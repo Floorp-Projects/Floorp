@@ -62,13 +62,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/PromiseWorker.jsm"
 );
 
-const TOPIC_APP_QUIT = "quit-application-granted";
-const TOPIC_CONTENT_DOCUMENT_INTERACTIVE = "content-document-interactive";
-
-const BASE_URL = "resource://activity-stream/";
 const CACHE_WORKER_URL = "resource://activity-stream/lib/cache-worker.js";
-
-const ACTIVITY_STREAM_PAGES = new Set(["home", "newtab", "welcome"]);
 
 const IS_PRIVILEGED_PROCESS =
   Services.appinfo.remoteType === E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE;
@@ -349,107 +343,10 @@ class BaseAboutNewTabService {
 
 /**
  * The child-process implementation of nsIAboutNewTabService,
- * which also does the work of loading scripts from the ScriptPreloader
- * cache when using the privileged about content process.
+ * which also does the work of redirecting about:home loads to
+ * the about:home startup cache if its available.
  */
 class AboutNewTabChildService extends BaseAboutNewTabService {
-  constructor() {
-    super();
-    if (this.privilegedAboutProcessEnabled) {
-      Services.obs.addObserver(this, TOPIC_CONTENT_DOCUMENT_INTERACTIVE);
-      Services.obs.addObserver(this, TOPIC_APP_QUIT);
-    }
-  }
-
-  observe(subject, topic, data) {
-    switch (topic) {
-      case TOPIC_APP_QUIT: {
-        Services.obs.removeObserver(this, TOPIC_CONTENT_DOCUMENT_INTERACTIVE);
-        Services.obs.removeObserver(this, TOPIC_APP_QUIT);
-        break;
-      }
-      case TOPIC_CONTENT_DOCUMENT_INTERACTIVE: {
-        if (!this.privilegedAboutProcessEnabled || !IS_PRIVILEGED_PROCESS) {
-          return;
-        }
-
-        const win = subject.defaultView;
-
-        // It seems like "content-document-interactive" is triggered multiple
-        // times for a single window. The first event always seems to be an
-        // HTMLDocument object that contains a non-null window reference
-        // whereas the remaining ones seem to be proxied objects.
-        // https://searchfox.org/mozilla-central/rev/d2966246905102b36ef5221b0e3cbccf7ea15a86/devtools/server/actors/object.js#100-102
-        if (win === null) {
-          return;
-        }
-
-        if (win.location.protocol !== "about:") {
-          // If we're somehow not an about: page, explode - something has gone
-          // horribly wrong.
-          let debug = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
-          debug.abort("AboutNewTabService.jsm", 0);
-          // And return just in case something went wrong trying to explode.
-          return;
-        }
-
-        // We use win.location.pathname instead of win.location.toString()
-        // because we want to account for URLs that contain the location hash
-        // property or query strings (e.g. about:newtab#foo, about:home?bar).
-        // Asserting here would be ideal, but this code path is also taken
-        // by the view-source:// scheme, so we should probably just bail out
-        // and do nothing.
-        if (!ACTIVITY_STREAM_PAGES.has(win.location.pathname)) {
-          return;
-        }
-
-        // In the event that the document that was loaded here was the cached
-        // about:home document, then there's nothing further to do - the page
-        // will load its scripts itself.
-        //
-        // Note that it's okay to waive the xray wrappers here since we know
-        // from the above condition that we're on one of our about: pages,
-        // plus we're in the privileged about content process.
-        if (ChromeUtils.waiveXrays(win).__FROM_STARTUP_CACHE__) {
-          return;
-        }
-
-        // Bail out early for separate about:welcome URL
-        if (
-          this.isSeparateAboutWelcome &&
-          win.location.pathname.includes("welcome")
-        ) {
-          return;
-        }
-
-        const onLoaded = () => {
-          const debugString = this.activityStreamDebug ? "-dev" : "";
-
-          // This list must match any similar ones in render-activity-stream-html.js.
-          const scripts = [
-            "chrome://browser/content/contentSearchUI.js",
-            "chrome://browser/content/contentSearchHandoffUI.js",
-            "chrome://browser/content/contentTheme.js",
-            `${BASE_URL}vendor/react${debugString}.js`,
-            `${BASE_URL}vendor/react-dom${debugString}.js`,
-            `${BASE_URL}vendor/prop-types.js`,
-            `${BASE_URL}vendor/react-transition-group.js`,
-            `${BASE_URL}vendor/redux.js`,
-            `${BASE_URL}vendor/react-redux.js`,
-            `${BASE_URL}data/content/activity-stream.bundle.js`,
-            `${BASE_URL}data/content/newtab-render.js`,
-          ];
-
-          for (let script of scripts) {
-            Services.scriptloader.loadSubScript(script, win); // Synchronous call
-          }
-        };
-        win.addEventListener("DOMContentLoaded", onLoaded, { once: true });
-        break;
-      }
-    }
-  }
-
   aboutHomeChannel(uri, loadInfo) {
     if (IS_PRIVILEGED_PROCESS) {
       let cacheChannel = AboutHomeStartupCacheChild.maybeGetCachedPageChannel(
