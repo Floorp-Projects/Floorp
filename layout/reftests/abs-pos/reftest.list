@@ -51,7 +51,7 @@ fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azur
 == scrollframe-1.html scrollframe-1-ref.html
 fuzzy-if(gtkWidget,0-1,0-1) fuzzy-if(Android,0-9,0-185) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-140,0-144) == scrollframe-2.html scrollframe-2-ref.html #bug 756530
 fuzzy-if(gtkWidget,0-1,0-8) fuzzy-if(Android,0-4,0-2) == select-1.html select-1-ref.html
-fuzzy-if(gtkWidget,0-1,0-8) == select-1-dynamic.html select-1-ref.html
+fuzzy-if(gtkWidget,0-1,0-8) fuzzy-if(Android,0-4,0-2) == select-1-dynamic.html select-1-ref.html
 == select-2.html select-2-ref.html
 fuzzy-if(gtkWidget,0-1,0-19) fuzzy-if(Android,0-17,0-726) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-110,0-114) fuzzy-if(browserIsRemote&&winWidget,0-143,0-114) == select-3.html select-3-ref.html
 == multi-column-1.html multi-column-1-ref.html

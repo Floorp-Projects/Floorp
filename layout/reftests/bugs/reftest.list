@@ -623,7 +623,7 @@ asserts(4) == 368155-negative-margins-1.html 368155-negative-margins-1-ref.html 
 == chrome://reftest/content/bugs/369882.xhtml chrome://reftest/content/bugs/369882-ref.xhtml
 == 369975-1.html 369975-1.html
 == 370353-1.html 370353-1-ref.html
-== 370422-1.html 370422-1-ref.html
+fuzzy-if(!nativeThemePref,0-1,0-4) == 370422-1.html 370422-1-ref.html
 == 370525-1.html 370525-1-ref.html
 != 370525-1.html 370525-1-notref.html
 == 370525-2.html 370525-2-ref.html
@@ -798,7 +798,7 @@ fuzzy-if(skiaContent,0-1,0-600) == 393649-1.html 393649-1-ref.html
 == 393671-3.html 393671-3-ref.html
 == 394111-1.html about:blank  # Really an assertion test rather than a rendering test
 == 394534-1.html 394534-1-ref.html
-== 395107-1.html 395107-1-ref.html
+fuzzy-if(Android,0-4,0-2) == 395107-1.html 395107-1-ref.html
 fuzzy-if(Android,0-4,0-2) == 395107-2.html 395107-2-ref.html # bug 1309533 fuzzy after test rebucketed
 fuzzy-if(skiaContent,0-1,0-118) fuzzy-if(geckoview,0-4,0-2) == 395107-3.html 395107-3-ref.html
 == 395107-4.html 395107-4-ref.html
@@ -1468,7 +1468,7 @@ fuzzy-if(Android,0-12,0-300) == 551463-1.html 551463-1-ref.html
 random != 553571-1.html 553571-1-notref.html # expect dotted circle in test, not in ref: "fails" under harfbuzz, which doesn't consider the sequence invalid
 fuzzy-if(!contentSameGfxBackendAsCanvas,0-128,0-91) random-if(d2d) skip-if(azureSkiaGL) fuzzy-if(skiaContent,0-32,0-150) == 555388-1.html 555388-1-ref.html
 == 556661-1.html 556661-1-ref.html
-fuzzy-if(skiaContent,0-4,0-5) == 557087-1.html 557087-ref.html
+fuzzy-if(skiaContent,0-4,0-9) == 557087-1.html 557087-ref.html
 fuzzy-if(skiaContent&&!Android,0-2,0-5) == 557087-2.html 557087-ref.html
 == 557736-1.html 557736-1-ref.html
 skip-if(Android) != chrome://reftest/content/bugs/558011-1.xhtml chrome://reftest/content/bugs/558011-1-ref.xhtml
@@ -2012,7 +2012,7 @@ skip-if(isDebugBuild&&winWidget) == 1330051.svg 1330051-ref.svg
 == 1375315-8.html 1375315-8-ref.html
 == 1375315-9.html 1375315-9-ref.html
 == 1375315-10.html 1375315-10-ref.html
-== 1375315-11.html 1375315-11-ref.html
+fuzzy-if(!nativeThemePref,0-1,0-4) == 1375315-11.html 1375315-11-ref.html
 == 1375315-12.html 1375315-12-ref.html
 == 1374062.html 1374062-ref.html
 == 1375674.html 1375674-ref.html
