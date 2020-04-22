@@ -4,8 +4,14 @@
 
 "use strict";
 
+const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const {
+  updateSettingsVisibility,
+} = require("devtools/client/inspector/compatibility/actions/compatibility");
 
 loader.lazyRequireGetter(
   this,
@@ -21,6 +27,12 @@ const REPORT_ICON = "chrome://devtools/skin/images/report.svg";
 const SETTINGS_ICON = "chrome://devtools/skin/images/settings.svg";
 
 class Footer extends PureComponent {
+  static get propTypes() {
+    return {
+      updateSettingsVisibility: PropTypes.func.isRequired,
+    };
+  }
+
   _renderButton(icon, label, onClick) {
     return dom.button(
       {
@@ -46,7 +58,11 @@ class Footer extends PureComponent {
       {
         className: "compatibility-footer",
       },
-      this._renderButton(SETTINGS_ICON, "Settings"),
+      this._renderButton(
+        SETTINGS_ICON,
+        "Settings",
+        this.props.updateSettingsVisibility
+      ),
       this._renderButton(REPORT_ICON, "Feedback", () =>
         openDocLink(FEEDBACK_LINK)
       )
@@ -54,4 +70,10 @@ class Footer extends PureComponent {
   }
 }
 
-module.exports = Footer;
+const mapDispatchToProps = dispatch => {
+  return {
+    updateSettingsVisibility: () => dispatch(updateSettingsVisibility(true)),
+  };
+};
+
+module.exports = connect(null, mapDispatchToProps)(Footer);
