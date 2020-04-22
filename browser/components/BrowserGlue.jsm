@@ -94,6 +94,19 @@ let ACTORS = {
     matches: ["about:logins", "about:logins?*"],
   },
 
+  AboutNewTab: {
+    child: {
+      moduleURI: "resource:///actors/AboutNewTabChild.jsm",
+      events: {
+        DOMContentLoaded: {},
+      },
+    },
+    // The wildcard on about:newtab is for the ?endpoint query parameter
+    // that is used for snippets debugging.
+    matches: ["about:home", "about:welcome", "about:newtab*"],
+    remoteTypes: ["privilegedabout"],
+  },
+
   AboutWelcome: {
     parent: {
       moduleURI: "resource:///actors/AboutWelcomeParent.jsm",
