@@ -41,9 +41,6 @@ nsWebBrowserContentPolicy::ShouldLoad(nsIURI* aContentLocation,
   bool allowed = true;
 
   switch (contentType) {
-    case nsIContentPolicy::TYPE_SCRIPT:
-      rv = shell->GetAllowJavascript(&allowed);
-      break;
     case nsIContentPolicy::TYPE_SUBDOCUMENT:
       rv = shell->GetAllowSubframes(&allowed);
       break;
