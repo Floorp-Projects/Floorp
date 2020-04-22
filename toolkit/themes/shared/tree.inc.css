@@ -2,9 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Styles used by non shadow parts of trees */
+/* ===== tree.css ===================================================
+  == Styles used by the XUL tree element.
+  ======================================================================= */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+/* ::::: tree ::::: */
+
+tree {
+  margin: 0 4px;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  -moz-appearance: listbox;
+}
 
 /* ::::: tree rows ::::: */
 
@@ -182,4 +194,22 @@ treechildren::-moz-tree-row(selected, editing) {
 
 treechildren::-moz-tree-cell-text(selected, editing) {
   color: inherit;
+}
+
+html|input.tree-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  -moz-appearance: none;
+  -moz-box-flex: 1;
+  border: 1px solid Highlight;
+  margin: 0;
+  margin-inline-start: -4px;
+  padding: 1px;
+  font: inherit;
+}
+
+.scrollbar-topmost {
+  position: relative;
+  z-index: 2147483647;
 }
