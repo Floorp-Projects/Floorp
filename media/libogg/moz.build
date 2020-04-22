@@ -8,6 +8,7 @@ with Files('*'):
     BUG_COMPONENT = ('Core', 'Audio/Video')
 
 EXPORTS.ogg += [
+    'geckoextra/include/OggStructsForRLBox.h',
     'include/ogg/config_types.h',
     'include/ogg/ogg.h',
     'include/ogg/os_types.h',
