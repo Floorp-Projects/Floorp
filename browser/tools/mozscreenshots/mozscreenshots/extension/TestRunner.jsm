@@ -137,7 +137,7 @@ var TestRunner = {
     Services.prefs.setIntPref("ui.caretBlinkTime", -1);
     // Disable some animations that can cause false positives, such as the
     // reload/stop button spinning animation.
-    Services.prefs.setBoolPref("toolkit.cosmeticAnimations.enabled", false);
+    Services.prefs.setIntPref("ui.prefersReducedMotion", 1);
 
     let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
 
@@ -250,7 +250,8 @@ var TestRunner = {
       "data:text/html;charset=utf-8,<h1>Done!"
     );
     browserWindow.restore();
-    Services.prefs.clearUserPref("toolkit.cosmeticAnimations.enabled");
+    Services.prefs.clearUserPref("ui.caretBlinkTime");
+    Services.prefs.clearUserPref("ui.prefersReducedMotion");
   },
 
   // helpers
