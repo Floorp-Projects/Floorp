@@ -5,16 +5,30 @@ exports[`Footer component renders 1`] = `
   className="compatibility-footer"
 >
   <button
-    className="compatibility-footer__feedback-button"
+    className="compatibility-footer__button"
+    title="Settings"
+  >
+    <img
+      className="compatibility-footer__icon"
+      src="chrome://devtools/skin/images/settings.svg"
+    />
+    <label
+      className="compatibility-footer__label"
+    >
+      Settings
+    </label>
+  </button>
+  <button
+    className="compatibility-footer__button"
     onClick={[Function]}
     title="Feedback"
   >
     <img
-      className="compatibility-footer__feedback-icon"
+      className="compatibility-footer__icon"
       src="chrome://devtools/skin/images/report.svg"
     />
     <label
-      className="compatibility-footer__feedback-label"
+      className="compatibility-footer__label"
     >
       Feedback
     </label>
