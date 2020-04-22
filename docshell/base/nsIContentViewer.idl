@@ -254,8 +254,10 @@ interface nsIContentViewer : nsISupports
    * of 90% is actually 89.1%, for example. This value is provided primarily to
    * support media queries of dppx values, because those queries are matched
    * against the actual native device pixel ratio and the actual full zoom.
+   *
+   * You should only need this for testing.
    */
-  readonly attribute float deviceFullZoom;
+  readonly attribute float deviceFullZoomForTest;
 
   /**
    * The value used to override devicePixelRatio and media queries dppx.
