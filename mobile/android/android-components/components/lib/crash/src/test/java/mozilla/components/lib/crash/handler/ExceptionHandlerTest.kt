@@ -60,14 +60,11 @@ class ExceptionHandlerTest {
         val crashReporter = CrashReporter(
                 shouldPrompt = CrashReporter.Prompt.NEVER,
                 services = listOf(object : CrashReporterService {
-                    override fun report(crash: Crash.UncaughtExceptionCrash) {
-                    }
+                    override fun report(crash: Crash.UncaughtExceptionCrash): String? = null
 
-                    override fun report(crash: Crash.NativeCodeCrash) {
-                    }
+                    override fun report(crash: Crash.NativeCodeCrash): String? = null
 
-                    override fun report(throwable: Throwable) {
-                    }
+                    override fun report(throwable: Throwable): String? = null
                 }),
                 scope = scope
         ).install(testContext)

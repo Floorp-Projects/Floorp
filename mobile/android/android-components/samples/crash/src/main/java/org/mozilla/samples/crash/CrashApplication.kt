@@ -55,22 +55,25 @@ private fun createDummyCrashService(context: Context): CrashReporterService {
     // For this sample we create a dummy service. In a real application this would be an instance of SentryCrashService
     // or SocorroCrashService.
     return object : CrashReporterService {
-        override fun report(crash: Crash.UncaughtExceptionCrash) {
+        override fun report(crash: Crash.UncaughtExceptionCrash): String? {
             GlobalScope.launch(Dispatchers.Main) {
                 Toast.makeText(context, "Uploading uncaught exception crash...", Toast.LENGTH_SHORT).show()
             }
+            return null
         }
 
-        override fun report(crash: Crash.NativeCodeCrash) {
+        override fun report(crash: Crash.NativeCodeCrash): String? {
             GlobalScope.launch(Dispatchers.Main) {
                 Toast.makeText(context, "Uploading native crash...", Toast.LENGTH_SHORT).show()
             }
+            return null
         }
 
-        override fun report(throwable: Throwable) {
+        override fun report(throwable: Throwable): String? {
             GlobalScope.launch(Dispatchers.Main) {
                 Toast.makeText(context, "Uploading caught exception...", Toast.LENGTH_SHORT).show()
             }
+            return null
         }
     }
 }

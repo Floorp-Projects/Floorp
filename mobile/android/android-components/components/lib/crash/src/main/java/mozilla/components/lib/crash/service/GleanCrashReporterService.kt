@@ -173,19 +173,22 @@ class GleanCrashReporterService(
         }
     }
 
-    override fun report(crash: Crash.UncaughtExceptionCrash) {
+    override fun report(crash: Crash.UncaughtExceptionCrash): String? {
         reportCrash(UNCAUGHT_EXCEPTION_KEY)
+        return null
     }
 
-    override fun report(crash: Crash.NativeCodeCrash) {
+    override fun report(crash: Crash.NativeCodeCrash): String? {
         if (crash.isFatal) {
             reportCrash(FATAL_NATIVE_CODE_CRASH_KEY)
         } else {
             reportCrash(NONFATAL_NATIVE_CODE_CRASH_KEY)
         }
+        return null
     }
 
-    override fun report(throwable: Throwable) {
+    override fun report(throwable: Throwable): String? {
         reportCrash(CAUGHT_EXCEPTION_KEY)
+        return null
     }
 }

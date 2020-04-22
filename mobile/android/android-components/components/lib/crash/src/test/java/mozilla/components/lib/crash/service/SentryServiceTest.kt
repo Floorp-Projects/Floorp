@@ -106,7 +106,7 @@ class SentryServiceTest {
     }
 
     @Test
-    fun `SentryService sends message for native code crashes`() {
+    fun `SentryService sends event for native code crashes`() {
         val client: SentryClient = mock()
 
         val service = SentryService(
@@ -119,11 +119,11 @@ class SentryServiceTest {
 
         service.report(Crash.NativeCodeCrash("", true, "", false, arrayListOf()))
 
-        verify(client).sendMessage(any())
+        verify(client).sendEvent(any<EventBuilder>())
     }
 
     @Test
-    fun `SentryService does not send message for native code crashes by default`() {
+    fun `SentryService does not send event for native code crashes by default`() {
         val client: SentryClient = mock()
 
         val service = SentryService(
@@ -135,7 +135,7 @@ class SentryServiceTest {
 
         service.report(Crash.NativeCodeCrash("", true, "", false, arrayListOf()))
 
-        verify(client, never()).sendMessage(any())
+        verify(client, never()).sendEvent(any<EventBuilder>())
     }
 
     @Test
