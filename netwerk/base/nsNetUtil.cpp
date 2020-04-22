@@ -2035,7 +2035,8 @@ bool NS_HasBeenCrossOrigin(nsIChannel* aChannel, bool aReport) {
     }
 
     nsCOMPtr<nsIURI> uri;
-    principal->GetURI(getter_AddRefs(uri));
+    auto* basePrin = BasePrincipal::Cast(principal);
+    basePrin->GetURI(getter_AddRefs(uri));
     if (!uri) {
       return true;
     }
@@ -2114,28 +2115,30 @@ bool NS_IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI) {
     return false;
   }
 
-  nsCOMPtr<nsIURI> uri;
+  bool isForeign = true;
+  nsresult rv;
   if (loadInfo->GetExternalContentPolicyType() ==
       nsIContentPolicy::TYPE_DOCUMENT) {
     // for loads of TYPE_DOCUMENT we query the hostURI from the
     // triggeringPrincipal which returns the URI of the document that caused the
     // navigation.
-    loadInfo->TriggeringPrincipal()->GetURI(getter_AddRefs(uri));
+    rv = loadInfo->TriggeringPrincipal()->IsThirdPartyChannel(aChannel,
+                                                              &isForeign);
+    if (NS_FAILED(rv)) {
+      return true;
+    }
   } else {
-    uri = aHostURI;
+    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+        do_GetService(THIRDPARTYUTIL_CONTRACTID);
+    if (!thirdPartyUtil) {
+      return true;
+    }
+    thirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
   }
 
-  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-      do_GetService(THIRDPARTYUTIL_CONTRACTID);
-  if (!thirdPartyUtil) {
-    return false;
-  }
-
-  bool isForeign = true;
-  nsresult rv = thirdPartyUtil->IsThirdPartyChannel(aChannel, uri, &isForeign);
   // if we are dealing with a cross origin request, we can return here
   // because we already know the request is 'foreign'.
-  if (NS_FAILED(rv) || isForeign) {
+  if (isForeign) {
     return true;
   }
 
@@ -2146,11 +2149,8 @@ bool NS_IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI) {
   // foreign.
   if (loadInfo->GetExternalContentPolicyType() ==
       nsIContentPolicy::TYPE_SUBDOCUMENT) {
-    nsCOMPtr<nsIURI> triggeringPrincipalURI;
-    loadInfo->TriggeringPrincipal()->GetURI(
-        getter_AddRefs(triggeringPrincipalURI));
-    rv = thirdPartyUtil->IsThirdPartyChannel(aChannel, triggeringPrincipalURI,
-                                             &isForeign);
+    rv = loadInfo->TriggeringPrincipal()->IsThirdPartyChannel(aChannel,
+                                                              &isForeign);
     if (NS_FAILED(rv) || isForeign) {
       return true;
     }
@@ -2161,13 +2161,10 @@ bool NS_IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI) {
   // with regards to CSRF.
 
   nsCOMPtr<nsIPrincipal> redirectPrincipal;
-  nsCOMPtr<nsIURI> redirectURI;
   for (nsIRedirectHistoryEntry* entry : loadInfo->RedirectChain()) {
     entry->GetPrincipal(getter_AddRefs(redirectPrincipal));
     if (redirectPrincipal) {
-      redirectPrincipal->GetURI(getter_AddRefs(redirectURI));
-      rv = thirdPartyUtil->IsThirdPartyChannel(aChannel, redirectURI,
-                                               &isForeign);
+      rv = redirectPrincipal->IsThirdPartyChannel(aChannel, &isForeign);
       // if at any point we encounter a cross-origin redirect we can return.
       if (NS_FAILED(rv) || isForeign) {
         return true;
@@ -2409,7 +2406,8 @@ bool NS_SecurityCompareURIs(nsIURI* aSourceURI, nsIURI* aTargetURI,
   if (BlobURLProtocolHandler::GetBlobURLPrincipal(
           sourceBaseURI, getter_AddRefs(sourceBlobPrincipal))) {
     nsCOMPtr<nsIURI> sourceBlobOwnerURI;
-    rv = sourceBlobPrincipal->GetURI(getter_AddRefs(sourceBlobOwnerURI));
+    auto* basePrin = BasePrincipal::Cast(sourceBlobPrincipal);
+    rv = basePrin->GetURI(getter_AddRefs(sourceBlobOwnerURI));
     if (NS_SUCCEEDED(rv)) {
       sourceBaseURI = sourceBlobOwnerURI;
     }
@@ -2419,7 +2417,8 @@ bool NS_SecurityCompareURIs(nsIURI* aSourceURI, nsIURI* aTargetURI,
   if (BlobURLProtocolHandler::GetBlobURLPrincipal(
           targetBaseURI, getter_AddRefs(targetBlobPrincipal))) {
     nsCOMPtr<nsIURI> targetBlobOwnerURI;
-    rv = targetBlobPrincipal->GetURI(getter_AddRefs(targetBlobOwnerURI));
+    auto* basePrin = BasePrincipal::Cast(targetBlobPrincipal);
+    rv = basePrin->GetURI(getter_AddRefs(targetBlobOwnerURI));
     if (NS_SUCCEEDED(rv)) {
       targetBaseURI = targetBlobOwnerURI;
     }
