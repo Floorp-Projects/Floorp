@@ -316,6 +316,8 @@ class BrowserParent final : public PBrowserParent,
       const Maybe<mozilla::ContentBlockingNotifier::StorageAccessGrantedReason>&
           aReason);
 
+  mozilla::ipc::IPCResult RecvReportBlockedEmbedderNodeByClassifier();
+
   mozilla::ipc::IPCResult RecvNavigationFinished();
 
   bool GetWebProgressListener(nsIBrowser** aOutBrowser,
