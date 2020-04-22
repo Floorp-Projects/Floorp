@@ -1788,7 +1788,7 @@ set_define('MOZ_HAS_REMOTE', has_remote)
 # ==============================================================
 
 def wasm_sandboxing_libraries():
-    return ('graphite',)
+    return ('graphite', 'ogg',)
 
 option('--with-wasm-sandboxed-libraries',
        env='WASM_SANDBOXED_LIBRARIES',
