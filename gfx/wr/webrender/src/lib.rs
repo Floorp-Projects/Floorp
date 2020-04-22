@@ -109,7 +109,6 @@ mod internal_types;
 mod picture;
 mod prim_store;
 mod print_tree;
-mod record;
 mod render_backend;
 mod render_target;
 mod render_task_graph;
@@ -132,8 +131,6 @@ mod util;
 mod shader_source {
     include!(concat!(env!("OUT_DIR"), "/shaders.rs"));
 }
-
-pub use crate::record::{ApiRecordingReceiver, BinaryRecorder, WEBRENDER_RECORDING_HEADER};
 
 mod platform {
     #[cfg(target_os = "macos")]

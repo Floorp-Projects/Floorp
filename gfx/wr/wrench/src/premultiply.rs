@@ -17,6 +17,7 @@ pub fn premultiply(data: &mut [u8]) {
     }
 }
 
+#[allow(unused)]
 pub fn unpremultiply(data: &mut [u8]) {
     for pixel in data.chunks_mut(4) {
         let a = pixel[3] as u32;
