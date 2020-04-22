@@ -2765,6 +2765,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput {
         mFragBStart(0),
         mStartRow(0),
         mNextFragmentStartRow(0),
+        mSkipSides(aFrame->GetWritingMode()),
         mWM(aWM),
         mInFragmentainer(false) {
     MOZ_ASSERT(!aReflowInput || aReflowInput->mFrame == mFrame);
