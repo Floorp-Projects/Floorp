@@ -62,11 +62,21 @@ body {
   background-color: white;
 }
 
+body.high-contrast #progress_background {
+  outline: solid;
+}
+
 #progress_bar {
   margin: 0;
   width: 0%;
   height: 100%;
   background-color: #00AAFF;
+}
+
+/* In high contrast mode, fill the entire progress bar with its border. */
+body.high-contrast #progress_bar {
+  border: 10px solid;
+  box-sizing: border-box;
 }
 
 /* No blurb or footer for this layout. */
