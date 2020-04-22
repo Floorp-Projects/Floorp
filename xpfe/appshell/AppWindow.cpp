@@ -233,7 +233,8 @@ nsresult AppWindow::Initialize(nsIAppWindow* aParent, nsIAppWindow* aOpener,
   // to pass in the opener window here. The opener is set later, if needed, by
   // nsWindowWatcher.
   RefPtr<BrowsingContext> browsingContext =
-      BrowsingContext::CreateIndependent(BrowsingContext::Type::Chrome);
+      BrowsingContext::Create(/* aParent */ nullptr, /* aOpener */ nullptr,
+                              EmptyString(), BrowsingContext::Type::Chrome);
 
   // Create web shell
   mDocShell = nsDocShell::Create(browsingContext);

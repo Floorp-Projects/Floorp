@@ -640,12 +640,18 @@ class ContentParent final
 
   static bool IsInputEventQueueSupported();
 
-  mozilla::ipc::IPCResult RecvCreateBrowsingContext(
-      uint64_t aGroupId, BrowsingContext::IPCInitializer&& aInit);
+  mozilla::ipc::IPCResult RecvAttachBrowsingContext(
+      BrowsingContext::IPCInitializer&& aInit);
 
-  mozilla::ipc::IPCResult RecvDiscardBrowsingContext(
+  mozilla::ipc::IPCResult RecvDetachBrowsingContext(
+      uint64_t aContextId, DetachBrowsingContextResolver&& aResolve);
+
+  mozilla::ipc::IPCResult RecvCacheBrowsingContextChildren(
+      const MaybeDiscarded<BrowsingContext>& aContext);
+
+  mozilla::ipc::IPCResult RecvRestoreBrowsingContextChildren(
       const MaybeDiscarded<BrowsingContext>& aContext,
-      DiscardBrowsingContextResolver&& aResolve);
+      nsTArray<MaybeDiscarded<BrowsingContext>>&& aChildren);
 
   mozilla::ipc::IPCResult RecvWindowClose(
       const MaybeDiscarded<BrowsingContext>& aContext, bool aTrustedCaller);
@@ -1290,6 +1296,9 @@ class ContentParent final
                                const bool& aAnonymize,
                                const bool& aMinimizeMemoryUsage,
                                const Maybe<FileDescriptor>& aDMDFile) override;
+
+  static void HoldBrowsingContextGroup(BrowsingContextGroup* aBCG);
+  static void ReleaseBrowsingContextGroup(BrowsingContextGroup* aBCG);
 
   void OnBrowsingContextGroupSubscribe(BrowsingContextGroup* aGroup);
   void OnBrowsingContextGroupUnsubscribe(BrowsingContextGroup* aGroup);
