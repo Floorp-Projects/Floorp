@@ -26,15 +26,22 @@ class Profile(Layer):
     def setup(self):
         pass
 
+    def _cleanup(self):
+        pass
+
     def __call__(self, metadata):
         if self.get_arg("profile-directory") is not None:
             # no need to create one or load a conditioned one
             return
+
         # XXX we'll use conditioned profiles later
-        #
-        # XXX keeping a reference on self, otherwise mozprofile
-        # silently deletes the dir in a __del__ call
-        self.profile = profile = create_profile(app="firefox")
+        profile = create_profile(app="firefox")
+
+        # mozprofile.Profile.__del__ silently deletes the profile
+        # it creates in a non-deterministic time (garbage collected) by
+        # calling cleanup. We override this silly behavior here.
+        profile.cleanup = self._cleanup
+
         prefs = metadata.get_browser_prefs()
 
         if prefs == {}:
