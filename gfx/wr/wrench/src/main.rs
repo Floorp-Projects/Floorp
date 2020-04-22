@@ -10,7 +10,6 @@ extern crate log;
 extern crate serde;
 
 mod angle;
-mod binary_frame_reader;
 mod blob;
 mod egl;
 mod parse_function;
@@ -19,16 +18,10 @@ mod png;
 mod premultiply;
 mod rawtest;
 mod reftest;
-mod ron_frame_writer;
-mod scene;
 mod wrench;
 mod yaml_frame_reader;
-mod yaml_frame_writer;
 mod yaml_helper;
-#[cfg(target_os = "macos")]
-mod cgfont_to_data;
 
-use crate::binary_frame_reader::BinaryFrameReader;
 use gleam::gl;
 #[cfg(feature = "software")]
 use gleam::gl::Gl;
@@ -557,12 +550,6 @@ fn main() {
     // handle some global arguments
     let res_path = args.value_of("shaders").map(|s| PathBuf::from(s));
     let dp_ratio = args.value_of("dp_ratio").map(|v| v.parse::<f32>().unwrap());
-    let save_type = args.value_of("save").map(|s| match s {
-        "yaml" => wrench::SaveType::Yaml,
-        "ron" => wrench::SaveType::Ron,
-        "binary" => wrench::SaveType::Binary,
-        _ => panic!("Save type must be ron, yaml, or binary")
-    });
     let size = args.value_of("size")
         .map(|s| if s == "720p" {
             DeviceIntSize::new(1280, 720)
@@ -659,7 +646,6 @@ fn main() {
         res_path,
         !args.is_present("use_unoptimized_shaders"),
         dp_ratio,
-        save_type,
         dim,
         args.is_present("rebuild"),
         args.is_present("no_subpixel_aa"),
@@ -790,7 +776,6 @@ fn render<'a>(
 
         match extension {
             "yaml" => Box::new(YamlFrameReader::new_from_args(subargs)) as Box<dyn WrenchThing>,
-            "bin" => Box::new(BinaryFrameReader::new_from_args(subargs)) as Box<dyn WrenchThing>,
             _ => panic!("Tried to render with an unknown file type."),
         }
     };

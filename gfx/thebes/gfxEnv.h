@@ -34,9 +34,6 @@ class gfxEnv final {
   // Debugging inside of ContainerLayerComposite
   DECL_GFX_ENV("DUMP_DEBUG", DumpDebug);
 
-  // Use WR recording
-  DECL_GFX_ENV("ENABLE_WR_RECORDING", EnableWebRenderRecording);
-
   // OpenGL shader debugging in OGLShaderProgram, in DEBUG only
   DECL_GFX_ENV("MOZ_DEBUG_SHADERS", DebugShaders);
 

@@ -115,8 +115,6 @@ bool is_glcontext_angle(void* glcontext_ptr) {
   return glcontext->IsANGLE();
 }
 
-bool gfx_use_wrench() { return gfxEnv::EnableWebRenderRecording(); }
-
 const char* gfx_wr_resource_path_override() {
   const char* resourcePath = PR_GetEnv("WR_RESOURCE_PATH");
   if (!resourcePath || resourcePath[0] == '\0') {
@@ -835,28 +833,10 @@ bool WebRenderBridgeParent::AddSharedExternalImage(
 
   mSharedSurfaceIds.insert(std::make_pair(key, aExtId));
 
-  if (!gfxEnv::EnableWebRenderRecording()) {
-    wr::ImageDescriptor descriptor(dSurf->GetSize(), dSurf->Stride(),
-                                   dSurf->GetFormat());
-    aResources.AddExternalImage(aKey, descriptor, aExtId,
-                                wr::ExternalImageType::Buffer(), 0);
-    return true;
-  }
-
-  DataSourceSurface::MappedSurface map;
-  if (!dSurf->Map(gfx::DataSourceSurface::MapType::READ, &map)) {
-    gfxCriticalNote << "DataSourceSurface failed to map for Image for extId:"
-                    << wr::AsUint64(aExtId);
-    return false;
-  }
-
-  IntSize size = dSurf->GetSize();
-  wr::ImageDescriptor descriptor(size, map.mStride, dSurf->GetFormat());
-  wr::Vec<uint8_t> data;
-  data.PushBytes(Range<uint8_t>(map.mData, size.height * map.mStride));
-  aResources.AddImage(keys[0], descriptor, data);
-  dSurf->Unmap();
-
+  wr::ImageDescriptor descriptor(dSurf->GetSize(), dSurf->Stride(),
+                                  dSurf->GetFormat());
+  aResources.AddExternalImage(aKey, descriptor, aExtId,
+                              wr::ExternalImageType::Buffer(), 0);
   return true;
 }
 
@@ -876,23 +856,22 @@ bool WebRenderBridgeParent::PushExternalImageForTexture(
     return false;
   }
 
-  if (!gfxEnv::EnableWebRenderRecording()) {
-    WebRenderTextureHost* wrTexture = aTexture->AsWebRenderTextureHost();
-    if (wrTexture) {
-      wrTexture->PushResourceUpdates(aResources, op, keys,
-                                     wrTexture->GetExternalImageKey());
-      auto it = mTextureHosts.find(wr::AsUint64(aKey));
-      MOZ_ASSERT((it == mTextureHosts.end() && !aIsUpdate) ||
-                 (it != mTextureHosts.end() && aIsUpdate));
-      if (it != mTextureHosts.end()) {
-        // Release Texture if it exists.
-        ReleaseTextureOfImage(aKey);
-      }
-      mTextureHosts.emplace(wr::AsUint64(aKey),
-                            CompositableTextureHostRef(aTexture));
-      return true;
+  WebRenderTextureHost* wrTexture = aTexture->AsWebRenderTextureHost();
+  if (wrTexture) {
+    wrTexture->PushResourceUpdates(aResources, op, keys,
+                                    wrTexture->GetExternalImageKey());
+    auto it = mTextureHosts.find(wr::AsUint64(aKey));
+    MOZ_ASSERT((it == mTextureHosts.end() && !aIsUpdate) ||
+                (it != mTextureHosts.end() && aIsUpdate));
+    if (it != mTextureHosts.end()) {
+      // Release Texture if it exists.
+      ReleaseTextureOfImage(aKey);
     }
+    mTextureHosts.emplace(wr::AsUint64(aKey),
+                          CompositableTextureHostRef(aTexture));
+    return true;
   }
+
   RefPtr<DataSourceSurface> dSurf = aTexture->GetAsSurface();
   if (!dSurf) {
     gfxCriticalNote
@@ -965,27 +944,12 @@ bool WebRenderBridgeParent::UpdateSharedExternalImage(
     it->second = aExtId;
   }
 
-  if (!gfxEnv::EnableWebRenderRecording()) {
-    wr::ImageDescriptor descriptor(dSurf->GetSize(), dSurf->Stride(),
-                                   dSurf->GetFormat());
-    aResources.UpdateExternalImageWithDirtyRect(
-        aKey, descriptor, aExtId, wr::ExternalImageType::Buffer(),
-        wr::ToDeviceIntRect(aDirtyRect), 0);
-    return true;
-  }
+  wr::ImageDescriptor descriptor(dSurf->GetSize(), dSurf->Stride(),
+                                  dSurf->GetFormat());
+  aResources.UpdateExternalImageWithDirtyRect(
+      aKey, descriptor, aExtId, wr::ExternalImageType::Buffer(),
+      wr::ToDeviceIntRect(aDirtyRect), 0);
 
-  DataSourceSurface::ScopedMap map(dSurf, DataSourceSurface::READ);
-  if (!map.IsMapped()) {
-    gfxCriticalNote << "DataSourceSurface failed to map for Image for extId:"
-                    << wr::AsUint64(aExtId);
-    return false;
-  }
-
-  IntSize size = dSurf->GetSize();
-  wr::ImageDescriptor descriptor(size, map.GetStride(), dSurf->GetFormat());
-  wr::Vec<uint8_t> data;
-  data.PushBytes(Range<uint8_t>(map.GetData(), size.height * map.GetStride()));
-  aResources.UpdateImageBuffer(keys[0], descriptor, data);
   return true;
 }
 

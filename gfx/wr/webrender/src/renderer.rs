@@ -79,7 +79,6 @@ use crate::profiler::{BackendProfileCounters, FrameProfileCounters, TimeProfileC
 use crate::profiler::{Profiler, ChangeIndicator, ProfileStyle, add_event_marker};
 use crate::device::query::{GpuProfiler, GpuDebugMethod};
 use rayon::{ThreadPool, ThreadPoolBuilder};
-use crate::record::ApiRecordingReceiver;
 use crate::render_backend::{FrameId, RenderBackend};
 use crate::render_task_graph::RenderTaskGraph;
 use crate::render_task::{RenderTask, RenderTaskData, RenderTaskKind};
@@ -2429,7 +2428,6 @@ impl Renderer {
         let enclosing_size_of_op = options.enclosing_size_of_op;
         let make_size_of_ops =
             move || size_of_op.map(|o| MallocSizeOfOps::new(o, enclosing_size_of_op));
-        let recorder = options.recorder;
         let thread_listener = Arc::new(options.thread_listener);
         let thread_listener_for_rayon_start = thread_listener.clone();
         let thread_listener_for_rayon_end = thread_listener.clone();
@@ -2557,7 +2555,6 @@ impl Renderer {
                 resource_cache,
                 backend_notifier,
                 config,
-                recorder,
                 sampler,
                 make_size_of_ops(),
                 debug_flags,
@@ -6752,7 +6749,6 @@ pub struct RendererOptions {
     pub workers: Option<Arc<ThreadPool>>,
     pub enable_multithreading: bool,
     pub blob_image_handler: Option<Box<dyn BlobImageHandler>>,
-    pub recorder: Option<Box<dyn ApiRecordingReceiver>>,
     pub thread_listener: Option<Box<dyn ThreadListener + Send + Sync>>,
     pub size_of_op: Option<VoidPtrToSizeFn>,
     pub enclosing_size_of_op: Option<VoidPtrToSizeFn>,
@@ -6824,7 +6820,6 @@ impl Default for RendererOptions {
             workers: None,
             enable_multithreading: true,
             blob_image_handler: None,
-            recorder: None,
             thread_listener: None,
             size_of_op: None,
             enclosing_size_of_op: None,
