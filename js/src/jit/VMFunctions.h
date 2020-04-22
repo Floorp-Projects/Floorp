@@ -715,6 +715,10 @@ struct OutParamToDataType<uint32_t*> {
   static const DataType result = Type_Int32;
 };
 template <>
+struct OutParamToDataType<uint64_t*> {
+  static const DataType result = Type_Pointer;
+};
+template <>
 struct OutParamToDataType<uint8_t**> {
   static const DataType result = Type_Pointer;
 };
@@ -1128,6 +1132,13 @@ bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result);
 bool DoToNumeric(JSContext* cx, HandleValue arg, MutableHandleValue ret);
 
 void* AllocateBigIntNoGC(JSContext* cx, bool requestMinorGC);
+#if JS_BITS_PER_WORD == 32
+BigInt* CreateBigIntFromInt64(JSContext* cx, uint32_t low, uint32_t high);
+#else
+BigInt* CreateBigIntFromInt64(JSContext* cx, uint64_t i64);
+#endif
+bool DoStringToInt64(JSContext* cx, HandleString str, uint64_t* res,
+                     bool* parseSuccess);
 
 template <EqualityKind Kind>
 bool BigIntEqual(BigInt* x, BigInt* y);

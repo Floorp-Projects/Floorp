@@ -830,6 +830,35 @@ bool ToStringPolicy::staticAdjustInputs(TempAllocator& alloc,
   return true;
 }
 
+bool ToInt64Policy::staticAdjustInputs(TempAllocator& alloc,
+                                       MInstruction* ins) {
+  MOZ_ASSERT(ins->isToInt64());
+
+  MDefinition* input = ins->getOperand(0);
+  MIRType type = input->type();
+
+  switch (type) {
+    case MIRType::BigInt: {
+      auto* replace = MTruncateBigIntToInt64::New(alloc, input);
+      ins->block()->insertBefore(ins, replace);
+      ins->replaceOperand(0, replace);
+      break;
+    }
+    // No need for boxing for these types, because they are handled specially
+    // when this instruction is lowered to LIR.
+    case MIRType::Boolean:
+    case MIRType::String:
+    case MIRType::Int64:
+    case MIRType::Value:
+      break;
+    default:
+      ins->replaceOperand(0, BoxAt(alloc, ins, ins->getOperand(0)));
+      break;
+  }
+
+  return true;
+}
+
 template <unsigned Op>
 bool ObjectPolicy<Op>::staticAdjustInputs(TempAllocator& alloc,
                                           MInstruction* ins) {
@@ -1152,6 +1181,7 @@ bool TypedArrayIndexPolicy::adjustInputs(TempAllocator& alloc,
   _(ToDoublePolicy)            \
   _(ToInt32Policy)             \
   _(ToStringPolicy)            \
+  _(ToInt64Policy)             \
   _(TypeBarrierPolicy)         \
   _(TypedArrayIndexPolicy)
 
