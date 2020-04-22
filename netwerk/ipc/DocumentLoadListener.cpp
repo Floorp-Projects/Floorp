@@ -905,6 +905,18 @@ void DocumentLoadListener::TriggerRedirectToRealChannel(
     newLoadFlags |= nsIChannel::LOAD_REPLACE;
   }
 
+  // INHIBIT_PERSISTENT_CACHING is clearing during http redirects (from
+  // both parent and content process channel instances), but only ever
+  // re-added to the parent-side nsHttpChannel.
+  // To match that behaviour, we want to explicitly avoid copying this flag
+  // back to our newly created content side channel, otherwise it can
+  // affect sub-resources loads in the same load group.
+  nsCOMPtr<nsIURI> uri;
+  mChannel->GetURI(getter_AddRefs(uri));
+  if (uri && uri->SchemeIs("https")) {
+    newLoadFlags &= ~nsIRequest::INHIBIT_PERSISTENT_CACHING;
+  }
+
   RefPtr<DocumentLoadListener> self = this;
   RedirectToRealChannel(redirectFlags, newLoadFlags, aDestinationProcess)
       ->Then(
