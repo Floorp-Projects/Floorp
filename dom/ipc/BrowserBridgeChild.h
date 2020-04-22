@@ -98,8 +98,6 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
   mozilla::ipc::IPCResult RecvSubFrameCrashed(
       const MaybeDiscarded<BrowsingContext>& aContext);
 
-  mozilla::ipc::IPCResult RecvAddBlockedNodeByClassifier();
-
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
