@@ -262,3 +262,10 @@ menulist > menupopup > menuseparator {
   border-top: 1px solid #000000;
   border-bottom: none;
 }
+
+/* align menupopup submenus */
+
+menupopup > menu > menupopup {
+  margin-inline-start: -3px;
+  margin-top: -3px;
+}

@@ -7,10 +7,6 @@
 // This is loaded into all XUL windows. Wrap in a block to prevent
 // leaking to window scope.
 {
-  const { AppConstants } = ChromeUtils.import(
-    "resource://gre/modules/AppConstants.jsm"
-  );
-
   class MozMenuPopup extends MozElements.MozElementMixin(XULPopupElement) {
     constructor() {
       super();
@@ -62,59 +58,19 @@
       // We generate shadow DOM lazily on popupshowing event to avoid extra load
       // on the system during browser startup.
       if (!super.shadowRoot.firstElementChild) {
-        super.shadowRoot.appendChild(this.fragment);
+        super.shadowRoot.appendChild(this.constructor.fragment);
         this.initShadowDOM();
       }
       return super.shadowRoot;
     }
 
-    get fragment() {
-      if (!this.constructor.hasOwnProperty("_fragment")) {
-        this.constructor._fragment = MozXULElement.parseXULToFragment(
-          this.markup
-        );
-      }
-      return document.importNode(this.constructor._fragment, true);
-    }
-
-    get markup() {
+    static get markup() {
       return `
-        <html:link rel="stylesheet" href="chrome://global/skin/global.css"/>
-        <html:style>${this.styles}</html:style>
-        <arrowscrollbox class="menupopup-arrowscrollbox"
-                        flex="1"
-                        orient="vertical"
-                        smoothscroll="false">
-          <html:slot></html:slot>
+        <html:link rel="stylesheet" href="chrome://global/skin/popup.css"/>
+        <arrowscrollbox flex="1" orient="vertical" smoothscroll="false">
+          <html:slot/>
         </arrowscrollbox>
       `;
-    }
-
-    get styles() {
-      let s = `
-        :host(.in-menulist) arrowscrollbox::part(scrollbutton-up),
-        :host(.in-menulist) arrowscrollbox::part(scrollbutton-down) {
-          display: none;
-        }
-        :host(.in-menulist) arrowscrollbox::part(scrollbox) {
-          overflow: auto;
-        }
-      `;
-
-      switch (AppConstants.platform) {
-        case "macosx":
-          s += `
-            :host(.in-menulist) arrowscrollbox {
-              padding: 0;
-            }
-          `;
-          break;
-
-        default:
-          break;
-      }
-
-      return s;
     }
 
     get scrollBox() {

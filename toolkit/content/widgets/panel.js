@@ -68,7 +68,12 @@
       }
 
       if (!this.isArrowPanel) {
-        this.shadowRoot.appendChild(document.createElement("slot"));
+        const stylesheet = document.createElement("link");
+        stylesheet.rel = "stylesheet";
+        stylesheet.href = "chrome://global/skin/popup.css";
+
+        const slot = document.createElement("slot");
+        this.shadowRoot.append(stylesheet, slot);
       } else {
         this.shadowRoot.appendChild(this.constructor.fragment);
       }
