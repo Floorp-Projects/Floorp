@@ -681,6 +681,21 @@ const POLICIES_TESTS = [
       "media.eme.enabled": false,
     },
   },
+
+  // POLICY: PDFjs
+
+  {
+    policies: {
+      PDFjs: {
+        Enabled: false,
+        EnablePermissions: true,
+      },
+    },
+    lockedPrefs: {
+      "pdfjs.disabled": true,
+      "pdfjs.enablePermissions": true,
+    },
+  },
 ];
 
 add_task(async function test_policy_simple_prefs() {

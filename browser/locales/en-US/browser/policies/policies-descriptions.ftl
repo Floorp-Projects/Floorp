@@ -144,6 +144,9 @@ policy-OverridePostUpdatePage = Override the post-update “What’s New” page
 
 policy-PasswordManagerEnabled = Enable saving passwords to the password manager.
 
+# PDF.js and PDF should not be translated
+policy-PDFjs = Disable or configure PDF.js, the built-in PDF viewer in { -brand-short-name }.
+
 policy-Permissions2 = Configure permissions for camera, microphone, location, notifications, and autoplay.
 
 policy-PopupBlocking = Allow certain websites to display popups by default.
