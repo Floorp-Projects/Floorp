@@ -33,7 +33,7 @@ import type {
   SymbolDeclaration,
   FunctionDeclaration,
 } from "../../workers/parser";
-import type { Source, Context, SourceLocation } from "../../types";
+import type { SourceWithContent, Context, SourceLocation } from "../../types";
 
 type OwnProps = {|
   alphabetizeOutline: boolean,
@@ -42,11 +42,11 @@ type OwnProps = {|
 type Props = {
   cx: Context,
   symbols: ?Symbols,
-  selectedSource: ?Source,
+  selectedSource: ?SourceWithContent,
   alphabetizeOutline: boolean,
   onAlphabetizeClick: Function,
-  cursorPosition: ?SourceLocation,
   getFunctionText: Function,
+  cursorPosition: ?SourceLocation,
   selectLocation: typeof actions.selectLocation,
   flashLineRange: typeof actions.flashLineRange,
 };
@@ -56,12 +56,13 @@ type State = {
   focusedItem: ?SymbolDeclaration,
 };
 
+// Set higher to make the fuzzaldrin filter more specific
+const FUZZALDRIN_FILTER_THRESHOLD = 15000;
+
 /**
  * Check whether the name argument matches the fuzzy filter argument
  */
 const filterOutlineItem = (name: string, filter: string) => {
-  // Set higher to make the fuzzaldrin filter more specific
-  const FUZZALDRIN_FILTER_THRESHOLD = 15000;
   if (!filter) {
     return true;
   }
@@ -75,10 +76,14 @@ const filterOutlineItem = (name: string, filter: string) => {
 
 // Checks if an element is visible inside its parent element
 function isVisible(element: HTMLLIElement, parent: HTMLElement) {
-  const parentTop = parent.getBoundingClientRect().top;
-  const parentBottom = parent.getBoundingClientRect().bottom;
-  const elTop = element.getBoundingClientRect().top;
-  const elBottom = element.getBoundingClientRect().bottom;
+  const parentRect = parent.getBoundingClientRect();
+  const elementRect = element.getBoundingClientRect();
+
+  const parentTop = parentRect.top;
+  const parentBottom = parentRect.bottom;
+  const elTop = elementRect.top;
+  const elBottom = elementRect.bottom;
+
   return parentTop < elTop && parentBottom > elBottom;
 }
 
@@ -92,18 +97,20 @@ export class Outline extends Component<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props) {
+    const { cursorPosition, symbols } = this.props;
     if (
-      this.props.cursorPosition &&
-      this.props.symbols &&
-      this.props.cursorPosition !== prevProps.cursorPosition
+      cursorPosition &&
+      symbols &&
+      cursorPosition !== prevProps.cursorPosition
     ) {
-      this.setFocus(this.props.cursorPosition);
+      this.setFocus(cursorPosition);
     }
 
-    if (this.focusedElRef) {
-      if (!isVisible(this.focusedElRef, this.refs.outlineList)) {
-        this.focusedElRef.scrollIntoView({ block: "center" });
-      }
+    if (
+      this.focusedElRef &&
+      !isVisible(this.focusedElRef, this.refs.outlineList)
+    ) {
+      this.focusedElRef.scrollIntoView({ block: "center" });
     }
   }
 
@@ -117,10 +124,9 @@ export class Outline extends Component<Props, State> {
     }
 
     // Find items that enclose the selected location
-    const enclosedItems = [...functions, ...classes].filter(
-      item =>
-        item.name != "anonymous" &&
-        containsPosition(item.location, cursorPosition)
+    const enclosedItems = [...classes, ...functions].filter(
+      ({ name, location }) =>
+        name != "anonymous" && containsPosition(location, cursorPosition)
     );
 
     if (enclosedItems.length == 0) {
@@ -154,10 +160,7 @@ export class Outline extends Component<Props, State> {
     event.stopPropagation();
     event.preventDefault();
 
-    const { selectedSource, getFunctionText, flashLineRange } = this.props;
-
-    const copyFunctionKey = L10N.getStr("copyFunction.accesskey");
-    const copyFunctionLabel = L10N.getStr("copyFunction.label");
+    const { selectedSource, flashLineRange, getFunctionText } = this.props;
 
     if (!selectedSource) {
       return;
@@ -168,12 +171,12 @@ export class Outline extends Component<Props, State> {
 
     const copyFunctionItem = {
       id: "node-menu-copy-function",
-      label: copyFunctionLabel,
-      accesskey: copyFunctionKey,
+      label: L10N.getStr("copyFunction.label"),
+      accesskey: L10N.getStr("copyFunction.accesskey"),
       disabled: !functionText,
       click: () => {
         flashLineRange({
-          start: func.location.start.line,
+          start: sourceLine,
           end: func.location.end.line,
           sourceId: selectedSource.id,
         });
@@ -275,21 +278,19 @@ export class Outline extends Component<Props, State> {
 
   renderFunctions(functions: Array<FunctionDeclaration>) {
     const { filter } = this.state;
-    let classes = uniq(functions.map(func => func.klass));
+    let classes = uniq(functions.map(({ klass }) => klass));
     let namedFunctions = functions.filter(
-      func =>
-        filterOutlineItem(func.name, filter) &&
-        !func.klass &&
-        !classes.includes(func.name)
+      ({ name, klass }) =>
+        filterOutlineItem(name, filter) && !klass && !classes.includes(name)
     );
 
     let classFunctions = functions.filter(
-      func => filterOutlineItem(func.name, filter) && !!func.klass
+      ({ name, klass }) => filterOutlineItem(name, filter) && !!klass
     );
 
     if (this.props.alphabetizeOutline) {
       namedFunctions = sortBy(namedFunctions, "name");
-      classes = sortBy(classes, "klass");
+      classes = classes.sort();
       classFunctions = sortBy(classFunctions, "name");
     }
 
@@ -331,7 +332,7 @@ export class Outline extends Component<Props, State> {
     }
 
     const symbolsToDisplay = symbols.functions.filter(
-      func => func.name != "anonymous"
+      ({ name }) => name != "anonymous"
     );
 
     if (symbolsToDisplay.length === 0) {
@@ -357,7 +358,7 @@ const mapStateToProps = state => {
   return {
     cx: getContext(state),
     symbols,
-    selectedSource: (selectedSource: ?Source),
+    selectedSource: (selectedSource: ?SourceWithContent),
     cursorPosition: getCursorPosition(state),
     getFunctionText: line => {
       if (selectedSource) {
