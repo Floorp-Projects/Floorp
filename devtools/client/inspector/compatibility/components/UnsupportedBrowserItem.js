@@ -4,42 +4,18 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const Types = require("devtools/client/inspector/compatibility/types");
+const BrowserIcon = createFactory(
+  require("devtools/client/inspector/compatibility/components/BrowserIcon")
+);
 
-const ICONS = {
-  firefox: {
-    src: "chrome://devtools/skin/images/browsers/firefox.svg",
-    isMobileIconNeeded: false,
-  },
-  firefox_android: {
-    src: "chrome://devtools/skin/images/browsers/firefox.svg",
-    isMobileIconNeeded: true,
-  },
-  chrome: {
-    src: "chrome://devtools/skin/images/browsers/chrome.svg",
-    isMobileIconNeeded: false,
-  },
-  chrome_android: {
-    src: "chrome://devtools/skin/images/browsers/chrome.svg",
-    isMobileIconNeeded: true,
-  },
-  safari: {
-    src: "chrome://devtools/skin/images/browsers/safari.svg",
-    isMobileIconNeeded: false,
-  },
-  safari_ios: {
-    src: "chrome://devtools/skin/images/browsers/safari.svg",
-    isMobileIconNeeded: true,
-  },
-  edge: {
-    src: "chrome://devtools/skin/images/browsers/edge.svg",
-    isMobileIconNeeded: false,
-  },
-};
+const Types = require("devtools/client/inspector/compatibility/types");
 
 class UnsupportedBrowserItem extends PureComponent {
   static get propTypes() {
@@ -63,23 +39,7 @@ class UnsupportedBrowserItem extends PureComponent {
       .join(", ");
     const title = `${name} ${versionsTitle}`;
 
-    const icon = ICONS[id];
-
-    return dom.li(
-      {
-        className:
-          "compatibility-unsupported-browser-item" +
-          (icon.isMobileIconNeeded
-            ? " compatibility-unsupported-browser-item--mobile"
-            : ""),
-      },
-      dom.img({
-        className: "compatibility-unsupported-browser-item__icon",
-        alt: title,
-        title,
-        src: icon.src,
-      })
-    );
+    return dom.li({}, BrowserIcon({ id, name, title }));
   }
 }
 
