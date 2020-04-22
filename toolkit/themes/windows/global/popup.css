@@ -4,7 +4,10 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-:host {
+/* ::::: menupopup ::::: */
+
+menupopup,
+panel:not([type="arrow"]) {
   border: 1px solid ThreeDShadow;
   padding: 0;
   min-width: 1px;
@@ -12,23 +15,20 @@
   color: MenuText;
 }
 
-:host(menupopup) {
+menupopup {
   -moz-appearance: menupopup;
+}
+
+menupopup > menu > menupopup {
+ /* align submenus */
+  margin-inline-start: -3px;
+  margin-top: -3px;
 }
 
 /* rules for popups associated with menulists */
 
-:host(.in-menulist) {
+menulist > menupopup {
   -moz-appearance: none;
   min-width: 0;
   background-color: -moz-Field;
-}
-
-:host(.in-menulist) arrowscrollbox::part(scrollbutton-up),
-:host(.in-menulist) arrowscrollbox::part(scrollbutton-down) {
-  display: none;
-}
-
-:host(.in-menulist) arrowscrollbox::part(scrollbox) {
-  overflow: auto;
 }
