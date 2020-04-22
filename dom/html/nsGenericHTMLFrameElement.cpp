@@ -121,7 +121,7 @@ Nullable<WindowProxyHolder> nsGenericHTMLFrameElement::GetContentWindow() {
 }
 
 void nsGenericHTMLFrameElement::EnsureFrameLoader() {
-  if (!IsInComposedDoc() || mFrameLoader || OwnerDoc()->IsStaticDocument()) {
+  if (!IsInComposedDoc() || mFrameLoader) {
     // If frame loader is there, we just keep it around, cached
     return;
   }
@@ -320,7 +320,10 @@ nsresult nsGenericHTMLFrameElement::CopyInnerTo(Element* aDest) {
   if (doc->IsStaticDocument() && mFrameLoader) {
     nsGenericHTMLFrameElement* dest =
         static_cast<nsGenericHTMLFrameElement*>(aDest);
-    doc->AddPendingFrameStaticClone(dest, mFrameLoader);
+    RefPtr<nsFrameLoader> fl = nsFrameLoader::Create(dest, false);
+    NS_ENSURE_STATE(fl);
+    dest->mFrameLoader = fl;
+    mFrameLoader->CreateStaticClone(fl);
   }
 
   return rv;
