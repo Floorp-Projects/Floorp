@@ -13,7 +13,6 @@ MOCHITEST_MANIFESTS += [
 ]
 
 DIRS += [
-    'ffi',
 ]
 
 h_and_cpp = [

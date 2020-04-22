@@ -1742,7 +1742,7 @@ dependencies = [
  "unic-langid",
  "unic-langid-ffi",
  "webrender_bindings",
- "wgpu-remote",
+ "wgpu_bindings",
  "xpcom",
  "xulstore",
 ]
@@ -5086,22 +5086,22 @@ dependencies = [
 ]
 
 [[package]]
-name = "wgpu-remote"
-version = "0.1.0"
-dependencies = [
- "log",
- "parking_lot",
- "wgpu-core",
- "wgpu-types",
-]
-
-[[package]]
 name = "wgpu-types"
 version = "0.5.0"
 dependencies = [
  "bitflags",
  "peek-poke 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
+]
+
+[[package]]
+name = "wgpu_bindings"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "parking_lot",
+ "wgpu-core",
+ "wgpu-types",
 ]
 
 [[package]]

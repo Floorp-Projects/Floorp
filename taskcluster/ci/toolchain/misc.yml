@@ -201,8 +201,6 @@ wgpu-deps:
     run:
         script: wgpu-deps-vendoring.sh
         sparse-profile: null
-        resources:
-            - 'gfx/wgpu/Cargo.lock'
         toolchain-artifact: public/build/wgpu-deps.tar.bz2
     fetches:
         fetch:
