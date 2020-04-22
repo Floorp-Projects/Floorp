@@ -1383,7 +1383,7 @@ class UrlbarView {
       if (
         result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
         (!result.heuristic &&
-          !result.payload.suggestion &&
+          (!result.payload.suggestion || result.payload.isSearchHistory) &&
           (!result.payload.inPrivateWindow || result.payload.isPrivateEngine))
       ) {
         continue;

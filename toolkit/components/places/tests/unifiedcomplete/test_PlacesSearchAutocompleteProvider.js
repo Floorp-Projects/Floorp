@@ -163,7 +163,7 @@ add_task(async function test_parseSubmissionURL_basic() {
   let result = PlacesSearchAutocompleteProvider.parseSubmissionURL(
     submissionURL
   );
-  Assert.equal(result.engineName, engine.name);
+  Assert.equal(result.engine.name, engine.name);
   Assert.equal(result.terms, "terms");
 
   result = PlacesSearchAutocompleteProvider.parseSubmissionURL(
