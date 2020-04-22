@@ -181,7 +181,7 @@ pub fn build_shader_prefix_string<F: FnMut(&str)>(
     for (i, feature) in features.iter().enumerate() {
         output(feature);
         if i != features.len() - 1 {
-            output("_");
+            output(",");
         }
     }
     output("\n");
