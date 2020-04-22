@@ -2918,8 +2918,7 @@ void nsGlobalWindowInner::GetOwnPropertyNames(
 }
 
 /* static */
-bool nsGlobalWindowInner::IsPrivilegedChromeWindow(JSContext* aCx,
-                                                   JSObject* aObj) {
+bool nsGlobalWindowInner::IsPrivilegedChromeWindow(JSContext*, JSObject* aObj) {
   // For now, have to deal with XPConnect objects here.
   nsGlobalWindowInner* win = xpc::WindowOrNull(aObj);
   return win && win->IsChromeWindow() &&
@@ -2929,15 +2928,21 @@ bool nsGlobalWindowInner::IsPrivilegedChromeWindow(JSContext* aCx,
 
 /* static */
 bool nsGlobalWindowInner::IsRequestIdleCallbackEnabled(JSContext* aCx,
-                                                       JSObject* aObj) {
+                                                       JSObject*) {
   // The requestIdleCallback should always be enabled for system code.
   return StaticPrefs::dom_requestIdleCallback_enabled() ||
          nsContentUtils::IsSystemCaller(aCx);
 }
 
 /* static */
-bool nsGlobalWindowInner::DeviceSensorsEnabled(JSContext* aCx, JSObject* aObj) {
+bool nsGlobalWindowInner::DeviceSensorsEnabled(JSContext*, JSObject*) {
   return Preferences::GetBool("device.sensors.enabled");
+}
+
+/* static */
+bool nsGlobalWindowInner::ContentPropertyEnabled(JSContext* aCx, JSObject*) {
+  return StaticPrefs::dom_window_content_untrusted_enabled() ||
+         nsContentUtils::IsSystemCaller(aCx);
 }
 
 nsDOMOfflineResourceList* nsGlobalWindowInner::GetApplicationCache(

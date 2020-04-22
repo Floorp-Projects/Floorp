@@ -386,12 +386,13 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> IndexedGetter(
       uint32_t aIndex);
 
-  static bool IsPrivilegedChromeWindow(JSContext* /* unused */, JSObject* aObj);
+  static bool IsPrivilegedChromeWindow(JSContext*, JSObject* aObj);
 
-  static bool IsRequestIdleCallbackEnabled(JSContext* aCx,
-                                           JSObject* /* unused */);
+  static bool IsRequestIdleCallbackEnabled(JSContext* aCx, JSObject*);
 
-  static bool DeviceSensorsEnabled(JSContext* /* unused */, JSObject* aObj);
+  static bool DeviceSensorsEnabled(JSContext*, JSObject*);
+
+  static bool ContentPropertyEnabled(JSContext* aCx, JSObject*);
 
   bool DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
                  JS::Handle<jsid> aId,
