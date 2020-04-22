@@ -1299,6 +1299,9 @@ class nsIFrame : public nsQueryFrame {
    * as of the most recent reflow.
    *
    * This doesn't include any margin collapsing that may have occurred.
+   * It also doesn't consider GetSkipSides()/GetLogicalSkipSides(), so
+   * may report nonzero values on sides that are actually skipped for
+   * this fragment.
    *
    * It also treats 'auto' margins as zero, and treats any margins that
    * should have been turned into 'auto' because of overconstraint as
@@ -1314,6 +1317,10 @@ class nsIFrame : public nsQueryFrame {
    * Return the distance between the border edge of the frame (which is
    * its rect) and the padding edge of the frame. Like GetRect(), returns
    * the dimensions as of the most recent reflow.
+   *
+   * This doesn't consider GetSkipSides()/GetLogicalSkipSides(), so
+   * may report nonzero values on sides that are actually skipped for
+   * this fragment.
    *
    * Note that this differs from StyleBorder()->GetComputedBorder() in
    * that this describes a region of the frame's box, and
@@ -1331,6 +1338,10 @@ class nsIFrame : public nsQueryFrame {
    * Return the distance between the padding edge of the frame and the
    * content edge of the frame.  Like GetRect(), returns the dimensions
    * as of the most recent reflow.
+   *
+   * This doesn't consider GetSkipSides()/GetLogicalSkipSides(), so
+   * may report nonzero values on sides that are actually skipped for
+   * this fragment.
    */
   virtual nsMargin GetUsedPadding() const;
   virtual mozilla::LogicalMargin GetLogicalUsedPadding(
