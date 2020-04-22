@@ -148,7 +148,7 @@ typedef ScrollableLayerGuid::ViewID ViewID;
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsFrameLoader, mPendingBrowsingContext,
                                       mMessageManager, mChildMessageManager,
-                                      mRemoteBrowser, mStaticCloneOf)
+                                      mRemoteBrowser)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameLoader)
 
@@ -2719,48 +2719,51 @@ void nsFrameLoader::ActivateFrameEvent(const nsAString& aType, bool aCapture,
   }
 }
 
-nsresult nsFrameLoader::CreateStaticClone(nsFrameLoader* aDest) {
-  if (NS_WARN_IF(IsRemoteFrame())) {
+nsresult nsFrameLoader::FinishStaticClone(nsFrameLoader* aStaticCloneOf,
+                                          nsIDocShell** aCloneDocShell,
+                                          Document** aCloneDocument) {
+  MOZ_DIAGNOSTIC_ASSERT(
+      !nsContentUtils::IsSafeToRunScript(),
+      "A script blocker should be on the stack while FinishStaticClone is run");
+
+  // NOTE: We don't check `aStaticCloneOf->IsDead()` here, as the nsFrameLoader
+  // which we're a static clone of may be in the process of being destroyed. It
+  // won't be fully destroyed when `FinishStaticClone` is called, as a script
+  // blocker on our caller's stack is preventing it from becoming finalized.
+  //
+  // This is quite fragile, but is quite difficult to work around without
+  // getting print-preview to stop re-cloning and replacing the previewed
+  // document when changing layout.
+  if (NS_WARN_IF(IsDead())) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  if (NS_WARN_IF(aStaticCloneOf->IsRemoteFrame())) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  aDest->mPendingBrowsingContext->EnsureAttached();
-
-  // Ensure that the embedder element is set correctly.
-  aDest->mPendingBrowsingContext->SetEmbedderElement(aDest->mOwnerContent);
-  aDest->mPendingBrowsingContext->Embed();
-  aDest->mStaticCloneOf = this;
-  return NS_OK;
-}
-
-nsresult nsFrameLoader::FinishStaticClone() {
-  // After cloning is complete, discard the reference to the original
-  // nsFrameLoader, as it is no longer needed.
-  auto exitGuard = MakeScopeExit([&] { mStaticCloneOf = nullptr; });
-
-  if (NS_WARN_IF(!mStaticCloneOf || IsDead())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   MaybeCreateDocShell();
-  NS_ENSURE_STATE(GetDocShell());
+  RefPtr<nsDocShell> docShell = GetDocShell();
+  NS_ENSURE_STATE(docShell);
 
-  nsCOMPtr<Document> kungFuDeathGrip = GetDocShell()->GetDocument();
+  nsCOMPtr<Document> kungFuDeathGrip = docShell->GetDocument();
   Unused << kungFuDeathGrip;
 
   nsCOMPtr<nsIContentViewer> viewer;
-  GetDocShell()->GetContentViewer(getter_AddRefs(viewer));
+  docShell->GetContentViewer(getter_AddRefs(viewer));
   NS_ENSURE_STATE(viewer);
 
-  nsIDocShell* origDocShell = mStaticCloneOf->GetDocShell(IgnoreErrors());
+  nsIDocShell* origDocShell = aStaticCloneOf->GetDocShell(IgnoreErrors());
   NS_ENSURE_STATE(origDocShell);
 
   nsCOMPtr<Document> doc = origDocShell->GetDocument();
   NS_ENSURE_STATE(doc);
 
-  nsCOMPtr<Document> clonedDoc = doc->CreateStaticClone(GetDocShell());
+  nsCOMPtr<Document> clonedDoc = doc->CreateStaticClone(docShell);
 
   viewer->SetDocument(clonedDoc);
+
+  docShell.forget(aCloneDocShell);
+  clonedDoc.forget(aCloneDocument);
   return NS_OK;
 }
 
