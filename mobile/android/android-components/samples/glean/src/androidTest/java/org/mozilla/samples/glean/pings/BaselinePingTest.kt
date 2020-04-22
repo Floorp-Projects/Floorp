@@ -14,33 +14,49 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.samples.glean.MainActivity
-import org.mozilla.samples.glean.getPingServer
 import androidx.test.uiautomator.UiDevice
 import mozilla.components.service.glean.testing.GleanTestLocalServer
+import okhttp3.mockwebserver.Dispatcher
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.RecordedRequest
 import org.json.JSONObject
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.mozilla.samples.glean.getPingServerPort
 import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
 class BaselinePingTest {
+    private val server = createMockWebServer()
+
     @get:Rule
     val activityRule: ActivityTestRule<MainActivity> = ActivityTestRule(MainActivity::class.java)
 
     @get:Rule
-    val gleanRule = GleanTestLocalServer(context, getPingServerPort())
+    val gleanRule = GleanTestLocalServer(context, server.port)
 
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()
+
+    /**
+     * Create a mock webserver that accepts all requests and replies with "OK".
+     * @return a [MockWebServer] instance
+     */
+    private fun createMockWebServer(): MockWebServer {
+        val server = MockWebServer()
+        server.setDispatcher(object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                return MockResponse().setBody("OK")
+            }
+        })
+        return server
+    }
 
     private fun waitForPingContent(
         pingName: String,
         maxAttempts: Int = 3
     ): JSONObject?
     {
-        val server = getPingServer()
-
         var attempts = 0
         do {
             attempts += 1
