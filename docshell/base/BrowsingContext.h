@@ -286,10 +286,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool IsContentSubframe() const { return IsContent() && GetParent(); }
   uint64_t Id() const { return mBrowsingContextId; }
 
-  BrowsingContext* GetParent() const {
-    MOZ_ASSERT_IF(mParent, mParent->mType == mType);
-    return mParent;
-  }
+  BrowsingContext* GetParent() const;
   BrowsingContext* Top();
 
   // NOTE: Unlike `GetEmbedderWindowGlobal`, `GetParentWindow` does not cross
@@ -716,10 +713,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   RefPtr<BrowsingContextGroup> mGroup;
   RefPtr<WindowContext> mParentWindow;
-  // NOTE: `mParent` must be the same as `mParentWindow->GetBrowsingContext()`
-  // at all times.
-  // FIXME: Consider removing this field?
-  RefPtr<BrowsingContext> mParent;
   nsCOMPtr<nsIDocShell> mDocShell;
 
   RefPtr<Element> mEmbedderElement;
