@@ -10,6 +10,7 @@ use api::{FontInstanceData, FontInstanceOptions, FontInstancePlatformOptions, Fo
 use api::{DirtyRect, GlyphDimensions, IdNamespace, DEFAULT_TILE_SIZE};
 use api::{ImageData, ImageDescriptor, ImageKey, ImageRendering, TileSize};
 use api::{BlobImageData, BlobImageKey, MemoryReport, VoidPtrToSizeFn};
+use api::{SharedFontInstanceMap, BaseFontInstance};
 use api::units::*;
 #[cfg(feature = "capture")]
 use crate::capture::ExternalCaptureImage;
@@ -22,7 +23,7 @@ use crate::device::TextureFilter;
 use euclid::{point2, size2};
 use crate::glyph_cache::GlyphCache;
 use crate::glyph_cache::GlyphCacheEntry;
-use crate::glyph_rasterizer::{GLYPH_FLASHING, BaseFontInstance, FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
+use crate::glyph_rasterizer::{GLYPH_FLASHING, FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::UvRectKind;
 use crate::image::{compute_tile_size, compute_tile_rect, compute_tile_range, for_each_tile_in_range};
@@ -37,13 +38,15 @@ use smallvec::SmallVec;
 use std::collections::hash_map::Entry::{self, Occupied, Vacant};
 use std::collections::hash_map::{Iter, IterMut};
 use std::collections::VecDeque;
+#[cfg(any(feature = "capture", feature = "replay"))]
+use std::collections::HashMap;
 use std::{cmp, mem};
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::os::raw::c_void;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use std::path::PathBuf;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::SystemTime;
 use std::u32;
@@ -405,12 +408,11 @@ impl ImageResult {
 }
 
 type ImageCache = ResourceClassCache<ImageKey, ImageResult, ()>;
-pub type FontInstanceMap = Arc<RwLock<FastHashMap<FontInstanceKey, Arc<BaseFontInstance>>>>;
 
 #[derive(Default)]
 struct Resources {
     font_templates: FastHashMap<FontKey, FontTemplate>,
-    font_instances: FontInstanceMap,
+    font_instances: SharedFontInstanceMap,
     image_templates: ImageTemplates,
 }
 
@@ -419,21 +421,7 @@ impl BlobImageResources for Resources {
         self.font_templates.get(&key).unwrap()
     }
     fn get_font_instance_data(&self, key: FontInstanceKey) -> Option<FontInstanceData> {
-        match self.font_instances.read().unwrap().get(&key) {
-            Some(instance) => Some(FontInstanceData {
-                font_key: instance.font_key,
-                size: instance.size,
-                options: Some(FontInstanceOptions {
-                  render_mode: instance.render_mode,
-                  flags: instance.flags,
-                  bg_color: instance.bg_color,
-                  synthetic_italics: instance.synthetic_italics,
-                }),
-                platform_options: instance.platform_options,
-                variations: instance.variations.clone(),
-            }),
-            None => None,
-        }
+        self.font_instances.get_font_instance_data(key)
     }
 }
 
@@ -780,47 +768,30 @@ impl ResourceCache {
         platform_options: Option<FontInstancePlatformOptions>,
         variations: Vec<FontVariation>,
     ) {
-        let FontInstanceOptions {
-            render_mode,
-            flags,
-            bg_color,
-            synthetic_italics,
-            ..
-        } = options.unwrap_or_default();
-        let instance = Arc::new(BaseFontInstance {
+        self.resources.font_instances.add_font_instance(
             instance_key,
             font_key,
             size,
-            bg_color,
-            render_mode,
-            flags,
-            synthetic_italics,
+            options,
             platform_options,
             variations,
-        });
-        self.resources.font_instances
-            .write()
-            .unwrap()
-            .insert(instance_key, instance);
+        );
     }
 
     pub fn delete_font_instance(&mut self, instance_key: FontInstanceKey) {
-        self.resources.font_instances
-            .write()
-            .unwrap()
-            .remove(&instance_key);
+        self.resources.font_instances.delete_font_instance(instance_key);
+
         if let Some(ref mut r) = self.blob_image_handler {
             r.delete_font_instance(instance_key);
         }
     }
 
-    pub fn get_font_instances(&self) -> FontInstanceMap {
+    pub fn get_font_instances(&self) -> SharedFontInstanceMap {
         self.resources.font_instances.clone()
     }
 
     pub fn get_font_instance(&self, instance_key: FontInstanceKey) -> Option<Arc<BaseFontInstance>> {
-        let instance_map = self.resources.font_instances.read().unwrap();
-        instance_map.get(&instance_key).map(|instance| { Arc::clone(instance) })
+        self.resources.font_instances.get_font_instance(instance_key)
     }
 
     pub fn add_image_template(
@@ -1676,10 +1647,8 @@ impl ResourceCache {
     pub fn clear_namespace(&mut self, namespace: IdNamespace) {
         self.clear_images(|k| k.0 == namespace);
 
-        self.resources.font_instances
-            .write()
-            .unwrap()
-            .retain(|key, _| key.0 != namespace);
+        self.resources.font_instances.clear_namespace(namespace);
+
         for &key in self.resources.font_templates.keys().filter(|key| key.0 == namespace) {
             self.glyph_rasterizer.delete_font(key);
         }
@@ -1792,7 +1761,7 @@ struct PlainImageTemplate {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PlainResources {
     font_templates: FastHashMap<FontKey, PlainFontTemplate>,
-    font_instances: FastHashMap<FontInstanceKey, Arc<BaseFontInstance>>,
+    font_instances: HashMap<FontInstanceKey, Arc<BaseFontInstance>>,
     image_templates: FastHashMap<ImageKey, PlainImageTemplate>,
 }
 
@@ -1981,7 +1950,7 @@ impl ResourceCache {
                     })
                 })
                 .collect(),
-            font_instances: res.font_instances.read().unwrap().clone(),
+            font_instances: res.font_instances.clone_map(),
             image_templates: res.image_templates.images
                 .iter()
                 .map(|(key, template)| {
@@ -2056,7 +2025,7 @@ impl ResourceCache {
         self.glyph_rasterizer.reset();
         let res = &mut self.resources;
         res.font_templates.clear();
-        *res.font_instances.write().unwrap() = resources.font_instances;
+        res.font_instances.set(resources.font_instances);
         res.image_templates.images.clear();
 
         info!("\tfont templates...");
