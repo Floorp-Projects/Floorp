@@ -14,9 +14,10 @@ HERE = os.path.dirname(__file__)
 
 class Profile(Layer):
     name = "profile"
+    activated = True
     arguments = {
-        "--profile-directory": {"type": str, "default": None, "help": "Profile to use"},
-        "--profile-user-js": {"type": str, "default": None, "help": "Custom user.js"},
+        "directory": {"type": str, "default": None, "help": "Profile to use"},
+        "user-js": {"type": str, "default": None, "help": "Custom user.js"},
     }
 
     def __init__(self, env, mach_cmd):
@@ -30,7 +31,7 @@ class Profile(Layer):
         pass
 
     def __call__(self, metadata):
-        if self.get_arg("profile-directory") is not None:
+        if self.get_arg("directory") is not None:
             # no need to create one or load a conditioned one
             return
 
@@ -48,7 +49,7 @@ class Profile(Layer):
             prefs["mozperftest"] = "true"
 
         # apply custom user prefs if any
-        user_js = self.get_arg("profile-user-js")
+        user_js = self.get_arg("user-js")
         if user_js is not None:
             self.info("Applying use prefs from %s" % user_js)
             default_prefs = dict(Preferences.read_prefs(user_js))

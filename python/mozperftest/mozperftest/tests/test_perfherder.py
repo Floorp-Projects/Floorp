@@ -10,7 +10,9 @@ HERE = os.path.dirname(__file__)
 
 
 def test_metrics():
-    mach_cmd, metadata, env = get_running_env()
+    options = {"perfherder": True, "perfherder-prefix": ""}
+
+    mach_cmd, metadata, env = get_running_env(**options)
     runs = []
 
     def _run_process(*args, **kw):
@@ -19,11 +21,6 @@ def test_metrics():
     mach_cmd.run_process = _run_process
     metrics = env.layers[METRICS]
     env.set_arg("tests", [os.path.join(HERE, "example.js")])
-
-    # XXX why do I have to set defaults?
-    env.set_arg("prefix", "")
-    env.set_arg("perfherder", True)
-
     metadata.set_result(os.path.join(HERE, "browsertime-results"))
 
     with temp_file() as output:

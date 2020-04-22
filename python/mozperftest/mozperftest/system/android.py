@@ -13,18 +13,19 @@ class DeviceError(Exception):
 
 
 class AndroidDevice(Layer):
+    """Use an android device via ADB
+    """
+
     name = "android"
+    # always activated, since we might
+    # decide to use the phone depending on the binary
+    activated = True
 
     arguments = {
-        "--android": {
-            "action": "store_true",
-            "default": False,
-            "help": "Use an android device via ADB",
-        },
-        "--android-intent": {"type": str, "default": None, "help": "Intent to use"},
-        "--android-app-name": {"type": str, "default": None, "help": "App name"},
-        "--android-activity": {"type": str, "default": None, "help": "Activity to use"},
-        "--android-install-apk": {
+        "intent": {"type": str, "default": None, "help": "Intent to use"},
+        "app-name": {"type": str, "default": None, "help": "App name"},
+        "activity": {"type": str, "default": None, "help": "Activity to use"},
+        "install-apk": {
             "nargs": "*",
             "default": [],
             "help": "APK to install to the device",

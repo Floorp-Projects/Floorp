@@ -11,20 +11,19 @@ from mozperftest.metrics.utils import write_json, filter_metrics
 
 
 class Perfherder(Layer):
+    """Output data in the perfherder format.
+    """
+
     name = "perfherder"
+    activated = False
 
     arguments = {
-        "--perfherder": {
-            "action": "store_true",
-            "default": False,
-            "help": "Output data in the perfherder format.",
-        },
-        "--perfherder-prefix": {
+        "prefix": {
             "type": str,
             "default": "",
             "help": "Prefix the output files with this string.",
         },
-        "--perfherder-metrics": {
+        "metrics": {
             "nargs": "*",
             "default": [],
             "help": "The metrics that should be retrieved from the data.",
@@ -46,10 +45,6 @@ class Perfherder(Layer):
             into a perfherder-data blob.
         :param flavor str: The flavor that is being processed.
         """
-
-        if not self.get_arg("perfherder"):
-            return
-
         # Get the common requirements for metrics (i.e. output path,
         # results to process)
         cm = CommonMetricsSingleton(
