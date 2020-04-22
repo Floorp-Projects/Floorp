@@ -556,7 +556,7 @@ fuzzy-if(skiaContent,0-2,0-4) == 362594-2c.html 362594-2-standards-ref.html
 == 363728-2.html 363728-2-ref.html
 fuzzy-if(skiaContent||Android,0-4,0-11) == 363858-1.html 363858-1-ref.html
 == 363858-2.html 363858-2-ref.html
-== 363858-3.html 363858-3-ref.html
+fuzzy-if(Android,0-1,0-4) == 363858-3.html 363858-3-ref.html
 == 363858-4.html 363858-4-ref.html
 # fuzzy-if(OSX,0-45,0-2) fuzzy-if(winWidget,0-116,0-1) == 363858-5a.html 363858-5-ref.html # bug 1452797
 fuzzy-if(Android,0-1,0-4) == 363858-5b.html 363858-5-ref.html
