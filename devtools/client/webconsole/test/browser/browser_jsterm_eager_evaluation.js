@@ -224,6 +224,12 @@ add_task(async function() {
   setInputValue(hud, "[] instanceof Array");
   await waitForEagerEvaluationResult(hud, "true");
 
+  setInputValue(hud, "Int8Array.from({length: 1})[0]");
+  await waitForEagerEvaluationResult(hud, "0");
+
+  setInputValue(hud, "Float64Array.of(1)[0]");
+  await waitForEagerEvaluationResult(hud, "1");
+
   // go back to inline layout.
   await toggleLayout(hud);
 });
