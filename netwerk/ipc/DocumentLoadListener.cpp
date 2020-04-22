@@ -6,44 +6,36 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DocumentLoadListener.h"
+
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/ContentBlockingAllowList.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/MozPromiseInlines.h"  // For MozPromise::FromDomPromise
+#include "mozilla/StaticPrefs_security.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ClientChannelHelper.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentProcessManager.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/ipc/IdType.h"
-#include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/net/RedirectChannelRegistrar.h"
+#include "mozilla/net/UrlClassifierCommon.h"
+#include "nsContentSecurityUtils.h"
 #include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
-#include "nsContentSecurityUtils.h"
-#include "nsHttpChannel.h"
-#include "nsISecureBrowserUI.h"
-#include "nsRedirectHistoryEntry.h"
-#include "nsSerializationHelper.h"
-#include "nsIPrompt.h"
-#include "nsIWindowWatcher.h"
-#include "nsIURIContentListener.h"
-#include "nsWebNavigationInfo.h"
-#include "nsURILoader.h"
-#include "nsIStreamConverterService.h"
 #include "nsExternalHelperAppService.h"
-#include "nsCExternalHandlerService.h"
-#include "nsMimeTypes.h"
-#include "nsIViewSourceChannel.h"
-#include "nsIOService.h"
-#include "mozilla/dom/WindowGlobalParent.h"
-#include "mozilla/StaticPrefs_security.h"
-#include "nsICookieService.h"
+#include "nsHttpChannel.h"
 #include "nsIBrowser.h"
 #include "nsIE10SUtils.h"
+#include "nsIStreamConverterService.h"
+#include "nsIViewSourceChannel.h"
 #include "nsImportModule.h"
+#include "nsMimeTypes.h"
+#include "nsRedirectHistoryEntry.h"
+#include "nsURILoader.h"
+#include "nsWebNavigationInfo.h"
 
 #ifdef ANDROID
 #  include "mozilla/widget/nsWindow.h"
@@ -248,11 +240,10 @@ NS_INTERFACE_MAP_END
 DocumentLoadListener::DocumentLoadListener(
     CanonicalBrowsingContext* aBrowsingContext, nsILoadContext* aLoadContext,
     ADocumentChannelBridge* aBridge)
-    : mLoadContext(aLoadContext) {
+    : mDocumentChannelBridge(aBridge), mLoadContext(aLoadContext) {
   LOG(("DocumentLoadListener ctor [this=%p]", this));
   mParentChannelListener = new ParentChannelListener(
       this, aBrowsingContext, aLoadContext->UsePrivateBrowsing());
-  mDocumentChannelBridge = aBridge;
 }
 
 DocumentLoadListener::~DocumentLoadListener() {
@@ -440,8 +431,8 @@ bool DocumentLoadListener::Open(
   // OnStart/StopRequest with itself. We don't need this, and instead
   // we want the original request so that we get different ones for
   // each part of a multipart channel.
-  if (nsCOMPtr<nsIViewSourceChannel> viewSourceChannel =
-          do_QueryInterface(mChannel)) {
+  nsCOMPtr<nsIViewSourceChannel> viewSourceChannel;
+  if (OtherPid() && (viewSourceChannel = do_QueryInterface(mChannel))) {
     viewSourceChannel->SetReplaceRequest(false);
   }
 
@@ -570,6 +561,11 @@ void DocumentLoadListener::RedirectToRealChannelFinished(nsresult aRv) {
     return;
   }
 
+  if (!mRedirectChannelId) {
+    FinishReplacementChannelSetup(true);
+    return;
+  }
+
   // Wait for background channel ready on target channel
   nsCOMPtr<nsIRedirectChannelRegistrar> redirectReg =
       RedirectChannelRegistrar::GetOrCreate();
@@ -608,42 +604,48 @@ void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
       ("DocumentLoadListener FinishReplacementChannelSetup [this=%p, "
        "aSucceeded=%d]",
        this, aSucceeded));
-  nsresult rv;
 
   if (mDoingProcessSwitch) {
     DisconnectChildListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED);
   }
 
-  nsCOMPtr<nsIParentChannel> redirectChannel;
-  if (mRedirectChannelId) {
-    nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
-        RedirectChannelRegistrar::GetOrCreate();
-    MOZ_ASSERT(registrar);
-
-    rv = registrar->GetParentChannel(mRedirectChannelId,
-                                     getter_AddRefs(redirectChannel));
-    if (NS_FAILED(rv) || !redirectChannel) {
-      // Redirect might get canceled before we got AsyncOnChannelRedirect
-      nsCOMPtr<nsIChannel> newChannel;
-      rv = registrar->GetRegisteredChannel(mRedirectChannelId,
-                                           getter_AddRefs(newChannel));
-      MOZ_ASSERT(newChannel, "Already registered channel not found");
-
-      if (NS_SUCCEEDED(rv)) {
-        newChannel->Cancel(NS_BINDING_ABORTED);
-      }
+  if (!mRedirectChannelId) {
+    if (!aSucceeded) {
+      mChannel->Resume();
+      return;
     }
-    // Release all previously registered channels, they are no longer needed to
-    // be kept in the registrar from this moment.
-    registrar->DeregisterChannels(mRedirectChannelId);
-
-    mRedirectChannelId = 0;
+    ApplyPendingFunctions(mChannel);
+    // ResumeSuspendedChannel will be called later as RedirectToRealChannel
+    // continues, so we can return early.
+    return;
   }
 
-  if (!redirectChannel) {
-    aSucceeded = false;
+  nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
+      RedirectChannelRegistrar::GetOrCreate();
+  MOZ_ASSERT(registrar);
+
+  nsCOMPtr<nsIParentChannel> redirectChannel;
+  nsresult rv = registrar->GetParentChannel(mRedirectChannelId,
+                                            getter_AddRefs(redirectChannel));
+  if (NS_FAILED(rv) || !redirectChannel) {
+    // Redirect might get canceled before we got AsyncOnChannelRedirect
+    nsCOMPtr<nsIChannel> newChannel;
+    rv = registrar->GetRegisteredChannel(mRedirectChannelId,
+                                         getter_AddRefs(newChannel));
+    MOZ_ASSERT(newChannel, "Already registered channel not found");
+
+    if (NS_SUCCEEDED(rv)) {
+      newChannel->Cancel(NS_BINDING_ABORTED);
+    }
+    if (!redirectChannel) {
+      aSucceeded = false;
+    }
   }
 
+  // Release all previously registered channels, they are no longer needed to
+  // be kept in the registrar from this moment.
+  registrar->DeregisterChannels(mRedirectChannelId);
+  mRedirectChannelId = 0;
   if (!aSucceeded) {
     if (redirectChannel) {
       redirectChannel->Delete();
@@ -656,36 +658,85 @@ void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
       !SameCOMIdentity(redirectChannel, static_cast<nsIParentChannel*>(this)));
 
   Delete();
-  if (!mIsFinished) {
-    mParentChannelListener->SetListenerAfterRedirect(redirectChannel);
-  }
   redirectChannel->SetParentListener(mParentChannelListener);
 
+  ApplyPendingFunctions(redirectChannel);
+
+  ResumeSuspendedChannel(redirectChannel);
+}
+
+void DocumentLoadListener::ApplyPendingFunctions(nsISupports* aChannel) const {
   // We stored the values from all nsIParentChannel functions called since we
-  // couldn't handle them. Copy them across to the real channel since it should
-  // know what to do.
-  for (auto& variant : mIParentChannelFunctions) {
-    variant.match(
-        [redirectChannel](const nsIHttpChannel::FlashPluginState& aState) {
-          redirectChannel->NotifyFlashPluginStateChanged(aState);
-        },
-        [redirectChannel](const ClassifierMatchedInfoParams& aParams) {
-          redirectChannel->SetClassifierMatchedInfo(
-              aParams.mList, aParams.mProvider, aParams.mFullHash);
-        },
-        [redirectChannel](const ClassifierMatchedTrackingInfoParams& aParams) {
-          redirectChannel->SetClassifierMatchedTrackingInfo(
-              aParams.mLists, aParams.mFullHashes);
-        },
-        [redirectChannel](const ClassificationFlagsParams& aParams) {
-          redirectChannel->NotifyClassificationFlags(
-              aParams.mClassificationFlags, aParams.mIsThirdParty);
-        });
+  // couldn't handle them. Copy them across to the real channel since it
+  // should know what to do.
+
+  nsCOMPtr<nsIParentChannel> parentChannel = do_QueryInterface(aChannel);
+  if (parentChannel) {
+    for (auto& variant : mIParentChannelFunctions) {
+      variant.match(
+          [parentChannel](const nsIHttpChannel::FlashPluginState& aState) {
+            parentChannel->NotifyFlashPluginStateChanged(aState);
+          },
+          [parentChannel](const ClassifierMatchedInfoParams& aParams) {
+            parentChannel->SetClassifierMatchedInfo(
+                aParams.mList, aParams.mProvider, aParams.mFullHash);
+          },
+          [parentChannel](const ClassifierMatchedTrackingInfoParams& aParams) {
+            parentChannel->SetClassifierMatchedTrackingInfo(
+                aParams.mLists, aParams.mFullHashes);
+          },
+          [parentChannel](const ClassificationFlagsParams& aParams) {
+            parentChannel->NotifyClassificationFlags(
+                aParams.mClassificationFlags, aParams.mIsThirdParty);
+          });
+    }
+  } else {
+    for (auto& variant : mIParentChannelFunctions) {
+      variant.match(
+          [&](const nsIHttpChannel::FlashPluginState& aState) {
+            // For now, only HttpChannel use this attribute.
+            RefPtr<HttpBaseChannel> httpChannel = do_QueryObject(aChannel);
+            if (httpChannel) {
+              httpChannel->SetFlashPluginState(aState);
+            }
+          },
+          [&](const ClassifierMatchedInfoParams& aParams) {
+            nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
+                do_QueryInterface(aChannel);
+            if (classifiedChannel) {
+              classifiedChannel->SetMatchedInfo(
+                  aParams.mList, aParams.mProvider, aParams.mFullHash);
+            }
+          },
+          [&](const ClassifierMatchedTrackingInfoParams& aParams) {
+            nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
+                do_QueryInterface(aChannel);
+            if (classifiedChannel) {
+              nsTArray<nsCString> lists, fullhashes;
+              for (const nsACString& token : aParams.mLists.Split(',')) {
+                lists.AppendElement(token);
+              }
+              for (const nsACString& token : aParams.mFullHashes.Split(',')) {
+                fullhashes.AppendElement(token);
+              }
+              classifiedChannel->SetMatchedTrackingInfo(lists, fullhashes);
+            }
+          },
+          [&](const ClassificationFlagsParams& aParams) {
+            UrlClassifierCommon::SetClassificationFlagsHelper(
+                static_cast<nsIChannel*>(aChannel),
+                aParams.mClassificationFlags, aParams.mIsThirdParty);
+          });
+    }
   }
 
-  RefPtr<HttpChannelParent> httpParent = do_QueryObject(redirectChannel);
-  if (httpParent) {
-    RefPtr<HttpChannelSecurityWarningReporter> reporter = httpParent;
+  RefPtr<HttpChannelSecurityWarningReporter> reporter;
+  if (RefPtr<HttpChannelParent> httpParent = do_QueryObject(aChannel)) {
+    reporter = httpParent;
+  } else if (RefPtr<nsHttpChannel> httpChannel = do_QueryObject(aChannel)) {
+    reporter = httpChannel->GetWarningReporter();
+  }
+  if (reporter) {
     for (auto& variant : mSecurityWarningFunctions) {
       variant.match(
           [reporter](const ReportSecurityMessageParams& aParams) {
@@ -703,11 +754,9 @@ void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
           });
     }
   }
-
-  ResumeSuspendedChannel(redirectChannel);
 }
 
-void DocumentLoadListener::ResumeSuspendedChannel(
+bool DocumentLoadListener::ResumeSuspendedChannel(
     nsIStreamListener* aListener) {
   LOG(("DocumentLoadListener ResumeSuspendedChannel [this=%p]", this));
   RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel);
@@ -715,11 +764,18 @@ void DocumentLoadListener::ResumeSuspendedChannel(
     httpChannel->SetApplyConversion(mOldApplyConversion);
   }
 
+  if (!mIsFinished) {
+    mParentChannelListener->SetListenerAfterRedirect(aListener);
+  }
+
   // If we failed to suspend the channel, then we might have received
   // some messages while the redirected was being handled.
   // Manually send them on now.
   nsTArray<StreamListenerFunction> streamListenerFunctions =
       std::move(mStreamListenerFunctions);
+  if (!aListener) {
+    streamListenerFunctions.Clear();
+  }
   nsresult rv = NS_OK;
   for (auto& variant : streamListenerFunctions) {
     variant.match(
@@ -775,6 +831,7 @@ void DocumentLoadListener::ResumeSuspendedChannel(
                "Should not have added new stream listener function!");
 
   mChannel->Resume();
+  return !mIsFinished;
 }
 
 void DocumentLoadListener::SerializeRedirectData(
@@ -1088,6 +1145,15 @@ DocumentLoadListener::RedirectToRealChannel(
   MOZ_ASSERT(registrar);
   MOZ_ALWAYS_SUCCEEDS(
       registrar->RegisterChannel(mChannel, &mRedirectChannelId));
+
+  if (aDestinationProcess || OtherPid()) {
+    // Register the new channel and obtain id for it
+    nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
+        RedirectChannelRegistrar::GetOrCreate();
+    MOZ_ASSERT(registrar);
+    MOZ_ALWAYS_SUCCEEDS(
+        registrar->RegisterChannel(mChannel, &mRedirectChannelId));
+  }
 
   if (aDestinationProcess) {
     dom::ContentParent* cp =
@@ -1426,15 +1492,12 @@ NS_IMETHODIMP
 DocumentLoadListener::AsyncOnChannelRedirect(
     nsIChannel* aOldChannel, nsIChannel* aNewChannel, uint32_t aFlags,
     nsIAsyncVerifyRedirectCallback* aCallback) {
+  LOG(("DocumentLoadListener AsyncOnChannelRedirect [this=%p, aFlags=%" PRIx32
+       "]",
+       this, aFlags));
   // We generally don't want to notify the content process about redirects,
   // so just update our channel and tell the callback that we're good to go.
   mChannel = aNewChannel;
-
-  // We need the original URI of the current channel to use to open the real
-  // channel in the content process. Unfortunately we overwrite the original
-  // uri of the new channel with the original pre-redirect URI, so grab
-  // a copy of it now.
-  aNewChannel->GetOriginalURI(getter_AddRefs(mChannelCreationURI));
 
   // Since we're redirecting away from aOldChannel, we should check if it
   // had a COOP mismatch, since we want the final result for this to
@@ -1448,6 +1511,10 @@ DocumentLoadListener::AsyncOnChannelRedirect(
   // We don't need to confirm internal redirects or record any
   // history for them, so just immediately verify and return.
   if (aFlags & nsIChannelEventSink::REDIRECT_INTERNAL) {
+    LOG(
+        ("DocumentLoadListener AsyncOnChannelRedirect [this=%p] "
+         "flags=REDIRECT_INTERNAL",
+         this));
     aCallback->OnRedirectVerifyCallback(NS_OK);
     return NS_OK;
   } else {
@@ -1460,10 +1527,20 @@ DocumentLoadListener::AsyncOnChannelRedirect(
     mRedirects.AppendElement(DocumentChannelRedirect{
         oldURI, aFlags, responseStatus, net::ChannelIsPost(aOldChannel)});
   }
+  LOG(
+      ("DocumentLoadListener AsyncOnChannelRedirect [this=%p] "
+       "mRedirects=%" PRIx32,
+       this, uint32_t(mRedirects.Length())));
 
   if (!mDocumentChannelBridge) {
     return NS_BINDING_ABORTED;
   }
+
+  // We need the original URI of the current channel to use to open the real
+  // channel in the content process. Unfortunately we overwrite the original
+  // uri of the new channel with the original pre-redirect URI, so grab
+  // a copy of it now.
+  aNewChannel->GetOriginalURI(getter_AddRefs(mChannelCreationURI));
 
   // Clear out our nsIParentChannel functions, since a normal parent
   // channel would actually redirect and not have those values on the new one.
@@ -1535,14 +1612,14 @@ DocumentLoadListener::AsyncOnChannelRedirect(
 
 // This method returns the cached result of running the Cross-Origin-Opener
 // policy compare algorithm by calling ComputeCrossOriginOpenerPolicyMismatch
-bool DocumentLoadListener::HasCrossOriginOpenerPolicyMismatch() {
+bool DocumentLoadListener::HasCrossOriginOpenerPolicyMismatch() const {
   // If we found a COOP mismatch on an earlier channel and then
   // redirected away from that, we should use that result.
   if (mHasCrossOriginOpenerPolicyMismatch) {
     return true;
   }
 
-  RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel);
+  RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel.get());
   if (!httpChannel) {
     // Not an nsHttpChannel assume it's okay to switch.
     return false;
