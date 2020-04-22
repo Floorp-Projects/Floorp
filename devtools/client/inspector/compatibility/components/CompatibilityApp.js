@@ -17,6 +17,9 @@ const Types = require("devtools/client/inspector/compatibility/types");
 const Accordion = createFactory(
   require("devtools/client/shared/components/Accordion")
 );
+const Footer = createFactory(
+  require("devtools/client/inspector/compatibility/components/Footer")
+);
 const IssuePane = createFactory(
   require("devtools/client/inspector/compatibility/components/IssuePane")
 );
@@ -70,6 +73,7 @@ class CompatibilityApp extends PureComponent {
         className: "compatibility-app theme-sidebar inspector-tabpanel",
       },
       Accordion({
+        className: "compatibility-app__main",
         items: [
           {
             id: "compatibility-app--selected-element-pane",
@@ -84,6 +88,9 @@ class CompatibilityApp extends PureComponent {
             opened: true,
           },
         ],
+      }),
+      Footer({
+        className: "compatibility-app__footer",
       })
     );
   }

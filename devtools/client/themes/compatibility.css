@@ -10,8 +10,9 @@
 }
 
 .compatibility-app {
+  display: grid;
+  grid-template-rows: 1fr calc(var(--compatibility-base-unit) * 7);
   height: 100%;
-  overflow: auto;
 }
 
 .compatibility-app__throbber {
@@ -19,6 +20,10 @@
   align-items: center;
   justify-content: center;
   height: calc(var(--compatibility-base-unit) * 8);
+}
+
+.compatibility-app__main {
+  overflow: auto;
 }
 
 .compatibility-issue-list {
@@ -141,4 +146,30 @@
 
 .compatibility-node-item {
   padding-block-start: var(--compatibility-base-unit);
+}
+
+.compatibility-footer {
+  border-top: 1px solid var(--theme-splitter-color);
+  display: flex;
+  justify-content: center;
+}
+
+.compatibility-footer__feedback-button {
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  column-gap: var(--compatibility-base-unit);
+}
+
+.compatibility-footer__feedback-icon {
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-color);
+  width: calc(var(--compatibility-base-unit) * 4);
+  height: calc(var(--compatibility-base-unit) * 4);
+}
+
+.compatibility-footer__feedback-label {
+  color: var(--theme-toolbar-color);
+  font-size: calc(var(--compatibility-base-unit) * 3);
 }
