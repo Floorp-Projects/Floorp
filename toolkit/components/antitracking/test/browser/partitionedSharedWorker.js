@@ -7,7 +7,7 @@ self.onconnect = e => {
     }
 
     if (event.data.what === "put") {
-      value += event.data.value;
+      value = event.data.value;
       return;
     }
 

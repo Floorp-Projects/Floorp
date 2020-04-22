@@ -123,7 +123,9 @@ this.PartitionedStorageHelper = {
           variant +
           "' in a " +
           (runInPrivateWindow ? "private" : "normal") +
-          " window to check that 2 tabs are correctly partititioned"
+          " window " +
+          (limitForeignContexts ? "with" : "without") +
+          " limitForeignContexts to check that 2 tabs are correctly partititioned"
       );
 
       await SpecialPowers.flushPrefEnv();
@@ -176,10 +178,19 @@ this.PartitionedStorageHelper = {
       let browser3 = win.gBrowser.getBrowserForTab(tab3);
       await BrowserTestUtils.browserLoaded(browser3);
 
+      // Use the same URL as first tab to check partitioned data
+      info("Creating the forth tab");
+      let tab4 = BrowserTestUtils.addTab(win.gBrowser, TEST_TOP_PAGE);
+      win.gBrowser.selectedTab = tab4;
+
+      let browser4 = win.gBrowser.getBrowserForTab(tab4);
+      await BrowserTestUtils.browserLoaded(browser4);
+
       async function getDataFromThirdParty(browser, result) {
         // Overwrite the special case here since third party cookies are not
         // avilable when `limitForeignContexts` is enabled.
         if (testCategory === "cookies" && limitForeignContexts) {
+          info("overwrite result to empty");
           result = "";
         }
 
@@ -261,6 +272,9 @@ this.PartitionedStorageHelper = {
       info("Checking first party has an empty cookie jar in third tab");
       await getDataFromFirstParty(browser3, "");
 
+      info("Checking 3rd party has an empty cookie jar in forth tab");
+      await getDataFromThirdParty(browser4, "");
+
       async function createDataInThirdParty(browser, value) {
         await SpecialPowers.spawn(
           browser,
@@ -329,11 +343,24 @@ this.PartitionedStorageHelper = {
       info("Creating data in the second tab");
       await createDataInThirdParty(browser2, "B");
 
+      // Before writing browser4, check data written by browser1
+      info("First tab should still have just 'A'");
+      await getDataFromThirdParty(browser1, "A");
+      info("Forth tab should still have just 'A'");
+      await getDataFromThirdParty(browser4, "A");
+
+      // Ensure to create data in the forth tab before the third tab,
+      // otherwise cookie will be written successfully due to prior cookie
+      // of the base domain exists.
+      info("Creating data in the forth tab");
+      await createDataInThirdParty(browser4, "D");
+
       info("Creating data in the third tab");
       await createDataInFirstParty(browser3, "C");
 
-      info("First tab should still have just 'A'");
-      await getDataFromThirdParty(browser1, "A");
+      // read all tabs
+      info("First tab should be changed to 'D'");
+      await getDataFromThirdParty(browser1, "D");
 
       info("Second tab should still have just 'B'");
       await getDataFromThirdParty(browser2, "B");
@@ -341,10 +368,14 @@ this.PartitionedStorageHelper = {
       info("Third tab should still have just 'C'");
       await getDataFromFirstParty(browser3, "C");
 
+      info("Forth tab should still have just 'D'");
+      await getDataFromThirdParty(browser4, "D");
+
       info("Removing the tabs");
       BrowserTestUtils.removeTab(tab1);
       BrowserTestUtils.removeTab(tab2);
       BrowserTestUtils.removeTab(tab3);
+      BrowserTestUtils.removeTab(tab4);
 
       if (runInPrivateWindow) {
         win.close();
