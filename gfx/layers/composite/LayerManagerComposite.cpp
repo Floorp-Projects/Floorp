@@ -1042,35 +1042,6 @@ static void ClearLayerFlags(Layer* aLayer) {
   });
 }
 
-#if defined(MOZ_WIDGET_ANDROID)
-class ScopedCompositorRenderOffset {
- public:
-  ScopedCompositorRenderOffset(CompositorOGL* aCompositor,
-                               const ScreenPoint& aOffset)
-      : mCompositor(aCompositor),
-        mOriginalOffset(mCompositor->GetScreenRenderOffset()),
-        mOriginalProjection(mCompositor->GetProjMatrix()) {
-    ScreenPoint offset(mOriginalOffset.x + aOffset.x,
-                       mOriginalOffset.y + aOffset.y);
-    mCompositor->SetScreenRenderOffset(offset);
-    // Calling CompositorOGL::SetScreenRenderOffset does not affect the
-    // projection matrix so adjust that as well.
-    gfx::Matrix4x4 mat = mOriginalProjection;
-    mat.PreTranslate(aOffset.x, aOffset.y, 0.0f);
-    mCompositor->SetProjMatrix(mat);
-  }
-  ~ScopedCompositorRenderOffset() {
-    mCompositor->SetScreenRenderOffset(mOriginalOffset);
-    mCompositor->SetProjMatrix(mOriginalProjection);
-  }
-
- private:
-  CompositorOGL* const mCompositor;
-  const ScreenPoint mOriginalOffset;
-  const gfx::Matrix4x4 mOriginalProjection;
-};
-#endif  // defined(MOZ_WIDGET_ANDROID)
-
 bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
                                    const nsIntRegion& aOpaqueRegion) {
   AUTO_PROFILER_LABEL("LayerManagerComposite::Render", GRAPHICS);
@@ -1171,11 +1142,6 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
 
   IntRect bounds = *maybeBounds;
   IntRect clipRect = rootLayerClip.valueOr(bounds);
-#if defined(MOZ_WIDGET_ANDROID)
-  ScreenCoord offset = GetContentShiftForToolbar();
-  ScopedCompositorRenderOffset scopedOffset(mCompositor->AsCompositorOGL(),
-                                            ScreenPoint(0.0f, offset));
-#endif
 
   // Prepare our layers.
   {
@@ -1287,11 +1253,6 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
     UpdateDebugOverlayNativeLayers();
   } else {
 #if defined(MOZ_WIDGET_ANDROID)
-    if (AndroidDynamicToolbarAnimator::IsEnabled()) {
-      // Depending on the content shift the toolbar may be rendered on top of
-      // some of the content so it must be rendered after the content.
-      RenderToolbar();
-    }
     HandlePixelsTarget();
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
@@ -1467,67 +1428,6 @@ void LayerManagerComposite::RenderToPresentationSurface() {
   RootLayer()->RenderLayer(clipRect, Nothing());
 
   mCompositor->EndFrame();
-}
-
-ScreenCoord LayerManagerComposite::GetContentShiftForToolbar() {
-  ScreenCoord result(0.0f);
-
-  if (!AndroidDynamicToolbarAnimator::IsEnabled()) {
-    return result;
-  }
-
-  // If mTarget not null we are not drawing to the screen so
-  // there will not be any content offset.
-  if (mTarget) {
-    return result;
-  }
-
-  if (CompositorBridgeParent* bridge =
-          mCompositor->GetCompositorBridgeParent()) {
-    AndroidDynamicToolbarAnimator* animator =
-        bridge->GetAndroidDynamicToolbarAnimator();
-    MOZ_RELEASE_ASSERT(animator);
-    result.value = (float)animator->GetCurrentContentOffset().value;
-  }
-  return result;
-}
-
-void LayerManagerComposite::RenderToolbar() {
-  // If mTarget is not null we are not drawing to the screen so
-  // don't draw the toolbar.
-  if (mTarget) {
-    return;
-  }
-
-  if (CompositorBridgeParent* bridge =
-          mCompositor->GetCompositorBridgeParent()) {
-    AndroidDynamicToolbarAnimator* animator =
-        bridge->GetAndroidDynamicToolbarAnimator();
-    MOZ_RELEASE_ASSERT(animator);
-
-    animator->UpdateToolbarSnapshotTexture(mCompositor->AsCompositorOGL());
-
-    int32_t toolbarHeight = animator->GetCurrentToolbarHeight();
-    if (toolbarHeight == 0) {
-      return;
-    }
-
-    EffectChain effects;
-    effects.mPrimaryEffect = animator->GetToolbarEffect();
-
-    // If GetToolbarEffect returns null, nothing is rendered for the static
-    // snapshot of the toolbar. If the real toolbar chrome is not covering this
-    // portion of the surface, the clear color of the surface will be visible.
-    // On Android the clear color is the background color of the page.
-    if (effects.mPrimaryEffect) {
-      ScopedCompositorRenderOffset toolbarOffset(
-          mCompositor->AsCompositorOGL(),
-          ScreenPoint(0.0f, -animator->GetCurrentContentOffset()));
-      mCompositor->DrawQuad(gfx::Rect(0, 0, mRenderBounds.width, toolbarHeight),
-                            IntRect(0, 0, mRenderBounds.width, toolbarHeight),
-                            effects, 1.0, gfx::Matrix4x4());
-    }
-  }
 }
 
 // Used by robocop tests to get a snapshot of the frame buffer.
