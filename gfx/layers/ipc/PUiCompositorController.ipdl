@@ -33,12 +33,9 @@ parent:
   async InvalidateAndRender();
   async MaxToolbarHeight(int32_t aHeight);
   async FixedBottomOffset(int32_t aOffset);
-  async Pinned(bool aPinned, int32_t aReason);
-  async ToolbarAnimatorMessageFromUI(int32_t aMessage);
   async DefaultClearColor(uint32_t aColor);
   async RequestScreenPixels();
   async EnableLayerUpdateNotifications(bool aEnable);
-  async ToolbarPixelsToCompositor(Shmem aMem, ScreenIntSize aSize);
 child:
   async ToolbarAnimatorMessageFromCompositor(int32_t aMessage);
   async RootFrameMetrics(ScreenPoint aScrollOffset, CSSToScreenScale aZoom);

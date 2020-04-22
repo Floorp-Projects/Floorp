@@ -40,16 +40,10 @@ class UiCompositorControllerParent final
   mozilla::ipc::IPCResult RecvInvalidateAndRender();
   mozilla::ipc::IPCResult RecvMaxToolbarHeight(const int32_t& aHeight);
   mozilla::ipc::IPCResult RecvFixedBottomOffset(const int32_t& aOffset);
-  mozilla::ipc::IPCResult RecvPinned(const bool& aPinned,
-                                     const int32_t& aReason);
-  mozilla::ipc::IPCResult RecvToolbarAnimatorMessageFromUI(
-      const int32_t& aMessage);
   mozilla::ipc::IPCResult RecvDefaultClearColor(const uint32_t& aColor);
   mozilla::ipc::IPCResult RecvRequestScreenPixels();
   mozilla::ipc::IPCResult RecvEnableLayerUpdateNotifications(
       const bool& aEnable);
-  mozilla::ipc::IPCResult RecvToolbarPixelsToCompositor(
-      Shmem&& aMem, const ScreenIntSize& aSize);
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void ActorDealloc() override;
 
