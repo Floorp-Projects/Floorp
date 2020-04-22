@@ -23,7 +23,6 @@ a {
 }
 
 .cert-url {
-  padding-left: 0.8em;
   height: 100%;
   width: 100%;
   position: absolute;
@@ -31,10 +30,14 @@ a {
   display: flex;
 }
 
+.cert-url > .item-name {
+  padding-inline-start: 0.8em;
+}
+
 .export {
-	position: absolute;
-	right: 2em;
+  position: absolute;
   top: 0.3em;
+  inset-inline-end: 2em;
   font-size: 1em;
 }
 
