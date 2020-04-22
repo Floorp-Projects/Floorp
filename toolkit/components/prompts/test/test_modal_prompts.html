@@ -1,72 +1,34 @@
-<!DOCTYPE html>
+
+<!DOCTYPE HTML>
 <html>
-  <head>
-    <title>Modal Prompts Test</title>
-    <script src="/tests/SimpleTest/SimpleTest.js"></script>
-    <script type="text/javascript" src="prompt_common.js"></script>
-    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-  </head>
-  <body>
-    Prompter tests: modal prompts
-    <p id="display"></p>
+<head>
+  <title>Modal Prompts Test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="prompt_common.js"></script>
+</head>
+<body>
+Prompter tests: modal prompts
+<p id="display"></p>
 
-    <div id="content" style="display: none">
-      <iframe id="iframe"></iframe>
-    </div>
+<div id="content" style="display: none">
+  <iframe id="iframe"></iframe>
+</div>
 
-    <pre id="test">
+<pre id="test">
 <script class="testbody" type="text/javascript">
-async function runTests() {
+/* eslint-disable complexity */
+async function runTests(util) {
   const { NetUtil } = SpecialPowers.Cu.import(
     "resource://gre/modules/NetUtil.jsm"
   );
-  const { Services } = SpecialPowers.Cu.import(
-    "resource://gre/modules/Services.jsm"
-  );
+
   let state, action, promptDone;
-  ok(
-    true,
-    "Running tests (isTabModal=" +
-      isTabModal +
-      ", usePromptService=" +
-      usePromptService +
-      ", useBrowsingContext=" +
-      useBrowsingContext +
-      ")"
-  );
-
-  let browsingContext = SpecialPowers.wrap(window).windowGlobalChild
-    .browsingContext;
-
-  let promptArgs;
-
-  let prompter = Cc["@mozilla.org/prompter;1"]
-    .getService(Ci.nsIPromptFactory)
-    .getPrompt(window, Ci.nsIPrompt);
 
   let checkVal = {};
   let textVal = {};
   let passVal = {};
   let flags;
-  let isOK, clickedButton;
-
-  function doPrompt(funcName) {
-    let subject;
-    if (usePromptService) {
-      subject = Services.prompt;
-      if (useBrowsingContext) {
-        funcName += "BC";
-        promptArgs.unshift(browsingContext, modalType);
-      } else {
-        promptArgs.unshift(window);
-      }
-    } else {
-      subject = prompter;
-      let bag = prompter.QueryInterface(Ci.nsIWritablePropertyBag2);
-      bag.setPropertyAsUint32("modalType", modalType);
-    }
-    return subject[funcName](...promptArgs);
-  }
+  let isOK;
 
   // =====
   info("Starting test: Alert");
@@ -92,7 +54,7 @@ async function runTests() {
   promptDone = handlePrompt(state, action);
 
   promptArgs = ["TestTitle", "This is the alert text."];
-  doPrompt("alert");
+  await util.prompt("alert", promptArgs);
 
   await promptDone;
 
@@ -119,8 +81,13 @@ async function runTests() {
 
   promptDone = handlePrompt(state, action);
 
-  promptArgs = ["TestTitle", "This is the alertCheck text.", null, {}];
-  doPrompt("alertCheck");
+  promptArgs = [
+    "TestTitle",
+    "This is the alertCheck text.",
+    null,
+    util.useAsync ? false : {},
+  ];
+  util.prompt("alertCheck", promptArgs);
 
   await promptDone;
 
@@ -153,10 +120,14 @@ async function runTests() {
     "TestTitle",
     "This is the alertCheck text.",
     "Check me out!",
-    checkVal,
+    util.useAsync ? checkVal.value : checkVal,
   ];
-  doPrompt("alertCheck");
-  is(checkVal.value, true, "checkbox was checked");
+  let result = await util.prompt("alertCheck", promptArgs);
+  is(
+    util.useAsync ? result.checked : checkVal.value,
+    true,
+    "checkbox was checked"
+  );
 
   await promptDone;
 
@@ -184,8 +155,8 @@ async function runTests() {
   promptDone = handlePrompt(state, action);
 
   promptArgs = ["TestTitle", "This is the confirm text."];
-  isOK = doPrompt("confirm");
-  is(isOK, true, "checked expected retval");
+  result = await util.prompt("confirm", promptArgs);
+  is(util.useAsync ? result.ok : result, true, "checked expected retval");
 
   await promptDone;
 
@@ -213,8 +184,8 @@ async function runTests() {
   promptDone = handlePrompt(state, action);
 
   promptArgs = ["TestTitle", "This is the confirm text."];
-  isOK = doPrompt("confirm");
-  is(isOK, false, "checked expected retval");
+  result = await util.prompt("confirm", promptArgs);
+  is(util.useAsync ? result.ok : result, false, "checked expected retval");
 
   await promptDone;
 
@@ -241,9 +212,14 @@ async function runTests() {
 
   promptDone = handlePrompt(state, action);
 
-  promptArgs = ["TestTitle", "This is the confirmCheck text.", null, {}];
-  isOK = doPrompt("confirmCheck");
-  is(isOK, true, "checked expected retval");
+  promptArgs = [
+    "TestTitle",
+    "This is the confirmCheck text.",
+    null,
+    util.useAsync ? false : {},
+  ];
+  result = await util.prompt("confirmCheck", promptArgs);
+  is(util.useAsync ? result.ok : result, true, "checked expected retval");
 
   await promptDone;
 
@@ -270,9 +246,14 @@ async function runTests() {
 
   promptDone = handlePrompt(state, action);
 
-  promptArgs = ["TestTitle", "This is the confirmCheck text.", null, {}];
-  isOK = doPrompt("confirmCheck");
-  is(isOK, false, "checked expected retval");
+  promptArgs = [
+    "TestTitle",
+    "This is the confirmCheck text.",
+    null,
+    util.useAsync ? false : {},
+  ];
+  result = await util.prompt("confirmCheck", promptArgs);
+  is(util.useAsync ? result.ok : result, false, "checked expected retval");
 
   await promptDone;
 
@@ -305,11 +286,15 @@ async function runTests() {
     "TestTitle",
     "This is the confirmCheck text.",
     "Check me out!",
-    checkVal,
+    util.useAsync ? checkVal.value : checkVal,
   ];
-  isOK = doPrompt("confirmCheck");
-  is(isOK, true, "checked expected retval");
-  is(checkVal.value, true, "expected checkbox setting");
+  result = await util.prompt("confirmCheck", promptArgs);
+  is(util.useAsync ? result.ok : result, true, "checked expected retval");
+  is(
+    util.useAsync ? result.checked : checkVal.value,
+    true,
+    "expected checkbox setting"
+  );
 
   await promptDone;
 
@@ -342,11 +327,15 @@ async function runTests() {
     "TestTitle",
     "This is the confirmCheck text.",
     "Check me out!",
-    checkVal,
+    util.useAsync ? checkVal.value : checkVal,
   ];
-  isOK = doPrompt("confirmCheck");
-  is(isOK, false, "checked expected retval");
-  is(checkVal.value, true, "expected checkbox setting");
+  result = await util.prompt("confirmCheck", promptArgs);
+  is(util.useAsync ? result.ok : result, false, "checked expected retval");
+  is(
+    util.useAsync ? result.checked : checkVal.value,
+    true,
+    "expected checkbox setting"
+  );
 
   await promptDone;
 
@@ -375,10 +364,14 @@ async function runTests() {
   promptDone = handlePrompt(state, action);
 
   textVal.value = "";
-  promptArgs = ["TestTitle", "This is the prompt text.", textVal, null, {}];
-  isOK = doPrompt("prompt");
-  is(isOK, true, "checked expected retval");
-  is(textVal.value, "bacon", "checking expected text value");
+  promptArgs = ["TestTitle", "This is the prompt text.", util.useAsync ? textVal.value : textVal , null, util.useAsync ? false : {}];
+  result = await util.prompt("prompt", promptArgs);
+  is(util.useAsync ? result.ok : result, true, "checked expected retval");
+  is(
+    util.useAsync ? result.value : textVal.value,
+    "bacon",
+    "checking expected text value"
+  );
 
   await promptDone;
 
@@ -406,10 +399,14 @@ async function runTests() {
   promptDone = handlePrompt(state, action);
 
   textVal.value = "kittens";
-  promptArgs = ["TestTitle", "This is the prompt text.", textVal, null, {}];
-  isOK = doPrompt("prompt");
-  is(isOK, true, "checked expected retval");
-  is(textVal.value, "kittens", "checking expected text value");
+  promptArgs = ["TestTitle", "This is the prompt text.", util.useAsync ? textVal.value : textVal, null, util.useAsync ? false : {}];
+  result = await util.prompt("prompt", promptArgs);
+  is(util.useAsync ? result.ok : result, true, "checked expected retval");
+  is(
+    util.useAsync ? result.value : textVal.value,
+    "kittens",
+    "checking expected text value"
+  );
 
   await promptDone;
 
@@ -437,10 +434,14 @@ async function runTests() {
   promptDone = handlePrompt(state, action);
 
   textVal.value = "puppies";
-  promptArgs = ["TestTitle", "This is the prompt text.", textVal, null, {}];
-  isOK = doPrompt("prompt");
-  is(isOK, false, "checked expected retval");
-  is(textVal.value, "puppies", "checking expected text value");
+  promptArgs = ["TestTitle", "This is the prompt text.", util.useAsync ? textVal.value : textVal, null, util.useAsync ? false : {}];
+  result = await util.prompt("prompt", promptArgs);
+  is(util.useAsync ? result.ok : result, false, "checked expected retval");
+  is(
+    util.useAsync ? result.value : textVal.value,
+    "puppies",
+    "checking expected text value"
+  );
 
   await promptDone;
 
@@ -469,10 +470,14 @@ async function runTests() {
   promptDone = handlePrompt(state, action);
 
   textVal.value = "puppies";
-  promptArgs = ["TestTitle", "This is the prompt text.", textVal, null, {}];
-  isOK = doPrompt("prompt");
-  is(isOK, false, "checked expected retval");
-  is(textVal.value, "puppies", "checking expected text value");
+  promptArgs = ["TestTitle", "This is the prompt text.", util.useAsync ? textVal.value : textVal, null, util.useAsync ? false : {}];
+  result = await util.prompt("prompt", promptArgs);
+  is(util.useAsync ? result.ok : result, false, "checked expected retval");
+  is(
+    util.useAsync ? result.value : textVal.value,
+    "puppies",
+    "checking expected text value"
+  );
 
   await promptDone;
 
@@ -505,14 +510,22 @@ async function runTests() {
   promptArgs = [
     "TestTitle",
     "This is the prompt text.",
-    textVal,
+    util.useAsync ? textVal.value : textVal,
     "Check me out!",
-    checkVal,
+    util.useAsync ? checkVal.value : checkVal,
   ];
-  isOK = doPrompt("prompt");
-  is(isOK, true, "checked expected retval");
-  is(textVal.value, "tribbles", "checking expected text value");
-  is(checkVal.value, true, "expected checkbox setting");
+  result = await util.prompt("prompt", promptArgs);
+  is(util.useAsync ? result.ok : result, true, "checked expected retval");
+  is(
+    util.useAsync ? result.value : textVal.value,
+    "tribbles",
+    "checking expected text value"
+  );
+  is(
+    util.useAsync ? result.checked : checkVal.value,
+    true,
+    "expected checkbox setting"
+  );
 
   await promptDone;
 
@@ -537,7 +550,6 @@ async function runTests() {
     buttonClick: "cancel",
     setCheckbox: true,
   };
-
   promptDone = handlePrompt(state, action);
 
   textVal.value = "tribbles";
@@ -545,14 +557,21 @@ async function runTests() {
   promptArgs = [
     "TestTitle",
     "This is the prompt text.",
-    textVal,
+    util.useAsync ? textVal.value : textVal,
     "Check me out!",
-    checkVal,
+    util.useAsync ? checkVal.value : checkVal,
   ];
-  isOK = doPrompt("prompt");
-  is(isOK, false, "checked expected retval");
-  is(textVal.value, "tribbles", "checking expected text value");
-  is(checkVal.value, false, "expected checkbox setting");
+  result = await util.prompt("prompt", promptArgs);
+  is(util.useAsync ? result.ok : result, false, "checked expected retval");
+  is(
+    util.useAsync ? result.value : textVal.value,
+    "tribbles",
+    "checking expected text value"
+  );
+  ok(
+    util.useAsync ? result.checked : !checkVal.value,
+    "expected checkbox setting"
+  );
 
   await promptDone;
 
@@ -589,16 +608,28 @@ async function runTests() {
   promptArgs = [
     "TestTitle",
     "This is the pUAP text.",
-    textVal,
-    passVal,
+    util.useAsync ? textVal.value : textVal,
+    util.useAsync ? passVal.value : passVal,
     "Check me out!",
-    checkVal,
+    util.useAsync ? checkVal.value : checkVal,
   ];
-  isOK = doPrompt("promptUsernameAndPassword");
-  is(isOK, true, "checked expected retval");
-  is(textVal.value, "newusr", "checking expected text value");
-  is(passVal.value, "newssh", "checking expected pass value");
-  is(checkVal.value, true, "expected checkbox setting");
+  result = await util.prompt("promptUsernameAndPassword", promptArgs);
+  is(util.useAsync ? result.ok : result, true, "checked expected retval");
+  is(
+    util.useAsync ? result.user : textVal.value,
+    "newusr",
+    "checking expected text value"
+  );
+  is(
+    util.useAsync ? result.pass : passVal.value,
+    "newssh",
+    "checking expected pass value"
+  );
+  is(
+    util.useAsync ? result.checked : checkVal.value,
+    true,
+    "expected checkbox setting"
+  );
 
   await promptDone;
 
@@ -634,16 +665,25 @@ async function runTests() {
   promptArgs = [
     "TestTitle",
     "This is the pUAP text.",
-    textVal,
-    passVal,
+    util.useAsync ? textVal.value : textVal,
+    util.useAsync ? passVal.value : passVal,
     "Check me out!",
-    checkVal,
+    util.useAsync ? checkVal.value : checkVal,
   ];
-  isOK = doPrompt("promptUsernameAndPassword");
-  is(isOK, false, "checked expected retval");
-  is(textVal.value, "usr", "checking expected text value");
-  is(passVal.value, "ssh", "checking expected pass value");
-  is(checkVal.value, false, "expected checkbox setting");
+  result = await util.prompt("promptUsernameAndPassword", promptArgs);
+  is(util.useAsync ? result.ok : result, false, "checked expected retval");
+  ok(
+    (util.useAsync && result.user == "newusr") || textVal.value == "usr",
+    "checking expected text value"
+  );
+  ok(
+    (util.useAsync && result.pass == "newpass") || passVal.value == "ssh",
+    "checking expected pass value"
+  );
+  ok(
+    util.useAsync ? result.checked : !checkVal.value,
+    "expected checkbox setting"
+  );
 
   await promptDone;
 
@@ -677,14 +717,22 @@ async function runTests() {
   promptArgs = [
     "TestTitle",
     "This is the promptPassword text.",
-    passVal,
+    util.useAsync ? passVal.value : passVal,
     "Check me out!",
-    checkVal,
+    util.useAsync ? checkVal.value : checkVal,
   ];
-  isOK = doPrompt("promptPassword");
-  is(isOK, true, "checked expected retval");
-  is(passVal.value, "newssh", "checking expected pass value");
-  is(checkVal.value, true, "expected checkbox setting");
+  result = await util.prompt("promptPassword", promptArgs);
+  is(util.useAsync ? result.ok : result, true, "checked expected retval");
+  is(
+    util.useAsync ? result.pass : passVal.value,
+    "newssh",
+    "checking expected pass value"
+  );
+  is(
+    util.useAsync ? result.checked : checkVal.value,
+    true,
+    "expected checkbox setting"
+  );
 
   await promptDone;
 
@@ -718,14 +766,20 @@ async function runTests() {
   promptArgs = [
     "TestTitle",
     "This is the promptPassword text.",
-    passVal,
+    util.useAsync ? passVal.value : passVal,
     "Check me out!",
-    checkVal,
+    util.useAsync ? checkVal.value : checkVal,
   ];
-  isOK = doPrompt("promptPassword");
-  is(isOK, false, "checked expected retval");
-  is(passVal.value, "ssh", "checking expected pass value");
-  is(checkVal.value, false, "expected checkbox setting");
+  result = await util.prompt("promptPassword", promptArgs);
+  is(util.useAsync ? result.ok : result, false, "checked expected retval");
+  ok(
+    (util.useAsync && result.pass == "newssh") || passVal.value == "ssh",
+    "checking expected pass value"
+  );
+  ok(
+    util.useAsync ? result.checked : !checkVal.value,
+    "expected checkbox setting"
+  );
 
   await promptDone;
 
@@ -763,10 +817,14 @@ async function runTests() {
     null,
     null,
     null,
-    {},
+    util.useAsync ? false : {},
   ];
-  clickedButton = doPrompt("confirmEx");
-  is(clickedButton, 0, "checked expected button num click");
+  result = await util.prompt("confirmEx", promptArgs);
+  is(
+    util.useAsync ? result.buttonNumClicked : result,
+    0,
+    "checked expected button num click"
+  );
 
   await promptDone;
 
@@ -804,10 +862,14 @@ async function runTests() {
     null,
     null,
     null,
-    {},
+    util.useAsync ? false : {},
   ];
-  clickedButton = doPrompt("confirmEx");
-  is(clickedButton, 1, "checked expected button num click");
+  result = await util.prompt("confirmEx", promptArgs);
+  is(
+    util.useAsync ? result.buttonNumClicked : result,
+    1,
+    "checked expected button num click"
+  );
 
   await promptDone;
 
@@ -852,11 +914,19 @@ async function runTests() {
     "butt1",
     "butt2",
     "Check me out!",
-    checkVal,
+    util.useAsync ? checkVal.value : checkVal,
   ];
-  clickedButton = doPrompt("confirmEx");
-  is(clickedButton, 0, "checked expected button num click");
-  is(checkVal.value, true, "expected checkbox setting");
+  result = await util.prompt("confirmEx", promptArgs);
+  is(
+    util.useAsync ? result.buttonNumClicked : result,
+    0,
+    "checked expected button num click"
+  );
+  is(
+    util.useAsync ? result.checked : checkVal.value,
+    true,
+    "expected checkbox setting"
+  );
 
   await promptDone;
 
@@ -902,11 +972,19 @@ async function runTests() {
     "butt1",
     "butt2",
     "Check me out!",
-    checkVal,
+    util.useAsync ? checkVal.value : checkVal,
   ];
-  clickedButton = doPrompt("confirmEx");
-  is(clickedButton, 1, "checked expected button num click");
-  is(checkVal.value, true, "expected checkbox setting");
+  result = await util.prompt("confirmEx", promptArgs);
+  is(
+    util.useAsync ? result.buttonNumClicked : result,
+    1,
+    "checked expected button num click"
+  );
+  is(
+    util.useAsync ? result.checked : checkVal.value,
+    true,
+    "expected checkbox setting"
+  );
 
   await promptDone;
 
@@ -952,11 +1030,19 @@ async function runTests() {
     "butt1",
     "butt2",
     "Check me out!",
-    checkVal,
+    util.useAsync ? checkVal.value : checkVal,
   ];
-  clickedButton = doPrompt("confirmEx");
-  is(clickedButton, 2, "checked expected button num click");
-  is(checkVal.value, true, "expected checkbox setting");
+  result = await util.prompt("confirmEx", promptArgs);
+  is(
+    util.useAsync ? result.buttonNumClicked : result,
+    2,
+    "checked expected button num click"
+  );
+  is(
+    util.useAsync ? result.checked : checkVal.value,
+    true,
+    "expected checkbox setting"
+  );
 
   await promptDone;
 
@@ -985,7 +1071,7 @@ async function runTests() {
     promptDone = handlePrompt(state, action);
 
     promptArgs = ["TestTitle", "This is the alert text."];
-    doPrompt("alert");
+    await util.prompt("alert", promptArgs);
 
     await promptDone;
   }
@@ -1033,10 +1119,14 @@ async function runTests() {
       null,
       null,
       null,
-      {},
+      util.useAsync ? false : {},
     ];
-    clickedButton = doPrompt("confirmEx");
-    is(clickedButton, 0, "checked expected button num click");
+    result = await util.prompt("confirmEx", promptArgs);
+    is(
+      util.useAsync ? result.buttonNumClicked : result,
+      0,
+      "checked expected button num click"
+    );
 
     await promptDone;
   }
@@ -1081,12 +1171,12 @@ async function runTests() {
     textField: "username",
     passField: "password",
   };
-  if (usePromptService) {
+  if (util.usePromptService && !util.useAsync) {
     promptDone = handlePrompt(state, action);
 
     checkVal.value = false;
     promptArgs = [channel, level, authinfo, "Check me out!", checkVal];
-    isOK = doPrompt("promptAuth");
+    isOK = await util.prompt("promptAuth", promptArgs);
     is(isOK, true, "checked expected retval");
     is(authinfo.username, "username", "checking filled username");
     is(authinfo.password, "password", "checking filled password");
@@ -1123,7 +1213,7 @@ async function runTests() {
     textField: "username",
     passField: "password",
   };
-  if (usePromptService) {
+  if (util.usePromptService && !util.useAsync) {
     promptDone = handlePrompt(state, action);
 
     checkVal.value = false;
@@ -1133,7 +1223,7 @@ async function runTests() {
     authinfo.username = "";
     authinfo.password = "";
     promptArgs = [channel, level, authinfo, "Check me out!", checkVal];
-    isOK = doPrompt("promptAuth");
+    isOK = await util.prompt("promptAuth", promptArgs);
     is(isOK, true, "checked expected retval");
     is(authinfo.username, "username", "checking filled username");
     is(authinfo.password, "password", "checking filled password");
@@ -1176,11 +1266,11 @@ async function runTests() {
     textField: "username",
     passField: "password",
   };
-  if (usePromptService) {
+  if (util.usePromptService && !util.useAsync) {
     promptDone = handlePrompt(state, action);
     checkVal.value = false;
     promptArgs = [channel, level, authinfo, "Check me out!", checkVal];
-    isOK = doPrompt("promptAuth");
+    isOK = await util.prompt("promptAuth", promptArgs);
     is(isOK, true, "checked expected retval");
     is(authinfo.username, "username", "checking filled username");
     is(authinfo.password, "password", "checking filled password");
@@ -1223,12 +1313,12 @@ async function runTests() {
     textField: "username",
     passField: "password",
   };
-  if (usePromptService) {
+  if (util.usePromptService && !util.useAsync) {
     promptDone = handlePrompt(state, action);
 
     checkVal.value = false;
     promptArgs = [channel, level, authinfo, "Check me out!", checkVal];
-    isOK = doPrompt("promptAuth");
+    isOK = await util.prompt("promptAuth", promptArgs);
     is(isOK, true, "checked expected retval");
     is(authinfo.username, "username", "checking filled username");
     is(authinfo.password, "password", "checking filled password");
@@ -1238,44 +1328,12 @@ async function runTests() {
   }
 }
 
-let usePromptService;
-let useBrowsingContext;
-let modalType;
+let promptArgs;
 
 add_task(async function runPromptTests() {
-  info("Process type: " + SpecialPowers.Services.appinfo.processType);
-
-  // Prompt service with dom window parent only supports window prompts
-  usePromptService = true;
-  useBrowsingContext = false;
-  isTabModal = false;
-  modalType = Ci.nsIPrompt.MODAL_TYPE_WINDOW;
-  await runTests();
-
-  let modalTypes = [Ci.nsIPrompt.MODAL_TYPE_WINDOW];
-  // if tab/content prompts are disabled by pref, only test window prompts
-  if (SpecialPowers.getBoolPref("prompts.tab_modal.enabled")) {
-    modalTypes.push(Ci.nsIPrompt.MODAL_TYPE_TAB);
-    modalTypes.push(Ci.nsIPrompt.MODAL_TYPE_CONTENT);
-  }
-
-  for (let type of modalTypes) {
-    modalType = type;
-    isTabModal = type !== Ci.nsIPrompt.MODAL_TYPE_WINDOW;
-
-    // Prompt service with browsing context
-    usePromptService = true;
-    useBrowsingContext = true;
-    await runTests();
-
-    // nsIPrompt
-    // modalType is set via nsIWritablePropertyBag (legacy)
-    usePromptService = false;
-    useBrowsingContext = false;
-    await runTests();
-  }
+  await runPromptCombinations(window, runTests);
 });
 </script>
 </pre>
-  </body>
+</body>
 </html>

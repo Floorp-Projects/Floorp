@@ -2,9 +2,8 @@
 <html>
 <head>
   <title>Modal Prompts Test</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="prompt_common.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 Prompter tests: modal prompts
@@ -50,9 +49,14 @@ function handlePrompt(state, action) {
   });
 }
 
+async function runTests(util) {
+    // Select prompt does not support tab or content prompts yet. See Bug 1622817.
+    if(util.modalType != Ci.nsIPrompt.MODAL_TYPE_WINDOW) {
+        info('Skipping modal type for select prompt...');
+        return;
+    }
 
-// =====
-add_task(async function test_select_empty_list() {
+    // Empty list
     info("Starting test: Select (0 items, ok)");
     let state = {
         msg: "This is the select text.",
@@ -65,75 +69,69 @@ add_task(async function test_select_empty_list() {
     let promptDone = handlePrompt(state, action);
     let items = [];
     selectVal.value = null; // outparam, just making sure.
-    isOK = Services.prompt.select(window, "TestTitle", "This is the select text.", items, selectVal);
-    is(isOK, true, "checked expected retval");
-    is(selectVal.value, -1, "checking selected index");
-
+    let result =  await util.prompt("select", ["TestTitle", "This is the select text.", items, util.useAsync ? false : selectVal]);
+    is(util.useAsync ? result.ok : result, true, "checked expected retval");
+    is(util.useAsync ? result.selected : selectVal.value, -1, "checking selected index");
     await promptDone;
-});
 
-// =====
-add_task(async function test_select_ok() {
+    // ok
     info("Starting test: Select (3 items, ok)");
-    let state = {
+    state = {
         msg: "This is the select text.",
         title: "TestTitle",
         items: ["one", "two", "three"],
     };
-    let action = {
+    action = {
         buttonClick: "ok",
     };
-    let promptDone = handlePrompt(state, action);
-    let items = ["one", "two", "three"];
+    promptDone = handlePrompt(state, action);
+    items = ["one", "two", "three"];
     selectVal.value = null; // outparam, just making sure.
-    isOK = Services.prompt.select(window, "TestTitle", "This is the select text.", items, selectVal);
-    is(isOK, true, "checked expected retval");
-    is(selectVal.value, 0, "checking selected index");
-
+    result = await util.prompt("select", ["TestTitle", "This is the select text.", items, util.useAsync ? false : selectVal]);
+    is(util.useAsync ? result.ok : result, true, "checked expected retval");
+    is(util.useAsync ? result.selected : selectVal.value, 0, "checking selected index");
     await promptDone;
-});
 
-// =====
-add_task(async function test_select_item() {
+    // select item
     info("Starting test: Select (3 items, selection changed, ok)");
-    let state = {
+    state = {
         msg: "This is the select text.",
         title: "TestTitle",
         items: ["one", "two", "three"],
     };
-    let action = {
+    action = {
         buttonClick: "ok",
         selectItem: 1,
     };
-    let promptDone = handlePrompt(state, action);
-    let items = ["one", "two", "three"];
+    promptDone = handlePrompt(state, action);
+    items = ["one", "two", "three"];
     selectVal.value = null; // outparam, just making sure.
-    isOK = Services.prompt.select(window, "TestTitle", "This is the select text.", items, selectVal);
-    is(isOK, true, "checked expected retval");
-    is(selectVal.value, 1, "checking selected index");
-
+    result = await util.prompt("select", ["TestTitle", "This is the select text.", items,  util.useAsync ? false : selectVal]);
+    is(util.useAsync ? result.ok : result, true, "checked expected retval");
+    is(util.useAsync ? result.selected : selectVal.value, 1, "checking selected index");
     await promptDone;
-});
 
-// =====
-add_task(async function test_cancel_prompt() {
+    // cancel prompt
     info("Starting test: Select (3 items, cancel)");
-    let state = {
+    state = {
         msg: "This is the select text.",
         title: "TestTitle",
         items: ["one", "two", "three"],
     };
-    let action = {
+    action = {
         buttonClick: "cancel",
     };
-    let promptDone = handlePrompt(state, action);
-    let items = ["one", "two", "three"];
+    promptDone = handlePrompt(state, action);
+    items = ["one", "two", "three"];
     selectVal.value = null; // outparam, just making sure.
-    isOK = Services.prompt.select(window, "TestTitle", "This is the select text.", items, selectVal);
-    is(isOK, false, "checked expected retval");
-    is(selectVal.value, 0, "checking selected index");
-
+    result = await util.prompt("select", ["TestTitle", "This is the select text.", items,  util.useAsync ? false : selectVal]);
+    is(util.useAsync ? result.ok : result, false, "checked expected retval");
+    ok(util.useAsync && result.selected == -1 || selectVal.value == 0, "checking selected index");
     await promptDone;
+}
+
+add_task(async function runPromptTests() {
+    await runPromptCombinations(window, runTests);
 });
 
 </script>
