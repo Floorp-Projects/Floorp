@@ -384,6 +384,37 @@ class experimental(object):
         ./mach try auto --strategy relevant_tests
     """
 
+    bugbug_all = {
+        'test': Any('skip-unless-schedules', 'bugbug-all'),
+    }
+    """Doesn't limit platforms, medium confidence threshold."""
+
+    bugbug_all_low = {
+        'test': Any('skip-unless-schedules', 'bugbug-all-low'),
+    }
+    """Doesn't limit platforms, low confidence threshold."""
+
+    bugbug_all_high = {
+        'test': Any('skip-unless-schedules', 'bugbug-all-high'),
+    }
+    """Doesn't limit platforms, high confidence threshold."""
+
+    bugbug_debug = {
+        'test': Any('skip-unless-schedules', 'bugbug-debug'),
+    }
+    """Restricts tests to debug platforms."""
+
+    bugbug_reduced = {
+        'test': Any('skip-unless-schedules', 'bugbug-reduced'),
+    }
+    """Use the reduced set of tasks (and no groups) chosen by bugbug."""
+
+    bugbug_reduced_high = {
+        'test': Any('skip-unless-schedules', 'bugbug-reduced-high'),
+    }
+    """Use the reduced set of tasks (and no groups) chosen by bugbug, high
+    confidence threshold."""
+
     relevant_tests = {
         'test': Any('skip-unless-schedules', 'skip-unless-has-relevant-tests'),
     }
@@ -394,38 +425,3 @@ class experimental(object):
     }
     """Provides a stable history of SETA's performance in the event we make it
     non-default in the future. Only useful as a benchmark."""
-
-    class bugbug(object):
-        """Strategies that query the bugbug push schedules endpoint which uses machine
-        learning to determine which tasks to run."""
-
-        all = {
-            'test': Any('skip-unless-schedules', 'bugbug-all'),
-        }
-        """Doesn't limit platforms, medium confidence threshold."""
-
-        all_low = {
-            'test': Any('skip-unless-schedules', 'bugbug-all-low'),
-        }
-        """Doesn't limit platforms, low confidence threshold."""
-
-        all_high = {
-            'test': Any('skip-unless-schedules', 'bugbug-all-high'),
-        }
-        """Doesn't limit platforms, high confidence threshold."""
-
-        debug = {
-            'test': Any('skip-unless-schedules', 'bugbug-debug'),
-        }
-        """Restricts tests to debug platforms."""
-
-        reduced = {
-            'test': Any('skip-unless-schedules', 'bugbug-reduced'),
-        }
-        """Use the reduced set of tasks (and no groups) chosen by bugbug."""
-
-        reduced_high = {
-            'test': Any('skip-unless-schedules', 'bugbug-reduced-high'),
-        }
-        """Use the reduced set of tasks (and no groups) chosen by bugbug, high
-        confidence threshold."""
