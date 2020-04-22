@@ -4,39 +4,73 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-menupopup,
-panel:not([type="arrow"]) {
+:host {
   -moz-appearance: menupopup;
   -moz-font-smoothing-background-color: -moz-mac-menupopup;
   background-color: Menu;
   color: MenuText;
 }
 
-menupopup > menu > menupopup {
-  margin-top: -4px;
+:host(panel[titlebar]) {
+  -moz-appearance: none; /* to disable rounded corners */
 }
 
-.menupopup-arrowscrollbox {
+/* Scroll box */
+
+:host(:not(.in-menulist)) arrowscrollbox {
   padding: 4px 0;
 }
 
-panel[titlebar] {
-  -moz-appearance: none; /* to disable rounded corners */
+arrowscrollbox:not(:-moz-lwtheme)::part(scrollbutton-up),
+arrowscrollbox:not(:-moz-lwtheme)::part(scrollbutton-down) {
+  position: relative;
+  /* Here we're using a little magic.
+   * The arrow button is supposed to overlay the scrollbox, blocking
+   * everything under it from reaching the screen. However, the menu background
+   * is slightly transparent, so how can we block something completely without
+   * messing up the transparency? It's easy: The native theming of the
+   * "menuitem" appearance uses CGContextClearRect before drawing, which
+   * clears everything under it.
+   * Without help from native theming this effect wouldn't be achievable.
+   */
+  -moz-appearance: menuitem;
+}
+
+arrowscrollbox:not(:-moz-lwtheme)::part(scrollbutton-up) {
+  margin-bottom: -16px;
+}
+
+arrowscrollbox:not(:-moz-lwtheme)::part(scrollbutton-down) {
+  margin-top: -16px;
+}
+
+arrowscrollbox:not(:-moz-lwtheme)[scrolledtostart="true"]::part(scrollbutton-up),
+arrowscrollbox:not(:-moz-lwtheme)[scrolledtoend="true"]::part(scrollbutton-down) {
+  visibility: collapse;
 }
 
 /* rules for popups associated with menulists */
 
-menulist > menupopup {
+:host(.in-menulist) {
   min-width: 0;
   padding: 4px 0;
 }
 
-menulist > menupopup:not([position]) {
+:host(.in-menulist:not([position])) {
   margin-inline-start: -13px;
   margin-top: -2px;
 }
 
-menupopup[customoptionstyling="true"] {
+:host([customoptionstyling="true"]) {
   -moz-appearance: none;
   padding-block: 0;
+}
+
+:host(.in-menulist) arrowscrollbox::part(scrollbutton-up),
+:host(.in-menulist) arrowscrollbox::part(scrollbutton-down) {
+  display: none;
+}
+
+:host(.in-menulist) arrowscrollbox::part(scrollbox) {
+  overflow: auto;
 }
