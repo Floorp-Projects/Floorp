@@ -11,11 +11,11 @@ HERE = os.path.dirname(__file__)
 
 
 class ProxyRunner(Layer):
-    name = "proxy"
+    """Use a proxy
+    """
 
-    arguments = {
-        "--proxy": {"action": "store_true", "default": False, "help": "Use a proxy"}
-    }
+    name = "proxy"
+    activated = False
 
     def __init__(self, env, mach_cmd):
         super(ProxyRunner, self).__init__(env, mach_cmd)
@@ -25,12 +25,7 @@ class ProxyRunner(Layer):
         pass
 
     def __call__(self, metadata):
-        if not self.get_arg("proxy"):
-            return metadata
-
         self.metadata = metadata
-        if not self.get_arg("proxy"):
-            return metadata
 
         # replace with artifacts
         config = {

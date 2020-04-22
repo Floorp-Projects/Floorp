@@ -7,6 +7,12 @@ from mozperftest.metrics.utils import filter_metrics
 
 
 class ConsoleOutput(Layer):
+    """Output metrics in the console.
+    """
+
+    name = "console"
+    activated = False
+
     def __call__(self, metadata):
         """Processes the given results into a perfherder-formatted data blob.
 

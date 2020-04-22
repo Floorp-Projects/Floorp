@@ -64,9 +64,9 @@ host_fetches = {
 
 
 def add_option(env, name, value):
-    options = env.get_arg("browser_browsertime_extra_options", "")
+    options = env.get_arg("browsertime-extra-options", "")
     options += ",%s=%s" % (name, value)
-    env.set_arg("browser_browsertime_extra_options", options)
+    env.set_arg("browsertime-extra-options", options)
 
 
 def add_options(env, options):
@@ -75,30 +75,30 @@ def add_options(env, options):
 
 
 class BrowsertimeRunner(NodeRunner):
-    name = "browsertime (%s)" % NodeRunner.name
+    """Runs a browsertime test.
+    """
+
+    name = "browsertime"
+    activated = True
 
     arguments = {
-        "--browser-cycles": {
-            "type": int,
-            "default": 1,
-            "help": "Number of full cycles",
-        },
-        "--browser-binary": {
+        "--cycles": {"type": int, "default": 1, "help": "Number of full cycles"},
+        "--binary": {
             "type": str,
             "default": None,
             "help": "Path to the desktop browser, or Android app name.",
         },
-        "--browsertime-clobber": {
+        "--clobber": {
             "action": "store_true",
             "default": False,
             "help": "Force-update the installation.",
         },
-        "--browsertime-install-url": {
+        "--install-url": {
             "type": str,
             "default": None,
             "help": "Use this URL as the install url.",
         },
-        "--browser-browsertime-extra-options": {
+        "--extra-options": {
             "type": str,
             "default": "",
             "help": "Extra options passed to browsertime.js",
@@ -464,7 +464,7 @@ class BrowsertimeRunner(NodeRunner):
 
     def __call__(self, metadata):
         self.setup()
-        cycles = self.get_arg("browser-cycles", 1)
+        cycles = self.get_arg("cycles", 1)
         for cycle in range(1, cycles + 1):
             metadata.run_hook("before_cycle", cycle=cycle)
             try:
@@ -501,7 +501,7 @@ class BrowsertimeRunner(NodeRunner):
         if self.get_arg("verbose"):
             args += ["-vvv"]
 
-        extra_options = self.get_arg("browser-browsertime-extra-options")
+        extra_options = self.get_arg("extra-options")
         if extra_options:
             for option in extra_options.split(","):
                 option = option.strip()

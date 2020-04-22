@@ -4,15 +4,12 @@
 import logging
 
 
-def _normalize_arg(name):
-    if name.startswith("--"):
-        name = name[2:]
-    return name.replace("-", "_")
-
-
 class Layer:
     # layer name
     name = "unset"
+
+    # activated by default ?
+    activated = False
 
     # list of arguments grabbed by PerftestArgumentParser
     arguments = {}
@@ -24,12 +21,19 @@ class Layer:
         self.run_process = mach_command.run_process
         self.env = env
 
+    def _normalize_arg(self, name):
+        if name.startswith("--"):
+            name = name[2:]
+        if not name.startswith(self.name):
+            name = "%s-%s" % (self.name, name)
+        return name.replace("-", "_")
+
     def get_arg_names(self):
-        return [_normalize_arg(arg) for arg in self.arguments]
+        return [self._normalize_arg(arg) for arg in self.arguments]
 
     def set_arg(self, name, value):
         """Sets the argument"""
-        name = _normalize_arg(name)
+        name = self._normalize_arg(name)
         if name not in self.get_arg_names():
             raise KeyError(
                 "%r tried to set %r, but does not own it" % (self.name, name)
@@ -37,7 +41,7 @@ class Layer:
         return self.env.set_arg(name, value)
 
     def get_arg(self, name, default=None):
-        return self.env.get_arg(name, default)
+        return self.env.get_arg(name, default, self)
 
     def info(self, msg, name="mozperftest", **kwargs):
         self.log(logging.INFO, name, kwargs, msg)
@@ -69,9 +73,25 @@ class Layer:
 class Layers(Layer):
     def __init__(self, env, mach_command, factories):
         super(Layers, self).__init__(env, mach_command)
-        self.layers = [factory(env, mach_command) for factory in factories]
+
+        def _active(layer):
+            # if it's activated by default, see if we need to deactivate
+            # it by looking for the --no-layername option
+            if layer.activated:
+                return not env.get_arg("no-" + layer.name, False)
+            # if it's deactivated by default, we look for --layername
+            return env.get_arg(layer.name, False)
+
+        self.layers = [
+            factory(env, mach_command) for factory in factories if _active(factory)
+        ]
         self.env = env
         self._counter = -1
+
+    def _normalize_arg(self, name):
+        if name.startswith("--"):
+            name = name[2:]
+        return name.replace("-", "_")
 
     def get_layer(self, name):
         for layer in self.layers:
@@ -81,7 +101,7 @@ class Layers(Layer):
 
     @property
     def name(self):
-        return " + ".join([name for name in self.layers])
+        return " + ".join([l.name for l in self.layers])
 
     def __iter__(self):
         self._counter = -1
@@ -111,7 +131,7 @@ class Layers(Layer):
 
     def set_arg(self, name, value):
         """Sets the argument"""
-        name = _normalize_arg(name)
+        name = self._normalize_arg(name)
         found = False
         for layer in self.layers:
             if name in layer.get_arg_names():
@@ -119,6 +139,9 @@ class Layers(Layer):
                 break
 
         if not found:
+            import pdb
+
+            pdb.set_trace()
             raise KeyError(
                 "%r tried to set %r, but does not own it" % (self.name, name)
             )
