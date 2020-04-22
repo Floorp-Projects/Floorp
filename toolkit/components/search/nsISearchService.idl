@@ -7,6 +7,8 @@
 interface nsIURI;
 interface nsIInputStream;
 
+webidl BrowsingContext;
+
 [scriptable, uuid(5799251f-5b55-4df7-a9e7-0c27812c469a)]
 interface nsISearchSubmission : nsISupports
 {
@@ -301,11 +303,16 @@ interface nsISearchService : nsISupports
    * @param extensionID [optional]
    *        Optional: The correct extensionID if called by an add-on.
    *
+   * @param reqContext [optional]
+   *        Optional: The browsing context of the site the request to add the
+   *        engine came from. If provided, this will act as the prompt parent.
+   *
    * @throws NS_ERROR_FAILURE if the description file cannot be successfully
    *         loaded.
    */
   Promise addEngine(in AString engineURL, in AString iconURL, in boolean confirm,
-                    [optional] in AString extensionID);
+                    [optional] in AString extensionID,
+                    [optional] in BrowsingContext reqContext);
 
   /**
    * Adds a new search engine, without asking the user for confirmation and

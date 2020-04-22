@@ -2820,12 +2820,13 @@ SearchService.prototype = {
     return params;
   },
 
-  async addEngine(engineURL, iconURL, confirm, extensionID) {
+  async addEngine(engineURL, iconURL, confirm, extensionID, reqContext) {
     SearchUtils.log('addEngine: Adding "' + engineURL + '".');
     await this.init();
     let errCode;
     try {
       var engine = new SearchEngine({
+        reqContext,
         uri: engineURL,
         isBuiltin: false,
       });
