@@ -16,6 +16,9 @@ with Files("AccessibleNode.webidl"):
 with Files("AccessibilityRole.webidl"):
     BUG_COMPONENT = ("Core", "Disability Access APIs")
 
+with Files("AriaAttributes.webidl"):
+    BUG_COMPONENT = ("Core", "Disability Access APIs")
+
 with Files("Addon*"):
     BUG_COMPONENT = ("Toolkit", "Add-ons Manager")
 
@@ -1133,4 +1136,5 @@ if CONFIG['ACCESSIBILITY']:
     WEBIDL_FILES += [
         'AccessibilityRole.webidl',
         'AccessibleNode.webidl',
+        'AriaAttributes.webidl',
     ]
