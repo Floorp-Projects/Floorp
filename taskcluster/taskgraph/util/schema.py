@@ -197,6 +197,10 @@ class Schema(voluptuous.Schema):
 OptimizationSchema = voluptuous.Any(
     # always run this task (default)
     None,
+    # always optimize this task
+    {'always': None},
+    # optimize strategy aliases for build kind
+    {'build': list(schedules.ALL_COMPONENTS)},
     # search the index for the given index namespaces, and replace this task if found
     # the search occurs in order, with the first match winning
     {'index-search': [text_type]},

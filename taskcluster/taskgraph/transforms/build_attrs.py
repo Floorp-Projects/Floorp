@@ -45,5 +45,5 @@ def set_schedules_optimization(config, jobs):
 
         build_platform = job['attributes']['build_platform']
         job.setdefault('optimization',
-                       {'skip-unless-schedules': [platform_family(build_platform)]})
+                       {'build': [platform_family(build_platform)]})
         yield job
