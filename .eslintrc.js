@@ -833,7 +833,7 @@ module.exports = {
         "browser/components/extensions/test/browser/head_webNavigation.js",
         "browser/components/extensions/test/xpcshell/test_ext_url_overrides_newtab.js",
         "browser/components/migration/tests/unit/test_Edge_db_migration.js",
-        "browser/components/preferences/in-content/tests/browser_contentblocking.js",
+        "browser/components/preferences/tests/browser_contentblocking.js",
         "browser/components/translation/test/unit/test_cld2.js",
         "browser/components/urlbar/tests/ext/browser/update/browser_getBrowserUpdateStatus_updateDisabledByPolicy.js",
         "browser/extensions/doh-rollout/experiments/doorhanger/api.js",

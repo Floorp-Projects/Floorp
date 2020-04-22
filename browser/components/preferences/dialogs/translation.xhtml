@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
+
+<window id="TranslationDialog"
+        windowtype="Browser:TranslationExceptions"
+        data-l10n-id="translation-window"
+        data-l10n-attrs="title, style"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        onload="gTranslationExceptions.onLoad();"
+        onunload="gTranslationExceptions.uninit();"
+        persist="screenX screenY width height"
+        onkeypress="gTranslationExceptions.onWindowKeyPress(event);">
+
+  <linkset>
+    <html:link rel="localization" href="browser/preferences/translation.ftl"/>
+  </linkset>
+
+  <script src="chrome://browser/content/preferences/dialogs/translation.js"/>
+
+  <keyset>
+    <key data-l10n-id="translation-close-key" modifiers="accel" oncommand="window.close();"/>
+  </keyset>
+
+  <vbox class="contentPane">
+    <vbox flex="1">
+      <label id="languagesLabel"
+             data-l10n-id="translation-languages-disabled-desc"
+             control="permissionsTree"/>
+      <separator class="thin"/>
+      <tree id="languagesTree" flex="1" style="height: 12em;"
+            hidecolumnpicker="true"
+            onkeypress="gTranslationExceptions.onLanguageKeyPress(event)"
+            onselect="gTranslationExceptions.onLanguageSelected();">
+        <treecols>
+          <treecol id="languageCol" data-l10n-id="translation-languages-column" flex="1"/>
+        </treecols>
+        <treechildren/>
+      </tree>
+    </vbox>
+    <hbox class="actionButtons" pack="end">
+      <button id="removeLanguage" disabled="true"
+              data-l10n-id="translation-languages-button-remove"
+              oncommand="gTranslationExceptions.onLanguageDeleted();"/>
+      <button id="removeAllLanguages"
+              data-l10n-id="translation-languages-button-remove-all"
+              oncommand="gTranslationExceptions.onAllLanguagesDeleted();"/>
+      <spacer flex="1"/>
+    </hbox>
+    <separator/>
+    <vbox flex="1">
+      <label id="languagesLabel"
+             data-l10n-id="translation-sites-disabled-desc"
+             control="permissionsTree"/>
+      <separator class="thin"/>
+      <tree id="sitesTree" flex="1" style="height: 12em;"
+            hidecolumnpicker="true"
+            onkeypress="gTranslationExceptions.onSiteKeyPress(event)"
+            onselect="gTranslationExceptions.onSiteSelected();">
+        <treecols>
+          <treecol id="siteCol" data-l10n-id="translation-sites-column" flex="1"/>
+        </treecols>
+        <treechildren/>
+      </tree>
+    </vbox>
+  </vbox>
+
+  <hbox class="actionButtons" pack="end">
+    <button id="removeSite" disabled="true"
+            data-l10n-id="translation-sites-button-remove"
+            oncommand="gTranslationExceptions.onSiteDeleted();"/>
+    <button id="removeAllSites"
+            data-l10n-id="translation-sites-button-remove-all"
+            oncommand="gTranslationExceptions.onAllSitesDeleted();"/>
+    <spacer flex="1"/>
+    <button oncommand="window.close();"
+            data-l10n-id="translation-button-close"/>
+  </hbox>
+</window>

@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+
+<!-- -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- -->
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/fxaPairDevice.css" type="text/css"?>
+
+<window id="fxaPairDeviceDialog"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        role="dialog"
+        onload="gFxaPairDeviceDialog.init();"
+        onunload="gFxaPairDeviceDialog.uninit()"
+        data-l10n-id="fxa-pair-device-dialog"
+        data-l10n-attrs="title, style">
+
+  <linkset>
+    <html:link rel="localization" href="browser/branding/sync-brand.ftl"/>
+    <html:link rel="localization" href="browser/preferences/fxaPairDevice.ftl"/>
+  </linkset>
+  <script src="chrome://browser/content/preferences/fxaPairDevice.js"/>
+
+  <vbox id="qrCodeDisplay">
+    <description class="pairHeading" data-l10n-id="fxa-qrcode-heading-phase1">
+      <html:a
+        id="connect-another-device-link"
+        data-l10n-name="connect-another-device"
+        class="text-link" target="_blank"/>
+    </description>
+    <description class="pairHeading" data-l10n-id="fxa-qrcode-heading-phase2"></description>
+    <vbox>
+      <vbox align="center" id="qrWrapper" pairing-status="loading">
+        <box id="qrContainer"></box>
+        <box id="qrSpinner"></box>
+        <vbox id="qrError" onclick="gFxaPairDeviceDialog.startPairingFlow();">
+          <image id="refresh-qr" />
+          <label class="qr-error-text" data-l10n-id="fxa-qrcode-error-title"></label>
+          <label class="qr-error-text" data-l10n-id="fxa-qrcode-error-body"></label>
+        </vbox>
+      </vbox>
+    </vbox>
+  </vbox>
+</window>

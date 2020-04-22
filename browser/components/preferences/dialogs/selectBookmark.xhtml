@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<?xml-stylesheet href="chrome://browser/content/places/places.css"?>
+
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/tree-icons.css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        data-l10n-id="select-bookmark-window"
+        data-l10n-attrs="title, style"
+        persist="screenX screenY width height" screenX="24" screenY="24"
+        onload="SelectBookmarkDialog.init();">
+<dialog id="selectBookmarkDialog">
+
+  <linkset>
+    <html:link rel="localization" href="browser/preferences/selectBookmark.ftl"/>
+  </linkset>
+
+  <script src="chrome://browser/content/preferences/dialogs/selectBookmark.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://browser/content/utilityOverlay.js"/>
+  <script src="chrome://browser/content/places/places-tree.js"/>
+
+  <description data-l10n-id="select-bookmark-desc"/>
+
+  <separator class="thin"/>
+
+  <tree id="bookmarks" flex="1" is="places-tree"
+        style="height: 15em;"
+        hidecolumnpicker="true"
+        seltype="single"
+        ondblclick="SelectBookmarkDialog.onItemDblClick();"
+        onselect="SelectBookmarkDialog.selectionChanged();"
+        disableUserActions="true">
+    <treecols>
+      <treecol id="title" flex="1" primary="true" hideheader="true"/>
+    </treecols>
+    <treechildren id="bookmarksChildren" flex="1"/>
+  </tree>
+
+  <separator class="thin"/>
+
+</dialog>
+</window>

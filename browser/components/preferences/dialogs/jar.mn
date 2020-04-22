@@ -1,0 +1,42 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+browser.jar:
+   content/browser/preferences/dialogs/applicationManager.xhtml
+   content/browser/preferences/dialogs/applicationManager.js
+   content/browser/preferences/dialogs/blocklists.xhtml
+   content/browser/preferences/dialogs/blocklists.js
+   content/browser/preferences/dialogs/browserLanguages.xhtml
+   content/browser/preferences/dialogs/browserLanguages.js
+   content/browser/preferences/dialogs/clearSiteData.css
+   content/browser/preferences/dialogs/clearSiteData.js
+   content/browser/preferences/dialogs/clearSiteData.xhtml
+   content/browser/preferences/dialogs/colors.xhtml
+   content/browser/preferences/dialogs/colors.js
+   content/browser/preferences/dialogs/connection.xhtml
+   content/browser/preferences/dialogs/connection.js
+   content/browser/preferences/dialogs/fonts.xhtml
+   content/browser/preferences/dialogs/fonts.js
+   content/browser/preferences/dialogs/handlers.css
+   content/browser/preferences/dialogs/languages.xhtml
+   content/browser/preferences/dialogs/languages.js
+   content/browser/preferences/dialogs/permissions.xhtml
+   content/browser/preferences/dialogs/sitePermissions.xhtml
+   content/browser/preferences/dialogs/sitePermissions.js
+   content/browser/preferences/dialogs/sitePermissions.css
+   content/browser/preferences/dialogs/containers.xhtml
+   content/browser/preferences/dialogs/containers.js
+   content/browser/preferences/dialogs/permissions.js
+   content/browser/preferences/dialogs/sanitize.xhtml
+   content/browser/preferences/dialogs/sanitize.js
+   content/browser/preferences/dialogs/selectBookmark.xhtml
+   content/browser/preferences/dialogs/selectBookmark.js
+   content/browser/preferences/dialogs/siteDataSettings.xhtml
+   content/browser/preferences/dialogs/siteDataSettings.js
+*  content/browser/preferences/dialogs/siteDataRemoveSelected.xhtml
+   content/browser/preferences/dialogs/siteDataRemoveSelected.js
+   content/browser/preferences/dialogs/syncChooseWhatToSync.xhtml
+   content/browser/preferences/dialogs/syncChooseWhatToSync.js
+   content/browser/preferences/dialogs/translation.xhtml
+   content/browser/preferences/dialogs/translation.js

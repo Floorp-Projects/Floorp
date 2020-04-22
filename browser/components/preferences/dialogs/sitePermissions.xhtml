@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/preferences/dialogs/sitePermissions.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
+
+<window id="SitePermissionsDialog"
+        windowtype="Browser:SitePermissions"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        data-l10n-id="permissions-window"
+        data-l10n-attrs="title, style"
+        onload="gSitePermissionsManager.onLoad();"
+        onunload="gSitePermissionsManager.uninit();"
+        persist="screenX screenY width height"
+        onkeypress="gSitePermissionsManager.onWindowKeyPress(event);">
+
+  <linkset>
+    <html:link rel="localization" href="browser/preferences/preferences.ftl"/>
+    <html:link rel="localization" href="browser/preferences/permissions.ftl"/>
+  </linkset>
+
+  <script src="chrome://browser/content/preferences/dialogs/sitePermissions.js"/>
+  <script src="chrome://browser/content/preferences/extensionControlled.js"/>
+
+  <keyset>
+    <key data-l10n-id="permissions-close-key" modifiers="accel" oncommand="window.close();"/>
+  </keyset>
+
+  <vbox class="contentPane">
+
+    <hbox align="center" id="setAutoplayPref" hidden="true">
+      <label data-l10n-id="permissions-autoplay-menu"/>
+    </hbox>
+    <description id="permissionsText" control="url"/>
+    <separator class="thin"/>
+    <hbox align="start">
+      <search-textbox id="searchBox" flex="1"
+                      data-l10n-id="permissions-searchbox"
+                      data-l10n-attrs="placeholder"
+                      oncommand="gSitePermissionsManager.buildPermissionsList();"/>
+    </hbox>
+    <separator class="thin"/>
+    <listheader>
+      <treecol id="siteCol" data-l10n-id="permissions-site-name" flex="3" width="75"
+               onclick="gSitePermissionsManager.buildPermissionsList(event.target)"/>
+      <treecol id="statusCol" data-l10n-id="permissions-status" flex="1" width="75"
+               data-isCurrentSortCol="true"
+               onclick="gSitePermissionsManager.buildPermissionsList(event.target);"/>
+    </listheader>
+    <richlistbox id="permissionsBox" flex="1" selected="false"
+                 onkeypress="gSitePermissionsManager.onPermissionKeyPress(event);"
+                 onselect="gSitePermissionsManager.onPermissionSelect();"/>
+  </vbox>
+
+  <hbox class="actionButtons">
+    <button id="removePermission" disabled="true"
+            data-l10n-id="permissions-remove"
+            oncommand="gSitePermissionsManager.onPermissionDelete();"/>
+    <button id="removeAllPermissions"
+            data-l10n-id="permissions-remove-all"
+            oncommand="gSitePermissionsManager.onAllPermissionsDelete();"/>
+  </hbox>
+
+  <spacer flex="1"/>
+  <checkbox id="permissionsDisableCheckbox"/>
+  <description id="permissionsDisableDescription"/>
+  <spacer flex="1"/>
+  <hbox id="browserNotificationsPermissionExtensionContent"
+        class="extension-controlled" align="center" hidden="true">
+    <description control="disableNotificationsPermissionExtension" flex="1"/>
+    <button id="disableNotificationsPermissionExtension"
+            class="extension-controlled-button accessory-button"
+            data-l10n-id="disable-extension"/>
+  </hbox>
+  <hbox class="actionButtons" pack="end">
+    <button oncommand="window.close();" id="cancel"
+            data-l10n-id="permissions-button-cancel" />
+    <button id="btnApplyChanges" oncommand="gSitePermissionsManager.onApplyChanges();"
+            data-l10n-id="permissions-button-ok" />
+  </hbox>
+</window>

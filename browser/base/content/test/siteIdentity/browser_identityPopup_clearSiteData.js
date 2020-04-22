@@ -4,7 +4,7 @@
 const TEST_ORIGIN = "https://example.com";
 const TEST_SUB_ORIGIN = "https://test1.example.com";
 const REMOVE_DIALOG_URL =
-  "chrome://browser/content/preferences/siteDataRemoveSelected.xhtml";
+  "chrome://browser/content/preferences/dialogs/siteDataRemoveSelected.xhtml";
 
 // Greek IDN for 'example.test'.
 const TEST_IDN_ORIGIN =

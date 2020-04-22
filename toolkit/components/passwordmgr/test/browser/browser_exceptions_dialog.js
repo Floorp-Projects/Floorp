@@ -4,7 +4,7 @@ const LOGIN_HOST = "http://example.com";
 
 function openExceptionsDialog() {
   return window.openDialog(
-    "chrome://browser/content/preferences/permissions.xhtml",
+    "chrome://browser/content/preferences/dialogs/permissions.xhtml",
     "Toolkit:PasswordManagerExceptions",
     "",
     {

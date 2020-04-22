@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/preferences/dialogs/siteDataSettings.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/siteDataSettings.css" type="text/css"?>
+
+<window windowtype="Browser:SiteDataRemoveSelected"
+        width="500"
+        data-l10n-id="site-data-removing-dialog"
+        data-l10n-attrs="title"
+        onload="gSiteDataRemoveSelected.init();"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+<dialog id="SiteDataRemoveSelectedDialog"
+        data-l10n-id="site-data-removing-dialog"
+        data-l10n-attrs="buttonlabelaccept">
+
+  <linkset>
+    <html:link rel="localization" href="browser/preferences/siteDataSettings.ftl"/>
+  </linkset>
+
+  <hbox>
+    <vbox>
+      <image class="question-icon"/>
+    </vbox>
+    <vbox flex="1">
+      <!-- Only show this label on OS X because of no dialog title -->
+      <label id="removing-label"
+             data-l10n-id="site-data-removing-header"
+#ifndef XP_MACOSX
+             hidden="true"
+#endif
+      />
+      <separator class="thin"/>
+      <description id="removing-description" data-l10n-id="site-data-removing-desc"/>
+    </vbox>
+  </hbox>
+
+  <separator/>
+
+  <label data-l10n-id="site-data-removing-table"/>
+  <separator class="thin"/>
+  <richlistbox id="removalList" class="theme-listbox" flex="1"/>
+
+  <!-- Load the script after the elements for layout issues (bug 1501755). -->
+  <script src="chrome://browser/content/preferences/dialogs/siteDataRemoveSelected.js"/>
+</dialog>
+</window>
