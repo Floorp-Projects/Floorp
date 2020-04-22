@@ -3,10 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{AsyncBlobImageRasterizer, BlobImageRequest, BlobImageParams, BlobImageResult};
-use api::{DocumentId, PipelineId, ApiMsg, FrameMsg, ResourceUpdate, ExternalEvent, Epoch};
-use api::{BuiltDisplayList, ColorF, NotificationRequest, Checkpoint, IdNamespace};
+use api::{DocumentId, PipelineId, ApiMsg, FrameMsg, SceneMsg, ResourceUpdate, ExternalEvent};
+use api::{BuiltDisplayList, NotificationRequest, Checkpoint, IdNamespace, QualitySettings};
 use api::{ClipIntern, FilterDataIntern, MemoryReport, PrimitiveKeyKind, SharedFontInstanceMap};
-use api::units::LayoutSize;
+use api::DocumentLayer;
+use api::units::*;
 #[cfg(feature = "capture")]
 use crate::capture::CaptureConfig;
 use crate::frame_builder::FrameBuilderConfig;
@@ -52,34 +53,21 @@ pub struct TransactionTimings {
 /// Represents the work associated to a transaction before scene building.
 pub struct Transaction {
     pub document_id: DocumentId,
-    pub display_list_updates: Vec<DisplayListUpdate>,
-    pub removed_pipelines: Vec<(PipelineId, DocumentId)>,
-    pub epoch_updates: Vec<(PipelineId, Epoch)>,
-    pub request_scene_build: Option<SceneRequest>,
     pub blob_requests: Vec<BlobImageParams>,
     pub blob_rasterizer: Option<Box<dyn AsyncBlobImageRasterizer>>,
     pub rasterized_blobs: Vec<(BlobImageRequest, BlobImageResult)>,
     pub resource_updates: Vec<ResourceUpdate>,
     pub frame_ops: Vec<FrameMsg>,
+    pub scene_ops: Vec<SceneMsg>,
     pub notifications: Vec<NotificationRequest>,
-    pub set_root_pipeline: Option<PipelineId>,
     pub render_frame: bool,
     pub invalidate_rendered_frame: bool,
+    pub fonts: SharedFontInstanceMap,
 }
 
 impl Transaction {
     pub fn can_skip_scene_builder(&self) -> bool {
-        self.request_scene_build.is_none() &&
-            self.display_list_updates.is_empty() &&
-            self.epoch_updates.is_empty() &&
-            self.removed_pipelines.is_empty() &&
-            self.blob_requests.is_empty() &&
-            self.set_root_pipeline.is_none()
-    }
-
-    pub fn should_build_scene(&self) -> bool {
-        !self.display_list_updates.is_empty() ||
-            self.set_root_pipeline.is_some()
+        self.scene_ops.is_empty() && self.blob_requests.is_empty()
     }
 
     fn rasterize_blobs(&mut self, is_low_priority: bool) {
@@ -102,6 +90,7 @@ impl Transaction {
 pub struct BuiltTransaction {
     pub document_id: DocumentId,
     pub built_scene: Option<BuiltScene>,
+    pub view: DocumentView,
     pub resource_updates: Vec<ResourceUpdate>,
     pub rasterized_blobs: Vec<(BlobImageRequest, BlobImageResult)>,
     pub blob_rasterizer: Option<Box<dyn AsyncBlobImageRasterizer>>,
@@ -116,28 +105,10 @@ pub struct BuiltTransaction {
     pub timings: Option<TransactionTimings>,
 }
 
-pub struct DisplayListUpdate {
-    pub pipeline_id: PipelineId,
-    pub epoch: Epoch,
-    pub built_display_list: BuiltDisplayList,
-    pub background: Option<ColorF>,
-    pub viewport_size: LayoutSize,
-    pub content_size: LayoutSize,
-    pub timings: TransactionTimings,
-}
-
-/// Contains the render backend data needed to build a scene.
-pub struct SceneRequest {
-    pub view: DocumentView,
-    pub font_instances: SharedFontInstanceMap,
-    pub output_pipelines: FastHashSet<PipelineId>,
-}
-
 #[cfg(feature = "replay")]
 pub struct LoadScene {
     pub document_id: DocumentId,
     pub scene: Scene,
-    pub output_pipelines: FastHashSet<PipelineId>,
     pub font_instances: SharedFontInstanceMap,
     pub view: DocumentView,
     pub config: FrameBuilderConfig,
@@ -149,6 +120,7 @@ pub struct LoadScene {
 pub enum SceneBuilderRequest {
     Transactions(Vec<Box<Transaction>>),
     ExternalEvent(ExternalEvent),
+    AddDocument(DocumentId, DeviceIntSize, DocumentLayer),
     DeleteDocument(DocumentId),
     WakeUp,
     Flush(Sender<()>),
@@ -253,14 +225,28 @@ struct Document {
     scene: Scene,
     interners: Interners,
     stats: SceneStats,
+    view: DocumentView,
+    /// A set of pipelines that the caller has requested be
+    /// made available as output textures.
+    output_pipelines: FastHashSet<PipelineId>,
 }
 
 impl Document {
-    fn new(scene: Scene) -> Self {
+    fn new(device_rect: DeviceIntRect, layer: DocumentLayer, device_pixel_ratio: f32) -> Self {
         Document {
-            scene,
+            scene: Scene::new(),
             interners: Interners::default(),
             stats: SceneStats::empty(),
+            output_pipelines: FastHashSet::default(),
+            view: DocumentView {
+                device_rect,
+                layer,
+                device_pixel_ratio,
+                pan: DeviceIntPoint::zero(),
+                page_zoom_factor: 1.0,
+                pinch_zoom_factor: 1.0,
+                quality_settings: QualitySettings::default(),
+            },
         }
     }
 }
@@ -271,6 +257,7 @@ pub struct SceneBuilderThread {
     tx: Sender<SceneBuilderResult>,
     api_tx: Sender<ApiMsg>,
     config: FrameBuilderConfig,
+    default_device_pixel_ratio: f32,
     size_of_ops: Option<MallocSizeOfOps>,
     hooks: Option<Box<dyn SceneBuilderHooks + Send>>,
     simulate_slow_ms: u32,
@@ -306,6 +293,7 @@ impl SceneBuilderThreadChannels {
 impl SceneBuilderThread {
     pub fn new(
         config: FrameBuilderConfig,
+        default_device_pixel_ratio: f32,
         size_of_ops: Option<MallocSizeOfOps>,
         hooks: Option<Box<dyn SceneBuilderHooks + Send>>,
         channels: SceneBuilderThreadChannels,
@@ -318,6 +306,7 @@ impl SceneBuilderThread {
             tx,
             api_tx,
             config,
+            default_device_pixel_ratio,
             size_of_ops,
             hooks,
             simulate_slow_ms: 0,
@@ -360,6 +349,14 @@ impl SceneBuilderThread {
                         _ => {},
                     }
                     self.forward_built_transactions(built_txns);
+                }
+                Ok(SceneBuilderRequest::AddDocument(document_id, initial_size, layer)) => {
+                    let old = self.documents.insert(document_id, Document::new(
+                        initial_size.into(),
+                        layer,
+                        self.default_device_pixel_ratio,
+                    ));
+                    debug_assert!(old.is_none());
                 }
                 Ok(SceneBuilderRequest::DeleteDocument(document_id)) => {
                     self.documents.remove(&document_id);
@@ -451,12 +448,14 @@ impl SceneBuilderThread {
             let mut built_scene = None;
             let mut interner_updates = None;
 
+            let output_pipelines = FastHashSet::default();
+
             if item.scene.has_root_pipeline() {
                 built_scene = Some(SceneBuilder::build(
                     &item.scene,
                     item.font_instances,
                     &item.view,
-                    &item.output_pipelines,
+                    &output_pipelines,
                     &self.config,
                     &mut item.interners,
                     &SceneStats::empty(),
@@ -473,6 +472,8 @@ impl SceneBuilderThread {
                     scene: item.scene,
                     interners: item.interners,
                     stats: SceneStats::empty(),
+                    view: item.view.clone(),
+                    output_pipelines,
                 },
             );
 
@@ -481,6 +482,7 @@ impl SceneBuilderThread {
                 render_frame: item.build_frame,
                 invalidate_rendered_frame: false,
                 built_scene,
+                view: item.view,
                 resource_updates: Vec::new(),
                 rasterized_blobs: Vec::new(),
                 blob_rasterizer: None,
@@ -598,68 +600,111 @@ impl SceneBuilderThread {
 
         let scene_build_start_time = precise_time_ns();
 
-        let doc = self.documents
-                      .entry(txn.document_id)
-                      .or_insert_with(|| Document::new(Scene::new()));
+        let doc = self.documents.get_mut(&txn.document_id).unwrap();
         let scene = &mut doc.scene;
 
-        for &(pipeline_id, epoch) in &txn.epoch_updates {
-            scene.update_epoch(pipeline_id, epoch);
-        }
-
-        if let Some(id) = txn.set_root_pipeline {
-            scene.set_root_pipeline_id(id);
-        }
-
-        for &(pipeline_id, _) in &txn.removed_pipelines {
-            scene.remove_pipeline(pipeline_id);
-            self.removed_pipelines.insert(pipeline_id);
-        }
-
         let mut timings = None;
-        for update in txn.display_list_updates.drain(..) {
-            if self.removed_pipelines.contains(&update.pipeline_id) {
-                continue;
+
+        let mut removed_pipelines = Vec::new();
+        let rebuild_scene = !txn.scene_ops.is_empty();
+        for message in txn.scene_ops.drain(..) {
+            match message {
+                SceneMsg::UpdateEpoch(pipeline_id, epoch) => {
+                    scene.update_epoch(pipeline_id, epoch);
+                }
+                SceneMsg::SetPageZoom(factor) => {
+                    doc.view.page_zoom_factor = factor.get();
+                }
+                SceneMsg::SetQualitySettings { settings } => {
+                    doc.view.quality_settings = settings;
+                }
+                SceneMsg::SetDocumentView { device_rect, device_pixel_ratio } => {
+                    doc.view.device_rect = device_rect;
+                    doc.view.device_pixel_ratio = device_pixel_ratio;
+                }
+                SceneMsg::SetDisplayList {
+                    epoch,
+                    pipeline_id,
+                    background,
+                    viewport_size,
+                    content_size,
+                    list_descriptor,
+                    list_data,
+                    ..
+                } => {
+                    let built_display_list =
+                        BuiltDisplayList::from_data(list_data, list_descriptor);
+                    let display_list_len = built_display_list.data().len();
+
+                    let (builder_start_time_ns, builder_end_time_ns, send_time_ns) =
+                        built_display_list.times();
+
+                    if self.removed_pipelines.contains(&pipeline_id) {
+                        continue;
+                    }
+
+                    scene.set_display_list(
+                        pipeline_id,
+                        epoch,
+                        built_display_list,
+                        background,
+                        viewport_size,
+                        content_size,
+                    );
+
+                    timings = Some(TransactionTimings {
+                        builder_start_time_ns,
+                        builder_end_time_ns,
+                        send_time_ns,
+                        scene_build_start_time_ns: 0,
+                        scene_build_end_time_ns: 0,
+                        blob_rasterization_end_time_ns: 0,
+                        display_list_len,
+                    });
+                }
+                SceneMsg::SetRootPipeline(pipeline_id) => {
+                    scene.set_root_pipeline_id(pipeline_id);
+                }
+                SceneMsg::RemovePipeline(pipeline_id) => {
+                    scene.remove_pipeline(pipeline_id);
+                    self.removed_pipelines.insert(pipeline_id);
+                    removed_pipelines.push((pipeline_id, txn.document_id));
+                }
+                SceneMsg::EnableFrameOutput(pipeline_id, enable) => {
+                    if enable {
+                        doc.output_pipelines.insert(pipeline_id);
+                    } else {
+                        doc.output_pipelines.remove(&pipeline_id);
+                    }
+                }
             }
-
-            scene.set_display_list(
-                update.pipeline_id,
-                update.epoch,
-                update.built_display_list,
-                update.background,
-                update.viewport_size,
-                update.content_size,
-            );
-
-            timings = Some(update.timings);
         }
 
         self.removed_pipelines.clear();
 
         let mut built_scene = None;
         let mut interner_updates = None;
-        if scene.has_root_pipeline() {
-            if let Some(request) = txn.request_scene_build.take() {
-                let built = SceneBuilder::build(
-                    &scene,
-                    request.font_instances,
-                    &request.view,
-                    &request.output_pipelines,
-                    &self.config,
-                    &mut doc.interners,
-                    &doc.stats,
-                );
+        if scene.has_root_pipeline() && rebuild_scene {
 
-                // Update the allocation stats for next scene
-                doc.stats = built.get_stats();
+            let built = SceneBuilder::build(
+                &scene,
+                txn.fonts.clone(),
+                &doc.view,
+                &doc.output_pipelines,
+                &self.config,
+                &mut doc.interners,
+                &doc.stats,
+            );
 
-                // Retrieve the list of updates from the clip interner.
-                interner_updates = Some(
-                    doc.interners.end_frame_and_get_pending_updates()
-                );
+            // Update the allocation stats for next scene
+            doc.stats = built.get_stats();
 
-                built_scene = Some(built);
-            }
+            // Retrieve the list of updates from the clip interner.
+            interner_updates = Some(
+                doc.interners.end_frame_and_get_pending_updates()
+            );
+
+            built_scene = Some(built);
         }
 
         let scene_build_end_time = precise_time_ns();
@@ -688,11 +733,12 @@ impl SceneBuilderThread {
             render_frame: txn.render_frame,
             invalidate_rendered_frame: txn.invalidate_rendered_frame,
             built_scene,
+            view: doc.view.clone(),
             rasterized_blobs: replace(&mut txn.rasterized_blobs, Vec::new()),
             resource_updates: replace(&mut txn.resource_updates, Vec::new()),
             blob_rasterizer: replace(&mut txn.blob_rasterizer, None),
             frame_ops: replace(&mut txn.frame_ops, Vec::new()),
-            removed_pipelines: replace(&mut txn.removed_pipelines, Vec::new()),
+            removed_pipelines,
             notifications: replace(&mut txn.notifications, Vec::new()),
             interner_updates,
             scene_build_start_time,
@@ -806,6 +852,9 @@ impl LowPrioritySceneBuilderThread {
                         .map(|txn| self.process_transaction(txn))
                         .collect();
                     self.tx.send(SceneBuilderRequest::Transactions(txns)).unwrap();
+                }
+                Ok(SceneBuilderRequest::AddDocument(id, size, layer)) => {
+                    self.tx.send(SceneBuilderRequest::AddDocument(id, size, layer)).unwrap();
                 }
                 Ok(SceneBuilderRequest::DeleteDocument(document_id)) => {
                     self.tx.send(SceneBuilderRequest::DeleteDocument(document_id)).unwrap();
