@@ -650,13 +650,14 @@ CookieService::AddNative(const nsACString& aHost, const nsACString& aPath,
   int64_t currentTimeInUsec = PR_Now();
   CookieKey key = CookieKey(baseDomain, *aOriginAttributes);
 
-  RefPtr<Cookie> cookie = Cookie::Create(
-      aName, aValue, host, aPath, aExpiry, currentTimeInUsec,
-      Cookie::GenerateUniqueCreationTime(currentTimeInUsec), aIsSession,
-      aIsSecure, aIsHttpOnly, key.mOriginAttributes, aSameSite, aSameSite);
-  if (!cookie) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  CookieStruct cookieData(nsCString(aName), nsCString(aValue), nsCString(aHost),
+                          nsCString(aPath), aExpiry, currentTimeInUsec,
+                          Cookie::GenerateUniqueCreationTime(currentTimeInUsec),
+                          aIsHttpOnly, aIsSession, aIsSecure, aSameSite,
+                          aSameSite);
+
+  RefPtr<Cookie> cookie = Cookie::Create(cookieData, key.mOriginAttributes);
+  MOZ_ASSERT(cookie);
 
   CookieStorage* storage = PickStorage(*aOriginAttributes);
   storage->AddCookie(baseDomain, *aOriginAttributes, cookie, currentTimeInUsec,
@@ -1075,15 +1076,14 @@ bool CookieService::SetCookieInternal(CookieStorage* aStorage, nsIURI* aHostURI,
     return newCookie;
   }
 
-  int64_t currentTimeInUsec = PR_Now();
-  // create a new Cookie and copy attributes
-  RefPtr<Cookie> cookie = Cookie::Create(
-      cookieData.name(), cookieData.value(), cookieData.host(),
-      cookieData.path(), cookieData.expiry(), currentTimeInUsec,
-      Cookie::GenerateUniqueCreationTime(currentTimeInUsec),
-      cookieData.isSession(), cookieData.isSecure(), cookieData.isHttpOnly(),
-      aOriginAttributes, cookieData.sameSite(), cookieData.rawSameSite());
+  // create a new Cookie
+  RefPtr<Cookie> cookie = Cookie::Create(cookieData, aOriginAttributes);
   MOZ_ASSERT(cookie);
+
+  int64_t currentTimeInUsec = PR_Now();
+  cookie->SetLastAccessed(currentTimeInUsec);
+  cookie->SetCreationTime(
+      Cookie::GenerateUniqueCreationTime(currentTimeInUsec));
 
   // add the cookie to the list. AddCookie() takes care of logging.
   // we get the current time again here, since it may have changed during
@@ -2256,15 +2256,14 @@ bool CookieService::SetCookiesFromIPC(const nsACString& aBaseDomain,
     }
 
     // create a new Cookie and copy attributes
-    RefPtr<Cookie> cookie = Cookie::Create(
-        cookieData.name(), cookieData.value(), cookieData.host(),
-        cookieData.path(), cookieData.expiry(), currentTimeInUsec,
-        Cookie::GenerateUniqueCreationTime(currentTimeInUsec),
-        cookieData.isSession(), cookieData.isSecure(), cookieData.isHttpOnly(),
-        aAttrs, cookieData.sameSite(), cookieData.rawSameSite());
+    RefPtr<Cookie> cookie = Cookie::Create(cookieData, aAttrs);
     if (!cookie) {
       continue;
     }
+
+    cookie->SetLastAccessed(currentTimeInUsec);
+    cookie->SetCreationTime(
+        Cookie::GenerateUniqueCreationTime(currentTimeInUsec));
 
     storage->AddCookie(aBaseDomain, aAttrs, cookie, currentTimeInUsec, aHostURI,
                        EmptyCString(), aFromHttp);
