@@ -1,6 +1,7 @@
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const SUBDIALOG_URL = "chrome://browser/content/preferences/dialogs/connection.xhtml";
+const SUBDIALOG_URL =
+  "chrome://browser/content/preferences/dialogs/connection.xhtml";
 const TRR_MODE_PREF = "network.trr.mode";
 const TRR_URI_PREF = "network.trr.uri";
 const TRR_RESOLVERS_PREF = "network.trr.resolvers";

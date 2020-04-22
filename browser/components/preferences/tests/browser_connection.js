@@ -17,7 +17,8 @@ function test() {
     Services.prefs.clearUserPref("browser.preferences.instantApply");
   });
 
-  let connectionURL = "chrome://browser/content/preferences/dialogs/connection.xhtml";
+  let connectionURL =
+    "chrome://browser/content/preferences/dialogs/connection.xhtml";
 
   /*
   The connection dialog alone won't save onaccept since it uses type="child",
