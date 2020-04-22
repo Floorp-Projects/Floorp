@@ -706,11 +706,14 @@ void IDBDatabase::AbortTransactions(bool aShouldWarn) {
     return;
   }
 
+  // XXX TransformIfIntoNewArray might be generalized to allow specifying the
+  // type of nsTArray to create, so that it can create an AutoTArray as well; an
+  // TransformIf (without AbortOnErr) might be added, which could be used here.
   StrongTransactionArray transactionsToAbort;
   transactionsToAbort.SetCapacity(mTransactions.Count());
 
-  for (auto iter = mTransactions.ConstIter(); !iter.Done(); iter.Next()) {
-    IDBTransaction* transaction = iter.Get()->GetKey();
+  for (const auto& entry : mTransactions) {
+    IDBTransaction* transaction = entry.GetKey();
     MOZ_ASSERT(transaction);
 
     transaction->AssertIsOnOwningThread();

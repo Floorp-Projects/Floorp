@@ -118,14 +118,14 @@ void IDBMutableFile::AbortFileHandles() {
   nsTArray<RefPtr<IDBFileHandle>> fileHandlesToAbort;
   fileHandlesToAbort.SetCapacity(mFileHandles.Count());
 
-  for (auto iter = mFileHandles.ConstIter(); !iter.Done(); iter.Next()) {
-    IDBFileHandle* const fileHandle = iter.Get()->GetKey();
+  for (const auto& entry : mFileHandles) {
+    IDBFileHandle* const fileHandle = entry.GetKey();
     MOZ_ASSERT(fileHandle);
 
     fileHandle->AssertIsOnOwningThread();
 
     if (!fileHandle->IsDone()) {
-      fileHandlesToAbort.AppendElement(iter.Get()->GetKey());
+      fileHandlesToAbort.AppendElement(fileHandle);
     }
   }
   MOZ_ASSERT(fileHandlesToAbort.Length() <= mFileHandles.Count());
