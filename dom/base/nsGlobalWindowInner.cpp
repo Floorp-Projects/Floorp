@@ -5388,10 +5388,7 @@ CallState nsGlobalWindowInner::CallOnInProcessChildren(Method aMethod,
     return state;
   }
 
-  BrowsingContext::Children children;
-  GetBrowsingContext()->GetChildren(children);
-
-  for (const RefPtr<BrowsingContext>& bc : children) {
+  for (const RefPtr<BrowsingContext>& bc : GetBrowsingContext()->Children()) {
     nsCOMPtr<nsPIDOMWindowOuter> pWin = bc->GetDOMWindow();
     if (!pWin) {
       continue;
