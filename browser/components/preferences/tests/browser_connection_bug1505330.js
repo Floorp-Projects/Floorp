@@ -10,7 +10,8 @@ add_task(async function testAutoconfigReloadButton() {
   Services.prefs.lockPref("signon.autologin.proxy");
 
   await openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true });
-  const connectionURL = "chrome://browser/content/preferences/dialogs/connection.xhtml";
+  const connectionURL =
+    "chrome://browser/content/preferences/dialogs/connection.xhtml";
   const promiseDialogLoaded = promiseLoadSubDialog(connectionURL);
   gBrowser.contentDocument.getElementById("connectionSettings").click();
   const dialog = await promiseDialogLoaded;

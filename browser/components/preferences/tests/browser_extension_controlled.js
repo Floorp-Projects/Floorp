@@ -968,7 +968,8 @@ add_task(async function testExtensionControlledProxyConfig() {
   const CONTROLLED_SECTION_ID = "proxyExtensionContent";
   const CONTROLLED_BUTTON_ID = "disableProxyExtension";
   const CONNECTION_SETTINGS_DESC_ID = "connectionSettingsDescription";
-  const PANEL_URL = "chrome://browser/content/preferences/dialogs/connection.xhtml";
+  const PANEL_URL =
+    "chrome://browser/content/preferences/dialogs/connection.xhtml";
 
   await SpecialPowers.pushPrefEnv({ set: [[PROXY_PREF, PROXY_DEFAULT]] });
 

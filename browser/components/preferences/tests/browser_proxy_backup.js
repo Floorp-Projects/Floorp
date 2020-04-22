@@ -28,7 +28,8 @@ function test() {
     }
   });
 
-  let connectionURL = "chrome://browser/content/preferences/dialogs/connection.xhtml";
+  let connectionURL =
+    "chrome://browser/content/preferences/dialogs/connection.xhtml";
 
   // Set a shared proxy and an SSL backup
   Services.prefs.setIntPref("network.proxy.type", 1);
