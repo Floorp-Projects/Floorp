@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>removing content attribute</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta name="viewport" content="width=400">
+  <meta name="viewport" content="width=800">
+  <script src="viewport_helpers.js"></script>
+</head>
+<body>
+  <script type="application/javascript">
+    "use strict";
+
+    add_task(async function multiple_viewport_tags() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
+
+      let info = getViewportInfo(800, 480);
+      // The latter meta viewport tag is used.
+      is(info.width, 800, "width should be 800");
+
+      const secondMeta =
+          document.querySelector("meta[name=viewport][content='width=800']");
+      secondMeta.removeAttribute("content");
+
+      info = getViewportInfo(800, 480);
+      // The latter meta viewport tag no longer has a valid content, the first
+      // one should be used.
+      is(info.width, 400, "width should be 400");
+    });
+  </script>
+</body>
+</html>
