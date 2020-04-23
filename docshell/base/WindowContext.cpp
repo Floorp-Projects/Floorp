@@ -45,8 +45,41 @@ WindowGlobalParent* WindowContext::Canonical() {
   return static_cast<WindowGlobalParent*>(this);
 }
 
+bool WindowContext::IsCached() const {
+  return mBrowsingContext->mCurrentWindowContext != this;
+}
+
 nsIGlobalObject* WindowContext::GetParentObject() const {
   return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
+}
+
+void WindowContext::AppendChildBrowsingContext(
+    BrowsingContext* aBrowsingContext) {
+  MOZ_DIAGNOSTIC_ASSERT(Group() == aBrowsingContext->Group(),
+                        "Mismatched groups?");
+  MOZ_DIAGNOSTIC_ASSERT(!mChildren.Contains(aBrowsingContext));
+
+  mChildren.AppendElement(aBrowsingContext);
+
+  // If we're the current WindowContext in our BrowsingContext, make sure to
+  // clear any cached `children` value.
+  if (!IsCached()) {
+    BrowsingContext_Binding::ClearCachedChildrenValue(mBrowsingContext);
+  }
+}
+
+void WindowContext::RemoveChildBrowsingContext(
+    BrowsingContext* aBrowsingContext) {
+  MOZ_DIAGNOSTIC_ASSERT(Group() == aBrowsingContext->Group(),
+                        "Mismatched groups?");
+
+  mChildren.RemoveElement(aBrowsingContext);
+
+  // If we're the current WindowContext in our BrowsingContext, make sure to
+  // clear any cached `children` value.
+  if (!IsCached()) {
+    BrowsingContext_Binding::ClearCachedChildrenValue(mBrowsingContext);
+  }
 }
 
 void WindowContext::SendCommitTransaction(ContentParent* aParent,
@@ -131,9 +164,9 @@ void WindowContext::Discard() {
     return;
   }
 
-  mBrowsingContext->UnregisterWindowContext(this);
-  gWindowContexts->Remove(InnerWindowId());
   mIsDiscarded = true;
+  gWindowContexts->Remove(InnerWindowId());
+  mBrowsingContext->UnregisterWindowContext(this);
 }
 
 WindowContext::WindowContext(BrowsingContext* aBrowsingContext,
@@ -172,11 +205,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(WindowContext)
   }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowsingContext)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mChildren)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(WindowContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowsingContext)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildren)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(WindowContext)
