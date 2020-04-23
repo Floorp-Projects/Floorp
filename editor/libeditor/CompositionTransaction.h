@@ -66,6 +66,7 @@ class CompositionTransaction final : public EditTransactionBase {
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_DECL_EDITTRANSACTIONBASE
+  NS_DECL_EDITTRANSACTIONBASE_GETASMETHODS_OVERRIDE(CompositionTransaction)
 
   NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;
 

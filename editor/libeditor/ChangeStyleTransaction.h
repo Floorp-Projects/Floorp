@@ -58,6 +58,7 @@ class ChangeStyleTransaction final : public EditTransactionBase {
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_DECL_EDITTRANSACTIONBASE
+  NS_DECL_EDITTRANSACTIONBASE_GETASMETHODS_OVERRIDE(ChangeStyleTransaction)
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
 
