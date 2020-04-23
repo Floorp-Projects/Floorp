@@ -1271,6 +1271,7 @@ checksum = "e88a8acf291dafb59c2d96e8f59828f3838bb1a70398823ade51a84de6a6deed"
 name = "fallible"
 version = "0.0.1"
 dependencies = [
+ "hashbrown",
  "hashglobe",
  "smallvec",
 ]
@@ -2534,6 +2535,7 @@ dependencies = [
  "app_units",
  "cssparser",
  "euclid",
+ "hashbrown",
  "hashglobe",
  "selectors",
  "servo_arc",

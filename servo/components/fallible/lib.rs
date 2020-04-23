@@ -2,20 +2,62 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+extern crate hashbrown;
 extern crate hashglobe;
 extern crate smallvec;
 
+use hashbrown::hash_map::Entry;
+use hashbrown::CollectionAllocErr;
 #[cfg(feature = "known_system_malloc")]
 use hashglobe::alloc;
-use hashglobe::FailedAllocationError;
 use smallvec::Array;
 use smallvec::SmallVec;
+use std::alloc::Layout;
 use std::vec::Vec;
 
 pub trait FallibleVec<T> {
     /// Append |val| to the end of |vec|.  Returns Ok(()) on success,
     /// Err(reason) if it fails, with |reason| describing the failure.
-    fn try_push(&mut self, value: T) -> Result<(), FailedAllocationError>;
+    fn try_push(&mut self, value: T) -> Result<(), CollectionAllocErr>;
+}
+
+pub trait FallibleHashMap<K, V, H> {
+    fn try_insert(&mut self, k: K, v: V) -> Result<Option<V>, CollectionAllocErr>;
+    fn try_entry(&mut self, k: K) -> Result<Entry<K, V, H>, CollectionAllocErr>;
+}
+
+pub trait FallibleHashSet<T, H> {
+    fn try_insert(&mut self, x: T) -> Result<bool, CollectionAllocErr>;
+}
+
+impl<K, V, H> FallibleHashMap<K, V, H> for hashbrown::HashMap<K, V, H>
+where
+    K: Eq + std::hash::Hash,
+    H: std::hash::BuildHasher,
+{
+    #[inline]
+    fn try_insert(&mut self, k: K, v: V) -> Result<Option<V>, CollectionAllocErr> {
+        self.try_reserve(1)?;
+        Ok(self.insert(k, v))
+    }
+
+    #[inline]
+    fn try_entry(&mut self, k: K) -> Result<Entry<K, V, H>, CollectionAllocErr> {
+        self.try_reserve(1)?;
+        Ok(self.entry(k))
+    }
+}
+
+impl<T, H> FallibleHashSet<T, H> for hashbrown::HashSet<T, H>
+where
+    T: Eq + std::hash::Hash,
+    H: std::hash::BuildHasher,
+{
+    #[inline]
+    fn try_insert(&mut self, x: T) -> Result<bool, CollectionAllocErr> {
+        self.try_reserve(1)?;
+        Ok(self.insert(x))
+    }
 }
 
 /////////////////////////////////////////////////////////////////
@@ -23,7 +65,7 @@ pub trait FallibleVec<T> {
 
 impl<T> FallibleVec<T> for Vec<T> {
     #[inline(always)]
-    fn try_push(&mut self, val: T) -> Result<(), FailedAllocationError> {
+    fn try_push(&mut self, val: T) -> Result<(), CollectionAllocErr> {
         #[cfg(feature = "known_system_malloc")]
         {
             if self.capacity() == self.len() {
@@ -41,7 +83,7 @@ impl<T> FallibleVec<T> for Vec<T> {
 #[cfg(feature = "known_system_malloc")]
 #[inline(never)]
 #[cold]
-fn try_double_vec<T>(vec: &mut Vec<T>) -> Result<(), FailedAllocationError> {
+fn try_double_vec<T>(vec: &mut Vec<T>) -> Result<(), CollectionAllocErr> {
     use std::mem;
 
     let old_ptr = vec.as_mut_ptr();
@@ -53,12 +95,15 @@ fn try_double_vec<T>(vec: &mut Vec<T>) -> Result<(), FailedAllocationError> {
     } else {
         old_cap
             .checked_mul(2)
-            .ok_or(FailedAllocationError::new("capacity overflow for Vec"))?
+            .ok_or(CollectionAllocErr::CapacityOverflow)?
     };
 
     let new_size_bytes = new_cap
         .checked_mul(mem::size_of::<T>())
-        .ok_or(FailedAllocationError::new("capacity overflow for Vec"))?;
+        .ok_or(CollectionAllocErr::CapacityOverflow)?;
+
+    let layout = Layout::from_size_align(new_size_bytes, std::mem::align_of::<T>())
+        .map_err(|_| CollectionAllocErr::CapacityOverflow)?;
 
     let new_ptr = unsafe {
         if old_cap == 0 {
@@ -69,9 +114,7 @@ fn try_double_vec<T>(vec: &mut Vec<T>) -> Result<(), FailedAllocationError> {
     };
 
     if new_ptr.is_null() {
-        return Err(FailedAllocationError::new(
-            "out of memory when allocating Vec",
-        ));
+        return Err(CollectionAllocErr::AllocErr { layout });
     }
 
     let new_vec = unsafe { Vec::from_raw_parts(new_ptr as *mut T, old_len, new_cap) };
@@ -85,7 +128,7 @@ fn try_double_vec<T>(vec: &mut Vec<T>) -> Result<(), FailedAllocationError> {
 
 impl<T: Array> FallibleVec<T::Item> for SmallVec<T> {
     #[inline(always)]
-    fn try_push(&mut self, val: T::Item) -> Result<(), FailedAllocationError> {
+    fn try_push(&mut self, val: T::Item) -> Result<(), CollectionAllocErr> {
         #[cfg(feature = "known_system_malloc")]
         {
             if self.capacity() == self.len() {
@@ -103,7 +146,7 @@ impl<T: Array> FallibleVec<T::Item> for SmallVec<T> {
 #[cfg(feature = "known_system_malloc")]
 #[inline(never)]
 #[cold]
-fn try_double_small_vec<T>(svec: &mut SmallVec<T>) -> Result<(), FailedAllocationError>
+fn try_double_small_vec<T>(svec: &mut SmallVec<T>) -> Result<(), CollectionAllocErr>
 where
     T: Array,
 {
@@ -119,18 +162,21 @@ where
     } else {
         old_cap
             .checked_mul(2)
-            .ok_or(FailedAllocationError::new("capacity overflow for SmallVec"))?
+            .ok_or(CollectionAllocErr::CapacityOverflow)?
     };
 
     // This surely shouldn't fail, if |old_cap| was previously accepted as a
     // valid value.  But err on the side of caution.
     let old_size_bytes = old_cap
         .checked_mul(mem::size_of::<T>())
-        .ok_or(FailedAllocationError::new("capacity overflow for SmallVec"))?;
+        .ok_or(CollectionAllocErr::CapacityOverflow)?;
 
     let new_size_bytes = new_cap
         .checked_mul(mem::size_of::<T>())
-        .ok_or(FailedAllocationError::new("capacity overflow for SmallVec"))?;
+        .ok_or(CollectionAllocErr::CapacityOverflow)?;
+
+    let layout = Layout::from_size_align(new_size_bytes, std::mem::align_of::<T>())
+        .map_err(|_| CollectionAllocErr::CapacityOverflow)?;
 
     let new_ptr;
     if svec.spilled() {
@@ -150,9 +196,7 @@ where
     }
 
     if new_ptr.is_null() {
-        return Err(FailedAllocationError::new(
-            "out of memory when allocating SmallVec",
-        ));
+        return Err(CollectionAllocErr::AllocErr { layout });
     }
 
     let new_vec = unsafe { Vec::from_raw_parts(new_ptr as *mut T::Item, old_len, new_cap) };
