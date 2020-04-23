@@ -38,6 +38,12 @@ def _generate_task_output_files(job, filenames, locale=None):
     return data
 
 
+def identify_desired_signing_keys(project):
+    if project in ["mozilla-beta", "mozilla-release", "mozilla-esr68", "mozilla-esr78"]:
+        return "release"
+    return "nightly"
+
+
 @transforms.add
 def make_task_description(config, jobs):
     # If no balrog release history, then don't generate partials
@@ -109,8 +115,7 @@ def make_task_description(config, jobs):
             'chain-of-trust': True,
             'taskcluster-proxy': True,
             'env': {
-                'SHA1_SIGNING_CERT': 'nightly_sha1',
-                'SHA384_SIGNING_CERT': 'nightly_sha384',
+                'SIGNING_CERT': identify_desired_signing_keys(config.params["project"]),
                 'EXTRA_PARAMS': '--arch={}'.format(architecture(build_platform)),
                 'MAR_CHANNEL_ID': attributes['mar-channel-id']
             }
