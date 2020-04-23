@@ -42,6 +42,8 @@ function renderPanel(component, store, panel: Panel) {
   }
   mount.appendChild(root);
 
+  const toolboxDoc = panel.panelWin.parent.document;
+
   ReactDOM.render(
     React.createElement(
       Provider,
@@ -49,7 +51,7 @@ function renderPanel(component, store, panel: Panel) {
       React.createElement(
         ToolboxProvider,
         { store: panel.getToolboxStore() },
-        React.createElement(component)
+        React.createElement(component, { toolboxDoc })
       )
     ),
     root

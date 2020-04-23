@@ -19,11 +19,13 @@
   cursor: default;
 }
 
-.command-bar-button:not(.disabled):hover {
+.command-bar-button:not(.disabled):hover,
+.devtools-button.debugger-settings-menu-button:empty:not(:disabled):not([aria-expanded="true"]):hover {
   background: var(--theme-toolbar-background-hover);
 }
 
-.theme-dark .command-bar-button:not(.disabled):hover {
+.theme-dark .command-bar-button:not(.disabled):hover,
+.devtools-button.debugger-settings-menu-button:empty:not(:disabled):not([aria-expanded="true"]):hover {
   background: var(--theme-toolbar-hover);
 }
 
@@ -36,4 +38,16 @@
   height: 16px;
   display: inline-block;
   vertical-align: middle;
+}
+
+/**
+ * Settings icon and menu
+ */
+.devtools-button.debugger-settings-menu-button {
+  border-radius: 0;
+  margin: 0;
+}
+
+.devtools-button.debugger-settings-menu-button::before {
+  background-image: url("chrome://devtools/skin/images/settings.svg");
 }
