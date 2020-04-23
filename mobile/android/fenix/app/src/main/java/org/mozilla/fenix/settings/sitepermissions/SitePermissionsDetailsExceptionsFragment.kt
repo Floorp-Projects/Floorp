@@ -100,6 +100,7 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
             requireContext().components.core.permissionStorage.deleteSitePermissions(sitePermissions)
             withContext(Main) {
                 requireView().findNavController().popBackStack()
+                requireContext().components.tryReloadTabBy(sitePermissions.origin)
             }
         }
     }
