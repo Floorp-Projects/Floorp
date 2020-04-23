@@ -240,12 +240,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     return mDocShell ? mDocShell->GetWindow() : nullptr;
   }
 
-  // Attach the current BrowsingContext to its parent, in both the child and the
-  // parent process. BrowsingContext objects are created attached by default, so
-  // this method need only be called when restoring cached BrowsingContext
-  // objects.
-  void Attach(bool aFromIPC = false);
-
   // Detach the current BrowsingContext from its parent, in both the
   // child and the parent process.
   void Detach(bool aFromIPC = false);
@@ -545,9 +539,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   IPCInitializer GetIPCInitializer();
 
   // Create a BrowsingContext object from over IPC.
-  static already_AddRefed<BrowsingContext> CreateFromIPC(
-      IPCInitializer&& aInitializer, BrowsingContextGroup* aGroup,
-      ContentParent* aOriginProcess);
+  static void CreateFromIPC(IPCInitializer&& aInitializer,
+                            BrowsingContextGroup* aGroup,
+                            ContentParent* aOriginProcess);
 
   // Performs access control to check that 'this' can access 'aTarget'.
   bool CanAccess(BrowsingContext* aTarget, bool aConsiderOpener = true);
@@ -574,6 +568,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
                   FieldTuple&& aFields);
 
  private:
+  void Attach(bool aFromIPC, ContentParent* aOriginProcess);
+
   // Find the special browsing context if aName is '_self', '_parent',
   // '_top', but not '_blank'. The latter is handled in FindWithName
   BrowsingContext* FindWithSpecialName(const nsAString& aName,
