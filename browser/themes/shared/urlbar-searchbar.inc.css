@@ -304,8 +304,7 @@
   list-style-image: url("chrome://browser/skin/pocket.svg");
 }
 
-#pocket-button-box[animate="true"] > #pocket-button,
-#pocket-button[open="true"][animationsenabled] > .toolbarbutton-icon {
+#pocket-button-box[animate="true"] > #pocket-button {
   fill: transparent;
 }
 
@@ -593,8 +592,7 @@
   }
 }
 
-#pocket-button-box[animate="true"] > #pocket-animatable-box,
-#pocket-button > .toolbarbutton-animatable-box {
+#pocket-button-box[animate="true"] > #pocket-animatable-box {
   top: calc(50% - 8px); /* 8px is half the height of the sprite */
   /* Since .toolbarbutton-icon uses a different width than the animatable box,
      we need to set a padding relative to the difference in widths. */
@@ -622,13 +620,11 @@
   margin-inline-start: 5px;
 }
 
-#pocket-button-box[animate="true"] > #pocket-animatable-box > #pocket-animatable-image,
-#pocket-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+#pocket-button-box[animate="true"] > #pocket-animatable-box > #pocket-animatable-image {
   height: var(--toolbarbutton-height); /* Height must be equal to height of toolbarbutton padding-box */
 }
 
-#pocket-button-box[animate="true"],
-#pocket-button[open="true"][animationsenabled][cui-areatype="toolbar"]:not([overflowedItem="true"]) {
+#pocket-button-box[animate="true"] {
   position: relative;
 }
 
@@ -640,15 +636,13 @@
    a flicker at the start of either animation. The preloading of the library
    animation is triggered off of hovering the pocket button since the pocket
    button always animates before the library button. */
-#pocket-button-box:not([animate="true"]):hover > #pocket-animatable-box > #pocket-animatable-image,
-#pocket-button[animationsenabled][cui-areatype="toolbar"]:not([overflowedItem="true"]):not([open="true"]):hover > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+#pocket-button-box:not([animate="true"]):hover > #pocket-animatable-box > #pocket-animatable-image {
   background-image: url("chrome://browser/skin/pocket-animation.svg"),
                     url("chrome://browser/skin/library-pocket-animation.svg");
   background-size: 0, 0;
 }
 
-#pocket-button-box[animate="true"] > #pocket-animatable-box > #pocket-animatable-image,
-#pocket-button[open="true"][animationsenabled][cui-areatype="toolbar"]:not([overflowedItem="true"]) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+#pocket-button-box[animate="true"] > #pocket-animatable-box > #pocket-animatable-image {
   animation-name: pocket-animation;
   animation-timing-function: steps(12);
   animation-duration: 200ms;
@@ -658,8 +652,7 @@
   width: 260px;
 }
 
-#pocket-button-box[animate="true"]:-moz-locale-dir(rtl) > #pocket-animatable-box > #pocket-animatable-image,
-#pocket-button[open="true"][animationsenabled][cui-areatype="toolbar"]:not([overflowedItem="true"]):-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+#pocket-button-box[animate="true"]:-moz-locale-dir(rtl) > #pocket-animatable-box > #pocket-animatable-image {
   animation-name: pocket-animation-rtl;
 }
 
