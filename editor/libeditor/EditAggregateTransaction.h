@@ -15,8 +15,6 @@
 #include "nsTArray.h"
 #include "nscore.h"
 
-class nsITransaction;
-
 namespace mozilla {
 
 /**
@@ -44,7 +42,7 @@ class EditAggregateTransaction : public EditTransactionBase {
   NS_DECL_EDITTRANSACTIONBASE
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
-  NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;
+  NS_IMETHOD Merge(nsITransaction* aOtherTransaction, bool* aDidMerge) override;
 
   /**
    * Append a transaction to this aggregate.

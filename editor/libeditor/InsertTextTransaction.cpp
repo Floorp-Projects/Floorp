@@ -93,24 +93,33 @@ NS_IMETHODIMP InsertTextTransaction::UndoTransaction() {
   return error.StealNSResult();
 }
 
-NS_IMETHODIMP InsertTextTransaction::Merge(nsITransaction* aTransaction,
+NS_IMETHODIMP InsertTextTransaction::Merge(nsITransaction* aOtherTransaction,
                                            bool* aDidMerge) {
-  if (NS_WARN_IF(!aTransaction) || NS_WARN_IF(!aDidMerge)) {
+  if (NS_WARN_IF(!aOtherTransaction) || NS_WARN_IF(!aDidMerge)) {
     return NS_ERROR_INVALID_ARG;
   }
   // Set out param default value
   *aDidMerge = false;
 
-  // If aTransaction is a InsertTextTransaction, and if the selection hasn't
-  // changed, then absorb it.
-  RefPtr<InsertTextTransaction> otherTransaction = do_QueryObject(aTransaction);
-  if (otherTransaction && IsSequentialInsert(*otherTransaction)) {
-    nsAutoString otherData;
-    otherTransaction->GetData(otherData);
-    mStringToInsert += otherData;
-    *aDidMerge = true;
+  RefPtr<EditTransactionBase> otherTransactionBase =
+      aOtherTransaction->GetAsEditTransactionBase();
+  if (!otherTransactionBase) {
+    return NS_OK;
   }
 
+  // If aTransaction is a InsertTextTransaction, and if the selection hasn't
+  // changed, then absorb it.
+  InsertTextTransaction* otherInsertTextTransaction =
+      otherTransactionBase->GetAsInsertTextTransaction();
+  if (!otherInsertTextTransaction ||
+      !IsSequentialInsert(*otherInsertTextTransaction)) {
+    return NS_OK;
+  }
+
+  nsAutoString otherData;
+  otherInsertTextTransaction->GetData(otherData);
+  mStringToInsert += otherData;
+  *aDidMerge = true;
   return NS_OK;
 }
 

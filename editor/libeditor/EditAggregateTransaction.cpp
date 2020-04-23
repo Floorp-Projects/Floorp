@@ -8,7 +8,6 @@
 #include "nsCOMPtr.h"          // for nsCOMPtr
 #include "nsError.h"           // for NS_OK, etc.
 #include "nsISupportsUtils.h"  // for NS_ADDREF
-#include "nsITransaction.h"    // for nsITransaction
 #include "nsString.h"          // for nsAutoString
 
 namespace mozilla {
@@ -62,7 +61,7 @@ NS_IMETHODIMP EditAggregateTransaction::RedoTransaction() {
   return NS_OK;
 }
 
-NS_IMETHODIMP EditAggregateTransaction::Merge(nsITransaction* aTransaction,
+NS_IMETHODIMP EditAggregateTransaction::Merge(nsITransaction* aOtherTransaction,
                                               bool* aDidMerge) {
   if (aDidMerge) {
     *aDidMerge = false;
@@ -72,7 +71,7 @@ NS_IMETHODIMP EditAggregateTransaction::Merge(nsITransaction* aTransaction,
   }
   // FIXME: Is this really intended not to loop?  It looks like the code
   // that used to be here sort of intended to loop, but didn't.
-  return mChildren[0]->Merge(aTransaction, aDidMerge);
+  return mChildren[0]->Merge(aOtherTransaction, aDidMerge);
 }
 
 NS_IMETHODIMP EditAggregateTransaction::AppendChild(

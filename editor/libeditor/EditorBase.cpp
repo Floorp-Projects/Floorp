@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/EditorBase.h"
+#include "EditorBase.h"
 
 #include "mozilla/DebugOnly.h"  // for DebugOnly
 #include "mozilla/Encoding.h"   // for Encoding
@@ -18,6 +18,7 @@
 #include "DeleteRangeTransaction.h"           // for DeleteRangeTransaction
 #include "DeleteTextTransaction.h"            // for DeleteTextTransaction
 #include "EditAggregateTransaction.h"         // for EditAggregateTransaction
+#include "EditTransactionBase.h"              // for EditTransactionBase
 #include "EditorEventListener.h"              // for EditorEventListener
 #include "HTMLEditUtils.h"                    // for HTMLEditUtils
 #include "InsertNodeTransaction.h"            // for InsertNodeTransaction
@@ -98,7 +99,6 @@
 #include "nsISupportsBase.h"           // for nsISupports
 #include "nsISupportsUtils.h"          // for NS_ADDREF, NS_IF_ADDREF
 #include "nsITransferable.h"           // for nsITransferable
-#include "nsITransaction.h"            // for nsITransaction
 #include "nsITransactionManager.h"
 #include "nsIWeakReference.h"  // for nsISupportsWeakReference
 #include "nsIWidget.h"         // for nsIWidget, IMEState, etc.
@@ -755,20 +755,20 @@ nsresult EditorBase::GetSelection(SelectionType aSelectionType,
   return NS_WARN_IF(!*aSelection) ? NS_ERROR_FAILURE : NS_OK;
 }
 
-NS_IMETHODIMP EditorBase::DoTransaction(nsITransaction* aTxn) {
+NS_IMETHODIMP EditorBase::DoTransaction(nsITransaction* aTransaction) {
   AutoEditActionDataSetter editActionData(*this, EditAction::eUnknown);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_FAILURE;
   }
   // This is a low level API.  So, the caller might require raw error code.
   // Therefore, don't need to use EditorBase::ToGenericNSResult().
-  nsresult rv = DoTransactionInternal(aTxn);
+  nsresult rv = DoTransactionInternal(aTransaction);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::DoTransactionInternal() failed");
   return rv;
 }
 
-nsresult EditorBase::DoTransactionInternal(nsITransaction* aTxn) {
+nsresult EditorBase::DoTransactionInternal(nsITransaction* aTransaction) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!NeedsToDispatchBeforeInputEvent(),
              "beforeinput event hasn't been dispatched yet");
@@ -788,25 +788,24 @@ nsresult EditorBase::DoTransactionInternal(nsITransaction* aTxn) {
         "EditorBase::DoTransactionInternal() failed, but ignored");
 
     if (mTransactionManager) {
-      nsCOMPtr<nsITransaction> topTransaction =
-          mTransactionManager->PeekUndoStack();
-      nsCOMPtr<nsIAbsorbingTransaction> topAbsorbingTransaction =
-          do_QueryInterface(topTransaction);
-      if (topAbsorbingTransaction) {
-        RefPtr<PlaceholderTransaction> topPlaceholderTransaction =
-            topAbsorbingTransaction->AsPlaceholderTransaction();
-        if (topPlaceholderTransaction) {
-          // there is a placeholder transaction on top of the undo stack.  It
-          // is either the one we just created, or an earlier one that we are
-          // now merging into.  From here on out remember this placeholder
-          // instead of the one we just created.
-          mPlaceholderTransaction = topPlaceholderTransaction;
+      if (nsCOMPtr<nsITransaction> topTransaction =
+              mTransactionManager->PeekUndoStack()) {
+        if (RefPtr<EditTransactionBase> topTransactionBase =
+                topTransaction->GetAsEditTransactionBase()) {
+          if (PlaceholderTransaction* topPlaceholderTransaction =
+                  topTransactionBase->GetAsPlaceholderTransaction()) {
+            // there is a placeholder transaction on top of the undo stack.  It
+            // is either the one we just created, or an earlier one that we are
+            // now merging into.  From here on out remember this placeholder
+            // instead of the one we just created.
+            mPlaceholderTransaction = topPlaceholderTransaction;
+          }
         }
       }
     }
   }
 
-  if (aTxn) {
+  if (aTransaction) {
     // XXX: Why are we doing selection specific batching stuff here?
     // XXX: Most entry points into the editor have auto variables that
     // XXX: should trigger Begin/EndUpdateViewBatch() calls that will make
@@ -831,20 +830,20 @@ nsresult EditorBase::DoTransactionInternal(nsITransaction* aTxn) {
 
     if (mTransactionManager) {
       RefPtr<TransactionManager> transactionManager(mTransactionManager);
-      nsresult rv = transactionManager->DoTransaction(aTxn);
+      nsresult rv = transactionManager->DoTransaction(aTransaction);
       if (NS_FAILED(rv)) {
         NS_WARNING("TransactionManager::DoTransaction() failed");
         return rv;
       }
     } else {
-      nsresult rv = aTxn->DoTransaction();
+      nsresult rv = aTransaction->DoTransaction();
       if (NS_FAILED(rv)) {
         NS_WARNING("nsITransaction::DoTransaction() failed");
         return rv;
       }
     }
 
-    DoAfterDoTransaction(aTxn);
+    DoAfterDoTransaction(aTransaction);
   }
 
   return NS_OK;
@@ -4429,9 +4428,9 @@ bool EditorBase::ShouldHandleIMEComposition() const {
   return mComposition && mDidPostCreate;
 }
 
-void EditorBase::DoAfterDoTransaction(nsITransaction* aTxn) {
+void EditorBase::DoAfterDoTransaction(nsITransaction* aTransaction) {
   bool isTransientTransaction;
-  MOZ_ALWAYS_SUCCEEDS(aTxn->GetIsTransient(&isTransientTransaction));
+  MOZ_ALWAYS_SUCCEEDS(aTransaction->GetIsTransient(&isTransientTransaction));
 
   if (!isTransientTransaction) {
     // we need to deal here with the case where the user saved after some

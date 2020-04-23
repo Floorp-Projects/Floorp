@@ -1918,7 +1918,8 @@ class EditorBase : public nsIEditor,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult MarkElementDirty(Element& aElement);
 
-  MOZ_CAN_RUN_SCRIPT nsresult DoTransactionInternal(nsITransaction* aTxn);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  DoTransactionInternal(nsITransaction* aTransaction);
 
   /**
    * Get the previous node.
@@ -2319,7 +2320,7 @@ class EditorBase : public nsIEditor,
   /**
    * Called after a transaction is done successfully.
    */
-  MOZ_CAN_RUN_SCRIPT void DoAfterDoTransaction(nsITransaction* aTxn);
+  MOZ_CAN_RUN_SCRIPT void DoAfterDoTransaction(nsITransaction* aTransaction);
 
   /**
    * Called after a transaction is undone successfully.

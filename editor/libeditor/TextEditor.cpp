@@ -1395,10 +1395,11 @@ void TextEditor::OnCompositionEnd(
   // commit the IME transaction..we can get at it via the transaction mgr.
   // Note that this means IME won't work without an undo stack!
   if (mTransactionManager) {
-    nsCOMPtr<nsITransaction> txn = mTransactionManager->PeekUndoStack();
-    nsCOMPtr<nsIAbsorbingTransaction> plcTxn = do_QueryInterface(txn);
-    if (plcTxn) {
-      plcTxn->Commit();
+    nsCOMPtr<nsITransaction> transaction = mTransactionManager->PeekUndoStack();
+    nsCOMPtr<nsIAbsorbingTransaction> absorbingTransaction =
+        do_QueryInterface(transaction);
+    if (absorbingTransaction) {
+      absorbingTransaction->Commit();
     }
   }
 
