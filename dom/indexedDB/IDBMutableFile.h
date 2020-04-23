@@ -109,7 +109,7 @@ class IDBMutableFile final : public DOMEventTargetHelper {
 
   IDBDatabase* Database() const;
 
-  MOZ_MUST_USE RefPtr<IDBFileHandle> Open(FileMode aMode, ErrorResult& aError);
+  [[nodiscard]] RefPtr<IDBFileHandle> Open(FileMode aMode, ErrorResult& aError);
 
   IMPL_EVENT_HANDLER(abort)
   IMPL_EVENT_HANDLER(error)

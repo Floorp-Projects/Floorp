@@ -78,19 +78,19 @@ class IDBCursor : public nsISupports, public nsWrapperCache {
   bool mHaveValue : 1;
 
  public:
-  static MOZ_MUST_USE RefPtr<IDBObjectStoreCursor> Create(
+  [[nodiscard]] static RefPtr<IDBObjectStoreCursor> Create(
       indexedDB::BackgroundCursorChild<Type::ObjectStore>* aBackgroundActor,
       Key aKey, StructuredCloneReadInfoChild&& aCloneInfo);
 
-  static MOZ_MUST_USE RefPtr<IDBObjectStoreKeyCursor> Create(
+  [[nodiscard]] static RefPtr<IDBObjectStoreKeyCursor> Create(
       indexedDB::BackgroundCursorChild<Type::ObjectStoreKey>* aBackgroundActor,
       Key aKey);
 
-  static MOZ_MUST_USE RefPtr<IDBIndexCursor> Create(
+  [[nodiscard]] static RefPtr<IDBIndexCursor> Create(
       indexedDB::BackgroundCursorChild<Type::Index>* aBackgroundActor, Key aKey,
       Key aSortKey, Key aPrimaryKey, StructuredCloneReadInfoChild&& aCloneInfo);
 
-  static MOZ_MUST_USE RefPtr<IDBIndexKeyCursor> Create(
+  [[nodiscard]] static RefPtr<IDBIndexKeyCursor> Create(
       indexedDB::BackgroundCursorChild<Type::IndexKey>* aBackgroundActor,
       Key aKey, Key aSortKey, Key aPrimaryKey);
 
@@ -134,12 +134,12 @@ class IDBCursor : public nsISupports, public nsWrapperCache {
 
   virtual void Advance(uint32_t aCount, ErrorResult& aRv) = 0;
 
-  virtual MOZ_MUST_USE RefPtr<IDBRequest> Update(JSContext* aCx,
-                                                 JS::Handle<JS::Value> aValue,
-                                                 ErrorResult& aRv) = 0;
+  [[nodiscard]] virtual RefPtr<IDBRequest> Update(JSContext* aCx,
+                                                  JS::Handle<JS::Value> aValue,
+                                                  ErrorResult& aRv) = 0;
 
-  virtual MOZ_MUST_USE RefPtr<IDBRequest> Delete(JSContext* aCx,
-                                                 ErrorResult& aRv) = 0;
+  [[nodiscard]] virtual RefPtr<IDBRequest> Delete(JSContext* aCx,
+                                                  ErrorResult& aRv) = 0;
 
   void ClearBackgroundActor() {
     AssertIsOnOwningThread();
@@ -194,12 +194,12 @@ class IDBTypedCursor : public IDBCursor {
 
   void Advance(uint32_t aCount, ErrorResult& aRv) final;
 
-  MOZ_MUST_USE RefPtr<IDBRequest> Update(JSContext* aCx,
-                                         JS::Handle<JS::Value> aValue,
-                                         ErrorResult& aRv) final;
+  [[nodiscard]] RefPtr<IDBRequest> Update(JSContext* aCx,
+                                          JS::Handle<JS::Value> aValue,
+                                          ErrorResult& aRv) final;
 
-  MOZ_MUST_USE RefPtr<IDBRequest> Delete(JSContext* aCx,
-                                         ErrorResult& aRv) final;
+  [[nodiscard]] RefPtr<IDBRequest> Delete(JSContext* aCx,
+                                          ErrorResult& aRv) final;
 
   // nsWrapperCache
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;

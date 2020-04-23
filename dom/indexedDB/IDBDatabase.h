@@ -88,7 +88,7 @@ class IDBDatabase final : public DOMEventTargetHelper {
   bool mIncreasedActiveDatabaseCount;
 
  public:
-  static MOZ_MUST_USE RefPtr<IDBDatabase> Create(
+  [[nodiscard]] static RefPtr<IDBDatabase> Create(
       IDBOpenDBRequest* aRequest, SafeRefPtr<IDBFactory> aFactory,
       indexedDB::BackgroundDatabaseChild* aActor,
       UniquePtr<DatabaseSpec> aSpec);
@@ -113,7 +113,7 @@ class IDBDatabase final : public DOMEventTargetHelper {
 
   uint64_t Version() const;
 
-  MOZ_MUST_USE RefPtr<Document> GetOwnerDocument() const;
+  [[nodiscard]] RefPtr<Document> GetOwnerDocument() const;
 
   void Close() {
     AssertIsOnOwningThread();
@@ -173,16 +173,16 @@ class IDBDatabase final : public DOMEventTargetHelper {
 
   void NoteFinishedMutableFile(IDBMutableFile* aMutableFile);
 
-  MOZ_MUST_USE RefPtr<DOMStringList> ObjectStoreNames() const;
+  [[nodiscard]] RefPtr<DOMStringList> ObjectStoreNames() const;
 
-  MOZ_MUST_USE RefPtr<IDBObjectStore> CreateObjectStore(
+  [[nodiscard]] RefPtr<IDBObjectStore> CreateObjectStore(
       const nsAString& aName,
       const IDBObjectStoreParameters& aOptionalParameters, ErrorResult& aRv);
 
   void DeleteObjectStore(const nsAString& name, ErrorResult& aRv);
 
   // This will be called from the DOM.
-  MOZ_MUST_USE RefPtr<IDBTransaction> Transaction(
+  [[nodiscard]] RefPtr<IDBTransaction> Transaction(
       JSContext* aCx, const StringOrStringSequence& aStoreNames,
       IDBTransactionMode aMode, ErrorResult& aRv);
 
@@ -193,7 +193,7 @@ class IDBDatabase final : public DOMEventTargetHelper {
   IMPL_EVENT_HANDLER(error)
   IMPL_EVENT_HANDLER(versionchange)
 
-  MOZ_MUST_USE RefPtr<IDBRequest> CreateMutableFile(
+  [[nodiscard]] RefPtr<IDBRequest> CreateMutableFile(
       JSContext* aCx, const nsAString& aName, const Optional<nsAString>& aType,
       ErrorResult& aRv);
 
