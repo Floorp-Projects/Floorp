@@ -7,6 +7,7 @@
 #ifndef mozilla_image_imgFrame_h
 #define mozilla_image_imgFrame_h
 
+#include <functional>
 #include <utility>
 
 #include "AnimationParams.h"

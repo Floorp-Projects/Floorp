@@ -14,8 +14,7 @@ var SimpleTest = window.arguments[0].SimpleTest;
 var ok = window.arguments[0].ok;
 var info = window.arguments[0].info;
 
-var viewer = ourFrame.contentWindow.docShell.contentViewer;
-viewer.fullZoom = 2;
+var viewer = SpecialPowers.setFullZoom(window, 2);
 
 SimpleTest.waitForExplicitFinish();
 
@@ -29,7 +28,8 @@ window.onload = function() {
 window.childLoaded = function() {
   setTimeout(function() {
     window.waitForAllPaintsFlushed(function(x1, y1, x2, y2) {
-      ok(x2 - x1 >= 700 && y2 - y1 >= 500,
+      // We set the full zoom of this window too, so we need to account for it here.
+      ok(x2 - x1 >= 700 / 2 && y2 - y1 >= 500 / 2,
          "expected to see invalidate of entire frame, got " + [x1,y1,x2,y2].join(','));
       SimpleTest.finish();
       window.close();

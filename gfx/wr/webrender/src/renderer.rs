@@ -2476,6 +2476,7 @@ impl Renderer {
 
             let mut scene_builder = SceneBuilderThread::new(
                 config,
+                device_pixel_ratio,
                 make_size_of_ops(),
                 scene_builder_hooks,
                 scene_builder_channels,

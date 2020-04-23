@@ -2604,6 +2604,7 @@ AccGroupInfo* Accessible::GetGroupInfo() const {
   }
 
   mBits.groupInfo = AccGroupInfo::CreateGroupInfo(this);
+  mStateFlags &= ~eGroupInfoDirty;
   return mBits.groupInfo;
 }
 

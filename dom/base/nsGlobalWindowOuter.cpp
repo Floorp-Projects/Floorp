@@ -2406,11 +2406,6 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
       // them into the JS slots. If we nullify them after, the slot values and
       // the objects will be out of sync.
       newInnerWindow->ClearDocumentDependentSlots(cx);
-
-      // When replacing an initial about:blank document we call
-      // ExecutionReady again to update the client creation URL.
-      rv = newInnerWindow->ExecutionReady();
-      NS_ENSURE_SUCCESS(rv, rv);
     } else {
       newInnerWindow->InitDocumentDependentState(cx);
 
@@ -2418,10 +2413,18 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
       JS::Rooted<JSObject*> obj(cx, newInnerGlobal);
       rv = kungFuDeathGrip->InitClasses(obj);
       NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = newInnerWindow->ExecutionReady();
-      NS_ENSURE_SUCCESS(rv, rv);
     }
+
+    // We would check the storage access in below function, so we need to
+    // set the flag before it.
+    newInnerWindow->GetWindowGlobalChild()
+        ->WindowContext()
+        ->SetHasStoragePermission(aDocument->HasStoragePermission());
+
+    // When replacing an initial about:blank document we call
+    // ExecutionReady again to update the client creation URL.
+    rv = newInnerWindow->ExecutionReady();
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (mArguments) {
       newInnerWindow->DefineArgumentsProperty(mArguments);
@@ -2504,6 +2507,9 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
   ReportLargeAllocStatus();
   mLargeAllocStatus = LargeAllocStatus::NONE;
 
+  bool isThirdPartyTrackingResourceWindow =
+      nsContentUtils::IsThirdPartyTrackingResourceWindow(newInnerWindow);
+
   // Set the cookie jar settings to the window context.
   if (newInnerWindow) {
     net::CookieJarSettingsArgs cookieJarSettings;
@@ -2516,7 +2522,13 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
 
     newInnerWindow->GetWindowGlobalChild()
         ->WindowContext()
-        ->SetHasStoragePermission(aDocument->HasStoragePermission());
+        ->SetIsThirdPartyWindow(nsContentUtils::IsThirdPartyWindowOrChannel(
+            newInnerWindow, nullptr, nullptr));
+
+    newInnerWindow->GetWindowGlobalChild()
+        ->WindowContext()
+        ->SetIsThirdPartyTrackingResourceWindow(
+            isThirdPartyTrackingResourceWindow);
   }
 
   mHasStorageAccess = false;
@@ -2540,7 +2552,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
           cookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
           cookieBehavior ==
               nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
-      if (nsContentUtils::IsThirdPartyTrackingResourceWindow(newInnerWindow)) {
+      if (isThirdPartyTrackingResourceWindow) {
         checkStorageAccess = true;
       }
     }

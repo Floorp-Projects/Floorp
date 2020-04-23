@@ -13,6 +13,7 @@
 
 #include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
+#include "jit/CacheIROpsGenerated.h"
 #include "jit/JitScript.h"
 #include "jit/JitSpewer.h"
 #include "jit/MIRGenerator.h"
@@ -658,20 +659,20 @@ AbortReasonOr<Ok> WarpOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
   CacheIRReader reader(stubInfo);
   while (reader.more()) {
     CacheOp op = reader.readOp();
-    uint32_t argLength = CacheIROpFormat::ArgLengths[uint8_t(op)];
+    uint32_t argLength = CacheIROpArgLengths[size_t(op)];
     reader.skip(argLength);
 
     switch (op) {
 #define DEFINE_OP(op, ...) \
   case CacheOp::op:        \
     break;
-      WARP_CACHE_IR_OPS(DEFINE_OP)
+      CACHE_IR_TRANSPILER_OPS(DEFINE_OP)
 #undef DEFINE_OP
 
       default:
         // Unsupported opcode.
         JitSpew(JitSpew_WarpTranspiler, "unsupported CacheIR opcode: %s",
-                CacheIrOpNames[uint8_t(op)]);
+                CacheIROpNames[size_t(op)]);
         return Ok();
     }
   }

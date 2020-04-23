@@ -262,9 +262,10 @@ nsresult ClientSource::WindowExecutionReady(nsPIDOMWindowInner* aInnerWindow) {
   // continue to inherit the SW as well.  We need to avoid triggering the
   // assertion in this corner case.
   if (mController.isSome()) {
-    MOZ_ASSERT(spec.LowerCaseEqualsLiteral("about:blank") ||
-               StringBeginsWith(spec, NS_LITERAL_CSTRING("blob:")) ||
-               StorageAllowedForWindow(aInnerWindow) == StorageAccess::eAllow);
+    MOZ_DIAGNOSTIC_ASSERT(spec.LowerCaseEqualsLiteral("about:blank") ||
+                          StringBeginsWith(spec, NS_LITERAL_CSTRING("blob:")) ||
+                          StorageAllowedForWindow(aInnerWindow) ==
+                              StorageAccess::eAllow);
   }
 
   nsPIDOMWindowOuter* outer = aInnerWindow->GetOuterWindow();

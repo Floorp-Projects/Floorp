@@ -447,6 +447,12 @@ bool DataChannelConnection::Init(const uint16_t aLocalPort,
       // See: https://tools.ietf.org/html/rfc6458#section-8.1.20
       usrsctp_sysctl_set_sctp_default_frag_interleave(2);
 
+      // Disabling authentication and dynamic address reconfiguration as neither
+      // of them are used for data channel and only result in additional code
+      // paths being used.
+      usrsctp_sysctl_set_sctp_asconf_enable(0);
+      usrsctp_sysctl_set_sctp_auth_enable(0);
+
       sctp_initialized = true;
 
       sDataChannelShutdown = new DataChannelShutdown();

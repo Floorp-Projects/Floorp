@@ -520,6 +520,7 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
   }
 
   docShell->SetAffectPrivateSessionLifetime(
+      mBrowsingContext->UsePrivateBrowsing() ||
       mChromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME);
 
 #ifdef DEBUG

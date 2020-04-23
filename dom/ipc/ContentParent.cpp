@@ -5759,6 +5759,34 @@ ContentParent::RecvFirstPartyStorageAccessGrantedForOrigin(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvCompleteAllowAccessFor(
+    const MaybeDiscarded<BrowsingContext>& aParentContext,
+    uint64_t aTopLevelWindowId, const Principal& aTrackingPrincipal,
+    const nsCString& aTrackingOrigin, uint32_t aCookieBehavior,
+    const ContentBlockingNotifier::StorageAccessGrantedReason& aReason,
+    CompleteAllowAccessForResolver&& aResolver) {
+  if (aParentContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
+  ContentBlocking::CompleteAllowAccessFor(
+      aParentContext.get_canonical(), aTopLevelWindowId, aTrackingPrincipal,
+      aTrackingOrigin, aCookieBehavior, aReason, nullptr)
+      ->Then(
+          GetCurrentThreadSerialEventTarget(), __func__,
+          [aResolver = std::move(aResolver)](
+              ContentBlocking::StorageAccessGrantPromise::ResolveOrRejectValue&&
+                  aValue) {
+            Maybe<StorageAccessPromptChoices> choice;
+            if (aValue.IsResolve()) {
+              choice.emplace(static_cast<StorageAccessPromptChoices>(
+                  aValue.ResolveValue()));
+            }
+            aResolver(choice);
+          });
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvStoreUserInteractionAsPermission(
     const Principal& aPrincipal) {
   ContentBlockingUserInteraction::Observe(aPrincipal);

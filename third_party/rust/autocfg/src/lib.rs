@@ -9,7 +9,7 @@
 //!
 //! ```toml
 //! [build-dependencies]
-//! autocfg = "0.1"
+//! autocfg = "1"
 //! ```
 //!
 //! Then use it in your `build.rs` script to detect compiler features.  For
@@ -25,7 +25,7 @@
 //!     ac.emit_has_type("i128");
 //!
 //!     // (optional) We don't need to rerun for anything external.
-//!     autocfg::rerun_path(file!());
+//!     autocfg::rerun_path("build.rs");
 //! }
 //! ```
 //!
@@ -33,6 +33,14 @@
 //! for Cargo, which translates to Rust arguments `--cfg has_i128`.  Then in the
 //! rest of your Rust code, you can add `#[cfg(has_i128)]` conditions on code that
 //! should only be used when the compiler supports it.
+//!
+//! ## Caution
+//!
+//! Many of the probing methods of `AutoCfg` document the particular template they
+//! use, **subject to change**. The inputs are not validated to make sure they are
+//! semantically correct for their expected use, so it's _possible_ to escape and
+//! inject something unintended. However, such abuse is unsupported and will not
+//! be considered when making changes to the templates.
 
 #![deny(missing_debug_implementations)]
 #![deny(missing_docs)]
@@ -40,6 +48,16 @@
 #![allow(unknown_lints)]
 #![allow(bare_trait_objects)]
 #![allow(ellipsis_inclusive_range_patterns)]
+
+/// Local macro to avoid `std::try!`, deprecated in Rust 1.39.
+macro_rules! try {
+    ($result:expr) => {
+        match $result {
+            Ok(value) => value,
+            Err(error) => return Err(error),
+        }
+    };
+}
 
 use std::env;
 use std::ffi::OsString;
@@ -68,6 +86,7 @@ pub struct AutoCfg {
     rustc_version: Version,
     target: Option<OsString>,
     no_std: bool,
+    rustflags: Option<Vec<String>>,
 }
 
 /// Writes a config flag for rustc on standard out.
@@ -145,12 +164,35 @@ impl AutoCfg {
             return Err(error::from_str("output path is not a writable directory"));
         }
 
+        // Cargo only applies RUSTFLAGS for building TARGET artifact in
+        // cross-compilation environment. Sadly, we don't have a way to detect
+        // when we're building HOST artifact in a cross-compilation environment,
+        // so for now we only apply RUSTFLAGS when cross-compiling an artifact.
+        //
+        // See https://github.com/cuviper/autocfg/pull/10#issuecomment-527575030.
+        let rustflags = if env::var_os("TARGET") != env::var_os("HOST") {
+            env::var("RUSTFLAGS").ok().map(|rustflags| {
+                // This is meant to match how cargo handles the RUSTFLAG environment
+                // variable.
+                // See https://github.com/rust-lang/cargo/blob/69aea5b6f69add7c51cca939a79644080c0b0ba0/src/cargo/core/compiler/build_context/target_info.rs#L434-L441
+                rustflags
+                    .split(' ')
+                    .map(str::trim)
+                    .filter(|s| !s.is_empty())
+                    .map(str::to_string)
+                    .collect::<Vec<String>>()
+            })
+        } else {
+            None
+        };
+
         let mut ac = AutoCfg {
             out_dir: dir,
             rustc: rustc,
             rustc_version: rustc_version,
             target: env::var_os("TARGET"),
             no_std: false,
+            rustflags: rustflags,
         };
 
         // Sanity check with and without `std`.
@@ -193,6 +235,10 @@ impl AutoCfg {
             .arg("--out-dir")
             .arg(&self.out_dir)
             .arg("--emit=llvm-ir");
+
+        if let &Some(ref rustflags) = &self.rustflags {
+            command.args(rustflags);
+        }
 
         if let Some(target) = self.target.as_ref() {
             command.arg("--target").arg(target);
@@ -313,6 +359,44 @@ impl AutoCfg {
     /// Emits the given `cfg` value if `probe_type` returns true.
     pub fn emit_type_cfg(&self, name: &str, cfg: &str) {
         if self.probe_type(name) {
+            emit(cfg);
+        }
+    }
+
+    /// Tests whether the given expression can be used.
+    ///
+    /// The test code is subject to change, but currently looks like:
+    ///
+    /// ```ignore
+    /// pub fn probe() { let _ = EXPR; }
+    /// ```
+    pub fn probe_expression(&self, expr: &str) -> bool {
+        self.probe(format!("pub fn probe() {{ let _ = {}; }}", expr))
+            .unwrap_or(false)
+    }
+
+    /// Emits the given `cfg` value if `probe_expression` returns true.
+    pub fn emit_expression_cfg(&self, expr: &str, cfg: &str) {
+        if self.probe_expression(expr) {
+            emit(cfg);
+        }
+    }
+
+    /// Tests whether the given constant expression can be used.
+    ///
+    /// The test code is subject to change, but currently looks like:
+    ///
+    /// ```ignore
+    /// pub const PROBE: () = ((), EXPR).0;
+    /// ```
+    pub fn probe_constant(&self, expr: &str) -> bool {
+        self.probe(format!("pub const PROBE: () = ((), {}).0;", expr))
+            .unwrap_or(false)
+    }
+
+    /// Emits the given `cfg` value if `probe_constant` returns true.
+    pub fn emit_constant_cfg(&self, expr: &str, cfg: &str) {
+        if self.probe_constant(expr) {
             emit(cfg);
         }
     }

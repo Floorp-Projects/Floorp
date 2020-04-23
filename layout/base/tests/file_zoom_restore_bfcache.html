@@ -1,0 +1,8 @@
+<!doctype html>
+<script>
+  window.addEventListener("pageshow", function(e) {
+    window.opener.handlePageShow(e.persisted);
+  });
+</script>
+<a href="?1">This is a very interesting page</a>
+<iframe srcdoc="And this is a nested frame"></iframe>

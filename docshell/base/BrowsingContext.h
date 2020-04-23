@@ -121,7 +121,9 @@ class WindowProxyHolder;
   FIELD(UserAgentOverride, nsString)                                         \
   FIELD(EmbedderElementType, Maybe<nsString>)                                \
   FIELD(MessageManagerGroup, nsString)                                       \
-  FIELD(MaxTouchPointsOverride, uint8_t)
+  FIELD(MaxTouchPointsOverride, uint8_t)                                     \
+  FIELD(FullZoom, float)                                                     \
+  FIELD(TextZoom, float)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -352,6 +354,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   BrowsingContextGroup* Group() { return mGroup; }
 
   bool InRDMPane() const { return GetInRDMPane(); }
+
+  float FullZoom() const { return GetFullZoom(); }
+  float TextZoom() const { return GetTextZoom(); }
 
   bool IsLoading();
 
@@ -695,6 +700,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void DidSet(FieldIndex<I>) {}
   template <size_t I, typename T>
   void DidSet(FieldIndex<I>, T&& aOldValue) {}
+
+  void DidSet(FieldIndex<IDX_FullZoom>, float aOldValue);
+  void DidSet(FieldIndex<IDX_TextZoom>, float aOldValue);
 
   // True if the process attemping to set field is the same as the owning
   // process.

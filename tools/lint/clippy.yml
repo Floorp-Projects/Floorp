@@ -94,7 +94,6 @@ clippy:
         - media/audioipc/audioipc/
         - media/audioipc/server/
         - tools/lint/test/files/clippy/
-        - servo/components/hashglobe/
         - servo/ports/geckolib/
         - servo/ports/geckolib/tests/
         - servo/tests/unit/malloc_size_of/

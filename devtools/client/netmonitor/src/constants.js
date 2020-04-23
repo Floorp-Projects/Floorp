@@ -222,7 +222,7 @@ const PANELS = {
   COOKIES: "cookies",
   HEADERS: "headers",
   MESSAGES: "messages",
-  PARAMS: "params",
+  REQUEST: "request",
   RESPONSE: "response",
   CACHE: "cache",
   SECURITY: "security",

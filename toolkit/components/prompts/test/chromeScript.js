@@ -53,7 +53,7 @@ function checkTabModal(prompt, browser) {
     "Check clicks on the content area don't go to the browser"
   );
   is(
-    doc.elementFromPoint(x - 10, y + 50).parentNode,
+    doc.elementFromPoint(x - 10, y + 50),
     prompt.element,
     "Check clicks on the content area go to the prompt dialog background"
   );
@@ -131,7 +131,7 @@ function getSelectState(ui) {
 function getPromptState(ui) {
   let state = {};
   state.msg = ui.infoBody.textContent;
-  state.titleHidden = ui.infoTitle.getAttribute("hidden") == "true";
+  state.titleHidden = ui.infoTitle.hidden;
   state.textHidden = ui.loginContainer.hidden;
   state.passHidden = ui.password1Container.hidden;
   state.checkHidden = ui.checkboxContainer.hidden;

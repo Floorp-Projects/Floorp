@@ -108,19 +108,19 @@
     }
 
     set fullZoom(val) {
-      this.markupDocumentViewer.fullZoom = val;
+      this.browsingContext.fullZoom = val;
     }
 
     get fullZoom() {
-      return this.markupDocumentViewer.fullZoom;
+      return this.browsingContext.fullZoom;
     }
 
     set textZoom(val) {
-      this.markupDocumentViewer.textZoom = val;
+      this.browsingContext.textZoom = val;
     }
 
     get textZoom() {
-      return this.markupDocumentViewer.textZoom;
+      return this.browsingContext.textZoom;
     }
 
     get isSyntheticDocument() {

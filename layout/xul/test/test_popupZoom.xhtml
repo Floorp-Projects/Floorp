@@ -14,14 +14,13 @@
   <script type="application/javascript"><![CDATA[
     SimpleTest.waitForExplicitFinish();
 
-    var docviewer;
     var savedzoom;
 
     function openPopup()
     {
       docviewer = window.docShell.contentViewer;
-      savedzoom = docviewer.fullZoom;
-      docviewer.fullZoom = 2;
+      savedzoom = SpecialPowers.getFullZoom(window);
+      SpecialPowers.setFullZoom(window, 2);
 
       document.getElementById("panel").
         openPopup(document.getElementById("anchor"), "after_start", 0, 0, false, false, null);
@@ -36,7 +35,7 @@
       ok(Math.abs(panelbcr.x - anchorbcr.x) < 3, "x pos is correct");
       ok(Math.abs(panelbcr.y - anchorbcr.bottom) < 3, "y pos is correct");
 
-      docviewer.fullZoom = savedzoom;
+      SpecialPowers.setFullZoom(window, savedzoom);
 
       event.target.hidePopup();
     }

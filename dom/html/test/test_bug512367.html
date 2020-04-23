@@ -24,14 +24,12 @@ var frame = document.getElementById("i");
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
-  var viewer = SpecialPowers.wrap(frame.contentWindow).docShell.contentViewer;
-
-  viewer.fullZoom = 1.5;
+  SpecialPowers.setFullZoom(frame.contentWindow, 1.5);
 
   setTimeout(function() {
     synthesizeMouse(frame, 30, 30, {});
 
-    is(viewer.fullZoom, 1.5, "Zoom in the image frame should not have been reset");
+    is(SpecialPowers.getFullZoom(frame.contentWindow), 1.5, "Zoom in the image frame should not have been reset");
 
     SimpleTest.finish();
   }, 0);

@@ -17,6 +17,9 @@ class nsPIDOMWindowInner;
 class nsPIDOMWindowOuter;
 
 namespace mozilla {
+namespace dom {
+class BrowsingContext;
+}  // namespace dom
 
 class ContentBlockingNotifier final {
  public:
@@ -47,6 +50,9 @@ class ContentBlockingNotifier final {
                          uint32_t aRejectedReason);
 
   static void OnDecision(nsPIDOMWindowInner* aWindow,
+                         BlockingDecision aDecision, uint32_t aRejectedReason);
+
+  static void OnDecision(dom::BrowsingContext* aBrowsingContext,
                          BlockingDecision aDecision, uint32_t aRejectedReason);
 
   static void OnEvent(nsIChannel* aChannel, uint32_t aRejectedReason);
