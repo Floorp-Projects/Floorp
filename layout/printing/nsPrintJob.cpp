@@ -142,7 +142,7 @@ static const char* gPrintRangeStr[] = {
 // This processes the selection on aOrigDoc and creates an inverted selection on
 // aDoc, which it then deletes. If the start or end of the inverted selection
 // ranges occur in text nodes then an ellipsis is added.
-static nsresult DeleteUnselectedNodes(Document* aOrigDoc, Document* aDoc);
+static nsresult DeleteNonSelectedNodes(Document& aDoc);
 
 #ifdef EXTENDED_DEBUG_PRINTING
 // Forward Declarations
@@ -2053,8 +2053,7 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
   int16_t printRangeType = nsIPrintSettings::kRangeAllPages;
   printData->mPrintSettings->GetPrintRange(&printRangeType);
   if (printRangeType == nsIPrintSettings::kRangeSelection) {
-    DeleteUnselectedNodes(aPO->mDocument->GetOriginalDocument(),
-                          aPO->mDocument);
+    DeleteNonSelectedNodes(*aPO->mDocument);
   }
 
   bool doReturn = false;
@@ -2202,61 +2201,39 @@ bool nsPrintJob::PrintDocContent(const UniquePtr<nsPrintObject>& aPO,
   return false;
 }
 
-static nsINode* GetCorrespondingNodeInDocument(const nsINode* aNode,
-                                               Document* aDoc) {
-  MOZ_ASSERT(aNode);
-  MOZ_ASSERT(aDoc);
-
-  // Selections in anonymous subtrees aren't supported.
-  if (aNode->IsInAnonymousSubtree()) {
-    return nullptr;
-  }
-
-  nsTArray<int32_t> indexArray;
-  const nsINode* child = aNode;
-  while (const nsINode* parent = child->GetParentNode()) {
-    int32_t index = parent->ComputeIndexOf(child);
-    MOZ_ASSERT(index >= 0);
-    indexArray.AppendElement(index);
-    child = parent;
-  }
-  MOZ_ASSERT(child->IsDocument());
-
-  nsINode* correspondingNode = aDoc;
-  for (int32_t i = indexArray.Length() - 1; i >= 0; --i) {
-    correspondingNode = correspondingNode->GetChildAt_Deprecated(indexArray[i]);
-    NS_ENSURE_TRUE(correspondingNode, nullptr);
-  }
-
-  return correspondingNode;
-}
-
 static NS_NAMED_LITERAL_STRING(kEllipsis, u"\x2026");
 
-MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult DeleteUnselectedNodes(
-    Document* aOrigDoc, Document* aDoc) {
-  PresShell* origPresShell = aOrigDoc->GetPresShell();
-  PresShell* presShell = aDoc->GetPresShell();
-  NS_ENSURE_STATE(origPresShell && presShell);
+/**
+ * Builds the complement set of ranges and adds those to the selection.
+ * Deletes all of the nodes contained in the complement set of ranges
+ * leaving behind only nodes that were originally selected.
+ * Adds ellipses to a selected node's text if text is truncated by a range.
+ * This is used to implement the "Print Selection Only" user interface option.
+ */
+MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult DeleteNonSelectedNodes(
+    Document& aDoc) {
+  MOZ_ASSERT(aDoc.IsStaticDocument());
+  const auto* printRanges = static_cast<nsTArray<RefPtr<nsRange>>*>(
+      aDoc.GetProperty(nsGkAtoms::printselectionranges));
+  if (!printRanges) {
+    return NS_OK;
+  }
 
-  RefPtr<Selection> origSelection =
-      origPresShell->GetCurrentSelection(SelectionType::eNormal);
+  PresShell* presShell = aDoc.GetPresShell();
+  NS_ENSURE_STATE(presShell);
   RefPtr<Selection> selection =
       presShell->GetCurrentSelection(SelectionType::eNormal);
-  NS_ENSURE_STATE(origSelection && selection);
+  NS_ENSURE_STATE(selection);
 
-  nsINode* bodyNode = aDoc->GetBodyElement();
+  MOZ_ASSERT(!selection->RangeCount());
+  nsINode* bodyNode = aDoc.GetBodyElement();
   nsINode* startNode = bodyNode;
   uint32_t startOffset = 0;
   uint32_t ellipsisOffset = 0;
 
-  int32_t rangeCount = origSelection->RangeCount();
-  for (int32_t i = 0; i < rangeCount; ++i) {
-    nsRange* origRange = origSelection->GetRangeAt(i);
-
+  for (nsRange* origRange : *printRanges) {
     // New end is start of original range.
-    nsINode* endNode =
-        GetCorrespondingNodeInDocument(origRange->GetStartContainer(), aDoc);
+    nsINode* endNode = origRange->GetStartContainer();
 
     // If we're no longer in the same text node reset the ellipsis offset.
     if (endNode != startNode) {
@@ -2267,13 +2244,12 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult DeleteUnselectedNodes(
     // Create the range that we want to remove. Note that if startNode or
     // endNode are null nsRange::Create() will fail and we won't remove
     // that section.
-    RefPtr<nsRange> range = nsRange::Create(startNode, startOffset, endNode,
-                                            endOffset, IgnoreErrors());
+    RefPtr<nsRange> unselectedRange = nsRange::Create(
+        startNode, startOffset, endNode, endOffset, IgnoreErrors());
 
-    if (range && !range->Collapsed()) {
-      selection->AddRangeAndSelectFramesAndNotifyListeners(*range,
+    if (unselectedRange && !unselectedRange->Collapsed()) {
+      selection->AddRangeAndSelectFramesAndNotifyListeners(*unselectedRange,
                                                            IgnoreErrors());
-
       // Unless we've already added an ellipsis at the start, if we ended mid
       // text node then add ellipsis.
       Text* text = endNode->GetAsText();
@@ -2284,8 +2260,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult DeleteUnselectedNodes(
     }
 
     // Next new start is end of original range.
-    startNode =
-        GetCorrespondingNodeInDocument(origRange->GetEndContainer(), aDoc);
+    startNode = origRange->GetEndContainer();
 
     // If we're no longer in the same text node reset the ellipsis offset.
     if (startNode != endNode) {
@@ -2310,7 +2285,6 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult DeleteUnselectedNodes(
     selection->AddRangeAndSelectFramesAndNotifyListeners(*lastRange,
                                                          IgnoreErrors());
   }
-
   selection->DeleteFromDocument(IgnoreErrors());
   return NS_OK;
 }
