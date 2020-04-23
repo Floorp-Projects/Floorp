@@ -5,6 +5,16 @@
 
 #include "nsISupports.idl"
 
+%{ C++
+namespace mozilla {
+class EditTransactionBase;
+}
+template <typename T>
+struct already_AddRefed;
+%}
+
+[ptr] native EditTransactionBasePtr(mozilla::EditTransactionBase);
+
 /*
  * The nsITransaction interface.
  * <P>
@@ -62,5 +72,12 @@ interface nsITransaction : nsISupports
    * @param aTransaction the previously executed transaction to merge.
    */
   boolean merge(in nsITransaction aTransaction);
+
+  [noscript] EditTransactionBasePtr getAsEditTransactionBase();
+
+%{ C++
+  inline already_AddRefed<mozilla::EditTransactionBase>
+  GetAsEditTransactionBase();
+%}
 };
 

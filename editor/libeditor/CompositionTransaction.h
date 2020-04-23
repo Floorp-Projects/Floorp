@@ -68,7 +68,7 @@ class CompositionTransaction final : public EditTransactionBase {
   NS_DECL_EDITTRANSACTIONBASE
   NS_DECL_EDITTRANSACTIONBASE_GETASMETHODS_OVERRIDE(CompositionTransaction)
 
-  NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;
+  NS_IMETHOD Merge(nsITransaction* aOtherTransaction, bool* aDidMerge) override;
 
   void MarkFixed();
 

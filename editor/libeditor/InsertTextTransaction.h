@@ -15,8 +15,6 @@
 #include "nsString.h"                      // nsString members
 #include "nscore.h"                        // NS_IMETHOD, nsAString
 
-class nsITransaction;
-
 #define NS_INSERTTEXTTXN_IID                         \
   {                                                  \
     0x8c9ad77f, 0x22a7, 0x4d01, {                    \
@@ -62,7 +60,7 @@ class InsertTextTransaction final : public EditTransactionBase {
   NS_DECL_EDITTRANSACTIONBASE
   NS_DECL_EDITTRANSACTIONBASE_GETASMETHODS_OVERRIDE(InsertTextTransaction)
 
-  NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;
+  NS_IMETHOD Merge(nsITransaction* aOtherTransaction, bool* aDidMerge) override;
 
   /**
    * Return the string data associated with this transaction.
