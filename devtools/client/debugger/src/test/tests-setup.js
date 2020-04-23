@@ -8,7 +8,6 @@
 global.Worker = require("workerjs");
 
 import path from "path";
-// import getConfig from "../../bin/getConfig";
 import { readFileSync } from "fs";
 import Enzyme from "enzyme";
 // $FlowIgnore
@@ -51,6 +50,43 @@ global.L10N = require("devtools-launchpad").L10N;
 global.L10N.setBundle(getL10nBundle());
 global.jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 global.performance = { now: () => 0 };
+global.isWorker = false;
+
+global.define = function() {};
+global.loader = {
+  lazyServiceGetter: () => {},
+  lazyGetter: (context, name, fn) => {
+    try {
+      global[name] = fn();
+    } catch (_) {}
+  },
+  lazyRequireGetter: (context, name, _path, destruct) => {
+    if (
+      !_path ||
+      _path.startsWith("resource://") ||
+      _path.match(/server\/actors/)
+    ) {
+      return;
+    }
+
+    const excluded = [
+      "Debugger",
+      "devtools/shared/event-emitter",
+      "devtools/client/shared/autocomplete-popup",
+      "devtools/client/framework/devtools",
+      "devtools/client/shared/keycodes",
+      "devtools/client/shared/sourceeditor/editor",
+      "devtools/client/shared/telemetry",
+      "devtools/shared/screenshot/save",
+      "devtools/client/shared/focus",
+    ];
+    if (!excluded.includes(_path)) {
+      // $FlowIgnore
+      const module = require(_path);
+      global[name] = destruct ? module[name] : module;
+    }
+  },
+};
 
 const { URL } = require("url");
 global.URL = URL;
