@@ -6055,7 +6055,7 @@
 # Is support for :is() and :where() enabled?
 - name: layout.css.is-where-selectors.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
   rust: true
 
