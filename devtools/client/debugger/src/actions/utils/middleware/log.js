@@ -21,7 +21,6 @@ const blacklist = [
   "SET_FOCUSED_SOURCE_ITEM",
   "NODE_EXPAND",
   "IN_SCOPE_LINES",
-  "SET_PREVIEW",
 ];
 
 function cloneAction(action: any) {
