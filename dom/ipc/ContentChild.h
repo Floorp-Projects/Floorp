@@ -673,6 +673,11 @@ class ContentChild final
       CrossProcessSHEntry* aOldEntry, CrossProcessSHEntry* aNewEntry,
       const MaybeDiscarded<BrowsingContext>& aContext);
 
+  mozilla::ipc::IPCResult RecvOnAllowAccessFor(
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      const nsCString& aTrackingOrigin, uint32_t aCookieBehavior,
+      const ContentBlockingNotifier::StorageAccessGrantedReason& aReason);
+
 #ifdef NIGHTLY_BUILD
   // Fetch the current number of pending input events.
   //

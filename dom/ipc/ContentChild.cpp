@@ -18,6 +18,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/BenchmarkStorageChild.h"
+#include "mozilla/ContentBlocking.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MemoryTelemetry.h"
 #include "mozilla/NullPrincipal.h"
@@ -3572,6 +3573,18 @@ mozilla::ipc::IPCResult ContentChild::RecvUpdateSHEntriesInDocShell(
     docshell->SwapHistoryEntries(aOldEntry->ToSHEntryChild(),
                                  aNewEntry->ToSHEntryChild());
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvOnAllowAccessFor(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    const nsCString& aTrackingOrigin, uint32_t aCookieBehavior,
+    const ContentBlockingNotifier::StorageAccessGrantedReason& aReason) {
+  MOZ_ASSERT(!aContext.IsNull(), "Browsing context cannot be null");
+
+  ContentBlocking::OnAllowAccessFor(aContext.GetMaybeDiscarded(),
+                                    aTrackingOrigin, aCookieBehavior, aReason);
+
   return IPC_OK();
 }
 
