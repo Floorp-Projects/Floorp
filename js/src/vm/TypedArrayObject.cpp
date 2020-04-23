@@ -37,6 +37,7 @@
 #include "util/Text.h"
 #include "util/Windows.h"
 #include "vm/ArrayBufferObject.h"
+#include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/JSContext.h"

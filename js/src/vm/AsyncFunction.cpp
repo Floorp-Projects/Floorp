@@ -9,6 +9,7 @@
 #include "mozilla/Maybe.h"
 
 #include "builtin/Promise.h"
+#include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/GeneratorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"

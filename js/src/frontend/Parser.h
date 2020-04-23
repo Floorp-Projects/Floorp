@@ -184,6 +184,7 @@
 #include "frontend/CompilationInfo.h"
 #include "frontend/ErrorReporter.h"
 #include "frontend/FullParseHandler.h"
+#include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/FunctionTree.h"
 #include "frontend/NameAnalysisTypes.h"
 #include "frontend/NameCollections.h"
@@ -193,6 +194,7 @@
 #include "frontend/TokenStream.h"
 #include "js/Vector.h"
 #include "vm/ErrorReporting.h"
+#include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
 
 namespace js {
 

@@ -22,7 +22,7 @@
 #include "vm/EnvironmentObject.h"  // js::CallObject
 #include "vm/JitActivation.h"      // js::jit::JitActivation
 #include "vm/JSContext.h"          // JSContext
-#include "vm/JSFunction.h"  // js::CanReuseScriptForClone, js::FunctionFlags, JSFunction
+#include "vm/JSFunction.h"         // js::CanReuseScriptForClone, JSFunction
 #include "vm/JSScript.h"  // js::PCToLineNumber, JSScript, js::ScriptSource
 #include "vm/Runtime.h"   // JSRuntime
 #include "vm/Stack.h"  // js::{AbstractFramePtr,InterpreterFrame,MaybeCheckAliasing}

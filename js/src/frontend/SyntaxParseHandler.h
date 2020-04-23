@@ -12,6 +12,7 @@
 
 #include <string.h>
 
+#include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/ParseNode.h"
 #include "frontend/TokenStream.h"
 #include "js/GCAnnotations.h"

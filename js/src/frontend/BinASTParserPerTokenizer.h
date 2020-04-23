@@ -25,16 +25,16 @@
 #include "frontend/BinASTTokenReaderContext.h"
 #include "frontend/BinASTTokenReaderMultipart.h"
 #include "frontend/FullParseHandler.h"
+#include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/ParseContext.h"
 #include "frontend/ParseNode.h"
 #include "frontend/SharedContext.h"
-
 #include "js/CompileOptions.h"
 #include "js/GCHashTable.h"
 #include "js/GCVector.h"
 #include "js/Result.h"
-
 #include "vm/ErrorReporting.h"
+#include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
 
 namespace js {
 namespace frontend {

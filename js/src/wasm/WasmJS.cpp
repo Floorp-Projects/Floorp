@@ -35,6 +35,7 @@
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/ErrorObject.h"
+#include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/Interpreter.h"
 #include "vm/PlainObject.h"    // js::PlainObject
 #include "vm/PromiseObject.h"  // js::PromiseObject

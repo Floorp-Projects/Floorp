@@ -44,6 +44,8 @@
 #include "util/StringBuffer.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
+#include "vm/FunctionFlags.h"          // js::FunctionFlags
+#include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/JSAtom.h"

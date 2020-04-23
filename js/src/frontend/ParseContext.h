@@ -15,6 +15,7 @@
 #include "frontend/NameCollections.h"
 #include "frontend/SharedContext.h"
 #include "frontend/UsedNameTracker.h"
+#include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
 
 namespace js {
 
