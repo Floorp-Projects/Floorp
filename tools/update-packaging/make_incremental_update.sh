@@ -105,7 +105,7 @@ if [ $(echo "$newdir" | grep -c '\/$') = 1 ]; then
   # Remove the /
   newdir=$(echo "$newdir" | sed -e 's:\/$::')
 fi
-workdir="$newdir.work"
+workdir="$(mktemp -d)"
 updatemanifestv2="$workdir/updatev2.manifest"
 updatemanifestv3="$workdir/updatev3.manifest"
 archivefiles="updatev2.manifest updatev3.manifest"
