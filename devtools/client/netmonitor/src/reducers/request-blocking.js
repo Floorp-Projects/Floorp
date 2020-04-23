@@ -50,13 +50,20 @@ function addBlockedUrl(state, action) {
   // The user can paste in a list of URLS so we need to cleanse the input
   // Pasting a list turns new lines into spaces
   const uniqueUrls = [...new Set(action.url.split(" "))].map(url => url.trim());
+
   const newUrls = uniqueUrls
     // Ensure the URL isn't already blocked
     .filter(url => url && !state.blockedUrls.some(item => item.url === url))
     // Add new URLs as enabled by default
     .map(url => ({ url, enabled: true }));
 
-  const blockedUrls = [...state.blockedUrls, ...newUrls];
+  // If the user is trying to block a URL that's currently in the list but disabled,
+  // re-enable the old item
+  const currentBlockedUrls = state.blockedUrls.map(item =>
+    uniqueUrls.includes(item.url) ? { url: item.url, enabled: true } : item
+  );
+
+  const blockedUrls = [...currentBlockedUrls, ...newUrls];
   return {
     ...state,
     blockedUrls,
