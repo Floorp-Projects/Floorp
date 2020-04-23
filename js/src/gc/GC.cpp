@@ -901,6 +901,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       lastMarkSlice(false),
       safeToYield(true),
       sweepOnBackgroundThread(false),
+      requestSliceAfterBackgroundTask(false),
       lifoBlocksToFree((size_t)JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
       lifoBlocksToFreeAfterMinorGC(
           (size_t)JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
@@ -2868,14 +2869,15 @@ bool SliceBudget::checkOverBudget() {
 }
 
 void GCRuntime::requestMajorGC(JS::GCReason reason) {
-  MOZ_ASSERT(!CurrentThreadIsPerformingGC());
+  MOZ_ASSERT_IF(reason != JS::GCReason::BG_TASK_FINISHED,
+                !CurrentThreadIsPerformingGC());
 
   if (majorGCRequested()) {
     return;
   }
 
   majorGCTriggerReason = reason;
-  rt->mainContextFromOwnThread()->requestInterrupt(InterruptReason::GC);
+  rt->mainContextFromAnyThread()->requestInterrupt(InterruptReason::GC);
 }
 
 void Nursery::requestMinorGC(JS::GCReason reason) const {
@@ -3173,6 +3175,13 @@ void GCRuntime::startDecommit() {
 
   decommitTask.setChunksToScan(toDecommit);
 
+#ifdef DEBUG
+  {
+    AutoLockHelperThreadState lock;
+    MOZ_ASSERT(!requestSliceAfterBackgroundTask);
+  }
+#endif
+
   if (sweepOnBackgroundThread) {
     decommitTask.start();
     return;
@@ -3189,29 +3198,57 @@ void js::gc::BackgroundDecommitTask::setChunksToScan(ChunkVector& chunks) {
 }
 
 void js::gc::BackgroundDecommitTask::run() {
-  AutoLockGC lock(gc);
+  ChunkPool toFree;
 
-  for (Chunk* chunk : toDecommit.ref()) {
-    // The arena list is not doubly-linked, so we have to work in the free
-    // list order and not in the natural order.
-    while (chunk->info.numArenasFreeCommitted) {
-      bool ok = chunk->decommitOneFreeArena(gc, lock);
+  {
+    AutoLockGC lock(gc);
 
-      // If we are low enough on memory that we can't update the page
-      // tables, or if we need to return for any other reason, break out
-      // of the loop.
-      if (cancel_ || !ok) {
-        break;
+    for (Chunk* chunk : toDecommit.ref()) {
+      // The arena list is not doubly-linked, so we have to work in the free
+      // list order and not in the natural order.
+
+      while (chunk->info.numArenasFreeCommitted && !cancel_) {
+        if (!chunk->decommitOneFreeArena(gc, lock)) {
+          // If we are low enough on memory that we can't update the page
+          // tables, break out of the loop.
+          break;
+        }
       }
     }
-  }
-  toDecommit.ref().clearAndFree();
 
-  ChunkPool toFree = gc->expireEmptyChunkPool(lock);
-  if (toFree.count()) {
-    AutoUnlockGC unlock(lock);
-    FreeChunkPool(toFree);
+    toDecommit.ref().clearAndFree();
+    toFree = gc->expireEmptyChunkPool(lock);
   }
+
+  FreeChunkPool(toFree);
+
+  AutoLockHelperThreadState lock;
+  setFinishing(lock);
+  gc->maybeRequestGCAfterBackgroundTask(lock);
+}
+
+void GCRuntime::maybeRequestGCAfterBackgroundTask(
+    const AutoLockHelperThreadState& lock) {
+  if (requestSliceAfterBackgroundTask) {
+    // Trigger a slice so the main thread can continue the collection
+    // immediately.
+    requestSliceAfterBackgroundTask = false;
+    requestMajorGC(JS::GCReason::BG_TASK_FINISHED);
+  }
+}
+
+void GCRuntime::cancelRequestedGCAfterBackgroundTask() {
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+
+#ifdef DEBUG
+  {
+    AutoLockHelperThreadState lock;
+    MOZ_ASSERT(!requestSliceAfterBackgroundTask);
+  }
+#endif
+
+  majorGCTriggerReason.compareExchange(JS::GCReason::BG_TASK_FINISHED,
+                                       JS::GCReason::NO_REASON);
 }
 
 void GCRuntime::sweepBackgroundThings(ZoneList& zones) {
@@ -3281,6 +3318,7 @@ void GCRuntime::assertBackgroundSweepingFinished() {
 void GCRuntime::queueZonesAndStartBackgroundSweep(ZoneList& zones) {
   {
     AutoLockHelperThreadState lock;
+    MOZ_ASSERT(!requestSliceAfterBackgroundTask);
     backgroundSweepZones.ref().transferFrom(zones);
     if (sweepOnBackgroundThread) {
       sweepTask.startOrRunIfIdle(lock);
@@ -3317,6 +3355,8 @@ void GCRuntime::sweepFromBackgroundThread(AutoLockHelperThreadState& lock) {
     // is running so we must check there is no more work after releasing the
     // lock.
   } while (!backgroundSweepZones.ref().isEmpty());
+
+  maybeRequestGCAfterBackgroundTask(lock);
 }
 
 void GCRuntime::waitBackgroundSweepEnd() {
@@ -6232,6 +6272,13 @@ void GCRuntime::finishCollection() {
   MOZ_ASSERT(zonesToMaybeCompact.ref().isEmpty());
   MOZ_ASSERT(cellsToAssertNotGray.ref().empty());
 
+#ifdef DEBUG
+  {
+    AutoLockHelperThreadState lock;
+    MOZ_ASSERT(!requestSliceAfterBackgroundTask);
+  }
+#endif
+
   lastGCEndTime_ = currentTime;
 }
 
@@ -6571,24 +6618,27 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
 
       [[fallthrough]];
 
-    case State::Finalize: {
-      gcstats::AutoPhase ap(stats(),
-                            gcstats::PhaseKind::WAIT_BACKGROUND_THREAD);
-
-      // Yield until background finalization is done.
+    case State::Finalize:
+      // In incremental collections, yield here until background finalization
+      // is done and request a slice to notify us when this happens.
       if (!budget.isUnlimited()) {
-        // Poll for end of background sweeping
-        if (isBackgroundSweeping()) {
+        AutoLockHelperThreadState lock;
+        if (sweepTask.wasStarted(lock)) {
+          requestSliceAfterBackgroundTask = true;
           break;
         }
-      } else {
-        waitBackgroundSweepEnd();
       }
-    }
 
       {
-        // Re-sweep the zones list, now that background finalization is
-        // finished to actually remove and free dead zones.
+        gcstats::AutoPhase ap(stats(),
+                              gcstats::PhaseKind::WAIT_BACKGROUND_THREAD);
+        waitBackgroundSweepEnd();
+        cancelRequestedGCAfterBackgroundTask();
+      }
+
+      {
+        // Sweep the zones list now that background finalization is finished to
+        // remove and free dead zones, compartments and realms.
         gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::SWEEP);
         gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::DESTROY);
         JSFreeOp fop(rt);
@@ -6625,21 +6675,27 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
 
       [[fallthrough]];
 
-    case State::Decommit: {
-      gcstats::AutoPhase ap(stats(),
-                            gcstats::PhaseKind::WAIT_BACKGROUND_THREAD);
-
-      // Yield until background decommit is done.
-      if (!budget.isUnlimited() && decommitTask.wasStarted()) {
-        break;
+    case State::Decommit:
+      // In incremental collections, yield until background decommit is done and
+      // request a slice to notify us when that happens.
+      if (!budget.isUnlimited()) {
+        AutoLockHelperThreadState lock;
+        if (decommitTask.wasStarted(lock)) {
+          requestSliceAfterBackgroundTask = true;
+          break;
+        }
       }
 
-      decommitTask.join();
+      {
+        gcstats::AutoPhase ap(stats(),
+                              gcstats::PhaseKind::WAIT_BACKGROUND_THREAD);
+        decommitTask.join();
+        cancelRequestedGCAfterBackgroundTask();
+      }
 
       incrementalState = State::Finish;
 
       [[fallthrough]];
-    }
 
     case State::Finish:
       finishCollection();

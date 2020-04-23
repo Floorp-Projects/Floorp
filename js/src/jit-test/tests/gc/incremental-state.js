@@ -1,5 +1,9 @@
 // |jit-test| skip-if: !hasFunction["gczeal"]
 
+function assert(x) {
+  assertEq(true, x);
+}
+
 // Test expected state changes during collection.
 gczeal(0);
 
@@ -10,8 +14,8 @@ assertEq(gcstate(), "NotActive");
 // Incremental GC in minimal slice. Note that finalization always uses zero-
 // sized slices while background finalization is on-going, so we need to loop.
 gcslice(1000000);
-while (gcstate() == "Finalize") { gcslice(1); }
-while (gcstate() == "Decommit") { gcslice(1); }
+assert(gcstate() !== "Mark");
+finishgc();
 assertEq(gcstate(), "NotActive");
 
 // Incremental GC in multiple slices: if marking takes more than one slice,
@@ -22,9 +26,8 @@ assertEq(gcstate(), "Mark");
 gcslice(1000000);
 assertEq(gcstate(), "Mark");
 gcslice(1000000);
-while (gcstate() == "Finalize") { gcslice(1); }
-while (gcstate() == "Decommit") { gcslice(1); }
-assertEq(gcstate(), "NotActive");
+assert(gcstate() !== "Mark");
+finishgc();
 
 // Zeal mode 8: Incremental GC in two slices:
 //   1) mark roots
@@ -51,9 +54,8 @@ gczeal(10, 0);
 gcslice(1000000);
 assertEq(gcstate(), "Sweep");
 gcslice(1000000);
-while (gcstate() == "Finalize") { gcslice(1); }
-while (gcstate() == "Decommit") { gcslice(1); }
-assertEq(gcstate(), "NotActive");
+assert(gcstate() !== "Sweep");
+finishgc();
 
 // Two-slice zeal modes that yield once during sweeping.
 for (let mode of [ 17, 19 ]) {
