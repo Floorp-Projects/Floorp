@@ -73,7 +73,7 @@ registerCleanupFunction(async function() {
  *        The type of toolbox host to be used.
  * @return Promise
  *         Resolves when the tab has been added, loaded and the toolbox has been opened.
- *         Resolves to the toolbox.
+ *         Resolves to the hud.
  */
 async function openNewTabAndConsole(url, clearJstermHistory = true, hostId) {
   const toolbox = await openNewTabAndToolbox(url, "webconsole", hostId);
@@ -85,6 +85,42 @@ async function openNewTabAndConsole(url, clearJstermHistory = true, hostId) {
   }
 
   return hud;
+}
+
+/**
+ * Add a new tab with iframes, open the toolbox in it, and select the webconsole.
+ *
+ * @param string url
+ *        The URL for the tab to be opened.
+ * @param Arra<string> iframes
+ *        An array of URLs that will be added to the top document.
+ * @return Promise
+ *         Resolves when the tab has been added, loaded, iframes loaded, and the toolbox
+ *         has been opened. Resolves to the hud.
+ */
+async function openNewTabWithIframesAndConsole(tabUrl, iframes) {
+  // We need to add the tab and the iframes before opening the console in case we want
+  // to handle remote frames (we don't support creating frames target when the toolbox
+  // is already open).
+  await addTab(tabUrl);
+  await ContentTask.spawn(gBrowser.selectedBrowser, iframes, async function(
+    urls
+  ) {
+    const iframesLoadPromises = urls.map((url, i) => {
+      const iframe = content.document.createElement("iframe");
+      iframe.classList.add(`iframe-${i + 1}`);
+      const onLoadIframe = new Promise(resolve => {
+        iframe.addEventListener("load", resolve, { once: true });
+      });
+      content.document.body.append(iframe);
+      iframe.src = url;
+      return onLoadIframe;
+    });
+
+    await Promise.all(iframesLoadPromises);
+  });
+
+  return openConsole();
 }
 
 /**
@@ -622,11 +658,19 @@ async function setInputValueForAutocompletion(
   setInputValue(hud, "");
   await Promise.all(initialPromises);
 
+  // Wait for next tick. Tooltip tests sometimes fail to successively hide and
+  // show tooltips on Win32 debug.
+  await waitForTick();
+
   jsterm.focus();
 
   const updated = jsterm.once("autocomplete-updated");
   EventUtils.sendString(value, hud.iframeWindow);
   await updated;
+
+  // Wait for next tick. Tooltip tests sometimes fail to successively hide and
+  // show tooltips on Win32 debug.
+  await waitForTick();
 
   if (caretPosition < 0) {
     caretPosition = value.length + caretPosition;
@@ -1677,4 +1721,84 @@ async function clearOutput(hud, { keepStorage = false } = {}) {
 
   ui.clearOutput(!keepStorage);
   await Promise.all(promises);
+}
+
+/**
+ * Retrieve all the items of the context selector menu.
+ *
+ * @param {WebConsole} hud
+ * @return Array<Element>
+ */
+function getContextSelectorItems(hud) {
+  const toolbox = hud.toolbox;
+  const doc = toolbox ? toolbox.doc : hud.chromeWindow.document;
+  const list = doc.getElementById(
+    "webconsole-console-evaluation-context-selector-menu-list"
+  );
+  return Array.from(list.querySelectorAll("li.menuitem button"));
+}
+
+/**
+ * Check that the evaluation context selector menu has the expected item, in the expected
+ * state.
+ *
+ * @param {WebConsole} hud
+ * @param {Array<Object>} expected: An array of object which can have the following shape:
+ *         - {String} label: The label of the target
+ *         - {String} tooltip: The tooltip of the target element in the menu
+ *         - {Boolean} checked: if the target should be selected or not
+ *         - {Boolean} separator: if the element is a simple separator
+ */
+function checkContextSelectorMenu(hud, expected) {
+  const items = getContextSelectorItems(hud);
+
+  is(
+    items.length,
+    expected.length,
+    "The context selector menu has the expected number of items"
+  );
+
+  expected.forEach(({ label, tooltip, checked, separator }, i) => {
+    const el = items[i];
+
+    if (separator === true) {
+      is(
+        el.getAttribute("role"),
+        "menuseparator",
+        "The element is a separator"
+      );
+      return;
+    }
+
+    const elChecked = el.getAttribute("aria-checked") === "true";
+    const elTooltip = el.getAttribute("title");
+    const elLabel = el.querySelector(".label").innerText;
+
+    is(elLabel, label, `The item has the expected label`);
+    is(elTooltip, tooltip, `Item "${label}" has the expected tooltip`);
+    is(
+      elChecked,
+      checked,
+      `Item "${label}" is ${checked ? "checked" : "unchecked"}`
+    );
+  });
+}
+
+/**
+ * Select a target in the context selector.
+ *
+ * @param {WebConsole} hud
+ * @param {String} targetLabel: The label of the target to select.
+ */
+function selectTargetInContextSelector(hud, targetLabel) {
+  const items = getContextSelectorItems(hud);
+  const itemToSelect = items.find(
+    item => item.querySelector(".label").innerText === targetLabel
+  );
+  if (!itemToSelect) {
+    ok(false, `Couldn't find target with "${targetLabel}" label`);
+    return;
+  }
+
+  itemToSelect.click();
 }

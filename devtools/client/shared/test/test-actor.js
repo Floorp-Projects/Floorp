@@ -476,8 +476,8 @@ var TestActor = protocol.ActorClassWithSpec(testSpec, {
         resolve();
       }
 
-      const docShell = this.content.docShell;
-      docShell.contentViewer.fullZoom = level;
+      const bc = this.content.docShell.browsingContext;
+      bc.fullZoom = level;
     });
   },
 

@@ -239,12 +239,6 @@ interface nsIContentViewer : nsISupports
    */
   [noscript,notxpcom,nostdcall] void setNavigationTiming(in nsDOMNavigationTimingPtr aTiming);
 
-  /** The amount by which to scale all text. Default is 1.0. */
-  attribute float textZoom;
-
-  /** The amount by which to scale all lengths. Default is 1.0. */
-  attribute float fullZoom;
-
   /**
    * The actual full zoom in effect, as modified by the device context.
    * For a requested full zoom, the device context may choose a slightly

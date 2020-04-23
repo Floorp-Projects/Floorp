@@ -1238,6 +1238,13 @@ class ContentParent final
       const nsCString& aTrackingOrigin, const int& aAllowMode,
       FirstPartyStorageAccessGrantedForOriginResolver&& aResolver);
 
+  mozilla::ipc::IPCResult RecvCompleteAllowAccessFor(
+      const MaybeDiscarded<BrowsingContext>& aParentContext,
+      uint64_t aTopLevelWindowId, const Principal& aTrackingPrincipal,
+      const nsCString& aTrackingOrigin, uint32_t aCookieBehavior,
+      const ContentBlockingNotifier::StorageAccessGrantedReason& aReason,
+      CompleteAllowAccessForResolver&& aResolver);
+
   mozilla::ipc::IPCResult RecvStoreUserInteractionAsPermission(
       const Principal& aPrincipal);
 

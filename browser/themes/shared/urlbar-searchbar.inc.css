@@ -202,7 +202,11 @@
 }
 
 #urlbar[breakout][breakout-extend] > #urlbar-background {
-  box-shadow: 0 5px 18px rgba(0, 0, 0, .2);
+  box-shadow: 0 3px 8px 0 rgba(0,0,0,.15)
+}
+
+#urlbar[breakout][breakout-extend][open] > #urlbar-background {
+  box-shadow: 0 5px 18px rgba(0,0,0,.2);
 }
 
 #urlbar[breakout][breakout-extend] > #urlbar-input-container {

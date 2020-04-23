@@ -46,9 +46,9 @@ add_task(async function test_sitespecific_iframe_global_zoom() {
     [],
     async () => {
       await ContentTaskUtils.waitForCondition(() => {
-        return content.docShell.contentViewer.fullZoom.toFixed(2) == 0.67;
+        return content.docShell.browsingContext.fullZoom.toFixed(2) == 0.67;
       });
-      return content.docShell.contentViewer.fullZoom.toFixed(2);
+      return content.docShell.browsingContext.fullZoom.toFixed(2);
     }
   );
 
@@ -98,9 +98,9 @@ add_task(async function test_sitespecific_global_zoom_enlarge() {
     [],
     async () => {
       await ContentTaskUtils.waitForCondition(() => {
-        return content.docShell.contentViewer.fullZoom.toFixed(2) == 0.8;
+        return content.docShell.browsingContext.fullZoom.toFixed(2) == 0.8;
       });
-      return content.docShell.contentViewer.fullZoom.toFixed(2);
+      return content.docShell.browsingContext.fullZoom.toFixed(2);
     }
   );
 

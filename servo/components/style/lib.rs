@@ -46,7 +46,7 @@ extern crate fxhash;
 #[cfg(feature = "gecko")]
 #[macro_use]
 pub mod gecko_string_cache;
-extern crate hashglobe;
+extern crate hashbrown;
 #[cfg(feature = "servo")]
 #[macro_use]
 extern crate html5ever;

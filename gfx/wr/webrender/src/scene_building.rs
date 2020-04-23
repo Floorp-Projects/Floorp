@@ -36,7 +36,7 @@ use crate::prim_store::image::{Image, YuvImage};
 use crate::prim_store::line_dec::{LineDecoration, LineDecorationCacheKey};
 use crate::prim_store::picture::{Picture, PictureCompositeKey, PictureKey};
 use crate::prim_store::text_run::TextRun;
-use crate::render_backend::{DocumentView};
+use crate::render_backend::SceneView;
 use crate::resource_cache::ImageRequest;
 use crate::scene::{Scene, BuiltScene, SceneStats, StackingContextHelpers};
 use crate::scene_builder_thread::Interners;
@@ -389,7 +389,7 @@ impl<'a> SceneBuilder<'a> {
     pub fn build(
         scene: &Scene,
         font_instances: SharedFontInstanceMap,
-        view: &DocumentView,
+        view: &SceneView,
         output_pipelines: &FastHashSet<PipelineId>,
         frame_builder_config: &FrameBuilderConfig,
         interners: &mut Interners,

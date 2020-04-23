@@ -74,14 +74,14 @@ add_task(async function() {
   );
 
   // Wait for all tree sections updated by react
-  wait = waitForDOM(document, "#params-panel .accordion-item", 2);
+  wait = waitForDOM(document, "#request-panel .accordion-item", 2);
   EventUtils.sendMouseEvent(
     { type: "click" },
-    document.querySelector("#params-tab")
+    document.querySelector("#request-tab")
   );
   await wait;
 
-  tabpanel = document.querySelector("#params-panel");
+  tabpanel = document.querySelector("#request-panel");
 
   ok(
     tabpanel.querySelector(".treeTable"),

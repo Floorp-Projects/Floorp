@@ -491,13 +491,16 @@ class nsPresContext : public nsISupports,
    * font scale into account as well.
    */
   float TextZoom() const { return mTextZoom; }
-  void SetTextZoom(float aZoom) {
-    MOZ_ASSERT(aZoom > 0.0f, "invalid zoom factor");
-    if (aZoom == mTextZoom) return;
 
-    mTextZoom = aZoom;
-    UpdateEffectiveTextZoom();
-  }
+  /**
+   * Corresponds to the product of text zoom and system font scale, limited
+   * by zoom.maxPercent and minPercent.
+   * As the system font scale is automatically set by the PresShell, code that
+   * e.g. wants to transfer zoom levels to a new document should use TextZoom()
+   * instead, which corresponds to the text zoom level that was actually set by
+   * the front-end/user.
+   */
+  float EffectiveTextZoom() const { return mEffectiveTextZoom; }
 
   /**
    * Notify the pres context that the safe area insets have changed.
@@ -513,16 +516,16 @@ class nsPresContext : public nsISupports,
   void ValidatePresShellAndDocumentReleation() const;
 #endif  // #ifdef DEBUG
 
+  void SetTextZoom(float aZoom) {
+    MOZ_ASSERT(aZoom > 0.0f, "invalid zoom factor");
+    if (aZoom == mTextZoom) return;
+
+    mTextZoom = aZoom;
+    UpdateEffectiveTextZoom();
+  }
+  void SetFullZoom(float aZoom);
+
  public:
-  /**
-   * Corresponds to the product of text zoom and system font scale, limited
-   * by zoom.maxPercent and minPercent.
-   * As the system font scale is automatically set by the PresShell, code that
-   * e.g. wants to transfer zoom levels to a new document should use TextZoom()
-   * instead, which corresponds to the text zoom level that was actually set by
-   * the front-end/user.
-   */
-  float EffectiveTextZoom() const { return mEffectiveTextZoom; }
 
   float GetFullZoom() { return mFullZoom; }
   /**
@@ -531,10 +534,18 @@ class nsPresContext : public nsISupports,
    * of app units to device pixels.
    */
   float GetDeviceFullZoom();
-  void SetFullZoom(float aZoom);
 
   float GetOverrideDPPX() const { return mMediaEmulationData.mDPPX; }
   void SetOverrideDPPX(float);
+
+  /**
+   * Recomputes the data dependent on the browsing context, like zoom and text
+   * zoom.
+   *
+   * TODO(emilio): Eventually stuff like the media emulation data, overrideDPPX
+   * and such should also move here.
+   */
+  void RecomputeBrowsingContextDependentData();
 
   Maybe<StylePrefersColorScheme> GetOverridePrefersColorScheme() const {
     return mMediaEmulationData.mPrefersColorScheme;

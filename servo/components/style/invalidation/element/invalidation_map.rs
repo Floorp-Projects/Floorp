@@ -10,7 +10,7 @@ use crate::selector_map::{MaybeCaseInsensitiveHashMap, SelectorMap, SelectorMapE
 use crate::selector_parser::SelectorImpl;
 use crate::{Atom, LocalName, Namespace};
 use fallible::FallibleVec;
-use hashglobe::FailedAllocationError;
+use hashbrown::CollectionAllocErr;
 use selectors::attr::NamespaceConstraint;
 use selectors::parser::{Combinator, Component};
 use selectors::parser::{Selector, SelectorIter};
@@ -224,7 +224,7 @@ impl InvalidationMap {
         &mut self,
         selector: &Selector<SelectorImpl>,
         quirks_mode: QuirksMode,
-    ) -> Result<(), FailedAllocationError> {
+    ) -> Result<(), CollectionAllocErr> {
         debug!("InvalidationMap::note_selector({:?})", selector);
 
         let mut iter = selector.iter();

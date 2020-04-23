@@ -28,15 +28,12 @@ function isBoundingClientRect(e, r, msg) {
 function doTest() {
   var f = document.getElementById('f');
 
-  var docShell = f.contentWindow.docShell;
-  var docviewer = docShell.contentViewer;
-
   var d = f.contentDocument.getElementById('d');
 
   isBoundingClientRect(d, "-70,0,100,1", "initial rect");
-  docviewer.fullZoom = 2;
+  SpecialPowers.setFullZoom(f.contentWindow, 2);
   isBoundingClientRect(d, "-120,0,50,1", "after zooming in");
-  docviewer.fullZoom = 1;
+  SpecialPowers.setFullZoom(f.contentWindow, 1);
   isBoundingClientRect(d, "-70,0,100,1", "after zooming back out");
   SimpleTest.finish();
 }

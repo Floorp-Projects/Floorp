@@ -14,8 +14,8 @@ use crate::rule_tree::CascadeLevel;
 use crate::selector_parser::SelectorImpl;
 use crate::stylist::Rule;
 use crate::{Atom, LocalName, Namespace, WeakAtom};
-use fallible::FallibleVec;
-use hashglobe::FailedAllocationError;
+use fallible::{FallibleHashMap, FallibleVec};
+use hashbrown::CollectionAllocErr;
 use precomputed_hash::PrecomputedHash;
 use selectors::matching::{matches_selector, ElementSelectorFlags, MatchingContext};
 use selectors::parser::{Combinator, Component, SelectorIter};
@@ -95,7 +95,7 @@ pub trait SelectorMapEntry: Sized + Clone {
 ///
 /// TODO: Tune the initial capacity of the HashMap
 #[derive(Debug, MallocSizeOf)]
-pub struct SelectorMap<T: 'static> {
+pub struct SelectorMap<T> {
     /// Rules that have `:root` selectors.
     pub root: SmallVec<[T; 1]>,
     /// A hash from an ID to rules which contain that ID selector.
@@ -112,17 +112,14 @@ pub struct SelectorMap<T: 'static> {
     pub count: usize,
 }
 
-impl<T: 'static> Default for SelectorMap<T> {
+impl<T> Default for SelectorMap<T> {
     #[inline]
     fn default() -> Self {
         Self::new()
     }
 }
 
-// FIXME(Manishearth) the 'static bound can be removed when
-// our HashMap fork (hashglobe) is able to use NonZero,
-// or when stdlib gets fallible collections
-impl<T: 'static> SelectorMap<T> {
+impl<T> SelectorMap<T> {
     /// Trivially constructs an empty `SelectorMap`.
     pub fn new() -> Self {
         SelectorMap {
@@ -280,11 +277,7 @@ impl SelectorMap<Rule> {
 impl<T: SelectorMapEntry> SelectorMap<T> {
     /// Inserts into the correct hash, trying id, class, localname and
     /// namespace.
-    pub fn insert(
-        &mut self,
-        entry: T,
-        quirks_mode: QuirksMode,
-    ) -> Result<(), FailedAllocationError> {
+    pub fn insert(&mut self, entry: T, quirks_mode: QuirksMode) -> Result<(), CollectionAllocErr> {
         self.count += 1;
 
         let vector = match find_bucket(entry.selector()) {
@@ -563,14 +556,11 @@ fn find_bucket<'a>(mut iter: SelectorIter<'a, SelectorImpl>) -> Bucket<'a> {
 
 /// Wrapper for PrecomputedHashMap that does ASCII-case-insensitive lookup in quirks mode.
 #[derive(Debug, MallocSizeOf)]
-pub struct MaybeCaseInsensitiveHashMap<K: PrecomputedHash + Hash + Eq, V: 'static>(
+pub struct MaybeCaseInsensitiveHashMap<K: PrecomputedHash + Hash + Eq, V>(
     PrecomputedHashMap<K, V>,
 );
 
-// FIXME(Manishearth) the 'static bound can be removed when
-// our HashMap fork (hashglobe) is able to use NonZero,
-// or when stdlib gets fallible collections
-impl<V: 'static> MaybeCaseInsensitiveHashMap<Atom, V> {
+impl<V> MaybeCaseInsensitiveHashMap<Atom, V> {
     /// Empty map
     pub fn new() -> Self {
         MaybeCaseInsensitiveHashMap(PrecomputedHashMap::default())
@@ -581,7 +571,8 @@ impl<V: 'static> MaybeCaseInsensitiveHashMap<Atom, V> {
         &mut self,
         mut key: Atom,
         quirks_mode: QuirksMode,
-    ) -> Result<hash_map::Entry<Atom, V>, FailedAllocationError> {
+    ) -> Result<hash_map::Entry<Atom, V, BuildHasherDefault<PrecomputedHasher>>, CollectionAllocErr>
+    {
         if quirks_mode == QuirksMode::Quirks {
             key = key.to_ascii_lowercase()
         }

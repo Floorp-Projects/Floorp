@@ -10,6 +10,7 @@
 
 #include <type_traits>
 
+#include "jit/CacheIRSpewer.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/Printer.h"
@@ -146,7 +147,12 @@ void WarpCacheIR::dumpData(GenericPrinter& out) const {
   out.printf("    stubCode: 0x%p\n", static_cast<JitCode*>(stubCode_));
   out.printf("    stubInfo: 0x%p\n", stubInfo_);
   out.printf("    stubData: 0x%p\n", stubData_);
-  // TODO: print CacheIR
+#  ifdef JS_CACHEIR_SPEW
+  out.printf("    IR:\n");
+  SpewCacheIROps(out, "      ", stubInfo_);
+#  else
+  out.printf("(CacheIR spew unavailable)\n");
+#  endif
 }
 #endif  // JS_JITSPEW
 

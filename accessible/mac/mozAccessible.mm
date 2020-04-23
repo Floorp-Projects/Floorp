@@ -1052,6 +1052,9 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
     case roles::PAGETAB:
       return @"AXTabButton";
 
+    case roles::SEPARATOR:
+      return @"AXContentSeparator";
+
     default:
       break;
   }

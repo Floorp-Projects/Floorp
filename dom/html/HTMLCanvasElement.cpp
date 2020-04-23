@@ -1043,6 +1043,12 @@ void HTMLCanvasElement::InvalidateCanvasContent(const gfx::Rect* damageRect) {
 
     if (layer) {
       static_cast<CanvasLayer*>(layer)->Updated();
+    } else {
+      // This path is taken in two situations:
+      // 1) WebRender is enabled and has not yet processed a display list.
+      // 2) WebRender is disabled and layer invalidation failed.
+      // In both cases, schedule a full paint to properly update canvas.
+      frame->SchedulePaint(nsIFrame::PAINT_DEFAULT, false);
     }
   }
 

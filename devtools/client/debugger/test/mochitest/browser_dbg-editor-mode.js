@@ -7,8 +7,8 @@ add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
 
   await selectSource(dbg, "simple1.js");
-  is(dbg.win.cm.getOption("mode").name, "javascript", "Mode is correct");
+  is(dbg.getCM().getOption("mode").name, "javascript", "Mode is correct");
 
   await selectSource(dbg, "doc-scripts.html");
-  is(dbg.win.cm.getOption("mode").name, "htmlmixed", "Mode is correct");
+  is(dbg.getCM().getOption("mode").name, "htmlmixed", "Mode is correct");
 });

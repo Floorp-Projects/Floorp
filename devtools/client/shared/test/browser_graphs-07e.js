@@ -125,8 +125,7 @@ function testGraph(graph) {
 }
 
 function setZoom(frame, zoomValue) {
-  const contViewer = frame.docShell.contentViewer;
-  CURRENT_ZOOM = contViewer.fullZoom = zoomValue;
+  CURRENT_ZOOM = frame.docShell.browsingContext.fullZoom = zoomValue;
 }
 
 // EventUtils just doesn't work!

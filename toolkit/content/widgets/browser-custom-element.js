@@ -343,10 +343,6 @@
 
       this._contentRequestContextID = null;
 
-      this._fullZoom = 1;
-
-      this._textZoom = 1;
-
       this._isSyntheticDocument = false;
 
       this.mPrefs = Services.prefs;
@@ -724,10 +720,6 @@
       return this.webNavigation.sessionHistory;
     }
 
-    get markupDocumentViewer() {
-      return this.docShell.contentViewer;
-    }
-
     get contentTitle() {
       return this.isRemoteBrowser
         ? this._contentTitle
@@ -813,19 +805,10 @@
     }
 
     set fullZoom(val) {
-      if (this.isRemoteBrowser) {
-        let changed = val.toFixed(2) != this._fullZoom.toFixed(2);
-
-        if (changed) {
-          this._fullZoom = val;
-          this.sendMessageToActor("FullZoom", { value: val }, "Zoom", "roots");
-
-          let event = new Event("FullZoomChange", { bubbles: true });
-          this.dispatchEvent(event);
-        }
-      } else {
-        this.markupDocumentViewer.fullZoom = val;
+      if (val.toFixed(2) == this.fullZoom.toFixed(2)) {
+        return;
       }
+      this.browsingContext.fullZoom = val;
     }
 
     get referrerInfo() {
@@ -835,33 +818,18 @@
     }
 
     get fullZoom() {
-      if (this.isRemoteBrowser) {
-        return this._fullZoom;
-      }
-      return this.markupDocumentViewer.fullZoom;
+      return this.browsingContext.fullZoom;
     }
 
     set textZoom(val) {
-      if (this.isRemoteBrowser) {
-        let changed = val.toFixed(2) != this._textZoom.toFixed(2);
-
-        if (changed) {
-          this._textZoom = val;
-          this.sendMessageToActor("TextZoom", { value: val }, "Zoom", "roots");
-
-          let event = new Event("TextZoomChange", { bubbles: true });
-          this.dispatchEvent(event);
-        }
-      } else {
-        this.markupDocumentViewer.textZoom = val;
+      if (val.toFixed(2) == this.textZoom.toFixed(2)) {
+        return;
       }
+      this.browsingContext.textZoom = val;
     }
 
     get textZoom() {
-      if (this.isRemoteBrowser) {
-        return this._textZoom;
-      }
-      return this.markupDocumentViewer.textZoom;
+      return this.browsingContext.textZoom;
     }
 
     get isSyntheticDocument() {
@@ -1836,8 +1804,6 @@
             "_charsetAutodetected",
             "_contentPrincipal",
             "_contentStoragePrincipal",
-            "_fullZoom",
-            "_textZoom",
             "_isSyntheticDocument",
             "_innerWindowID",
           ]

@@ -378,3 +378,66 @@ uint64_t AntiTrackingUtils::GetTopLevelStorageAreaWindowId(
 
   return parentBC->GetCurrentInnerWindowId();
 }
+
+/* static */
+already_AddRefed<nsIPrincipal> AntiTrackingUtils::GetPrincipal(
+    BrowsingContext* aBrowsingContext) {
+  MOZ_ASSERT(aBrowsingContext);
+
+  nsCOMPtr<nsIPrincipal> principal;
+
+  if (XRE_IsContentProcess()) {
+    // Passing an out-of-process browsing context in child processes to
+    // this API won't get any result, so just assert.
+    MOZ_ASSERT(aBrowsingContext->IsInProcess());
+
+    nsPIDOMWindowOuter* outer = aBrowsingContext->GetDOMWindow();
+    if (NS_WARN_IF(!outer)) {
+      return nullptr;
+    }
+
+    nsPIDOMWindowInner* inner = outer->GetCurrentInnerWindow();
+    if (NS_WARN_IF(!inner)) {
+      return nullptr;
+    }
+
+    principal = nsGlobalWindowInner::Cast(inner)->GetPrincipal();
+  } else {
+    WindowGlobalParent* wgp =
+        aBrowsingContext->Canonical()->GetCurrentWindowGlobal();
+    if (NS_WARN_IF(!wgp)) {
+      return nullptr;
+    }
+
+    principal = wgp->DocumentPrincipal();
+  }
+  return principal.forget();
+}
+
+/* static */
+bool AntiTrackingUtils::GetPrincipalAndTrackingOrigin(
+    BrowsingContext* aBrowsingContext, nsIPrincipal** aPrincipal,
+    nsACString& aTrackingOrigin) {
+  MOZ_ASSERT(aBrowsingContext);
+  MOZ_ASSERT(aPrincipal);
+
+  // Passing an out-of-process browsing context in child processes to
+  // this API won't get any result, so just assert.
+  MOZ_ASSERT_IF(XRE_IsContentProcess(), aBrowsingContext->IsInProcess());
+
+  // Let's take the principal and the origin of the tracker.
+  nsCOMPtr<nsIPrincipal> principal =
+      AntiTrackingUtils::GetPrincipal(aBrowsingContext);
+  if (NS_WARN_IF(!principal)) {
+    return false;
+  }
+
+  nsresult rv = principal->GetOriginNoSuffix(aTrackingOrigin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  principal.forget(aPrincipal);
+
+  return true;
+};

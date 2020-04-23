@@ -456,7 +456,8 @@ function _parseModifiers(aEvent, aWindow = window) {
  * aOffsetY. This allows mouse clicks to be simulated by calling this method.
  *
  * aEvent is an object which may contain the properties:
- *   shiftKey, ctrlKey, altKey, metaKey, accessKey, clickCount, button, type
+ *   accelKey, shiftKey, ctrlKey, altKey, metaKey, accessKey, clickCount,
+ *   button, type
  *
  * If the type is specified, an mouse event of that type is fired. Otherwise,
  * a mousedown followed by a mouse up is performed.
@@ -1062,8 +1063,9 @@ function synthesizeAndWaitNativeMouseMove(
  *          If keydown is specified, this only fires keydown (and keypress if
  *          it should be fired).
  *          If keyup is specified, this only fires keyup.
- *  - altKey, altGraphKey, ctrlKey, capsLockKey, fnKey, fnLockKey, numLockKey,
- *    metaKey, osKey, scrollLockKey, shiftKey, symbolKey, symbolLockKey:
+ *  - accelKey, altKey, altGraphKey, ctrlKey, capsLockKey, fnKey, fnLockKey,
+ *    numLockKey, metaKey, osKey, scrollLockKey, shiftKey, symbolKey,
+ *    symbolLockKey:
  *        Basically, you shouldn't use these attributes.  nsITextInputProcessor
  *        manages modifier key state when you synthesize modifier key events.
  *        However, if some of these attributes are true, this function activates

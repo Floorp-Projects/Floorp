@@ -14,10 +14,18 @@
 namespace mozilla {
 namespace dom {
 
+class WindowGlobalParent;
+
 #define MOZ_EACH_WC_FIELD(FIELD)                                       \
   FIELD(OuterWindowId, uint64_t)                                       \
   FIELD(CookieJarSettings, Maybe<mozilla::net::CookieJarSettingsArgs>) \
-  FIELD(HasStoragePermission, bool)
+  FIELD(HasStoragePermission, bool)                                    \
+  /* Whether the given window hierarchy is third party. See            \
+   * ThirdPartyUtil::IsThirdPartyWindow for details */                 \
+  FIELD(IsThirdPartyWindow, bool)                                      \
+  /* Whether this window's channel has been marked as a third-party    \
+   * tracking resource */                                              \
+  FIELD(IsThirdPartyTrackingResourceWindow, bool)
 
 class WindowContext : public nsISupports, public nsWrapperCache {
   MOZ_DECL_SYNCED_CONTEXT(WindowContext, MOZ_EACH_WC_FIELD)
@@ -88,6 +96,12 @@ class WindowContext : public nsISupports, public nsWrapperCache {
               ContentParent* aSource) {
     return true;
   }
+
+  bool CanSet(FieldIndex<IDX_IsThirdPartyWindow>,
+              const bool& IsThirdPartyWindow, ContentParent* aSource);
+  bool CanSet(FieldIndex<IDX_IsThirdPartyTrackingResourceWindow>,
+              const bool& aIsThirdPartyTrackingResourceWindow,
+              ContentParent* aSource);
 
   // Overload `DidSet` to get notifications for a particular field being set.
   //

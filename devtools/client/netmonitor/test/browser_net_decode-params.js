@@ -31,7 +31,7 @@ add_task(async function() {
 
   EventUtils.sendMouseEvent(
     { type: "click" },
-    document.querySelector("#params-tab")
+    document.querySelector("#request-tab")
   );
 
   // The Params panel should render the following:

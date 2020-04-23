@@ -17,7 +17,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [build-dependencies]
-autocfg = "0.1"
+autocfg = "1"
 ```
 
 Then use it in your `build.rs` script to detect compiler features.  For
@@ -31,7 +31,7 @@ fn main() {
     ac.emit_has_type("i128");
 
     // (optional) We don't need to rerun for anything external.
-    autocfg::rerun_path(file!());
+    autocfg::rerun_path("build.rs");
 }
 ```
 
@@ -43,8 +43,16 @@ should only be used when the compiler supports it.
 
 ## Release Notes
 
+- 1.0.0 (2020-01-08)
+  - 🎉 Release 1.0! 🎉 (no breaking changes)
+  - Add `probe_expression` and `emit_expression_cfg` to test arbitrary expressions.
+  - Add `probe_constant` and `emit_constant_cfg` to test arbitrary constant expressions.
+
+- 0.1.7 (2019-10-20)
+  - Apply `RUSTFLAGS` when probing `$TARGET != $HOST`, mainly for sysroot, by @roblabla.
+
 - 0.1.6 (2019-08-19)
-  - Add `probe`/`emit_sysroot_crate`, by @leo60228
+  - Add `probe`/`emit_sysroot_crate`, by @leo60228.
 
 - 0.1.5 (2019-07-16)
   - Mask some warnings from newer rustc.
@@ -54,11 +62,11 @@ should only be used when the compiler supports it.
   - Improve `rustc` bootstrap compatibility.
 
 - 0.1.3 (2019-05-21)
-  - Auto-detects if `#![no_std]` is needed for the `$TARGET`
+  - Auto-detects if `#![no_std]` is needed for the `$TARGET`.
 
 - 0.1.2 (2019-01-16)
-  - Add `rerun_env(ENV)` to print `cargo:rerun-if-env-changed=ENV`
-  - Add `rerun_path(PATH)` to print `cargo:rerun-if-changed=PATH`
+  - Add `rerun_env(ENV)` to print `cargo:rerun-if-env-changed=ENV`.
+  - Add `rerun_path(PATH)` to print `cargo:rerun-if-changed=PATH`.
 
 
 ## Minimum Rust version policy

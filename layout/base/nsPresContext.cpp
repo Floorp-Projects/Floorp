@@ -615,7 +615,9 @@ nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
     RestyleManager::ClearServoDataFromSubtree(root);
   }
 
-  if (mDeviceContext->SetFullZoom(mFullZoom)) mDeviceContext->FlushFontCache();
+  if (mDeviceContext->SetFullZoom(mFullZoom)) {
+    mDeviceContext->FlushFontCache();
+  }
   mCurAppUnitsPerDevPixel = mDeviceContext->AppUnitsPerDevPixel();
 
   mEventManager = new mozilla::EventStateManager();
@@ -641,8 +643,9 @@ nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
         "How did we end up with a presshell if our parent doesn't "
         "have one?");
     if (parent && parent->GetPresContext()) {
-      dom::BrowsingContext* ourItem = mDocument->GetBrowsingContext();
-      if (ourItem && !ourItem->IsTop()) {
+      // XXX the document can change in AttachPresShell, does this work?
+      dom::BrowsingContext* browsingContext = mDocument->GetBrowsingContext();
+      if (browsingContext && !browsingContext->IsTop()) {
         Element* containingElement =
             parent->FindContentForSubDocument(mDocument);
         if (!containingElement->IsXULElement() ||
@@ -720,6 +723,27 @@ void nsPresContext::AttachPresShell(mozilla::PresShell* aPresShell) {
   }
 
   UpdateCharSet(doc->GetDocumentCharacterSet());
+}
+
+void nsPresContext::RecomputeBrowsingContextDependentData() {
+  MOZ_ASSERT(mDocument);
+  dom::Document* doc = mDocument;
+  // Resource documents inherit all this state from their display document.
+  while (dom::Document* outer = doc->GetDisplayDocument()) {
+    doc = outer;
+  }
+  auto* browsingContext = doc->GetBrowsingContext();
+  if (NS_WARN_IF(!browsingContext)) {
+    return;
+  }
+  SetFullZoom(browsingContext->FullZoom());
+  SetTextZoom(browsingContext->TextZoom());
+  mDocument->EnumerateExternalResources([](dom::Document& aSubResource) {
+    if (nsPresContext* subResourcePc = aSubResource.GetPresContext()) {
+      subResourcePc->RecomputeBrowsingContextDependentData();
+    }
+    return CallState::Continue;
+  });
 }
 
 void nsPresContext::DetachPresShell() {

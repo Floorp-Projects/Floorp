@@ -27,26 +27,26 @@ add_task(async function() {
   // Wait for all aaccordion items updated by react, Bug 1514750 - wait for editor also
   const waitAccordionItems = waitForDOM(
     document,
-    "#params-panel .accordion-item",
+    "#request-panel .accordion-item",
     2
   );
   const waitSourceEditor = waitForDOM(
     document,
-    "#params-panel .CodeMirror-code"
+    "#request-panel .CodeMirror-code"
   );
   store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent(
     { type: "click" },
-    document.querySelector("#params-tab")
+    document.querySelector("#request-tab")
   );
   await Promise.all([waitAccordionItems, waitSourceEditor]);
-  const tabpanel = document.querySelector("#params-panel");
+  const tabpanel = document.querySelector("#request-panel");
 
   ok(
     tabpanel.querySelector(".treeTable"),
     "The request params doesn't have the indended visibility."
   );
-  // Bug 1514750 - Show JSON params in plain text view also
+  // Bug 1514750 - Show JSON request in plain text view also
   ok(
     tabpanel.querySelector(".CodeMirror-code"),
     "The request post data doesn't have the indended visibility."
