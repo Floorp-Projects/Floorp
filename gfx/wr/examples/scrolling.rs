@@ -55,7 +55,6 @@ impl Example for App {
                 (0, 0).by(1000, 1000),
                 scrollbox,
                 vec![],
-                None,
                 ScrollSensitivity::ScriptAndInputEvents,
                 LayoutVector2D::zero(),
             );
@@ -89,7 +88,6 @@ impl Example for App {
                 (0, 100).to(300, 1000),
                 (0, 100).to(200, 300),
                 vec![],
-                None,
                 ScrollSensitivity::ScriptAndInputEvents,
                 LayoutVector2D::zero(),
             );

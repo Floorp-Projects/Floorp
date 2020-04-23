@@ -281,7 +281,6 @@ pub struct ScrollFrameDisplayItem {
     pub clip_rect: LayoutRect,
     pub parent_space_and_clip: SpaceAndClipInfo,
     pub external_id: Option<ExternalScrollId>,
-    pub image_mask: Option<ImageMask>,
     pub scroll_sensitivity: ScrollSensitivity,
     /// The amount this scrollframe has already been scrolled by, in the caller.
     /// This means that all the display items that are inside the scrollframe
