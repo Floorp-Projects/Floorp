@@ -1272,7 +1272,6 @@ name = "fallible"
 version = "0.0.1"
 dependencies = [
  "hashbrown",
- "hashglobe",
  "smallvec",
 ]
 
@@ -1912,13 +1911,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hashglobe"
-version = "0.1.0"
-dependencies = [
- "libc",
-]
-
-[[package]]
 name = "headers"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2536,7 +2528,6 @@ dependencies = [
  "cssparser",
  "euclid",
  "hashbrown",
- "hashglobe",
  "selectors",
  "servo_arc",
  "smallbitvec",
@@ -4191,7 +4182,6 @@ dependencies = [
  "fallible",
  "fxhash",
  "hashbrown",
- "hashglobe",
  "indexmap",
  "itertools",
  "itoa",
