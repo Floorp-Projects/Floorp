@@ -217,8 +217,7 @@ function* nextTest()
 
 function setScale(win, scale)
 {
-  var docViewer = win.docShell.contentViewer;
-  docViewer.fullZoom = scale;
+  SpecialPowers.setFullZoom(win, scale);
   zoomFactor = scale;
 }
 

@@ -46,8 +46,6 @@ license:
         - security/mac/hardenedruntime/plugin-container.developer.entitlements.xml
         - security/mac/hardenedruntime/plugin-container.production.entitlements.xml
         - security/mac/hardenedruntime/production.entitlements.xml
-        - servo/components/hashglobe/src/alloc.rs
-        - servo/components/hashglobe/src/shim.rs
         - toolkit/components/reputationservice/chromium/chrome/common/safe_browsing/csd.pb.cc
         - toolkit/components/reputationservice/chromium/chrome/common/safe_browsing/csd.pb.h
         - toolkit/mozapps/update/updater/crctable.h

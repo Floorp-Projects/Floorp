@@ -464,6 +464,13 @@ nsresult nsDocumentEncoder::SerializeSelection() {
       } else if (prevNode) {
         // Went from a <tr> to a non-<tr>
         mDisableContextSerialize = false;
+
+        // `mCommonInclusiveAncestors` is used in `EncodeToStringWithContext`
+        // too. Update it here to mimic the old behavior.
+        mCommonInclusiveAncestors.Clear();
+        nsContentUtils::GetInclusiveAncestors(prevNode->GetParentNode(),
+                                              mCommonInclusiveAncestors);
+
         rv = SerializeRangeContextEnd();
         NS_ENSURE_SUCCESS(rv, rv);
         prevNode = nullptr;
@@ -482,6 +489,13 @@ nsresult nsDocumentEncoder::SerializeSelection() {
     rv = SerializeNodeEnd(*prevNode);
     NS_ENSURE_SUCCESS(rv, rv);
     mDisableContextSerialize = false;
+
+    // `mCommonInclusiveAncestors` is used in `EncodeToStringWithContext`
+    // too. Update it here to mimic the old behavior.
+    mCommonInclusiveAncestors.Clear();
+    nsContentUtils::GetInclusiveAncestors(prevNode->GetParentNode(),
+                                          mCommonInclusiveAncestors);
+
     rv = SerializeRangeContextEnd();
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -984,7 +998,6 @@ nsresult nsDocumentEncoder::SerializeRangeContextStart(
 
   while (i > 0) {
     nsINode* node = aAncestorArray.ElementAt(--i);
-
     if (!node) break;
 
     // Either a general inclusion or as immediate context

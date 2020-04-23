@@ -24,18 +24,18 @@ add_task(async function() {
   await performRequests(monitor, tab, 1);
 
   // Wait for all tree view updated by react
-  const wait = waitForDOM(document, "#params-panel .accordion-item", 2);
+  const wait = waitForDOM(document, "#request-panel .accordion-item", 2);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
   EventUtils.sendMouseEvent(
     { type: "click" },
-    document.querySelector("#params-tab")
+    document.querySelector("#request-tab")
   );
   await wait;
 
-  const tabpanel = document.querySelector("#params-panel");
+  const tabpanel = document.querySelector("#request-panel");
 
   ok(
     tabpanel.querySelector(".treeTable"),

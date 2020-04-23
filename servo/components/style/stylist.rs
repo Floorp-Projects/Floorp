@@ -33,8 +33,8 @@ use crate::stylesheets::{CounterStyleRule, FontFaceRule, FontFeatureValuesRule, 
 use crate::stylesheets::{CssRule, Origin, OriginSet, PerOrigin, PerOriginIter};
 use crate::thread_state::{self, ThreadState};
 use crate::{Atom, LocalName, Namespace, WeakAtom};
-use fallible::FallibleVec;
-use hashglobe::FailedAllocationError;
+use fallible::{FallibleHashMap, FallibleVec};
+use hashbrown::CollectionAllocErr;
 use malloc_size_of::MallocSizeOf;
 #[cfg(feature = "gecko")]
 use malloc_size_of::{MallocShallowSizeOf, MallocSizeOfOps, MallocUnconditionalShallowSizeOf};
@@ -88,7 +88,7 @@ impl UserAgentCascadeDataCache {
         device: &Device,
         quirks_mode: QuirksMode,
         guard: &SharedRwLockReadGuard,
-    ) -> Result<Arc<UserAgentCascadeData>, FailedAllocationError>
+    ) -> Result<Arc<UserAgentCascadeData>, CollectionAllocErr>
     where
         I: Iterator<Item = &'a S> + Clone,
         S: StylesheetInDocument + ToMediaListKey + PartialEq + 'static,
@@ -260,7 +260,7 @@ impl DocumentCascadeData {
         quirks_mode: QuirksMode,
         mut flusher: DocumentStylesheetFlusher<'a, S>,
         guards: &StylesheetGuards,
-    ) -> Result<(), FailedAllocationError>
+    ) -> Result<(), CollectionAllocErr>
     where
         S: StylesheetInDocument + ToMediaListKey + PartialEq + 'static,
     {
@@ -1839,7 +1839,7 @@ impl CascadeData {
         quirks_mode: QuirksMode,
         collection: SheetCollectionFlusher<S>,
         guard: &SharedRwLockReadGuard,
-    ) -> Result<(), FailedAllocationError>
+    ) -> Result<(), CollectionAllocErr>
     where
         S: StylesheetInDocument + ToMediaListKey + PartialEq + 'static,
     {
@@ -1976,7 +1976,7 @@ impl CascadeData {
         guard: &SharedRwLockReadGuard,
         rebuild_kind: SheetRebuildKind,
         mut precomputed_pseudo_element_decls: Option<&mut PrecomputedPseudoElementDeclarations>,
-    ) -> Result<(), FailedAllocationError>
+    ) -> Result<(), CollectionAllocErr>
     where
         S: StylesheetInDocument + ToMediaListKey + 'static,
     {

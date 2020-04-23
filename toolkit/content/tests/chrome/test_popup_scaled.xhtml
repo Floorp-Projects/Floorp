@@ -40,8 +40,7 @@ function runTests()
 
 function setScale(win, scale)
 {
-  var docViewer = win.docShell.contentViewer;
-  docViewer.fullZoom = scale;
+  SpecialPowers.setFullZoom(win, scale);
 }
 
 function shown()

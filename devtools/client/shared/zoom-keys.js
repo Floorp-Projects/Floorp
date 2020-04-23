@@ -25,8 +25,7 @@ const L10N = new LocalizationHelper(
  *        KeyShortcuts instance where the zoom keys should be added.
  */
 exports.register = function(window, shortcuts) {
-  const docShell = window.docShell;
-  const contViewer = docShell.contentViewer;
+  const bc = BrowsingContext.getFromWindow(window);
   let zoomValue = parseFloat(Services.prefs.getCharPref(ZOOM_PREF));
   const zoomIn = function(event) {
     setZoom(zoomValue + 0.1);
@@ -50,7 +49,7 @@ exports.register = function(window, shortcuts) {
     // Prevent the floating-point error. (e.g. 1.1 + 0.1 = 1.2000000000000002)
     zoomValue = Math.round(zoomValue * 10) / 10;
 
-    contViewer.fullZoom = zoomValue;
+    bc.fullZoom = zoomValue;
 
     Services.prefs.setCharPref(ZOOM_PREF, zoomValue);
   };

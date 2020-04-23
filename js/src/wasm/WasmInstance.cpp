@@ -138,14 +138,9 @@ static bool ToWebAssemblyValue_i32(JSContext* cx, HandleValue val,
 template <typename Debug = NoDebug>
 static bool ToWebAssemblyValue_i64(JSContext* cx, HandleValue val,
                                    int64_t* loc) {
-#ifdef ENABLE_WASM_BIGINT
-  MOZ_ASSERT(I64BigIntConversionAvailable(cx));
   JS_TRY_VAR_OR_RETURN_FALSE(cx, *loc, ToBigInt64(cx, val));
   Debug::print(*loc);
   return true;
-#else
-  MOZ_CRASH("unexpected conversion of i64 from js to wasm value");
-#endif
 }
 template <typename Debug = NoDebug>
 static bool ToWebAssemblyValue_f32(JSContext* cx, HandleValue val, float* loc) {
@@ -230,9 +225,6 @@ static bool ToJSValue_i32(JSContext* cx, int32_t src, MutableHandleValue dst) {
 }
 template <typename Debug = NoDebug>
 static bool ToJSValue_i64(JSContext* cx, int64_t src, MutableHandleValue dst) {
-#ifdef ENABLE_WASM_BIGINT
-  MOZ_ASSERT(I64BigIntConversionAvailable(cx),
-             "unexpected conversion of i64 from wasm to JS value");
   // If bi is manipulated other than test & storing, it would need
   // to be rooted here.
   BigInt* bi = BigInt::createFromInt64(cx, src);
@@ -242,9 +234,6 @@ static bool ToJSValue_i64(JSContext* cx, int64_t src, MutableHandleValue dst) {
   dst.set(BigIntValue(bi));
   Debug::print(src);
   return true;
-#else
-  MOZ_CRASH("unexpected conversion of i64 from wasm to JS value");
-#endif
 }
 template <typename Debug = NoDebug>
 static bool ToJSValue_f32(JSContext* cx, float src, MutableHandleValue dst) {

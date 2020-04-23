@@ -57,6 +57,10 @@ interface BrowsingContext {
   // active for the browsing context.
   attribute boolean inRDMPane;
 
+  attribute float fullZoom;
+
+  attribute float textZoom;
+
   // Extension to give chrome JS the ability to set the window screen
   // orientation while in RDM.
   void setRDMPaneOrientation(OrientationType type, float rotationAngle);

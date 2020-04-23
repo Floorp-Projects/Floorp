@@ -181,35 +181,14 @@ enum class CacheKind : uint8_t {
 
 extern const char* const CacheKindNames[];
 
-// This namespace exists to make it possible to use unqualified
-// argument types in CACHE_IR_OPS without letting the symbols escape
-// into the global namespace. Any code that consumes the argument
-// information must have CacheIROpFormat in scope.
-namespace CacheIROpFormat {
-enum ArgType {
-  None,
-  Id,
-  Field,
-  Byte,
-  Int32,
-  UInt32,
-  Word,
-};
-
-extern const uint32_t ArgLengths[];
-}  // namespace CacheIROpFormat
-
 enum class CacheOp {
 #define DEFINE_OP(op, ...) op,
   CACHE_IR_OPS(DEFINE_OP)
 #undef DEFINE_OP
 };
 
-const char* const CacheIrOpNames[] = {
-#define OPNAME(op, ...) #op,
-    CACHE_IR_OPS(OPNAME)
-#undef OPNAME
-};
+extern const char* const CacheIROpNames[];
+extern const uint32_t CacheIROpArgLengths[];
 
 class StubField {
  public:
@@ -274,8 +253,6 @@ class StubField {
   }
 } JS_HAZ_GC_POINTER;
 
-using FieldOffset = uint8_t;
-
 // This class is used to wrap up information about a call to make it
 // easier to convey from one function to another. (In particular,
 // CacheIRWriter encodes the CallFlags in CacheIR, and CacheIRReader
@@ -305,6 +282,18 @@ class CallFlags {
     return isConstructing_;
   }
   bool isSameRealm() const { return isSameRealm_; }
+
+  uint8_t toByte() const {
+    // See CacheIRReader::callFlags()
+    uint8_t value = getArgFormat();
+    if (isConstructing()) {
+      value |= CallFlags::IsConstructing;
+    }
+    if (isSameRealm()) {
+      value |= CallFlags::IsSameRealm;
+    }
+    return value;
+  }
 
  private:
   ArgFormat argFormat_;
@@ -475,12 +464,33 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   mutable uint32_t lastOffset_;
   mutable uint32_t lastIndex_;
 
+#ifdef DEBUG
+  // Information for assertLengthMatches.
+  mozilla::Maybe<CacheOp> currentOp_;
+  size_t currentOpArgsStart_ = 0;
+#endif
+
   void assertSameCompartment(JSObject*);
 
   void writeOp(CacheOp op) {
     MOZ_ASSERT(uint32_t(op) <= UINT8_MAX);
     buffer_.writeByte(uint32_t(op));
     nextInstructionId_++;
+#ifdef DEBUG
+    MOZ_ASSERT(currentOp_.isNothing(), "Missing call to assertLengthMatches?");
+    currentOp_.emplace(op);
+    currentOpArgsStart_ = buffer_.length();
+#endif
+  }
+
+  void assertLengthMatches() {
+#ifdef DEBUG
+    // After writing arguments, assert the length matches CacheIROpArgLengths.
+    size_t expectedLen = CacheIROpArgLengths[size_t(*currentOp_)];
+    MOZ_ASSERT_IF(!failed(),
+                  buffer_.length() - currentOpArgsStart_ == expectedLen);
+    currentOp_.reset();
+#endif
   }
 
   void writeOperandId(OperandId opId) {
@@ -502,22 +512,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     operandLastUsed_[opId.id()] = nextInstructionId_ - 1;
   }
 
-  void writeCallFlagsImm(CallFlags flags) {
-    // See CacheIRReader::callFlags()
-    uint8_t value = flags.getArgFormat();
-    if (flags.isConstructing()) {
-      value |= CallFlags::IsConstructing;
-    }
-    if (flags.isSameRealm()) {
-      value |= CallFlags::IsSameRealm;
-    }
-    buffer_.writeByte(uint32_t(value));
-  }
-
-  void writeOpWithOperandId(CacheOp op, OperandId opId) {
-    writeOp(op);
-    writeOperandId(opId);
-  }
+  void writeCallFlagsImm(CallFlags flags) { buffer_.writeByte(flags.toByte()); }
 
   uint8_t addStubField(uint64_t value, StubField::Type fieldType) {
     uint8_t offset = 0;

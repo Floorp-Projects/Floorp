@@ -18,6 +18,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/BenchmarkStorageChild.h"
+#include "mozilla/ContentBlocking.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MemoryTelemetry.h"
 #include "mozilla/NullPrincipal.h"
@@ -850,18 +851,7 @@ static nsresult GetCreateWindowParams(nsIOpenWindowInfo* aOpenWindowInfo,
 
   referrerInfo.swap(*aReferrerInfo);
 
-  RefPtr<nsDocShell> openerDocShell =
-      static_cast<nsDocShell*>(opener->GetDocShell());
-  if (!openerDocShell) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIContentViewer> cv;
-  nsresult rv = openerDocShell->GetContentViewer(getter_AddRefs(cv));
-  if (NS_SUCCEEDED(rv) && cv) {
-    cv->GetFullZoom(aFullZoom);
-  }
-
+  *aFullZoom = parent->FullZoom();
   return NS_OK;
 }
 
@@ -3574,6 +3564,44 @@ mozilla::ipc::IPCResult ContentChild::RecvUpdateSHEntriesInDocShell(
     docshell->SwapHistoryEntries(aOldEntry->ToSHEntryChild(),
                                  aNewEntry->ToSHEntryChild());
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvOnAllowAccessFor(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    const nsCString& aTrackingOrigin, uint32_t aCookieBehavior,
+    const ContentBlockingNotifier::StorageAccessGrantedReason& aReason) {
+  MOZ_ASSERT(!aContext.IsNull(), "Browsing context cannot be null");
+
+  ContentBlocking::OnAllowAccessFor(aContext.GetMaybeDiscarded(),
+                                    aTrackingOrigin, aCookieBehavior, aReason);
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvOnContentBlockingDecision(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    const ContentBlockingNotifier::BlockingDecision& aDecision,
+    uint32_t aRejectedReason) {
+  MOZ_ASSERT(!aContext.IsNull(), "Browsing context cannot be null");
+
+  nsCOMPtr<nsPIDOMWindowOuter> outer = aContext.get()->GetDOMWindow();
+  if (!outer) {
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
+            ("ChildIPC: Trying to send a message to a context without a outer "
+             "window"));
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsPIDOMWindowInner> inner = outer->GetCurrentInnerWindow();
+  if (!inner) {
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
+            ("ChildIPC: Trying to send a message to a context without a inner "
+             "window"));
+    return IPC_OK();
+  }
+
+  ContentBlockingNotifier::OnDecision(inner, aDecision, aRejectedReason);
   return IPC_OK();
 }
 

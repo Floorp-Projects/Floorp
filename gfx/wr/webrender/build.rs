@@ -104,10 +104,9 @@ fn write_optimized_shaders(shader_dir: &Path, shader_file: &mut File, out_dir: &
     // The full set of optimized shaders can be quite large, so only optimize
     // for the GL version we expect to be used on the target platform. If a different GL
     // version is used we will simply fall back to the unoptimized shaders.
-    let shader_versions = if cfg!(target_os = "android") || cfg!(target_os = "windows") {
-        [ShaderVersion::Gles]
-    } else {
-        [ShaderVersion::Gl]
+    let shader_versions = match env::var("CARGO_CFG_TARGET_OS").as_ref().map(|s| &**s) {
+        Ok("android") | Ok("windows") => [ShaderVersion::Gles],
+        _ => [ShaderVersion::Gl],
     };
 
     let mut shaders = Vec::default();

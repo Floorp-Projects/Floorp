@@ -12,6 +12,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["indexedDB"]);
 XPCOMUtils.defineLazyModuleGetters(this, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   CommonUtils: "resource://services-common/utils.js",
+  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["Database"];
@@ -90,15 +91,24 @@ class Database {
 
   async list(options = {}) {
     const { filters = {}, sort = "" } = options;
-    const objFilters = transformSubObjectFilters(filters);
     let results = [];
     try {
       await executeIDB(
         "records",
         store => {
+          // Fast-path the (very common) no-filters case
+          if (ObjectUtils.isEmpty(filters)) {
+            const range = IDBKeyRange.only(this.identifier);
+            const request = store.index("cid").getAll(range);
+            request.onsuccess = e => {
+              results = e.target.result;
+            };
+            return;
+          }
           const request = store
             .index("cid")
             .openCursor(IDBKeyRange.only(this.identifier));
+          const objFilters = transformSubObjectFilters(filters);
           request.onsuccess = event => {
             const cursor = event.target.result;
             if (cursor) {

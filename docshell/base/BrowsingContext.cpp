@@ -248,6 +248,11 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
 
   context->mFields.SetWithoutSyncing<IDX_IsActive>(true);
 
+  context->mFields.SetWithoutSyncing<IDX_FullZoom>(aParent ? aParent->FullZoom()
+                                                           : 1.0f);
+  context->mFields.SetWithoutSyncing<IDX_TextZoom>(aParent ? aParent->TextZoom()
+                                                           : 1.0f);
+
   const bool allowContentRetargeting =
       inherit ? inherit->GetAllowContentRetargetingOnChildren() : true;
   context->mFields.SetWithoutSyncing<IDX_AllowContentRetargeting>(
@@ -2019,6 +2024,69 @@ void BrowsingContext::DidSet(FieldIndex<IDX_AncestorLoading>) {
              document->GetReadyStateEnum()));
     document->NotifyLoading(GetAncestorLoading(), document->GetReadyStateEnum(),
                             document->GetReadyStateEnum());
+  }
+}
+
+void BrowsingContext::DidSet(FieldIndex<IDX_TextZoom>, float aOldValue) {
+  if (!IsInProcess() || GetTextZoom() == aOldValue) {
+    return;
+  }
+
+  RefPtr<Document> doc;
+  if (auto* win = GetDOMWindow()) {
+    doc = win->GetExtantDoc();
+  }
+
+  if (nsIDocShell* shell = GetDocShell()) {
+    if (nsPresContext* pc = shell->GetPresContext()) {
+      pc->RecomputeBrowsingContextDependentData();
+    }
+  }
+
+  for (BrowsingContext* child : GetChildren()) {
+    child->SetTextZoom(GetTextZoom());
+  }
+
+  if (doc) {
+    nsContentUtils::DispatchChromeEvent(doc, ToSupports(doc),
+                                        NS_LITERAL_STRING("TextZoomChange"),
+                                        CanBubble::eYes, Cancelable::eYes);
+  }
+}
+
+// TODO(emilio): It'd be potentially nicer and cheaper to allow to set this only
+// on the Top() browsing context, but there are a lot of tests that rely on
+// zooming a subframe so...
+void BrowsingContext::DidSet(FieldIndex<IDX_FullZoom>, float aOldValue) {
+  if (!IsInProcess() || GetFullZoom() == aOldValue) {
+    return;
+  }
+
+  RefPtr<Document> doc;
+  if (auto* win = GetDOMWindow()) {
+    doc = win->GetExtantDoc();
+  }
+
+  if (doc) {
+    nsContentUtils::DispatchChromeEvent(doc, ToSupports(doc),
+                                        NS_LITERAL_STRING("PreFullZoomChange"),
+                                        CanBubble::eYes, Cancelable::eYes);
+  }
+
+  if (nsIDocShell* shell = GetDocShell()) {
+    if (nsPresContext* pc = shell->GetPresContext()) {
+      pc->RecomputeBrowsingContextDependentData();
+    }
+  }
+
+  for (BrowsingContext* child : GetChildren()) {
+    child->SetFullZoom(GetFullZoom());
+  }
+
+  if (doc) {
+    nsContentUtils::DispatchChromeEvent(doc, ToSupports(doc),
+                                        NS_LITERAL_STRING("FullZoomChange"),
+                                        CanBubble::eYes, Cancelable::eYes);
   }
 }
 
