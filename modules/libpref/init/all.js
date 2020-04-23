@@ -33,7 +33,11 @@ pref("security.tls.insecure_fallback_hosts", "");
 // https://tools.ietf.org/html/draft-davidben-http2-tls13-00
 pref("security.tls.enable_post_handshake_auth", false);
 pref("security.tls.hello_downgrade_check", true);
-pref("security.tls.enable_delegated_credentials", false);
+#ifdef NIGHTLY_BUILD
+  pref("security.tls.enable_delegated_credentials", true);
+#else if MOZ_UPDATE_CHANNEL != esr
+  pref("security.tls.enable_delegated_credentials", false);
+#endif
 
 pref("security.ssl.treat_unsafe_negotiation_as_broken", false);
 pref("security.ssl.require_safe_negotiation",  false);
