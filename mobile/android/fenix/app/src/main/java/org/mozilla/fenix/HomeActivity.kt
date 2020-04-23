@@ -22,6 +22,7 @@ import androidx.navigation.NavDirections
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
+import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -73,6 +74,10 @@ import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.BrowsersCache
 import org.mozilla.fenix.utils.RunWhenReadyQueue
+import mozilla.components.concept.tabstray.TabsTray
+import mozilla.components.browser.tabstray.TabsAdapter
+import mozilla.components.browser.tabstray.BrowserTabsTray
+import org.mozilla.fenix.tabtray.TabTrayFragmentDirections
 
 /**
  * The main activity of the application. The application is primarily a single Activity (this one)
@@ -211,6 +216,11 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
                 share(it)
             }
         }.asView()
+        TabsTray::class.java.name -> {
+            val layout = LinearLayoutManager(context)
+            val adapter = TabsAdapter(layoutId = R.layout.tab_tray_item)
+            BrowserTabsTray(context, attrs, tabsAdapter = adapter, layout = layout)
+        }
         else -> super.onCreateView(parent, name, context, attrs)
     }
 
@@ -333,6 +343,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
             HomeFragmentDirections.actionHomeFragmentToBrowserFragment(customTabSessionId, true)
         BrowserDirection.FromSearch ->
             SearchFragmentDirections.actionGlobalBrowser(customTabSessionId)
+        BrowserDirection.FromTabTray ->
+            TabTrayFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromSettings ->
             SettingsFragmentDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromBookmarks ->

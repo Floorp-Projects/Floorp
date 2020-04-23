@@ -44,6 +44,12 @@
     <attr name="syncDisconnectedBackground" format="reference" />
     <attr name="swipeDeleteBackground" format="reference" />
 
+    <!-- Tab tray -->
+    <attr name="tabTrayItemText" format="reference"/>
+    <attr name="tabTrayItemSelectedText" format="reference" />
+    <attr name="tabTrayItemBackground" format="reference" />
+    <attr name="tabTrayItemSelectedBackground" format="reference" />
+
     <declare-styleable name="LibraryListItem">
         <attr name="listItemTitle" format="reference" />
         <attr name="listItemIcon" format="reference" />
