@@ -209,8 +209,9 @@ nsString MediaSessionController::GetDefaultFaviconURL() const {
 
 void MediaSessionController::SetDeclaredPlaybackState(
     uint64_t aSessionContextId, MediaSessionPlaybackState aState) {
-  MOZ_ASSERT(mMediaSessionInfoMap.Contains(aSessionContextId),
-             "Update declared state for unknown media session!");
+  if (!mMediaSessionInfoMap.Contains(aSessionContextId)) {
+    return;
+  }
   MediaSessionInfo* info = mMediaSessionInfoMap.GetValue(aSessionContextId);
   LOG("SetDeclaredPlaybackState from %s to %s",
       ToMediaSessionPlaybackStateStr(info->mDeclaredPlaybackState),
