@@ -391,6 +391,7 @@ WEBIDL_FILES = [
     'AbortSignal.webidl',
     'AbstractRange.webidl',
     'AbstractWorker.webidl',
+    'AccessibilityRole.webidl',
     'AddonManager.webidl',
     'AnalyserNode.webidl',
     'Animatable.webidl',
@@ -401,6 +402,7 @@ WEBIDL_FILES = [
     'AppInfo.webidl',
     'AppNotificationServiceOptions.webidl',
     'APZTestData.webidl',
+    'AriaAttributes.webidl',
     'Attr.webidl',
     'AudioBuffer.webidl',
     'AudioBufferSourceNode.webidl',
@@ -1134,7 +1136,5 @@ if CONFIG['MOZ_BUILD_APP'] in ['browser', 'comm/mail', 'mobile/android', 'xulrun
 
 if CONFIG['ACCESSIBILITY']:
     WEBIDL_FILES += [
-        'AccessibilityRole.webidl',
         'AccessibleNode.webidl',
-        'AriaAttributes.webidl',
     ]
