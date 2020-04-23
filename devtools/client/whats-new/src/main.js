@@ -29,39 +29,39 @@ const aside = {
 };
 
 const release = {
-  title: "What’s New in DevTools (Firefox 75)",
+  title: "What’s New in DevTools (Firefox 76)",
   linkText: "Read more",
-  linkUrl: `https://developer.mozilla.org/docs/Mozilla/Firefox/Releases/75?${utmParams}`,
+  linkUrl: `https://developer.mozilla.org/docs/Mozilla/Firefox/Releases/76?${utmParams}`,
   features: [
     {
-      header: `Instant evaluation for Console expressions`,
-      description: `Identify and fix errors more rapidly than before. As long as expressions typed into the Web Console are side-effect free, their results will be previewed while you type.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Web_Console/The_command_line_interpreter?${utmParams}`,
+      header: `Ignore entire folders in Debugger`,
+      description: `Filter out the noise of extraneous groups of sources with a new “Blackbox” context menu in Debugger’s sources list. Ignoring can be limited to files inside or outside of the selected folder. Combine with “Set directory root” for a laser-focused debugging experience.`,
+      href: `https://wiki.developer.mozilla.org/en-US/docs/Tools/Debugger/UI_Tour?${utmParams}#Source_list_pane`,
     },
     {
-      header: `Measurement area is now resizable`,
-      description: `Quickly drag the area on the fly to measure the height, width and diagonal in your page. Enable the feature in Setting, under "Available Toolbox Buttons".`,
-      href: `https://developer.mozilla.org/docs/Tools/Measure_a_portion_of_the_page?${utmParams}`,
+      header: `Console collapses multi-line code snippets`,
+      description: `Console’s multi-line editor mode just got better to iterate on long snippets with less clutter. Multiple lines are neatly collapsed and can be expanded on demand.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Web_Console/The_command_line_interpreter?${utmParams}#Multi-line_mode`,
     },
     {
-      header: `Event breakpoints for WebSockets`,
-      description: `Newly added event breakpoint types in the Debugger let you pause or log when WebSocket event handlers get executed.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/Set_event_listener_breakpoints?${utmParams}`,
+      header: `Formatted Action Cable WebSocket messages`,
+      description: `The JSON embedded in Action Cable messages are now broken out to be more readable, adding to a growing set of supported WebSocket protocol formats.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor/Inspecting_web_sockets?${utmParams}`,
     },
     {
-      header: `Use XPath to find DOM elements`,
-      description: `XPath queries, common in automation tools, can now be used in Inspector’s HTML search to test expressions and find matching elements.`,
-      href: `https://developer.mozilla.org/en-US/docs/Tools/Page_Inspector/How_to/Examine_and_edit_HTML?${utmParams}#XPath_search`,
+      header: `Cleaner WebSocket output`,
+      description: `WebSocket control frames are now hidden by default to let you focus on the content actual send and received messages.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor/Inspecting_web_sockets?${utmParams}`,
     },
     {
-      header: `Polished Network analysis`,
-      description: `Optimized table rendering renders many simultaneous requests much faster. Borders between columns and higher contrast state for filter buttons makes reading easier.`,
-      href: `https://wiki.developer.mozilla.org/en-US/docs/Tools/Network_Monitor/request_list?${utmParams}`,
+      header: `Resize Network table columns to fit to content`,
+      description: `Expanding longer content in the Network panel no longer requires countless dragging and resizing. Like modern data tables, just double-tap the table’s resize handles to fit the column size to its content.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor/request_list?${utmParams}`,
     },
     {
-      header: `Request blocking with “*” wildcards`,
-      description: `Use URL patterns with * wildcards in Network’s Request Blocking panel to test how resilient your site is when matches requests fail.`,
-      href: `https://wiki.developer.mozilla.org/en-US/docs/Tools/Network_Monitor/request_list?${utmParams}#Blocking_specific_URLs`,
+      header: `Improve Network response details`,
+      description: `Response data is now much easier to navigate and copy out of the Network details. More work is coming in this area to make various kinds of Network analysis easier.`,
+      href: `https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor/request_details?${utmParams}`,
     },
   ],
 };
@@ -75,11 +75,6 @@ const dev = {
       header: `Full Asynchronous Stacks in Debugger`,
       description: `Step through event, timeout and promise-based function calls over time with the full-featured async stacks in Debugger.`,
       href: `https://developer.mozilla.org/en-US/docs/Tools/Debugger/UI_Tour?${utmParams}`,
-    },
-    {
-      header: `Inspect & Debug Service Workers`,
-      description: `Start, pause and debug your Service Workers and inspect your Web App Manifests within the long-awaited Application panel.`,
-      href: `https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers?${utmParams}`,
     },
   ],
 };
