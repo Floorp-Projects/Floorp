@@ -124,6 +124,31 @@ depending on the user's locale.
 You can specify ``"default"`` as a region in the configuration if
 the engine is to be included when we do not know the user's region.
 
+"override"
+----------
+
+The `"override"` field can be set to true if you want a section to
+only override otherwise included engines. For example:
+
+.. code-block:: js
+
+    {
+      "webExtension": {
+        "id": "web@ext"
+      },
+      "appliesTo": [{
+        // Complicated and lengthy inclusion rules
+      }, {
+        "override": true,
+        "application": { "distributions": ["mydistrocode"]},
+        "params": {
+          "searchUrlGetParams": [
+            { "name": "custom", "value": "foobar" }
+          ]
+        }
+      }]
+    }
+
 Application Scoping
 ===================
 

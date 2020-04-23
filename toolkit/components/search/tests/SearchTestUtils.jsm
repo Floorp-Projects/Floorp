@@ -112,4 +112,18 @@ var SearchTestUtils = Object.freeze({
       }
     }
   },
+
+  /**
+   * Convert a list of engine configurations into engine objects.
+   *
+   * @param {Array} engineConfigurations
+   **/
+  async searchConfigToEngines(engineConfigurations) {
+    let engines = [];
+    for (let config of engineConfigurations) {
+      let engine = await Services.search.makeEngineFromConfig(config);
+      engines.push(engine);
+    }
+    return engines;
+  },
 });

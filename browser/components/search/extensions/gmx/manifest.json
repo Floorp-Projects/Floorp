@@ -1,26 +1,26 @@
 {
-  "name": "亚马逊",
-  "description": "亚马逊搜索",
+  "name": "__MSG_extensionName__",
+  "description": "__MSG_extensionName__",
   "manifest_version": 2,
   "version": "1.0",
   "applications": {
     "gecko": {
-      "id": "amazondotcn@search.mozilla.org"
+      "id": "gmx@search.mozilla.org"
     }
   },
   "hidden": true,
-  "default_locale": "default",
+  "default_locale": "de",
   "icons": {
-    "16": "favicon.ico"
+    "16": "favicon.png"
   },
   "web_accessible_resources": [
-    "favicon.ico"
+    "favicon.png"
   ],
   "chrome_settings_overrides": {
     "search_provider": {
-      "name": "亚马逊",
+      "name": "__MSG_extensionName__",
       "search_url": "__MSG_searchUrl__",
-      "search_form": "https://www.amazon.cn/",
+      "suggest_url": "__MSG_suggestUrl__",
       "search_url_get_params": "__MSG_searchUrlGetParams__"
     }
   }

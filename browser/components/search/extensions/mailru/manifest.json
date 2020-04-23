@@ -9,6 +9,7 @@
     }
   },
   "hidden": true,
+  "default_locale": "default",
   "icons": {
     "16": "favicon.ico"
   },
@@ -19,10 +20,10 @@
     "search_provider": {
       "name": "Поиск Mail.Ru",
       "search_url": "https://go.mail.ru/search",
-      "search_form": "https://go.mail.ru/?gp=900200",
-      "search_url_get_params": "q={searchTerms}&fr=osmi&gp=900200&frc=900200",
+      "search_form": "__MSG_searchForm__",
+      "search_url_get_params": "__MSG_searchUrlGetParams__",
       "suggest_url": "https://suggests.go.mail.ru/ff3",
-      "suggest_url_get_params": "q={searchTerms}&gp=900200"
+      "suggest_url_get_params": "__MSG_suggestUrlGetParams__"
     }
   }
 }
