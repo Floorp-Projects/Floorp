@@ -348,6 +348,103 @@ BasePrincipal::Equals(nsIPrincipal* aOther, bool* aResult) {
 }
 
 NS_IMETHODIMP
+BasePrincipal::EqualsForPermission(nsIPrincipal* aOther, bool aExactHost,
+                                   bool* aResult) {
+  *aResult = false;
+  NS_ENSURE_ARG_POINTER(aOther);
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  // If the principals are equal, then they match.
+  if (FastEquals(aOther)) {
+    *aResult = true;
+    return NS_OK;
+  }
+
+  // If we are matching with an exact host, we're done now - the permissions
+  // don't match otherwise, we need to start comparing subdomains!
+  if (aExactHost) {
+    return NS_OK;
+  }
+
+  // Compare their OriginAttributes
+  const mozilla::OriginAttributes& theirAttrs = aOther->OriginAttributesRef();
+  const mozilla::OriginAttributes& ourAttrs = OriginAttributesRef();
+
+  if (theirAttrs != ourAttrs) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> ourURI;
+  nsresult rv = GetURI(getter_AddRefs(ourURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  auto* basePrin = BasePrincipal::Cast(aOther);
+
+  nsCOMPtr<nsIURI> otherURI;
+  rv = basePrin->GetURI(getter_AddRefs(otherURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  // Compare schemes
+  nsAutoCString otherScheme;
+  rv = otherURI->GetScheme(otherScheme);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString ourScheme;
+  rv = ourURI->GetScheme(ourScheme);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (otherScheme != ourScheme) {
+    return NS_OK;
+  }
+
+  // Compare ports
+  int32_t otherPort;
+  rv = otherURI->GetPort(&otherPort);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  int32_t ourPort;
+  rv = ourURI->GetPort(&ourPort);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (otherPort != ourPort) {
+    return NS_OK;
+  }
+
+  // Check if the host or any subdomain of their host matches.
+  nsAutoCString otherHost;
+  rv = otherURI->GetHost(otherHost);
+  if (NS_FAILED(rv) || otherHost.IsEmpty()) {
+    return NS_OK;
+  }
+
+  nsAutoCString ourHost;
+  rv = ourURI->GetHost(ourHost);
+  if (NS_FAILED(rv) || ourHost.IsEmpty()) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIEffectiveTLDService> tldService =
+      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  if (!tldService) {
+    NS_ERROR("Should have a tld service!");
+    return NS_ERROR_FAILURE;
+  }
+
+  // This loop will not loop forever, as GetNextSubDomain will eventually fail
+  // with NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS.
+  while (otherHost != ourHost) {
+    rv = tldService->GetNextSubDomain(otherHost, otherHost);
+    if (NS_FAILED(rv)) {
+      if (rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
+        return NS_OK;
+      }
+      return rv;
+    }
+  }
+
+  *aResult = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 BasePrincipal::EqualsConsideringDomain(nsIPrincipal* aOther, bool* aResult) {
   NS_ENSURE_ARG_POINTER(aOther);
 
