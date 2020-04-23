@@ -274,9 +274,9 @@ ContentBlocking::AllowAccessFor(
       return StorageAccessGrantPromise::CreateAndReject(false, __func__);
     }
 
-    // TODO: This is not yet fission-compatible because when we are not
-    //       in-process, we can't get the principal and tracking origin.
-    //       This will be addressed in another patch.
+    // If we can't get the principal and tracking origin at this point, the
+    // tracking principal will be gotten while running ::CompleteAllowAccessFor
+    // in the parent.
     if (aParentContext->IsInProcess()) {
       if (!AntiTrackingUtils::GetPrincipalAndTrackingOrigin(
               aParentContext, getter_AddRefs(trackingPrincipal),
@@ -408,6 +408,27 @@ ContentBlocking::CompleteAllowAccessFor(
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
+  nsCOMPtr<nsIPrincipal> trackingPrincipal;
+  nsAutoCString trackingOrigin;
+  if (!aTrackingPrincipal) {
+    // User interaction is the only case that tracking principal is not
+    // available.
+    MOZ_ASSERT(XRE_IsParentProcess() &&
+               aReason == ContentBlockingNotifier::eOpenerAfterUserInteraction);
+
+    if (!AntiTrackingUtils::GetPrincipalAndTrackingOrigin(
+            aParentContext, getter_AddRefs(trackingPrincipal),
+            trackingOrigin)) {
+      LOG(
+          ("Error while computing the parent principal and tracking origin, "
+           "bailing out early"));
+      return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+    }
+  } else {
+    trackingPrincipal = aTrackingPrincipal;
+    trackingOrigin = aTrackingOrigin;
+  }
+
   // We hardcode this block reason since the first-party storage access
   // permission is granted for the purpose of blocking trackers.
   // Note that if aReason is eOpenerAfterUserInteraction and the
@@ -417,16 +438,16 @@ ContentBlocking::CompleteAllowAccessFor(
   // parent, without having received the permission itself yet.
 
   bool isInPrefList = false;
-  aTrackingPrincipal->IsURIInPrefList(
+  trackingPrincipal->IsURIInPrefList(
       "privacy.restrict3rdpartystorage."
       "userInteractionRequiredForHosts",
       &isInPrefList);
   if (isInPrefList &&
-      !ContentBlockingUserInteraction::Exists(aTrackingPrincipal)) {
+      !ContentBlockingUserInteraction::Exists(trackingPrincipal)) {
     LOG_PRIN(("Tracking principal (%s) hasn't been interacted with before, "
               "refusing to add a first-party storage permission to access it",
               _spec),
-             aTrackingPrincipal);
+             trackingPrincipal);
     ContentBlockingNotifier::OnDecision(
         parentInnerWindow, ContentBlockingNotifier::BlockingDecision::eBlock,
         CookieJarSettings::IsRejectThirdPartyWithExceptions(aCookieBehavior)
@@ -452,11 +473,11 @@ ContentBlocking::CompleteAllowAccessFor(
   }
 
   auto storePermission =
-      [parentInnerWindow, topInnerWindow, aTrackingOrigin, aTrackingPrincipal,
+      [parentInnerWindow, topInnerWindow, trackingOrigin, trackingPrincipal,
        aReason, aCookieBehavior,
        aTopLevelWindowId](int aAllowMode) -> RefPtr<StorageAccessGrantPromise> {
     nsAutoCString permissionKey;
-    AntiTrackingUtils::CreateStoragePermissionKey(aTrackingOrigin,
+    AntiTrackingUtils::CreateStoragePermissionKey(trackingOrigin,
                                                   permissionKey);
 
     // Let's store the permission in the current parent window.
@@ -470,16 +491,16 @@ ContentBlocking::CompleteAllowAccessFor(
         CookieJarSettings::IsRejectThirdPartyWithExceptions(aCookieBehavior)
             ? nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN
             : nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER,
-        aTrackingOrigin, Some(aReason));
+        trackingOrigin, Some(aReason));
 
     ContentBlockingNotifier::ReportUnblockingToConsole(
-        parentInnerWindow, NS_ConvertUTF8toUTF16(aTrackingOrigin), aReason);
+        parentInnerWindow, NS_ConvertUTF8toUTF16(trackingOrigin), aReason);
 
     if (XRE_IsParentProcess()) {
-      LOG(("Saving the permission: trackingOrigin=%s", aTrackingOrigin.get()));
+      LOG(("Saving the permission: trackingOrigin=%s", trackingOrigin.get()));
       return SaveAccessForOriginOnParentProcess(aTopLevelWindowId,
-                                                aTrackingPrincipal,
-                                                aTrackingOrigin, aAllowMode)
+                                                trackingPrincipal,
+                                                trackingOrigin, aAllowMode)
           ->Then(GetCurrentThreadSerialEventTarget(), __func__,
                  [](ParentAccessGrantPromise::ResolveOrRejectValue&& aValue) {
                    if (aValue.IsResolve()) {
@@ -497,14 +518,14 @@ ContentBlocking::CompleteAllowAccessFor(
     LOG(
         ("Asking the parent process to save the permission for us: "
          "trackingOrigin=%s",
-         aTrackingOrigin.get()));
+         trackingOrigin.get()));
 
     // This is not really secure, because here we have the content process
     // sending the request of storing a permission.
     return cc
         ->SendFirstPartyStorageAccessGrantedForOrigin(
-            aTopLevelWindowId, IPC::Principal(aTrackingPrincipal),
-            aTrackingOrigin, aAllowMode)
+            aTopLevelWindowId, IPC::Principal(trackingPrincipal),
+            trackingOrigin, aAllowMode)
         ->Then(GetCurrentThreadSerialEventTarget(), __func__,
                [](const ContentChild::
                       FirstPartyStorageAccessGrantedForOriginPromise::
