@@ -148,6 +148,17 @@ JSObject* HTMLMetaElement::WrapNode(JSContext* aCx,
 }
 
 void HTMLMetaElement::ProcessViewportContent(Document* aDocument) {
+  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::content)) {
+    // Call Document::RemoveMetaViewportElement for cases that the content
+    // attribute is removed.
+    // NOTE: RemoveMetaViewportElement enumerates all existing meta viewport
+    // tags in the case where this element hasn't been there, i.e. this element
+    // is newly added to the document, but it should be fine because a document
+    // unlikely has a bunch of meta viewport tags.
+    aDocument->RemoveMetaViewportElement(this);
+    return;
+  }
+
   nsAutoString content;
   GetContent(content);
 
