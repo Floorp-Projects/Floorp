@@ -38,6 +38,9 @@ void MediaControlKeysHandler::OnKeyPressed(MediaControlKeysEvent aKeyEvent) {
   }
 
   switch (aKeyEvent) {
+    case MediaControlKeysEvent::eFocus:
+      controller->Focus();
+      return;
     case MediaControlKeysEvent::ePlay:
       controller->Play();
       return;
