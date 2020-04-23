@@ -9,7 +9,7 @@ use api::{FilterOp, FilterPrimitive, FontInstanceKey, GlyphInstance, GlyphOption
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, ColorDepth, QualitySettings};
 use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId, MixBlendMode};
 use api::{PropertyBinding, ReferenceFrame, ReferenceFrameKind, ScrollFrameDisplayItem, ScrollSensitivity};
-use api::{Shadow, SpaceAndClipInfo, SpatialId, StackingContext, StickyFrameDisplayItem};
+use api::{Shadow, SpaceAndClipInfo, SpatialId, StackingContext, StickyFrameDisplayItem, ImageMask};
 use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, ColorRange, YuvData, TempFilterData};
 use api::units::*;
 use crate::clip::{ClipChainId, ClipRegion, ClipItemKey, ClipStore, ClipItemKeyKind};
@@ -810,7 +810,6 @@ impl<'a> SceneBuilder<'a> {
         let clip_region = ClipRegion::create_for_clip_node(
             info.clip_rect,
             item.complex_clip().iter(),
-            None,
             &current_offset,
         );
         // Just use clip rectangle as the frame rect for this scroll frame.
@@ -1385,13 +1384,27 @@ impl<'a> SceneBuilder<'a> {
                     space,
                 );
             }
+            DisplayItem::ImageMaskClip(ref info) => {
+                let parent_space = self.get_space(&info.parent_space_and_clip.spatial_id);
+                let current_offset = self.current_offset(parent_space);
+
+                let image_mask = ImageMask {
+                    rect: info.image_mask.rect.translate(current_offset),
+                    ..info.image_mask
+                };
+
+                self.add_image_mask_clip_node(
+                    info.id,
+                    &info.parent_space_and_clip,
+                    &image_mask,
+                );
+            }
             DisplayItem::Clip(ref info) => {
                 let parent_space = self.get_space(&info.parent_space_and_clip.spatial_id);
                 let current_offset = self.current_offset(parent_space);
                 let clip_region = ClipRegion::create_for_clip_node(
                     info.clip_rect,
                     item.complex_clip().iter(),
-                    info.image_mask,
                     &current_offset,
                 );
                 self.add_clip_node(info.id, &info.parent_space_and_clip, clip_region);
@@ -2305,6 +2318,56 @@ impl<'a> SceneBuilder<'a> {
         );
     }
 
+    fn add_image_mask_clip_node(
+        &mut self,
+        new_node_id: ClipId,
+        space_and_clip: &SpaceAndClipInfo,
+        image_mask: &ImageMask,
+    ) -> ClipChainId {
+        // Map from parent ClipId to existing clip-chain.
+        let parent_clip_chain_index = self.id_to_index_mapper.get_clip_chain_id(space_and_clip.clip_id);
+
+        // Map the ClipId for the positioning node to a spatial node index.
+        let spatial_node_index = self.id_to_index_mapper.get_spatial_node_index(space_and_clip.spatial_id);
+
+        let snap_to_device = &mut self.sc_stack.last_mut().unwrap().snap_to_device;
+        snap_to_device.set_target_spatial_node(
+            spatial_node_index,
+            &self.spatial_tree,
+        );
+
+        let snapped_mask_rect = snap_to_device.snap_rect(&image_mask.rect);
+        let item = ClipItemKey {
+            kind: ClipItemKeyKind::image_mask(image_mask, snapped_mask_rect),
+            spatial_node_index,
+        };
+
+        let handle = self
+            .interners
+            .clip
+            .intern(&item, || {
+                ClipInternData {
+                    clip_node_kind: ClipNodeKind::Complex,
+                    spatial_node_index,
+                }
+            });
+
+        let clip_chain_index = self.clip_store
+            .add_clip_chain_node(
+                handle,
+                parent_clip_chain_index,
+            );
+
+        // Map the supplied ClipId -> clip chain id.
+        self.id_to_index_mapper.add_clip_chain(
+            new_node_id,
+            clip_chain_index,
+            1,
+        );
+
+        clip_chain_index
+    }
+
     pub fn add_clip_node<I>(
         &mut self,
         new_node_id: ClipId,
@@ -2359,32 +2422,6 @@ impl<'a> SceneBuilder<'a> {
                 parent_clip_chain_index,
             );
         clip_count += 1;
-
-        if let Some(ref image_mask) = clip_region.image_mask {
-            let snapped_mask_rect = snap_to_device.snap_rect(&image_mask.rect);
-            let item = ClipItemKey {
-                kind: ClipItemKeyKind::image_mask(image_mask, snapped_mask_rect),
-                spatial_node_index,
-            };
-
-            let handle = self
-                .interners
-                .clip
-                .intern(&item, || {
-                    ClipInternData {
-                        clip_node_kind: ClipNodeKind::Complex,
-                        spatial_node_index,
-                    }
-                });
-
-            parent_clip_chain_index = self
-                .clip_store
-                .add_clip_chain_node(
-                    handle,
-                    parent_clip_chain_index,
-                );
-            clip_count += 1;
-        }
 
         for region in clip_region.complex_clips {
             let snapped_region_rect = snap_to_device.snap_rect(&region.rect);

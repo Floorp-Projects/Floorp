@@ -1709,7 +1709,6 @@ impl YamlFrameReader {
                             &self.top_space_and_clip(),
                             clip_rect,
                             vec![complex_clip],
-                            None,
                         );
                         self.clip_id_stack.push(id);
                         pushed_clip = true;
@@ -1965,14 +1964,19 @@ impl YamlFrameReader {
         let clip_rect = yaml["bounds"].as_rect().expect("clip must have a bounds");
         let numeric_id = yaml["id"].as_i64();
         let complex_clips = self.to_complex_clip_regions(&yaml["complex"]);
-        let image_mask = self.to_image_mask(&yaml["image-mask"], wrench);
+        let mut space_and_clip = self.top_space_and_clip();
 
-        let space_and_clip = self.top_space_and_clip();
+        if let Some(image_mask) = self.to_image_mask(&yaml["image-mask"], wrench) {
+            space_and_clip.clip_id = dl.define_clip_image_mask(
+                &space_and_clip,
+                image_mask,
+            );
+        }
+
         let real_id = dl.define_clip(
             &space_and_clip,
             clip_rect,
             complex_clips,
-            image_mask,
         );
         if let Some(numeric_id) = numeric_id {
             self.add_clip_id_mapping(numeric_id as u64, real_id);

@@ -316,7 +316,6 @@ impl<'a> RawtestHarness<'a> {
             &root_space_and_clip,
             rect(40., 41., 200., 201.),
             vec![],
-            None,
         );
 
         let info = CommonItemProperties {
@@ -404,7 +403,6 @@ impl<'a> RawtestHarness<'a> {
             &root_space_and_clip,
             rect(-1000.0, -1000.0, 2000.0, 2000.0),
             vec![],
-            None,
         );
 
         let info = CommonItemProperties {
@@ -501,7 +499,6 @@ impl<'a> RawtestHarness<'a> {
             &root_space_and_clip,
             rect(-1000.0, -1000.0, 2000.0, 2000.0),
             vec![],
-            None,
         );
 
         let info = CommonItemProperties {
@@ -548,7 +545,6 @@ impl<'a> RawtestHarness<'a> {
             &root_space_and_clip,
             rect(-1000.0, -1000.0, 2000.0, 2000.0),
             vec![],
-            None,
         );
 
         let info = CommonItemProperties {
@@ -597,7 +593,6 @@ impl<'a> RawtestHarness<'a> {
             &root_space_and_clip,
             rect(-1000.0, -1000.0, 2000.0, 2000.0),
             vec![],
-            None,
         );
 
         let info = CommonItemProperties {
@@ -1080,7 +1075,6 @@ impl<'a> RawtestHarness<'a> {
                 &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
                 rect(110., 120., 200., 200.),
                 None::<ComplexClipRegion>,
-                None
             );
             builder.push_rect(
                 &self.make_common_properties_with_clip_and_spatial(
@@ -1097,7 +1091,6 @@ impl<'a> RawtestHarness<'a> {
                     &SpaceAndClipInfo { spatial_id, clip_id },
                     rect(80., 80., 90., 90.),
                     None::<ComplexClipRegion>,
-                    None
                 );
                 let space_and_clip = SpaceAndClipInfo {
                     spatial_id,
@@ -1143,7 +1136,6 @@ impl<'a> RawtestHarness<'a> {
                     &SpaceAndClipInfo { spatial_id, clip_id },
                     rect(80., 80., 100., 100.),
                     None::<ComplexClipRegion>,
-                    None
                 );
                 builder.push_rect(
                     &self.make_common_properties_with_clip_and_spatial(
@@ -1373,7 +1365,6 @@ impl<'a> RawtestHarness<'a> {
             &space_and_clip,
             rect,
             vec![make_rounded_complex_clip(&rect, 20.)],
-            None,
         );
         builder.push_rect(
             &CommonItemProperties {
@@ -1393,7 +1384,6 @@ impl<'a> RawtestHarness<'a> {
             &space_and_clip,
             rect,
             vec![make_rounded_complex_clip(&rect, 20.)],
-            None,
         );
         let clip_chain_id = builder.define_clip_chain(None, vec![clip_id]);
         builder.push_rect(

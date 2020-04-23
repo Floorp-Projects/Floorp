@@ -217,11 +217,17 @@ impl Example for App {
             BorderRadius::uniform(20.0),
             ClipMode::Clip
         );
-        let clip_id = builder.define_clip(
+        let mask_clip_id = builder.define_clip_image_mask(
             &root_space_and_clip,
+            mask,
+        );
+        let clip_id = builder.define_clip(
+            &SpaceAndClipInfo {
+                spatial_id: root_space_and_clip.spatial_id,
+                clip_id: mask_clip_id,
+            },
             content_bounds,
             vec![complex],
-            Some(mask)
         );
 
         builder.push_rect(

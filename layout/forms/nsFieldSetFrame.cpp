@@ -197,7 +197,7 @@ bool nsDisplayFieldSetBorder::CreateWebRenderCommands(
       region.radii = wr::EmptyBorderRadius();
       nsTArray<mozilla::wr::ComplexClipRegion> array{region};
 
-      auto clip = aBuilder.DefineClip(Nothing(), layoutRect, &array, nullptr);
+      auto clip = aBuilder.DefineClip(Nothing(), layoutRect, &array);
       auto clipChain = aBuilder.DefineClipChain({clip}, true);
       clipOut.emplace(aBuilder, clipChain);
     }
