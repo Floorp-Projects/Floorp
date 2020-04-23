@@ -7539,7 +7539,7 @@
 # ("network.http.network_access_on_socket_process.enabled").
 # Changing these prefs requires a restart.
 - name: network.process.enabled
-  type: RelaxedAtomicBool
+  type: bool
   mirror: always
 #ifdef ANDROID
   value: false
@@ -7550,14 +7550,6 @@
   value: false
 #endif
 #endif
-
-# Perform all network access on the socket process.
-# The pref requires "network.process.enabled" to be true.
-# Changing these prefs requires a restart.
-- name: network.http.network_access_on_socket_process.enabled
-  type: RelaxedAtomicBool
-  mirror: always
-  value: false
 
 # Telemetry of traffic categories. Whether or not to enable HttpTrafficAnalyzer.
 - name: network.traffic_analyzer.enabled

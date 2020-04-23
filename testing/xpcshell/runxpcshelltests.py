@@ -1311,9 +1311,6 @@ class XPCShellTests(object):
         self.mozInfo['verify'] = options.get('verify', False)
         self.mozInfo['webrender'] = self.enable_webrender
 
-        self.mozInfo['socketprocess_networking'] = prefs.get(
-            'network.http.network_access_on_socket_process.enabled', False)
-
         mozinfo.update(self.mozInfo)
 
         return True
