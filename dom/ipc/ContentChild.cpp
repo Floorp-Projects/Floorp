@@ -3588,6 +3588,32 @@ mozilla::ipc::IPCResult ContentChild::RecvOnAllowAccessFor(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvOnContentBlockingDecision(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    const ContentBlockingNotifier::BlockingDecision& aDecision,
+    uint32_t aRejectedReason) {
+  MOZ_ASSERT(!aContext.IsNull(), "Browsing context cannot be null");
+
+  nsCOMPtr<nsPIDOMWindowOuter> outer = aContext.get()->GetDOMWindow();
+  if (!outer) {
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
+            ("ChildIPC: Trying to send a message to a context without a outer "
+             "window"));
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsPIDOMWindowInner> inner = outer->GetCurrentInnerWindow();
+  if (!inner) {
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
+            ("ChildIPC: Trying to send a message to a context without a inner "
+             "window"));
+    return IPC_OK();
+  }
+
+  ContentBlockingNotifier::OnDecision(inner, aDecision, aRejectedReason);
+  return IPC_OK();
+}
+
 void ContentChild::OnChannelReceivedMessage(const Message& aMsg) {
   if (aMsg.is_sync() && !aMsg.is_reply()) {
     LSObject::OnSyncMessageReceived();

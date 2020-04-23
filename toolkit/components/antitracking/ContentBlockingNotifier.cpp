@@ -447,6 +447,39 @@ void ContentBlockingNotifier::OnDecision(nsPIDOMWindowInner* aWindow,
 }
 
 /* static */
+void ContentBlockingNotifier::OnDecision(BrowsingContext* aBrowsingContext,
+                                         BlockingDecision aDecision,
+                                         uint32_t aRejectedReason) {
+  MOZ_ASSERT(aBrowsingContext);
+  MOZ_ASSERT_IF(XRE_IsContentProcess(), aBrowsingContext->IsInProcess());
+
+  if (aBrowsingContext->IsInProcess()) {
+    nsCOMPtr<nsPIDOMWindowOuter> outer = aBrowsingContext->GetDOMWindow();
+    if (NS_WARN_IF(!outer)) {
+      return;
+    }
+
+    nsCOMPtr<nsPIDOMWindowInner> inner = outer->GetCurrentInnerWindow();
+    if (NS_WARN_IF(!inner)) {
+      return;
+    }
+
+    ContentBlockingNotifier::OnDecision(inner, aDecision, aRejectedReason);
+  } else {
+    // we send an IPC to the content process when we don't have an in-process
+    // browsing context. This is not smart because this should be able to be
+    // done directly in the parent. The reason we are doing this is because we
+    // need the channel, which is not accessible in the parent when you only
+    // have a browsing context.
+    MOZ_ASSERT(XRE_IsParentProcess());
+
+    ContentParent* cp = aBrowsingContext->Canonical()->GetContentParent();
+    Unused << cp->SendOnContentBlockingDecision(aBrowsingContext, aDecision,
+                                                aRejectedReason);
+  }
+}
+
+/* static */
 void ContentBlockingNotifier::OnEvent(nsIChannel* aTrackingChannel,
                                       uint32_t aRejectedReason) {
   MOZ_ASSERT(XRE_IsParentProcess() && aTrackingChannel);
