@@ -281,10 +281,7 @@ class BrowserToolbar @JvmOverloads constructor(
      */
     override fun editMode() {
         val urlValue = if (searchTerms.isEmpty()) url else searchTerms
-        // Don't autocomplete search terms as they could be substrings of a suggested url
-        val shouldAutoComplete = searchTerms.isEmpty()
-
-        edit.updateUrl(urlValue.toString(), shouldAutoComplete)
+        edit.updateUrl(urlValue.toString(), false)
         updateState(State.EDIT)
         edit.focus()
         edit.selectAll()

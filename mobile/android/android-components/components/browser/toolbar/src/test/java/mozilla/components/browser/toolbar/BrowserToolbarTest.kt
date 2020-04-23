@@ -127,11 +127,11 @@ class BrowserToolbarTest {
         toolbar.edit = spy(toolbar.edit)
 
         toolbar.url = "https://www.mozilla.org"
-        verify(toolbar.edit, never()).updateUrl("https://www.mozilla.org", true)
+        verify(toolbar.edit, never()).updateUrl("https://www.mozilla.org", false)
 
         toolbar.editMode()
 
-        verify(toolbar.edit).updateUrl("https://www.mozilla.org", true)
+        verify(toolbar.edit).updateUrl("https://www.mozilla.org", false)
     }
 
     @Test
@@ -424,7 +424,7 @@ class BrowserToolbarTest {
         toolbar.url = "https://www.mozilla.org"
         toolbar.editMode()
         verify(toolbar.display).url = "https://www.mozilla.org"
-        verify(toolbar.edit).updateUrl("https://www.mozilla.org", true)
+        verify(toolbar.edit).updateUrl("https://www.mozilla.org", false)
     }
 
     @Test

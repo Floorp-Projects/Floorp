@@ -19,6 +19,9 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: `AddonManager.enableAddon` and `AddonManager.disableAddon` have a new optional parameter  `source` that indicates why the extension is enabled/disabled.
   * ⚠️ **This is a breaking change**: `Map<String, String>.translate` now is marked as internal, if you are trying to translate the summary or the description of an add-on, use `Addon.translatedSummary` and `Addon.translatedDescription`.
 
+* **feature-toolbar**
+  * Disabled autocompleting when updating url upon entering edit mode in BrowserToolbar.
+
 * **feature-media**
   * Muted media will not start the media service anymore, causing no media notification to be shown and no audio focus getting requested.
 
