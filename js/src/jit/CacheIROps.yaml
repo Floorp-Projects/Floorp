@@ -216,13 +216,13 @@
 - name: GuardSpecificAtom
   shared: false
   operands:
-    str: StrId
+    str: StringId
     expected: AtomField
 
 - name: GuardSpecificSymbol
   shared: false
   operands:
-    sym: SymId
+    sym: SymbolId
     expected: SymbolField
 
 - name: GuardSpecificInt32Immediate
@@ -255,26 +255,26 @@
 - name: GuardAndGetIndexFromString
   shared: true
   operands:
-    str: StrId
+    str: StringId
     result: Int32Id
 
 - name: GuardAndGetInt32FromString
   shared: true
   operands:
-    str: StrId
+    str: StringId
     result: Int32Id
 
 - name: GuardAndGetNumberFromString
   shared: true
   operands:
-    str: StrId
-    result: NumId
+    str: StringId
+    result: NumberId
 
 - name: GuardAndGetNumberFromBoolean
   shared: true
   operands:
     boolean: Int32Id
-    result: NumId
+    result: NumberId
 
 - name: GuardAndGetIterator
   shared: false
@@ -321,8 +321,8 @@
 - name: GuardTagNotEqual
   shared: true
   operands:
-    lhs: ValTagId
-    rhs: ValTagId
+    lhs: ValueTagId
+    rhs: ValueTagId
 
 - name: GuardXrayExpandoShapeAndDefaultProto
   shared: true
@@ -403,7 +403,7 @@
   shared: true
   operands:
     val: ValId
-    result: ValTagId
+    result: ValueTagId
 
 - name: LoadArgumentFixedSlot
   shared: false
@@ -639,19 +639,19 @@
   shared: true
   operands:
     input: Int32Id
-    result: StrId
+    result: StringId
 
 - name: CallNumberToString
   shared: true
   operands:
-    input: NumId
-    result: StrId
+    input: NumberId
+    result: StringId
 
 - name: BooleanToString
   shared: true
   operands:
     input: Int32Id
-    result: StrId
+    result: StringId
 
 - name: CallScriptedFunction
   shared: false
@@ -781,13 +781,13 @@
 - name: LoadStringCharResult
   shared: true
   operands:
-    str: StrId
+    str: StringId
     index: Int32Id
 
 - name: LoadStringLengthResult
   shared: true
   operands:
-    str: StrId
+    str: StringId
 
 - name: LoadFrameCalleeResult
   shared: false
@@ -827,7 +827,7 @@
 - name: LoadDoubleResult
   shared: true
   operands:
-    val: NumId
+    val: NumberId
 
 - name: CallScriptedGetterResult
   shared: false
@@ -914,38 +914,38 @@
 - name: DoubleAddResult
   shared: true
   operands:
-    lhs: NumId
-    rhs: NumId
+    lhs: NumberId
+    rhs: NumberId
 
 - name: DoubleSubResult
   shared: true
   operands:
-    lhs: NumId
-    rhs: NumId
+    lhs: NumberId
+    rhs: NumberId
 
 - name: DoubleMulResult
   shared: true
   operands:
-    lhs: NumId
-    rhs: NumId
+    lhs: NumberId
+    rhs: NumberId
 
 - name: DoubleDivResult
   shared: true
   operands:
-    lhs: NumId
-    rhs: NumId
+    lhs: NumberId
+    rhs: NumberId
 
 - name: DoubleModResult
   shared: true
   operands:
-    lhs: NumId
-    rhs: NumId
+    lhs: NumberId
+    rhs: NumberId
 
 - name: DoublePowResult
   shared: true
   operands:
-    lhs: NumId
-    rhs: NumId
+    lhs: NumberId
+    rhs: NumberId
 
 - name: Int32AddResult
   shared: true
@@ -1104,7 +1104,7 @@
 - name: DoubleNegationResult
   shared: true
   operands:
-    input: NumId
+    input: NumberId
 
 - name: BigIntNegationResult
   shared: true
@@ -1124,12 +1124,12 @@
 - name: DoubleIncResult
   shared: true
   operands:
-    input: NumId
+    input: NumberId
 
 - name: DoubleDecResult
   shared: true
   operands:
-    input: NumId
+    input: NumberId
 
 - name: BigIntIncResult
   shared: true
@@ -1154,7 +1154,7 @@
 - name: LoadStringTruthyResult
   shared: true
   operands:
-    str: StrId
+    str: StringId
 
 - name: LoadObjectTruthyResult
   shared: true
@@ -1181,8 +1181,8 @@
 - name: CallStringConcatResult
   shared: true
   operands:
-    lhs: StrId
-    rhs: StrId
+    lhs: StringId
+    rhs: StringId
 
 - name: CallStringObjectConcatResult
   shared: false
@@ -1199,8 +1199,8 @@
   shared: false
   operands:
     op: JSOpImm
-    lhs: StrId
-    rhs: StrId
+    lhs: StringId
+    rhs: StringId
 
 - name: CompareObjectResult
   shared: true
@@ -1213,8 +1213,8 @@
   shared: true
   operands:
     op: JSOpImm
-    lhs: SymId
-    rhs: SymId
+    lhs: SymbolId
+    rhs: SymbolId
 
 - name: CompareInt32Result
   shared: true
@@ -1227,8 +1227,8 @@
   shared: true
   operands:
     op: JSOpImm
-    lhs: NumId
-    rhs: NumId
+    lhs: NumberId
+    rhs: NumberId
 
 - name: CompareBigIntResult
   shared: true
@@ -1256,13 +1256,13 @@
   operands:
     op: JSOpImm
     lhs: BigIntId
-    rhs: NumId
+    rhs: NumberId
 
 - name: CompareNumberBigIntResult
   shared: true
   operands:
     op: JSOpImm
-    lhs: NumId
+    lhs: NumberId
     rhs: BigIntId
 
 - name: CompareBigIntStringResult
@@ -1270,13 +1270,13 @@
   operands:
     op: JSOpImm
     lhs: BigIntId
-    rhs: StrId
+    rhs: StringId
 
 - name: CompareStringBigIntResult
   shared: true
   operands:
     op: JSOpImm
-    lhs: StrId
+    lhs: StringId
     rhs: BigIntId
 
 - name: CompareObjectUndefinedNullResult
