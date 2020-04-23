@@ -33,6 +33,8 @@ this.EXPORTED_SYMBOLS = ["browser", "Context", "WindowState"];
 /** @namespace */
 this.browser = {};
 
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
 /**
  * Variations of Marionette contexts.
  *
@@ -298,7 +300,10 @@ browser.Context = class {
 
     // The modal is a direct sibling of the browser element.
     // See tabbrowser.xml's getTabModalPromptBox.
-    let modalElements = br.parentNode.getElementsByTagName("tabmodalprompt");
+    let modalElements = br.parentNode.getElementsByTagNameNS(
+      XUL_NS,
+      "tabmodalprompt"
+    );
 
     return br.tabModalPromptBox.getPrompt(modalElements[0]);
   }
