@@ -29,6 +29,7 @@ from arsenic import get_session
 from arsenic.browsers import Firefox
 
 from condprof.util import fresh_profile, logger, obfuscate_file, obfuscate
+from condprof.helpers import close_extra_windows
 from condprof.scenarii import scenarii
 from condprof.client import get_profile, ProfileNotFoundError
 from condprof.archiver import Archiver
@@ -155,6 +156,7 @@ class ProfileCreator:
                     logger.info("Running the %s scenario" % scenario)
                     metadata.update(await scenario_func(session, options))
                     logger.info("%s scenario done." % scenario)
+                    await close_extra_windows(session)
         except Exception:
             logger.error("%s scenario broke!" % scenario)
             if step == START:
