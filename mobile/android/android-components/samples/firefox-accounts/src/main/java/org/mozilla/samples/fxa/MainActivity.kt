@@ -54,6 +54,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        RustLog.disable()
         RustLog.enable()
         RustHttpConfig.setClient(lazy { HttpURLConnectionClient() })
 
@@ -82,7 +83,8 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
                     }
                     openWebView(url.url)
                 }
-            }
+            },
+            scanMessage = R.string.pair_instructions_message
         )
 
         lifecycle.addObserver(qrFeature)
@@ -169,9 +171,9 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
     private fun openTab(url: String) {
         val customTabsIntent = CustomTabsIntent.Builder()
-                .addDefaultShareMenuItem()
-                .setShowTitle(true)
-                .build()
+            .addDefaultShareMenuItem()
+            .setShowTitle(true)
+            .build()
 
         customTabsIntent.intent.data = Uri.parse(url)
         customTabsIntent.launchUrl(this@MainActivity, Uri.parse(url))
@@ -193,7 +195,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
             }
             account.toJSONString().let {
                 getSharedPreferences(FXA_STATE_PREFS_KEY, Context.MODE_PRIVATE)
-                        .edit().putString(FXA_STATE_KEY, it).apply()
+                    .edit().putString(FXA_STATE_KEY, it).apply()
             }
         }
     }

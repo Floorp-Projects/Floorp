@@ -11,4 +11,5 @@
     <string name="log_out">FxA Log Out</string>
     <string name="logged_out">Logged out!</string>
     <string name="wants_keys">Request sync scope?</string>
+    <string name="pair_instructions_message"><![CDATA[Scan the QR code shown at <b>firefox.com/pair</b>]]></string>
 </resources>
