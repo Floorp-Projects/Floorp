@@ -200,11 +200,6 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateBuffer(
   ffi::WGPUBufferDescriptor desc = {};
   desc.usage = aDesc.mUsage;
   desc.size = aDesc.mSize;
-  // tweak: imply STORAGE_READ. This is yet to be figured out by the spec,
-  // see https://github.com/gpuweb/gpuweb/issues/541
-  if (desc.usage & WGPUBufferUsage_STORAGE) {
-    desc.usage |= WGPUBufferUsage_STORAGE_READ;
-  }
   ffi::wgpu_server_device_create_buffer(mContext, aSelfId, &desc, aNewId);
   return IPC_OK();
 }
