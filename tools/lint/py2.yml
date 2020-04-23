@@ -32,6 +32,7 @@ py2:
 
         # These paths are intentionally excluded (Python 3 only)
         - config/printconfigsetting.py
+        - python/mozbuild/mozbuild/html_build_viewer.py
         - python/mozlint
         - python/mozperftest
         - tools/crashreporter/system-symbols/win/symsrv-fetch.py
