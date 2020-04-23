@@ -1021,8 +1021,7 @@ wr::WrClipChainId DisplayListBuilder::DefineClipChain(
 
 wr::WrClipId DisplayListBuilder::DefineClip(
     const Maybe<wr::WrSpaceAndClip>& aParent, const wr::LayoutRect& aClipRect,
-    const nsTArray<wr::ComplexClipRegion>* aComplex,
-    const wr::ImageMask* aMask) {
+    const nsTArray<wr::ComplexClipRegion>* aComplex) {
   CancelGroup();
 
   WrClipId clipId;
@@ -1030,19 +1029,27 @@ wr::WrClipId DisplayListBuilder::DefineClip(
     clipId = wr_dp_define_clip_with_parent_clip(
         mWrState, aParent.ptr(), aClipRect,
         aComplex ? aComplex->Elements() : nullptr,
-        aComplex ? aComplex->Length() : 0, aMask);
+        aComplex ? aComplex->Length() : 0);
   } else {
     clipId = wr_dp_define_clip_with_parent_clip_chain(
         mWrState, &mCurrentSpaceAndClipChain, aClipRect,
         aComplex ? aComplex->Elements() : nullptr,
-        aComplex ? aComplex->Length() : 0, aMask);
+        aComplex ? aComplex->Length() : 0);
   }
 
-  WRDL_LOG("DefineClip id=%zu p=%s r=%s m=%p b=%s complex=%zu\n", mWrState,
-           clipId.id, aParent ? Stringify(aParent->clip.id).c_str() : "(nil)",
-           Stringify(aClipRect).c_str(), aMask,
-           aMask ? Stringify(aMask->rect).c_str() : "none",
-           aComplex ? aComplex->Length() : 0);
+  WRDL_LOG("DefineClip id=%zu p=%s r=%s complex=%zu\n", mWrState, clipId.id,
+           aParent ? Stringify(aParent->clip.id).c_str() : "(nil)",
+           Stringify(aClipRect).c_str(), aComplex ? aComplex->Length() : 0);
+
+  return clipId;
+}
+
+wr::WrClipId DisplayListBuilder::DefineImageMaskClip(
+    const wr::ImageMask& aMask) {
+  CancelGroup();
+
+  WrClipId clipId = wr_dp_define_image_mask_clip_with_parent_clip_chain(
+      mWrState, &mCurrentSpaceAndClipChain, aMask);
 
   return clipId;
 }
@@ -1136,7 +1143,7 @@ void DisplayListBuilder::PushRoundedRect(const wr::LayoutRect& aBounds,
   AutoTArray<wr::ComplexClipRegion, 1> clips;
   clips.AppendElement(wr::SimpleRadii(aBounds, aBounds.size.width / 2));
   // TODO: use `mCurrentSpaceAndClipChain.clip_chain` as a parent?
-  auto clipId = DefineClip(Nothing(), aBounds, &clips, nullptr);
+  auto clipId = DefineClip(Nothing(), aBounds, &clips);
   auto spaceAndClip = WrSpaceAndClip{mCurrentSpaceAndClipChain.space, clipId};
 
   wr_dp_push_rect_with_parent_clip(mWrState, aBounds, clip, aIsBackfaceVisible,
@@ -1181,7 +1188,7 @@ void DisplayListBuilder::PushClearRectWithComplexRegion(
            Stringify(aBounds).c_str(), Stringify(clip).c_str());
 
   AutoTArray<wr::ComplexClipRegion, 1> clips;
-  auto clipId = DefineClip(Nothing(), aBounds, &clips, nullptr);
+  auto clipId = DefineClip(Nothing(), aBounds, &clips);
   auto spaceAndClip = WrSpaceAndClip{mCurrentSpaceAndClipChain.space, clipId};
 
   wr_dp_push_clear_rect_with_parent_clip(mWrState, aBounds, clip,
@@ -1198,7 +1205,7 @@ void DisplayListBuilder::PushBackdropFilter(
 
   AutoTArray<wr::ComplexClipRegion, 1> clips;
   clips.AppendElement(aRegion);
-  auto clipId = DefineClip(Nothing(), aBounds, &clips, nullptr);
+  auto clipId = DefineClip(Nothing(), aBounds, &clips);
   auto spaceAndClip = WrSpaceAndClip{mCurrentSpaceAndClipChain.space, clipId};
 
   wr_dp_push_backdrop_filter_with_parent_clip(

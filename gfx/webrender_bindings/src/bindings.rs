@@ -2433,14 +2433,12 @@ pub extern "C" fn wr_dp_define_clip_with_parent_clip(
     clip_rect: LayoutRect,
     complex: *const ComplexClipRegion,
     complex_count: usize,
-    mask: *const ImageMask,
 ) -> WrClipId {
     wr_dp_define_clip_impl(
         &mut state.frame_builder,
         parent.to_webrender(state.pipeline_id),
         clip_rect,
         unsafe { make_slice(complex, complex_count) },
-        unsafe { mask.as_ref() }.map(|m| *m),
     )
 }
 
@@ -2451,14 +2449,12 @@ pub extern "C" fn wr_dp_define_clip_with_parent_clip_chain(
     clip_rect: LayoutRect,
     complex: *const ComplexClipRegion,
     complex_count: usize,
-    mask: *const ImageMask,
 ) -> WrClipId {
     wr_dp_define_clip_impl(
         &mut state.frame_builder,
         parent.to_webrender(state.pipeline_id),
         clip_rect,
         unsafe { make_slice(complex, complex_count) },
-        unsafe { mask.as_ref() }.map(|m| *m),
     )
 }
 
@@ -2467,12 +2463,29 @@ fn wr_dp_define_clip_impl(
     parent: SpaceAndClipInfo,
     clip_rect: LayoutRect,
     complex_regions: &[ComplexClipRegion],
-    mask: Option<ImageMask>,
 ) -> WrClipId {
     debug_assert!(unsafe { is_in_main_thread() });
     let clip_id = frame_builder
         .dl_builder
-        .define_clip(&parent, clip_rect, complex_regions.iter().cloned(), mask);
+        .define_clip(&parent, clip_rect, complex_regions.iter().cloned());
+    WrClipId::from_webrender(clip_id)
+}
+
+#[no_mangle]
+pub extern "C" fn wr_dp_define_image_mask_clip_with_parent_clip_chain(
+    state: &mut WrState,
+    parent: &WrSpaceAndClipChain,
+    mask: ImageMask,
+) -> WrClipId {
+    debug_assert!(unsafe { is_in_main_thread() });
+
+    let clip_id = state
+        .frame_builder
+        .dl_builder
+        .define_clip_image_mask(
+            &parent.to_webrender(state.pipeline_id),
+            mask,
+        );
     WrClipId::from_webrender(clip_id)
 }
 

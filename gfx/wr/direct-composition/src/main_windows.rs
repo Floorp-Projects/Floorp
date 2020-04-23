@@ -147,7 +147,6 @@ impl Rectangle {
             &api::SpaceAndClipInfo::root_scroll(pipeline_id),
             rect,
             vec![region],
-            None,
         );
 
         builder.push_rect(

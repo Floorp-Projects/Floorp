@@ -136,6 +136,7 @@ pub enum DisplayItem {
     BackdropFilter(BackdropFilterDisplayItem),
 
     // Clips
+    ImageMaskClip(ImageMaskClipDisplayItem),
     Clip(ClipDisplayItem),
     ClipChain(ClipChainItem),
 
@@ -184,6 +185,7 @@ pub enum DebugDisplayItem {
     YuvImage(YuvImageDisplayItem),
     BackdropFilter(BackdropFilterDisplayItem),
 
+    ImageMaskClip(ImageMaskClipDisplayItem),
     Clip(ClipDisplayItem, Vec<ComplexClipRegion>),
     ClipChain(ClipChainItem, Vec<ClipId>),
 
@@ -204,11 +206,17 @@ pub enum DebugDisplayItem {
 }
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
+pub struct ImageMaskClipDisplayItem {
+    pub id: ClipId,
+    pub parent_space_and_clip: SpaceAndClipInfo,
+    pub image_mask: ImageMask,
+}
+
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub struct ClipDisplayItem {
     pub id: ClipId,
     pub parent_space_and_clip: SpaceAndClipInfo,
     pub clip_rect: LayoutRect,
-    pub image_mask: Option<ImageMask>,
 } // IMPLICIT: complex_clips: Vec<ComplexClipRegion>
 
 /// The minimum and maximum allowable offset for a sticky frame in a single dimension.
@@ -1465,6 +1473,7 @@ impl DisplayItem {
             DisplayItem::BoxShadow(..) => "box_shadow",
             DisplayItem::ClearRectangle(..) => "clear_rectangle",
             DisplayItem::HitTest(..) => "hit_test",
+            DisplayItem::ImageMaskClip(..) => "image_mask_clip",
             DisplayItem::Clip(..) => "clip",
             DisplayItem::ClipChain(..) => "clip_chain",
             DisplayItem::ConicGradient(..) => "conic_gradient",
