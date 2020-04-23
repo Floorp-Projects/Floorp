@@ -3,17 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # This module contains code for running an HTTP server to view build info.
-
-from __future__ import absolute_import, print_function, unicode_literals
-
-import BaseHTTPServer
+import http.server
 import json
 import os
 
 import requests
 
 
-class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+class HTTPHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         s = self.server.wrapper
         p = self.path
@@ -24,7 +21,8 @@ class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.end_headers()
 
             keys = sorted(s.json_files.keys())
-            json.dump({'files': ['resources/%s' % k for k in keys]}, self.wfile)
+            s = json.dumps({'files': ['resources/%s' % k for k in keys]})
+            self.wfile.write(s.encode('utf-8'))
             return
 
         if p.startswith('/resources/'):
@@ -92,7 +90,7 @@ class BuildViewerServer(object):
         self.doc_root = doc_root
         self.json_files = {}
 
-        self.server = BaseHTTPServer.HTTPServer((address, port), HTTPHandler)
+        self.server = http.server.HTTPServer((address, port), HTTPHandler)
         self.server.wrapper = self
         self.do_shutdown = False
 
