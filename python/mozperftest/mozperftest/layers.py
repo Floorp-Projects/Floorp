@@ -139,9 +139,6 @@ class Layers(Layer):
                 break
 
         if not found:
-            import pdb
-
-            pdb.set_trace()
             raise KeyError(
                 "%r tried to set %r, but does not own it" % (self.name, name)
             )

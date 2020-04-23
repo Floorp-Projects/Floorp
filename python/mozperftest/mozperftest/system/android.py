@@ -17,13 +17,15 @@ class AndroidDevice(Layer):
     """
 
     name = "android"
-    # always activated, since we might
-    # decide to use the phone depending on the binary
-    activated = True
+    activated = False
 
     arguments = {
+        "app-name": {
+            "type": str,
+            "default": "org.mozilla.firefox",
+            "help": "Android app name",
+        },
         "intent": {"type": str, "default": None, "help": "Intent to use"},
-        "app-name": {"type": str, "default": None, "help": "App name"},
         "activity": {"type": str, "default": None, "help": "Activity to use"},
         "install-apk": {
             "nargs": "*",
@@ -39,8 +41,12 @@ class AndroidDevice(Layer):
     def setup(self):
         pass
 
-    def _setup_options(self, app_name="org.mozilla.firefox"):
-        self.app_name = app_name
+    def teardown(self):
+        pass
+
+    def __call__(self, metadata):
+        self.app_name = self.get_arg("android-app-name")
+        self.metadata = metadata
         try:
             self.device = ADBDevice(verbose=True)
         except AttributeError as e:
@@ -53,41 +59,23 @@ class AndroidDevice(Layer):
             self.device.install_app(apk, replace=True)
             self.info("Done.")
 
+        # checking that the app is installed
+        if not self.device.is_app_installed(self.app_name):
+            raise Exception("%s is not installed" % self.app_name)
+
+        # set up default activity with the app name if none given
         if self.android_activity is None:
             # guess the activity, given the app
-            if "fenix" in app_name:
+            if "fenix" in self.app_name:
                 self.android_activity = "org.mozilla.fenix.IntentReceiverActivity"
-            elif "geckoview_example" in app_name:
+            elif "geckoview_example" in self.app_name:
                 self.android_activity = (
                     "org.mozilla.geckoview_example.GeckoViewActivity"
                 )
             self.set_arg("android_activity", self.android_activity)
 
-        # checking that the app is installed
-        if not self.device.is_app_installed(self.app_name):
-            raise Exception("%s is not installed" % self.app_name)
-
         self.info("Android environment:")
-        self.info("\t- application name: %s" % self.app_name)
-        self.info("\t- activity: %s" % self.android_activity)
-        self.info("\t- intent: %s" % self.get_arg("android_intent"))
-
-    def teardown(self):
-        pass
-
-    def __call__(self, metadata):
-        android = self.get_arg("android")
-        app_name = self.get_arg("android-app-name")
-        if app_name is None:
-            app_name = self.get_arg("browser-binary")
-        if app_name is not None and app_name.startswith("org.mozilla.") and not android:
-            self.set_arg("android", True)
-            android = True
-        if not android:
-            return metadata
-        if app_name is None:
-            app_name = "org.mozilla.firefox"
-        self.set_arg("android-app-name", app_name)
-        self.metadata = metadata
-        self._setup_options(app_name)
+        self.info("- Application name: %s" % self.app_name)
+        self.info("- Activity: %s" % self.android_activity)
+        self.info("- Intent: %s" % self.get_arg("android_intent"))
         return metadata
