@@ -244,6 +244,9 @@
       testName("requested_name_from_grouping", "label");
       testName("listitem_containing_block_tbody", "label");
 
+      // Name from subtree of grouping labelled by an ancestor.
+      testName("grouping_labelledby_ancestor", "label");
+
       SimpleTest.finish();
     }
 
@@ -682,6 +685,13 @@
         <tr><td>label</td></tr>
       </tbody>
     </table>
+  </div>
+
+  <!-- Name from subtree of grouping labelled by an ancestor. -->
+  <div id="grouping_ancestor_label">label
+    <div id="grouping_labelledby_ancestor" role="group" aria-labelledby="grouping_ancestor_label">
+      This content should not be included in the grouping's label.
+    </div>
   </div>
 </body>
 </html>
