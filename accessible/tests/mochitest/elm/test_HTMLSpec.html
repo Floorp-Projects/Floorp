@@ -849,6 +849,8 @@
 
       obj = {
         role: ROLE_GROUPING,
+        name: "time label",
+        attributes: { "text-input-type": "time" },
         children: [
           { role: ROLE_SPINBUTTON },
           { role: ROLE_TEXT_LEAF },
@@ -865,6 +867,8 @@
 
       obj = {
         role: ROLE_DATE_EDITOR,
+        name: "date label",
+        attributes: { "text-input-type": "date" },
         children: [
           { role: ROLE_SPINBUTTON },
           { role: ROLE_TEXT_LEAF },
@@ -1754,8 +1758,12 @@
   <form>
     <input id="input_reset" type="reset">
   </form>
-  <input id="input_time" type="time" value="23:23">
-  <input id="input_date" type="date" value="2017-11-10">
+  <label>time label
+    <input id="input_time" type="time" value="23:23">
+  </label>
+  <label>date label
+    <input id="input_date" type="date" value="2017-11-10">
+  </label>
 
   <p id="ins_container">normal<ins>Inserted</ins></p>
   <p id="kbd_container">normal<kbd>cmd</kbd></p>

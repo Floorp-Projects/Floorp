@@ -213,13 +213,13 @@ MARKUPMAP(
       }
       if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                                 nsGkAtoms::time, eIgnoreCase)) {
-        return new EnumRoleAccessible<roles::GROUPING>(aElement,
-                                                       aContext->Document());
+        return new HTMLDateTimeAccessible<roles::GROUPING>(
+            aElement, aContext->Document());
       }
       if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                                 nsGkAtoms::date, eIgnoreCase)) {
-        return new EnumRoleAccessible<roles::DATE_EDITOR>(aElement,
-                                                          aContext->Document());
+        return new HTMLDateTimeAccessible<roles::DATE_EDITOR>(
+            aElement, aContext->Document());
       }
       return nullptr;
     },
