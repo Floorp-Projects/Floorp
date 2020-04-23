@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import errno
 import hashlib
+import io
 import logging
 import os
 import re
@@ -282,7 +283,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             # pytoml is not sophisticated enough to parse Cargo.toml files
             # with [target.'cfg(...)'.dependencies sections, so we resort
             # to scanning individual lines.
-            with open(toml_file, 'r') as f:
+            with io.open(toml_file, 'r', encoding='utf-8') as f:
                 license_lines = [l for l in f if l.strip().startswith('license')]
                 license_matches = list(
                     filter(lambda x: x, [LICENSE_LINE_RE.match(l) for l in license_lines]))
