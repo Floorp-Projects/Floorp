@@ -1101,6 +1101,21 @@ DocumentLoadListener::RedirectToRealChannel(
       args.timing() = Some(std::move(mTiming));
     }
 
+    auto loadInfo = args.loadInfo();
+
+    if (loadInfo.isNothing()) {
+      return PDocumentChannelParent::RedirectToRealChannelPromise::
+          CreateAndReject(ipc::ResponseRejectReason::SendError, __func__);
+    }
+
+    nsresult rv;
+    nsCOMPtr<nsIPrincipal> triggeringPrincipal =
+        PrincipalInfoToPrincipal(loadInfo.ref().triggeringPrincipalInfo(), &rv);
+
+    if (NS_SUCCEEDED(rv) && triggeringPrincipal) {
+      cp->TransmitBlobDataIfBlobURL(args.uri(), triggeringPrincipal);
+    }
+
     return cp->SendCrossProcessRedirect(args,
                                         std::move(aStreamFilterEndpoints));
   }
