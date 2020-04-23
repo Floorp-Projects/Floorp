@@ -11,9 +11,6 @@
 #include <gtk/gtk.h>
 #include <functional>
 #include <vector>
-#ifdef MOZ_WAYLAND
-#  include "mozilla/Mutex.h"
-#endif
 
 /*
  * MozContainer
@@ -90,10 +87,6 @@ struct _MozContainer {
   gboolean surface_needs_clear;
   gboolean ready_to_draw;
   std::vector<std::function<void(void)>> initial_draw_cbs;
-  // mozcontainer is used from Compositor and Rendering threads
-  // so we need to control access to mozcontainer where wayland internals
-  // are used directly.
-  mozilla::Mutex* container_lock;
 #endif
   gboolean force_default_visual;
 };
