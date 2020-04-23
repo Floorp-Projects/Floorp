@@ -472,6 +472,7 @@ impl BuiltDisplayList {
                 Real::SetGradientStops => Debug::SetGradientStops(
                     item.iter.cur_stops.iter().collect()
                 ),
+                Real::ImageMaskClip(v) => Debug::ImageMaskClip(v),
                 Real::StickyFrame(v) => Debug::StickyFrame(v),
                 Real::Rectangle(v) => Debug::Rectangle(v),
                 Real::ClearRectangle(v) => Debug::ClearRectangle(v),
@@ -897,7 +898,7 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                     DisplayListBuilder::push_iter_impl(&mut temp, stops);
                     Real::SetGradientStops
                 },
-
+                Debug::ImageMaskClip(v) => Real::ImageMaskClip(v),
                 Debug::Rectangle(v) => Real::Rectangle(v),
                 Debug::ClearRectangle(v) => Real::ClearRectangle(v),
                 Debug::HitTest(v) => Real::HitTest(v),
@@ -1748,12 +1749,27 @@ impl DisplayListBuilder {
         id
     }
 
+    pub fn define_clip_image_mask(
+        &mut self,
+        parent_space_and_clip: &di::SpaceAndClipInfo,
+        image_mask: di::ImageMask,
+    ) -> di::ClipId {
+        let id = self.generate_clip_index();
+        let item = di::DisplayItem::ImageMaskClip(di::ImageMaskClipDisplayItem {
+            id,
+            parent_space_and_clip: *parent_space_and_clip,
+            image_mask,
+        });
+
+        self.push_item(&item);
+        id
+    }
+
     pub fn define_clip<I>(
         &mut self,
         parent_space_and_clip: &di::SpaceAndClipInfo,
         clip_rect: LayoutRect,
         complex_clips: I,
-        image_mask: Option<di::ImageMask>,
     ) -> di::ClipId
     where
         I: IntoIterator<Item = di::ComplexClipRegion>,
@@ -1764,7 +1780,6 @@ impl DisplayListBuilder {
             id,
             parent_space_and_clip: *parent_space_and_clip,
             clip_rect,
-            image_mask,
         });
 
         self.push_item(&item);

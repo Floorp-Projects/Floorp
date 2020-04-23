@@ -969,7 +969,6 @@ impl<I: Iterator<Item = ComplexClipRegion>> Iterator for ComplexTranslateIter<I>
 #[derive(Clone, Debug)]
 pub struct ClipRegion<I> {
     pub main: LayoutRect,
-    pub image_mask: Option<ImageMask>,
     pub complex_clips: I,
 }
 
@@ -977,19 +976,13 @@ impl<J> ClipRegion<ComplexTranslateIter<J>> {
     pub fn create_for_clip_node(
         rect: LayoutRect,
         complex_clips: J,
-        mut image_mask: Option<ImageMask>,
         reference_frame_relative_offset: &LayoutVector2D,
     ) -> Self
     where
         J: Iterator<Item = ComplexClipRegion>
     {
-        if let Some(ref mut image_mask) = image_mask {
-            image_mask.rect = image_mask.rect.translate(*reference_frame_relative_offset);
-        }
-
         ClipRegion {
             main: rect.translate(*reference_frame_relative_offset),
-            image_mask,
             complex_clips: ComplexTranslateIter {
                 source: complex_clips,
                 offset: *reference_frame_relative_offset,
@@ -1005,7 +998,6 @@ impl ClipRegion<Option<ComplexClipRegion>> {
     ) -> Self {
         ClipRegion {
             main: local_clip.translate(*reference_frame_relative_offset),
-            image_mask: None,
             complex_clips: None,
         }
     }

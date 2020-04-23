@@ -10102,8 +10102,7 @@ static Maybe<wr::WrClipId> CreateSimpleClipRegion(
       MOZ_ASSERT_UNREACHABLE("Unhandled shape id?");
       return Nothing();
   }
-  wr::WrClipId clipId =
-      aBuilder.DefineClip(Nothing(), rect, &clipRegions, nullptr);
+  wr::WrClipId clipId = aBuilder.DefineClip(Nothing(), rect, &clipRegions);
   return Some(clipId);
 }
 
@@ -10122,8 +10121,7 @@ static Maybe<wr::WrClipId> CreateWRClipPathAndMasks(
     return Nothing();
   }
 
-  wr::WrClipId clipId = aBuilder.DefineClip(
-      Nothing(), wr::ToLayoutRect(aBounds), nullptr, mask.ptr());
+  wr::WrClipId clipId = aBuilder.DefineImageMaskClip(mask.ref());
 
   return Some(clipId);
 }
