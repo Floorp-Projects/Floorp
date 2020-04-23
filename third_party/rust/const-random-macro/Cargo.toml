@@ -11,14 +11,20 @@
 # will likely look very different (and much more reasonable)
 
 [package]
-name = "autocfg"
-version = "1.0.0"
-authors = ["Josh Stone <cuviper@gmail.com>"]
-description = "Automatic cfg for Rust compiler features"
-readme = "README.md"
-keywords = ["rustc", "build", "autoconf"]
-categories = ["development-tools::build-utils"]
-license = "Apache-2.0 OR MIT"
-repository = "https://github.com/cuviper/autocfg"
+edition = "2018"
+name = "const-random-macro"
+version = "0.1.8"
+authors = ["Tom Kaitchuck <Tom.Kaitchuck@gmail.com>"]
+description = "Provides the procedural macro used by const-random"
+documentation = "https://docs.rs/const-random"
+keywords = ["rust", "constants", "macro"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/tkaitchuck/constrandom"
 
-[dependencies]
+[lib]
+proc-macro = true
+[dependencies.getrandom]
+version = "0.1"
+
+[dependencies.proc-macro-hack]
+version = "0.5"
