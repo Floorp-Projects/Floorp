@@ -13,8 +13,7 @@
 namespace mozilla {
 namespace dom {
 class CanonicalBrowsingContext;
-class BrowserParent;
-}  // namespace dom
+}
 namespace net {
 
 /**
@@ -62,7 +61,7 @@ class DocumentChannelParent final : public ADocumentChannelBridge,
     }
   }
 
-  ProcessId OtherPid() const override { return IProtocol::OtherPid(); }
+  virtual ProcessId OtherPid() const override { return IProtocol::OtherPid(); }
 
   RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
   RedirectToRealChannel(
@@ -70,7 +69,7 @@ class DocumentChannelParent final : public ADocumentChannelBridge,
           aStreamFilterEndpoints,
       uint32_t aRedirectFlags, uint32_t aLoadFlags) override;
 
-  virtual ~DocumentChannelParent();
+  ~DocumentChannelParent();
 
   RefPtr<DocumentLoadListener> mParent;
 };
