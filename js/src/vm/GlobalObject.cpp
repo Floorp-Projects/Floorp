@@ -379,7 +379,7 @@ bool GlobalObject::resolveConstructor(JSContext* cx,
       // it should be defined.
       if (key == JSProto_SharedArrayBuffer) {
         const JS::RealmCreationOptions& options =
-            cx->realm()->creationOptions();
+            global->realm()->creationOptions();
 
         MOZ_ASSERT(options.getSharedMemoryAndAtomicsEnabled(),
                    "shouldn't be defining SharedArrayBuffer if shared memory "

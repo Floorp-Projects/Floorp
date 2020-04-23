@@ -905,15 +905,31 @@ static const JSStdName builtin_property_names[] = {
 
     {0, JSProto_LIMIT}};
 
-static bool SkipUneval(JSContext* cx, jsid id) {
+static bool SkipUneval(jsid id, JSContext* cx) {
   return !cx->realm()->creationOptions().getToSourceEnabled() &&
          id == NameToId(cx->names().uneval);
 }
 
+static bool SkipSharedArrayBufferConstructor(JSProtoKey key,
+                                             GlobalObject* global) {
+  if (key != JSProto_SharedArrayBuffer) {
+    return false;
+  }
+
+  const JS::RealmCreationOptions& options = global->realm()->creationOptions();
+  MOZ_ASSERT(options.getSharedMemoryAndAtomicsEnabled(),
+             "shouldn't contemplate defining SharedArrayBuffer if shared "
+             "memory is disabled");
+
+  // On the web, it isn't presently possible to expose the global
+  // "SharedArrayBuffer" property unless the page is cross-site-isolated.  Only
+  // define this constructor if an option on the realm indicates that it should
+  // be defined.
+  return !options.defineSharedArrayBufferConstructor();
+}
+
 JS_PUBLIC_API bool JS_ResolveStandardClass(JSContext* cx, HandleObject obj,
                                            HandleId id, bool* resolved) {
-  const JSStdName* stdnm;
-
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(obj, id);
@@ -939,35 +955,39 @@ JS_PUBLIC_API bool JS_ResolveStandardClass(JSContext* cx, HandleObject obj,
     return GlobalObject::maybeResolveGlobalThis(cx, global, resolved);
   }
 
-  /* Try for class constructors/prototypes named by well-known atoms. */
-  stdnm = LookupStdName(cx->names(), idAtom, standard_class_names);
-
-  /* Try less frequently used top-level functions and constants. */
-  if (!stdnm) {
-    stdnm = LookupStdName(cx->names(), idAtom, builtin_property_names);
-  }
-
-  if (stdnm && GlobalObject::skipDeselectedConstructor(cx, stdnm->key)) {
-    stdnm = nullptr;
-  }
-  if (stdnm && SkipUneval(cx, id)) {
-    stdnm = nullptr;
-  }
-
-  // If this class is anonymous, then it doesn't exist as a global
-  // property, so we won't resolve anything.
-  JSProtoKey key = stdnm ? stdnm->key : JSProto_Null;
-  if (key != JSProto_Null) {
-    const JSClass* clasp = ProtoKeyToClass(key);
-    if (!clasp || clasp->specShouldDefineConstructor()) {
-      if (!GlobalObject::ensureConstructor(cx, global, key)) {
-        return false;
+  do {
+    // Try for class constructors/prototypes named by well-known atoms.
+    const JSStdName* stdnm =
+        LookupStdName(cx->names(), idAtom, standard_class_names);
+    if (!stdnm) {
+      // Try less frequently used top-level functions and constants.
+      stdnm = LookupStdName(cx->names(), idAtom, builtin_property_names);
+      if (!stdnm) {
+        break;
       }
-
-      *resolved = true;
-      return true;
     }
-  }
+
+    if (GlobalObject::skipDeselectedConstructor(cx, stdnm->key) ||
+        SkipUneval(id, cx)) {
+      break;
+    }
+
+    if (JSProtoKey key = stdnm->key; key != JSProto_Null) {
+      // If this class is anonymous (or it's "SharedArrayBuffer" but that global
+      // constructor isn't supposed to be defined), then it doesn't exist as a
+      // global property, so we won't resolve anything.
+      const JSClass* clasp = ProtoKeyToClass(key);
+      if ((!clasp || clasp->specShouldDefineConstructor()) &&
+          !SkipSharedArrayBufferConstructor(key, global)) {
+        if (!GlobalObject::ensureConstructor(cx, global, key)) {
+          return false;
+        }
+
+        *resolved = true;
+        return true;
+      }
+    }
+  } while (false);
 
   // There is no such property to resolve. An ordinary resolve hook would
   // just return true at this point. But the global object is special in one
@@ -1034,14 +1054,15 @@ static bool EnumerateStandardClassesInTable(JSContext* cx,
     }
 
     if (const JSClass* clasp = ProtoKeyToClass(key)) {
-      if (!clasp->specShouldDefineConstructor()) {
+      if (!clasp->specShouldDefineConstructor() ||
+          SkipSharedArrayBufferConstructor(key, global)) {
         continue;
       }
     }
 
     jsid id = NameToId(AtomStateOffsetToName(cx->names(), table[i].atomOffset));
 
-    if (SkipUneval(cx, id)) {
+    if (SkipUneval(id, cx)) {
       continue;
     }
 
@@ -1158,7 +1179,12 @@ JS_PUBLIC_API JSProtoKey JS_IdToProtoKey(JSContext* cx, HandleId id) {
     return JSProto_Null;
   }
 
-  if (SkipUneval(cx, id)) {
+  if (SkipSharedArrayBufferConstructor(stdnm->key, cx->global())) {
+    MOZ_ASSERT(id == NameToId(cx->names().SharedArrayBuffer));
+    return JSProto_Null;
+  }
+
+  if (SkipUneval(id, cx)) {
     return JSProto_Null;
   }
 
