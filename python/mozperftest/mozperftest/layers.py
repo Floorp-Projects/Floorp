@@ -52,6 +52,9 @@ class Layer:
     def warning(self, msg, name="mozperftest", **kwargs):
         self.log(logging.WARNING, name, kwargs, msg)
 
+    def error(self, msg, name="mozperftest", **kwargs):
+        self.log(logging.ERROR, name, kwargs, msg)
+
     def __enter__(self):
         self.setup()
         return self
