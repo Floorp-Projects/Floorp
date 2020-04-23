@@ -8,11 +8,11 @@ extern crate smallvec;
 
 use hashbrown::hash_map::Entry;
 use hashbrown::CollectionAllocErr;
-#[cfg(feature = "known_system_malloc")]
-use hashglobe::alloc;
 use smallvec::Array;
 use smallvec::SmallVec;
-use std::alloc::Layout;
+use std::alloc::{self, Layout};
+use std::mem;
+use std::ptr::copy_nonoverlapping;
 use std::vec::Vec;
 
 pub trait FallibleVec<T> {
@@ -66,25 +66,29 @@ where
 impl<T> FallibleVec<T> for Vec<T> {
     #[inline(always)]
     fn try_push(&mut self, val: T) -> Result<(), CollectionAllocErr> {
-        #[cfg(feature = "known_system_malloc")]
-        {
-            if self.capacity() == self.len() {
-                try_double_vec(self)?;
-                debug_assert!(self.capacity() > self.len());
-            }
+        if self.capacity() == self.len() {
+            try_double_vec(self)?;
+            debug_assert!(self.capacity() > self.len());
         }
         self.push(val);
         Ok(())
     }
 }
 
+/// FIXME: use `Layout::array` when it’s stable https://github.com/rust-lang/rust/issues/55724
+fn layout_array<T>(n: usize) -> Result<Layout, CollectionAllocErr> {
+    let size = n.checked_mul(mem::size_of::<T>())
+        .ok_or(CollectionAllocErr::CapacityOverflow)?;
+    let align = std::mem::align_of::<T>();
+    Layout::from_size_align(size, align)
+        .map_err(|_| CollectionAllocErr::CapacityOverflow)
+}
+
 // Double the capacity of |vec|, or fail to do so due to lack of memory.
 // Returns Ok(()) on success, Err(..) on failure.
-#[cfg(feature = "known_system_malloc")]
 #[inline(never)]
 #[cold]
 fn try_double_vec<T>(vec: &mut Vec<T>) -> Result<(), CollectionAllocErr> {
-    use std::mem;
 
     let old_ptr = vec.as_mut_ptr();
     let old_len = vec.len();
@@ -98,23 +102,19 @@ fn try_double_vec<T>(vec: &mut Vec<T>) -> Result<(), CollectionAllocErr> {
             .ok_or(CollectionAllocErr::CapacityOverflow)?
     };
 
-    let new_size_bytes = new_cap
-        .checked_mul(mem::size_of::<T>())
-        .ok_or(CollectionAllocErr::CapacityOverflow)?;
-
-    let layout = Layout::from_size_align(new_size_bytes, std::mem::align_of::<T>())
-        .map_err(|_| CollectionAllocErr::CapacityOverflow)?;
+    let old_layout = layout_array::<T>(old_cap)?;
+    let new_layout = layout_array::<T>(new_cap)?;
 
     let new_ptr = unsafe {
         if old_cap == 0 {
-            alloc::alloc(new_size_bytes, 0)
+            alloc::alloc(new_layout)
         } else {
-            alloc::realloc(old_ptr as *mut u8, new_size_bytes)
+            alloc::realloc(old_ptr as *mut u8, old_layout, new_layout.size())
         }
     };
 
     if new_ptr.is_null() {
-        return Err(CollectionAllocErr::AllocErr { layout });
+        return Err(CollectionAllocErr::AllocErr { layout: new_layout });
     }
 
     let new_vec = unsafe { Vec::from_raw_parts(new_ptr as *mut T, old_len, new_cap) };
@@ -129,12 +129,9 @@ fn try_double_vec<T>(vec: &mut Vec<T>) -> Result<(), CollectionAllocErr> {
 impl<T: Array> FallibleVec<T::Item> for SmallVec<T> {
     #[inline(always)]
     fn try_push(&mut self, val: T::Item) -> Result<(), CollectionAllocErr> {
-        #[cfg(feature = "known_system_malloc")]
-        {
-            if self.capacity() == self.len() {
-                try_double_small_vec(self)?;
-                debug_assert!(self.capacity() > self.len());
-            }
+        if self.capacity() == self.len() {
+            try_double_small_vec(self)?;
+            debug_assert!(self.capacity() > self.len());
         }
         self.push(val);
         Ok(())
@@ -143,16 +140,12 @@ impl<T: Array> FallibleVec<T::Item> for SmallVec<T> {
 
 // Double the capacity of |svec|, or fail to do so due to lack of memory.
 // Returns Ok(()) on success, Err(..) on failure.
-#[cfg(feature = "known_system_malloc")]
 #[inline(never)]
 #[cold]
 fn try_double_small_vec<T>(svec: &mut SmallVec<T>) -> Result<(), CollectionAllocErr>
 where
     T: Array,
 {
-    use std::mem;
-    use std::ptr::copy_nonoverlapping;
-
     let old_ptr = svec.as_mut_ptr();
     let old_len = svec.len();
 
@@ -167,36 +160,28 @@ where
 
     // This surely shouldn't fail, if |old_cap| was previously accepted as a
     // valid value.  But err on the side of caution.
-    let old_size_bytes = old_cap
-        .checked_mul(mem::size_of::<T>())
-        .ok_or(CollectionAllocErr::CapacityOverflow)?;
-
-    let new_size_bytes = new_cap
-        .checked_mul(mem::size_of::<T>())
-        .ok_or(CollectionAllocErr::CapacityOverflow)?;
-
-    let layout = Layout::from_size_align(new_size_bytes, std::mem::align_of::<T>())
-        .map_err(|_| CollectionAllocErr::CapacityOverflow)?;
+    let old_layout = layout_array::<T>(old_cap)?;
+    let new_layout = layout_array::<T>(new_cap)?;
 
     let new_ptr;
     if svec.spilled() {
         // There's an old block to free, and, presumably, old contents to
         // copy.  realloc takes care of both aspects.
         unsafe {
-            new_ptr = alloc::realloc(old_ptr as *mut u8, new_size_bytes);
+            new_ptr = alloc::realloc(old_ptr as *mut u8, old_layout, new_layout.size());
         }
     } else {
         // There's no old block to free.  There may be old contents to copy.
         unsafe {
-            new_ptr = alloc::alloc(new_size_bytes, 0);
-            if !new_ptr.is_null() && old_size_bytes > 0 {
-                copy_nonoverlapping(old_ptr as *const u8, new_ptr as *mut u8, old_size_bytes);
+            new_ptr = alloc::alloc(new_layout);
+            if !new_ptr.is_null() && old_layout.size() > 0 {
+                copy_nonoverlapping(old_ptr as *const u8, new_ptr as *mut u8, old_layout.size());
             }
         }
     }
 
     if new_ptr.is_null() {
-        return Err(CollectionAllocErr::AllocErr { layout });
+        return Err(CollectionAllocErr::AllocErr { layout: new_layout });
     }
 
     let new_vec = unsafe { Vec::from_raw_parts(new_ptr as *mut T::Item, old_len, new_cap) };
