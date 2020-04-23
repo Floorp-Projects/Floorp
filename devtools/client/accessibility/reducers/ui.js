@@ -119,7 +119,7 @@ function onAudit(state, { response: ancestries, error }) {
 
 function onHighlight(state, { accessible, response: ancestry, error }) {
   if (error) {
-    console.warn("Error fetching ancestry", accessible, error);
+    console.warn("Error fetching ancestry", error);
     return state;
   }
 
@@ -129,7 +129,7 @@ function onHighlight(state, { accessible, response: ancestry, error }) {
 
 function onSelect(state, { accessible, response: ancestry, error }) {
   if (error) {
-    console.warn("Error fetching ancestry", accessible, error);
+    console.warn("Error fetching ancestry", error);
     return state;
   }
 
