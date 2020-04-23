@@ -29,8 +29,8 @@ const HeadersPanel = createFactory(
 const WebSocketsPanel = createFactory(
   require("devtools/client/netmonitor/src/components/websockets/WebSocketsPanel")
 );
-const ParamsPanel = createFactory(
-  require("devtools/client/netmonitor/src/components/request-details/ParamsPanel")
+const RequestPanel = createFactory(
+  require("devtools/client/netmonitor/src/components/request-details/RequestPanel")
 );
 const CachePanel = createFactory(
   require("devtools/client/netmonitor/src/components/request-details/CachePanel")
@@ -53,7 +53,7 @@ const CACHE_TITLE = L10N.getStr("netmonitor.tab.cache");
 const COOKIES_TITLE = L10N.getStr("netmonitor.tab.cookies");
 const HEADERS_TITLE = L10N.getStr("netmonitor.tab.headers");
 const MESSAGES_TITLE = L10N.getStr("netmonitor.tab.messages");
-const PARAMS_TITLE = L10N.getStr("netmonitor.tab.params");
+const REQUEST_TITLE = L10N.getStr("netmonitor.tab.request");
 const RESPONSE_TITLE = L10N.getStr("netmonitor.tab.response");
 const SECURITY_TITLE = L10N.getStr("netmonitor.tab.security");
 const STACK_TRACE_TITLE = L10N.getStr("netmonitor.tab.stackTrace");
@@ -179,11 +179,11 @@ class TabboxPanel extends Component {
       ),
       TabPanel(
         {
-          id: PANELS.PARAMS,
-          title: PARAMS_TITLE,
+          id: PANELS.REQUEST,
+          title: REQUEST_TITLE,
           className: "panel-with-code",
         },
-        ParamsPanel({
+        RequestPanel({
           connector,
           openLink,
           request,

@@ -285,7 +285,7 @@ add_task(async function() {
   }
 
   async function testParamsTab() {
-    const tabpanel = await selectTab(PANELS.PARAMS, 2);
+    const tabpanel = await selectTab(PANELS.REQUEST, 2);
 
     is(
       tabpanel.querySelectorAll(".panel-container").length,
