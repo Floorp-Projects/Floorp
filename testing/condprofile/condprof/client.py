@@ -38,6 +38,10 @@ class ProfileNotFoundError(Exception):
     pass
 
 
+class RetriesError(Exception):
+    pass
+
+
 def _check_profile(profile_dir):
     """Checks for prefs we need to remove or set.
     """
@@ -66,6 +70,22 @@ def _check_profile(profile_dir):
 
     _clean_pref_file("prefs.js")
     _clean_pref_file("user.js")
+
+
+def _retries(callable, onerror=None):
+    retries = 0
+    while retries < RETRIES:
+        try:
+            return callable()
+        except Exception as e:
+            if onerror is not None:
+                onerror(e)
+            logger.info("Failed, retrying")
+            retries += 1
+            time.sleep(RETRY_PAUSE)
+    # If we reach that point, it means all attempts failed
+    logger.error("All attempt failed")
+    raise RetriesError()
 
 
 def get_profile(
@@ -108,56 +128,54 @@ def get_profile(
 
     downloaded_archive = os.path.join(download_dir, filename)
     logger.info("Downloaded archive path: %s" % downloaded_archive)
-    retries = 0
 
-    while retries < RETRIES:
+    def _get_profile():
+        logger.info("Getting %s" % url)
         try:
-            logger.info("Getting %s" % url)
+            archive = download_file(url, target=downloaded_archive)
+        except ArchiveNotFound:
+            raise ProfileNotFoundError(url)
+
+        try:
+            with tarfile.open(archive, "r:gz") as tar:
+                logger.info("Extracting the tarball content in %s" % target_dir)
+                size = len(list(tar))
+                with progress.Bar(expected_size=size) as bar:
+
+                    def _extract(self, *args, **kw):
+                        if not TASK_CLUSTER:
+                            bar.show(bar.last_progress + 1)
+                        return self.old(*args, **kw)
+
+                    tar.old = tar.extract
+                    tar.extract = functools.partial(_extract, tar)
+                    tar.extractall(target_dir)
+        except (OSError, tarfile.ReadError) as e:
+            logger.info("Failed to extract the tarball")
+            if download_cache and os.path.exists(archive):
+                logger.info("Removing cached file to attempt a new download")
+                os.remove(archive)
+            raise ProfileNotFoundError(str(e))
+        finally:
+            if not download_cache:
+                shutil.rmtree(download_dir)
+
+        _check_profile(target_dir)
+        logger.info("Success, we have a profile to work with")
+        return target_dir
+
+    def onerror(error):
+        logger.info("Failed to get the profile.")
+        if os.path.exists(downloaded_archive):
             try:
-                archive = download_file(url, target=downloaded_archive)
-            except ArchiveNotFound:
-                raise ProfileNotFoundError(url)
+                os.remove(downloaded_archive)
+            except Exception:
+                logger.error("Could not remove the file")
 
-            try:
-                with tarfile.open(archive, "r:gz") as tar:
-                    logger.info("Extracting the tarball content in %s" % target_dir)
-                    size = len(list(tar))
-                    with progress.Bar(expected_size=size) as bar:
-
-                        def _extract(self, *args, **kw):
-                            if not TASK_CLUSTER:
-                                bar.show(bar.last_progress + 1)
-                            return self.old(*args, **kw)
-
-                        tar.old = tar.extract
-                        tar.extract = functools.partial(_extract, tar)
-                        tar.extractall(target_dir)
-            except (OSError, tarfile.ReadError) as e:
-                logger.info("Failed to extract the tarball")
-                if download_cache and os.path.exists(archive):
-                    logger.info("Removing cached file to attempt a new download")
-                    os.remove(archive)
-                raise ProfileNotFoundError(str(e))
-            finally:
-                if not download_cache:
-                    shutil.rmtree(download_dir)
-
-            _check_profile(target_dir)
-            logger.info("Success, we have a profile to work with")
-            return target_dir
-        except Exception:
-            logger.info("Failed to get the profile.")
-            retries += 1
-            if os.path.exists(downloaded_archive):
-                try:
-                    os.remove(downloaded_archive)
-                except Exception:
-                    logger.error("Could not remove the file")
-            time.sleep(RETRY_PAUSE)
-
-    # If we reach that point, it means all attempts failed
-    logger.error("All attempt failed")
-    raise ProfileNotFoundError(url)
+    try:
+        return _retries(_get_profile, onerror)
+    except Exception:
+        raise ProfileNotFoundError(url)
 
 
 def read_changelog(platform, repo="mozilla-central"):
@@ -166,9 +184,16 @@ def read_changelog(platform, repo="mozilla-central"):
     logger.info("Getting %s" % changelog_url)
     download_dir = tempfile.mkdtemp()
     downloaded_changelog = os.path.join(download_dir, "changelog.json")
+
+    def _get_changelog():
+        try:
+            download_file(changelog_url, target=downloaded_changelog)
+        except ArchiveNotFound:
+            shutil.rmtree(download_dir)
+            raise ProfileNotFoundError(changelog_url)
+        return Changelog(download_dir)
+
     try:
-        download_file(changelog_url, target=downloaded_changelog)
-    except ArchiveNotFound:
-        shutil.rmtree(download_dir)
+        return _retries(_get_changelog)
+    except Exception:
         raise ProfileNotFoundError(changelog_url)
-    return Changelog(download_dir)
