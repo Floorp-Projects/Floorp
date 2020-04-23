@@ -81,6 +81,7 @@ class InstalledAddonDetailsFragment : Fragment() {
         bindSettings(view)
         bindDetails(view)
         bindPermissions(view)
+        bindAllowInPrivateBrowsingSwitch(view)
         bindRemoveButton(view)
     }
 
@@ -211,6 +212,32 @@ class InstalledAddonDetailsFragment : Fragment() {
         }
     }
 
+    private fun bindAllowInPrivateBrowsingSwitch(view: View) {
+        val switch = view.allow_in_private_browsing_switch
+        switch.isChecked = addon.isAllowedInPrivateBrowsing()
+        switch.setOnCheckedChangeListener { v, isChecked ->
+            val addonManager = v.context.components.addonManager
+            switch.isClickable = false
+            view.remove_add_on.isEnabled = false
+            addonManager.setAddonAllowedInPrivateBrowsing(
+                addon,
+                isChecked,
+                onSuccess = {
+                    runIfFragmentIsAttached {
+                        this.addon = it
+                        switch.isClickable = true
+                        view.remove_add_on.isEnabled = true
+                    }
+                },
+                onError = {
+                    runIfFragmentIsAttached {
+                        switch.isClickable = true
+                        view.remove_add_on.isEnabled = true
+                    }
+                }
+            )
+        }
+    }
     private fun bindRemoveButton(view: View) {
         view.remove_add_on.setOnClickListener {
             setAllInteractiveViewsClickable(view, false)
