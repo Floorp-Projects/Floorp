@@ -27,6 +27,8 @@ interface IDBCursor {
     [Throws]
     readonly    attribute any                          primaryKey;
 
+    readonly    attribute IDBRequest                   request;
+
     [Throws]
     IDBRequest update (any value);
 
