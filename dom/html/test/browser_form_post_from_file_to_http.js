@@ -167,32 +167,10 @@ async function runTest(doNewTab) {
   });
 }
 
-if (!SpecialPowers.useRemoteSubframes) {
-  add_task(async function runWithAllowLinked() {
-    // Set prefs to ensure file content process, to allow linked web content in
-    // file URI process and allow more that one file content process.
-    await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.tabs.remote.separateFileUriProcess", true],
-        ["browser.tabs.remote.allowLinkedWebInFileUriProcess", true],
-        ["browser.tabs.documentchannel", false],
-      ],
-    });
-
-    await runTest(false);
-    await runTest(true);
-
-    await SpecialPowers.popPrefEnv();
-  });
-}
-
 add_task(async function runWithDocumentChannel() {
-  // Set prefs to use documentchannel instead.
+  // Set prefs to use documentchannel.
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.tabs.remote.allowLinkedWebInFileUriProcess", false],
-      ["browser.tabs.documentchannel", true],
-    ],
+    set: [["browser.tabs.documentchannel", true]],
   });
 
   await runTest(false);
