@@ -500,7 +500,7 @@ class Toolbar extends Component {
         tooltip: L10N.getStr("netmonitor.toolbar.enablePersistentLogs.tooltip"),
         onClick: () => togglePersistentLogs(),
       }),
-      hr(),
+      hr({ key: "netmonitor-settings-har-divider" }),
       MenuItem({
         key: "request-list-context-import-har",
         className: "menu-item netmonitor-settings-import-har-item",
