@@ -12,6 +12,8 @@ body {
    font-family: "Segoe UI", sans-serif;
 }
 
+/* This is an <img> rather than using background-image because IE8
+ * does not support background-size. */
 #background {
   min-height: 100%;
   min-width: 100%;
