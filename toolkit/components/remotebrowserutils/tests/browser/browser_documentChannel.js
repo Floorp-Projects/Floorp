@@ -11,24 +11,10 @@ const DATA_URL = "data:text/html,Hello%2C World!";
 const DATA_STRING = "Hello, World!";
 
 const DOCUMENT_CHANNEL_PREF = "browser.tabs.documentchannel";
-const LINKED_WEB_IN_FILE_PREF =
-  "browser.tabs.remote.allowLinkedWebInFileUriProcess";
 
 async function setPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [DOCUMENT_CHANNEL_PREF, true],
-      [LINKED_WEB_IN_FILE_PREF, false],
-    ],
-  });
-}
-
-async function unsetPref() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      [DOCUMENT_CHANNEL_PREF, false],
-      [LINKED_WEB_IN_FILE_PREF, true],
-    ],
+    set: [[DOCUMENT_CHANNEL_PREF, true]],
   });
 }
 
@@ -234,63 +220,6 @@ async function testLoadAndRedirect(
     }
   );
 }
-
-add_task(async function test_disabled() {
-  if (gFissionBrowser) {
-    info(
-      `Skipping test. Cannot disable ${DOCUMENT_CHANNEL_PREF} with Fission.`
-    );
-    return;
-  }
-
-  await unsetPref();
-
-  // With the pref disabled, file URIs should successfully POST, but remain in
-  // the 'file' process.
-  info("DISABLED -- FILE -- raw URI load");
-  let resp = await postFrom(FILE_DUMMY, PRINT_POSTDATA);
-  is(resp.remoteType, E10SUtils.FILE_REMOTE_TYPE, "no process switch");
-  is(resp.location, PRINT_POSTDATA, "correct location");
-  is(resp.body, "initialRemoteType=file", "correct POST body");
-
-  info("DISABLED -- FILE -- 307-redirect URI load");
-  let resp307 = await postFrom(FILE_DUMMY, add307(PRINT_POSTDATA));
-  is(resp307.remoteType, E10SUtils.FILE_REMOTE_TYPE, "no process switch");
-  is(resp307.location, PRINT_POSTDATA, "correct location");
-  is(resp307.body, "initialRemoteType=file", "correct POST body");
-
-  // With the pref disabled, extension URIs should fail to POST, but correctly
-  // switch processes.
-  await withExtensionDummy(async extOrigin => {
-    info("DISABLED -- EXTENSION -- raw URI load");
-    let respExt = await postFrom(extOrigin + "dummy.html", PRINT_POSTDATA);
-    ok(E10SUtils.isWebRemoteType(respExt.remoteType), "process switch");
-    is(respExt.location, PRINT_POSTDATA, "correct location");
-    is(respExt.body, "", "no POST body");
-
-    info("DISABLED -- EXTENSION -- extension-redirect URI load");
-    let respExtRedirect = await postFrom(
-      extOrigin + "redirect.html",
-      PRINT_POSTDATA
-    );
-    ok(E10SUtils.isWebRemoteType(respExtRedirect.remoteType), "process switch");
-    is(
-      respExtRedirect.location,
-      PRINT_POSTDATA + "?redirected",
-      "correct location"
-    );
-    is(respExtRedirect.body, "redirected", "no POST body");
-
-    info("DISABLED -- EXTENSION -- 307-redirect URI load");
-    let respExt307 = await postFrom(
-      extOrigin + "dummy.html",
-      add307(PRINT_POSTDATA)
-    );
-    ok(E10SUtils.isWebRemoteType(respExt307.remoteType), "process switch");
-    is(respExt307.location, PRINT_POSTDATA, "correct location");
-    is(respExt307.body, "", "no POST body");
-  });
-});
 
 add_task(async function test_enabled() {
   await setPref();

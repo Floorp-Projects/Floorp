@@ -2719,15 +2719,6 @@ pref("browser.tabs.remote.separateFileUriProcess", true);
 // web process when running with fission.
 pref("browser.tabs.remote.dataUriInDefaultWebProcess", false);
 
-// Pref that enables top level web content pages that are opened from file://
-// URI pages to run in the file content process.
-// This has been added in case breaking any window references between these
-// sorts of pages, which we have to do when we run them in the normal web
-// content process, causes compatibility issues.
-//
-// This is going away and for now is disabled.
-pref("browser.tabs.remote.allowLinkedWebInFileUriProcess", false);
-
 // This pref will cause assertions when a remoteType triggers a process switch
 // to a new remoteType it should not be able to trigger.
 pref("browser.tabs.remote.enforceRemoteTypeRestrictions", false);
