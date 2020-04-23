@@ -45,7 +45,9 @@ class RequestListContextMenu {
     this.props = props;
   }
 
-  createCopySubMenu(clickedRequest, requests, connector) {
+  createCopySubMenu(clickedRequest, requests) {
+    const { connector } = this.props;
+
     const {
       id,
       formDataSections,
@@ -267,11 +269,7 @@ class RequestListContextMenu {
       url,
     } = clickedRequest;
 
-    const copySubMenu = this.createCopySubMenu(
-      clickedRequest,
-      requests,
-      connector
-    );
+    const copySubMenu = this.createCopySubMenu(clickedRequest, requests);
 
     const menu = [];
 
