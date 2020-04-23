@@ -9,10 +9,10 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
+import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry
 
 class UriOpenedObserver(
     private val owner: LifecycleOwner,
@@ -25,7 +25,7 @@ class UriOpenedObserver(
         activity,
         activity.components.core.sessionManager,
         activity.metrics,
-        activity.components.core.ads
+        activity.components.core.adsTelemetry
     )
 
     @VisibleForTesting
