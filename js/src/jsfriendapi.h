@@ -2168,7 +2168,7 @@ static MOZ_ALWAYS_INLINE shadow::Function* FunctionObjectToShadowFunction(
   return reinterpret_cast<shadow::Function*>(fun);
 }
 
-/* Statically asserted in JSFunction.h. */
+/* Statically asserted in FunctionFlags.cpp. */
 static const unsigned JS_FUNCTION_INTERPRETED_BITS = 0x0060;
 
 // Return whether the given function object is native.

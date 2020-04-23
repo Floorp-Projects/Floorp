@@ -13,6 +13,7 @@
 #include "gc/Policy.h"
 #include "jit/JitAllocPolicy.h"
 #include "jit/JitContext.h"
+#include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/Printer.h"
 
 namespace js {

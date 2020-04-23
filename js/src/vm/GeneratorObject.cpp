@@ -9,6 +9,7 @@
 #include "js/PropertySpec.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
+#include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/GlobalObject.h"
 #include "vm/JSObject.h"
 #include "vm/PlainObject.h"  // js::PlainObject

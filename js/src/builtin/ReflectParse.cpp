@@ -23,6 +23,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/StableStringChars.h"
 #include "vm/BigIntType.h"
+#include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/JSAtom.h"
 #include "vm/JSObject.h"
 #include "vm/ModuleBuilder.h"  // js::ModuleBuilder

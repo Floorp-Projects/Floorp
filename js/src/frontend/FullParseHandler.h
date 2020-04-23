@@ -13,6 +13,7 @@
 #include <cstddef>  // std::nullptr_t
 #include <string.h>
 
+#include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/ParseNode.h"
 #include "frontend/SharedContext.h"
 #include "frontend/Stencil.h"

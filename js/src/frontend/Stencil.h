@@ -16,22 +16,25 @@
 #include <stdint.h>  // char16_t, uint8_t, uint32_t
 #include <stdlib.h>  // size_t
 
-#include "frontend/AbstractScopePtr.h"   // AbstractScopePtr, ScopeIndex
-#include "frontend/NameAnalysisTypes.h"  // AtomVector
-#include "frontend/ObjLiteral.h"         // ObjLiteralCreationData
-#include "frontend/TypedIndex.h"         // TypedIndex
-#include "gc/Barrier.h"                  // HeapPtr, GCPtrAtom
+#include "frontend/AbstractScopePtr.h"    // AbstractScopePtr, ScopeIndex
+#include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
+#include "frontend/NameAnalysisTypes.h"   // AtomVector
+#include "frontend/ObjLiteral.h"          // ObjLiteralCreationData
+#include "frontend/TypedIndex.h"          // TypedIndex
+#include "gc/Barrier.h"                   // HeapPtr, GCPtrAtom
 #include "gc/Rooting.h"  // HandleAtom, HandleModuleObject, HandleScriptSourceObject, MutableHandleScope
-#include "js/GCVariant.h"    // GC Support for mozilla::Variant
-#include "js/RegExpFlags.h"  // JS::RegExpFlags
-#include "js/RootingAPI.h"   // Handle
-#include "js/TypeDecls.h"    // JSContext,JSAtom,JSFunction
-#include "js/UniquePtr.h"    // js::UniquePtr
-#include "js/Utility.h"      // JS::FreePolicy, UniqueTwoByteChars
-#include "js/Vector.h"       // js::Vector
-#include "util/Text.h"       // DuplicateString
-#include "vm/BigIntType.h"   // ParseBigIntLiteral
-#include "vm/JSFunction.h"   // FunctionFlags
+#include "js/GCVariant.h"              // GC Support for mozilla::Variant
+#include "js/RegExpFlags.h"            // JS::RegExpFlags
+#include "js/RootingAPI.h"             // Handle
+#include "js/TypeDecls.h"              // JSContext,JSAtom,JSFunction
+#include "js/UniquePtr.h"              // js::UniquePtr
+#include "js/Utility.h"                // JS::FreePolicy, UniqueTwoByteChars
+#include "js/Vector.h"                 // js::Vector
+#include "util/Text.h"                 // DuplicateString
+#include "vm/BigIntType.h"             // ParseBigIntLiteral
+#include "vm/FunctionFlags.h"          // FunctionFlags
+#include "vm/GeneratorAndAsyncKind.h"  // GeneratorKind, FunctionAsyncKind
+#include "vm/JSFunction.h"             // FunctionFlags
 #include "vm/JSScript.h"  // GeneratorKind, FunctionAsyncKind, FieldInitializers
 #include "vm/Runtime.h"   // ReportOutOfMemory
 #include "vm/Scope.h"  // BaseScopeData, FunctionScope, LexicalScope, VarScope, GlobalScope, EvalScope, ModuleScope
@@ -53,8 +56,6 @@ class FunctionBox;
 // the frontend.
 //
 // Renaming to use the term stencil more broadly is still in progress.
-
-enum class FunctionSyntaxKind : uint8_t;
 
 // Arbitrary typename to disambiguate TypedIndexes;
 class FunctionIndexType;

@@ -11,6 +11,7 @@
 #include "builtin/ModuleObject.h"          // ModuleObject
 #include "frontend/BCEScriptStencil.h"     // BCEScriptStencil
 #include "frontend/BytecodeEmitter.h"      // BytecodeEmitter
+#include "frontend/FunctionSyntaxKind.h"   // FunctionSyntaxKind
 #include "frontend/ModuleSharedContext.h"  // ModuleSharedContext
 #include "frontend/NameAnalysisTypes.h"    // NameLocation
 #include "frontend/NameOpEmitter.h"        // NameOpEmitter

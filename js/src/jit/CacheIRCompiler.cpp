@@ -23,6 +23,7 @@
 #include "proxy/Proxy.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/BigIntType.h"
+#include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/GeneratorObject.h"
 
 #include "builtin/Boolean-inl.h"

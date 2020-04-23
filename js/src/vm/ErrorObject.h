@@ -22,6 +22,7 @@
 #include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
 #include "js/Value.h"
+#include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/JSObject.h"
 #include "vm/NativeObject.h"
 #include "vm/Shape.h"
