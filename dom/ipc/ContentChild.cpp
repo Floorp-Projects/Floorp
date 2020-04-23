@@ -2949,23 +2949,25 @@ bool ContentChild::DeallocPContentPermissionRequestChild(
 
 PWebBrowserPersistDocumentChild*
 ContentChild::AllocPWebBrowserPersistDocumentChild(
-    PBrowserChild* aBrowser, const MaybeDiscarded<BrowsingContext>& aContext) {
+    PBrowserChild* aBrowser, const uint64_t& aOuterWindowID) {
   return new WebBrowserPersistDocumentChild();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvPWebBrowserPersistDocumentConstructor(
     PWebBrowserPersistDocumentChild* aActor, PBrowserChild* aBrowser,
-    const MaybeDiscarded<BrowsingContext>& aContext) {
+    const uint64_t& aOuterWindowID) {
   if (NS_WARN_IF(!aBrowser)) {
     return IPC_FAIL_NO_REASON(this);
   }
-
-  if (aContext.IsNullOrDiscarded()) {
-    aActor->SendInitFailure(NS_ERROR_NO_CONTENT);
-    return IPC_OK();
+  nsCOMPtr<Document> rootDoc =
+      static_cast<BrowserChild*>(aBrowser)->GetTopLevelDocument();
+  nsCOMPtr<Document> foundDoc;
+  if (aOuterWindowID) {
+    foundDoc = nsContentUtils::GetSubdocumentWithOuterWindowId(rootDoc,
+                                                               aOuterWindowID);
+  } else {
+    foundDoc = rootDoc;
   }
-
-  nsCOMPtr<Document> foundDoc = aContext.get()->GetDocument();
 
   if (!foundDoc) {
     aActor->SendInitFailure(NS_ERROR_NO_CONTENT);

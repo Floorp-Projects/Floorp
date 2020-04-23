@@ -219,7 +219,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
              nsIWebProgressListener* aProgressListener,
              mozilla::ErrorResult& aRv);
 
-  void StartPersistence(BrowsingContext* aContext,
+  void StartPersistence(uint64_t aOuterWindowID,
                         nsIWebBrowserPersistDocumentReceiver* aRecv,
                         mozilla::ErrorResult& aRv);
 

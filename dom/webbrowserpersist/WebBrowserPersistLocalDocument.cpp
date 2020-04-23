@@ -7,7 +7,6 @@
 #include "WebBrowserPersistDocumentParent.h"
 
 #include "mozilla/dom/Attr.h"
-#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLAnchorElement.h"
@@ -288,17 +287,12 @@ nsresult ResourceReader::OnWalkSubframe(nsINode* aNode) {
   RefPtr<nsFrameLoader> loader = loaderOwner->GetFrameLoader();
   NS_ENSURE_STATE(loader);
 
-  RefPtr<dom::BrowsingContext> context = loader->GetBrowsingContext();
-  NS_ENSURE_STATE(context);
-
-  if (loader->IsRemoteFrame()) {
-    mVisitor->VisitBrowsingContext(mParent, context);
-    return NS_OK;
-  }
-
   ++mOutstandingDocuments;
+  // Pass in 0 as the outer window ID so that we start
+  // persisting the root of this subframe, and not some other
+  // subframe child of this subframe.
   ErrorResult err;
-  loader->StartPersistence(context, this, err);
+  loader->StartPersistence(0, this, err);
   nsresult rv = err.StealNSResult();
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_NO_CONTENT) {

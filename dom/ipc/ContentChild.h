@@ -216,11 +216,11 @@ class ContentChild final
       const FileDescriptor& aGCLog, const FileDescriptor& aCCLog) override;
 
   PWebBrowserPersistDocumentChild* AllocPWebBrowserPersistDocumentChild(
-      PBrowserChild* aBrowser, const MaybeDiscarded<BrowsingContext>& aContext);
+      PBrowserChild* aBrowser, const uint64_t& aOuterWindowID);
 
   virtual mozilla::ipc::IPCResult RecvPWebBrowserPersistDocumentConstructor(
       PWebBrowserPersistDocumentChild* aActor, PBrowserChild* aBrowser,
-      const MaybeDiscarded<BrowsingContext>& aContext) override;
+      const uint64_t& aOuterWindowID) override;
 
   bool DeallocPWebBrowserPersistDocumentChild(
       PWebBrowserPersistDocumentChild* aActor);
