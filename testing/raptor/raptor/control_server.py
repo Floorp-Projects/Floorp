@@ -214,11 +214,12 @@ def MakeCustomHandlerClass(
             elif data["type"] == "webext_raptor-page-timeout":
                 LOG.info("received " + data["type"] + ": " + str(data["data"]))
 
-                if len(data["data"]) == 2:
+                if len(data["data"]) == 3:
                     data["data"].append("")
                 # pageload test has timed out; record it as a failure
                 self.results_handler.add_page_timeout(
-                    str(data["data"][0]), str(data["data"][1]), dict(data["data"][2])
+                    str(data["data"][0]), str(data["data"][1]), str(data["data"][2]),
+                    dict(data["data"][3])
                 )
             elif data["type"] == "webext_shutdownBrowser":
                 LOG.info("received request to shutdown the browser")

@@ -155,10 +155,13 @@ def main(args=sys.argv[1:]):
             for _page in pages_that_timed_out:
                 message = [
                     ("TEST-UNEXPECTED-FAIL", "test '%s'" % _page["test_name"]),
-                    ("timed out loading test page", _page["url"]),
+                    ("timed out loading test page", "waiting for pending metrics"),
                 ]
                 if _page.get("pending_metrics") is not None:
-                    message.append(("pending metrics", _page["pending_metrics"]))
+                    LOG.warning("page cycle {} has pending metrics: {}".format(
+                        _page["page_cycle"],
+                        _page["pending_metrics"])
+                    )
 
                 LOG.critical(
                     " ".join("%s: %s" % (subject, msg) for subject, msg in message)
