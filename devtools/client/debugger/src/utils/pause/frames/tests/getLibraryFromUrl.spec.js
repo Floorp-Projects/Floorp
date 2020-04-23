@@ -65,8 +65,11 @@ describe("getLibraryFromUrl", () => {
         "https://debugger-example.com/react-dom.production.min.js",
         "https://debugger-react-example.com/react-dom.js",
         "https://debugger-react-example.com/react/react-dom.js",
+        "https://debugger-react-example.com/react-dom-dev.js",
         "/node_modules/react/test.js",
+        "/node_modules/react-dev/test.js",
         "/node_modules/react-dom/test.js",
+        "/node_modules/react-dom-dev/test.js",
       ];
       reactUrlList.forEach(reactUrl => {
         const frame = makeMockFrameWithURL(reactUrl);
