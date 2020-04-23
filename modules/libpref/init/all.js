@@ -1577,11 +1577,6 @@ pref("network.sts.max_time_for_pr_close_during_shutdown", 5000);
 // The value is expected in seconds.
 pref("network.sts.pollable_event_timeout", 6);
 
-// Perform all network access on the socket process.
-// The pref requires "network.sts.socket_process.enable" to be true.
-// Changing these prefs requires a restart.
-pref("network.http.network_access_on_socket_process.enabled", false);
-
 // Enable/disable sni encryption.
 pref("network.security.esni.enabled", false);
 
