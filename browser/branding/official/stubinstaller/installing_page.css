@@ -28,13 +28,13 @@ body {
 }
 
 #header {
-  font-size: 25px;
-  font-weight: 600;
+  font-size: 24px;
+  font-weight: 800;
   margin-top: 0;
 }
 
 #content {
-  font-size: 14px;
+  font-size: 22px;
 }
 
 #installing {
