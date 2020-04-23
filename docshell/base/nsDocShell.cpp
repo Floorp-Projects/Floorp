@@ -7361,9 +7361,13 @@ nsresult nsDocShell::RestoreFromHistory() {
   // But we depend on that device context when adjusting the view size
   // via mContentViewer->SetBounds(newBounds) below. So we need to
   // explicitly tell it to check for changed resolution here.
-  if (presShell &&
-      presShell->GetPresContext()->DeviceContext()->CheckDPIChange()) {
-    presShell->BackingScaleFactorChanged();
+  if (presShell) {
+    RefPtr<nsPresContext> pc = presShell->GetPresContext();
+    if (pc->DeviceContext()->CheckDPIChange()) {
+      presShell->BackingScaleFactorChanged();
+    }
+    // Recompute zoom and text-zoom and such.
+    pc->RecomputeBrowsingContextDependentData();
   }
 
   nsViewManager* newVM = presShell ? presShell->GetViewManager() : nullptr;
