@@ -2507,6 +2507,9 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
   ReportLargeAllocStatus();
   mLargeAllocStatus = LargeAllocStatus::NONE;
 
+  bool isThirdPartyTrackingResourceWindow =
+      nsContentUtils::IsThirdPartyTrackingResourceWindow(newInnerWindow);
+
   // Set the cookie jar settings to the window context.
   if (newInnerWindow) {
     net::CookieJarSettingsArgs cookieJarSettings;
@@ -2516,6 +2519,16 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
     newInnerWindow->GetWindowGlobalChild()
         ->WindowContext()
         ->SetCookieJarSettings(Some(cookieJarSettings));
+
+    newInnerWindow->GetWindowGlobalChild()
+        ->WindowContext()
+        ->SetIsThirdPartyWindow(nsContentUtils::IsThirdPartyWindowOrChannel(
+            newInnerWindow, nullptr, nullptr));
+
+    newInnerWindow->GetWindowGlobalChild()
+        ->WindowContext()
+        ->SetIsThirdPartyTrackingResourceWindow(
+            isThirdPartyTrackingResourceWindow);
   }
 
   mHasStorageAccess = false;
@@ -2539,7 +2552,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
           cookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
           cookieBehavior ==
               nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
-      if (nsContentUtils::IsThirdPartyTrackingResourceWindow(newInnerWindow)) {
+      if (isThirdPartyTrackingResourceWindow) {
         checkStorageAccess = true;
       }
     }
