@@ -45,7 +45,7 @@ class OnboardingPrivateBrowsingViewHolder(
         }
 
         view.description_text_once.text = text
-        view.contentDescription = String.format(text.toString(), view.header_text.text)
+        view.description_text_once.contentDescription = String.format(text.toString(), view.header_text.text)
         view.open_settings_button.setOnClickListener {
             interactor.onOpenSettingsClicked()
         }
