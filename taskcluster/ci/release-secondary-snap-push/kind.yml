@@ -28,7 +28,7 @@ job-defaults:
         implementation: push-snap
         channel:
             by-release-type:
-                release: "beta"
+                release-rc: "beta"
                 default: "mock"
 
 jobs:
