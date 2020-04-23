@@ -6,7 +6,6 @@ package org.mozilla.fenix.home.sessioncontrol
 
 import android.content.Context
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.DrawableRes
 import androidx.annotation.LayoutRes
@@ -18,6 +17,7 @@ import kotlinx.android.synthetic.main.tab_list_row.*
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.components.tips.Tip
+import org.mozilla.fenix.ext.removeAndDisable
 import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.home.Tab
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionHeaderViewHolder
@@ -255,7 +255,7 @@ class SessionControlAdapter(
             (holder as TabViewHolder).updateTab(it.tab)
 
             // Always set the visibility to GONE to avoid the play button sticking around from previous draws
-            holder.play_pause_button.visibility = View.GONE
+            holder.play_pause_button.removeAndDisable()
 
             if (it.shouldUpdateHostname) { holder.updateHostname(it.tab.hostname) }
             if (it.shouldUpdateTitle) {

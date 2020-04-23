@@ -19,6 +19,8 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.loadIntoView
+import org.mozilla.fenix.ext.removeAndDisable
+import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.home.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabSessionInteractor
 
@@ -93,10 +95,10 @@ class TabViewHolder(
 
     internal fun updatePlayPauseButton(mediaState: MediaState.State) {
         with(play_pause_button) {
-            visibility = if (mediaState == MediaState.State.PLAYING || mediaState == MediaState.State.PAUSED) {
-                View.VISIBLE
+            if (mediaState == MediaState.State.PLAYING || mediaState == MediaState.State.PAUSED) {
+                this.showAndEnable()
             } else {
-                View.GONE
+                this.removeAndDisable()
             }
 
             if (mediaState == MediaState.State.PLAYING) {
