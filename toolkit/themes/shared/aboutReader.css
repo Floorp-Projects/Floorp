@@ -15,6 +15,7 @@ body {
   --popup-border: #b5b5b5;
   --font-color: #4c4c4c;
   --icon-fill: #808080;
+  --icon-disabled-fill: #8080807F;
   /* light colours */
 }
 
@@ -26,6 +27,7 @@ body.dark {
   --popup-border: #65646a;
   --font-color: #fff;
   --icon-fill: #fff;
+  --icon-disabled-fill: #ffffff66;
   /* dark colours */
 }
 
@@ -259,6 +261,10 @@ button {
   -moz-context-properties: fill;
   color: var(--font-color);
   fill: var(--icon-fill);
+}
+
+button:disabled {
+  fill: var(--icon-disabled-fill);
 }
 
 .toolbar .button {
