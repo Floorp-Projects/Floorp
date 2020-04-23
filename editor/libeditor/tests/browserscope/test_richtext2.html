@@ -47,6 +47,7 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
   <script type="text/javascript" src="lib/richtext2/richtext2/tests/queryValue.py"></script>
 
   <script type="text/javascript" src="lib/richtext2/currentStatus.js"></script>
+  <script type="text/javascript" src="lib/richtext2/platformFailures.js"></script>
 
   <!-- Do something -->
   <script type="text/javascript">
@@ -206,9 +207,9 @@ http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/u
                     case "div":
                       var row = results[category.id][group][test_id][structure];
                       var testName = [category.id, group, test_id, structure].join("-");
-                      (testName in knownFailures.value ? todo_is : is)(
+                      (testName in knownFailures.value || testName in platformFailures.value ? todo_is : is)(
                         row.valscore, 1, "Browserscope richtext2 value: " + testName);
-                      (testName in knownFailures.select ? todo_is : is)(
+                      (testName in knownFailures.select || testName in platformFailures.select ? todo_is : is)(
                         row.selscore, 1, "Browserscope richtext2 selection: " + testName);
                     }
                   }
