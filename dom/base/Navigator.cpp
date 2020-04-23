@@ -109,8 +109,6 @@
 #include "mozilla/webgpu/Instance.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 
-#include "mozilla/intl/LocaleService.h"
-
 namespace mozilla {
 namespace dom {
 
@@ -317,13 +315,7 @@ void Navigator::GetAppName(nsAString& aAppName, CallerType aCallerType) const {
  *
  * "en", "en-US" and "i-cherokee" and "" are valid languages tokens.
  *
- * If there is no valid language, the value of getWebExposedLocales is
- * used to ensure that locale spoofing is honored and to reduce
- * fingerprinting.
- *
- * See RFC 7231, Section 9.7 "Browser Fingerprinting" and
- * RFC 2616, Section 15.1.4 "Privacy Issues Connected to Accept Headers"
- * for more detail.
+ * An empty array will be returned if there is no valid languages.
  */
 /* static */
 void Navigator::GetAcceptLanguages(nsTArray<nsString>& aLanguages) {
@@ -369,29 +361,29 @@ void Navigator::GetAcceptLanguages(nsTArray<nsString>& aLanguages) {
 
     aLanguages.AppendElement(lang);
   }
-  if (aLanguages.Length() == 0) {
-    nsTArray<nsCString> locales;
-    mozilla::intl::LocaleService::GetInstance()->GetWebExposedLocales(locales);
-    aLanguages.AppendElement(NS_ConvertUTF8toUTF16(locales[0]));
-  }
 }
 
 /**
- * Returns the first language from GetAcceptLanguages.
+ * Do not use UI language (chosen app locale) here but the first value set in
+ * the Accept Languages header, see ::GetAcceptLanguages().
  *
- * Full details above in GetAcceptLanguages.
+ * See RFC 2616, Section 15.1.4 "Privacy Issues Connected to Accept Headers" for
+ * the reasons why.
  */
 void Navigator::GetLanguage(nsAString& aLanguage) {
   nsTArray<nsString> languages;
   GetLanguages(languages);
-  MOZ_ASSERT(languages.Length() >= 1);
-  aLanguage.Assign(languages[0]);
+  if (languages.Length() >= 1) {
+    aLanguage.Assign(languages[0]);
+  } else {
+    aLanguage.Truncate();
+  }
 }
 
 void Navigator::GetLanguages(nsTArray<nsString>& aLanguages) {
   GetAcceptLanguages(aLanguages);
 
-  // The returned value is cached by the binding code. The window listens to the
+  // The returned value is cached by the binding code. The window listen to the
   // accept languages change and will clear the cache when needed. It has to
   // take care of dispatching the DOM event already and the invalidation and the
   // event has to be timed correctly.
