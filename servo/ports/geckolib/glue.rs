@@ -349,9 +349,7 @@ pub extern "C" fn Servo_TraverseSubtree(
 #[no_mangle]
 pub extern "C" fn Servo_MaybeGCRuleTree(raw_data: &RawServoStyleSet) {
     let per_doc_data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
-    unsafe {
-        per_doc_data.stylist.rule_tree().maybe_gc();
-    }
+    per_doc_data.stylist.rule_tree().maybe_gc();
 }
 
 #[no_mangle]
