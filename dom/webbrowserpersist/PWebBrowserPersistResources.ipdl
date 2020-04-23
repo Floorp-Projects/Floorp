@@ -5,8 +5,6 @@
 
 include protocol PWebBrowserPersistDocument;
 
-using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
-
 namespace mozilla {
 
 // == nsIWebBrowserPersistResourceVisitor
@@ -20,8 +18,6 @@ parent:
   // receiver will have to wait for it to enter the MAIN state
   // before exposing it with a visitDocument call.
   async VisitDocument(PWebBrowserPersistDocument aSubDocument);
-
-  async VisitBrowsingContext(MaybeDiscardedBrowsingContext aContext);
 
   // This reflects the endVisit method.
   async __delete__(nsresult aStatus);

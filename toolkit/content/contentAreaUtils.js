@@ -84,7 +84,7 @@ function saveURL(
 
 // Save the current document inside any browser/frame-like element,
 // whether in-process or out-of-process.
-function saveBrowser(aBrowser, aSkipPrompt, aBrowsingContext = null) {
+function saveBrowser(aBrowser, aSkipPrompt, aOuterWindowID = 0) {
   if (!aBrowser) {
     throw new Error("Must have a browser when calling saveBrowser");
   }
@@ -119,7 +119,7 @@ function saveBrowser(aBrowser, aSkipPrompt, aBrowsingContext = null) {
     return;
   }
   let stack = Components.stack.caller;
-  persistable.startPersistence(aBrowsingContext, {
+  persistable.startPersistence(aOuterWindowID, {
     onDocumentReady(document) {
       if (!document || !(document instanceof Ci.nsIWebBrowserPersistDocument)) {
         throw new Error("Must have an nsIWebBrowserPersistDocument!");

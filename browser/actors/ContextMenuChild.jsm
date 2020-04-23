@@ -567,7 +567,6 @@ class ContextMenuChild extends JSWindowActorChild {
     } = doc;
     docLocation = docLocation && docLocation.spec;
     let frameOuterWindowID = WebNavigationFrames.getFrameId(doc.defaultView);
-    let frameBrowsingContextID = doc.defaultView.docShell.browsingContext.id;
     let loginFillInfo = LoginManagerChild.forWindow(
       doc.defaultView
     ).getFieldContext(aEvent.composedTarget);
@@ -684,7 +683,6 @@ class ContextMenuChild extends JSWindowActorChild {
       customMenuItems,
       contentDisposition,
       frameOuterWindowID,
-      frameBrowsingContextID,
       disableSetDesktopBackground,
       parentAllowsMixedContent,
     };
@@ -903,9 +901,6 @@ class ContextMenuChild extends JSWindowActorChild {
     context.frameOuterWindowID = WebNavigationFrames.getFrameId(
       context.target.ownerGlobal
     );
-
-    context.frameBrowsingContextID =
-      context.target.ownerGlobal.docShell.browsingContext.id;
 
     // Check if we are in the PDF Viewer.
     context.inPDFViewer =

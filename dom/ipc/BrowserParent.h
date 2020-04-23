@@ -612,7 +612,7 @@ class BrowserParent final : public PBrowserParent,
 
   bool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 
-  void StartPersistence(CanonicalBrowsingContext* aContext,
+  void StartPersistence(uint64_t aOuterWindowID,
                         nsIWebBrowserPersistDocumentReceiver* aRecv,
                         ErrorResult& aRv);
 
