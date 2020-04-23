@@ -76,6 +76,10 @@ if CONFIG['MOZ_APP_BASENAME']:
         if CONFIG[var]:
             appini_defines[var] = True
 
+    appini_defines['MOZ_APPUPDATE_HOST'] = 'aus5.mozilla.org'
+    if CONFIG['MOZ_APPUPDATE_HOST']:
+        appini_defines['MOZ_APPUPDATE_HOST'] = CONFIG['MOZ_APPUPDATE_HOST']
+
     GeneratedFile(
         'application.ini',
         script='../python/mozbuild/mozbuild/action/preprocessor.py',
@@ -83,7 +87,7 @@ if CONFIG['MOZ_APP_BASENAME']:
         inputs=['application.ini.in'],
         flags=['-D%s=%s' % (k, '1' if v is True else v)
                for k, v in sorted(appini_defines.items(), key=lambda t: t[0])])
-    
+
     FINAL_TARGET_FILES += ['!application.ini']
     if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android' and CONFIG['MOZ_UPDATER']:
         FINAL_TARGET_PP_FILES += ['update-settings.ini']
