@@ -55,13 +55,14 @@ def test_server_get_timeout(raptor):
     test_name = "test-name"
     url = "test-url"
     metrics = {"metric1": False, "metric2": True, "metric3": True}
+    page_cycle = 1
 
     def post_state():
         requests.post(
             "http://127.0.0.1:%s/" % raptor.control_server.port,
             json={
                 "type": "webext_raptor-page-timeout",
-                "data": [test_name, url, metrics]
+                "data": [test_name, url, page_cycle, metrics]
             })
 
     assert len(raptor.results_handler.page_timeout_list) == 0
