@@ -25,7 +25,7 @@ taskgraph:
     repositories:
         mobile:
             name: "Fenix"
-    cached-task-prefix: project.mobile.fenix
+    cached-task-prefix: mobile.v2.fenix
     decision-parameters: 'fenix_taskgraph.parameters:get_decision_parameters'
 
 workers:
