@@ -470,7 +470,7 @@ class RequestListContextMenu {
   async copyPostData(id, formDataSections, requestPostData) {
     let params = [];
     // Try to extract any form data parameters if formDataSections is already
-    // available, which is only true if ParamsPanel has ever been mounted before.
+    // available, which is only true if RequestPanel has ever been mounted before.
     if (formDataSections) {
       formDataSections.forEach(section => {
         const paramsArray = parseQueryString(section);

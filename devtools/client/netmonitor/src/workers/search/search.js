@@ -100,7 +100,7 @@ function searchInResource(resource, query, modifiers) {
       findMatches(resource, query, modifiers, {
         key: "requestPostData.postData.text",
         type: "requestPostData",
-        panel: "params",
+        panel: "request",
       })
     );
   }
