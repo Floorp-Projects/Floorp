@@ -8,6 +8,7 @@
 
 #include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
+#include "jit/CacheIROpsGenerated.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
@@ -26,7 +27,6 @@ class MOZ_RAII WarpCacheIRTranspiler {
   // Vector mapping OperandId to corresponding MDefinition.
   MDefinitionStackVector operands_;
 
-  CacheIRReader reader;
   MBasicBlock* current;
 
   TempAllocator& alloc() { return alloc_; }
@@ -59,13 +59,11 @@ class MOZ_RAII WarpCacheIRTranspiler {
     return static_cast<int32_t>(readStubWord(offset));
   }
 
-  bool transpileGuardTo(MIRType type);
+  bool emitGuardTo(ValOperandId inputId, MIRType type);
 
   MInstruction* addBoundsCheck(MDefinition* index, MDefinition* length);
 
-#define DEFINE_OP(op, ...) MOZ_MUST_USE bool transpile_##op();
-  WARP_CACHE_IR_OPS(DEFINE_OP)
-#undef DEFINE_OP
+  CACHE_IR_TRANSPILER_GENERATED
 
  public:
   WarpCacheIRTranspiler(MIRGenerator& mirGen, MBasicBlock* current,
@@ -74,7 +72,6 @@ class MOZ_RAII WarpCacheIRTranspiler {
         stubInfo_(snapshot->stubInfo()),
         stubData_(snapshot->stubData()),
         output_(output),
-        reader(stubInfo_),
         current(current) {}
 
   MOZ_MUST_USE bool transpile(const MDefinitionStackVector& inputs);
@@ -85,16 +82,17 @@ bool WarpCacheIRTranspiler::transpile(const MDefinitionStackVector& inputs) {
     return false;
   }
 
+  CacheIRReader reader(stubInfo_);
   do {
     CacheOp op = reader.readOp();
     switch (op) {
 #define DEFINE_OP(op, ...)   \
   case CacheOp::op:          \
-    if (!transpile_##op()) { \
+    if (!emit##op(reader)) { \
       return false;          \
     }                        \
     break;
-      WARP_CACHE_IR_OPS(DEFINE_OP)
+      CACHE_IR_TRANSPILER_OPS(DEFINE_OP)
 #undef DEFINE_OP
 
       default:
@@ -106,13 +104,12 @@ bool WarpCacheIRTranspiler::transpile(const MDefinitionStackVector& inputs) {
   return true;
 }
 
-bool WarpCacheIRTranspiler::transpile_GuardClass() {
-  ObjOperandId objId = reader.objOperandId();
+bool WarpCacheIRTranspiler::emitGuardClass(ObjOperandId objId,
+                                           GuardClassKind kind) {
   MDefinition* def = getOperand(objId);
-  GuardClassKind classKind = reader.guardClassKind();
 
   const JSClass* classp = nullptr;
-  switch (classKind) {
+  switch (kind) {
     case GuardClassKind::Array:
       classp = &ArrayObject::class_;
       break;
@@ -127,10 +124,10 @@ bool WarpCacheIRTranspiler::transpile_GuardClass() {
   return true;
 }
 
-bool WarpCacheIRTranspiler::transpile_GuardShape() {
-  ObjOperandId objId = reader.objOperandId();
+bool WarpCacheIRTranspiler::emitGuardShape(ObjOperandId objId,
+                                           uint32_t shapeOffset) {
   MDefinition* def = getOperand(objId);
-  Shape* shape = shapeStubField(reader.stubOffset());
+  Shape* shape = shapeStubField(shapeOffset);
 
   auto* ins = MGuardShape::New(alloc(), def, shape, Bailout_ShapeGuard);
   current->add(ins);
@@ -139,9 +136,7 @@ bool WarpCacheIRTranspiler::transpile_GuardShape() {
   return true;
 }
 
-bool WarpCacheIRTranspiler::transpileGuardTo(MIRType type) {
-  ValOperandId inputId = reader.valOperandId();
-
+bool WarpCacheIRTranspiler::emitGuardTo(ValOperandId inputId, MIRType type) {
   MDefinition* def = getOperand(inputId);
   if (def->type() == type) {
     return true;
@@ -154,40 +149,36 @@ bool WarpCacheIRTranspiler::transpileGuardTo(MIRType type) {
   return true;
 }
 
-bool WarpCacheIRTranspiler::transpile_GuardToObject() {
-  return transpileGuardTo(MIRType::Object);
+bool WarpCacheIRTranspiler::emitGuardToObject(ValOperandId inputId) {
+  return emitGuardTo(inputId, MIRType::Object);
 }
 
-bool WarpCacheIRTranspiler::transpile_GuardToString() {
-  return transpileGuardTo(MIRType::String);
+bool WarpCacheIRTranspiler::emitGuardToString(ValOperandId inputId) {
+  return emitGuardTo(inputId, MIRType::String);
 }
 
-bool WarpCacheIRTranspiler::transpile_GuardToInt32Index() {
-  ValOperandId inputId = reader.valOperandId();
-  Int32OperandId outputId = reader.int32OperandId();
-
+bool WarpCacheIRTranspiler::emitGuardToInt32Index(ValOperandId inputId,
+                                                  Int32OperandId resultId) {
   MDefinition* input = getOperand(inputId);
   auto* ins =
       MToNumberInt32::New(alloc(), input, IntConversionInputKind::NumbersOnly);
   current->add(ins);
 
-  return defineOperand(outputId, ins);
+  return defineOperand(resultId, ins);
 }
 
-bool WarpCacheIRTranspiler::transpile_LoadEnclosingEnvironment() {
-  ObjOperandId inputId = reader.objOperandId();
-  ObjOperandId outputId = reader.objOperandId();
-
-  MDefinition* env = getOperand(inputId);
+bool WarpCacheIRTranspiler::emitLoadEnclosingEnvironment(
+    ObjOperandId objId, ObjOperandId resultId) {
+  MDefinition* env = getOperand(objId);
   auto* ins = MEnclosingEnvironment::New(alloc(), env);
   current->add(ins);
 
-  return defineOperand(outputId, ins);
+  return defineOperand(resultId, ins);
 }
 
-bool WarpCacheIRTranspiler::transpile_LoadDynamicSlotResult() {
-  ObjOperandId objId = reader.objOperandId();
-  int32_t offset = int32StubField(reader.stubOffset());
+bool WarpCacheIRTranspiler::emitLoadDynamicSlotResult(ObjOperandId objId,
+                                                      uint32_t offsetOffset) {
+  int32_t offset = int32StubField(offsetOffset);
 
   MDefinition* obj = getOperand(objId);
   size_t slotIndex = NativeObject::getDynamicSlotIndexFromOffset(offset);
@@ -202,9 +193,9 @@ bool WarpCacheIRTranspiler::transpile_LoadDynamicSlotResult() {
   return true;
 }
 
-bool WarpCacheIRTranspiler::transpile_LoadFixedSlotResult() {
-  ObjOperandId objId = reader.objOperandId();
-  int32_t offset = int32StubField(reader.stubOffset());
+bool WarpCacheIRTranspiler::emitLoadFixedSlotResult(ObjOperandId objId,
+                                                    uint32_t offsetOffset) {
+  int32_t offset = int32StubField(offsetOffset);
 
   MDefinition* obj = getOperand(objId);
   uint32_t slotIndex = NativeObject::getFixedSlotIndexFromOffset(offset);
@@ -216,9 +207,9 @@ bool WarpCacheIRTranspiler::transpile_LoadFixedSlotResult() {
   return true;
 }
 
-bool WarpCacheIRTranspiler::transpile_LoadEnvironmentFixedSlotResult() {
-  ObjOperandId objId = reader.objOperandId();
-  int32_t offset = int32StubField(reader.stubOffset());
+bool WarpCacheIRTranspiler::emitLoadEnvironmentFixedSlotResult(
+    ObjOperandId objId, uint32_t offsetOffset) {
+  int32_t offset = int32StubField(offsetOffset);
 
   MDefinition* obj = getOperand(objId);
   uint32_t slotIndex = NativeObject::getFixedSlotIndexFromOffset(offset);
@@ -233,9 +224,9 @@ bool WarpCacheIRTranspiler::transpile_LoadEnvironmentFixedSlotResult() {
   return true;
 }
 
-bool WarpCacheIRTranspiler::transpile_LoadEnvironmentDynamicSlotResult() {
-  ObjOperandId objId = reader.objOperandId();
-  int32_t offset = int32StubField(reader.stubOffset());
+bool WarpCacheIRTranspiler::emitLoadEnvironmentDynamicSlotResult(
+    ObjOperandId objId, uint32_t offsetOffset) {
+  int32_t offset = int32StubField(offsetOffset);
 
   MDefinition* obj = getOperand(objId);
   size_t slotIndex = NativeObject::getDynamicSlotIndexFromOffset(offset);
@@ -253,8 +244,7 @@ bool WarpCacheIRTranspiler::transpile_LoadEnvironmentDynamicSlotResult() {
   return true;
 }
 
-bool WarpCacheIRTranspiler::transpile_LoadInt32ArrayLengthResult() {
-  ObjOperandId objId = reader.objOperandId();
+bool WarpCacheIRTranspiler::emitLoadInt32ArrayLengthResult(ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 
   auto* elements = MElements::New(alloc(), obj);
@@ -267,8 +257,7 @@ bool WarpCacheIRTranspiler::transpile_LoadInt32ArrayLengthResult() {
   return true;
 }
 
-bool WarpCacheIRTranspiler::transpile_LoadStringLengthResult() {
-  StringOperandId strId = reader.stringOperandId();
+bool WarpCacheIRTranspiler::emitLoadStringLengthResult(StringOperandId strId) {
   MDefinition* str = getOperand(strId);
 
   auto* length = MStringLength::New(alloc(), str);
@@ -304,9 +293,8 @@ MInstruction* WarpCacheIRTranspiler::addBoundsCheck(MDefinition* index,
   return check;
 }
 
-bool WarpCacheIRTranspiler::transpile_LoadDenseElementResult() {
-  ObjOperandId objId = reader.objOperandId();
-  Int32OperandId indexId = reader.int32OperandId();
+bool WarpCacheIRTranspiler::emitLoadDenseElementResult(ObjOperandId objId,
+                                                       Int32OperandId indexId) {
   MDefinition* obj = getOperand(objId);
   MDefinition* index = getOperand(indexId);
 
@@ -328,9 +316,8 @@ bool WarpCacheIRTranspiler::transpile_LoadDenseElementResult() {
   return true;
 }
 
-bool WarpCacheIRTranspiler::transpile_LoadStringCharResult() {
-  StringOperandId strId = reader.stringOperandId();
-  Int32OperandId indexId = reader.int32OperandId();
+bool WarpCacheIRTranspiler::emitLoadStringCharResult(StringOperandId strId,
+                                                     Int32OperandId indexId) {
   MDefinition* str = getOperand(strId);
   MDefinition* index = getOperand(indexId);
 
@@ -349,12 +336,12 @@ bool WarpCacheIRTranspiler::transpile_LoadStringCharResult() {
   return true;
 }
 
-bool WarpCacheIRTranspiler::transpile_TypeMonitorResult() {
+bool WarpCacheIRTranspiler::emitTypeMonitorResult() {
   MOZ_ASSERT(output_.result, "Didn't set result MDefinition");
   return true;
 }
 
-bool WarpCacheIRTranspiler::transpile_ReturnFromIC() { return true; }
+bool WarpCacheIRTranspiler::emitReturnFromIC() { return true; }
 
 bool jit::TranspileCacheIRToMIR(MIRGenerator& mirGen, MBasicBlock* current,
                                 const WarpCacheIR* snapshot,
