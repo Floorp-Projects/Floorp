@@ -19,8 +19,12 @@ class CacheControlParser final : Tokenizer {
   [[nodiscard]] bool MaxAge(uint32_t* seconds);
   [[nodiscard]] bool MaxStale(uint32_t* seconds);
   [[nodiscard]] bool MinFresh(uint32_t* seconds);
+  [[nodiscard]] bool StaleWhileRevalidate(uint32_t* seconds);
   bool NoCache();
   bool NoStore();
+  bool Public();
+  bool Private();
+  bool Immutable();
 
  private:
   void Directive();
@@ -33,8 +37,13 @@ class CacheControlParser final : Tokenizer {
   uint32_t mMaxStale;
   bool mMinFreshSet;
   uint32_t mMinFresh;
+  bool mStaleWhileRevalidateSet;
+  uint32_t mStaleWhileRevalidate;
   bool mNoCache;
   bool mNoStore;
+  bool mPublic;
+  bool mPrivate;
+  bool mImmutable;
 };
 
 }  // namespace net
