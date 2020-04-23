@@ -2270,7 +2270,7 @@
   # See bug 1626846 for setting this to false by default.
 -   name: dom.quotaManager.useDOSDevicePathSyntax
     type: RelaxedAtomicBool
-    value: false
+    value: true
     mirror: always
     do_not_use_directly: true
 #endif
