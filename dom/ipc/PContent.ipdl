@@ -851,6 +851,11 @@ child:
                                     CrossProcessSHEntry aNewEntry,
                                     MaybeDiscardedBrowsingContext aContext);
 
+    async OnAllowAccessFor(MaybeDiscardedBrowsingContext aParentContext,
+                           nsCString aTrackingOrigin,
+                           uint32_t aCookieBehavior,
+                           StorageAccessGrantedReason aReason);
+
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 

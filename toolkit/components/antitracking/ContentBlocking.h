@@ -95,6 +95,13 @@ class ContentBlocking final {
       ContentBlockingNotifier::StorageAccessGrantedReason aReason,
       const PerformFinalChecks& aPerformFinalChecks = nullptr);
 
+  // This function handles tasks that have to be done in the process
+  // of the window that we just grant permission for.
+  static void OnAllowAccessFor(
+      dom::BrowsingContext* aParentContext, const nsCString& aTrackingOrigin,
+      uint32_t aCookieBehavior,
+      ContentBlockingNotifier::StorageAccessGrantedReason aReason);
+
   // For IPC only.
   typedef MozPromise<nsresult, bool, true> ParentAccessGrantPromise;
   static RefPtr<ParentAccessGrantPromise> SaveAccessForOriginOnParentProcess(
