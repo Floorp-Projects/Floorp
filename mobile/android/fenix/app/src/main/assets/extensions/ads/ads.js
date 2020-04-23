@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- const ADLINK_CHECK_TIMEOUT_MS = 1000;
+const ADLINK_CHECK_TIMEOUT_MS = 1000;
 
 function collectLinks(urls) {
     let anchors = document.getElementsByTagName("a");
@@ -25,18 +25,26 @@ function sendLinks() {
     browser.runtime.sendNativeMessage("MozacBrowserAds", message);
 }
 
+const events = ["pageshow", "load", "unload"];
 var timeout;
 
-window.onload = function() {
-    timeout = setTimeout(sendLinks, ADLINK_CHECK_TIMEOUT_MS);
-};
-
-window.onpageshow = function(event) {
-    if (event.persisted) {
+const eventLogger = event => {
+  switch (event.type) {
+    case "load":
         timeout = setTimeout(sendLinks, ADLINK_CHECK_TIMEOUT_MS);
-    }
+        break;
+    case "pageshow":
+        if (event.persisted) {
+          timeout = setTimeout(sendLinks, ADLINK_CHECK_TIMEOUT_MS);
+        }
+        break;
+    case "unload":
+        clearTimeout(timeout);
+    default:
+        console.log('Event:', event.type);
+  }
 };
 
-window.onunload = function() {
-  clearTimeout(timeout);
-};
+events.forEach(eventName =>
+  window.addEventListener(eventName, eventLogger)
+);
