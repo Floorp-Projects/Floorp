@@ -58,7 +58,9 @@ import EditorFooter from "./Editor/Footer";
 import QuickOpenModal from "./QuickOpenModal";
 import WhyPaused from "./SecondaryPanes/WhyPaused";
 
-type OwnProps = {||};
+type OwnProps = {|
+  toolboxDoc: Object,
+|};
 type Props = {
   selectedSource: ?Source,
   orientation: OrientationType,
@@ -66,6 +68,7 @@ type Props = {
   endPanelCollapsed: boolean,
   activeSearch: ?ActiveSearchType,
   quickOpenEnabled: boolean,
+  toolboxDoc: Object,
   setActiveSearch: typeof actions.setActiveSearch,
   closeActiveSearch: typeof actions.closeActiveSearch,
   closeProjectSearch: typeof actions.closeProjectSearch,
@@ -98,9 +101,13 @@ class App extends Component<Props, State> {
     };
   }
 
-  getChildContext = () => {
-    return { shortcuts, l10n: L10N };
-  };
+  getChildContext() {
+    return {
+      toolboxDoc: this.props.toolboxDoc,
+      shortcuts,
+      l10n: L10N,
+    };
+  }
 
   componentDidMount() {
     horizontalLayoutBreakpoint.addListener(this.onLayoutChange);
@@ -331,6 +338,7 @@ class App extends Component<Props, State> {
 }
 
 App.childContextTypes = {
+  toolboxDoc: PropTypes.object,
   shortcuts: PropTypes.object,
   l10n: PropTypes.object,
 };
