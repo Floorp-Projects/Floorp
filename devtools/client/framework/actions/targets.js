@@ -3,20 +3,13 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 "use strict";
 
-const TARGET_TYPES = {
-  MAIN_TARGET: "mainTarget",
-  FRAME: "frame",
-  CONTENT_PROCESS: "contentProcess",
-  WORKER: "worker",
-};
-
 function registerTarget(targetFront, targetList) {
   const target = {
     actorID: targetFront.actorID,
-    url: targetFront.url,
-    type: getTargetType(targetFront, targetList),
+    isMainTarget: targetFront === targetList?.targetFront,
     name: targetFront.name,
-    serviceWorkerStatus: targetFront.debuggerServiceWorkerStatus,
+    type: targetList?.getTargetType(targetFront),
+    url: targetFront.url,
     _targetFront: targetFront,
   };
   return { type: "REGISTER_TARGET", target };
@@ -36,25 +29,8 @@ function selectTarget(targetActorID) {
   };
 }
 
-function getTargetType(target, targetList) {
-  if (target.isWorkerTarget) {
-    return TARGET_TYPES.WORKER;
-  }
-
-  if (target.isContentProcess) {
-    return TARGET_TYPES.CONTENT_PROCESS;
-  }
-
-  if (targetList?.targetFront === target) {
-    return TARGET_TYPES.MAIN_TARGET;
-  }
-
-  return TARGET_TYPES.FRAME;
-}
-
 module.exports = {
   registerTarget,
   unregisterTarget,
   selectTarget,
-  TARGET_TYPES,
 };
