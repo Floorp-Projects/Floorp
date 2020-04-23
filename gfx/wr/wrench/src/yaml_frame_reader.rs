@@ -1805,7 +1805,6 @@ impl YamlFrameReader {
         let numeric_id = yaml["id"].as_i64().map(|id| id as u64);
 
         let complex_clips = self.to_complex_clip_regions(&yaml["complex"]);
-        let image_mask = self.to_image_mask(&yaml["image-mask"], wrench);
 
         let external_id =  yaml["scroll-offset"].as_point().map(|size| {
             let id = ExternalScrollId((self.scroll_offsets.len() + 1) as u64, dl.pipeline_id);
@@ -1819,7 +1818,6 @@ impl YamlFrameReader {
             content_rect,
             clip_rect,
             complex_clips,
-            image_mask,
             ScrollSensitivity::ScriptAndInputEvents,
             external_scroll_offset,
         );
