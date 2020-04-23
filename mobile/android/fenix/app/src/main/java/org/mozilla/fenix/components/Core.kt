@@ -42,10 +42,11 @@ import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.media.MediaService
+import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry
+import org.mozilla.fenix.search.telemetry.incontent.InContentTelemetry
 import org.mozilla.fenix.utils.Mockable
 import java.util.concurrent.TimeUnit
 
@@ -125,12 +126,14 @@ class Core(private val context: Context) {
      */
     val sessionManager by lazy {
         SessionManager(engine, store).also { sessionManager ->
-
             // Install the "icons" WebExtension to automatically load icons for every visited website.
             icons.install(engine, store)
 
             // Install the "ads" WebExtension to get the links in an partner page.
-            ads.install(engine, store)
+            adsTelemetry.install(engine, store)
+
+            // Install the "cookies" WebExtension and tracks user interaction with SERPs.
+            searchTelemetry.install(engine, store)
 
             // Show an ongoing notification when recording devices (camera, microphone) are used by web content
             RecordingDevicesNotificationFeature(context, sessionManager)
@@ -175,8 +178,12 @@ class Core(private val context: Context) {
         BrowserIcons(context, client)
     }
 
-    val ads by lazy {
+    val adsTelemetry by lazy {
         AdsTelemetry(context.components.analytics.metrics)
+    }
+
+    val searchTelemetry by lazy {
+        InContentTelemetry(context.components.analytics.metrics)
     }
 
     /**
