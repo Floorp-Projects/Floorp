@@ -343,7 +343,7 @@ class TargetList {
     this._targets.add(targetFront);
 
     // Map the descriptor typeName to a target type.
-    const targetType = this._getTargetType(targetFront);
+    const targetType = this.getTargetType(targetFront);
 
     // Notify the target front creation listeners
     await this._createListeners.emitAsync(targetType, {
@@ -355,7 +355,7 @@ class TargetList {
   }
 
   _onTargetDestroyed(targetFront, isTargetSwitching = false) {
-    const targetType = this._getTargetType(targetFront);
+    const targetType = this.getTargetType(targetFront);
     this._destroyListeners.emit(targetType, {
       type: targetType,
       targetFront,
@@ -442,7 +442,7 @@ class TargetList {
     }
   }
 
-  _getTargetType(target) {
+  getTargetType(target) {
     const { typeName } = target;
     if (typeName == "browsingContextTarget") {
       return TargetList.TYPES.FRAME;
@@ -458,7 +458,7 @@ class TargetList {
   }
 
   _matchTargetType(type, target) {
-    return type === this._getTargetType(target);
+    return type === this.getTargetType(target);
   }
 
   /**
@@ -488,7 +488,7 @@ class TargetList {
     // Notify about already existing target of these types
     const promises = [...this._targets]
       .filter(targetFront => {
-        const targetType = this._getTargetType(targetFront);
+        const targetType = this.getTargetType(targetFront);
         return types.includes(targetType);
       })
       .map(async targetFront => {
@@ -497,7 +497,7 @@ class TargetList {
           // which may setup things regarding the existing targets
           // and listen callsite may care about the full initialization
           await onAvailable({
-            type: this._getTargetType(targetFront),
+            type: this.getTargetType(targetFront),
             targetFront,
             isTopLevel: targetFront == this.targetFront,
             isTargetSwitching: false,
