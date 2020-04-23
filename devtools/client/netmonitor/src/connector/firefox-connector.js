@@ -104,7 +104,6 @@ class FirefoxConnector {
     this.removeListeners();
 
     this.currentTarget.off("will-navigate", this.willNavigate);
-    this.currentTarget.off("navigate", this.navigate);
 
     this.webConsoleFront = null;
     this.dataProvider = null;
@@ -133,7 +132,6 @@ class FirefoxConnector {
     // Paused network panel should be automatically resumed when page
     // reload, so `will-navigate` listener needs to be there all the time.
     targetFront.on("will-navigate", this.willNavigate);
-    targetFront.on("navigate", this.navigate);
 
     this.webConsoleFront = await this.currentTarget.getFront("console");
 
@@ -307,6 +305,10 @@ class FirefoxConnector {
 
     if (this.actions) {
       this.actions.addTimingMarker(event);
+    }
+
+    if (event.name === "dom-complete") {
+      this.navigate();
     }
 
     this.emitForTests(TEST_EVENTS.TIMELINE_EVENT, event);
