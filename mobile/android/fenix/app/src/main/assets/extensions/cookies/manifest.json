@@ -1,0 +1,32 @@
+{
+  "manifest_version": 2,
+  "name": "Mozilla Android Components - Cookies",
+  "version": "1.0",
+  "content_scripts": [
+    {
+      "matches": ["https://*/*"],
+      "include_globs": [
+        "https://www.google.*/search*",
+        "https://www.baidu.com/from=844b/s*",
+        "https://www.baidu.com/from=844b/baidu*",
+        "https://*search.yahoo.com/search*",
+        "https://www.bing.com/search*",
+        "https://duckduckgo.com/*"
+      ],
+      "js": ["cookies.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "background": {
+    "scripts": ["cookiesBackground.js"]
+  },
+  "permissions": [
+    "geckoViewAddons",
+    "nativeMessaging",
+    "webNavigation",
+    "webRequest",
+    "webRequestBlocking",
+    "cookies",
+    "*://*/*"
+  ]
+}
