@@ -3,8 +3,7 @@
 set -xe
 
 test "$TASK_ID"
-test "$SHA1_SIGNING_CERT"
-test "$SHA384_SIGNING_CERT"
+test "$SIGNING_CERT"
 
 ARTIFACTS_DIR="/home/worker/artifacts"
 mkdir -p "$ARTIFACTS_DIR"
@@ -54,6 +53,6 @@ fi
 python3.8 /home/worker/bin/funsize.py \
     --artifacts-dir "$ARTIFACTS_DIR" \
     --task-definition /home/worker/task.json \
-    --sha1-signing-cert "/home/worker/keys/${SHA1_SIGNING_CERT}.pubkey" \
-    --sha384-signing-cert "/home/worker/keys/${SHA384_SIGNING_CERT}.pubkey" \
+    --sha1-signing-cert "/home/worker/keys/${SIGNING_CERT}_sha1.pubkey" \
+    --sha384-signing-cert "/home/worker/keys/${SIGNING_CERT}_sha384.pubkey" \
     $EXTRA_PARAMS
