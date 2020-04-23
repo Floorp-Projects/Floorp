@@ -1162,7 +1162,7 @@ void nsWindow::Move(double aX, double aY) {
   if (!mCreated) return;
 
   if (IsWaylandPopup()) {
-  int32_t p2a = AppUnitsPerCSSPixel();
+    int32_t p2a = AppUnitsPerCSSPixel() / gfxPlatformGtk::GetFontScaleFactor();
     if (mPreferredPopupRect.x != mBounds.x * p2a &&
         mPreferredPopupRect.y != mBounds.y * p2a) {
       NativeMove();
@@ -1451,7 +1451,7 @@ void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
   // Update view
 
   if (needsSizeUpdate) {
-    int32_t p2a = AppUnitsPerCSSPixel();
+    int32_t p2a = AppUnitsPerCSSPixel() / gfxPlatformGtk::GetFontScaleFactor();
     mPreferredPopupRect = nsRect(NSIntPixelsToAppUnits(newBounds.x, p2a),
                                  NSIntPixelsToAppUnits(newBounds.y, p2a),
                                  NSIntPixelsToAppUnits(newBounds.width, p2a),
@@ -1550,10 +1550,11 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   // Get anchor rectangle
   LayoutDeviceIntRect anchorRect(0, 0, 0, 0);
   nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
+  int32_t p2a = AppUnitsPerCSSPixel() / gfxPlatformGtk::GetFontScaleFactor();
   if (popupFrame) {
 #ifdef MOZ_WAYLAND
     anchorRect = LayoutDeviceIntRect::FromAppUnitsToNearest(
-        popupFrame->GetAnchorRect(), AppUnitsPerCSSPixel());
+        popupFrame->GetAnchorRect(), p2a);
 #endif
   }
 
@@ -1689,7 +1690,6 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
                      G_CALLBACK(NativeMoveResizeWaylandPopupCallback), this);
   }
 
-  int32_t p2a = AppUnitsPerCSSPixel();
   LOG(("  popup window cursor offset x: %d y: %d\n", cursorOffset.x / p2a,
        cursorOffset.y / p2a));
   mWaitingForMoveToRectCB = true;
