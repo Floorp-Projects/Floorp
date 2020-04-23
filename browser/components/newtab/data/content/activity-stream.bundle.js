@@ -4386,6 +4386,7 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_13___default.a
       case "CardGrid":
         return react__WEBPACK_IMPORTED_MODULE_13___default.a.createElement(content_src_components_DiscoveryStreamComponents_CardGrid_CardGrid__WEBPACK_IMPORTED_MODULE_1__["CardGrid"], {
           title: component.header && component.header.title,
+          display_variant: component.properties.display_variant,
           data: component.data,
           feed: component.feed,
           border: component.properties.border,
@@ -4626,18 +4627,12 @@ class CardGrid extends react__WEBPACK_IMPORTED_MODULE_2___default.a.PureComponen
         cta: rec.cta,
         cta_variant: this.props.cta_variant
       }));
-    }
+    } // Used for CSS overrides to default styling (eg: "hero")
 
-    let divisibility = ``;
 
-    if (this.props.items % 4 === 0) {
-      divisibility = `divisible-by-4`;
-    } else if (this.props.items % 3 === 0) {
-      divisibility = `divisible-by-3`;
-    }
-
+    const variantClass = this.props.display_variant ? `ds-card-grid-${this.props.display_variant}` : ``;
     return react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
-      className: `ds-card-grid ds-card-grid-${this.props.border} ds-card-grid-${divisibility}`
+      className: `ds-card-grid ds-card-grid-${this.props.border} ${variantClass}`
     }, cards);
   }
 

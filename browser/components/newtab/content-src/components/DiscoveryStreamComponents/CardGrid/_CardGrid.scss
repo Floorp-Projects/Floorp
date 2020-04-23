@@ -14,6 +14,70 @@ $col4-header-font-size: 14;
     border-radius: 4px;
   }
 
+  .ds-column-12 &.ds-card-grid-hero {
+    @media (min-width: $break-point-large) {
+      grid-template-columns: repeat(12, 1fr);
+
+      // "hero"
+      .ds-card:nth-child(1) {
+        grid-column-start: 1;
+        grid-column-end: span 6;
+        grid-row-start: 1;
+        grid-row-end: span 2;
+
+        .excerpt {
+          -webkit-line-clamp: 4;
+        }
+      }
+
+      .ds-card:nth-child(2),
+      .ds-card:nth-child(4) {
+        grid-column-start: 7;
+        grid-column-end: span 3;
+      }
+
+      .ds-card:nth-child(3),
+      .ds-card:nth-child(5) {
+        grid-column-start: 10;
+        grid-column-end: span 3;
+      }
+
+      // "small" cards
+      .ds-card:nth-child(n+2):nth-child(-n+5) {
+        .excerpt {
+          display: none;
+        }
+
+        .meta {
+          padding: 8px;
+
+          .title {
+            font-size: 13px;
+            line-height: 19px;
+          }
+
+          .story-sponsored-label {
+            -webkit-line-clamp: none;
+            line-height: 19px;
+          }
+        }
+      }
+
+      .ds-card:nth-child(n+6) {
+        grid-column-start: auto;
+        grid-column-end: span 4;
+      }
+    }
+
+    @media (min-width: $break-point-widest) {
+      // "small" cards
+      .ds-card:nth-child(n+2):nth-child(-n+5) {
+        min-height: 222px;
+      }
+    }
+  }
+
+
   .ds-card-link:focus {
     @include ds-fade-in;
   }
@@ -56,31 +120,23 @@ $col4-header-font-size: 14;
   .ds-column-10 &,
   .ds-column-11 &,
   .ds-column-12 & {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(1, 1fr);
 
-    &.ds-card-grid-divisible-by-3 {
-      grid-template-columns: repeat(1, 1fr);
-
-      @media (min-width: $break-point-medium) {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      @media (min-width: $break-point-large) {
-        grid-template-columns: repeat(3, 1fr);
-      }
-
-      .title {
-        font-size: 17px;
-        line-height: 24px;
-      }
-
-      .excerpt {
-        @include limit-visible-lines(3, 24, 15);
-      }
+    @media (min-width: $break-point-medium) {
+      grid-template-columns: repeat(2, 1fr);
     }
 
-    &.ds-card-grid-divisible-by-4 .title {
-      @include limit-visible-lines(3, 20, 15);
+    @media (min-width: $break-point-large) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .title {
+      font-size: 17px;
+      line-height: 24px;
+    }
+
+    .excerpt {
+      @include limit-visible-lines(3, 24, 15);
     }
   }
 

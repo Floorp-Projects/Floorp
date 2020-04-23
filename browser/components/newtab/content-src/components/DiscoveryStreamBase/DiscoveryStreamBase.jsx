@@ -185,6 +185,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
         return (
           <CardGrid
             title={component.header && component.header.title}
+            display_variant={component.properties.display_variant}
             data={component.data}
             feed={component.feed}
             border={component.properties.border}
