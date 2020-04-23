@@ -21,3 +21,7 @@ bug gets fixed, which makes us pass one of the tests.  When that happens,
 you should set the UPDATE_TEST_RESULTS constant to true in test_richtext2.html,
 run the test suite, paste the result JSON string in a JSON beautifier (such
 as http://jsbeautifier.org/), and use the result to update currentStatus.js.
+
+As a special case, if there are platform-specific failures, these are instead
+recorded manually in platformFailures.js. (Currently, this applies only to
+tests that are dependent on underlying platform support for the Thai script.)

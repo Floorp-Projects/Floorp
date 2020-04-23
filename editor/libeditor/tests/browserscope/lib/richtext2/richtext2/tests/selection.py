@@ -467,6 +467,35 @@ SELECTION_TESTS = {
       ]
     },
 
+    { 'desc':       'sel.modify: move forward/backward over words in Thai text',
+      'tests':      [
+        { 'id':         'SM:m.f.w_TEXT-th_SC-1',
+          'desc':       'move caret forward 1 word in Thai text',
+          'function':   'sel.modify("move", "forward", "word");',
+          'pad':        '^&#x0E17;&#x0E14;&#x0E2A;&#x0E2D;&#x0E1A;&#x0E01;&#x0E32;&#x0E23;&#x0E17;&#x0E33;&#x0E07;&#x0E32;&#x0E19;',
+          'expected':   '&#x0E17;&#x0E14;&#x0E2A;&#x0E2D;&#x0E1A;^&#x0E01;&#x0E32;&#x0E23;&#x0E17;&#x0E33;&#x0E07;&#x0E32;&#x0E19;' },
+
+        { 'id':         'SM:m.f.w_TEXT-th_SC-2',
+          'desc':       'move caret forward 1 word in Thai text (mid-word)',
+          'function':   'sel.modify("move", "forward", "word");',
+          'pad':        '&#x0E17;&#x0E14;&#x0E2A;&#x0E2D;&#x0E1A;&#x0E01;^&#x0E32;&#x0E23;&#x0E17;&#x0E33;&#x0E07;&#x0E32;&#x0E19;',
+          'expected':   '&#x0E17;&#x0E14;&#x0E2A;&#x0E2D;&#x0E1A;&#x0E01;&#x0E32;&#x0E23;^&#x0E17;&#x0E33;&#x0E07;&#x0E32;&#x0E19;' },
+
+        { 'id':         'SM:m.b.w_TEXT-th_SC-1',
+          'desc':       'move caret backward 1 word in Thai text',
+          'function':   'sel.modify("move", "backward", "word");',
+          'pad':        '&#x0E17;&#x0E14;&#x0E2A;&#x0E2D;&#x0E1A;&#x0E01;&#x0E32;&#x0E23;^&#x0E17;&#x0E33;&#x0E07;&#x0E32;&#x0E19;',
+          'expected':   '&#x0E17;&#x0E14;&#x0E2A;&#x0E2D;&#x0E1A;^&#x0E01;&#x0E32;&#x0E23;&#x0E17;&#x0E33;&#x0E07;&#x0E32;&#x0E19;' },
+
+        { 'id':         'SM:m.b.w_TEXT-th_SC-2',
+          'desc':       'move caret backward 1 word in Thai text (mid-word)',
+          'function':   'sel.modify("move", "backward", "word");',
+          'pad':        '&#x0E17;&#x0E14;&#x0E2A;&#x0E2D;&#x0E1A;&#x0E01;&#x0E32;&#x0E23;&#x0E17;&#x0E33;&#x0E07;&#x0E32;^&#x0E19;',
+          'expected':   [ '&#x0E17;&#x0E14;&#x0E2A;&#x0E2D;&#x0E1A;&#x0E01;&#x0E32;&#x0E23;^&#x0E17;&#x0E33;&#x0E07;&#x0E32;&#x0E19;',
+                          '&#x0E17;&#x0E14;&#x0E2A;&#x0E2D;&#x0E1A;&#x0E01;&#x0E32;&#x0E23;&#x0E17;&#x0E33;^&#x0E07;&#x0E32;&#x0E19;' ] },
+      ]
+    },
+
     { 'desc':       'sel.modify: extend selection forward',
       'tests':      [
         { 'id':         'SM:e.f.c_TEXT-1_SC-1',
