@@ -35,10 +35,13 @@ window.attachEvent("onload", function() {
 
   // Get the blurb strings and initialize the blurb rotation.
   var currentBlurb = 0;
+  // IE8 adds undefined to the array if there is a trailing comma in an
+  // array literal, so don't allow prettier to add one here.
+  // prettier-ignore
   var blurbStrings = [
     external.getUIString("installing_blurb_0"),
     external.getUIString("installing_blurb_1"),
-    external.getUIString("installing_blurb_2"),
+    external.getUIString("installing_blurb_2")
   ];
   function rotateBlurb() {
     document.getElementById("blurb").innerText = blurbStrings[currentBlurb];
