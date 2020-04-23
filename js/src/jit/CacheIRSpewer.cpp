@@ -45,7 +45,7 @@ class MOZ_RAII CacheIROpsJitSpewer {
   CACHE_IR_SPEWER_GENERATED
 
   void spewOp(CacheOp op) {
-    const char* opName = CacheIrOpNames[size_t(op)];
+    const char* opName = CacheIROpNames[size_t(op)];
     out_.printf("%s%-30s", prefix_, opName);
   }
   void spewOpEnd() { out_.printf("\n"); }
@@ -183,7 +183,7 @@ class MOZ_RAII CacheIROpsJSONSpewer {
   CACHE_IR_SPEWER_GENERATED
 
   void spewOp(CacheOp op) {
-    const char* opName = CacheIrOpNames[size_t(op)];
+    const char* opName = CacheIROpNames[size_t(op)];
     j_.beginObject();
     j_.property("op", opName);
     j_.beginListProperty("args");
