@@ -621,8 +621,6 @@ class PaintedLayerData {
    * Record that an item has been added to the PaintedLayer, so we
    * need to update our regions.
    * @param aVisibleRect the area of the item that's visible
-   * @param aSolidColor if non-null, the visible area of the item is
-   * a constant color given by *aSolidColor
    */
   void Accumulate(ContainerState* aState, nsPaintedDisplayItem* aItem,
                   const nsIntRect& aVisibleRect, const nsRect& aContentRect,
