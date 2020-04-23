@@ -26,7 +26,7 @@ enum WordBreakClass : uint8_t {
   kWbClassKatakanaLetter,
   kWbClassHiraganaLetter,
   kWbClassHWKatakanaLetter,
-  kWbClassThaiLetter
+  kWbClassScriptioContinua
 };
 
 class WordBreaker {
