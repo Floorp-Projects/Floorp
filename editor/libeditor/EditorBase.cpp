@@ -83,8 +83,6 @@
 #include "nsFrameSelection.h"          // for nsFrameSelection
 #include "nsGenericHTMLElement.h"      // for nsGenericHTMLElement
 #include "nsGkAtoms.h"                 // for nsGkAtoms, nsGkAtoms::dir
-#include "nsIAbsorbingTransaction.h"   // for nsIAbsorbingTransaction
-#include "nsAtom.h"                    // for nsAtom
 #include "nsIContent.h"                // for nsIContent
 #include "mozilla/dom/Document.h"      // for Document
 #include "nsIDocumentStateListener.h"  // for nsIDocumentStateListener
@@ -774,8 +772,9 @@ nsresult EditorBase::DoTransactionInternal(nsITransaction* aTransaction) {
              "beforeinput event hasn't been dispatched yet");
 
   if (mPlaceholderBatch && !mPlaceholderTransaction) {
+    MOZ_DIAGNOSTIC_ASSERT(mPlaceholderName);
     mPlaceholderTransaction = PlaceholderTransaction::Create(
-        *this, mPlaceholderName, std::move(mSelState));
+        *this, *mPlaceholderName, std::move(mSelState));
     MOZ_ASSERT(mSelState.isNothing());
 
     // We will recurse, but will not hit this case in the nested call
@@ -950,7 +949,7 @@ void EditorBase::EndTransactionInternal() {
   EndUpdateViewBatch();
 }
 
-void EditorBase::BeginPlaceholderTransaction(nsAtom* aTransactionName) {
+void EditorBase::BeginPlaceholderTransaction(nsStaticAtom& aTransactionName) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(mPlaceholderBatch >= 0, "negative placeholder batch count!");
 
@@ -959,7 +958,7 @@ void EditorBase::BeginPlaceholderTransaction(nsAtom* aTransactionName) {
     // time to turn on the batch
     BeginUpdateViewBatch();
     mPlaceholderTransaction = nullptr;
-    mPlaceholderName = aTransactionName;
+    mPlaceholderName = &aTransactionName;
     mSelState.emplace();
     mSelState->SaveSelection(*SelectionRefPtr());
     // Composition transaction can modify multiple nodes and it merges text
