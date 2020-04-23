@@ -62,14 +62,15 @@ SubDialog.prototype = {
   },
 
   injectXMLStylesheet(aStylesheetURL) {
-    let contentStylesheet = this._frame.contentDocument.createProcessingInstruction(
+    const doc = this._frame.contentDocument;
+    if ([...doc.styleSheets].find(s => s.href === aStylesheetURL)) {
+      return;
+    }
+    let contentStylesheet = doc.createProcessingInstruction(
       "xml-stylesheet",
       'href="' + aStylesheetURL + '" type="text/css"'
     );
-    this._frame.contentDocument.insertBefore(
-      contentStylesheet,
-      this._frame.contentDocument.documentElement
-    );
+    doc.insertBefore(contentStylesheet, doc.documentElement);
   },
 
   async open(aURL, aFeatures = null, aParams = null, aClosingCallback = null) {
