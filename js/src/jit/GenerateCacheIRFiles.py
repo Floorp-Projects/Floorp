@@ -272,7 +272,6 @@ def generate_cacheirops_header(c_out, yaml_path):
         'DOMExpandoGenerationField': 'Field',
         'IdField': 'Field',
         'ValueField': 'Field',
-        'FieldOffset': 'Field',
 
         'ByteImm': 'Byte',
         'BoolImm': 'Byte',

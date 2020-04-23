@@ -274,8 +274,6 @@ class StubField {
   }
 } JS_HAZ_GC_POINTER;
 
-using FieldOffset = uint8_t;
-
 // This class is used to wrap up information about a call to make it
 // easier to convey from one function to another. (In particular,
 // CacheIRWriter encodes the CallFlags in CacheIR, and CacheIRReader
