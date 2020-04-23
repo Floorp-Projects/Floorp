@@ -8,12 +8,9 @@
 
 #include "EditAggregateTransaction.h"
 #include "mozilla/Maybe.h"
-#include "nsIAbsorbingTransaction.h"
-#include "nsIWeakReferenceUtils.h"
+#include "mozilla/WeakPtr.h"
 
 namespace mozilla {
-
-class CompositionTransaction;
 
 /**
  * An aggregate transaction that knows how to absorb all subsequent
@@ -22,10 +19,11 @@ class CompositionTransaction;
  * transactions it has absorbed.
  */
 
-class PlaceholderTransaction final : public EditAggregateTransaction,
-                                     public nsIAbsorbingTransaction {
+class PlaceholderTransaction final
+    : public EditAggregateTransaction,
+      public SupportsWeakPtr<PlaceholderTransaction> {
  protected:
-  PlaceholderTransaction(EditorBase& aEditorBase, nsAtom* aName,
+  PlaceholderTransaction(EditorBase& aEditorBase, nsStaticAtom& aName,
                          Maybe<SelectionState>&& aSelState);
 
  public:
@@ -37,7 +35,7 @@ class PlaceholderTransaction final : public EditAggregateTransaction,
    * @param aSelState       The selection state of aEditorBase.
    */
   static already_AddRefed<PlaceholderTransaction> Create(
-      EditorBase& aEditorBase, nsAtom* aName,
+      EditorBase& aEditorBase, nsStaticAtom& aName,
       Maybe<SelectionState>&& aSelState) {
     // Make sure to move aSelState into a local variable to null out the
     // original Maybe<SelectionState> variable.
@@ -46,6 +44,8 @@ class PlaceholderTransaction final : public EditAggregateTransaction,
         new PlaceholderTransaction(aEditorBase, aName, std::move(selState));
     return transaction.forget();
   }
+
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(PlaceholderTransaction)
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -59,22 +59,15 @@ class PlaceholderTransaction final : public EditAggregateTransaction,
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
   NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;
 
-  // ------------ nsIAbsorbingTransaction -----------------------
+  bool StartSelectionEquals(SelectionState& aSelectionState);
 
-  NS_IMETHOD GetTxnName(nsAtom** aName) override;
+  nsresult EndPlaceHolderBatch();
 
-  NS_IMETHOD_(bool) StartSelectionEquals(SelectionState& aSelState) override;
-
-  NS_IMETHOD EndPlaceHolderBatch() override;
-
-  NS_IMETHOD_(void)
-  ForwardEndBatchTo(nsIAbsorbingTransaction* aForwardingAddress) override;
-
-  NS_IMETHOD_(void) Commit() override;
-
-  NS_IMETHOD_(PlaceholderTransaction*) AsPlaceholderTransaction() override {
-    return this;
+  void ForwardEndBatchTo(PlaceholderTransaction& aForwardingTransaction) {
+    mForwardingTransaction = &aForwardingTransaction;
   }
+
+  void Commit() { mCommitted = true; }
 
   nsresult RememberEndingSelection();
 
@@ -84,9 +77,10 @@ class PlaceholderTransaction final : public EditAggregateTransaction,
   // The editor for this transaction.
   RefPtr<EditorBase> mEditorBase;
 
-  nsWeakPtr mForwarding;
+  WeakPtr<PlaceholderTransaction> mForwardingTransaction;
+
   // First IME txn in this placeholder - used for IME merging.
-  mozilla::CompositionTransaction* mCompositionTransaction;
+  WeakPtr<CompositionTransaction> mCompositionTransaction;
 
   // These next two members store the state of the selection in a safe way.
   // Selection at the start of the transaction is stored, as is the selection
