@@ -8,8 +8,10 @@
 #include "nsITransactionManager.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/Likely.h"
+#include "mozilla/EditTransactionBase.h"
 #include "mozilla/TransactionManager.h"
 
+using mozilla::EditTransactionBase;
 using mozilla::TransactionManager;
 
 static int32_t sConstructorCount = 0;
@@ -245,6 +247,10 @@ class TestTransaction : public nsITransaction {
   TestTransaction() {}
 
   NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetAsEditTransactionBase(EditTransactionBase**) final {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
 };
 
 NS_IMPL_ISUPPORTS(TestTransaction, nsITransaction)

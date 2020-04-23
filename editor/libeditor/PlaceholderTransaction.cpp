@@ -99,9 +99,9 @@ NS_IMETHODIMP PlaceholderTransaction::RedoTransaction() {
   return rv;
 }
 
-NS_IMETHODIMP PlaceholderTransaction::Merge(nsITransaction* aTransaction,
+NS_IMETHODIMP PlaceholderTransaction::Merge(nsITransaction* aOtherTransaction,
                                             bool* aDidMerge) {
-  if (NS_WARN_IF(!aDidMerge) || NS_WARN_IF(!aTransaction)) {
+  if (NS_WARN_IF(!aDidMerge) || NS_WARN_IF(!aOtherTransaction)) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -115,45 +115,49 @@ NS_IMETHODIMP PlaceholderTransaction::Merge(nsITransaction* aTransaction,
     return NS_ERROR_FAILURE;
   }
 
-  // XXX: hack, not safe!  need nsIEditTransaction!
-  EditTransactionBase* editTransactionBase =
-      reinterpret_cast<EditTransactionBase*>(aTransaction);
+  RefPtr<EditTransactionBase> otherTransactionBase =
+      aOtherTransaction->GetAsEditTransactionBase();
+  if (!otherTransactionBase) {
+    return NS_OK;
+  }
 
   // We are absorbing all transactions if mAbsorb is lit.
   if (mAbsorb) {
-    RefPtr<CompositionTransaction> otherTransaction =
-        do_QueryObject(aTransaction);
-    if (otherTransaction) {
+    CompositionTransaction* otherCompositionTransaction =
+        otherTransactionBase->GetAsCompositionTransaction();
+    if (otherCompositionTransaction) {
       // special handling for CompositionTransaction's: they need to merge with
       // any previous CompositionTransaction in this placeholder, if possible.
       if (!mCompositionTransaction) {
         // this is the first IME txn in the placeholder
-        mCompositionTransaction = otherTransaction;
-        DebugOnly<nsresult> rvIgnored = AppendChild(editTransactionBase);
+        mCompositionTransaction = otherCompositionTransaction;
+        DebugOnly<nsresult> rvIgnored =
+            AppendChild(otherCompositionTransaction);
         NS_WARNING_ASSERTION(
             NS_SUCCEEDED(rvIgnored),
             "EditAggregateTransaction::AppendChild() failed, but ignored");
       } else {
         bool didMerge;
-        mCompositionTransaction->Merge(otherTransaction, &didMerge);
+        mCompositionTransaction->Merge(otherCompositionTransaction, &didMerge);
         if (!didMerge) {
           // it wouldn't merge.  Earlier IME txn is already committed and will
           // not absorb further IME txns.  So just stack this one after it
           // and remember it as a candidate for further merges.
-          mCompositionTransaction = otherTransaction;
-          DebugOnly<nsresult> rvIgnored = AppendChild(editTransactionBase);
+          mCompositionTransaction = otherCompositionTransaction;
+          DebugOnly<nsresult> rvIgnored =
+              AppendChild(otherCompositionTransaction);
           NS_WARNING_ASSERTION(
               NS_SUCCEEDED(rvIgnored),
               "EditAggregateTransaction::AppendChild() failed, but ignored");
         }
       }
     } else {
-      nsCOMPtr<nsIAbsorbingTransaction> absorbingTransaction =
-          do_QueryInterface(editTransactionBase);
-      if (!absorbingTransaction) {
+      nsCOMPtr<nsIAbsorbingTransaction> otherAbsorbingTransaction =
+          do_QueryInterface(otherTransactionBase);
+      if (!otherAbsorbingTransaction) {
         // See bug 171243: just drop incoming placeholders on the floor.
         // Their children will be swallowed by this preexisting one.
-        DebugOnly<nsresult> rvIgnored = AppendChild(editTransactionBase);
+        DebugOnly<nsresult> rvIgnored = AppendChild(otherTransactionBase);
         NS_WARNING_ASSERTION(
             NS_SUCCEEDED(rvIgnored),
             "EditAggregateTransaction::AppendChild() failed, but ignored");
@@ -174,15 +178,15 @@ NS_IMETHODIMP PlaceholderTransaction::Merge(nsITransaction* aTransaction,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIAbsorbingTransaction> absorbingTransaction =
-      do_QueryInterface(editTransactionBase);
-  if (!absorbingTransaction) {
+  nsCOMPtr<nsIAbsorbingTransaction> otherAbsorbingTransaction =
+      do_QueryInterface(otherTransactionBase);
+  if (!otherAbsorbingTransaction) {
     return NS_OK;
   }
 
   RefPtr<nsAtom> otherTransactionName;
-  DebugOnly<nsresult> rvIgnored =
-      absorbingTransaction->GetTxnName(getter_AddRefs(otherTransactionName));
+  DebugOnly<nsresult> rvIgnored = otherAbsorbingTransaction->GetTxnName(
+      getter_AddRefs(otherTransactionName));
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rvIgnored),
       "nsIAbsorbingTransaction::GetTxnName() failed, but ignored");
@@ -191,11 +195,11 @@ NS_IMETHODIMP PlaceholderTransaction::Merge(nsITransaction* aTransaction,
   }
   // check if start selection of next placeholder matches
   // end selection of this placeholder
-  if (!absorbingTransaction->StartSelectionEquals(mEndSel)) {
+  if (!otherAbsorbingTransaction->StartSelectionEquals(mEndSel)) {
     return NS_OK;
   }
   mAbsorb = true;  // we need to start absorbing again
-  absorbingTransaction->ForwardEndBatchTo(this);
+  otherAbsorbingTransaction->ForwardEndBatchTo(this);
   // AppendChild(editTransactionBase);
   // see bug 171243: we don't need to merge placeholders
   // into placeholders.  We just reactivate merging in the

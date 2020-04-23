@@ -47,10 +47,9 @@ NS_IMETHODIMP EditTransactionBase::GetIsTransient(bool* aIsTransient) {
   return NS_OK;
 }
 
-NS_IMETHODIMP EditTransactionBase::Merge(nsITransaction* aTransaction,
+NS_IMETHODIMP EditTransactionBase::Merge(nsITransaction* aOtherTransaction,
                                          bool* aDidMerge) {
   *aDidMerge = false;
-
   return NS_OK;
 }
 

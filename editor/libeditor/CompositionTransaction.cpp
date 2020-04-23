@@ -178,30 +178,35 @@ NS_IMETHODIMP CompositionTransaction::UndoTransaction() {
   return rv;
 }
 
-NS_IMETHODIMP CompositionTransaction::Merge(nsITransaction* aTransaction,
+NS_IMETHODIMP CompositionTransaction::Merge(nsITransaction* aOtherTransaction,
                                             bool* aDidMerge) {
-  if (NS_WARN_IF(!aTransaction) || NS_WARN_IF(!aDidMerge)) {
+  if (NS_WARN_IF(!aOtherTransaction) || NS_WARN_IF(!aDidMerge)) {
     return NS_ERROR_INVALID_ARG;
   }
-
-  // Check to make sure we aren't fixed, if we are then nothing gets absorbed
-  if (mFixed) {
-    *aDidMerge = false;
-    return NS_OK;
-  }
-
-  // If aTransaction is another CompositionTransaction then absorb it
-  RefPtr<CompositionTransaction> otherTransaction =
-      do_QueryObject(aTransaction);
-  if (otherTransaction) {
-    // We absorb the next IME transaction by adopting its insert string
-    mStringToInsert = otherTransaction->mStringToInsert;
-    mRanges = otherTransaction->mRanges;
-    *aDidMerge = true;
-    return NS_OK;
-  }
-
   *aDidMerge = false;
+
+  // Check to make sure we aren't fixed, if we are then nothing gets merged.
+  if (mFixed) {
+    return NS_OK;
+  }
+
+  RefPtr<EditTransactionBase> otherTransactionBase =
+      aOtherTransaction->GetAsEditTransactionBase();
+  if (!otherTransactionBase) {
+    return NS_OK;
+  }
+
+  // If aTransaction is another CompositionTransaction then merge it
+  CompositionTransaction* otherCompositionTransaction =
+      otherTransactionBase->GetAsCompositionTransaction();
+  if (!otherCompositionTransaction) {
+    return NS_OK;
+  }
+
+  // We merge the next IME transaction by adopting its insert string.
+  mStringToInsert = otherCompositionTransaction->mStringToInsert;
+  mRanges = otherCompositionTransaction->mRanges;
+  *aDidMerge = true;
   return NS_OK;
 }
 

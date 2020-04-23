@@ -11,6 +11,15 @@
 #include "nsITransaction.h"
 #include "nscore.h"
 
+already_AddRefed<mozilla::EditTransactionBase>
+nsITransaction::GetAsEditTransactionBase() {
+  RefPtr<mozilla::EditTransactionBase> editTransactionBase;
+  return NS_SUCCEEDED(
+             GetAsEditTransactionBase(getter_AddRefs(editTransactionBase)))
+             ? editTransactionBase.forget()
+             : nullptr;
+}
+
 namespace mozilla {
 
 class ChangeAttributeTransaction;
@@ -42,6 +51,13 @@ class EditTransactionBase : public nsITransaction {
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction(void) override;
   NS_IMETHOD GetIsTransient(bool* aIsTransient) override;
   NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;
+  NS_IMETHOD GetAsEditTransactionBase(
+      EditTransactionBase** aEditTransactionBase) final {
+    MOZ_ASSERT(aEditTransactionBase);
+    MOZ_ASSERT(!*aEditTransactionBase);
+    *aEditTransactionBase = do_AddRef(this).take();
+    return NS_OK;
+  }
 
   NS_DECL_GETASTRANSACTION_BASE(ChangeAttributeTransaction)
   NS_DECL_GETASTRANSACTION_BASE(ChangeStyleTransaction)
