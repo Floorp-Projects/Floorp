@@ -29,15 +29,12 @@ describe("<CardGrid>", () => {
     );
   });
 
-  it("should add divisible-by-4 to the grid", () => {
-    wrapper.setProps({ items: 4, data: { recommendations: [{}, {}] } });
+  it("should add hero classname to card grid", () => {
+    wrapper.setProps({
+      display_variant: "hero",
+      data: { recommendations: [{}, {}] },
+    });
 
-    assert.ok(wrapper.find(".ds-card-grid-divisible-by-4").exists());
-  });
-
-  it("should add divisible-by-3 to the grid", () => {
-    wrapper.setProps({ items: 3, data: { recommendations: [{}, {}] } });
-
-    assert.ok(wrapper.find(".ds-card-grid-divisible-by-3").exists());
+    assert.ok(wrapper.find(".ds-card-grid-hero").exists());
   });
 });

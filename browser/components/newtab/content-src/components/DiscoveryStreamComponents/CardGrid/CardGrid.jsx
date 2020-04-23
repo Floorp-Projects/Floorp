@@ -45,17 +45,14 @@ export class CardGrid extends React.PureComponent {
       );
     }
 
-    let divisibility = ``;
-
-    if (this.props.items % 4 === 0) {
-      divisibility = `divisible-by-4`;
-    } else if (this.props.items % 3 === 0) {
-      divisibility = `divisible-by-3`;
-    }
+    // Used for CSS overrides to default styling (eg: "hero")
+    const variantClass = this.props.display_variant
+      ? `ds-card-grid-${this.props.display_variant}`
+      : ``;
 
     return (
       <div
-        className={`ds-card-grid ds-card-grid-${this.props.border} ds-card-grid-${divisibility}`}
+        className={`ds-card-grid ds-card-grid-${this.props.border} ${variantClass}`}
       >
         {cards}
       </div>
