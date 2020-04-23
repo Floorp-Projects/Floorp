@@ -137,6 +137,12 @@ class HangMonitorChild : public PProcessHangMonitorChild,
 
   void AnnotateHang(BackgroundHangAnnotations& aAnnotations) override;
 
+ protected:
+  friend class mozilla::ProcessHangMonitor;
+  static Maybe<Monitor> sMonitor;
+
+  static Atomic<bool, SequentiallyConsistent> sInitializing;
+
  private:
   void ShutdownOnThread();
 
@@ -172,6 +178,10 @@ class HangMonitorChild : public PProcessHangMonitorChild,
   // either thread to do so.
   Atomic<bool> mPaintWhileInterruptingJSActive;
 };
+
+Maybe<Monitor> HangMonitorChild::sMonitor;
+
+Atomic<bool, SequentiallyConsistent> HangMonitorChild::sInitializing;
 
 Atomic<HangMonitorChild*, SequentiallyConsistent> HangMonitorChild::sInstance;
 
@@ -319,9 +329,17 @@ HangMonitorChild::HangMonitorChild(ProcessHangMonitor* aMonitor)
       mIPCOpen(true),
       mPaintWhileInterruptingJSActive(false) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!sInstance);
   mContext = danger::GetJSContext();
 
   BackgroundHangMonitor::RegisterAnnotator(*this);
+
+  MOZ_ASSERT(!sMonitor.isSome());
+  sMonitor.emplace("HangMonitorChild::sMonitor");
+  MonitorAutoLock mal(*sMonitor);
+
+  MOZ_ASSERT(!sInitializing);
+  sInitializing = true;
 }
 
 HangMonitorChild::~HangMonitorChild() {
@@ -560,11 +578,16 @@ mozilla::ipc::IPCResult HangMonitorChild::RecvCancelContentJSExecutionIfRunning(
 void HangMonitorChild::Bind(Endpoint<PProcessHangMonitorChild>&& aEndpoint) {
   MOZ_RELEASE_ASSERT(IsOnThread());
 
+  MonitorAutoLock mal(*sMonitor);
+
   MOZ_ASSERT(!sInstance);
   sInstance = this;
 
   DebugOnly<bool> ok = aEndpoint.Bind(this);
   MOZ_ASSERT(ok);
+
+  sInitializing = false;
+  mal.Notify();
 }
 
 void HangMonitorChild::NotifySlowScriptAsync(TabId aTabId,
@@ -1227,15 +1250,21 @@ ProcessHangMonitor::Observe(nsISupports* aSubject, const char* aTopic,
                             const char16_t* aData) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   if (!strcmp(aTopic, "xpcom-shutdown")) {
-    if (HangMonitorChild* child = HangMonitorChild::Get()) {
-      child->Shutdown();
-      delete child;
+    if (HangMonitorChild::sMonitor) {
+      MonitorAutoLock mal(*HangMonitorChild::sMonitor);
+      if (HangMonitorChild::sInitializing) {
+        mal.Wait();
+      }
+
+      if (HangMonitorChild* child = HangMonitorChild::Get()) {
+        child->Shutdown();
+        delete child;
+      }
     }
+    HangMonitorChild::sMonitor.reset();
 
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-      obs->RemoveObserver(this, "xpcom-shutdown");
-    }
+    obs->RemoveObserver(this, "xpcom-shutdown");
   }
   return NS_OK;
 }
