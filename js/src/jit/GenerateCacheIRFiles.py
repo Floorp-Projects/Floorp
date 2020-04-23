@@ -111,7 +111,11 @@ def gen_writer_method(name, args, custom_writer):
     #     writeOp(CacheOp::GuardShape);
     #     writeOperandId(obj);
     #     writeShapeField(shape);
+    #     assertLengthMatches();
     #  }
+    #
+    # The assertLengthMatches() call is to assert the information in the
+    # arg_length dictionary below matches what's written.
 
     # Method names start with a lowercase letter.
     method_name = name[0].lower() + name[1:]
@@ -138,6 +142,7 @@ def gen_writer_method(name, args, custom_writer):
     code += '{} {}({}) {{\\\n'.format(ret_type, method_name, ', '.join(method_args))
     code += '  writeOp(CacheOp::{});\\\n'.format(name)
     code += args_code
+    code += '  assertLengthMatches();\\\n'
     if ret_type != 'void':
         code += '  return result;\\\n'
     code += '}'
@@ -306,6 +311,53 @@ def gen_spewer_method(name, args):
     return code
 
 
+# Length in bytes for each argument type, either an integer or a C++ expression.
+# This is used to generate the CacheIROpArgLengths array. CacheIRWriter asserts
+# the number of bytes written matches the value in that array.
+arg_length = {
+    'ValId': 1,
+    'ObjId': 1,
+    'StringId': 1,
+    'SymbolId': 1,
+    'Int32Id': 1,
+    'NumberId': 1,
+    'BigIntId': 1,
+    'ValueTagId': 1,
+    'RawId': 1,
+
+    'ShapeField': 1,
+    'GroupField': 1,
+    'ObjectField': 1,
+    'StringField': 1,
+    'AtomField': 1,
+    'PropertyNameField': 1,
+    'SymbolField': 1,
+    'RawWordField': 1,
+    'RawPointerField': 1,
+    'DOMExpandoGenerationField': 1,
+    'IdField': 1,
+    'ValueField': 1,
+
+    'ByteImm': 1,
+    'BoolImm': 1,
+    'CallFlagsImm': 1,
+    'TypedThingLayoutImm': 1,
+    'ReferenceTypeImm': 1,
+    'ScalarTypeImm': 1,
+    'MetaTwoByteKindImm': 1,
+    'JSOpImm': 1,
+    'ValueTypeImm': 1,
+    'GuardClassKindImm': 1,
+    'JSWhyMagicImm': 1,
+
+    'Int32Imm': 4,
+    'UInt32Imm': 4,
+
+    'JSNativeImm': 'sizeof(uintptr_t)',
+    'StaticStringImm': 'sizeof(uintptr_t)',
+}
+
+
 def generate_cacheirops_header(c_out, yaml_path):
     """Generate CacheIROpsGenerated.h from CacheIROps.yaml. The generated file
     contains a list of all CacheIR ops and generated source code for
@@ -313,53 +365,8 @@ def generate_cacheirops_header(c_out, yaml_path):
 
     data = load_yaml(yaml_path)
 
-    # Mapping from argument types to the less precise types expected by current
-    # C++ code.
-    mapping = {
-        'ValId': 'Id',
-        'ObjId': 'Id',
-        'StringId': 'Id',
-        'SymbolId': 'Id',
-        'Int32Id': 'Id',
-        'NumberId': 'Id',
-        'BigIntId': 'Id',
-        'ValueTagId': 'Id',
-        'RawId': 'Id',
-
-        'ShapeField': 'Field',
-        'GroupField': 'Field',
-        'ObjectField': 'Field',
-        'StringField': 'Field',
-        'AtomField': 'Field',
-        'PropertyNameField': 'Field',
-        'SymbolField': 'Field',
-        'RawWordField': 'Field',
-        'RawPointerField': 'Field',
-        'DOMExpandoGenerationField': 'Field',
-        'IdField': 'Field',
-        'ValueField': 'Field',
-
-        'ByteImm': 'Byte',
-        'BoolImm': 'Byte',
-        'CallFlagsImm': 'Byte',
-        'TypedThingLayoutImm': 'Byte',
-        'ReferenceTypeImm': 'Byte',
-        'ScalarTypeImm': 'Byte',
-        'MetaTwoByteKindImm': 'Byte',
-        'JSOpImm': 'Byte',
-        'ValueTypeImm': 'Byte',
-        'GuardClassKindImm': 'Byte',
-        'JSWhyMagicImm': 'Byte',
-
-        'Int32Imm': 'Int32',
-
-        'UInt32Imm': 'UInt32',
-
-        'JSNativeImm': 'Word',
-        'StaticStringImm': 'Word',
-    }
-
-    # CACHE_IR_OPS items.
+    # CACHE_IR_OPS items. Each item stores an opcode name and arguments length
+    # expression. For example: _(GuardShape, 1 + 1)
     ops_items = []
 
     # Generated CacheIRWriter methods.
@@ -385,10 +392,10 @@ def generate_cacheirops_header(c_out, yaml_path):
         assert isinstance(custom_writer, bool)
 
         if args:
-            args_str = ', '.join([mapping[v] for v in args.values()])
+            args_length = ' + '.join([str(arg_length[v]) for v in args.values()])
         else:
-            args_str = 'None'
-        ops_items.append('_({}, {})'.format(name, args_str))
+            args_length = '0'
+        ops_items.append('_({}, {})'.format(name, args_length))
 
         writer_methods.append(gen_writer_method(name, args, custom_writer))
         if shared:
