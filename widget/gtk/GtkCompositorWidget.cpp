@@ -27,10 +27,9 @@ GtkCompositorWidget::GtkCompositorWidget(
   }
 
 #ifdef MOZ_WAYLAND
-  if (!aInitData.IsX11Display()) {
-    if (!aWindow) {
-      NS_WARNING("GtkCompositorWidget: We're missing nsWindow!");
-    }
+  if (!mXDisplay) {
+    MOZ_RELEASE_ASSERT(
+        aWindow, "We're running on Wayland and but without valid nsWindow.");
     mProvider.Initialize(aWindow);
   } else
 #endif
@@ -93,9 +92,7 @@ uintptr_t GtkCompositorWidget::GetWidgetKey() {
 }
 
 EGLNativeWindowType GtkCompositorWidget::GetEGLNativeWindow() {
-  return mWidget
-             ? (EGLNativeWindowType)mWidget->GetNativeData(NS_NATIVE_EGL_WINDOW)
-             : nullptr;
+  return (EGLNativeWindowType)mWidget->GetNativeData(NS_NATIVE_EGL_WINDOW);
 }
 
 #ifdef MOZ_WAYLAND
