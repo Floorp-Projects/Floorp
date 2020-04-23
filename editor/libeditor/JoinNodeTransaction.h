@@ -54,6 +54,7 @@ class JoinNodeTransaction final : public EditTransactionBase {
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
   NS_DECL_EDITTRANSACTIONBASE
+  NS_DECL_EDITTRANSACTIONBASE_GETASMETHODS_OVERRIDE(JoinNodeTransaction)
 
  protected:
   RefPtr<EditorBase> mEditorBase;
