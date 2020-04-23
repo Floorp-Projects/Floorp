@@ -12,13 +12,13 @@
 
 [package]
 name = "autocfg"
-version = "1.0.0"
+version = "0.1.6"
 authors = ["Josh Stone <cuviper@gmail.com>"]
 description = "Automatic cfg for Rust compiler features"
 readme = "README.md"
 keywords = ["rustc", "build", "autoconf"]
 categories = ["development-tools::build-utils"]
-license = "Apache-2.0 OR MIT"
+license = "Apache-2.0/MIT"
 repository = "https://github.com/cuviper/autocfg"
 
 [dependencies]

@@ -40,6 +40,7 @@ encoding_rs = {version = "0.8", optional = true}
 euclid = "0.20"
 fallible = { path = "../fallible" }
 fxhash = "0.2"
+hashbrown = "0.7"
 hashglobe = { path = "../hashglobe" }
 html5ever = {version = "0.24", optional = true}
 indexmap = "1.0"
