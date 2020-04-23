@@ -55,6 +55,7 @@ extern crate content_security_policy;
 extern crate crossbeam_channel;
 extern crate cssparser;
 extern crate euclid;
+extern crate hashbrown;
 extern crate hashglobe;
 #[cfg(feature = "servo")]
 extern crate hyper;
@@ -487,6 +488,7 @@ macro_rules! malloc_size_of_hash_set {
 }
 
 malloc_size_of_hash_set!(std::collections::HashSet<T, S>);
+malloc_size_of_hash_set!(hashbrown::HashSet<T, S>);
 malloc_size_of_hash_set!(hashglobe::hash_set::HashSet<T, S>);
 malloc_size_of_hash_set!(hashglobe::fake::HashSet<T, S>);
 
@@ -528,6 +530,7 @@ macro_rules! malloc_size_of_hash_map {
 }
 
 malloc_size_of_hash_map!(std::collections::HashMap<K, V, S>);
+malloc_size_of_hash_map!(hashbrown::HashMap<K, V, S>);
 malloc_size_of_hash_map!(hashglobe::hash_map::HashMap<K, V, S>);
 malloc_size_of_hash_map!(hashglobe::fake::HashMap<K, V, S>);
 
