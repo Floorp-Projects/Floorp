@@ -48,11 +48,7 @@ class DocumentChannelChild final : public DocumentChannel,
       RedirectToRealChannelResolver&& aResolve);
 
  private:
-  void DeleteIPDL() override {
-    if (CanSend()) {
-      Send__delete__(this);
-    }
-  }
+  void ShutdownListeners(nsresult aStatusCode);
 
   ~DocumentChannelChild();
 

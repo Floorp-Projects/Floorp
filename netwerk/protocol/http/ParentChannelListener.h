@@ -8,14 +8,14 @@
 #ifndef mozilla_net_ParentChannelListener_h
 #define mozilla_net_ParentChannelListener_h
 
-#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "nsIAuthPromptProvider.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIMultiPartChannel.h"
 #include "nsINetworkInterceptController.h"
-#include "nsIRemoteWindowContext.h"
 #include "nsIStreamListener.h"
-#include "nsIThreadRetargetableStreamListener.h"
+#include "nsIMultiPartChannel.h"
+#include "nsIRemoteWindowContext.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 
 namespace mozilla {
 namespace net {
@@ -35,7 +35,6 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
                                     public nsIStreamListener,
                                     public nsIMultiPartChannelListener,
                                     public nsINetworkInterceptController,
-                                    public nsIThreadRetargetableStreamListener,
                                     private nsIAuthPromptProvider,
                                     private nsIRemoteWindowContext {
  public:
@@ -47,7 +46,6 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
   NS_DECL_NSINETWORKINTERCEPTCONTROLLER
   NS_DECL_NSIAUTHPROMPTPROVIDER
   NS_DECL_NSIREMOTEWINDOWCONTEXT
-  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
   NS_DECLARE_STATIC_IID_ACCESSOR(PARENT_CHANNEL_LISTENER)
 

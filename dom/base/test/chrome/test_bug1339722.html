@@ -1,91 +1,67 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML>
 <html>
-  <!--
+<!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=1339722
 -->
-  <head>
-    <meta charset="utf-8" />
-    <title>Test for Bug 1339722</title>
-    <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-    <link rel="stylesheet" type="text/css" href="chrome://global/skin" />
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="chrome://mochikit/content/tests/SimpleTest/test.css"
-    />
-    <script type="application/javascript">
-      /**
-       * Test for Bug 1339722
-       * 1. Wait for "http-on-modify-request" or document-on-modify-request for the
-       *    iframe load.
-       * 2. In the observer, access it's window proxy to trigger DOMWindowCreated.
-       * 3. In the event handler, delete the iframe so that the frameloader would be
-       *    destroyed in the middle of ReallyStartLoading.
-       * 4. Verify that it doesn't crash.
-       **/
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1339722</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
 
-      const { Services } = ChromeUtils.import(
-        "resource://gre/modules/Services.jsm"
-      );
-      // This topic used to be http-on-useragent-request, but that got removed in
-      // bug 1513574. on-modify-request is called around the same time, and should
-      // behave similarly.
-      const TOPIC = SpecialPowers.getBoolPref("browser.tabs.documentchannel")
-        ? "document-on-modify-request"
-        : "http-on-modify-request";
-      let win;
-      const observe = (subject, topic, data) => {
-        info("Got " + topic);
-        Services.obs.removeObserver(observe, TOPIC);
+  /**
+   * Test for Bug 1339722
+   * 1. Wait for "http-on-modify-request" for the iframe load.
+   * 2. In the observer, access it's window proxy to trigger DOMWindowCreated.
+   * 3. In the event handler, delete the iframe so that the frameloader would be
+   *    destoryed in the middle of ReallyStartLoading.
+   * 4. Verify that it doesn't crash.
+  **/
 
-        // Query window proxy so it triggers DOMWindowCreated.
-        let channel;
-        try {
-          // We need to QI nsIHttpChannel in order to load the interface's
-          // methods / attributes for later code that could assume we are dealing
-          // with a nsIHttpChannel.
-          channel = subject.QueryInterface(Ci.nsIHttpChannel);
-        } catch (e) {
-          channel = subject.QueryInterface(Ci.nsIIdentChannel);
-        }
-        win = channel.notificationCallbacks.getInterface(Ci.mozIDOMWindowProxy);
-      };
+  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-      Services.obs.addObserver(observe, TOPIC);
+  // This topic used to be http-on-useragent-request, but that got removed in
+  // bug 1513574. on-modify-request is called around the same time, and should
+  // behave similarly.
+  const TOPIC = "http-on-modify-request";
+  let win;
+  Services.obs.addObserver({
+    observe(subject, topic, data) {
+      info("Got " + topic);
+      Services.obs.removeObserver(this, TOPIC);
 
-      let docShell = SpecialPowers.wrap(window).docShell;
-      docShell.chromeEventHandler.addEventListener(
-        "DOMWindowCreated",
-        function handler(e) {
-          info("Got DOMWindowCreated");
-          let iframe = document.getElementById("testFrame");
-          is(e.target, iframe.contentDocument, "verify event target");
+      // Query window proxy so it triggers DOMWindowCreated.
+      let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+      win = channel.notificationCallbacks.getInterface(Ci.mozIDOMWindowProxy);
+    },
+  }, TOPIC);
 
-          // Remove the iframe to cause frameloader destroy.
-          iframe.remove();
-          setTimeout(($) => {
-            ok(!document.getElementById("testFrame"), "verify iframe removed");
-            SimpleTest.finish();
-          }, 0);
-        },
-        { once: true }
-      );
+  let docShell = SpecialPowers.wrap(window).docShell;
+  docShell.chromeEventHandler.addEventListener("DOMWindowCreated", function handler(e) {
+    let iframe = document.getElementById("testFrame");
+    is(e.target, iframe.contentDocument, "verify event target");
 
-      SimpleTest.waitForExplicitFinish();
-    </script>
-  </head>
-  <body>
-    <a
-      target="_blank"
-      href="https://bugzilla.mozilla.org/show_bug.cgi?id=1339722"
-      >Mozilla Bug 1339722</a
-    >
-    <p id="display"></p>
-    <div id="content" style="display: none;"></div>
-    <pre id="test">
+    // Remove the iframe to cause frameloader destroy.
+    iframe.remove();
+    setTimeout($ => {
+      ok(!document.getElementById("testFrame"), "verify iframe removed");
+      SimpleTest.finish();
+    }, 0);
+  }, {once: true});
+
+  SimpleTest.waitForExplicitFinish();
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1339722">Mozilla Bug 1339722</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
   <div id="frameContainer">
     <iframe id="testFrame" src="http://www.example.com"></iframe>
   </div>
 </pre>
-  </body>
+</body>
 </html>
