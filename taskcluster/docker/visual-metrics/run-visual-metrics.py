@@ -154,13 +154,13 @@ def read_json(json_path, schema):
         The contents of the file at ``json_path`` interpreted as JSON.
     """
     try:
-        with open(str(json_path), "r") as f:
+        with open(str(json_path),  "r", encoding="utf-8", errors="ignore") as f:
             data = json.load(f)
     except Exception:
         log.error("Could not read JSON file", path=json_path, exc_info=True)
         raise
 
-    log.info("Loaded JSON from file", path=json_path, read_json=data)
+    log.info("Loaded JSON from file", path=json_path)
 
     try:
         schema(data)
@@ -204,7 +204,7 @@ def main(log, args):
         log.error(
             "Could not read extract browsertime results archive",
             path=browsertime_results_path,
-            exc_info=True,
+            exc_info=True
         )
         return 1
     log.info("Extracted browsertime results", path=browsertime_results_path)
@@ -213,6 +213,11 @@ def main(log, args):
         jobs_json_path = fetch_dir / "browsertime-results" / "jobs.json"
         jobs_json = read_json(jobs_json_path, JOB_SCHEMA)
     except Exception:
+        log.error(
+            "Could not open the jobs.json file",
+            path=jobs_json_path,
+            exc_info=True
+        )
         return 1
 
     jobs = []
@@ -223,6 +228,11 @@ def main(log, args):
         try:
             browsertime_json = read_json(browsertime_json_path, BROWSERTIME_SCHEMA)
         except Exception:
+            log.error(
+                "Could not open a browsertime.json file",
+                path=browsertime_json_path,
+                exc_info=True
+            )
             return 1
 
         for site in browsertime_json:
