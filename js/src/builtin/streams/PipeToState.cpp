@@ -21,7 +21,7 @@
 #include "builtin/streams/WritableStream.h"        // js::WritableStream
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::CreateWritableStreamDefaultWriter, js::WritableStreamDefaultWriter
 #include "builtin/streams/WritableStreamOperations.h"  // js::WritableStreamCloseQueuedOrInFlight
-#include "builtin/streams/WritableStreamWriterOperations.h"  // js::WritableStreamDefaultWriterGetDesiredSize
+#include "builtin/streams/WritableStreamWriterOperations.h"  // js::WritableStreamDefaultWriter{GetDesiredSize,Write}
 #include "js/CallArgs.h"       // JS::CallArgsFromVp, JS::CallArgs
 #include "js/Class.h"          // JSClass, JSCLASS_HAS_RESERVED_SLOTS
 #include "js/Promise.h"        // JS::AddPromiseReactions
@@ -59,6 +59,7 @@ using js::UnwrapStreamFromWriter;
 using js::UnwrapWriterFromStream;
 using js::WritableStream;
 using js::WritableStreamDefaultWriter;
+using js::WritableStreamDefaultWriterWrite;
 
 // This typedef is undoubtedly not the right one for the long run, but it's
 // enough to be placeholder for now.
@@ -449,6 +450,72 @@ static inline JSObject* GetClosedPromise(
   return unwrappedAccessor->closedPromise();
 }
 
+static MOZ_MUST_USE bool ReadFromSource(JSContext* cx,
+                                        Handle<PipeToState*> state);
+
+static bool ReadFulfilled(JSContext* cx, Handle<PipeToState*> state,
+                          Handle<JSObject*> result) {
+  cx->check(state);
+  cx->check(result);
+
+  state->clearReadPending();
+
+  // In general, "Shutdown must stop activity: if shuttingDown becomes true, the
+  // user agent must not initiate further reads from reader, and must only
+  // perform writes of already-read chunks".  But we "perform writes of already-
+  // read chunks" here, so we ignore |state->shuttingDown()|.
+
+  {
+    bool done;
+    {
+      Rooted<Value> doneVal(cx);
+      if (!GetProperty(cx, result, result, cx->names().done, &doneVal)) {
+        return false;
+      }
+      done = doneVal.toBoolean();
+    }
+
+    if (done) {
+      // All chunks have been read from |reader| and written to |writer| (but
+      // not necessarily fulfilled yet, in the latter case).  Proceed as if
+      // |source| is now closed.  (This will asynchronously wait until any
+      // pending writes have fulfilled.)
+      return OnSourceClosed(cx, state);
+    }
+  }
+
+  // A chunk was read, and *at the time the read was requested*, |dest| was
+  // ready to accept a write.  (Only one read is processed at a time per
+  // |state->isReadPending()|, so this condition remains true now.)  Write the
+  // chunk to |dest|.
+  {
+    Rooted<Value> chunk(cx);
+    if (!GetProperty(cx, result, result, cx->names().value, &chunk)) {
+      return false;
+    }
+
+    Rooted<WritableStreamDefaultWriter*> writer(cx, state->writer());
+    cx->check(writer);
+
+    PromiseObject* writeRequest =
+        WritableStreamDefaultWriterWrite(cx, writer, chunk);
+    if (!writeRequest) {
+      return false;
+    }
+
+    // Stash away this new last write request.  (The shutdown process will react
+    // to this write request to finish shutdown only once all pending writes are
+    // completed.)
+    state->updateLastWriteRequest(writeRequest);
+  }
+
+  // Read another chunk if this write didn't fill up |dest|.
+  //
+  // While we (properly) ignored |state->shuttingDown()| earlier, this call will
+  // *not* initiate a fresh read if |!state->shuttingDown()|.
+  return ReadFromSource(cx, state);
+}
+
 static bool ReadFulfilled(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
@@ -456,9 +523,12 @@ static bool ReadFulfilled(JSContext* cx, unsigned argc, Value* vp) {
   Rooted<PipeToState*> state(cx, TargetFromHandler<PipeToState>(args));
   cx->check(state);
 
-  state->clearReadPending();
+  Rooted<JSObject*> result(cx, &args[0].toObject());
+  cx->check(result);
 
-  // XXX fill me in!
+  if (!ReadFulfilled(cx, state, result)) {
+    return false;
+  }
 
   args.rval().setUndefined();
   return true;
