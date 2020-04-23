@@ -530,7 +530,7 @@ async function timeoutAlarmListener() {
     "load time": isLoadTimePending,
   };
 
-  let msgData = [testName, testURL];
+  let msgData = [testName, testURL, pageCycle];
   if (testType == TEST_PAGE_LOAD) {
     msgData.push(pendingMetrics);
   }
