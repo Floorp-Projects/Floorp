@@ -63,6 +63,7 @@ class RaptorRunner(MozbuildObject):
         self.memory_test = kwargs['memory_test']
         self.power_test = kwargs['power_test']
         self.cpu_test = kwargs['cpu_test']
+        self.live_sites = kwargs['live_sites']
         self.disable_perf_tuning = kwargs['disable_perf_tuning']
         self.conditioned_profile_scenario = kwargs['conditioned_profile_scenario']
         self.device_name = kwargs['device_name']
@@ -163,6 +164,7 @@ class RaptorRunner(MozbuildObject):
             'power_test': self.power_test,
             'memory_test': self.memory_test,
             'cpu_test': self.cpu_test,
+            'live_sites': self.live_sites,
             'disable_perf_tuning': self.disable_perf_tuning,
             'conditioned_profile_scenario': self.conditioned_profile_scenario,
             'is_release_build': self.is_release_build,
