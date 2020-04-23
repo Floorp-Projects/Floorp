@@ -13,6 +13,7 @@
 
 #include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
+#include "jit/CacheIROpsGenerated.h"
 #include "jit/JitScript.h"
 #include "jit/JitSpewer.h"
 #include "jit/MIRGenerator.h"
@@ -665,7 +666,7 @@ AbortReasonOr<Ok> WarpOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
 #define DEFINE_OP(op, ...) \
   case CacheOp::op:        \
     break;
-      WARP_CACHE_IR_OPS(DEFINE_OP)
+      CACHE_IR_TRANSPILER_OPS(DEFINE_OP)
 #undef DEFINE_OP
 
       default:
