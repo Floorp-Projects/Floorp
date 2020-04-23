@@ -55,7 +55,7 @@ class IDBIndex final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBIndex)
 
-  static MOZ_MUST_USE RefPtr<IDBIndex> Create(
+  [[nodiscard]] static RefPtr<IDBIndex> Create(
       IDBObjectStore* aObjectStore, const indexedDB::IndexMetadata& aMetadata);
 
   int64_t Id() const {
@@ -94,37 +94,37 @@ class IDBIndex final : public nsISupports, public nsWrapperCache {
   void GetKeyPath(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
                   ErrorResult& aRv);
 
-  MOZ_MUST_USE RefPtr<IDBRequest> OpenCursor(JSContext* aCx,
-                                             JS::Handle<JS::Value> aRange,
-                                             IDBCursorDirection aDirection,
-                                             ErrorResult& aRv);
+  [[nodiscard]] RefPtr<IDBRequest> OpenCursor(JSContext* aCx,
+                                              JS::Handle<JS::Value> aRange,
+                                              IDBCursorDirection aDirection,
+                                              ErrorResult& aRv);
 
-  MOZ_MUST_USE RefPtr<IDBRequest> OpenKeyCursor(JSContext* aCx,
-                                                JS::Handle<JS::Value> aRange,
-                                                IDBCursorDirection aDirection,
-                                                ErrorResult& aRv);
+  [[nodiscard]] RefPtr<IDBRequest> OpenKeyCursor(JSContext* aCx,
+                                                 JS::Handle<JS::Value> aRange,
+                                                 IDBCursorDirection aDirection,
+                                                 ErrorResult& aRv);
 
-  MOZ_MUST_USE RefPtr<IDBRequest> Get(JSContext* aCx,
-                                      JS::Handle<JS::Value> aKey,
-                                      ErrorResult& aRv);
+  [[nodiscard]] RefPtr<IDBRequest> Get(JSContext* aCx,
+                                       JS::Handle<JS::Value> aKey,
+                                       ErrorResult& aRv);
 
-  MOZ_MUST_USE RefPtr<IDBRequest> GetKey(JSContext* aCx,
+  [[nodiscard]] RefPtr<IDBRequest> GetKey(JSContext* aCx,
+                                          JS::Handle<JS::Value> aKey,
+                                          ErrorResult& aRv);
+
+  [[nodiscard]] RefPtr<IDBRequest> Count(JSContext* aCx,
                                          JS::Handle<JS::Value> aKey,
                                          ErrorResult& aRv);
 
-  MOZ_MUST_USE RefPtr<IDBRequest> Count(JSContext* aCx,
-                                        JS::Handle<JS::Value> aKey,
-                                        ErrorResult& aRv);
+  [[nodiscard]] RefPtr<IDBRequest> GetAll(JSContext* aCx,
+                                          JS::Handle<JS::Value> aKey,
+                                          const Optional<uint32_t>& aLimit,
+                                          ErrorResult& aRv);
 
-  MOZ_MUST_USE RefPtr<IDBRequest> GetAll(JSContext* aCx,
-                                         JS::Handle<JS::Value> aKey,
-                                         const Optional<uint32_t>& aLimit,
-                                         ErrorResult& aRv);
-
-  MOZ_MUST_USE RefPtr<IDBRequest> GetAllKeys(JSContext* aCx,
-                                             JS::Handle<JS::Value> aKey,
-                                             const Optional<uint32_t>& aLimit,
-                                             ErrorResult& aRv);
+  [[nodiscard]] RefPtr<IDBRequest> GetAllKeys(JSContext* aCx,
+                                              JS::Handle<JS::Value> aKey,
+                                              const Optional<uint32_t>& aLimit,
+                                              ErrorResult& aRv);
 
   void RefreshMetadata(bool aMayDelete);
 
@@ -154,15 +154,15 @@ class IDBIndex final : public nsISupports, public nsWrapperCache {
 
   ~IDBIndex();
 
-  MOZ_MUST_USE RefPtr<IDBRequest> GetInternal(bool aKeyOnly, JSContext* aCx,
-                                              JS::Handle<JS::Value> aKey,
-                                              ErrorResult& aRv);
+  [[nodiscard]] RefPtr<IDBRequest> GetInternal(bool aKeyOnly, JSContext* aCx,
+                                               JS::Handle<JS::Value> aKey,
+                                               ErrorResult& aRv);
 
-  MOZ_MUST_USE RefPtr<IDBRequest> GetAllInternal(
+  [[nodiscard]] RefPtr<IDBRequest> GetAllInternal(
       bool aKeysOnly, JSContext* aCx, JS::Handle<JS::Value> aKey,
       const Optional<uint32_t>& aLimit, ErrorResult& aRv);
 
-  MOZ_MUST_USE RefPtr<IDBRequest> OpenCursorInternal(
+  [[nodiscard]] RefPtr<IDBRequest> OpenCursorInternal(
       bool aKeysOnly, JSContext* aCx, JS::Handle<JS::Value> aRange,
       IDBCursorDirection aDirection, ErrorResult& aRv);
 };

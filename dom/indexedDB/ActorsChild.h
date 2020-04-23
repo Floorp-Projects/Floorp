@@ -735,7 +735,7 @@ class BackgroundCursorChild final : public BackgroundCursorChildBase {
                                      const Func& aHandleRecord);
 
   template <typename... Args>
-  MOZ_MUST_USE RefPtr<IDBCursor> HandleIndividualCursorResponse(
+  [[nodiscard]] RefPtr<IDBCursor> HandleIndividualCursorResponse(
       bool aUseAsCurrentResult, Args&&... aArgs);
 
  public:
