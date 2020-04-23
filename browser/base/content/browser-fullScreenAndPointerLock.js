@@ -730,7 +730,7 @@ var FullScreen = {
 
     if (
       aAnimate &&
-      Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled") &&
+      window.matchMedia("(prefers-reduced-motion: no-preference)").matches &&
       !BrowserHandler.kiosk
     ) {
       gNavToolbox.setAttribute("fullscreenShouldAnimate", true);
