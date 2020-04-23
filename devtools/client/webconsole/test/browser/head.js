@@ -622,11 +622,19 @@ async function setInputValueForAutocompletion(
   setInputValue(hud, "");
   await Promise.all(initialPromises);
 
+  // Wait for next tick. Tooltip tests sometimes fail to successively hide and
+  // show tooltips on Win32 debug.
+  await waitForTick();
+
   jsterm.focus();
 
   const updated = jsterm.once("autocomplete-updated");
   EventUtils.sendString(value, hud.iframeWindow);
   await updated;
+
+  // Wait for next tick. Tooltip tests sometimes fail to successively hide and
+  // show tooltips on Win32 debug.
+  await waitForTick();
 
   if (caretPosition < 0) {
     caretPosition = value.length + caretPosition;
