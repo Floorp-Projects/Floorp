@@ -43,6 +43,7 @@ permalink: /changelog/
 
 * **browser-tabstray**
   * The iconView is no longer required in the template.
+  * The URL text for items may be styled.
 
 * **Developer ergonomics**
   * Improved autoPublication workflow. See https://mozac.org/contributing/testing-components-inside-app for updated documentation.
