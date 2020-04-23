@@ -15,7 +15,7 @@ const http_base = chrome_base.replace(
   "https://example.com"
 );
 
-async function test_view_image_works({ page, selector, skipTests }) {
+async function test_view_image_works({ page, selector }) {
   let mainURL = http_base + page;
   let accel = AppConstants.platform == "macosx" ? "metaKey" : "ctrlKey";
   let tests = {
@@ -76,13 +76,6 @@ async function test_view_image_works({ page, selector, skipTests }) {
       );
     });
     for (let [testLabel, test] of Object.entries(tests)) {
-      if (skipTests && testLabel in skipTests) {
-        todo(
-          false,
-          `Skipping ${testLabel} for ${page}: ${skipTests[testLabel]}`
-        );
-        continue;
-      }
       let contextMenu = document.getElementById("contentAreaContextMenu");
       is(
         contextMenu.state,
@@ -151,9 +144,5 @@ add_task(async function test_view_image_revoked_cached_blob() {
   await test_view_image_works({
     page: "test_view_image_revoked_cached_blob.html",
     selector: "#second",
-    skipTests: {
-      tab: "bug 1626573",
-      window: "bug 1626573",
-    },
   });
 });
