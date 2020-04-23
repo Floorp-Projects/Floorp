@@ -402,23 +402,6 @@ ContentBlocking::CompleteAllowAccessFor(
   MOZ_ASSERT(aParentContext);
   MOZ_ASSERT_IF(XRE_IsContentProcess(), aParentContext->IsInProcess());
 
-  nsCOMPtr<nsPIDOMWindowOuter> parentOuter = aParentContext->GetDOMWindow();
-  if (!parentOuter) {
-    LOG(
-        ("No outer window found for our parent window context, bailing out "
-         "early"));
-    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
-  }
-
-  nsCOMPtr<nsPIDOMWindowInner> parentInnerWindow =
-      parentOuter->GetCurrentInnerWindow();
-  if (!parentInnerWindow) {
-    LOG(
-        ("No inner window found for our parent outer window, bailing out "
-         "early"));
-    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
-  }
-
   nsCOMPtr<nsIPrincipal> trackingPrincipal;
   nsAutoCString trackingOrigin;
   if (!aTrackingPrincipal) {
@@ -460,10 +443,21 @@ ContentBlocking::CompleteAllowAccessFor(
               _spec),
              trackingPrincipal);
     ContentBlockingNotifier::OnDecision(
-        parentInnerWindow, ContentBlockingNotifier::BlockingDecision::eBlock,
+        aParentContext, ContentBlockingNotifier::BlockingDecision::eBlock,
         CookieJarSettings::IsRejectThirdPartyWithExceptions(aCookieBehavior)
             ? nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN
             : nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER);
+    return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+  }
+
+  // Ensure we can find the window before continuing, so we can safely
+  // execute storePermission.
+  if (aParentContext->IsInProcess() &&
+      (!aParentContext->GetDOMWindow() ||
+       !aParentContext->GetDOMWindow()->GetCurrentInnerWindow())) {
+    LOG(
+        ("No window found for our parent browsing context, bailing out "
+         "early"));
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 

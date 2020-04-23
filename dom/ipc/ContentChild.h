@@ -678,6 +678,11 @@ class ContentChild final
       const nsCString& aTrackingOrigin, uint32_t aCookieBehavior,
       const ContentBlockingNotifier::StorageAccessGrantedReason& aReason);
 
+  mozilla::ipc::IPCResult RecvOnContentBlockingDecision(
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      const ContentBlockingNotifier::BlockingDecision& aDecision,
+      uint32_t aRejectedReason);
+
 #ifdef NIGHTLY_BUILD
   // Fetch the current number of pending input events.
   //
