@@ -35,6 +35,9 @@ bool nsWaylandDisplay::sIsDMABufConfigured = false;
 wl_display* WaylandDisplayGetWLDisplay(GdkDisplay* aGdkDisplay) {
   if (!aGdkDisplay) {
     aGdkDisplay = gdk_display_get_default();
+    if (!aGdkDisplay || GDK_IS_X11_DISPLAY(aGdkDisplay)) {
+      return nullptr;
+    }
   }
 
   // Available as of GTK 3.8+
@@ -537,8 +540,7 @@ bool nsWaylandDisplay::IsDMABufWebGLEnabled() {
          StaticPrefs::widget_wayland_dmabuf_webgl_enabled();
 }
 bool nsWaylandDisplay::IsDMABufVAAPIEnabled() {
-  return IsDMABufEnabled() &&
-         StaticPrefs::widget_wayland_dmabuf_vaapi_enabled();
+  return StaticPrefs::widget_wayland_dmabuf_vaapi_enabled();
 }
 
 void* nsGbmLib::sGbmLibHandle = nullptr;
