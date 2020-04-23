@@ -156,15 +156,6 @@ async function addTestTab(url) {
  * cleanup function to make sure that the panel is still present.
  */
 async function disableAccessibilityInspector(env) {
-  if (
-    Services.prefs.getBoolPref(
-      "devtools.accessibility.auto-init.enabled",
-      false
-    )
-  ) {
-    return;
-  }
-
   const { doc, win, panel } = env;
   // Disable accessibility service through the panel and wait for the shutdown
   // event.
