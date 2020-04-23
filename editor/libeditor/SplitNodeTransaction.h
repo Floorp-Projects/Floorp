@@ -50,6 +50,7 @@ class SplitNodeTransaction final : public EditTransactionBase {
                                            EditTransactionBase)
 
   NS_DECL_EDITTRANSACTIONBASE
+  NS_DECL_EDITTRANSACTIONBASE_GETASMETHODS_OVERRIDE(SplitNodeTransaction)
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
 
