@@ -27,6 +27,7 @@ class OriginAttributes;
 
 namespace dom {
 class BrowsingContext;
+class ContentParent;
 }
 
 class ContentBlocking final {
@@ -109,6 +110,7 @@ class ContentBlocking final {
           StaticPrefs::privacy_restrict3rdpartystorage_expiration());
 
  private:
+  friend class dom::ContentParent;
   // This should be running either in the parent process or in the child
   // processes with an in-process browsing context.
   static MOZ_MUST_USE RefPtr<StorageAccessGrantPromise> CompleteAllowAccessFor(

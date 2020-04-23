@@ -10,6 +10,7 @@
 #include "ipc/IPCMessageUtils.h"
 
 #include "mozilla/ContentBlockingNotifier.h"
+#include "mozilla/ContentBlocking.h"
 
 namespace IPC {
 
@@ -24,6 +25,14 @@ struct ParamTraits<mozilla::ContentBlockingNotifier::StorageAccessGrantedReason>
           mozilla::ContentBlockingNotifier::StorageAccessGrantedReason::
               eOpener> {};
 
+// ContentBlocking::StorageAccessPromptChoices over IPC.
+template <>
+struct ParamTraits<mozilla::ContentBlocking::StorageAccessPromptChoices>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::ContentBlocking::StorageAccessPromptChoices,
+          mozilla::ContentBlocking::StorageAccessPromptChoices::eAllow,
+          mozilla::ContentBlocking::StorageAccessPromptChoices::
+              eAllowAutoGrant> {};
 }  // namespace IPC
 
 #endif  // mozilla_antitrackingipcutils_h
