@@ -5196,6 +5196,8 @@ void LIRGenerator::visitIonToWasmCall(MIonToWasmCall* ins) {
   LInstruction* lir;
   if (ins->type() == MIRType::Value) {
     lir = allocateVariadic<LIonToWasmCallV>(ins->numOperands(), scratch, fp);
+  } else if (ins->type() == MIRType::Int64) {
+    lir = allocateVariadic<LIonToWasmCallI64>(ins->numOperands(), scratch, fp);
   } else {
     lir = allocateVariadic<LIonToWasmCall>(ins->numOperands(), scratch, fp);
   }

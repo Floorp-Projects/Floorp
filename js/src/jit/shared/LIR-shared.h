@@ -7386,6 +7386,14 @@ class LIonToWasmCallV : public LIonToWasmCallBase<BOX_PIECES> {
       : LIonToWasmCallBase<BOX_PIECES>(classOpcode, numOperands, temp, fp) {}
 };
 
+class LIonToWasmCallI64 : public LIonToWasmCallBase<INT64_PIECES> {
+ public:
+  LIR_HEADER(IonToWasmCallI64);
+  LIonToWasmCallI64(uint32_t numOperands, const LDefinition& temp,
+                    const LDefinition& fp)
+      : LIonToWasmCallBase<INT64_PIECES>(classOpcode, numOperands, temp, fp) {}
+};
+
 class LWasmBoxValue : public LInstructionHelper<1, BOX_PIECES, 0> {
  public:
   LIR_HEADER(WasmBoxValue)
