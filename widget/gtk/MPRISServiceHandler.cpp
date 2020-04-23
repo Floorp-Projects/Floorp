@@ -500,11 +500,7 @@ GVariant* MPRISServiceHandler::SupportedMimeTypes() {
   return g_variant_builder_end(&builder);
 }
 
-constexpr bool MPRISServiceHandler::CanRaise() { return false; }
-
-void MPRISServiceHandler::Raise() {
-  MOZ_ASSERT_UNREACHABLE("CanRaise is false, this method is not implemented");
-}
+constexpr bool MPRISServiceHandler::CanRaise() { return true; }
 
 constexpr bool MPRISServiceHandler::CanQuit() { return false; }
 
@@ -629,6 +625,11 @@ void MPRISServiceHandler::EmitEvent(mozilla::dom::MediaControlKeysEvent event) {
   for (auto& listener : mListeners) {
     listener->OnKeyPressed(event);
   }
+}
+
+void MPRISServiceHandler::Raise() {
+  LOG("Raise");
+  EmitEvent(mozilla::dom::MediaControlKeysEvent::eFocus);
 }
 
 void MPRISServiceHandler::Next() {

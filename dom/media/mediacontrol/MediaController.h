@@ -52,6 +52,8 @@ class MediaController final
 
   explicit MediaController(uint64_t aContextId);
 
+  // Focus the window currently playing media.
+  void Focus();
   void Play();
   void Pause();
   void Stop();

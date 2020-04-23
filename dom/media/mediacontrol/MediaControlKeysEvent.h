@@ -27,6 +27,7 @@ enum class MediaControlKeysEvent : uint32_t {
   eNextTrack,
   eSeekBackward,
   eSeekForward,
+  eFocus,
   // Keep this the last element, or you have to modify the serialized structure
   // in `MediaControlIPC.h` when you use other element as the last one.
   eStop,
