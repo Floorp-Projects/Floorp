@@ -348,6 +348,8 @@ void WorkletThread::EnsureCycleCollectedJSContext(JSRuntime* aParentRuntime) {
     return;
   }
 
+  JS_SetGCParameter(context->Context(), JSGC_MAX_BYTES, uint32_t(-1));
+
   // FIXME: JS_SetDefaultLocale
   // FIXME: JSSettings
   // FIXME: JS_SetSecurityCallbacks
