@@ -82,6 +82,8 @@ class PipeToState : public NativeObject {
     Flag_PreventClose = 0b0010,
     Flag_PreventAbort = 0b0100,
     Flag_PreventCancel = 0b1000,
+
+    Flag_ReadPending = 0b1'0000,
   };
 
   uint32_t flags() const { return getFixedSlot(Slot_Flags).toInt32(); }
@@ -117,6 +119,16 @@ class PipeToState : public NativeObject {
   bool preventClose() const { return flags() & Flag_PreventClose; }
   bool preventAbort() const { return flags() & Flag_PreventAbort; }
   bool preventCancel() const { return flags() & Flag_PreventCancel; }
+
+  bool isReadPending() const { return flags() & Flag_ReadPending; }
+  void setReadPending() {
+    MOZ_ASSERT(!isReadPending());
+    setFlags(flags() | Flag_ReadPending);
+  }
+  void clearReadPending() {
+    MOZ_ASSERT(isReadPending());
+    setFlags(flags() & ~Flag_ReadPending);
+  }
 
   void initFlags(bool preventClose, bool preventAbort, bool preventCancel) {
     MOZ_ASSERT(getFixedSlot(Slot_Flags).isUndefined());
