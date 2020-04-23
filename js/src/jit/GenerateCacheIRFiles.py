@@ -57,9 +57,9 @@ def load_yaml(yaml_path):
     return yaml.load(contents, OrderedLoader)
 
 
-# Information for generating CacheIRWriter code for a single operand. Tuple
+# Information for generating CacheIRWriter code for a single argument. Tuple
 # stores the C++ argument type and the CacheIRWriter method to call.
-operand_writer_info = {
+arg_writer_info = {
     'ValId': ('ValOperandId', 'writeOperandId'),
     'ObjId': ('ObjOperandId', 'writeOperandId'),
     'StringId': ('StringOperandId', 'writeOperandId'),
@@ -101,10 +101,10 @@ operand_writer_info = {
 }
 
 
-def gen_writer_method(name, operands, custom_writer):
+def gen_writer_method(name, args, custom_writer):
     """Generates a CacheIRWRiter method for a single opcode."""
 
-    # Generate a single method that writes the opcode and each operand.
+    # Generate a single method that writes the opcode and each argument.
     # For example:
     #
     #   void guardShape(ObjOperandId obj, Shape* shape) {
@@ -118,26 +118,26 @@ def gen_writer_method(name, operands, custom_writer):
     if custom_writer:
         method_name += '_'
 
-    args_sig = []
+    method_args = []
     ret_type = 'void'
-    operands_code = ''
-    if operands:
-        for opnd_name, opnd_type in six.iteritems(operands):
-            argtype, write_method = operand_writer_info[opnd_type]
-            if opnd_name == 'result':
-                ret_type = argtype
-                operands_code += '  {} result(newOperandId());\\\n'.format(argtype)
-                operands_code += '  writeOperandId(result);\\\n'
+    args_code = ''
+    if args:
+        for arg_name, arg_type in six.iteritems(args):
+            cpp_type, write_method = arg_writer_info[arg_type]
+            if arg_name == 'result':
+                ret_type = cpp_type
+                args_code += '  {} result(newOperandId());\\\n'.format(cpp_type)
+                args_code += '  writeOperandId(result);\\\n'
             else:
-                args_sig.append('{} {}'.format(argtype, opnd_name))
-                operands_code += '  {}({});\\\n'.format(write_method, opnd_name)
+                method_args.append('{} {}'.format(cpp_type, arg_name))
+                args_code += '  {}({});\\\n'.format(write_method, arg_name)
 
     code = ''
     if custom_writer:
         code += 'private:\\\n'
-    code += '{} {}({}) {{\\\n'.format(ret_type, method_name, ', '.join(args_sig))
+    code += '{} {}({}) {{\\\n'.format(ret_type, method_name, ', '.join(method_args))
     code += '  writeOp(CacheOp::{});\\\n'.format(name)
-    code += operands_code
+    code += args_code
     if ret_type != 'void':
         code += '  return result;\\\n'
     code += '}'
@@ -146,10 +146,10 @@ def gen_writer_method(name, operands, custom_writer):
     return code
 
 
-# Information for generating CacheIRCompiler code for a single operand. Tuple
-# stores the C++ type, the suffix used for arguments/variables of this type, and
-# the expression to read this type from CacheIRReader.
-operand_compiler_info = {
+# Information for generating CacheIRCompiler code for a single argument. Tuple
+# stores the C++ type, the suffix used for generated arguments/variables of this
+# type, and the expression to read this type from CacheIRReader.
+arg_compiler_info = {
     'ValId': ('ValOperandId', 'Id', 'reader.valOperandId()'),
     'ObjId': ('ObjOperandId', 'Id', 'reader.objOperandId()'),
     'StringId': ('StringOperandId', 'Id', 'reader.stringOperandId()'),
@@ -191,7 +191,7 @@ operand_compiler_info = {
 }
 
 
-def gen_compiler_method(name, operands):
+def gen_compiler_method(name, args):
     """Generates CacheIRCompiler header code for a single opcode."""
 
     method_name = 'emit' + name
@@ -205,24 +205,24 @@ def gen_compiler_method(name, operands):
     #     uint32_t shapeOffset = reader.stubOffset();
     #     return emitGuardShape(objId, shapeOffset);
     #   }
-    args_names = []
-    args_sig = []
-    operands_code = ''
-    if operands:
-        for opnd_name, opnd_type in six.iteritems(operands):
-            vartype, suffix, readexpr = operand_compiler_info[opnd_type]
-            varname = opnd_name + suffix
-            args_names.append(varname)
-            args_sig.append('{} {}'.format(vartype, varname))
-            operands_code += '  {} {} = {};\\\n'.format(vartype, varname, readexpr)
+    cpp_args = []
+    method_args = []
+    args_code = ''
+    if args:
+        for arg_name, arg_type in six.iteritems(args):
+            cpp_type, suffix, readexpr = arg_compiler_info[arg_type]
+            cpp_name = arg_name + suffix
+            cpp_args.append(cpp_name)
+            method_args.append('{} {}'.format(cpp_type, cpp_name))
+            args_code += '  {} {} = {};\\\n'.format(cpp_type, cpp_name, readexpr)
 
     # Generate signature.
-    code = 'MOZ_MUST_USE bool {}({});\\\n'.format(method_name, ', '.join(args_sig))
+    code = 'MOZ_MUST_USE bool {}({});\\\n'.format(method_name, ', '.join(method_args))
 
     # Generate the method forwarding to it.
     code += 'MOZ_MUST_USE bool {}(CacheIRReader& reader) {{\\\n'.format(method_name)
-    code += operands_code
-    code += '  return {}({});\\\n'.format(method_name, ', '.join(args_names))
+    code += args_code
+    code += '  return {}({});\\\n'.format(method_name, ', '.join(cpp_args))
     code += '}\\\n'
 
     return code
@@ -230,24 +230,12 @@ def gen_compiler_method(name, operands):
 
 def generate_cacheirops_header(c_out, yaml_path):
     """Generate CacheIROpsGenerated.h from CacheIROps.yaml. The generated file
-    contains:
-
-    * A list of all CacheIR ops:
-
-        #define CACHE_IR_OPS(_)\
-        _(GuardToObject, Id)\
-        _(CompareObjectUndefinedNullResult, Id, Byte)\
-        ...
-
-    * Lists of shared and unshared ops for the CacheIRCompiler classes. See the
-    'shared' attribute in the YAML file.
-
-    * Generated source code for CacheIRWriter and CacheIRCompiler.
-    """
+    contains a list of all CacheIR ops and generated source code for
+    CacheIRWriter and CacheIRCompiler."""
 
     data = load_yaml(yaml_path)
 
-    # Mapping from operand types to the less precise types expected by current
+    # Mapping from argument types to the less precise types expected by current
     # C++ code.
     mapping = {
         'ValId': 'Id',
@@ -306,8 +294,8 @@ def generate_cacheirops_header(c_out, yaml_path):
     for op in data:
         name = op['name']
 
-        operands = op['operands']
-        assert operands is None or isinstance(operands, OrderedDict)
+        args = op['args']
+        assert args is None or isinstance(args, OrderedDict)
 
         shared = op['shared']
         assert isinstance(shared, bool)
@@ -315,17 +303,17 @@ def generate_cacheirops_header(c_out, yaml_path):
         custom_writer = op.get('custom_writer', False)
         assert isinstance(custom_writer, bool)
 
-        if operands:
-            operands_str = ', '.join([mapping[v] for v in operands.values()])
+        if args:
+            args_str = ', '.join([mapping[v] for v in args.values()])
         else:
-            operands_str = 'None'
-        ops_items.append('_({}, {})'.format(name, operands_str))
+            args_str = 'None'
+        ops_items.append('_({}, {})'.format(name, args_str))
 
-        writer_methods.append(gen_writer_method(name, operands, custom_writer))
+        writer_methods.append(gen_writer_method(name, args, custom_writer))
         if shared:
-            compiler_shared_methods.append(gen_compiler_method(name, operands))
+            compiler_shared_methods.append(gen_compiler_method(name, args))
         else:
-            compiler_unshared_methods.append(gen_compiler_method(name, operands))
+            compiler_unshared_methods.append(gen_compiler_method(name, args))
 
     contents = '#define CACHE_IR_OPS(_)\\\n'
     contents += '\\\n'.join(ops_items)
