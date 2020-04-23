@@ -151,14 +151,15 @@ async function listProcessTargets(args: Args): Promise<*> {
     if (currentTarget.url && features.windowlessServiceWorkers) {
       // Service workers associated with our target's origin need to pause until
       // we attach, regardless of which process they are running in.
-      const origin = new URL(currentTarget.url).origin;
-      const targets = await getAllProcessTargets(args);
       try {
+        const origin = new URL(currentTarget.url).origin;
+        const targets = await getAllProcessTargets(args);
         await Promise.all(
           targets.map(t => t.pauseMatchingServiceWorkers({ origin }))
         );
       } catch (e) {
-        // Old servers without pauseMatchingServiceWorkers will throw.
+        // currentTarget.url might not be a full URL, and old servers without
+        // pauseMatchingServiceWorkers will throw.
         // @backward-compatibility: remove in Firefox 75
       }
     }
