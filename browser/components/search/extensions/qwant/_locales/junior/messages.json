@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Qwant Junior"
+  },
+  "searchUrl": {
+    "message": "https://www.qwantjunior.com/"
+  },
+  "searchUrlGetParams": {
+    "message": "q={searchTerms}&client=firefoxqwant"
+  },
+  "suggestUrl": {
+    "message": "https://api.qwant.com/egp/suggest/"
+  },
+  "suggestUrlGetParams": {
+    "message": "q={searchTerms}&client=opensearch"
+  },
+  "searchForm": {
+    "message": "https://www.qwantjunior.com/"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "mail.com",
+  "description": "mail.com",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "mailcom@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Qwant",
+      "search_url": "https://go.mail.com/br/moz_search_web/",
+      "search_url_get_params": "q={searchTerms}&enc=UTF-8",
+      "suggest_url": "https://search.mail.com/SuggestSearch/s",
+      "suggest_url_get_params": "q={searchTerms}&brand=mailcom&origin=br_splugin_ff_sg"
+    }
+  }
+}

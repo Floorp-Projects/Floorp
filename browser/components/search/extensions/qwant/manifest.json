@@ -1,6 +1,5 @@
 {
-  "name": "Qwant",
-  "description": "Search Qwant",
+  "name": "__MSG_extensionName__",
   "manifest_version": 2,
   "version": "1.0",
   "applications": {
@@ -9,6 +8,7 @@
     }
   },
   "hidden": true,
+  "default_locale": "default",
   "icons": {
     "16": "favicon.ico"
   },
@@ -17,12 +17,12 @@
   ],
   "chrome_settings_overrides": {
     "search_provider": {
-      "name": "Qwant",
-      "search_url": "https://www.qwant.com/",
-      "search_form": "https://www.qwant.com/?client=brz-moz&q={searchTerms}",
-      "search_url_get_params": "client=brz-moz&q={searchTerms}",
-      "suggest_url": "https://api.qwant.com/api/suggest/",
-      "suggest_url_get_params": "client=opensearch&q={searchTerms}"
+      "name": "__MSG_extensionName__",
+      "search_url": "__MSG_searchUrl__",
+      "search_url_get_params": "__MSG_searchUrlGetParams__",
+      "suggest_url": "__MSG_suggestUrl__",
+      "suggest_url_get_params": "__MSG_suggestUrlGetParams__",
+      "search_form": "__MSG_searchForm__"
     }
   }
 }

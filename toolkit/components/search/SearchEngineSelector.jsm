@@ -189,12 +189,19 @@ class SearchEngineSelector {
         if ("cohort" in section && cohort != section.cohort) {
           return false;
         }
+        const distroExcluded =
+          (distroID &&
+            sectionIncludes(section, "excludedDistributions", distroID)) ||
+          isDistroExcluded(section, "distributions", distroID);
+
+        if (distroID && !distroExcluded && section.override) {
+          return true;
+        }
+
         if (
           sectionExcludes(section, "channel", channel) ||
           sectionExcludes(section, "name", name) ||
-          (distroID &&
-            sectionIncludes(section, "excludedDistributions", distroID)) ||
-          isDistroExcluded(section, "distributions", distroID) ||
+          distroExcluded ||
           belowMinVersion(section, version) ||
           aboveMaxVersion(section, version)
         ) {
@@ -211,9 +218,13 @@ class SearchEngineSelector {
 
       let baseConfig = this._copyObject({}, config);
 
+      // Don't include any engines if every section is an override
+      // entry, these are only supposed to override otherwise
+      // included engine configurations.
+      let allOverrides = applies.every(e => "override" in e && e.override);
       // Loop through all the appliedTo sections that apply to
-      // this configuration
-      if (applies.length) {
+      // this configuration.
+      if (applies.length && !allOverrides) {
         for (let section of applies) {
           this._copyObject(baseConfig, section);
         }
