@@ -256,6 +256,12 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "default": "settled",
             "help": "Name of profile scenario.",
         }],
+        [["--live-sites"], {
+            "dest": "live_sites",
+            "action": "store_true",
+            "default": False,
+            "help": "Run tests using live sites instead of recorded sites.",
+        }],
         [["--debug-mode"], {
             "dest": "debug_mode",
             "action": "store_true",
@@ -384,6 +390,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         self.power_test = self.config.get('power_test')
         self.memory_test = self.config.get('memory_test')
         self.cpu_test = self.config.get('cpu_test')
+        self.live_sites = self.config.get('live_sites')
         self.disable_perf_tuning = self.config.get('disable_perf_tuning')
         self.conditioned_profile_scenario = self.config.get('conditioned_profile_scenario',
                                                             'settled')
@@ -571,6 +578,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             options.extend(['--memory-test'])
         if self.config.get('cpu_test', False):
             options.extend(['--cpu-test'])
+        if self.config.get('live_sites', False):
+            options.extend(['--live-sites'])
         if self.config.get('disable_perf_tuning', False):
             options.extend(['--disable-perf-tuning'])
         if self.config.get('cold', False):

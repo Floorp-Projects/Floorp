@@ -100,6 +100,8 @@ def create_parser(mach_interface=False):
             help="Use Raptor to measure memory usage.")
     add_arg('--cpu-test', dest="cpu_test", action="store_true",
             help="Use Raptor to measure CPU usage. Currently supported for Android only.")
+    add_arg('--live-sites', dest="live_sites", action="store_true", default=False,
+            help="Run tests using live sites instead of recorded sites.")
     add_arg('--is-release-build', dest="is_release_build", default=False,
             action='store_true',
             help="Whether the build is a release build which requires workarounds "
