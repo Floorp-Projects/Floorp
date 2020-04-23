@@ -540,7 +540,6 @@ WEBIDL_FILES = [
     'FontFaceSet.webidl',
     'FontFaceSource.webidl',
     'FormData.webidl',
-    'FrameLoader.webidl',
     'Function.webidl',
     'GainNode.webidl',
     'Gamepad.webidl',
