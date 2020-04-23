@@ -13,15 +13,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=396367
 
     function finish() {
       ok(true, "didn't crash");
-      var docviewer = getdocviewer();
-      docviewer.textZoom = 1;
+      top.docShell.browsingContext.textZoom = 1;
       SimpleTest.finish();
-    }
-
-    function getdocviewer() {
-      var docShell = top.docShell;
-      var docviewer = docShell.contentViewer;
-      return docviewer;
     }
   </script>
 </head>
@@ -41,8 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=396367
 <li style="display: table-cell;">
 
 <script>
-var docviewer = getdocviewer();
-docviewer.textZoom=Math.floor(10*Math.random())/4+0.2;
+top.docShell.browsingContext.textZoom = Math.floor(10 * Math.random()) / 4 + 0.2;
 document.documentElement.offsetHeight;
 setTimeout(finish, 0);
 </script>
