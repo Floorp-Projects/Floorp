@@ -38,46 +38,17 @@ const char* const js::jit::CacheKindNames[] = {
 #undef DEFINE_KIND
 };
 
-const char* const js::jit::CacheIrOpNames[] = {
+const char* const js::jit::CacheIROpNames[] = {
 #define OPNAME(op, ...) #op,
     CACHE_IR_OPS(OPNAME)
 #undef OPNAME
 };
 
-// We need to enter the namespace here so that the definition of
-// CacheIROpFormat::ArgLengths can see CacheIROpFormat::ArgType
-// (without defining None/Id/Field/etc everywhere else in this file.)
-namespace js::jit::CacheIROpFormat {
-
-static constexpr uint32_t CacheIRArgLength(ArgType arg) {
-  switch (arg) {
-    case None:
-      return 0;
-    case Id:
-      return sizeof(uint8_t);
-    case Field:
-      return sizeof(uint8_t);
-    case Byte:
-      return sizeof(uint8_t);
-    case Int32:
-    case UInt32:
-      return sizeof(uint32_t);
-    case Word:
-      return sizeof(uintptr_t);
-  }
-}
-template <typename... Args>
-static constexpr uint32_t CacheIRArgsLength(Args... args) {
-  return (CacheIRArgLength(args) + ...);
-}
-
-const uint32_t ArgLengths[] = {
-#define ARGLENGTH(op, ...) CacheIRArgsLength(__VA_ARGS__),
+const uint32_t js::jit::CacheIROpArgLengths[] = {
+#define ARGLENGTH(op, len) len,
     CACHE_IR_OPS(ARGLENGTH)
 #undef ARGLENGTH
 };
-
-}  // namespace js::jit::CacheIROpFormat
 
 void CacheIRWriter::assertSameCompartment(JSObject* obj) {
   cx_->debugOnlyCheck(obj);
