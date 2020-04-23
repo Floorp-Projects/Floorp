@@ -205,11 +205,7 @@ enum class CacheOp {
 #undef DEFINE_OP
 };
 
-const char* const CacheIrOpNames[] = {
-#define OPNAME(op, ...) #op,
-    CACHE_IR_OPS(OPNAME)
-#undef OPNAME
-};
+extern const char* const CacheIrOpNames[];
 
 class StubField {
  public:
