@@ -93,6 +93,16 @@ static void Register(BrowsingContext* aBrowsingContext) {
   aBrowsingContext->Group()->Register(aBrowsingContext);
 }
 
+bool BrowsingContext::IsInSubtreeOf(BrowsingContext* aContext) {
+  BrowsingContext* bc = this;
+  do {
+    if (bc == aContext) {
+      return true;
+    }
+  } while ((bc = bc->mParent));
+  return false;
+}
+
 BrowsingContext* BrowsingContext::Top() {
   BrowsingContext* bc = this;
   while (bc->mParent) {
