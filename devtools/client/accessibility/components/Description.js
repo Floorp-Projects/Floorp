@@ -24,10 +24,7 @@ const Button = createFactory(
 const LearnMoreLink = createFactory(
   require("devtools/client/accessibility/components/LearnMoreLink")
 );
-const {
-  enable,
-  updateCanBeEnabled,
-} = require("devtools/client/accessibility/actions/ui");
+const { enable } = require("devtools/client/accessibility/actions/ui");
 
 // Localization
 const { L10N } = require("devtools/client/accessibility/utils/l10n");
@@ -47,8 +44,6 @@ class Description extends Component {
       canBeEnabled: PropTypes.bool,
       dispatch: PropTypes.func.isRequired,
       enableAccessibility: PropTypes.func.isRequired,
-      startListeningForLifecycleEvents: PropTypes.func.isRequired,
-      stopListeningForLifecycleEvents: PropTypes.func.isRequired,
     };
   }
 
@@ -60,19 +55,6 @@ class Description extends Component {
     };
 
     this.onEnable = this.onEnable.bind(this);
-    this.onCanBeEnabledChange = this.onCanBeEnabledChange.bind(this);
-  }
-
-  componentWillMount() {
-    this.props.startListeningForLifecycleEvents({
-      "can-be-enabled-change": this.onCanBeEnabledChange,
-    });
-  }
-
-  componentWillUnmount() {
-    this.props.stopListeningForLifecycleEvents({
-      "can-be-enabled-change": this.onCanBeEnabledChange,
-    });
   }
 
   onEnable() {
@@ -86,10 +68,6 @@ class Description extends Component {
     dispatch(enable(enableAccessibility))
       .then(() => this.setState({ enabling: false }))
       .catch(() => this.setState({ enabling: false }));
-  }
-
-  onCanBeEnabledChange(canBeEnabled) {
-    this.props.dispatch(updateCanBeEnabled(canBeEnabled));
   }
 
   render() {
