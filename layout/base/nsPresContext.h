@@ -524,6 +524,7 @@ class nsPresContext : public nsISupports,
     UpdateEffectiveTextZoom();
   }
   void SetFullZoom(float aZoom);
+
  public:
 
   float GetFullZoom() { return mFullZoom; }
