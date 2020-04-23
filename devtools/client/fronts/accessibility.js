@@ -210,6 +210,58 @@ class AccessibleWalkerFront extends FrontClassWithSpec(accessibleWalkerSpec) {
 
     return super.pick();
   }
+
+  /**
+   * Get the accessible object ancestry starting from the given accessible to
+   * the top level document. BROWSER_TOOLBOX_FISSION_ENABLED is false, the top
+   * level document is bound by current target's document. Otherwise, the top
+   * level document is in the top level content process.
+   * @param  {Object} accessible
+   *         Accessible front to determine the ancestry for.
+   *
+   * @return {Array}  ancestry
+   *         List of ancestry objects which consist of an accessible with its
+   *         children.
+   */
+  async getAncestry(accessible) {
+    const ancestry = await super.getAncestry(accessible);
+    if (!BROWSER_TOOLBOX_FISSION_ENABLED) {
+      // Do not try to get the ancestry across the remote frame hierarchy.
+      return ancestry;
+    }
+
+    const parentTarget = await this.targetFront.getParentTarget();
+    if (!parentTarget) {
+      return ancestry;
+    }
+
+    // Get an accessible front for the parent frame. We go through the
+    // inspector's walker to keep both inspector and accessibility trees in
+    // sync.
+    const { walker: domWalkerFront } = await this.targetFront.getFront(
+      "inspector"
+    );
+    const frameNodeFront = (await domWalkerFront.getRootNode()).parentNode();
+    const accessibilityFront = await parentTarget.getFront("accessibility");
+    await accessibilityFront.bootstrap();
+    const { accessibleWalkerFront } = accessibilityFront;
+    const frameAccessibleFront = await accessibleWalkerFront.getAccessibleFor(
+      frameNodeFront
+    );
+
+    // Compose the final ancestry out of ancestry for the given accessible in
+    // the current process and recursively get the ancestry for the frame
+    // accessible.
+    ancestry.push(
+      {
+        accessible: frameAccessibleFront,
+        children: await frameAccessibleFront.children(),
+      },
+      ...(await accessibleWalkerFront.getAncestry(frameAccessibleFront))
+    );
+
+    return ancestry;
+  }
 }
 
 class AccessibilityFront extends FrontClassWithSpec(accessibilitySpec) {
