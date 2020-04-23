@@ -304,6 +304,18 @@ class CallFlags {
   }
   bool isSameRealm() const { return isSameRealm_; }
 
+  uint8_t toByte() const {
+    // See CacheIRReader::callFlags()
+    uint8_t value = getArgFormat();
+    if (isConstructing()) {
+      value |= CallFlags::IsConstructing;
+    }
+    if (isSameRealm()) {
+      value |= CallFlags::IsSameRealm;
+    }
+    return value;
+  }
+
  private:
   ArgFormat argFormat_;
   bool isConstructing_;
@@ -500,22 +512,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     operandLastUsed_[opId.id()] = nextInstructionId_ - 1;
   }
 
-  void writeCallFlagsImm(CallFlags flags) {
-    // See CacheIRReader::callFlags()
-    uint8_t value = flags.getArgFormat();
-    if (flags.isConstructing()) {
-      value |= CallFlags::IsConstructing;
-    }
-    if (flags.isSameRealm()) {
-      value |= CallFlags::IsSameRealm;
-    }
-    buffer_.writeByte(uint32_t(value));
-  }
-
-  void writeOpWithOperandId(CacheOp op, OperandId opId) {
-    writeOp(op);
-    writeOperandId(opId);
-  }
+  void writeCallFlagsImm(CallFlags flags) { buffer_.writeByte(flags.toByte()); }
 
   uint8_t addStubField(uint64_t value, StubField::Type fieldType) {
     uint8_t offset = 0;

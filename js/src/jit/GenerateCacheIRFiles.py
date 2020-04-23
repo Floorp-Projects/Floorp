@@ -146,10 +146,10 @@ def gen_writer_method(name, args, custom_writer):
     return code
 
 
-# Information for generating CacheIRCompiler code for a single argument. Tuple
-# stores the C++ type, the suffix used for generated arguments/variables of this
+# Information for generating code using CacheIRReader for a single argument.
+# Tuple stores the C++ type, the suffix used for arguments/variables of this
 # type, and the expression to read this type from CacheIRReader.
-arg_compiler_info = {
+arg_reader_info = {
     'ValId': ('ValOperandId', 'Id', 'reader.valOperandId()'),
     'ObjId': ('ObjOperandId', 'Id', 'reader.objOperandId()'),
     'StringId': ('StringOperandId', 'Id', 'reader.stringOperandId()'),
@@ -210,7 +210,7 @@ def gen_compiler_method(name, args):
     args_code = ''
     if args:
         for arg_name, arg_type in six.iteritems(args):
-            cpp_type, suffix, readexpr = arg_compiler_info[arg_type]
+            cpp_type, suffix, readexpr = arg_reader_info[arg_type]
             cpp_name = arg_name + suffix
             cpp_args.append(cpp_name)
             method_args.append('{} {}'.format(cpp_type, cpp_name))
@@ -223,6 +223,84 @@ def gen_compiler_method(name, args):
     code += 'MOZ_MUST_USE bool {}(CacheIRReader& reader) {{\\\n'.format(method_name)
     code += args_code
     code += '  return {}({});\\\n'.format(method_name, ', '.join(cpp_args))
+    code += '}\\\n'
+
+    return code
+
+
+# For each argument type, the method name for printing it.
+arg_spewer_method = {
+    'ValId': 'spewOperandId',
+    'ObjId': 'spewOperandId',
+    'StringId': 'spewOperandId',
+    'SymbolId': 'spewOperandId',
+    'Int32Id': 'spewOperandId',
+    'NumberId': 'spewOperandId',
+    'BigIntId': 'spewOperandId',
+    'ValueTagId': 'spewOperandId',
+    'RawId': 'spewRawOperandId',
+
+    'ShapeField': 'spewField',
+    'GroupField': 'spewField',
+    'ObjectField': 'spewField',
+    'StringField': 'spewField',
+    'AtomField': 'spewField',
+    'PropertyNameField': 'spewField',
+    'SymbolField': 'spewField',
+    'RawWordField': 'spewField',
+    'RawPointerField': 'spewField',
+    'IdField': 'spewField',
+    'ValueField': 'spewField',
+    'DOMExpandoGenerationField': 'spewField',
+
+    'JSOpImm': 'spewJSOpImm',
+    'BoolImm': 'spewBoolImm',
+    'ByteImm': 'spewByteImm',
+    'GuardClassKindImm': 'spewGuardClassKindImm',
+    'ValueTypeImm': 'spewValueTypeImm',
+    'JSWhyMagicImm': 'spewJSWhyMagicImm',
+    'CallFlagsImm': 'spewCallFlagsImm',
+    'TypedThingLayoutImm': 'spewTypedThingLayoutImm',
+    'ReferenceTypeImm': 'spewReferenceTypeImm',
+    'ScalarTypeImm': 'spewScalarTypeImm',
+    'MetaTwoByteKindImm': 'spewMetaTwoByteKindImm',
+    'Int32Imm': 'spewInt32Imm',
+    'UInt32Imm': 'spewUInt32Imm',
+    'JSNativeImm': 'spewJSNativeImm',
+    'StaticStringImm': 'spewStaticStringImm',
+}
+
+
+def gen_spewer_method(name, args):
+    """Generates spewer code for a single opcode."""
+
+    method_name = 'spew' + name
+
+    # Generate code like this:
+    #
+    #  void spewGuardShape(CacheIRReader& reader) {
+    #     spewOp(CacheOp::GuardShape);
+    #     spewOperandId("objId", reader.objOperandId());
+    #     spewOperandSeparator();
+    #     spewField("shapeOffset", reader.stubOffset());
+    #     spewOpEnd();
+    #  }
+    args_code = ''
+    if args:
+        is_first = True
+        for arg_name, arg_type in six.iteritems(args):
+            _, suffix, readexpr = arg_reader_info[arg_type]
+            arg_name += suffix
+            spew_method = arg_spewer_method[arg_type]
+            if not is_first:
+                args_code += '  spewArgSeparator();\\\n'
+            args_code += '  {}("{}", {});\\\n'.format(spew_method, arg_name, readexpr)
+            is_first = False
+
+    code = 'void {}(CacheIRReader& reader) {{\\\n'.format(method_name)
+    code += '  spewOp(CacheOp::{});\\\n'.format(name)
+    code += args_code
+    code += '  spewOpEnd();\\\n'
     code += '}\\\n'
 
     return code
@@ -291,6 +369,9 @@ def generate_cacheirops_header(c_out, yaml_path):
     compiler_shared_methods = []
     compiler_unshared_methods = []
 
+    # Generated methods for spewers.
+    spewer_methods = []
+
     for op in data:
         name = op['name']
 
@@ -314,6 +395,7 @@ def generate_cacheirops_header(c_out, yaml_path):
             compiler_shared_methods.append(gen_compiler_method(name, args))
         else:
             compiler_unshared_methods.append(gen_compiler_method(name, args))
+        spewer_methods.append(gen_spewer_method(name, args))
 
     contents = '#define CACHE_IR_OPS(_)\\\n'
     contents += '\\\n'.join(ops_items)
@@ -329,6 +411,10 @@ def generate_cacheirops_header(c_out, yaml_path):
 
     contents += '#define CACHE_IR_COMPILER_UNSHARED_GENERATED \\\n'
     contents += '\\\n'.join(compiler_unshared_methods)
+    contents += '\n\n'
+
+    contents += '#define CACHE_IR_SPEWER_GENERATED \\\n'
+    contents += '\\\n'.join(spewer_methods)
     contents += '\n\n'
 
     generate_header(c_out, 'jit_CacheIROpsGenerated_h', contents)

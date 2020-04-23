@@ -29,6 +29,254 @@
 using namespace js;
 using namespace js::jit;
 
+// Text spewer for CacheIR ops that can be used with JitSpew.
+// Output looks like this:
+//
+//   GuardToInt32                   inputId 0, resultId 2
+//   GuardToInt32                   inputId 1, resultId 3
+//   CompareInt32Result             op JSOp::Lt, lhsId 2, rhsId 3
+//   ReturnFromIC
+class MOZ_RAII CacheIROpsJitSpewer {
+  GenericPrinter& out_;
+
+  // String prepended to each line. Can be used for indentation.
+  const char* prefix_;
+
+  CACHE_IR_SPEWER_GENERATED
+
+  void spewOp(CacheOp op) {
+    const char* opName = CacheIrOpNames[size_t(op)];
+    out_.printf("%s%-30s", prefix_, opName);
+  }
+  void spewOpEnd() { out_.printf("\n"); }
+
+  void spewArgSeparator() { out_.printf(", "); }
+
+  void spewOperandId(const char* name, OperandId id) {
+    spewRawOperandId(name, id.id());
+  }
+  void spewRawOperandId(const char* name, uint32_t id) {
+    out_.printf("%s %u", name, id);
+  }
+  void spewField(const char* name, uint32_t offset) {
+    out_.printf("%s %u", name, offset);
+  }
+  void spewTypedThingLayoutImm(const char* name, TypedThingLayout layout) {
+    switch (layout) {
+      case Layout_TypedArray:
+        out_.printf("%s TypedArray", name);
+        return;
+      case Layout_OutlineTypedObject:
+        out_.printf("%s OutlineTypedObject", name);
+        return;
+      case Layout_InlineTypedObject:
+        out_.printf("%s InlineTypedObject", name);
+        return;
+    }
+    MOZ_CRASH("Unknown layout");
+  }
+  void spewBoolImm(const char* name, bool b) {
+    out_.printf("%s %s", name, b ? "true" : "false");
+  }
+  void spewByteImm(const char* name, uint8_t val) {
+    out_.printf("%s %u", name, val);
+  }
+  void spewJSOpImm(const char* name, JSOp op) {
+    out_.printf("%s JSOp::%s", name, CodeName(op));
+  }
+  void spewStaticStringImm(const char* name, const char* str) {
+    out_.printf("%s \"%s\"", name, str);
+  }
+  void spewInt32Imm(const char* name, int32_t val) {
+    out_.printf("%s %d", name, val);
+  }
+  void spewUInt32Imm(const char* name, uint32_t val) {
+    out_.printf("%s %u", name, val);
+  }
+  void spewCallFlagsImm(const char* name, CallFlags flags) {
+    out_.printf("%s (format %u, isConstructing %u, isSameRealm %u)", name,
+                flags.getArgFormat(), flags.isConstructing(),
+                flags.isSameRealm());
+  }
+  void spewJSWhyMagicImm(const char* name, JSWhyMagic magic) {
+    out_.printf("%s JSWhyMagic(%u)", name, unsigned(magic));
+  }
+  void spewScalarTypeImm(const char* name, Scalar::Type type) {
+    out_.printf("%s Scalar::Type(%u)", name, unsigned(type));
+  }
+  void spewReferenceTypeImm(const char* name, ReferenceType type) {
+    out_.printf("%s ReferenceType(%u)", name, unsigned(type));
+  }
+  void spewMetaTwoByteKindImm(const char* name, MetaTwoByteKind kind) {
+    out_.printf("%s MetaTwoByteKind(%u)", name, unsigned(kind));
+  }
+  void spewValueTypeImm(const char* name, ValueType type) {
+    out_.printf("%s ValueType(%u)", name, unsigned(type));
+  }
+  void spewJSNativeImm(const char* name, JSNative native) {
+    out_.printf("%s %p", name, native);
+  }
+  void spewGuardClassKindImm(const char* name, GuardClassKind kind) {
+    out_.printf("%s GuardClassKind(%u)", name, unsigned(kind));
+  }
+
+ public:
+  CacheIROpsJitSpewer(GenericPrinter& out, const char* prefix)
+      : out_(out), prefix_(prefix) {}
+
+  void spew(CacheIRReader& reader) {
+    do {
+      switch (reader.readOp()) {
+#  define SPEW_OP(op, ...) \
+    case CacheOp::op:      \
+      spew##op(reader);    \
+      break;
+        CACHE_IR_OPS(SPEW_OP)
+#  undef SPEW_OP
+
+        default:
+          MOZ_CRASH("Invalid op");
+      }
+    } while (reader.more());
+  }
+};
+
+void js::jit::SpewCacheIROps(GenericPrinter& out, const char* prefix,
+                             const CacheIRStubInfo* info) {
+  CacheIRReader reader(info);
+  CacheIROpsJitSpewer spewer(out, prefix);
+  spewer.spew(reader);
+}
+
+// JSON spewer for CacheIR ops. Output looks like this:
+//
+// ...
+//    {
+//      "op":"GuardToInt32",
+//      "args":[
+//        {
+//          "name":"inputId",
+//          "type":"Id",
+//          "value":0
+//        },
+//        {
+//          "name":"resultId",
+//          "type":"Id",
+//          "value":1
+//        }
+//      ]
+//    },
+//    {
+//      "op":"Int32IncResult",
+//      "args":[
+//        {
+//          "name":"inputId",
+//          "type":"Id",
+//          "value":1
+//        }
+//      ]
+//    }
+// ...
+class MOZ_RAII CacheIROpsJSONSpewer {
+  JSONPrinter& j_;
+
+  CACHE_IR_SPEWER_GENERATED
+
+  void spewOp(CacheOp op) {
+    const char* opName = CacheIrOpNames[size_t(op)];
+    j_.beginObject();
+    j_.property("op", opName);
+    j_.beginListProperty("args");
+  }
+  void spewOpEnd() {
+    j_.endList();
+    j_.endObject();
+  }
+
+  void spewArgSeparator() {}
+
+  template <typename T>
+  void spewArgImpl(const char* name, const char* type, T value) {
+    j_.beginObject();
+    j_.property("name", name);
+    j_.property("type", type);
+    j_.property("value", value);
+    j_.endObject();
+  }
+
+  void spewOperandId(const char* name, OperandId id) {
+    spewRawOperandId(name, id.id());
+  }
+  void spewRawOperandId(const char* name, uint32_t id) {
+    spewArgImpl(name, "Id", id);
+  }
+  void spewField(const char* name, uint32_t offset) {
+    spewArgImpl(name, "Field", offset);
+  }
+  void spewTypedThingLayoutImm(const char* name, TypedThingLayout layout) {
+    spewArgImpl(name, "Imm", unsigned(layout));
+  }
+  void spewBoolImm(const char* name, bool b) { spewArgImpl(name, "Imm", b); }
+  void spewByteImm(const char* name, uint8_t val) {
+    spewArgImpl(name, "Imm", val);
+  }
+  void spewJSOpImm(const char* name, JSOp op) {
+    spewArgImpl(name, "JSOp", CodeName(op));
+  }
+  void spewStaticStringImm(const char* name, const char* str) {
+    spewArgImpl(name, "String", str);
+  }
+  void spewInt32Imm(const char* name, int32_t val) {
+    spewArgImpl(name, "Imm", val);
+  }
+  void spewUInt32Imm(const char* name, uint32_t val) {
+    spewArgImpl(name, "Imm", val);
+  }
+  void spewCallFlagsImm(const char* name, CallFlags flags) {
+    spewArgImpl(name, "Imm", flags.toByte());
+  }
+  void spewJSWhyMagicImm(const char* name, JSWhyMagic magic) {
+    spewArgImpl(name, "Imm", unsigned(magic));
+  }
+  void spewScalarTypeImm(const char* name, Scalar::Type type) {
+    spewArgImpl(name, "Imm", unsigned(type));
+  }
+  void spewReferenceTypeImm(const char* name, ReferenceType type) {
+    spewArgImpl(name, "Imm", unsigned(type));
+  }
+  void spewMetaTwoByteKindImm(const char* name, MetaTwoByteKind kind) {
+    spewArgImpl(name, "Imm", unsigned(kind));
+  }
+  void spewValueTypeImm(const char* name, ValueType type) {
+    spewArgImpl(name, "Imm", unsigned(type));
+  }
+  void spewJSNativeImm(const char* name, JSNative native) {
+    spewArgImpl(name, "Word", uintptr_t(native));
+  }
+  void spewGuardClassKindImm(const char* name, GuardClassKind kind) {
+    spewArgImpl(name, "Imm", unsigned(kind));
+  }
+
+ public:
+  explicit CacheIROpsJSONSpewer(JSONPrinter& j) : j_(j) {}
+
+  void spew(CacheIRReader& reader) {
+    do {
+      switch (reader.readOp()) {
+#  define SPEW_OP(op, ...) \
+    case CacheOp::op:      \
+      spew##op(reader);    \
+      break;
+        CACHE_IR_OPS(SPEW_OP)
+#  undef SPEW_OP
+
+        default:
+          MOZ_CRASH("Invalid op");
+      }
+    } while (reader.more());
+  }
+};
+
 CacheIRSpewer CacheIRSpewer::cacheIRspewer;
 
 CacheIRSpewer::CacheIRSpewer()
@@ -193,68 +441,15 @@ void CacheIRSpewer::opcodeProperty(const char* name, const JSOp op) {
   j.endStringProperty();
 }
 
-void CacheIRSpewer::CacheIRArg(JSONPrinter& j, CacheIRReader& r,
-                               CacheIROpFormat::ArgType arg) {
-  j.beginObject();
-  switch (arg) {
-    case CacheIROpFormat::None:
-      break;
-    case CacheIROpFormat::Id:
-      j.property("Id", r.readByte());
-      break;
-    case CacheIROpFormat::Field:
-      j.property("Field", r.readByte());
-      break;
-    case CacheIROpFormat::Byte:
-      j.property("Byte", r.readByte());
-      break;
-    case CacheIROpFormat::Int32:
-      j.property("Int32", r.int32Immediate());
-      break;
-    case CacheIROpFormat::UInt32:
-      j.property("Uint32", r.uint32Immediate());
-      break;
-    case CacheIROpFormat::Word:
-      j.property("Word", uintptr_t(r.pointer()));
-      break;
-  }
-  j.endObject();
-}
-template <typename... Args>
-void CacheIRSpewer::CacheIRArgs(JSONPrinter& j, CacheIRReader& r,
-                                Args... args) {
-  using namespace js::jit::CacheIROpFormat;
-
-  (CacheIRArg(j, r, args), ...);
-}
-
 void CacheIRSpewer::cacheIRSequence(CacheIRReader& reader) {
-  using namespace js::jit::CacheIROpFormat;
-
   MOZ_ASSERT(enabled());
   JSONPrinter& j = json_.ref();
 
   j.beginListProperty("cacheIR");
-  while (reader.more()) {
-    j.beginObject();
-    CacheOp op = reader.readOp();
-    j.property("op", CacheIrOpNames[uint32_t(op)]);
-    j.beginListProperty("args");
 
-    switch (op) {
-#  define DEFINE_OP(op, ...)               \
-    case CacheOp::op:                      \
-      CacheIRArgs(j, reader, __VA_ARGS__); \
-      break;
-      CACHE_IR_OPS(DEFINE_OP)
-#  undef DEFINE_OP
-      default:
-        MOZ_CRASH("unreachable");
-    }
+  CacheIROpsJSONSpewer spewer(j);
+  spewer.spew(reader);
 
-    j.endList();
-    j.endObject();
-  }
   j.endList();
 }
 
