@@ -178,7 +178,12 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
   AVHWDeviceContext* hwctx = (AVHWDeviceContext*)mVAAPIDeviceContext->data;
   AVVAAPIDeviceContext* vactx = (AVVAAPIDeviceContext*)hwctx->hwctx;
 
-  mDisplay = mLib->vaGetDisplayWl(widget::WaylandDisplayGet()->GetDisplay());
+  wl_display* display = widget::WaylandDisplayGetWLDisplay();
+  if (!display) {
+    FFMPEG_LOG("Can't get default wayland display.");
+    return false;
+  }
+  mDisplay = mLib->vaGetDisplayWl(display);
 
   hwctx->user_opaque = new VAAPIDisplayHolder(mLib, mDisplay);
   hwctx->free = VAAPIDisplayReleaseCallback;
