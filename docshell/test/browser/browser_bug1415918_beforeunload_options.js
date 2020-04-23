@@ -7,9 +7,6 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 );
 
 add_task(async function test() {
-  const XUL_NS =
-    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
   await SpecialPowers.pushPrefEnv({
     set: [["dom.require_user_interaction_for_beforeunload", false]],
   });
@@ -28,7 +25,7 @@ add_task(async function test() {
         mutation.type == "attributes" &&
         browser.hasAttribute("tabmodalPromptShowing")
       ) {
-        let prompt = stack.getElementsByTagNameNS(XUL_NS, "tabmodalprompt")[0];
+        let prompt = stack.getElementsByTagName("tabmodalprompt")[0];
         prompt.querySelector(`.tabmodalprompt-${buttonId}`).click();
         promptShown = true;
       }

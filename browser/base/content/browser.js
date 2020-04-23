@@ -8890,16 +8890,19 @@ TabModalPromptBox.prototype = {
       /* Ignore exceptions for host-less URIs */
     }
     if (hostForAllowFocusCheckbox) {
-      let allowFocusRow = document.createXULElement("row");
-      allowFocusCheckbox = document.createXULElement("checkbox");
-      let spacer = document.createXULElement("spacer");
+      let allowFocusRow = document.createElement("div");
+
+      let spacer = document.createElement("div");
       allowFocusRow.appendChild(spacer);
+
+      allowFocusCheckbox = document.createXULElement("checkbox");
       let label = gTabBrowserBundle.formatStringFromName(
         "tabs.allowTabFocusByPromptForSite",
         [hostForAllowFocusCheckbox]
       );
       allowFocusCheckbox.setAttribute("label", label);
       allowFocusRow.appendChild(allowFocusCheckbox);
+
       newPrompt.ui.rows.append(allowFocusRow);
     }
 

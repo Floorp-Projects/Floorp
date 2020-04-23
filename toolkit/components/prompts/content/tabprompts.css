@@ -3,18 +3,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Tab Modal Prompt boxes */
-.tabModalBackground,
-tabmodalprompt {
-  width: 100%;
-  height: 100%;
+
+.tabModalBackground {
   -moz-box-pack: center;
   -moz-box-orient: vertical;
 }
 
-.tabmodalprompt-mainContainer {
-  min-width: 20em;
-  min-height: 12em;
-  -moz-user-focus: normal;
+.tabModalBackground,
+tabmodalprompt {
+  width: 100%;
+  height: 100%;
+}
+
+tabmodalprompt {
+  --tabmodalprompt-padding: 20px;
+}
+
+tabmodalprompt:not([hidden]) {
+  display: grid;
+  grid-template-rows: 1fr [dialog-start] auto [dialog-end] 2fr;
+  justify-items: center;
 }
 
 /*
@@ -25,14 +33,48 @@ tabmodalprompt {
 tabmodalprompt.tab-prompt {
   overflow: visible;
   z-index: 1;
+  grid-template-rows: [dialog-start] auto [dialog-end] 1fr;
 }
 
-tabmodalprompt.tab-prompt .spacer-top {
-  display: none;
-}
-
-tabmodalprompt.tab-prompt *.tabmodalprompt-mainContainer {
+tabmodalprompt.tab-prompt .tabmodalprompt-mainContainer {
   margin-top: -5px;
+}
+
+.tabmodalprompt-mainContainer {
+  min-width: 20em;
+  min-height: 12em;
+  max-width: calc(60% + calc(var(--tabmodalprompt-padding) * 2));
+  -moz-user-focus: normal;
+  grid-row: dialog;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.tabmodalprompt-topContainer {
+  flex-grow: 1;
+  padding: var(--tabmodalprompt-padding);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+}
+
+.tabmodalprompt-topContainer > div:not(.tabmodalprompt-infoContainer):not([hidden]) {
+  display: contents;
+}
+
+.tabmodalprompt-infoContainer {
+  grid-column: span 2;
+
+  display: block;
+  margin-block: auto;
+  text-align: center;
+}
+
+/* When all elements in the first column are hidden, prevent the second column
+   from becoming the first one because it won't have the right fraction */
+.tabmodalprompt-topContainer > div > *:nth-child(2) {
+  grid-column: 2;
 }
 
 .infoTitle {
@@ -47,10 +89,21 @@ tabmodalprompt.tab-prompt *.tabmodalprompt-mainContainer {
   cursor: text !important;
   white-space: pre-wrap;
   unicode-bidi: plaintext;
+  outline: none; /* remove focus outline */
+  overflow: auto;
 }
 
 tabmodalprompt label[value=""] {
-  visibility: collapse;
+  display: none;
+}
+
+.tabmodalprompt-buttonContainer {
+  display: flex;
+  padding: 12px var(--tabmodalprompt-padding) 15px;
+}
+
+.tabmodalprompt-buttonSpacer {
+  flex-grow: 1;
 }
 
 /* Tab-Modal Payment Request widget */
