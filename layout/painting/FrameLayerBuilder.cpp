@@ -852,7 +852,6 @@ struct NewLayerEntry {
         mLayerState(LayerState::LAYER_INACTIVE),
         mHideAllLayersBelow(false),
         mOpaqueForAnimatedGeometryRootParent(false),
-        mPropagateComponentAlphaFlattening(true),
         mUntransformedVisibleRegion(false),
         mIsFixedToRootScrollFrame(false) {}
   // mLayer is null if the previous entry is for a PaintedLayer that hasn't
@@ -885,9 +884,6 @@ struct NewLayerEntry {
   // mAnimatedGeometryRoot->GetParent().
   bool mOpaqueForAnimatedGeometryRootParent;
 
-  // If true, then the content flags for this layer should contribute
-  // to our decision to flatten component alpha layers, false otherwise.
-  bool mPropagateComponentAlphaFlattening;
   // mVisibleRegion is relative to the associated frame before
   // transform.
   bool mUntransformedVisibleRegion;
@@ -5000,13 +4996,6 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
             item->Frame()->StyleDisplay()->mPosition ==
                 StylePositionProperty::Fixed &&
             nsLayoutUtils::IsReallyFixedPos(item->Frame());
-      }
-
-      // Don't attempt to flatten compnent alpha layers that are within
-      // a forced active layer, or an active transform;
-      if (itemType == DisplayItemType::TYPE_TRANSFORM ||
-          layerState == LayerState::LAYER_ACTIVE_FORCE) {
-        newLayerEntry->mPropagateComponentAlphaFlattening = false;
       }
 
       float contentXScale = 1.0f;
