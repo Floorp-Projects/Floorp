@@ -124,7 +124,15 @@ class MainFrame extends Component {
   }
 
   onCanBeEnabledChange(canBeEnabled) {
-    this.props.dispatch(updateCanBeEnabled(canBeEnabled));
+    const {
+      enableAccessibility,
+      dispatch,
+      supports: { autoInit },
+    } = this.props;
+    dispatch(updateCanBeEnabled(canBeEnabled));
+    if (canBeEnabled && autoInit) {
+      dispatch(enable(enableAccessibility));
+    }
   }
 
   onCanBeDisabledChange(canBeDisabled) {
