@@ -34,6 +34,7 @@ class BrowsertimeRunner(NodeRunner):
 
     arguments = {
         "cycles": {"type": int, "default": 1, "help": "Number of full cycles"},
+        "iterations": {"type": int, "default": 1, "help": "Number of iterations"},
         "binary": {
             "type": str,
             "default": None,
@@ -307,7 +308,7 @@ class BrowsertimeRunner(NodeRunner):
             "--firefox.profileTemplate",
             profile,
             "--iterations",
-            "1",
+            str(self.get_arg("iterations")),
             test_script,
         ]
 
