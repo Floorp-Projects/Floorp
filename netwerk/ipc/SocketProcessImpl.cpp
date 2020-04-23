@@ -5,12 +5,13 @@
 
 #include "SocketProcessImpl.h"
 
+#include "ProcessUtils.h"
 #include "base/command_line.h"
 #include "base/shared_memory.h"
 #include "base/string_util.h"
-#include "mozilla/ipc/IOThreadChild.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ipc/IOThreadChild.h"
 
 #if defined(OS_WIN) && defined(MOZ_SANDBOX)
 #  include "mozilla/sandboxTarget.h"
@@ -89,7 +90,7 @@ bool SocketProcessImpl::Init(int aArgc, char* aArgv[]) {
     }
   }
 
-  SharedPreferenceDeserializer deserializer;
+  ipc::SharedPreferenceDeserializer deserializer;
   if (!deserializer.DeserializeFromSharedMemory(prefsHandle, prefMapHandle,
                                                 prefsLen, prefMapSize)) {
     return false;
