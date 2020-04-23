@@ -52,6 +52,7 @@ Var FinishPhaseStart
 Var FinishPhaseEnd
 Var InstallResult
 Var LaunchedNewApp
+Var PostSigningData
 
 ; By defining NO_STARTMENU_DIR an installer that doesn't provide an option for
 ; an application's Start Menu PROGRAMS directory and doesn't define the
@@ -98,6 +99,7 @@ VIAddVersionKey "OriginalFilename" "setup.exe"
 !insertmacro CheckForFilesInUse
 !insertmacro CleanUpdateDirectories
 !insertmacro CopyFilesFromDir
+!insertmacro CopyPostSigningData
 !insertmacro CreateRegKey
 !insertmacro GetFirstInstallPath
 !insertmacro GetLongPath
@@ -742,6 +744,23 @@ Section "-InstallEndCleanup"
   DetailPrint "$(STATUS_CLEANUP)"
   SetDetailsPrint none
 
+  ; Maybe copy the post-signing data?
+  StrCpy $PostSigningData ""
+  ${GetParameters} $0
+  ClearErrors
+  ; We don't get post-signing data from the MSI.
+  ${GetOptions} $0 "/LaunchedFromMSI" $1
+  ${If} ${Errors}
+    ; The stub will handle copying the data if it ran us.
+    ClearErrors
+    ${GetOptions} $0 "/LaunchedFromStub" $1
+    ${If} ${Errors}
+      ; We're being run standalone, copy the data.
+      ${CopyPostSigningData}
+      Pop $PostSigningData
+    ${EndIf}
+  ${EndIf}
+
   ${Unless} ${Silent}
     ClearErrors
     ${MUI_INSTALLOPTIONS_READ} $0 "summary.ini" "Field 4" "State"
@@ -1155,6 +1174,16 @@ Function SendPing
     ${EndIf}
     ${GetSecondsElapsed} $FinishPhaseStart $FinishPhaseEnd $1
     nsJSON::Set /tree ping "Data" "finish_time" /value "$1"
+  ${EndIf}
+
+  ; $PostSigningData should only be empty if we didn't try to copy the
+  ; postSigningData file at all. If we did try and the file was missing
+  ; or empty, this will be "0", and for consistency with the stub we will
+  ; still submit it.
+  ${If} $PostSigningData != ""
+    nsJSON::Quote /always $PostSigningData
+    Pop $0
+    nsJSON::Set /tree ping "Data" "attribution" /value $0
   ${EndIf}
 
   nsJSON::Set /tree ping "Data" "new_launched" /value "$LaunchedNewApp"
