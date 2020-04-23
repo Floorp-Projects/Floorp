@@ -258,10 +258,10 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
 
   context->mFields.SetWithoutSyncing<IDX_IsActive>(true);
 
-  context->mFields.SetWithoutSyncing<IDX_FullZoom>(
-      aParent ? aParent->FullZoom() : 1.0f);
-  context->mFields.SetWithoutSyncing<IDX_TextZoom>(
-      aParent ? aParent->TextZoom() : 1.0f);
+  context->mFields.SetWithoutSyncing<IDX_FullZoom>(aParent ? aParent->FullZoom()
+                                                           : 1.0f);
+  context->mFields.SetWithoutSyncing<IDX_TextZoom>(aParent ? aParent->TextZoom()
+                                                           : 1.0f);
 
   const bool allowContentRetargeting =
       inherit ? inherit->GetAllowContentRetargetingOnChildren() : true;
