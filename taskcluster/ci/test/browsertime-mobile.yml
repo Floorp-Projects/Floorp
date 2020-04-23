@@ -136,6 +136,42 @@ browsertime-tp6m:
             default: true
     treeherder-symbol: Btime(tp6m)
 
+browsertime-tp6m-live:
+    description: "Raptor (browsertime) tp6 live site page-load tests on android"
+    raptor-test: tp6m
+    raptor-subtests:
+        - amazon-search
+        - bbc
+        - booking-sf
+        - cnn-ampstories
+        - discord
+        - espn
+        - expedia
+        - facebook-cristiano
+        - fashionbeans
+        - google
+        - google-accounts
+        - imdb-firefox
+        - jianshu
+        - medium-article
+        - microsoft-support
+        - nytimes
+        - people-article
+        - reddit-thread
+        - rumble-fox
+        - stackoverflow-question
+        - urbandictionary-define
+        - wikia-marvel
+        - youtube-watch
+    apps: ["fenix", "chrome-m"]
+    run-on-projects: []
+    pageload: cold
+    run-visual-metrics: true
+    treeherder-symbol: Btime-live(tp6m)
+    mozharness:
+        extra-options:
+            - --live-sites
+
 browsertime-tp6m-profiling:
     description: "Raptor (browsertime) tp6 page-load tests on android with Gecko profiling"
     raptor-test: tp6m

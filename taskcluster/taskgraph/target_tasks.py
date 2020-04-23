@@ -538,6 +538,12 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                 and ('-fenix' in try_name or '-fennec68' in try_name):
             return True
 
+        # Run the live site tests
+        if 'browsertime' in try_name \
+                and 'pgo' in platform \
+                and '-live' in try_name:
+            return True
+
         # Run the following tests on android geckoview
         if platform and 'android' not in platform:
             return False
