@@ -13,13 +13,6 @@
 #include "nsCycleCollectionParticipant.h"  // various macros
 #include "nsString.h"                      // mStringToInsert
 
-#define NS_IMETEXTTXN_IID                            \
-  {                                                  \
-    0xb391355d, 0x346c, 0x43d1, {                    \
-      0x85, 0xed, 0x9e, 0x65, 0xbe, 0xe7, 0x7e, 0x48 \
-    }                                                \
-  }
-
 namespace mozilla {
 
 class EditorBase;
@@ -45,8 +38,6 @@ class CompositionTransaction final
                          const EditorDOMPointInText& aPointToInsert);
 
  public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMETEXTTXN_IID)
-
   /**
    * Creates a composition transaction.  aEditorBase must not return from
    * GetComposition() while calling this method.  Note that this method will
@@ -105,8 +96,6 @@ class CompositionTransaction final
 
   bool mFixed;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(CompositionTransaction, NS_IMETEXTTXN_IID)
 
 }  // namespace mozilla
 
