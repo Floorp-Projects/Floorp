@@ -302,14 +302,14 @@ void BrowsingContext::EnsureAttached() {
     Register(this);
 
     // Attach the browsing context to the tree.
-    Attach();
+    Attach(/* aFromIPC */ false, /* aOriginProcess */ nullptr);
   }
 }
 
 /* static */
-already_AddRefed<BrowsingContext> BrowsingContext::CreateFromIPC(
-    BrowsingContext::IPCInitializer&& aInit, BrowsingContextGroup* aGroup,
-    ContentParent* aOriginProcess) {
+void BrowsingContext::CreateFromIPC(BrowsingContext::IPCInitializer&& aInit,
+                                    BrowsingContextGroup* aGroup,
+                                    ContentParent* aOriginProcess) {
   MOZ_DIAGNOSTIC_ASSERT(aOriginProcess || XRE_IsContentProcess());
   MOZ_DIAGNOSTIC_ASSERT(aGroup);
 
@@ -350,9 +350,7 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateFromIPC(
 
   Register(context);
 
-  // Caller handles attaching us to the tree.
-
-  return context.forget();
+  context->Attach(/* aFromIPC */ true, aOriginProcess);
 }
 
 BrowsingContext::BrowsingContext(WindowContext* aParentWindow,
@@ -465,7 +463,7 @@ void BrowsingContext::Embed() {
   }
 }
 
-void BrowsingContext::Attach(bool aFromIPC) {
+void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
   MOZ_DIAGNOSTIC_ASSERT(!mEverAttached);
   mEverAttached = true;
 
@@ -494,17 +492,19 @@ void BrowsingContext::Attach(bool aFromIPC) {
     PopupBlocker::RegisterOpenPopupSpam();
   }
 
-  if (!aFromIPC) {
+  if (XRE_IsContentProcess() && !aFromIPC) {
     // Send attach to our parent if we need to.
-    if (XRE_IsContentProcess()) {
-      ContentChild::GetSingleton()->SendAttachBrowsingContext(
-          GetIPCInitializer());
-    } else if (IsContent()) {
-      MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-      mGroup->EachParent([&](ContentParent* aParent) {
-        Unused << aParent->SendAttachBrowsingContext(GetIPCInitializer());
-      });
-    }
+    ContentChild::GetSingleton()->SendCreateBrowsingContext(
+        mGroup->Id(), GetIPCInitializer());
+  } else if (XRE_IsParentProcess()) {
+    mGroup->EachOtherParent(aOriginProcess, [&](ContentParent* aParent) {
+      MOZ_DIAGNOSTIC_ASSERT(IsContent(),
+                            "chrome BCG cannot be synced to content process");
+      if (!Canonical()->IsEmbeddedInProcess(aParent->ChildID())) {
+        Unused << aParent->SendCreateBrowsingContext(mGroup->Id(),
+                                                     GetIPCInitializer());
+      }
+    });
   }
 }
 
@@ -544,12 +544,12 @@ void BrowsingContext::Detach(bool aFromIPC) {
         // destroyed.
         if (!Canonical()->IsEmbeddedInProcess(aParent->ChildID()) &&
             !Canonical()->IsOwnedByProcess(aParent->ChildID())) {
-          aParent->SendDetachBrowsingContext(Id(), callback, callback);
+          aParent->SendDiscardBrowsingContext(this, callback, callback);
         }
       });
     } else if (!aFromIPC) {
-      ContentChild::GetSingleton()->SendDetachBrowsingContext(Id(), callback,
-                                                              callback);
+      ContentChild::GetSingleton()->SendDiscardBrowsingContext(this, callback,
+                                                               callback);
     }
   }
 
