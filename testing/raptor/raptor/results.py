@@ -27,6 +27,7 @@ class PerftestResultsHandler(object):
         power_test=False,
         cpu_test=False,
         memory_test=False,
+        live_sites=False,
         app=None,
         no_conditioned_profile=False,
         **kwargs
@@ -35,6 +36,7 @@ class PerftestResultsHandler(object):
         self.power_test = power_test
         self.cpu_test = cpu_test
         self.memory_test = memory_test
+        self.live_sites = live_sites
         self.app = app
         self.results = []
         self.page_timeout_list = []
@@ -596,6 +598,8 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                         new_result["extra_options"].append("nocondprof")
                     if self.fission_enabled:
                         new_result["extra_options"].append("fission")
+                    if self.live_sites:
+                        new_result["extra_options"].append("live")
 
                     return new_result
 

@@ -98,6 +98,7 @@ def create_args():
         run_local=True,
         browsertime=True,
         cold=False,
+        live_sites=False,
     )
 
     def inner(**kwargs):
