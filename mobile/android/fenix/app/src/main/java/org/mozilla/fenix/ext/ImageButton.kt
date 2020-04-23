@@ -16,3 +16,8 @@ fun ImageButton.showAndEnable() {
     this.visibility = View.VISIBLE
     this.isEnabled = true
 }
+
+fun ImageButton.removeAndDisable() {
+    this.visibility = View.GONE
+    this.isEnabled = false
+}
