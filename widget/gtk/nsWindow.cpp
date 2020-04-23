@@ -7844,11 +7844,12 @@ void nsWindow::GetCompositorWidgetInitData(
     XFlush(mXDisplay);
   }
 
+  bool isShaped =
+      mIsTransparent && !mHasAlphaVisual && !mTransparencyBitmapForTitlebar;
   *aInitData = mozilla::widget::GtkCompositorWidgetInitData(
       (mXWindow != X11None) ? mXWindow : (uintptr_t) nullptr,
-      mXDisplay ? nsCString(XDisplayString(mXDisplay)) : nsCString(),
-      mIsTransparent && !mHasAlphaVisual && !mTransparencyBitmapForTitlebar,
-      GetClientSize());
+      mXDisplay ? nsCString(XDisplayString(mXDisplay)) : nsCString(), isShaped,
+      mIsX11Display, GetClientSize());
 }
 
 #ifdef MOZ_WAYLAND

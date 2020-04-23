@@ -35,7 +35,7 @@ class GtkCompositorWidget : public CompositorWidget,
  public:
   GtkCompositorWidget(const GtkCompositorWidgetInitData& aInitData,
                       const layers::CompositorOptions& aOptions,
-                      nsWindow* aWindow = nullptr);
+                      nsWindow* aWindow /* = nullptr*/);
   ~GtkCompositorWidget();
 
   // CompositorWidget Overrides
