@@ -86,7 +86,6 @@ treeherder:
         'X': 'Xpcshell tests'
         'X-1proc': 'Xpcshell tests, without e10s'
         'X-fis': 'Xpcshell tests with fission enabled'
-        'X-spi-nw': 'Xpcshell tests with networking on socket process'
         'L10n': 'Localised Repacks'
         'L10n-Rpk': 'Localized Repackaged Repacks'
         'BM': 'Beetmover'

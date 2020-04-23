@@ -277,6 +277,7 @@ nsresult nsIOService::Init() {
     observerService->AddObserver(this, NS_NETWORK_LINK_TOPIC, true);
     observerService->AddObserver(this, NS_NETWORK_ID_CHANGED_TOPIC, true);
     observerService->AddObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC, true);
+    observerService->AddObserver(this, NS_PREFSERVICE_READ_TOPIC_ID, true);
   } else
     NS_WARNING("failed to get observer service");
 
@@ -448,6 +449,11 @@ nsresult nsIOService::LaunchSocketProcess() {
     return NS_OK;
   }
 
+  if (!XRE_IsE10sParentProcess()) {
+    LOG(("nsIOService skipping LaunchSocketProcess because e10s is disabled"));
+    return NS_OK;
+  }
+
   if (!Preferences::GetBool("network.process.enabled", true)) {
     LOG(("nsIOService skipping LaunchSocketProcess because of the pref"));
     return NS_OK;
@@ -493,16 +499,15 @@ static bool sUseSocketProcess = false;
 static bool sUseSocketProcessChecked = false;
 
 // static
-bool nsIOService::UseSocketProcess(bool aCheckAgain) {
-  if (sUseSocketProcessChecked && !aCheckAgain) {
+bool nsIOService::UseSocketProcess() {
+  if (sUseSocketProcessChecked) {
     return sUseSocketProcess;
   }
 
   sUseSocketProcessChecked = true;
-  sUseSocketProcess = false;
-  if (StaticPrefs::network_process_enabled()) {
-    sUseSocketProcess =
-        StaticPrefs::network_http_network_access_on_socket_process_enabled();
+  if (Preferences::GetBool("network.process.enabled")) {
+    sUseSocketProcess = Preferences::GetBool(
+        "network.http.network_access_on_socket_process.enabled", true);
   }
   return sUseSocketProcess;
 }
@@ -1545,7 +1550,10 @@ nsIOService::Observe(nsISupports* subject, const char* topic,
       SetOffline(false);
     }
   } else if (!strcmp(topic, kProfileDoChange)) {
-    if (data && NS_LITERAL_STRING("startup").Equals(data)) {
+    if (!data) {
+      return NS_OK;
+    }
+    if (NS_LITERAL_STRING("startup").Equals(data)) {
       // Lazy initialization of network link service (see bug 620472)
       InitializeNetworkLinkService();
       // Set up the initilization flag regardless the actuall result.
@@ -1560,6 +1568,9 @@ nsIOService::Observe(nsISupports* subject, const char* topic,
       // before something calls into the cookie service.
       nsCOMPtr<nsISupports> cookieServ =
           do_GetService(NS_COOKIESERVICE_CONTRACTID);
+    } else if (NS_LITERAL_STRING("xpcshell-do-get-profile").Equals(data)) {
+      // xpcshell doesn't read user profile.
+      LaunchSocketProcess();
     }
   } else if (!strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     // Remember we passed XPCOM shutdown notification to prevent any
@@ -1598,6 +1609,10 @@ nsIOService::Observe(nsISupports* subject, const char* topic,
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1152048#c19
     nsCOMPtr<nsIRunnable> wakeupNotifier = new nsWakeupNotifier(this);
     NS_DispatchToMainThread(wakeupNotifier);
+  } else if (!strcmp(topic, NS_PREFSERVICE_READ_TOPIC_ID)) {
+    // Launch socket process after we load user's pref. This is to make sure
+    // that socket process can get the latest prefs.
+    LaunchSocketProcess();
   }
 
   return NS_OK;

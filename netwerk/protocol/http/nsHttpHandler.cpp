@@ -445,8 +445,6 @@ nsresult nsHttpHandler::Init() {
   mIOService = new nsMainThreadPtrHolder<nsIIOService>(
       "nsHttpHandler::mIOService", service);
 
-  gIOService->LaunchSocketProcess();
-
   if (IsNeckoChild()) NeckoChild::InitNeckoChild();
 
   InitUserAgentComponents();
@@ -596,7 +594,7 @@ nsresult nsHttpHandler::InitConnectionMgr() {
     return NS_OK;
   }
 
-  if (nsIOService::UseSocketProcess(true) && XRE_IsParentProcess()) {
+  if (nsIOService::UseSocketProcess() && XRE_IsParentProcess()) {
     if (!gIOService->SocketProcessReady()) {
       gIOService->CallOrWaitForSocketProcess(
           []() { Unused << gHttpHandler->InitConnectionMgr(); });
