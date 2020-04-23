@@ -38,6 +38,12 @@ const char* const js::jit::CacheKindNames[] = {
 #undef DEFINE_KIND
 };
 
+const char* const js::jit::CacheIrOpNames[] = {
+#define OPNAME(op, ...) #op,
+    CACHE_IR_OPS(OPNAME)
+#undef OPNAME
+};
+
 // We need to enter the namespace here so that the definition of
 // CacheIROpFormat::ArgLengths can see CacheIROpFormat::ArgType
 // (without defining None/Id/Field/etc everywhere else in this file.)
