@@ -56,6 +56,16 @@ class AccessibilityProxy {
     return this.accessibilityFront && this.accessibilityFront.enabled;
   }
 
+  /**
+   * Indicates whether the accessibility service is enabled.
+   */
+  get canBeEnabled() {
+    // TODO: Just use parentAccessibilityFront after Firefox 75.
+    const { canBeEnabled } =
+      this.parentAccessibilityFront || this.accessibilityFront;
+    return canBeEnabled;
+  }
+
   get currentTarget() {
     return this._currentTarget;
   }
