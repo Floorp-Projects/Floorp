@@ -10693,10 +10693,6 @@ exports.PSEUDO_ELEMENTS = [
  */
 exports.PREFERENCES = [
   [
-    "contain",
-    "layout.css.contain.enabled"
-  ],
-  [
     "font-optical-sizing",
     "layout.css.font-variations.enabled"
   ],
