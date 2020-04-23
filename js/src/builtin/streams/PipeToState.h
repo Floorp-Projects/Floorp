@@ -72,6 +72,17 @@ class PipeToState : public NativeObject {
      */
     Slot_Writer,
 
+    /**
+     * The |PromiseObject*| of the last write performed to the destinationg
+     * |WritableStream| using the writer in |Slot_Writer|.  If no writes have
+     * yet been performed, this slot contains |undefined|.
+     *
+     * This promise is created inside a handler function in the same compartment
+     * and realm as this |PipeToState|, so it is always a |PromiseObject*| and
+     * never a wrapper around one.
+     */
+    Slot_LastWriteRequest,
+
     SlotCount,
   };
 
@@ -108,6 +119,20 @@ class PipeToState : public NativeObject {
     return &getFixedSlot(Slot_Writer)
                 .toObject()
                 .as<WritableStreamDefaultWriter>();
+  }
+
+  PromiseObject* lastWriteRequest() const {
+    const auto& slot = getFixedSlot(Slot_LastWriteRequest);
+    if (slot.isUndefined()) {
+      return nullptr;
+    }
+
+    return &slot.toObject().as<PromiseObject>();
+  }
+
+  void updateLastWriteRequest(PromiseObject* writeRequest) {
+    MOZ_ASSERT(writeRequest != nullptr);
+    setFixedSlot(Slot_LastWriteRequest, JS::ObjectValue(*writeRequest));
   }
 
   bool shuttingDown() const { return flags() & Flag_ShuttingDown; }
