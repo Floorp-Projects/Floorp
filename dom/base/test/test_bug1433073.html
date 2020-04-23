@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test bug 1433073</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    function synthesizeAccelKeyAndClickAt(aElementId) {
+      const element = document.getElementById(aElementId);
+      synthesizeMouseAtCenter(element, { accelKey: true });
+    }
+
+    function synthesizeAccelKeyAndC() {
+      synthesizeKey("C", { accelKey: true });
+    }
+
+    async function runTest() {
+      synthesizeAccelKeyAndClickAt("x");
+      synthesizeAccelKeyAndClickAt("y");
+      synthesizeAccelKeyAndClickAt("u");
+      synthesizeAccelKeyAndClickAt("v");
+
+      {
+        // Assert content contains the table.
+        // TODO: the `<meta>` element is missing; which is a defect in the
+        // test-code, see https://bugzilla.mozilla.org/show_bug.cgi?id=1632183.
+        const expectedString = "\
+<table>\
+<tbody>\
+<tr>\
+<td id=\"x\">x</td>\
+<td id=\"y\">y</td>\
+</tr>\
+<tr>\
+<td id=\"u\">u</td>\
+<td id=\"v\">v</td>\
+</tr>\
+</tbody>\
+</table>";
+
+        const flavor = "text/html";
+        await SimpleTest.promiseClipboardChange(expectedString,
+          synthesizeAccelKeyAndC, flavor);
+      }
+
+      {
+        // The key point of this check is that the string doesn't contain a
+        // `<tr>`. It's possible that `<tbody>` could be removed, but it's
+        // unknown if other applications rely on it being included.
+        const expectedString = "\
+<html>\
+<body onload=\"onLoad()\">\
+<div id=\"content\">\
+<table><tbody></tbody></table></div></body></html>";
+        const flavor = "text/_moz_htmlcontext";
+        await SimpleTest.promiseClipboardChange(expectedString,
+          synthesizeAccelKeyAndC, flavor);
+      }
+
+      SimpleTest.finish();
+    }
+
+    function onLoad() {
+      SimpleTest.waitForExplicitFinish();
+      SimpleTest.waitForFocus(runTest);
+    }
+  </script>
+</head>
+<body onLoad="onLoad()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1433073">Mozilla Bug 1433073</a>
+<p id="display"></p>
+<div id="content">
+  <table>
+    <tbody>
+      <tr>
+        <td id="x">x</td>
+        <td id="y">y</td>
+      </tr>
+      <tr>
+        <td id="u">u</td>
+        <td id="v">v</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</body>
+</html>
