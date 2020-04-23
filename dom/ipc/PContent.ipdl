@@ -123,6 +123,8 @@ using mozilla::dom::MediaSessionPlaybackState from "mozilla/dom/MediaSessionBind
 using refcounted class nsDocShellLoadState from "nsDocShellLoadState.h";
 using mozilla::dom::ServiceWorkerShutdownState::Progress from "mozilla/dom/ServiceWorkerShutdownState.h";
 using refcounted class mozilla::dom::CrossProcessSHEntry from "mozilla/dom/MaybeNewPSHEntry.h";
+using mozilla::ContentBlockingNotifier::StorageAccessGrantedReason from "mozilla/ContentBlockingNotifier.h";
+using mozilla::ContentBlocking::StorageAccessPromptChoices from "mozilla/ContentBlocking.h";
 
 union ChromeRegistryItem
 {
@@ -1465,6 +1467,14 @@ parent:
                                                   nsCString aTrackingOrigin,
                                                   int aAllowMode)
           returns (bool unused);
+
+    async CompleteAllowAccessFor(MaybeDiscardedBrowsingContext aParentContext,
+                                 uint64_t aTopLevelWindowId,
+                                 Principal aTrackingPrincipal,
+                                 nsCString aTrackingOrigin,
+                                 uint32_t aCookieBehavior,
+                                 StorageAccessGrantedReason aReason)
+          returns (StorageAccessPromptChoices? choice);
 
     async StoreUserInteractionAsPermission(Principal aPrincipal);
 

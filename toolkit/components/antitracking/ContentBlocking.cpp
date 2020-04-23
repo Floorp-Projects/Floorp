@@ -331,7 +331,29 @@ ContentBlocking::AllowAccessFor(
         behavior, aReason, aPerformFinalChecks);
   }
 
-  return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+  MOZ_ASSERT(XRE_IsContentProcess());
+  // Only support PerformFinalChecks when we run ::CompleteAllowAccessFor in
+  // the same process. This callback is only used by eStorageAccessAPI,
+  // which is always runned in the same process.
+  MOZ_ASSERT(!aPerformFinalChecks);
+
+  ContentChild* cc = ContentChild::GetSingleton();
+  MOZ_ASSERT(cc);
+
+  return cc
+      ->SendCompleteAllowAccessFor(aParentContext, topLevelWindowId,
+                                   IPC::Principal(trackingPrincipal),
+                                   trackingOrigin, behavior, aReason)
+      ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+             [](const ContentChild::CompleteAllowAccessForPromise::
+                    ResolveOrRejectValue& aValue) {
+               if (aValue.IsResolve() && aValue.ResolveValue().isSome()) {
+                 return StorageAccessGrantPromise::CreateAndResolve(
+                     aValue.ResolveValue().value(), __func__);
+               }
+               return StorageAccessGrantPromise::CreateAndReject(false,
+                                                                 __func__);
+             });
 }
 
 // CompleteAllowAccessFor is used to process the remaining work in
@@ -462,7 +484,7 @@ ContentBlocking::CompleteAllowAccessFor(
                  [](ParentAccessGrantPromise::ResolveOrRejectValue&& aValue) {
                    if (aValue.IsResolve()) {
                      return StorageAccessGrantPromise::CreateAndResolve(
-                         eAllow, __func__);
+                         ContentBlocking::eAllow, __func__);
                    }
                    return StorageAccessGrantPromise::CreateAndReject(false,
                                                                      __func__);
