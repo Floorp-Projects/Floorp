@@ -102,6 +102,7 @@ pub struct BuiltTransaction {
     pub scene_build_end_time: u64,
     pub render_frame: bool,
     pub invalidate_rendered_frame: bool,
+    pub discard_frame_state_for_pipelines: Vec<PipelineId>,
     pub timings: Option<TransactionTimings>,
 }
 
@@ -486,6 +487,7 @@ impl SceneBuilderThread {
                 blob_rasterizer: None,
                 frame_ops: Vec::new(),
                 removed_pipelines: Vec::new(),
+                discard_frame_state_for_pipelines: Vec::new(),
                 notifications: Vec::new(),
                 scene_build_start_time,
                 scene_build_end_time: precise_time_ns(),
@@ -603,6 +605,7 @@ impl SceneBuilderThread {
 
         let mut timings = None;
 
+        let mut discard_frame_state_for_pipelines = Vec::new();
         let mut removed_pipelines = Vec::new();
         let rebuild_scene = !txn.scene_ops.is_empty();
         for message in txn.scene_ops.drain(..) {
@@ -628,7 +631,7 @@ impl SceneBuilderThread {
                     content_size,
                     list_descriptor,
                     list_data,
-                    ..
+                    preserve_frame_state,
                 } => {
                     let built_display_list =
                         BuiltDisplayList::from_data(list_data, list_descriptor);
@@ -659,6 +662,10 @@ impl SceneBuilderThread {
                         blob_rasterization_end_time_ns: 0,
                         display_list_len,
                     });
+
+                    if !preserve_frame_state {
+                        discard_frame_state_for_pipelines.push(pipeline_id);
+                    }
                 }
                 SceneMsg::SetRootPipeline(pipeline_id) => {
                     scene.set_root_pipeline_id(pipeline_id);
@@ -737,6 +744,7 @@ impl SceneBuilderThread {
             blob_rasterizer: replace(&mut txn.blob_rasterizer, None),
             frame_ops: replace(&mut txn.frame_ops, Vec::new()),
             removed_pipelines,
+            discard_frame_state_for_pipelines,
             notifications: replace(&mut txn.notifications, Vec::new()),
             interner_updates,
             scene_build_start_time,
