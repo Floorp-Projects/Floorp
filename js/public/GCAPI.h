@@ -444,7 +444,7 @@ namespace JS {
   D(DELAYED_ATOMS_GC, 12)                   \
   D(SHARED_MEMORY_LIMIT, 13)                \
   D(IDLE_TIME_COLLECTION, 14)               \
-  D(UNUSED_1, 15)                           \
+  D(BG_TASK_FINISHED, 15)                   \
   D(ABORT_GC, 16)                           \
   D(FULL_WHOLE_CELL_BUFFER, 17)             \
   D(FULL_GENERIC_BUFFER, 18)                \
