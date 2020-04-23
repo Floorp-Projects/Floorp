@@ -229,10 +229,10 @@ add_task(async function() {
     );
     EventUtils.sendMouseEvent(
       { type: "click" },
-      document.querySelector("#params-tab")
+      document.querySelector("#request-tab")
     );
 
-    const panel = document.querySelector("#params-panel");
+    const panel = document.querySelector("#request-panel");
     // Bug 1414981 - Request URL should not show #hash
     const statusParamValue = data.uri
       .split("=")
@@ -262,7 +262,7 @@ add_task(async function() {
     is(
       accordionItems[0].querySelector(".accordion-header-label").textContent,
       L10N.getStr("paramsQueryString"),
-      "The params scope doesn't have the correct title."
+      "The request query section doesn't have the correct title."
     );
 
     is(labels[0].textContent, "sts", "The param name was incorrect.");

@@ -52,18 +52,18 @@ loader.lazyGetter(this, "SourcePreview", function() {
 const { div } = dom;
 
 const JSON_SCOPE_NAME = L10N.getStr("jsonScopeName");
-const PARAMS_EMPTY_TEXT = L10N.getStr("paramsEmptyText");
-const PARAMS_FILTER_TEXT = L10N.getStr("paramsFilterText");
-const PARAMS_FORM_DATA = L10N.getStr("paramsFormData");
-const PARAMS_POST_PAYLOAD = L10N.getStr("paramsPostPayload");
-const PARAMS_QUERY_STRING = L10N.getStr("paramsQueryString");
+const REQUEST_EMPTY_TEXT = L10N.getStr("paramsEmptyText");
+const REQUEST_FILTER_TEXT = L10N.getStr("paramsFilterText");
+const REQUEST_FORM_DATA = L10N.getStr("paramsFormData");
+const REQUEST_POST_PAYLOAD = L10N.getStr("paramsPostPayload");
+const REQUEST_QUERY_STRING = L10N.getStr("paramsQueryString");
 const REQUEST_TRUNCATED = L10N.getStr("requestTruncated");
 
 /**
  * Params panel component
  * Displays the GET parameters and POST data of a request
  */
-class ParamsPanel extends Component {
+class RequestPanel extends Component {
   static get propTypes() {
     return {
       connector: PropTypes.object.isRequired,
@@ -160,7 +160,7 @@ class ParamsPanel extends Component {
       !postData &&
       !query
     ) {
-      return div({ className: "empty-notice" }, PARAMS_EMPTY_TEXT);
+      return div({ className: "empty-notice" }, REQUEST_EMPTY_TEXT);
     }
 
     let error;
@@ -175,8 +175,8 @@ class ParamsPanel extends Component {
           filterText,
           targetSearchResult,
         },
-        header: PARAMS_QUERY_STRING,
-        id: "paramsQueryString",
+        header: REQUEST_QUERY_STRING,
+        id: "requestQueryString",
         opened: true,
       });
     }
@@ -192,8 +192,8 @@ class ParamsPanel extends Component {
           targetSearchResult,
           defaultSelectFirstNode: false,
         },
-        header: PARAMS_FORM_DATA,
-        id: "paramsFormData",
+        header: REQUEST_FORM_DATA,
+        id: "requestFormData",
         opened: true,
       });
     }
@@ -238,8 +238,8 @@ class ParamsPanel extends Component {
           mode: mimeType.replace(/;.+/, ""),
           targetSearchResult,
         },
-        header: PARAMS_POST_PAYLOAD,
-        id: "paramsPostPayload",
+        header: REQUEST_POST_PAYLOAD,
+        id: "requestPostPayload",
         opened: true,
       });
     }
@@ -253,7 +253,7 @@ class ParamsPanel extends Component {
           delay: FILTER_SEARCH_DELAY,
           type: "filter",
           onChange: text => this.setState({ filterText: text }),
-          placeholder: PARAMS_FILTER_TEXT,
+          placeholder: REQUEST_FILTER_TEXT,
         })
       ),
       Accordion({ items })
@@ -264,4 +264,4 @@ class ParamsPanel extends Component {
 module.exports = connect(null, dispatch => ({
   updateRequest: (id, data, batch) =>
     dispatch(Actions.updateRequest(id, data, batch)),
-}))(ParamsPanel);
+}))(RequestPanel);

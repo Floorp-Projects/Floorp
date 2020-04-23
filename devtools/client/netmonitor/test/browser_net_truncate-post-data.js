@@ -32,23 +32,23 @@ add_task(async function() {
   // Make sure the accordion items and editor is loaded
   const waitAccordionItems = waitForDOM(
     document,
-    "#params-panel .accordion-item",
+    "#request-panel .accordion-item",
     1
   );
   const waitSourceEditor = waitForDOM(
     document,
-    "#params-panel .CodeMirror.cm-s-mozilla"
+    "#request-panel .CodeMirror.cm-s-mozilla"
   );
 
   store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent(
     { type: "click" },
-    document.querySelector("#params-tab")
+    document.querySelector("#request-tab")
   );
 
   await Promise.all([waitAccordionItems, waitSourceEditor]);
 
-  const tabpanel = document.querySelector("#params-panel");
+  const tabpanel = document.querySelector("#request-panel");
   is(
     tabpanel.querySelector(".request-error-header") === null,
     false,
