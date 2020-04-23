@@ -79,18 +79,6 @@ import {
 } from "../../utils/editor";
 
 import { resizeToggleButton, resizeBreakpointGutter } from "../../utils/ui";
-import Services from "devtools-services";
-const { appinfo } = Services;
-
-const isMacOS = appinfo.OS === "Darwin";
-
-function isSecondary(ev) {
-  return isMacOS && ev.ctrlKey && ev.button === 0;
-}
-
-function isCmd(ev) {
-  return isMacOS ? ev.metaKey : ev.ctrlKey;
-}
 
 import "./Editor.css";
 import "./Breakpoints.css";
@@ -471,7 +459,7 @@ class Editor extends PureComponent<Props, State> {
     } = this.props;
 
     // ignore right clicks in the gutter
-    if (isSecondary(ev) || ev.button === 2 || !selectedSource) {
+    if ((ev.ctrlKey && ev.button === 0) || ev.button === 2 || !selectedSource) {
       return;
     }
 
@@ -493,12 +481,8 @@ class Editor extends PureComponent<Props, State> {
       return;
     }
 
-    if (isCmd(ev)) {
-      return continueToHere(cx, {
-        line: sourceLine,
-        column: undefined,
-        sourceId: selectedSource.id,
-      });
+    if (ev.metaKey) {
+      return continueToHere(cx, sourceLine);
     }
 
     return addBreakpointAtLine(cx, sourceLine, ev.altKey, ev.shiftKey);
