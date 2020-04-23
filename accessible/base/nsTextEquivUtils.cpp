@@ -194,7 +194,9 @@ nsresult nsTextEquivUtils::AppendFromAccessible(Accessible* aAccessible,
   // it's not root and not control.
   if (isEmptyTextEquiv) {
     uint32_t nameRule = GetRoleRule(aAccessible->Role());
-    if (nameRule & eNameFromSubtreeIfReqRule) {
+    if (nameRule == eNameFromSubtreeRule ||
+        (nameRule & eNameFromSubtreeIfReqRule &&
+         aAccessible != sInitiatorAcc)) {
       rv = AppendFromAccessibleChildren(aAccessible, aString);
       NS_ENSURE_SUCCESS(rv, rv);
 
