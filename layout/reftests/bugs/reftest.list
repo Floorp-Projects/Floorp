@@ -2052,7 +2052,12 @@ fuzzy-if(Android,0-66,0-574) fuzzy-if(d2d,0-89,0-777) fuzzy-if(!Android&&!d2d,0-
 pref(layout.css.moz-document.url-prefix-hack.enabled,true) == 1446470.html 1035091-ref.html
 pref(layout.css.moz-document.url-prefix-hack.enabled,false) == 1446470-2.html 1035091-ref.html
 == 1456111-1.html about:blank
-test-pref(layout.css.contain.enabled,false) == 1466008.html 1466008-ref.html
+# Note: The following test depends on having a pref-controllable CSS property,
+# and the property needs to have a non-initial value that causes it to create
+# a containing block for fixed-position descendants. It doesn't matter whether
+# the pref is enabled by default; we just need to be able to pref it off here.
+# For now, we use the "backdrop-filter" CSS property (and its pref).
+test-pref(layout.css.backdrop-filter.enabled,false) == 1466008.html 1466008-ref.html
 fuzzy(0-1,0-625) == 1466638-1.html 1466638-1-ref.html
 == bug1472465-1.html bug1472465-1-ref.html
 == 1475971-1.html 1475971-1-ref.html
