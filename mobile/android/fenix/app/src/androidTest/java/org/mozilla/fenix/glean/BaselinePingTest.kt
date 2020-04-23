@@ -4,16 +4,13 @@
 
 package org.mozilla.fenix.glean
 
+import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.junit.Assert.assertEquals
-
-import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiSelector
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -21,10 +18,14 @@ import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.testing.GleanTestLocalServer
 import org.json.JSONObject
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.BeforeClass
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.MockWebServerHelper
 import java.util.concurrent.TimeUnit
@@ -56,8 +57,17 @@ class BaselinePingTest {
         }
     }
 
+    /**
+     * Wait for a specific ping to be received by the local server and
+     * return its parsed JSON content.
+     *
+     * @param pingName the name of the ping to wait for
+     * @param pingReason the value of the `reason` field for the received ping
+     * @param maxAttempts how many times should a wait be attempted
+     */
     private fun waitForPingContent(
         pingName: String,
+        pingReason: String?,
         maxAttempts: Int = 3
     ): JSONObject? {
         var attempts = 0
@@ -66,7 +76,16 @@ class BaselinePingTest {
             val request = server.takeRequest(20L, TimeUnit.SECONDS)
             val docType = request.path.split("/")[3]
             if (pingName == docType) {
-                return JSONObject(request.body.readUtf8())
+                val parsedPayload = JSONObject(request.body.readUtf8())
+                if (pingReason == null) {
+                    return parsedPayload
+                }
+
+                // If we requested a specific ping reason, look for it.
+                val reason = parsedPayload.getJSONObject("ping_info").getString("reason")
+                if (reason == pingReason) {
+                    return parsedPayload
+                }
             }
         } while (attempts < maxAttempts)
 
@@ -87,9 +106,17 @@ class BaselinePingTest {
         // Move it to background.
         device.pressHome()
 
+        // Due to bug 1632184, we need move the activity to foreground again, in order
+        // for a 'background' ping with reason 'foreground' to be generated and also trigger
+        // sending the ping that was submitted on background. This can go away once bug 1634375
+        // is fixed.
+        device.pressRecentApps()
+        device.findObject(UiSelector().descriptionContains(
+            ApplicationProvider.getApplicationContext<Context>().getString(R.string.app_name)))
+            .click()
+
         // Validate the received data.
-        val baselinePing = waitForPingContent("baseline")!!
-        assertEquals("baseline", baselinePing.getJSONObject("ping_info")["ping_type"])
+        val baselinePing = waitForPingContent("baseline", "background")!!
 
         val metrics = baselinePing.getJSONObject("metrics")
 
