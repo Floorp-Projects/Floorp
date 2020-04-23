@@ -6,7 +6,8 @@ async function continueToLine(dbg, line) {
   rightClickElement(dbg, "gutter", line);
   selectContextMenuItem(dbg, selectors.editorContextMenu.continueToHere);
   await waitForDispatch(dbg, "RESUME");
-  return waitForPaused(dbg);
+  await waitForPaused(dbg);
+  await waitForInlinePreviews(dbg);
 }
 
 async function continueToColumn(dbg, pos) {
@@ -28,7 +29,7 @@ add_task(async function() {
   await waitForPaused(dbg);
   await waitForInlinePreviews(dbg);
 
-  await continueToColumn(dbg, { line: 31, ch: 7 });
+  await continueToLine(dbg, 31);
   assertDebugLine(dbg, 31, 4);
   await resume(dbg);
 
@@ -38,7 +39,6 @@ add_task(async function() {
   await waitForInlinePreviews(dbg);
 
   await continueToColumn(dbg, { line: 31, ch: 7 });
-
   assertDebugLine(dbg, 31, 4);
   await resume(dbg);
 });
