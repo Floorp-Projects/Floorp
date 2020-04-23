@@ -319,6 +319,10 @@ function getVisibleSelectedFrameLine(dbg) {
   return frame && frame.location.line;
 }
 
+function waitForPausedLine(dbg, line) {
+  return waitForState(dbg, () => getVisibleSelectedFrameLine(dbg) == line);
+}
+
 /**
  * Assert that the debugger is paused at the correct location.
  *
@@ -390,6 +394,7 @@ function assertDebugLine(dbg, line, column) {
 
     ok(classMatch, "expression is highlighted as paused");
   }
+  info(`Paused on line ${line}`);
 }
 
 /**
@@ -1128,8 +1133,8 @@ const startKey = isMac
 
 const keyMappings = {
   close: { code: "w", modifiers: cmdOrCtrl },
-  commandKeyDown: {code: "VK_META", modifiers: {type: "keydown"}},
-  commandKeyUp: {code: "VK_META", modifiers: {type: "keyup"}},
+  commandKeyDown: { code: "VK_META", modifiers: { type: "keydown" } },
+  commandKeyUp: { code: "VK_META", modifiers: { type: "keyup" } },
   debugger: { code: "s", modifiers: shiftOrAlt },
   // test conditional panel shortcut
   toggleCondPanel: { code: "b", modifiers: cmdShift },
@@ -1444,8 +1449,8 @@ function clickElementWithSelector(dbg, selector) {
   clickDOMElement(dbg, findElementWithSelector(dbg, selector));
 }
 
-function clickDOMElement(dbg, element) {
-  EventUtils.synthesizeMouseAtCenter(element, {}, dbg.win);
+function clickDOMElement(dbg, element, options = {}) {
+  EventUtils.synthesizeMouseAtCenter(element, options, dbg.win);
 }
 
 function dblClickElement(dbg, elementName, ...args) {
@@ -1489,6 +1494,11 @@ function rightClickEl(dbg, el) {
 async function clickGutter(dbg, line) {
   const el = await codeMirrorGutterElement(dbg, line);
   clickDOMElement(dbg, el);
+}
+
+async function cmdClickGutter(dbg, line) {
+  const el = await codeMirrorGutterElement(dbg, line);
+  clickDOMElement(dbg, el, cmdOrCtrl);
 }
 
 function findContextMenu(dbg, selector) {
