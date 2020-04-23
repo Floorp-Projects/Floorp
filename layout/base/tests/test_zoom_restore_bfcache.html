@@ -1,0 +1,42 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Test for zoom restoration when coming from the bfcache</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+const originalDPR = window.devicePixelRatio;
+let loadCount = 0;
+let childWin;
+function handlePageShow(persisted) {
+  ok(typeof persisted == "boolean", "Should get the persisted state from the pageshow event");
+  is(persisted, loadCount == 2, "Should've gone into the bfcache after the back navigation");
+
+  if (loadCount == 0) {
+    loadCount++;
+    is(childWin.devicePixelRatio, originalDPR, "No zoom")
+    childWin.document.querySelector("a").click(); // navigate away
+  } else if (loadCount == 1) {
+    loadCount++;
+    is(childWin.devicePixelRatio, originalDPR, "No zoom (yet)")
+    is(childWin.document.querySelector("iframe").contentWindow.devicePixelRatio, originalDPR, "No zoom on frame either");
+    SpecialPowers.setFullZoom(childWin, 2);
+    childWin.requestAnimationFrame(() => childWin.requestAnimationFrame(() => {
+      is(childWin.devicePixelRatio, originalDPR * 2, "Zoomed");
+      is(childWin.document.querySelector("iframe").contentWindow.devicePixelRatio, originalDPR * 2, "Zoomed iframe too");
+      childWin.history.back();
+    }));
+  } else {
+    childWin.requestAnimationFrame(() => childWin.requestAnimationFrame(() => {
+      is(childWin.devicePixelRatio, originalDPR * 2, "Should preserve zoom when restored");
+      todo_is(childWin.document.querySelector("iframe").contentWindow.devicePixelRatio, originalDPR * 2, "Should preserve zoom on frames too");
+      childWin.close();
+      SimpleTest.finish();
+    }));
+  }
+}
+
+childWin = window.open('file_zoom_restore_bfcache.html', '_blank');
+</script>
