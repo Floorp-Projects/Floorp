@@ -47,7 +47,6 @@ class ADocumentChannelBridge {
       uint32_t aRedirectFlags, uint32_t aLoadFlags) = 0;
 
   // Returns the process id that this bridge is connected to.
-  // If 0 indicates that the load is started from the parent process.
   virtual base::ProcessId OtherPid() const = 0;
 
  protected:
