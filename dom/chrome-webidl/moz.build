@@ -45,7 +45,6 @@ WEBIDL_FILES = [
     'DOMLocalization.webidl',
     'Flex.webidl',
     'Fluent.webidl',
-    'FrameLoader.webidl',
     'HeapSnapshot.webidl',
     'InspectorUtils.webidl',
     'IteratorResult.webidl',

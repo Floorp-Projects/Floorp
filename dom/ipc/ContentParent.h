@@ -972,8 +972,7 @@ class ContentParent final
 #endif
 
   PWebBrowserPersistDocumentParent* AllocPWebBrowserPersistDocumentParent(
-      PBrowserParent* aBrowser,
-      const MaybeDiscarded<BrowsingContext>& aContext);
+      PBrowserParent* aBrowser, const uint64_t& aOuterWindowID);
 
   bool DeallocPWebBrowserPersistDocumentParent(
       PWebBrowserPersistDocumentParent* aActor);
