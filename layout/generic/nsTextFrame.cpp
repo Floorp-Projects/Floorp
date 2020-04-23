@@ -8025,11 +8025,15 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
     aContext.Insert(str, 0);
   }
   mozilla::intl::WordBreaker* wordBreaker = nsContentUtils::WordBreaker();
-  for (int32_t i = 0; i <= textLen; ++i) {
-    int32_t indexInText = i + textStart;
-    mWordBreaks[i] |= wordBreaker->BreakInBetween(
-        aContext.get(), indexInText, aContext.get() + indexInText,
-        aContext.Length() - indexInText);
+  int32_t nextWord = textStart > 0 ? textStart - 1 : textStart;
+  while (true) {
+    nextWord =
+        wordBreaker->NextWord(aContext.get(), aContext.Length(), nextWord);
+    if (NS_WORDBREAKER_NEED_MORE_TEXT == nextWord ||
+        nextWord > textStart + textLen) {
+      break;
+    }
+    mWordBreaks[nextWord - textStart] = true;
   }
 }
 

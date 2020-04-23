@@ -5,10 +5,13 @@
 
 #include "mozilla/intl/WordBreaker.h"
 #include "mozilla/Preferences.h"
+#include "nsComplexBreaker.h"
+#include "nsUnicodeProperties.h"
 
 using mozilla::intl::WordBreakClass;
 using mozilla::intl::WordBreaker;
 using mozilla::intl::WordRange;
+using mozilla::unicode::GetScriptCode;
 
 /*static*/
 already_AddRefed<WordBreaker> WordBreaker::Create() {
@@ -22,7 +25,20 @@ bool WordBreaker::BreakInBetween(const char16_t* aText1, uint32_t aTextLen1,
 
   if (!aText1 || !aText2 || (0 == aTextLen1) || (0 == aTextLen2)) return false;
 
-  return GetClass(aText1[aTextLen1 - 1]) != GetClass(aText2[0]);
+  uint8_t c1 = GetClass(aText1[aTextLen1 - 1]);
+  uint8_t c2 = GetClass(aText2[0]);
+
+  if (c1 == c2 && kWbClassScriptioContinua == c1) {
+    nsAutoString text(aText1, aTextLen1);
+    text.Append(aText2, aTextLen2);
+    AutoTArray<uint8_t, 256> breakBefore;
+    breakBefore.SetLength(aTextLen1 + aTextLen2);
+    NS_GetComplexLineBreaks(text.get(), text.Length(), breakBefore.Elements());
+    bool ret = breakBefore[aTextLen1];
+    return ret;
+  }
+
+  return (c1 != c2);
 }
 
 #define IS_ASCII(c) (0 == (0xFF80 & (c)))
@@ -40,7 +56,21 @@ bool WordBreaker::BreakInBetween(const char16_t* aText1, uint32_t aTextLen1,
 #define IS_KATAKANA(c) ((0x30A0 <= (c)) && ((c) <= 0x30FF))
 #define IS_HIRAGANA(c) ((0x3040 <= (c)) && ((c) <= 0x309F))
 #define IS_HALFWIDTHKATAKANA(c) ((0xFF60 <= (c)) && ((c) <= 0xFF9F))
-#define IS_THAI(c) (0x0E00 == (0xFF80 & (c)))  // Look at the higest 9 bits
+
+// Return true if aChar belongs to a SEAsian script that is written without
+// word spaces, so we need to use the "complex breaker" to find possible word
+// boundaries. (https://en.wikipedia.org/wiki/Scriptio_continua)
+// (How well this works depends on the level of platform support for finding
+// possible line breaks - or possible word boundaries - in the particular
+// script. Thai, at least, works pretty well on the major desktop OSes. If
+// the script is not supported by the platform, we just won't find any useful
+// boundaries.)
+static bool IsScriptioContinua(char16_t aChar) {
+  Script sc = GetScriptCode(aChar);
+  return sc == Script::THAI || sc == Script::MYANMAR || sc == Script::KHMER ||
+         sc == Script::JAVANESE || sc == Script::BALINESE ||
+         sc == Script::SUNDANESE || sc == Script::LAO;
+}
 
 /* static */
 WordBreakClass WordBreaker::GetClass(char16_t c) {
@@ -54,33 +84,37 @@ WordBreakClass WordBreaker::GetClass(char16_t c) {
     if (IS_ASCII(c)) {
       if (ASCII_IS_SPACE(c)) {
         return kWbClassSpace;
-      } else if (ASCII_IS_ALPHA(c) || ASCII_IS_DIGIT(c) ||
-                 (c == '_' && !sStopAtUnderscore)) {
-        return kWbClassAlphaLetter;
-      } else {
-        return kWbClassPunct;
       }
-    } else if (IS_THAI(c)) {
-      return kWbClassThaiLetter;
-    } else if (c == 0x00A0 /*NBSP*/) {
+      if (ASCII_IS_ALPHA(c) || ASCII_IS_DIGIT(c) ||
+          (c == '_' && !sStopAtUnderscore)) {
+        return kWbClassAlphaLetter;
+      }
+      return kWbClassPunct;
+    }
+    if (c == 0x00A0 /*NBSP*/) {
       return kWbClassSpace;
-    } else {
-      return kWbClassAlphaLetter;
     }
-  } else {
-    if (IS_HAN(c)) {
-      return kWbClassHanLetter;
-    } else if (IS_KATAKANA(c)) {
-      return kWbClassKatakanaLetter;
-    } else if (IS_HIRAGANA(c)) {
-      return kWbClassHiraganaLetter;
-    } else if (IS_HALFWIDTHKATAKANA(c)) {
-      return kWbClassHWKatakanaLetter;
-    } else {
-      return kWbClassAlphaLetter;
+    if (IsScriptioContinua(c)) {
+      return kWbClassScriptioContinua;
     }
+    return kWbClassAlphaLetter;
   }
-  return static_cast<WordBreakClass>(0);
+  if (IS_HAN(c)) {
+    return kWbClassHanLetter;
+  }
+  if (IS_KATAKANA(c)) {
+    return kWbClassKatakanaLetter;
+  }
+  if (IS_HIRAGANA(c)) {
+    return kWbClassHiraganaLetter;
+  }
+  if (IS_HALFWIDTHKATAKANA(c)) {
+    return kWbClassHWKatakanaLetter;
+  }
+  if (IsScriptioContinua(c)) {
+    return kWbClassScriptioContinua;
+  }
+  return kWbClassAlphaLetter;
 }
 
 WordRange WordBreaker::FindWord(const char16_t* aText, uint32_t aTextLen,
@@ -114,10 +148,30 @@ WordRange WordBreaker::FindWord(const char16_t* aText, uint32_t aTextLen,
       break;
     }
   }
-  if (kWbClassThaiLetter == c) {
-    // need to call Thai word breaker from here
-    // we should pass the whole Thai segment to the thai word breaker to find a
+
+  if (kWbClassScriptioContinua == c) {
+    // we pass the whole text segment to the complex word breaker to find a
     // shorter answer
+    AutoTArray<uint8_t, 256> breakBefore;
+    breakBefore.SetLength(range.mEnd - range.mBegin);
+    NS_GetComplexLineBreaks(aText + range.mBegin, range.mEnd - range.mBegin,
+                            breakBefore.Elements());
+
+    // Scan forward
+    for (i = aOffset + 1; i < range.mEnd; i++) {
+      if (breakBefore[i - range.mBegin]) {
+        range.mEnd = i;
+        break;
+      }
+    }
+
+    // Scan backward
+    for (i = aOffset; i > range.mBegin; i--) {
+      if (breakBefore[i - range.mBegin]) {
+        range.mBegin = i;
+        break;
+      }
+    }
   }
   return range;
 }
@@ -126,18 +180,36 @@ int32_t WordBreaker::NextWord(const char16_t* aText, uint32_t aLen,
                               uint32_t aPos) {
   WordBreakClass c1, c2;
   uint32_t cur = aPos;
-  if (cur == aLen) return NS_WORDBREAKER_NEED_MORE_TEXT;
+  if (cur == aLen) {
+    return NS_WORDBREAKER_NEED_MORE_TEXT;
+  }
   c1 = GetClass(aText[cur]);
 
   for (cur++; cur < aLen; cur++) {
     c2 = GetClass(aText[cur]);
-    if (c2 != c1) break;
+    if (c2 != c1) {
+      break;
+    }
   }
-  if (kWbClassThaiLetter == c1) {
-    // need to call Thai word breaker from here
-    // we should pass the whole Thai segment to the thai word breaker to find a
+
+  if (kWbClassScriptioContinua == c1) {
+    // we pass the whole text segment to the complex word breaker to find a
     // shorter answer
+    AutoTArray<uint8_t, 256> breakBefore;
+    breakBefore.SetLength(aLen - aPos);
+    NS_GetComplexLineBreaks(aText + aPos, aLen - aPos, breakBefore.Elements());
+    uint32_t i = 0;
+    while (i < cur - aPos && !breakBefore[i]) {
+      i++;
+    }
+    if (i < cur - aPos) {
+      return aPos + i;
+    }
   }
-  if (cur == aLen) return NS_WORDBREAKER_NEED_MORE_TEXT;
+
+  if (cur == aLen) {
+    return NS_WORDBREAKER_NEED_MORE_TEXT;
+  }
+
   return cur;
 }
