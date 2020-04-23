@@ -386,7 +386,9 @@ void AudioSendStream::OnPacketAdded(uint32_t ssrc, uint16_t seq_num) {
 
 void AudioSendStream::OnPacketFeedbackVector(
     const std::vector<PacketFeedback>& packet_feedback_vector) {
-  RTC_DCHECK(worker_thread_checker_.CalledOnValidThread());
+  //Called on STS Thread as a result of delivering a packet.
+  //The functions below are protected by locks, so this should be safe.
+  //RTC_DCHECK(worker_thread_checker_.CalledOnValidThread());
   rtc::Optional<float> plr;
   rtc::Optional<float> rplr;
   {
