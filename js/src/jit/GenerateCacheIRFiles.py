@@ -197,7 +197,8 @@ arg_reader_info = {
 
 
 def gen_compiler_method(name, args):
-    """Generates CacheIRCompiler header code for a single opcode."""
+    """Generates CacheIRCompiler or WarpCacheIRTranspiler header code for a
+    single opcode."""
 
     method_name = 'emit' + name
 
@@ -376,6 +377,12 @@ def generate_cacheirops_header(c_out, yaml_path):
     compiler_shared_methods = []
     compiler_unshared_methods = []
 
+    # Generated WarpCacheIRTranspiler methods.
+    transpiler_methods = []
+
+    # List of ops supported by WarpCacheIRTranspiler.
+    transpiler_ops = []
+
     # Generated methods for spewers.
     spewer_methods = []
 
@@ -388,6 +395,9 @@ def generate_cacheirops_header(c_out, yaml_path):
         shared = op['shared']
         assert isinstance(shared, bool)
 
+        transpile = op['transpile']
+        assert isinstance(transpile, bool)
+
         custom_writer = op.get('custom_writer', False)
         assert isinstance(custom_writer, bool)
 
@@ -398,10 +408,16 @@ def generate_cacheirops_header(c_out, yaml_path):
         ops_items.append('_({}, {})'.format(name, args_length))
 
         writer_methods.append(gen_writer_method(name, args, custom_writer))
+
         if shared:
             compiler_shared_methods.append(gen_compiler_method(name, args))
         else:
             compiler_unshared_methods.append(gen_compiler_method(name, args))
+
+        if transpile:
+            transpiler_methods.append(gen_compiler_method(name, args))
+            transpiler_ops.append('_({})'.format(name))
+
         spewer_methods.append(gen_spewer_method(name, args))
 
     contents = '#define CACHE_IR_OPS(_)\\\n'
@@ -418,6 +434,14 @@ def generate_cacheirops_header(c_out, yaml_path):
 
     contents += '#define CACHE_IR_COMPILER_UNSHARED_GENERATED \\\n'
     contents += '\\\n'.join(compiler_unshared_methods)
+    contents += '\n\n'
+
+    contents += '#define CACHE_IR_TRANSPILER_GENERATED \\\n'
+    contents += '\\\n'.join(transpiler_methods)
+    contents += '\n\n'
+
+    contents += '#define CACHE_IR_TRANSPILER_OPS(_)\\\n'
+    contents += '\\\n'.join(transpiler_ops)
     contents += '\n\n'
 
     contents += '#define CACHE_IR_SPEWER_GENERATED \\\n'
