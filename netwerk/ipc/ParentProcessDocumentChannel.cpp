@@ -7,6 +7,8 @@
 
 #include "ParentProcessDocumentChannel.h"
 
+#include "nsIObserverService.h"
+
 extern mozilla::LazyLogModule gDocumentChannelLog;
 #define LOG(fmt) MOZ_LOG(gDocumentChannelLog, mozilla::LogLevel::Verbose, fmt)
 
@@ -14,7 +16,7 @@ namespace mozilla {
 namespace net {
 
 NS_IMPL_ISUPPORTS_INHERITED(ParentProcessDocumentChannel, DocumentChannel,
-                            nsIAsyncVerifyRedirectCallback)
+                            nsIAsyncVerifyRedirectCallback, nsIObserver)
 
 ParentProcessDocumentChannel::ParentProcessDocumentChannel(
     nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
@@ -95,8 +97,7 @@ ParentProcessDocumentChannel::OnRedirectVerifyCallback(nsresult aResult) {
   mLoadGroup = nullptr;
   mListener = nullptr;
   mCallbacks = nullptr;
-  mDocumentLoadListener->DocumentChannelBridgeDisconnected();
-  mDocumentLoadListener = nullptr;
+  DisconnectDocumentLoadListener();
 
   mPromise.ResolveIfExists(aResult, __func__);
 
@@ -114,6 +115,14 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
   LOG(("Created PPDocumentChannel with listener=%p",
        mDocumentLoadListener.get()));
 
+  // Add observers.
+  nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+  if (observerService) {
+    MOZ_ALWAYS_SUCCEEDS(observerService->AddObserver(
+        this, NS_HTTP_ON_MODIFY_REQUEST_TOPIC, false));
+  }
+
   gHttpHandler->OnOpeningDocumentRequest(this);
 
   nsresult rv = NS_OK;
@@ -126,8 +135,7 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
               ->HasValidTransientUserGestureActivation(),
           &rv)) {
     MOZ_ASSERT(NS_FAILED(rv));
-    mDocumentLoadListener->DocumentChannelBridgeDisconnected();
-    mDocumentLoadListener = nullptr;
+    DisconnectDocumentLoadListener();
     return rv;
   }
 
@@ -148,6 +156,44 @@ NS_IMETHODIMP ParentProcessDocumentChannel::Cancel(nsresult aStatus) {
   mDocumentLoadListener->Cancel(aStatus);
 
   ShutdownListeners(aStatus);
+
+  return NS_OK;
+}
+
+void ParentProcessDocumentChannel::DisconnectDocumentLoadListener() {
+  if (nsCOMPtr<nsIObserverService> observerService =
+          mozilla::services::GetObserverService()) {
+    observerService->RemoveObserver(this, NS_HTTP_ON_MODIFY_REQUEST_TOPIC);
+  }
+  mDocumentLoadListener->DocumentChannelBridgeDisconnected();
+  mDocumentLoadListener = nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIObserver
+
+NS_IMETHODIMP
+ParentProcessDocumentChannel::Observe(nsISupports* aSubject, const char* aTopic,
+                                      const char16_t* aData) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mRequestObserversCalled) {
+    // We have already emitted the event, we don't want to emit it again.
+    // We only care about forwarding the first NS_HTTP_ON_MODIFY_REQUEST_TOPIC
+    // encountered.
+    return NS_OK;
+  }
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aSubject);
+  if (!channel || mDocumentLoadListener->GetChannel() != channel) {
+    // Not a channel we are interested with.
+    return NS_OK;
+  }
+  LOG(("DocumentChannelParent Observe [this=%p aChannel=%p]", this,
+       channel.get()));
+  if (!nsCRT::strcmp(aTopic, NS_HTTP_ON_MODIFY_REQUEST_TOPIC)) {
+    mRequestObserversCalled = true;
+    gHttpHandler->OnModifyDocumentRequest(this);
+  }
 
   return NS_OK;
 }
