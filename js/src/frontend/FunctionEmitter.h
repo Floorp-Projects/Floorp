@@ -11,15 +11,16 @@
 
 #include <stdint.h>  // uint16_t, uint32_t
 
-#include "frontend/DefaultEmitter.h"  // DefaultEmitter
-#include "frontend/EmitterScope.h"    // EmitterScope
-#include "frontend/SharedContext.h"   // FunctionBox
-#include "frontend/TDZCheckCache.h"   // TDZCheckCache
-#include "frontend/TryEmitter.h"      // TryEmitter
-#include "gc/Rooting.h"               // JS::Rooted, JS::Handle
-#include "vm/BytecodeUtil.h"          // JSOp
-#include "vm/JSAtom.h"                // JSAtom
-#include "vm/JSFunction.h"            // JSFunction
+#include "frontend/DefaultEmitter.h"      // DefaultEmitter
+#include "frontend/EmitterScope.h"        // EmitterScope
+#include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
+#include "frontend/SharedContext.h"       // FunctionBox
+#include "frontend/TDZCheckCache.h"       // TDZCheckCache
+#include "frontend/TryEmitter.h"          // TryEmitter
+#include "gc/Rooting.h"                   // JS::Rooted, JS::Handle
+#include "vm/BytecodeUtil.h"              // JSOp
+#include "vm/JSAtom.h"                    // JSAtom
+#include "vm/JSFunction.h"                // JSFunction
 
 namespace js {
 namespace frontend {

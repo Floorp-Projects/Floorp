@@ -39,6 +39,7 @@
 #include "vm/BigIntType.h"
 #include "vm/BytecodeUtil.h"        // JSDVG_SEARCH_STACK
 #include "vm/EqualityOperations.h"  // js::StrictlyEqual
+#include "vm/FunctionFlags.h"       // js::FunctionFlags
 #include "vm/GeneratorObject.h"
 #include "vm/Instrumentation.h"
 #include "vm/Iteration.h"
@@ -1912,7 +1913,7 @@ class ReservedRooted : public RootedBase<T, ReservedRooted<T>> {
 
   void set(const T& p) const { *savedRoot = p; }
   operator Handle<T>() { return *savedRoot; }
-  operator Rooted<T>&() { return *savedRoot; }
+  operator Rooted<T> &() { return *savedRoot; }
   MutableHandle<T> operator&() { return &*savedRoot; }
 
   DECLARE_NONPOINTER_ACCESSOR_METHODS(savedRoot->get())

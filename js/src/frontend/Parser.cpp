@@ -40,6 +40,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeSection.h"
 #include "frontend/FoldConstants.h"
+#include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/ParseNode.h"
 #include "frontend/ParseNodeVerify.h"
@@ -53,6 +54,8 @@
 #endif
 #include "vm/BigIntType.h"
 #include "vm/BytecodeUtil.h"
+#include "vm/FunctionFlags.h"          // js::FunctionFlags
+#include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"

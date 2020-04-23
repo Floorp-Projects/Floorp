@@ -14,6 +14,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/Stencil.h"
 #include "frontend/Token.h"
 #include "js/RootingAPI.h"
@@ -628,24 +629,6 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
 #define DECLARE_CLASS(typeName, longTypeName, asMethodName) class typeName;
 FOR_EACH_PARSENODE_SUBCLASS(DECLARE_CLASS)
 #undef DECLARE_CLASS
-
-enum class FunctionSyntaxKind : uint8_t {
-  // A non-arrow function expression.
-  Expression,
-
-  // A named function appearing as a Statement.
-  Statement,
-
-  Arrow,
-
-  // Method of a class or object. Field initializers also desugar to methods.
-  Method,
-
-  ClassConstructor,
-  DerivedClassConstructor,
-  Getter,
-  Setter,
-};
 
 enum class AccessorType { None, Getter, Setter };
 

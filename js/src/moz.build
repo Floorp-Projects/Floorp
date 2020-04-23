@@ -310,6 +310,7 @@ UNIFIED_SOURCES += [
     'vm/Exception.cpp',
     'vm/ForOfIterator.cpp',
     'vm/FrameIter.cpp',
+    'vm/FunctionFlags.cpp',
     'vm/GeckoProfiler.cpp',
     'vm/GeneratorObject.cpp',
     'vm/GlobalObject.cpp',
