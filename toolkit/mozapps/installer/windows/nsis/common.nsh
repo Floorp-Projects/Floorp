@@ -7851,6 +7851,40 @@ end:
   !endif
 !macroend
 
+/**
+ * Copy the post-signing data, which was left alongside the installer
+ * by the self-extractor stub, into the global location for this data.
+ *
+ * If the post-signing data file doesn't exist, or is empty, "0" is
+ * pushed on the stack, and nothing is copied.
+ * Otherwise the first line of the post-signing data (including newline,
+ * if any) is pushed on the stack.
+ */
+!macro CopyPostSigningData
+  !ifndef ${_MOZFUNC_UN}CopyPostSigningData
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}CopyPostSigningData "Call ${_MOZFUNC_UN}CopyPostSigningData"
+
+    Function CopyPostSigningData
+      Push $0   ; Stack: old $0
+
+      ${LineRead} "$EXEDIR\postSigningData" "1" $0
+      ${If} ${Errors}
+        ClearErrors
+        StrCpy $0 "0"
+      ${Else}
+        CreateDirectory "$LOCALAPPDATA\Mozilla\Firefox"
+        CopyFiles /SILENT "$EXEDIR\postSigningData" "$LOCALAPPDATA\Mozilla\Firefox"
+      ${Endif}
+
+      Exch $0   ; Stack: postSigningData
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
 ################################################################################
 # Helpers for taskbar progress
 

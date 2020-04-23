@@ -243,6 +243,7 @@ Var ArchToInstall
 
 !include "common.nsh"
 
+!insertmacro CopyPostSigningData
 !insertmacro ElevateUAC
 !insertmacro GetLongPath
 !insertmacro GetPathFromString
@@ -1287,7 +1288,9 @@ Function FinishInstall
 
   StrCpy $ExitCode "${ERR_SUCCESS}"
 
-  Call CopyPostSigningData
+  ${CopyPostSigningData}
+  Pop $PostSigningData
+
   Call LaunchApp
 FunctionEnd
 
@@ -1438,17 +1441,6 @@ Function WaitForAppLaunch
     IntOp $ProgressCompleted $ProgressCompleted + 1
     Call SetProgressBars
   ${EndIf}
-FunctionEnd
-
-Function CopyPostSigningData
-  ${LineRead} "$EXEDIR\postSigningData" "1" $PostSigningData
-  ${If} ${Errors}
-    ClearErrors
-    StrCpy $PostSigningData "0"
-  ${Else}
-    CreateDirectory "$LOCALAPPDATA\Mozilla\Firefox"
-    CopyFiles /SILENT "$EXEDIR\postSigningData" "$LOCALAPPDATA\Mozilla\Firefox"
-  ${Endif}
 FunctionEnd
 
 Function DisplayDownloadError
