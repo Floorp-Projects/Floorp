@@ -810,7 +810,7 @@ impl<'a> SceneBuilder<'a> {
         let clip_region = ClipRegion::create_for_clip_node(
             info.clip_rect,
             item.complex_clip().iter(),
-            info.image_mask,
+            None,
             &current_offset,
         );
         // Just use clip rectangle as the frame rect for this scroll frame.

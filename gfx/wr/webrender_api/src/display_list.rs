@@ -1704,7 +1704,6 @@ impl DisplayListBuilder {
         content_rect: LayoutRect,
         clip_rect: LayoutRect,
         complex_clips: I,
-        image_mask: Option<di::ImageMask>,
         scroll_sensitivity: di::ScrollSensitivity,
         external_scroll_offset: LayoutVector2D,
     ) -> di::SpaceAndClipInfo
@@ -1721,7 +1720,6 @@ impl DisplayListBuilder {
             clip_id,
             scroll_frame_id,
             external_id,
-            image_mask,
             scroll_sensitivity,
             external_scroll_offset,
         });

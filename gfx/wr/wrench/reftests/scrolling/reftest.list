@@ -4,7 +4,6 @@
 == nested-scroll-offset.yaml nested-scroll-offset-ref.yaml
 == out-of-bounds-scroll.yaml out-of-bounds-scroll-ref.yaml
 == root-scroll.yaml root-scroll-ref.yaml
-== scroll-layer-with-mask.yaml scroll-layer-with-mask-ref.yaml
 == scroll-layer.yaml scroll-layer-ref.yaml
 == simple.yaml simple-ref.yaml
 == clip-and-scroll-property.yaml clip-and-scroll-property-ref.yaml

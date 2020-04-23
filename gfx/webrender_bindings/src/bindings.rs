@@ -2524,7 +2524,6 @@ pub extern "C" fn wr_dp_define_scroll_layer(
         content_rect,
         clip_rect,
         vec![],
-        None,
         ScrollSensitivity::Script,
         // TODO(gw): We should also update the Gecko-side APIs to provide
         //           this as a vector rather than a point.
