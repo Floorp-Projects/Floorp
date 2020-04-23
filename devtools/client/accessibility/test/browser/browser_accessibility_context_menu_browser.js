@@ -30,7 +30,15 @@ add_task(async function testNoShowAccessibilityPropertiesContextMenu() {
   const inspectA11YPropsItem = contextMenu.querySelector(
     "#context-inspect-a11y"
   );
-  ok(inspectA11YPropsItem.hidden, "Accessibility tools are not enabled.");
+  const visible = Services.prefs.getBoolPref(
+    "devtools.accessibility.auto-init.enabled",
+    false
+  );
+  isnot(
+    inspectA11YPropsItem.hidden,
+    visible,
+    "Accessibility tools have the right visibility."
+  );
   contextMenu.hidePopup();
   gBrowser.removeCurrentTab();
 });
