@@ -2,13 +2,19 @@
 <script>
   dump("Content running top level script " + window.location.href + "\n");
 
-  SpecialPowers.registerObservers("inner-window-nuked");
+  var winID = SpecialPowers.getDOMWindowUtils(this).currentInnerWindowID;
 
   var observer = {
     observe(subject, topic) {
+      var currID = SpecialPowers.wrap(subject).QueryInterface(SpecialPowers.Ci.nsISupportsPRUint64).data;
+      if (currID != winID) {
+        return;
+      }
       // We should be able to wrap the inner window when the outer
       // window has navigated out of process.
       SpecialPowers.Cu.getGlobalForObject({});
+
+      SpecialPowers.removeObserver(observer, "inner-window-nuked");
     }
   };
   SpecialPowers.addObserver(observer, "inner-window-nuked");
