@@ -239,18 +239,14 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* aStream) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   for (const auto& cert : mSucceededCertChain) {
-    nsCOMPtr<nsISerializable> serializableCert = do_QueryInterface(cert);
-    rv = aStream->WriteCompoundObject(serializableCert, NS_GET_IID(nsIX509Cert),
-                                      true);
+    rv = aStream->WriteCompoundObject(cert, NS_GET_IID(nsIX509Cert), true);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   // END moved from nsISSLStatus
   rv = aStream->Write16(mFailedCertChain.Length());
   NS_ENSURE_SUCCESS(rv, rv);
   for (const auto& cert : mFailedCertChain) {
-    nsCOMPtr<nsISerializable> serializableCert = do_QueryInterface(cert);
-    rv = aStream->WriteCompoundObject(serializableCert, NS_GET_IID(nsIX509Cert),
-                                      true);
+    rv = aStream->WriteCompoundObject(cert, NS_GET_IID(nsIX509Cert), true);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
