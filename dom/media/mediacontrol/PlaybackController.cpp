@@ -7,6 +7,7 @@
 #include "MediaControlUtils.h"
 #include "mozilla/dom/MediaSession.h"
 #include "mozilla/dom/Navigator.h"
+#include "nsFocusManager.h"
 
 // avoid redefined macro in unified build
 #undef LOG
@@ -31,6 +32,14 @@ MediaSession* PlaybackController::GetMediaSession() {
   RefPtr<Navigator> navigator = window->GetNavigator();
   return navigator->HasCreatedMediaSession() ? navigator->MediaSession()
                                              : nullptr;
+}
+
+void PlaybackController::Focus() {
+  // Focus is not part of the MediaSession standard, so always use the
+  // default behavior and focus the window currently playing media.
+  if (RefPtr<nsPIDOMWindowOuter> win = mBC->GetDOMWindow()) {
+    nsFocusManager::FocusWindow(win, CallerType::System);
+  }
 }
 
 void PlaybackController::Play() {
@@ -126,6 +135,9 @@ void MediaActionHandler::HandleMediaControlKeysEvent(
     BrowsingContext* aContext, MediaControlKeysEvent aEvent) {
   PlaybackController controller(aContext);
   switch (aEvent) {
+    case MediaControlKeysEvent::eFocus:
+      controller.Focus();
+      return;
     case MediaControlKeysEvent::ePlay:
       controller.Play();
       return;

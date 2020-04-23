@@ -36,6 +36,12 @@ MediaController::~MediaController() {
   }
 };
 
+void MediaController::Focus() {
+  LOG("Focus");
+  UpdateMediaControlKeysEventToContentMediaIfNeeded(
+      MediaControlKeysEvent::eFocus);
+}
+
 void MediaController::Play() {
   LOG("Play");
   SetGuessedPlayState(MediaSessionPlaybackState::Playing);
