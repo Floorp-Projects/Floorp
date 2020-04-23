@@ -2030,6 +2030,20 @@ browser.search:
       notification_emails:
         - fenix-core@mozilla.com
       expires: "2020-09-01"
+    in_content:
+      type: labeled_counter
+      description: >
+        Records the type of interaction a user has on SERP pages.
+      send_in_pings:
+        - baseline
+        - metrics
+      bugs:
+        - https://github.com/mozilla-mobile/fenix/issues/6557
+      data_reviews:
+        - https://github.com/mozilla-mobile/fenix/pull/10167
+      notification_emails:
+        - fenix-core@mozilla.com
+      expires: "2020-09-01"
 
 addons:
   open_addons_in_settings:

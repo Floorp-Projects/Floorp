@@ -375,6 +375,11 @@ sealed class Event {
             get() = providerName
     }
 
+    data class SearchInContent(val keyName: String) : Event() {
+        val label: String
+            get() = keyName
+    }
+
     class ContextMenuItemTapped private constructor(val item: String) : Event() {
         override val extras: Map<ContextMenu.itemTappedKeys, String>?
             get() = mapOf(ContextMenu.itemTappedKeys.named to item)

@@ -117,6 +117,11 @@ private val Event.wrapper: EventWrapper<*>?
                 BrowserSearch.adClicks[label].add(1)
             }
         )
+        is Event.SearchInContent -> EventWrapper<NoExtraKeys>(
+            {
+                BrowserSearch.inContent[label].add(1)
+            }
+        )
         is Event.SearchShortcutSelected -> EventWrapper(
             { SearchShortcuts.selected.record(it) },
             { SearchShortcuts.selectedKeys.valueOf(it) }
