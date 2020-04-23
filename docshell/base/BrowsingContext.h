@@ -168,25 +168,24 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     return GetFromWindow(aProxy);
   }
 
-  // Create a brand-new BrowsingContext object.
-  static already_AddRefed<BrowsingContext> Create(BrowsingContext* aParent,
-                                                  BrowsingContext* aOpener,
-                                                  const nsAString& aName,
-                                                  Type aType);
+  // Create a brand-new toplevel BrowsingContext with no relationships to other
+  // BrowsingContexts, and which is not embedded within any <browser> or frame
+  // element.
+  //
+  // This BrowsingContext is immediately attached, and cannot have LoadContext
+  // flags customized unless it is of `Type::Chrome`.
+  //
+  // The process which created this BrowsingContext is responsible for detaching
+  // it.
+  static already_AddRefed<BrowsingContext> CreateIndependent(Type aType);
 
-  // Same as the above, but does not immediately attach the browsing context.
+  // Create a brand-new BrowsingContext object, but does not immediately attach
+  // it. State such as OriginAttributes and PrivateBrowsingId may be customized
+  // to configure the BrowsingContext before it is attached.
+  //
   // `EnsureAttached()` must be called before the BrowsingContext is used for a
   // DocShell, BrowserParent, or BrowserBridgeChild.
   static already_AddRefed<BrowsingContext> CreateDetached(
-      BrowsingContext* aParent, BrowsingContext* aOpener,
-      const nsAString& aName, Type aType);
-
-  // Same as Create, but for a BrowsingContext which does not belong to a
-  // visible window, and will always be detached by the process that created it.
-  // In contrast, any top-level BrowsingContext created in a content process
-  // using Create() is assumed to belong to a <browser> element in the parent
-  // process, which will be responsible for detaching it.
-  static already_AddRefed<BrowsingContext> CreateWindowless(
       BrowsingContext* aParent, BrowsingContext* aOpener,
       const nsAString& aName, Type aType);
 
