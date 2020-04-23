@@ -85,7 +85,7 @@ class AccessibilityStartup {
         shutdown: this._updateToolHighlight,
       });
 
-      this.accessibilityProxy.destroy();
+      await this.accessibilityProxy.destroy();
       this.accessibilityProxy = null;
     }.bind(this)();
     return this._destroyingAccessibility;

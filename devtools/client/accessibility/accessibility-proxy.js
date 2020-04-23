@@ -14,6 +14,12 @@ const PARENT_ACCESSIBILITY_EVENTS = [
   "can-be-enabled-change",
 ];
 
+loader.lazyImporter(
+  this,
+  "FeatureGate",
+  "resource://featuregates/FeatureGate.jsm"
+);
+
 /**
  * Component responsible for tracking all Accessibility fronts in parent and
  * content processes.
@@ -24,6 +30,7 @@ class AccessibilityProxy {
 
     this.accessibilityEventsMap = new Map();
     this.accessibleWalkerEventsMap = new Map();
+    this.supports = {};
 
     this.audit = this.audit.bind(this);
     this.disableAccessibility = this.disableAccessibility.bind(this);
@@ -250,11 +257,22 @@ class AccessibilityProxy {
     }
   }
 
+  async onChange(isEnabled) {
+    this.supports.autoInit = isEnabled;
+  }
+
   async initialize() {
     try {
       await this.toolbox.targetList.watchTargets(
         [this.toolbox.targetList.TYPES.FRAME],
         this._onTargetAvailable
+      );
+      // Bug 1602075: auto init feature definition is used for an experiment to
+      // determine if we can automatically enable accessibility panel when it
+      // opens.
+      this.supports.autoInit = await FeatureGate.addObserver(
+        "accessibility-panel-auto-init",
+        this
       );
       return true;
     } catch (e) {
@@ -263,11 +281,13 @@ class AccessibilityProxy {
     }
   }
 
-  destroy() {
+  async destroy() {
     this.toolbox.targetList.unwatchTargets(
       [this.toolbox.targetList.TYPES.FRAME],
       this._onTargetAvailable
     );
+
+    await FeatureGate.removeObserver("accessibility-panel-auto-init", this);
 
     this.accessibilityEventsMap = null;
     this.accessibleWalkerEventsMap = null;
@@ -342,7 +362,6 @@ class AccessibilityProxy {
       // Finalize accessibility front initialization. See accessibility front
       // bootstrap method description.
       await this.accessibilityFront.bootstrap();
-      this.supports = {};
       // To add a check for backward compatibility add something similar to the
       // example below:
       //
