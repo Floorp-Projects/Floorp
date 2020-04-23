@@ -726,16 +726,8 @@ class ContentChild final
   mozilla::ipc::IPCResult RecvDetachBrowsingContext(
       uint64_t aContextId, DetachBrowsingContextResolver&& aResolve);
 
-  mozilla::ipc::IPCResult RecvCacheBrowsingContextChildren(
-      const MaybeDiscarded<BrowsingContext>& aContext);
-
-  mozilla::ipc::IPCResult RecvRestoreBrowsingContextChildren(
-      const MaybeDiscarded<BrowsingContext>& aContext,
-      const nsTArray<MaybeDiscarded<BrowsingContext>>& aChildren);
-
   mozilla::ipc::IPCResult RecvRegisterBrowsingContextGroup(
-      nsTArray<BrowsingContext::IPCInitializer>&& aInits,
-      nsTArray<WindowContext::IPCInitializer>&& aWindowInits);
+      nsTArray<SyncedContextInitializer>&& aInits);
 
   mozilla::ipc::IPCResult RecvWindowClose(
       const MaybeDiscarded<BrowsingContext>& aContext, bool aTrustedCaller);
