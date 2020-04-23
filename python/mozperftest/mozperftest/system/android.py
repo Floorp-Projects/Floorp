@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import os
-from mozdevice import ADBDevice
+from mozdevice import ADBDevice, ADBError
 from mozperftest.layers import Layer
 
 HERE = os.path.dirname(__file__)
@@ -48,8 +48,8 @@ class AndroidDevice(Layer):
         self.app_name = self.get_arg("android-app-name")
         self.metadata = metadata
         try:
-            self.device = ADBDevice(verbose=True)
-        except AttributeError as e:
+            self.device = ADBDevice(verbose=True, timeout=30)
+        except (ADBError, AttributeError) as e:
             self.error("Could not connect to the phone. Is it connected?")
             raise DeviceError(str(e))
 
