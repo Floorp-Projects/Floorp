@@ -47,6 +47,10 @@ class nsHttpResponseHead {
         mCacheControlNoStore(false),
         mCacheControlNoCache(false),
         mCacheControlImmutable(false),
+        mCacheControlStaleWhileRevalidateSet(false),
+        mCacheControlStaleWhileRevalidate(0),
+        mCacheControlMaxAgeSet(false),
+        mCacheControlMaxAge(0),
         mPragmaNoCache(false),
         mRecursiveMutex("nsHttpResponseHead.mRecursiveMutex"),
         mInVisitHeaders(false) {}
@@ -202,6 +206,10 @@ class nsHttpResponseHead {
   bool mCacheControlNoStore;
   bool mCacheControlNoCache;
   bool mCacheControlImmutable;
+  bool mCacheControlStaleWhileRevalidateSet;
+  uint32_t mCacheControlStaleWhileRevalidate;
+  bool mCacheControlMaxAgeSet;
+  uint32_t mCacheControlMaxAge;
   bool mPragmaNoCache;
 
   // We are using RecursiveMutex instead of a Mutex because VisitHeader

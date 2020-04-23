@@ -43,7 +43,7 @@ function test_handler(metadata, response) {
 
 function cached_handler(metadata, response) {
   response.setHeader("Content-Type", "text/plain");
-  response.setHeader("Cache-Control", "Cache-Control: max-age=3600");
+  response.setHeader("Cache-Control", "max-age=3600");
   response.setHeader("ETag", "test-etag1");
 
   response.setStatusLine(metadata.httpVersion, 200, "OK");
