@@ -56,16 +56,29 @@ class AntiTrackingUtils final {
   // And this is meant to be called in the parent process.
   static bool HasStoragePermissionInParent(nsIChannel* aChannel);
 
-  // Return the toplevel inner window id, returns 0 if this is a toplevel
+  // Returns the toplevel inner window id, returns 0 if this is a toplevel
   // window.
   static uint64_t GetTopLevelAntiTrackingWindowId(
       dom::BrowsingContext* aBrowsingContext);
 
-  // Return the parent inner window id, returns 0 if this or the parent are not
+  // Returns the parent inner window id, returns 0 if this or the parent are not
   // a toplevel window. This is mainly used to determine the anti-tracking
   // storage area.
   static uint64_t GetTopLevelStorageAreaWindowId(
       dom::BrowsingContext* aBrowsingContext);
+
+  // Returns the principal of the given browsing context.
+  // This API should only be used either in child processes with an in-process
+  // browsing context or in the parent process.
+  static already_AddRefed<nsIPrincipal> GetPrincipal(
+      dom::BrowsingContext* aBrowsingContext);
+
+  // Returns the principal of the given browsing context and tracking origin.
+  // This API should only be used either in child processes with an in-process
+  // browsing context or in the parent process.
+  static bool GetPrincipalAndTrackingOrigin(
+      dom::BrowsingContext* aBrowsingContext, nsIPrincipal** aPrincipal,
+      nsACString& aTrackingOrigin);
 };
 
 }  // namespace mozilla
