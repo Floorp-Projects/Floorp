@@ -217,7 +217,7 @@ var InterventionHelpers = {
    *   matchPatternsForTLDs("*://mozilla.", "/*", ["com", "org"])
    *     => ["*://mozilla.com/*", "*://mozilla.org/*"]
    */
-  matchPatternsForTLDs: function(base, suffix, tlds) {
+  matchPatternsForTLDs(base, suffix, tlds) {
     return tlds.map(tld => base + tld + suffix);
   },
 
@@ -225,7 +225,7 @@ var InterventionHelpers = {
    * A modified version of matchPatternsForTLDs that always returns the match
    * list for all known Google country TLDs.
    */
-  matchPatternsForGoogle: function(base, suffix = "/*") {
+  matchPatternsForGoogle(base, suffix = "/*") {
     return InterventionHelpers.matchPatternsForTLDs(base, suffix, GOOGLE_TLDS);
   },
 };
