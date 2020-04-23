@@ -2843,7 +2843,16 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * corresponding valid accessible object.
    */
   hasAccessibilityProperties: async function(node) {
-    if (isNodeDead(node) || !Services.appinfo.accessibilityEnabled) {
+    if (
+      isNodeDead(node) ||
+      !(
+        Services.appinfo.accessibilityEnabled ||
+        Services.prefs.getBoolPref(
+          "devtools.accessibility.auto-init.enabled",
+          false
+        )
+      )
+    ) {
       return false;
     }
 
@@ -2860,7 +2869,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       }
     }
 
-    return acc && acc.indexInParent > -1;
+    return acc != null && acc.indexInParent > -1;
   },
 
   getEmbedderElement(browsingContextID) {
