@@ -34,7 +34,6 @@ crossbeam-channel = { version = "0.3", optional = true }
 cssparser = "0.27"
 euclid = "0.20"
 hashbrown = "0.7"
-hashglobe = { path = "../hashglobe" }
 hyper = { version = "0.12", optional = true }
 hyper_serde = { version = "0.11", optional = true }
 keyboard-types = {version = "0.4.3", optional = true}
