@@ -306,19 +306,15 @@ ContentBlocking::AllowAccessFor(
 
   } else {
     // We should be a 3rd party source.
-    // Make sure we are either a third-party tracker or a third-party
-    // window (depends upon the cookie bahavior).
     if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER &&
-        !nsContentUtils::IsThirdPartyTrackingResourceWindow(
-            parentInnerWindow)) {
+        !parentWindowContext->GetIsThirdPartyTrackingResourceWindow()) {
       LOG(("Our window isn't a third-party tracking window"));
       return StorageAccessGrantPromise::CreateAndReject(false, __func__);
     } else if ((CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior) ||
                 behavior ==
                     nsICookieService::
                         BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) &&
-               !nsContentUtils::IsThirdPartyWindowOrChannel(parentInnerWindow,
-                                                            nullptr, nullptr)) {
+               !parentWindowContext->GetIsThirdPartyWindow()) {
       LOG(("Our window isn't a third-party window"));
       return StorageAccessGrantPromise::CreateAndReject(false, __func__);
     }

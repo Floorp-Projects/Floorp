@@ -61,6 +61,18 @@ void WindowContext::SendCommitTransaction(ContentChild* aChild,
   aChild->SendCommitWindowContextTransaction(this, aTxn, aEpoch);
 }
 
+bool WindowContext::CanSet(FieldIndex<IDX_IsThirdPartyWindow>,
+                           const bool& IsThirdPartyWindow,
+                           ContentParent* aSource) {
+  return mBrowsingContext->CheckOnlyOwningProcessCanSet(aSource);
+}
+
+bool WindowContext::CanSet(FieldIndex<IDX_IsThirdPartyTrackingResourceWindow>,
+                           const bool& aIsThirdPartyTrackingResourceWindow,
+                           ContentParent* aSource) {
+  return mBrowsingContext->CheckOnlyOwningProcessCanSet(aSource);
+}
+
 already_AddRefed<WindowContext> WindowContext::Create(
     WindowGlobalChild* aWindow) {
   MOZ_RELEASE_ASSERT(XRE_IsContentProcess(),
