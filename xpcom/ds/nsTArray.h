@@ -2024,9 +2024,33 @@ class nsTArray_Impl
   // This method causes the elements contained in this array and the given
   // array to be swapped.
   template <class Allocator>
-  typename Alloc::ResultType SwapElements(nsTArray_Impl<E, Allocator>& aOther) {
-    return Alloc::Result(this->template SwapArrayElements<Alloc>(
-        aOther, sizeof(elem_type), MOZ_ALIGNOF(elem_type)));
+  void SwapElements(nsTArray_Impl<E, Allocator>& aOther) {
+    // The only case this might fail were if someone called this with a
+    // AutoTArray upcast to nsTArray_Impl, under the conditions mentioned in the
+    // overload for AutoTArray below.
+    this->template SwapArrayElements<InfallibleAlloc>(aOther, sizeof(elem_type),
+                                                      MOZ_ALIGNOF(elem_type));
+  }
+
+  template <size_t N>
+  void SwapElements(AutoTArray<E, N>& aOther) {
+    // Allocation might fail if Alloc==FallibleAlloc and
+    // Allocator==InfallibleAlloc and aOther uses auto storage. Allow this for
+    // small inline sizes, and crash in the rare case of a small OOM error.
+    static_assert(!std::is_same_v<Alloc, FallibleAlloc> ||
+                  sizeof(E) * N <= 1024);
+    this->template SwapArrayElements<InfallibleAlloc>(aOther, sizeof(elem_type),
+                                                      MOZ_ALIGNOF(elem_type));
+  }
+
+  template <class Allocator>
+  [[nodiscard]] auto SwapElements(nsTArray_Impl<E, Allocator>& aOther,
+                                  const mozilla::fallible_t&) {
+    // Allocation might fail if Alloc==FallibleAlloc and
+    // Allocator==InfallibleAlloc and aOther uses auto storage.
+    return FallibleAlloc::Result(
+        this->template SwapArrayElements<FallibleAlloc>(
+            aOther, sizeof(elem_type), MOZ_ALIGNOF(elem_type)));
   }
 
  private:
