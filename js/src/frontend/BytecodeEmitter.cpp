@@ -5733,13 +5733,15 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
     // from the parent. The remaining values will use their defaults.
     MOZ_ASSERT(script->mutedErrors() == parser->options().mutedErrors());
     const JS::TransitiveCompileOptions& transitiveOptions = parser->options();
+    // Add input flags to funbox for JSSCript::Create call.
+    funbox->addToImmutableFlags(
+        ImmutableScriptFlags::fromCompileOptions(transitiveOptions));
 
     RootedFunction fun(cx, funbox->function());
     RootedScript innerScript(
         cx,
-        JSScript::Create(
-            cx, fun, compilationInfo.sourceObject, funbox->getScriptExtent(),
-            ImmutableScriptFlags::fromCompileOptions(transitiveOptions)));
+        JSScript::Create(cx, fun, compilationInfo.sourceObject,
+                         funbox->getScriptExtent(), funbox->immutableFlags()));
     if (!innerScript) {
       return false;
     }
