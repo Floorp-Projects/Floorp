@@ -221,6 +221,7 @@ struct Statistics {
   void recordTrigger(size_t amount, size_t threshold) {
     recordedTrigger = mozilla::Some(Trigger{amount, threshold});
   }
+  bool hasTrigger() const { return recordedTrigger.isSome(); }
 
   void noteNurseryAlloc() { allocsSinceMinorGC.nursery++; }
 
