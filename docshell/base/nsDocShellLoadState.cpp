@@ -85,7 +85,8 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI)
       mHasValidUserGestureActivation(false),
       mTypeHint(VoidCString()),
       mFileName(VoidString()),
-      mIsFromProcessingFrameAttributes(false) {
+      mIsFromProcessingFrameAttributes(false),
+      mLoadIdentifier(0) {
   MOZ_ASSERT(aURI, "Cannot create a LoadState with a null URI!");
 }
 
@@ -124,7 +125,7 @@ nsDocShellLoadState::nsDocShellLoadState(
   mPostDataStream = aLoadState.PostDataStream();
   mHeadersStream = aLoadState.HeadersStream();
   mSrcdocData = aLoadState.SrcdocData();
-  mResultPrincipalURI = aLoadState.ResultPrincipalURI();
+  mLoadIdentifier = aLoadState.LoadIdentifier();
   if (!aLoadState.SHEntry() || !StaticPrefs::fission_sessionHistoryInParent()) {
     return;
   }
@@ -134,6 +135,42 @@ nsDocShellLoadState::nsDocShellLoadState(
     mSHEntry = static_cast<SHEntryChild*>(aLoadState.SHEntry());
   }
 }
+
+nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
+    : mReferrerInfo(aOther.mReferrerInfo),
+      mURI(aOther.mURI),
+      mOriginalURI(aOther.mOriginalURI),
+      mResultPrincipalURI(aOther.mResultPrincipalURI),
+      mResultPrincipalURIIsSome(aOther.mResultPrincipalURIIsSome),
+      mTriggeringPrincipal(aOther.mTriggeringPrincipal),
+      mCsp(aOther.mCsp),
+      mKeepResultPrincipalURIIfSet(aOther.mKeepResultPrincipalURIIfSet),
+      mLoadReplace(aOther.mLoadReplace),
+      mInheritPrincipal(aOther.mInheritPrincipal),
+      mPrincipalIsExplicit(aOther.mPrincipalIsExplicit),
+      mPrincipalToInherit(aOther.mPrincipalToInherit),
+      mStoragePrincipalToInherit(aOther.mStoragePrincipalToInherit),
+      mForceAllowDataURI(aOther.mForceAllowDataURI),
+      mOriginalFrameSrc(aOther.mOriginalFrameSrc),
+      mIsFormSubmission(aOther.mIsFormSubmission),
+      mLoadType(aOther.mLoadType),
+      mSHEntry(aOther.mSHEntry),
+      mTarget(aOther.mTarget),
+      mPostDataStream(aOther.mPostDataStream),
+      mHeadersStream(aOther.mHeadersStream),
+      mSrcdocData(aOther.mSrcdocData),
+      mSourceBrowsingContext(aOther.mSourceBrowsingContext),
+      mBaseURI(aOther.mBaseURI),
+      mLoadFlags(aOther.mLoadFlags),
+      mFirstParty(aOther.mFirstParty),
+      mHasValidUserGestureActivation(aOther.mHasValidUserGestureActivation),
+      mTypeHint(aOther.mTypeHint),
+      mFileName(aOther.mFileName),
+      mIsFromProcessingFrameAttributes(aOther.mIsFromProcessingFrameAttributes),
+      mPendingRedirectedChannel(aOther.mPendingRedirectedChannel),
+      mOriginalURIString(aOther.mOriginalURIString),
+      mCancelContentJSEpoch(aOther.mCancelContentJSEpoch),
+      mLoadIdentifier(aOther.mLoadIdentifier) {}
 
 nsDocShellLoadState::~nsDocShellLoadState() {}
 
@@ -737,6 +774,7 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.HeadersStream() = mHeadersStream;
   loadState.SrcdocData() = mSrcdocData;
   loadState.ResultPrincipalURI() = mResultPrincipalURI;
+  loadState.LoadIdentifier() = mLoadIdentifier;
   if (!mSHEntry || !StaticPrefs::fission_sessionHistoryInParent()) {
     // Without the pref, we don't have an actor for shentry and thus
     // we can't serialize it. We could write custom (de)serializers,
