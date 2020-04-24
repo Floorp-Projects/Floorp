@@ -209,11 +209,6 @@ OfflineCacheUpdateParent::GetTopFrameElement(dom::Element** aElement) {
 }
 
 NS_IMETHODIMP
-OfflineCacheUpdateParent::GetNestedFrameId(uint64_t* aId) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 OfflineCacheUpdateParent::GetIsContent(bool* aIsContent) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
