@@ -98,7 +98,7 @@ add_task(async function() {
       info("done showCallback");
     };
     saveBrowser(browser);
-    await new Promise(async (resolve, reject) => {
+    await new Promise(async resolve => {
       let dls = await Downloads.getList(Downloads.PUBLIC);
       dls.addView({
         onDownloadChanged(download) {
@@ -106,8 +106,6 @@ add_task(async function() {
             dls.removeView(this);
             dls.removeFinished();
             resolve();
-          } else if (download.error) {
-            reject("Download failed");
           }
         },
       });

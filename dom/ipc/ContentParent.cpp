@@ -4539,7 +4539,7 @@ bool ContentParent::DeallocPContentPermissionRequestParent(
 
 PWebBrowserPersistDocumentParent*
 ContentParent::AllocPWebBrowserPersistDocumentParent(
-    PBrowserParent* aBrowser, const MaybeDiscarded<BrowsingContext>& aContext) {
+    PBrowserParent* aBrowser, const uint64_t& aOuterWindowID) {
   return new WebBrowserPersistDocumentParent();
 }
 
