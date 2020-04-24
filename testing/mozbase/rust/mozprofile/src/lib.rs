@@ -14,7 +14,6 @@ mod test {
     use crate::prefreader::{parse, serialize, tokenize};
     use crate::prefreader::{Position, PrefToken};
     use std::collections::BTreeMap;
-    use std::error::Error;
     use std::io::Cursor;
     use std::str;
 
@@ -166,7 +165,7 @@ mod test {
                 assert_eq!(actual, &expected);
             }
             Err(e) => {
-                println!("{}", e.description());
+                println!("{}", e);
                 assert!(false)
             }
         }
