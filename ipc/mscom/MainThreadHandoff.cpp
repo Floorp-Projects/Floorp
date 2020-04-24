@@ -22,6 +22,7 @@
 #include "nsThreadUtils.h"
 
 using mozilla::DebugOnly;
+using mozilla::Unused;
 using mozilla::mscom::AgileReference;
 
 namespace {
@@ -189,7 +190,7 @@ class MOZ_RAII LogEvent final {
       return;
     }
 
-    mozilla::TimeStamp callEnd(TimeStamp::Now());
+    mozilla::TimeStamp callEnd(mozilla::TimeStamp::Now());
     mozilla::TimeDuration totalTime(callEnd - mCallStart);
     mozilla::TimeDuration overhead(totalTime - mGeckoDuration -
                                    mCaptureDuration);
@@ -200,13 +201,13 @@ class MOZ_RAII LogEvent final {
 
   void CaptureFrame(ICallFrame* aFrame, IUnknown* aTarget,
                     const mozilla::TimeDuration& aGeckoDuration) {
-    mozilla::TimeStamp captureStart(TimeStamp::Now());
+    mozilla::TimeStamp captureStart(mozilla::TimeStamp::Now());
 
     mozilla::mscom::InterceptorLog::CaptureFrame(aFrame, aTarget,
                                                  mCapturedFrame);
     mGeckoDuration = aGeckoDuration;
 
-    mozilla::TimeStamp captureEnd(TimeStamp::Now());
+    mozilla::TimeStamp captureEnd(mozilla::TimeStamp::Now());
 
     // Make sure that the time we spent in CaptureFrame isn't charged against
     // overall overhead
