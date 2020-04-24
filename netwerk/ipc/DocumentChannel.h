@@ -8,12 +8,12 @@
 #ifndef mozilla_net_DocumentChannel_h
 #define mozilla_net_DocumentChannel_h
 
-#include "mozilla/net/PDocumentChannelChild.h"
+#include "mozilla/dom/ClientInfo.h"
+#include "mozilla/net/NeckoChannelParams.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIChannel.h"
 #include "nsIChildChannel.h"
 #include "nsITraceableChannel.h"
-#include "mozilla/dom/ClientInfo.h"
 
 #define DOCUMENT_CHANNEL_IID                         \
   {                                                  \
@@ -66,6 +66,11 @@ class DocumentChannel : public nsIIdentChannel, public nsITraceableChannel {
   }
 
  protected:
+  void ShutdownListeners(nsresult aStatusCode);
+  void DisconnectChildListeners(const nsresult& aStatus,
+                                const nsresult& aLoadGroupStatus);
+  virtual void DeleteIPDL() {}
+
   nsDocShell* GetDocShell();
 
   virtual ~DocumentChannel() = default;
