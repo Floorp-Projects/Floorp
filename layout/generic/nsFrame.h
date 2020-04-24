@@ -57,14 +57,6 @@ class PresShell;
 
 #  define NS_FRAME_TRACE_OUT(_method) Trace(_method, false)
 
-// XXX remove me
-#  define NS_FRAME_TRACE_MSG(_bit, _args)                    \
-    PR_BEGIN_MACRO                                           \
-    if (NS_FRAME_LOG_TEST(nsFrame::sFrameLogModule, _bit)) { \
-      TraceMsg _args;                                        \
-    }                                                        \
-    PR_END_MACRO
-
 #  define NS_FRAME_TRACE(_bit, _args)                        \
     PR_BEGIN_MACRO                                           \
     if (NS_FRAME_LOG_TEST(nsFrame::sFrameLogModule, _bit)) { \
@@ -81,7 +73,6 @@ class PresShell;
 #  define NS_FRAME_TRACE(_bits, _args)
 #  define NS_FRAME_TRACE_IN(_method)
 #  define NS_FRAME_TRACE_OUT(_method)
-#  define NS_FRAME_TRACE_MSG(_bits, _args)
 #  define NS_FRAME_TRACE_REFLOW_IN(_method)
 #  define NS_FRAME_TRACE_REFLOW_OUT(_method, _status)
 #endif
