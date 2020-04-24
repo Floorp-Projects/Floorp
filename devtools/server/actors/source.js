@@ -14,6 +14,7 @@ const { assert } = DevToolsUtils;
 const { sourceSpec } = require("devtools/shared/specs/source");
 const {
   resolveSourceURL,
+  getSourcemapBaseURL,
 } = require("devtools/server/actors/utils/source-map-utils");
 
 loader.lazyRequireGetter(
@@ -162,24 +163,15 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
   form: function() {
     const source = this._source;
 
-    let introductionUrl = null;
-    if (source.introductionScript && source.introductionScript.source.url) {
-      introductionUrl = source.introductionScript.source.url
-        .split(" -> ")
-        .pop();
-    }
-
     return {
       actor: this.actorID,
       extensionName: this.extensionName,
       url: this.url,
       isBlackBoxed: this.threadActor.sources.isBlackBoxed(this.url),
-      // If the source was dynamically generated (via eval, dynamically
-      // created script elements, and so forth), it won't have a URL, so that
-      // it is not collapsed into other sources from the same place. The
-      // introduction URL will include the point it was constructed at,
-      // however, so use that for resolving any source maps in the source.
-      sourceMapBaseURL: this.url || introductionUrl || null,
+      sourceMapBaseURL: getSourcemapBaseURL(
+        this.url,
+        this.threadActor._parent.window
+      ),
       sourceMapURL: source.sourceMapURL,
       introductionType: source.introductionType,
     };
