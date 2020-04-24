@@ -25,7 +25,7 @@ function initDevToolsClient() {
 }
 
 function onNewSource(packet) {
-  if (packet.source.url == "http://foo.com") {
+  if (packet.source.url == "http://foo.com/") {
     ok(true, "Received the custom script source: " + packet.source.url);
     gThreadFront.off("newSource", onNewSource);
     gNewChromeSource.resolve();

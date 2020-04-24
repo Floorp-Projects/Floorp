@@ -11,8 +11,10 @@ const {
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert } = DevToolsUtils;
-const { joinURI } = require("devtools/shared/path");
 const { sourceSpec } = require("devtools/shared/specs/source");
+const {
+  resolveSourceURL,
+} = require("devtools/server/actors/utils/source-map-utils");
 
 loader.lazyRequireGetter(
   this,
@@ -40,7 +42,10 @@ function isEvalSource(source) {
   // Script elements that are dynamically created are treated as eval sources.
   // We detect these by looking at whether there was another script on the stack
   // when the source was created.
-  if (introType == "scriptElement" && source.introductionScript) {
+  if (
+    (introType == "scriptElement" || introType == "importedModule") &&
+    source.introductionScript
+  ) {
     return true;
   }
 
@@ -59,33 +64,21 @@ function isEvalSource(source) {
 exports.isEvalSource = isEvalSource;
 
 function getSourceURL(source, window) {
-  if (isEvalSource(source)) {
-    // Eval sources have no urls, but they might have a `displayURL`
-    // created with the sourceURL pragma. If the introduction script
-    // is a non-eval script, generate an full absolute URL relative to it.
+  // Some eval sources have URLs, but we want to explcitly ignore those because
+  // they are generally useless strings like "eval" or "debugger eval code".
+  const resourceURL =
+    ((!isEvalSource(source) && source.url) || "").split(" -> ").pop() || null;
 
-    if (source.displayURL && source.introductionScript) {
-      if (source.introductionScript.source.url === "debugger eval code") {
-        if (window) {
-          // If this is a named eval script created from the console, make it
-          // relative to the current page. window is only available
-          // when we care about this.
-          return joinURI(window.location.href, source.displayURL);
-        }
-      } else if (!isEvalSource(source.introductionScript.source)) {
-        return joinURI(source.introductionScript.source.url, source.displayURL);
-      }
-    }
-
-    return source.displayURL;
-  } else if (source.url === "debugger eval code") {
-    // Treat code evaluated by the console as unnamed eval scripts
-    return null;
-  }
-  return source.url;
+  // A "//# sourceURL=" pragma should basically be treated as a source file's
+  // full URL, so that is what we want to use as the base if it is present.
+  // If this is not an absolute URL, this will mean the maps in the file
+  // will not have a valid base URL, but that is up to tooling that
+  return (
+    resolveSourceURL(source.displayURL, window) ||
+    resolveSourceURL(resourceURL, window) ||
+    resourceURL
+  );
 }
-
-exports.getSourceURL = getSourceURL;
 
 /**
  * A SourceActor provides information about the source of a script. Source
@@ -107,7 +100,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     Actor.prototype.initialize.call(this, thread.conn);
 
     this._threadActor = thread;
-    this._url = null;
+    this._url = undefined;
     this._source = source;
     this._contentType = contentType;
     this._isInlineSource = isInlineSource;
@@ -136,7 +129,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     return this.threadActor.breakpointActorMap;
   },
   get url() {
-    if (!this._url) {
+    if (this._url === undefined) {
       this._url = getSourceURL(this._source, this.threadActor._parent.window);
     }
     return this._url;
@@ -177,7 +170,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     return {
       actor: this.actorID,
       extensionName: this.extensionName,
-      url: this.url ? this.url.split(" -> ").pop() : null,
+      url: this.url,
       isBlackBoxed: this.threadActor.sources.isBlackBoxed(this.url),
       sourceMapURL: source ? source.sourceMapURL : null,
       introductionUrl: introductionUrl
