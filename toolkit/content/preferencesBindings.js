@@ -345,7 +345,7 @@ const Preferences = (window.Preferences = (function() {
   window.addEventListener("unload", Preferences, { once: true });
 
   class Preference extends EventEmitter {
-    constructor({ id, type, inverted, disabled }) {
+    constructor({ id, type, inverted }) {
       super();
       this.on("change", this.onChange.bind(this));
 
@@ -357,7 +357,6 @@ const Preferences = (window.Preferences = (function() {
       this.id = id;
       this.type = type;
       this.inverted = !!inverted;
-      this._disabled = !!disabled;
 
       // In non-instant apply mode, we must try and use the last saved state
       // from any previous opens of a child dialog instead of the value from
@@ -533,16 +532,12 @@ const Preferences = (window.Preferences = (function() {
       return Services.prefs.prefIsLocked(this.id);
     }
 
-    get disabled() {
-      return this._disabled;
-    }
-
-    set disabled(val) {
-      this._disabled = !!val;
-
+    updateControlDisabledState(val) {
       if (!this.id) {
-        return val;
+        return;
       }
+
+      val = val || this.locked;
 
       const elements = getElementsByAttribute("preference", this.id);
       for (const element of elements) {
@@ -553,8 +548,6 @@ const Preferences = (window.Preferences = (function() {
           label.disabled = val;
         }
       }
-
-      return val;
     }
 
     get hasUserValue() {
