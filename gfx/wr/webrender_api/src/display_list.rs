@@ -435,10 +435,7 @@ impl BuiltDisplayList {
                     v,
                     item.iter.cur_clip_chain_items.iter().collect()
                 ),
-                Real::ScrollFrame(v) => Debug::ScrollFrame(
-                    v,
-                    item.iter.cur_complex_clip.iter().collect()
-                ),
+                Real::ScrollFrame(v) => Debug::ScrollFrame(v),
                 Real::Text(v) => Debug::Text(
                     v,
                     item.iter.cur_glyphs.iter().collect()
@@ -683,14 +680,9 @@ impl<'a> BuiltDisplayListIter<'a> {
                 self.cur_clip_chain_items = skip_slice::<di::ClipId>(&mut self.data);
                 self.debug_stats.log_slice("clip_chain.clip_ids", &self.cur_clip_chain_items);
             }
-            Clip(_) | ScrollFrame(_) => {
+            Clip(_) => {
                 self.cur_complex_clip = skip_slice::<di::ComplexClipRegion>(&mut self.data);
-                let name = if let Clip(_) = self.cur_item {
-                    "clip.complex_clips"
-                } else {
-                    "scroll_frame.complex_clips"
-                };
-                self.debug_stats.log_slice(name, &self.cur_complex_clip);
+                self.debug_stats.log_slice("clip.complex_clips", &self.cur_complex_clip);
             }
             Text(_) => {
                 self.cur_glyphs = skip_slice::<GlyphInstance>(&mut self.data);
@@ -851,10 +843,9 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                     DisplayListBuilder::push_iter_impl(&mut temp, clip_chain_ids);
                     Real::ClipChain(v)
                 }
-                Debug::ScrollFrame(v, complex_clips) => {
+                Debug::ScrollFrame(v) => {
                     total_spatial_nodes += 1;
                     total_clip_nodes += 1;
-                    DisplayListBuilder::push_iter_impl(&mut temp, complex_clips);
                     Real::ScrollFrame(v)
                 }
                 Debug::StickyFrame(v) => {
@@ -1698,20 +1689,15 @@ impl DisplayListBuilder {
         di::ClipChainId(self.next_clip_chain_id - 1, self.pipeline_id)
     }
 
-    pub fn define_scroll_frame<I>(
+    pub fn define_scroll_frame(
         &mut self,
         parent_space_and_clip: &di::SpaceAndClipInfo,
         external_id: Option<di::ExternalScrollId>,
         content_rect: LayoutRect,
         clip_rect: LayoutRect,
-        complex_clips: I,
         scroll_sensitivity: di::ScrollSensitivity,
         external_scroll_offset: LayoutVector2D,
-    ) -> di::SpaceAndClipInfo
-    where
-        I: IntoIterator<Item = di::ComplexClipRegion>,
-        I::IntoIter: ExactSizeIterator + Clone,
-    {
+    ) -> di::SpaceAndClipInfo {
         let clip_id = self.generate_clip_index();
         let scroll_frame_id = self.generate_spatial_index();
         let item = di::DisplayItem::ScrollFrame(di::ScrollFrameDisplayItem {
@@ -1726,7 +1712,6 @@ impl DisplayListBuilder {
         });
 
         self.push_item(&item);
-        self.push_iter(complex_clips);
 
         di::SpaceAndClipInfo {
             spatial_id: scroll_frame_id,

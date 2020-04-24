@@ -238,7 +238,6 @@ fn build_display_list(
         Some(scroll_id),
         LayoutRect::new(LayoutPoint::zero(), layout_size),
         LayoutRect::new(LayoutPoint::zero(), layout_size),
-        Vec::new(),
         ScrollSensitivity::Script,
         LayoutVector2D::zero(),
     );
