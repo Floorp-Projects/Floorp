@@ -22,3 +22,10 @@ fun View.increaseTapArea(extraDps: Int) {
         parent.touchDelegate = TouchDelegate(touchRect, this)
     }
 }
+
+fun View.removeTouchDelegate() {
+    val parent = this.parent as View
+    parent.post {
+        parent.touchDelegate = null
+    }
+}
