@@ -304,6 +304,7 @@ class MarionetteParentProcess {
     if (env.exists(ENV_ENABLED)) {
       this.enabled = true;
     } else {
+      // TODO: Don't read the preference anymore (bug 1632821)
       this.enabled = MarionettePrefs.enabled;
     }
 
@@ -312,6 +313,19 @@ class MarionetteParentProcess {
     }
 
     Services.ppmm.addMessageListener("Marionette:IsRunning", this);
+  }
+
+  get enabled() {
+    return !!this._enabled;
+  }
+
+  set enabled(value) {
+    if (value) {
+      // Only update the preference when Marionette is going to be enabled
+      MarionettePrefs.enabled = value;
+    }
+
+    this._enabled = value;
   }
 
   get running() {
