@@ -41,12 +41,7 @@ nsTArray<RefPtr<PerformanceInfoPromise>> CollectPerformanceInfo() {
   }
 
   nsTArray<RefPtr<BrowsingContextGroup>> groups;
-  if (XRE_IsContentProcess()) {
-    groups.AppendElements(
-        ContentChild::GetSingleton()->BrowsingContextGroups());
-  } else {
-    groups.AppendElements(ContentParent::BrowsingContextGroups());
-  }
+  BrowsingContextGroup::GetAllGroups(groups);
 
   nsTArray<DocGroup*> docGroups;
   for (auto& browsingContextGroup : groups) {
