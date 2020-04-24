@@ -402,7 +402,7 @@ void MPRISServiceHandler::OnBusAcquired(GDBusConnection* aConnection,
       &error);                 /* GError** */
 
   if (mPlayerRegistrationId == 0) {
-    LOG("Failed at object registration %s",
+    LOG("Failed at object registration: %s",
         error ? error->message : "Unknown Error");
     if (error) {
       g_error_free(error);
@@ -429,7 +429,7 @@ bool MPRISServiceHandler::Open() {
   mIntrospectionData = g_dbus_node_info_new_for_xml(introspection_xml, &error);
 
   if (!mIntrospectionData) {
-    LOG("Failed at parsing XML Interface definition %s",
+    LOG("Failed at parsing XML Interface definition: %s",
         error ? error->message : "Unknown Error");
     if (error) {
       g_error_free(error);
@@ -573,12 +573,20 @@ void MPRISServiceHandler::SetPlaybackState(
   GVariantBuilder builder;
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
   g_variant_builder_add(&builder, "{sv}", "PlaybackStatus", state);
-  g_dbus_connection_emit_signal(
-      mConnection, nullptr, DBUS_MPRIS_OBJECT_PATH,
-      "org.freedesktop.DBus.Properties", "PropertiesChanged",
-      g_variant_new("(sa{sv}as)", DBUS_MPRIS_PLAYER_INTERFACE, &builder,
-                    nullptr),
-      nullptr);
+
+  GVariant* parameters = g_variant_new(
+      "(sa{sv}as)", DBUS_MPRIS_PLAYER_INTERFACE, &builder, nullptr);
+  GError* error = nullptr;
+  if (!g_dbus_connection_emit_signal(mConnection, nullptr,
+                                     DBUS_MPRIS_OBJECT_PATH,
+                                     "org.freedesktop.DBus.Properties",
+                                     "PropertiesChanged", parameters, &error)) {
+    LOG("Failed at emitting MPRIS property changes for 'PlaybackStatus': %s",
+        error ? error->message : "Unknown Error");
+    if (error) {
+      g_error_free(error);
+    }
+  }
 }
 
 GVariant* MPRISServiceHandler::GetPlaybackStatus() const {
@@ -614,10 +622,17 @@ void MPRISServiceHandler::SetMediaMetadata(
 
   GVariant* parameters = g_variant_new(
       "(sa{sv}as)", DBUS_MPRIS_PLAYER_INTERFACE, &builder, nullptr);
-
-  g_dbus_connection_emit_signal(mConnection, nullptr, DBUS_MPRIS_OBJECT_PATH,
-                                "org.freedesktop.DBus.Properties",
-                                "PropertiesChanged", parameters, nullptr);
+  GError* error = nullptr;
+  if (!g_dbus_connection_emit_signal(mConnection, nullptr,
+                                     DBUS_MPRIS_OBJECT_PATH,
+                                     "org.freedesktop.DBus.Properties",
+                                     "PropertiesChanged", parameters, &error)) {
+    LOG("Failed at emitting MPRIS property changes for 'Metadata': %s:",
+        error ? error->message : "Unknown Error");
+    if (error) {
+      g_error_free(error);
+    }
+  }
 }
 
 GVariant* MPRISServiceHandler::GetMetadataAsGVariant() const {
