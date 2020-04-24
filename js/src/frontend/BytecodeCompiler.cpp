@@ -572,6 +572,9 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
     if (!emitter->emitScript(pn)) {
       return nullptr;
     }
+
+    compilationInfo.script = emitter->getResultScript();
+    MOZ_ASSERT(compilationInfo.script);
   }
 
   // We have just finished parsing the source. Inform the source so that we
@@ -633,6 +636,9 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   if (!emitter->emitScript(pn->as<ModuleNode>().body())) {
     return nullptr;
   }
+
+  compilationInfo.script = emitter->getResultScript();
+  MOZ_ASSERT(compilationInfo.script);
 
   if (!builder.initModule(module)) {
     return nullptr;
@@ -724,6 +730,9 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
                                      BytecodeEmitter::TopLevelFunction::Yes)) {
       return false;
     }
+
+    compilationInfo.script = emitter->getResultScript();
+    MOZ_ASSERT(compilationInfo.script);
   } else {
     fun.set(funbox->function());
     MOZ_ASSERT(IsAsmJSModule(fun));
@@ -830,14 +839,18 @@ static JSScript* CompileGlobalBinASTScriptImpl(
     return nullptr;
   }
 
+  RootedScript resultScript(cx, bce.getResultScript());
+  MOZ_ASSERT(resultScript);
+
   if (sourceObjectOut) {
     *sourceObjectOut = compilationInfo.sourceObject;
   }
 
-  tellDebuggerAboutCompiledScript(cx, options.hideScriptFromDebugger, script);
+  tellDebuggerAboutCompiledScript(cx, options.hideScriptFromDebugger,
+                                  resultScript);
 
   assertException.reset();
-  return script;
+  return resultScript;
 }
 
 JSScript* frontend::CompileGlobalBinASTScript(

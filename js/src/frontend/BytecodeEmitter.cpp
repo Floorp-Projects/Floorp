@@ -106,7 +106,8 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
     : sc(sc),
       cx(sc->cx_),
       parent(parent),
-      script(cx, script),
+      inputScript(cx, script),
+      outputScript(cx),
       bytecodeSection_(cx, sc->extent.lineno),
       perScriptData_(cx, compilationInfo),
       compilationInfo(compilationInfo),
@@ -2448,7 +2449,13 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
   }
 
   BCEScriptStencil stencil(*this, std::move(immutableScriptData));
-  return JSScript::fullyInitFromStencil(cx, compilationInfo, script, stencil);
+  if (!JSScript::fullyInitFromStencil(cx, compilationInfo, inputScript,
+                                      stencil)) {
+    return false;
+  }
+  // Script is allocated now.
+  outputScript = inputScript;
+  return true;
 }
 
 js::UniquePtr<ImmutableScriptData> BytecodeEmitter::createImmutableScriptData(
@@ -2527,11 +2534,7 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode,
     }
   }
 
-  if (!fse.initScript()) {
-    return false;
-  }
-
-  return true;
+  return fse.initScript();
 }
 
 bool BytecodeEmitter::emitDestructuringLHSRef(ParseNode* target,
@@ -5731,7 +5734,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
 
     // Only propagate transitive compiler options (principals, version, etc)
     // from the parent. The remaining values will use their defaults.
-    MOZ_ASSERT(script->mutedErrors() == parser->options().mutedErrors());
+    MOZ_ASSERT(inputScript->mutedErrors() == parser->options().mutedErrors());
     const JS::TransitiveCompileOptions& transitiveOptions = parser->options();
     // Add input flags to funbox for JSSCript::Create call.
     funbox->addToImmutableFlags(
@@ -5748,7 +5751,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
 
     EmitterMode nestedMode = emitterMode;
     if (nestedMode == BytecodeEmitter::LazyFunction) {
-      MOZ_ASSERT(script->isBinAST());
+      MOZ_ASSERT(inputScript->isBinAST());
       nestedMode = BytecodeEmitter::Normal;
     }
 
@@ -6761,7 +6764,7 @@ bool BytecodeEmitter::emitExpressionStatement(UnaryNode* exprStmt) {
   bool wantval = false;
   bool useful = false;
   if (!sc->isFunctionBox()) {
-    MOZ_ASSERT(parser->options().noScriptRval == script->noScriptRval());
+    MOZ_ASSERT(parser->options().noScriptRval == inputScript->noScriptRval());
     useful = wantval = !parser->options().noScriptRval;
   }
 
