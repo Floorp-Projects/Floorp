@@ -13,6 +13,7 @@ import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.net.isHttpOrHttps
+import java.net.URISyntaxException
 import java.util.UUID
 
 private const val EXTRA_BROWSER_FALLBACK_URL = "browser_fallback_url"
@@ -63,11 +64,20 @@ class AppLinksUseCases(
         return context.packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
     }
 
+    private fun safeParseUri(uri: String, flags: Int): Intent? {
+        return try {
+            Intent.parseUri(uri, flags)
+        } catch (e: URISyntaxException) {
+            null
+        }
+    }
+
     private fun findExcludedPackages(randomWebURLString: String): Set<String> {
+        val intent = safeParseUri(randomWebURLString, 0) ?: return emptySet()
         // We generate a URL is not likely to be opened by a native app
         // but will fallback to a browser.
         // In this way, we're looking for only the browsers — including us.
-        return findActivities(Intent.parseUri(randomWebURLString, 0).addCategory(Intent.CATEGORY_BROWSABLE))
+        return findActivities(intent.addCategory(Intent.CATEGORY_BROWSABLE))
             .map { it.activityInfo.packageName }
             .toHashSet()
     }
@@ -136,19 +146,19 @@ class AppLinksUseCases(
         }
 
         private fun createBrowsableIntents(url: String): RedirectData {
-            val intent = Intent.parseUri(url, 0)
-            if (intent.action == Intent.ACTION_VIEW) {
+            val intent = safeParseUri(url, 0)
+            if (intent != null && intent.action == Intent.ACTION_VIEW) {
                 intent.addCategory(Intent.CATEGORY_BROWSABLE)
                 intent.component = null
                 intent.selector = null
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
 
-            val fallbackIntent = intent.getStringExtra(EXTRA_BROWSER_FALLBACK_URL)?.let {
+            val fallbackIntent = intent?.getStringExtra(EXTRA_BROWSER_FALLBACK_URL)?.let {
                 Intent.parseUri(it, 0)
             }
 
-            val marketplaceIntent = intent.`package`?.let {
+            val marketplaceIntent = intent?.`package`?.let {
                 if (includeInstallAppFallback) {
                     Intent.parseUri(MARKET_INTENT_URI_PACKAGE_PREFIX + it, 0)
                 } else {
@@ -173,8 +183,8 @@ class AppLinksUseCases(
             }
 
             val appIntent = when {
-                intent.data == null -> null
-                alwaysDeniedSchemes.contains(intent?.data?.scheme) -> null
+                intent?.data == null -> null
+                alwaysDeniedSchemes.contains(intent.data?.scheme) -> null
                 else -> intent
             }
 

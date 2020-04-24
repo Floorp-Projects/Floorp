@@ -82,6 +82,14 @@ class AppLinksUseCasesTest {
     }
 
     @Test
+    fun `A malformed URL should not cause a crash`() {
+        val context = createContext()
+        val subject = AppLinksUseCases(context, { true }, browserPackageNames = emptySet())
+        val redirect = subject.interceptedAppLinkRedirect("test://test#Intent;")
+        assertFalse(redirect.isRedirect())
+    }
+
+    @Test
     fun `A URL that matches zero apps is not an app link`() {
         val context = createContext()
         val subject = AppLinksUseCases(context, { true }, browserPackageNames = emptySet())
@@ -169,7 +177,7 @@ class AppLinksUseCasesTest {
     }
 
     @Test
-    fun `browser package names is lazily intialized`() {
+    fun `browser package names is lazily initialized`() {
         val unguessable = "https://unguessable-test-url.com"
         val context = createContext(unguessable to browserPackage)
         val subject = AppLinksUseCases(context, unguessableWebUrl = unguessable)
