@@ -42,11 +42,12 @@ class InChunkPointer {
   InChunkPointer()
       : mChunk(nullptr), mNextChunkGroup(nullptr), mOffsetInChunk(0) {}
 
-  // InChunkPointer over one or two chunk groups, will start at the first
-  // block (if any).
+  // InChunkPointer over one or two chunk groups, pointing at the given
+  // block index (if still in range).
+  // This constructor should only be used with *trusted* block index values!
   InChunkPointer(const ProfileBufferChunk* aChunk,
                  const ProfileBufferChunk* aNextChunkGroup,
-                 ProfileBufferBlockIndex aBlockIndex = nullptr)
+                 ProfileBufferBlockIndex aBlockIndex)
       : mChunk(aChunk), mNextChunkGroup(aNextChunkGroup) {
     if (mChunk) {
       mOffsetInChunk = mChunk->OffsetFirstBlock();
@@ -60,9 +61,39 @@ class InChunkPointer {
       mOffsetInChunk = 0;
     }
 
-    // Try to advance to given position, don't worry about success.
-    Unused << AdvanceToGlobalRangePosition(
-        aBlockIndex.ConvertToProfileBufferIndex());
+    // Try to advance to given position.
+    if (!AdvanceToGlobalRangePosition(aBlockIndex)) {
+      // Block does not exist anymore (or block doesn't look valid), reset the
+      // in-chunk pointer.
+      mChunk = nullptr;
+      mNextChunkGroup = nullptr;
+    }
+  }
+
+  // InChunkPointer over one or two chunk groups, will start at the first
+  // block (if any). This may be slow, so avoid using it too much.
+  InChunkPointer(const ProfileBufferChunk* aChunk,
+                 const ProfileBufferChunk* aNextChunkGroup,
+                 ProfileBufferIndex aIndex = ProfileBufferIndex(0))
+      : mChunk(aChunk), mNextChunkGroup(aNextChunkGroup) {
+    if (mChunk) {
+      mOffsetInChunk = mChunk->OffsetFirstBlock();
+      Adjust();
+    } else if (mNextChunkGroup) {
+      mChunk = mNextChunkGroup;
+      mNextChunkGroup = nullptr;
+      mOffsetInChunk = mChunk->OffsetFirstBlock();
+      Adjust();
+    } else {
+      mOffsetInChunk = 0;
+    }
+
+    // Try to advance to given position.
+    if (!AdvanceToGlobalRangePosition(aIndex)) {
+      // Block does not exist anymore, reset the in-chunk pointer.
+      mChunk = nullptr;
+      mNextChunkGroup = nullptr;
+    }
   }
 
   // Compute the current position in the global range.
@@ -72,6 +103,50 @@ class InChunkPointer {
       return 0;
     }
     return mChunk->RangeStart() + mOffsetInChunk;
+  }
+
+  // Move InChunkPointer forward to the block at the given global block
+  // position, which is assumed to be valid exactly -- but it may be obsolete.
+  // 0 stays where it is (if valid already).
+  // MOZ_ASSERTs if the index is invalid.
+  [[nodiscard]] bool AdvanceToGlobalRangePosition(
+      ProfileBufferBlockIndex aBlockIndex) {
+    if (IsNull()) {
+      // Pointer is null already. (Not asserting because it's acceptable.)
+      return false;
+    }
+    if (!aBlockIndex) {
+      // Special null position, just stay where we are.
+      return ShouldPointAtValidBlock();
+    }
+    if (aBlockIndex.ConvertToProfileBufferIndex() < GlobalRangePosition()) {
+      // Past the requested position, stay where we are (assuming the current
+      // position was valid).
+      return ShouldPointAtValidBlock();
+    }
+    for (;;) {
+      if (aBlockIndex.ConvertToProfileBufferIndex() <
+          mChunk->RangeStart() + mChunk->OffsetPastLastBlock()) {
+        // Target position is in this chunk's written space, move to it.
+        mOffsetInChunk =
+            aBlockIndex.ConvertToProfileBufferIndex() - mChunk->RangeStart();
+        return ShouldPointAtValidBlock();
+      }
+      // Position is after this chunk, try next chunk.
+      GoToNextChunk();
+      if (IsNull()) {
+        return false;
+      }
+      // Skip whatever block tail there is, we don't allow pointing in the
+      // middle of a block.
+      mOffsetInChunk = mChunk->OffsetFirstBlock();
+      if (aBlockIndex.ConvertToProfileBufferIndex() < GlobalRangePosition()) {
+        // Past the requested position, meaning that the given position was in-
+        // between blocks -> Failure.
+        MOZ_ASSERT(false, "AdvanceToGlobalRangePosition - In-between blocks");
+        return false;
+      }
+    }
   }
 
   // Move InChunkPointer forward to the block at or after the given global
@@ -296,6 +371,32 @@ class InChunkPointer {
       }
       GoToNextChunk();
     }
+  }
+
+  // Check if the current position is likely to point at a valid block.
+  // (Size should be reasonable, and block should fully fit inside buffer.)
+  // MOZ_ASSERTs on failure, to catch incorrect uses of block indices (which
+  // should only point at valid blocks if still in range). Non-asserting build
+  // fallback should still be handled.
+  [[nodiscard]] bool ShouldPointAtValidBlock() const {
+    if (IsNull()) {
+      // Pointer is null, no blocks here.
+      MOZ_ASSERT(false, "ShouldPointAtValidBlock - null pointer");
+      return false;
+    }
+    // Use a copy, so we don't modify `*this`.
+    InChunkPointer pointer = *this;
+    // Try to read the entry size.
+    Length entrySize = pointer.ReadEntrySize();
+    if (entrySize == 0) {
+      // Entry size of zero means we read 0 or a way-too-big value.
+      MOZ_ASSERT(false, "ShouldPointAtValidBlock - invalid size");
+      return false;
+    }
+    // See if the last byte of the entry is still inside the buffer.
+    pointer += entrySize - 1;
+    MOZ_ASSERT(!IsNull(), "ShouldPointAtValidBlock - past end of buffer");
+    return !IsNull();
   }
 
   const ProfileBufferChunk* mChunk;
