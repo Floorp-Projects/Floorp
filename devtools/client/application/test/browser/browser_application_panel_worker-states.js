@@ -14,7 +14,7 @@ add_task(async function() {
   selectPage(panel, "service-workers");
 
   info("Check for non-existing service worker");
-  const isWorkerListEmpty = !!doc.querySelector(".worker-list-empty");
+  const isWorkerListEmpty = !!doc.querySelector(".js-registration-list-empty");
   ok(isWorkerListEmpty, "No Service Worker displayed");
 
   info("Register a service worker with a controlled install in the page.");

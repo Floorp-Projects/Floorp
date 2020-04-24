@@ -13,17 +13,17 @@ const {
   MULTIPLE_WORKER_LIST,
 } = require("devtools/client/application/test/node/fixtures/data/constants");
 
-const WorkerList = createFactory(
-  require("devtools/client/application/src/components/service-workers/WorkerList")
+const RegistrationList = createFactory(
+  require("devtools/client/application/src/components/service-workers/RegistrationList")
 );
 
 /**
- * Test for workerList.js component
+ * Test for RegistrationList.js component
  */
-describe("WorkerList", () => {
-  it("renders the expected snapshot for a list with a single worker", () => {
+describe("RegistrationList", () => {
+  it("renders the expected snapshot for a list with a single registration", () => {
     const wrapper = shallow(
-      WorkerList({
+      RegistrationList({
         workers: SINGLE_WORKER_DEFAULT_DOMAIN_LIST,
         canDebugWorkers: true,
       })
@@ -31,9 +31,9 @@ describe("WorkerList", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("renders the expected snapshot for a multiple workers list", () => {
+  it("renders the expected snapshot for a multiple registration list", () => {
     const wrapper = shallow(
-      WorkerList({
+      RegistrationList({
         workers: MULTIPLE_WORKER_LIST,
         canDebugWorkers: true,
       })

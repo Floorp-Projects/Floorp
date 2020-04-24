@@ -15,11 +15,11 @@ const {
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const Types = require("devtools/client/application/src/types/index");
-const WorkerList = createFactory(
-  require("devtools/client/application/src/components/service-workers/WorkerList")
+const RegistrationList = createFactory(
+  require("devtools/client/application/src/components/service-workers/RegistrationList")
 );
-const WorkerListEmpty = createFactory(
-  require("devtools/client/application/src/components/service-workers/WorkerListEmpty")
+const RegistrationListEmpty = createFactory(
+  require("devtools/client/application/src/components/service-workers/RegistrationListEmpty")
 );
 
 class WorkersPage extends PureComponent {
@@ -48,8 +48,8 @@ class WorkersPage extends PureComponent {
         }`,
       },
       isWorkerListEmpty
-        ? WorkerListEmpty({})
-        : WorkerList({
+        ? RegistrationListEmpty({})
+        : RegistrationList({
             canDebugWorkers,
             workers: domainWorkers,
           })
