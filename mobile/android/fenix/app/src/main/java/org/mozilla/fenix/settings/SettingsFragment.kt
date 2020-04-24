@@ -51,7 +51,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private val accountObserver = object : AccountObserver {
         private fun updateAccountUi(profile: Profile? = null) {
             val context = context ?: return
-            viewLifecycleOwner.lifecycleScope.launch {
+            lifecycleScope.launch {
                 updateAccountUIState(
                     context = context,
                     profile = profile
@@ -377,7 +377,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             preferenceSignIn?.isVisible = false
 
             profile?.avatar?.url?.let { avatarUrl ->
-                viewLifecycleOwner.lifecycleScope.launch(Main) {
+                lifecycleScope.launch(Main) {
                     val roundedDrawable =
                         avatarUrl.toRoundedDrawable(context, requireComponents.core.client)
                     preferenceFirefoxAccount?.icon =

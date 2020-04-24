@@ -98,10 +98,10 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
     private fun bindRecyclerView(view: View) {
         val recyclerView = view.add_ons_list
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        viewLifecycleOwner.lifecycleScope.launch(IO) {
+        lifecycleScope.launch(IO) {
             try {
                 val addons = requireContext().components.addonManager.getAddons()
-                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                lifecycleScope.launch(Dispatchers.Main) {
                     runIfFragmentIsAttached {
                         val adapter = AddonsManagerAdapter(
                             requireContext().components.addonCollectionProvider,
@@ -117,7 +117,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management),
                     }
                 }
             } catch (e: AddonManagerException) {
-                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                lifecycleScope.launch(Dispatchers.Main) {
                     runIfFragmentIsAttached {
                         showSnackBar(
                             view,
