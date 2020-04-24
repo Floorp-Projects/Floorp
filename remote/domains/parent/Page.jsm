@@ -10,6 +10,8 @@ var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
 });
@@ -70,6 +72,43 @@ class Page extends Domain {
   }
 
   // commands
+
+  /**
+   * Navigates current page to given URL.
+   *
+   * @param {Object} options
+   * @param {string} options.url
+   *     destination URL
+   * @param {string=} options.frameId
+   *     frame id to navigate (not supported),
+   *     if not specified navigate top frame
+   * @param {string=} options.referrer
+   *     referred URL (optional)
+   * @param {string=} options.transitionType
+   *     intended transition type
+   * @return {Object}
+   *         - frameId {string} frame id that has navigated (or failed to)
+   *         - errorText {string} error message if navigation has failed
+   *                              (not supported)
+   *         - loaderId {string} (not supported)
+   */
+  async navigate(options = {}) {
+    const { url, frameId, referrer, transitionType } = options;
+    if (frameId && frameId != this.session.browsingContext.id.toString()) {
+      throw new UnsupportedError("frameId not supported");
+    }
+
+    const opts = {
+      loadFlags: transitionToLoadFlag(transitionType),
+      referrerURI: referrer,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    };
+    this.session.browsingContext.loadURI(url, opts);
+
+    return {
+      frameId: this.session.browsingContext.id.toString(),
+    };
+  }
 
   /**
    * Capture page screenshot.
@@ -631,5 +670,15 @@ class Page extends Domain {
     // Since the event is fired asynchronously, this should not have an impact
     // on the actual tests relying on this API.
     this.emit("Page.javascriptDialogOpening", { message, type });
+  }
+}
+
+function transitionToLoadFlag(transitionType) {
+  switch (transitionType) {
+    case "reload":
+      return Ci.nsIWebNavigation.LOAD_FLAGS_IS_REFRESH;
+    case "link":
+    default:
+      return Ci.nsIWebNavigation.LOAD_FLAGS_IS_LINK;
   }
 }
