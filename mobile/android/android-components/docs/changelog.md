@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-downloads**
+  * Fixed issue [#6764](https://github.com/mozilla-mobile/android-components/issues/6764).
+
 * **support-locale**
   * Added fix for respecting RTL/LTR changes when activity is recreated in Android 8
 
