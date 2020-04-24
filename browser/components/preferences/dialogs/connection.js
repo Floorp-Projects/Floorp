@@ -187,9 +187,9 @@ var gConnectionsDialog = {
 
     // Update http
     var httpProxyURLPref = Preferences.get("network.proxy.http");
-    httpProxyURLPref.updateControlDisabledState(proxyTypePref.value != 1);
+    httpProxyURLPref.disabled = proxyTypePref.value != 1;
     var httpProxyPortPref = Preferences.get("network.proxy.http_port");
-    httpProxyPortPref.updateControlDisabledState(proxyTypePref.value != 1);
+    httpProxyPortPref.disabled = proxyTypePref.value != 1;
 
     // Now update the other protocols
     this.updateProtocolPrefs();
@@ -197,14 +197,17 @@ var gConnectionsDialog = {
     var shareProxiesPref = Preferences.get(
       "network.proxy.share_proxy_settings"
     );
-    shareProxiesPref.updateControlDisabledState(proxyTypePref.value != 1);
+    shareProxiesPref.disabled =
+      proxyTypePref.value != 1 || shareProxiesPref.locked;
     var autologinProxyPref = Preferences.get("signon.autologin.proxy");
-    autologinProxyPref.updateControlDisabledState(proxyTypePref.value == 0);
+    autologinProxyPref.disabled =
+      proxyTypePref.value == 0 || autologinProxyPref.locked;
     var noProxiesPref = Preferences.get("network.proxy.no_proxies_on");
-    noProxiesPref.updateControlDisabledState(proxyTypePref.value == 0);
+    noProxiesPref.disabled = proxyTypePref.value == 0 || noProxiesPref.locked;
 
     var autoconfigURLPref = Preferences.get("network.proxy.autoconfig_url");
-    autoconfigURLPref.updateControlDisabledState(proxyTypePref.value != 2);
+    autoconfigURLPref.disabled =
+      proxyTypePref.value != 2 || autoconfigURLPref.locked;
 
     this.updateReloadButton();
 
@@ -221,10 +224,9 @@ var gConnectionsDialog = {
     var socksDNSPref = Preferences.get("network.proxy.socks_remote_dns");
     var proxyTypePref = Preferences.get("network.proxy.type");
     var isDefinitelySocks4 =
-      proxyTypePref.value == 1 && socksVersionPref.value == 4;
-    socksDNSPref.updateControlDisabledState(
-      isDefinitelySocks4 || proxyTypePref.value == 0
-    );
+      !socksVersionPref.disabled && socksVersionPref.value == 4;
+    socksDNSPref.disabled =
+      isDefinitelySocks4 || proxyTypePref.value == 0 || socksDNSPref.locked;
     return undefined;
   },
 
@@ -243,9 +245,8 @@ var gConnectionsDialog = {
     var disableReloadPref = Preferences.get(
       "pref.advanced.proxies.disable_button.reload"
     );
-    disableReloadPref.updateControlDisabledState(
-      proxyTypeCur != 2 || proxyType != 2 || typedURL != pacURL
-    );
+    disableReloadPref.disabled =
+      proxyTypeCur != 2 || proxyType != 2 || typedURL != pacURL;
   },
 
   readProxyType() {
@@ -288,15 +289,11 @@ var gConnectionsDialog = {
       proxyServerURLPref.updateElements();
       proxyPortPref.updateElements();
       let prefIsShared = proxyPrefs[i] != "socks" && shareProxiesPref.value;
-      proxyServerURLPref.updateControlDisabledState(
-        proxyTypePref.value != 1 || prefIsShared
-      );
-      proxyPortPref.updateControlDisabledState(
-        proxyTypePref.value != 1 || prefIsShared
-      );
+      proxyServerURLPref.disabled = proxyTypePref.value != 1 || prefIsShared;
+      proxyPortPref.disabled = proxyServerURLPref.disabled;
     }
     var socksVersionPref = Preferences.get("network.proxy.socks_version");
-    socksVersionPref.updateControlDisabledState(proxyTypePref.value != 1);
+    socksVersionPref.disabled = proxyTypePref.value != 1;
     this.updateDNSPref();
     return undefined;
   },
@@ -450,7 +447,7 @@ var gConnectionsDialog = {
     // called to update checked element property to reflect current pref value
     let enabled = this.isDnsOverHttpsEnabled();
     let uriPref = Preferences.get("network.trr.uri");
-    uriPref.updateControlDisabledState(!enabled || this.isDnsOverHttpsLocked());
+    uriPref.disabled = !enabled || this.isDnsOverHttpsLocked();
     // this is the first signal we get when the prefs are available, so
     // lazy-init if appropriate
     if (!this._areTrrPrefsReady) {
