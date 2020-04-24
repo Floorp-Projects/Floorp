@@ -1280,7 +1280,6 @@ CHUNK_SUITES_BLACKLIST = (
     'mochitest-webgl2-ext',
     'raptor',
     'reftest',
-    'reftest-qr',
     'reftest-gpu',
     'reftest-no-accel',
     'talos',
@@ -1345,11 +1344,10 @@ def split_chunks(config, tests):
             if chunked_manifests is not None:
                 manifests = sorted(chunked_manifests[i])
                 if not manifests:
-                    print(chunked_manifests)
                     raise Exception(
                         'Chunking algorithm yielded no manifests for chunk {} of {} on {}'.format(
                             this_chunk, test['test-name'], test['test-platform']))
-                    chunked['test-manifests'] = manifests
+                chunked['test-manifests'] = manifests
 
             if test['chunks'] > 1:
                 # add the chunk number to the TH symbol
