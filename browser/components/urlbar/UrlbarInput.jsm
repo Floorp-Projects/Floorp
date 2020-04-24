@@ -1049,6 +1049,18 @@ class UrlbarInput {
       // Expanding requires a parent toolbar.
       return;
     }
+    if (this.document.fullscreenElement) {
+      // Toolbars are hidden in DOM fullscreen mode, so we can't get proper
+      // layout information and need to retry after leaving that mode.
+      this.window.addEventListener(
+        "fullscreen",
+        () => {
+          this.updateLayoutBreakout();
+        },
+        { once: true }
+      );
+      return;
+    }
     await this._updateLayoutBreakoutDimensions();
     this.startLayoutExtend();
   }
