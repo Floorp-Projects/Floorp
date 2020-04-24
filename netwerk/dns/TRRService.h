@@ -92,6 +92,10 @@ class TRRService : public nsIObserver,
   nsresult DispatchTRRRequestInternal(TRR* aTrrRequest, bool aWithLock);
   already_AddRefed<nsIThread> TRRThread_locked();
 
+  // This method will process the URI and try to set mPrivateURI to that value.
+  // Will return true if performed the change (if the value was different)
+  // or false if mPrivateURI already had that value.
+  bool MaybeSetPrivateURI(const nsACString& aURI);
   void ProcessURITemplate(nsACString& aURI);
   void ClearEntireCache();
 
@@ -105,6 +109,7 @@ class TRRService : public nsIObserver,
   nsCString mPrivateCred;  // main thread only
   nsCString mConfirmationNS;
   nsCString mBootstrapAddr;
+  bool mURISetByDetection = false;
 
   Atomic<bool, Relaxed> mWaitForCaptive;  // wait for the captive portal to say
                                           // OK before using TRR

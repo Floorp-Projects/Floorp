@@ -151,21 +151,7 @@ void TRRService::SetDetectedTrrURI(const nsACString& aURI) {
     return;
   }
 
-  nsAutoCString newURI(aURI);
-  ProcessURITemplate(newURI);
-  bool clearEntireCache = false;
-  {
-    MutexAutoLock lock(mLock);
-    if (!mPrivateURI.IsEmpty() && !newURI.Equals(mPrivateURI)) {
-      mClearTRRBLStorage = true;
-      LOG(("TRRService clearing blacklist because of change in uri service\n"));
-      clearEntireCache = true;
-    }
-    mPrivateURI = newURI;
-  }
-  if (clearEntireCache) {
-    ClearEntireCache();
-  }
+  mURISetByDetection = MaybeSetPrivateURI(aURI);
 }
 
 bool TRRService::Enabled(nsIRequest::TRRMode aMode) {
@@ -247,6 +233,32 @@ void TRRService::ProcessURITemplate(nsACString& aURI) {
   aURI = uri;
 }
 
+bool TRRService::MaybeSetPrivateURI(const nsACString& aURI) {
+  bool clearCache = false;
+  nsAutoCString newURI(aURI);
+  ProcessURITemplate(newURI);
+
+  {
+    MutexAutoLock lock(mLock);
+    if (mPrivateURI.Equals(newURI)) {
+      return false;
+    }
+
+    if (!mPrivateURI.IsEmpty()) {
+      mClearTRRBLStorage = true;
+      LOG(("TRRService clearing blacklist because of change in uri service\n"));
+      clearCache = true;
+    }
+    mPrivateURI = newURI;
+  }
+
+  // Clear the cache because we changed the URI
+  if (clearCache) {
+    ClearEntireCache();
+  }
+  return true;
+}
+
 nsresult TRRService::ReadPrefs(const char* name) {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
 
@@ -274,15 +286,8 @@ nsresult TRRService::ReadPrefs(const char* name) {
   if (!name || !strcmp(name, TRR_PREF("uri"))) {
     nsAutoCString newURI;
     Preferences::GetCString(TRR_PREF("uri"), newURI);
-    ProcessURITemplate(newURI);
-
-    MutexAutoLock lock(mLock);
-    if (!mPrivateURI.IsEmpty() && !newURI.Equals(mPrivateURI)) {
-      mClearTRRBLStorage = true;
-      LOG(("TRRService clearing blacklist because of change in uri service\n"));
-      clearEntireCache = true;
-    }
-    mPrivateURI = newURI;
+    MaybeSetPrivateURI(newURI);
+    mURISetByDetection = false;
   }
   if (!name || !strcmp(name, TRR_PREF("credentials"))) {
     MutexAutoLock lock(mLock);
@@ -508,6 +513,7 @@ bool TRRService::IsOnTRRThread() {
 NS_IMETHODIMP
 TRRService::Observe(nsISupports* aSubject, const char* aTopic,
                     const char16_t* aData) {
+  nsresult rv;
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   LOG(("TRR::Observe() topic=%s\n", aTopic));
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
@@ -570,6 +576,17 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
     nsCOMPtr<nsINetworkLinkService> link = do_QueryInterface(aSubject);
     RebuildSuffixList(link);
     CheckPlatformDNSStatus(link);
+
+    if (!strcmp(aTopic, NS_NETWORK_LINK_TOPIC) && mURISetByDetection) {
+      // If the URI was set via SetDetectedTrrURI we need to restore it to the
+      // default pref when a network link change occurs.
+      nsAutoCString userPrefURI;
+      rv = Preferences::GetCString(TRR_PREF("uri"), userPrefURI);
+      if (NS_SUCCEEDED(rv)) {
+        MaybeSetPrivateURI(userPrefURI);
+        mURISetByDetection = false;
+      }
+    }
   } else if (!strcmp(aTopic, "xpcom-shutdown-threads")) {
     if (sTRRBackgroundThread) {
       nsCOMPtr<nsIThread> thread;
