@@ -1751,11 +1751,6 @@ class nsTArray_Impl
     return AppendElements<Item, ActualAlloc>(aSpan.Elements(), aSpan.Length());
   }
 
-  template <class Item, size_t Length, typename ActualAlloc = Alloc>
-  elem_type* AppendElements(const mozilla::Array<Item, Length>& aArray) {
-    return AppendElements<Item, ActualAlloc>(&aArray[0], Length);
-  }
-
  public:
   template <class Item>
   /* [[nodiscard]] */
