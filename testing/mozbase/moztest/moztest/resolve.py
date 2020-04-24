@@ -189,6 +189,14 @@ TEST_SUITES = {
         'task_regex': ['(opt|debug)-reftest($|.*(-1|[^0-9])$)',
                        'test-verify-gpu($|.*(-1|[^0-9])$)'],
     },
+    'reftest-qr': {
+        'aliases': ('rr',),
+        'build_flavor': 'reftest',
+        'mach_command': 'reftest',
+        'kwargs': {'tests': None},
+        'task_regex': ['(opt|debug)-reftest-qr($|.*(-1|[^0-9])$)',
+                       'test-verify-gpu($|.*(-1|[^0-9])$)'],
+    },
     'robocop': {
         'mach_command': 'robocop',
         'kwargs': {'test_paths': None},
