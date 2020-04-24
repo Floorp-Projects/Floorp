@@ -422,6 +422,12 @@ class nsTArray_base {
   // the same free().
   template <class XAlloc, class XRelocationStrategy>
   friend class nsTArray_base;
+
+  // Needed for AppendElements from an array with a different allocator, which
+  // calls ShiftData.
+  template <class E, class XAlloc>
+  friend class nsTArray_Impl;
+
   friend void Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity,
                                          size_t aElemSize);
   friend void Gecko_ClearPODTArray(void* aTArray, size_t aElementSize,
@@ -2588,23 +2594,25 @@ template <typename E, class Alloc>
 template <class Item, class Allocator, typename ActualAlloc>
 auto nsTArray_Impl<E, Alloc>::AppendElements(
     nsTArray_Impl<Item, Allocator>&& aArray) -> elem_type* {
-  MOZ_ASSERT(&aArray != this, "argument must be different aArray");
+  if constexpr (std::is_same_v<Alloc, Allocator>) {
+    MOZ_ASSERT(&aArray != this, "argument must be different aArray");
+  }
   if (Length() == 0) {
-    SwapElements<ActualAlloc>(aArray);
+    SwapElements(aArray);
     return Elements();
   }
 
   index_type len = Length();
   index_type otherLen = aArray.Length();
-  if (!Alloc::Successful(this->template ExtendCapacity<Alloc>(
+  if (!ActualAlloc::Successful(this->template ExtendCapacity<ActualAlloc>(
           len, otherLen, sizeof(elem_type)))) {
     return nullptr;
   }
   relocation_type::RelocateNonOverlappingRegion(
       Elements() + len, aArray.Elements(), otherLen, sizeof(elem_type));
   this->IncrementLength(otherLen);
-  aArray.template ShiftData<Alloc>(0, otherLen, 0, sizeof(elem_type),
-                                   MOZ_ALIGNOF(elem_type));
+  aArray.template ShiftData<ActualAlloc>(0, otherLen, 0, sizeof(elem_type),
+                                         MOZ_ALIGNOF(elem_type));
   return Elements() + len;
 }
 
