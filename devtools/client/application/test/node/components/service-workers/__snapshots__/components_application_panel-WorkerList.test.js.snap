@@ -16,12 +16,15 @@ Array [
     <ul>
       <Worker
         isDebugEnabled={true}
+        key="id-worker-1-example-0"
         worker={
           Object {
             "active": true,
+            "id": "id-worker-1-example",
             "name": "worker1",
             "registrationFront": "",
             "scope": "SCOPE 123",
+            "state": 0,
             "url": "http://example.com/worker.js",
             "workerTargetFront": "",
           }
@@ -62,12 +65,15 @@ Array [
     <ul>
       <Worker
         isDebugEnabled={true}
+        key="id-worker-1-example-0"
         worker={
           Object {
             "active": true,
+            "id": "id-worker-1-example",
             "name": "worker1",
             "registrationFront": "",
             "scope": "SCOPE 123",
+            "state": 0,
             "url": "http://example.com/worker.js",
             "workerTargetFront": "",
           }
@@ -75,12 +81,15 @@ Array [
       />
       <Worker
         isDebugEnabled={true}
+        key="id-worker-2-example-0"
         worker={
           Object {
             "active": false,
+            "id": "id-worker-2-example",
             "name": "worker2",
             "registrationFront": "",
             "scope": "SCOPE 456",
+            "state": 0,
             "url": "http://example.com/worker.js",
             "workerTargetFront": "",
           }
@@ -88,12 +97,15 @@ Array [
       />
       <Worker
         isDebugEnabled={true}
+        key="id-worker-3-example-0"
         worker={
           Object {
             "active": true,
+            "id": "id-worker-3-example",
             "name": "worker3",
             "registrationFront": "",
             "scope": "SCOPE 789",
+            "state": 0,
             "url": "http://example.com/worker.js",
             "workerTargetFront": "",
           }
