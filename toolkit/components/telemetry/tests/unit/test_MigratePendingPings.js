@@ -109,8 +109,38 @@ add_task(async function test_migrateUnsentPings() {
       "The ping should not be in the Pending Pings directory anymore."
     );
   }
+});
 
+add_task(async function test_migrateIncompatiblePing() {
+  const APP_DATA_DIR = Services.dirsvc.get("UAppData", Ci.nsIFile).path;
+  const APPDATA_PINGS_DIR = OS.Path.join(APP_DATA_DIR, PENDING_PING_DIR_NAME);
+
+  // Create a ping incompatible with migration outside of the user profile.
+  const pingPath = OS.Path.join(APPDATA_PINGS_DIR, "incompatible.json");
+  await TelemetryStorage.savePingToFile({ incom: "patible" }, pingPath, true);
+
+  // Ensure the pending ping list is empty.
+  await TelemetryStorage.testClearPendingPings();
+  TelemetryStorage.reset();
+
+  // Start the migration from TelemetryStorage.
+  let pendingPings = await TelemetryStorage.loadPendingPingList();
+  Assert.equal(
+    pendingPings.length,
+    0,
+    "TelemetryStorage must have migrated no pings." +
+      JSON.stringify(pendingPings)
+  );
+
+  Assert.ok(
+    !(await OS.File.exists(pingPath)),
+    "The incompatible ping must have been deleted by the migration"
+  );
+});
+
+add_task(async function teardown() {
   // Delete the UAppData directory and make sure nothing breaks.
+  const APP_DATA_DIR = Services.dirsvc.get("UAppData", Ci.nsIFile).path;
   await OS.File.removeDir(APP_DATA_DIR, { ignorePermissions: true });
   Assert.ok(
     !(await OS.File.exists(APP_DATA_DIR)),
