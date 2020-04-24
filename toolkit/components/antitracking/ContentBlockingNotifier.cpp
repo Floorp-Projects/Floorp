@@ -192,39 +192,18 @@ void ReportBlockingToConsole(nsIChannel* aChannel, nsIURI* aURI,
                              uint32_t aRejectedReason) {
   MOZ_ASSERT(aChannel && aURI);
 
-  uint64_t windowID;
+  // Get the top-level window ID from the top-level BrowsingContext
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
-  if (XRE_IsParentProcess()) {
-    // Get the top-level window ID from the top-level BrowsingContext
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-    RefPtr<dom::BrowsingContext> bc;
-    loadInfo->GetBrowsingContext(getter_AddRefs(bc));
+  RefPtr<dom::BrowsingContext> bc;
+  loadInfo->GetBrowsingContext(getter_AddRefs(bc));
 
-    if (!bc || bc->IsDiscarded()) {
-      return;
-    }
-
-    bc = bc->Top();
-    RefPtr<dom::WindowGlobalParent> wgp =
-        bc->Canonical()->GetCurrentWindowGlobal();
-    if (!wgp) {
-      return;
-    }
-
-    windowID = wgp->InnerWindowId();
-  } else {
-    nsresult rv;
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel, &rv);
-
-    if (!httpChannel) {
-      return;
-    }
-
-    rv = httpChannel->GetTopLevelContentWindowId(&windowID);
-    if (NS_FAILED(rv) || !windowID) {
-      windowID = nsContentUtils::GetInnerWindowID(httpChannel);
-    }
+  BrowsingContext* top = bc ? bc->Top() : nullptr;
+  if (!top) {
+    return;
   }
+
+  uint64_t windowID = top->GetCurrentInnerWindowId();
 
   ReportBlockingToConsole(windowID, aURI, aRejectedReason);
 }
