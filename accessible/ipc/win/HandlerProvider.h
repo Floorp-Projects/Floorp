@@ -8,6 +8,7 @@
 #define mozilla_a11y_HandlerProvider_h
 
 #include "mozilla/a11y/AccessibleHandler.h"
+#include "mozilla/a11y/HandlerDataCleanup.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/mscom/IHandlerProvider.h"
@@ -80,6 +81,14 @@ class HandlerProvider final : public IGeckoBackChannel,
                            DynamicIA2Data* aOutDynamicData);
   static void CleanupStaticIA2Data(StaticIA2Data& aData);
   bool IsTargetInterfaceCacheable();
+
+  /**
+   * Build the payload for later marshaling.
+   * This is intended to be used during a bulk fetch operation and must only be
+   * called from the main thread.
+   */
+  void PrebuildPayload(NotNull<mscom::IInterceptor*> aInterceptor);
+
   // Replace a raw object from the main thread with a wrapped, intercepted
   // object suitable for calling from the MTA.
   // The reference to the original object is adopted; i.e. you should not
@@ -104,6 +113,21 @@ class HandlerProvider final : public IGeckoBackChannel,
       mTargetUnk;  // Constant, main thread only
   UniquePtr<mscom::StructToStream> mSerializer;
   RefPtr<IUnknown> mFastMarshalUnk;
+
+  struct IA2PayloadDeleter {
+    void operator()(IA2Payload* aPayload) {
+      CleanupStaticIA2Data(aPayload->mStaticData);
+      // No need to zero memory, since aPayload is being deleted.
+      CleanupDynamicIA2Data(aPayload->mDynamicData, false);
+      delete aPayload;
+    }
+  };
+  using IA2PayloadPtr = UniquePtr<IA2Payload, IA2PayloadDeleter>;
+
+  // Used when the payload is built prior to marshaling the object by a bulk
+  // fetch operation. See prebuildPayload().
+  IA2PayloadPtr mPayload;
+  Mutex mPayloadMutex;  // Protects mPayload
 };
 
 }  // namespace a11y
