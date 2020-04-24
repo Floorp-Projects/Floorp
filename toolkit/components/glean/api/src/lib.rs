@@ -10,6 +10,9 @@
 //! assert!(glean::is_upload_enabled())
 //! ```
 
+// Re-exporting for later use in generated code.
+pub extern crate once_cell;
+
 pub mod metrics;
 
 /// Run a closure with a mutable reference to the locked global Glean object.
