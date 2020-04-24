@@ -591,9 +591,9 @@ class nsTArray_base {
   // null.  If the array is empty, then this will point to sEmptyTArrayHeader.
   Header* mHdr;
 
-  Header* Hdr() const { return mHdr; }
-  Header** PtrToHdr() { return &mHdr; }
-  static Header* EmptyHdr() { return &sEmptyTArrayHeader; }
+  Header* Hdr() const MOZ_NONNULL_RETURN { return mHdr; }
+  Header** PtrToHdr() MOZ_NONNULL_RETURN { return &mHdr; }
+  static Header* EmptyHdr() MOZ_NONNULL_RETURN { return &sEmptyTArrayHeader; }
 };
 
 namespace detail {
@@ -1188,12 +1188,14 @@ class nsTArray_Impl
   // This method provides direct access to the array elements.
   // @return A pointer to the first element of the array.  If the array is
   // empty, then this pointer must not be dereferenced.
-  elem_type* Elements() { return reinterpret_cast<elem_type*>(Hdr() + 1); }
+  elem_type* Elements() MOZ_NONNULL_RETURN {
+    return reinterpret_cast<elem_type*>(Hdr() + 1);
+  }
 
   // This method provides direct, readonly access to the array elements.
   // @return A pointer to the first element of the array.  If the array is
   // empty, then this pointer must not be dereferenced.
-  const elem_type* Elements() const {
+  const elem_type* Elements() const MOZ_NONNULL_RETURN {
     return reinterpret_cast<const elem_type*>(Hdr() + 1);
   }
 
@@ -2706,7 +2708,8 @@ class nsTArray : public nsTArray_Impl<E, nsTArrayInfallibleAllocator> {
   using base_type::SetLength;
 
   template <class... Args>
-  typename base_type::elem_type* EmplaceBack(Args&&... aArgs) {
+  MOZ_NONNULL_RETURN typename base_type::elem_type* EmplaceBack(
+      Args&&... aArgs) {
     return this
         ->template EmplaceBackInternal<nsTArrayInfallibleAllocator, Args...>(
             std::forward<Args>(aArgs)...);
