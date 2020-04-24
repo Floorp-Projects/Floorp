@@ -59,6 +59,7 @@ class AdsTelemetry(private val metrics: MetricController) : BaseSearchTelemetry(
         internal const val ADS_MESSAGE_SESSION_URL_KEY = "url"
         @VisibleForTesting
         internal const val ADS_MESSAGE_DOCUMENT_URLS_KEY = "urls"
-        private const val ADS_MESSAGE_ID = "MozacBrowserAds"
+        @VisibleForTesting
+        internal const val ADS_MESSAGE_ID = "MozacBrowserAds"
     }
 }

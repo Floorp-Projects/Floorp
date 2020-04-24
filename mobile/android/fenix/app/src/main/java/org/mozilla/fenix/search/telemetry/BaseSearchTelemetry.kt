@@ -91,7 +91,7 @@ abstract class BaseSearchTelemetry {
         return null
     }
 
-    protected fun installWebExtension(
+    internal fun installWebExtension(
         engine: Engine,
         store: BrowserStore,
         extensionInfo: ExtensionInfo
@@ -138,8 +138,10 @@ abstract class BaseSearchTelemetry {
     /**
      * This method is used to process any valid json message coming from a web-extension
      */
-    protected abstract fun processMessage(message: JSONObject)
+    @VisibleForTesting
+    internal abstract fun processMessage(message: JSONObject)
 
+    @VisibleForTesting
     internal inner class SearchTelemetryMessageHandler : MessageHandler {
 
         override fun onMessage(message: Any, source: EngineSession?): Any? {

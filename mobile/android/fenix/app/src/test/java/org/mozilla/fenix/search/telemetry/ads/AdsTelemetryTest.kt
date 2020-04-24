@@ -19,9 +19,11 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.search.telemetry.ExtensionInfo
 import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry.Companion.ADS_EXTENSION_ID
 import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry.Companion.ADS_EXTENSION_RESOURCE_URL
 import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry.Companion.ADS_MESSAGE_DOCUMENT_URLS_KEY
+import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry.Companion.ADS_MESSAGE_ID
 import org.mozilla.fenix.search.telemetry.ads.AdsTelemetry.Companion.ADS_MESSAGE_SESSION_URL_KEY
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -29,12 +31,10 @@ class AdsTelemetryTest {
 
     private val metrics: MetricController = mockk(relaxed = true)
     private lateinit var ads: AdsTelemetry
-    private lateinit var adsMessageHandler: AdsTelemetry.AdsTelemetryContentMessageHandler
 
     @Before
     fun setUp() {
         ads = spyk(AdsTelemetry(metrics))
-        adsMessageHandler = ads.AdsTelemetryContentMessageHandler()
     }
 
     @Test
@@ -71,22 +71,18 @@ class AdsTelemetryTest {
     fun install() {
         val engine = mockk<Engine>(relaxed = true)
         val store = mockk<BrowserStore>(relaxed = true)
+        val extensionInfo = slot<ExtensionInfo>()
 
         ads.install(engine, store)
 
-        verify {
-            engine.installWebExtension(
-                id = ADS_EXTENSION_ID,
-                url = ADS_EXTENSION_RESOURCE_URL,
-                allowContentMessaging = true,
-                onSuccess = any(),
-                onError = any()
-            )
-        }
+        verify { ads.installWebExtension(engine, store, capture(extensionInfo)) }
+        assertEquals(ADS_EXTENSION_ID, extensionInfo.captured.id)
+        assertEquals(ADS_EXTENSION_RESOURCE_URL, extensionInfo.captured.resourceUrl)
+        assertEquals(ADS_MESSAGE_ID, extensionInfo.captured.messageId)
     }
 
     @Test
-    fun `message handler processes the document urls and reports an ad`() {
+    fun `process the document urls and reports an ad`() {
         val metricEvent = slot<Event.SearchWithAds>()
         val first = "https://www.google.com/aclk"
         val second = "https://www.google.com/aaa"
@@ -97,14 +93,14 @@ class AdsTelemetryTest {
         message.put(ADS_MESSAGE_DOCUMENT_URLS_KEY, array)
         message.put(ADS_MESSAGE_SESSION_URL_KEY, "https://www.google.com/search?q=aaa")
 
-        assertEquals("", adsMessageHandler.onMessage(message, mockk()))
+        ads.processMessage(message)
 
         verify { metrics.track(capture(metricEvent)) }
         assertEquals(ads.providerList[0].name, metricEvent.captured.label)
     }
 
     @Test
-    fun `message handler processes the document urls and doesn't find ads`() {
+    fun `process the document urls and don't find ads`() {
         val first = "https://www.google.com/aaaaaa"
         val second = "https://www.google.com/aaa"
         val array = JSONArray()
@@ -114,15 +110,8 @@ class AdsTelemetryTest {
         message.put(ADS_MESSAGE_DOCUMENT_URLS_KEY, array)
         message.put(ADS_MESSAGE_SESSION_URL_KEY, "https://www.google.com/search?q=aaa")
 
-        assertEquals("", adsMessageHandler.onMessage(message, mockk()))
+        ads.processMessage(message)
 
         verify(exactly = 0) { metrics.track(any()) }
-    }
-
-    @Test(expected = IllegalStateException::class)
-    fun `message handler finds no json object`() {
-        val message = "message"
-
-        adsMessageHandler.onMessage(message, mockk())
     }
 }

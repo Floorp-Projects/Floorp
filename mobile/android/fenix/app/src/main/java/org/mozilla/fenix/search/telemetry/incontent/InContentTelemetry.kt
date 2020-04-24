@@ -30,7 +30,7 @@ class InContentTelemetry(private val metrics: MetricController) : BaseSearchTele
     override fun processMessage(message: JSONObject) {
         val cookies = getMessageList<JSONObject>(
             message,
-            COOKIES_MESSAGE_DOCUMENT_URLS_KEY
+            COOKIES_MESSAGE_LIST_KEY
         )
         trackPartnerUrlTypeMetric(message.getString(COOKIES_MESSAGE_SESSION_URL_KEY), cookies)
     }
@@ -138,8 +138,9 @@ class InContentTelemetry(private val metrics: MetricController) : BaseSearchTele
         @VisibleForTesting
         internal const val COOKIES_MESSAGE_SESSION_URL_KEY = "url"
         @VisibleForTesting
-        internal const val COOKIES_MESSAGE_DOCUMENT_URLS_KEY = "cookies"
-        private const val COOKIES_MESSAGE_ID = "BrowserCookiesMessage"
+        internal const val COOKIES_MESSAGE_LIST_KEY = "cookies"
+        @VisibleForTesting
+        internal const val COOKIES_MESSAGE_ID = "BrowserCookiesMessage"
 
         private const val SEARCH_TYPE_ORGANIC = "organic"
         private const val SEARCH_TYPE_SAP = "sap"
