@@ -8,11 +8,6 @@
 
 "use strict";
 
-const modernConfig = Services.prefs.getBoolPref(
-  SearchUtils.BROWSER_SEARCH_PREF + "modernConfig",
-  false
-);
-
 const SEARCH_PREF = SearchUtils.BROWSER_SEARCH_PREF;
 
 const EXPECTED_ORDER = [
@@ -41,7 +36,9 @@ add_task(async function setup() {
   );
   // Even though we don't use the distro bits to begin with, we still have
   // to set the pref now, as this gets cached.
-  Services.prefs.getDefaultBranch("distribution.").setCharPref("id", "test");
+  if (!gModernConfig) {
+    Services.prefs.getDefaultBranch("distribution.").setCharPref("id", "test");
+  }
 });
 
 async function checkOrder(type, expectedOrder) {
@@ -80,11 +77,14 @@ add_task(async function test_engine_sort_with_non_builtins_sort() {
   const expected = [...EXPECTED_ORDER];
   // For modern config, all the engines in this config specify an order hint,
   // so our added engine gets sorted to the end.
-  expected.splice(modernConfig ? EXPECTED_ORDER.length : 5, 0, "nonbuiltin1");
+  expected.splice(gModernConfig ? EXPECTED_ORDER.length : 5, 0, "nonbuiltin1");
   await checkOrder("getEngines", expected);
 });
 
 add_task(async function test_engine_sort_with_distro() {
+  if (gModernConfig) {
+    return;
+  }
   Services.prefs.setCharPref(
     SearchUtils.BROWSER_SEARCH_PREF + "order.extra.bar",
     "engine-pref"
@@ -125,7 +125,7 @@ add_task(async function test_engine_sort_with_distro() {
 
   // For modern config, all the engines in this config specify an order hint,
   // so our added engine gets sorted to the end.
-  expected.splice(modernConfig ? expected.length : 5, 0, "nonbuiltin1");
+  expected.splice(5, 0, "nonbuiltin1");
 
   await checkOrder("getEngines", expected);
 
@@ -136,7 +136,7 @@ add_task(async function test_engine_sort_with_distro() {
 });
 
 add_task(async function test_engine_sort_with_locale() {
-  if (!modernConfig) {
+  if (!gModernConfig) {
     return;
   }
   Services.locale.availableLocales = ["gd"];
