@@ -4009,6 +4009,16 @@ mozilla::ipc::IPCResult ContentChild::RecvCommitWindowContextTransaction(
 
 mozilla::ipc::IPCResult ContentChild::RecvCreateWindowContext(
     WindowContext::IPCInitializer&& aInit) {
+  RefPtr<BrowsingContext> bc = BrowsingContext::Get(aInit.mBrowsingContextId);
+  if (!bc) {
+    // Handle this case by ignoring the request, as bc must be in the process of
+    // being discarded.
+    // In the future it would be nice to avoid sending this message to the child
+    // at all.
+    NS_WARNING("Attempt to attach WindowContext to discarded parent");
+    return IPC_OK();
+  }
+
   WindowContext::CreateFromIPC(std::move(aInit));
   return IPC_OK();
 }
