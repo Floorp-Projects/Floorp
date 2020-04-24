@@ -256,7 +256,7 @@ TEST(TArray, test_object_array)
   size_t i;
   for (i = 0; i < ArrayLength(kdata); ++i) {
     char x[] = {kdata[i], '\0'};
-    ASSERT_TRUE(objArray.AppendElement(Object(x, i)));
+    objArray.AppendElement(Object(x, i));
   }
   for (i = 0; i < ArrayLength(kdata); ++i) {
     ASSERT_EQ(objArray[i].Str()[0], kdata[i]);
@@ -371,7 +371,7 @@ TEST(TArray, test_move_array)
   nsTArray<Countable> countableArray;
   uint32_t i;
   for (i = 0; i < 4; ++i) {
-    ASSERT_TRUE(countableArray.AppendElement(Countable()));
+    countableArray.AppendElement(Countable());
   }
 
   ASSERT_EQ(Countable::Count(), 8);
@@ -417,7 +417,7 @@ TEST(TArray, test_move_array)
 
   nsTArray<Moveable> moveableArray;
   for (i = 0; i < 4; ++i) {
-    ASSERT_TRUE(moveableArray.AppendElement(Moveable()));
+    moveableArray.AppendElement(Moveable());
   }
 
   ASSERT_EQ(Moveable::Count(), 4);
@@ -463,7 +463,7 @@ TEST(TArray, test_move_array)
 
   AutoTArray<Moveable, 8> moveableAutoArray;
   for (uint32_t i = 0; i < 4; ++i) {
-    ASSERT_TRUE(moveableAutoArray.AppendElement(Moveable()));
+    moveableAutoArray.AppendElement(Moveable());
   }
 
   ASSERT_EQ(Moveable::Count(), 12);
@@ -668,7 +668,7 @@ TEST(TArray, test_string_array)
   for (i = 0; i < ArrayLength(kdata); ++i) {
     nsCString str;
     str.Assign(kdata[i]);
-    ASSERT_TRUE(strArray.AppendElement(str));
+    strArray.AppendElement(str);
   }
   for (i = 0; i < ArrayLength(kdata); ++i) {
     ASSERT_EQ(strArray[i].CharAt(0), kdata[i]);
@@ -676,7 +676,7 @@ TEST(TArray, test_string_array)
 
   const char kextra[] = "foo bar";
   size_t oldLen = strArray.Length();
-  ASSERT_TRUE(strArray.AppendElement(kextra));
+  strArray.AppendElement(kextra);
   strArray.RemoveElement(kextra);
   ASSERT_EQ(oldLen, strArray.Length());
 

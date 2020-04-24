@@ -783,9 +783,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
                                                    aIsPrintPreview);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    NS_ENSURE_TRUE(
-        printData->mPrintDocList.AppendElement(printData->mPrintObject.get()),
-        NS_ERROR_OUT_OF_MEMORY);
+    printData->mPrintDocList.AppendElement(printData->mPrintObject.get());
 
     printData->mIsParentAFrameSet = IsParentAFrameSet(docShell);
     printData->mPrintObject->mFrameType =
