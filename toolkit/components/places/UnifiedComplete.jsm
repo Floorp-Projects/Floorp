@@ -592,20 +592,6 @@ function makeKeyForMatch(match) {
 }
 
 /**
- * Returns whether the passed in string looks like a url.
- */
-function looksLikeUrl(str, ignoreAlphanumericHosts = false) {
-  // Single word including special chars.
-  return (
-    !REGEXP_SPACES.test(str) &&
-    (["/", "@", ":", "["].some(c => str.includes(c)) ||
-      (ignoreAlphanumericHosts
-        ? /^([\[\]A-Z0-9-]+\.){3,}[^.]+$/i.test(str)
-        : str.includes(".")))
-  );
-}
-
-/**
  * Returns the portion of a string starting at the index where another string
  * ends.
  *
@@ -1389,15 +1375,20 @@ Search.prototype = {
       // but isn't in the whitelist.
       let matched = await this._matchUnknownUrl();
       if (matched) {
-        // Since we can't tell if this is a real URL and
-        // whether the user wants to visit or search for it,
-        // we always provide an alternative searchengine match.
+        // Since we can't tell if this is a real URL and whether the user wants
+        // to visit or search for it, we provide an alternative searchengine
+        // match if the string looks like an alphanumeric origin or an e-mail.
+        let str = this._originalSearchString;
         try {
-          new URL(this._originalSearchString);
+          new URL(str);
         } catch (ex) {
           if (
             UrlbarPrefs.get("keyword.enabled") &&
-            !looksLikeUrl(this._originalSearchString, true)
+            (UrlbarTokenizer.looksLikeOrigin(str, {
+              noIp: true,
+              noPort: true,
+            }) ||
+              UrlbarTokenizer.REGEXP_COMMON_EMAIL.test(str))
           ) {
             this._addingHeuristicResult = false;
             await this._matchCurrentSearchEngine();
