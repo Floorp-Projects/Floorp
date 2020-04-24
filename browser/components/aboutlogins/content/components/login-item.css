@@ -300,7 +300,6 @@ input[name="password"] {
   border: 1px solid var(--in-content-border-color);
   box-shadow: 0 2px 8px 0 var(--grey-90-a10);
   font-size: .9em;
-  font-weight: 300;
   line-height: 1.4;
   padding-block: 12px;
   padding-inline: 64px 32px;
