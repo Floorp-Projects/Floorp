@@ -44,7 +44,7 @@ function onLoadPermission(uri, principal) {
       initRow(i);
     }
     Services.obs.addObserver(permissionObserver, "perm-changed");
-    onUnloadRegistry.push(onUnloadPermission);
+    window.addEventListener("unload", onUnloadPermission);
     permTab.hidden = false;
   } else {
     permTab.hidden = true;
