@@ -604,12 +604,12 @@ DevTools.prototype = {
     this.emit("toolbox-created", toolbox);
 
     toolbox.once("destroy", () => {
-      this.emit("toolbox-destroy", target);
+      this.emit("toolbox-destroy", toolbox);
     });
 
     toolbox.once("destroyed", () => {
       this._toolboxes.delete(target);
-      this.emit("toolbox-destroyed", target);
+      this.emit("toolbox-destroyed", toolbox);
     });
     // If the document navigates to another process, the current target will be
     // destroyed in favor of a new one. So acknowledge this swap here.

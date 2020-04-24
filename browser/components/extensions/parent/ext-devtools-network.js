@@ -23,7 +23,7 @@ this.devtools_network = class extends ExtensionAPI {
                 fire.async(data.url);
               };
 
-              let targetPromise = getDevToolsTargetForContext(context);
+              let targetPromise = context.getCurrentDevToolsTarget();
               targetPromise.then(target => {
                 target.on("navigate", listener);
               });
