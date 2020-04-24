@@ -13,7 +13,7 @@
 "use strict";
 
 add_task(async function() {
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs", "<all_urls>"],
     },
@@ -34,7 +34,7 @@ add_task(async function() {
       }
 
       try {
-        let tab = await browser.tabs.create({url: URL});
+        const tab = await browser.tabs.create({url: URL});
         await awaitLoad(tab.id);
 
         await browser.tabs.reload(tab.id, {bypassCache: false});
@@ -48,7 +48,7 @@ add_task(async function() {
 
         [textContent] = await browser.tabs.executeScript(tab.id, {code: "document.body.textContent"});
 
-        let [pragma, cacheControl] = textContent.split(":");
+        const [pragma, cacheControl] = textContent.split(":");
         browser.test.assertEq("no-cache", pragma, "`pragma` should be set to `no-cache` when bypassCache is true");
         browser.test.assertEq("no-cache", cacheControl, "`cacheControl` should be set to `no-cache` when bypassCache is true");
 

@@ -14,9 +14,9 @@
 
 add_task(async function testTabEvents() {
   async function background() {
-    let events = [];
+    const events = [];
     let eventPromise;
-    let checkEvents = () => {
+    const checkEvents = () => {
       if (eventPromise && events.length >= eventPromise.names.length) {
         eventPromise.resolve();
       }
@@ -56,7 +56,7 @@ add_task(async function testTabEvents() {
       });
 
       browser.test.assertEq(names.length, events.length, "Got expected number of events");
-      for (let [i, name] of names.entries()) {
+      for (const [i, name] of names.entries()) {
         browser.test.assertEq(name, i in events && events[i].type,
                               `Got expected ${name} event`);
       }
@@ -65,17 +65,17 @@ add_task(async function testTabEvents() {
 
     try {
       browser.test.log("Create tab");
-      let tab = await browser.tabs.create({url: "about:blank"});
-      let oldIndex = tab.index;
+      const tab = await browser.tabs.create({url: "about:blank"});
+      const oldIndex = tab.index;
 
-      let [created] = await expectEvents(["onCreated"]);
+      const [created] = await expectEvents(["onCreated"]);
       browser.test.assertEq(tab.id, created.tab.id, "Got expected tab ID");
       browser.test.assertEq(oldIndex, created.tab.index, "Got expected tab index");
 
 
       browser.test.log("Remove tab");
       await browser.tabs.remove(tab.id);
-      let [removed] = await expectEvents(["onRemoved"]);
+      const [removed] = await expectEvents(["onRemoved"]);
 
       browser.test.assertEq(tab.id, removed.tabId, "Expected removed tab ID");
       browser.test.assertEq(tab.windowId, removed.windowId, "Expected removed tab window ID");
@@ -89,7 +89,7 @@ add_task(async function testTabEvents() {
     }
   }
 
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
       applications: {
@@ -123,7 +123,7 @@ add_task(async function testTabRemovalEvent() {
     chrome.tabs.onRemoved.addListener((tabId, info) => {
       browser.test.log("Make sure the removed tab is not available in the tabs.query callback.");
       chrome.tabs.query({}, tabs => {
-        for (let tab of tabs) {
+        for (const tab of tabs) {
           browser.test.assertTrue(tab.id != tabId, "Tab query should not include removed tabId");
         }
         browser.test.notifyPass("tabs-events");
@@ -131,8 +131,8 @@ add_task(async function testTabRemovalEvent() {
     });
 
     try {
-      let url = "http://example.com/mochitest/mobile/android/components/extensions/test/mochitest/context.html";
-      let tab = await browser.tabs.create({url: url});
+      const url = "http://example.com/mochitest/mobile/android/components/extensions/test/mochitest/context.html";
+      const tab = await browser.tabs.create({url: url});
       await awaitLoad(tab.id);
 
       await browser.tabs.remove(tab.id);
@@ -142,7 +142,7 @@ add_task(async function testTabRemovalEvent() {
     }
   }
 
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
       applications: {
@@ -232,7 +232,7 @@ add_task(async function testTabActivationEvent() {
     }
   }
 
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
     },

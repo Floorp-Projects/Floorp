@@ -13,10 +13,10 @@
 "use strict";
 
 add_task(async function testExecuteScript() {
-  let win = window.open("http://mochi.test:8888/");
+  const win = window.open("http://mochi.test:8888/");
 
   async function background() {
-    let tasks = [
+    const tasks = [
       {
         background: "rgba(0, 0, 0, 0)",
         foreground: "rgb(0, 113, 4)",
@@ -65,12 +65,12 @@ add_task(async function testExecuteScript() {
     ];
 
     function checkCSS() {
-      let computedStyle = window.getComputedStyle(document.body);
+      const computedStyle = window.getComputedStyle(document.body);
       return [computedStyle.backgroundColor, computedStyle.color];
     }
 
     try {
-      for (let {promise, background, foreground} of tasks) {
+      for (const {promise, background, foreground} of tasks) {
         let result = await promise();
 
         browser.test.assertEq(undefined, result, "Expected callback result");
@@ -90,7 +90,7 @@ add_task(async function testExecuteScript() {
     }
   }
 
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["http://mochi.test/"],
     },
