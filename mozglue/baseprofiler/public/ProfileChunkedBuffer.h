@@ -68,7 +68,7 @@ class InChunkPointer {
   // Compute the current position in the global range.
   // 0 if null (including if we're reached the end).
   [[nodiscard]] ProfileBufferIndex GlobalRangePosition() const {
-    if (!mChunk) {
+    if (IsNull()) {
       return 0;
     }
     return mChunk->RangeStart() + mOffsetInChunk;
@@ -82,7 +82,7 @@ class InChunkPointer {
     if (aPosition == 0) {
       // Special position '0', just stay where we are.
       // Success if this position is already valid.
-      return !!mChunk;
+      return !IsNull();
     }
     for (;;) {
       ProfileBufferIndex currentPosition = GlobalRangePosition();
@@ -112,7 +112,7 @@ class InChunkPointer {
       }
       // Position is after this chunk, try next chunk.
       GoToNextChunk();
-      if (!mChunk) {
+      if (IsNull()) {
         return false;
       }
       // Skip whatever block tail there is, we don't allow pointing in the
@@ -122,7 +122,7 @@ class InChunkPointer {
   }
 
   [[nodiscard]] Byte ReadByte() {
-    MOZ_ASSERT(!!mChunk);
+    MOZ_ASSERT(!IsNull());
     MOZ_ASSERT(mOffsetInChunk < mChunk->OffsetPastLastBlock());
     Byte byte = mChunk->ByteAt(mOffsetInChunk);
     if (MOZ_UNLIKELY(++mOffsetInChunk == mChunk->OffsetPastLastBlock())) {
@@ -137,12 +137,12 @@ class InChunkPointer {
   // available to read! (EntryReader() below may gracefully fail.)
   [[nodiscard]] Length ReadEntrySize() {
     ULEB128Reader<Length> reader;
-    if (!mChunk) {
+    if (IsNull()) {
       return 0;
     }
     for (;;) {
       const bool isComplete = reader.FeedByteIsComplete(ReadByte());
-      if (MOZ_UNLIKELY(!mChunk)) {
+      if (MOZ_UNLIKELY(IsNull())) {
         // End of chunks, so there's no actual entry after this anyway.
         return 0;
       }
@@ -157,14 +157,14 @@ class InChunkPointer {
   }
 
   InChunkPointer& operator+=(Length aLength) {
-    MOZ_ASSERT(!!mChunk);
+    MOZ_ASSERT(!IsNull());
     mOffsetInChunk += aLength;
     Adjust();
     return *this;
   }
 
   [[nodiscard]] ProfileBufferEntryReader EntryReader(Length aLength) {
-    if (!mChunk || aLength == 0) {
+    if (IsNull() || aLength == 0) {
       return ProfileBufferEntryReader();
     }
 
@@ -195,7 +195,7 @@ class InChunkPointer {
 
     // We need to go to the next chunk for the 2nd part of this block.
     GoToNextChunk();
-    if (!mChunk) {
+    if (IsNull()) {
       return ProfileBufferEntryReader();
     }
 
@@ -218,32 +218,27 @@ class InChunkPointer {
             GlobalRangePosition()));
   }
 
-  explicit operator bool() const { return !!mChunk; }
-
-  [[nodiscard]] bool operator!() const { return !mChunk; }
+  [[nodiscard]] bool IsNull() const { return !mChunk; }
 
   [[nodiscard]] bool operator==(const InChunkPointer& aOther) const {
-    if (!*this || !aOther) {
-      return !*this && !aOther;
+    if (IsNull() || aOther.IsNull()) {
+      return IsNull() && aOther.IsNull();
     }
     return mChunk == aOther.mChunk && mOffsetInChunk == aOther.mOffsetInChunk;
   }
 
   [[nodiscard]] bool operator!=(const InChunkPointer& aOther) const {
-    if (!*this || !aOther) {
-      return !!*this || !!aOther;
-    }
-    return mChunk != aOther.mChunk || mOffsetInChunk != aOther.mOffsetInChunk;
+    return !(*this == aOther);
   }
 
   [[nodiscard]] Byte operator*() const {
-    MOZ_ASSERT(!!mChunk);
+    MOZ_ASSERT(!IsNull());
     MOZ_ASSERT(mOffsetInChunk < mChunk->OffsetPastLastBlock());
     return mChunk->ByteAt(mOffsetInChunk);
   }
 
   InChunkPointer& operator++() {
-    MOZ_ASSERT(!!mChunk);
+    MOZ_ASSERT(!IsNull());
     MOZ_ASSERT(mOffsetInChunk < mChunk->OffsetPastLastBlock());
     if (MOZ_UNLIKELY(++mOffsetInChunk == mChunk->OffsetPastLastBlock())) {
       mOffsetInChunk = 0;
@@ -255,7 +250,7 @@ class InChunkPointer {
 
  private:
   void GoToNextChunk() {
-    MOZ_ASSERT(!!mChunk);
+    MOZ_ASSERT(!IsNull());
     const ProfileBufferIndex expectedNextRangeStart =
         mChunk->RangeStart() + mChunk->BufferBytes();
 
@@ -854,7 +849,7 @@ class ProfileChunkedBuffer {
                   "ReadEach callback must take ProfileBufferEntryReader& and "
                   "optionally a ProfileBufferBlockIndex");
     detail::InChunkPointer p{aChunks0, aChunks1};
-    while (p) {
+    while (!p.IsNull()) {
       // The position right before an entry size *is* a block index.
       const ProfileBufferBlockIndex blockIndex =
           ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
@@ -911,7 +906,7 @@ class ProfileChunkedBuffer {
         std::is_invocable_v<Callback, Maybe<ProfileBufferEntryReader>&&>,
         "ReadAt callback must take a Maybe<ProfileBufferEntryReader>&&");
     Maybe<ProfileBufferEntryReader> maybeEntryReader;
-    if (detail::InChunkPointer p{aChunks0, aChunks1}; p) {
+    if (detail::InChunkPointer p{aChunks0, aChunks1}; !p.IsNull()) {
       // If the pointer position is before the given position, try to advance.
       if (p.GlobalRangePosition() >=
               aMinimumBlockIndex.ConvertToProfileBufferIndex() ||
