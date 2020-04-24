@@ -15,6 +15,7 @@
 #include "mozilla/dom/PlaybackController.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/net/DocumentLoadListener.h"
 
 #include "nsGlobalWindowOuter.h"
 
@@ -522,6 +523,17 @@ MediaController* CanonicalBrowsingContext::GetMediaController() {
     mTabMediaController = new MediaController(Id());
   }
   return mTabMediaController;
+}
+
+void CanonicalBrowsingContext::StartDocumentLoad(
+    net::DocumentLoadListener* aLoad) {
+  mCurrentLoad = aLoad;
+}
+void CanonicalBrowsingContext::EndDocumentLoad(
+    net::DocumentLoadListener* aLoad) {
+  if (mCurrentLoad == aLoad) {
+    mCurrentLoad = nullptr;
+  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(CanonicalBrowsingContext, BrowsingContext,
