@@ -12,6 +12,7 @@ import os.path
 import re
 from ply import lex
 from ply import yacc
+import six
 from collections import namedtuple
 
 """A type conforms to the following pattern:
@@ -231,7 +232,7 @@ class NameMap(object):
         return self._d[key]
 
     def __iter__(self):
-        return self._d.itervalues()
+        return six.itervalues(self._d)
 
     def __contains__(self, key):
         return key in builtinMap or key in self._d
