@@ -117,6 +117,20 @@
       await p;
     }
 
+    async function testLinked() {
+      let p = waitForEvent(...stateChange(STATE_LINKED, false, false, "link1"));
+      getNode("link1").removeAttribute("href");
+      await p;
+
+      p = waitForEvent(...stateChange(STATE_LINKED, false, false, "link2"));
+      getNode("link2").removeAttribute("onclick");
+      await p;
+
+      p = waitForEvent(...stateChange(STATE_LINKED, false, true, "link3"));
+      getNode("link3").setAttribute("href", "http://example.com");
+      await p;
+    }
+
     async function doTests() {
       // Test opening details objects
       await openNode("detailsOpen", "summaryOpen", true);
@@ -158,6 +172,8 @@
                                EXT_STATE_ENABLED, true, false);
       await echoingStateChange("text1", "aria-disabled", "disabled", null,
                                EXT_STATE_ENABLED, true, true);
+
+      await testLinked();
 
       SimpleTest.finish();
     }
@@ -244,6 +260,10 @@
   <div id="sentinel"></div>
 
   <input id="text1">
+
+  <a id="link1" href="#">I am a link link</a>
+  <a id="link2" onclick="console.log('hi')">I am a link-ish link</a>
+  <a id="link3">I am a non-link link</a>
 
   <div id="eventdump"></div>
 </body>
