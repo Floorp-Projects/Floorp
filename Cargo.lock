@@ -1413,14 +1413,12 @@ checksum = "2fad85553e09a6f881f739c29f0b00b0f01357c743266d478b68951ce23285f3"
 name = "fog"
 version = "0.1.0"
 dependencies = [
- "glean",
  "glean-core",
  "log",
  "nserror",
  "nsstring",
  "once_cell",
  "static_prefs",
- "tempfile",
  "xpcom",
 ]
 
@@ -1810,16 +1808,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9a13b5bb12ab457c15400b43cbba5971df5c1898b6a9c30cc8c52cb01baa112"
 dependencies = [
  "gl_generator",
-]
-
-[[package]]
-name = "glean"
-version = "0.1.0"
-dependencies = [
- "glean-core",
- "log",
- "once_cell",
- "tempfile",
 ]
 
 [[package]]
