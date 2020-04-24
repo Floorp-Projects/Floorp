@@ -165,7 +165,7 @@ static bool test_basic_array(ElementType* data, size_t dataLen,
     return false;
 
   ary.Clear();
-  if (!ary.IsEmpty() || ary.Elements() == nullptr) return false;
+  if (!ary.IsEmpty()) return false;
   if (!(ary == nsTArray<ElementType>())) return false;
   if (ary == copy) return false;
   if (ary.SafeElementAt(0, extra) != extra ||
