@@ -2190,7 +2190,7 @@ impl<'alloc> Lexer<'alloc> {
     }
 
     fn slice_to_token_value(&mut self, s: &'alloc str) -> TokenValue {
-        let index = self.slices.borrow_mut().insert(s);
+        let index = self.slices.borrow_mut().push(s);
         TokenValue::Slice(index)
     }
 

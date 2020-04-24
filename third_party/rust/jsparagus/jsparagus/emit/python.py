@@ -6,7 +6,7 @@ import io
 import typing
 
 from ..grammar import ErrorSymbol, Nt, Some
-from ..actions import (Action, CheckNotOnNewLine, FilterFlag, FunCall,
+from ..actions import (Accept, Action, CheckNotOnNewLine, FilterFlag, FunCall,
                        Lookahead, OutputExpr, PopFlag, PushFlag, Reduce, Seq)
 from ..runtime import ErrorToken, ErrorTokenClass
 from ..ordered import OrderedSet
@@ -44,6 +44,9 @@ def write_python_parse_table(out: io.TextIOBase, parse_table: ParseTable) -> Non
                 out.write("{}del parser.stack[-{}:]\n".format(indent, act.replay + act.pop))
             out.write("{}parser.shift_list(replay, lexer)\n".format(indent))
             return indent, False
+        if isinstance(act, Accept):
+            out.write("{}raise ShiftAccept()\n".format(indent))
+            return indent, False
         if isinstance(act, Lookahead):
             raise ValueError("Unexpected Lookahead action")
         if isinstance(act, CheckNotOnNewLine):
@@ -80,9 +83,6 @@ def write_python_parse_table(out: io.TextIOBase, parse_table: ParseTable) -> Non
             if act.method == "id":
                 assert len(act.args) == 1
                 out.write("{}{} = {}\n".format(indent, act.set_to, next(map_with_offset(act.args))))
-            elif act.method == "accept":
-                assert len(act.args) == 0
-                out.write("{}raise ShiftAccept()\n".format(indent))
             else:
                 methods.add(act)
                 out.write("{}{} = parser.methods.{}({})\n".format(

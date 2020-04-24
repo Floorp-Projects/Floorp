@@ -82,6 +82,9 @@ pub struct SmooshGCThing {
 impl From<GCThing> for SmooshGCThing {
     fn from(item: GCThing) -> Self {
         match item {
+            GCThing::Function(_index) => {
+                panic!("Not yet implemented");
+            },
             GCThing::Scope(index) => Self {
                 kind: SmooshGCThingKind::ScopeIndex,
                 index: index.into(),

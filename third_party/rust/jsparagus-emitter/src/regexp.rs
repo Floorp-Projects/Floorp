@@ -40,7 +40,7 @@ impl RegExpList {
         Self { items: Vec::new() }
     }
 
-    pub fn append(&mut self, item: RegExpItem) -> RegExpIndex {
+    pub fn push(&mut self, item: RegExpItem) -> RegExpIndex {
         let index = self.items.len();
         self.items.push(item);
         RegExpIndex::new(index)

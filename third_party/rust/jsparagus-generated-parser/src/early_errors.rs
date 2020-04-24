@@ -6,6 +6,49 @@ use ast::arena;
 use ast::source_atom_set::{CommonSourceAtomSetIndices, SourceAtomSet, SourceAtomSetIndex};
 use std::collections::HashMap;
 
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum ControlKind {
+    Continue,
+
+    Break,
+}
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub struct ControlInfo {
+    pub label: Option<SourceAtomSetIndex>,
+    // The offset of the nested control in the source.
+    pub offset: usize,
+    pub kind: ControlKind,
+}
+
+impl ControlInfo {
+    pub fn new_continue(offset: usize, label: Option<SourceAtomSetIndex>) -> Self {
+        Self {
+            label,
+            kind: ControlKind::Continue,
+            offset,
+        }
+    }
+
+    pub fn new_break(offset: usize, label: Option<SourceAtomSetIndex>) -> Self {
+        Self {
+            label,
+            kind: ControlKind::Break,
+            offset,
+        }
+    }
+}
+
+pub struct BreakOrContinueIndex {
+    pub index: usize,
+}
+
+impl BreakOrContinueIndex {
+    pub fn new(index: usize) -> Self {
+        Self { index }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct DeclarationInfo {
     kind: DeclarationKind,
@@ -46,6 +89,13 @@ pub trait ParameterEarlyErrorsContext {
         name: SourceAtomSetIndex,
         offset: usize,
         atoms: &SourceAtomSet<'alloc>,
+    ) -> EarlyErrorsResult<'alloc>;
+}
+
+pub trait ControlEarlyErrorsContext {
+    fn on_unhandled_break_or_continue<'alloc>(
+        &self,
+        info: &ControlInfo,
     ) -> EarlyErrorsResult<'alloc>;
 }
 
@@ -910,6 +960,83 @@ impl VarEarlyErrorsContext for LexicalForBodyEarlyErrorsContext {
 }
 
 // ===========================================================================
+// LabelledStatements
+// https://tc39.es/ecma262/#sec-labelled-statements
+// ===========================================================================
+
+pub struct LabelledStatementEarlyErrorsContext {
+    name: SourceAtomSetIndex,
+    is_loop: bool,
+}
+
+impl LabelledStatementEarlyErrorsContext {
+    pub fn new(name: SourceAtomSetIndex, is_loop: bool) -> Self {
+        Self { name, is_loop }
+    }
+
+    pub fn check_duplicate_label<'alloc>(
+        &self,
+        inner_label_name: SourceAtomSetIndex,
+    ) -> EarlyErrorsResult<'alloc> {
+        // Static Semantics: ContainsDuplicateLabels
+        // https://tc39.es/ecma262/#sec-labelled-statements-static-semantics-containsduplicatelabels
+        //
+        //  LabelledStatement : LabelIdentifier : LabelledItem
+        //
+        // Static Semantics: Early Errors
+        // https://tc39.es/ecma262/#sec-scripts-static-semantics-early-errors
+        //
+        // * It is a Syntax Error if ContainsDuplicateLabels of StatementList with argument « » is
+        //   true.
+        //
+        // and
+        //
+        // https://tc39.es/ecma262/#sec-module-semantics-static-semantics-early-errors
+        //
+        // * It is a Syntax Error if ContainsDuplicateLabels of ModuleItemList with argument « » is
+        //   true.
+        //
+        // and
+        //
+        // https://tc39.es/ecma262/#sec-function-definitions-static-semantics-early-errors
+        // * It is a Syntax Error if ContainsDuplicateLabels of FunctionStatementList with argument
+        //   « » is true.
+        if inner_label_name == self.name {
+            return Err(ParseError::DuplicateLabel);
+        }
+        Ok(())
+    }
+
+    pub fn check_labelled_continue_to_non_loop<'alloc>(
+        &self,
+        info: &ControlInfo,
+    ) -> EarlyErrorsResult<'alloc> {
+        //  Continues outside of iterators and Unlabelled breaks can not be detected at the
+        //  function / script level easily, because we only have binding information there, not
+        //  whether the label in question is associated with a loop or not. The nesting errors
+        //  also cannot be detected at the {Break,Continue}Statement level, as we don't have that
+        //  information there either. So we are handling these errors here. This handles labelled
+        //  continues that would otherwise pass.
+        //
+        //  Static Semantics: Early Errors
+        //  https://tc39.es/ecma262/#sec-continue-statement-static-semantics-early-e
+        //
+        //  ContinueStatement : continue LabelIdentifier ;
+        //
+        //  * It is a Syntax Error if this ContinueStatement is not nested, directly
+        //    indirectly (but not crossing function boundaries), within an
+        //    IterationStatement.
+        if let Some(name) = info.label {
+            if !self.is_loop && info.kind == ControlKind::Continue && name == self.name {
+                return Err(ParseError::BadContinue);
+            }
+        }
+
+        Ok(())
+    }
+}
+
+// ===========================================================================
 // The switch Statement
 // https://tc39.es/ecma262/#sec-switch-statement
 // ===========================================================================
@@ -1555,6 +1682,15 @@ impl VarEarlyErrorsContext for InternalFunctionBodyEarlyErrorsContext {
     }
 }
 
+impl ControlEarlyErrorsContext for InternalFunctionBodyEarlyErrorsContext {
+    fn on_unhandled_break_or_continue<'alloc>(
+        &self,
+        info: &ControlInfo,
+    ) -> EarlyErrorsResult<'alloc> {
+        ModuleScriptOrFunctionEarlyErrorsContext::on_unhandled_break_or_continue(info)
+    }
+}
+
 // Functions with FormalParameters + FunctionBody.
 //
 // This is used for the following:
@@ -1683,6 +1819,15 @@ impl VarEarlyErrorsContext for FunctionBodyEarlyErrorsContext {
         atoms: &SourceAtomSet<'alloc>,
     ) -> EarlyErrorsResult<'alloc> {
         self.body.declare_var(name, kind, offset, atoms)
+    }
+}
+
+impl ControlEarlyErrorsContext for FunctionBodyEarlyErrorsContext {
+    fn on_unhandled_break_or_continue<'alloc>(
+        &self,
+        info: &ControlInfo,
+    ) -> EarlyErrorsResult<'alloc> {
+        self.body.on_unhandled_break_or_continue(info)
     }
 }
 
@@ -1830,6 +1975,15 @@ impl VarEarlyErrorsContext for UniqueFunctionBodyEarlyErrorsContext {
     }
 }
 
+impl ControlEarlyErrorsContext for UniqueFunctionBodyEarlyErrorsContext {
+    fn on_unhandled_break_or_continue<'alloc>(
+        &self,
+        info: &ControlInfo,
+    ) -> EarlyErrorsResult<'alloc> {
+        self.body.on_unhandled_break_or_continue(info)
+    }
+}
+
 // ===========================================================================
 // Scripts
 // https://tc39.es/ecma262/#sec-scripts
@@ -1973,6 +2127,15 @@ impl VarEarlyErrorsContext for ScriptEarlyErrorsContext {
             .insert(name, DeclarationInfo::new(kind, offset));
 
         Ok(())
+    }
+}
+
+impl ControlEarlyErrorsContext for ScriptEarlyErrorsContext {
+    fn on_unhandled_break_or_continue<'alloc>(
+        &self,
+        info: &ControlInfo,
+    ) -> EarlyErrorsResult<'alloc> {
+        ModuleScriptOrFunctionEarlyErrorsContext::on_unhandled_break_or_continue(info)
     }
 }
 
@@ -2231,5 +2394,86 @@ impl VarEarlyErrorsContext for ModuleEarlyErrorsContext {
             .insert(name, DeclarationInfo::new(kind, offset));
 
         Ok(())
+    }
+}
+
+impl ControlEarlyErrorsContext for ModuleEarlyErrorsContext {
+    fn on_unhandled_break_or_continue<'alloc>(
+        &self,
+        info: &ControlInfo,
+    ) -> EarlyErrorsResult<'alloc> {
+        ModuleScriptOrFunctionEarlyErrorsContext::on_unhandled_break_or_continue(info)
+    }
+}
+
+struct ModuleScriptOrFunctionEarlyErrorsContext {}
+
+impl ModuleScriptOrFunctionEarlyErrorsContext {
+    fn on_unhandled_break_or_continue<'alloc>(info: &ControlInfo) -> EarlyErrorsResult<'alloc> {
+        if let Some(_) = info.label {
+            match info.kind {
+                // Static Semantics: Early Errors
+                // https://tc39.es/ecma262/#sec-scripts-static-semantics-early-errors
+                //
+                // Script : ScriptBody
+                //
+                // * It is a Syntax Error if ContainsUndefinedContinueTarget of StatementList
+                //   with arguments « » and « » is true.
+                //
+                // https://tc39.es/ecma262/#sec-module-semantics-static-semantics-early-errors
+                //
+                // ModuleBody : ModuleItemList
+                //
+                // * It is a Syntax Error if ContainsUndefinedContinueTarget of ModuleItemList
+                //   with arguments « » and « » is true.
+                ControlKind::Continue => {
+                    return Err(ParseError::BadContinue);
+                }
+
+                // Static Semantics: Early Errors
+                // https://tc39.es/ecma262/#sec-scripts-static-semantics-early-errors
+                //
+                // Script : ScriptBody
+                //
+                // * It is a Syntax Error if ContainsUndefinedBreakTarget of StatementList
+                //   with argument « » is true.
+                //
+                // https://tc39.es/ecma262/#sec-module-semantics-static-semantics-early-errors
+                //
+                // ModuleBody : ModuleItemList
+                //
+                // * It is a Syntax Error if ContainsUndefinedBreakTarget of ModuleItemList
+                //   with argument « » is true.
+                ControlKind::Break => {
+                    return Err(ParseError::LabelNotFound);
+                }
+            }
+        } else {
+            match info.kind {
+                // Static Semantics: Early Errors
+                // https://tc39.es/ecma262/#sec-continue-statement-static-semantics-early-errors
+                //
+                // ContinueStatement : continue ;
+                // ContinueStatement : continueLabelIdentifier ;
+                //
+                // * It is a Syntax Error if this ContinueStatement is not nested, directly or
+                //   indirectly (but not crossing function boundaries), within an
+                //   IterationStatement.
+                ControlKind::Continue => {
+                    return Err(ParseError::BadContinue);
+                }
+                // Static Semantics: Early Errors
+                // https://tc39.es/ecma262/#sec-break-statement-static-semantics-early-errors
+                //
+                //  BreakStatement : break ;
+                //
+                // * It is a Syntax Error if this BreakStatement is not nested, directly or
+                //   indirectly (but not crossing function boundaries), within an
+                //   IterationStatement or a SwitchStatement.
+                ControlKind::Break => {
+                    return Err(ParseError::ToughBreak);
+                }
+            }
+        }
     }
 }
