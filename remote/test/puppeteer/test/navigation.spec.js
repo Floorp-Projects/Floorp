@@ -91,10 +91,7 @@ module.exports.addTests = function({testRunner, expect, puppeteer, CHROME}) {
     it('should fail when navigating to bad url', async({page, server}) => {
       let error = null;
       await page.goto('asdfasdf').catch(e => error = e);
-      if (CHROME)
-        expect(error.message).toContain('Cannot navigate to invalid URL');
-      else
-        expect(error.message).toContain('Invalid url');
+      expect(error.message).toContain('Cannot navigate to invalid URL');
     });
     it('should fail when navigating to bad SSL', async({page, httpsServer}) => {
       // Make sure that network events do not emit 'undefined'.
