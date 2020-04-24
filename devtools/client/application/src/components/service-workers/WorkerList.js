@@ -55,7 +55,7 @@ class WorkerList extends PureComponent {
           {},
           workers.map(worker =>
             Worker({
-              key: worker.id,
+              key: `${worker.id}-${worker.state}`,
               isDebugEnabled: canDebugWorkers,
               worker,
             })
