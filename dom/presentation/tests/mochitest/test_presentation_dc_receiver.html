@@ -129,8 +129,7 @@ SpecialPowers.pushPermissions([
   SpecialPowers.pushPrefEnv({ "set": [["dom.presentation.enabled", true],
                                       ["dom.presentation.controller.enabled", false],
                                       ["dom.presentation.receiver.enabled", true],
-                                      ["dom.presentation.session_transport.data_channel.enable", true],
-                                      ["network.disable.ipc.security", true]]},
+                                      ["dom.presentation.session_transport.data_channel.enable", true]]},
                             runTests);
 });
 

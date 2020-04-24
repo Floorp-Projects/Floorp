@@ -513,7 +513,6 @@ SpecialPowers.pushPermissions(
           ["dom.presentation.receiver.enabled", true],
           ["dom.presentation.test.enabled", true],
           ["dom.presentation.test.stage", 0],
-          ["network.disable.ipc.security", true],
           ["media.navigator.permission.disabled", true],
         ],
       },
