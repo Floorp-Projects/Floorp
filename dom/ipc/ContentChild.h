@@ -701,10 +701,6 @@ class ContentChild final
   PFileDescriptorSetChild* SendPFileDescriptorSetConstructor(
       const FileDescriptor& aFD) override;
 
-  const nsTArray<RefPtr<BrowsingContextGroup>>& BrowsingContextGroups() const {
-    return mBrowsingContextGroupHolder;
-  }
-
  private:
   static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
   void StartForceKillTimer();
@@ -720,14 +716,15 @@ class ContentChild final
 
   virtual void OnChannelReceivedMessage(const Message& aMsg) override;
 
-  mozilla::ipc::IPCResult RecvAttachBrowsingContext(
-      BrowsingContext::IPCInitializer&& aInit);
+  mozilla::ipc::IPCResult RecvCreateBrowsingContext(
+      uint64_t aGroupId, BrowsingContext::IPCInitializer&& aInit);
 
-  mozilla::ipc::IPCResult RecvDetachBrowsingContext(
-      uint64_t aContextId, DetachBrowsingContextResolver&& aResolve);
+  mozilla::ipc::IPCResult RecvDiscardBrowsingContext(
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      DiscardBrowsingContextResolver&& aResolve);
 
   mozilla::ipc::IPCResult RecvRegisterBrowsingContextGroup(
-      nsTArray<SyncedContextInitializer>&& aInits);
+      uint64_t aGroupId, nsTArray<SyncedContextInitializer>&& aInits);
 
   mozilla::ipc::IPCResult RecvWindowClose(
       const MaybeDiscarded<BrowsingContext>& aContext, bool aTrustedCaller);
@@ -880,8 +877,6 @@ class ContentChild final
 #endif
 
   uint32_t mNetworkLinkType = 0;
-
-  nsTArray<RefPtr<BrowsingContextGroup>> mBrowsingContextGroupHolder;
 
   // See `BrowsingContext::mEpochs` for an explanation of this field.
   uint64_t mBrowsingContextFieldEpoch = 0;
