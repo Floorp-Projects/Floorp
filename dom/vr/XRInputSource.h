@@ -44,7 +44,7 @@ class XRInputSource final : public nsWrapperCache {
   void GetProfiles(nsTArray<nsString>& aResult);
   Gamepad* GetGamepad();
   void Setup(XRSession* aSession, uint32_t aIndex);
-  void SetGamepadIsConnected(bool aConnected);
+  void SetGamepadIsConnected(bool aConnected, XRSession* aSession);
   void Update(XRSession* aSession);
   int32_t GetIndex();
 

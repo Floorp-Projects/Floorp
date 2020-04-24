@@ -39,7 +39,8 @@ void XRInputSourceArray::Update(XRSession* aSession) {
   XRInputSourcesChangeEventInit addInit;
   nsTArray<RefPtr<XRInputSource>> removedInputs;
   for (int32_t i = 0; i < gfx::kVRControllerMaxCount; ++i) {
-    const gfx::VRControllerState& controllerState = displayClient->GetDisplayInfo().mControllerState[i];
+    const gfx::VRControllerState& controllerState =
+        displayClient->GetDisplayInfo().mControllerState[i];
     if (controllerState.controllerName[0] == '\0') {
       // Checking if exising controllers need to be removed.
       for (auto& input : mInputSources) {
@@ -62,7 +63,7 @@ void XRInputSourceArray::Update(XRSession* aSession) {
     }
     // Checking if it is added before.
     if (!found &&
-      (controllerState.numButtons > 0 || controllerState.numAxes > 0)) {
+        (controllerState.numButtons > 0 || controllerState.numAxes > 0)) {
       inputSource = new XRInputSource(mParent);
       inputSource->Setup(aSession, i);
       mInputSources.AppendElement(inputSource);
@@ -80,8 +81,9 @@ void XRInputSourceArray::Update(XRSession* aSession) {
 
   // Send `inputsourceschange` for new controllers.
   if (addInit.mAdded.Length()) {
-    RefPtr<XRInputSourcesChangeEvent> event = XRInputSourcesChangeEvent::Constructor(aSession,
-        NS_LITERAL_STRING("inputsourceschange"), addInit);
+    RefPtr<XRInputSourcesChangeEvent> event =
+        XRInputSourcesChangeEvent::Constructor(
+            aSession, NS_LITERAL_STRING("inputsourceschange"), addInit);
 
     event->SetTrusted(true);
     aSession->DispatchEvent(*event);
@@ -91,18 +93,20 @@ void XRInputSourceArray::Update(XRSession* aSession) {
   if (removedInputs.Length()) {
     DispatchInputSourceRemovedEvent(removedInputs, aSession);
   }
-  for (auto& input: removedInputs) {
+  for (auto& input : removedInputs) {
     mInputSources.RemoveElement(input);
   }
 }
 
 void XRInputSourceArray::DispatchInputSourceRemovedEvent(
-  const nsTArray<RefPtr<XRInputSource>>& aInputs, XRSession* aSession) {
+    const nsTArray<RefPtr<XRInputSource>>& aInputs, XRSession* aSession) {
+  if (!aSession) {
+    return;
+  }
+
   XRInputSourcesChangeEventInit init;
-
-  for (auto& input: aInputs) {
-    input->SetGamepadIsConnected(false);
-
+  for (const auto& input : aInputs) {
+    input->SetGamepadIsConnected(false, aSession);
     init.mBubbles = false;
     init.mCancelable = false;
     init.mSession = aSession;
@@ -110,8 +114,9 @@ void XRInputSourceArray::DispatchInputSourceRemovedEvent(
   }
 
   if (init.mRemoved.Length()) {
-    RefPtr<XRInputSourcesChangeEvent> event = XRInputSourcesChangeEvent::Constructor(aSession,
-      NS_LITERAL_STRING("inputsourceschange"), init);
+    RefPtr<XRInputSourcesChangeEvent> event =
+        XRInputSourcesChangeEvent::Constructor(
+            aSession, NS_LITERAL_STRING("inputsourceschange"), init);
 
     event->SetTrusted(true);
     aSession->DispatchEvent(*event);

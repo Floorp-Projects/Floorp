@@ -211,8 +211,21 @@ void XRInputSource::Setup(XRSession* aSession, uint32_t aIndex) {
   }
 }
 
-void XRInputSource::SetGamepadIsConnected(bool aConnected) {
+void XRInputSource::SetGamepadIsConnected(bool aConnected,
+                                          XRSession* aSession) {
   mGamepad->SetConnected(aConnected);
+  MOZ_ASSERT(aSession);
+
+  if (!aConnected) {
+    if (mSelectAction != ActionState::ActionState_Released) {
+      DispatchEvent(NS_LITERAL_STRING("selectend"), aSession);
+      mSelectAction = ActionState::ActionState_Released;
+    }
+    if (mSqueezeAction != ActionState::ActionState_Released) {
+      DispatchEvent(NS_LITERAL_STRING("squeezeend"), aSession);
+      mSqueezeAction = ActionState::ActionState_Released;
+    }
+  }
 }
 
 void XRInputSource::Update(XRSession* aSession) {
@@ -339,6 +352,9 @@ int32_t XRInputSource::GetIndex() { return mIndex; }
 
 void XRInputSource::DispatchEvent(const nsAString& aEvent,
                                   XRSession* aSession) {
+  if (!GetParentObject() || !aSession) {
+    return;
+  }
   // Create a XRFrame for its callbacks
   RefPtr<XRFrame> frame = new XRFrame(GetParentObject(), aSession);
   frame->StartInputSourceEvent();
