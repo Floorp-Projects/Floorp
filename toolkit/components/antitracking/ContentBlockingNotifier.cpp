@@ -382,13 +382,16 @@ void NotifyEventInParent(
 
 }  // namespace
 
-/* static */ void ContentBlockingNotifier::ReportUnblockingToConsole(
-    nsPIDOMWindowInner* aWindow, const nsAString& aTrackingOrigin,
+/* static */
+void ContentBlockingNotifier::ReportUnblockingToConsole(
+    BrowsingContext* aBrowsingContext, const nsAString& aTrackingOrigin,
     ContentBlockingNotifier::StorageAccessGrantedReason aReason) {
-  uint64_t windowID = aWindow->WindowID();
+  MOZ_ASSERT(aBrowsingContext);
+
+  uint64_t windowID = aBrowsingContext->GetCurrentInnerWindowId();
 
   nsCOMPtr<nsIPrincipal> principal =
-      nsGlobalWindowInner::Cast(aWindow)->GetPrincipal();
+      AntiTrackingUtils::GetPrincipal(aBrowsingContext);
   if (NS_WARN_IF(!principal)) {
     return;
   }
