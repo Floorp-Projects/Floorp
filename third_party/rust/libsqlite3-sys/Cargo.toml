@@ -13,15 +13,15 @@
 [package]
 edition = "2018"
 name = "libsqlite3-sys"
-version = "0.17.3"
-authors = ["John Gallagher <jgallagher@bignerdranch.com>"]
+version = "0.18.0"
+authors = ["The rusqlite developers"]
 build = "build.rs"
 links = "sqlite3"
 description = "Native bindings to the libsqlite3 library"
 keywords = ["sqlite", "sqlcipher", "ffi"]
 categories = ["external-ffi-bindings"]
 license = "MIT"
-repository = "https://github.com/jgallagher/rusqlite"
+repository = "https://github.com/rusqlite/rusqlite"
 [build-dependencies.bindgen]
 version = "0.53"
 features = ["runtime"]
@@ -51,6 +51,7 @@ preupdate_hook = []
 session = ["preupdate_hook"]
 sqlcipher = []
 unlock_notify = []
+with-asan = []
 [target."cfg(target_env = \"msvc\")".build-dependencies.vcpkg]
 version = "0.2"
 optional = true
