@@ -430,15 +430,21 @@ ParentChannelListener::OpenURI(nsIURI* aURI) {
   nsCString spec;
   aURI->GetSpec(spec);
 
-  dom::LoadURIOptions loadURIOptions;
-  loadURIOptions.mTriggeringPrincipal = nsContentUtils::GetSystemPrincipal();
-  loadURIOptions.mLoadFlags =
-      nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
-      nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
+  RefPtr<dom::CanonicalBrowsingContext> bc = mBrowsingContext;
 
-  ErrorResult rv;
-  mBrowsingContext->LoadURI(NS_ConvertUTF8toUTF16(spec), loadURIOptions, rv);
-  return rv.StealNSResult();
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction("ParentChannelListener::OpenURI", [spec, bc]() {
+        dom::LoadURIOptions loadURIOptions;
+        loadURIOptions.mTriggeringPrincipal =
+            nsContentUtils::GetSystemPrincipal();
+        loadURIOptions.mLoadFlags =
+            nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
+            nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
+
+        ErrorResult rv;
+        bc->LoadURI(NS_ConvertUTF8toUTF16(spec), loadURIOptions, rv);
+      }));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
