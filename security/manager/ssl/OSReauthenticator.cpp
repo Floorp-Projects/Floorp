@@ -33,6 +33,7 @@ using mozilla::dom::Promise;
 #  include <windows.h>
 #  define SECURITY_WIN32
 #  include <security.h>
+#  include <shlwapi.h>
 struct HandleCloser {
   typedef HANDLE pointer;
   void operator()(HANDLE h) {
@@ -103,7 +104,7 @@ static nsresult ReauthenticateUserWindows(const nsAString& aMessageText,
     return NS_ERROR_FAILURE;
   }
 
-  {
+  if (!IsOS(OS_DOMAINMEMBER)) {
     HANDLE logonUserHandle = nullptr;
     bool result = LogonUser(username, L".", L"", LOGON32_LOGON_INTERACTIVE,
                             LOGON32_PROVIDER_DEFAULT, &logonUserHandle);
