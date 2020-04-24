@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Do this along with adding your values and values-ldrtl dimensions. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:insetLeft="@dimen/tab_tray_divider_margin_start"
+    android:insetRight="@dimen/tab_tray_divider_margin_end">
+
+    <shape>
+        <size android:height="1dp"/>
+        <solid android:color="?tabTrayItemDivider" />
+    </shape>
+
+</inset>

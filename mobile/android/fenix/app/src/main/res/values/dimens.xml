@@ -143,4 +143,8 @@
     <dimen name="addon_details_rating_view_margin_start">6dp</dimen>
     <dimen name="addon_details_rating_view_margin_end">6dp</dimen>
 
+    <!-- Tabs Tray -->
+    <dimen name="tab_tray_divider_margin_start">124dp</dimen>
+    <dimen name="tab_tray_divider_margin_end">0dp</dimen>
+
 </resources>

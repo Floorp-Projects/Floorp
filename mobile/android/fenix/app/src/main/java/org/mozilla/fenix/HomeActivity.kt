@@ -15,6 +15,7 @@ import androidx.annotation.IdRes
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PROTECTED
 import androidx.appcompat.app.ActionBar
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.lifecycleScope
@@ -23,6 +24,7 @@ import androidx.navigation.NavDirections
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.coroutines.CoroutineScope
@@ -221,6 +223,16 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         TabsTray::class.java.name -> {
             val layout = LinearLayoutManager(context)
             val adapter = TabsAdapter { parentView, tabsTray ->
+                val decoration = DividerItemDecoration(
+                    context,
+                    DividerItemDecoration.VERTICAL
+                )
+                val drawable = AppCompatResources.getDrawable(context, R.drawable.tab_tray_divider)
+                drawable?.let {
+                    decoration.setDrawable(it)
+                    tabsTray.addItemDecoration(decoration)
+                }
+
                 DefaultTabViewHolder(
                     LayoutInflater.from(parentView.context).inflate(
                         R.layout.tab_tray_item,

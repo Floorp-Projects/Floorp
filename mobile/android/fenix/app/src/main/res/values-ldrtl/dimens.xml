@@ -5,4 +5,8 @@
 <resources>
     <!--  Onboarding  -->
     <dimen name="onboarding_dual_pane_radio_button_translation_x">7dp</dimen>
+
+    <!-- Tabs Tray -->
+    <dimen name="tab_tray_divider_margin_start">0dp</dimen>
+    <dimen name="tab_tray_divider_margin_end">124dp</dimen>
 </resources>
