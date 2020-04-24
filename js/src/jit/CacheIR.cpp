@@ -1637,13 +1637,13 @@ AttachDecision GetPropIRGenerator::tryAttachProxy(HandleObject obj,
 
 static TypedThingLayout GetTypedThingLayout(const JSClass* clasp) {
   if (IsTypedArrayClass(clasp)) {
-    return Layout_TypedArray;
+    return TypedThingLayout::TypedArray;
   }
   if (IsOutlineTypedObjectClass(clasp)) {
-    return Layout_OutlineTypedObject;
+    return TypedThingLayout::OutlineTypedObject;
   }
   if (IsInlineTypedObjectClass(clasp)) {
-    return Layout_InlineTypedObject;
+    return TypedThingLayout::InlineTypedObject;
   }
   MOZ_CRASH("Bad object class");
 }
@@ -2243,9 +2243,14 @@ AttachDecision GetPropIRGenerator::tryAttachTypedElement(
 
   // Don't handle out-of-bounds accesses here because we have to ensure the
   // |undefined| type is monitored. See also tryAttachTypedArrayNonInt32Index.
-  writer.loadTypedElementResult(objId, indexId, layout,
-                                TypedThingElementType(obj),
-                                /* handleOOB = */ false);
+  if (layout == TypedThingLayout::TypedArray) {
+    writer.loadTypedArrayElementResult(objId, indexId,
+                                       TypedThingElementType(obj),
+                                       /* handleOOB = */ false);
+  } else {
+    writer.loadTypedObjectElementResult(objId, indexId, layout,
+                                        TypedThingElementType(obj));
+  }
 
   // Reading from Uint32Array may produce an int32 now but a double value
   // later, so ensure we monitor the result.
@@ -2272,13 +2277,10 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArrayNonInt32Index(
   ValOperandId keyId = getElemKeyValueId();
   Int32OperandId indexId = writer.guardToTypedArrayIndex(keyId);
 
-  TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
-
   writer.guardShapeForClass(objId, obj->as<TypedArrayObject>().shape());
 
-  writer.loadTypedElementResult(objId, indexId, layout,
-                                TypedThingElementType(obj),
-                                /* handleOOB = */ true);
+  writer.loadTypedArrayElementResult(objId, indexId, TypedThingElementType(obj),
+                                     /* handleOOB = */ true);
 
   // Always monitor the result when out-of-bounds accesses are expected.
   writer.typeMonitorResult();

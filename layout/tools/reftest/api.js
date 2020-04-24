@@ -4,17 +4,25 @@
 
 const Cm = Components.manager;
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 var OnRefTestLoad, OnRefTestUnload;
 
-XPCOMUtils.defineLazyServiceGetter(this, "resProto",
-                                   "@mozilla.org/network/protocol;1?name=resource",
-                                   "nsISubstitutingProtocolHandler");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "resProto",
+  "@mozilla.org/network/protocol;1?name=resource",
+  "nsISubstitutingProtocolHandler"
+);
 
-XPCOMUtils.defineLazyServiceGetter(this, "aomStartup",
-                                   "@mozilla.org/addons/addon-manager-startup;1",
-                                   "amIAddonManagerStartup");
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "aomStartup",
+  "@mozilla.org/addons/addon-manager-startup;1",
+  "amIAddonManagerStartup"
+);
 
 function processTerminated() {
   return new Promise(resolve => {
@@ -29,35 +37,46 @@ function processTerminated() {
 
 function startAndroid(win) {
   // Add setTimeout here because windows.innerWidth/Height are not set yet.
-  win.setTimeout(function() {OnRefTestLoad(win);}, 0);
+  win.setTimeout(function() {
+    OnRefTestLoad(win);
+  }, 0);
 }
 
-var WindowListener = {
-  onOpenWindow: function(xulWin) {
-    Services.wm.removeListener(WindowListener);
-
-    let win = xulWin.docShell.domWindow;
-    win.addEventListener("load", function listener() {
-      // Load into any existing windows.
-      for (win of Services.wm.getEnumerator("navigator:browser")) {
-        break;
-      }
-
-      win.addEventListener("pageshow", function() {
-        startAndroid(win);
-      }, {once: true});
-    }, {once: true});
+function GetMainWindow() {
+  let win = Services.wm.getMostRecentWindow("navigator:browser");
+  if (!win) {
+    // There is no navigator:browser in the geckoview TestRunnerActivity;
+    // try navigator.geckoview instead.
+    win = Services.wm.getMostRecentWindow("navigator:geckoview");
   }
-};
+  return win;
+}
 
 this.reftest = class extends ExtensionAPI {
   onStartup() {
-    let uri = Services.io.newURI("chrome/reftest/res/", null, this.extension.rootURI);
-    resProto.setSubstitutionWithFlags("reftest", uri, resProto.ALLOW_CONTENT_ACCESS);
+    let uri = Services.io.newURI(
+      "chrome/reftest/res/",
+      null,
+      this.extension.rootURI
+    );
+    resProto.setSubstitutionWithFlags(
+      "reftest",
+      uri,
+      resProto.ALLOW_CONTENT_ACCESS
+    );
 
-    const manifestURI = Services.io.newURI("manifest.json", null, this.extension.rootURI);
+    const manifestURI = Services.io.newURI(
+      "manifest.json",
+      null,
+      this.extension.rootURI
+    );
     this.chromeHandle = aomStartup.registerChrome(manifestURI, [
-      ["content", "reftest", "chrome/reftest/content/", "contentaccessible=yes"],
+      [
+        "content",
+        "reftest",
+        "chrome/reftest/content/",
+        "contentaccessible=yes",
+      ],
     ]);
 
     // Starting tests is handled quite differently on android and desktop.
@@ -66,19 +85,24 @@ this.reftest = class extends ExtensionAPI {
     // On desktop, a separate window (dummy) is created and explicitly given
     // focus (see bug 859339 for details), then tests are launched in a new
     // top-level window.
-    let win = Services.wm.getMostRecentWindow("navigator:browser");
-    if (!win) {
-      // There is no navigator:browser in the geckoview TestRunnerActivity;
-      // try navigator.geckoview instead.
-      win = Services.wm.getMostRecentWindow("navigator:geckoview");
-    }
-
+    let win = GetMainWindow();
     if (Services.appinfo.OS == "Android") {
-      ({OnRefTestLoad, OnRefTestUnload} = ChromeUtils.import("resource://reftest/reftest.jsm"));
+      ({ OnRefTestLoad, OnRefTestUnload } = ChromeUtils.import(
+        "resource://reftest/reftest.jsm"
+      ));
       if (win) {
         startAndroid(win);
       } else {
-        Services.wm.addListener(WindowListener);
+        // The window type parameter is only available once the window's document
+        // element has been created. The main window has already been created
+        // however and it is in an in-between state which means that you can't
+        // find it by its type nor will domwindowcreated be fired.
+        // So we listen to either initial-document-element-inserted which
+        // indicates when it's okay to search for the main window by type again.
+        Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+          Services.obs.removeObserver(observer, aTopic);
+          startAndroid(GetMainWindow());
+        }, "initial-document-element-inserted");
       }
       return;
     }
@@ -86,13 +110,20 @@ this.reftest = class extends ExtensionAPI {
     Services.io.manageOfflineStatus = false;
     Services.io.offline = false;
 
-    let dummy = Services.ww.openWindow(null, "about:blank", "dummy",
-                                       "chrome,dialog=no,left=800,height=200,width=200,all",null);
+    let dummy = Services.ww.openWindow(
+      null,
+      "about:blank",
+      "dummy",
+      "chrome,dialog=no,left=800,height=200,width=200,all",
+      null
+    );
     dummy.onload = async function() {
       // Close pre-existing window
       win.close();
 
-      const {PerTestCoverageUtils} = ChromeUtils.import("resource://reftest/PerTestCoverageUtils.jsm");
+      const { PerTestCoverageUtils } = ChromeUtils.import(
+        "resource://reftest/PerTestCoverageUtils.jsm"
+      );
       if (PerTestCoverageUtils.enabled) {
         // In PerTestCoverage mode, wait for the process belonging to the window we just closed
         // to be terminated, to avoid its shutdown interfering when we reset the counters.
@@ -100,8 +131,13 @@ this.reftest = class extends ExtensionAPI {
       }
 
       dummy.focus();
-      Services.ww.openWindow(null, "chrome://reftest/content/reftest.xhtml",
-                             "_blank", "chrome,dialog=no,all", {});
+      Services.ww.openWindow(
+        null,
+        "chrome://reftest/content/reftest.xhtml",
+        "_blank",
+        "chrome,dialog=no,all",
+        {}
+      );
     };
   }
 

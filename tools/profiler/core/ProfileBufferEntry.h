@@ -55,9 +55,9 @@ class ProfileBufferEntry {
   // stored in a `ProfileBufferEntry`, as per the list in
   // `FOR_EACH_PROFILE_BUFFER_ENTRY_KIND`.
   //
-  // This byte is also used to identify entries in BlocksRingBuffer blocks, for
-  // both "legacy" entries that do contain a `ProfileBufferEntry`, and for new
-  // types of entries that may carry more data of different types.
+  // This byte is also used to identify entries in ProfileChunkedBuffer blocks,
+  // for both "legacy" entries that do contain a `ProfileBufferEntry`, and for
+  // new types of entries that may carry more data of different types.
   // TODO: Eventually each type of "legacy" entry should be replaced with newer,
   // more efficient kinds of entries (e.g., stack frames could be stored in one
   // bigger entry, instead of multiple `ProfileBufferEntry`s); then we could

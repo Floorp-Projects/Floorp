@@ -63,13 +63,13 @@ class MOZ_RAII CacheIROpsJitSpewer {
   }
   void spewTypedThingLayoutImm(const char* name, TypedThingLayout layout) {
     switch (layout) {
-      case Layout_TypedArray:
+      case TypedThingLayout::TypedArray:
         out_.printf("%s TypedArray", name);
         return;
-      case Layout_OutlineTypedObject:
+      case TypedThingLayout::OutlineTypedObject:
         out_.printf("%s OutlineTypedObject", name);
         return;
-      case Layout_InlineTypedObject:
+      case TypedThingLayout::InlineTypedObject:
         out_.printf("%s InlineTypedObject", name);
         return;
     }

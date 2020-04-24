@@ -33,12 +33,10 @@ registerCleanupFunction(() =>
 
 var { synthesizeDrop, synthesizeMouseAtCenter } = EventUtils;
 
-const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
 const kForceOverflowWidthPx = 450;
 
 function createDummyXULButton(id, label, win = window) {
-  let btn = win.document.createElementNS(kNSXUL, "toolbarbutton");
+  let btn = win.document.createXULElement("toolbarbutton");
   btn.id = id;
   btn.setAttribute("label", label || id);
   btn.className = "toolbarbutton-1 chromeclass-toolbar-additional";
@@ -50,7 +48,7 @@ var gAddedToolbars = new Set();
 
 function createToolbarWithPlacements(id, placements = []) {
   gAddedToolbars.add(id);
-  let tb = document.createElementNS(kNSXUL, "toolbar");
+  let tb = document.createXULElement("toolbar");
   tb.id = id;
   tb.setAttribute("customizable", "true");
   CustomizableUI.registerArea(id, {
@@ -65,24 +63,24 @@ function createToolbarWithPlacements(id, placements = []) {
 function createOverflowableToolbarWithPlacements(id, placements) {
   gAddedToolbars.add(id);
 
-  let tb = document.createElementNS(kNSXUL, "toolbar");
+  let tb = document.createXULElement("toolbar");
   tb.id = id;
   tb.setAttribute("customizationtarget", id + "-target");
 
-  let customizationtarget = document.createElementNS(kNSXUL, "hbox");
+  let customizationtarget = document.createXULElement("hbox");
   customizationtarget.id = id + "-target";
   customizationtarget.setAttribute("flex", "1");
   tb.appendChild(customizationtarget);
 
-  let overflowPanel = document.createElementNS(kNSXUL, "panel");
+  let overflowPanel = document.createXULElement("panel");
   overflowPanel.id = id + "-overflow";
   document.getElementById("mainPopupSet").appendChild(overflowPanel);
 
-  let overflowList = document.createElementNS(kNSXUL, "vbox");
+  let overflowList = document.createXULElement("vbox");
   overflowList.id = id + "-overflow-list";
   overflowPanel.appendChild(overflowList);
 
-  let chevron = document.createElementNS(kNSXUL, "toolbarbutton");
+  let chevron = document.createXULElement("toolbarbutton");
   chevron.id = id + "-chevron";
   tb.appendChild(chevron);
 

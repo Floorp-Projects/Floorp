@@ -322,6 +322,7 @@
 namespace js {
 
 class AutoLockGC;
+class ZoneAllocator;
 class ZoneAllocPolicy;
 
 namespace gc {
@@ -751,13 +752,15 @@ class HeapThreshold {
   HeapThreshold() = default;
 
   // GC trigger threshold.
+  //
+  // TODO: This is currently read off-thread during parsing, but at some point
+  // we should be able to make this MainThreadData<>.
   AtomicByteCount bytes_;
 
  public:
   size_t bytes() const { return bytes_; }
-  size_t nonIncrementalTriggerBytes(GCSchedulingTunables& tunables) const {
-    return bytes_ * tunables.nonIncrementalFactor();
-  }
+  size_t nonIncrementalBytes(ZoneAllocator* zone,
+                             const GCSchedulingTunables& tunables) const;
   float eagerAllocTrigger(bool highFrequencyGC) const;
 };
 

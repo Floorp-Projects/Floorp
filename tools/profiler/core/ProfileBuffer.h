@@ -9,25 +9,21 @@
 #include "GeckoProfiler.h"
 #include "ProfileBufferEntry.h"
 
-#include "mozilla/BlocksRingBuffer.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PowerOfTwo.h"
+#include "mozilla/ProfileBufferChunkManagerSingle.h"
+#include "mozilla/ProfileChunkedBuffer.h"
 
-// Class storing most profiling data in a BlocksRingBuffer.
+// Class storing most profiling data in a ProfileChunkedBuffer.
 //
 // This class is used as a queue of entries which, after construction, never
 // allocates. This makes it safe to use in the profiler's "critical section".
 class ProfileBuffer final {
  public:
   // ProfileBuffer constructor
-  // @param aBuffer The empty BlocksRingBuffer to use as buffer manager.
-  // @param aCapacity The capacity of the buffer.
-  ProfileBuffer(mozilla::BlocksRingBuffer& aBuffer,
-                mozilla::PowerOfTwo32 aCapacity);
-
-  // ProfileBuffer constructor
-  // @param aBuffer The pre-filled BlocksRingBuffer to use as buffer manager.
-  explicit ProfileBuffer(mozilla::BlocksRingBuffer& aBuffer);
+  // @param aBuffer The in-session ProfileChunkedBuffer to use as buffer
+  // manager.
+  explicit ProfileBuffer(mozilla::ProfileChunkedBuffer& aBuffer);
 
   ~ProfileBuffer();
 
@@ -91,27 +87,27 @@ class ProfileBuffer final {
 
   void DiscardSamplesBeforeTime(double aTime);
 
-  // Read an entry in the buffer. Slow!
+  // Read an entry in the buffer.
   ProfileBufferEntry GetEntry(uint64_t aPosition) const {
-    ProfileBufferEntry entry;
-    mEntries.Read([&](mozilla::BlocksRingBuffer::Reader* aReader) {
-      // BlocksRingBuffer cannot be out-of-session when sampler is running.
-      MOZ_ASSERT(aReader);
-      const auto itEnd = aReader->end();
-      for (auto it = aReader->begin(); it != itEnd; ++it) {
-        if (it.CurrentBlockIndex().ConvertToProfileBufferIndex() > aPosition) {
-          // Passed the block. (We need a precise position.)
-          return;
-        }
-        if (it.CurrentBlockIndex().ConvertToProfileBufferIndex() == aPosition) {
-          mozilla::ProfileBufferEntryReader er = *it;
-          MOZ_RELEASE_ASSERT(er.RemainingBytes() <= sizeof(entry));
-          er.ReadBytes(&entry, er.RemainingBytes());
-          return;
-        }
-      }
-    });
-    return entry;
+    return mEntries.ReadAt(
+        mozilla::ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+            aPosition),
+        [&](mozilla::Maybe<mozilla::ProfileBufferEntryReader>&& aMER) {
+          ProfileBufferEntry entry;
+          if (aMER.isSome()) {
+            if (aMER->CurrentBlockIndex().ConvertToProfileBufferIndex() ==
+                aPosition) {
+              // If we're here, it means `aPosition` pointed at a valid block.
+              MOZ_RELEASE_ASSERT(aMER->RemainingBytes() <= sizeof(entry));
+              aMER->ReadBytes(&entry, aMER->RemainingBytes());
+            } else {
+              // EntryReader at the wrong position, pretend to have read
+              // everything.
+              aMER->SetRemainingBytes(0);
+            }
+          }
+          return entry;
+        });
   }
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -126,22 +122,22 @@ class ProfileBuffer final {
   ProfilerBufferInfo GetProfilerBufferInfo() const;
 
  private:
-  // Add |aEntry| to the provided BlocksRingBuffer.
-  // `static` because it may be used to add an entry to a `BlocksRingBuffer`
+  // Add |aEntry| to the provided ProfileChunkedBuffer.
+  // `static` because it may be used to add an entry to a `ProfileChunkedBuffer`
   // that is not attached to a `ProfileBuffer`.
   static mozilla::ProfileBufferBlockIndex AddEntry(
-      mozilla::BlocksRingBuffer& aBlocksRingBuffer,
+      mozilla::ProfileChunkedBuffer& aProfileChunkedBuffer,
       const ProfileBufferEntry& aEntry);
 
   // Add a sample start (ThreadId) entry for aThreadId to the provided
-  // BlocksRingBuffer. Returns the position of the entry.
-  // `static` because it may be used to add an entry to a `BlocksRingBuffer`
+  // ProfileChunkedBuffer. Returns the position of the entry.
+  // `static` because it may be used to add an entry to a `ProfileChunkedBuffer`
   // that is not attached to a `ProfileBuffer`.
   static mozilla::ProfileBufferBlockIndex AddThreadIdEntry(
-      mozilla::BlocksRingBuffer& aBlocksRingBuffer, int aThreadId);
+      mozilla::ProfileChunkedBuffer& aProfileChunkedBuffer, int aThreadId);
 
-  // The circular-ring storage in which this ProfileBuffer stores its data.
-  mozilla::BlocksRingBuffer& mEntries;
+  // The storage in which this ProfileBuffer stores its entries.
+  mozilla::ProfileChunkedBuffer& mEntries;
 
  public:
   // `BufferRangeStart()` and `BufferRangeEnd()` return `uint64_t` values
@@ -157,19 +153,22 @@ class ProfileBuffer final {
   // - It is safe to try and read entries at any index strictly less than
   //   `BufferRangeEnd()` -- but note that these reads may fail by the time you
   //   request them, as old entries get overwritten by new ones.
-  uint64_t BufferRangeStart() const {
-    return mEntries.GetState().mRangeStart.ConvertToProfileBufferIndex();
-  }
-  uint64_t BufferRangeEnd() const {
-    return mEntries.GetState().mRangeEnd.ConvertToProfileBufferIndex();
-  }
+  uint64_t BufferRangeStart() const { return mEntries.GetState().mRangeStart; }
+  uint64_t BufferRangeEnd() const { return mEntries.GetState().mRangeEnd; }
 
  private:
-  // Pre-allocated (to avoid spurious mallocs) temporary buffer used when:
+  // 65536 bytes should be plenty for a single backtrace.
+  static constexpr auto WorkerBufferBytes = mozilla::MakePowerOfTwo32<65536>();
+
+  // Single pre-allocated chunk (to avoid spurious mallocs), used when:
   // - Duplicating sleeping stacks.
   // - Adding JIT info.
   // - Streaming stacks to JSON.
-  mozilla::UniquePtr<mozilla::BlocksRingBuffer::Byte[]> mWorkerBuffer;
+  // Mutable because it's accessed from non-multithreaded const methods.
+  mutable mozilla::ProfileBufferChunkManagerSingle mWorkerChunkManager{
+      mozilla::ProfileBufferChunk::Create(
+          mozilla::ProfileBufferChunk::SizeofChunkMetadata() +
+          WorkerBufferBytes.Value())};
 
   double mFirstSamplingTimeNs = 0.0;
   double mLastSamplingTimeNs = 0.0;

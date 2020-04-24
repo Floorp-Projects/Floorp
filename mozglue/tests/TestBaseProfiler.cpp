@@ -850,11 +850,12 @@ static void TestChunkedBuffer() {
         MOZ_RELEASE_ASSERT(false);
         return 1;
       },
-      [](ProfileBufferEntryWriter* aEW) { return aEW ? 2 : 3; });
+      [](Maybe<ProfileBufferEntryWriter>& aEW) { return aEW ? 2 : 3; });
   MOZ_RELEASE_ASSERT(result == 3);
 
   result = 0;
-  result = cb.Put(1, [](ProfileBufferEntryWriter* aEW) { return aEW ? 1 : 2; });
+  result = cb.Put(
+      1, [](Maybe<ProfileBufferEntryWriter>& aEW) { return aEW ? 1 : 2; });
   MOZ_RELEASE_ASSERT(result == 2);
 
   blockIndex = cb.PutFrom(&result, 1);
@@ -912,7 +913,7 @@ static void TestChunkedBuffer() {
   blockIndex = nullptr;
   bool success = cb.ReserveAndPut(
       []() { return sizeof(test); },
-      [&](ProfileBufferEntryWriter* aEW) {
+      [&](Maybe<ProfileBufferEntryWriter>& aEW) {
         ran = true;
         if (!aEW) {
           return false;
@@ -1171,7 +1172,7 @@ static void TestChunkedBuffer() {
             // to store an int), and write an increasing int.
             const bool success =
                 cb.Put(std::max(aThreadNo, int(sizeof(push))),
-                       [&](ProfileBufferEntryWriter* aEW) {
+                       [&](Maybe<ProfileBufferEntryWriter>& aEW) {
                          if (!aEW) {
                            return false;
                          }
@@ -1205,10 +1206,11 @@ static void TestChunkedBuffer() {
         MOZ_RELEASE_ASSERT(false);
         return 1;
       },
-      [](ProfileBufferEntryWriter* aEW) { return !!aEW; });
+      [](Maybe<ProfileBufferEntryWriter>& aEW) { return !!aEW; });
   MOZ_RELEASE_ASSERT(!success);
 
-  success = cb.Put(1, [](ProfileBufferEntryWriter* aEW) { return !!aEW; });
+  success =
+      cb.Put(1, [](Maybe<ProfileBufferEntryWriter>& aEW) { return !!aEW; });
   MOZ_RELEASE_ASSERT(!success);
 
   blockIndex = cb.PutFrom(&success, 1);
@@ -1707,8 +1709,8 @@ void TestBlocksRingBufferAPI() {
 
     // Push `2` through ReserveAndPut, check output ProfileBufferBlockIndex.
     auto bi2 = rb.ReserveAndPut([]() { return sizeof(uint32_t); },
-                                [](ProfileBufferEntryWriter* aEW) {
-                                  MOZ_RELEASE_ASSERT(!!aEW);
+                                [](Maybe<ProfileBufferEntryWriter>& aEW) {
+                                  MOZ_RELEASE_ASSERT(aEW.isSome());
                                   aEW->WriteObject(uint32_t(2));
                                   return aEW->CurrentBlockIndex();
                                 });
@@ -1790,12 +1792,13 @@ void TestBlocksRingBufferAPI() {
 
     // Push `3` through Put, check writer output
     // is returned to the initial caller.
-    auto put3 = rb.Put(sizeof(uint32_t), [&](ProfileBufferEntryWriter* aEW) {
-      MOZ_RELEASE_ASSERT(!!aEW);
-      aEW->WriteObject(uint32_t(3));
-      MOZ_RELEASE_ASSERT(aEW->CurrentBlockIndex() == bi2Next);
-      return float(aEW->CurrentBlockIndex().ConvertToProfileBufferIndex());
-    });
+    auto put3 =
+        rb.Put(sizeof(uint32_t), [&](Maybe<ProfileBufferEntryWriter>& aEW) {
+          MOZ_RELEASE_ASSERT(aEW.isSome());
+          aEW->WriteObject(uint32_t(3));
+          MOZ_RELEASE_ASSERT(aEW->CurrentBlockIndex() == bi2Next);
+          return float(aEW->CurrentBlockIndex().ConvertToProfileBufferIndex());
+        });
     static_assert(std::is_same<decltype(put3), float>::value,
                   "Expect float as returned by callback.");
     MOZ_RELEASE_ASSERT(put3 == 11.0);
@@ -1847,11 +1850,12 @@ void TestBlocksRingBufferAPI() {
     // Push 5 through Put, no returns.
     // This will clear the second entry.
     // Check that the EntryWriter can access bi4 but not bi2.
-    auto bi5 = rb.Put(sizeof(uint32_t), [&](ProfileBufferEntryWriter* aEW) {
-      MOZ_RELEASE_ASSERT(!!aEW);
-      aEW->WriteObject(uint32_t(5));
-      return aEW->CurrentBlockIndex();
-    });
+    auto bi5 =
+        rb.Put(sizeof(uint32_t), [&](Maybe<ProfileBufferEntryWriter>& aEW) {
+          MOZ_RELEASE_ASSERT(aEW.isSome());
+          aEW->WriteObject(uint32_t(5));
+          return aEW->CurrentBlockIndex();
+        });
     auto bi6 = rb.GetState().mRangeEnd;
     //  16  17  18  19  20  21  22  23  24  25  26  11  12  13  14  15 (16)
     //  [4 |    int(4)    ] [4 |    int(5)    ]E ? S[4 |    int(3)    ]
@@ -2031,8 +2035,8 @@ void TestBlocksRingBufferUnderlyingBufferChanges() {
     MOZ_RELEASE_ASSERT(state.mClearedBlockCount == 0);
     // `Put()` functions run the callback with `Nothing`.
     int32_t ran = 0;
-    rb.Put(1, [&](ProfileBufferEntryWriter* aMaybeEntryWriter) {
-      MOZ_RELEASE_ASSERT(!aMaybeEntryWriter);
+    rb.Put(1, [&](Maybe<ProfileBufferEntryWriter>& aMaybeEntryWriter) {
+      MOZ_RELEASE_ASSERT(aMaybeEntryWriter.isNothing());
       ++ran;
     });
     MOZ_RELEASE_ASSERT(ran == 1);
@@ -2103,12 +2107,13 @@ void TestBlocksRingBufferUnderlyingBufferChanges() {
     }
     int32_t ran = 0;
     // The following three `Put...` will write three int32_t of value 1.
-    bi = rb.Put(sizeof(ran), [&](ProfileBufferEntryWriter* aMaybeEntryWriter) {
-      MOZ_RELEASE_ASSERT(!!aMaybeEntryWriter);
-      ++ran;
-      aMaybeEntryWriter->WriteObject(ran);
-      return aMaybeEntryWriter->CurrentBlockIndex();
-    });
+    bi = rb.Put(sizeof(ran),
+                [&](Maybe<ProfileBufferEntryWriter>& aMaybeEntryWriter) {
+                  MOZ_RELEASE_ASSERT(aMaybeEntryWriter.isSome());
+                  ++ran;
+                  aMaybeEntryWriter->WriteObject(ran);
+                  return aMaybeEntryWriter->CurrentBlockIndex();
+                });
     MOZ_RELEASE_ASSERT(ran == 1);
     MOZ_RELEASE_ASSERT(rb.PutFrom(&ran, sizeof(ran)) !=
                        ProfileBufferBlockIndex{});
@@ -2253,8 +2258,8 @@ void TestBlocksRingBufferThreading() {
             // Reserve as many bytes as the thread number (but at least enough
             // to store an int), and write an increasing int.
             rb.Put(std::max(aThreadNo, int(sizeof(push))),
-                   [&](ProfileBufferEntryWriter* aEW) {
-                     MOZ_RELEASE_ASSERT(!!aEW);
+                   [&](Maybe<ProfileBufferEntryWriter>& aEW) {
+                     MOZ_RELEASE_ASSERT(aEW.isSome());
                      aEW->WriteObject(aThreadNo * 1000000 + push);
                      *aEW += aEW->RemainingBytes();
                    });

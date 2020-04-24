@@ -8,8 +8,6 @@ var EXPORTED_SYMBOLS = [
   "DefaultBrowserCheck",
 ];
 
-const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -2005,7 +2003,7 @@ BrowserGlue.prototype = {
       let win = BrowserWindowTracker.getTopWindow();
 
       let stack = win.gBrowser.getPanel().querySelector(".browserStack");
-      let mask = win.document.createElementNS(XULNS, "box");
+      let mask = win.document.createXULElement("box");
       mask.setAttribute("id", "content-mask");
       stack.appendChild(mask);
 

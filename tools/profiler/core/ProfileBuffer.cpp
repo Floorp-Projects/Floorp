@@ -15,39 +15,27 @@
 
 using namespace mozilla;
 
-// 65536 bytes should be plenty for a single backtrace.
-static constexpr auto WorkerBufferBytes = MakePowerOfTwo32<65536>();
-
-ProfileBuffer::ProfileBuffer(BlocksRingBuffer& aBuffer, PowerOfTwo32 aCapacity)
-    : mEntries(aBuffer),
-      mWorkerBuffer(
-          MakeUnique<BlocksRingBuffer::Byte[]>(WorkerBufferBytes.Value())) {
-  // Only ProfileBuffer should control this buffer, and it should be empty when
-  // there is no ProfileBuffer using it.
-  MOZ_ASSERT(!mEntries.IsInSession());
-  // Allocate the requested capacity.
-  mEntries.Set(aCapacity);
-}
-
-ProfileBuffer::ProfileBuffer(BlocksRingBuffer& aBuffer) : mEntries(aBuffer) {
-  // Assume the given buffer is not empty.
+ProfileBuffer::ProfileBuffer(ProfileChunkedBuffer& aBuffer)
+    : mEntries(aBuffer) {
+  // Assume the given buffer is in-session.
   MOZ_ASSERT(mEntries.IsInSession());
 }
 
 ProfileBuffer::~ProfileBuffer() {
   // Only ProfileBuffer controls this buffer, and it should be empty when there
   // is no ProfileBuffer using it.
-  mEntries.Reset();
+  mEntries.ResetChunkManager();
   MOZ_ASSERT(!mEntries.IsInSession());
 }
 
 /* static */
 ProfileBufferBlockIndex ProfileBuffer::AddEntry(
-    BlocksRingBuffer& aBlocksRingBuffer, const ProfileBufferEntry& aEntry) {
+    ProfileChunkedBuffer& aProfileChunkedBuffer,
+    const ProfileBufferEntry& aEntry) {
   switch (aEntry.GetKind()) {
-#define SWITCH_KIND(KIND, TYPE, SIZE)                      \
-  case ProfileBufferEntry::Kind::KIND: {                   \
-    return aBlocksRingBuffer.PutFrom(&aEntry, 1 + (SIZE)); \
+#define SWITCH_KIND(KIND, TYPE, SIZE)                          \
+  case ProfileBufferEntry::Kind::KIND: {                       \
+    return aProfileChunkedBuffer.PutFrom(&aEntry, 1 + (SIZE)); \
   }
 
     FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(SWITCH_KIND)
@@ -66,8 +54,9 @@ uint64_t ProfileBuffer::AddEntry(const ProfileBufferEntry& aEntry) {
 
 /* static */
 ProfileBufferBlockIndex ProfileBuffer::AddThreadIdEntry(
-    BlocksRingBuffer& aBlocksRingBuffer, int aThreadId) {
-  return AddEntry(aBlocksRingBuffer, ProfileBufferEntry::ThreadId(aThreadId));
+    ProfileChunkedBuffer& aProfileChunkedBuffer, int aThreadId) {
+  return AddEntry(aProfileChunkedBuffer,
+                  ProfileBufferEntry::ThreadId(aThreadId));
 }
 
 uint64_t ProfileBuffer::AddThreadIdEntry(int aThreadId) {
@@ -164,7 +153,8 @@ void ProfileBuffer::CollectOverheadStats(TimeDuration aSamplingTime,
 ProfilerBufferInfo ProfileBuffer::GetProfilerBufferInfo() const {
   return {BufferRangeStart(),
           BufferRangeEnd(),
-          mEntries.BufferLength()->Value() / 8,  // 8 bytes per entry.
+          static_cast<uint32_t>(*mEntries.BufferLength() /
+                                8),  // 8 bytes per entry.
           mIntervalsNs,
           mOverheadsNs,
           mLockingsNs,

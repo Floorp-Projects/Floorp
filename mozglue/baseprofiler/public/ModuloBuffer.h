@@ -8,6 +8,7 @@
 #define ModuloBuffer_h
 
 #include "mozilla/leb128iterator.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/PowerOfTwo.h"
@@ -151,6 +152,7 @@ class ModuloBuffer {
         EntrySpan(&mBuffer[0], end), aBlockIndex, aNextBlockIndex};
   }
 
+  // Return an entry writer for the given range.
   ProfileBufferEntryWriter EntryWriterFromTo(Index aStart, Index aEnd) const {
     using EntrySpan = Span<ProfileBufferEntryReader::Byte>;
     if (aStart == aEnd) {
@@ -175,6 +177,37 @@ class ModuloBuffer {
         EntrySpan(&mBuffer[0], end),
         ProfileBufferBlockIndex::CreateFromProfileBufferIndex(aStart),
         ProfileBufferBlockIndex::CreateFromProfileBufferIndex(aEnd)};
+  }
+
+  // Emplace an entry writer into `aMaybeEntryWriter` for the given range.
+  void EntryWriterFromTo(Maybe<ProfileBufferEntryWriter>& aMaybeEntryWriter,
+                         Index aStart, Index aEnd) const {
+    MOZ_ASSERT(aMaybeEntryWriter.isNothing(),
+               "Reference entry writer should be Nothing.");
+    using EntrySpan = Span<ProfileBufferEntryReader::Byte>;
+    if (aStart == aEnd) {
+      return;
+    }
+    MOZ_ASSERT(aEnd - aStart <= mMask.MaskValue() + 1);
+    // Start offset in 0 .. (buffer size - 1)
+    Offset start = static_cast<Offset>(aStart) & mMask;
+    // End offset in 1 .. (buffer size)
+    Offset end = (static_cast<Offset>(aEnd - 1) & mMask) + 1;
+    if (start < end) {
+      // Segment doesn't cross buffer threshold, one span is enough.
+      aMaybeEntryWriter.emplace(
+          EntrySpan(&mBuffer[start], end - start),
+          ProfileBufferBlockIndex::CreateFromProfileBufferIndex(aStart),
+          ProfileBufferBlockIndex::CreateFromProfileBufferIndex(aEnd));
+    } else {
+      // Segment crosses buffer threshold, we need one span until the end and
+      // one span restarting at the beginning of the buffer.
+      aMaybeEntryWriter.emplace(
+          EntrySpan(&mBuffer[start], mMask.MaskValue() + 1 - start),
+          EntrySpan(&mBuffer[0], end),
+          ProfileBufferBlockIndex::CreateFromProfileBufferIndex(aStart),
+          ProfileBufferBlockIndex::CreateFromProfileBufferIndex(aEnd));
+    }
   }
 
   // All ModuloBuffer operations should be done through this iterator, which has
