@@ -13,7 +13,7 @@
 "use strict";
 
 add_task(async function test_query_index() {
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
     },

@@ -16,13 +16,13 @@ add_task(async function testExecuteScript() {
   const BASE = "http://mochi.test:8888/tests/mobile/android/components/extensions/test/mochitest/";
   const URL = BASE + "file_iframe_document.html";
 
-  let win = window.open(URL);
+  const win = window.open(URL);
   await new Promise(resolve => win.addEventListener("load", resolve, {once: true}));
 
   async function background() {
     try {
-      let [tab] = await browser.tabs.query({active: true, currentWindow: true});
-      let frames = await browser.webNavigation.getAllFrames({tabId: tab.id});
+      const [tab] = await browser.tabs.query({active: true, currentWindow: true});
+      const frames = await browser.webNavigation.getAllFrames({tabId: tab.id});
 
       browser.test.log(`FRAMES: ${frames[1].frameId} ${JSON.stringify(frames)}\n`);
       await Promise.all([
@@ -182,7 +182,7 @@ add_task(async function testExecuteScript() {
         }),
 
         browser.tabs.create({url: "http://example.com/"}).then(async tab => {
-          let result = await browser.tabs.executeScript(tab.id, {code: "location.href"});
+          const result = await browser.tabs.executeScript(tab.id, {code: "location.href"});
 
           browser.test.assertEq("http://example.com/", result[0], "Script executed correctly in new tab");
 
@@ -213,7 +213,7 @@ add_task(async function testExecuteScript() {
     }
   }
 
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["http://mochi.test/", "http://example.com/", "webNavigation"],
       applications: {

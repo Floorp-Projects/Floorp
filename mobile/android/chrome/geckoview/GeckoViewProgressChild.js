@@ -138,7 +138,7 @@ const ProgressTracker = {
 
     this._tracking = true;
     this.clear();
-    let data = this._data;
+    const data = this._data;
 
     if (aUri === "about:blank") {
       data.uri = null;
@@ -155,7 +155,7 @@ const ProgressTracker = {
   changeLocation(aUri) {
     debug`ProgressTracker changeLocation ${aUri}`;
 
-    let data = this._data;
+    const data = this._data;
     data.locationChange = true;
     data.uri = aUri;
   },
@@ -163,7 +163,7 @@ const ProgressTracker = {
   stop() {
     debug`ProgressTracker stop`;
 
-    let data = this._data;
+    const data = this._data;
     data.pageStop = true;
     this.updateProgress();
     this._tracking = false;
@@ -197,7 +197,7 @@ const ProgressTracker = {
   },
 
   handleEvent(aEvent) {
-    let data = this._data;
+    const data = this._data;
 
     const target = aEvent.originalTarget;
     const uri = target && target.location.href;
@@ -271,7 +271,7 @@ const ProgressTracker = {
   updateProgress() {
     debug`ProgressTracker updateProgress`;
 
-    let data = this._data;
+    const data = this._data;
 
     if (!this._tracking || !data.uri) {
       return;

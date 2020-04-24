@@ -7,12 +7,12 @@ this.tabs = class extends ExtensionAPI {
     return {
       tabs: {
         connect(tabId, options) {
-          let { frameId = null, name = "" } = options || {};
+          const { frameId = null, name = "" } = options || {};
           return context.messenger.nm.connect({ name, tabId, frameId });
         },
 
         sendMessage: function(tabId, message, options, responseCallback) {
-          let recipient = {
+          const recipient = {
             extensionId: context.extension.id,
             tabId: tabId,
           };

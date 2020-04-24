@@ -13,7 +13,7 @@
 "use strict";
 
 async function testHasPermission(params) {
-  let contentSetup = params.contentSetup || (() => Promise.resolve());
+  const contentSetup = params.contentSetup || (() => Promise.resolve());
 
   async function background(contentSetup) {
     browser.runtime.onMessage.addListener((msg, sender) => {
@@ -34,7 +34,7 @@ async function testHasPermission(params) {
     browser.test.sendMessage("ready");
   }
 
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: params.manifest,
 
     background: `(${background})(${contentSetup})`,
@@ -65,7 +65,7 @@ async function testHasPermission(params) {
 }
 
 add_task(async function testGoodPermissions() {
-  let win = window.open("http://mochi.test:8888/");
+  const win = window.open("http://mochi.test:8888/");
 
   info("Test explicit host permission");
   await testHasPermission({

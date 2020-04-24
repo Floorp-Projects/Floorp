@@ -53,7 +53,7 @@ GeckoViewPermission.prototype = {
   receiveMessage(aMsg) {
     switch (aMsg.name) {
       case "GeckoView:AddCameraPermission": {
-        let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+        const principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
           aMsg.data.origin
         );
 
@@ -71,7 +71,7 @@ GeckoViewPermission.prototype = {
   },
 
   handleMediaAskDevicePermission(aType, aCallback) {
-    let perms = [];
+    const perms = [];
     if (aType === "video" || aType === "all") {
       perms.push(PERM_CAMERA);
     }
@@ -79,8 +79,8 @@ GeckoViewPermission.prototype = {
       perms.push(PERM_RECORD_AUDIO);
     }
 
-    let [dispatcher] = GeckoViewUtils.getActiveDispatcherAndWindow();
-    let callback = _ => {
+    const [dispatcher] = GeckoViewUtils.getActiveDispatcherAndWindow();
+    const callback = _ => {
       Services.obs.notifyObservers(
         aCallback,
         "getUserMedia:got-device-permission"
@@ -96,13 +96,13 @@ GeckoViewPermission.prototype = {
   },
 
   handleMediaRequest(aRequest) {
-    let constraints = aRequest.getConstraints();
-    let callId = aRequest.callID;
-    let denyRequest = _ => {
+    const constraints = aRequest.getConstraints();
+    const callId = aRequest.callID;
+    const denyRequest = _ => {
       Services.obs.notifyObservers(null, "getUserMedia:response:deny", callId);
     };
 
-    let win = Services.wm.getOuterWindowWithId(aRequest.windowID);
+    const win = Services.wm.getOuterWindowWithId(aRequest.windowID);
     new Promise((resolve, reject) => {
       win.navigator.mozGetUserMediaDevices(
         constraints,
@@ -119,7 +119,7 @@ GeckoViewPermission.prototype = {
           return Promise.resolve();
         }
 
-        let sources = devices.map(device => {
+        const sources = devices.map(device => {
           device = device.QueryInterface(Ci.nsIMediaDevice);
           return {
             type: device.type,
@@ -142,8 +142,8 @@ GeckoViewPermission.prototype = {
           throw new Error("no audio source");
         }
 
-        let dispatcher = GeckoViewUtils.getDispatcherForWindow(win);
-        let uri = win.document.documentURIObject;
+        const dispatcher = GeckoViewUtils.getDispatcherForWindow(win);
+        const uri = win.document.documentURIObject;
         return dispatcher
           .sendRequestForResult({
             type: "GeckoView:MediaPermission",
@@ -161,11 +161,13 @@ GeckoViewPermission.prototype = {
               denyRequest();
               return;
             }
-            let allowedDevices = Cc["@mozilla.org/array;1"].createInstance(
+            const allowedDevices = Cc["@mozilla.org/array;1"].createInstance(
               Ci.nsIMutableArray
             );
             if (constraints.video) {
-              let video = devices.find(device => response.video === device.id);
+              const video = devices.find(
+                device => response.video === device.id
+              );
               if (!video) {
                 throw new Error("invalid video id");
               }
@@ -176,7 +178,9 @@ GeckoViewPermission.prototype = {
               allowedDevices.appendElement(video);
             }
             if (constraints.audio) {
-              let audio = devices.find(device => response.audio === device.id);
+              const audio = devices.find(
+                device => response.audio === device.id
+              );
               if (!audio) {
                 throw new Error("invalid audio id");
               }
@@ -208,7 +212,7 @@ GeckoViewPermission.prototype = {
   },
 
   getAppPermissions(aDispatcher, aPerms) {
-    let perms = aPerms.filter(perm => !this._appPermissions[perm]);
+    const perms = aPerms.filter(perm => !this._appPermissions[perm]);
     if (!perms.length) {
       return Promise.resolve(/* granted */ true);
     }
@@ -219,7 +223,7 @@ GeckoViewPermission.prototype = {
       })
       .then(granted => {
         if (granted) {
-          for (let perm of perms) {
+          for (const perm of perms) {
             this._appPermissions[perm] = true;
           }
         }
@@ -229,13 +233,13 @@ GeckoViewPermission.prototype = {
 
   prompt(aRequest) {
     // Only allow exactly one permission request here.
-    let types = aRequest.types.QueryInterface(Ci.nsIArray);
+    const types = aRequest.types.QueryInterface(Ci.nsIArray);
     if (types.length !== 1) {
       aRequest.cancel();
       return;
     }
 
-    let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
+    const perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
     if (
       perm.type === "desktop-notification" &&
       !aRequest.isHandlingUserInput &&
@@ -249,7 +253,7 @@ GeckoViewPermission.prototype = {
       return;
     }
 
-    let dispatcher = GeckoViewUtils.getDispatcherForWindow(
+    const dispatcher = GeckoViewUtils.getDispatcherForWindow(
       aRequest.window ? aRequest.window : aRequest.element.ownerGlobal
     );
     dispatcher

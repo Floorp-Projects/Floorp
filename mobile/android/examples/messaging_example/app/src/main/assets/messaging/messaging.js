@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let manifest = document.querySelector("head > link[rel=manifest]");
+const manifest = document.querySelector("head > link[rel=manifest]");
 if (manifest) {
   fetch(manifest.href)
     .then(response => response.json())
     .then(json => {
-      let message = { type: "WPAManifest", manifest: json };
+      const message = { type: "WPAManifest", manifest: json };
       browser.runtime.sendNativeMessage("browser", message);
     });
 }
