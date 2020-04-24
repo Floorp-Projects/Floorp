@@ -1,11 +1,12 @@
 # Rusqlite
 
-[![Travis Build Status](https://api.travis-ci.org/jgallagher/rusqlite.svg?branch=master)](https://travis-ci.org/jgallagher/rusqlite)
-[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/jgallagher/rusqlite?branch=master&svg=true)](https://ci.appveyor.com/project/jgallagher/rusqlite)
-[![Build Status](https://github.com/jgallagher/rusqlite/workflows/CI/badge.svg)](https://github.com/jgallagher/rusqlite/actions)
-[![dependency status](https://deps.rs/repo/github/jgallagher/rusqlite/status.svg)](https://deps.rs/repo/github/jgallagher/rusqlite)
+[![Travis Build Status](https://api.travis-ci.org/rusqlite/rusqlite.svg?branch=master)](https://travis-ci.org/rusqlite/rusqlite)
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/rusqlite/rusqlite?branch=master&svg=true)](https://ci.appveyor.com/project/rusqlite/rusqlite)
+[![Build Status](https://github.com/rusqlite/rusqlite/workflows/CI/badge.svg)](https://github.com/rusqlite/rusqlite/actions)
+[![dependency status](https://deps.rs/repo/github/rusqlite/rusqlite/status.svg)](https://deps.rs/repo/github/rusqlite/rusqlite)
 [![Latest Version](https://img.shields.io/crates/v/rusqlite.svg)](https://crates.io/crates/rusqlite)
 [![Docs](https://docs.rs/rusqlite/badge.svg)](https://docs.rs/rusqlite)
+[![codecov](https://codecov.io/gh/rusqlite/rusqlite/branch/master/graph/badge.svg)](https://codecov.io/gh/rusqlite/rusqlite)
 
 Rusqlite is an ergonomic wrapper for using SQLite from Rust. It attempts to expose
 an interface similar to [rust-postgres](https://github.com/sfackler/rust-postgres).
@@ -188,7 +189,8 @@ instead.
 
 ## Author
 
-John Gallagher, johnkgallagher@gmail.com
+Rusqlite is the product of hard work by a number of people. A list is available
+here: https://github.com/rusqlite/rusqlite/graphs/contributors
 
 ## License
 
