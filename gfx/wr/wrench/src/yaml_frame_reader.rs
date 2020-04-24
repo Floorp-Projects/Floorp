@@ -1803,8 +1803,6 @@ impl YamlFrameReader {
 
         let numeric_id = yaml["id"].as_i64().map(|id| id as u64);
 
-        let complex_clips = self.to_complex_clip_regions(&yaml["complex"]);
-
         let external_id =  yaml["scroll-offset"].as_point().map(|size| {
             let id = ExternalScrollId((self.scroll_offsets.len() + 1) as u64, dl.pipeline_id);
             self.scroll_offsets.insert(id, LayoutPoint::new(size.x, size.y));
@@ -1816,7 +1814,6 @@ impl YamlFrameReader {
             external_id,
             content_rect,
             clip_rect,
-            complex_clips,
             ScrollSensitivity::ScriptAndInputEvents,
             external_scroll_offset,
         );
