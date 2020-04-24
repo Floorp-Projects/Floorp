@@ -312,7 +312,6 @@ bool AudioBuffer::RestoreJSChannelData(JSContext* aJSContext) {
 void AudioBuffer::CopyFromChannel(const Float32Array& aDestination,
                                   uint32_t aChannelNumber,
                                   uint32_t aStartInChannel, ErrorResult& aRv) {
-  aDestination.ComputeState();
 
   if (aChannelNumber >= NumberOfChannels()) {
     aRv.ThrowIndexSizeError(
@@ -328,8 +327,9 @@ void AudioBuffer::CopyFromChannel(const Float32Array& aDestination,
     return;
   }
 
-  uint32_t count = std::min(Length() - aStartInChannel, aDestination.Length());
   JS::AutoCheckCannotGC nogc;
+  aDestination.ComputeState();
+  uint32_t count = std::min(Length() - aStartInChannel, aDestination.Length());
   JSObject* channelArray = mJSChannels[aChannelNumber];
   if (channelArray) {
     if (JS_GetTypedArrayLength(channelArray) != Length()) {
@@ -363,7 +363,6 @@ void AudioBuffer::CopyToChannel(JSContext* aJSContext,
                                 const Float32Array& aSource,
                                 uint32_t aChannelNumber,
                                 uint32_t aStartInChannel, ErrorResult& aRv) {
-  aSource.ComputeState();
 
   if (aChannelNumber >= NumberOfChannels()) {
     aRv.ThrowIndexSizeError(
@@ -394,6 +393,7 @@ void AudioBuffer::CopyToChannel(JSContext* aJSContext,
     return;
   }
 
+  aSource.ComputeState();
   uint32_t count = std::min(Length() - aStartInChannel, aSource.Length());
   bool isShared = false;
   float* channelData = JS_GetFloat32ArrayData(channelArray, &isShared, nogc);
