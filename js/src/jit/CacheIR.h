@@ -419,10 +419,10 @@ enum class GuardClassKind : uint8_t {
 JSObject* NewWrapperWithObjectShape(JSContext* cx, HandleNativeObject obj);
 
 // Enum for stubs handling a combination of typed arrays and typed objects.
-enum TypedThingLayout : uint8_t {
-  Layout_TypedArray,
-  Layout_OutlineTypedObject,
-  Layout_InlineTypedObject
+enum class TypedThingLayout : uint8_t {
+  TypedArray,
+  OutlineTypedObject,
+  InlineTypedObject
 };
 
 void LoadShapeWrapperContents(MacroAssembler& masm, Register obj, Register dst,

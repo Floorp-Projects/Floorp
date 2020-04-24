@@ -715,6 +715,10 @@ class MOZ_RAII CacheIRCompiler {
            !allocator.isDeadAfterInstruction(objId);
   }
 
+  bool emitLoadTypedElementResult(ObjOperandId objId, Int32OperandId indexId,
+                                  TypedThingLayout layout,
+                                  Scalar::Type elementType, bool handleOOB);
+
   void emitStoreTypedObjectReferenceProp(ValueOperand val, ReferenceType type,
                                          const Address& dest, Register scratch);
 
