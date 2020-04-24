@@ -169,7 +169,7 @@ bool WindowNamedPropertiesHandler::ownPropNames(
   nsGlobalWindowOuter* outer = win->GetOuterWindowInternal();
   if (outer) {
     if (BrowsingContext* bc = outer->GetBrowsingContext()) {
-      for (const auto& child : bc->GetChildren()) {
+      for (const auto& child : bc->Children()) {
         const nsString& name = child->Name();
         if (!name.IsEmpty() && !names.Contains(name)) {
           // Make sure we really would expose it from getOwnPropDescriptor.
