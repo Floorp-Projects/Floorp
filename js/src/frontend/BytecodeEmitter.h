@@ -79,8 +79,18 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // Enclosing function or global context.
   BytecodeEmitter* const parent = nullptr;
 
-  // The JSScript we're ultimately producing.
-  JS::Rooted<JSScript*> script;
+  // The incomplete JSScript we've been handed to fill in.
+  JS::Rooted<JSScript*> inputScript;
+
+  // The JSScript after we've filled it in.
+  JS::Rooted<JSScript*> outputScript;
+
+ public:
+  // Returns the finished script produced by this bce.
+  JSScript* getResultScript() {
+    MOZ_ASSERT(outputScript);
+    return outputScript;
+  }
 
  private:
   BytecodeSection bytecodeSection_;
