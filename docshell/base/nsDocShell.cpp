@@ -73,9 +73,8 @@
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/dom/JSWindowActorChild.h"
-#include "mozilla/net/DocumentChannel.h"
 #include "nsSHEntry.h"
-#include "mozilla/net/DocumentChannelChild.h"
+#include "mozilla/net/DocumentChannel.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "ReferrerInfo.h"
 
@@ -9180,23 +9179,6 @@ static bool IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
   return NS_OK;
 }
 
-// Changes here should also be made in
-// E10SUtils.documentChannelPermittedForURI().
-static bool URIUsesDocChannel(nsIURI* aURI) {
-  if (SchemeIsJavascript(aURI) || NS_IsAboutBlank(aURI)) {
-    return false;
-  }
-
-  nsCString spec = aURI->GetSpecOrDefault();
-
-  if (spec.EqualsLiteral("about:printpreview") ||
-      spec.EqualsLiteral("about:crashcontent")) {
-    return false;
-  }
-
-  return true;
-}
-
 /* static */ bool nsDocShell::CreateAndConfigureRealChannelForLoadState(
     BrowsingContext* aBrowsingContext, nsDocShellLoadState* aLoadState,
     LoadInfo* aLoadInfo, nsIInterfaceRequestor* aCallbacks,
@@ -9597,8 +9579,9 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   // If we have a pending channel, use the channel we've already created here.
   // We don't need to set up load flags for our channel, as it has already been
   // created.
-  nsCOMPtr<nsIChannel> channel = aLoadState->GetPendingRedirectedChannel();
-  if (channel) {
+
+  if (nsCOMPtr<nsIChannel> channel =
+          aLoadState->GetPendingRedirectedChannel()) {
     MOZ_ASSERT(!aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC),
                "pending channel for srcdoc load?");
 
@@ -9767,20 +9750,11 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     cacheKey = mOSHE->GetCacheKey();
   }
 
-  // We want to use DocumentChannel if we're using a supported scheme. Sandboxed
-  // srcdoc loads break due to failing assertions after changing processes, and
-  // non-sandboxed srcdoc loads need to share the same principal object as their
-  // outer document (and must load in the same process), which breaks if we
-  // serialize to the parent process.
-  bool canUseDocumentChannel =
-      !aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC) &&
-      URIUsesDocChannel(aLoadState->URI());
-
-  if (StaticPrefs::browser_tabs_documentchannel() && XRE_IsContentProcess() &&
-      canUseDocumentChannel) {
-    channel =
-        new DocumentChannelChild(aLoadState, loadInfo, loadFlags, cacheKey);
-    channel->SetNotificationCallbacks(this);
+  nsCOMPtr<nsIChannel> channel;
+  if (DocumentChannel::CanUseDocumentChannel(aLoadState)) {
+    channel = DocumentChannel::CreateDocumentChannel(aLoadState, loadInfo,
+                                                     loadFlags, this, cacheKey);
+    MOZ_ASSERT(channel);
   } else if (!CreateAndConfigureRealChannelForLoadState(
                  mBrowsingContext, aLoadState, loadInfo, this, this,
                  GetOriginAttributes(), loadFlags, cacheKey, rv,
