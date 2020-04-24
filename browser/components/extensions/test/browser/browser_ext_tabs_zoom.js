@@ -48,12 +48,13 @@ add_task(async function test_zoom_api() {
       });
     }
 
-    let zoomEvents = [];
-    let eventPromises = [];
+    let lastZoomEvent = {};
+    let promiseZoomEvents = {};
     browser.tabs.onZoomChange.addListener(info => {
-      zoomEvents.push(info);
-      if (eventPromises.length) {
-        eventPromises.shift().resolve();
+      lastZoomEvent[info.tabId] = info;
+      if (promiseZoomEvents[info.tabId]) {
+        promiseZoomEvents[info.tabId]();
+        promiseZoomEvents[info.tabId] = null;
       }
     });
 
@@ -80,9 +81,9 @@ add_task(async function test_zoom_api() {
 
     let checkZoom = async (tabId, newValue, oldValue = null) => {
       let awaitEvent;
-      if (oldValue != null && !zoomEvents.length) {
+      if (oldValue != null && !lastZoomEvent[tabId]) {
         awaitEvent = new Promise(resolve => {
-          eventPromises.push({ resolve });
+          promiseZoomEvents[tabId] = resolve;
         });
       }
 
@@ -104,7 +105,8 @@ add_task(async function test_zoom_api() {
       );
 
       if (oldValue != null) {
-        let event = zoomEvents.shift();
+        let event = lastZoomEvent[tabId];
+        lastZoomEvent[tabId] = null;
         browser.test.assertEq(
           tabId,
           event.tabId,
