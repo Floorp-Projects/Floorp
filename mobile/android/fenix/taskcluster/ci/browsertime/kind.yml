@@ -20,6 +20,8 @@ only-for-abis:
     - arm64-v8a
 
 job-defaults:
+    attributes:
+        artifact_prefix: public/test_info
     dependencies:
         geckoview-nightly: geckoview-nightly
     notify:

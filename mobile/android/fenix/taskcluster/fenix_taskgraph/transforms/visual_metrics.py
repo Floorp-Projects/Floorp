@@ -64,10 +64,6 @@ def run_visual_metrics(config, jobs):
                 'extract': True
             }]
 
-            # Set the artifact prefix for the browsertime results
-            job.setdefault('attributes', {})
-            job['attributes']['artifact_prefix'] = 'public/test_info'
-
             # vismet runs on Linux but we want to have it displayed
             # alongside the job it was triggered by to make it easier for
             # people to find it back.
