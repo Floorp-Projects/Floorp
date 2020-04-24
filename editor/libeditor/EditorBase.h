@@ -626,6 +626,24 @@ class EditorBase : public nsIEditor,
   MOZ_CAN_RUN_SCRIPT nsresult InsertTextAsAction(
       const nsAString& aStringToInsert, nsIPrincipal* aPrincipal = nullptr);
 
+  /**
+   * DeleteSelectionAsAction() removes selection content or content around
+   * caret with transactions.  This should be used for handling it as an
+   * edit action.  If you'd like to remove selection for preparing to insert
+   * something, you probably should use DeleteSelectionAsSubAction().
+   *
+   * @param aDirectionAndAmount How much range should be removed.
+   * @param aStripWrappers      Whether the parent blocks should be removed
+   *                            when they become empty.
+   * @param aPrincipal          Set subject principal if it may be called by
+   *                            JS.  If set to nullptr, will be treated as
+   *                            called by system.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult
+  DeleteSelectionAsAction(nsIEditor::EDirection aDirectionAndAmount,
+                          nsIEditor::EStripWrappers aStripWrappers,
+                          nsIPrincipal* aPrincipal = nullptr);
+
  protected:  // May be used by friends.
   class AutoEditActionDataSetter;
 
@@ -2190,6 +2208,32 @@ class EditorBase : public nsIEditor,
    */
   void UndefineCaretBidiLevel() const;
 
+  /**
+   * DeleteSelectionAsSubAction() removes selection content or content around
+   * caret with transactions.  This should be used for handling it as an
+   * edit sub-action.
+   *
+   * @param aDirectionAndAmount How much range should be removed.
+   * @param aStripWrappers      Whether the parent blocks should be removed
+   *                            when they become empty.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  DeleteSelectionAsSubAction(nsIEditor::EDirection aDirectionAndAmount,
+                             nsIEditor::EStripWrappers aStripWrappers);
+
+  /**
+   * This method handles "delete selection" commands.
+   * NOTE: Don't call this method recursively from the helper methods since
+   *       when nobody handled it without canceling and returing an error,
+   *       this falls it back to `DeleteSelectionWithTransaction()`.
+   *
+   * @param aDirectionAndAmount Direction of the deletion.
+   * @param aStripWrappers      Must be eStrip or eNoStrip.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual EditActionResult
+  HandleDeleteSelection(nsIEditor::EDirection aDirectionAndAmount,
+                        nsIEditor::EStripWrappers aStripWrappers) = 0;
+
  protected:  // Called by helper classes.
   /**
    * OnStartToHandleTopLevelEditSubAction() is called when
@@ -2496,6 +2540,14 @@ class EditorBase : public nsIEditor,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InsertLineBreakAsSubAction();
 
+  /**
+   * Extends the selection for given deletion operation
+   * If done, also update aDirectionAndAmount to what's actually left to do
+   * after the extension.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  ExtendSelectionForDelete(nsIEditor::EDirection* aDirectionAndAmount);
+
  private:
   nsCOMPtr<nsISelectionController> mSelectionController;
   RefPtr<Document> mDocument;
@@ -2745,6 +2797,7 @@ class EditorBase : public nsIEditor,
 
   int32_t mWrapColumn;
   int32_t mNewlineHandling;
+  int32_t mCaretStyle;
 
   // -1 = not initialized
   int8_t mDocDirtyState;

@@ -95,7 +95,7 @@ nsresult TextEditor::PrepareToInsertContent(
     nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "TextEditor::DeleteSelectionAsSubAction(eNone, eStrip) failed");
+          "EditorBase::DeleteSelectionAsSubAction(eNone, eStrip) failed");
       return rv;
     }
   }
@@ -552,11 +552,8 @@ nsresult TextEditor::DeleteSelectionByDragAsAction(bool aDispatchInputEvent) {
   }
 
   rv = DeleteSelectionAsSubAction(eNone, eStrip);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
   if (NS_FAILED(rv)) {
-    NS_WARNING("TextEditor::DeleteSelectionAsSubAction() failed");
+    NS_WARNING("EditorBase::DeleteSelectionAsSubAction() failed");
     return rv;
   }
 
