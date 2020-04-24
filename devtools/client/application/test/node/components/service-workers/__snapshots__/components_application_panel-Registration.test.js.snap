@@ -1,0 +1,178 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Registration Renders the expected snapshot for a registration with a worker 1`] = `
+<li
+  className=""
+>
+  <article
+    className="registration js-sw-container"
+  >
+    <header
+      className="registration__header"
+    >
+      <span
+        className="registration__scope js-sw-scope"
+        title="SCOPE 123"
+      >
+        SCOPE 123
+      </span>
+      <aside>
+        <Localized
+          id="serviceworker-worker-unregister"
+        >
+          <UIButton
+            className="js-unregister-button"
+            onClick={[Function]}
+          />
+        </Localized>
+      </aside>
+    </header>
+    <ul
+      className="registration__workers"
+    >
+      <li
+        className="registration__workers-item"
+        key="id-worker-1-example"
+      >
+        <Worker
+          isDebugEnabled={true}
+          worker={
+            Object {
+              "id": "id-worker-1-example",
+              "isActive": true,
+              "state": 4,
+              "stateText": "activated",
+              "url": "http://example.com/worker.js",
+              "workerTargetFront": "",
+            }
+          }
+        />
+      </li>
+    </ul>
+  </article>
+</li>
+`;
+
+exports[`Registration Renders the expected snapshot for a registration with multiple workers 1`] = `
+<li
+  className=""
+>
+  <article
+    className="registration js-sw-container"
+  >
+    <header
+      className="registration__header"
+    >
+      <span
+        className="registration__scope js-sw-scope"
+        title="SCOPE 123"
+      >
+        SCOPE 123
+      </span>
+      <aside>
+        <Localized
+          id="serviceworker-worker-unregister"
+        >
+          <UIButton
+            className="js-unregister-button"
+            onClick={[Function]}
+          />
+        </Localized>
+      </aside>
+    </header>
+    <ul
+      className="registration__workers"
+    >
+      <li
+        className="registration__workers-item"
+        key="id-worker-1-example"
+      >
+        <Worker
+          isDebugEnabled={true}
+          worker={
+            Object {
+              "id": "id-worker-1-example",
+              "isActive": true,
+              "state": 4,
+              "stateText": "activated",
+              "url": "http://example.com/worker.js",
+              "workerTargetFront": "",
+            }
+          }
+        />
+      </li>
+      <li
+        className="registration__workers-item"
+        key="id-worker-2-example"
+      >
+        <Worker
+          isDebugEnabled={true}
+          worker={
+            Object {
+              "id": "id-worker-2-example",
+              "isActive": false,
+              "state": 2,
+              "stateText": "installed",
+              "url": "http://example.com/worker.js",
+              "workerTargetFront": "",
+            }
+          }
+        />
+      </li>
+    </ul>
+  </article>
+</li>
+`;
+
+exports[`Registration Renders the expected snapshot when sw debugging is disabled 1`] = `
+<li
+  className=""
+>
+  <article
+    className="registration js-sw-container"
+  >
+    <header
+      className="registration__header"
+    >
+      <span
+        className="registration__scope js-sw-scope"
+        title="SCOPE 123"
+      >
+        SCOPE 123
+      </span>
+      <aside>
+        <Localized
+          id="serviceworker-worker-unregister"
+        >
+          <UIButton
+            className="js-unregister-button"
+            onClick={[Function]}
+          />
+        </Localized>
+      </aside>
+    </header>
+    <ul
+      className="registration__workers"
+    >
+      <li
+        className="registration__workers-item"
+        key="id-worker-1-example"
+      >
+        <Worker
+          isDebugEnabled={false}
+          worker={
+            Object {
+              "id": "id-worker-1-example",
+              "isActive": true,
+              "state": 4,
+              "stateText": "activated",
+              "url": "http://example.com/worker.js",
+              "workerTargetFront": "",
+            }
+          }
+        />
+      </li>
+    </ul>
+  </article>
+</li>
+`;
