@@ -5,7 +5,6 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const Services = require("Services");
 
 class ResourceWatcher {
   /**
@@ -33,16 +32,6 @@ class ResourceWatcher {
     this._destroyedListeners = new EventEmitter();
 
     this._listenerCount = new Map();
-  }
-
-  get contentToolboxFissionPrefValue() {
-    if (!this._contentToolboxFissionPrefValue) {
-      this._contentToolboxFissionPrefValue = Services.prefs.getBoolPref(
-        "devtools.contenttoolbox.fission",
-        false
-      );
-    }
-    return this._contentToolboxFissionPrefValue;
   }
 
   /**
@@ -262,7 +251,6 @@ class ResourceWatcher {
       targetType,
       targetFront,
       isTopLevel,
-      isFissionEnabledOnContentToolbox: this.contentToolboxFissionPrefValue,
       onAvailable,
     });
   }
@@ -312,7 +300,6 @@ class ResourceWatcher {
 
 ResourceWatcher.TYPES = ResourceWatcher.prototype.TYPES = {
   CONSOLE_MESSAGES: "console-messages",
-  ERROR_MESSAGES: "error-messages",
   PLATFORM_MESSAGES: "platform-messages",
 };
 module.exports = { ResourceWatcher };
@@ -323,8 +310,6 @@ module.exports = { ResourceWatcher };
 const LegacyListeners = {
   [ResourceWatcher.TYPES
     .CONSOLE_MESSAGES]: require("devtools/shared/resources/legacy-listeners/console-messages"),
-  [ResourceWatcher.TYPES
-    .ERROR_MESSAGES]: require("devtools/shared/resources/legacy-listeners/error-messages"),
   [ResourceWatcher.TYPES
     .PLATFORM_MESSAGES]: require("devtools/shared/resources/legacy-listeners/platform-messages"),
 };
