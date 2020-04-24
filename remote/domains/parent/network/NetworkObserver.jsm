@@ -283,6 +283,7 @@ class NetworkObserver {
     responseStorage.addResponseBody(httpChannel, body);
     this.emit("requestfinished", httpChannel, {
       requestId: requestId(httpChannel),
+      errorCode: getNetworkErrorStatusText(httpChannel.status),
     });
   }
 

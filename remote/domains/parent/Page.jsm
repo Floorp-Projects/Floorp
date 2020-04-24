@@ -94,15 +94,64 @@ class Page extends Domain {
    *     intended transition type
    * @return {Object}
    *         - frameId {string} frame id that has navigated (or failed to)
-   *         - errorText {string} error message if navigation has failed
-   *                              (not supported)
+   *         - errorText {string=} error message if navigation has failed
    *         - loaderId {string} (not supported)
    */
   async navigate(options = {}) {
     const { url, frameId, referrer, transitionType } = options;
+    if (typeof url != "string") {
+      throw new TypeError("url: string value expected");
+    }
+    let validURL;
+    try {
+      validURL = Services.io.newURI(url);
+    } catch (e) {
+      throw new Error("Error: Cannot navigate to invalid URL");
+    }
     if (frameId && frameId != this.session.browsingContext.id.toString()) {
       throw new UnsupportedError("frameId not supported");
     }
+
+    const requestDone = new Promise(resolve => {
+      if (validURL.scheme == "data" || validURL.scheme == "about") {
+        resolve({});
+        return;
+      }
+      let navigationRequestId, redirectedRequestId;
+      const _onNavigationRequest = function(_type, _ch, data) {
+        const {
+          url: requestURL,
+          requestId,
+          redirectedFrom = null,
+          isNavigationRequest,
+        } = data;
+        if (!isNavigationRequest) {
+          return;
+        }
+        if (validURL.spec === requestURL) {
+          navigationRequestId = redirectedRequestId = requestId;
+        } else if (redirectedFrom === redirectedRequestId) {
+          redirectedRequestId = requestId;
+        }
+      };
+
+      const _onRequestFinished = function(_type, _ch, data) {
+        const { requestId, errorCode } = data;
+        if (
+          redirectedRequestId !== requestId ||
+          errorCode == "NS_BINDING_REDIRECTED"
+        ) {
+          // handle next request in redirection chain
+          return;
+        }
+        this.session.networkObserver.off("request", _onNavigationRequest);
+        this.session.networkObserver.off("requestfinished", _onRequestFinished);
+        resolve({ errorCode, navigationRequestId });
+      }.bind(this);
+
+      this.session.networkObserver.on("request", _onNavigationRequest);
+      this.session.networkObserver.on("requestfinished", _onRequestFinished);
+    });
 
     const opts = {
       loadFlags: transitionToLoadFlag(transitionType),
@@ -110,10 +159,20 @@ class Page extends Domain {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     };
     this.session.browsingContext.loadURI(url, opts);
-
-    return {
+    // clients expect loaderId == requestId for a document navigation request
+    const {
+      // TODO as part of Bug 1599260
+      // navigationRequestId: loaderId,
+      errorCode,
+    } = await requestDone;
+    const result = {
       frameId: this.session.browsingContext.id.toString(),
+      // loaderId,
     };
+    if (errorCode) {
+      result.errorText = errorCode;
+    }
+    return result;
   }
 
   /**
