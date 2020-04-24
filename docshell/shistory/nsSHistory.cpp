@@ -386,7 +386,7 @@ nsresult nsSHistory::WalkHistoryEntries(nsISHEntry* aRootEntry,
 
     BrowsingContext* childBC = nullptr;
     if (aBC) {
-      for (BrowsingContext* child : aBC->GetChildren()) {
+      for (BrowsingContext* child : aBC->Children()) {
         // If the SH pref is on, or we are in the parent process, update
         // canonical BC directly
         if (StaticPrefs::fission_sessionHistoryInParent() ||
