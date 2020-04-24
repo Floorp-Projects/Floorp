@@ -11085,7 +11085,7 @@ void PresShell::SetIsUnderHiddenEmbedderElement(
     BrowsingContext* bc = docShell->GetBrowsingContext();
 
     // Propagate to children.
-    for (BrowsingContext* child : bc->GetChildren()) {
+    for (BrowsingContext* child : bc->Children()) {
       Element* embedderElement = child->GetEmbedderElement();
       if (!embedderElement) {
         // TODO: We shouldn't need to null check here since `child` and the
