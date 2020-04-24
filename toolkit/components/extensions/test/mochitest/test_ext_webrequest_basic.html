@@ -359,15 +359,6 @@ add_task(async function test_webRequest_tabId_browser() {
 
 add_task(async function test_webRequest_frames() {
   let expect = {
-    "text/plain,webRequestTest": {
-      type: "sub_frame",
-      events: ["onBeforeRequest", "onCompleted"],
-    },
-    "text/plain,webRequestTest_bad": {
-      type: "sub_frame",
-      events: ["onBeforeRequest", "onCompleted"],
-      cancel: "onBeforeRequest",
-    },
     "redirection.sjs": {
       status: 302,
       type: "sub_frame",
@@ -390,9 +381,6 @@ add_task(async function test_webRequest_frames() {
   };
   extension.sendMessage("set-expected", {expect, origin: location.href});
   await extension.awaitMessage("continue");
-  addFrame("data:text/plain,webRequestTest");
-  addFrame("data:text/plain,webRequestTest_bad");
-  await extension.awaitMessage("cancelled");
   addFrame("redirection.sjs");
   addFrame("https://nonresolvablehostname.invalid/badrobot");
   await extension.awaitMessage("done");
