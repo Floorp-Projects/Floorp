@@ -1467,7 +1467,7 @@ class nsTArray_Impl
   //
 
   template <class Allocator, typename ActualAlloc = Alloc>
-  typename ActualAlloc::ResultType Assign(
+  [[nodiscard]] typename ActualAlloc::ResultType Assign(
       const nsTArray_Impl<E, Allocator>& aOther) {
     return ActualAlloc::ConvertBoolToResultType(
         !!ReplaceElementsAt<E, ActualAlloc>(0, Length(), aOther.Elements(),
