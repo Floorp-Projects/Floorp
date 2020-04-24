@@ -838,6 +838,41 @@ this.LoginHelper = {
   },
 
   /**
+   * Checks if a field type is password compatible.
+   *
+   * @param {Element} element
+   *                  the field we want to check.
+   *
+   * @returns {Boolean} true if the field can
+   *                    be treated as a password input
+   */
+  isPasswordFieldType(element) {
+    if (ChromeUtils.getClassName(element) !== "HTMLInputElement") {
+      return false;
+    }
+
+    if (!element.isConnected) {
+      // If the element isn't connected then it isn't visible to the user so
+      // shouldn't be considered. It must have been connected in the past.
+      return false;
+    }
+
+    if (!element.hasBeenTypePassword) {
+      return false;
+    }
+
+    // Ensure the element is of a type that could have autocomplete.
+    // These include the types with user-editable values. If not, even if it used to be
+    // a type=password, we can't treat it as a password input now
+    let acInfo = element.getAutocompleteInfo();
+    if (!acInfo) {
+      return false;
+    }
+
+    return true;
+  },
+
+  /**
    * Checks if a field type is username compatible.
    *
    * @param {Element} element
