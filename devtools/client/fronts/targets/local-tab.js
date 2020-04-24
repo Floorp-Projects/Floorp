@@ -35,6 +35,10 @@ class LocalTabTargetFront extends BrowsingContextTargetFront {
     this._teardownTabListeners = this._teardownTabListeners.bind(this);
     this._handleTabEvent = this._handleTabEvent.bind(this);
 
+    // This flag will be set true from DevToolsExtensionPageContextParent
+    // if this target is created for DevTools extension page.
+    this.isDevToolsExtensionContext = false;
+
     this._tab = tab;
     this._setupTabListeners();
 
@@ -106,6 +110,11 @@ class LocalTabTargetFront extends BrowsingContextTargetFront {
     // remotenesschange events. But we should ignore them as at the end
     // the content doesn't change its remoteness.
     if (this.localTab.isResponsiveDesignMode) {
+      return;
+    }
+
+    // The front that was created for DevTools page extension does not have corresponding toolbox.
+    if (this.isDevToolsExtensionContext) {
       return;
     }
 

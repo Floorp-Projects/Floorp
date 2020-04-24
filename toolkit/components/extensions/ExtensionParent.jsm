@@ -26,6 +26,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   BroadcastConduit: "resource://gre/modules/ConduitsParent.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
+  DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
   ExtensionData: "resource://gre/modules/Extension.jsm",
   ExtensionActivityLog: "resource://gre/modules/ExtensionActivityLog.jsm",
   GeckoViewConnection: "resource://gre/modules/GeckoViewWebExtension.jsm",
@@ -724,6 +725,11 @@ class ExtensionPageContextParent extends ProxyContextParent {
  * devtools pages and panels running in ExtensionChild.jsm.
  */
 class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
+  constructor(...params) {
+    super(...params);
+    this._onTargetAvailable = this._onTargetAvailable.bind(this);
+  }
+
   set devToolsToolbox(toolbox) {
     if (this._devToolsToolbox) {
       throw new Error("Cannot set the context DevTools toolbox twice");
@@ -738,29 +744,50 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
     return this._devToolsToolbox;
   }
 
-  set devToolsTargetPromise(promise) {
-    if (this._devToolsTargetPromise) {
-      throw new Error("Cannot set the context DevTools target twice");
+  /**
+   * The returned target may be destroyed when navigating to another process and so,
+   * should only be used accordingly. That is to say, we can do an immediate action on it,
+   * but not listen to RDP events.
+   * @returns {Promise<TabTarget>}
+   *   The current devtools target associated to the context.
+   */
+  async getCurrentDevToolsTarget() {
+    if (!this._currentDevToolsTarget) {
+      await this.devToolsToolbox.targetList.watchTargets(
+        [this.devToolsToolbox.targetList.TYPES.FRAME],
+        this._onTargetAvailable
+      );
     }
 
-    this._devToolsTargetPromise = promise;
-
-    return promise;
-  }
-
-  get devToolsTargetPromise() {
-    return this._devToolsTargetPromise;
+    return this._currentDevToolsTarget;
   }
 
   shutdown() {
-    if (this._devToolsTargetPromise) {
-      this._devToolsTargetPromise.then(target => target.destroy());
-      this._devToolsTargetPromise = null;
+    this.devToolsToolbox.targetList.unwatchTargets(
+      [this.devToolsToolbox.targetList.TYPES.FRAME],
+      this._onTargetAvailable
+    );
+
+    if (this._currentDevToolsTarget) {
+      this._currentDevToolsTarget.destroy();
+      this._currentDevToolsTarget = null;
     }
 
     this._devToolsToolbox = null;
 
     super.shutdown();
+  }
+
+  async _onTargetAvailable({ targetFront, isTopLevel }) {
+    if (!isTopLevel) {
+      return;
+    }
+
+    this._currentDevToolsTarget = await DevToolsShim.createTargetForTab(
+      targetFront.localTab
+    );
+    this._currentDevToolsTarget.isDevToolsExtensionContext = true;
+    await this._currentDevToolsTarget.attach();
   }
 }
 
