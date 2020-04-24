@@ -5,72 +5,36 @@
  /*
  * The current layout of a service worker item is
  *
- *  +----------------------------+----------------+
- *  | Service worker scope       | Unregister_btn |
  *  +---+----------+-------------+----------------|
  *  |     "Source" | script_name debug_link       |
-    |              | "Updated" update_time        |
  *  |--------------+-------------+----------------|
  *  |     "Status" | status start_button          |
  *  +---+----------+-------------+----------------|
  */
 
 .worker {
-  display: grid;
-  grid-template-rows: auto auto auto;
-  grid-template-columns: auto 1fr;
-  width: 100%;
-  grid-column-gap: 0;
-  padding: 1rem 0;
   line-height: 1.5;
   font-size: var(--body-10-font-size);
 }
 
-.worker:first-child {
-  padding-top: 0;
-}
-
-.worker:not(:last-child) {
-  border-bottom: 1px solid var(--separator-color);
-}
-
-.worker__header {
-  grid-column: 1/3;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-column-gap: 2rem;
-  align-items: center;
-}
-
-.worker__scope {
-  font-weight: bold;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.worker__scope,
 .worker__source-url {
   user-select: text;
 }
 
 .worker__meta-name {
   color: var(--grey-50);
-  padding-inline-start: 4.5rem;
+  padding-inline-start: calc(var(--base-unit) * 3);
 }
 
 .worker__data {
   display: grid;
   grid-template-columns: auto 1fr;
-  grid-gap: 1rem;
+  grid-column-gap: calc(var(--base-unit) * 2);
+  grid-row-gap: calc(var(--base-unit) * 0.5);
 }
 
 .worker__data > * {
   margin: 0;
-}
-
-.worker__data__updated {
-  color: var(--theme-text-color-alt);
 }
 
 .worker__link-start,

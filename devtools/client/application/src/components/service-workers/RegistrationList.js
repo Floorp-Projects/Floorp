@@ -22,8 +22,8 @@ const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
 const Types = require("devtools/client/application/src/types/index");
-const Worker = createFactory(
-  require("devtools/client/application/src/components/service-workers/Worker")
+const Registration = createFactory(
+  require("devtools/client/application/src/components/service-workers/Registration")
 );
 
 /**
@@ -35,12 +35,12 @@ class RegistrationList extends PureComponent {
   static get propTypes() {
     return {
       canDebugWorkers: PropTypes.bool.isRequired,
-      workers: Types.workerArray.isRequired,
+      registrations: Types.registrationArray.isRequired,
     };
   }
 
   render() {
-    const { canDebugWorkers, workers } = this.props;
+    const { canDebugWorkers, registrations } = this.props;
 
     return [
       article(
@@ -56,11 +56,12 @@ class RegistrationList extends PureComponent {
         ),
         ul(
           {},
-          workers.map(worker =>
-            Worker({
-              key: `${worker.id}-${worker.state}`,
+          registrations.map(registration =>
+            Registration({
+              key: registration.id,
               isDebugEnabled: canDebugWorkers,
-              worker,
+              registration,
+              className: "registrations-container__item",
             })
           )
         )

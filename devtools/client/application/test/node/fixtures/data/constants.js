@@ -4,97 +4,140 @@
 
 "use strict";
 
+// NOTE: worker state values are defined in an enum in nsIServiceWorkerManager
+// https://searchfox.org/mozilla-central/source/dom/interfaces/base/nsIServiceWorkerManager.idl
+
 const EMPTY_WORKER_LIST = [];
 
 const SINGLE_WORKER_DEFAULT_DOMAIN_LIST = [
   {
-    active: true,
-    name: "worker1",
+    id: "id-reg-1-example",
     scope: "SCOPE 123",
     registrationFront: "",
-    workerTargetFront: "",
-    url: "http://example.com/worker.js",
-    id: "id-worker-1-example",
-    state: 0,
+    workers: [
+      {
+        id: "id-worker-1-example",
+        isActive: true,
+        workerTargetFront: "",
+        url: "http://example.com/worker.js",
+        state: 4,
+        stateText: "activated",
+      },
+    ],
   },
 ];
 
 const SINGLE_WORKER_DIFFERENT_DOMAIN_LIST = [
   {
-    active: true,
-    name: "worker1",
+    id: "id-reg-1-example",
     scope: "SCOPE 123",
     registrationFront: "",
-    workerTargetFront: "",
-    url: "http://different-example.com/worker.js",
-    id: "id-worker-1-different-example",
-    state: 0,
+    workers: [
+      {
+        id: "id-worker-1-example",
+        isActive: true,
+        workerTargetFront: "",
+        url: "http://different-example.com/worker.js",
+        state: 4,
+        stateText: "activated",
+      },
+    ],
   },
 ];
 
 const MULTIPLE_WORKER_LIST = [
   {
-    active: true,
-    name: "worker1",
-    scope: "SCOPE 123",
+    id: "id-reg-1-example",
+    scope: "SCOPE1",
     registrationFront: "",
-    workerTargetFront: "",
-    url: "http://example.com/worker.js",
-    id: "id-worker-1-example",
-    state: 0,
+    workers: [
+      {
+        id: "id-worker-1-example",
+        isActive: true,
+        workerTargetFront: "",
+        url: "http://example.com/worker.js",
+        state: 4,
+        stateText: "activated",
+      },
+    ],
   },
   {
-    active: false,
-    name: "worker2",
-    scope: "SCOPE 456",
+    id: "id-reg-1-example",
+    scope: "SCOPE2",
     registrationFront: "",
-    workerTargetFront: "",
-    url: "http://example.com/worker.js",
-    id: "id-worker-2-example",
-    state: 0,
+    workers: [
+      {
+        id: "id-worker-2-example",
+        isActive: false,
+        workerTargetFront: "",
+        url: "http://example.com/worker.js",
+        state: 2,
+        stateText: "installed",
+      },
+    ],
   },
   {
-    active: true,
-    name: "worker3",
-    scope: "SCOPE 789",
+    id: "id-reg-3-example",
+    scope: "SCOPE3",
     registrationFront: "",
-    workerTargetFront: "",
-    url: "http://example.com/worker.js",
-    id: "id-worker-3-example",
-    state: 0,
+    workers: [
+      {
+        id: "id-worker-3-example",
+        isActive: true,
+        workerTargetFront: "",
+        url: "http://example.com/worker.js",
+        state: 4,
+        stateText: "activated",
+      },
+    ],
   },
 ];
 
 const MULTIPLE_WORKER_MIXED_DOMAINS_LIST = [
   {
-    active: true,
-    name: "worker1",
-    scope: "SCOPE 123",
+    id: "id-reg-1-example",
+    scope: "SCOPE1",
     registrationFront: "",
-    workerTargetFront: "",
-    url: "http://example.com/worker.js",
-    id: "id-worker-1-example",
-    state: 0,
+    workers: [
+      {
+        id: "id-worker-1-example",
+        isActive: true,
+        workerTargetFront: "",
+        url: "http://example.com/worker.js",
+        state: 4,
+        stateText: "activated",
+      },
+    ],
   },
   {
-    active: false,
-    name: "worker2",
-    scope: "SCOPE 456",
+    id: "id-reg-2-example",
+    scope: "SCOPE2",
     registrationFront: "",
-    workerTargetFront: "",
-    url: "http://example.com/worker.js",
-    id: "id-worker-2-example",
-    state: 0,
+    workers: [
+      {
+        id: "id-worker-2-example",
+        isActive: true,
+        workerTargetFront: "",
+        url: "http://example.com/worker.js",
+        state: 4,
+        stateText: "activated",
+      },
+    ],
   },
   {
-    active: true,
-    name: "worker3",
-    scope: "SCOPE 789",
+    id: "id-reg-3-example",
+    scope: "SCOPE3",
     registrationFront: "",
-    workerTargetFront: "",
-    url: "http://different-example.com/worker.js",
-    id: "id-worker-3-different-example",
-    state: 0,
+    workers: [
+      {
+        id: "id-worker-3-example",
+        isActive: true,
+        workerTargetFront: "",
+        url: "http://different-example.com/worker.js",
+        state: 4,
+        stateText: "activated",
+      },
+    ],
   },
 ];
 
