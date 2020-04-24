@@ -624,7 +624,7 @@ GVariant* MPRISServiceHandler::GetMetadataAsGVariant() const {
   GVariantBuilder builder;
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
   g_variant_builder_add(&builder, "{sv}", "mpris:trackid",
-                        g_variant_new("o", "/valid/path"));
+                        g_variant_new("o", DBUS_MPRIS_TRACK_PATH));
 
   if (mMetadata.isSome()) {
     LOG("Get Metadata: title - %s, Artist - %s, Album - %s",
