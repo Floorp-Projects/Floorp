@@ -42,31 +42,15 @@ function startAndroid(win) {
   }, 0);
 }
 
-var WindowListener = {
-  onOpenWindow: function(xulWin) {
-    Services.wm.removeListener(WindowListener);
-
-    let win = xulWin.docShell.domWindow;
-    win.addEventListener(
-      "load",
-      function listener() {
-        // Load into any existing windows.
-        for (win of Services.wm.getEnumerator("navigator:browser")) {
-          break;
-        }
-
-        win.addEventListener(
-          "pageshow",
-          function() {
-            startAndroid(win);
-          },
-          { once: true }
-        );
-      },
-      { once: true }
-    );
-  },
-};
+function GetMainWindow() {
+  let win = Services.wm.getMostRecentWindow("navigator:browser");
+  if (!win) {
+    // There is no navigator:browser in the geckoview TestRunnerActivity;
+    // try navigator.geckoview instead.
+    win = Services.wm.getMostRecentWindow("navigator:geckoview");
+  }
+  return win;
+}
 
 this.reftest = class extends ExtensionAPI {
   onStartup() {
@@ -101,13 +85,7 @@ this.reftest = class extends ExtensionAPI {
     // On desktop, a separate window (dummy) is created and explicitly given
     // focus (see bug 859339 for details), then tests are launched in a new
     // top-level window.
-    let win = Services.wm.getMostRecentWindow("navigator:browser");
-    if (!win) {
-      // There is no navigator:browser in the geckoview TestRunnerActivity;
-      // try navigator.geckoview instead.
-      win = Services.wm.getMostRecentWindow("navigator:geckoview");
-    }
-
+    let win = GetMainWindow();
     if (Services.appinfo.OS == "Android") {
       ({ OnRefTestLoad, OnRefTestUnload } = ChromeUtils.import(
         "resource://reftest/reftest.jsm"
@@ -115,7 +93,16 @@ this.reftest = class extends ExtensionAPI {
       if (win) {
         startAndroid(win);
       } else {
-        Services.wm.addListener(WindowListener);
+        // The window type parameter is only available once the window's document
+        // element has been created. The main window has already been created
+        // however and it is in an in-between state which means that you can't
+        // find it by its type nor will domwindowcreated be fired.
+        // So we listen to either initial-document-element-inserted which
+        // indicates when it's okay to search for the main window by type again.
+        Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+          Services.obs.removeObserver(observer, aTopic);
+          startAndroid(GetMainWindow());
+        }, "initial-document-element-inserted");
       }
       return;
     }
