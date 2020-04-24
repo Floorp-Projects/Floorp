@@ -25,13 +25,6 @@ _mochitest_summary = {
     'known_fail_group': "Todo",
 }
 
-_reftest_summary = {
-    'regex': re.compile(r'''REFTEST INFO \| (Successful|Unexpected|Known problems): (\d+) \('''),  # NOQA: E501
-    'pass_group': "Successful",
-    'fail_group': "Unexpected",
-    'known_fail_group': "Known problems",
-}
-
 TinderBoxPrintRe = {
     "mochitest-chrome_summary": _mochitest_summary,
     "mochitest-webgl1-core_summary": _mochitest_summary,
@@ -49,16 +42,30 @@ TinderBoxPrintRe = {
         'fail_group': "failed",
         'known_fail_group': "todo",
     },
-    "reftest_summary": _reftest_summary,
-    "reftest-qr_summary": _reftest_summary,
-    "crashtest_summary": _reftest_summary,
+    "reftest_summary": {
+        'regex': re.compile(r'''REFTEST INFO \| (Successful|Unexpected|Known problems): (\d+) \('''),  # NOQA: E501
+        'pass_group': "Successful",
+        'fail_group': "Unexpected",
+        'known_fail_group': "Known problems",
+    },
+    "crashtest_summary": {
+        'regex': re.compile(r'''REFTEST INFO \| (Successful|Unexpected|Known problems): (\d+) \('''),  # NOQA: E501
+        'pass_group': "Successful",
+        'fail_group': "Unexpected",
+        'known_fail_group': "Known problems",
+    },
     "xpcshell_summary": {
         'regex': re.compile(r'''INFO \| (Passed|Failed|Todo): (\d+)'''),
         'pass_group': "Passed",
         'fail_group': "Failed",
         'known_fail_group': "Todo",
     },
-    "jsreftest_summary": _reftest_summary,
+    "jsreftest_summary": {
+        'regex': re.compile(r'''REFTEST INFO \| (Successful|Unexpected|Known problems): (\d+) \('''),  # NOQA: E501
+        'pass_group': "Successful",
+        'fail_group': "Unexpected",
+        'known_fail_group': "Known problems",
+    },
     "instrumentation_summary": _mochitest_summary,
     "cppunittest_summary": {
         'regex': re.compile(r'''cppunittests INFO \| (Passed|Failed): (\d+)'''),

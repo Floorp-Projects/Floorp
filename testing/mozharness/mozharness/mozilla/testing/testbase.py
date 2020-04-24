@@ -320,7 +320,6 @@ You can set this by specifying --test-url URL
             'mochitest-webgpu': 'mochitest',
             'geckoview': 'mochitest',
             'geckoview-junit': 'mochitest',
-            'reftest-qr': 'reftest',
             'jsreftest': 'reftest',
             'crashtest': 'reftest',
             'reftest-debug': 'reftest',

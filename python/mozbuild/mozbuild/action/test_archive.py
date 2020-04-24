@@ -461,7 +461,6 @@ ARCHIVE_FILES = {
             'base': '',
             'manifests': [
                 'layout/reftests/reftest.list',
-                'layout/reftests/reftest-qr.list',
                 'testing/crashtest/crashtests.list',
             ],
             'dest': 'reftest/tests',
