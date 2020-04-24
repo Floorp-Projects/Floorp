@@ -1328,28 +1328,50 @@ class UrlbarInput {
   _checkForRtlText(value) {
     let directionality = this.window.windowUtils.getDirectionFromText(value);
     if (directionality == this.window.windowUtils.DIRECTION_RTL) {
-      this.setAttribute("rtltext", "true");
       return true;
     }
-    this.removeAttribute("rtltext");
     return false;
   }
 
+  /**
+   * Invoked on overflow/underflow/scrollend events to update attributes
+   * related to the input text directionality. Overflow fade masks use these
+   * attributes to appear at the proper side of the urlbar.
+   */
   _updateTextOverflow() {
     if (!this._overflowing) {
       this.removeAttribute("textoverflow");
       return;
     }
 
-    let isRTL = this._checkForRtlText(this.value);
+    let isRTL =
+      this.getAttribute("domaindir") != "ltr" &&
+      this._checkForRtlText(this.value);
 
     this.window.promiseDocumentFlushed(() => {
-      // Check overflow again to ensure it didn't change in the meantime.
+      // Check overflow again to ensure it didn't change in the meanwhile.
       let input = this.inputField;
       if (input && this._overflowing) {
-        let side = isRTL ? "left" : "right";
-        if (input.scrollLeft == input.scrollLeftMax) {
-          side = isRTL == !input.scrollLeft ? "left" : "right";
+        // Normally we would overflow at the final side of text direction,
+        // though RTL domains may cause us to overflow at the opposite side.
+        // This happens dynamically as a consequence of the input field contents
+        // and the call to _ensureFormattedHostVisible, this code only reports
+        // the final state of all that scrolling into an attribute, because
+        // there's no other way to capture this in css.
+        // Note it's also possible to scroll an unfocused input field using
+        // SHIFT + mousewheel on Windows, or with just the mousewheel / touchpad
+        // scroll (without modifiers) on Mac.
+        let side = "both";
+        if (isRTL) {
+          if (input.scrollLeft == 0) {
+            side = "left";
+          } else if (input.scrollLeft == input.scrollLeftMin) {
+            side = "right";
+          }
+        } else if (input.scrollLeft == 0) {
+          side = "right";
+        } else if (input.scrollLeft == input.scrollLeftMax) {
+          side = "left";
         }
 
         this.window.requestAnimationFrame(() => {
@@ -2059,7 +2081,6 @@ class UrlbarInput {
 
     if (value) {
       this.setAttribute("usertyping", "true");
-      this._checkForRtlText(value);
     } else {
       this.removeAttribute("usertyping");
     }
