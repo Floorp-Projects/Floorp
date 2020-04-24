@@ -2500,7 +2500,7 @@ XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
             {
                 headers: options.headers ? options.headers : {},
                 path: path + "?" + querystring,
-            }, 
+            },
             // N.B. This doesn't use _getRetry, because all calls to
             // `paginatedList` are assumed to come from calls that already
             // used `_getRetry` at e.g. the bucket or collection level.
