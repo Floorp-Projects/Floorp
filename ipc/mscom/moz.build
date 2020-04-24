@@ -60,6 +60,7 @@ if CONFIG['ACCESSIBILITY']:
 
     SOURCES += [
         'Interceptor.cpp',
+        'MainThreadHandoff.cpp',
         'Registration.cpp',
         'SpinEvent.cpp',
         'WeakRef.cpp',
@@ -70,7 +71,6 @@ if CONFIG['ACCESSIBILITY']:
         'DispatchForwarder.cpp',
         'FastMarshaler.cpp',
         'InterceptorLog.cpp',
-        'MainThreadHandoff.cpp',
         'MainThreadInvoker.cpp',
         'StructStream.cpp',
     ]
