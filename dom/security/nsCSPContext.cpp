@@ -1648,7 +1648,9 @@ nsCSPContext::ToJSON(nsAString& outCSPinJSON) {
   for (uint32_t p = 0; p < mPolicies.Length(); p++) {
     dom::CSP jsonCSP;
     mPolicies[p]->toDomCSPStruct(jsonCSP);
-    jsonPolicies.mCsp_policies.Value().AppendElement(jsonCSP, fallible);
+    if (!jsonPolicies.mCsp_policies.Value().AppendElement(jsonCSP, fallible)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   // convert the gathered information to JSON

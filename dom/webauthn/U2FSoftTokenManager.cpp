@@ -419,9 +419,11 @@ static UniqueSECItem KeyHandleFromPrivateKey(
 
   // It's OK to ignore the return values here because we're writing into
   // pre-allocated space
-  keyHandleBuf.AppendElement(SoftTokenHandle::Version1, mozilla::fallible);
-  keyHandleBuf.AppendElement(sizeof(saltParam), mozilla::fallible);
-  keyHandleBuf.AppendElements(saltParam, sizeof(saltParam), mozilla::fallible);
+  (void)keyHandleBuf.AppendElement(SoftTokenHandle::Version1,
+                                   mozilla::fallible);
+  (void)keyHandleBuf.AppendElement(sizeof(saltParam), mozilla::fallible);
+  (void)keyHandleBuf.AppendElements(saltParam, sizeof(saltParam),
+                                    mozilla::fallible);
   keyHandleBuf.AppendSECItem(wrappedKey.get());
 
   UniqueSECItem keyHandle(::SECITEM_AllocItem(nullptr, nullptr, 0));
@@ -692,9 +694,9 @@ RefPtr<U2FRegisterPromise> U2FSoftTokenManager::Register(
 
   // // It's OK to ignore the return values here because we're writing into
   // // pre-allocated space
-  signedDataBuf.AppendElement(0x00, mozilla::fallible);
-  signedDataBuf.AppendElements(rpIdHash, mozilla::fallible);
-  signedDataBuf.AppendElements(clientDataHash, mozilla::fallible);
+  (void)signedDataBuf.AppendElement(0x00, mozilla::fallible);
+  (void)signedDataBuf.AppendElements(rpIdHash, mozilla::fallible);
+  (void)signedDataBuf.AppendElements(clientDataHash, mozilla::fallible);
   signedDataBuf.AppendSECItem(keyHandleItem.get());
   signedDataBuf.AppendSECItem(pubKey->u.ec.publicValue);
 
@@ -717,9 +719,9 @@ RefPtr<U2FRegisterPromise> U2FSoftTokenManager::Register(
     return U2FRegisterPromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY,
                                                __func__);
   }
-  registrationBuf.AppendElement(0x05, mozilla::fallible);
+  (void)registrationBuf.AppendElement(0x05, mozilla::fallible);
   registrationBuf.AppendSECItem(pubKey->u.ec.publicValue);
-  registrationBuf.AppendElement(keyHandleItem->len, mozilla::fallible);
+  (void)registrationBuf.AppendElement(keyHandleItem->len, mozilla::fallible);
   registrationBuf.AppendSECItem(keyHandleItem.get());
   registrationBuf.AppendSECItem(attestCert.get()->derCert);
   registrationBuf.AppendSECItem(signatureItem);
@@ -893,12 +895,12 @@ RefPtr<U2FSignPromise> U2FSoftTokenManager::Sign(
 
   // It's OK to ignore the return values here because we're writing into
   // pre-allocated space
-  signedDataBuf.AppendElements(chosenAppId.Elements(), chosenAppId.Length(),
-                               mozilla::fallible);
-  signedDataBuf.AppendElement(0x01, mozilla::fallible);
+  (void)signedDataBuf.AppendElements(chosenAppId.Elements(),
+                                     chosenAppId.Length(), mozilla::fallible);
+  (void)signedDataBuf.AppendElement(0x01, mozilla::fallible);
   signedDataBuf.AppendSECItem(counterItem);
-  signedDataBuf.AppendElements(clientDataHash.Elements(),
-                               clientDataHash.Length(), mozilla::fallible);
+  (void)signedDataBuf.AppendElements(
+      clientDataHash.Elements(), clientDataHash.Length(), mozilla::fallible);
 
   if (MOZ_LOG_TEST(gNSSTokenLog, LogLevel::Debug)) {
     nsAutoCString base64;
@@ -932,7 +934,7 @@ RefPtr<U2FSignPromise> U2FSoftTokenManager::Sign(
 
   // It's OK to ignore the return values here because we're writing into
   // pre-allocated space
-  signatureDataBuf.AppendElement(0x01, mozilla::fallible);
+  (void)signatureDataBuf.AppendElement(0x01, mozilla::fallible);
   signatureDataBuf.AppendSECItem(counterItem);
   signatureDataBuf.AppendSECItem(signatureItem);
 
