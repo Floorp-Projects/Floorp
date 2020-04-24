@@ -296,18 +296,22 @@ abstract class AbstractFetchDownloadService : Service() {
         // stop and cannot be controlled via the notification anymore (until we persist enough data
         // to resume downloads from a new process).
 
-        val notificationManager = NotificationManagerCompat.from(context)
-
-        downloadJobs.values.forEach { state ->
-            notificationManager.cancel(state.foregroundServiceId)
-        }
+        clearAllDownloadsNotificationsAndJobs()
     }
 
     override fun onDestroy() {
         super.onDestroy()
 
-        downloadJobs.values.forEach {
-            it.job?.cancel()
+        clearAllDownloadsNotificationsAndJobs()
+    }
+
+    // Cancels all running jobs and remove all notifications
+    internal fun clearAllDownloadsNotificationsAndJobs() {
+        val notificationManager = NotificationManagerCompat.from(context)
+
+        downloadJobs.values.forEach { state ->
+            notificationManager.cancel(state.foregroundServiceId)
+            state.job?.cancel()
         }
 
         notificationUpdateScope.cancel()
