@@ -326,7 +326,6 @@ async def generate_partial(from_dir, to_dir, dest_mar, mar_data, tools_dir, arch
         del env["MAR_OLD_FORMAT"]
 
     make_incremental_update = tools_dir / "make_incremental_update.sh"
-    make_incremental_update = "/home/worker/tools/make_incremental_update.sh"
     cmd = f"{make_incremental_update} {dest_mar} {from_dir} {to_dir}"
 
     await run_command(cmd, cwd=dest_mar.parent, env=env, label=dest_mar.name)
