@@ -290,10 +290,11 @@ class MasterList {
   }
 
   inline bool IsObservedOperation(mozilla::IOInterposeObserver::Operation aOp) {
-    // This does not occur inside of a lock, so this makes no guarantees that
-    // the observers are in sync with this. That is acceptable; it is not a
-    // problem if we occasionally report more or less IO than is actually
-    // occurring.
+    // The quick reader may observe that no locks are being employed here,
+    // hence the result of the operations is truly undefined. However, most
+    // computers will usually return either true or false, which is good enough.
+    // It is not a problem if we occasionally report more or less IO than is
+    // actually occurring.
     return mIsEnabled && !!(mObservedOperations & aOp);
   }
 
@@ -306,9 +307,7 @@ class MasterList {
   // during shutdown.
   mozilla::IOInterposer::Mutex mLock;
   // Flags tracking which operations are being observed
-  mozilla::Atomic<mozilla::IOInterposeObserver::Operation,
-                  mozilla::MemoryOrdering::Relaxed>
-      mObservedOperations;
+  mozilla::IOInterposeObserver::Operation mObservedOperations;
   // Used for quickly disabling everything by IOInterposer::Disable()
   mozilla::Atomic<bool> mIsEnabled;
   // Used to inform threads that the master observer list has changed
