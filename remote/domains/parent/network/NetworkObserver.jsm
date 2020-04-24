@@ -185,44 +185,6 @@ class NetworkObserver {
     this._redirectMap.set(newChannel, oldChannel);
   }
 
-  observeActivity(
-    channel,
-    activityType,
-    activitySubtype,
-    timestamp,
-    extraSizeData,
-    extraStringData
-  ) {
-    if (
-      activityType !== Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION
-    ) {
-      return;
-    }
-    try {
-      channel.QueryInterface(Ci.nsIHttpChannel);
-    } catch (ex) {
-      return;
-    }
-
-    const httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
-    const loadContext = getLoadContext(httpChannel);
-    if (
-      !loadContext ||
-      !this._browserSessionCount.has(loadContext.topFrameElement)
-    ) {
-      return;
-    }
-    if (
-      activitySubtype !==
-      Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE
-    ) {
-      return;
-    }
-    this.emit("requestfinished", httpChannel, {
-      requestId: requestId(httpChannel),
-    });
-  }
-
   _onRequest(channel, topic) {
     try {
       channel.QueryInterface(Ci.nsIHttpChannel);
