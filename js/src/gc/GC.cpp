@@ -2920,8 +2920,8 @@ void GCRuntime::maybeAllocTriggerZoneGC(Zone* zone, size_t nbytes) {
 
   MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
 
-  TriggerResult trigger = checkHeapThreshold(
-      zone->gcHeapSize, zone->gcHeapThreshold, zone->isCollecting());
+  TriggerResult trigger =
+      checkHeapThreshold(zone, zone->gcHeapSize, zone->gcHeapThreshold);
 
   if (trigger.kind == TriggerKind::None) {
     return;
@@ -2990,8 +2990,7 @@ bool GCRuntime::maybeMallocTriggerZoneGC(Zone* zone, const HeapSize& heap,
     return false;
   }
 
-  TriggerResult trigger =
-      checkHeapThreshold(heap, threshold, zone->isCollecting());
+  TriggerResult trigger = checkHeapThreshold(zone, heap, threshold);
   if (trigger.kind == TriggerKind::None) {
     return false;
   }
@@ -3010,20 +3009,27 @@ bool GCRuntime::maybeMallocTriggerZoneGC(Zone* zone, const HeapSize& heap,
   return true;
 }
 
-TriggerResult GCRuntime::checkHeapThreshold(const HeapSize& heapSize,
-                                            const HeapThreshold& heapThreshold,
-                                            bool isCollecting) {
+TriggerResult GCRuntime::checkHeapThreshold(
+    Zone* zone, const HeapSize& heapSize, const HeapThreshold& heapThreshold) {
   size_t usedBytes = heapSize.bytes();
   size_t thresholdBytes = heapThreshold.bytes();
   if (usedBytes < thresholdBytes) {
     return TriggerResult{TriggerKind::None, 0, 0};
   }
 
-  size_t niThreshold = thresholdBytes * tunables.nonIncrementalFactor();
+  size_t niThreshold = heapThreshold.nonIncrementalBytes(zone, tunables);
   if (usedBytes >= niThreshold) {
     // We have passed the non-incremental threshold: immediately trigger a
     // non-incremental GC.
     return TriggerResult{TriggerKind::NonIncremental, usedBytes, niThreshold};
+  }
+
+  // Don't trigger incremental slices during background sweeping or decommit, as
+  // these will have no effect. A slice will be triggered automatically when
+  // these tasks finish.
+  if (zone->wasGCStarted() &&
+      (state() == State::Finalize || state() == State::Decommit)) {
+    return TriggerResult{TriggerKind::None, 0, 0};
   }
 
   // Start or continue an in progress incremental GC.
@@ -3294,7 +3300,6 @@ void GCRuntime::sweepBackgroundThings(ZoneList& zones) {
         emptyArenas = emptyArenas->next;
         releaseArena(arena, lock);
       }
-      zone->updateGCThresholds(*this, invocationKind, lock);
     }
   }
 }
@@ -5392,7 +5397,6 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(JSFreeOp* fop,
     }
     AutoLockGC lock(this);
     zone->changeGCState(Zone::Sweep, Zone::Finished);
-    zone->updateGCThresholds(*this, invocationKind, lock);
     zone->arenas.unmarkPreMarkedFreeCells();
   }
 
@@ -6257,13 +6261,17 @@ void GCRuntime::finishCollection() {
   schedulingState.updateHighFrequencyMode(lastGCEndTime_, currentTime,
                                           tunables);
 
-  for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
-    if (zone->isCollecting()) {
+  {
+    AutoLockGC lock(this);
+    for (GCZonesIter zone(this); !zone.done(); zone.next()) {
       zone->changeGCState(Zone::Finished, Zone::NoGC);
       zone->gcDelayBytes = 0;
       zone->notifyObservingDebuggers();
+      zone->updateGCThresholds(*this, invocationKind, lock);
     }
+  }
 
+  for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
     MOZ_ASSERT(!zone->wasGCStarted());
     MOZ_ASSERT(!zone->needsIncrementalBarrier());
     MOZ_ASSERT(!zone->isOnList());
@@ -6801,7 +6809,7 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
     }
 
     if (zone->gcHeapSize.bytes() >=
-        zone->gcHeapThreshold.nonIncrementalTriggerBytes(tunables)) {
+        zone->gcHeapThreshold.nonIncrementalBytes(zone, tunables)) {
       checkZoneIsScheduled(zone, reason, "GC bytes");
       budget.makeUnlimited();
       stats().nonincremental(AbortReason::GCBytesTrigger);
@@ -6811,7 +6819,7 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
     }
 
     if (zone->mallocHeapSize.bytes() >=
-        zone->mallocHeapThreshold.nonIncrementalTriggerBytes(tunables)) {
+        zone->mallocHeapThreshold.nonIncrementalBytes(zone, tunables)) {
       checkZoneIsScheduled(zone, reason, "malloc bytes");
       budget.makeUnlimited();
       stats().nonincremental(AbortReason::MallocBytesTrigger);
@@ -6821,7 +6829,7 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
     }
 
     if (zone->jitHeapSize.bytes() >=
-        zone->jitHeapThreshold.nonIncrementalTriggerBytes(tunables)) {
+        zone->jitHeapThreshold.nonIncrementalBytes(zone, tunables)) {
       checkZoneIsScheduled(zone, reason, "JIT code bytes");
       budget.makeUnlimited();
       stats().nonincremental(AbortReason::JitCodeBytesTrigger);

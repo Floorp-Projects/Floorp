@@ -49,6 +49,9 @@
 #  include "mozilla/BaseProfilerDetail.h"
 #  include "mozilla/DoubleConversion.h"
 #  include "mozilla/Printf.h"
+#  include "mozilla/ProfileBufferChunkManagerSingle.h"
+#  include "mozilla/ProfileBufferChunkManagerWithLocalLimit.h"
+#  include "mozilla/ProfileChunkedBuffer.h"
 #  include "mozilla/Services.h"
 #  include "mozilla/Span.h"
 #  include "mozilla/StackWalk.h"
@@ -284,7 +287,7 @@ class CorePS {
         // functions guarded by gPSMutex as well as others without safety (e.g.,
         // profiler_add_marker). It is *not* used inside the critical section of
         // the sampler, because mutexes cannot be used there.
-        mCoreBlocksRingBuffer(BlocksRingBuffer::ThreadSafety::WithMutex)
+        mCoreBuffer(ProfileChunkedBuffer::ThreadSafety::WithMutex)
 #  ifdef USE_LUL_STACKWALK
         ,
         mLul(nullptr)
@@ -349,7 +352,7 @@ class CorePS {
   PS_GET_LOCKLESS(TimeStamp, ProcessStartTime)
 
   // No PSLockRef is needed for this field because it's thread-safe.
-  PS_GET_LOCKLESS(BlocksRingBuffer&, CoreBlocksRingBuffer)
+  PS_GET_LOCKLESS(ProfileChunkedBuffer&, CoreBuffer)
 
   PS_GET(const Vector<UniquePtr<RegisteredThread>>&, RegisteredThreads)
 
@@ -458,16 +461,16 @@ class CorePS {
   // The time that the process started.
   const TimeStamp mProcessStartTime;
 
-  // The thread-safe blocks-oriented ring buffer into which all profiling data
-  // is recorded.
+  // The thread-safe blocks-oriented buffer into which all profiling data is
+  // recorded.
   // ActivePS controls the lifetime of the underlying contents buffer: When
-  // ActivePS does not exist, mCoreBlocksRingBuffer is empty and rejects all
-  // reads&writes; see ActivePS for further details.
+  // ActivePS does not exist, mCoreBuffer is empty and rejects all reads&writes;
+  // see ActivePS for further details.
   // Note: This needs to live here outside of ActivePS, because some producers
   // are indirectly controlled (e.g., by atomic flags) and therefore may still
   // attempt to write some data shortly after ActivePS has shutdown and deleted
   // the underlying buffer in memory.
-  BlocksRingBuffer mCoreBlocksRingBuffer;
+  ProfileChunkedBuffer mCoreBuffer;
 
   // Info on all the registered threads.
   // ThreadIds in mRegisteredThreads are unique.
@@ -523,6 +526,26 @@ class ActivePS {
     return aFeatures;
   }
 
+  constexpr static uint32_t bytesPerEntry = 8;
+
+  // We need to decide how many chunks of what size we want to fit in the given
+  // total maximum capacity for this process, in the (likely) context of
+  // multiple processes doing the same choice and having an inter-process
+  // mechanism to control the overal memory limit.
+
+  // Ideally we want at least 2 unreleased chunks to work with (1 current and 1
+  // next), and 2 released chunks (so that one can be recycled when old, leaving
+  // one with some data).
+  constexpr static uint32_t minimumNumberOfChunks = 4;
+
+  // And we want to limit chunks to a maximum size, which is a compromise
+  // between:
+  // - A big size, which helps with reducing the rate of allocations and IPCs.
+  // - A small size, which helps with equalizing the duration of recorded data
+  //   (as the inter-process controller will discard the oldest chunks in all
+  //   Firefox processes).
+  constexpr static uint32_t maximumChunkSize = 1024 * 1024;
+
   ActivePS(PSLockRef aLock, PowerOfTwo32 aCapacity, double aInterval,
            uint32_t aFeatures, const char** aFilters, uint32_t aFilterCount,
            const Maybe<double>& aDuration)
@@ -531,9 +554,14 @@ class ActivePS {
         mDuration(aDuration),
         mInterval(aInterval),
         mFeatures(AdjustFeatures(aFeatures, aFilterCount)),
-        // 8 bytes per entry.
-        mProfileBuffer(CorePS::CoreBlocksRingBuffer(),
-                       PowerOfTwo32(aCapacity.Value() * 8)),
+        mProfileBufferChunkManager(
+            aCapacity.Value() * bytesPerEntry,
+            std::min(aCapacity.Value() * bytesPerEntry / minimumNumberOfChunks,
+                     maximumChunkSize)),
+        mProfileBuffer([this]() -> ProfileChunkedBuffer& {
+          CorePS::CoreBuffer().SetChunkManager(mProfileBufferChunkManager);
+          return CorePS::CoreBuffer();
+        }()),
         // The new sampler thread doesn't start sampling immediately because the
         // main loop within Run() is blocked until this function's caller
         // unlocks gPSMutex.
@@ -553,7 +581,7 @@ class ActivePS {
     }
   }
 
-  ~ActivePS() {}
+  ~ActivePS() { CorePS::CoreBuffer().ResetChunkManager(); }
 
   bool ThreadSelected(const char* aThreadName) {
     if (mFilters.empty()) {
@@ -673,6 +701,11 @@ class ActivePS {
 #  undef PS_GET_FEATURE
 
   PS_GET(const Vector<std::string>&, Filters)
+
+  static void FulfillChunkRequests(PSLockRef) {
+    MOZ_ASSERT(sInstance);
+    sInstance->mProfileBufferChunkManager.FulfillChunkRequests();
+  }
 
   static ProfileBuffer& Buffer(PSLockRef) {
     MOZ_ASSERT(sInstance);
@@ -910,6 +943,9 @@ class ActivePS {
 
   // Substrings of names of threads we want to profile.
   Vector<std::string> mFilters;
+
+  // The chunk manager used by `mProfileBuffer` below.
+  ProfileBufferChunkManagerWithLocalLimit mProfileBufferChunkManager;
 
   // The buffer into which all samples are recorded.
   ProfileBuffer mProfileBuffer;
@@ -2046,16 +2082,16 @@ void SamplerThread::Run() {
   }();
 
   // Use local BlocksRingBuffer&ProfileBuffer to capture the stack.
-  // (This is to avoid touching the CorePS::BlocksRingBuffer lock while
+  // (This is to avoid touching the CorePS::CoreBuffer lock while
   // a thread is suspended, because that thread could be working with
-  // the CorePS::BlocksRingBuffer as well.)
-  BlocksRingBuffer localBlocksRingBuffer(
-      BlocksRingBuffer::ThreadSafety::WithoutMutex);
-  ProfileBuffer localProfileBuffer(localBlocksRingBuffer,
-                                   MakePowerOfTwo32<65536>());
+  // the CorePS::CoreBuffer as well.)
+  ProfileBufferChunkManagerSingle localChunkManager(65536);
+  ProfileChunkedBuffer localBuffer(
+      ProfileChunkedBuffer::ThreadSafety::WithoutMutex, localChunkManager);
+  ProfileBuffer localProfileBuffer(localBuffer);
 
   // Will be kept between collections, to know what each collection does.
-  auto previousState = localBlocksRingBuffer.GetState();
+  auto previousState = localBuffer.GetState();
 
   // This will be positive if we are running behind schedule (sampling less
   // frequently than desired) and negative if we are ahead of schedule.
@@ -2155,28 +2191,21 @@ void SamplerThread::Run() {
                 });
 
             // If data is complete, copy it into the global buffer.
-            auto state = localBlocksRingBuffer.GetState();
+            auto state = localBuffer.GetState();
             if (state.mClearedBlockCount != previousState.mClearedBlockCount) {
               LOG("Stack sample too big for local storage, needed %u bytes",
-                  unsigned(
-                      state.mRangeEnd.ConvertToProfileBufferIndex() -
-                      previousState.mRangeEnd.ConvertToProfileBufferIndex()));
-            } else if (state.mRangeEnd.ConvertToProfileBufferIndex() -
-                           previousState.mRangeEnd
-                               .ConvertToProfileBufferIndex() >=
-                       CorePS::CoreBlocksRingBuffer().BufferLength()->Value()) {
+                  unsigned(state.mRangeEnd - previousState.mRangeEnd));
+            } else if (state.mRangeEnd - previousState.mRangeEnd >=
+                       *CorePS::CoreBuffer().BufferLength()) {
               LOG("Stack sample too big for profiler storage, needed %u bytes",
-                  unsigned(
-                      state.mRangeEnd.ConvertToProfileBufferIndex() -
-                      previousState.mRangeEnd.ConvertToProfileBufferIndex()));
+                  unsigned(state.mRangeEnd - previousState.mRangeEnd));
             } else {
-              CorePS::CoreBlocksRingBuffer().AppendContents(
-                  localBlocksRingBuffer);
+              CorePS::CoreBuffer().AppendContents(localBuffer);
             }
 
             // Clean up for the next run.
-            localBlocksRingBuffer.Clear();
-            previousState = localBlocksRingBuffer.GetState();
+            localBuffer.Clear();
+            previousState = localBuffer.GetState();
           }
         }
 
@@ -2189,6 +2218,11 @@ void SamplerThread::Run() {
         CorePS::Lul(lock)->MaybeShowStats();
 #  endif
         TimeStamp threadsSampled = TimeStamp::NowUnfuzzed();
+
+        {
+          AUTO_PROFILER_STATS(Sampler_FulfillChunkRequests);
+          ActivePS::FulfillChunkRequests(lock);
+        }
 
         buffer.CollectOverheadStats(delta, lockAcquired - sampleStart,
                                     expiredMarkersCleaned - lockAcquired,
@@ -3274,10 +3308,10 @@ UniqueProfilerBacktrace profiler_get_backtrace() {
 #  endif
 
   // 65536 bytes should be plenty for a single backtrace.
-  auto bufferManager = MakeUnique<BlocksRingBuffer>(
-      BlocksRingBuffer::ThreadSafety::WithoutMutex);
-  auto buffer =
-      MakeUnique<ProfileBuffer>(*bufferManager, MakePowerOfTwo32<65536>());
+  auto bufferManager = MakeUnique<ProfileChunkedBuffer>(
+      ProfileChunkedBuffer::ThreadSafety::WithoutMutex,
+      MakeUnique<ProfileBufferChunkManagerSingle>(65536));
+  auto buffer = MakeUnique<ProfileBuffer>(*bufferManager);
 
   DoSyncSample(lock, *registeredThread, now, regs, *buffer.get());
 
@@ -3313,7 +3347,7 @@ static void racy_profiler_add_marker(const char* aMarkerName,
                          ? aPayload->GetStartTime()
                          : TimeStamp::NowUnfuzzed();
   TimeDuration delta = origin - CorePS::ProcessStartTime();
-  CorePS::CoreBlocksRingBuffer().PutObjects(
+  CorePS::CoreBuffer().PutObjects(
       ProfileBufferEntry::Kind::MarkerData, racyRegisteredThread->ThreadId(),
       WrapProfileBufferUnownedCString(aMarkerName),
       static_cast<uint32_t>(aCategoryPair), aPayload, delta.ToMilliseconds());
@@ -3376,7 +3410,7 @@ void profiler_add_marker_for_thread(int aThreadId,
                          ? aPayload->GetStartTime()
                          : TimeStamp::NowUnfuzzed();
   TimeDuration delta = origin - CorePS::ProcessStartTime();
-  CorePS::CoreBlocksRingBuffer().PutObjects(
+  CorePS::CoreBuffer().PutObjects(
       ProfileBufferEntry::Kind::MarkerData, aThreadId,
       WrapProfileBufferUnownedCString(aMarkerName),
       static_cast<uint32_t>(aCategoryPair), aPayload, delta.ToMilliseconds());

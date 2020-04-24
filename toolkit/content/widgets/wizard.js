@@ -14,6 +14,9 @@
     "resource://gre/modules/Services.jsm"
   );
 
+  const XUL_NS =
+    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
   // Note: MozWizard currently supports adding, but not removing MozWizardPage
   //       children.
   class MozWizard extends MozXULElement {
@@ -172,9 +175,7 @@
     }
 
     get wizardPages() {
-      const xulns =
-        "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-      return this.getElementsByTagNameNS(xulns, "wizardpage");
+      return this.getElementsByTagNameNS(XUL_NS, "wizardpage");
     }
 
     set currentPage(val) {
@@ -646,10 +647,8 @@
     }
 
     get defaultButton() {
-      const kXULNS =
-        "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
       let buttons = this._wizardButtonDeck.selectedPanel.getElementsByTagNameNS(
-        kXULNS,
+        XUL_NS,
         "button"
       );
       for (let i = 0; i < buttons.length; i++) {

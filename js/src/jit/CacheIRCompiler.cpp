@@ -3940,6 +3940,22 @@ bool CacheIRCompiler::emitLoadTypedElementResult(ObjOperandId objId,
   return true;
 }
 
+bool CacheIRCompiler::emitLoadTypedArrayElementResult(ObjOperandId objId,
+                                                      Int32OperandId indexId,
+
+                                                      Scalar::Type elementType,
+                                                      bool handleOOB) {
+  return emitLoadTypedElementResult(
+      objId, indexId, TypedThingLayout::TypedArray, elementType, handleOOB);
+}
+
+bool CacheIRCompiler::emitLoadTypedObjectElementResult(
+    ObjOperandId objId, Int32OperandId indexId, TypedThingLayout layout,
+    Scalar::Type elementType) {
+  return emitLoadTypedElementResult(objId, indexId, layout, elementType,
+                                    /* handleOOB = */ false);
+}
+
 bool CacheIRCompiler::emitStoreTypedObjectScalarProperty(
     ObjOperandId objId, uint32_t offsetOffset, TypedThingLayout layout,
     Scalar::Type type, uint32_t rhsId) {
@@ -5585,13 +5601,13 @@ bool CacheIRCompiler::emitBooleanToString(Int32OperandId inputId,
 void js::jit::LoadTypedThingData(MacroAssembler& masm, TypedThingLayout layout,
                                  Register obj, Register result) {
   switch (layout) {
-    case Layout_TypedArray:
+    case TypedThingLayout::TypedArray:
       masm.loadPtr(Address(obj, TypedArrayObject::dataOffset()), result);
       break;
-    case Layout_OutlineTypedObject:
+    case TypedThingLayout::OutlineTypedObject:
       masm.loadPtr(Address(obj, OutlineTypedObject::offsetOfData()), result);
       break;
-    case Layout_InlineTypedObject:
+    case TypedThingLayout::InlineTypedObject:
       masm.computeEffectiveAddress(
           Address(obj, InlineTypedObject::offsetOfDataStart()), result);
       break;
@@ -5604,11 +5620,11 @@ void js::jit::LoadTypedThingLength(MacroAssembler& masm,
                                    TypedThingLayout layout, Register obj,
                                    Register result) {
   switch (layout) {
-    case Layout_TypedArray:
+    case TypedThingLayout::TypedArray:
       masm.unboxInt32(Address(obj, TypedArrayObject::lengthOffset()), result);
       break;
-    case Layout_OutlineTypedObject:
-    case Layout_InlineTypedObject:
+    case TypedThingLayout::OutlineTypedObject:
+    case TypedThingLayout::InlineTypedObject:
       masm.loadTypedObjectLength(obj, result);
       break;
     default:

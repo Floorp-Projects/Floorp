@@ -18,16 +18,17 @@ class ThreadInfo;
 class UniqueStacks;
 
 namespace mozilla {
-class BlocksRingBuffer;
+class ProfileChunkedBuffer;
 class TimeStamp;
 }  // namespace mozilla
 
 // ProfilerBacktrace encapsulates a synchronous sample.
 class ProfilerBacktrace {
  public:
-  ProfilerBacktrace(const char* aName, int aThreadId,
-                    UniquePtr<mozilla::BlocksRingBuffer> aBlocksRingBuffer,
-                    mozilla::UniquePtr<ProfileBuffer> aProfileBuffer);
+  ProfilerBacktrace(
+      const char* aName, int aThreadId,
+      UniquePtr<mozilla::ProfileChunkedBuffer> aProfileChunkedBuffer,
+      mozilla::UniquePtr<ProfileBuffer> aProfileBuffer);
   ~ProfilerBacktrace();
 
   // ProfilerBacktraces' stacks are deduplicated in the context of the
@@ -47,9 +48,9 @@ class ProfilerBacktrace {
 
   mozilla::UniqueFreePtr<char> mName;
   int mThreadId;
-  // `BlocksRingBuffer` in which `mProfileBuffer` stores its data; must be
+  // `ProfileChunkedBuffer` in which `mProfileBuffer` stores its data; must be
   // located before `mProfileBuffer` so that it's destroyed after.
-  UniquePtr<mozilla::BlocksRingBuffer> mBlocksRingBuffer;
+  UniquePtr<mozilla::ProfileChunkedBuffer> mProfileChunkedBuffer;
   mozilla::UniquePtr<ProfileBuffer> mProfileBuffer;
 };
 
@@ -63,7 +64,7 @@ struct ProfileBufferEntryWriter::Serializer<ProfilerBacktrace> {
     if (!aBacktrace.mProfileBuffer) {
       return ULEB128Size<Length>(0);
     }
-    auto bufferBytes = SumBytes(*aBacktrace.mBlocksRingBuffer);
+    auto bufferBytes = SumBytes(*aBacktrace.mProfileChunkedBuffer);
     if (bufferBytes == 0) {
       return ULEB128Size<Length>(0);
     }
@@ -74,11 +75,11 @@ struct ProfileBufferEntryWriter::Serializer<ProfilerBacktrace> {
   static void Write(ProfileBufferEntryWriter& aEW,
                     const ProfilerBacktrace& aBacktrace) {
     if (!aBacktrace.mProfileBuffer ||
-        SumBytes(*aBacktrace.mBlocksRingBuffer) == 0) {
+        SumBytes(*aBacktrace.mProfileChunkedBuffer) == 0) {
       aEW.WriteULEB128(0u);
       return;
     }
-    aEW.WriteObject(*aBacktrace.mBlocksRingBuffer);
+    aEW.WriteObject(*aBacktrace.mProfileChunkedBuffer);
     aEW.WriteObject(aBacktrace.mThreadId);
     aEW.WriteObject(WrapProfileBufferUnownedCString(aBacktrace.mName.get()));
   }
@@ -113,18 +114,19 @@ struct ProfileBufferEntryReader::Deserializer<
   }
   static UniquePtr<ProfilerBacktrace, Destructor> Read(
       ProfileBufferEntryReader& aER) {
-    auto blocksRingBuffer = aER.ReadObject<UniquePtr<BlocksRingBuffer>>();
-    if (!blocksRingBuffer) {
+    auto profileChunkedBuffer =
+        aER.ReadObject<UniquePtr<ProfileChunkedBuffer>>();
+    if (!profileChunkedBuffer) {
       return nullptr;
     }
     MOZ_ASSERT(
-        !blocksRingBuffer->IsThreadSafe(),
-        "ProfilerBacktrace only stores non-thread-safe BlocksRingBuffers");
+        !profileChunkedBuffer->IsThreadSafe(),
+        "ProfilerBacktrace only stores non-thread-safe ProfileChunkedBuffers");
     int threadId = aER.ReadObject<int>();
     std::string name = aER.ReadObject<std::string>();
-    auto profileBuffer = MakeUnique<ProfileBuffer>(*blocksRingBuffer);
+    auto profileBuffer = MakeUnique<ProfileBuffer>(*profileChunkedBuffer);
     return UniquePtr<ProfilerBacktrace, Destructor>{new ProfilerBacktrace(
-        name.c_str(), threadId, std::move(blocksRingBuffer),
+        name.c_str(), threadId, std::move(profileChunkedBuffer),
         std::move(profileBuffer))};
   }
 };

@@ -167,6 +167,15 @@ bool WarpCacheIRTranspiler::emitGuardToInt32Index(ValOperandId inputId,
   return defineOperand(resultId, ins);
 }
 
+bool WarpCacheIRTranspiler::emitGuardToTypedArrayIndex(
+    ValOperandId inputId, Int32OperandId resultId) {
+  MDefinition* input = getOperand(inputId);
+  auto* ins = MTypedArrayIndexToInt32::New(alloc(), input);
+  current->add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
 bool WarpCacheIRTranspiler::emitLoadEnclosingEnvironment(
     ObjOperandId objId, ObjOperandId resultId) {
   MDefinition* env = getOperand(objId);
@@ -310,6 +319,39 @@ bool WarpCacheIRTranspiler::emitLoadDenseElementResult(ObjOperandId objId,
   bool loadDouble = false;  // TODO: Ion-only optimization.
   auto* load =
       MLoadElement::New(alloc(), elements, index, needsHoleCheck, loadDouble);
+  current->add(load);
+
+  setResult(load);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitLoadTypedArrayElementResult(
+    ObjOperandId objId, Int32OperandId indexId, Scalar::Type elementType,
+    bool handleOOB) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* index = getOperand(indexId);
+
+  if (handleOOB) {
+    bool allowDouble = true;
+    auto* load = MLoadTypedArrayElementHole::New(alloc(), obj, index,
+                                                 elementType, allowDouble);
+    current->add(load);
+
+    setResult(load);
+    return true;
+  }
+
+  auto* length = MTypedArrayLength::New(alloc(), obj);
+  current->add(length);
+
+  index = addBoundsCheck(index, length);
+
+  auto* elements = MTypedArrayElements::New(alloc(), obj);
+  current->add(elements);
+
+  auto* load = MLoadUnboxedScalar::New(alloc(), elements, index, elementType);
+  // TODO: Uint32 always loaded as double.
+  load->setResultType(MIRTypeForTypedArrayRead(elementType, true));
   current->add(load);
 
   setResult(load);

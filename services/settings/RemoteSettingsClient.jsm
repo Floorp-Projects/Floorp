@@ -765,24 +765,17 @@ class RemoteSettingsClient extends EventEmitter {
     options = {}
   ) {
     const { retry = false } = options;
+    const since = retry || !localTimestamp ? undefined : `${localTimestamp}`;
 
-    // Fetch collection metadata and list of changes from server
-    // (or all records on retry).
-    const client = this.httpClient();
-    const [
+    // Fetch collection metadata and list of changes from server.
+    console.debug(
+      `Fetch changes from server (expected=${expectedTimestamp}, since=${since})`
+    );
+    const {
       metadata,
-      { data: remoteRecords, last_modified: remoteTimestamp },
-    ] = await Promise.all([
-      client.getData({
-        query: { _expected: expectedTimestamp },
-      }),
-      client.listRecords({
-        filters: {
-          _expected: expectedTimestamp,
-        },
-        since: retry || !localTimestamp ? undefined : `${localTimestamp}`,
-      }),
-    ]);
+      remoteTimestamp,
+      remoteRecords,
+    } = await this._fetchChangeset(expectedTimestamp, since);
 
     // We build a sync result, based on remote changes.
     const syncResult = {
@@ -891,6 +884,36 @@ class RemoteSettingsClient extends EventEmitter {
     );
 
     return syncResult;
+  }
+
+  /**
+   * Fetch information from changeset endpoint.
+   *
+   * @param expectedTimestamp cache busting value
+   * @param since timestamp of last sync (optional)
+   */
+  async _fetchChangeset(expectedTimestamp, since) {
+    const client = this.httpClient();
+    const {
+      metadata,
+      timestamp: remoteTimestamp,
+      changes: remoteRecords,
+    } = await client.execute(
+      {
+        path: `/buckets/${this.bucketName}/collections/${this.collectionName}/changeset`,
+      },
+      {
+        query: {
+          _expected: expectedTimestamp,
+          _since: since,
+        },
+      }
+    );
+    return {
+      remoteTimestamp,
+      metadata,
+      remoteRecords,
+    };
   }
 
   /**

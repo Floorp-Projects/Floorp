@@ -26,7 +26,7 @@ TooltipTextProvider.prototype = {
     }
 
     const XLinkNS = "http://www.w3.org/1999/xlink";
-    const XULNS =
+    const XUL_NS =
       "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
     var titleText = null;
@@ -109,7 +109,7 @@ TooltipTextProvider.prototype = {
       XULtooltiptextText == null
     ) {
       if (tipElement.nodeType == defView.Node.ELEMENT_NODE) {
-        if (tipElement.namespaceURI == XULNS) {
+        if (tipElement.namespaceURI == XUL_NS) {
           XULtooltiptextText = tipElement.hasAttribute("tooltiptext")
             ? tipElement.getAttribute("tooltiptext")
             : null;

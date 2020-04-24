@@ -187,7 +187,7 @@ h2 {
 
 .perf-presets-description {
   font-size: 13px;
-  color: var(--grey-60);
+  color: var(--in-content-deemphasized-text);
   margin: 5px 0;
 }
 

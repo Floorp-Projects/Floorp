@@ -42,11 +42,12 @@ class InChunkPointer {
   InChunkPointer()
       : mChunk(nullptr), mNextChunkGroup(nullptr), mOffsetInChunk(0) {}
 
-  // InChunkPointer over one or two chunk groups, will start at the first
-  // block (if any).
+  // InChunkPointer over one or two chunk groups, pointing at the given
+  // block index (if still in range).
+  // This constructor should only be used with *trusted* block index values!
   InChunkPointer(const ProfileBufferChunk* aChunk,
                  const ProfileBufferChunk* aNextChunkGroup,
-                 ProfileBufferBlockIndex aBlockIndex = nullptr)
+                 ProfileBufferBlockIndex aBlockIndex)
       : mChunk(aChunk), mNextChunkGroup(aNextChunkGroup) {
     if (mChunk) {
       mOffsetInChunk = mChunk->OffsetFirstBlock();
@@ -60,18 +61,92 @@ class InChunkPointer {
       mOffsetInChunk = 0;
     }
 
-    // Try to advance to given position, don't worry about success.
-    Unused << AdvanceToGlobalRangePosition(
-        aBlockIndex.ConvertToProfileBufferIndex());
+    // Try to advance to given position.
+    if (!AdvanceToGlobalRangePosition(aBlockIndex)) {
+      // Block does not exist anymore (or block doesn't look valid), reset the
+      // in-chunk pointer.
+      mChunk = nullptr;
+      mNextChunkGroup = nullptr;
+    }
+  }
+
+  // InChunkPointer over one or two chunk groups, will start at the first
+  // block (if any). This may be slow, so avoid using it too much.
+  InChunkPointer(const ProfileBufferChunk* aChunk,
+                 const ProfileBufferChunk* aNextChunkGroup,
+                 ProfileBufferIndex aIndex = ProfileBufferIndex(0))
+      : mChunk(aChunk), mNextChunkGroup(aNextChunkGroup) {
+    if (mChunk) {
+      mOffsetInChunk = mChunk->OffsetFirstBlock();
+      Adjust();
+    } else if (mNextChunkGroup) {
+      mChunk = mNextChunkGroup;
+      mNextChunkGroup = nullptr;
+      mOffsetInChunk = mChunk->OffsetFirstBlock();
+      Adjust();
+    } else {
+      mOffsetInChunk = 0;
+    }
+
+    // Try to advance to given position.
+    if (!AdvanceToGlobalRangePosition(aIndex)) {
+      // Block does not exist anymore, reset the in-chunk pointer.
+      mChunk = nullptr;
+      mNextChunkGroup = nullptr;
+    }
   }
 
   // Compute the current position in the global range.
   // 0 if null (including if we're reached the end).
   [[nodiscard]] ProfileBufferIndex GlobalRangePosition() const {
-    if (!mChunk) {
+    if (IsNull()) {
       return 0;
     }
     return mChunk->RangeStart() + mOffsetInChunk;
+  }
+
+  // Move InChunkPointer forward to the block at the given global block
+  // position, which is assumed to be valid exactly -- but it may be obsolete.
+  // 0 stays where it is (if valid already).
+  // MOZ_ASSERTs if the index is invalid.
+  [[nodiscard]] bool AdvanceToGlobalRangePosition(
+      ProfileBufferBlockIndex aBlockIndex) {
+    if (IsNull()) {
+      // Pointer is null already. (Not asserting because it's acceptable.)
+      return false;
+    }
+    if (!aBlockIndex) {
+      // Special null position, just stay where we are.
+      return ShouldPointAtValidBlock();
+    }
+    if (aBlockIndex.ConvertToProfileBufferIndex() < GlobalRangePosition()) {
+      // Past the requested position, stay where we are (assuming the current
+      // position was valid).
+      return ShouldPointAtValidBlock();
+    }
+    for (;;) {
+      if (aBlockIndex.ConvertToProfileBufferIndex() <
+          mChunk->RangeStart() + mChunk->OffsetPastLastBlock()) {
+        // Target position is in this chunk's written space, move to it.
+        mOffsetInChunk =
+            aBlockIndex.ConvertToProfileBufferIndex() - mChunk->RangeStart();
+        return ShouldPointAtValidBlock();
+      }
+      // Position is after this chunk, try next chunk.
+      GoToNextChunk();
+      if (IsNull()) {
+        return false;
+      }
+      // Skip whatever block tail there is, we don't allow pointing in the
+      // middle of a block.
+      mOffsetInChunk = mChunk->OffsetFirstBlock();
+      if (aBlockIndex.ConvertToProfileBufferIndex() < GlobalRangePosition()) {
+        // Past the requested position, meaning that the given position was in-
+        // between blocks -> Failure.
+        MOZ_ASSERT(false, "AdvanceToGlobalRangePosition - In-between blocks");
+        return false;
+      }
+    }
   }
 
   // Move InChunkPointer forward to the block at or after the given global
@@ -82,7 +157,7 @@ class InChunkPointer {
     if (aPosition == 0) {
       // Special position '0', just stay where we are.
       // Success if this position is already valid.
-      return !!mChunk;
+      return !IsNull();
     }
     for (;;) {
       ProfileBufferIndex currentPosition = GlobalRangePosition();
@@ -112,7 +187,7 @@ class InChunkPointer {
       }
       // Position is after this chunk, try next chunk.
       GoToNextChunk();
-      if (!mChunk) {
+      if (IsNull()) {
         return false;
       }
       // Skip whatever block tail there is, we don't allow pointing in the
@@ -122,7 +197,7 @@ class InChunkPointer {
   }
 
   [[nodiscard]] Byte ReadByte() {
-    MOZ_ASSERT(!!mChunk);
+    MOZ_ASSERT(!IsNull());
     MOZ_ASSERT(mOffsetInChunk < mChunk->OffsetPastLastBlock());
     Byte byte = mChunk->ByteAt(mOffsetInChunk);
     if (MOZ_UNLIKELY(++mOffsetInChunk == mChunk->OffsetPastLastBlock())) {
@@ -137,12 +212,12 @@ class InChunkPointer {
   // available to read! (EntryReader() below may gracefully fail.)
   [[nodiscard]] Length ReadEntrySize() {
     ULEB128Reader<Length> reader;
-    if (!mChunk) {
+    if (IsNull()) {
       return 0;
     }
     for (;;) {
       const bool isComplete = reader.FeedByteIsComplete(ReadByte());
-      if (MOZ_UNLIKELY(!mChunk)) {
+      if (MOZ_UNLIKELY(IsNull())) {
         // End of chunks, so there's no actual entry after this anyway.
         return 0;
       }
@@ -157,14 +232,14 @@ class InChunkPointer {
   }
 
   InChunkPointer& operator+=(Length aLength) {
-    MOZ_ASSERT(!!mChunk);
+    MOZ_ASSERT(!IsNull());
     mOffsetInChunk += aLength;
     Adjust();
     return *this;
   }
 
   [[nodiscard]] ProfileBufferEntryReader EntryReader(Length aLength) {
-    if (!mChunk || aLength == 0) {
+    if (IsNull() || aLength == 0) {
       return ProfileBufferEntryReader();
     }
 
@@ -195,7 +270,7 @@ class InChunkPointer {
 
     // We need to go to the next chunk for the 2nd part of this block.
     GoToNextChunk();
-    if (!mChunk) {
+    if (IsNull()) {
       return ProfileBufferEntryReader();
     }
 
@@ -218,32 +293,27 @@ class InChunkPointer {
             GlobalRangePosition()));
   }
 
-  explicit operator bool() const { return !!mChunk; }
-
-  [[nodiscard]] bool operator!() const { return !mChunk; }
+  [[nodiscard]] bool IsNull() const { return !mChunk; }
 
   [[nodiscard]] bool operator==(const InChunkPointer& aOther) const {
-    if (!*this || !aOther) {
-      return !*this && !aOther;
+    if (IsNull() || aOther.IsNull()) {
+      return IsNull() && aOther.IsNull();
     }
     return mChunk == aOther.mChunk && mOffsetInChunk == aOther.mOffsetInChunk;
   }
 
   [[nodiscard]] bool operator!=(const InChunkPointer& aOther) const {
-    if (!*this || !aOther) {
-      return !!*this || !!aOther;
-    }
-    return mChunk != aOther.mChunk || mOffsetInChunk != aOther.mOffsetInChunk;
+    return !(*this == aOther);
   }
 
   [[nodiscard]] Byte operator*() const {
-    MOZ_ASSERT(!!mChunk);
+    MOZ_ASSERT(!IsNull());
     MOZ_ASSERT(mOffsetInChunk < mChunk->OffsetPastLastBlock());
     return mChunk->ByteAt(mOffsetInChunk);
   }
 
   InChunkPointer& operator++() {
-    MOZ_ASSERT(!!mChunk);
+    MOZ_ASSERT(!IsNull());
     MOZ_ASSERT(mOffsetInChunk < mChunk->OffsetPastLastBlock());
     if (MOZ_UNLIKELY(++mOffsetInChunk == mChunk->OffsetPastLastBlock())) {
       mOffsetInChunk = 0;
@@ -255,7 +325,7 @@ class InChunkPointer {
 
  private:
   void GoToNextChunk() {
-    MOZ_ASSERT(!!mChunk);
+    MOZ_ASSERT(!IsNull());
     const ProfileBufferIndex expectedNextRangeStart =
         mChunk->RangeStart() + mChunk->BufferBytes();
 
@@ -303,6 +373,32 @@ class InChunkPointer {
     }
   }
 
+  // Check if the current position is likely to point at a valid block.
+  // (Size should be reasonable, and block should fully fit inside buffer.)
+  // MOZ_ASSERTs on failure, to catch incorrect uses of block indices (which
+  // should only point at valid blocks if still in range). Non-asserting build
+  // fallback should still be handled.
+  [[nodiscard]] bool ShouldPointAtValidBlock() const {
+    if (IsNull()) {
+      // Pointer is null, no blocks here.
+      MOZ_ASSERT(false, "ShouldPointAtValidBlock - null pointer");
+      return false;
+    }
+    // Use a copy, so we don't modify `*this`.
+    InChunkPointer pointer = *this;
+    // Try to read the entry size.
+    Length entrySize = pointer.ReadEntrySize();
+    if (entrySize == 0) {
+      // Entry size of zero means we read 0 or a way-too-big value.
+      MOZ_ASSERT(false, "ShouldPointAtValidBlock - invalid size");
+      return false;
+    }
+    // See if the last byte of the entry is still inside the buffer.
+    pointer += entrySize - 1;
+    MOZ_ASSERT(!IsNull(), "ShouldPointAtValidBlock - past end of buffer");
+    return !IsNull();
+  }
+
   const ProfileBufferChunk* mChunk;
   const ProfileBufferChunk* mNextChunkGroup;
   Length mOffsetInChunk;
@@ -327,7 +423,7 @@ class InChunkPointer {
 // ```
 // ProfileChunkedBuffer cb(...);
 // cb.ReserveAndPut([]() { return sizeof(123); },
-//                  [&](ProfileBufferEntryWriter* aEW) {
+//                  [&](Maybe<ProfileBufferEntryWriter>& aEW) {
 //                    if (aEW) { aEW->WriteObject(123); }
 //                  });
 // ```
@@ -502,7 +598,7 @@ class ProfileChunkedBuffer {
 
   // Reserve a block that can hold an entry of the given `aCallbackEntryBytes()`
   // size, write the entry size (ULEB128-encoded), and invoke and return
-  // `aCallback(ProfileBufferEntryWriter*)`.
+  // `aCallback(Maybe<ProfileBufferEntryWriter>&)`.
   // Note: `aCallbackEntryBytes` is a callback instead of a simple value, to
   // delay this potentially-expensive computation until after we're checked that
   // we're in-session; use `Put(Length, Callback)` below if you know the size
@@ -511,7 +607,7 @@ class ProfileChunkedBuffer {
   auto ReserveAndPut(CallbackEntryBytes&& aCallbackEntryBytes,
                      Callback&& aCallback)
       -> decltype(std::forward<Callback>(aCallback)(
-          std::declval<ProfileBufferEntryWriter*>())) {
+          std::declval<Maybe<ProfileBufferEntryWriter>&>())) {
     baseprofiler::detail::BaseProfilerMaybeAutoLock lock(mMutex);
 
     // This can only be read in the 2nd lambda below after it has been written
@@ -524,12 +620,12 @@ class ProfileChunkedBuffer {
           MOZ_ASSERT(entryBytes != 0, "Empty entries are not allowed");
           return ULEB128Size(entryBytes) + entryBytes;
         },
-        [&](ProfileBufferEntryWriter* aEntryWriter) {
-          if (aEntryWriter) {
-            aEntryWriter->WriteULEB128(entryBytes);
-            MOZ_ASSERT(aEntryWriter->RemainingBytes() == entryBytes);
+        [&](Maybe<ProfileBufferEntryWriter>& aMaybeEntryWriter) {
+          if (aMaybeEntryWriter.isSome()) {
+            aMaybeEntryWriter->WriteULEB128(entryBytes);
+            MOZ_ASSERT(aMaybeEntryWriter->RemainingBytes() == entryBytes);
           }
-          return std::forward<Callback>(aCallback)(aEntryWriter);
+          return std::forward<Callback>(aCallback)(aMaybeEntryWriter);
         },
         lock);
   }
@@ -544,12 +640,12 @@ class ProfileChunkedBuffer {
   ProfileBufferBlockIndex PutFrom(const void* aSrc, Length aBytes) {
     return ReserveAndPut(
         [aBytes]() { return aBytes; },
-        [aSrc, aBytes](ProfileBufferEntryWriter* aEntryWriter) {
-          if (!aEntryWriter) {
+        [aSrc, aBytes](Maybe<ProfileBufferEntryWriter>& aMaybeEntryWriter) {
+          if (aMaybeEntryWriter.isNothing()) {
             return ProfileBufferBlockIndex{};
           }
-          aEntryWriter->WriteBytes(aSrc, aBytes);
-          return aEntryWriter->CurrentBlockIndex();
+          aMaybeEntryWriter->WriteBytes(aSrc, aBytes);
+          return aMaybeEntryWriter->CurrentBlockIndex();
         });
   }
 
@@ -561,12 +657,12 @@ class ProfileChunkedBuffer {
                   "PutObjects must be given at least one object.");
     return ReserveAndPut(
         [&]() { return ProfileBufferEntryWriter::SumBytes(aTs...); },
-        [&](ProfileBufferEntryWriter* aEntryWriter) {
-          if (!aEntryWriter) {
+        [&](Maybe<ProfileBufferEntryWriter>& aMaybeEntryWriter) {
+          if (aMaybeEntryWriter.isNothing()) {
             return ProfileBufferBlockIndex{};
           }
-          aEntryWriter->WriteObjects(aTs...);
-          return aEntryWriter->CurrentBlockIndex();
+          aMaybeEntryWriter->WriteObjects(aTs...);
+          return aMaybeEntryWriter->CurrentBlockIndex();
         });
   }
 
@@ -854,7 +950,7 @@ class ProfileChunkedBuffer {
                   "ReadEach callback must take ProfileBufferEntryReader& and "
                   "optionally a ProfileBufferBlockIndex");
     detail::InChunkPointer p{aChunks0, aChunks1};
-    while (p) {
+    while (!p.IsNull()) {
       // The position right before an entry size *is* a block index.
       const ProfileBufferBlockIndex blockIndex =
           ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
@@ -911,7 +1007,7 @@ class ProfileChunkedBuffer {
         std::is_invocable_v<Callback, Maybe<ProfileBufferEntryReader>&&>,
         "ReadAt callback must take a Maybe<ProfileBufferEntryReader>&&");
     Maybe<ProfileBufferEntryReader> maybeEntryReader;
-    if (detail::InChunkPointer p{aChunks0, aChunks1}; p) {
+    if (detail::InChunkPointer p{aChunks0, aChunks1}; !p.IsNull()) {
       // If the pointer position is before the given position, try to advance.
       if (p.GlobalRangePosition() >=
               aMinimumBlockIndex.ConvertToProfileBufferIndex() ||
@@ -971,16 +1067,17 @@ class ProfileChunkedBuffer {
       if (failed) {
         return;
       }
-      failed = !Put(aER.RemainingBytes(), [&](ProfileBufferEntryWriter* aEW) {
-        if (!aEW) {
-          return false;
-        }
-        if (!firstBlockIndex) {
-          firstBlockIndex = aEW->CurrentBlockIndex();
-        }
-        aEW->WriteFromReader(aER, aER.RemainingBytes());
-        return true;
-      });
+      failed =
+          !Put(aER.RemainingBytes(), [&](Maybe<ProfileBufferEntryWriter>& aEW) {
+            if (aEW.isNothing()) {
+              return false;
+            }
+            if (!firstBlockIndex) {
+              firstBlockIndex = aEW->CurrentBlockIndex();
+            }
+            aEW->WriteFromReader(aER, aER.RemainingBytes());
+            return true;
+          });
     });
     return failed ? nullptr : firstBlockIndex;
   }
@@ -1250,8 +1347,8 @@ class ProfileChunkedBuffer {
   }
 
   // Reserve a block of `aCallbackBlockBytes()` size, and invoke and return
-  // `aCallback(ProfileBufferEntryWriter*)`. Note that this is the "raw" version
-  // that doesn't write the entry size at the beginning of the block.
+  // `aCallback(Maybe<ProfileBufferEntryWriter>&)`. Note that this is the "raw"
+  // version that doesn't write the entry size at the beginning of the block.
   // Note: `aCallbackBlockBytes` is a callback instead of a simple value, to
   // delay this potentially-expensive computation until after we're checked that
   // we're in-session; use `Put(Length, Callback)` below if you know the size
@@ -1261,6 +1358,10 @@ class ProfileChunkedBuffer {
                         Callback&& aCallback,
                         baseprofiler::detail::BaseProfilerMaybeAutoLock& aLock,
                         uint64_t aBlockCount = 1) {
+    // The entry writer that will point into one or two chunks to write
+    // into, empty by default (failure).
+    Maybe<ProfileBufferEntryWriter> maybeEntryWriter;
+
     // The current chunk will be filled if we need to write more than its
     // remaining space.
     bool currentChunkFilled = false;
@@ -1269,16 +1370,69 @@ class ProfileChunkedBuffer {
     // chunk!
     bool nextChunkInitialized = false;
 
-    // The entry writer that will point into one or two chunks to write
-    // into, empty by default (failure).
-    ProfileBufferEntryWriter entryWriter;
+    if (MOZ_LIKELY(mChunkManager)) {
+      // In-session.
+
+      if (ProfileBufferChunk* current = GetOrCreateCurrentChunk(aLock);
+          MOZ_LIKELY(current)) {
+        const Length blockBytes =
+            std::forward<CallbackBlockBytes>(aCallbackBlockBytes)();
+        if (blockBytes <= current->RemainingBytes()) {
+          // Block fits in current chunk with only one span.
+          currentChunkFilled = blockBytes == current->RemainingBytes();
+          const auto [mem0, blockIndex] = current->ReserveBlock(blockBytes);
+          MOZ_ASSERT(mem0.LengthBytes() == blockBytes);
+          maybeEntryWriter.emplace(
+              mem0, blockIndex,
+              ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+                  blockIndex.ConvertToProfileBufferIndex() + blockBytes));
+          MOZ_ASSERT(maybeEntryWriter->RemainingBytes() == blockBytes);
+          mRangeEnd += blockBytes;
+          mPushedBlockCount += aBlockCount;
+        } else {
+          // Block doesn't fit fully in current chunk, it needs to overflow into
+          // the next one.
+          // Make sure the next chunk is available (from a previous request),
+          // otherwise create one on the spot.
+          if (ProfileBufferChunk* next = GetOrCreateNextChunk(aLock);
+              MOZ_LIKELY(next)) {
+            // Here, we know we have a current and a next chunk.
+            // Reserve head of block at the end of the current chunk.
+            const auto [mem0, blockIndex] =
+                current->ReserveBlock(current->RemainingBytes());
+            MOZ_ASSERT(mem0.LengthBytes() < blockBytes);
+            MOZ_ASSERT(current->RemainingBytes() == 0);
+            // Set the next chunk range, and reserve the needed space for the
+            // tail of the block.
+            next->SetRangeStart(mNextChunkRangeStart);
+            mNextChunkRangeStart += next->BufferBytes();
+            const auto mem1 = next->ReserveInitialBlockAsTail(
+                blockBytes - mem0.LengthBytes());
+            MOZ_ASSERT(next->RemainingBytes() != 0);
+            currentChunkFilled = true;
+            nextChunkInitialized = true;
+            // Block is split in two spans.
+            maybeEntryWriter.emplace(
+                mem0, mem1, blockIndex,
+                ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
+                    blockIndex.ConvertToProfileBufferIndex() + blockBytes));
+            MOZ_ASSERT(maybeEntryWriter->RemainingBytes() == blockBytes);
+            mRangeEnd += blockBytes;
+            mPushedBlockCount += aBlockCount;
+          }
+        }
+      }  // end of `MOZ_LIKELY(current)`
+    }    // end of `if (MOZ_LIKELY(mChunkManager))`
+
+    // Here, we either have a `Nothing` (failure), or a non-empty entry writer
+    // pointing at the start of the block.
 
     // After we invoke the callback and return, we may need to handle the
     // current chunk being filled.
     auto handleFilledChunk = MakeScopeExit([&]() {
       // If the entry writer was not already empty, the callback *must* have
       // filled the full entry.
-      MOZ_ASSERT(entryWriter.RemainingBytes() == 0);
+      MOZ_ASSERT(!maybeEntryWriter || maybeEntryWriter->RemainingBytes() == 0);
 
       if (currentChunkFilled) {
         // Extract current (now filled) chunk.
@@ -1313,81 +1467,12 @@ class ProfileChunkedBuffer {
       }
     });
 
-    if (MOZ_LIKELY(mChunkManager)) {
-      // In-session.
-
-      if (ProfileBufferChunk* current = GetOrCreateCurrentChunk(aLock);
-          MOZ_LIKELY(current)) {
-        const Length blockBytes =
-            std::forward<CallbackBlockBytes>(aCallbackBlockBytes)();
-        if (blockBytes <= current->RemainingBytes()) {
-          // Block fits in current chunk with only one span.
-          currentChunkFilled = blockBytes == current->RemainingBytes();
-          const auto [mem0, blockIndex] = current->ReserveBlock(blockBytes);
-          MOZ_ASSERT(mem0.LengthBytes() == blockBytes);
-          entryWriter.Set(
-              mem0, blockIndex,
-              ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
-                  blockIndex.ConvertToProfileBufferIndex() + blockBytes));
-        } else {
-          // Block doesn't fit fully in current chunk, it needs to overflow into
-          // the next one.
-          // Make sure the next chunk is available (from a previous request),
-          // otherwise create one on the spot.
-          if (ProfileBufferChunk* next = GetOrCreateNextChunk(aLock);
-              MOZ_LIKELY(next)) {
-            // Here, we know we have a current and a next chunk.
-            // Reserve head of block at the end of the current chunk.
-            const auto [mem0, blockIndex] =
-                current->ReserveBlock(current->RemainingBytes());
-            MOZ_ASSERT(mem0.LengthBytes() < blockBytes);
-            MOZ_ASSERT(current->RemainingBytes() == 0);
-            // Set the next chunk range, and reserve the needed space for the
-            // tail of the block.
-            next->SetRangeStart(mNextChunkRangeStart);
-            mNextChunkRangeStart += next->BufferBytes();
-            const auto mem1 = next->ReserveInitialBlockAsTail(
-                blockBytes - mem0.LengthBytes());
-            MOZ_ASSERT(next->RemainingBytes() != 0);
-            currentChunkFilled = true;
-            nextChunkInitialized = true;
-            // Block is split in two spans.
-            entryWriter.Set(
-                mem0, mem1, blockIndex,
-                ProfileBufferBlockIndex::CreateFromProfileBufferIndex(
-                    blockIndex.ConvertToProfileBufferIndex() + blockBytes));
-          }
-        }
-
-        // Here, we either have an empty `entryWriter` (failure), or a non-empty
-        // writer pointing at the start of the block.
-
-        // Remember that following the final `return` below, `handleFilledChunk`
-        // will take care of releasing the current chunk, and cycling to the
-        // next one, if needed.
-
-        if (MOZ_LIKELY(entryWriter.RemainingBytes() != 0)) {
-          // `entryWriter` is not empty, record some stats and let the user
-          // write their data in the entry.
-          MOZ_ASSERT(entryWriter.RemainingBytes() == blockBytes);
-          mRangeEnd += blockBytes;
-          mPushedBlockCount += aBlockCount;
-          return std::forward<Callback>(aCallback)(&entryWriter);
-        }
-
-        // If we're here, `entryWriter` was empty (probably because we couldn't
-        // get a next chunk to write into), we just fall back to the `nullptr`
-        // case below...
-
-      }  // end of `if (current)`
-    }    // end of `if (mChunkManager)`
-
-    return std::forward<Callback>(aCallback)(nullptr);
+    return std::forward<Callback>(aCallback)(maybeEntryWriter);
   }
 
   // Reserve a block of `aBlockBytes` size, and invoke and return
-  // `aCallback(ProfileBufferEntryWriter*)`. Note that this is the "raw" version
-  // that doesn't write the entry size at the beginning of the block.
+  // `aCallback(Maybe<ProfileBufferEntryWriter>&)`. Note that this is the "raw"
+  // version that doesn't write the entry size at the beginning of the block.
   template <typename Callback>
   auto ReserveAndPutRaw(Length aBlockBytes, Callback&& aCallback,
                         uint64_t aBlockCount) {
@@ -1607,8 +1692,8 @@ struct ProfileBufferEntryReader::Deserializer<ProfileChunkedBuffer> {
     // Copy bytes into the buffer.
     aBuffer.ReserveAndPutRaw(
         len,
-        [&](ProfileBufferEntryWriter* aEW) {
-          MOZ_RELEASE_ASSERT(aEW);
+        [&](Maybe<ProfileBufferEntryWriter>& aEW) {
+          MOZ_RELEASE_ASSERT(aEW.isSome());
           aEW->WriteFromReader(aER, len);
         },
         0);
