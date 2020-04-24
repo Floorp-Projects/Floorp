@@ -42,7 +42,6 @@ exports[`Frame getFrameTitle 1`] = `
         "source": Object {
           "extensionName": null,
           "id": "source",
-          "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
           "isOriginal": false,
@@ -98,7 +97,6 @@ exports[`Frame getFrameTitle 1`] = `
         "source": Object {
           "extensionName": null,
           "id": "source",
-          "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
           "isOriginal": false,
@@ -161,7 +159,6 @@ exports[`Frame library frame 1`] = `
         "source": Object {
           "extensionName": null,
           "id": "source",
-          "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
           "isOriginal": false,
@@ -218,7 +215,6 @@ exports[`Frame library frame 1`] = `
         "source": Object {
           "extensionName": null,
           "id": "source",
-          "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
           "isOriginal": false,
@@ -280,7 +276,6 @@ exports[`Frame user frame (not selected) 1`] = `
         "source": Object {
           "extensionName": null,
           "id": "source",
-          "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
           "isOriginal": false,
@@ -336,7 +331,6 @@ exports[`Frame user frame (not selected) 1`] = `
         "source": Object {
           "extensionName": null,
           "id": "source",
-          "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
           "isOriginal": false,
@@ -398,7 +392,6 @@ exports[`Frame user frame 1`] = `
         "source": Object {
           "extensionName": null,
           "id": "source",
-          "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
           "isOriginal": false,
@@ -454,7 +447,6 @@ exports[`Frame user frame 1`] = `
         "source": Object {
           "extensionName": null,
           "id": "source",
-          "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
           "isOriginal": false,
