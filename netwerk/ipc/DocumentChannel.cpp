@@ -20,6 +20,7 @@
 #include "mozilla/net/DocumentChannelChild.h"
 #include "mozilla/net/HttpChannelChild.h"
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/net/ParentProcessDocumentChannel.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "nsContentSecurityManager.h"
 #include "nsDocShell.h"
@@ -158,7 +159,6 @@ bool DocumentChannel::CanUseDocumentChannel(nsDocShellLoadState* aLoadState) {
   // outer document (and must load in the same process), which breaks if we
   // serialize to the parent process.
   return StaticPrefs::browser_tabs_documentchannel() &&
-         XRE_IsContentProcess() &&
          !aLoadState->HasLoadFlags(nsDocShell::INTERNAL_LOAD_FLAGS_IS_SRCDOC) &&
          URIUsesDocChannel(aLoadState->URI());
 }
@@ -168,9 +168,14 @@ already_AddRefed<DocumentChannel> DocumentChannel::CreateDocumentChannel(
     nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
     nsLoadFlags aLoadFlags, nsIInterfaceRequestor* aNotificationCallbacks,
     uint32_t aCacheKey) {
-  MOZ_ASSERT(XRE_IsContentProcess());
-  RefPtr<DocumentChannel> channel =
-      new DocumentChannelChild(aLoadState, aLoadInfo, aLoadFlags, aCacheKey);
+  RefPtr<DocumentChannel> channel;
+  if (XRE_IsContentProcess()) {
+    channel =
+        new DocumentChannelChild(aLoadState, aLoadInfo, aLoadFlags, aCacheKey);
+  } else {
+    channel = new ParentProcessDocumentChannel(aLoadState, aLoadInfo,
+                                               aLoadFlags, aCacheKey);
+  }
   channel->SetNotificationCallbacks(aNotificationCallbacks);
   return channel.forget();
 }
