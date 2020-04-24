@@ -61,6 +61,13 @@ pub fn alloc<'alloc, T>(allocator: &'alloc Bump, value: T) -> Box<'alloc, T> {
     Box(allocator.alloc(value))
 }
 
+pub fn alloc_with<'alloc, F, T>(allocator: &'alloc Bump, gen: F) -> Box<'alloc, T>
+where
+    F: FnOnce() -> T,
+{
+    Box(allocator.alloc_with(gen))
+}
+
 pub fn alloc_str<'alloc>(allocator: &'alloc Bump, value: &str) -> &'alloc str {
     String::from_str_in(value, allocator).into_bump_str()
 }

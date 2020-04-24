@@ -82,7 +82,9 @@ rust: $(RS_AST_OUT) $(RS_TABLES_OUT)
 jsparagus/parse_pgen_generated.py:
 	$(PYTHON) -m jsparagus.parse_pgen --regenerate > $@
 
-check: all static-check
+check: all static-check dyn-check
+
+dyn-check:
 	./test.sh
 	cargo fmt
 	cargo test --all
@@ -97,4 +99,4 @@ update-opcodes-m-u:
 	$(PYTHON) crates/emitter/scripts/update_opcodes.py \
 		../mozilla-unified ./
 
-.PHONY: all check static-check jsdemo rust update-opcodes-m-u
+.PHONY: all check static-check dyn-check jsdemo rust update-opcodes-m-u
