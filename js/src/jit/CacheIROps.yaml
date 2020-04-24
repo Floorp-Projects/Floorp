@@ -965,6 +965,12 @@
   args:
     val: NumberId
 
+- name: LoadBigIntResult
+  shared: true
+  transpile: false
+  args:
+    val: BigIntId
+
 - name: CallScriptedGetterResult
   shared: false
   transpile: false

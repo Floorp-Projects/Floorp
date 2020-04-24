@@ -32,6 +32,10 @@ var fun_dec_double = (x) => { return --x; }
 var fun_pos_int32 = (x) => { return +x; }
 var fun_pos_double = (x) => { return +x; }
 
+// JSOp::ToNumeric using string representations of either int32 or double.
+var fun_tonumeric_int32 = (x) => { return x++; }
+var fun_tonumeric_double = (x) => { return x++; }
+
 warmup(fun_neg_int32_double, ["1", "2", "-3"], [-1, -2, 3]);
 warmup(fun_neg_double_int32, ["0"], [-0]);
 
@@ -49,3 +53,6 @@ warmup(fun_dec_double, ["-1.0", "0.0", "1.5", "3"], [-2, -1, 0.5, 2]);
 
 warmup(fun_pos_int32, ["-1", "0"], [-1, 0]);
 warmup(fun_pos_double, ["-1.0", "0.0", "1.2", "3"], [-1.0, 0.0, 1.2, 3]);
+
+warmup(fun_tonumeric_int32, ["-1", "0"], [-1, 0]);
+warmup(fun_tonumeric_double, ["-1.0", "0.0", "1.2", "3"], [-1.0, 0.0, 1.2, 3]);
