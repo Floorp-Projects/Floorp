@@ -1817,6 +1817,8 @@ version = "0.1.0"
 dependencies = [
  "glean-core",
  "log",
+ "once_cell",
+ "tempfile",
 ]
 
 [[package]]
