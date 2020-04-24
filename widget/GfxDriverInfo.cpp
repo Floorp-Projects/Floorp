@@ -513,20 +513,22 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x193b);
       APPEND_DEVICE(0x193d);
 
-      // kabylake
+      // kabylake gt1
       APPEND_DEVICE(0x5902);
       APPEND_DEVICE(0x5906);
-      APPEND_DEVICE(0x5908);
       APPEND_DEVICE(0x5908);
       APPEND_DEVICE(0x590a);
       APPEND_DEVICE(0x590b);
       APPEND_DEVICE(0x590e);
-      APPEND_DEVICE(0x5908);
-      APPEND_DEVICE(0x5908);
+
+      // kabylake gt1.5
+      APPEND_DEVICE(0x5913);
       APPEND_DEVICE(0x5915);
       APPEND_DEVICE(0x5917);
+
+      // kabylake gt2
+      APPEND_DEVICE(0x5912);
       APPEND_DEVICE(0x5916);
-      APPEND_DEVICE(0x5917);
       APPEND_DEVICE(0x591a);
       APPEND_DEVICE(0x591b);
       APPEND_DEVICE(0x591c);
