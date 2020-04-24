@@ -996,59 +996,27 @@ static already_AddRefed<gl::GLContext> CreateGLContextCGL() {
 }
 #endif
 
-static void DebugMessageCallback(GLenum aSource, GLenum aType, GLuint aId,
-                                 GLenum aSeverity, GLsizei aLength,
-                                 const GLchar* aMessage,
-                                 const void* aUserParam) {
-  constexpr const char* kContextLost = "Context has been lost.";
-
-  if (StaticPrefs::gfx_webrender_gl_debug_message_critical_note_AtStartup() &&
-      aSeverity == LOCAL_GL_DEBUG_SEVERITY_HIGH) {
-    auto message = std::string(aMessage, aLength);
-    // When content lost happned, error messages are flooded by its message.
-    if (message != kContextLost) {
-      gfxCriticalNote << message;
-    }
-  }
-
-  if (StaticPrefs::gfx_webrender_gl_debug_message_print_AtStartup()) {
-    gl::GLContext* gl = (gl::GLContext*)aUserParam;
-    gl->DebugCallback(aSource, aType, aId, aSeverity, aLength, aMessage);
-  }
-}
-
 static already_AddRefed<gl::GLContext> CreateGLContext() {
-  RefPtr<gl::GLContext> gl;
-
 #ifdef XP_WIN
   if (gfx::gfxVars::UseWebRenderANGLE()) {
-    gl = CreateGLContextANGLE();
+    return CreateGLContextANGLE();
   }
-#elif defined(MOZ_WIDGET_ANDROID)
-  gl = CreateGLContextEGL();
+#endif
+
+#if defined(MOZ_WIDGET_ANDROID)
+  return CreateGLContextEGL();
 #elif defined(MOZ_WAYLAND)
   if (gdk_display_get_default() &&
       !GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
-    gl = CreateGLContextEGL();
+    return CreateGLContextEGL();
   }
-#elif XP_MACOSX
-  gl = CreateGLContextCGL();
 #endif
 
-  bool enableDebugMessage =
-      StaticPrefs::gfx_webrender_gl_debug_message_critical_note_AtStartup() ||
-      StaticPrefs::gfx_webrender_gl_debug_message_print_AtStartup();
+#ifdef XP_MACOSX
+  return CreateGLContextCGL();
+#endif
 
-  if (enableDebugMessage && gl &&
-      gl->IsExtensionSupported(gl::GLContext::KHR_debug)) {
-    gl->fEnable(LOCAL_GL_DEBUG_OUTPUT);
-    gl->fDisable(LOCAL_GL_DEBUG_OUTPUT_SYNCHRONOUS);
-    gl->fDebugMessageCallback(DebugMessageCallback, (void*)gl.get());
-    gl->fDebugMessageControl(LOCAL_GL_DONT_CARE, LOCAL_GL_DONT_CARE,
-                             LOCAL_GL_DONT_CARE, 0, nullptr, true);
-  }
-
-  return gl.forget();
+  return nullptr;
 }
 
 extern "C" {
