@@ -106,8 +106,6 @@ template <typename T>
 class NotNull {
   template <typename U>
   friend constexpr NotNull<U> WrapNotNull(U aBasePtr);
-  template <typename U>
-  friend constexpr NotNull<U*> WrapNotNullUnsafe(U* aBasePtr);
   template <typename U, typename... Args>
   friend constexpr NotNull<U> MakeNotNull(Args&&... aArgs);
 
@@ -131,12 +129,6 @@ class NotNull {
                   "mBasePtr must have zero offset.");
   }
 
-  // Default copy/move construction and assignment.
-  NotNull(const NotNull<T>&) = default;
-  NotNull<T>& operator=(const NotNull<T>&) = default;
-  NotNull(NotNull<T>&&) = default;
-  NotNull<T>& operator=(NotNull<T>&&) = default;
-
   // Disallow null checks, which are unnecessary for this type.
   explicit operator bool() const = delete;
 
@@ -150,6 +142,51 @@ class NotNull {
   // Dereference operators.
   constexpr const T& operator->() const { return get(); }
   constexpr decltype(*mBasePtr) operator*() const { return *mBasePtr; }
+};
+
+// Specialization for T* to allow adding MOZ_NONNULL_RETURN attributes.
+template <typename T>
+class NotNull<T*> {
+  template <typename U>
+  friend constexpr NotNull<U> WrapNotNull(U aBasePtr);
+  template <typename U>
+  friend constexpr NotNull<U*> WrapNotNullUnchecked(U* aBasePtr);
+  template <typename U, typename... Args>
+  friend constexpr NotNull<U> MakeNotNull(Args&&... aArgs);
+
+  T* mBasePtr;
+
+  // This constructor is only used by WrapNotNull() and MakeNotNull<U>().
+  template <typename U>
+  constexpr explicit NotNull(U* aBasePtr) : mBasePtr(aBasePtr) {}
+
+ public:
+  // Disallow default construction.
+  NotNull() = delete;
+
+  // Construct/assign from another NotNull with a compatible base pointer type.
+  template <typename U>
+  constexpr MOZ_IMPLICIT NotNull(const NotNull<U>& aOther)
+      : mBasePtr(aOther.get()) {
+    static_assert(sizeof(T*) == sizeof(NotNull<T*>),
+                  "NotNull must have zero space overhead.");
+    static_assert(offsetof(NotNull<T*>, mBasePtr) == 0,
+                  "mBasePtr must have zero offset.");
+  }
+
+  // Disallow null checks, which are unnecessary for this type.
+  explicit operator bool() const = delete;
+
+  // Explicit conversion to a base pointer. Use only to resolve ambiguity or to
+  // get a castable pointer.
+  constexpr T* get() const MOZ_NONNULL_RETURN { return mBasePtr; }
+
+  // Implicit conversion to a base pointer. Preferable to get().
+  constexpr operator T*() const MOZ_NONNULL_RETURN { return get(); }
+
+  // Dereference operators.
+  constexpr T* operator->() const MOZ_NONNULL_RETURN { return get(); }
+  constexpr T& operator*() const { return *mBasePtr; }
 };
 
 template <typename T>
