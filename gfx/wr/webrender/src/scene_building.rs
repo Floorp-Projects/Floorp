@@ -801,15 +801,13 @@ impl<'a> SceneBuilder<'a> {
 
     fn build_scroll_frame(
         &mut self,
-        item: &DisplayItemRef,
         info: &ScrollFrameDisplayItem,
         parent_node_index: SpatialNodeIndex,
         pipeline_id: PipelineId,
     ) {
         let current_offset = self.current_offset(parent_node_index);
-        let clip_region = ClipRegion::create_for_clip_node(
-            info.clip_rect,
-            item.complex_clip().iter(),
+        let clip_region = ClipRegion::create_for_clip_node_with_local_clip(
+            &info.clip_rect,
             &current_offset,
         );
         // Just use clip rectangle as the frame rect for this scroll frame.
@@ -1479,7 +1477,6 @@ impl<'a> SceneBuilder<'a> {
             DisplayItem::ScrollFrame(ref info) => {
                 let parent_space = self.get_space(&info.parent_space_and_clip.spatial_id);
                 self.build_scroll_frame(
-                    &item,
                     info,
                     parent_space,
                     pipeline_id,
