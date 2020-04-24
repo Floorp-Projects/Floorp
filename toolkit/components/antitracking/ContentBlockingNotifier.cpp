@@ -48,6 +48,65 @@ void RunConsoleReportingRunnable(already_AddRefed<nsIRunnable>&& aRunnable) {
   }
 }
 
+void ReportUnblockingToConsole(
+    uint64_t aWindowID, nsIPrincipal* aPrincipal,
+    const nsAString& aTrackingOrigin,
+    ContentBlockingNotifier::StorageAccessGrantedReason aReason) {
+  MOZ_ASSERT(aWindowID);
+  MOZ_ASSERT(aPrincipal);
+
+  nsAutoString sourceLine;
+  uint32_t lineNumber = 0, columnNumber = 0;
+  JSContext* cx = nsContentUtils::GetCurrentJSContext();
+  if (cx) {
+    nsJSUtils::GetCallingLocation(cx, sourceLine, &lineNumber, &columnNumber);
+  }
+
+  nsCOMPtr<nsIPrincipal> principal(aPrincipal);
+  nsAutoString trackingOrigin(aTrackingOrigin);
+
+  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
+      "ReportUnblockingToConsoleDelayed",
+      [aWindowID, sourceLine, lineNumber, columnNumber, principal,
+       trackingOrigin, aReason]() {
+        const char* messageWithSameOrigin = nullptr;
+
+        switch (aReason) {
+          case ContentBlockingNotifier::eStorageAccessAPI:
+            messageWithSameOrigin = "CookieAllowedForTrackerByStorageAccessAPI";
+            break;
+
+          case ContentBlockingNotifier::eOpenerAfterUserInteraction:
+            [[fallthrough]];
+          case ContentBlockingNotifier::eOpener:
+            messageWithSameOrigin = "CookieAllowedForTrackerByHeuristic";
+            break;
+        }
+
+        nsAutoString origin;
+        nsresult rv = nsContentUtils::GetUTFOrigin(principal, origin);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return;
+        }
+
+        // Not adding grantedOrigin yet because we may not want it later.
+        AutoTArray<nsString, 2> params = {origin, trackingOrigin};
+
+        nsAutoString errorText;
+        rv = nsContentUtils::FormatLocalizedString(
+            nsContentUtils::eNECKO_PROPERTIES, messageWithSameOrigin, params,
+            errorText);
+        NS_ENSURE_SUCCESS_VOID(rv);
+
+        nsContentUtils::ReportToConsoleByWindowID(
+            errorText, nsIScriptError::warningFlag,
+            ANTITRACKING_CONSOLE_CATEGORY, aWindowID, nullptr, sourceLine,
+            lineNumber, columnNumber);
+      });
+
+  RunConsoleReportingRunnable(runnable.forget());
+}
+
 void ReportBlockingToConsole(uint64_t aWindowID, nsIURI* aURI,
                              uint32_t aRejectedReason) {
   MOZ_ASSERT(aWindowID);
@@ -326,59 +385,15 @@ void NotifyEventInParent(
 /* static */ void ContentBlockingNotifier::ReportUnblockingToConsole(
     nsPIDOMWindowInner* aWindow, const nsAString& aTrackingOrigin,
     ContentBlockingNotifier::StorageAccessGrantedReason aReason) {
+  uint64_t windowID = aWindow->WindowID();
+
   nsCOMPtr<nsIPrincipal> principal =
       nsGlobalWindowInner::Cast(aWindow)->GetPrincipal();
   if (NS_WARN_IF(!principal)) {
     return;
   }
 
-  RefPtr<Document> doc = aWindow->GetExtantDoc();
-  if (NS_WARN_IF(!doc)) {
-    return;
-  }
-
-  nsAutoString trackingOrigin(aTrackingOrigin);
-
-  nsAutoString sourceLine;
-  uint32_t lineNumber = 0, columnNumber = 0;
-  JSContext* cx = nsContentUtils::GetCurrentJSContext();
-  if (cx) {
-    nsJSUtils::GetCallingLocation(cx, sourceLine, &lineNumber, &columnNumber);
-  }
-
-  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
-      "ReportUnblockingToConsoleDelayed",
-      [doc, principal, trackingOrigin, sourceLine, lineNumber, columnNumber,
-       aReason]() {
-        nsAutoString origin;
-        nsresult rv = nsContentUtils::GetUTFOrigin(principal, origin);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return;
-        }
-
-        // Not adding grantedOrigin yet because we may not want it later.
-        AutoTArray<nsString, 3> params = {origin, trackingOrigin};
-        const char* messageWithSameOrigin = nullptr;
-
-        switch (aReason) {
-          case ContentBlockingNotifier::eStorageAccessAPI:
-            messageWithSameOrigin = "CookieAllowedForTrackerByStorageAccessAPI";
-            break;
-
-          case ContentBlockingNotifier::eOpenerAfterUserInteraction:
-            [[fallthrough]];
-          case ContentBlockingNotifier::eOpener:
-            messageWithSameOrigin = "CookieAllowedForTrackerByHeuristic";
-            break;
-        }
-
-        nsContentUtils::ReportToConsole(
-            nsIScriptError::warningFlag, ANTITRACKING_CONSOLE_CATEGORY, doc,
-            nsContentUtils::eNECKO_PROPERTIES, messageWithSameOrigin, params,
-            nullptr, sourceLine, lineNumber, columnNumber);
-      });
-
-  RunConsoleReportingRunnable(runnable.forget());
+  ::ReportUnblockingToConsole(windowID, principal, aTrackingOrigin, aReason);
 }
 
 /* static */
