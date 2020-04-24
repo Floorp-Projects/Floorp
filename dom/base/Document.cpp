@@ -2218,12 +2218,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
     cb.NoteXPCOMChild(it.Key());
     CycleCollectionNoteChild(cb, it.UserData(), "mL10nProtoElements value");
   }
-
-  for (size_t i = 0; i < tmp->mPendingFrameStaticClones.Length(); ++i) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingFrameStaticClones[i].mElement);
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
-        mPendingFrameStaticClones[i].mStaticCloneOf);
-  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Document)
@@ -2348,8 +2342,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
     mql->Disconnect();
     mql = next;
   }
-
-  tmp->mPendingFrameStaticClones.Clear();
 
   tmp->mInUnlinkOrDeletion = false;
 
@@ -10460,7 +10452,7 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest,
 
   // BFCache is currently not compatible with remote subframes (bug 1609324)
   if (RefPtr<BrowsingContext> browsingContext = GetBrowsingContext()) {
-    for (auto& child : browsingContext->Children()) {
+    for (auto& child : browsingContext->GetChildren()) {
       if (!child->IsInProcess()) {
         aBFCacheCombo |= BFCacheStatus::CONTAINS_REMOTE_SUBFRAMES;
         ret = false;
@@ -11159,7 +11151,7 @@ void Document::NotifyLoading(bool aNewParentIsLoading,
       // readystates of the subdocument.  In the child process it will call
       // NotifyLoading() to notify the innerwindow/TimeoutManager, and then
       // iterate it's children
-      for (auto& child : context->Children()) {
+      for (auto& child : context->GetChildren()) {
         MOZ_LOG(gTimeoutDeferralLog, mozilla::LogLevel::Debug,
                 ("bc: %p SetAncestorLoading(%d)", (void*)child, is_loading));
         child->SetAncestorLoading(is_loading);
@@ -16296,20 +16288,6 @@ bool Document::HasRecentlyStartedForegroundLoads() {
     idleScheduler->SendPrioritizedOperationDone();
   }
   return false;
-}
-
-nsTArray<Document::PendingFrameStaticClone>
-Document::TakePendingFrameStaticClones() {
-  MOZ_ASSERT(mIsStaticDocument,
-             "Cannot have pending frame static clones in non-static documents");
-  return std::move(mPendingFrameStaticClones);
-}
-
-void Document::AddPendingFrameStaticClone(nsFrameLoaderOwner* aElement,
-                                          nsFrameLoader* aStaticCloneOf) {
-  PendingFrameStaticClone* clone = mPendingFrameStaticClones.AppendElement();
-  clone->mElement = aElement;
-  clone->mStaticCloneOf = aStaticCloneOf;
 }
 
 }  // namespace dom

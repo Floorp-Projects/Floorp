@@ -11,7 +11,6 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/Span.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -33,7 +32,6 @@
 #include "nsILoadContext.h"
 
 class nsDocShellLoadState;
-class nsGlobalWindowInner;
 class nsGlobalWindowOuter;
 class nsILoadInfo;
 class nsIPrincipal;
@@ -74,15 +72,13 @@ class WindowProxyHolder;
 // Fields are, by default, settable by any process and readable by any process.
 // Racy sets will be resolved as-if they occurred in the order the parent
 // process finds out about them.
-//
-// The `DidSet` and `CanSet` methods may be overloaded to provide different
-// behavior for a specific field.
-//  * `DidSet` is called to run code in every process whenever the value is
-//    updated (This currently occurs even if the value didn't change, though
-//    this may change in the future).
-//  * `CanSet` is called before attempting to set the value, in both the process
-//    which calls `Set`, and the parent process, and will kill the misbehaving
-//    process if it fails.
+// This defines the default do-nothing implementations for DidSet()
+// and CanSet() for all the fields. They may be overloaded to provide
+// different behavior for a specific field.
+// DidSet() is used to run code in any process that sees the
+// the value updated (note: even if the value itself didn't change).
+// CanSet() is used to verify that the setting is allowed, and will
+// assert if it fails in Debug builds.
 #define MOZ_EACH_BC_FIELD(FIELD)                                             \
   FIELD(Name, nsString)                                                      \
   FIELD(Closed, bool)                                                        \
@@ -151,6 +147,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
  public:
   enum class Type { Chrome, Content };
 
+  using Children = nsTArray<RefPtr<BrowsingContext>>;
+
   static void Init();
   static LogModule* GetLog();
   static void CleanupContexts(uint64_t aProcessId);
@@ -168,25 +166,26 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     return GetFromWindow(aProxy);
   }
 
-  // Create a brand-new toplevel BrowsingContext with no relationships to other
-  // BrowsingContexts, and which is not embedded within any <browser> or frame
-  // element.
-  //
-  // This BrowsingContext is immediately attached, and cannot have LoadContext
-  // flags customized unless it is of `Type::Chrome`.
-  //
-  // The process which created this BrowsingContext is responsible for detaching
-  // it.
-  static already_AddRefed<BrowsingContext> CreateIndependent(Type aType);
+  // Create a brand-new BrowsingContext object.
+  static already_AddRefed<BrowsingContext> Create(BrowsingContext* aParent,
+                                                  BrowsingContext* aOpener,
+                                                  const nsAString& aName,
+                                                  Type aType);
 
-  // Create a brand-new BrowsingContext object, but does not immediately attach
-  // it. State such as OriginAttributes and PrivateBrowsingId may be customized
-  // to configure the BrowsingContext before it is attached.
-  //
+  // Same as the above, but does not immediately attach the browsing context.
   // `EnsureAttached()` must be called before the BrowsingContext is used for a
   // DocShell, BrowserParent, or BrowserBridgeChild.
   static already_AddRefed<BrowsingContext> CreateDetached(
-      nsGlobalWindowInner* aParent, BrowsingContext* aOpener,
+      BrowsingContext* aParent, BrowsingContext* aOpener,
+      const nsAString& aName, Type aType);
+
+  // Same as Create, but for a BrowsingContext which does not belong to a
+  // visible window, and will always be detached by the process that created it.
+  // In contrast, any top-level BrowsingContext created in a content process
+  // using Create() is assumed to belong to a <browser> element in the parent
+  // process, which will be responsible for detaching it.
+  static already_AddRefed<BrowsingContext> CreateWindowless(
+      BrowsingContext* aParent, BrowsingContext* aOpener,
       const nsAString& aName, Type aType);
 
   void EnsureAttached();
@@ -240,12 +239,25 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     return mDocShell ? mDocShell->GetWindow() : nullptr;
   }
 
+  // Attach the current BrowsingContext to its parent, in both the child and the
+  // parent process. BrowsingContext objects are created attached by default, so
+  // this method need only be called when restoring cached BrowsingContext
+  // objects.
+  void Attach(bool aFromIPC = false);
+
   // Detach the current BrowsingContext from its parent, in both the
   // child and the parent process.
   void Detach(bool aFromIPC = false);
 
   // Prepare this BrowsingContext to leave the current process.
   void PrepareForProcessChange();
+
+  // Remove all children from the current BrowsingContext and cache
+  // them to allow them to be attached again.
+  void CacheChildren(bool aFromIPC = false);
+
+  // Restore cached browsing contexts.
+  void RestoreChildren(Children&& aChildren, bool aFromIPC = false);
 
   // Triggers a load in the process which currently owns this BrowsingContext.
   nsresult LoadURI(nsDocShellLoadState* aLoadState, bool aSetNavigating = false);
@@ -260,7 +272,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   void DisplayLoadError(const nsAString& aURI);
 
-  // Determine if the current BrowsingContext is in the BFCache.
+  // Determine if the current BrowsingContext was 'cached' by the logic in
+  // CacheChildren.
   bool IsCached();
 
   // Check that this browsing context is targetable for navigations (i.e. that
@@ -282,12 +295,11 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool IsContentSubframe() const { return IsContent() && GetParent(); }
   uint64_t Id() const { return mBrowsingContextId; }
 
-  BrowsingContext* GetParent() const;
+  BrowsingContext* GetParent() const {
+    MOZ_ASSERT_IF(mParent, mParent->mType == mType);
+    return mParent;
+  }
   BrowsingContext* Top();
-
-  // NOTE: Unlike `GetEmbedderWindowGlobal`, `GetParentWindow` does not cross
-  // toplevel content browser boundaries.
-  WindowContext* GetParentWindow() const { return mParentWindow; }
 
   already_AddRefed<BrowsingContext> GetOpener() const {
     RefPtr<BrowsingContext> opener(Get(GetOpenerId()));
@@ -329,12 +341,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   uint32_t SandboxFlags() { return GetSandboxFlags(); }
 
-  Span<RefPtr<BrowsingContext>> Children() const;
-  void GetChildren(nsTArray<RefPtr<BrowsingContext>>& aChildren);
+  void GetChildren(Children& aChildren);
 
-  const nsTArray<RefPtr<WindowContext>>& GetWindowContexts() {
-    return mWindowContexts;
-  }
   void GetWindowContexts(nsTArray<RefPtr<WindowContext>>& aWindows);
 
   void RegisterWindowContext(WindowContext* aWindow);
@@ -445,17 +453,22 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BrowsingContext)
   NS_DECL_NSILOADCONTEXT
 
+  const Children& GetChildren() { return mChildren; }
+  const nsTArray<RefPtr<WindowContext>>& GetWindowContexts() {
+    return mWindowContexts;
+  }
+
   // Perform a pre-order walk of this BrowsingContext subtree.
   void PreOrderWalk(const std::function<void(BrowsingContext*)>& aCallback) {
     aCallback(this);
-    for (auto& child : Children()) {
+    for (auto& child : GetChildren()) {
       child->PreOrderWalk(aCallback);
     }
   }
 
   // Perform an post-order walk of this BrowsingContext subtree.
   void PostOrderWalk(const std::function<void(BrowsingContext*)>& aCallback) {
-    for (auto& child : Children()) {
+    for (auto& child : GetChildren()) {
       child->PostOrderWalk(aCallback);
     }
 
@@ -472,7 +485,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void Focus(CallerType aCallerType, ErrorResult& aError);
   void Blur(ErrorResult& aError);
   WindowProxyHolder GetFrames(ErrorResult& aError);
-  int32_t Length() const { return Children().Length(); }
+  int32_t Length() const { return mChildren.Length(); }
   Nullable<WindowProxyHolder> GetTop(ErrorResult& aError);
   void GetOpener(JSContext* aCx, JS::MutableHandle<JS::Value> aOpener,
                  ErrorResult& aError) const;
@@ -513,35 +526,27 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     // deserialized before other BrowsingContext in the BrowsingContextGroup
     // have been initialized.
     uint64_t mParentId = 0;
-    already_AddRefed<WindowContext> GetParent();
+    already_AddRefed<BrowsingContext> GetParent();
     already_AddRefed<BrowsingContext> GetOpener();
 
     uint64_t GetOpenerId() const { return mozilla::Get<IDX_OpenerId>(mFields); }
 
+    bool mCached = false;
     bool mWindowless = false;
     bool mUseRemoteTabs = false;
     bool mUseRemoteSubframes = false;
     OriginAttributes mOriginAttributes;
 
     FieldTuple mFields;
-
-    bool operator==(const IPCInitializer& aOther) const {
-      return mId == aOther.mId && mParentId == aOther.mParentId &&
-             mWindowless == aOther.mWindowless &&
-             mUseRemoteTabs == aOther.mUseRemoteTabs &&
-             mUseRemoteSubframes == aOther.mUseRemoteSubframes &&
-             mOriginAttributes == aOther.mOriginAttributes &&
-             mFields == aOther.mFields;
-    }
   };
 
   // Create an IPCInitializer object for this BrowsingContext.
   IPCInitializer GetIPCInitializer();
 
   // Create a BrowsingContext object from over IPC.
-  static void CreateFromIPC(IPCInitializer&& aInitializer,
-                            BrowsingContextGroup* aGroup,
-                            ContentParent* aOriginProcess);
+  static already_AddRefed<BrowsingContext> CreateFromIPC(
+      IPCInitializer&& aInitializer, BrowsingContextGroup* aGroup,
+      ContentParent* aOriginProcess);
 
   // Performs access control to check that 'this' can access 'aTarget'.
   bool CanAccess(BrowsingContext* aTarget, bool aConsiderOpener = true);
@@ -563,13 +568,11 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
  protected:
   virtual ~BrowsingContext();
-  BrowsingContext(WindowContext* aParentWindow, BrowsingContextGroup* aGroup,
+  BrowsingContext(BrowsingContext* aParent, BrowsingContextGroup* aGroup,
                   uint64_t aBrowsingContextId, Type aType,
                   FieldTuple&& aFields);
 
  private:
-  void Attach(bool aFromIPC, ContentParent* aOriginProcess);
-
   // Find the special browsing context if aName is '_self', '_parent',
   // '_top', but not '_blank'. The latter is handled in FindWithName
   BrowsingContext* FindWithSpecialName(const nsAString& aName,
@@ -716,7 +719,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   const uint64_t mBrowsingContextId;
 
   RefPtr<BrowsingContextGroup> mGroup;
-  RefPtr<WindowContext> mParentWindow;
+  RefPtr<BrowsingContext> mParent;
+  // Note: BrowsingContext_Binding::ClearCachedChildrenValue must be called any
+  // time this array is mutated to keep the JS-exposed reflection in sync.
+  Children mChildren;
   nsCOMPtr<nsIDocShell> mDocShell;
 
   RefPtr<Element> mEmbedderElement;
@@ -825,6 +831,7 @@ extern bool GetRemoteOuterWindowProxy(JSContext* aCx, BrowsingContext* aContext,
 
 using BrowsingContextTransaction = BrowsingContext::BaseTransaction;
 using BrowsingContextInitializer = BrowsingContext::IPCInitializer;
+using BrowsingContextChildren = BrowsingContext::Children;
 using MaybeDiscardedBrowsingContext = MaybeDiscarded<BrowsingContext>;
 
 // Specialize the transaction object for every translation unit it's used in.

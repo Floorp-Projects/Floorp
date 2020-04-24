@@ -7,15 +7,12 @@
 #ifndef mozilla_dom_WindowContext_h
 #define mozilla_dom_WindowContext_h
 
-#include "mozilla/Span.h"
 #include "mozilla/dom/MaybeDiscarded.h"
 #include "mozilla/dom/SyncedContext.h"
 #include "mozilla/net/NeckoChannelParams.h"
 
 namespace mozilla {
 namespace dom {
-
-class WindowGlobalParent;
 
 class WindowGlobalParent;
 
@@ -47,10 +44,6 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   uint64_t OuterWindowId() const { return GetOuterWindowId(); }
   bool IsDiscarded() const { return mIsDiscarded; }
 
-  bool IsCached() const;
-
-  Span<RefPtr<BrowsingContext>> Children() { return mChildren; }
-
   // Cast this object to it's parent-process canonical form.
   WindowGlobalParent* Canonical();
 
@@ -65,12 +58,6 @@ class WindowContext : public nsISupports, public nsWrapperCache {
     uint64_t mBrowsingContextId;
 
     FieldTuple mFields;
-
-    bool operator==(const IPCInitializer& aOther) const {
-      return mInnerWindowId == aOther.mInnerWindowId &&
-             mBrowsingContextId == aOther.mBrowsingContextId &&
-             mFields == aOther.mFields;
-    }
   };
   IPCInitializer GetIPCInitializer() {
     return {mInnerWindowId, mBrowsingContext->Id(), mFields.Fields()};
@@ -87,11 +74,6 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   void Init();
 
  private:
-  friend class BrowsingContext;
-
-  void AppendChildBrowsingContext(BrowsingContext* aBrowsingContext);
-  void RemoveChildBrowsingContext(BrowsingContext* aBrowsingContext);
-
   // Send a given `BaseTransaction` object to the correct remote.
   void SendCommitTransaction(ContentParent* aParent,
                              const BaseTransaction& aTxn, uint64_t aEpoch);
@@ -131,12 +113,6 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   uint64_t mInnerWindowId;
   RefPtr<BrowsingContext> mBrowsingContext;
-
-  // --- NEVER CHANGE `mChildren` DIRECTLY! ---
-  // Changes to this list need to be synchronized to the list within our
-  // `mBrowsingContext`, and should only be performed through the
-  // `AppendChildBrowsingContext` and `RemoveChildBrowsingContext` methods.
-  nsTArray<RefPtr<BrowsingContext>> mChildren;
 
   bool mIsDiscarded = false;
 };
