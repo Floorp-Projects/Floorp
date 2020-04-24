@@ -45,7 +45,8 @@ const BrowserStatusFilter = Components.Constructor(
 
 const WINDOW_TYPE = "navigator:geckoview";
 
-let tabTracker;
+// We need let to break cyclic dependency
+/* eslint-disable-next-line prefer-const */
 let windowTracker;
 
 /**
@@ -290,7 +291,7 @@ class TabTracker extends TabTrackerBase {
 }
 
 windowTracker = new WindowTracker();
-tabTracker = new TabTracker();
+const tabTracker = new TabTracker();
 
 Object.assign(global, { tabTracker, windowTracker });
 
