@@ -1789,6 +1789,14 @@ void MUnbox::printOpcode(GenericPrinter& out) const {
 #endif
 
 MDefinition* MUnbox::foldsTo(TempAllocator& alloc) {
+  // Fold MUnbox(MBox(x)) => x if types match.
+  if (input()->isBox()) {
+    MBox* box = input()->toBox();
+    if (box->input()->type() == type()) {
+      return box->input();
+    }
+  }
+
   if (!input()->isLoadFixedSlot()) {
     return this;
   }
