@@ -254,7 +254,7 @@ const char* NeckoParent::CreateChannelLoadContext(
         break;
       }
       case PBrowserOrId::TTabId: {
-        aResult = new LoadContext(aSerialized, aBrowser.get_TabId(), attrs);
+        aResult = new LoadContext(aSerialized, nullptr, attrs);
         break;
       }
       default:
