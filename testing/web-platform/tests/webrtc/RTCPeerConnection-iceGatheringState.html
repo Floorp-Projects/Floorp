@@ -149,6 +149,16 @@
     t.add_cleanup(() => pc1.close());
     const pc2 = new RTCPeerConnection();
     t.add_cleanup(() => pc2.close());
+    await initialOfferAnswer(pc1, pc2, {offerToReceiveAudio:true});
+    await pc1.setLocalDescription(await pc1.createOffer({iceRestart: true}));
+    await iceGatheringStateTransitions(pc1, 'gathering', 'complete');
+  }, 'setLocalDescription(reoffer) with a new transport should cause iceGatheringState to go to "checking" and then "complete"');
+
+  promise_test(async t => {
+    const pc1 = new RTCPeerConnection();
+    t.add_cleanup(() => pc1.close());
+    const pc2 = new RTCPeerConnection();
+    t.add_cleanup(() => pc2.close());
     expectNoMoreGatheringStateChanges(t, pc2);
     const offer = await pc1.createOffer({offerToReceiveAudio: true});
     await pc2.setRemoteDescription(offer);
