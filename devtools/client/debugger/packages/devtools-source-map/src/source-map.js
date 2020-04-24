@@ -48,7 +48,11 @@ type Range = {
 };
 export type SourceMapInput = {|
   id: SourceId,
+  // This URL isn't actually used in the source-map module, but we have it
+  // passed in so that the Toolbox can throw a more useful error message
+  // if the sourcemap for a given generated source file fails to load.
   url: string,
+  sourceMapBaseURL: string,
   sourceMapURL: string,
   isWasm: boolean,
 |};

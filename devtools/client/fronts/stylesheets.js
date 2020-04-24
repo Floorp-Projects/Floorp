@@ -117,6 +117,14 @@ class StyleSheetFront extends FrontClassWithSpec(styleSheetSpec) {
   get ruleCount() {
     return this._form.ruleCount;
   }
+  get sourceMapBaseURL() {
+    // Handle backward-compat for servers that don't return sourceMapBaseURL.
+    if (this._form.sourceMapBaseURL === undefined) {
+      return this.href || this.nodeHref;
+    }
+
+    return this._form.sourceMapBaseURL;
+  }
   get sourceMapURL() {
     return this._form.sourceMapURL;
   }

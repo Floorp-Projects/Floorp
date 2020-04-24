@@ -133,9 +133,9 @@ function makeSourceURL(filename: string) {
 }
 
 type MakeSourceProps = {
+  sourceMapBaseURL?: string,
   sourceMapURL?: string,
   introductionType?: string,
-  introductionUrl?: string,
   isBlackBoxed?: boolean,
 };
 function createMakeSource(): (
@@ -155,9 +155,9 @@ function createMakeSource(): (
       source: {
         actor: `${name}-${index}-actor`,
         url: `http://localhost:8000/examples/${name}`,
+        sourceMapBaseURL: props.sourceMapBaseURL || null,
         sourceMapURL: props.sourceMapURL || null,
         introductionType: props.introductionType || null,
-        introductionUrl: props.introductionUrl || null,
         isBlackBoxed: !!props.isBlackBoxed,
         extensionName: null,
       },
