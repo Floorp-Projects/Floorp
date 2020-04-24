@@ -119,6 +119,11 @@ class SharedContext {
  public:
   SourceExtent extent;
 
+  // If defined, this is used to allocate a JSScript instead of the
+  // parser determined extent (above). This is used for certain top
+  // level contexts.
+  mozilla::Maybe<SourceExtent> scriptExtent;
+
  protected:
   bool allowNewTarget_ : 1;
   bool allowSuperProperty_ : 1;
@@ -265,6 +270,8 @@ class SharedContext {
     localStrict = strict;
     return retVal;
   }
+
+  SourceExtent getScriptExtent() { return scriptExtent.refOr(extent); }
 };
 
 class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext {
