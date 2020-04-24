@@ -106,18 +106,6 @@ function loadSourceMap(cx: Context, sourceActor: SourceActor) {
 
     let data = null;
     try {
-      // Unable to correctly type the result of a spread on a union type.
-      // See https://github.com/facebook/flow/pull/7298
-      let url = sourceActor.url || "";
-      if (!sourceActor.url && typeof sourceActor.introductionUrl === "string") {
-        // If the source was dynamically generated (via eval, dynamically
-        // created script elements, and so forth), it won't have a URL, so that
-        // it is not collapsed into other sources from the same place. The
-        // introduction URL will include the point it was constructed at,
-        // however, so use that for resolving any source maps in the source.
-        url = sourceActor.introductionUrl;
-      }
-
       // Ignore sourceMapURL on scripts that are part of HTML files, since
       // we currently treat sourcemaps as Source-wide, not SourceActor-specific.
       const source = getSourceByActorId(getState(), sourceActor.id);
@@ -126,7 +114,8 @@ function loadSourceMap(cx: Context, sourceActor: SourceActor) {
           // Using source ID here is historical and eventually we'll want to
           // switch to all of this being per-source-actor.
           id: source.id,
-          url,
+          url: sourceActor.url || "",
+          sourceMapBaseURL: sourceActor.sourceMapBaseURL || "",
           sourceMapURL: sourceActor.sourceMapURL || "",
           isWasm: sourceActor.introductionType === "wasm",
         });
@@ -345,9 +334,9 @@ export function newGeneratedSources(sourceInfo: Array<GeneratedSourceData>) {
           thread,
           source: newId,
           isBlackBoxed: source.isBlackBoxed,
+          sourceMapBaseURL: source.sourceMapBaseURL,
           sourceMapURL: source.sourceMapURL,
           url: source.url,
-          introductionUrl: source.introductionUrl,
           introductionType: source.introductionType,
         });
       }
