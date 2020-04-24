@@ -24,7 +24,7 @@ describe("RegistrationList", () => {
   it("renders the expected snapshot for a list with a single registration", () => {
     const wrapper = shallow(
       RegistrationList({
-        workers: SINGLE_WORKER_DEFAULT_DOMAIN_LIST,
+        registrations: SINGLE_WORKER_DEFAULT_DOMAIN_LIST,
         canDebugWorkers: true,
       })
     );
@@ -34,7 +34,7 @@ describe("RegistrationList", () => {
   it("renders the expected snapshot for a multiple registration list", () => {
     const wrapper = shallow(
       RegistrationList({
-        workers: MULTIPLE_WORKER_LIST,
+        registrations: MULTIPLE_WORKER_LIST,
         canDebugWorkers: true,
       })
     );

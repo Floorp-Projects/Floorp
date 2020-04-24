@@ -74,7 +74,7 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
           );
 
           return {
-            id: registrationFront.id,
+            id: workerFront.id,
             name: workerFront.url,
             state: workerFront.state,
             stateText: workerFront.stateText,
