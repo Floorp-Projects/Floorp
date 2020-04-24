@@ -71,8 +71,6 @@ media-save-as =
 media-save-image-as =
     .label = Save As…
     .accesskey = e
-media-preview =
-    .value = Media Preview:
 
 perm-tab =
     .label = Permissions
