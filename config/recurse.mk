@@ -183,6 +183,10 @@ dom/bindings/export: layout/style/export
 # Various telemetry histogram files need ServoCSSPropList.py from layout/style
 toolkit/components/telemetry/export: layout/style/export
 
+# The update agent needs to link to the updatecommon library, but the build system does not
+# currently have a good way of expressing this dependency.
+toolkit/components/updateagent/target: toolkit/mozapps/update/common/target
+
 ifdef ENABLE_CLANG_PLUGIN
 # Only target rules use the clang plugin.
 $(filter %/target %/target-objects,$(filter-out config/export config/host build/unix/stdc++compat/% build/clang-plugin/%,$(compile_targets))): build/clang-plugin/host build/clang-plugin/tests/target-objects
