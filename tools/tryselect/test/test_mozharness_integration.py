@@ -25,6 +25,7 @@ MOZHARNESS_SCRIPTS = {
             'geckoview-junit',
             'jittest',
             'jsreftest',
+            'reftest-qr',
         ],
     },
     'desktop_unittest': {
@@ -45,7 +46,6 @@ MOZHARNESS_SCRIPTS = {
             'mochitest-valgrind-plain',
             'reftest-gpu',
             'reftest-no-accel',
-            'reftest-qr',
         ],
     },
 }
