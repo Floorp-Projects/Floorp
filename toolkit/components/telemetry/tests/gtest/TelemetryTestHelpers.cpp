@@ -172,7 +172,7 @@ bool EventPresent(JSContext* aCx, const JS::RootedValue& aSnapshot,
 }
 
 void GetOriginSnapshot(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
-                       bool aClear = false) {
+                       bool aClear) {
   nsCOMPtr<nsITelemetry> telemetry =
       do_GetService("@mozilla.org/base/telemetry;1");
 
