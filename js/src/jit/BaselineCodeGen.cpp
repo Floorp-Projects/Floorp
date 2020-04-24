@@ -2163,24 +2163,7 @@ bool BaselineCodeGen<Handler>::emit_Pos() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_ToNumeric() {
-  // Keep top stack value in R0.
-  frame.popRegsAndSync(1);
-
-  // Inline path for int32 and double; otherwise call VM.
-  Label done;
-  masm.branchTestNumber(Assembler::Equal, R0, &done);
-
-  prepareVMCall();
-  pushArg(R0);
-
-  using Fn = bool (*)(JSContext*, HandleValue, MutableHandleValue);
-  if (!callVM<Fn, DoToNumeric>()) {
-    return false;
-  }
-
-  masm.bind(&done);
-  frame.push(R0);
-  return true;
+  return emitUnaryArith();
 }
 
 template <typename Handler>
