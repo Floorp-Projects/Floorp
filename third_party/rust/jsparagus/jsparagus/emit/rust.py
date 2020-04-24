@@ -10,8 +10,8 @@ from ..ordered import OrderedSet
 
 from ..grammar import (CallMethod, Some, is_concrete_element, Nt, InitNt, Optional, End,
                        ErrorSymbol)
-from ..actions import (Action, Reduce, Lookahead, CheckNotOnNewLine, FilterFlag, PushFlag, PopFlag,
-                       FunCall, Seq)
+from ..actions import (Accept, Action, Reduce, Lookahead, CheckNotOnNewLine, FilterFlag, PushFlag,
+                       PopFlag, FunCall, Seq)
 
 from .. import types
 
@@ -72,6 +72,269 @@ TERMINAL_NAMES = {
     '...': 'Ellipsis',
 }
 
+class RustActionWriter:
+    """Write epsilon state transitions for a given action function."""
+    ast_builder = types.Type("AstBuilderDelegate", (types.Lifetime("alloc"),))
+
+    def __init__(self, writer, traits, indent):
+        self.writer = writer
+        self.traits = traits
+        self.indent = indent
+        self.has_ast_builder = self.ast_builder in traits
+        self.used_variables = set()
+
+    def implement_trait(self, funcall):
+        "Returns True if this function call should be encoded"
+        ty = funcall.trait
+        if ty.name == "AstBuilder":
+            return "AstBuilderDelegate<'alloc>" in map(str, self.traits)
+        if ty in self.traits:
+            return True
+        if len(ty.args) == 0:
+            return ty.name in map(lambda t: t.name, self.traits)
+        return False
+
+    def reset(self, act):
+        "Traverse all action to collect preliminary information."
+        self.used_variables = set(self.collect_uses(act))
+
+    def collect_uses(self, act):
+        "Generator which visit all used variables."
+        assert isinstance(act, Action)
+        if isinstance(act, Reduce):
+            yield "value"
+        elif isinstance(act, FunCall):
+            def map_with_offset(args):
+                for a in args:
+                    if isinstance(a, int):
+                        yield a + act.offset
+                    if isinstance(a, str):
+                        yield a
+                    elif isinstance(a, Some):
+                        for offset in map_with_offset([a.inner]):
+                            yield offset
+            if self.implement_trait(act):
+                for var in map_with_offset(act.args):
+                    yield var
+        elif isinstance(act, Seq):
+            for a in act.actions:
+                for var in self.collect_uses(a):
+                    yield var
+
+    def write(self, string, *format_args):
+        "Delegate to the RustParserWriter.write function"
+        self.writer.write(self.indent, string, *format_args)
+
+    def write_state_transitions(self, state):
+        "Given a state, generate the code corresponding to all outgoing epsilon edges."
+        assert not state.is_inconsistent()
+        assert len(list(state.shifted_edges())) == 0
+        for ctx in self.writer.parse_table.debug_context(state.index, None):
+            self.write("// {}", ctx)
+        try:
+            first, dest = next(state.edges(), (None, None))
+            if first is None:
+                return
+            self.reset(first)
+            if first.is_condition():
+                self.write_condition(state, first)
+            else:
+                assert len(list(state.edges())) == 1
+                self.write_action(first, dest)
+        except Exception as exc:
+            print("Error while writing code for {}\n\n".format(state))
+            self.writer.parse_table.debug_info = True
+            print(self.writer.parse_table.debug_context(state.index, "\n", "# "))
+            raise exc
+
+    def write_epsilon_transition(self, dest):
+        self.write("// --> {}", dest)
+        if dest >= self.writer.shift_count:
+            self.write("state = {}", dest)
+        else:
+            self.write("parser.epsilon({});", dest)
+            self.write("return Ok(false)")
+
+    def write_condition(self, state, first_act):
+        "Write code to test a conditions, and dispatch to the matching destination"
+        # NOTE: we already asserted that this state is consistent, this implies
+        # that the first state check the same variables as all remaining
+        # states. Thus we use the first action to produce the match statement.
+        assert isinstance(first_act, Action)
+        assert first_act.is_condition()
+        if isinstance(first_act, CheckNotOnNewLine):
+            # TODO: At the moment this is Action is implemented as a single
+            # operation with a single destination. However, we should implement
+            # it in the future as 2 branches, one which is verifying the lack
+            # of new lines, and one which is shifting an extra error token.
+            # This might help remove the overhead of backtracking in addition
+            # to make this backtracking visible through APS.
+            assert len(list(state.edges())) == 1
+            act, dest = next(state.edges())
+            assert -act.offset > 0
+            self.write("// {}", str(act))
+            self.write("if !parser.check_not_on_new_line({})? {{", -act.offset)
+            self.indent += 1
+            self.write("return Ok(false);")
+            self.indent -= 1
+            self.write("}")
+            self.write_epsilon_transition(dest)
+        else:
+            raise ValueError("Unexpected action type")
+
+    def write_action(self, act, dest):
+        assert isinstance(act, Action)
+        assert not act.is_condition()
+        is_packed = {}
+        if isinstance(act, Seq):
+            # Do not pop any of the stack elements if the reduce action has
+            # an accept function call. Ideally we should be returning the
+            # result instead of keeping it on the parser stack.
+            if act.update_stack() and not act.contains_accept():
+                assert not act.contains_accept()
+                reducer = act.reduce_with()
+                start = 0
+                depth = reducer.pop
+                if reducer.replay > 0:
+                    self.write("parser.rewind({});", reducer.replay)
+                    start = reducer.replay
+                    depth += start
+                for i in range(start, depth):
+                    name = 's'
+                    if i + 1 not in self.used_variables:
+                        name = '_s'
+                    self.write("let {}{} = parser.pop();", name, i + 1)
+
+            for a in act.actions:
+                self.write_single_action(a, is_packed)
+                if a.contains_accept():
+                    break
+        else:
+            self.write_single_action(act, is_packed)
+
+        # If we fallthrough the execution of the action, then generate an
+        # epsilon transition.
+        if not act.update_stack() and not act.contains_accept():
+            assert 0 <= dest < self.writer.shift_count + self.writer.action_count
+            self.write_epsilon_transition(dest)
+
+    def write_single_action(self, act, is_packed):
+        self.write("// {}", str(act))
+        if isinstance(act, Reduce):
+            self.write_reduce(act, is_packed)
+        elif isinstance(act, Accept):
+            self.write_accept()
+        elif isinstance(act, PushFlag):
+            raise ValueError("NYI: PushFlag action")
+        elif isinstance(act, PopFlag):
+            raise ValueError("NYI: PopFlag action")
+        elif isinstance(act, FunCall):
+            self.write_funcall(act, is_packed)
+        else:
+            raise ValueError("Unexpected action type")
+
+    def write_reduce(self, act, is_packed):
+        value = "value"
+        if value in is_packed:
+            packed = is_packed[value]
+        else:
+            packed = False
+            value = "None"
+
+        if packed:
+            # Extract the StackValue from the packed TermValue
+            value = "{}.value".format(value)
+        elif self.has_ast_builder:
+            # Convert into a StackValue
+            value = "TryIntoStack::try_into_stack({})?".format(value)
+        else:
+            # Convert into a StackValue (when no ast-builder)
+            value = "value"
+
+        self.write("let term = Term::Nonterminal(NonterminalId::{});",
+                   self.writer.nonterminal_to_camel(act.nt))
+        if value != "value":
+            self.write("let value = {};", value)
+        self.write("parser.replay(TermValue { term, value });")
+        self.write("return Ok(false)")
+
+    def write_accept(self):
+        self.write("return Ok(true);")
+
+    def write_funcall(self, act, is_packed):
+        def no_unpack(val):
+            return val
+
+        def unpack(val):
+            if val in is_packed:
+                packed = is_packed[val]
+            else:
+                packed = True
+            if packed:
+                return "{}.value.to_ast()?".format(val)
+            return val
+
+        def map_with_offset(args, unpack):
+            get_value = "s{}"
+            for a in args:
+                if isinstance(a, int):
+                    yield unpack(get_value.format(a + act.offset))
+                elif isinstance(a, str):
+                    yield unpack(a)
+                elif isinstance(a, Some):
+                    yield "Some({})".format(next(map_with_offset([a.inner], unpack)))
+                elif a is None:
+                    yield "None"
+                else:
+                    raise ValueError(a)
+
+        packed = False
+        # If the variable is used, then generate the let binding.
+        set_var = ""
+        if act.set_to in self.used_variables:
+            set_var = "let {} = ".format(act.set_to)
+
+        # If the function cannot be call as the generated action function does
+        # not use the trait on which this function is implemented, then replace
+        # the value by `()`.
+        if not self.implement_trait(act):
+            self.write("{}();", set_var)
+            return
+
+        # NOTE: Currently "AstBuilder" is implemented through the
+        # AstBuilderDelegate which returns a mutable reference to the
+        # AstBuilder. This would call the specific special case method to get
+        # the actual AstBuilder.
+        delegate = ""
+        if str(act.trait) == "AstBuilder":
+            delegate = "ast_builder_refmut()."
+
+        # NOTE: Currently "AstBuilder" functions are made fallible
+        # using the fallible_methods taken from some Rust code
+        # which extract this information to produce a JSON file.
+        forward_errors = ""
+        if act.fallible or act.method in self.writer.fallible_methods:
+            forward_errors = "?"
+
+        # By default generate a method call, with the method name. However,
+        # there is a special case for the "id" function which is an artifact,
+        # which does not have to unpack the content of its argument.
+        value = "parser.{}{}({})".format(
+            delegate, act.method,
+            ", ".join(map_with_offset(act.args, unpack)))
+        packed = False
+        if act.method == "id":
+            assert len(act.args) == 1
+            value = next(map_with_offset(act.args, no_unpack))
+            if isinstance(act.args[0], str):
+                packed = is_packed[act.args[0]]
+            else:
+                assert isinstance(act.args[0], int)
+                packed = True
+
+        self.write("{}{}{};", set_var, value, forward_errors)
+        is_packed[act.set_to] = packed
+
 
 class RustParserWriter:
     def __init__(self, out, pt, fallible_methods):
@@ -98,8 +361,6 @@ class RustParserWriter:
         self.check_camel_case()
         self.parser_trait()
         self.actions()
-        self.reduce()
-        self.reduce_simulator()
         self.entry()
 
     def write(self, indentation, string, *format_args):
@@ -327,29 +588,6 @@ class RustParserWriter:
         s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', ident)
         return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
-    def method_name_to_rust(self, name):
-        """Convert jsparagus's internal method name to idiomatic Rust."""
-        nt_name, space, number = name.partition(' ')
-        name = self.nonterminal_to_snake(nt_name)
-        if space:
-            name += "_p" + str(number)
-        return name
-
-    def get_associated_type_names(self):
-        names = OrderedSet()
-
-        def visit_type(ty):
-            for arg in ty.args:
-                visit_type(arg)
-            if len(ty.args) == 0:
-                names.add(ty.name)
-
-        for ty in self.grammar.nt_types:
-            visit_type(ty)
-        for method in self.grammar.methods.values():
-            visit_type(method.return_type)
-        return names
-
     def type_to_rust(self, ty, namespace="", boxed=False):
         """
         Convert a jsparagus type (see types.py) to Rust.
@@ -385,49 +623,6 @@ class RustParserWriter:
         else:
             return rty
 
-    def handler_trait(self):
-        # NOTE: unused, code kept if we need it later
-        self.write(0, "pub trait Handler {")
-
-        for name in self.get_associated_type_names():
-            self.write(1, "type {};", name)
-
-        for tag, method in self.grammar.methods.items():
-            method_name = self.method_name_to_rust(tag)
-            arg_types = [
-                self.type_to_rust(ty, "Self")
-                for ty in method.argument_types
-                if ty != types.UnitType
-            ]
-            if method.return_type == types.UnitType:
-                return_type_tag = ''
-            else:
-                return_type_tag = ' -> ' + \
-                    self.type_to_rust(method.return_type, "Self")
-
-            args = ", ".join(("a{}: {}".format(i, t)
-                              for i, t in enumerate(arg_types)))
-            self.write(1, "fn {}(&self, {}){};",
-                       method_name, args, return_type_tag)
-        self.write(0, "}")
-        self.write(0, "")
-
-    def element_type(self, e):
-        # Mostly duplicated from types.py. :(
-        g = self.grammar
-        if isinstance(e, str):
-            return types.TokenType
-        elif isinstance(e, Optional):
-            return types.Type('Option', [self.element_type(e.inner)])
-        elif isinstance(e, Nt):
-            # Cope with the awkward fact that g.nonterminals keys may be either
-            # strings or Nt objects.
-            nt_key = e if e in g.nonterminals else e.name
-            assert g.nonterminals[nt_key].type is not None
-            return g.nonterminals[nt_key].type
-        else:
-            assert False, "unexpected element type: {!r}".format(e)
-
     def parser_trait(self):
         self.write(0, "#[derive(Debug)]")
         self.write(0, "pub struct TermValue<Value> {")
@@ -451,174 +646,11 @@ class RustParserWriter:
         self.write(0, "")
 
     def actions(self):
-        if not self.parse_table:
-            return
-        ast_builder = types.Type("AstBuilderDelegate", (types.Lifetime("alloc"),))
-        has_ast_builder = False
-        used_variables = set()
-        traits = []
-
-        def implement_trait(funcall):
-            "Returns True if this function call should be encoded"
-            ty = funcall.trait
-            if ty.name == "AstBuilder":
-                return "AstBuilderDelegate<'alloc>" in map(str, traits)
-            if ty in traits:
-                return True
-            if len(ty.args) == 0:
-                return ty.name in map(lambda t: t.name, traits)
-            return False
-
-        def collect_uses(act):
-            # Given an action, returns the list of used stack slots.
-            assert isinstance(act, Action)
-            if isinstance(act, Reduce):
-                yield "value"
-            elif isinstance(act, FunCall):
-                def map_with_offset(args):
-                    for a in args:
-                        if isinstance(a, int):
-                            yield a + act.offset
-                        if isinstance(a, str):
-                            yield a
-                        elif isinstance(a, Some):
-                            for offset in map_with_offset([a.inner]):
-                                yield offset
-                if implement_trait(act):
-                    for var in map_with_offset(act.args):
-                        yield var
-            elif isinstance(act, Seq):
-                for a in act.actions:
-                    for var in collect_uses(a):
-                        yield var
-
-        def write_action(indent, act, is_packed):
-            # Compile function calls and reduce actions to Rust. Return whether
-            # the control flow exit (False) or fallthrough (True).
-            assert isinstance(act, Action)
-            assert not act.is_inconsistent()
-            if isinstance(act, Reduce):
-                value = "value"
-                if value in is_packed:
-                    packed = is_packed[value]
-                else:
-                    packed = False
-                    value = "None"
-                if packed:
-                    value = "{}.value".format(value)
-                else:
-                    if has_ast_builder:
-                        value = "TryIntoStack::try_into_stack({})?".format(value)
-                    else:
-                        value = "value"
-
-                self.write(indent, "let term = Term::Nonterminal(NonterminalId::{});",
-                           self.nonterminal_to_camel(act.nt))
-                if value != "value":
-                    self.write(indent, "let value = {};", value)
-                self.write(indent, "parser.replay(TermValue { term, value });")
-                self.write(indent, "return Ok(false)")
-                return False
-            elif isinstance(act, CheckNotOnNewLine):
-                assert -act.offset > 0
-                self.write(indent, "if !parser.check_not_on_new_line({})? {{", -act.offset)
-                self.write(indent + 1, "return Ok(false);")
-                self.write(indent, "}")
-            elif isinstance(act, Lookahead):
-                raise ValueError("Unexpected Lookahead action")
-            elif isinstance(act, FilterFlag):
-                raise ValueError("NYI: FilterFlag action")
-            elif isinstance(act, PushFlag):
-                raise ValueError("NYI: PushFlag action")
-            elif isinstance(act, PopFlag):
-                raise ValueError("NYI: PopFlag action")
-            elif isinstance(act, FunCall) and not implement_trait(act):
-                if act.set_to == "value":
-                    self.write(indent, "let value = ();")
-            elif isinstance(act, FunCall):
-                def no_unpack(val):
-                    return val
-
-                def unpack(val):
-                    packed = is_packed.get(val, True)
-                    if packed:
-                        return "{}.value.to_ast()?".format(val)
-                    return val
-
-                def map_with_offset(args, unpack):
-                    get_value = "s{}"
-                    for a in args:
-                        if isinstance(a, int):
-                            yield unpack(get_value.format(a + act.offset))
-                        elif isinstance(a, str):
-                            yield unpack(a)
-                        elif isinstance(a, Some):
-                            yield "Some({})".format(next(map_with_offset([a.inner], unpack)))
-                        elif a is None:
-                            yield "None"
-                        else:
-                            raise ValueError(a)
-                packed = False
-                set_var = ""
-                if act.set_to in used_variables:
-                    set_var = "let {} = ".format(act.set_to)
-                if act.method == "id":
-                    assert len(act.args) == 1
-                    self.write(indent, "{}{};", set_var, next(map_with_offset(act.args, no_unpack)))
-                    is_packed[act.set_to] = True
-                elif act.method == "accept":
-                    assert len(act.args) == 0
-                    self.write(indent, "return Ok(true);")
-                    return False
-                else:
-                    delegate = ""
-                    if str(act.trait) == "AstBuilder":
-                        delegate = "ast_builder_refmut()."
-                    forward_errors = ""
-                    # NOTE: Currently "AstBuilder" functions are made fallible
-                    # using the fallible_methods taken from some Rust code
-                    # which extract this information to produce a JSON file.
-                    if act.fallible or act.method in self.fallible_methods:
-                        forward_errors = "?"
-                    self.write(indent, "{}parser.{}{}({}){};",
-                               set_var, delegate, act.method,
-                               ", ".join(map_with_offset(act.args, unpack)),
-                               forward_errors)
-                    is_packed[act.set_to] = False
-            elif isinstance(act, Seq):
-                # Do not pop any of the stack elements if the reduce action has
-                # an accept function call. Ideally we should be returning the
-                # result instead of keeping it on the parser stack.
-                has_accept = any(
-                    a.method == "accept" for a in act.actions
-                    if isinstance(a, FunCall)
-                )
-                if act.update_stack() and not has_accept:
-                    reducer = act.reduce_with()
-                    if reducer.replay > 0:
-                        self.write(indent, "parser.rewind({});", reducer.replay)
-                    depth = reducer.pop + reducer.replay
-                    for i in range(reducer.replay, depth):
-                        name = 's'
-                        if i + 1 not in used_variables:
-                            name = '_s'
-                        self.write(indent, "let {}{} = parser.pop();", name, i + 1)
-
-                for a in act.actions:
-                    fallthrough = write_action(indent, a, is_packed)
-                    if not fallthrough:
-                        return False
-            else:
-                raise ValueError("Unknow action type")
-            return True
-
         # For each execution mode, add a corresponding function which
         # implements various traits. The trait list is used for filtering which
         # function is added in the generated code.
-        for mode, mode_traits in self.parse_table.exec_modes.items():
-            used_variables = set()
-            traits = mode_traits
-            has_ast_builder = ast_builder in traits
+        for mode, traits in self.parse_table.exec_modes.items():
+            action_writer = RustActionWriter(self, traits, 4)
             self.write(0,
                        "pub fn {}<'alloc, Handler>(parser: &mut Handler, state: usize) "
                        "-> Result<'alloc, bool>",
@@ -632,158 +664,13 @@ class RustParserWriter:
             assert len(self.states[self.shift_count:]) == self.action_count
             for state in self.states[self.shift_count:]:
                 self.write(3, "{} => {{", state.index)
-                for ctx in self.parse_table.debug_context(state.index, None):
-                    self.write(4, "// {}", ctx)
-                for act, d in state.edges():
-                    self.write(4, "// {} --> {}", str(act), d)
-
-                    # Map variable names to a boolean, True if the data is
-                    # packed.
-                    is_packed = {}
-                    try:
-                        used_variables = set(collect_uses(act))
-                        fallthrough = write_action(3, act, is_packed)
-                    except Exception as exc:
-                        print("{}: Error while writing code for {}\n\n".format(mode, state))
-                        self.parse_table.debug_info = True
-                        print(self.parse_table.debug_context(state.index, "\n", "# "))
-                        raise exc
-                    if fallthrough:
-                        assert 0 <= d < self.shift_count + self.action_count
-                        if d >= self.shift_count:
-                            self.write(4, "state = {}", d)
-                        else:
-                            self.write(4, "parser.epsilon({});", d)
-                            self.write(4, "return Ok(false)")
+                action_writer.write_state_transitions(state)
                 self.write(3, "}")
             self.write(3, '_ => panic!("no such state: {}", state),')
             self.write(2, "}")
             self.write(1, "}")
             self.write(0, "}")
             self.write(0, "")
-
-    def reduce(self):
-        if self.parse_table:
-            return
-        # Note use of std::vec::Vec below: we have imported `arena::Vec` in this module,
-        # since every other data structure mentioned in this file lives in the arena.
-        self.write(0, "pub fn reduce<'alloc>(")
-        self.write(1, "handler: &mut AstBuilder<'alloc>,")
-        self.write(1, "prod: usize,")
-        self.write(1, "stack: &mut std::vec::Vec<StackValue<'alloc>>,")
-        self.write(0, ") -> Result<'alloc, NonterminalId> {")
-        self.write(1, "match prod {")
-        for i, prod in enumerate(self.prods):
-            # If prod.nt is not in nonterminals, that means it's a goal
-            # nonterminal, only accepted, never reduced.
-            if prod.nt in self.nonterminals:
-                self.write(2, "{} => {{", i)
-                self.write(3, "// {}",
-                           self.grammar.production_to_str(prod.nt, prod.rhs, prod.reducer))
-
-                # At run time, the top of the stack will be one value per
-                # concrete symbol in the RHS of the production we're reducing.
-                # We are about to emit code to pop these values from the stack,
-                # one at a time. They come off the stack in reverse order.
-                elements = [e for e in prod.rhs if is_concrete_element(e)]
-
-                # We can emit three different kinds of code here:
-                #
-                # 1.  Full compilation. Pop each value from the stack; if it's
-                #     used, downcast it to its actual type and store it in a
-                #     local variable (otherwise just drop it). Then, evaulate
-                #     the reduce-expression. Push the result back onto the
-                #     stack.
-                #
-                # 2.  `is_discarding_reduction`: A reduce expression that is
-                #     just an integer is retaining one stack value and dropping
-                #     the rest. We skip the downcast in this case.
-                #
-                # 3.  `is_trivial_reduction`: A production has only one
-                #     concrete symbol in it, and the reducer is just `0`.
-                #     We don't have to do anything at all here.
-                is_trivial_reduction = len(elements) == 1 and prod.reducer == 0
-                is_discarding_reduction = isinstance(prod.reducer, int)
-
-                # While compiling, figure out which elements are used.
-                variable_used = [False] * len(elements)
-
-                def compile_reduce_expr(expr):
-                    """Compile a reduce expression to Rust"""
-                    if isinstance(expr, CallMethod):
-                        method_type = self.grammar.methods[expr.method]
-                        method_name = self.method_name_to_rust(expr.method)
-                        assert len(method_type.argument_types) == len(expr.args)
-
-                        # Given arguments can contain any mutable call,
-                        # store them in local variable first.
-                        arg_defs = ''
-                        args = ''
-                        i = 0
-                        for ty, arg in zip(method_type.argument_types,
-                                           expr.args):
-                            if ty != types.UnitType:
-                                arg_defs += 'let a{} = {};'.format(i, compile_reduce_expr(arg))
-                                args += 'a{},'.format(i)
-                                i += 1
-                        call = "{{ {} handler.{}({}) }}".format(
-                            arg_defs, method_name, args)
-
-                        # Extremely bad hack. In Rust, since type inference is
-                        # currently so poor, we don't have enough information
-                        # to know if this method can fail or not, and Rust
-                        # requires us to know that.
-                        if method_name in self.fallible_methods:
-                            call += "?"
-                        return call
-                    elif isinstance(expr, Some):
-                        return "Some({})".format(compile_reduce_expr(expr.inner))
-                    elif expr is None:
-                        return "None"
-                    else:
-                        # can't be 'accept' because we filter out InitNt productions
-                        assert isinstance(expr, int)
-                        variable_used[expr] = True
-                        return "x{}".format(expr)
-
-                compiled_expr = compile_reduce_expr(prod.reducer)
-
-                if not is_trivial_reduction:
-                    for index, e in reversed(list(enumerate(elements))):
-                        if variable_used[index]:
-                            ty = self.element_type(e)
-                            rust_ty = self.type_to_rust(ty, "", boxed=True)
-                            if is_discarding_reduction:
-                                self.write(3, "let x{} = stack.pop().unwrap();", index)
-                            else:
-                                self.write(3, "let x{}: {} = stack.pop().unwrap().to_ast()?;",
-                                           index, rust_ty)
-                        else:
-                            self.write(3, "stack.pop();", index)
-
-                    if is_discarding_reduction:
-                        self.write(3, "stack.push({});", compiled_expr)
-                    else:
-                        self.write(3, "stack.push(TryIntoStack::try_into_stack({})?);", compiled_expr)
-
-                self.write(3, "Ok(NonterminalId::{})",
-                           self.nonterminal_to_camel(prod.nt))
-                self.write(2, "}")
-        self.write(2, '_ => panic!("no such production: {}", prod),')
-        self.write(1, "}")
-        self.write(0, "}")
-        self.write(0, "")
-
-    def reduce_simulator(self):
-        if self.parse_table:
-            return
-        prods = [prod for prod in self.prods if prod.nt in self.nonterminals]
-        self.write(0, "static REDUCE_SIMULATOR: [(usize, NonterminalId); {}] = [", len(prods))
-        for prod in prods:
-            elements = [e for e in prod.rhs if is_concrete_element(e)]
-            self.write(1, "({}, NonterminalId::{}),", len(elements), self.nonterminal_to_camel(prod.nt))
-        self.write(0, "];")
-        self.write(0, "")
 
     def entry(self):
         self.write(0, "#[derive(Clone, Copy)]")

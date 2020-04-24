@@ -446,8 +446,8 @@ impl<'alloc> ASTDump for Statement<'alloc> {
             Statement::IfStatement(ast) => {
                 ast.dump_with_atoms_at(out, atoms, slices, depth);
             }
-            Statement::LabeledStatement { label, body, .. } => {
-                write!(out, "(LabeledStatement").expect("failed to dump");
+            Statement::LabelledStatement { label, body, .. } => {
+                write!(out, "(LabelledStatement").expect("failed to dump");
                 newline(out, depth + 1);
                 write!(out, "label=").expect("failed to dump");
                 label.dump_with_atoms_at(out, atoms, slices, depth + 1);

@@ -11,7 +11,7 @@ import collections
 from dataclasses import dataclass
 import typing
 
-from .actions import (Action, CheckNotOnNewLine, FunCall, Lookahead,
+from .actions import (Accept, Action, CheckNotOnNewLine, FunCall, Lookahead,
                       OutputExpr, Reduce, Seq)
 from .ordered import OrderedFrozenSet
 from .grammar import (CallMethod, Element, End, ErrorSymbol, Grammar,
@@ -172,7 +172,7 @@ def callmethods_to_funcalls(
         pop: int,
         ret: str,
         depth: int,
-        funcalls: typing.List[FunCall]
+        funcalls: typing.List[Action]
 ) -> OutputExpr:
     """Lower a reduce-expression to the OutputExpr language.
 
@@ -212,13 +212,7 @@ def callmethods_to_funcalls(
         funcalls.append(call)
         return ret
     elif expr == "accept":
-        call = FunCall("accept", (),
-                       trait=types.Type("ParserTrait"),
-                       fallible=False,
-                       set_to=ret,
-                       alias_read=alias_set,
-                       alias_write=alias_set)
-        funcalls.append(call)
+        funcalls.append(Accept())
         return ret
     else:
         raise ValueError(expr)
@@ -349,7 +343,7 @@ class LR0Generator:
                 # terminal offset.
                 term = CheckNotOnNewLine()
             elif isinstance(term, CallMethod):
-                funcalls: typing.List[FunCall] = []
+                funcalls: typing.List[Action] = []
                 pop = sum(1 for e in prod.rhs[:lr_item.offset] if on_stack(self.grammar.grammar, e))
                 callmethods_to_funcalls(term, pop, "expr", 0, funcalls)
                 term = Seq(funcalls)

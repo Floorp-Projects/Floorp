@@ -1,3 +1,4 @@
+use crate::function::FunctionCreationDataIndex;
 use crate::regexp::RegExpIndex;
 use scope::data::ScopeIndex;
 
@@ -5,11 +6,12 @@ use scope::data::ScopeIndex;
 /// in m-c/js/src/frontend/BytecodeSection.h.
 #[derive(Debug)]
 pub enum GCThing {
+    Function(FunctionCreationDataIndex),
     RegExp(RegExpIndex),
     Scope(ScopeIndex),
 }
 
-/// Index into GCThingList.atoms.
+/// Index into GCThingList.things.
 #[derive(Debug, Clone, Copy)]
 pub struct GCThingIndex {
     index: usize,
@@ -40,13 +42,19 @@ impl GCThingList {
         Self { things: Vec::new() }
     }
 
-    pub fn append_regexp(&mut self, regexp_index: RegExpIndex) -> GCThingIndex {
+    pub fn push_function(&mut self, fun_index: FunctionCreationDataIndex) -> GCThingIndex {
+        let index = self.things.len();
+        self.things.push(GCThing::Function(fun_index));
+        GCThingIndex::new(index)
+    }
+
+    pub fn push_regexp(&mut self, regexp_index: RegExpIndex) -> GCThingIndex {
         let index = self.things.len();
         self.things.push(GCThing::RegExp(regexp_index));
         GCThingIndex::new(index)
     }
 
-    pub fn append_scope(&mut self, scope_index: ScopeIndex) -> GCThingIndex {
+    pub fn push_scope(&mut self, scope_index: ScopeIndex) -> GCThingIndex {
         let index = self.things.len();
         self.things.push(GCThing::Scope(scope_index));
         GCThingIndex::new(index)

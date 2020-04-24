@@ -17,61 +17,58 @@ use crate::reference_op_emitter::{
 };
 use crate::regexp::RegExpItem;
 use crate::script_emitter::ScriptEmitter;
-use crate::stencil::{EmitResult, ScriptStencil};
-use ast::source_atom_set::{CommonSourceAtomSetIndices, SourceAtomSet, SourceAtomSetIndex};
-use ast::source_slice_list::SourceSliceList;
+use crate::stencil::{EmitResult, ScriptStencilIndex, ScriptStencilList};
+use ast::source_atom_set::{CommonSourceAtomSetIndices, SourceAtomSetIndex};
 use ast::types::*;
-use scope::data::ScopeDataMap;
 
 use crate::control_structures::{
-    BreakEmitter, CForEmitter, ContinueEmitter, DoWhileEmitter, ForwardJumpEmitter, JumpKind,
-    LoopStack, WhileEmitter,
+    BreakEmitter, CForEmitter, ContinueEmitter, ControlStructureStack, DoWhileEmitter,
+    ForwardJumpEmitter, JumpKind, LabelEmitter, WhileEmitter,
 };
 
 /// Emit a program, converting the AST directly to bytecode.
 pub fn emit_program<'alloc>(
     ast: &Program,
     options: &EmitOptions,
-    atoms: SourceAtomSet<'alloc>,
-    slices: SourceSliceList<'alloc>,
-    scope_data_map: ScopeDataMap,
+    mut compilation_info: CompilationInfo<'alloc>,
 ) -> Result<EmitResult<'alloc>, EmitError> {
-    let mut compilation_info = CompilationInfo::new(atoms, slices, scope_data_map);
-    let mut scripts: Vec<ScriptStencil> = Vec::new();
+    let mut scripts = ScriptStencilList::new();
     let emitter = AstEmitter::new(options, &mut compilation_info, &mut scripts);
 
     match ast {
-        Program::Script(script) => emitter.emit_script(script)?,
+        Program::Script(script) => {
+            emitter.emit_script(script)?;
+        }
         _ => {
             return Err(EmitError::NotImplemented("TODO: modules"));
         }
     }
 
-    Ok(EmitResult::new(compilation_info, scripts))
+    Ok(EmitResult::new(compilation_info, scripts.into()))
 }
 
 pub struct AstEmitter<'alloc, 'opt> {
     pub emit: InstructionWriter,
+    pub scope_stack: EmitterScopeStack,
     pub options: &'opt EmitOptions,
     pub compilation_info: &'opt mut CompilationInfo<'alloc>,
-    pub scope_stack: EmitterScopeStack,
-    pub loop_stack: LoopStack,
-    pub scripts: &'opt mut Vec<ScriptStencil>,
+    pub scripts: &'opt mut ScriptStencilList,
+    pub control_stack: ControlStructureStack,
 }
 
 impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
     fn new(
         options: &'opt EmitOptions,
         compilation_info: &'opt mut CompilationInfo<'alloc>,
-        scripts: &'opt mut Vec<ScriptStencil>,
+        scripts: &'opt mut ScriptStencilList,
     ) -> Self {
         Self {
             emit: InstructionWriter::new(),
+            scope_stack: EmitterScopeStack::new(),
             options,
             compilation_info,
-            scope_stack: EmitterScopeStack::new(),
-            loop_stack: LoopStack::new(),
             scripts,
+            control_stack: ControlStructureStack::new(),
         }
     }
 
@@ -79,16 +76,41 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
         self.scope_stack.lookup_name(name)
     }
 
-    fn emit_script(mut self, ast: &Script) -> Result<(), EmitError> {
+    fn emit_script(mut self, ast: &Script) -> Result<ScriptStencilIndex, EmitError> {
+        let scope_data_map = &self.compilation_info.scope_data_map;
+        let function_map = &self.compilation_info.function_map;
+
+        let scope_index = scope_data_map.get_global_index();
+        let scope_data = scope_data_map.get_global_at(scope_index);
+
+        let top_level_functions: Vec<&Function> = scope_data
+            .functions
+            .iter()
+            .map(|key| *function_map.get(key).expect("function should exist"))
+            .collect();
+
         ScriptEmitter {
+            top_level_functions: top_level_functions.iter(),
+            top_level_function: |emitter, fun| emitter.emit_top_level_function_declaration(fun),
             statements: ast.statements.iter(),
             statement: |emitter, statement| emitter.emit_statement(statement),
         }
         .emit(&mut self)?;
 
-        self.scripts.push(self.emit.into());
+        Ok(self.scripts.push(self.emit.into()))
+    }
 
-        Ok(())
+    fn emit_top_level_function_declaration(&mut self, fun: &Function) -> Result<(), EmitError> {
+        let _name = fun
+            .name
+            .as_ref()
+            .expect("function declaration should have name")
+            .name
+            .value;
+
+        Err(EmitError::NotImplemented(
+            "TODO: top level FunctionDeclaration",
+        ))
     }
 
     fn emit_statement(&mut self, ast: &Statement) -> Result<(), EmitError> {
@@ -105,20 +127,16 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
                 .emit(self)?;
             }
             Statement::BreakStatement { label, .. } => {
-                if let Some(_label) = label {
-                    return Err(EmitError::NotImplemented("TODO: Labeled BreakStatement"));
-                }
                 BreakEmitter {
                     jump: JumpKind::Goto,
+                    label: label.as_ref().map(|x| x.value),
                 }
                 .emit(self);
             }
             Statement::ContinueStatement { label, .. } => {
-                if let Some(_label) = label {
-                    return Err(EmitError::NotImplemented("TODO: Labeled ContinueStatement"));
-                }
                 ContinueEmitter {
                     jump: JumpKind::Goto,
+                    label: label.as_ref().map(|x| x.value),
                 }
                 .emit(self);
             }
@@ -173,8 +191,12 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
             Statement::IfStatement(if_statement) => {
                 self.emit_if(if_statement)?;
             }
-            Statement::LabeledStatement { .. } => {
-                return Err(EmitError::NotImplemented("TODO: LabeledStatement"));
+            Statement::LabelledStatement { label, body, .. } => {
+                LabelEmitter {
+                    name: label.value,
+                    body: |emitter| emitter.emit_statement(body),
+                }
+                .emit(self)?;
             }
             Statement::ReturnStatement { .. } => {
                 return Err(EmitError::NotImplemented("TODO: ReturnStatement"));

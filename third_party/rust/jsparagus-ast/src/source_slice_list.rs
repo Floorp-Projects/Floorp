@@ -31,7 +31,7 @@ impl<'alloc> SourceSliceList<'alloc> {
         Self { items: Vec::new() }
     }
 
-    pub fn insert(&mut self, s: &'alloc str) -> SourceSliceIndex {
+    pub fn push(&mut self, s: &'alloc str) -> SourceSliceIndex {
         let index = self.items.len();
         self.items.push(s);
         SourceSliceIndex::new(index)
