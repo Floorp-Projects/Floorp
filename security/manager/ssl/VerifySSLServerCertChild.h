@@ -33,7 +33,8 @@ class VerifySSLServerCertChild : public PVerifySSLServerCertChild {
 
   ipc::IPCResult RecvOnVerifiedSSLServerCertSuccess(
       nsTArray<ByteArray>&& aBuiltCertChain,
-      const uint16_t& aCertTransparencyStatus, const uint8_t& aEVStatus);
+      const uint16_t& aCertTransparencyStatus, const uint8_t& aEVStatus,
+      const bool& aIsBuiltCertChainRootBuiltInRoot);
 
   ipc::IPCResult RecvOnVerifiedSSLServerCertFailure(
       const uint32_t& aFinalError, const uint32_t& aCollectedErrors);
