@@ -100,13 +100,11 @@ static bool ParseNodeRequiresSpecialLineNumberNotes(ParseNode* pn) {
 }
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
-                                 HandleScript script,
                                  CompilationInfo& compilationInfo,
                                  EmitterMode emitterMode)
     : sc(sc),
       cx(sc->cx_),
       parent(parent),
-      inputScript(cx, script),
       outputScript(cx),
       bytecodeSection_(cx, sc->extent.lineno),
       perScriptData_(cx, compilationInfo),
@@ -121,26 +119,23 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
   if (sc->isTopLevelContext()) {
     bool isRunOnce = compilationInfo.options.isRunOnce;
     sc->setTreatAsRunOnce(isRunOnce);
-    MOZ_ASSERT(script->treatAsRunOnce() == isRunOnce);
   }
 }
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                                  BCEParserHandle* handle, SharedContext* sc,
-                                 HandleScript script,
                                  CompilationInfo& compilationInfo,
                                  EmitterMode emitterMode)
-    : BytecodeEmitter(parent, sc, script, compilationInfo, emitterMode) {
+    : BytecodeEmitter(parent, sc, compilationInfo, emitterMode) {
   parser = handle;
   instrumentationKinds = parser->options().instrumentationKinds;
 }
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                                  const EitherParser& parser, SharedContext* sc,
-                                 HandleScript script,
                                  CompilationInfo& compilationInfo,
                                  EmitterMode emitterMode)
-    : BytecodeEmitter(parent, sc, script, compilationInfo, emitterMode) {
+    : BytecodeEmitter(parent, sc, compilationInfo, emitterMode) {
   ep_.emplace(parser);
   this->parser = ep_.ptr();
   instrumentationKinds = this->parser->options().instrumentationKinds;
@@ -2448,13 +2443,26 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
     return false;
   }
 
+  RootedObject functionOrGlobal(cx);
+  if (sc->isFunctionBox()) {
+    functionOrGlobal = sc->asFunctionBox()->function();
+  } else {
+    functionOrGlobal = cx->global();
+  }
+
+  RootedScript script(
+      cx, JSScript::Create(cx, functionOrGlobal, compilationInfo.sourceObject,
+                           sc->getScriptExtent(), sc->immutableFlags()));
+  if (!script) {
+    return false;
+  }
+
   BCEScriptStencil stencil(*this, std::move(immutableScriptData));
-  if (!JSScript::fullyInitFromStencil(cx, compilationInfo, inputScript,
-                                      stencil)) {
+  if (!JSScript::fullyInitFromStencil(cx, compilationInfo, script, stencil)) {
     return false;
   }
   // Script is allocated now.
-  outputScript = inputScript;
+  outputScript = script;
   return true;
 }
 
@@ -5734,29 +5742,18 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
 
     // Only propagate transitive compiler options (principals, version, etc)
     // from the parent. The remaining values will use their defaults.
-    MOZ_ASSERT(inputScript->mutedErrors() == parser->options().mutedErrors());
     const JS::TransitiveCompileOptions& transitiveOptions = parser->options();
     // Add input flags to funbox for JSSCript::Create call.
     funbox->addToImmutableFlags(
         ImmutableScriptFlags::fromCompileOptions(transitiveOptions));
 
-    RootedFunction fun(cx, funbox->function());
-    RootedScript innerScript(
-        cx,
-        JSScript::Create(cx, fun, compilationInfo.sourceObject,
-                         funbox->getScriptExtent(), funbox->immutableFlags()));
-    if (!innerScript) {
-      return false;
-    }
-
     EmitterMode nestedMode = emitterMode;
     if (nestedMode == BytecodeEmitter::LazyFunction) {
-      MOZ_ASSERT(inputScript->isBinAST());
+      MOZ_ASSERT(compilationInfo.sourceObject->source()->hasBinASTSource());
       nestedMode = BytecodeEmitter::Normal;
     }
 
-    BytecodeEmitter bce2(this, parser, funbox, innerScript, compilationInfo,
-                         nestedMode);
+    BytecodeEmitter bce2(this, parser, funbox, compilationInfo, nestedMode);
     if (!bce2.init(funNode->pn_pos)) {
       return false;
     }
@@ -5767,9 +5764,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
     }
 
     // fieldInitializers are copied to the JSScript inside BytecodeEmitter
-
     if (funbox->isLikelyConstructorWrapper()) {
-      innerScript->setIsLikelyConstructorWrapper();
+      bce2.getResultScript()->setIsLikelyConstructorWrapper();
     }
 
     if (!fe.emitNonLazyEnd()) {
@@ -6764,7 +6760,6 @@ bool BytecodeEmitter::emitExpressionStatement(UnaryNode* exprStmt) {
   bool wantval = false;
   bool useful = false;
   if (!sc->isFunctionBox()) {
-    MOZ_ASSERT(parser->options().noScriptRval == inputScript->noScriptRval());
     useful = wantval = !parser->options().noScriptRval;
   }
 
