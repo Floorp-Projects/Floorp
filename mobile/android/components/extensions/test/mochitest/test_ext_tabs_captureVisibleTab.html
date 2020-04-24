@@ -40,9 +40,12 @@ function* runTest(options) {
     try {
       const [tab] = await browser.tabs.query({currentWindow: true, active: true});
 
-      let [jpeg, png, ...pngs] = await Promise.all([
+      let [jpeg, png] = await Promise.all([
         browser.tabs.captureVisibleTab(tab.windowId, {format: "jpeg", quality: 95}),
         browser.tabs.captureVisibleTab(tab.windowId, {format: "png", quality: 95}),
+      ]);
+
+      const pngs = await Promise.all([
         browser.tabs.captureVisibleTab(tab.windowId, {quality: 95}),
         browser.tabs.captureVisibleTab(tab.windowId),
       ]);
