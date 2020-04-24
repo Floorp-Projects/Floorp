@@ -576,7 +576,7 @@ void MPRISServiceHandler::SetPlaybackState(
   g_dbus_connection_emit_signal(
       mConnection, nullptr, DBUS_MPRIS_OBJECT_PATH,
       "org.freedesktop.DBus.Properties", "PropertiesChanged",
-      g_variant_new("(sa{sv}as)", "org.mpris.MediaPlayer2.Player", &builder,
+      g_variant_new("(sa{sv}as)", DBUS_MPRIS_PLAYER_INTERFACE, &builder,
                     nullptr),
       nullptr);
 }
@@ -613,7 +613,7 @@ void MPRISServiceHandler::SetMediaMetadata(
   g_variant_builder_add(&builder, "{sv}", "Metadata", GetMetadataAsGVariant());
 
   GVariant* parameters = g_variant_new(
-      "(sa{sv}as)", "org.mpris.MediaPlayer2.Player", &builder, nullptr);
+      "(sa{sv}as)", DBUS_MPRIS_PLAYER_INTERFACE, &builder, nullptr);
 
   g_dbus_connection_emit_signal(mConnection, nullptr, DBUS_MPRIS_OBJECT_PATH,
                                 "org.freedesktop.DBus.Properties",
