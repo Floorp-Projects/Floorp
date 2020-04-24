@@ -106,6 +106,8 @@ template <typename T>
 class NotNull {
   template <typename U>
   friend constexpr NotNull<U> WrapNotNull(U aBasePtr);
+  template <typename U>
+  friend constexpr NotNull<U*> WrapNotNullUnsafe(U* aBasePtr);
   template <typename U, typename... Args>
   friend constexpr NotNull<U> MakeNotNull(Args&&... aArgs);
 
@@ -155,6 +157,25 @@ constexpr NotNull<T> WrapNotNull(const T aBasePtr) {
   NotNull<T> notNull(aBasePtr);
   MOZ_RELEASE_ASSERT(aBasePtr);
   return notNull;
+}
+
+// WrapNotNullUnchecked should only be used in situations, where it is
+// statically known that aBasePtr is non-null, and redundant release assertions
+// should be avoided. It is only defined for raw base pointers, since it is only
+// needed for those right now. There is no fundamental reason not to allow
+// arbitrary base pointers here.
+template <typename T>
+MOZ_NONNULL(1)
+constexpr NotNull<T*> WrapNotNullUnchecked(T* const aBasePtr) {
+#if defined(__GNUC__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wnonnull-compare"
+#endif
+  MOZ_ASSERT(aBasePtr);
+#if defined(__GNUC__)
+#  pragma GCC diagnostic pop
+#endif
+  return NotNull<T*>{aBasePtr};
 }
 
 namespace detail {
