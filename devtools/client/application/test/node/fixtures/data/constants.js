@@ -14,6 +14,8 @@ const SINGLE_WORKER_DEFAULT_DOMAIN_LIST = [
     registrationFront: "",
     workerTargetFront: "",
     url: "http://example.com/worker.js",
+    id: "id-worker-1-example",
+    state: 0,
   },
 ];
 
@@ -25,6 +27,8 @@ const SINGLE_WORKER_DIFFERENT_DOMAIN_LIST = [
     registrationFront: "",
     workerTargetFront: "",
     url: "http://different-example.com/worker.js",
+    id: "id-worker-1-different-example",
+    state: 0,
   },
 ];
 
@@ -36,6 +40,8 @@ const MULTIPLE_WORKER_LIST = [
     registrationFront: "",
     workerTargetFront: "",
     url: "http://example.com/worker.js",
+    id: "id-worker-1-example",
+    state: 0,
   },
   {
     active: false,
@@ -44,6 +50,8 @@ const MULTIPLE_WORKER_LIST = [
     registrationFront: "",
     workerTargetFront: "",
     url: "http://example.com/worker.js",
+    id: "id-worker-2-example",
+    state: 0,
   },
   {
     active: true,
@@ -52,6 +60,8 @@ const MULTIPLE_WORKER_LIST = [
     registrationFront: "",
     workerTargetFront: "",
     url: "http://example.com/worker.js",
+    id: "id-worker-3-example",
+    state: 0,
   },
 ];
 
@@ -63,6 +73,8 @@ const MULTIPLE_WORKER_MIXED_DOMAINS_LIST = [
     registrationFront: "",
     workerTargetFront: "",
     url: "http://example.com/worker.js",
+    id: "id-worker-1-example",
+    state: 0,
   },
   {
     active: false,
@@ -71,6 +83,8 @@ const MULTIPLE_WORKER_MIXED_DOMAINS_LIST = [
     registrationFront: "",
     workerTargetFront: "",
     url: "http://example.com/worker.js",
+    id: "id-worker-2-example",
+    state: 0,
   },
   {
     active: true,
@@ -79,6 +93,8 @@ const MULTIPLE_WORKER_MIXED_DOMAINS_LIST = [
     registrationFront: "",
     workerTargetFront: "",
     url: "http://different-example.com/worker.js",
+    id: "id-worker-3-different-example",
+    state: 0,
   },
 ];
 

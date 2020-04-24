@@ -107,7 +107,6 @@ class Worker extends PureComponent {
     } else if (this.isActive()) {
       return l10n.getString("serviceworker-worker-status-stopped");
     }
-
     // NOTE: this is already localized by the service worker front
     // (strings are in debugger.properties)
     return this.props.worker.stateText;
