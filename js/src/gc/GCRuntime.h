@@ -352,6 +352,32 @@ class GCRuntime {
   void onOutOfMallocMemory();
   void onOutOfMallocMemory(const AutoLockGC& lock);
 
+  Nursery& nursery() { return nursery_.ref(); }
+  gc::StoreBuffer& storeBuffer() { return storeBuffer_.ref(); }
+
+  void minorGC(JS::GCReason reason,
+               gcstats::PhaseKind phase = gcstats::PhaseKind::MINOR_GC)
+      JS_HAZ_GC_CALL;
+  void evictNursery(JS::GCReason reason = JS::GCReason::EVICT_NURSERY) {
+    minorGC(reason, gcstats::PhaseKind::EVICT_NURSERY);
+  }
+
+  void* addressOfNurseryPosition() {
+    return nursery_.refNoCheck().addressOfPosition();
+  }
+  const void* addressOfNurseryCurrentEnd() {
+    return nursery_.refNoCheck().addressOfCurrentEnd();
+  }
+  const void* addressOfStringNurseryCurrentEnd() {
+    return nursery_.refNoCheck().addressOfCurrentStringEnd();
+  }
+  const void* addressOfBigIntNurseryCurrentEnd() {
+    return nursery_.refNoCheck().addressOfCurrentBigIntEnd();
+  }
+  uint32_t* addressOfNurseryAllocCount() {
+    return stats().addressOfAllocsSinceMinorGCNursery();
+  }
+
 #ifdef JS_GC_ZEAL
   const uint32_t* addressOfZealModeBits() { return &zealModeBits.refNoCheck(); }
   void getZealBits(uint32_t* zealBits, uint32_t* frequency,
@@ -1170,33 +1196,6 @@ class GCRuntime {
  private:
   MainThreadData<Nursery> nursery_;
   MainThreadData<gc::StoreBuffer> storeBuffer_;
-
- public:
-  Nursery& nursery() { return nursery_.ref(); }
-  gc::StoreBuffer& storeBuffer() { return storeBuffer_.ref(); }
-
-  void* addressOfNurseryPosition() {
-    return nursery_.refNoCheck().addressOfPosition();
-  }
-  const void* addressOfNurseryCurrentEnd() {
-    return nursery_.refNoCheck().addressOfCurrentEnd();
-  }
-  const void* addressOfStringNurseryCurrentEnd() {
-    return nursery_.refNoCheck().addressOfCurrentStringEnd();
-  }
-  const void* addressOfBigIntNurseryCurrentEnd() {
-    return nursery_.refNoCheck().addressOfCurrentBigIntEnd();
-  }
-  uint32_t* addressOfNurseryAllocCount() {
-    return stats().addressOfAllocsSinceMinorGCNursery();
-  }
-
-  void minorGC(JS::GCReason reason,
-               gcstats::PhaseKind phase = gcstats::PhaseKind::MINOR_GC)
-      JS_HAZ_GC_CALL;
-  void evictNursery(JS::GCReason reason = JS::GCReason::EVICT_NURSERY) {
-    minorGC(reason, gcstats::PhaseKind::EVICT_NURSERY);
-  }
 
   mozilla::TimeStamp lastLastDitchTime;
 
