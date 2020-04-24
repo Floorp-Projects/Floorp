@@ -659,7 +659,15 @@ void StyleSheet::MaybeRejectReplacePromise() {
 // https://wicg.github.io/construct-stylesheets/#dom-cssstylesheet-replace
 already_AddRefed<dom::Promise> StyleSheet::Replace(const nsACString& aText,
                                                    ErrorResult& aRv) {
-  nsIGlobalObject* globalObject = mConstructorDocument->GetScopeObject();
+  nsIGlobalObject* globalObject = nullptr;
+  if (Document* doc = GetAssociatedDocument()) {
+    globalObject = doc->GetScopeObject();
+  }
+
+  // TODO(nordzilla, bug1632686) We need to find a way to get the relevant
+  // global object if a non-constructed sheet has been disassocited from
+  // its document.
+
   RefPtr<dom::Promise> promise = dom::Promise::Create(globalObject, aRv);
   if (!promise) {
     return nullptr;
