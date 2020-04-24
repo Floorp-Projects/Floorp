@@ -1838,12 +1838,12 @@ static ReturnAbortOnError ProfileLockedDialog(nsIFile* aProfileDir,
     NS_ENSURE_TRUE_LOG(sbs, NS_ERROR_FAILURE);
 
     NS_ConvertUTF8toUTF16 appName(gAppData->name);
-    AutoTArray<nsString, 2> params = {appName, appName};
+    AutoTArray<nsString, 3> params = {appName, appName, appName};
 
     nsAutoString killMessage;
 #ifndef XP_MACOSX
     rv = sb->FormatStringFromName(
-        aUnlocker ? "restartMessageUnlocker" : "restartMessageNoUnlocker",
+        aUnlocker ? "restartMessageUnlocker" : "restartMessageNoUnlocker2",
         params, killMessage);
 #else
     rv = sb->FormatStringFromName(
