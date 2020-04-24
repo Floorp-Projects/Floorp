@@ -30,6 +30,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus
+import org.junit.Assert.assertFalse
 import org.mockito.Mockito.times
 
 @RunWith(AndroidJUnit4::class)
@@ -99,6 +100,28 @@ class FetchDownloadManagerTest {
         verify(context, times(2)).startService(any())
         notifyDownloadCompleted(id)
         assertTrue(downloadCompleted)
+    }
+
+    @Test
+    fun `try again should not crash when download does not exist`() {
+        val context: Context = mock()
+        downloadManager = FetchDownloadManager(context, MockDownloadService::class, broadcastManager)
+        var downloadCompleted = false
+
+        downloadManager.onDownloadStopped = { _, _, _ -> downloadCompleted = true }
+
+        grantPermissions()
+
+        val id = downloadManager.download(download)!!
+
+        verify(context).startService(any())
+        notifyDownloadCompleted(id)
+        assertTrue(downloadCompleted)
+
+        downloadCompleted = false
+        downloadManager.tryAgain(id + 1)
+        assertFalse(downloadCompleted)
+        verify(context, times(1)).startService(any())
     }
 
     @Test

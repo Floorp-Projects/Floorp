@@ -76,7 +76,7 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
     }
 
     override fun tryAgain(downloadId: Long) {
-        val download = queuedDownloads[downloadId]
+        val download = queuedDownloads[downloadId] ?: return
 
         val intent = Intent(applicationContext, service.java)
         intent.putDownloadExtra(download)
