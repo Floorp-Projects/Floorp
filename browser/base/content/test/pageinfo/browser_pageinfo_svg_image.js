@@ -1,34 +1,49 @@
 const URI =
   "https://example.com/browser/browser/base/content/test/pageinfo/svg_image.html";
 
-add_task(async function() {
+function test() {
+  waitForExplicitFinish();
+
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, URI);
-  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, URI);
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, URI).then(
+    () => {
+      var pageInfo = BrowserPageInfo(
+        gBrowser.selectedBrowser.currentURI.spec,
+        "mediaTab"
+      );
 
-  const pageInfo = BrowserPageInfo(
-    gBrowser.selectedBrowser.currentURI.spec,
-    "mediaTab"
+      pageInfo.addEventListener(
+        "load",
+        function() {
+          pageInfo.onFinished.push(function() {
+            executeSoon(function() {
+              var imageTree = pageInfo.document.getElementById("imagetree");
+              var imageRowsNum = imageTree.view.rowCount;
+
+              ok(imageTree, "Image tree is null (media tab is broken)");
+
+              is(imageRowsNum, 1, "should have one image");
+
+              // Only bother running this if we've got the right number of rows.
+              if (imageRowsNum == 1) {
+                is(
+                  imageTree.view.getCellText(0, imageTree.columns[0]),
+                  "https://example.com/browser/browser/base/content/test/pageinfo/title_test.svg",
+                  "The URL should be the svg image."
+                );
+              }
+
+              pageInfo.close();
+              gBrowser.removeCurrentTab();
+              finish();
+            });
+          });
+        },
+        { capture: true, once: true }
+      );
+    }
   );
-  await BrowserTestUtils.waitForEvent(pageInfo, "page-info-init");
 
-  const imageTree = pageInfo.document.getElementById("imagetree");
-  const imageRowsNum = imageTree.view.rowCount;
-
-  ok(imageTree, "Image tree is null (media tab is broken)");
-
-  is(imageRowsNum, 1, "should have one image");
-
-  // Only bother running this if we've got the right number of rows.
-  if (imageRowsNum == 1) {
-    is(
-      imageTree.view.getCellText(0, imageTree.columns[0]),
-      "https://example.com/browser/browser/base/content/test/pageinfo/title_test.svg",
-      "The URL should be the svg image."
-    );
-  }
-
-  pageInfo.close();
-  gBrowser.removeCurrentTab();
-});
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, URI);
+}
