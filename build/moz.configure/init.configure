@@ -23,9 +23,9 @@ option(env='DIST', nargs=1, help='DIST directory')
 @imports(_from='os.path', _import='exists')
 @imports(_from='six', _import='ensure_text')
 def check_build_environment(help, dist):
-    topobjdir = os.path.realpath(os.path.abspath('.'))
-    topsrcdir = os.path.realpath(os.path.abspath(
-        os.path.join(os.path.dirname(__file__), '..', '..')))
+    topobjdir = os.path.realpath('.')
+    topsrcdir = os.path.realpath(
+        os.path.join(os.path.dirname(__file__), '..', '..'))
 
     if dist:
         dist = normsep(dist[0])
