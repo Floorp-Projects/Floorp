@@ -172,11 +172,11 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       extensionName: this.extensionName,
       url: this.url,
       isBlackBoxed: this.threadActor.sources.isBlackBoxed(this.url),
-      sourceMapURL: source ? source.sourceMapURL : null,
+      sourceMapURL: source.sourceMapURL,
       introductionUrl: introductionUrl
         ? introductionUrl.split(" -> ").pop()
         : null,
-      introductionType: source ? source.introductionType : null,
+      introductionType: source.introductionType,
     };
   },
 
@@ -215,7 +215,6 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     // (javascript.options.discardSystemSource == true). Re-fetch non-JS
     // sources to get the contentType from the headers.
     if (
-      this._source &&
       this._source.text !== "[no source]" &&
       this._contentType &&
       (this._contentType.includes("javascript") ||
