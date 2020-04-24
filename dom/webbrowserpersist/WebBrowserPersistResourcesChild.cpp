@@ -38,7 +38,7 @@ WebBrowserPersistResourcesChild::VisitDocument(
   // persistence started does not necessarily exist at this point;
   // see bug 1203602.
   if (!Manager()->Manager()->SendPWebBrowserPersistDocumentConstructor(
-          subActor, nullptr, nullptr)) {
+          subActor, nullptr, 0)) {
     // NOTE: subActor is freed at this point.
     return NS_ERROR_FAILURE;
   }
@@ -54,14 +54,6 @@ WebBrowserPersistResourcesChild::VisitDocument(
   // which simplifies the lifetime management.
   SendVisitDocument(subActor);
   subActor->Start(aSubDocument);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-WebBrowserPersistResourcesChild::VisitBrowsingContext(
-    nsIWebBrowserPersistDocument* aDocument,
-    dom::BrowsingContext* aBrowsingContext) {
-  SendVisitBrowsingContext(aBrowsingContext);
   return NS_OK;
 }
 
