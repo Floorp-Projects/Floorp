@@ -26,6 +26,7 @@
 #include "mozilla/FunctionTypeTraits.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/ReverseIterator.h"
 #include "mozilla/Span.h"
 #include "mozilla/TypeTraits.h"
@@ -217,6 +218,10 @@ struct nsTArrayInfallibleAllocatorBase {
       MOZ_CRASH("infallible nsTArray should never convert false to ResultType");
     }
   }
+
+  template <typename T>
+  static constexpr ResultType ConvertBoolToResultType(
+      const mozilla::NotNull<T>& aValue) {}
 };
 
 struct nsTArrayFallibleAllocator : nsTArrayFallibleAllocatorBase {
@@ -1617,10 +1622,13 @@ class nsTArray_Impl
 
   // A variation on the ReplaceElementsAt method defined above.
   template <class Item>
-  MOZ_NONNULL_RETURN elem_type* ReplaceElementAt(index_type aIndex,
-                                                 const Item& aItem) {
+  mozilla::NotNull<elem_type*> ReplaceElementAt(index_type aIndex,
+                                                const Item& aItem) {
     // This can never fail as the oldCount and newCount are the same.
-    return ReplaceElementsAtInternal<InfallibleAlloc>(aIndex, 1, &aItem, 1);
+    // XXX(Bug 1631391) Still, we might better use a different implementation,
+    // which better exploits that the old and new count are the same.
+    return mozilla::WrapNotNullUnchecked(
+        ReplaceElementsAtInternal<InfallibleAlloc>(aIndex, 1, &aItem, 1));
   }
 
   // InsertElementsAt is ReplaceElementsAt with 0 elements to replace.
@@ -1686,11 +1694,11 @@ class nsTArray_Impl
   //
   // would accomplish the same thing as long as T has the appropriate moving
   // operator=, but some types don't for various reasons.
-  elem_type* ReconstructElementAt(index_type aIndex) MOZ_NONNULL_RETURN {
+  mozilla::NotNull<elem_type*> ReconstructElementAt(index_type aIndex) {
     elem_type* elem = &ElementAt(aIndex);
     elem_traits::Destruct(elem);
     elem_traits::Construct(elem);
-    return elem;
+    return mozilla::WrapNotNullUnchecked(elem);
   }
 
   // This method searches for the smallest index of an element that is strictly
@@ -2712,141 +2720,159 @@ class nsTArray : public nsTArray_Impl<E, nsTArrayInfallibleAllocator> {
   using base_type::SetLength;
 
   template <class Item>
-  MOZ_NONNULL_RETURN elem_type* AppendElements(const Item* aArray,
-                                               size_type aArrayLen) {
-    return this->template AppendElementsInternal<InfallibleAlloc>(aArray,
-                                                                  aArrayLen);
+  mozilla::NotNull<elem_type*> AppendElements(const Item* aArray,
+                                              size_type aArrayLen) {
+    return mozilla::WrapNotNullUnchecked(
+        this->template AppendElementsInternal<InfallibleAlloc>(aArray,
+                                                               aArrayLen));
   }
 
   template <class Item>
-  MOZ_NONNULL_RETURN elem_type* AppendElements(mozilla::Span<Item> aSpan) {
-    return this->template AppendElementsInternal<InfallibleAlloc>(
-        aSpan.Elements(), aSpan.Length());
+  mozilla::NotNull<elem_type*> AppendElements(mozilla::Span<Item> aSpan) {
+    return mozilla::WrapNotNullUnchecked(
+        this->template AppendElementsInternal<InfallibleAlloc>(aSpan.Elements(),
+                                                               aSpan.Length()));
   }
 
   template <class Item, class Allocator>
-  MOZ_NONNULL_RETURN elem_type* AppendElements(
+  mozilla::NotNull<elem_type*> AppendElements(
       const nsTArray_Impl<Item, Allocator>& aArray) {
-    return this->template AppendElementsInternal<InfallibleAlloc>(
-        aArray.Elements(), aArray.Length());
+    return mozilla::WrapNotNullUnchecked(
+        this->template AppendElementsInternal<InfallibleAlloc>(
+            aArray.Elements(), aArray.Length()));
   }
 
   template <class Item, class Allocator>
-  MOZ_NONNULL_RETURN elem_type* AppendElements(
+  mozilla::NotNull<elem_type*> AppendElements(
       nsTArray_Impl<Item, Allocator>&& aArray) {
-    return this->template AppendElementsInternal<InfallibleAlloc>(
-        std::move(aArray));
+    return mozilla::WrapNotNullUnchecked(
+        this->template AppendElementsInternal<InfallibleAlloc>(
+            std::move(aArray)));
   }
 
   template <class Item>
-  MOZ_NONNULL_RETURN elem_type* AppendElement(Item&& aItem) {
-    return this->template AppendElementInternal<InfallibleAlloc>(
-        std::forward<Item>(aItem));
+  mozilla::NotNull<elem_type*> AppendElement(Item&& aItem) {
+    return mozilla::WrapNotNullUnchecked(
+        this->template AppendElementInternal<InfallibleAlloc>(
+            std::forward<Item>(aItem)));
   }
 
-  MOZ_NONNULL_RETURN elem_type* AppendElements(size_type aCount) {
-    return this->template AppendElementsInternal<InfallibleAlloc>(aCount);
+  mozilla::NotNull<elem_type*> AppendElements(size_type aCount) {
+    return mozilla::WrapNotNullUnchecked(
+        this->template AppendElementsInternal<InfallibleAlloc>(aCount));
   }
 
-  MOZ_NONNULL_RETURN elem_type* AppendElement() {
-    return this->template AppendElementsInternal<InfallibleAlloc>(1);
+  mozilla::NotNull<elem_type*> AppendElement() {
+    return mozilla::WrapNotNullUnchecked(
+        this->template AppendElementsInternal<InfallibleAlloc>(1));
+  }
+
+  mozilla::NotNull<elem_type*> InsertElementsAt(index_type aIndex,
+                                                size_type aCount) {
+    return mozilla::WrapNotNullUnchecked(
+        this->template InsertElementsAtInternal<InfallibleAlloc>(aIndex,
+                                                                 aCount));
   }
 
   template <class Item>
-  MOZ_NONNULL_RETURN elem_type* InsertElementsAt(index_type aIndex,
+  mozilla::NotNull<elem_type*> InsertElementsAt(index_type aIndex,
+                                                size_type aCount,
+                                                const Item& aItem) {
+    return mozilla::WrapNotNullUnchecked(
+        this->template InsertElementsAtInternal<InfallibleAlloc>(aIndex, aCount,
+                                                                 aItem));
+  }
+
+  template <class Item>
+  mozilla::NotNull<elem_type*> InsertElementsAt(index_type aIndex,
+                                                const Item* aArray,
+                                                size_type aArrayLen) {
+    return mozilla::WrapNotNullUnchecked(
+        this->template ReplaceElementsAtInternal<InfallibleAlloc>(
+            aIndex, 0, aArray, aArrayLen));
+  }
+
+  template <class Item, class Allocator>
+  mozilla::NotNull<elem_type*> InsertElementsAt(
+      index_type aIndex, const nsTArray_Impl<Item, Allocator>& aArray) {
+    return mozilla::WrapNotNullUnchecked(
+        this->template ReplaceElementsAtInternal<InfallibleAlloc>(
+            aIndex, 0, aArray.Elements(), aArray.Length()));
+  }
+
+  template <class Item>
+  mozilla::NotNull<elem_type*> InsertElementsAt(index_type aIndex,
+                                                mozilla::Span<Item> aSpan) {
+    return mozilla::WrapNotNullUnchecked(
+        this->template ReplaceElementsAtInternal<InfallibleAlloc>(
+            aIndex, 0, aSpan.Elements(), aSpan.Length()));
+  }
+
+  mozilla::NotNull<elem_type*> InsertElementAt(index_type aIndex) {
+    return mozilla::WrapNotNullUnchecked(
+        this->template InsertElementAtInternal<InfallibleAlloc>(aIndex));
+  }
+
+  template <class Item>
+  mozilla::NotNull<elem_type*> InsertElementAt(index_type aIndex,
+                                               Item&& aItem) {
+    return mozilla::WrapNotNullUnchecked(
+        this->template InsertElementAtInternal<InfallibleAlloc>(
+            aIndex, std::forward<Item>(aItem)));
+  }
+
+  template <class Item>
+  mozilla::NotNull<elem_type*> ReplaceElementsAt(index_type aStart,
+                                                 size_type aCount,
                                                  const Item* aArray,
                                                  size_type aArrayLen) {
-    return this->template ReplaceElementsAtInternal<InfallibleAlloc>(
-        aIndex, 0, aArray, aArrayLen);
-  }
-
-  template <class Item, class Allocator>
-  MOZ_NONNULL_RETURN elem_type* InsertElementsAt(
-      index_type aIndex, const nsTArray_Impl<Item, Allocator>& aArray) {
-    return this->template ReplaceElementsAtInternal<InfallibleAlloc>(
-        aIndex, 0, aArray.Elements(), aArray.Length());
-  }
-
-  elem_type* InsertElementsAt(index_type aIndex,
-                              size_type aCount) MOZ_NONNULL_RETURN {
-    return this->template InsertElementsAtInternal<InfallibleAlloc>(aIndex,
-                                                                    aCount);
+    return mozilla::WrapNotNullUnchecked(
+        this->template ReplaceElementsAtInternal<InfallibleAlloc>(
+            aStart, aCount, aArray, aArrayLen));
   }
 
   template <class Item>
-  MOZ_NONNULL_RETURN elem_type* InsertElementsAt(index_type aIndex,
+  mozilla::NotNull<elem_type*> ReplaceElementsAt(index_type aStart,
                                                  size_type aCount,
-                                                 const Item& aItem) {
-    return this->template InsertElementsAtInternal<InfallibleAlloc>(
-        aIndex, aCount, aItem);
-  }
-
-  template <class Item>
-  MOZ_NONNULL_RETURN elem_type* InsertElementsAt(index_type aIndex,
-                                                 mozilla::Span<Item> aSpan) {
-    return this->template ReplaceElementsAtInternal<InfallibleAlloc>(
-        aIndex, 0, aSpan.Elements(), aSpan.Length());
-  }
-
-  MOZ_NONNULL_RETURN elem_type* InsertElementAt(index_type aIndex) {
-    return this->template InsertElementAtInternal<InfallibleAlloc>(aIndex);
-  }
-
-  template <class Item>
-  MOZ_NONNULL_RETURN elem_type* InsertElementAt(index_type aIndex,
-                                                Item&& aItem) {
-    return this->template InsertElementAtInternal<InfallibleAlloc>(
-        aIndex, std::forward<Item>(aItem));
-  }
-
-  template <class Item>
-  MOZ_NONNULL_RETURN elem_type* ReplaceElementsAt(index_type aStart,
-                                                  size_type aCount,
-                                                  const Item* aArray,
-                                                  size_type aArrayLen) {
-    return this->template ReplaceElementsAtInternal<InfallibleAlloc>(
-        aStart, aCount, aArray, aArrayLen);
-  }
-
-  template <class Item>
-  MOZ_NONNULL_RETURN elem_type* ReplaceElementsAt(
-      index_type aStart, size_type aCount, const nsTArray<Item>& aArray) {
+                                                 const nsTArray<Item>& aArray) {
     return ReplaceElementsAt(aStart, aCount, aArray.Elements(),
                              aArray.Length());
   }
 
   template <class Item>
-  MOZ_NONNULL_RETURN elem_type* ReplaceElementsAt(index_type aStart,
-                                                  size_type aCount,
-                                                  mozilla::Span<Item> aSpan) {
+  mozilla::NotNull<elem_type*> ReplaceElementsAt(index_type aStart,
+                                                 size_type aCount,
+                                                 mozilla::Span<Item> aSpan) {
     return ReplaceElementsAt(aStart, aCount, aSpan.Elements(), aSpan.Length());
   }
 
   template <class Item>
-  MOZ_NONNULL_RETURN elem_type* ReplaceElementsAt(index_type aStart,
-                                                  size_type aCount,
-                                                  const Item& aItem) {
+  mozilla::NotNull<elem_type*> ReplaceElementsAt(index_type aStart,
+                                                 size_type aCount,
+                                                 const Item& aItem) {
     return ReplaceElementsAt(aStart, aCount, &aItem, 1);
   }
 
   template <class Item, class Comparator>
-  MOZ_NONNULL_RETURN elem_type* InsertElementSorted(Item&& aItem,
-                                                    const Comparator& aComp) {
-    return this->template InsertElementSortedInternal<InfallibleAlloc>(
-        std::forward<Item>(aItem), aComp);
+  mozilla::NotNull<elem_type*> InsertElementSorted(Item&& aItem,
+                                                   const Comparator& aComp) {
+    return mozilla::WrapNotNullUnchecked(
+        this->template InsertElementSortedInternal<InfallibleAlloc>(
+            std::forward<Item>(aItem), aComp));
   }
 
   template <class Item>
-  MOZ_NONNULL_RETURN elem_type* InsertElementSorted(Item&& aItem) {
-    return this->template InsertElementSortedInternal<InfallibleAlloc>(
-        std::forward<Item>(aItem), nsDefaultComparator<elem_type, Item>{});
+  mozilla::NotNull<elem_type*> InsertElementSorted(Item&& aItem) {
+    return mozilla::WrapNotNullUnchecked(
+        this->template InsertElementSortedInternal<InfallibleAlloc>(
+            std::forward<Item>(aItem), nsDefaultComparator<elem_type, Item>{}));
   }
 
   template <class... Args>
-  MOZ_NONNULL_RETURN typename base_type::elem_type* EmplaceBack(
-      Args&&... aArgs) {
-    return this->template EmplaceBackInternal<InfallibleAlloc, Args...>(
-        std::forward<Args>(aArgs)...);
+  mozilla::NotNull<elem_type*> EmplaceBack(Args&&... aArgs) {
+    return mozilla::WrapNotNullUnchecked(
+        this->template EmplaceBackInternal<InfallibleAlloc, Args...>(
+            std::forward<Args>(aArgs)...));
   }
 };
 

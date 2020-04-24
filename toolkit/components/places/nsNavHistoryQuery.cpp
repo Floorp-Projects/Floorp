@@ -428,7 +428,7 @@ nsresult nsNavHistory::TokensToQuery(const nsTArray<QueryKeyValuePair>& aTokens,
 
       // parent folders (guids)
     } else if (kvp.key.EqualsLiteral(QUERYKEY_PARENT)) {
-      NS_ENSURE_TRUE(parents.AppendElement(kvp.value), NS_ERROR_OUT_OF_MEMORY);
+      parents.AppendElement(kvp.value);
 
       // uri
     } else if (kvp.key.EqualsLiteral(QUERYKEY_URI)) {
@@ -462,7 +462,7 @@ nsresult nsNavHistory::TokensToQuery(const nsTArray<QueryKeyValuePair>& aTokens,
       NS_UnescapeURL(unescaped);  // modifies input
       NS_ConvertUTF8toUTF16 tag(unescaped);
       if (!tags.Contains(tag)) {
-        NS_ENSURE_TRUE(tags.AppendElement(tag), NS_ERROR_OUT_OF_MEMORY);
+        tags.AppendElement(tag);
       }
 
       // not tags
@@ -474,8 +474,7 @@ nsresult nsNavHistory::TokensToQuery(const nsTArray<QueryKeyValuePair>& aTokens,
       uint32_t transition = kvp.value.ToInteger(&rv);
       if (NS_SUCCEEDED(rv)) {
         if (!transitions.Contains(transition))
-          NS_ENSURE_TRUE(transitions.AppendElement(transition),
-                         NS_ERROR_OUT_OF_MEMORY);
+          transitions.AppendElement(transition);
       } else {
         NS_WARNING("Invalid Int32 transition value.");
       }
