@@ -37,6 +37,8 @@ Array [
     "source": Object {
       "extensionName": null,
       "id": "a",
+      "introductionType": null,
+      "introductionUrl": null,
       "isBlackBoxed": false,
       "isExtension": false,
       "isOriginal": false,
@@ -118,6 +120,8 @@ Array [
     "source": Object {
       "extensionName": null,
       "id": "a",
+      "introductionType": null,
+      "introductionUrl": null,
       "isBlackBoxed": false,
       "isExtension": false,
       "isOriginal": false,

@@ -417,6 +417,8 @@ export type Source = {
   +isBlackBoxed: boolean,
   +isPrettyPrinted: boolean,
   +relativeUrl: URL,
+  +introductionUrl: ?URL,
+  +introductionType: ?string,
   +extensionName: ?string,
   +isExtension: boolean,
   +isWasm: boolean,

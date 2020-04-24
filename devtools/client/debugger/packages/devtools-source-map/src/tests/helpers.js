@@ -27,7 +27,7 @@ async function setupBundleFixtureAndData(name) {
   const source = {
     id: `${name}.js`,
     sourceMapURL: `${name}.js.map`,
-    sourceMapBaseURL: `http://example.com/${name}.js`,
+    url: `http://example.com/${name}.js`,
   };
 
   require("devtools-utils/src/network-request").mockImplementationOnce(() => {
