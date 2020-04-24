@@ -2447,11 +2447,6 @@ static void ExtractCompatVersionInfo(const nsACString& aCompatVersion,
  */
 int32_t CompareCompatVersions(const nsACString& aOldCompatVersion,
                               const nsACString& aNewCompatVersion) {
-  // The simple case,
-  if (aOldCompatVersion.Equals(aNewCompatVersion)) {
-    return 0;
-  }
-
   // Hardcode the case where the last run was in safe mode (Bug 1556612). We
   // cannot tell if this is a downgrade or not so just assume it isn't and let
   // the user proceed.
@@ -2475,11 +2470,14 @@ int32_t CompareCompatVersions(const nsACString& aOldCompatVersion,
 /**
  * Checks the compatibility.ini file to see if we have updated our application
  * or otherwise invalidated our caches. If the application has been updated,
- * we return false; otherwise, we return true. We also write the status
- * of the caches (valid/invalid) into the return param aCachesOK. The aCachesOK
- * is always invalid if the application has been updated. aIsDowngrade is set to
- * true if the current application is older than that previously used by the
- * profile.
+ * we return false; otherwise, we return true.
+ *
+ * We also write the status of the caches (valid/invalid) into the return param
+ * aCachesOK. The aCachesOK is always invalid if the application has been
+ * updated.
+ *
+ * Finally, aIsDowngrade is set to true if the current application is older
+ * than that previously used by the profile.
  */
 static bool CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
                                const nsCString& aOSABI, nsIFile* aXULRunnerDir,
@@ -2505,17 +2503,19 @@ static bool CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
     return false;
   }
 
-  int32_t comparison = CompareCompatVersions(aLastVersion, aVersion);
-  if (comparison != 0) {
-    *aIsDowngrade = comparison > 0;
+  if (!aLastVersion.Equals(aVersion)) {
+    // The version is not the same. Whether it's a downgrade depends on an
+    // actual comparison:
+    *aIsDowngrade = 0 < CompareCompatVersions(aLastVersion, aVersion);
     ExtractCompatVersionInfo(aLastVersion, gLastAppVersion, gLastAppBuildID);
-
     return false;
   }
 
+  // If we get here, the version matched, but there may still be other
+  // differences between us and the build that the profile last ran under.
+
   gLastAppVersion.Assign(gAppData->version);
   gLastAppBuildID.Assign(gAppData->buildID);
-  *aIsDowngrade = false;
 
   nsAutoCString buf;
   rv = parser.GetString("Compatibility", "LastOSABI", buf);
@@ -4068,7 +4068,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   // profile was started with.  The format of the version stamp is defined
   // by the BuildVersion function.
   // Also check to see if something has happened to invalidate our
-  // fastload caches, like an extension upgrade or installation.
+  // fastload caches, like an app upgrade.
 
   // If we see .purgecaches, that means someone did a make.
   // Re-register components to catch potential changes.
@@ -4087,7 +4087,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
       mProfD, version, osABI, mDirProvider.GetGREDir(), mAppData->directory,
       flagFile, &cachesOK, &isDowngrade, lastVersion);
 
-  MOZ_RELEASE_ASSERT(!cachesOK || versionOK,
+  MOZ_RELEASE_ASSERT(!cachesOK || lastVersion.Equals(version),
                      "Caches cannot be good if the version has changed.");
 
 #ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
