@@ -23,6 +23,7 @@ from mozpack.manifests import (
 )
 import mozpack.path as mozpath
 
+from mozbuild import frontend
 from mozbuild.frontend.context import (
     AbsolutePath,
     Path,
@@ -87,54 +88,21 @@ from ..util import (
 from ..makeutil import Makefile
 from mozbuild.shellutil import quote as shell_quote
 
-MOZBUILD_VARIABLES = [
-    'ASFLAGS',
-    'CMSRCS',
-    'CMMSRCS',
-    'CPP_UNIT_TESTS',
-    'DIRS',
-    'DIST_INSTALL',
-    'EXTRA_DSO_LDOPTS',
-    'EXTRA_JS_MODULES',
-    'EXTRA_PP_COMPONENTS',
-    'EXTRA_PP_JS_MODULES',
-    'FORCE_SHARED_LIB',
-    'FORCE_STATIC_LIB',
-    'FINAL_LIBRARY',
-    'HOST_CFLAGS',
-    'HOST_CSRCS',
-    'HOST_CMMSRCS',
-    'HOST_CXXFLAGS',
-    'HOST_EXTRA_LIBS',
-    'HOST_LIBRARY_NAME',
-    'HOST_PROGRAM',
-    'HOST_SIMPLE_PROGRAMS',
-    'JAR_MANIFEST',
-    'JAVA_JAR_TARGETS',
-    'LIBRARY_NAME',
-    'LIBS',
-    'MAKE_FRAMEWORK',
-    'MODULE',
-    'NO_DIST_INSTALL',
-    'NO_EXPAND_LIBS',
-    'NO_INTERFACES_MANIFEST',
-    'OS_LIBS',
-    'PARALLEL_DIRS',
-    'PREF_JS_EXPORTS',
-    'PROGRAM',
-    'RESOURCE_FILES',
-    'SHARED_LIBRARY_LIBS',
-    'SHARED_LIBRARY_NAME',
-    'SIMPLE_PROGRAMS',
-    'SONAME',
-    'STATIC_LIBRARY_NAME',
-    'TEST_DIRS',
-    'TOOL_DIRS',
-    # XXX config/Makefile.in specifies this in a make invocation
-    # 'USE_EXTENSION_MANIFEST',
-    'XPCSHELL_TESTS',
-    'XPIDL_MODULE',
-]
+# To protect against accidentally adding logic to Makefiles that belong in moz.build,
+# we check if moz.build-like variables are defined in Makefiles. If they are, we throw
+# an error to encourage the usage of moz.build instead.
+_MOZBUILD_ONLY_VARIABLES = set(frontend.context.VARIABLES.keys()) - {
+    # The migration to moz.build from Makefiles still isn't complete, and there's still
+    # some straggling Makefile logic that uses variables that only moz.build should
+    # use.
+    # These remaining variables are excluded from our blacklist. As the variables here
+    # are migrated from Makefiles in the future, they should be removed from this
+    # "override" list.
+    'XPI_NAME',
+    'USE_EXTENSION_MANIFEST',
+    'CFLAGS',
+    'CXXFLAGS',
+}
 
 DEPRECATED_VARIABLES = [
     'ALLOW_COMPILER_WARNINGS',
@@ -908,7 +876,7 @@ class RecursiveMakeBackend(MakeBackend):
             # Don't check comments
             if l.startswith('#'):
                 continue
-            for x in chain(MOZBUILD_VARIABLES, DEPRECATED_VARIABLES):
+            for x in chain(_MOZBUILD_ONLY_VARIABLES, DEPRECATED_VARIABLES):
                 if x not in l:
                     continue
 
@@ -916,7 +884,7 @@ class RecursiveMakeBackend(MakeBackend):
                 # may just appear as part of something else, like DIRS appears
                 # in GENERATED_DIRS.
                 if re.search(r'\b%s\s*[:?+]?=' % x, l):
-                    if x in MOZBUILD_VARIABLES:
+                    if x in _MOZBUILD_ONLY_VARIABLES:
                         message = MOZBUILD_VARIABLES_MESSAGE
                     else:
                         message = DEPRECATED_VARIABLES_MESSAGE
