@@ -23,7 +23,9 @@ using namespace mozilla::a11y;
 
 HTMLLinkAccessible::HTMLLinkAccessible(nsIContent* aContent,
                                        DocAccessible* aDoc)
-    : HyperTextAccessibleWrap(aContent, aDoc) {}
+    : HyperTextAccessibleWrap(aContent, aDoc) {
+  mType = eHTMLLinkType;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible
@@ -107,7 +109,7 @@ already_AddRefed<nsIURI> HTMLLinkAccessible::AnchorURIAt(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Protected members
+// HTMLLinkAccessible
 
 bool HTMLLinkAccessible::IsLinked() const {
   EventStates state = mContent->AsElement()->State();
