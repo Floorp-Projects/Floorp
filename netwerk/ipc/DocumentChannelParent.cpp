@@ -18,13 +18,13 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace net {
 
-DocumentChannelParent::DocumentChannelParent(CanonicalBrowsingContext* aContext,
-                                             nsILoadContext* aLoadContext) {
+DocumentChannelParent::DocumentChannelParent(
+    CanonicalBrowsingContext* aContext) {
   LOG(("DocumentChannelParent ctor [this=%p]", this));
   // Sometime we can get this called without a BrowsingContext, so that we have
   // an actor to call SendFailedAsyncOpen on.
   if (aContext) {
-    mParent = new DocumentLoadListener(aContext, aLoadContext, this);
+    mParent = new DocumentLoadListener(aContext, this);
   }
 }
 
