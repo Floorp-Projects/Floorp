@@ -711,13 +711,16 @@ bool FunctionScriptEmitter::initScript() {
 
   BCEScriptStencil stencil(*bce_, std::move(immutableScriptData));
   if (!JSScript::fullyInitFromStencil(bce_->cx, bce_->compilationInfo,
-                                      bce_->script, stencil)) {
+                                      bce_->inputScript, stencil)) {
     return false;
   }
+  MOZ_ASSERT(!bce_->outputScript);
+  bce_->outputScript = bce_->inputScript;
 
 #ifdef DEBUG
   state_ = State::End;
 #endif
+
   return true;
 }
 
