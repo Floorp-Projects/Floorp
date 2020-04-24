@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Tests for preview through Babel's compile output.
-requestLongerTimeout(6);
+requestLongerTimeout(3);
 
 function getOriginalScope(dbg) {
   return dbg.selectors.getSelectedOriginalScope(
