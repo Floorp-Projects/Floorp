@@ -215,6 +215,12 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void SetDocShell(nsIDocShell* aDocShell);
   void ClearDocShell() { mDocShell = nullptr; }
 
+  // Get the Document for this BrowsingContext if it is in-process, or
+  // null if it's not.
+  Document* GetDocument() const {
+    return mDocShell ? mDocShell->GetDocument() : nullptr;
+  }
+
   // This cleans up remote outer window proxies that might have been left behind
   // when the browsing context went from being remote to local. It does this by
   // turning them into cross-compartment wrappers to aOuter. If there is already
@@ -278,6 +284,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool IsTop() const { return !GetParent(); }
 
   bool IsTopContent() const { return IsContent() && !GetParent(); }
+
+  bool IsInSubtreeOf(BrowsingContext* aContext);
 
   bool IsContentSubframe() const { return IsContent() && GetParent(); }
   uint64_t Id() const { return mBrowsingContextId; }

@@ -435,12 +435,12 @@ child:
 both:
     async PFileDescriptorSet(FileDescriptor fd);
 
-    // For parent->child, aBrowser must be non-null; aOuterWindowID can
-    // be 0 to indicate the browser's current root document, or nonzero
+    // For parent->child, aBrowser must be non-null; aContext can
+    // be null to indicate the browser's current root document, or non-null
     // to persist a subdocument.  For child->parent, arguments are
-    // ignored and should be null/zero.
+    // ignored and should be null.
     async PWebBrowserPersistDocument(nullable PBrowser aBrowser,
-                                     uint64_t aOuterWindowID);
+                                     MaybeDiscardedBrowsingContext aContext);
 
 child:
     async InitGMPService(Endpoint<PGMPServiceChild> service);
