@@ -2,7 +2,7 @@
 
 # asForegroundServicePendingIntent
 
-`@JvmName("createForegroundServicePendingIntent") fun <ERROR CLASS>.asForegroundServicePendingIntent(context: <ERROR CLASS>, requestCode: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/intents.kt#L24)
+`@JvmName("createForegroundServicePendingIntent") fun <ERROR CLASS>.asForegroundServicePendingIntent(context: <ERROR CLASS>, requestCode: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, flags: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = PendingIntent.FLAG_UPDATE_CURRENT): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/intents.kt#L24)
 
 Create a [PendingIntent](#) instance to run a certain service described with the [Intent](#).
 
