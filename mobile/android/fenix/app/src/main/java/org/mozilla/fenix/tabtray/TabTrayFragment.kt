@@ -217,7 +217,8 @@ class TabTrayFragment : Fragment(R.layout.fragment_tab_tray), TabsTray.Observer,
     private fun onTabsChanged() {
         val hasNoTabs = getListOfSessions().toList().isEmpty()
 
-        view?.tab_tray_empty_view?.isVisible = !hasNoTabs
+        view?.tab_tray_empty_view?.isVisible = hasNoTabs
+        view?.tabsTray?.asView()?.isVisible = !hasNoTabs
         view?.save_to_collection_button?.isVisible = !hasNoTabs
 
         if (hasNoTabs) {
