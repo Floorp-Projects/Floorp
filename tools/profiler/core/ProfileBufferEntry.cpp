@@ -1650,8 +1650,8 @@ bool ProfileBuffer::DuplicateLastSample(int aThreadId,
               er = *it;
               auto bytes = er.RemainingBytes();
               MOZ_ASSERT(bytes < 65536);
-              tempBuffer.Put(bytes, [&](ProfileBufferEntryWriter* aEW) {
-                MOZ_ASSERT(aEW, "tempBuffer cannot be out-of-session");
+              tempBuffer.Put(bytes, [&](Maybe<ProfileBufferEntryWriter>& aEW) {
+                MOZ_ASSERT(aEW.isSome(), "tempBuffer cannot be out-of-session");
                 aEW->WriteFromReader(er, bytes);
               });
               break;
