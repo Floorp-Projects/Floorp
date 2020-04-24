@@ -20,6 +20,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.ext.removeAndDisable
+import org.mozilla.fenix.ext.removeTouchDelegate
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.home.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabSessionInteractor
@@ -47,8 +48,6 @@ class TabViewHolder(
         close_tab_button.setOnClickListener {
             interactor.onCloseTab(tab?.sessionId!!)
         }
-
-        play_pause_button.increaseTapArea(PLAY_PAUSE_BUTTON_EXTRA_DPS)
 
         play_pause_button.setOnClickListener {
             when (tab?.mediaState) {
@@ -95,20 +94,38 @@ class TabViewHolder(
 
     internal fun updatePlayPauseButton(mediaState: MediaState.State) {
         with(play_pause_button) {
-            if (mediaState == MediaState.State.PLAYING || mediaState == MediaState.State.PAUSED) {
-                this.showAndEnable()
-            } else {
-                this.removeAndDisable()
-            }
+            invalidate()
+            when (mediaState) {
+                MediaState.State.PAUSED -> {
+                    showAndEnable()
+                    play_pause_button.increaseTapArea(PLAY_PAUSE_BUTTON_EXTRA_DPS)
+                    contentDescription =
+                        context.getString(R.string.mozac_feature_media_notification_action_play)
+                    setImageDrawable(
+                        AppCompatResources.getDrawable(
+                            context,
+                            R.drawable.play_with_background
+                        )
+                    )
+                }
 
-            if (mediaState == MediaState.State.PLAYING) {
-                play_pause_button.contentDescription =
-                    context.getString(R.string.mozac_feature_media_notification_action_pause)
-                setImageDrawable(AppCompatResources.getDrawable(context, R.drawable.pause_with_background))
-            } else {
-                play_pause_button.contentDescription =
-                    context.getString(R.string.mozac_feature_media_notification_action_play)
-                setImageDrawable(AppCompatResources.getDrawable(context, R.drawable.play_with_background))
+                MediaState.State.PLAYING -> {
+                    showAndEnable()
+                    play_pause_button.increaseTapArea(PLAY_PAUSE_BUTTON_EXTRA_DPS)
+                    contentDescription =
+                        context.getString(R.string.mozac_feature_media_notification_action_pause)
+                    setImageDrawable(
+                        AppCompatResources.getDrawable(
+                            context,
+                            R.drawable.pause_with_background
+                        )
+                    )
+                }
+
+                MediaState.State.NONE -> {
+                    removeTouchDelegate()
+                    removeAndDisable()
+                }
             }
         }
     }
@@ -116,6 +133,7 @@ class TabViewHolder(
     internal fun updateTab(tab: Tab) {
         this.tab = tab
     }
+
     internal fun updateTitle(text: String) {
         tab_title.text = text
     }
@@ -135,6 +153,7 @@ class TabViewHolder(
     internal fun updateSelected(selected: Boolean) {
         selected_border.visibility = if (selected) View.VISIBLE else View.GONE
     }
+
     internal fun updateCloseButtonDescription(title: String) {
         close_tab_button.contentDescription =
             close_tab_button.context.getString(R.string.close_tab_title, title)
