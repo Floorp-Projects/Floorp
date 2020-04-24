@@ -162,7 +162,7 @@ class Worker extends PureComponent {
     const statusText = this.getLocalizedStatus();
 
     return section(
-      { className: "worker" },
+      { className: "worker js-sw-worker" },
       dl(
         { className: "worker__data" },
         Localized(
