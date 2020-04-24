@@ -447,8 +447,7 @@ MPRISServiceHandler::~MPRISServiceHandler() {
 
 void MPRISServiceHandler::Close() {
   gchar serviceName[256];
-  SprintfLiteral(serviceName, DBUS_MRPIS_SERVICE_NAME ".instance%" PRId32,
-                 getpid());
+  SprintfLiteral(serviceName, DBUS_MRPIS_SERVICE_NAME ".instance%d", getpid());
 
   OnNameLost(mConnection, serviceName);
 
