@@ -14133,7 +14133,12 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
         argMir = ToMIRType(sig.args()[i]);
         break;
       case wasm::ValType::I64:
+#ifdef ENABLE_WASM_BIGINT
+        argMir = ToMIRType(sig.args()[i]);
+        break;
+#else
         MOZ_CRASH("unexpected argument type when calling from ion to wasm");
+#endif
       case wasm::ValType::Ref:
         switch (sig.args()[i].refTypeKind()) {
           case wasm::RefType::Any:
@@ -14191,6 +14196,14 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
         MOZ_ASSERT(lir->mir()->type() == MIRType::Int32);
         MOZ_ASSERT(ToRegister(lir->output()) == ReturnReg);
         break;
+      case wasm::ValType::I64:
+#ifdef ENABLE_WASM_BIGINT
+        MOZ_ASSERT(lir->mir()->type() == MIRType::Int64);
+        MOZ_ASSERT(ToOutRegister64(lir) == ReturnReg64);
+#else
+        MOZ_CRASH("unexpected return type when calling from ion to wasm");
+#endif
+        break;
       case wasm::ValType::F32:
         MOZ_ASSERT(lir->mir()->type() == MIRType::Float32);
         MOZ_ASSERT(ToFloatRegister(lir->output()) == ReturnFloat32Reg);
@@ -14199,8 +14212,6 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
         MOZ_ASSERT(lir->mir()->type() == MIRType::Double);
         MOZ_ASSERT(ToFloatRegister(lir->output()) == ReturnDoubleReg);
         break;
-      case wasm::ValType::I64:
-        MOZ_CRASH("unexpected return type when calling from ion to wasm");
       case wasm::ValType::Ref:
         switch (results[0].refTypeKind()) {
           case wasm::RefType::Any:
