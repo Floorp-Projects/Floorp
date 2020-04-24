@@ -32,8 +32,11 @@ using namespace js::gcstats;
 
 using mozilla::DebugOnly;
 using mozilla::EnumeratedArray;
+using mozilla::Maybe;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
+
+static const size_t BYTES_PER_MB = 1024 * 1024;
 
 /*
  * If this fails, then you can either delete this assertion and allow all
@@ -309,8 +312,6 @@ UniqueChars Statistics::formatCompactSliceMessage() const {
 }
 
 UniqueChars Statistics::formatCompactSummaryMessage() const {
-  const double bytesPerMiB = 1024 * 1024;
-
   FragmentVector fragments;
   if (!fragments.append(DuplicateString("Summary - "))) {
     return UniqueChars(nullptr);
@@ -343,7 +344,7 @@ UniqueChars Statistics::formatCompactSummaryMessage() const {
                  zoneStats.collectedZoneCount, zoneStats.zoneCount,
                  zoneStats.sweptZoneCount, zoneStats.collectedCompartmentCount,
                  zoneStats.compartmentCount, zoneStats.sweptCompartmentCount,
-                 double(preTotalHeapBytes) / bytesPerMiB,
+                 double(preTotalHeapBytes) / BYTES_PER_MB,
                  int32_t(counts[COUNT_NEW_CHUNK] - counts[COUNT_DESTROY_CHUNK]),
                  counts[COUNT_NEW_CHUNK] + counts[COUNT_DESTROY_CHUNK]);
   if (!fragments.append(DuplicateString(buffer))) {
@@ -355,7 +356,7 @@ UniqueChars Statistics::formatCompactSummaryMessage() const {
     SprintfLiteral(
         buffer, "Kind: %s; Relocated: %.3f MiB; ",
         ExplainInvocationKind(gckind),
-        double(ArenaSize * counts[COUNT_ARENA_RELOCATED]) / bytesPerMiB);
+        double(ArenaSize * counts[COUNT_ARENA_RELOCATED]) / BYTES_PER_MB);
     if (!fragments.append(DuplicateString(buffer))) {
       return UniqueChars(nullptr);
     }
@@ -423,8 +424,6 @@ UniqueChars Statistics::formatDetailedMessage() const {
 }
 
 UniqueChars Statistics::formatDetailedDescription() const {
-  const double bytesPerMiB = 1024 * 1024;
-
   TimeDuration sccTotal, sccLongest;
   sccDurations(&sccTotal, &sccLongest);
 
@@ -445,15 +444,7 @@ UniqueChars Statistics::formatDetailedDescription() const {
   HeapSize: %.3f MiB\n\
   Chunk Delta (magnitude): %+d  (%d)\n\
   Arenas Relocated: %.3f MiB\n\
-  Trigger: %s\n\
 ";
-
-  char thresholdBuffer[100] = "n/a";
-  if (thresholdTriggered) {
-    SprintfLiteral(thresholdBuffer, "%.3f MiB of %.3f MiB threshold\n",
-                   triggerAmount / 1024.0 / 1024.0,
-                   triggerThreshold / 1024.0 / 1024.0);
-  }
 
   char buffer[1024];
   SprintfLiteral(
@@ -465,11 +456,10 @@ UniqueChars Statistics::formatDetailedDescription() const {
       zoneStats.compartmentCount, zoneStats.sweptCompartmentCount,
       getCount(COUNT_MINOR_GC), getCount(COUNT_STOREBUFFER_OVERFLOW),
       mmu20 * 100., mmu50 * 100., t(sccTotal), t(sccLongest),
-      double(preTotalHeapBytes) / bytesPerMiB,
+      double(preTotalHeapBytes) / BYTES_PER_MB,
       getCount(COUNT_NEW_CHUNK) - getCount(COUNT_DESTROY_CHUNK),
       getCount(COUNT_NEW_CHUNK) + getCount(COUNT_DESTROY_CHUNK),
-      double(ArenaSize * getCount(COUNT_ARENA_RELOCATED)) / bytesPerMiB,
-      thresholdBuffer);
+      double(ArenaSize * getCount(COUNT_ARENA_RELOCATED)) / BYTES_PER_MB);
 
   return DuplicateString(buffer);
 }
@@ -483,15 +473,25 @@ UniqueChars Statistics::formatDetailedSliceDescription(
       "\
   ---- Slice %u ----\n\
     Reason: %s\n\
+    Trigger: %s\n\
     Reset: %s%s\n\
     State: %s -> %s\n\
     Page Faults: %" PRIu64
       "\n\
     Pause: %.3fms of %s budget (@ %.3fms)\n\
 ";
+
+  char triggerBuffer[100] = "n/a";
+  if (slice.trigger) {
+    Trigger trigger = slice.trigger.value();
+    SprintfLiteral(triggerBuffer, "%.3f MiB of %.3f MiB threshold\n",
+                   double(trigger.amount) / BYTES_PER_MB,
+                   double(trigger.threshold) / BYTES_PER_MB);
+  }
+
   char buffer[1024];
   SprintfLiteral(
-      buffer, format, i, ExplainGCReason(slice.reason),
+      buffer, format, i, ExplainGCReason(slice.reason), triggerBuffer,
       slice.wasReset() ? "yes - " : "no",
       slice.wasReset() ? ExplainAbortReason(slice.resetReason) : "",
       gc::StateName(slice.initialState), gc::StateName(slice.finalState),
@@ -734,9 +734,10 @@ void Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice,
   json.property("final_state", gc::StateName(slice.finalState));        // #5
   json.property("budget", budgetDescription);                           // #6
   json.property("major_gc_number", startingMajorGCNumber);              // #7
-  if (thresholdTriggered) {
-    json.floatProperty("trigger_amount", triggerAmount, 0);        // #8
-    json.floatProperty("trigger_threshold", triggerThreshold, 0);  // #9
+  if (slice.trigger) {
+    Trigger trigger = slice.trigger.value();
+    json.property("trigger_amount", trigger.amount);        // #8
+    json.property("trigger_threshold", trigger.threshold);  // #9
   }
   int64_t numFaults = slice.endFaults - slice.startFaults;
   if (numFaults != 0) {
@@ -765,9 +766,6 @@ Statistics::Statistics(GCRuntime* gc)
       preTotalHeapBytes(0),
       postTotalHeapBytes(0),
       preCollectedHeapBytes(0),
-      thresholdTriggered(false),
-      triggerAmount(0.0),
-      triggerThreshold(0.0),
       startingMinorGCNumber(0),
       startingMajorGCNumber(0),
       startingSliceNumber(0),
@@ -1016,8 +1014,6 @@ void Statistics::endGC() {
   postTotalHeapBytes = gc->heapSize.bytes();
 
   sendGCTelemetry();
-
-  thresholdTriggered = false;
 }
 
 void Statistics::sendGCTelemetry() {
@@ -1101,7 +1097,7 @@ void Statistics::sendGCTelemetry() {
     TimeDuration clampedTotal =
         TimeDuration::Max(total, TimeDuration::FromMilliseconds(1));
     double effectiveness =
-        (double(bytesFreed) / (1024.0 * 1024.0)) / clampedTotal.ToSeconds();
+        (double(bytesFreed) / BYTES_PER_MB) / clampedTotal.ToSeconds();
     runtime->addTelemetry(JS_TELEMETRY_GC_EFFECTIVENESS,
                           uint32_t(effectiveness));
   }
@@ -1125,6 +1121,16 @@ void Statistics::endNurseryCollection(JS::GCReason reason) {
   allocsSinceMinorGC = {0, 0};
 }
 
+Statistics::SliceData::SliceData(SliceBudget budget, Maybe<Trigger> trigger,
+                                 JS::GCReason reason, TimeStamp start,
+                                 size_t startFaults, gc::State initialState)
+    : budget(budget),
+      reason(reason),
+      trigger(trigger),
+      initialState(initialState),
+      start(start),
+      startFaults(startFaults) {}
+
 void Statistics::beginSlice(const ZoneGCStats& zoneStats,
                             JSGCInvocationKind gckind, SliceBudget budget,
                             JS::GCReason reason) {
@@ -1147,8 +1153,11 @@ void Statistics::beginSlice(const ZoneGCStats& zoneStats,
                           uint32_t(timeSinceLastSlice.ToMilliseconds()));
   }
 
-  if (!slices_.emplaceBack(budget, reason, currentTime, GetPageFaultCount(),
-                           gc->state())) {
+  Maybe<Trigger> trigger = recordedTrigger;
+  recordedTrigger.reset();
+
+  if (!slices_.emplaceBack(budget, trigger, reason, currentTime,
+                           GetPageFaultCount(), gc->state())) {
     // If we are OOM, set a flag to indicate we have missing slice data.
     aborted = true;
     return;
