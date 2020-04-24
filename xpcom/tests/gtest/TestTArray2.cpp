@@ -1160,6 +1160,46 @@ TEST(TArray, test_swap)
     CHECK_ARRAY(b, data1);
     CHECK_EQ_INT(a.Length(), size_t(0));
   }
+
+  // Test fallible SwapElements of nsTArray.
+  {
+    nsTArray<int> a;
+    nsTArray<int> b;
+
+    a.AppendElements(data1, ArrayLength(data1));
+
+    ASSERT_TRUE(a.SwapElements(b, fallible));
+
+    CHECK_ARRAY(b, data1);
+    CHECK_EQ_INT(a.Length(), size_t(0));
+  }
+
+  // Test fallible SwapElements of FallibleTArray.
+  {
+    FallibleTArray<int> a;
+    FallibleTArray<int> b;
+
+    ASSERT_TRUE(a.AppendElements(data1, ArrayLength(data1), fallible));
+
+    ASSERT_TRUE(a.SwapElements(b, fallible));
+
+    CHECK_ARRAY(b, data1);
+    CHECK_EQ_INT(a.Length(), size_t(0));
+  }
+
+  // Test fallible SwapElements of FallibleTArray with large AutoTArray.
+  {
+    FallibleTArray<int> a;
+    AutoTArray<int, 8192> b;
+
+    ASSERT_TRUE(a.AppendElements(data1, ArrayLength(data1), fallible));
+
+    ASSERT_TRUE(a.SwapElements(b, fallible));
+
+    CHECK_IS_USING_AUTO(b);
+    CHECK_ARRAY(b, data1);
+    CHECK_EQ_INT(a.Length(), size_t(0));
+  }
 }
 
 // Bug 1171296: Disabled on andoid due to crashes.
