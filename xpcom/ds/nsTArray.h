@@ -283,12 +283,20 @@ constexpr bool SpecializableIsCopyConstructibleValue =
 // nsTArray_Impl only is copy-constructible and copy-assignable if E is
 // copy-constructible. nsTArray_Impl never makes use of E's copy assignment
 // operator, so the decision is made solely based on E's copy-constructibility.
-template <typename E, typename Impl,
-          bool IsCopyConstructible = SpecializableIsCopyConstructibleValue<E>>
+template <typename E, typename Impl, typename Alloc,
+          bool IsCopyConstructible = SpecializableIsCopyConstructibleValue<E>
+          // XXX Bug 1628692: We should disallow copy constructors/assignment
+          // operators for FallibleTArray, since copying may fail but there's no
+          // way to signal that to the caller. However, there are several uses,
+          // including in ipdlc generated code, that do this, which need to be
+          // fixed first.
+          //
+          // && std::is_same_v<Alloc, nsTArrayInfallibleAllocator>
+          >
 class nsTArray_CopyEnabler;
 
-template <typename E, typename Impl>
-class nsTArray_CopyEnabler<E, Impl, false> {
+template <typename E, typename Impl, typename Alloc>
+class nsTArray_CopyEnabler<E, Impl, Alloc, false> {
  public:
   nsTArray_CopyEnabler() = default;
 
@@ -296,8 +304,8 @@ class nsTArray_CopyEnabler<E, Impl, false> {
   nsTArray_CopyEnabler& operator=(const nsTArray_CopyEnabler&) = delete;
 };
 
-template <typename E, typename Impl>
-class nsTArray_CopyEnabler<E, Impl, true> {
+template <typename E, typename Impl, typename Alloc>
+class nsTArray_CopyEnabler<E, Impl, Alloc, true> {
  public:
   nsTArray_CopyEnabler() = default;
 
@@ -307,10 +315,17 @@ class nsTArray_CopyEnabler<E, Impl, true> {
 
   nsTArray_CopyEnabler& operator=(const nsTArray_CopyEnabler& aOther) {
     if (this != &aOther) {
-      static_cast<Impl*>(this)->ReplaceElementsAt(
+      /// XXX Bug 1628692 will make FallibleTArray uncopyable. Checking of the
+      /// return value should be removed then again.
+      E* const res = static_cast<Impl*>(this)->ReplaceElementsAt(
           0, static_cast<Impl*>(this)->Length(),
           static_cast<const Impl&>(aOther).Elements(),
           static_cast<const Impl&>(aOther).Length());
+#ifdef DEBUG
+      MOZ_ASSERT(res);
+#else
+      (void)res;
+#endif
     }
     return *this;
   }
@@ -320,9 +335,9 @@ class nsTArray_CopyEnabler<E, Impl, true> {
 
 // This class provides a SafeElementAt method to nsTArray<T*> which does
 // not take a second default value parameter.
-template <class E, class Derived>
+template <class E, class Derived, typename Alloc>
 struct nsTArray_SafeElementAtHelper
-    : public ::detail::nsTArray_CopyEnabler<E, Derived> {
+    : public ::detail::nsTArray_CopyEnabler<E, Derived, Alloc> {
   typedef E* elem_type;
   typedef size_t index_type;
 
@@ -333,9 +348,9 @@ struct nsTArray_SafeElementAtHelper
   const elem_type& SafeElementAt(index_type aIndex) const;
 };
 
-template <class E, class Derived>
-struct nsTArray_SafeElementAtHelper<E*, Derived>
-    : public ::detail::nsTArray_CopyEnabler<E*, Derived> {
+template <class E, class Derived, typename Alloc>
+struct nsTArray_SafeElementAtHelper<E*, Derived, Alloc>
+    : public ::detail::nsTArray_CopyEnabler<E*, Derived, Alloc> {
   typedef E* elem_type;
   // typedef const E* const_elem_type;   XXX: see below
   typedef size_t index_type;
@@ -355,9 +370,9 @@ struct nsTArray_SafeElementAtHelper<E*, Derived>
 
 // E is a smart pointer type; the
 // smart pointer can act as its element_type*.
-template <class E, class Derived>
+template <class E, class Derived, typename Alloc>
 struct nsTArray_SafeElementAtSmartPtrHelper
-    : public ::detail::nsTArray_CopyEnabler<E, Derived> {
+    : public ::detail::nsTArray_CopyEnabler<E, Derived, Alloc> {
   typedef typename E::element_type* elem_type;
   typedef const typename E::element_type* const_elem_type;
   typedef size_t index_type;
@@ -383,23 +398,24 @@ struct nsTArray_SafeElementAtSmartPtrHelper
 template <class T>
 class nsCOMPtr;
 
-template <class E, class Derived>
-struct nsTArray_SafeElementAtHelper<nsCOMPtr<E>, Derived>
-    : public nsTArray_SafeElementAtSmartPtrHelper<nsCOMPtr<E>, Derived> {};
+template <class E, class Derived, typename Alloc>
+struct nsTArray_SafeElementAtHelper<nsCOMPtr<E>, Derived, Alloc>
+    : public nsTArray_SafeElementAtSmartPtrHelper<nsCOMPtr<E>, Derived, Alloc> {
+};
 
-template <class E, class Derived>
-struct nsTArray_SafeElementAtHelper<RefPtr<E>, Derived>
-    : public nsTArray_SafeElementAtSmartPtrHelper<RefPtr<E>, Derived> {};
+template <class E, class Derived, typename Alloc>
+struct nsTArray_SafeElementAtHelper<RefPtr<E>, Derived, Alloc>
+    : public nsTArray_SafeElementAtSmartPtrHelper<RefPtr<E>, Derived, Alloc> {};
 
 namespace mozilla {
 template <class T>
 class OwningNonNull;
 }  // namespace mozilla
 
-template <class E, class Derived>
-struct nsTArray_SafeElementAtHelper<mozilla::OwningNonNull<E>, Derived>
+template <class E, class Derived, typename Alloc>
+struct nsTArray_SafeElementAtHelper<mozilla::OwningNonNull<E>, Derived, Alloc>
     : public nsTArray_SafeElementAtSmartPtrHelper<mozilla::OwningNonNull<E>,
-                                                  Derived> {};
+                                                  Derived, Alloc> {};
 
 // Servo bindings.
 extern "C" void Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity,
@@ -875,8 +891,9 @@ MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::SourceBufferTask)
 // nsTArray_Impl class, to allow extra conversions to be added for specific
 // types.
 //
-template <class E, class Derived>
-struct nsTArray_TypedBase : public nsTArray_SafeElementAtHelper<E, Derived> {};
+template <class E, class Derived, typename Alloc>
+struct nsTArray_TypedBase
+    : public nsTArray_SafeElementAtHelper<E, Derived, Alloc> {};
 
 //
 // Specialization of nsTArray_TypedBase for arrays containing JS::Heap<E>
@@ -889,9 +906,9 @@ struct nsTArray_TypedBase : public nsTArray_SafeElementAtHelper<E, Derived> {};
 // The static_cast is necessary to obtain the correct address for the derived
 // class since we are a base class used in multiple inheritance.
 //
-template <class E, class Derived>
-struct nsTArray_TypedBase<JS::Heap<E>, Derived>
-    : public nsTArray_SafeElementAtHelper<JS::Heap<E>, Derived> {
+template <class E, class Derived, typename Alloc>
+struct nsTArray_TypedBase<JS::Heap<E>, Derived, Alloc>
+    : public nsTArray_SafeElementAtHelper<JS::Heap<E>, Derived, Alloc> {
   operator const nsTArray<E>&() {
     static_assert(sizeof(E) == sizeof(JS::Heap<E>),
                   "JS::Heap<E> must be binary compatible with E.");
@@ -1013,15 +1030,16 @@ template <class E, class Alloc>
 class nsTArray_Impl
     : public nsTArray_base<Alloc,
                            typename nsTArray_RelocationStrategy<E>::Type>,
-      public nsTArray_TypedBase<
-          E,
-          nsTArray_Impl<E, Alloc>>  // This must come last to ensure the members
-                                    // from nsTArray_base are initialized before
-                                    // the delegated constructor calls from
-                                    // nsTArray_CopyEnabler are executed.
+      public nsTArray_TypedBase<E, nsTArray_Impl<E, Alloc>,
+                                Alloc>  // This must come last to ensure the
+                                        // members from nsTArray_base are
+                                        // initialized before the delegated
+                                        // constructor calls from
+                                        // nsTArray_CopyEnabler are executed.
 {
  private:
-  friend class ::detail::nsTArray_CopyEnabler<E, nsTArray_Impl<E, Alloc>>;
+  friend class ::detail::nsTArray_CopyEnabler<E, nsTArray_Impl<E, Alloc>,
+                                              Alloc>;
 
   typedef nsTArrayFallibleAllocator FallibleAlloc;
   typedef nsTArrayInfallibleAllocator InfallibleAlloc;
@@ -1034,7 +1052,8 @@ class nsTArray_Impl
   typedef E elem_type;
   typedef nsTArray_Impl<E, Alloc> self_type;
   typedef nsTArrayElementTraits<E> elem_traits;
-  typedef nsTArray_SafeElementAtHelper<E, self_type> safeelementat_helper_type;
+  typedef nsTArray_SafeElementAtHelper<E, self_type, Alloc>
+      safeelementat_helper_type;
   typedef mozilla::ArrayIterator<elem_type&, nsTArray<E>> iterator;
   typedef mozilla::ArrayIterator<const elem_type&, nsTArray<E>> const_iterator;
   typedef mozilla::ReverseIterator<iterator> reverse_iterator;
@@ -1149,7 +1168,13 @@ class nsTArray_Impl
   // elements as |aOther|.
   bool operator!=(const self_type& aOther) const { return !operator==(aOther); }
 
-  template <typename Allocator>
+  // If Alloc == FallibleAlloc, ReplaceElementsAt might fail, without a way to
+  // signal this to the caller, so we disallow copying via operator=. Callers
+  // should use ReplaceElementsAt with a fallible argument instead, and check
+  // the result.
+  template <typename Allocator,
+            typename = std::enable_if_t<std::is_same_v<Alloc, InfallibleAlloc>,
+                                        Allocator>>
   self_type& operator=(const nsTArray_Impl<E, Allocator>& aOther) {
     ReplaceElementsAt(0, Length(), aOther.Elements(), aOther.Length());
     return *this;
