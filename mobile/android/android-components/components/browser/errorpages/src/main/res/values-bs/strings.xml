@@ -98,4 +98,23 @@
     <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Zatražena adresa ima definiran priključak (npr. <q>mozilla.org:80</q> za priključak 80 na mozilla.org) koji se inače koristi za <em>druge</em> radnje, a ne za pregledavanje weba. Browser je prekinuo zahtjev radi tvoje zaštite i sigurnosti.</p>]]></string>
 
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Veza je resetovana</string>
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Mrežna veza je prekinuta tijekom povezivanja. Pokušaj ponovo.</p>
+      <ul>
+        <li>Stranica je možda privremeno nedostupna ili prezauzeta. Pokušaj ponovo za nekoliko trenutaka.</li>
+        <li>Ako ne možeš učitati nijednu stranicu, provjeri podatke tvog uređaja ili Wi-Fi vezu.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Nesigurna vrsta datoteke</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>Kontaktiraj vlasnike web stranice i obavijesti ih o ovom problemu.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Greška oštećenog sadržaja</string>
+
     </resources>

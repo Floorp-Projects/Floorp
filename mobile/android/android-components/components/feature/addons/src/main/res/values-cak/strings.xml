@@ -158,4 +158,6 @@
     <string name="mozac_feature_addons_unsupported_caption_plural">%1$s taq tz\'aqat</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
     <string name="mozac_feature_addons_unsupported_learn_more">Tetamäx ch\'aqa\' chik</string>
-</resources>
+    <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
+    <string name="mozac_feature_addons_updater_status_error">Sachoj</string>
+    </resources>
