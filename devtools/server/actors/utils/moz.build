@@ -16,6 +16,7 @@ DevToolsModules(
     'logEvent.js',
     'make-debugger.js',
     'shapes-utils.js',
+    'source-map-utils.js',
     'stack.js',
     'TabSources.js',
     'track-change-emitter.js',
