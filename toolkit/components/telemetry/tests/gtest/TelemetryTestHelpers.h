@@ -56,6 +56,13 @@ void GetSnapshots(JSContext* cx, nsCOMPtr<nsITelemetry> mTelemetry,
                   const char* name, JS::MutableHandleValue valueOut,
                   bool is_keyed);
 
+void GetOriginSnapshot(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
+                       bool aClear = false);
+
+void GetEncodedOriginStrings(
+    JSContext* aCx, const nsCString& aEncoding,
+    nsTArray<mozilla::Tuple<nsCString, nsCString>>& aPrioStrings);
+
 }  // namespace TelemetryTestHelpers
 
 #endif

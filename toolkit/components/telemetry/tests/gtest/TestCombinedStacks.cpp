@@ -2,6 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+#include "TelemetryFixture.h"
+#include "TelemetryTestHelpers.h"
 #include "other/CombinedStacks.h"
 #include "other/ProcessedStack.h"
 #include "nsPrintfCString.h"

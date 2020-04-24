@@ -7,6 +7,9 @@
 #define TelemetryOrigin_h__
 
 #include "TelemetryOriginEnums.h"
+#include "jsapi.h"
+#include "nsError.h"
+#include "nsString.h"
 
 // This module is internal to Telemetry. It encapsulates Telemetry's
 // origin recording and storage logic. It should only be used by
