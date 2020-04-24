@@ -422,7 +422,7 @@ let ACTORS = {
       moduleURI: "resource:///modules/translation/TranslationChild.jsm",
       events: {
         pageshow: {},
-        load: { mozSystemGroup: true },
+        load: { mozSystemGroup: true, capture: true },
       },
     },
     enablePreference: "browser.translation.detectLanguage",
