@@ -3,6 +3,7 @@ const URI =
 
 add_task(async function() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, URI);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, URI);
 
@@ -10,8 +11,8 @@ add_task(async function() {
     gBrowser.selectedBrowser.currentURI.spec,
     "mediaTab"
   );
-
   await BrowserTestUtils.waitForEvent(pageInfo, "page-info-init");
+
   const imageTree = pageInfo.document.getElementById("imagetree");
   const imageRowsNum = imageTree.view.rowCount;
 
