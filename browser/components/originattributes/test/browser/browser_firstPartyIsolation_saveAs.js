@@ -271,10 +271,7 @@ add_task(async function testPageInfoMediaSaveAs() {
     "mediaTab"
   );
 
-  await BrowserTestUtils.waitForEvent(pageInfo, "load");
-  await new Promise(resolve =>
-    pageInfo.onFinished.push(() => executeSoon(resolve))
-  );
+  await BrowserTestUtils.waitForEvent(pageInfo, "page-info-init");
 
   let imageTree = pageInfo.document.getElementById("imagetree");
   let imageRowsNum = imageTree.view.rowCount;
