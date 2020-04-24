@@ -6,7 +6,7 @@
 
 const TOOLBARID = "test-noncustomizable-toolbar-for-toggling";
 function test() {
-  let tb = document.createElementNS(kNSXUL, "toolbar");
+  let tb = document.createXULElement("toolbar");
   tb.id = TOOLBARID;
   gNavToolbox.appendChild(tb);
   try {

@@ -19,8 +19,6 @@ const { ExtensionUtils } = ChromeUtils.import(
 
 var { promiseEvent } = ExtensionUtils;
 
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
 function getBrowser(panel) {
   let browser = document.getElementById("webext-panels-browser");
   if (browser) {

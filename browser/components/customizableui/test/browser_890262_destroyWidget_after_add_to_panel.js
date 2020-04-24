@@ -64,7 +64,7 @@ add_task(async function asyncCleanup() {
 });
 
 function setupArea() {
-  let lazyArea = document.createElementNS(kNSXUL, "hbox");
+  let lazyArea = document.createXULElement("hbox");
   lazyArea.id = kLazyAreaId;
   document.getElementById("nav-bar").appendChild(lazyArea);
   CustomizableUI.registerArea(kLazyAreaId, {

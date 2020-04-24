@@ -35,7 +35,6 @@
      each preference.
 */
 
-const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kContentDoc =
   "http://www.example.com/browser/dom/tests/browser/test_new_window_from_content_child.html";
 const kNewWindowPrefKey = "browser.link.open_newwindow";
