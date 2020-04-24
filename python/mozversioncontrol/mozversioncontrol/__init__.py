@@ -380,6 +380,8 @@ class HgRepository(Repository):
                          '--template', template, upstream, return_codes=(1,)).split()
 
     def add_remove_files(self, *paths):
+        if not paths:
+            return
         args = ['addremove'] + list(paths)
         m = re.search(r'\d+\.\d+', self.tool_version)
         simplified_version = float(m.group(0)) if m else 0
@@ -388,6 +390,8 @@ class HgRepository(Repository):
         self._run(*args)
 
     def forget_add_remove_files(self, *paths):
+        if not paths:
+            return
         self._run('forget', *paths)
 
     def get_files_in_working_directory(self):
@@ -506,9 +510,13 @@ class GitRepository(Repository):
         return [f for f in files if f]
 
     def add_remove_files(self, *paths):
+        if not paths:
+            return
         self._run('add', *paths)
 
     def forget_add_remove_files(self, *paths):
+        if not paths:
+            return
         self._run('reset', *paths)
 
     def get_files_in_working_directory(self):
