@@ -140,7 +140,9 @@ class NotNull {
   constexpr operator const T&() const { return get(); }
 
   // Dereference operators.
-  constexpr const T& operator->() const { return get(); }
+  constexpr auto* operator->() const MOZ_NONNULL_RETURN {
+    return mBasePtr.operator->();
+  }
   constexpr decltype(*mBasePtr) operator*() const { return *mBasePtr; }
 };
 
