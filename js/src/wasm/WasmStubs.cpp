@@ -1376,6 +1376,13 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
         case MIRType::Int32:
           GenPrintIsize(DebugChannel::Function, masm, iter->gpr());
           break;
+        case MIRType::Int64:
+#ifdef ENABLE_WASM_BIGINT
+          GenPrintI64(DebugChannel::Function, masm, iter->gpr64());
+          break;
+#else
+          MOZ_CRASH("ion to wasm fast path can only handle i32/f32/f64");
+#endif
         case MIRType::Float32:
           GenPrintF32(DebugChannel::Function, masm, iter->fpu());
           break;
@@ -1508,6 +1515,14 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
         // The return value is in ReturnReg, which is what Ion expects.
         GenPrintIsize(DebugChannel::Function, masm, ReturnReg);
         break;
+      case wasm::ValType::I64:
+#ifdef ENABLE_WASM_BIGINT
+        // The return value is in ReturnReg64, which is what Ion expects.
+        GenPrintI64(DebugChannel::Function, masm, ReturnReg64);
+        break;
+#else
+        MOZ_CRASH("unexpected return type when calling from ion to wasm");
+#endif
       case wasm::ValType::F32:
         masm.canonicalizeFloat(ReturnFloat32Reg);
         GenPrintF32(DebugChannel::Function, masm, ReturnFloat32Reg);
@@ -1532,8 +1547,6 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
             MOZ_CRASH("unexpected return type when calling from ion to wasm");
         }
         break;
-      case wasm::ValType::I64:
-        MOZ_CRASH("unexpected return type when calling from ion to wasm");
     }
   }
 
