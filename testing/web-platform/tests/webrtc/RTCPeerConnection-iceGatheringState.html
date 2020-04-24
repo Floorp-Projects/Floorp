@@ -84,6 +84,23 @@
       assert_unreached(`Unhandled rejection ${err.name}: ${err.message}`)));
   }, 'iceGatheringState should eventually become complete after setLocalDescription');
 
+  const expectNoMoreGatheringStateChanges = async (t, pc) => {
+    pc.onicegatheringstatechange = t.step_func(() => assert_unreached('Should not get an icegatheringstatechange right now!'));
+  };
+
+  promise_test(async t => {
+    const pc1 = new RTCPeerConnection();
+    t.add_cleanup(() => pc1.close());
+    const pc2 = new RTCPeerConnection();
+    t.add_cleanup(() => pc2.close());
+    expectNoMoreGatheringStateChanges(t, pc2);
+    const offer = await pc1.createOffer({offerToReceiveAudio:true});
+    await pc2.setRemoteDescription(offer);
+    await pc2.setRemoteDescription(offer);
+    await pc2.setRemoteDescription({type:'rollback'});
+    await pc2.setRemoteDescription(offer);
+  }, 'sRD does not cause ICE gathering state changes')
+
   /*
     4.4.2.  RTCIceGatheringState Enum
       gathering
