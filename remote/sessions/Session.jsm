@@ -13,6 +13,10 @@ const { DomainCache } = ChromeUtils.import(
   "chrome://remote/content/domains/DomainCache.jsm"
 );
 
+const { NetworkObserver } = ChromeUtils.import(
+  "chrome://remote/content/domains/parent/network/NetworkObserver.jsm"
+);
+
 /**
  * A session represents exactly one client WebSocket connection.
  *
@@ -47,11 +51,24 @@ class Session {
   }
 
   destructor() {
+    if (
+      this.networkObserver &&
+      this.networkObserver.isActive(this.target.browser)
+    ) {
+      this.networkObserver.dispose();
+    }
     this.domains.clear();
   }
 
   execute(id, domain, command, params) {
     return this.domains.execute(domain, command, params);
+  }
+
+  get networkObserver() {
+    if (!this._networkObserver) {
+      this._networkObserver = new NetworkObserver();
+    }
+    return this._networkObserver;
   }
 
   /**
