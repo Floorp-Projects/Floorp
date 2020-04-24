@@ -7,7 +7,7 @@ that encompasses a variety of things.
 - User preferences (e.g. things set from `about:preferences`)
 - Internal application parameters (e.g.
   `javascript.options.mem.nursery.max_kb`).
-- Testing and debugging flags (e.g. `network.disable.ipc.security`).
+- Testing and debugging flags (e.g. `network.dns.native-is-localhost`).
 - Things that might need locking in an enterprise installation.
 - Application data (e.g.
   `browser.onboarding.tour.onboarding-tour-addons.completed`,
