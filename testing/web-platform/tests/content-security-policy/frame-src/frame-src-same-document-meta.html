@@ -9,7 +9,7 @@
       {
         iframe.name = "theiframe";
         iframe.src =
-          "http://www1.{{host}}:{{ports[http][0]}}/content-security-policy/support/frame.html#0";
+          "http://www1.{{host}}/content-security-policy/support/frame.html#0";
         let iframeLoaded = new Promise(resolve => { iframe.onload = resolve; });
         document.body.appendChild(iframe);
         await iframeLoaded;
@@ -29,7 +29,7 @@
           window.addEventListener('securitypolicyviolation', resolve);
         });
         iframe.src =
-          "http://www1.{{host}}:{{ports[http][0]}}/content-security-policy/support/frame.html#1";
+          "http://www1.{{host}}/content-security-policy/support/frame.html#1";
         await violation;
       }
 
@@ -39,7 +39,7 @@
           window.addEventListener('securitypolicyviolation', resolve);
         });
         window.open(
-          "http://www1.{{host}}:{{ports[http][0]}}/content-security-policy/support/frame.html#2",
+          "http://www1.{{host}}/content-security-policy/support/frame.html#2",
           "theiframe");
         await violation;
       }
