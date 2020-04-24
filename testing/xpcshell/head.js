@@ -117,10 +117,6 @@ if (runningInParent && "mozIAsyncHistory" in Ci) {
 
 try {
   if (runningInParent) {
-    // disable necko IPC security checks for xpcshell, as they lack the
-    // docshells needed to pass them
-    _Services.prefs.setBoolPref("network.disable.ipc.security", true);
-
     // Disable IPv6 lookups for 'localhost' on windows.
     if ("@mozilla.org/windows-registry-key;1" in Cc) {
       _Services.prefs.setCharPref("network.dns.ipv4OnlyDomains", "localhost");
