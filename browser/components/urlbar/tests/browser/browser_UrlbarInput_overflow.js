@@ -60,7 +60,10 @@ async function testVal(aExpected, overflowSide = "") {
   );
   if (overflowSide) {
     let side =
-      gURLBar.inputField.scrollLeft == 0 && !gURLBar.hasAttribute("rtltext")
+      gURLBar.getAttribute("domaindir") == "ltr" ||
+      (gURLBar.inputField.scrollLeft == 0 &&
+        !gURLBar.hasAttribute("rtltext") &&
+        !gURLBar.hasAttribute("domaindir"))
         ? "right"
         : "left";
     Assert.equal(side, overflowSide, "Check the overflow side");
