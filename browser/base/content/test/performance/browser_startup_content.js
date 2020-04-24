@@ -74,7 +74,6 @@ const whitelist = {
     "resource:///modules/ContentObservers.js",
     "resource://gre/modules/extensionProcessScriptLoader.js",
     "resource://devtools/client/jsonview/converter-observer.js",
-    "resource://gre/modules/WebRequestContent.js",
   ]),
 };
 
