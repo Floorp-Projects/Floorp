@@ -18,28 +18,26 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace net {
 
-DocumentChannelParent::DocumentChannelParent() {
+DocumentChannelParent::DocumentChannelParent(CanonicalBrowsingContext* aContext,
+                                             nsILoadContext* aLoadContext) {
   LOG(("DocumentChannelParent ctor [this=%p]", this));
+  // Sometime we can get this called without a BrowsingContext, so that we have
+  // an actor to call SendFailedAsyncOpen on.
+  if (aContext) {
+    mParent = new DocumentLoadListener(aContext, aLoadContext, this);
+  }
 }
 
 DocumentChannelParent::~DocumentChannelParent() {
   LOG(("DocumentChannelParent dtor [this=%p]", this));
 }
 
-bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
-                                 const DocumentChannelCreationArgs& aArgs) {
+bool DocumentChannelParent::Init(const DocumentChannelCreationArgs& aArgs) {
+  MOZ_ASSERT(mParent);
   RefPtr<nsDocShellLoadState> loadState =
       new nsDocShellLoadState(aArgs.loadState());
   LOG(("DocumentChannelParent Init [this=%p, uri=%s]", this,
        loadState->URI()->GetSpecOrDefault().get()));
-
-  if (loadState->GetLoadIdentifier()) {
-    mParent = DocumentLoadListener::ClaimParentLoad(
-        loadState->GetLoadIdentifier(), this);
-    return !!mParent;
-  }
-
-  mParent = new DocumentLoadListener(aContext, this);
 
   Maybe<ClientInfo> clientInfo;
   if (aArgs.initialClientInfo().isSome()) {
@@ -48,7 +46,7 @@ bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
 
   nsresult rv = NS_ERROR_UNEXPECTED;
   if (!mParent->Open(loadState, aArgs.loadFlags(), aArgs.cacheKey(),
-                     Some(aArgs.channelId()), aArgs.asyncOpenTime(),
+                     aArgs.channelId(), aArgs.asyncOpenTime(),
                      aArgs.timing().refOr(nullptr), std::move(clientInfo),
                      aArgs.outerWindowId(), aArgs.hasValidTransientUserAction(),
                      &rv)) {
@@ -63,7 +61,7 @@ DocumentChannelParent::RedirectToRealChannel(
     nsTArray<ipc::Endpoint<extensions::PStreamFilterParent>>&&
         aStreamFilterEndpoints,
     uint32_t aRedirectFlags, uint32_t aLoadFlags) {
-  if (!CanSend() || !mParent) {
+  if (!CanSend()) {
     return PDocumentChannelParent::RedirectToRealChannelPromise::
         CreateAndReject(ResponseRejectReason::ChannelClosed, __func__);
   }

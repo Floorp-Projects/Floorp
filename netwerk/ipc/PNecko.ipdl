@@ -88,7 +88,9 @@ parent:
   async PDNSRequest(nsCString hostName, nsCString trrServer, uint16_t type,
                     OriginAttributes originAttributes, uint32_t flags);
 
-  async PDocumentChannel(MaybeDiscardedBrowsingContext browsingContext,
+  async PDocumentChannel(PBrowser browser,
+                         MaybeDiscardedBrowsingContext browsingContext,
+                         SerializedLoadContext loadContext,
                          DocumentChannelCreationArgs args);
 
   async PWebSocketEventListener(uint64_t aInnerWindowID);

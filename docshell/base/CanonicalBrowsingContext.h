@@ -19,10 +19,6 @@
 #include "nsISHEntry.h"
 
 namespace mozilla {
-namespace net {
-class DocumentLoadListener;
-}
-
 namespace dom {
 
 class WindowGlobalParent;
@@ -114,9 +110,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // if the top-level browsing context has been discarded.
   MediaController* GetMediaController();
 
-  bool AttemptLoadURIInParent(nsDocShellLoadState* aLoadState,
-                              uint32_t* aLoadIdentifier);
-
   bool HasHistoryEntry(nsISHEntry* aEntry) const {
     return aEntry && (aEntry == mOSHE || aEntry == mLSHE);
   }
@@ -177,15 +170,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     uint64_t mPendingSwitchId;
   };
 
-  friend class net::DocumentLoadListener;
-  // Called when a DocumentLoadListener is created to start a load for
-  // this browsing context.
-  void StartDocumentLoad(net::DocumentLoadListener* aLoad);
-  // Called once DocumentLoadListener completes handling a load, and it
-  // is either complete, or handed off to the final channel to deliver
-  // data to the destination docshell.
-  void EndDocumentLoad(net::DocumentLoadListener* aLoad);
-
   // XXX(farre): Store a ContentParent pointer here rather than mProcessId?
   // Indicates which process owns the docshell.
   uint64_t mProcessId;
@@ -206,8 +190,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // browsing context tree, so it would only exist in the top level browsing
   // context.
   RefPtr<MediaController> mTabMediaController;
-
-  RefPtr<net::DocumentLoadListener> mCurrentLoad;
 
   // These are being mirrored from docshell
   nsCOMPtr<nsISHEntry> mOSHE;

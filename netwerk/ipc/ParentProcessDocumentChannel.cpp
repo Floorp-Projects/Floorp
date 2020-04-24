@@ -107,9 +107,11 @@ ParentProcessDocumentChannel::OnRedirectVerifyCallback(nsresult aResult) {
 NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
     nsIStreamListener* aListener) {
   LOG(("ParentProcessDocumentChannel AsyncOpen [this=%p]", this));
+  nsCOMPtr<nsILoadContext> loadContext;
+  NS_QueryNotificationCallbacks(this, loadContext);
 
   mDocumentLoadListener = new DocumentLoadListener(
-      GetDocShell()->GetBrowsingContext()->Canonical(), this);
+      GetDocShell()->GetBrowsingContext()->Canonical(), loadContext, this);
   LOG(("Created PPDocumentChannel with listener=%p",
        mDocumentLoadListener.get()));
 
@@ -126,7 +128,7 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
   nsresult rv = NS_OK;
   Maybe<dom::ClientInfo> initialClientInfo = mInitialClientInfo;
   if (!mDocumentLoadListener->Open(
-          mLoadState, mLoadFlags, mCacheKey, Some(mChannelId), mAsyncOpenTime,
+          mLoadState, mLoadFlags, mCacheKey, mChannelId, mAsyncOpenTime,
           mTiming, std::move(initialClientInfo),
           GetDocShell()->GetOuterWindowID(),
           GetDocShell()

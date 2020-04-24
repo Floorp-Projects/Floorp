@@ -46,10 +46,8 @@ function runTest() {
       "amosigned.xpi'</script>",
   });
 
-  BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    TESTROOT + "redirect.sjs?mode=redirect"
-  );
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+  BrowserTestUtils.loadURI(gBrowser, TESTROOT + "redirect.sjs?mode=redirect");
 }
 
 function install_blocked(installInfo) {
