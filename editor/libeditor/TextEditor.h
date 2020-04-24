@@ -59,9 +59,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   NS_IMETHOD GetDocumentIsEmpty(bool* aDocumentIsEmpty) override;
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD
-  DeleteSelection(EDirection aAction, EStripWrappers aStripWrappers) override;
-
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD
   SetDocumentCharacterSet(const nsACString& characterSet) override;
 
   NS_IMETHOD GetTextLength(int32_t* aCount) override;
@@ -206,23 +203,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   MOZ_CAN_RUN_SCRIPT virtual nsresult PasteAsQuotationAsAction(
       int32_t aClipboardType, bool aDispatchPasteEvent,
       nsIPrincipal* aPrincipal = nullptr);
-
-  /**
-   * DeleteSelectionAsAction() removes selection content or content around
-   * caret with transactions.  This should be used for handling it as an
-   * edit action.  If you'd like to remove selection for preparing to insert
-   * something, you probably should use DeleteSelectionAsSubAction().
-   *
-   * @param aDirection          How much range should be removed.
-   * @param aStripWrappers      Whether the parent blocks should be removed
-   *                            when they become empty.
-   * @param aPrincipal          Set subject principal if it may be called by
-   *                            JS.  If set to nullptr, will be treated as
-   *                            called by system.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult
-  DeleteSelectionAsAction(EDirection aDirection, EStripWrappers aStripWrappers,
-                          nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * The maximum number of characters allowed.
@@ -377,18 +357,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   using EditorBase::SetAttributeOrEquivalent;
 
   /**
-   * DeleteSelectionAsSubAction() removes selection content or content around
-   * caret with transactions.  This should be used for handling it as an
-   * edit sub-action.
-   *
-   * @param aDirection          How much range should be removed.
-   * @param aStripWrappers      Whether the parent blocks should be removed
-   *                            when they become empty.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult DeleteSelectionAsSubAction(
-      EDirection aDirection, EStripWrappers aStripWrappers);
-
-  /**
    * DeleteSelectionByDragAsAction() removes selection and dispatch "input"
    * event whose inputType is "deleteByDrag".
    */
@@ -422,16 +390,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    */
   MOZ_CAN_RUN_SCRIPT nsresult
   ReplaceSelectionAsSubAction(const nsAString& aString);
-
-  /**
-   * Extends the selection for given deletion operation
-   * If done, also update aAction to what's actually left to do after the
-   * extension.
-   */
-  nsresult ExtendSelectionForDelete(nsIEditor::EDirection* aAction);
-
-  static void GetDefaultEditorPrefs(int32_t& aNewLineHandling,
-                                    int32_t& aCaretStyle);
 
   /**
    * MaybeDoAutoPasswordMasking() may mask password if we're doing auto-masking.
@@ -602,9 +560,9 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    * @param aDirectionAndAmount Direction of the deletion.
    * @param aStripWrappers      Always ignored in TextEditor.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual EditActionResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
   HandleDeleteSelection(nsIEditor::EDirection aDirectionAndAmount,
-                        nsIEditor::EStripWrappers aStripWrappers);
+                        nsIEditor::EStripWrappers aStripWrappers) override;
 
   /**
    * ComputeValueFromTextNodeAndPaddingBRElement() tries to compute "value" of
@@ -849,7 +807,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   mutable nsString mCachedDocumentEncoderType;
 
   int32_t mMaxTextLength;
-  int32_t mCaretStyle;
 
   // Unmasked character range.  Used only when it's a password field.
   // If mUnmaskedLength is 0, it means there is no unmasked characters.

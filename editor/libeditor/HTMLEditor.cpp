@@ -1133,7 +1133,7 @@ nsresult HTMLEditor::InsertBRElementAtSelectionWithTransaction() {
     nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "TextEditor::DeleteSelectionAsSubAction(eNone, eStrip) failed");
+          "EditorBase::DeleteSelectionAsSubAction(eNone, eStrip) failed");
       return rv;
     }
   }
@@ -1655,7 +1655,7 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
       nsresult rv = DeleteSelectionAsSubAction(eNone, eNoStrip);
       if (NS_FAILED(rv)) {
         NS_WARNING(
-            "TextEditor::DeleteSelectionAsSubAction(eNone, eNoStrip) failed");
+            "EditorBase::DeleteSelectionAsSubAction(eNone, eNoStrip) failed");
         return EditorBase::ToGenericNSResult(rv);
       }
     }

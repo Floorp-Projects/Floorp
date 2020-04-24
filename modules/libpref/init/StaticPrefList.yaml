@@ -3247,6 +3247,20 @@
   value: false
   mirror: always
 
+# How line breakers are treated in single line editor:
+# * 0: Only remove the leading and trailing newlines.
+# * 1: Remove the first newline and all characters following it.
+# * 2: Replace newlines with spaces (default of Firefox).
+# * 3: Remove newlines from the string.
+# * 4: Replace newlines with commas (default of Thunderbird).
+# * 5: Collapse newlines and surrounding whitespace characters and
+#      remove them from the string.
+# Other values are treated as 1.
+- name: editor.singleLine.pasteNewlines
+  type: int32_t
+  value: 2
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "extensions."
 #---------------------------------------------------------------------------
@@ -5986,6 +6000,20 @@
 - name: layout.scrollbars.always-layerize-track
   type: RelaxedAtomicBool
   value: false
+  mirror: always
+
+# Controls caret style and word-delete during text selection.
+# 0: Use platform default
+# 1: Caret moves and blinks as when there is no selection; word
+#    delete deselects the selection and then deletes word.
+# 2: Caret moves to selection edge and is not visible during selection;
+#    word delete deletes the selection (Mac and Linux default).
+# 3: Caret moves and blinks as when there is no selection; word delete
+#    deletes the selection.
+# Windows default is 1 for word delete behavior, the rest as for 2.
+- name: layout.selection.caret_style
+  type: int32_t
+  value: 0
   mirror: always
 
 # If layout.show_previous_page is true then during loading of a new page we

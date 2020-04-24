@@ -213,7 +213,7 @@ EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
         DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eStrip);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "TextEditor::DeleteSelectionAsSubAction(eNone, eStrip) failed");
+          "EditorBase::DeleteSelectionAsSubAction(eNone, eStrip) failed");
       return EditActionIgnored(rv);
     }
   }
@@ -481,7 +481,7 @@ EditActionResult TextEditor::HandleInsertText(
         DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eStrip);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "TextEditor::DeleteSelectionAsSubAction(eNone, eStrip) failed");
+          "EditorBase::DeleteSelectionAsSubAction(eNone, eStrip) failed");
       return EditActionHandled(rv);
     }
   }

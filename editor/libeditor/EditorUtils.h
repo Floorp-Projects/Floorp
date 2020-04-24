@@ -785,6 +785,7 @@ class MOZ_RAII DOMSubtreeIterator final : public DOMIterator {
 class EditorUtils final {
  public:
   using EditorType = EditorBase::EditorType;
+  using Selection = dom::Selection;
 
   /**
    * IsDescendantOf() checks if aNode is a child or a descendant of aParent.
@@ -879,6 +880,27 @@ class EditorUtils final {
       return nullptr;  // Don't use nsGkAtoms::_empty for attribute.
     }
     return NS_GetStaticAtom(aAttribute);
+  }
+
+  /**
+   * Helper method for deletion.  When this returns true, Selection will be
+   * computed with nsFrameSelection that also requires flushed layout
+   * information.
+   */
+  static bool IsFrameSelectionRequiredToExtendSelection(
+      nsIEditor::EDirection aDirectionAndAmount, Selection& aSelection) {
+    switch (aDirectionAndAmount) {
+      case nsIEditor::eNextWord:
+      case nsIEditor::ePreviousWord:
+      case nsIEditor::eToBeginningOfLine:
+      case nsIEditor::eToEndOfLine:
+        return true;
+      case nsIEditor::ePrevious:
+      case nsIEditor::eNext:
+        return aSelection.IsCollapsed();
+      default:
+        return false;
+    }
   }
 };
 

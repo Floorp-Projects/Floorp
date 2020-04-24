@@ -1382,7 +1382,7 @@ EditActionResult HTMLEditor::HandleInsertText(
         DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eNoStrip);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "TextEditor::DeleteSelectionAsSubAction(nsIEditor::eNone, "
+          "EditorBase::DeleteSelectionAsSubAction(nsIEditor::eNone, "
           "nsIEditor::eNoStrip) failed");
       return EditActionHandled(rv);
     }
@@ -1747,7 +1747,7 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
         DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eStrip);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "TextEditor::DeleteSelectionAsSubAction(eNone, eStrip) failed");
+          "EditorBase::DeleteSelectionAsSubAction(eNone, eStrip) failed");
       return EditActionIgnored(rv);
     }
   }

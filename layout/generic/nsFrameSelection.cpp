@@ -18,6 +18,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_layout.h"
 
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -674,7 +675,7 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     scrollFlags |= Selection::SCROLL_OVERFLOW_HIDDEN;
   }
 
-  int32_t caretStyle = Preferences::GetInt("layout.selection.caret_style", 0);
+  int32_t caretStyle = StaticPrefs::layout_selection_caret_style();
   if (caretStyle == 0
 #ifdef XP_WIN
       && aAmount != eSelectLine
