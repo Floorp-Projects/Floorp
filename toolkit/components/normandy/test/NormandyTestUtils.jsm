@@ -51,6 +51,7 @@ const NormandyTestUtils = {
             "ade1c14196ec4fe0aa0a6ba40ac433d7c8d1ec985581a8a94d43dc58991b5171",
           extensionHashAlgorithm: "sha256",
           enrollmentId: NormandyUtils.generateUuid(),
+          temporaryErrorDeadline: null,
         },
         attrs
       );

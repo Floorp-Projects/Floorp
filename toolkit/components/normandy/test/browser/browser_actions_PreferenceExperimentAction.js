@@ -481,7 +481,6 @@ decorate_task(
 // Check that the appropriate set of suitabilities are considered temporary errors
 decorate_task(
   withStudiesEnabled,
-  PreferenceExperiments.withMockExperiments([]),
   async function test_temporary_errors_set_deadline() {
     let suitabilities = [
       {
@@ -517,12 +516,12 @@ decorate_task(
     );
 
     // The action should set a deadline 1 week from now. To avoid intermittent
-    // failures, give this a generous bound of 1 hour on either side.
+    // failures, give this a generous bound of 2 hour on either side.
     let now = Date.now();
     let hour = 60 * 60 * 1000;
     let expectedDeadline = now + 7 * 24 * hour;
-    let minDeadline = new Date(expectedDeadline - hour);
-    let maxDeadline = new Date(expectedDeadline + hour);
+    let minDeadline = new Date(expectedDeadline - 2 * hour);
+    let maxDeadline = new Date(expectedDeadline + 2 * hour);
 
     // For each suitability, build a decorator that sets up a suitabilty
     // environment, and then call that decorator with a sub-test that asserts
@@ -564,7 +563,6 @@ decorate_task(
 // Check that if there is an existing deadline, temporary errors don't overwrite it
 decorate_task(
   withStudiesEnabled,
-  withMockPreferences,
   PreferenceExperiments.withMockExperiments([]),
   async function test_temporary_errors_dont_overwrite_deadline() {
     let temporaryFailureSuitabilities = [
@@ -572,9 +570,9 @@ decorate_task(
       BaseAction.suitability.FILTER_ERROR,
     ];
 
-    // A deadline one hour in the future won't be hit during the test.
+    // A deadline two hours in the future won't be hit during the test.
     let now = Date.now();
-    let hour = 60 * 60 * 1000;
+    let hour = 2 * 60 * 60 * 1000;
     let unhitDeadline = new Date(now + hour).toJSON();
 
     // For each suitability, build a decorator that sets up a suitabilty
@@ -608,17 +606,15 @@ decorate_task(
 // Check that if the deadline is past, temporary errors end the experiment.
 decorate_task(
   withStudiesEnabled,
-  withMockPreferences,
-  PreferenceExperiments.withMockExperiments([]),
   async function test_temporary_errors_hit_deadline() {
     let temporaryFailureSuitabilities = [
       BaseAction.suitability.SIGNATURE_ERROR,
       BaseAction.suitability.FILTER_ERROR,
     ];
 
-    // Set a deadline of an hour in the past, so that the experiment expires.
+    // Set a deadline of two hours in the past, so that the experiment expires.
     let now = Date.now();
-    let hour = 60 * 60 * 1000;
+    let hour = 2 * 60 * 60 * 1000;
     let hitDeadline = new Date(now - hour).toJSON();
 
     // For each suitability, build a decorator that sets up a suitabilty
@@ -650,10 +646,9 @@ decorate_task(
   }
 );
 
-// Check that non-error suitabilities clear the temporary deadline
+// Check that non-temporary-error suitabilities clear the temporary deadline
 decorate_task(
   withStudiesEnabled,
-  withMockPreferences,
   PreferenceExperiments.withMockExperiments([]),
   async function test_non_temporary_error_clears_temporary_error_deadline() {
     let suitabilitiesThatShouldClearDeadline = [
@@ -667,7 +662,7 @@ decorate_task(
     // passed, only a temporary error suitability ends the experiment.
     let now = Date.now();
     let hour = 60 * 60 * 1000;
-    let hitDeadline = new Date(now - hour).toJSON();
+    let hitDeadline = new Date(now - 2 * hour).toJSON();
 
     // For each suitability, build a decorator that sets up a suitabilty
     // environment, and then call that decorator with a sub-test that asserts
@@ -699,7 +694,6 @@ decorate_task(
 // Check that invalid deadlines are reset
 decorate_task(
   withStudiesEnabled,
-  withMockPreferences,
   PreferenceExperiments.withMockExperiments([]),
   async function test_non_temporary_error_clears_temporary_error_deadline() {
     let temporaryFailureSuitabilities = [
