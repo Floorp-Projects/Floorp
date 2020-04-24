@@ -1139,14 +1139,14 @@ class nsTArray_Impl
   // Allow converting to a const array with a different kind of allocator,
   // Since the allocator doesn't matter for const arrays
   template <typename Allocator>
-  operator const nsTArray_Impl<E, Allocator>&() const& {
+  [[nodiscard]] operator const nsTArray_Impl<E, Allocator>&() const& {
     return *reinterpret_cast<const nsTArray_Impl<E, Allocator>*>(this);
   }
   // And we have to do this for our subclasses too
-  operator const nsTArray<E>&() const& {
+  [[nodiscard]] operator const nsTArray<E>&() const& {
     return *reinterpret_cast<const nsTArray<E>*>(this);
   }
-  operator const FallibleTArray<E>&() const& {
+  [[nodiscard]] operator const FallibleTArray<E>&() const& {
     return *reinterpret_cast<const FallibleTArray<E>*>(this);
   }
 
@@ -1169,7 +1169,8 @@ class nsTArray_Impl
   // Return true if this array has the same length and the same
   // elements as |aOther|.
   template <typename Allocator>
-  bool operator==(const nsTArray_Impl<E, Allocator>& aOther) const {
+  [[nodiscard]] bool operator==(
+      const nsTArray_Impl<E, Allocator>& aOther) const {
     size_type len = Length();
     if (len != aOther.Length()) {
       return false;
@@ -1187,7 +1188,9 @@ class nsTArray_Impl
 
   // Return true if this array does not have the same length and the same
   // elements as |aOther|.
-  bool operator!=(const self_type& aOther) const { return !operator==(aOther); }
+  [[nodiscard]] bool operator!=(const self_type& aOther) const {
+    return !operator==(aOther);
+  }
 
   // If Alloc == FallibleAlloc, ReplaceElementsAt might fail, without a way to
   // signal this to the caller, so we disallow copying via operator=. Callers
@@ -1213,7 +1216,8 @@ class nsTArray_Impl
   // sizeof(*this). If you want to measure anything hanging off the array, you
   // must iterate over the elements and measure them individually; hence the
   // "Shallow" prefix.
-  size_t ShallowSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+  [[nodiscard]] size_t ShallowSizeOfExcludingThis(
+      mozilla::MallocSizeOf aMallocSizeOf) const {
     if (this->UsesAutoArrayBuffer() || Hdr() == EmptyHdr()) {
       return 0;
     }
@@ -1224,7 +1228,8 @@ class nsTArray_Impl
   // sizeof(*this). If you want to measure anything hanging off the array, you
   // must iterate over the elements and measure them individually; hence the
   // "Shallow" prefix.
-  size_t ShallowSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+  [[nodiscard]] size_t ShallowSizeOfIncludingThis(
+      mozilla::MallocSizeOf aMallocSizeOf) const {
     return aMallocSizeOf(this) + ShallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
@@ -1235,14 +1240,14 @@ class nsTArray_Impl
   // This method provides direct access to the array elements.
   // @return A pointer to the first element of the array.  If the array is
   // empty, then this pointer must not be dereferenced.
-  elem_type* Elements() MOZ_NONNULL_RETURN {
+  [[nodiscard]] elem_type* Elements() MOZ_NONNULL_RETURN {
     return reinterpret_cast<elem_type*>(Hdr() + 1);
   }
 
   // This method provides direct, readonly access to the array elements.
   // @return A pointer to the first element of the array.  If the array is
   // empty, then this pointer must not be dereferenced.
-  const elem_type* Elements() const MOZ_NONNULL_RETURN {
+  [[nodiscard]] const elem_type* Elements() const MOZ_NONNULL_RETURN {
     return reinterpret_cast<const elem_type*>(Hdr() + 1);
   }
 
@@ -1250,7 +1255,7 @@ class nsTArray_Impl
   // index must be within the array bounds.
   // @param aIndex The index of an element in the array.
   // @return A reference to the i'th element of the array.
-  elem_type& ElementAt(index_type aIndex) {
+  [[nodiscard]] elem_type& ElementAt(index_type aIndex) {
     if (MOZ_UNLIKELY(aIndex >= Length())) {
       InvalidArrayIndex_CRASH(aIndex, Length());
     }
@@ -1261,7 +1266,7 @@ class nsTArray_Impl
   // The given index must be within the array bounds.
   // @param aIndex The index of an element in the array.
   // @return A const reference to the i'th element of the array.
-  const elem_type& ElementAt(index_type aIndex) const {
+  [[nodiscard]] const elem_type& ElementAt(index_type aIndex) const {
     if (MOZ_UNLIKELY(aIndex >= Length())) {
       InvalidArrayIndex_CRASH(aIndex, Length());
     }
@@ -1273,7 +1278,7 @@ class nsTArray_Impl
   // value is returned.
   // @param aIndex The index of an element in the array.
   // @param aDef   The value to return if the index is out of bounds.
-  elem_type& SafeElementAt(index_type aIndex, elem_type& aDef) {
+  [[nodiscard]] elem_type& SafeElementAt(index_type aIndex, elem_type& aDef) {
     return aIndex < Length() ? Elements()[aIndex] : aDef;
   }
 
@@ -1282,62 +1287,70 @@ class nsTArray_Impl
   // value is returned.
   // @param aIndex The index of an element in the array.
   // @param aDef   The value to return if the index is out of bounds.
-  const elem_type& SafeElementAt(index_type aIndex,
-                                 const elem_type& aDef) const {
+  [[nodiscard]] const elem_type& SafeElementAt(index_type aIndex,
+                                               const elem_type& aDef) const {
     return aIndex < Length() ? Elements()[aIndex] : aDef;
   }
 
   // Shorthand for ElementAt(aIndex)
-  elem_type& operator[](index_type aIndex) { return ElementAt(aIndex); }
+  [[nodiscard]] elem_type& operator[](index_type aIndex) {
+    return ElementAt(aIndex);
+  }
 
   // Shorthand for ElementAt(aIndex)
-  const elem_type& operator[](index_type aIndex) const {
+  [[nodiscard]] const elem_type& operator[](index_type aIndex) const {
     return ElementAt(aIndex);
   }
 
   // Shorthand for ElementAt(length - 1)
-  elem_type& LastElement() { return ElementAt(Length() - 1); }
+  [[nodiscard]] elem_type& LastElement() { return ElementAt(Length() - 1); }
 
   // Shorthand for ElementAt(length - 1)
-  const elem_type& LastElement() const { return ElementAt(Length() - 1); }
+  [[nodiscard]] const elem_type& LastElement() const {
+    return ElementAt(Length() - 1);
+  }
 
   // Shorthand for SafeElementAt(length - 1, def)
-  elem_type& SafeLastElement(elem_type& aDef) {
+  [[nodiscard]] elem_type& SafeLastElement(elem_type& aDef) {
     return SafeElementAt(Length() - 1, aDef);
   }
 
   // Shorthand for SafeElementAt(length - 1, def)
-  const elem_type& SafeLastElement(const elem_type& aDef) const {
+  [[nodiscard]] const elem_type& SafeLastElement(const elem_type& aDef) const {
     return SafeElementAt(Length() - 1, aDef);
   }
 
   // Methods for range-based for loops.
-  iterator begin() { return iterator(*this, 0); }
-  const_iterator begin() const { return const_iterator(*this, 0); }
-  const_iterator cbegin() const { return begin(); }
-  iterator end() { return iterator(*this, Length()); }
-  const_iterator end() const { return const_iterator(*this, Length()); }
-  const_iterator cend() const { return end(); }
+  [[nodiscard]] iterator begin() { return iterator(*this, 0); }
+  [[nodiscard]] const_iterator begin() const {
+    return const_iterator(*this, 0);
+  }
+  [[nodiscard]] const_iterator cbegin() const { return begin(); }
+  [[nodiscard]] iterator end() { return iterator(*this, Length()); }
+  [[nodiscard]] const_iterator end() const {
+    return const_iterator(*this, Length());
+  }
+  [[nodiscard]] const_iterator cend() const { return end(); }
 
   // Methods for reverse iterating.
-  reverse_iterator rbegin() { return reverse_iterator(end()); }
-  const_reverse_iterator rbegin() const {
+  [[nodiscard]] reverse_iterator rbegin() { return reverse_iterator(end()); }
+  [[nodiscard]] const_reverse_iterator rbegin() const {
     return const_reverse_iterator(end());
   }
-  const_reverse_iterator crbegin() const { return rbegin(); }
-  reverse_iterator rend() { return reverse_iterator(begin()); }
-  const_reverse_iterator rend() const {
+  [[nodiscard]] const_reverse_iterator crbegin() const { return rbegin(); }
+  [[nodiscard]] reverse_iterator rend() { return reverse_iterator(begin()); }
+  [[nodiscard]] const_reverse_iterator rend() const {
     return const_reverse_iterator(begin());
   }
-  const_reverse_iterator crend() const { return rend(); }
+  [[nodiscard]] const_reverse_iterator crend() const { return rend(); }
 
   // Span integration
 
-  operator mozilla::Span<elem_type>() {
+  [[nodiscard]] operator mozilla::Span<elem_type>() {
     return mozilla::Span<elem_type>(Elements(), Length());
   }
 
-  operator mozilla::Span<const elem_type>() const {
+  [[nodiscard]] operator mozilla::Span<const elem_type>() const {
     return mozilla::Span<const elem_type>(Elements(), Length());
   }
 
@@ -1351,14 +1364,16 @@ class nsTArray_Impl
   // @param aComp  The Comparator used to determine element equality.
   // @return       true if the element was found.
   template <class Item, class Comparator>
-  bool Contains(const Item& aItem, const Comparator& aComp) const {
+  [[nodiscard]] bool Contains(const Item& aItem,
+                              const Comparator& aComp) const {
     return ApplyIf(
         aItem, 0, aComp, []() { return true; }, []() { return false; });
   }
 
   // Like Contains(), but assumes a sorted array.
   template <class Item, class Comparator>
-  bool ContainsSorted(const Item& aItem, const Comparator& aComp) const {
+  [[nodiscard]] bool ContainsSorted(const Item& aItem,
+                                    const Comparator& aComp) const {
     return BinaryIndexOf(aItem, aComp) != NoIndex;
   }
 
@@ -1368,13 +1383,13 @@ class nsTArray_Impl
   // @param aItem  The item to search for.
   // @return       true if the element was found.
   template <class Item>
-  bool Contains(const Item& aItem) const {
+  [[nodiscard]] bool Contains(const Item& aItem) const {
     return Contains(aItem, nsDefaultComparator<elem_type, Item>());
   }
 
   // Like Contains(), but assumes a sorted array.
   template <class Item>
-  bool ContainsSorted(const Item& aItem) const {
+  [[nodiscard]] bool ContainsSorted(const Item& aItem) const {
     return BinaryIndexOf(aItem) != NoIndex;
   }
 
@@ -1385,8 +1400,8 @@ class nsTArray_Impl
   // @param aComp  The Comparator used to determine element equality.
   // @return       The index of the found element or NoIndex if not found.
   template <class Item, class Comparator>
-  index_type IndexOf(const Item& aItem, index_type aStart,
-                     const Comparator& aComp) const {
+  [[nodiscard]] index_type IndexOf(const Item& aItem, index_type aStart,
+                                   const Comparator& aComp) const {
     ::detail::CompareWrapper<Comparator, Item> comp(aComp);
 
     const elem_type* iter = Elements() + aStart;
@@ -1406,7 +1421,8 @@ class nsTArray_Impl
   // @param aStart The index to start from.
   // @return       The index of the found element or NoIndex if not found.
   template <class Item>
-  index_type IndexOf(const Item& aItem, index_type aStart = 0) const {
+  [[nodiscard]] index_type IndexOf(const Item& aItem,
+                                   index_type aStart = 0) const {
     return IndexOf(aItem, aStart, nsDefaultComparator<elem_type, Item>());
   }
 
@@ -1418,8 +1434,8 @@ class nsTArray_Impl
   // @param aComp  The Comparator used to determine element equality.
   // @return       The index of the found element or NoIndex if not found.
   template <class Item, class Comparator>
-  index_type LastIndexOf(const Item& aItem, index_type aStart,
-                         const Comparator& aComp) const {
+  [[nodiscard]] index_type LastIndexOf(const Item& aItem, index_type aStart,
+                                       const Comparator& aComp) const {
     ::detail::CompareWrapper<Comparator, Item> comp(aComp);
 
     size_type endOffset = aStart >= Length() ? Length() : aStart + 1;
@@ -1441,7 +1457,8 @@ class nsTArray_Impl
   //               length of the array, then the entire array is searched.
   // @return       The index of the found element or NoIndex if not found.
   template <class Item>
-  index_type LastIndexOf(const Item& aItem, index_type aStart = NoIndex) const {
+  [[nodiscard]] index_type LastIndexOf(const Item& aItem,
+                                       index_type aStart = NoIndex) const {
     return LastIndexOf(aItem, aStart, nsDefaultComparator<elem_type, Item>());
   }
 
@@ -1453,7 +1470,8 @@ class nsTArray_Impl
   // @param aComp  The Comparator used.
   // @return       The index of the found element or NoIndex if not found.
   template <class Item, class Comparator>
-  index_type BinaryIndexOf(const Item& aItem, const Comparator& aComp) const {
+  [[nodiscard]] index_type BinaryIndexOf(const Item& aItem,
+                                         const Comparator& aComp) const {
     using mozilla::BinarySearchIf;
     ::detail::CompareWrapper<Comparator, Item> comp(aComp);
 
@@ -1480,7 +1498,7 @@ class nsTArray_Impl
   // @param aItem  The item to search for.
   // @return       The index of the found element or NoIndex if not found.
   template <class Item>
-  index_type BinaryIndexOf(const Item& aItem) const {
+  [[nodiscard]] index_type BinaryIndexOf(const Item& aItem) const {
     return BinaryIndexOf(aItem, nsDefaultComparator<elem_type, Item>());
   }
 
@@ -1691,8 +1709,8 @@ class nsTArray_Impl
   // @return        The index of greatest element <= to |aItem|
   // @precondition The array is sorted
   template <class Item, class Comparator>
-  index_type IndexOfFirstElementGt(const Item& aItem,
-                                   const Comparator& aComp) const {
+  [[nodiscard]] index_type IndexOfFirstElementGt(
+      const Item& aItem, const Comparator& aComp) const {
     using mozilla::BinarySearchIf;
     ::detail::CompareWrapper<Comparator, Item> comp(aComp);
 
@@ -1708,7 +1726,7 @@ class nsTArray_Impl
 
   // A variation on the IndexOfFirstElementGt method defined above.
   template <class Item>
-  index_type IndexOfFirstElementGt(const Item& aItem) const {
+  [[nodiscard]] index_type IndexOfFirstElementGt(const Item& aItem) const {
     return IndexOfFirstElementGt(aItem, nsDefaultComparator<elem_type, Item>());
   }
 
