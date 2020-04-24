@@ -68,6 +68,8 @@ add_task(async function test_unknownContentType_dialog_layout() {
       {
         gBrowser,
         url: test.url,
+        waitForLoad: false,
+        waitForStateStop: true,
       },
       async function() {
         let uctWindow = await UCTObserver.opened.promise;
