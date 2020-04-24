@@ -61,6 +61,9 @@ class Page extends Domain {
     this._onDialogLoaded = this._onDialogLoaded.bind(this);
 
     this.enabled = false;
+    this.session.networkObserver.startTrackingBrowserNetwork(
+      this.session.target.browser
+    );
   }
 
   destructor() {
@@ -68,6 +71,9 @@ class Page extends Domain {
     this._isDestroyed = false;
     this.disable();
 
+    this.session.networkObserver.stopTrackingBrowserNetwork(
+      this.session.target.browser
+    );
     super.destructor();
   }
 
