@@ -21,7 +21,7 @@
 #include "nsEscape.h"
 #include "nsAuthInformationHolder.h"
 #include "nsIStringBundle.h"
-#include "nsIPrompt.h"
+#include "nsIPromptService.h"
 #include "netCore.h"
 #include "nsIHttpAuthenticableChannel.h"
 #include "nsIURI.h"
@@ -33,6 +33,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIURL.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/StaticPrefs_prompts.h"
 #include "mozilla/Telemetry.h"
 #include "nsIProxiedChannel.h"
 #include "nsIProxyInfo.h"
@@ -1510,27 +1511,42 @@ bool nsHttpChannelAuthProvider::ConfirmAuth(const char* bundleKey,
   rv = mAuthChannel->GetLoadGroup(getter_AddRefs(loadGroup));
   if (NS_FAILED(rv)) return true;
 
-  nsCOMPtr<nsIPrompt> prompt;
-  NS_QueryNotificationCallbacks(callbacks, loadGroup, NS_GET_IID(nsIPrompt),
-                                getter_AddRefs(prompt));
-  if (!prompt) return true;
+  nsCOMPtr<nsIPromptService> promptSvc =
+      do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
+  if (NS_FAILED(rv) || !promptSvc) {
+    return true;
+  }
 
   // do not prompt again
   mSuppressDefensiveAuth = true;
+
+  // Get current browsing context to use as prompt parent
+  nsCOMPtr<nsIChannel> chan = do_QueryInterface(mAuthChannel);
+  if (!chan) {
+    return true;
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo = chan->LoadInfo();
+  RefPtr<mozilla::dom::BrowsingContext> browsingContext;
+  loadInfo->GetBrowsingContext(getter_AddRefs(browsingContext));
 
   bool confirmed;
   if (doYesNoPrompt) {
     int32_t choice;
     bool checkState = false;
-    rv = prompt->ConfirmEx(
-        nullptr, msg.get(),
-        nsIPrompt::BUTTON_POS_1_DEFAULT + nsIPrompt::STD_YES_NO_BUTTONS,
+    rv = promptSvc->ConfirmExBC(
+        browsingContext, StaticPrefs::prompts_modalType_confirmAuth(), nullptr,
+        msg.get(),
+        nsIPromptService::BUTTON_POS_1_DEFAULT +
+            nsIPromptService::STD_YES_NO_BUTTONS,
         nullptr, nullptr, nullptr, nullptr, &checkState, &choice);
     if (NS_FAILED(rv)) return true;
 
     confirmed = choice == 0;
   } else {
-    rv = prompt->Confirm(nullptr, msg.get(), &confirmed);
+    rv = promptSvc->ConfirmBC(browsingContext,
+                              StaticPrefs::prompts_modalType_confirmAuth(),
+                              nullptr, msg.get(), &confirmed);
     if (NS_FAILED(rv)) return true;
   }
 

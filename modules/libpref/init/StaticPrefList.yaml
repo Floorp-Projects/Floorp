@@ -7346,7 +7346,7 @@
 # with userinfo
 - name: network.auth.confirmAuth.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # See the full list of values in nsICookieService.idl.
@@ -8216,9 +8216,17 @@
 # Prefs starting with "prompts."
 #---------------------------------------------------------------------------
 
-# The prompt type to use for the insecure form submit warning.
+# Prompt modal type prefs
 # See nsIPromptService::MODAL_TYPE fields for possible values.
+
+# Insecure form submit warning.
 - name: prompts.modalType.insecureFormSubmit
+  type: int32_t
+  value: 2
+  mirror: always
+
+# nsHttpChannelAuthProvider#ConfirmAuth anti-phishing prompts.
+- name: prompts.modalType.confirmAuth
   type: int32_t
   value: 2
   mirror: always
