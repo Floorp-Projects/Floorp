@@ -33,25 +33,30 @@ add_task(async function() {
     "mediaTab",
     imageInfo
   );
-  await BrowserTestUtils.waitForEvent(pageInfo, "page-info-init");
-
-  let pageInfoImg = pageInfo.document.getElementById("thepreviewimage");
-  await BrowserTestUtils.waitForEvent(pageInfoImg, "loadend");
-  Assert.equal(
-    pageInfoImg.src,
-    imageInfo.src,
-    "selected image has the correct source"
-  );
-  Assert.equal(
-    pageInfoImg.width,
-    imageInfo.width,
-    "selected image has the correct width"
-  );
-  Assert.equal(
-    pageInfoImg.height,
-    imageInfo.height,
-    "selected image has the correct height"
-  );
+  await BrowserTestUtils.waitForEvent(pageInfo, "load", true /** capture **/);
+  await new Promise(resolve => {
+    pageInfo.onFinished.push(() => {
+      let pageInfoImg = pageInfo.document.getElementById("thepreviewimage");
+      BrowserTestUtils.waitForEvent(pageInfoImg, "loadend").then(() => {
+        Assert.equal(
+          pageInfoImg.src,
+          imageInfo.src,
+          "selected image has the correct source"
+        );
+        Assert.equal(
+          pageInfoImg.width,
+          imageInfo.width,
+          "selected image has the correct width"
+        );
+        Assert.equal(
+          pageInfoImg.height,
+          imageInfo.height,
+          "selected image has the correct height"
+        );
+        resolve();
+      });
+    });
+  });
   pageInfo.close();
   BrowserTestUtils.removeTab(tab);
 });
