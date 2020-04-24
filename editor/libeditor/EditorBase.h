@@ -2548,6 +2548,18 @@ class EditorBase : public nsIEditor,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   ExtendSelectionForDelete(nsIEditor::EDirection* aDirectionAndAmount);
 
+  /**
+   * DeleteSelectionWithTransaction() removes selected content or content
+   * around caret with transactions.
+   *
+   * @param aDirectionAndAmount How much range should be removed.
+   * @param aStripWrappers      Whether the parent blocks should be removed
+   *                            when they become empty.
+   */
+  MOZ_CAN_RUN_SCRIPT virtual nsresult DeleteSelectionWithTransaction(
+      nsIEditor::EDirection aDirectionAndAmount,
+      nsIEditor::EStripWrappers aStripWrappers);
+
  private:
   nsCOMPtr<nsISelectionController> mSelectionController;
   RefPtr<Document> mDocument;

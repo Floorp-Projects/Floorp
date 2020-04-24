@@ -364,17 +364,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   DeleteSelectionByDragAsAction(bool aDispatchInputEvent);
 
   /**
-   * DeleteSelectionWithTransaction() removes selected content or content
-   * around caret with transactions.
-   *
-   * @param aDirection          How much range should be removed.
-   * @param aStripWrappers      Whether the parent blocks should be removed
-   *                            when they become empty.
-   */
-  MOZ_CAN_RUN_SCRIPT virtual nsresult DeleteSelectionWithTransaction(
-      EDirection aAction, EStripWrappers aStripWrappers);
-
-  /**
    * Replace existed string with aString.  Caller must guarantee that there
    * is a placeholder transaction which will have the transaction.
    *

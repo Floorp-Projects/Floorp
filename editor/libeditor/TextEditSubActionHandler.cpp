@@ -790,7 +790,7 @@ EditActionResult TextEditor::HandleDeleteSelectionInternal(
           DeleteSelectionWithTransaction(aDirectionAndAmount, aStripWrappers);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
-          "TextEditor::DeleteSelectionWithTransaction() failed");
+          "EditorBase::DeleteSelectionWithTransaction() failed");
       return EditActionHandled(rv);
     }
 
@@ -815,7 +815,7 @@ EditActionResult TextEditor::HandleDeleteSelectionInternal(
     return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "TextEditor::DeleteSelectionWithTransaction() failed");
+                       "EditorBase::DeleteSelectionWithTransaction() failed");
   return EditActionHandled(rv);
 }
 

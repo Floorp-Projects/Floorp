@@ -5068,6 +5068,124 @@ nsresult EditorBase::ExtendSelectionForDelete(
   }
 }
 
+nsresult EditorBase::DeleteSelectionWithTransaction(
+    nsIEditor::EDirection aDirectionAndAmount,
+    nsIEditor::EStripWrappers aStripWrappers) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
+
+  RefPtr<EditAggregateTransaction> deleteSelectionTransaction;
+  nsCOMPtr<nsINode> deleteNode;
+  int32_t deleteCharOffset = 0, deleteCharLength = 0;
+  if (!SelectionRefPtr()->IsCollapsed() ||
+      aDirectionAndAmount != nsIEditor::eNone) {
+    deleteSelectionTransaction = CreateTxnForDeleteSelection(
+        aDirectionAndAmount, getter_AddRefs(deleteNode), &deleteCharOffset,
+        &deleteCharLength);
+    if (!deleteSelectionTransaction) {
+      NS_WARNING("EditorBase::CreateTxnForDeleteSelection() failed");
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  RefPtr<CharacterData> deleteCharData =
+      CharacterData::FromNodeOrNull(deleteNode);
+  IgnoredErrorResult ignoredError;
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this, EditSubAction::eDeleteSelectedContent, aDirectionAndAmount,
+      ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "TextEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
+
+  if (IsHTMLEditor()) {
+    if (!deleteNode) {
+      // XXX We may remove multiple ranges in the following.  Therefore,
+      //     this must have a bug since we only add the first range into
+      //     the changed range.
+      TopLevelEditSubActionDataRef().WillDeleteRange(
+          *this, EditorBase::GetStartPoint(*SelectionRefPtr()),
+          EditorBase::GetEndPoint(*SelectionRefPtr()));
+    } else if (!deleteCharData) {
+      MOZ_ASSERT(deleteNode->IsContent());
+      TopLevelEditSubActionDataRef().WillDeleteContent(
+          *this, *deleteNode->AsContent());
+    }
+  }
+
+  // Notify nsIEditActionListener::WillDelete[Selection|Text]
+  if (!mActionListeners.IsEmpty()) {
+    if (!deleteNode) {
+      AutoActionListenerArray listeners(mActionListeners);
+      for (auto& listener : listeners) {
+        DebugOnly<nsresult> rvIgnored =
+            listener->WillDeleteSelection(SelectionRefPtr());
+        NS_WARNING_ASSERTION(
+            NS_SUCCEEDED(rvIgnored),
+            "nsIEditActionListener::WillDeleteSelection() failed, but ignored");
+      }
+    } else if (deleteCharData) {
+      AutoActionListenerArray listeners(mActionListeners);
+      for (auto& listener : listeners) {
+        DebugOnly<nsresult> rvIgnored =
+            listener->WillDeleteText(deleteCharData, deleteCharOffset, 1);
+        NS_WARNING_ASSERTION(
+            NS_SUCCEEDED(rvIgnored),
+            "nsIEditActionListener::WillDeleteText() failed, but ignored");
+      }
+    }
+  }
+
+  // Delete the specified amount
+  nsresult rv = DoTransactionInternal(deleteSelectionTransaction);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::DoTransactionInternal() failed");
+
+  if (IsHTMLEditor() && deleteCharData) {
+    MOZ_ASSERT(deleteNode);
+    TopLevelEditSubActionDataRef().DidDeleteText(*this,
+                                                 EditorRawDOMPoint(deleteNode));
+  }
+
+  if (mTextServicesDocument && NS_SUCCEEDED(rv) && deleteNode &&
+      !deleteCharData) {
+    RefPtr<TextServicesDocument> textServicesDocument = mTextServicesDocument;
+    textServicesDocument->DidDeleteNode(deleteNode);
+  }
+
+  // Notify nsIEditActionListener::DidDelete[Selection|Text|Node]
+  AutoActionListenerArray listeners(mActionListeners);
+  if (!deleteNode) {
+    for (auto& listener : mActionListeners) {
+      DebugOnly<nsresult> rvIgnored =
+          listener->DidDeleteSelection(SelectionRefPtr());
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rvIgnored),
+          "nsIEditActionListener::DidDeleteSelection() failed, but ignored");
+    }
+  } else if (deleteCharData) {
+    for (auto& listener : mActionListeners) {
+      DebugOnly<nsresult> rvIgnored =
+          listener->DidDeleteText(deleteCharData, deleteCharOffset, 1, rv);
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rvIgnored),
+          "nsIEditActionListener::DidDeleteText() failed, but ignored");
+    }
+  } else {
+    for (auto& listener : mActionListeners) {
+      DebugOnly<nsresult> rvIgnored = listener->DidDeleteNode(deleteNode, rv);
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rvIgnored),
+          "nsIEditActionListener::DidDeleteNode() failed, but ignored");
+    }
+  }
+
+  return rv;
+}
+
 nsresult EditorBase::CreateRange(nsINode* aStartContainer, int32_t aStartOffset,
                                  nsINode* aEndContainer, int32_t aEndOffset,
                                  nsRange** aRange) {
