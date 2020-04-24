@@ -114,39 +114,10 @@ add_task(async function test_check_signatures() {
 add_task(async function test_check_synchronization_with_signatures() {
   const port = server.identity.primaryPort;
 
+  const x5u = `http://localhost:${port}/test_remote_settings_signatures/test_cert_chain.pem`;
+
   // Telemetry reports.
   const TELEMETRY_HISTOGRAM_KEY = client.identifier;
-
-  // a response to give the client when the cert chain is expected
-  function makeMetaResponseBody(lastModified, signature) {
-    return {
-      data: {
-        id: "signed",
-        last_modified: lastModified,
-        signature: {
-          x5u: `http://localhost:${port}/test_remote_settings_signatures/test_cert_chain.pem`,
-          public_key: "fake",
-          "content-signature": `x5u=http://localhost:${port}/test_remote_settings_signatures/test_cert_chain.pem;p384ecdsa=${signature}`,
-          signature_encoding: "rs_base64url",
-          signature,
-          hash_algorithm: "sha384",
-          ref: "1yryrnmzou5rf31ou80znpnq8n",
-        },
-      },
-    };
-  }
-
-  function makeMetaResponse(eTag, body, comment) {
-    return {
-      comment,
-      sampleHeaders: [
-        "Content-Type: application/json; charset=UTF-8",
-        `ETag: \"${eTag}\"`,
-      ],
-      status: { status: 200, statusText: "OK" },
-      responseBody: JSON.stringify(body),
-    };
-  }
 
   function registerHandlers(responses) {
     function handleResponse(serverTimeMillis, request, response) {
@@ -292,22 +263,18 @@ add_task(async function test_check_synchronization_with_signatures() {
       'ETag: "1000"',
     ],
     status: { status: 200, statusText: "OK" },
-    responseBody: JSON.stringify({ data: [] }),
+    responseBody: JSON.stringify({
+      timestamp: 1000,
+      metadata: {
+        signature: {
+          x5u,
+          signature:
+            "vxuAg5rDCB-1pul4a91vqSBQRXJG_j7WOYUTswxRSMltdYmbhLRH8R8brQ9YKuNDF56F-w6pn4HWxb076qgKPwgcEBtUeZAO_RtaHXRkRUUgVzAr86yQL4-aJTbv3D6u",
+        },
+      },
+      changes: [],
+    }),
   };
-
-  // Valid signature for empty collection.
-  const RESPONSE_BODY_META_EMPTY_SIG = makeMetaResponseBody(
-    1000,
-    "vxuAg5rDCB-1pul4a91vqSBQRXJG_j7WOYUTswxRSMltdYmbhLRH8R8brQ9YKuNDF56F-w6pn4HWxb076qgKPwgcEBtUeZAO_RtaHXRkRUUgVzAr86yQL4-aJTbv3D6u"
-  );
-
-  // The collection metadata containing the signature for the empty
-  // collection.
-  const RESPONSE_META_EMPTY_SIG = makeMetaResponse(
-    1000,
-    RESPONSE_BODY_META_EMPTY_SIG,
-    "RESPONSE_META_EMPTY_SIG"
-  );
 
   // Here, we map request method and path to the available responses
   const emptyCollectionResponses = {
@@ -315,11 +282,8 @@ add_task(async function test_check_synchronization_with_signatures() {
       RESPONSE_CERT_CHAIN,
     ],
     "GET:/v1/?": [RESPONSE_SERVER_SETTINGS],
-    "GET:/v1/buckets/main/collections/signed/records?_expected=1000&_sort=-last_modified": [
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=1000": [
       RESPONSE_EMPTY_INITIAL,
-    ],
-    "GET:/v1/buckets/main/collections/signed?_expected=1000": [
-      RESPONSE_META_EMPTY_SIG,
     ],
   };
 
@@ -362,27 +326,22 @@ add_task(async function test_check_synchronization_with_signatures() {
       'ETag: "3000"',
     ],
     status: { status: 200, statusText: "OK" },
-    responseBody: JSON.stringify({ data: [RECORD2, RECORD1] }),
+    responseBody: JSON.stringify({
+      timestamp: 3000,
+      metadata: {
+        signature: {
+          x5u,
+          signature:
+            "dwhJeypadNIyzGj3QdI0KMRTPnHhFPF_j73mNrsPAHKMW46S2Ftf4BzsPMvPMB8h0TjDus13wo_R4l432DHe7tYyMIWXY0PBeMcoe5BREhFIxMxTsh9eGVXBD1e3UwRy",
+        },
+      },
+      changes: [RECORD2, RECORD1],
+    }),
   };
 
-  const RESPONSE_BODY_META_TWO_ITEMS_SIG = makeMetaResponseBody(
-    3000,
-    "dwhJeypadNIyzGj3QdI0KMRTPnHhFPF_j73mNrsPAHKMW46S2Ftf4BzsPMvPMB8h0TjDus13wo_R4l432DHe7tYyMIWXY0PBeMcoe5BREhFIxMxTsh9eGVXBD1e3UwRy"
-  );
-
-  // A signature response for the collection containg RECORD1 and RECORD2
-  const RESPONSE_META_TWO_ITEMS_SIG = makeMetaResponse(
-    3000,
-    RESPONSE_BODY_META_TWO_ITEMS_SIG,
-    "RESPONSE_META_TWO_ITEMS_SIG"
-  );
-
   const twoItemsResponses = {
-    "GET:/v1/buckets/main/collections/signed/records?_expected=3000&_sort=-last_modified&_since=1000": [
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=3000&_since=1000": [
       RESPONSE_TWO_ADDED,
-    ],
-    "GET:/v1/buckets/main/collections/signed?_expected=3000": [
-      RESPONSE_META_TWO_ITEMS_SIG,
     ],
   };
   registerHandlers(twoItemsResponses);
@@ -397,6 +356,8 @@ add_task(async function test_check_synchronization_with_signatures() {
   //
   // Check the collection with one addition and one removal has a valid
   // signature
+  const THREE_ITEMS_SIG =
+    "MIEmNghKnkz12UodAAIc3q_Y4a3IJJ7GhHF4JYNYmm8avAGyPM9fYU7NzVo94pzjotG7vmtiYuHyIX2rTHTbT587w0LdRWxipgFd_PC1mHiwUyjFYNqBBG-kifYk7kEw";
 
   // Remove RECORD1, add RECORD3
   const RESPONSE_ONE_ADDED_ONE_REMOVED = {
@@ -406,27 +367,21 @@ add_task(async function test_check_synchronization_with_signatures() {
       'ETag: "4000"',
     ],
     status: { status: 200, statusText: "OK" },
-    responseBody: JSON.stringify({ data: [RECORD3, RECORD1_DELETION] }),
+    responseBody: JSON.stringify({
+      timestamp: 4000,
+      metadata: {
+        signature: {
+          x5u,
+          signature: THREE_ITEMS_SIG,
+        },
+      },
+      changes: [RECORD3, RECORD1_DELETION],
+    }),
   };
 
-  const RESPONSE_BODY_META_THREE_ITEMS_SIG = makeMetaResponseBody(
-    4000,
-    "MIEmNghKnkz12UodAAIc3q_Y4a3IJJ7GhHF4JYNYmm8avAGyPM9fYU7NzVo94pzjotG7vmtiYuHyIX2rTHTbT587w0LdRWxipgFd_PC1mHiwUyjFYNqBBG-kifYk7kEw"
-  );
-
-  // signature response for the collection containing RECORD2 and RECORD3
-  const RESPONSE_META_THREE_ITEMS_SIG = makeMetaResponse(
-    4000,
-    RESPONSE_BODY_META_THREE_ITEMS_SIG,
-    "RESPONSE_META_THREE_ITEMS_SIG"
-  );
-
   const oneAddedOneRemovedResponses = {
-    "GET:/v1/buckets/main/collections/signed/records?_expected=4000&_sort=-last_modified&_since=3000": [
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=4000&_since=3000": [
       RESPONSE_ONE_ADDED_ONE_REMOVED,
-    ],
-    "GET:/v1/buckets/main/collections/signed?_expected=4000": [
-      RESPONSE_META_THREE_ITEMS_SIG,
     ],
   };
   registerHandlers(oneAddedOneRemovedResponses);
@@ -449,15 +404,21 @@ add_task(async function test_check_synchronization_with_signatures() {
       'ETag: "4000"',
     ],
     status: { status: 200, statusText: "OK" },
-    responseBody: JSON.stringify({ data: [] }),
+    responseBody: JSON.stringify({
+      timestamp: 4000,
+      metadata: {
+        signature: {
+          x5u,
+          signature: THREE_ITEMS_SIG,
+        },
+      },
+      changes: [],
+    }),
   };
 
   const noOpResponses = {
-    "GET:/v1/buckets/main/collections/signed/records?_expected=4100&_sort=-last_modified&_since=4000": [
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=4100&_since=4000": [
       RESPONSE_EMPTY_NO_UPDATE,
-    ],
-    "GET:/v1/buckets/main/collections/signed?_expected=4100": [
-      RESPONSE_META_THREE_ITEMS_SIG,
     ],
   };
   registerHandlers(noOpResponses);
@@ -465,6 +426,7 @@ add_task(async function test_check_synchronization_with_signatures() {
 
   equal((await client.get()).length, 2);
 
+  console.info("---------------------------------------------------------");
   //
   // 5.
   // - collection: [RECORD2, RECORD3] -> [RECORD2, RECORD3]
@@ -484,38 +446,42 @@ add_task(async function test_check_synchronization_with_signatures() {
       'ETag: "4000"',
     ],
     status: { status: 200, statusText: "OK" },
-    responseBody: JSON.stringify({ data: [RECORD2, RECORD3] }),
+    responseBody: JSON.stringify({
+      timestamp: 4000,
+      metadata: {
+        signature: {
+          x5u,
+          signature: THREE_ITEMS_SIG,
+        },
+      },
+      changes: [RECORD2, RECORD3],
+    }),
   };
 
-  // Prepare a (deliberately) bad signature to check the collection state is
-  // reset if something is inconsistent
-  const RESPONSE_BODY_META_BAD_SIG = makeMetaResponseBody(
-    4000,
-    "aW52YWxpZCBzaWduYXR1cmUK"
-  );
-  const RESPONSE_META_BAD_SIG = makeMetaResponse(
-    4000,
-    RESPONSE_BODY_META_BAD_SIG,
-    "RESPONSE_META_BAD_SIG"
-  );
+  const RESPONSE_EMPTY_NO_UPDATE_BAD_SIG = {
+    ...RESPONSE_EMPTY_NO_UPDATE,
+    responseBody: JSON.stringify({
+      timestamp: 4000,
+      metadata: {
+        signature: {
+          x5u,
+          signature: "aW52YWxpZCBzaWduYXR1cmUK",
+        },
+      },
+      changes: [],
+    }),
+  };
 
   const badSigGoodSigResponses = {
-    // In this test, we deliberately serve a bad signature initially. The
-    // subsequent signature returned is a valid one for the three item
-    // collection.
-    "GET:/v1/buckets/main/collections/signed?_expected=5000": [
-      RESPONSE_META_BAD_SIG,
-      RESPONSE_META_THREE_ITEMS_SIG,
-    ],
     // The first collection state is the three item collection (since
-    // there's a sync with no updates) - but, since the signature is wrong,
+    // there was sync with no updates before) - but, since the signature is wrong,
     // another request will be made...
-    "GET:/v1/buckets/main/collections/signed/records?_expected=5000&_sort=-last_modified&_since=4000": [
-      RESPONSE_EMPTY_NO_UPDATE,
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=5000&_since=4000": [
+      RESPONSE_EMPTY_NO_UPDATE_BAD_SIG,
     ],
-    // The next request is for the full collection. This will be checked against the valid signature
-    // - so the sync should succeed.
-    "GET:/v1/buckets/main/collections/signed/records?_expected=5000&_sort=-last_modified": [
+    // Subsequent signature returned is a valid one for the three item
+    // collection.
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=5000": [
       RESPONSE_COMPLETE_INITIAL,
     ],
   };
@@ -558,23 +524,16 @@ add_task(async function test_check_synchronization_with_signatures() {
   //   - Sync will be no-op since local is equal to server, no changes to emit.
 
   const badSigGoodOldResponses = {
-    // In this test, we deliberately serve a bad signature initially. The
-    // subsequent sitnature returned is a valid one for the three item
-    // collection.
-    "GET:/v1/buckets/main/collections/signed?_expected=5000": [
-      RESPONSE_META_BAD_SIG,
-      RESPONSE_META_EMPTY_SIG,
-    ],
     // The first collection state is the current state (since there's no update
     // - but, since the signature is wrong, another request will be made)
-    "GET:/v1/buckets/main/collections/signed/records?_expected=5000&_sort=-last_modified&_since=4000": [
-      RESPONSE_EMPTY_NO_UPDATE,
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=5000&_since=4000": [
+      RESPONSE_EMPTY_NO_UPDATE_BAD_SIG,
     ],
     // The next request is for the full collection. This will be
     // checked against the valid signature and last_modified times will be
     // compared. Sync should be a no-op, even though the signature is good,
     // because the local collection is newer.
-    "GET:/v1/buckets/main/collections/signed/records?_expected=5000&_sort=-last_modified": [
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=5000": [
       RESPONSE_EMPTY_INITIAL,
     ],
   };
@@ -603,17 +562,23 @@ add_task(async function test_check_synchronization_with_signatures() {
   // Check that a tampered local DB will be overwritten and
   // sync event contain the appropriate data.
 
+  const RESPONSE_COMPLETE_BAD_SIG = {
+    ...RESPONSE_EMPTY_NO_UPDATE,
+    responseBody: JSON.stringify({
+      timestamp: 5000,
+      metadata: {
+        signature: {
+          x5u,
+          signature: "aW52YWxpZCBzaWduYXR1cmUK",
+        },
+      },
+      changes: [RECORD2, RECORD3],
+    }),
+  };
+
   const badLocalContentGoodSigResponses = {
-    // In this test, we deliberately serve a bad signature initially. The
-    // subsequent signature returned is a valid one for the three item
-    // collection.
-    "GET:/v1/buckets/main/collections/signed?_expected=5000": [
-      RESPONSE_META_BAD_SIG,
-      RESPONSE_META_THREE_ITEMS_SIG,
-    ],
-    // The next request is for the full collection. This will be checked
-    // against the valid signature - so the sync should succeed.
-    "GET:/v1/buckets/main/collections/signed/records?_expected=5000&_sort=-last_modified": [
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=5000": [
+      RESPONSE_COMPLETE_BAD_SIG,
       RESPONSE_COMPLETE_INITIAL,
     ],
   };
@@ -659,7 +624,7 @@ add_task(async function test_check_synchronization_with_signatures() {
   // Check that a failing signature throws after retry, and that sync changes
   // are not applied.
 
-  const RESPONSE_ONLY_RECORD4 = {
+  const RESPONSE_ONLY_RECORD4_BAD_SIG = {
     comment: "Delete RECORD3, create RECORD4",
     sampleHeaders: [
       "Content-Type: application/json; charset=UTF-8",
@@ -667,7 +632,14 @@ add_task(async function test_check_synchronization_with_signatures() {
     ],
     status: { status: 200, statusText: "OK" },
     responseBody: JSON.stringify({
-      data: [
+      timestamp: 6000,
+      metadata: {
+        signature: {
+          x5u,
+          signature: "wrong-sig-here-too",
+        },
+      },
+      changes: [
         {
           id: "f765df30-b2f1-42f6-9803-7bd5a07b5098",
           last_modified: 6000,
@@ -676,19 +648,11 @@ add_task(async function test_check_synchronization_with_signatures() {
     }),
   };
   const allBadSigResponses = {
-    // In this test, we deliberately serve only a bad signature.
-    "GET:/v1/buckets/main/collections/signed?_expected=6000": [
-      RESPONSE_META_BAD_SIG,
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=6000&_since=4000": [
+      RESPONSE_EMPTY_NO_UPDATE_BAD_SIG,
     ],
-    // The first collection state is the three item collection (since
-    // there's a sync with no updates) - but, since the signature is wrong,
-    // another request will be made...
-    "GET:/v1/buckets/main/collections/signed/records?_expected=6000&_sort=-last_modified&_since=4000": [
-      RESPONSE_EMPTY_NO_UPDATE,
-    ],
-    // The next request is for the full collection.
-    "GET:/v1/buckets/main/collections/signed/records?_expected=6000&_sort=-last_modified": [
-      RESPONSE_ONLY_RECORD4,
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=6000": [
+      RESPONSE_ONLY_RECORD4_BAD_SIG,
     ],
   };
 
@@ -747,24 +711,26 @@ add_task(async function test_check_synchronization_with_signatures() {
   //
   // Check that we don't apply changes when signature is missing in remote.
 
-  const RESPONSE_META_NO_SIG = {
+  const RESPONSE_NO_SIG = {
     sampleHeaders: [
       "Content-Type: application/json; charset=UTF-8",
       `ETag: \"123456\"`,
     ],
     status: { status: 200, statusText: "OK" },
     responseBody: JSON.stringify({
-      data: {
+      metadata: {
         last_modified: 123456,
       },
+      changes: [],
+      timestamp: 123456,
     }),
   };
 
   const missingSigResponses = {
     // In this test, we deliberately serve metadata without the signature attribute.
     // As if the collection was not signed.
-    "GET:/v1/buckets/main/collections/signed?_expected=6000": [
-      RESPONSE_META_NO_SIG,
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=6000": [
+      RESPONSE_NO_SIG,
     ],
   };
 
