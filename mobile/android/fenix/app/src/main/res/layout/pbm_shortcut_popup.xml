@@ -3,39 +3,39 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <ImageView
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_gravity="end"
-            android:importantForAccessibility="no"
-            app:srcCompat="@drawable/ic_pbm_triangle" />
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_gravity="end"
+        android:layout_marginEnd="16dp"
+        android:importantForAccessibility="no"
+        app:srcCompat="@drawable/ic_pbm_triangle" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/cfr_background_gradient">
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/cfr_background_gradient">
 
         <TextView
-                android:id="@+id/cfr_message"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="32dp"
-                android:lineSpacingExtra="2dp"
-                android:text="@string/cfr_message"
-                android:textColor="@color/primary_text_dark_theme"
-                android:textSize="16sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:fontFamily="@font/metropolis_medium" />
+            android:id="@+id/cfr_message"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="32dp"
+            android:lineSpacingExtra="2dp"
+            android:text="@string/cfr_message"
+            android:textColor="@color/primary_text_dark_theme"
+            android:textSize="16sp"
+            app:fontFamily="@font/metropolis_medium"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <Button
             android:id="@+id/cfr_pos_button"
@@ -56,17 +56,17 @@
             app:layout_constraintTop_toBottomOf="@id/cfr_message" />
 
         <Button
-                android:id="@+id/cfr_neg_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:text="@string/cfr_neg_button_text"
-                android:textAllCaps="false"
-                android:textColor="@color/white_color"
-                android:textSize="16sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/cfr_pos_button"
-                style="@style/MetropolisButton" />
+            android:id="@+id/cfr_neg_button"
+            style="@style/MetropolisButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:text="@string/cfr_neg_button_text"
+            android:textAllCaps="false"
+            android:textColor="@color/white_color"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cfr_pos_button" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </LinearLayout>
