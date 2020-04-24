@@ -5,10 +5,9 @@ const { evaluate } = ChromeUtils.import(
   "chrome://marionette/content/evaluate.js"
 );
 
-const SVGNS = "http://www.w3.org/2000/svg";
-const XBLNS = "http://www.mozilla.org/xbl";
-const XHTMLNS = "http://www.w3.org/1999/xhtml";
-const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const SVG_NS = "http://www.w3.org/2000/svg";
+const XHTML_NS = "http://www.w3.org/1999/xhtml";
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 class Element {
   constructor(tagName, attrs = {}) {
@@ -31,35 +30,27 @@ class Element {
 class DOMElement extends Element {
   constructor(tagName, attrs = {}) {
     super(tagName, attrs);
-    this.namespaceURI = XHTMLNS;
+    this.namespaceURI = XHTML_NS;
   }
 }
 
 class SVGElement extends Element {
   constructor(tagName, attrs = {}) {
     super(tagName, attrs);
-    this.namespaceURI = SVGNS;
+    this.namespaceURI = SVG_NS;
   }
 }
 
 class XULElement extends Element {
   constructor(tagName, attrs = {}) {
     super(tagName, attrs);
-    this.namespaceURI = XULNS;
-  }
-}
-
-class XBLElement extends XULElement {
-  constructor(tagName, attrs = {}) {
-    super(tagName, attrs);
-    this.namespaceURI = XBLNS;
+    this.namespaceURI = XUL_NS;
   }
 }
 
 const domEl = new DOMElement("p");
 const svgEl = new SVGElement("rect");
 const xulEl = new XULElement("browser");
-const xblEl = new XBLElement("framebox");
 
 const seenEls = new element.Store();
 
@@ -80,7 +71,6 @@ add_test(function test_toJSON_types() {
   ok(evaluate.toJSON(domEl, seenEls) instanceof WebElement);
   ok(evaluate.toJSON(svgEl, seenEls) instanceof WebElement);
   ok(evaluate.toJSON(xulEl, seenEls) instanceof WebElement);
-  ok(evaluate.toJSON(xblEl, seenEls) instanceof WebElement);
 
   // toJSON
   equal(

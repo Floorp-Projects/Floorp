@@ -16,7 +16,7 @@ add_task(async function() {
   dummyBtn.setAttribute("removable", "true");
   CustomizableUI.getCustomizationTarget(gNavBar).appendChild(dummyBtn);
   let popupSet = document.getElementById("mainPopupSet");
-  gLazyArea = document.createElementNS(kNSXUL, "panel");
+  gLazyArea = document.createXULElement("panel");
   gLazyArea.id = kLazyAreaId;
   gLazyArea.setAttribute("hidden", "true");
   popupSet.appendChild(gLazyArea);
