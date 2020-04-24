@@ -318,12 +318,16 @@ ContentBlocking::AllowAccessFor(
     // Only continue to run in child processes when aParentContext is
     // in-process and tracking origin is not third-party with respect to
     // the parent window.
-    bool isThirdParty;
-    nsCOMPtr<nsIPrincipal> principal =
-        AntiTrackingUtils::GetPrincipal(aParentContext);
-    Unused << trackingPrincipal->IsThirdPartyPrincipal(principal,
-                                                       &isThirdParty);
-    runInSameProcess = aParentContext->IsInProcess() && !isThirdParty;
+    if (aParentContext->IsInProcess()) {
+      bool isThirdParty;
+      nsCOMPtr<nsIPrincipal> principal =
+          AntiTrackingUtils::GetPrincipal(aParentContext);
+      Unused << trackingPrincipal->IsThirdPartyPrincipal(principal,
+                                                         &isThirdParty);
+      runInSameProcess = !isThirdParty;
+    } else {
+      runInSameProcess = false;
+    }
   }
 
   if (runInSameProcess) {
