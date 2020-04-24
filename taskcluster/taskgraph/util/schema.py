@@ -205,6 +205,8 @@ OptimizationSchema = voluptuous.Any(
     # search the index for the given index namespaces, and replace this task if found
     # the search occurs in order, with the first match winning
     {'index-search': [text_type]},
+    {'push-interval-10': list(schedules.ALL_COMPONENTS)},
+    {'push-interval-25': list(schedules.ALL_COMPONENTS)},
     # consult SETA and skip this task if it is low-value
     {'seta': None},
     # skip this task if none of the given file patterns match
