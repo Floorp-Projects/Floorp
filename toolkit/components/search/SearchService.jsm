@@ -939,32 +939,6 @@ SearchService.prototype = {
     // cache as we can calculate it all on startup anyway from the engines
     // configuration.
     if (gModernConfig) {
-      // We only allow the old defaultenginename pref for distributions.
-      // We can't use `isPartnerBuild` because we need to allow reading
-      // of the defaultenginename pref for funnelcakes.
-      if (SearchUtils.distroID && !privateMode) {
-        let defaultPrefB = Services.prefs.getDefaultBranch(
-          SearchUtils.BROWSER_SEARCH_PREF
-        );
-        try {
-          let defaultEngineName = defaultPrefB.getComplexValue(
-            "defaultenginename",
-            Ci.nsIPrefLocalizedString
-          ).data;
-
-          let defaultEngine = this.getEngineByName(defaultEngineName);
-          if (defaultEngine) {
-            return defaultEngine;
-          }
-        } catch (ex) {
-          // If the default pref is invalid (e.g. an add-on set it to a bogus value)
-          // we'll fallback and use the default engine from the configuration.
-          // Worst case, getEngineByName will just return null, which is the best we can do.
-        }
-      }
-
-      // If we got this far, the distro hasn't set the default engine, so
-      // get it from the configuration.
       let defaultEngine = this._getEngineByWebExtensionDetails(
         privateMode && this._searchPrivateDefault
           ? this._searchPrivateDefault
@@ -1146,7 +1120,6 @@ SearchService.prototype = {
   async _loadEngines(cache, isReload) {
     SearchUtils.log("_loadEngines: start");
     let engines = await this._findEngines();
-    let distDirs = await this._getDistibutionEngineDirectories();
 
     let buildID = Services.appinfo.platformBuildID;
     let rebuildCache =
@@ -1173,13 +1146,8 @@ SearchService.prototype = {
           cache.builtInEngineList.length != engines.length ||
           engines.some(notInCacheEngines);
 
-        // We don't do a built-in list comparison with distributions because they
-        // have a different set of built-ins to that given from the configuration.
-        // Once distributions are incorporated into the modern config, we could
-        // probably move the distroID check to be legacy config only.
         if (
           !rebuildCache &&
-          SearchUtils.distroID == "" &&
           cache.engines.filter(e => e._isBuiltin).length !=
             cache.builtInEngineList.length
         ) {
@@ -1218,14 +1186,6 @@ SearchService.prototype = {
     if (!rebuildCache) {
       SearchUtils.log("_loadEngines: loading from cache directories");
       if (gModernConfig) {
-        // This isn't ideal, as it means re-processing the xml files on each
-        // startup, however the switch to in-tree distributions (bug 1622978)
-        // should be done before we release modern config, so we can get away
-        // with it for now.
-        for (let loadDir of distDirs) {
-          let enginesFromDir = await this._loadEnginesFromDir(loadDir);
-          enginesFromDir.forEach(this._addEngineToStore, this);
-        }
         const newEngines = await this._loadEnginesFromConfig(engines, isReload);
         for (let engine of newEngines) {
           this._addEngineToStore(engine);
@@ -1249,14 +1209,16 @@ SearchService.prototype = {
     SearchUtils.log(
       "_loadEngines: Absent or outdated cache. Loading engines from disk."
     );
-    for (let loadDir of distDirs) {
-      let enginesFromDir = await this._loadEnginesFromDir(loadDir);
-      enginesFromDir.forEach(this._addEngineToStore, this);
-    }
     if (gModernConfig) {
       let newEngines = await this._loadEnginesFromConfig(engines, isReload);
       newEngines.forEach(this._addEngineToStore, this);
     } else {
+      let distDirs = await this._getDistibutionEngineDirectories();
+      for (let loadDir of distDirs) {
+        let enginesFromDir = await this._loadEnginesFromDir(loadDir);
+        enginesFromDir.forEach(this._addEngineToStore, this);
+      }
+
       let engineList = this._enginesToLocales(engines);
       for (let [id, locales] of engineList) {
         await this.ensureBuiltinExtension(id, locales, isReload);
@@ -2302,7 +2264,7 @@ SearchService.prototype = {
       addedEngines.add(engine.name);
     }
 
-    if (SearchUtils.distroID) {
+    if (!gModernConfig && SearchUtils.distroID) {
       try {
         var extras = Services.prefs.getChildList(
           SearchUtils.BROWSER_SEARCH_PREF + "order.extra."
