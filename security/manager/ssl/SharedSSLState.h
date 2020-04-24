@@ -36,6 +36,12 @@ class SharedSSLState {
   void SetSignedCertTimestampsEnabled(bool signedCertTimestampsEnabled) {
     mSignedCertTimestampsEnabled = signedCertTimestampsEnabled;
   }
+  void SetPinningMode(CertVerifier::PinningMode aPinningMode) {
+    mPinningMode = aPinningMode;
+  }
+  void SetNameMatchingMode(BRNameMatchingPolicy::Mode aMode) {
+    mNameMatchingMode = aMode;
+  }
 
   // The following methods may be called from any thread
   bool SocketCreated();
@@ -46,6 +52,8 @@ class SharedSSLState {
   bool IsSignedCertTimestampsEnabled() const {
     return mSignedCertTimestampsEnabled;
   }
+  CertVerifier::PinningMode PinningMode() { return mPinningMode; }
+  BRNameMatchingPolicy::Mode NameMatchingMode() { return mNameMatchingMode; }
 
  private:
   ~SharedSSLState();
@@ -63,6 +71,8 @@ class SharedSSLState {
   bool mOCSPStaplingEnabled;
   bool mOCSPMustStapleEnabled;
   bool mSignedCertTimestampsEnabled;
+  CertVerifier::PinningMode mPinningMode;
+  BRNameMatchingPolicy::Mode mNameMatchingMode;
 };
 
 SharedSSLState* PublicSSLState();

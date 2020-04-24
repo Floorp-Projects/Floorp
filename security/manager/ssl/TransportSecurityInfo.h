@@ -130,6 +130,7 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   bool mNPNCompleted;
   nsCString mNegotiatedNPN;
   bool mResumed;
+  bool mIsBuiltCertChainRootBuiltInRoot;
 
  private:
   uint32_t mSecurityState;

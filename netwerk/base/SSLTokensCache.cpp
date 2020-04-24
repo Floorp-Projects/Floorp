@@ -154,6 +154,7 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
     return rv;
   }
 
+  Maybe<bool> isBuiltCertChainRootBuiltInRoot;
   if (!succeededCertArray.IsEmpty()) {
     succeededCertChainBytes.emplace();
     for (const auto& cert : succeededCertArray) {
@@ -164,6 +165,13 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
       }
       succeededCertChainBytes->AppendElement(std::move(rawCert));
     }
+
+    bool builtInRoot = false;
+    rv = aSecInfo->GetIsBuiltCertChainRootBuiltInRoot(&builtInRoot);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    isBuiltCertChainRootBuiltInRoot.emplace(builtInRoot);
   }
 
   bool isEV;
@@ -206,6 +214,9 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
 
   rec->mSessionCacheInfo.mCertificateTransparencyStatus =
       certificateTransparencyStatus;
+
+  rec->mSessionCacheInfo.mIsBuiltCertChainRootBuiltInRoot =
+      std::move(isBuiltCertChainRootBuiltInRoot);
 
   gInstance->mCacheSize += rec->Size();
 
