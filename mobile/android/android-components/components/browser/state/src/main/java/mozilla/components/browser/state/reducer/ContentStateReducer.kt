@@ -105,6 +105,12 @@ internal object ContentStateReducer {
             is ContentAction.ViewportFitChangedAction -> updateContentState(state, action.sessionId) {
                 it.copy(layoutInDisplayCutoutMode = action.layoutInDisplayCutoutMode)
             }
+            is ContentAction.UpdateBackNavigationStateAction -> updateContentState(state, action.sessionId) {
+                it.copy(canGoBack = action.canGoBack)
+            }
+            is ContentAction.UpdateForwardNavigationStateAction -> updateContentState(state, action.sessionId) {
+                it.copy(canGoForward = action.canGoForward)
+            }
         }
     }
 }

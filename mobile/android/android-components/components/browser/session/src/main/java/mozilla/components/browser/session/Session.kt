@@ -18,6 +18,8 @@ import mozilla.components.browser.state.action.ContentAction.AddFindResultAction
 import mozilla.components.browser.state.action.ContentAction.ClearFindResultsAction
 import mozilla.components.browser.state.action.ContentAction.ConsumeHitResultAction
 import mozilla.components.browser.state.action.ContentAction.FullScreenChangedAction
+import mozilla.components.browser.state.action.ContentAction.UpdateBackNavigationStateAction
+import mozilla.components.browser.state.action.ContentAction.UpdateForwardNavigationStateAction
 import mozilla.components.browser.state.action.ContentAction.RemoveThumbnailAction
 import mozilla.components.browser.state.action.ContentAction.UpdateHitResultAction
 import mozilla.components.browser.state.action.ContentAction.UpdateLoadingStateAction
@@ -227,6 +229,7 @@ class Session(
      */
     var canGoBack: Boolean by Delegates.observable(false) { _, old, new ->
         notifyObservers(old, new) { onNavigationStateChanged(this@Session, new, canGoForward) }
+        store?.syncDispatch(UpdateBackNavigationStateAction(id, canGoBack))
     }
 
     /**
@@ -234,6 +237,7 @@ class Session(
      */
     var canGoForward: Boolean by Delegates.observable(false) { _, old, new ->
         notifyObservers(old, new) { onNavigationStateChanged(this@Session, canGoBack, new) }
+        store?.syncDispatch(UpdateForwardNavigationStateAction(id, canGoForward))
     }
 
     /**

@@ -35,6 +35,8 @@ import mozilla.components.concept.engine.window.WindowRequest
  * @property searchRequest the last received [SearchRequest]
  * @property fullScreen true if the page is full screen, false if not.
  * @property layoutInDisplayCutoutMode the display layout cutout mode state.
+ * @property canGoBack whether or not there's an history item to navigate back to.
+ * @property canGoForward whether or not there's an history item to navigate forward to.
  */
 data class ContentState(
     val url: String,
@@ -53,5 +55,7 @@ data class ContentState(
     val windowRequest: WindowRequest? = null,
     val searchRequest: SearchRequest? = null,
     val fullScreen: Boolean = false,
-    val layoutInDisplayCutoutMode: Int = 0
+    val layoutInDisplayCutoutMode: Int = 0,
+    val canGoBack: Boolean = false,
+    val canGoForward: Boolean = false
 )
