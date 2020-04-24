@@ -148,7 +148,7 @@ static bool test_basic_array(ElementType* data, size_t dataLen,
   for (i = 0; i < copy.Length(); ++i) {
     if (ary[i] != copy[i]) return false;
   }
-  if (!ary.AppendElements(copy)) return false;
+  ary.AppendElements(copy);
   size_t cap = ary.Capacity();
   ary.RemoveElementsAt(copy.Length(), copy.Length());
   ary.Compact();

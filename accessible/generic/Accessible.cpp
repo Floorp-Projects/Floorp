@@ -2130,8 +2130,9 @@ bool Accessible::InsertChildAt(uint32_t aIndex, Accessible* aChild) {
   if (!aChild) return false;
 
   if (aIndex == mChildren.Length()) {
-    if (!mChildren.AppendElement(aChild)) return false;
-
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    mChildren.AppendElement(aChild);
   } else {
     // XXX(Bug 1631371) Check if this should use a fallible operation as it
     // pretended earlier.

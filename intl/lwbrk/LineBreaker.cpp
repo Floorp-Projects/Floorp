@@ -921,16 +921,18 @@ int32_t LineBreaker::WordMove(const char16_t* aText, uint32_t aLen,
 
   int32_t ret;
   AutoTArray<uint8_t, 2000> breakState;
-  if (!textNeedsJISx4051 || !breakState.AppendElements(end - begin)) {
+  if (!textNeedsJISx4051) {
     // No complex text character, do not try to do complex line break.
     // (This is required for serializers. See Bug #344816.)
-    // Also fall back to this when out of memory.
     if (aDirection < 0) {
       ret = (begin == int32_t(aPos)) ? begin - 1 : begin;
     } else {
       ret = end;
     }
   } else {
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    breakState.AppendElements(end - begin);
     GetJISx4051Breaks(aText + begin, end - begin, WordBreak::Normal,
                       Strictness::Auto, false, breakState.Elements());
 

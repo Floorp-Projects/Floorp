@@ -1287,7 +1287,7 @@ static void test_parse_string_helper(const char* str, char separator, int len,
                                      const char* s1, const char* s2) {
   nsCString data(str);
   nsTArray<nsCString> results;
-  EXPECT_TRUE(ParseString(data, separator, results));
+  ParseString(data, separator, results);
   EXPECT_EQ(int(results.Length()), len);
   const char* strings[] = {s1, s2};
   for (int i = 0; i < len; ++i) {

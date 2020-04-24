@@ -105,9 +105,9 @@ nsresult nsRangeFrame::MakeAnonymousDiv(Element** aResult,
   // Associate the pseudo-element with the anonymous child.
   resultElement->SetPseudoElementType(aPseudoType);
 
-  if (!aElements.AppendElement(resultElement)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier, or change the return type to void.
+  aElements.AppendElement(resultElement);
 
   resultElement.forget(aResult);
   return NS_OK;

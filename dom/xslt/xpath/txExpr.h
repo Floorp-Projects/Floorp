@@ -225,7 +225,10 @@ class FunctionCall : public Expr {
    * @return nsresult indicating out of memory
    */
   nsresult addParam(Expr* aExpr) {
-    return mParams.AppendElement(aExpr) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier, or change the return type to void.
+    mParams.AppendElement(aExpr);
+    return NS_OK;
   }
 
   /**
@@ -448,7 +451,10 @@ class PredicateList {
    */
   nsresult add(Expr* aExpr) {
     NS_ASSERTION(aExpr, "missing expression");
-    return mPredicates.AppendElement(aExpr) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier, or change the return type to void.
+    mPredicates.AppendElement(aExpr);
+    return NS_OK;
   }
 
   nsresult evaluatePredicates(txNodeSet* aNodes, txIMatchContext* aContext);
@@ -784,7 +790,10 @@ class UnionExpr : public Expr {
    * @return nsresult indicating out of memory
    */
   nsresult addExpr(Expr* aExpr) {
-    return mExpressions.AppendElement(aExpr) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier, or change the return type to void.
+    mExpressions.AppendElement(aExpr);
+    return NS_OK;
   }
 
   /**
@@ -826,7 +835,10 @@ class txNamedAttributeStep : public Expr {
 class txUnionNodeTest : public txNodeTest {
  public:
   nsresult addNodeTest(txNodeTest* aNodeTest) {
-    return mNodeTests.AppendElement(aNodeTest) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier, or change the return type to void.
+    mNodeTests.AppendElement(aNodeTest);
+    return NS_OK;
   }
 
   TX_DECL_NODE_TEST

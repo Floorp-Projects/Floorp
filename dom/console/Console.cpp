@@ -2919,10 +2919,8 @@ bool Console::ArgumentData::Initialize(JSContext* aCx,
                                        const Sequence<JS::Value>& aArguments) {
   mGlobal = JS::CurrentGlobalOrNull(aCx);
 
-  for (uint32_t i = 0; i < aArguments.Length(); ++i) {
-    if (NS_WARN_IF(!mArguments.AppendElement(aArguments[i]))) {
-      return false;
-    }
+  if (NS_WARN_IF(!mArguments.AppendElements(aArguments, fallible))) {
+    return false;
   }
 
   return true;

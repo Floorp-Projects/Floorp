@@ -419,9 +419,9 @@ nsIdleService::AddIdleObserver(nsIObserver* aObserver, uint32_t aIdleTimeInS) {
   // Put the time + observer in a struct we can keep:
   IdleListener listener(aObserver, aIdleTimeInS);
 
-  if (!mArrayListeners.AppendElement(listener)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier.
+  mArrayListeners.AppendElement(listener);
 
   // Create our timer callback if it's not there already.
   if (!mTimer) {

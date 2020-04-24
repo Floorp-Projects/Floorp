@@ -57,9 +57,11 @@ class DOMStringList : public nsISupports, public nsWrapperCache {
   }
 
   bool Add(const nsAString& aName) {
-    // XXXbz mNames should really be a fallible array; otherwise this
-    // return value is meaningless.
-    return mNames.AppendElement(aName) != nullptr;
+    // XXXbz(Bug 1631374) mNames should really be a fallible array; otherwise
+    // this return value is meaningless. return mNames.AppendElement(aName) !=
+    // nullptr;
+    mNames.AppendElement(aName);
+    return true;
   }
 
   void Clear() { mNames.Clear(); }
