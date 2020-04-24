@@ -3050,9 +3050,9 @@ nsresult HTMLEditor::DeleteSelectionWithTransaction(
   MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
 
   nsresult rv =
-      TextEditor::DeleteSelectionWithTransaction(aAction, aStripWrappers);
+      EditorBase::DeleteSelectionWithTransaction(aAction, aStripWrappers);
   if (NS_FAILED(rv)) {
-    NS_WARNING("TextEditor::DeleteSelectionWithTransaction() failed");
+    NS_WARNING("EditorBase::DeleteSelectionWithTransaction() failed");
     return rv;
   }
 
