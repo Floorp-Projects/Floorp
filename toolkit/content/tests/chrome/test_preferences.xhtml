@@ -413,6 +413,15 @@
       ok(!GetPreference(aPrefWindow, "tests.static_preference_bool").value, "redirected command bool");
     }
 
+    function RunCheckDisabled(aPrefWindow)
+    {
+      ok(!GetXULElement(aPrefWindow, "disabled_checkbox").disabled, "Checkbox should be enabled");
+      GetPreference(aPrefWindow, "tests.disabled_preference_bool").updateControlDisabledState(true);
+      ok(GetXULElement(aPrefWindow, "disabled_checkbox").disabled, "Checkbox should be disabled");
+      GetPreference(aPrefWindow, "tests.locked_preference_bool").updateControlDisabledState(false);;
+      ok(GetXULElement(aPrefWindow, "locked_checkbox").disabled, "Locked checkbox should stay disabled");
+    }
+
     function RunResetPrefTest(aPrefWindow)
     {
       // try resetting the prefs to default values
@@ -499,11 +508,21 @@
       window.docShell.rootTreeItem.domWindow.openDialog("window_preferences_commandretarget.xhtml", "", "modal", RunCheckCommandRedirect, true);
     }
 
+    function RunTestDisabled()
+    {
+      // Because this pref is on the default branch and locked, we need to set it before opening the dialog.
+      const defaultBranch = kPref.getDefaultBranch("");
+      defaultBranch.setBoolPref("tests.locked_preference_bool", true);
+      defaultBranch.lockPref("tests.locked_preference_bool");
+      window.docShell.rootTreeItem.domWindow.openDialog("window_preferences_disabled.xhtml", "", "modal", RunCheckDisabled, true);
+    }
+
     function RunTest()
     {
       RunTestInstant();
       RunTestNonInstant();
       RunTestCommandRedirect();
+      RunTestDisabled();
       SimpleTest.finish();
     }
   ]]>
