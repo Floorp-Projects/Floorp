@@ -13,14 +13,14 @@ Services.scriptloader.loadSubScript(
 // So that PERFHERDER data can be extracted from the logs.
 SimpleTest.requestCompleteLog();
 
-function getFilteredModules(filter, loaders) {
+function getFilteredModules(filters, loaders) {
   let modules = [];
   for (const l of loaders) {
     const loaderModulesMap = l.modules;
     const loaderModulesPaths = Object.keys(loaderModulesMap);
     modules = modules.concat(loaderModulesPaths);
   }
-  return modules.filter(url => url.includes(filter));
+  return modules.filter(url => filters.some(filter => url.includes(filter)));
 }
 
 function countCharsInModules(modules) {
@@ -43,14 +43,20 @@ function countCharsInModules(modules) {
  * - panelName {String} reused in identifiers for perfherder data
  */
 function runMetricsTest({ filterString, loaders, panelName }) {
-  const allModules = getFilteredModules("", loaders);
-  const panelModules = getFilteredModules(filterString, loaders);
+  const allModules = getFilteredModules([""], loaders);
+  const panelModules = getFilteredModules([filterString], loaders);
+  const vendoredModules = getFilteredModules(
+    ["devtools/client/debugger/dist/vendors", "devtools/client/shared/vendor/"],
+    loaders
+  );
 
   const allModulesCount = allModules.length;
   const panelModulesCount = panelModules.length;
+  const vendoredModulesCount = vendoredModules.length;
 
   const allModulesChars = countCharsInModules(allModules);
   const panelModulesChars = countCharsInModules(panelModules);
+  const vendoredModulesChars = countCharsInModules(vendoredModules);
 
   const PERFHERDER_DATA = {
     framework: {
@@ -77,6 +83,14 @@ function runMetricsTest({ filterString, loaders, panelName }) {
             name: "all-chars",
             value: allModulesChars,
           },
+          {
+            name: "vendored-modules",
+            value: vendoredModulesCount,
+          },
+          {
+            name: "vendored-chars",
+            value: vendoredModulesChars,
+          },
         ],
       },
     ],
@@ -92,10 +106,16 @@ function runMetricsTest({ filterString, loaders, panelName }) {
     allModulesChars > panelModulesChars && panelModulesChars > 0,
     "Successfully recorded char count for " + panelName
   );
+
+  // Easy way to check how many vendored chars we have for a given panel.
+  const percentage = ((100 * vendoredModulesChars) / allModulesChars).toFixed(
+    1
+  );
+  info(`Percentage of vendored chars for ${panelName}: ${percentage}%`);
 }
 
 function getDuplicatedModules(loaders) {
-  const allModules = getFilteredModules("", loaders);
+  const allModules = getFilteredModules([""], loaders);
 
   const uniqueModules = new Set();
   const duplicatedModules = new Set();

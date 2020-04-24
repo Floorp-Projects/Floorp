@@ -13,21 +13,22 @@
 
 ProfilerBacktrace::ProfilerBacktrace(
     const char* aName, int aThreadId,
-    UniquePtr<mozilla::BlocksRingBuffer> aBlocksRingBuffer,
+    UniquePtr<mozilla::ProfileChunkedBuffer> aProfileChunkedBuffer,
     mozilla::UniquePtr<ProfileBuffer> aProfileBuffer)
     : mName(strdup(aName)),
       mThreadId(aThreadId),
-      mBlocksRingBuffer(std::move(aBlocksRingBuffer)),
+      mProfileChunkedBuffer(std::move(aProfileChunkedBuffer)),
       mProfileBuffer(std::move(aProfileBuffer)) {
   MOZ_COUNT_CTOR(ProfilerBacktrace);
-  MOZ_ASSERT(
-      !!mBlocksRingBuffer,
-      "ProfilerBacktrace only takes a non-null UniquePtr<BlocksRingBuffer>");
+  MOZ_ASSERT(!!mProfileChunkedBuffer,
+             "ProfilerBacktrace only takes a non-null "
+             "UniquePtr<ProfileChunkedBuffer>");
   MOZ_ASSERT(
       !!mProfileBuffer,
       "ProfilerBacktrace only takes a non-null UniquePtr<ProfileBuffer>");
-  MOZ_ASSERT(!mBlocksRingBuffer->IsThreadSafe(),
-             "ProfilerBacktrace only takes a non-thread-safe BlocksRingBuffer");
+  MOZ_ASSERT(
+      !mProfileChunkedBuffer->IsThreadSafe(),
+      "ProfilerBacktrace only takes a non-thread-safe ProfileChunkedBuffer");
 }
 
 ProfilerBacktrace::~ProfilerBacktrace() { MOZ_COUNT_DTOR(ProfilerBacktrace); }

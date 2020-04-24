@@ -124,7 +124,7 @@ add_task(async function() {
   );
 
   let otherWin = await openAndLoadWindow({}, true);
-  let otherTB = otherWin.document.createElementNS(kNSXUL, "toolbar");
+  let otherTB = otherWin.document.createXULElement("toolbar");
   otherTB.id = TOOLBARID;
   otherTB.setAttribute("customizable", "true");
   let wasInformedCorrectlyOfAreaAppearing = false;

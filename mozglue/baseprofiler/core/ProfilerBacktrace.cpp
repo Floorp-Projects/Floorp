@@ -20,20 +20,21 @@ namespace baseprofiler {
 
 ProfilerBacktrace::ProfilerBacktrace(
     const char* aName, int aThreadId,
-    UniquePtr<BlocksRingBuffer> aBlocksRingBuffer,
+    UniquePtr<ProfileChunkedBuffer> aProfileChunkedBuffer,
     UniquePtr<ProfileBuffer> aProfileBuffer)
     : mName(strdup(aName)),
       mThreadId(aThreadId),
-      mBlocksRingBuffer(std::move(aBlocksRingBuffer)),
+      mProfileChunkedBuffer(std::move(aProfileChunkedBuffer)),
       mProfileBuffer(std::move(aProfileBuffer)) {
-  MOZ_ASSERT(
-      !!mBlocksRingBuffer,
-      "ProfilerBacktrace only takes a non-null UniquePtr<BlocksRingBuffer>");
+  MOZ_ASSERT(!!mProfileChunkedBuffer,
+             "ProfilerBacktrace only takes a non-null "
+             "UniquePtr<ProfileChunkedBuffer>");
   MOZ_ASSERT(
       !!mProfileBuffer,
       "ProfilerBacktrace only takes a non-null UniquePtr<ProfileBuffer>");
-  MOZ_ASSERT(!mBlocksRingBuffer->IsThreadSafe(),
-             "ProfilerBacktrace only takes a non-thread-safe BlocksRingBuffer");
+  MOZ_ASSERT(
+      !mProfileChunkedBuffer->IsThreadSafe(),
+      "ProfilerBacktrace only takes a non-thread-safe ProfileChunkedBuffer");
 }
 
 ProfilerBacktrace::~ProfilerBacktrace() {}
@@ -60,19 +61,20 @@ UniquePtr<baseprofiler::ProfilerBacktrace, Destructor>
 ProfileBufferEntryReader::
     Deserializer<UniquePtr<baseprofiler::ProfilerBacktrace, Destructor>>::Read(
         ProfileBufferEntryReader& aER) {
-  auto blocksRingBuffer = aER.ReadObject<UniquePtr<BlocksRingBuffer>>();
-  if (!blocksRingBuffer) {
+  auto profileChunkedBuffer = aER.ReadObject<UniquePtr<ProfileChunkedBuffer>>();
+  if (!profileChunkedBuffer) {
     return nullptr;
   }
-  MOZ_ASSERT(!blocksRingBuffer->IsThreadSafe(),
-             "ProfilerBacktrace only stores non-thread-safe BlocksRingBuffers");
+  MOZ_ASSERT(
+      !profileChunkedBuffer->IsThreadSafe(),
+      "ProfilerBacktrace only stores non-thread-safe ProfileChunkedBuffers");
   int threadId = aER.ReadObject<int>();
   std::string name = aER.ReadObject<std::string>();
   auto profileBuffer =
-      MakeUnique<baseprofiler::ProfileBuffer>(*blocksRingBuffer);
+      MakeUnique<baseprofiler::ProfileBuffer>(*profileChunkedBuffer);
   return UniquePtr<baseprofiler::ProfilerBacktrace, Destructor>{
       new baseprofiler::ProfilerBacktrace(name.c_str(), threadId,
-                                          std::move(blocksRingBuffer),
+                                          std::move(profileChunkedBuffer),
                                           std::move(profileBuffer))};
 };
 

@@ -1320,6 +1320,8 @@ TEST(GeckoProfiler, Markers)
   EXPECT_EQ(GTestMarkerPayload::sNumDestroyed, 10 + 10 + 0 + 10);
 }
 
+// The duration limit will be removed from Firefox, see bug 1632365.
+#if 0
 TEST(GeckoProfiler, DurationLimit)
 {
   uint32_t features = ProfilerFeature::StackWalk;
@@ -1345,12 +1347,13 @@ TEST(GeckoProfiler, DurationLimit)
 
   // Both markers created, serialized, destroyed; Only the first marker should
   // have been deserialized, streamed, and destroyed again.
-  ASSERT_EQ(GTestMarkerPayload::sNumCreated, 2);
-  ASSERT_EQ(GTestMarkerPayload::sNumSerialized, 2);
-  ASSERT_EQ(GTestMarkerPayload::sNumDeserialized, 1);
-  ASSERT_EQ(GTestMarkerPayload::sNumStreamed, 1);
-  ASSERT_EQ(GTestMarkerPayload::sNumDestroyed, 3);
+  EXPECT_EQ(GTestMarkerPayload::sNumCreated, 2);
+  EXPECT_EQ(GTestMarkerPayload::sNumSerialized, 2);
+  EXPECT_EQ(GTestMarkerPayload::sNumDeserialized, 1);
+  EXPECT_EQ(GTestMarkerPayload::sNumStreamed, 1);
+  EXPECT_EQ(GTestMarkerPayload::sNumDestroyed, 3);
 }
+#endif
 
 #define COUNTER_NAME "TestCounter"
 #define COUNTER_DESCRIPTION "Test of counters in profiles"

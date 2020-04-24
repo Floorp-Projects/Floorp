@@ -338,6 +338,20 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
   }
 }
 
+size_t HeapThreshold::nonIncrementalBytes(
+    ZoneAllocator* zone, const GCSchedulingTunables& tunables) const {
+  size_t bytes = bytes_ * tunables.nonIncrementalFactor();
+
+  // Increase the non-incremental threshold when we start background sweeping
+  // for the zone. The splay latency benchmark depends on this to avoid pauses
+  // due to non-incremental GC.
+  if (zone->gcState() > ZoneAllocator::Sweep) {
+    bytes *= tunables.lowFrequencyHeapGrowth();
+  }
+
+  return bytes;
+}
+
 float HeapThreshold::eagerAllocTrigger(bool highFrequencyGC) const {
   float eagerTriggerFactor = highFrequencyGC
                                  ? HighFrequencyEagerAllocTriggerFactor

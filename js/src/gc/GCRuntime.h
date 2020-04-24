@@ -595,9 +595,8 @@ class GCRuntime {
  private:
   enum IncrementalResult { ResetIncremental = 0, Ok };
 
-  TriggerResult checkHeapThreshold(const HeapSize& heapSize,
-                                   const HeapThreshold& heapThreshold,
-                                   bool isCollecting);
+  TriggerResult checkHeapThreshold(Zone* zone, const HeapSize& heapSize,
+                                   const HeapThreshold& heapThreshold);
 
   // Delete an empty zone after its contents have been merged.
   void deleteEmptyZone(Zone* zone);

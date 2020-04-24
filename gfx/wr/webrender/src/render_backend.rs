@@ -10,7 +10,7 @@
 
 use api::{ApiMsg, ClearCache, DebugCommand, DebugFlags};
 use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestFlags, HitTestResult};
-use api::{IdNamespace, MemoryReport, PipelineId, RenderNotifier, SceneMsg, ScrollClamping};
+use api::{IdNamespace, MemoryReport, PipelineId, RenderNotifier, ScrollClamping};
 use api::{ScrollLocation, TransactionMsg, ResourceUpdate, BlobImageKey};
 use api::{NotificationRequest, Checkpoint, QualitySettings};
 use api::{ClipIntern, FilterDataIntern, PrimitiveKeyKind};
@@ -1015,6 +1015,12 @@ impl RenderBackend {
                     // in the update_document call below.
                     resume_rx.recv().ok();
                 }
+
+                for pipeline_id in &txn.discard_frame_state_for_pipelines {
+                    doc.scene
+                        .spatial_tree
+                        .discard_frame_state_for_pipeline(*pipeline_id);
+                }
             } else {
                 // The document was removed while we were building it, skip it.
                 // TODO: we might want to just ensure that removed documents are
@@ -1345,19 +1351,6 @@ impl RenderBackend {
                     &mut transaction_msg.resource_updates,
                     &mut profile_counters.resources,
                 );
-
-                // TODO(nical) I believe this is wrong. We should discard this state when swapping the
-                // scene after it is built.
-                for msg in &transaction_msg.scene_ops {
-                    if let SceneMsg::SetDisplayList { preserve_frame_state: false, pipeline_id, .. } = *msg {
-                        self.documents
-                            .get_mut(&document_id)
-                            .unwrap()
-                            .scene
-                            .spatial_tree
-                            .discard_frame_state_for_pipeline(pipeline_id);
-                    }
-                }
 
                 let mut txn = Box::new(Transaction {
                     document_id,
