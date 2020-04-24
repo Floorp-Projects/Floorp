@@ -1145,9 +1145,14 @@ void KeyframeEffect::GetProperties(
       if (segment.mFromKey == segment.mToKey) {
         fromValue.mEasing.Reset();
       }
-      // The following won't fail since we have already allocated the capacity
-      // above.
-      propertyDetails.mValues.AppendElement(fromValue, mozilla::fallible);
+      // Even though we called SetCapacity before, this could fail, since we
+      // might add multiple elements to propertyDetails.mValues for an element
+      // of property.mSegments in the cases mentioned below.
+      if (!propertyDetails.mValues.AppendElement(fromValue,
+                                                 mozilla::fallible)) {
+        aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+        return;
+      }
 
       // Normally we can ignore the to-value for this segment since it is
       // identical to the from-value from the next segment. However, we need
@@ -1164,7 +1169,11 @@ void KeyframeEffect::GetProperties(
         // last property value or before a sudden jump so we just drop the
         // easing property altogether.
         toValue.mEasing.Reset();
-        propertyDetails.mValues.AppendElement(toValue, mozilla::fallible);
+        if (!propertyDetails.mValues.AppendElement(toValue,
+                                                   mozilla::fallible)) {
+          aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+          return;
+        }
       }
     }
 

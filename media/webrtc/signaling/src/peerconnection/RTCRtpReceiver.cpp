@@ -191,7 +191,9 @@ static UniquePtr<dom::RTCStatsCollection> GetReceiverStats_s(
     s.mLocalId.Construct(localId);
     s.mPacketsSent.Construct(packetsSent);
     s.mBytesSent.Construct(bytesSent);
-    report->mRemoteOutboundRtpStreamStats.AppendElement(s, fallible);
+    if (!report->mRemoteOutboundRtpStreamStats.AppendElement(s, fallible)) {
+      mozalloc_handle_oom(0);
+    }
   }
 
   // Then, fill in local side (with cross-link to remote only if present)
@@ -244,7 +246,9 @@ static UniquePtr<dom::RTCStatsCollection> GetReceiverStats_s(
       s.mFramesDecoded.Construct(framesDecoded);
     }
   });
-  report->mInboundRtpStreamStats.AppendElement(s, fallible);
+  if (!report->mInboundRtpStreamStats.AppendElement(s, fallible)) {
+    mozalloc_handle_oom(0);
+  }
 
   // Fill in Contributing Source statistics
   aPipeline->GetContributingSourceStats(localId,
