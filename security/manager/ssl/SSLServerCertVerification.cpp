@@ -1043,7 +1043,7 @@ static void AuthCertificateSetResults(
     nsTArray<nsTArray<uint8_t>>&& aBuiltCertChain,
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
     uint16_t aCertificateTransparencyStatus, EVStatus aEvStatus,
-    bool aSucceeded) {
+    bool aSucceeded, bool aIsCertChainRootBuiltInRoot) {
   MOZ_ASSERT(aInfoObject);
 
   if (aSucceeded) {
@@ -1057,6 +1057,8 @@ static void AuthCertificateSetResults(
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("AuthCertificate setting NEW cert %p", aCert));
 
+    aInfoObject->SetIsBuiltCertChainRootBuiltInRoot(
+        aIsCertChainRootBuiltInRoot);
     aInfoObject->SetCertificateTransparencyStatus(
         aCertificateTransparencyStatus);
   } else {
@@ -1078,7 +1080,8 @@ Result AuthCertificate(
     Time time, uint32_t certVerifierFlags,
     /*out*/ UniqueCERTCertList& builtCertChain,
     /*out*/ SECOidTag& evOidPolicy,
-    /*out*/ CertificateTransparencyInfo& certificateTransparencyInfo) {
+    /*out*/ CertificateTransparencyInfo& certificateTransparencyInfo,
+    /*out*/ bool& aIsCertChainRootBuiltInRoot) {
   MOZ_ASSERT(cert);
 
   // We want to avoid storing any intermediate cert information when browsing
@@ -1105,7 +1108,8 @@ Result AuthCertificate(
       Some(peerCertsBytes), stapledOCSPResponse, sctsFromTLSExtension, dcInfo,
       aOriginAttributes, saveIntermediates, &evOidPolicy, &ocspStaplingStatus,
       &keySizeStatus, &sha1ModeResult, &pinningTelemetryInfo,
-      &certificateTransparencyInfo, &crliteTelemetryInfo);
+      &certificateTransparencyInfo, &crliteTelemetryInfo,
+      &aIsCertChainRootBuiltInRoot);
 
   CollectCertTelemetry(rv, evOidPolicy, ocspStaplingStatus, keySizeStatus,
                        sha1ModeResult, pinningTelemetryInfo, builtCertChain,
@@ -1296,11 +1300,12 @@ SSLServerCertVerificationJob::Run() {
   UniqueCERTCertList builtCertChain;
   SECOidTag evOidPolicy;
   CertificateTransparencyInfo certificateTransparencyInfo;
+  bool isCertChainRootBuiltInRoot = false;
   Result rv = AuthCertificate(
       *certVerifier, mPinArg, mCert, mPeerCertChain, mHostName,
       mOriginAttributes, mStapledOCSPResponse, mSCTsFromTLSExtension, mDCInfo,
       mProviderFlags, mTime, mCertVerifierFlags, builtCertChain, evOidPolicy,
-      certificateTransparencyInfo);
+      certificateTransparencyInfo, isCertChainRootBuiltInRoot);
 
   RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(mCert.get());
   nsTArray<nsTArray<uint8_t>> certBytesArray;
@@ -1318,7 +1323,7 @@ SSLServerCertVerificationJob::Run() {
         nsc, std::move(certBytesArray), std::move(mPeerCertChain),
         TransportSecurityInfo::ConvertCertificateTransparencyInfoToStatus(
             certificateTransparencyInfo),
-        evStatus, true, 0, 0);
+        evStatus, true, 0, 0, isCertChainRootBuiltInRoot);
     return NS_OK;
   }
 
@@ -1336,7 +1341,7 @@ SSLServerCertVerificationJob::Run() {
   mResultTask->Dispatch(
       nsc, std::move(certBytesArray), std::move(mPeerCertChain),
       nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE,
-      EVStatus::NotEV, false, finalError, collectedErrors);
+      EVStatus::NotEV, false, finalError, collectedErrors, false);
   return NS_OK;
 }
 
@@ -1561,7 +1566,8 @@ void SSLServerCertVerificationResult::Dispatch(
     nsNSSCertificate* aCert, nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
     uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
-    bool aSucceeded, PRErrorCode aFinalError, uint32_t aCollectedErrors) {
+    bool aSucceeded, PRErrorCode aFinalError, uint32_t aCollectedErrors,
+    bool aIsCertChainRootBuiltInRoot) {
   mCert = aCert;
   mBuiltChain = std::move(aBuiltChain);
   mPeerCertChain = std::move(aPeerCertChain);
@@ -1570,6 +1576,7 @@ void SSLServerCertVerificationResult::Dispatch(
   mSucceeded = aSucceeded;
   mFinalError = aFinalError;
   mCollectedErrors = aCollectedErrors;
+  mIsBuiltCertChainRootBuiltInRoot = aIsCertChainRootBuiltInRoot;
 
   nsresult rv;
   nsCOMPtr<nsIEventTarget> stsTarget =
@@ -1594,9 +1601,10 @@ SSLServerCertVerificationResult::Run() {
   MOZ_ASSERT(onSTSThread);
 #endif
 
-  AuthCertificateSetResults(
-      mInfoObject, mCert, std::move(mBuiltChain), std::move(mPeerCertChain),
-      mCertificateTransparencyStatus, mEVStatus, mSucceeded);
+  AuthCertificateSetResults(mInfoObject, mCert, std::move(mBuiltChain),
+                            std::move(mPeerCertChain),
+                            mCertificateTransparencyStatus, mEVStatus,
+                            mSucceeded, mIsBuiltCertChainRootBuiltInRoot);
 
   if (!mSucceeded && mCollectedErrors != 0) {
     mInfoObject->SetStatusErrorBits(mCert, mCollectedErrors);
