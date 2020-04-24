@@ -16,15 +16,6 @@
     test = new PeerConnectionTest(options);
     addRenegotiation(test.chain,
       [
-        function PC_LOCAL_SETUP_ICE_HANDLER(test) {
-          test.pcLocal.setupIceCandidateHandler(test);
-          if (test.testOptions.steeplechase) {
-            test.pcLocal.endOfTrickleIce.then(() => {
-              send_message({"type": "end_of_trickle_ice"});
-            });
-          }
-        },
-
         function PC_LOCAL_ADD_SECOND_STREAM(test) {
           test.setMediaConstraints([{audio: true}, {audio: true}],
                                    [{audio: true}]);
@@ -46,11 +37,6 @@
               test.pcLocal,
               new RTCSessionDescription({ type: "rollback", sdp: ""}),
               STABLE);
-        },
-
-        // Rolling back should shut down gathering
-        function PC_LOCAL_WAIT_FOR_END_OF_TRICKLE(test) {
-          return test.pcLocal.endOfTrickleIce;
         },
       ],
       1 // Second PC_REMOTE_SET_REMOTE_DESCRIPTION

@@ -17,18 +17,11 @@
 
     addRenegotiation(test.chain,
       [
-        function PC_LOCAL_SETUP_ICE_HANDLER(test) {
+        async function PC_LOCAL_SETUP_ICE_HANDLER(test) {
+          await test.pcLocal.endOfTrickleSdp;
           test.pcLocal.setupIceCandidateHandler(test);
           if (test.testOptions.steeplechase) {
             test.pcLocal.endOfTrickleIce.then(() => {
-              send_message({"type": "end_of_trickle_ice"});
-            });
-          }
-        },
-        function PC_REMOTE_SETUP_ICE_HANDLER(test) {
-          test.pcRemote.setupIceCandidateHandler(test);
-          if (test.testOptions.steeplechase) {
-            test.pcRemote.endOfTrickleIce.then(() => {
               send_message({"type": "end_of_trickle_ice"});
             });
           }
@@ -45,9 +38,6 @@
       [
         function PC_LOCAL_EXPECT_ICE_CONNECTED(test) {
           test.pcLocal.iceCheckingIceRollbackExpected = true;
-        },
-        function PC_REMOTE_EXPECT_ICE_CONNECTED(test) {
-          test.pcRemote.iceCheckingIceRollbackExpected = true;
         },
 
         function PC_REMOTE_ROLLBACK(test) {
