@@ -603,6 +603,22 @@ void MPRISServiceHandler::SetMediaMetadata(
       NS_ConvertUTF16toUTF8(mMetadata->mTitle).get(),
       NS_ConvertUTF16toUTF8(mMetadata->mArtist).get(),
       NS_ConvertUTF16toUTF8(mMetadata->mAlbum).get());
+
+  if (!mConnection) {
+    LOG("No D-Bus Connection. Drop the update.");
+    return;
+  }
+
+  GVariantBuilder builder;
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
+  g_variant_builder_add(&builder, "{sv}", "Metadata", GetMetadataAsGVariant());
+
+  GVariant* parameters = g_variant_new(
+      "(sa{sv}as)", "org.mpris.MediaPlayer2.Player", &builder, nullptr);
+
+  g_dbus_connection_emit_signal(mConnection, nullptr, DBUS_MPRIS_OBJECT_PATH,
+                                "org.freedesktop.DBus.Properties",
+                                "PropertiesChanged", parameters, nullptr);
 }
 
 GVariant* MPRISServiceHandler::GetMetadataAsGVariant() const {
