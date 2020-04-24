@@ -44,6 +44,7 @@ struct IInterceptor : public IUnknown {
       REFIID aIid, InterceptorTargetPtr<IUnknown>& aTarget) = 0;
   virtual STDMETHODIMP GetInterceptorForIID(REFIID aIid,
                                             void** aOutInterceptor) = 0;
+  virtual STDMETHODIMP GetEventSink(IInterceptorSink** aSink) = 0;
 };
 
 /**
@@ -120,6 +121,12 @@ class Interceptor final : public WeakReferenceSupport,
       REFIID aIid, InterceptorTargetPtr<IUnknown>& aTarget) override;
   STDMETHODIMP GetInterceptorForIID(REFIID aIid,
                                     void** aOutInterceptor) override;
+
+  STDMETHODIMP GetEventSink(IInterceptorSink** aSink) override {
+    RefPtr<IInterceptorSink> sink = mEventSink;
+    sink.forget(aSink);
+    return mEventSink ? S_OK : S_FALSE;
+  }
 
  private:
   struct MapEntry {
