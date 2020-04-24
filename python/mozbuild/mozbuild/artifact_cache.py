@@ -162,7 +162,7 @@ class ArtifactCache(object):
             if len(fname) not in (32, 40, 56, 64, 96, 128):
                 raise TypeError()
             binascii.unhexlify(fname)
-        except TypeError:
+        except (TypeError, binascii.Error):
             # We download to a temporary name like HASH[:16]-basename to
             # differentiate among URLs with the same basenames.  We used to then
             # extract the build ID from the downloaded artifact and use it to make a

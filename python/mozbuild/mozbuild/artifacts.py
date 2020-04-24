@@ -897,6 +897,7 @@ class Artifacts(object):
         env = kwargs.get('env', {})
         env['HGPLAIN'] = '1'
         kwargs['env'] = ensure_subprocess_env(env)
+        kwargs['universal_newlines'] = True
         return subprocess.check_output([self._hg] + list(args),
                                        **kwargs)
 
@@ -979,11 +980,11 @@ class Artifacts(object):
             self._git, 'rev-list', '--topo-order',
             '--max-count={num}'.format(num=NUM_REVISIONS_TO_QUERY),
             'HEAD',
-        ], cwd=self._topsrcdir)
+        ], universal_newlines=True, cwd=self._topsrcdir)
 
         hg_hash_list = subprocess.check_output([
             self._git, 'cinnabar', 'git2hg'
-        ] + rev_list.splitlines(), cwd=self._topsrcdir)
+        ] + rev_list.splitlines(), universal_newlines=True, cwd=self._topsrcdir)
 
         zeroes = "0" * 40
 
@@ -1201,7 +1202,8 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
             elif self._git:
                 revset = subprocess.check_output([
                     self._git, 'rev-parse', '%s^{commit}' % revset],
-                    stderr=open(os.devnull, 'w'), cwd=self._topsrcdir).strip()
+                    stderr=open(os.devnull, 'w'), universal_newlines=True,
+                    cwd=self._topsrcdir).strip()
             else:
                 # Fallback to the exception handling case from both hg and git
                 raise subprocess.CalledProcessError()
@@ -1215,7 +1217,8 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
 
         if revision is None and self._git:
             revision = subprocess.check_output(
-                [self._git, 'cinnabar', 'git2hg', revset], cwd=self._topsrcdir).strip()
+                [self._git, 'cinnabar', 'git2hg', revset], universal_newlines=True,
+                cwd=self._topsrcdir).strip()
 
         if revision == "0" * 40 or revision is None:
             raise ValueError('revision specification must resolve to a commit known to hg')
