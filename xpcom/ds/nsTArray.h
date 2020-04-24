@@ -168,9 +168,10 @@ class JSStructuredCloneData;
 //
 struct nsTArrayFallibleResult {
   // Note: allows implicit conversions from and to bool
-  MOZ_IMPLICIT nsTArrayFallibleResult(bool aResult) : mResult(aResult) {}
+  MOZ_IMPLICIT constexpr nsTArrayFallibleResult(bool aResult)
+      : mResult(aResult) {}
 
-  MOZ_IMPLICIT operator bool() { return mResult; }
+  MOZ_IMPLICIT constexpr operator bool() { return mResult; }
 
  private:
   bool mResult;
@@ -187,27 +188,30 @@ struct nsTArrayFallibleAllocatorBase {
   typedef bool ResultType;
   typedef nsTArrayFallibleResult ResultTypeProxy;
 
-  static ResultType Result(ResultTypeProxy aResult) { return aResult; }
-  static bool Successful(ResultTypeProxy aResult) { return aResult; }
-  static ResultTypeProxy SuccessResult() { return true; }
-  static ResultTypeProxy FailureResult() { return false; }
-  static ResultType ConvertBoolToResultType(bool aValue) { return aValue; }
+  static constexpr ResultType Result(ResultTypeProxy aResult) {
+    return aResult;
+  }
+  static constexpr bool Successful(ResultTypeProxy aResult) { return aResult; }
+  static constexpr ResultTypeProxy SuccessResult() { return true; }
+  static constexpr ResultTypeProxy FailureResult() { return false; }
+  static constexpr ResultType ConvertBoolToResultType(bool aValue) {
+    return aValue;
+  }
 };
 
 struct nsTArrayInfallibleAllocatorBase {
   typedef void ResultType;
   typedef nsTArrayInfallibleResult ResultTypeProxy;
 
-  static ResultType Result(ResultTypeProxy aResult) {}
-  static bool Successful(ResultTypeProxy) { return true; }
-  static ResultTypeProxy SuccessResult() { return ResultTypeProxy(); }
+  static constexpr ResultType Result(ResultTypeProxy aResult) {}
+  static constexpr bool Successful(ResultTypeProxy) { return true; }
+  static constexpr ResultTypeProxy SuccessResult() { return ResultTypeProxy(); }
 
-  static ResultTypeProxy FailureResult() {
+  [[noreturn]] static ResultTypeProxy FailureResult() {
     MOZ_CRASH("Infallible nsTArray should never fail");
-    return ResultTypeProxy();
   }
 
-  static ResultType ConvertBoolToResultType(bool aValue) {
+  static constexpr ResultType ConvertBoolToResultType(bool aValue) {
     if (!aValue) {
       MOZ_CRASH("infallible nsTArray should never convert false to ResultType");
     }
