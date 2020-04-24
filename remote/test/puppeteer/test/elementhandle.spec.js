@@ -69,7 +69,7 @@ module.exports.addTests = function({testRunner, expect, CHROME}) {
     });
   });
 
-  describe_fails_ffox('ElementHandle.boxModel', function() {
+  describe('ElementHandle.boxModel', function() {
     it('should work', async({page, server}) => {
       await page.goto(server.PREFIX + '/resetcss.html');
 
