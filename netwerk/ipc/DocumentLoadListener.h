@@ -177,6 +177,12 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                              bool aIsCrossProcess, uint32_t aRedirectFlags,
                              uint32_t aLoadFlags) const;
 
+  const nsTArray<DocumentChannelRedirect>& Redirects() const {
+    return mRedirects;
+  }
+
+  net::LastVisitInfo LastVisitInfo() const;
+
  protected:
   virtual ~DocumentLoadListener();
 
