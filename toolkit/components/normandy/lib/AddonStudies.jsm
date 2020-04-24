@@ -30,10 +30,14 @@
  *   The hash of the XPI file.
  * @property {string} extensionHashAlgorithm
  *   The algorithm used to hash the XPI file.
- * @property {string} studyStartDate
+ * @property {Date} studyStartDate
  *   Date when the study was started.
- * @property {Date} studyEndDate
+ * @property {Date|null} studyEndDate
  *   Date when the study was ended.
+ * @property {Date|null} temporaryErrorDeadline
+ *   Date of when temporary errors with this experiment should no longer be
+ *   considered temporary. After this point, further errors will result in
+ *   unenrollment.
  * @property {string} enrollmentId
  *   A random ID generated at time of enrollment. It should be included on all
  *   telemetry related to this study. It should not be re-used by other studies,
@@ -308,7 +312,7 @@ var AddonStudies = {
   /**
    * Fetch a study from storage.
    * @param {Number} recipeId
-   * @return {Study}
+   * @return {Study} The requested study, or null if none with that ID exist.
    */
   async get(recipeId) {
     const db = await getDatabase();
@@ -423,6 +427,7 @@ var AddonStudies = {
     }
 
     study.active = false;
+    study.temporaryErrorDeadline = null;
     study.studyEndDate = new Date();
     const db = await getDatabase();
     await getStore(db, "readwrite").put(study);
