@@ -2133,7 +2133,9 @@ bool Accessible::InsertChildAt(uint32_t aIndex, Accessible* aChild) {
     if (!mChildren.AppendElement(aChild)) return false;
 
   } else {
-    if (!mChildren.InsertElementAt(aIndex, aChild)) return false;
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    mChildren.InsertElementAt(aIndex, aChild);
 
     MOZ_ASSERT(mStateFlags & eKidsMutating, "Illicit children change");
 
