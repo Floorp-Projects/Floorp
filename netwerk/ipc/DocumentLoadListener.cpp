@@ -771,7 +771,7 @@ void DocumentLoadListener::ResumeSuspendedChannel(
 
 void DocumentLoadListener::SerializeRedirectData(
     RedirectToRealChannelArgs& aArgs, bool aIsCrossProcess,
-    uint32_t aRedirectFlags, uint32_t aLoadFlags) {
+    uint32_t aRedirectFlags, uint32_t aLoadFlags) const {
   // Use the original URI of the current channel, as this is what
   // we'll use to construct the channel in the content process.
   aArgs.uri() = mChannelCreationURI;
@@ -789,7 +789,7 @@ void DocumentLoadListener::SerializeRedirectData(
   nsCOMPtr<nsIPrincipal> principalToInherit;
   channelLoadInfo->GetPrincipalToInherit(getter_AddRefs(principalToInherit));
 
-  RefPtr<nsHttpChannel> baseChannel = do_QueryObject(mChannel);
+  const RefPtr<nsHttpChannel> baseChannel = do_QueryObject(mChannel.get());
   nsCOMPtr<nsILoadInfo> redirectLoadInfo;
   if (baseChannel) {
     redirectLoadInfo = baseChannel->CloneLoadInfoForRedirect(
@@ -821,12 +821,6 @@ void DocumentLoadListener::SerializeRedirectData(
     redirectLoadInfo->SetReservedClientInfo(*reservedClientInfo);
   }
 
-  // Register the new channel and obtain id for it
-  nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
-      RedirectChannelRegistrar::GetOrCreate();
-  MOZ_ASSERT(registrar);
-  nsresult rv = registrar->RegisterChannel(mChannel, &mRedirectChannelId);
-  NS_ENSURE_SUCCESS_VOID(rv);
   aArgs.registrarId() = mRedirectChannelId;
 
   MOZ_ALWAYS_SUCCEEDS(
@@ -858,7 +852,7 @@ void DocumentLoadListener::SerializeRedirectData(
   }
 
   uint32_t contentDispositionTemp;
-  rv = mChannel->GetContentDisposition(&contentDispositionTemp);
+  nsresult rv = mChannel->GetContentDisposition(&contentDispositionTemp);
   if (NS_SUCCEEDED(rv)) {
     aArgs.contentDisposition() = Some(contentDispositionTemp);
   }
@@ -873,7 +867,7 @@ void DocumentLoadListener::SerializeRedirectData(
   aArgs.redirectFlags() = aRedirectFlags;
   aArgs.redirects() = mRedirects;
   aArgs.redirectIdentifier() = mCrossProcessRedirectIdentifier;
-  aArgs.properties() = do_QueryObject(mChannel);
+  aArgs.properties() = do_QueryObject(mChannel.get());
   nsCOMPtr<nsIURI> previousURI;
   uint32_t previousFlags = 0;
   nsDocShell::ExtractLastVisit(mChannel, getter_AddRefs(previousURI),
@@ -1083,6 +1077,13 @@ DocumentLoadListener::RedirectToRealChannel(
     const Maybe<uint64_t>& aDestinationProcess,
     nsTArray<ParentEndpoint>&& aStreamFilterEndpoints) {
   LOG(("DocumentLoadListener RedirectToRealChannel [this=%p]", this));
+
+  // Register the new channel and obtain id for it
+  nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
+      RedirectChannelRegistrar::GetOrCreate();
+  MOZ_ASSERT(registrar);
+  MOZ_ALWAYS_SUCCEEDS(
+      registrar->RegisterChannel(mChannel, &mRedirectChannelId));
 
   if (aDestinationProcess) {
     dom::ContentParent* cp =
