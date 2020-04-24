@@ -394,6 +394,7 @@ const JSClass SavedFrame::protoClass_ = {
     JS_PSG("asyncCause", SavedFrame::asyncCauseProperty, 0),
     JS_PSG("asyncParent", SavedFrame::asyncParentProperty, 0),
     JS_PSG("parent", SavedFrame::parentProperty, 0),
+    JS_STRING_SYM_PS(toStringTag, "SavedFrame", JSPROP_READONLY),
     JS_PS_END};
 
 /* static */

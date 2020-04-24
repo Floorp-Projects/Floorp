@@ -10224,6 +10224,10 @@ static JSObject* NewGlobalObject(JSContext* cx, JS::RealmOptions& options,
     /* Initialize FakeDOMObject.prototype */
     InitDOMObject(domProto);
 
+    if (!DefineToStringTag(cx, glob, cx->names().global)) {
+      return nullptr;
+    }
+
     JS_FireOnNewGlobalObject(cx, glob);
   }
 

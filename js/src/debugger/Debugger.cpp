@@ -121,7 +121,7 @@
 #include "vm/JSAtom-inl.h"         // for AtomToId, ValueToId
 #include "vm/JSContext-inl.h"      // for JSContext::check
 #include "vm/JSObject-inl.h"  // for JSObject::isCallable, NewTenuredObjectWithGivenProto
-#include "vm/JSScript-inl.h"       // for JSScript::isDebuggee, JSScript
+#include "vm/JSScript-inl.h"      // for JSScript::isDebuggee, JSScript
 #include "vm/NativeObject-inl.h"  // for NativeObject::ensureDenseInitializedLength
 #include "vm/ObjectOperations-inl.h"  // for GetProperty, HasProperty
 #include "vm/Realm-inl.h"             // for AutoRealm::AutoRealm
@@ -6075,6 +6075,7 @@ const JSPropertySpec Debugger::properties[] = {
     JS_DEBUG_PSGS("collectCoverageInfo", getCollectCoverageInfo,
                   setCollectCoverageInfo),
     JS_DEBUG_PSG("memory", getMemory),
+    JS_STRING_SYM_PS(toStringTag, "Debugger", JSPROP_READONLY),
     JS_PS_END};
 
 const JSFunctionSpec Debugger::methods[] = {
