@@ -11,6 +11,7 @@
 #include "base/string_util.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/Preferences.h"
+#include "ProcessUtils.h"
 #include "mozilla/ipc/IOThreadChild.h"
 
 #if defined(OS_WIN) && defined(MOZ_SANDBOX)
