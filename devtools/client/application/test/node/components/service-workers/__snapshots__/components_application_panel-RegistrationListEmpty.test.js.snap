@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`WorkerListEmpty renders the expected snapshot 1`] = `
+exports[`RegistrationListEmpty renders the expected snapshot 1`] = `
 <article
-  className="worker-list-empty js-worker-list-empty"
+  className="registration-list-empty js-registration-list-empty"
 >
   <Localized
     a={
@@ -23,7 +23,7 @@ exports[`WorkerListEmpty renders the expected snapshot 1`] = `
     <p />
   </Localized>
   <ul
-    className="worker-list-empty__tips"
+    className="registration-list-empty__tips"
   >
     <Localized
       a={
@@ -35,7 +35,7 @@ exports[`WorkerListEmpty renders the expected snapshot 1`] = `
       id="serviceworker-empty-suggestions-console"
     >
       <li
-        className="worker-list-empty__tips__item"
+        className="registration-list-empty__tips-item"
       />
     </Localized>
     <Localized
@@ -48,7 +48,7 @@ exports[`WorkerListEmpty renders the expected snapshot 1`] = `
       id="serviceworker-empty-suggestions-debugger"
     >
       <li
-        className="worker-list-empty__tips__item"
+        className="registration-list-empty__tips-item"
       />
     </Localized>
     <Localized
@@ -61,7 +61,7 @@ exports[`WorkerListEmpty renders the expected snapshot 1`] = `
       id="serviceworker-empty-suggestions-aboutdebugging"
     >
       <li
-        className="worker-list-empty__tips__item"
+        className="registration-list-empty__tips-item"
       />
     </Localized>
   </ul>

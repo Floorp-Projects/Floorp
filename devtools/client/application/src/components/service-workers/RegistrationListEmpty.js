@@ -33,7 +33,7 @@ const DOC_URL =
  * This component displays help information when no service workers are found for the
  * current target.
  */
-class WorkerListEmpty extends PureComponent {
+class RegistrationListEmpty extends PureComponent {
   switchToConsole() {
     services.selectTool("webconsole");
   }
@@ -52,7 +52,7 @@ class WorkerListEmpty extends PureComponent {
 
   render() {
     return article(
-      { className: "worker-list-empty js-worker-list-empty" },
+      { className: "registration-list-empty js-registration-list-empty" },
       Localized(
         {
           id: "serviceworker-empty-intro",
@@ -65,20 +65,20 @@ class WorkerListEmpty extends PureComponent {
       ),
       Localized({ id: "serviceworker-empty-suggestions" }, p({})),
       ul(
-        { className: "worker-list-empty__tips" },
+        { className: "registration-list-empty__tips" },
         Localized(
           {
             id: "serviceworker-empty-suggestions-console",
             a: a({ className: "link", onClick: () => this.switchToConsole() }),
           },
-          li({ className: "worker-list-empty__tips__item" })
+          li({ className: "registration-list-empty__tips-item" })
         ),
         Localized(
           {
             id: "serviceworker-empty-suggestions-debugger",
             a: a({ className: "link", onClick: () => this.switchToDebugger() }),
           },
-          li({ className: "worker-list-empty__tips__item" })
+          li({ className: "registration-list-empty__tips-item" })
         ),
         Localized(
           {
@@ -88,7 +88,7 @@ class WorkerListEmpty extends PureComponent {
               onClick: () => this.openAboutDebugging(),
             }),
           },
-          li({ className: "worker-list-empty__tips__item" })
+          li({ className: "registration-list-empty__tips-item" })
         )
       )
     );
@@ -96,4 +96,4 @@ class WorkerListEmpty extends PureComponent {
 }
 
 // Exports
-module.exports = WorkerListEmpty;
+module.exports = RegistrationListEmpty;
