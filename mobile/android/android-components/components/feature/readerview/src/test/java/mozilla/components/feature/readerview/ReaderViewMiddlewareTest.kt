@@ -101,4 +101,21 @@ class ReaderViewMiddlewareTest {
         store.dispatch(ContentAction.UpdateUrlAction(tab.id, "https://www.firefox.com")).joinBlocking()
         assertTrue(store.state.findTab(tab.id)!!.readerState.checkRequired)
     }
+
+    @Test
+    fun `state is updated to leave reader mode when URL changes`() {
+        val tab = createTab("https://www.mozilla.org", id = "test-tab1",
+            readerState = ReaderState(readerable = true, active = true)
+        )
+        val store = BrowserStore(
+            initialState = BrowserState(tabs = listOf(tab)),
+            middleware = listOf(ReaderViewMiddleware())
+        )
+        assertTrue(store.state.findTab(tab.id)!!.readerState.active)
+        assertTrue(store.state.findTab(tab.id)!!.readerState.readerable)
+
+        store.dispatch(ContentAction.UpdateUrlAction(tab.id, "https://www.firefox.com")).joinBlocking()
+        assertFalse(store.state.findTab(tab.id)!!.readerState.active)
+        assertFalse(store.state.findTab(tab.id)!!.readerState.readerable)
+    }
 }

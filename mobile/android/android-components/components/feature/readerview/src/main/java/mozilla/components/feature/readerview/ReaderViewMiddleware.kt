@@ -65,6 +65,7 @@ class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
                 store.dispatch(ReaderAction.UpdateReaderableCheckRequiredAction(action.tabId, true))
             }
             is ContentAction.UpdateUrlAction -> {
+                store.dispatch(ReaderAction.UpdateReaderActiveAction(action.sessionId, false))
                 store.dispatch(ReaderAction.UpdateReaderableAction(action.sessionId, false))
                 store.dispatch(ReaderAction.UpdateReaderableCheckRequiredAction(action.sessionId, true))
             }
