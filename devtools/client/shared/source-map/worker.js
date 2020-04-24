@@ -3869,13 +3869,11 @@ function hasOriginalURL(url) {
 
 function _resolveSourceMapURL(source) {
   let {
-    sourceMapBaseURL,
+    url = "",
     sourceMapURL
   } = source;
-  sourceMapBaseURL = sourceMapBaseURL || "";
-  sourceMapURL = sourceMapURL || "";
 
-  if (!sourceMapBaseURL) {
+  if (!url) {
     // If the source doesn't have a URL, don't resolve anything.
     return {
       sourceMapURL,
@@ -3883,6 +3881,7 @@ function _resolveSourceMapURL(source) {
     };
   }
 
+  sourceMapURL = sourceMapURL || "";
   let resolvedString;
   let baseURL; // When the sourceMap is a data: URL, fall back to using the source's URL,
   // if possible. We don't use `new URL` here because it will be _very_ slow
@@ -3890,12 +3889,12 @@ function _resolveSourceMapURL(source) {
 
   if (sourceMapURL.startsWith("data:")) {
     resolvedString = sourceMapURL;
-    baseURL = sourceMapBaseURL;
+    baseURL = url;
   } else {
     resolvedString = new URL(sourceMapURL, // If the URL is a data: URL, the sourceMapURL needs to be absolute, so
     // we might as well pass `undefined` to avoid parsing a potentially
     // very large data: URL for no reason.
-    sourceMapBaseURL.startsWith("data:") ? undefined : sourceMapBaseURL).toString();
+    url.startsWith("data:") ? undefined : url).toString();
     baseURL = resolvedString;
   }
 

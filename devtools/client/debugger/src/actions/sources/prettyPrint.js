@@ -80,6 +80,8 @@ export function createPrettySource(cx: Context, sourceId: SourceId) {
       isBlackBoxed: false,
       isPrettyPrinted: true,
       isWasm: false,
+      introductionUrl: null,
+      introductionType: undefined,
       isExtension: false,
       extensionName: null,
       isOriginal: true,
