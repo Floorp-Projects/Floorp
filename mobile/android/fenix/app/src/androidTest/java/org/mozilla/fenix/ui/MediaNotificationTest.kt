@@ -150,7 +150,7 @@ class MediaNotificationTest {
         mDevice.openNotification()
 
         notificationShade {
-            verifySystemNotificationGone(audioTestPage.title)
+            verifySystemNotificationGone("A site is playing media")
         }
     }
 }
