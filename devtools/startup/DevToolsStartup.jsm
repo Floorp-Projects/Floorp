@@ -1320,7 +1320,7 @@ const JsonView = {
       //   principal is from the child. Null principals don't survive crossing
       //   over IPC, so there's no other principal that'll work.
       const persistable = browser.frameLoader;
-      persistable.startPersistence(0, {
+      persistable.startPersistence(null, {
         onDocumentReady(doc) {
           const uri = chrome.makeURI(doc.documentURI, doc.characterSet);
           const filename = chrome.getDefaultFileName(undefined, uri, doc, null);

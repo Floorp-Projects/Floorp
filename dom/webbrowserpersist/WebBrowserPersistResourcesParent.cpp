@@ -8,6 +8,11 @@
 
 #include "nsThreadUtils.h"
 
+#include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/WindowGlobalParent.h"
+
 namespace mozilla {
 
 NS_IMPL_ISUPPORTS(WebBrowserPersistResourcesParent,
@@ -55,6 +60,18 @@ mozilla::ipc::IPCResult WebBrowserPersistResourcesParent::RecvVisitDocument(
   // Don't expose the subdocument to the visitor until it's ready
   // (until the actor isn't in START state).
   static_cast<WebBrowserPersistDocumentParent*>(aSubDocument)->SetOnReady(this);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+WebBrowserPersistResourcesParent::RecvVisitBrowsingContext(
+    const dom::MaybeDiscarded<dom::BrowsingContext>& aContext) {
+  if (aContext.IsNullOrDiscarded()) {
+    // Nothing useful to do but ignore the discarded context.
+    return IPC_OK();
+  }
+
+  mVisitor->VisitBrowsingContext(mDocument, aContext.get());
   return IPC_OK();
 }
 
