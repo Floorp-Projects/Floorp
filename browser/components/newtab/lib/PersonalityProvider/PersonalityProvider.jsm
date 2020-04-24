@@ -35,29 +35,31 @@ const RECIPE_NAME = "personality-provider-recipe";
 const MODELS_NAME = "personality-provider-models";
 
 this.PersonalityProvider = class PersonalityProvider {
-  constructor(
-    timeSegments,
-    parameterSets,
-    maxHistoryQueryResults,
-    version,
-    scores,
-    v2Params
-  ) {
-    this.timeSegments = timeSegments;
-    this.parameterSets = parameterSets;
+  constructor(v2Params) {
     this.v2Params = v2Params || {};
     this.modelKeys = this.v2Params.modelKeys;
     this.dispatch = this.v2Params.dispatch;
     if (!this.dispatch) {
       this.dispatch = () => {};
     }
+    this.onSync = this.onSync.bind(this);
+    this.setup();
+  }
+
+  setAffinities(
+    timeSegments,
+    parameterSets,
+    maxHistoryQueryResults,
+    version,
+    scores
+  ) {
+    this.timeSegments = timeSegments;
+    this.parameterSets = parameterSets;
     this.maxHistoryQueryResults = maxHistoryQueryResults;
     this.version = version;
     this.scores = scores || {};
     this.interestConfig = this.scores.interestConfig;
     this.interestVector = this.scores.interestVector;
-    this.onSync = this.onSync.bind(this);
-    this.setup();
   }
 
   get personalityProviderWorker() {
