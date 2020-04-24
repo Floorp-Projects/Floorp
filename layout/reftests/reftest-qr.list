@@ -1,0 +1,26 @@
+# tests that are more likely to be affected by WebRender changes
+# as per bug 1621095 this is created to reduce load on android phones
+
+# gfx
+include ../../gfx/tests/reftest/reftest.list
+
+include async-scrolling/reftest.list
+
+# bugs/
+include bugs/reftest.list
+
+# css animations
+include css-animations/reftest.list
+
+# invalidation
+include invalidation/reftest.list
+
+# sticky positioning
+include position-sticky/reftest.list
+
+# svg/
+include svg/reftest.list
+
+# 3d transforms
+include transform-3d/reftest.list
+
