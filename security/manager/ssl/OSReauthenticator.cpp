@@ -156,13 +156,12 @@ static nsresult ReauthenticateUserWindows(const nsAString& aMessageText,
     ULONG authPackage = 0;
     ULONG outCredSize = 0;
     LPVOID outCredBuffer = nullptr;
-    BOOL save = false;
 
     // Get user's Windows credentials.
     // https://docs.microsoft.com/en-us/windows/desktop/api/wincred/nf-wincred-creduipromptforwindowscredentialsw
     err = CredUIPromptForWindowsCredentialsW(
         &credui, err, &authPackage, nullptr, 0, &outCredBuffer, &outCredSize,
-        &save, CREDUIWIN_ENUMERATE_CURRENT_USER);
+        nullptr, CREDUIWIN_ENUMERATE_CURRENT_USER);
     ScopedBuffer scopedOutCredBuffer(outCredBuffer);
     if (err == ERROR_CANCELLED) {
       MOZ_LOG(gCredentialManagerSecretLog, LogLevel::Debug,
