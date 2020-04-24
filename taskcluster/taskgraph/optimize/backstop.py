@@ -17,6 +17,8 @@ PUSH_ENDPOINT = "{head_repository}/json-pushes/?startID={push_id_start}&endID={p
 
 
 @register_strategy('backstop', args=(10, 60))
+@register_strategy("push-interval-10", args=(10, 0))
+@register_strategy("push-interval-25", args=(25, 0))
 class Backstop(OptimizationStrategy):
     """Ensures that no task gets left behind.
 
@@ -24,6 +26,8 @@ class Backstop(OptimizationStrategy):
 
     Args:
         push_interval (int): Number of pushes
+        time_interval (int): Minutes between forced schedules.
+                             Use 0 to disable.
     """
     def __init__(self, push_interval, time_interval):
         self.push_interval = push_interval
@@ -49,7 +53,7 @@ class Backstop(OptimizationStrategy):
             return False
 
         # We also want to ensure we run all tasks at least once per N minutes.
-        if self.minutes_between_pushes(
+        if self.time_interval > 0 and self.minutes_between_pushes(
                 params["head_repository"],
                 project,
                 pushid,
