@@ -79,6 +79,9 @@ linux64-plain/opt:
             - linux64-cbindgen
             - linux64-lucetc
             - wasi-sysroot
+    optimization:
+        push-interval-10:
+            - linux
 
 linux64-fuzzing/debug:
     description: "Linux64 Fuzzing Debug"
@@ -209,6 +212,9 @@ linux64-plain/debug:
             - linux64-cbindgen
             - linux64-lucetc
             - wasi-sysroot
+    optimization:
+        push-interval-10:
+            - linux
 
 linux64-devedition/opt:
     description: "Linux64 devedition (shippable)"
@@ -1400,6 +1406,9 @@ linux64-aarch64/opt:
             - linux64-node
             - linux64-lucetc
             - wasi-sysroot
+    optimization:
+        push-interval-10:
+            - linux
 
 linux-gcp/debug:
     description: "Linux32 Debug - built on GCP"
