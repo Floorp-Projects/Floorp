@@ -27,7 +27,7 @@ class GeckoViewScrollChild extends GeckoViewChildModule {
 
     switch (aEvent.type) {
       case "mozvisualscroll":
-        let x = {},
+        const x = {},
           y = {};
         content.windowUtils.getVisualViewportOffset(x, y);
         this.eventDispatcher.sendRequest({

@@ -13,7 +13,7 @@
 "use strict";
 
 add_task(async function() {
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
       "applications": { "gecko": { "id": "get-current@tests.mozilla.org" } },
@@ -22,7 +22,7 @@ add_task(async function() {
 
     files: {
       "tab.js": function() {
-        let url = document.location.href;
+        const url = document.location.href;
 
         browser.tabs.getCurrent().then(currentTab => {
           browser.test.assertEq(currentTab.url, url, "getCurrent in non-active background tab");

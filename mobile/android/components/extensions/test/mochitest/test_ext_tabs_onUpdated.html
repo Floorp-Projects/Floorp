@@ -13,7 +13,7 @@
 "use strict";
 
 add_task(async function test_onUpdated() {
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "applications": {
         "gecko": {
@@ -30,15 +30,15 @@ add_task(async function test_onUpdated() {
 
     useAddonManager: "permanent",
     background: function() {
-      let pageURL = "http://mochi.test:8888/tests/mobile/android/components/extensions/test/mochitest/context_tabs_onUpdated_page.html";
+      const pageURL = "http://mochi.test:8888/tests/mobile/android/components/extensions/test/mochitest/context_tabs_onUpdated_page.html";
 
-      let expectedSequence = [
+      const expectedSequence = [
         {status: "loading"},
         {status: "loading", url: pageURL},
         {status: "complete"},
       ];
 
-      let collectedSequence = [];
+      const collectedSequence = [];
 
       let tabId;
       browser.tabs.onUpdated.addListener(function(tabId, updatedInfo) {
@@ -101,7 +101,7 @@ add_task(async function test_onUpdated() {
 });
 
 function* do_test_update(name, background, withPermissions = true) {
-  let manifest = {
+  const manifest = {
     applications: {
       gecko: {
         id: "test_update_" + name + "@tests.mozilla.org",
@@ -111,7 +111,7 @@ function* do_test_update(name, background, withPermissions = true) {
   if (withPermissions) {
     manifest.permissions = ["tabs", "http://mochi.test/"];
   }
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest,
     background,
     useAddonManager: "permanent",

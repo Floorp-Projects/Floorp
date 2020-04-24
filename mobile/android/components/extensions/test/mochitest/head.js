@@ -15,7 +15,7 @@ var TEST_ICON_ARRAYBUFFER = Uint8Array.from(atob(TEST_ICON_DATA), byte =>
 ).buffer;
 
 {
-  let chromeScript = SpecialPowers.loadChromeScript(
+  const chromeScript = SpecialPowers.loadChromeScript(
     SimpleTest.getTestFileURL("chrome_cleanup_script.js")
   );
 
@@ -24,7 +24,7 @@ var TEST_ICON_ARRAYBUFFER = Uint8Array.from(atob(TEST_ICON_DATA), byte =>
 
     chromeScript.sendAsyncMessage("check-cleanup");
 
-    let results = await chromeScript.promiseOneMessage("cleanup-results");
+    const results = await chromeScript.promiseOneMessage("cleanup-results");
     chromeScript.destroy();
 
     if (results.extraWindows.length || results.extraTabs.length) {

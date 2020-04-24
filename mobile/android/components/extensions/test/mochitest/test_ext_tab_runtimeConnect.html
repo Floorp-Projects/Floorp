@@ -13,15 +13,15 @@
 "use strict";
 
 add_task(async function() {
-  let win = window.open("http://mochi.test:8888/");
+  const win = window.open("http://mochi.test:8888/");
 
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
     },
 
     background: function() {
-      let messages_received = [];
+      const messages_received = [];
 
       let tabId;
 
@@ -54,7 +54,7 @@ add_task(async function() {
 
     files: {
       "tab.js": function() {
-        let port = browser.runtime.connect({name: "tab-connection-name"});
+        const port = browser.runtime.connect({name: "tab-connection-name"});
         port.postMessage("tab to background port message");
         port.onMessage.addListener((msg) => {
           port.postMessage({tabReceived: msg});

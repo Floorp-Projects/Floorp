@@ -25,7 +25,7 @@
  */
 
 add_task(async function testExecuteScript() {
-  let win = window.open("about:blank");
+  const win = window.open("about:blank");
 
   async function background(DEBUG) {
     let tab;
@@ -35,7 +35,7 @@ add_task(async function testExecuteScript() {
 
     const MAX_TRIES = 30;
 
-    let onUpdatedPromise = (tabId, url, status) => {
+    const onUpdatedPromise = (tabId, url, status) => {
       return new Promise(resolve => {
         browser.tabs.onUpdated.addListener(function listener(_, changed, tab) {
           if (tabId == tab.id && changed.status == status && tab.url == url) {
@@ -51,17 +51,17 @@ add_task(async function testExecuteScript() {
 
       let success = false;
       for (let tries = 0; !success && tries < MAX_TRIES; tries++) {
-        let url = `${URL}?with-iframe&r=${Math.random()}`;
+        const url = `${URL}?with-iframe&r=${Math.random()}`;
 
-        let loadingPromise = onUpdatedPromise(tab.id, url, "loading");
-        let completePromise = onUpdatedPromise(tab.id, url, "complete");
+        const loadingPromise = onUpdatedPromise(tab.id, url, "loading");
+        const completePromise = onUpdatedPromise(tab.id, url, "complete");
 
         // TODO: Test allFrames and frameId.
 
         await browser.tabs.update({url});
         await loadingPromise;
 
-        let states = await Promise.all([
+        const states = await Promise.all([
           // Send the executeScript requests in the reverse order that we expect
           // them to execute in, to avoid them passing only because of timing
           // races.
@@ -106,7 +106,7 @@ add_task(async function testExecuteScript() {
     }
   }
 
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
       "applications": {

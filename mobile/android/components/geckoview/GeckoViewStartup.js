@@ -260,7 +260,7 @@ GeckoViewStartup.prototype = {
         if (aData.requestedLocales) {
           Services.locale.requestedLocales = aData.requestedLocales;
         }
-        let pls = Cc["@mozilla.org/pref-localizedstring;1"].createInstance(
+        const pls = Cc["@mozilla.org/pref-localizedstring;1"].createInstance(
           Ci.nsIPrefLocalizedString
         );
         pls.data = aData.acceptLanguages;

@@ -20,13 +20,13 @@ var EXPORTED_SYMBOLS = ["GeckoViewContentChild"];
 class GeckoViewContentChild extends GeckoViewActorChild {
   collectSessionState() {
     const { docShell, contentWindow } = this;
-    let history = SessionHistory.collect(docShell);
+    const history = SessionHistory.collect(docShell);
     let formdata = SessionStoreUtils.collectFormData(contentWindow);
     let scrolldata = SessionStoreUtils.collectScrollPosition(contentWindow);
 
     // Save the current document resolution.
     let zoom = 1;
-    let domWindowUtils = contentWindow.windowUtils;
+    const domWindowUtils = contentWindow.windowUtils;
     zoom = domWindowUtils.getResolution();
     scrolldata = scrolldata || {};
     scrolldata.zoom = {};
@@ -34,8 +34,8 @@ class GeckoViewContentChild extends GeckoViewActorChild {
 
     // Save some data that'll help in adjusting the zoom level
     // when restoring in a different screen orientation.
-    let displaySize = {};
-    let width = {},
+    const displaySize = {};
+    const width = {},
       height = {};
     domWindowUtils.getContentViewerSize(width, height);
 
