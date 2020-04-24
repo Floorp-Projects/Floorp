@@ -35,6 +35,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Downloader: "resource://services-settings/Attachments.jsm",
   RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
+  ExperimentAPI: "resource://messaging-system/experiments/ExperimentAPI.jsm",
 });
 XPCOMUtils.defineLazyServiceGetters(this, {
   BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
@@ -336,6 +337,31 @@ const MessageLoaderUtils = {
     return RemoteSettings(bucket).get();
   },
 
+  async _experimentsAPILoader(provider, options) {
+    try {
+      await ExperimentAPI.ready();
+    } catch (e) {
+      MessageLoaderUtils.reportError(e);
+      return [];
+    }
+    return provider.messageGroups
+      .map(group => {
+        let experimentData;
+        try {
+          experimentData = ExperimentAPI.getExperiment({ group });
+        } catch (e) {
+          MessageLoaderUtils.reportError(e);
+          return [];
+        }
+        if (experimentData && experimentData.branch) {
+          return experimentData.branch.value;
+        }
+
+        return [];
+      })
+      .flat();
+  },
+
   _handleRemoteSettingsUndesiredEvent(event, providerId, dispatchToAS) {
     if (dispatchToAS) {
       dispatchToAS(
@@ -363,6 +389,8 @@ const MessageLoaderUtils = {
         return this._remoteSettingsLoader;
       case "json":
         return this._localJsonLoader;
+      case "remote-experiments":
+        return this._experimentsAPILoader;
       case "local":
       default:
         return this._localLoader;
