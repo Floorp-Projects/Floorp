@@ -594,6 +594,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   position: relative;
   direction: ltr;
 }
+
 #urlbar-scheme {
   position: absolute;
   height: 100%;
@@ -602,31 +603,38 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   pointer-events: none;
 }
 
-/* Visible if the urlbar is not focused and it overflows at the start.
-   Uses the required-valid trick to check if it contains a value */
-#urlbar[textoverflow="left"][hasrtldomain]:not([focused]) > #urlbar-input-container > .urlbar-input-box > #urlbar-scheme:valid {
-  visibility: visible;
-}
-
-/* Fade out URL on overflow
-   This mask may be overriden when a Contextual Feature Recommendation is shown,
-   see browser/themes/shared/urlbar-searchbar.inc.css for details */
-#urlbar[textoverflow="right"]:not([focused]) > #urlbar-input-container > .urlbar-input-box > #urlbar-input {
-  mask-image: linear-gradient(to left, transparent, black 3ch);
-}
-
-#urlbar[textoverflow="left"][rtltext]:not([focused]) > #urlbar-input-container > .urlbar-input-box > #urlbar-input {
-  mask-image: linear-gradient(to right, transparent, black 3ch);
-}
-
-#urlbar[textoverflow="left"][hasrtldomain]:not([focused]) > #urlbar-input-container > .urlbar-input-box > #urlbar-input {
-  mask-image: linear-gradient(to right, transparent var(--urlbar-scheme-size), black calc(var(--urlbar-scheme-size) + 3ch));
-}
-
 #urlbar-input {
   mask-repeat: no-repeat;
   unicode-bidi: plaintext;
   text-align: match-parent;
+}
+
+#urlbar:not([focused])[domaindir="ltr"]> #urlbar-input-container > .urlbar-input-box > #urlbar-input {
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+/* The following rules apply overflow masks to the unfocused urlbar
+   This mask may be overriden when a Contextual Feature Recommendation is shown,
+   see browser/themes/shared/urlbar-searchbar.inc.css for details */
+
+#urlbar:not([focused])[textoverflow="both"] > #urlbar-input-container > .urlbar-input-box > #urlbar-input {
+  mask-image: linear-gradient(to right, transparent, black 3ch, black calc(100% - 3ch), transparent);
+}
+#urlbar:not([focused])[textoverflow="right"] > #urlbar-input-container > .urlbar-input-box > #urlbar-input {
+  mask-image: linear-gradient(to left, transparent, black 3ch);
+}
+#urlbar:not([focused])[textoverflow="left"] > #urlbar-input-container > .urlbar-input-box > #urlbar-input {
+  mask-image: linear-gradient(to right, transparent, black 3ch);
+}
+
+/* The protocol is visible if there is an RTL domain and we overflow to the left.
+   Uses the required-valid trick to check if it contains a value */
+#urlbar:not([focused])[textoverflow="left"][domaindir="rtl"] > #urlbar-input-container > .urlbar-input-box > #urlbar-scheme:valid {
+  visibility: visible;
+}
+#urlbar:not([focused])[textoverflow="left"][domaindir="rtl"] > #urlbar-input-container > .urlbar-input-box > #urlbar-input {
+  mask-image: linear-gradient(to right, transparent var(--urlbar-scheme-size), black calc(var(--urlbar-scheme-size) + 3ch));
 }
 
 /* Apply crisp rendering for favicons at exactly 2dppx resolution */
