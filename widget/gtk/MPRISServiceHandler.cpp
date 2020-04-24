@@ -599,6 +599,10 @@ GVariant* MPRISServiceHandler::GetPlaybackStatus() const {
 void MPRISServiceHandler::SetMediaMetadata(
     const dom::MediaMetadataBase& aMetadata) {
   mMetadata = Some(aMetadata);
+  LOG("Set MediaMetadata: title - %s, Artist - %s, Album - %s",
+      NS_ConvertUTF16toUTF8(mMetadata->mTitle).get(),
+      NS_ConvertUTF16toUTF8(mMetadata->mArtist).get(),
+      NS_ConvertUTF16toUTF8(mMetadata->mAlbum).get());
 }
 
 GVariant* MPRISServiceHandler::GetMetadataAsGVariant() const {
@@ -608,6 +612,11 @@ GVariant* MPRISServiceHandler::GetMetadataAsGVariant() const {
                         g_variant_new("o", "/valid/path"));
 
   if (mMetadata.isSome()) {
+    LOG("Get Metadata: title - %s, Artist - %s, Album - %s",
+        NS_ConvertUTF16toUTF8(mMetadata->mTitle).get(),
+        NS_ConvertUTF16toUTF8(mMetadata->mArtist).get(),
+        NS_ConvertUTF16toUTF8(mMetadata->mAlbum).get());
+
     g_variant_builder_add(
         &builder, "{sv}", "xesam:title",
         g_variant_new_string(NS_ConvertUTF16toUTF8(mMetadata->mTitle).get()));
