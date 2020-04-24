@@ -131,7 +131,9 @@ void L10nMutations::FlushPendingTranslations() {
       continue;
     }
 
-    elements.AppendElement(*elem, fallible);
+    if (!elements.AppendElement(*elem, fallible)) {
+      mozalloc_handle_oom(0);
+    }
   }
 
   mPendingElementsHash.Clear();

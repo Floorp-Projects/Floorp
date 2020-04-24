@@ -876,8 +876,8 @@ static Sequence<nsString> UnboxSessionTypes(
     sessionTypes = aSessionTypes.Value();
   } else {
     // Note: fallible. Results in an empty array.
-    sessionTypes.AppendElement(ToString(MediaKeySessionType::Temporary),
-                               mozilla::fallible);
+    (void)sessionTypes.AppendElement(ToString(MediaKeySessionType::Temporary),
+                                     mozilla::fallible);
   }
   return sessionTypes;
 }

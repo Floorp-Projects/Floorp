@@ -9,6 +9,7 @@
 
 #include "TimelineMarker.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
+#include "mozilla/mozalloc_oom.h"
 #include "nsRegion.h"
 
 namespace mozilla {
@@ -28,7 +29,12 @@ class LayerTimelineMarker : public TimelineMarker {
       rect.mY = iterRect.Y();
       rect.mWidth = iterRect.Width();
       rect.mHeight = iterRect.Height();
-      aRectangles.AppendElement(rect, fallible);
+      if (!aRectangles.AppendElement(rect, fallible)) {
+        // XXX(Bug 1632090) Instead of extending the array 1-by-1 (which might
+        // involve multiple reallocations) and potentially crashing here,
+        // SetCapacity could be called outside the loop once.
+        mozalloc_handle_oom(0);
+      }
     }
   }
 

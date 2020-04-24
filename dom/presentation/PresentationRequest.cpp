@@ -67,7 +67,10 @@ static nsresult GetAbsoluteURL(const nsAString& aUrl, nsIURI* aBaseUri,
 already_AddRefed<PresentationRequest> PresentationRequest::Constructor(
     const GlobalObject& aGlobal, const nsAString& aUrl, ErrorResult& aRv) {
   Sequence<nsString> urls;
-  urls.AppendElement(aUrl, fallible);
+  if (!urls.AppendElement(aUrl, fallible)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
   return Constructor(aGlobal, urls, aRv);
 }
 

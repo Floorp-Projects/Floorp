@@ -457,7 +457,7 @@ TEST(TArray, Movable_AppendElement_ElementArg_Fallible)
   movable.mDestructionCounter = &dummyMovableArrayDestructorCounter;
   {
     nsTArray<Movable> array;
-    array.AppendElement(std::move(movable), fallible);
+    ASSERT_NE(nullptr, array.AppendElement(std::move(movable), fallible));
 
     ASSERT_EQ(1u, array.Length());
     ASSERT_EQ(&dummyMovableArrayDestructorCounter,

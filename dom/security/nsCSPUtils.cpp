@@ -1092,7 +1092,12 @@ void nsCSPDirective::toDomCSPStruct(mozilla::dom::CSP& outCSP) const {
   for (uint32_t i = 0; i < mSrcs.Length(); i++) {
     src.Truncate();
     mSrcs[i]->toString(src);
-    srcs.AppendElement(src, mozilla::fallible);
+    if (!srcs.AppendElement(src, mozilla::fallible)) {
+      // XXX(Bug 1632090) Instead of extending the array 1-by-1 (which might
+      // involve multiple reallocations) and potentially crashing here,
+      // SetCapacity could be called outside the loop once.
+      mozalloc_handle_oom(0);
+    }
   }
 
   switch (mDirective) {

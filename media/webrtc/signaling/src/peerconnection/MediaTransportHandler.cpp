@@ -31,6 +31,7 @@
 
 #include "runnable_utils.h"
 
+#include "mozilla/Algorithm.h"
 #include "mozilla/Telemetry.h"
 
 #include "mozilla/dom/RTCStatsReportBinding.h"
@@ -963,9 +964,15 @@ MediaTransportHandlerSTS::GetIceLog(const nsCString& aPattern) {
         if (logs) {
           logs->Filter(aPattern.get(), 0, &result);
         }
+        /// XXX(Bug 1631386) Check if we should reject the promise instead of
+        /// crashing in an OOM situation.
+        if (!converted.SetCapacity(result.size(), fallible)) {
+          mozalloc_handle_oom(sizeof(nsString) * result.size());
+        }
         for (auto& line : result) {
-          converted.AppendElement(NS_ConvertUTF8toUTF16(line.c_str()),
-                                  fallible);
+          // Cannot fail, SetCapacity was called before.
+          (void)converted.AppendElement(NS_ConvertUTF8toUTF16(line.c_str()),
+                                        fallible);
         }
         return IceLogPromise::CreateAndResolve(std::move(converted), __func__);
       });
@@ -1054,9 +1061,16 @@ static void ToRTCIceCandidateStats(
     }
     cand.mProxied.Construct(NS_ConvertASCIItoUTF16(
         candidate.is_proxied ? "proxied" : "non-proxied"));
-    stats->mIceCandidateStats.AppendElement(cand, fallible);
+    if (!stats->mIceCandidateStats.AppendElement(cand, fallible)) {
+      // XXX(Bug 1632090) Instead of extending the array 1-by-1 (which might
+      // involve multiple reallocations) and potentially crashing here,
+      // SetCapacity could be called outside the loop once.
+      mozalloc_handle_oom(0);
+    }
     if (candidate.trickled) {
-      stats->mTrickledIceCandidateStats.AppendElement(cand, fallible);
+      if (!stats->mTrickledIceCandidateStats.AppendElement(cand, fallible)) {
+        mozalloc_handle_oom(0);
+      }
     }
   }
 }
@@ -1102,7 +1116,12 @@ void MediaTransportHandlerSTS::GetIceStats(
     s.mLastPacketReceivedTimestamp.Construct(candPair.ms_since_last_recv);
     s.mState.Construct(dom::RTCStatsIceCandidatePairState(candPair.state));
     s.mComponentId.Construct(candPair.component_id);
-    aStats->mIceCandidatePairStats.AppendElement(s, fallible);
+    if (!aStats->mIceCandidatePairStats.AppendElement(s, fallible)) {
+      // XXX(Bug 1632090) Instead of extending the array 1-by-1 (which might
+      // involve multiple reallocations) and potentially crashing here,
+      // SetCapacity could be called outside the loop once.
+      mozalloc_handle_oom(0);
+    }
   }
 
   std::vector<NrIceCandidate> candidates;
@@ -1112,8 +1131,13 @@ void MediaTransportHandlerSTS::GetIceStats(
                            mSignaledAddresses);
     // add the local candidates unparsed string to a sequence
     for (const auto& candidate : candidates) {
-      aStats->mRawLocalCandidates.AppendElement(
-          NS_ConvertASCIItoUTF16(candidate.label.c_str()), fallible);
+      if (!aStats->mRawLocalCandidates.AppendElement(
+              NS_ConvertASCIItoUTF16(candidate.label.c_str()), fallible)) {
+        // XXX(Bug 1632090) Instead of extending the array 1-by-1 (which might
+        // involve multiple reallocations) and potentially crashing here,
+        // SetCapacity could be called outside the loop once.
+        mozalloc_handle_oom(0);
+      }
     }
   }
   candidates.clear();
@@ -1124,8 +1148,13 @@ void MediaTransportHandlerSTS::GetIceStats(
                            mSignaledAddresses);
     // add the remote candidates unparsed string to a sequence
     for (const auto& candidate : candidates) {
-      aStats->mRawRemoteCandidates.AppendElement(
-          NS_ConvertASCIItoUTF16(candidate.label.c_str()), fallible);
+      if (!aStats->mRawRemoteCandidates.AppendElement(
+              NS_ConvertASCIItoUTF16(candidate.label.c_str()), fallible)) {
+        // XXX(Bug 1632090) Instead of extending the array 1-by-1 (which might
+        // involve multiple reallocations) and potentially crashing here,
+        // SetCapacity could be called outside the loop once.
+        mozalloc_handle_oom(0);
+      }
     }
   }
 }

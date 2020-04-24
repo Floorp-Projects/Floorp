@@ -198,7 +198,7 @@ nsresult nsNavBookmarks::Init() {
   NS_ENSURE_STATE(history);
   history->AddObserver(this, true);
   AutoTArray<PlacesEventType, 1> events;
-  events.AppendElement(PlacesEventType::Page_visited, fallible);
+  events.AppendElement(PlacesEventType::Page_visited);
   PlacesObservers::AddListener(events, this);
 
   // DO NOT PUT STUFF HERE that can fail. See observer comment above.
