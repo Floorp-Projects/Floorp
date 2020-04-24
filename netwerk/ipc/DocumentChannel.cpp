@@ -10,12 +10,14 @@
 #include "SerializedLoadContext.h"
 #include "mozIThirdPartyUtil.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/extensions/StreamFilterParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "mozilla/net/DocumentChannelChild.h"
 #include "mozilla/net/HttpChannelChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/UrlClassifierCommon.h"
@@ -24,6 +26,7 @@
 #include "nsDocShellLoadState.h"
 #include "nsHttpHandler.h"
 #include "nsIInputStreamChannel.h"
+#include "nsNetUtil.h"
 #include "nsQueryObject.h"
 #include "nsSerializationHelper.h"
 #include "nsStreamListenerWrapper.h"
@@ -133,6 +136,43 @@ nsDocShell* DocumentChannel::GetDocShell() {
   auto* pDomWindow = nsPIDOMWindowOuter::From(domWindow);
   nsIDocShell* docshell = pDomWindow->GetDocShell();
   return nsDocShell::Cast(docshell);
+}
+
+// Changes here should also be made in
+// E10SUtils.documentChannelPermittedForURI().
+static bool URIUsesDocChannel(nsIURI* aURI) {
+  if (SchemeIsJavascript(aURI) || NS_IsAboutBlank(aURI)) {
+    return false;
+  }
+
+  nsCString spec = aURI->GetSpecOrDefault();
+  return !spec.EqualsLiteral("about:printpreview") &&
+         !spec.EqualsLiteral("about:crashcontent");
+}
+
+bool DocumentChannel::CanUseDocumentChannel(nsDocShellLoadState* aLoadState) {
+  MOZ_ASSERT(aLoadState);
+  // We want to use DocumentChannel if we're using a supported scheme. Sandboxed
+  // srcdoc loads break due to failing assertions after changing processes, and
+  // non-sandboxed srcdoc loads need to share the same principal object as their
+  // outer document (and must load in the same process), which breaks if we
+  // serialize to the parent process.
+  return StaticPrefs::browser_tabs_documentchannel() &&
+         XRE_IsContentProcess() &&
+         !aLoadState->HasLoadFlags(nsDocShell::INTERNAL_LOAD_FLAGS_IS_SRCDOC) &&
+         URIUsesDocChannel(aLoadState->URI());
+}
+
+/* static */
+already_AddRefed<DocumentChannel> DocumentChannel::CreateDocumentChannel(
+    nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
+    nsLoadFlags aLoadFlags, nsIInterfaceRequestor* aNotificationCallbacks,
+    uint32_t aCacheKey) {
+  MOZ_ASSERT(XRE_IsContentProcess());
+  RefPtr<DocumentChannel> channel =
+      new DocumentChannelChild(aLoadState, aLoadInfo, aLoadFlags, aCacheKey);
+  channel->SetNotificationCallbacks(aNotificationCallbacks);
+  return channel.forget();
 }
 
 //-----------------------------------------------------------------------------
