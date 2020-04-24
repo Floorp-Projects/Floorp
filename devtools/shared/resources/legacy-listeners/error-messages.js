@@ -30,15 +30,33 @@ module.exports = async function({
 
   const webConsoleFront = await targetFront.getFront("console");
 
-  // Request notifying about new messages
-  await webConsoleFront.startListeners(["ConsoleAPI"]);
+  // Request notifying about new messages. Here the "PageError" type start listening for
+  // both actual PageErrors (emitted as "pageError" events) as well as LogMessages (
+  // emitted as "logMessage" events). This function only set up the listener on the
+  // webConsoleFront for "pageError".
+  await webConsoleFront.startListeners(["PageError"]);
 
   // Fetch already existing messages
-  // /!\ The actor implementation requires to call startListeners(ConsoleAPI) first /!\
-  const { messages } = await webConsoleFront.getCachedMessages(["ConsoleAPI"]);
-  // Wrap the message into a `message` attribute, to match `consoleAPICall` behavior
-  messages.map(message => ({ message })).forEach(onAvailable);
+  // /!\ The actor implementation requires to call startListeners("PageError") first /!\
+  const { messages } = await webConsoleFront.getCachedMessages(["PageError"]);
 
-  // Forward new message events
-  webConsoleFront.on("consoleAPICall", onAvailable);
+  for (let message of messages) {
+    // On older server (< v77), we're also getting LogMessage cached messages, so we need
+    // to ignore those.
+    if (
+      !webConsoleFront.traits.newCacheStructure &&
+      message._type !== "PageError"
+    ) {
+      continue;
+    }
+
+    // Cached messages don't have the same shape as live messages,
+    // so we need to transform them.
+    if (message._type) {
+      message = { pageError: message };
+    }
+    onAvailable(message);
+  }
+
+  webConsoleFront.on("pageError", onAvailable);
 };

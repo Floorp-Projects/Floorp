@@ -303,39 +303,3 @@ function checkConsoleAPICall(call, expected) {
 
   checkObject(call, expected);
 }
-
-function checkObject(object, expected) {
-  if (object && object.getGrip) {
-    object = object.getGrip();
-  }
-
-  for (const name of Object.keys(expected)) {
-    const expectedValue = expected[name];
-    const value = object[name];
-    checkValue(name, value, expectedValue);
-  }
-}
-
-function checkValue(name, value, expected) {
-  if (expected === null) {
-    ok(!value, "'" + name + "' is null");
-  } else if (value === undefined) {
-    ok(false, "'" + name + "' is undefined");
-  } else if (value === null) {
-    ok(false, "'" + name + "' is null");
-  } else if (
-    typeof expected == "string" ||
-    typeof expected == "number" ||
-    typeof expected == "boolean"
-  ) {
-    is(value, expected, "property '" + name + "'");
-  } else if (expected instanceof RegExp) {
-    ok(expected.test(value), name + ": " + expected + " matched " + value);
-  } else if (Array.isArray(expected)) {
-    info("checking array for property '" + name + "'");
-    checkObject(value, expected);
-  } else if (typeof expected == "object") {
-    info("checking object for property '" + name + "'");
-    checkObject(value, expected);
-  }
-}
