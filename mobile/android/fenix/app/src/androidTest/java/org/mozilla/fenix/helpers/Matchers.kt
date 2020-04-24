@@ -7,6 +7,10 @@ package org.mozilla.fenix.helpers
 import android.graphics.Bitmap
 import android.view.View
 import android.view.ViewGroup
+import androidx.test.espresso.ViewInteraction
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers
+import junit.framework.AssertionFailedError
 import org.hamcrest.CoreMatchers.not
 import org.hamcrest.Description
 import org.hamcrest.Matcher
@@ -55,4 +59,14 @@ fun nthChildOf(
             return parentMatcher.matches(view.parent) && group.getChildAt(childPosition) == view
         }
     }
+}
+
+fun ViewInteraction.isVisibleForUser(): Boolean {
+    try {
+        check(matches(ViewMatchers.isCompletelyDisplayed()))
+    } catch (assertionError: AssertionFailedError) {
+        return false
+    }
+
+    return true
 }

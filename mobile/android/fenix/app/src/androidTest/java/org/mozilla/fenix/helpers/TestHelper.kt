@@ -17,6 +17,7 @@ import androidx.test.espresso.action.GeneralClickAction
 import androidx.test.espresso.action.Press
 import androidx.test.espresso.action.Tap
 import androidx.test.espresso.action.ViewActions.longClick
+import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
@@ -24,6 +25,7 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
+import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.allOf
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.ext.waitNotNull
@@ -77,6 +79,11 @@ object TestHelper {
             Until.findObjects(By.res(resourceName)),
             TestAssetHelper.waitingTime
         )
+    }
+
+    fun verifyUrl(urlSubstring: String, resourceName: String, resId: Int) {
+        waitUntilObjectIsFound(resourceName)
+        onView(withId(resId)).check(ViewAssertions.matches(withText(CoreMatchers.containsString(urlSubstring))))
     }
 
     fun openAppFromExternalLink(url: String) {
