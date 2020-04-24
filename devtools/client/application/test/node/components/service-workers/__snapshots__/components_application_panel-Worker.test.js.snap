@@ -1,0 +1,187 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Worker Renders the expected snapshot for a non-active worker 1`] = `
+<section
+  className="worker js-sw-worker"
+>
+  <dl
+    className="worker__data"
+  >
+    <Localized
+      id="serviceworker-worker-source"
+    >
+      <dt
+        className="worker__meta-name"
+      />
+    </Localized>
+    <dd>
+      <span
+        className="worker__source-url js-source-url"
+        title="http://example.com/worker.js"
+      >
+        worker.js
+      </span>
+       
+      <Localized
+        attrs={
+          Object {
+            "title": true,
+          }
+        }
+        id="serviceworker-worker-debug"
+      >
+        <UIButton
+          className="js-debug-button"
+          disabled={true}
+          onClick={[Function]}
+          size="micro"
+        />
+      </Localized>
+    </dd>
+    <Localized
+      id="serviceworker-worker-status"
+    >
+      <dt
+        className="worker__meta-name"
+      />
+    </Localized>
+    <dd>
+      <span
+        className="js-worker-status worker__status"
+      >
+        installed
+      </span>
+       
+    </dd>
+  </dl>
+</section>
+`;
+
+exports[`Worker Renders the expected snapshot for a running worker 1`] = `
+<section
+  className="worker js-sw-worker"
+>
+  <dl
+    className="worker__data"
+  >
+    <Localized
+      id="serviceworker-worker-source"
+    >
+      <dt
+        className="worker__meta-name"
+      />
+    </Localized>
+    <dd>
+      <span
+        className="worker__source-url js-source-url"
+        title="http://example.com/worker.js"
+      >
+        worker.js
+      </span>
+       
+      <Localized
+        attrs={
+          Object {
+            "title": false,
+          }
+        }
+        id="serviceworker-worker-debug"
+      >
+        <UIButton
+          className="js-debug-button"
+          disabled={false}
+          onClick={[Function]}
+          size="micro"
+        />
+      </Localized>
+    </dd>
+    <Localized
+      id="serviceworker-worker-status"
+    >
+      <dt
+        className="worker__meta-name"
+      />
+    </Localized>
+    <dd>
+      <span
+        className="js-worker-status worker__status"
+      >
+        serviceworker-worker-status-running
+      </span>
+       
+    </dd>
+  </dl>
+</section>
+`;
+
+exports[`Worker Renders the expected snapshot for a stopped worker 1`] = `
+<section
+  className="worker js-sw-worker"
+>
+  <dl
+    className="worker__data"
+  >
+    <Localized
+      id="serviceworker-worker-source"
+    >
+      <dt
+        className="worker__meta-name"
+      />
+    </Localized>
+    <dd>
+      <span
+        className="worker__source-url js-source-url"
+        title="http://example.com/worker.js"
+      >
+        worker.js
+      </span>
+       
+      <Localized
+        attrs={
+          Object {
+            "title": true,
+          }
+        }
+        id="serviceworker-worker-debug"
+      >
+        <UIButton
+          className="js-debug-button"
+          disabled={true}
+          onClick={[Function]}
+          size="micro"
+        />
+      </Localized>
+    </dd>
+    <Localized
+      id="serviceworker-worker-status"
+    >
+      <dt
+        className="worker__meta-name"
+      />
+    </Localized>
+    <dd>
+      <span
+        className="js-worker-status worker__status"
+      >
+        serviceworker-worker-status-stopped
+      </span>
+       
+      <Localized
+        attrs={
+          Object {
+            "title": true,
+          }
+        }
+        id="serviceworker-worker-start2"
+      >
+        <UIButton
+          className="js-start-button"
+          disabled={false}
+          onClick={[Function]}
+          size="micro"
+        />
+      </Localized>
+    </dd>
+  </dl>
+</section>
+`;
