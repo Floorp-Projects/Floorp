@@ -851,11 +851,9 @@ NS_IMETHODIMP nsNavHistoryQuery::SetTags(nsIVariant* aTags) {
     // Don't store duplicate tags.  This isn't just to save memory or to be
     // fancy; the SQL that's built from the tags relies on no dupes.
     if (!mTags.Contains(tag)) {
-      if (!mTags.AppendElement(tag)) {
-        free(tags[i]);
-        free(tags);
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+      // XXX(Bug 1631371) Check if this should use a fallible operation as it
+      // pretended earlier.
+      mTags.AppendElement(tag);
     }
     free(tags[i]);
   }

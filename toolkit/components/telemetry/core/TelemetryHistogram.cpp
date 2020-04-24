@@ -747,9 +747,9 @@ nsresult internal_GetHistogramAndSamples(const StaticMutexAutoLock& aLock,
   // Convert the ranges of the buckets to a nsTArray.
   const size_t bucketCount = h->bucket_count();
   for (size_t i = 0; i < bucketCount; i++) {
-    if (!aSnapshot.mBucketRanges.AppendElement(h->ranges(i))) {
-      return NS_ERROR_FAILURE;
-    }
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier, or change the return type to void.
+    aSnapshot.mBucketRanges.AppendElement(h->ranges(i));
   }
 
   // Get a snapshot of the samples.
@@ -758,9 +758,9 @@ nsresult internal_GetHistogramAndSamples(const StaticMutexAutoLock& aLock,
 
   // Get the number of samples in each bucket.
   for (size_t i = 0; i < bucketCount; i++) {
-    if (!aSnapshot.mBucketCounts.AppendElement(ss.counts(i))) {
-      return NS_ERROR_FAILURE;
-    }
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier, or change the return type to void.
+    aSnapshot.mBucketCounts.AppendElement(ss.counts(i));
   }
 
   // Finally, save the |sum|. We don't need to reflect declared_min,

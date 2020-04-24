@@ -73,7 +73,9 @@ nsresult nsMathMLmencloseFrame::AllocateMathMLChar(nsMencloseNotation mask) {
   uint32_t i = mMathMLChar.Length();
   nsAutoString Char;
 
-  if (!mMathMLChar.AppendElement()) return NS_ERROR_OUT_OF_MEMORY;
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier, or change the return type to void.
+  mMathMLChar.AppendElement();
 
   if (mask == NOTATION_LONGDIV) {
     Char.Assign(kLongDivChar);

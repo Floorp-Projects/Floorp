@@ -139,7 +139,10 @@ nsresult nsStreamConverterService::AddAdjacency(const char* aContractID) {
   NS_ASSERTION(fromEdges, "something wrong in adjacency list construction");
   if (!fromEdges) return NS_ERROR_FAILURE;
 
-  return fromEdges->AppendElement(vertex) ? NS_OK : NS_ERROR_FAILURE;
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier.
+  fromEdges->AppendElement(vertex);
+  return NS_OK;
 }
 
 nsresult nsStreamConverterService::ParseFromTo(const char* aContractID,
@@ -309,10 +312,9 @@ nsresult nsStreamConverterService::FindConverter(
     newContractID.Append(data->key);
 
     // Add this CONTRACTID to the chain.
-    rv = shortestPath->AppendElement(newContractID)
-             ? NS_OK
-             : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
-    NS_ASSERTION(NS_SUCCEEDED(rv), "AppendElement failed");
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    shortestPath->AppendElement(newContractID);
 
     // move up the tree.
     data = predecessorData;

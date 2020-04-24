@@ -401,7 +401,7 @@ char16_t* CopyUnicodeTo(const nsAString& aSource, uint32_t aSrcOffset,
   return true;
 }
 
-bool ParseString(const nsACString& aAstring, char aDelimiter,
+void ParseString(const nsACString& aSource, char aDelimiter,
                  nsTArray<nsCString>& aArray);
 
 /**

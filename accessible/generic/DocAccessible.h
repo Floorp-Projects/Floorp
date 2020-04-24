@@ -424,7 +424,10 @@ class DocAccessible : public HyperTextAccessibleWrap,
    * accessibles.
    */
   bool AppendChildDocument(DocAccessible* aChildDocument) {
-    return mChildDocuments.AppendElement(aChildDocument);
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier, or change the return type to void.
+    mChildDocuments.AppendElement(aChildDocument);
+    return true;
   }
 
   /**
