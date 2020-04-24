@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<!--
+  XUL Widget Test for preferences window. This particular test ensures that
+  when a preference is disabled, the checkbox disabled and when a preference
+  is locked, the checkbox can't be enabled.
+-->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="prefwindow"
+        title="preferences window"
+        windowtype="test:preferences"
+        onload="RunTest(window.arguments)">
+<dialog id="disabled_dialog"
+        buttons="accept,cancel">
+  <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
+  <script type="application/javascript">
+  <![CDATA[
+    function RunTest(aArgs)
+    {
+      aArgs[0](this);
+      let dialog = document.getElementById("disabled_dialog");
+      dialog.cancelDialog();
+    }
+
+    Preferences.addAll([
+    { id: "tests.disabled_preference_bool", type: "bool" },
+    { id: "tests.locked_preference_bool", type: "bool" },
+    ]);
+  ]]>
+  </script>
+
+  <vbox id="sample_pane" class="prefpane" label="Sample Prefpane">
+    <checkbox id="disabled_checkbox" label="Disabled" preference="tests.disabled_preference_bool"/>
+    <checkbox id="locked_checkbox" label="Locked" preference="tests.locked_preference_bool"/>
+  </vbox>
+</dialog>
+</window>
