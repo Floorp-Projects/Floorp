@@ -850,11 +850,12 @@ static void TestChunkedBuffer() {
         MOZ_RELEASE_ASSERT(false);
         return 1;
       },
-      [](ProfileBufferEntryWriter* aEW) { return aEW ? 2 : 3; });
+      [](Maybe<ProfileBufferEntryWriter>& aEW) { return aEW ? 2 : 3; });
   MOZ_RELEASE_ASSERT(result == 3);
 
   result = 0;
-  result = cb.Put(1, [](ProfileBufferEntryWriter* aEW) { return aEW ? 1 : 2; });
+  result = cb.Put(
+      1, [](Maybe<ProfileBufferEntryWriter>& aEW) { return aEW ? 1 : 2; });
   MOZ_RELEASE_ASSERT(result == 2);
 
   blockIndex = cb.PutFrom(&result, 1);
@@ -912,7 +913,7 @@ static void TestChunkedBuffer() {
   blockIndex = nullptr;
   bool success = cb.ReserveAndPut(
       []() { return sizeof(test); },
-      [&](ProfileBufferEntryWriter* aEW) {
+      [&](Maybe<ProfileBufferEntryWriter>& aEW) {
         ran = true;
         if (!aEW) {
           return false;
@@ -1171,7 +1172,7 @@ static void TestChunkedBuffer() {
             // to store an int), and write an increasing int.
             const bool success =
                 cb.Put(std::max(aThreadNo, int(sizeof(push))),
-                       [&](ProfileBufferEntryWriter* aEW) {
+                       [&](Maybe<ProfileBufferEntryWriter>& aEW) {
                          if (!aEW) {
                            return false;
                          }
@@ -1205,10 +1206,11 @@ static void TestChunkedBuffer() {
         MOZ_RELEASE_ASSERT(false);
         return 1;
       },
-      [](ProfileBufferEntryWriter* aEW) { return !!aEW; });
+      [](Maybe<ProfileBufferEntryWriter>& aEW) { return !!aEW; });
   MOZ_RELEASE_ASSERT(!success);
 
-  success = cb.Put(1, [](ProfileBufferEntryWriter* aEW) { return !!aEW; });
+  success =
+      cb.Put(1, [](Maybe<ProfileBufferEntryWriter>& aEW) { return !!aEW; });
   MOZ_RELEASE_ASSERT(!success);
 
   blockIndex = cb.PutFrom(&success, 1);
