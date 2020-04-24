@@ -250,8 +250,6 @@ class SearchEngineSelector {
       }
     }
 
-    engines = this._filterEngines(engines);
-
     let defaultEngine;
     let privateEngine;
 
@@ -332,35 +330,6 @@ class SearchEngineSelector {
       return Number.MAX_SAFE_INTEGER - 1;
     }
     return obj.orderHint || 0;
-  }
-
-  /**
-   * Filter any search engines that are preffed to be ignored,
-   * the pref is only allowed in partner distributions.
-   * @param {Array} engines - The list of engines to be filtered.
-   * @returns {Array} - The engine list with filtered removed.
-   */
-  _filterEngines(engines) {
-    let branch = Services.prefs.getDefaultBranch(
-      SearchUtils.BROWSER_SEARCH_PREF
-    );
-    if (
-      SearchUtils.isPartnerBuild() &&
-      branch.getPrefType("ignoredJAREngines") == branch.PREF_STRING
-    ) {
-      let ignoredJAREngines = branch
-        .getCharPref("ignoredJAREngines")
-        .split(",");
-      let filteredEngines = engines.filter(engine => {
-        let name = engine.webExtension.id.split("@")[0];
-        return !ignoredJAREngines.includes(name);
-      });
-      // Don't allow all engines to be hidden
-      if (filteredEngines.length) {
-        engines = filteredEngines;
-      }
-    }
-    return engines;
   }
 
   /**
