@@ -33,8 +33,8 @@ use std::rc::Rc;
 use crate::ffi;
 use crate::types::{ToSql, ToSqlOutput, Value};
 use crate::vtab::{
-    eponymous_only_module, Context, IndexConstraintOp, IndexInfo, Module, VTab, VTabConnection,
-    VTabCursor, Values,
+    eponymous_only_module, Context, IndexConstraintOp, IndexInfo, VTab, VTabConnection, VTabCursor,
+    Values,
 };
 use crate::{Connection, Result};
 
@@ -57,11 +57,7 @@ impl ToSql for Array {
 /// `feature = "array"` Register the "rarray" module.
 pub fn load_module(conn: &Connection) -> Result<()> {
     let aux: Option<()> = None;
-    conn.create_module("rarray", &ARRAY_MODULE, aux)
-}
-
-lazy_static::lazy_static! {
-    static ref ARRAY_MODULE: Module<ArrayTab> = eponymous_only_module::<ArrayTab>(1);
+    conn.create_module("rarray", eponymous_only_module::<ArrayTab>(), aux)
 }
 
 // Column numbers
@@ -75,7 +71,7 @@ struct ArrayTab {
     base: ffi::sqlite3_vtab,
 }
 
-impl VTab for ArrayTab {
+unsafe impl VTab for ArrayTab {
     type Aux = ();
     type Cursor = ArrayTabCursor;
 
@@ -153,7 +149,7 @@ impl ArrayTabCursor {
         }
     }
 }
-impl VTabCursor for ArrayTabCursor {
+unsafe impl VTabCursor for ArrayTabCursor {
     fn filter(&mut self, idx_num: c_int, _idx_str: Option<&str>, args: &Values<'_>) -> Result<()> {
         if idx_num > 0 {
             self.ptr = args.get_array(0)?;

@@ -128,6 +128,9 @@ mod version;
 #[cfg(feature = "vtab")]
 pub mod vtab;
 
+pub(crate) mod util;
+pub(crate) use util::SmallCString;
+
 // Number of cached prepared statements we'll hold on to.
 const STATEMENT_CACHE_DEFAULT_CAPACITY: usize = 16;
 /// To be used when your statement has no [parameter](https://sqlite.org/lang_expr.html#varparam).
@@ -231,8 +234,8 @@ unsafe fn errmsg_to_string(errmsg: *const c_char) -> String {
     String::from_utf8_lossy(c_slice).into_owned()
 }
 
-fn str_to_cstring(s: &str) -> Result<CString> {
-    Ok(CString::new(s)?)
+fn str_to_cstring(s: &str) -> Result<SmallCString> {
+    Ok(SmallCString::new(s)?)
 }
 
 /// Returns `Ok((string ptr, len as c_int, SQLITE_STATIC | SQLITE_TRANSIENT))`
@@ -265,9 +268,16 @@ fn len_as_c_int(len: usize) -> Result<c_int> {
     }
 }
 
+#[cfg(unix)]
+fn path_to_cstring(p: &Path) -> Result<CString> {
+    use std::os::unix::ffi::OsStrExt;
+    Ok(CString::new(p.as_os_str().as_bytes())?)
+}
+
+#[cfg(not(unix))]
 fn path_to_cstring(p: &Path) -> Result<CString> {
     let s = p.to_str().ok_or_else(|| Error::InvalidPath(p.to_owned()))?;
-    str_to_cstring(s)
+    Ok(CString::new(s)?)
 }
 
 /// Name for a database within a SQLite connection.
@@ -292,7 +302,7 @@ pub enum DatabaseName<'a> {
     feature = "modern_sqlite"
 ))]
 impl DatabaseName<'_> {
-    fn to_cstring(&self) -> Result<CString> {
+    fn to_cstring(&self) -> Result<util::SmallCString> {
         use self::DatabaseName::{Attached, Main, Temp};
         match *self {
             Main => str_to_cstring("main"),
@@ -727,7 +737,7 @@ impl Connection {
     /// # Warning
     ///
     /// You should not need to use this function. If you do need to, please
-    /// [open an issue on the rusqlite repository](https://github.com/jgallagher/rusqlite/issues) and describe
+    /// [open an issue on the rusqlite repository](https://github.com/rusqlite/rusqlite/issues) and describe
     /// your use case.
     ///
     /// # Safety
@@ -1017,6 +1027,35 @@ mod test {
         } else {
             panic!("SqliteFailure expected");
         }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_invalid_unicode_file_names() {
+        use std::ffi::OsStr;
+        use std::fs::File;
+        use std::os::unix::ffi::OsStrExt;
+        let temp_dir = tempfile::tempdir().unwrap();
+
+        let path = temp_dir.path();
+        if File::create(path.join(OsStr::from_bytes(&[0xFE]))).is_err() {
+            // Skip test, filesystem doesn't support invalid Unicode
+            return;
+        }
+        let db_path = path.join(OsStr::from_bytes(&[0xFF]));
+        {
+            let db = Connection::open(&db_path).unwrap();
+            let sql = "BEGIN;
+                   CREATE TABLE foo(x INTEGER);
+                   INSERT INTO foo VALUES(42);
+                   END;";
+            db.execute_batch(sql).unwrap();
+        }
+
+        let db = Connection::open(&db_path).unwrap();
+        let the_answer: Result<i64> = db.query_row("SELECT x FROM foo", NO_PARAMS, |r| r.get(0));
+
+        assert_eq!(42i64, the_answer.unwrap());
     }
 
     #[test]

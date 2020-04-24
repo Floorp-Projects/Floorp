@@ -30,7 +30,7 @@ use crate::ffi;
 use crate::types::Null;
 use crate::vtab::{
     dequote, escape_double_quote, parse_boolean, read_only_module, Context, CreateVTab, IndexInfo,
-    Module, VTab, VTabConnection, VTabCursor, Values,
+    VTab, VTabConnection, VTabCursor, Values,
 };
 use crate::{Connection, Error, Result};
 
@@ -47,11 +47,7 @@ use crate::{Connection, Error, Result};
 /// ```
 pub fn load_module(conn: &Connection) -> Result<()> {
     let aux: Option<()> = None;
-    conn.create_module("csv", &CSV_MODULE, aux)
-}
-
-lazy_static::lazy_static! {
-    static ref CSV_MODULE: Module<CSVTab> = read_only_module::<CSVTab>(1);
+    conn.create_module("csv", read_only_module::<CSVTab>(), aux)
 }
 
 /// An instance of the CSV virtual table
@@ -99,7 +95,7 @@ impl CSVTab {
     }
 }
 
-impl VTab for CSVTab {
+unsafe impl VTab for CSVTab {
     type Aux = ();
     type Cursor = CSVTabCursor;
 
@@ -300,7 +296,7 @@ impl CSVTabCursor {
     }
 }
 
-impl VTabCursor for CSVTabCursor {
+unsafe impl VTabCursor for CSVTabCursor {
     // Only a full table scan is supported.  So `filter` simply rewinds to
     // the beginning.
     fn filter(
