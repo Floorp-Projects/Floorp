@@ -22,14 +22,17 @@ NS_IMPL_ISUPPORTS(OSReauthenticator, nsIOSReauthenticator)
 
 extern mozilla::LazyLogModule gCredentialManagerSecretLog;
 
-using namespace mozilla;
-using dom::Promise;
+using mozilla::LogLevel;
+using mozilla::WindowsHandle;
+using mozilla::dom::Promise;
 
 #if defined(XP_WIN)
 #  include <combaseapi.h>
 #  include <ntsecapi.h>
 #  include <wincred.h>
 #  include <windows.h>
+#  define SECURITY_WIN32
+#  include <security.h>
 struct HandleCloser {
   typedef HANDLE pointer;
   void operator()(HANDLE h) {
@@ -93,7 +96,14 @@ static nsresult ReauthenticateUserWindows(const nsAString& aMessageText,
   // Check if the user has a blank password before proceeding
   DWORD usernameLength = CREDUI_MAX_USERNAME_LENGTH + 1;
   WCHAR username[CREDUI_MAX_USERNAME_LENGTH + 1] = {0};
-  if (GetUserName(username, &usernameLength)) {
+
+  if (!GetUserNameEx(NameSamCompatible, username, &usernameLength)) {
+    MOZ_LOG(gCredentialManagerSecretLog, LogLevel::Debug,
+            ("Error getting username"));
+    return NS_ERROR_FAILURE;
+  }
+
+  {
     HANDLE logonUserHandle = nullptr;
     bool result = LogonUser(username, L".", L"", LOGON32_LOGON_INTERACTIVE,
                             LOGON32_PROVIDER_DEFAULT, &logonUserHandle);
@@ -131,7 +141,7 @@ static nsresult ReauthenticateUserWindows(const nsAString& aMessageText,
     // https://docs.microsoft.com/en-us/windows/desktop/api/ntsecapi/nf-ntsecapi-lsaconnectuntrusted
     if (LsaConnectUntrusted(&lsa) != ERROR_SUCCESS) {
       MOZ_LOG(gCredentialManagerSecretLog, LogLevel::Debug,
-              ("Error aquiring lsa. Authentication attempts will fail."));
+              ("Error acquiring lsa. Authentication attempts will fail."));
       return NS_ERROR_FAILURE;
     }
     ScopedHANDLE scopedLsa(lsa);
