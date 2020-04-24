@@ -340,7 +340,7 @@ class GeckoViewContentChild extends GeckoViewChildModule {
 
     const webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
 
-    let {
+    const {
       referrerInfo,
       triggeringPrincipal,
       uri,
@@ -348,15 +348,12 @@ class GeckoViewContentChild extends GeckoViewChildModule {
       csp,
       headers,
     } = loadOptions;
-    referrerInfo = E10SUtils.deserializeReferrerInfo(referrerInfo);
-    triggeringPrincipal = E10SUtils.deserializePrincipal(triggeringPrincipal);
-    csp = E10SUtils.deserializeCSP(csp);
 
     webNavigation.loadURI(uri, {
-      triggeringPrincipal,
-      referrerInfo,
+      triggeringPrincipal: E10SUtils.deserializePrincipal(triggeringPrincipal),
+      referrerInfo: E10SUtils.deserializeReferrerInfo(referrerInfo),
       loadFlags: flags,
-      csp,
+      csp: E10SUtils.deserializeCSP(csp),
       headers,
     });
   }

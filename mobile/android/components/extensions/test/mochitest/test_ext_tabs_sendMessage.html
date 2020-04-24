@@ -31,6 +31,7 @@ add_task(async function tabsSendMessageReply() {
     useAddonManager: "permanent",
 
     background: async function() {
+      // eslint-disable-next-line prefer-const
       let firstTab;
       const promiseResponse = new Promise(resolve => {
         browser.runtime.onMessage.addListener((msg, sender, respond) => {
