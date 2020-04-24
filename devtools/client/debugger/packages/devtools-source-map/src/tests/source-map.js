@@ -136,7 +136,7 @@ describe("source maps", () => {
       const source = {
         id: "missingmap.js",
         sourceMapURL: "missingmap.js.map",
-        url: "http:://example.com/missingmap.js",
+        sourceMapBaseURL: "http:://example.com/missingmap.js",
       };
 
       networkRequest.mockImplementationOnce(() => {
