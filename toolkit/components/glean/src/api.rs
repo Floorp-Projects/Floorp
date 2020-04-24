@@ -98,7 +98,9 @@ fn initialize_core_metrics(glean: &Glean, client_info: &ClientInfo) {
     core_metrics
         .os_version
         .set(glean, &client_info.os_version[..]);
-    core_metrics.architecture.set(glean, &client_info.architecture);
+    core_metrics
+        .architecture
+        .set(glean, &client_info.architecture);
     // FIXME(bug 1625207): Device manufacturer should be made optional.
     core_metrics
         .device_manufacturer
