@@ -21,33 +21,19 @@
           return test.pcLocal.getAllUserMediaAndAddStreams([{audio: true}]);
         },
 
-        function PC_REMOTE_SETUP_ICE_HANDLER(test) {
-          test.pcRemote.setupIceCandidateHandler(test);
-          if (test.testOptions.steeplechase) {
-            test.pcRemote.endOfTrickleIce.then(() => {
-              send_message({"type": "end_of_trickle_ice"});
-            });
-          }
-        },
-
-        function PC_REMOTE_CREATE_AND_SET_OFFER(test) {
-          return test.createOffer(test.pcRemote).then(offer => {
-            return test.setLocalDescription(test.pcRemote, offer, HAVE_LOCAL_OFFER);
+        function PC_LOCAL_CREATE_AND_SET_OFFER(test) {
+          return test.createOffer(test.pcLocal).then(offer => {
+            return test.setLocalDescription(test.pcLocal, offer, HAVE_LOCAL_OFFER);
           });
         },
 
-        function PC_REMOTE_ROLLBACK(test) {
+        function PC_LOCAL_ROLLBACK(test) {
           // the negotiationNeeded slot should have been true both before and
           // after this SLD, so the event should fire again.
-          test.pcRemote.expectNegotiationNeeded();
-          return test.setLocalDescription(test.pcRemote,
+          test.pcLocal.expectNegotiationNeeded();
+          return test.setLocalDescription(test.pcLocal,
                                           { type: "rollback", sdp: "" },
                                           STABLE);
-        },
-
-        // Rolling back should shut down gathering
-        function PC_REMOTE_WAIT_FOR_END_OF_TRICKLE(test) {
-          return test.pcRemote.endOfTrickleIce;
         },
     ]);
     test.setMediaConstraints([{audio: true}], [{audio: true}]);

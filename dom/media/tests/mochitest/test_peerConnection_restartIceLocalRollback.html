@@ -41,6 +41,15 @@
         function PC_LOCAL_EXPECT_ICE_CONNECTED(test) {
           test.pcLocal.iceCheckingIceRollbackExpected = true;
         },
+        function PC_LOCAL_WAIT_FOR_GATHERING(test) {
+          return new Promise(r => {
+            test.pcLocal._pc.addEventListener("icegatheringstatechange", () => {
+              if (test.pcLocal._pc.iceGatheringState == "gathering") {
+                r();
+              }
+            });
+          });
+        },
         function PC_LOCAL_ROLLBACK(test) {
           return test.setLocalDescription(test.pcLocal,
                                           { type: "rollback", sdp: ""},

@@ -38,14 +38,13 @@
                                             HAVE_LOCAL_OFFER);
           });
         },
+        function PC_LOCAL_WAIT_FOR_END_OF_TRICKLE(test) {
+          return test.pcLocal.endOfTrickleIce;
+        },
         function PC_LOCAL_ROLLBACK(test) {
           return test.setLocalDescription(test.pcLocal,
                                           { type: "rollback", sdp: ""},
                                           STABLE);
-        },
-        // Rolling back should shut down gathering
-        function PC_LOCAL_WAIT_FOR_END_OF_TRICKLE(test) {
-          return test.pcLocal.endOfTrickleIce;
         },
         function PC_LOCAL_SET_OFFER_OPTION(test) {
           test.setOfferOptions({ iceRestart: false });
