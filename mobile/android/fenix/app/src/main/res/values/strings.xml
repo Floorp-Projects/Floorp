@@ -29,8 +29,7 @@
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">
-         %1$s clears your search and browsing history from private tabs when you close them or quit the app. While this doesn\'t make you anonymous to websites or your internet service provider, it makes it easier to keep what you do online from anyone else who uses this device.
-    </string>
+        %1$s clears your search and browsing history from private tabs when you close them or quit the app. While this doesn’t make you anonymous to websites or your internet service provider, it makes it easier to keep what you do online private from anyone else who uses this device.</string>
     <string name="private_browsing_common_myths">
        Common myths about private browsing
     </string>
