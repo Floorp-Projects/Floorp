@@ -468,10 +468,15 @@ static bool InternalCreateScript(CompilationInfo& compilationInfo,
   } else {
     functionOrGlobal = compilationInfo.cx->global();
   }
+  ImmutableScriptFlags inputFlags =
+      ImmutableScriptFlags::fromCompileOptions(compilationInfo.options);
+
+  // Add the required input flags to the shared context.
+  sc->addToImmutableFlags(inputFlags);
+
   compilationInfo.script = JSScript::Create(
       compilationInfo.cx, functionOrGlobal, compilationInfo.sourceObject,
-      sc->getScriptExtent(),
-      ImmutableScriptFlags::fromCompileOptions(compilationInfo.options));
+      sc->getScriptExtent(), sc->immutableFlags());
   return compilationInfo.script != nullptr;
 }
 
@@ -785,13 +790,14 @@ static JSScript* CompileGlobalBinASTScriptImpl(
 
   SourceExtent extent = SourceExtent::makeGlobalExtent(len);
   extent.lineno = 0;
-  GlobalSharedContext globalsc(cx, ScopeKind::Global, compilationInfo,
-                               compilationInfo.directives, extent);
+  GlobalSharedContext globalsc(
+      cx, ScopeKind::Global, compilationInfo, compilationInfo.directives,
+      extent, ImmutableScriptFlags::fromCompileOptions(options));
 
   RootedScript script(
-      cx, JSScript::Create(cx, cx->global(), compilationInfo.sourceObject,
-                           globalsc.getScriptExtent(),
-                           ImmutableScriptFlags::fromCompileOptions(options)));
+      cx,
+      JSScript::Create(cx, cx->global(), compilationInfo.sourceObject,
+                       globalsc.getScriptExtent(), globalsc.immutableFlags()));
 
   if (!script) {
     return nullptr;
