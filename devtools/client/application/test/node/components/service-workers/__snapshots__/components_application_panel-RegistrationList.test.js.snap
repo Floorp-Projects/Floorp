@@ -1,10 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`WorkerList renders the expected snapshot for a list with a single worker 1`] = `
+exports[`RegistrationList renders the expected snapshot for a list with a single registration 1`] = `
 Array [
   <article
-    className="workers-container"
-    key="workers-container"
+    className="registrations-container"
+    key="registrations-container"
   >
     <Localized
       id="serviceworker-list-header"
@@ -49,11 +49,11 @@ Array [
 ]
 `;
 
-exports[`WorkerList renders the expected snapshot for a multiple workers list 1`] = `
+exports[`RegistrationList renders the expected snapshot for a multiple registration list 1`] = `
 Array [
   <article
-    className="workers-container"
-    key="workers-container"
+    className="registrations-container"
+    key="registrations-container"
   >
     <Localized
       id="serviceworker-list-header"

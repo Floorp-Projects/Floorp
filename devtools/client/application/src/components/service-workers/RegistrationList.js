@@ -31,7 +31,7 @@ const Worker = createFactory(
  * and also displays a suggestion to use about debugging for debugging other service
  * workers.
  */
-class WorkerList extends PureComponent {
+class RegistrationList extends PureComponent {
   static get propTypes() {
     return {
       canDebugWorkers: PropTypes.bool.isRequired,
@@ -44,7 +44,10 @@ class WorkerList extends PureComponent {
 
     return [
       article(
-        { className: "workers-container", key: "workers-container" },
+        {
+          className: "registrations-container",
+          key: "registrations-container",
+        },
         Localized(
           { id: "serviceworker-list-header" },
           h1({
@@ -78,4 +81,4 @@ class WorkerList extends PureComponent {
 }
 
 // Exports
-module.exports = WorkerList;
+module.exports = RegistrationList;

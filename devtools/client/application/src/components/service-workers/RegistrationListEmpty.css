@@ -6,11 +6,11 @@
   font-weight: var(--title-30-font-weight);
 }
 
-.worker-list-empty__tips {
+.registration-list-empty__tips {
   margin-inline-start: 2rem;
 }
 
-.worker-list-empty__tips__item {
+.registration-list-empty__tips-item {
   margin-block-start: 0.5rem;
   margin-block-end: 0.5rem;
 }

@@ -4,7 +4,7 @@ exports[`WorkersPage filters out workers from diferent domains 1`] = `
 <section
   className="app-page js-service-workers-page "
 >
-  <WorkerList
+  <RegistrationList
     canDebugWorkers={true}
     workers={
       Array [
@@ -38,7 +38,7 @@ exports[`WorkersPage filters out workers from different domains and renders an e
 <section
   className="app-page js-service-workers-page app-page--empty"
 >
-  <WorkerListEmpty />
+  <RegistrationListEmpty />
 </section>
 `;
 
@@ -46,7 +46,7 @@ exports[`WorkersPage it renders a list with a single element if there's just 1 w
 <section
   className="app-page js-service-workers-page "
 >
-  <WorkerList
+  <RegistrationList
     canDebugWorkers={true}
     workers={
       Array [
@@ -70,7 +70,7 @@ exports[`WorkersPage renders a list with multiple elements when there are multip
 <section
   className="app-page js-service-workers-page "
 >
-  <WorkerList
+  <RegistrationList
     canDebugWorkers={true}
     workers={
       Array [
@@ -114,6 +114,6 @@ exports[`WorkersPage renders an empty list if there are no workers 1`] = `
 <section
   className="app-page js-service-workers-page app-page--empty"
 >
-  <WorkerListEmpty />
+  <RegistrationListEmpty />
 </section>
 `;
