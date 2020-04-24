@@ -120,7 +120,7 @@ static bool test_basic_array(ElementType* data, size_t dataLen,
           return false;
 
   size_t index = ary.Length() / 2;
-  if (!ary.InsertElementAt(index, extra)) return false;
+  ary.InsertElementAt(index, extra);
   if (!(ary == ary)) return false;
   if (ary[index] != extra) return false;
   if (ary.IndexOf(extra) == ary.NoIndex) return false;
@@ -178,7 +178,7 @@ static bool test_basic_array(ElementType* data, size_t dataLen,
     if (ary[i] != copy[i]) return false;
   }
 
-  if (!ary.InsertElementsAt(0, copy)) return false;
+  ary.InsertElementsAt(0, copy);
   if (ary == copy) return false;
   ary.RemoveElementsAt(0, copy.Length());
   for (i = 0; i < copy.Length(); ++i) {
