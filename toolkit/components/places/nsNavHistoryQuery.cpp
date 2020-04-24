@@ -532,8 +532,7 @@ nsresult nsNavHistory::TokensToQuery(const nsTArray<QueryKeyValuePair>& aTokens,
   }
 
   if (tags.Length() > 0) {
-    rv = aQuery->SetTags(tags);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aQuery->SetTags(std::move(tags));
   }
 
   if (transitions.Length() > 0) {
