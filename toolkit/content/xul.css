@@ -223,6 +223,12 @@ menubar > menu:empty {
 menupopup,
 panel {
   -moz-box-orient: vertical;
+
+%ifdef XP_WIN
+  /* This should be in popup.css, but this stylesheet loads after the custom
+     element initializes which is too late for widget code. */
+  background: Menu;
+%endif
 }
 
 menupopup,
