@@ -116,6 +116,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                         runIfFragmentIsAttached {
                             switch.isClickable = true
                             view.remove_add_on.isEnabled = true
+                            switch.setState(addon.isEnabled())
                             showSnackBar(
                                 view,
                                 getString(
@@ -149,6 +150,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                         runIfFragmentIsAttached {
                             switch.isClickable = true
                             view.remove_add_on.isEnabled = true
+                            switch.setState(addon.isEnabled())
                             showSnackBar(
                                 view,
                                 getString(
@@ -230,6 +232,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                     }
                 },
                 onError = {
+                    switch.isChecked = addon.isAllowedInPrivateBrowsing()
                     runIfFragmentIsAttached {
                         switch.isClickable = true
                         view.remove_add_on.isEnabled = true
