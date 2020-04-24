@@ -1712,40 +1712,34 @@ class nsTArray_Impl
     return IndexOfFirstElementGt(aItem, nsDefaultComparator<elem_type, Item>());
   }
 
-  // Inserts |aItem| at such an index to guarantee that if the array
-  // was previously sorted, it will remain sorted after this
-  // insertion.
- protected:
-  template <class Item, class Comparator, typename ActualAlloc = Alloc>
-  elem_type* InsertElementSorted(Item&& aItem, const Comparator& aComp) {
+ private:
+  template <typename ActualAlloc, class Item, class Comparator>
+  elem_type* InsertElementSortedInternal(Item&& aItem,
+                                         const Comparator& aComp) {
     index_type index = IndexOfFirstElementGt<Item, Comparator>(aItem, aComp);
     return InsertElementAtInternal<ActualAlloc>(index,
                                                 std::forward<Item>(aItem));
   }
 
+  // Inserts |aItem| at such an index to guarantee that if the array
+  // was previously sorted, it will remain sorted after this
+  // insertion.
  public:
   template <class Item, class Comparator>
   [[nodiscard]] elem_type* InsertElementSorted(Item&& aItem,
                                                const Comparator& aComp,
                                                const mozilla::fallible_t&) {
-    return InsertElementSorted<Item, Comparator, FallibleAlloc>(
-        std::forward<Item>(aItem), aComp);
+    return InsertElementSortedInternal<FallibleAlloc>(std::forward<Item>(aItem),
+                                                      aComp);
   }
 
   // A variation on the InsertElementSorted method defined above.
- protected:
-  template <class Item, typename ActualAlloc = Alloc>
-  elem_type* InsertElementSorted(Item&& aItem) {
-    nsDefaultComparator<elem_type, Item> comp;
-    return InsertElementSorted<Item, decltype(comp), ActualAlloc>(
-        std::forward<Item>(aItem), comp);
-  }
-
  public:
   template <class Item>
   [[nodiscard]] elem_type* InsertElementSorted(Item&& aItem,
                                                const mozilla::fallible_t&) {
-    return InsertElementSorted<Item, FallibleAlloc>(std::forward<Item>(aItem));
+    return InsertElementSortedInternal<FallibleAlloc>(
+        std::forward<Item>(aItem), nsDefaultComparator<elem_type, Item>{});
   }
 
  private:
@@ -2818,6 +2812,19 @@ class nsTArray : public nsTArray_Impl<E, nsTArrayInfallibleAllocator> {
                                                   size_type aCount,
                                                   const Item& aItem) {
     return ReplaceElementsAt(aStart, aCount, &aItem, 1);
+  }
+
+  template <class Item, class Comparator>
+  MOZ_NONNULL_RETURN elem_type* InsertElementSorted(Item&& aItem,
+                                                    const Comparator& aComp) {
+    return this->template InsertElementSortedInternal<InfallibleAlloc>(
+        std::forward<Item>(aItem), aComp);
+  }
+
+  template <class Item>
+  MOZ_NONNULL_RETURN elem_type* InsertElementSorted(Item&& aItem) {
+    return this->template InsertElementSortedInternal<InfallibleAlloc>(
+        std::forward<Item>(aItem), nsDefaultComparator<elem_type, Item>{});
   }
 
   template <class... Args>
