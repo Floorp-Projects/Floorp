@@ -137,7 +137,7 @@
 
 - name: GuardToTypedArrayIndex
   shared: true
-  transpile: false
+  transpile: true
   args:
     input: ValId
     result: Int32Id
@@ -861,7 +861,16 @@
     obj: ObjId
     index: Int32Id
 
-- name: LoadTypedElementResult
+- name: LoadTypedArrayElementResult
+  shared: true
+  transpile: true
+  args:
+    obj: ObjId
+    index: Int32Id
+    elementType: ScalarTypeImm
+    handleOOB: BoolImm
+
+- name: LoadTypedObjectElementResult
   shared: true
   transpile: false
   args:
@@ -869,7 +878,6 @@
     index: Int32Id
     layout: TypedThingLayoutImm
     elementType: ScalarTypeImm
-    handleOOB: BoolImm
 
 - name: LoadInt32ArrayLengthResult
   shared: true
