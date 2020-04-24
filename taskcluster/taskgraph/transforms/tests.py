@@ -1280,6 +1280,7 @@ CHUNK_SUITES_BLACKLIST = (
     'mochitest-webgl2-ext',
     'raptor',
     'reftest',
+    'reftest-qr',
     'reftest-gpu',
     'reftest-no-accel',
     'talos',

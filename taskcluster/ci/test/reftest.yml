@@ -146,6 +146,18 @@ reftest:
             linux1804-64-qr/debug: ['trunk']
             default: []
 
+reftest-qr:
+    description: "Reftest webrender run"
+    treeherder-symbol: R(R)
+    chunks: 2
+    e10s: true
+    run-on-projects: built-projects
+    max-run-time: 2400
+    mozharness:
+        chunked: true
+    tier: 2
+
+
 reftest-gpu:
     description: "Reftest GPU run"
     treeherder-symbol: R(Rg)
