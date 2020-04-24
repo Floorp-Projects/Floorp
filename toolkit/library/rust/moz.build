@@ -11,6 +11,7 @@ RustLibrary('gkrust', gkrust_features, is_gkrust=True)
 # Target directory doesn't matter a lot here, since we can't share panic=abort
 # compilation artifacts with gkrust.
 RUST_TESTS = [
+    'glean',
     'selectors',
     'servo_arc',
     'stylo_tests',
