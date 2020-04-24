@@ -158,14 +158,8 @@ WinCompositorWnds WinCompositorWindowThread::CreateCompositorWindow() {
                              nullptr, WS_POPUP | WS_DISABLED, 0, 0, 1, 1,
                              nullptr, 0, GetModuleHandle(nullptr), 0);
 
-        DWORD extendedStyle = WS_EX_NOPARENTNOTIFY | WS_EX_NOREDIRECTIONBITMAP;
-
-        if (!StaticPrefs::apz_windows_force_disable_direct_manipulation()) {
-          extendedStyle |= WS_EX_LAYERED;
-        }
-
         compositorWnd = ::CreateWindowEx(
-            extendedStyle,
+            WS_EX_LAYERED | WS_EX_NOPARENTNOTIFY | WS_EX_NOREDIRECTIONBITMAP,
             kClassNameCompositor, nullptr,
             WS_CHILDWINDOW | WS_DISABLED | WS_VISIBLE, 0, 0, 1, 1,
             initialParentWnd, 0, GetModuleHandle(nullptr), 0);
