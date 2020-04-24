@@ -106,7 +106,6 @@ function makeFrame({ id, sourceId, thread }: Object, opts: Object = {}) {
 function createSourceObject(
   filename: string,
   props: {
-    introductionUrl?: string,
     isBlackBoxed?: boolean,
   } = {}
 ): Source {
@@ -115,7 +114,6 @@ function createSourceObject(
     url: makeSourceURL(filename),
     isBlackBoxed: !!props.isBlackBoxed,
     isPrettyPrinted: false,
-    introductionUrl: props.introductionUrl || null,
     isExtension: false,
     isOriginal: filename.includes("originalSource"),
   }: any);
