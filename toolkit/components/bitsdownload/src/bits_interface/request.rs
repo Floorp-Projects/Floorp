@@ -684,14 +684,15 @@ impl BitsRequest {
         )
     }
 
+    xpcom_method!(
+        get_load_group => GetLoadGroup() -> *const nsILoadGroup
+    );
+
     /**
      * As stated in nsIBits.idl, nsIBits interfaces are not expected to
      * implement the loadGroup or loadFlags attributes. This implementation
      * provides only null implementations only for these methods.
      */
-    xpcom_method!(
-        get_load_group => GetLoadGroup() -> *const nsILoadGroup
-    );
     fn get_load_group(&self) -> Result<RefPtr<nsILoadGroup>, nsresult> {
         Err(NS_ERROR_NOT_IMPLEMENTED)
     }
