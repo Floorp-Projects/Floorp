@@ -13,10 +13,8 @@ add_task(async function test_all_images_mentioned() {
         gBrowser.selectedBrowser.currentURI.spec,
         "mediaTab"
       );
-      await BrowserTestUtils.waitForEvent(pageInfo, "load");
-      await new Promise(resolve =>
-        pageInfo.onFinished.push(() => executeSoon(resolve))
-      );
+      await BrowserTestUtils.waitForEvent(pageInfo, "page-info-init");
+
       let imageTree = pageInfo.document.getElementById("imagetree");
       let imageRowsNum = imageTree.view.rowCount;
 
