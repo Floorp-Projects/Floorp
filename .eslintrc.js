@@ -717,6 +717,7 @@ module.exports = {
         "toolkit/content/tests/chrome/window_preferences3.xhtml",
         "toolkit/content/tests/chrome/window_preferences_beforeaccept.xhtml",
         "toolkit/content/tests/chrome/window_preferences_commandretarget.xhtml",
+        "toolkit/content/tests/chrome/window_preferences_disabled.xhtml",
         "toolkit/content/tests/chrome/window_preferences_onsyncfrompreference.xhtml",
         "toolkit/content/tests/chrome/window_subframe_origin.xhtml",
         "toolkit/content/tests/chrome/window_titlebar.xhtml",
