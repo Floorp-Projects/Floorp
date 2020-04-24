@@ -1862,6 +1862,43 @@ panelview[mainview] #PanelUI-whatsNew-content {
   padding-top: 0;
 }
 
+#PanelUI-whatsNew .panelMenu-toggleWhatsNew-checkbox {
+  margin-inline-start: -80px;
+}
+
+/* These checkbox styles have been pulled from `common.inc.css` and 
+   duplicated here to ensure they apply correctly. 
+   see https://searchfox.org/mozilla-central/source/toolkit/themes/shared/in-content/common.inc.css#560 */
+#PanelUI-whatsNew checkbox {
+  -moz-appearance: none;
+  height: 30px;
+  margin: 2px 0;
+}
+
+#PanelUI-whatsNew checkbox[checked].panelMenu-toggleWhatsNew-checkbox {
+  list-style-image: url("chrome://global/skin/icons/check.svg");
+  -moz-context-properties: fill;
+  fill: #2292d0;
+}
+
+#PanelUI-whatsNew .checkbox-check {
+  -moz-appearance: none;
+  width: 20px;
+  height: 20px;
+  padding: 1px;
+  border: 1px solid #A9A9A9;
+  border-radius: 2px;
+  margin: 0;
+  margin-inline-end: 10px;
+  background-color: #FFF;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+#PanelUI-whatsNew .checkbox-icon {
+  display: none;
+}
+
 #PanelUI-whatsNew .whatsNew-message {
   cursor: pointer;
   margin: 0 12px;
