@@ -32,40 +32,38 @@ function test() {
   }
 
   function doTest(aIsPrivateMode, aWindow, aCallback) {
-    BrowserTestUtils.browserLoaded(
-      aWindow.gBrowser.selectedBrowser,
-      false,
-      testURI
-    ).then(() => {
-      consoleObserver = {
-        observe(aSubject, aTopic, aData) {
-          if (aTopic == "console-api-log-event") {
-            afterEvents = ConsoleAPIStorage.getEvents(innerID);
-            is(
-              beforeEvents.length == afterEvents.length - 1,
-              storageShouldOccur,
-              "storage should" + (storageShouldOccur ? "" : " not") + " occur"
-            );
-
-            executeSoon(function() {
-              Services.obs.removeObserver(
-                consoleObserver,
-                "console-api-log-event"
+    BrowserTestUtils.browserLoaded(aWindow.gBrowser.selectedBrowser).then(
+      () => {
+        consoleObserver = {
+          observe(aSubject, aTopic, aData) {
+            if (aTopic == "console-api-log-event") {
+              afterEvents = ConsoleAPIStorage.getEvents(innerID);
+              is(
+                beforeEvents.length == afterEvents.length - 1,
+                storageShouldOccur,
+                "storage should" + (storageShouldOccur ? "" : " not") + " occur"
               );
-              aCallback();
-            });
-          }
-        },
-      };
 
-      aWindow.Services.obs.addObserver(
-        consoleObserver,
-        "console-api-log-event"
-      );
-      aWindow.nativeConsole.log(
-        "foo bar baz (private: " + aIsPrivateMode + ")"
-      );
-    });
+              executeSoon(function() {
+                Services.obs.removeObserver(
+                  consoleObserver,
+                  "console-api-log-event"
+                );
+                aCallback();
+              });
+            }
+          },
+        };
+
+        aWindow.Services.obs.addObserver(
+          consoleObserver,
+          "console-api-log-event"
+        );
+        aWindow.nativeConsole.log(
+          "foo bar baz (private: " + aIsPrivateMode + ")"
+        );
+      }
+    );
 
     // We expect that console API messages are always stored.
     storageShouldOccur = true;

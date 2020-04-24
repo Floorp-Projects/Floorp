@@ -1,9 +1,11 @@
 // ----------------------------------------------------------------------------
 // Test whether an InstallTrigger.enabled is working
-add_task(async function test() {
-  await BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT);
+function test() {
+  waitForExplicitFinish();
 
-  let text = await ContentTask.spawn(
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TESTROOT);
+
+  ContentTask.spawn(
     gBrowser.selectedBrowser,
     TESTROOT + "enabled.html",
     function(url) {
@@ -23,8 +25,9 @@ add_task(async function test() {
         content.location.href = url;
       });
     }
-  );
-
-  is(text, "true", "installTrigger should have been enabled");
-  gBrowser.removeCurrentTab();
-});
+  ).then(text => {
+    is(text, "true", "installTrigger should have been enabled");
+    gBrowser.removeCurrentTab();
+    finish();
+  });
+}
