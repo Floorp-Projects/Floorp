@@ -14,3 +14,17 @@
 .registrations-container {
   flex-grow: 1;
 }
+
+.registrations-container__item {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.registrations-container__item:first-child {
+  padding-top: 0;
+}
+
+.registrations-container__item:not(:last-child) {
+  border-bottom: 1px solid var(--separator-color);
+}

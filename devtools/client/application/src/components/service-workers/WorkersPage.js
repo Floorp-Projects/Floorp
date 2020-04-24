@@ -28,30 +28,30 @@ class WorkersPage extends PureComponent {
       // mapped from state
       canDebugWorkers: PropTypes.bool.isRequired,
       domain: PropTypes.string.isRequired,
-      workers: Types.workerArray.isRequired,
+      registrations: Types.registrationArray.isRequired,
     };
   }
 
   render() {
-    const { canDebugWorkers, domain, workers } = this.props;
+    const { canDebugWorkers, domain, registrations } = this.props;
 
     // Filter out workers from other domains
-    const domainWorkers = workers.filter(
-      x => new URL(x.url).hostname === domain
+    const domainWorkers = registrations.filter(
+      x => x.workers.length > 0 && new URL(x.workers[0].url).hostname === domain
     );
-    const isWorkerListEmpty = domainWorkers.length === 0;
+    const isListEmpty = domainWorkers.length === 0;
 
     return section(
       {
         className: `app-page js-service-workers-page ${
-          isWorkerListEmpty ? "app-page--empty" : ""
+          isListEmpty ? "app-page--empty" : ""
         }`,
       },
-      isWorkerListEmpty
+      isListEmpty
         ? RegistrationListEmpty({})
         : RegistrationList({
             canDebugWorkers,
-            workers: domainWorkers,
+            registrations: domainWorkers,
           })
     );
   }
@@ -61,7 +61,7 @@ function mapStateToProps(state) {
   return {
     canDebugWorkers: state.workers.canDebugWorkers,
     domain: state.page.domain,
-    workers: state.workers.list,
+    registrations: state.workers.list,
   };
 }
 

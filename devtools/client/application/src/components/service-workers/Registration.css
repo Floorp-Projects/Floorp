@@ -1,0 +1,45 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.registration {
+  padding: 1rem 0;
+  line-height: 1.5;
+  font-size: var(--body-10-font-size);
+}
+
+/*
+ * The current layout of a registration header is
+ *
+ *  +----------------------------+----------------+
+ *  | Registration scope         | Unregister_btn |
+ *  +---+----------+-------------+----------------|
+ */
+.registration__header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-column-gap: calc(4 * var(--base-unit));
+  align-items: center;
+}
+
+.registration__scope {
+  font-weight: bold;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  user-select: text;
+}
+
+.registration__updated-time {
+  color: var(--theme-text-color-alt);
+}
+
+.registration__workers {
+  list-style-type: none;
+  padding: 0;
+  margin: calc(2 * var(--base-unit)) 0 0 0;
+}
+
+.registration__workers-item:not(:first-child) {
+  margin-block-start: calc(var(--base-unit) * 2);
+}

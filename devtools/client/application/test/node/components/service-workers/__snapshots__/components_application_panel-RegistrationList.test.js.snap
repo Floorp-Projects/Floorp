@@ -14,19 +14,25 @@ Array [
       />
     </Localized>
     <ul>
-      <Worker
+      <Registration
+        className="registrations-container__item"
         isDebugEnabled={true}
-        key="id-worker-1-example-0"
-        worker={
+        key="id-reg-1-example"
+        registration={
           Object {
-            "active": true,
-            "id": "id-worker-1-example",
-            "name": "worker1",
+            "id": "id-reg-1-example",
             "registrationFront": "",
             "scope": "SCOPE 123",
-            "state": 0,
-            "url": "http://example.com/worker.js",
-            "workerTargetFront": "",
+            "workers": Array [
+              Object {
+                "id": "id-worker-1-example",
+                "isActive": true,
+                "state": 4,
+                "stateText": "activated",
+                "url": "http://example.com/worker.js",
+                "workerTargetFront": "",
+              },
+            ],
           }
         }
       />
@@ -63,51 +69,69 @@ Array [
       />
     </Localized>
     <ul>
-      <Worker
+      <Registration
+        className="registrations-container__item"
         isDebugEnabled={true}
-        key="id-worker-1-example-0"
-        worker={
+        key="id-reg-1-example"
+        registration={
           Object {
-            "active": true,
-            "id": "id-worker-1-example",
-            "name": "worker1",
+            "id": "id-reg-1-example",
             "registrationFront": "",
-            "scope": "SCOPE 123",
-            "state": 0,
-            "url": "http://example.com/worker.js",
-            "workerTargetFront": "",
+            "scope": "SCOPE1",
+            "workers": Array [
+              Object {
+                "id": "id-worker-1-example",
+                "isActive": true,
+                "state": 4,
+                "stateText": "activated",
+                "url": "http://example.com/worker.js",
+                "workerTargetFront": "",
+              },
+            ],
           }
         }
       />
-      <Worker
+      <Registration
+        className="registrations-container__item"
         isDebugEnabled={true}
-        key="id-worker-2-example-0"
-        worker={
+        key="id-reg-1-example"
+        registration={
           Object {
-            "active": false,
-            "id": "id-worker-2-example",
-            "name": "worker2",
+            "id": "id-reg-1-example",
             "registrationFront": "",
-            "scope": "SCOPE 456",
-            "state": 0,
-            "url": "http://example.com/worker.js",
-            "workerTargetFront": "",
+            "scope": "SCOPE2",
+            "workers": Array [
+              Object {
+                "id": "id-worker-2-example",
+                "isActive": false,
+                "state": 2,
+                "stateText": "installed",
+                "url": "http://example.com/worker.js",
+                "workerTargetFront": "",
+              },
+            ],
           }
         }
       />
-      <Worker
+      <Registration
+        className="registrations-container__item"
         isDebugEnabled={true}
-        key="id-worker-3-example-0"
-        worker={
+        key="id-reg-3-example"
+        registration={
           Object {
-            "active": true,
-            "id": "id-worker-3-example",
-            "name": "worker3",
+            "id": "id-reg-3-example",
             "registrationFront": "",
-            "scope": "SCOPE 789",
-            "state": 0,
-            "url": "http://example.com/worker.js",
-            "workerTargetFront": "",
+            "scope": "SCOPE3",
+            "workers": Array [
+              Object {
+                "id": "id-worker-3-example",
+                "isActive": true,
+                "state": 4,
+                "stateText": "activated",
+                "url": "http://example.com/worker.js",
+                "workerTargetFront": "",
+              },
+            ],
           }
         }
       />
