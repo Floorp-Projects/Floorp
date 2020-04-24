@@ -488,6 +488,9 @@ ContentBlocking::CompleteAllowAccessFor(
       }
     }
 
+    ContentBlockingNotifier::ReportUnblockingToConsole(
+        aParentContext, NS_ConvertUTF8toUTF16(trackingOrigin), aReason);
+
     if (XRE_IsParentProcess()) {
       LOG(("Saving the permission: trackingOrigin=%s", trackingOrigin.get()));
       return SaveAccessForOriginOnParentProcess(aTopLevelWindowId,
@@ -586,11 +589,6 @@ ContentBlocking::CompleteAllowAccessFor(
           ? nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN
           : nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER,
       aTrackingOrigin, Some(aReason));
-
-  // TODO: When Bug 1611755 is done, we can remove reporting console
-  // from here and report it directly in the parent.
-  ContentBlockingNotifier::ReportUnblockingToConsole(
-      parentInner, NS_ConvertUTF8toUTF16(aTrackingOrigin), aReason);
 }
 
 /* static */
