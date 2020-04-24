@@ -829,11 +829,7 @@ bool WarpBuilder::build_SetArg(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_ToNumeric(BytecodeLocation loc) {
-  MDefinition* value = current->pop();
-  MToNumeric* ins = MToNumeric::New(alloc(), value, /* types = */ nullptr);
-  current->add(ins);
-  current->push(ins);
-  return resumeAfter(ins, loc);
+  return buildUnaryOp(loc);
 }
 
 bool WarpBuilder::build_Pos(BytecodeLocation loc) {

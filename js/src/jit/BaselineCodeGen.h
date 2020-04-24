@@ -188,7 +188,7 @@ class BaselineCodeGen {
   FOR_EACH_OPCODE(EMIT_OP)
 #undef EMIT_OP
 
-  // JSOp::Pos, JSOp::Neg, JSOp::BitNot, JSOp::Inc, JSOp::Dec
+  // JSOp::Pos, JSOp::Neg, JSOp::BitNot, JSOp::Inc, JSOp::Dec, JSOp::ToNumeric.
   MOZ_MUST_USE bool emitUnaryArith();
 
   // JSOp::BitXor, JSOp::Lsh, JSOp::Add etc.
