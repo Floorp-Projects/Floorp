@@ -211,7 +211,8 @@ struct nsTArrayInfallibleAllocatorBase {
     MOZ_CRASH("Infallible nsTArray should never fail");
   }
 
-  static constexpr ResultType ConvertBoolToResultType(bool aValue) {
+  template <typename T>
+  static constexpr ResultType ConvertBoolToResultType(T aValue) {
     if (!aValue) {
       MOZ_CRASH("infallible nsTArray should never convert false to ResultType");
     }
@@ -229,8 +230,10 @@ struct nsTArrayFallibleAllocator : nsTArrayFallibleAllocatorBase {
 };
 
 struct nsTArrayInfallibleAllocator : nsTArrayInfallibleAllocatorBase {
-  static void* Malloc(size_t aSize) { return moz_xmalloc(aSize); }
-  static void* Realloc(void* aPtr, size_t aSize) {
+  static void* Malloc(size_t aSize) MOZ_NONNULL_RETURN {
+    return moz_xmalloc(aSize);
+  }
+  static void* Realloc(void* aPtr, size_t aSize) MOZ_NONNULL_RETURN {
     return moz_xrealloc(aPtr, aSize);
   }
 
@@ -321,10 +324,11 @@ class nsTArray_CopyEnabler<E, Impl, Alloc, true> {
     if (this != &aOther) {
       /// XXX Bug 1628692 will make FallibleTArray uncopyable. Checking of the
       /// return value should be removed then again.
-      E* const res = static_cast<Impl*>(this)->ReplaceElementsAt(
-          0, static_cast<Impl*>(this)->Length(),
-          static_cast<const Impl&>(aOther).Elements(),
-          static_cast<const Impl&>(aOther).Length());
+      E* const res =
+          static_cast<Impl*>(this)->template ReplaceElementsAtInternal<Alloc>(
+              0, static_cast<Impl*>(this)->Length(),
+              static_cast<const Impl&>(aOther).Elements(),
+              static_cast<const Impl&>(aOther).Length());
 #ifdef DEBUG
       MOZ_ASSERT(res);
 #else
@@ -1045,6 +1049,8 @@ class nsTArray_Impl
   friend class ::detail::nsTArray_CopyEnabler<E, nsTArray_Impl<E, Alloc>,
                                               Alloc>;
 
+  friend class nsTArray<E>;
+
   typedef nsTArrayFallibleAllocator FallibleAlloc;
   typedef nsTArrayInfallibleAllocator InfallibleAlloc;
 
@@ -1180,7 +1186,8 @@ class nsTArray_Impl
             typename = std::enable_if_t<std::is_same_v<Alloc, InfallibleAlloc>,
                                         Allocator>>
   self_type& operator=(const nsTArray_Impl<E, Allocator>& aOther) {
-    ReplaceElementsAt(0, Length(), aOther.Elements(), aOther.Length());
+    ReplaceElementsAtInternal<InfallibleAlloc>(0, Length(), aOther.Elements(),
+                                               aOther.Length());
     return *this;
   }
 
@@ -1474,8 +1481,8 @@ class nsTArray_Impl
   [[nodiscard]] typename ActualAlloc::ResultType Assign(
       const nsTArray_Impl<E, Allocator>& aOther) {
     return ActualAlloc::ConvertBoolToResultType(
-        !!ReplaceElementsAt<E, ActualAlloc>(0, Length(), aOther.Elements(),
-                                            aOther.Length()));
+        ReplaceElementsAtInternal<ActualAlloc>(0, Length(), aOther.Elements(),
+                                               aOther.Length()));
   }
 
   template <class Allocator>
@@ -1535,10 +1542,10 @@ class nsTArray_Impl
   // @param aArrayLen The number of values to copy into this array.
   // @return          A pointer to the new elements in the array, or null if
   //                  the operation failed due to insufficient memory.
- protected:
-  template <class Item, typename ActualAlloc = Alloc>
-  elem_type* ReplaceElementsAt(index_type aStart, size_type aCount,
-                               const Item* aArray, size_type aArrayLen);
+ private:
+  template <typename ActualAlloc, class Item>
+  elem_type* ReplaceElementsAtInternal(index_type aStart, size_type aCount,
+                                       const Item* aArray, size_type aArrayLen);
 
  public:
   template <class Item>
@@ -1547,33 +1554,17 @@ class nsTArray_Impl
                                              const Item* aArray,
                                              size_type aArrayLen,
                                              const mozilla::fallible_t&) {
-    return ReplaceElementsAt<Item, FallibleAlloc>(aStart, aCount, aArray,
-                                                  aArrayLen);
+    return ReplaceElementsAtInternal<FallibleAlloc>(aStart, aCount, aArray,
+                                                    aArrayLen);
   }
 
   // A variation on the ReplaceElementsAt method defined above.
- protected:
-  template <class Item, typename ActualAlloc = Alloc>
-  elem_type* ReplaceElementsAt(index_type aStart, size_type aCount,
-                               const nsTArray<Item>& aArray) {
-    return ReplaceElementsAt<Item, ActualAlloc>(
-        aStart, aCount, aArray.Elements(), aArray.Length());
-  }
-
-  template <class Item, typename ActualAlloc = Alloc>
-  elem_type* ReplaceElementsAt(index_type aStart, size_type aCount,
-                               mozilla::Span<Item> aSpan) {
-    return ReplaceElementsAt<Item, ActualAlloc>(
-        aStart, aCount, aSpan.Elements(), aSpan.Length());
-  }
-
- public:
   template <class Item>
   [[nodiscard]] elem_type* ReplaceElementsAt(index_type aStart,
                                              size_type aCount,
                                              const nsTArray<Item>& aArray,
                                              const mozilla::fallible_t&) {
-    return ReplaceElementsAt<Item, FallibleAlloc>(aStart, aCount, aArray);
+    return ReplaceElementsAtInternal<FallibleAlloc>(aStart, aCount, aArray);
   }
 
   template <class Item>
@@ -1581,30 +1572,24 @@ class nsTArray_Impl
                                              size_type aCount,
                                              mozilla::Span<Item> aSpan,
                                              const mozilla::fallible_t&) {
-    return ReplaceElementsAt<Item, FallibleAlloc>(aStart, aCount, aSpan);
+    return ReplaceElementsAtInternal<FallibleAlloc>(aStart, aCount, aSpan);
   }
 
   // A variation on the ReplaceElementsAt method defined above.
- protected:
-  template <class Item, typename ActualAlloc = Alloc>
-  elem_type* ReplaceElementsAt(index_type aStart, size_type aCount,
-                               const Item& aItem) {
-    return ReplaceElementsAt<Item, ActualAlloc>(aStart, aCount, &aItem, 1);
-  }
-
- public:
   template <class Item>
   [[nodiscard]] elem_type* ReplaceElementsAt(index_type aStart,
                                              size_type aCount,
                                              const Item& aItem,
                                              const mozilla::fallible_t&) {
-    return ReplaceElementsAt<Item, FallibleAlloc>(aStart, aCount, aItem);
+    return ReplaceElementsAtInternal<FallibleAlloc>(aStart, aCount, aItem);
   }
 
   // A variation on the ReplaceElementsAt method defined above.
   template <class Item>
-  elem_type* ReplaceElementAt(index_type aIndex, const Item& aItem) {
-    return ReplaceElementsAt(aIndex, 1, &aItem, 1);
+  MOZ_NONNULL_RETURN elem_type* ReplaceElementAt(index_type aIndex,
+                                                 const Item& aItem) {
+    // This can never fail as the oldCount and newCount are the same.
+    return ReplaceElementsAtInternal<InfallibleAlloc>(aIndex, 1, &aItem, 1);
   }
 
   // A variation on the ReplaceElementsAt method defined above.
@@ -1612,7 +1597,7 @@ class nsTArray_Impl
   template <class Item, typename ActualAlloc = Alloc>
   elem_type* InsertElementsAt(index_type aIndex, const Item* aArray,
                               size_type aArrayLen) {
-    return ReplaceElementsAt<Item, ActualAlloc>(aIndex, 0, aArray, aArrayLen);
+    return ReplaceElementsAtInternal<ActualAlloc>(aIndex, 0, aArray, aArrayLen);
   }
 
  public:
@@ -1629,14 +1614,14 @@ class nsTArray_Impl
   template <class Item, class Allocator, typename ActualAlloc = Alloc>
   elem_type* InsertElementsAt(index_type aIndex,
                               const nsTArray_Impl<Item, Allocator>& aArray) {
-    return ReplaceElementsAt<Item, ActualAlloc>(aIndex, 0, aArray.Elements(),
-                                                aArray.Length());
+    return ReplaceElementsAtInternal<ActualAlloc>(aIndex, 0, aArray.Elements(),
+                                                  aArray.Length());
   }
 
   template <class Item, typename ActualAlloc = Alloc>
   elem_type* InsertElementsAt(index_type aIndex, mozilla::Span<Item> aSpan) {
-    return ReplaceElementsAt<Item, ActualAlloc>(aIndex, 0, aSpan.Elements(),
-                                                aSpan.Length());
+    return ReplaceElementsAtInternal<ActualAlloc>(aIndex, 0, aSpan.Elements(),
+                                                  aSpan.Length());
   }
 
  public:
@@ -2458,11 +2443,11 @@ class nsTArray_Impl
 };
 
 template <typename E, class Alloc>
-template <class Item, typename ActualAlloc>
-auto nsTArray_Impl<E, Alloc>::ReplaceElementsAt(index_type aStart,
-                                                size_type aCount,
-                                                const Item* aArray,
-                                                size_type aArrayLen)
+template <typename ActualAlloc, class Item>
+auto nsTArray_Impl<E, Alloc>::ReplaceElementsAtInternal(index_type aStart,
+                                                        size_type aCount,
+                                                        const Item* aArray,
+                                                        size_type aArrayLen)
     -> elem_type* {
   if (MOZ_UNLIKELY(aStart > Length())) {
     InvalidArrayIndex_CRASH(aStart, Length());
@@ -2699,9 +2684,12 @@ inline void ImplCycleCollectionTraverse(
 template <class E>
 class nsTArray : public nsTArray_Impl<E, nsTArrayInfallibleAllocator> {
  public:
-  typedef nsTArray_Impl<E, nsTArrayInfallibleAllocator> base_type;
-  typedef nsTArray<E> self_type;
-  typedef typename base_type::size_type size_type;
+  using InfallibleAlloc = nsTArrayInfallibleAllocator;
+  using base_type = nsTArray_Impl<E, InfallibleAlloc>;
+  using self_type = nsTArray<E>;
+  using typename base_type::elem_type;
+  using typename base_type::index_type;
+  using typename base_type::size_type;
 
   nsTArray() {}
   explicit nsTArray(size_type aCapacity) : base_type(aCapacity) {}
@@ -2736,12 +2724,41 @@ class nsTArray : public nsTArray_Impl<E, nsTArrayInfallibleAllocator> {
   using base_type::SetCapacity;
   using base_type::SetLength;
 
+  template <class Item>
+  MOZ_NONNULL_RETURN elem_type* ReplaceElementsAt(index_type aStart,
+                                                  size_type aCount,
+                                                  const Item* aArray,
+                                                  size_type aArrayLen) {
+    return this->template ReplaceElementsAtInternal<InfallibleAlloc>(
+        aStart, aCount, aArray, aArrayLen);
+  }
+
+  template <class Item>
+  MOZ_NONNULL_RETURN elem_type* ReplaceElementsAt(
+      index_type aStart, size_type aCount, const nsTArray<Item>& aArray) {
+    return ReplaceElementsAt(aStart, aCount, aArray.Elements(),
+                             aArray.Length());
+  }
+
+  template <class Item>
+  MOZ_NONNULL_RETURN elem_type* ReplaceElementsAt(index_type aStart,
+                                                  size_type aCount,
+                                                  mozilla::Span<Item> aSpan) {
+    return ReplaceElementsAt(aStart, aCount, aSpan.Elements(), aSpan.Length());
+  }
+
+  template <class Item>
+  MOZ_NONNULL_RETURN elem_type* ReplaceElementsAt(index_type aStart,
+                                                  size_type aCount,
+                                                  const Item& aItem) {
+    return ReplaceElementsAt(aStart, aCount, &aItem, 1);
+  }
+
   template <class... Args>
   MOZ_NONNULL_RETURN typename base_type::elem_type* EmplaceBack(
       Args&&... aArgs) {
-    return this
-        ->template EmplaceBackInternal<nsTArrayInfallibleAllocator, Args...>(
-            std::forward<Args>(aArgs)...);
+    return this->template EmplaceBackInternal<InfallibleAlloc, Args...>(
+        std::forward<Args>(aArgs)...);
   }
 };
 
