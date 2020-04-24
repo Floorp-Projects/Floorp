@@ -673,7 +673,7 @@ bool BrowsingContext::HasOpener() const {
 }
 
 void BrowsingContext::GetChildren(Children& aChildren) {
-  MOZ_ALWAYS_TRUE(aChildren.AppendElements(mChildren));
+  aChildren.AppendElements(mChildren);
 }
 
 void BrowsingContext::GetWindowContexts(

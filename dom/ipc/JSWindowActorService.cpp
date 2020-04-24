@@ -52,7 +52,7 @@ JSWindowActorProtocol::FromIPC(const JSWindowActorInfo& aInfo) {
 
   proto->mChild.mEvents.SetCapacity(aInfo.events().Length());
   for (auto& ipc : aInfo.events()) {
-    auto* event = proto->mChild.mEvents.AppendElement();
+    auto event = proto->mChild.mEvents.AppendElement();
     event->mName.Assign(ipc.name());
     event->mFlags.mCapture = ipc.capture();
     event->mFlags.mInSystemGroup = ipc.systemGroup();
@@ -79,7 +79,7 @@ JSWindowActorInfo JSWindowActorProtocol::ToIPC() {
 
   info.events().SetCapacity(mChild.mEvents.Length());
   for (auto& event : mChild.mEvents) {
-    auto* ipc = info.events().AppendElement();
+    auto ipc = info.events().AppendElement();
     ipc->name().Assign(event.mName);
     ipc->capture() = event.mFlags.mCapture;
     ipc->systemGroup() = event.mFlags.mInSystemGroup;
@@ -312,7 +312,7 @@ extensions::MatchPatternSet* JSWindowActorProtocol::GetURIMatcher() {
   nsTArray<OwningStringOrMatchPattern> patterns;
   patterns.SetCapacity(mMatches.Length());
   for (nsString& s : mMatches) {
-    auto* entry = patterns.AppendElement();
+    auto entry = patterns.AppendElement();
     entry->SetAsString() = s;
   }
 

@@ -2659,7 +2659,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput {
     uint32_t offsetInOppositeAxis = aRangeInOppositeAxis.mStart;
     uint32_t gridEndInOppositeAxis = aRangeInOppositeAxis.Extent();
     for (const auto& subgridItem : aItems) {
-      auto* newItem = aResult.AppendElement(
+      auto newItem = aResult.AppendElement(
           isOrthogonal ? subgridItem.Transpose() : subgridItem);
       if (MOZ_UNLIKELY(!isSameDirInAxis)) {
         newItem->ReverseDirection(aAxis, gridEndInAxis);

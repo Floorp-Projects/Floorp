@@ -25,6 +25,9 @@
 
 namespace mozilla {
 
+template <typename T>
+class NotNull;
+
 /** Set the contents of |aT| to 0. */
 template <typename T>
 static MOZ_ALWAYS_INLINE void PodZero(T* aT) {
@@ -42,6 +45,12 @@ static MOZ_ALWAYS_INLINE void PodZero(T* aT, size_t aNElem) {
   for (T* end = aT + aNElem; aT < end; aT++) {
     memset(aT, 0, sizeof(T));
   }
+}
+
+/** Set the contents of |aNElem| elements starting at |aT| to 0. */
+template <typename T>
+static MOZ_ALWAYS_INLINE void PodZero(NotNull<T*> aT, size_t aNElem) {
+  PodZero(aT.get(), aNElem);
 }
 
 /*

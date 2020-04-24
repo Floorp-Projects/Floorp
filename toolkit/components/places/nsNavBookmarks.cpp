@@ -1763,7 +1763,7 @@ nsresult nsNavBookmarks::GetBookmarksForURI(
     rv = stmt->GetInt32(6, &bookmark.syncStatus);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    NS_ENSURE_TRUE(aBookmarks.AppendElement(bookmark), NS_ERROR_OUT_OF_MEMORY);
+    aBookmarks.AppendElement(bookmark);
   }
 
   return NS_OK;
