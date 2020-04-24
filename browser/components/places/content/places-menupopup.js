@@ -32,14 +32,14 @@
       }
     }
 
-    static get markup() {
+    get markup() {
       return `
-      <html:link rel="stylesheet" href="chrome://global/skin/popup.css"/>
+      <html:link rel="stylesheet" href="chrome://global/content/widgets.css" />
       <hbox flex="1" part="innerbox">
         <vbox part="drop-indicator-bar" hidden="true">
           <image part="drop-indicator"/>
         </vbox>
-        <arrowscrollbox flex="1" orient="vertical"
+        <arrowscrollbox class="menupopup-arrowscrollbox" flex="1" orient="vertical"
                         exportparts="scrollbox: arrowscrollbox-scrollbox"
                         smoothscroll="false" part="arrowscrollbox">
           <html:slot/>
@@ -589,9 +589,9 @@
       };
     }
 
-    static get markup() {
+    get markup() {
       return `
-      <html:link rel="stylesheet" href="chrome://global/skin/popup.css"/>
+      <html:link rel="stylesheet" href="chrome://global/content/widgets.css"/>
       <html:link rel="stylesheet" href="chrome://global/skin/arrowpanel.css"/>
       <vbox class="panel-arrowcontainer" flex="1">
         <box class="panel-arrowbox" part="arrowbox">
@@ -601,8 +601,9 @@
           <vbox part="drop-indicator-bar" hidden="true">
             <image part="drop-indicator"/>
           </vbox>
-          <arrowscrollbox flex="1" orient="vertical"
-                          smoothscroll="false" part="arrowscrollbox">
+          <arrowscrollbox class="menupopup-arrowscrollbox" flex="1"
+                          orient="vertical" smoothscroll="false"
+                          part="arrowscrollbox">
             <html:slot/>
           </arrowscrollbox>
         </box>
