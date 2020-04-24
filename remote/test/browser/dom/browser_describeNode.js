@@ -100,11 +100,9 @@ add_task(async function objectIdNoAttributes({ client }) {
 });
 
 add_task(async function objectIdDiffersForDifferentNodes({ client }) {
-  const { DOM, Page, Runtime } = client;
+  const { DOM, Runtime } = client;
 
-  await Page.enable();
-  await Page.navigate({ url: DOC });
-  await Page.loadEventFired();
+  await loadURL(DOC);
 
   await Runtime.enable();
   const { result: doc } = await Runtime.evaluate({
