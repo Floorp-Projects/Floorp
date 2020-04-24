@@ -4181,6 +4181,23 @@
   value: true
   mirror: once
 
+# When gl debug message is a high severity message, forwward it to gfx critical
+# note.
+- name: gfx.webrender.gl-debug-message-critical-note
+  type: bool
+#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+  value: true
+#else
+  value: false
+#endif
+  mirror: once
+
+# Enable printing gl debug messages
+- name: gfx.webrender.gl-debug-message-print
+  type: bool
+  value: false
+  mirror: once
+
 #ifdef NIGHTLY_BUILD
   # Keep this pref hidden on non-nightly builds to avoid people accidentally
   # turning it on.
