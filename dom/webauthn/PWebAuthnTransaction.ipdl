@@ -18,6 +18,7 @@ include protocol PBackground;
 
 using mozilla::dom::AttestationConveyancePreference from "mozilla/dom/WebAuthnUtil.h";
 using mozilla::dom::AuthenticatorAttachment from "mozilla/dom/WebAuthnUtil.h";
+using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::UserVerificationRequirement from "mozilla/dom/WebAuthnUtil.h";
 
 namespace mozilla {
@@ -94,6 +95,7 @@ struct WebAuthnMakeCredentialInfo {
   uint32_t TimeoutMS;
   WebAuthnScopedCredential[] ExcludeList;
   WebAuthnMakeCredentialExtraInfo? Extra;
+  uint64_t BrowsingContextId;
 };
 
 struct WebAuthnMakeCredentialResult {
@@ -118,6 +120,7 @@ struct WebAuthnGetAssertionInfo {
   uint32_t TimeoutMS;
   WebAuthnScopedCredential[] AllowList;
   WebAuthnGetAssertionExtraInfo? Extra;
+  uint64_t BrowsingContextId;
 };
 
 struct WebAuthnGetAssertionResult {

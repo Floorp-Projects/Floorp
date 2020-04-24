@@ -283,9 +283,19 @@ void U2F::Register(const nsAString& aAppId,
   NS_ConvertUTF16toUTF8 clientData(clientDataJSON);
   uint32_t adjustedTimeoutMillis = AdjustedTimeoutMillis(opt_aTimeoutSeconds);
 
+  BrowsingContext* context = mParent->GetBrowsingContext();
+  if (!context) {
+    RegisterResponse response;
+    response.mErrorCode.Construct(
+        static_cast<uint32_t>(ErrorCode::OTHER_ERROR));
+    ExecuteCallback(response, callback);
+    return;
+  }
+
   WebAuthnMakeCredentialInfo info(mOrigin, adjustedAppId, challenge, clientData,
                                   adjustedTimeoutMillis, excludeList,
-                                  Nothing() /* no extra info for U2F */);
+                                  Nothing(), /* no extra info for U2F */
+                                  context->Id());
 
   MOZ_ASSERT(mTransaction.isNothing());
   mTransaction = Some(U2FTransaction(AsVariant(callback)));
@@ -469,9 +479,19 @@ void U2F::Sign(const nsAString& aAppId, const nsAString& aChallenge,
   NS_ConvertUTF16toUTF8 clientData(clientDataJSON);
   uint32_t adjustedTimeoutMillis = AdjustedTimeoutMillis(opt_aTimeoutSeconds);
 
+  BrowsingContext* context = mParent->GetBrowsingContext();
+  if (!context) {
+    SignResponse response;
+    response.mErrorCode.Construct(
+        static_cast<uint32_t>(ErrorCode::OTHER_ERROR));
+    ExecuteCallback(response, callback);
+    return;
+  }
+
   WebAuthnGetAssertionInfo info(mOrigin, adjustedAppId, challenge, clientData,
                                 adjustedTimeoutMillis, permittedList,
-                                Nothing() /* no extra info for U2F */);
+                                Nothing(), /* no extra info for U2F */
+                                context->Id());
 
   MOZ_ASSERT(mTransaction.isNothing());
   mTransaction = Some(U2FTransaction(AsVariant(callback)));
