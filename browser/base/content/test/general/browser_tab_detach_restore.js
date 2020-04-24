@@ -15,7 +15,7 @@ add_task(async function() {
 
   let tab = BrowserTestUtils.addTab(gBrowser);
   BrowserTestUtils.loadURI(tab.linkedBrowser, uri);
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, uri);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await TabStateFlusher.flush(tab.linkedBrowser);
 
   let key = tab.linkedBrowser.permanentKey;

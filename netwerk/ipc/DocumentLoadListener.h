@@ -14,6 +14,7 @@
 #include "mozilla/net/PDocumentChannelParent.h"
 #include "mozilla/net/ParentChannelListener.h"
 #include "mozilla/net/ADocumentChannelBridge.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIParentChannel.h"
@@ -29,9 +30,6 @@
   }
 
 namespace mozilla {
-namespace dom {
-class CanonicalBrowsingContext;
-}
 namespace net {
 using ChildEndpointPromise =
     MozPromise<ipc::Endpoint<extensions::PStreamFilterChild>, bool, true>;
@@ -91,33 +89,15 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                              public nsIMultiPartChannelListener {
  public:
   explicit DocumentLoadListener(dom::CanonicalBrowsingContext* aBrowsingContext,
+                                nsILoadContext* aLoadContext,
                                 ADocumentChannelBridge* aBridge);
 
   // Creates the channel, and then calls AsyncOpen on it.
   bool Open(nsDocShellLoadState* aLoadState, nsLoadFlags aLoadFlags,
-            uint32_t aCacheKey, const Maybe<uint64_t>& aChannelId,
+            uint32_t aCacheKey, const uint64_t& aChannelId,
             const TimeStamp& aAsyncOpenTime, nsDOMNavigationTiming* aTiming,
             Maybe<dom::ClientInfo>&& aInfo, uint64_t aOuterWindowId,
             bool aHasGesture, nsresult* aRv);
-
-  // Creates a DocumentLoadListener directly in the parent process without
-  // an associated DocumentChannelBridge.
-  // If successful it registers a unique identifier (return in aOutIdent) to
-  // keep it alive until a future bridge can attach to it, or we fail and clean
-  // up.
-  static bool OpenFromParent(dom::CanonicalBrowsingContext* aBrowsingContext,
-                             nsDocShellLoadState* aLoadState,
-                             uint64_t aOuterWindowId, uint32_t* aOutIdent);
-
-  // Ensures that a load identifier allocated by OpenFromParent has
-  // been deregistered if it hasn't already been claimed.
-  // This also cancels the load.
-  static void CleanupParentLoadAttempt(uint32_t aLoadIdent);
-
-  // Looks up aLoadIdent to find the associated, cleans up the registration
-  // and attaches aBridge as the listener.
-  static already_AddRefed<DocumentLoadListener> ClaimParentLoad(
-      uint32_t aLoadIdent, ADocumentChannelBridge* aBridge);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
@@ -185,9 +165,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
     if (mDocumentChannelBridge) {
       return mDocumentChannelBridge->OtherPid();
     }
-    if (mPendingDocumentChannelBridgeProcess) {
-      return *mPendingDocumentChannelBridgeProcess;
-    }
     return 0;
   }
 
@@ -209,25 +186,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   net::LastVisitInfo LastVisitInfo() const;
 
  protected:
-  DocumentLoadListener(dom::CanonicalBrowsingContext* aBrowsingContext,
-                       base::ProcessId aPendingBridgeProcess);
   virtual ~DocumentLoadListener();
-
-  // Called when we were created without a document channel bridge,
-  // and now it has been created and attached.
-  void NotifyBridgeConnected(ADocumentChannelBridge* aBridge);
-
-  // Called when we were created without a document channel bridge,
-  // and creation has failed, and won't ever be attached.
-  void NotifyBridgeFailed();
-
-  // Returns a promise that resolves with the document channel bridge,
-  // waiting for a pending one if necessary.
-  // If we've failed to create a bridge, or a bridge has already been
-  // detached then rejects.
-  typedef MozPromise<RefPtr<ADocumentChannelBridge>, bool, false>
-      EnsureBridgePromise;
-  RefPtr<EnsureBridgePromise> EnsureBridge();
 
   // Initiates the switch from DocumentChannel to the real protocol-specific
   // channel, and ensures that RedirectToRealChannelFinished is called when
@@ -263,8 +222,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   already_AddRefed<LoadInfo> CreateLoadInfo(
       dom::CanonicalBrowsingContext* aBrowsingContext,
       nsDocShellLoadState* aLoadState, uint64_t aOuterWindowId);
-
-  dom::CanonicalBrowsingContext* GetBrowsingContext();
 
   bool HasCrossOriginOpenerPolicyMismatch() const;
   void ApplyPendingFunctions(nsISupports* aChannel) const;
@@ -373,14 +330,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // shuts down to break this.
   RefPtr<ADocumentChannelBridge> mDocumentChannelBridge;
 
-  // If we were created without a bridge, then this is set
-  // to Some() with the process id of the content process
-  // that will be creating our bridge soon.
-  Maybe<base::ProcessId> mPendingDocumentChannelBridgeProcess;
-
-  // Holds a promise for callers that want to wait on the document
-  // channel bridge becoming available.
-  MozPromiseHolder<EnsureBridgePromise> mBridgePromise;
+  nsCOMPtr<nsILoadContext> mLoadContext;
 
   // The original URI of the current channel. If there are redirects,
   // then the value on the channel gets overwritten with the original

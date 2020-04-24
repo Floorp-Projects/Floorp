@@ -97,13 +97,23 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
     args.timing() = Some(mTiming);
   }
 
+  nsCOMPtr<nsIBrowserChild> iBrowserChild;
+  NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup,
+                                NS_GET_TEMPLATE_IID(nsIBrowserChild),
+                                getter_AddRefs(iBrowserChild));
+  BrowserChild* browserChild = static_cast<BrowserChild*>(iBrowserChild.get());
+  if (MissingRequiredBrowserChild(browserChild, "documentchannel")) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
   args.hasValidTransientUserAction() =
       GetDocShell()
           ->GetBrowsingContext()
           ->HasValidTransientUserGestureActivation();
 
   gNeckoChild->SendPDocumentChannelConstructor(
-      this, GetDocShell()->GetBrowsingContext(), args);
+      this, browserChild, GetDocShell()->GetBrowsingContext(),
+      IPC::SerializedLoadContext(this), args);
 
   mIsPending = true;
   mWasOpened = true;

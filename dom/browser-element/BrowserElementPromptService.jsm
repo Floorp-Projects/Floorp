@@ -523,7 +523,8 @@ AuthPromptWrapper.prototype = {
       );
       let frame = context.topFrameElement;
       if (!frame) {
-        return false;
+        // This function returns a boolean value
+        return !!context.nestedFrameId;
       }
 
       if (!BrowserElementPromptService.getBrowserElementParentForFrame(frame)) {

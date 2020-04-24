@@ -841,8 +841,7 @@ child:
 
     async EvictContentViewers(uint64_t[] aToEvictSharedStateIDs);
 
-    async LoadURI(MaybeDiscardedBrowsingContext aContext, nsDocShellLoadState aLoadState, bool aSetNavigating)
-        returns (bool aSuccess);
+    async LoadURI(MaybeDiscardedBrowsingContext aContext, nsDocShellLoadState aLoadState, bool aSetNavigating);
 
     async InternalLoad(MaybeDiscardedBrowsingContext aContext, nsDocShellLoadState aLoadState, bool aTakeFocus);
 
