@@ -589,6 +589,31 @@ async function setupRemoteSettings() {
 }
 
 /**
+ * Helper function that sets up a server and respnds to region
+ * fetch requests.
+ * @param {string} region
+ *   The region that the server will respond with.
+ * @param {Promise|null} waitToRespond
+ *   A promise that the server will await on to delay responding
+ *   to the request.
+ */
+function useCustomGeoServer(region, waitToRespond = Promise.resolve()) {
+  let srv = useHttpServer();
+  srv.registerPathHandler("/fetch_region", async (req, res) => {
+    res.processAsync();
+    await waitToRespond;
+    res.setStatusLine("1.1", 200, "OK");
+    res.write(JSON.stringify({ country_code: region }));
+    res.finish();
+  });
+
+  Services.prefs.setCharPref(
+    "geo.provider-country.network.url",
+    `http://localhost:${srv.identity.primaryPort}/fetch_region`
+  );
+}
+
+/**
  * Some tests might trigger initialisation which will trigger the search settings
  * update. We need to make sure we wait for that to finish before we exit, otherwise
  * it may cause shutdown issues.
