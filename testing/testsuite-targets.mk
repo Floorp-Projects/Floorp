@@ -124,6 +124,8 @@ TEST_PKGS_TARGZ := \
   xpcshell \
   web-platform \
   updater-dep \
+  jsreftest \
+  jittest \
   $(NULL)
 
 ifdef LINK_GTEST_DURING_COMPILE
