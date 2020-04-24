@@ -42,7 +42,6 @@ exports[`Frame getFrameTitle 1`] = `
         "source": Object {
           "extensionName": null,
           "id": "source",
-          "introductionType": undefined,
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
@@ -99,7 +98,6 @@ exports[`Frame getFrameTitle 1`] = `
         "source": Object {
           "extensionName": null,
           "id": "source",
-          "introductionType": undefined,
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
@@ -163,7 +161,6 @@ exports[`Frame library frame 1`] = `
         "source": Object {
           "extensionName": null,
           "id": "source",
-          "introductionType": undefined,
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
@@ -221,7 +218,6 @@ exports[`Frame library frame 1`] = `
         "source": Object {
           "extensionName": null,
           "id": "source",
-          "introductionType": undefined,
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
@@ -284,7 +280,6 @@ exports[`Frame user frame (not selected) 1`] = `
         "source": Object {
           "extensionName": null,
           "id": "source",
-          "introductionType": undefined,
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
@@ -341,7 +336,6 @@ exports[`Frame user frame (not selected) 1`] = `
         "source": Object {
           "extensionName": null,
           "id": "source",
-          "introductionType": undefined,
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
@@ -404,7 +398,6 @@ exports[`Frame user frame 1`] = `
         "source": Object {
           "extensionName": null,
           "id": "source",
-          "introductionType": undefined,
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,
@@ -461,7 +454,6 @@ exports[`Frame user frame 1`] = `
         "source": Object {
           "extensionName": null,
           "id": "source",
-          "introductionType": undefined,
           "introductionUrl": null,
           "isBlackBoxed": false,
           "isExtension": false,

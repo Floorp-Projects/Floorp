@@ -181,7 +181,6 @@ exports[`ConditionalPanel it should render at location of selected breakpoint 1`
     Object {
       "extensionName": null,
       "id": "source",
-      "introductionType": undefined,
       "introductionUrl": null,
       "isBlackBoxed": false,
       "isExtension": false,
@@ -380,7 +379,6 @@ exports[`ConditionalPanel it should render with condition at selected breakpoint
     Object {
       "extensionName": null,
       "id": "source",
-      "introductionType": undefined,
       "introductionUrl": null,
       "isBlackBoxed": false,
       "isExtension": false,
@@ -579,7 +577,6 @@ exports[`ConditionalPanel it should render with logpoint at selected breakpoint 
     Object {
       "extensionName": null,
       "id": "source",
-      "introductionType": undefined,
       "introductionUrl": null,
       "isBlackBoxed": false,
       "isExtension": false,
