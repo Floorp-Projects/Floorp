@@ -16,6 +16,7 @@ PromiseTestUtils.whitelistRejectionsGlobally(/NS_ERROR_ILLEGAL_VALUE/);
 
 const kEnginePref = "browser.translation.engine";
 const kApiKeyPref = "browser.translation.yandex.apiKeyOverride";
+const kDetectLanguagePref = "browser.translation.detectLanguage";
 const kShowUIPref = "browser.translation.ui.show";
 
 const { Translation } = ChromeUtils.import(
@@ -23,14 +24,13 @@ const { Translation } = ChromeUtils.import(
 );
 
 add_task(async function setup() {
-  Services.prefs.setCharPref(kEnginePref, "Yandex");
-  Services.prefs.setCharPref(kApiKeyPref, "yandexValidKey");
-  Services.prefs.setBoolPref(kShowUIPref, true);
-
-  registerCleanupFunction(function() {
-    Services.prefs.clearUserPref(kEnginePref);
-    Services.prefs.clearUserPref(kApiKeyPref);
-    Services.prefs.clearUserPref(kShowUIPref);
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [kEnginePref, "Yandex"],
+      [kApiKeyPref, "yandexValidKey"],
+      [kDetectLanguagePref, true],
+      [kShowUIPref, true],
+    ],
   });
 });
 
