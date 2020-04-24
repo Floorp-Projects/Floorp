@@ -3203,24 +3203,26 @@ void nsFrameLoader::DestroyBrowserFrameScripts() {
 }
 
 void nsFrameLoader::StartPersistence(
-    uint64_t aOuterWindowID, nsIWebBrowserPersistDocumentReceiver* aRecv,
+    BrowsingContext* aContext, nsIWebBrowserPersistDocumentReceiver* aRecv,
     ErrorResult& aRv) {
   MOZ_ASSERT(aRecv);
+  RefPtr<BrowsingContext> context = aContext ? aContext : GetBrowsingContext();
 
-  if (auto* browserParent = GetBrowserParent()) {
-    browserParent->StartPersistence(aOuterWindowID, aRecv, aRv);
+  if (!context || !context->IsInSubtreeOf(GetBrowsingContext())) {
+    aRecv->OnError(NS_ERROR_NO_CONTENT);
     return;
   }
 
-  nsCOMPtr<Document> rootDoc =
-      GetDocShell() ? GetDocShell()->GetDocument() : nullptr;
-  nsCOMPtr<Document> foundDoc;
-  if (aOuterWindowID) {
-    foundDoc = nsContentUtils::GetSubdocumentWithOuterWindowId(rootDoc,
-                                                               aOuterWindowID);
-  } else {
-    foundDoc = rootDoc;
+  if (!context->GetDocShell() && XRE_IsParentProcess()) {
+    CanonicalBrowsingContext* canonical =
+        CanonicalBrowsingContext::Cast(context);
+    RefPtr<BrowserParent> browserParent =
+        canonical->GetCurrentWindowGlobal()->GetBrowserParent();
+    browserParent->StartPersistence(canonical, aRecv, aRv);
+    return;
   }
+
+  nsCOMPtr<Document> foundDoc = context->GetDocument();
 
   if (!foundDoc) {
     aRecv->OnError(NS_ERROR_NO_CONTENT);
