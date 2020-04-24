@@ -4,5 +4,6 @@
 
 DevToolsModules(
     'console-messages.js',
+    'error-messages.js',
     'platform-messages.js',
 )
