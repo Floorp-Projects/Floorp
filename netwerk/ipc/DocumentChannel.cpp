@@ -77,6 +77,48 @@ DocumentChannel::AsyncOpen(nsIStreamListener* aListener) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+void DocumentChannel::ShutdownListeners(nsresult aStatusCode) {
+  LOG(("DocumentChannel ShutdownListeners [this=%p, status=%" PRIx32 "]", this,
+       static_cast<uint32_t>(aStatusCode)));
+  mStatus = aStatusCode;
+
+  nsCOMPtr<nsIStreamListener> listener = mListener;
+  if (listener) {
+    listener->OnStartRequest(this);
+  }
+
+  mIsPending = false;
+
+  listener = mListener;  // it might have changed!
+  if (listener) {
+    listener->OnStopRequest(this, aStatusCode);
+  }
+  mListener = nullptr;
+  mCallbacks = nullptr;
+
+  if (mLoadGroup) {
+    mLoadGroup->RemoveRequest(this, nullptr, aStatusCode);
+    mLoadGroup = nullptr;
+  }
+
+  DeleteIPDL();
+}
+
+void DocumentChannel::DisconnectChildListeners(
+    const nsresult& aStatus, const nsresult& aLoadGroupStatus) {
+  MOZ_ASSERT(NS_FAILED(aStatus));
+  mStatus = aLoadGroupStatus;
+  // Make sure we remove from the load group before
+  // setting mStatus, as existing tests expect the
+  // status to be successful when we disconnect.
+  if (mLoadGroup) {
+    mLoadGroup->RemoveRequest(this, nullptr, aStatus);
+    mLoadGroup = nullptr;
+  }
+
+  ShutdownListeners(aStatus);
+}
+
 nsDocShell* DocumentChannel::GetDocShell() {
   nsCOMPtr<nsILoadContext> loadContext;
   NS_QueryNotificationCallbacks(this, loadContext);
