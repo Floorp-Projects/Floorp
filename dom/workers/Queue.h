@@ -38,7 +38,10 @@ struct StorageWithTArray {
   }
 
   static bool Push(StorageType& aStorage, const T& aEntry) {
-    return !!aStorage.AppendElement(aEntry);
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier, or change the return type to void.
+    aStorage.AppendElement(aEntry);
+    return true;
   }
 
   static bool Pop(StorageType& aStorage, T& aEntry) {

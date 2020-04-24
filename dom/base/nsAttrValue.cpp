@@ -290,11 +290,13 @@ void nsAttrValue::SetTo(const nsAttrValue& aOther) {
       break;
     }
     case eAtomArray: {
-      if (!EnsureEmptyAtomArray() ||
-          !GetAtomArrayValue()->AppendElements(*otherCont->mValue.mAtomArray)) {
+      if (!EnsureEmptyAtomArray()) {
         Reset();
         return;
       }
+      // XXX(Bug 1631371) Check if this should use a fallible operation as it
+      // pretended earlier.
+      GetAtomArrayValue()->AppendElements(*otherCont->mValue.mAtomArray);
       break;
     }
     case eDoubleValue: {
@@ -1125,10 +1127,9 @@ void nsAttrValue::ParseAtomArray(const nsAString& aValue) {
 
   AtomArray* array = GetAtomArrayValue();
 
-  if (!array->AppendElement(std::move(classAtom))) {
-    Reset();
-    return;
-  }
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier.
+  array->AppendElement(std::move(classAtom));
 
   // parse the rest of the classnames
   while (iter != end) {
@@ -1140,10 +1141,9 @@ void nsAttrValue::ParseAtomArray(const nsAString& aValue) {
 
     classAtom = NS_AtomizeMainThread(Substring(start, iter));
 
-    if (!array->AppendElement(std::move(classAtom))) {
-      Reset();
-      return;
-    }
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    array->AppendElement(std::move(classAtom));
 
     // skip whitespace
     while (iter != end && nsContentUtils::IsHTMLWhitespace(*iter)) {

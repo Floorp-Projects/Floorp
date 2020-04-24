@@ -59,9 +59,9 @@ already_AddRefed<nsTransformedTextRun> nsTransformedTextRun::Create(
 void nsTransformedTextRun::SetCapitalization(uint32_t aStart, uint32_t aLength,
                                              bool* aCapitalization) {
   if (mCapitalize.IsEmpty()) {
-    if (!mCapitalize.AppendElements(GetLength())) {
-      return;
-    }
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    mCapitalize.AppendElements(GetLength());
     memset(mCapitalize.Elements(), 0, GetLength() * sizeof(bool));
   }
   memcpy(mCapitalize.Elements() + aStart, aCapitalization,

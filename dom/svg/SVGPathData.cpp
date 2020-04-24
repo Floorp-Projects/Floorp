@@ -143,10 +143,9 @@ bool SVGPathData::GetSegmentLengths(nsTArray<double>* aLengths) const {
   while (i < mData.Length()) {
     state.length = 0.0;
     SVGPathSegUtils::TraversePathSegment(&mData[i], state);
-    if (!aLengths->AppendElement(state.length)) {
-      aLengths->Clear();
-      return false;
-    }
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    aLengths->AppendElement(state.length);
     i += 1 + SVGPathSegUtils::ArgCountForType(mData[i]);
   }
 
@@ -1043,12 +1042,11 @@ void SVGPathData::GetMarkerPositioningData(nsTArray<SVGMark>* aMarks) const {
     }
 
     // Add the mark at the end of this segment, and set its position:
-    if (!aMarks->AppendElement(SVGMark(static_cast<float>(segEnd.x),
-                                       static_cast<float>(segEnd.y), 0.0f,
-                                       SVGMark::eMid))) {
-      aMarks->Clear();  // OOM, so try to free some
-      return;
-    }
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    aMarks->AppendElement(SVGMark(static_cast<float>(segEnd.x),
+                                  static_cast<float>(segEnd.y), 0.0f,
+                                  SVGMark::eMid));
 
     if (segType == PATHSEG_CLOSEPATH && prevSegType != PATHSEG_CLOSEPATH) {
       aMarks->LastElement().angle = aMarks->ElementAt(pathStartIndex).angle =

@@ -2164,9 +2164,9 @@ nsresult Database::MigrateV50Up() {
     rv = stmt->GetUTF8String(1, url);
     if (NS_FAILED(rv)) return rv;
 
-    if (!placeURLs.AppendElement(std::make_pair(placeId, url))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    placeURLs.AppendElement(std::make_pair(placeId, url));
   }
 
   if (placeURLs.IsEmpty()) {
@@ -2470,9 +2470,9 @@ nsresult Database::ConvertOldStyleQuery(nsCString& aURL) {
     const QueryKeyValuePair& kvp = tokens[j];
 
     if (!kvp.key.EqualsLiteral("folder")) {
-      if (!newTokens.AppendElement(kvp)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+      // XXX(Bug 1631371) Check if this should use a fallible operation as it
+      // pretended earlier.
+      newTokens.AppendElement(kvp);
       continue;
     }
 
@@ -2518,9 +2518,9 @@ nsresult Database::ConvertOldStyleQuery(nsCString& aURL) {
     } else {
       newPair = new QueryKeyValuePair(NS_LITERAL_CSTRING("parent"), guid);
     }
-    if (!newTokens.AppendElement(*newPair)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    newTokens.AppendElement(*newPair);
     delete newPair;
   }
 

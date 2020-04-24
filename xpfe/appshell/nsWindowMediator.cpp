@@ -199,9 +199,8 @@ nsWindowMediator::GetZOrderAppWindowEnumerator(const char16_t* aWindowType,
   return NS_OK;
 }
 
-int32_t nsWindowMediator::AddEnumerator(
-    nsAppShellWindowEnumerator* inEnumerator) {
-  return mEnumeratorList.AppendElement(inEnumerator) != nullptr;
+void nsWindowMediator::AddEnumerator(nsAppShellWindowEnumerator* inEnumerator) {
+  mEnumeratorList.AppendElement(inEnumerator);
 }
 
 int32_t nsWindowMediator::RemoveEnumerator(

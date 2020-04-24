@@ -16,11 +16,9 @@ namespace system {
  * Normalize the short IP form into the complete form.
  * For example, it converts "192.168" into "192.168.0.0"
  */
-static bool NormalizeAddr(const nsACString& aAddr, nsCString& aNormalized) {
+static void NormalizeAddr(const nsACString& aAddr, nsCString& aNormalized) {
   nsTArray<nsCString> addr;
-  if (!ParseString(aAddr, '.', addr)) {
-    return false;
-  }
+  ParseString(aAddr, '.', addr);
   aNormalized = "";
   for (uint32_t i = 0; i < 4; ++i) {
     if (i != 0) {
@@ -32,7 +30,6 @@ static bool NormalizeAddr(const nsACString& aAddr, nsCString& aNormalized) {
       aNormalized.AppendLiteral("0");
     }
   }
-  return true;
 }
 
 static PRUint32 MaskIPv4Addr(PRUint32 aAddr, uint16_t aMaskLen) {
@@ -81,9 +78,7 @@ static bool IsMatchMask(const nsACString& aHost, const nsACString& aOverride) {
   }
 
   nsAutoCString override(aOverride);
-  if (!NormalizeAddr(Substring(aOverride, 0, tokenEnd), override)) {
-    return false;
-  }
+  NormalizeAddr(Substring(aOverride, 0, tokenEnd), override);
 
   PRNetAddr prAddrHost;
   PRNetAddr prAddrOverride;

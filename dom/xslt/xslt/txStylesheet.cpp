@@ -305,9 +305,9 @@ nsresult txStylesheet::doneCompiling() {
       itemIter.remove();  // remove() moves to the previous
       itemIter.next();
     }
-    if (!mStripSpaceTests.AppendElements(frameStripSpaceTests)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    mStripSpaceTests.AppendElements(frameStripSpaceTests);
 
     frameStripSpaceTests.Clear();
   }

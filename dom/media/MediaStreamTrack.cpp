@@ -497,7 +497,10 @@ void MediaStreamTrack::NotifyEnabledChanged() {
 
 bool MediaStreamTrack::AddPrincipalChangeObserver(
     PrincipalChangeObserver<MediaStreamTrack>* aObserver) {
-  return mPrincipalChangeObservers.AppendElement(aObserver) != nullptr;
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier.
+  mPrincipalChangeObservers.AppendElement(aObserver);
+  return true;
 }
 
 bool MediaStreamTrack::RemovePrincipalChangeObserver(

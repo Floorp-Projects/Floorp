@@ -298,9 +298,9 @@ nsGIOMimeApp::GetSupportedURISchemes(nsIUTF8StringEnumerator** aSchemes) {
   const gchar* const* uri_schemes = g_vfs_get_supported_uri_schemes(gvfs);
 
   while (*uri_schemes != nullptr) {
-    if (!array->mStrings.AppendElement(*uri_schemes)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    array->mStrings.AppendElement(*uri_schemes);
     uri_schemes++;
   }
 

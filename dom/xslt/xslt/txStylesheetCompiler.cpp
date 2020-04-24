@@ -212,10 +212,9 @@ nsresult txStylesheetCompiler::startElementInternal(
         if (namespaceID == kNameSpaceID_Unknown)
           return NS_ERROR_XSLT_PARSE_FAILURE;
 
-        if (!mElementContext->mInstructionNamespaces.AppendElement(
-                namespaceID)) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
+        // XXX(Bug 1631371) Check if this should use a fallible operation as it
+        // pretended earlier.
+        mElementContext->mInstructionNamespaces.AppendElement(namespaceID);
       }
 
       attr->mLocalName = nullptr;
@@ -678,9 +677,9 @@ nsresult txStylesheetCompilerState::loadIncludedStylesheet(
   // step forward before calling the observer in case of syncronous loading
   mToplevelIterator.next();
 
-  if (mChildCompilerList.AppendElement(compiler) == nullptr) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier.
+  mChildCompilerList.AppendElement(compiler);
 
   rv = mObserver->loadURI(aURI, mStylesheetURI, mReferrerPolicy, compiler);
   if (NS_FAILED(rv)) {
@@ -709,9 +708,9 @@ nsresult txStylesheetCompilerState::loadImportedStylesheet(
       aURI, mStylesheet, &iter, mReferrerPolicy, observer);
   NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
 
-  if (mChildCompilerList.AppendElement(compiler) == nullptr) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier.
+  mChildCompilerList.AppendElement(compiler);
 
   nsresult rv =
       mObserver->loadURI(aURI, mStylesheetURI, mReferrerPolicy, compiler);
@@ -724,20 +723,17 @@ nsresult txStylesheetCompilerState::loadImportedStylesheet(
 
 nsresult txStylesheetCompilerState::addGotoTarget(
     txInstruction** aTargetPointer) {
-  if (mGotoTargetPointers.AppendElement(aTargetPointer) == nullptr) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier, or change the return type to void.
+  mGotoTargetPointers.AppendElement(aTargetPointer);
   return NS_OK;
 }
 
 nsresult txStylesheetCompilerState::addVariable(const txExpandedName& aName) {
   txInScopeVariable* var = new txInScopeVariable(aName);
-  if (!mInScopeVariables.AppendElement(var)) {
-    delete var;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier, or change the return type to void.
+  mInScopeVariables.AppendElement(var);
   return NS_OK;
 }
 

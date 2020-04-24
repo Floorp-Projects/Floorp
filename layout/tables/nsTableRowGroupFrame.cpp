@@ -568,9 +568,9 @@ void nsTableRowGroupFrame::CalculateRowBSizes(nsPresContext* aPresContext,
   if (numRows <= 0) return;
 
   AutoTArray<RowInfo, 32> rowInfo;
-  if (!rowInfo.AppendElements(numRows)) {
-    return;
-  }
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier.
+  rowInfo.AppendElements(numRows);
 
   bool hasRowSpanningCell = false;
   nscoord bSizeOfRows = 0;
@@ -1945,7 +1945,10 @@ bool nsTableRowGroupFrame::FrameCursorData::AppendFrame(nsIFrame* aFrame) {
   nscoord overflowBelow = overflowRect.YMost() - aFrame->GetSize().height;
   mOverflowAbove = std::max(mOverflowAbove, overflowAbove);
   mOverflowBelow = std::max(mOverflowBelow, overflowBelow);
-  return mFrames.AppendElement(aFrame) != nullptr;
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier, or change the return type to void.
+  mFrames.AppendElement(aFrame);
+  return true;
 }
 
 void nsTableRowGroupFrame::InvalidateFrame(uint32_t aDisplayItemKey,
