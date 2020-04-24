@@ -40,9 +40,16 @@ void AccGroupInfo::Update() {
     // If the sibling is separator then the group is ended.
     if (siblingRole == roles::SEPARATOR) break;
 
-    // If sibling is not visible and hasn't the same base role.
-    if (BaseRole(siblingRole) != mRole || sibling->State() & states::INVISIBLE)
+    if (BaseRole(siblingRole) != mRole) {
       continue;
+    }
+    bool siblingHasGroupInfo =
+        sibling->mBits.groupInfo && !sibling->HasDirtyGroupInfo();
+    // Skip invisible siblings.
+    // If the sibling has calculated group info, that means it's visible.
+    if (!siblingHasGroupInfo && sibling->State() & states::INVISIBLE) {
+      continue;
+    }
 
     // Check if it's hierarchical flatten structure, i.e. if the sibling
     // level is lesser than this one then group is ended, if the sibling level
@@ -59,7 +66,7 @@ void AccGroupInfo::Update() {
 
     // If the previous item in the group has calculated group information then
     // build group information for this item based on found one.
-    if (sibling->mBits.groupInfo && !sibling->HasDirtyGroupInfo()) {
+    if (siblingHasGroupInfo) {
       mPosInSet += sibling->mBits.groupInfo->mPosInSet;
       mParent = sibling->mBits.groupInfo->mParent;
       mSetSize = sibling->mBits.groupInfo->mSetSize;
@@ -80,9 +87,16 @@ void AccGroupInfo::Update() {
     // If the sibling is separator then the group is ended.
     if (siblingRole == roles::SEPARATOR) break;
 
-    // If sibling is visible and has the same base role
-    if (BaseRole(siblingRole) != mRole || sibling->State() & states::INVISIBLE)
+    if (BaseRole(siblingRole) != mRole) {
       continue;
+    }
+    bool siblingHasGroupInfo =
+        sibling->mBits.groupInfo && !sibling->HasDirtyGroupInfo();
+    // Skip invisible siblings.
+    // If the sibling has calculated group info, that means it's visible.
+    if (!siblingHasGroupInfo && sibling->State() & states::INVISIBLE) {
+      continue;
+    }
 
     // and check if it's hierarchical flatten structure.
     int32_t siblingLevel = nsAccUtils::GetARIAOrDefaultLevel(sibling);
@@ -93,7 +107,7 @@ void AccGroupInfo::Update() {
 
     // If the next item in the group has calculated group information then
     // build group information for this item based on found one.
-    if (sibling->mBits.groupInfo && !sibling->HasDirtyGroupInfo()) {
+    if (siblingHasGroupInfo) {
       mParent = sibling->mBits.groupInfo->mParent;
       mSetSize = sibling->mBits.groupInfo->mSetSize;
       return;
