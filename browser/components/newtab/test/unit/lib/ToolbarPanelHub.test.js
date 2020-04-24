@@ -8,7 +8,6 @@ describe("ToolbarPanelHub", () => {
   let sandbox;
   let instance;
   let everyWindowStub;
-  let preferencesStub;
   let fakeDocument;
   let fakeWindow;
   let fakeElementById;
@@ -112,10 +111,6 @@ describe("ToolbarPanelHub", () => {
       registerCallback: sandbox.stub(),
       unregisterCallback: sandbox.stub(),
     };
-    preferencesStub = {
-      get: sandbox.stub(),
-      set: sandbox.stub(),
-    };
     scriptloaderStub = { loadSubScript: sandbox.stub() };
     addObserverStub = sandbox.stub();
     removeObserverStub = sandbox.stub();
@@ -146,7 +141,6 @@ describe("ToolbarPanelHub", () => {
       PrivateBrowsingUtils: {
         isBrowserPrivate: isBrowserPrivateStub,
       },
-      Preferences: preferencesStub,
       TrackingDBService: {
         getEarliestRecordedDate: getEarliestRecordedDateStub,
         getEventsByDateRange: getEventsByDateRangeStub,
@@ -164,7 +158,14 @@ describe("ToolbarPanelHub", () => {
   it("should create an instance", () => {
     assert.ok(instance);
   });
-  it("should enableAppmenuButton() on init()", async () => {
+  it("should not enableAppmenuButton() on init() if pref is not enabled", async () => {
+    getBoolPrefStub.returns(false);
+    instance.enableAppmenuButton = sandbox.stub();
+    await instance.init(waitForInitializedStub, { getMessages: () => {} });
+    assert.notCalled(instance.enableAppmenuButton);
+  });
+  it("should enableAppmenuButton() on init() if pref is enabled", async () => {
+    getBoolPrefStub.returns(true);
     instance.enableAppmenuButton = sandbox.stub();
 
     await instance.init(waitForInitializedStub, { getMessages: () => {} });
@@ -173,7 +174,7 @@ describe("ToolbarPanelHub", () => {
   });
   it("should unregisterCallback on uninit()", () => {
     instance.uninit();
-    assert.calledOnce(everyWindowStub.unregisterCallback);
+    assert.calledTwice(everyWindowStub.unregisterCallback);
   });
   it("should observe pref changes on init", async () => {
     await instance.init(waitForInitializedStub, {});
@@ -223,7 +224,7 @@ describe("ToolbarPanelHub", () => {
   });
   describe("#enableAppmenuButton", () => {
     it("should registerCallback on enableAppmenuButton() if there are messages", async () => {
-      await instance.init(waitForInitializedStub, {
+      instance.init(waitForInitializedStub, {
         getMessages: sandbox.stub().resolves([{}, {}]),
       });
       // init calls `enableAppmenuButton`
@@ -266,11 +267,9 @@ describe("ToolbarPanelHub", () => {
   });
   describe("#enableToolbarButton", () => {
     it("should registerCallback on enableToolbarButton if messages.length", async () => {
-      await instance.init(waitForInitializedStub, {
+      instance.init(waitForInitializedStub, {
         getMessages: sandbox.stub().resolves([{}, {}]),
       });
-      // init calls `enableAppmenuButton`
-      everyWindowStub.registerCallback.resetHistory();
 
       await instance.enableToolbarButton();
 
