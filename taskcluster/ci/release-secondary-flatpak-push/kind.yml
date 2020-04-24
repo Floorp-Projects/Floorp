@@ -15,7 +15,7 @@ kind-dependencies:
 job-defaults:
     description: Pushes Flatpaks onto Flathub
     run-on-projects: []  # to make sure this never runs as part of CI
-    shipping-phase: ship
+    shipping-phase: ship  # ship-rc phase
     treeherder:
         platform: linux64/opt
         kind: build
@@ -28,12 +28,11 @@ job-defaults:
         implementation: push-flatpak
         channel:
             by-release-type:
-                beta: beta
-                release: stable
-                default: mock
+                release-rc: "beta"
+                default: "mock"
 
 jobs:
-    firefox:
+    firefox-rc:
         shipping-product: firefox
         treeherder:
-            symbol: Flatpak(push)
+            symbol: Flatpak(push-beta)
