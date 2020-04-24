@@ -83,16 +83,16 @@
     }
 
     /**
-     * Setting @href on option makes the accessible to recreate.
+     * Setting role=option on option makes the accessible recreate.
      */
-    function setHrefOnOption() {
+    function setRoleOnOption() {
       this.eventSeq = [
         new invokerChecker(EVENT_HIDE, "s2_o"),
         new invokerChecker(EVENT_SHOW, "s2_o"),
       ];
 
-      this.invoke = function setHrefOnOption_setHref() {
-        getNode("s2_o").setAttribute("href", "1");
+      this.invoke = function setRoleOnOption_setRole() {
+        getNode("s2_o").setAttribute("role", "option");
       };
 
       this.finalCheck = function() {
@@ -106,7 +106,7 @@
       };
 
       this.getID = function removeptions_getID() {
-        return "setting @href on select option";
+        return "setting role=option on select option";
       };
     }
 
@@ -115,7 +115,7 @@
 
       gQueue.push(new addOptions("select"));
       gQueue.push(new removeOptions("select"));
-      gQueue.push(new setHrefOnOption());
+      gQueue.push(new setRoleOnOption());
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
