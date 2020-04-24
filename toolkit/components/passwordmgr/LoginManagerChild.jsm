@@ -197,6 +197,9 @@ const observer = {
           loginManagerChild._passwordEditedOrGenerated(focusedInput, {
             triggeredByFillingGenerated: true,
           });
+          loginManagerChild._fillConfirmFieldWithGeneratedPassword(
+            focusedInput
+          );
         }
         break;
       }
@@ -1656,6 +1659,30 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     }
   }
 
+  /**
+   * Track a form field as has having been filled with a generated password. This adds explicit
+   * focus & blur handling to unmask & mask the value, and enables special handling of edits to
+   * generated password values (see the observer's input event handler.)
+   *
+   * @param {HTMLInputElement} passwordField
+   */
+  _treatAsGeneratedPasswordField(passwordField) {
+    let docState = this.stateForDocument(passwordField.ownerDocument);
+    docState.generatedPasswordFields.add(passwordField);
+
+    // blur/focus: listen for focus changes to we can mask/unmask generated passwords
+    for (let eventType of ["blur", "focus"]) {
+      passwordField.addEventListener(eventType, observer, {
+        capture: true,
+        mozSystemGroup: true,
+      });
+    }
+    if (passwordField.ownerDocument.activeElement == passwordField) {
+      // Unmask the password field
+      this._togglePasswordFieldMasking(passwordField, true);
+    }
+  }
+
   _maybeStopTreatingAsGeneratedPasswordField(event) {
     let passwordField = event.target;
     let { value } = passwordField;
@@ -1704,21 +1731,10 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     }
 
     let loginForm = LoginFormFactory.createFromField(passwordField);
-    let docState = this.stateForDocument(passwordField.ownerDocument);
 
     if (triggeredByFillingGenerated) {
-      docState.generatedPasswordFields.add(passwordField);
       this._highlightFilledField(passwordField);
-
-      // blur/focus: listen for focus changes to we can mask/unmask generated passwords
-      for (let eventType of ["blur", "focus"]) {
-        passwordField.addEventListener(eventType, observer, {
-          capture: true,
-          mozSystemGroup: true,
-        });
-      }
-      // Unmask the password field
-      this._togglePasswordFieldMasking(passwordField, true);
+      this._treatAsGeneratedPasswordField(passwordField);
 
       // Once the generated password was filled we no longer want to autocomplete
       // saved logins into a non-empty password field (see LoginAutoComplete.startSearch)
@@ -1735,6 +1751,77 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         triggeredByFillingGenerated,
       }
     );
+  }
+
+  _fillConfirmFieldWithGeneratedPassword(passwordField) {
+    // Fill a nearby password input if it looks like a confirm-password field
+    let form = LoginFormFactory.createFromField(passwordField);
+    let confirmPasswordInput = null;
+    let docState = this.stateForDocument(passwordField.ownerDocument);
+    // The confirm-password field shouldn't be more than 3 form elements away from the password field we filled
+    let MAX_CONFIRM_PASSWORD_DISTANCE = 3;
+
+    let startIndex = form.elements.indexOf(passwordField);
+    if (startIndex == -1) {
+      throw new Error(
+        "Password field is not in the form's elements collection"
+      );
+    }
+
+    // If we've already filled another field with a generated password,
+    // this might be the confirm-password field, so don't try and find another
+    let previousGeneratedPasswordField = form.elements.some(
+      inp => inp !== passwordField && docState.generatedPasswordFields.has(inp)
+    );
+    if (previousGeneratedPasswordField) {
+      log(
+        "_fillConfirmFieldWithGeneratedPassword, previously-filled generated password input found"
+      );
+      return;
+    }
+
+    // Get a list of input fields to search in.
+    // Pre-filter type=hidden fields; they don't count against the distance threshold
+    let afterFields = form.elements
+      .slice(startIndex + 1)
+      .filter(elem => elem.type !== "hidden");
+
+    let acFieldName = passwordField.getAutocompleteInfo()?.fieldName;
+
+    // Match same autocomplete values first
+    if (acFieldName && acFieldName == "new-password") {
+      let matchIndex = afterFields.findIndex(
+        elem =>
+          LoginHelper.isPasswordFieldType(elem) &&
+          elem.getAutocompleteInfo().fieldName == acFieldName &&
+          !elem.disabled &&
+          !elem.readOnly
+      );
+      if (matchIndex >= 0 && matchIndex < MAX_CONFIRM_PASSWORD_DISTANCE) {
+        confirmPasswordInput = afterFields[matchIndex];
+      }
+    }
+    if (!confirmPasswordInput) {
+      for (
+        let idx = 0;
+        idx < Math.min(MAX_CONFIRM_PASSWORD_DISTANCE, afterFields.length);
+        idx++
+      ) {
+        if (
+          LoginHelper.isPasswordFieldType(afterFields[idx]) &&
+          !afterFields[idx].disabled &&
+          !afterFields[idx].readOnly
+        ) {
+          confirmPasswordInput = afterFields[idx];
+          break;
+        }
+      }
+    }
+    if (confirmPasswordInput && !confirmPasswordInput.value) {
+      confirmPasswordInput.setUserInput(passwordField.value);
+      this._highlightFilledField(confirmPasswordInput);
+      this._treatAsGeneratedPasswordField(confirmPasswordInput);
+    }
   }
 
   _togglePasswordFieldMasking(passwordField, unmask) {
