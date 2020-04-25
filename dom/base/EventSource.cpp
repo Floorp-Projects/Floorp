@@ -18,6 +18,7 @@
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
+#include "mozilla/dom/EventSourceEventService.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsIThreadRetargetableStreamListener.h"
 #include "nsNetUtil.h"
@@ -276,6 +277,34 @@ class EventSourceImpl final : public nsIObserver,
   // Whether the EventSourceImpl is going to be destroyed.
   bool mIsShutDown;
 
+  class EventSourceServiceNotifier final {
+   public:
+    EventSourceServiceNotifier(uint64_t aHttpChannelId, uint64_t aInnerWindowID)
+        : mHttpChannelId(aHttpChannelId), mInnerWindowID(aInnerWindowID) {
+      mService = EventSourceEventService::GetOrCreate();
+      mService->EventSourceConnectionOpened(aHttpChannelId, aInnerWindowID);
+    }
+
+    void EventReceived(const nsAString& aEventName,
+                       const nsAString& aLastEventID, const nsAString& aData,
+                       uint32_t aRetry, DOMHighResTimeStamp aTimeStamp) {
+      mService->EventReceived(mHttpChannelId, mInnerWindowID, aEventName,
+                              aLastEventID, aData, aRetry, aTimeStamp);
+    }
+
+    ~EventSourceServiceNotifier() {
+      mService->EventSourceConnectionClosed(mHttpChannelId, mInnerWindowID);
+      NS_ReleaseOnMainThread("EventSourceServiceNotifier::mService",
+                             mService.forget());
+    }
+
+   private:
+    RefPtr<EventSourceEventService> mService;
+    uint64_t mHttpChannelId;
+    uint64_t mInnerWindowID;
+  };
+
+  UniquePtr<EventSourceServiceNotifier> mServiceNotifier;
   // Event Source owner information:
   // - the script file name
   // - source code line number and column number where the Event Source object
@@ -362,6 +391,8 @@ void EventSourceImpl::Close() {
   if (IsClosed()) {
     return;
   }
+
+  mServiceNotifier = nullptr;
 
   SetReadyState(CLOSED);
   CloseInternal();
@@ -657,6 +688,9 @@ EventSourceImpl::OnStartRequest(nsIRequest* aRequest) {
       }
     }
   }
+
+  mServiceNotifier = MakeUnique<EventSourceServiceNotifier>(
+      mHttpChannel->ChannelId(), mInnerWindowID);
   rv = Dispatch(NewRunnableMethod("dom::EventSourceImpl::AnnounceConnection",
                                   this, &EventSourceImpl::AnnounceConnection),
                 NS_DISPATCH_NORMAL);
@@ -754,6 +788,7 @@ EventSourceImpl::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
       aStatusCode != NS_ERROR_PROXY_CONNECTION_REFUSED &&
       aStatusCode != NS_ERROR_DNS_LOOKUP_QUEUE_FULL) {
     DispatchFailConnection();
+    mServiceNotifier = nullptr;
     return NS_ERROR_ABORT;
   }
 
@@ -1050,6 +1085,7 @@ void EventSourceImpl::AnnounceConnection() {
 
 nsresult EventSourceImpl::ResetConnection() {
   AssertIsOnMainThread();
+  mServiceNotifier = nullptr;
   if (mHttpChannel) {
     mHttpChannel->Cancel(NS_ERROR_ABORT);
     mHttpChannel = nullptr;
@@ -1091,6 +1127,7 @@ nsresult EventSourceImpl::RestartConnection() {
   if (IsClosed()) {
     return NS_ERROR_ABORT;
   }
+
   nsresult rv = ResetConnection();
   NS_ENSURE_SUCCESS(rv, rv);
   rv = SetReconnectionTimeout();
@@ -1340,6 +1377,8 @@ nsresult EventSourceImpl::DispatchCurrentMessageEvent() {
     message->mLastEventID.Assign(mLastEventID);
   }
 
+  mServiceNotifier->EventReceived(message->mEventName, message->mLastEventID,
+                                  message->mData, mReconnectionTime, PR_Now());
   mMessagesToDispatch.Push(message.release());
 
   if (!mGoingToDispatchAllMessages) {
@@ -1851,6 +1890,8 @@ already_AddRefed<EventSource> EventSource::Constructor(
   // Worker side.
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
+
+  eventSourceImp->mInnerWindowID = workerPrivate->WindowID();
 
   RefPtr<InitRunnable> initRunnable =
       new InitRunnable(workerPrivate, eventSourceImp, aURL);
