@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>EventSource event service reconnect error test</title>
+    <meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var service = SpecialPowers.Cc["@mozilla.org/eventsourceevent/service;1"]
+                .getService(SpecialPowers.Ci.nsIEventSourceEventService);
+ok(!!service, "We have the nsIEventSourceEventService");
+
+var innerId = SpecialPowers.getDOMWindowUtils(window).currentInnerWindowID;
+ok(innerId, "We have a valid innerWindowID: " + innerId);
+
+var channelId;
+
+var listener = {
+    QueryInterface(aIID) {
+      if (
+        SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsISupports) ||
+        SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsIEventSourceEventListener)
+      ) {
+        return this;
+      }
+      throw SpecialPowers.Components.results.NS_ERROR_NO_INTERFACE;
+    },
+    eventSourceConnectionOpened(httpChannelId) {
+      info("eventSourceConnectionOpened");
+      ok(httpChannelId > 0, "Channel ID received");
+      channelId = httpChannelId;
+    },
+    eventSourceConnectionClosed(httpChannelId) {
+      info("eventSourceConnectionClosed");
+      ok (httpChannelId === channelId, "Channel was closed on failure");
+      SimpleTest.finish();
+    },
+    eventReceived(httpChannelId, eventName, lastEventId, data, retry, timeStamp) {
+      info("eventReceived");
+      is(eventName, "message", "Event name is 'message'");
+    }
+}
+
+service.addListener(innerId, listener);
+ok(true, "Listener added");
+addLoadEvent(function () {
+    const es = new EventSource("http://mochi.test:8888/tests/dom/base/test/eventsource_reconnect.sjs");
+});
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
