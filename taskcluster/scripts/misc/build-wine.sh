@@ -9,11 +9,11 @@ mkdir -p $WORKSPACE/build/wine
 mkdir -p $WORKSPACE/build/wine64
 
 cd $WORKSPACE/build/wine64
-$MOZ_FETCHES_DIR/wine-3.0.3/configure --enable-win64 --without-x --without-freetype --prefix=$INSTALL_DIR/
+$MOZ_FETCHES_DIR/wine-5.0/configure --enable-win64 --without-x --without-freetype --prefix=$INSTALL_DIR/
 make -j$(nproc)
 
 cd $WORKSPACE/build/wine
-$MOZ_FETCHES_DIR/wine-3.0.3/configure --with-wine64=../wine64 --without-x --without-freetype --prefix=$INSTALL_DIR/
+$MOZ_FETCHES_DIR/wine-5.0/configure --with-wine64=../wine64 --without-x --without-freetype --prefix=$INSTALL_DIR/
 make -j$(nproc)
 make install
 
