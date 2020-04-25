@@ -314,7 +314,7 @@ class GCRuntime {
   // Check whether to trigger a zone GC after allocating GC cells. During an
   // incremental GC, optionally count |nbytes| towards the threshold for
   // performing the next slice.
-  void maybeAllocTriggerZoneGC(Zone* zone, size_t nbytes = 0);
+  void maybeAllocTriggerZoneGC(Zone* zone);
   // Check whether to trigger a zone GC after malloc memory.
   void maybeMallocTriggerZoneGC(Zone* zone);
   bool maybeMallocTriggerZoneGC(Zone* zone, const HeapSize& heap,
