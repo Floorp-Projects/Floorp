@@ -52,7 +52,7 @@ MOZALLOC_EXPORT_NEW void operator delete(void* ptr) noexcept(true) {
 }
 
 MOZALLOC_EXPORT_NEW void operator delete(void* ptr,
-                                         const std::nothrow_t&)noexcept(true) {
+                                         const std::nothrow_t&) noexcept(true) {
   return free_impl(ptr);
 }
 

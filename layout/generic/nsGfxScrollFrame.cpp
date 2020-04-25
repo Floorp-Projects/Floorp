@@ -1343,9 +1343,9 @@ nscoord ScrollFrameHelper::GetNondisappearingScrollbarWidth(
                                    StyleAppearance::ScrollbarNonDisappearing)) {
       LayoutDeviceIntSize size;
       bool canOverride = true;
-      theme->GetMinimumWidgetSize(
-          aState->PresContext(), box,
-          StyleAppearance::ScrollbarNonDisappearing, &size, &canOverride);
+      theme->GetMinimumWidgetSize(aState->PresContext(), box,
+                                  StyleAppearance::ScrollbarNonDisappearing,
+                                  &size, &canOverride);
       return aState->PresContext()->DevPixelsToAppUnits(
           verticalWM ? size.height : size.width);
     }

@@ -18,7 +18,7 @@
 //#include "gfxSharedImageSurface.h"      // for gfxSharedImageSurface
 #include "ipc/IPCMessageUtils.h"  // for gfxContentType, null_t
 #include "IPDLActor.h"
-#include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
+#include "mozilla/Assertions.h"                 // for MOZ_ASSERT, etc
 #include "mozilla/gfx/Point.h"                  // for IntSize
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient, etc
 #include "mozilla/layers/CompositorBridgeChild.h"

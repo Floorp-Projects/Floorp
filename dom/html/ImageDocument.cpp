@@ -283,7 +283,8 @@ void ImageDocument::ShrinkToFit() {
     if (imageHeight > mVisibleHeight) {
       classList->Add(NS_LITERAL_STRING("overflowingVertical"), IgnoreErrors());
     } else {
-      classList->Remove(NS_LITERAL_STRING("overflowingVertical"), IgnoreErrors());
+      classList->Remove(NS_LITERAL_STRING("overflowingVertical"),
+                        IgnoreErrors());
     }
     return;
   }

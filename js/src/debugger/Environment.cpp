@@ -37,8 +37,8 @@
 #include "vm/Compartment-inl.h"        // for Compartment::wrap
 #include "vm/EnvironmentObject-inl.h"  // for JSObject::enclosingEnvironment
 #include "vm/JSObject-inl.h"  // for IsInternalFunctionObject, NewObjectWithGivenProtoAndKind
-#include "vm/ObjectOperations-inl.h"   // for HasProperty, GetProperty
-#include "vm/Realm-inl.h"              // for AutoRealm::AutoRealm
+#include "vm/ObjectOperations-inl.h"  // for HasProperty, GetProperty
+#include "vm/Realm-inl.h"             // for AutoRealm::AutoRealm
 
 namespace js {
 class GlobalObject;

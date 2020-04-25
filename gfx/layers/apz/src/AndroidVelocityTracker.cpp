@@ -31,8 +31,7 @@ static const uint8_t kPolyDegree = kDegree + 1;
 // Maximum size of position history.
 static const uint8_t kHistorySize = 20;
 
-AndroidVelocityTracker::AndroidVelocityTracker()
-    : mLastEventTime(0) {}
+AndroidVelocityTracker::AndroidVelocityTracker() : mLastEventTime(0) {}
 
 void AndroidVelocityTracker::StartTracking(ParentLayerCoord aPos,
                                            uint32_t aTimestampMs) {
@@ -275,9 +274,7 @@ Maybe<float> AndroidVelocityTracker::ComputeVelocity(uint32_t aTimestampMs) {
   return Nothing{};
 }
 
-void AndroidVelocityTracker::Clear() {
-  mHistory.Clear();
-}
+void AndroidVelocityTracker::Clear() { mHistory.Clear(); }
 
 }  // namespace layers
 }  // namespace mozilla

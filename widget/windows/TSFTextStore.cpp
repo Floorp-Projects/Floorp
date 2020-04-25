@@ -28,7 +28,7 @@
 
 // Workaround for mingw32
 #ifndef TS_SD_INPUTPANEMANUALDISPLAYENABLE
-#define TS_SD_INPUTPANEMANUALDISPLAYENABLE 0x40
+#  define TS_SD_INPUTPANEMANUALDISPLAYENABLE 0x40
 #endif
 
 namespace mozilla {

@@ -552,8 +552,8 @@ void WebRenderBridgeChild::SetWebRenderLayerManager(
   mManager = aManager;
 
   MOZ_ASSERT(NS_IsMainThread() || !XRE_IsContentProcess());
-  mActiveResourceTracker = MakeUnique<ActiveResourceTracker>(
-      1000, "CompositableForwarder", nullptr);
+  mActiveResourceTracker =
+      MakeUnique<ActiveResourceTracker>(1000, "CompositableForwarder", nullptr);
 }
 
 ipc::IShmemAllocator* WebRenderBridgeChild::GetShmemAllocator() {

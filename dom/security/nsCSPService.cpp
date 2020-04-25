@@ -339,7 +339,7 @@ nsresult CSPService::ConsultCSPForRedirect(nsIURI* aOriginalURI,
           aOriginalURI,    // Original nsIURI
           true,            // aSendViolationReports
           cspNonce,        // nonce
-                       parserCreatedScript, &decision);
+          parserCreatedScript, &decision);
 
       // if the preload policy already denied the load, then there
       // is no point in checking the real policy
@@ -361,7 +361,7 @@ nsresult CSPService::ConsultCSPForRedirect(nsIURI* aOriginalURI,
                     aOriginalURI,    // Original nsIURI
                     true,            // aSendViolationReports
                     cspNonce,        // nonce
-        parserCreatedScript, &decision);
+                    parserCreatedScript, &decision);
     if (NS_CP_REJECTED(decision)) {
       aCancelCode = Some(NS_ERROR_DOM_BAD_URI);
       return NS_BINDING_FAILED;

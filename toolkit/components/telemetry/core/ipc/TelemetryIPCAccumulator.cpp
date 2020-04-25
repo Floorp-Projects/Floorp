@@ -341,6 +341,5 @@ void TelemetryIPCAccumulator::DeInitializeGlobalState() {
 
 void TelemetryIPCAccumulator::DispatchToMainThread(
     already_AddRefed<nsIRunnable>&& aEvent) {
-  SchedulerGroup::Dispatch(TaskCategory::Other,
-      std::move(aEvent));
+  SchedulerGroup::Dispatch(TaskCategory::Other, std::move(aEvent));
 }

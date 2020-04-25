@@ -18,7 +18,7 @@
 #include "vm/JSFunction.h"    // JSFunction
 #include "vm/NativeObject.h"  // js::NativeObject::create
 #include "vm/ObjectGroup.h"  // js::ObjectGroup, js::GenericObject, js::NewObjectKind
-#include "vm/Shape.h"         // js::Shape
+#include "vm/Shape.h"        // js::Shape
 
 #include "gc/ObjectKind-inl.h"  // js::gc::GetGCObjectKind
 #include "vm/JSObject-inl.h"  // js::GetInitialHeap, js::NewBuiltinClassInstance
