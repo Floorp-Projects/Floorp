@@ -37,6 +37,9 @@ HTTP load delayedframe.sjs # A 3-frame animated GIF with an inordinate delay bet
 load delaytest.html?523528-1.gif
 load delaytest.html?523528-2.gif
 
+load delaytest.html?1262549-1.gif
+load delaytest.html?1277397-1.jpg
+
 # Bug 1160801 - Ensure that we handle invalid disposal types.
 load invalid-disposal-method-1.gif
 load invalid-disposal-method-2.gif
