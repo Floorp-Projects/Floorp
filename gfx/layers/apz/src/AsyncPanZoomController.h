@@ -976,7 +976,7 @@ class AsyncPanZoomController {
 
   // These variables cache the layout viewport, scroll offset, and zoom stored
   // in |Metrics()| the last time SampleCompositedAsyncTransform() was
-  // called.
+  // called. mRecursiveMutex must be held with using or modifying these fields.
   CSSRect mCompositedLayoutViewport;
   CSSPoint mCompositedScrollOffset;
   CSSToParentLayerScale2D mCompositedZoom;
@@ -1175,9 +1175,15 @@ class AsyncPanZoomController {
    * store the required value from the last time it was sampled by calling
    * SampleCompositedAsyncTransform(), depending on who is asking.
    */
-  CSSRect GetEffectiveLayoutViewport(AsyncTransformConsumer aMode) const;
-  CSSPoint GetEffectiveScrollOffset(AsyncTransformConsumer aMode) const;
-  CSSToParentLayerScale2D GetEffectiveZoom(AsyncTransformConsumer aMode) const;
+  CSSRect GetEffectiveLayoutViewport(
+      AsyncTransformConsumer aMode,
+      const RecursiveMutexAutoLock& aProofOfLock) const;
+  CSSPoint GetEffectiveScrollOffset(
+      AsyncTransformConsumer aMode,
+      const RecursiveMutexAutoLock& aProofOfLock) const;
+  CSSToParentLayerScale2D GetEffectiveZoom(
+      AsyncTransformConsumer aMode,
+      const RecursiveMutexAutoLock& aProofOfLock) const;
 
   /**
    * Returns the visible portion of the content scrolled by this APZC, in
