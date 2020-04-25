@@ -59,8 +59,14 @@ class ContentMediaAgent : public MediaControlKeysEventSource {
       const MediaControlKeysEventListener* aMedia,
       ControlledMediaState aState) = 0;
 
-  // Use this method to update the audible state of controlled media, and it's
-  // safe to notify same audible state again.
+  // Use this method to update the audible state of controlled media, and MUST
+  // follow the following rules in which `audible` and `inaudible` should be a
+  // pair. `inaudible` should always be notified after `audible`. When audible
+  // media paused, `inaudible` should be notified
+  // Eg. (O) `audible` -> `inaudible` -> `audible` -> `inaudible`
+  //     (X) `inaudible` -> `audible`    [notify `inaudible` before `audible`]
+  //     (X) `audible` -> `audible`      [notify `audible` twice]
+  //     (X) `audible` -> (media pauses) [forgot to notify `inaudible`]
   virtual void NotifyAudibleStateChanged(
       const MediaControlKeysEventListener* aMedia, bool aAudible) = 0;
 
