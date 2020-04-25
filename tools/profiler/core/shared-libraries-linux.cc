@@ -250,7 +250,8 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
   // executable's name to that entry.
   for (size_t i = 0; i < info.GetSize(); i++) {
     SharedLibrary& lib = info.GetMutableEntry(i);
-    if (lib.GetStart() == exeExeAddr && lib.GetNativeDebugPath().empty()) {
+    if (lib.GetStart() <= exeExeAddr && exeExeAddr <= lib.GetEnd() &&
+        lib.GetNativeDebugPath().empty()) {
       lib = SharedLibraryAtPath(exeName, lib.GetStart(), lib.GetEnd(),
                                 lib.GetOffset());
 
