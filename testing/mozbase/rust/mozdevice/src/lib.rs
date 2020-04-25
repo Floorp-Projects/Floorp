@@ -410,7 +410,10 @@ impl Device {
     }
 
     pub fn forward_port(&self, local: u16, remote: u16) -> Result<u16> {
-        let command = format!("host-serial:{}:forward:tcp:{};tcp:{}", self.serial, local, remote);
+        let command = format!(
+            "host-serial:{}:forward:tcp:{};tcp:{}",
+            self.serial, local, remote
+        );
         let response = self.host.execute_command(&command, true, false)?;
 
         if local == 0 {
@@ -422,8 +425,7 @@ impl Device {
 
     pub fn kill_forward_port(&self, local: u16) -> Result<()> {
         let command = format!("killforward:tcp:{}", local);
-        self.execute_host_command(&command, true, false)
-            .and(Ok(()))
+        self.execute_host_command(&command, true, false).and(Ok(()))
     }
 
     pub fn kill_forward_all_ports(&self) -> Result<()> {

@@ -178,10 +178,14 @@ where
 
     let builder = thread::Builder::new().name("webdriver server".to_string());
     let handle = builder.spawn(move || {
-        let mut rt = tokio::runtime::Builder::new().basic_scheduler().enable_io().build().unwrap();
-        let mut listener = rt.handle().enter(|| {
-            TcpListener::from_std(listener).unwrap()
-        });
+        let mut rt = tokio::runtime::Builder::new()
+            .basic_scheduler()
+            .enable_io()
+            .build()
+            .unwrap();
+        let mut listener = rt
+            .handle()
+            .enter(|| TcpListener::from_std(listener).unwrap());
         let wroutes = build_warp_routes(&extension_routes, msg_send.clone());
         let fut = warp::serve(wroutes).run_incoming(listener.incoming());
         rt.block_on(fut);
@@ -340,4 +344,3 @@ fn build_route<U: 'static + WebDriverExtensionRoute + Send + Sync>(
         ))
         .boxed()
 }
-

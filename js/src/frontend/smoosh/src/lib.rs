@@ -84,7 +84,7 @@ impl From<GCThing> for SmooshGCThing {
         match item {
             GCThing::Function(_index) => {
                 panic!("Not yet implemented");
-            },
+            }
             GCThing::Scope(index) => Self {
                 kind: SmooshGCThingKind::ScopeIndex,
                 index: index.into(),

@@ -113,17 +113,16 @@ macro_rules! shrinking_conversion {
     (name = $name:ident,
      convert = $convert:ident,
      other_ty = $other_ty:ty,
-     math = $math:ident) => (
+     math = $math:ident) => {
         fn $name(&mut self, other: $other_ty, old_len: usize) -> Result<BulkWriteOk, ()> {
             let needed = $math(other.len()).ok_or(())?;
-            let mut handle = unsafe {
-                self.bulk_write(old_len.checked_add(needed).ok_or(())?, old_len, false)?
-            };
+            let mut handle =
+                unsafe { self.bulk_write(old_len.checked_add(needed).ok_or(())?, old_len, false)? };
             let written = $convert(other, &mut handle.as_mut_slice()[old_len..]);
             let new_len = old_len + written;
             Ok(handle.finish(new_len, new_len > CACHE_LINE))
         }
-     )
+    };
 }
 
 /// A conversion where the number of code units in the output is always equal
@@ -138,16 +137,19 @@ macro_rules! shrinking_conversion {
 macro_rules! constant_conversion {
     (name = $name:ident,
      convert = $convert:ident,
-     other_ty = $other_ty:ty) => (
-        fn $name(&mut self, other: $other_ty, old_len: usize, allow_shrinking: bool) -> Result<BulkWriteOk, ()> {
+     other_ty = $other_ty:ty) => {
+        fn $name(
+            &mut self,
+            other: $other_ty,
+            old_len: usize,
+            allow_shrinking: bool,
+        ) -> Result<BulkWriteOk, ()> {
             let new_len = old_len.checked_add(other.len()).ok_or(())?;
-            let mut handle = unsafe {
-                self.bulk_write(new_len, old_len, allow_shrinking)?
-            };
+            let mut handle = unsafe { self.bulk_write(new_len, old_len, allow_shrinking)? };
             $convert(other, &mut handle.as_mut_slice()[old_len..]);
             Ok(handle.finish(new_len, false))
         }
-     )
+    };
 }
 
 /// An intermediate check for avoiding a copy and having an `nsStringBuffer`
@@ -161,8 +163,12 @@ macro_rules! constant_conversion {
 macro_rules! ascii_copy_avoidance {
     (name = $name:ident,
      implementation = $implementation:ident,
-     string_like = $string_like:ident) => (
-        fn $name<T: $string_like + ?Sized>(&mut self, other: &T, old_len: usize) -> Result<BulkWriteOk, ()> {
+     string_like = $string_like:ident) => {
+        fn $name<T: $string_like + ?Sized>(
+            &mut self,
+            other: &T,
+            old_len: usize,
+        ) -> Result<BulkWriteOk, ()> {
             let adapter = other.adapt();
             let other_slice = adapter.as_ref();
             let num_ascii = if adapter.is_abstract() && old_len == 0 {
@@ -173,7 +179,7 @@ macro_rules! ascii_copy_avoidance {
                     // lifetime mess by keeping nsStringLike and
                     // Latin1StringLike free of lifetime interdependencies.
                     if unsafe { Gecko_FallibleAssignCString(self, other.adapt().as_ptr()) } {
-                        return Ok(BulkWriteOk{});
+                        return Ok(BulkWriteOk {});
                     } else {
                         return Err(());
                     }
@@ -184,7 +190,7 @@ macro_rules! ascii_copy_avoidance {
             };
             self.$implementation(other_slice, old_len, num_ascii)
         }
-    )
+    };
 }
 
 impl nsAString {

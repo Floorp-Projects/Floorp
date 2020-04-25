@@ -244,7 +244,10 @@ impl<'s> Store<'s> {
         let raw_validity: i64 = step.get_by_name("validity")?;
         item.validity = Validity::from_column(raw_validity)?;
 
-        let content = if item.validity == Validity::Replace || item.guid == dogear::ROOT_GUID || !item.needs_merge {
+        let content = if item.validity == Validity::Replace
+            || item.guid == dogear::ROOT_GUID
+            || !item.needs_merge
+        {
             None
         } else {
             match kind {
