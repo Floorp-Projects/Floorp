@@ -54,7 +54,8 @@ macro_rules! task_done {
                 Some(Ok(value)) => unsafe { callback.Resolve(self.convert(value)?.coerce()) },
                 Some(Err(err)) => unsafe { callback.Reject(&*nsCString::from(err.to_string())) },
                 None => unsafe { callback.Reject(&*nsCString::from("unexpected")) },
-            }.to_result()
+            }
+            .to_result()
         }
     };
 
@@ -74,7 +75,8 @@ macro_rules! task_done {
                 Some(Ok(())) => unsafe { callback.Resolve() },
                 Some(Err(err)) => unsafe { callback.Reject(&*nsCString::from(err.to_string())) },
                 None => unsafe { callback.Reject(&*nsCString::from("unexpected")) },
-            }.to_result()
+            }
+            .to_result()
         }
     };
 }

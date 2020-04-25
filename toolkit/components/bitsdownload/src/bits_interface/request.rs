@@ -242,11 +242,7 @@ impl BitsRequest {
     pub fn on_progress(&self, transferred_bytes: i64, total_bytes: i64) {
         if let Some(progress_event_sink) = self.observer.query_interface::<nsIProgressEventSink>() {
             unsafe {
-                progress_event_sink.OnProgress(
-                    self.coerce(),
-                    transferred_bytes,
-                    total_bytes,
-                );
+                progress_event_sink.OnProgress(self.coerce(), transferred_bytes, total_bytes);
             }
         }
     }

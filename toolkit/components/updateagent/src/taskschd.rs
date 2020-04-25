@@ -62,13 +62,11 @@ macro_rules! bool_putter {
         pub fn $method(&mut self, v: bool) -> Result<(), HResult> {
             let v = v.into_variant_bool();
             unsafe {
-                com_call!(
-                    self.0,
-                    $interface :: $method(v))?;
+                com_call!(self.0, $interface::$method(v))?;
             }
             Ok(())
         }
-    }
+    };
 }
 
 /// put a value that is already available as a `BString`
@@ -77,13 +75,11 @@ macro_rules! bstring_putter {
         #[allow(non_snake_case)]
         pub fn $method(&mut self, v: &BString) -> Result<(), HResult> {
             unsafe {
-                com_call!(
-                    self.0,
-                    $interface :: $method(v.as_raw_ptr()))?;
+                com_call!(self.0, $interface::$method(v.as_raw_ptr()))?;
             }
             Ok(())
         }
-    }
+    };
 }
 
 /// put a `chrono::DateTime` value
@@ -93,13 +89,11 @@ macro_rules! datetime_putter {
         pub fn $method(&mut self, v: chrono::DateTime<chrono::Utc>) -> Result<(), HResult> {
             let v = try_to_bstring!(v.to_rfc3339_opts(chrono::SecondsFormat::Secs, true))?;
             unsafe {
-                com_call!(
-                    self.0,
-                    $interface :: $method(v.as_raw_ptr()))?;
+                com_call!(self.0, $interface::$method(v.as_raw_ptr()))?;
             }
             Ok(())
         }
-    }
+    };
 }
 
 /// put a value of type `$ty`, which implements `AsRef<OsStr>`
@@ -109,13 +103,11 @@ macro_rules! to_os_str_putter {
         pub fn $method(&mut self, v: $ty) -> Result<(), HResult> {
             let v = try_to_bstring!(v)?;
             unsafe {
-                com_call!(
-                    self.0,
-                    $interface :: $method(v.as_raw_ptr()))?;
+                com_call!(self.0, $interface::$method(v.as_raw_ptr()))?;
             }
             Ok(())
         }
-    }
+    };
 }
 
 /// put a value of type `$ty`, which implements `ToString`
@@ -125,13 +117,11 @@ macro_rules! to_string_putter {
         pub fn $method(&mut self, v: $ty) -> Result<(), HResult> {
             let v = try_to_bstring!(v.to_string())?;
             unsafe {
-                com_call!(
-                    self.0,
-                    $interface :: $method(v.as_raw_ptr()))?;
+                com_call!(self.0, $interface::$method(v.as_raw_ptr()))?;
             }
             Ok(())
         }
-    }
+    };
 }
 
 pub struct TaskService(ComRef<ITaskService>);
