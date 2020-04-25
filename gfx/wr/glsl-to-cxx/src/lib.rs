@@ -569,8 +569,8 @@ fn scalar_type_name(state: &OutputState, ty: &Type) -> String {
 
 fn write_load_attribs(state: &mut OutputState, attribs: &[hir::SymRef]) {
     write!(state, "static void load_attribs(\
-                   Self *self, {}_program *prog, VertexAttrib *attribs, unsigned short *indices, \
-                   int start, int instance, int count) {{\n", state.name);
+                   Self *self, {}_program *prog, VertexAttrib *attribs, \
+                   uint32_t start, int instance, int count) {{\n", state.name);
     for i in attribs {
         let sym = state.hir.sym(*i);
         match &sym.decl {
@@ -582,7 +582,7 @@ fn write_load_attribs(state: &mut OutputState, attribs: &[hir::SymRef]) {
                     "load_attrib"
                 };
                 write!(state,
-                    " {0}(self->{1}, attribs[prog->attrib_locations.{1}], indices, start, instance, count);\n",
+                    " {0}(self->{1}, attribs[prog->attrib_locations.{1}], start, instance, count);\n",
                     func, name);
             }
             _ => panic!(),

@@ -47,8 +47,7 @@ struct ShaderImpl {
 struct VertexShaderImpl : ShaderImpl {
   typedef void (*InitBatchFunc)(VertexShaderImpl*, ProgramImpl* prog);
   typedef void (*LoadAttribsFunc)(VertexShaderImpl*, ProgramImpl* prog,
-                                  VertexAttrib* attribs,
-                                  unsigned short* indices, int start,
+                                  VertexAttrib* attribs, uint32_t start,
                                   int instance, int count);
   typedef void (*RunFunc)(VertexShaderImpl*, char* flats, char* interps,
                           size_t interp_stride);
@@ -62,9 +61,8 @@ struct VertexShaderImpl : ShaderImpl {
   void init_batch(ProgramImpl* prog) { (*init_batch_func)(this, prog); }
 
   ALWAYS_INLINE void load_attribs(ProgramImpl* prog, VertexAttrib* attribs,
-                                  unsigned short* indices, int start,
-                                  int instance, int count) {
-    (*load_attribs_func)(this, prog, attribs, indices, start, instance, count);
+                                  uint32_t start, int instance, int count) {
+    (*load_attribs_func)(this, prog, attribs, start, instance, count);
   }
 
   ALWAYS_INLINE void run(char* flats, char* interps, size_t interp_stride) {
