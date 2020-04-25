@@ -13,7 +13,7 @@ var UIDensities = {
 
   configurations: {
     compactDensity: {
-      selectors: ["#navigator-toolbox, #appMenu-popup, #widget-overflow"],
+      selectors: ["#navigator-toolbox", "#appMenu-popup", "#widget-overflow"],
       async applyConfig() {
         let browserWindow = Services.wm.getMostRecentWindow(
           "navigator:browser"
@@ -25,7 +25,7 @@ var UIDensities = {
     },
 
     normalDensity: {
-      selectors: ["#navigator-toolbox, #appMenu-popup, #widget-overflow"],
+      selectors: ["#navigator-toolbox", "#appMenu-popup", "#widget-overflow"],
       async applyConfig() {
         let browserWindow = Services.wm.getMostRecentWindow(
           "navigator:browser"
@@ -37,7 +37,7 @@ var UIDensities = {
     },
 
     touchDensity: {
-      selectors: ["#navigator-toolbox, #appMenu-popup, #widget-overflow"],
+      selectors: ["#navigator-toolbox", "#appMenu-popup", "#widget-overflow"],
       async applyConfig() {
         let browserWindow = Services.wm.getMostRecentWindow(
           "navigator:browser"
