@@ -65,7 +65,7 @@ this.test = class extends ExtensionAPI {
 
         /* Restore prefs to old value. */
         async restorePrefs(oldPrefs) {
-          for (let [name, value] of Object.entries(oldPrefs)) {
+          for (const [name, value] of Object.entries(oldPrefs)) {
             if (value === null) {
               Preferences.reset(name);
             } else {

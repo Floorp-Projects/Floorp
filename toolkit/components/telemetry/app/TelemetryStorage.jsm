@@ -1689,7 +1689,15 @@ var TelemetryStorageImpl = {
         // Save it among the pending pings in the user profile, overwrite on
         // ping id collision.
         await TelemetryStorage.savePing(pingData, true);
+      } catch (ex) {
+        this._log.error(
+          "_migrateAppDataPings - failed to load or migrate file. Removing. " +
+            file.path,
+          ex
+        );
+      }
 
+      try {
         // Finally remove the file.
         await OS.File.remove(file.path);
       } catch (ex) {

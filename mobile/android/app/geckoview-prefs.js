@@ -80,10 +80,5 @@ pref("media.geckoview.autoplay.request", true);
 // Enable EME permission prompts
 pref("media.eme.require-app-approval", true);
 
-// Enable the extension process
-#ifndef RELEASE_OR_BETA
-  pref("extensions.webextensions.remote", true);
-#endif
-
 // Enable the Process Priority Manager
 pref("dom.ipc.processPriorityManager.enabled", true);

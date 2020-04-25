@@ -13,7 +13,7 @@
 "use strict";
 
 function* testHasNoPermission(params) {
-  let contentSetup = params.contentSetup || (() => Promise.resolve());
+  const contentSetup = params.contentSetup || (() => Promise.resolve());
 
   async function background(contentSetup) {
     browser.test.onMessage.addListener(async msg => {
@@ -31,7 +31,7 @@ function* testHasNoPermission(params) {
     browser.test.sendMessage("ready");
   }
 
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: params.manifest,
 
     background: `(${background})(${contentSetup})`,
@@ -57,7 +57,7 @@ function* testHasNoPermission(params) {
 }
 
 add_task(async function testBadPermissions() {
-  let win = window.open("http://mochi.test:8888/");
+  const win = window.open("http://mochi.test:8888/");
 
   await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -76,7 +76,7 @@ add_task(async function testBadPermissions() {
 
 add_task(async function testBadURL() {
   async function background() {
-    let promises = [
+    const promises = [
       new Promise(resolve => {
         browser.tabs.executeScript({
           file: "http://example.com/script.js",
@@ -126,7 +126,7 @@ add_task(async function testBadURL() {
     browser.test.notifyPass("executeScript-lastError");
   }
 
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["<all_urls>"],
     },

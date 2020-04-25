@@ -4,25 +4,39 @@ exports[`WorkersPage filters out workers from diferent domains 1`] = `
 <section
   className="app-page js-service-workers-page "
 >
-  <WorkerList
+  <RegistrationList
     canDebugWorkers={true}
-    workers={
+    registrations={
       Array [
         Object {
-          "active": true,
-          "name": "worker1",
+          "id": "id-reg-1-example",
           "registrationFront": "",
-          "scope": "SCOPE 123",
-          "url": "http://example.com/worker.js",
-          "workerTargetFront": "",
+          "scope": "SCOPE1",
+          "workers": Array [
+            Object {
+              "id": "id-worker-1-example",
+              "isActive": true,
+              "state": 4,
+              "stateText": "activated",
+              "url": "http://example.com/worker.js",
+              "workerTargetFront": "",
+            },
+          ],
         },
         Object {
-          "active": false,
-          "name": "worker2",
+          "id": "id-reg-2-example",
           "registrationFront": "",
-          "scope": "SCOPE 456",
-          "url": "http://example.com/worker.js",
-          "workerTargetFront": "",
+          "scope": "SCOPE2",
+          "workers": Array [
+            Object {
+              "id": "id-worker-2-example",
+              "isActive": true,
+              "state": 4,
+              "stateText": "activated",
+              "url": "http://example.com/worker.js",
+              "workerTargetFront": "",
+            },
+          ],
         },
       ]
     }
@@ -34,7 +48,7 @@ exports[`WorkersPage filters out workers from different domains and renders an e
 <section
   className="app-page js-service-workers-page app-page--empty"
 >
-  <WorkerListEmpty />
+  <RegistrationListEmpty />
 </section>
 `;
 
@@ -42,17 +56,24 @@ exports[`WorkersPage it renders a list with a single element if there's just 1 w
 <section
   className="app-page js-service-workers-page "
 >
-  <WorkerList
+  <RegistrationList
     canDebugWorkers={true}
-    workers={
+    registrations={
       Array [
         Object {
-          "active": true,
-          "name": "worker1",
+          "id": "id-reg-1-example",
           "registrationFront": "",
           "scope": "SCOPE 123",
-          "url": "http://example.com/worker.js",
-          "workerTargetFront": "",
+          "workers": Array [
+            Object {
+              "id": "id-worker-1-example",
+              "isActive": true,
+              "state": 4,
+              "stateText": "activated",
+              "url": "http://example.com/worker.js",
+              "workerTargetFront": "",
+            },
+          ],
         },
       ]
     }
@@ -64,33 +85,54 @@ exports[`WorkersPage renders a list with multiple elements when there are multip
 <section
   className="app-page js-service-workers-page "
 >
-  <WorkerList
+  <RegistrationList
     canDebugWorkers={true}
-    workers={
+    registrations={
       Array [
         Object {
-          "active": true,
-          "name": "worker1",
+          "id": "id-reg-1-example",
           "registrationFront": "",
-          "scope": "SCOPE 123",
-          "url": "http://example.com/worker.js",
-          "workerTargetFront": "",
+          "scope": "SCOPE1",
+          "workers": Array [
+            Object {
+              "id": "id-worker-1-example",
+              "isActive": true,
+              "state": 4,
+              "stateText": "activated",
+              "url": "http://example.com/worker.js",
+              "workerTargetFront": "",
+            },
+          ],
         },
         Object {
-          "active": false,
-          "name": "worker2",
+          "id": "id-reg-1-example",
           "registrationFront": "",
-          "scope": "SCOPE 456",
-          "url": "http://example.com/worker.js",
-          "workerTargetFront": "",
+          "scope": "SCOPE2",
+          "workers": Array [
+            Object {
+              "id": "id-worker-2-example",
+              "isActive": false,
+              "state": 2,
+              "stateText": "installed",
+              "url": "http://example.com/worker.js",
+              "workerTargetFront": "",
+            },
+          ],
         },
         Object {
-          "active": true,
-          "name": "worker3",
+          "id": "id-reg-3-example",
           "registrationFront": "",
-          "scope": "SCOPE 789",
-          "url": "http://example.com/worker.js",
-          "workerTargetFront": "",
+          "scope": "SCOPE3",
+          "workers": Array [
+            Object {
+              "id": "id-worker-3-example",
+              "isActive": true,
+              "state": 4,
+              "stateText": "activated",
+              "url": "http://example.com/worker.js",
+              "workerTargetFront": "",
+            },
+          ],
         },
       ]
     }
@@ -102,6 +144,6 @@ exports[`WorkersPage renders an empty list if there are no workers 1`] = `
 <section
   className="app-page js-service-workers-page app-page--empty"
 >
-  <WorkerListEmpty />
+  <RegistrationListEmpty />
 </section>
 `;

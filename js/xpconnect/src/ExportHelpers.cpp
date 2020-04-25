@@ -134,9 +134,9 @@ class MOZ_STACK_CLASS StackScopedCloneData : public StructuredCloneHolderBase {
         BlobImpl* blobImpl = blob->Impl();
         MOZ_ASSERT(blobImpl);
 
-        if (!mBlobImpls.AppendElement(blobImpl)) {
-          return false;
-        }
+        // XXX(Bug 1631371) Check if this should use a fallible operation as it
+        // pretended earlier.
+        mBlobImpls.AppendElement(blobImpl);
 
         size_t idx = mBlobImpls.Length() - 1;
         return JS_WriteUint32Pair(aWriter, SCTAG_BLOB, 0) &&

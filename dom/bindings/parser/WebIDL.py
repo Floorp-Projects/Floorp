@@ -2110,6 +2110,11 @@ class IDLType(IDLObject):
         self._allowShared = False
         self._extendedAttrDict = {}
 
+    def __hash__(self):
+        return (hash(self.builtin) + hash(self.name) + hash(self._clamp) +
+                hash(self._enforceRange) + hash(self.treatNullAsEmpty) +
+                hash(self._allowShared))
+
     def __eq__(self, other):
         return (other and self.builtin == other.builtin and self.name == other.name and
                           self._clamp == other.hasClamp() and self._enforceRange == other.hasEnforceRange() and
@@ -2355,6 +2360,9 @@ class IDLNullableType(IDLParametrizedType):
 
         IDLParametrizedType.__init__(self, location, None, innerType)
 
+    def __hash__(self):
+        return hash(self.inner)
+
     def __eq__(self, other):
         return isinstance(other, IDLNullableType) and self.inner == other.inner
 
@@ -2517,6 +2525,9 @@ class IDLSequenceType(IDLParametrizedType):
         if self.inner.isComplete():
             self.name = self.inner.name + "Sequence"
 
+    def __hash__(self):
+        return hash(self.inner)
+
     def __eq__(self, other):
         return isinstance(other, IDLSequenceType) and self.inner == other.inner
 
@@ -2600,6 +2611,9 @@ class IDLRecordType(IDLParametrizedType):
         # since in that case our .complete() won't be called.
         if self.inner.isComplete():
             self.name = self.keyType.name + self.inner.name + "Record"
+
+    def __hash__(self):
+        return hash(self.inner)
 
     def __eq__(self, other):
         return isinstance(other, IDLRecordType) and self.inner == other.inner
@@ -2781,6 +2795,9 @@ class IDLTypedefType(IDLType):
         self.inner = innerType
         self.builtin = False
 
+    def __hash__(self):
+        return hash(self.inner)
+
     def __eq__(self, other):
         return isinstance(other, IDLTypedefType) and self.inner == other.inner
 
@@ -2917,6 +2934,9 @@ class IDLWrapperType(IDLType):
         self.inner = inner
         self._identifier = inner.identifier
         self.builtin = False
+
+    def __hash__(self):
+        return hash(self._identifier) + hash(self.builtin)
 
     def __eq__(self, other):
         return (isinstance(other, IDLWrapperType) and
@@ -3090,6 +3110,9 @@ class IDLWrapperType(IDLType):
 class IDLPromiseType(IDLParametrizedType):
     def __init__(self, location, innerType):
         IDLParametrizedType.__init__(self, location, "Promise", innerType)
+
+    def __hash__(self):
+        return hash(self.promiseInnerType())
 
     def __eq__(self, other):
         return (isinstance(other, IDLPromiseType) and

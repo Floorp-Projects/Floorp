@@ -146,7 +146,7 @@
       "block": "Box<Statement>"
     },
     "IfStatement": "IfStatement",
-    "LabeledStatement": {
+    "LabelledStatement": {
       "label": "Label",
       "body": "Box<Statement>"
     },

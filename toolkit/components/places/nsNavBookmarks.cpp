@@ -198,7 +198,7 @@ nsresult nsNavBookmarks::Init() {
   NS_ENSURE_STATE(history);
   history->AddObserver(this, true);
   AutoTArray<PlacesEventType, 1> events;
-  events.AppendElement(PlacesEventType::Page_visited, fallible);
+  events.AppendElement(PlacesEventType::Page_visited);
   PlacesObservers::AddListener(events, this);
 
   // DO NOT PUT STUFF HERE that can fail. See observer comment above.
@@ -1763,7 +1763,7 @@ nsresult nsNavBookmarks::GetBookmarksForURI(
     rv = stmt->GetInt32(6, &bookmark.syncStatus);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    NS_ENSURE_TRUE(aBookmarks.AppendElement(bookmark), NS_ERROR_OUT_OF_MEMORY);
+    aBookmarks.AppendElement(bookmark);
   }
 
   return NS_OK;

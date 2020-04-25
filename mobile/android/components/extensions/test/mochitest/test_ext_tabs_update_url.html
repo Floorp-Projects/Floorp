@@ -13,7 +13,7 @@
 "use strict";
 
 async function testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected) {
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
       "applications": { "gecko": { "id": "tabs-update-url@tests.mozilla.org" } },
@@ -37,10 +37,10 @@ async function testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected)
       browser.test.sendMessage("ready", browser.runtime.getURL("tab.html"));
 
       browser.test.onMessage.addListener(async (msg, tabsUpdateURL, isErrorExpected) => {
-        let tabs = await browser.tabs.query({lastFocusedWindow: true});
+        const tabs = await browser.tabs.query({lastFocusedWindow: true});
 
         try {
-          let tab = await browser.tabs.update(tabs[0].id, {url: tabsUpdateURL});
+          const tab = await browser.tabs.update(tabs[0].id, {url: tabsUpdateURL});
 
           browser.test.assertFalse(isErrorExpected, `tabs.update with URL ${tabsUpdateURL} should be rejected`);
           browser.test.assertTrue(tab, "on success the tab should be defined");
@@ -57,7 +57,7 @@ async function testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected)
 
   await extension.startup();
 
-  let mozExtTabURL = await extension.awaitMessage("ready");
+  const mozExtTabURL = await extension.awaitMessage("ready");
 
   if (tabsUpdateURL == "self") {
     tabsUpdateURL = mozExtTabURL;
@@ -65,7 +65,7 @@ async function testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected)
 
   info(`tab.update URL "${tabsUpdateURL}" on tab with URL "${existentTabURL}"`);
 
-  let tab1 = window.open(existentTabURL);
+  const tab1 = window.open(existentTabURL);
 
   extension.sendMessage("start", tabsUpdateURL, isErrorExpected);
   await extension.awaitMessage("done");
@@ -77,7 +77,7 @@ async function testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected)
 add_task(async function() {
   info("Start testing tabs.update on javascript URLs");
 
-  let dataURLPage = `data:text/html,
+  const dataURLPage = `data:text/html,
     <!DOCTYPE html>
     <html>
       <head>
@@ -88,7 +88,7 @@ add_task(async function() {
       </body>
     </html>`;
 
-  let checkList = [
+  const checkList = [
     {
       tabsUpdateURL: "http://example.net",
       isErrorExpected: false,
@@ -111,10 +111,10 @@ add_task(async function() {
     },
   ];
 
-  let testCases = checkList
+  const testCases = checkList
         .map((check) => Object.assign({}, check, {existentTabURL: "about:blank"}));
 
-  for (let {existentTabURL, tabsUpdateURL, isErrorExpected} of testCases) {
+  for (const {existentTabURL, tabsUpdateURL, isErrorExpected} of testCases) {
     await testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected);
   }
 

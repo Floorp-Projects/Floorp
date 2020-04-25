@@ -31,3 +31,7 @@ body {
 body.high-contrast #background {
   display: none;
 }
+
+.no-focus-outline {
+  outline: none;
+}

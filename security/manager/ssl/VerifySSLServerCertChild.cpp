@@ -28,7 +28,8 @@ VerifySSLServerCertChild::VerifySSLServerCertChild(
 
 ipc::IPCResult VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertSuccess(
     nsTArray<ByteArray>&& aBuiltCertChain,
-    const uint16_t& aCertTransparencyStatus, const uint8_t& aEVStatus) {
+    const uint16_t& aCertTransparencyStatus, const uint8_t& aEVStatus,
+    const bool& aIsBuiltCertChainRootBuiltInRoot) {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
           ("[%p] VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertSuccess",
            this));
@@ -41,7 +42,8 @@ ipc::IPCResult VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertSuccess(
 
   mResultTask->Dispatch(nsc, std::move(certBytesArray),
                         std::move(mPeerCertChain), aCertTransparencyStatus,
-                        static_cast<EVStatus>(aEVStatus), true, 0, 0);
+                        static_cast<EVStatus>(aEVStatus), true, 0, 0,
+                        aIsBuiltCertChainRootBuiltInRoot);
   return IPC_OK();
 }
 
@@ -57,7 +59,7 @@ ipc::IPCResult VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertFailure(
   mResultTask->Dispatch(
       nsc, nsTArray<nsTArray<uint8_t>>(), std::move(mPeerCertChain),
       nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE,
-      EVStatus::NotEV, false, aFinalError, aCollectedErrors);
+      EVStatus::NotEV, false, aFinalError, aCollectedErrors, false);
   return IPC_OK();
 }
 

@@ -22,9 +22,10 @@
 @import "resource://devtools/client/application/src/components/routing/PageSwitcher.css";
 @import "resource://devtools/client/application/src/components/routing/Sidebar.css";
 @import "resource://devtools/client/application/src/components/routing/SidebarItem.css";
+@import "resource://devtools/client/application/src/components/service-workers/Registration.css";
+@import "resource://devtools/client/application/src/components/service-workers/RegistrationList.css";
+@import "resource://devtools/client/application/src/components/service-workers/RegistrationListEmpty.css";
 @import "resource://devtools/client/application/src/components/service-workers/Worker.css";
-@import "resource://devtools/client/application/src/components/service-workers/WorkerList.css";
-@import "resource://devtools/client/application/src/components/service-workers/WorkerListEmpty.css";
 @import "resource://devtools/client/application/src/components/service-workers/WorkersPage.css";
 @import "resource://devtools/client/application/src/components/ui/UIButton.css";
 

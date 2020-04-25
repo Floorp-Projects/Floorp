@@ -62,7 +62,7 @@ add_task(async function testCDP({ client }) {
   const onExecutionContextCreated2 = Runtime.executionContextCreated();
   const url = toDataURL("test-page");
   const { frameId } = await Page.navigate({ url });
-  info("A new page has been loaded");
+  info("A new page has been requested");
   ok(frameId, "Page.navigate returned a frameId");
   is(
     frameId,

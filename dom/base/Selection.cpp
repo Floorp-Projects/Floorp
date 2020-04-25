@@ -761,9 +761,9 @@ nsresult Selection::SubtractRange(StyledRange& aRange, nsRange& aSubtract,
     }
     MOZ_ASSERT(postOverlap);
     if (!postOverlap->Collapsed()) {
-      if (!aOutput->InsertElementAt(0, StyledRange(postOverlap))) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+      // XXX(Bug 1631371) Check if this should use a fallible operation as it
+      // pretended earlier.
+      aOutput->InsertElementAt(0, StyledRange(postOverlap));
       (*aOutput)[0].mTextRangeStyle = aRange.mTextRangeStyle;
     }
   }
@@ -779,9 +779,9 @@ nsresult Selection::SubtractRange(StyledRange& aRange, nsRange& aSubtract,
     }
     MOZ_ASSERT(preOverlap);
     if (!preOverlap->Collapsed()) {
-      if (!aOutput->InsertElementAt(0, StyledRange(preOverlap))) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+      // XXX(Bug 1631371) Check if this should use a fallible operation as it
+      // pretended earlier.
+      aOutput->InsertElementAt(0, StyledRange(preOverlap));
       (*aOutput)[0].mTextRangeStyle = aRange.mTextRangeStyle;
     }
   }
@@ -970,9 +970,9 @@ nsresult Selection::StyledRanges::MaybeAddRangeAndTruncateOverlaps(
 
   // a common case is that we have no ranges yet
   if (mRanges.Length() == 0) {
-    if (!mRanges.AppendElement(StyledRange(aRange))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    mRanges.AppendElement(StyledRange(aRange));
     aRange->RegisterSelection(aSelection);
 
     *aOutIndex = 0;
@@ -1008,9 +1008,9 @@ nsresult Selection::StyledRanges::MaybeAddRangeAndTruncateOverlaps(
 
   if (startIndex == endIndex) {
     // The new range doesn't overlap any existing ranges
-    if (!mRanges.InsertElementAt(startIndex, StyledRange(aRange))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    mRanges.InsertElementAt(startIndex, StyledRange(aRange));
     aRange->RegisterSelection(aSelection);
     *aOutIndex = startIndex;
     return NS_OK;
@@ -1023,12 +1023,14 @@ nsresult Selection::StyledRanges::MaybeAddRangeAndTruncateOverlaps(
   // between these indices are fully overlapped by the new range, and so can be
   // removed
   nsTArray<StyledRange> overlaps;
-  if (!overlaps.InsertElementAt(0, mRanges[startIndex]))
-    return NS_ERROR_OUT_OF_MEMORY;
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier.
+  overlaps.InsertElementAt(0, mRanges[startIndex]);
 
   if (endIndex - 1 != startIndex) {
-    if (!overlaps.InsertElementAt(1, mRanges[endIndex - 1]))
-      return NS_ERROR_OUT_OF_MEMORY;
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    overlaps.InsertElementAt(1, mRanges[endIndex - 1]);
   }
 
   // Remove all the overlapping ranges
@@ -1049,13 +1051,14 @@ nsresult Selection::StyledRanges::MaybeAddRangeAndTruncateOverlaps(
                                             aRange->StartOffset(),
                                             CompareToRangeStart)};
 
-  if (!temp.InsertElementAt(insertionPoint, StyledRange(aRange))) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier.
+  temp.InsertElementAt(insertionPoint, StyledRange(aRange));
 
   // Merge the leftovers back in to mRanges
-  if (!mRanges.InsertElementsAt(startIndex, temp))
-    return NS_ERROR_OUT_OF_MEMORY;
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier.
+  mRanges.InsertElementsAt(startIndex, temp);
 
   for (uint32_t i = 0; i < temp.Length(); ++i) {
     MOZ_KnownLive(temp[i].mRange)->RegisterSelection(aSelection);
@@ -1172,8 +1175,9 @@ nsresult Selection::GetRangesForIntervalArray(
   if (startIndex == -1 || endIndex == -1) return NS_OK;
 
   for (int32_t i = startIndex; i < endIndex; i++) {
-    if (!aRanges->AppendElement(mStyledRanges.mRanges[i].mRange))
-      return NS_ERROR_OUT_OF_MEMORY;
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    aRanges->AppendElement(mStyledRanges.mRanges[i].mRange);
   }
 
   return NS_OK;

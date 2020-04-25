@@ -374,7 +374,9 @@ void MediaPipeline::GetContributingSourceStats(
     if (!info.second.Expired(expiry)) {
       RTCRTPContributingSourceStats stats;
       info.second.GetWebidlInstance(stats, aInboundRtpStreamId);
-      aArr.AppendElement(stats, fallible);
+      if (!aArr.AppendElement(stats, fallible)) {
+        mozalloc_handle_oom(0);
+      }
     }
   }
 }

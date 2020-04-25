@@ -849,10 +849,9 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
     oldTransition = nullptr;  // Clear pointer so it doesn't dangle
     animations[currentIndex] = animation;
   } else {
-    if (!animations.AppendElement(animation)) {
-      NS_WARNING("out of memory");
-      return false;
-    }
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    animations.AppendElement(animation);
   }
 
   EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);

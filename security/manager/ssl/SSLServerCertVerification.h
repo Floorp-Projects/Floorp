@@ -49,7 +49,8 @@ class BaseSSLServerCertVerificationResult {
                         nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
                         uint16_t aCertificateTransparencyStatus,
                         EVStatus aEVStatus, bool aSucceeded,
-                        PRErrorCode aFinalError, uint32_t aCollectedErrors) = 0;
+                        PRErrorCode aFinalError, uint32_t aCollectedErrors,
+                        bool aIsBuiltCertChainRootBuiltInRoot) = 0;
 };
 
 // Dispatched to the STS thread to notify the infoObject of the verification
@@ -72,7 +73,8 @@ class SSLServerCertVerificationResult final
                 nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
                 uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
                 bool aSucceeded, PRErrorCode aFinalError,
-                uint32_t aCollectedErrors) override;
+                uint32_t aCollectedErrors,
+                bool aIsBuiltCertChainRootBuiltInRoot) override;
 
  private:
   ~SSLServerCertVerificationResult() = default;
@@ -86,6 +88,7 @@ class SSLServerCertVerificationResult final
   bool mSucceeded;
   PRErrorCode mFinalError;
   uint32_t mCollectedErrors;
+  bool mIsBuiltCertChainRootBuiltInRoot;
 };
 
 class SSLServerCertVerificationJob : public Runnable {

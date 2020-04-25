@@ -33,9 +33,14 @@ from moztest.resolve import (
 
 here = os.path.abspath(os.path.dirname(__file__))
 ACTIVE_DATA_URL = "https://activedata.allizom.org/query"
+EXCEED_LIMIT = [
+    # Suites that exceed 10,000 ActiveData result limit will be defined here.
+    'web-platform-tests',
+]
+MAX_TIMEOUT = 180  # seconds
 
 
-def query_activedata(suite, platform):
+def construct_query(suite, platform):
     if platform in ('windows', 'android'):
         platform_clause = '{"find":{"run.machine.platform": "%s"}}' % platform
     else:
@@ -50,23 +55,35 @@ def query_activedata(suite, platform):
             }
         '''
 
+    # By default, this clause should be not be set.
+    # However, for some web-platform-test suites, results exceed the 10,000 limit.
+    # This permits AD to retrieve the full set of results.
+    output_clause = ''
+    if suite in EXCEED_LIMIT:
+        output_clause = '"destination": "url",\n"format": "list",'
+
     query = """
 {
     "from":"unittest",
     "limit":200000,
     "groupby":["result.test"],
     "select":{"value":"result.duration","aggregate":"average"},
+    %s
     "where":{"and":[
         {"eq":{"repo.branch.name": "mozilla-central"}},
         {"in":{"result.status": ["OK", "PASS", "FAIL"]}},
         {"gt":{"run.timestamp": {"date": "today-week"}}},
-        {"not": {"find": {"run.name": "-ccov"}}},
-        {"not": {"find": {"run.name": "-shippable"}}},
         {"eq":{"run.suite.fullname":"%s"}},
         %s
     ]}
 }
-""" % (suite, platform_clause)
+""" % (output_clause, suite, platform_clause)
+
+    return query
+
+
+def query_activedata(suite, platform):
+    query = construct_query(suite, platform)
 
     print("Querying ActiveData for '{}' tests on '{}' platforms.. "
             .format(suite, platform), end='')
@@ -75,7 +92,30 @@ def query_activedata(suite, platform):
                              data=query,
                              stream=True)
     response.raise_for_status()
-    data = dict(response.json()["data"])
+
+    # Presence of destination clause in the query requires additional processing
+    # to produce the dataset that can be used.
+    if "destination" in query:
+        total_timeout = 0
+        sleep = 10
+
+        status_url = response.json()["status"]
+        status_url_response = requests.get(status_url).json()
+        while total_timeout <= MAX_TIMEOUT and status_url_response["status"] != "done":
+            total_timeout += sleep
+            time.sleep(sleep)
+            status_url_response = requests.get(status_url).json()
+
+        output_url = response.json()["url"]
+        raw_data = requests.get(output_url).json()["data"]
+
+        # Data returned from destination is in format of:
+        # {data: [result: {test: test_name, duration: duration}]}
+        # Normalize it to the format if destination/format was not specified.
+        data = dict([[item['result']['test'], item['result']['duration']] for item in raw_data])
+    else:
+        data = dict(response.json()["data"])
+
     print("{} found".format(len(data)))
     return data
 
@@ -102,6 +142,7 @@ def compute_manifest_runtimes(suites, platform):
         data = query_activedata(suite, platform)
 
         for path, duration in data.items():
+            # Returned data did not contain a test path, so go to next result.
             if not path:
                 continue
 
@@ -114,11 +155,28 @@ def compute_manifest_runtimes(suites, platform):
                 scheme = path[:path.index('://')]
                 if ':' in scheme:
                     scheme = scheme.split(':')[-1]
-
                 prefix = crashtest_prefixes[scheme]
                 path = path.split(prefix, 1)[-1]
             elif suite == 'xpcshell' and ':' in path:
                 path = path.split(':', 1)[-1]
+
+            if suite in EXCEED_LIMIT:
+                # Sanitize test paths to remove leading forward slash and
+                # in case of mozilla tests, the /_mozilla prefix.
+                prefix = 'testing/web-platform/tests'
+                path = path.lstrip('/')
+
+                if path.startswith('_mozilla'):
+                    prefix = 'testing/web-platform/mozilla/tests'
+                    path = path.lstrip('_mozilla/')
+
+                # Normalize returned test paths to be relative to topsrcdir.
+                path = os.path.join(prefix, path.split('/')[0])
+
+                # Use the previously calculated path to the web-platform-test
+                # group as the key.
+                manifest_runtimes[path] += duration
+                continue
 
             if path not in resolver.tests_by_path:
                 continue
@@ -133,6 +191,7 @@ def compute_manifest_runtimes(suites, platform):
 
 def cli(args=sys.argv[1:]):
     default_suites = [suite for suite, obj in TEST_SUITES.items() if 'build_flavor' in obj]
+    default_platforms = ['android', 'windows', 'unix']
 
     parser = ArgumentParser()
     parser.add_argument('-o', '--output-directory', dest='outdir', default=here,
@@ -141,13 +200,13 @@ def cli(args=sys.argv[1:]):
                         default=None, choices=default_suites,
                         help="Suite(s) to include in the data set (default: all)")
     parser.add_argument('-p', '--platform', dest='platforms', action='append',
-                        default=None, choices=['android', 'unix', 'windows'],
+                        default=None, choices=default_platforms,
                         help="Platform(s) to gather runtime information on "
                              "(default: all).")
     args = parser.parse_args(args)
 
     suites = args.suites or default_suites
-    platforms = args.platforms or ['android', 'windows', 'unix']
+    platforms = args.platforms or default_platforms
     for platform in platforms:
         runtimes = compute_manifest_runtimes(suites, platform)
         if not runtimes:

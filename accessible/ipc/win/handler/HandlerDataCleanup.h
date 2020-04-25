@@ -37,7 +37,7 @@ inline void ReleaseStaticIA2DataInterfaces(StaticIA2Data& aData) {
   }
 }
 
-inline void CleanupDynamicIA2Data(DynamicIA2Data& aData, bool aZero = true) {
+inline void CleanupDynamicIA2Data(DynamicIA2Data& aData) {
   ::VariantClear(&aData.mRole);
   if (aData.mKeyboardShortcut) {
     ::SysFreeString(aData.mKeyboardShortcut);
@@ -65,9 +65,6 @@ inline void CleanupDynamicIA2Data(DynamicIA2Data& aData, bool aZero = true) {
   }
   if (aData.mIA2Locale.variant) {
     ::SysFreeString(aData.mIA2Locale.variant);
-  }
-  if (aZero) {
-    ZeroMemory(&aData, sizeof(DynamicIA2Data));
   }
 }
 

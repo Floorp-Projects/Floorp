@@ -159,9 +159,14 @@ var UrlbarTokenizer = {
    *        The string token to verify
    * @param {boolean} [ignoreWhitelist] If true, the origin doesn't have to be
    *        in the whitelist
+   * @param {boolean} [noIp] If true, the origin cannot be an IP address
+   * @param {boolean} [noPort] If true, the origin cannot have a port number
    * @returns {boolean} whether the token looks like an origin.
    */
-  looksLikeOrigin(token, { ignoreWhitelist = false } = {}) {
+  looksLikeOrigin(
+    token,
+    { ignoreWhitelist = false, noIp = false, noPort = false } = {}
+  ) {
     if (!token.length) {
       return false;
     }
@@ -172,13 +177,17 @@ var UrlbarTokenizer = {
     }
     let userinfo = atIndex != -1 ? token.slice(0, atIndex) : "";
     let hostPort = atIndex != -1 ? token.slice(atIndex + 1) : token;
+    let hasPort = this.REGEXP_HAS_PORT.test(hostPort);
     logger.debug("userinfo", userinfo);
     logger.debug("hostPort", hostPort);
+    if (noPort && hasPort) {
+      return false;
+    }
     if (
       this.REGEXP_HOSTPORT_IPV4.test(hostPort) ||
       this.REGEXP_HOSTPORT_IPV6.test(hostPort)
     ) {
-      return true;
+      return !noIp;
     }
 
     // Check for invalid chars.
@@ -197,7 +206,7 @@ var UrlbarTokenizer = {
     if (
       !ignoreWhitelist &&
       !userinfo &&
-      !this.REGEXP_HAS_PORT.test(hostPort) &&
+      !hasPort &&
       this.REGEXP_SINGLE_WORD_HOST.test(hostPort)
     ) {
       return Services.uriFixup.isDomainWhitelisted(hostPort);

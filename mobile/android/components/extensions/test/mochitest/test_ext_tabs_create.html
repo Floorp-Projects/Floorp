@@ -13,7 +13,7 @@
 "use strict";
 
 add_task(async function() {
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
     manifest: {
       "applications": { "gecko": { "id": "tabs-create@tests.mozilla.org" } },
@@ -39,7 +39,7 @@ add_task(async function() {
             url: "about:blank",
           };
 
-          let tests = [
+          const tests = [
             {
               create: {url: "http://example.com/"},
               result: {url: "http://example.com/"},
@@ -67,13 +67,13 @@ add_task(async function() {
               return;
             }
 
-            let test = tests.shift();
-            let expected = Object.assign({}, DEFAULTS, test.result);
+            const test = tests.shift();
+            const expected = Object.assign({}, DEFAULTS, test.result);
 
             browser.test.log(`Testing tabs.create(${JSON.stringify(test.create)}), expecting ${JSON.stringify(test.result)}`);
 
-            let updatedPromise = new Promise(resolve => {
-              let onUpdated = (changedTabId, changed) => {
+            const updatedPromise = new Promise(resolve => {
+              const onUpdated = (changedTabId, changed) => {
                 // Loading an extension page causes two `about:blank` messages
                 // because of the process switch
                 if (changed.url && (expected.url == "about:blank" || changed.url != "about:blank")) {
@@ -84,21 +84,21 @@ add_task(async function() {
               browser.tabs.onUpdated.addListener(onUpdated);
             });
 
-            let createdPromise = new Promise(resolve => {
-              let onCreated = tab => {
+            const createdPromise = new Promise(resolve => {
+              const onCreated = tab => {
                 browser.test.assertTrue("id" in tab, `Expected tabs.onCreated callback to receive tab object`);
                 resolve();
               };
               browser.tabs.onCreated.addListener(onCreated);
             });
 
-            let [tab] = await Promise.all([
+            const [tab] = await Promise.all([
               browser.tabs.create(test.create),
               createdPromise,
             ]);
-            let tabId = tab.id;
+            const tabId = tab.id;
 
-            for (let key of Object.keys(expected)) {
+            for (const key of Object.keys(expected)) {
               if (key === "url") {
                 // FIXME: This doesn't get updated until later in the load cycle.
                 continue;
@@ -107,7 +107,7 @@ add_task(async function() {
               browser.test.assertEq(expected[key], tab[key], `Expected value for tab.${key}`);
             }
 
-            let updated = await updatedPromise;
+            const updated = await updatedPromise;
             browser.test.assertEq(tabId, updated.tabId, `Expected value for tab.id`);
             browser.test.assertEq(expected.url, updated.url, `Expected value for tab.url`);
 

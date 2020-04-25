@@ -46,7 +46,7 @@ add_task(async function testCDP({ client }) {
   await Page.navigate({
     url: toDataURL(`<script>console.log("foo")</script>`),
   });
-  info("A new page has been loaded");
+  info("A new page has been requested");
 
   await loadEventFired;
   info("`Page.loadEventFired` fired");

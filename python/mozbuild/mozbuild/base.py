@@ -154,7 +154,7 @@ class MozbuildObject(ProcessExecutionMixin):
         default.
         """
 
-        cwd = cwd or os.getcwd()
+        cwd = os.path.realpath(cwd or os.getcwd())
         topsrcdir = None
         topobjdir = None
         mozconfig = MozconfigLoader.AUTODETECT

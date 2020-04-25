@@ -129,12 +129,6 @@ class NotNull {
                   "mBasePtr must have zero offset.");
   }
 
-  // Default copy/move construction and assignment.
-  NotNull(const NotNull<T>&) = default;
-  NotNull<T>& operator=(const NotNull<T>&) = default;
-  NotNull(NotNull<T>&&) = default;
-  NotNull<T>& operator=(NotNull<T>&&) = default;
-
   // Disallow null checks, which are unnecessary for this type.
   explicit operator bool() const = delete;
 
@@ -146,8 +140,55 @@ class NotNull {
   constexpr operator const T&() const { return get(); }
 
   // Dereference operators.
-  constexpr const T& operator->() const { return get(); }
+  constexpr auto* operator->() const MOZ_NONNULL_RETURN {
+    return mBasePtr.operator->();
+  }
   constexpr decltype(*mBasePtr) operator*() const { return *mBasePtr; }
+};
+
+// Specialization for T* to allow adding MOZ_NONNULL_RETURN attributes.
+template <typename T>
+class NotNull<T*> {
+  template <typename U>
+  friend constexpr NotNull<U> WrapNotNull(U aBasePtr);
+  template <typename U>
+  friend constexpr NotNull<U*> WrapNotNullUnchecked(U* aBasePtr);
+  template <typename U, typename... Args>
+  friend constexpr NotNull<U> MakeNotNull(Args&&... aArgs);
+
+  T* mBasePtr;
+
+  // This constructor is only used by WrapNotNull() and MakeNotNull<U>().
+  template <typename U>
+  constexpr explicit NotNull(U* aBasePtr) : mBasePtr(aBasePtr) {}
+
+ public:
+  // Disallow default construction.
+  NotNull() = delete;
+
+  // Construct/assign from another NotNull with a compatible base pointer type.
+  template <typename U>
+  constexpr MOZ_IMPLICIT NotNull(const NotNull<U>& aOther)
+      : mBasePtr(aOther.get()) {
+    static_assert(sizeof(T*) == sizeof(NotNull<T*>),
+                  "NotNull must have zero space overhead.");
+    static_assert(offsetof(NotNull<T*>, mBasePtr) == 0,
+                  "mBasePtr must have zero offset.");
+  }
+
+  // Disallow null checks, which are unnecessary for this type.
+  explicit operator bool() const = delete;
+
+  // Explicit conversion to a base pointer. Use only to resolve ambiguity or to
+  // get a castable pointer.
+  constexpr T* get() const MOZ_NONNULL_RETURN { return mBasePtr; }
+
+  // Implicit conversion to a base pointer. Preferable to get().
+  constexpr operator T*() const MOZ_NONNULL_RETURN { return get(); }
+
+  // Dereference operators.
+  constexpr T* operator->() const MOZ_NONNULL_RETURN { return get(); }
+  constexpr T& operator*() const { return *mBasePtr; }
 };
 
 template <typename T>
@@ -155,6 +196,25 @@ constexpr NotNull<T> WrapNotNull(const T aBasePtr) {
   NotNull<T> notNull(aBasePtr);
   MOZ_RELEASE_ASSERT(aBasePtr);
   return notNull;
+}
+
+// WrapNotNullUnchecked should only be used in situations, where it is
+// statically known that aBasePtr is non-null, and redundant release assertions
+// should be avoided. It is only defined for raw base pointers, since it is only
+// needed for those right now. There is no fundamental reason not to allow
+// arbitrary base pointers here.
+template <typename T>
+MOZ_NONNULL(1)
+constexpr NotNull<T*> WrapNotNullUnchecked(T* const aBasePtr) {
+#if defined(__GNUC__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wnonnull-compare"
+#endif
+  MOZ_ASSERT(aBasePtr);
+#if defined(__GNUC__)
+#  pragma GCC diagnostic pop
+#endif
+  return NotNull<T*>{aBasePtr};
 }
 
 namespace detail {

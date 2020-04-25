@@ -443,7 +443,12 @@ class HTMLMediaElement::MediaControlEventListener final
     if (mState == ControlledMediaState::eStarted ||
         mState == ControlledMediaState::ePaused) {
       NotifyMediaStateChanged(ControlledMediaState::ePlayed);
-      NotifyAudibleStateChanged();
+      // If media is `inaudible` in the beginning, then we don't need to notify
+      // the state, because notifying `inaudible` should always come after
+      // notifying `audible`.
+      if (mIsOwnerAudible) {
+        NotifyAudibleStateChanged(true);
+      }
     }
   }
 
@@ -452,6 +457,10 @@ class HTMLMediaElement::MediaControlEventListener final
     MOZ_ASSERT(IsStarted());
     if (mState == ControlledMediaState::ePlayed) {
       NotifyMediaStateChanged(ControlledMediaState::ePaused);
+      // As media are going to be paused, so no sound is possible to be heard.
+      if (mIsOwnerAudible) {
+        NotifyAudibleStateChanged(false);
+      }
     }
   }
 
@@ -468,7 +477,7 @@ class HTMLMediaElement::MediaControlEventListener final
     // audible state. Therefore, in that case we would noitfy the audible state
     // when media starts playing.
     if (mState == ControlledMediaState::ePlayed) {
-      NotifyAudibleStateChanged();
+      NotifyAudibleStateChanged(mIsOwnerAudible);
     }
   }
 
@@ -530,10 +539,10 @@ class HTMLMediaElement::MediaControlEventListener final
     mControlAgent->NotifyMediaStateChanged(this, mState);
   }
 
-  void NotifyAudibleStateChanged() {
+  void NotifyAudibleStateChanged(bool aIsOwnerAudible) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(IsStarted());
-    mControlAgent->NotifyAudibleStateChanged(this, mIsOwnerAudible);
+    mControlAgent->NotifyAudibleStateChanged(this, aIsOwnerAudible);
   }
 
   ControlledMediaState mState = ControlledMediaState::eStopped;

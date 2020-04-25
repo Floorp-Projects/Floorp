@@ -47,7 +47,7 @@ class nsWindowMediator : public nsIWindowMediator,
                                nsCOMPtr<nsPIDOMWindowOuter>& outDOMWindow);
 
  private:
-  int32_t AddEnumerator(nsAppShellWindowEnumerator* inEnumerator);
+  void AddEnumerator(nsAppShellWindowEnumerator* inEnumerator);
   int32_t RemoveEnumerator(nsAppShellWindowEnumerator* inEnumerator);
   nsWindowInfo* MostRecentWindowInfo(const char16_t* inType,
                                      bool aSkipPrivateBrowsingOrClosed = false);

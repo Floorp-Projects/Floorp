@@ -66,19 +66,6 @@ class NetworkObserver {
       false /* fromCache */
     );
     this._onCachedResponse = this._onResponse.bind(this, true /* fromCache */);
-    Services.obs.addObserver(this._onRequest, "http-on-modify-request");
-    Services.obs.addObserver(
-      this._onExamineResponse,
-      "http-on-examine-response"
-    );
-    Services.obs.addObserver(
-      this._onCachedResponse,
-      "http-on-examine-cached-response"
-    );
-    Services.obs.addObserver(
-      this._onCachedResponse,
-      "http-on-examine-merged-response"
-    );
   }
 
   dispose() {
@@ -198,44 +185,6 @@ class NetworkObserver {
     this._redirectMap.set(newChannel, oldChannel);
   }
 
-  observeActivity(
-    channel,
-    activityType,
-    activitySubtype,
-    timestamp,
-    extraSizeData,
-    extraStringData
-  ) {
-    if (
-      activityType !== Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION
-    ) {
-      return;
-    }
-    try {
-      channel.QueryInterface(Ci.nsIHttpChannel);
-    } catch (ex) {
-      return;
-    }
-
-    const httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
-    const loadContext = getLoadContext(httpChannel);
-    if (
-      !loadContext ||
-      !this._browserSessionCount.has(loadContext.topFrameElement)
-    ) {
-      return;
-    }
-    if (
-      activitySubtype !==
-      Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE
-    ) {
-      return;
-    }
-    this.emit("requestfinished", httpChannel, {
-      requestId: requestId(httpChannel),
-    });
-  }
-
   _onRequest(channel, topic) {
     try {
       channel.QueryInterface(Ci.nsIHttpChannel);
@@ -334,13 +283,31 @@ class NetworkObserver {
     responseStorage.addResponseBody(httpChannel, body);
     this.emit("requestfinished", httpChannel, {
       requestId: requestId(httpChannel),
+      errorCode: getNetworkErrorStatusText(httpChannel.status),
     });
+  }
+
+  isActive(browser) {
+    return !!this._browserSessionCount.get(browser);
   }
 
   startTrackingBrowserNetwork(browser) {
     const value = this._browserSessionCount.get(browser) || 0;
     this._browserSessionCount.set(browser, value + 1);
     if (value === 0) {
+      Services.obs.addObserver(this._onRequest, "http-on-modify-request");
+      Services.obs.addObserver(
+        this._onExamineResponse,
+        "http-on-examine-response"
+      );
+      Services.obs.addObserver(
+        this._onCachedResponse,
+        "http-on-examine-cached-response"
+      );
+      Services.obs.addObserver(
+        this._onCachedResponse,
+        "http-on-examine-merged-response"
+      );
       this._browserResponseStorages.set(
         browser,
         new ResponseStorage(
@@ -359,6 +326,7 @@ class NetworkObserver {
     } else {
       this._browserSessionCount.delete(browser);
       this._browserResponseStorages.delete(browser);
+      this.dispose();
     }
   }
 }

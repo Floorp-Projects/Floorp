@@ -365,9 +365,9 @@ void nsXULPrototypeDocument::SetRootElement(nsXULPrototypeElement* aElement) {
 nsresult nsXULPrototypeDocument::AddProcessingInstruction(
     nsXULPrototypePI* aPI) {
   MOZ_ASSERT(aPI, "null ptr");
-  if (!mProcessingInstructions.AppendElement(aPI)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier, or change the return type to void.
+  mProcessingInstructions.AppendElement(aPI);
   return NS_OK;
 }
 
@@ -400,9 +400,9 @@ nsresult nsXULPrototypeDocument::AwaitLoadDone(Callback&& aCallback,
   *aResult = mLoaded;
 
   if (!mLoaded) {
-    rv = mPrototypeWaiters.AppendElement(std::move(aCallback))
-             ? NS_OK
-             : NS_ERROR_OUT_OF_MEMORY;  // addrefs
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier, or change the return type to void.
+    mPrototypeWaiters.AppendElement(std::move(aCallback));
   }
 
   return rv;

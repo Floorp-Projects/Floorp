@@ -14,7 +14,7 @@
 
 // saveAs is not implemented on Fennec but this tests that a call to download() that supplies that option passes anyway.
 add_task(async function testDownload() {
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {permissions: ["downloads"]},
 
     background: async function() {

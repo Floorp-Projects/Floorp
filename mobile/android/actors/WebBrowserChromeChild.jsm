@@ -67,7 +67,7 @@ class WebBrowserChromeChild extends GeckoViewActorChild {
   // nsIWebBrowserChrome
   shouldLoadURIInThisProcess(aURI) {
     debug`shouldLoadURIInThisProcess ${aURI.displaySpec}`;
-    let remoteSubframes = this.docShell.nsILoadContext.useRemoteSubframes;
+    const remoteSubframes = this.docShell.nsILoadContext.useRemoteSubframes;
     return E10SUtils.shouldLoadURIInThisProcess(aURI, remoteSubframes);
   }
 

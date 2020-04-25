@@ -11,11 +11,6 @@
 <script type="application/javascript">
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv(
-    { "set": [["network.disable.ipc.security", true]] });
-});
-
-add_task(async function() {
   let iframe = document.querySelector("#target-iframe");
 
   let win = SpecialPowers.wrap(iframe).contentWindow;

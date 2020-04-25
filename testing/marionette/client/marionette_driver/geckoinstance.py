@@ -93,8 +93,6 @@ class GeckoInstance(object):
 
         "javascript.options.showInConsole": True,
 
-        # Enable Marionette component
-        "marionette.enabled": True,
         # (deprecated and can be removed when Firefox 60 ships)
         "marionette.defaultPrefs.enabled": True,
 

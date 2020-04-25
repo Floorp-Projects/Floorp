@@ -15,7 +15,7 @@ const getSender = (extension, target, sender) => {
   }
 
   if (tabId != null && tabId >= 0) {
-    let tab = extension.tabManager.get(tabId, null);
+    const tab = extension.tabManager.get(tabId, null);
     if (tab) {
       sender.tab = tab.convert();
     }

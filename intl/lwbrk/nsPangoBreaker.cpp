@@ -17,7 +17,9 @@ void NS_GetComplexLineBreaks(const char16_t* aText, uint32_t aLength,
   memset(aBreakBefore, false, aLength * sizeof(uint8_t));
 
   AutoTArray<PangoLogAttr, 2000> attrBuffer;
-  if (!attrBuffer.AppendElements(aLength + 1)) return;
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier.
+  attrBuffer.AppendElements(aLength + 1);
 
   NS_ConvertUTF16toUTF8 aUTF8(aText, aLength);
 

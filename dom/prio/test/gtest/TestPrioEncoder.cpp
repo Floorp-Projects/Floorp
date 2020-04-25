@@ -44,7 +44,7 @@ TEST(PrioEncoder, BooleanLimitExceeded)
     *(sequence.AppendElement(mozilla::fallible)) = rand() % 2;
   }
 
-  prioParams.mBooleans.Assign(sequence);
+  ASSERT_TRUE(prioParams.mBooleans.Assign(sequence));
 
   mozilla::dom::RootedDictionary<mozilla::dom::PrioEncodedData> prioEncodedData(
       cx);
@@ -183,7 +183,7 @@ TEST(PrioEncoder, VerifyFull)
   *(sequence.AppendElement(mozilla::fallible)) = dataItems[0];
   *(sequence.AppendElement(mozilla::fallible)) = dataItems[1];
   *(sequence.AppendElement(mozilla::fallible)) = dataItems[2];
-  prioParams.mBooleans.Assign(sequence);
+  ASSERT_TRUE(prioParams.mBooleans.Assign(sequence));
 
   mozilla::dom::RootedDictionary<mozilla::dom::PrioEncodedData> prioEncodedData(
       cx);

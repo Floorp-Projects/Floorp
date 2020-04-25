@@ -10025,14 +10025,14 @@ struct CommonPopulateResponseHelper {
   }
 
   template <typename Response>
-  void FillKeys(Response* const aResponse) {
+  void FillKeys(Response& aResponse) {
     MOZ_ASSERT(!mPosition.IsUnset());
-    aResponse->key() = std::move(mPosition);
+    aResponse.key() = std::move(mPosition);
   }
 
   template <typename Response>
-  static size_t GetKeySize(const Response* const aResponse) {
-    return aResponse->key().GetBuffer().Length();
+  static size_t GetKeySize(const Response& aResponse) {
+    return aResponse.key().GetBuffer().Length();
   }
 
  protected:
@@ -10075,20 +10075,20 @@ struct IndexPopulateResponseHelper : CommonPopulateResponseHelper {
   }
 
   template <typename Response>
-  void FillKeys(Response* const aResponse) {
+  void FillKeys(Response& aResponse) {
     MOZ_ASSERT(!mLocaleAwarePosition.IsUnset());
     MOZ_ASSERT(!mObjectStorePosition.IsUnset());
 
     CommonPopulateResponseHelper::FillKeys(aResponse);
-    aResponse->sortKey() = std::move(mLocaleAwarePosition);
-    aResponse->objectKey() = std::move(mObjectStorePosition);
+    aResponse.sortKey() = std::move(mLocaleAwarePosition);
+    aResponse.objectKey() = std::move(mObjectStorePosition);
   }
 
   template <typename Response>
-  static size_t GetKeySize(const Response* const aResponse) {
+  static size_t GetKeySize(Response& aResponse) {
     return CommonPopulateResponseHelper::GetKeySize(aResponse) +
-           aResponse->sortKey().GetBuffer().Length() +
-           aResponse->objectKey().GetBuffer().Length();
+           aResponse.sortKey().GetBuffer().Length() +
+           aResponse.objectKey().GetBuffer().Length();
   }
 
  private:
@@ -10102,12 +10102,11 @@ struct KeyPopulateResponseHelper {
   }
 
   template <typename Response>
-  static constexpr void MaybeFillCloneInfo(Response* const /*aResponse*/,
+  static constexpr void MaybeFillCloneInfo(Response& /*aResponse*/,
                                            FilesArray* const /*aFiles*/) {}
 
   template <typename Response>
-  static constexpr size_t MaybeGetCloneInfoSize(
-      const Response* const /*aResponse*/) {
+  static constexpr size_t MaybeGetCloneInfoSize(const Response& /*aResponse*/) {
     return 0;
   }
 };
@@ -10138,15 +10137,15 @@ struct ValuePopulateResponseHelper {
   }
 
   template <typename Response>
-  void MaybeFillCloneInfo(Response* const aResponse, FilesArray* const aFiles) {
+  void MaybeFillCloneInfo(Response& aResponse, FilesArray* const aFiles) {
     auto cloneInfo = mCloneInfo.release();
-    aResponse->cloneInfo().data().data = cloneInfo.ReleaseData();
+    aResponse.cloneInfo().data().data = cloneInfo.ReleaseData();
     aFiles->AppendElement(cloneInfo.ReleaseFiles());
   }
 
   template <typename Response>
-  static size_t MaybeGetCloneInfoSize(const Response* const aResponse) {
-    return aResponse->cloneInfo().data().data.Size();
+  static size_t MaybeGetCloneInfoSize(const Response& aResponse) {
+    return aResponse.cloneInfo().data().data.Size();
   }
 
  private:
@@ -26744,7 +26743,7 @@ CursorOpBaseHelperBase<CursorType>::PopulateResponseFromStatement(
   }
 
   auto& responses = populateResponseHelper.GetTypedResponse(&mOp.mResponse);
-  auto* response = responses.AppendElement();
+  auto& response = *responses.AppendElement();
 
   populateResponseHelper.FillKeys(response);
   if constexpr (!CursorTypeTraits<CursorType>::IsKeyOnlyCursor) {

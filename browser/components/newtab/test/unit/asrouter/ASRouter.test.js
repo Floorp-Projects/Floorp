@@ -206,6 +206,10 @@ describe("ASRouter", () => {
           return Promise.resolve("/path/to/download");
         }
       },
+      ExperimentAPI: {
+        getExperiment: sandbox.stub().returns({ branch: { value: [] } }),
+        ready: sandbox.stub().resolves(),
+      },
     });
     await createRouterAndInit();
   });
@@ -4161,6 +4165,71 @@ describe("ASRouter", () => {
     });
   });
   describe("#loadMessagesForProvider", () => {
+    it("should fetch messages from the ExperimentAPI", async () => {
+      const args = {
+        type: "remote-experiments",
+        messageGroups: ["asrouter"],
+      };
+
+      await MessageLoaderUtils.loadMessagesForProvider(args);
+
+      assert.calledOnce(global.ExperimentAPI.getExperiment);
+      assert.calledWithExactly(global.ExperimentAPI.getExperiment, {
+        group: "asrouter",
+      });
+    });
+    it("should handle the case of no experiments in the ExperimentAPI", async () => {
+      const args = {
+        type: "remote-experiments",
+        messageGroups: ["asrouter"],
+      };
+
+      global.ExperimentAPI.getExperiment.throws();
+      const stub = sandbox.stub(MessageLoaderUtils, "reportError");
+
+      await MessageLoaderUtils.loadMessagesForProvider(args);
+
+      assert.calledOnce(stub);
+    });
+    it("should handle the case of no experiments in the ExperimentAPI", async () => {
+      const args = {
+        type: "remote-experiments",
+        messageGroups: ["asrouter"],
+      };
+
+      global.ExperimentAPI.getExperiment.returns(null);
+
+      const result = await MessageLoaderUtils.loadMessagesForProvider(args);
+
+      assert.lengthOf(result.messages, 0);
+    });
+    it("should normally load ExperimentAPI messages", async () => {
+      const args = {
+        type: "remote-experiments",
+        messageGroups: ["asrouter"],
+      };
+
+      global.ExperimentAPI.getExperiment.returns({
+        branch: { value: ["foo", "bar"] },
+      });
+
+      const result = await MessageLoaderUtils.loadMessagesForProvider(args);
+
+      assert.lengthOf(result.messages, 2);
+    });
+    it("should fetch messages from the ExperimentAPI", async () => {
+      global.ExperimentAPI.ready.throws();
+      const args = {
+        type: "remote-experiments",
+        messageGroups: ["asrouter"],
+      };
+      const stub = sandbox.stub(MessageLoaderUtils, "reportError");
+
+      await MessageLoaderUtils.loadMessagesForProvider(args);
+
+      assert.notCalled(global.ExperimentAPI.getExperiment);
+      assert.calledOnce(stub);
+    });
     it("should fetch json from url", async () => {
       let result = await MessageLoaderUtils.loadMessagesForProvider({
         location: "http://fake.com/endpoint",

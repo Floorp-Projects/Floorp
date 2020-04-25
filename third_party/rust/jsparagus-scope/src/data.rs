@@ -261,8 +261,7 @@ impl ScopeDataList {
         Self { scopes: Vec::new() }
     }
 
-    #[allow(dead_code)]
-    pub fn append(&mut self, scope: ScopeData) -> ScopeIndex {
+    pub fn push(&mut self, scope: ScopeData) -> ScopeIndex {
         let index = self.scopes.len();
         self.scopes.push(Some(scope));
         ScopeIndex::new(index)

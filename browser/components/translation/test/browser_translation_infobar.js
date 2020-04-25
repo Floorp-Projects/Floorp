@@ -11,32 +11,15 @@ ChromeUtils.import(
 );
 var { Translation, TranslationParent } = tmp;
 
+const kDetectLanguagePref = "browser.translation.detectLanguage";
 const kShowUIPref = "browser.translation.ui.show";
 
-function waitForCondition(condition, nextTest, errorMsg) {
-  var tries = 0;
-  var interval = setInterval(function() {
-    if (tries >= 30) {
-      ok(false, errorMsg);
-      moveOn();
-    }
-    var conditionPassed;
-    try {
-      conditionPassed = condition();
-    } catch (e) {
-      ok(false, e + "\n" + e.stack);
-      conditionPassed = false;
-    }
-    if (conditionPassed) {
-      moveOn();
-    }
-    tries++;
-  }, 100);
-  var moveOn = function() {
-    clearInterval(interval);
-    nextTest();
-  };
-}
+const text =
+  "Il y a aujourd'hui trois cent quarante-huit ans six mois et dix-neuf jours que les Parisiens s'éveillèrent au bruit de toutes les cloches sonnant à grande volée dans la triple enceinte de la Cité, de l'Université et de la Ville.";
+const EXAMPLE_URL =
+  "http://example.com/document-builder.sjs?html=<html><body>" +
+  text +
+  "</body></html>";
 
 // Create a subclass that overrides the translation functions. This can be
 // instantiated separately from the normal actor creation process. This will
@@ -95,29 +78,6 @@ function hasTranslationInfoBar() {
     .getNotificationWithValue("translation");
 }
 
-function test() {
-  waitForExplicitFinish();
-
-  Services.prefs.setBoolPref(kShowUIPref, true);
-  let tab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.selectedTab = tab;
-  BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => {
-    TranslationStub.browser = gBrowser.selectedBrowser;
-    registerCleanupFunction(function() {
-      gBrowser.removeTab(tab);
-      Services.prefs.clearUserPref(kShowUIPref);
-    });
-    run_tests(() => {
-      finish();
-    });
-  });
-
-  BrowserTestUtils.loadURI(
-    gBrowser.selectedBrowser,
-    "data:text/plain,test page"
-  );
-}
-
 function checkURLBarIcon(aExpectTranslated = false) {
   is(
     !PopupNotifications.getNotification("translate"),
@@ -131,7 +91,18 @@ function checkURLBarIcon(aExpectTranslated = false) {
   );
 }
 
-function run_tests(aFinishCallback) {
+add_task(async function test_infobar() {
+  await SpecialPowers.pushPrefEnv({
+    set: [[kShowUIPref, true]],
+  });
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "data:text/plain,test page"
+  );
+
+  TranslationStub.browser = gBrowser.selectedBrowser;
+
   info("Show an info bar saying the current page is in French");
   let notif = showTranslationUI("fr");
   is(
@@ -335,12 +306,45 @@ function run_tests(aFinishCallback) {
   // Clicking the anchor element causes a 'showing' event to be sent
   // asynchronously to our callback that will then show the infobar.
   PopupNotifications.getNotification("translate").anchorElement.click();
-  waitForCondition(
+
+  await BrowserTestUtils.waitForCondition(
     hasTranslationInfoBar,
-    () => {
-      ok(hasTranslationInfoBar(), "there's a 'translate' notification");
-      aFinishCallback();
-    },
     "timeout waiting for the info bar to reappear"
   );
-}
+
+  ok(hasTranslationInfoBar(), "there's a 'translate' notification");
+
+  await BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_infobar_using_page() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [kDetectLanguagePref, true],
+      [kShowUIPref, true],
+    ],
+  });
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, EXAMPLE_URL);
+
+  await BrowserTestUtils.waitForCondition(
+    hasTranslationInfoBar,
+    "timeout waiting for the info bar to reappear"
+  );
+
+  let notificationBox = gBrowser.getNotificationBox(tab.linkedBrowser);
+  let notif = notificationBox.getNotificationWithValue("translation");
+  is(
+    notif.state,
+    Translation.STATE_OFFER,
+    "the infobar is offering translation"
+  );
+  is(
+    notif._getAnonElt("detectedLanguage").value,
+    "fr",
+    "The detected language is displayed"
+  );
+  checkURLBarIcon();
+
+  await BrowserTestUtils.removeTab(tab);
+});

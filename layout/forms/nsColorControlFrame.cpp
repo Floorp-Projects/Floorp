@@ -66,9 +66,9 @@ nsresult nsColorControlFrame::CreateAnonymousContent(
   nsresult rv = UpdateColor();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!aElements.AppendElement(mColorContent)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier.
+  aElements.AppendElement(mColorContent);
 
   return NS_OK;
 }

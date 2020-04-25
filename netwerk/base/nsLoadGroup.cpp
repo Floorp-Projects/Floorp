@@ -159,10 +159,9 @@ static bool AppendRequestsToArray(PLDHashTable* aTable,
     nsIRequest* request = e->mKey;
     NS_ASSERTION(request, "What? Null key in PLDHashTable entry?");
 
-    bool ok = !!aArray->AppendElement(request);
-    if (!ok) {
-      break;
-    }
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    aArray->AppendElement(request);
     NS_ADDREF(request);
   }
 

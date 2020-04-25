@@ -581,9 +581,9 @@ nsresult nsNSSComponent::CommonGetEnterpriseCerts(
       if (NS_FAILED(rv)) {
         return rv;
       }
-      if (!enterpriseCerts.AppendElement(std::move(certCopy))) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+      // XXX(Bug 1631371) Check if this should use a fallible operation as it
+      // pretended earlier.
+      enterpriseCerts.AppendElement(std::move(certCopy));
     }
   }
   return NS_OK;
@@ -1262,6 +1262,33 @@ void SetValidationOptionsCommon() {
       ctMode != CertVerifier::CertificateTransparencyMode::Disabled;
   PublicSSLState()->SetSignedCertTimestampsEnabled(sctsEnabled);
   PrivateSSLState()->SetSignedCertTimestampsEnabled(sctsEnabled);
+
+  CertVerifier::PinningMode pinningMode =
+      static_cast<CertVerifier::PinningMode>(
+          Preferences::GetInt("security.cert_pinning.enforcement_level",
+                              CertVerifier::pinningDisabled));
+  if (pinningMode > CertVerifier::pinningEnforceTestMode) {
+    pinningMode = CertVerifier::pinningDisabled;
+  }
+  PublicSSLState()->SetPinningMode(pinningMode);
+  PrivateSSLState()->SetPinningMode(pinningMode);
+
+  BRNameMatchingPolicy::Mode nameMatchingMode =
+      static_cast<BRNameMatchingPolicy::Mode>(Preferences::GetInt(
+          "security.pki.name_matching_mode",
+          static_cast<int32_t>(BRNameMatchingPolicy::Mode::DoNotEnforce)));
+  switch (nameMatchingMode) {
+    case BRNameMatchingPolicy::Mode::Enforce:
+    case BRNameMatchingPolicy::Mode::EnforceAfter23August2015:
+    case BRNameMatchingPolicy::Mode::EnforceAfter23August2016:
+    case BRNameMatchingPolicy::Mode::DoNotEnforce:
+      break;
+    default:
+      nameMatchingMode = BRNameMatchingPolicy::Mode::DoNotEnforce;
+      break;
+  }
+  PublicSSLState()->SetNameMatchingMode(nameMatchingMode);
+  PrivateSSLState()->SetNameMatchingMode(nameMatchingMode);
 }
 
 namespace {
@@ -1383,14 +1410,6 @@ void nsNSSComponent::setValidationOptions(
     Telemetry::Accumulate(Telemetry::CERT_OCSP_REQUIRED, ocspRequired);
   }
 
-  CertVerifier::PinningMode pinningMode =
-      static_cast<CertVerifier::PinningMode>(
-          Preferences::GetInt("security.cert_pinning.enforcement_level",
-                              CertVerifier::pinningDisabled));
-  if (pinningMode > CertVerifier::pinningEnforceTestMode) {
-    pinningMode = CertVerifier::pinningDisabled;
-  }
-
   CertVerifier::SHA1Mode sha1Mode =
       static_cast<CertVerifier::SHA1Mode>(Preferences::GetInt(
           "security.pki.sha1_enforcement_level",
@@ -1410,21 +1429,6 @@ void nsNSSComponent::setValidationOptions(
   // Convert a previously-available setting to a safe one.
   if (sha1Mode == CertVerifier::SHA1Mode::UsedToBeBefore2016ButNowIsForbidden) {
     sha1Mode = CertVerifier::SHA1Mode::Forbidden;
-  }
-
-  BRNameMatchingPolicy::Mode nameMatchingMode =
-      static_cast<BRNameMatchingPolicy::Mode>(Preferences::GetInt(
-          "security.pki.name_matching_mode",
-          static_cast<int32_t>(BRNameMatchingPolicy::Mode::DoNotEnforce)));
-  switch (nameMatchingMode) {
-    case BRNameMatchingPolicy::Mode::Enforce:
-    case BRNameMatchingPolicy::Mode::EnforceAfter23August2015:
-    case BRNameMatchingPolicy::Mode::EnforceAfter23August2016:
-    case BRNameMatchingPolicy::Mode::DoNotEnforce:
-      break;
-    default:
-      nameMatchingMode = BRNameMatchingPolicy::Mode::DoNotEnforce;
-      break;
   }
 
   NetscapeStepUpPolicy netscapeStepUpPolicy =
@@ -1476,8 +1480,9 @@ void nsNSSComponent::setValidationOptions(
                                  softTimeout, hardTimeout, proofOfLock);
 
   mDefaultCertVerifier = new SharedCertVerifier(
-      odc, osc, softTimeout, hardTimeout, certShortLifetimeInDays, pinningMode,
-      sha1Mode, nameMatchingMode, netscapeStepUpPolicy, ctMode,
+      odc, osc, softTimeout, hardTimeout, certShortLifetimeInDays,
+      PublicSSLState()->PinningMode(), sha1Mode,
+      PublicSSLState()->NameMatchingMode(), netscapeStepUpPolicy, ctMode,
       distrustedCAPolicy, crliteMode, mEnterpriseCerts);
 }
 

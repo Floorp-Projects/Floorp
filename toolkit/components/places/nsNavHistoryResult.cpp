@@ -2719,9 +2719,9 @@ nsNavHistoryFolderResultNode::GetQuery(nsINavHistoryQuery** _query) {
 
   nsTArray<nsCString> parents;
   // query just has the folder ID set and nothing else
-  if (!parents.AppendElement(mTargetFolderGuid)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier, or change the return type to void.
+  parents.AppendElement(mTargetFolderGuid);
   nsresult rv = query->SetParents(parents);
   NS_ENSURE_SUCCESS(rv, rv);
 
