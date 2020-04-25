@@ -960,10 +960,12 @@ class AsyncPanZoomController {
   // This allows us to transform events into Gecko's coordinate space.
   FrameMetrics mExpectedGeckoMetrics;
 
-  // This holds important state from the Metrics() at the last time
-  // SampleCompositedAsyncTransform() was called. mRecursiveMutex must be held
-  // when using or modifying this member.
-  SampledAPZCState mSampledState;
+  // This holds important state from the Metrics() at previous times
+  // SampleCompositedAsyncTransform() was called. This will always have exactly
+  // one item. mRecursiveMutex must be held when using or modifying this member.
+  // Samples should be inserted to the "back" of the deque and extracted from
+  // the "front".
+  std::deque<SampledAPZCState> mSampledState;
 
   // Groups state variables that are specific to a platform.
   // Initialized on first use.
