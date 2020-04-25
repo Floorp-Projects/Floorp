@@ -8,4 +8,4 @@ clang-format:
         - 'tools/lint/clang-format/**'
     type: external
     payload: clang-format:lint
-    code_review_warnings: true
+    code_review_warnings: false
