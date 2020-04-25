@@ -435,7 +435,7 @@ static bool TryResolvePropertyFromSpecs(
     // pass along JITInfo. It's probably ok though, since Xrays are already
     // pretty slow.
     desc.value().setUndefined();
-    unsigned flags = psMatch->flags;
+    unsigned attrs = psMatch->attributes();
     if (psMatch->isAccessor()) {
       if (psMatch->isSelfHosted()) {
         JSFunction* getterFun = JS::GetSelfHostedFunction(
@@ -446,7 +446,7 @@ static bool TryResolvePropertyFromSpecs(
         RootedObject getterObj(cx, JS_GetFunctionObject(getterFun));
         RootedObject setterObj(cx);
         if (psMatch->u.accessors.setter.selfHosted.funname) {
-          MOZ_ASSERT(flags & JSPROP_SETTER);
+          MOZ_ASSERT(attrs & JSPROP_SETTER);
           JSFunction* setterFun = JS::GetSelfHostedFunction(
               cx, psMatch->u.accessors.setter.selfHosted.funname, id, 0);
           if (!setterFun) {
@@ -455,13 +455,13 @@ static bool TryResolvePropertyFromSpecs(
           setterObj = JS_GetFunctionObject(setterFun);
         }
         if (!JS_DefinePropertyById(cx, holder, id, getterObj, setterObj,
-                                   flags)) {
+                                   attrs)) {
           return false;
         }
       } else {
         if (!JS_DefinePropertyById(
                 cx, holder, id, psMatch->u.accessors.getter.native.op,
-                psMatch->u.accessors.setter.native.op, flags)) {
+                psMatch->u.accessors.setter.native.op, attrs)) {
           return false;
         }
       }
@@ -470,8 +470,7 @@ static bool TryResolvePropertyFromSpecs(
       if (!psMatch->getValue(cx, &v)) {
         return false;
       }
-      if (!JS_DefinePropertyById(cx, holder, id, v,
-                                 flags & ~JSPROP_INTERNAL_USE_BIT)) {
+      if (!JS_DefinePropertyById(cx, holder, id, v, attrs)) {
         return false;
       }
     }
