@@ -4,6 +4,8 @@
 
 "use strict";
 
+/* import-globals-from ../../head.js */
+
 ChromeUtils.import("resource://gre/modules/Geometry.jsm", this);
 
 async function draw(window, src) {
