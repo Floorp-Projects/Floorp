@@ -4086,7 +4086,7 @@ CSSRect AsyncPanZoomController::GetCurrentAsyncLayoutViewport(
   AutoApplyAsyncTestAttributes testAttributeApplier(this, lock);
   MOZ_ASSERT(Metrics().IsRootContent(),
              "Only the root content APZC has a layout viewport");
-  return GetEffectiveLayoutViewport(aMode);
+  return GetEffectiveLayoutViewport(aMode, lock);
 }
 
 ParentLayerPoint AsyncPanZoomController::GetCurrentAsyncScrollOffset(
@@ -4094,7 +4094,7 @@ ParentLayerPoint AsyncPanZoomController::GetCurrentAsyncScrollOffset(
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   AutoApplyAsyncTestAttributes testAttributeApplier(this, lock);
 
-  return GetEffectiveScrollOffset(aMode) * GetEffectiveZoom(aMode);
+  return GetEffectiveScrollOffset(aMode, lock) * GetEffectiveZoom(aMode, lock);
 }
 
 CSSPoint AsyncPanZoomController::GetCurrentAsyncScrollOffsetInCssPixels(
@@ -4102,7 +4102,7 @@ CSSPoint AsyncPanZoomController::GetCurrentAsyncScrollOffsetInCssPixels(
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   AutoApplyAsyncTestAttributes testAttributeApplier(this, lock);
 
-  return GetEffectiveScrollOffset(aMode);
+  return GetEffectiveScrollOffset(aMode, lock);
 }
 
 AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
@@ -4112,7 +4112,7 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
 
   CSSToParentLayerScale2D effectiveZoom;
   if (aComponents.contains(AsyncTransformComponent::eVisual)) {
-    effectiveZoom = GetEffectiveZoom(aMode);
+    effectiveZoom = GetEffectiveZoom(aMode, lock);
   } else {
     effectiveZoom =
         Metrics().LayersPixelsPerCSSPixel() * LayerToParentLayerScale(1.0f);
@@ -4130,8 +4130,9 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
                  mLastContentPaintMetrics.GetLayoutViewport().TopLeft());
     }
 
-    CSSPoint currentVisualOffset = GetEffectiveScrollOffset(aMode) -
-                                   GetEffectiveLayoutViewport(aMode).TopLeft();
+    CSSPoint currentVisualOffset =
+        GetEffectiveScrollOffset(aMode, lock) -
+        GetEffectiveLayoutViewport(aMode, lock).TopLeft();
 
     translation += currentVisualOffset * effectiveZoom;
   }
@@ -4142,7 +4143,8 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
           mLastContentPaintMetrics.GetLayoutViewport().TopLeft();
     }
 
-    CSSPoint currentLayoutOffset = GetEffectiveLayoutViewport(aMode).TopLeft();
+    CSSPoint currentLayoutOffset =
+        GetEffectiveLayoutViewport(aMode, lock).TopLeft();
 
     translation +=
         (currentLayoutOffset - lastPaintLayoutOffset) * effectiveZoom;
@@ -4163,7 +4165,7 @@ LayoutDeviceToParentLayerScale AsyncPanZoomController::GetCurrentPinchZoomScale(
     AsyncTransformConsumer aMode) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   AutoApplyAsyncTestAttributes testAttributeApplier(this, lock);
-  CSSToParentLayerScale2D scale = GetEffectiveZoom(aMode);
+  CSSToParentLayerScale2D scale = GetEffectiveZoom(aMode, lock);
   // Note that in general the zoom might have different x- and y-scales.
   // However, this function in particular is only used on the WebRender codepath
   // for which the scales should always be the same.
@@ -4171,7 +4173,8 @@ LayoutDeviceToParentLayerScale AsyncPanZoomController::GetCurrentPinchZoomScale(
 }
 
 CSSRect AsyncPanZoomController::GetEffectiveLayoutViewport(
-    AsyncTransformConsumer aMode) const {
+    AsyncTransformConsumer aMode,
+    const RecursiveMutexAutoLock& aProofOfLock) const {
   if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
     return mLastContentPaintMetrics.GetLayoutViewport();
   }
@@ -4182,7 +4185,8 @@ CSSRect AsyncPanZoomController::GetEffectiveLayoutViewport(
 }
 
 CSSPoint AsyncPanZoomController::GetEffectiveScrollOffset(
-    AsyncTransformConsumer aMode) const {
+    AsyncTransformConsumer aMode,
+    const RecursiveMutexAutoLock& aProofOfLock) const {
   if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
     return mLastContentPaintMetrics.GetVisualViewportOffset();
   }
@@ -4193,7 +4197,8 @@ CSSPoint AsyncPanZoomController::GetEffectiveScrollOffset(
 }
 
 CSSToParentLayerScale2D AsyncPanZoomController::GetEffectiveZoom(
-    AsyncTransformConsumer aMode) const {
+    AsyncTransformConsumer aMode,
+    const RecursiveMutexAutoLock& aProofOfLock) const {
   if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
     return mLastContentPaintMetrics.GetZoom();
   }
@@ -4270,8 +4275,8 @@ Matrix4x4 AsyncPanZoomController::GetTransformToLastDispatchedPaint() const {
 CSSRect AsyncPanZoomController::GetVisibleRect(
     const RecursiveMutexAutoLock& aProofOfLock) const {
   AutoApplyAsyncTestAttributes testAttributeApplier(this, aProofOfLock);
-  CSSPoint currentScrollOffset =
-      GetEffectiveScrollOffset(AsyncPanZoomController::eForCompositing);
+  CSSPoint currentScrollOffset = GetEffectiveScrollOffset(
+      AsyncPanZoomController::eForCompositing, aProofOfLock);
   CSSRect visible = CSSRect(currentScrollOffset,
                             Metrics().CalculateCompositedSizeInCssPixels());
   return visible;
