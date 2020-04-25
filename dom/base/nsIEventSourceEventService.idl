@@ -1,0 +1,35 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=4 ts=4 et tw=80 : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+#include "nsISupports.idl"
+
+[scriptable, uuid(d2cc6222-b7f2-490d-adc2-497d89878fa2)]
+interface nsIEventSourceEventListener : nsISupports
+{
+  [must_use] void eventSourceConnectionOpened(in uint64_t aHttpChannelId);
+
+  [must_use] void eventSourceConnectionClosed(in uint64_t aHttpChannelId);
+
+  [must_use] void eventReceived(in uint64_t aHttpChannelId,
+                                in AString aEventName,
+                                in AString aLastEventID,
+                                in AString aData,
+                                in uint32_t aRetry,
+                                in DOMHighResTimeStamp aTimeStamp);
+};
+
+[scriptable, builtinclass, uuid(c0378840-8a74-4b0a-9225-c3a0ac1fac41)]
+interface nsIEventSourceEventService : nsISupports
+{
+  [must_use] void addListener(in unsigned long long aInnerWindowID,
+                              in nsIEventSourceEventListener aListener);
+
+  [must_use] void removeListener(in unsigned long long aInnerWindowID,
+                                 in nsIEventSourceEventListener aListener);
+
+  [must_use] bool hasListenerFor(in unsigned long long aInnerWindowID);
+};

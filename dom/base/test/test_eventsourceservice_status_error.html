@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>EventSource event service status error test</title>
+    <meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var service = SpecialPowers.Cc["@mozilla.org/eventsourceevent/service;1"]
+                .getService(SpecialPowers.Ci.nsIEventSourceEventService);
+ok(!!service, "We have the nsIEventSourceEventService");
+
+var innerId = SpecialPowers.getDOMWindowUtils(window).currentInnerWindowID;
+ok(innerId, "We have a valid innerWindowID: " + innerId);
+
+var listener = {
+    QueryInterface(aIID) {
+      if (
+        SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsISupports) ||
+        SpecialPowers.wrap(aIID).equals(SpecialPowers.Ci.nsIEventSourceEventListener)
+      ) {
+        return this;
+      }
+      throw SpecialPowers.Components.results.NS_ERROR_NO_INTERFACE;
+    },
+    eventSourceConnectionOpened(httpChannelId) {
+      ok(false, "This should not happen");
+    },
+    eventSourceConnectionClosed(httpChannelId) {
+      ok(false, "This should not happen");
+    },
+    eventReceived(httpChannelId, eventName, lastEventId, data, retry, timeStamp) {
+      ok(false, "This should not happen");
+    }
+}
+
+service.addListener(innerId, listener);
+ok(true, "Listener added");
+
+var NUM_TESTS = 2;
+addLoadEvent(function () {
+  doTest(404);
+  doTest(502);
+});
+
+SimpleTest.waitForExplicitFinish();
+
+var count = 0;
+function doTest(status) {
+  const es = new EventSource(
+    "http://mochi.test:8888/tests/dom/base/test/eventsource_message.sjs?status=" + status
+  );
+  es.onerror = function (e) {
+    count++;
+    if (count >= NUM_TESTS) {
+      SimpleTest.finish();
+    }
+  }
+}
+</script>
+</pre>
+</body>
+</html>
