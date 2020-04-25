@@ -117,4 +117,53 @@
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">Greška oštećenog sadržaja</string>
 
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Stranicu kojoj pokušavaš pristupiti nije moguće prikazati zbog greške u prijenosu podataka.</p>
+      <ul>
+        <li>Obavijesti vlasnike web stranice o ovom problemu.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Greška u sadržaju</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Stranicu kojoj pokušavaš pristupiti nije moguće prikazati zbog greške u prenosu podataka.</p>
+      <ul>
+        <li>Obavijesti vlasnike web stranice o ovom problemu.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Greška u enkodiranju sadržaja</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Stranica koju pokušavaš vidjeti ne može biti prikazana jer koristi neispravni ili nepodržani oblik komprimiranja.</p>
+      <ul>
+        <li>Kontaktiraj vlasnike web stranice i obavijesti ih o ovom problemu.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Adresa nije pronađena</string>
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[<p>Browser nije mogao pronaći server domaćina za navedenu adresu.</p>
+      <ul>
+        <li>Pazi da nemaš greške u tipkanju, kao što su
+          <strong>ww</strong>.primjer.ba umjesto
+          <strong>www</strong>.primjer.ba.</li>
+        <li>Ako ne možeš učitati nijednu stranicu, provjeri podatke svog uređaja ili Wi-Fi vezu.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Nema internet konekcije</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Provjeri mrežnu vezu ili pokušaj ponovo učitati stranicu za nekoliko trenutaka.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Učitaj ponovo</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Neispravna adresa</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>Navedena adresa nije u poznatrom formatu. Molimo provjerite lokaciju sa greškama i pokušajte ponovo.</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Adresa je nevažeća</string>
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>Adrese web stranice se obično pišu u formatu poput <strong>http://www.example.com/</strong></li>
+        <li>Pazi na način pisanja kose crte (tj. <strong>/</strong>).</li>
+      </ul>]]></string>
+
     </resources>
