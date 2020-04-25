@@ -58,9 +58,7 @@ function* test(testDriver) {
   // (for unrelated reasons), and the repaint will clear the checkerboard
   // state. We do, however, want to wait for a "steady state" here that
   // includes all pending paints from the main thread and a composite that
-  // samples the APZ state. (The latter is not required if the APZ frame delay
-  // is disabled, but it's enabled by default so it's desirable to handle that
-  // situation as well.) In order to accomplish this we wait for all the main
+  // samples the APZ state. In order to accomplish this we wait for all the main
   // thread paints, and then force a composite via advanceTimeAndRefresh. The
   // advanceTimeAndRefresh has the additional advantage of freezing the refresh
   // driver which avoids any additional externally-triggered repaints from
