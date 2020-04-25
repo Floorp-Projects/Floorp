@@ -72,6 +72,10 @@ jobs:
         packages:
             - deb7-cmake
             - deb7-ninja
+    deb9-toolchain-build:
+        symbol: I(deb9-toolchain)
+        parent: debian9-base
+        definition: toolchain-build
     deb10-toolchain-build:
         symbol: I(deb10-toolchain)
         parent: debian10-base
