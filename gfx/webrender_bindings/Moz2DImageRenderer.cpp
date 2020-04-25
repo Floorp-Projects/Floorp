@@ -343,7 +343,7 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
                                 const mozilla::wr::DeviceIntRect* aVisibleRect,
                                 const mozilla::wr::LayoutIntRect* aRenderRect,
                                 const uint16_t aTileSize,
-                                const mozilla::wr::TileOffset *aTileOffset,
+                                const mozilla::wr::TileOffset* aTileOffset,
                                 const mozilla::wr::LayoutIntRect* aDirtyRect,
                                 Range<uint8_t> aOutput) {
   IntSize size(aRenderRect->size.width, aRenderRect->size.height);

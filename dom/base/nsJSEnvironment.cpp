@@ -2151,11 +2151,11 @@ void nsJSContext::MaybePokeCC() {
     nsCycleCollector_dispatchDeferredDeletion();
 
     ActivateCCRunner();
-    sCCRunner = IdleTaskRunner::Create(
-        CCRunnerFired, "MaybePokeCC::CCRunnerFired",
-        kCCSkippableDelay.ToMilliseconds(),
-        kForgetSkippableSliceDuration.ToMilliseconds(), true,
-        [] { return sShuttingDown; });
+    sCCRunner =
+        IdleTaskRunner::Create(CCRunnerFired, "MaybePokeCC::CCRunnerFired",
+                               kCCSkippableDelay.ToMilliseconds(),
+                               kForgetSkippableSliceDuration.ToMilliseconds(),
+                               true, [] { return sShuttingDown; });
   }
 }
 

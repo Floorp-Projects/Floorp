@@ -40,7 +40,7 @@
 #include "vm/JSContext-inl.h"                          // JSContext::check
 #include "vm/List-inl.h"  // js::ListObject, js::AppendToListInFixedSlot, js::StoreNewListInFixedSlot
 #include "vm/PlainObject-inl.h"  // js::PlainObject::createWithTemplate
-#include "vm/Realm-inl.h"  // JS::Realm
+#include "vm/Realm-inl.h"        // JS::Realm
 
 using JS::BooleanValue;
 using JS::CallArgs;

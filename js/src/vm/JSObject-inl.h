@@ -409,8 +409,9 @@ JSObject* NewObjectWithGivenTaggedProto(JSContext* cx, const JSClass* clasp,
                                         uint32_t initialShapeFlags = 0);
 
 template <NewObjectKind NewKind>
-inline JSObject* NewObjectWithGivenTaggedProto(
-    JSContext* cx, const JSClass* clasp, Handle<TaggedProto> proto) {
+inline JSObject* NewObjectWithGivenTaggedProto(JSContext* cx,
+                                               const JSClass* clasp,
+                                               Handle<TaggedProto> proto) {
   gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
   return NewObjectWithGivenTaggedProto(cx, clasp, proto, allocKind, NewKind, 0);
 }
@@ -420,8 +421,7 @@ namespace detail {
 template <typename T, NewObjectKind NewKind>
 inline T* NewObjectWithGivenTaggedProtoForKind(JSContext* cx,
                                                Handle<TaggedProto> proto) {
-  JSObject* obj =
-      NewObjectWithGivenTaggedProto<NewKind>(cx, &T::class_, proto);
+  JSObject* obj = NewObjectWithGivenTaggedProto<NewKind>(cx, &T::class_, proto);
   return obj ? &obj->as<T>() : nullptr;
 }
 
@@ -430,7 +430,6 @@ inline T* NewObjectWithGivenTaggedProtoForKind(JSContext* cx,
 template <typename T>
 inline T* NewObjectWithGivenTaggedProto(JSContext* cx,
                                         Handle<TaggedProto> proto) {
-
   return detail::NewObjectWithGivenTaggedProtoForKind<T, GenericObject>(cx,
                                                                         proto);
 }

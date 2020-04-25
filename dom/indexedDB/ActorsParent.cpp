@@ -12659,7 +12659,7 @@ void ConnectionPool::ScheduleQueuedTransactions(ThreadInfo aThreadInfo) {
 
   const auto foundIt = std::find_if(
       mQueuedTransactions.begin(), mQueuedTransactions.end(),
-      [& me = *this](const auto& queuedTransaction) {
+      [&me = *this](const auto& queuedTransaction) {
         return !me.ScheduleTransaction(queuedTransaction,
                                        /* aFromQueuedTransactions */ true);
       });
@@ -12785,7 +12785,7 @@ void ConnectionPool::NoteClosedDatabase(DatabaseInfo* aDatabaseInfo) {
   // finished.
   mCompleteCallbacks.RemoveElementsAt(
       std::remove_if(mCompleteCallbacks.begin(), mCompleteCallbacks.end(),
-                     [& me = *this](const auto& completeCallback) {
+                     [&me = *this](const auto& completeCallback) {
                        return me.MaybeFireCallback(completeCallback.get());
                      }),
       mCompleteCallbacks.end());
@@ -25840,7 +25840,7 @@ ObjectStoreGetRequestOp::GetPreprocessParams() {
         std::make_move_iterator(mResponse.end()),
         MakeBackInserter(preprocessInfos),
         [](const auto& info) { return info.HasPreprocessInfo(); },
-        [& self = *this](StructuredCloneReadInfoParent&& info) {
+        [&self = *this](StructuredCloneReadInfoParent&& info) {
           return self.ConvertResponse<PreprocessInfo>(std::move(info));
         });
 

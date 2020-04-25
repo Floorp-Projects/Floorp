@@ -23,7 +23,7 @@
 #include "js/PropertySpec.h"
 #include "vm/Interpreter.h"
 #include "vm/JSContext.h"
-#include "vm/PlainObject.h"    // js::PlainObject
+#include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/PromiseObject.h"  // js::PromiseObject, js::PromiseResolvedWithUndefined
 #include "vm/SelfHosting.h"
 

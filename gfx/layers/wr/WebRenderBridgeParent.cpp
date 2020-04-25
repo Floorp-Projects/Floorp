@@ -834,7 +834,7 @@ bool WebRenderBridgeParent::AddSharedExternalImage(
   mSharedSurfaceIds.insert(std::make_pair(key, aExtId));
 
   wr::ImageDescriptor descriptor(dSurf->GetSize(), dSurf->Stride(),
-                                  dSurf->GetFormat());
+                                 dSurf->GetFormat());
   aResources.AddExternalImage(aKey, descriptor, aExtId,
                               wr::ExternalImageType::Buffer(), 0);
   return true;
@@ -859,10 +859,10 @@ bool WebRenderBridgeParent::PushExternalImageForTexture(
   WebRenderTextureHost* wrTexture = aTexture->AsWebRenderTextureHost();
   if (wrTexture) {
     wrTexture->PushResourceUpdates(aResources, op, keys,
-                                    wrTexture->GetExternalImageKey());
+                                   wrTexture->GetExternalImageKey());
     auto it = mTextureHosts.find(wr::AsUint64(aKey));
     MOZ_ASSERT((it == mTextureHosts.end() && !aIsUpdate) ||
-                (it != mTextureHosts.end() && aIsUpdate));
+               (it != mTextureHosts.end() && aIsUpdate));
     if (it != mTextureHosts.end()) {
       // Release Texture if it exists.
       ReleaseTextureOfImage(aKey);
@@ -945,7 +945,7 @@ bool WebRenderBridgeParent::UpdateSharedExternalImage(
   }
 
   wr::ImageDescriptor descriptor(dSurf->GetSize(), dSurf->Stride(),
-                                  dSurf->GetFormat());
+                                 dSurf->GetFormat());
   aResources.UpdateExternalImageWithDirtyRect(
       aKey, descriptor, aExtId, wr::ExternalImageType::Buffer(),
       wr::ToDeviceIntRect(aDirtyRect), 0);

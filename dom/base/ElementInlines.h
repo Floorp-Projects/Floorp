@@ -28,10 +28,9 @@ inline void Element::UnregisterActivityObserver() {
 
 inline mozilla::dom::Element* nsINode::GetFlattenedTreeParentElement() const {
   nsINode* parentNode = GetFlattenedTreeParentNode();
-  if
-    MOZ_LIKELY(parentNode && parentNode->IsElement()) {
-      return parentNode->AsElement();
-    }
+  if MOZ_LIKELY (parentNode && parentNode->IsElement()) {
+    return parentNode->AsElement();
+  }
 
   return nullptr;
 }

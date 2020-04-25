@@ -40,7 +40,9 @@ DEF(data)
 DEF(relocation)
 DEF(sections)
 DEF(are)
+// clang-format off
 DEF(not)
+// clang-format on
 DEF(sufficiently)
 DEF(large)
 DEF(and)
