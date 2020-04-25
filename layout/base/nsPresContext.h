@@ -526,7 +526,6 @@ class nsPresContext : public nsISupports,
   void SetFullZoom(float aZoom);
 
  public:
-
   float GetFullZoom() { return mFullZoom; }
   /**
    * Device full zoom differs from full zoom because it gets the zoom from

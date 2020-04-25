@@ -206,7 +206,7 @@ class MOZ_RAII BaseAutoLock {
 };
 
 template <typename MutexType>
-BaseAutoLock(MutexType&)->BaseAutoLock<MutexType&>;
+BaseAutoLock(MutexType&) -> BaseAutoLock<MutexType&>;
 }  // namespace detail
 
 typedef detail::BaseAutoLock<Mutex&> MutexAutoLock;
@@ -250,7 +250,7 @@ class MOZ_RAII BaseAutoUnlock {
 };
 
 template <typename MutexType>
-BaseAutoUnlock(MutexType&)->BaseAutoUnlock<MutexType&>;
+BaseAutoUnlock(MutexType&) -> BaseAutoUnlock<MutexType&>;
 }  // namespace detail
 
 typedef detail::BaseAutoUnlock<Mutex&> MutexAutoUnlock;

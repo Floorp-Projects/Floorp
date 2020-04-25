@@ -248,7 +248,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void PrepareForProcessChange();
 
   // Triggers a load in the process which currently owns this BrowsingContext.
-  nsresult LoadURI(nsDocShellLoadState* aLoadState, bool aSetNavigating = false);
+  nsresult LoadURI(nsDocShellLoadState* aLoadState,
+                   bool aSetNavigating = false);
 
   nsresult InternalLoad(nsDocShellLoadState* aLoadState,
                         nsIDocShell** aDocShell, nsIRequest** aRequest);

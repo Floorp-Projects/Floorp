@@ -159,7 +159,7 @@ SVGElement* SVGTransformableElement::GetFarthestViewportElement() {
 }
 
 static already_AddRefed<SVGRect> ZeroBBox(SVGTransformableElement& aOwner) {
-  return MakeAndAddRef<SVGRect>(&aOwner, Rect {0, 0, 0, 0});
+  return MakeAndAddRef<SVGRect>(&aOwner, Rect{0, 0, 0, 0});
 }
 
 already_AddRefed<SVGRect> SVGTransformableElement::GetBBox(

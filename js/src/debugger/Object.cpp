@@ -67,8 +67,8 @@
 #include "vm/StringType.h"                // for JSAtom, PropertyName
 #include "vm/WrapperObject.h"             // for JSObject::is, WrapperObject
 
-#include "vm/Compartment-inl.h"       // for Compartment::wrap
-#include "vm/JSAtom-inl.h"            // for ValueToId
+#include "vm/Compartment-inl.h"  // for Compartment::wrap
+#include "vm/JSAtom-inl.h"       // for ValueToId
 #include "vm/JSObject-inl.h"  // for GetObjectClassName, InitClass, NewObjectWithGivenProtoAndKind
 #include "vm/NativeObject-inl.h"      // for NativeObject::global
 #include "vm/ObjectOperations-inl.h"  // for DeleteProperty, GetProperty

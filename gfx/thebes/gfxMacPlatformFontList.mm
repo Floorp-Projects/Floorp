@@ -415,7 +415,7 @@ CGFontRef MacOSFontEntry::CreateOrCopyFontRef() {
       ref = CTFontCopyGraphicsFont((CTFontRef)font, nullptr);
     }
   }
-  return ref; // Not saved in mFontRef; caller will own the reference
+  return ref;  // Not saved in mFontRef; caller will own the reference
 }
 
 // For a logging build, we wrap the CFDataRef in a FontTableRec so that we can

@@ -312,7 +312,6 @@ bool AudioBuffer::RestoreJSChannelData(JSContext* aJSContext) {
 void AudioBuffer::CopyFromChannel(const Float32Array& aDestination,
                                   uint32_t aChannelNumber,
                                   uint32_t aStartInChannel, ErrorResult& aRv) {
-
   if (aChannelNumber >= NumberOfChannels()) {
     aRv.ThrowIndexSizeError(
         nsPrintfCString("Channel number (%u) is out of range", aChannelNumber));
@@ -363,7 +362,6 @@ void AudioBuffer::CopyToChannel(JSContext* aJSContext,
                                 const Float32Array& aSource,
                                 uint32_t aChannelNumber,
                                 uint32_t aStartInChannel, ErrorResult& aRv) {
-
   if (aChannelNumber >= NumberOfChannels()) {
     aRv.ThrowIndexSizeError(
         nsPrintfCString("Channel number (%u) is out of range", aChannelNumber));

@@ -1302,8 +1302,7 @@ bool nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
     // nothing if aContent does not have a frame. So getting the displayport is
     // useless if the content has no frame, so we avoid calling this to avoid
     // triggering a warning about not having a frame.
-    hadDisplayPort =
-        GetHighResolutionDisplayPort(aContent, &oldDisplayPort);
+    hadDisplayPort = GetHighResolutionDisplayPort(aContent, &oldDisplayPort);
   }
 
   aContent->SetProperty(

@@ -82,7 +82,6 @@ class SchedulerGroup {
   static nsresult Dispatch(TaskCategory aCategory,
                            already_AddRefed<nsIRunnable>&& aRunnable);
 
-
   static nsresult UnlabeledDispatch(TaskCategory aCategory,
                                     already_AddRefed<nsIRunnable>&& aRunnable);
 
@@ -97,7 +96,6 @@ class SchedulerGroup {
  protected:
   static nsresult InternalUnlabeledDispatch(
       TaskCategory aCategory, already_AddRefed<Runnable>&& aRunnable);
-
 
   static nsresult LabeledDispatch(TaskCategory aCategory,
                                   already_AddRefed<nsIRunnable>&& aRunnable,

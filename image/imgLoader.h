@@ -365,8 +365,7 @@ class imgLoader final : public imgILoader,
 
   // aURI may be different from imgRequest's URI in the case of blob URIs, as we
   // can share requests with different URIs.
-  nsresult CreateNewProxyForRequest(imgRequest* aRequest,
-                                    nsIURI* aURI,
+  nsresult CreateNewProxyForRequest(imgRequest* aRequest, nsIURI* aURI,
                                     nsILoadGroup* aLoadGroup,
                                     mozilla::dom::Document* aLoadingDocument,
                                     imgINotificationObserver* aObserver,

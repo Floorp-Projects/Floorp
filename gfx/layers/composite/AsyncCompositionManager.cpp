@@ -1045,7 +1045,6 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
                 Compositor* compositor = mLayerManager->GetCompositor();
                 if (CompositorBridgeParent* bridge =
                         compositor->GetCompositorBridgeParent()) {
-
                   LayersId rootLayerTreeId = bridge->RootLayerTreeId();
                   if (mIsFirstPaint || FrameMetricsHaveUpdated(metrics)) {
                     if (RefPtr<UiCompositorControllerParent> uiController =

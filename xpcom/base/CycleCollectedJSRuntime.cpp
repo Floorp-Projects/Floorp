@@ -942,21 +942,21 @@ void CycleCollectedJSRuntime::TraverseNativeRoots(
   // would hurt to do this after the JS holders.
   TraverseAdditionalNativeRoots(aCb);
 
-  mJSHolders.ForEach([&aCb](void* holder, nsScriptObjectTracer* tracer,
-                            JS::Zone* zone) {
-    bool noteRoot = false;
-    if (MOZ_UNLIKELY(aCb.WantAllTraces())) {
-      noteRoot = true;
-    } else {
-      tracer->Trace(holder,
-                    TraceCallbackFunc(CheckParticipatesInCycleCollection),
-                    &noteRoot);
-    }
+  mJSHolders.ForEach(
+      [&aCb](void* holder, nsScriptObjectTracer* tracer, JS::Zone* zone) {
+        bool noteRoot = false;
+        if (MOZ_UNLIKELY(aCb.WantAllTraces())) {
+          noteRoot = true;
+        } else {
+          tracer->Trace(holder,
+                        TraceCallbackFunc(CheckParticipatesInCycleCollection),
+                        &noteRoot);
+        }
 
-    if (noteRoot) {
-      aCb.NoteNativeRoot(holder, tracer);
-    }
-  });
+        if (noteRoot) {
+          aCb.NoteNativeRoot(holder, tracer);
+        }
+      });
 }
 
 /* static */
@@ -1286,7 +1286,7 @@ static inline bool ShouldCheckSingleZoneHolders() {
   return rand() % 256 == 0;
 #else
   return false;
-#  endif
+#endif
 }
 
 void CycleCollectedJSRuntime::TraceNativeGrayRoots(
@@ -1298,13 +1298,13 @@ void CycleCollectedJSRuntime::TraceNativeGrayRoots(
   bool checkSingleZoneHolders = ShouldCheckSingleZoneHolders();
   mJSHolders.ForEach(
       [aTracer, checkSingleZoneHolders](
-                         void* holder, nsScriptObjectTracer* tracer, JS::Zone* zone) {
+          void* holder, nsScriptObjectTracer* tracer, JS::Zone* zone) {
 #ifdef CHECK_SINGLE_ZONE_JS_HOLDERS
         if (checkSingleZoneHolders && !tracer->IsMultiZoneJSHolder()) {
           CheckHolderIsSingleZone(holder, tracer, zone);
         }
 #else
-    Unused << checkSingleZoneHolders;
+        Unused << checkSingleZoneHolders;
 #endif
         tracer->Trace(holder, JsGcTracer(), aTracer);
       },

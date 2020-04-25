@@ -559,7 +559,7 @@ class JSString : public js::gc::Cell {
    *
    * Returns mozilla::Nothing on OOM.
    */
-  mozilla::Maybe<mozilla::Tuple<size_t, size_t> > encodeUTF8Partial(
+  mozilla::Maybe<mozilla::Tuple<size_t, size_t>> encodeUTF8Partial(
       const JS::AutoRequireNoGC& nogc, mozilla::Span<char> buffer) const;
 
  private:

@@ -42,8 +42,8 @@ class XRInputSourceArray final : public nsISupports, public nsWrapperCache {
   virtual ~XRInputSourceArray() = default;
 
  private:
-  void DispatchInputSourceRemovedEvent(const nsTArray<RefPtr<XRInputSource>>& aInputs,
-                                       XRSession* aSession);
+  void DispatchInputSourceRemovedEvent(
+      const nsTArray<RefPtr<XRInputSource>>& aInputs, XRSession* aSession);
 
   nsCOMPtr<nsISupports> mParent;
   nsTArray<RefPtr<XRInputSource>> mInputSources;

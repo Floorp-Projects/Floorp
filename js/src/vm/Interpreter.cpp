@@ -1913,7 +1913,7 @@ class ReservedRooted : public RootedBase<T, ReservedRooted<T>> {
 
   void set(const T& p) const { *savedRoot = p; }
   operator Handle<T>() { return *savedRoot; }
-  operator Rooted<T> &() { return *savedRoot; }
+  operator Rooted<T>&() { return *savedRoot; }
   MutableHandle<T> operator&() { return &*savedRoot; }
 
   DECLARE_NONPOINTER_ACCESSOR_METHODS(savedRoot->get())

@@ -201,10 +201,10 @@ nsresult PageIconProtocolHandler::NewChannelInternal(nsIURI* aURI,
     // We override the channel's loadinfo below anyway, so using a null
     // principal here is alright.
     nsCOMPtr<nsIPrincipal> loadingPrincipal =
-      NullPrincipal::CreateWithoutOriginAttributes();
+        NullPrincipal::CreateWithoutOriginAttributes();
     rv = NS_NewInputStreamChannel(
-        getter_AddRefs(channel), aURI, pipeIn.forget(),
-        loadingPrincipal, nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
+        getter_AddRefs(channel), aURI, pipeIn.forget(), loadingPrincipal,
+        nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
         nsIContentPolicy::TYPE_INTERNAL_IMAGE);
     NS_ENSURE_SUCCESS(rv, rv);
   }

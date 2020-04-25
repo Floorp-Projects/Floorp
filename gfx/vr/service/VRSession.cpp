@@ -167,25 +167,25 @@ void VRSession::UpdateTrigger(VRControllerState& aState, uint32_t aButtonIndex,
   }
 }
 
-void VRSession::SetControllerSelectionAndSqueezeFrameId(VRControllerState& controllerState,
-                                                        uint64_t aFrameId) {
+void VRSession::SetControllerSelectionAndSqueezeFrameId(
+    VRControllerState& controllerState, uint64_t aFrameId) {
   // The 1st button, trigger, is its selection action.
   const bool selectionPressed = controllerState.buttonPressed & 1ULL;
-  if (selectionPressed && controllerState.selectActionStopFrameId
-    >= controllerState.selectActionStartFrameId) {
-      controllerState.selectActionStartFrameId = aFrameId;
-  } else if (!selectionPressed && controllerState.selectActionStartFrameId
-    > controllerState.selectActionStopFrameId) {
-      controllerState.selectActionStopFrameId = aFrameId;
+  if (selectionPressed && controllerState.selectActionStopFrameId >=
+                              controllerState.selectActionStartFrameId) {
+    controllerState.selectActionStartFrameId = aFrameId;
+  } else if (!selectionPressed && controllerState.selectActionStartFrameId >
+                                      controllerState.selectActionStopFrameId) {
+    controllerState.selectActionStopFrameId = aFrameId;
   }
   // The 2nd button, squeeze, is its squeeze action.
   const bool squeezePressed = controllerState.buttonPressed & (1ULL << 1);
-  if (squeezePressed && controllerState.squeezeActionStopFrameId
-    >= controllerState.squeezeActionStartFrameId) {
-      controllerState.squeezeActionStartFrameId = aFrameId;
-  } else if (!squeezePressed && controllerState.squeezeActionStartFrameId
-    > controllerState.squeezeActionStopFrameId) {
-      controllerState.squeezeActionStopFrameId = aFrameId;
+  if (squeezePressed && controllerState.squeezeActionStopFrameId >=
+                            controllerState.squeezeActionStartFrameId) {
+    controllerState.squeezeActionStartFrameId = aFrameId;
+  } else if (!squeezePressed && controllerState.squeezeActionStartFrameId >
+                                    controllerState.squeezeActionStopFrameId) {
+    controllerState.squeezeActionStopFrameId = aFrameId;
   }
 }
 

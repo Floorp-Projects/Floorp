@@ -87,7 +87,7 @@ void MediaElementAudioSourceNode::ListenForAllowedToPlay(
           // static analysis. We capture a non-owning reference so as to allow
           // cycle collection of the node. The reference is cleared via
           // DisconnectIfExists() from Destroy() when the node is collected.
-          [& self = *this]() {
+          [&self = *this]() {
             self.Context()->StartBlockedAudioContextIfAllowed();
             self.mAllowedToPlayRequest.Complete();
           })
