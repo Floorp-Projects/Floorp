@@ -140,10 +140,11 @@ impl MonitorRunnable {
         }
     }
 
+    xpcom_method!(run => Run());
+
     /// This method is essentially a error-handling wrapper around try_run.
     /// This is done to make it easier to ensure that main-thread data is freed
     /// on the main thread.
-    xpcom_method!(run => Run());
     pub fn run(&self) -> Result<(), nsresult> {
         if self.in_error_state.load() {
             self.free_mainthread_data();

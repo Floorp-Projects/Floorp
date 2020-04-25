@@ -13,7 +13,7 @@
 "use strict";
 
 add_task(async function() {
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["webNavigation", "tabs"],
       applications: {

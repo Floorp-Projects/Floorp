@@ -28,7 +28,10 @@ class txStack : private nsTArray<void*> {
    * top of this stack.
    */
   inline nsresult push(void* aObject) {
-    return AppendElement(aObject) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier, or change the return type to void.
+    AppendElement(aObject);
+    return NS_OK;
   }
 
   /**

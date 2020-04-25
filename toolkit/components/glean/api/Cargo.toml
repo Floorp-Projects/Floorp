@@ -1,0 +1,14 @@
+[package]
+name = "glean"
+version = "0.1.0"
+authors = ["Glean SDK team <glean-team@mozilla.com>"]
+edition = "2018"
+publish = false
+
+[dependencies]
+glean-core = "25.1.0"
+log = "0.4"
+once_cell = "1.2.0"
+
+[dev-dependencies]
+tempfile = "3.1.0"

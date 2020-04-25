@@ -13,12 +13,12 @@
 "use strict";
 
 add_task(async function testLastAccessed() {
-  let past = Date.now();
+  const past = Date.now();
 
   window.open("https://example.com/?1");
   window.open("https://example.com/?2");
 
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["tabs"],
     },
@@ -28,12 +28,12 @@ add_task(async function testLastAccessed() {
           return;
         }
 
-        let [tab1] = await browser.tabs.query({url: "https://example.com/?1"});
-        let [tab2] = await browser.tabs.query({url: "https://example.com/?2"});
+        const [tab1] = await browser.tabs.query({url: "https://example.com/?1"});
+        const [tab2] = await browser.tabs.query({url: "https://example.com/?2"});
 
         browser.test.assertTrue(tab1 && tab2, "Expected tabs were found");
 
-        let now = Date.now();
+        const now = Date.now();
 
         browser.test.assertTrue(typeof tab1.lastAccessed == "number",
                                 "tab1 lastAccessed should be a number");

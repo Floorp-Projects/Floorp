@@ -19,7 +19,7 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
   const {it, fit, xit, it_fails_ffox} = testRunner;
   const {beforeAll, beforeEach, afterAll, afterEach} = testRunner;
 
-  describe_fails_ffox('DefaultBrowserContext', function() {
+  describe('DefaultBrowserContext', function() {
     beforeEach(async state => {
       state.browser = await puppeteer.launch(defaultBrowserOptions);
       state.page = await state.browser.newPage();

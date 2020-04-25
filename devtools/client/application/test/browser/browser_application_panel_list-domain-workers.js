@@ -40,7 +40,9 @@ add_task(async function() {
 
   await navigateTo(EMPTY_URL);
   info("Wait until the service worker list is updated");
-  await waitUntil(() => doc.querySelector(".worker-list-empty") !== null);
+  await waitUntil(
+    () => doc.querySelector(".js-registration-list-empty") !== null
+  );
   ok(
     true,
     "No service workers are shown for an empty page in a different domain."

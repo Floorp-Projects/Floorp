@@ -39,6 +39,7 @@ class EmbeddedObjCollector;
 class EventTree;
 class HTMLImageMapAccessible;
 class HTMLLIAccessible;
+class HTMLLinkAccessible;
 class HyperTextAccessible;
 class ImageAccessible;
 class KeyBinding;
@@ -575,6 +576,9 @@ class Accessible : public nsISupports {
 
   bool IsHTMLListItem() const { return mType == eHTMLLiType; }
   HTMLLIAccessible* AsHTMLListItem();
+
+  bool IsHTMLLink() const { return mType == eHTMLLinkType; }
+  HTMLLinkAccessible* AsHTMLLink();
 
   bool IsHTMLOptGroup() const { return mType == eHTMLOptGroupType; }
 

@@ -18,7 +18,9 @@ add_task(async function() {
 
   selectPage(panel, "service-workers");
 
-  await waitUntil(() => doc.querySelector(".js-worker-list-empty") !== null);
+  await waitUntil(
+    () => doc.querySelector(".js-registration-list-empty") !== null
+  );
   ok(true, "No service workers are shown for an empty page");
 
   // close the tab

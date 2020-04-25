@@ -1508,9 +1508,13 @@ SearchService.prototype = {
     // Capture the current engine state, in case we need to notify below.
     const prevCurrentEngine = this._currentEngine;
     const prevPrivateEngine = this._currentPrivateEngine;
+    // Clear cached objects as they may get replaced.
     this._currentEngine = null;
     this._currentPrivateEngine = null;
-
+    // Ensure we generate a new __sortedEngines list instead
+    // of appending new engines to the end and fixing the
+    // engine order.
+    this.__sortedEngines = null;
     await this._loadEngines(await this._readCacheFile(), true);
     // Make sure the current list of engines is persisted.
     await this._buildCache();

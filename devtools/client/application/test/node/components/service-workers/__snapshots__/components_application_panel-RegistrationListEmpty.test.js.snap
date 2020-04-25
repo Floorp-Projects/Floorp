@@ -1,0 +1,69 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`RegistrationListEmpty renders the expected snapshot 1`] = `
+<article
+  className="registration-list-empty js-registration-list-empty"
+>
+  <Localized
+    a={
+      <a
+        className="external-link"
+        onClick={[Function]}
+      />
+    }
+    id="serviceworker-empty-intro"
+  >
+    <h1
+      className="app-page__title"
+    />
+  </Localized>
+  <Localized
+    id="serviceworker-empty-suggestions"
+  >
+    <p />
+  </Localized>
+  <ul
+    className="registration-list-empty__tips"
+  >
+    <Localized
+      a={
+        <a
+          className="link"
+          onClick={[Function]}
+        />
+      }
+      id="serviceworker-empty-suggestions-console"
+    >
+      <li
+        className="registration-list-empty__tips-item"
+      />
+    </Localized>
+    <Localized
+      a={
+        <a
+          className="link"
+          onClick={[Function]}
+        />
+      }
+      id="serviceworker-empty-suggestions-debugger"
+    >
+      <li
+        className="registration-list-empty__tips-item"
+      />
+    </Localized>
+    <Localized
+      a={
+        <a
+          className="link js-trusted-link"
+          onClick={[Function]}
+        />
+      }
+      id="serviceworker-empty-suggestions-aboutdebugging"
+    >
+      <li
+        className="registration-list-empty__tips-item"
+      />
+    </Localized>
+  </ul>
+</article>
+`;

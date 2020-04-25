@@ -120,7 +120,7 @@ static bool test_basic_array(ElementType* data, size_t dataLen,
           return false;
 
   size_t index = ary.Length() / 2;
-  if (!ary.InsertElementAt(index, extra)) return false;
+  ary.InsertElementAt(index, extra);
   if (!(ary == ary)) return false;
   if (ary[index] != extra) return false;
   if (ary.IndexOf(extra) == ary.NoIndex) return false;
@@ -148,7 +148,7 @@ static bool test_basic_array(ElementType* data, size_t dataLen,
   for (i = 0; i < copy.Length(); ++i) {
     if (ary[i] != copy[i]) return false;
   }
-  if (!ary.AppendElements(copy)) return false;
+  ary.AppendElements(copy);
   size_t cap = ary.Capacity();
   ary.RemoveElementsAt(copy.Length(), copy.Length());
   ary.Compact();
@@ -165,7 +165,7 @@ static bool test_basic_array(ElementType* data, size_t dataLen,
     return false;
 
   ary.Clear();
-  if (!ary.IsEmpty() || ary.Elements() == nullptr) return false;
+  if (!ary.IsEmpty()) return false;
   if (!(ary == nsTArray<ElementType>())) return false;
   if (ary == copy) return false;
   if (ary.SafeElementAt(0, extra) != extra ||
@@ -178,7 +178,7 @@ static bool test_basic_array(ElementType* data, size_t dataLen,
     if (ary[i] != copy[i]) return false;
   }
 
-  if (!ary.InsertElementsAt(0, copy)) return false;
+  ary.InsertElementsAt(0, copy);
   if (ary == copy) return false;
   ary.RemoveElementsAt(0, copy.Length());
   for (i = 0; i < copy.Length(); ++i) {
@@ -256,7 +256,7 @@ TEST(TArray, test_object_array)
   size_t i;
   for (i = 0; i < ArrayLength(kdata); ++i) {
     char x[] = {kdata[i], '\0'};
-    ASSERT_TRUE(objArray.AppendElement(Object(x, i)));
+    objArray.AppendElement(Object(x, i));
   }
   for (i = 0; i < ArrayLength(kdata); ++i) {
     ASSERT_EQ(objArray[i].Str()[0], kdata[i]);
@@ -371,7 +371,7 @@ TEST(TArray, test_move_array)
   nsTArray<Countable> countableArray;
   uint32_t i;
   for (i = 0; i < 4; ++i) {
-    ASSERT_TRUE(countableArray.AppendElement(Countable()));
+    countableArray.AppendElement(Countable());
   }
 
   ASSERT_EQ(Countable::Count(), 8);
@@ -417,7 +417,7 @@ TEST(TArray, test_move_array)
 
   nsTArray<Moveable> moveableArray;
   for (i = 0; i < 4; ++i) {
-    ASSERT_TRUE(moveableArray.AppendElement(Moveable()));
+    moveableArray.AppendElement(Moveable());
   }
 
   ASSERT_EQ(Moveable::Count(), 4);
@@ -463,7 +463,7 @@ TEST(TArray, test_move_array)
 
   AutoTArray<Moveable, 8> moveableAutoArray;
   for (uint32_t i = 0; i < 4; ++i) {
-    ASSERT_TRUE(moveableAutoArray.AppendElement(Moveable()));
+    moveableAutoArray.AppendElement(Moveable());
   }
 
   ASSERT_EQ(Moveable::Count(), 12);
@@ -668,7 +668,7 @@ TEST(TArray, test_string_array)
   for (i = 0; i < ArrayLength(kdata); ++i) {
     nsCString str;
     str.Assign(kdata[i]);
-    ASSERT_TRUE(strArray.AppendElement(str));
+    strArray.AppendElement(str);
   }
   for (i = 0; i < ArrayLength(kdata); ++i) {
     ASSERT_EQ(strArray[i].CharAt(0), kdata[i]);
@@ -676,7 +676,7 @@ TEST(TArray, test_string_array)
 
   const char kextra[] = "foo bar";
   size_t oldLen = strArray.Length();
-  ASSERT_TRUE(strArray.AppendElement(kextra));
+  strArray.AppendElement(kextra);
   strArray.RemoveElement(kextra);
   ASSERT_EQ(oldLen, strArray.Length());
 
@@ -1157,6 +1157,46 @@ TEST(TArray, test_swap)
 
     CHECK_IS_USING_AUTO(a);
     CHECK_NOT_USING_AUTO(b);
+    CHECK_ARRAY(b, data1);
+    CHECK_EQ_INT(a.Length(), size_t(0));
+  }
+
+  // Test fallible SwapElements of nsTArray.
+  {
+    nsTArray<int> a;
+    nsTArray<int> b;
+
+    a.AppendElements(data1, ArrayLength(data1));
+
+    ASSERT_TRUE(a.SwapElements(b, fallible));
+
+    CHECK_ARRAY(b, data1);
+    CHECK_EQ_INT(a.Length(), size_t(0));
+  }
+
+  // Test fallible SwapElements of FallibleTArray.
+  {
+    FallibleTArray<int> a;
+    FallibleTArray<int> b;
+
+    ASSERT_TRUE(a.AppendElements(data1, ArrayLength(data1), fallible));
+
+    ASSERT_TRUE(a.SwapElements(b, fallible));
+
+    CHECK_ARRAY(b, data1);
+    CHECK_EQ_INT(a.Length(), size_t(0));
+  }
+
+  // Test fallible SwapElements of FallibleTArray with large AutoTArray.
+  {
+    FallibleTArray<int> a;
+    AutoTArray<int, 8192> b;
+
+    ASSERT_TRUE(a.AppendElements(data1, ArrayLength(data1), fallible));
+
+    ASSERT_TRUE(a.SwapElements(b, fallible));
+
+    CHECK_IS_USING_AUTO(b);
     CHECK_ARRAY(b, data1);
     CHECK_EQ_INT(a.Length(), size_t(0));
   }

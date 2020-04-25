@@ -10,6 +10,8 @@ var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
 });
@@ -59,6 +61,9 @@ class Page extends Domain {
     this._onDialogLoaded = this._onDialogLoaded.bind(this);
 
     this.enabled = false;
+    this.session.networkObserver.startTrackingBrowserNetwork(
+      this.session.target.browser
+    );
   }
 
   destructor() {
@@ -66,10 +71,109 @@ class Page extends Domain {
     this._isDestroyed = false;
     this.disable();
 
+    this.session.networkObserver.stopTrackingBrowserNetwork(
+      this.session.target.browser
+    );
     super.destructor();
   }
 
   // commands
+
+  /**
+   * Navigates current page to given URL.
+   *
+   * @param {Object} options
+   * @param {string} options.url
+   *     destination URL
+   * @param {string=} options.frameId
+   *     frame id to navigate (not supported),
+   *     if not specified navigate top frame
+   * @param {string=} options.referrer
+   *     referred URL (optional)
+   * @param {string=} options.transitionType
+   *     intended transition type
+   * @return {Object}
+   *         - frameId {string} frame id that has navigated (or failed to)
+   *         - errorText {string=} error message if navigation has failed
+   *         - loaderId {string} (not supported)
+   */
+  async navigate(options = {}) {
+    const { url, frameId, referrer, transitionType } = options;
+    if (typeof url != "string") {
+      throw new TypeError("url: string value expected");
+    }
+    let validURL;
+    try {
+      validURL = Services.io.newURI(url);
+    } catch (e) {
+      throw new Error("Error: Cannot navigate to invalid URL");
+    }
+    if (frameId && frameId != this.session.browsingContext.id.toString()) {
+      throw new UnsupportedError("frameId not supported");
+    }
+
+    const requestDone = new Promise(resolve => {
+      if (validURL.scheme == "data" || validURL.scheme == "about") {
+        resolve({});
+        return;
+      }
+      let navigationRequestId, redirectedRequestId;
+      const _onNavigationRequest = function(_type, _ch, data) {
+        const {
+          url: requestURL,
+          requestId,
+          redirectedFrom = null,
+          isNavigationRequest,
+        } = data;
+        if (!isNavigationRequest) {
+          return;
+        }
+        if (validURL.spec === requestURL) {
+          navigationRequestId = redirectedRequestId = requestId;
+        } else if (redirectedFrom === redirectedRequestId) {
+          redirectedRequestId = requestId;
+        }
+      };
+
+      const _onRequestFinished = function(_type, _ch, data) {
+        const { requestId, errorCode } = data;
+        if (
+          redirectedRequestId !== requestId ||
+          errorCode == "NS_BINDING_REDIRECTED"
+        ) {
+          // handle next request in redirection chain
+          return;
+        }
+        this.session.networkObserver.off("request", _onNavigationRequest);
+        this.session.networkObserver.off("requestfinished", _onRequestFinished);
+        resolve({ errorCode, navigationRequestId });
+      }.bind(this);
+
+      this.session.networkObserver.on("request", _onNavigationRequest);
+      this.session.networkObserver.on("requestfinished", _onRequestFinished);
+    });
+
+    const opts = {
+      loadFlags: transitionToLoadFlag(transitionType),
+      referrerURI: referrer,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    };
+    this.session.browsingContext.loadURI(url, opts);
+    // clients expect loaderId == requestId for a document navigation request
+    const {
+      // TODO as part of Bug 1599260
+      // navigationRequestId: loaderId,
+      errorCode,
+    } = await requestDone;
+    const result = {
+      frameId: this.session.browsingContext.id.toString(),
+      // loaderId,
+    };
+    if (errorCode) {
+      result.errorText = errorCode;
+    }
+    return result;
+  }
 
   /**
    * Capture page screenshot.
@@ -631,5 +735,15 @@ class Page extends Domain {
     // Since the event is fired asynchronously, this should not have an impact
     // on the actual tests relying on this API.
     this.emit("Page.javascriptDialogOpening", { message, type });
+  }
+}
+
+function transitionToLoadFlag(transitionType) {
+  switch (transitionType) {
+    case "reload":
+      return Ci.nsIWebNavigation.LOAD_FLAGS_IS_REFRESH;
+    case "link":
+    default:
+      return Ci.nsIWebNavigation.LOAD_FLAGS_IS_LINK;
   }
 }

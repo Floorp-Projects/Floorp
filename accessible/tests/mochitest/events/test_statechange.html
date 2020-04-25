@@ -11,232 +11,171 @@
   <script type="application/javascript"
           src="../common.js"></script>
   <script type="application/javascript"
-          src="../events.js"></script>
+          src="../promisified-events.js"></script>
   <script type="application/javascript"
           src="../role.js"></script>
   <script type="application/javascript"
           src="../states.js"></script>
 
   <script type="application/javascript">
-    // //////////////////////////////////////////////////////////////////////////
-    // Invokers
-
-    function openNode(aIDDetails, aIDSummary, aIsOpen) {
-      this.DOMNode = getNode(aIDDetails);
-
-      this.eventSeq = [
-        new expandedStateChecker(aIsOpen, getNode(aIDSummary)),
-      ];
-
-      this.invoke = function expandNode_invoke() {
-        if (aIsOpen) {
-          this.DOMNode.setAttribute("open", "");
-        } else {
-          this.DOMNode.removeAttribute("open");
-        }
-
-      };
-
-      this.getID = function expandNode_getID() {
-        return prettyName(aIDDetails) + " Open changed to '" + aIsOpen + "'";
-      };
+    function stateChange(aState, aIsExtraState, aIsEnabled, aTarget) {
+      return [EVENT_STATE_CHANGE, evt => {
+        evt.QueryInterface(nsIAccessibleStateChangeEvent);
+        return evt.state == aState && evt.isExtraState == aIsExtraState &&
+          aIsEnabled == evt.isEnabled && getAccessible(aTarget) == evt.accessible;
+      }];
     }
 
-    function makeEditableDoc(aDocNode, aIsEnabled) {
-      this.DOMNode = aDocNode;
-
-      this.invoke = function editabledoc_invoke() {
-        // Note: this should fire an EVENT_STATE_CHANGE
-        this.DOMNode.designMode = "on";
-      };
-
-      this.check = function editabledoc_check(aEvent) {
-        testStates(aDocNode, 0, EXT_STATE_EDITABLE);
-
-        let event = null;
-        try {
-          event = aEvent.QueryInterface(nsIAccessibleStateChangeEvent);
-        } catch (e) {
-          ok(false, "State change event was expected");
-        }
-
-        if (!event) { return; }
-
-        ok(event.isExtraState, "Extra state change was expected");
-        is(event.state, EXT_STATE_EDITABLE, "Wrong state of statechange event");
-        ok(event.isEnabled, "Expected editable state to be enabled");
-      };
-
-      this.getID = function editabledoc_getID() {
-        return prettyName(aDocNode) + " editable state changed";
-      };
+    async function openNode(aIDDetails, aIDSummary, aIsOpen) {
+      let p = waitForEvent(...stateChange(STATE_EXPANDED, false, aIsOpen, aIDSummary));
+      if (aIsOpen) {
+        getNode(aIDDetails).setAttribute("open", "");
+      } else {
+        getNode(aIDDetails).removeAttribute("open");
+      }
+      await p;
     }
 
-    function invalidInput(aNodeOrID) {
-      this.DOMNode = getNode(aNodeOrID);
-
-      this.invoke = function invalidInput_invoke() {
-        // Note: this should fire an EVENT_STATE_CHANGE
-        this.DOMNode.value = "I am not an email";
-      };
-
-      this.check = function invalidInput_check() {
-        testStates(aNodeOrID, STATE_INVALID);
-      };
-
-      this.getID = function invalidInput_getID() {
-        return prettyName(aNodeOrID) + " became invalid";
-      };
+    async function makeEditableDoc(aDocNode, aIsEnabled) {
+      let p = waitForEvent(...stateChange(EXT_STATE_EDITABLE, true, true, aDocNode));
+      aDocNode.designMode = "on";
+      await p;
     }
 
-    function changeCheckInput(aID, aIsChecked) {
-      this.DOMNode = getNode(aID);
-
-      this.eventSeq = [
-        new stateChangeChecker(STATE_CHECKED, false, aIsChecked, this.DOMNode),
-      ];
-
-      this.invoke = function changeCheckInput_invoke() {
-        this.DOMNode.checked = aIsChecked;
-      };
-
-      this.getID = function changeCheckInput_getID() {
-        return "change checked state to '" + aIsChecked + "' for " +
-          prettyName(aID);
-      };
+    async function invalidInput(aNodeOrID) {
+      let p = waitForEvent(...stateChange(STATE_INVALID, false, true, aNodeOrID));
+      getNode(aNodeOrID).value = "I am not an email";
+      await p;
     }
 
-    function stateChangeOnFileInput(aID, aAttr, aValue,
+    async function changeCheckInput(aID, aIsChecked) {
+      let p = waitForEvent(...stateChange(STATE_CHECKED, false, aIsChecked, aID));
+      getNode(aID).checked = aIsChecked;
+      await p;
+    }
+
+    async function stateChangeOnFileInput(aID, aAttr, aValue,
                                     aState, aIsExtraState, aIsEnabled) {
-      this.fileControlNode = getNode(aID);
-      this.fileControl = getAccessible(this.fileControlNode);
-      this.browseButton = this.fileControl.firstChild;
-      // No state change events on the label.
-
-      this.invoke = function stateChangeOnFileInput_invoke() {
-        this.fileControlNode.setAttribute(aAttr, aValue);
-      };
-
-      this.eventSeq = [
-        new stateChangeChecker(aState, aIsExtraState, aIsEnabled, this.fileControl),
-        new stateChangeChecker(aState, aIsExtraState, aIsEnabled, this.browseButton),
-      ];
-
-      this.getID = function stateChangeOnFileInput_getID() {
-        return "inherited state change on file input on attribute '" + aAttr + "' change";
-      };
+      let fileControlNode = getNode(aID);
+      let fileControl = getAccessible(fileControlNode);
+      let browseButton = fileControl.firstChild;
+      let p = waitForEvents([
+        stateChange(aState, aIsExtraState, aIsEnabled, fileControl),
+        stateChange(aState, aIsExtraState, aIsEnabled, browseButton)])
+      fileControlNode.setAttribute(aAttr, aValue);
+      await p;
     }
 
-    function dupeStateChange(aID, aAttr, aValue,
+    function toggleSentinel() {
+      let sentinel = getNode("sentinel");
+      if (sentinel.hasAttribute("aria-busy"))  {
+        sentinel.removeAttribute("aria-busy");
+      } else {
+        sentinel.setAttribute("aria-busy", "true");
+      }
+    }
+
+    async function dupeStateChange(aID, aAttr, aValue,
                              aState, aIsExtraState, aIsEnabled) {
-      this.eventSeq = [
-        new stateChangeChecker(aState, aIsExtraState, aIsEnabled, getNode(aID)),
-      ];
-
-      this.invoke = function dupeStateChange_invoke() {
-        getNode(aID).setAttribute(aAttr, aValue);
-        getNode(aID).setAttribute(aAttr, aValue);
-      };
-
-      this.getID = function dupeStateChange_getID() {
-        return "duped state change events";
-      };
+      let p = waitForEvents([
+        stateChange(aState, aIsExtraState, aIsEnabled, aID),
+        [EVENT_STATE_CHANGE, "sentinel"]
+        ]);
+      getNode(aID).setAttribute(aAttr, aValue);
+      getNode(aID).setAttribute(aAttr, aValue);
+      toggleSentinel();
+      await p;
     }
 
-    function oppositeStateChange(aID, aAttr, aState, aIsExtraState) {
-      this.eventSeq = [ ];
-      this.unexpectedEventSeq = [
-        new stateChangeChecker(aState, aIsExtraState, false, getNode(aID)),
-        new stateChangeChecker(aState, aIsExtraState, true, getNode(aID)),
-      ];
-
-      this.invoke = function oppositeStateChange_invoke() {
-        getNode(aID).setAttribute(aAttr, "false");
-        getNode(aID).setAttribute(aAttr, "true");
-      };
-
-      this.getID = function oppositeStateChange_getID() {
-        return "opposite state change events";
-      };
+    async function oppositeStateChange(aID, aAttr, aState, aIsExtraState) {
+      let p = waitForEvents({
+        expected: [[EVENT_STATE_CHANGE, "sentinel"]],
+        unexpected: [
+          stateChange(aState, aIsExtraState, false, aID),
+          stateChange(aState, aIsExtraState, true, aID)
+        ]
+      });
+      getNode(aID).setAttribute(aAttr, "false");
+      getNode(aID).setAttribute(aAttr, "true");
+      toggleSentinel();
+      await p;
     }
 
     /**
      * Change concomitant ARIA and native attribute at once.
      */
-    function echoingStateChange(aID, aARIAAttr, aAttr, aValue,
-                               aState, aIsExtraState, aIsEnabled) {
-      this.eventSeq = [
-        new stateChangeChecker(aState, aIsExtraState, aIsEnabled, getNode(aID)),
-      ];
-
-      this.invoke = function echoingStateChange_invoke() {
-        if (aValue == null) {
-          getNode(aID).removeAttribute(aARIAAttr);
-          getNode(aID).removeAttribute(aAttr);
-        } else {
-          getNode(aID).setAttribute(aARIAAttr, aValue);
-          getNode(aID).setAttribute(aAttr, aValue);
-        }
-      };
-
-      this.getID = function echoingStateChange_getID() {
-        return "enchoing ARIA and native attributes change";
-      };
+    async function echoingStateChange(aID, aARIAAttr, aAttr, aValue,
+                                      aState, aIsExtraState, aIsEnabled) {
+      let p = waitForEvent(...stateChange(aState, aIsExtraState, aIsEnabled, aID));
+      if (aValue == null) {
+        getNode(aID).removeAttribute(aARIAAttr);
+        getNode(aID).removeAttribute(aAttr);
+      } else {
+        getNode(aID).setAttribute(aARIAAttr, aValue);
+        getNode(aID).setAttribute(aAttr, aValue);
+      }
+      await p;
     }
 
-    // //////////////////////////////////////////////////////////////////////////
-    // Do tests
+    async function testLinked() {
+      let p = waitForEvent(...stateChange(STATE_LINKED, false, false, "link1"));
+      getNode("link1").removeAttribute("href");
+      await p;
 
-    var gQueue = null;
+      p = waitForEvent(...stateChange(STATE_LINKED, false, false, "link2"));
+      getNode("link2").removeAttribute("onclick");
+      await p;
 
-    // var gA11yEventDumpID = "eventdump"; // debug stuff
-    // gA11yEventDumpToConsole = true; // debug stuff
+      p = waitForEvent(...stateChange(STATE_LINKED, false, true, "link3"));
+      getNode("link3").setAttribute("href", "http://example.com");
+      await p;
+    }
 
-    function doTests() {
-      gQueue = new eventQueue(nsIAccessibleEvent.EVENT_STATE_CHANGE);
-
+    async function doTests() {
       // Test opening details objects
-      gQueue.push(new openNode("detailsOpen", "summaryOpen", true));
-      gQueue.push(new openNode("detailsOpen", "summaryOpen", false));
-      gQueue.push(new openNode("detailsOpen1", "summaryOpen1", true));
-      gQueue.push(new openNode("detailsOpen2", "summaryOpen2", true));
-      gQueue.push(new openNode("detailsOpen3", "summaryOpen3", true));
-      gQueue.push(new openNode("detailsOpen4", "summaryOpen4", true));
-      gQueue.push(new openNode("detailsOpen5", "summaryOpen5", true));
-      gQueue.push(new openNode("detailsOpen6", "summaryOpen6", true));
+      await openNode("detailsOpen", "summaryOpen", true);
+      await openNode("detailsOpen", "summaryOpen", false);
+      await openNode("detailsOpen1", "summaryOpen1", true);
+      await openNode("detailsOpen2", "summaryOpen2", true);
+      await openNode("detailsOpen3", "summaryOpen3", true);
+      await openNode("detailsOpen4", "summaryOpen4", true);
+      await openNode("detailsOpen5", "summaryOpen5", true);
+      await openNode("detailsOpen6", "summaryOpen6", true);
 
       // Test delayed editable state change
       var doc = document.getElementById("iframe").contentDocument;
-      gQueue.push(new makeEditableDoc(doc));
+      await makeEditableDoc(doc);
 
       // invalid state change
-      gQueue.push(new invalidInput("email"));
+      await invalidInput("email");
 
       // checked state change
-      gQueue.push(new changeCheckInput("checkbox", true));
-      gQueue.push(new changeCheckInput("checkbox", false));
-      gQueue.push(new changeCheckInput("radio", true));
-      gQueue.push(new changeCheckInput("radio", false));
+      await changeCheckInput("checkbox", true);
+      await changeCheckInput("checkbox", false);
+      await changeCheckInput("radio", true);
+      await changeCheckInput("radio", false);
 
       // file input inherited state changes
-      gQueue.push(new stateChangeOnFileInput("file", "aria-busy", "true",
-                                             STATE_BUSY, false, true));
-      gQueue.push(new stateChangeOnFileInput("file", "aria-required", "true",
-                                             STATE_REQUIRED, false, true));
-      gQueue.push(new stateChangeOnFileInput("file", "aria-invalid", "true",
-                                             STATE_INVALID, false, true));
+      await stateChangeOnFileInput("file", "aria-busy", "true",
+                                   STATE_BUSY, false, true);
+      await stateChangeOnFileInput("file", "aria-required", "true",
+                                   STATE_REQUIRED, false, true);
+      await stateChangeOnFileInput("file", "aria-invalid", "true",
+                                   STATE_INVALID, false, true);
 
-      gQueue.push(new dupeStateChange("div", "aria-busy", "true",
-                                      STATE_BUSY, false, true));
-      gQueue.push(new oppositeStateChange("div", "aria-busy",
-                                          STATE_BUSY, false));
+      await dupeStateChange("div", "aria-busy", "true",
+                            STATE_BUSY, false, true);
+      await oppositeStateChange("div", "aria-busy",
+                                STATE_BUSY, false);
 
-      gQueue.push(new echoingStateChange("text1", "aria-disabled", "disabled", "true",
-                                         EXT_STATE_ENABLED, true, false));
-      gQueue.push(new echoingStateChange("text1", "aria-disabled", "disabled", null,
-                                         EXT_STATE_ENABLED, true, true));
+      await echoingStateChange("text1", "aria-disabled", "disabled", "true",
+                               EXT_STATE_ENABLED, true, false);
+      await echoingStateChange("text1", "aria-disabled", "disabled", null,
+                               EXT_STATE_ENABLED, true, true);
 
-      gQueue.invoke(); // Will call SimpleTest.finish();
+      await testLinked();
+
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -317,7 +256,14 @@
 
   <div id="div"></div>
 
+  <!-- A sentinal guards from events of interest being fired after it emits a state change -->
+  <div id="sentinel"></div>
+
   <input id="text1">
+
+  <a id="link1" href="#">I am a link link</a>
+  <a id="link2" onclick="console.log('hi')">I am a link-ish link</a>
+  <a id="link3">I am a non-link link</a>
 
   <div id="eventdump"></div>
 </body>

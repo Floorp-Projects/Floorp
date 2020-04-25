@@ -11,7 +11,7 @@ import subprocess
 import mozfile
 import mozpack.path as mozpath
 from mozbuild.base import MozbuildObject
-from mozfile import NamedTemporaryFile, TemporaryDirectory
+from mozfile import TemporaryDirectory
 from mozpack.files import FileFinder
 
 
@@ -37,18 +37,25 @@ class VendorPython(MozbuildObject):
         spec = os.path.join(vendor_dir, 'requirements.in')
         requirements = os.path.join(vendor_dir, 'requirements.txt')
 
-        with NamedTemporaryFile('w') as tmpspec:
-            shutil.copyfile(spec, tmpspec.name)
-            self._update_packages(tmpspec.name, packages)
+        with TemporaryDirectory() as spec_dir:
+            tmpspec = 'requirements-mach-vendor-python.in'
+            tmpspec_absolute = os.path.join(spec_dir, tmpspec)
+            shutil.copyfile(spec, tmpspec_absolute)
+            self._update_packages(tmpspec_absolute, packages)
 
             # resolve the dependencies and update requirements.txt
-            subprocess.check_output([
-                pip_compile,
-                tmpspec.name,
-                '--no-header',
-                '--no-index',
-                '--output-file', requirements,
-                '--generate-hashes'])
+            subprocess.check_output(
+                [
+                    pip_compile,
+                    tmpspec,
+                    '--no-header',
+                    '--no-index',
+                    '--output-file', requirements,
+                    '--generate-hashes'
+                ],
+                # Run pip-compile from within the temporary directory so that the "via"
+                # annotations don't have the non-deterministic temporary path in them.
+                cwd=spec_dir)
 
             with TemporaryDirectory() as tmp:
                 # use requirements.txt to download archived source distributions of all packages
@@ -76,7 +83,7 @@ class VendorPython(MozbuildObject):
                         packages[0]])
                 self._extract(tmp, vendor_dir)
 
-            shutil.copyfile(tmpspec.name, spec)
+            shutil.copyfile(tmpspec_absolute, spec)
             self.repository.add_remove_files(vendor_dir)
 
     def _update_packages(self, spec, packages):

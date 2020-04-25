@@ -1,0 +1,155 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`RegistrationList renders the expected snapshot for a list with a single registration 1`] = `
+Array [
+  <article
+    className="registrations-container"
+    key="registrations-container"
+  >
+    <Localized
+      id="serviceworker-list-header"
+    >
+      <h1
+        className="app-page__title"
+      />
+    </Localized>
+    <ul>
+      <Registration
+        className="registrations-container__item"
+        isDebugEnabled={true}
+        key="id-reg-1-example"
+        registration={
+          Object {
+            "id": "id-reg-1-example",
+            "registrationFront": "",
+            "scope": "SCOPE 123",
+            "workers": Array [
+              Object {
+                "id": "id-worker-1-example",
+                "isActive": true,
+                "state": 4,
+                "stateText": "activated",
+                "url": "http://example.com/worker.js",
+                "workerTargetFront": "",
+              },
+            ],
+          }
+        }
+      />
+    </ul>
+  </article>,
+  <Localized
+    a={
+      <a
+        className="aboutdebugging-plug__link"
+        onClick={[Function]}
+      />
+    }
+    id="serviceworker-list-aboutdebugging"
+    key="serviceworkerlist-footer"
+  >
+    <footer
+      className="aboutdebugging-plug"
+    />
+  </Localized>,
+]
+`;
+
+exports[`RegistrationList renders the expected snapshot for a multiple registration list 1`] = `
+Array [
+  <article
+    className="registrations-container"
+    key="registrations-container"
+  >
+    <Localized
+      id="serviceworker-list-header"
+    >
+      <h1
+        className="app-page__title"
+      />
+    </Localized>
+    <ul>
+      <Registration
+        className="registrations-container__item"
+        isDebugEnabled={true}
+        key="id-reg-1-example"
+        registration={
+          Object {
+            "id": "id-reg-1-example",
+            "registrationFront": "",
+            "scope": "SCOPE1",
+            "workers": Array [
+              Object {
+                "id": "id-worker-1-example",
+                "isActive": true,
+                "state": 4,
+                "stateText": "activated",
+                "url": "http://example.com/worker.js",
+                "workerTargetFront": "",
+              },
+            ],
+          }
+        }
+      />
+      <Registration
+        className="registrations-container__item"
+        isDebugEnabled={true}
+        key="id-reg-1-example"
+        registration={
+          Object {
+            "id": "id-reg-1-example",
+            "registrationFront": "",
+            "scope": "SCOPE2",
+            "workers": Array [
+              Object {
+                "id": "id-worker-2-example",
+                "isActive": false,
+                "state": 2,
+                "stateText": "installed",
+                "url": "http://example.com/worker.js",
+                "workerTargetFront": "",
+              },
+            ],
+          }
+        }
+      />
+      <Registration
+        className="registrations-container__item"
+        isDebugEnabled={true}
+        key="id-reg-3-example"
+        registration={
+          Object {
+            "id": "id-reg-3-example",
+            "registrationFront": "",
+            "scope": "SCOPE3",
+            "workers": Array [
+              Object {
+                "id": "id-worker-3-example",
+                "isActive": true,
+                "state": 4,
+                "stateText": "activated",
+                "url": "http://example.com/worker.js",
+                "workerTargetFront": "",
+              },
+            ],
+          }
+        }
+      />
+    </ul>
+  </article>,
+  <Localized
+    a={
+      <a
+        className="aboutdebugging-plug__link"
+        onClick={[Function]}
+      />
+    }
+    id="serviceworker-list-aboutdebugging"
+    key="serviceworkerlist-footer"
+  >
+    <footer
+      className="aboutdebugging-plug"
+    />
+  </Localized>,
+]
+`;

@@ -161,7 +161,11 @@ void SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromBasicAttrs(
     if (HasAttr(nsGkAtoms::from)) {
       const nsAString& fromStr = GetAttr(nsGkAtoms::from)->GetStringValue();
       success = pathGenerator.MoveToAbsolute(fromStr);
-      mPathVertices.AppendElement(0.0, fallible);
+      // XXX(Bug 1631371) Check if this should use a fallible operation as it
+      // pretended earlier.
+      if (!mPathVertices.AppendElement(0.0, fallible)) {
+        mozalloc_handle_oom(0);
+      }
     } else {
       // Create dummy 'from' value at 0,0, if we're doing by-animation.
       // (NOTE: We don't add the dummy 0-point to our list for *to-animation*,
@@ -169,7 +173,11 @@ void SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromBasicAttrs(
       // expect a dummy value. It only expects one value: the final 'to' value.)
       pathGenerator.MoveToOrigin();
       if (!HasAttr(nsGkAtoms::to)) {
-        mPathVertices.AppendElement(0.0, fallible);
+        // XXX(Bug 1631371) Check if this should use a fallible operation as it
+        // pretended earlier.
+        if (!mPathVertices.AppendElement(0.0, fallible)) {
+          mozalloc_handle_oom(0);
+        }
       }
       success = true;
     }
@@ -187,7 +195,11 @@ void SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromBasicAttrs(
         success = pathGenerator.LineToRelative(byStr, dist);
       }
       if (success) {
-        mPathVertices.AppendElement(dist, fallible);
+        // XXX(Bug 1631371) Check if this should use a fallible operation as it
+        // pretended earlier.
+        if (!mPathVertices.AppendElement(dist, fallible)) {
+          mozalloc_handle_oom(0);
+        }
       }
     }
   }

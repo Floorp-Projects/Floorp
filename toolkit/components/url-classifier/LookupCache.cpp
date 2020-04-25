@@ -1076,7 +1076,9 @@ nsresult LookupCacheV2::LoadMozEntries() {
     if (NS_FAILED(add.complete.FromPlaintext(entry))) {
       continue;
     }
-    completes.AppendElement(add, fallible);
+    if (!completes.AppendElement(add, fallible)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   return Build(prefix, completes);

@@ -46,10 +46,13 @@ add_task(async function addScriptAfterNavigation({ client }) {
 
 add_task(async function addWithIsolatedWorldAndNavigate({ client }) {
   const { Page, Runtime } = client;
+  Page.enable();
+  const loadEventFired = Page.loadEventFired();
   const contextsCreated = recordContextCreated(Runtime, 3);
   await Runtime.enable();
   info(`Navigating to ${DOC}`);
   const { frameId } = await Page.navigate({ url: DOC });
+  await loadEventFired;
   await Page.addScriptToEvaluateOnNewDocument({
     source: "1 + 1;",
     worldName: WORLD,

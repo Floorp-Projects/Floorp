@@ -389,9 +389,7 @@ nsresult VRManagerChild::ScheduleFrameRequestCallback(
   }
   int32_t newHandle = ++mFrameRequestCallbackCounter;
 
-  DebugOnly<XRFrameRequest*> request = mFrameRequestCallbacks.AppendElement(
-      XRFrameRequest(aCallback, newHandle));
-  NS_ASSERTION(request, "This is supposed to be infallible!");
+  mFrameRequestCallbacks.AppendElement(XRFrameRequest(aCallback, newHandle));
 
   *aHandle = newHandle;
   return NS_OK;

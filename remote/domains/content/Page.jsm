@@ -6,7 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["Page"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -113,23 +112,6 @@ class Page extends ContentProcessDomain {
       });
       this.enabled = false;
     }
-  }
-
-  async navigate({ url, referrer, transitionType, frameId } = {}) {
-    if (frameId && frameId != this.docShell.browsingContext.id.toString()) {
-      throw new UnsupportedError("frameId not supported");
-    }
-
-    const opts = {
-      loadFlags: transitionToLoadFlag(transitionType),
-      referrerURI: referrer,
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    };
-    this.docShell.loadURI(url, opts);
-
-    return {
-      frameId: this.docShell.browsingContext.id.toString(),
-    };
   }
 
   async reload({ ignoreCache }) {
@@ -394,15 +376,5 @@ class Page extends ContentProcessDomain {
       clientWidth: this.content.innerWidth - scrollbarSize.width,
       clientHeight: this.content.innerHeight - scrollbarSize.height,
     };
-  }
-}
-
-function transitionToLoadFlag(transitionType) {
-  switch (transitionType) {
-    case "reload":
-      return Ci.nsIWebNavigation.LOAD_FLAGS_IS_REFRESH;
-    case "link":
-    default:
-      return Ci.nsIWebNavigation.LOAD_FLAGS_IS_LINK;
   }
 }

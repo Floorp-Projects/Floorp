@@ -5,15 +5,15 @@ atomicwrites==1.1.5 \
 attrs==18.1.0 \
     --hash=sha256:4b90b09eeeb9b88c35bc642cbac057e45a5fd85367b985bd2809c62b7b939265 \
     --hash=sha256:e0d0eb91441a3b53dab4d9b743eafc1ac44476296a2053b6ca3af0b139faf87b \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h, mozilla-version, pytest
+    # via -r requirements-mach-vendor-python.in, mozilla-version, pytest
 biplist==1.0.3 \
     --hash=sha256:4c0549764c5fe50b28042ec21aa2e14fe1a2224e239a1dae77d9e7f3932aa4c6 \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h
+    # via -r requirements-mach-vendor-python.in
 blessings==1.7 \
     --hash=sha256:98e5854d805f50a5b58ac2333411b0482516a8210f23f43308baeb58d77c157d \
     --hash=sha256:b1fdd7e7a675295630f9ae71527a8ebc10bfefa236b3d6aa4932ee4462c17ba3 \
     --hash=sha256:caad5211e7ba5afe04367cdd4cfc68fa886e2e08f6f35e76b7387d2109ccea6e \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h
+    # via -r requirements-mach-vendor-python.in
 certifi==2018.4.16 \
     --hash=sha256:13e698f54293db9f89122b0581843a782ad0934a4fe0172d2a980ba77fc61bb7 \
     --hash=sha256:9fa520c1bacfb634fa7af20a76bcbd3d5fb390481724c597da32c719a7dca4b0 \
@@ -25,28 +25,29 @@ click==7.0 \
 compare-locales==7.2.5 \
     --hash=sha256:9d332ac3cb389724b02d725f724b54393b39499cf70fefcd8267b15b1e5ec281 \
     --hash=sha256:af035b6c2e53689a815e8a0d104a51359b2d45cf5109595348eda03e68ff9bec \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h
+    # via -r requirements-mach-vendor-python.in
 cookies==2.2.1 \
     --hash=sha256:15bee753002dff684987b8df8c235288eb8d45f8191ae056254812dfd42c81d3 \
     --hash=sha256:d6b698788cae4cfa4e62ef8643a9ca332b79bd96cb314294b864ae8d7eb3ee8e \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h
+    # via -r requirements-mach-vendor-python.in
 distro==1.4.0 \
     --hash=sha256:362dde65d846d23baee4b5c058c8586f219b5a54be1cf5fc6ff55c4578392f57 \
     --hash=sha256:eedf82a470ebe7d010f1872c17237c79ab04097948800029994fa458e52fb4b4 \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h
+    # via -r requirements-mach-vendor-python.in
+ecdsa==0.15 \
+    --hash=sha256:867ec9cf6df0b03addc8ef66b56359643cb5d0c1dc329df76ba7ecfe256c8061 \
+    --hash=sha256:8f12ac317f8a1318efa75757ef0a651abe12e51fc1af8838fb91079445227277 \
+    # via -r requirements-mach-vendor-python.in
 fluent.syntax==0.15.1 \
     --hash=sha256:3d3c95b9de82df498172d9447576e787e809b753c6f7f5acf64a9ef8d7782c81 \
     --hash=sha256:e95bb3abfe7cf51b2c6d1e92d57335f07c737ba57bbbba18e57618bd15f78d4b \
     # via compare-locales
-ecdsa==0.15 \
-    --hash=sha256:867ec9cf6df0b03addc8ef66b56359643cb5d0c1dc329df76ba7ecfe256c8061 \
-    --hash=sha256:8f12ac317f8a1318efa75757ef0a651abe12e51fc1af8838fb91079445227277
 jsmin==2.1.0 \
     --hash=sha256:5d07bf0251a4128e5e8e8eef603849b6b5741c337bff087731a248f9cc774f56 \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h
+    # via -r requirements-mach-vendor-python.in
 json-e==2.7.0 \
     --hash=sha256:d8c1ec3f5bbc7728c3a504ebe58829f283c64eca230871e4eefe974b4cdaae4a \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h
+    # via -r requirements-mach-vendor-python.in
 more-itertools==4.3.0 \
     --hash=sha256:c187a73da93e7a8acc0001572aebc7e3c69daf7bf6881a2cea10650bd4420092 \
     --hash=sha256:c476b5d3a34e12d40130bc2f935028b5f636df8f372dc2c1c01dc19681b2039e \
@@ -54,19 +55,19 @@ more-itertools==4.3.0 \
     # via pytest
 mozilla-version==0.3.0 \
     --hash=sha256:97f428f6a87f1a0569e03c39e446eeed87c3ec5d8300319d41e8348ef832e8ea \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h
+    # via -r requirements-mach-vendor-python.in
 pathlib2==2.3.2 \
     --hash=sha256:8eb170f8d0d61825e09a95b38be068299ddeda82f35e96c3301a8a5e7604cb83 \
     --hash=sha256:d1aa2a11ba7b8f7b21ab852b1fb5afb277e1bb99d5dfc663380b5015c0d80c5a \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h
+    # via -r requirements-mach-vendor-python.in
 pip-tools==4.5.1 \
     --hash=sha256:693f30e451875796b1b25203247f0b4cf48a4c4a5ab7341f4f33ffd498cdcc98 \
     --hash=sha256:be9c796aa88b2eec5cabf1323ba1cb60a08212b84bfb75b8b4037a8ef8cb8cb6 \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h
+    # via -r requirements-mach-vendor-python.in
 pipenv==2018.5.18 \
     --hash=sha256:04b9a8b02a3ff12a5502b335850cfdb192adcfd1d6bbdb7a7c47cae9ab9ddece \
     --hash=sha256:e96d5bfa6822a17b2200d455aa5f9002c14361c50df1b1e51921479d7c09e741 \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h
+    # via -r requirements-mach-vendor-python.in
 pluggy==0.6.0 \
     --hash=sha256:7f8ae7f5bdf75671a718d2daf0a64b7885f74510bcd98b1a0bb420eb9a9d0cff \
     --hash=sha256:d345c8fe681115900d6da8d048ba67c25df42973bda370783cd58826442dcd7c \
@@ -84,7 +85,7 @@ psutil==5.7.0 \
     --hash=sha256:d84029b190c8a66a946e28b4d3934d2ca1528ec94764b180f7d6ea57b0e75e26 \
     --hash=sha256:e2d0c5b07c6fe5a87fa27b7855017edb0d52ee73b71e6ee368fae268605cc3f5 \
     --hash=sha256:f344ca230dd8e8d5eee16827596f1c22ec0876127c28e800d7ae20ed44c4b310 \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h
+    # via -r requirements-mach-vendor-python.in
 py==1.5.4 \
     --hash=sha256:3fd59af7435864e1a243790d322d763925431213b6b8529c6ca71081ace3bbf7 \
     --hash=sha256:e31fb2767eb657cbde86c454f02e99cb846d3cd9d61b318525140214fdc0e98e \
@@ -92,33 +93,33 @@ py==1.5.4 \
 pyasn1==0.4.8 \
     --hash=sha256:39c7e2ec30515947ff4e87fb6f456dfc6e84857d34be479c9d4a4ba4bf46aa5d \
     --hash=sha256:aef77c9fb94a3ac588e87841208bdec464471d9871bd5050a287cc9a475cd0ba \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h
+    # via -r requirements-mach-vendor-python.in
 pytest==3.6.2 \
     --hash=sha256:8ea01fc4fcc8e1b1e305252b4bc80a1528019ab99fd3b88666c9dc38d754406c \
     --hash=sha256:90898786b3d0b880b47645bae7b51aa9bbf1e9d1e4510c2cfd15dd65c70ea0cd \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h
+    # via -r requirements-mach-vendor-python.in
 python-hglib==2.4 \
     --hash=sha256:693d6ed92a6566e78802c7a03c256cda33d08c63ad3f00fcfa11379b184b9462 \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h
+    # via -r requirements-mach-vendor-python.in
 pytoml==0.1.10 \
     --hash=sha256:98399eabd927cd3e12457525315b6abbc5abf9a6f392ab578cbcec327f73890c \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h, compare-locales
+    # via -r requirements-mach-vendor-python.in, compare-locales
 redo==2.0.3 \
     --hash=sha256:36784bf8ae766e14f9db0e377ccfa02835d648321d2007b6ae0bf4fd612c0f94 \
     --hash=sha256:71161cb0e928d824092a5f16203939bbc0867ce4c4685db263cf22c3ae7634a8 \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h
+    # via -r requirements-mach-vendor-python.in
 requests==2.9.1 \
     --hash=sha256:113fbba5531a9e34945b7d36b33a084e8ba5d0664b703c81a7c572d91919a5b8 \
     --hash=sha256:c577815dd00f1394203fc44eb979724b098f88264a9ef898ee45b8e5e9cf587f \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h, responses
+    # via -r requirements-mach-vendor-python.in, responses
 responses==0.10.6 \
     --hash=sha256:502d9c0c8008439cfcdef7e251f507fcfdd503b56e8c0c87c3c3e3393953f790 \
     --hash=sha256:97193c0183d63fba8cd3a041c75464e4b09ea0aff6328800d1546598567dde0b \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h
+    # via -r requirements-mach-vendor-python.in
 six==1.13.0 \
     --hash=sha256:1f1b7d42e254082a9db6279deae68afb421ceba6158efa6131de7b3003ee93fd \
     --hash=sha256:30f610279e8b2578cab6db20741130331735c781b56053c59c4076da27f06b66 \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h, blessings, compare-locales, more-itertools, pathlib2, pip-tools, pytest, responses
+    # via -r requirements-mach-vendor-python.in, blessings, compare-locales, ecdsa, more-itertools, pathlib2, pip-tools, pytest, responses
 virtualenv-clone==0.3.0 \
     --hash=sha256:4507071d81013fd03ea9930ec26bc8648b997927a11fa80e8ee81198b57e0ac7 \
     --hash=sha256:b5cfe535d14dc68dfc1d1bb4ac1209ea28235b91156e2bba8e250d291c3fb4f8 \
@@ -126,11 +127,11 @@ virtualenv-clone==0.3.0 \
 virtualenv==16.7.8 \
     --hash=sha256:116655188441670978117d0ebb6451eb6a7526f9ae0796cc0dee6bd7356909b0 \
     --hash=sha256:b57776b44f91511866594e477dd10e76a6eb44439cdd7f06dcd30ba4c5bd854f \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h, pipenv
+    # via -r requirements-mach-vendor-python.in, pipenv
 voluptuous==0.11.5 \
     --hash=sha256:303542b3fc07fb52ec3d7a1c614b329cdbee13a9d681935353d8ea56a7bfa9f1 \
     --hash=sha256:567a56286ef82a9d7ae0628c5842f65f516abcb496e74f3f59f1d7b28df314ef \
-    # via -r /var/folders/1p/nw98d5q17vq_xmq74nm0l8_w0000gn/T/tmpbkijmg9h
+    # via -r requirements-mach-vendor-python.in
 
 # WARNING: The following packages were not pinned, but pip requires them to be
 # pinned when the requirements file includes hashes. Consider using the --allow-unsafe flag.

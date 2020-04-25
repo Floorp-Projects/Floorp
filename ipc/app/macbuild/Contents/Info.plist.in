@@ -27,6 +27,8 @@
 	</dict>
 	<key>LSUIElement</key>
 	<string>1</string>
+	<key>NSRequiresAquaSystemAppearance</key>
+	<true/>
 	<key>NSSupportsAutomaticGraphicsSwitching</key>
 	<true/>
 	<key>NSHighResolutionCapable</key>

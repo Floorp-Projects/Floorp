@@ -35,16 +35,20 @@ class HTMLLinkAccessible : public HyperTextAccessibleWrap {
   virtual already_AddRefed<nsIURI> AnchorURIAt(
       uint32_t aAnchorIndex) const override;
 
- protected:
-  virtual ~HTMLLinkAccessible() {}
-
-  enum { eAction_Jump = 0 };
-
   /**
    * Returns true if the link has href attribute.
    */
   bool IsLinked() const;
+
+ protected:
+  virtual ~HTMLLinkAccessible() {}
+
+  enum { eAction_Jump = 0 };
 };
+
+inline HTMLLinkAccessible* Accessible::AsHTMLLink() {
+  return IsHTMLLink() ? static_cast<HTMLLinkAccessible*>(this) : nullptr;
+}
 
 }  // namespace a11y
 }  // namespace mozilla

@@ -1855,8 +1855,7 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
   }
 
   nsTArray<VisitData> placeArray(1);
-  NS_ENSURE_TRUE(placeArray.AppendElement(VisitData(aURI, aLastVisitedURI)),
-                 NS_ERROR_OUT_OF_MEMORY);
+  placeArray.AppendElement(VisitData(aURI, aLastVisitedURI));
   VisitData& place = placeArray.ElementAt(0);
   NS_ENSURE_FALSE(place.spec.IsEmpty(), NS_ERROR_INVALID_ARG);
 

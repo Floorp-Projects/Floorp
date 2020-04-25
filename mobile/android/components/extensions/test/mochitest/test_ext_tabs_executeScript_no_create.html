@@ -57,7 +57,7 @@ add_task(async function testExecuteScriptAtOnUpdated() {
     });
   }
 
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["http://mochi.test/", "tabs"],
     },
@@ -69,7 +69,7 @@ add_task(async function testExecuteScriptAtOnUpdated() {
   extension.sendMessage(URL);
   await extension.awaitMessage("open-test-tab");
 
-  let tab = window.open(URL);
+  const tab = window.open(URL);
   await extension.awaitFinish("executeScript-at-onUpdated");
 
   await extension.unload();

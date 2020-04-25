@@ -733,7 +733,10 @@ void nsPresContext::RecomputeBrowsingContextDependentData() {
     doc = outer;
   }
   auto* browsingContext = doc->GetBrowsingContext();
-  if (NS_WARN_IF(!browsingContext)) {
+  if (!browsingContext) {
+    // This can legitimately happen for e.g. SVG images. Those just get scaled
+    // as a result of the zoom on the embedder document so it doesn't really
+    // matter...
     return;
   }
   SetFullZoom(browsingContext->FullZoom());

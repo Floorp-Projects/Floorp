@@ -101,7 +101,6 @@ inline bool IsSocketProcessChild() {
 
 namespace NeckoCommonInternal {
 extern bool gSecurityDisabled;
-extern bool gRegisteredBool;
 }  // namespace NeckoCommonInternal
 
 // This should always return true unless xpcshell tests are being used

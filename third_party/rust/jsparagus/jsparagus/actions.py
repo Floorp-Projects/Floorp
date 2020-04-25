@@ -66,23 +66,9 @@ class Action:
         """
         return self
 
-    def maybe_add(self, other: Action) -> typing.Optional[Action]:
-        """Implement the fact of concatenating actions into a new action which can have
-        a single state instead of multiple states which are following each others."""
-        actions: typing.List[Action] = []
-        if isinstance(self, Seq):
-            actions.extend(list(self.actions))
-        else:
-            actions.append(self)
-        if isinstance(other, Seq):
-            actions.extend(list(other.actions))
-        else:
-            actions.append(other)
-        if any(a.is_condition() for a in actions):
-            return None
-        if any(a.update_stack() for a in actions[:-1]):
-            return None
-        return Seq(actions)
+    def contains_accept(self) -> bool:
+        "Returns whether the current action stops the parser."
+        return False
 
     def __eq__(self, other: object) -> bool:
         if self.__class__ != other.__class__:
@@ -162,6 +148,24 @@ class Reduce(Action):
     def shifted_action(self, shifted_term: Element) -> Reduce:
         return Reduce(self.nt, self.pop, replay=self.replay + 1)
 
+
+class Accept(Action):
+    """This state terminate the parser by accepting the content consumed until
+    now."""
+    __slots__: typing.List[str] = []
+
+    def __init__(self) -> None:
+        super().__init__([], [])
+
+    def __str__(self) -> str:
+        return "Accept()"
+
+    def contains_accept(self) -> bool:
+        "Returns whether the current action stops the parser."
+        return True
+
+    def shifted_action(self, shifted_term: Element) -> Accept:
+        return Accept()
 
 class Lookahead(Action):
     """Define a Lookahead assertion which is meant to either accept or reject
@@ -370,7 +374,8 @@ class Seq(Action):
         write = [wr for a in actions for wr in a.write]
         super().__init__(read, write)
         self.actions = tuple(actions)   # Ordered list of actions to execute.
-        assert all([not a.is_condition() for a in actions[1:]])
+        assert all([not a.is_condition() for a in actions])
+        assert all([not isinstance(a, Seq) for a in actions])
         assert all([not a.update_stack() for a in actions[:-1]])
 
     def __str__(self) -> str:
@@ -401,3 +406,6 @@ class Seq(Action):
             else:
                 actions.append(b)
         return Seq(actions)
+
+    def contains_accept(self) -> bool:
+        return any(a.contains_accept() for a in self.actions)

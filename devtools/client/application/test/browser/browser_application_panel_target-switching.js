@@ -26,7 +26,7 @@ add_task(async function() {
 
   info("Check for non-existing service worker");
   selectPage(panel, "service-workers");
-  const isWorkerListEmpty = !!doc.querySelector(".worker-list-empty");
+  const isWorkerListEmpty = !!doc.querySelector(".js-registration-list-empty");
   ok(isWorkerListEmpty, "No Service Worker displayed");
 
   info("Navigate to a page that runs in the child process");

@@ -237,7 +237,8 @@ nsresult VariableLengthPrefixSet::GetFixedLengthPrefixes(
       }
 
       for (uint32_t i = 0; i < count; i++) {
-        aCompletes->AppendElement(
+        // SetCapacity was just called, these cannot fail.
+        (void)aCompletes->AppendElement(
             Substring(*completes, i * COMPLETE_SIZE, COMPLETE_SIZE), fallible);
       }
     }

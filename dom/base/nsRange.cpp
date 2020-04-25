@@ -2626,7 +2626,8 @@ static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
                                nsIFrame::TextOffsetType::OffsetsInContentText,
                                nsIFrame::TrailingWhitespace::DontTrim);
 
-        aTextList->AppendElement(renderedText.mString, fallible);
+        NS_ENSURE_TRUE(aTextList->AppendElement(renderedText.mString, fallible),
+                       NS_ERROR_OUT_OF_MEMORY);
       }
     }
   }

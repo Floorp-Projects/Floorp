@@ -17,6 +17,10 @@
 //! [privacy-policy]: https://www.mozilla.org/privacy/
 //! [docs]: https://firefox-source-docs.mozilla.org/toolkit/components/glean/
 
+// No one is currently using the Glean SDK, so let's export it, so we know it gets
+// compiled.
+pub extern crate glean;
+
 use std::ffi::CStr;
 use std::os::raw::c_char;
 
@@ -41,7 +45,7 @@ pub unsafe extern "C" fn fog_init(
     app_display_version: &nsACString,
     channel: *const c_char,
     os_version: &nsACString,
-    architecture: &nsACString
+    architecture: &nsACString,
 ) -> nsresult {
     log::debug!("Initializing FOG.");
 

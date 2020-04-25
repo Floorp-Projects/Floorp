@@ -37,7 +37,8 @@ nsresult WindowHook::RemoveHook(UINT nMsg, Callback callback, void* context) {
 
 nsresult WindowHook::AddMonitor(UINT nMsg, Callback callback, void* context) {
   MessageData* data = LookupOrCreate(nMsg);
-  return (data && data->monitors.AppendElement(CallbackData(callback, context)))
+  return (data && data->monitors.AppendElement(CallbackData(callback, context),
+                                               fallible))
              ? NS_OK
              : NS_ERROR_OUT_OF_MEMORY;
 }

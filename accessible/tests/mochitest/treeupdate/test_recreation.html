@@ -39,12 +39,6 @@
       document.getElementById("div1").setAttribute("role", "button");
       await events;
 
-      msg = "Add an href to an anchor tag";
-      events = waitForOrderedEvents(
-        [[EVENT_HIDE, "anchor"], [EVENT_SHOW, "anchor"], [EVENT_REORDER, "container"]], msg);
-      document.getElementById("anchor").setAttribute("href", "www");
-      await events;
-
       msg = "Set a listbox as multiselectable";
       events = waitForOrderedEvents(
         [[EVENT_HIDE, "div3"], [EVENT_SHOW, "div3"], [EVENT_REORDER, "container"]], msg);

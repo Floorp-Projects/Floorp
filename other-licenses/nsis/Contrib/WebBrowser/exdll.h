@@ -33,6 +33,7 @@ extern unsigned int g_stringsize;
 extern stack_t** g_stacktop;
 extern int(__stdcall* g_executeCodeSegment)(int, HWND);
 extern HWND g_hwndParent;
+extern HINSTANCE gHInst;
 
 typedef struct {
   int autoclose;
@@ -69,5 +70,7 @@ typedef struct {
 
 int popstring(TCHAR* str);
 void pushstring(const TCHAR* str);
+
+UINT_PTR __cdecl NSISPluginCallback(NSPIM msg);
 
 #endif  //_EXDLL_H_

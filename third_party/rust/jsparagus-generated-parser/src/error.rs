@@ -39,6 +39,12 @@ pub enum ParseError<'alloc> {
     DuplicateExport(&'alloc str, usize, usize),
     MissingExport(&'alloc str, usize),
 
+    // Labelled Statement Errors
+    DuplicateLabel,
+    BadContinue,
+    ToughBreak,
+    LabelNotFound,
+
     // Annex B. FunctionDeclarations in IfStatement Statement Clauses
     // https://tc39.es/ecma262/#sec-functiondeclarations-in-ifstatement-statement-clauses
     FunctionDeclInSingleStatement,
@@ -105,6 +111,18 @@ impl<'alloc> ParseError<'alloc> {
             ),
             ParseError::LabelledFunctionDeclInSingleStatement => format!(
                 "functions can only be labelled inside blocks"
+            ),
+            ParseError::DuplicateLabel => format!(
+                "duplicate label"
+            ),
+            ParseError::BadContinue => format!(
+                "continue must be inside loop"
+            ),
+            ParseError::ToughBreak => format!(
+                "unlabeled break must be inside loop or switch"
+            ),
+            ParseError::LabelNotFound => format!(
+                "label not found"
             ),
         }
     }

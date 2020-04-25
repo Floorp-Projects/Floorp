@@ -1520,9 +1520,9 @@ class TreeMetadataEmitter(LoggingMixin):
                             % (f, p.full_path), context)
                     inputs.append(p)
 
-                yield GeneratedFile(context, script, method, outputs, inputs,
-                                    flags.flags, localized=localized, force=flags.force,
-                                    py2=flags.py2)
+                yield GeneratedFile(
+                    context, script, method, outputs, inputs, flags.flags,
+                    localized=localized, force=flags.force)
 
     def _process_test_manifests(self, context):
         for prefix, info in TEST_MANIFESTS.items():

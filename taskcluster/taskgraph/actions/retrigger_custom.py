@@ -79,9 +79,9 @@ extended_properties.update({
     symbol='rt',
     generic=True,
     description="Retriggers the specified task with custom environment and parameters",
-    context=[{'test-type': 'mochitest'},
-             {'test-type': 'reftest'},
-             {'test-type': 'geckoview-junit'}],
+    context=[{'test-type': 'mochitest', 'worker-implementation': 'docker-worker'},
+             {'test-type': 'reftest', 'worker-implementation': 'docker-worker'},
+             {'test-type': 'geckoview-junit', 'worker-implementation': 'docker-worker'}],
     order=10,
     schema={
         'type': 'object',
@@ -100,7 +100,7 @@ def extended_custom_retrigger_action(parameters, graph_config, input, task_group
     symbol='rt',
     generic=True,
     description="Retriggers the specified task with custom environment and parameters",
-    context=[{'test-type': 'gtest'}],
+    context=[{'test-type': 'gtest', 'worker-implementation': 'docker-worker'}],
     order=10,
     schema={
         'type': 'object',

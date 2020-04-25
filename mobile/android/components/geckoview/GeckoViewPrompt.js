@@ -55,7 +55,7 @@ PromptFactory.prototype = {
   },
 
   _handleClick(aEvent) {
-    let target = aEvent.composedTarget;
+    const target = aEvent.composedTarget;
     if (
       target.isContentEditable ||
       target.disabled ||
@@ -67,12 +67,12 @@ PromptFactory.prototype = {
       return;
     }
 
-    let win = target.ownerGlobal;
+    const win = target.ownerGlobal;
     if (target instanceof win.HTMLSelectElement) {
       this._handleSelect(target);
       aEvent.preventDefault();
     } else if (target instanceof win.HTMLInputElement) {
-      let type = target.type;
+      const type = target.type;
       if (
         type === "date" ||
         type === "month" ||
@@ -87,19 +87,19 @@ PromptFactory.prototype = {
   },
 
   _handleSelect(aElement) {
-    let win = aElement.ownerGlobal;
+    const win = aElement.ownerGlobal;
     let id = 0;
-    let map = {};
+    const map = {};
 
-    let items = (function enumList(elem, disabled) {
-      let items = [];
-      let children = elem.children;
+    const items = (function enumList(elem, disabled) {
+      const items = [];
+      const children = elem.children;
       for (let i = 0; i < children.length; i++) {
-        let child = children[i];
+        const child = children[i];
         if (win.getComputedStyle(child).display === "none") {
           continue;
         }
-        let item = {
+        const item = {
           id: String(id),
           disabled: disabled || child.disabled,
         };
@@ -118,7 +118,7 @@ PromptFactory.prototype = {
       return items;
     })(aElement);
 
-    let prompt = new PromptDelegate(win);
+    const prompt = new PromptDelegate(win);
     prompt.asyncShowPrompt(
       {
         type: "choice",
@@ -134,7 +134,7 @@ PromptFactory.prototype = {
 
         let dispatchEvents = false;
         if (!aElement.multiple) {
-          let elem = map[result.choices[0]];
+          const elem = map[result.choices[0]];
           if (elem && elem instanceof win.HTMLOptionElement) {
             dispatchEvents = !elem.selected;
             elem.selected = true;
@@ -145,8 +145,8 @@ PromptFactory.prototype = {
           }
         } else {
           for (let i = 0; i < id; i++) {
-            let elem = map[i];
-            let index = result.choices.indexOf(String(i));
+            const elem = map[i];
+            const index = result.choices.indexOf(String(i));
             if (
               elem instanceof win.HTMLOptionElement &&
               elem.selected !== index >= 0
@@ -175,7 +175,7 @@ PromptFactory.prototype = {
   },
 
   _handleDateTime(aElement, aType) {
-    let prompt = new PromptDelegate(aElement.ownerGlobal);
+    const prompt = new PromptDelegate(aElement.ownerGlobal);
     prompt.asyncShowPrompt(
       {
         type: "datetime",
@@ -212,7 +212,7 @@ PromptFactory.prototype = {
   },
 
   _handleContextMenu(aEvent) {
-    let target = aEvent.composedTarget;
+    const target = aEvent.composedTarget;
     if (aEvent.defaultPrevented || target.isContentEditable) {
       return;
     }
@@ -228,7 +228,7 @@ PromptFactory.prototype = {
       return;
     }
 
-    let builder = {
+    const builder = {
       _cursor: undefined,
       _id: 0,
       _map: {},
@@ -242,7 +242,7 @@ PromptFactory.prototype = {
           this._cursor = this;
           return;
         }
-        let newCursor = {
+        const newCursor = {
           id: String(this._id++),
           items: [],
           label: aLabel,
@@ -275,14 +275,15 @@ PromptFactory.prototype = {
       },
 
       undoAddSeparator() {
-        let sep = this._cursor.items[this._cursor.items.length - 1];
+        const sep = this._cursor.items[this._cursor.items.length - 1];
         if (sep && sep.separator) {
           this._cursor.items.pop();
         }
       },
 
       closeContainer() {
-        let childItems = this._cursor.label === "" ? this._cursor.items : null;
+        const childItems =
+          this._cursor.label === "" ? this._cursor.items : null;
         this._cursor = this._stack.pop();
 
         if (
@@ -301,7 +302,7 @@ PromptFactory.prototype = {
       },
 
       click(aId) {
-        let item = this._map[aId];
+        const item = this._map[aId];
         if (item) {
           item.click();
         }
@@ -312,7 +313,7 @@ PromptFactory.prototype = {
     menu.sendShowEvent();
     menu.build(builder);
 
-    let prompt = new PromptDelegate(target.ownerGlobal);
+    const prompt = new PromptDelegate(target.ownerGlobal);
     prompt.asyncShowPrompt(
       {
         type: "choice",
@@ -337,7 +338,7 @@ PromptFactory.prototype = {
       ? aEvent.popupWindowURI.displaySpec
       : "about:blank";
 
-    let prompt = new PromptDelegate(aEvent.requestingWindow);
+    const prompt = new PromptDelegate(aEvent.requestingWindow);
     prompt.asyncShowPrompt(
       {
         type: "popup",
@@ -360,7 +361,7 @@ PromptFactory.prototype = {
     // Delegated to login manager here, which in turn calls back into us via nsIPromptService.
     if (aIID.equals(Ci.nsIAuthPrompt2) || aIID.equals(Ci.nsIAuthPrompt)) {
       try {
-        let pwmgr = Cc[
+        const pwmgr = Cc[
           "@mozilla.org/passwordmanager/authpromptfactory;1"
         ].getService(Ci.nsIPromptFactory);
         return pwmgr.getPrompt(aDOMWin, aIID);
@@ -369,7 +370,7 @@ PromptFactory.prototype = {
       }
     }
 
-    let p = new PromptDelegate(aDOMWin);
+    const p = new PromptDelegate(aDOMWin);
     p.QueryInterface(aIID);
     return p;
   },
@@ -378,7 +379,7 @@ PromptFactory.prototype = {
 
   // nsIPromptService methods proxy to our Prompt class
   callProxy(aMethod, aArguments) {
-    let prompt = new PromptDelegate(aArguments[0]);
+    const prompt = new PromptDelegate(aArguments[0]);
     let promptArgs;
     if (aArguments[0] instanceof BrowsingContext) {
       // Called by BrowsingContext prompt method, strip modalType.
@@ -500,12 +501,12 @@ PromptDelegate.prototype = {
     }
     // Accessing the document object can throw if this window no longer exists. See bug 789888.
     try {
-      let winUtils = this._domWin.windowUtils;
+      const winUtils = this._domWin.windowUtils;
       if (!aEntering) {
         winUtils.leaveModalState();
       }
 
-      let event = this._domWin.document.createEvent("Events");
+      const event = this._domWin.document.createEvent("Events");
       event.initEvent(
         aEntering ? "DOMWillOpenModalDialog" : "DOMModalDialogClosed",
         true,
@@ -547,7 +548,7 @@ PromptDelegate.prototype = {
 
   asyncShowPrompt(aMsg, aCallback) {
     let handled = false;
-    let onResponse = response => {
+    const onResponse = response => {
       if (handled) {
         return;
       }
@@ -598,7 +599,7 @@ PromptDelegate.prototype = {
   },
 
   alertCheck(aTitle, aText, aCheckMsg, aCheckState) {
-    let result = this._showPrompt(
+    const result = this._showPrompt(
       this._addText(
         aTitle,
         aText,
@@ -643,12 +644,12 @@ PromptDelegate.prototype = {
     aCheckMsg,
     aCheckState
   ) {
-    let btnMap = Array(3).fill(null);
-    let btnTitle = Array(3).fill(null);
-    let btnCustomTitle = Array(3).fill(null);
-    let savedButtonId = [];
+    const btnMap = Array(3).fill(null);
+    const btnTitle = Array(3).fill(null);
+    const btnCustomTitle = Array(3).fill(null);
+    const savedButtonId = [];
     for (let i = 0; i < 3; i++) {
-      let btnFlags = aButtonFlags >> (i * 8);
+      const btnFlags = aButtonFlags >> (i * 8);
       switch (btnFlags & 0xff) {
         case Ci.nsIPrompt.BUTTON_TITLE_OK:
           btnMap[this.BUTTON_TYPE_POSITIVE] = i;
@@ -688,7 +689,7 @@ PromptDelegate.prototype = {
       }
     }
 
-    let result = this._showPrompt(
+    const result = this._showPrompt(
       this._addText(
         aTitle,
         aText,
@@ -706,7 +707,7 @@ PromptDelegate.prototype = {
   },
 
   prompt(aTitle, aText, aValue, aCheckMsg, aCheckState) {
-    let result = this._showPrompt(
+    const result = this._showPrompt(
       this._addText(
         aTitle,
         aText,
@@ -748,7 +749,7 @@ PromptDelegate.prototype = {
     aCheckMsg,
     aCheckState
   ) {
-    let msg = {
+    const msg = {
       type: "auth",
       mode: aUsername ? "auth" : "password",
       options: {
@@ -757,7 +758,7 @@ PromptDelegate.prototype = {
         password: aPassword.value,
       },
     };
-    let result = this._showPrompt(
+    const result = this._showPrompt(
       this._addText(aTitle, aText, this._addCheck(aCheckMsg, aCheckState, msg))
     );
     // OK: result && result.password !== undefined
@@ -777,13 +778,13 @@ PromptDelegate.prototype = {
   },
 
   select(aTitle, aText, aSelectList, aOutSelection) {
-    let choices = Array.prototype.map.call(aSelectList, (item, index) => ({
+    const choices = Array.prototype.map.call(aSelectList, (item, index) => ({
       id: String(index),
       label: item,
       disabled: false,
       selected: false,
     }));
-    let result = this._showPrompt(
+    const result = this._showPrompt(
       this._addText(aTitle, aText, {
         type: "choice",
         mode: "single",
@@ -842,7 +843,7 @@ PromptDelegate.prototype = {
       return true;
     }
 
-    let username = aResult.username || "";
+    const username = aResult.username || "";
     if (aAuthInfo.flags & Ci.nsIAuthInformation.NEED_DOMAIN) {
       // Domain is separated from username by a backslash
       var idx = username.indexOf("\\");
@@ -857,7 +858,7 @@ PromptDelegate.prototype = {
   },
 
   promptAuth(aChannel, aLevel, aAuthInfo, aCheckMsg, aCheckState) {
-    let result = this._showPrompt(
+    const result = this._showPrompt(
       this._addCheck(
         aCheckMsg,
         aCheckState,
@@ -880,7 +881,7 @@ PromptDelegate.prototype = {
     aCheckState
   ) {
     let responded = false;
-    let callback = result => {
+    const callback = result => {
       // OK: result && result.password !== undefined
       // Cancel: result && result.password === undefined
       // Error: !result
@@ -915,13 +916,15 @@ PromptDelegate.prototype = {
   },
 
   _getAuthText(aChannel, aAuthInfo) {
-    let isProxy = aAuthInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY;
-    let isPassOnly = aAuthInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD;
-    let isCrossOrig =
+    const isProxy = aAuthInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY;
+    const isPassOnly = aAuthInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD;
+    const isCrossOrig =
       aAuthInfo.flags & Ci.nsIAuthInformation.CROSS_ORIGIN_SUB_RESOURCE;
 
-    let username = aAuthInfo.username;
-    let [displayHost, realm] = this._getAuthTarget(aChannel, aAuthInfo);
+    const username = aAuthInfo.username;
+    const authTarget = this._getAuthTarget(aChannel, aAuthInfo);
+    const { displayHost } = authTarget;
+    let { realm } = authTarget;
 
     // Suppress "the site says: $realm" when we synthesized a missing realm.
     if (!aAuthInfo.realm && !isProxy) {
@@ -933,7 +936,7 @@ PromptDelegate.prototype = {
       realm = realm.substring(0, 50) + "\u2026";
     }
 
-    let bundle = Services.strings.createBundle(
+    const bundle = Services.strings.createBundle(
       "chrome://global/locale/commonDialogs.properties"
     );
     let text;
@@ -972,36 +975,37 @@ PromptDelegate.prototype = {
       if (!(aChannel instanceof Ci.nsIProxiedChannel)) {
         throw new Error("proxy auth needs nsIProxiedChannel");
       }
-      let info = aChannel.proxyInfo;
+      const info = aChannel.proxyInfo;
       if (!info) {
         throw new Error("proxy auth needs nsIProxyInfo");
       }
       // Proxies don't have a scheme, but we'll use "moz-proxy://"
       // so that it's more obvious what the login is for.
-      let idnService = Cc["@mozilla.org/network/idn-service;1"].getService(
+      const idnService = Cc["@mozilla.org/network/idn-service;1"].getService(
         Ci.nsIIDNService
       );
-      let hostname =
+      const displayHost =
         "moz-proxy://" +
         idnService.convertUTF8toACE(info.host) +
         ":" +
         info.port;
       let realm = aAuthInfo.realm;
       if (!realm) {
-        realm = hostname;
+        realm = displayHost;
       }
-      return [hostname, realm];
+      return { displayHost, realm };
     }
 
-    let hostname = aChannel.URI.scheme + "://" + aChannel.URI.displayHostPort;
+    const displayHost =
+      aChannel.URI.scheme + "://" + aChannel.URI.displayHostPort;
     // If a HTTP WWW-Authenticate header specified a realm, that value
     // will be available here. If it wasn't set or wasn't HTTP, we'll use
     // the formatted hostname instead.
     let realm = aAuthInfo.realm;
     if (!realm) {
-      realm = hostname;
+      realm = displayHost;
     }
-    return [hostname, realm];
+    return { displayHost, realm };
   },
 };
 

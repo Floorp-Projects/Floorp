@@ -646,8 +646,8 @@ pub trait Pass<'alloc> {
             Statement::IfStatement(ast) => {
                 self.visit_enum_statement_variant_if_statement(ast)
             }
-            Statement::LabeledStatement { label, body, .. } => {
-                self.visit_enum_statement_variant_labeled_statement(
+            Statement::LabelledStatement { label, body, .. } => {
+                self.visit_enum_statement_variant_labelled_statement(
                     label,
                     body,
                 )
@@ -1001,31 +1001,31 @@ pub trait Pass<'alloc> {
     ) {
     }
 
-    fn visit_enum_statement_variant_labeled_statement(
+    fn visit_enum_statement_variant_labelled_statement(
         &mut self,
         label: &'alloc Label,
         body: &'alloc arena::Box<'alloc, Statement<'alloc>>,
     ) {
-        self.enter_enum_statement_variant_labeled_statement(
+        self.enter_enum_statement_variant_labelled_statement(
             label,
             body,
         );
         self.visit_label(label);
         self.visit_statement(body);
-        self.leave_enum_statement_variant_labeled_statement(
+        self.leave_enum_statement_variant_labelled_statement(
             label,
             body,
         );
     }
 
-    fn enter_enum_statement_variant_labeled_statement(
+    fn enter_enum_statement_variant_labelled_statement(
         &mut self,
         label: &'alloc Label,
         body: &'alloc arena::Box<'alloc, Statement<'alloc>>,
     ) {
     }
 
-    fn leave_enum_statement_variant_labeled_statement(
+    fn leave_enum_statement_variant_labelled_statement(
         &mut self,
         label: &'alloc Label,
         body: &'alloc arena::Box<'alloc, Statement<'alloc>>,

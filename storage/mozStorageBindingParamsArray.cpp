@@ -57,7 +57,7 @@ BindingParamsArray::AddParams(mozIStorageBindingParams* aParameters) {
   // Check to make sure that this set of parameters was created with us.
   if (params->getOwner() != this) return NS_ERROR_UNEXPECTED;
 
-  NS_ENSURE_TRUE(mArray.AppendElement(params), NS_ERROR_OUT_OF_MEMORY);
+  mArray.AppendElement(params);
 
   // Lock the parameters only after we've successfully added them.
   params->lock();

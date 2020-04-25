@@ -47,7 +47,7 @@ add_task(async function({ client }) {
 
   const url = RANDOM_ID_DOC;
   const { frameId } = await Page.navigate({ url });
-  info("A new page has been loaded");
+  info("A new page has been requested");
 
   ok(frameId, "Page.navigate returned a frameId");
   is(

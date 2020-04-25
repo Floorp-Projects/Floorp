@@ -42,14 +42,22 @@ add_task(async function() {
       registration: {
         scope: "lorem-ipsum",
         lastUpdateTime: 42,
+        id: "r1",
       },
       workers: [
         {
-          id: 1,
+          id: "w1",
           state: Ci.nsIServiceWorkerInfo.STATE_ACTIVATED,
-          url: "https://example.com",
+          url: "https://example.com/w1.js",
           workerTargetFront: { foo: "bar" },
           stateText: "activated",
+        },
+        {
+          id: "w2",
+          state: Ci.nsIServiceWorkerInfo.STATE_INSTALLED,
+          url: "https://example.com/w2.js",
+          workerTargetFront: undefined,
+          stateText: "installed",
         },
       ],
     },
@@ -57,14 +65,28 @@ add_task(async function() {
 
   const expectedData = [
     {
-      id: 1,
-      isActive: true,
-      scope: "lorem-ipsum",
+      id: "r1",
       lastUpdateTime: 42,
-      url: "https://example.com",
       registrationFront: rawData[0].registration,
-      workerTargetFront: rawData[0].workers[0].workerTargetFront,
-      stateText: "activated",
+      scope: "lorem-ipsum",
+      workers: [
+        {
+          id: "w1",
+          isActive: true,
+          url: "https://example.com/w1.js",
+          workerTargetFront: rawData[0].workers[0].workerTargetFront,
+          registrationFront: rawData[0].registration,
+          stateText: "activated",
+        },
+        {
+          id: "w2",
+          isActive: false,
+          url: "https://example.com/w2.js",
+          workerTargetFront: undefined,
+          registrationFront: rawData[0].registration,
+          stateText: "installed",
+        },
+      ],
     },
   ];
 

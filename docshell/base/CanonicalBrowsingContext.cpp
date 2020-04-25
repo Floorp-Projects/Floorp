@@ -33,14 +33,14 @@ extern mozilla::LazyLogModule gUserInteractionPRLog;
 #define USER_ACTIVATION_LOG(msg, ...) \
   MOZ_LOG(gUserInteractionPRLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
 
-CanonicalBrowsingContext::CanonicalBrowsingContext(BrowsingContext* aParent,
+CanonicalBrowsingContext::CanonicalBrowsingContext(WindowContext* aParentWindow,
                                                    BrowsingContextGroup* aGroup,
                                                    uint64_t aBrowsingContextId,
                                                    uint64_t aOwnerProcessId,
                                                    uint64_t aEmbedderProcessId,
                                                    BrowsingContext::Type aType,
                                                    FieldTuple&& aFields)
-    : BrowsingContext(aParent, aGroup, aBrowsingContextId, aType,
+    : BrowsingContext(aParentWindow, aGroup, aBrowsingContextId, aType,
                       std::move(aFields)),
       mProcessId(aOwnerProcessId),
       mEmbedderProcessId(aEmbedderProcessId) {

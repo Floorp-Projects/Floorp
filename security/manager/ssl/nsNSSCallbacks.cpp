@@ -1106,6 +1106,7 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
   CertificateTransparencyInfo certificateTransparencyInfo;
   UniqueCERTCertList builtChain;
   const bool saveIntermediates = false;
+  bool isBuiltCertChainRootBuiltInRoot = false;
   mozilla::pkix::Result rv = certVerifier->VerifySSLServerCert(
       cert, mozilla::pkix::Now(), infoObject, infoObject->GetHostName(),
       builtChain, flags, maybePeerCertsBytes, stapledOCSPResponse,
@@ -1115,7 +1116,9 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
       nullptr,  // key size telemetry
       nullptr,  // SHA-1 telemetry
       nullptr,  // pinning telemetry
-      &certificateTransparencyInfo);
+      &certificateTransparencyInfo,
+      nullptr,  // CRLite telemetry,
+      &isBuiltCertChainRootBuiltInRoot);
 
   if (rv != Success) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
@@ -1141,6 +1144,8 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
     nsTArray<nsTArray<uint8_t>> certBytesArray =
         TransportSecurityInfo::CreateCertBytesArray(builtChain);
     infoObject->SetSucceededCertChain(std::move(certBytesArray));
+    infoObject->SetIsBuiltCertChainRootBuiltInRoot(
+        isBuiltCertChainRootBuiltInRoot);
   }
 }
 
@@ -1231,6 +1236,11 @@ static void RebuildCertificateInfoFromSSLTokenCache(
   if (info.mSucceededCertChainBytes) {
     aInfoObject->SetSucceededCertChain(
         std::move(*info.mSucceededCertChainBytes));
+  }
+
+  if (info.mIsBuiltCertChainRootBuiltInRoot) {
+    aInfoObject->SetIsBuiltCertChainRootBuiltInRoot(
+        *info.mIsBuiltCertChainRootBuiltInRoot);
   }
 }
 

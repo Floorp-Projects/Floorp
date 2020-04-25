@@ -48,6 +48,7 @@ var browserCycle = 0;
 var pageCycles = 0;
 var pageCycle = 0;
 var testURL;
+var testTabId;
 var scenarioTestTime = 60000;
 var getHero = false;
 var getFNBPaint = false;
@@ -226,15 +227,13 @@ async function startScenarioTimer() {
   await postToControlServer("status", `started scenario test timer`);
 }
 
-async function closeTab() {
+async function closeTab(tabId) {
   // Don't close the last tab which would close the window or application
   const tabs = await queryForTabs({ currentWindow: true });
   if (tabs.length == 1) {
     await postToControlServer("status", `Not closing last Tab: ${tabs[0].id}`);
     return;
   }
-
-  const tabId = await getCurrentTabId();
 
   await postToControlServer("status", `closing Tab: ${tabId}`);
 
@@ -251,6 +250,9 @@ async function closeTab() {
 
 async function getCurrentTabId() {
   const tabs = await queryForTabs({ currentWindow: true, active: true });
+  if (tabs.length == 0) {
+    throw new Error("No active tab has been found.");
+  }
 
   await postToControlServer("status", "found active tab with id " + tabs[0].id);
   return tabs[0].id;
@@ -290,9 +292,7 @@ async function queryForTabs(options = {}) {
 /**
  * Update the given tab by navigating to the test URL
  */
-async function updateTab(url) {
-  const tabId = await getCurrentTabId();
-
+async function updateTab(tabId, url) {
   await postToControlServer("status", `update tab ${tabId} for ${url}`);
 
   // "null" = active tab
@@ -493,11 +493,11 @@ async function nextCycle() {
 
     if (newTabPerCycle) {
       // close previous test tab and open a new one
-      await closeTab();
-      await openTab();
+      await closeTab(testTabId);
+      testTabId = await openTab();
     }
 
-    await updateTab(testURL);
+    await updateTab(testTabId, testURL);
 
     if (testType == TEST_SCENARIO) {
       await startScenarioTimer();
@@ -694,7 +694,7 @@ async function cleanUp() {
   if (debugMode == 1) {
     raptorLog("debug-mode enabled, leaving tab open");
   } else {
-    await closeTab();
+    await closeTab(testTabId);
   }
 
   if (testType == TEST_PAGE_LOAD) {
@@ -740,9 +740,11 @@ async function raptorRunner() {
   await sleep(postStartupDelay);
 
   // GeckoView doesn't support tabs
-  if (!isGeckoView) {
+  if (!isGeckoView && newTabPerCycle) {
     await openTab();
   }
+
+  testTabId = await getCurrentTabId();
 
   await nextCycle();
 }

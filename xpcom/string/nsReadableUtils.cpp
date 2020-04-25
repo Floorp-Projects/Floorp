@@ -209,23 +209,18 @@ void ToLowerCase(const nsACString& aSource, nsACString& aDest) {
   }
 }
 
-bool ParseString(const nsACString& aSource, char aDelimiter,
+void ParseString(const nsACString& aSource, char aDelimiter,
                  nsTArray<nsCString>& aArray) {
   nsACString::const_iterator start, end;
   aSource.BeginReading(start);
   aSource.EndReading(end);
-
-  uint32_t oldLength = aArray.Length();
 
   for (;;) {
     nsACString::const_iterator delimiter = start;
     FindCharInReadable(aDelimiter, delimiter, end);
 
     if (delimiter != start) {
-      if (!aArray.AppendElement(Substring(start, delimiter))) {
-        aArray.RemoveElementsAt(oldLength, aArray.Length() - oldLength);
-        return false;
-      }
+      aArray.AppendElement(Substring(start, delimiter));
     }
 
     if (delimiter == end) {
@@ -236,8 +231,6 @@ bool ParseString(const nsACString& aSource, char aDelimiter,
       break;
     }
   }
-
-  return true;
 }
 
 template <class StringT, class IteratorT, class Comparator>

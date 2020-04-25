@@ -424,7 +424,10 @@ class DocAccessible : public HyperTextAccessibleWrap,
    * accessibles.
    */
   bool AppendChildDocument(DocAccessible* aChildDocument) {
-    return mChildDocuments.AppendElement(aChildDocument);
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier, or change the return type to void.
+    mChildDocuments.AppendElement(aChildDocument);
+    return true;
   }
 
   /**
@@ -472,9 +475,10 @@ class DocAccessible : public HyperTextAccessibleWrap,
    * @param aAccessible   [in] accessible the DOM attribute is changed for
    * @param aNameSpaceID  [in] namespace of changed attribute
    * @param aAttribute    [in] changed attribute
+   * @param aModType      [in] modification type (changed/added/removed)
    */
   void AttributeChangedImpl(Accessible* aAccessible, int32_t aNameSpaceID,
-                            nsAtom* aAttribute);
+                            nsAtom* aAttribute, int32_t aModType);
 
   /**
    * Fire accessible events when ARIA attribute is changed.

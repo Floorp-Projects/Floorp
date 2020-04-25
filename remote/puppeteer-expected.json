@@ -231,10 +231,10 @@
     "PASS"
   ],
   "Firefox Browser Page ElementHandle.boxModel should work": [
-    "SKIP"
+    "FAIL"
   ],
   "Firefox Browser Page ElementHandle.boxModel should return null for invisible elements": [
-    "SKIP"
+    "FAIL"
   ],
   "Firefox Browser Page ElementHandle.contentFrame should work": [
     "FAIL"
@@ -289,7 +289,8 @@
     "PASS"
   ],
   "Firefox Browser Page Page.emulate should support clicking": [
-    "PASS", "FAIL"
+    "PASS",
+    "FAIL"
   ],
   "Firefox Browser Page Page.emulateMedia should be an alias for Page.emulateMediaType": [
     "PASS"
@@ -352,7 +353,7 @@
     "PASS"
   ],
   "Firefox Browser Page Page.evaluate should throw when evaluation triggers reload": [
-    "SKIP"
+    "TIMEOUT"
   ],
   "Firefox Browser Page Page.evaluate should await promise": [
     "PASS"
@@ -361,7 +362,7 @@
     "PASS"
   ],
   "Firefox Browser Page Page.evaluate should work from-inside an exposed function": [
-    "SKIP"
+    "FAIL"
   ],
   "Firefox Browser Page Page.evaluate should reject promise with exception": [
     "PASS"
@@ -628,7 +629,8 @@
     "FAIL"
   ],
   "Firefox Browser Page Keyboard should report shiftKey": [
-    "PASS", "FAIL"
+    "PASS",
+    "FAIL"
   ],
   "Firefox Browser Page Keyboard should report multiple modifiers": [
     "PASS"
@@ -723,19 +725,19 @@
     "SKIP"
   ],
   "Firefox Browser Page Page.goto should fail when navigating to bad url": [
-    "TIMEOUT"
+    "PASS"
   ],
   "Firefox Browser Page Page.goto should fail when navigating to bad SSL": [
-    "TIMEOUT"
+    "FAIL"
   ],
   "Firefox Browser Page Page.goto should fail when navigating to bad SSL after redirects": [
-    "TIMEOUT"
+    "PASS"
   ],
   "Firefox Browser Page Page.goto should throw if networkidle is passed as an option": [
     "SKIP"
   ],
   "Firefox Browser Page Page.goto should fail when main resources failed to load": [
-    "TIMEOUT"
+    "PASS"
   ],
   "Firefox Browser Page Page.goto should fail when exceeding maximum navigation timeout": [
     "PASS"
@@ -771,7 +773,7 @@
     "PASS"
   ],
   "Firefox Browser Page Page.goto should not leak listeners during bad navigation": [
-    "TIMEOUT"
+    "PASS"
   ],
   "Firefox Browser Page Page.goto should not leak listeners during navigation of 11 pages": [
     "PASS"
@@ -786,7 +788,7 @@
     "FAIL"
   ],
   "Firefox Browser Page Page.goto should fail when navigating and show the url at the error message": [
-    "TIMEOUT"
+    "PASS"
   ],
   "Firefox Browser Page Page.goto should send referer": [
     "FAIL"
@@ -1258,13 +1260,16 @@
     "PASS"
   ],
   "Firefox Browser Page Page.setContent should respect timeout": [
-    "PASS", "FAIL"
+    "PASS",
+    "FAIL"
   ],
   "Firefox Browser Page Page.setContent should respect default navigation timeout": [
-    "PASS", "FAIL"
+    "PASS",
+    "FAIL"
   ],
   "Firefox Browser Page Page.setContent should await resources to load": [
-    "PASS", "FAIL"
+    "PASS",
+    "FAIL"
   ],
   "Firefox Browser Page Page.setContent should work fast enough": [
     "PASS"
@@ -1684,13 +1689,15 @@
     "PASS"
   ],
   "Firefox Browser Page Frame.waitForSelector Page.waitForSelector is shortcut for main frame": [
-    "PASS"
+    "SKIP"
   ],
   "Firefox Browser Page Frame.waitForSelector should run in specified frame": [
-    "PASS", "FAIL"
+    "PASS",
+    "FAIL"
   ],
   "Firefox Browser Page Frame.waitForSelector should throw when frame is detached": [
-    "PASS", "FAIL"
+    "PASS",
+    "FAIL"
   ],
   "Firefox Browser Page Frame.waitForSelector should survive cross-process navigation": [
     "PASS"
@@ -1816,13 +1823,13 @@
     "FAIL"
   ],
   "Firefox DefaultBrowserContext page.cookies() should work": [
-    "SKIP"
+    "FAIL"
   ],
   "Firefox DefaultBrowserContext page.setCookie() should work": [
-    "SKIP"
+    "PASS"
   ],
   "Firefox DefaultBrowserContext page.deleteCookie() should work": [
-    "SKIP"
+    "PASS"
   ],
   "Firefox Puppeteer BrowserFetcher should download and extract linux binary": [
     "PASS"

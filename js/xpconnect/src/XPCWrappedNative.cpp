@@ -1421,11 +1421,9 @@ bool CallMethodHelper::InitializeDispatchParams() {
   mJSContextIndex = mMethodInfo->IndexOfJSContext();
 
   // Allocate enough space in mDispatchParams up-front.
-  if (!mDispatchParams.AppendElements(paramCount + wantsJSContext +
-                                      wantsOptArgc)) {
-    Throw(NS_ERROR_OUT_OF_MEMORY, mCallContext);
-    return false;
-  }
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier.
+  mDispatchParams.AppendElements(paramCount + wantsJSContext + wantsOptArgc);
 
   // Initialize each parameter to a valid state (for safe cleanup later).
   for (uint8_t i = 0, paramIdx = 0; i < mDispatchParams.Length(); i++) {

@@ -51,11 +51,7 @@ class nsNavHistoryQuery final : public nsINavHistoryQuery {
   const nsTArray<nsCString>& Parents() const { return mParents; }
 
   const nsTArray<nsString>& Tags() const { return mTags; }
-  nsresult SetTags(const nsTArray<nsString>& aTags) {
-    if (!mTags.ReplaceElementsAt(0, mTags.Length(), aTags))
-      return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
-  }
+  void SetTags(nsTArray<nsString> aTags) { mTags = std::move(aTags); }
   bool TagsAreNot() { return mTagsAreNot; }
 
   const nsTArray<uint32_t>& Transitions() const { return mTransitions; }
