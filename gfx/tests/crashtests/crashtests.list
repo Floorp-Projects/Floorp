@@ -157,8 +157,8 @@ load 1242822.html
 load 1248222.html
 load 1278305.html
 load 1308394.html
-load 1317403-1.html # bug 1331533
-load 1325159-1.html
+skip-if(Android&&isDebugBuild) load 1317403-1.html # bug 1331533, 1630774
+skip-if(Android&&!isDebugBuild) load 1325159-1.html # bug 1630774
 load 1331683.html
 skip-if(Android) pref(dom.disable_open_during_load,false) load 1343666.html
 load 1408078-1.html
