@@ -340,7 +340,7 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
 
 size_t HeapThreshold::nonIncrementalBytes(
     ZoneAllocator* zone, const GCSchedulingTunables& tunables) const {
-  size_t bytes = bytes_ * tunables.nonIncrementalFactor();
+  size_t bytes = startBytes_ * tunables.nonIncrementalFactor();
 
   // Increase the non-incremental threshold when we start background sweeping
   // for the zone. The splay latency benchmark depends on this to avoid pauses
@@ -356,7 +356,14 @@ float HeapThreshold::eagerAllocTrigger(bool highFrequencyGC) const {
   float eagerTriggerFactor = highFrequencyGC
                                  ? HighFrequencyEagerAllocTriggerFactor
                                  : LowFrequencyEagerAllocTriggerFactor;
-  return eagerTriggerFactor * bytes();
+  return eagerTriggerFactor * startBytes();
+}
+
+void HeapThreshold::setSliceThreshold(ZoneAllocator* zone,
+                                      const HeapSize& heapSize,
+                                      const GCSchedulingTunables& tunables) {
+  sliceBytes_ = std::min(heapSize.bytes() + tunables.zoneAllocDelayBytes(),
+                         nonIncrementalBytes(zone, tunables));
 }
 
 /* static */
@@ -425,10 +432,12 @@ size_t GCHeapThreshold::computeZoneTriggerBytes(
   return size_t(std::min(triggerMax, trigger));
 }
 
-void GCHeapThreshold::updateAfterGC(size_t lastBytes, JSGCInvocationKind gckind,
-                                    const GCSchedulingTunables& tunables,
-                                    const GCSchedulingState& state,
-                                    bool isAtomsZone, const AutoLockGC& lock) {
+void GCHeapThreshold::updateStartThreshold(size_t lastBytes,
+                                           JSGCInvocationKind gckind,
+                                           const GCSchedulingTunables& tunables,
+                                           const GCSchedulingState& state,
+                                           bool isAtomsZone,
+                                           const AutoLockGC& lock) {
   float growthFactor =
       computeZoneHeapGrowthFactorForHeapSize(lastBytes, tunables, state);
 
@@ -438,7 +447,7 @@ void GCHeapThreshold::updateAfterGC(size_t lastBytes, JSGCInvocationKind gckind,
     growthFactor *= 1.5;
   }
 
-  bytes_ =
+  startBytes_ =
       computeZoneTriggerBytes(growthFactor, lastBytes, gckind, tunables, lock);
 }
 
@@ -450,10 +459,12 @@ size_t MallocHeapThreshold::computeZoneTriggerBytes(float growthFactor,
   return size_t(float(std::max(lastBytes, baseBytes)) * growthFactor);
 }
 
-void MallocHeapThreshold::updateAfterGC(size_t lastBytes, size_t baseBytes,
-                                        float growthFactor,
-                                        const AutoLockGC& lock) {
-  bytes_ = computeZoneTriggerBytes(growthFactor, lastBytes, baseBytes, lock);
+void MallocHeapThreshold::updateStartThreshold(size_t lastBytes,
+                                               size_t baseBytes,
+                                               float growthFactor,
+                                               const AutoLockGC& lock) {
+  startBytes_ =
+      computeZoneTriggerBytes(growthFactor, lastBytes, baseBytes, lock);
 }
 
 #ifdef DEBUG
