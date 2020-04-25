@@ -1005,7 +1005,7 @@ void BlendFunc(GLenum srgb, GLenum drgb, GLenum sa, GLenum da) {
 }
 
 void BlendColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
-  I32 c = roundfast((Float){b, g, r, a}, 255.49f);
+  I32 c = round_pixel((Float){b, g, r, a});
   ctx->blendcolor = CONVERT(c, U16).xyzwxyzw;
 }
 
@@ -1032,7 +1032,7 @@ void SetScissor(GLint x, GLint y, GLsizei width, GLsizei height) {
 }
 
 void ClearColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
-  I32 c = roundfast((Float){b, g, r, a}, 255.49f);
+  I32 c = round_pixel((Float){b, g, r, a});
   ctx->clearcolor = bit_cast<uint32_t>(CONVERT(c, U8));
 }
 
@@ -2329,7 +2329,7 @@ static ALWAYS_INLINE void discard_depth(uint16_t z, uint16_t* zbuf,
 }
 
 static inline WideRGBA8 pack_pixels_RGBA8(const vec4& v) {
-  ivec4 i = roundfast(v, 255.49f);
+  ivec4 i = round_pixel(v);
   HalfRGBA8 xz = packRGBA8(i.z, i.x);
   HalfRGBA8 yw = packRGBA8(i.y, i.w);
   HalfRGBA8 xy = zipLow(xz, yw);
@@ -2340,7 +2340,7 @@ static inline WideRGBA8 pack_pixels_RGBA8(const vec4& v) {
 }
 
 static inline WideRGBA8 pack_pixels_RGBA8(const vec4_scalar& v) {
-  I32 i = roundfast((Float){v.z, v.y, v.x, v.w}, 255.49f);
+  I32 i = round_pixel((Float){v.z, v.y, v.x, v.w});
   HalfRGBA8 c = packRGBA8(i, i);
   return combine(c, c);
 }
@@ -2476,7 +2476,7 @@ static inline void commit_output(uint32_t* buf, int span) {
 }
 
 static inline WideR8 pack_pixels_R8(Float c) {
-  return packR8(roundfast(c, 255.49f));
+  return packR8(round_pixel(c));
 }
 
 static inline WideR8 pack_pixels_R8() {
