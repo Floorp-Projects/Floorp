@@ -33,7 +33,7 @@ use cranelift_wasm::{
     SignatureIndex, TableIndex, TargetEnvironment, WasmError, WasmResult,
 };
 
-use crate::bindings::{self, SymbolicAddress, GlobalDesc};
+use crate::bindings::{self, GlobalDesc, SymbolicAddress};
 use crate::compile::{symbolic_function_name, wasm_function_name};
 use crate::isa::POINTER_SIZE;
 

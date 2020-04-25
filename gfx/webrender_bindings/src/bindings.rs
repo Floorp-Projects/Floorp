@@ -34,11 +34,10 @@ use rayon;
 use swgl_bindings::SwCompositor;
 use tracy_rs::register_thread_with_profiler;
 use webrender::{
-    api::units::*, api::*, set_profiler_hooks, AsyncPropertySampler, AsyncScreenshotHandle,
-    Compositor, CompositorCapabilities, CompositorConfig, DebugFlags, Device, FastHashMap,
-    NativeSurfaceId, NativeSurfaceInfo, NativeTileId, PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer,
-    RendererOptions, RendererStats, SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod,
-    VertexUsageHint, WrShaders,
+    api::units::*, api::*, set_profiler_hooks, AsyncPropertySampler, AsyncScreenshotHandle, Compositor,
+    CompositorCapabilities, CompositorConfig, DebugFlags, Device, FastHashMap, NativeSurfaceId, NativeSurfaceInfo,
+    NativeTileId, PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer, RendererOptions, RendererStats,
+    SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod, VertexUsageHint, WrShaders,
 };
 
 #[cfg(target_os = "macos")]
@@ -1995,7 +1994,7 @@ pub extern "C" fn wr_resource_updates_add_raw_font(
 }
 
 fn generate_capture_path(path: *const c_char) -> Option<PathBuf> {
-    use std::fs::{File, create_dir_all};
+    use std::fs::{create_dir_all, File};
     use std::io::Write;
 
     let cstr = unsafe { CStr::from_ptr(path) };
@@ -2043,7 +2042,7 @@ fn generate_capture_path(path: *const c_char) -> Option<PathBuf> {
         }
         Err(e) => {
             warn!("Unable to create path '{:?}' for capture: {:?}", path, e);
-            return None
+            return None;
         }
     }
 
@@ -2482,10 +2481,7 @@ pub extern "C" fn wr_dp_define_image_mask_clip_with_parent_clip_chain(
     let clip_id = state
         .frame_builder
         .dl_builder
-        .define_clip_image_mask(
-            &parent.to_webrender(state.pipeline_id),
-            mask,
-        );
+        .define_clip_image_mask(&parent.to_webrender(state.pipeline_id), mask);
     WrClipId::from_webrender(clip_id)
 }
 

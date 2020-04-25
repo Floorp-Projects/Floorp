@@ -656,13 +656,7 @@ fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
 }
 
 impl BlobImageHandler for Moz2dBlobImageHandler {
-    fn add(
-        &mut self,
-        key: BlobImageKey,
-        data: Arc<BlobImageData>,
-        visible_rect: &DeviceIntRect,
-        tile_size: TileSize,
-    ) {
+    fn add(&mut self, key: BlobImageKey, data: Arc<BlobImageData>, visible_rect: &DeviceIntRect, tile_size: TileSize) {
         {
             let index = BlobReader::new(&data);
             assert!(index.reader.has_more());
