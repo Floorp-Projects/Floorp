@@ -105,17 +105,25 @@ static nsresult ReauthenticateUserWindows(const nsAString& aMessageText,
   }
 
   if (!IsOS(OS_DOMAINMEMBER)) {
-    HANDLE logonUserHandle = nullptr;
-    bool result = LogonUser(username, L".", L"", LOGON32_LOGON_INTERACTIVE,
-                            LOGON32_PROVIDER_DEFAULT, &logonUserHandle);
+    const WCHAR* usernameNoDomain = username;
+    // Don't include the domain portion of the username when calling LogonUser.
+    LPCWSTR backslash = wcschr(username, L'\\');
+    if (backslash) {
+      usernameNoDomain = backslash + 1;
+    }
+
+    HANDLE logonUserHandle = INVALID_HANDLE_VALUE;
+    bool result =
+        LogonUser(usernameNoDomain, L".", L"", LOGON32_LOGON_INTERACTIVE,
+                  LOGON32_PROVIDER_DEFAULT, &logonUserHandle);
+    if (result) {
+      CloseHandle(logonUserHandle);
+    }
     // ERROR_ACCOUNT_RESTRICTION: Indicates a referenced user name and
     // authentication information are valid, but some user account restriction
     // has prevented successful authentication (such as time-of-day
     // restrictions).
     if (result || GetLastError() == ERROR_ACCOUNT_RESTRICTION) {
-      if (logonUserHandle && logonUserHandle != INVALID_HANDLE_VALUE) {
-        CloseHandle(logonUserHandle);
-      }
       reauthenticated = true;
       isBlankPassword = true;
       return NS_OK;
