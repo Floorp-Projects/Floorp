@@ -566,6 +566,8 @@ SI I32 roundfast(Float v, Float scale) {
 #endif
 }
 
+template <typename T> SI auto round_pixel(T v) { return roundfast(v, 255.0f); }
+
 #define round __glsl_round
 
 float round(float a) { return roundf(a); }
