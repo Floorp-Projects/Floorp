@@ -244,13 +244,14 @@ linux64-wine:
         symbol: TL(wine)
         tier: 1
     worker:
+        docker-image: {in-tree: deb9-toolchain-build}
         max-run-time: 10800
     run:
         script: build-wine.sh
         toolchain-artifact: public/build/wine.tar.xz
     fetches:
         fetch:
-            - wine-3.0.3
+            - wine-5.0
 
 win32-pdbstr:
     description: "pdbstr for 32-bits Windows"

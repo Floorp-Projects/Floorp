@@ -269,13 +269,13 @@ upx-3.95-win:
         sha256: 5c076f87ba64d82f11513f4af0ceb07246a3540aa3c72ca3ffc2d53971fa56e3
         size: 462820
 
-wine-3.0.3:
-    description: wine-3.0.3.tar.xz
+wine-5.0:
+    description: wine-5.0.tar.xz
     fetch:
         type: static-url
-        url: http://dl.winehq.org/wine/source/3.0/wine-3.0.3.tar.xz
-        sha256: eb645999ea6f6455a5275bf267e19a32497c8f5aac818ea40afe7c8c396a4da1
-        size: 19735412
+        url: https://dl.winehq.org/wine/source/5.0/wine-5.0.tar.xz
+        sha256: 181550ba69a80b00c631f80c28ff7642264613bbecdb0c0fc04d6534866713b4
+        size: 22469428
         gpg-signature:
             sig-url: "{url}.sign"
             key-path: build/unix/build-gcc/DA23579A74D4AD9AF9D3F945CEFAC8EAAF17519D.key
