@@ -64,7 +64,7 @@ var DevTools = {
         let target = await getTargetForSelectedTab();
         let toolbox = await gDevTools.showToolbox(target, "inspector", "right");
         this.selectors = [selectToolbox.bind(null, toolbox)];
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 1000));
       },
     },
     undockedToolbox: {
@@ -77,7 +77,7 @@ var DevTools = {
           "window"
         );
         this.selectors = [selectToolbox.bind(null, toolbox)];
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 1000));
       },
     },
   },
