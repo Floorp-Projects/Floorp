@@ -3149,7 +3149,8 @@ void AsyncPanZoomController::UpdateWithTouchAtDevicePoint(
 }
 
 Maybe<CompositionPayload> AsyncPanZoomController::NotifyScrollSampling() {
-  return std::move(mCompositedScrollPayload);
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+  return mSampledState.TakeScrollPayload();
 }
 
 bool AsyncPanZoomController::AttemptScroll(
@@ -3639,19 +3640,6 @@ void AsyncPanZoomController::SetScrollOffset(const CSSPoint& aOffset) {
 void AsyncPanZoomController::ClampAndSetScrollOffset(const CSSPoint& aOffset) {
   Metrics().ClampAndSetScrollOffset(aOffset);
   Metrics().RecalculateLayoutViewportOffset();
-}
-
-void AsyncPanZoomController::ClampCompositedScrollOffset() {
-  mCompositedScrollOffset =
-      Metrics().CalculateScrollRange().ClampPoint(mCompositedScrollOffset);
-  RecalculateCompositedLayoutViewport();
-}
-
-void AsyncPanZoomController::RecalculateCompositedLayoutViewport() {
-  FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
-      CSSRect(mCompositedScrollOffset,
-              Metrics().CalculateCompositedSizeInCssPixels()),
-      Metrics().GetScrollableRect(), mCompositedLayoutViewport);
 }
 
 void AsyncPanZoomController::ScrollBy(const CSSPoint& aOffset) {
@@ -4179,7 +4167,7 @@ CSSRect AsyncPanZoomController::GetEffectiveLayoutViewport(
     return mLastContentPaintMetrics.GetLayoutViewport();
   }
   if (aMode == eForCompositing) {
-    return mCompositedLayoutViewport;
+    return mSampledState.GetLayoutViewport();
   }
   return Metrics().GetLayoutViewport();
 }
@@ -4191,7 +4179,7 @@ CSSPoint AsyncPanZoomController::GetEffectiveScrollOffset(
     return mLastContentPaintMetrics.GetVisualViewportOffset();
   }
   if (aMode == eForCompositing) {
-    return mCompositedScrollOffset;
+    return mSampledState.GetScrollOffset();
   }
   return Metrics().GetScrollOffset();
 }
@@ -4203,20 +4191,15 @@ CSSToParentLayerScale2D AsyncPanZoomController::GetEffectiveZoom(
     return mLastContentPaintMetrics.GetZoom();
   }
   if (aMode == eForCompositing) {
-    return mCompositedZoom;
+    return mSampledState.GetZoom();
   }
   return Metrics().GetZoom();
 }
 
 bool AsyncPanZoomController::SampleCompositedAsyncTransform(
     const RecursiveMutexAutoLock& aProofOfLock) {
-  if (!mCompositedLayoutViewport.IsEqualEdges(Metrics().GetLayoutViewport()) ||
-      mCompositedScrollOffset != Metrics().GetScrollOffset() ||
-      mCompositedZoom != Metrics().GetZoom()) {
-    mCompositedLayoutViewport = Metrics().GetLayoutViewport();
-    mCompositedScrollOffset = Metrics().GetScrollOffset();
-    mCompositedZoom = Metrics().GetZoom();
-    mCompositedScrollPayload = std::move(mScrollPayload);
+  if (mSampledState != SampledAPZCState(Metrics())) {
+    mSampledState = SampledAPZCState(Metrics(), std::move(mScrollPayload));
     return true;
   }
   return false;
@@ -4546,9 +4529,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     mExpectedGeckoMetrics = aLayerMetrics;
     ShareCompositorFrameMetrics();
 
-    mCompositedLayoutViewport = Metrics().GetLayoutViewport();
-    mCompositedScrollOffset = Metrics().GetScrollOffset();
-    mCompositedZoom = Metrics().GetZoom();
+    mSampledState.UpdateScrollProperties(Metrics());
+    mSampledState.UpdateZoomProperties(Metrics());
 
     if (Metrics().GetDisplayPortMargins() != ScreenMargin()) {
       // A non-zero display port margin here indicates a displayport has
@@ -4586,16 +4568,13 @@ void AsyncPanZoomController::NotifyLayersUpdated(
         needContentRepaint = true;
       }
       Metrics().ZoomBy(totalResolutionChange / presShellResolutionChange);
-      mCompositedZoom.xScale *=
-          (totalResolutionChange / presShellResolutionChange).width;
-      mCompositedZoom.yScale *=
-          (totalResolutionChange / presShellResolutionChange).height;
+      mSampledState.ZoomBy(totalResolutionChange / presShellResolutionChange);
     } else {
       // Take the new zoom as either device scale or composition width or
       // viewport size got changed (e.g. due to orientation change, or content
       // changing the meta-viewport tag).
       Metrics().SetZoom(aLayerMetrics.GetZoom());
-      mCompositedZoom = aLayerMetrics.GetZoom();
+      mSampledState.UpdateZoomProperties(aLayerMetrics);
       Metrics().SetDevPixelsPerCSSPixel(
           aLayerMetrics.GetDevPixelsPerCSSPixel());
     }
@@ -4670,8 +4649,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       }
       Metrics().RecalculateLayoutViewportOffset();
 
-      mCompositedLayoutViewport = Metrics().GetLayoutViewport();
-      mCompositedScrollOffset = Metrics().GetScrollOffset();
+      mSampledState.UpdateScrollProperties(Metrics());
       mExpectedGeckoMetrics = aLayerMetrics;
 
       // If an animation is underway, tell it about the scroll offset update.
@@ -4700,7 +4678,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       // scrollable rect or composition bounds may have changed in a way that
       // makes our local scroll offset out of bounds, so re-clamp it.
       ClampAndSetScrollOffset(Metrics().GetScrollOffset());
-      ClampCompositedScrollOffset();
+      mSampledState.ClampScrollOffset(Metrics());
     }
   }
 
@@ -4736,8 +4714,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     // The rest of this branch largely follows the code in the
     // |if (scrollOffsetUpdated)| branch above.
     Metrics().RecalculateLayoutViewportOffset();
-    mCompositedLayoutViewport = Metrics().GetLayoutViewport();
-    mCompositedScrollOffset = Metrics().GetScrollOffset();
+    mSampledState.UpdateScrollProperties(Metrics());
     mExpectedGeckoMetrics = aLayerMetrics;
     if (ShouldCancelAnimationForScrollUpdate(Nothing())) {
       CancelAnimation();

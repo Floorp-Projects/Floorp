@@ -31,6 +31,7 @@
 #include "nsTArray.h"
 #include "PotentialCheckerboardDurationTracker.h"
 #include "RecentEventsBuffer.h"  // for RecentEventsBuffer
+#include "SampledAPZCState.h"
 
 #include "base/message_loop.h"
 
@@ -698,21 +699,6 @@ class AsyncPanZoomController {
   void ClampAndSetScrollOffset(const CSSPoint& aOffset);
 
   /**
-   * Re-clamp mCompositedScrollOffset to the scroll range. This only needs to
-   * be called if the composited scroll offset changes outside of
-   * SampleCompositedAsyncTransform().
-   */
-  void ClampCompositedScrollOffset();
-
-  /**
-   * Recalculate mCompositedLayoutViewport so that it continues to enclose
-   * the composited visual viewport. This only needs to be called if the
-   * composited layout viewport changes outside of
-   * SampleCompositedAsyncTransform().
-   */
-  void RecalculateCompositedLayoutViewport();
-
-  /**
    * Scroll the scroll frame by an X,Y offset.
    * The resulting scroll offset is not clamped to the scrollable rect;
    * the caller must ensure it stays within range.
@@ -974,12 +960,10 @@ class AsyncPanZoomController {
   // This allows us to transform events into Gecko's coordinate space.
   FrameMetrics mExpectedGeckoMetrics;
 
-  // These variables cache the layout viewport, scroll offset, and zoom stored
-  // in |Metrics()| the last time SampleCompositedAsyncTransform() was
-  // called. mRecursiveMutex must be held with using or modifying these fields.
-  CSSRect mCompositedLayoutViewport;
-  CSSPoint mCompositedScrollOffset;
-  CSSToParentLayerScale2D mCompositedZoom;
+  // This holds important state from the Metrics() at the last time
+  // SampleCompositedAsyncTransform() was called. mRecursiveMutex must be held
+  // when using or modifying this member.
+  SampledAPZCState mSampledState;
 
   // Groups state variables that are specific to a platform.
   // Initialized on first use.
@@ -1033,8 +1017,6 @@ class AsyncPanZoomController {
 
   // Position on screen where user first put their finger down.
   ExternalPoint mStartTouch;
-
-  Maybe<CompositionPayload> mCompositedScrollPayload;
 
   // Accessing mScrollPayload needs to be protected by mRecursiveMutex
   Maybe<CompositionPayload> mScrollPayload;
