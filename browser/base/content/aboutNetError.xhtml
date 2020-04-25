@@ -144,7 +144,7 @@
           <div id="errorLongDesc" />
 
           <div id="learnMoreContainer">
-            <p><a id="learnMoreLink" target="new">&errorReporting.learnMore;</a></p>
+            <p><a id="learnMoreLink" target="new" data-telemetry-id="learn_more_link">&errorReporting.learnMore;</a></p>
           </div>
         </div>
 
@@ -164,10 +164,10 @@
         </div>
 
         <div id="certErrorAndCaptivePortalButtonContainer" class="button-container">
-          <button id="returnButton" class="primary">&returnToPreviousPage1.label;</button>
+          <button id="returnButton" class="primary" data-telemetry-id="return_button_top">&returnToPreviousPage1.label;</button>
           <button id="openPortalLoginPageButton" class="primary">&openPortalLoginPage.label2;</button>
           <button class="primary try-again">&retry.label;</button>
-          <button id="advancedButton">&advanced2.label;</button>
+          <button id="advancedButton" data-telemetry-id="advanced_button">&advanced2.label;</button>
         </div>
       </div>
 
@@ -180,10 +180,10 @@
           <p id="badCertTechnicalInfo"/>
           <a id="viewCertificate" href="javascript:void(0)">&viewCertificate.label;</a>
           <div id="advancedPanelButtonContainer" class="button-container">
-            <button id="advancedPanelReturnButton" class="primary">&returnToPreviousPage1.label;</button>
+            <button id="advancedPanelReturnButton" class="primary" data-telemetry-id="return_button_adv">&returnToPreviousPage1.label;</button>
             <button class="primary try-again">&retry.label;</button>
             <div class="exceptionDialogButtonContainer">
-              <button id="exceptionDialogButton">&securityOverride.exceptionButton1Label;</button>
+              <button id="exceptionDialogButton" data-telemetry-id="exception_button">&securityOverride.exceptionButton1Label;</button>
             </div>
           </div>
         </div>
@@ -191,14 +191,14 @@
         <div id="certificateErrorReporting">
             <p class="toggle-container-with-text">
                 <input type="checkbox" id="automaticallyReportInFuture" role="checkbox"/>
-                <label for="automaticallyReportInFuture">&errorReporting.automatic2;</label>
+                <label for="automaticallyReportInFuture" data-telemetry-id="auto_report_cb">&errorReporting.automatic2;</label>
             </p>
         </div>
 
         <div id="certificateErrorDebugInformation">
-          <button id="copyToClipboardTop">&certerror.copyToClipboard.label;</button>
+          <button id="copyToClipboardTop" data-telemetry-id="clipboard_button_top">&certerror.copyToClipboard.label;</button>
           <div id="certificateErrorText"/>
-          <button id="copyToClipboardBottom">&certerror.copyToClipboard.label;</button>
+          <button id="copyToClipboardBottom" data-telemetry-id="clipboard_button_bot">&certerror.copyToClipboard.label;</button>
         </div>
       </div>
     </div>
