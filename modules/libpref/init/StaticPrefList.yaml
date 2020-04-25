@@ -986,7 +986,7 @@
 
 - name: browser.tabs.documentchannel.ppdc
   type: bool
-  value: true
+  value: false
   mirror: always
 
 - name: browser.tabs.remote.desktopbehavior

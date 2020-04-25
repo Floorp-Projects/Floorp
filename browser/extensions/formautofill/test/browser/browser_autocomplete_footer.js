@@ -25,8 +25,7 @@ add_task(async function test_press_enter_on_footer() {
     );
     const prefTabPromise = BrowserTestUtils.waitForNewTab(
       gBrowser,
-      PRIVACY_PREF_URL,
-      true
+      PRIVACY_PREF_URL
     );
     for (let i = 0; i < listItemElems.length; i++) {
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
@@ -60,8 +59,7 @@ add_task(async function test_click_on_footer() {
     )._optionButton;
     const prefTabPromise = BrowserTestUtils.waitForNewTab(
       gBrowser,
-      PRIVACY_PREF_URL,
-      true
+      PRIVACY_PREF_URL
     );
     // Wait for dropdown animation finished to continue mouse synthesizing.
     await sleep(3000);
