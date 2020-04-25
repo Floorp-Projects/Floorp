@@ -1439,7 +1439,7 @@ static bool XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
   // Because of centralization, we need to make sure we fault in the JitInfos as
   // well. At present, until the JSAPI changes, the easiest way to do this is
   // wrap them up as functions ourselves.
-  desc.setAttributes(attrSpec.flags);
+  desc.setAttributes(attrSpec.attributes());
   // They all have getters, so we can just make it.
   JS::Rooted<JSObject*> funobj(
       cx, XrayCreateFunction(cx, wrapper, attrSpec.u.accessors.getter.native, 0,
@@ -1773,7 +1773,8 @@ bool XrayAppendPropertyKeys(JSContext* cx, JS::Handle<JSObject*> obj,
       const SpecType* spec = pref->specs;
       do {
         const jsid id = infos++->Id();
-        if (((flags & JSITER_HIDDEN) || (spec->flags & JSPROP_ENUMERATE)) &&
+        if (((flags & JSITER_HIDDEN) ||
+             (spec->attributes() & JSPROP_ENUMERATE)) &&
             ((flags & JSITER_SYMBOLS) || !JSID_IS_SYMBOL(id)) &&
             !props.append(id)) {
           return false;

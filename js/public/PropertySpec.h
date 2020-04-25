@@ -176,17 +176,21 @@ struct JSPropertySpec {
   };
 
   Name name;
-  uint8_t flags;
+
+ private:
+  uint8_t flags_;
+
+ public:
   AccessorsOrValue u;
 
  private:
   JSPropertySpec() = delete;
 
   constexpr JSPropertySpec(const char* name, uint8_t flags, AccessorsOrValue u)
-      : name(name), flags(flags), u(u) {}
+      : name(name), flags_(flags), u(u) {}
   constexpr JSPropertySpec(JS::SymbolCode name, uint8_t flags,
                            AccessorsOrValue u)
-      : name(name), flags(flags), u(u) {}
+      : name(name), flags_(flags), u(u) {}
 
  public:
   JSPropertySpec(const JSPropertySpec& other) = default;
@@ -272,7 +276,11 @@ struct JSPropertySpec {
                               JSPropertySpec::Accessor::noAccessor()));
   }
 
-  bool isAccessor() const { return !(flags & JSPROP_INTERNAL_USE_BIT); }
+  // JSPROP_* property attributes as defined in PropertyDescriptor.h
+  unsigned attributes() const { return flags_ & ~JSPROP_INTERNAL_USE_BIT; }
+
+  bool isAccessor() const { return !(flags_ & JSPROP_INTERNAL_USE_BIT); }
+
   JS_PUBLIC_API bool getValue(JSContext* cx,
                               JS::MutableHandle<JS::Value> value) const;
 
@@ -281,13 +289,13 @@ struct JSPropertySpec {
 
 #ifdef DEBUG
     // Verify that our accessors match our JSPROP_GETTER flag.
-    if (flags & JSPROP_GETTER) {
+    if (flags_ & JSPROP_GETTER) {
       checkAccessorsAreSelfHosted();
     } else {
       checkAccessorsAreNative();
     }
 #endif
-    return (flags & JSPROP_GETTER);
+    return (flags_ & JSPROP_GETTER);
   }
 
   static_assert(sizeof(SelfHostedWrapper) == sizeof(JSNativeWrapper),
@@ -361,6 +369,9 @@ struct JSFunctionSpec {
   uint16_t nargs;
   uint16_t flags;
   const char* selfHostedName;
+
+  // JSPROP_* property attributes as defined in PropertyDescriptor.h
+  unsigned attributes() const { return flags; }
 };
 
 /*
