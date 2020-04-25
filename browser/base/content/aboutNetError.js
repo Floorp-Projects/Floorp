@@ -515,7 +515,46 @@ function initPageCertError() {
     document.querySelector(".exceptionDialogButtonContainer").hidden = true;
   }
 
+  let els = document.querySelectorAll("[data-telemetry-id]");
+  for (let el of els) {
+    el.addEventListener("click", recordClickTelemetry);
+  }
+
+  let failedCertInfo = document.getFailedCertSecurityInfo();
+  // Truncate the error code to avoid going over the allowed
+  // string size limit for telemetry events.
+  let errorCode = failedCertInfo.errorCodeString.substring(0, 40);
+  RPMRecordTelemetryEvent(
+    "security.ui.certerror",
+    "load",
+    "aboutcerterror",
+    errorCode,
+    {
+      has_sts: (getCSSClass() == "badStsCert").toString(),
+      is_frame: (window.parent != window).toString(),
+    }
+  );
+
   setCertErrorDetails();
+}
+
+function recordClickTelemetry(e) {
+  let target = e.originalTarget;
+  let telemetryId = target.dataset.telemetryId;
+  let failedCertInfo = document.getFailedCertSecurityInfo();
+  // Truncate the error code to avoid going over the allowed
+  // string size limit for telemetry events.
+  let errorCode = failedCertInfo.errorCodeString.substring(0, 40);
+  RPMRecordTelemetryEvent(
+    "security.ui.certerror",
+    "click",
+    telemetryId,
+    errorCode,
+    {
+      has_sts: (getCSSClass() == "badStsCert").toString(),
+      is_frame: (window.parent != window).toString(),
+    }
+  );
 }
 
 function initCertErrorPageActions() {
@@ -1064,6 +1103,7 @@ async function setTechnicalDetailsOnCertError() {
       title: failedCertInfo.errorCodeString,
       id: "errorCode",
       "data-l10n-name": "error-code-link",
+      "data-telemetry-id": "error_code_link",
     },
     false
   );
@@ -1087,6 +1127,7 @@ function handleErrorCodeClick(event) {
   let debugInfo = document.getElementById("certificateErrorDebugInformation");
   debugInfo.style.display = "block";
   debugInfo.scrollIntoView({ block: "start", behavior: "smooth" });
+  recordClickTelemetry(event);
 }
 
 /* Only do autofocus if we're the toplevel frame; otherwise we

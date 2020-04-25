@@ -28,6 +28,7 @@ class NetErrorChild extends RemotePageChild {
       "RPMGetAppBuildID",
       "RPMPrefIsLocked",
       "RPMAddToHistogram",
+      "RPMRecordTelemetryEvent",
     ];
     this.exportFunctions(exportableFunctions);
   }
@@ -76,5 +77,9 @@ class NetErrorChild extends RemotePageChild {
 
   RPMAddToHistogram(histID, bin) {
     Services.telemetry.getHistogramById(histID).add(bin);
+  }
+
+  RPMRecordTelemetryEvent(category, event, object, value, extra) {
+    Services.telemetry.recordEvent(category, event, object, value, extra);
   }
 }
