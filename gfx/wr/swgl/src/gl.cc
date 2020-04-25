@@ -689,89 +689,88 @@ int bytes_per_type(GLenum type) {
   }
 }
 
-template <typename S>
-static inline S load_attrib_scalar(const char* src, size_t size, GLenum type,
-                                   bool normalized) {
-  if (sizeof(S) <= size) {
-    return *reinterpret_cast<const S*>(src);
-  }
+template <typename S, typename C>
+static inline S expand_attrib(const char* buf, size_t size, bool normalized) {
+  typedef typename ElementType<S>::ty elem_type;
   S scalar = {0};
-  if (type == GL_UNSIGNED_SHORT) {
-    if (normalized) {
-      for (size_t i = 0; i < size / sizeof(uint16_t); i++) {
-        typename ElementType<S>::ty x =
-            reinterpret_cast<const uint16_t*>(src)[i];
-        put_nth_component(scalar, i, x * (1.0f / 0xFFFF));
-      }
-    } else {
-      for (size_t i = 0; i < size / sizeof(uint16_t); i++) {
-        typename ElementType<S>::ty x =
-            reinterpret_cast<const uint16_t*>(src)[i];
-        put_nth_component(scalar, i, x);
-      }
+  const C* src = reinterpret_cast<const C*>(buf);
+  if (normalized) {
+    const float scale = 1.0f / ((1 << (8 * sizeof(C))) - 1);
+    for (size_t i = 0; i < size / sizeof(C); i++) {
+      put_nth_component(scalar, i, elem_type(src[i]) * scale);
     }
   } else {
-    assert(sizeof(typename ElementType<S>::ty) == bytes_per_type(type));
-    memcpy(&scalar, src, size);
+    for (size_t i = 0; i < size / sizeof(C); i++) {
+      put_nth_component(scalar, i, elem_type(src[i]));
+    }
   }
   return scalar;
 }
 
+template <typename S>
+static inline S load_attrib_scalar(VertexAttrib& va, const char* src) {
+  if (sizeof(S) <= va.size) {
+    return *reinterpret_cast<const S*>(src);
+  }
+  if (va.type == GL_UNSIGNED_SHORT) {
+    return expand_attrib<S, uint16_t>(src, va.size, va.normalized);
+  }
+  if (va.type == GL_UNSIGNED_BYTE) {
+    return expand_attrib<S, uint8_t>(src, va.size, va.normalized);
+  }
+  assert(sizeof(typename ElementType<S>::ty) == bytes_per_type(va.type));
+  S scalar = {0};
+  memcpy(&scalar, src, va.size);
+  return scalar;
+}
+
 template <typename T>
-void load_attrib(T& attrib, VertexAttrib& va, uint16_t* indices, int start,
-                 int instance, int count) {
+void load_attrib(T& attrib, VertexAttrib& va, uint32_t start, int instance,
+                 int count) {
   typedef decltype(force_scalar(attrib)) scalar_type;
   if (!va.enabled) {
     attrib = T(scalar_type{0});
-  } else if (va.divisor == 1) {
+  } else if (va.divisor != 0) {
     char* src = (char*)va.buf + va.stride * instance + va.offset;
     assert(src + va.size <= va.buf + va.buf_size);
-    attrib = T(
-        load_attrib_scalar<scalar_type>(src, va.size, va.type, va.normalized));
-  } else if (va.divisor == 0) {
-    if (!indices) return;
-    assert(sizeof(typename ElementType<T>::ty) == bytes_per_type(va.type));
-    assert(count == 3 || count == 4);
-    attrib = (T){
-        load_attrib_scalar<scalar_type>(
-            (char*)va.buf + va.stride * indices[start + 0] + va.offset, va.size,
-            va.type, va.normalized),
-        load_attrib_scalar<scalar_type>(
-            (char*)va.buf + va.stride * indices[start + 1] + va.offset, va.size,
-            va.type, va.normalized),
-        load_attrib_scalar<scalar_type>(
-            (char*)va.buf + va.stride * indices[start + 2] + va.offset, va.size,
-            va.type, va.normalized),
-        load_attrib_scalar<scalar_type>(
-            (char*)va.buf + va.stride * indices[start + (count > 3 ? 3 : 2)] +
-                va.offset,
-            va.size, va.type, va.normalized),
-    };
+    attrib = T(load_attrib_scalar<scalar_type>(va, src));
   } else {
-    assert(false);
+    // Specialized for WR's primitive vertex order/winding.
+    // Triangles must be indexed at offsets 0, 1, 2.
+    // Quads must be successive triangles indexed at offsets 0, 1, 2, 2, 1, 3.
+    // Triangle vertexes fill vertex shader SIMD lanes as 0, 1, 2, 2.
+    // Quad vertexes fill vertex shader SIMD lanes as 0, 1, 3, 2, so that the
+    // points form a convex path that can be traversed by the rasterizer.
+    if (!count) return;
+    assert(count == 3 || count == 4);
+    char* src = (char*)va.buf + va.stride * start + va.offset;
+    attrib = (T){
+        load_attrib_scalar<scalar_type>(va, src),
+        load_attrib_scalar<scalar_type>(va, src + va.stride),
+        load_attrib_scalar<scalar_type>(va, src + va.stride * 2 +
+                                            (count > 3 ? va.stride : 0)),
+        load_attrib_scalar<scalar_type>(va, src + va.stride * 2)
+    };
   }
 }
 
 template <typename T>
-void load_flat_attrib(T& attrib, VertexAttrib& va, uint16_t* indices, int start,
-                      int instance, UNUSED int count) {
+void load_flat_attrib(T& attrib, VertexAttrib& va, uint32_t start, int instance,
+                      int count) {
   typedef decltype(force_scalar(attrib)) scalar_type;
   if (!va.enabled) {
     attrib = T{0};
     return;
   }
   char* src = nullptr;
-  if (va.divisor == 1) {
+  if (va.divisor != 0) {
     src = (char*)va.buf + va.stride * instance + va.offset;
-  } else if (va.divisor == 0) {
-    if (!indices) return;
-    src = (char*)va.buf + va.stride * indices[start] + va.offset;
   } else {
-    assert(false);
+    if (!count) return;
+    src = (char*)va.buf + va.stride * start + va.offset;
   }
   assert(src + va.size <= va.buf + va.buf_size);
-  attrib =
-      T(load_attrib_scalar<scalar_type>(src, va.size, va.type, va.normalized));
+  attrib = T(load_attrib_scalar<scalar_type>(va, src));
 }
 
 void setup_program(GLuint program) {
@@ -1629,7 +1628,8 @@ void DisableVertexAttribArray(GLuint index) {
 
 void VertexAttribDivisor(GLuint index, GLuint divisor) {
   VertexArray& v = ctx->vertex_arrays[ctx->current_vertex_array];
-  if (index >= NULL_ATTRIB) {
+  // Only support divisor being 0 (per-vertex) or 1 (per-instance).
+  if (index >= NULL_ATTRIB || divisor > 1) {
     assert(0);
     return;
   }
@@ -3276,8 +3276,8 @@ static void draw_quad(int nump, Texture& colortex, int layer,
 void VertexArray::validate() {
   int last_enabled = -1;
   for (int i = 0; i <= max_attrib; i++) {
-    if (attribs[i].enabled) {
-      VertexAttrib& attr = attribs[i];
+    VertexAttrib& attr = attribs[i];
+    if (attr.enabled) {
       // VertexArray &v = ctx->vertex_arrays[attr.vertex_array];
       Buffer& vertex_buf = ctx->buffers[attr.vertex_buffer];
       attr.buf = vertex_buf.buf;
@@ -3290,15 +3290,59 @@ void VertexArray::validate() {
   max_attrib = last_enabled;
 }
 
+template <typename INDEX>
+static inline void draw_elements(GLsizei count, GLsizei instancecount,
+                                 Buffer& indices_buf, size_t offset,
+                                 VertexArray& v, Texture& colortex, int layer,
+                                 Texture& depthtex) {
+  assert((offset & (sizeof(INDEX) - 1)) == 0);
+  INDEX* indices = (INDEX*)(indices_buf.buf + offset);
+  count = min(count,
+              (GLsizei)((indices_buf.size - offset) / sizeof(INDEX)));
+  // Triangles must be indexed at offsets 0, 1, 2.
+  // Quads must be successive triangles indexed at offsets 0, 1, 2, 2, 1, 3.
+  if (count == 6 && indices[1] == indices[0] + 1 &&
+      indices[2] == indices[0] + 2 && indices[5] == indices[0] + 3) {
+    assert(indices[3] == indices[0] + 2 && indices[4] == indices[0] + 1);
+    // Fast path - since there is only a single quad, we only load per-vertex
+    // attribs once for all instances, as they won't change across instances
+    // or within an instance.
+    vertex_shader->load_attribs(program_impl, v.attribs, indices[0], 0, 4);
+    draw_quad(4, colortex, layer, depthtex);
+    for (GLsizei instance = 1; instance < instancecount; instance++) {
+      vertex_shader->load_attribs(program_impl, v.attribs, indices[0],
+                                  instance, 0);
+      draw_quad(4, colortex, layer, depthtex);
+    }
+  } else {
+    for (GLsizei instance = 0; instance < instancecount; instance++) {
+      for (GLsizei i = 0; i + 3 <= count; i += 3) {
+        if (indices[i + 1] != indices[i] + 1 ||
+            indices[i + 2] != indices[i] + 2) {
+          continue;
+        }
+        int nump = 3;
+        if (i + 6 <= count && indices[i + 5] == indices[i] + 3) {
+          assert(indices[i + 3] == indices[i] + 2 &&
+                 indices[i + 4] == indices[i] + 1);
+          nump = 4;
+          i += 3;
+        }
+        vertex_shader->load_attribs(program_impl, v.attribs, indices[i],
+                                    instance, nump);
+        draw_quad(nump, colortex, layer, depthtex);
+      }
+    }
+  }
+}
+
 extern "C" {
 
 void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
                            void* indicesptr, GLsizei instancecount) {
-  assert(mode == GL_TRIANGLES || mode == GL_QUADS);
+  assert(mode == GL_TRIANGLES);
   assert(type == GL_UNSIGNED_SHORT || type == GL_UNSIGNED_INT);
-  assert(count == 6);
-  assert(indicesptr == nullptr);
-  if (count <= 0 || instancecount <= 0 || indicesptr) {
+  if (count <= 0 || instancecount <= 0) {
     return;
   }
 
@@ -3317,7 +3361,8 @@ void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
   }
 
   Buffer& indices_buf = ctx->buffers[ctx->element_array_buffer_binding];
-  if (!indices_buf.buf) {
+  size_t offset = (size_t)indicesptr;
+  if (!indices_buf.buf || offset >= indices_buf.size) {
     return;
   }
 
@@ -3336,69 +3381,17 @@ void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
   ctx->shaded_rows = 0;
   ctx->shaded_pixels = 0;
 
-  uint16_t* indices = (uint16_t*)indices_buf.buf;
-  if (type == GL_UNSIGNED_INT) {
-    assert(indices_buf.size == size_t(count) * 4);
-    indices = new uint16_t[count];
-    for (GLsizei i = 0; i < count; i++) {
-      uint32_t val = ((uint32_t*)indices_buf.buf)[i];
-      assert(val <= 0xFFFFU);
-      indices[i] = val;
-    }
-  } else if (type == GL_UNSIGNED_SHORT) {
-    assert(indices_buf.size == size_t(count) * 2);
-  } else {
-    assert(0);
-  }
-
   vertex_shader->init_batch(program_impl);
   fragment_shader->init_batch(program_impl);
-  if (count == 6 && indices[3] == indices[2] && indices[4] == indices[1]) {
-    uint16_t quad_indices[4] = {indices[0], indices[1], indices[5], indices[2]};
-    vertex_shader->load_attribs(program_impl, v.attribs, quad_indices, 0, 0, 4);
-    // debugf("emulate quad %d %d %d %d\n", indices[0], indices[1], indices[5],
-    // indices[2]);
-    draw_quad(4, colortex, fb.layer, depthtex);
-    for (GLsizei instance = 1; instance < instancecount; instance++) {
-      vertex_shader->load_attribs(program_impl, v.attribs, nullptr, 0, instance,
-                                  4);
-      draw_quad(4, colortex, fb.layer, depthtex);
-    }
-  } else {
-    for (GLsizei instance = 0; instance < instancecount; instance++) {
-      if (mode == GL_QUADS)
-        for (GLsizei i = 0; i + 4 <= count; i += 4) {
-          vertex_shader->load_attribs(program_impl, v.attribs, indices, i,
-                                      instance, 4);
-          // debugf("native quad %d %d %d %d\n", indices[i], indices[i+1],
-          // indices[i+2], indices[i+3]);
-          draw_quad(4, colortex, fb.layer, depthtex);
-        }
-      else
-        for (GLsizei i = 0; i + 3 <= count; i += 3) {
-          if (i + 6 <= count && indices[i + 3] == indices[i + 2] &&
-              indices[i + 4] == indices[i + 1]) {
-            uint16_t quad_indices[4] = {indices[i], indices[i + 1],
-                                        indices[i + 5], indices[i + 2]};
-            vertex_shader->load_attribs(program_impl, v.attribs, quad_indices,
-                                        0, instance, 4);
-            // debugf("emulate quad %d %d %d %d\n", indices[i], indices[i+1],
-            // indices[i+5], indices[i+2]);
-            draw_quad(4, colortex, fb.layer, depthtex);
-            i += 3;
-          } else {
-            vertex_shader->load_attribs(program_impl, v.attribs, indices, i,
-                                        instance, 3);
-            // debugf("triangle %d %d %d %d\n", indices[i], indices[i+1],
-            // indices[i+2]);
-            draw_quad(3, colortex, fb.layer, depthtex);
-          }
-        }
-    }
-  }
 
-  if (indices != (uint16_t*)indices_buf.buf) {
-    delete[] indices;
+  if (type == GL_UNSIGNED_SHORT) {
+    draw_elements<uint16_t>(count, instancecount, indices_buf, offset, v,
+                            colortex, fb.layer, depthtex);
+  } else if (type == GL_UNSIGNED_INT) {
+    draw_elements<uint32_t>(count, instancecount, indices_buf, offset, v,
+                            colortex, fb.layer, depthtex);
+  } else {
+    assert(false);
   }
 
   if (ctx->samples_passed_query) {
