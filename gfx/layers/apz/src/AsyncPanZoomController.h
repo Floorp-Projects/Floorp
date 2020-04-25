@@ -1165,10 +1165,6 @@ class AsyncPanZoomController {
    *
    * Returns true if the newly sampled value is different from the previously
    * sampled value.
-   *
-   * (This is only relevant when StaticPrefs::apz_frame_delay_enabled() is
-   * true. Otherwise, GetCurrentAsyncTransform() always reflects what's stored
-   * in |Metrics()| immediately, without any delay.)
    */
   bool SampleCompositedAsyncTransform(
       const RecursiveMutexAutoLock& aProofOfLock);
