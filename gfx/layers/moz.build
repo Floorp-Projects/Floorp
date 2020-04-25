@@ -363,6 +363,7 @@ UNIFIED_SOURCES += [
     'apz/src/OverscrollHandoffState.cpp',
     'apz/src/PotentialCheckerboardDurationTracker.cpp',
     'apz/src/QueuedInput.cpp',
+    'apz/src/SampledAPZCState.cpp',
     'apz/src/SimpleVelocityTracker.cpp',
     'apz/src/WheelScrollAnimation.cpp',
     'apz/testutil/APZTestData.cpp',
