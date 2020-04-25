@@ -122,21 +122,23 @@ void CookieServiceParent::SerialializeCookieList(
 }
 
 IPCResult CookieServiceParent::RecvPrepareCookieList(
-    const URIParams& aHost, const bool& aIsForeign,
+    nsIURI* aHost, const bool& aIsForeign,
     const bool& aIsThirdPartyTrackingResource,
     const bool& aIsThirdPartySocialTrackingResource,
     const bool& aFirstPartyStorageAccessGranted,
     const uint32_t& aRejectedReason, const bool& aIsSafeTopLevelNav,
     const bool& aIsSameSiteForeign, const OriginAttributes& aAttrs) {
-  nsCOMPtr<nsIURI> hostURI = DeserializeURI(aHost);
-
   // Send matching cookies to Child.
+  if (!aHost) {
+    return IPC_FAIL(this, "aHost must not be null");
+  }
+
   nsTArray<Cookie*> foundCookieList;
   // Note: passing nullptr as aChannel to GetCookiesForURI() here is fine since
   // this argument is only used for proper reporting of cookie loads, but the
   // child process already does the necessary reporting in this case for us.
   mCookieService->GetCookiesForURI(
-      hostURI, nullptr, aIsForeign, aIsThirdPartyTrackingResource,
+      aHost, nullptr, aIsForeign, aIsThirdPartyTrackingResource,
       aIsThirdPartySocialTrackingResource, aFirstPartyStorageAccessGranted,
       aRejectedReason, aIsSafeTopLevelNav, aIsSameSiteForeign, false, aAttrs,
       foundCookieList);
@@ -153,17 +155,15 @@ void CookieServiceParent::ActorDestroy(ActorDestroyReason aWhy) {
 
 IPCResult CookieServiceParent::RecvSetCookies(
     const nsCString& aBaseDomain, const OriginAttributes& aOriginAttributes,
-    const URIParams& aHost, bool aFromHttp,
-    const nsTArray<CookieStruct>& aCookies) {
+    nsIURI* aHost, bool aFromHttp, const nsTArray<CookieStruct>& aCookies) {
   if (!mCookieService) {
     return IPC_OK();
   }
 
   // Deserialize URI. Having a host URI is mandatory and should always be
   // provided by the child; thus we consider failure fatal.
-  nsCOMPtr<nsIURI> hostURI = DeserializeURI(aHost);
-  if (!hostURI) {
-    return IPC_FAIL_NO_REASON(this);
+  if (!aHost) {
+    return IPC_FAIL(this, "aHost must not be null");
   }
 
   // We set this to true while processing this cookie update, to make sure
@@ -171,8 +171,7 @@ IPCResult CookieServiceParent::RecvSetCookies(
   mProcessingCookie = true;
 
   bool ok = mCookieService->SetCookiesFromIPC(aBaseDomain, aOriginAttributes,
-                                              hostURI, aFromHttp, aCookies);
-
+                                              aHost, aFromHttp, aCookies);
   mProcessingCookie = false;
   return ok ? IPC_OK() : IPC_FAIL(this, "Invalid cookie received.");
 }

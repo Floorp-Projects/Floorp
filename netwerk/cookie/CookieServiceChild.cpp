@@ -135,12 +135,10 @@ void CookieServiceChild::TrackCookieLoad(nsIChannel* aChannel) {
 
   OriginAttributes attrs = loadInfo->GetOriginAttributes();
   StoragePrincipalHelper::PrepareOriginAttributes(aChannel, attrs);
-  URIParams uriParams;
-  SerializeURI(uri, uriParams);
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
   bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, uri);
   SendPrepareCookieList(
-      uriParams, result.contains(ThirdPartyAnalysis::IsForeign),
+      uri, result.contains(ThirdPartyAnalysis::IsForeign),
       result.contains(ThirdPartyAnalysis::IsThirdPartyTrackingResource),
       result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
       result.contains(ThirdPartyAnalysis::IsFirstPartyStorageAccessGranted),
@@ -320,21 +318,14 @@ nsresult CookieServiceChild::SetCookieStringInternal(
 
   nsCString cookieString(aCookieString);
 
-  URIParams hostURIParams;
-  SerializeURI(aHostURI, hostURIParams);
-
-  Maybe<URIParams> channelURIParams;
+  nsCOMPtr<nsIURI> channelURI;
   OriginAttributes attrs;
   if (aChannel) {
-    nsCOMPtr<nsIURI> channelURI;
     aChannel->GetURI(getter_AddRefs(channelURI));
-    SerializeURI(channelURI, channelURIParams);
 
     MOZ_ASSERT(loadInfo);
     attrs = loadInfo->GetOriginAttributes();
     StoragePrincipalHelper::PrepareOriginAttributes(aChannel, attrs);
-  } else {
-    SerializeURI(nullptr, channelURIParams);
   }
 
   Maybe<LoadInfoArgs> optionalLoadInfoArgs;
@@ -423,10 +414,7 @@ nsresult CookieServiceChild::SetCookieStringInternal(
 
   // Asynchronously call the parent.
   if (CanSend() && !cookiesToSend.IsEmpty()) {
-    URIParams host;
-    SerializeURI(aHostURI, host);
-
-    SendSetCookies(baseDomain, attrs, host, aFromHttp, cookiesToSend);
+    SendSetCookies(baseDomain, attrs, aHostURI, aFromHttp, cookiesToSend);
   }
 
   return NS_OK;
