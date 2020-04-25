@@ -6,10 +6,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PNecko;
-include URIParams;
 include NeckoChannelParams;
 
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
+using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
 
 namespace mozilla {
 namespace net {
@@ -34,11 +34,11 @@ nested(upto inside_cpow) sync protocol PCookieService
 parent:
   nested(inside_cpow) async SetCookies(nsCString baseDomain,
                                        OriginAttributes attrs,
-                                       URIParams host,
+                                       nsIURI host,
                                        bool fromHttp,
                                        CookieStruct[] cookies);
 
-  async PrepareCookieList(URIParams host,
+  async PrepareCookieList(nsIURI host,
                           bool isForeign,
                           bool isThirdPartyTrackingResource,
                           bool isThirdPartySocialTrackingResource,
