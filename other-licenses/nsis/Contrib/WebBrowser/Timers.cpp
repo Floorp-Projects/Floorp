@@ -11,6 +11,7 @@ static void APIENTRY TimerCallback(LPVOID NSISFunctionAddr, DWORD, DWORD) {
 
 PLUGINFUNCTION(CreateTimer) {
   EXDLL_INIT();
+  extra->RegisterPluginCallback(gHInst, NSISPluginCallback);
 
   TCHAR* funcAddrStr =
       (TCHAR*)HeapAlloc(GetProcessHeap(), 0, g_stringsize * sizeof(TCHAR));

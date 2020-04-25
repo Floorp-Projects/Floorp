@@ -232,10 +232,10 @@ Result NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
   nsTArray<uint8_t> subject;
-  if (!subject.AppendElements(encodedIssuerName.UnsafeGetData(),
-                              encodedIssuerName.GetLength())) {
-    return Result::FATAL_ERROR_NO_MEMORY;
-  }
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier.
+  subject.AppendElements(encodedIssuerName.UnsafeGetData(),
+                         encodedIssuerName.GetLength());
   nsTArray<nsTArray<uint8_t>> certs;
   nsresult rv = mCertStorage->FindCertsBySubject(subject, certs);
   if (NS_FAILED(rv)) {

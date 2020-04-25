@@ -18,7 +18,8 @@ refcounted protocol PVerifySSLServerCert
 child:
   async OnVerifiedSSLServerCertSuccess(ByteArray[] aBuiltCertChain,
                                        uint16_t aCertTransparencyStatus,
-                                       uint8_t aEVStatus);
+                                       uint8_t aEVStatus,
+                                       bool isBuiltCertChainRootBuiltInRoot);
 
   async OnVerifiedSSLServerCertFailure(uint32_t aFinalError,
                                        uint32_t aCollectedErrors);

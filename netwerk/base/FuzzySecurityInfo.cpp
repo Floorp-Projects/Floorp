@@ -335,5 +335,16 @@ FuzzySecurityInfo::GetPeerId(nsACString& aResult) {
   return NS_OK;
 }
 
+NS_IMETHODIMP FuzzySecurityInfo::SetIsBuiltCertChainRootBuiltInRoot(
+    bool aIsBuiltInRoot) {
+  return NS_OK;
+}
+
+NS_IMETHODIMP FuzzySecurityInfo::GetIsBuiltCertChainRootBuiltInRoot(
+    bool* aIsBuiltInRoot) {
+  *aIsBuiltInRoot = false;
+  return NS_OK;
+}
+
 }  // namespace net
 }  // namespace mozilla

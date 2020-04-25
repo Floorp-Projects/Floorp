@@ -59,35 +59,35 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
       : await this.listAllWorkerTargets();
 
     for (const registrationFront of registrations) {
-      // TODO: add all workers to the result. See Bug 1612897
-      const latestWorker =
-        registrationFront.activeWorker ||
-        registrationFront.waitingWorker ||
-        registrationFront.installingWorker ||
-        registrationFront.evaluatingWorker;
+      // workers from the registration, ordered from most recent to older
+      const workers = [
+        registrationFront.activeWorker,
+        registrationFront.waitingWorker,
+        registrationFront.installingWorker,
+        registrationFront.evaluatingWorker,
+      ]
+        .filter(w => !!w) // filter out non-existing workers
+        // build a worker object with its WorkerTargetFront
+        .map(workerFront => {
+          const workerTargetFront = allWorkers.find(
+            targetFront => targetFront.id === workerFront.id
+          );
 
-      if (latestWorker !== null) {
-        const latestWorkerFront = allWorkers.find(
-          workerFront => workerFront.id === latestWorker.id
-        );
-        if (latestWorkerFront) {
-          registrationFront.workerTargetFront = latestWorkerFront;
-        }
-        // TODO: return only the worker targets. See Bug 1620605
-        result.push({
-          registration: registrationFront,
-          workers: [
-            {
-              id: registrationFront.id,
-              name: latestWorker.url,
-              state: latestWorker.state,
-              stateText: latestWorker.stateText,
-              url: latestWorker.url,
-              workerTargetFront: latestWorkerFront,
-            },
-          ],
+          return {
+            id: workerFront.id,
+            name: workerFront.url,
+            state: workerFront.state,
+            stateText: workerFront.stateText,
+            url: workerFront.url,
+            workerTargetFront,
+          };
         });
-      }
+
+      // TODO: return only the worker targets. See Bug 1620605
+      result.push({
+        registration: registrationFront,
+        workers,
+      });
     }
 
     return result;
@@ -112,10 +112,14 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
     const allWorkers = await this.listAllWorkerTargets();
     const serviceWorkers = await this.listAllServiceWorkers(allWorkers);
 
+    // NOTE: listAllServiceWorkers() now returns all the workers belonging to
+    //       a registration. To preserve the usual behavior at about:debugging,
+    //       in which we show only the most recent one, we grab the first
+    //       worker in the array only.
     const result = {
       service: serviceWorkers
         .map(({ registration, workers }) => {
-          return workers.map(worker => {
+          return workers.slice(0, 1).map(worker => {
             return Object.assign(worker, {
               registrationFront: registration,
               fetch: registration.fetch,

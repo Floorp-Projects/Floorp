@@ -1866,7 +1866,7 @@ Connection::ExecuteAsync(
                  "Statement must be from this database connection!");
 
     // Now append it to our array.
-    NS_ENSURE_TRUE(stmts.AppendElement(data), NS_ERROR_OUT_OF_MEMORY);
+    stmts.AppendElement(data);
   }
 
   // Dispatch to the background

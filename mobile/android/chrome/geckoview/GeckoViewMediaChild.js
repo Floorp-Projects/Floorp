@@ -448,7 +448,7 @@ class GeckoViewMediaChild extends GeckoViewChildModule {
   }
 
   notifyMediaError(aElement) {
-    let code = aElement.error ? aElement.error.code : 0;
+    const code = aElement.error ? aElement.error.code : 0;
     this.eventDispatcher.sendRequest({
       type: "GeckoView:MediaError",
       id: this.getState(aElement).id,

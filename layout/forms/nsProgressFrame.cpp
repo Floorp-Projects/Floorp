@@ -56,9 +56,9 @@ nsresult nsProgressFrame::CreateAnonymousContent(
   // Associate ::-moz-progress-bar pseudo-element to the anonymous child.
   mBarDiv->SetPseudoElementType(PseudoStyleType::mozProgressBar);
 
-  if (!aElements.AppendElement(mBarDiv)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  // XXX(Bug 1631371) Check if this should use a fallible operation as it
+  // pretended earlier, or change the return type to void.
+  aElements.AppendElement(mBarDiv);
 
   return NS_OK;
 }

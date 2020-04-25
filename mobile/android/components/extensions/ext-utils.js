@@ -45,7 +45,8 @@ const BrowserStatusFilter = Components.Constructor(
 
 const WINDOW_TYPE = "navigator:geckoview";
 
-let tabTracker;
+// We need let to break cyclic dependency
+/* eslint-disable-next-line prefer-const */
 let windowTracker;
 
 /**
@@ -142,21 +143,21 @@ class WindowTracker extends WindowTrackerBase {
   }
 
   isBrowserWindow(window) {
-    let { documentElement } = window.document;
+    const { documentElement } = window.document;
     return documentElement.getAttribute("windowtype") === WINDOW_TYPE;
   }
 
   addProgressListener(window, listener) {
-    let listeners = this.progressListeners.get(window);
+    const listeners = this.progressListeners.get(window);
     if (!listeners.has(listener)) {
-      let wrapper = new ProgressListenerWrapper(window, listener);
+      const wrapper = new ProgressListenerWrapper(window, listener);
       listeners.set(listener, wrapper);
     }
   }
 
   removeProgressListener(window, listener) {
-    let listeners = this.progressListeners.get(window);
-    let wrapper = listeners.get(listener);
+    const listeners = this.progressListeners.get(window);
+    const wrapper = listeners.get(listener);
     if (wrapper) {
       wrapper.destroy();
       listeners.delete(listener);
@@ -193,7 +194,7 @@ global.makeGlobalEvent = function makeGlobalEvent(
     context,
     name,
     register: fire => {
-      let listener2 = {
+      const listener2 = {
         onEvent(event, data, callback) {
           listener(fire, data);
         },
@@ -290,7 +291,7 @@ class TabTracker extends TabTrackerBase {
 }
 
 windowTracker = new WindowTracker();
-tabTracker = new TabTracker();
+const tabTracker = new TabTracker();
 
 Object.assign(global, { tabTracker, windowTracker });
 
@@ -438,7 +439,7 @@ class TabContext extends EventEmitter {
 
   get(tabId) {
     if (!this.tabData.has(tabId)) {
-      let data = Object.create(this.getDefaultPrototype(tabId));
+      const data = Object.create(this.getDefaultPrototype(tabId));
       this.tabData.set(tabId, data);
     }
 
@@ -515,7 +516,7 @@ Object.assign(global, { Tab, TabContext, Window });
 
 class TabManager extends TabManagerBase {
   get(tabId, default_ = undefined) {
-    let nativeTab = tabTracker.getTab(tabId, default_);
+    const nativeTab = tabTracker.getTab(tabId, default_);
 
     if (nativeTab) {
       return this.getWrapper(nativeTab);
@@ -545,17 +546,17 @@ class TabManager extends TabManagerBase {
 
 class WindowManager extends WindowManagerBase {
   get(windowId, context) {
-    let window = windowTracker.getWindow(windowId, context);
+    const window = windowTracker.getWindow(windowId, context);
 
     return this.getWrapper(window);
   }
 
   *getAll(context) {
-    for (let window of windowTracker.browserWindows()) {
+    for (const window of windowTracker.browserWindows()) {
       if (!this.canAccessWindow(window, context)) {
         continue;
       }
-      let wrapped = this.getWrapper(window);
+      const wrapped = this.getWrapper(window);
       if (wrapped) {
         yield wrapped;
       }

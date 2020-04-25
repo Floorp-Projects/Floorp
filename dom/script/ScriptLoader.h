@@ -340,7 +340,10 @@ class ScriptLoader final : public nsISupports {
   nsresult ProcessOffThreadRequest(ScriptLoadRequest* aRequest);
 
   bool AddPendingChildLoader(ScriptLoader* aChild) {
-    return mPendingChildLoaders.AppendElement(aChild) != nullptr;
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier. Else, change the return type to void.
+    mPendingChildLoaders.AppendElement(aChild);
+    return true;
   }
 
   mozilla::dom::DocGroup* GetDocGroup() const {

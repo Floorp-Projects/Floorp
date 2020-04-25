@@ -13,7 +13,7 @@
 "use strict";
 
 add_task(async function tabsSendMessageReply() {
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
       "applications": {
@@ -31,11 +31,12 @@ add_task(async function tabsSendMessageReply() {
     useAddonManager: "permanent",
 
     background: async function() {
+      // eslint-disable-next-line prefer-const
       let firstTab;
-      let promiseResponse = new Promise(resolve => {
+      const promiseResponse = new Promise(resolve => {
         browser.runtime.onMessage.addListener((msg, sender, respond) => {
           if (msg == "content-script-ready") {
-            let tabId = sender.tab.id;
+            const tabId = sender.tab.id;
 
             Promise.all([
               promiseResponse,
@@ -82,7 +83,7 @@ add_task(async function tabsSendMessageReply() {
         });
       });
 
-      let tabs = await browser.tabs.query({currentWindow: true, active: true});
+      const tabs = await browser.tabs.query({currentWindow: true, active: true});
       firstTab = tabs[0].id;
       browser.tabs.create({url: "http://example.com/"});
     },
@@ -114,7 +115,7 @@ add_task(async function tabsSendMessageReply() {
           }
         });
 
-        let response = await browser.runtime.sendMessage("content-script-ready");
+        const response = await browser.runtime.sendMessage("content-script-ready");
         browser.runtime.sendMessage(["got-response", response]);
       },
     },
@@ -129,7 +130,7 @@ add_task(async function tabsSendMessageReply() {
 
 
 add_task(async function tabsSendHidden() {
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
       "applications": {
@@ -154,7 +155,7 @@ add_task(async function tabsSendHidden() {
         }
       });
 
-      let awaitContent = url => {
+      const awaitContent = url => {
         return new Promise(resolve => {
           resolveContent = resolve;
         }).then(result => {
@@ -166,7 +167,7 @@ add_task(async function tabsSendHidden() {
         const URL1 = "http://example.com/content1.html";
         const URL2 = "http://example.com/content2.html";
 
-        let tab = await browser.tabs.create({url: URL1});
+        const tab = await browser.tabs.create({url: URL1});
         await awaitContent(URL1);
 
         let url = await browser.tabs.sendMessage(tab.id, URL1);
@@ -196,7 +197,7 @@ add_task(async function tabsSendHidden() {
       "content-script.js": function() {
         // Store this in a local variable to make sure we don't touch any
         // properties of the possibly-hidden content window.
-        let href = window.location.href;
+        const href = window.location.href;
 
         browser.runtime.onMessage.addListener((msg, sender) => {
           browser.test.assertEq(href, msg, "Should be in the expected content window");
@@ -218,7 +219,7 @@ add_task(async function tabsSendHidden() {
 
 
 add_task(async function tabsSendMessageNoExceptionOnNonExistentTab() {
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
       "applications": {
@@ -231,8 +232,8 @@ add_task(async function tabsSendMessageNoExceptionOnNonExistentTab() {
     useAddonManager: "permanent",
 
     async background() {
-      let url = "http://example.com/mochitest/tests/mobile/android/components/extensions/test/mochitest/file_dummy.html";
-      let tab = await browser.tabs.create({url});
+      const url = "http://example.com/mochitest/tests/mobile/android/components/extensions/test/mochitest/file_dummy.html";
+      const tab = await browser.tabs.create({url});
 
       try {
         browser.tabs.sendMessage(tab.id, "message");

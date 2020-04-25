@@ -131,7 +131,7 @@ class GeckoViewSelectionActionChild extends GeckoViewChildModule {
       offset.left += currentRect.left;
       offset.top += currentRect.top;
 
-      let targetDocShell = currentWindow.docShell;
+      const targetDocShell = currentWindow.docShell;
       if (targetDocShell.isMozBrowser) {
         break;
       }
@@ -256,7 +256,7 @@ class GeckoViewSelectionActionChild extends GeckoViewChildModule {
             warn`Stale response ${response.id}`;
             return;
           }
-          let action = actions.find(action => action.id === response.id);
+          const action = actions.find(action => action.id === response.id);
           if (action) {
             debug`Performing ${response.id}`;
             action.perform.call(this, aEvent, response);

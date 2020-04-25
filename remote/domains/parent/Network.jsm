@@ -18,10 +18,6 @@ const { Domain } = ChromeUtils.import(
   "chrome://remote/content/domains/Domain.jsm"
 );
 
-const { NetworkObserver } = ChromeUtils.import(
-  "chrome://remote/content/domains/parent/network/NetworkObserver.jsm"
-);
-
 const MAX_COOKIE_EXPIRY = Number.MAX_SAFE_INTEGER;
 
 const LOAD_CAUSE_STRINGS = {
@@ -69,20 +65,20 @@ class Network extends Domain {
       return;
     }
     this.enabled = true;
-    this._networkObserver = new NetworkObserver();
-    const { browser } = this.session.target;
-    this._networkObserver.startTrackingBrowserNetwork(browser);
-    this._networkObserver.on("request", this._onRequest);
+    this.session.networkObserver.startTrackingBrowserNetwork(
+      this.session.target.browser
+    );
+    this.session.networkObserver.on("request", this._onRequest);
   }
 
   disable() {
     if (!this.enabled) {
       return;
     }
-    const { browser } = this.session.target;
-    this._networkObserver.stopTrackingBrowserNetwork(browser);
-    this._networkObserver.off("request", this._onRequest);
-    this._networkObserver.dispose();
+    this.session.networkObserver.stopTrackingBrowserNetwork(
+      this.session.target.browser
+    );
+    this.session.networkObserver.off("request", this._onRequest);
     this.enabled = false;
   }
 

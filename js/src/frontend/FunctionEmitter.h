@@ -248,7 +248,7 @@ class MOZ_STACK_CLASS FunctionScriptEmitter {
   MOZ_MUST_USE bool prepareForBody();
   MOZ_MUST_USE bool emitEndBody();
 
-  // Initialize JSScript for this function.
+  // Initialize & Allocate JSScript for this function.
   // WARNING: There shouldn't be any fallible operation for the function
   //          compilation after `initScript` call.
   //          See the comment inside JSScript::fullyInitFromEmitter for

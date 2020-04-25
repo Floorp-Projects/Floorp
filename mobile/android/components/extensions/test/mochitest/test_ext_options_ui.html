@@ -23,10 +23,10 @@ async function waitAboutAddonsRendered(addonId) {
 
 async function navigateToAddonDetails(addonId) {
   const item = content.document.querySelector(`div.addon-item[addonID="${addonId}"]`);
-  let rect = item.getBoundingClientRect();
+  const rect = item.getBoundingClientRect();
   const x = rect.left + rect.width / 2;
   const y = rect.top + rect.height / 2;
-  let domWinUtils = content.window.windowUtils;
+  const domWinUtils = content.window.windowUtils;
 
   domWinUtils.sendMouseEventToWindow("mousedown", x, y, 0, 1, 0);
   domWinUtils.sendMouseEventToWindow("mouseup", x, y, 0, 1, 0);
@@ -65,7 +65,7 @@ function waitDOMContentLoaded(checkUrlCb) {
   const {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
 
   return new Promise(resolve => {
-    let listener = (event) => {
+    const listener = (event) => {
       if (checkUrlCb(event.target.defaultView.location.href)) {
         BrowserApp.deck.removeEventListener("DOMContentLoaded", listener);
         resolve();
@@ -89,9 +89,9 @@ function clickAddonEnable() {
 }
 
 add_task(async function test_options_ui_iframe_height() {
-  let addonID = "test-options-ui@mozilla.org";
+  const addonID = "test-options-ui@mozilla.org";
 
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
     manifest: {
       applications: {
@@ -142,7 +142,7 @@ add_task(async function test_options_ui_iframe_height() {
 
   const {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
 
-  let onceAboutAddonsLoaded = waitAboutAddonsLoaded();
+  const onceAboutAddonsLoaded = waitAboutAddonsLoaded();
 
   BrowserApp.addTab("about:addons", {
     selected: true,
@@ -204,7 +204,7 @@ add_task(async function test_options_ui_iframe_height() {
 });
 
 add_task(async function test_options_ui_open_aboutaddons_details() {
-  let addonID = "test-options-ui-open-addon-details@mozilla.org";
+  const addonID = "test-options-ui-open-addon-details@mozilla.org";
 
   function background() {
     browser.test.onMessage.addListener(msg => {
@@ -221,7 +221,7 @@ add_task(async function test_options_ui_open_aboutaddons_details() {
     browser.test.sendMessage("options-page-loaded", window.location.href);
   }
 
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
     background,
     manifest: {
@@ -254,7 +254,7 @@ add_task(async function test_options_ui_open_aboutaddons_details() {
 
   const {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
 
-  let onceAboutAddonsLoaded = waitAboutAddonsLoaded();
+  const onceAboutAddonsLoaded = waitAboutAddonsLoaded();
 
   BrowserApp.addTab("about:addons", {
     selected: true,
@@ -279,7 +279,7 @@ add_task(async function test_options_ui_open_aboutaddons_details() {
 });
 
 add_task(async function test_options_ui_open_in_tab() {
-  let addonID = "test-options-ui@mozilla.org";
+  const addonID = "test-options-ui@mozilla.org";
 
   function background() {
     browser.test.onMessage.addListener(msg => {
@@ -296,7 +296,7 @@ add_task(async function test_options_ui_open_in_tab() {
     browser.test.sendMessage("options-page-loaded", window.location.href);
   }
 
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
     background,
     manifest: {
@@ -330,7 +330,7 @@ add_task(async function test_options_ui_open_in_tab() {
 
   const {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
 
-  let onceAboutAddonsLoaded = waitAboutAddonsLoaded();
+  const onceAboutAddonsLoaded = waitAboutAddonsLoaded();
 
   BrowserApp.selectOrAddTab("about:addons", {
     selected: true,
@@ -347,7 +347,7 @@ add_task(async function test_options_ui_open_in_tab() {
   await SpecialPowers.spawn(aboutAddonsTab.browser, [addonID], waitAboutAddonsRendered);
   await SpecialPowers.spawn(aboutAddonsTab.browser, [addonID], navigateToAddonDetails);
 
-  let onceAddonOptionsLoaded = waitDOMContentLoaded(url => url.endsWith("options.html"));
+  const onceAddonOptionsLoaded = waitDOMContentLoaded(url => url.endsWith("options.html"));
 
   info("Click the Options button in the addon details");
   await SpecialPowers.spawn(aboutAddonsTab.browser, [], clickAddonOptionButton);
@@ -367,11 +367,11 @@ add_task(async function test_options_ui_open_in_tab() {
 
   const waitTabClosed = (nativeTab) => {
     return new Promise(resolve => {
-      let {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
-      let expectedBrowser = nativeTab.browser;
+      const {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
+      const expectedBrowser = nativeTab.browser;
 
-      let tabCloseListener = (event) => {
-        let browser = event.target;
+      const tabCloseListener = (event) => {
+        const browser = event.target;
         if (browser !== expectedBrowser) {
           return;
         }
@@ -384,8 +384,8 @@ add_task(async function test_options_ui_open_in_tab() {
     });
   };
 
-  let onceOptionsTabClosed = waitTabClosed(addonOptionsTab);
-  let onceAboutAddonsClosed = waitTabClosed(aboutAddonsTab);
+  const onceOptionsTabClosed = waitTabClosed(addonOptionsTab);
+  const onceAboutAddonsClosed = waitTabClosed(aboutAddonsTab);
 
   info("Close the opened about:addons and options tab");
   BrowserApp.closeTab(addonOptionsTab);
@@ -415,13 +415,13 @@ add_task(async function test_options_ui_on_disable_and_enable() {
   /* eslint-disable no-unreachable */
   return;
 
-  let addonID = "test-options-ui-disable-enable@mozilla.org";
+  const addonID = "test-options-ui-disable-enable@mozilla.org";
 
   function optionsScript() {
     browser.test.sendMessage("options-page-loaded", window.location.href);
   }
 
-  let extension = ExtensionTestUtils.loadExtension({
+  const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
     manifest: {
       applications: {
@@ -453,7 +453,7 @@ add_task(async function test_options_ui_on_disable_and_enable() {
 
   const {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
 
-  let onceAboutAddonsLoaded = waitAboutAddonsLoaded();
+  const onceAboutAddonsLoaded = waitAboutAddonsLoaded();
 
   BrowserApp.addTab("about:addons", {
     selected: true,

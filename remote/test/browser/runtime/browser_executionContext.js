@@ -72,7 +72,7 @@ async function testNavigate({ Runtime, Page }, previousContext) {
   const history = recordContextEvents(Runtime, 3);
 
   const { frameId } = await Page.navigate({ url: toDataURL("test-page") });
-  info("A new page has been loaded");
+  info("A new page has been requested");
   is(
     frameId,
     previousContext.auxData.frameId,

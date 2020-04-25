@@ -135,6 +135,10 @@ class MarionetteBranch extends Branch {
     return this.get("enabled", false);
   }
 
+  set enabled(isEnabled) {
+    this.set("enabled", isEnabled);
+  }
+
   /**
    * The `marionette.debugging.clicktostart` preference delays
    * server startup until a modal dialogue has been clicked to allow

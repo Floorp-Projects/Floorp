@@ -22,6 +22,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ActionSchemas: "resource://normandy/actions/schemas/index.js",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonStudies: "resource://normandy/lib/AddonStudies.jsm",
+  BaseAction: "resource://normandy/actions/BaseAction.jsm",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
   NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
   NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
@@ -124,23 +125,81 @@ class BranchedAddonStudyAction extends BaseStudyAction {
     this.seenRecipeIds = new Set();
   }
 
-  /**
-   * This hook is executed once for each recipe that currently applies to this
-   * client. It is responsible for:
-   *
-   *   - Enrolling studies the first time they are seen.
-   *   - Updating studies that have upgraded addons.
-   *   - Marking studies as having been seen in this session.
-   *
-   * If the recipe fails to enroll or update, it should throw to properly report its status.
-   */
   async _run(recipe) {
+    throw new Error("_run should not be called anymore");
+  }
+
+  /**
+   * This hook is executed once for every recipe currently enabled on the
+   * server. It is responsible for:
+   *
+   *   - Enrolling studies the first time they have a FILTER_MATCH suitability.
+   *   - Updating studies that have changed and still have a FILTER_MATCH suitability.
+   *   - Marking studies as having been seen in this session.
+   *   - Unenrolling studies when they have permanent errors.
+   *   - Unenrolling studies when temporary errors persist for too long.
+   *
+   * If the action fails to perform any of these tasks, it should throw to
+   * properly report its status.
+   */
+  async _processRecipe(recipe, suitability) {
     this.seenRecipeIds.add(recipe.id);
     const study = await AddonStudies.get(recipe.id);
-    if (study) {
-      await this.update(recipe, study);
-    } else {
-      await this.enroll(recipe);
+
+    switch (suitability) {
+      case BaseAction.suitability.FILTER_MATCH: {
+        if (study) {
+          await this.update(recipe, study);
+        } else {
+          await this.enroll(recipe);
+        }
+        break;
+      }
+
+      case BaseAction.suitability.SIGNATURE_ERROR: {
+        if (study) {
+          await this._considerTemporaryError({
+            study,
+            reason: "signature-error",
+          });
+        }
+        break;
+      }
+
+      case BaseAction.suitability.FILTER_ERROR: {
+        if (study) {
+          await this._considerTemporaryError({
+            study,
+            reason: "filter-error",
+          });
+        }
+        break;
+      }
+
+      case BaseAction.suitability.CAPABILITES_MISMATCH: {
+        if (study) {
+          await this.unenroll(recipe.id, "capability-mismatch");
+        }
+        break;
+      }
+
+      case BaseAction.suitability.FILTER_MISMATCH: {
+        if (study) {
+          await this.unenroll(recipe.id, "filter-mismatch");
+        }
+        break;
+      }
+
+      case BaseAction.suitability.ARGUMENTS_INVALID: {
+        if (study) {
+          await this.unenroll(recipe.id, "arguments-invalid");
+        }
+        break;
+      }
+
+      default: {
+        throw new Error(`Unknown recipe suitability "${suitability}".`);
+      }
     }
   }
 
@@ -339,6 +398,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
         studyStartDate: new Date(),
         studyEndDate: null,
         enrollmentId,
+        temporaryErrorDeadline: null,
       };
 
       try {
@@ -403,6 +463,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
           studyStartDate: new Date(),
           studyEndDate: null,
           enrollmentId,
+          temporaryErrorDeadline: null,
         };
 
         try {
@@ -463,6 +524,10 @@ class BranchedAddonStudyAction extends BaseStudyAction {
       await this.unenroll(recipe.id, "branch-removed");
       return;
     }
+
+    // Since we saw a non-error suitability, clear the temporary error deadline.
+    study.temporaryErrorDeadline = null;
+    await AddonStudies.update(study);
 
     const extensionDetails = await NormandyApi.fetchExtensionDetails(
       branch.extensionApiId
@@ -666,6 +731,46 @@ class BranchedAddonStudyAction extends BaseStudyAction {
           `Could not uninstall addon ${study.addonId} for recipe ${study.recipeId}: it is not installed.`
         );
       }
+    }
+  }
+
+  /**
+   * Given that a temporary error has occured for a study, check if it
+   * should be temporarily ignored, or if the deadline has passed. If the
+   * deadline is passed, the study will be ended. If this is the first
+   * temporary error, a deadline will be generated. Otherwise, nothing will
+   * happen.
+   *
+   * If a temporary deadline exists but cannot be parsed, a new one will be
+   * made.
+   *
+   * The deadline is 7 days from the first time that recipe failed, as
+   * reckoned by the client's clock.
+   *
+   * @param {Object} args
+   * @param {Study} args.study The enrolled study to potentially unenroll.
+   * @param {String} args.reason If the study should end, the reason it is ending.
+   */
+  async _considerTemporaryError({ study, reason }) {
+    let now = Date.now(); // milliseconds-since-epoch
+    let day = 24 * 60 * 60 * 1000;
+    let newDeadline = new Date(now + 7 * day);
+
+    if (study.temporaryErrorDeadline) {
+      // if deadline is an invalid date, set it to one week from now.
+      if (isNaN(study.temporaryErrorDeadline)) {
+        study.temporaryErrorDeadline = newDeadline;
+        await AddonStudies.update(study);
+        return;
+      }
+
+      if (now > study.temporaryErrorDeadline) {
+        await this.unenroll(study.recipeId, reason);
+      }
+    } else {
+      // there is no deadline, so set one
+      study.temporaryErrorDeadline = newDeadline;
+      await AddonStudies.update(study);
     }
   }
 }

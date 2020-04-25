@@ -186,7 +186,7 @@ var ModuleManager = {
     }
 
     // Now we're switching the remoteness (value of "remote" attr).
-    let disabledModules = [];
+    const disabledModules = [];
     this.forEach(module => {
       if (module.enabled) {
         module.enabled = false;

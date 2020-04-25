@@ -571,7 +571,7 @@ void nsFileInputStream::SerializeInternal(
     FileHandleType fd = FileHandleType(PR_FileDesc2NativeHandle(mFD));
     NS_ASSERTION(fd, "This should never be null!");
 
-    DebugOnly<FileDescriptor*> dbgFD = aFileDescriptors.AppendElement(fd);
+    DebugOnly dbgFD = aFileDescriptors.AppendElement(fd);
     NS_ASSERTION(dbgFD->IsValid(), "Sending an invalid file descriptor!");
 
     params.fileDescriptorIndex() = aFileDescriptors.Length() - 1;

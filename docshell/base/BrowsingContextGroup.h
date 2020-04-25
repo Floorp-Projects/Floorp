@@ -21,6 +21,7 @@ class ThrottledEventQueue;
 namespace dom {
 
 class BrowsingContext;
+class WindowContext;
 class ContentParent;
 
 // A BrowsingContextGroup represents the Unit of Related Browsing Contexts in
@@ -47,46 +48,24 @@ class BrowsingContextGroup final : public nsWrapperCache {
   // Force the given ContentParent to subscribe to our BrowsingContextGroup.
   void EnsureSubscribed(ContentParent* aProcess);
 
-  // Methods interacting with cached contexts.
-  bool IsContextCached(BrowsingContext* aContext) const;
-  void CacheContext(BrowsingContext* aContext);
-  void CacheContexts(const BrowsingContext::Children& aContexts);
-  bool EvictCachedContext(BrowsingContext* aContext);
-
   // Get a reference to the list of toplevel contexts in this
   // BrowsingContextGroup.
-  BrowsingContext::Children& Toplevels() { return mToplevels; }
-  void GetToplevels(BrowsingContext::Children& aToplevels) {
+  nsTArray<RefPtr<BrowsingContext>>& Toplevels() { return mToplevels; }
+  void GetToplevels(nsTArray<RefPtr<BrowsingContext>>& aToplevels) {
     aToplevels.AppendElements(mToplevels);
   }
+
+  uint64_t Id() { return mId; }
 
   nsISupports* GetParentObject() const;
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  BrowsingContextGroup();
-
+  // Get or create a BrowsingContextGroup with the given ID.
+  static already_AddRefed<BrowsingContextGroup> GetOrCreate(uint64_t aId);
+  static already_AddRefed<BrowsingContextGroup> Create();
   static already_AddRefed<BrowsingContextGroup> Select(
-      BrowsingContext* aParent, BrowsingContext* aOpener) {
-    if (aParent) {
-      return do_AddRef(aParent->Group());
-    }
-    if (aOpener) {
-      return do_AddRef(aOpener->Group());
-    }
-    return MakeAndAddRef<BrowsingContextGroup>();
-  }
-
-  static already_AddRefed<BrowsingContextGroup> Select(uint64_t aParentId,
-                                                       uint64_t aOpenerId) {
-    RefPtr<BrowsingContext> parent = BrowsingContext::Get(aParentId);
-    MOZ_RELEASE_ASSERT(parent || aParentId == 0);
-
-    RefPtr<BrowsingContext> opener = BrowsingContext::Get(aOpenerId);
-    MOZ_RELEASE_ASSERT(opener || aOpenerId == 0);
-
-    return Select(parent, opener);
-  }
+      WindowContext* aParent, BrowsingContext* aOpener);
 
   // For each 'ContentParent', except for 'aExcludedParent',
   // associated with this group call 'aCallback'.
@@ -135,12 +114,17 @@ class BrowsingContextGroup final : public nsWrapperCache {
     return mWorkerEventQueue;
   }
 
+  static void GetAllGroups(nsTArray<RefPtr<BrowsingContextGroup>>& aGroups);
+
  private:
   friend class CanonicalBrowsingContext;
 
+  explicit BrowsingContextGroup(uint64_t aId);
   ~BrowsingContextGroup();
 
   void UnsubscribeAllContentParents();
+
+  uint64_t mId;
 
   // A BrowsingContextGroup contains a series of BrowsingContext objects. They
   // are addressed using a hashtable to avoid linear lookup when adding or
@@ -148,7 +132,7 @@ class BrowsingContextGroup final : public nsWrapperCache {
   nsTHashtable<nsRefPtrHashKey<BrowsingContext>> mContexts;
 
   // The set of toplevel browsing contexts in the current BrowsingContextGroup.
-  BrowsingContext::Children mToplevels;
+  nsTArray<RefPtr<BrowsingContext>> mToplevels;
 
   // DocGroups are thread-safe, and not able to be cycle collected,
   // but we still keep strong pointers. When all Documents are removed
@@ -157,9 +141,6 @@ class BrowsingContextGroup final : public nsWrapperCache {
   nsRefPtrHashtable<nsCStringHashKey, DocGroup> mDocGroups;
 
   ContentParents mSubscribers;
-
-  // Map of cached contexts that need to stay alive due to bfcache.
-  nsTHashtable<nsRefPtrHashKey<BrowsingContext>> mCachedContexts;
 
   // A queue to store postMessage events during page load, the queue will be
   // flushed once the page is loaded

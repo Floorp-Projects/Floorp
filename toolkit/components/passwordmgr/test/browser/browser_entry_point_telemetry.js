@@ -67,7 +67,7 @@ add_task(async function pageInfo_entryPoint() {
     async function(browser) {
       info("pageInfo_entryPoint, opening pageinfo");
       let pageInfo = BrowserPageInfo(TEST_ORIGIN, "securityTab", {});
-      await BrowserTestUtils.waitForEvent(pageInfo, "load");
+      await BrowserTestUtils.waitForEvent(pageInfo, "page-info-init");
       info(
         "pageInfo_entryPoint, got pageinfo, wait until password button is visible"
       );

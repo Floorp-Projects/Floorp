@@ -28,10 +28,6 @@ DIRS += [
     'fonts',
 ]
 
-TEST_DIRS += [
-    'tests',
-]
-
 TEST_HARNESS_FILES.testing.mochitest.tests.junit += [
     'geckoview/src/androidTest/assets/www/hello.html',
     'geckoview/src/androidTest/assets/www/simple_redirect.sjs',

@@ -539,10 +539,9 @@ LRESULT CALLBACK CallWindowProcedureHook(int nCode, WPARAM wParam,
     if (!gNeuteredWindows->Contains(hWnd) &&
         !SuppressedNeuteringRegion::IsNeuteringSuppressed() &&
         NeuterWindowProcedure(hWnd)) {
-      if (!gNeuteredWindows->AppendElement(hWnd)) {
-        NS_ERROR("Out of memory!");
-        RestoreWindowProcedure(hWnd);
-      }
+      // XXX(Bug 1631371) Check if this should use a fallible operation as it
+      // pretended earlier.
+      gNeuteredWindows->AppendElement(hWnd);
     }
   }
   return CallNextHookEx(nullptr, nCode, wParam, lParam);

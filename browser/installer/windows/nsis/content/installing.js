@@ -50,5 +50,9 @@ window.attachEvent("onload", function() {
   rotateBlurb();
   setInterval(rotateBlurb, BLURB_CYCLE_MS);
 
+  // Focus the label, in order to get the focus in the web page, to
+  // assist screen readers. On Win 7's IE8 this causes the focus rectangle
+  // to be immediately visible, so also hide that here.
+  label.className += " no-focus-outline";
   label.focus();
 });

@@ -285,7 +285,7 @@ pub enum Statement<'alloc> {
         loc: SourceLocation,
     },
     IfStatement(IfStatement<'alloc>),
-    LabeledStatement {
+    LabelledStatement {
         label: Label,
         body: arena::Box<'alloc, Statement<'alloc>>,
         loc: SourceLocation,

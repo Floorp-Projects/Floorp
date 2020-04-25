@@ -381,9 +381,7 @@ int32_t XRSession::RequestAnimationFrame(XRFrameRequestCallback& aCallback,
 
   int32_t handle = ++mFrameRequestCallbackCounter;
 
-  DebugOnly<XRFrameRequest*> request =
-      mFrameRequestCallbacks.AppendElement(XRFrameRequest(aCallback, handle));
-  NS_ASSERTION(request, "This is supposed to be infallible!");
+  mFrameRequestCallbacks.AppendElement(XRFrameRequest(aCallback, handle));
 
   return handle;
 }

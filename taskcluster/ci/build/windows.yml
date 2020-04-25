@@ -241,6 +241,9 @@ win64-plain/debug:
             - win64-node
             - win64-nasm
             - win64-cbindgen
+    optimization:
+        push-interval-10:
+            - windows
 
 win64/opt:
     description: "Win64 Opt"
@@ -332,6 +335,9 @@ win64-plain/opt:
             - win64-nasm
             - win64-node
             - win64-cbindgen
+    optimization:
+        push-interval-10:
+            - windows
 
 win32-shippable/opt:
     description: "Win32 Opt Shippable"
@@ -1172,6 +1178,9 @@ win64-aarch64/debug:
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
+    optimization:
+        push-interval-10:
+            - windows
 
 win64-aarch64/opt:
     description: "AArch64 Win64 Opt"
@@ -1227,6 +1236,9 @@ win64-aarch64/opt:
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
+    optimization:
+        push-interval-10:
+            - windows
 
 win64-aarch64-eme/opt:
     description: "AArch64 Win64 Opt w/ EME"
@@ -1268,6 +1280,9 @@ win64-aarch64-eme/opt:
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
+    optimization:
+        push-interval-10:
+            - windows
 
 win64-aarch64-shippable/opt:
     description: "AArch64 Win64 Shippable"
@@ -1365,6 +1380,9 @@ win64-aarch64-shippable/opt:
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
+    optimization:
+        push-interval-10:
+            - windows
 
 win64-aarch64-shippable-no-eme/opt:
     description: "AArch64 Win64 Shippable w/o EME"
@@ -1424,6 +1442,9 @@ win64-aarch64-shippable-no-eme/opt:
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
+    optimization:
+        push-interval-10:
+            - windows
 
 win64-aarch64-devedition/opt:
     description: "AArch64 Win64 Dev Edition (shippable)"

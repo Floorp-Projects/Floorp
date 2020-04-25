@@ -402,7 +402,7 @@ void MPRISServiceHandler::OnBusAcquired(GDBusConnection* aConnection,
       &error);                 /* GError** */
 
   if (mPlayerRegistrationId == 0) {
-    LOG("Failed at object registration %s",
+    LOG("Failed at object registration: %s",
         error ? error->message : "Unknown Error");
     if (error) {
       g_error_free(error);
@@ -429,7 +429,7 @@ bool MPRISServiceHandler::Open() {
   mIntrospectionData = g_dbus_node_info_new_for_xml(introspection_xml, &error);
 
   if (!mIntrospectionData) {
-    LOG("Failed at parsing XML Interface definition %s",
+    LOG("Failed at parsing XML Interface definition: %s",
         error ? error->message : "Unknown Error");
     if (error) {
       g_error_free(error);
@@ -447,8 +447,7 @@ MPRISServiceHandler::~MPRISServiceHandler() {
 
 void MPRISServiceHandler::Close() {
   gchar serviceName[256];
-  SprintfLiteral(serviceName, DBUS_MRPIS_SERVICE_NAME ".instance%" PRId32,
-                 getpid());
+  SprintfLiteral(serviceName, DBUS_MRPIS_SERVICE_NAME ".instance%d", getpid());
 
   OnNameLost(mConnection, serviceName);
 
@@ -574,12 +573,20 @@ void MPRISServiceHandler::SetPlaybackState(
   GVariantBuilder builder;
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
   g_variant_builder_add(&builder, "{sv}", "PlaybackStatus", state);
-  g_dbus_connection_emit_signal(
-      mConnection, nullptr, DBUS_MPRIS_OBJECT_PATH,
-      "org.freedesktop.DBus.Properties", "PropertiesChanged",
-      g_variant_new("(sa{sv}as)", "org.mpris.MediaPlayer2.Player", &builder,
-                    nullptr),
-      nullptr);
+
+  GVariant* parameters = g_variant_new(
+      "(sa{sv}as)", DBUS_MPRIS_PLAYER_INTERFACE, &builder, nullptr);
+  GError* error = nullptr;
+  if (!g_dbus_connection_emit_signal(mConnection, nullptr,
+                                     DBUS_MPRIS_OBJECT_PATH,
+                                     "org.freedesktop.DBus.Properties",
+                                     "PropertiesChanged", parameters, &error)) {
+    LOG("Failed at emitting MPRIS property changes for 'PlaybackStatus': %s",
+        error ? error->message : "Unknown Error");
+    if (error) {
+      g_error_free(error);
+    }
+  }
 }
 
 GVariant* MPRISServiceHandler::GetPlaybackStatus() const {
@@ -599,15 +606,47 @@ GVariant* MPRISServiceHandler::GetPlaybackStatus() const {
 void MPRISServiceHandler::SetMediaMetadata(
     const dom::MediaMetadataBase& aMetadata) {
   mMetadata = Some(aMetadata);
+  LOG("Set MediaMetadata: title - %s, Artist - %s, Album - %s",
+      NS_ConvertUTF16toUTF8(mMetadata->mTitle).get(),
+      NS_ConvertUTF16toUTF8(mMetadata->mArtist).get(),
+      NS_ConvertUTF16toUTF8(mMetadata->mAlbum).get());
+
+  if (!mConnection) {
+    LOG("No D-Bus Connection. Drop the update.");
+    return;
+  }
+
+  GVariantBuilder builder;
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
+  g_variant_builder_add(&builder, "{sv}", "Metadata", GetMetadataAsGVariant());
+
+  GVariant* parameters = g_variant_new(
+      "(sa{sv}as)", DBUS_MPRIS_PLAYER_INTERFACE, &builder, nullptr);
+  GError* error = nullptr;
+  if (!g_dbus_connection_emit_signal(mConnection, nullptr,
+                                     DBUS_MPRIS_OBJECT_PATH,
+                                     "org.freedesktop.DBus.Properties",
+                                     "PropertiesChanged", parameters, &error)) {
+    LOG("Failed at emitting MPRIS property changes for 'Metadata': %s:",
+        error ? error->message : "Unknown Error");
+    if (error) {
+      g_error_free(error);
+    }
+  }
 }
 
 GVariant* MPRISServiceHandler::GetMetadataAsGVariant() const {
   GVariantBuilder builder;
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
   g_variant_builder_add(&builder, "{sv}", "mpris:trackid",
-                        g_variant_new("o", "/valid/path"));
+                        g_variant_new("o", DBUS_MPRIS_TRACK_PATH));
 
   if (mMetadata.isSome()) {
+    LOG("Get Metadata: title - %s, Artist - %s, Album - %s",
+        NS_ConvertUTF16toUTF8(mMetadata->mTitle).get(),
+        NS_ConvertUTF16toUTF8(mMetadata->mArtist).get(),
+        NS_ConvertUTF16toUTF8(mMetadata->mAlbum).get());
+
     g_variant_builder_add(
         &builder, "{sv}", "xesam:title",
         g_variant_new_string(NS_ConvertUTF16toUTF8(mMetadata->mTitle).get()));

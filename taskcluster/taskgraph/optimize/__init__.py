@@ -408,6 +408,11 @@ class experimental(object):
     }
     """Doesn't limit platforms, high confidence threshold."""
 
+    bugbug_combined_high = {
+        'test': Any('skip-unless-schedules', 'bugbug-high'),
+    }
+    """Combines the weights of all groups, high confidence threshold."""
+
     bugbug_debug = {
         'test': Any('skip-unless-schedules', 'bugbug', 'platform-debug'),
     }

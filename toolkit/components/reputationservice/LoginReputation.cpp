@@ -333,7 +333,7 @@ LoginReputationService::QueryReputation(
   // mQueryRequests is an array used to maintain the ownership of
   // |QueryRequest|. We ensure that |QueryRequest| is always valid until
   // Finish() is called or LoginReputationService is shutdown.
-  auto* request =
+  auto request =
       mQueryRequests.AppendElement(MakeUnique<QueryRequest>(aQuery, aCallback));
 
   return QueryLoginWhitelist(request->get());

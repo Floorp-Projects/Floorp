@@ -75,7 +75,11 @@ add_task(async function basic_install_test() {
 
   // User installs a new search engine
   let extension = await installSearchExtension("example", "Example");
-  Assert.deepEqual(await getEngineNames(), ["Plain", "Special", "Example"]);
+  Assert.deepEqual((await getEngineNames()).sort(), [
+    "Example",
+    "Plain",
+    "Special",
+  ]);
 
   await forceExpiration();
 

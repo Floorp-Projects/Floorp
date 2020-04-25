@@ -41,12 +41,7 @@ nsTArray<RefPtr<PerformanceInfoPromise>> CollectPerformanceInfo() {
   }
 
   nsTArray<RefPtr<BrowsingContextGroup>> groups;
-  if (XRE_IsContentProcess()) {
-    groups.AppendElements(
-        ContentChild::GetSingleton()->BrowsingContextGroups());
-  } else {
-    groups.AppendElements(ContentParent::BrowsingContextGroups());
-  }
+  BrowsingContextGroup::GetAllGroups(groups);
 
   nsTArray<DocGroup*> docGroups;
   for (auto& browsingContextGroup : groups) {
@@ -99,7 +94,7 @@ nsresult GetTabSizes(nsGlobalWindowOuter* aWindow, nsTabSizes* aSizes) {
   }
 
   // Measure this window's descendents.
-  for (const auto& frame : bc->GetChildren()) {
+  for (const auto& frame : bc->Children()) {
     if (auto* childWin = nsGlobalWindowOuter::Cast(frame->GetDOMWindow())) {
       MOZ_TRY(GetTabSizes(childWin, aSizes));
     }

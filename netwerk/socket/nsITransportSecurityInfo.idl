@@ -104,4 +104,9 @@ interface nsITransportSecurityInfo : nsISupports {
      * True iff the connection was resumed using the resumption token.
      */
     readonly attribute boolean resumed;
+
+    /**
+     * True iff the succeededCertChain is built in root.
+     */
+    attribute boolean isBuiltCertChainRootBuiltInRoot;
 };

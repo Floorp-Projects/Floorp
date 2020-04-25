@@ -162,9 +162,9 @@ class ExpirationTrackerImpl {
         return rv;
       }
     }
-    if (!generation.AppendElement(aObj)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    // XXX(Bug 1631371) Check if this should use a fallible operation as it
+    // pretended earlier.
+    generation.AppendElement(aObj);
     state->mGeneration = mNewestGeneration;
     state->mIndexInGeneration = index;
     return NS_OK;

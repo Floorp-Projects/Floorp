@@ -41,6 +41,18 @@
 using TelemetryFieldResult = mozilla::WindowsErrorResult<std::string>;
 using FilePathResult = mozilla::WindowsErrorResult<std::wstring>;
 
+// This function was copied from the implementation of
+// nsITelemetry::isOfficialTelemetry, currently found in the file
+// toolkit/components/telemetry/core/Telemetry.cpp.
+static bool IsOfficialTelemetry() {
+#if defined(MOZILLA_OFFICIAL) && defined(MOZ_TELEMETRY_REPORTING) && \
+    !defined(DEBUG)
+  return true;
+#else
+  return false;
+#endif
+}
+
 static TelemetryFieldResult GetDefaultBrowser() {
   RefPtr<IApplicationAssociationRegistration> pAAR;
   HRESULT hr = CoCreateInstance(
@@ -406,6 +418,13 @@ HRESULT SendDefaultBrowserPing() {
     return osLocaleResult.unwrapErr().AsHResult();
   }
   std::string osLocale = osLocaleResult.unwrap();
+
+  // Do not send the ping if we are not an official telemetry-enabled build;
+  // don't even generate the ping in fact, because if we write the file out
+  // then some other build might find it later and decide to submit it.
+  if (!IsOfficialTelemetry()) {
+    return S_OK;
+  }
 
   return SendPing(defaultBrowser, previousDefaultBrowser, osVersion, osLocale)
       .AsHResult();

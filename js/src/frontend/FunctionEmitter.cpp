@@ -709,15 +709,31 @@ bool FunctionScriptEmitter::initScript() {
     return false;
   }
 
+  RootedFunction function(bce_->cx, funbox_->function());
+  RootedScript script(bce_->cx);
+  if (bce_->emitterMode == BytecodeEmitter::LazyFunction) {
+    script = JSScript::CastFromLazy(funbox_->function()->baseScript());
+  } else {
+    script =
+        JSScript::Create(bce_->cx, function, bce_->compilationInfo.sourceObject,
+                         funbox_->getScriptExtent(), funbox_->immutableFlags());
+    if (!script) {
+      return false;
+    }
+  }
+
   BCEScriptStencil stencil(*bce_, std::move(immutableScriptData));
-  if (!JSScript::fullyInitFromStencil(bce_->cx, bce_->compilationInfo,
-                                      bce_->script, stencil)) {
+  if (!JSScript::fullyInitFromStencil(bce_->cx, bce_->compilationInfo, script,
+                                      stencil)) {
     return false;
   }
+  MOZ_ASSERT(!bce_->outputScript);
+  bce_->outputScript = script;
 
 #ifdef DEBUG
   state_ = State::End;
 #endif
+
   return true;
 }
 

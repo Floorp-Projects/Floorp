@@ -766,7 +766,8 @@ static nsresult ByteSliceRead(nsIInputStream* aInStream,
   }
 
   for (uint32_t i = 0; i < count; i++) {
-    aData->AppendElement(
+    // SetCapacity was just called, these cannot fail.
+    (void)aData->AppendElement(
         (slice1[i] << 24) | (slice2[i] << 16) | (slice3[i] << 8) | (slice4[i]),
         fallible);
   }

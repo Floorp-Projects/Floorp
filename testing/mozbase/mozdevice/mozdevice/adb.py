@@ -22,6 +22,9 @@ from six.moves import range
 from . import version_codes
 
 
+_TEST_ROOT = None
+
+
 class ADBProcess(object):
     """ADBProcess encapsulates the data related to executing the adb process."""
 
@@ -558,13 +561,14 @@ class ADBDevice(ADBCommand):
                  adb='adb',
                  adb_host=None,
                  adb_port=None,
-                 test_root='',
+                 test_root=None,
                  logger_name='adb',
                  timeout=300,
                  verbose=False,
                  device_ready_retry_wait=20,
                  device_ready_retry_attempts=3,
-                 require_root=True):
+                 require_root=True,
+                 share_test_root=True):
         """Initializes the ADBDevice object.
 
         :param device: When a string is passed, it is interpreted as the
@@ -588,6 +592,9 @@ class ADBDevice(ADBCommand):
         :type adb_host: str or None
         :param adb_port: port of the adb server to connect to.
         :type adb_port: integer or None
+        :param str test_root: value containing the test root to be
+            used on the device. This value will be shared among all
+            instances of ADBDevice if share_test_root is True.
         :param str logger_name: logging logger name. Defaults to 'adb'.
         :param timeout: The default maximum time in
             seconds for any spawned adb process to complete before
@@ -602,11 +609,15 @@ class ADBDevice(ADBCommand):
         :param integer device_ready_retry_attempts: number of attempts when
             checking if a device is ready.
         :param bool require_root: check that we have root permissions on device
+        :param bool share_test_root: True if instance should share the
+            same test_root value with other ADBInstances. Defaults to True.
 
         :raises: * ADBError
                  * ADBTimeoutError
                  * ValueError
         """
+        global _TEST_ROOT
+
         ADBCommand.__init__(self, adb=adb, adb_host=adb_host,
                             adb_port=adb_port, logger_name=logger_name,
                             timeout=timeout, verbose=verbose,
@@ -614,6 +625,9 @@ class ADBDevice(ADBCommand):
         self._logger.info('Using adb %s' % self._adb_version)
         self._device_serial = self._get_device_serial(device)
         self._initial_test_root = test_root
+        self._share_test_root = share_test_root
+        if share_test_root and not _TEST_ROOT:
+            _TEST_ROOT = test_root
         self._test_root = None
         self._device_ready_retry_wait = device_ready_retry_wait
         self._device_ready_retry_attempts = device_ready_retry_attempts
@@ -804,6 +818,12 @@ class ADBDevice(ADBCommand):
             if not boot_completed:
                 raise ADBTimeoutError("ADBDevice: pidof not found.")
         self._logger.info("Native pidof support: {}".format(self._have_pidof))
+
+        if require_root:
+            # Guarantee that /data/local/tmp exists and is accessible to all.
+            if not self.exists("/data/local/tmp", timeout=timeout, root=True):
+                self.mkdir("/data/local/tmp", timeout=timeout, root=True)
+            self.chmod("/data/local/tmp", timeout=timeout, root=True)
 
         # Bug 1529960 observed pidof intermittently returning no results for a
         # running process on the 7.0 x86_64 emulator.
@@ -1103,13 +1123,12 @@ class ADBDevice(ADBCommand):
         for the test root on the device. It determines the appropriate test
         root by attempting to create a 'dummy' directory on each of a list of
         directories and returning the first successful directory as the
-        test_root value.
+        test_root value. The cached value for the test_root will be shared
+        by subsequent instances of ADBDevice if self._share_test_root is True.
 
         The default list of directories checked by test_root are:
 
-        - /sdcard/tests
-        - /mnt/sdcard/tests
-        - /data/local/tests
+        - /data/local/tmp/tests
 
         You may override the default list by providing a test_root argument to
         the :class:`ADBDevice` constructor which will then be used when
@@ -1122,12 +1141,20 @@ class ADBDevice(ADBCommand):
         if self._test_root is not None:
             return self._test_root
 
-        if self._initial_test_root:
+        if self._share_test_root and _TEST_ROOT:
+            paths = [_TEST_ROOT]
+        elif self._initial_test_root is not None:
             paths = [self._initial_test_root]
         else:
-            paths = ['/sdcard/tests',
-                     '/mnt/sdcard/tests',
-                     '/data/local/tests']
+            # Android 10's scoped storage means we can no longer host
+            # profiles and tests on the sdcard. See
+            # https://developer.android.com/training/data-storage#scoped-storage
+            # Also see RunProgram in
+            # python/mozbuild/mozbuild/mach_commands.py where they
+            # choose /data/local/tmp as the default location for the
+            # profile because GeckoView only takes its configuration
+            # file from /data/local/tmp.
+            paths = ['/data/local/tmp/tests']
 
         max_attempts = 3
         for attempt in range(1, max_attempts + 1):
@@ -1137,6 +1164,8 @@ class ADBDevice(ADBCommand):
 
                 if self._try_test_root(test_root):
                     self._test_root = test_root
+                    # make sure we can fully access the test root.
+                    self.chmod(self._test_root, recursive=True, root=True)
                     return self._test_root
 
                 self._logger.debug('_setup_test_root: '
@@ -1148,6 +1177,16 @@ class ADBDevice(ADBCommand):
 
         raise ADBError("Unable to set up test root using paths: [%s]"
                        % ", ".join(paths))
+
+    @test_root.setter
+    def test_root(self, value):
+        # Cache the requested test root so that
+        # other invocations of ADBDevice will pick
+        # up the same value.
+        global _TEST_ROOT
+        self._test_root = value
+        if self._share_test_root:
+            _TEST_ROOT = value
 
     def _try_test_root(self, test_root):
         base_path, sub_path = posixpath.split(test_root)
@@ -1684,8 +1723,18 @@ class ADBDevice(ADBCommand):
         """
         buffers = self._get_logcat_buffer_args(buffers)
         cmds = ["logcat", "-c"] + buffers
-        self.command_output(cmds, timeout=timeout)
-        self.shell_output("log logcat cleared", timeout=timeout)
+        try:
+            self.command_output(cmds, timeout=timeout)
+            self.shell_output("log logcat cleared", timeout=timeout)
+        except ADBTimeoutError:
+            raise
+        except ADBProcessError as e:
+            if "failed to clear" not in str(e):
+                raise
+            self._logger.warning(
+                "retryable logcat clear error?: {}. Retrying...".format(str(e)))
+            self.command_output(cmds, timeout=timeout)
+            self.shell_output("log logcat cleared", timeout=timeout)
 
     def get_logcat(self,
                    filter_specs=[
@@ -1993,7 +2042,14 @@ class ADBDevice(ADBCommand):
             self.batch_execute(commands, timeout, root)
         else:
             command.append(path)
-            self.shell_output(cmd=' '.join(command), timeout=timeout, root=root)
+            try:
+                self.shell_output(cmd=' '.join(command), timeout=timeout, root=root)
+            except ADBProcessError as e:
+                if "No such file or directory" not in str(e):
+                    # It appears that chmod -R with symbolic links will exit with
+                    # exit code 1 but the files apart from the symbolic links
+                    # were transfered.
+                    raise
 
     def chown(self, path, owner, group=None, recursive=False, timeout=None, root=False):
         """Run the chown command on the provided path.
@@ -2355,6 +2411,7 @@ class ADBDevice(ADBCommand):
         local = os.path.normpath(local)
         remote = posixpath.normpath(remote)
         copy_required = False
+        sdcard_remote = None
         if os.path.isdir(local):
             copy_required = True
             temp_parent = tempfile.mkdtemp()
@@ -2373,12 +2430,32 @@ class ADBDevice(ADBCommand):
                 remote = '/'.join(remote.rstrip('/').split('/')[:-1])
         try:
             self.command_output(["push", local, remote], timeout=timeout)
+        except ADBProcessError as e:
+            if "remote secure_mkdirs failed" not in str(e):
+                raise
+            self._logger.warning(
+                "remote secure_mkdirs failed push('{}', '{}') {}".format(
+                    local, remote, str(e)))
+            # Work around change in Android where push creates
+            # directories which can not be written by "other" by first
+            # pushing the source to the sdcard which has no
+            # permissions issues, then moving it from the sdcard to
+            # the final destination.
+            self._logger.info("Falling back to using intermediate /sdcard in push.")
+            self.mkdir(posixpath.dirname(remote), parents=True, timeout=timeout, root=True)
+            with tempfile.NamedTemporaryFile(delete=True) as tmpf:
+                sdcard_remote = posixpath.join('/sdcard', posixpath.basename(tmpf.name))
+            self.command_output(["push", local, sdcard_remote], timeout=timeout)
+            self.cp(sdcard_remote, remote, recursive=True, timeout=timeout, root=True)
+            self.chmod(remote, recursive=True, timeout=timeout, root=True)
         except BaseException:
             raise
         finally:
             self._sync(timeout=timeout)
             if copy_required:
                 shutil.rmtree(temp_parent)
+            if sdcard_remote:
+                self.rm(sdcard_remote, recursive=True, force=True, timeout=timeout, root=True)
 
     def pull(self, remote, local, timeout=None):
         """Pulls a file or directory from the device.
@@ -2428,6 +2505,8 @@ class ADBDevice(ADBCommand):
             else:
                 local = '/'.join(local.rstrip('/').split('/')[:-1])
         try:
+            # We must first make the remote directory readable.
+            self.chmod(remote, recursive=True, timeout=timeout, root=True)
             self.command_output(["pull", remote, local], timeout=timeout)
         finally:
             if copy_required:

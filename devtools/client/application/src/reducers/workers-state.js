@@ -13,23 +13,27 @@ const {
 
 function WorkersState() {
   return {
-    // Array of all service workers
+    // Array of all service worker registrations
     list: [],
     canDebugWorkers: false,
   };
 }
 
 function buildWorkerDataFromFronts({ registration, workers }) {
-  return workers.map(worker => ({
-    id: worker.id,
-    isActive: worker.state === Ci.nsIServiceWorkerInfo.STATE_ACTIVATED,
-    scope: registration.scope,
-    lastUpdateTime: registration.lastUpdateTime, // only available for active worker
-    url: worker.url,
+  return {
+    id: registration.id,
+    lastUpdateTime: registration.lastUpdateTime,
     registrationFront: registration,
-    workerTargetFront: worker.workerTargetFront,
-    stateText: worker.stateText,
-  }));
+    scope: registration.scope,
+    workers: workers.map(worker => ({
+      id: worker.id,
+      isActive: worker.state === Ci.nsIServiceWorkerInfo.STATE_ACTIVATED,
+      url: worker.url,
+      stateText: worker.stateText,
+      registrationFront: registration,
+      workerTargetFront: worker.workerTargetFront,
+    })),
+  };
 }
 
 function workersReducer(state = WorkersState(), action) {

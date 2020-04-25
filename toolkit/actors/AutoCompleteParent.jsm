@@ -240,7 +240,7 @@ class AutoCompleteParent extends JSWindowActorParent {
       (resultStyles.has("autofill-profile") || resultStyles.has("loginsFooter"))
     ) {
       this.openedPopup._normalMaxRows = this.openedPopup.maxRows;
-      this.openedPopup.mInput.maxRows = 100;
+      this.openedPopup.mInput.maxRows = 10;
     }
     this.openedPopup.addEventListener("popuphidden", this);
     this.openedPopup.addEventListener("popupshowing", this);

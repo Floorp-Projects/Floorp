@@ -318,12 +318,16 @@ ContentBlocking::AllowAccessFor(
     // Only continue to run in child processes when aParentContext is
     // in-process and tracking origin is not third-party with respect to
     // the parent window.
-    bool isThirdParty;
-    nsCOMPtr<nsIPrincipal> principal =
-        AntiTrackingUtils::GetPrincipal(aParentContext);
-    Unused << trackingPrincipal->IsThirdPartyPrincipal(principal,
-                                                       &isThirdParty);
-    runInSameProcess = aParentContext->IsInProcess() && !isThirdParty;
+    if (aParentContext->IsInProcess()) {
+      bool isThirdParty;
+      nsCOMPtr<nsIPrincipal> principal =
+          AntiTrackingUtils::GetPrincipal(aParentContext);
+      Unused << trackingPrincipal->IsThirdPartyPrincipal(principal,
+                                                         &isThirdParty);
+      runInSameProcess = !isThirdParty;
+    } else {
+      runInSameProcess = false;
+    }
   }
 
   if (runInSameProcess) {
@@ -484,6 +488,9 @@ ContentBlocking::CompleteAllowAccessFor(
       }
     }
 
+    ContentBlockingNotifier::ReportUnblockingToConsole(
+        aParentContext, NS_ConvertUTF8toUTF16(trackingOrigin), aReason);
+
     if (XRE_IsParentProcess()) {
       LOG(("Saving the permission: trackingOrigin=%s", trackingOrigin.get()));
       return SaveAccessForOriginOnParentProcess(aTopLevelWindowId,
@@ -582,11 +589,6 @@ ContentBlocking::CompleteAllowAccessFor(
           ? nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN
           : nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER,
       aTrackingOrigin, Some(aReason));
-
-  // TODO: When Bug 1611755 is done, we can remove reporting console
-  // from here and report it directly in the parent.
-  ContentBlockingNotifier::ReportUnblockingToConsole(
-      parentInner, NS_ConvertUTF8toUTF16(aTrackingOrigin), aReason);
 }
 
 /* static */

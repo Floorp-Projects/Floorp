@@ -22,14 +22,18 @@ NS_IMPL_ISUPPORTS(OSReauthenticator, nsIOSReauthenticator)
 
 extern mozilla::LazyLogModule gCredentialManagerSecretLog;
 
-using namespace mozilla;
-using dom::Promise;
+using mozilla::LogLevel;
+using mozilla::WindowsHandle;
+using mozilla::dom::Promise;
 
 #if defined(XP_WIN)
 #  include <combaseapi.h>
 #  include <ntsecapi.h>
 #  include <wincred.h>
 #  include <windows.h>
+#  define SECURITY_WIN32
+#  include <security.h>
+#  include <shlwapi.h>
 struct HandleCloser {
   typedef HANDLE pointer;
   void operator()(HANDLE h) {
@@ -93,18 +97,39 @@ static nsresult ReauthenticateUserWindows(const nsAString& aMessageText,
   // Check if the user has a blank password before proceeding
   DWORD usernameLength = CREDUI_MAX_USERNAME_LENGTH + 1;
   WCHAR username[CREDUI_MAX_USERNAME_LENGTH + 1] = {0};
-  if (GetUserName(username, &usernameLength)) {
-    HANDLE logonUserHandle = nullptr;
-    bool result = LogonUser(username, L".", L"", LOGON32_LOGON_INTERACTIVE,
-                            LOGON32_PROVIDER_DEFAULT, &logonUserHandle);
+
+  if (!GetUserNameEx(NameSamCompatible, username, &usernameLength)) {
+    MOZ_LOG(gCredentialManagerSecretLog, LogLevel::Debug,
+            ("Error getting username"));
+    return NS_ERROR_FAILURE;
+  }
+
+#  ifdef OS_DOMAINMEMBER
+  bool isDomainMember = IsOS(OS_DOMAINMEMBER);
+#  else
+  // Bug 1633097
+  bool isDomainMember = false;
+#  endif
+  if (!isDomainMember) {
+    const WCHAR* usernameNoDomain = username;
+    // Don't include the domain portion of the username when calling LogonUser.
+    LPCWSTR backslash = wcschr(username, L'\\');
+    if (backslash) {
+      usernameNoDomain = backslash + 1;
+    }
+
+    HANDLE logonUserHandle = INVALID_HANDLE_VALUE;
+    bool result =
+        LogonUser(usernameNoDomain, L".", L"", LOGON32_LOGON_INTERACTIVE,
+                  LOGON32_PROVIDER_DEFAULT, &logonUserHandle);
+    if (result) {
+      CloseHandle(logonUserHandle);
+    }
     // ERROR_ACCOUNT_RESTRICTION: Indicates a referenced user name and
     // authentication information are valid, but some user account restriction
     // has prevented successful authentication (such as time-of-day
     // restrictions).
     if (result || GetLastError() == ERROR_ACCOUNT_RESTRICTION) {
-      if (logonUserHandle && logonUserHandle != INVALID_HANDLE_VALUE) {
-        CloseHandle(logonUserHandle);
-      }
       reauthenticated = true;
       isBlankPassword = true;
       return NS_OK;
@@ -131,7 +156,7 @@ static nsresult ReauthenticateUserWindows(const nsAString& aMessageText,
     // https://docs.microsoft.com/en-us/windows/desktop/api/ntsecapi/nf-ntsecapi-lsaconnectuntrusted
     if (LsaConnectUntrusted(&lsa) != ERROR_SUCCESS) {
       MOZ_LOG(gCredentialManagerSecretLog, LogLevel::Debug,
-              ("Error aquiring lsa. Authentication attempts will fail."));
+              ("Error acquiring lsa. Authentication attempts will fail."));
       return NS_ERROR_FAILURE;
     }
     ScopedHANDLE scopedLsa(lsa);
@@ -145,13 +170,12 @@ static nsresult ReauthenticateUserWindows(const nsAString& aMessageText,
     ULONG authPackage = 0;
     ULONG outCredSize = 0;
     LPVOID outCredBuffer = nullptr;
-    BOOL save = false;
 
     // Get user's Windows credentials.
     // https://docs.microsoft.com/en-us/windows/desktop/api/wincred/nf-wincred-creduipromptforwindowscredentialsw
     err = CredUIPromptForWindowsCredentialsW(
         &credui, err, &authPackage, nullptr, 0, &outCredBuffer, &outCredSize,
-        &save, CREDUIWIN_ENUMERATE_CURRENT_USER);
+        nullptr, CREDUIWIN_ENUMERATE_CURRENT_USER);
     ScopedBuffer scopedOutCredBuffer(outCredBuffer);
     if (err == ERROR_CANCELLED) {
       MOZ_LOG(gCredentialManagerSecretLog, LogLevel::Debug,

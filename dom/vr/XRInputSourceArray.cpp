@@ -71,7 +71,9 @@ void XRInputSourceArray::Update(XRSession* aSession) {
       addInit.mBubbles = false;
       addInit.mCancelable = false;
       addInit.mSession = aSession;
-      addInit.mAdded.AppendElement(*inputSource, mozilla::fallible);
+      if (!addInit.mAdded.AppendElement(*inputSource, mozilla::fallible)) {
+        mozalloc_handle_oom(0);
+      }
     }
     // If added, updating the current controller states.
     if (inputSource) {
@@ -110,7 +112,12 @@ void XRInputSourceArray::DispatchInputSourceRemovedEvent(
     init.mBubbles = false;
     init.mCancelable = false;
     init.mSession = aSession;
-    init.mRemoved.AppendElement(*input, mozilla::fallible);
+    if (!init.mRemoved.AppendElement(*input, mozilla::fallible)) {
+      // XXX(Bug 1632090) Instead of extending the array 1-by-1 (which might
+      // involve multiple reallocations) and potentially crashing here,
+      // SetCapacity could be called outside the loop once.
+      mozalloc_handle_oom(0);
+    }
   }
 
   if (init.mRemoved.Length()) {

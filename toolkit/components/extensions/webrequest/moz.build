@@ -7,8 +7,6 @@
 EXTRA_JS_MODULES += [
     'SecurityInfo.jsm',
     'WebRequest.jsm',
-    'WebRequestCommon.jsm',
-    'WebRequestContent.js',
     'WebRequestUpload.jsm',
 ]
 

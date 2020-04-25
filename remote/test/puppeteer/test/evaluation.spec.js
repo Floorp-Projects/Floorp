@@ -80,7 +80,7 @@ module.exports.addTests = function({testRunner, expect}) {
       const result = await page.evaluate(a => a['中文字符'], {'中文字符': 42});
       expect(result).toBe(42);
     });
-    it_fails_ffox('should throw when evaluation triggers reload', async({page, server}) => {
+    it('should throw when evaluation triggers reload', async({page, server}) => {
       let error = null;
       await page.evaluate(() => {
         location.reload();
@@ -100,7 +100,7 @@ module.exports.addTests = function({testRunner, expect}) {
       await page.goto(server.EMPTY_PAGE);
       expect(await frameEvaluation).toBe(42);
     });
-    it_fails_ffox('should work from-inside an exposed function', async({page, server}) => {
+    it('should work from-inside an exposed function', async({page, server}) => {
       // Setup inpage callback, which calls Page.evaluate
       await page.exposeFunction('callController', async function(a, b) {
         return await page.evaluate((a, b) => a * b, a, b);

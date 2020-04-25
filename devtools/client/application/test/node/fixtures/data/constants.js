@@ -4,81 +4,207 @@
 
 "use strict";
 
+// NOTE: worker state values are defined in an enum in nsIServiceWorkerManager
+// https://searchfox.org/mozilla-central/source/dom/interfaces/base/nsIServiceWorkerManager.idl
+
 const EMPTY_WORKER_LIST = [];
+
+const WORKER_RUNNING = {
+  id: "id-worker-1-example",
+  isActive: true,
+  workerTargetFront: true,
+  url: "http://example.com/worker.js",
+  state: 4,
+  stateText: "activated",
+};
+
+const WORKER_STOPPED = {
+  id: "id-worker-1-example",
+  isActive: true,
+  workerTargetFront: false,
+  url: "http://example.com/worker.js",
+  state: 4,
+  stateText: "activated",
+};
+
+const WORKER_WAITING = {
+  id: "id-worker-1-example",
+  isActive: false,
+  workerTargetFront: false,
+  url: "http://example.com/worker.js",
+  state: 2,
+  stateText: "installed",
+};
+
+const REGISTRATION_SINGLE_WORKER = {
+  id: "id-reg-1-example",
+  scope: "SCOPE 123",
+  registrationFront: "",
+  workers: [
+    {
+      id: "id-worker-1-example",
+      isActive: true,
+      workerTargetFront: "",
+      url: "http://example.com/worker.js",
+      state: 4,
+      stateText: "activated",
+    },
+  ],
+};
+
+const REGISTRATION_MULTIPLE_WORKERS = {
+  id: "id-reg-1-example",
+  scope: "SCOPE 123",
+  registrationFront: "",
+  workers: [
+    {
+      id: "id-worker-1-example",
+      isActive: true,
+      workerTargetFront: "",
+      url: "http://example.com/worker.js",
+      state: 4,
+      stateText: "activated",
+    },
+    {
+      id: "id-worker-2-example",
+      isActive: false,
+      workerTargetFront: "",
+      url: "http://example.com/worker.js",
+      state: 2,
+      stateText: "installed",
+    },
+  ],
+};
 
 const SINGLE_WORKER_DEFAULT_DOMAIN_LIST = [
   {
-    active: true,
-    name: "worker1",
+    id: "id-reg-1-example",
     scope: "SCOPE 123",
     registrationFront: "",
-    workerTargetFront: "",
-    url: "http://example.com/worker.js",
+    workers: [
+      {
+        id: "id-worker-1-example",
+        isActive: true,
+        workerTargetFront: "",
+        url: "http://example.com/worker.js",
+        state: 4,
+        stateText: "activated",
+      },
+    ],
   },
 ];
 
 const SINGLE_WORKER_DIFFERENT_DOMAIN_LIST = [
   {
-    active: true,
-    name: "worker1",
+    id: "id-reg-1-example",
     scope: "SCOPE 123",
     registrationFront: "",
-    workerTargetFront: "",
-    url: "http://different-example.com/worker.js",
+    workers: [
+      {
+        id: "id-worker-1-example",
+        isActive: true,
+        workerTargetFront: "",
+        url: "http://different-example.com/worker.js",
+        state: 4,
+        stateText: "activated",
+      },
+    ],
   },
 ];
 
 const MULTIPLE_WORKER_LIST = [
   {
-    active: true,
-    name: "worker1",
-    scope: "SCOPE 123",
+    id: "id-reg-1-example",
+    scope: "SCOPE1",
     registrationFront: "",
-    workerTargetFront: "",
-    url: "http://example.com/worker.js",
+    workers: [
+      {
+        id: "id-worker-1-example",
+        isActive: true,
+        workerTargetFront: "",
+        url: "http://example.com/worker.js",
+        state: 4,
+        stateText: "activated",
+      },
+    ],
   },
   {
-    active: false,
-    name: "worker2",
-    scope: "SCOPE 456",
+    id: "id-reg-1-example",
+    scope: "SCOPE2",
     registrationFront: "",
-    workerTargetFront: "",
-    url: "http://example.com/worker.js",
+    workers: [
+      {
+        id: "id-worker-2-example",
+        isActive: false,
+        workerTargetFront: "",
+        url: "http://example.com/worker.js",
+        state: 2,
+        stateText: "installed",
+      },
+    ],
   },
   {
-    active: true,
-    name: "worker3",
-    scope: "SCOPE 789",
+    id: "id-reg-3-example",
+    scope: "SCOPE3",
     registrationFront: "",
-    workerTargetFront: "",
-    url: "http://example.com/worker.js",
+    workers: [
+      {
+        id: "id-worker-3-example",
+        isActive: true,
+        workerTargetFront: "",
+        url: "http://example.com/worker.js",
+        state: 4,
+        stateText: "activated",
+      },
+    ],
   },
 ];
 
 const MULTIPLE_WORKER_MIXED_DOMAINS_LIST = [
   {
-    active: true,
-    name: "worker1",
-    scope: "SCOPE 123",
+    id: "id-reg-1-example",
+    scope: "SCOPE1",
     registrationFront: "",
-    workerTargetFront: "",
-    url: "http://example.com/worker.js",
+    workers: [
+      {
+        id: "id-worker-1-example",
+        isActive: true,
+        workerTargetFront: "",
+        url: "http://example.com/worker.js",
+        state: 4,
+        stateText: "activated",
+      },
+    ],
   },
   {
-    active: false,
-    name: "worker2",
-    scope: "SCOPE 456",
+    id: "id-reg-2-example",
+    scope: "SCOPE2",
     registrationFront: "",
-    workerTargetFront: "",
-    url: "http://example.com/worker.js",
+    workers: [
+      {
+        id: "id-worker-2-example",
+        isActive: true,
+        workerTargetFront: "",
+        url: "http://example.com/worker.js",
+        state: 4,
+        stateText: "activated",
+      },
+    ],
   },
   {
-    active: true,
-    name: "worker3",
-    scope: "SCOPE 789",
+    id: "id-reg-3-example",
+    scope: "SCOPE3",
     registrationFront: "",
-    workerTargetFront: "",
-    url: "http://different-example.com/worker.js",
+    workers: [
+      {
+        id: "id-worker-3-example",
+        isActive: true,
+        workerTargetFront: "",
+        url: "http://different-example.com/worker.js",
+        state: 4,
+        stateText: "activated",
+      },
+    ],
   },
 ];
 
@@ -167,9 +293,18 @@ const MANIFEST_NO_ISSUES = {
 };
 
 module.exports = {
+  // service worker related fixtures
   EMPTY_WORKER_LIST,
+  MULTIPLE_WORKER_LIST,
+  MULTIPLE_WORKER_MIXED_DOMAINS_LIST,
+  REGISTRATION_MULTIPLE_WORKERS,
+  REGISTRATION_SINGLE_WORKER,
   SINGLE_WORKER_DEFAULT_DOMAIN_LIST,
   SINGLE_WORKER_DIFFERENT_DOMAIN_LIST,
+  WORKER_RUNNING,
+  WORKER_STOPPED,
+  WORKER_WAITING,
+  // manifest related fixtures
   MANIFEST_NO_ISSUES,
   MANIFEST_WITH_ISSUES,
   MANIFEST_SIMPLE,
@@ -177,6 +312,4 @@ module.exports = {
   MANIFEST_ICON_MEMBERS,
   MANIFEST_STRING_MEMBERS,
   MANIFEST_UNKNOWN_TYPE_MEMBERS,
-  MULTIPLE_WORKER_LIST,
-  MULTIPLE_WORKER_MIXED_DOMAINS_LIST,
 };

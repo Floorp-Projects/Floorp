@@ -5,8 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CommonSocketControl.h"
+
+#include "BRNameMatchingPolicy.h"
+#include "PublicKeyPinningService.h"
 #include "SharedCertVerifier.h"
 #include "nsNSSComponent.h"
+#include "SharedSSLState.h"
 #include "sslt.h"
 #include "ssl.h"
 
@@ -139,34 +143,56 @@ CommonSocketControl::IsAcceptableForHost(const nsACString& hostname,
     return NS_OK;
   }
 
-  // Attempt to verify the joinee's certificate using the joining hostname.
-  // This ensures that any hostname-specific verification logic (e.g. key
-  // pinning) is satisfied by the joinee's certificate chain.
-  // This verification only uses local information; since we're on the network
-  // thread, we would be blocking on ourselves if we attempted any network i/o.
-  // TODO(bug 1056935): The certificate chain built by this verification may be
-  // different than the certificate chain originally built during the joined
-  // connection's TLS handshake. Consequently, we may report a wrong and/or
-  // misleading certificate chain for HTTP transactions coalesced onto this
-  // connection. This may become problematic in the future. For example,
-  // if/when we begin relying on intermediate certificates being stored in the
-  // securityInfo of a cached HTTPS response, that cached certificate chain may
-  // actually be the wrong chain. We should consider having JoinConnection
-  // return the certificate chain built here, so that the calling Necko code
-  // can associate the correct certificate chain with the HTTP transactions it
-  // is trying to join onto this connection.
-  RefPtr<psm::SharedCertVerifier> certVerifier(psm::GetDefaultCertVerifier());
-  if (!certVerifier) {
+  // An empty mSucceededCertChain means the server certificate verification
+  // failed before, so don't join in this case.
+  if (mSucceededCertChain.IsEmpty()) {
     return NS_OK;
   }
-  psm::CertVerifier::Flags flags = psm::CertVerifier::FLAG_LOCAL_ONLY;
-  UniqueCERTCertList unusedBuiltChain;
-  mozilla::pkix::Result result =
-      certVerifier->VerifySSLServerCert(nssCert, mozilla::pkix::Now(),
-                                        nullptr,  // pinarg
-                                        hostname, unusedBuiltChain, flags);
-  if (result != mozilla::pkix::Success) {
+
+  // See where CheckCertHostname() is called in
+  // CertVerifier::VerifySSLServerCert. We are doing the same hostname-specific
+  // checks here. If any hostname-specific checks are added to
+  // CertVerifier::VerifySSLServerCert we need to add them here too.
+  Input serverCertInput;
+  mozilla::pkix::Result rv =
+      serverCertInput.Init(nssCert->derCert.data, nssCert->derCert.len);
+  if (rv != Success) {
     return NS_OK;
+  }
+
+  Input hostnameInput;
+  rv = hostnameInput.Init(
+      BitwiseCast<const uint8_t*, const char*>(hostname.BeginReading()),
+      hostname.Length());
+  if (rv != Success) {
+    return NS_OK;
+  }
+
+  mozilla::psm::BRNameMatchingPolicy nameMatchingPolicy(
+      mIsBuiltCertChainRootBuiltInRoot
+          ? mozilla::psm::PublicSSLState()->NameMatchingMode()
+          : mozilla::psm::BRNameMatchingPolicy::Mode::DoNotEnforce);
+  rv = CheckCertHostname(serverCertInput, hostnameInput, nameMatchingPolicy);
+  if (rv != Success) {
+    return NS_OK;
+  }
+
+  mozilla::psm::CertVerifier::PinningMode pinningMode =
+      mozilla::psm::PublicSSLState()->PinningMode();
+  if (pinningMode != mozilla::psm::CertVerifier::pinningDisabled) {
+    bool chainHasValidPins;
+    bool enforceTestMode =
+        (pinningMode == mozilla::psm::CertVerifier::pinningEnforceTestMode);
+    nsresult nsrv = mozilla::psm::PublicKeyPinningService::ChainHasValidPins(
+        mSucceededCertChain, PromiseFlatCString(hostname).BeginReading(), Now(),
+        enforceTestMode, GetOriginAttributes(), chainHasValidPins, nullptr);
+    if (NS_FAILED(nsrv)) {
+      return NS_OK;
+    }
+
+    if (!chainHasValidPins) {
+      return NS_OK;
+    }
   }
 
   // All tests pass

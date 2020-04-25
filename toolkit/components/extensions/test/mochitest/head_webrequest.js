@@ -69,18 +69,7 @@ function background(events) {
   // Retrieve the per-file/test expected values.
   function getExpected(details) {
     let url = new URL(details.url);
-    let filename;
-    if (url.protocol == "data:") {
-      // See bug 1471387
-      if (details.originUrl == "about:newtab") {
-        return;
-      }
-
-      // pathname is everything after protocol.
-      filename = url.pathname;
-    } else {
-      filename = url.pathname.split("/").pop();
-    }
+    let filename = url.pathname.split("/").pop();
     if (ignore && ignore.includes(filename)) {
       return;
     }

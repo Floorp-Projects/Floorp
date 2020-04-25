@@ -98,11 +98,6 @@ Test swapFrameLoaders with different frame types and remoteness
   }
 
   add_task(async function() {
-    await SpecialPowers.pushPrefEnv(
-      { "set": [["network.disable.ipc.security", true]] });
-  });
-
-  add_task(async function() {
     for (let scenario of SCENARIOS) {
       let [ typeA, typeB, options ] = scenario;
       let heightA = HEIGHTS[0];

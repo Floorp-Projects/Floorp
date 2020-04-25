@@ -89,13 +89,6 @@ let expected = {
     origin: "file_simple_xhr_frame2.html",
     parent: "file_simple_xhr_frame.html",
   },
-  // Last frame tests content policy frame ancestors.
-  "webRequestTest": {
-    type: "sub_frame",
-    depth: 3,
-    origin: "file_simple_xhr_frame2.html",
-    parent: "file_simple_xhr_frame2.html",
-  },
   // This is loaded in a sandbox iframe.  originUrl is not available for that,
   // and requests within a sandboxed iframe will additionally have an empty
   // url on their immediate parent/ancestor.
@@ -139,7 +132,7 @@ function checkDetails(details) {
   }
 
   let url = new URL(details.url);
-  let filename = url.pathname.split(url.protocol == "data:" ? "," : "/").pop();
+  let filename = url.pathname.split("/").pop();
   ok(filename in expected, `Should be expecting a request for ${filename}`);
   let expect = expected[filename];
   is(expect.type, details.type, `${details.type} type matches`);
