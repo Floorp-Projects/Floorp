@@ -1951,3 +1951,62 @@ security.doh.trrPerformance:
       retryCount: The number of lookup attempts before success.
       networkUnstable: Whether there was network fluctuation while gathering the results.
       captivePortal: Whether there a captive portal was detected during the run.
+
+security.ui.certerror:
+  load:
+    objects: ["aboutcerterror"]
+    bug_numbers:
+      - 1484255
+      - 1505310
+      - 1553181
+      - 1629826
+    description: >
+      The about:certerror page is loaded, keyed by error code, see https://searchfox.org/mozilla-central/source/security/nss/lib/mozpkix/include/pkix/Result.h
+    expiry_version: never
+    notification_emails:
+      - jhofmann@mozilla.com
+      - rtestard@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["content"]
+    products:
+      - firefox
+    extra_keys:
+      is_frame: If the error page is loaded in an iframe.
+      has_sts: If the error page is for a site with HSTS headers or with a pinned key.
+  click:
+    objects: [
+      "advanced_button",
+      "exception_button",
+      "return_button_top",
+      "return_button_adv",
+      "learn_more_link",
+      "auto_report_cb",
+      "error_code_link",
+      "clipboard_button_top",
+      "clipboard_button_bot",
+    ]
+    bug_numbers:
+      - 1484255
+      - 1505310
+      - 1553181
+      - 1629826
+    description: >
+      User interaction by click events on the cert error page. Keyed by error code, see https://searchfox.org/mozilla-central/source/security/nss/lib/mozpkix/include/pkix/Result.h
+    expiry_version: never
+    notification_emails:
+      - jhofmann@mozilla.com
+      - rtestard@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["content"]
+    products:
+      - firefox
+    extra_keys:
+      is_frame: If the error page is loaded in an iframe.
+      has_sts: If the error page is for a site with HSTS headers or with a pinned key.
+      panel_open: If the advanced panel was open at the time of the interaction.

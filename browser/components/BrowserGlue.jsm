@@ -2163,6 +2163,19 @@ BrowserGlue.prototype = {
 
       {
         task: () => {
+          let enableCertErrorUITelemetry = Services.prefs.getBoolPref(
+            "security.certerrors.recordEventTelemetry",
+            true
+          );
+          Services.telemetry.setEventRecordingEnabled(
+            "security.ui.certerror",
+            enableCertErrorUITelemetry
+          );
+        },
+      },
+
+      {
+        task: () => {
           let siteSpecific = Services.prefs.getBoolPref(
             "browser.zoom.siteSpecific",
             false
