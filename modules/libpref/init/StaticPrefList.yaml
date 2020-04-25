@@ -407,11 +407,6 @@
   value: 0.01f
   mirror: always
 
-- name: apz.frame_delay.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 - name: apz.touch_acceleration_factor_x
   type: float
   value: 1.0f

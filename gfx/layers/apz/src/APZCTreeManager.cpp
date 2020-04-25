@@ -891,7 +891,7 @@ void APZCTreeManager::SampleForWebRender(
   // Advance animations. It's important that this happens after
   // sampling all async transforms, because AdvanceAnimations() updates
   // the effective scroll offset to the value it should have for the *next*
-  // composite after this one (if the APZ frame delay is enabled).
+  // composite after this one.
   bool activeAnimations =
       AdvanceAnimationsInternal(lock, Some(aRenderRoot), aSampleTime);
   if (activeAnimations) {
