@@ -41,7 +41,7 @@ var TestRunner = {
   currentComboIndex: 0,
   _lastCombo: null,
   _libDir: null,
-  croppingPadding: 10,
+  croppingPadding: 0,
   mochitestScope: null,
 
   init(extensionPath) {
