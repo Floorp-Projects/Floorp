@@ -30,7 +30,7 @@ addAccessibleTask(
 
     is(link.getAttributeValue("AXVisited"), 0, "Link has not been visited");
 
-    PlacesTestUtils.addVisits(["http://www.example.com/"]);
+    await PlacesTestUtils.addVisits(["http://www.example.com/"]);
 
     await stateChanged;
     is(link.getAttributeValue("AXVisited"), 1, "Link has been visited");
