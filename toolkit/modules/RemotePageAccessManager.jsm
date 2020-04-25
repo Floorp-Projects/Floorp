@@ -41,6 +41,7 @@ let RemotePageAccessManager = {
         "Browser:PrimeMitm",
         "Browser:ResetEnterpriseRootsPref",
       ],
+      RPMRecordTelemetryEvent: ["*"],
       RPMAddMessageListener: ["*"],
       RPMRemoveMessageListener: ["*"],
       RPMGetFormatURLPref: ["app.support.baseURL"],
