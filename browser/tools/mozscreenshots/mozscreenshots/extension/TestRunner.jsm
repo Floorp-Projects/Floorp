@@ -41,7 +41,7 @@ var TestRunner = {
   currentComboIndex: 0,
   _lastCombo: null,
   _libDir: null,
-  croppingPadding: 0,
+  croppingPadding: 10,
   mochitestScope: null,
 
   init(extensionPath) {
@@ -140,9 +140,6 @@ var TestRunner = {
     Services.prefs.setIntPref("ui.prefersReducedMotion", 1);
 
     let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-
-    // Prevent the mouse cursor from causing hover styles or tooltips to appear.
-    browserWindow.windowUtils.disableNonTestMouseEvents(true);
 
     // When being automated through Marionette, Firefox shows a prominent indication
     // in the urlbar and identity block. We don't want this to show when testing browser UI.
@@ -255,7 +252,6 @@ var TestRunner = {
     browserWindow.restore();
     Services.prefs.clearUserPref("ui.caretBlinkTime");
     Services.prefs.clearUserPref("ui.prefersReducedMotion");
-    browserWindow.windowUtils.disableNonTestMouseEvents(false);
   },
 
   // helpers
