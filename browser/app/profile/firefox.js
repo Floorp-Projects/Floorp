@@ -1790,7 +1790,7 @@ pref("extensions.formautofill.reauth.enabled", false);
 pref("extensions.formautofill.section.enabled", true);
 pref("extensions.formautofill.loglevel", "Warn");
 
-pref("browser.osKeyStore.loglevel", "Warn");
+pref("toolkit.osKeyStore.loglevel", "Warn");
 
 #ifdef NIGHTLY_BUILD
   // Comma separated list of countries Form Autofill is available in.

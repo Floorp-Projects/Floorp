@@ -351,7 +351,7 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   let ConsoleAPI = ChromeUtils.import("resource://gre/modules/Console.jsm", {})
     .ConsoleAPI;
   return new ConsoleAPI({
-    maxLogLevelPref: "browser.osKeyStore.loglevel",
+    maxLogLevelPref: "toolkit.osKeyStore.loglevel",
     prefix: "OSKeyStore",
   });
 });
