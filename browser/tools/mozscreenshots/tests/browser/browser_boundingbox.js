@@ -4,6 +4,8 @@
 
 "use strict";
 
+/* import-globals-from ../../head.js */
+
 add_task(async function() {
   const scale = window.docShell.QueryInterface(Ci.nsIBaseWindow)
     .devicePixelsPerDesktopPixel;
