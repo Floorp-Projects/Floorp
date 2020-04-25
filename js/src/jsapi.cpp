@@ -3139,13 +3139,13 @@ JS_PUBLIC_API bool JS_DefineProperties(JSContext* cx, HandleObject obj,
       if (ps->isSelfHosted()) {
         if (!DefineSelfHostedProperty(
                 cx, obj, id, ps->u.accessors.getter.selfHosted.funname,
-                ps->u.accessors.setter.selfHosted.funname, ps->flags)) {
+                ps->u.accessors.setter.selfHosted.funname, ps->attributes())) {
           return false;
         }
       } else {
         if (!DefineAccessorPropertyById(
                 cx, obj, id, ps->u.accessors.getter.native,
-                ps->u.accessors.setter.native, ps->flags)) {
+                ps->u.accessors.setter.native, ps->attributes())) {
           return false;
         }
       }
@@ -3155,8 +3155,7 @@ JS_PUBLIC_API bool JS_DefineProperties(JSContext* cx, HandleObject obj,
         return false;
       }
 
-      if (!DefineDataPropertyById(cx, obj, id, v,
-                                  ps->flags & ~JSPROP_INTERNAL_USE_BIT)) {
+      if (!DefineDataPropertyById(cx, obj, id, v, ps->attributes())) {
         return false;
       }
     }
