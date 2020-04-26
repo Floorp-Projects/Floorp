@@ -21,12 +21,6 @@ XPCOMUtils.defineLazyGetter(
   () => ExtensionParent.StartupCache
 );
 
-XPCOMUtils.defineLazyGetter(
-  this,
-  "Management",
-  () => ExtensionParent.apiManager
-);
-
 var EXPORTED_SYMBOLS = ["ExtensionPermissions"];
 
 const FILE_NAME = "extension-preferences.json";
@@ -129,7 +123,6 @@ var ExtensionPermissions = {
 
     if (added.permissions.length || added.origins.length) {
       await this._update(extensionId, { permissions, origins });
-      Management.emit("change-permissions", { extensionId, added });
       if (emitter) {
         emitter.emit("add-permissions", added);
       }
@@ -169,7 +162,6 @@ var ExtensionPermissions = {
 
     if (removed.permissions.length || removed.origins.length) {
       await this._update(extensionId, { permissions, origins });
-      Management.emit("change-permissions", { extensionId, removed });
       if (emitter) {
         emitter.emit("remove-permissions", removed);
       }
@@ -180,13 +172,8 @@ var ExtensionPermissions = {
     await lazyInit();
     StartupCache.permissions.delete(extensionId);
     if (prefs.data[extensionId]) {
-      let removed = prefs.data[extensionId];
       delete prefs.data[extensionId];
       prefs.saveSoon();
-      Management.emit("change-permissions", {
-        extensionId,
-        removed,
-      });
     }
   },
 

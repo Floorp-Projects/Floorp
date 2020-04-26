@@ -258,6 +258,19 @@ ExtensionPreferencesManager.addSetting("network.tlsVersionRestriction", {
 
 this.privacy = class extends ExtensionAPI {
   getAPI(context) {
+    let { extension } = context;
+
+    // eslint-disable-next-line mozilla/balanced-listeners
+    extension.on("remove-permissions", (ignoreEvent, permissions) => {
+      if (!permissions.permissions.includes("privacy")) {
+        return;
+      }
+      ExtensionPreferencesManager.removeSettingsForPermission(
+        extension.id,
+        "privacy"
+      );
+    });
+
     return {
       privacy: {
         network: {
