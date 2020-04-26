@@ -2,7 +2,7 @@
 
 /* exported createHttpServer, cleanupDir, clearCache, promiseConsoleOutput,
             promiseQuotaManagerServiceReset, promiseQuotaManagerServiceClear,
-            runWithPrefs, testEnv, withHandlingUserInput */
+            runWithPrefs, testEnv, withHandlingUserInput, resetHandlingUserInput */
 
 var { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
@@ -222,6 +222,12 @@ function handlingUserInputFrameScript() {
       }
     },
   });
+}
+
+// If you use withHandlingUserInput then restart the addon manager,
+// you need to reset this before using withHandlingUserInput again.
+function resetHandlingUserInput() {
+  extensionHandlers = new WeakSet();
 }
 
 async function withHandlingUserInput(extension, fn) {
