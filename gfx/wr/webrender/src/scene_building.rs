@@ -1397,6 +1397,17 @@ impl<'a> SceneBuilder<'a> {
                     &image_mask,
                 );
             }
+            DisplayItem::RoundedRectClip(ref info) => {
+                let parent_space = self.get_space(&info.parent_space_and_clip.spatial_id);
+                let current_offset = self.current_offset(parent_space);
+
+                self.add_rounded_rect_clip_node(
+                    info.id,
+                    &info.parent_space_and_clip,
+                    &info.clip,
+                    current_offset,
+                );
+            }
             DisplayItem::RectClip(ref info) => {
                 let parent_space = self.get_space(&info.parent_space_and_clip.spatial_id);
                 let current_offset = self.current_offset(parent_space);
@@ -2406,6 +2417,65 @@ impl<'a> SceneBuilder<'a> {
             .intern(&item, || {
                 ClipInternData {
                     clip_node_kind: ClipNodeKind::Rectangle,
+                    spatial_node_index,
+                }
+            });
+
+        let clip_chain_index = self
+            .clip_store
+            .add_clip_chain_node(
+                handle,
+                parent_clip_chain_index,
+            );
+
+        // Map the supplied ClipId -> clip chain id.
+        self.id_to_index_mapper.add_clip_chain(
+            new_node_id,
+            clip_chain_index,
+            1,
+        );
+
+        clip_chain_index
+    }
+
+
+    pub fn add_rounded_rect_clip_node(
+        &mut self,
+        new_node_id: ClipId,
+        space_and_clip: &SpaceAndClipInfo,
+        clip: &ComplexClipRegion,
+        current_offset: LayoutVector2D,
+    ) -> ClipChainId {
+        // Add a new ClipNode - this is a ClipId that identifies a list of clip items,
+        // and the positioning node associated with those clip sources.
+
+        // Map from parent ClipId to existing clip-chain.
+        let parent_clip_chain_index = self.id_to_index_mapper.get_clip_chain_id(space_and_clip.clip_id);
+        // Map the ClipId for the positioning node to a spatial node index.
+        let spatial_node_index = self.id_to_index_mapper.get_spatial_node_index(space_and_clip.spatial_id);
+
+        let snap_to_device = &mut self.sc_stack.last_mut().unwrap().snap_to_device;
+        snap_to_device.set_target_spatial_node(
+            spatial_node_index,
+            &self.spatial_tree,
+        );
+
+        let snapped_region_rect = snap_to_device.snap_rect(&clip.rect.translate(current_offset));
+        let item = ClipItemKey {
+            kind: ClipItemKeyKind::rounded_rect(
+                snapped_region_rect,
+                clip.radii,
+                clip.mode,
+            ),
+            spatial_node_index,
+        };
+
+        let handle = self
+            .interners
+            .clip
+            .intern(&item, || {
+                ClipInternData {
+                    clip_node_kind: ClipNodeKind::Complex,
                     spatial_node_index,
                 }
             });
