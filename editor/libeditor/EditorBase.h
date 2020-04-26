@@ -1768,39 +1768,6 @@ class EditorBase : public nsIEditor,
       nsAtom& aTag, const EditorDOMPoint& aPointToInsert);
 
   /**
-   * Create an aggregate transaction for delete selection.  The result may
-   * include DeleteNodeTransactions and/or DeleteTextTransactions as its
-   * children.
-   *
-   * @param aAction             The action caused removing the selection.
-   * @param aRemovingNode       The node to be removed.
-   * @param aOffset             The start offset of the range in aRemovingNode.
-   * @param aLength             The length of the range in aRemovingNode.
-   * @return                    If it can remove the selection, returns an
-   *                            aggregate transaction which has some
-   *                            DeleteNodeTransactions and/or
-   *                            DeleteTextTransactions as its children.
-   */
-  already_AddRefed<EditAggregateTransaction> CreateTxnForDeleteSelection(
-      EDirection aAction, nsINode** aNode, int32_t* aOffset, int32_t* aLength);
-
-  /**
-   * Create a transaction for removing the nodes and/or text in aRange.
-   *
-   * @param aRangeToDelete      The range to be removed.
-   * @param aAction             The action caused removing the range.
-   * @param aRemovingNode       The node to be removed.
-   * @param aOffset             The start offset of the range in aRemovingNode.
-   * @param aLength             The length of the range in aRemovingNode.
-   * @return                    The transaction to remove the range.  Its type
-   *                            is DeleteNodeTransaction or
-   *                            DeleteTextTransaction.
-   */
-  already_AddRefed<EditTransactionBase> CreateTxnForDeleteRange(
-      nsRange* aRangeToDelete, EDirection aAction, nsINode** aRemovingNode,
-      int32_t* aOffset, int32_t* aLength);
-
-  /**
    * DeleteTextWithTransaction() removes text in the range from aTextNode.
    *
    * @param aTextNode           The text node which should be modified.
@@ -2541,6 +2508,39 @@ class EditorBase : public nsIEditor,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InsertLineBreakAsSubAction();
 
   /**
+   * HowToHandleCollapsedRange indicates how collapsed range should be treated.
+   */
+  enum class HowToHandleCollapsedRange {
+    // Ignore collapsed range.
+    Ignore,
+    // Extend collapsed range for removing previous content.
+    ExtendBackward,
+    // Extend collapsed range for removing next content.
+    ExtendForward,
+  };
+
+  static HowToHandleCollapsedRange HowToHandleCollapsedRangeFor(
+      nsIEditor::EDirection aDirectionAndAmount) {
+    switch (aDirectionAndAmount) {
+      case nsIEditor::eNone:
+        return HowToHandleCollapsedRange::Ignore;
+      case nsIEditor::ePrevious:
+        return HowToHandleCollapsedRange::ExtendBackward;
+      case nsIEditor::eNext:
+        return HowToHandleCollapsedRange::ExtendForward;
+      case nsIEditor::ePreviousWord:
+      case nsIEditor::eNextWord:
+      case nsIEditor::eToBeginningOfLine:
+      case nsIEditor::eToEndOfLine:
+        // If the amount is word or line,`ExtendSelectionForDelete()`
+        // must have already been extended collapsed ranges before.
+        return HowToHandleCollapsedRange::Ignore;
+    }
+    MOZ_ASSERT_UNREACHABLE("Invalid nsIEditor::EDirection value");
+    return HowToHandleCollapsedRange::Ignore;
+  }
+
+  /**
    * Extends the selection for given deletion operation
    * If done, also update aDirectionAndAmount to what's actually left to do
    * after the extension.
@@ -2559,6 +2559,50 @@ class EditorBase : public nsIEditor,
   MOZ_CAN_RUN_SCRIPT virtual nsresult DeleteSelectionWithTransaction(
       nsIEditor::EDirection aDirectionAndAmount,
       nsIEditor::EStripWrappers aStripWrappers);
+
+  /**
+   * Create an aggregate transaction for delete selection.  The result may
+   * include DeleteNodeTransactions and/or DeleteTextTransactions as its
+   * children.
+   *
+   * @param aHowToHandleCollapsedRange
+   *                            How to handle collapsed ranges.
+   * @param aRemovingContent    The node to be removed.
+   * @param aOffset             The start offset of the range in
+   *                            aRemovingContent.
+   * @param aLength             The length of the range in aRemovingContent.
+   * @return                    If it can remove the selection, returns an
+   *                            aggregate transaction which has some
+   *                            DeleteNodeTransactions and/or
+   *                            DeleteTextTransactions as its children.
+   */
+  already_AddRefed<EditAggregateTransaction>
+  CreateTransactionForDeleteSelection(
+      HowToHandleCollapsedRange aHowToHandleCollapsedRange,
+      nsIContent** aRemovingContent, int32_t* aOffset, int32_t* aLength);
+
+  /**
+   * Create a transaction for removing the nodes and/or text around
+   * aRangeToDelete.
+   *
+   * @param aCollapsedRange     The range to be removed.  This must be
+   *                            collapsed.
+   * @param aHowToHandleCollapsedRange
+   *                            How to handle aCollapsedRange.  Must
+   *                            be HowToHandleCollapsedRange::ExtendBackward or
+   *                            HowToHandleCollapsedRange::ExtendForward.
+   * @param aRemovingContent    The node to be removed.
+   * @param aOffset             The start offset of the range in
+   *                            aRemovingContent.
+   * @param aLength             The length of the range in aRemovingContent.
+   * @return                    The transaction to remove content around the
+   *                            range.  Its type is DeleteNodeTransaction or
+   *                            DeleteTextTransaction.
+   */
+  already_AddRefed<EditTransactionBase> CreateTransactionForCollapsedRange(
+      nsRange& aCollapsedRange,
+      HowToHandleCollapsedRange aHowToHandleCollapsedRange,
+      nsIContent** aRemovingContent, int32_t* aOffset, int32_t* aLength);
 
  private:
   nsCOMPtr<nsISelectionController> mSelectionController;
