@@ -1353,10 +1353,9 @@ impl<'a> RawtestHarness<'a> {
 
         // Add a rectangle that is clipped by a rounded rect clip item.
         let rect = LayoutRect::new(LayoutPoint::new(100., 100.), LayoutSize::new(100., 100.));
-        let temp_clip_id = builder.define_clip(
+        let temp_clip_id = builder.define_clip_rounded_rect(
             &space_and_clip,
-            rect,
-            vec![make_rounded_complex_clip(&rect, 20.)],
+            make_rounded_complex_clip(&rect, 20.),
         );
         builder.push_rect(
             &CommonItemProperties {
@@ -1372,10 +1371,9 @@ impl<'a> RawtestHarness<'a> {
 
         // Add a rectangle that is clipped by a ClipChain containing a rounded rect.
         let rect = LayoutRect::new(LayoutPoint::new(200., 100.), LayoutSize::new(100., 100.));
-        let clip_id = builder.define_clip(
+        let clip_id = builder.define_clip_rounded_rect(
             &space_and_clip,
-            rect,
-            vec![make_rounded_complex_clip(&rect, 20.)],
+            make_rounded_complex_clip(&rect, 20.),
         );
         let clip_chain_id = builder.define_clip_chain(None, vec![clip_id]);
         builder.push_rect(
