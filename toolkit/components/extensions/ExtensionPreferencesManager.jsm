@@ -76,18 +76,6 @@ Management.on("enabling", async (type, id) => {
   await Management.asyncLoadSettingsModules();
   return ExtensionPreferencesManager.enableAll(id);
 });
-
-Management.on("change-permissions", (type, change) => {
-  // Called for added or removed, but we only care about removed here.
-  if (!change.removed) {
-    return;
-  }
-  ExtensionPreferencesManager.removeSettingsForPermissions(
-    change.extensionId,
-    change.removed.permissions
-  );
-});
-
 /* eslint-enable mozilla/balanced-listeners */
 
 const STORE_TYPE = "prefs";
@@ -426,18 +414,13 @@ this.ExtensionPreferencesManager = {
    * Removes a set of settings that are available under certain addon permissions.
    *
    * @param {string} id           The extension id.
-   * @param {array<string>}
-   *                 permissions   The permission name from the extension manifest.
+   * @param {string} permission   The permission name from the extension manifest.
    * @returns {Promise}           A promise that resolves when all related settings are removed.
    */
-  async removeSettingsForPermissions(id, permissions) {
-    if (!permissions || !permissions.length) {
-      return;
-    }
-    await Management.asyncLoadSettingsModules();
+  removeSettingsForPermission(id, permission) {
     let removePromises = [];
     settingsMap.forEach((setting, name) => {
-      if (permissions.includes(setting.permission)) {
+      if (setting.permission == permission) {
         removePromises.push(this.removeSetting(id, name));
       }
     });
