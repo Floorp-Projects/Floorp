@@ -383,7 +383,7 @@ struct InternalBarrierMethods<Value> {
 
 template <>
 struct InternalBarrierMethods<jsid> {
-  static bool isMarkable(jsid id) { return JSID_IS_GCTHING(id); }
+  static bool isMarkable(jsid id) { return id.isGCThing(); }
   static void preBarrier(jsid id);
   static void postBarrier(jsid* idp, jsid prev, jsid next) {}
 #ifdef DEBUG

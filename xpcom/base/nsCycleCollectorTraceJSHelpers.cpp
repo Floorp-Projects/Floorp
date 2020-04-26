@@ -40,7 +40,7 @@ void TraceCallbackFunc::Trace(JS::Heap<JS::Value>* aPtr, const char* aName,
 
 void TraceCallbackFunc::Trace(JS::Heap<jsid>* aPtr, const char* aName,
                               void* aClosure) const {
-  if (JSID_IS_GCTHING(aPtr->unbarrieredGet())) {
+  if (aPtr->unbarrieredGet().isGCThing()) {
     mCallback(JSID_TO_GCTHING(aPtr->unbarrieredGet()), aName, aClosure);
   }
 }
