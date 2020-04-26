@@ -4652,11 +4652,7 @@ static bool PropertySpecNameIsDigits(JSPropertySpec::Name name) {
 JS_PUBLIC_API bool JS::PropertySpecNameEqualsId(JSPropertySpec::Name name,
                                                 HandleId id) {
   if (name.isSymbol()) {
-    if (!JSID_IS_SYMBOL(id)) {
-      return false;
-    }
-    Symbol* sym = JSID_TO_SYMBOL(id);
-    return sym->isWellKnownSymbol() && sym->code() == name.symbol();
+    return id.isWellKnownSymbol(name.symbol());
   }
 
   MOZ_ASSERT(!PropertySpecNameIsDigits(name));

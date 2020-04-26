@@ -1243,9 +1243,8 @@ bool NPObjWrapperProxyHandler::get(JSContext* cx, JS::Handle<JSObject*> proxy,
     return false;
   }
 
-  if (JSID_IS_SYMBOL(id)) {
-    JS::RootedSymbol sym(cx, JSID_TO_SYMBOL(id));
-    if (JS::GetSymbolCode(sym) == JS::SymbolCode::toPrimitive) {
+  if (id.isSymbol()) {
+    if (id.isWellKnownSymbol(JS::SymbolCode::toPrimitive)) {
       JS::RootedObject obj(
           cx, JS_GetFunctionObject(JS_NewFunction(cx, NPObjWrapper_toPrimitive,
                                                   1, 0, "Symbol.toPrimitive")));
@@ -1254,7 +1253,7 @@ bool NPObjWrapperProxyHandler::get(JSContext* cx, JS::Handle<JSObject*> proxy,
       return true;
     }
 
-    if (JS::GetSymbolCode(sym) == JS::SymbolCode::toStringTag) {
+    if (id.isWellKnownSymbol(JS::SymbolCode::toStringTag)) {
       JS::RootedString tag(cx, JS_NewStringCopyZ(cx, NPRUNTIME_JSCLASS_NAME));
       if (!tag) {
         return false;
