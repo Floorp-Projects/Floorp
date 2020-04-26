@@ -3970,21 +3970,27 @@ bool AsyncPanZoomController::UpdateAnimation(
     nsTArray<RefPtr<Runnable>>* aOutDeferredTasks) {
   AssertOnSamplerThread();
 
-  // This function may get called multiple with the same sample time, for two
-  // reasons: (1) there may be multiple layers with this APZC, and each layer
-  // invokes this function during composition, and (2) we might composite
-  // multiple times at the same timestamp.
+  // This function may get called multiple with the same sample time, if we
+  // composite multiple times at the same timestamp.
   // However we only want to do one animation step per composition so we need
   // to deduplicate these calls first.
   if (mLastSampleTime == aSampleTime) {
     return (mAnimation != nullptr);
   }
 
-  // Sample the composited async transform once per composite. Note that we
-  // call this after the |mLastSampleTime == aSampleTime| check, to ensure
-  // it's only called once per APZC on each composite.
-  bool needComposite = SampleCompositedAsyncTransform(aProofOfLock);
+  // We're at a new timestamp, so advance to the next sample in the deque, if
+  // there is one. That one will be used for all the code that reads the
+  // eForCompositing transforms in this vsync interval.
   AdvanceToNextSample();
+
+  // And then create a new sample, which will be used in the *next* vsync
+  // interval. We do the sample at this point and not later in order to try
+  // and enforce one frame delay between computing the async transform and
+  // compositing it to the screen. This one-frame delay gives code running on
+  // the main thread a chance to try and respond to the scroll position change,
+  // so that e.g. a main-thread animation can stay in sync with user-driven
+  // scrolling or a compositor animation.
+  bool needComposite = SampleCompositedAsyncTransform(aProofOfLock);
 
   TimeDuration sampleTimeDelta = aSampleTime - mLastSampleTime;
   mLastSampleTime = aSampleTime;
@@ -4211,7 +4217,7 @@ void AsyncPanZoomController::AdvanceToNextSample() {
 
 bool AsyncPanZoomController::SampleCompositedAsyncTransform(
     const RecursiveMutexAutoLock& aProofOfLock) {
-  MOZ_ASSERT(mSampledState.size() == 1);
+  MOZ_ASSERT(mSampledState.size() <= 2);
   bool sampleChanged = (mSampledState.back() != SampledAPZCState(Metrics()));
   mSampledState.emplace_back(Metrics(), std::move(mScrollPayload));
   return sampleChanged;
