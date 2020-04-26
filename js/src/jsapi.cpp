@@ -4204,13 +4204,6 @@ JS_PUBLIC_API bool JS_StringHasBeenPinned(JSContext* cx, JSString* str) {
   return str->asAtom().isPinned();
 }
 
-JS_PUBLIC_API jsid INTERNED_STRING_TO_JSID(JSContext* cx, JSString* str) {
-  MOZ_ASSERT(str);
-  MOZ_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
-  MOZ_ASSERT_IF(cx, JS_StringHasBeenPinned(cx, str));
-  return AtomToId(&str->asAtom());
-}
-
 JS_PUBLIC_API JSString* JS_AtomizeAndPinJSString(JSContext* cx,
                                                  HandleString str) {
   AssertHeapIsIdle();

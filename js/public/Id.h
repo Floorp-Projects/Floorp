@@ -62,6 +62,32 @@ struct PropertyKey {
     return !!(asBits & JSID_TYPE_INT_BIT);
   }
 
+  MOZ_ALWAYS_INLINE bool isString() const {
+    return (asBits & JSID_TYPE_MASK) == JSID_TYPE_STRING;
+  }
+
+  MOZ_ALWAYS_INLINE bool isSymbol() const {
+    return (asBits & JSID_TYPE_MASK) == JSID_TYPE_SYMBOL;
+  }
+
+  MOZ_ALWAYS_INLINE int32_t toInt() const {
+    MOZ_ASSERT(isInt());
+    uint32_t bits = static_cast<uint32_t>(asBits) >> 1;
+    return static_cast<int32_t>(bits);
+  }
+
+  MOZ_ALWAYS_INLINE JSString* toString() const {
+    MOZ_ASSERT(isString());
+    // Use XOR instead of `& ~JSID_TYPE_MASK` because small immediates can be
+    // encoded more efficiently on some platorms.
+    return reinterpret_cast<JSString*>(asBits ^ JSID_TYPE_STRING);
+  }
+
+  MOZ_ALWAYS_INLINE JS::Symbol* toSymbol() const {
+    MOZ_ASSERT(isSymbol());
+    return reinterpret_cast<JS::Symbol*>(asBits ^ JSID_TYPE_SYMBOL);
+  }
+
 } JS_HAZ_GC_POINTER;
 
 }  // namespace JS
@@ -70,15 +96,10 @@ using jsid = JS::PropertyKey;
 
 #define JSID_BITS(id) (id.asBits)
 
-static MOZ_ALWAYS_INLINE bool JSID_IS_STRING(jsid id) {
-  return (JSID_BITS(id) & JSID_TYPE_MASK) == JSID_TYPE_STRING;
-}
+static MOZ_ALWAYS_INLINE bool JSID_IS_STRING(jsid id) { return id.isString(); }
 
 static MOZ_ALWAYS_INLINE JSString* JSID_TO_STRING(jsid id) {
-  // Use XOR instead of `& ~JSID_TYPE_MASK` because small immediates can be
-  // encoded more efficiently on some platorms.
-  MOZ_ASSERT(JSID_IS_STRING(id));
-  return (JSString*)(JSID_BITS(id) ^ JSID_TYPE_STRING);
+  return id.toString();
 }
 
 /**
@@ -90,16 +111,9 @@ static MOZ_ALWAYS_INLINE JSString* JSID_TO_STRING(jsid id) {
  */
 JS_PUBLIC_API jsid INTERNED_STRING_TO_JSID(JSContext* cx, JSString* str);
 
-static MOZ_ALWAYS_INLINE bool JSID_IS_INT(jsid id) {
-  return !!(JSID_BITS(id) & JSID_TYPE_INT_BIT);
-}
+static MOZ_ALWAYS_INLINE bool JSID_IS_INT(jsid id) { return id.isInt(); }
 
-static MOZ_ALWAYS_INLINE int32_t JSID_TO_INT(jsid id) {
-  MOZ_ASSERT(JSID_IS_INT(id));
-  MOZ_ASSERT(id.isInt());
-  uint32_t bits = static_cast<uint32_t>(JSID_BITS(id)) >> 1;
-  return static_cast<int32_t>(bits);
-}
+static MOZ_ALWAYS_INLINE int32_t JSID_TO_INT(jsid id) { return id.toInt(); }
 
 #define JSID_INT_MIN 0
 #define JSID_INT_MAX INT32_MAX
@@ -114,13 +128,10 @@ static MOZ_ALWAYS_INLINE jsid INT_TO_JSID(int32_t i) {
   return id;
 }
 
-static MOZ_ALWAYS_INLINE bool JSID_IS_SYMBOL(jsid id) {
-  return (JSID_BITS(id) & JSID_TYPE_MASK) == JSID_TYPE_SYMBOL;
-}
+static MOZ_ALWAYS_INLINE bool JSID_IS_SYMBOL(jsid id) { return id.isSymbol(); }
 
 static MOZ_ALWAYS_INLINE JS::Symbol* JSID_TO_SYMBOL(jsid id) {
-  MOZ_ASSERT(JSID_IS_SYMBOL(id));
-  return (JS::Symbol*)(JSID_BITS(id) ^ JSID_TYPE_SYMBOL);
+  return id.toSymbol();
 }
 
 static MOZ_ALWAYS_INLINE jsid SYMBOL_TO_JSID(JS::Symbol* sym) {
@@ -133,7 +144,7 @@ static MOZ_ALWAYS_INLINE jsid SYMBOL_TO_JSID(JS::Symbol* sym) {
 }
 
 static MOZ_ALWAYS_INLINE bool JSID_IS_GCTHING(jsid id) {
-  return JSID_IS_STRING(id) || JSID_IS_SYMBOL(id);
+  return id.isString() || id.isSymbol();
 }
 
 static MOZ_ALWAYS_INLINE JS::GCCellPtr JSID_TO_GCTHING(jsid id) {
@@ -238,6 +249,22 @@ bool ApplyGCThingTyped(const jsid& id, F&& f) {
                          })
       .isSome();
 }
+
+template <typename Wrapper>
+class WrappedPtrOperations<JS::PropertyKey, Wrapper> {
+  const JS::PropertyKey& id() const {
+    return static_cast<const Wrapper*>(this)->get();
+  }
+
+ public:
+  bool isInt() const { return id().isInt(); }
+  bool isString() const { return id().isString(); }
+  bool isSymbol() const { return id().isSymbol(); }
+
+  int32_t toInt() const { return id().toInt(); }
+  JSString* toString() const { return id().toString(); }
+  JS::Symbol* toSymbol() const { return id().toSymbol(); }
+};
 
 }  // namespace js
 

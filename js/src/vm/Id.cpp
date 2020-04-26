@@ -7,9 +7,18 @@
 #include "js/Id.h"
 #include "js/RootingAPI.h"
 
+#include "vm/JSAtom-inl.h"
+
 static const jsid voidIdValue = JSID_VOID;
 static const jsid emptyIdValue = JSID_EMPTY;
 const JS::HandleId JSID_VOIDHANDLE =
     JS::HandleId::fromMarkedLocation(&voidIdValue);
 const JS::HandleId JSID_EMPTYHANDLE =
     JS::HandleId::fromMarkedLocation(&emptyIdValue);
+
+JS_PUBLIC_API jsid INTERNED_STRING_TO_JSID(JSContext* cx, JSString* str) {
+  MOZ_ASSERT(str);
+  MOZ_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
+  MOZ_ASSERT_IF(cx, str->asAtom().isPinned());
+  return js::AtomToId(&str->asAtom());
+}
