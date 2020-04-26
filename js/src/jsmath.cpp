@@ -52,20 +52,6 @@ using mozilla::NumberEqualsInt32;
 using mozilla::PositiveInfinity;
 using mozilla::WrappingMultiply;
 
-static const JSConstDoubleSpec math_constants[] = {
-    // clang-format off
-    {"E"      ,  M_E       },
-    {"LOG2E"  ,  M_LOG2E   },
-    {"LOG10E" ,  M_LOG10E  },
-    {"LN2"    ,  M_LN2     },
-    {"LN10"   ,  M_LN10    },
-    {"PI"     ,  M_PI      },
-    {"SQRT2"  ,  M_SQRT2   },
-    {"SQRT1_2",  M_SQRT1_2 },
-    {nullptr  ,  0         }
-    // clang-format on
-};
-
 using UnaryMathFunctionType = double (*)(double);
 
 template <UnaryMathFunctionType F>
@@ -934,7 +920,17 @@ static const JSFunctionSpec math_static_methods[] = {
     JS_FS_END};
 
 static const JSPropertySpec math_static_properties[] = {
-    JS_STRING_SYM_PS(toStringTag, "Math", JSPROP_READONLY), JS_PS_END};
+    JS_DOUBLE_PS("E", M_E, JSPROP_READONLY | JSPROP_PERMANENT),
+    JS_DOUBLE_PS("LOG2E", M_LOG2E, JSPROP_READONLY | JSPROP_PERMANENT),
+    JS_DOUBLE_PS("LOG10E", M_LOG10E, JSPROP_READONLY | JSPROP_PERMANENT),
+    JS_DOUBLE_PS("LN2", M_LN2, JSPROP_READONLY | JSPROP_PERMANENT),
+    JS_DOUBLE_PS("LN10", M_LN10, JSPROP_READONLY | JSPROP_PERMANENT),
+    JS_DOUBLE_PS("PI", M_PI, JSPROP_READONLY | JSPROP_PERMANENT),
+    JS_DOUBLE_PS("SQRT2", M_SQRT2, JSPROP_READONLY | JSPROP_PERMANENT),
+    JS_DOUBLE_PS("SQRT1_2", M_SQRT1_2, JSPROP_READONLY | JSPROP_PERMANENT),
+
+    JS_STRING_SYM_PS(toStringTag, "Math", JSPROP_READONLY),
+    JS_PS_END};
 
 static JSObject* CreateMathObject(JSContext* cx, JSProtoKey key) {
   Handle<GlobalObject*> global = cx->global();
@@ -945,14 +941,13 @@ static JSObject* CreateMathObject(JSContext* cx, JSProtoKey key) {
   return NewSingletonObjectWithGivenProto(cx, &MathClass, proto);
 }
 
-static bool MathClassFinish(JSContext* cx, HandleObject ctor,
-                            HandleObject proto) {
-  return JS_DefineConstDoubles(cx, ctor, math_constants);
-}
-
-static const ClassSpec MathClassSpec = {
-    CreateMathObject, nullptr, math_static_methods, math_static_properties,
-    nullptr,          nullptr, MathClassFinish};
+static const ClassSpec MathClassSpec = {CreateMathObject,
+                                        nullptr,
+                                        math_static_methods,
+                                        math_static_properties,
+                                        nullptr,
+                                        nullptr,
+                                        nullptr};
 
 const JSClass js::MathClass = {js_Math_str,
                                JSCLASS_HAS_CACHED_PROTO(JSProto_Math),
