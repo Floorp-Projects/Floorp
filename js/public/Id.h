@@ -92,6 +92,15 @@ struct PropertyKey {
     return reinterpret_cast<JS::Symbol*>(asBits ^ JSID_TYPE_SYMBOL);
   }
 
+  GCCellPtr toGCCellPtr() const {
+    void* thing = (void*)(asBits & ~(size_t)JSID_TYPE_MASK);
+    if (isString()) {
+      return JS::GCCellPtr(thing, JS::TraceKind::String);
+    }
+    MOZ_ASSERT(isSymbol());
+    return JS::GCCellPtr(thing, JS::TraceKind::Symbol);
+  }
+
   bool isWellKnownSymbol(JS::SymbolCode code) const;
 
 } JS_HAZ_GC_POINTER;
@@ -149,15 +158,6 @@ static MOZ_ALWAYS_INLINE jsid SYMBOL_TO_JSID(JS::Symbol* sym) {
   return id;
 }
 
-static MOZ_ALWAYS_INLINE JS::GCCellPtr JSID_TO_GCTHING(jsid id) {
-  void* thing = (void*)(JSID_BITS(id) & ~(size_t)JSID_TYPE_MASK);
-  if (JSID_IS_STRING(id)) {
-    return JS::GCCellPtr(thing, JS::TraceKind::String);
-  }
-  MOZ_ASSERT(JSID_IS_SYMBOL(id));
-  return JS::GCCellPtr(thing, JS::TraceKind::Symbol);
-}
-
 static MOZ_ALWAYS_INLINE bool JSID_IS_VOID(const jsid id) {
   MOZ_ASSERT_IF((JSID_BITS(id) & JSID_TYPE_MASK) == JSID_TYPE_VOID,
                 JSID_BITS(id) == JSID_TYPE_VOID);
@@ -187,14 +187,14 @@ struct GCPolicy<jsid> {
   }
   static bool isValid(jsid id) {
     return !id.isGCThing() ||
-           js::gc::IsCellPointerValid(JSID_TO_GCTHING(id).asCell());
+           js::gc::IsCellPointerValid(id.toGCCellPtr().asCell());
   }
 };
 
 #ifdef DEBUG
 MOZ_ALWAYS_INLINE void AssertIdIsNotGray(jsid id) {
   if (id.isGCThing()) {
-    AssertCellIsNotGray(JSID_TO_GCTHING(id).asCell());
+    AssertCellIsNotGray(id.toGCCellPtr().asCell());
   }
 }
 #endif
@@ -220,7 +220,7 @@ struct BarrierMethods<jsid> {
   }
   static void exposeToJS(jsid id) {
     if (id.isGCThing()) {
-      js::gc::ExposeGCThingToActiveJS(JSID_TO_GCTHING(id));
+      js::gc::ExposeGCThingToActiveJS(id.toGCCellPtr());
     }
   }
 };
