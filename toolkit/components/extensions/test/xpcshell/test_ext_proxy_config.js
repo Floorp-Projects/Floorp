@@ -8,16 +8,36 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Preferences.jsm"
 );
 
-const {
-  createAppInfo,
-  promiseShutdownManager,
-  promiseStartupManager,
-} = AddonTestUtils;
+const { ExtensionPermissions } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionPermissions.jsm"
+);
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 
-createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "42"
+);
+
+Services.prefs.setBoolPref(
+  "extensions.webextensions.background-delayed-startup",
+  false
+);
+
+add_task(async function setup() {
+  Services.prefs.setBoolPref(
+    "extensions.webextOptionalPermissionPrompts",
+    false
+  );
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("extensions.webextOptionalPermissionPrompts");
+  });
+
+  await AddonTestUtils.promiseStartupManager();
+});
 
 add_task(async function test_browser_settings() {
   const proxySvc = Ci.nsIProtocolProxyService;
@@ -76,7 +96,6 @@ add_task(async function test_browser_settings() {
     useAddonManager: "temporary",
   });
 
-  await promiseStartupManager();
   await extension.startup();
 
   async function testSetting(value, expected, expectedValue = value) {
@@ -407,7 +426,6 @@ add_task(async function test_browser_settings() {
   );
 
   await extension.unload();
-  await promiseShutdownManager();
 });
 
 add_task(async function test_bad_value_proxy_config() {
@@ -505,5 +523,107 @@ add_task(async function test_bad_value_proxy_config() {
 
   await extension.startup();
   await extension.awaitMessage("done");
+  await extension.unload();
+});
+
+// Verify proxy prefs are unset on permission removal.
+add_task(async function test_proxy_settings_permissions() {
+  async function background() {
+    const permObj = { permissions: ["proxy"] };
+    browser.test.onMessage.addListener(async (msg, value) => {
+      if (msg === "request") {
+        browser.test.log("requesting proxy permission");
+        await browser.permissions.request(permObj);
+        browser.test.log("setting proxy values");
+        await browser.proxy.settings.set({ value });
+        browser.test.sendMessage("set");
+      } else if (msg === "remove") {
+        await browser.permissions.remove(permObj);
+        browser.test.sendMessage("removed");
+      }
+    });
+  }
+
+  let prefNames = [
+    "network.proxy.type",
+    "network.proxy.http",
+    "network.proxy.http_port",
+    "network.proxy.ftp",
+    "network.proxy.ftp_port",
+    "network.proxy.ssl",
+    "network.proxy.ssl_port",
+    "network.proxy.socks",
+    "network.proxy.socks_port",
+    "network.proxy.socks_version",
+    "network.proxy.no_proxies_on",
+  ];
+
+  function checkSettings(msg, expectUserValue = false) {
+    info(msg);
+    for (let pref of prefNames) {
+      equal(
+        expectUserValue,
+        Services.prefs.prefHasUserValue(pref),
+        `${pref} set as expected ${Preferences.get(pref)}`
+      );
+    }
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      optional_permissions: ["proxy"],
+    },
+    incognitoOverride: "spanning",
+    useAddonManager: "permanent",
+  });
+  await extension.startup();
+  checkSettings("setting is not set after startup");
+
+  await withHandlingUserInput(extension, async () => {
+    extension.sendMessage("request", {
+      proxyType: "manual",
+      http: "www.mozilla.org:8080",
+      httpProxyAll: false,
+      ftp: "www.mozilla.org:8081",
+      ssl: "www.mozilla.org:8082",
+      socks: "mozilla.org:8083",
+      socksVersion: 4,
+      passthrough: ".mozilla.org",
+    });
+    await extension.awaitMessage("set");
+    checkSettings("setting was set after request", true);
+
+    extension.sendMessage("remove");
+    await extension.awaitMessage("removed");
+    checkSettings("setting is reset after remove");
+
+    // Set again to test after restart
+    extension.sendMessage("request", {
+      proxyType: "manual",
+      http: "www.mozilla.org:8080",
+      httpProxyAll: false,
+      ftp: "www.mozilla.org:8081",
+      ssl: "www.mozilla.org:8082",
+      socks: "mozilla.org:8083",
+      socksVersion: 4,
+      passthrough: ".mozilla.org",
+    });
+    await extension.awaitMessage("set");
+    checkSettings("setting was set after request", true);
+  });
+
+  // force the permissions store to be re-read on startup
+  await ExtensionPermissions._uninit();
+  resetHandlingUserInput();
+  await AddonTestUtils.promiseRestartManager();
+  await extension.awaitStartup();
+
+  await withHandlingUserInput(extension, async () => {
+    extension.sendMessage("remove");
+    await extension.awaitMessage("removed");
+    checkSettings("setting is reset after remove");
+  });
+
   await extension.unload();
 });
