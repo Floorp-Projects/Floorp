@@ -1269,6 +1269,7 @@ void BrowsingContext::AssertOriginAttributesMatchPrivateBrowsing() {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BrowsingContext)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsILoadContext)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 

@@ -107,11 +107,8 @@ ParentProcessDocumentChannel::OnRedirectVerifyCallback(nsresult aResult) {
 NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
     nsIStreamListener* aListener) {
   LOG(("ParentProcessDocumentChannel AsyncOpen [this=%p]", this));
-  nsCOMPtr<nsILoadContext> loadContext;
-  NS_QueryNotificationCallbacks(this, loadContext);
-
   mDocumentLoadListener = new DocumentLoadListener(
-      GetDocShell()->GetBrowsingContext()->Canonical(), loadContext, this);
+      GetDocShell()->GetBrowsingContext()->Canonical(), this);
   LOG(("Created PPDocumentChannel with listener=%p",
        mDocumentLoadListener.get()));
 
