@@ -1272,6 +1272,29 @@ static const JSFunctionSpec number_static_methods[] = {
     JS_SELF_HOSTED_FN("isSafeInteger", "Number_isSafeInteger", 1, 0),
     JS_FS_END};
 
+static const JSPropertySpec number_static_properties[] = {
+    // Our NaN must be one particular canonical value, because we rely on NaN
+    // encoding for our value representation.  See Value.h.
+    JS_DOUBLE_PS("NaN", GenericNaN(), JSPROP_READONLY | JSPROP_PERMANENT),
+    JS_DOUBLE_PS("POSITIVE_INFINITY", mozilla::PositiveInfinity<double>(),
+                 JSPROP_READONLY | JSPROP_PERMANENT),
+    JS_DOUBLE_PS("NEGATIVE_INFINITY", mozilla::NegativeInfinity<double>(),
+                 JSPROP_READONLY | JSPROP_PERMANENT),
+    JS_DOUBLE_PS("MAX_VALUE", 1.7976931348623157E+308,
+                 JSPROP_READONLY | JSPROP_PERMANENT),
+    JS_DOUBLE_PS("MIN_VALUE", MinNumberValue<double>(),
+                 JSPROP_READONLY | JSPROP_PERMANENT),
+    /* ES6 (April 2014 draft) 20.1.2.6 */
+    JS_DOUBLE_PS("MAX_SAFE_INTEGER", 9007199254740991,
+                 JSPROP_READONLY | JSPROP_PERMANENT),
+    /* ES6 (April 2014 draft) 20.1.2.10 */
+    JS_DOUBLE_PS("MIN_SAFE_INTEGER", -9007199254740991,
+                 JSPROP_READONLY | JSPROP_PERMANENT),
+    /* ES6 (May 2013 draft) 15.7.3.7 */
+    JS_DOUBLE_PS("EPSILON", 2.2204460492503130808472633361816e-16,
+                 JSPROP_READONLY | JSPROP_PERMANENT),
+    JS_PS_END};
+
 bool js::InitRuntimeNumberState(JSRuntime* rt) {
   // XXX If JS_HAS_INTL_API becomes true all the time at some point,
   //     js::InitRuntimeNumberState is no longer fallible, and we should
@@ -1352,30 +1375,6 @@ JSObject* NumberObject::createPrototype(JSContext* cx, JSProtoKey key) {
 
 static bool NumberClassFinish(JSContext* cx, HandleObject ctor,
                               HandleObject proto) {
-  // Our NaN must be one particular canonical value, because we rely on NaN
-  // encoding for our value representation.  See Value.h.
-  static const JSConstDoubleSpec number_constants[] = {
-      // clang-format off
-        {"NaN",               GenericNaN()               },
-        {"POSITIVE_INFINITY", mozilla::PositiveInfinity<double>() },
-        {"NEGATIVE_INFINITY", mozilla::NegativeInfinity<double>() },
-        {"MAX_VALUE",         1.7976931348623157E+308    },
-        {"MIN_VALUE",         MinNumberValue<double>()   },
-        /* ES6 (April 2014 draft) 20.1.2.6 */
-        {"MAX_SAFE_INTEGER",  9007199254740991           },
-        /* ES6 (April 2014 draft) 20.1.2.10 */
-        {"MIN_SAFE_INTEGER", -9007199254740991,          },
-        /* ES6 (May 2013 draft) 15.7.3.7 */
-        {"EPSILON", 2.2204460492503130808472633361816e-16},
-        {0,0}
-      // clang-format on
-  };
-
-  // Add numeric constants (MAX_VALUE, NaN, &c.) to the Number constructor.
-  if (!JS_DefineConstDoubles(cx, ctor, number_constants)) {
-    return false;
-  }
-
   Handle<GlobalObject*> global = cx->global();
 
   if (!JS_DefineFunctions(cx, global, number_functions)) {
@@ -1427,7 +1426,7 @@ const ClassSpec NumberObject::classSpec_ = {
     GenericCreateConstructor<Number, 1, gc::AllocKind::FUNCTION>,
     NumberObject::createPrototype,
     number_static_methods,
-    nullptr,
+    number_static_properties,
     number_methods,
     nullptr,
     NumberClassFinish};
