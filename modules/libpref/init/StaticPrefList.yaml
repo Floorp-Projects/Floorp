@@ -1003,7 +1003,7 @@
 # parent-process BrowsingContexts
 - name: browser.tabs.documentchannel.parent-initiated
   type: bool
-  value: false 
+  value: true 
   mirror: always
 
 - name: browser.tabs.remote.desktopbehavior
