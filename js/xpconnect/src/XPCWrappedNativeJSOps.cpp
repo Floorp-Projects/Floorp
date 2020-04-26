@@ -304,8 +304,7 @@ static bool DefinePropertyIfFound(
       } else if (id == xpccx->GetStringID(XPCJSContext::IDX_TO_SOURCE)) {
         call = XPC_WN_Shared_ToSource;
         name = xpccx->GetStringName(XPCJSContext::IDX_TO_SOURCE);
-      } else if (id == SYMBOL_TO_JSID(JS::GetWellKnownSymbol(
-                           ccx, JS::SymbolCode::toPrimitive))) {
+      } else if (id.isWellKnownSymbol(JS::SymbolCode::toPrimitive)) {
         call = XPC_WN_Shared_toPrimitive;
         name = "[Symbol.toPrimitive]";
       } else {

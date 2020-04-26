@@ -44,6 +44,8 @@
 
 namespace JS {
 
+enum class SymbolCode : uint32_t;
+
 struct PropertyKey {
   size_t asBits;
 
@@ -87,6 +89,8 @@ struct PropertyKey {
     MOZ_ASSERT(isSymbol());
     return reinterpret_cast<JS::Symbol*>(asBits ^ JSID_TYPE_SYMBOL);
   }
+
+  bool isWellKnownSymbol(JS::SymbolCode code) const;
 
 } JS_HAZ_GC_POINTER;
 
@@ -264,6 +268,10 @@ class WrappedPtrOperations<JS::PropertyKey, Wrapper> {
   int32_t toInt() const { return id().toInt(); }
   JSString* toString() const { return id().toString(); }
   JS::Symbol* toSymbol() const { return id().toSymbol(); }
+
+  bool isWellKnownSymbol(JS::SymbolCode code) const {
+    return id().isWellKnownSymbol(code);
+  }
 };
 
 }  // namespace js
