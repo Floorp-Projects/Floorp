@@ -127,6 +127,7 @@ class WindowProxyHolder;
   FIELD(MessageManagerGroup, nsString)                                       \
   FIELD(MaxTouchPointsOverride, uint8_t)                                     \
   FIELD(FullZoom, float)                                                     \
+  FIELD(WatchedByDevtools, bool)                                             \
   FIELD(TextZoom, float)
 
 // BrowsingContext, in this context, is the cross process replicated
@@ -697,6 +698,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
               const bool& aAllowContentRetargetingOnChildren,
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_AllowPlugins>, const bool& aAllowPlugins,
+              ContentParent* aSource);
+  bool CanSet(FieldIndex<IDX_WatchedByDevtools>, const bool& aWatchedByDevtools,
               ContentParent* aSource);
 
   template <size_t I, typename T>
