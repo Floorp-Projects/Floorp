@@ -1705,10 +1705,9 @@ impl YamlFrameReader {
                 match item_type {
                     "clip" | "clip-chain" | "scroll-frame" => {},
                     _ => {
-                        let id = dl.define_clip(
+                        let id = dl.define_clip_rounded_rect(
                             &self.top_space_and_clip(),
-                            clip_rect,
-                            vec![complex_clip],
+                            complex_clip,
                         );
                         self.clip_id_stack.push(id);
                         pushed_clip = true;
@@ -1958,10 +1957,16 @@ impl YamlFrameReader {
     }
 
     fn handle_clip(&mut self, dl: &mut DisplayListBuilder, wrench: &mut Wrench, yaml: &Yaml) {
-        let clip_rect = yaml["bounds"].as_rect().expect("clip must have a bounds");
         let numeric_id = yaml["id"].as_i64();
         let complex_clips = self.to_complex_clip_regions(&yaml["complex"]);
         let mut space_and_clip = self.top_space_and_clip();
+
+        if let Some(clip_rect) = yaml["bounds"].as_rect() {
+            space_and_clip.clip_id = dl.define_clip_rect(
+                &space_and_clip,
+                clip_rect,
+            );
+        }
 
         if let Some(image_mask) = self.to_image_mask(&yaml["image-mask"], wrench) {
             space_and_clip.clip_id = dl.define_clip_image_mask(
@@ -1970,18 +1975,20 @@ impl YamlFrameReader {
             );
         }
 
-        let real_id = dl.define_clip(
-            &space_and_clip,
-            clip_rect,
-            complex_clips,
-        );
+        for complex_clip in complex_clips {
+            space_and_clip.clip_id = dl.define_clip_rounded_rect(
+                &space_and_clip,
+                complex_clip,
+            );
+        }
+
         if let Some(numeric_id) = numeric_id {
-            self.add_clip_id_mapping(numeric_id as u64, real_id);
+            self.add_clip_id_mapping(numeric_id as u64, space_and_clip.clip_id);
             self.add_spatial_id_mapping(numeric_id as u64, space_and_clip.spatial_id);
         }
 
         if !yaml["items"].is_badvalue() {
-            self.clip_id_stack.push(real_id);
+            self.clip_id_stack.push(space_and_clip.clip_id);
             self.add_display_list_items_from_yaml(dl, wrench, &yaml["items"]);
             self.clip_id_stack.pop().unwrap();
         }

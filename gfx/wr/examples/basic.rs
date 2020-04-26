@@ -221,13 +221,12 @@ impl Example for App {
             &root_space_and_clip,
             mask,
         );
-        let clip_id = builder.define_clip(
+        let clip_id = builder.define_clip_rounded_rect(
             &SpaceAndClipInfo {
                 spatial_id: root_space_and_clip.spatial_id,
                 clip_id: mask_clip_id,
             },
-            content_bounds,
-            vec![complex],
+            complex,
         );
 
         builder.push_rect(

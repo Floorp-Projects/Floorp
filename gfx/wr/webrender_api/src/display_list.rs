@@ -470,6 +470,7 @@ impl BuiltDisplayList {
                     item.iter.cur_stops.iter().collect()
                 ),
                 Real::RectClip(v) => Debug::RectClip(v),
+                Real::RoundedRectClip(v) => Debug::RoundedRectClip(v),
                 Real::ImageMaskClip(v) => Debug::ImageMaskClip(v),
                 Real::StickyFrame(v) => Debug::StickyFrame(v),
                 Real::Rectangle(v) => Debug::Rectangle(v),
@@ -891,6 +892,7 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
                     Real::SetGradientStops
                 },
                 Debug::RectClip(v) => Real::RectClip(v),
+                Debug::RoundedRectClip(v) => Real::RoundedRectClip(v),
                 Debug::ImageMaskClip(v) => Real::ImageMaskClip(v),
                 Debug::Rectangle(v) => Real::Rectangle(v),
                 Debug::ClearRectangle(v) => Real::ClearRectangle(v),
@@ -1762,6 +1764,22 @@ impl DisplayListBuilder {
             id,
             parent_space_and_clip: *parent_space_and_clip,
             clip_rect,
+        });
+
+        self.push_item(&item);
+        id
+    }
+
+    pub fn define_clip_rounded_rect(
+        &mut self,
+        parent_space_and_clip: &di::SpaceAndClipInfo,
+        clip: di::ComplexClipRegion,
+    ) -> di::ClipId {
+        let id = self.generate_clip_index();
+        let item = di::DisplayItem::RoundedRectClip(di::RoundedRectClipDisplayItem {
+            id,
+            parent_space_and_clip: *parent_space_and_clip,
+            clip,
         });
 
         self.push_item(&item);
