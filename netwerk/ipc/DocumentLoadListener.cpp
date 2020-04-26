@@ -37,6 +37,7 @@
 #include "nsRedirectHistoryEntry.h"
 #include "nsURILoader.h"
 #include "nsWebNavigationInfo.h"
+#include "nsDocShellLoadTypes.h"
 
 #ifdef ANDROID
 #  include "mozilla/widget/nsWindow.h"
@@ -1564,6 +1565,22 @@ DocumentLoadListener::AsyncOnChannelRedirect(
        "mRedirects=%" PRIx32,
        this, uint32_t(mRedirects.Length())));
 
+  // If this is a cross-origin redirect, then we should no longer allow
+  // mixed content. The destination docshell checks this in its redirect
+  // handling, but if we deliver to a new docshell (with a process switch)
+  // then this doesn't happen.
+  // Manually remove the allow mixed content flags.
+  nsresult rv = nsContentUtils::CheckSameOrigin(aOldChannel, aNewChannel);
+  if (NS_FAILED(rv)) {
+    if (mLoadStateLoadType == LOAD_NORMAL_ALLOW_MIXED_CONTENT) {
+      mLoadStateLoadType = LOAD_NORMAL;
+    } else if (mLoadStateLoadType == LOAD_RELOAD_ALLOW_MIXED_CONTENT) {
+      mLoadStateLoadType = LOAD_RELOAD_NORMAL;
+    }
+    MOZ_ASSERT(!LOAD_TYPE_HAS_FLAGS(
+        mLoadStateLoadType, nsIWebNavigation::LOAD_FLAGS_ALLOW_MIXED_CONTENT));
+  }
+
   if (!mDocumentChannelBridge) {
     return NS_BINDING_ABORTED;
   }
@@ -1583,7 +1600,7 @@ DocumentLoadListener::AsyncOnChannelRedirect(
   nsCOMPtr<nsILoadInfo> loadInfo = aOldChannel->LoadInfo();
 
   nsCOMPtr<nsIURI> originalUri;
-  nsresult rv = aOldChannel->GetOriginalURI(getter_AddRefs(originalUri));
+  rv = aOldChannel->GetOriginalURI(getter_AddRefs(originalUri));
   if (NS_FAILED(rv)) {
     aOldChannel->Cancel(NS_ERROR_DOM_BAD_URI);
     return rv;
