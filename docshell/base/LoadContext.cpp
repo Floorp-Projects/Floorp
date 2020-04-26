@@ -20,7 +20,6 @@ NS_IMPL_ISUPPORTS(LoadContext, nsILoadContext, nsIInterfaceRequestor)
 LoadContext::LoadContext(nsIPrincipal* aPrincipal,
                          nsILoadContext* aOptionalBase)
     : mTopFrameElement(nullptr),
-      mNestedFrameId(0),
       mIsContent(true),
       mUseRemoteTabs(false),
       mUseRemoteSubframes(false),
@@ -65,13 +64,6 @@ NS_IMETHODIMP
 LoadContext::GetTopFrameElement(dom::Element** aElement) {
   nsCOMPtr<dom::Element> element = do_QueryReferent(mTopFrameElement);
   element.forget(aElement);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadContext::GetNestedFrameId(uint64_t* aId) {
-  NS_ENSURE_ARG(aId);
-  *aId = mNestedFrameId;
   return NS_OK;
 }
 
