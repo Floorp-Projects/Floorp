@@ -18,7 +18,11 @@ var innerId = SpecialPowers.getDOMWindowUtils(window).currentInnerWindowID;
 ok(innerId, "We have a valid innerWindowID: " + innerId);
 
 var channelId;
-
+var count = {
+  open: 0,
+  msg: 0,
+  close: 0
+};
 var listener = {
     QueryInterface(aIID) {
       if (
@@ -33,24 +37,35 @@ var listener = {
       info("eventSourceConnectionOpened");
       ok(httpChannelId > 0, "Channel ID received");
       channelId = httpChannelId;
+      count.open++;
     },
     eventSourceConnectionClosed(httpChannelId) {
       info("eventSourceConnectionClosed");
       ok (httpChannelId === channelId, "Channel was closed on failure");
-      SimpleTest.finish();
+      count.close++;
+      SimpleTest.requestFlakyTimeout("Test for open/close");
+      setTimeout(checkCallsCount, 2000);
     },
     eventReceived(httpChannelId, eventName, lastEventId, data, retry, timeStamp) {
-      info("eventReceived");
+      info("eventReceived=", retry);
       is(eventName, "message", "Event name is 'message'");
+      count.msg++;
     }
 }
 
 service.addListener(innerId, listener);
 ok(true, "Listener added");
 addLoadEvent(function () {
-    const es = new EventSource("http://mochi.test:8888/tests/dom/base/test/eventsource_reconnect.sjs");
+    const es = new EventSource("http://mochi.test:8888/tests/dom/base/test/eventsource_reconnect.sjs?id=" + Date.now());
 });
 SimpleTest.waitForExplicitFinish();
+
+function checkCallsCount() {
+  ok(count.open == 1, "No new open event");
+  ok(count.close == 1, "No new close event");
+  ok(count.msg == 1, "No new message event");
+  SimpleTest.finish();
+}
 </script>
 </pre>
 </body>
