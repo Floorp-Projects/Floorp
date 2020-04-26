@@ -615,7 +615,7 @@ struct ColorCheckFunctor {
     // Shapes and symbols are never marked gray.
     jsid id = shape->propid();
     if (id.isGCThing() &&
-        !CheckCellColor(JSID_TO_GCTHING(id).asCell(), MarkColor::Black)) {
+        !CheckCellColor(id.toGCCellPtr().asCell(), MarkColor::Black)) {
       return false;
     }
 
