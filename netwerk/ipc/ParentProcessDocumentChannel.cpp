@@ -125,7 +125,7 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
   nsresult rv = NS_OK;
   Maybe<dom::ClientInfo> initialClientInfo = mInitialClientInfo;
   if (!mDocumentLoadListener->Open(
-          mLoadState, mLoadFlags, mCacheKey, mChannelId, mAsyncOpenTime,
+          mLoadState, mLoadFlags, mCacheKey, Some(mChannelId), mAsyncOpenTime,
           mTiming, std::move(initialClientInfo),
           GetDocShell()->GetOuterWindowID(),
           GetDocShell()

@@ -114,6 +114,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // if the top-level browsing context has been discarded.
   MediaController* GetMediaController();
 
+  bool AttemptLoadURIInParent(nsDocShellLoadState* aLoadState,
+                              uint32_t* aLoadIdentifier);
+
   bool HasHistoryEntry(nsISHEntry* aEntry) const {
     return aEntry && (aEntry == mOSHE || aEntry == mLSHE);
   }
