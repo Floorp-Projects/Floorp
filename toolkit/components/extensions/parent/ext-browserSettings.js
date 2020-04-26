@@ -189,17 +189,6 @@ this.browserSettings = class extends ExtensionAPI {
   getAPI(context) {
     let { extension } = context;
 
-    // eslint-disable-next-line mozilla/balanced-listeners
-    extension.on("remove-permissions", (ignoreEvent, permissions) => {
-      if (!permissions.permissions.includes("browserSettings")) {
-        return;
-      }
-      ExtensionPreferencesManager.removeSettingsForPermission(
-        extension.id,
-        "browserSettings"
-      );
-    });
-
     return {
       browserSettings: {
         allowPopupsForUserEvents: getSettingsAPI({
