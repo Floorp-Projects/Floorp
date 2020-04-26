@@ -185,15 +185,17 @@ async function testSearchEngine(engineDetails) {
       await test.preTest(tab);
     }
 
-    let stateChangePromise = promiseStateChangeURI();
+    let promises = [
+      BrowserTestUtils.waitForDocLoadAndStopIt(
+        "https://www.google.com/search?client=" + test.code + "&q=foo",
+        tab
+      ),
+      BrowserTestUtils.browserStopped(tab.linkedBrowser, null, true),
+    ];
 
     await test.run(tab);
 
-    let receivedURI = await stateChangePromise;
-
-    let receivedURLParams = new URLSearchParams(receivedURI.split("?")[1]);
-
-    Assert.equal(receivedURLParams.get("client"), test.code);
+    await Promise.all(promises);
 
     if (test.postTest) {
       await test.postTest(tab);
