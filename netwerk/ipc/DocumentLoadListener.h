@@ -91,7 +91,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                              public nsIMultiPartChannelListener {
  public:
   explicit DocumentLoadListener(dom::CanonicalBrowsingContext* aBrowsingContext,
-                                nsILoadContext* aLoadContext,
                                 ADocumentChannelBridge* aBridge);
 
   // Creates the channel, and then calls AsyncOpen on it.
@@ -333,8 +332,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // the bridge to call DisonnectDocumentChannelBridge when it
   // shuts down to break this.
   RefPtr<ADocumentChannelBridge> mDocumentChannelBridge;
-
-  nsCOMPtr<nsILoadContext> mLoadContext;
 
   // The original URI of the current channel. If there are redirects,
   // then the value on the channel gets overwritten with the original

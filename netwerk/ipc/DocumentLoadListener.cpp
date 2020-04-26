@@ -240,12 +240,11 @@ NS_INTERFACE_MAP_BEGIN(DocumentLoadListener)
 NS_INTERFACE_MAP_END
 
 DocumentLoadListener::DocumentLoadListener(
-    CanonicalBrowsingContext* aBrowsingContext, nsILoadContext* aLoadContext,
-    ADocumentChannelBridge* aBridge)
-    : mDocumentChannelBridge(aBridge), mLoadContext(aLoadContext) {
+    CanonicalBrowsingContext* aBrowsingContext, ADocumentChannelBridge* aBridge)
+    : mDocumentChannelBridge(aBridge) {
   LOG(("DocumentLoadListener ctor [this=%p]", this));
   mParentChannelListener = new ParentChannelListener(
-      this, aBrowsingContext, aLoadContext->UsePrivateBrowsing());
+      this, aBrowsingContext, aBrowsingContext->UsePrivateBrowsing());
 }
 
 DocumentLoadListener::~DocumentLoadListener() {
@@ -300,7 +299,7 @@ already_AddRefed<LoadInfo> DocumentLoadListener::CreateLoadInfo(
   } else {
     // Build LoadInfo for TYPE_DOCUMENT
     OriginAttributes attrs;
-    mLoadContext->GetOriginAttributes(attrs);
+    aBrowsingContext->GetOriginAttributes(attrs);
     loadInfo = new LoadInfo(aBrowsingContext, aLoadState->TriggeringPrincipal(),
                             attrs, aOuterWindowId, securityFlags, sandboxFlags);
   }
@@ -360,7 +359,7 @@ bool DocumentLoadListener::Open(
       mParentChannelListener->GetBrowsingContext();
 
   OriginAttributes attrs;
-  mLoadContext->GetOriginAttributes(attrs);
+  browsingContext->GetOriginAttributes(attrs);
 
   RefPtr<WindowGlobalParent> embedderWGP =
       browsingContext->GetParentWindowGlobal();
@@ -1457,10 +1456,10 @@ DocumentLoadListener::SetParentListener(
 
 NS_IMETHODIMP
 DocumentLoadListener::GetInterface(const nsIID& aIID, void** result) {
-  // Only support nsILoadContext if child channel's callbacks did too
-  if (aIID.Equals(NS_GET_IID(nsILoadContext)) && mLoadContext) {
-    nsCOMPtr<nsILoadContext> copy = mLoadContext;
-    copy.forget(result);
+  RefPtr<CanonicalBrowsingContext> browsingContext =
+      mParentChannelListener->GetBrowsingContext();
+  if (aIID.Equals(NS_GET_IID(nsILoadContext)) && browsingContext) {
+    browsingContext.forget(result);
     return NS_OK;
   }
 
