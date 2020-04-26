@@ -1220,7 +1220,7 @@ struct CheckZoneTracer : public TraceCallbacks {
   virtual void Trace(JS::Heap<jsid>* aPtr, const char* aName,
                      void* aClosure) const override {
     jsid id = aPtr->unbarrieredGet();
-    if (JSID_IS_GCTHING(id)) {
+    if (id.isGCThing()) {
       checkZone(JS::GetTenuredGCThingZone(JSID_TO_GCTHING(id)), aName);
     }
   }
