@@ -18,26 +18,22 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace net {
 
-DocumentChannelParent::DocumentChannelParent(
-    CanonicalBrowsingContext* aContext) {
+DocumentChannelParent::DocumentChannelParent() {
   LOG(("DocumentChannelParent ctor [this=%p]", this));
-  // Sometime we can get this called without a BrowsingContext, so that we have
-  // an actor to call SendFailedAsyncOpen on.
-  if (aContext) {
-    mParent = new DocumentLoadListener(aContext, this);
-  }
 }
 
 DocumentChannelParent::~DocumentChannelParent() {
   LOG(("DocumentChannelParent dtor [this=%p]", this));
 }
 
-bool DocumentChannelParent::Init(const DocumentChannelCreationArgs& aArgs) {
-  MOZ_ASSERT(mParent);
+bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
+                                 const DocumentChannelCreationArgs& aArgs) {
   RefPtr<nsDocShellLoadState> loadState =
       new nsDocShellLoadState(aArgs.loadState());
   LOG(("DocumentChannelParent Init [this=%p, uri=%s]", this,
        loadState->URI()->GetSpecOrDefault().get()));
+
+  mParent = new DocumentLoadListener(aContext, this);
 
   Maybe<ClientInfo> clientInfo;
   if (aArgs.initialClientInfo().isSome()) {
