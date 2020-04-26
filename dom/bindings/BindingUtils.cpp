@@ -19,6 +19,7 @@
 #include "mozilla/UseCounter.h"
 
 #include "AccessCheck.h"
+#include "js/Id.h"
 #include "js/JSON.h"
 #include "js/StableStringChars.h"
 #include "js/Symbol.h"
@@ -1398,8 +1399,7 @@ static const PropertyInfo* XrayFindOwnPropertyInfo(
     JSContext* cx, JS::Handle<jsid> id,
     const NativeProperties* nativeProperties) {
   if (MOZ_UNLIKELY(nativeProperties->iteratorAliasMethodIndex >= 0) &&
-      id.get() == SYMBOL_TO_JSID(
-                      JS::GetWellKnownSymbol(cx, JS::SymbolCode::iterator))) {
+      id.isWellKnownSymbol(JS::SymbolCode::iterator)) {
     return nativeProperties->MethodPropertyInfos() +
            nativeProperties->iteratorAliasMethodIndex;
   }
@@ -1703,8 +1703,7 @@ static bool ResolvePrototypeOrConstructor(
       }
     }
 
-    if (id.get() == SYMBOL_TO_JSID(JS::GetWellKnownSymbol(
-                        cx, JS::SymbolCode::hasInstance))) {
+    if (id.isWellKnownSymbol(JS::SymbolCode::hasInstance)) {
       const JSClass* objClass = js::GetObjectClass(obj);
       if (IsDOMIfaceAndProtoClass(objClass) &&
           DOMIfaceAndProtoJSClass::FromJSClass(objClass)

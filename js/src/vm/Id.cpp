@@ -7,6 +7,8 @@
 #include "js/Id.h"
 #include "js/RootingAPI.h"
 
+#include "vm/SymbolType.h"
+
 #include "vm/JSAtom-inl.h"
 
 static const jsid voidIdValue = JSID_VOID;
@@ -21,4 +23,12 @@ JS_PUBLIC_API jsid INTERNED_STRING_TO_JSID(JSContext* cx, JSString* str) {
   MOZ_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
   MOZ_ASSERT_IF(cx, str->asAtom().isPinned());
   return js::AtomToId(&str->asAtom());
+}
+
+bool JS::PropertyKey::isWellKnownSymbol(JS::SymbolCode code) const {
+  MOZ_ASSERT(uint32_t(code) < WellKnownSymbolLimit);
+  if (!isSymbol()) {
+    return false;
+  }
+  return toSymbol()->code() == code;
 }

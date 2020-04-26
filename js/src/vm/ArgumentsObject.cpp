@@ -460,10 +460,8 @@ bool ArgumentsObject::obj_mayResolve(const JSAtomState& names, jsid id,
     }
     return atom == names.length || atom == names.callee;
   }
-  if (JSID_IS_SYMBOL(id)) {
-    return JSID_TO_SYMBOL(id)->code() == JS::SymbolCode::iterator;
-  }
-  return true;
+
+  return id.isInt() || id.isWellKnownSymbol(JS::SymbolCode::iterator);
 }
 
 static bool MappedArgGetter(JSContext* cx, HandleObject obj, HandleId id,
