@@ -55,7 +55,12 @@ class WebsitePermissionsView(
      * @param state [WebsitePermissionsState] to be rendered.
      */
     fun update(state: WebsitePermissionsState) {
-        if (state.isVisible) {
+        val isAnyPermissionVisible = state.camera.isVisible || state.location.isVisible ||
+                state.microphone.isVisible || state.notification.isVisible
+
+        // Can not use state.isVisible because we are not handling the audio permissions here right
+        // now. If we add more permissions below we should update isAnyPermissionVisible too
+        if (isAnyPermissionVisible) {
             interactor.onPermissionsShown()
         }
 
