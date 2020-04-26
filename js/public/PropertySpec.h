@@ -66,6 +66,7 @@ struct JSPropertySpec {
     union {
       const char* string;
       int32_t int32;
+      double double_;
     };
 
    private:
@@ -77,6 +78,9 @@ struct JSPropertySpec {
     explicit constexpr ValueWrapper(const char* s)
         : type(JSVAL_TYPE_STRING), string(s) {}
 
+    explicit constexpr ValueWrapper(double d)
+        : type(JSVAL_TYPE_DOUBLE), double_(d) {}
+
    public:
     ValueWrapper(const ValueWrapper& other) = default;
 
@@ -86,6 +90,10 @@ struct JSPropertySpec {
 
     static constexpr ValueWrapper stringValue(const char* s) {
       return ValueWrapper(s);
+    }
+
+    static constexpr ValueWrapper doubleValue(double d) {
+      return ValueWrapper(d);
     }
   };
 
@@ -269,6 +277,13 @@ struct JSPropertySpec {
                               JSPropertySpec::ValueWrapper::stringValue(s)));
   }
 
+  static constexpr JSPropertySpec doubleValue(const char* name, uint8_t flags,
+                                              double d) {
+    return JSPropertySpec(name, flags | JSPROP_INTERNAL_USE_BIT,
+                          AccessorsOrValue::fromValue(
+                              JSPropertySpec::ValueWrapper::doubleValue(d)));
+  }
+
   static constexpr JSPropertySpec sentinel() {
     return JSPropertySpec(nullptr, 0,
                           AccessorsOrValue::fromAccessors(
@@ -354,6 +369,8 @@ struct JSPropertySpec {
   JSPropertySpec::stringValue(::JS::SymbolCode::symbol, flags, string)
 #define JS_INT32_PS(name, value, flags) \
   JSPropertySpec::int32Value(name, flags, value)
+#define JS_DOUBLE_PS(name, value, flags) \
+  JSPropertySpec::doubleValue(name, flags, value)
 #define JS_PS_END JSPropertySpec::sentinel()
 
 /**

@@ -3092,6 +3092,8 @@ JS_PUBLIC_API bool JSPropertySpec::getValue(JSContext* cx,
       return false;
     }
     vp.setString(atom);
+  } else if (u.value.type == JSVAL_TYPE_DOUBLE) {
+    vp.setDouble(u.value.double_);
   } else {
     MOZ_ASSERT(u.value.type == JSVAL_TYPE_INT32);
     vp.setInt32(u.value.int32);
