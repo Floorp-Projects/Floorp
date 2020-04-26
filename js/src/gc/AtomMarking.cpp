@@ -172,7 +172,7 @@ void AtomMarkingRuntime::markId(JSContext* cx, jsid id) {
     markAtom(cx, JSID_TO_SYMBOL(id));
     return;
   }
-  MOZ_ASSERT(!JSID_IS_GCTHING(id));
+  MOZ_ASSERT(!id.isGCThing());
 }
 
 void AtomMarkingRuntime::markAtomValue(JSContext* cx, const Value& value) {
@@ -252,7 +252,7 @@ bool AtomMarkingRuntime::idIsMarked(Zone* zone, jsid id) {
     return atomIsMarked(zone, JSID_TO_SYMBOL(id));
   }
 
-  MOZ_ASSERT(!JSID_IS_GCTHING(id));
+  MOZ_ASSERT(!id.isGCThing());
   return true;
 }
 

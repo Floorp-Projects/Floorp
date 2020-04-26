@@ -72,6 +72,8 @@ struct PropertyKey {
     return (asBits & JSID_TYPE_MASK) == JSID_TYPE_SYMBOL;
   }
 
+  MOZ_ALWAYS_INLINE bool isGCThing() const { return isString() || isSymbol(); }
+
   MOZ_ALWAYS_INLINE int32_t toInt() const {
     MOZ_ASSERT(isInt());
     uint32_t bits = static_cast<uint32_t>(asBits) >> 1;
@@ -147,10 +149,6 @@ static MOZ_ALWAYS_INLINE jsid SYMBOL_TO_JSID(JS::Symbol* sym) {
   return id;
 }
 
-static MOZ_ALWAYS_INLINE bool JSID_IS_GCTHING(jsid id) {
-  return id.isString() || id.isSymbol();
-}
-
 static MOZ_ALWAYS_INLINE JS::GCCellPtr JSID_TO_GCTHING(jsid id) {
   void* thing = (void*)(JSID_BITS(id) & ~(size_t)JSID_TYPE_MASK);
   if (JSID_IS_STRING(id)) {
@@ -188,14 +186,14 @@ struct GCPolicy<jsid> {
     UnsafeTraceRoot(trc, idp, name);
   }
   static bool isValid(jsid id) {
-    return !JSID_IS_GCTHING(id) ||
+    return !id.isGCThing() ||
            js::gc::IsCellPointerValid(JSID_TO_GCTHING(id).asCell());
   }
 };
 
 #ifdef DEBUG
 MOZ_ALWAYS_INLINE void AssertIdIsNotGray(jsid id) {
-  if (JSID_IS_GCTHING(id)) {
+  if (id.isGCThing()) {
     AssertCellIsNotGray(JSID_TO_GCTHING(id).asCell());
   }
 }
@@ -221,7 +219,7 @@ struct BarrierMethods<jsid> {
                   !gc::IsInsideNursery(JSID_TO_STRING(next)));
   }
   static void exposeToJS(jsid id) {
-    if (JSID_IS_GCTHING(id)) {
+    if (id.isGCThing()) {
       js::gc::ExposeGCThingToActiveJS(JSID_TO_GCTHING(id));
     }
   }
@@ -237,7 +235,7 @@ auto MapGCThingTyped(const jsid& id, F&& f) {
   if (JSID_IS_SYMBOL(id)) {
     return mozilla::Some(f(JSID_TO_SYMBOL(id)));
   }
-  MOZ_ASSERT(!JSID_IS_GCTHING(id));
+  MOZ_ASSERT(!id.isGCThing());
   using ReturnType = decltype(f(static_cast<JSString*>(nullptr)));
   return mozilla::Maybe<ReturnType>();
 }
@@ -264,6 +262,7 @@ class WrappedPtrOperations<JS::PropertyKey, Wrapper> {
   bool isInt() const { return id().isInt(); }
   bool isString() const { return id().isString(); }
   bool isSymbol() const { return id().isSymbol(); }
+  bool isGCThing() const { return id().isGCThing(); }
 
   int32_t toInt() const { return id().toInt(); }
   JSString* toString() const { return id().toString(); }
