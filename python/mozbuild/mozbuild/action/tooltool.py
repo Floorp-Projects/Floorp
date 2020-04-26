@@ -705,7 +705,7 @@ def open_manifest(manifest_file):
     """I know how to take a filename and load it into a Manifest object"""
     if os.path.exists(manifest_file):
         manifest = Manifest()
-        with open(manifest_file, "rb") as f:
+        with open(manifest_file, "r" if PY3 else "rb") as f:
             manifest.load(f)
             log.debug("loaded manifest from file '%s'" % manifest_file)
         return manifest
