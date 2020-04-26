@@ -55,11 +55,16 @@ add_task(async function checkCtrlWorks() {
       expectedURL,
       gBrowser.selectedBrowser
     );
+    let promiseStopped = BrowserTestUtils.browserStopped(
+      gBrowser.selectedBrowser,
+      undefined,
+      true
+    );
     gURLBar.focus();
     gURLBar.inputField.value = inputValue.slice(0, -1);
     EventUtils.sendString(inputValue.slice(-1));
     EventUtils.synthesizeKey("KEY_Enter", options);
-    await promiseLoad;
+    await Promise.all([promiseLoad, promiseStopped]);
   }
 });
 
