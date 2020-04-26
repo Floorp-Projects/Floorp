@@ -36,7 +36,6 @@ const DEFAULT_PORTS = new Map([
 ]);
 
 ExtensionPreferencesManager.addSetting("proxy.settings", {
-  permission: "proxy",
   prefNames: [
     "network.proxy.type",
     "network.proxy.http",
