@@ -33,6 +33,12 @@ bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
   LOG(("DocumentChannelParent Init [this=%p, uri=%s]", this,
        loadState->URI()->GetSpecOrDefault().get()));
 
+  if (loadState->GetLoadIdentifier()) {
+    mParent = DocumentLoadListener::ClaimParentLoad(
+        loadState->GetLoadIdentifier(), this);
+    return !!mParent;
+  }
+
   mParent = new DocumentLoadListener(aContext, this);
 
   Maybe<ClientInfo> clientInfo;
@@ -42,7 +48,7 @@ bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
 
   nsresult rv = NS_ERROR_UNEXPECTED;
   if (!mParent->Open(loadState, aArgs.loadFlags(), aArgs.cacheKey(),
-                     aArgs.channelId(), aArgs.asyncOpenTime(),
+                     Some(aArgs.channelId()), aArgs.asyncOpenTime(),
                      aArgs.timing().refOr(nullptr), std::move(clientInfo),
                      aArgs.outerWindowId(), aArgs.hasValidTransientUserAction(),
                      &rv)) {
@@ -57,7 +63,7 @@ DocumentChannelParent::RedirectToRealChannel(
     nsTArray<ipc::Endpoint<extensions::PStreamFilterParent>>&&
         aStreamFilterEndpoints,
     uint32_t aRedirectFlags, uint32_t aLoadFlags) {
-  if (!CanSend()) {
+  if (!CanSend() || !mParent) {
     return PDocumentChannelParent::RedirectToRealChannelPromise::
         CreateAndReject(ResponseRejectReason::ChannelClosed, __func__);
   }
