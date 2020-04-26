@@ -4064,7 +4064,10 @@ mozilla::ipc::IPCResult ContentChild::RecvScriptError(
 
 mozilla::ipc::IPCResult ContentChild::RecvLoadURI(
     const MaybeDiscarded<BrowsingContext>& aContext,
-    nsDocShellLoadState* aLoadState, bool aSetNavigating) {
+    nsDocShellLoadState* aLoadState, bool aSetNavigating,
+    LoadURIResolver&& aResolve) {
+  auto resolveOnExit = MakeScopeExit([&] { aResolve(true); });
+
   if (aContext.IsNullOrDiscarded()) {
     return IPC_OK();
   }

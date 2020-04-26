@@ -28,6 +28,7 @@
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/dom/SyncedContextInlines.h"
+#include "mozilla/net/DocumentLoadListener.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Components.h"
@@ -1428,9 +1429,30 @@ nsresult BrowsingContext::LoadURI(nsDocShellLoadState* aLoadState,
     }
 
     if (ContentParent* cp = Canonical()->GetContentParent()) {
+      // Attempt to initiate this load immediately in the parent, if it succeeds
+      // it'll return a unique identifier so that we can find it later.
+      uint32_t loadIdentifier = 0;
+      if (Canonical()->AttemptLoadURIInParent(aLoadState, &loadIdentifier)) {
+        aLoadState->SetLoadIdentifier(loadIdentifier);
+      }
+
       cp->TransmitBlobDataIfBlobURL(aLoadState->URI(),
                                     aLoadState->TriggeringPrincipal());
-      Unused << cp->SendLoadURI(this, aLoadState, aSetNavigating);
+
+      // Setup a confirmation callback once the content process receives this
+      // load. Normally we'd expect a PDocumentChannel actor to have been
+      // created to claim the load identifier by that time. If not, then it
+      // won't be coming, so make sure we clean up and deregister.
+      cp->SendLoadURI(this, aLoadState, aSetNavigating)
+          ->Then(GetMainThreadSerialEventTarget(), __func__,
+                 [loadIdentifier](
+                     const PContentParent::LoadURIPromise::ResolveOrRejectValue&
+                         aValue) {
+                   if (loadIdentifier) {
+                     net::DocumentLoadListener::CleanupParentLoadAttempt(
+                         loadIdentifier);
+                   }
+                 });
     }
   }
   return NS_OK;
