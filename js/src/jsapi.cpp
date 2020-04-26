@@ -3055,33 +3055,6 @@ JS_PUBLIC_API JSObject* JS_DefineObject(JSContext* cx, HandleObject obj,
   return nobj;
 }
 
-static inline Value ValueFromScalar(double x) { return DoubleValue(x); }
-static inline Value ValueFromScalar(int32_t x) { return Int32Value(x); }
-
-template <typename T>
-static bool DefineConstScalar(JSContext* cx, HandleObject obj,
-                              const JSConstScalarSpec<T>* cds) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  unsigned attrs = JSPROP_READONLY | JSPROP_PERMANENT;
-  for (; cds->name; cds++) {
-    RootedValue value(cx, ValueFromScalar(cds->val));
-    if (!DefineDataProperty(cx, obj, cds->name, value, attrs)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-JS_PUBLIC_API bool JS_DefineConstDoubles(JSContext* cx, HandleObject obj,
-                                         const JSConstDoubleSpec* cds) {
-  return DefineConstScalar(cx, obj, cds);
-}
-JS_PUBLIC_API bool JS_DefineConstIntegers(JSContext* cx, HandleObject obj,
-                                          const JSConstIntegerSpec* cis) {
-  return DefineConstScalar(cx, obj, cis);
-}
-
 JS_PUBLIC_API bool JSPropertySpec::getValue(JSContext* cx,
                                             MutableHandleValue vp) const {
   MOZ_ASSERT(!isAccessor());
