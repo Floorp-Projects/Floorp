@@ -412,7 +412,7 @@ class PackageFrontend(MachCommandBase):
             # Keep a sha256 of each downloaded file, for the chain-of-trust
             # validation.
             if artifact_manifest is not None:
-                with open(local) as fh:
+                with open(local, 'rb') as fh:
                     h = hashlib.sha256()
                     while True:
                         data = fh.read(1024 * 1024)
