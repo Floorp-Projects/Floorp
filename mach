@@ -14,7 +14,6 @@ py2commands="
     analyze
     android
     android-emulator
-    artifact
     awsy-test
     browsertime
     cargo
