@@ -515,20 +515,6 @@ class nsFrameSelection final {
                                                      bool aExtend);
 
   /**
-   * CharacterExtendForDelete extends the selection forward (logically) to
-   * the next character cell, so that the selected cell can be deleted.
-   */
-  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult CharacterExtendForDelete();
-
-  /**
-   * CharacterExtendForBackspace extends the selection backward (logically) to
-   * the previous character cell, so that the selected cell can be deleted.
-   */
-  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult CharacterExtendForBackspace();
-
-  /**
    * WordMove will generally be called from the nsiselectioncontroller
    * implementations. the effect being the selection will move one word left or
    * right.
@@ -537,14 +523,6 @@ class nsFrameSelection final {
    */
   // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult WordMove(bool aForward, bool aExtend);
-
-  /**
-   * WordExtendForDelete extends the selection backward or forward (logically)
-   * to the next word boundary, so that the selected word can be deleted.
-   * @param aForward select forward in document.
-   */
-  // TODO: replace with `MOZ_CAN_RUN_SCRIPT`.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult WordExtendForDelete(bool aForward);
 
   /**
    * LineMove will generally be called from the nsiselectioncontroller
