@@ -7,6 +7,8 @@
 #ifndef frontend_NameCollections_h
 #define frontend_NameCollections_h
 
+#include <type_traits>
+
 #include "ds/InlineTable.h"
 #include "frontend/NameAnalysisTypes.h"
 #include "js/Vector.h"
@@ -176,10 +178,17 @@ class VectorPool : public CollectionPool<RepresentativeVector,
         Vector::sMaxInlineStorage == RepresentativeVector::sMaxInlineStorage,
         "Only vectors with the same size for inline entries are usable in the "
         "pool.");
-    static_assert(mozilla::IsPod<typename Vector::ElementType>::value,
-                  "Only vectors of POD values are usable in the pool.");
+
+    using ElementType = typename Vector::ElementType;
+
+    static_assert(std::is_trivial_v<ElementType>,
+                  "Only vectors of trivial values are usable in the pool.");
+    static_assert(std::is_trivially_destructible_v<ElementType>,
+                  "Only vectors of trivially destructible values are usable in "
+                  "the pool.");
+
     static_assert(
-        sizeof(typename Vector::ElementType) ==
+        sizeof(ElementType) ==
             sizeof(typename RepresentativeVector::ElementType),
         "Only vectors with same-sized elements are usable in the pool.");
   }
