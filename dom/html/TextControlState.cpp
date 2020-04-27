@@ -2818,7 +2818,7 @@ bool TextControlState::SetValueWithTextEditor(
       // event so that passing nullptr as nsIPrincipal is safe for
       // now.
       nsresult rv = textEditor->DeleteSelectionAsAction(
-          nsIEditor::eNone, nsIEditor::eStrip, nullptr);
+          nsIEditor::eNone, nsIEditor::eNoStrip, nullptr);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "TextEditor::DeleteSelectionAsAction() failed");
       return rv != NS_ERROR_OUT_OF_MEMORY;

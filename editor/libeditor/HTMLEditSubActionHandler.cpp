@@ -2353,14 +2353,17 @@ EditActionResult HTMLEditor::HandleDeleteSelection(
   if (!result.Handled()) {
     // If it's just ignored, we should fall this back to
     // `DeleteSelectionWithTransaction()`.
-    DebugOnly<nsresult> rvIgnored =
+    nsresult rv =
         DeleteSelectionWithTransaction(aDirectionAndAmount, aStripWrappers);
-    if (NS_WARN_IF(Destroyed())) {
+    if (rv == NS_ERROR_EDITOR_DESTROYED) {
+      NS_WARNING(
+          "EditorBase::DeleteSelectionWithTransaction() caused destroying the "
+          "editor");
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rvIgnored),
-        "HTMLEditor::DeleteSelectionWithTransaction() failed, but ignored");
+        NS_SUCCEEDED(rv),
+        "EditorBase::DeleteSelectionWithTransaction() failed, but ignored");
   }
 
   EditorDOMPoint atNewStartOfSelection(
@@ -3206,11 +3209,8 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
 
       nsresult rv =
           DeleteSelectionWithTransaction(aDirectionAndAmount, aStripWrappers);
-      if (NS_WARN_IF(Destroyed())) {
-        return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-      }
       if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::DeleteSelectionWithTransaction() failed");
+        NS_WARNING("EditorBase::DeleteSelectionWithTransaction() failed");
         return EditActionHandled(rv);
       }
     }
@@ -3260,14 +3260,17 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
       AutoTrackDOMPoint startTracker(RangeUpdaterRef(), &firstRangeStart);
       AutoTrackDOMPoint endTracker(RangeUpdaterRef(), &firstRangeEnd);
 
-      DebugOnly<nsresult> rv =
+      nsresult rv =
           DeleteSelectionWithTransaction(aDirectionAndAmount, aStripWrappers);
-      if (NS_WARN_IF(Destroyed())) {
+      if (rv == NS_ERROR_EDITOR_DESTROYED) {
+        NS_WARNING(
+            "EditorBase::DeleteSelectionWithTransaction() caused destroying "
+            "the editor");
         return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
       }
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
-          "HTMLEditor::DeleteSelectionWithTransaction() failed, but ignored");
+          "EditorBase::DeleteSelectionWithTransaction() failed, but ignored");
     }
     nsresult rv = DeleteUnnecessaryNodesAndCollapseSelection(
         aDirectionAndAmount, firstRangeStart, firstRangeEnd);
@@ -3294,11 +3297,8 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
     // First delete the selection
     nsresult rv =
         DeleteSelectionWithTransaction(aDirectionAndAmount, aStripWrappers);
-    if (NS_WARN_IF(Destroyed())) {
-      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
-    }
     if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::DeleteSelectionWithTransaction() failed");
+      NS_WARNING("EditorBase::DeleteSelectionWithTransaction() failed");
       return EditActionHandled(rv);
     }
     // Join blocks

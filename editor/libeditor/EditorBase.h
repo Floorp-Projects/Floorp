@@ -2182,7 +2182,8 @@ class EditorBase : public nsIEditor,
    *
    * @param aDirectionAndAmount How much range should be removed.
    * @param aStripWrappers      Whether the parent blocks should be removed
-   *                            when they become empty.
+   *                            when they become empty.  If this instance is
+   *                            a TextEditor, Must be nsIEditor::eNoStrip.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   DeleteSelectionAsSubAction(nsIEditor::EDirection aDirectionAndAmount,
@@ -2195,7 +2196,9 @@ class EditorBase : public nsIEditor,
    *       this falls it back to `DeleteSelectionWithTransaction()`.
    *
    * @param aDirectionAndAmount Direction of the deletion.
-   * @param aStripWrappers      Must be eStrip or eNoStrip.
+   * @param aStripWrappers      Must be nsIEditor::eNoStrip if this is a
+   *                            TextEditor instance.  Otherwise,
+   *                            nsIEditor::eStrip is also valid.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT virtual EditActionResult
   HandleDeleteSelection(nsIEditor::EDirection aDirectionAndAmount,
@@ -2550,15 +2553,19 @@ class EditorBase : public nsIEditor,
 
   /**
    * DeleteSelectionWithTransaction() removes selected content or content
-   * around caret with transactions.
+   * around caret with transactions and remove empty inclusive ancestor
+   * inline elements of collapsed selection after removing the contents.
    *
    * @param aDirectionAndAmount How much range should be removed.
    * @param aStripWrappers      Whether the parent blocks should be removed
    *                            when they become empty.
+   *                            Note that this must be `nsIEditor::eNoStrip`
+   *                            if this is a TextEditor because anyway it'll
+   *                            be ignored.
    */
-  MOZ_CAN_RUN_SCRIPT virtual nsresult DeleteSelectionWithTransaction(
-      nsIEditor::EDirection aDirectionAndAmount,
-      nsIEditor::EStripWrappers aStripWrappers);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  DeleteSelectionWithTransaction(nsIEditor::EDirection aDirectionAndAmount,
+                                 nsIEditor::EStripWrappers aStripWrappers);
 
   /**
    * Create an aggregate transaction for delete selection.  The result may
