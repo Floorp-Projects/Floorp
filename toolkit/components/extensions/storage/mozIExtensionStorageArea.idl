@@ -1,0 +1,82 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface mozIExtensionStorageCallback;
+interface nsIFile;
+interface nsIVariant;
+
+// Implements the operations needed to support the `StorageArea` WebExtension
+// API.
+[scriptable, uuid(d8eb3ff1-9b4b-435a-99ca-5b8cbaba2420)]
+interface mozIExtensionStorageArea : nsISupports {
+    // Sets one or more key-value pairs specified in `json` for the
+    // `extensionId`. If the `callback` implements
+    // `mozIExtensionStorageListener`, its `onChange`
+    // method will be called with the new and old values.
+    void set(in AUTF8String extensionId,
+             in AUTF8String json,
+             in mozIExtensionStorageCallback callback);
+
+    // Returns the value for the `key` in the storage area for the
+    // `extensionId`. `key` must be a JSON string containing either `null`,
+    // an array of string key names, a single string key name, or an object
+    // where the properties are the key names, and the values are the defaults
+    // if the key name doesn't exist in the storage area.
+    void get(in AUTF8String extensionId,
+             in AUTF8String key,
+             in mozIExtensionStorageCallback callback);
+
+    // Removes the `key` from the storage area for the `extensionId`. If `key`
+    // exists and the `callback` implements `mozIExtensionStorageListener`, its
+    // `onChanged` method will be called with the removed key-value pair.
+    void remove(in AUTF8String extensionId,
+                in AUTF8String key,
+                in mozIExtensionStorageCallback callback);
+
+    // Removes all keys from the storage area for the `extensionId`. If
+    // `callback` implements `mozIExtensionStorageListener`, its `onChange`
+    // method will be called with all removed key-value pairs.
+    void clear(in AUTF8String extensionId,
+               in mozIExtensionStorageCallback callback);
+};
+
+// A configurable storage area has additional methods for setting up and tearing
+// down its underlying database connection.
+[scriptable, uuid(2b008295-1bcc-4610-84f1-ad4cab2fa9ee)]
+interface mozIConfigurableExtensionStorageArea : mozIExtensionStorageArea {
+    // Sets up the storage area. An area can only be configured once; calling
+    // `configure` multiple times will throw. `configure` must also be called
+    // before any of the `mozIExtensionStorageArea` methods, or they'll fail
+    // with errors.
+    void configure(in nsIFile databaseFile);
+
+    // Tears down the storage area, closing the backing database connection.
+    // This is called automatically when Firefox shuts down. Once a storage area
+    // has been shut down, all its methods will fail with errors. If `configure`
+    // hasn't been called for this area yet, `teardown` is a no-op.
+    void teardown(in mozIExtensionStorageCallback callback);
+};
+
+// A listener for storage area notifications.
+[scriptable, uuid(8cb3c7e4-d0ca-4353-bccd-2673b4e11510)]
+interface mozIExtensionStorageListener : nsISupports {
+    // Notifies that an operation has data to pass to `storage.onChanged`
+    // listeners. `json` is a JSON array of listener infos.
+    void onChanged(in AUTF8String json);
+};
+
+// A generic callback for a storage operation. Either `handleSuccess` or
+// `handleError` is guaranteed to be called once.
+[scriptable, uuid(870dca40-6602-4748-8493-c4253eb7f322)]
+interface mozIExtensionStorageCallback : nsISupports {
+    // Called when the operation completes. Operations that return a result,
+    // like `get`, will pass a `UTF8String` variant. Those that don't return
+    // anything, like `set` or `remove`, will pass a `null` variant.
+    void handleSuccess(in nsIVariant result);
+
+    // Called when the operation fails.
+    void handleError(in nsresult code, in AUTF8String message);
+};
