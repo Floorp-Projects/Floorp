@@ -22,6 +22,8 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: The `SitePermissionsFeature`'s constructor, now requires a new parameter `onShouldShowRequestPermissionRationale` a lambda to allow the feature to query [ActivityCompat.shouldShowRequestPermissionRationale](https://developer.android.com/reference/androidx/core/app/ActivityCompat#shouldShowRequestPermissionRationale(android.app.Activity,%20java.lang.String)) or [Fragment.shouldShowRequestPermissionRationale](https://developer.android.com/reference/androidx/fragment/app/Fragment#shouldShowRequestPermissionRationale(java.lang.String)). This allows the `SitePermissionsFeature` to handle when a user clicks "Deny & don't ask again" button in a system permission dialog, for more information see [issue #6565](https://github.com/mozilla-mobile/android-components/issues/6565).
 
 * **feature-addons**
+  * Added `AddonsManagerAdapter.updateAddon` and `AddonsManagerAdapter.updateAddons` to allow partial updates.
+  * ⚠️ **This is a breaking change**: `AddonsManagerAdapterDelegate.onNotYetSupportedSectionClicked(unsupportedAddons: ArrayList<Addon>)` is changed to `AddonsManagerAdapterDelegate.onNotYetSupportedSectionClicked(unsupportedAddons: List<Addon>)`.
   * Fixed [issue #6685](https://github.com/mozilla-mobile/android-components/issues/6685), now `DefaultSupportedAddonsChecker` will marked any newly supported add-on as enabled.
   * Added `Addon.translatedSummary` and `Addon.translatedDescription` to ease add-on translations.
   * Added `Addon.defaultLocale` Indicates which locale will be always available to display translatable fields.

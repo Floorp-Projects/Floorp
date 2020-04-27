@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.addons.amo.mozilla.components.feature.addons.ui
 
+import android.graphics.Bitmap
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
@@ -11,6 +12,7 @@ import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
@@ -20,6 +22,7 @@ import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter.NotYetSupportedSection
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter.Section
+import mozilla.components.feature.addons.ui.AddonsManagerAdapter.DifferCallback
 import mozilla.components.feature.addons.ui.AddonsManagerAdapterDelegate
 import mozilla.components.feature.addons.ui.CustomViewHolder
 import mozilla.components.support.test.mock
@@ -29,6 +32,8 @@ import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.fail
+import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,6 +41,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.any
 import java.io.IOException
 import java.util.Locale
 
@@ -111,6 +117,43 @@ class AddonsManagerAdapterTest {
             } catch (e: IOException) {
                 fail("The exception must be handle in the adapter")
             }
+        }
+    }
+
+    @Test
+    fun `fetching the add-on icon from cache MUST NOT animate`() {
+        val addon = mock<Addon>()
+        val bitmap = mock<Bitmap>()
+        val mockedImageView = spy(ImageView(testContext))
+        val mockedCollectionProvider = mock<AddonCollectionProvider>()
+        val adapter = AddonsManagerAdapter(mockedCollectionProvider, mock(), emptyList())
+
+        runBlocking {
+            whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).thenReturn(bitmap)
+
+            adapter.fetchIcon(addon, mockedImageView, scope).join()
+            verify(mockedImageView).setImageDrawable(any())
+        }
+    }
+
+    @Test
+    fun `fetching the add-on icon uncached MUST animate`() {
+        val addon = mock<Addon>()
+        val bitmap = mock<Bitmap>()
+        val mockedImageView = spy(ImageView(testContext))
+        val mockedCollectionProvider = mock<AddonCollectionProvider>()
+        val adapter = spy(AddonsManagerAdapter(mockedCollectionProvider, mock(), emptyList()))
+
+        runBlocking {
+            whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).thenAnswer {
+                runBlocking {
+                    delay(1000)
+                }
+                bitmap
+            }
+
+            adapter.fetchIcon(addon, mockedImageView, scope).join()
+            verify(adapter).setWithCrossFadeAnimation(mockedImageView, bitmap)
         }
     }
 
@@ -232,6 +275,105 @@ class AddonsManagerAdapterTest {
         adapter.bindAddon(addonViewHolder, addon)
         verify(titleView).setText("id")
         verify(summaryView).setVisibility(View.GONE)
+    }
+
+    @Test
+    fun updateAddon() {
+        var addon = Addon(
+                id = "id",
+                authors = emptyList(),
+                categories = emptyList(),
+                downloadUrl = "downloadUrl",
+                version = "version",
+                permissions = emptyList(),
+                createdAt = "",
+                updatedAt = ""
+        )
+        val adapter = spy(AddonsManagerAdapter(mock(), mock(), listOf(addon)))
+
+        assertEquals(addon, adapter.addonsMap[addon.id])
+
+        addon = addon.copy(version = "newVersion")
+        adapter.updateAddon(addon)
+
+        assertEquals(addon.version, adapter.addonsMap[addon.id]!!.version)
+        verify(adapter).submitList(any())
+    }
+
+    @Test
+    fun updateAddons() {
+        var addon1 = Addon(
+                id = "addon1",
+                authors = emptyList(),
+                categories = emptyList(),
+                downloadUrl = "downloadUrl",
+                version = "version",
+                permissions = emptyList(),
+                createdAt = "",
+                updatedAt = ""
+        )
+
+        val addon2 = Addon(
+                id = "addon2",
+                authors = emptyList(),
+                categories = emptyList(),
+                downloadUrl = "downloadUrl",
+                version = "version",
+                permissions = emptyList(),
+                createdAt = "",
+                updatedAt = ""
+        )
+        val adapter = spy(AddonsManagerAdapter(mock(), mock(), listOf(addon1, addon2)))
+
+        assertEquals(addon1, adapter.addonsMap[addon1.id])
+        assertEquals(addon2, adapter.addonsMap[addon2.id])
+
+        addon1 = addon1.copy(version = "newVersion")
+        adapter.updateAddons(listOf(addon1, addon2))
+
+        // Only addon1 must be updated
+        assertEquals(addon1.version, adapter.addonsMap[addon1.id]!!.version)
+        assertEquals(addon2, adapter.addonsMap[addon2.id])
+        verify(adapter).submitList(any())
+    }
+
+    @Test
+    fun differCallback() {
+        var addon1 = Addon(
+                id = "addon1",
+                authors = emptyList(),
+                categories = emptyList(),
+                downloadUrl = "downloadUrl",
+                version = "version",
+                permissions = emptyList(),
+                createdAt = "",
+                updatedAt = ""
+        )
+
+        var addon2 = Addon(
+                id = "addon1",
+                authors = emptyList(),
+                categories = emptyList(),
+                downloadUrl = "downloadUrl",
+                version = "version",
+                permissions = emptyList(),
+                createdAt = "",
+                updatedAt = ""
+        )
+
+        assertTrue(DifferCallback.areItemsTheSame(addon1, addon2))
+
+        addon2 = addon2.copy(id = "addon2")
+
+        assertFalse(DifferCallback.areItemsTheSame(addon1, addon2))
+
+        addon2 = addon2.copy(id = "addon1")
+
+        assertTrue(DifferCallback.areItemsTheSame(addon1, addon2))
+
+        addon1 = addon1.copy(version = "newVersion")
+
+        assertFalse(DifferCallback.areContentsTheSame(addon1, addon2))
     }
 
     @Test
