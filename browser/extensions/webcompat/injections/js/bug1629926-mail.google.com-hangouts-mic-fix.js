@@ -18,8 +18,9 @@ console.info(
 );
 
 const isHangoutsSrc = src => {
-  const url = new URL(src);
-  return url.host === "hangouts.google.com" && url.pathname.includes("blank");
+  return (
+    src.startsWith("https://hangouts.google.com/") && src.includes("blank")
+  );
 };
 
 const orig = Object.getOwnPropertyDescriptor(
