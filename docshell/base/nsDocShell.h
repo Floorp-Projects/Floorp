@@ -1186,8 +1186,6 @@ class nsDocShell final : public nsDocLoader,
 
   eCharsetReloadState mCharsetReloadState;
 
-  mozilla::hal::ScreenOrientation mOrientationLock;
-
   int32_t mParentCharsetSource;
   mozilla::CSSIntSize mFrameMargins;
 

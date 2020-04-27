@@ -296,6 +296,9 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
       inherit ? inherit->GetDefaultLoadFlags() : nsIRequest::LOAD_NORMAL;
   context->mFields.SetWithoutSyncing<IDX_DefaultLoadFlags>(defaultLoadFlags);
 
+  context->mFields.SetWithoutSyncing<IDX_OrientationLock>(
+      mozilla::hal::eScreenOrientation_None);
+
   return context.forget();
 }
 
@@ -2004,6 +2007,13 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_MessageManagerGroup>,
                              ContentParent* aSource) {
   // Should only be set in the parent process on toplevel.
   return XRE_IsParentProcess() && !aSource && IsTopContent();
+}
+
+bool BrowsingContext::CanSet(
+    FieldIndex<IDX_OrientationLock>,
+    const mozilla::hal::ScreenOrientation& aOrientationLock,
+    ContentParent* aSource) {
+  return IsTop();
 }
 
 bool BrowsingContext::IsLoading() {

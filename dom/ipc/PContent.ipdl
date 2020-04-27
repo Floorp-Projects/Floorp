@@ -867,6 +867,12 @@ child:
                                     BlockingDecision aReason,
                                     uint32_t aRejectedReason);
 
+    /**
+     * Abort orientationPendingPromises for documents in the child which
+     * are part of a BrowsingContextGroup.
+     */
+    async AbortOrientationPendingPromises(MaybeDiscardedBrowsingContext aContext);
+
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 
@@ -1563,6 +1569,12 @@ parent:
      */
     async UpdateSHEntriesInBC(nullable PSHEntry aNewLSHE, nullable
                               PSHEntry aNewOSHE, MaybeDiscardedBrowsingContext aContext);
+
+    /**
+     * Whenever a document is updating the OrientationLock, we need to
+     * reject the orientationPendingPromises in other processes.
+     */
+    async AbortOtherOrientationPendingPromises(MaybeDiscardedBrowsingContext aContext);
 
 both:
     async ScriptError(nsString message, nsString sourceName, nsString sourceLine,
