@@ -98,6 +98,8 @@ Result<nsCOMPtr<nsIFile>, nsresult> QM_NewLocalFile(const nsAString& aPath) {
   nsresult rv =
       NS_NewLocalFile(aPath, /* aFollowLinks */ false, getter_AddRefs(file));
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    QM_WARNING("Failed to construct a file for path (%s)",
+               NS_ConvertUTF16toUTF8(aPath).get());
     return Err(rv);
   }
 
