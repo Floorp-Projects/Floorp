@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+// Ignore strange errors when shutting down.
+PromiseTestUtils.whitelistRejectionsGlobally(/No such actor/);
+
 // checks to see if the frame is selected and the title is correct
 function isFrameSelected(dbg, index, title) {
   const $frame = findElement(dbg, "frame", index);
