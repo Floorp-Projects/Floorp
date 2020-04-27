@@ -4,7 +4,7 @@
 "use strict";
 
 do_get_profile();
-let SqliteInternals = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
+
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 // OS.File doesn't like to be first imported during shutdown
 const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
@@ -60,7 +60,6 @@ function sleep(ms) {
 //
 add_task(async function test_shutdown_clients() {
   info("Ensuring that Sqlite.jsm doesn't shutdown before its clients");
-  let db1 = await getDummyDatabase("opened before shutdown");
 
   let assertions = [];
 
@@ -96,29 +95,7 @@ add_task(async function test_shutdown_clients() {
 
   assertions.push({ name: "dbOpened", value: () => dbOpened });
   assertions.push({ name: "dbClosed", value: () => dbClosed });
-  info(
-    "Making sure that the database we opened before shutdown shows up in the blockers"
-  );
-  SqliteInternals.Barriers.connections.wait();
-  let openedDbArray = SqliteInternals.Barriers.connections.state;
-  ok(
-    openedDbArray.length,
-    "There should be at least one database that shows up in the blockers."
-  );
 
-  function check(element) {
-    let dbOpenedName = element.name;
-    if (dbOpenedName.includes("opened before shutdown")) {
-      return true;
-    }
-    return false;
-  }
-  ok(
-    openedDbArray.some(check),
-    "The db 'opened before shutown' is present in the blocker"
-  );
-
-  db1.close();
   info("Now shutdown Sqlite.jsm synchronously");
   Services.prefs.setBoolPref("toolkit.asyncshutdown.testing", true);
   AsyncShutdown.profileBeforeChange._trigger();
