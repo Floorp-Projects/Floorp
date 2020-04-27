@@ -618,7 +618,7 @@ nsresult txStylesheetCompilerState::openInstructionContainer(
     txInstructionContainer* aContainer) {
   MOZ_ASSERT(!mNextInstrPtr, "can't nest instruction-containers");
 
-  mNextInstrPtr = aContainer->mFirstInstruction.StartAssignment();
+  mNextInstrPtr = &aContainer->mFirstInstruction;
   return NS_OK;
 }
 
@@ -634,8 +634,8 @@ void txStylesheetCompilerState::addInstruction(
 
   txInstruction* newInstr = aInstruction.get();
 
-  *mNextInstrPtr = aInstruction.release();
-  mNextInstrPtr = newInstr->mNext.StartAssignment();
+  *mNextInstrPtr = std::move(aInstruction);
+  mNextInstrPtr = &newInstr->mNext;
 
   uint32_t i, count = mGotoTargetPointers.Length();
   for (i = 0; i < count; ++i) {
