@@ -163,6 +163,9 @@ class DataStorage : public nsIObserver {
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
+  // Return true if this data storage is ready to be used.
+  bool IsReady();
+
  private:
   explicit DataStorage(const nsString& aFilename);
   virtual ~DataStorage();
