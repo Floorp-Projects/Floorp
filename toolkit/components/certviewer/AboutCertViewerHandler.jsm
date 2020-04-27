@@ -15,7 +15,6 @@ const TYPE_CA = 1;
 const TYPE_USER = 2;
 const TYPE_EMAIL = 4;
 const TYPE_SERVER = 8;
-const TYPE_ANY = 0xffff;
 
 var AboutCertViewerHandler = {
   _inited: false,
@@ -28,7 +27,6 @@ var AboutCertViewerHandler = {
       [TYPE_USER]: [],
       [TYPE_EMAIL]: [],
       [TYPE_SERVER]: [],
-      [TYPE_ANY]: [],
     };
     let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
       Ci.nsIX509CertDB

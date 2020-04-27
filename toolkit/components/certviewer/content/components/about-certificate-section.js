@@ -14,9 +14,8 @@ const TYPE_EMAIL = 4;
 const TYPE_SERVER = 8;
 
 export class AboutCertificateSection extends HTMLElement {
-  constructor(certs) {
+  constructor() {
     super();
-    this.certs = certs;
   }
 
   connectedCallback() {
@@ -30,29 +29,6 @@ export class AboutCertificateSection extends HTMLElement {
     this.certificateTabsSection = new CertificateTabsSection(true);
     this.shadowRoot.appendChild(this.certificateTabsSection.tabsElement);
     this.infoGroupsContainers = new InfoGroupContainer(true);
-
-    this.certData = {
-      [TYPE_UNKNOWN]: {
-        name: "certificate-viewer-tab-unkonwn",
-        data: null,
-      },
-      [TYPE_CA]: {
-        name: "certificate-viewer-tab-ca",
-        data: null,
-      },
-      [TYPE_USER]: {
-        name: "certificate-viewer-tab-mine",
-        data: null,
-      },
-      [TYPE_EMAIL]: {
-        name: "certificate-viewer-tab-people",
-        data: null,
-      },
-      [TYPE_SERVER]: {
-        name: "certificate-viewer-tab-servers",
-        data: null,
-      },
-    };
 
     this.render();
   }
@@ -69,23 +45,46 @@ export class AboutCertificateSection extends HTMLElement {
   }
 
   filterCerts(message) {
-    this.certData[TYPE_UNKNOWN].data = message.data.certs[TYPE_UNKNOWN];
-    this.certData[TYPE_CA].data = message.data.certs[TYPE_CA];
-    this.certData[TYPE_USER].data = message.data.certs[TYPE_USER];
-    this.certData[TYPE_EMAIL].data = message.data.certs[TYPE_EMAIL];
-    this.certData[TYPE_SERVER].data = message.data.certs[TYPE_SERVER];
+    let certs = [];
+    if (message.data.certs[TYPE_USER].length) {
+      certs.push({
+        name: "certificate-viewer-tab-mine",
+        data: message.data.certs[TYPE_USER],
+      });
+    }
+    if (message.data.certs[TYPE_EMAIL].length) {
+      certs.push({
+        name: "certificate-viewer-tab-people",
+        data: message.data.certs[TYPE_EMAIL],
+      });
+    }
+    if (message.data.certs[TYPE_SERVER].length) {
+      certs.push({
+        name: "certificate-viewer-tab-servers",
+        data: message.data.certs[TYPE_SERVER],
+      });
+    }
+    if (message.data.certs[TYPE_CA].length) {
+      certs.push({
+        name: "certificate-viewer-tab-ca",
+        data: message.data.certs[TYPE_CA],
+      });
+    }
+    if (message.data.certs[TYPE_UNKNOWN].length) {
+      certs.push({
+        name: "certificate-viewer-tab-unkonwn",
+        data: message.data.certs[TYPE_UNKNOWN],
+      });
+    }
 
-    let final = false;
     let i = 0;
-    for (let data of Object.values(this.certData)) {
-      if (i === this.certs.length - 1) {
-        final = true;
-      }
-      this.infoGroupsContainers.createInfoGroupsContainers({}, i, final, data);
+    for (let cert of certs) {
+      let final = i == certs.length - 1;
+      this.infoGroupsContainers.createInfoGroupsContainers({}, i, final, cert);
       this.shadowRoot.appendChild(
         this.infoGroupsContainers.infoGroupsContainers[i]
       );
-      this.certificateTabsSection.createTabSection(data.name, i);
+      this.certificateTabsSection.createTabSection(cert.name, i);
       this.infoGroupsContainers.addClass("selected", 0);
       i++;
     }
