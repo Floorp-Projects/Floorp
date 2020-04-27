@@ -220,7 +220,6 @@
 #identity-popup-permissions-headline,
 .protections-popup-empty-label,
 .tracking-protection-button,
-#protections-popup-trackersView-strict-info > label,
 .protections-popup-cookiesView-list-header,
 .protections-popup-list-item > label,
 #protections-popup-mainView-panel-header > label,
@@ -621,33 +620,6 @@ description#identity-popup-content-verifier,
 
 .protections-popup-cryptominersView-icon.allowed {
   list-style-image: url(chrome://browser/skin/controlcenter/cryptominers.svg);
-}
-
-#protections-popup-trackersView-strict-info {
-  min-height: 40px;
-  /* Limit to full width - margin */
-  max-width: calc(var(--popup-width) - 12px);
-  min-width: calc(var(--popup-width) - 12px);
-  background-color: #45a1ff80;
-  margin: 6px;
-  text-align: center;
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  padding: 5px 15px;
-  border-radius: 3px;
-}
-
-#protections-popup-trackersView-strict-info > image {
-  list-style-image: url(chrome://browser/skin/controlcenter/info.svg);
-  -moz-context-properties: fill;
-  fill: currentColor;
-  margin-inline-end: 10px;
-}
-
-#protections-popup-trackersView-strict-info > label {
-  overflow-wrap: break-word;
-  /* Limit to full width - container margin - container padding - icon width - icon margin */
-  max-width: calc(var(--popup-width) - 12px - 20px - 16px - 10px);
 }
 
 /* Content Blocking categories */
