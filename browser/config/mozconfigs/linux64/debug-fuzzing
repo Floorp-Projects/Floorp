@@ -10,6 +10,11 @@ export MOZ_PACKAGE_JSSHELL=1
 ac_add_options --enable-fuzzing
 unset MOZ_STDCXX_COMPAT
 
+# Even in fuzzing builds without sanitizers, the UBSan runtime is pulled
+# in as a dependency to allow libFuzzer to have rudimentary stacks.
+# Hence we need to disable jemalloc until bug 1435148 is fully resolved.
+ac_add_options --disable-jemalloc
+
 # Need this to prevent name conflicts with the normal nightly build packages
 export MOZ_PKG_SPECIAL=fuzzing
 
