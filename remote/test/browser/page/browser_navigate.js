@@ -14,11 +14,11 @@ add_task(async function testBasicNavigation({ client }) {
     url: pageEmptyURL,
   });
 
-  await compareFrame(frameId);
   todo(!!loaderId, "Page.navigate returns loaderId");
   is(errorText, undefined, "No errorText on a successful navigation");
 
   await loadEventFired;
+  await compareFrame(frameId);
   is(
     gBrowser.selectedBrowser.currentURI.spec,
     pageEmptyURL,
@@ -160,11 +160,11 @@ add_task(async function testDataURL({ client }) {
   await Page.enable();
   const loadEventFired = Page.loadEventFired();
   const { frameId, loaderId, errorText } = await Page.navigate({ url });
-  await compareFrame(frameId);
   is(errorText, undefined, "No errorText on a successful navigation");
   todo(!!loaderId, "Page.navigate returns loaderId");
 
   await loadEventFired;
+  await compareFrame(frameId);
   is(gBrowser.selectedBrowser.currentURI.spec, url, "Expected URL loaded");
 });
 
@@ -177,9 +177,9 @@ add_task(async function testAbout({ client }) {
   });
   todo(!!loaderId, "Page.navigate returns loaderId");
   is(errorText, undefined, "No errorText on a successful navigation");
-  await compareFrame(frameId);
 
   await loadEventFired;
+  await compareFrame(frameId);
   is(
     gBrowser.selectedBrowser.currentURI.spec,
     "about:blank",
