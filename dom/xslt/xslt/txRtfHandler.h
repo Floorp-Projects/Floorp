@@ -22,7 +22,7 @@ class txResultTreeFragment : public txAExprResult {
   void setNode(const txXPathNode* aNode) {
     NS_ASSERTION(!mNode, "Already converted!");
 
-    mNode = aNode;
+    mNode = mozilla::WrapUnique(aNode);
   }
   const txXPathNode* getNode() const { return mNode.get(); }
 

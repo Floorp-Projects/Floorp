@@ -14,10 +14,14 @@
 #include "txURIUtils.h"
 #include "txXMLParser.h"
 
+using mozilla::UniquePtr;
+using mozilla::Unused;
+using mozilla::WrapUnique;
+
 const int32_t txExecutionState::kMaxRecursionDepth = 20000;
 
 nsresult txLoadedDocumentsHash::init(const txXPathNode& aSource) {
-  mSourceDocument = txXPathNodeUtils::getOwnerDocument(aSource);
+  mSourceDocument = WrapUnique(txXPathNodeUtils::getOwnerDocument(aSource));
 
   nsAutoString baseURI;
   nsresult rv = txXPathNodeUtils::getBaseURI(*mSourceDocument, baseURI);
@@ -35,8 +39,8 @@ nsresult txLoadedDocumentsHash::init(const txXPathNode& aSource) {
   // txMozillaXSLTProcessor::TransformToFragment) it makes more sense to return
   // the real root of the source tree, which is the node where the transform
   // started.
-  PutEntry(baseURI)->mDocument =
-      txXPathNativeNode::createXPathNode(txXPathNativeNode::getNode(aSource));
+  PutEntry(baseURI)->mDocument = WrapUnique(
+      txXPathNativeNode::createXPathNode(txXPathNativeNode::getNode(aSource)));
   return NS_OK;
 }
 
@@ -247,7 +251,7 @@ nsresult txExecutionState::getVariable(int32_t aNamespace, nsAtom* aLName,
       return rv;
     }
 
-    rtfHandler.release();
+    Unused << rtfHandler.release();
 
     txInstruction* prevInstr = mNextInstruction;
     // set return to nullptr to stop execution
@@ -268,7 +272,7 @@ nsresult txExecutionState::getVariable(int32_t aNamespace, nsAtom* aLName,
     popTemplateRule();
 
     mNextInstruction = prevInstr;
-    rtfHandler = (txRtfHandler*)popResultHandler();
+    rtfHandler = WrapUnique((txRtfHandler*)popResultHandler());
     rv = rtfHandler->getAsRTF(&aResult);
     if (NS_FAILED(rv)) {
       popAndDeleteEvalContextUntil(mInitialEvalContext);

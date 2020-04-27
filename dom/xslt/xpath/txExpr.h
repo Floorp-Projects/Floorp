@@ -172,8 +172,8 @@ class Expr {
   }                                                            \
   void _class::setSubExprAt(uint32_t aPos, Expr* aExpr) {      \
     NS_ASSERTION(aPos < 1, "setting bad subexpression index"); \
-    _Expr1.release();                                          \
-    _Expr1 = aExpr;                                            \
+    mozilla::Unused << _Expr1.release();                       \
+    _Expr1 = mozilla::WrapUnique(aExpr);                       \
   }
 
 #define TX_IMPL_EXPR_STUBS_2(_class, _ReturnType, _Expr1, _Expr2) \
@@ -192,11 +192,11 @@ class Expr {
   void _class::setSubExprAt(uint32_t aPos, Expr* aExpr) {         \
     NS_ASSERTION(aPos < 2, "setting bad subexpression index");    \
     if (aPos == 0) {                                              \
-      _Expr1.release();                                           \
-      _Expr1 = aExpr;                                             \
+      mozilla::Unused << _Expr1.release();                        \
+      _Expr1 = mozilla::WrapUnique(aExpr);                        \
     } else {                                                      \
-      _Expr2.release();                                           \
-      _Expr2 = aExpr;                                             \
+      mozilla::Unused << _Expr2.release();                        \
+      _Expr2 = mozilla::WrapUnique(aExpr);                        \
     }                                                             \
   }
 
@@ -524,8 +524,8 @@ class LocationStep : public Expr, public PredicateList {
 
   txNodeTest* getNodeTest() { return mNodeTest.get(); }
   void setNodeTest(txNodeTest* aNodeTest) {
-    mNodeTest.release();
-    mNodeTest = aNodeTest;
+    mozilla::Unused << mNodeTest.release();
+    mNodeTest = mozilla::WrapUnique(aNodeTest);
   }
   LocationStepType getAxisIdentifier() { return mAxisIdentifier; }
   void setAxisIdentifier(LocationStepType aAxisIdentifier) {

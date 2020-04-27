@@ -15,6 +15,10 @@
 #include "nsWhitespaceTokenizer.h"
 #include "nsIContent.h"
 
+using mozilla::UniquePtr;
+using mozilla::Unused;
+using mozilla::WrapUnique;
+
 /*
  * Returns the default priority of this Pattern.
  * UnionPatterns don't like this.
@@ -89,7 +93,7 @@ nsresult txLocPathPattern::addStep(txPattern* aPattern, bool isChild) {
   Step* step = mSteps.AppendElement();
   if (!step) return NS_ERROR_OUT_OF_MEMORY;
 
-  step->pattern = aPattern;
+  step->pattern = WrapUnique(aPattern);
   step->isChild = isChild;
 
   return NS_OK;
@@ -201,8 +205,8 @@ txPattern* txLocPathPattern::getSubPatternAt(uint32_t aPos) {
 void txLocPathPattern::setSubPatternAt(uint32_t aPos, txPattern* aPattern) {
   NS_ASSERTION(aPos < mSteps.Length(), "setting bad subexpression index");
   Step* step = &mSteps[aPos];
-  step->pattern.release();
-  step->pattern = aPattern;
+  Unused << step->pattern.release();
+  step->pattern = WrapUnique(aPattern);
 }
 
 #ifdef TX_TO_STRING

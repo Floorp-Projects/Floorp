@@ -7,6 +7,9 @@
 #include "txNodeSet.h"
 #include "txIXPathContext.h"
 
+using mozilla::Unused;
+using mozilla::WrapUnique;
+
 //-- Implementation of FilterExpr --/
 
 //-----------------------------/
@@ -62,8 +65,8 @@ Expr* FilterExpr::getSubExprAt(uint32_t aPos) {
 
 void FilterExpr::setSubExprAt(uint32_t aPos, Expr* aExpr) {
   if (aPos == 0) {
-    expr.release();
-    expr = aExpr;
+    Unused << expr.release();
+    expr = WrapUnique(aExpr);
   } else {
     PredicateList::setSubExprAt(aPos - 1, aExpr);
   }

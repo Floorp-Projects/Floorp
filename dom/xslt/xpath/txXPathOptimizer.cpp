@@ -12,6 +12,9 @@
 #include "txExpr.h"
 #include "txIXPathContext.h"
 
+using mozilla::UniquePtr;
+using mozilla::Unused;
+
 class txEarlyEvalContext : public txIEvalContext {
  public:
   explicit txEarlyEvalContext(txResultRecycler* aRecycler)
@@ -223,7 +226,7 @@ nsresult txXPathOptimizer::optimizeUnion(Expr* aInExpr, Expr** aOutExpr) {
         NS_ENSURE_SUCCESS(rv, rv);
 
         currentStep->setNodeTest(unionTest);
-        owner.release();
+        Unused << owner.release();
       }
 
       // Merge the nodetest into the union
