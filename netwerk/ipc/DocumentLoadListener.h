@@ -200,7 +200,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // in the content process into the RedirectToRealChannelArgs struct.
   void SerializeRedirectData(RedirectToRealChannelArgs& aArgs,
                              bool aIsCrossProcess, uint32_t aRedirectFlags,
-                             uint32_t aLoadFlags) const;
+                             uint32_t aLoadFlags,
+                             dom::ContentParent* aParent) const;
 
   const nsTArray<DocumentChannelRedirect>& Redirects() const {
     return mRedirects;
