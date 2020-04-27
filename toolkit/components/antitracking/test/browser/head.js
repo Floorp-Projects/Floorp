@@ -28,6 +28,7 @@ const TEST_TOP_PAGE_5 = TEST_DOMAIN_5 + TEST_PATH + "page.html";
 const TEST_TOP_PAGE_6 = TEST_DOMAIN_6 + TEST_PATH + "page.html";
 const TEST_EMBEDDER_PAGE = TEST_DOMAIN + TEST_PATH + "embedder.html";
 const TEST_POPUP_PAGE = TEST_DOMAIN + TEST_PATH + "popup.html";
+const TEST_IFRAME_PAGE = TEST_DOMAIN + TEST_PATH + "iframe.html";
 const TEST_3RD_PARTY_PAGE = TEST_3RD_PARTY_DOMAIN + TEST_PATH + "3rdParty.html";
 const TEST_3RD_PARTY_PAGE_HTTP =
   TEST_3RD_PARTY_DOMAIN_HTTP + TEST_PATH + "3rdParty.html";
