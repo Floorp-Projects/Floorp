@@ -155,7 +155,7 @@ class JitRuntime {
     BailoutTable(uint32_t startOffset, uint32_t size)
         : startOffset(startOffset), size(size) {}
   };
-  typedef Vector<BailoutTable, 4, SystemAllocPolicy> BailoutTableVector;
+  using BailoutTableVector = Vector<BailoutTable, 4, SystemAllocPolicy>;
   WriteOnceData<BailoutTableVector> bailoutTables_;
 
   // Generic bailout table; used if the bailout table overflows.
@@ -190,12 +190,14 @@ class JitRuntime {
   WriteOnceData<uint32_t> doubleToInt32ValueStubOffset_{0};
 
   // Thunk used by the debugger for breakpoint and step mode.
-  mozilla::EnumeratedArray<DebugTrapHandlerKind, DebugTrapHandlerKind::Count,
-                           WriteOnceData<JitCode*>>
-      debugTrapHandlers_;
+  using DebugHandlerArray =
+      mozilla::EnumeratedArray<DebugTrapHandlerKind,
+                               DebugTrapHandlerKind::Count,
+                               WriteOnceData<JitCode*>>;
+  DebugHandlerArray debugTrapHandlers_;
 
   // BaselineInterpreter state.
-  BaselineInterpreter baselineInterpreter_;
+  MainThreadData<BaselineInterpreter> baselineInterpreter_;
 
   // Code for trampolines and VMFunction wrappers.
   WriteOnceData<JitCode*> trampolineCode_{nullptr};
@@ -206,7 +208,8 @@ class JitRuntime {
   WriteOnceData<VMWrapperMap*> functionWrappers_{nullptr};
 
   // Maps VMFunctionId to the offset of the wrapper code in trampolineCode_.
-  using VMWrapperOffsets = Vector<uint32_t, 0, SystemAllocPolicy>;
+  using VMWrapperOffsets =
+      Vector<WriteOnceData<uint32_t>, 0, SystemAllocPolicy>;
   VMWrapperOffsets functionWrapperOffsets_;
 
   // Maps TailCallVMFunctionId to the offset of the wrapper code in
@@ -227,8 +230,8 @@ class JitRuntime {
   // Number of Ion compilations which were finished off thread and are
   // waiting to be lazily linked. This is only set while holding the helper
   // thread state lock, but may be read from at other times.
-  typedef mozilla::Atomic<size_t, mozilla::SequentiallyConsistent>
-      NumFinishedOffThreadTasksType;
+  using NumFinishedOffThreadTasksType =
+      mozilla::Atomic<size_t, mozilla::SequentiallyConsistent>;
   NumFinishedOffThreadTasksType numFinishedOffThreadTasks_{0};
 
   // List of Ion compilation waiting to get linked.
@@ -335,7 +338,9 @@ class JitRuntime {
 
   JitCode* debugTrapHandler(JSContext* cx, DebugTrapHandlerKind kind);
 
-  BaselineInterpreter& baselineInterpreter() { return baselineInterpreter_; }
+  BaselineInterpreter& baselineInterpreter() {
+    return baselineInterpreter_.ref();
+  }
 
   TrampolinePtr getGenericBailoutHandler() const {
     return trampolineCode(bailoutHandlerOffset_);
