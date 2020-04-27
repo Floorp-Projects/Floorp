@@ -3241,6 +3241,12 @@
   value: false
   mirror: always
 
+# Whether user pastes should be truncated.
+- name: editor.truncate_user_pastes
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "extensions."
 #---------------------------------------------------------------------------
