@@ -79,6 +79,10 @@ class AntiTrackingUtils final {
   static bool GetPrincipalAndTrackingOrigin(
       dom::BrowsingContext* aBrowsingContext, nsIPrincipal** aPrincipal,
       nsACString& aTrackingOrigin);
+
+  // Retruns true if the given browsingContext is a first-level sub context,
+  // i.e. a first-level iframe.
+  static bool IsFirstLevelSubContext(dom::BrowsingContext* aBrowsingContext);
 };
 
 }  // namespace mozilla
