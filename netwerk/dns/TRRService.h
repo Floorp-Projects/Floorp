@@ -96,12 +96,25 @@ class TRRService : public nsIObserver,
   // Will return true if performed the change (if the value was different)
   // or false if mPrivateURI already had that value.
   bool MaybeSetPrivateURI(const nsACString& aURI);
+  // Checks the network.trr.uri or the doh-rollout.uri prefs and sets the URI
+  // in order of preference:
+  // 1. The value of network.trr.uri if it is not the default one, meaning
+  //    is was set by an explicit user action
+  // 2. The value of doh-rollout.uri if it exists
+  //    this is set by the rollout addon
+  // 3. The default value of network.trr.uri
+  void CheckURIPrefs();
   void ProcessURITemplate(nsACString& aURI);
   void ClearEntireCache();
 
   bool mInitialized;
   Atomic<uint32_t, Relaxed> mMode;
   Atomic<uint32_t, Relaxed> mTRRBlacklistExpireTime;
+
+  // Pref caches should only be used on the main thread.
+  nsCString mURIPref;
+  bool mURIPrefHasUserValue = false;
+  nsCString mRolloutURIPref;
 
   Mutex mLock;
 
