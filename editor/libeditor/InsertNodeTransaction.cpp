@@ -7,6 +7,8 @@
 
 #include "mozilla/EditorBase.h"      // for EditorBase
 #include "mozilla/EditorDOMPoint.h"  // for EditorDOMPoint
+#include "mozilla/HTMLEditor.h"      // for HTMLEditor
+#include "mozilla/TextEditor.h"      // for TextEditor
 
 #include "mozilla/dom/Selection.h"  // for Selection
 

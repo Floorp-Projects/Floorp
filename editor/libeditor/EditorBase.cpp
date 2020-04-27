@@ -38,6 +38,7 @@
 #include "mozilla/EditorUtils.h"              // for various helper classes.
 #include "mozilla/EditTransactionBase.h"      // for EditTransactionBase
 #include "mozilla/FlushType.h"                // for FlushType::Frames
+#include "mozilla/HTMLEditor.h"               // for HTMLEditor
 #include "mozilla/IMEContentObserver.h"       // for IMEContentObserver
 #include "mozilla/IMEStateManager.h"          // for IMEStateManager
 #include "mozilla/InputEventOptions.h"        // for InputEventOptions
@@ -57,6 +58,7 @@
 #include "mozilla/TextComposition.h"     // for TextComposition
 #include "mozilla/TextInputListener.h"   // for TextInputListener
 #include "mozilla/TextServicesDocument.h"  // for TextServicesDocument
+#include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TransactionManager.h"  // for TransactionManager
 #include "mozilla/Tuple.h"

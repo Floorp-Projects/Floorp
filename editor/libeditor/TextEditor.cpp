@@ -9,6 +9,7 @@
 
 #include "EditAggregateTransaction.h"
 #include "InternetCiter.h"
+#include "PlaceholderTransaction.h"
 #include "gfxFontUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ContentIterator.h"

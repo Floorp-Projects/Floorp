@@ -23,6 +23,7 @@
 #include "nsIContent.h"                // for nsIContent, etc
 #include "nsID.h"                      // for NS_GET_IID
 #include "nsIEditor.h"                 // for nsIEditor, etc
+#include "nsIEditorSpellCheck.h"       // for nsIEditorSpellCheck, etc
 #include "nsINode.h"                   // for nsINode
 #include "nsISelectionController.h"    // for nsISelectionController, etc
 #include "nsISupportsBase.h"           // for nsISupports

@@ -409,7 +409,7 @@ class MOZ_STACK_CLASS WSRunScanner {
   /**
    * Active editing host when this instance is created.
    */
-  Element* GetEditingHost() const { return mEditingHost; }
+  dom::Element* GetEditingHost() const { return mEditingHost; }
 
  protected:
   using EditorType = EditorBase::EditorType;
@@ -614,7 +614,7 @@ class MOZ_STACK_CLASS WSRunScanner {
   // info.
 
   // The editing host when the instance is created.
-  RefPtr<Element> mEditingHost;
+  RefPtr<dom::Element> mEditingHost;
 
   // true if we are in preformatted whitespace context.
   bool mPRE;
@@ -762,7 +762,7 @@ class MOZ_STACK_CLASS WSRunObject final : public WSRunScanner {
    *                        node, returns nullptr.
    */
   MOZ_CAN_RUN_SCRIPT already_AddRefed<dom::Element> InsertBreak(
-      Selection& aSelection, const EditorDOMPoint& aPointToInsert,
+      dom::Selection& aSelection, const EditorDOMPoint& aPointToInsert,
       nsIEditor::EDirection aSelect);
 
   /**
