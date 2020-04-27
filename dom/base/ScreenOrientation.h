@@ -54,6 +54,8 @@ class ScreenOrientation final
   void Notify(const mozilla::hal::ScreenConfiguration& aConfiguration) override;
 
   static void UpdateActiveOrientationLock(hal::ScreenOrientation aOrientation);
+  static void AbortInProcessOrientationPromises(
+      BrowsingContext* aBrowsingContext);
 
  private:
   virtual ~ScreenOrientation();

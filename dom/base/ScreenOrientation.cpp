@@ -15,6 +15,7 @@
 #include "mozilla/Hal.h"
 #include "mozilla/Preferences.h"
 
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Promise.h"
 #include "nsContentUtils.h"
@@ -249,33 +250,25 @@ already_AddRefed<Promise> ScreenOrientation::Lock(
   return LockInternal(orientation, aRv);
 }
 
-#if defined(MOZ_WIDGET_ANDROID)
-static inline void AbortOrientationPromises(nsIDocShell* aDocShell) {
-  MOZ_ASSERT(aDocShell);
+void ScreenOrientation::AbortInProcessOrientationPromises(
+    BrowsingContext* aBrowsingContext) {
+  MOZ_ASSERT(aBrowsingContext);
 
-  Document* doc = aDocShell->GetDocument();
-  if (doc) {
-    Promise* promise = doc->GetOrientationPendingPromise();
-    if (promise) {
-      promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-      doc->ClearOrientationPendingPromise();
-    }
-  }
-
-  int32_t childCount;
-  aDocShell->GetInProcessChildCount(&childCount);
-  for (int32_t i = 0; i < childCount; i++) {
-    nsCOMPtr<nsIDocShellTreeItem> child;
-    if (NS_SUCCEEDED(
-            aDocShell->GetInProcessChildAt(i, getter_AddRefs(child)))) {
-      nsCOMPtr<nsIDocShell> childShell(do_QueryInterface(child));
-      if (childShell) {
-        AbortOrientationPromises(childShell);
+  aBrowsingContext = aBrowsingContext->Top();
+  aBrowsingContext->PreOrderWalk([](BrowsingContext* aContext) {
+    nsIDocShell* docShell = aContext->GetDocShell();
+    if (docShell) {
+      Document* doc = docShell->GetDocument();
+      if (doc) {
+        Promise* promise = doc->GetOrientationPendingPromise();
+        if (promise) {
+          promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+          doc->ClearOrientationPendingPromise();
+        }
       }
     }
-  }
+  });
 }
-#endif
 
 already_AddRefed<Promise> ScreenOrientation::LockInternal(
     hal::ScreenOrientation aOrientation, ErrorResult& aRv) {
@@ -317,16 +310,17 @@ already_AddRefed<Promise> ScreenOrientation::LockInternal(
     return p.forget();
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> root;
-  docShell->GetInProcessSameTypeRootTreeItem(getter_AddRefs(root));
-  nsCOMPtr<nsIDocShell> rootShell(do_QueryInterface(root));
-  if (!rootShell) {
+  RefPtr<BrowsingContext> bc = docShell->GetBrowsingContext();
+  bc = bc ? bc->Top() : nullptr;
+  if (!bc) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
-  rootShell->SetOrientationLock(aOrientation);
-  AbortOrientationPromises(rootShell);
+  bc->SetOrientationLock(aOrientation);
+  AbortInProcessOrientationPromises(bc);
+  dom::ContentChild::GetSingleton()->SendAbortOtherOrientationPendingPromises(
+      bc);
 
   if (!doc->SetOrientationPendingPromise(p)) {
     p->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);

@@ -1281,6 +1281,9 @@ class ContentParent final
       PSHEntryParent* aNewLSHE, PSHEntryParent* aNewOSHE,
       const MaybeDiscarded<BrowsingContext>& aMaybeContext);
 
+  mozilla::ipc::IPCResult RecvAbortOtherOrientationPendingPromises(
+      const MaybeDiscarded<BrowsingContext>& aContext);
+
   // Notify the ContentChild to enable the input event prioritization when
   // initializing.
   void MaybeEnableRemoteInputEventQueue();

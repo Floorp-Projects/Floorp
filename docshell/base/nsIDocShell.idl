@@ -760,9 +760,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   [infallible] readonly attribute boolean fullscreenAllowed;
 
-  [notxpcom] uint32_t orientationLock();
-  [notxpcom] void setOrientationLock(in uint32_t orientationLock);
-
   [noscript, infallible] attribute boolean affectPrivateSessionLifetime;
 
   /**

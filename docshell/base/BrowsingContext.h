@@ -8,6 +8,7 @@
 #define mozilla_dom_BrowsingContext_h
 
 #include "GVAutoplayRequestUtils.h"
+#include "mozilla/HalScreenConfiguration.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
@@ -122,6 +123,7 @@ class WindowProxyHolder;
   /* ScreenOrientation-related APIs */                                       \
   FIELD(CurrentOrientationAngle, float)                                      \
   FIELD(CurrentOrientationType, mozilla::dom::OrientationType)               \
+  FIELD(OrientationLock, mozilla::hal::ScreenOrientation)                    \
   FIELD(UserAgentOverride, nsString)                                         \
   FIELD(EmbedderElementType, Maybe<nsString>)                                \
   FIELD(MessageManagerGroup, nsString)                                       \
@@ -698,6 +700,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   void DidSet(FieldIndex<IDX_UserAgentOverride>);
   bool CanSet(FieldIndex<IDX_UserAgentOverride>, const nsString& aUserAgent,
+              ContentParent* aSource);
+  bool CanSet(FieldIndex<IDX_OrientationLock>,
+              const mozilla::hal::ScreenOrientation& aOrientationLock,
               ContentParent* aSource);
 
   bool CanSet(FieldIndex<IDX_EmbedderElementType>,
