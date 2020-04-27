@@ -92,6 +92,9 @@ class TRRService : public nsIObserver,
   nsresult DispatchTRRRequestInternal(TRR* aTrrRequest, bool aWithLock);
   already_AddRefed<nsIThread> TRRThread_locked();
 
+  void ProcessURITemplate(nsACString& aURI);
+  void ClearEntireCache();
+
   bool mInitialized;
   Atomic<uint32_t, Relaxed> mMode;
   Atomic<uint32_t, Relaxed> mTRRBlacklistExpireTime;

@@ -1776,3 +1776,17 @@ add_task(async function test_fqdn_get() {
 
   Services.prefs.setBoolPref("network.trr.useGET", false);
 });
+
+add_task(async function test_detected_uri() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/doh?responseIP=3.4.5.6`
+  );
+  await new DNSListener("domainA.example.org.", "3.4.5.6");
+  dns.setDetectedTrrURI(
+    `https://foo.example.com:${h2Port}/doh?responseIP=1.2.3.4`
+  );
+  await new DNSListener("domainB.example.org.", "1.2.3.4");
+});
