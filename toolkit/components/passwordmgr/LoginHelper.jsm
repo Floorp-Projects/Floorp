@@ -333,6 +333,12 @@ this.LoginHelper = {
       return true;
     }
 
+    // We can only match logins now if either of these flags are true, so
+    // avoid doing the work of constructing URL objects if neither is true.
+    if (!aOptions.acceptDifferentSubdomains && !aOptions.schemeUpgrades) {
+      return false;
+    }
+
     try {
       let loginURI = Services.io.newURI(aLoginOrigin);
       let searchURI = Services.io.newURI(aSearchOrigin);
