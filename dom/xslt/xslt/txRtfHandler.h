@@ -13,7 +13,7 @@
 
 class txResultTreeFragment : public txAExprResult {
  public:
-  explicit txResultTreeFragment(nsAutoPtr<txResultBuffer>&& aBuffer);
+  explicit txResultTreeFragment(mozilla::UniquePtr<txResultBuffer>&& aBuffer);
 
   TX_DECL_EXPRRESULT
 
@@ -27,8 +27,8 @@ class txResultTreeFragment : public txAExprResult {
   const txXPathNode* getNode() const { return mNode.get(); }
 
  private:
-  nsAutoPtr<txResultBuffer> mBuffer;
-  nsAutoPtr<const txXPathNode> mNode;
+  mozilla::UniquePtr<txResultBuffer> mBuffer;
+  mozilla::UniquePtr<const txXPathNode> mNode;
 };
 
 class txRtfHandler : public txBufferingHandler {

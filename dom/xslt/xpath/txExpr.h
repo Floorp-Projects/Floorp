@@ -432,8 +432,8 @@ class txPredicatedNodeTest : public txNodeTest {
   TX_DECL_NODE_TEST
 
  private:
-  nsAutoPtr<txNodeTest> mNodeTest;
-  nsAutoPtr<Expr> mPredicate;
+  mozilla::UniquePtr<txNodeTest> mNodeTest;
+  mozilla::UniquePtr<Expr> mPredicate;
 };
 
 /**
@@ -557,7 +557,7 @@ class LocationStep : public Expr, public PredicateList {
                                         txIMatchContext* aContext,
                                         txNodeSet* aNodes);
 
-  nsAutoPtr<txNodeTest> mNodeTest;
+  mozilla::UniquePtr<txNodeTest> mNodeTest;
   LocationStepType mAxisIdentifier;
 };
 
@@ -572,7 +572,7 @@ class FilterExpr : public Expr, public PredicateList {
   TX_DECL_EXPR
 
  private:
-  nsAutoPtr<Expr> expr;
+  mozilla::UniquePtr<Expr> expr;
 
 };  //-- FilterExpr
 
@@ -600,7 +600,7 @@ class UnaryExpr : public Expr {
   TX_DECL_EXPR
 
  private:
-  nsAutoPtr<Expr> expr;
+  mozilla::UniquePtr<Expr> expr;
 };  //-- UnaryExpr
 
 /**
@@ -618,7 +618,7 @@ class BooleanExpr : public Expr {
   TX_DECL_EXPR
 
  private:
-  nsAutoPtr<Expr> leftExpr, rightExpr;
+  mozilla::UniquePtr<Expr> leftExpr, rightExpr;
   short op;
 };  //-- BooleanExpr
 
@@ -640,7 +640,7 @@ class txNumberExpr : public Expr {
   TX_DECL_EXPR
 
  private:
-  nsAutoPtr<Expr> mLeftExpr, mRightExpr;
+  mozilla::UniquePtr<Expr> mLeftExpr, mRightExpr;
   eOp mOp;
 };  //-- MultiplicativeExpr
 
@@ -674,8 +674,8 @@ class RelationalExpr : public Expr {
   bool compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
                       txAExprResult* aRight);
 
-  nsAutoPtr<Expr> mLeftExpr;
-  nsAutoPtr<Expr> mRightExpr;
+  mozilla::UniquePtr<Expr> mLeftExpr;
+  mozilla::UniquePtr<Expr> mRightExpr;
   RelationalExprType mOp;
 };
 
@@ -736,7 +736,7 @@ class PathExpr : public Expr {
  private:
   class PathExprItem {
    public:
-    nsAutoPtr<Expr> expr;
+    mozilla::UniquePtr<Expr> expr;
     PathOperator pathOp;
   };
 

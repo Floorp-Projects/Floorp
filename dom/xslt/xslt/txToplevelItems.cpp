@@ -35,7 +35,7 @@ nsresult txStripSpaceItem::addStripSpaceTest(
 
 TX_IMPL_GETTYPE(txTemplateItem, txToplevelItem::templ)
 
-txTemplateItem::txTemplateItem(nsAutoPtr<txPattern>&& aMatch,
+txTemplateItem::txTemplateItem(UniquePtr<txPattern>&& aMatch,
                                const txExpandedName& aName,
                                const txExpandedName& aMode, double aPrio)
     : mMatch(std::move(aMatch)), mName(aName), mMode(aMode), mPrio(aPrio) {}
@@ -43,5 +43,5 @@ txTemplateItem::txTemplateItem(nsAutoPtr<txPattern>&& aMatch,
 TX_IMPL_GETTYPE(txVariableItem, txToplevelItem::variable)
 
 txVariableItem::txVariableItem(const txExpandedName& aName,
-                               nsAutoPtr<Expr>&& aValue, bool aIsParam)
+                               UniquePtr<Expr>&& aValue, bool aIsParam)
     : mName(aName), mValue(std::move(aValue)), mIsParam(aIsParam) {}

@@ -54,18 +54,19 @@ class txStylesheet final {
   /**
    * Add a key to the stylesheet
    */
-  nsresult addKey(const txExpandedName& aName, nsAutoPtr<txPattern> aMatch,
-                  nsAutoPtr<Expr> aUse);
+  nsresult addKey(const txExpandedName& aName,
+                  mozilla::UniquePtr<txPattern> aMatch,
+                  mozilla::UniquePtr<Expr> aUse);
 
   /**
    * Add a decimal-format to the stylesheet
    */
   nsresult addDecimalFormat(const txExpandedName& aName,
-                            nsAutoPtr<txDecimalFormat>&& aFormat);
+                            mozilla::UniquePtr<txDecimalFormat>&& aFormat);
 
   struct MatchableTemplate {
     txInstruction* mFirstInstruction;
-    nsAutoPtr<txPattern> mMatch;
+    mozilla::UniquePtr<txPattern> mMatch;
     double mPriority;
   };
 
@@ -89,11 +90,12 @@ class txStylesheet final {
 
   class GlobalVariable : public txObject {
    public:
-    GlobalVariable(nsAutoPtr<Expr>&& aExpr,
-                   nsAutoPtr<txInstruction>&& aFirstInstruction, bool aIsParam);
+    GlobalVariable(mozilla::UniquePtr<Expr>&& aExpr,
+                   mozilla::UniquePtr<txInstruction>&& aFirstInstruction,
+                   bool aIsParam);
 
-    nsAutoPtr<Expr> mExpr;
-    nsAutoPtr<txInstruction> mFirstInstruction;
+    mozilla::UniquePtr<Expr> mExpr;
+    mozilla::UniquePtr<txInstruction> mFirstInstruction;
     bool mIsParam;
   };
 
@@ -137,12 +139,12 @@ class txStylesheet final {
   txOwningExpandedNameMap<txXSLKey> mKeys;
 
   // Array of all txStripSpaceTests, sorted in acending order
-  nsTArray<nsAutoPtr<txStripSpaceTest> > mStripSpaceTests;
+  nsTArray<mozilla::UniquePtr<txStripSpaceTest> > mStripSpaceTests;
 
   // Default templates
-  nsAutoPtr<txInstruction> mContainerTemplate;
-  nsAutoPtr<txInstruction> mCharactersTemplate;
-  nsAutoPtr<txInstruction> mEmptyTemplate;
+  mozilla::UniquePtr<txInstruction> mContainerTemplate;
+  mozilla::UniquePtr<txInstruction> mCharactersTemplate;
+  mozilla::UniquePtr<txInstruction> mEmptyTemplate;
 };
 
 /**

@@ -7,7 +7,7 @@
 
 #include <utility>
 
-txResultTreeFragment::txResultTreeFragment(nsAutoPtr<txResultBuffer>&& aBuffer)
+txResultTreeFragment::txResultTreeFragment(UniquePtr<txResultBuffer>&& aBuffer)
     : txAExprResult(nullptr), mBuffer(std::move(aBuffer)) {}
 
 short txResultTreeFragment::getResultType() { return RESULT_TREE_FRAGMENT; }

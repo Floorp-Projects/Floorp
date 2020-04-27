@@ -21,7 +21,7 @@ nsresult txPatternParser::createPattern(const nsString& aPattern,
     // XXX error report parsing error
     return rv;
   }
-  nsAutoPtr<txPattern> pattern;
+  UniquePtr<txPattern> pattern;
   rv = createUnionPattern(lexer, aContext, *getter_Transfers(pattern));
   if (NS_FAILED(rv)) {
     // XXX error report parsing error
@@ -277,7 +277,7 @@ nsresult txPatternParser::createStepPattern(txExprLexer& aLexer,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsAutoPtr<txStepPattern> step(new txStepPattern(nodeTest, isAttr));
+  UniquePtr<txStepPattern> step(new txStepPattern(nodeTest, isAttr));
   rv = parsePredicates(step.get(), aLexer, aContext);
   NS_ENSURE_SUCCESS(rv, rv);
 

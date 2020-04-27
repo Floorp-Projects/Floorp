@@ -40,7 +40,7 @@ class txToplevelItem {
 
 class txInstructionContainer : public txToplevelItem {
  public:
-  nsAutoPtr<txInstruction> mFirstInstruction;
+  mozilla::UniquePtr<txInstruction> mFirstInstruction;
 };
 
 // xsl:attribute-set
@@ -58,7 +58,7 @@ class txImportItem : public txToplevelItem {
  public:
   TX_DECL_TOPLEVELITEM
 
-  nsAutoPtr<txStylesheet::ImportFrame> mFrame;
+  mozilla::UniquePtr<txStylesheet::ImportFrame> mFrame;
 };
 
 // xsl:output
@@ -90,12 +90,13 @@ class txStripSpaceItem : public txToplevelItem {
 // xsl:template
 class txTemplateItem : public txInstructionContainer {
  public:
-  txTemplateItem(nsAutoPtr<txPattern>&& aMatch, const txExpandedName& aName,
-                 const txExpandedName& aMode, double aPrio);
+  txTemplateItem(mozilla::UniquePtr<txPattern>&& aMatch,
+                 const txExpandedName& aName, const txExpandedName& aMode,
+                 double aPrio);
 
   TX_DECL_TOPLEVELITEM
 
-  nsAutoPtr<txPattern> mMatch;
+  mozilla::UniquePtr<txPattern> mMatch;
   txExpandedName mName;
   txExpandedName mMode;
   double mPrio;
@@ -104,13 +105,13 @@ class txTemplateItem : public txInstructionContainer {
 // xsl:variable at top level
 class txVariableItem : public txInstructionContainer {
  public:
-  txVariableItem(const txExpandedName& aName, nsAutoPtr<Expr>&& aValue,
+  txVariableItem(const txExpandedName& aName, mozilla::UniquePtr<Expr>&& aValue,
                  bool aIsParam);
 
   TX_DECL_TOPLEVELITEM
 
   txExpandedName mName;
-  nsAutoPtr<Expr> mValue;
+  mozilla::UniquePtr<Expr> mValue;
   bool mIsParam;
 };
 

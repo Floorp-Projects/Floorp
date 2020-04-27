@@ -242,7 +242,7 @@ nsresult XPathResult::GetExprResult(txAExprResult** aExprResult) {
 
   uint32_t i, count = mResultNodes.Count();
   for (i = 0; i < count; ++i) {
-    nsAutoPtr<txXPathNode> node(
+    UniquePtr<txXPathNode> node(
         txXPathNativeNode::createXPathNode(mResultNodes[i]));
     if (!node) {
       return NS_ERROR_OUT_OF_MEMORY;

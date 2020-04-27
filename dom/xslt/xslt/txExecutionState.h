@@ -44,7 +44,7 @@ class txLoadedDocumentEntry : public nsStringHashKey {
     return NS_FAILED(mLoadResult);
   }
 
-  nsAutoPtr<txXPathNode> mDocument;
+  mozilla::UniquePtr<txXPathNode> mDocument;
   nsresult mLoadResult;
 };
 
@@ -56,7 +56,7 @@ class txLoadedDocumentsHash : public nsTHashtable<txLoadedDocumentEntry> {
 
  private:
   friend class txExecutionState;
-  nsAutoPtr<txXPathNode> mSourceDocument;
+  mozilla::UniquePtr<txXPathNode> mSourceDocument;
 };
 
 class txExecutionState : public txIMatchContext {
@@ -125,7 +125,7 @@ class txExecutionState : public txIMatchContext {
 
   txAXMLEventHandler* mOutputHandler;
   txAXMLEventHandler* mResultHandler;
-  nsAutoPtr<txAXMLEventHandler> mObsoleteHandler;
+  mozilla::UniquePtr<txAXMLEventHandler> mObsoleteHandler;
   txAOutputHandlerFactory* mOutputHandlerFactory;
 
   RefPtr<txParameterMap> mTemplateParams;

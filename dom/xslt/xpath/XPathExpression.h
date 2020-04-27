@@ -29,8 +29,8 @@ class XPathResult;
  */
 class XPathExpression final : public NonRefcountedDOMObject {
  public:
-  XPathExpression(nsAutoPtr<Expr>&& aExpression, txResultRecycler* aRecycler,
-                  Document* aDocument);
+  XPathExpression(mozilla::UniquePtr<Expr>&& aExpression,
+                  txResultRecycler* aRecycler, Document* aDocument);
   ~XPathExpression();
 
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
@@ -58,7 +58,7 @@ class XPathExpression final : public NonRefcountedDOMObject {
       uint16_t aType, XPathResult* aInResult, ErrorResult& aRv);
 
  private:
-  nsAutoPtr<Expr> mExpression;
+  mozilla::UniquePtr<Expr> mExpression;
   RefPtr<txResultRecycler> mRecycler;
   nsWeakPtr mDocument;
   bool mCheckDocument;

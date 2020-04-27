@@ -38,7 +38,7 @@ class txBufferingHandler : public txAXMLEventHandler {
   TX_DECL_TXAXMLEVENTHANDLER
 
  protected:
-  nsAutoPtr<txResultBuffer> mBuffer;
+  mozilla::UniquePtr<txResultBuffer> mBuffer;
   bool mCanAddAttribute;
 };
 

@@ -37,7 +37,7 @@ nsresult txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
                                       Expr* aDataTypeExpr, Expr* aOrderExpr,
                                       Expr* aCaseOrderExpr,
                                       txIEvalContext* aContext) {
-  nsAutoPtr<SortKey> key(new SortKey);
+  UniquePtr<SortKey> key(new SortKey);
   nsresult rv = NS_OK;
 
   // Select

@@ -27,7 +27,7 @@ class txInstruction : public txObject {
 
   virtual nsresult execute(txExecutionState& aEs) = 0;
 
-  nsAutoPtr<txInstruction> mNext;
+  mozilla::UniquePtr<txInstruction> mNext;
 };
 
 #define TX_DECL_TXINSTRUCTION \
@@ -59,13 +59,13 @@ class txApplyTemplates : public txInstruction {
 
 class txAttribute : public txInstruction {
  public:
-  txAttribute(nsAutoPtr<Expr>&& aName, nsAutoPtr<Expr>&& aNamespace,
-              txNamespaceMap* aMappings);
+  txAttribute(mozilla::UniquePtr<Expr>&& aName,
+              mozilla::UniquePtr<Expr>&& aNamespace, txNamespaceMap* aMappings);
 
   TX_DECL_TXINSTRUCTION
 
-  nsAutoPtr<Expr> mName;
-  nsAutoPtr<Expr> mNamespace;
+  mozilla::UniquePtr<Expr> mName;
+  mozilla::UniquePtr<Expr> mNamespace;
   RefPtr<txNamespaceMap> mMappings;
 };
 
@@ -90,11 +90,12 @@ class txCheckParam : public txInstruction {
 
 class txConditionalGoto : public txInstruction {
  public:
-  txConditionalGoto(nsAutoPtr<Expr>&& aCondition, txInstruction* aTarget);
+  txConditionalGoto(mozilla::UniquePtr<Expr>&& aCondition,
+                    txInstruction* aTarget);
 
   TX_DECL_TXINSTRUCTION
 
-  nsAutoPtr<Expr> mCondition;
+  mozilla::UniquePtr<Expr> mCondition;
   txInstruction* mTarget;
 };
 
@@ -119,11 +120,11 @@ class txCopy : public txCopyBase {
 
 class txCopyOf : public txCopyBase {
  public:
-  explicit txCopyOf(nsAutoPtr<Expr>&& aSelect);
+  explicit txCopyOf(mozilla::UniquePtr<Expr>&& aSelect);
 
   TX_DECL_TXINSTRUCTION
 
-  nsAutoPtr<Expr> mSelect;
+  mozilla::UniquePtr<Expr> mSelect;
 };
 
 class txEndElement : public txInstruction {
@@ -166,7 +167,7 @@ class txLoopNodeSet : public txInstruction {
 class txLREAttribute : public txInstruction {
  public:
   txLREAttribute(int32_t aNamespaceID, nsAtom* aLocalName, nsAtom* aPrefix,
-                 nsAutoPtr<Expr>&& aValue);
+                 mozilla::UniquePtr<Expr>&& aValue);
 
   TX_DECL_TXINSTRUCTION
 
@@ -174,7 +175,7 @@ class txLREAttribute : public txInstruction {
   RefPtr<nsAtom> mLocalName;
   RefPtr<nsAtom> mLowercaseLocalName;
   RefPtr<nsAtom> mPrefix;
-  nsAutoPtr<Expr> mValue;
+  mozilla::UniquePtr<Expr> mValue;
 };
 
 class txMessage : public txInstruction {
@@ -188,20 +189,23 @@ class txMessage : public txInstruction {
 
 class txNumber : public txInstruction {
  public:
-  txNumber(txXSLTNumber::LevelType aLevel, nsAutoPtr<txPattern>&& aCount,
-           nsAutoPtr<txPattern>&& aFrom, nsAutoPtr<Expr>&& aValue,
-           nsAutoPtr<Expr>&& aFormat, nsAutoPtr<Expr>&& aGroupingSeparator,
-           nsAutoPtr<Expr>&& aGroupingSize);
+  txNumber(txXSLTNumber::LevelType aLevel,
+           mozilla::UniquePtr<txPattern>&& aCount,
+           mozilla::UniquePtr<txPattern>&& aFrom,
+           mozilla::UniquePtr<Expr>&& aValue,
+           mozilla::UniquePtr<Expr>&& aFormat,
+           mozilla::UniquePtr<Expr>&& aGroupingSeparator,
+           mozilla::UniquePtr<Expr>&& aGroupingSize);
 
   TX_DECL_TXINSTRUCTION
 
   txXSLTNumber::LevelType mLevel;
-  nsAutoPtr<txPattern> mCount;
-  nsAutoPtr<txPattern> mFrom;
-  nsAutoPtr<Expr> mValue;
-  nsAutoPtr<Expr> mFormat;
-  nsAutoPtr<Expr> mGroupingSeparator;
-  nsAutoPtr<Expr> mGroupingSize;
+  mozilla::UniquePtr<txPattern> mCount;
+  mozilla::UniquePtr<txPattern> mFrom;
+  mozilla::UniquePtr<Expr> mValue;
+  mozilla::UniquePtr<Expr> mFormat;
+  mozilla::UniquePtr<Expr> mGroupingSeparator;
+  mozilla::UniquePtr<Expr> mGroupingSize;
 };
 
 class txPopParams : public txInstruction {
@@ -211,35 +215,36 @@ class txPopParams : public txInstruction {
 
 class txProcessingInstruction : public txInstruction {
  public:
-  explicit txProcessingInstruction(nsAutoPtr<Expr>&& aName);
+  explicit txProcessingInstruction(mozilla::UniquePtr<Expr>&& aName);
 
   TX_DECL_TXINSTRUCTION
 
-  nsAutoPtr<Expr> mName;
+  mozilla::UniquePtr<Expr> mName;
 };
 
 class txPushNewContext : public txInstruction {
  public:
-  explicit txPushNewContext(nsAutoPtr<Expr>&& aSelect);
+  explicit txPushNewContext(mozilla::UniquePtr<Expr>&& aSelect);
   ~txPushNewContext();
 
   TX_DECL_TXINSTRUCTION
 
-  nsresult addSort(nsAutoPtr<Expr>&& aSelectExpr, nsAutoPtr<Expr>&& aLangExpr,
-                   nsAutoPtr<Expr>&& aDataTypeExpr,
-                   nsAutoPtr<Expr>&& aOrderExpr,
-                   nsAutoPtr<Expr>&& aCaseOrderExpr);
+  nsresult addSort(mozilla::UniquePtr<Expr>&& aSelectExpr,
+                   mozilla::UniquePtr<Expr>&& aLangExpr,
+                   mozilla::UniquePtr<Expr>&& aDataTypeExpr,
+                   mozilla::UniquePtr<Expr>&& aOrderExpr,
+                   mozilla::UniquePtr<Expr>&& aCaseOrderExpr);
 
   struct SortKey {
-    nsAutoPtr<Expr> mSelectExpr;
-    nsAutoPtr<Expr> mLangExpr;
-    nsAutoPtr<Expr> mDataTypeExpr;
-    nsAutoPtr<Expr> mOrderExpr;
-    nsAutoPtr<Expr> mCaseOrderExpr;
+    mozilla::UniquePtr<Expr> mSelectExpr;
+    mozilla::UniquePtr<Expr> mLangExpr;
+    mozilla::UniquePtr<Expr> mDataTypeExpr;
+    mozilla::UniquePtr<Expr> mOrderExpr;
+    mozilla::UniquePtr<Expr> mCaseOrderExpr;
   };
 
   nsTArray<SortKey> mSortKeys;
-  nsAutoPtr<Expr> mSelect;
+  mozilla::UniquePtr<Expr> mSelect;
   txInstruction* mBailTarget;
 };
 
@@ -283,33 +288,34 @@ class txReturn : public txInstruction {
 
 class txSetParam : public txInstruction {
  public:
-  txSetParam(const txExpandedName& aName, nsAutoPtr<Expr>&& aValue);
+  txSetParam(const txExpandedName& aName, mozilla::UniquePtr<Expr>&& aValue);
 
   TX_DECL_TXINSTRUCTION
 
   txExpandedName mName;
-  nsAutoPtr<Expr> mValue;
+  mozilla::UniquePtr<Expr> mValue;
 };
 
 class txSetVariable : public txInstruction {
  public:
-  txSetVariable(const txExpandedName& aName, nsAutoPtr<Expr>&& aValue);
+  txSetVariable(const txExpandedName& aName, mozilla::UniquePtr<Expr>&& aValue);
 
   TX_DECL_TXINSTRUCTION
 
   txExpandedName mName;
-  nsAutoPtr<Expr> mValue;
+  mozilla::UniquePtr<Expr> mValue;
 };
 
 class txStartElement : public txInstruction {
  public:
-  txStartElement(nsAutoPtr<Expr>&& aName, nsAutoPtr<Expr>&& aNamespace,
+  txStartElement(mozilla::UniquePtr<Expr>&& aName,
+                 mozilla::UniquePtr<Expr>&& aNamespace,
                  txNamespaceMap* aMappings);
 
   TX_DECL_TXINSTRUCTION
 
-  nsAutoPtr<Expr> mName;
-  nsAutoPtr<Expr> mNamespace;
+  mozilla::UniquePtr<Expr> mName;
+  mozilla::UniquePtr<Expr> mNamespace;
   RefPtr<txNamespaceMap> mMappings;
 };
 
@@ -337,11 +343,11 @@ class txText : public txInstruction {
 
 class txValueOf : public txInstruction {
  public:
-  txValueOf(nsAutoPtr<Expr>&& aExpr, bool aDOE);
+  txValueOf(mozilla::UniquePtr<Expr>&& aExpr, bool aDOE);
 
   TX_DECL_TXINSTRUCTION
 
-  nsAutoPtr<Expr> mExpr;
+  mozilla::UniquePtr<Expr> mExpr;
   bool mDOE;
 };
 

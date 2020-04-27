@@ -330,7 +330,7 @@ void txIdPattern::toString(nsAString& aDest) {
 nsresult txKeyPattern::matches(const txXPathNode& aNode,
                                txIMatchContext* aContext, bool& aMatched) {
   txExecutionState* es = (txExecutionState*)aContext->getPrivateContext();
-  nsAutoPtr<txXPathNode> contextDoc(txXPathNodeUtils::getOwnerDocument(aNode));
+  UniquePtr<txXPathNode> contextDoc(txXPathNodeUtils::getOwnerDocument(aNode));
   NS_ENSURE_TRUE(contextDoc, NS_ERROR_FAILURE);
 
   RefPtr<txNodeSet> nodes;
