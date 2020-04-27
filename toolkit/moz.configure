@@ -1989,6 +1989,19 @@ def glean(milestone):
 set_config('MOZ_GLEAN', True, when=glean)
 set_define('MOZ_GLEAN', True, when=glean)
 
+
+# New WebExtension `storage.sync` implementation in Rust
+# ==============================================================
+
+@depends(milestone)
+def new_webext_storage(milestone):
+    if milestone.is_nightly:
+        return True
+
+set_config('MOZ_NEW_WEBEXT_STORAGE', True, when=new_webext_storage)
+set_define('MOZ_NEW_WEBEXT_STORAGE', True, when=new_webext_storage)
+
+
 # dump_syms
 # ==============================================================
 
