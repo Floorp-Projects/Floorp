@@ -9,6 +9,7 @@ publish = false
 glean-core = "25.1.0"
 log = "0.4"
 once_cell = "1.2.0"
+uuid = { version = "0.8.1", features = ["v4"] }
 
 [dev-dependencies]
 tempfile = "3.1.0"
