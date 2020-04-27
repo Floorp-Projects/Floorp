@@ -233,8 +233,6 @@ pref("browser.bookmarks.max_backups",       5);
 pref("browser.cache.disk.capacity",         256000);
 
 pref("browser.cache.disk_cache_ssl",        true);
-// 0 = once-per-session, 1 = each-time, 2 = never, 3 = when-appropriate/automatically
-pref("browser.cache.check_doc_frequency",   3);
 // The half life used to re-compute cache entries frecency in hours.
 pref("browser.cache.frecency_half_life_hours", 6);
 

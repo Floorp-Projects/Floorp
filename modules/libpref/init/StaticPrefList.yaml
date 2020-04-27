@@ -787,6 +787,16 @@
   value: 50
   mirror: always
 
+# How often to validate document in cache
+#   0 = once-per-session,
+#   1 = each-time,
+#   2 = never,
+#   3 = when-appropriate/automatically
+- name: browser.cache.check_doc_frequency
+  type: RelaxedAtomicUint32
+  value: 3
+  mirror: always
+
 - name: browser.contentblocking.database.enabled
   type: bool
   value: false
