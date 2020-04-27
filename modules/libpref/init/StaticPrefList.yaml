@@ -7040,6 +7040,13 @@
   value: false
   mirror: always
 
+# The getDisplayMedia method is always SecureContext regardless of the above two
+# prefs. But it is not implemented on android, and can be turned off elsewhere.
+- name: media.getdisplaymedia.enabled
+  type: bool
+  value: @IS_NOT_ANDROID@
+  mirror: always
+
 # WebRTC prefs follow
 
 # Enables RTCPeerConnection support. Note that, when true, this pref enables
