@@ -461,13 +461,15 @@ already_AddRefed<Element> TextEditor::DeleteSelectionAndCreateElement(
 
 nsresult TextEditor::DeleteSelectionAndPrepareToCreateNode() {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(IsHTMLEditor());  // TODO: Move this method to `HTMLEditor`
 
   if (NS_WARN_IF(!SelectionRefPtr()->GetAnchorFocusRange())) {
     return NS_OK;
   }
 
   if (!SelectionRefPtr()->GetAnchorFocusRange()->Collapsed()) {
-    nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
+    nsresult rv =
+        DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eStrip);
     if (NS_FAILED(rv)) {
       NS_WARNING("EditorBase::DeleteSelectionAsSubAction() failed");
       return rv;
@@ -721,11 +723,14 @@ nsresult TextEditor::SetTextAsSubAction(const nsAString& aString) {
 }
 
 nsresult TextEditor::ReplaceSelectionAsSubAction(const nsAString& aString) {
+  // TODO: Move this method to `EditorBase`.
   if (aString.IsEmpty()) {
-    nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
+    nsresult rv = DeleteSelectionAsSubAction(
+        nsIEditor::eNone,
+        IsTextEditor() ? nsIEditor::eNoStrip : nsIEditor::eStrip);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
-        "EditorBase::DeleteSelectionAsSubAction(eNone, eStrip) failed");
+        "EditorBase::DeleteSelectionAsSubAction(eNone) failed");
     return rv;
   }
 
@@ -1252,6 +1257,7 @@ bool TextEditor::FireClipboardEvent(EventMessage aEventMessage,
 }
 
 nsresult TextEditor::CutAsAction(nsIPrincipal* aPrincipal) {
+  // TODO: Move this method to `EditorBase`.
   AutoEditActionDataSetter editActionData(*this, EditAction::eCut, aPrincipal);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -1273,10 +1279,11 @@ nsresult TextEditor::CutAsAction(nsIPrincipal* aPrincipal) {
   // XXX This transaction name is referred by PlaceholderTransaction::Merge()
   //     so that we need to keep using it here.
   AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::DeleteTxnName);
-  rv = DeleteSelectionAsSubAction(eNone, eStrip);
+  rv = DeleteSelectionAsSubAction(
+      eNone, IsTextEditor() ? nsIEditor::eNoStrip : nsIEditor::eStrip);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
-      "EditorBase::DeleteSelectionAsSubAction() failed, but ignored");
+      "EditorBase::DeleteSelectionAsSubAction(eNone) failed, but ignored");
   return EditorBase::ToGenericNSResult(rv);
 }
 

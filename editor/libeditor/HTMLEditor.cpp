@@ -3043,66 +3043,42 @@ nsresult HTMLEditor::SetHTMLBackgroundColorWithTransaction(
   return rv;
 }
 
-nsresult HTMLEditor::DeleteSelectionWithTransaction(
-    EDirection aAction, EStripWrappers aStripWrappers) {
+nsresult HTMLEditor::RemoveEmptyInclusiveAncestorInlineElements(
+    nsIContent& aContent) {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!aContent.Length());
 
-  MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
-
-  nsresult rv =
-      EditorBase::DeleteSelectionWithTransaction(aAction, aStripWrappers);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::DeleteSelectionWithTransaction() failed");
-    return rv;
-  }
-
-  // If we weren't asked to strip any wrappers, we're done.
-  if (aStripWrappers == eNoStrip) {
-    return NS_OK;
-  }
-
-  // Just checking that the selection itself is collapsed doesn't seem to work
-  // right in the multi-range case
-  if (NS_WARN_IF(!SelectionRefPtr()->GetAnchorFocusRange()) ||
-      NS_WARN_IF(!SelectionRefPtr()->GetAnchorFocusRange()->Collapsed()) ||
-      NS_WARN_IF(!SelectionRefPtr()->GetAnchorNode()) ||
-      NS_WARN_IF(!SelectionRefPtr()->GetAnchorNode()->IsContent())) {
+  Element* editingHost = aContent.GetEditingHost();
+  if (NS_WARN_IF(!editingHost)) {
     return NS_ERROR_FAILURE;
   }
 
-  OwningNonNull<nsIContent> content =
-      *SelectionRefPtr()->GetAnchorNode()->AsContent();
+  if (&aContent == editingHost || HTMLEditUtils::IsBlockElement(aContent) ||
+      !HTMLEditUtils::IsSimplyEditableNode(aContent) || !aContent.GetParent()) {
+    return NS_OK;
+  }
 
   // Don't strip wrappers if this is the only wrapper in the block.  Then we'll
   // add a <br> later, so it won't be an empty wrapper in the end.
-  // XXX Looks like that we should specify editing host as limiter.
   Element* blockElement =
-      HTMLEditUtils::GetInclusiveAncestorBlockElement(content);
-  if (!blockElement) {
-    return NS_OK;
-  }
-  if (IsEmptyNode(*blockElement)) {
+      HTMLEditUtils::GetAncestorBlockElement(aContent, editingHost);
+  if (!blockElement || IsEmptyNode(*blockElement)) {
     return NS_OK;
   }
 
-  if (HTMLEditUtils::IsBlockElement(content) || content->Length() ||
-      !content->IsEditable() || !content->GetParent()) {
-    return NS_OK;
-  }
-  Element* editingHost = content->GetEditingHost();
-  if (content == editingHost) {
-    return NS_OK;
-  }
+  OwningNonNull<nsIContent> content = aContent;
   for (nsIContent* parentContent :
-       InclusiveAncestorsOfType<nsIContent>(*content->GetParent())) {
+       InclusiveAncestorsOfType<nsIContent>(*aContent.GetParent())) {
     if (HTMLEditUtils::IsBlockElement(*parentContent) ||
-        parentContent->Length() != 1 || !parentContent->IsEditable() ||
+        parentContent->Length() != 1 ||
+        !HTMLEditUtils::IsSimplyEditableNode(*parentContent) ||
         parentContent == editingHost) {
       break;
     }
     content = *parentContent;
   }
-  rv = DeleteNodeWithTransaction(content);
+
+  nsresult rv = DeleteNodeWithTransaction(content);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }

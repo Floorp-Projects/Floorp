@@ -547,7 +547,7 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
    * This method handles "delete selection" commands.
    *
    * @param aDirectionAndAmount Direction of the deletion.
-   * @param aStripWrappers      Always ignored in TextEditor.
+   * @param aStripWrappers      Must be nsIEditor::eNoStrip.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
   HandleDeleteSelection(nsIEditor::EDirection aDirectionAndAmount,

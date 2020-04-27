@@ -670,17 +670,6 @@ class HTMLEditor final : public TextEditor,
       const EditorDOMPoint& aPointToInsert, EDirection aSelect = eNone);
 
   /**
-   * DeleteSelectionWithTransaction() removes selected content or content
-   * around caret with transactions.
-   *
-   * @param aDirection          How much range should be removed.
-   * @param aStripWrappers      Whether the parent blocks should be removed
-   *                            when they become empty.
-   */
-  MOZ_CAN_RUN_SCRIPT virtual nsresult DeleteSelectionWithTransaction(
-      EDirection aAction, EStripWrappers aStripWrappers) override;
-
-  /**
    * DeleteNodeWithTransaction() removes aContent from the DOM tree if it's
    * modifiable.  Note that this is not an override of same method of
    * EditorBase.
@@ -2116,6 +2105,15 @@ class HTMLEditor final : public TextEditor,
    */
   EditorDOMPoint GetGoodCaretPointFor(
       nsIContent& aContent, nsIEditor::EDirection aDirectionAndAmount);
+
+  /**
+   * RemoveEmptyInclusiveAncestorInlineElements() removes empty inclusive
+   * ancestor inline elements in inclusive ancestor block element of aContent.
+   *
+   * @param aContent    Must be an empty content.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  RemoveEmptyInclusiveAncestorInlineElements(nsIContent& aContent);
 
   /**
    * MaybeDeleteTopMostEmptyAncestor() looks for top most empty block ancestor
