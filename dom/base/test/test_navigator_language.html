@@ -25,10 +25,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=889335
   var actualLanguageChangesFromHandler = 0;
   var actualLanguageChangesFromAVL = 0;
   var expectedLanguageChanges = 0;
+  var emptyLocale = SpecialPowers.Services.locale.webExposedLocales[0];
 
   var testValues = [
     { accept_languages: 'foo', language: 'foo', languages: ['foo'] },
-    { accept_languages: '', language: '', languages: [] },
+    { accept_languages: '', language: emptyLocale, languages: [emptyLocale] },
     { accept_languages: 'foo,bar', language: 'foo', languages: [ 'foo', 'bar' ] },
     { accept_languages: '  foo , bar ', language: 'foo', languages: [ 'foo', 'bar' ] },
     { accept_languages: '  foo ; bar ', language: 'foo ; bar', languages: [ 'foo ; bar' ] },
