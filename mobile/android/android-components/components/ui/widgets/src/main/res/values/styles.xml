@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Button styling -->
+    <style name="Mozac.Widgets.NeutralButton" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="iconTint">@color/mozac_grey_button_text_color</item>
+        <item name="iconPadding">8dp</item>
+        <item name="iconGravity">textStart</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:background">@drawable/rounded_button_background</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="backgroundTint">@color/mozac_grey_button_color</item>
+        <item name="android:textColor">@color/mozac_grey_button_text_color</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="fontFamily">?mozac_font_semibold</item>
+    </style>
+
+    <style name="Mozac.Widgets.DestructiveButton" parent="Mozac.Widgets.NeutralButton">
+        <item name="iconTint">@color/mozac_destructive_button_text_color</item>
+        <item name="android:textColor">@color/mozac_destructive_button_text_color</item>
+    </style>
+
+    <style name="Mozac.Widgets.PositiveButton" parent="Mozac.Widgets.NeutralButton">
+        <item name="backgroundTint">?mozac_accent</item>
+        <item name="iconTint">?mozac_contrast_text</item>
+        <item name="android:textColor">?mozac_contrast_text</item>
+    </style>
+</resources>
