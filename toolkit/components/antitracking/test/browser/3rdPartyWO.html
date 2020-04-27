@@ -65,7 +65,7 @@ onmessage = function(e) {
       }
     });
   }).then(_ => {
-    // This time the tracker must have been able to ontain first-party storage
+    // This time the tracker must have been able to obtain first-party storage
     // access because it has had user interaction before.
     let runnableStr = `(() => {return (${e.data.nonBlockingCallback});})();`;
     let runnable = eval(runnableStr); // eslint-disable-line no-eval
