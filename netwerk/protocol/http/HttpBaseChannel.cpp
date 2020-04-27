@@ -77,6 +77,8 @@
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
 #include "nsURLHelper.h"
+#include "mozilla/dom/IPCBlobUtils.h"
+#include "mozilla/dom/IPCBlobInputStreamChild.h"
 
 namespace mozilla {
 namespace net {
@@ -3181,7 +3183,15 @@ HttpBaseChannel::CloneReplacementChannelConfig(bool aPreserveMethod,
     mRequestHead.Method(method);
     config.method = Some(method);
 
-    config.uploadStream = mUploadStream;
+    if (mUploadStream) {
+      // rewind upload stream
+      nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mUploadStream);
+      if (seekable) {
+        seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+      }
+      config.uploadStream = mUploadStream;
+    }
+    config.uploadStreamLength = mReqContentLength;
     config.uploadStreamHasHeaders = mUploadStreamHasHeaders;
 
     nsAutoCString contentType;
@@ -3312,13 +3322,6 @@ HttpBaseChannel::CloneReplacementChannelConfig(bool aPreserveMethod,
     nsCOMPtr<nsIUploadChannel> uploadChannel = do_QueryInterface(httpChannel);
     nsCOMPtr<nsIUploadChannel2> uploadChannel2 = do_QueryInterface(httpChannel);
     if (uploadChannel2 || uploadChannel) {
-      // rewind upload stream
-      nsCOMPtr<nsISeekableStream> seekable =
-          do_QueryInterface(config.uploadStream);
-      if (seekable) {
-        seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
-      }
-
       // replicate original call to SetUploadStream...
       if (uploadChannel2) {
         const nsACString& ctype =
@@ -3331,16 +3334,13 @@ HttpBaseChannel::CloneReplacementChannelConfig(bool aPreserveMethod,
         const nsACString& method =
             config.method ? *config.method : VoidCString();
 
-        int64_t len = (!config.contentLength || config.contentLength->IsEmpty())
-                          ? -1
-                          : nsCRT::atoll(config.contentLength->get());
-        uploadChannel2->ExplicitSetUploadStream(config.uploadStream, ctype, len,
-                                                method,
-                                                config.uploadStreamHasHeaders);
+        uploadChannel2->ExplicitSetUploadStream(
+            config.uploadStream, ctype, config.uploadStreamLength, method,
+            config.uploadStreamHasHeaders);
       } else {
         if (config.uploadStreamHasHeaders) {
           uploadChannel->SetUploadStream(config.uploadStream, EmptyCString(),
-                                         -1);
+                                         config.uploadStreamLength);
         } else {
           nsAutoCString ctype;
           if (config.contentType) {
@@ -3378,14 +3378,24 @@ HttpBaseChannel::ReplacementChannelConfig::ReplacementChannelConfig(
   method = aInit.method();
   referrerInfo = aInit.referrerInfo();
   timedChannel = aInit.timedChannel();
-  uploadStream = aInit.uploadStream();
+  if (dom::IPCBlobInputStreamChild* actor =
+          static_cast<dom::IPCBlobInputStreamChild*>(
+              aInit.uploadStreamChild())) {
+    uploadStreamLength = actor->Size();
+    uploadStream = actor->CreateStream();
+    // actor can be deleted by CreateStream, so don't touch it
+    // after this.
+  } else {
+    uploadStreamLength = 0;
+  }
   uploadStreamHasHeaders = aInit.uploadStreamHasHeaders();
   contentType = aInit.contentType();
   contentLength = aInit.contentLength();
 }
 
 dom::ReplacementChannelConfigInit
-HttpBaseChannel::ReplacementChannelConfig::Serialize() {
+HttpBaseChannel::ReplacementChannelConfig::Serialize(
+    dom::ContentParent* aParent) {
   dom::ReplacementChannelConfigInit config;
   config.redirectFlags() = redirectFlags;
   config.classOfService() = classOfService;
@@ -3393,7 +3403,10 @@ HttpBaseChannel::ReplacementChannelConfig::Serialize() {
   config.method() = method;
   config.referrerInfo() = referrerInfo;
   config.timedChannel() = timedChannel;
-  config.uploadStream() = uploadStream;
+  if (uploadStream) {
+    dom::IPCBlobUtils::SerializeInputStream(
+        uploadStream, uploadStreamLength, config.uploadStreamParent(), aParent);
+  }
   config.uploadStreamHasHeaders() = uploadStreamHasHeaders;
   config.contentType() = contentType;
   config.contentLength() = contentLength;
