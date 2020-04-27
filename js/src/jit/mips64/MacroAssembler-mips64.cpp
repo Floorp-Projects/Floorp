@@ -569,6 +569,14 @@ void MacroAssemblerMIPS64Compat::computeScaledAddress(const BaseIndex& address,
   }
 }
 
+void MacroAssemblerMIPS64Compat::computeEffectiveAddress(
+    const BaseIndex& address, Register dest) {
+  computeScaledAddress(address, dest);
+  if (address.offset) {
+    asMasm().addPtr(Imm32(address.offset), dest);
+  }
+}
+
 // Shortcut for when we know we're transferring 32 bits of data.
 void MacroAssemblerMIPS64::ma_pop(Register r) {
   as_ld(r, StackPointer, 0);
