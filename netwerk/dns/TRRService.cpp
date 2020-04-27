@@ -132,7 +132,21 @@ void TRRService::GetParentalControlEnabledInternal() {
 }
 
 void TRRService::SetDetectedTrrURI(const nsACString& aURI) {
-  // TODO
+  nsAutoCString newURI(aURI);
+  ProcessURITemplate(newURI);
+  bool clearEntireCache = false;
+  {
+    MutexAutoLock lock(mLock);
+    if (!mPrivateURI.IsEmpty() && !newURI.Equals(mPrivateURI)) {
+      mClearTRRBLStorage = true;
+      LOG(("TRRService clearing blacklist because of change in uri service\n"));
+      clearEntireCache = true;
+    }
+    mPrivateURI = newURI;
+  }
+  if (clearEntireCache) {
+    ClearEntireCache();
+  }
 }
 
 bool TRRService::Enabled(nsIRequest::TRRMode aMode) {
@@ -165,6 +179,55 @@ void TRRService::GetPrefBranch(nsIPrefBranch** result) {
   CallGetService(NS_PREFSERVICE_CONTRACTID, result);
 }
 
+void TRRService::ProcessURITemplate(nsACString& aURI) {
+  // URI Template, RFC 6570.
+  if (aURI.IsEmpty()) {
+    return;
+  }
+  nsAutoCString scheme;
+  nsCOMPtr<nsIIOService> ios(do_GetIOService());
+  if (ios) {
+    ios->ExtractScheme(aURI, scheme);
+  }
+  if (!scheme.Equals("https")) {
+    LOG(("TRRService TRR URI %s is not https. Not used.\n",
+         PromiseFlatCString(aURI).get()));
+    aURI.Truncate();
+    return;
+  }
+
+  // cut off everything from "{" to "}" sequences (potentially multiple),
+  // as a crude conversion from template into URI.
+  nsAutoCString uri(aURI);
+
+  do {
+    nsCCharSeparatedTokenizer openBrace(uri, '{');
+    if (openBrace.hasMoreTokens()) {
+      // the 'nextToken' is the left side of the open brace (or full uri)
+      nsAutoCString prefix(openBrace.nextToken());
+
+      // if there is an open brace, there's another token
+      const nsACString& endBrace = openBrace.nextToken();
+      nsCCharSeparatedTokenizer closeBrace(endBrace, '}');
+      if (closeBrace.hasMoreTokens()) {
+        // there is a close brace as well, make a URI out of the prefix
+        // and the suffix
+        closeBrace.nextToken();
+        nsAutoCString suffix(closeBrace.nextToken());
+        uri = prefix + suffix;
+      } else {
+        // no (more) close brace
+        break;
+      }
+    } else {
+      // no (more) open brace
+      break;
+    }
+  } while (true);
+
+  aURI = uri;
+}
+
 nsresult TRRService::ReadPrefs(const char* name) {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
 
@@ -190,58 +253,17 @@ nsresult TRRService::ReadPrefs(const char* name) {
     }
   }
   if (!name || !strcmp(name, TRR_PREF("uri"))) {
-    // URI Template, RFC 6570.
+    nsAutoCString newURI;
+    Preferences::GetCString(TRR_PREF("uri"), newURI);
+    ProcessURITemplate(newURI);
+
     MutexAutoLock lock(mLock);
-    nsAutoCString old(mPrivateURI);
-    Preferences::GetCString(TRR_PREF("uri"), mPrivateURI);
-    nsAutoCString scheme;
-    if (!mPrivateURI.IsEmpty()) {
-      nsCOMPtr<nsIIOService> ios(do_GetIOService());
-      if (ios) {
-        ios->ExtractScheme(mPrivateURI, scheme);
-      }
-    }
-    if (!mPrivateURI.IsEmpty() && !scheme.Equals("https")) {
-      LOG(("TRRService TRR URI %s is not https. Not used.\n",
-           mPrivateURI.get()));
-      mPrivateURI.Truncate();
-    }
-    if (!mPrivateURI.IsEmpty()) {
-      // cut off everything from "{" to "}" sequences (potentially multiple),
-      // as a crude conversion from template into URI.
-      nsAutoCString uri(mPrivateURI);
-
-      do {
-        nsCCharSeparatedTokenizer openBrace(uri, '{');
-        if (openBrace.hasMoreTokens()) {
-          // the 'nextToken' is the left side of the open brace (or full uri)
-          nsAutoCString prefix(openBrace.nextToken());
-
-          // if there is an open brace, there's another token
-          const nsACString& endBrace = openBrace.nextToken();
-          nsCCharSeparatedTokenizer closeBrace(endBrace, '}');
-          if (closeBrace.hasMoreTokens()) {
-            // there is a close brace as well, make a URI out of the prefix
-            // and the suffix
-            closeBrace.nextToken();
-            nsAutoCString suffix(closeBrace.nextToken());
-            uri = prefix + suffix;
-          } else {
-            // no (more) close brace
-            break;
-          }
-        } else {
-          // no (more) open brace
-          break;
-        }
-      } while (true);
-      mPrivateURI = uri;
-    }
-    if (!old.IsEmpty() && !mPrivateURI.Equals(old)) {
+    if (!mPrivateURI.IsEmpty() && !newURI.Equals(mPrivateURI)) {
       mClearTRRBLStorage = true;
-      LOG(("TRRService clearing blacklist because of change is uri service\n"));
+      LOG(("TRRService clearing blacklist because of change in uri service\n"));
       clearEntireCache = true;
     }
+    mPrivateURI = newURI;
   }
   if (!name || !strcmp(name, TRR_PREF("credentials"))) {
     MutexAutoLock lock(mLock);
@@ -364,18 +386,27 @@ nsresult TRRService::ReadPrefs(const char* name) {
   // if name is null, then we're just now initializing. In that case we don't
   // need to clear the cache.
   if (name && clearEntireCache) {
-    bool tmp;
-    if (NS_SUCCEEDED(Preferences::GetBool(
-            TRR_PREF("clear-cache-on-pref-change"), &tmp)) &&
-        tmp) {
-      nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
-      if (dns) {
-        dns->ClearCache(true);
-      }
-    }
+    ClearEntireCache();
   }
 
   return NS_OK;
+}
+
+void TRRService::ClearEntireCache() {
+  bool tmp;
+  nsresult rv =
+      Preferences::GetBool(TRR_PREF("clear-cache-on-pref-change"), &tmp);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  if (!tmp) {
+    return;
+  }
+  nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
+  if (!dns) {
+    return;
+  }
+  dns->ClearCache(true);
 }
 
 nsresult TRRService::GetURI(nsCString& result) {
