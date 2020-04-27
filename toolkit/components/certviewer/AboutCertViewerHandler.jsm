@@ -35,9 +35,9 @@ var AboutCertViewerHandler = {
     );
     let certcache = certdb.getCerts();
     for (let cert of certcache) {
-      for (let certType of Object.keys(certs)) {
+      for (let certType of Object.keys(certs).map(Number)) {
         if (certType & cert.certType) {
-          certs[cert.certType].push({
+          certs[certType].push({
             displayName: cert.displayName,
             derb64: cert.getBase64DERString(),
           });
