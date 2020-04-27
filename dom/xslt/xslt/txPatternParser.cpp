@@ -33,7 +33,7 @@ nsresult txPatternParser::createPattern(const nsString& aPattern,
   rv = optimizer.optimize(pattern.get(), &newPattern);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aResult = newPattern ? newPattern : pattern.forget();
+  *aResult = newPattern ? newPattern : pattern.release();
 
   return NS_OK;
 }
@@ -281,7 +281,7 @@ nsresult txPatternParser::createStepPattern(txExprLexer& aLexer,
   rv = parsePredicates(step.get(), aLexer, aContext);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aPattern = step.forget();
+  aPattern = step.release();
 
   return NS_OK;
 }

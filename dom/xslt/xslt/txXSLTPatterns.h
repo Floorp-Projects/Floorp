@@ -191,7 +191,7 @@ class txStepPattern : public txPattern, public PredicateList {
 
   txNodeTest* getNodeTest() { return mNodeTest.get(); }
   void setNodeTest(txNodeTest* aNodeTest) {
-    mNodeTest.forget();
+    mNodeTest.release();
     mNodeTest = aNodeTest;
   }
 

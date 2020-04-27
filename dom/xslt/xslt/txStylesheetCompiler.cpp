@@ -421,7 +421,7 @@ nsresult txStylesheetCompiler::ensureNewElementContext() {
   nsresult rv = pushObject(mElementContext.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mElementContext.forget();
+  mElementContext.release();
   mElementContext = std::move(context);
 
   return NS_OK;
@@ -560,7 +560,7 @@ nsresult txStylesheetCompilerState::pushChooseGotoList() {
   nsresult rv = pushObject(mChooseGotoList.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mChooseGotoList.forget();
+  mChooseGotoList.release();
   mChooseGotoList = new txList;
 
   return NS_OK;
@@ -634,7 +634,7 @@ void txStylesheetCompilerState::addInstruction(
 
   txInstruction* newInstr = aInstruction.get();
 
-  *mNextInstrPtr = aInstruction.forget();
+  *mNextInstrPtr = aInstruction.release();
   mNextInstrPtr = newInstr->mNext.StartAssignment();
 
   uint32_t i, count = mGotoTargetPointers.Length();
@@ -657,7 +657,7 @@ nsresult txStylesheetCompilerState::loadIncludedStylesheet(
   UniquePtr<txToplevelItem> item(new txDummyItem);
   NS_ENSURE_TRUE(item, NS_ERROR_OUT_OF_MEMORY);
 
-  mToplevelIterator.addBefore(item.forget());
+  mToplevelIterator.addBefore(item.release());
 
   // step back to the dummy-item
   mToplevelIterator.previous();

@@ -47,7 +47,7 @@ txLoadedDocumentsHash::~txLoadedDocumentsHash() {
     if (NS_SUCCEEDED(rv)) {
       txLoadedDocumentEntry* entry = GetEntry(baseURI);
       if (entry) {
-        delete entry->mDocument.forget();
+        delete entry->mDocument.release();
       }
     }
   }
@@ -247,7 +247,7 @@ nsresult txExecutionState::getVariable(int32_t aNamespace, nsAtom* aLName,
       return rv;
     }
 
-    rtfHandler.forget();
+    rtfHandler.release();
 
     txInstruction* prevInstr = mNextInstruction;
     // set return to nullptr to stop execution

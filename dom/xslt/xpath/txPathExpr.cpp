@@ -179,7 +179,7 @@ Expr* PathExpr::getSubExprAt(uint32_t aPos) {
 }
 void PathExpr::setSubExprAt(uint32_t aPos, Expr* aExpr) {
   NS_ASSERTION(aPos < mItems.Length(), "setting bad subexpression index");
-  mItems[aPos].expr.forget();
+  mItems[aPos].expr.release();
   mItems[aPos].expr = aExpr;
 }
 

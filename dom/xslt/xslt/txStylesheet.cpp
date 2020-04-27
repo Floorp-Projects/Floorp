@@ -31,7 +31,7 @@ nsresult txStylesheet::init() {
   UniquePtr<txNodeTest> nt(new txNodeTypeTest(txNodeTypeTest::NODE_TYPE));
   UniquePtr<Expr> nodeExpr(
       new LocationStep(nt.get(), LocationStep::CHILD_AXIS));
-  nt.forget();
+  nt.release();
 
   txPushNewContext* pushContext = new txPushNewContext(std::move(nodeExpr));
   mContainerTemplate->mNext = pushContext;
@@ -52,7 +52,7 @@ nsresult txStylesheet::init() {
   // attribute/textnode template
   nt = new txNodeTypeTest(txNodeTypeTest::NODE_TYPE);
   nodeExpr = new LocationStep(nt.get(), LocationStep::SELF_AXIS);
-  nt.forget();
+  nt.release();
 
   mCharactersTemplate = new txValueOf(std::move(nodeExpr), false);
   mCharactersTemplate->mNext = new txReturn();
@@ -318,7 +318,7 @@ nsresult txStylesheet::doneCompiling() {
     rv = mDecimalFormats.add(txExpandedName(), format.get());
     NS_ENSURE_SUCCESS(rv, rv);
 
-    format.forget();
+    format.release();
   }
 
   return NS_OK;
@@ -332,7 +332,7 @@ nsresult txStylesheet::addTemplate(txTemplateItem* aTemplate,
   mTemplateInstructions.add(instr);
 
   // mTemplateInstructions now owns the instructions
-  aTemplate->mFirstInstruction.forget();
+  aTemplate->mFirstInstruction.release();
 
   if (!aTemplate->mName.isNull()) {
     nsresult rv = mNamedTemplates.add(aTemplate->mName, instr);
@@ -356,7 +356,7 @@ nsresult txStylesheet::addTemplate(txTemplateItem* aTemplate,
         aImportFrame->mMatchableTemplates.set(aTemplate->mMode, newList.get());
     NS_ENSURE_SUCCESS(rv, rv);
 
-    templates = newList.forget();
+    templates = newList.release();
   }
 
   // Add the simple patterns to the list of matchable templates, according
@@ -414,7 +414,7 @@ nsresult txStylesheet::addFrames(txListIterator& aInsertIter) {
       txImportItem* import = static_cast<txImportItem*>(item);
       import->mFrame->mFirstNotImported =
           static_cast<ImportFrame*>(aInsertIter.next());
-      aInsertIter.addBefore(import->mFrame.forget());
+      aInsertIter.addBefore(import->mFrame.release());
       aInsertIter.previous();
       rv = addFrames(aInsertIter);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -456,7 +456,7 @@ nsresult txStylesheet::addAttributeSet(txAttributeSetItem* aAttributeSetItem) {
                             aAttributeSetItem->mFirstInstruction.get());
     NS_ENSURE_SUCCESS(rv, rv);
 
-    aAttributeSetItem->mFirstInstruction.forget();
+    aAttributeSetItem->mFirstInstruction.release();
 
     return NS_OK;
   }
@@ -478,7 +478,7 @@ nsresult txStylesheet::addAttributeSet(txAttributeSetItem* aAttributeSetItem) {
                           aAttributeSetItem->mFirstInstruction.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aAttributeSetItem->mFirstInstruction.forget();
+  aAttributeSetItem->mFirstInstruction.release();
 
   lastNonReturn->mNext = oldInstr;  // ...and link up the old instructions.
 
@@ -495,7 +495,7 @@ nsresult txStylesheet::addGlobalVariable(txVariableItem* aVariable) {
   nsresult rv = mGlobalVariables.add(aVariable->mName, var.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  var.forget();
+  var.release();
 
   return NS_OK;
 }
@@ -533,7 +533,7 @@ nsresult txStylesheet::addDecimalFormat(const txExpandedName& aName,
   nsresult rv = mDecimalFormats.add(aName, aFormat.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aFormat.forget();
+  aFormat.release();
 
   return NS_OK;
 }
