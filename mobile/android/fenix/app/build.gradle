@@ -32,7 +32,7 @@ android {
         testInstrumentationRunnerArguments clearPackageData: 'true'
         resValue "bool", "IS_DEBUG", "false"
         buildConfigField "boolean", "USE_RELEASE_VERSIONING", "false"
-        buildConfigField "String", "AMO_COLLECTION", "\"7e8d6dc651b54ab385fb8791bf9dac\""
+        buildConfigField "String", "AMO_COLLECTION", "\"16f6e5d9a40448b8955db57ced6d75\""
         def deepLinkSchemeValue = "fenix-dev"
         buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
         manifestPlaceholders = [
@@ -53,7 +53,6 @@ android {
             shrinkResources false
             minifyEnabled false
             applicationIdSuffix ".fenix.debug"
-            buildConfigField "String", "AMO_COLLECTION", "\"16f6e5d9a40448b8955db57ced6d75\""
             manifestPlaceholders.isRaptorEnabled = "true"
             resValue "bool", "IS_DEBUG", "true"
             pseudoLocalesEnabled true
@@ -73,7 +72,6 @@ android {
         fenixNightly releaseTemplate >> {
             applicationIdSuffix ".fenix.nightly"
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
-            buildConfigField "String", "AMO_COLLECTION", "\"16f6e5d9a40448b8955db57ced6d75\""
             def deepLinkSchemeValue = "fenix-nightly"
             buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
             manifestPlaceholders = ["deepLinkScheme": deepLinkSchemeValue]
@@ -128,7 +126,6 @@ android {
         }
         fennecNightly releaseTemplate >> {
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
-            buildConfigField "String", "AMO_COLLECTION", "\"16f6e5d9a40448b8955db57ced6d75\""
             applicationIdSuffix ".fennec_aurora"
             def deepLinkSchemeValue = "fenix-nightly"
             buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
