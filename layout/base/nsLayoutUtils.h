@@ -694,7 +694,14 @@ class nsLayoutUtils {
      * frames that are in the root document (in the current process) return the
      * root scrollable frame for that document.
      */
-    SCROLLABLE_FIXEDPOS_FINDS_ROOT = 0x10
+    SCROLLABLE_FIXEDPOS_FINDS_ROOT = 0x10,
+    /**
+     * If the SCROLLABLE_STOP_AT_PAGE flag is set, then we stop searching
+     * for scrollable ancestors when seeing a nsPageFrame.  This can be used
+     * to avoid finding the viewport scroll frame in Print Preview (which
+     * would be undesirable as a 'position:sticky' container for content).
+     */
+    SCROLLABLE_STOP_AT_PAGE = 0x20,
   };
   /**
    * GetNearestScrollableFrame locates the first ancestor of aFrame
