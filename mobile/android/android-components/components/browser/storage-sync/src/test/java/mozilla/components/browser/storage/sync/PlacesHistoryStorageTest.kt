@@ -709,15 +709,41 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `history import v38 populated`() {
+    fun `history import v23 populated`() {
         // Fennec v38 schema populated with data.
-        val path = getTestPath("databases/populated-v38.db").absolutePath
+        val path = getTestPath("databases/bookmarks-v23.db").absolutePath
         try {
             history.importFromFennec(path)
-            fail("Expected v38 database to be unsupported")
+            fail("Expected v23 database to be unsupported")
         } catch (e: PlacesException) {
             // This is a little brittle, but the places library doesn't have a proper error type for this.
-            assertEquals("Database version 38 is not supported", e.message)
+            assertEquals("Database version 23 is not supported", e.message)
+        }
+    }
+
+    @Test
+    fun `history import v38 populated`() = runBlocking {
+        val path = getTestPath("databases/populated-v38.db").absolutePath
+        var visits = history.getDetailedVisits(0, Long.MAX_VALUE)
+        assertEquals(0, visits.size)
+        history.importFromFennec(path)
+
+        visits = history.getDetailedVisits(0, Long.MAX_VALUE)
+        assertEquals(152, visits.size)
+
+        assertEquals(listOf(false, false, true, true, false), history.reader.getVisited(listOf(
+            "files:///",
+            "https://news.ycombinator.com/",
+            "https://www.theguardian.com/film/2017/jul/24/stranger-things-thor-ragnarok-comic-con-2017",
+            "http://www.bbc.com/news/world-us-canada-40662772",
+            "https://mobile.reuters.com/"
+        )))
+
+        with(visits[0]) {
+            assertEquals("Apple", this.title)
+            assertEquals("http://www.apple.com/", this.url)
+            assertEquals(1472685165382, this.visitTime)
+            assertEquals(VisitType.REDIRECT_PERMANENT, this.visitType)
         }
     }
 
@@ -775,6 +801,62 @@ class PlacesHistoryStorageTest {
             assertEquals("", this.title)
             assertEquals("https://mobile.reuters.com/", this.url)
             assertEquals(1570830217562, this.visitTime)
+            assertEquals(VisitType.LINK, this.visitType)
+        }
+    }
+
+    @Test
+    fun `history import v34 populated`() = runBlocking {
+        val path = getTestPath("databases/history-v34.db").absolutePath
+        var visits = history.getDetailedVisits(0, Long.MAX_VALUE)
+        assertEquals(0, visits.size)
+        history.importFromFennec(path)
+
+        visits = history.getDetailedVisits(0, Long.MAX_VALUE)
+        assertEquals(6, visits.size)
+
+        assertEquals(listOf(true, true, true, true, true), history.reader.getVisited(listOf(
+            "https://www.newegg.com/",
+            "https://news.ycombinator.com/",
+            "https://terrytao.wordpress.com/2020/04/12/john-conway/",
+            "https://news.ycombinator.com/item?id=22862053",
+            "https://malleable.systems/"
+        )))
+
+        with(visits[0]) {
+            assertEquals("Computer Parts, PC Components, Laptop Computers, LED LCD TV, Digital Cameras and more - Newegg.com", this.title)
+            assertEquals("https://www.newegg.com/", this.url)
+            assertEquals(1586838104188, this.visitTime)
+            assertEquals(VisitType.LINK, this.visitType)
+        }
+        with(visits[1]) {
+            assertEquals("Hacker News", this.title)
+            assertEquals("https://news.ycombinator.com/", this.url)
+            assertEquals(1586838109506, this.visitTime)
+            assertEquals(VisitType.LINK, this.visitType)
+        }
+        with(visits[2]) {
+            assertEquals("https://terrytao.wordpress.com/2020/04/12/john-conway/", this.title)
+            assertEquals("https://terrytao.wordpress.com/2020/04/12/john-conway/", this.url)
+            assertEquals(1586838113212, this.visitTime)
+            assertEquals(VisitType.LINK, this.visitType)
+        }
+        with(visits[3]) {
+            assertEquals("John Conway | Hacker News", this.title)
+            assertEquals("https://news.ycombinator.com/item?id=22862053", this.url)
+            assertEquals(1586838123314, this.visitTime)
+            assertEquals(VisitType.LINK, this.visitType)
+        }
+        with(visits[4]) {
+            assertEquals("John Conway | Hacker News", this.title)
+            assertEquals("https://news.ycombinator.com/item?id=22862053", this.url)
+            assertEquals(1586838126671, this.visitTime)
+            assertEquals(VisitType.LINK, this.visitType)
+        }
+        with(visits[5]) {
+            assertEquals("https://malleable.systems/", this.title)
+            assertEquals("https://malleable.systems/", this.url)
+            assertEquals(1586838164613, this.visitTime)
             assertEquals(VisitType.LINK, this.visitType)
         }
     }
