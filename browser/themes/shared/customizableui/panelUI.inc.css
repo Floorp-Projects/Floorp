@@ -1724,6 +1724,11 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   text-align: center;
 }
 
+.panel-header > label > span {
+  display: inline-block;
+  white-space: pre-wrap;
+}
+
 .panel-header > .subviewbutton-back + label {
   /* Add the size of the back button to center properly. */
   margin-inline-end: 32px;
