@@ -6,13 +6,13 @@
 #ifndef TRANSFRMX_TXINSTRUCTIONS_H
 #define TRANSFRMX_TXINSTRUCTIONS_H
 
+#include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "txCore.h"
 #include "nsString.h"
 #include "txXMLUtils.h"
 #include "txExpandedName.h"
 #include "txNamespaceMap.h"
-#include "nsAutoPtr.h"
 #include "txXSLTNumber.h"
 #include "nsTArray.h"
 
