@@ -1370,6 +1370,11 @@ void MacroAssemblerMIPSCompat::unboxDouble(const Address& src,
   moveToDoubleHi(ScratchRegister, dest);
 }
 
+void MacroAssemblerMIPSCompat::unboxDouble(const BaseIndex& src,
+                                           FloatRegister dest) {
+  loadDouble(src, dest);
+}
+
 void MacroAssemblerMIPSCompat::unboxString(const ValueOperand& operand,
                                            Register dest) {
   ma_move(dest, operand.payloadReg());
@@ -1379,12 +1384,26 @@ void MacroAssemblerMIPSCompat::unboxString(const Address& src, Register dest) {
   ma_lw(dest, Address(src.base, src.offset + PAYLOAD_OFFSET));
 }
 
+void MacroAssemblerMIPSCompat::unboxBigInt(const ValueOperand& operand,
+                                           Register dest) {
+  ma_move(dest, operand.payloadReg());
+}
+
+void MacroAssemblerMIPSCompat::unboxBigInt(const Address& src, Register dest) {
+  ma_lw(dest, Address(src.base, src.offset + PAYLOAD_OFFSET));
+}
+
 void MacroAssemblerMIPSCompat::unboxObject(const ValueOperand& src,
                                            Register dest) {
   ma_move(dest, src.payloadReg());
 }
 
 void MacroAssemblerMIPSCompat::unboxObject(const Address& src, Register dest) {
+  ma_lw(dest, Address(src.base, src.offset + PAYLOAD_OFFSET));
+}
+
+void MacroAssemblerMIPSCompat::unboxObjectOrNull(const Address& src,
+                                                 Register dest) {
   ma_lw(dest, Address(src.base, src.offset + PAYLOAD_OFFSET));
 }
 
@@ -2260,6 +2279,8 @@ template void MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value,
 template void MacroAssembler::storeUnboxedValue(
     const ConstantOrRegister& value, MIRType valueType,
     const BaseObjectElementIndex& dest, MIRType slotType);
+
+void MacroAssembler::PushBoxed(FloatRegister reg) { Push(reg); }
 
 void MacroAssembler::wasmBoundsCheck(Condition cond, Register index,
                                      Register boundsCheckLimit, Label* label) {
