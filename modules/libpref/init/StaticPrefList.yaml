@@ -2482,6 +2482,20 @@
   value: false
   mirror: always
 
+# If true and HTTPS-only mode is enabled, requests
+# to local IP addresses are also upgraded
+- name: dom.security.https_only_mode.upgrade_local
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# If true and HTTPS-only mode is enabled, requests
+# to .onion hosts are also upgraded
+- name: dom.security.https_only_mode.upgrade_onion
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # WARNING: Don't ever update that pref manually! It is only used
 # for telemetry purposes and allows to reason about retention of
 # the pref dom.security.https_only_mode from above.
