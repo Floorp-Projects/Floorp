@@ -8,6 +8,8 @@
 
 #include "mozilla/UniquePtr.h"
 
+class nsINode;
+
 /**
  * This class enables those using it to skip over certain nodes when
  * traversing content.

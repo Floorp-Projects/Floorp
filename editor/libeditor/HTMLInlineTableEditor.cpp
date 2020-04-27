@@ -4,6 +4,7 @@
 
 #include "mozilla/HTMLEditor.h"
 
+#include "EditorEventListener.h"
 #include "HTMLEditUtils.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/Element.h"

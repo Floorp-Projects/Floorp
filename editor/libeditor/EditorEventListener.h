@@ -81,9 +81,9 @@ class EditorEventListener : public nsIDOMEventListener {
   MOZ_CAN_RUN_SCRIPT nsresult DragOverOrDrop(dom::DragEvent* aDragEvent);
   nsresult DragExit(dom::DragEvent* aDragEvent);
 
-  void RefuseToDropAndHideCaret(DragEvent* aDragEvent);
-  bool DragEventHasSupportingData(DragEvent* aDragEvent) const;
-  MOZ_CAN_RUN_SCRIPT bool CanInsertAtDropPosition(DragEvent* aDragEvent);
+  void RefuseToDropAndHideCaret(dom::DragEvent* aDragEvent);
+  bool DragEventHasSupportingData(dom::DragEvent* aDragEvent) const;
+  MOZ_CAN_RUN_SCRIPT bool CanInsertAtDropPosition(dom::DragEvent* aDragEvent);
   void CleanupDragDropCaret();
   PresShell* GetPresShell() const;
   nsPresContext* GetPresContext() const;

@@ -31,6 +31,7 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
+#include "nsTextNode.h"
 #include "nscore.h"
 #include <algorithm>
 
