@@ -5413,13 +5413,13 @@
 # Whether we get notified of history queries for visited even if unvisited.
 - name: layout.css.notify-of-unvisited
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # Whether we always restyle / repaint as a result of a visited query
 - name: layout.css.always-repaint-on-unvisited
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # Make `zoom` a `transform` + `transform-origin` alias.
