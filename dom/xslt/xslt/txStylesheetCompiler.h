@@ -99,7 +99,7 @@ class txStylesheetCompilerState : public txIParseContext {
   void* popPtr(enumStackType aType);
 
   // stylesheet functions
-  nsresult addToplevelItem(txToplevelItem* aItem);
+  void addToplevelItem(txToplevelItem* aItem);
   nsresult openInstructionContainer(txInstructionContainer* aContainer);
   void closeInstructionContainer();
   nsresult addInstruction(nsAutoPtr<txInstruction>&& aInstruction);

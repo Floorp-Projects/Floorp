@@ -249,8 +249,7 @@ nsresult txStylesheet::doneCompiling() {
   nsresult rv = NS_OK;
   // Collect all importframes into a single ordered list
   txListIterator frameIter(&mImportFrames);
-  rv = frameIter.addAfter(mRootFrame);
-  NS_ENSURE_SUCCESS(rv, rv);
+  frameIter.addAfter(mRootFrame);
 
   mRootFrame = nullptr;
   frameIter.next();
@@ -328,14 +327,13 @@ nsresult txStylesheet::addTemplate(txTemplateItem* aTemplate,
   NS_ASSERTION(aTemplate, "missing template");
 
   txInstruction* instr = aTemplate->mFirstInstruction;
-  nsresult rv = mTemplateInstructions.add(instr);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mTemplateInstructions.add(instr);
 
   // mTemplateInstructions now owns the instructions
   aTemplate->mFirstInstruction.forget();
 
   if (!aTemplate->mName.isNull()) {
-    rv = mNamedTemplates.add(aTemplate->mName, instr);
+    nsresult rv = mNamedTemplates.add(aTemplate->mName, instr);
     NS_ENSURE_TRUE(NS_SUCCEEDED(rv) || rv == NS_ERROR_XSLT_ALREADY_SET, rv);
   }
 
@@ -352,7 +350,8 @@ nsresult txStylesheet::addTemplate(txTemplateItem* aTemplate,
   if (!templates) {
     nsAutoPtr<nsTArray<MatchableTemplate> > newList(
         new nsTArray<MatchableTemplate>);
-    rv = aImportFrame->mMatchableTemplates.set(aTemplate->mMode, newList);
+    nsresult rv =
+        aImportFrame->mMatchableTemplates.set(aTemplate->mMode, newList);
     NS_ENSURE_SUCCESS(rv, rv);
 
     templates = newList.forget();
@@ -413,8 +412,7 @@ nsresult txStylesheet::addFrames(txListIterator& aInsertIter) {
       txImportItem* import = static_cast<txImportItem*>(item);
       import->mFrame->mFirstNotImported =
           static_cast<ImportFrame*>(aInsertIter.next());
-      rv = aInsertIter.addBefore(import->mFrame);
-      NS_ENSURE_SUCCESS(rv, rv);
+      aInsertIter.addBefore(import->mFrame);
 
       import->mFrame.forget();
       aInsertIter.previous();
