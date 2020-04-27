@@ -596,19 +596,17 @@ var FullScreen = {
     // Otherwise, they would not affect chrome and the user would expect the chrome to go away.
     // e.g. we wouldn't want the autoscroll icon firing this event, so when the user
     // toggles chrome when moving mouse to the top, it doesn't go away again.
+    let target = aEvent.originalTarget;
+    if (target.localName == "tooltip") {
+      return;
+    }
     if (
       aEvent.type == "popupshown" &&
       !FullScreen._isChromeCollapsed &&
-      aEvent.target.localName != "tooltip" &&
-      aEvent.target.localName != "window" &&
-      aEvent.target.getAttribute("nopreventnavboxhide") != "true"
+      target.getAttribute("nopreventnavboxhide") != "true"
     ) {
       FullScreen._isPopupOpen = true;
-    } else if (
-      aEvent.type == "popuphidden" &&
-      aEvent.target.localName != "tooltip" &&
-      aEvent.target.localName != "window"
-    ) {
+    } else if (aEvent.type == "popuphidden") {
       FullScreen._isPopupOpen = false;
       // Try again to hide toolbar when we close the popup.
       FullScreen.hideNavToolbox(true);
