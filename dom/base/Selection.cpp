@@ -729,8 +729,9 @@ int32_t Selection::StyledRanges::FindInsertionPoint(
 //    difference to aOutput. It is assumed that the caller has checked that
 //    aRange and aSubtract do indeed overlap
 
-nsresult Selection::SubtractRange(StyledRange& aRange, nsRange& aSubtract,
-                                  nsTArray<StyledRange>* aOutput) {
+// static
+nsresult Selection::StyledRanges::SubtractRange(
+    StyledRange& aRange, nsRange& aSubtract, nsTArray<StyledRange>* aOutput) {
   nsRange* range = aRange.mRange;
 
   if (NS_WARN_IF(!range->IsPositioned())) {
