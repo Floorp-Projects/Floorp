@@ -13,7 +13,8 @@ function cleanup_and_finish() {
  * Check that the list of crashes displayed by about:crashes matches
  * the list of crashes that we placed in the pending+submitted directories.
  *
- * NB: This function is run in the child process via ContentTask.spawn.
+ * This function is run in a separate JS context via ContentTask.spawn, so
+ * it has no access to other functions or variables in this file.
  */
 function check_crash_list(crashes) {
   const doc = content.document;
@@ -102,8 +103,7 @@ function check_submit_pending(tab, crashes) {
         }
       }
 
-      // The pageshow event fortunately gets propagated to the containing
-      // browser across process boundaries.
+      // We can listen for pageshow like this because the tab is not remote.
       BrowserTestUtils.waitForEvent(browser, "pageshow", true).then(
         csp_pageshow
       );
