@@ -546,6 +546,23 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x5927);
       APPEND_DEVICE(0x593b);
 
+      // coffeelake gt1
+      APPEND_DEVICE(0x3e90);
+      APPEND_DEVICE(0x3e93);
+      APPEND_DEVICE(0x3e99);
+      APPEND_DEVICE(0x3e9c);
+      APPEND_DEVICE(0x3ea1);
+      APPEND_DEVICE(0x3ea4);
+      APPEND_DEVICE(0x9b21);
+      APPEND_DEVICE(0x9ba0);
+      APPEND_DEVICE(0x9ba2);
+      APPEND_DEVICE(0x9ba4);
+      APPEND_DEVICE(0x9ba5);
+      APPEND_DEVICE(0x9ba8);
+      APPEND_DEVICE(0x9baa);
+      APPEND_DEVICE(0x9bab);
+      APPEND_DEVICE(0x9bac);
+
       // coffeelake gt2+
       APPEND_RANGE(0x3e91, 0x3e92);
       APPEND_DEVICE(0x3e94);
