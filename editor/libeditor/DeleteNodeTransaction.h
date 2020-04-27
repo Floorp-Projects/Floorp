@@ -51,6 +51,8 @@ class DeleteNodeTransaction final : public EditTransactionBase {
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
 
+  nsIContent* GetContent() const { return mContentToDelete; }
+
  protected:
   virtual ~DeleteNodeTransaction() = default;
 

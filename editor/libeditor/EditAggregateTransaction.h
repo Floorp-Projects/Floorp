@@ -54,6 +54,11 @@ class EditAggregateTransaction : public EditTransactionBase {
    */
   NS_IMETHOD GetName(nsAtom** aName);
 
+  const nsTArray<OwningNonNull<EditTransactionBase>>& ChildTransactions()
+      const {
+    return mChildren;
+  }
+
  protected:
   virtual ~EditAggregateTransaction() = default;
 

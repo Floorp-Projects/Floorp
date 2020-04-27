@@ -68,9 +68,9 @@ class DeleteTextTransaction final : public EditTransactionBase {
   NS_DECL_EDITTRANSACTIONBASE
   NS_DECL_EDITTRANSACTIONBASE_GETASMETHODS_OVERRIDE(DeleteTextTransaction)
 
-  uint32_t Offset() { return mOffset; }
-
-  uint32_t LengthToDelete() { return mLengthToDelete; }
+  dom::Text* GetText() const { return mTextNode; }
+  uint32_t Offset() const { return mOffset; }
+  uint32_t LengthToDelete() const { return mLengthToDelete; }
 
  protected:
   // The provider of basic editing operations.

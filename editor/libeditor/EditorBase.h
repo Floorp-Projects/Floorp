@@ -2574,10 +2574,6 @@ class EditorBase : public nsIEditor,
    *
    * @param aHowToHandleCollapsedRange
    *                            How to handle collapsed ranges.
-   * @param aRemovingContent    The node to be removed.
-   * @param aOffset             The start offset of the range in
-   *                            aRemovingContent.
-   * @param aLength             The length of the range in aRemovingContent.
    * @return                    If it can remove the selection, returns an
    *                            aggregate transaction which has some
    *                            DeleteNodeTransactions and/or
@@ -2585,8 +2581,7 @@ class EditorBase : public nsIEditor,
    */
   already_AddRefed<EditAggregateTransaction>
   CreateTransactionForDeleteSelection(
-      HowToHandleCollapsedRange aHowToHandleCollapsedRange,
-      nsIContent** aRemovingContent, int32_t* aOffset, int32_t* aLength);
+      HowToHandleCollapsedRange aHowToHandleCollapsedRange);
 
   /**
    * Create a transaction for removing the nodes and/or text around
@@ -2598,18 +2593,13 @@ class EditorBase : public nsIEditor,
    *                            How to handle aCollapsedRange.  Must
    *                            be HowToHandleCollapsedRange::ExtendBackward or
    *                            HowToHandleCollapsedRange::ExtendForward.
-   * @param aRemovingContent    The node to be removed.
-   * @param aOffset             The start offset of the range in
-   *                            aRemovingContent.
-   * @param aLength             The length of the range in aRemovingContent.
    * @return                    The transaction to remove content around the
    *                            range.  Its type is DeleteNodeTransaction or
    *                            DeleteTextTransaction.
    */
   already_AddRefed<EditTransactionBase> CreateTransactionForCollapsedRange(
       nsRange& aCollapsedRange,
-      HowToHandleCollapsedRange aHowToHandleCollapsedRange,
-      nsIContent** aRemovingContent, int32_t* aOffset, int32_t* aLength);
+      HowToHandleCollapsedRange aHowToHandleCollapsedRange);
 
  private:
   nsCOMPtr<nsISelectionController> mSelectionController;
