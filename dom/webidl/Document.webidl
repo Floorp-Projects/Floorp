@@ -241,6 +241,7 @@ partial interface Document {
    *
    * @see <https://developer.mozilla.org/en/DOM/document.mozSetImageElement>
    */
+  [UseCounter]
   void mozSetImageElement(DOMString aImageElementId,
                           Element? aImageElement);
 
