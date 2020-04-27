@@ -128,7 +128,9 @@ class WindowProxyHolder;
   FIELD(MaxTouchPointsOverride, uint8_t)                                     \
   FIELD(FullZoom, float)                                                     \
   FIELD(WatchedByDevtools, bool)                                             \
-  FIELD(TextZoom, float)
+  FIELD(TextZoom, float)                                                     \
+  /* See nsIRequest for possible flags. */                                   \
+  FIELD(DefaultLoadFlags, uint32_t)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -709,6 +711,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_WatchedByDevtools>, const bool& aWatchedByDevtools,
               ContentParent* aSource);
+
+  bool CanSet(FieldIndex<IDX_DefaultLoadFlags>,
+              const uint32_t& aDefaultLoadFlags, ContentParent* aSource);
+  void DidSet(FieldIndex<IDX_DefaultLoadFlags>);
 
   template <size_t I, typename T>
   bool CanSet(FieldIndex<I>, const T&, ContentParent*) {
