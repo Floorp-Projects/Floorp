@@ -48,10 +48,11 @@ bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
   }
 
   nsresult rv = NS_ERROR_UNEXPECTED;
-  if (!mParent->Open(loadState, aArgs.loadFlags(), aArgs.cacheKey(),
-                     Some(aArgs.channelId()), aArgs.asyncOpenTime(),
-                     aArgs.timing().refOr(nullptr), std::move(clientInfo),
-                     aArgs.outerWindowId(), aArgs.hasValidTransientUserAction(),
+  if (!mParent->Open(loadState, aArgs.cacheKey(), Some(aArgs.channelId()),
+                     aArgs.asyncOpenTime(), aArgs.timing().refOr(nullptr),
+                     std::move(clientInfo), aArgs.outerWindowId(),
+                     aArgs.hasValidTransientUserAction(),
+                     Some(aArgs.uriModified()), Some(aArgs.isXFOError()),
                      &rv)) {
     return SendFailedAsyncOpen(rv);
   }

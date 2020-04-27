@@ -29,8 +29,10 @@ NS_IMPL_RELEASE_INHERITED(DocumentChannelChild, DocumentChannel)
 DocumentChannelChild::DocumentChannelChild(nsDocShellLoadState* aLoadState,
                                            net::LoadInfo* aLoadInfo,
                                            nsLoadFlags aLoadFlags,
-                                           uint32_t aCacheKey)
-    : DocumentChannel(aLoadState, aLoadInfo, aLoadFlags, aCacheKey) {
+                                           uint32_t aCacheKey,
+                                           bool aUriModified, bool aIsXFOError)
+    : DocumentChannel(aLoadState, aLoadInfo, aLoadFlags, aCacheKey,
+                      aUriModified, aIsXFOError) {
   LOG(("DocumentChannelChild ctor [this=%p, uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
 }
@@ -81,11 +83,12 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   DocumentChannelCreationArgs args;
 
   args.loadState() = mLoadState->Serialize();
-  args.loadFlags() = mLoadFlags;
   args.cacheKey() = mCacheKey;
   args.channelId() = mChannelId;
   args.asyncOpenTime() = mAsyncOpenTime;
   args.outerWindowId() = GetDocShell()->GetOuterWindowID();
+  args.uriModified() = mUriModified;
+  args.isXFOError() = mIsXFOError;
 
   Maybe<IPCClientInfo> ipcClientInfo;
   if (mInitialClientInfo.isSome()) {

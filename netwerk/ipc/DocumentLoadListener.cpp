@@ -360,10 +360,11 @@ CanonicalBrowsingContext* DocumentLoadListener::GetBrowsingContext() {
 }
 
 bool DocumentLoadListener::Open(
-    nsDocShellLoadState* aLoadState, nsLoadFlags aLoadFlags, uint32_t aCacheKey,
+    nsDocShellLoadState* aLoadState, uint32_t aCacheKey,
     const Maybe<uint64_t>& aChannelId, const TimeStamp& aAsyncOpenTime,
     nsDOMNavigationTiming* aTiming, Maybe<ClientInfo>&& aInfo,
-    uint64_t aOuterWindowId, bool aHasGesture, nsresult* aRv) {
+    uint64_t aOuterWindowId, bool aHasGesture, Maybe<bool> aUriModified,
+    Maybe<bool> aIsXFOError, nsresult* aRv) {
   LOG(("DocumentLoadListener Open [this=%p, uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
   RefPtr<CanonicalBrowsingContext> browsingContext =
@@ -388,9 +389,12 @@ bool DocumentLoadListener::Open(
   RefPtr<LoadInfo> loadInfo =
       CreateLoadInfo(browsingContext, aLoadState, aOuterWindowId);
 
+  nsLoadFlags loadFlags = aLoadState->CalculateChannelLoadFlags(
+      browsingContext, std::move(aUriModified), std::move(aIsXFOError));
+
   if (!nsDocShell::CreateAndConfigureRealChannelForLoadState(
           browsingContext, aLoadState, loadInfo, mParentChannelListener,
-          nullptr, attrs, aLoadFlags, aCacheKey, *aRv,
+          nullptr, attrs, loadFlags, aCacheKey, *aRv,
           getter_AddRefs(mChannel))) {
     mParentChannelListener = nullptr;
     return false;
@@ -578,18 +582,6 @@ bool DocumentLoadListener::OpenFromParent(
   RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(*aLoadState);
   loadState->CalculateLoadURIFlags();
 
-  nsLoadFlags loadFlags = loadState->LoadFlags() |
-                          nsIChannel::LOAD_DOCUMENT_URI |
-                          nsIChannel::LOAD_CALL_CONTENT_SNIFFERS;
-  uint32_t sandboxFlags = aBrowsingContext->GetSandboxFlags();
-  if ((sandboxFlags & (SANDBOXED_ORIGIN | SANDBOXED_SCRIPTS)) == 0) {
-    loadFlags |= nsIRequest::LOAD_DOCUMENT_NEEDS_COOKIE;
-  }
-  if (loadState->FirstParty()) {
-    // tag first party URL loads
-    loadFlags |= nsIChannel::LOAD_INITIAL_DOCUMENT_URI;
-  }
-
   RefPtr<nsDOMNavigationTiming> timing = new nsDOMNavigationTiming(nullptr);
   timing->NotifyNavigationStart(
       aBrowsingContext->GetIsActive()
@@ -612,9 +604,10 @@ bool DocumentLoadListener::OpenFromParent(
       aBrowsingContext, aBrowsingContext->GetContentParent()->OtherPid());
 
   nsresult rv;
-  bool result = listener->Open(
-      loadState, loadFlags, cacheKey, channelId, TimeStamp::Now(), timing,
-      std::move(initialClientInfo), aOuterWindowId, false, &rv);
+  bool result =
+      listener->Open(loadState, cacheKey, channelId, TimeStamp::Now(), timing,
+                     std::move(initialClientInfo), aOuterWindowId, false,
+                     Nothing(), Nothing(), &rv);
   if (result) {
     // Create an entry in the redirect channel registrar to
     // allocate an identifier for this load.

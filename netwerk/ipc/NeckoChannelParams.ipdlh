@@ -434,13 +434,14 @@ struct DocumentChannelCreationArgs {
   DocShellLoadStateInit loadState;
   TimeStamp asyncOpenTime;
   uint64_t channelId;
-  uint32_t loadFlags;
   uint32_t cacheKey;
   bool pluginsAllowed;
   nsDOMNavigationTiming? timing;
   IPCClientInfo? initialClientInfo;
   uint64_t outerWindowId;
   bool hasValidTransientUserAction;
+  bool uriModified;
+  bool isXFOError;
 };
 
 struct DocumentChannelRedirect {
