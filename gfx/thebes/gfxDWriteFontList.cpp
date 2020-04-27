@@ -1000,7 +1000,7 @@ FontVisibility gfxDWriteFontList::GetVisibilityForFamily(
     return FontVisibility::Base;
   }
   if (FamilyInList(aName, kLangPackFonts, ArrayLength(kLangPackFonts))) {
-    return FontVisibility::Base;
+    return FontVisibility::LangPack;
   }
   return FontVisibility::User;
 }
