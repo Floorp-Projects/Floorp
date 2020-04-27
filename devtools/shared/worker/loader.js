@@ -430,9 +430,13 @@ var {
       Ci.nsIJSInspector
     );
 
+    const { URL } = Cu.Sandbox(principal, {
+      wantGlobalProperties: ["URL"],
+    });
+
     return {
       Debugger,
-      URL: this.URL,
+      URL: URL,
       createSandbox,
       dump: this.dump,
       rpc,
