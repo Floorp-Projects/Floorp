@@ -866,8 +866,6 @@ nsresult NrIceCtx::StartGathering(bool default_route_only,
 
   obfuscate_host_addresses_ = obfuscate_host_addresses;
 
-  SetGatheringState(ICE_CTX_GATHER_STARTED);
-
   SetCtxFlags(default_route_only);
 
   // This might start gathering for the first time, or again after
@@ -877,7 +875,10 @@ nsresult NrIceCtx::StartGathering(bool default_route_only,
 
   if (!r) {
     SetGatheringState(ICE_CTX_GATHER_COMPLETE);
-  } else if (r != R_WOULDBLOCK) {
+  } else if (r == R_WOULDBLOCK) {
+    SetGatheringState(ICE_CTX_GATHER_STARTED);
+  } else {
+    SetGatheringState(ICE_CTX_GATHER_COMPLETE);
     MOZ_MTLOG(ML_ERROR, "ICE FAILED: Couldn't gather ICE candidates for '"
                             << name_ << "', error=" << r);
     SetConnectionState(ICE_CTX_FAILED);
