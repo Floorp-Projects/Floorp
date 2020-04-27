@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "audio_thread_priority"
-version = "0.22.0"
+version = "0.22.1"
 authors = ["Paul Adenot <paul@paul.cx>"]
 description = "Bump a thread to real-time priority, for audio work, on Linux, Windows and macOS"
 license = "MPL-2.0"
