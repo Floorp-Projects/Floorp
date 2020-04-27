@@ -66,6 +66,9 @@ var DevTools = {
         this.selectors = [selectToolbox.bind(null, toolbox)];
         await new Promise(resolve => setTimeout(resolve, 1000));
       },
+      async verifyConfig() {
+        return "Panel sizes are regularly inconsistent";
+      },
     },
     undockedToolbox: {
       windowType: "devtools:toolbox",
@@ -78,6 +81,9 @@ var DevTools = {
         );
         this.selectors = [selectToolbox.bind(null, toolbox)];
         await new Promise(resolve => setTimeout(resolve, 1000));
+      },
+      async verifyConfig() {
+        return "Panel sizes are regularly inconsistent";
       },
     },
   },
