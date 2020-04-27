@@ -10980,6 +10980,10 @@ cleverapps.io
 *.lcl.dev
 *.stg.dev
 
+// Clic2000 : https://clic2000.fr
+// Submitted by Mathilde Blanchemanche <mathilde@clic2000.fr>
+clic2000.net
+
 // Cloud66 : https://www.cloud66.com/
 // Submitted by Khash Sajadi <khash@cloud66.com>
 c66.me
@@ -12791,6 +12795,10 @@ myshopblocks.com
 // Submitted by Craig McMahon <craig@shopitcommerce.com>
 shopitsite.com
 
+// shopware AG : https://shopware.com
+// Submitted by Jens Küper <cloud@shopware.com>
+shopware.store
+
 // Siemens Mobility GmbH
 // Submitted by Oliver Graebner <security@mo-siemens.io>
 mo-siemens.io
@@ -13130,5 +13138,9 @@ bss.design
 basicserver.io
 virtualserver.io
 enterprisecloud.nu
+
+// Mintere : https://mintere.com/
+// Submitted by Ben Aubin <security@mintere.com>
+mintere.site
 
 // ===END PRIVATE DOMAINS===
