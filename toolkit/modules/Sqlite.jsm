@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["Sqlite", "Barriers"];
+var EXPORTED_SYMBOLS = ["Sqlite"];
 
 // The maximum time to wait before considering a transaction stuck and rejecting
 // it. (Note that the minimum amount of time we wait is 20% less than this, see
