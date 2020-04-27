@@ -165,17 +165,90 @@ void readFull(JSContext* cx, const char* path,
   }
 }
 
-// Invariant: `path` must end with directory separator.
+// Represents absolute/relative path.
+class Path {
+  Vector<char> path_;
+
+  char lastChar() const {
+    size_t pathlen = path_.length();
+    return path_[pathlen - 1];
+  }
+
+  bool empty() const { return path_.empty(); }
+
+  bool isTerminated() const { return !empty() && lastChar() == '\0'; }
+
+  void terminate() {
+    if (!path_.append('\0')) {
+      MOZ_CRASH();
+    }
+  }
+
+ public:
+  explicit Path(JSContext* cx) : path_(cx) {}
+
+  void init(const char* path) {
+    path_.shrinkTo(0);
+
+    if (!path_.append(path, strlen(path))) {
+      MOZ_CRASH();
+    }
+  }
+
+  void join(const char* component) {
+    MOZ_ASSERT(!isTerminated());
+
+#if defined(XP_WIN)
+    const char separator = '\\';
+#else
+    const char separator = '/';
+#endif  // defined(XP_XIN)
+
+    if (!empty() && lastChar() != separator) {
+      if (!path_.append(separator)) {
+        MOZ_CRASH();
+      }
+    }
+
+    if (!path_.append(component, strlen(component))) {
+      MOZ_CRASH();
+    }
+  }
+
+  Vector<char>& getBuffer() {
+    MOZ_ASSERT(!isTerminated());
+    return path_;
+  }
+
+  bool exists() {
+    if (!isTerminated()) {
+      terminate();
+    }
+
+    struct stat info;
+    if (stat(get(), &info) < 0) {
+      return false;
+    }
+
+    return true;
+  }
+
+  const char* get() {
+    if (!isTerminated()) {
+      terminate();
+    }
+
+    return path_.begin();
+  }
+};
+
 template <typename Tok>
 void runTestFromPath(JSContext* cx, const char* path) {
   const char BIN_SUFFIX[] = ".binjs";
   const char TXT_SUFFIX[] = ".js";
   fprintf(stderr, "runTestFromPath: entering directory '%s'\n", path);
-  const size_t pathlen = strlen(path);
 
 #if defined(XP_UNIX)
-  MOZ_ASSERT(path[pathlen - 1] == '/');
-
   // Read the list of files in the directory.
   enterJsDirectory();
   DIR* dir = opendir(path);
@@ -189,22 +262,13 @@ void runTestFromPath(JSContext* cx, const char* path) {
     const bool isDirectory = entry->d_type == DT_DIR;
 
 #elif defined(XP_WIN)
-  MOZ_ASSERT(path[pathlen - 1] == '\\');
-
-  Vector<char> pattern(cx);
-  if (!pattern.append(path, pathlen)) {
-    MOZ_CRASH();
-  }
-  if (!pattern.append('*')) {
-    MOZ_CRASH();
-  }
-  if (!pattern.append('\0')) {
-    MOZ_CRASH();
-  }
+  Path pattern(cx);
+  pattern.init(path);
+  pattern.join("*");
 
   WIN32_FIND_DATA FindFileData;
   enterJsDirectory();
-  HANDLE hFind = FindFirstFile(pattern.begin(), &FindFileData);
+  HANDLE hFind = FindFirstFile(pattern.get(), &FindFileData);
   exitJsDirectory();
   for (bool found = (hFind != INVALID_HANDLE_VALUE); found;
        found = FindNextFile(hFind, &FindFileData)) {
@@ -225,22 +289,10 @@ void runTestFromPath(JSContext* cx, const char* path) {
         continue;
       }
 
-      Vector<char> subPath(cx);
-      // Start with `path` (including directory separator).
-      if (!subPath.append(path, pathlen)) {
-        MOZ_CRASH();
-      }
-      if (!subPath.append(d_name, namlen)) {
-        MOZ_CRASH();
-      }
-      // Append same directory separator.
-      if (!subPath.append(path[pathlen - 1])) {
-        MOZ_CRASH();
-      }
-      if (!subPath.append(0)) {
-        MOZ_CRASH();
-      }
-      runTestFromPath<Tok>(cx, subPath.begin());
+      Path subPath(cx);
+      subPath.init(path);
+      subPath.join(d_name);
+      runTestFromPath<Tok>(cx, subPath.get());
       continue;
     }
 
@@ -261,26 +313,22 @@ void runTestFromPath(JSContext* cx, const char* path) {
       continue;
 
     // Find text file.
-    Vector<char> txtPath(cx);
-    if (!txtPath.append(path, pathlen)) {
+    Path txtPath(cx);
+    txtPath.init(path);
+    txtPath.join(d_name);
+    txtPath.getBuffer().shrinkBy(sizeof(BIN_SUFFIX) - 1);
+    if (!txtPath.getBuffer().append(TXT_SUFFIX, sizeof(TXT_SUFFIX))) {
       MOZ_CRASH();
     }
-    if (!txtPath.append(d_name, namlen)) {
-      MOZ_CRASH();
-    }
-    txtPath.shrinkBy(sizeof(BIN_SUFFIX) - 1);
-    if (!txtPath.append(TXT_SUFFIX, sizeof(TXT_SUFFIX))) {
-      MOZ_CRASH();
-    }
-    fprintf(stderr, "Testing %s\n", txtPath.begin());
+    fprintf(stderr, "Testing %s\n", txtPath.get());
 
     // Read text file.
     js::Vector<mozilla::Utf8Unit> txtSource(cx);
-    readFull(cx, txtPath.begin(), txtSource);
+    readFull(cx, txtPath.get(), txtSource);
 
     // Parse text file.
     CompileOptions txtOptions(cx);
-    txtOptions.setFileAndLine(txtPath.begin(), 0);
+    txtOptions.setFileAndLine(txtPath.get(), 0);
 
     frontend::CompilationInfo compilationInfo(cx, allocScope, txtOptions);
     if (!compilationInfo.init(cx)) {
@@ -308,23 +356,16 @@ void runTestFromPath(JSContext* cx, const char* path) {
     }
 
     // Read binary file.
-    Vector<char> binPath(cx);
-    if (!binPath.append(path, pathlen)) {
-      MOZ_CRASH();
-    }
-    if (!binPath.append(d_name, namlen)) {
-      MOZ_CRASH();
-    }
-    if (!binPath.append(0)) {
-      MOZ_CRASH();
-    }
+    Path binPath(cx);
+    binPath.init(path);
+    binPath.join(d_name);
 
     js::Vector<uint8_t> binSource(cx);
-    readFull(binPath.begin(), binSource);
+    readFull(binPath.get(), binSource);
 
     // Parse binary file.
     CompileOptions binOptions(cx);
-    binOptions.setFileAndLine(binPath.begin(), 0);
+    binOptions.setFileAndLine(binPath.get(), 0);
 
     frontend::CompilationInfo binCompilationInfo(cx, allocScope, binOptions);
     if (!binCompilationInfo.init(cx)) {
@@ -380,7 +421,7 @@ void runTestFromPath(JSContext* cx, const char* path) {
     if (binParsed.isErr()) {
       fprintf(stderr,
               "Binary parser and text parser agree that %s is invalid\n",
-              txtPath.begin());
+              txtPath.get());
       continue;
     }
 
@@ -402,7 +443,7 @@ void runTestFromPath(JSContext* cx, const char* path) {
       fprintf(stderr,
               "Got distinct ASTs when parsing %s "
               "(%p/%p):\n\tBINARY\n%s\n\n\tTEXT\n%s\n",
-              txtPath.begin(), (void*)binPrinter.getOffset(),
+              txtPath.get(), (void*)binPrinter.getOffset(),
               (void*)txtPrinter.getOffset(), binPrinter.string(),
               txtPrinter.string());
 #  if 0   // Not for release, but useful for debugging.
@@ -437,7 +478,7 @@ void runTestFromPath(JSContext* cx, const char* path) {
       MOZ_CRASH("Got distinct ASTs");
     }
 
-    fprintf(stderr, "Got the same AST when parsing %s\n", txtPath.begin());
+    fprintf(stderr, "Got the same AST when parsing %s\n", txtPath.get());
 #endif  // defined(DEBUG)
   }
 
@@ -452,26 +493,61 @@ void runTestFromPath(JSContext* cx, const char* path) {
 #endif  // defined(XP_WIN)
 }
 
+// Construct either absolute or relative path to test directory into `path`.
+//
+// If TOPSRCDIR environment variable is given, it should point
+// mozilla-central.
+//
+// Otherwise, searches for test path, assuming cwd is somewhere between
+// the mozilla-central top and the test directory.
+//
+// NOTE: At least this should work without TOPSRCDIR environment variable,
+//       as long as cwd is either mozilla-central or mozilla-central/js/src.
+template <size_t N>
+void getTestPath(JSContext* cx, const char* (&pathComponents)[N], Path& path) {
+  char* topSrcDir = getenv("TOPSRCDIR");
+  if (!topSrcDir) {
+    for (size_t i = 0; i < N; i++) {
+      Path tmp(cx);
+      tmp.init(pathComponents[i]);
+      if (tmp.exists()) {
+        for (; i < N; i++) {
+          path.join(pathComponents[i]);
+        }
+        MOZ_ASSERT(path.exists());
+        return;
+      }
+    }
+
+    MOZ_CRASH(
+        "Could not find test path. Please specify TOPSRCDIR or run from "
+        "mozilla-central top.");
+  }
+
+  path.init(topSrcDir);
+  for (size_t i = 0; i < N; i++) {
+    path.join(pathComponents[i]);
+  }
+}
+
 BEGIN_TEST(testBinASTReaderMultipartECMAScript2) {
-#if defined(XP_WIN)
-  runTestFromPath<js::frontend::BinASTTokenReaderMultipart>(
-      cx, "jsapi-tests\\binast\\parser\\multipart\\");
-#else
-  runTestFromPath<js::frontend::BinASTTokenReaderMultipart>(
-      cx, "jsapi-tests/binast/parser/multipart/");
-#endif  // defined(XP_XIN)
+  const char* pathComponents[6] = {
+      "js", "src", "jsapi-tests", "binast", "parser", "multipart",
+  };
+  Path path(cx);
+  getTestPath(cx, pathComponents, path);
+  runTestFromPath<js::frontend::BinASTTokenReaderMultipart>(cx, path.get());
   return true;
 }
 END_TEST(testBinASTReaderMultipartECMAScript2)
 
 BEGIN_TEST(testBinASTReaderContextECMAScript2) {
-#if defined(XP_WIN)
-  runTestFromPath<js::frontend::BinASTTokenReaderContext>(
-      cx, "jsapi-tests\\binast\\parser\\context\\");
-#else
-  runTestFromPath<js::frontend::BinASTTokenReaderContext>(
-      cx, "jsapi-tests/binast/parser/context/");
-#endif  // defined(XP_XIN)
+  const char* pathComponents[] = {
+      "js", "src", "jsapi-tests", "binast", "parser", "context",
+  };
+  Path path(cx);
+  getTestPath(cx, pathComponents, path);
+  runTestFromPath<js::frontend::BinASTTokenReaderContext>(cx, path.get());
   return true;
 }
 END_TEST(testBinASTReaderContextECMAScript2)
