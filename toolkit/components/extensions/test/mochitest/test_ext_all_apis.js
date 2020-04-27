@@ -85,6 +85,8 @@ let expectedBackgroundApis = [
   "permissions.contains",
   "permissions.request",
   "permissions.remove",
+  "permissions.onAdded",
+  "permissions.onRemoved",
   "runtime.getBackgroundPage",
   "runtime.getBrowserInfo",
   "runtime.getPlatformInfo",
