@@ -197,6 +197,62 @@
 
 /* Toolbox controls */
 
+.devtools-tabbar-button {
+  -moz-appearance: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  margin: 0;
+  padding: 4px;
+  border: none;
+  direction: ltr;
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--theme-icon-color);
+  background-color: transparent;
+}
+
+/* Button icon style */
+.devtools-tabbar-button::before {
+  content: "";
+  flex: none;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin: 0 1px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.devtools-tabbar-button::-moz-focus-inner {
+  border: none;
+}
+
+.devtools-tabbar-button:focus {
+  outline: none;
+  background-color: var(--theme-toolbar-hover);
+}
+
+.devtools-tabbar-button:hover,
+.devtools-tabbar-button.checked {
+  background-color: var(--theme-toolbar-hover);
+}
+
+.devtools-tabbar-button.checked,
+.devtools-tabbar-button:active {
+  color: var(--theme-icon-checked-color);
+}
+
+.devtools-tabbar-button:disabled {
+  color: var(--theme-icon-dimmed-color) !important;
+  background-color: transparent !important;
+}
+
 #tools-chevron-menu-button::before {
   background-image: url("chrome://devtools/skin/images/command-chevron.svg");
 }
@@ -261,16 +317,6 @@
 
 /* Command buttons */
 
-.command-button,
-#toolbox-controls > button,
-.toolbox-tabs-wrapper .tools-chevron-menu {
-  /* !important is needed to override .devtools-button rules in common.css */
-  margin: 0 !important;
-  border-radius: 0 !important;
-  position: relative;
-  min-width: 26px;
-}
-
 #command-button-pick {
   min-width: 32px;
 }
@@ -309,7 +355,8 @@
 
 #command-button-fission-prefs::before {
   content: "FIS";
-  font-weight: bold;
+  width: auto;
+  font-weight: 600;
 }
 
 .fission-pref-icon::before {
