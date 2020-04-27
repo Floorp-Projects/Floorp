@@ -12,7 +12,9 @@ pub use glean_core::{CommonMetricData, Lifetime};
 mod boolean;
 mod counter;
 mod string;
+mod uuid;
 
 pub use self::boolean::BooleanMetric;
 pub use self::counter::CounterMetric;
 pub use self::string::StringMetric;
+pub use self::uuid::UuidMetric;

@@ -1895,6 +1895,7 @@ dependencies = [
  "log",
  "once_cell",
  "tempfile",
+ "uuid",
 ]
 
 [[package]]
