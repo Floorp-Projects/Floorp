@@ -79,3 +79,6 @@ if CONFIG['MOZ_GLEAN']:
 
 if CONFIG['MOZ_USING_WASM_SANDBOXING']:
     gkrust_features += ['wasm_library_sandboxing']
+
+if CONFIG['MOZ_NEW_WEBEXT_STORAGE']:
+    gkrust_features += ['new_webext_storage']

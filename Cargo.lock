@@ -1239,6 +1239,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ff511d5dc435d703f4971bc399647c9bc38e20cb41452e3b9feb4765419ed3f3"
 
 [[package]]
+name = "error-support"
+version = "0.1.0"
+source = "git+https://github.com/mozilla/application-services?rev=c17198fa5a88295f2cca722586c539280e10201c#c17198fa5a88295f2cca722586c539280e10201c"
+dependencies = [
+ "failure",
+]
+
+[[package]]
 name = "euclid"
 version = "0.20.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1843,6 +1851,7 @@ dependencies = [
  "sync15-traits",
  "unic-langid",
  "unic-langid-ffi",
+ "webext-storage",
  "webrender_bindings",
  "wgpu_bindings",
  "xpcom",
@@ -2149,6 +2158,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "interrupt-support"
+version = "0.1.0"
+source = "git+https://github.com/mozilla/application-services?rev=c17198fa5a88295f2cca722586c539280e10201c#c17198fa5a88295f2cca722586c539280e10201c"
+
+[[package]]
 name = "intl-memoizer"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2395,6 +2409,7 @@ version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e704a02bcaecd4a08b93a23f6be59d0bd79cd161e0963e9499165a0a35df7bd"
 dependencies = [
+ "cc",
  "pkg-config",
  "vcpkg",
 ]
@@ -3076,6 +3091,11 @@ version = "0.1.0"
 dependencies = [
  "nsstring",
 ]
+
+[[package]]
+name = "nss_build_common"
+version = "0.1.0"
+source = "git+https://github.com/mozilla/application-services?rev=c17198fa5a88295f2cca722586c539280e10201c#c17198fa5a88295f2cca722586c539280e10201c"
 
 [[package]]
 name = "nsstring"
@@ -4203,6 +4223,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "sql-support"
+version = "0.1.0"
+source = "git+https://github.com/mozilla/application-services?rev=c17198fa5a88295f2cca722586c539280e10201c#c17198fa5a88295f2cca722586c539280e10201c"
+dependencies = [
+ "ffi-support",
+ "interrupt-support",
+ "lazy_static",
+ "log",
+ "rusqlite",
+]
+
+[[package]]
 name = "stable_deref_trait"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4390,18 +4422,22 @@ dependencies = [
 [[package]]
 name = "sync-guid"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=120e51dd5f2aab4194cf0f7e93b2a8923f4504bb#120e51dd5f2aab4194cf0f7e93b2a8923f4504bb"
+source = "git+https://github.com/mozilla/application-services?rev=c17198fa5a88295f2cca722586c539280e10201c#c17198fa5a88295f2cca722586c539280e10201c"
 dependencies = [
+ "base64 0.12.0",
+ "rand",
+ "rusqlite",
  "serde",
 ]
 
 [[package]]
 name = "sync15-traits"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=120e51dd5f2aab4194cf0f7e93b2a8923f4504bb#120e51dd5f2aab4194cf0f7e93b2a8923f4504bb"
+source = "git+https://github.com/mozilla/application-services?rev=c17198fa5a88295f2cca722586c539280e10201c#c17198fa5a88295f2cca722586c539280e10201c"
 dependencies = [
  "failure",
  "ffi-support",
+ "interrupt-support",
  "log",
  "serde",
  "serde_json",
@@ -4974,6 +5010,7 @@ dependencies = [
  "idna",
  "matches",
  "percent-encoding",
+ "serde",
 ]
 
 [[package]]
@@ -5106,6 +5143,26 @@ dependencies = [
  "unicode-segmentation",
  "url",
  "warp",
+]
+
+[[package]]
+name = "webext-storage"
+version = "0.1.0"
+source = "git+https://github.com/mozilla/application-services?rev=c17198fa5a88295f2cca722586c539280e10201c#c17198fa5a88295f2cca722586c539280e10201c"
+dependencies = [
+ "error-support",
+ "failure",
+ "interrupt-support",
+ "lazy_static",
+ "log",
+ "nss_build_common",
+ "rusqlite",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "sql-support",
+ "sync-guid",
+ "url",
 ]
 
 [[package]]
