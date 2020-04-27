@@ -62,7 +62,7 @@ Expr* FilterExpr::getSubExprAt(uint32_t aPos) {
 
 void FilterExpr::setSubExprAt(uint32_t aPos, Expr* aExpr) {
   if (aPos == 0) {
-    expr.forget();
+    expr.release();
     expr = aExpr;
   } else {
     PredicateList::setSubExprAt(aPos - 1, aExpr);

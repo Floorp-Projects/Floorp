@@ -83,7 +83,7 @@ nsresult txToDocHandlerFactory::createHandlerWith(
       nsresult rv = handler->createResultDocument(
           EmptyString(), kNameSpaceID_None, mSourceDocument, mDocumentIsData);
       if (NS_SUCCEEDED(rv)) {
-        *aHandler = handler.forget();
+        *aHandler = handler.release();
       }
 
       return rv;
@@ -96,7 +96,7 @@ nsresult txToDocHandlerFactory::createHandlerWith(
       nsresult rv =
           handler->createResultDocument(mSourceDocument, mDocumentIsData);
       if (NS_SUCCEEDED(rv)) {
-        *aHandler = handler.forget();
+        *aHandler = handler.release();
       }
 
       return rv;
@@ -126,7 +126,7 @@ nsresult txToDocHandlerFactory::createHandlerWith(
       nsresult rv = handler->createResultDocument(aName, aNsID, mSourceDocument,
                                                   mDocumentIsData);
       if (NS_SUCCEEDED(rv)) {
-        *aHandler = handler.forget();
+        *aHandler = handler.release();
       }
 
       return rv;
@@ -139,7 +139,7 @@ nsresult txToDocHandlerFactory::createHandlerWith(
       nsresult rv =
           handler->createResultDocument(mSourceDocument, mDocumentIsData);
       if (NS_SUCCEEDED(rv)) {
-        *aHandler = handler.forget();
+        *aHandler = handler.release();
       }
 
       return rv;

@@ -223,7 +223,7 @@ nsresult txXPathOptimizer::optimizeUnion(Expr* aInExpr, Expr** aOutExpr) {
         NS_ENSURE_SUCCESS(rv, rv);
 
         currentStep->setNodeTest(unionTest);
-        owner.forget();
+        owner.release();
       }
 
       // Merge the nodetest into the union

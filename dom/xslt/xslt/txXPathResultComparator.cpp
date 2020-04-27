@@ -61,7 +61,7 @@ nsresult txResultStringComparator::createSortableValue(Expr* aExpr,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (nsCaseKey.IsEmpty()) {
-    aResult = val.forget();
+    aResult = val.release();
 
     return NS_OK;
   }
@@ -70,7 +70,7 @@ nsresult txResultStringComparator::createSortableValue(Expr* aExpr,
                                       nsCaseKey, val->mKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aResult = val.forget();
+  aResult = val.release();
 
   return NS_OK;
 }
@@ -158,7 +158,7 @@ nsresult txResultNumberComparator::createSortableValue(Expr* aExpr,
 
   numval->mVal = exprRes->numberValue();
 
-  aResult = numval.forget();
+  aResult = numval.release();
 
   return NS_OK;
 }
