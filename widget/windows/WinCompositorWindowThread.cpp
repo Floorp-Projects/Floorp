@@ -162,7 +162,7 @@ WinCompositorWnds WinCompositorWindowThread::CreateCompositorWindow() {
         DWORD extendedStyle = WS_EX_NOPARENTNOTIFY | WS_EX_NOREDIRECTIONBITMAP;
 
         if (!StaticPrefs::apz_windows_force_disable_direct_manipulation()) {
-          extendedStyle |= WS_EX_LAYERED;
+          extendedStyle |= WS_EX_LAYERED | WS_EX_TRANSPARENT;
         }
 
         compositorWnd = ::CreateWindowEx(
