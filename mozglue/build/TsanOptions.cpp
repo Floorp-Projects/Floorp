@@ -278,6 +278,9 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1615265
          "race:ScriptPreloader::OffThreadDecodeCallback\n"
 
+         // Bug 1615569
+         "race:mp_exptmod.max_window_bits\n"
+
          // ~GLContextGLX unlocks a libGL mutex that cannot be seen
          // by TSan because libGL is not instrumented.
          "mutex:GLContextGLX::~GLContextGLX\n"
