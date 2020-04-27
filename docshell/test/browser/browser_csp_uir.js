@@ -39,7 +39,11 @@ add_task(async function test_csp_inheritance_regular_click() {
 
 add_task(async function test_csp_inheritance_ctrl_click() {
   await BrowserTestUtils.withNewTab(TEST_URI, async function(browser) {
-    let loadPromise = BrowserTestUtils.waitForNewTab(gBrowser, RESULT_URI);
+    let loadPromise = BrowserTestUtils.waitForNewTab(
+      gBrowser,
+      RESULT_URI,
+      true
+    );
     // set the data href + simulate ctrl+click
     BrowserTestUtils.synthesizeMouseAtCenter(
       "#testlink",

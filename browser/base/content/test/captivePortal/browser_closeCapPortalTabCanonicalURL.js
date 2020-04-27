@@ -48,7 +48,11 @@ async function openCaptivePortalErrorTab() {
 }
 
 async function openCaptivePortalLoginTab(errorTab) {
-  let portalTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, LOGIN_URL);
+  let portalTabPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    LOGIN_URL,
+    true
+  );
 
   await SpecialPowers.spawn(errorTab.linkedBrowser, [], async () => {
     let doc = content.document;

@@ -1226,7 +1226,8 @@ add_task(async function testGoBackButtonIsDisabledWhenHistoryIsEmptyInNewTab() {
   );
   let addonsTabLoaded = BrowserTestUtils.waitForNewTab(
     gBrowser,
-    "about:addons"
+    "about:addons",
+    true
   );
   // Simulate a click on "Manage extension" from a context menu.
   let win = await BrowserOpenAddonsMgr(viewID);

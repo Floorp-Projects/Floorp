@@ -173,7 +173,7 @@ async function backgroundUpdateTest(url, id, checkIconFn) {
   is(addons.children.length, 1, "Have a menu entry for the update");
 
   // Click the menu item
-  tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:addons");
+  tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:addons", true);
   popupPromise = promisePopupNotificationShown("addon-webext-permissions");
 
   addons.children[0].click();

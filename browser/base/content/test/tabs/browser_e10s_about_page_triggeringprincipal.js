@@ -83,7 +83,8 @@ add_task(async function test_principal_ctrl_click() {
     async function(browser) {
       let loadPromise = BrowserTestUtils.waitForNewTab(
         gBrowser,
-        "about:test-about-principal-child"
+        "about:test-about-principal-child",
+        true
       );
       // simulate ctrl+click
       BrowserTestUtils.synthesizeMouseAtCenter(
@@ -141,7 +142,8 @@ add_task(async function test_principal_right_click_open_link_in_new_tab() {
     async function(browser) {
       let loadPromise = BrowserTestUtils.waitForNewTab(
         gBrowser,
-        "about:test-about-principal-child"
+        "about:test-about-principal-child",
+        true
       );
 
       // simulate right-click open link in tab

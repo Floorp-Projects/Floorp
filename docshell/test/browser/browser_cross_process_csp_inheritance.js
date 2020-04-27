@@ -84,7 +84,7 @@ async function simulateCspInheritanceForNewTab(aTestName, aSamePID) {
     is(currentURI, TEST_URI, aTestName + ": correct test uri loaded");
 
     let pid = await getCurrentPID(gBrowser.selectedBrowser);
-    let loadPromise = BrowserTestUtils.waitForNewTab(gBrowser, DATA_URI);
+    let loadPromise = BrowserTestUtils.waitForNewTab(gBrowser, DATA_URI, true);
     // simulate click
     BrowserTestUtils.synthesizeMouseAtCenter(
       "#testLink",
