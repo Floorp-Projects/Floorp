@@ -14,6 +14,7 @@ RUN apt-get update && \
       locales \
       bzip2 \
       curl \
+      gcc \
       git \
       python3 \
       locales \
@@ -42,11 +43,17 @@ RUN curl -L $(curl -H 'X-Ubuntu-Series: 16' 'https://api.snapcraft.io/api/v1/sna
 RUN mkdir -p /snap/core18
 RUN unsquashfs -d /snap/core18/current core18.snap
 
-# Grab the gnome-3-28-1804 snap from the stable channel
+# Grab the gnome-3-34-1804 snap from the stable channel
 # and unpack it in the proper place.
-RUN curl -L $(curl -H 'X-Ubuntu-Series: 16' 'https://api.snapcraft.io/api/v1/snaps/details/gnome-3-28-1804' | jq '.download_url' -r) --output gnome-3-28-1804.snap
-RUN mkdir -p /snap/gnome-3-28-1804
-RUN unsquashfs -d /snap/gnome-3-28-1804/current gnome-3-28-1804.snap
+RUN curl -L $(curl -H 'X-Ubuntu-Series: 16' 'https://api.snapcraft.io/api/v1/snaps/details/gnome-3-34-1804?channel=stable' | jq '.download_url' -r) --output gnome-3-34-1804.snap
+RUN mkdir -p /snap/gnome-3-34-1804
+RUN unsquashfs -d /snap/gnome-3-34-1804/current gnome-3-34-1804.snap
+
+# Grab the gnome-3-34-1804-sdk snap from the stable channel
+# and unpack it in the proper place.
+RUN curl -L $(curl -H 'X-Ubuntu-Series: 16' 'https://api.snapcraft.io/api/v1/snaps/details/gnome-3-34-1804-sdk?channel=stable' | jq '.download_url' -r) --output gnome-3-34-1804-sdk.snap
+RUN mkdir -p /snap/gnome-3-34-1804-sdk
+RUN unsquashfs -d /snap/gnome-3-34-1804-sdk/current gnome-3-34-1804-sdk.snap
 
 # Grab the snapcraft snap from the stable channel and unpack it in the proper
 # place.
