@@ -72,6 +72,17 @@
         "async": false
       },
       {
+        "name": "setDetectedTrrURI",
+        "type": "function",
+        "description": "Sets the TRR URI signalled by the network",
+        "parameters": [
+          {
+            "name": "uri",
+            "type": "string"
+          }
+        ]
+      },
+      {
         "name": "sendStatePing",
         "type": "function",
         "description": "Sends a ping for the state of the addon",

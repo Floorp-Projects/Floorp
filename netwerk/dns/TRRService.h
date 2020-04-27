@@ -79,6 +79,7 @@ class TRRService : public nsIObserver,
   void MaybeConfirm_locked();
   friend class ::nsDNSService;
   void GetParentalControlEnabledInternal();
+  void SetDetectedTrrURI(const nsACString& aURI);
 
   bool IsDomainBlacklisted(const nsACString& aHost,
                            const nsACString& aOriginSuffix,
