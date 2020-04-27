@@ -340,14 +340,4 @@ using FunctionBoxVector = Vector<const FunctionBox*, 8>;
 }  // namespace frontend
 }  // namespace js
 
-namespace mozilla {
-
-template <>
-struct IsPod<js::frontend::DeclaredNameInfo> : std::true_type {};
-
-template <>
-struct IsPod<js::frontend::NameLocation> : std::true_type {};
-
-}  // namespace mozilla
-
 #endif  // frontend_NameAnalysisTypes_h
