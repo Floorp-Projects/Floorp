@@ -430,8 +430,7 @@ static nsresult txFnStartLREStylesheet(int32_t aNamespaceID, nsAtom* aLocalName,
   nsAutoPtr<txTemplateItem> templ(
       new txTemplateItem(std::move(match), nullExpr, nullExpr, prio));
   aState.openInstructionContainer(templ);
-  rv = aState.addToplevelItem(templ);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aState.addToplevelItem(templ);
 
   templ.forget();
 
@@ -518,8 +517,7 @@ static nsresult txFnStartAttributeSet(int32_t aNamespaceID, nsAtom* aLocalName,
   nsAutoPtr<txAttributeSetItem> attrSet(new txAttributeSetItem(name));
   aState.openInstructionContainer(attrSet);
 
-  rv = aState.addToplevelItem(attrSet);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aState.addToplevelItem(attrSet);
 
   attrSet.forget();
 
@@ -622,14 +620,13 @@ static nsresult txFnStartImport(int32_t aNamespaceID, nsAtom* aLocalName,
                                 txStylesheetCompilerState& aState) {
   nsAutoPtr<txImportItem> import(new txImportItem);
   import->mFrame = new txStylesheet::ImportFrame;
-  nsresult rv = aState.addToplevelItem(import);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aState.addToplevelItem(import);
 
   txImportItem* importPtr = import.forget();
 
   txStylesheetAttr* attr = nullptr;
-  rv = getStyleAttr(aAttributes, aAttrCount, kNameSpaceID_None, nsGkAtoms::href,
-                    true, &attr);
+  nsresult rv = getStyleAttr(aAttributes, aAttrCount, kNameSpaceID_None,
+                             nsGkAtoms::href, true, &attr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString absUri;
@@ -804,8 +801,7 @@ static nsresult txFnStartOutput(int32_t aNamespaceID, nsAtom* aLocalName,
                        false);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = item->mFormat.mCDATASectionElements.add(qname);
-      NS_ENSURE_SUCCESS(rv, rv);
+      item->mFormat.mCDATASectionElements.add(qname);
       qname.forget();
     }
   }
@@ -820,8 +816,7 @@ static nsresult txFnStartOutput(int32_t aNamespaceID, nsAtom* aLocalName,
     item->mFormat.mMediaType = attr->mValue;
   }
 
-  rv = aState.addToplevelItem(item);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aState.addToplevelItem(item);
 
   item.forget();
 
@@ -894,8 +889,7 @@ static nsresult txFnStartStripSpace(int32_t aNamespaceID, nsAtom* aLocalName,
     sst.forget();
   }
 
-  rv = aState.addToplevelItem(stripItem);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aState.addToplevelItem(stripItem);
 
   stripItem.forget();
 
@@ -938,8 +932,7 @@ static nsresult txFnStartTemplate(int32_t aNamespaceID, nsAtom* aLocalName,
   nsAutoPtr<txTemplateItem> templ(
       new txTemplateItem(std::move(match), name, mode, prio));
   aState.openInstructionContainer(templ);
-  rv = aState.addToplevelItem(templ);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aState.addToplevelItem(templ);
 
   templ.forget();
 
@@ -990,8 +983,7 @@ static nsresult txFnStartTopVariable(int32_t aNamespaceID, nsAtom* aLocalName,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = aState.addToplevelItem(var);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aState.addToplevelItem(var);
 
   var.forget();
 
@@ -2148,11 +2140,10 @@ static nsresult txFnStartWhen(int32_t aNamespaceID, nsAtom* aLocalName,
 static nsresult txFnEndWhen(txStylesheetCompilerState& aState) {
   aState.popHandlerTable();
   nsAutoPtr<txGoTo> gotoinstr(new txGoTo(nullptr));
-  nsresult rv = aState.mChooseGotoList->add(gotoinstr);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aState.mChooseGotoList->add(gotoinstr);
 
   nsAutoPtr<txInstruction> instr(gotoinstr.forget());
-  rv = aState.addInstruction(std::move(instr));
+  nsresult rv = aState.addInstruction(std::move(instr));
   NS_ENSURE_SUCCESS(rv, rv);
 
   txConditionalGoto* condGoto =

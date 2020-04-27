@@ -611,8 +611,8 @@ void* txStylesheetCompilerState::popPtr(enumStackType aType) {
   return value;
 }
 
-nsresult txStylesheetCompilerState::addToplevelItem(txToplevelItem* aItem) {
-  return mToplevelIterator.addBefore(aItem);
+void txStylesheetCompilerState::addToplevelItem(txToplevelItem* aItem) {
+  mToplevelIterator.addBefore(aItem);
 }
 
 nsresult txStylesheetCompilerState::openInstructionContainer(
@@ -660,8 +660,7 @@ nsresult txStylesheetCompilerState::loadIncludedStylesheet(
   nsAutoPtr<txToplevelItem> item(new txDummyItem);
   NS_ENSURE_TRUE(item, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = mToplevelIterator.addBefore(item);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mToplevelIterator.addBefore(item);
 
   item.forget();
 
@@ -681,7 +680,8 @@ nsresult txStylesheetCompilerState::loadIncludedStylesheet(
   // pretended earlier.
   mChildCompilerList.AppendElement(compiler);
 
-  rv = mObserver->loadURI(aURI, mStylesheetURI, mReferrerPolicy, compiler);
+  nsresult rv =
+      mObserver->loadURI(aURI, mStylesheetURI, mReferrerPolicy, compiler);
   if (NS_FAILED(rv)) {
     mChildCompilerList.RemoveElement(compiler);
   }

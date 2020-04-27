@@ -336,12 +336,7 @@ nsresult txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
     NS_ENSURE_SUCCESS(rv, rv);
 
     defaultCounter->mSeparator.Assign('.');
-    rv = aCounters.add(defaultCounter);
-    if (NS_FAILED(rv)) {
-      // XXX ErrorReport: out of memory
-      delete defaultCounter;
-      return rv;
-    }
+    aCounters.add(defaultCounter);
 
     return NS_OK;
   }
@@ -391,16 +386,7 @@ nsresult txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
 
     // Add to list of counters
     counter->mSeparator = sepToken;
-    rv = aCounters.add(counter);
-    if (NS_FAILED(rv)) {
-      // XXX ErrorReport: out of memory
-      txListIterator iter(&aCounters);
-      while (iter.hasNext()) {
-        delete (txFormattedCounter*)iter.next();
-      }
-      aCounters.clear();
-      return rv;
-    }
+    aCounters.add(counter);
   }
 
   return NS_OK;
