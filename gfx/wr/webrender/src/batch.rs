@@ -19,7 +19,7 @@ use crate::internal_types::{FastHashMap, SavedTargetIndex, Swizzle, TextureSourc
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive};
 use crate::prim_store::{DeferredResolve, EdgeAaSegmentMask, PrimitiveInstanceKind, PrimitiveVisibilityIndex, PrimitiveVisibilityMask};
 use crate::prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
-use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex, PrimitiveVisibilityFlags};
+use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex, PrimitiveVisibility, PrimitiveVisibilityFlags};
 use crate::prim_store::{VECS_PER_SEGMENT, SpaceMapper};
 use crate::prim_store::image::ImageSource;
 use crate::render_target::RenderTargetContext;
@@ -722,6 +722,73 @@ impl BatchBuilder {
                 );
             }
         }
+    }
+
+    // If an image is being drawn as a compositor surface, we don't want
+    // to draw the surface itself into the tile. Instead, we draw a transparent
+    // rectangle that writes to the z-buffer where this compositor surface is.
+    // That ensures we 'cut out' the part of the tile that has the compositor
+    // surface on it, allowing us to draw this tile as an overlay on top of
+    // the compositor surface.
+    // TODO(gw): There's a slight performance cost to doing this cutout rectangle
+    //           if we end up not needing to use overlay mode. Consider skipping
+    //           the cutout completely in this path.
+    fn emit_placeholder(
+        &mut self,
+        prim_rect: LayoutRect,
+        prim_info: &PrimitiveVisibility,
+        z_id: ZBufferId,
+        transform_id: TransformPaletteId,
+        batch_features: BatchFeatures,
+        ctx: &RenderTargetContext,
+        gpu_cache: &mut GpuCache,
+        render_tasks: &RenderTaskGraph,
+        prim_headers: &mut PrimitiveHeaders,
+    ) {
+        let batch_params = BrushBatchParameters::shared(
+            BrushBatchKind::Solid,
+            BatchTextures::no_texture(),
+            [get_shader_opacity(0.0), 0, 0, 0],
+            0,
+        );
+
+        let prim_cache_address = gpu_cache.get_address(
+            &ctx.globals.default_transparent_rect_handle,
+        );
+
+        let prim_header = PrimitiveHeader {
+            local_rect: prim_rect,
+            local_clip_rect: prim_info.combined_local_clip_rect,
+            specific_prim_address: prim_cache_address,
+            transform_id,
+        };
+
+        let prim_header_index = prim_headers.push(
+            &prim_header,
+            z_id,
+            batch_params.prim_user_data,
+        );
+
+        let bounding_rect = &prim_info.clip_chain.pic_clip_rect;
+        let transform_kind = transform_id.transform_kind();
+        let prim_vis_mask = prim_info.visibility_mask;
+
+        self.add_segmented_prim_to_batch(
+            None,
+            PrimitiveOpacity::translucent(),
+            &batch_params,
+            BlendMode::None,
+            BlendMode::None,
+            batch_features,
+            prim_header_index,
+            bounding_rect,
+            transform_kind,
+            render_tasks,
+            z_id,
+            prim_info.clip_task_index,
+            prim_vis_mask,
+            ctx,
+        );
     }
 
     // Adds a primitive to a batch.
@@ -1923,57 +1990,16 @@ impl BatchBuilder {
                 );
             }
             PrimitiveInstanceKind::YuvImage { data_handle, segment_instance_index, is_compositor_surface, .. } => {
-                // If this YUV image is being drawn as a compositor surface, we don't want
-                // to draw the YUV surface itself into the tile. Instead, we draw a transparent
-                // rectangle that writes to the z-buffer where this compositor surface is.
-                // That ensures we 'cut out' the part of the tile that has the compositor
-                // surface on it, allowing us to draw this tile as an overlay on top of
-                // the compositor surface.
-                // TODO(gw): There's a slight performance cost to doing this cutout rectangle
-                //           if we end up not needing to use overlay mode. Consider skipping
-                //           the cutout completely in this path.
                 if is_compositor_surface {
-                    let batch_params = BrushBatchParameters::shared(
-                        BrushBatchKind::Solid,
-                        BatchTextures::no_texture(),
-                        [get_shader_opacity(0.0), 0, 0, 0],
-                        0,
-                    );
-
-                    let prim_cache_address = gpu_cache.get_address(
-                        &ctx.globals.default_transparent_rect_handle,
-                    );
-
-                    let prim_header = PrimitiveHeader {
-                        local_rect: prim_rect,
-                        local_clip_rect: prim_info.combined_local_clip_rect,
-                        specific_prim_address: prim_cache_address,
-                        transform_id,
-                    };
-
-                    let prim_header_index = prim_headers.push(
-                        &prim_header,
-                        z_id,
-                        batch_params.prim_user_data,
-                    );
-
-                    self.add_segmented_prim_to_batch(
-                        None,
-                        PrimitiveOpacity::translucent(),
-                        &batch_params,
-                        BlendMode::None,
-                        BlendMode::None,
-                        batch_features,
-                        prim_header_index,
-                        bounding_rect,
-                        transform_kind,
-                        render_tasks,
-                        z_id,
-                        prim_info.clip_task_index,
-                        prim_vis_mask,
-                        ctx,
-                    );
-
+                    self.emit_placeholder(prim_rect,
+                                          prim_info,
+                                          z_id,
+                                          transform_id,
+                                          batch_features,
+                                          ctx,
+                                          gpu_cache,
+                                          render_tasks,
+                                          prim_headers);
                     return;
                 }
 
@@ -2086,7 +2112,19 @@ impl BatchBuilder {
                     ctx,
                 );
             }
-            PrimitiveInstanceKind::Image { data_handle, image_instance_index, .. } => {
+            PrimitiveInstanceKind::Image { data_handle, image_instance_index, is_compositor_surface, .. } => {
+                if is_compositor_surface {
+                    self.emit_placeholder(prim_rect,
+                                          prim_info,
+                                          z_id,
+                                          transform_id,
+                                          batch_features,
+                                          ctx,
+                                          gpu_cache,
+                                          render_tasks,
+                                          prim_headers);
+                    return;
+                }
                 let image_data = &ctx.data_stores.image[data_handle].kind;
                 let common_data = &ctx.data_stores.image[data_handle].common;
                 let image_instance = &ctx.prim_store.images[image_instance_index];
