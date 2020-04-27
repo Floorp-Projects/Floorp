@@ -3895,12 +3895,12 @@ bool BrowserParent::AsyncPanZoomEnabled() const {
 }
 
 void BrowserParent::StartPersistence(
-    uint64_t aOuterWindowID, nsIWebBrowserPersistDocumentReceiver* aRecv,
-    ErrorResult& aRv) {
+    CanonicalBrowsingContext* aContext,
+    nsIWebBrowserPersistDocumentReceiver* aRecv, ErrorResult& aRv) {
   auto* actor = new WebBrowserPersistDocumentParent();
   actor->SetOnReady(aRecv);
-  bool ok = Manager()->SendPWebBrowserPersistDocumentConstructor(
-      actor, this, aOuterWindowID);
+  bool ok = Manager()->SendPWebBrowserPersistDocumentConstructor(actor, this,
+                                                                 aContext);
   if (!ok) {
     aRv.Throw(NS_ERROR_FAILURE);
   }

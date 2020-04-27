@@ -52,6 +52,7 @@ function openContextMenu(aMessage, aBrowser, aActor) {
     contentType: data.contentType,
     contentDisposition: data.contentDisposition,
     frameOuterWindowID: data.frameOuterWindowID,
+    frameBrowsingContext: BrowsingContext.get(data.frameBrowsingContextID),
     selectionInfo: data.selectionInfo,
     disableSetDesktopBackground: data.disableSetDesktopBackground,
     loginFillInfo: data.loginFillInfo,
@@ -231,6 +232,9 @@ class nsContextMenu {
     this.principal = context.principal;
     this.storagePrincipal = context.storagePrincipal;
     this.frameOuterWindowID = context.frameOuterWindowID;
+    this.frameBrowsingContext = BrowsingContext.get(
+      context.frameBrowsingContextID
+    );
 
     this.inSyntheticDoc = context.inSyntheticDoc;
     this.inAboutDevtoolsToolbox = context.inAboutDevtoolsToolbox;
@@ -1395,7 +1399,7 @@ class nsContextMenu {
 
   // Save URL of clicked-on frame.
   saveFrame() {
-    saveBrowser(this.browser, false, this.frameOuterWindowID);
+    saveBrowser(this.browser, false, this.frameBrowsingContext);
   }
 
   // Helper function to wait for appropriate MIME-type headers and
