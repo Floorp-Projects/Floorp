@@ -380,11 +380,11 @@ var TestRunner = {
       });
 
       this.mochitestScope.info("called " + config.name);
-      // Add a default timeout of 500ms to avoid conflicts when configurations
+      // Add a default timeout of 700ms to avoid conflicts when configurations
       // try to apply at the same time. e.g WindowSize and TabsInTitlebar
       return Promise.race([applyPromise, timeoutPromise]).then(result => {
         return new Promise(resolve => {
-          setTimeout(() => resolve(result), 500);
+          setTimeout(() => resolve(result), 700);
         });
       });
     };
