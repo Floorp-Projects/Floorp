@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-session**
+  * `SnapshotSerializer` no longer restores source of a `Session`, added `Session.Source.RESTORED`
+
 * **feature-downloads**
   * Fixed issue [#6764](https://github.com/mozilla-mobile/android-components/issues/6764).
 
@@ -52,7 +55,7 @@ permalink: /changelog/
 * **browser-tabstray**
   * The iconView is no longer required in the template.
   * The URL text for items may be styled.
-  
+
 * **service-glean**
   * Glean was updated to v28.0.0
     * The baseline ping is now sent when the application goes to foreground, in addition to background and dirty-startup.

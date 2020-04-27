@@ -174,7 +174,12 @@ class Session(
         /**
          * User entered a URL or search term
          */
-        USER_ENTERED
+        USER_ENTERED,
+
+        /**
+         * This session was restored
+         */
+        RESTORED
     }
 
     /**
