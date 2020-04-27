@@ -204,6 +204,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // closed.
   bool IsInProcess() const { return mIsInProcess; }
 
+  bool CanHaveRemoteOuterProxies() const {
+    return !mIsInProcess || mDanglingRemoteOuterProxies;
+  }
+
   // Has this BrowsingContext been discarded. A discarded browsing context has
   // been destroyed, and may not be available on the other side of an IPC
   // message.
