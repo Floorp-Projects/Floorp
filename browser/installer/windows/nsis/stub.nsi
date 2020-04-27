@@ -136,12 +136,6 @@ Var ArchToInstall
 ; Maximum times to retry the download before displaying an error
 !define DownloadMaxRetries 9
 
-; Minimum size expected to download in bytes
-!define DownloadMinSizeBytes 15728640 ; 15 MB
-
-; Maximum size expected to download in bytes
-!define DownloadMaxSizeBytes 157286400 ; 150 MB
-
 ; Interval before retrying to download. 3 seconds is used along with 10
 ; attempted downloads (the first attempt along with 9 retries) to give a
 ; minimum of 30 seconds or retrying before giving up.
@@ -805,24 +799,6 @@ Function OnDownload
 
   ${If} "$DownloadSizeBytes" == ""
   ${AndIf} "$4" != ""
-    ; Handle the case where the size of the file to be downloaded is less than
-    ; the minimum expected size or greater than the maximum expected size at the
-    ; beginning of the download.
-    ${If} $4 < ${DownloadMinSizeBytes}
-    ${OrIf} $4 > ${DownloadMaxSizeBytes}
-      WebBrowser::CancelTimer $TimerHandle
-      InetBgDL::Get /RESET /END
-      StrCpy $DownloadReset "true"
-
-      ${If} $DownloadRetryCount >= ${DownloadMaxRetries}
-        ; Use a timer so the UI has a chance to update
-        ${StartTimer} ${InstallIntervalMS} DisplayDownloadError
-      ${Else}
-        ${StartTimer} ${DownloadRetryIntervalMS} StartDownload
-      ${EndIf}
-      Return
-    ${EndIf}
-
     StrCpy $DownloadSizeBytes "$4"
     StrCpy $ProgressCompleted 0
   ${EndIf}
@@ -833,21 +809,6 @@ Function OnDownload
     Return
   ${EndIf}
 
-  ; Handle the case where the downloaded size is greater than the maximum
-  ; expected size during the download.
-  ${If} $DownloadedBytes > ${DownloadMaxSizeBytes}
-    InetBgDL::Get /RESET /END
-    StrCpy $DownloadReset "true"
-
-    ${If} $DownloadRetryCount >= ${DownloadMaxRetries}
-      ; Use a timer so the UI has a chance to update
-      ${StartTimer} ${InstallIntervalMS} DisplayDownloadError
-    ${Else}
-      ${StartTimer} ${DownloadRetryIntervalMS} StartDownload
-    ${EndIf}
-    Return
-  ${EndIf}
-
   ${If} $IsDownloadFinished != "true"
     ${If} $2 == 0
       WebBrowser::CancelTimer $TimerHandle
@@ -855,24 +816,18 @@ Function OnDownload
       System::Call "kernel32::GetTickCount()l .s"
       Pop $EndDownloadPhaseTickCount
 
-      StrCpy $DownloadedBytes "$DownloadSizeBytes"
-
-      ; When a download has finished handle the case where the  downloaded size
-      ; is less than the minimum expected size or greater than the maximum
-      ; expected size during the download.
-      ${If} $DownloadedBytes < ${DownloadMinSizeBytes}
-      ${OrIf} $DownloadedBytes > ${DownloadMaxSizeBytes}
-        InetBgDL::Get /RESET /END
-        StrCpy $DownloadReset "true"
-
-        ${If} $DownloadRetryCount >= ${DownloadMaxRetries}
-          ; Use a timer so the UI has a chance to update
-          ${StartTimer} ${InstallIntervalMS} DisplayDownloadError
-        ${Else}
-          ${StartTimer} ${DownloadRetryIntervalMS} StartDownload
+      ${If} "$DownloadSizeBytes" == ""
+        ; It's possible for the download to finish before we were able to
+        ; get the size while it was downloading, and InetBgDL doesn't report
+        ; it afterwards. Use the size of the finished file.
+        ClearErrors
+        FileOpen $5 "$PLUGINSDIR\download.exe" r
+        ${IfNot} ${Errors}
+          FileSeek $5 0 END $DownloadSizeBytes
+          FileClose $5
         ${EndIf}
-        Return
       ${EndIf}
+      StrCpy $DownloadedBytes "$DownloadSizeBytes"
 
       ; Update the progress bars first in the UI change so they take affect
       ; before other UI changes.
