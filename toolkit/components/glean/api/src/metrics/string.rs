@@ -59,8 +59,15 @@ impl StringMetric {
     /// **Test-only API.**
     ///
     /// Get the currently stored value as a string.
-    ///
     /// This doesn't clear the stored value.
+    ///
+    /// ## Arguments
+    ///
+    /// * `storage_name` - the storage name to look into.
+    ///
+    /// ## Return value
+    ///
+    /// Returns the stored value or `None` if nothing stored.
     pub fn test_get_value(&self, storage_name: &str) -> Option<String> {
         crate::with_glean(move |glean| self.0.test_get_value(glean, storage_name))
     }
