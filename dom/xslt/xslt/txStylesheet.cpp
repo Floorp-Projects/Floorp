@@ -28,8 +28,8 @@ nsresult txStylesheet::init() {
   // element/root template
   mContainerTemplate = new txPushParams;
 
-  nsAutoPtr<txNodeTest> nt(new txNodeTypeTest(txNodeTypeTest::NODE_TYPE));
-  nsAutoPtr<Expr> nodeExpr(
+  UniquePtr<txNodeTest> nt(new txNodeTypeTest(txNodeTypeTest::NODE_TYPE));
+  UniquePtr<Expr> nodeExpr(
       new LocationStep(nt.get(), LocationStep::CHILD_AXIS));
   nt.forget();
 
@@ -314,7 +314,7 @@ nsresult txStylesheet::doneCompiling() {
   }
 
   if (!mDecimalFormats.get(txExpandedName())) {
-    nsAutoPtr<txDecimalFormat> format(new txDecimalFormat);
+    UniquePtr<txDecimalFormat> format(new txDecimalFormat);
     rv = mDecimalFormats.add(txExpandedName(), format.get());
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -350,7 +350,7 @@ nsresult txStylesheet::addTemplate(txTemplateItem* aTemplate,
       aImportFrame->mMatchableTemplates.get(aTemplate->mMode);
 
   if (!templates) {
-    nsAutoPtr<nsTArray<MatchableTemplate> > newList(
+    UniquePtr<nsTArray<MatchableTemplate> > newList(
         new nsTArray<MatchableTemplate>);
     nsresult rv =
         aImportFrame->mMatchableTemplates.set(aTemplate->mMode, newList.get());
@@ -361,8 +361,8 @@ nsresult txStylesheet::addTemplate(txTemplateItem* aTemplate,
 
   // Add the simple patterns to the list of matchable templates, according
   // to default priority
-  nsAutoPtr<txPattern> simple = std::move(aTemplate->mMatch);
-  nsAutoPtr<txPattern> unionPattern;
+  UniquePtr<txPattern> simple = std::move(aTemplate->mMatch);
+  UniquePtr<txPattern> unionPattern;
   if (simple->getType() == txPattern::UNION_PATTERN) {
     unionPattern = std::move(simple);
     simple = unionPattern->getSubPatternAt(0);
@@ -489,7 +489,7 @@ nsresult txStylesheet::addGlobalVariable(txVariableItem* aVariable) {
   if (mGlobalVariables.get(aVariable->mName)) {
     return NS_OK;
   }
-  nsAutoPtr<GlobalVariable> var(new GlobalVariable(
+  UniquePtr<GlobalVariable> var(new GlobalVariable(
       std::move(aVariable->mValue), std::move(aVariable->mFirstInstruction),
       aVariable->mIsParam));
   nsresult rv = mGlobalVariables.add(aVariable->mName, var.get());
@@ -501,8 +501,8 @@ nsresult txStylesheet::addGlobalVariable(txVariableItem* aVariable) {
 }
 
 nsresult txStylesheet::addKey(const txExpandedName& aName,
-                              nsAutoPtr<txPattern> aMatch,
-                              nsAutoPtr<Expr> aUse) {
+                              UniquePtr<txPattern> aMatch,
+                              UniquePtr<Expr> aUse) {
   nsresult rv = NS_OK;
 
   txXSLKey* xslKey = mKeys.get(aName);
@@ -521,7 +521,7 @@ nsresult txStylesheet::addKey(const txExpandedName& aName,
 }
 
 nsresult txStylesheet::addDecimalFormat(const txExpandedName& aName,
-                                        nsAutoPtr<txDecimalFormat>&& aFormat) {
+                                        UniquePtr<txDecimalFormat>&& aFormat) {
   txDecimalFormat* existing = mDecimalFormats.get(aName);
   if (existing) {
     NS_ENSURE_TRUE(existing->isEqual(aFormat.get()),
@@ -545,8 +545,8 @@ txStylesheet::ImportFrame::~ImportFrame() {
   }
 }
 
-txStylesheet::GlobalVariable::GlobalVariable(nsAutoPtr<Expr>&& aExpr,
-                                             nsAutoPtr<txInstruction>&& aInstr,
+txStylesheet::GlobalVariable::GlobalVariable(UniquePtr<Expr>&& aExpr,
+                                             UniquePtr<txInstruction>&& aInstr,
                                              bool aIsParam)
     : mExpr(std::move(aExpr)),
       mFirstInstruction(std::move(aInstr)),

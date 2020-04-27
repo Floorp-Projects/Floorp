@@ -239,7 +239,7 @@ nsresult txExecutionState::getVariable(int32_t aNamespace, nsAtom* aLName,
       return rv;
     }
   } else {
-    nsAutoPtr<txRtfHandler> rtfHandler(new txRtfHandler);
+    UniquePtr<txRtfHandler> rtfHandler(new txRtfHandler);
 
     rv = pushResultHandler(rtfHandler.get());
     if (NS_FAILED(rv)) {

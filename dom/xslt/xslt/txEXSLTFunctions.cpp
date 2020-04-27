@@ -122,7 +122,7 @@ static nsresult createAndAddToResult(nsAtom* aName, const nsAString& aValue,
   rv = aResultHolder->AppendChildTo(elem, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoPtr<txXPathNode> xpathNode(
+  UniquePtr<txXPathNode> xpathNode(
       txXPathNativeNode::createXPathNode(elem, true));
   NS_ENSURE_TRUE(xpathNode, NS_ERROR_OUT_OF_MEMORY);
 
@@ -258,7 +258,7 @@ nsresult txEXSLTFunctionCall::evaluate(txIEvalContext* aContext,
           nsAutoString value;
           exprResult->stringValue(value);
 
-          nsAutoPtr<txXPathNode> node;
+          UniquePtr<txXPathNode> node;
           rv = createTextNode(aContext, value, getter_Transfers(node));
           NS_ENSURE_SUCCESS(rv, rv);
 
@@ -685,7 +685,7 @@ nsresult txEXSLTRegExFunctionCall::evaluate(txIEvalContext* aContext,
       rv = aContext->recycler()->getNodeSet(getter_AddRefs(resultSet));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      nsAutoPtr<txXPathNode> node;
+      UniquePtr<txXPathNode> node;
       for (nsIContent* result = docFrag->GetFirstChild(); result;
            result = result->GetNextSibling()) {
         node = txXPathNativeNode::createXPathNode(result, true);

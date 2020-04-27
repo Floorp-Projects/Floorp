@@ -125,7 +125,7 @@ class txOwningExpandedNameMap : public txExpandedNameMap_base {
   }
 
   nsresult set(const txExpandedName& aKey, E* aValue) {
-    nsAutoPtr<E> oldValue;
+    mozilla::UniquePtr<E> oldValue;
     return setItem(aKey, (void*)aValue, getter_Transfers(oldValue));
   }
 

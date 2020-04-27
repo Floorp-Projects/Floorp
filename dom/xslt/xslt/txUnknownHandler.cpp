@@ -152,7 +152,7 @@ nsresult txUnknownHandler::createHandlerAndFlush(bool aHTMLRoot,
     format.mMethod = aHTMLRoot ? eHTMLOutput : eXMLOutput;
   }
 
-  nsAutoPtr<txAXMLEventHandler> handler;
+  UniquePtr<txAXMLEventHandler> handler;
   nsresult rv = mEs->mOutputHandlerFactory->createHandlerWith(
       &format, aName, aNsID, getter_Transfers(handler));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -169,6 +169,6 @@ nsresult txUnknownHandler::createHandlerAndFlush(bool aHTMLRoot,
   // Let go of out buffer as soon as we're done flushing it, we're not going
   // to need it anymore from this point on (all hooks get forwarded to
   // mEs->mResultHandler.
-  nsAutoPtr<txResultBuffer> buffer(std::move(mBuffer));
+  UniquePtr<txResultBuffer> buffer(std::move(mBuffer));
   return buffer->flushToHandler(mEs->mResultHandler);
 }

@@ -125,7 +125,7 @@ class txLocPathPattern : public txPattern {
  private:
   class Step {
    public:
-    nsAutoPtr<txPattern> pattern;
+    mozilla::UniquePtr<txPattern> pattern;
     bool isChild;
   };
 
@@ -196,7 +196,7 @@ class txStepPattern : public txPattern, public PredicateList {
   }
 
  private:
-  nsAutoPtr<txNodeTest> mNodeTest;
+  mozilla::UniquePtr<txNodeTest> mNodeTest;
   bool mIsAttr;
 };
 

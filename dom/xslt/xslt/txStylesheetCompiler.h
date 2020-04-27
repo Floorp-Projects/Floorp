@@ -102,7 +102,7 @@ class txStylesheetCompilerState : public txIParseContext {
   void addToplevelItem(txToplevelItem* aItem);
   nsresult openInstructionContainer(txInstructionContainer* aContainer);
   void closeInstructionContainer();
-  void addInstruction(nsAutoPtr<txInstruction>&& aInstruction);
+  void addInstruction(mozilla::UniquePtr<txInstruction>&& aInstruction);
   nsresult loadIncludedStylesheet(const nsAString& aURI);
   nsresult loadImportedStylesheet(const nsAString& aURI,
                                   txStylesheet::ImportFrame* aFrame);
@@ -134,9 +134,9 @@ class txStylesheetCompilerState : public txIParseContext {
 
   RefPtr<txStylesheet> mStylesheet;
   txHandlerTable* mHandlerTable;
-  nsAutoPtr<txElementContext> mElementContext;
+  mozilla::UniquePtr<txElementContext> mElementContext;
   txPushNewContext* mSorter;
-  nsAutoPtr<txList> mChooseGotoList;
+  mozilla::UniquePtr<txList> mChooseGotoList;
   bool mDOE;
   bool mSearchingForFallback;
   uint16_t mDisAllowed;
