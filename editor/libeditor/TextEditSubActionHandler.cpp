@@ -185,7 +185,7 @@ nsresult TextEditor::OnEndHandlingTopLevelEditSubAction() {
 
 EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(!AsHTMLEditor());
+  MOZ_ASSERT(IsTextEditor());
   MOZ_ASSERT(!IsSingleLineEditor());
 
   UndefineCaretBidiLevel();
@@ -210,10 +210,10 @@ EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
   // if the selection isn't collapsed, delete it.
   if (!SelectionRefPtr()->IsCollapsed()) {
     nsresult rv =
-        DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eStrip);
+        DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eNoStrip);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "EditorBase::DeleteSelectionAsSubAction(eNone, eStrip) failed");
+          "EditorBase::DeleteSelectionAsSubAction(eNone, eNoStrip) failed");
       return EditActionIgnored(rv);
     }
   }
@@ -478,10 +478,10 @@ EditActionResult TextEditor::HandleInsertText(
   // if the selection isn't collapsed, delete it.
   if (!SelectionRefPtr()->IsCollapsed()) {
     nsresult rv =
-        DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eStrip);
+        DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eNoStrip);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "EditorBase::DeleteSelectionAsSubAction(eNone, eStrip) failed");
+          "EditorBase::DeleteSelectionAsSubAction(eNone, eNoStrip) failed");
       return EditActionHandled(rv);
     }
   }
@@ -738,6 +738,8 @@ EditActionResult TextEditor::HandleDeleteSelection(
     nsIEditor::EDirection aDirectionAndAmount,
     nsIEditor::EStripWrappers aStripWrappers) {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(IsTextEditor());
+  MOZ_ASSERT(aStripWrappers == nsIEditor::eNoStrip);
 
   UndefineCaretBidiLevel();
 
@@ -749,14 +751,15 @@ EditActionResult TextEditor::HandleDeleteSelection(
     return EditActionCanceled();
   }
   EditActionResult result =
-      HandleDeleteSelectionInternal(aDirectionAndAmount, aStripWrappers);
+      HandleDeleteSelectionInternal(aDirectionAndAmount, nsIEditor::eNoStrip);
   // HandleDeleteSelectionInternal() creates SelectionBatcher.  Therefore,
   // quitting from it might cause having destroyed the editor.
   if (NS_WARN_IF(Destroyed())) {
     return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
   }
-  NS_WARNING_ASSERTION(result.Succeeded(),
-                       "TextEditor::HandleDeleteSelectionInternal() failed");
+  NS_WARNING_ASSERTION(
+      result.Succeeded(),
+      "TextEditor::HandleDeleteSelectionInternal(eNoStrip) failed");
   return result;
 }
 
@@ -764,7 +767,8 @@ EditActionResult TextEditor::HandleDeleteSelectionInternal(
     nsIEditor::EDirection aDirectionAndAmount,
     nsIEditor::EStripWrappers aStripWrappers) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(!AsHTMLEditor());
+  MOZ_ASSERT(IsTextEditor());
+  MOZ_ASSERT(aStripWrappers == nsIEditor::eNoStrip);
 
   // If the current selection is empty (e.g the user presses backspace with
   // a collapsed selection), then we want to avoid sending the selectstart
@@ -786,11 +790,11 @@ EditActionResult TextEditor::HandleDeleteSelectionInternal(
     }
 
     if (!SelectionRefPtr()->IsCollapsed()) {
-      nsresult rv =
-          DeleteSelectionWithTransaction(aDirectionAndAmount, aStripWrappers);
+      nsresult rv = DeleteSelectionWithTransaction(aDirectionAndAmount,
+                                                   nsIEditor::eNoStrip);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
-          "EditorBase::DeleteSelectionWithTransaction() failed");
+          "EditorBase::DeleteSelectionWithTransaction(eNoStrip) failed");
       return EditActionHandled(rv);
     }
 
@@ -810,12 +814,10 @@ EditActionResult TextEditor::HandleDeleteSelectionInternal(
     return EditActionResult(rv);
   }
 
-  rv = DeleteSelectionWithTransaction(aDirectionAndAmount, aStripWrappers);
-  if (NS_WARN_IF(Destroyed())) {
-    return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-  }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::DeleteSelectionWithTransaction() failed");
+  rv = DeleteSelectionWithTransaction(aDirectionAndAmount, nsIEditor::eNoStrip);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EditorBase::DeleteSelectionWithTransaction(eNoStrip) failed");
   return EditActionHandled(rv);
 }
 

@@ -4758,6 +4758,12 @@ nsresult EditorBase::DeleteSelectionAsAction(
       "Should be called only when this is the only edit action of the "
       "operation unless mutation event listener nests some operations");
 
+  // If we're a TextEditor instance, we don't need to treat parent elements
+  // so that we can ignore aStripWrappers for skipping unnecessary cost.
+  if (IsTextEditor()) {
+    aStripWrappers = nsIEditor::eNoStrip;
+  }
+
   EditAction editAction = EditAction::eDeleteSelection;
   switch (aDirectionAndAmount) {
     case nsIEditor::ePrevious:
@@ -4881,8 +4887,9 @@ nsresult EditorBase::DeleteSelectionAsSubAction(
     nsIEditor::EStripWrappers aStripWrappers) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(mPlaceholderBatch);
-
   MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
+  NS_ASSERTION(IsHTMLEditor() || aStripWrappers == nsIEditor::eNoStrip,
+               "TextEditor does not support strip wrappers");
 
   if (NS_WARN_IF(!mInitSucceeded)) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -5072,6 +5079,10 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
 
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+
   if (NS_WARN_IF(!SelectionRefPtr()->RangeCount()) ||
       NS_WARN_IF(
           SelectionRefPtr()->IsCollapsed() &&
@@ -5127,6 +5138,9 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
         NS_WARNING_ASSERTION(
             NS_SUCCEEDED(rvIgnored),
             "nsIEditActionListener::WillDeleteSelection() failed, but ignored");
+        MOZ_DIAGNOSTIC_ASSERT(!Destroyed(),
+                              "nsIEditActionListener::WillDeleteSelection() "
+                              "must not destroy the editor");
       }
     } else if (deleteCharData) {
       AutoActionListenerArray listeners(mActionListeners);
@@ -5136,13 +5150,19 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
         NS_WARNING_ASSERTION(
             NS_SUCCEEDED(rvIgnored),
             "nsIEditActionListener::WillDeleteText() failed, but ignored");
+        MOZ_DIAGNOSTIC_ASSERT(!Destroyed(),
+                              "nsIEditActionListener::WillDeleteText() must "
+                              "not destroy the editor");
       }
     }
   }
 
   // Delete the specified amount
   nsresult rv = DoTransactionInternal(deleteSelectionTransaction);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+  // I'm not sure whether we should keep notifying edit action listeners or
+  // stop doing it.  For now, just keep traditional behavior.
+  bool destroyedByTransaction = Destroyed();
+  NS_WARNING_ASSERTION(destroyedByTransaction || NS_SUCCEEDED(rv),
                        "EditorBase::DoTransactionInternal() failed");
 
   if (IsHTMLEditor() && deleteCharData) {
@@ -5155,6 +5175,9 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
       !deleteCharData) {
     RefPtr<TextServicesDocument> textServicesDocument = mTextServicesDocument;
     textServicesDocument->DidDeleteNode(deleteContent);
+    MOZ_ASSERT(
+        destroyedByTransaction || !Destroyed(),
+        "TextServicesDocument::DidDeleteNode() must not destroy the editor");
   }
 
   // Notify nsIEditActionListener::DidDelete[Selection|Text|Node]
@@ -5166,6 +5189,9 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "nsIEditActionListener::DidDeleteSelection() failed, but ignored");
+      MOZ_DIAGNOSTIC_ASSERT(destroyedByTransaction || !Destroyed(),
+                            "nsIEditActionListener::DidDeleteSelection() must "
+                            "not destroy the editor");
     }
   } else if (deleteCharData) {
     for (auto& listener : mActionListeners) {
@@ -5174,6 +5200,9 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "nsIEditActionListener::DidDeleteText() failed, but ignored");
+      MOZ_DIAGNOSTIC_ASSERT(
+          destroyedByTransaction || !Destroyed(),
+          "nsIEditActionListener::DidDeleteText() must not destroy the editor");
     }
   } else {
     for (auto& listener : mActionListeners) {
@@ -5182,9 +5211,41 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "nsIEditActionListener::DidDeleteNode() failed, but ignored");
+      MOZ_DIAGNOSTIC_ASSERT(
+          destroyedByTransaction || !Destroyed(),
+          "nsIEditActionListener::DidDeleteNode() must not destroy the editor");
     }
   }
 
+  if (NS_WARN_IF(destroyedByTransaction)) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!IsHTMLEditor() || aStripWrappers == nsIEditor::eNoStrip) {
+    return NS_OK;
+  }
+
+  if (!SelectionRefPtr()->IsCollapsed()) {
+    NS_WARNING("Selection was changed by mutation event listeners");
+    return NS_OK;
+  }
+
+  nsINode* anchorNode = SelectionRefPtr()->GetAnchorNode();
+  if (NS_WARN_IF(!anchorNode) || NS_WARN_IF(!anchorNode->IsContent()) ||
+      NS_WARN_IF(!HTMLEditUtils::IsSimplyEditableNode(*anchorNode)) ||
+      anchorNode->Length() > 0) {
+    return NS_OK;
+  }
+
+  OwningNonNull<nsIContent> anchorContent = *anchorNode->AsContent();
+  rv = MOZ_KnownLive(AsHTMLEditor())
+           ->RemoveEmptyInclusiveAncestorInlineElements(anchorContent);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "HTMLEditor::RemoveEmptyInclusiveAncestorInlineElements() failed");
   return rv;
 }
 
