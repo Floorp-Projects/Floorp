@@ -7,6 +7,7 @@
 #define HTMLEditUtils_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/AbstractRange.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/Element.h"
 #include "nsGkAtoms.h"
@@ -264,6 +265,38 @@ class HTMLEditUtils final {
       }
     }
     return nullptr;
+  }
+
+  /**
+   * GetElementIfOnlyOneSelected() returns an element if aRange selects only
+   * the element node (and its descendants).
+   */
+  static Element* GetElementIfOnlyOneSelected(
+      const dom::AbstractRange& aRange) {
+    if (!aRange.IsPositioned()) {
+      return nullptr;
+    }
+    const RangeBoundary& start = aRange.StartRef();
+    const RangeBoundary& end = aRange.EndRef();
+    if (NS_WARN_IF(!start.IsSetAndValid()) ||
+        NS_WARN_IF(!end.IsSetAndValid()) ||
+        start.Container() != end.Container()) {
+      return nullptr;
+    }
+    nsIContent* childAtStart = start.GetChildAtOffset();
+    if (!childAtStart || !childAtStart->IsElement()) {
+      return nullptr;
+    }
+    // If start child is not the last sibling and only if end child is its
+    // next sibling, the start child is selected.
+    if (childAtStart->GetNextSibling()) {
+      return childAtStart->GetNextSibling() == end.GetChildAtOffset()
+                 ? childAtStart->AsElement()
+                 : nullptr;
+    }
+    // If start child is the last sibling and only if no child at the end,
+    // the start child is selected.
+    return !end.GetChildAtOffset() ? childAtStart->AsElement() : nullptr;
   }
 
   static EditAction GetEditActionForInsert(const nsAtom& aTagName);

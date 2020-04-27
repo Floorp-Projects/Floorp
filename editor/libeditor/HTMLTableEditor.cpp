@@ -3889,39 +3889,27 @@ nsresult HTMLEditor::GetCellFromRange(nsRange* aRange, Element** aCell) {
   }
 
   *aCell = nullptr;
-
-  nsCOMPtr<nsINode> startContainer = aRange->GetStartContainer();
-  if (NS_WARN_IF(!startContainer)) {
-    return NS_ERROR_FAILURE;
+  Element* element = HTMLEditUtils::GetElementIfOnlyOneSelected(*aRange);
+  if (!element) {
+    // For backward compatibility, the following cases should return error for
+    // now.
+    if (NS_WARN_IF(!aRange->GetStartContainer())) {
+      return NS_ERROR_FAILURE;
+    }
+    if (NS_WARN_IF(!aRange->GetChildAtStartOffset())) {
+      return NS_ERROR_FAILURE;
+    }
+    if (NS_WARN_IF(!aRange->GetEndContainer())) {
+      return NS_ERROR_FAILURE;
+    }
+    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
 
-  uint32_t startOffset = aRange->StartOffset();
-
-  nsCOMPtr<nsINode> childNode = aRange->GetChildAtStartOffset();
-  // This means selection is probably at a text node (or end of doc?)
-  if (!childNode) {
-    NS_WARNING("First selection range does not starts from a node");
-    return NS_ERROR_FAILURE;
+  if (!HTMLEditUtils::IsTableCell(element)) {
+    return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
   }
-
-  nsCOMPtr<nsINode> endContainer = aRange->GetEndContainer();
-  if (NS_WARN_IF(!endContainer)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // If a cell is deleted, the range is collapse
-  //   (startOffset == aRange->EndOffset())
-  //   so tell caller the cell wasn't found
-  if (startContainer == endContainer &&
-      aRange->EndOffset() == startOffset + 1 &&
-      HTMLEditUtils::IsTableCell(childNode)) {
-    // Should we also test if frame is selected? (Use CellData)
-    // (Let's not for now -- more efficient)
-    RefPtr<Element> cellElement = childNode->AsElement();
-    cellElement.forget(aCell);
-    return NS_OK;
-  }
-  return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
+  *aCell = do_AddRef(element).take();
+  return NS_OK;
 }
 
 NS_IMETHODIMP HTMLEditor::GetFirstSelectedCell(
