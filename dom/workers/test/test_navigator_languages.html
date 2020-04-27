@@ -20,8 +20,13 @@ Tests of DOM Worker Navigator
 <pre id="test">
 <script class="testbody" language="javascript">
 
-  var tests = [ 'en,it', 'it,en,fr', '', 'en' ];
-  var expectedLanguages;
+  var tests = [
+    { expectedLanguages: 'en,it', inputLanguages: 'en,it' },
+    { expectedLanguages: 'it,en,fr', inputLanguages: 'it,en,fr' },
+    { expectedLanguages: SpecialPowers.Services.locale.webExposedLocales[0], inputLanguages: '' },
+    { expectedLanguages: 'en,it', inputLanguages: 'en,it' },
+  ];
+  var test;
   function runTests() {
     if (!tests.length) {
       worker.postMessage('finish');
@@ -29,8 +34,8 @@ Tests of DOM Worker Navigator
       return;
     }
 
-    expectedLanguages = tests.shift();
-    SpecialPowers.pushPrefEnv({"set": [["intl.accept_languages", expectedLanguages]]}, function() {
+    test = tests.shift();
+    SpecialPowers.pushPrefEnv({"set": [["intl.accept_languages", test.inputLanguages]]}, function() {
       worker.postMessage(true);
     });
   }
@@ -40,8 +45,8 @@ Tests of DOM Worker Navigator
   var worker = new Worker("navigator_languages_worker.js");
 
   worker.onmessage = function(event) {
-    is(event.data.toString(), navigator.languages.toString(), "The languages mach.");
-    is(event.data.toString(), expectedLanguages, "This is the correct result.");
+    is(event.data.toString(), navigator.languages.toString(), "The languages match.");
+    is(event.data.toString(), test.expectedLanguages, "This is the correct result.");
     runTests();
   }
 
