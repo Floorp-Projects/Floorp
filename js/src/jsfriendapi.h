@@ -11,6 +11,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/UniquePtr.h"
 
 #include "jspubtd.h"
