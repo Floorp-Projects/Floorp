@@ -611,16 +611,16 @@ void MacroAssembler::branchTestUndefined(Condition cond, Register tag,
 void MacroAssembler::branchTestUndefined(Condition cond, const Address& address,
                                          Label* label) {
   SecondScratchRegisterScope scratch2(*this);
-  extractTag(address, scratch2);
-  branchTestUndefined(cond, scratch2, label);
+  Register tag = extractTag(address, scratch2);
+  branchTestUndefined(cond, tag, label);
 }
 
 void MacroAssembler::branchTestUndefined(Condition cond,
                                          const BaseIndex& address,
                                          Label* label) {
   SecondScratchRegisterScope scratch2(*this);
-  extractTag(address, scratch2);
-  branchTestUndefined(cond, scratch2, label);
+  Register tag = extractTag(address, scratch2);
+  branchTestUndefined(cond, tag, label);
 }
 
 void MacroAssembler::branchTestInt32(Condition cond, Register tag,
@@ -632,29 +632,29 @@ void MacroAssembler::branchTestInt32(Condition cond, Register tag,
 void MacroAssembler::branchTestInt32(Condition cond, const Address& address,
                                      Label* label) {
   SecondScratchRegisterScope scratch2(*this);
-  extractTag(address, scratch2);
-  branchTestInt32(cond, scratch2, label);
+  Register tag = extractTag(address, scratch2);
+  branchTestInt32(cond, tag, label);
 }
 
 void MacroAssembler::branchTestInt32(Condition cond, const BaseIndex& address,
                                      Label* label) {
   SecondScratchRegisterScope scratch2(*this);
-  extractTag(address, scratch2);
-  branchTestInt32(cond, scratch2, label);
+  Register tag = extractTag(address, scratch2);
+  branchTestInt32(cond, tag, label);
 }
 
 void MacroAssembler::branchTestDouble(Condition cond, const Address& address,
                                       Label* label) {
   SecondScratchRegisterScope scratch2(*this);
-  extractTag(address, scratch2);
-  branchTestDouble(cond, scratch2, label);
+  Register tag = extractTag(address, scratch2);
+  branchTestDouble(cond, tag, label);
 }
 
 void MacroAssembler::branchTestDouble(Condition cond, const BaseIndex& address,
                                       Label* label) {
   SecondScratchRegisterScope scratch2(*this);
-  extractTag(address, scratch2);
-  branchTestDouble(cond, scratch2, label);
+  Register tag = extractTag(address, scratch2);
+  branchTestDouble(cond, tag, label);
 }
 
 void MacroAssembler::branchTestDoubleTruthy(bool b, FloatRegister value,
@@ -680,15 +680,15 @@ void MacroAssembler::branchTestBoolean(Condition cond, Register tag,
 void MacroAssembler::branchTestBoolean(Condition cond, const Address& address,
                                        Label* label) {
   SecondScratchRegisterScope scratch2(*this);
-  extractTag(address, scratch2);
-  branchTestBoolean(cond, scratch2, label);
+  Register tag = extractTag(address, scratch2);
+  branchTestBoolean(cond, tag, label);
 }
 
 void MacroAssembler::branchTestBoolean(Condition cond, const BaseIndex& address,
                                        Label* label) {
   SecondScratchRegisterScope scratch2(*this);
-  extractTag(address, scratch2);
-  branchTestBoolean(cond, scratch2, label);
+  Register tag = extractTag(address, scratch2);
+  branchTestBoolean(cond, tag, label);
 }
 
 void MacroAssembler::branchTestString(Condition cond, Register tag,
@@ -700,15 +700,15 @@ void MacroAssembler::branchTestString(Condition cond, Register tag,
 void MacroAssembler::branchTestString(Condition cond, const Address& address,
                                       Label* label) {
   SecondScratchRegisterScope scratch2(*this);
-  extractTag(address, scratch2);
-  branchTestString(cond, scratch2, label);
+  Register tag = extractTag(address, scratch2);
+  branchTestString(cond, tag, label);
 }
 
 void MacroAssembler::branchTestString(Condition cond, const BaseIndex& address,
                                       Label* label) {
   SecondScratchRegisterScope scratch2(*this);
-  extractTag(address, scratch2);
-  branchTestString(cond, scratch2, label);
+  Register tag = extractTag(address, scratch2);
+  branchTestString(cond, tag, label);
 }
 
 void MacroAssembler::branchTestSymbol(Condition cond, Register tag,
@@ -720,8 +720,8 @@ void MacroAssembler::branchTestSymbol(Condition cond, Register tag,
 void MacroAssembler::branchTestSymbol(Condition cond, const BaseIndex& address,
                                       Label* label) {
   SecondScratchRegisterScope scratch2(*this);
-  extractTag(address, scratch2);
-  branchTestSymbol(cond, scratch2, label);
+  Register tag = extractTag(address, scratch2);
+  branchTestSymbol(cond, tag, label);
 }
 
 void MacroAssembler::branchTestBigInt(Condition cond, Register tag,
@@ -733,8 +733,8 @@ void MacroAssembler::branchTestBigInt(Condition cond, Register tag,
 void MacroAssembler::branchTestBigInt(Condition cond, const Address& address,
                                       Label* label) {
   SecondScratchRegisterScope scratch2(*this);
-  extractTag(address, scratch2);
-  branchTestBigInt(cond, scratch2, label);
+  Register tag = extractTag(address, scratch2);
+  branchTestBigInt(cond, tag, label);
 }
 
 void MacroAssembler::branchTestNull(Condition cond, Register tag,
@@ -746,15 +746,15 @@ void MacroAssembler::branchTestNull(Condition cond, Register tag,
 void MacroAssembler::branchTestNull(Condition cond, const Address& address,
                                     Label* label) {
   SecondScratchRegisterScope scratch2(*this);
-  extractTag(address, scratch2);
-  branchTestNull(cond, scratch2, label);
+  Register tag = extractTag(address, scratch2);
+  branchTestNull(cond, tag, label);
 }
 
 void MacroAssembler::branchTestNull(Condition cond, const BaseIndex& address,
                                     Label* label) {
   SecondScratchRegisterScope scratch2(*this);
-  extractTag(address, scratch2);
-  branchTestNull(cond, scratch2, label);
+  Register tag = extractTag(address, scratch2);
+  branchTestNull(cond, tag, label);
 }
 
 void MacroAssembler::branchTestObject(Condition cond, Register tag,
@@ -766,31 +766,31 @@ void MacroAssembler::branchTestObject(Condition cond, Register tag,
 void MacroAssembler::branchTestObject(Condition cond, const Address& address,
                                       Label* label) {
   SecondScratchRegisterScope scratch2(*this);
-  extractTag(address, scratch2);
-  branchTestObject(cond, scratch2, label);
+  Register tag = extractTag(address, scratch2);
+  branchTestObject(cond, tag, label);
 }
 
 void MacroAssembler::branchTestObject(Condition cond, const BaseIndex& address,
                                       Label* label) {
   SecondScratchRegisterScope scratch2(*this);
-  extractTag(address, scratch2);
-  branchTestObject(cond, scratch2, label);
+  Register tag = extractTag(address, scratch2);
+  branchTestObject(cond, tag, label);
 }
 
 void MacroAssembler::branchTestGCThing(Condition cond, const Address& address,
                                        Label* label) {
   MOZ_ASSERT(cond == Equal || cond == NotEqual);
   SecondScratchRegisterScope scratch2(*this);
-  extractTag(address, scratch2);
-  ma_b(scratch2, ImmTag(JS::detail::ValueLowerInclGCThingTag), label,
+  Register tag = extractTag(address, scratch2);
+  ma_b(tag, ImmTag(JS::detail::ValueLowerInclGCThingTag), label,
        (cond == Equal) ? AboveOrEqual : Below);
 }
 void MacroAssembler::branchTestGCThing(Condition cond, const BaseIndex& address,
                                        Label* label) {
   MOZ_ASSERT(cond == Equal || cond == NotEqual);
   SecondScratchRegisterScope scratch2(*this);
-  extractTag(address, scratch2);
-  ma_b(scratch2, ImmTag(JS::detail::ValueLowerInclGCThingTag), label,
+  Register tag = extractTag(address, scratch2);
+  ma_b(tag, ImmTag(JS::detail::ValueLowerInclGCThingTag), label,
        (cond == Equal) ? AboveOrEqual : Below);
 }
 
@@ -810,15 +810,15 @@ void MacroAssembler::branchTestMagic(Condition cond, Register tag,
 void MacroAssembler::branchTestMagic(Condition cond, const Address& address,
                                      Label* label) {
   SecondScratchRegisterScope scratch2(*this);
-  extractTag(address, scratch2);
-  branchTestMagic(cond, scratch2, label);
+  Register tag = extractTag(address, scratch2);
+  branchTestMagic(cond, tag, label);
 }
 
 void MacroAssembler::branchTestMagic(Condition cond, const BaseIndex& address,
                                      Label* label) {
   SecondScratchRegisterScope scratch2(*this);
-  extractTag(address, scratch2);
-  branchTestMagic(cond, scratch2, label);
+  Register tag = extractTag(address, scratch2);
+  branchTestMagic(cond, tag, label);
 }
 
 void MacroAssembler::branchToComputedAddress(const BaseIndex& addr) {
