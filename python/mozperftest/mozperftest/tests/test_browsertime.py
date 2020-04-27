@@ -7,6 +7,7 @@ import shutil
 from mozperftest.tests.support import get_running_env
 from mozperftest.environment import BROWSER
 from mozperftest.browser.browsertime import add_options
+from mozperftest.utils import silence
 
 
 HERE = os.path.dirname(__file__)
@@ -30,7 +31,7 @@ def test_browser():
     env.set_arg("tests", [os.path.join(HERE, "example.js")])
 
     try:
-        with browser as b:
+        with browser as b, silence():
             b(metadata)
     finally:
         shutil.rmtree(mach_cmd._mach_context.state_dir)

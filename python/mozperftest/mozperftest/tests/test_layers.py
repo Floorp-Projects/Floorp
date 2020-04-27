@@ -5,7 +5,7 @@ from mozperftest.layers import Layer, Layers
 from mozperftest.environment import MachEnvironment
 
 
-class TestLayer(Layer):
+class _TestLayer(Layer):
     name = "test"
     activated = True
     called = 0
@@ -18,13 +18,13 @@ class TestLayer(Layer):
         self.called += 1
 
 
-class TestLayer2(TestLayer):
+class _TestLayer2(_TestLayer):
     name = "test2"
     activated = True
     arguments = {"arg2": {"type": str, "default": "xxx", "help": "arg2"}}
 
 
-class TestLayer3(TestLayer):
+class _TestLayer3(_TestLayer):
     name = "test3"
     activated = True
 
@@ -33,7 +33,7 @@ def test_layer():
     mach = MagicMock()
     env = MachEnvironment(mach, test=True, test_arg1="ok")
 
-    with TestLayer(env, mach) as layer:
+    with _TestLayer(env, mach) as layer:
         layer.info("info")
         layer.debug("debug")
         assert layer.get_arg("test")
@@ -49,7 +49,7 @@ def test_layer():
 
 def test_layers():
     mach = MagicMock()
-    factories = [TestLayer, TestLayer2, TestLayer3]
+    factories = [_TestLayer, _TestLayer2, _TestLayer3]
     env = MachEnvironment(
         mach, no_test3=True, test_arg1="ok", test2=True, test2_arg2="2"
     )

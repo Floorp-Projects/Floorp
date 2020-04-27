@@ -1,10 +1,10 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-import logging
+from mozperftest.utils import MachLogger
 
 
-class Layer:
+class Layer(MachLogger):
     # layer name
     name = "unset"
 
@@ -15,9 +15,9 @@ class Layer:
     arguments = {}
 
     def __init__(self, env, mach_command):
+        MachLogger.__init__(self, mach_command)
         self.return_code = 0
         self.mach_cmd = mach_command
-        self.log = mach_command.log
         self.run_process = mach_command.run_process
         self.env = env
 
@@ -42,18 +42,6 @@ class Layer:
 
     def get_arg(self, name, default=None):
         return self.env.get_arg(name, default, self)
-
-    def info(self, msg, name="mozperftest", **kwargs):
-        self.log(logging.INFO, name, kwargs, msg)
-
-    def debug(self, msg, name="mozperftest", **kwargs):
-        self.log(logging.DEBUG, name, kwargs, msg)
-
-    def warning(self, msg, name="mozperftest", **kwargs):
-        self.log(logging.WARNING, name, kwargs, msg)
-
-    def error(self, msg, name="mozperftest", **kwargs):
-        self.log(logging.ERROR, name, kwargs, msg)
 
     def __enter__(self):
         self.setup()
