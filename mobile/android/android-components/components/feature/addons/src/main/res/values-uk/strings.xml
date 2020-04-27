@@ -33,7 +33,7 @@
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">Моніторинг використання додатків і керування темами</string>
     <!-- Description for native_messaging permission. -->
-    <string name="mozac_feature_addons_permissions_native_messaging_description">Обмін повідомленнями з іншими додатками, окрім цього</string>
+    <string name="mozac_feature_addons_permissions_native_messaging_description">Обмін повідомленнями з іншими програмами</string>
     <!-- Description for notifications permission. -->
     <string name="mozac_feature_addons_permissions_notifications_description">Показ сповіщень</string>
     <!-- Description for pkcs11 permission. -->
