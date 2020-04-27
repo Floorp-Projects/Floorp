@@ -603,7 +603,7 @@ android-hw-aarch64-debug-unittests:
     - mochitest-webgl2-core
 
 android-hw-aarch64-qr:
-    - crashtest
+    - crashtest-qr
     - reftest-qr
 
 android-hw-arm7-raptor:

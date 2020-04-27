@@ -63,6 +63,16 @@ crashtest:
             android-hw-.*-qr/.*: 2
             default: default
 
+crashtest-qr:
+    description: "Crashtest Webrender run"
+    schedules-component: crashtest
+    treeherder-symbol: R(C)
+    chunks: 1
+    e10s: true
+    run-on-projects: built-projects
+    max-run-time: 1200
+    tier: 2
+
 jsreftest:
     description: "JS Reftest run"
     schedules-component: jsreftest

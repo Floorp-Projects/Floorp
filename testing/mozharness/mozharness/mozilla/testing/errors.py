@@ -52,6 +52,7 @@ TinderBoxPrintRe = {
     "reftest_summary": _reftest_summary,
     "reftest-qr_summary": _reftest_summary,
     "crashtest_summary": _reftest_summary,
+    "crashtest-qr_summary": _reftest_summary,
     "xpcshell_summary": {
         'regex': re.compile(r'''INFO \| (Passed|Failed|Todo): (\d+)'''),
         'pass_group': "Passed",
