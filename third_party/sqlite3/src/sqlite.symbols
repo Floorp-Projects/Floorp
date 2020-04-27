@@ -45,6 +45,7 @@ sqlite3_create_collation
 sqlite3_create_collation16
 sqlite3_create_function
 sqlite3_create_function16
+sqlite3_create_function_v2
 sqlite3_create_module
 sqlite3_data_count
 sqlite3_db_config
@@ -104,6 +105,7 @@ sqlite3_result_error
 sqlite3_result_error16
 sqlite3_result_error_code
 sqlite3_result_error_nomem
+sqlite3_result_error_toobig
 sqlite3_result_int
 sqlite3_result_int64
 sqlite3_result_null
@@ -112,6 +114,7 @@ sqlite3_result_text16
 sqlite3_result_text16be
 sqlite3_result_text16le
 sqlite3_result_value
+sqlite3_result_zeroblob
 sqlite3_rollback_hook
 sqlite3_set_authorizer
 sqlite3_set_auxdata
