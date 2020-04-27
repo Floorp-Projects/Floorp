@@ -910,6 +910,13 @@ this.AntiTracking = {
         }
       );
 
+      await AntiTracking._maybeDoSubIframeTest(
+        browser,
+        cookieBehavior,
+        blockingCallback,
+        iframeSandbox
+      );
+
       info("Removing the tab");
       BrowserTestUtils.removeTab(tab);
 
@@ -1123,6 +1130,13 @@ this.AntiTracking = {
         }
       );
 
+      await AntiTracking._maybeDoSubIframeTest(
+        browser,
+        cookieBehavior,
+        blockingCallback,
+        iframeSandbox
+      );
+
       info("Removing the tab");
       BrowserTestUtils.removeTab(tab);
 
@@ -1130,6 +1144,88 @@ this.AntiTracking = {
         win.close();
       }
     });
+  },
+
+  async _maybeDoSubIframeTest(
+    browser,
+    cookieBehavior,
+    blockingCallback,
+    iframeSandbox
+  ) {
+    // We would do an additional test for sub-iframe if the cookie behavior is
+    // BEHAVIOR_REJECT_TRACKER. The sub-iframes shouldn't get the the storage
+    // access even they have the storage permission.
+    if (cookieBehavior !== BEHAVIOR_REJECT_TRACKER) {
+      return;
+    }
+
+    info("Create a first-level iframe to test sub iframes.");
+    let iframeBrowsingContext = await SpecialPowers.spawn(
+      browser,
+      [{ page: TEST_IFRAME_PAGE }],
+      async function(obj) {
+        // Add an iframe.
+        let ifr = content.document.createElement("iframe");
+        let loading = new content.Promise(resolve => {
+          ifr.onload = resolve;
+        });
+        content.document.body.appendChild(ifr);
+        ifr.src = obj.page;
+        await loading;
+
+        return ifr.browsingContext;
+      }
+    );
+
+    info("Create a second-level 3rd party content which should be blocked");
+    await SpecialPowers.spawn(
+      iframeBrowsingContext,
+      [
+        {
+          page: TEST_3RD_PARTY_PAGE_UI,
+          blockingCallback: blockingCallback.toString(),
+          iframeSandbox,
+        },
+      ],
+      async function(obj) {
+        let ifr = content.document.createElement("iframe");
+        let loading = new content.Promise(resolve => {
+          ifr.onload = resolve;
+        });
+        if (typeof obj.iframeSandbox == "string") {
+          ifr.setAttribute("sandbox", obj.iframeSandbox);
+        }
+        content.document.body.appendChild(ifr);
+        ifr.src = obj.page;
+        await loading;
+
+        await new content.Promise(resolve => {
+          content.addEventListener("message", function msg(event) {
+            if (event.data.type == "finish") {
+              content.removeEventListener("message", msg);
+              resolve();
+              return;
+            }
+
+            if (event.data.type == "ok") {
+              ok(event.data.what, event.data.msg);
+              return;
+            }
+
+            if (event.data.type == "info") {
+              info(event.data.msg);
+              return;
+            }
+
+            ok(false, "Unknown message");
+          });
+          ifr.contentWindow.postMessage(
+            { callback: obj.blockingCallback },
+            "*"
+          );
+        });
+      }
+    );
   },
 
   async _isThirdPartyPageClassifiedAsTracker(topPage, thirdPartyDomainURI) {
