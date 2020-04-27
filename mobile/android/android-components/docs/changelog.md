@@ -46,11 +46,11 @@ permalink: /changelog/
 * **feature-media**
   * Muted media will not start the media service anymore, causing no media notification to be shown and no audio focus getting requested.
 
-* **feature-fullscreen**
-  * ⚠️ **This is a breaking change**: Added `viewportFitChanged` to support Android display cutouts.
+* **feature-session**
+  * ⚠️ **This is a breaking change**: Added `viewportFitChanged` to `FullScreenFeature` for supporting Android display cutouts.
 
-  * **feature-qr**
-    * Moved `AutoFitTextureView` from `support-base` to `feature-qr`.
+* **feature-qr**
+  * Moved `AutoFitTextureView` from `support-base` to `feature-qr`.
 
 * **service-sync-logins**
   * Adds fun `LoginsStorage.getPotentialDupesIgnoringUsername` for fetching list of potential duplicate logins from the underlying storage layer, ignoring username.
