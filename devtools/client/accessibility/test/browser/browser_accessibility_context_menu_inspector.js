@@ -2,11 +2,6 @@
 http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const a11yAutoInitEnabled = Services.prefs.getBoolPref(
-  "devtools.accessibility.auto-init.enabled",
-  false
-);
-
 const TEST_URI = `
   <h1 id="h1">header</h1>
   <p id="p">paragraph</p>
@@ -29,9 +24,7 @@ async function openContextMenuForNode({ toolbox }, selector) {
     await updated;
   }
 
-  const menuUpdated = a11yAutoInitEnabled
-    ? Promise.resolve()
-    : inspector.once("node-menu-updated");
+  const menuUpdated = inspector.once("node-menu-updated");
   const allMenuItems = openContextMenuAndGetAllItems(inspector);
   await menuUpdated;
   return allMenuItems;
@@ -48,7 +41,7 @@ function checkShowA11YPropertiesNode(allMenuItems, disabled) {
   is(
     showA11YPropertiesNode.disabled,
     disabled,
-    `Show accessibility properties item has correct disabled state: ${disabled}`
+    "Show accessibility properties item has correct state"
   );
   return showA11YPropertiesNode;
 }
@@ -96,7 +89,7 @@ addA11YPanelTask(
     let allMenuItems = await openContextMenuForNode(env);
     let showA11YPropertiesNode = checkShowA11YPropertiesNode(
       allMenuItems,
-      !a11yAutoInitEnabled
+      true
     );
 
     allMenuItems = await openContextMenuForNode(env, "#h1");
@@ -108,10 +101,7 @@ addA11YPanelTask(
     await checkAccessibleObjectSelection(env, showA11YPropertiesNode, true);
 
     allMenuItems = await openContextMenuForNode(env, "#span-2");
-    showA11YPropertiesNode = checkShowA11YPropertiesNode(
-      allMenuItems,
-      !a11yAutoInitEnabled
-    );
+    showA11YPropertiesNode = checkShowA11YPropertiesNode(allMenuItems, true);
 
     const inspector = env.toolbox.getPanel("inspector");
     const span2 = await getNodeFront("#span-2", inspector);
