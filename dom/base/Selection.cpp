@@ -1455,7 +1455,7 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
   }
   MOZ_ASSERT(aRange && aRange->IsPositioned());
 
-  if (mFrameSelection->GetTableCellSelection()) {
+  if (mFrameSelection->IsInTableSelectionMode()) {
     nsINode* node = aRange->GetClosestCommonInclusiveAncestor();
     nsIFrame* frame = node->IsContent()
                           ? node->AsContent()->GetPrimaryFrame()
