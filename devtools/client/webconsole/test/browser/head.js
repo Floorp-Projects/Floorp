@@ -1802,3 +1802,89 @@ function selectTargetInContextSelector(hud, targetLabel) {
 
   itemToSelect.click();
 }
+
+/**
+ * A helper that returns the size of the image that was just put into the clipboard by the
+ * :screenshot command.
+ * @return The {width, height} dimension object.
+ */
+async function getImageSizeFromClipboard() {
+  const clipid = Ci.nsIClipboard;
+  const clip = Cc["@mozilla.org/widget/clipboard;1"].getService(clipid);
+  const trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(
+    Ci.nsITransferable
+  );
+  const flavor = "image/png";
+  trans.init(null);
+  trans.addDataFlavor(flavor);
+
+  clip.getData(trans, clipid.kGlobalClipboard);
+  const data = {};
+  trans.getTransferData(flavor, data);
+
+  ok(data.value, "screenshot exists");
+
+  let image = data.value;
+
+  // Due to the differences in how images could be stored in the clipboard the
+  // checks below are needed. The clipboard could already provide the image as
+  // byte streams or as image container. If it's not possible obtain a
+  // byte stream, the function throws.
+
+  if (image instanceof Ci.imgIContainer) {
+    image = Cc["@mozilla.org/image/tools;1"]
+      .getService(Ci.imgITools)
+      .encodeImage(image, flavor);
+  }
+
+  if (!(image instanceof Ci.nsIInputStream)) {
+    throw new Error("Unable to read image data");
+  }
+
+  const binaryStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+    Ci.nsIBinaryInputStream
+  );
+  binaryStream.setInputStream(image);
+  const available = binaryStream.available();
+  const buffer = new ArrayBuffer(available);
+  is(
+    binaryStream.readArrayBuffer(available, buffer),
+    available,
+    "Read expected amount of data"
+  );
+
+  // We are going to load the image in the content page to measure its size.
+  // We don't want to insert the image directly in the browser's document
+  // (which is value of the global `document` here). Doing so might push the
+  // toolbox upwards, shrink the content page and fail the fullpage screenshot
+  // test.
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [buffer], async function(
+    _buffer
+  ) {
+    const img = content.document.createElement("img");
+    const loaded = new Promise(r => {
+      img.addEventListener("load", r, { once: true });
+    });
+
+    // Build a URL from the buffer passed to the ContentTask
+    const url = content.URL.createObjectURL(
+      new Blob([_buffer], { type: "image/png" })
+    );
+
+    // Load the image
+    img.src = url;
+    content.document.documentElement.appendChild(img);
+
+    info("Waiting for the clipboard image to load in the content page");
+    await loaded;
+
+    // Remove the image and revoke the URL.
+    img.remove();
+    content.URL.revokeObjectURL(url);
+
+    return {
+      width: img.width,
+      height: img.height,
+    };
+  });
+}
