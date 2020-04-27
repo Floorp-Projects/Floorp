@@ -207,7 +207,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
     ma_daddu(dest, address.base, Imm32(address.offset));
   }
 
-  inline void computeEffectiveAddress(const BaseIndex& address, Register dest);
+  void computeEffectiveAddress(const BaseIndex& address, Register dest);
 
   void j(Label* dest) { ma_b(dest); }
 
