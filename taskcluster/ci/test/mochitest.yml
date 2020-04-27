@@ -226,7 +226,7 @@ mochitest-plain-gpu:
         mochitest-flavor: plain
         extra-options:
             by-test-platform:
-                android-em.*:
+                android.*:
                     # note that Android runs fewer suites than other platforms
                     - --test-suite=mochitest-plain-gpu
                 default:
@@ -250,7 +250,12 @@ mochitest-chrome-gpu:
     mozharness:
         mochitest-flavor: chrome
         extra-options:
-            - --mochitest-suite=mochitest-chrome-gpu
+            by-test-platform:
+                android.*:
+                    # note that Android runs fewer suites than other platforms
+                    - --test-suite=mochitest-chrome-gpu
+                default:
+                    - --mochitest-suite=mochitest-chrome-gpu
 
 mochitest-media:
     description: "Mochitest media run"
