@@ -66,7 +66,8 @@ namespace mozilla {
 
 namespace dom {
 class PerformanceStorage;
-}
+class ContentParent;
+}  // namespace dom
 
 class LogCollector;
 
@@ -491,11 +492,12 @@ class HttpBaseChannel : public nsHashPropertyBag,
     nsCOMPtr<nsIReferrerInfo> referrerInfo;
     Maybe<dom::TimedChannelInfo> timedChannel;
     nsCOMPtr<nsIInputStream> uploadStream;
+    uint64_t uploadStreamLength;
     bool uploadStreamHasHeaders;
     Maybe<nsCString> contentType;
     Maybe<nsCString> contentLength;
 
-    dom::ReplacementChannelConfigInit Serialize();
+    dom::ReplacementChannelConfigInit Serialize(dom::ContentParent* aParent);
   };
 
   enum class ReplacementReason {

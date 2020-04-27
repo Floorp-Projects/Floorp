@@ -9,6 +9,7 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ClientInfo.h"
+#include "mozilla/dom/ContentParent.h"
 
 extern mozilla::LazyLogModule gDocumentChannelLog;
 #define LOG(fmt) MOZ_LOG(gDocumentChannelLog, mozilla::LogLevel::Verbose, fmt)
@@ -68,7 +69,9 @@ DocumentChannelParent::RedirectToRealChannel(
         CreateAndReject(ResponseRejectReason::ChannelClosed, __func__);
   }
   RedirectToRealChannelArgs args;
-  mParent->SerializeRedirectData(args, false, aRedirectFlags, aLoadFlags);
+  mParent->SerializeRedirectData(
+      args, false, aRedirectFlags, aLoadFlags,
+      static_cast<ContentParent*>(Manager()->Manager()));
   return SendRedirectToRealChannel(args, std::move(aStreamFilterEndpoints));
 }
 
