@@ -52,6 +52,7 @@ class WebrtcMediaDataDecoder : public WebrtcVideoDecoder {
   void QueueFrame(MediaRawData* aFrame);
   AbstractThread* OwnerThread() const { return mTaskQueue; }
   bool OnTaskQueue() const;
+  int32_t CreateDecoder();
 
   const RefPtr<SharedThreadPool> mThreadPool;
   const RefPtr<TaskQueue> mTaskQueue;
