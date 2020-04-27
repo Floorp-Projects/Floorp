@@ -312,10 +312,9 @@ impl<'a> RawtestHarness<'a> {
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
 
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
-        let clip_id = builder.define_clip(
+        let clip_id = builder.define_clip_rect(
             &root_space_and_clip,
             rect(40., 41., 200., 201.),
-            vec![],
         );
 
         let info = CommonItemProperties {
@@ -399,10 +398,9 @@ impl<'a> RawtestHarness<'a> {
         let image_size = size2(400.0, 400.0);
 
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
-        let clip_id = builder.define_clip(
+        let clip_id = builder.define_clip_rect(
             &root_space_and_clip,
             rect(-1000.0, -1000.0, 2000.0, 2000.0),
-            vec![],
         );
 
         let info = CommonItemProperties {
@@ -495,10 +493,9 @@ impl<'a> RawtestHarness<'a> {
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
 
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
-        let clip_id = builder.define_clip(
+        let clip_id = builder.define_clip_rect(
             &root_space_and_clip,
             rect(-1000.0, -1000.0, 2000.0, 2000.0),
-            vec![],
         );
 
         let info = CommonItemProperties {
@@ -541,10 +538,9 @@ impl<'a> RawtestHarness<'a> {
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
 
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
-        let clip_id = builder.define_clip(
+        let clip_id = builder.define_clip_rect(
             &root_space_and_clip,
             rect(-1000.0, -1000.0, 2000.0, 2000.0),
-            vec![],
         );
 
         let info = CommonItemProperties {
@@ -589,10 +585,9 @@ impl<'a> RawtestHarness<'a> {
         let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
 
         let root_space_and_clip = SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id);
-        let clip_id = builder.define_clip(
+        let clip_id = builder.define_clip_rect(
             &root_space_and_clip,
             rect(-1000.0, -1000.0, 2000.0, 2000.0),
-            vec![],
         );
 
         let info = CommonItemProperties {
@@ -1071,10 +1066,9 @@ impl<'a> RawtestHarness<'a> {
             let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
 
             let spatial_id = SpatialId::root_scroll_node(self.wrench.root_pipeline_id);
-            let clip_id = builder.define_clip(
+            let clip_id = builder.define_clip_rect(
                 &SpaceAndClipInfo::root_scroll(self.wrench.root_pipeline_id),
                 rect(110., 120., 200., 200.),
-                None::<ComplexClipRegion>,
             );
             builder.push_rect(
                 &self.make_common_properties_with_clip_and_spatial(
@@ -1087,10 +1081,9 @@ impl<'a> RawtestHarness<'a> {
 
             if should_try_and_fail {
                 builder.save();
-                let clip_id = builder.define_clip(
+                let clip_id = builder.define_clip_rect(
                     &SpaceAndClipInfo { spatial_id, clip_id },
                     rect(80., 80., 90., 90.),
-                    None::<ComplexClipRegion>,
                 );
                 let space_and_clip = SpaceAndClipInfo {
                     spatial_id,
@@ -1132,10 +1125,9 @@ impl<'a> RawtestHarness<'a> {
 
             {
                 builder.save();
-                let clip_id = builder.define_clip(
+                let clip_id = builder.define_clip_rect(
                     &SpaceAndClipInfo { spatial_id, clip_id },
                     rect(80., 80., 100., 100.),
-                    None::<ComplexClipRegion>,
                 );
                 builder.push_rect(
                     &self.make_common_properties_with_clip_and_spatial(
