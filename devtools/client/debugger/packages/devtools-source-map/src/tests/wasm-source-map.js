@@ -91,7 +91,7 @@ describe("wasm source maps", () => {
   test("read and transpose wasm map", async () => {
     const source = {
       id: "min.js",
-      url: "wasm:http://example.com/whatever/:min.js",
+      sourceMapBaseURL: "wasm:http://example.com/whatever/:min.js",
       sourceMapURL: "http://example.com/whatever/min.js.map",
       isWasm: true,
     };
