@@ -100,33 +100,6 @@ add_task(async () => {
     "Correct title for tab"
   );
 
-  // Test multiple tab selections.
-  // First, focus on current tab. If it isn't already focused.
-  if (gBrowser.ownerDocument.activeElement != gBrowser.selectedTab) {
-    evt = waitForMacEvent(
-      "AXFocusedUIElementChanged",
-      iface => iface.getAttributeValue("AXRole") == "AXRadioButton"
-    );
-    gBrowser.selectedTab.focus();
-    await evt;
-  }
-
-  // Next, move focus left to nearby tab.
-  evt = waitForMacEvent(
-    "AXFocusedUIElementChanged",
-    iface => iface.getAttributeValue("AXRole") == "AXRadioButton"
-  );
-  EventUtils.synthesizeKey("KEY_ArrowLeft", { metaKey: true });
-  await evt;
-
-  // Select focused tab.
-  evt = waitForMacEvent("AXSelectedChildrenChanged");
-  EventUtils.synthesizeKey(" ", { metaKey: true, shiftKey: true });
-  await evt;
-
-  selectedTabs = tablist.getAttributeValue("AXSelectedChildren");
-  is(selectedTabs.length, 2, "two tabs selected");
-
   // Close all open tabs
   await Promise.all(newTabs.map(t => BrowserTestUtils.removeTab(t)));
 });
