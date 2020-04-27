@@ -254,5 +254,6 @@ Unsupported features
 ====================
 This is the list of the currently unsupported features:
 
-* `keyed scalars <https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/collection/scalars.html#keyed-scalars>`__ are not supported and there are no future plans for supporting them;
-* uint scalar operations other than `set <https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/collection/scalars.html#id2>`__ are not supported and there are no future plans for supporting them.
+* `keyed scalars <https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/collection/scalars.html#keyed-scalars>`__ are not supported and there are no future plans for supporting them;
+* uint scalar operations other than `set <https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/collection/scalars.html#id2>`__ are not supported and there are no future plans for supporting them.
+* `events <https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/collection/events.html>`__ are not supported and there are no future plans for supporting them.
