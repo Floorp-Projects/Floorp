@@ -51,6 +51,7 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "mozilla/StaticPrefs_webgl.h"
 
 namespace mozilla {
 
@@ -1382,7 +1383,8 @@ RefPtr<WebGLFramebuffer> WebGLContext::CreateOpaqueFramebuffer(
   const FuncScope funcScope(*this, "createOpaqueFramebuffer");
   if (IsContextLost()) return nullptr;
 
-  const uint32_t samples = options.antialias ? gl->MaxSamples() : 0;
+  uint32_t samples = options.antialias ? StaticPrefs::webgl_msaa_samples() : 0;
+  samples = std::min(samples, gl->MaxSamples());
   const gfx::IntSize size = {options.width, options.height};
 
   auto fbo =
