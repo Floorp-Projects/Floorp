@@ -686,6 +686,22 @@ class Span {
     return const_reverse_iterator{cbegin()};
   }
 
+  template <size_t SplitPoint>
+  constexpr std::pair<Span<ElementType, SplitPoint>,
+                      Span<ElementType, Extent - SplitPoint>>
+  SplitAt() const {
+    static_assert(Extent != dynamic_extent);
+    static_assert(SplitPoint <= Extent);
+    return {First<SplitPoint>(), Last<Extent - SplitPoint>()};
+  }
+
+  constexpr std::pair<Span<ElementType, dynamic_extent>,
+                      Span<ElementType, dynamic_extent>>
+  SplitAt(const index_type aSplitPoint) const {
+    MOZ_RELEASE_ASSERT(aSplitPoint <= Length());
+    return {First(aSplitPoint), Last(Length() - aSplitPoint)};
+  }
+
  private:
   // this implementation detail class lets us take advantage of the
   // empty base class optimization to pay for only storage of a single
