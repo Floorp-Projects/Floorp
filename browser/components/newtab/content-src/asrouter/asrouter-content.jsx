@@ -50,6 +50,12 @@ export const ASRouterUtils = {
       data: { id, ...options },
     });
   },
+  modifyMessageJson(content) {
+    ASRouterUtils.sendMessage({
+      type: "MODIFY_MESSAGE_JSON",
+      data: { content },
+    });
+  },
   dismissById(id) {
     ASRouterUtils.sendMessage({ type: "DISMISS_MESSAGE_BY_ID", data: { id } });
   },

@@ -1574,6 +1574,11 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
     }
   }
 
+  modifyJson(content) {
+    let newContent = JSON.parse(content);
+    _asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_1__["ASRouterUtils"].modifyMessageJson(newContent);
+  }
+
   renderWNMessageItem(msg) {
     const isBlocked = this.state.messageBlockList.includes(msg.id) || this.state.messageBlockList.includes(msg.campaign);
     const impressions = this.state.messageImpressions[msg.id] ? this.state.messageImpressions[msg.id].length : 0;
@@ -1603,7 +1608,16 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
       className: `message-summary`
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("pre", {
       className: isCollapsed ? "collapsed" : "expanded"
-    }, JSON.stringify(msg, null, 2))));
+    }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
+      className: "button json-button",
+      name: msg.id // eslint-disable-next-line react/jsx-no-bind
+      ,
+      onClick: e => this.modifyJson(document.getElementById(`${msg.id}-textarea`).value)
+    }, "Modify Template"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("textarea", {
+      id: `${msg.id}-textarea`,
+      className: "wnp-textarea",
+      name: msg.id
+    }, JSON.stringify(msg, null, 2)))));
   }
 
   toggleAllMessages(messagesToShow) {
@@ -1946,7 +1960,7 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
       className: "helpLink"
     }, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", {
       className: "icon icon-small-spacer icon-info"
-    }), " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", null, "To correctly render selected messages, please check \"Disable Popup Auto-Hide\" in the browser toolbox, or set", " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("i", null, "ui.popup.disable_autohide"), " to ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("b", null, "true"), " in", " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("i", null, "about:config"), ".")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
+    }), " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("span", null, "To correctly render selected messages, please check \"Disable Popup Auto-Hide\" in the browser toolbox, or set", " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("i", null, "ui.popup.disable_autohide"), " to ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("b", null, "true"), " in", " ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("i", null, "about:config"), ". ", react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("br", null), "To modify a message, render it first using 'Render Selected Messages'. Then, modify the JSON and click 'Modify Template' to see your changes.")), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
       className: "ASRouterButton primary button",
       onClick: this.handleForceWNP
     }, "Open What's New Panel"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
@@ -2181,6 +2195,15 @@ const ASRouterUtils = {
       data: {
         id,
         ...options
+      }
+    });
+  },
+
+  modifyMessageJson(content) {
+    ASRouterUtils.sendMessage({
+      type: "MODIFY_MESSAGE_JSON",
+      data: {
+        content
       }
     });
   },
