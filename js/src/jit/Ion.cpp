@@ -80,30 +80,6 @@ using mozilla::DebugOnly;
 using namespace js;
 using namespace js::jit;
 
-JitRuntime::JitRuntime()
-    : nextCompilationId_(0),
-      exceptionTailOffset_(0),
-      bailoutTailOffset_(0),
-      profilerExitFrameTailOffset_(0),
-      enterJITOffset_(0),
-      bailoutHandlerOffset_(0),
-      argumentsRectifierOffset_(0),
-      argumentsRectifierReturnOffset_(0),
-      invalidatorOffset_(0),
-      lazyLinkStubOffset_(0),
-      interpreterStubOffset_(0),
-      doubleToInt32ValueStubOffset_(0),
-      debugTrapHandlers_(),
-      baselineInterpreter_(),
-      trampolineCode_(nullptr),
-      jitcodeGlobalTable_(nullptr),
-#ifdef DEBUG
-      ionBailAfter_(0),
-#endif
-      numFinishedOffThreadTasks_(0),
-      ionLazyLinkListSize_(0) {
-}
-
 JitRuntime::~JitRuntime() {
   MOZ_ASSERT(numFinishedOffThreadTasks_ == 0);
   MOZ_ASSERT(ionLazyLinkListSize_ == 0);
