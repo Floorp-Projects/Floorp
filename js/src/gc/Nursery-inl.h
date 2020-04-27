@@ -89,7 +89,7 @@ inline void js::Nursery::setDirectForwardingPointer(void* oldData,
   MOZ_ASSERT(!isInside(newData) ||
              (uintptr_t(newData) & js::gc::ChunkMask) == 0);
 
-  *reinterpret_cast<void**>(oldData) = newData;
+  new (oldData) BufferRelocationOverlay{newData};
 }
 
 namespace js {

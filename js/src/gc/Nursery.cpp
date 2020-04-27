@@ -702,25 +702,35 @@ static bool IsWriteableAddress(void* ptr) {
 }
 #endif
 
-void js::Nursery::forwardBufferPointer(HeapSlot** pSlotsElems) {
-  HeapSlot* old = *pSlotsElems;
+void js::Nursery::forwardBufferPointer(uintptr_t* pSlotsElems) {
+  // Read the current pointer value which may be one of:
+  //  - Non-nursery pointer
+  //  - Nursery-allocated buffer
+  //  - A BufferRelocationOverlay inside the nursery
+  //
+  // Note: The buffer has already be relocated. We are just patching stale
+  //       pointers now.
+  void* buffer = reinterpret_cast<void*>(*pSlotsElems);
 
-  if (!isInside(old)) {
+  if (!isInside(buffer)) {
     return;
   }
 
   // The new location for this buffer is either stored inline with it or in
   // the forwardedBuffers table.
-  if (ForwardedBufferMap::Ptr p = forwardedBuffers.lookup(old)) {
-    *pSlotsElems = reinterpret_cast<HeapSlot*>(p->value());
+  if (ForwardedBufferMap::Ptr p = forwardedBuffers.lookup(buffer)) {
+    buffer = p->value();
     // It's not valid to assert IsWriteableAddress for indirect forwarding
     // pointers because the size of the allocation could be less than a word.
   } else {
-    *pSlotsElems = *reinterpret_cast<HeapSlot**>(old);
-    MOZ_ASSERT(IsWriteableAddress(*pSlotsElems));
+    BufferRelocationOverlay* reloc =
+        static_cast<BufferRelocationOverlay*>(buffer);
+    buffer = *reloc;
+    MOZ_ASSERT(IsWriteableAddress(buffer));
   }
 
-  MOZ_ASSERT(!isInside(*pSlotsElems));
+  MOZ_ASSERT(!isInside(buffer));
+  *pSlotsElems = reinterpret_cast<uintptr_t>(buffer);
 }
 
 js::TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery)
