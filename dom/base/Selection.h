@@ -152,8 +152,6 @@ class Selection final : public nsSupportsWeakReference,
   MOZ_CAN_RUN_SCRIPT nsresult
   ScrollIntoView(SelectionRegion aRegion, ScrollAxis aVertical = ScrollAxis(),
                  ScrollAxis aHorizontal = ScrollAxis(), int32_t aFlags = 0);
-  static nsresult SubtractRange(StyledRange& aRange, nsRange& aSubtract,
-                                nsTArray<StyledRange>* aOutput);
 
  private:
   static bool AreUserSelectedRangesNonEmpty(
@@ -836,6 +834,9 @@ class Selection final : public nsSupportsWeakReference,
     Element* GetCommonEditingHost() const;
 
     void MaybeFocusCommonEditingHost(PresShell* aPresShell) const;
+
+    static nsresult SubtractRange(StyledRange& aRange, nsRange& aSubtract,
+                                  nsTArray<StyledRange>* aOutput);
 
     // These are the ranges inside this selection. They are kept sorted in order
     // of DOM start position.
