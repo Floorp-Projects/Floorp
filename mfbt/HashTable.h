@@ -88,9 +88,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Opaque.h"
 #include "mozilla/OperatorNewExtensions.h"
-#include "mozilla/PodOperations.h"
 #include "mozilla/ReentrancyGuard.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WrappingOperations.h"
 
@@ -925,10 +923,6 @@ class HashMapEntry {
   HashMapEntry(const HashMapEntry&) = delete;
   void operator=(const HashMapEntry&) = delete;
 };
-
-template <typename K, typename V>
-struct IsPod<HashMapEntry<K, V>>
-    : std::integral_constant<bool, IsPod<K>::value && IsPod<V>::value> {};
 
 namespace detail {
 

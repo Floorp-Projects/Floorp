@@ -48,6 +48,7 @@
 #include "gtest/gtest.h"
 #include "gtest/MozGTestBench.h"  // For MOZ_GTEST_BENCH
 #include "mozilla/AllocPolicy.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/HashTable.h"
 #include "mozilla/StaticMutex.h"
