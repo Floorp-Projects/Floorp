@@ -98,6 +98,16 @@ BrowsingContext* BrowsingContext::GetParent() const {
   return mParentWindow ? mParentWindow->GetBrowsingContext() : nullptr;
 }
 
+bool BrowsingContext::IsInSubtreeOf(BrowsingContext* aContext) {
+  BrowsingContext* bc = this;
+  do {
+    if (bc == aContext) {
+      return true;
+    }
+  } while ((bc = bc->GetParent()));
+  return false;
+}
+
 BrowsingContext* BrowsingContext::Top() {
   BrowsingContext* bc = this;
   while (bc->mParentWindow) {
