@@ -94,11 +94,11 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                                 ADocumentChannelBridge* aBridge);
 
   // Creates the channel, and then calls AsyncOpen on it.
-  bool Open(nsDocShellLoadState* aLoadState, nsLoadFlags aLoadFlags,
-            uint32_t aCacheKey, const Maybe<uint64_t>& aChannelId,
-            const TimeStamp& aAsyncOpenTime, nsDOMNavigationTiming* aTiming,
-            Maybe<dom::ClientInfo>&& aInfo, uint64_t aOuterWindowId,
-            bool aHasGesture, nsresult* aRv);
+  bool Open(nsDocShellLoadState* aLoadState, uint32_t aCacheKey,
+            const Maybe<uint64_t>& aChannelId, const TimeStamp& aAsyncOpenTime,
+            nsDOMNavigationTiming* aTiming, Maybe<dom::ClientInfo>&& aInfo,
+            uint64_t aOuterWindowId, bool aHasGesture, Maybe<bool> aUriModified,
+            Maybe<bool> aIsXFOError, nsresult* aRv);
 
   // Creates a DocumentLoadListener directly in the parent process without
   // an associated DocumentChannelBridge.

@@ -20,8 +20,10 @@ NS_IMPL_ISUPPORTS_INHERITED(ParentProcessDocumentChannel, DocumentChannel,
 
 ParentProcessDocumentChannel::ParentProcessDocumentChannel(
     nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
-    nsLoadFlags aLoadFlags, uint32_t aCacheKey)
-    : DocumentChannel(aLoadState, aLoadInfo, aLoadFlags, aCacheKey) {
+    nsLoadFlags aLoadFlags, uint32_t aCacheKey, bool aUriModified,
+    bool aIsXFOError)
+    : DocumentChannel(aLoadState, aLoadInfo, aLoadFlags, aCacheKey,
+                      aUriModified, aIsXFOError) {
   LOG(("ParentProcessDocumentChannel ctor [this=%p]", this));
 }
 
@@ -125,13 +127,12 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
   nsresult rv = NS_OK;
   Maybe<dom::ClientInfo> initialClientInfo = mInitialClientInfo;
   if (!mDocumentLoadListener->Open(
-          mLoadState, mLoadFlags, mCacheKey, Some(mChannelId), mAsyncOpenTime,
-          mTiming, std::move(initialClientInfo),
-          GetDocShell()->GetOuterWindowID(),
+          mLoadState, mCacheKey, Some(mChannelId), mAsyncOpenTime, mTiming,
+          std::move(initialClientInfo), GetDocShell()->GetOuterWindowID(),
           GetDocShell()
               ->GetBrowsingContext()
               ->HasValidTransientUserGestureActivation(),
-          &rv)) {
+          Some(mUriModified), Some(mIsXFOError), &rv)) {
     MOZ_ASSERT(NS_FAILED(rv));
     DisconnectDocumentLoadListener();
     return rv;
