@@ -15,6 +15,12 @@ permalink: /changelog/
 * **feature-top-sites**
   * Added `isDefault` to the top site entity, which allows application to specify a default top site that is added by the application. This is called through `TopSiteStorage.addTopSite`.
 
+* **support-utils**
+  * `URLStringUtils.isURLLikeStrict` is now deprecated due to performance issues. Consider using the less strict `isURLLike` instead or creating a new method using `:lib-publicsuffixlist`.
+
+* **support-ktx**
+  * `String.isUrlStrict` is now deprecated due to performance issues. Consider using the less strict `isURL` instead or creating a new method using `:lib-publicsuffixlist`.
+
 # 39.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v38.0.0...v39.0.0)

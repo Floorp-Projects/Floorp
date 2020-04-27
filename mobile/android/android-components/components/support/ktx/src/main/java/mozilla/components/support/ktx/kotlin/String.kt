@@ -37,6 +37,11 @@ fun String.isUrl() = URLStringUtils.isURLLike(this)
  * to execute than isUrl() but checks whether, e.g., the TLD is ICANN-recognized. Consider
  * using isUrl() unless these guarantees are required.
  */
+@Deprecated(
+    "Consider using the less strict isUrl or creating a new method using" +
+        ":lib-publicsuffixlist instead. This method is being removed for performance issues"
+)
+@Suppress("DEPRECATION") // this method is being removed with the deprecated method underneath it
 fun String.isUrlStrict() = URLStringUtils.isURLLikeStrict(this)
 
 fun String.toNormalizedUrl() = URLStringUtils.toNormalizedURL(this)

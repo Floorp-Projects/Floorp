@@ -33,6 +33,7 @@ class URLStringUtilsTest {
         assertEquals(expectedUrl, toNormalizedURL("mozilla.org"))
     }
 
+    @Suppress("DEPRECATION") // this test will be removed with the deprecated method
     @Test
     fun isURLLikeStrict() {
         assertTrue(isURLLikeStrict("mozilla.org"))
