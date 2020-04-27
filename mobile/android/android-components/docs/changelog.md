@@ -52,6 +52,10 @@ permalink: /changelog/
 * **browser-tabstray**
   * The iconView is no longer required in the template.
   * The URL text for items may be styled.
+  
+* **service-glean**
+  * Glean was updated to v28.0.0
+    * The baseline ping is now sent when the application goes to foreground, in addition to background and dirty-startup.
 
 * **Developer ergonomics**
   * Improved autoPublication workflow. See https://mozac.org/contributing/testing-components-inside-app for updated documentation.
