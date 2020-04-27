@@ -2580,6 +2580,8 @@ class ADBDevice(ADBCommand):
         except ADBError as e:
             if not force and 'No such file or directory' in str(e):
                 raise
+            if 'Directory not empty' in str(e):
+                raise
 
     def rmdir(self, path, timeout=None, root=False):
         """Delete empty directory on the device.
