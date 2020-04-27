@@ -591,12 +591,12 @@ class MediaRawDataWriter {
 
   // Set size of buffer, allocating memory as required.
   // If size is increased, new buffer area is filled with 0.
-  MOZ_MUST_USE bool SetSize(size_t aSize);
+  [[nodiscard]] bool SetSize(size_t aSize);
   // Add aData at the beginning of buffer.
-  MOZ_MUST_USE bool Prepend(const uint8_t* aData, size_t aSize);
-  MOZ_MUST_USE bool Append(const uint8_t* aData, size_t aSize);
+  [[nodiscard]] bool Prepend(const uint8_t* aData, size_t aSize);
+  [[nodiscard]] bool Append(const uint8_t* aData, size_t aSize);
   // Replace current content with aData.
-  MOZ_MUST_USE bool Replace(const uint8_t* aData, size_t aSize);
+  [[nodiscard]] bool Replace(const uint8_t* aData, size_t aSize);
   // Clear the memory buffer. Will set target mData and mSize to 0.
   void Clear();
   // Remove aSize bytes from the front of the sample.
@@ -605,7 +605,7 @@ class MediaRawDataWriter {
  private:
   friend class MediaRawData;
   explicit MediaRawDataWriter(MediaRawData* aMediaRawData);
-  MOZ_MUST_USE bool EnsureSize(size_t aSize);
+  [[nodiscard]] bool EnsureSize(size_t aSize);
   MediaRawData* mTarget;
 };
 
