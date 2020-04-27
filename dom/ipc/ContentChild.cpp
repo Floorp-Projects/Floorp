@@ -57,6 +57,7 @@
 #include "mozilla/dom/PostMessageEvent.h"
 #include "mozilla/dom/PushNotifier.h"
 #include "mozilla/dom/RemoteWorkerService.h"
+#include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/SHEntryChild.h"
 #include "mozilla/dom/SHistoryChild.h"
@@ -3849,6 +3850,18 @@ mozilla::ipc::IPCResult ContentChild::RecvSetActiveBrowsingContext(
   if (fm) {
     fm->SetActiveBrowsingContextFromOtherProcess(aContext.get());
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvAbortOrientationPendingPromises(
+    const MaybeDiscarded<BrowsingContext>& aContext) {
+  if (aContext.IsNullOrDiscarded()) {
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
+            ("ChildIPC: Trying to send a message to dead or detached context"));
+    return IPC_OK();
+  }
+
+  dom::ScreenOrientation::AbortInProcessOrientationPromises(aContext.get());
   return IPC_OK();
 }
 

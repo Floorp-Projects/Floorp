@@ -206,14 +206,12 @@ static void UpdateDocShellOrientationLock(nsPIDOMWindowInner* aWindow,
     return;
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> root;
-  docShell->GetInProcessSameTypeRootTreeItem(getter_AddRefs(root));
-  nsCOMPtr<nsIDocShell> rootShell(do_QueryInterface(root));
-  if (!rootShell) {
+  RefPtr<BrowsingContext> bc = docShell->GetBrowsingContext();
+  bc = bc ? bc->Top() : nullptr;
+  if (!bc) {
     return;
   }
-
-  rootShell->SetOrientationLock(aOrientation);
+  bc->SetOrientationLock(aOrientation);
 }
 
 bool nsScreen::MozLockOrientation(const nsAString& aOrientation,

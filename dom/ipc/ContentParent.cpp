@@ -5854,6 +5854,21 @@ mozilla::ipc::IPCResult ContentParent::RecvUpdateSHEntriesInBC(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvAbortOtherOrientationPendingPromises(
+    const MaybeDiscarded<BrowsingContext>& aContext) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
+  CanonicalBrowsingContext* context = aContext.get_canonical();
+
+  context->Group()->EachOtherParent(this, [&](ContentParent* aParent) {
+    Unused << aParent->SendAbortOrientationPendingPromises(context);
+  });
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaSessionUpdated(
     const MaybeDiscarded<BrowsingContext>& aContext, bool aIsCreated) {
   if (aContext.IsNullOrDiscarded()) {
