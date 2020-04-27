@@ -494,6 +494,12 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
 #endif
       [[fallthrough]];
     case DeviceFamily::IntelModernRolloutWebRender:
+      // skylake gt1
+      APPEND_DEVICE(0x1902);
+      APPEND_DEVICE(0x1906);
+      APPEND_DEVICE(0x190a);
+      APPEND_DEVICE(0x190e);
+
       // skylake gt2+
       APPEND_DEVICE(0x1912);
       APPEND_DEVICE(0x1913);
