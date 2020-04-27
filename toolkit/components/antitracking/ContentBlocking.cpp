@@ -865,6 +865,16 @@ bool ContentBlocking::ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow,
     return false;
   }
 
+  // We will only allow the storage access for the first-level iframe in cookie
+  // behavior BEHAVIOR_REJECT_TRACKER. We don't need to consider the top window
+  // here since we only get here if the window is not a top.
+  if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER &&
+      !AntiTrackingUtils::IsFirstLevelSubContext(
+          aWindow->GetBrowsingContext())) {
+    *aRejectedReason = blockedReason;
+    return false;
+  }
+
   nsAutoCString trackingOrigin;
   if (!GetTrackingOrigin(nsGlobalWindowInner::Cast(aWindow), trackingOrigin)) {
     LOG(("Failed to obtain the the tracking origin"));
