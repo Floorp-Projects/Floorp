@@ -289,6 +289,14 @@ add_task(async function test_IdlePromise() {
   ok(called);
 });
 
+add_task(async function test_IdlePromiseAbortWhenWindowClosed() {
+  let win = {
+    closed: true,
+    requestAnimationFrame() {},
+  };
+  await IdlePromise(win);
+});
+
 add_test(function test_DebounceCallback_constructor() {
   for (let cb of [42, "foo", true, null, undefined, [], {}]) {
     Assert.throws(() => new DebounceCallback(cb), /TypeError/);
