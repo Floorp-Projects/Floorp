@@ -1579,22 +1579,28 @@ nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
 
   // If the HTTPS-Only mode is enabled, we need to upgrade the websocket
   // connection from ws:// to wss:// and mark it as secure.
-  if (!mIsServerSide && !mSecure &&
-      StaticPrefs::dom_security_https_only_mode()) {
-    // let's use the old specification before the upgrade for logging
-    AutoTArray<nsString, 2> params;
-    CopyUTF8toUTF16(mURI, *params.AppendElement());
+  if (!mIsServerSide && !mSecure) {
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), mURI);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    mURI.ReplaceSubstring("ws://", "wss://");
-    if (NS_WARN_IF(mURI.Find("wss://") != 0)) {
-      return NS_OK;
+    uint32_t httpsOnlyStatus = nsILoadInfo::HTTPS_ONLY_UNINITIALIZED;
+    if (originDoc) {
+      nsCOMPtr<nsIChannel> channel = originDoc->GetChannel();
+      if (channel) {
+        nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+        httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
+      }
     }
-    mSecure = true;
 
-    params.AppendElement(NS_LITERAL_STRING("wss"));
-    nsHTTPSOnlyUtils::LogLocalizedString("HTTPSOnlyUpgradeRequest", params,
-                                         nsIScriptError::warningFlag,
-                                         mInnerWindowID, mPrivateBrowsing);
+    if (nsHTTPSOnlyUtils::ShouldUpgradeWebSocket(
+            uri, mInnerWindowID, mPrivateBrowsing, httpsOnlyStatus)) {
+      mURI.ReplaceSubstring("ws://", "wss://");
+      if (NS_WARN_IF(mURI.Find("wss://") != 0)) {
+        return NS_OK;
+      }
+      mSecure = true;
+    }
   }
 
   // Potentially the page uses the CSP directive 'upgrade-insecure-requests'.
