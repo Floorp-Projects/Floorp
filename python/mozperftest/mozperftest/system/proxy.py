@@ -3,7 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import os
 import mozinfo
+
 from mozproxy import get_playback
+from mozproxy.utils import LOG
 from mozperftest.layers import Layer
 
 
@@ -20,6 +22,8 @@ class ProxyRunner(Layer):
     def __init__(self, env, mach_cmd):
         super(ProxyRunner, self).__init__(env, mach_cmd)
         self.proxy = None
+        LOG.info = self.info
+        LOG.error = self.error
 
     def setup(self):
         pass

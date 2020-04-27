@@ -1,10 +1,12 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from mozperftest.utils import MachLogger
 
 
-class Metadata:
+class Metadata(MachLogger):
     def __init__(self, mach_cmd, env, flavor):
+        MachLogger.__init__(self, mach_cmd)
         self._mach_cmd = mach_cmd
         self.flavor = flavor
         self.browser = {"prefs": {}}

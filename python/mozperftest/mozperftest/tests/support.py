@@ -9,11 +9,23 @@ from mozperftest.environment import MachEnvironment
 
 
 @contextlib.contextmanager
-def temp_file(name="temp"):
+def temp_file(name="temp", content=None):
     tempdir = tempfile.mkdtemp()
     path = os.path.join(tempdir, name)
+    if content is not None:
+        with open(path, "w") as f:
+            f.write(content)
     try:
         yield path
+    finally:
+        shutil.rmtree(tempdir)
+
+
+@contextlib.contextmanager
+def temp_dir():
+    tempdir = tempfile.mkdtemp()
+    try:
+        yield tempdir
     finally:
         shutil.rmtree(tempdir)
 
