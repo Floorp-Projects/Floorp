@@ -41,7 +41,8 @@ add_task(async function test_restoringModifiedTab() {
   // Open and close a tabs.
   let tabPromise = BrowserTestUtils.waitForNewTab(
     win.gBrowser,
-    "http://example.com/"
+    "http://example.com/",
+    true
   );
   await extension.startup();
   let firstTab = await tabPromise;

@@ -503,7 +503,8 @@ async function openPasswordManager(openingFunc, waitForFilter) {
   info("waiting for new tab to open");
   let tabPromise = BrowserTestUtils.waitForNewTab(
     gBrowser,
-    url => url.includes("about:logins") && !url.includes("entryPoint=")
+    url => url.includes("about:logins") && !url.includes("entryPoint="),
+    true
   );
   await openingFunc();
   let tab = await tabPromise;
