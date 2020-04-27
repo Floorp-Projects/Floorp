@@ -156,7 +156,7 @@ class txStylesheetCompilerState : public txIParseContext {
   nsTArray<enumStackType> mTypeStack;
 
  private:
-  txInstruction** mNextInstrPtr;
+  mozilla::UniquePtr<txInstruction>* mNextInstrPtr;
   txListIterator mToplevelIterator;
   nsTArray<txInstruction**> mGotoTargetPointers;
   ReferrerPolicy mReferrerPolicy;
