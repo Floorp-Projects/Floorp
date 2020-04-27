@@ -52,7 +52,7 @@ impl Default for QualitySettings {
 /// Update of a persistent resource in WebRender.
 ///
 /// ResourceUpdate changes keep theirs effect across display list changes.
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub enum ResourceUpdate {
     /// See `AddImage`.
     AddImage(AddImage),
@@ -642,7 +642,7 @@ impl TransactionMsg {
 /// Creates an image resource with provided parameters.
 ///
 /// Must be matched with a `DeleteImage` at some point to prevent memory leaks.
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct AddImage {
     /// A key to identify the image resource.
     pub key: ImageKey,
@@ -659,7 +659,7 @@ pub struct AddImage {
 }
 
 /// Updates an already existing image resource.
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct UpdateImage {
     /// The key identfying the image resource to update.
     pub key: ImageKey,
@@ -677,7 +677,7 @@ pub struct UpdateImage {
 /// Creates a blob-image resource with provided parameters.
 ///
 /// Must be matched with a `DeleteImage` at some point to prevent memory leaks.
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct AddBlobImage {
     /// A key to identify the blob-image resource.
     pub key: BlobImageKey,
@@ -703,7 +703,7 @@ pub struct AddBlobImage {
 }
 
 /// Updates an already existing blob-image resource.
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct UpdateBlobImage {
     /// The key identfying the blob-image resource to update.
     pub key: BlobImageKey,
@@ -722,7 +722,7 @@ pub struct UpdateBlobImage {
 ///
 /// Must be matched with a corresponding `ResourceUpdate::DeleteFont` at some point to prevent
 /// memory leaks.
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub enum AddFont {
     ///
     Raw(font::FontKey, Vec<u8>, u32),
@@ -731,7 +731,7 @@ pub enum AddFont {
 }
 
 /// Describe an item that matched a hit-test query.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct HitTestItem {
     /// The pipeline that the display item that was hit belongs to.
     pub pipeline: PipelineId,
@@ -750,14 +750,14 @@ pub struct HitTestItem {
 }
 
 /// Returned by `RenderApi::hit_test`.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct HitTestResult {
     /// List of items that are match the hit-test query.
     pub items: Vec<HitTestItem>,
 }
 
 bitflags! {
-    #[derive(MallocSizeOf)]
+    #[derive(Deserialize, MallocSizeOf, Serialize)]
     ///
     pub struct HitTestFlags: u8 {
         ///
@@ -771,7 +771,7 @@ bitflags! {
 ///
 /// Must be matched with a corresponding `DeleteFontInstance` at some point
 /// to prevent memory leaks.
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct AddFontInstance {
     /// A key to identify the font instance.
     pub key: font::FontInstanceKey,
@@ -1274,7 +1274,7 @@ impl ExternalEvent {
 }
 
 /// Describe whether or not scrolling should be clamped by the content bounds.
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub enum ScrollClamping {
     ///
     ToContentBounds,
