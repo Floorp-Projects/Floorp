@@ -107,6 +107,8 @@ class CollectionPool {
 
 template <typename Wrapped>
 struct RecyclableAtomMapValueWrapper {
+  using WrappedType = Wrapped;
+
   union {
     Wrapped wrapped;
     uint64_t dummy;
@@ -156,6 +158,13 @@ template <typename RepresentativeTable>
 class InlineTablePool
     : public CollectionPool<RepresentativeTable,
                             InlineTablePool<RepresentativeTable>> {
+  template <typename>
+  struct IsRecyclableAtomMapValueWrapper : std::false_type {};
+
+  template <typename T>
+  struct IsRecyclableAtomMapValueWrapper<RecyclableAtomMapValueWrapper<T>>
+      : std::true_type {};
+
  public:
   template <typename Table>
   static void assertInvariants() {
@@ -163,8 +172,34 @@ class InlineTablePool
         Table::SizeOfInlineEntries == RepresentativeTable::SizeOfInlineEntries,
         "Only tables with the same size for inline entries are usable in the "
         "pool.");
-    static_assert(mozilla::IsPod<typename Table::Table::Entry>::value,
-                  "Only tables with POD values are usable in the pool.");
+
+    using EntryType = typename Table::Table::Entry;
+    using KeyType = typename EntryType::KeyType;
+    using ValueType = typename EntryType::ValueType;
+
+    static_assert(IsRecyclableAtomMapValueWrapper<ValueType>::value,
+                  "Please adjust the static assertions below if you need to "
+                  "support other types than RecyclableAtomMapValueWrapper");
+
+    using WrappedType = typename ValueType::WrappedType;
+
+    // We can't directly check |std::is_trivial<EntryType>|, because neither
+    // mozilla::HashMapEntry nor IsRecyclableAtomMapValueWrapper are trivially
+    // default constructible. Instead we check that the key and the unwrapped
+    // value are trivial and additionally ensure that the entry itself is
+    // trivially copyable and destructible.
+
+    static_assert(std::is_trivial_v<KeyType>,
+                  "Only tables with trivial keys are usable in the pool.");
+    static_assert(std::is_trivial_v<WrappedType>,
+                  "Only tables with trivial values are usable in the pool.");
+
+    static_assert(
+        std::is_trivially_copyable_v<EntryType>,
+        "Only tables with trivially copyable entries are usable in the pool.");
+    static_assert(std::is_trivially_destructible_v<EntryType>,
+                  "Only tables with trivially destructible entries are usable "
+                  "in the pool.");
   }
 };
 
@@ -338,12 +373,5 @@ class PooledVectorPtr : public PooledCollectionPtr<Vector, PooledVectorPtr> {
 
 }  // namespace frontend
 }  // namespace js
-
-namespace mozilla {
-
-template <typename T>
-struct IsPod<js::frontend::RecyclableAtomMapValueWrapper<T>> : IsPod<T> {};
-
-}  // namespace mozilla
 
 #endif  // frontend_NameCollections_h

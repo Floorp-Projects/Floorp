@@ -84,11 +84,6 @@ enum MaybeCheckTDZ { CheckTDZ = true, DontCheckTDZ = false };
 
 }  // namespace js
 
-namespace mozilla {
-template <>
-struct IsPod<js::MaybeCheckTDZ> : std::true_type {};
-}  // namespace mozilla
-
 /*****************************************************************************/
 
 namespace js {
