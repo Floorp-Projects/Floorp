@@ -19,12 +19,12 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Čia bus rodomos jūsų atvertos kortelės.</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">„%1$s“ kūrėjai yra „Mozilla“.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Esate privačiojo naršymo seanse</string>
-    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">„%1$s“ išvalo jūsų paieškos ir naršymo žurnalą kai išjungiate programą arba užveriate visas privačiąsias korteles. Nors šie dalykai ir nesuteikia jums anonimiškumo internete, tai leidžia išlaikyti jūsų privatumą nuo kitų šį įrenginį naudojančių asmenų.</string>
     <string name="private_browsing_common_myths">Dažni mitai apie privatųjį naršymą</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Ištrinti seansą</string>
@@ -856,6 +856,31 @@
     <string name="preferences_delete_browsing_data_snackbar">Naršymo duomenys pašalinti</string>
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Šalinami naršymo duomenys…</string>
+
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">„Firefox Preview“ dabar tapo „Firefox Nightly“</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">„Firefox Nightly“ yra atnaujinama kiekvieną naktį ir turi naujų bandomųjų funkcijų.
+        Dėl to ji gali būti mažiau stabili. Atsisiųskite mūsų „beta“ naršyklę, jeigu norite stabilesnio veikimo.</string>
+    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button">Atsisiųsti „Mozilla Firefox“ naršyklę</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">„Firefox Nightly“ pasikeitė</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">Ši programa nebegaus saugumo atnaujinimų. Nenaudokite šios programos, ir pereikite prie naujosios „Nightly“.
+        \n\nNorėdami perkelti savo adresyną, prisijungimus, ir žurnalą į kitą programą, susikurkite „Firefox“ paskyrą.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">Pereiti prie naujosios „Nightly“</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">„Firefox Nightly“ pasikeitė</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">Ši programa nebegaus saugumo atnaujinimų. Pereikite prie naujosios „Nightly“, ir nenaudokite šios programos.
+        \n\nNorėdami perkelti savo adresyną, prisijungimus, ir žurnalą į kitą programą, susikurkite „Firefox“ paskyrą.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Atsisiųsti naująją „Nightly“</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message

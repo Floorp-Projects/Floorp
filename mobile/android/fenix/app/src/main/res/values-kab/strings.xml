@@ -19,15 +19,15 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Iccaren-ik yeldin ad ttwaseknen dagi.</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s d afares n Mozilla.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Aql-ak deg tɣimit n usfaylu uslig</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">
-         %1$s iseffeḍ azray-ik n unadi d tunigin mi ara teffɣeḍ seg usnas neɣ ad tmedleḍ iccaren n tunigin tusligin. Ɣas wama aya ur yettarra ara d udrig deg yismal web neɣ deg usaǧǧaw-ik n unekcum Internet,
-        aya ad k-yeǧǧ ad tḥerzeḍ tabaḍnit n urmud-ik srid i wid yesseqdacen ibenk-ik.
-    </string>
+    <string name="private_browsing_placeholder_description_2">%1$s iseffeḍ amazray-ik n unadi d tunigin seg waccaren n tunigin tusligin mi ara tent-tmeḍleḍ neɣ mi ara teffɣeḍ seg usnas. Ɣas wama aya ur yettarra ara d udrig deg yismal web neɣ deg usaǧǧaw-ik n unekcum Internet, aya ad k-yeǧǧ ad tḥarzeḍ tabaḍnit n urmud-ik srid i wid yesseqdacen ibenk-ik.</string>
     <string name="private_browsing_common_myths">
 Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
      </string>
@@ -857,6 +857,28 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_delete_browsing_data_snackbar">Isefka n tunigin ttwakksen</string>
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Tiksa n isefka n tunigin…</string>
+
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">Firefox Preview  tura yuɣal d Firefox Nightly</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly iseɛɛu llqem yal iḍ u ttilint deg-s timahilin tirmitanin timaynutin.
+        Dacu, yezmer ad yenɣes urkad. Sider iminig-nneɣ beta i tarmit irekden ugar.</string>
+    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button">Awi iminig Web Mozilla Firefox</string>
+
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">. 
+        Asnas-agi ur yettɛawad ara ad yermes ileqman n tɣellist. Ur seqdac ara asnas-agi, beddel ɣer Nightly amaynut.
+        \n\nAkken ad tazneḍ ticraḍ n yisebtar, inekcam, akked umazray ɣer usnas-nniḍen, rnu amiḍan Firefox.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">Beddel ɣer Nightly amaynut</string>
+
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">Asnas-agi ur yettɛawad ara ad yermes ileqman n tɣellist. Awi Nightlu amaynut u seḥbes aseqdec n usnas-agi.
+        \n\nAkken ad tazneḍ ticraḍ n yisebtar, inekcam, akked umazray ɣer usnas-nniḍen, rnu amiḍan Firefox.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Awi Nightly amaynut</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_2">Firefox Preview Private</string>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_3">Firefox Preview (Private)</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">%s Privat</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (Privat)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Më tepër mundësi</string>
@@ -44,6 +44,9 @@
     <string name="home_screen_shortcut_open_new_tab_2">Skedë e re</string>
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Skedë e re private</string>
+
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Sajte kryesues</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -109,6 +112,10 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">Dukje</string>
 
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">S’arrihet të lidhet. Skemë URL jo e pranuar.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Gjuha e përzgjedhur</string>
@@ -148,6 +155,9 @@
     <string name="search_widget_text_short">Kërko</string>
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">Kërkoni në web</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Kërkim zanor</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -194,10 +204,18 @@
     <string name="preferences_private_browsing_options">Shfletim privat</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Hapi lidhjet në skedë private</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Lejo foto ekrani nën shfletim privat</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Shtoni shkurtore shfletimi privat</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Përdorshmëri</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Shërbyes vetjak Llogarish Firefox</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Shërbyes vetjak Sync</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Shërbyesi Llogari Firefox/Sync u ndryshua. Po dilet nga aplikacioni për të zbatuar ndryshimet…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Llogari</string>
     <!-- Preference shown on banner to sign into account -->
@@ -274,10 +292,11 @@
     <string name="sync_last_synced_summary">Njëkohësuar së fundi më: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Njëkohësuar së fundi: kurrë</string>
+
     <!-- Text for displaying the default device name.
         The first parameter is the application name, the second is the device manufacturer name
         and the third is the device model. -->
-    <string name="default_device_name">%s te %s %s</string>
+    <string name="default_device_name_2">%1$s në %2$s %3$s</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -454,6 +473,14 @@
     <string name="history_delete_all_dialog">Jeni i sigurt se doni të spastrohet historiku juaj?</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Spastroje</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Kopjoje</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Ndajeni me të tjerët</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Hape në skedë të re</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Hape në skedë private</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Fshije</string>
     <!-- History multi select title in app bar
@@ -896,6 +923,9 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Lexoni shënimin tonë mbi privatësinë</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">Mbylle</string>
+
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Nisni shfletimin</string>
 
@@ -934,6 +964,8 @@
     <string name="sign_in_with_email">Më mirë përdorni email</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox-i do të reshtë së njëkohësuari me llogarinë tuaj, por s’do të fshijë ndonjë nga të dhënat e shfletimit tuaj në këtë pajisje.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s-i do të reshtë së njëkohësuari me llogarinë tuaj, por nuk do të fshihet ndonjë nga të dhënat e shfletimeve tuaja në këtë pajisje.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Shkëputu</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -1035,6 +1067,9 @@
     <string name="etp_panel_off">Për këtë sajt, mbrojtjet janë OFF</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">Mbrojtja e Thelluar Nga Gjurmimet është e çaktivizuar për këto sajte</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Shko mbrapsht</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Të drejtat tuaja</string>
     <!-- About page link text to open open source licenses screen -->
@@ -1058,6 +1093,11 @@
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Biblioteka që përdorim</string>
 
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Menu diagnostikimesh: ende %1$d klikim(e) për aktivizim</string>
+    <string name="about_debug_menu_toast_done">Menuja e diagnostikimeve u aktivizua</string>
+
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 skedë</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
@@ -1079,8 +1119,13 @@
     <string name="add_to_homescreen_cancel">Anuloje</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Shtoje</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Vazhdoni te sajti</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Emër shkurtoreje</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Këtë sajt mund ta shtoni lehtë te skena Kreu e telefonit tuaj, që ta hapni në çast dhe të shfletoni më shpejt, si të ish aplikacion.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Kredenciale hyrjesh dhe fjalëkalime</string>

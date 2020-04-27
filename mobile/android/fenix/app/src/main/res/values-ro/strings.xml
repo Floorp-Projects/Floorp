@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_2">Previzualizare Firefox privată</string>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_3">Previzualizare Firefox (privat)</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">Privat %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (Privat)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Mai multe opțiuni</string>
@@ -18,14 +18,16 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Filele deschise vor fi afișate aici.</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s este realizat de Mozilla.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Ești într-o sesiune privată</string>
 
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">%1$s îți șterge istoricul de căutare și de navigare când ieși din aplicație sau când închizi toate filele private. Deși acest lucru nu te face anonim(ă) pentru site-urile web sau furnizorul tău de Internet, ușurează
-        păstrarea confidențialității a ceea ce faci online față de oricine altcineva ar folosi acest dispozitiv.</string>
+    <string name="private_browsing_placeholder_description_2">%1$s îți șterge istoricul de căutare și navigare din filele private când le închizi sau când ieși din aplicație. Deși nu te anonimizează pe site-urile web sau pentru furnizorul de servicii de internet, ușurează păstrarea confidențialității asupra a ce faci online față de oricine altcineva folosește acest dispozitiv.</string>
     <string name="private_browsing_common_myths">Mituri comune despre navigarea privată</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Șterge sesiunea</string>
@@ -288,10 +290,11 @@
     <string name="sync_last_synced_summary">Ultima sincronizare: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Ultima sincronizare: niciodată</string>
+
     <!-- Text for displaying the default device name.
         The first parameter is the application name, the second is the device manufacturer name
         and the third is the device model. -->
-    <string name="default_device_name">%s pe %s %s</string>
+    <string name="default_device_name_2">%1$s pe %2$s %3$s</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -844,6 +847,31 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Se șterg datele de navigare…</string>
 
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">Firefox Preview este acum Firefox Nightly</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly se actualizează în fiecare seară și are funcționalități experimentale noi
+        Dar poate fi mai puțin stabil. Descarcă browserul nostru beta pentru o experiență mai stabilă.</string>
+    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button">Obține browserul Firefox de la Mozilla</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly s-a mutat</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">Această aplicație nu va mai primi actualizări de securitate. Încetează folosirea acestei aplicații și treci pe noul Nightly.
+        \n\nPentru transferul marcajelor, datelor de autentificare și al istoricului în altă aplicație, creează un cont Firefox.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">Treci la noul Nightly</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly s-a mutat</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">Această aplicație nu va mai primi actualizări de securitate. Descarcă noul Nightly și nu mai folosi această aplicație.
+        \n\nPentru transferul marcajelor, datelor de autentificare și al istoricului în altă aplicație, creează un cont Firefox.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Obține noul Nightly</string>
+
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -957,6 +985,8 @@
     <string name="sign_in_with_email">Folosește e-mailul în schimb</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox va opri sincronizarea cu contul tău, dar nu va șterge niciuna din datele de navigare de pe acest dispozitiv.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s va înceta să se mai sincronizeze cu contul tău, dar nu va șterge nimic din datele de navigare de pe acest dispozitiv.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Deconectare</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -1065,12 +1095,12 @@
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Drepturile tale</string>
     <!-- About page link text to open open source licenses screen -->
-    <string name="about_open_source_licenses">Librării cu sursă deschisă pe care le folosim</string>
+    <string name="about_open_source_licenses">Biblioteci cu sursă deschisă pe care le folosim</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">Ce este nou în %s</string>
     <!-- Open source licenses page title
     The first parameter is the app name -->
-    <string name="open_source_licenses_title">%s | Librării OSS</string>
+    <string name="open_source_licenses_title">%s | Biblioteci OSS</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Asistență</string>
@@ -1081,7 +1111,7 @@
     <!-- About page link text to open licensing information link -->
     <string name="about_licensing_information">Informații despre licențiere</string>
     <!-- About page link text to open a screen with libraries that are used -->
-    <string name="about_other_open_source_libraries">Librării pe care le folosim</string>
+    <string name="about_other_open_source_libraries">Biblioteci pe care le folosim</string>
 
     <!-- Toast shown to the user when they are activating the secret dev menu
         The first parameter is number of long clicks left to enable the menu -->
@@ -1110,7 +1140,7 @@
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Adaugă</string>
     <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
-    <string name="add_to_homescreen_continue">Continuă către site-ul web</string>
+    <string name="add_to_homescreen_continue">Mergi pe site</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Denumire comandă rapidă</string>
 

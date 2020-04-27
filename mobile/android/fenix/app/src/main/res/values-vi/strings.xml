@@ -19,15 +19,15 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Các thẻ đang mở của bạn sẽ được hiển thị ở đây.</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s được sản xuất bởi Mozilla.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Bạn đang ở trong chế độ riêng tư</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">
-         %1$s xóa lịch sử tìm kiếm và duyệt web của bạn khi bạn thoát khỏi ứng dụng hoặc đóng tất cả các thẻ riêng tư. Mặc dù điều này không làm cho bạn ẩn danh với các trang web hoặc nhà cung cấp dịch vụ internet của bạn, nhưng nó giúp bạn
-        dễ dàng giữ những gì bạn làm trực tuyến riêng tư với bất kỳ ai khác sử dụng thiết bị này.
-    </string>
+    <string name="private_browsing_placeholder_description_2">%1$s xóa lịch sử tìm kiếm và duyệt web của bạn khỏi các thẻ riêng tư khi bạn đóng chúng hoặc thoát khỏi ứng dụng. Mặc dù điều này không làm cho bạn ẩn danh với các trang web hoặc nhà cung cấp dịch vụ internet của bạn, nhưng nó giúp bạn dễ dàng giữ những gì bạn làm trực tuyến riêng tư với bất kỳ ai khác sử dụng thiết bị này.</string>
     <string name="private_browsing_common_myths">
        Những lầm tưởng phổ biến về duyệt web riêng tư
     </string>
@@ -847,6 +847,31 @@
     <string name="preferences_delete_browsing_data_snackbar">Đã xóa dữ liệu duyệt web</string>
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Đang xóa dữ liệu duyệt web…</string>
+
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">Firefox Preview hiện là Firefox Nightly</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly được cập nhật mỗi đêm và có các tính năng mới thử nghiệm.
+        Tuy nhiên, nó có thể kém ổn định hơn. Tải xuống trình duyệt beta của chúng tôi để có trải nghiệm ổn định hơn.</string>
+    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button">Tải trình duyệt Mozilla Firefox</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly đã di chuyển</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">Ứng dụng này sẽ không còn nhận được cập nhật bảo mật. Ngừng sử dụng ứng dụng này và chuyển sang Nightly mới.
+        \n\nĐể chuyển dấu trang, thông tin đăng nhập và lịch sử của bạn sang một ứng dụng khác, hãy tạo một tài khoản Firefox.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">Chuyển sang Nightly mới</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly đã di chuyển</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">Ứng dụng này sẽ không còn nhận được cập nhật bảo mật. Tải Nightly mới và ngừng sử dụng ứng dụng này.
+        \n\nĐể chuyển dấu trang, thông tin đăng nhập và lịch sử của bạn sang một ứng dụng khác, hãy tạo một tài khoản Firefox.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Tải Nightly mới</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message

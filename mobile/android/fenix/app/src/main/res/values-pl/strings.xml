@@ -19,16 +19,15 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Tutaj będą wyświetlane otwarte karty.</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s jest tworzony przez Mozillę.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Prywatna sesja</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">
-         %1$s usuwa historię wyszukiwania i przeglądania po wyłączeniu aplikacji lub zamknięciu wszystkich kart prywatnych.
-        Chociaż nie czyni to użytkownika anonimowym wobec stron internetowych ani dostawcy Internetu,
-        to ułatwia zachowanie prywatności przed pozostałymi użytkownikami tego urządzenia.
-    </string>
+    <string name="private_browsing_placeholder_description_2">%1$s usuwa historię wyszukiwania i przeglądania w prywatnych kartach po ich zamknięciu lub wyłączeniu aplikacji. Chociaż nie czyni to użytkownika anonimowym wobec stron internetowych ani dostawcy Internetu, to ułatwia zachowanie prywatności przed pozostałymi użytkownikami tego urządzenia.</string>
     <string name="private_browsing_common_myths">
        Popularne mity na temat przeglądania prywatnego
     </string>
@@ -859,6 +858,32 @@
 
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Usuwanie danych przeglądania…</string>
+
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">Firefox Preview to teraz Firefox Nightly</string>
+
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly jest aktualizowany każdej nocy i ma eksperymentalne nowe funkcje.
+        Może jednak być mniej stabilny. Pobierz nasze wydanie beta, aby korzystać ze stabilniejszej przeglądarki.</string>
+    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button">Pobierz przeglądarkę Mozilla Firefox</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly się przeprowadził</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">Ta aplikacja nie będzie już otrzymywała aktualizacji zabezpieczeń. Prosimy przestać jej używać i przejść na nowe wydanie Nightly.
+        \n\nAby przenieść zakładki, dane logowania i historię do innej aplikacji, utwórz konto Firefoksa.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">Przejdź na nowe wydanie Nightly</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly się przeprowadził</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">Ta aplikacja nie będzie już otrzymywała aktualizacji zabezpieczeń. Prosimy przestać jej używać i pobrać nowe wydanie Nightly.
+        \n\nAby przenieść zakładki, dane logowania i historię do innej aplikacji, utwórz konto Firefoksa.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Pobierz nowe wydanie Nightly</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message

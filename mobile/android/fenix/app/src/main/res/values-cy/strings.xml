@@ -18,14 +18,15 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Bydd eich tabiau agored i’w gweld yma.</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">Mae %1$s yn cael ei greu gan Mozilla.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Rydych mewn sesiwn breifat</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">
-         Mae %1$s yn clirio eich hanes chwilio a phori pan fyddwch yn cau’r ap neu’n cau pob tab a ffenestr Pori Preifat. Er nad yw hyn yn eich gwneud yn anhysbys i wefannau neu i’ch darparwr gwasanaeth
-        rhyngrwyd, mae’n ei gwneud yn haws i chi gadw’r hyn rydych yn ei wneud ar-lein yn breifat rhag unrhyw un arall sy’n defnyddio’r ddyfais hon.</string>
+    <string name="private_browsing_placeholder_description_2">Mae %1$s yn clirio’ch hanes chwilio a phori o dabiau preifat pan fyddwch yn eu cau neu’n gadael yr ap. Er nad yw hyn yn eich gwneud chi’n anhysbys i wefannau neu’ch darparwr gwasanaeth rhyngrwyd, mae’n ei gwneud hi’n haws cadw’r hyn rydych chi’n ei wneud ar-lein yn breifat rhag unrhyw un arall sy’n defnyddio’r ddyfais hon.</string>
     <string name="private_browsing_common_myths">
        Mythau cyffredin am bori preifat
     </string>
@@ -848,6 +849,32 @@
     <string name="preferences_delete_browsing_data_snackbar">Data pori wedi’i ddileu</string>
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Dileu data pori…</string>
+
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">Mae Firefox Preview bellach yn Firefox Nightly</string>
+
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">Mae Firefox Nightly yn cael ei ddiweddaru bob nos ac mae ganddo nodweddion newydd arbrofol.
+        Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr beta i gael profiad mwy sefydlog.</string>
+    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button">Estyn porwr Mozilla Firefox Browser</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">Mae Firefox Nightly wedi symud</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">Ni fydd yr ap hon yn derbyn diweddariadau diogelwch mwyach. Peidiwch a defnyddio’r ap hon a symud i’r Nightly newydd.
+        \n\nEr mwyn trosglwyddo’ch nodau tudalen, eich mewngofnodion a’ch hanes i ap arall, crëwch gyfrif Firefox.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">Newid i’r Nightly newydd</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Mae Firefox Nightly wedi symud</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">Ni fydd yr ap hon yn derbyn diweddariadau diogelwch bellach. Estynnwch y Nightly newydd a pheidio a defnyddio’r ap hon.
+        \n\nEr mwyn trosglwyddo’ch nodau tudalen, eich mewngofnodion a’ch hanes i ap arall, crëwch gyfrif Firefox.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Estyn y Nightly newydd</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message

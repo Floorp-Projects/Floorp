@@ -18,16 +18,17 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Waše wočinjene rajtarki so tu wočinja.</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s so přez Mozilla zhotowja.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Sće w priwatnym posedźenju</string>
 
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">
-         %1$s wašu pytansku a přehladowansku historjiu wuprózdni, hdyž nałoženje wopušćiće abo wšě priwatne rajtarki začiniće. Přez to so wosnadnja, před druhimi, kotřiž tutón grat wužiwaja, schować,
-        štož online činiće, hačrunjež to was za websydła abo wašeho poskićowarja internetneje słužby njeanonymizuje.
-    </string>
+    <string name="private_browsing_placeholder_description_2">%1$s wašu pytansku a přehladowansku historjiu z priwatnych rajtarkow wuprózdni, hdyž je začinjeće abo nałoženje kónčiće. Přez to so wosnadnja, před druhimi, kotřiž tutón grat wužiwaja, schować,
+        štož online činiće, hačrunjež to was za websydła abo wašeho poskićowarja internetneje słužby njeanonymizuje.</string>
     <string name="private_browsing_common_myths">
        Časte myty wo priwatnym modusu
     </string>
@@ -853,6 +854,31 @@
     <string name="preferences_delete_browsing_data_snackbar">Přehladowanske daty su so zhašeli</string>
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Přehladowanske daty so hašeja…</string>
+
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">Firefox Preview je nětko Firefox Nightly</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly so kóždu nóc aktualizuje a ma eksperimentelne nowe funkcije.
+        Móže mjenje stabilny być. Sćehńće naš betawobhladowak za stabilniše dožiwjenje.</string>
+    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button">Wobstarajće sej Mozilla Firefox Browser</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly je přećehnjeny</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">Tute nałoženje hižo wěstotne aktualizacije njedóstawa. Přestańće tute nałoženje wužiwać a wužiwajće město toho nowy Nightly.
+        \n\nZo byšće swoje zapołožki, přizjewjenja a historiju do druheho nałoženja přenošował, załožće konto Firefox.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">Přeńdźće k nowemu Nightly</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly je přećehnjeny</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">Tute nałoženje hižo wěstotne aktualizacije njedóstawa. Wobstarajće sej nowy Nightly a přestańće tute nałoženje wužiwać.
+        \n\nZo byšće swoje zapołožki, přizjewjenja a historiju do druheho nałoženja přenošował, załožće konto Firefox.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Wobstarajće sej nowy Nightly</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
