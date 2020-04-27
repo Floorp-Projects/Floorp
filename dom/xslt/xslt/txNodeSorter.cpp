@@ -102,7 +102,7 @@ nsresult txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
   }
 
   // mSortKeys owns key now.
-  mSortKeys.add(key.forget());
+  mSortKeys.add(key.release());
   mNKeys++;
 
   return NS_OK;

@@ -201,7 +201,7 @@ txPattern* txLocPathPattern::getSubPatternAt(uint32_t aPos) {
 void txLocPathPattern::setSubPatternAt(uint32_t aPos, txPattern* aPattern) {
   NS_ASSERTION(aPos < mSteps.Length(), "setting bad subexpression index");
   Step* step = &mSteps[aPos];
-  step->pattern.forget();
+  step->pattern.release();
   step->pattern = aPattern;
 }
 

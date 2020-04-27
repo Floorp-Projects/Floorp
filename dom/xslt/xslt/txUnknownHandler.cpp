@@ -158,7 +158,7 @@ nsresult txUnknownHandler::createHandlerAndFlush(bool aHTMLRoot,
   NS_ENSURE_SUCCESS(rv, rv);
 
   mEs->mOutputHandler = handler.get();
-  mEs->mResultHandler = handler.forget();
+  mEs->mResultHandler = handler.release();
   // Let the executionstate delete us. We need to stay alive because we might
   // need to forward hooks to mEs->mResultHandler if someone is currently
   // flushing a buffer to mEs->mResultHandler.

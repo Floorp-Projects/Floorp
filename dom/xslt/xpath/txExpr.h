@@ -172,7 +172,7 @@ class Expr {
   }                                                            \
   void _class::setSubExprAt(uint32_t aPos, Expr* aExpr) {      \
     NS_ASSERTION(aPos < 1, "setting bad subexpression index"); \
-    _Expr1.forget();                                           \
+    _Expr1.release();                                          \
     _Expr1 = aExpr;                                            \
   }
 
@@ -192,10 +192,10 @@ class Expr {
   void _class::setSubExprAt(uint32_t aPos, Expr* aExpr) {         \
     NS_ASSERTION(aPos < 2, "setting bad subexpression index");    \
     if (aPos == 0) {                                              \
-      _Expr1.forget();                                            \
+      _Expr1.release();                                           \
       _Expr1 = aExpr;                                             \
     } else {                                                      \
-      _Expr2.forget();                                            \
+      _Expr2.release();                                           \
       _Expr2 = aExpr;                                             \
     }                                                             \
   }
@@ -524,7 +524,7 @@ class LocationStep : public Expr, public PredicateList {
 
   txNodeTest* getNodeTest() { return mNodeTest.get(); }
   void setNodeTest(txNodeTest* aNodeTest) {
-    mNodeTest.forget();
+    mNodeTest.release();
     mNodeTest = aNodeTest;
   }
   LocationStepType getAxisIdentifier() { return mAxisIdentifier; }
