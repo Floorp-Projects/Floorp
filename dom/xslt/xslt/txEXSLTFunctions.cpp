@@ -688,7 +688,7 @@ nsresult txEXSLTRegExFunctionCall::evaluate(txIEvalContext* aContext,
       UniquePtr<txXPathNode> node;
       for (nsIContent* result = docFrag->GetFirstChild(); result;
            result = result->GetNextSibling()) {
-        node = txXPathNativeNode::createXPathNode(result, true);
+        node = WrapUnique(txXPathNativeNode::createXPathNode(result, true));
         rv = resultSet->add(*node);
         NS_ENSURE_SUCCESS(rv, rv);
       }

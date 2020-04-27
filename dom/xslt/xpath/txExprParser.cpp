@@ -23,6 +23,11 @@
 #include "txXPathNode.h"
 #include "txXPathOptimizer.h"
 
+using mozilla::MakeUnique;
+using mozilla::UniquePtr;
+using mozilla::Unused;
+using mozilla::WrapUnique;
+
 /**
  * Creates an Attribute Value Template using the given value
  * This should move to XSLProcessor class
@@ -78,7 +83,8 @@ nsresult txExprParser::createAVT(const nsAString& aAttrValue,
         // Restart the loop since we didn't create an expression
         continue;
       }
-      newExpr = new txLiteralExpr(literalString + Substring(start, iter));
+      newExpr =
+          MakeUnique<txLiteralExpr>(literalString + Substring(start, iter));
     } else {
       // Parse expressions, iter is already past the initial '{' when
       // we get here.
@@ -115,7 +121,7 @@ nsresult txExprParser::createAVT(const nsAString& aAttrValue,
       if (!concat) {
         concat = new txCoreFunctionCall(txCoreFunctionCall::CONCAT);
         rv = concat->addParam(expr.release());
-        expr = concat;
+        expr = WrapUnique(concat);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
@@ -130,7 +136,7 @@ nsresult txExprParser::createAVT(const nsAString& aAttrValue,
   }
 
   if (!expr) {
-    expr = new txLiteralExpr(EmptyString());
+    expr = MakeUnique<txLiteralExpr>(EmptyString());
   }
 
   *aResult = expr.release();
@@ -248,8 +254,8 @@ nsresult txExprParser::createBinaryExpr(UniquePtr<Expr>& left,
   }
   NS_ENSURE_TRUE(expr, NS_ERROR_OUT_OF_MEMORY);
 
-  left.release();
-  right.release();
+  Unused << left.release();
+  Unused << right.release();
 
   *aResult = expr;
   return NS_OK;
@@ -286,10 +292,10 @@ nsresult txExprParser::createExpr(txExprLexer& lexer, txIParseContext* aContext,
 
         rv = fcExpr->addParam(expr.get());
         if (NS_FAILED(rv)) return rv;
-        expr.release();
-        expr = fcExpr;
+        Unused << expr.release();
+        expr = WrapUnique(fcExpr);
       } else {
-        expr = new UnaryExpr(expr.release());
+        expr = MakeUnique<UnaryExpr>(expr.release());
       }
     }
 
@@ -353,7 +359,7 @@ nsresult txExprParser::createFilterOrStep(txExprLexer& lexer,
         nsresult rv = resolveQName(tok->Value(), getter_AddRefs(prefix),
                                    aContext, getter_AddRefs(lName), nspace);
         NS_ENSURE_SUCCESS(rv, rv);
-        expr = new VariableRefExpr(prefix, lName, nspace);
+        expr = MakeUnique<VariableRefExpr>(prefix, lName, nspace);
       }
       break;
     case Token::L_PAREN:
@@ -368,11 +374,11 @@ nsresult txExprParser::createFilterOrStep(txExprLexer& lexer,
       break;
     case Token::LITERAL:
       lexer.nextToken();
-      expr = new txLiteralExpr(tok->Value());
+      expr = MakeUnique<txLiteralExpr>(tok->Value());
       break;
     case Token::NUMBER: {
       lexer.nextToken();
-      expr = new txLiteralExpr(txDouble::toDouble(tok->Value()));
+      expr = MakeUnique<txLiteralExpr>(txDouble::toDouble(tok->Value()));
       break;
     }
     default:
@@ -382,12 +388,12 @@ nsresult txExprParser::createFilterOrStep(txExprLexer& lexer,
   if (lexer.peek()->mType == Token::L_BRACKET) {
     UniquePtr<FilterExpr> filterExpr(new FilterExpr(expr.get()));
 
-    expr.release();
+    Unused << expr.release();
 
     //-- handle predicates
     rv = parsePredicates(filterExpr.get(), lexer, aContext);
     NS_ENSURE_SUCCESS(rv, rv);
-    expr = filterExpr.release();
+    expr = std::move(filterExpr);
   }
 
   *aResult = expr.release();
@@ -416,7 +422,7 @@ nsresult txExprParser::createFunctionCall(txExprLexer& lexer,
   if (namespaceID == kNameSpaceID_None &&
       txCoreFunctionCall::getTypeFromAtom(lName, type)) {
     // It is a known built-in function.
-    fnCall = new txCoreFunctionCall(type);
+    fnCall = MakeUnique<txCoreFunctionCall>(type);
   }
 
   // check extension functions and xslt
@@ -503,13 +509,13 @@ nsresult txExprParser::createLocationStep(txExprLexer& lexer,
       //-- eat token
       lexer.nextToken();
       axisIdentifier = LocationStep::PARENT_AXIS;
-      nodeTest = new txNodeTypeTest(txNodeTypeTest::NODE_TYPE);
+      nodeTest = MakeUnique<txNodeTypeTest>(txNodeTypeTest::NODE_TYPE);
       break;
     case Token::SELF_NODE:
       //-- eat token
       lexer.nextToken();
       axisIdentifier = LocationStep::SELF_AXIS;
-      nodeTest = new txNodeTypeTest(txNodeTypeTest::NODE_TYPE);
+      nodeTest = MakeUnique<txNodeTypeTest>(txNodeTypeTest::NODE_TYPE);
       break;
     default:
       break;
@@ -529,7 +535,7 @@ nsresult txExprParser::createLocationStep(txExprLexer& lexer,
                         getter_AddRefs(lName), nspace, true);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      nodeTest = new txNameTest(
+      nodeTest = MakeUnique<txNameTest>(
           prefix, lName, nspace,
           axisIdentifier == LocationStep::ATTRIBUTE_AXIS
               ? static_cast<uint16_t>(txXPathNodeType::ATTRIBUTE_NODE)
@@ -543,7 +549,7 @@ nsresult txExprParser::createLocationStep(txExprLexer& lexer,
   UniquePtr<LocationStep> lstep(
       new LocationStep(nodeTest.get(), axisIdentifier));
 
-  nodeTest.release();
+  Unused << nodeTest.release();
 
   //-- handle predicates
   rv = parsePredicates(lstep.get(), lexer, aContext);
@@ -567,19 +573,19 @@ nsresult txExprParser::createNodeTypeTest(txExprLexer& lexer,
   switch (nodeTok->mType) {
     case Token::COMMENT_AND_PAREN:
       lexer.nextToken();
-      nodeTest = new txNodeTypeTest(txNodeTypeTest::COMMENT_TYPE);
+      nodeTest = MakeUnique<txNodeTypeTest>(txNodeTypeTest::COMMENT_TYPE);
       break;
     case Token::NODE_AND_PAREN:
       lexer.nextToken();
-      nodeTest = new txNodeTypeTest(txNodeTypeTest::NODE_TYPE);
+      nodeTest = MakeUnique<txNodeTypeTest>(txNodeTypeTest::NODE_TYPE);
       break;
     case Token::PROC_INST_AND_PAREN:
       lexer.nextToken();
-      nodeTest = new txNodeTypeTest(txNodeTypeTest::PI_TYPE);
+      nodeTest = MakeUnique<txNodeTypeTest>(txNodeTypeTest::PI_TYPE);
       break;
     case Token::TEXT_AND_PAREN:
       lexer.nextToken();
-      nodeTest = new txNodeTypeTest(txNodeTypeTest::TEXT_TYPE);
+      nodeTest = MakeUnique<txNodeTypeTest>(txNodeTypeTest::TEXT_TYPE);
       break;
     default:
       return NS_ERROR_XPATH_NO_NODE_TYPE_TEST;
@@ -636,7 +642,7 @@ nsresult txExprParser::createPathExpr(txExprLexer& lexer,
       return NS_OK;
     }
   } else {
-    expr = new RootExpr();
+    expr = MakeUnique<RootExpr>();
 
 #ifdef TX_TO_STRING
     static_cast<RootExpr*>(expr.get())->setSerialize(false);
@@ -649,7 +655,7 @@ nsresult txExprParser::createPathExpr(txExprLexer& lexer,
   rv = pathExpr->addExpr(expr.get(), PathExpr::RELATIVE_OP);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  expr.release();
+  Unused << expr.release();
 
   // this is ugly
   while (1) {
@@ -673,7 +679,7 @@ nsresult txExprParser::createPathExpr(txExprLexer& lexer,
     rv = pathExpr->addExpr(expr.get(), pathOp);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    expr.release();
+    Unused << expr.release();
   }
   MOZ_ASSERT_UNREACHABLE("internal xpath parser error");
   return NS_ERROR_UNEXPECTED;
@@ -702,7 +708,7 @@ nsresult txExprParser::createUnionExpr(txExprLexer& lexer,
   rv = unionExpr->addExpr(expr.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  expr.release();
+  Unused << expr.release();
 
   while (lexer.peek()->mType == Token::UNION_OP) {
     lexer.nextToken();  //-- eat token
@@ -753,7 +759,7 @@ nsresult txExprParser::parsePredicates(PredicateList* aPredicateList,
     rv = aPredicateList->add(expr.get());
     NS_ENSURE_SUCCESS(rv, rv);
 
-    expr.release();
+    Unused << expr.release();
 
     if (lexer.peek()->mType != Token::R_BRACKET) {
       return NS_ERROR_XPATH_BRACKET_EXPECTED;

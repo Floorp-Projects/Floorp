@@ -17,6 +17,7 @@
 
 using mozilla::CheckedUint32;
 using mozilla::MakeUniqueFallible;
+using mozilla::UniquePtr;
 
 /*
  * Sorts Nodes as specified by the W3C XSLT 1.0 Recommendation

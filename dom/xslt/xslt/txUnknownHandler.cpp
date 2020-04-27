@@ -12,6 +12,9 @@
 #include "txStringUtils.h"
 #include "txStylesheet.h"
 
+using mozilla::UniquePtr;
+using mozilla::WrapUnique;
+
 txUnknownHandler::txUnknownHandler(txExecutionState* aEs)
     : mEs(aEs), mFlushed(false) {
   MOZ_COUNT_CTOR_INHERITED(txUnknownHandler, txBufferingHandler);
@@ -162,7 +165,7 @@ nsresult txUnknownHandler::createHandlerAndFlush(bool aHTMLRoot,
   // Let the executionstate delete us. We need to stay alive because we might
   // need to forward hooks to mEs->mResultHandler if someone is currently
   // flushing a buffer to mEs->mResultHandler.
-  mEs->mObsoleteHandler = this;
+  mEs->mObsoleteHandler = WrapUnique(this);
 
   mFlushed = true;
 
