@@ -101,8 +101,8 @@ export type SourcePayload = {
   actor: ActorId,
   url: URL | null,
   isBlackBoxed: boolean,
+  sourceMapBaseURL: URL | null,
   sourceMapURL: URL | null,
-  introductionUrl: URL | null,
   introductionType: string | null,
   extensionName: string | null,
 };
