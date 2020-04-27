@@ -2173,8 +2173,9 @@ void PeerConnectionImpl::OnSetDescriptionSuccess(bool rollback, bool remote) {
 
   // We do this after queueing the above task, to ensure that ICE state
   // changes don't start happening before sRD finishes.
-  if (!rollback && (newSignalingState == RTCSignalingState::Have_local_offer ||
-                    mSignalingState == RTCSignalingState::Have_remote_offer)) {
+
+  // Did we just apply a local description?
+  if (!remote) {
     // We'd like to handle this in PeerConnectionMedia::UpdateNetworkState.
     // Unfortunately, if the WiFi switch happens quickly, we never see
     // that state change.  We need to detect the ice restart here and
