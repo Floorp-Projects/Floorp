@@ -544,11 +544,39 @@ class TestResolver(MozbuildObject):
                 self._test_dirs.add(test['dir_relpath'])
         return self._test_dirs
 
-    def _resolve(self, paths=None, flavor=None, subsuite=None, under_path=None, tags=None):
+    def _resolve(self, paths=None, flavor='', subsuite=None, under_path=None, tags=None):
+        """Given parameters, resolve them to produce an appropriate list of tests.
+
+        Args:
+            paths (list):
+                By default, set to None. If provided as a list of paths, then
+                this method will attempt to load the appropriate set of tests
+                that live in this path.
+
+            flavor (string):
+                By default, an empty string. If provided as a string, then this
+                method will attempt to load tests that belong to this flavor.
+                Additional filtering also takes the flavor into consideration.
+
+            subsuite (string):
+                By default, set to None. If provided as a string, then this value
+                is used to perform filtering of a candidate set of tests.
+        """
         if tags:
             tags = set(tags)
 
         def fltr(tests):
+            """Filters tests based on several criteria.
+
+            Args:
+                tests (list):
+                    List of tests that belong to the same candidate path.
+
+            Returns:
+                test (dict):
+                    If the test survived the filtering process, it is returned
+                    as a valid test.
+            """
             for test in tests:
                 if flavor:
                     if flavor == 'devtools' and test.get('flavor') != 'browser-chrome':
@@ -573,13 +601,13 @@ class TestResolver(MozbuildObject):
         if not paths:
             paths = [None]
 
-        candidate_paths = set()
-
-        if flavor in (None, 'puppeteer') and any(self.is_puppeteer_path(p) for p in paths):
+        if flavor in ('', 'puppeteer') and any(self.is_puppeteer_path(p) for p in paths):
             self.add_puppeteer_manifest_data()
 
-        if flavor in (None, 'web-platform-tests') and any(self.is_wpt_path(p) for p in paths):
+        if flavor in ('', 'web-platform-tests') and any(self.is_wpt_path(p) for p in paths):
             self.add_wpt_manifest_data()
+
+        candidate_paths = set()
 
         for path in sorted(paths):
             if path is None:
@@ -611,7 +639,6 @@ class TestResolver(MozbuildObject):
 
         for p in sorted(candidate_paths):
             tests = self.tests_by_path[p]
-
             for test in fltr(tests):
                 yield test
 
@@ -647,6 +674,16 @@ class TestResolver(MozbuildObject):
         self._puppeteer_loaded = True
 
     def is_wpt_path(self, path):
+        """Checks if path forms part of the known web-platform-test paths.
+
+        Args:
+            path (str or None):
+                Path to check against the list of known web-platform-test paths.
+
+        Returns:
+            Boolean value. True if path is part of web-platform-tests path, or
+            path is None. False otherwise.
+        """
         if path is None:
             return True
         if mozpath.match(path, "testing/web-platform/tests/**"):
@@ -656,6 +693,14 @@ class TestResolver(MozbuildObject):
         return False
 
     def add_wpt_manifest_data(self):
+        """Adds manifest data for web-platform-tests into the list of available tests.
+
+        Upon invocation, this method will download from firefox-ci the most recent
+        version of the web-platform-tests manifests.
+
+        Once manifest is downloaded, this method will add details about each test
+        into the list of available tests.
+        """
         if self._wpt_loaded:
             return
 
@@ -665,10 +710,11 @@ class TestResolver(MozbuildObject):
         sys.path = [wpt_path] + sys.path
 
         import manifestupdate
-        # Set up a logger that will drop all the output
+        # Import and redirect the logger to sys.stderr.
         import logging
         logger = logging.getLogger("manifestupdate")
-        logger.propogate = False
+        handler = logging.StreamHandler(sys.stderr)
+        logger.addHandler(handler)
 
         manifests = manifestupdate.run(self.topsrcdir, self.topobjdir, rebuild=False,
                                        download=True, config_path=None, rewrite_config=True,
@@ -678,25 +724,30 @@ class TestResolver(MozbuildObject):
             return
 
         for manifest, data in six.iteritems(manifests):
-            tests_root = data["tests_path"]
+            tests_root = data["tests_path"]  # full path on disk until web-platform tests directory
             for test_type, path, tests in manifest:
                 full_path = mozpath.join(tests_root, path)
                 src_path = mozpath.relpath(full_path, self.topsrcdir)
                 if test_type not in ["testharness", "reftest", "wdspec", "crashtest"]:
                     continue
+
+                full_path = mozpath.join(tests_root, path)  # absolute path on disk
+                src_path = mozpath.relpath(full_path, self.topsrcdir)
+
                 for test in tests:
                     self._tests.append({
-                        "path": full_path,
-                        "flavor": "web-platform-tests",
-                        "here": mozpath.dirname(path),
-                        "manifest": data["manifest_path"],
-                        "name": test.id,
-                        "file_relpath": src_path,
                         "head": "",
                         "support-files": "",
+                        "path": full_path,
+                        "flavor": "web-platform-tests",
                         "subsuite": test_type,
-                        "dir_relpath": mozpath.dirname(src_path),
+                        "here": mozpath.dirname(path),
+                        "manifest": mozpath.dirname(full_path),
+                        "manifest_relpath": mozpath.dirname(src_path),
+                        "name": test.path_parts[-1],
+                        "file_relpath": src_path,
                         "srcdir_relpath": src_path,
+                        "dir_relpath": mozpath.dirname(src_path),
                     })
 
         self._wpt_loaded = True
