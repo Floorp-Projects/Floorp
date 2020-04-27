@@ -4878,7 +4878,7 @@ void nsTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
 UniquePtr<SelectionDetails> nsTextFrame::GetSelectionDetails() {
   const nsFrameSelection* frameSelection = GetConstFrameSelection();
-  if (frameSelection->GetTableCellSelection()) {
+  if (frameSelection->IsInTableSelectionMode()) {
     return nullptr;
   }
   UniquePtr<SelectionDetails> details = frameSelection->LookUpSelection(

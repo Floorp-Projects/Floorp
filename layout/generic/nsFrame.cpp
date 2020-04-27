@@ -4530,7 +4530,7 @@ nsresult nsFrame::GetDataForTableSelection(
 
   int16_t displaySelection = aPresShell->GetSelectionFlags();
 
-  bool selectingTableCells = aFrameSelection->GetTableCellSelection();
+  bool selectingTableCells = aFrameSelection->IsInTableSelectionMode();
 
   // DISPLAY_ALL means we're in an editor.
   // If already in cell selection mode,

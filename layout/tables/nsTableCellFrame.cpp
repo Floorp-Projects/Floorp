@@ -61,7 +61,7 @@ class nsDisplayTableCellSelection final : public nsPaintedDisplayItem {
       nsDisplayListBuilder* aDisplayListBuilder) override {
     RefPtr<nsFrameSelection> frameSelection =
         mFrame->PresShell()->FrameSelection();
-    if (frameSelection->GetTableCellSelection()) {
+    if (frameSelection->IsInTableSelectionMode()) {
       return false;
     }
 
@@ -272,7 +272,7 @@ void nsTableCellFrame::DecorateForSelection(DrawTarget* aDrawTarget,
     RefPtr<nsFrameSelection> frameSelection =
         presContext->PresShell()->FrameSelection();
 
-    if (frameSelection->GetTableCellSelection()) {
+    if (frameSelection->IsInTableSelectionMode()) {
       nscolor bordercolor;
       if (displaySelection == nsISelectionController::SELECTION_DISABLED) {
         bordercolor = NS_RGB(176, 176, 176);  // disabled color
