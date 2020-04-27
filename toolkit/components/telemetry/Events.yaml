@@ -304,9 +304,9 @@ form_autocomplete:
 extensions.data:
   migrateResult:
     objects: ["storageLocal"]
-    bug_numbers: [1470213, 1553297, 1590736]
+    bug_numbers: [1470213, 1553297, 1590736, 1630596]
     notification_emails: ["addons-dev-internal@mozilla.com"]
-    expiry_version: "78"
+    expiry_version: "85"
     products:
       - "firefox"
       - "fennec"
