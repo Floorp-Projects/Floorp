@@ -46,7 +46,6 @@ exports[`Group displays a group 1`] = `
           "source": Object {
             "extensionName": null,
             "id": "source",
-            "introductionType": undefined,
             "introductionUrl": null,
             "isBlackBoxed": false,
             "isExtension": false,
@@ -123,7 +122,6 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           "source": Object {
             "extensionName": null,
             "id": "source",
-            "introductionType": undefined,
             "introductionUrl": null,
             "isBlackBoxed": false,
             "isExtension": false,
@@ -199,7 +197,6 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           "source": Object {
             "extensionName": null,
             "id": "source",
-            "introductionType": undefined,
             "introductionUrl": null,
             "isBlackBoxed": false,
             "isExtension": false,
@@ -251,7 +248,6 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           "source": Object {
             "extensionName": null,
             "id": "source",
-            "introductionType": undefined,
             "introductionUrl": null,
             "isBlackBoxed": false,
             "isExtension": false,
@@ -315,7 +311,6 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           "source": Object {
             "extensionName": null,
             "id": "source",
-            "introductionType": undefined,
             "introductionUrl": null,
             "isBlackBoxed": false,
             "isExtension": false,
@@ -367,7 +362,6 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           "source": Object {
             "extensionName": null,
             "id": "source",
-            "introductionType": undefined,
             "introductionUrl": null,
             "isBlackBoxed": false,
             "isExtension": false,
@@ -431,7 +425,6 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           "source": Object {
             "extensionName": null,
             "id": "source",
-            "introductionType": undefined,
             "introductionUrl": null,
             "isBlackBoxed": false,
             "isExtension": false,
@@ -483,7 +476,6 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           "source": Object {
             "extensionName": null,
             "id": "source",
-            "introductionType": undefined,
             "introductionUrl": null,
             "isBlackBoxed": false,
             "isExtension": false,
@@ -552,7 +544,6 @@ exports[`Group renders group with anonymous functions 1`] = `
           "source": Object {
             "extensionName": null,
             "id": "source",
-            "introductionType": undefined,
             "introductionUrl": null,
             "isBlackBoxed": false,
             "isExtension": false,
@@ -629,7 +620,6 @@ exports[`Group renders group with anonymous functions 2`] = `
           "source": Object {
             "extensionName": null,
             "id": "source",
-            "introductionType": undefined,
             "introductionUrl": null,
             "isBlackBoxed": false,
             "isExtension": false,
@@ -705,7 +695,6 @@ exports[`Group renders group with anonymous functions 2`] = `
           "source": Object {
             "extensionName": null,
             "id": "source",
-            "introductionType": undefined,
             "introductionUrl": null,
             "isBlackBoxed": false,
             "isExtension": false,
@@ -756,7 +745,6 @@ exports[`Group renders group with anonymous functions 2`] = `
           "source": Object {
             "extensionName": null,
             "id": "source",
-            "introductionType": undefined,
             "introductionUrl": null,
             "isBlackBoxed": false,
             "isExtension": false,
@@ -820,7 +808,6 @@ exports[`Group renders group with anonymous functions 2`] = `
           "source": Object {
             "extensionName": null,
             "id": "source",
-            "introductionType": undefined,
             "introductionUrl": null,
             "isBlackBoxed": false,
             "isExtension": false,
@@ -871,7 +858,6 @@ exports[`Group renders group with anonymous functions 2`] = `
           "source": Object {
             "extensionName": null,
             "id": "source",
-            "introductionType": undefined,
             "introductionUrl": null,
             "isBlackBoxed": false,
             "isExtension": false,
@@ -935,7 +921,6 @@ exports[`Group renders group with anonymous functions 2`] = `
           "source": Object {
             "extensionName": null,
             "id": "source",
-            "introductionType": undefined,
             "introductionUrl": null,
             "isBlackBoxed": false,
             "isExtension": false,
@@ -986,7 +971,6 @@ exports[`Group renders group with anonymous functions 2`] = `
           "source": Object {
             "extensionName": null,
             "id": "source",
-            "introductionType": undefined,
             "introductionUrl": null,
             "isBlackBoxed": false,
             "isExtension": false,
