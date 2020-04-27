@@ -2106,3 +2106,10 @@ SPAN_TEST(default_constructible) {
   ASSERT_TRUE((std::is_default_constructible<Span<int, 0>>::value));
   ASSERT_TRUE((!std::is_default_constructible<Span<int, 42>>::value));
 }
+
+SPAN_TEST(type_inference) {
+  static constexpr int arr[5] = {1, 2, 3, 4, 5};
+  constexpr auto s = Span{arr};
+  static_assert(std::is_same_v<const Span<const int, 5>, decltype(s)>);
+  static_assert(arr == s.Elements());
+}
