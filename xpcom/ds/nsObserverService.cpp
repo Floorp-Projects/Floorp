@@ -243,10 +243,6 @@ nsObserverService::RemoveObserver(nsIObserver* aObserver, const char* aTopic) {
     return NS_ERROR_FAILURE;
   }
 
-  /* This death grip is needed to protect against consumers who call
-   * RemoveObserver from their Destructor thus potentially thus causing
-   * infinite recursion, see bug 485834/bug 325392. */
-  nsCOMPtr<nsIObserver> kungFuDeathGrip(aObserver);
   return observerList->RemoveObserver(aObserver);
 }
 
