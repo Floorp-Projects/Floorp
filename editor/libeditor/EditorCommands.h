@@ -6,9 +6,11 @@
 #ifndef mozilla_EditorCommands_h
 #define mozilla_EditorCommands_h
 
+#include "mozilla/EventForwards.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TypedEnumBits.h"
+#include "nsGkAtoms.h"
 #include "nsIControllerCommand.h"
 #include "nsIPrincipal.h"
 #include "nsISupportsImpl.h"

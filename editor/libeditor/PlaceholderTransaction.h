@@ -8,9 +8,12 @@
 
 #include "EditAggregateTransaction.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/SelectionState.h"
 #include "mozilla/WeakPtr.h"
 
 namespace mozilla {
+
+class EditorBase;
 
 /**
  * An aggregate transaction that knows how to absorb all subsequent

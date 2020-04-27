@@ -6,10 +6,12 @@
 #include "mozilla/TextEditor.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/SelectionState.h"
 #include "mozilla/TextControlElement.h"
 #include "mozilla/dom/DataTransfer.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/StaticRange.h"

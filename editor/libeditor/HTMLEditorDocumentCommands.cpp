@@ -393,7 +393,7 @@ nsresult DocumentStateCommand::GetCommandStateParams(
       if (!aTextEditor) {
         return NS_OK;
       }
-      Document* document = aTextEditor->GetDocument();
+      dom::Document* document = aTextEditor->GetDocument();
       if (NS_WARN_IF(!document)) {
         return NS_ERROR_FAILURE;
       }
