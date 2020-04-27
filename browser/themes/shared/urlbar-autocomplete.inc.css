@@ -203,9 +203,17 @@
   -moz-context-properties: fill, stroke;
 }
 
+/* Favicon badges have this priority: switchtab/remotetab > pinned > bookmark. */
+
 .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
   background-image: url(chrome://browser/skin/bookmark-12.svg);
   color: #0060df; /* Blue-60 */
+  stroke: #fff;
+}
+
+.urlbarView-row[pinned] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
+  background-image: url(chrome://browser/skin/pin-12.svg);
+  color: #b1b1b3; /* Grey-40 */
   stroke: #fff;
 }
 
@@ -218,6 +226,11 @@
 
 :root[lwt-toolbar-field-brighttext] .urlbarView-row[type=bookmark] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
   color: #0a84ff; /* Blue-50 */
+  stroke: #38383d; /* Grey-70 */
+}
+
+:root[lwt-toolbar-field-brighttext] .urlbarView-row[pinned] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-type-icon {
+  color: #d7d7db; /* Grey-30 */
   stroke: #38383d; /* Grey-70 */
 }
 

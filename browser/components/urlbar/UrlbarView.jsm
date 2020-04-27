@@ -868,6 +868,12 @@ class UrlbarView {
       favicon.src = result.payload.icon || UrlbarUtils.ICON.DEFAULT;
     }
 
+    if (result.payload.isPinned) {
+      item.toggleAttribute("pinned", true);
+    } else {
+      item.removeAttribute("pinned");
+    }
+
     let title = item._elements.get("title");
     this._addTextContentWithHighlights(
       title,
