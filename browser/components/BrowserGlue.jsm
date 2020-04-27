@@ -2298,36 +2298,6 @@ BrowserGlue.prototype = {
         },
       },
 
-      // Temporary for Delegated Credentials Study:
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=1628012
-      {
-        condition: !Cu.isInAutomation && AppConstants.NIGHTLY_BUILD,
-        task: () => {
-          let env = Cc["@mozilla.org/process/environment;1"].getService(
-            Ci.nsIEnvironment
-          );
-
-          // Disable under xpcshell-test.
-          if (!env.exists("XPCSHELL_TEST_PROFILE_DIR")) {
-            let { DelegatedCredsExperiment } = ChromeUtils.import(
-              "resource:///modules/DelegatedCredsExperiment.jsm"
-            );
-
-            let currentDate = new Date();
-            let expiryDate = new Date("2020-05-01 0:00:00");
-            if (currentDate < expiryDate) {
-              Services.tm.idleDispatchToMainThread(() => {
-                DelegatedCredsExperiment.runTest();
-              });
-            } else {
-              Services.tm.idleDispatchToMainThread(() => {
-                DelegatedCredsExperiment.uninstall();
-              });
-            }
-          }
-        },
-      },
-
       // Marionette needs to be initialized as very last step
       {
         task: () => {
