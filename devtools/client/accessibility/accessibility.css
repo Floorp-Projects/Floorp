@@ -146,7 +146,6 @@ body {
 
 .devtools-toolbar .accessibility-tree-filters,
 .devtools-toolbar .accessibility-simulation {
-  margin-inline-start: 4px;
   display: flex;
   flex-wrap: nowrap;
   flex-direction: row;

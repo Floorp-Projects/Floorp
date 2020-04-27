@@ -383,23 +383,18 @@ class MarkupContextMenu {
       return;
     }
 
-    const a11yAutoInitEnabled = Services.prefs.getBoolPref(
-      "devtools.accessibility.auto-init.enabled",
-      false
-    );
     const showA11YPropsItem = new MenuItem({
       id: "node-menu-showaccessibilityproperties",
       label: INSPECTOR_L10N.getStr(
         "inspectorShowAccessibilityProperties.label"
       ),
       click: () => this._showAccessibilityProperties(),
-      disabled: !a11yAutoInitEnabled,
+      disabled: true,
     });
 
     // Only attempt to determine if a11y props menu item needs to be enabled if
-    // AccessibilityFront is enabled and accessibility panel auto init feature
-    // is disabled.
-    if (!a11yAutoInitEnabled && this.inspector.accessibilityFront.enabled) {
+    // AccessibilityFront is enabled.
+    if (this.inspector.accessibilityFront.enabled) {
       this._updateA11YMenuItem(showA11YPropsItem);
     }
 
@@ -960,7 +955,6 @@ class MarkupContextMenu {
     const hasA11YProps = await this.walker.hasAccessibilityProperties(
       this.selection.nodeFront
     );
-
     if (hasA11YProps) {
       const menuItemEl = Menu.getMenuElementById(menuItem.id, this.toolbox.doc);
       menuItemEl.disabled = menuItem.disabled = false;
