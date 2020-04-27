@@ -238,6 +238,12 @@ class nsDocShellLoadState final {
   // nsDocShell::InternalLoad.
   void CalculateLoadURIFlags();
 
+  // Compute the load flags to be used by creating channel.  aUriModified and
+  // aIsXFOError are expected to be Nothing when called from Parent process.
+  nsLoadFlags CalculateChannelLoadFlags(
+      mozilla::dom::BrowsingContext* aBrowsingContext, Maybe<bool> aUriModified,
+      Maybe<bool> aIsXFOError);
+
   mozilla::dom::DocShellLoadStateInit Serialize();
 
  protected:
