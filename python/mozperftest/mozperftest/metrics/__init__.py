@@ -7,7 +7,7 @@ from mozperftest.metrics.consoleoutput import ConsoleOutput
 
 
 def get_layers():
-    return ConsoleOutput, Perfherder
+    return Perfherder, ConsoleOutput
 
 
 def pick_metrics(env, flavor, mach_cmd):

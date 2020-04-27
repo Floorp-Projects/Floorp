@@ -18,7 +18,7 @@ from mozperftest.environment import MachEnvironment
 from mozperftest.mach_commands import Perftest
 
 
-class TestMachEnvironment(MachEnvironment):
+class _TestMachEnvironment(MachEnvironment):
     def run(self, metadata):
         return metadata
 
@@ -29,7 +29,7 @@ class TestMachEnvironment(MachEnvironment):
         pass
 
 
-@mock.patch("mozperftest.MachEnvironment", new=TestMachEnvironment)
+@mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
 def test_command():
     from mozbuild.base import MozbuildObject
 
