@@ -201,7 +201,7 @@ class RemoteReftest(RefTest):
 
         self.device.clear_logcat()
 
-        self.device.rm(self.remoteCache, force=True, recursive=True)
+        self.device.rm(self.remoteCache, force=True, recursive=True, root=True)
 
         procName = options.app.split('/')[-1]
         self.device.stop_application(procName)
@@ -375,9 +375,9 @@ class RemoteReftest(RefTest):
         return status
 
     def cleanup(self, profileDir):
-        self.device.rm(self.remoteTestRoot,  force=True, recursive=True)
-        self.device.rm(self.remoteProfile, force=True, recursive=True)
-        self.device.rm(self.remoteCache, force=True, recursive=True)
+        self.device.rm(self.remoteTestRoot,  force=True, recursive=True, root=True)
+        self.device.rm(self.remoteProfile, force=True, recursive=True, root=True)
+        self.device.rm(self.remoteCache, force=True, recursive=True, root=True)
         RefTest.cleanup(self, profileDir)
 
 

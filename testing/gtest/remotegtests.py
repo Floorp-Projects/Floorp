@@ -83,7 +83,8 @@ class RemoteGTests(object):
         self.cleanup()
         self.device.mkdir(self.remote_profile, parents=True)
         self.device.mkdir(self.remote_minidumps, parents=True)
-        self.device.mkdir(self.remote_libdir, parents=True)
+        self.device.mkdir(self.remote_libdir, parents=True, root=True)
+        self.device.chmod(self.remote_libdir, recursive=True, root=True)
 
         log.info("Running Android gtest")
         if not self.device.is_app_installed(self.package):

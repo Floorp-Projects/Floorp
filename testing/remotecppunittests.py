@@ -41,7 +41,7 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
             self.setup_bin(progs)
 
     def setup_bin(self, progs):
-        self.device.rm(self.remote_test_root, force=True, recursive=True)
+        self.device.rm(self.remote_test_root, force=True, recursive=True, root=True)
         self.device.mkdir(self.remote_home_dir, parents=True)
         self.device.mkdir(self.remote_tmp_dir)
         self.device.mkdir(self.remote_bin_dir)
