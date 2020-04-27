@@ -29,12 +29,10 @@ function handlePageShow(persisted) {
       childWin.history.back();
     }));
   } else {
-    childWin.requestAnimationFrame(() => childWin.requestAnimationFrame(() => {
-      is(childWin.devicePixelRatio, originalDPR * 2, "Should preserve zoom when restored");
-      todo_is(childWin.document.querySelector("iframe").contentWindow.devicePixelRatio, originalDPR * 2, "Should preserve zoom on frames too");
-      childWin.close();
-      SimpleTest.finish();
-    }));
+    is(childWin.devicePixelRatio, originalDPR * 2, "Should preserve zoom when restored");
+    todo_is(childWin.document.querySelector("iframe").contentWindow.devicePixelRatio, originalDPR * 2, "Should preserve zoom on frames too");
+    childWin.close();
+    SimpleTest.finish();
   }
 }
 
