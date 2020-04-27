@@ -985,7 +985,7 @@ dependencies = [
 [[package]]
 name = "cubeb-pulse"
 version = "0.3.0"
-source = "git+https://github.com/djg/cubeb-pulse-rs?rev=8375ed3cd2fb85add5800fa2eb6ec7bfc8e6bbf5#8375ed3cd2fb85add5800fa2eb6ec7bfc8e6bbf5"
+source = "git+https://github.com/djg/cubeb-pulse-rs?rev=5eb38163103b0dae86de81cdaf46070bdeedc0d1#5eb38163103b0dae86de81cdaf46070bdeedc0d1"
 dependencies = [
  "cubeb-backend",
  "pulse",
@@ -3563,7 +3563,7 @@ dependencies = [
 [[package]]
 name = "pulse"
 version = "0.3.0"
-source = "git+https://github.com/djg/cubeb-pulse-rs?rev=8375ed3cd2fb85add5800fa2eb6ec7bfc8e6bbf5#8375ed3cd2fb85add5800fa2eb6ec7bfc8e6bbf5"
+source = "git+https://github.com/djg/cubeb-pulse-rs?rev=5eb38163103b0dae86de81cdaf46070bdeedc0d1#5eb38163103b0dae86de81cdaf46070bdeedc0d1"
 dependencies = [
  "bitflags",
  "pulse-ffi",
@@ -3572,7 +3572,7 @@ dependencies = [
 [[package]]
 name = "pulse-ffi"
 version = "0.1.0"
-source = "git+https://github.com/djg/cubeb-pulse-rs?rev=8375ed3cd2fb85add5800fa2eb6ec7bfc8e6bbf5#8375ed3cd2fb85add5800fa2eb6ec7bfc8e6bbf5"
+source = "git+https://github.com/djg/cubeb-pulse-rs?rev=5eb38163103b0dae86de81cdaf46070bdeedc0d1#5eb38163103b0dae86de81cdaf46070bdeedc0d1"
 dependencies = [
  "libc",
 ]
