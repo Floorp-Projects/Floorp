@@ -10,7 +10,7 @@ apps:
   firefox:
     command: firefox
     desktop: distribution/firefox.desktop
-    extensions: [gnome-3-28]
+    extensions: [gnome-3-34]
     environment:
       DISABLE_WAYLAND: 1
       HOME: "$SNAP_USER_COMMON"
@@ -56,6 +56,9 @@ parts:
       - libc-bin
       - locales-all
       - libcurl3-gnutls
+    prime:
+      - -usr/lib/*/libharfbuzz*
+      - -usr/lib/*/*pango*
 
   xdg-open:
     after: [firefox]
@@ -90,6 +93,18 @@ parts:
     override-prime: |
       set -eux
       for snap in "core18" "gnome-3-28-1804"; do
+        cd "/snap/$snap/current" && find . -type f,l -exec rm -f "$SNAPCRAFT_PRIME/{}" \;
+      done
+
+  # Find files provided by the base and platform snap and ensure they aren't
+  # duplicated in this snap
+  cleanup:
+    after: [shared-mime-info]
+    plugin: nil
+    build-snaps: [core18, gnome-3-34-1804]
+    override-prime: |
+      set -eux
+      for snap in "core18" "gnome-3-34-1804"; do
         cd "/snap/$snap/current" && find . -type f,l -exec rm -f "$SNAPCRAFT_PRIME/{}" \;
       done
 
