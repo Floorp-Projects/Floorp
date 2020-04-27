@@ -4876,45 +4876,16 @@ void nsTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   aLists.Content()->AppendNewToTop<nsDisplayText>(aBuilder, this, isSelected);
 }
 
-static nsIFrame* GetGeneratedContentOwner(nsIFrame* aFrame, bool* aIsBefore) {
-  *aIsBefore = false;
-  while (aFrame && (aFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT)) {
-    if (aFrame->Style()->GetPseudoType() == PseudoStyleType::before) {
-      *aIsBefore = true;
-    }
-    aFrame = aFrame->GetParent();
-  }
-  return aFrame;
-}
-
 UniquePtr<SelectionDetails> nsTextFrame::GetSelectionDetails() {
   const nsFrameSelection* frameSelection = GetConstFrameSelection();
   if (frameSelection->GetTableCellSelection()) {
     return nullptr;
   }
-  if (!(GetStateBits() & NS_FRAME_GENERATED_CONTENT)) {
-    UniquePtr<SelectionDetails> details = frameSelection->LookUpSelection(
-        mContent, GetContentOffset(), GetContentLength(), false);
-    for (SelectionDetails* sd = details.get(); sd; sd = sd->mNext.get()) {
-      sd->mStart += mContentOffset;
-      sd->mEnd += mContentOffset;
-    }
-    return details;
-  }
-
-  // Check if the beginning or end of the element is selected, depending on
-  // whether we're :before content or :after content.
-  bool isBefore;
-  nsIFrame* owner = GetGeneratedContentOwner(this, &isBefore);
-  if (!owner || !owner->GetContent()) return nullptr;
-
   UniquePtr<SelectionDetails> details = frameSelection->LookUpSelection(
-      owner->GetContent(), isBefore ? 0 : owner->GetContent()->GetChildCount(),
-      0, false);
+      mContent, GetContentOffset(), GetContentLength(), false);
   for (SelectionDetails* sd = details.get(); sd; sd = sd->mNext.get()) {
-    // The entire text is selected!
-    sd->mStart = GetContentOffset();
-    sd->mEnd = GetContentEnd();
+    sd->mStart += mContentOffset;
+    sd->mEnd += mContentOffset;
   }
   return details;
 }

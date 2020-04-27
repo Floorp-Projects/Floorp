@@ -109,11 +109,8 @@ let runTests = t.step_func_done(function() {
     document.documentElement.appendChild(div);
   }, "Slotted content in Shadow DOM");
 
-  // TODO(emilio): Even though this works (as in, find(..) returns true), the
-  // selection here doesn't end up selecting the shadow content.
-  //
-  // This should work in an ideal world.
-  testFindable(true, "Shadow text", function(document) {
+  // TODO(emilio): This should work in an ideal world.
+  testFindable(false, "Shadow text", function(document) {
     let div = document.createElement("div");
     div.appendChild(document.createTextNode("text, yay!"));
     div.attachShadow({ mode: "open" }).innerHTML = `This is Shadow <slot></slot>`;
@@ -130,6 +127,23 @@ let runTests = t.step_func_done(function() {
     input.value = "foo";
     document.documentElement.appendChild(input);
   }, "Native anonymous content isn't exposed in window.find");
+
+  // Same as above, but in this case the check is warranted, we shouldn't
+  // expose this range.
+  testFindable(false, "find me", `
+    <style>div::before { content: "Do find me" }</style>
+    <div></div>
+  `, "Pseudo-element");
+
+  // Same as above.
+  testFindable(false, "find me", `
+    <img alt="Do find me">
+  `, "Image alt content");
+
+  // Same as above.
+  testFindable(false, "find me", `
+    <input type="submit" value="Do find me">
+  `, "Submit input value");
 
   testFindable(false, "\0", `
     &#0;
