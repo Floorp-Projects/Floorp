@@ -132,6 +132,25 @@ void TRRService::GetParentalControlEnabledInternal() {
 }
 
 void TRRService::SetDetectedTrrURI(const nsACString& aURI) {
+  nsAutoCString userPrefURI;
+  nsAutoCString defaultPrefURI;
+
+  nsresult rv = Preferences::GetCString(TRR_PREF("uri"), userPrefURI,
+                                        PrefValueKind::User);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  rv = Preferences::GetCString(TRR_PREF("uri"), defaultPrefURI,
+                               PrefValueKind::Default);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  // If the user has set a custom URI then we don't want to override that.
+  if (!userPrefURI.Equals(defaultPrefURI)) {
+    return;
+  }
+
   nsAutoCString newURI(aURI);
   ProcessURITemplate(newURI);
   bool clearEntireCache = false;

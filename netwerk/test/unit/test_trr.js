@@ -11,6 +11,8 @@ const { MockRegistrar } = ChromeUtils.import(
 );
 const mainThread = Services.tm.currentThread;
 
+const gDefaultPref = Services.prefs.getDefaultBranch("");
+
 const defaultOriginAttributes = {};
 let h2Port = null;
 
@@ -1780,7 +1782,9 @@ add_task(async function test_fqdn_get() {
 add_task(async function test_detected_uri() {
   dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 3);
-  Services.prefs.setCharPref(
+  Services.prefs.clearUserPref("network.trr.uri");
+  let defaultURI = gDefaultPref.getCharPref("network.trr.uri");
+  gDefaultPref.setCharPref(
     "network.trr.uri",
     `https://foo.example.com:${h2Port}/doh?responseIP=3.4.5.6`
   );
@@ -1789,4 +1793,20 @@ add_task(async function test_detected_uri() {
     `https://foo.example.com:${h2Port}/doh?responseIP=1.2.3.4`
   );
   await new DNSListener("domainB.example.org.", "1.2.3.4");
+  gDefaultPref.setCharPref("network.trr.uri", defaultURI);
+});
+
+add_task(async function test_detected_uri_userSet() {
+  dns.clearCache(true);
+  Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/doh?responseIP=4.5.6.7`
+  );
+  await new DNSListener("domainA.example.org.", "4.5.6.7");
+  // This should be a no-op, since we have a user-set URI
+  dns.setDetectedTrrURI(
+    `https://foo.example.com:${h2Port}/doh?responseIP=1.2.3.4`
+  );
+  await new DNSListener("domainB.example.org.", "4.5.6.7");
 });
