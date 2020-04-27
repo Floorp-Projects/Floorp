@@ -11,6 +11,7 @@
 #include "mozilla/EditorUtils.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_editor.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
@@ -27,14 +28,14 @@
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
-#include "nsNameSpaceManager.h"
+#include "nsIHTMLCollection.h"
 #include "nsINode.h"
 #include "nsISupportsBase.h"
 #include "nsLiteralString.h"
+#include "nsNameSpaceManager.h"
+#include "nsPrintfCString.h"
 #include "nsTextNode.h"
 #include "nsUnicharUtils.h"
-#include "nsIHTMLCollection.h"
-#include "nsPrintfCString.h"
 
 namespace mozilla {
 
@@ -194,9 +195,10 @@ EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
   if (mMaxTextLength >= 0) {
     nsAutoString insertionString(NS_LITERAL_STRING("\n"));
     EditActionResult result =
-        TruncateInsertionStringForMaxLength(insertionString);
+        MaybeTruncateInsertionStringForMaxLength(insertionString);
     if (result.Failed()) {
-      NS_WARNING("TextEditor::TruncateInsertionStringForMaxLength() failed");
+      NS_WARNING(
+          "TextEditor::MaybeTruncateInsertionStringForMaxLength() failed");
       return result;
     }
     if (result.Handled()) {
@@ -448,9 +450,10 @@ EditActionResult TextEditor::HandleInsertText(
   nsAutoString insertionString(aInsertionString);
   if (mMaxTextLength >= 0) {
     EditActionResult result =
-        TruncateInsertionStringForMaxLength(insertionString);
+        MaybeTruncateInsertionStringForMaxLength(insertionString);
     if (result.Failed()) {
-      NS_WARNING("TextEditor::TruncateInsertionStringForMaxLength() failed");
+      NS_WARNING(
+          "TextEditor::MaybeTruncateInsertionStringForMaxLength() failed");
       return result.MarkAsHandled();
     }
     // If we're exceeding the maxlength when composing IME, we need to clean up
@@ -937,13 +940,33 @@ nsresult TextEditor::EnsurePaddingBRElementInMultilineEditor() {
   return NS_OK;
 }
 
-EditActionResult TextEditor::TruncateInsertionStringForMaxLength(
+EditActionResult TextEditor::MaybeTruncateInsertionStringForMaxLength(
     nsAString& aInsertionString) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(mMaxTextLength >= 0);
 
   if (!IsPlaintextEditor() || IsIMEComposing()) {
     return EditActionIgnored();
+  }
+
+  // Ignore user pastes
+  switch (GetEditAction()) {
+    case EditAction::ePaste:
+    case EditAction::ePasteAsQuotation:
+    case EditAction::eDrop:
+    case EditAction::eReplaceText:
+      // EditActionPrinciple() is non-null iff the edit was requested by
+      // javascript.
+      if (!GetEditActionPrincipal()) {
+        // By now we are certain that this is a user paste, before we ignore it,
+        // lets check if the user explictly enabled truncating user pastes.
+        if (!StaticPrefs::editor_truncate_user_pastes()) {
+          return EditActionIgnored();
+        }
+      }
+      [[fallthrough]];
+    default:
+      break;
   }
 
   int32_t currentLength = INT32_MAX;
