@@ -278,6 +278,8 @@ class RenderThread final {
   Maybe<layers::CollectedFrames> GetCollectedFramesForWindow(
       wr::WindowId aWindowId);
 
+  static void MaybeEnableGLDebugMessage(gl::GLContext* aGLContext);
+
  private:
   explicit RenderThread(base::Thread* aThread);
 

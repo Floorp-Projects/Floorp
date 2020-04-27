@@ -884,6 +884,50 @@ RefPtr<layers::SurfacePool> RenderThread::SharedSurfacePool() {
 
 void RenderThread::ClearSharedSurfacePool() { mSurfacePool = nullptr; }
 
+static void GLAPIENTRY DebugMessageCallback(GLenum aSource, GLenum aType,
+                                            GLuint aId, GLenum aSeverity,
+                                            GLsizei aLength,
+                                            const GLchar* aMessage,
+                                            const GLvoid* aUserParam) {
+  constexpr const char* kContextLost = "Context has been lost.";
+
+  if (StaticPrefs::gfx_webrender_gl_debug_message_critical_note_AtStartup() &&
+      aSeverity == LOCAL_GL_DEBUG_SEVERITY_HIGH) {
+    auto message = std::string(aMessage, aLength);
+    // When content lost happned, error messages are flooded by its message.
+    if (message != kContextLost) {
+      gfxCriticalNote << message;
+    } else {
+      gfxCriticalNoteOnce << message;
+    }
+  }
+
+  if (StaticPrefs::gfx_webrender_gl_debug_message_print_AtStartup()) {
+    gl::GLContext* gl = (gl::GLContext*)aUserParam;
+    gl->DebugCallback(aSource, aType, aId, aSeverity, aLength, aMessage);
+  }
+}
+
+// static
+void RenderThread::MaybeEnableGLDebugMessage(gl::GLContext* aGLContext) {
+  if (!aGLContext) {
+    return;
+  }
+
+  bool enableDebugMessage =
+      StaticPrefs::gfx_webrender_gl_debug_message_critical_note_AtStartup() ||
+      StaticPrefs::gfx_webrender_gl_debug_message_print_AtStartup();
+
+  if (enableDebugMessage &&
+      aGLContext->IsExtensionSupported(gl::GLContext::KHR_debug)) {
+    aGLContext->fEnable(LOCAL_GL_DEBUG_OUTPUT);
+    aGLContext->fDisable(LOCAL_GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    aGLContext->fDebugMessageCallback(&DebugMessageCallback, (void*)aGLContext);
+    aGLContext->fDebugMessageControl(LOCAL_GL_DONT_CARE, LOCAL_GL_DONT_CARE,
+                                     LOCAL_GL_DONT_CARE, 0, nullptr, true);
+  }
+}
+
 WebRenderShaders::WebRenderShaders(gl::GLContext* gl,
                                    WebRenderProgramCache* programCache) {
   mGL = gl;
@@ -996,28 +1040,6 @@ static already_AddRefed<gl::GLContext> CreateGLContextCGL() {
 }
 #endif
 
-static void GLAPIENTRY DebugMessageCallback(GLenum aSource, GLenum aType,
-                                            GLuint aId, GLenum aSeverity,
-                                            GLsizei aLength,
-                                            const GLchar* aMessage,
-                                            const GLvoid* aUserParam) {
-  constexpr const char* kContextLost = "Context has been lost.";
-
-  if (StaticPrefs::gfx_webrender_gl_debug_message_critical_note_AtStartup() &&
-      aSeverity == LOCAL_GL_DEBUG_SEVERITY_HIGH) {
-    auto message = std::string(aMessage, aLength);
-    // When content lost happned, error messages are flooded by its message.
-    if (message != kContextLost) {
-      gfxCriticalNote << message;
-    }
-  }
-
-  if (StaticPrefs::gfx_webrender_gl_debug_message_print_AtStartup()) {
-    gl::GLContext* gl = (gl::GLContext*)aUserParam;
-    gl->DebugCallback(aSource, aType, aId, aSeverity, aLength, aMessage);
-  }
-}
-
 static already_AddRefed<gl::GLContext> CreateGLContext() {
   RefPtr<gl::GLContext> gl;
 
@@ -1036,18 +1058,7 @@ static already_AddRefed<gl::GLContext> CreateGLContext() {
   gl = CreateGLContextCGL();
 #endif
 
-  bool enableDebugMessage =
-      StaticPrefs::gfx_webrender_gl_debug_message_critical_note_AtStartup() ||
-      StaticPrefs::gfx_webrender_gl_debug_message_print_AtStartup();
-
-  if (enableDebugMessage && gl &&
-      gl->IsExtensionSupported(gl::GLContext::KHR_debug)) {
-    gl->fEnable(LOCAL_GL_DEBUG_OUTPUT);
-    gl->fDisable(LOCAL_GL_DEBUG_OUTPUT_SYNCHRONOUS);
-    gl->fDebugMessageCallback(&DebugMessageCallback, (void*)gl.get());
-    gl->fDebugMessageControl(LOCAL_GL_DONT_CARE, LOCAL_GL_DONT_CARE,
-                             LOCAL_GL_DONT_CARE, 0, nullptr, true);
-  }
+  wr::RenderThread::MaybeEnableGLDebugMessage(gl);
 
   return gl.forget();
 }
