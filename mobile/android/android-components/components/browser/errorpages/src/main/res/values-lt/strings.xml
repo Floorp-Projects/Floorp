@@ -69,11 +69,27 @@
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Nepavyko užmegzti ryšio</string>
 
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>Svetainė gali būti laikinai nepasiekiama. Pabandykite šiek tiek vėliau.</li>
+        <li>Jeigu nepavyksta įkelti jokio tinklalapio, patikrinkite savo įrenginio duomenų arba belaidį ryšį.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">Netikėtas serverio atsakas</string>
 
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>Svetainė netikėtu būdu atsakė į tinklo užklausą, tad naršyklė negali tęsti darbo.</p>]]></string>
+
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">Netinkamas tinklalapio peradresavimas</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>Naršyklė nutraukė ryšį, kadangi svetainė cikliškai peradresuoja užklausas sau pačiai.</p>
+      <ul>
+        <li>Ši klaida galėjo įvykti dėl to, kad naršyklė nepriima svetainės slapukų.</li>
+        <li>Jei leidus priimti svetainės slapukus nesklandumas išlieka, tai jo priežastis gali būti ne jūsų kompiuteryje, o serverio sąrankoje.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Dirbama neprisijungus prie tinklo</string>

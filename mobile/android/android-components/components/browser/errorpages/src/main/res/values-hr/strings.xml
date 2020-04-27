@@ -29,7 +29,7 @@
     <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
         <li>Možda se radi o problemu s postavkama na poslužitelju ili možda netko pokušava oponašati ovaj poslužitelj.</li>
-        <li>Ako si se na ovaj poslužitelj u prošlosti bez problema spajao/la, moguće je da se radi o privremenoj grešci, stoga pokušaj ponovo kasnije.</li>
+        <li>Ako u prošlosti nije bilo problema sa spajanjem na ovaj poslužitelj, moguće je da se radi o privremenoj grešci, stoga pokušaj ponovo kasnije.</li>
       </ul>]]></string>
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
