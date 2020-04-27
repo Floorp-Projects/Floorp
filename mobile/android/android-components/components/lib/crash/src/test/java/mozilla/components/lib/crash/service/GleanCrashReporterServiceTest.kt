@@ -46,9 +46,9 @@ class GleanCrashReporterServiceTest {
             assertFalse("No previous persisted crashes must exist", service.file.exists())
 
             val crash = Crash.NativeCodeCrash("", true, "", true, arrayListOf())
-            service.report(crash)
+            service.record(crash)
 
-            verify(service).report(crash)
+            verify(service).record(crash)
 
             assertTrue("Persistence file must exist", service.file.exists())
             val lines = service.file.readLines()
@@ -85,9 +85,7 @@ class GleanCrashReporterServiceTest {
             assertFalse("No previous persisted crashes must exist", service.file.exists())
 
             val crash = Crash.NativeCodeCrash("", true, "", false, arrayListOf())
-            service.report(crash)
-
-            verify(service).report(crash)
+            service.record(crash)
 
             assertTrue("Persistence file must exist", service.file.exists())
             val lines = service.file.readLines()
@@ -124,8 +122,7 @@ class GleanCrashReporterServiceTest {
             assertFalse("No previous persisted crashes must exist", service.file.exists())
 
             val crash = Crash.UncaughtExceptionCrash(RuntimeException("Test"), arrayListOf())
-            service.report(crash)
-            verify(service).report(crash)
+            service.record(crash)
 
             assertTrue("Persistence file must exist", service.file.exists())
             val lines = service.file.readLines()
@@ -162,8 +159,7 @@ class GleanCrashReporterServiceTest {
             assertFalse("No previous persisted crashes must exist", service.file.exists())
 
             val throwable = RuntimeException("Test")
-            service.report(throwable)
-            verify(service).report(throwable)
+            service.record(throwable)
 
             assertTrue("Persistence file must exist", service.file.exists())
             val lines = service.file.readLines()
@@ -212,10 +208,10 @@ class GleanCrashReporterServiceTest {
             val nonfatalNativeCodeCrash = Crash.NativeCodeCrash("", true, "", false, arrayListOf())
 
             // Record some crashes
-            service.report(uncaughtExceptionCrash)
-            service.report(fatalNativeCodeCrash)
-            service.report(uncaughtExceptionCrash)
-            service.report(nonfatalNativeCodeCrash)
+            service.record(uncaughtExceptionCrash)
+            service.record(fatalNativeCodeCrash)
+            service.record(uncaughtExceptionCrash)
+            service.record(nonfatalNativeCodeCrash)
 
             // Make sure the file exists
             assertTrue("Persistence file must exist", service.file.exists())
@@ -260,8 +256,7 @@ class GleanCrashReporterServiceTest {
         assertFalse("No previous persisted crashes must exist", service.file.exists())
 
         val crash = Crash.UncaughtExceptionCrash(RuntimeException("Test"), arrayListOf())
-        service.report(crash)
-        verify(service).report(crash)
+        service.record(crash)
 
         assertTrue("Persistence file must exist", service.file.exists())
         val lines = service.file.readLines()
@@ -285,9 +280,7 @@ class GleanCrashReporterServiceTest {
             assertFalse("No previous persisted crashes must exist", service.file.exists())
 
             val crash = Crash.NativeCodeCrash("", true, "", true, arrayListOf())
-            service.report(crash)
-
-            verify(service).report(crash)
+            service.record(crash)
 
             assertTrue("Persistence file must exist", service.file.exists())
 

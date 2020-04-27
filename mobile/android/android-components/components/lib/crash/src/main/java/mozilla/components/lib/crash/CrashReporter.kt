@@ -19,6 +19,7 @@ import mozilla.components.lib.crash.handler.ExceptionHandler
 import mozilla.components.lib.crash.notification.CrashNotification
 import mozilla.components.lib.crash.prompt.CrashPrompt
 import mozilla.components.lib.crash.service.CrashReporterService
+import mozilla.components.lib.crash.service.CrashTelemetryService
 import mozilla.components.lib.crash.service.SendCrashReportService
 import mozilla.components.lib.crash.service.SendCrashTelemetryService
 import mozilla.components.support.base.crash.CrashReporting
@@ -54,7 +55,7 @@ import mozilla.components.support.base.log.logger.Logger
 @Suppress("TooManyFunctions")
 class CrashReporter(
     private val services: List<CrashReporterService> = emptyList(),
-    private val telemetryServices: List<CrashReporterService> = emptyList(),
+    private val telemetryServices: List<CrashTelemetryService> = emptyList(),
     private val shouldPrompt: Prompt = Prompt.NEVER,
     var enabled: Boolean = true,
     internal val promptConfiguration: PromptConfiguration = PromptConfiguration(),
@@ -109,8 +110,8 @@ class CrashReporter(
         return scope.launch {
             telemetryServices.forEach { telemetryService ->
                 when (crash) {
-                    is Crash.NativeCodeCrash -> telemetryService.report(crash)
-                    is Crash.UncaughtExceptionCrash -> telemetryService.report(crash)
+                    is Crash.NativeCodeCrash -> telemetryService.record(crash)
+                    is Crash.UncaughtExceptionCrash -> telemetryService.record(crash)
                 }
             }
 
