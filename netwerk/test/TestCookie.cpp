@@ -196,6 +196,7 @@ void InitPrefs(nsIPrefBranch* aPrefBranch) {
   // default"
   Preferences::SetBool("network.cookie.sameSite.laxByDefault", false);
   Preferences::SetBool("network.cookieJarSettings.unblocked_for_testing", true);
+  Preferences::SetBool("dom.securecontext.whitelist_onions", false);
 }
 
 TEST(TestCookie, TestCookieMain)
@@ -1009,6 +1010,9 @@ TEST(TestCookie, TestCookieMain)
     SetACookie(cookieService, secureURIs[i], "test=basic; secure");
     GetACookie(cookieService, secureURIs[i], cookie);
     EXPECT_TRUE(CheckResult(cookie.get(), MUST_EQUAL, "test=basic"));
+    SetACookie(cookieService, secureURIs[i], "test=basic1");
+    GetACookie(cookieService, secureURIs[i], cookie);
+    EXPECT_TRUE(CheckResult(cookie.get(), MUST_EQUAL, "test=basic1"));
   }
 
   // XXX the following are placeholders: add these tests please!
@@ -1061,4 +1065,34 @@ TEST(TestCookie, SameSiteLax)
   cookie = static_cast<Cookie*>(cookies[0].get());
   EXPECT_EQ(cookie->RawSameSite(), nsICookie::SAMESITE_NONE);
   EXPECT_EQ(cookie->SameSite(), nsICookie::SAMESITE_NONE);
+}
+
+TEST(TestCookie, OnionSite)
+{
+  Preferences::SetBool("dom.securecontext.whitelist_onions", true);
+
+  nsresult rv;
+  nsCString cookie;
+
+  nsCOMPtr<nsICookieService> cookieService =
+      do_GetService(kCookieServiceCID, &rv);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  // .onion secure cookie tests
+  SetACookie(cookieService, "http://123456789abcdef.onion/",
+             "test=onion-security; secure");
+  GetACookieNoHttp(cookieService, "https://123456789abcdef.onion/", cookie);
+  EXPECT_TRUE(CheckResult(cookie.get(), MUST_EQUAL, "test=onion-security"));
+  SetACookie(cookieService, "http://123456789abcdef.onion/",
+             "test=onion-security2; secure");
+  GetACookieNoHttp(cookieService, "http://123456789abcdef.onion/", cookie);
+  EXPECT_TRUE(CheckResult(cookie.get(), MUST_EQUAL, "test=onion-security2"));
+  SetACookie(cookieService, "https://123456789abcdef.onion/",
+             "test=onion-security3; secure");
+  GetACookieNoHttp(cookieService, "http://123456789abcdef.onion/", cookie);
+  EXPECT_TRUE(CheckResult(cookie.get(), MUST_EQUAL, "test=onion-security3"));
+  SetACookie(cookieService, "http://123456789abcdef.onion/",
+             "test=onion-security4");
+  GetACookieNoHttp(cookieService, "http://123456789abcdef.onion/", cookie);
+  EXPECT_TRUE(CheckResult(cookie.get(), MUST_EQUAL, "test=onion-security4"));
 }
