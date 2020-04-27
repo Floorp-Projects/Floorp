@@ -3121,7 +3121,7 @@ static const char* GetFullscreenError(CallerType aCallerType,
     return nullptr;
   }
 
-  if (!aDocument->HasValidTransientUserGestureActivation()) {
+  if (!aDocument->ConsumeTransientUserGestureActivation()) {
     return "FullscreenDeniedNotInputDriven";
   }
 
