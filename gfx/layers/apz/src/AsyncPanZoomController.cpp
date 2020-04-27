@@ -3984,6 +3984,7 @@ bool AsyncPanZoomController::UpdateAnimation(
   // call this after the |mLastSampleTime == aSampleTime| check, to ensure
   // it's only called once per APZC on each composite.
   bool needComposite = SampleCompositedAsyncTransform(aProofOfLock);
+  AdvanceToNextSample();
 
   TimeDuration sampleTimeDelta = aSampleTime - mLastSampleTime;
   mLastSampleTime = aSampleTime;
@@ -4199,15 +4200,29 @@ CSSToParentLayerScale2D AsyncPanZoomController::GetEffectiveZoom(
   return Metrics().GetZoom();
 }
 
+void AsyncPanZoomController::AdvanceToNextSample() {
+  AssertOnSamplerThread();
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+  // Always keep at least one state in mSampledState.
+  if (mSampledState.size() > 1) {
+    mSampledState.pop_front();
+  }
+}
+
 bool AsyncPanZoomController::SampleCompositedAsyncTransform(
     const RecursiveMutexAutoLock& aProofOfLock) {
   MOZ_ASSERT(mSampledState.size() == 1);
-  if (mSampledState.back() != SampledAPZCState(Metrics())) {
-    mSampledState.back() =
-        SampledAPZCState(Metrics(), std::move(mScrollPayload));
-    return true;
-  }
-  return false;
+  bool sampleChanged = (mSampledState.back() != SampledAPZCState(Metrics()));
+  mSampledState.emplace_back(Metrics(), std::move(mScrollPayload));
+  return sampleChanged;
+}
+
+void AsyncPanZoomController::ResampleCompositedAsyncTransform(
+    const RecursiveMutexAutoLock& aProofOfLock) {
+  // This only gets called during testing situations, so the fact that this
+  // drops the scroll payload from mSampledState.front() is not really a
+  // problem.
+  mSampledState.front() = SampledAPZCState(Metrics());
 }
 
 void AsyncPanZoomController::ApplyAsyncTestAttributes(
@@ -4215,9 +4230,16 @@ void AsyncPanZoomController::ApplyAsyncTestAttributes(
   if (mTestAttributeAppliers == 0) {
     if (mTestAsyncScrollOffset != CSSPoint() ||
         mTestAsyncZoom != LayerToParentLayerScale()) {
+      // TODO Currently we update Metrics() and resample, which will cause
+      // the very latest user input to get immediately captured in the sample,
+      // and may defeat our attempt at "frame delay" (i.e. delaying the user
+      // input from affecting composition by one frame).
+      // Instead, maybe we should just apply the mTest* stuff directly to
+      // mSampledState.front(). We can even save/restore that SampledAPZCState
+      // instance in the AutoApplyAsyncTestAttributes instead of Metrics().
       Metrics().ZoomBy(mTestAsyncZoom.scale);
       ScrollBy(mTestAsyncScrollOffset);
-      SampleCompositedAsyncTransform(aProofOfLock);
+      ResampleCompositedAsyncTransform(aProofOfLock);
     }
   }
   ++mTestAttributeAppliers;
@@ -4232,7 +4254,7 @@ void AsyncPanZoomController::UnapplyAsyncTestAttributes(
     if (mTestAsyncScrollOffset != CSSPoint() ||
         mTestAsyncZoom != LayerToParentLayerScale()) {
       Metrics() = aPrevFrameMetrics;
-      SampleCompositedAsyncTransform(aProofOfLock);
+      ResampleCompositedAsyncTransform(aProofOfLock);
     }
   }
 }
