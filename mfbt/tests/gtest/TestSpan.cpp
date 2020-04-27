@@ -2113,3 +2113,109 @@ SPAN_TEST(type_inference) {
   static_assert(std::is_same_v<const Span<const int, 5>, decltype(s)>);
   static_assert(arr == s.Elements());
 }
+
+SPAN_TEST(split_at_dynamic_with_dynamic_extent) {
+  static constexpr int arr[5] = {1, 2, 3, 4, 5};
+  constexpr Span<const int> s = Span{arr};
+
+  {  // Split at begin.
+    constexpr auto splitAt0Result = s.SplitAt(0);
+    static_assert(
+        std::is_same_v<Span<const int>, decltype(splitAt0Result.first)>);
+    static_assert(
+        std::is_same_v<Span<const int>, decltype(splitAt0Result.second)>);
+    ASSERT_EQ(s.Elements(), splitAt0Result.second.Elements());
+    ASSERT_EQ(0u, splitAt0Result.first.Length());
+    ASSERT_EQ(5u, splitAt0Result.second.Length());
+  }
+
+  {  // Split at end.
+    constexpr auto splitAt5Result = s.SplitAt(s.Length());
+    static_assert(
+        std::is_same_v<Span<const int>, decltype(splitAt5Result.first)>);
+    static_assert(
+        std::is_same_v<Span<const int>, decltype(splitAt5Result.second)>);
+    ASSERT_EQ(s.Elements(), splitAt5Result.first.Elements());
+    ASSERT_EQ(5u, splitAt5Result.first.Length());
+    ASSERT_EQ(0u, splitAt5Result.second.Length());
+  }
+
+  {
+    // Split inside.
+    constexpr auto splitAt3Result = s.SplitAt(3);
+    static_assert(
+        std::is_same_v<Span<const int>, decltype(splitAt3Result.first)>);
+    static_assert(
+        std::is_same_v<Span<const int>, decltype(splitAt3Result.second)>);
+    ASSERT_EQ(s.Elements(), splitAt3Result.first.Elements());
+    ASSERT_EQ(s.Elements() + 3, splitAt3Result.second.Elements());
+    ASSERT_EQ(3u, splitAt3Result.first.Length());
+    ASSERT_EQ(2u, splitAt3Result.second.Length());
+  }
+}
+
+SPAN_TEST(split_at_dynamic_with_static_extent) {
+  static constexpr int arr[5] = {1, 2, 3, 4, 5};
+  constexpr auto s = Span{arr};
+
+  {
+    // Split at begin.
+    constexpr auto splitAt0Result = s.SplitAt(0);
+    static_assert(
+        std::is_same_v<Span<const int>, decltype(splitAt0Result.first)>);
+    static_assert(
+        std::is_same_v<Span<const int>, decltype(splitAt0Result.second)>);
+    ASSERT_EQ(s.Elements(), splitAt0Result.second.Elements());
+  }
+
+  {
+    // Split at end.
+    constexpr auto splitAt5Result = s.SplitAt(s.Length());
+    static_assert(
+        std::is_same_v<Span<const int>, decltype(splitAt5Result.first)>);
+    static_assert(
+        std::is_same_v<Span<const int>, decltype(splitAt5Result.second)>);
+    ASSERT_EQ(s.Elements(), splitAt5Result.first.Elements());
+  }
+
+  {
+    // Split inside.
+    constexpr auto splitAt3Result = s.SplitAt(3);
+    static_assert(
+        std::is_same_v<Span<const int>, decltype(splitAt3Result.first)>);
+    static_assert(
+        std::is_same_v<Span<const int>, decltype(splitAt3Result.second)>);
+    ASSERT_EQ(s.Elements(), splitAt3Result.first.Elements());
+    ASSERT_EQ(s.Elements() + 3, splitAt3Result.second.Elements());
+  }
+}
+
+SPAN_TEST(split_at_static) {
+  static constexpr int arr[5] = {1, 2, 3, 4, 5};
+  constexpr auto s = Span{arr};
+
+  // Split at begin.
+  constexpr auto splitAt0Result = s.SplitAt<0>();
+  static_assert(
+      std::is_same_v<Span<const int, 0>, decltype(splitAt0Result.first)>);
+  static_assert(
+      std::is_same_v<Span<const int, 5>, decltype(splitAt0Result.second)>);
+  static_assert(splitAt0Result.second.Elements() == s.Elements());
+
+  // Split at end.
+  constexpr auto splitAt5Result = s.SplitAt<s.Length()>();
+  static_assert(std::is_same_v<Span<const int, s.Length()>,
+                               decltype(splitAt5Result.first)>);
+  static_assert(
+      std::is_same_v<Span<const int, 0>, decltype(splitAt5Result.second)>);
+  static_assert(splitAt5Result.first.Elements() == s.Elements());
+
+  // Split inside.
+  constexpr auto splitAt3Result = s.SplitAt<3>();
+  static_assert(
+      std::is_same_v<Span<const int, 3>, decltype(splitAt3Result.first)>);
+  static_assert(
+      std::is_same_v<Span<const int, 2>, decltype(splitAt3Result.second)>);
+  static_assert(splitAt3Result.first.Elements() == s.Elements());
+  static_assert(splitAt3Result.second.Elements() == s.Elements() + 3);
+}
