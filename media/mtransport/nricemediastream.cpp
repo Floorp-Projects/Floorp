@@ -253,6 +253,10 @@ nsresult NrIceMediaStream::SetIceCredentials(const std::string& ufrag,
     return NS_OK;
   }
 
+  if (Matches(old_stream_, ufrag, pwd)) {
+    return NS_OK;
+  }
+
   MOZ_MTLOG(ML_DEBUG, "Setting ICE credentials for " << name_ << " - " << ufrag
                                                      << ":" << pwd);
   CloseStream(&old_stream_);
