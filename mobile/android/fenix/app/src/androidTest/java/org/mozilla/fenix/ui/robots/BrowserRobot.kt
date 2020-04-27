@@ -327,7 +327,7 @@ class BrowserRobot {
         )
 
         fun openThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {
-            mDevice.waitForIdle()
+            mDevice.waitForIdle(waitingTime)
             threeDotButton().perform(ViewActions.click())
 
             ThreeDotMenuMainRobot().interact()

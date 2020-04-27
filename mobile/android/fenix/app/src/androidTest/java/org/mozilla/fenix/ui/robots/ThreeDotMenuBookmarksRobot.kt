@@ -31,6 +31,13 @@ class ThreeDotMenuBookmarksRobot {
             return BookmarksRobot.Transition()
         }
 
+        fun clickShare(interact: BookmarksRobot.() -> Unit): BookmarksRobot.Transition {
+            shareButton().click()
+
+            BookmarksRobot().interact()
+            return BookmarksRobot.Transition()
+        }
+
         fun clickOpenInNewTab(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             openInNewTabButton().click()
 
@@ -57,6 +64,8 @@ class ThreeDotMenuBookmarksRobot {
 private fun editButton() = onView(withText("Edit"))
 
 private fun copyButton() = onView(withText("Copy"))
+
+private fun shareButton() = onView(withText("Share"))
 
 private fun openInNewTabButton() = onView(withText("Open in new tab"))
 

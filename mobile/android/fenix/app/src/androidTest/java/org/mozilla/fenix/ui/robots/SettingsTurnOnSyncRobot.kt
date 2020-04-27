@@ -5,12 +5,20 @@
 package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso
+import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions
+import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withParent
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import org.hamcrest.CoreMatchers
+import org.hamcrest.Matchers.allOf
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.click
 
 /**
@@ -22,6 +30,8 @@ class SettingsTurnOnSyncRobot {
     fun verifyReadyToScanOption() = assertReadyToScan()
 
     fun tapOnUseEmailToSignIn() = useEmailButton().click()
+
+    fun verifyTurnOnSyncToolbarTitle() = assertTurnOnSyncToolbarTitle()
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -45,3 +55,11 @@ private fun assertReadyToScan() = Espresso.onView(ViewMatchers.withText("Ready t
         .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun useEmailButton() = Espresso.onView(ViewMatchers.withText("Use email instead"))
+
+private fun assertTurnOnSyncToolbarTitle() =
+    onView(
+        allOf(
+            withParent(withId(R.id.navigationToolbar)),
+            withText("Turn on Sync")
+        )
+    ).check(matches(isDisplayed()))

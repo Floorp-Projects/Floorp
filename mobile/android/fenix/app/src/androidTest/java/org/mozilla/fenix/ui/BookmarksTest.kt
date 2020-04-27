@@ -5,23 +5,26 @@
 package org.mozilla.fenix.ui
 
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
+import androidx.test.espresso.IdlingRegistry
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.places.BookmarkRoot
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.bookmarkStorage
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.ui.robots.bookmarksMenu
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
+import org.mozilla.fenix.ui.robots.mDevice
 import org.mozilla.fenix.ui.robots.multipleSelectionToolbar
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -33,6 +36,11 @@ class BookmarksTest {
 
     private lateinit var mockWebServer: MockWebServer
     private val bookmarksFolderName = "New Folder"
+    private val testBookmark = object {
+        var title: String = "Bookmark title"
+        var url: String = "https://www.test.com"
+    }
+    private var bookmarksListIdlingResource: RecyclerViewIdlingResource? = null
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
@@ -54,14 +62,28 @@ class BookmarksTest {
             val bookmarks = bookmarksStorage?.getTree(BookmarkRoot.Mobile.id)?.children
             bookmarks?.forEach { bookmarksStorage.deleteNode(it.guid) }
         }
+
+        if (bookmarksListIdlingResource != null) {
+            IdlingRegistry.getInstance().unregister(bookmarksListIdlingResource!!)
+        }
     }
 
     @Test
-    fun noBookmarkItemsTest() {
+    fun defaultDesktopBookmarksFoldersTest() {
         homeScreen {
         }.openThreeDotMenu {
         }.openBookmarks {
-            verifyEmptyBookmarksList()
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
+
+            selectFolder("Desktop Bookmarks")
+            verifyFolderTitle("Bookmarks Menu")
+            verifyFolderTitle("Bookmarks Toolbar")
+            verifyFolderTitle("Other Bookmarks")
+            verifySignInToSyncButton()
+        }.clickSingInToSyncButton {
+            verifyTurnOnSyncToolbarTitle()
         }
     }
 
@@ -90,12 +112,15 @@ class BookmarksTest {
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
-            verifyBookmarkedURL(defaultWebPage.url)
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
+
+            verifyBookmarkedURL(defaultWebPage.url.toString())
             verifyBookmarkFavicon(defaultWebPage.url)
         }
     }
 
-    @Ignore("Intermittent failure on Nexus 6: https://github.com/mozilla-mobile/fenix/issues/8772")
     @Test
     fun createBookmarkFolderTest() {
         homeScreen {
@@ -105,7 +130,11 @@ class BookmarksTest {
             verifyKeyboardVisible()
             addNewFolderName(bookmarksFolderName)
             saveNewFolder()
-            getInstrumentation().waitForIdleSync()
+
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
+
             verifyFolderTitle(bookmarksFolderName)
             verifyKeyboardHidden()
         }
@@ -124,7 +153,7 @@ class BookmarksTest {
     }
 
     @Test
-    fun editBookmarkViewTest() {
+    fun editBookmarkTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         browserScreen {
@@ -132,14 +161,25 @@ class BookmarksTest {
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
         }.openThreeDotMenu(defaultWebPage.url) {
+            IdlingRegistry.getInstance().unregister(bookmarksListIdlingResource!!)
         }.clickEdit {
             verifyEditBookmarksView()
             verifyBookmarkNameEditBox()
             verifyBookmarkURLEditBox()
             verifyParentFolderSelector()
-            navigateUp()
-            verifyBookmarksMenuView()
+            changeBookmarkTitle(testBookmark.title)
+            changeBookmarkUrl(testBookmark.url)
+            saveEditBookmark()
+
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
+
+            verifyBookmarkTitle(testBookmark.title)
+            verifyBookmarkedURL(testBookmark.url)
+            verifyKeyboardHidden()
         }
     }
 
@@ -152,9 +192,33 @@ class BookmarksTest {
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
         }.openThreeDotMenu(defaultWebPage.url) {
         }.clickCopy {
             verifyCopySnackBarText()
+        }
+    }
+
+    @Test
+    fun threeDotMenuShareBookmarkTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        browserScreen {
+            createBookmark(defaultWebPage.url)
+        }.openThreeDotMenu {
+        }.openLibrary {
+        }.openBookmarks {
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
+        }.openThreeDotMenu(defaultWebPage.url) {
+        }.clickShare {
+            verifyShareOverlay()
+            verifyShareBookmarkFavicon()
+            verifyShareBookmarkTitle()
+            verifyShareBookmarkUrl()
         }
     }
 
@@ -167,6 +231,9 @@ class BookmarksTest {
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
         }.openThreeDotMenu(defaultWebPage.url) {
         }.clickOpenInNewTab {
             verifyPageContent(defaultWebPage.content)
@@ -184,6 +251,9 @@ class BookmarksTest {
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
         }.openThreeDotMenu(defaultWebPage.url) {
         }.clickOpenInPrivateTab {
             verifyPageContent(defaultWebPage.content)
@@ -201,9 +271,34 @@ class BookmarksTest {
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
         }.openThreeDotMenu(defaultWebPage.url) {
         }.clickDelete {
             verifyDeleteSnackBarText()
+            verifyUndoDeleteSnackBarButton()
+        }
+    }
+
+    @Test
+    fun undoDeleteBookmarkTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        browserScreen {
+            createBookmark(defaultWebPage.url)
+        }.openThreeDotMenu {
+        }.openLibrary {
+        }.openBookmarks {
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
+        }.openThreeDotMenu(defaultWebPage.url) {
+        }.clickDelete {
+            verifyUndoDeleteSnackBarButton()
+            clickUndoDeleteButton()
+            verifySnackBarHidden()
+            verifyBookmarkedURL(defaultWebPage.url.toString())
         }
     }
 
@@ -216,6 +311,10 @@ class BookmarksTest {
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
+
             longTapSelectItem(defaultWebPage.url)
         }
 
@@ -240,6 +339,10 @@ class BookmarksTest {
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
+
             longTapSelectItem(defaultWebPage.url)
             openActionBarOverflowOrOptionsMenu(activityTestRule.activity)
         }
@@ -260,6 +363,10 @@ class BookmarksTest {
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
+
             longTapSelectItem(defaultWebPage.url)
             openActionBarOverflowOrOptionsMenu(activityTestRule.activity)
         }
@@ -271,7 +378,6 @@ class BookmarksTest {
         }
     }
 
-    @Ignore("Temp disable: Nexus 6 failures - issue: https://github.com/mozilla-mobile/fenix/issues/7417")
     @Test
     fun deleteMultipleSelectionTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -283,6 +389,10 @@ class BookmarksTest {
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
+
             longTapSelectItem(firstWebPage.url)
             longTapSelectItem(secondWebPage.url)
             openActionBarOverflowOrOptionsMenu(activityTestRule.activity)
@@ -298,7 +408,7 @@ class BookmarksTest {
     }
 
     @Test
-    fun shareButtonTest() {
+    fun multipleSelectionShareButtonTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         browserScreen {
@@ -306,6 +416,10 @@ class BookmarksTest {
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
+
             longTapSelectItem(defaultWebPage.url)
         }
 
@@ -318,7 +432,6 @@ class BookmarksTest {
         }
     }
 
-    @Ignore("Temp disable: Nexus 6 failures - issue: https://github.com/mozilla-mobile/fenix/issues/7417")
     @Test
     fun multipleBookmarkDeletions() {
         homeScreen {
@@ -342,6 +455,80 @@ class BookmarksTest {
         }.openThreeDotMenu {
         }.openBookmarks {
             verifyFolderTitle("3")
+        }
+    }
+
+    @Test
+    fun changeBookmarkParentFolderTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        browserScreen {
+            createBookmark(defaultWebPage.url)
+        }.openThreeDotMenu {
+        }.openLibrary {
+        }.openBookmarks {
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
+        }.openThreeDotMenu(defaultWebPage.url) {
+            IdlingRegistry.getInstance().unregister(bookmarksListIdlingResource!!)
+        }.clickEdit {
+            verifyEditBookmarksView()
+            changeBookmarkTitle(testBookmark.title)
+            saveEditBookmark()
+
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
+
+            createFolder(bookmarksFolderName)
+
+            IdlingRegistry.getInstance().unregister(bookmarksListIdlingResource!!)
+
+        }.openThreeDotMenu(testBookmark.title) {
+        }.clickEdit {
+            clickParentFolderSelector()
+            selectFolder(bookmarksFolderName)
+            navigateUp()
+            saveEditBookmark()
+
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
+
+            selectFolder(bookmarksFolderName)
+            verifyBookmarkedURL(defaultWebPage.url.toString())
+
+            IdlingRegistry.getInstance().unregister(bookmarksListIdlingResource!!)
+        }
+    }
+
+    @Test
+    fun navigateBookmarksFoldersTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openBookmarks {
+            createFolder("1")
+            getInstrumentation().waitForIdleSync()
+            selectFolder("1")
+            createFolder("2")
+            getInstrumentation().waitForIdleSync()
+            selectFolder("2")
+            verifyCurrentFolderTitle("2")
+            navigateUp()
+            verifyCurrentFolderTitle("1")
+            mDevice.pressBack()
+            verifyBookmarksMenuView()
+        }
+    }
+
+    @Test
+    fun cantSelectDesktopFoldersTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openBookmarks {
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list))
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
+
+            longTapDesktopFolder("Desktop Bookmarks")
+            verifySelectDefaultFolderSnackBarText()
         }
     }
 }
