@@ -7,7 +7,7 @@
 #define TRANSFRMX_EXPR_H
 
 #include "mozilla/Attributes.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "txExprResult.h"
 #include "txCore.h"
 #include "nsString.h"

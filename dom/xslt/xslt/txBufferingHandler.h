@@ -6,10 +6,10 @@
 #ifndef txBufferingHandler_h__
 #define txBufferingHandler_h__
 
+#include "mozilla/UniquePtr.h"
 #include "txXMLEventHandler.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 
 class txOutputTransaction;
 

@@ -7,11 +7,11 @@
 #define TRANSFRMX_TXSTYLESHEETCOMPILER_H
 
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
 #include "txStack.h"
 #include "txXSLTPatterns.h"
 #include "txExpr.h"
 #include "txIXPathContext.h"
-#include "nsAutoPtr.h"
 #include "txStylesheet.h"
 #include "nsTArray.h"
 
