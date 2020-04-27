@@ -37,8 +37,7 @@ class AlignedAutoTArray : private AutoTArray<E, S + N> {
 
   void SetLength(size_type newLen) { base_type::SetLength(newLen + sExtra); }
 
-  MOZ_MUST_USE
-  bool SetLength(size_type newLen, const mozilla::fallible_t&) {
+  [[nodiscard]] bool SetLength(size_type newLen, const mozilla::fallible_t&) {
     return base_type::SetLength(newLen + sExtra, mozilla::fallible);
   }
 
@@ -88,8 +87,7 @@ class AlignedTArray : private nsTArray_Impl<E, nsTArrayInfallibleAllocator> {
 
   void SetLength(size_type newLen) { base_type::SetLength(newLen + sExtra); }
 
-  MOZ_MUST_USE
-  bool SetLength(size_type newLen, const mozilla::fallible_t&) {
+  [[nodiscard]] bool SetLength(size_type newLen, const mozilla::fallible_t&) {
     return base_type::SetLength(newLen + sExtra, mozilla::fallible);
   }
 
