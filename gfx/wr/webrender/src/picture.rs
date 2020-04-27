@@ -97,6 +97,7 @@
 use api::{MixBlendMode, PipelineId, PremultipliedColorF, FilterPrimitiveKind};
 use api::{PropertyBinding, PropertyBindingId, FilterPrimitive, FontRenderMode};
 use api::{DebugFlags, RasterSpace, ImageKey, ColorF, ColorU, PrimitiveFlags};
+use api::{ImageRendering, ColorDepth, YuvColorSpace, YuvFormat};
 use api::units::*;
 use crate::box_shadow::BLUR_SAMPLE_SCALE;
 use crate::clip::{ClipStore, ClipChainInstance, ClipDataHandle, ClipChainId};
@@ -104,7 +105,7 @@ use crate::spatial_tree::{ROOT_SPATIAL_NODE_INDEX,
     SpatialTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace
 };
 use crate::composite::{CompositorKind, CompositeState, NativeSurfaceId, NativeTileId};
-use crate::composite::{ExternalSurfaceDescriptor};
+use crate::composite::{ExternalSurfaceDescriptor, ExternalSurfaceDependency};
 use crate::debug_colors;
 use euclid::{vec2, vec3, Point2D, Scale, Size2D, Vector2D, Rect, Transform3D, SideOffsets2D};
 use euclid::approxeq::ApproxEq;
@@ -2252,7 +2253,7 @@ pub struct NativeSurface {
 /// Hash key for an external native compositor surface
 #[derive(PartialEq, Eq, Hash)]
 pub struct ExternalNativeSurfaceKey {
-    /// The YUV image keys that are used to draw this surface.
+    /// The YUV/RGB image keys that are used to draw this surface.
     pub image_keys: [ImageKey; 3],
     /// The current device size of the surface.
     pub size: DeviceIntSize,
@@ -2933,6 +2934,236 @@ impl TileCacheInstance {
         world_culling_rect
     }
 
+    fn can_promote_to_surface(
+        &mut self,
+        flags: PrimitiveFlags,
+        prim_clip_chain: &ClipChainInstance,
+        prim_spatial_node_index: SpatialNodeIndex,
+        on_picture_surface: bool,
+        frame_context: &FrameVisibilityContext,
+    ) -> bool {
+        // Check if this primitive _wants_ to be promoted to a compositor surface.
+        if !flags.contains(PrimitiveFlags::PREFER_COMPOSITOR_SURFACE) {
+            return false;
+        }
+
+        // For now, only support a small (arbitrary) number of compositor surfaces.
+        if self.external_surfaces.len() == MAX_COMPOSITOR_SURFACES {
+            return false;
+        }
+
+        // If a complex clip is being applied to this primitive, it can't be
+        // promoted directly to a compositor surface (we might be able to
+        // do this in limited cases in future, some native compositors do
+        // support rounded rect clips, for example)
+        if prim_clip_chain.needs_mask {
+            return false;
+        }
+
+        // If not on the same surface as the picture cache, it has some kind of
+        // complex effect (such as a filter, mix-blend-mode or 3d transform).
+        if !on_picture_surface {
+            return false;
+        }
+
+        // If the primitive is not axis-aligned with the root coordinate system,
+        // it can't be promoted to a native compositor surface (could potentially
+        // be supported in future on some platforms).
+        let prim_spatial_node = &frame_context.spatial_tree
+            .spatial_nodes[prim_spatial_node_index.0 as usize];
+        if prim_spatial_node.coordinate_system_id != CoordinateSystemId::root() {
+            return false;
+        }
+
+        // If the transform has scale, we can't currently handle
+        // it in the native compositor - we can support this in future though.
+        if !self.map_local_to_surface.get_transform().is_simple_2d_translation() {
+            return false;
+        }
+        return true;
+    }
+
+    fn setup_compositor_surfaces_yuv(
+        &mut self,
+        prim_info: &mut PrimitiveDependencyInfo,
+        prim_rect: PictureRect,
+        frame_context: &FrameVisibilityContext,
+        image_dependencies: &[ImageDependency;3],
+        api_keys: &[ImageKey; 3],
+        resource_cache: &mut ResourceCache,
+        composite_state: &mut CompositeState,
+        image_rendering: ImageRendering,
+        color_depth: ColorDepth,
+        color_space: YuvColorSpace,
+        format: YuvFormat,
+    ) {
+        self.setup_compositor_surfaces_impl(
+            prim_info,
+            prim_rect,
+            frame_context,
+            ExternalSurfaceDependency::Yuv {
+                image_dependencies: *image_dependencies,
+                color_space,
+                format,
+                rescale: color_depth.rescaling_factor(),
+            },
+            api_keys,
+            resource_cache,
+            composite_state,
+            image_rendering,
+        );
+    }
+
+    fn setup_compositor_surfaces_rgb(
+        &mut self,
+        prim_info: &mut PrimitiveDependencyInfo,
+        prim_rect: PictureRect,
+        frame_context: &FrameVisibilityContext,
+        image_dependency: ImageDependency,
+        api_key: ImageKey,
+        resource_cache: &mut ResourceCache,
+        composite_state: &mut CompositeState,
+        image_rendering: ImageRendering,
+    ) {
+        let mut api_keys = [ImageKey::DUMMY; 3];
+        api_keys[0] = api_key;
+        self.setup_compositor_surfaces_impl(
+            prim_info,
+            prim_rect,
+            frame_context,
+            ExternalSurfaceDependency::Rgb {
+                image_dependency,
+            },
+            &api_keys,
+            resource_cache,
+            composite_state,
+            image_rendering,
+        );
+    }
+
+    fn setup_compositor_surfaces_impl(
+        &mut self,
+        prim_info: &mut PrimitiveDependencyInfo,
+        prim_rect: PictureRect,
+        frame_context: &FrameVisibilityContext,
+        dependency: ExternalSurfaceDependency,
+        api_keys: &[ImageKey; 3],
+        resource_cache: &mut ResourceCache,
+        composite_state: &mut CompositeState,
+        image_rendering: ImageRendering,
+    ) {
+        prim_info.is_compositor_surface = true;
+
+        let pic_to_world_mapper = SpaceMapper::new_with_target(
+            ROOT_SPATIAL_NODE_INDEX,
+            self.spatial_node_index,
+            frame_context.global_screen_world_rect,
+            frame_context.spatial_tree,
+        );
+
+        let world_rect = pic_to_world_mapper
+            .map(&prim_rect)
+            .expect("bug: unable to map the primitive to world space");
+        let world_clip_rect = pic_to_world_mapper
+            .map(&prim_info.prim_clip_rect)
+            .expect("bug: unable to map clip to world space");
+
+        let is_visible = world_clip_rect.intersects(&frame_context.global_screen_world_rect);
+        if !is_visible {
+            return;
+        }
+
+        // TODO(gw): Is there any case where if the primitive ends up on a fractional
+        //           boundary we want to _skip_ promoting to a compositor surface and
+        //           draw it as part of the content?
+        let device_rect = (world_rect * frame_context.global_device_pixel_scale).round();
+        let clip_rect = (world_clip_rect * frame_context.global_device_pixel_scale).round();
+
+        // When using native compositing, we need to find an existing native surface
+        // handle to use, or allocate a new one. For existing native surfaces, we can
+        // also determine whether this needs to be updated, depending on whether the
+        // image generation(s) of the planes have changed since last composite.
+        let (native_surface_id, update_params) = match composite_state.compositor_kind {
+            CompositorKind::Draw { .. } => {
+                (None, None)
+            }
+            CompositorKind::Native { .. } => {
+                let native_surface_size = device_rect.size.round().to_i32();
+
+                let key = ExternalNativeSurfaceKey {
+                    image_keys: *api_keys,
+                    size: native_surface_size,
+                };
+
+                let native_surface = self.external_native_surface_cache
+                    .entry(key)
+                    .or_insert_with(|| {
+                        // No existing surface, so allocate a new compositor surface and
+                        // a single compositor tile that covers the entire compositor surface.
+
+                        let native_surface_id = resource_cache.create_compositor_surface(
+                            DeviceIntPoint::zero(),
+                            native_surface_size,
+                            true,
+                        );
+
+                        let tile_id = NativeTileId {
+                            surface_id: native_surface_id,
+                            x: 0,
+                            y: 0,
+                        };
+
+                        resource_cache.create_compositor_tile(tile_id);
+
+                        ExternalNativeSurface {
+                            used_this_frame: true,
+                            native_surface_id,
+                            image_dependencies: [ImageDependency::INVALID; 3],
+                        }
+                    });
+
+                // Mark that the surface is referenced this frame so that the
+                // backing native surface handle isn't freed.
+                native_surface.used_this_frame = true;
+
+                // If the image dependencies match, there is no need to update
+                // the backing native surface.
+                let update_params = match dependency {
+                    ExternalSurfaceDependency::Yuv{ image_dependencies, .. } => {
+                       if image_dependencies == native_surface.image_dependencies {
+                           None
+                       } else {
+                           Some(native_surface_size)
+                       }
+                    },
+                    ExternalSurfaceDependency::Rgb{ image_dependency, .. } => {
+                       if image_dependency == native_surface.image_dependencies[0] {
+                           None
+                       } else {
+                           Some(native_surface_size)
+                       }
+                    },
+                };
+
+                (Some(native_surface.native_surface_id), update_params)
+            }
+        };
+
+        // Each compositor surface allocates a unique z-id
+        self.external_surfaces.push(ExternalSurfaceDescriptor {
+            local_rect: prim_info.prim_clip_rect,
+            world_rect,
+            local_clip_rect: prim_info.prim_clip_rect,
+            dependency,
+            image_rendering,
+            device_rect,
+            clip_rect,
+            z_id: composite_state.z_generator.next(),
+            native_surface_id,
+            update_params,
+        });
+    }
+
     /// Update the dependencies for each tile for a given primitive instance.
     pub fn update_prim_dependencies(
         &mut self,
@@ -3064,6 +3295,7 @@ impl TileCacheInstance {
         // then applied below.
         let mut backdrop_candidate = None;
 
+
         // For pictures, we don't (yet) know the valid clip rect, so we can't correctly
         // use it to calculate the local bounding rect for the tiles. If we include them
         // then we may calculate a bounding rect that is too large, since it won't include
@@ -3113,10 +3345,23 @@ impl TileCacheInstance {
 
                 prim_info.clip_by_tile = true;
             }
-            PrimitiveInstanceKind::Image { data_handle, image_instance_index, .. } => {
-                let image_data = &data_stores.image[data_handle].kind;
+            PrimitiveInstanceKind::Image { data_handle, image_instance_index, ref mut is_compositor_surface, .. } => {
+                let image_key = &data_stores.image[data_handle];
+                let image_data = &image_key.kind;
                 let image_instance = &image_instances[image_instance_index];
                 let opacity_binding_index = image_instance.opacity_binding_index;
+
+                let mut promote_to_surface = false;
+                // If picture caching is disabled, we can't support any compositor surfaces.
+                if composite_state.picture_caching_is_enabled &&
+                   self.can_promote_to_surface(image_key.common.flags,
+                                                prim_clip_chain,
+                                                prim_spatial_node_index,
+                                                on_picture_surface,
+                                                frame_context) {
+                        promote_to_surface = true;
+                }
+                *is_compositor_surface = promote_to_surface;
 
                 if opacity_binding_index == OpacityBindingIndex::INVALID {
                     if let Some(image_properties) = resource_cache.get_image_properties(image_data.key) {
@@ -3140,10 +3385,26 @@ impl TileCacheInstance {
                     }
                 }
 
-                prim_info.images.push(ImageDependency {
-                    key: image_data.key,
-                    generation: resource_cache.get_image_generation(image_data.key),
-                });
+                if promote_to_surface {
+                    self.setup_compositor_surfaces_rgb(
+                        &mut prim_info,
+                        prim_rect,
+                        frame_context,
+                        ImageDependency {
+                            key: image_data.key,
+                            generation: resource_cache.get_image_generation(image_data.key),
+                        },
+                        image_data.key,
+                        resource_cache,
+                        composite_state,
+                        image_data.image_rendering,
+                    );
+                } else {
+                    prim_info.images.push(ImageDependency {
+                        key: image_data.key,
+                        generation: resource_cache.get_image_generation(image_data.key),
+                    });
+                }
             }
             PrimitiveInstanceKind::YuvImage { data_handle, ref mut is_compositor_surface, .. } => {
                 let prim_data = &data_stores.yuv_image[data_handle];
@@ -3152,50 +3413,17 @@ impl TileCacheInstance {
                 //           extract the logic below and support RGBA compositor surfaces too.
                 let mut promote_to_surface = false;
 
-
                 // If picture caching is disabled, we can't support any compositor surfaces.
                 if composite_state.picture_caching_is_enabled {
-                    // Check if this primitive _wants_ to be promoted to a compositor surface.
-                    if prim_data.common.flags.contains(PrimitiveFlags::PREFER_COMPOSITOR_SURFACE) {
-                        promote_to_surface = true;
+                    promote_to_surface = self.can_promote_to_surface(
+                                                prim_data.common.flags,
+                                                prim_clip_chain,
+                                                prim_spatial_node_index,
+                                                on_picture_surface,
+                                                frame_context);
 
-                        // For now, only support a small (arbitrary) number of compositor surfaces.
-                        if self.external_surfaces.len() == MAX_COMPOSITOR_SURFACES {
-                            promote_to_surface = false;
-                        }
-
-                        // If a complex clip is being applied to this primitive, it can't be
-                        // promoted directly to a compositor surface (we might be able to
-                        // do this in limited cases in future, some native compositors do
-                        // support rounded rect clips, for example)
-                        if prim_clip_chain.needs_mask {
-                            promote_to_surface = false;
-                        }
-
-                        // If not on the same surface as the picture cache, it has some kind of
-                        // complex effect (such as a filter, mix-blend-mode or 3d transform).
-                        if !on_picture_surface {
-                            promote_to_surface = false;
-                        }
-
-                        // If the primitive is not axis-aligned with the root coordinate system,
-                        // it can't be promoted to a native compositor surface (could potentially
-                        // be supported in future on some platforms).
-                        let prim_spatial_node = &frame_context.spatial_tree
-                            .spatial_nodes[prim_spatial_node_index.0 as usize];
-                        if prim_spatial_node.coordinate_system_id != CoordinateSystemId::root() {
-                            promote_to_surface = false;
-                        }
-
-                        // If the transform has scale, we can't currently handle
-                        // it in the native compositor - we can support this in future though.
-                        if !self.map_local_to_surface.get_transform().is_simple_2d_translation() {
-                            promote_to_surface = false;
-                        }
-
-                        // TODO(gw): When we support RGBA images for external surfaces, we also
-                        //           need to check if opaque (YUV images are implicitly opaque).
-                    }
+                    // TODO(gw): When we support RGBA images for external surfaces, we also
+                    //           need to check if opaque (YUV images are implicitly opaque).
                 }
 
                 // Store on the YUV primitive instance whether this is a promoted surface.
@@ -3209,116 +3437,29 @@ impl TileCacheInstance {
                 // a promoted surface, since we don't want the tiles to invalidate when the
                 // video content changes, if it's a compositor surface!
                 if promote_to_surface {
-                    prim_info.is_compositor_surface = true;
-
-                    let pic_to_world_mapper = SpaceMapper::new_with_target(
-                        ROOT_SPATIAL_NODE_INDEX,
-                        self.spatial_node_index,
-                        frame_context.global_screen_world_rect,
-                        frame_context.spatial_tree,
-                    );
-
-                    let world_rect = pic_to_world_mapper
-                        .map(&prim_rect)
-                        .expect("bug: unable to map the primitive to world space");
-                    let world_clip_rect = pic_to_world_mapper
-                        .map(&prim_info.prim_clip_rect)
-                        .expect("bug: unable to map clip to world space");
-
-                    let is_visible = world_clip_rect.intersects(&frame_context.global_screen_world_rect);
-                    if is_visible {
-                        // TODO(gw): Is there any case where if the primitive ends up on a fractional
-                        //           boundary we want to _skip_ promoting to a compositor surface and
-                        //           draw it as part of the content?
-                        let device_rect = (world_rect * frame_context.global_device_pixel_scale).round();
-                        let clip_rect = (world_clip_rect * frame_context.global_device_pixel_scale).round();
-
-                        // Build dependency for each YUV plane, with current image generation for
-                        // later detection of when the composited surface has changed.
-                        let mut image_dependencies = [ImageDependency::INVALID; 3];
-                        for (key, dep) in prim_data.kind.yuv_key.iter().cloned().zip(image_dependencies.iter_mut()) {
-                            *dep = ImageDependency {
-                                key,
-                                generation: resource_cache.get_image_generation(key),
-                            }
+                    // Build dependency for each YUV plane, with current image generation for
+                    // later detection of when the composited surface has changed.
+                    let mut image_dependencies = [ImageDependency::INVALID; 3];
+                    for (key, dep) in prim_data.kind.yuv_key.iter().cloned().zip(image_dependencies.iter_mut()) {
+                        *dep = ImageDependency {
+                            key,
+                            generation: resource_cache.get_image_generation(key),
                         }
-
-                        // When using native compositing, we need to find an existing native surface
-                        // handle to use, or allocate a new one. For existing native surfaces, we can
-                        // also determine whether this needs to be updated, depending on whether the
-                        // image generation(s) of the YUV planes have changed since last composite.
-                        let (native_surface_id, update_params) = match composite_state.compositor_kind {
-                            CompositorKind::Draw { .. } => {
-                                (None, None)
-                            }
-                            CompositorKind::Native { .. } => {
-                                let native_surface_size = device_rect.size.round().to_i32();
-
-                                let key = ExternalNativeSurfaceKey {
-                                    image_keys: prim_data.kind.yuv_key,
-                                    size: native_surface_size,
-                                };
-
-                                let native_surface = self.external_native_surface_cache
-                                    .entry(key)
-                                    .or_insert_with(|| {
-                                        // No existing surface, so allocate a new compositor surface and
-                                        // a single compositor tile that covers the entire compositor surface.
-
-                                        let native_surface_id = resource_cache.create_compositor_surface(
-                                            DeviceIntPoint::zero(),
-                                            native_surface_size,
-                                            true,
-                                        );
-
-                                        let tile_id = NativeTileId {
-                                            surface_id: native_surface_id,
-                                            x: 0,
-                                            y: 0,
-                                        };
-
-                                        resource_cache.create_compositor_tile(tile_id);
-
-                                        ExternalNativeSurface {
-                                            used_this_frame: true,
-                                            native_surface_id,
-                                            image_dependencies: [ImageDependency::INVALID; 3],
-                                        }
-                                    });
-
-                                // Mark that the surface is referenced this frame so that the
-                                // backing native surface handle isn't freed.
-                                native_surface.used_this_frame = true;
-
-                                // If the image dependencies match, there is no need to update
-                                // the backing native surface.
-                                let update_params = if image_dependencies == native_surface.image_dependencies {
-                                    None
-                                } else {
-                                    Some(native_surface_size)
-                                };
-
-                                (Some(native_surface.native_surface_id), update_params)
-                            }
-                        };
-
-                        // Each compositor surface allocates a unique z-id
-                        self.external_surfaces.push(ExternalSurfaceDescriptor {
-                            local_rect: prim_info.prim_clip_rect,
-                            world_rect,
-                            local_clip_rect: prim_info.prim_clip_rect,
-                            image_dependencies,
-                            image_rendering: prim_data.kind.image_rendering,
-                            device_rect,
-                            clip_rect,
-                            yuv_color_space: prim_data.kind.color_space,
-                            yuv_format: prim_data.kind.format,
-                            yuv_rescale: prim_data.kind.color_depth.rescaling_factor(),
-                            z_id: composite_state.z_generator.next(),
-                            native_surface_id,
-                            update_params,
-                        });
                     }
+
+                    self.setup_compositor_surfaces_yuv(
+                        &mut prim_info,
+                        prim_rect,
+                        frame_context,
+                        &image_dependencies,
+                        &prim_data.kind.yuv_key,
+                        resource_cache,
+                        composite_state,
+                        prim_data.kind.image_rendering,
+                        prim_data.kind.color_depth,
+                        prim_data.kind.color_space,
+                        prim_data.kind.format,
+                    );
                 } else {
                     prim_info.images.extend(
                         prim_data.kind.yuv_key.iter().map(|key| {
