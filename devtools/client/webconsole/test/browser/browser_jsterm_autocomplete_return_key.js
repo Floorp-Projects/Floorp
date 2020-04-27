@@ -28,18 +28,12 @@ add_task(async function() {
   const { jsterm } = hud;
   const { autocompletePopup: popup } = jsterm;
 
-  let onPopUpOpen = popup.once("popup-opened");
-
   info("wait for completion suggestions: window.foobar.");
-
-  setInputValue(hud, "window.fooba");
-  EventUtils.sendString("r.");
-
-  await onPopUpOpen;
+  await setInputValueForAutocompletion(hud, "window.foobar.");
 
   ok(popup.isOpen, "popup is open");
-
   const expectedPopupItems = ["item0", "item1", "item2", "item3", "item33"];
+  hasExactPopupLabels(popup, expectedPopupItems);
   is(popup.itemCount, expectedPopupItems.length, "popup.itemCount is correct");
   is(popup.selectedIndex, 0, "First index from top is selected");
 
@@ -70,11 +64,8 @@ add_task(async function() {
   info(
     "Test that hitting enter when the completeNode is empty closes the popup"
   );
-  onPopUpOpen = popup.once("popup-opened");
   info("wait for completion suggestions: window.foobar.item3");
-  setInputValue(hud, "window.foobar.item");
-  EventUtils.sendString("3");
-  await onPopUpOpen;
+  await setInputValueForAutocompletion(hud, "window.foobar.item3");
 
   is(popup.selectedItem.label, "item3", "item3 is selected");
   ok(!getInputCompletionValue(hud), "completeNode is empty");
