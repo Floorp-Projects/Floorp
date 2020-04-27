@@ -157,6 +157,46 @@
     await pc2.setRemoteDescription(offer);
   }, 'sRD does not cause ICE gathering state changes')
 
+  promise_test(async t => {
+    const pc = new RTCPeerConnection();
+    t.add_cleanup(() => pc.close());
+    await pc.setLocalDescription(
+      await pc.createOffer({offerToReceiveAudio: true}));
+    await iceGatheringStateTransitions(pc, 'gathering', 'complete');
+    await pc.setLocalDescription({type: 'rollback'});
+    await iceGatheringStateTransitions(pc, 'new');
+  }, 'setLocalDescription(rollback) of original offer should cause iceGatheringState to reach "new" when starting in "complete"');
+
+  promise_test(async t => {
+    const pc = new RTCPeerConnection();
+    t.add_cleanup(() => pc.close());
+    await pc.setLocalDescription(
+      await pc.createOffer({offerToReceiveAudio: true}));
+    await iceGatheringStateTransitions(pc, 'gathering');
+    await pc.setLocalDescription({type: 'rollback'});
+    // We might go directly to 'new', or we might go to 'complete' first,
+    // depending on timing. Allow either.
+    await Promise.any([
+      iceGatheringStateTransitions(pc, 'new'),
+      iceGatheringStateTransitions(pc, 'complete', 'new')]);
+  }, 'setLocalDescription(rollback) of original offer should cause iceGatheringState to reach "new" when starting in "gathering"');
+
+  promise_test(async t => {
+    const pc1 = new RTCPeerConnection();
+    t.add_cleanup(() => pc1.close());
+    const pc2 = new RTCPeerConnection();
+    t.add_cleanup(() => pc2.close());
+    await initialOfferAnswer(pc1, pc2, {offerToReceiveAudio: true});
+
+    pc1.getTransceivers()[0].stop();
+    await pc1.setLocalDescription(await pc1.createOffer());
+    await pc2.setRemoteDescription(pc1.localDescription);
+    await pc2.setLocalDescription(await pc2.createAnswer());
+    await iceGatheringStateTransitions(pc2, 'new');
+    await pc1.setRemoteDescription(pc2.localDescription);
+    await iceGatheringStateTransitions(pc1, 'new');
+  }, 'renegotiation that closes all transports should result in ICE gathering state "new"');
+
   /*
     4.4.2.  RTCIceGatheringState Enum
       gathering
