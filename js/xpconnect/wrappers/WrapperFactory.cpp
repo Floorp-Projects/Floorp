@@ -178,12 +178,12 @@ static bool MaybeWrapWindowProxy(JSContext* cx, HandleObject origObj,
     MOZ_ASSERT(bc);
   }
 
-  if (bc->IsInProcess()) {
-    // Any remote window proxies for bc should have been cleaned up by a call to
-    // CleanUpDanglingRemoteOuterWindowProxies() before now, so obj must be a
-    // local outer window proxy.
-    MOZ_RELEASE_ASSERT(isWindowProxy);
+  // We should only have a remote window proxy if bc is in a state where we
+  // expect remote window proxies. Otherwise, they should have been cleaned up
+  // by a call to CleanUpDanglingRemoteOuterWindowProxies().
+  MOZ_RELEASE_ASSERT(isWindowProxy || bc->CanHaveRemoteOuterProxies());
 
+  if (bc->IsInProcess()) {
     retObj.set(obj);
   } else {
     // If bc is not in process, then use a remote window proxy, whether or not
