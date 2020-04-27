@@ -362,6 +362,10 @@ class PermissionManager final : public nsIPermissionManager,
   // Returns -1 on failure
   int32_t GetTypeIndex(const nsACString& aType, bool aAdd);
 
+  // Returns whether the given combination of expire type and expire time are
+  // expired. Note that EXPIRE_SESSION only honors expireTime if it is nonzero.
+  bool HasExpired(uint32_t aExpireType, int64_t aExpireTime);
+
   // Returns PermissionHashKey for a given { host, isInBrowserElement } tuple.
   // This is not simply using PermissionKey because we will walk-up domains in
   // case of |host| contains sub-domains. Returns null if nothing found. Also
