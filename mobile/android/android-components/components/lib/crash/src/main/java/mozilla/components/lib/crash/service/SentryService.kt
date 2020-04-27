@@ -64,7 +64,7 @@ class SentryService(
         }
     }
 
-    override fun report(crash: Crash.UncaughtExceptionCrash) {
+    override fun report(crash: Crash.UncaughtExceptionCrash): String? {
         crash.breadcrumbs.forEach {
             client.context.recordBreadcrumb(it.toSentryBreadcrumb())
         }
@@ -73,22 +73,36 @@ class SentryService(
                 .withLevel(Event.Level.FATAL)
                 .withSentryInterface(ExceptionInterface(crash.throwable))
         client.sendEvent(eventBuilder)
+
+        return eventBuilder.event.id.toString()
     }
 
-    override fun report(crash: Crash.NativeCodeCrash) {
+    override fun report(crash: Crash.NativeCodeCrash): String? {
         if (sendEventForNativeCrashes) {
             crash.breadcrumbs.forEach {
                 client.context.recordBreadcrumb(it.toSentryBreadcrumb())
             }
-            client.sendMessage(createMessage(crash))
+
+            val eventBuilder = EventBuilder()
+                .withMessage(createMessage(crash))
+                .withLevel(Event.Level.INFO)
+
+            client.sendEvent(eventBuilder)
+
+            return eventBuilder.event.id.toString()
         }
+
+        return null
     }
 
-    override fun report(throwable: Throwable) {
+    override fun report(throwable: Throwable): String? {
         val eventBuilder = EventBuilder().withMessage(createMessage(throwable))
                 .withLevel(Event.Level.INFO)
                 .withSentryInterface(ExceptionInterface(throwable))
+
         client.sendEvent(eventBuilder)
+
+        return eventBuilder.event.id.toString()
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

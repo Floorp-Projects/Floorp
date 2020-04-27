@@ -9,7 +9,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.VisibleForTesting
-import mozilla.components.Build as AcBuild
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONException
@@ -30,8 +29,8 @@ import java.net.URL
 import java.nio.channels.Channels
 import java.util.concurrent.TimeUnit
 import java.util.zip.GZIPOutputStream
-import kotlin.collections.HashMap
 import kotlin.random.Random
+import mozilla.components.Build as AcBuild
 
 /* This ID is used for all Mozilla products.  Setting as default if no ID is passed in */
 private const val MOZILLA_PRODUCT_ID = "{eeb82917-e434-4870-8148-5c03d4caa81b}"
@@ -43,6 +42,9 @@ internal const val FATAL_NATIVE_CRASH_TYPE = "fatal native crash"
 internal const val NON_FATAL_NATIVE_CRASH_TYPE = "non-fatal native crash"
 
 internal const val DEFAULT_VERSION_NAME = "N/A"
+
+private const val KEY_CRASH_ID = "CrashID"
+
 /**
  * A [CrashReporterService] implementation uploading crash reports to crash-stats.mozilla.com.
  *
@@ -91,16 +93,34 @@ class MozillaSocorroService(
         }
     }
 
-    override fun report(crash: Crash.UncaughtExceptionCrash) {
-        sendReport(crash.throwable, null, null, isNativeCodeCrash = false, isFatalCrash = true)
+    override fun report(crash: Crash.UncaughtExceptionCrash): String? {
+        return sendReport(
+            crash.throwable,
+            miniDumpFilePath = null,
+            extrasFilePath = null,
+            isNativeCodeCrash = false,
+            isFatalCrash = true
+        )
     }
 
-    override fun report(crash: Crash.NativeCodeCrash) {
-        sendReport(null, crash.minidumpPath, crash.extrasPath, isNativeCodeCrash = true, isFatalCrash = crash.isFatal)
+    override fun report(crash: Crash.NativeCodeCrash): String? {
+        return sendReport(
+            throwable = null,
+            miniDumpFilePath = crash.minidumpPath,
+            extrasFilePath = crash.extrasPath,
+            isNativeCodeCrash = true,
+            isFatalCrash = crash.isFatal
+        )
     }
 
-    override fun report(throwable: Throwable) {
-        sendReport(throwable, null, null, isNativeCodeCrash = false, isFatalCrash = false)
+    override fun report(throwable: Throwable): String? {
+        return sendReport(
+            throwable,
+            miniDumpFilePath = null,
+            extrasFilePath = null,
+            isNativeCodeCrash = false,
+            isFatalCrash = false
+        )
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -110,7 +130,7 @@ class MozillaSocorroService(
         extrasFilePath: String?,
         isNativeCodeCrash: Boolean,
         isFatalCrash: Boolean
-    ) {
+    ): String? {
         val url = URL(serverUrl)
         val boundary = generateBoundary()
         var conn: HttpURLConnection? = null
@@ -125,21 +145,39 @@ class MozillaSocorroService(
             sendCrashData(conn.outputStream, boundary, throwable, miniDumpFilePath, extrasFilePath,
                     isNativeCodeCrash, isFatalCrash)
 
-            BufferedReader(InputStreamReader(conn.inputStream)).use {
-                val response = StringBuffer()
-                var inputLine = it.readLine()
-                while (inputLine != null) {
-                    response.append(inputLine)
-                    inputLine = it.readLine()
+            BufferedReader(InputStreamReader(conn.inputStream)).use { reader ->
+                val map = parseResponse(reader)
+
+                val id = map?.get(KEY_CRASH_ID)
+                if (id != null) {
+                    Logger.info("Crash reported to Socorro: $id")
+                } else {
+                    Logger.info("Server rejected crash report")
                 }
 
-                Logger.info("Crash reported to Socorro: $response")
+                return id
             }
         } catch (e: IOException) {
             Logger.error("failed to send report to Socorro", e)
+            return null
         } finally {
             conn?.disconnect()
         }
+    }
+
+    private fun parseResponse(reader: BufferedReader): Map<String, String>? {
+        val map = mutableMapOf<String, String>()
+
+        reader.readLines().forEach { line ->
+            val position = line.indexOf("=")
+            if (position != -1) {
+                val key = line.substring(0, position)
+                val value = unescape(line.substring(position + 1))
+                map[key] = value
+            }
+        }
+
+        return map
     }
 
     @Suppress("LongParameterList", "LongMethod")

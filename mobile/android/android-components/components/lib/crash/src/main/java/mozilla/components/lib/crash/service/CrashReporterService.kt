@@ -14,16 +14,25 @@ internal const val INFO_PREFIX = "[INFO]"
 interface CrashReporterService {
     /**
      * Submits a crash report for this [Crash.UncaughtExceptionCrash].
+     *
+     * @return Unique identifier that can be used by/with this crash reporter service to find this
+     * crash - or null if no identifier can be provided.
      */
-    fun report(crash: Crash.UncaughtExceptionCrash)
+    fun report(crash: Crash.UncaughtExceptionCrash): String?
 
     /**
      * Submits a crash report for this [Crash.NativeCodeCrash].
+     *
+     * @return Unique identifier that can be used by/with this crash reporter service to find this
+     * crash - or null if no identifier can be provided.
      */
-    fun report(crash: Crash.NativeCodeCrash)
+    fun report(crash: Crash.NativeCodeCrash): String?
 
     /**
      * Submits a caught exception report for this [Throwable].
+     *
+     * @return Unique identifier that can be used by/with this crash reporter service to find this
+     * crash - or null if no identifier can be provided.
      */
-    fun report(throwable: Throwable)
+    fun report(throwable: Throwable): String?
 }

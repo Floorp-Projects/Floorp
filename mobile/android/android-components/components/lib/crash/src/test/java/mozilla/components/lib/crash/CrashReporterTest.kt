@@ -303,15 +303,14 @@ class CrashReporterTest {
         var exceptionCrash = false
 
         val service = object : CrashReporterService {
-            override fun report(crash: Crash.UncaughtExceptionCrash) {
+            override fun report(crash: Crash.UncaughtExceptionCrash): String? {
                 exceptionCrash = true
+                return null
             }
 
-            override fun report(crash: Crash.NativeCodeCrash) {
-            }
+            override fun report(crash: Crash.NativeCodeCrash): String? = null
 
-            override fun report(throwable: Throwable) {
-            }
+            override fun report(throwable: Throwable): String? = null
         }
 
         val reporter = spy(CrashReporter(
@@ -330,15 +329,14 @@ class CrashReporterTest {
         var nativeCrash = false
 
         val service = object : CrashReporterService {
-            override fun report(crash: Crash.UncaughtExceptionCrash) {
-            }
+            override fun report(crash: Crash.UncaughtExceptionCrash): String? = null
 
-            override fun report(crash: Crash.NativeCodeCrash) {
+            override fun report(crash: Crash.NativeCodeCrash): String? {
                 nativeCrash = true
+                return null
             }
 
-            override fun report(throwable: Throwable) {
-            }
+            override fun report(throwable: Throwable): String? = null
         }
 
         val reporter = spy(CrashReporter(
@@ -357,14 +355,13 @@ class CrashReporterTest {
         var exceptionCrash = false
 
         val service = object : CrashReporterService {
-            override fun report(crash: Crash.UncaughtExceptionCrash) {
-            }
+            override fun report(crash: Crash.UncaughtExceptionCrash): String? = null
 
-            override fun report(crash: Crash.NativeCodeCrash) {
-            }
+            override fun report(crash: Crash.NativeCodeCrash): String? = null
 
-            override fun report(throwable: Throwable) {
+            override fun report(throwable: Throwable): String? {
                 exceptionCrash = true
+                return null
             }
         }
 
@@ -385,15 +382,14 @@ class CrashReporterTest {
         var nativeCrash = false
 
         val telemetryService = object : CrashReporterService {
-            override fun report(crash: Crash.UncaughtExceptionCrash) {
-            }
+            override fun report(crash: Crash.UncaughtExceptionCrash): String? = null
 
-            override fun report(crash: Crash.NativeCodeCrash) {
+            override fun report(crash: Crash.NativeCodeCrash): String? {
                 nativeCrash = true
+                return null
             }
 
-            override fun report(throwable: Throwable) {
-            }
+            override fun report(throwable: Throwable): String? = null
         }
 
         val reporter = spy(CrashReporter(
