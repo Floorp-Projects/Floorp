@@ -1,13 +1,11 @@
 from __future__ import absolute_import
 
-import argparse
 import os
 from datetime import datetime, timedelta
 import tarfile
 import requests
 import six
-import vcs
-import logging
+import mozversioncontrol
 
 try:
     from cStringIO import StringIO as BytesIO
@@ -28,29 +26,38 @@ def abs_path(path):
     return os.path.abspath(os.path.expanduser(path))
 
 
-def hg_commits(repo_root):
-    hg = vcs.Mercurial.get_func(repo_root)
-    for item in hg("log", "-fl50", "--template={node}\n", "testing/web-platform/tests",
-                   "testing/web-platform/mozilla/tests").splitlines():
-        yield item
-
-
-def git_commits(repo_root):
-    git = vcs.Git.get_func(repo_root)
-    for item in git("log", "--format=%H", "-n50", "testing/web-platform/tests",
-                    "testing/web-platform/mozilla/tests").splitlines():
-        yield git("cinnabar", "git2hg", item).strip()
-
-
 def get_commits(logger, repo_root):
-    if vcs.Mercurial.is_hg_repo(repo_root):
-        return hg_commits(repo_root)
+    try:
+        repo = mozversioncontrol.get_repository_object(repo_root)
+    except mozversioncontrol.InvalidRepoPath:
+        logger.warning("No VCS found for path %s" % repo_root)
+        return []
 
-    elif vcs.Git.is_git_repo(repo_root):
-        return git_commits(repo_root)
-
-    logger.warning("No VCS found")
-    return []
+    # The base_ref doesn't actually return a ref, sadly
+    base_rev = repo.base_ref
+    if repo.name == "git":
+        logger.debug("Found git repo")
+        logger.debug("Base rev is %s" % base_rev)
+        if not repo.has_git_cinnabar:
+            logger.error("git cinnabar not found")
+            return []
+        changeset_iter = (repo._run("cinnabar", "git2hg", rev).strip() for rev in
+                          repo._run("log",
+                                    "--format=%H",
+                                    "-n50",
+                                    base_rev,
+                                    "testing/web-platform/tests",
+                                    "testing/web-platform/mozilla/tests").splitlines())
+    else:
+        logger.debug("Found hg repo")
+        logger.debug("Base rev is %s" % base_rev)
+        changeset_iter = repo._run("log",
+                                   "-fl50",
+                                   "--template={node}\n",
+                                   "-r", base_rev,
+                                   "testing/web-platform/tests",
+                                   "testing/web-platform/mozilla/tests").splitlines()
+    return changeset_iter
 
 
 def should_download(logger, manifest_paths, rebuild_time=timedelta(days=5)):
@@ -71,11 +78,13 @@ def should_download(logger, manifest_paths, rebuild_time=timedelta(days=5)):
 def taskcluster_url(logger, commits):
     artifact_path = '/artifacts/public/manifests.tar.gz'
 
-    cset_url = ('https://hg.mozilla.org/mozilla-central/json-pushes?'
+    repos = {"mozilla-central": "mozilla-central",
+             "integration/autoland": "autoland"}
+    cset_url = ('https://hg.mozilla.org/{repo}/json-pushes?'
                 'changeset={changeset}&version=2&tipsonly=1')
 
     tc_url = ('https://firefox-ci-tc.services.mozilla.com/api/index/v1/'
-              'task/gecko.v2.mozilla-central.'
+              'task/gecko.v2.{name}.'
               'revision.{changeset}.source.manifest-upload')
 
     default = ("https://firefox-ci-tc.services.mozilla.com/api/index/v1/"
@@ -87,33 +96,38 @@ def taskcluster_url(logger, commits):
 
         if revision == 40 * "0":
             continue
-        try:
-            req_headers = HEADERS.copy()
-            req_headers.update({'Accept': 'application/json'})
-            req = get(logger, cset_url.format(changeset=revision),
-                      headers=req_headers)
-            req.raise_for_status()
-        except requests.exceptions.RequestException:
-            if req is not None and req.status_code == 404:
-                # The API returns a 404 if it can't find a changeset for the revision.
+
+        for repo_path, index_name in six.iteritems(repos):
+            try:
+                req_headers = HEADERS.copy()
+                req_headers.update({'Accept': 'application/json'})
+                req = get(logger, cset_url.format(changeset=revision, repo=repo_path),
+                          headers=req_headers)
+                req.raise_for_status()
+            except requests.exceptions.RequestException:
+                if req is not None and req.status_code == 404:
+                    # The API returns a 404 if it can't find a changeset for the revision.
+                    logger.debug("%s not found in %s" % (revision, repo_path))
+                    continue
+                else:
+                    return default
+
+            result = req.json()
+
+            pushes = result['pushes']
+            if not pushes:
+                logger.debug("Error reading response; 'pushes' key not found")
                 continue
-            else:
+            [cset] = pushes.values()[0]['changesets']
+
+            tc_index_url = tc_url.format(changeset=cset, name=index_name)
+            try:
+                req = get(logger, tc_index_url)
+            except requests.exceptions.RequestException:
                 return default
 
-        result = req.json()
-
-        pushes = result['pushes']
-        if not pushes:
-            continue
-        [cset] = pushes.values()[0]['changesets']
-
-        try:
-            req = get(logger, tc_url.format(changeset=cset))
-        except requests.exceptions.RequestException:
-            return default
-
-        if req.status_code == 200:
-            return tc_url.format(changeset=cset) + artifact_path
+            if req.status_code == 200:
+                return tc_index_url + artifact_path
 
     logger.info("Can't find a commit-specific manifest so just using the most "
                 "recent one")
