@@ -69,14 +69,11 @@ class nsAutoOwningThread {
 };
 
 #  define NS_DECL_OWNINGTHREAD nsAutoOwningThread _mOwningThread;
-#  define NS_ASSERT_OWNINGTHREAD_AGGREGATE(agg, _class) \
-    agg->_mOwningThread.AssertOwnership(#_class " not thread-safe")
 #  define NS_ASSERT_OWNINGTHREAD(_class) \
-    NS_ASSERT_OWNINGTHREAD_AGGREGATE(this, _class)
+    _mOwningThread.AssertOwnership(#_class " not thread-safe")
 #else  // !MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
 
 #  define NS_DECL_OWNINGTHREAD /* nothing */
-#  define NS_ASSERT_OWNINGTHREAD_AGGREGATE(agg, _class) ((void)0)
 #  define NS_ASSERT_OWNINGTHREAD(_class) ((void)0)
 
 #endif  // MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
