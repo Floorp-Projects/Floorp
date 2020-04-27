@@ -364,6 +364,11 @@ ChildDNSService::ReloadParentalControlEnabled() {
 }
 
 NS_IMETHODIMP
+ChildDNSService::SetDetectedTrrURI(const nsACString& aURI) {
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
 ChildDNSService::GetMyHostName(nsACString& result) {
   // TODO: get value from parent during PNecko construction?
   return NS_ERROR_NOT_AVAILABLE;
