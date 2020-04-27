@@ -225,10 +225,7 @@ bool js::DumpRealmPCCounts(JSContext* cx) {
 
 // Stores the information about the stack slot, where the value comes from.
 // Elements of BytecodeParser::Bytecode.{offsetStack,offsetStackAfter} arrays.
-struct OffsetAndDefIndex {
-  // To make this struct a POD type, keep these properties public.
-  // Use accessors instead of directly accessing them.
-
+class OffsetAndDefIndex {
   // The offset of the PC that pushed the value for this slot.
   uint32_t offset_;
 
@@ -248,6 +245,7 @@ struct OffsetAndDefIndex {
     Merged,
   } type_;
 
+ public:
   uint32_t offset() const {
     MOZ_ASSERT(!isSpecial());
     return offset_;
@@ -288,13 +286,6 @@ struct OffsetAndDefIndex {
     return !(*this == rhs);
   }
 };
-
-namespace mozilla {
-
-template <>
-struct IsPod<OffsetAndDefIndex> : std::true_type {};
-
-}  // namespace mozilla
 
 namespace {
 
