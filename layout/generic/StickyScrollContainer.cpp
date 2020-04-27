@@ -36,6 +36,7 @@ StickyScrollContainer* StickyScrollContainer::GetStickyScrollContainerForFrame(
     nsIFrame* aFrame) {
   nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetNearestScrollableFrame(
       aFrame->GetParent(), nsLayoutUtils::SCROLLABLE_SAME_DOC |
+                               nsLayoutUtils::SCROLLABLE_STOP_AT_PAGE |
                                nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
   if (!scrollFrame) {
     // We might not find any, for instance in the case of

@@ -2072,6 +2072,9 @@ nsIScrollableFrame* nsLayoutUtils::GetNearestScrollableFrame(nsIFrame* aFrame,
        f = (aFlags & SCROLLABLE_SAME_DOC)
                ? f->GetParent()
                : nsLayoutUtils::GetCrossDocParentFrame(f)) {
+    if ((aFlags & SCROLLABLE_STOP_AT_PAGE) && f->IsPageFrame()) {
+      break;
+    }
     nsIScrollableFrame* scrollableFrame = do_QueryFrame(f);
     if (scrollableFrame) {
       if (aFlags & SCROLLABLE_ONLY_ASYNC_SCROLLABLE) {
