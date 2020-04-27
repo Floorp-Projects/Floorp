@@ -9,6 +9,8 @@
 #include "nsISerializable.idl"
 #include "nsIAboutModule.idl"
 #include "nsIReferrerInfo.idl"
+interface nsIChannel;
+
 
 %{C++
 struct JSPrincipals;
@@ -173,7 +175,7 @@ interface nsIPrincipal : nsISerializable
                                    in unsigned long long innerWindowID);
 
     /**
-    * Checks if the provided URI is concidered third-party to the
+    * Checks if the provided URI is considered third-party to the
     * URI of the principal.
     * Returns true if the URI is third-party.
     *
@@ -182,13 +184,23 @@ interface nsIPrincipal : nsISerializable
     boolean isThirdPartyURI(in nsIURI uri);
 
     /**
-    * Checks if the provided principal is concidered third-party to the
+    * Checks if the provided principal is considered third-party to the
     * URI of the Principal.
     * Returns true if the principal is third-party.
     *
     * @param principal - The principal to check
     */
     boolean isThirdPartyPrincipal(in nsIPrincipal principal);
+
+    /**
+    * Checks if the provided channel is considered third-party to the
+    * URI of the principal. 
+    * Returns true if the channel is third-party.
+    * Returns false if the Principal is a System Principal
+    *
+    * @param channel - The Channel to check
+    */
+    boolean isThirdPartyChannel(in nsIChannel channel);
 
     /**
      * A dictionary of the non-default origin attributes associated with this
