@@ -53,7 +53,7 @@ class MochiRemote(MochitestDesktop):
         self.device.mkdir(logParent)
 
         self.remoteProfile = posixpath.join(options.remoteTestRoot, "profile/")
-        self.device.rm(self.remoteProfile, force=True, recursive=True)
+        self.device.rm(self.remoteProfile, force=True, recursive=True, root=True)
 
         self.counts = dict()
         self.message_logger = MessageLogger(logger=None)
@@ -73,19 +73,19 @@ class MochiRemote(MochitestDesktop):
         self.remoteModulesDir = posixpath.join(options.remoteTestRoot, "modules/")
 
         self.remoteCache = posixpath.join(options.remoteTestRoot, "cache/")
-        self.device.rm(self.remoteCache, force=True, recursive=True)
+        self.device.rm(self.remoteCache, force=True, recursive=True, root=True)
 
         # move necko cache to a location that can be cleaned up
         options.extraPrefs += ["browser.cache.disk.parent_directory=%s" % self.remoteCache]
 
         self.remoteMozLog = posixpath.join(options.remoteTestRoot, "mozlog")
-        self.device.rm(self.remoteMozLog, force=True, recursive=True)
+        self.device.rm(self.remoteMozLog, force=True, recursive=True, root=True)
         self.device.mkdir(self.remoteMozLog)
 
         self.remoteChromeTestDir = posixpath.join(
             options.remoteTestRoot,
             "chrome")
-        self.device.rm(self.remoteChromeTestDir, force=True, recursive=True)
+        self.device.rm(self.remoteChromeTestDir, force=True, recursive=True, root=True)
         self.device.mkdir(self.remoteChromeTestDir)
 
         procName = options.app.split('/')[-1]
@@ -104,14 +104,14 @@ class MochiRemote(MochitestDesktop):
 
     def cleanup(self, options, final=False):
         if final:
-            self.device.rm(self.remoteChromeTestDir, force=True, recursive=True)
+            self.device.rm(self.remoteChromeTestDir, force=True, recursive=True, root=True)
             self.chromePushed = False
             uploadDir = os.environ.get('MOZ_UPLOAD_DIR', None)
             if uploadDir and self.device.is_dir(self.remoteMozLog):
                 self.device.pull(self.remoteMozLog, uploadDir)
-        self.device.rm(self.remoteLogFile, force=True)
-        self.device.rm(self.remoteProfile, force=True, recursive=True)
-        self.device.rm(self.remoteCache, force=True, recursive=True)
+        self.device.rm(self.remoteLogFile, force=True, root=True)
+        self.device.rm(self.remoteProfile, force=True, recursive=True, root=True)
+        self.device.rm(self.remoteCache, force=True, recursive=True, root=True)
         MochitestDesktop.cleanup(self, options, final)
         self.localProfile = None
 
