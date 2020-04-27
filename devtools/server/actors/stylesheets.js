@@ -15,6 +15,9 @@ const {
   styleSheetsSpec,
 } = require("devtools/shared/specs/stylesheets");
 const InspectorUtils = require("InspectorUtils");
+const {
+  getSourcemapBaseURL,
+} = require("devtools/server/actors/utils/source-map-utils");
 
 loader.lazyRequireGetter(
   this,
@@ -431,7 +434,13 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       title: this.rawSheet.title,
       system: !CssLogic.isAuthorStylesheet(this.rawSheet),
       styleSheetIndex: this.styleSheetIndex,
-      sourceMapBaseURL: this.href || docHref || null,
+      sourceMapBaseURL: getSourcemapBaseURL(
+        // Technically resolveSourceURL should be used here alongside
+        // "this.rawSheet.sourceURL", but the style inspector does not support
+        // /*# sourceURL=*/ in CSS, so we're omitting it here (bug 880831).
+        this.href || docHref,
+        this.ownerWindow
+      ),
       sourceMapURL: this.rawSheet.sourceMapURL,
     };
 
