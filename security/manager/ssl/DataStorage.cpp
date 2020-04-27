@@ -721,6 +721,11 @@ nsresult DataStorage::AsyncReadData(const MutexAutoLock& /*aProofOfLock*/) {
   return NS_OK;
 }
 
+bool DataStorage::IsReady() {
+  MonitorAutoLock readyLock(mReadyMonitor);
+  return mReady;
+}
+
 void DataStorage::WaitForReady() {
   MOZ_DIAGNOSTIC_ASSERT(mInitCalled, "Waiting before Init() has been called?");
 

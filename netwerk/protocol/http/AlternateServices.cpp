@@ -920,6 +920,13 @@ already_AddRefed<AltSvcMapping> AltSvcCache::LookupMapping(
     LOG(("AltSvcCache::LookupMapping %p no backing store\n", this));
     return nullptr;
   }
+
+  if (NS_IsMainThread() && !mStorage->IsReady()) {
+    LOG(("AltSvcCache::LookupMapping %p skip when storage is not ready\n",
+         this));
+    return nullptr;
+  }
+
   nsCString val(mStorage->Get(
       key, privateBrowsing ? DataStorage_Private : DataStorage_Persistent));
   if (val.IsEmpty()) {
