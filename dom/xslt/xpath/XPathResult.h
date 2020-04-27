@@ -7,7 +7,6 @@
 #define mozilla_dom_XPathResult_h
 
 #include "nsStubMutationObserver.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsIWeakReferenceUtils.h"

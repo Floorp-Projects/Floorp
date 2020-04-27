@@ -7,7 +7,6 @@
 #define TRANSFRMX_MOZILLA_XML_OUTPUT_H
 
 #include "txXMLEventHandler.h"
-#include "nsAutoPtr.h"
 #include "nsIScriptLoaderObserver.h"
 #include "txOutputFormat.h"
 #include "nsCOMArray.h"

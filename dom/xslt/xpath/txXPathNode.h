@@ -6,7 +6,6 @@
 #ifndef txXPathNode_h__
 #define txXPathNode_h__
 
-#include "nsAutoPtr.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Document.h"
 #include "nsINode.h"
