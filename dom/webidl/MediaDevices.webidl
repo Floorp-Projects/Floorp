@@ -23,6 +23,8 @@ interface MediaDevices : EventTarget {
   [Throws, NeedsCallerType, UseCounter]
   Promise<MediaStream> getUserMedia(optional MediaStreamConstraints constraints = {});
 
-  [SecureContext, Throws, NeedsCallerType, UseCounter]
+  // We need [SecureContext] in case media.devices.insecure.enabled = true
+  // because we don't want that legacy pref to expose this newer method.
+  [SecureContext, Pref="media.getdisplaymedia.enabled", Throws, NeedsCallerType, UseCounter]
   Promise<MediaStream> getDisplayMedia(optional DisplayMediaStreamConstraints constraints = {});
 };
