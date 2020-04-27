@@ -4,6 +4,7 @@
 
 DevToolsModules(
     'PropertiesViewContextMenu.js',
+    'RequestBlockingContextMenu.js',
     'RequestListContextMenu.js',
     'RequestListHeaderContextMenu.js',
     'WaterfallBackground.js',

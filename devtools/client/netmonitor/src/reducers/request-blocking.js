@@ -10,6 +10,9 @@ const {
   TOGGLE_BLOCKED_URL,
   UPDATE_BLOCKED_URL,
   REMOVE_BLOCKED_URL,
+  REMOVE_ALL_BLOCKED_URLS,
+  ENABLE_ALL_BLOCKED_URLS,
+  DISABLE_ALL_BLOCKED_URLS,
   TOGGLE_BLOCKING_ENABLED,
 } = require("devtools/client/netmonitor/src/constants");
 
@@ -26,12 +29,18 @@ function requestBlockingReducer(state = RequestBlocking(), action) {
       return addBlockedUrl(state, action);
     case REMOVE_BLOCKED_URL:
       return removeBlockedUrl(state, action);
+    case REMOVE_ALL_BLOCKED_URLS:
+      return removeAllBlockedUrls(state, action);
     case UPDATE_BLOCKED_URL:
       return updateBlockedUrl(state, action);
     case TOGGLE_BLOCKED_URL:
       return toggleBlockedUrl(state, action);
     case TOGGLE_BLOCKING_ENABLED:
       return toggleBlockingEnabled(state, action);
+    case ENABLE_ALL_BLOCKED_URLS:
+      return enableAllBlockedUrls(state, action);
+    case DISABLE_ALL_BLOCKED_URLS:
+      return disableAllBlockedUrls(state, action);
     case DISABLE_MATCHING_URLS:
       return disableOrRemoveMatchingUrls(state, action);
     default:
@@ -74,6 +83,35 @@ function removeBlockedUrl(state, action) {
   return {
     ...state,
     blockedUrls: state.blockedUrls.filter(item => item.url != action.url),
+  };
+}
+
+function removeAllBlockedUrls(state, action) {
+  return {
+    ...state,
+    blockedUrls: [],
+  };
+}
+
+function enableAllBlockedUrls(state, action) {
+  const blockedUrls = state.blockedUrls.map(item => ({
+    ...item,
+    enabled: true,
+  }));
+  return {
+    ...state,
+    blockedUrls,
+  };
+}
+
+function disableAllBlockedUrls(state, action) {
+  const blockedUrls = state.blockedUrls.map(item => ({
+    ...item,
+    enabled: false,
+  }));
+  return {
+    ...state,
+    blockedUrls,
   };
 }
 
