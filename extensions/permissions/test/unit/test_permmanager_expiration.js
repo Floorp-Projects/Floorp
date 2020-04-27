@@ -93,6 +93,12 @@ function* do_run_test() {
     1,
     pm.testPermissionFromPrincipal(principal, "test/expiration-perm-nexp")
   );
+  Assert.equal(1, pm.getAllWithTypePrefix("test/expiration-perm-exp3").length);
+  Assert.equal(
+    1,
+    pm.getAllWithTypePrefix("test/expiration-session-exp3").length
+  );
+  Assert.equal(1, pm.getAllWithTypePrefix("test/expiration-perm-nexp").length);
 
   // ... and the first one has
   do_timeout(10, continue_test);
@@ -106,6 +112,8 @@ function* do_run_test() {
     pm.testPermissionFromPrincipal(principal, "test/expiration-session-exp")
   );
 
+  Assert.equal(5, pm.getAllForPrincipal(principal).length);
+
   // ... and that the short-term one will
   do_timeout(200, continue_test);
   yield;
@@ -117,6 +125,13 @@ function* do_run_test() {
     0,
     pm.testPermissionFromPrincipal(principal, "test/expiration-session-exp2")
   );
+  Assert.equal(0, pm.getAllWithTypePrefix("test/expiration-perm-exp2").length);
+  Assert.equal(
+    0,
+    pm.getAllWithTypePrefix("test/expiration-session-exp2").length
+  );
+
+  Assert.equal(3, pm.getAllForPrincipal(principal).length);
 
   // Check that .getPermission returns a matching result
   Assert.equal(
