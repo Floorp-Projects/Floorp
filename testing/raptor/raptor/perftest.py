@@ -637,8 +637,10 @@ class PerftestAndroid(Perftest):
 
         try:
             LOG.info("copying profile to device: %s" % self.remote_profile)
-            self.device.rm(self.remote_profile, force=True, recursive=True)
-            # self.device.mkdir(self.remote_profile)
+            # We must use root=True since the remote profile has been
+            # modified by gecko and has content which is only
+            # accessible to the gecko user.
+            self.device.rm(self.remote_profile, force=True, recursive=True, root=True)
             self.device.push(self.profile.profile, self.remote_profile)
             self.device.chmod(self.remote_profile, recursive=True, root=True)
 

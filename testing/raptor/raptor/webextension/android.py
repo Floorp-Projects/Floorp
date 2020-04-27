@@ -39,9 +39,7 @@ class WebExtensionAndroid(PerftestAndroid, WebExtension):
 
         self.config.update({"activity": activity, "intent": intent})
 
-        self.remote_test_root = os.path.abspath(
-            os.path.join(os.sep, "sdcard", "raptor")
-        )
+        self.remote_test_root = "/data/local/tmp/tests/raptor"
         self.remote_profile = os.path.join(self.remote_test_root, "profile")
         self.os_baseline_data = None
         self.power_test_time = None
@@ -59,8 +57,8 @@ class WebExtensionAndroid(PerftestAndroid, WebExtension):
             disable_charging(self.device)
 
         LOG.info("creating remote root folder for raptor: %s" % self.remote_test_root)
-        self.device.rm(self.remote_test_root, force=True, recursive=True)
-        self.device.mkdir(self.remote_test_root)
+        self.device.rm(self.remote_test_root, force=True, recursive=True, root=True)
+        self.device.mkdir(self.remote_test_root, parents=True, root=True)
         self.device.chmod(self.remote_test_root, recursive=True, root=True)
 
         self.clear_app_data()
@@ -410,7 +408,9 @@ class WebExtensionAndroid(PerftestAndroid, WebExtension):
 
     def clean_up(self):
         LOG.info("removing test folder for raptor: %s" % self.remote_test_root)
-        self.device.rm(self.remote_test_root, force=True, recursive=True)
+        # We must use root=True since the browser will have created files in
+        # the profile.
+        self.device.rm(self.remote_test_root, force=True, recursive=True, root=True)
 
         if self.config['power_test']:
             enable_charging(self.device)

@@ -27,9 +27,9 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
     because geckodriver takes care of that.
     We tell browsertime to use our profile (we pass it in with the firefox.profileTemplate arg);
     browsertime creates a copy of that and passes that into geckodriver. Geckodriver then takes
-    the profile and copies it onto the mobile device's sdcard for us; and then it even writes
+    the profile and copies it onto the mobile device's test root for us; and then it even writes
     the geckoview app config.yaml file onto the device, which points the app to the profile on
-    the sdcard.
+    the device's test root.
     Therefore, raptor doesn't have to copy the profile onto the scard (and create the config.yaml)
     file ourselves. Also note when using playback, the nss certificate db is created as usual when
     mitmproxy is started (and saved in the profile) so it is already included in the profile that
@@ -42,10 +42,7 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
         )
 
         self.config.update({"activity": activity, "intent": intent})
-
-        self.remote_test_root = os.path.abspath(
-            os.path.join(os.sep, "sdcard", "raptor")
-        )
+        self.remote_test_root = "/data/local/tmp/tests/raptor"
         self.remote_profile = os.path.join(self.remote_test_root, "profile")
 
     @property
