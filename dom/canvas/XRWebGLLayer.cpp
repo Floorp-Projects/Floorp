@@ -122,11 +122,11 @@ already_AddRefed<XRWebGLLayer> XRWebGLLayer::Constructor(
     }
 
     bool antialias = aXRWebGLLayerInitDict.mAntialias;
-    if (antialias && aXRWebGLContext.IsWebGLRenderingContext()) {
+    if (antialias && !StaticPrefs::webgl_msaa_force()) {
       antialias = false;
       nsContentUtils::ReportToConsoleNonLocalized(
-          NS_LITERAL_STRING("XRWebGLLayer antialiasing is only supported "
-                            "in WebGL2. Antialiasing will be disabled."),
+          NS_LITERAL_STRING("XRWebGLLayer antialiasing is not supported."
+                            "Antialiasing will be disabled."),
           nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), document);
     }
 
