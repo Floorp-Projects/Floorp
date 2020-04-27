@@ -133,7 +133,7 @@ The following event properties are valid:
 
   - ``firefox`` - Collected in Firefox Desktop for submission via Firefox Telemetry.
   - ``fennec`` - Collected in Firefox for Android for submission via Firefox Mobile Telemetry.
-  - ``geckoview`` - Collected in GeckoView-based Android products and surfaced via `GeckoViewTelemetryController.jsm <https://hg.mozilla.org/mozilla-central/raw-file/tip/toolkit/components/telemetry/geckoview/GeckoViewTelemetryController.jsm>`__.
+  - ``geckoview`` - *deprecated* Will be removed in Firefox 79. (see `bug 1620395 <https://bugzilla.mozilla.org/show_bug.cgi?id=1620395>`__)
 
 - ``operating_systems`` *(optional, list of strings)*: This field restricts recording to certain operating systems only. It defaults to ``all``. Currently supported values are:
 
