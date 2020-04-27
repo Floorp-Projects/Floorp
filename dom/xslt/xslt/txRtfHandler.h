@@ -24,7 +24,7 @@ class txResultTreeFragment : public txAExprResult {
 
     mNode = aNode;
   }
-  const txXPathNode* getNode() const { return mNode; }
+  const txXPathNode* getNode() const { return mNode.get(); }
 
  private:
   nsAutoPtr<txResultBuffer> mBuffer;
