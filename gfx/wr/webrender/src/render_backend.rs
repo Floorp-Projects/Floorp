@@ -1546,7 +1546,6 @@ impl RenderBackend {
             profile_scope!("generate frame");
 
             *frame_counter += 1;
-            doc.rendered_frame_is_valid = false;
 
             // borrow ck hack for profile_counters
             let (pending_update, rendered_document) = {
@@ -1580,13 +1579,13 @@ impl RenderBackend {
                 .descriptor
                 .clone();
 
-            // If there are no texture cache updates to apply, and if the produced
-            // frame is a no-op, and the compositor state is equal, then we can skip
-            // compositing this frame completely.
-            if pending_update.is_nop() &&
-               rendered_document.frame.is_nop() &&
-               composite_descriptor == doc.prev_composite_descriptor {
-                doc.rendered_frame_is_valid = true;
+            // If there are texture cache updates to apply, or if the produced
+            // frame is not a no-op, or the compositor state has changed,
+            // then we cannot skip compositing this frame.
+            if !pending_update.is_nop() ||
+               !rendered_document.frame.is_nop() ||
+               composite_descriptor != doc.prev_composite_descriptor {
+                doc.rendered_frame_is_valid = false;
             }
             doc.prev_composite_descriptor = composite_descriptor;
 
