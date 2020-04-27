@@ -9726,7 +9726,8 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   nsCOMPtr<nsIChannel> channel;
   if (DocumentChannel::CanUseDocumentChannel(aLoadState)) {
     channel = DocumentChannel::CreateDocumentChannel(aLoadState, loadInfo,
-                                                     loadFlags, this, cacheKey);
+                                                     loadFlags, this, cacheKey,
+                                                     uriModified, isXFOError);
     MOZ_ASSERT(channel);
   } else if (!CreateAndConfigureRealChannelForLoadState(
                  mBrowsingContext, aLoadState, loadInfo, this, this,

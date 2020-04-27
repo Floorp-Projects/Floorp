@@ -23,7 +23,8 @@ class ParentProcessDocumentChannel : public DocumentChannel,
  public:
   ParentProcessDocumentChannel(nsDocShellLoadState* aLoadState,
                                class LoadInfo* aLoadInfo,
-                               nsLoadFlags aLoadFlags, uint32_t aCacheKey);
+                               nsLoadFlags aLoadFlags, uint32_t aCacheKey,
+                               bool aUriModified, bool aIsXFOError);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK

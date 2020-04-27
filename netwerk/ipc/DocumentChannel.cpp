@@ -60,13 +60,16 @@ NS_INTERFACE_MAP_END
 
 DocumentChannel::DocumentChannel(nsDocShellLoadState* aLoadState,
                                  net::LoadInfo* aLoadInfo,
-                                 nsLoadFlags aLoadFlags, uint32_t aCacheKey)
+                                 nsLoadFlags aLoadFlags, uint32_t aCacheKey,
+                                 bool aUriModified, bool aIsXFOError)
     : mAsyncOpenTime(TimeStamp::Now()),
       mLoadState(aLoadState),
       mCacheKey(aCacheKey),
       mLoadFlags(aLoadFlags),
       mURI(aLoadState->URI()),
-      mLoadInfo(aLoadInfo) {
+      mLoadInfo(aLoadInfo),
+      mUriModified(aUriModified),
+      mIsXFOError(aIsXFOError) {
   LOG(("DocumentChannel ctor [this=%p, uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
   RefPtr<nsHttpHandler> handler = nsHttpHandler::GetInstance();
@@ -173,14 +176,15 @@ bool DocumentChannel::CanUseDocumentChannel(nsDocShellLoadState* aLoadState) {
 already_AddRefed<DocumentChannel> DocumentChannel::CreateDocumentChannel(
     nsDocShellLoadState* aLoadState, class LoadInfo* aLoadInfo,
     nsLoadFlags aLoadFlags, nsIInterfaceRequestor* aNotificationCallbacks,
-    uint32_t aCacheKey) {
+    uint32_t aCacheKey, bool aUriModified, bool aIsXFOError) {
   RefPtr<DocumentChannel> channel;
   if (XRE_IsContentProcess()) {
-    channel =
-        new DocumentChannelChild(aLoadState, aLoadInfo, aLoadFlags, aCacheKey);
+    channel = new DocumentChannelChild(aLoadState, aLoadInfo, aLoadFlags,
+                                       aCacheKey, aUriModified, aIsXFOError);
   } else {
-    channel = new ParentProcessDocumentChannel(aLoadState, aLoadInfo,
-                                               aLoadFlags, aCacheKey);
+    channel =
+        new ParentProcessDocumentChannel(aLoadState, aLoadInfo, aLoadFlags,
+                                         aCacheKey, aUriModified, aIsXFOError);
   }
   channel->SetNotificationCallbacks(aNotificationCallbacks);
   return channel.forget();
@@ -288,7 +292,7 @@ DocumentChannel::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
 }
 
 NS_IMETHODIMP DocumentChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
-  mLoadFlags = aLoadFlags;
+  MOZ_CRASH("Don't set flags after creation");
   return NS_OK;
 }
 
