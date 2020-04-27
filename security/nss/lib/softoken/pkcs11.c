@@ -323,6 +323,10 @@ static const struct mechanismList mechanisms[] = {
     { CKM_DSA, { DSA_MIN_P_BITS, DSA_MAX_P_BITS, CKF_SN_VR }, PR_TRUE },
     { CKM_DSA_PARAMETER_GEN, { DSA_MIN_P_BITS, DSA_MAX_P_BITS, CKF_GENERATE }, PR_TRUE },
     { CKM_DSA_SHA1, { DSA_MIN_P_BITS, DSA_MAX_P_BITS, CKF_SN_VR }, PR_TRUE },
+    { CKM_DSA_SHA224, { DSA_MIN_P_BITS, DSA_MAX_P_BITS, CKF_SN_VR }, PR_TRUE },
+    { CKM_DSA_SHA256, { DSA_MIN_P_BITS, DSA_MAX_P_BITS, CKF_SN_VR }, PR_TRUE },
+    { CKM_DSA_SHA384, { DSA_MIN_P_BITS, DSA_MAX_P_BITS, CKF_SN_VR }, PR_TRUE },
+    { CKM_DSA_SHA512, { DSA_MIN_P_BITS, DSA_MAX_P_BITS, CKF_SN_VR }, PR_TRUE },
     /* -------------------- Diffie Hellman Operations --------------------- */
     /* no diffie hellman yet */
     { CKM_DH_PKCS_KEY_PAIR_GEN, { DH_MIN_P_BITS, DH_MAX_P_BITS, CKF_GENERATE_KEY_PAIR }, PR_TRUE },
@@ -332,6 +336,10 @@ static const struct mechanismList mechanisms[] = {
     { CKM_ECDH1_DERIVE, { EC_MIN_KEY_BITS, EC_MAX_KEY_BITS, CKF_DERIVE | CKF_EC_BPNU }, PR_TRUE },
     { CKM_ECDSA, { EC_MIN_KEY_BITS, EC_MAX_KEY_BITS, CKF_SN_VR | CKF_EC_BPNU }, PR_TRUE },
     { CKM_ECDSA_SHA1, { EC_MIN_KEY_BITS, EC_MAX_KEY_BITS, CKF_SN_VR | CKF_EC_BPNU }, PR_TRUE },
+    { CKM_ECDSA_SHA224, { EC_MIN_KEY_BITS, EC_MAX_KEY_BITS, CKF_SN_VR | CKF_EC_BPNU }, PR_TRUE },
+    { CKM_ECDSA_SHA256, { EC_MIN_KEY_BITS, EC_MAX_KEY_BITS, CKF_SN_VR | CKF_EC_BPNU }, PR_TRUE },
+    { CKM_ECDSA_SHA384, { EC_MIN_KEY_BITS, EC_MAX_KEY_BITS, CKF_SN_VR | CKF_EC_BPNU }, PR_TRUE },
+    { CKM_ECDSA_SHA512, { EC_MIN_KEY_BITS, EC_MAX_KEY_BITS, CKF_SN_VR | CKF_EC_BPNU }, PR_TRUE },
     /* ------------------------- RC2 Operations --------------------------- */
     { CKM_RC2_KEY_GEN, { 1, 128, CKF_GENERATE }, PR_TRUE },
     { CKM_RC2_ECB, { 1, 128, CKF_EN_DE_WR_UN }, PR_TRUE },
@@ -556,6 +564,9 @@ static const struct mechanismList mechanisms[] = {
     /* ------------------ AES Key Wrap (also encrypt)  ------------------- */
     { CKM_NSS_AES_KEY_WRAP, { 16, 32, CKF_EN_DE_WR_UN }, PR_TRUE },
     { CKM_NSS_AES_KEY_WRAP_PAD, { 16, 32, CKF_EN_DE_WR_UN }, PR_TRUE },
+    { CKM_AES_KEY_WRAP, { 16, 32, CKF_EN_DE_WR_UN }, PR_TRUE },
+    { CKM_AES_KEY_WRAP_PAD, { 16, 32, CKF_EN_DE_WR_UN }, PR_TRUE },
+    { CKM_AES_KEY_WRAP_KWP, { 1, 32, CKF_EN_DE_WR_UN }, PR_TRUE },
     /* --------------------------- J-PAKE -------------------------------- */
     { CKM_NSS_JPAKE_ROUND1_SHA1, { 0, 0, CKF_GENERATE }, PR_TRUE },
     { CKM_NSS_JPAKE_ROUND1_SHA256, { 0, 0, CKF_GENERATE }, PR_TRUE },

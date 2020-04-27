@@ -302,4 +302,69 @@ PORT_LoadLibraryFromOrigin(const char *existingShLibName,
 
 SEC_END_PROTOS
 
+/*
+ * Constant time macros
+ */
+/* These macros use the fact that arithmetic shift shifts-in the sign bit.
+ * However, this is not ensured by the C standard so you may need to replace
+ * them with something else for odd compilers. These macros work for object
+ * sizes up to 32 bits. The inequalities will produce incorrect results if
+ * abs(a-b) >= PR_UINT32_MAX/2. This can be a voided if unsigned values stay
+ * within the range 0-PRUINT32_MAX/2 and signed values stay within the range
+ * -PRINT32_MAX/2-PRINT32_MAX/2. If these are insufficient, we can fix
+ * this by either expanding the PORT_CT_DUPLICATE_MSB_TO_ALL to PRUint64
+ * or by creating the following new macros for inequality:
+ *
+ * PORT_CT_OVERFLOW prevents the overflow condition by handling the case
+ * where the high bits in a and b are different specially. Basically if
+ * the high bit in a and b differs we can just
+ * copy the high bit of one of the parameters to determine the result as
+ * follows:
+ *    GxU if a has the high bit on, a>b, so d=a
+ *    LxU if b has the high bit on, a<b, so d=b
+ *    GxS if b has the high bit on, it's negative a>b so d=b
+ *    LxS if a has the high bit on, it's negative a<b so d=a
+ * where PORT_CT_xxU() macros do unsigned compares and PORT_CT_xxS() do signed
+ * compares.
+ *
+ * #define PORT_CT_OVERFLOW(a,b,c,d) \
+ *       PORT_CT_SEL(PORT_CT_DUPLICATE_MSB_TO_ALL((a)^(b)), \
+ *                  (PORT_CT_DUPLICATE_MSB_TO_ALL(d)),c)
+ * #define PORT_CT_GTU(a,b) PORT_CT_OVERFLOW(a,b,PORT_CT_GT(a,b),a)
+ * #define PORT_CT_LTU(a,b) PORT_CT_OVERFLOW(a,b,PORT_CT_LT(a,b),b)
+ * #define PORT_CT_GEU(a,b) PORT_CT_OVERFLOW(a,b,PORT_CT_GE(a,b),a)
+ * #define PORT_CT_LEU(a,b) PORT_CT_OVERFLOW(a,b,PORT_CT_LE(a,b),b)
+ * #define PORT_CT_GTS(a,b) PORT_CT_OVERFLOW(a,b,PORT_CT_GT(a,b),b)
+ * #define PORT_CT_LTS(a,b) PORT_CT_OVERFLOW(a,b,PORT_CT_LT(a,b),a)
+ * #define PORT_CT_GES(a,b) PORT_CT_OVERFLOW(a,b,PORT_CT_GE(a,b),b)
+ * #define PORT_CT_LES(a,b) PORT_CT_OVERFLOW(a,b,PORT_CT_LE(a,b),a)
+ *
+ *
+ * */
+/* Constant-time helper macro that copies the MSB of x to all other bits. */
+#define PORT_CT_DUPLICATE_MSB_TO_ALL(x) ((PRUint32)((PRInt32)(x) >> (sizeof(PRInt32) * 8 - 1)))
+
+/* Constant-time helper macro that selects l or r depending on all-1 or all-0
+ * mask m */
+#define PORT_CT_SEL(m, l, r) (((m) & (l)) | (~(m) & (r)))
+
+/* Constant-time helper macro that returns all-1s if x is not 0; and all-0s
+ * otherwise. */
+#define PORT_CT_NOT_ZERO(x) (PORT_CT_DUPLICATE_MSB_TO_ALL(((x) | (0 - (x)))))
+
+/* Constant-time helper macro that returns all-1s if x is 0; and all-0s
+ * otherwise. */
+#define PORT_CT_ZERO(x) (~PORT_CT_DUPLICATE_MSB_TO_ALL(((x) | (0 - (x)))))
+
+/* Constant-time helper macro for equalities and inequalities.
+ * returns all-1's for true and all-0's for false */
+#define PORT_CT_EQ(a, b) PORT_CT_ZERO(((a) - (b)))
+#define PORT_CT_NE(a, b) PORT_CT_NOT_ZERO(((a) - (b)))
+#define PORT_CT_GT(a, b) PORT_CT_DUPLICATE_MSB_TO_ALL((b) - (a))
+#define PORT_CT_LT(a, b) PORT_CT_DUPLICATE_MSB_TO_ALL((a) - (b))
+#define PORT_CT_GE(a, b) (~PORT_CT_LT(a, b))
+#define PORT_CT_LE(a, b) (~PORT_CT_GT(a, b))
+#define PORT_CT_TRUE (~0)
+#define PORT_CT_FALSE 0
+
 #endif /* _SECPORT_H_ */

@@ -31,26 +31,8 @@
 #include <arm_neon.h>
 #endif
 
-#if defined(__powerpc64__) && !defined(NSS_DISABLE_ALTIVEC)
-#include "altivec-types.h"
-
-/* The ghash freebl test tries to use this in C++, and gcc defines conflict. */
-#ifdef __cplusplus
-#undef pixel
-#undef vector
-#undef bool
-#endif
-
-/*
- * PPC CRYPTO requires at least gcc 8 or clang. The LE check is purely
- * because it's only been tested on LE. If you're interested in BE,
- * please send a patch.
- */
-#if (defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 8)) && \
-    defined(IS_LITTLE_ENDIAN)
-#define USE_PPC_CRYPTO
-#endif
-
+#if defined(__powerpc64__)
+#include "ppc-crypto.h"
 #endif
 
 SEC_BEGIN_PROTOS

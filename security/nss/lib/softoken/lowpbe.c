@@ -1237,8 +1237,8 @@ sec_pkcs5_des(SECItem *key, SECItem *iv, SECItem *src, PRBool triple_des,
     /* remove padding */
     if ((encrypt == PR_FALSE) && (rv == SECSuccess)) {
         crv = sftk_CheckCBCPadding(dest->data, dest->len, DES_BLOCK_SIZE, &pad);
-        dest->len = CT_SEL(sftk_CKRVToMask(crv), dest->len - pad, dest->len);
-        PORT_SetError(CT_SEL(sftk_CKRVToMask(crv), error, SEC_ERROR_BAD_PASSWORD));
+        dest->len = PORT_CT_SEL(sftk_CKRVToMask(crv), dest->len - pad, dest->len);
+        PORT_SetError(PORT_CT_SEL(sftk_CKRVToMask(crv), error, SEC_ERROR_BAD_PASSWORD));
     }
     DES_DestroyContext(ctxt, PR_TRUE);
 
@@ -1312,8 +1312,8 @@ sec_pkcs5_aes(SECItem *key, SECItem *iv, SECItem *src, PRBool triple_des,
     /* remove padding */
     if ((encrypt == PR_FALSE) && (rv == SECSuccess)) {
         crv = sftk_CheckCBCPadding(dest->data, dest->len, AES_BLOCK_SIZE, &pad);
-        dest->len = CT_SEL(sftk_CKRVToMask(crv), dest->len - pad, dest->len);
-        PORT_SetError(CT_SEL(sftk_CKRVToMask(crv), error, SEC_ERROR_BAD_PASSWORD));
+        dest->len = PORT_CT_SEL(sftk_CKRVToMask(crv), dest->len - pad, dest->len);
+        PORT_SetError(PORT_CT_SEL(sftk_CKRVToMask(crv), error, SEC_ERROR_BAD_PASSWORD));
     }
     AES_DestroyContext(ctxt, PR_TRUE);
 
@@ -1388,8 +1388,8 @@ sec_pkcs5_aes_key_wrap(SECItem *key, SECItem *iv, SECItem *src, PRBool triple_de
     /* remove padding */
     if ((encrypt == PR_FALSE) && (rv == SECSuccess)) {
         crv = sftk_CheckCBCPadding(dest->data, dest->len, AES_BLOCK_SIZE, &pad);
-        dest->len = CT_SEL(sftk_CKRVToMask(crv), dest->len - pad, dest->len);
-        PORT_SetError(CT_SEL(sftk_CKRVToMask(crv), error, SEC_ERROR_BAD_PASSWORD));
+        dest->len = PORT_CT_SEL(sftk_CKRVToMask(crv), dest->len - pad, dest->len);
+        PORT_SetError(PORT_CT_SEL(sftk_CKRVToMask(crv), error, SEC_ERROR_BAD_PASSWORD));
     }
     AESKeyWrap_DestroyContext(ctxt, PR_TRUE);
 

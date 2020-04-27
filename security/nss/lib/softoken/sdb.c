@@ -90,38 +90,6 @@ typedef enum {
 #define SDB_MAX_BUSY_RETRIES 10
 
 /*
- * Note on use of sqlReadDB: Only one thread at a time may have an actual
- * operation going on given sqlite3 * database. An operation is defined as
- * the time from a sqlite3_prepare() until the sqlite3_finalize().
- * Multiple sqlite3 * databases can be open and have simultaneous operations
- * going. We use the sqlXactDB for all write operations. This database
- * is only opened when we first create a transaction and closed when the
- * transaction is complete. sqlReadDB is open when we first opened the database
- * and is used for all read operation. It's use is protected by a monitor. This
- * is because an operation can span the use of FindObjectsInit() through the
- * call to FindObjectsFinal(). In the intermediate time it is possible to call
- * other operations like NSC_GetAttributeValue */
-
-struct SDBPrivateStr {
-    char *sqlDBName;               /* invariant, path to this database */
-    sqlite3 *sqlXactDB;            /* access protected by dbMon, use protected
-                                    * by the transaction. Current transaction db*/
-    PRThread *sqlXactThread;       /* protected by dbMon,
-                                    * current transaction thread */
-    sqlite3 *sqlReadDB;            /* use protected by dbMon, value invariant */
-    PRIntervalTime lastUpdateTime; /* last time the cache was updated */
-    PRIntervalTime updateInterval; /* how long the cache can go before it
-                                    * must be updated again */
-    sdbDataType type;              /* invariant, database type */
-    char *table;                   /* invariant, SQL table which contains the db */
-    char *cacheTable;              /* invariant, SQL table cache of db */
-    PRMonitor *dbMon;              /* invariant, monitor to protect
-                                    * sqlXact* fields, and use of the sqlReadDB */
-};
-
-typedef struct SDBPrivateStr SDBPrivate;
-
-/*
  * known attributes
  */
 static const CK_ATTRIBUTE_TYPE known_attributes[] = {
@@ -135,35 +103,68 @@ static const CK_ATTRIBUTE_TYPE known_attributes[] = {
     CKA_VERIFY, CKA_VERIFY_RECOVER, CKA_DERIVE, CKA_START_DATE, CKA_END_DATE,
     CKA_MODULUS, CKA_MODULUS_BITS, CKA_PUBLIC_EXPONENT, CKA_PRIVATE_EXPONENT,
     CKA_PRIME_1, CKA_PRIME_2, CKA_EXPONENT_1, CKA_EXPONENT_2, CKA_COEFFICIENT,
-    CKA_PRIME, CKA_SUBPRIME, CKA_BASE, CKA_PRIME_BITS,
+    CKA_PUBLIC_KEY_INFO, CKA_PRIME, CKA_SUBPRIME, CKA_BASE, CKA_PRIME_BITS,
     CKA_SUB_PRIME_BITS, CKA_VALUE_BITS, CKA_VALUE_LEN, CKA_EXTRACTABLE,
     CKA_LOCAL, CKA_NEVER_EXTRACTABLE, CKA_ALWAYS_SENSITIVE,
     CKA_KEY_GEN_MECHANISM, CKA_MODIFIABLE, CKA_EC_PARAMS,
     CKA_EC_POINT, CKA_SECONDARY_AUTH, CKA_AUTH_PIN_FLAGS,
-    CKA_ALWAYS_AUTHENTICATE, CKA_WRAP_WITH_TRUSTED, CKA_WRAP_TEMPLATE,
-    CKA_UNWRAP_TEMPLATE, CKA_HW_FEATURE_TYPE, CKA_RESET_ON_INIT,
-    CKA_HAS_RESET, CKA_PIXEL_X, CKA_PIXEL_Y, CKA_RESOLUTION, CKA_CHAR_ROWS,
-    CKA_CHAR_COLUMNS, CKA_COLOR, CKA_BITS_PER_PIXEL, CKA_CHAR_SETS,
-    CKA_ENCODING_METHODS, CKA_MIME_TYPES, CKA_MECHANISM_TYPE,
-    CKA_REQUIRED_CMS_ATTRIBUTES, CKA_DEFAULT_CMS_ATTRIBUTES,
-    CKA_SUPPORTED_CMS_ATTRIBUTES, CKA_NSS_URL, CKA_NSS_EMAIL,
-    CKA_NSS_SMIME_INFO, CKA_NSS_SMIME_TIMESTAMP,
+    CKA_ALWAYS_AUTHENTICATE, CKA_WRAP_WITH_TRUSTED, CKA_HW_FEATURE_TYPE,
+    CKA_RESET_ON_INIT, CKA_HAS_RESET, CKA_PIXEL_X, CKA_PIXEL_Y,
+    CKA_RESOLUTION, CKA_CHAR_ROWS, CKA_CHAR_COLUMNS, CKA_COLOR,
+    CKA_BITS_PER_PIXEL, CKA_CHAR_SETS, CKA_ENCODING_METHODS, CKA_MIME_TYPES,
+    CKA_MECHANISM_TYPE, CKA_REQUIRED_CMS_ATTRIBUTES,
+    CKA_DEFAULT_CMS_ATTRIBUTES, CKA_SUPPORTED_CMS_ATTRIBUTES,
+    CKA_WRAP_TEMPLATE, CKA_UNWRAP_TEMPLATE, CKA_NSS_TRUST, CKA_NSS_URL,
+    CKA_NSS_EMAIL, CKA_NSS_SMIME_INFO, CKA_NSS_SMIME_TIMESTAMP,
     CKA_NSS_PKCS8_SALT, CKA_NSS_PASSWORD_CHECK, CKA_NSS_EXPIRES,
     CKA_NSS_KRL, CKA_NSS_PQG_COUNTER, CKA_NSS_PQG_SEED,
     CKA_NSS_PQG_H, CKA_NSS_PQG_SEED_BITS, CKA_NSS_MODULE_SPEC,
-    CKA_TRUST_DIGITAL_SIGNATURE, CKA_TRUST_NON_REPUDIATION,
-    CKA_TRUST_KEY_ENCIPHERMENT, CKA_TRUST_DATA_ENCIPHERMENT,
-    CKA_TRUST_KEY_AGREEMENT, CKA_TRUST_KEY_CERT_SIGN, CKA_TRUST_CRL_SIGN,
-    CKA_TRUST_SERVER_AUTH, CKA_TRUST_CLIENT_AUTH, CKA_TRUST_CODE_SIGNING,
-    CKA_TRUST_EMAIL_PROTECTION, CKA_TRUST_IPSEC_END_SYSTEM,
-    CKA_TRUST_IPSEC_TUNNEL, CKA_TRUST_IPSEC_USER, CKA_TRUST_TIME_STAMPING,
-    CKA_TRUST_STEP_UP_APPROVED, CKA_CERT_SHA1_HASH, CKA_CERT_MD5_HASH,
-    CKA_NSS_DB, CKA_NSS_TRUST, CKA_NSS_OVERRIDE_EXTENSIONS,
-    CKA_PUBLIC_KEY_INFO, CKA_NSS_SERVER_DISTRUST_AFTER, CKA_NSS_EMAIL_DISTRUST_AFTER
+    CKA_NSS_OVERRIDE_EXTENSIONS, CKA_NSS_SERVER_DISTRUST_AFTER,
+    CKA_NSS_EMAIL_DISTRUST_AFTER, CKA_TRUST_DIGITAL_SIGNATURE,
+    CKA_TRUST_NON_REPUDIATION, CKA_TRUST_KEY_ENCIPHERMENT,
+    CKA_TRUST_DATA_ENCIPHERMENT, CKA_TRUST_KEY_AGREEMENT,
+    CKA_TRUST_KEY_CERT_SIGN, CKA_TRUST_CRL_SIGN, CKA_TRUST_SERVER_AUTH,
+    CKA_TRUST_CLIENT_AUTH, CKA_TRUST_CODE_SIGNING, CKA_TRUST_EMAIL_PROTECTION,
+    CKA_TRUST_IPSEC_END_SYSTEM, CKA_TRUST_IPSEC_TUNNEL, CKA_TRUST_IPSEC_USER,
+    CKA_TRUST_TIME_STAMPING, CKA_TRUST_STEP_UP_APPROVED, CKA_CERT_SHA1_HASH,
+    CKA_CERT_MD5_HASH, CKA_NSS_DB
 };
 
-static int known_attributes_size = sizeof(known_attributes) /
-                                   sizeof(known_attributes[0]);
+static const int known_attributes_size = PR_ARRAY_SIZE(known_attributes);
+
+/*
+ * Note on use of sqlReadDB: Only one thread at a time may have an actual
+ * operation going on given sqlite3 * database. An operation is defined as
+ * the time from a sqlite3_prepare() until the sqlite3_finalize().
+ * Multiple sqlite3 * databases can be open and have simultaneous operations
+ * going. We use the sqlXactDB for all write operations. This database
+ * is only opened when we first create a transaction and closed when the
+ * transaction is complete. sqlReadDB is open when we first opened the database
+ * and is used for all read operation. It's use is protected by a monitor. This
+ * is because an operation can span the use of FindObjectsInit() through the
+ * call to FindObjectsFinal(). In the intermediate time it is possible to call
+ * other operations like NSC_GetAttributeValue */
+
+struct SDBPrivateStr {
+    char *sqlDBName;                /* invariant, path to this database */
+    sqlite3 *sqlXactDB;             /* access protected by dbMon, use protected
+                                    * by the transaction. Current transaction db*/
+    PRThread *sqlXactThread;        /* protected by dbMon,
+                                    * current transaction thread */
+    sqlite3 *sqlReadDB;             /* use protected by dbMon, value invariant */
+    PRIntervalTime lastUpdateTime;  /* last time the cache was updated */
+    PRIntervalTime updateInterval;  /* how long the cache can go before it
+                                    * must be updated again */
+    sdbDataType type;               /* invariant, database type */
+    char *table;                    /* invariant, SQL table which contains the db */
+    char *cacheTable;               /* invariant, SQL table cache of db */
+    PRMonitor *dbMon;               /* invariant, monitor to protect
+                                    * sqlXact* fields, and use of the sqlReadDB */
+    CK_ATTRIBUTE_TYPE *schemaAttrs; /* Attribute columns that exist in the table. */
+    unsigned int numSchemaAttrs;
+};
+
+typedef struct SDBPrivateStr SDBPrivate;
 
 /* Magic for an explicit NULL. NOTE: ideally this should be
  * out of band data. Since it's not completely out of band, pick
@@ -400,8 +401,20 @@ sdb_measureAccess(const char *directory)
     PRIntervalTime duration = PR_MillisecondsToInterval(33);
     const char *doesntExistName = "_dOeSnotExist_.db";
     char *temp, *tempStartOfFilename;
-    size_t maxTempLen, maxFileNameLen, directoryLength;
-
+    size_t maxTempLen, maxFileNameLen, directoryLength, tmpdirLength = 0;
+#ifdef SDB_MEASURE_USE_TEMP_DIR
+    /*
+     * on some OS's and Filesystems, creating a bunch of files and deleting
+     * them messes up the systems's caching, but if we create the files in
+     * a temp directory which we later delete, then the cache gets cleared
+     * up. This code uses several OS dependent calls, and it's not clear
+     * that temp directory use won't mess up other filesystems and OS caching,
+     * so if you need this for your OS, you can turn on the
+     * 'SDB_MEASURE_USE_TEMP_DIR' define in coreconf
+     */
+    const char template[] = "dbTemp.XXXXXX";
+    tmpdirLength = sizeof(template);
+#endif
     /* no directory, just return one */
     if (directory == NULL) {
         return 1;
@@ -412,24 +425,39 @@ sdb_measureAccess(const char *directory)
 
     directoryLength = strlen(directory);
 
-    maxTempLen = directoryLength + strlen(doesntExistName) + 1 /* potential additional separator char */
-                 + 11                                          /* max chars for 32 bit int plus potential sign */
-                 + 1;                                          /* zero terminator */
+    maxTempLen = directoryLength + 1       /* dirname + / */
+                 + tmpdirLength            /* tmpdirname includes / */
+                 + strlen(doesntExistName) /* filename base */
+                 + 11                      /* max chars for 32 bit int plus potential sign */
+                 + 1;                      /* zero terminator */
 
-    temp = PORT_Alloc(maxTempLen);
+    temp = PORT_ZAlloc(maxTempLen);
     if (!temp) {
         return 1;
     }
 
     /* We'll copy directory into temp just once, then ensure it ends
-     * with the directory separator, then remember the position after
-     * the separator, and calculate the number of remaining bytes. */
+     * with the directory separator. */
 
     strcpy(temp, directory);
     if (directory[directoryLength - 1] != PR_GetDirectorySeparator()) {
         temp[directoryLength++] = PR_GetDirectorySeparator();
     }
-    tempStartOfFilename = temp + directoryLength;
+
+#ifdef SDB_MEASURE_USE_TEMP_DIR
+    /* add the template for a temporary subdir, and create it */
+    strcat(temp, template);
+    if (!mkdtemp(temp)) {
+        PORT_Free(temp);
+        return 1;
+    }
+    /* and terminate that tmp subdir with a / */
+    strcat(temp, "/");
+#endif
+
+    /* Remember the position after the last separator, and calculate the
+     * number of remaining bytes. */
+    tempStartOfFilename = temp + directoryLength + tmpdirLength;
     maxFileNameLen = maxTempLen - directoryLength;
 
     /* measure number of Access operations that can be done in 33 milliseconds
@@ -453,6 +481,12 @@ sdb_measureAccess(const char *directory)
             break;
     }
 
+#ifdef SDB_MEASURE_USE_TEMP_DIR
+    /* turn temp back into our tmpdir path by removing doesntExistName, and
+     * remove the tmp dir */
+    *tempStartOfFilename = '\0';
+    (void)rmdir(temp);
+#endif
     PORT_Free(temp);
 
     /* always return 1 or greater */
@@ -858,9 +892,9 @@ sdb_FindObjectsFinal(SDB *sdb, SDBFind *sdbFind)
     return sdb_mapSQLError(sdb_p->type, sqlerr);
 }
 
-CK_RV
-sdb_GetAttributeValueNoLock(SDB *sdb, CK_OBJECT_HANDLE object_id,
-                            CK_ATTRIBUTE *template, CK_ULONG count)
+static CK_RV
+sdb_GetValidAttributeValueNoLock(SDB *sdb, CK_OBJECT_HANDLE object_id,
+                                 CK_ATTRIBUTE *template, CK_ULONG count)
 {
     SDBPrivate *sdb_p = sdb->private;
     sqlite3 *sqlDB = NULL;
@@ -992,19 +1026,109 @@ loser:
     return error;
 }
 
+/* NOTE: requires sdb_p->schemaAttrs to be sorted asc. */
+inline static PRBool
+sdb_attributeExists(SDB *sdb, CK_ATTRIBUTE_TYPE attr)
+{
+    SDBPrivate *sdb_p = sdb->private;
+    int first = 0;
+    int last = (int)sdb_p->numSchemaAttrs - 1;
+    while (last >= first) {
+        int mid = first + (last - first) / 2;
+        if (sdb_p->schemaAttrs[mid] == attr) {
+            return PR_TRUE;
+        }
+        if (attr > sdb_p->schemaAttrs[mid]) {
+            first = mid + 1;
+        } else {
+            last = mid - 1;
+        }
+    }
+
+    return PR_FALSE;
+}
+
 CK_RV
 sdb_GetAttributeValue(SDB *sdb, CK_OBJECT_HANDLE object_id,
                       CK_ATTRIBUTE *template, CK_ULONG count)
 {
-    CK_RV crv;
+    CK_RV crv = CKR_OK;
+    unsigned int tmplIdx;
+    unsigned int resIdx = 0;
+    unsigned int validCount = 0;
+    unsigned int i;
 
     if (count == 0) {
-        return CKR_OK;
+        return crv;
     }
 
-    LOCK_SQLITE()
-    crv = sdb_GetAttributeValueNoLock(sdb, object_id, template, count);
-    UNLOCK_SQLITE()
+    CK_ATTRIBUTE *validTemplate;
+    PRBool invalidExists = PR_FALSE;
+    for (tmplIdx = 0; tmplIdx < count; tmplIdx++) {
+        if (!sdb_attributeExists(sdb, template[tmplIdx].type)) {
+            template[tmplIdx].ulValueLen = -1;
+            crv = CKR_ATTRIBUTE_TYPE_INVALID;
+            invalidExists = PR_TRUE;
+            break;
+        }
+    }
+
+    if (!invalidExists) {
+        validTemplate = template;
+        validCount = count;
+    } else {
+        /* Create a new template containing only the valid subset of
+         * input |template|, and query with that. */
+        validCount = tmplIdx;
+        validTemplate = malloc(sizeof(CK_ATTRIBUTE) * count);
+        if (!validTemplate) {
+            return CKR_HOST_MEMORY;
+        }
+        /* Copy in what we already know is valid. */
+        for (i = 0; i < validCount; i++) {
+            validTemplate[i] = template[i];
+        }
+
+        /* tmplIdx was left at the index of the first invalid
+         * attribute, which has been handled. We only need to
+         * deal with the remainder. */
+        tmplIdx++;
+        for (; tmplIdx < count; tmplIdx++) {
+            if (sdb_attributeExists(sdb, template[tmplIdx].type)) {
+                validTemplate[validCount++] = template[tmplIdx];
+            } else {
+                template[tmplIdx].ulValueLen = -1;
+            }
+        }
+    }
+
+    if (validCount) {
+        LOCK_SQLITE()
+        CK_RV crv2 = sdb_GetValidAttributeValueNoLock(sdb, object_id, validTemplate, validCount);
+        UNLOCK_SQLITE()
+
+        /* If an invalid attribute was removed above, let
+         * the caller know. Any other error from the actual
+         * query should propogate. */
+        crv = (crv2 == CKR_OK) ? crv : crv2;
+    }
+
+    if (invalidExists) {
+        /* Copy out valid lengths. */
+        tmplIdx = 0;
+        for (resIdx = 0; resIdx < validCount; resIdx++) {
+            for (; tmplIdx < count; tmplIdx++) {
+                if (template[tmplIdx].type != validTemplate[resIdx].type) {
+                    continue;
+                }
+                template[tmplIdx].ulValueLen = validTemplate[resIdx].ulValueLen;
+                tmplIdx++;
+                break;
+            }
+        }
+        free(validTemplate);
+    }
+
     return crv;
 }
 
@@ -1115,7 +1239,7 @@ sdb_objectExists(SDB *sdb, CK_OBJECT_HANDLE candidate)
     CK_RV crv;
     CK_ATTRIBUTE template = { CKA_LABEL, NULL, 0 };
 
-    crv = sdb_GetAttributeValueNoLock(sdb, candidate, &template, 1);
+    crv = sdb_GetValidAttributeValueNoLock(sdb, candidate, &template, 1);
     if (crv == CKR_OBJECT_HANDLE_INVALID) {
         return PR_FALSE;
     }
@@ -1759,6 +1883,7 @@ sdb_Close(SDB *sdb)
     if (sdb_p->dbMon) {
         PR_DestroyMonitor(sdb_p->dbMon);
     }
+    free(sdb_p->schemaAttrs);
     free(sdb_p);
     free(sdb);
     return sdb_mapSQLError(type, sqlerr);
@@ -1796,6 +1921,18 @@ sdb_SetForkState(PRBool forked)
      * interface, we will need to set it and reset it from here */
 }
 
+static int
+sdb_attributeComparator(const void *a, const void *b)
+{
+    if (*(CK_ATTRIBUTE_TYPE *)a < *(CK_ATTRIBUTE_TYPE *)b) {
+        return -1;
+    }
+    if (*(CK_ATTRIBUTE_TYPE *)a > *(CK_ATTRIBUTE_TYPE *)b) {
+        return 1;
+    }
+    return 0;
+}
+
 /*
  * initialize a single database
  */
@@ -1809,6 +1946,7 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
     int i;
     char *initStr = NULL;
     char *newStr;
+    char *queryStr = NULL;
     int inTransaction = 0;
     SDB *sdb = NULL;
     SDBPrivate *sdb_p = NULL;
@@ -2062,7 +2200,85 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
     }
 
     sdb = (SDB *)malloc(sizeof(SDB));
+    if (!sdb) {
+        error = CKR_HOST_MEMORY;
+        goto loser;
+    }
     sdb_p = (SDBPrivate *)malloc(sizeof(SDBPrivate));
+    if (!sdb_p) {
+        error = CKR_HOST_MEMORY;
+        goto loser;
+    }
+
+    /* Cache the attributes that are held in the table, so we can later check
+     * that queried attributes actually exist. We don't assume the schema
+     * to be exactly |known_attributes|, as it may change over time. */
+    sdb_p->schemaAttrs = NULL;
+    if (!PORT_Strcmp("nssPublic", table) ||
+        !PORT_Strcmp("nssPrivate", table)) {
+        sqlite3_stmt *stmt = NULL;
+        int retry = 0;
+        unsigned int backedAttrs = 0;
+
+        /* Can't bind parameters to a PRAGMA. */
+        queryStr = sqlite3_mprintf("PRAGMA table_info(%s);", table);
+        if (queryStr == NULL) {
+            error = CKR_HOST_MEMORY;
+            goto loser;
+        }
+        sqlerr = sqlite3_prepare_v2(sqlDB, queryStr, -1, &stmt, NULL);
+        sqlite3_free(queryStr);
+        queryStr = NULL;
+        if (sqlerr != SQLITE_OK) {
+            goto loser;
+        }
+        unsigned int schemaAttrsCapacity = known_attributes_size;
+        sdb_p->schemaAttrs = malloc(schemaAttrsCapacity * sizeof(CK_ATTRIBUTE));
+        if (!sdb_p->schemaAttrs) {
+            error = CKR_HOST_MEMORY;
+            goto loser;
+        }
+        do {
+            sqlerr = sqlite3_step(stmt);
+            if (sqlerr == SQLITE_BUSY) {
+                PR_Sleep(SDB_BUSY_RETRY_TIME);
+            }
+            if (sqlerr == SQLITE_ROW) {
+                if (backedAttrs == schemaAttrsCapacity) {
+                    schemaAttrsCapacity += known_attributes_size;
+                    sdb_p->schemaAttrs = realloc(sdb_p->schemaAttrs,
+                                                 schemaAttrsCapacity * sizeof(CK_ATTRIBUTE));
+                    if (!sdb_p->schemaAttrs) {
+                        error = CKR_HOST_MEMORY;
+                        goto loser;
+                    }
+                }
+                /* Record the ULONG attribute value. */
+                char *val = (char *)sqlite3_column_text(stmt, 1);
+                if (val && val[0] == 'a') {
+                    CK_ATTRIBUTE_TYPE attr = strtoul(&val[1], NULL, 16);
+                    sdb_p->schemaAttrs[backedAttrs++] = attr;
+                }
+            }
+        } while (!sdb_done(sqlerr, &retry));
+        if (sqlerr != SQLITE_DONE) {
+            goto loser;
+        }
+        sqlerr = sqlite3_reset(stmt);
+        if (sqlerr != SQLITE_OK) {
+            goto loser;
+        }
+        sqlerr = sqlite3_finalize(stmt);
+        if (sqlerr != SQLITE_OK) {
+            goto loser;
+        }
+
+        sdb_p->numSchemaAttrs = backedAttrs;
+
+        /* Sort these once so we can shortcut invalid attribute searches. */
+        qsort(sdb_p->schemaAttrs, sdb_p->numSchemaAttrs,
+              sizeof(CK_ATTRIBUTE_TYPE), sdb_attributeComparator);
+    }
 
     /* invariant fields */
     sdb_p->sqlDBName = PORT_Strdup(dbname);
@@ -2123,6 +2339,9 @@ loser:
         free(sdb);
     }
     if (sdb_p) {
+        if (sdb_p->schemaAttrs) {
+            free(sdb_p->schemaAttrs);
+        }
         free(sdb_p);
     }
     if (sqlDB) {

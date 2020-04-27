@@ -276,6 +276,17 @@ typedef struct inheritanceStr inheritance;
 
 /************************************************************************/
 
+/* SSL Session Cache has a smaller set of functions to initialize than 
+ * ssl does. some ssl_functions can't be initialized before NSS has been
+ * initialized, and the cache may be configured before NSS is initialized
+ * so thus the special init function */
+static SECStatus
+ssl_InitSessionCache()
+{
+    /* currently only one function, which is itself idempotent */
+    return ssl_InitializePRErrorTable();
+}
+
 /* This is used to set locking times for the cache.  It is not used to set the
  * PRTime attributes of sessions, which are driven by ss->now(). */
 static PRUint32
@@ -1165,7 +1176,7 @@ ssl_ConfigServerSessionIDCacheInstanceWithOpt(cacheDesc *cache,
 {
     SECStatus rv;
 
-    rv = ssl_Init();
+    rv = ssl_InitSessionCache();
     if (rv != SECSuccess) {
         return rv;
     }
@@ -1341,7 +1352,7 @@ SSL_InheritMPServerSIDCacheInstance(cacheDesc *cache, const char *envString)
     int locks_initialized = 0;
     int locks_to_initialize = 0;
 #endif
-    SECStatus status = ssl_Init();
+    SECStatus status = ssl_InitSessionCache();
 
     if (status != SECSuccess) {
         return status;

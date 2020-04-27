@@ -1170,6 +1170,7 @@ _PK11_ContextSetAEADSimulation;
 PK11_AEADOp;
 PK11_AEADRawOp;
 PK11_GetObjectHandle;
+PK11_ReadRawAttributes;
 PK11_SymKeysToSameSlot;
 ;+    local:
 ;+       *;
