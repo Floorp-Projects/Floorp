@@ -389,6 +389,7 @@ a.hidden,
   font-size: 0.8em;
   opacity: 0;
   transition: opacity 700ms;
+  pointer-events: none;
 }
 
 .bar-count.animate {
