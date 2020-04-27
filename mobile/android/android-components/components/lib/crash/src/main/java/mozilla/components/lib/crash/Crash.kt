@@ -7,6 +7,7 @@ package mozilla.components.lib.crash
 import android.content.Intent
 import android.os.Bundle
 import java.io.Serializable
+import java.util.UUID
 
 // Intent extra used to store crash data under when passing crashes in Intent objects
 private const val INTENT_CRASH = "mozilla.components.lib.crash.CRASH"
@@ -18,6 +19,7 @@ private const val INTENT_EXCEPTION = "exception"
 private const val INTENT_BREADCRUMBS = "breadcrumbs"
 
 // Native code crash intent extras (Mirroring GeckoView values)
+private const val INTENT_UUID = "uuid"
 private const val INTENT_MINIDUMP_PATH = "minidumpPath"
 private const val INTENT_EXTRAS_PATH = "extrasPath"
 private const val INTENT_MINIDUMP_SUCCESS = "minidumpSuccess"
@@ -28,6 +30,11 @@ private const val INTENT_FATAL = "fatal"
  */
 sealed class Crash {
     /**
+     * Unique ID identifying this crash.
+     */
+    abstract val uuid: String
+
+    /**
      * A crash caused by an uncaught exception.
      *
      * @property throwable The [Throwable] that caused the crash.
@@ -35,17 +42,20 @@ sealed class Crash {
      */
     data class UncaughtExceptionCrash(
         val throwable: Throwable,
-        val breadcrumbs: ArrayList<Breadcrumb>
+        val breadcrumbs: ArrayList<Breadcrumb>,
+        override val uuid: String = UUID.randomUUID().toString()
     ) : Crash() {
         override fun toBundle() = Bundle().apply {
+            putString(INTENT_UUID, uuid)
             putSerializable(INTENT_EXCEPTION, throwable as Serializable)
             putParcelableArrayList(INTENT_BREADCRUMBS, breadcrumbs)
         }
 
         companion object {
             internal fun fromBundle(bundle: Bundle) = UncaughtExceptionCrash(
-                bundle.getSerializable(INTENT_EXCEPTION) as Throwable,
-                bundle.getParcelableArrayList(INTENT_BREADCRUMBS) ?: arrayListOf()
+                uuid = bundle.getString(INTENT_UUID) as String,
+                throwable = bundle.getSerializable(INTENT_EXCEPTION) as Throwable,
+                breadcrumbs = bundle.getParcelableArrayList(INTENT_BREADCRUMBS) ?: arrayListOf()
             )
         }
     }
@@ -69,9 +79,11 @@ sealed class Crash {
         val minidumpSuccess: Boolean,
         val extrasPath: String?,
         val isFatal: Boolean,
-        val breadcrumbs: ArrayList<Breadcrumb>
+        val breadcrumbs: ArrayList<Breadcrumb>,
+        override val uuid: String = UUID.randomUUID().toString()
     ) : Crash() {
         override fun toBundle() = Bundle().apply {
+            putString(INTENT_UUID, uuid)
             putString(INTENT_MINIDUMP_PATH, minidumpPath)
             putBoolean(INTENT_MINIDUMP_SUCCESS, minidumpSuccess)
             putString(INTENT_EXTRAS_PATH, extrasPath)
@@ -81,11 +93,12 @@ sealed class Crash {
 
         companion object {
             internal fun fromBundle(bundle: Bundle) = NativeCodeCrash(
-                bundle.getString(INTENT_MINIDUMP_PATH, null),
-                bundle.getBoolean(INTENT_MINIDUMP_SUCCESS, false),
-                bundle.getString(INTENT_EXTRAS_PATH, null),
-                bundle.getBoolean(INTENT_FATAL, false),
-                bundle.getParcelableArrayList(INTENT_BREADCRUMBS) ?: arrayListOf()
+                uuid = bundle.getString(INTENT_UUID) ?: UUID.randomUUID().toString(),
+                minidumpPath = bundle.getString(INTENT_MINIDUMP_PATH, null),
+                minidumpSuccess = bundle.getBoolean(INTENT_MINIDUMP_SUCCESS, false),
+                extrasPath = bundle.getString(INTENT_EXTRAS_PATH, null),
+                isFatal = bundle.getBoolean(INTENT_FATAL, false),
+                breadcrumbs = bundle.getParcelableArrayList(INTENT_BREADCRUMBS) ?: arrayListOf()
             )
         }
     }
