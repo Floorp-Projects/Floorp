@@ -207,21 +207,6 @@ interface nsISelectionController : nsISelectionDisplay
    const short MOVE_UP = 2;
    const short MOVE_DOWN = 3;
 
-   /**
-    * CharacterExtendForDelete will extend the selection one character cell
-    * forward in the document.
-    * this method is used internally for handling del key.
-    */
-    [noscript] void characterExtendForDelete();
-
-   /**
-    * CharacterExtendForBackspace will extend the selection one character cell
-    * backward in the document.
-    * this method is used internally for handling backspace key only when we're
-    * after UTF-16 surrogates.
-    */
-    [noscript] void characterExtendForBackspace();
-
    /** WordMove will move the selection one word forward/backward in the document.
    *  this will also have the effect of collapsing the selection if the aExtend = PR_FALSE
    *  the "point" of selection that is extended is considered the "focus" point.
@@ -231,12 +216,6 @@ interface nsISelectionController : nsISelectionDisplay
    */
 
     void wordMove(in boolean forward, in boolean extend);
-
-   /** wordExtendForDelete will extend the selection one word forward/backward in the document.
-   *  this method is used internally for handling ctrl[option]-backspace and ctrl[option]-del.
-   *  @param aForward forward or backward if PR_FALSE
-   */
-    [noscript] void wordExtendForDelete(in boolean forward);
 
     /** LineMove will move the selection one line forward/backward in the document.
    *  this will also have the effect of collapsing the selection if the aExtend = PR_FALSE
