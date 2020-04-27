@@ -470,6 +470,10 @@ def get_raptor_test_list(args, oskey):
             # when using live sites we want to turn off playback
             LOG.info("using live sites so turning playback off!")
             next_test['playback'] = None
+            # Only for raptor-youtube-playback tests until they are removed
+            # in favor of the browsertime variant
+            if "raptor-youtube-playback" in next_test['name']:
+                next_test['name'] = next_test['name'] + "-live"
             # allow a slightly higher page timeout due to remote page loads
             next_test['page_timeout'] = int(
                 next_test['page_timeout']) * LIVE_SITE_TIMEOUT_MULTIPLIER
