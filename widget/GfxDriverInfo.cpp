@@ -574,6 +574,9 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_RANGE(0x7310, 0x731f);
       APPEND_RANGE(0x9830, 0x986f);
       APPEND_RANGE(0x9900, 0x99ff);
+      // Raven
+      APPEND_DEVICE(0x15dd);
+      APPEND_DEVICE(0x15d8);
       break;
     // This should never happen, but we get a warning if we don't handle this.
     case DeviceFamily::Max:
