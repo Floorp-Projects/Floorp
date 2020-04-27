@@ -895,7 +895,6 @@ const JSClass WasmModuleObject::class_ = {
     "WebAssembly.Module",
     JSCLASS_DELAY_METADATA_BUILDER |
         JSCLASS_HAS_RESERVED_SLOTS(WasmModuleObject::RESERVED_SLOTS) |
-        JSCLASS_HAS_CACHED_PROTO(JSProto_WasmModule) |
         JSCLASS_FOREGROUND_FINALIZE,
     &WasmModuleObject::classOps_,
     &WasmModuleObject::classSpec_,
@@ -1283,7 +1282,7 @@ bool WasmModuleObject::customSections(JSContext* cx, unsigned argc, Value* vp) {
 WasmModuleObject* WasmModuleObject::create(JSContext* cx, const Module& module,
                                            HandleObject proto) {
   AutoSetNewObjectMetadata metadata(cx);
-  auto* obj = NewObjectWithClassProto<WasmModuleObject>(cx, proto);
+  auto* obj = NewObjectWithGivenProto<WasmModuleObject>(cx, proto);
   if (!obj) {
     return nullptr;
   }
@@ -1406,12 +1405,8 @@ bool WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, callArgs, JSProto_WasmModule,
-                                          &proto)) {
-    return false;
-  }
-
+  RootedObject proto(
+      cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
   RootedObject moduleObj(cx, WasmModuleObject::create(cx, *module, proto));
   if (!moduleObj) {
     return false;
@@ -1449,7 +1444,6 @@ const JSClass WasmInstanceObject::class_ = {
     "WebAssembly.Instance",
     JSCLASS_DELAY_METADATA_BUILDER |
         JSCLASS_HAS_RESERVED_SLOTS(WasmInstanceObject::RESERVED_SLOTS) |
-        JSCLASS_HAS_CACHED_PROTO(JSProto_WasmInstance) |
         JSCLASS_FOREGROUND_FINALIZE,
     &WasmInstanceObject::classOps_,
     &WasmInstanceObject::classSpec_,
@@ -1581,7 +1575,7 @@ WasmInstanceObject* WasmInstanceObject::create(
     // slots have been initialized. We must also create the metadata before
     // calling Instance::init as that may allocate new objects.
     AutoSetNewObjectMetadata metadata(cx);
-    obj = NewObjectWithClassProto<WasmInstanceObject>(cx, proto);
+    obj = NewObjectWithGivenProto<WasmInstanceObject>(cx, proto);
     if (!obj) {
       return nullptr;
     }
@@ -1667,11 +1661,8 @@ bool WasmInstanceObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedObject instanceProto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_WasmInstance,
-                                          &instanceProto)) {
-    return false;
-  }
+  RootedObject instanceProto(
+      cx, &cx->global()->getPrototype(JSProto_WasmInstance).toObject());
 
   Rooted<ImportValues> imports(cx);
   if (!GetImports(cx, *module, importObj, imports.address())) {
@@ -1908,7 +1899,6 @@ const JSClass WasmMemoryObject::class_ = {
     "WebAssembly.Memory",
     JSCLASS_DELAY_METADATA_BUILDER |
         JSCLASS_HAS_RESERVED_SLOTS(WasmMemoryObject::RESERVED_SLOTS) |
-        JSCLASS_HAS_CACHED_PROTO(JSProto_WasmMemory) |
         JSCLASS_FOREGROUND_FINALIZE,
     &WasmMemoryObject::classOps_, &WasmMemoryObject::classSpec_};
 
@@ -1939,7 +1929,7 @@ WasmMemoryObject* WasmMemoryObject::create(
     JSContext* cx, HandleArrayBufferObjectMaybeShared buffer,
     HandleObject proto) {
   AutoSetNewObjectMetadata metadata(cx);
-  auto* obj = NewObjectWithClassProto<WasmMemoryObject>(cx, proto);
+  auto* obj = NewObjectWithGivenProto<WasmMemoryObject>(cx, proto);
   if (!obj) {
     return nullptr;
   }
@@ -1981,12 +1971,8 @@ bool WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_WasmMemory,
-                                          &proto)) {
-    return false;
-  }
-
+  RootedObject proto(
+      cx, &cx->global()->getPrototype(JSProto_WasmMemory).toObject());
   RootedWasmMemoryObject memoryObj(cx,
                                    WasmMemoryObject::create(cx, buffer, proto));
   if (!memoryObj) {
@@ -2282,7 +2268,6 @@ const JSClass WasmTableObject::class_ = {
     "WebAssembly.Table",
     JSCLASS_DELAY_METADATA_BUILDER |
         JSCLASS_HAS_RESERVED_SLOTS(WasmTableObject::RESERVED_SLOTS) |
-        JSCLASS_HAS_CACHED_PROTO(JSProto_WasmTable) |
         JSCLASS_FOREGROUND_FINALIZE,
     &WasmTableObject::classOps_, &WasmTableObject::classSpec_};
 
@@ -2324,11 +2309,13 @@ void WasmTableObject::trace(JSTracer* trc, JSObject* obj) {
 
 /* static */
 WasmTableObject* WasmTableObject::create(JSContext* cx, const Limits& limits,
-                                         TableKind tableKind,
-                                         HandleObject proto) {
+                                         TableKind tableKind) {
+  RootedObject proto(cx,
+                     &cx->global()->getPrototype(JSProto_WasmTable).toObject());
+
   AutoSetNewObjectMetadata metadata(cx);
   RootedWasmTableObject obj(
-      cx, NewObjectWithClassProto<WasmTableObject>(cx, proto));
+      cx, NewObjectWithGivenProto<WasmTableObject>(cx, proto));
   if (!obj) {
     return nullptr;
   }
@@ -2426,14 +2413,8 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_WasmTable,
-                                          &proto)) {
-    return false;
-  }
-
-  RootedWasmTableObject table(
-      cx, WasmTableObject::create(cx, limits, tableKind, proto));
+  RootedWasmTableObject table(cx,
+                              WasmTableObject::create(cx, limits, tableKind));
   if (!table) {
     return false;
   }
@@ -2675,7 +2656,6 @@ const JSClassOps WasmGlobalObject::classOps_ = {
 const JSClass WasmGlobalObject::class_ = {
     "WebAssembly.Global",
     JSCLASS_HAS_RESERVED_SLOTS(WasmGlobalObject::RESERVED_SLOTS) |
-        JSCLASS_HAS_CACHED_PROTO(JSProto_WasmGlobal) |
         JSCLASS_BACKGROUND_FINALIZE,
     &WasmGlobalObject::classOps_, &WasmGlobalObject::classSpec_};
 
@@ -2740,10 +2720,13 @@ void WasmGlobalObject::finalize(JSFreeOp* fop, JSObject* obj) {
 
 /* static */
 WasmGlobalObject* WasmGlobalObject::create(JSContext* cx, HandleVal hval,
-                                           bool isMutable, HandleObject proto) {
+                                           bool isMutable) {
+  RootedObject proto(
+      cx, &cx->global()->getPrototype(JSProto_WasmGlobal).toObject());
+
   AutoSetNewObjectMetadata metadata(cx);
   RootedWasmGlobalObject obj(
-      cx, NewObjectWithClassProto<WasmGlobalObject>(cx, proto));
+      cx, NewObjectWithGivenProto<WasmGlobalObject>(cx, proto));
   if (!obj) {
     return nullptr;
   }
@@ -2923,14 +2906,7 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_WasmGlobal,
-                                          &proto)) {
-    return false;
-  }
-
-  WasmGlobalObject* global =
-      WasmGlobalObject::create(cx, globalVal, isMutable, proto);
+  WasmGlobalObject* global = WasmGlobalObject::create(cx, globalVal, isMutable);
   if (!global) {
     return false;
   }
