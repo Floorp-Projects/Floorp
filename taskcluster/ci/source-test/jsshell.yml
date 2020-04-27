@@ -37,6 +37,9 @@ job-defaults:
             - target.jsshell.zip
         toolchain:
             - linux64-custom-v8
+    optimization:
+        push-interval-10:
+            - linux
 
 bench-ares6:
     description: Ares6 JavaScript shell benchmark suite
