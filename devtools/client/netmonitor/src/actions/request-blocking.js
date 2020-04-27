@@ -12,6 +12,9 @@ const {
   TOGGLE_BLOCKED_URL,
   UPDATE_BLOCKED_URL,
   REMOVE_BLOCKED_URL,
+  REMOVE_ALL_BLOCKED_URLS,
+  ENABLE_ALL_BLOCKED_URLS,
+  DISABLE_ALL_BLOCKED_URLS,
   DISABLE_MATCHING_URLS,
   OPEN_ACTION_BAR,
   SELECT_ACTION_BAR_TAB,
@@ -44,6 +47,18 @@ function removeBlockedUrl(url) {
     type: REMOVE_BLOCKED_URL,
     url,
   };
+}
+
+function removeAllBlockedUrls() {
+  return { type: REMOVE_ALL_BLOCKED_URLS };
+}
+
+function enableAllBlockedUrls() {
+  return { type: ENABLE_ALL_BLOCKED_URLS };
+}
+
+function disableAllBlockedUrls() {
+  return { type: DISABLE_ALL_BLOCKED_URLS };
 }
 
 function addBlockedUrl(url) {
@@ -109,6 +124,9 @@ module.exports = {
   toggleBlockingEnabled,
   toggleBlockedUrl,
   removeBlockedUrl,
+  removeAllBlockedUrls,
+  enableAllBlockedUrls,
+  disableAllBlockedUrls,
   updateBlockedUrl,
   openRequestBlockingAndAddUrl,
   openRequestBlockingAndDisableUrls,

@@ -23,6 +23,8 @@ const Actions = require("devtools/client/netmonitor/src/actions/index");
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const { PANELS } = require("devtools/client/netmonitor/src/constants");
 
+const RequestBlockingContextMenu = require("devtools/client/netmonitor/src/widgets/RequestBlockingContextMenu");
+
 const ENABLE_BLOCKING_LABEL = L10N.getStr(
   "netmonitor.actionbar.enableBlocking"
 );
@@ -41,6 +43,9 @@ class RequestBlockingPanel extends Component {
       toggleBlockingEnabled: PropTypes.func.isRequired,
       toggleBlockedUrl: PropTypes.func.isRequired,
       updateBlockedUrl: PropTypes.func.isRequired,
+      removeAllBlockedUrls: PropTypes.func.isRequired,
+      disableAllBlockedUrls: PropTypes.func.isRequired,
+      enableAllBlockedUrls: PropTypes.func.isRequired,
       blockingEnabled: PropTypes.bool.isRequired,
     };
   }
@@ -183,7 +188,13 @@ class RequestBlockingPanel extends Component {
   }
 
   renderBlockedList() {
-    const { blockedUrls, blockingEnabled } = this.props;
+    const {
+      blockedUrls,
+      blockingEnabled,
+      removeAllBlockedUrls,
+      disableAllBlockedUrls,
+      enableAllBlockedUrls,
+    } = this.props;
 
     if (blockedUrls.length === 0) {
       return null;
@@ -199,6 +210,16 @@ class RequestBlockingPanel extends Component {
       {
         className: "request-blocking-contents",
         ref: "contents",
+        onContextMenu: event => {
+          if (!this.contextMenu) {
+            this.contextMenu = new RequestBlockingContextMenu({
+              removeAllBlockedUrls,
+              disableAllBlockedUrls,
+              enableAllBlockedUrls,
+            });
+          }
+          this.contextMenu.open(event);
+        },
       },
       ul(
         {
@@ -270,6 +291,9 @@ module.exports = connect(
     addBlockedUrl: url => dispatch(Actions.addBlockedUrl(url)),
     removeBlockedUrl: url => dispatch(Actions.removeBlockedUrl(url)),
     toggleBlockedUrl: url => dispatch(Actions.toggleBlockedUrl(url)),
+    removeAllBlockedUrls: () => dispatch(Actions.removeAllBlockedUrls()),
+    enableAllBlockedUrls: () => dispatch(Actions.enableAllBlockedUrls()),
+    disableAllBlockedUrls: () => dispatch(Actions.disableAllBlockedUrls()),
     updateBlockedUrl: (oldUrl, newUrl) =>
       dispatch(Actions.updateBlockedUrl(oldUrl, newUrl)),
   })
