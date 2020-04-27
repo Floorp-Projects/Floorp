@@ -190,6 +190,7 @@ class Nursery {
     CellAlignedByte cell;
   };
 
+  using BufferRelocationOverlay = void*;
   using BufferSet = HashSet<void*, PointerHasher<void*>, SystemAllocPolicy>;
 
   explicit Nursery(gc::GCRuntime* gc);
@@ -332,7 +333,7 @@ class Nursery {
       js::gc::Cell** ref);
 
   // Forward a slots/elements pointer stored in an Ion frame.
-  void forwardBufferPointer(HeapSlot** pSlotsElems);
+  void forwardBufferPointer(uintptr_t* pSlotsElems);
 
   inline void maybeSetForwardingPointer(JSTracer* trc, void* oldData,
                                         void* newData, bool direct);
