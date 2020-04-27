@@ -21,6 +21,8 @@
 #include "txTextHandler.h"
 #include "txXSLTNumber.h"
 
+using mozilla::UniquePtr;
+
 nsresult txApplyDefaultElementTemplate::execute(txExecutionState& aEs) {
   txExecutionState::TemplateRule* rule = aEs.getCurrentTemplateRule();
   txExpandedName mode(rule->mModeNsId, rule->mModeLocalName);

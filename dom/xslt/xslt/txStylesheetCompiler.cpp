@@ -310,7 +310,7 @@ nsresult txStylesheetCompiler::endElement() {
 
   if (!--mElementContext->mDepth) {
     // this will delete the old object
-    mElementContext = static_cast<txElementContext*>(popObject());
+    mElementContext = WrapUnique(static_cast<txElementContext*>(popObject()));
   }
 
   return NS_OK;
@@ -421,7 +421,7 @@ nsresult txStylesheetCompiler::ensureNewElementContext() {
   nsresult rv = pushObject(mElementContext.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mElementContext.release();
+  Unused << mElementContext.release();
   mElementContext = std::move(context);
 
   return NS_OK;
@@ -509,7 +509,7 @@ nsresult txStylesheetCompilerState::init(const nsAString& aStylesheetURI,
     mIsTopCompiler = true;
   }
 
-  mElementContext = new txElementContext(aStylesheetURI);
+  mElementContext = MakeUnique<txElementContext>(aStylesheetURI);
   NS_ENSURE_TRUE(mElementContext->mMappings, NS_ERROR_OUT_OF_MEMORY);
 
   // Push the "old" txElementContext
@@ -560,15 +560,15 @@ nsresult txStylesheetCompilerState::pushChooseGotoList() {
   nsresult rv = pushObject(mChooseGotoList.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mChooseGotoList.release();
-  mChooseGotoList = new txList;
+  Unused << mChooseGotoList.release();
+  mChooseGotoList = MakeUnique<txList>();
 
   return NS_OK;
 }
 
 void txStylesheetCompilerState::popChooseGotoList() {
   // this will delete the old value
-  mChooseGotoList = static_cast<txList*>(popObject());
+  mChooseGotoList = WrapUnique(static_cast<txList*>(popObject()));
 }
 
 nsresult txStylesheetCompilerState::pushObject(txObject* aObject) {

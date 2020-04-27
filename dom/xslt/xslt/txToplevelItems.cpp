@@ -11,6 +11,8 @@
 #include "txStylesheet.h"
 #include "txXSLTPatterns.h"
 
+using mozilla::UniquePtr;
+
 TX_IMPL_GETTYPE(txAttributeSetItem, txToplevelItem::attributeSet)
 TX_IMPL_GETTYPE(txImportItem, txToplevelItem::import)
 TX_IMPL_GETTYPE(txOutputItem, txToplevelItem::output)

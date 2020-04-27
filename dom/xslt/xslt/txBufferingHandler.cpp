@@ -5,6 +5,8 @@
 
 #include "txBufferingHandler.h"
 
+using mozilla::MakeUnique;
+
 class txOutputTransaction {
  public:
   enum txTransactionType {
@@ -149,7 +151,7 @@ class txAttributeAtomTransaction : public txOutputTransaction {
 
 txBufferingHandler::txBufferingHandler() : mCanAddAttribute(false) {
   MOZ_COUNT_CTOR(txBufferingHandler);
-  mBuffer = new txResultBuffer();
+  mBuffer = MakeUnique<txResultBuffer>();
 }
 
 txBufferingHandler::~txBufferingHandler() {

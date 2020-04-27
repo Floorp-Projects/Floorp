@@ -484,7 +484,7 @@ nsresult txMozillaXMLOutput::startElementInternal(nsAtom* aPrefix,
   RefPtr<NodeInfo> ni = mNodeInfoManager->GetNodeInfo(
       aLocalName, aPrefix, aNsID, nsINode::ELEMENT_NODE);
 
-  NS_NewElement(getter_AddRefs(mOpenedElement), ni.release(),
+  NS_NewElement(getter_AddRefs(mOpenedElement), ni.forget(),
                 mCreatingNewDocument ? FROM_PARSER_XSLT : FROM_PARSER_FRAGMENT);
 
   // Set up the element and adjust state
@@ -856,7 +856,7 @@ nsresult txMozillaXMLOutput::createHTMLElement(nsAtom* aName,
 
   nsCOMPtr<Element> el;
   nsresult rv = NS_NewHTMLElement(
-      getter_AddRefs(el), ni.release(),
+      getter_AddRefs(el), ni.forget(),
       mCreatingNewDocument ? FROM_PARSER_XSLT : FROM_PARSER_FRAGMENT);
   el.forget(aResult);
   return rv;

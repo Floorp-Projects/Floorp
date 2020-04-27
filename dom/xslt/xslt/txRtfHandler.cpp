@@ -7,7 +7,8 @@
 
 #include <utility>
 
-txResultTreeFragment::txResultTreeFragment(UniquePtr<txResultBuffer>&& aBuffer)
+txResultTreeFragment::txResultTreeFragment(
+    mozilla::UniquePtr<txResultBuffer>&& aBuffer)
     : txAExprResult(nullptr), mBuffer(std::move(aBuffer)) {}
 
 short txResultTreeFragment::getResultType() { return RESULT_TREE_FRAGMENT; }

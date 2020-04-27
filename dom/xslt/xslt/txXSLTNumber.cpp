@@ -17,6 +17,9 @@
 
 #include <algorithm>
 
+using mozilla::MakeUnique;
+using mozilla::UniquePtr;
+
 nsresult txXSLTNumber::createNumber(Expr* aValueExpr, txPattern* aCountPattern,
                                     txPattern* aFromPattern, LevelType aLevel,
                                     Expr* aGroupSize, Expr* aGroupSeparator,
@@ -147,7 +150,7 @@ nsresult txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
       }
     }
     MOZ_ASSERT(nodeTest);
-    newCountPattern = new txStepPattern(nodeTest, false);
+    newCountPattern = MakeUnique<txStepPattern>(nodeTest, false);
     countPattern = newCountPattern.get();
   }
 
