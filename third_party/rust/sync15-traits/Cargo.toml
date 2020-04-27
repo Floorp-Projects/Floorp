@@ -16,3 +16,5 @@ log = "0.4"
 ffi-support = "0.4"
 url = "2.1"
 failure = "0.1.6"
+
+interrupt-support = { path = "../interrupt" }
