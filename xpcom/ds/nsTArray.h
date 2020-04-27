@@ -1623,12 +1623,11 @@ class nsTArray_Impl
   // A variation on the ReplaceElementsAt method defined above.
   template <class Item>
   mozilla::NotNull<elem_type*> ReplaceElementAt(index_type aIndex,
-                                                const Item& aItem) {
-    // This can never fail as the oldCount and newCount are the same.
-    // XXX(Bug 1631391) Still, we might better use a different implementation,
-    // which better exploits that the old and new count are the same.
-    return mozilla::WrapNotNullUnchecked(
-        ReplaceElementsAtInternal<InfallibleAlloc>(aIndex, 1, &aItem, 1));
+                                                Item&& aItem) {
+    elem_type* const elem = &ElementAt(aIndex);
+    elem_traits::Destruct(elem);
+    elem_traits::Construct(elem, std::forward<Item>(aItem));
+    return mozilla::WrapNotNullUnchecked(elem);
   }
 
   // InsertElementsAt is ReplaceElementsAt with 0 elements to replace.
