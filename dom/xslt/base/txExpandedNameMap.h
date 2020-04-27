@@ -6,7 +6,7 @@
 #ifndef TRANSFRMX_EXPANDEDNAMEMAP_H
 #define TRANSFRMX_EXPANDEDNAMEMAP_H
 
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsError.h"
 #include "txExpandedName.h"
 #include "nsTArray.h"

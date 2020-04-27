@@ -6,12 +6,12 @@
 #ifndef mozilla_dom_XPathExpression_h
 #define mozilla_dom_XPathExpression_h
 
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIWeakReferenceUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "mozilla/dom/XPathExpressionBinding.h"
+#include "mozilla/UniquePtr.h"
 
 class Expr;
 
