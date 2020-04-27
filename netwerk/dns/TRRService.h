@@ -45,7 +45,7 @@ class TRRService : public nsIObserver,
   bool SkipTRRWhenParentalControlEnabled() {
     return mSkipTRRWhenParentalControlEnabled;
   }
-  nsresult GetURI(nsCString& result);
+  nsresult GetURI(nsACString& result);
   nsresult GetCredentials(nsCString& result);
   uint32_t GetRequestTimeout();
 

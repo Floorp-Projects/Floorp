@@ -85,6 +85,7 @@ nsresult TRRService::Init() {
     prefBranch->AddObserver(TRR_PREF_PREFIX, this, true);
     prefBranch->AddObserver(kDisableIpv6Pref, this, true);
     prefBranch->AddObserver(kPrefSkipTRRParentalControl, this, true);
+    prefBranch->AddObserver(kRolloutURIPref, this, true);
   }
   nsCOMPtr<nsICaptivePortalService> captivePortalService =
       do_GetService(NS_CAPTIVEPORTAL_CID);
@@ -242,6 +243,11 @@ bool TRRService::MaybeSetPrivateURI(const nsACString& aURI) {
   // Clear the cache because we changed the URI
   if (clearCache) {
     ClearEntireCache();
+  }
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(nullptr, NS_NETWORK_TRR_URI_CHANGED_TOPIC, nullptr);
   }
   return true;
 }
@@ -442,7 +448,7 @@ void TRRService::ClearEntireCache() {
   dns->ClearCache(true);
 }
 
-nsresult TRRService::GetURI(nsCString& result) {
+nsresult TRRService::GetURI(nsACString& result) {
   MutexAutoLock lock(mLock);
   result = mPrivateURI;
   return NS_OK;
