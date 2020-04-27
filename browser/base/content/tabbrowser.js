@@ -2441,8 +2441,13 @@
         delete aTab._findBar;
       }
 
-      // Remove stale loading attributes.
-      let attributesToRemove = ["busy", "progress", "pendingicon"];
+      // Remove potentially stale attributes.
+      let attributesToRemove = [
+        "busy",
+        "pendingicon",
+        "progress",
+        "soundplaying",
+      ];
       let removedAttributes = [];
       for (let attr of attributesToRemove) {
         if (aTab.hasAttribute(attr)) {
