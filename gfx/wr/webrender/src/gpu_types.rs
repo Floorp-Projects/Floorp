@@ -236,6 +236,8 @@ impl ResolveInstanceData {
 }
 
 /// Vertex format for picture cache composite shader.
+/// When editing the members, update desc::COMPOSITE
+/// so its list of instance_attributes matches:
 #[derive(Debug, Clone)]
 #[repr(C)]
 pub struct CompositeInstance {
@@ -277,6 +279,27 @@ impl CompositeInstance {
             yuv_rescale: 0.0,
             texture_layers: [layer, 0.0, 0.0],
             uv_rects: [TexelRect::invalid(); 3],
+        }
+    }
+
+    pub fn new_rgb(
+        rect: DeviceRect,
+        clip_rect: DeviceRect,
+        color: PremultipliedColorF,
+        layer: f32,
+        z_id: ZBufferId,
+        uv_rect: TexelRect,
+    ) -> Self {
+        CompositeInstance {
+            rect,
+            clip_rect,
+            color,
+            z_id: z_id.0 as f32,
+            yuv_color_space: 0.0,
+            yuv_format: 0.0,
+            yuv_rescale: 0.0,
+            texture_layers: [layer, 0.0, 0.0],
+            uv_rects: [uv_rect, uv_rect, TexelRect::invalid()],
         }
     }
 
