@@ -322,6 +322,7 @@ You can set this by specifying --test-url URL
             'geckoview-junit': 'mochitest',
             'reftest-qr': 'reftest',
             'crashtest': 'reftest',
+            'crashtest-qr': 'reftest',
             'reftest-debug': 'reftest',
             'crashtest-debug': 'reftest',
         }

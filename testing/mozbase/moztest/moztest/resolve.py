@@ -52,6 +52,14 @@ TEST_SUITES = {
         'task_regex': ['crashtest($|.*(-1|[^0-9])$)',
                        'test-verify($|.*(-1|[^0-9])$)'],
     },
+    'crashtest-qr': {
+        'aliases': ('c', 'rc'),
+        'build_flavor': 'crashtest',
+        'mach_command': 'crashtest',
+        'kwargs': {'test_file': None},
+        'task_regex': ['crashtest-qr($|.*(-1|[^0-9])$)',
+                       'test-verify($|.*(-1|[^0-9])$)'],
+    },
     'firefox-ui-functional': {
         'aliases': ('fxfn',),
         'mach_command': 'firefox-ui-functional',

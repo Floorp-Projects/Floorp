@@ -1264,6 +1264,7 @@ CHUNK_SUITES_BLACKLIST = (
     'awsy',
     'cppunittest',
     'crashtest',
+    'crashtest-qr',
     'firefox-ui-functional-local',
     'firefox-ui-functional-remote',
     'geckoview-junit',

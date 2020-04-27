@@ -21,6 +21,7 @@ MOZHARNESS_SCRIPTS = {
         ],
         'xfail': [
             'cppunittest',
+            'crashtest-qr',
             'gtest',
             'geckoview-junit',
             'jittest',
