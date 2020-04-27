@@ -599,17 +599,16 @@ set_define('WASM_PRIVATE_REFTYPES', depends_if('--enable-wasm-private-reftypes')
 # Do not remove until Cranelift supports multi-value.
 # =====================================================
 
-@depends(milestone.is_nightly)
-def default_wasm_multi_value(is_nightly):
-    return is_nightly
+js_option('--disable-wasm-multi-value',
+          help='Disable WebAssembly multi-value blocks and function calls')
 
-js_option('--enable-wasm-multi-value',
-          default=default_wasm_multi_value,
-          help='{Enable|Disable} support for the experimental WebAssembly '
-               'multi-value proposal')
+@depends('--disable-wasm-multi-value')
+def enable_wasm_multi_value(value):
+    if value:
+        return True
 
-set_config('ENABLE_WASM_MULTI_VALUE', depends_if('--enable-wasm-multi-value')(lambda x: True))
-set_define('ENABLE_WASM_MULTI_VALUE', depends_if('--enable-wasm-multi-value')(lambda x: True))
+set_config('ENABLE_WASM_MULTI_VALUE', enable_wasm_multi_value)
+set_define('ENABLE_WASM_MULTI_VALUE', enable_wasm_multi_value)
 
 
 # Support for WebAssembly shared memory and atomics.
