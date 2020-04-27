@@ -13,7 +13,7 @@
     android:gravity="center_vertical"
     android:paddingStart="16dp"
     android:layout_marginBottom="8dp"
-    android:paddingEnd="?android:attr/scrollbarSize">
+    android:paddingEnd="16dp">
 
     <LinearLayout
         android:id="@android:id/widget_frame"
