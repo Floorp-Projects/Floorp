@@ -494,6 +494,8 @@ function stripAnyPrefix(str) {
  *        Whether to trim the trailing slash.
  * @param {boolean} options.trimEmptyQuery
  *        Whether to trim a trailing `?`.
+ * @param {boolean} options.trimEmptyHash
+ *        Whether to trim a trailing `#`.
  * @returns {array} [modified, prefix, suffix]
  *          modified: {string} The modified spec.
  *          prefix: {string} The parts stripped from the prefix, if any.
@@ -513,13 +515,17 @@ function stripPrefixAndTrim(spec, options = {}) {
     spec = spec.slice(4);
     prefix += "www.";
   }
-  if (options.trimSlash && spec.endsWith("/")) {
+  if (options.trimEmptyHash && spec.endsWith("#")) {
     spec = spec.slice(0, -1);
-    suffix += "/";
+    suffix = "#" + suffix;
   }
   if (options.trimEmptyQuery && spec.endsWith("?")) {
     spec = spec.slice(0, -1);
-    suffix += "?";
+    suffix = "?" + suffix;
+  }
+  if (options.trimSlash && spec.endsWith("/")) {
+    spec = spec.slice(0, -1);
+    suffix = "/" + suffix;
   }
   return [spec, prefix, suffix];
 }
@@ -558,8 +564,9 @@ function makeKeyForMatch(match) {
       stripHttp: true,
       stripHttps: true,
       stripWww: true,
-      trimEmptyQuery: true,
       trimSlash: true,
+      trimEmptyQuery: true,
+      trimEmptyHash: true,
     });
     return [key, prefix, null];
   }
