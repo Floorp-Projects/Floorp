@@ -317,6 +317,10 @@ void NrIceCtx::DestroyStream(const std::string& id) {
     streams_.erase(it);
     preexisting_stream->Close();
   }
+
+  if (streams_.empty()) {
+    SetGatheringState(ICE_CTX_GATHER_INIT);
+  }
 }
 
 // Handler callbacks
