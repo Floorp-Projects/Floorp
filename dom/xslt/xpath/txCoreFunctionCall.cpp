@@ -7,7 +7,6 @@
 #include "mozilla/FloatingPoint.h"
 
 #include "txExpr.h"
-#include "nsAutoPtr.h"
 #include "txNodeSet.h"
 #include "nsGkAtoms.h"
 #include "txIXPathContext.h"
