@@ -67,3 +67,55 @@ add_task(async function test_skip_invisible() {
     }
   );
 });
+
+add_task(async function test_find_anon_content() {
+  const URI = `
+    <!doctype html>
+    <style>
+      div::before { content: "before content"; }
+      div::after { content: "after content"; }
+    </style>
+    <div> </div>
+    <img alt="Some fallback text">
+    <input type="submit" value="Some button text">
+  `;
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "data:text/html;charset=utf-8," + encodeURIComponent(URI),
+    },
+    async function(browser) {
+      let finder = browser.finder;
+      let listener = {
+        onFindResult() {
+          ok(false, "callback wasn't replaced");
+        },
+      };
+      finder.addResultListener(listener);
+
+      function waitForFind() {
+        return new Promise(resolve => {
+          listener.onFindResult = resolve;
+        });
+      }
+
+      async function assertFindable(text) {
+        let promiseFind = waitForFind();
+        finder.fastFind(text, false, false);
+        let findResult = await promiseFind;
+        is(
+          findResult.result,
+          Ci.nsITypeAheadFind.FIND_FOUND,
+          `${text} should be findable`
+        );
+      }
+
+      await assertFindable("before content");
+      await assertFindable("after content");
+      await assertFindable("fallback text");
+      await assertFindable("button text");
+
+      finder.removeResultListener(listener);
+    }
+  );
+});
