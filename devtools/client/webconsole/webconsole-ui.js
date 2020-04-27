@@ -335,6 +335,7 @@ class WebConsoleUI {
     await resourceWatcher.watch(
       [
         resourceWatcher.TYPES.CONSOLE_MESSAGES,
+        resourceWatcher.TYPES.ERROR_MESSAGES,
         resourceWatcher.TYPES.PLATFORM_MESSAGES,
       ],
       this._onResourceAvailable
@@ -347,6 +348,14 @@ class WebConsoleUI {
       // resource is the packet sent from `ConsoleActor.getCachedMessages().messages`
       // or via ConsoleActor's `consoleAPICall` event.
       resource.type = "consoleAPICall";
+      this.wrapper.dispatchMessageAdd(resource);
+      return;
+    }
+
+    if (resourceType == resourceWatcher.TYPES.ERROR_MESSAGES) {
+      // resource is the packet sent from `ConsoleActor.getCachedMessages().messages`
+      // or via ConsoleActor's `pageError` event.
+      resource.type = "pageError";
       this.wrapper.dispatchMessageAdd(resource);
       return;
     }
