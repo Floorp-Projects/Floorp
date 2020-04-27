@@ -1852,6 +1852,7 @@ dependencies = [
  "unic-langid",
  "unic-langid-ffi",
  "webext-storage",
+ "webext_storage_bridge",
  "webrender_bindings",
  "wgpu_bindings",
  "xpcom",
@@ -5163,6 +5164,23 @@ dependencies = [
  "sql-support",
  "sync-guid",
  "url",
+]
+
+[[package]]
+name = "webext_storage_bridge"
+version = "0.1.0"
+dependencies = [
+ "atomic_refcell",
+ "cstr",
+ "moz_task",
+ "nserror",
+ "nsstring",
+ "once_cell",
+ "serde",
+ "serde_json",
+ "storage_variant",
+ "webext-storage",
+ "xpcom",
 ]
 
 [[package]]
