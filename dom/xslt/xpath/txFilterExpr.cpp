@@ -55,7 +55,7 @@ TX_IMPL_EXPR_STUBS_BASE(FilterExpr, NODESET_RESULT)
 
 Expr* FilterExpr::getSubExprAt(uint32_t aPos) {
   if (aPos == 0) {
-    return expr;
+    return expr.get();
   }
   return PredicateList::getSubExprAt(aPos - 1);
 }

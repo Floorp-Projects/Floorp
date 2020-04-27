@@ -147,7 +147,8 @@ nsresult txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
       }
     }
     MOZ_ASSERT(nodeTest);
-    countPattern = newCountPattern = new txStepPattern(nodeTest, false);
+    newCountPattern = new txStepPattern(nodeTest, false);
+    countPattern = newCountPattern.get();
   }
 
   // Generate list of values depending on the value of the level-attribute

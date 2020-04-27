@@ -241,7 +241,7 @@ nsresult txExecutionState::getVariable(int32_t aNamespace, nsAtom* aLName,
   } else {
     nsAutoPtr<txRtfHandler> rtfHandler(new txRtfHandler);
 
-    rv = pushResultHandler(rtfHandler);
+    rv = pushResultHandler(rtfHandler.get());
     if (NS_FAILED(rv)) {
       popAndDeleteEvalContextUntil(mInitialEvalContext);
       return rv;
@@ -252,7 +252,7 @@ nsresult txExecutionState::getVariable(int32_t aNamespace, nsAtom* aLName,
     txInstruction* prevInstr = mNextInstruction;
     // set return to nullptr to stop execution
     mNextInstruction = nullptr;
-    rv = runTemplate(var->mFirstInstruction);
+    rv = runTemplate(var->mFirstInstruction.get());
     if (NS_FAILED(rv)) {
       popAndDeleteEvalContextUntil(mInitialEvalContext);
       return rv;
@@ -401,7 +401,7 @@ const txXPathNode* txExecutionState::retrieveDocument(const nsAString& aUri) {
     }
   }
 
-  return entry->mDocument;
+  return entry->mDocument.get();
 }
 
 nsresult txExecutionState::getKeyNodes(const txExpandedName& aKeyName,
@@ -421,7 +421,7 @@ txExecutionState::TemplateRule* txExecutionState::getCurrentTemplateRule() {
 txInstruction* txExecutionState::getNextInstruction() {
   txInstruction* instr = mNextInstruction;
   if (instr) {
-    mNextInstruction = instr->mNext;
+    mNextInstruction = instr->mNext.get();
   }
 
   return instr;

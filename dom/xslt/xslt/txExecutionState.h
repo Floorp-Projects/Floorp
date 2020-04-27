@@ -34,7 +34,7 @@ class txLoadedDocumentEntry : public nsStringHashKey {
   }
   ~txLoadedDocumentEntry() {
     if (mDocument) {
-      txXPathNodeUtils::release(mDocument);
+      txXPathNodeUtils::release(mDocument.get());
     }
   }
   bool LoadingFailed() {

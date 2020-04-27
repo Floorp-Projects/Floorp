@@ -30,7 +30,7 @@ nsresult txPatternParser::createPattern(const nsString& aPattern,
 
   txPatternOptimizer optimizer;
   txPattern* newPattern = nullptr;
-  rv = optimizer.optimize(pattern, &newPattern);
+  rv = optimizer.optimize(pattern.get(), &newPattern);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aResult = newPattern ? newPattern : pattern.forget();
@@ -278,7 +278,7 @@ nsresult txPatternParser::createStepPattern(txExprLexer& aLexer,
   }
 
   nsAutoPtr<txStepPattern> step(new txStepPattern(nodeTest, isAttr));
-  rv = parsePredicates(step, aLexer, aContext);
+  rv = parsePredicates(step.get(), aLexer, aContext);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aPattern = step.forget();

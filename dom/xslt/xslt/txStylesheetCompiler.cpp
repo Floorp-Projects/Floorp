@@ -418,7 +418,7 @@ nsresult txStylesheetCompiler::ensureNewElementContext() {
   }
 
   nsAutoPtr<txElementContext> context(new txElementContext(*mElementContext));
-  nsresult rv = pushObject(mElementContext);
+  nsresult rv = pushObject(mElementContext.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   mElementContext.forget();
@@ -557,7 +557,7 @@ void txStylesheetCompilerState::popSorter() {
 }
 
 nsresult txStylesheetCompilerState::pushChooseGotoList() {
-  nsresult rv = pushObject(mChooseGotoList);
+  nsresult rv = pushObject(mChooseGotoList.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   mChooseGotoList.forget();
@@ -632,7 +632,7 @@ void txStylesheetCompilerState::addInstruction(
     nsAutoPtr<txInstruction>&& aInstruction) {
   MOZ_ASSERT(mNextInstrPtr, "adding instruction outside container");
 
-  txInstruction* newInstr = aInstruction;
+  txInstruction* newInstr = aInstruction.get();
 
   *mNextInstrPtr = aInstruction.forget();
   mNextInstrPtr = newInstr->mNext.StartAssignment();
@@ -657,9 +657,7 @@ nsresult txStylesheetCompilerState::loadIncludedStylesheet(
   nsAutoPtr<txToplevelItem> item(new txDummyItem);
   NS_ENSURE_TRUE(item, NS_ERROR_OUT_OF_MEMORY);
 
-  mToplevelIterator.addBefore(item);
-
-  item.forget();
+  mToplevelIterator.addBefore(item.forget());
 
   // step back to the dummy-item
   mToplevelIterator.previous();
