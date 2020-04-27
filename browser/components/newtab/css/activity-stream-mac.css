@@ -1727,6 +1727,22 @@ main {
     padding: 6px 12px;
     margin-inline-start: 5px;
     margin-bottom: 0; }
+  .asrouter-admin .wnp-textarea {
+    width: 740px;
+    height: 500px;
+    overflow: auto;
+    resize: none;
+    border-radius: 4px;
+    display: flex; }
+  .asrouter-admin .json-button {
+    display: inline-flex;
+    font-size: 10px;
+    padding: 4px 10px;
+    margin-bottom: 6px;
+    margin-inline-end: 4px; }
+    .asrouter-admin .json-button:hover {
+      background-color: rgba(237, 237, 240, 0.6);
+      box-shadow: none; }
   .asrouter-admin table {
     border-collapse: collapse;
     width: 100%; }
@@ -1811,7 +1827,9 @@ main {
   .asrouter-admin .collapsed {
     display: none; }
   .asrouter-admin .icon {
-    cursor: pointer; }
+    cursor: pointer;
+    width: 18px;
+    height: 18px; }
 
 .pocket-logged-in-cta {
   font-size: 13px;

@@ -878,6 +878,11 @@ export class ASRouterAdminInner extends React.PureComponent {
     }
   }
 
+  modifyJson(content) {
+    let newContent = JSON.parse(content);
+    ASRouterUtils.modifyMessageJson(newContent);
+  }
+
   renderWNMessageItem(msg) {
     const isBlocked =
       this.state.messageBlockList.includes(msg.id) ||
@@ -919,7 +924,25 @@ export class ASRouterAdminInner extends React.PureComponent {
         </td>
         <td className={`message-summary`}>
           <pre className={isCollapsed ? "collapsed" : "expanded"}>
-            {JSON.stringify(msg, null, 2)}
+            <button
+              className="button json-button"
+              name={msg.id}
+              // eslint-disable-next-line react/jsx-no-bind
+              onClick={e =>
+                this.modifyJson(
+                  document.getElementById(`${msg.id}-textarea`).value
+                )
+              }
+            >
+              Modify Template
+            </button>
+            <textarea
+              id={`${msg.id}-textarea`}
+              className="wnp-textarea"
+              name={msg.id}
+            >
+              {JSON.stringify(msg, null, 2)}
+            </textarea>
           </pre>
         </td>
       </tr>
@@ -1517,7 +1540,10 @@ export class ASRouterAdminInner extends React.PureComponent {
             To correctly render selected messages, please check "Disable Popup
             Auto-Hide" in the browser toolbox, or set{" "}
             <i>ui.popup.disable_autohide</i> to <b>true</b> in{" "}
-            <i>about:config</i>.
+            <i>about:config</i>. <br />
+            To modify a message, render it first using 'Render Selected
+            Messages'. Then, modify the JSON and click 'Modify Template' to see
+            your changes.
           </span>
         </p>
         <div>

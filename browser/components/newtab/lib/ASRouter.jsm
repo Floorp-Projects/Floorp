@@ -1646,6 +1646,10 @@ class _ASRouter {
     });
   }
 
+  async modifyMessageJson(content, target, force = true, action = {}) {
+    await this._sendMessageToTarget(content, target, action.data, force);
+  }
+
   async setMessageById(id, target, force = true, action = {}) {
     const newMessage = this.getMessageById(id);
 
@@ -2177,6 +2181,9 @@ class _ASRouter {
             outgoingMessage
           );
         }
+        break;
+      case "MODIFY_MESSAGE_JSON":
+        await this.modifyMessageJson(action.data.content, target, true, action);
         break;
       case "DISMISS_MESSAGE_BY_ID":
         this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
