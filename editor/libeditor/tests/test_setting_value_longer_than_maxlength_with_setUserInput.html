@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1320229
+
+Checks if `eReplaceText` has consistent behavior regardless of whether the
+field has an associated editor---this test works by calling `setUserInput()`
+before the element gets focus.)
+
+Inspired by `dom/html/test/forms/test_MozEditableElement_setUserInput.html`.
+-->
+
+<head>
+  <title>Test setting value longer than maxlength with setUserInput</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1320229">Mozilla Bug 1320229</a>
+  <div id="display">
+  </div>
+  <div id="content"></div>
+  <pre id="test">
+</pre>
+
+  <script class="testbody" type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+    // eslint-disable-next-line complexity
+    SimpleTest.waitForFocus(async () => {
+      await SpecialPowers.pushPrefEnv({
+        set: [["dom.input_events.beforeinput.enabled", true]],
+      });
+
+      let content = document.getElementById("content");
+      for (let test of [
+        {
+          element: "input",
+          type: "password",
+          maxlength: "9",
+          input: { before: "aaaaaaaa", after: "bbbbbbbb" },
+          result: { before: "aaaaaaaa", after: "bbbbbbbb"}
+        },
+        {
+          element: "input",
+          type: "password",
+          maxlength: "4",
+          input: { before: "aaaaaaaa", after: "bbbbbbbb" },
+          result: { before: "aaaaaaaa", after: "bbbbbbbb"}
+        },
+      ]) {
+        let tag = `<${test.element} type="${test.type}" maxlength="${test.maxlength}">`
+        content.innerHTML = `${tag}`;
+        content.scrollTop; // Flush pending layout.
+        let target = content.firstChild;
+
+        // Before setting focus, editor of the element may have not been created yet.
+        SpecialPowers.wrap(target).setUserInput(test.input.before);
+        is(target.value, test.result.before, `setUserInput("${test.input.before}") before ${tag} gets focus should set its value to "${test.result.before}"`);
+
+        // Now we do the same after setting focus.
+        target.focus();
+        SpecialPowers.wrap(target).setUserInput(test.input.after);
+        is(target.value, test.result.after, `setUserInput("${test.input.after}") after ${tag} gets focus should set its value to "${test.result.after}"`);
+      }
+
+      SimpleTest.finish();
+    });
+  </script>
+</body>
+
+</html>

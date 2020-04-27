@@ -533,16 +533,16 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
 
  protected:  // edit sub-action handler
   /**
-   * TruncateInsertionStringForMaxLength() truncates aInsertionString for
-   * making handling insertion not cause overflow from `maxlength` value.
+   * MaybeTruncateInsertionStringForMaxLength() truncates aInsertionString to
+   * `maxlength` if it was not pasted in by the user.
    *
    * @param aInsertionString    [in/out] New insertion string.  This is
-   *                            truncated if there is no enough space to
-   *                            insert the new string.
-   * @return                    If aInsertionString is truncated one or
-   *                            more characters, returns "as handled".
+   *                            truncated to `maxlength` if it was not pasted in
+   *                            by the user.
+   * @return                    If aInsertionString is truncated, it returns "as
+   *                            handled", else "as ignored."
    */
-  EditActionResult TruncateInsertionStringForMaxLength(
+  EditActionResult MaybeTruncateInsertionStringForMaxLength(
       nsAString& aInsertionString);
 
   /**
