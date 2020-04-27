@@ -88,7 +88,7 @@ XPathExpression* XPathEvaluator::CreateExpression(const nsAString& aExpression,
     mRecycler = new txResultRecycler;
   }
 
-  nsAutoPtr<Expr> expression;
+  UniquePtr<Expr> expression;
   aRv = txExprParser::createExpr(PromiseFlatString(aExpression), aContext,
                                  getter_Transfers(expression));
   if (aRv.Failed()) {
@@ -118,7 +118,7 @@ already_AddRefed<XPathResult> XPathEvaluator::Evaluate(
     JSContext* aCx, const nsAString& aExpression, nsINode& aContextNode,
     XPathNSResolver* aResolver, uint16_t aType, JS::Handle<JSObject*> aResult,
     ErrorResult& rv) {
-  nsAutoPtr<XPathExpression> expression(
+  UniquePtr<XPathExpression> expression(
       CreateExpression(aExpression, aResolver, rv));
   if (rv.Failed()) {
     return nullptr;

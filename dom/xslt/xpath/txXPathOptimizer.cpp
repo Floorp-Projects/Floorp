@@ -218,7 +218,7 @@ nsresult txXPathOptimizer::optimizeUnion(Expr* aInExpr, Expr** aOutExpr) {
 
       // Create a txUnionNodeTest if needed
       if (!unionTest) {
-        nsAutoPtr<txNodeTest> owner(unionTest = new txUnionNodeTest);
+        UniquePtr<txNodeTest> owner(unionTest = new txUnionNodeTest);
         rv = unionTest->addNodeTest(currentStep->getNodeTest());
         NS_ENSURE_SUCCESS(rv, rv);
 

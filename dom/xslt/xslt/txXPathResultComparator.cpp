@@ -48,7 +48,7 @@ nsresult txResultStringComparator::init(const nsString& aLanguage) {
 nsresult txResultStringComparator::createSortableValue(Expr* aExpr,
                                                        txIEvalContext* aContext,
                                                        txObject*& aResult) {
-  nsAutoPtr<StringValue> val(new StringValue);
+  UniquePtr<StringValue> val(new StringValue);
   if (!val) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -147,7 +147,7 @@ txResultNumberComparator::txResultNumberComparator(bool aAscending) {
 nsresult txResultNumberComparator::createSortableValue(Expr* aExpr,
                                                        txIEvalContext* aContext,
                                                        txObject*& aResult) {
-  nsAutoPtr<NumberValue> numval(new NumberValue);
+  UniquePtr<NumberValue> numval(new NumberValue);
   if (!numval) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

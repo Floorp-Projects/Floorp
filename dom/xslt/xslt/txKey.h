@@ -102,7 +102,8 @@ class txXSLKey {
    * @param aUse    use-expression
    * @return false if an error occurred, true otherwise
    */
-  bool addKey(nsAutoPtr<txPattern>&& aMatch, nsAutoPtr<Expr>&& aUse);
+  bool addKey(mozilla::UniquePtr<txPattern>&& aMatch,
+              mozilla::UniquePtr<Expr>&& aUse);
 
   /**
    * Indexes a subtree and adds it to the hash of key values
@@ -141,8 +142,8 @@ class txXSLKey {
    * represents one match/use pair
    */
   struct Key {
-    nsAutoPtr<txPattern> matchPattern;
-    nsAutoPtr<Expr> useExpr;
+    mozilla::UniquePtr<txPattern> matchPattern;
+    mozilla::UniquePtr<Expr> useExpr;
   };
 
   /**

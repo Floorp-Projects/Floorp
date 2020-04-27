@@ -295,7 +295,7 @@ nsresult txStylesheetCompiler::endElement() {
   for (i = mInScopeVariables.Length() - 1; i >= 0; --i) {
     txInScopeVariable* var = mInScopeVariables[i];
     if (!--(var->mLevel)) {
-      nsAutoPtr<txInstruction> instr(new txRemoveVariable(var->mName));
+      UniquePtr<txInstruction> instr(new txRemoveVariable(var->mName));
       addInstruction(std::move(instr));
 
       mInScopeVariables.RemoveElementAt(i);
@@ -417,7 +417,7 @@ nsresult txStylesheetCompiler::ensureNewElementContext() {
     return NS_OK;
   }
 
-  nsAutoPtr<txElementContext> context(new txElementContext(*mElementContext));
+  UniquePtr<txElementContext> context(new txElementContext(*mElementContext));
   nsresult rv = pushObject(mElementContext.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -629,7 +629,7 @@ void txStylesheetCompilerState::closeInstructionContainer() {
 }
 
 void txStylesheetCompilerState::addInstruction(
-    nsAutoPtr<txInstruction>&& aInstruction) {
+    UniquePtr<txInstruction>&& aInstruction) {
   MOZ_ASSERT(mNextInstrPtr, "adding instruction outside container");
 
   txInstruction* newInstr = aInstruction.get();
@@ -654,7 +654,7 @@ nsresult txStylesheetCompilerState::loadIncludedStylesheet(
   }
   NS_ENSURE_TRUE(mObserver, NS_ERROR_NOT_IMPLEMENTED);
 
-  nsAutoPtr<txToplevelItem> item(new txDummyItem);
+  UniquePtr<txToplevelItem> item(new txDummyItem);
   NS_ENSURE_TRUE(item, NS_ERROR_OUT_OF_MEMORY);
 
   mToplevelIterator.addBefore(item.forget());
@@ -837,7 +837,7 @@ extern bool TX_XSLTFunctionAvailable(nsAtom* aName, int32_t aNameSpaceID) {
       new txStylesheetCompiler(EmptyString(), ReferrerPolicy::_empty, nullptr);
   NS_ENSURE_TRUE(compiler, false);
 
-  nsAutoPtr<FunctionCall> fnCall;
+  UniquePtr<FunctionCall> fnCall;
 
   return NS_SUCCEEDED(
       findFunction(aName, aNameSpaceID, compiler, getter_Transfers(fnCall)));
