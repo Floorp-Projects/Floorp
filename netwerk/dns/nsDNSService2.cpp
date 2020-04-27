@@ -1342,6 +1342,14 @@ nsDNSService::SetDetectedTrrURI(const nsACString& aURI) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDNSService::GetCurrentTrrURI(nsACString& aURI) {
+  if (mTrrService) {
+    return mTrrService->GetURI(aURI);
+  }
+  return NS_OK;
+}
+
 size_t nsDNSService::SizeOfIncludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
   // Measurement of the following members may be added later if DMD finds it

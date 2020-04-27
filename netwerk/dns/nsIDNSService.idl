@@ -314,6 +314,11 @@ interface nsIDNSService : nsISupports
     void setDetectedTrrURI(in AUTF8String aURI);
 
     /**
+     * Returns a string containing the URI currently used by the TRR service.
+     */
+    readonly attribute AUTF8String currentTrrURI;
+
+    /**
      * @return the hostname of the operating system.
      */
     readonly attribute AUTF8String myHostName;
@@ -402,3 +407,14 @@ interface nsIDNSService : nsISupports
     const unsigned long RESOLVE_TYPE_DEFAULT = 0;
     const unsigned long RESOLVE_TYPE_TXT = 16;
 };
+
+%{C++
+
+/**
+ * An observer notification for this topic is sent whenever the URI that the
+ * TRR service is using has changed.
+ */
+#define NS_NETWORK_TRR_URI_CHANGED_TOPIC "network:trr-uri-changed"
+
+%}
+
