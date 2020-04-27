@@ -594,9 +594,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       icon: {
         type: "string",
       },
-      isPinned: {
-        type: "boolean",
-      },
       inPrivateWindow: {
         type: "boolean",
       },
@@ -635,9 +632,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       },
       icon: {
         type: "string",
-      },
-      isPinned: {
-        type: "boolean",
       },
       tags: {
         type: "array",
