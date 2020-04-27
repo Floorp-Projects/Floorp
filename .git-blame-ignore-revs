@@ -455,3 +455,7 @@ f9f59140398bc4d04d840e8217c04e0d7eafafb9 # gecko-dev
 # Bug 1569574 - Part 2: Format devtools/client/responsive/. a=automatic-formatting r=vporof
 # https://hg.mozilla.org/mozilla-central/rev/3b3a2e363253d5db0f2103064e8f59d8a2ae0543
 788820312b71a33a7ec2915935632ca7811a0baf # gecko-dev
+
+# Bug 1561435 - Format browser/extensions/, a=automatic-formatting
+# https://hg.mozilla.org/mozilla-central/rev/39b4804c504c
+bd4cd8fd748713f2923d2df9f2e899e0bc6b3396 # gecko-dev
