@@ -472,9 +472,9 @@ txNumber::txNumber(txXSLTNumber::LevelType aLevel,
 
 nsresult txNumber::execute(txExecutionState& aEs) {
   nsAutoString res;
-  nsresult rv = txXSLTNumber::createNumber(mValue, mCount, mFrom, mLevel,
-                                           mGroupingSize, mGroupingSeparator,
-                                           mFormat, aEs.getEvalContext(), res);
+  nsresult rv = txXSLTNumber::createNumber(
+      mValue.get(), mCount.get(), mFrom.get(), mLevel, mGroupingSize.get(),
+      mGroupingSeparator.get(), mFormat.get(), aEs.getEvalContext(), res);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return aEs.mResultHandler->characters(res, false);
@@ -538,9 +538,9 @@ nsresult txPushNewContext::execute(txExecutionState& aEs) {
   uint32_t i, count = mSortKeys.Length();
   for (i = 0; i < count; ++i) {
     SortKey& sort = mSortKeys[i];
-    rv = sorter.addSortElement(sort.mSelectExpr, sort.mLangExpr,
-                               sort.mDataTypeExpr, sort.mOrderExpr,
-                               sort.mCaseOrderExpr, aEs.getEvalContext());
+    rv = sorter.addSortElement(sort.mSelectExpr.get(), sort.mLangExpr.get(),
+                               sort.mDataTypeExpr.get(), sort.mOrderExpr.get(),
+                               sort.mCaseOrderExpr.get(), aEs.getEvalContext());
     NS_ENSURE_SUCCESS(rv, rv);
   }
   RefPtr<txNodeSet> sortedNodes;

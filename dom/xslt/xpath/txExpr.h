@@ -166,7 +166,7 @@ class Expr {
   TX_IMPL_EXPR_STUBS_BASE(_class, _ReturnType)                 \
   Expr* _class::getSubExprAt(uint32_t aPos) {                  \
     if (aPos == 0) {                                           \
-      return _Expr1;                                           \
+      return _Expr1.get();                                     \
     }                                                          \
     return nullptr;                                            \
   }                                                            \
@@ -181,9 +181,9 @@ class Expr {
   Expr* _class::getSubExprAt(uint32_t aPos) {                     \
     switch (aPos) {                                               \
       case 0:                                                     \
-        return _Expr1;                                            \
+        return _Expr1.get();                                      \
       case 1:                                                     \
-        return _Expr2;                                            \
+        return _Expr2.get();                                      \
       default:                                                    \
         break;                                                    \
     }                                                             \
@@ -522,7 +522,7 @@ class LocationStep : public Expr, public PredicateList {
 
   TX_DECL_OPTIMIZABLE_EXPR
 
-  txNodeTest* getNodeTest() { return mNodeTest; }
+  txNodeTest* getNodeTest() { return mNodeTest.get(); }
   void setNodeTest(txNodeTest* aNodeTest) {
     mNodeTest.forget();
     mNodeTest = aNodeTest;

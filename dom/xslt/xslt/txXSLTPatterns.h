@@ -189,7 +189,7 @@ class txStepPattern : public txPattern, public PredicateList {
   TX_DECL_PATTERN;
   Type getType() override;
 
-  txNodeTest* getNodeTest() { return mNodeTest; }
+  txNodeTest* getNodeTest() { return mNodeTest.get(); }
   void setNodeTest(txNodeTest* aNodeTest) {
     mNodeTest.forget();
     mNodeTest = aNodeTest;

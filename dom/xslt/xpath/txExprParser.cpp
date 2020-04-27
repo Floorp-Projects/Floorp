@@ -167,7 +167,7 @@ nsresult txExprParser::createExprInternal(const nsAString& aExpression,
 
   txXPathOptimizer optimizer;
   Expr* newExpr = nullptr;
-  rv = optimizer.optimize(expr, &newExpr);
+  rv = optimizer.optimize(expr.get(), &newExpr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aExpr = newExpr ? newExpr : expr.forget();
@@ -192,49 +192,54 @@ nsresult txExprParser::createBinaryExpr(nsAutoPtr<Expr>& left,
   switch (op->mType) {
     //-- math ops
     case Token::ADDITION_OP:
-      expr = new txNumberExpr(left, right, txNumberExpr::ADD);
+      expr = new txNumberExpr(left.get(), right.get(), txNumberExpr::ADD);
       break;
     case Token::SUBTRACTION_OP:
-      expr = new txNumberExpr(left, right, txNumberExpr::SUBTRACT);
+      expr = new txNumberExpr(left.get(), right.get(), txNumberExpr::SUBTRACT);
       break;
     case Token::DIVIDE_OP:
-      expr = new txNumberExpr(left, right, txNumberExpr::DIVIDE);
+      expr = new txNumberExpr(left.get(), right.get(), txNumberExpr::DIVIDE);
       break;
     case Token::MODULUS_OP:
-      expr = new txNumberExpr(left, right, txNumberExpr::MODULUS);
+      expr = new txNumberExpr(left.get(), right.get(), txNumberExpr::MODULUS);
       break;
     case Token::MULTIPLY_OP:
-      expr = new txNumberExpr(left, right, txNumberExpr::MULTIPLY);
+      expr = new txNumberExpr(left.get(), right.get(), txNumberExpr::MULTIPLY);
       break;
 
     //-- case boolean ops
     case Token::AND_OP:
-      expr = new BooleanExpr(left, right, BooleanExpr::AND);
+      expr = new BooleanExpr(left.get(), right.get(), BooleanExpr::AND);
       break;
     case Token::OR_OP:
-      expr = new BooleanExpr(left, right, BooleanExpr::OR);
+      expr = new BooleanExpr(left.get(), right.get(), BooleanExpr::OR);
       break;
 
     //-- equality ops
     case Token::EQUAL_OP:
-      expr = new RelationalExpr(left, right, RelationalExpr::EQUAL);
+      expr = new RelationalExpr(left.get(), right.get(), RelationalExpr::EQUAL);
       break;
     case Token::NOT_EQUAL_OP:
-      expr = new RelationalExpr(left, right, RelationalExpr::NOT_EQUAL);
+      expr = new RelationalExpr(left.get(), right.get(),
+                                RelationalExpr::NOT_EQUAL);
       break;
 
     //-- relational ops
     case Token::LESS_THAN_OP:
-      expr = new RelationalExpr(left, right, RelationalExpr::LESS_THAN);
+      expr = new RelationalExpr(left.get(), right.get(),
+                                RelationalExpr::LESS_THAN);
       break;
     case Token::GREATER_THAN_OP:
-      expr = new RelationalExpr(left, right, RelationalExpr::GREATER_THAN);
+      expr = new RelationalExpr(left.get(), right.get(),
+                                RelationalExpr::GREATER_THAN);
       break;
     case Token::LESS_OR_EQUAL_OP:
-      expr = new RelationalExpr(left, right, RelationalExpr::LESS_OR_EQUAL);
+      expr = new RelationalExpr(left.get(), right.get(),
+                                RelationalExpr::LESS_OR_EQUAL);
       break;
     case Token::GREATER_OR_EQUAL_OP:
-      expr = new RelationalExpr(left, right, RelationalExpr::GREATER_OR_EQUAL);
+      expr = new RelationalExpr(left.get(), right.get(),
+                                RelationalExpr::GREATER_OR_EQUAL);
       break;
 
     default:
@@ -279,7 +284,7 @@ nsresult txExprParser::createExpr(txExprLexer& lexer, txIParseContext* aContext,
         FunctionCall* fcExpr =
             new txCoreFunctionCall(txCoreFunctionCall::NUMBER);
 
-        rv = fcExpr->addParam(expr);
+        rv = fcExpr->addParam(expr.get());
         if (NS_FAILED(rv)) return rv;
         expr.forget();
         expr = fcExpr;
@@ -375,12 +380,12 @@ nsresult txExprParser::createFilterOrStep(txExprLexer& lexer,
   }
 
   if (lexer.peek()->mType == Token::L_BRACKET) {
-    nsAutoPtr<FilterExpr> filterExpr(new FilterExpr(expr));
+    nsAutoPtr<FilterExpr> filterExpr(new FilterExpr(expr.get()));
 
     expr.forget();
 
     //-- handle predicates
-    rv = parsePredicates(filterExpr, lexer, aContext);
+    rv = parsePredicates(filterExpr.get(), lexer, aContext);
     NS_ENSURE_SUCCESS(rv, rv);
     expr = filterExpr.forget();
   }
@@ -435,7 +440,7 @@ nsresult txExprParser::createFunctionCall(txExprLexer& lexer,
   }
 
   //-- handle parametes
-  rv = parseParameters(fnCall, lexer, aContext);
+  rv = parseParameters(fnCall.get(), lexer, aContext);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aResult = fnCall.forget();
@@ -535,12 +540,13 @@ nsresult txExprParser::createLocationStep(txExprLexer& lexer,
     }
   }
 
-  nsAutoPtr<LocationStep> lstep(new LocationStep(nodeTest, axisIdentifier));
+  nsAutoPtr<LocationStep> lstep(
+      new LocationStep(nodeTest.get(), axisIdentifier));
 
   nodeTest.forget();
 
   //-- handle predicates
-  rv = parsePredicates(lstep, lexer, aContext);
+  rv = parsePredicates(lstep.get(), lexer, aContext);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aExpr = lstep.forget();
@@ -640,7 +646,7 @@ nsresult txExprParser::createPathExpr(txExprLexer& lexer,
   // We have a PathExpr containing several steps
   nsAutoPtr<PathExpr> pathExpr(new PathExpr());
 
-  rv = pathExpr->addExpr(expr, PathExpr::RELATIVE_OP);
+  rv = pathExpr->addExpr(expr.get(), PathExpr::RELATIVE_OP);
   NS_ENSURE_SUCCESS(rv, rv);
 
   expr.forget();
@@ -664,7 +670,7 @@ nsresult txExprParser::createPathExpr(txExprLexer& lexer,
     rv = createLocationStep(lexer, aContext, getter_Transfers(expr));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = pathExpr->addExpr(expr, pathOp);
+    rv = pathExpr->addExpr(expr.get(), pathOp);
     NS_ENSURE_SUCCESS(rv, rv);
 
     expr.forget();
@@ -693,7 +699,7 @@ nsresult txExprParser::createUnionExpr(txExprLexer& lexer,
 
   nsAutoPtr<UnionExpr> unionExpr(new UnionExpr());
 
-  rv = unionExpr->addExpr(expr);
+  rv = unionExpr->addExpr(expr.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   expr.forget();
@@ -744,7 +750,7 @@ nsresult txExprParser::parsePredicates(PredicateList* aPredicateList,
     rv = createExpr(lexer, aContext, getter_Transfers(expr));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = aPredicateList->add(expr);
+    rv = aPredicateList->add(expr.get());
     NS_ENSURE_SUCCESS(rv, rv);
 
     expr.forget();

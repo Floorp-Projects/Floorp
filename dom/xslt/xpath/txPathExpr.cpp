@@ -78,8 +78,8 @@ nsresult PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult) {
         rv = aContext->recycler()->getNodeSet(getter_AddRefs(resNodes));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = evalDescendants(pxi.expr, eContext.getContextNode(), &eContext,
-                             resNodes);
+        rv = evalDescendants(pxi.expr.get(), eContext.getContextNode(),
+                             &eContext, resNodes);
         NS_ENSURE_SUCCESS(rv, rv);
       } else {
         RefPtr<txAExprResult> res;

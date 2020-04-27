@@ -29,7 +29,8 @@ nsresult txStylesheet::init() {
   mContainerTemplate = new txPushParams;
 
   nsAutoPtr<txNodeTest> nt(new txNodeTypeTest(txNodeTypeTest::NODE_TYPE));
-  nsAutoPtr<Expr> nodeExpr(new LocationStep(nt, LocationStep::CHILD_AXIS));
+  nsAutoPtr<Expr> nodeExpr(
+      new LocationStep(nt.get(), LocationStep::CHILD_AXIS));
   nt.forget();
 
   txPushNewContext* pushContext = new txPushNewContext(std::move(nodeExpr));
@@ -43,13 +44,14 @@ nsresult txStylesheet::init() {
   applyTemplates->mNext = loopNodeSet;
 
   txPopParams* popParams = new txPopParams;
-  pushContext->mBailTarget = loopNodeSet->mNext = popParams;
+  loopNodeSet->mNext = popParams;
+  pushContext->mBailTarget = loopNodeSet->mNext.get();
 
   popParams->mNext = new txReturn();
 
   // attribute/textnode template
   nt = new txNodeTypeTest(txNodeTypeTest::NODE_TYPE);
-  nodeExpr = new LocationStep(nt, LocationStep::SELF_AXIS);
+  nodeExpr = new LocationStep(nt.get(), LocationStep::SELF_AXIS);
   nt.forget();
 
   mCharactersTemplate = new txValueOf(std::move(nodeExpr), false);
@@ -127,7 +129,7 @@ nsresult txStylesheet::findTemplate(const txXPathNode& aNode,
           *aTemplate = templ.mFirstInstruction;
           *aImportFrame = frame;
 #if defined(TX_TO_STRING)
-          match = templ.mMatch;
+          match = templ.mMatch.get();
 #endif
         }
       }
@@ -163,12 +165,12 @@ nsresult txStylesheet::findTemplate(const txXPathNode& aNode,
     // and a root (if it is orphaned)
     if (txXPathNodeUtils::isAttribute(aNode) ||
         txXPathNodeUtils::isText(aNode)) {
-      *aTemplate = mCharactersTemplate;
+      *aTemplate = mCharactersTemplate.get();
     } else if (txXPathNodeUtils::isElement(aNode) ||
                txXPathNodeUtils::isRoot(aNode)) {
-      *aTemplate = mContainerTemplate;
+      *aTemplate = mContainerTemplate.get();
     } else {
-      *aTemplate = mEmptyTemplate;
+      *aTemplate = mEmptyTemplate.get();
     }
   }
 
@@ -228,7 +230,7 @@ nsresult txStylesheet::isStripSpaceAllowed(const txXPathNode& aNode,
   // check Whitespace stipping handling list against given Node
   int32_t i;
   for (i = 0; i < frameCount; ++i) {
-    txStripSpaceTest* sst = mStripSpaceTests[i];
+    const auto& sst = mStripSpaceTests[i];
     bool matched;
     nsresult rv = sst->matches(node, aContext, matched);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -313,7 +315,7 @@ nsresult txStylesheet::doneCompiling() {
 
   if (!mDecimalFormats.get(txExpandedName())) {
     nsAutoPtr<txDecimalFormat> format(new txDecimalFormat);
-    rv = mDecimalFormats.add(txExpandedName(), format);
+    rv = mDecimalFormats.add(txExpandedName(), format.get());
     NS_ENSURE_SUCCESS(rv, rv);
 
     format.forget();
@@ -326,7 +328,7 @@ nsresult txStylesheet::addTemplate(txTemplateItem* aTemplate,
                                    ImportFrame* aImportFrame) {
   NS_ASSERTION(aTemplate, "missing template");
 
-  txInstruction* instr = aTemplate->mFirstInstruction;
+  txInstruction* instr = aTemplate->mFirstInstruction.get();
   mTemplateInstructions.add(instr);
 
   // mTemplateInstructions now owns the instructions
@@ -351,7 +353,7 @@ nsresult txStylesheet::addTemplate(txTemplateItem* aTemplate,
     nsAutoPtr<nsTArray<MatchableTemplate> > newList(
         new nsTArray<MatchableTemplate>);
     nsresult rv =
-        aImportFrame->mMatchableTemplates.set(aTemplate->mMode, newList);
+        aImportFrame->mMatchableTemplates.set(aTemplate->mMode, newList.get());
     NS_ENSURE_SUCCESS(rv, rv);
 
     templates = newList.forget();
@@ -412,9 +414,7 @@ nsresult txStylesheet::addFrames(txListIterator& aInsertIter) {
       txImportItem* import = static_cast<txImportItem*>(item);
       import->mFrame->mFirstNotImported =
           static_cast<ImportFrame*>(aInsertIter.next());
-      aInsertIter.addBefore(import->mFrame);
-
-      import->mFrame.forget();
+      aInsertIter.addBefore(import->mFrame.forget());
       aInsertIter.previous();
       rv = addFrames(aInsertIter);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -453,7 +453,7 @@ nsresult txStylesheet::addAttributeSet(txAttributeSetItem* aAttributeSetItem) {
   txInstruction* oldInstr = mAttributeSets.get(aAttributeSetItem->mName);
   if (!oldInstr) {
     rv = mAttributeSets.add(aAttributeSetItem->mName,
-                            aAttributeSetItem->mFirstInstruction);
+                            aAttributeSetItem->mFirstInstruction.get());
     NS_ENSURE_SUCCESS(rv, rv);
 
     aAttributeSetItem->mFirstInstruction.forget();
@@ -462,11 +462,11 @@ nsresult txStylesheet::addAttributeSet(txAttributeSetItem* aAttributeSetItem) {
   }
 
   // We need to prepend the new instructions before the existing ones.
-  txInstruction* instr = aAttributeSetItem->mFirstInstruction;
+  txInstruction* instr = aAttributeSetItem->mFirstInstruction.get();
   txInstruction* lastNonReturn = nullptr;
   while (instr->mNext) {
     lastNonReturn = instr;
-    instr = instr->mNext;
+    instr = instr->mNext.get();
   }
 
   if (!lastNonReturn) {
@@ -475,7 +475,7 @@ nsresult txStylesheet::addAttributeSet(txAttributeSetItem* aAttributeSetItem) {
   }
 
   rv = mAttributeSets.set(aAttributeSetItem->mName,
-                          aAttributeSetItem->mFirstInstruction);
+                          aAttributeSetItem->mFirstInstruction.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   aAttributeSetItem->mFirstInstruction.forget();
@@ -492,7 +492,7 @@ nsresult txStylesheet::addGlobalVariable(txVariableItem* aVariable) {
   nsAutoPtr<GlobalVariable> var(new GlobalVariable(
       std::move(aVariable->mValue), std::move(aVariable->mFirstInstruction),
       aVariable->mIsParam));
-  nsresult rv = mGlobalVariables.add(aVariable->mName, var);
+  nsresult rv = mGlobalVariables.add(aVariable->mName, var.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   var.forget();
@@ -524,12 +524,13 @@ nsresult txStylesheet::addDecimalFormat(const txExpandedName& aName,
                                         nsAutoPtr<txDecimalFormat>&& aFormat) {
   txDecimalFormat* existing = mDecimalFormats.get(aName);
   if (existing) {
-    NS_ENSURE_TRUE(existing->isEqual(aFormat), NS_ERROR_XSLT_PARSE_FAILURE);
+    NS_ENSURE_TRUE(existing->isEqual(aFormat.get()),
+                   NS_ERROR_XSLT_PARSE_FAILURE);
 
     return NS_OK;
   }
 
-  nsresult rv = mDecimalFormats.add(aName, aFormat);
+  nsresult rv = mDecimalFormats.add(aName, aFormat.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   aFormat.forget();
