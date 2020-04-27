@@ -19,6 +19,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getIconColor
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.removeAndDisable
+import org.mozilla.fenix.ext.removeTouchDelegate
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.home.sessioncontrol.CollectionInteractor
 import org.mozilla.fenix.theme.ThemeManager
@@ -45,20 +46,14 @@ class CollectionViewHolder(
             }
         }
 
-        collection_overflow_button.run {
-            increaseTapArea(buttonIncreaseDps)
-            setOnClickListener {
-                collectionMenu.menuBuilder
-                    .build(view.context)
-                    .show(anchor = it)
-            }
+        collection_overflow_button.setOnClickListener {
+            collectionMenu.menuBuilder
+                .build(view.context)
+                .show(anchor = it)
         }
 
-        collection_share_button.run {
-            increaseTapArea(buttonIncreaseDps)
-            setOnClickListener {
-                interactor.onCollectionShareTabsClicked(collection)
-            }
+        collection_share_button.setOnClickListener {
+            interactor.onCollectionShareTabsClicked(collection)
         }
 
         view.clipToOutline = true
@@ -80,11 +75,24 @@ class CollectionViewHolder(
 
         view.isActivated = expanded
         if (expanded) {
-            view.collection_share_button.showAndEnable()
-            view.collection_overflow_button.showAndEnable()
+            view.collection_share_button.apply {
+                showAndEnable()
+                increaseTapArea(buttonIncreaseDps)
+            }
+            view.collection_overflow_button.apply {
+                showAndEnable()
+                increaseTapArea(buttonIncreaseDps)
+            }
         } else {
-            view.collection_share_button.removeAndDisable()
-            view.collection_overflow_button.removeAndDisable()
+
+            view.collection_share_button.apply {
+                removeAndDisable()
+                removeTouchDelegate()
+            }
+            view.collection_overflow_button.apply {
+                removeAndDisable()
+                removeTouchDelegate()
+            }
         }
 
         view.collection_icon.colorFilter = createBlendModeColorFilterCompat(
