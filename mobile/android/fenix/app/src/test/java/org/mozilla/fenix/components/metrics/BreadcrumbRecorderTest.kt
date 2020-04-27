@@ -19,14 +19,9 @@ internal class BreadcrumbRecorderTest {
     @Test
     fun `ensure crash reporter recordCrashBreadcrumb is called`() {
         val service = object : CrashReporterService {
-            override fun report(throwable: Throwable) {
-            }
-
-            override fun report(crash: Crash.UncaughtExceptionCrash) {
-            }
-
-            override fun report(crash: Crash.NativeCodeCrash) {
-            }
+            override fun report(throwable: Throwable): String? = ""
+            override fun report(crash: Crash.NativeCodeCrash): String? = ""
+            override fun report(crash: Crash.UncaughtExceptionCrash): String? = ""
         }
 
         val reporter = spy(
