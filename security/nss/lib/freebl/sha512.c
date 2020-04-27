@@ -18,8 +18,10 @@
 #include "prlong.h"
 #include "secport.h" /* for PORT_XXX */
 #include "blapi.h"
+#include "blapii.h"
 #include "sha256.h" /* for struct SHA256ContextStr */
 #include "crypto_primitives.h"
+#include "ppc-crypto.h" /* for USE_PPC_CRYPTO */
 
 /* ============= Common constants and defines ======================= */
 
@@ -43,7 +45,7 @@ static const PRUint8 pad[240] = {
 /* ============= SHA256 implementation ================================== */
 
 /* SHA-256 constants, K256. */
-static const PRUint32 K256[64] = {
+pre_align static const PRUint32 K256[64] post_align = {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
     0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
     0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
@@ -177,9 +179,162 @@ SHA256_Begin(SHA256Context *ctx)
     memcpy(H, H256, sizeof H256);
 }
 
+#if defined(USE_PPC_CRYPTO)
+
+#define ROUND(n, a, b, c, d, e, f, g, h)         \
+    s0 = __builtin_crypto_vshasigmaw(e, 1, 0xf); \
+    h += s0 + vec_sel(g, f, e) + w[n / 4];       \
+    d += h;                                      \
+    s0 = __builtin_crypto_vshasigmaw(a, 1, 0);   \
+    h += s0 + vec_sel(b, c, vec_xor(a, b));      \
+    if (n % 4 != 3)                              \
+        w[n / 4] = vec_sro(w[n / 4], rshift);
+
+#else
+
+#define ROUND(n, a, b, c, d, e, f, g, h)       \
+    h += S1(e) + Ch(e, f, g) + K256[n] + W[n]; \
+    d += h;                                    \
+    h += S0(a) + Maj(a, b, c);
+
+#endif
+
+#define SHA256_UNROLLED_ROUNDS        \
+    ROUND(0, a, b, c, d, e, f, g, h)  \
+    ROUND(1, h, a, b, c, d, e, f, g)  \
+    ROUND(2, g, h, a, b, c, d, e, f)  \
+    ROUND(3, f, g, h, a, b, c, d, e)  \
+    ROUND(4, e, f, g, h, a, b, c, d)  \
+    ROUND(5, d, e, f, g, h, a, b, c)  \
+    ROUND(6, c, d, e, f, g, h, a, b)  \
+    ROUND(7, b, c, d, e, f, g, h, a)  \
+                                      \
+    ROUND(8, a, b, c, d, e, f, g, h)  \
+    ROUND(9, h, a, b, c, d, e, f, g)  \
+    ROUND(10, g, h, a, b, c, d, e, f) \
+    ROUND(11, f, g, h, a, b, c, d, e) \
+    ROUND(12, e, f, g, h, a, b, c, d) \
+    ROUND(13, d, e, f, g, h, a, b, c) \
+    ROUND(14, c, d, e, f, g, h, a, b) \
+    ROUND(15, b, c, d, e, f, g, h, a) \
+                                      \
+    ROUND(16, a, b, c, d, e, f, g, h) \
+    ROUND(17, h, a, b, c, d, e, f, g) \
+    ROUND(18, g, h, a, b, c, d, e, f) \
+    ROUND(19, f, g, h, a, b, c, d, e) \
+    ROUND(20, e, f, g, h, a, b, c, d) \
+    ROUND(21, d, e, f, g, h, a, b, c) \
+    ROUND(22, c, d, e, f, g, h, a, b) \
+    ROUND(23, b, c, d, e, f, g, h, a) \
+                                      \
+    ROUND(24, a, b, c, d, e, f, g, h) \
+    ROUND(25, h, a, b, c, d, e, f, g) \
+    ROUND(26, g, h, a, b, c, d, e, f) \
+    ROUND(27, f, g, h, a, b, c, d, e) \
+    ROUND(28, e, f, g, h, a, b, c, d) \
+    ROUND(29, d, e, f, g, h, a, b, c) \
+    ROUND(30, c, d, e, f, g, h, a, b) \
+    ROUND(31, b, c, d, e, f, g, h, a) \
+                                      \
+    ROUND(32, a, b, c, d, e, f, g, h) \
+    ROUND(33, h, a, b, c, d, e, f, g) \
+    ROUND(34, g, h, a, b, c, d, e, f) \
+    ROUND(35, f, g, h, a, b, c, d, e) \
+    ROUND(36, e, f, g, h, a, b, c, d) \
+    ROUND(37, d, e, f, g, h, a, b, c) \
+    ROUND(38, c, d, e, f, g, h, a, b) \
+    ROUND(39, b, c, d, e, f, g, h, a) \
+                                      \
+    ROUND(40, a, b, c, d, e, f, g, h) \
+    ROUND(41, h, a, b, c, d, e, f, g) \
+    ROUND(42, g, h, a, b, c, d, e, f) \
+    ROUND(43, f, g, h, a, b, c, d, e) \
+    ROUND(44, e, f, g, h, a, b, c, d) \
+    ROUND(45, d, e, f, g, h, a, b, c) \
+    ROUND(46, c, d, e, f, g, h, a, b) \
+    ROUND(47, b, c, d, e, f, g, h, a) \
+                                      \
+    ROUND(48, a, b, c, d, e, f, g, h) \
+    ROUND(49, h, a, b, c, d, e, f, g) \
+    ROUND(50, g, h, a, b, c, d, e, f) \
+    ROUND(51, f, g, h, a, b, c, d, e) \
+    ROUND(52, e, f, g, h, a, b, c, d) \
+    ROUND(53, d, e, f, g, h, a, b, c) \
+    ROUND(54, c, d, e, f, g, h, a, b) \
+    ROUND(55, b, c, d, e, f, g, h, a) \
+                                      \
+    ROUND(56, a, b, c, d, e, f, g, h) \
+    ROUND(57, h, a, b, c, d, e, f, g) \
+    ROUND(58, g, h, a, b, c, d, e, f) \
+    ROUND(59, f, g, h, a, b, c, d, e) \
+    ROUND(60, e, f, g, h, a, b, c, d) \
+    ROUND(61, d, e, f, g, h, a, b, c) \
+    ROUND(62, c, d, e, f, g, h, a, b) \
+    ROUND(63, b, c, d, e, f, g, h, a)
+
 static void
 SHA256_Compress(SHA256Context *ctx)
 {
+#if defined(USE_PPC_CRYPTO)
+    vec_u32 w[16], s0, s1;
+    const vec_u8 rshift = (vec_u8)vec_splats(4 << 3);
+    const vec_u8 shifthalf = (vec_u8)vec_splats(8 << 3);
+    const vec_u8 bswap4 = (vec_u8){
+        3, 2, 1, 0, 7, 6, 5, 4, 11,
+        10, 9, 8, 15, 14, 13, 12,
+    };
+    unsigned i;
+
+    for (i = 0; i < 4; i++) {
+        w[i] = vec_vsx_ld(0, &W[i * 4]);
+        w[i] = vec_perm(w[i], w[i], bswap4);
+    }
+
+    /* prepare the message schedule */
+    for (i = 4; i < 16; i++) {
+        vec_u32 off1 = vec_sld(w[i - 3], w[i - 4], 12);
+        vec_u32 off2 = vec_sld(w[i - 1], w[i - 2], 12);
+        s0 = __builtin_crypto_vshasigmaw(off1, 0, 0);
+        /* first half, s1 depends on two prior ints */
+        s1 = __builtin_crypto_vshasigmaw(w[i - 1], 0, 0xf);
+        s1 = vec_sro(s1, shifthalf);
+        w[i] = w[i - 4] + s0 + off2 + s1;
+
+        /* second half s1 */
+        s1 = __builtin_crypto_vshasigmaw(w[i], 0, 0xf);
+        s1 = vec_slo(s1, shifthalf);
+        w[i] += s1;
+    }
+
+    for (i = 0; i < 16; i++) {
+        w[i] += vec_ld(0, &K256[i * 4]);
+    }
+
+    vec_u32 a, b, c, d, e, f, g, h;
+    a = vec_splats(H[0]);
+    b = vec_splats(H[1]);
+    c = vec_splats(H[2]);
+    d = vec_splats(H[3]);
+    e = vec_splats(H[4]);
+    f = vec_splats(H[5]);
+    g = vec_splats(H[6]);
+    h = vec_splats(H[7]);
+
+    SHA256_UNROLLED_ROUNDS;
+
+    H[0] += a[0];
+    H[1] += b[0];
+    H[2] += c[0];
+    H[3] += d[0];
+    H[4] += e[0];
+    H[5] += f[0];
+    H[6] += g[0];
+    H[7] += h[0];
+
+#undef ROUND
+
+#else /* USE_PPC_CRYPTO*/
+
     {
 #if defined(IS_LITTLE_ENDIAN)
         BYTESWAP4(W[0]);
@@ -280,11 +435,6 @@ SHA256_Compress(SHA256Context *ctx)
         g = H[6];
         h = H[7];
 
-#define ROUND(n, a, b, c, d, e, f, g, h)       \
-    h += S1(e) + Ch(e, f, g) + K256[n] + W[n]; \
-    d += h;                                    \
-    h += S0(a) + Maj(a, b, c);
-
 #ifdef NOUNROLL256
         {
             int t;
@@ -300,77 +450,7 @@ SHA256_Compress(SHA256Context *ctx)
             }
         }
 #else
-        ROUND(0, a, b, c, d, e, f, g, h)
-        ROUND(1, h, a, b, c, d, e, f, g)
-        ROUND(2, g, h, a, b, c, d, e, f)
-        ROUND(3, f, g, h, a, b, c, d, e)
-        ROUND(4, e, f, g, h, a, b, c, d)
-        ROUND(5, d, e, f, g, h, a, b, c)
-        ROUND(6, c, d, e, f, g, h, a, b)
-        ROUND(7, b, c, d, e, f, g, h, a)
-
-        ROUND(8, a, b, c, d, e, f, g, h)
-        ROUND(9, h, a, b, c, d, e, f, g)
-        ROUND(10, g, h, a, b, c, d, e, f)
-        ROUND(11, f, g, h, a, b, c, d, e)
-        ROUND(12, e, f, g, h, a, b, c, d)
-        ROUND(13, d, e, f, g, h, a, b, c)
-        ROUND(14, c, d, e, f, g, h, a, b)
-        ROUND(15, b, c, d, e, f, g, h, a)
-
-        ROUND(16, a, b, c, d, e, f, g, h)
-        ROUND(17, h, a, b, c, d, e, f, g)
-        ROUND(18, g, h, a, b, c, d, e, f)
-        ROUND(19, f, g, h, a, b, c, d, e)
-        ROUND(20, e, f, g, h, a, b, c, d)
-        ROUND(21, d, e, f, g, h, a, b, c)
-        ROUND(22, c, d, e, f, g, h, a, b)
-        ROUND(23, b, c, d, e, f, g, h, a)
-
-        ROUND(24, a, b, c, d, e, f, g, h)
-        ROUND(25, h, a, b, c, d, e, f, g)
-        ROUND(26, g, h, a, b, c, d, e, f)
-        ROUND(27, f, g, h, a, b, c, d, e)
-        ROUND(28, e, f, g, h, a, b, c, d)
-        ROUND(29, d, e, f, g, h, a, b, c)
-        ROUND(30, c, d, e, f, g, h, a, b)
-        ROUND(31, b, c, d, e, f, g, h, a)
-
-        ROUND(32, a, b, c, d, e, f, g, h)
-        ROUND(33, h, a, b, c, d, e, f, g)
-        ROUND(34, g, h, a, b, c, d, e, f)
-        ROUND(35, f, g, h, a, b, c, d, e)
-        ROUND(36, e, f, g, h, a, b, c, d)
-        ROUND(37, d, e, f, g, h, a, b, c)
-        ROUND(38, c, d, e, f, g, h, a, b)
-        ROUND(39, b, c, d, e, f, g, h, a)
-
-        ROUND(40, a, b, c, d, e, f, g, h)
-        ROUND(41, h, a, b, c, d, e, f, g)
-        ROUND(42, g, h, a, b, c, d, e, f)
-        ROUND(43, f, g, h, a, b, c, d, e)
-        ROUND(44, e, f, g, h, a, b, c, d)
-        ROUND(45, d, e, f, g, h, a, b, c)
-        ROUND(46, c, d, e, f, g, h, a, b)
-        ROUND(47, b, c, d, e, f, g, h, a)
-
-        ROUND(48, a, b, c, d, e, f, g, h)
-        ROUND(49, h, a, b, c, d, e, f, g)
-        ROUND(50, g, h, a, b, c, d, e, f)
-        ROUND(51, f, g, h, a, b, c, d, e)
-        ROUND(52, e, f, g, h, a, b, c, d)
-        ROUND(53, d, e, f, g, h, a, b, c)
-        ROUND(54, c, d, e, f, g, h, a, b)
-        ROUND(55, b, c, d, e, f, g, h, a)
-
-        ROUND(56, a, b, c, d, e, f, g, h)
-        ROUND(57, h, a, b, c, d, e, f, g)
-        ROUND(58, g, h, a, b, c, d, e, f)
-        ROUND(59, f, g, h, a, b, c, d, e)
-        ROUND(60, e, f, g, h, a, b, c, d)
-        ROUND(61, d, e, f, g, h, a, b, c)
-        ROUND(62, c, d, e, f, g, h, a, b)
-        ROUND(63, b, c, d, e, f, g, h, a)
+        SHA256_UNROLLED_ROUNDS;
 #endif
 
         H[0] += a;
@@ -383,6 +463,7 @@ SHA256_Compress(SHA256Context *ctx)
         H[7] += h;
     }
 #undef ROUND
+#endif /* !USE_PPC_CRYPTO */
 }
 
 #undef s0
@@ -691,6 +772,11 @@ SHA224_Clone(SHA224Context *dest, SHA224Context *src)
 
 #endif
 
+#if defined(USE_PPC_CRYPTO)
+void sha512_block_p8(void *ctx, const void *inp, size_t len);
+
+#else /* USE_PPC_CRYPTO */
+
 /* SHA-384 and SHA-512 constants, K512. */
 static const PRUint64 K512[80] = {
 #if PR_BYTES_PER_LONG == 8
@@ -777,6 +863,8 @@ static const PRUint64 K512[80] = {
     ULLC(5fcb6fab, 3ad6faec), ULLC(6c44198c, 4a475817)
 #endif
 };
+
+#endif /* !USE_PPC_CRYPTO */
 
 struct SHA512ContextStr {
     union {
@@ -932,6 +1020,10 @@ SHA512_Begin(SHA512Context *ctx)
 static void
 SHA512_Compress(SHA512Context *ctx)
 {
+#if defined(USE_PPC_CRYPTO)
+    sha512_block_p8(&H[0], &W[0], 1);
+#else /* USE_PPC_CRYPTO */
+
 #if defined(IS_LITTLE_ENDIAN)
     {
         BYTESWAP8(W[0]);
@@ -1174,6 +1266,8 @@ SHA512_Compress(SHA512Context *ctx)
         ADDTO(g, H[6]);
         ADDTO(h, H[7]);
     }
+
+#endif /* !USE_PPC_CRYPTO */
 }
 
 void

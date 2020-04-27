@@ -927,8 +927,18 @@ ssl_policy_selfserv()
   # Disallow RSA in key exchange explicitly
   setup_policy "disallow=rsa/ssl-key-exchange" ${P_R_SERVERDIR}
 
+  SAVE_SERVER_OPTIONS=${SERVER_OPTIONS}
+  # make sure policy is working in the multiprocess case is working on
+  # UNIX-like OS's. Other OS's can't properly clean up the child processes
+  # when our test suite kills the parent, so just use the single process 
+  # self serve for them
+  if [ "${OS_ARCH}" != "WINNT" -a "${OS_ARCH}" != "WIN95" -a "${OS_ARCH}" != "OS2" ]; then
+      SERVER_OPTIONS="-M 3 ${SERVER_OPTIONS}"
+  fi
+  
   start_selfserv $CIPHER_SUITES
 
+  SERVER_OPTIONS="${SAVE_SERVER_OPTIONS}"
   VMIN="ssl3"
   VMAX="tls1.2"
 

@@ -796,6 +796,20 @@ struct FREEBLVectorStr {
                             const unsigned char *input, unsigned int inputLen,
                             void *params, unsigned int paramsLen,
                             const unsigned char *aad, unsigned int aadLen);
+    SECStatus (*p_AESKeyWrap_EncryptKWP)(AESKeyWrapContext *cx,
+                                         unsigned char *output,
+                                         unsigned int *outputLen,
+                                         unsigned int maxOutputLen,
+                                         const unsigned char *input,
+                                         unsigned int inputLen);
+
+    SECStatus (*p_AESKeyWrap_DecryptKWP)(AESKeyWrapContext *cx,
+                                         unsigned char *output,
+                                         unsigned int *outputLen,
+                                         unsigned int maxOutputLen,
+                                         const unsigned char *input,
+                                         unsigned int inputLen);
+
     /* Version 3.023 came to here */
 
     /* Add new function pointers at the end of this struct and bump

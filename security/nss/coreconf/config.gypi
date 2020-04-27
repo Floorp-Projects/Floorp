@@ -362,6 +362,7 @@
               '_DEFAULT_SOURCE', # for <endian.h> functions, strdup, realpath, and getentropy
               '_BSD_SOURCE', # for the above in glibc <= 2.19
               '_POSIX_SOURCE', # for <signal.h>
+              'SQL_MEASURE_USE_TEMP_DIR', # use tmpdir for the access calls
             ],
           }],
           [ 'OS=="dragonfly" or OS=="freebsd"', {
@@ -594,9 +595,11 @@
             'Optimization': '<(debug_optimization_level)',
             'BasicRuntimeChecks': '3',
             'RuntimeLibrary': '2', # /MD
+            'DebugInformationFormat': '3',
           },
           'VCLinkerTool': {
             'LinkIncremental': '1',
+            'GenerateDebugInformation' : 'true',
           },
           'VCResourceCompilerTool': {
             'PreprocessorDefinitions': ['DEBUG'],

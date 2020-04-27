@@ -1271,7 +1271,7 @@ gotmdobject:
         return (NSSCKFWObject *)NULL;
     }
 
-    fwObject = nssCKFWObject_Create(arena, mdObject,
+    fwObject = nssCKFWObject_Create(isTokenObject ? arena : NULL, mdObject,
                                     isTokenObject ? NULL
                                                   : fwSession,
                                     fwSession->fwToken, fwSession->fwInstance, pError);
@@ -1399,7 +1399,7 @@ nssCKFWSession_CopyObject(
             return (NSSCKFWObject *)NULL;
         }
 
-        rv = nssCKFWObject_Create(arena, mdObject,
+        rv = nssCKFWObject_Create(newIsToken ? arena : NULL, mdObject,
                                   newIsToken ? NULL
                                              : fwSession,
                                   fwSession->fwToken, fwSession->fwInstance, pError);
