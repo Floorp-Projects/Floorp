@@ -48,6 +48,7 @@ wgpu_bindings = { path = "../../../../gfx/wgpu_bindings", optional = true }
 mapped_hyph = { git = "https://github.com/jfkthame/mapped_hyph.git", tag = "v0.3.0" }
 remote = { path = "../../../../remote", optional = true }
 fog = { path = "../../../components/glean", optional = true }
+webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge", optional = true }
 
 unic-langid = { version = "0.8", features = ["likelysubtags"] }
 unic-langid-ffi = { path = "../../../../intl/locale/rust/unic-langid-ffi" }
@@ -97,7 +98,7 @@ wasm_library_sandboxing = ["rlbox_lucet_sandbox"]
 webgpu = ["wgpu_bindings"]
 remote_agent = ["remote"]
 glean = ["fog"]
-new_webext_storage = ["webext-storage"]
+new_webext_storage = ["webext_storage_bridge"]
 
 [lib]
 path = "lib.rs"
