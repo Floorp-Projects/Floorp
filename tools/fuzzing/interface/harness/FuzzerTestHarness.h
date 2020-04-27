@@ -56,7 +56,7 @@ MOZ_FORMAT_PRINTF(1, 2) void fail(const char* msg, ...) {
 
 //-----------------------------------------------------------------------------
 
-class ScopedXPCOM : public nsIDirectoryServiceProvider2 {
+class ScopedXPCOM final : public nsIDirectoryServiceProvider2 {
  public:
   NS_DECL_ISUPPORTS
 
