@@ -135,7 +135,7 @@ class JUnitTestRunner(MochitestDesktop):
             self.stopServers()
             self.log.debug("Servers stopped")
             self.device.stop_application(self.options.app)
-            self.device.rm(self.remote_profile, force=True, recursive=True)
+            self.device.rm(self.remote_profile, force=True, recursive=True, root=True)
             if hasattr(self, 'profile'):
                 del self.profile
         except Exception:
