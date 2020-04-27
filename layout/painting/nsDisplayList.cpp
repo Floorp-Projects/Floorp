@@ -7064,42 +7064,6 @@ void nsDisplaySubDocument::Disown() {
   }
 }
 
-UniquePtr<ScrollMetadata> nsDisplaySubDocument::ComputeScrollMetadata(
-    LayerManager* aLayerManager,
-    const ContainerLayerParameters& aContainerParameters) {
-  if (!(mFlags & nsDisplayOwnLayerFlags::GenerateScrollableLayer)) {
-    return UniquePtr<ScrollMetadata>(nullptr);
-  }
-
-  nsPresContext* presContext = mFrame->PresContext();
-  nsIFrame* rootScrollFrame = presContext->PresShell()->GetRootScrollFrame();
-  bool isRootContentDocument = presContext->IsRootContentDocumentCrossProcess();
-  PresShell* presShell = presContext->PresShell();
-  ContainerLayerParameters params(
-      aContainerParameters.mXScale * presShell->GetResolution(),
-      aContainerParameters.mYScale * presShell->GetResolution(), nsIntPoint(),
-      aContainerParameters);
-
-  nsRect viewport = mFrame->GetRect() - mFrame->GetPosition() +
-                    mFrame->GetOffsetToCrossDoc(ReferenceFrame());
-
-  nsIScrollableFrame* scrollableFrame = rootScrollFrame->GetScrollTargetFrame();
-  if (isRootContentDocument) {
-    viewport.SizeTo(scrollableFrame->GetScrollPortRect().Size());
-  }
-
-  UniquePtr<ScrollMetadata> metadata =
-      MakeUnique<ScrollMetadata>(nsLayoutUtils::ComputeScrollMetadata(
-          mFrame, rootScrollFrame, rootScrollFrame->GetContent(),
-          ReferenceFrame(), aLayerManager, mScrollParentId, viewport, Nothing(),
-          isRootContentDocument, Some(params)));
-  if (scrollableFrame) {
-    scrollableFrame->NotifyApzTransaction();
-  }
-
-  return metadata;
-}
-
 static bool UseDisplayPortForViewport(nsDisplayListBuilder* aBuilder,
                                       nsIFrame* aFrame) {
   return aBuilder->IsPaintingToWindow() &&

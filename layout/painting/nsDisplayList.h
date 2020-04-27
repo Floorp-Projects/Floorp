@@ -6149,10 +6149,6 @@ class nsDisplaySubDocument : public nsDisplayOwnLayer {
   nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override;
 
-  mozilla::UniquePtr<ScrollMetadata> ComputeScrollMetadata(
-      LayerManager* aLayerManager,
-      const ContainerLayerParameters& aContainerParameters);
-
   nsIFrame* FrameForInvalidation() const override;
   void RemoveFrame(nsIFrame* aFrame) override;
 
