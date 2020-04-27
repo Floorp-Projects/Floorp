@@ -7,7 +7,7 @@
 #include "CookieCommons.h"
 #include "CookieLogging.h"
 #include "CookieStorage.h"
-
+#include "mozilla/dom/nsMixedContentBlocker.h"
 #include "nsIMutableArray.h"
 #include "nsTPriorityQueue.h"
 #include "prprf.h"
@@ -407,9 +407,10 @@ void CookieStorage::AddCookie(const nsACString& aBaseDomain,
   foundCookie = FindCookie(aBaseDomain, aOriginAttributes, aCookie->Host(),
                            aCookie->Name(), aCookie->Path(), exactIter);
   bool foundSecureExact = foundCookie && exactIter.Cookie()->IsSecure();
-  bool isSecure = true;
+  bool potentiallyTrustworthy = true;
   if (aHostURI) {
-    isSecure = aHostURI->SchemeIs("https");
+    potentiallyTrustworthy =
+        nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(aHostURI);
   }
   bool oldCookieIsSession = false;
   // Step1, call FindSecureCookie(). FindSecureCookie() would
@@ -425,7 +426,7 @@ void CookieStorage::AddCookie(const nsACString& aBaseDomain,
   if (!aCookie->IsSecure() &&
       (foundSecureExact ||
        FindSecureCookie(aBaseDomain, aOriginAttributes, aCookie)) &&
-      !isSecure) {
+      !potentiallyTrustworthy) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
                       "cookie can't save because older cookie is secure "
                       "cookie but newer cookie is non-secure cookie");
