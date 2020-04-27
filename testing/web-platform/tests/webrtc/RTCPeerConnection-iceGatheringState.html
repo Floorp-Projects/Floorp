@@ -120,7 +120,7 @@
     t.add_cleanup(() => pc1.close());
     const pc2 = new RTCPeerConnection();
     t.add_cleanup(() => pc2.close());
-    await initialOfferAnswer(pc1, pc2, {offerToReceiveAudio:true});
+    await initialOfferAnswer(pc1, pc2, {offerToReceiveAudio: true});
 
     expectNoMoreGatheringStateChanges(t, pc1);
     expectNoMoreGatheringStateChanges(t, pc2);
@@ -136,11 +136,24 @@
     t.add_cleanup(() => pc1.close());
     const pc2 = new RTCPeerConnection();
     t.add_cleanup(() => pc2.close());
+    await initialOfferAnswer(pc1, pc2, {offerToReceiveAudio: true});
+    await pc1.setLocalDescription(await pc1.createOffer({iceRestart: true}));
+    await iceGatheringStateTransitions(pc1, 'gathering', 'complete');
+    expectNoMoreGatheringStateChanges(t, pc1);
+    await pc1.setLocalDescription({type: 'rollback'});
+    await new Promise(r => t.step_timeout(r, 1000));
+  }, 'rolling back an ICE restart when gathering is complete should not result in iceGatheringState changes');
+
+  promise_test(async t => {
+    const pc1 = new RTCPeerConnection();
+    t.add_cleanup(() => pc1.close());
+    const pc2 = new RTCPeerConnection();
+    t.add_cleanup(() => pc2.close());
     expectNoMoreGatheringStateChanges(t, pc2);
-    const offer = await pc1.createOffer({offerToReceiveAudio:true});
+    const offer = await pc1.createOffer({offerToReceiveAudio: true});
     await pc2.setRemoteDescription(offer);
     await pc2.setRemoteDescription(offer);
-    await pc2.setRemoteDescription({type:'rollback'});
+    await pc2.setRemoteDescription({type: 'rollback'});
     await pc2.setRemoteDescription(offer);
   }, 'sRD does not cause ICE gathering state changes')
 
