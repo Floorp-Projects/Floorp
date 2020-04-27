@@ -495,15 +495,13 @@ add_task(async function testPreferencesLink() {
   // Open the about:preferences page from about:addons.
   let waitForNewTab = BrowserTestUtils.waitForNewTab(
     gBrowser,
-    "about:preferences"
+    "about:preferences",
+    true
   );
   doc.getElementById("preferencesButton").click();
   let tab = await waitForNewTab;
   let getAddonsButton = () =>
     tab.linkedBrowser.contentDocument.getElementById("addonsButton");
-
-  // Wait for the page to load.
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   // Open the about:addons page from about:preferences.
   getAddonsButton().click();

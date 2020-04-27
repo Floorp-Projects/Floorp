@@ -116,7 +116,11 @@ async function addTrackerDataIntoDB(count) {
 }
 
 async function waitForAboutProtectionsTab() {
-  let tab = await BrowserTestUtils.waitForNewTab(gBrowser, "about:protections");
+  let tab = await BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    "about:protections",
+    true
+  );
 
   // When the graph is built it means the messaging has finished,
   // we can close the tab.
