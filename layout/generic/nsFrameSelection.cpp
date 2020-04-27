@@ -2005,22 +2005,9 @@ nsresult nsFrameSelection::CharacterMove(bool aForward, bool aExtend) {
                    eUsePrefStyle);
 }
 
-nsresult nsFrameSelection::CharacterExtendForDelete() {
-  return MoveCaret(eDirNext, true, eSelectCluster, eLogical);
-}
-
-nsresult nsFrameSelection::CharacterExtendForBackspace() {
-  return MoveCaret(eDirPrevious, true, eSelectCharacter, eLogical);
-}
-
 nsresult nsFrameSelection::WordMove(bool aForward, bool aExtend) {
   return MoveCaret(aForward ? eDirNext : eDirPrevious, aExtend, eSelectWord,
                    eUsePrefStyle);
-}
-
-nsresult nsFrameSelection::WordExtendForDelete(bool aForward) {
-  return MoveCaret(aForward ? eDirNext : eDirPrevious, true, eSelectWord,
-                   eLogical);
 }
 
 nsresult nsFrameSelection::LineMove(bool aForward, bool aExtend) {

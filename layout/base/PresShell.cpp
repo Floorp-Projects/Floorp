@@ -2278,18 +2278,6 @@ PresShell::CharacterMove(bool aForward, bool aExtend) {
 }
 
 NS_IMETHODIMP
-PresShell::CharacterExtendForDelete() {
-  RefPtr<nsFrameSelection> frameSelection = mSelection;
-  return frameSelection->CharacterExtendForDelete();
-}
-
-NS_IMETHODIMP
-PresShell::CharacterExtendForBackspace() {
-  RefPtr<nsFrameSelection> frameSelection = mSelection;
-  return frameSelection->CharacterExtendForBackspace();
-}
-
-NS_IMETHODIMP
 PresShell::WordMove(bool aForward, bool aExtend) {
   RefPtr<nsFrameSelection> frameSelection = mSelection;
   nsresult result = frameSelection->WordMove(aForward, aExtend);
@@ -2297,12 +2285,6 @@ PresShell::WordMove(bool aForward, bool aExtend) {
   // end/beginning respectively.
   if (NS_FAILED(result)) result = CompleteMove(aForward, aExtend);
   return result;
-}
-
-NS_IMETHODIMP
-PresShell::WordExtendForDelete(bool aForward) {
-  RefPtr<nsFrameSelection> frameSelection = mSelection;
-  return frameSelection->WordExtendForDelete(aForward);
 }
 
 NS_IMETHODIMP
