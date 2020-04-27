@@ -556,7 +556,6 @@ android-x86_64-tests:
     - crashtest
     - geckoview-junit
     - gtest
-    - mochitest-chrome-gpu
     - mochitest-media
     - mochitest-plain
     - mochitest-plain-gpu
