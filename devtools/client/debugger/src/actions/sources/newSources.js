@@ -282,7 +282,6 @@ export function newOriginalSources(sourceInfo: Array<OriginalSourceData>) {
         isWasm: false,
         isBlackBoxed: false,
         introductionUrl: null,
-        introductionType: undefined,
         isExtension: false,
         extensionName: null,
         isOriginal: true,
@@ -329,7 +328,6 @@ export function newGeneratedSources(sourceInfo: Array<GeneratedSourceData>) {
           isPrettyPrinted: false,
           extensionName: source.extensionName,
           introductionUrl: source.introductionUrl,
-          introductionType: source.introductionType,
           isBlackBoxed: false,
           isWasm:
             !!supportsWasm(getState()) && source.introductionType === "wasm",

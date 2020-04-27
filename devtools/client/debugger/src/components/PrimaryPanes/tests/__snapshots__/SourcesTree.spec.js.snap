@@ -137,7 +137,6 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
             "contents": Object {
               "extensionName": null,
               "id": "server1.conn13.child1/41",
-              "introductionType": undefined,
               "introductionUrl": null,
               "isBlackBoxed": false,
               "isExtension": false,
@@ -157,7 +156,6 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                 "contents": Object {
                   "extensionName": null,
                   "id": "server1.conn13.child1/42",
-                  "introductionType": undefined,
                   "introductionUrl": null,
                   "isBlackBoxed": false,
                   "isExtension": false,
@@ -175,7 +173,6 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                 "contents": Object {
                   "extensionName": null,
                   "id": "server1.conn13.child1/42/originalSource-sha",
-                  "introductionType": undefined,
                   "introductionUrl": null,
                   "isBlackBoxed": false,
                   "isExtension": false,
@@ -193,7 +190,6 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                 "contents": Object {
                   "extensionName": null,
                   "id": "server1.conn13.child1/39",
-                  "introductionType": undefined,
                   "introductionUrl": null,
                   "isBlackBoxed": false,
                   "isExtension": false,
@@ -211,7 +207,6 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                 "contents": Object {
                   "extensionName": null,
                   "id": "server1.conn13.child1/41",
-                  "introductionType": undefined,
                   "introductionUrl": null,
                   "isBlackBoxed": false,
                   "isExtension": false,
@@ -229,7 +224,6 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                 "contents": Object {
                   "extensionName": null,
                   "id": "server1.conn13.child1/40",
-                  "introductionType": undefined,
                   "introductionUrl": null,
                   "isBlackBoxed": false,
                   "isExtension": false,
@@ -256,7 +250,6 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                     "contents": Object {
                       "extensionName": null,
                       "id": "server1.conn13.child1/42",
-                      "introductionType": undefined,
                       "introductionUrl": null,
                       "isBlackBoxed": false,
                       "isExtension": false,
@@ -274,7 +267,6 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                     "contents": Object {
                       "extensionName": null,
                       "id": "server1.conn13.child1/42/originalSource-sha",
-                      "introductionType": undefined,
                       "introductionUrl": null,
                       "isBlackBoxed": false,
                       "isExtension": false,
@@ -292,7 +284,6 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                     "contents": Object {
                       "extensionName": null,
                       "id": "server1.conn13.child1/39",
-                      "introductionType": undefined,
                       "introductionUrl": null,
                       "isBlackBoxed": false,
                       "isExtension": false,
@@ -310,7 +301,6 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                     "contents": Object {
                       "extensionName": null,
                       "id": "server1.conn13.child1/41",
-                      "introductionType": undefined,
                       "introductionUrl": null,
                       "isBlackBoxed": false,
                       "isExtension": false,
@@ -328,7 +318,6 @@ exports[`SourcesTree on receiving new props updates highlighted items updates hi
                     "contents": Object {
                       "extensionName": null,
                       "id": "server1.conn13.child1/40",
-                      "introductionType": undefined,
                       "introductionUrl": null,
                       "isBlackBoxed": false,
                       "isExtension": false,
