@@ -739,6 +739,107 @@ void nsDocShellLoadState::CalculateLoadURIFlags() {
   }
 }
 
+nsLoadFlags nsDocShellLoadState::CalculateChannelLoadFlags(
+    BrowsingContext* aBrowsingContext, Maybe<bool> aUriModified,
+    Maybe<bool> aIsXFOError) {
+  MOZ_ASSERT(aBrowsingContext);
+
+  nsLoadFlags loadFlags = aBrowsingContext->GetDefaultLoadFlags();
+
+  if (FirstParty()) {
+    // tag first party URL loads
+    loadFlags |= nsIChannel::LOAD_INITIAL_DOCUMENT_URI;
+  }
+
+  const uint32_t loadType = LoadType();
+
+  // These values aren't available for loads initiated in the Parent process.
+  MOZ_ASSERT_IF(loadType == LOAD_HISTORY, aUriModified.isSome());
+  MOZ_ASSERT_IF(loadType == LOAD_ERROR_PAGE, aIsXFOError.isSome());
+
+  if (loadType == LOAD_ERROR_PAGE) {
+    // Error pages are LOAD_BACKGROUND, unless it's an
+    // XFO error for which we want an error page to load
+    // but additionally want the onload() event to fire.
+    if (!*aIsXFOError) {
+      loadFlags |= nsIChannel::LOAD_BACKGROUND;
+    }
+  }
+
+  // Mark the channel as being a document URI and allow content sniffing...
+  loadFlags |=
+      nsIChannel::LOAD_DOCUMENT_URI | nsIChannel::LOAD_CALL_CONTENT_SNIFFERS;
+
+  if (nsDocShell::SandboxFlagsImplyCookies(
+          aBrowsingContext->GetSandboxFlags())) {
+    loadFlags |= nsIRequest::LOAD_DOCUMENT_NEEDS_COOKIE;
+  }
+
+  // Load attributes depend on load type...
+  switch (loadType) {
+    case LOAD_HISTORY: {
+      // Only send VALIDATE_NEVER if mLSHE's URI was never changed via
+      // push/replaceState (bug 669671).
+      if (!*aUriModified) {
+        loadFlags |= nsIRequest::VALIDATE_NEVER;
+      }
+      break;
+    }
+
+    case LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE:
+    case LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE:
+      loadFlags |=
+          nsIRequest::LOAD_BYPASS_CACHE | nsIRequest::LOAD_FRESH_CONNECTION;
+      [[fallthrough]];
+
+    case LOAD_RELOAD_NORMAL:
+    case LOAD_REFRESH:
+      loadFlags |= nsIRequest::VALIDATE_ALWAYS;
+      break;
+
+    case LOAD_NORMAL_BYPASS_CACHE:
+    case LOAD_NORMAL_BYPASS_PROXY:
+    case LOAD_NORMAL_BYPASS_PROXY_AND_CACHE:
+    case LOAD_NORMAL_ALLOW_MIXED_CONTENT:
+    case LOAD_RELOAD_BYPASS_CACHE:
+    case LOAD_RELOAD_BYPASS_PROXY:
+    case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
+    case LOAD_RELOAD_ALLOW_MIXED_CONTENT:
+    case LOAD_REPLACE_BYPASS_CACHE:
+      loadFlags |=
+          nsIRequest::LOAD_BYPASS_CACHE | nsIRequest::LOAD_FRESH_CONNECTION;
+      break;
+
+    case LOAD_NORMAL:
+    case LOAD_LINK:
+      // Set cache checking flags
+      switch (Preferences::GetInt("browser.cache.check_doc_frequency", -1)) {
+        case 0:
+          loadFlags |= nsIRequest::VALIDATE_ONCE_PER_SESSION;
+          break;
+        case 1:
+          loadFlags |= nsIRequest::VALIDATE_ALWAYS;
+          break;
+        case 2:
+          loadFlags |= nsIRequest::VALIDATE_NEVER;
+          break;
+      }
+      break;
+  }
+
+  if (HasLoadFlags(nsDocShell::INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER)) {
+    loadFlags |= nsIChannel::LOAD_BYPASS_URL_CLASSIFIER;
+  }
+
+  // If the user pressed shift-reload, then do not allow ServiceWorker
+  // interception to occur. See step 12.1 of the SW HandleFetch algorithm.
+  if (IsForceReloadType(loadType)) {
+    loadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
+  }
+
+  return loadFlags;
+}
+
 DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   DocShellLoadStateInit loadState;
   loadState.ResultPrincipalURI() = mResultPrincipalURI;

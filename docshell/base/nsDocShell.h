@@ -682,9 +682,6 @@ class nsDocShell final : public nsDocLoader,
   static nsresult AddHeadersToChannel(nsIInputStream* aHeadersData,
                                       nsIChannel* aChannel);
 
-  nsresult DoChannelLoad(nsIChannel* aChannel, nsIURILoader* aURILoader,
-                         bool aBypassClassifier);
-
   nsresult OpenInitializedChannel(nsIChannel* aChannel,
                                   nsIURILoader* aURILoader,
                                   uint32_t aOpenFlags);
