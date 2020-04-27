@@ -28,6 +28,7 @@ UniquePtr<RenderCompositor> RenderCompositorOGL::Create(
   if (!gl) {
     gl = gl::GLContextProvider::CreateForCompositorWidget(
         aWidget, /* aWebRender */ true, /* aForceAccelerated */ true);
+    RenderThread::MaybeEnableGLDebugMessage(gl);
   }
   if (!gl || !gl->MakeCurrent()) {
     gfxCriticalNote << "Failed GL context creation for WebRender: "
