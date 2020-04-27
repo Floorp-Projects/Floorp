@@ -416,7 +416,7 @@ const render = async (certs, error, isAboutCertificate = false) => {
     const AboutCertificateSection = customElements.get(
       "about-certificate-section"
     );
-    document.querySelector("body").append(new AboutCertificateSection(certs));
+    document.querySelector("body").append(new AboutCertificateSection());
   } else {
     await customElements.whenDefined("certificate-section");
     const CertificateSection = customElements.get("certificate-section");
