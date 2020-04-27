@@ -512,6 +512,7 @@ if 'jittest' in test_suites:
 if 'jsapitests' in test_suites:
     jsapi_test_binary = os.path.join(OBJDIR, 'dist', 'bin', 'jsapi-tests')
     test_env = env.copy()
+    test_env['TOPSRCDIR'] = DIR.source
     if use_minidump and platform.system() == 'Linux':
         test_env['LD_PRELOAD'] = injector_lib
     st = run_test_command([jsapi_test_binary], env=test_env)

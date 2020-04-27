@@ -551,7 +551,10 @@ class SpiderMonkeyTests(MachCommandBase):
         if test_name:
             jsapi_tests_cmd.append(test_name)
 
-        return subprocess.call(jsapi_tests_cmd)
+        test_env = os.environ.copy()
+        test_env["TOPSRCDIR"] = self.topsrcdir
+
+        return subprocess.call(jsapi_tests_cmd, env=test_env)
 
     def run_check_js_msg(self):
         import subprocess
