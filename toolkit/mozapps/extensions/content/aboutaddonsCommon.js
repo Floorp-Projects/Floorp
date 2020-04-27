@@ -41,17 +41,10 @@ XPCOMUtils.defineLazyPreferenceGetter(
   true
 );
 
-const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
 const PREF_DISCOVER_ENABLED = "extensions.getAddons.showPane";
 const PREF_UI_LASTCATEGORY = "extensions.ui.lastCategory";
 
 function isDiscoverEnabled() {
-  if (
-    Services.prefs.getPrefType(PREF_DISCOVERURL) == Services.prefs.PREF_INVALID
-  ) {
-    return false;
-  }
-
   try {
     if (!Services.prefs.getBoolPref(PREF_DISCOVER_ENABLED)) {
       return false;

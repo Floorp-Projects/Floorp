@@ -118,8 +118,6 @@ user_pref("extensions.systemAddon.update.url", "http://{server}/dummy-system-add
 user_pref("extensions.update.background.url", "http://{server}/extensions-dummy/updateBackgroundURL");
 // Point update checks to the local testing server for fast failures
 user_pref("extensions.update.url", "http://{server}/extensions-dummy/updateURL");
-// Make sure opening about:addons won't hit the network
-user_pref("extensions.webservice.discoverURL", "http://{server}/extensions-dummy/discoveryURL");
 user_pref("findbar.highlightAll", false);
 user_pref("findbar.modalHighlight", false);
 // Existing tests assume there is no font size inflation.
