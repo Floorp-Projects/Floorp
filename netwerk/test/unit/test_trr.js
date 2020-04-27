@@ -1841,3 +1841,108 @@ add_task(async function test_detected_uri_link_change() {
 
   gDefaultPref.setCharPref("network.trr.uri", defaultURI);
 });
+
+add_task(async function test_pref_changes() {
+  Services.prefs.clearUserPref("network.trr.uri");
+  let defaultURI = gDefaultPref.getCharPref("network.trr.uri");
+
+  async function doThenCheckURI(closure, expectedURI, expectChange = false) {
+    let uriChanged;
+    if (expectChange) {
+      uriChanged = observerPromise("network:trr-uri-changed");
+    }
+    closure();
+    if (expectChange) {
+      await uriChanged;
+    }
+    equal(dns.currentTrrURI, expectedURI);
+  }
+
+  // setting the default value of the pref should be reflected in the URI
+  await doThenCheckURI(() => {
+    gDefaultPref.setCharPref(
+      "network.trr.uri",
+      `https://foo.example.com:${h2Port}/doh?default`
+    );
+  }, `https://foo.example.com:${h2Port}/doh?default`);
+
+  // the user set value should be reflected in the URI
+  await doThenCheckURI(() => {
+    Services.prefs.setCharPref(
+      "network.trr.uri",
+      `https://foo.example.com:${h2Port}/doh?user`
+    );
+  }, `https://foo.example.com:${h2Port}/doh?user`);
+
+  // A user set pref is selected, so it should be chosen instead of the rollout
+  await doThenCheckURI(
+    () => {
+      Services.prefs.setCharPref(
+        "doh-rollout.uri",
+        `https://foo.example.com:${h2Port}/doh?rollout`
+      );
+    },
+    `https://foo.example.com:${h2Port}/doh?user`,
+    false
+  );
+
+  // There is no user set pref, so we go to the rollout pref
+  await doThenCheckURI(() => {
+    Services.prefs.clearUserPref("network.trr.uri");
+  }, `https://foo.example.com:${h2Port}/doh?rollout`);
+
+  // When the URI is set by the rollout addon, detection is allowed
+  await doThenCheckURI(() => {
+    dns.setDetectedTrrURI(`https://foo.example.com:${h2Port}/doh?detected`);
+  }, `https://foo.example.com:${h2Port}/doh?detected`);
+
+  // Should switch back to the default provided by the rollout addon
+  await doThenCheckURI(() => {
+    let networkLinkService = {
+      platformDNSIndications: 0,
+      QueryInterface: ChromeUtils.generateQI([Ci.nsINetworkLinkService]),
+    };
+    Services.obs.notifyObservers(
+      networkLinkService,
+      "network:link-status-changed",
+      "changed"
+    );
+  }, `https://foo.example.com:${h2Port}/doh?rollout`);
+
+  // Again the user set pref should be chosen
+  await doThenCheckURI(() => {
+    Services.prefs.setCharPref(
+      "network.trr.uri",
+      `https://foo.example.com:${h2Port}/doh?user`
+    );
+  }, `https://foo.example.com:${h2Port}/doh?user`);
+
+  // Detection should not work with a user set pref
+  await doThenCheckURI(
+    () => {
+      dns.setDetectedTrrURI(`https://foo.example.com:${h2Port}/doh?detected`);
+    },
+    `https://foo.example.com:${h2Port}/doh?user`,
+    false
+  );
+
+  // Should stay the same on network changes
+  await doThenCheckURI(
+    () => {
+      let networkLinkService = {
+        platformDNSIndications: 0,
+        QueryInterface: ChromeUtils.generateQI([Ci.nsINetworkLinkService]),
+      };
+      Services.obs.notifyObservers(
+        networkLinkService,
+        "network:link-status-changed",
+        "changed"
+      );
+    },
+    `https://foo.example.com:${h2Port}/doh?user`,
+    false
+  );
+
+  // Restore the pref
+  gDefaultPref.setCharPref("network.trr.uri", defaultURI);
+});
