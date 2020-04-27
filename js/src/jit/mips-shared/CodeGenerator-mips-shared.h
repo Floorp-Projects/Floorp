@@ -138,6 +138,7 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared {
 
 // An out-of-line bailout thunk.
 class OutOfLineBailout : public OutOfLineCodeBase<CodeGeneratorMIPSShared> {
+ protected:
   LSnapshot* snapshot_;
   uint32_t frameSize_;
 

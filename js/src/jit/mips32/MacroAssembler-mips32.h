@@ -339,13 +339,17 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS {
   void unboxBoolean(const Address& src, Register dest);
   void unboxDouble(const ValueOperand& operand, FloatRegister dest);
   void unboxDouble(const Address& src, FloatRegister dest);
+  void unboxDouble(const BaseIndex& src, FloatRegister dest);
   void unboxString(const ValueOperand& operand, Register dest);
   void unboxString(const Address& src, Register dest);
+  void unboxBigInt(const ValueOperand& operand, Register dest);
+  void unboxBigInt(const Address& src, Register dest);
   void unboxObject(const ValueOperand& src, Register dest);
   void unboxObject(const Address& src, Register dest);
   void unboxObject(const BaseIndex& src, Register dest) {
     unboxNonDouble(src, dest, JSVAL_TYPE_OBJECT);
   }
+  void unboxObjectOrNull(const Address& src, Register dest);
   void unboxValue(const ValueOperand& src, AnyRegister dest, JSValueType);
 
   void unboxGCThingForPreBarrierTrampoline(const Address& src, Register dest) {
