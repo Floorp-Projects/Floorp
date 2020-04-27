@@ -139,7 +139,11 @@ class nsWebBrowserPersist::OnWalk final
     : public nsIWebBrowserPersistResourceVisitor {
  public:
   OnWalk(nsWebBrowserPersist* aParent, nsIURI* aFile, nsIFile* aDataPath)
-      : mParent(aParent), mFile(aFile), mDataPath(aDataPath) {}
+      : mParent(aParent),
+        mFile(aFile),
+        mDataPath(aDataPath),
+        mPendingDocuments(1),
+        mStatus(NS_OK) {}
 
   NS_DECL_NSIWEBBROWSERPERSISTRESOURCEVISITOR
   NS_DECL_ISUPPORTS
@@ -148,11 +152,33 @@ class nsWebBrowserPersist::OnWalk final
   nsCOMPtr<nsIURI> mFile;
   nsCOMPtr<nsIFile> mDataPath;
 
+  uint32_t mPendingDocuments;
+  nsresult mStatus;
+
   virtual ~OnWalk() = default;
 };
 
 NS_IMPL_ISUPPORTS(nsWebBrowserPersist::OnWalk,
                   nsIWebBrowserPersistResourceVisitor)
+
+class nsWebBrowserPersist::OnRemoteWalk final
+    : public nsIWebBrowserPersistDocumentReceiver {
+ public:
+  OnRemoteWalk(nsIWebBrowserPersistResourceVisitor* aVisitor,
+               nsIWebBrowserPersistDocument* aDocument)
+      : mVisitor(aVisitor), mDocument(aDocument) {}
+
+  NS_DECL_NSIWEBBROWSERPERSISTDOCUMENTRECEIVER
+  NS_DECL_ISUPPORTS
+ private:
+  nsCOMPtr<nsIWebBrowserPersistResourceVisitor> mVisitor;
+  nsCOMPtr<nsIWebBrowserPersistDocument> mDocument;
+
+  virtual ~OnRemoteWalk() = default;
+};
+
+NS_IMPL_ISUPPORTS(nsWebBrowserPersist::OnRemoteWalk,
+                  nsIWebBrowserPersistDocumentReceiver)
 
 class nsWebBrowserPersist::OnWrite final
     : public nsIWebBrowserPersistWriteCompletion {
@@ -1569,14 +1595,69 @@ nsWebBrowserPersist::OnWalk::VisitDocument(
 }
 
 NS_IMETHODIMP
+nsWebBrowserPersist::OnWalk::VisitBrowsingContext(
+    nsIWebBrowserPersistDocument* aDoc, BrowsingContext* aContext) {
+  RefPtr<dom::CanonicalBrowsingContext> context = aContext->Canonical();
+
+  UniquePtr<WebBrowserPersistDocumentParent> actor(
+      new WebBrowserPersistDocumentParent());
+
+  nsCOMPtr<nsIWebBrowserPersistDocumentReceiver> receiver =
+      new OnRemoteWalk(this, aDoc);
+  actor->SetOnReady(receiver);
+
+  RefPtr<dom::BrowserParent> browserParent =
+      context->GetCurrentWindowGlobal()->GetBrowserParent();
+
+  bool ok =
+      context->GetContentParent()->SendPWebBrowserPersistDocumentConstructor(
+          actor.release(), browserParent, context);
+
+  if (NS_WARN_IF(!ok)) {
+    // (The actor will be destroyed on constructor failure.)
+    EndVisit(nullptr, NS_ERROR_FAILURE);
+    return NS_ERROR_FAILURE;
+  }
+
+  ++mPendingDocuments;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWebBrowserPersist::OnWalk::EndVisit(nsIWebBrowserPersistDocument* aDoc,
                                       nsresult aStatus) {
+  if (NS_FAILED(mStatus)) {
+    return mStatus;
+  }
+
   if (NS_FAILED(aStatus)) {
+    mStatus = aStatus;
     mParent->SendErrorStatusChange(true, aStatus, nullptr, mFile);
     mParent->EndDownload(aStatus);
     return aStatus;
   }
+
+  if (--mPendingDocuments) {
+    // We're not done yet, wait for more.
+    return NS_OK;
+  }
+
   mParent->FinishSaveDocumentInternal(mFile, mDataPath);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebBrowserPersist::OnRemoteWalk::OnDocumentReady(
+    nsIWebBrowserPersistDocument* aSubDocument) {
+  mVisitor->VisitDocument(mDocument, aSubDocument);
+  mVisitor->EndVisit(mDocument, NS_OK);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebBrowserPersist::OnRemoteWalk::OnError(nsresult aFailure) {
+  mVisitor->EndVisit(nullptr, aFailure);
   return NS_OK;
 }
 

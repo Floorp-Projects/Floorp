@@ -22,7 +22,7 @@ add_task(async function checkFormStateSaved() {
       await SpecialPowers.spawn(browser, [{ textareas, textboxes }], fillform);
       let fileURISpec = await new Promise((resolve, reject) => {
         let stack = Components.stack.caller;
-        browser.frameLoader.startPersistence(0, {
+        browser.frameLoader.startPersistence(null, {
           onDocumentReady(document) {
             // Note that 'document' here is going to be an nsIWebBrowserPersistDocument,
             // not a regular DOM document.
