@@ -60,28 +60,53 @@ class TextInputDelegateTest : BaseSessionTest() {
             }
         }
 
-    private val selectionOffsets: Pair<Int, Int> get() = when (id) {
-        "#contenteditable" -> mainSession.evaluateJS("""[
-                document.getSelection().anchorOffset,
-                document.getSelection().focusOffset]""")
-        "#designmode" -> mainSession.evaluateJS("""(function() {
-                    var sel = document.querySelector('$id').contentDocument.getSelection();
-                    var text = document.querySelector('$id').contentDocument.body.firstChild;
-                    return [sel.anchorOffset, sel.focusOffset];
-                })()""")
-        else -> mainSession.evaluateJS("""(document.querySelector('$id').selectionDirection !== 'backward'
-            ? [ document.querySelector('$id').selectionStart, document.querySelector('$id').selectionEnd ]
-            : [ document.querySelector('$id').selectionEnd, document.querySelector('$id').selectionStart ])""")
-    }.asJsonArray().let {
-        Pair(it.getInt(0), it.getInt(1))
-    }
+    private var selectionOffsets: Pair<Int, Int>
+        get() = when (id) {
+            "#contenteditable" -> mainSession.evaluateJS("""[
+                    document.getSelection().anchorOffset,
+                    document.getSelection().focusOffset]""")
+            "#designmode" -> mainSession.evaluateJS("""(function() {
+                        var sel = document.querySelector('$id').contentDocument.getSelection();
+                        var text = document.querySelector('$id').contentDocument.body.firstChild;
+                        return [sel.anchorOffset, sel.focusOffset];
+                    })()""")
+            else -> mainSession.evaluateJS("""(document.querySelector('$id').selectionDirection !== 'backward'
+                ? [ document.querySelector('$id').selectionStart, document.querySelector('$id').selectionEnd ]
+                : [ document.querySelector('$id').selectionEnd, document.querySelector('$id').selectionStart ])""")
+        }.asJsonArray().let {
+            Pair(it.getInt(0), it.getInt(1))
+        }
+        set(offsets) {
+            var (start, end) = offsets
+            when (id) {
+                "#contenteditable" -> mainSession.evaluateJS("""(function() {
+                        let selection = document.getSelection();
+                        let text = document.querySelector('$id').firstChild;
+                        if (text) {
+                            selection.setBaseAndExtent(text, $start, text, $end)
+                        } else {
+                            selection.collapse(document.querySelector('$id'), 0);
+                        }
+                    })()""")
+                "#designmode" -> mainSession.evaluateJS("""(function() {
+                        let selection = document.querySelector('$id').contentDocument.getSelection();
+                        let text = document.querySelector('$id').contentDocument.body.firstChild;
+                        if (text) {
+                            selection.setBaseAndExtent(text, $start, text, $end)
+                        } else {
+                            selection.collapse(document.querySelector('$id').contentDocument.body, 0);
+                        }
+                    })()""")
+                else -> mainSession.evaluateJS("document.querySelector('$id').setSelectionRange($start, $end)")
+            }
+        }
 
     private fun processParentEvents() {
         sessionRule.requestedLocales
     }
 
     private fun processChildEvents() {
-        mainSession.waitForJS("new Promise(r => window.setTimeout(r))")
+        mainSession.waitForJS("new Promise(r => requestAnimationFrame(r))")
     }
 
     private fun setComposingText(ic: InputConnection, text: CharSequence, newCursorPosition: Int) {
@@ -104,6 +129,47 @@ class TextInputDelegateTest : BaseSessionTest() {
         promise.value
     }
 
+    private fun commitText(ic: InputConnection, text: CharSequence, newCursorPosition: Int) {
+        if (text == "") {
+            // No composition event is fired
+            ic.commitText(text, newCursorPosition)
+            return
+        }
+        val promise = mainSession.evaluatePromiseJS(
+                when (id) {
+                    "#designmode" -> "new Promise(r => document.querySelector('$id').contentDocument.addEventListener('compositionend', r, { once: true }))"
+                    else -> "new Promise(r => document.querySelector('$id').addEventListener('compositionend', r, { once: true }))"
+                })
+        ic.commitText(text, newCursorPosition)
+        promise.value
+    }
+
+    private fun deleteSurroundingText(ic: InputConnection, before: Int, after: Int) {
+        // deleteSurroundingText might fire multiple events.
+        val promise = mainSession.evaluatePromiseJS(
+                when (id) {
+                    "#designmode" -> "new Promise(r => document.querySelector('$id').contentDocument.addEventListener('input', r, { once: true }))"
+                    else -> "new Promise(r => document.querySelector('$id').addEventListener('input', r, { once: true }))"
+                })
+        ic.deleteSurroundingText(before, after)
+        if (before != 0 || after != 0) {
+            promise.value
+        }
+        // XXX: No way to wait for all events.
+        processChildEvents()
+    }
+
+    private fun setSelection(ic: InputConnection, start: Int, end: Int) {
+        val promise = mainSession.evaluatePromiseJS(
+                when (id) {
+                    "#designmode" -> "new Promise(r => document.querySelector('$id').contentDocument.addEventListener('selectionchange', r, { once: true }))"
+                    "#contenteditable" -> "new Promise(r => document.addEventListener('selectionchange', r, { once: true }))"
+                    else -> "new Promise(r => document.querySelector('$id').addEventListener('selectionchange', r, { once: true }))"
+                })
+        ic.setSelection(start, end)
+        promise.value
+    }
+
     private fun pressKey(keyCode: Int) {
         // Create a Promise to listen to the key event, and wait on it below.
         val promise = mainSession.evaluatePromiseJS(
@@ -113,6 +179,25 @@ class TextInputDelegateTest : BaseSessionTest() {
         mainSession.textInput.onKeyDown(keyCode, keyEvent)
         mainSession.textInput.onKeyUp(keyCode, KeyEvent.changeAction(keyEvent, KeyEvent.ACTION_UP))
         promise.value
+    }
+
+    private fun pressKey(ic: InputConnection, keyCode: Int) {
+        val promise = mainSession.evaluatePromiseJS(
+                when (id) {
+                    "#designmode" -> "new Promise(r => document.querySelector('$id').contentDocument.addEventListener('keyup', r, { once: true }))"
+                    else -> "new Promise(r => document.querySelector('$id').addEventListener('keyup', r, { once: true }))"
+                })
+        val time = SystemClock.uptimeMillis()
+        val keyEvent = KeyEvent(time, time, KeyEvent.ACTION_DOWN, keyCode, 0)
+        ic.sendKeyEvent(keyEvent)
+        ic.sendKeyEvent(KeyEvent.changeAction(keyEvent, KeyEvent.ACTION_UP))
+        promise.value
+    }
+
+    private fun syncShadowText(ic: InputConnection) {
+        // Workaround for sync shadow text
+        ic.beginBatchEdit()
+        ic.endBatchEdit()
     }
 
     @Test fun restartInput() {
@@ -318,6 +403,20 @@ class TextInputDelegateTest : BaseSessionTest() {
                                          expected: String, value: Int,
                                          checkGecko: Boolean = true) =
             assertTextAndSelection(message, ic, expected, value, value, checkGecko)
+
+    private fun setupContent(content: String) {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "dom.select_events.textcontrols.enabled" to true))
+
+        mainSession.textInput.view = View(InstrumentationRegistry.getInstrumentation().targetContext)
+
+        mainSession.loadTestPath(INPUTS_PATH)
+        mainSession.waitForPageStop()
+
+        textContent = content
+        mainSession.evaluateJS("document.querySelector('$id').focus()")
+        mainSession.waitUntilCalled(GeckoSession.TextInputDelegate::class, "restartInput")
+    }
 
     @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
     @Test fun inputConnection() {
