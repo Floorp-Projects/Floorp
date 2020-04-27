@@ -8,7 +8,6 @@
 
 #include "txIXPathContext.h"
 #include "txNodeSet.h"
-#include "nsAutoPtr.h"
 
 class txNodeSetContext : public txIEvalContext {
  public:

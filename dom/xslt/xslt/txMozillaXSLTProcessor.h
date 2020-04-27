@@ -6,7 +6,6 @@
 #ifndef TRANSFRMX_TXMOZILLAXSLTPROCESSOR_H
 #define TRANSFRMX_TXMOZILLAXSLTPROCESSOR_H
 
-#include "nsAutoPtr.h"
 #include "nsStubMutationObserver.h"
 #include "nsIDocumentTransformer.h"
 #include "txExpandedNameMap.h"

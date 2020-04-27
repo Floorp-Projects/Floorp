@@ -7,7 +7,6 @@
 #define TRANSFRMX_EXPRRESULT_H
 
 #include "nsString.h"
-#include "nsAutoPtr.h"
 #include "txCore.h"
 #include "txResultRecycler.h"
 
