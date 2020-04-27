@@ -22,6 +22,7 @@ static const char kPurge[] = "browser:purge-session-history";
 static const char kDisableIpv6Pref[] = "network.dns.disableIPv6";
 static const char kPrefSkipTRRParentalControl[] =
     "network.dns.skipTRR-when-parental-control-enabled";
+static const char kRolloutURIPref[] = "doh-rollout.uri";
 
 #define TRR_PREF_PREFIX "network.trr."
 #define TRR_PREF(x) TRR_PREF_PREFIX x
@@ -132,22 +133,8 @@ void TRRService::GetParentalControlEnabledInternal() {
 }
 
 void TRRService::SetDetectedTrrURI(const nsACString& aURI) {
-  nsAutoCString userPrefURI;
-  nsAutoCString defaultPrefURI;
-
-  nsresult rv = Preferences::GetCString(TRR_PREF("uri"), userPrefURI,
-                                        PrefValueKind::User);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-  rv = Preferences::GetCString(TRR_PREF("uri"), defaultPrefURI,
-                               PrefValueKind::Default);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
   // If the user has set a custom URI then we don't want to override that.
-  if (!userPrefURI.Equals(defaultPrefURI)) {
+  if (mURIPrefHasUserValue) {
     return;
   }
 
@@ -259,6 +246,25 @@ bool TRRService::MaybeSetPrivateURI(const nsACString& aURI) {
   return true;
 }
 
+void TRRService::CheckURIPrefs() {
+  mURISetByDetection = false;
+
+  // The user has set a custom URI so it takes precedence.
+  if (mURIPrefHasUserValue) {
+    MaybeSetPrivateURI(mURIPref);
+    return;
+  }
+
+  // Check if the rollout addon has set a pref.
+  if (!mRolloutURIPref.IsEmpty()) {
+    MaybeSetPrivateURI(mRolloutURIPref);
+    return;
+  }
+
+  // Otherwise just use the default value.
+  MaybeSetPrivateURI(mURIPref);
+}
+
 nsresult TRRService::ReadPrefs(const char* name) {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
 
@@ -283,11 +289,14 @@ nsresult TRRService::ReadPrefs(const char* name) {
       mMode = tmp;
     }
   }
-  if (!name || !strcmp(name, TRR_PREF("uri"))) {
-    nsAutoCString newURI;
-    Preferences::GetCString(TRR_PREF("uri"), newURI);
-    MaybeSetPrivateURI(newURI);
-    mURISetByDetection = false;
+  if (!name || !strcmp(name, TRR_PREF("uri")) ||
+      !strcmp(name, kRolloutURIPref)) {
+
+    mURIPrefHasUserValue = Preferences::HasUserValue(TRR_PREF("uri"));
+    Preferences::GetCString(TRR_PREF("uri"), mURIPref);
+    Preferences::GetCString(kRolloutURIPref, mRolloutURIPref);
+
+    CheckURIPrefs();
   }
   if (!name || !strcmp(name, TRR_PREF("credentials"))) {
     MutexAutoLock lock(mLock);
@@ -513,7 +522,6 @@ bool TRRService::IsOnTRRThread() {
 NS_IMETHODIMP
 TRRService::Observe(nsISupports* aSubject, const char* aTopic,
                     const char16_t* aData) {
-  nsresult rv;
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
   LOG(("TRR::Observe() topic=%s\n", aTopic));
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
@@ -580,12 +588,7 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
     if (!strcmp(aTopic, NS_NETWORK_LINK_TOPIC) && mURISetByDetection) {
       // If the URI was set via SetDetectedTrrURI we need to restore it to the
       // default pref when a network link change occurs.
-      nsAutoCString userPrefURI;
-      rv = Preferences::GetCString(TRR_PREF("uri"), userPrefURI);
-      if (NS_SUCCEEDED(rv)) {
-        MaybeSetPrivateURI(userPrefURI);
-        mURISetByDetection = false;
-      }
+      CheckURIPrefs();
     }
   } else if (!strcmp(aTopic, "xpcom-shutdown-threads")) {
     if (sTRRBackgroundThread) {
