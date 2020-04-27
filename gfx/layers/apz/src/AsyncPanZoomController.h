@@ -961,7 +961,7 @@ class AsyncPanZoomController {
   FrameMetrics mExpectedGeckoMetrics;
 
   // This holds important state from the Metrics() at previous times
-  // SampleCompositedAsyncTransform() was called. This will always have exactly
+  // SampleCompositedAsyncTransform() was called. This will always have at least
   // one item. mRecursiveMutex must be held when using or modifying this member.
   // Samples should be inserted to the "back" of the deque and extracted from
   // the "front".
@@ -1143,14 +1143,33 @@ class AsyncPanZoomController {
 
  private:
   /**
-   * Samples the composited async transform, making the result of
+   * Advances to the next sample, if there is one, the list of sampled states
+   * stored in mSampledState. This will make the result of
    * |GetCurrentAsyncTransform(eForCompositing)| and similar functions reflect
-   * the async scroll offset and zoom stored in |Metrics()|.
+   * the async scroll offset and zoom of the next sample. See also
+   * SampleCompositedAsyncTransform which creates the samples.
+   */
+  void AdvanceToNextSample();
+
+  /**
+   * Samples the composited async transform, storing the result into
+   * mSampledState. This will make the result of
+   * |GetCurrentAsyncTransform(eForCompositing)| and similar functions reflect
+   * the async scroll offset and zoom stored in |Metrics()| when the sample
+   * is activated via some future call to |AdvanceToNextSample|.
    *
-   * Returns true if the newly sampled value is different from the previously
+   * Returns true if the newly sampled value is different from the last
    * sampled value.
    */
   bool SampleCompositedAsyncTransform(
+      const RecursiveMutexAutoLock& aProofOfLock);
+
+  /**
+   * Updates the sample at the front of mSampledState with the latest
+   * metrics. This makes the result of
+   * |GetCurrentAsyncTransform(eForCompositing)| reflect the current Metrics().
+   */
+  void ResampleCompositedAsyncTransform(
       const RecursiveMutexAutoLock& aProofOfLock);
 
   /*
