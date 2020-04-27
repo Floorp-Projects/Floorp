@@ -766,12 +766,11 @@ class ExtensionData {
     );
 
     let removed = oldPerms.filter(x => !permSet.has(x));
-    if (removed.length) {
-      await Management.asyncLoadSettingsModules();
-      for (let name of removed) {
-        await ExtensionPreferencesManager.removeSettingsForPermission(id, name);
-      }
-    }
+    // Force the removal here to ensure the settings are removed prior
+    // to startup.  This will remove both required or optional permissions,
+    // whereas the call from within ExtensionPermissions would only result
+    // in a removal for optional permissions that were removed.
+    await ExtensionPreferencesManager.removeSettingsForPermissions(id, removed);
 
     // Remove any optional permissions that have been removed from the manifest.
     await ExtensionPermissions.remove(id, {
