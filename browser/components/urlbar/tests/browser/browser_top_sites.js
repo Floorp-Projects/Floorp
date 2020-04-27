@@ -5,7 +5,6 @@
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
-  NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
   PlacesSearchAutocompleteProvider:
     "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm",
 });
@@ -174,7 +173,7 @@ add_task(async function topSitesBookmarksAndTabs() {
   Assert.equal(
     exampleResult.url,
     "http://example.com/",
-    "The example.com Top Site should be the first result."
+    "The example.com Top Site should be the second result."
   );
   Assert.equal(
     exampleResult.source,
@@ -186,7 +185,7 @@ add_task(async function topSitesBookmarksAndTabs() {
   Assert.equal(
     youtubeResult.url,
     "https://www.youtube.com/",
-    "The YouTube Top Site should be the second result."
+    "The YouTube Top Site should be the third result."
   );
   Assert.equal(
     youtubeResult.source,
@@ -244,56 +243,6 @@ add_task(async function topSitesKeywordNavigationPageproxystate() {
     "valid",
     "Double ESC should restore state"
   );
-});
-
-add_task(async function topSitesPinned() {
-  let info = { url: "http://example.com/" };
-  NewTabUtils.pinnedLinks.pin(info, 0);
-
-  await updateTopSites(sites => sites && sites[0] && sites[0].isPinned);
-
-  let sites = AboutNewTab.getTopSites();
-  Assert.equal(
-    sites.length,
-    7,
-    "The test suite browser should have 7 Top Sites."
-  );
-
-  await UrlbarTestUtils.promisePopupOpen(window, () => {
-    EventUtils.synthesizeMouseAtCenter(window.gURLBar.inputField, {});
-  });
-  Assert.ok(window.gURLBar.view.isOpen, "UrlbarView should be open.");
-  await UrlbarTestUtils.promiseSearchComplete(window);
-
-  Assert.equal(
-    UrlbarTestUtils.getResultCount(window),
-    7,
-    "The number of results should be the same as the number of Top Sites (7)."
-  );
-
-  let exampleResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-  Assert.equal(
-    exampleResult.url,
-    "http://example.com/",
-    "The example.com Top Site should be the first result."
-  );
-
-  Assert.equal(
-    exampleResult.source,
-    UrlbarUtils.RESULT_SOURCE.TABS,
-    "The example.com Top Site should be an open tab result."
-  );
-
-  Assert.equal(
-    exampleResult.element.row.getAttribute("pinned"),
-    "true",
-    "The example.com Top Site should be displayed as a pinned site."
-  );
-
-  await UrlbarTestUtils.promisePopupClose(window, () => {
-    window.gURLBar.blur();
-  });
-  NewTabUtils.pinnedLinks.unpin(info);
 });
 
 add_task(async function topSitesDisabled() {
