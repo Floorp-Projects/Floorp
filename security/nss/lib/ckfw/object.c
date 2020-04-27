@@ -52,6 +52,7 @@
 struct NSSCKFWObjectStr {
     NSSCKFWMutex *mutex; /* merely to serialise the MDObject calls */
     NSSArena *arena;
+    NSSArena *localArena;
     NSSCKMDObject *mdObject;
     NSSCKMDSession *mdSession;
     NSSCKFWSession *fwSession;
@@ -110,6 +111,8 @@ nssCKFWObject_Create(
     NSSCKFWInstance *fwInstance,
     CK_RV *pError)
 {
+    NSSArena *objArena = arena;
+    NSSArena *localArena = NULL;
     NSSCKFWObject *fwObject;
     nssCKFWHash *mdObjectHash;
 
@@ -139,13 +142,23 @@ nssCKFWObject_Create(
         return fwObject;
     }
 
-    fwObject = nss_ZNEW(arena, NSSCKFWObject);
+    /* session objects should have their own arena so they can be destroyed in the end. */
+    if (arena == NULL) {
+        localArena = objArena = NSSArena_Create();
+        if (objArena == NULL) {
+            *pError = CKR_HOST_MEMORY;
+            return (NSSCKFWObject *)NULL;
+        }
+    }
+
+    fwObject = nss_ZNEW(objArena, NSSCKFWObject);
     if (!fwObject) {
         *pError = CKR_HOST_MEMORY;
         return (NSSCKFWObject *)NULL;
     }
 
-    fwObject->arena = arena;
+    fwObject->arena = objArena;
+    fwObject->localArena = localArena;
     fwObject->mdObject = mdObject;
     fwObject->fwSession = fwSession;
 
@@ -157,18 +170,24 @@ nssCKFWObject_Create(
     fwObject->mdToken = nssCKFWToken_GetMDToken(fwToken);
     fwObject->fwInstance = fwInstance;
     fwObject->mdInstance = nssCKFWInstance_GetMDInstance(fwInstance);
-    fwObject->mutex = nssCKFWInstance_CreateMutex(fwInstance, arena, pError);
+    fwObject->mutex = nssCKFWInstance_CreateMutex(fwInstance, objArena, pError);
     if (!fwObject->mutex) {
         if (CKR_OK == *pError) {
             *pError = CKR_GENERAL_ERROR;
         }
         nss_ZFreeIf(fwObject);
+        if (localArena) {
+            NSSArena_Destroy(localArena);
+        }
         return (NSSCKFWObject *)NULL;
     }
 
     *pError = nssCKFWHash_Add(mdObjectHash, mdObject, fwObject);
     if (CKR_OK != *pError) {
         nss_ZFreeIf(fwObject);
+        if (localArena) {
+            NSSArena_Destroy(localArena);
+        }
         return (NSSCKFWObject *)NULL;
     }
 
@@ -177,6 +196,9 @@ nssCKFWObject_Create(
     if (CKR_OK != *pError) {
         nssCKFWHash_Remove(mdObjectHash, mdObject);
         nss_ZFreeIf(fwObject);
+        if (localArena) {
+            NSSArena_Destroy(localArena);
+        }
         return (NSSCKFWObject *)NULL;
     }
 #endif /* DEBUG */
@@ -195,6 +217,7 @@ nssCKFWObject_Finalize(
     PRBool removeFromHash)
 {
     nssCKFWHash *mdObjectHash;
+    NSSArena *arena = NULL;
 
 #ifdef NSSDEBUG
     if (CKR_OK != nssCKFWObject_verifyPointer(fwObject)) {
@@ -220,7 +243,11 @@ nssCKFWObject_Finalize(
     if (fwObject->fwSession) {
         nssCKFWSession_DeregisterSessionObject(fwObject->fwSession, fwObject);
     }
+    arena = fwObject->localArena;
     nss_ZFreeIf(fwObject);
+    if (arena) {
+        NSSArena_Destroy(arena);
+    }
 
 #ifdef DEBUG
     (void)object_remove_pointer(fwObject);
@@ -238,6 +265,7 @@ nssCKFWObject_Destroy(
     NSSCKFWObject *fwObject)
 {
     nssCKFWHash *mdObjectHash;
+    NSSArena *arena = NULL;
 
 #ifdef NSSDEBUG
     if (CKR_OK != nssCKFWObject_verifyPointer(fwObject)) {
@@ -261,7 +289,11 @@ nssCKFWObject_Destroy(
     if (fwObject->fwSession) {
         nssCKFWSession_DeregisterSessionObject(fwObject->fwSession, fwObject);
     }
+    arena = fwObject->localArena;
     nss_ZFreeIf(fwObject);
+    if (arena) {
+        NSSArena_Destroy(arena);
+    }
 
 #ifdef DEBUG
     (void)object_remove_pointer(fwObject);

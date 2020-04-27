@@ -1138,6 +1138,7 @@ AESKeyWrap_Encrypt(AESKeyWrapContext *cx, unsigned char *output,
     return vector->p_AESKeyWrap_Encrypt(cx, output, outputLen, maxOutputLen,
                                         input, inputLen);
 }
+
 SECStatus
 AESKeyWrap_Decrypt(AESKeyWrapContext *cx, unsigned char *output,
                    unsigned int *outputLen, unsigned int maxOutputLen,
@@ -1147,6 +1148,28 @@ AESKeyWrap_Decrypt(AESKeyWrapContext *cx, unsigned char *output,
         return SECFailure;
     return vector->p_AESKeyWrap_Decrypt(cx, output, outputLen, maxOutputLen,
                                         input, inputLen);
+}
+
+SECStatus
+AESKeyWrap_EncryptKWP(AESKeyWrapContext *cx, unsigned char *output,
+                      unsigned int *outputLen, unsigned int maxOutputLen,
+                      const unsigned char *input, unsigned int inputLen)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return SECFailure;
+    return vector->p_AESKeyWrap_EncryptKWP(cx, output, outputLen, maxOutputLen,
+                                           input, inputLen);
+}
+
+SECStatus
+AESKeyWrap_DecryptKWP(AESKeyWrapContext *cx, unsigned char *output,
+                      unsigned int *outputLen, unsigned int maxOutputLen,
+                      const unsigned char *input, unsigned int inputLen)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return SECFailure;
+    return vector->p_AESKeyWrap_DecryptKWP(cx, output, outputLen, maxOutputLen,
+                                           input, inputLen);
 }
 
 PRBool

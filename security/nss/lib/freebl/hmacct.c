@@ -16,34 +16,19 @@
  * field. (SHA-384/512 have 128-bit length.) */
 #define MAX_HASH_BIT_COUNT_BYTES 16
 
-/* Some utility functions are needed:
- *
- * These macros return the given value with the MSB copied to all the other
- * bits. They use the fact that an arithmetic shift shifts-in the sign bit.
- * However, this is not ensured by the C standard so you may need to replace
- * them with something else on odd CPUs.
- *
- * Note: the argument to these macros must be an unsigned int.
- * */
-#define DUPLICATE_MSB_TO_ALL(x) ((unsigned int)((int)(x) >> (sizeof(int) * 8 - 1)))
-#define DUPLICATE_MSB_TO_ALL_8(x) ((unsigned char)(DUPLICATE_MSB_TO_ALL(x)))
-
 /* constantTimeGE returns 0xff if a>=b and 0x00 otherwise, where a, b <
  * MAX_UINT/2. */
 static unsigned char
 constantTimeGE(unsigned int a, unsigned int b)
 {
-    a -= b;
-    return DUPLICATE_MSB_TO_ALL(~a);
+    return PORT_CT_GE(a, b);
 }
 
 /* constantTimeEQ8 returns 0xff if a==b and 0x00 otherwise. */
 static unsigned char
-constantTimeEQ8(unsigned char a, unsigned char b)
+constantTimeEQ(unsigned char a, unsigned char b)
 {
-    unsigned int c = a ^ b;
-    c--;
-    return DUPLICATE_MSB_TO_ALL_8(c);
+    return PORT_CT_EQ(a, b);
 }
 
 /* MAC performs a constant time SSLv3/TLS MAC of |dataLen| bytes of |data|,
@@ -223,8 +208,8 @@ MAC(unsigned char *mdOut,
      * constant time, to |macOut|. */
     for (i = numStartingBlocks; i <= numStartingBlocks + varianceBlocks; i++) {
         unsigned char block[HASH_BLOCK_LENGTH_MAX];
-        unsigned char isBlockA = constantTimeEQ8(i, indexA);
-        unsigned char isBlockB = constantTimeEQ8(i, indexB);
+        unsigned char isBlockA = constantTimeEQ(i, indexA);
+        unsigned char isBlockB = constantTimeEQ(i, indexB);
         for (j = 0; j < mdBlockSize; j++) {
             unsigned char isPastC = isBlockA & constantTimeGE(j, c);
             unsigned char isPastCPlus1 = isBlockA & constantTimeGE(j, c + 1);

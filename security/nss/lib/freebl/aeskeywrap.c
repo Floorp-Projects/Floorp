@@ -196,11 +196,33 @@ set_t(unsigned char *pt, unsigned long t)
 
 #endif
 
+static void
+encode_PRUint32_BE(unsigned char *data, PRUint32 val)
+{
+    int i;
+    for (i = 0; i < sizeof(PRUint32); i++) {
+        data[i] = PORT_GET_BYTE_BE(val, i, sizeof(PRUint32));
+    }
+}
+
+static PRUint32
+decode_PRUint32_BE(unsigned char *data)
+{
+    PRUint32 val = 0;
+    int i;
+
+    for (i = 0; i < sizeof(PRUint32); i++) {
+        val = (val << PR_BITS_PER_BYTE) | data[i];
+    }
+    return val;
+}
+
 /*
-** Perform AES key wrap.
+** Perform AES key wrap W function.
 **  "cx" the context
+**  "iv" the iv is concatenated to the plain text for for executing the function
 **  "output" the output buffer to store the encrypted data.
-**  "outputLen" how much data is stored in "output". Set by the routine
+**  "pOutputLen" how much data is stored in "output". Set by the routine
 **     after some data is stored in output.
 **  "maxOutputLen" the maximum amount of data that can ever be
 **     stored in "output"
@@ -208,9 +230,9 @@ set_t(unsigned char *pt, unsigned long t)
 **  "inputLen" the amount of input data
 */
 extern SECStatus
-AESKeyWrap_Encrypt(AESKeyWrapContext *cx, unsigned char *output,
-                   unsigned int *pOutputLen, unsigned int maxOutputLen,
-                   const unsigned char *input, unsigned int inputLen)
+AESKeyWrap_W(AESKeyWrapContext *cx, unsigned char *iv, unsigned char *output,
+             unsigned int *pOutputLen, unsigned int maxOutputLen,
+             const unsigned char *input, unsigned int inputLen)
 {
     PRUint64 *R = NULL;
     unsigned int nBlocks;
@@ -251,7 +273,7 @@ AESKeyWrap_Encrypt(AESKeyWrapContext *cx, unsigned char *output,
     /*
     ** 1) Initialize variables.
     */
-    memcpy(&A, cx->iv, AES_KEY_WRAP_IV_BYTES);
+    memcpy(&A, iv, AES_KEY_WRAP_IV_BYTES);
     memcpy(&R[1], input, inputLen);
 #if BIG_ENDIAN_WITH_64_BIT_REGISTERS
     t = 0;
@@ -294,10 +316,12 @@ AESKeyWrap_Encrypt(AESKeyWrapContext *cx, unsigned char *output,
 #undef A
 
 /*
-** Perform AES key unwrap.
+** Perform AES key wrap W^-1 function.
 **  "cx" the context
+**  "iv" the input IV to verify against. If NULL, then skip verification.
+**  "ivOut" the output buffer to store the IV (optional).
 **  "output" the output buffer to store the decrypted data.
-**  "outputLen" how much data is stored in "output". Set by the routine
+**  "pOutputLen" how much data is stored in "output". Set by the routine
 **     after some data is stored in output.
 **  "maxOutputLen" the maximum amount of data that can ever be
 **     stored in "output"
@@ -305,9 +329,10 @@ AESKeyWrap_Encrypt(AESKeyWrapContext *cx, unsigned char *output,
 **  "inputLen" the amount of input data
 */
 extern SECStatus
-AESKeyWrap_Decrypt(AESKeyWrapContext *cx, unsigned char *output,
-                   unsigned int *pOutputLen, unsigned int maxOutputLen,
-                   const unsigned char *input, unsigned int inputLen)
+AESKeyWrap_Winv(AESKeyWrapContext *cx, unsigned char *iv,
+                unsigned char *ivOut, unsigned char *output,
+                unsigned int *pOutputLen, unsigned int maxOutputLen,
+                const unsigned char *input, unsigned int inputLen)
 {
     PRUint64 *R = NULL;
     unsigned int nBlocks;
@@ -378,11 +403,14 @@ AESKeyWrap_Decrypt(AESKeyWrapContext *cx, unsigned char *output,
     ** 3) Output the results.
     */
     if (s == SECSuccess) {
-        int bad = memcmp(&B[0], cx->iv, AES_KEY_WRAP_IV_BYTES);
+        int bad = (iv) && memcmp(&B[0], iv, AES_KEY_WRAP_IV_BYTES);
         if (!bad) {
             memcpy(output, &R[1], outLen);
             if (pOutputLen)
                 *pOutputLen = outLen;
+            if (ivOut) {
+                memcpy(ivOut, &B[0], AES_KEY_WRAP_IV_BYTES);
+            }
         } else {
             s = SECFailure;
             PORT_SetError(SEC_ERROR_BAD_DATA);
@@ -396,3 +424,217 @@ AESKeyWrap_Decrypt(AESKeyWrapContext *cx, unsigned char *output,
     return s;
 }
 #undef A
+
+/*
+** Perform AES key wrap.
+**  "cx" the context
+**  "output" the output buffer to store the encrypted data.
+**  "pOutputLen" how much data is stored in "output". Set by the routine
+**     after some data is stored in output.
+**  "maxOutputLen" the maximum amount of data that can ever be
+**     stored in "output"
+**  "input" the input data
+**  "inputLen" the amount of input data
+*/
+extern SECStatus
+AESKeyWrap_Encrypt(AESKeyWrapContext *cx, unsigned char *output,
+                   unsigned int *pOutputLen, unsigned int maxOutputLen,
+                   const unsigned char *input, unsigned int inputLen)
+{
+    return AESKeyWrap_W(cx, cx->iv, output, pOutputLen, maxOutputLen,
+                        input, inputLen);
+}
+
+/*
+** Perform AES key unwrap.
+**  "cx" the context
+**  "output" the output buffer to store the decrypted data.
+**  "pOutputLen" how much data is stored in "output". Set by the routine
+**     after some data is stored in output.
+**  "maxOutputLen" the maximum amount of data that can ever be
+**     stored in "output"
+**  "input" the input data
+**  "inputLen" the amount of input data
+*/
+extern SECStatus
+AESKeyWrap_Decrypt(AESKeyWrapContext *cx, unsigned char *output,
+                   unsigned int *pOutputLen, unsigned int maxOutputLen,
+                   const unsigned char *input, unsigned int inputLen)
+{
+    return AESKeyWrap_Winv(cx, cx->iv, NULL, output, pOutputLen, maxOutputLen,
+                           input, inputLen);
+}
+
+#define BLOCK_PAD_POWER2(x, bs) (((bs) - ((x) & ((bs)-1))) & ((bs)-1))
+#define AES_KEY_WRAP_ICV2 0xa6, 0x59, 0x59, 0xa6
+#define AES_KEY_WRAP_ICV2_INT32 0xa65959a6
+#define AES_KEY_WRAP_ICV2_LEN 4
+
+/*
+** Perform AES key wrap with padding.
+**  "cx" the context
+**  "output" the output buffer to store the encrypted data.
+**  "pOutputLen" how much data is stored in "output". Set by the routine
+**     after some data is stored in output.
+**  "maxOutputLen" the maximum amount of data that can ever be
+**     stored in "output"
+**  "input" the input data
+**  "inputLen" the amount of input data
+*/
+extern SECStatus
+AESKeyWrap_EncryptKWP(AESKeyWrapContext *cx, unsigned char *output,
+                      unsigned int *pOutputLen, unsigned int maxOutputLen,
+                      const unsigned char *input, unsigned int inputLen)
+{
+    unsigned int padLen = BLOCK_PAD_POWER2(inputLen, AES_KEY_WRAP_BLOCK_SIZE);
+    unsigned int paddedInputLen = inputLen + padLen;
+    unsigned int outLen = paddedInputLen + AES_KEY_WRAP_BLOCK_SIZE;
+    unsigned char iv[AES_BLOCK_SIZE] = { AES_KEY_WRAP_ICV2 };
+    unsigned char *newBuf;
+    SECStatus rv;
+
+    *pOutputLen = outLen;
+    if (maxOutputLen < outLen) {
+        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+        return SECFailure;
+    }
+    PORT_Assert((AES_KEY_WRAP_ICV2_LEN + sizeof(PRUint32)) == AES_KEY_WRAP_BLOCK_SIZE);
+    encode_PRUint32_BE(iv + AES_KEY_WRAP_ICV2_LEN, inputLen);
+
+    /* If we can fit in an AES Block, just do and AES Encrypt,
+     * iv is big enough to handle this on the stack, so no need to allocate
+     */
+    if (outLen == AES_BLOCK_SIZE) {
+        PORT_Assert(inputLen <= AES_KEY_WRAP_BLOCK_SIZE);
+        PORT_Memset(iv + AES_KEY_WRAP_BLOCK_SIZE, 0, AES_KEY_WRAP_BLOCK_SIZE);
+        PORT_Memcpy(iv + AES_KEY_WRAP_BLOCK_SIZE, input, inputLen);
+        rv = AES_Encrypt(&cx->aescx, output, pOutputLen, maxOutputLen, iv,
+                         outLen);
+        PORT_Memset(iv, 0, sizeof(iv));
+        return rv;
+    }
+
+    /* add padding to our input block */
+    newBuf = PORT_ZAlloc(paddedInputLen);
+    if (newBuf == NULL) {
+        return SECFailure;
+    }
+    PORT_Memcpy(newBuf, input, inputLen);
+
+    rv = AESKeyWrap_W(cx, iv, output, pOutputLen, maxOutputLen,
+                      newBuf, paddedInputLen);
+    PORT_ZFree(newBuf, paddedInputLen);
+    /* a little overkill, we only need to clear out the length, but this
+     * is easier to verify we got it all */
+    PORT_Memset(iv, 0, sizeof(iv));
+    return rv;
+}
+
+/*
+** Perform AES key unwrap with padding.
+**  "cx" the context
+**  "output" the output buffer to store the decrypted data.
+**  "pOutputLen" how much data is stored in "output". Set by the routine
+**     after some data is stored in output.
+**  "maxOutputLen" the maximum amount of data that can ever be
+**     stored in "output"
+**  "input" the input data
+**  "inputLen" the amount of input data
+*/
+extern SECStatus
+AESKeyWrap_DecryptKWP(AESKeyWrapContext *cx, unsigned char *output,
+                      unsigned int *pOutputLen, unsigned int maxOutputLen,
+                      const unsigned char *input, unsigned int inputLen)
+{
+    unsigned int padLen;
+    unsigned int padLen2;
+    unsigned int outLen;
+    unsigned int paddedLen;
+    unsigned int good;
+    unsigned char *newBuf = NULL;
+    unsigned char *allocBuf = NULL;
+    int i;
+    unsigned char iv[AES_BLOCK_SIZE];
+    PRUint32 magic;
+    SECStatus rv = SECFailure;
+
+    paddedLen = inputLen - AES_KEY_WRAP_BLOCK_SIZE;
+    /* unwrap the padded result */
+    if (inputLen == AES_BLOCK_SIZE) {
+        rv = AES_Decrypt(&cx->aescx, iv, &outLen, inputLen, input, inputLen);
+        newBuf = &iv[AES_KEY_WRAP_BLOCK_SIZE];
+        outLen -= AES_KEY_WRAP_BLOCK_SIZE;
+    } else {
+        /* if the caller supplied enough space to hold the unpadded buffer,
+         * we can unwrap directly into that unpadded buffer. Otherwise
+         * we allocate a buffer that can hold the padding, and we'll copy
+         * the result in a later step */
+        newBuf = output;
+        if (maxOutputLen < paddedLen) {
+            allocBuf = newBuf = PORT_Alloc(paddedLen);
+            if (!allocBuf) {
+                return SECFailure;
+            }
+        }
+        /* We pass NULL for the first IV argument because we don't know
+         * what the IV has since in includes the length, so we don't have
+         * Winv verify it. We pass iv in the second argument to get the
+         * iv, which we verify below before we return anything */
+        rv = AESKeyWrap_Winv(cx, NULL, iv, newBuf, &outLen,
+                             paddedLen, input, inputLen);
+    }
+    if (rv != SECSuccess) {
+        goto loser;
+    }
+    rv = SECFailure;
+    if (outLen != paddedLen) {
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        goto loser;
+    }
+
+    /* we verify the result in a constant time manner */
+    /* verify ICV magic */
+    magic = decode_PRUint32_BE(iv);
+    good = PORT_CT_EQ(magic, AES_KEY_WRAP_ICV2_INT32);
+    /* fetch and verify plain text length */
+    outLen = decode_PRUint32_BE(iv + AES_KEY_WRAP_ICV2_LEN);
+    good &= PORT_CT_LE(outLen, paddedLen);
+    /* now verify the padding */
+    padLen = paddedLen - outLen;
+    padLen2 = BLOCK_PAD_POWER2(outLen, AES_KEY_WRAP_BLOCK_SIZE);
+    good &= PORT_CT_EQ(padLen, padLen2);
+    for (i = 0; i < AES_KEY_WRAP_BLOCK_SIZE; i++) {
+        unsigned int doTest = PORT_CT_GT(padLen, i);
+        unsigned int result = PORT_CT_ZERO(newBuf[paddedLen - i - 1]);
+        good &= PORT_CT_SEL(doTest, result, PORT_CT_TRUE);
+    }
+
+    /* now if anything was wrong, fail. At this point we will leak timing
+     * information, but we also 'leak' the error code as well. */
+    if (!good) {
+        PORT_SetError(SEC_ERROR_BAD_DATA);
+        goto loser;
+    }
+
+    /* now copy out the result */
+    *pOutputLen = outLen;
+    if (maxOutputLen < outLen) {
+        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+        goto loser;
+    }
+    if (output != newBuf) {
+        PORT_Memcpy(output, newBuf, outLen);
+    }
+    rv = SECSuccess;
+loser:
+    /* if we failed, make sure we don't return any data to the user */
+    if ((rv != SECSuccess) && (output == newBuf)) {
+        PORT_Memset(newBuf, 0, paddedLen);
+    }
+    /* clear out CSP sensitive data from the heap and stack */
+    if (allocBuf) {
+        PORT_ZFree(allocBuf, paddedLen);
+    }
+    PORT_Memset(iv, 0, sizeof(iv));
+    return rv;
+}

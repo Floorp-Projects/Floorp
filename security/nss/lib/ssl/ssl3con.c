@@ -12292,41 +12292,26 @@ loser : {
     return SECFailure;
 }
 
-/* These macros return the given value with the MSB copied to all the other
- * bits. They use the fact that arithmetic shift shifts-in the sign bit.
- * However, this is not ensured by the C standard so you may need to replace
- * them with something else for odd compilers. */
-#define DUPLICATE_MSB_TO_ALL(x) ((unsigned)((int)(x) >> (sizeof(int) * 8 - 1)))
-#define DUPLICATE_MSB_TO_ALL_8(x) ((unsigned char)(DUPLICATE_MSB_TO_ALL(x)))
-
 /* SECStatusToMask returns, in constant time, a mask value of all ones if
  * rv == SECSuccess.  Otherwise it returns zero. */
 static unsigned int
 SECStatusToMask(SECStatus rv)
 {
-    unsigned int good;
-    /* rv ^ SECSuccess is zero iff rv == SECSuccess. Subtracting one results
-     * in the MSB being set to one iff it was zero before. */
-    good = rv ^ SECSuccess;
-    good--;
-    return DUPLICATE_MSB_TO_ALL(good);
+    return PORT_CT_EQ(rv, SECSuccess);
 }
 
-/* ssl_ConstantTimeGE returns 0xff if a>=b and 0x00 otherwise. */
+/* ssl_ConstantTimeGE returns 0xffffffff if a>=b and 0x00 otherwise. */
 static unsigned char
 ssl_ConstantTimeGE(unsigned int a, unsigned int b)
 {
-    a -= b;
-    return DUPLICATE_MSB_TO_ALL(~a);
+    return PORT_CT_GE(a, b);
 }
 
-/* ssl_ConstantTimeEQ8 returns 0xff if a==b and 0x00 otherwise. */
+/* ssl_ConstantTimeEQ returns 0xffffffff if a==b and 0x00 otherwise. */
 static unsigned char
-ssl_ConstantTimeEQ8(unsigned char a, unsigned char b)
+ssl_ConstantTimeEQ(unsigned char a, unsigned char b)
 {
-    unsigned int c = a ^ b;
-    c--;
-    return DUPLICATE_MSB_TO_ALL_8(c);
+    return PORT_CT_EQ(a, b);
 }
 
 /* ssl_constantTimeSelect return a if mask is 0xFF and b if mask is 0x00 */
@@ -12341,7 +12326,7 @@ ssl_RemoveSSLv3CBCPadding(sslBuffer *plaintext,
                           unsigned int blockSize,
                           unsigned int macSize)
 {
-    unsigned int paddingLength, good, t;
+    unsigned int paddingLength, good;
     const unsigned int overhead = 1 /* padding length byte */ + macSize;
 
     /* These lengths are all public so we can test them in non-constant
@@ -12352,13 +12337,9 @@ ssl_RemoveSSLv3CBCPadding(sslBuffer *plaintext,
 
     paddingLength = plaintext->buf[plaintext->len - 1];
     /* SSLv3 padding bytes are random and cannot be checked. */
-    t = plaintext->len;
-    t -= paddingLength + overhead;
-    /* If len >= paddingLength+overhead then the MSB of t is zero. */
-    good = DUPLICATE_MSB_TO_ALL(~t);
+    good = PORT_CT_GE(plaintext->len, paddingLength + overhead);
     /* SSLv3 requires that the padding is minimal. */
-    t = blockSize - (paddingLength + 1);
-    good &= DUPLICATE_MSB_TO_ALL(~t);
+    good &= PORT_CT_GE(blockSize, paddingLength + 1);
     plaintext->len -= good & (paddingLength + 1);
     return (good & SECSuccess) | (~good & SECFailure);
 }
@@ -12366,7 +12347,7 @@ ssl_RemoveSSLv3CBCPadding(sslBuffer *plaintext,
 SECStatus
 ssl_RemoveTLSCBCPadding(sslBuffer *plaintext, unsigned int macSize)
 {
-    unsigned int paddingLength, good, t, toCheck, i;
+    unsigned int paddingLength, good, toCheck, i;
     const unsigned int overhead = 1 /* padding length byte */ + macSize;
 
     /* These lengths are all public so we can test them in non-constant
@@ -12376,10 +12357,7 @@ ssl_RemoveTLSCBCPadding(sslBuffer *plaintext, unsigned int macSize)
     }
 
     paddingLength = plaintext->buf[plaintext->len - 1];
-    t = plaintext->len;
-    t -= paddingLength + overhead;
-    /* If len >= paddingLength+overhead then the MSB of t is zero. */
-    good = DUPLICATE_MSB_TO_ALL(~t);
+    good = PORT_CT_GE(plaintext->len, paddingLength + overhead);
 
     /* The padding consists of a length byte at the end of the record and then
      * that many bytes of padding, all with the same value as the length byte.
@@ -12396,10 +12374,9 @@ ssl_RemoveTLSCBCPadding(sslBuffer *plaintext, unsigned int macSize)
     }
 
     for (i = 0; i < toCheck; i++) {
-        t = paddingLength - i;
         /* If i <= paddingLength then the MSB of t is zero and mask is
          * 0xff.  Otherwise, mask is 0. */
-        unsigned char mask = DUPLICATE_MSB_TO_ALL(~t);
+        unsigned char mask = PORT_CT_LE(i, paddingLength);
         unsigned char b = plaintext->buf[plaintext->len - 1 - i];
         /* The final |paddingLength+1| bytes should all have the value
          * |paddingLength|. Therefore the XOR should be zero. */
@@ -12414,7 +12391,7 @@ ssl_RemoveTLSCBCPadding(sslBuffer *plaintext, unsigned int macSize)
     good &= good >> 2;
     good &= good >> 1;
     good <<= sizeof(good) * 8 - 1;
-    good = DUPLICATE_MSB_TO_ALL(good);
+    good = PORT_CT_DUPLICATE_MSB_TO_ALL(good);
 
     plaintext->len -= good & (paddingLength + 1);
     return (good & SECSuccess) | (~good & SECFailure);
@@ -12507,7 +12484,7 @@ ssl_CBCExtractMAC(sslBuffer *plaintext,
                                           0, rotateOffset);
     for (i = 0; i < macSize; i++) {
         for (j = 0; j < macSize; j++) {
-            out[j] |= rotatedMac[i] & ssl_ConstantTimeEQ8(j, rotateOffset);
+            out[j] |= rotatedMac[i] & ssl_ConstantTimeEQ(j, rotateOffset);
         }
         rotateOffset++;
         rotateOffset = ssl_constantTimeSelect(ssl_ConstantTimeGE(rotateOffset, macSize),

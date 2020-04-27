@@ -267,6 +267,7 @@ ifeq ($(CPU_ARCH),arm)
 endif
 ifeq ($(CPU_ARCH),ppc)
     EXTRA_SRCS += gcm-ppc.c
+    ASFILES += sha512-p8.s
 ifdef USE_64
     DEFINES += -DNSS_NO_INIT_SUPPORT
 endif # USE_64
@@ -794,6 +795,8 @@ ifndef NSS_DISABLE_ALTIVEC
 $(OBJDIR)/$(PROG_PREFIX)gcm-ppc$(OBJ_SUFFIX): CFLAGS += -mcrypto -maltivec -mvsx
 $(OBJDIR)/$(PROG_PREFIX)gcm$(OBJ_SUFFIX): CFLAGS += -mcrypto -maltivec -mvsx
 $(OBJDIR)/$(PROG_PREFIX)rijndael$(OBJ_SUFFIX): CFLAGS += -mcrypto -maltivec -mvsx
+$(OBJDIR)/$(PROG_PREFIX)sha512$(OBJ_SUFFIX): CFLAGS += -mcrypto -maltivec -mvsx \
+					-funroll-loops -fpeel-loops
 endif
 endif
 

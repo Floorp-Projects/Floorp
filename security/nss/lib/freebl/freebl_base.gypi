@@ -56,7 +56,6 @@
     'rsa.c',
     'rsapkcs.c',
     'seed.c',
-    'sha512.c',
     'sha_fast.c',
     'shvfy.c',
     'sysrand.c',
@@ -144,6 +143,13 @@
       'sources': [
         # All other architectures get the generic 32 bit implementation.
         'ecl/curve25519_32.c',
+      ],
+    }],
+    ['(target_arch!="ppc64" and target_arch!="ppc64le") or disable_altivec==1', {
+      'sources': [
+        # Gyp does not support per-file cflags, so working around like this.
+        # ppc performance greatly benefits from specific flags.
+        'sha512.c',
       ],
     }],
     [ 'disable_chachapoly==0', {

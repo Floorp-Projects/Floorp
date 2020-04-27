@@ -1334,11 +1334,14 @@ sftk_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
         }
 
         case CKM_NSS_AES_KEY_WRAP_PAD:
+        case CKM_AES_KEY_WRAP_PAD:
             context->doPad = PR_TRUE;
         /* fall thru */
         case CKM_NSS_AES_KEY_WRAP:
-            context->multi = PR_FALSE;
+        case CKM_AES_KEY_WRAP:
             context->blockSize = 8;
+        case CKM_AES_KEY_WRAP_KWP:
+            context->multi = PR_FALSE;
             if (key_type != CKK_AES) {
                 crv = CKR_KEY_TYPE_INCONSISTENT;
                 break;
@@ -1357,8 +1360,13 @@ sftk_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
                 crv = CKR_HOST_MEMORY;
                 break;
             }
-            context->update = (SFTKCipher)(isEncrypt ? AESKeyWrap_Encrypt
-                                                     : AESKeyWrap_Decrypt);
+            if (pMechanism->mechanism == CKM_AES_KEY_WRAP_KWP) {
+                context->update = (SFTKCipher)(isEncrypt ? AESKeyWrap_EncryptKWP
+                                                         : AESKeyWrap_DecryptKWP);
+            } else {
+                context->update = (SFTKCipher)(isEncrypt ? AESKeyWrap_Encrypt
+                                                         : AESKeyWrap_Decrypt);
+            }
             context->destroy = (SFTKDestroy)AESKeyWrap_DestroyContext;
             break;
 
@@ -1742,7 +1750,7 @@ NSC_DecryptFinal(CK_SESSION_HANDLE hSession,
                 crv = sftk_CheckCBCPadding(pLastPart, outlen,
                                            context->blockSize, &padSize);
                 /* Update pulLastPartLen, in constant time, if crv is OK */
-                *pulLastPartLen = CT_SEL(sftk_CKRVToMask(crv), outlen - padSize, *pulLastPartLen);
+                *pulLastPartLen = PORT_CT_SEL(sftk_CKRVToMask(crv), outlen - padSize, *pulLastPartLen);
             }
         }
     }
@@ -1794,7 +1802,7 @@ NSC_Decrypt(CK_SESSION_HANDLE hSession,
         finalLen = maxoutlen;
         crv2 = NSC_DecryptFinal(hSession, pData, &finalLen);
         if (crv == CKR_OK) {
-            *pulDataLen = CT_SEL(sftk_CKRVToMask(crv2), updateLen + finalLen, *pulDataLen);
+            *pulDataLen = PORT_CT_SEL(sftk_CKRVToMask(crv2), updateLen + finalLen, *pulDataLen);
             return crv2;
         } else {
             return crv;
@@ -1811,7 +1819,7 @@ NSC_Decrypt(CK_SESSION_HANDLE hSession,
             crv = sftk_CheckCBCPadding(pData, outlen, context->blockSize,
                                        &padSize);
             /* Update pulDataLen, in constant time, if crv is OK */
-            *pulDataLen = CT_SEL(sftk_CKRVToMask(crv), outlen - padSize, *pulDataLen);
+            *pulDataLen = PORT_CT_SEL(sftk_CKRVToMask(crv), outlen - padSize, *pulDataLen);
         } else {
             *pulDataLen = (CK_ULONG)outlen;
         }
@@ -2784,13 +2792,20 @@ NSC_SignInit(CK_SESSION_HANDLE hSession,
             context->maxLen = nsslowkey_PrivateModulusLen(info->key);
             break;
 
-        case CKM_DSA_SHA1:
-            context->multi = PR_TRUE;
-            crv = sftk_doSubSHA1(context);
-            if (crv != CKR_OK)
-                break;
-        /* fall through */
+#define INIT_DSA_SIGN_MECH(mmm)         \
+    case CKM_DSA_##mmm:                 \
+        context->multi = PR_TRUE;       \
+        crv = sftk_doSub##mmm(context); \
+        if (crv != CKR_OK)              \
+            break;                      \
+        goto finish_dsa;
+            INIT_DSA_SIGN_MECH(SHA1)
+            INIT_DSA_SIGN_MECH(SHA224)
+            INIT_DSA_SIGN_MECH(SHA256)
+            INIT_DSA_SIGN_MECH(SHA384)
+            INIT_DSA_SIGN_MECH(SHA512)
         case CKM_DSA:
+        finish_dsa:
             if (key_type != CKK_DSA) {
                 crv = CKR_KEY_TYPE_INCONSISTENT;
                 break;
@@ -2806,13 +2821,20 @@ NSC_SignInit(CK_SESSION_HANDLE hSession,
 
             break;
 
-        case CKM_ECDSA_SHA1:
-            context->multi = PR_TRUE;
-            crv = sftk_doSubSHA1(context);
-            if (crv != CKR_OK)
-                break;
-        /* fall through */
+#define INIT_ECDSA_SIGN_MECH(mmm)       \
+    case CKM_ECDSA_##mmm:               \
+        context->multi = PR_TRUE;       \
+        crv = sftk_doSub##mmm(context); \
+        if (crv != CKR_OK)              \
+            break;                      \
+        goto finish_ecdsa;
+            INIT_ECDSA_SIGN_MECH(SHA1)
+            INIT_ECDSA_SIGN_MECH(SHA224)
+            INIT_ECDSA_SIGN_MECH(SHA256)
+            INIT_ECDSA_SIGN_MECH(SHA384)
+            INIT_ECDSA_SIGN_MECH(SHA512)
         case CKM_ECDSA:
+        finish_ecdsa:
             if (key_type != CKK_EC) {
                 crv = CKR_KEY_TYPE_INCONSISTENT;
                 break;

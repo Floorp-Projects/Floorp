@@ -114,9 +114,9 @@ typedef int __BLAPI_DEPRECATED __attribute__((deprecated));
 #define BLAKE2B_BLOCK_LENGTH 128 /* Bytes */
 #define HASH_BLOCK_LENGTH_MAX SHA512_BLOCK_LENGTH
 
-#define AES_KEY_WRAP_IV_BYTES 8
-#define AES_KEY_WRAP_BLOCK_SIZE 8 /* bytes */
-#define AES_BLOCK_SIZE 16         /* bytes */
+#define AES_BLOCK_SIZE 16 /* bytes */
+#define AES_KEY_WRAP_BLOCK_SIZE (AES_BLOCK_SIZE / 2)
+#define AES_KEY_WRAP_IV_BYTES AES_KEY_WRAP_BLOCK_SIZE
 
 #define AES_128_KEY_LENGTH 16 /* bytes */
 #define AES_192_KEY_LENGTH 24 /* bytes */

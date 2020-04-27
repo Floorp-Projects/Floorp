@@ -1783,6 +1783,26 @@ PK11_ReadRawAttribute(PK11ObjectType objType, void *objSpec,
     return PK11_ReadAttribute(slot, handle, attrType, NULL, item);
 }
 
+SECStatus
+PK11_ReadRawAttributes(PLArenaPool *arena, PK11ObjectType objType, void *objSpec,
+                       CK_ATTRIBUTE *pTemplate, unsigned int count)
+{
+    PK11SlotInfo *slot = NULL;
+    CK_OBJECT_HANDLE handle = 0;
+
+    handle = PK11_GetObjectHandle(objType, objSpec, &slot);
+    if (handle == CK_INVALID_HANDLE) {
+        PORT_SetError(SEC_ERROR_UNKNOWN_OBJECT_TYPE);
+        return SECFailure;
+    }
+    CK_RV crv = PK11_GetAttributes(arena, slot, handle, pTemplate, count);
+    if (crv != CKR_OK) {
+        PORT_SetError(PK11_MapError(crv));
+        return SECFailure;
+    }
+    return SECSuccess;
+}
+
 /*
  * return the object handle that matches the template
  */

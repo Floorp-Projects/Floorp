@@ -258,7 +258,8 @@
       'target_name': 'gcm-aes-ppc_c_lib',
       'type': 'static_library',
       'sources': [
-        'gcm-ppc.c'
+        'gcm-ppc.c',
+        'sha512-p8.s',
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports'
@@ -270,7 +271,58 @@
       'cflags_mozilla': [
         '-mcrypto',
         '-maltivec'
-      ]
+      ],
+    },
+    {
+      'target_name': 'gcm-sha512-nodepend-ppc_c_lib',
+      'type': 'static_library',
+      'sources': [
+        'sha512.c',
+      ],
+      'dependencies': [
+        '<(DEPTH)/exports.gyp:nss_exports'
+      ],
+      'cflags': [
+        '-mcrypto',
+        '-maltivec',
+        '-mvsx',
+        '-funroll-loops',
+        '-fpeel-loops',
+      ],
+      'cflags_mozilla': [
+        '-mcrypto',
+        '-maltivec',
+        '-mvsx',
+        '-funroll-loops',
+        '-fpeel-loops',
+      ],
+    },
+    {
+      'target_name': 'gcm-sha512-ppc_c_lib',
+      'type': 'static_library',
+      'sources': [
+        'sha512.c',
+      ],
+      'dependencies': [
+        '<(DEPTH)/exports.gyp:nss_exports'
+      ],
+      'cflags': [
+        '-mcrypto',
+        '-maltivec',
+        '-mvsx',
+        '-funroll-loops',
+        '-fpeel-loops',
+      ],
+      'cflags_mozilla': [
+        '-mcrypto',
+        '-maltivec',
+        '-mvsx',
+        '-funroll-loops',
+        '-fpeel-loops',
+      ],
+      'defines!': [
+        'FREEBL_NO_DEPEND',
+      ],
     },
     {
       'target_name': 'armv8_c_lib',
@@ -355,6 +407,7 @@
         [ 'disable_altivec==0 and (target_arch=="ppc64" or target_arch=="ppc64le")', {
           'dependencies': [
             'gcm-aes-ppc_c_lib',
+            'gcm-sha512-ppc_c_lib',
           ],
         }],
         [ 'disable_altivec==1 and (target_arch=="ppc64" or target_arch=="ppc64le")', {
@@ -422,6 +475,7 @@
         [ 'disable_altivec==0 and (target_arch=="ppc64" or target_arch=="ppc64le")', {
           'dependencies': [
             'gcm-aes-ppc_c_lib',
+            'gcm-sha512-nodepend-ppc_c_lib',
           ],
         }],
         [ 'disable_altivec==1 and (target_arch=="ppc64" or target_arch=="ppc64le")', {

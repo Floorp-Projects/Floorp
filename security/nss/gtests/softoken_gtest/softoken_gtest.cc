@@ -100,6 +100,175 @@ static const CK_ATTRIBUTE attributes[] = {
     {CKA_TRUST_STEP_UP_APPROVED, (void *)&ck_false,
      (PRUint32)sizeof(CK_BBOOL)}};
 
+TEST_F(SoftokenTest, GetInvalidAttribute) {
+  ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+  ASSERT_TRUE(slot);
+  EXPECT_EQ(SECSuccess, PK11_InitPin(slot.get(), nullptr, "password"));
+  ScopedPK11GenericObject obj(PK11_CreateGenericObject(
+      slot.get(), attributes, PR_ARRAY_SIZE(attributes), true));
+  ASSERT_NE(nullptr, obj);
+  SECItem out = {siBuffer, nullptr, 0};
+  SECStatus rv = PK11_ReadRawAttribute(PK11_TypeGeneric, obj.get(),
+                                       CKA_ALLOWED_MECHANISMS, &out);
+  EXPECT_EQ(SECFailure, rv);
+  // CKR_ATTRIBUTE_TYPE_INVALID maps to SEC_ERROR_BAD_DATA.
+  EXPECT_EQ(SEC_ERROR_BAD_DATA, PORT_GetError());
+}
+
+TEST_F(SoftokenTest, GetValidAttributes) {
+  ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+  ASSERT_TRUE(slot);
+  EXPECT_EQ(SECSuccess, PK11_InitPin(slot.get(), nullptr, "password"));
+  ScopedPK11GenericObject obj(PK11_CreateGenericObject(
+      slot.get(), attributes, PR_ARRAY_SIZE(attributes), true));
+  ASSERT_NE(nullptr, obj);
+
+  CK_ATTRIBUTE template_attrs[] = {
+      {CKA_LABEL, NULL, 0},
+      {CKA_CERT_SHA1_HASH, NULL, 0},
+      {CKA_ISSUER, NULL, 0},
+  };
+  SECStatus rv =
+      PK11_ReadRawAttributes(nullptr, PK11_TypeGeneric, obj.get(),
+                             template_attrs, PR_ARRAY_SIZE(template_attrs));
+  EXPECT_EQ(SECSuccess, rv);
+  ASSERT_EQ(attributes[4].ulValueLen, template_attrs[0].ulValueLen);
+  EXPECT_EQ(0, memcmp(attributes[4].pValue, template_attrs[0].pValue,
+                      template_attrs[0].ulValueLen));
+  ASSERT_EQ(attributes[5].ulValueLen, template_attrs[1].ulValueLen);
+  EXPECT_EQ(0, memcmp(attributes[5].pValue, template_attrs[1].pValue,
+                      template_attrs[1].ulValueLen));
+  ASSERT_EQ(attributes[7].ulValueLen, template_attrs[2].ulValueLen);
+  EXPECT_EQ(0, memcmp(attributes[7].pValue, template_attrs[2].pValue,
+                      template_attrs[2].ulValueLen));
+  for (unsigned int i = 0; i < PR_ARRAY_SIZE(template_attrs); i++) {
+    PORT_Free(template_attrs[i].pValue);
+  }
+}
+
+TEST_F(SoftokenTest, GetOnlyInvalidAttributes) {
+  ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+  ASSERT_TRUE(slot);
+  EXPECT_EQ(SECSuccess, PK11_InitPin(slot.get(), nullptr, "password"));
+  ScopedPK11GenericObject obj(PK11_CreateGenericObject(
+      slot.get(), attributes, PR_ARRAY_SIZE(attributes), true));
+  ASSERT_NE(nullptr, obj);
+
+  // Provide buffers of sufficient size, so that token
+  // will write the data. This is annoying, but PK11_GetAttributes
+  // won't allocate in the cases below when a single attribute
+  // is missing. So, just put them all on the stack.
+  unsigned char buf1[100];
+  unsigned char buf2[100];
+  CK_ATTRIBUTE template_attrs[] = {{0xffffffffUL, buf1, sizeof(buf1)},
+                                   {0xfffffffeUL, buf2, sizeof(buf2)}};
+  SECStatus rv =
+      PK11_ReadRawAttributes(nullptr, PK11_TypeGeneric, obj.get(),
+                             template_attrs, PR_ARRAY_SIZE(template_attrs));
+  EXPECT_EQ(SECFailure, rv);
+  EXPECT_EQ(SEC_ERROR_BAD_DATA, PORT_GetError());
+
+  // MSVC rewards -1UL with a C4146 warning...
+  ASSERT_EQ(0UL, template_attrs[0].ulValueLen + 1);
+  ASSERT_EQ(0UL, template_attrs[1].ulValueLen + 1);
+}
+
+TEST_F(SoftokenTest, GetAttributesInvalidInterspersed1) {
+  ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+  ASSERT_TRUE(slot);
+  EXPECT_EQ(SECSuccess, PK11_InitPin(slot.get(), nullptr, "password"));
+  ScopedPK11GenericObject obj(PK11_CreateGenericObject(
+      slot.get(), attributes, PR_ARRAY_SIZE(attributes), true));
+  ASSERT_NE(nullptr, obj);
+
+  unsigned char buf1[100];
+  unsigned char buf2[100];
+  unsigned char buf3[200];
+  CK_ATTRIBUTE template_attrs[] = {{0xffffffff, buf1, sizeof(buf1)},
+                                   {CKA_CERT_SHA1_HASH, buf2, sizeof(buf2)},
+                                   {CKA_ISSUER, buf3, sizeof(buf3)}};
+  SECStatus rv =
+      PK11_ReadRawAttributes(nullptr, PK11_TypeGeneric, obj.get(),
+                             template_attrs, PR_ARRAY_SIZE(template_attrs));
+  EXPECT_EQ(SECFailure, rv);
+  EXPECT_EQ(SEC_ERROR_BAD_DATA, PORT_GetError());
+  ASSERT_EQ(0UL, template_attrs[0].ulValueLen + 1);
+  ASSERT_EQ(attributes[5].ulValueLen, template_attrs[1].ulValueLen);
+  EXPECT_EQ(0, memcmp(attributes[5].pValue, template_attrs[1].pValue,
+                      template_attrs[1].ulValueLen));
+  ASSERT_EQ(attributes[7].ulValueLen, template_attrs[2].ulValueLen);
+  EXPECT_EQ(0, memcmp(attributes[7].pValue, template_attrs[2].pValue,
+                      template_attrs[2].ulValueLen));
+}
+
+TEST_F(SoftokenTest, GetAttributesInvalidInterspersed2) {
+  ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+  ASSERT_TRUE(slot);
+  EXPECT_EQ(SECSuccess, PK11_InitPin(slot.get(), nullptr, "password"));
+  ScopedPK11GenericObject obj(PK11_CreateGenericObject(
+      slot.get(), attributes, PR_ARRAY_SIZE(attributes), true));
+  ASSERT_NE(nullptr, obj);
+
+  unsigned char buf1[100];
+  unsigned char buf2[100];
+  unsigned char buf3[100];
+  CK_ATTRIBUTE template_attrs[] = {{CKA_LABEL, buf1, sizeof(buf1)},
+                                   {CKA_CERT_SHA1_HASH, buf2, sizeof(buf2)},
+                                   {0xffffffffUL, buf3, sizeof(buf3)}};
+  SECStatus rv =
+      PK11_ReadRawAttributes(nullptr, PK11_TypeGeneric, obj.get(),
+                             template_attrs, PR_ARRAY_SIZE(template_attrs));
+  EXPECT_EQ(SECFailure, rv);
+  EXPECT_EQ(SEC_ERROR_BAD_DATA, PORT_GetError());
+  ASSERT_EQ(attributes[4].ulValueLen, template_attrs[0].ulValueLen);
+  EXPECT_EQ(0, memcmp(attributes[4].pValue, template_attrs[0].pValue,
+                      template_attrs[0].ulValueLen));
+  ASSERT_EQ(attributes[5].ulValueLen, template_attrs[1].ulValueLen);
+  EXPECT_EQ(0, memcmp(attributes[5].pValue, template_attrs[1].pValue,
+                      template_attrs[1].ulValueLen));
+  ASSERT_EQ(0UL, template_attrs[2].ulValueLen + 1);
+}
+
+TEST_F(SoftokenTest, GetAttributesInvalidInterspersed3) {
+  ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+  ASSERT_TRUE(slot);
+  EXPECT_EQ(SECSuccess, PK11_InitPin(slot.get(), nullptr, "password"));
+  ScopedPK11GenericObject obj(PK11_CreateGenericObject(
+      slot.get(), attributes, PR_ARRAY_SIZE(attributes), true));
+  ASSERT_NE(nullptr, obj);
+
+  unsigned char buf1[100];
+  unsigned char buf2[100];
+  unsigned char buf3[100];
+  unsigned char buf4[100];
+  unsigned char buf5[100];
+  unsigned char buf6[200];
+  CK_ATTRIBUTE template_attrs[6] = {{CKA_LABEL, buf1, sizeof(buf1)},
+                                    {0xffffffffUL, buf2, sizeof(buf2)},
+                                    {0xfffffffeUL, buf3, sizeof(buf3)},
+                                    {CKA_CERT_SHA1_HASH, buf4, sizeof(buf4)},
+                                    {0xfffffffdUL, buf5, sizeof(buf5)},
+                                    {CKA_ISSUER, buf6, sizeof(buf6)}};
+  SECStatus rv =
+      PK11_ReadRawAttributes(nullptr, PK11_TypeGeneric, obj.get(),
+                             template_attrs, PR_ARRAY_SIZE(template_attrs));
+  EXPECT_EQ(SECFailure, rv);
+  EXPECT_EQ(SEC_ERROR_BAD_DATA, PORT_GetError());
+
+  ASSERT_EQ(attributes[4].ulValueLen, template_attrs[0].ulValueLen);
+  EXPECT_EQ(0, memcmp(attributes[4].pValue, template_attrs[0].pValue,
+                      template_attrs[0].ulValueLen));
+  ASSERT_EQ(0UL, template_attrs[1].ulValueLen + 1);
+  ASSERT_EQ(0UL, template_attrs[2].ulValueLen + 1);
+  ASSERT_EQ(attributes[5].ulValueLen, template_attrs[3].ulValueLen);
+  EXPECT_EQ(0, memcmp(attributes[5].pValue, template_attrs[3].pValue,
+                      template_attrs[3].ulValueLen));
+  ASSERT_EQ(0UL, template_attrs[4].ulValueLen + 1);
+  ASSERT_EQ(attributes[7].ulValueLen, template_attrs[5].ulValueLen);
+  EXPECT_EQ(0, memcmp(attributes[7].pValue, template_attrs[5].pValue,
+                      template_attrs[5].ulValueLen));
+}
+
 TEST_F(SoftokenTest, CreateObjectNonEmptyPassword) {
   ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
   ASSERT_TRUE(slot);
