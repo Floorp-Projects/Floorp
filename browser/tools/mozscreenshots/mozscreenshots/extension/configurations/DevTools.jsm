@@ -61,6 +61,8 @@ var DevTools = {
     },
     sideToolbox: {
       async applyConfig() {
+        return Promise.reject("Panel sizes are regularly inconsistent");
+        // eslint-disable-next-line no-unreachable
         let target = await getTargetForSelectedTab();
         let toolbox = await gDevTools.showToolbox(target, "inspector", "right");
         this.selectors = [selectToolbox.bind(null, toolbox)];
@@ -70,6 +72,8 @@ var DevTools = {
     undockedToolbox: {
       windowType: "devtools:toolbox",
       async applyConfig() {
+        return Promise.reject("Panel sizes are regularly inconsistent");
+        // eslint-disable-next-line no-unreachable
         let target = await getTargetForSelectedTab();
         let toolbox = await gDevTools.showToolbox(
           target,
