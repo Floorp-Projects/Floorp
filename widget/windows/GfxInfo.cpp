@@ -1795,7 +1795,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     // FEATURE_WEBRENDER - ALLOWLIST
 
     APPEND_TO_DRIVER_BLOCKLIST2_EXT(
-        OperatingSystem::RecentWindows10, ScreenSizeStatus::Small,
+        OperatingSystem::RecentWindows10, ScreenSizeStatus::All,
         BatteryStatus::Present, DesktopEnvironment::All, WindowProtocol::All,
         DriverVendor::All, DeviceFamily::NvidiaRolloutWebRender,
         nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_ALLOW_ALWAYS,
