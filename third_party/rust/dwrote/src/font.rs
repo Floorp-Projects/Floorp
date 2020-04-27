@@ -3,16 +3,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use std::cell::UnsafeCell;
-
-use comptr::ComPtr;
-use winapi::shared::minwindef::{BOOL, FALSE, TRUE};
-use winapi::shared::winerror::S_OK;
-use winapi::um::dwrite::{DWRITE_FONT_METRICS, DWRITE_INFORMATIONAL_STRING_FULL_NAME, DWRITE_INFORMATIONAL_STRING_ID};
-use winapi::um::dwrite::{DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_CID_NAME};
-use winapi::um::dwrite::{DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_NAME, IDWriteFontFace};
-use winapi::um::dwrite::{IDWriteLocalizedStrings, IDWriteFont, IDWriteFontFamily};
-use winapi::um::dwrite_1::IDWriteFont1;
 use std::mem;
+use std::ptr;
+use winapi::shared::minwindef::{FALSE, TRUE};
+use winapi::shared::winerror::S_OK;
+use winapi::um::dwrite::IDWriteFont;
+use winapi::um::dwrite::IDWriteFontFace;
+use winapi::um::dwrite::IDWriteFontFamily;
+use winapi::um::dwrite::IDWriteLocalizedStrings;
+use winapi::um::dwrite::DWRITE_FONT_METRICS;
+use winapi::um::dwrite::DWRITE_INFORMATIONAL_STRING_FULL_NAME;
+use winapi::um::dwrite::DWRITE_INFORMATIONAL_STRING_ID;
+use winapi::um::dwrite::DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_CID_NAME;
+use winapi::um::dwrite::DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_NAME;
+use winapi::um::dwrite_1::{IDWriteFont1, DWRITE_FONT_METRICS1};
+use wio::com::ComPtr;
 
 use super::*;
 use helpers::*;
@@ -29,7 +34,7 @@ impl Font {
     }
 
     pub unsafe fn as_ptr(&self) -> *mut IDWriteFont {
-        (*self.native.get()).as_ptr()
+        (*self.native.get()).as_raw()
     }
 
     pub fn to_descriptor(&self) -> FontDescriptor {
@@ -42,67 +47,57 @@ impl Font {
     }
 
     pub fn stretch(&self) -> FontStretch {
-        unsafe {
-            mem::transmute::<u32, FontStretch>((*self.native.get()).GetStretch())
-        }
+        unsafe { mem::transmute::<u32, FontStretch>((*self.native.get()).GetStretch()) }
     }
 
     pub fn style(&self) -> FontStyle {
-        unsafe {
-            mem::transmute::<u32, FontStyle>((*self.native.get()).GetStyle())
-        }
+        unsafe { mem::transmute::<u32, FontStyle>((*self.native.get()).GetStyle()) }
     }
 
     pub fn weight(&self) -> FontWeight {
-        unsafe {
-            FontWeight::from_u32((*self.native.get()).GetWeight())
-        }
+        unsafe { FontWeight::from_u32((*self.native.get()).GetWeight()) }
     }
 
     pub fn is_monospace(&self) -> Option<bool> {
         unsafe {
-            let font1: Option<ComPtr<IDWriteFont1>> = (*self.native.get()).query_interface(&IDWriteFont1::uuidof());
+            let font1: Option<ComPtr<IDWriteFont1>> = (*self.native.get()).cast().ok();
             font1.map(|font| font.IsMonospacedFont() == TRUE)
         }
     }
 
     pub fn simulations(&self) -> FontSimulations {
-        unsafe {
-            mem::transmute::<u32, FontSimulations>((*self.native.get()).GetSimulations())
-        }
+        unsafe { mem::transmute::<u32, FontSimulations>((*self.native.get()).GetSimulations()) }
     }
 
     pub fn family_name(&self) -> String {
         unsafe {
-            let mut family: ComPtr<IDWriteFontFamily> = ComPtr::new();
-            let hr = (*self.native.get()).GetFontFamily(family.getter_addrefs());
+            let mut family: *mut IDWriteFontFamily = ptr::null_mut();
+            let hr = (*self.native.get()).GetFontFamily(&mut family);
             assert!(hr == 0);
 
-            FontFamily::take(family).name()
+            FontFamily::take(ComPtr::from_raw(family)).name()
         }
     }
 
     pub fn face_name(&self) -> String {
         unsafe {
-            let mut names: ComPtr<IDWriteLocalizedStrings> = ComPtr::new();
-            let hr = (*self.native.get()).GetFaceNames(names.getter_addrefs());
+            let mut names: *mut IDWriteLocalizedStrings = ptr::null_mut();
+            let hr = (*self.native.get()).GetFaceNames(&mut names);
             assert!(hr == 0);
 
-            get_locale_string(&mut names)
+            get_locale_string(&mut ComPtr::from_raw(names))
         }
     }
 
     pub fn informational_string(&self, id: InformationalStringId) -> Option<String> {
         unsafe {
-            let mut names: ComPtr<IDWriteLocalizedStrings> = ComPtr::new();
+            let mut names: *mut IDWriteLocalizedStrings = ptr::null_mut();
             let mut exists = FALSE;
             let id = id as DWRITE_INFORMATIONAL_STRING_ID;
-            let hr = (*self.native.get()).GetInformationalStrings(id,
-                                                                  names.getter_addrefs(),
-                                                                  &mut exists);
+            let hr = (*self.native.get()).GetInformationalStrings(id, &mut names, &mut exists);
             assert!(hr == S_OK);
             if exists == TRUE {
-                Some(get_locale_string(&mut names))
+                Some(get_locale_string(&mut ComPtr::from_raw(names)))
             } else {
                 None
             }
@@ -113,18 +108,28 @@ impl Font {
         // FIXME create_font_face should cache the FontFace and return it,
         // there's a 1:1 relationship
         unsafe {
-            let mut face: ComPtr<IDWriteFontFace> = ComPtr::new();
-            let hr = (*self.native.get()).CreateFontFace(face.getter_addrefs());
+            let mut face: *mut IDWriteFontFace = ptr::null_mut();
+            let hr = (*self.native.get()).CreateFontFace(&mut face);
             assert!(hr == 0);
-            FontFace::take(face)
+            FontFace::take(ComPtr::from_raw(face))
         }
     }
 
-    pub fn metrics(&self) -> DWRITE_FONT_METRICS {
+    pub fn metrics(&self) -> FontMetrics {
         unsafe {
-            let mut metrics = mem::zeroed();
-            (*self.native.get()).GetMetrics(&mut metrics);
-            metrics
+            let font_1: Option<ComPtr<IDWriteFont1>> = (*self.native.get()).cast().ok();
+            match font_1 {
+                None => {
+                    let mut metrics = mem::zeroed();
+                    (*self.native.get()).GetMetrics(&mut metrics);
+                    FontMetrics::Metrics0(metrics)
+                }
+                Some(font_1) => {
+                    let mut metrics_1 = mem::zeroed();
+                    font_1.GetMetrics(&mut metrics_1);
+                    FontMetrics::Metrics1(metrics_1)
+                }
+            }
         }
     }
 }
@@ -145,4 +150,33 @@ pub enum InformationalStringId {
     FullName = DWRITE_INFORMATIONAL_STRING_FULL_NAME,
     PostscriptName = DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_NAME,
     PostscriptCidName = DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_CID_NAME,
+}
+
+/// A wrapper around the `DWRITE_FONT_METRICS` and `DWRITE_FONT_METRICS1` types.
+pub enum FontMetrics {
+    /// Windows 7.
+    Metrics0(DWRITE_FONT_METRICS),
+    /// Windows 8 and up.
+    Metrics1(DWRITE_FONT_METRICS1),
+}
+
+impl FontMetrics {
+    /// Convert self to the Metrics0 arm (throwing away additional information)
+    pub fn metrics0(self) -> DWRITE_FONT_METRICS {
+        match self {
+            FontMetrics::Metrics0(metrics) => metrics,
+            FontMetrics::Metrics1(metrics) => DWRITE_FONT_METRICS {
+                designUnitsPerEm: metrics.designUnitsPerEm,
+                ascent: metrics.ascent,
+                descent: metrics.descent,
+                lineGap: metrics.lineGap,
+                capHeight: metrics.capHeight,
+                xHeight: metrics.xHeight,
+                underlinePosition: metrics.underlinePosition,
+                underlineThickness: metrics.underlineThickness,
+                strikethroughPosition: metrics.strikethroughPosition,
+                strikethroughThickness: metrics.strikethroughThickness,
+            }
+        }
+    }
 }

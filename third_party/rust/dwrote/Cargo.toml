@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -11,8 +11,9 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "dwrote"
-version = "0.9.0"
+version = "0.11.0"
 authors = ["The Servo Project Developers", "Vladimir Vukicevic <vladimir@pobox.com>"]
 description = "Lightweight binding to DirectWrite."
 license = "MPL-2.0"
@@ -37,6 +38,9 @@ optional = true
 [dependencies.winapi]
 version = "0.3.6"
 features = ["dwrite", "dwrite_1", "dwrite_3", "winnt", "unknwnbase", "libloaderapi", "winnls"]
+
+[dependencies.wio]
+version = "0.2"
 
 [features]
 default = ["serde_serialization"]
