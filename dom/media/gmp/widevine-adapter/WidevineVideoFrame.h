@@ -38,8 +38,8 @@ class WidevineVideoFrame : public cdm::VideoFrame {
   void SetTimestamp(int64_t aTimestamp) override;
   int64_t Timestamp() const override;
 
-  MOZ_MUST_USE bool InitToBlack(int32_t aWidth, int32_t aHeight,
-                                int64_t aTimeStamp);
+  [[nodiscard]] bool InitToBlack(int32_t aWidth, int32_t aHeight,
+                                 int64_t aTimeStamp);
 
  protected:
   cdm::VideoFormat mFormat;
