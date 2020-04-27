@@ -3,9 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use std::cell::UnsafeCell;
-
-use comptr::ComPtr;
+use std::ptr;
 use winapi::um::dwrite::IDWriteRenderingParams;
+use wio::com::ComPtr;
+
 use super::DWriteFactory;
 
 pub struct RenderingParams {
@@ -15,10 +16,10 @@ pub struct RenderingParams {
 impl RenderingParams {
     pub fn create_for_primary_monitor() -> RenderingParams {
         unsafe {
-            let mut native: ComPtr<IDWriteRenderingParams> = ComPtr::new();
-            let hr = (*DWriteFactory()).CreateRenderingParams(native.getter_addrefs());
+            let mut native: *mut IDWriteRenderingParams = ptr::null_mut();
+            let hr = (*DWriteFactory()).CreateRenderingParams(&mut native);
             assert!(hr == 0);
-            RenderingParams::take(native)
+            RenderingParams::take(ComPtr::from_raw(native))
         }
     }
 
@@ -29,6 +30,6 @@ impl RenderingParams {
     }
 
     pub unsafe fn as_ptr(&self) -> *mut IDWriteRenderingParams {
-        (*self.native.get()).as_ptr()
+        (*self.native.get()).as_raw()
     }
 }

@@ -36,6 +36,9 @@ struct CachedFont {
     file: dwrote::FontFile,
 }
 
+// FontFile contains a ComPtr<IDWriteFontFile>, but DWrite font files are threadsafe.
+unsafe impl Send for CachedFont {}
+
 impl PartialEq for CachedFont {
     fn eq(&self, other: &CachedFont) -> bool {
         self.key == other.key
@@ -392,7 +395,7 @@ impl FontContext {
             .first()
             .map(|metrics| {
                 let em_size = size / 16.;
-                let design_units_per_pixel = face.metrics().designUnitsPerEm as f32 / 16. as f32;
+                let design_units_per_pixel = face.metrics().metrics0().designUnitsPerEm as f32 / 16. as f32;
                 let scaled_design_units_to_pixels = em_size / design_units_per_pixel;
                 let advance = metrics.advanceWidth as f32 * scaled_design_units_to_pixels;
 

@@ -2,15 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use winapi::um::dwrite::IDWriteLocalizedStrings;
+use std::ffi::OsStr;
+use std::os::windows::ffi::OsStrExt;
 use winapi::ctypes::wchar_t;
-use comptr::ComPtr;
-use winapi::shared::winerror::S_OK;
 use winapi::shared::minwindef::{BOOL, FALSE};
+use winapi::shared::winerror::S_OK;
+use winapi::um::dwrite::IDWriteLocalizedStrings;
 use winapi::um::winnls::GetUserDefaultLocaleName;
-use std::ffi::{OsStr};
-use std::os::windows::ffi::{OsStrExt};
-
+use wio::com::ComPtr;
 
 lazy_static! {
     static ref SYSTEM_LOCALE: Vec<wchar_t> = {
@@ -20,9 +19,7 @@ lazy_static! {
             locale
         }
     };
-    static ref EN_US_LOCALE: Vec<wchar_t> = {
-        OsStr::new("en-us").encode_wide().collect()
-    };
+    static ref EN_US_LOCALE: Vec<wchar_t> = { OsStr::new("en-us").to_wide_null() };
 }
 
 pub fn get_locale_string(strings: &mut ComPtr<IDWriteLocalizedStrings>) -> String {
@@ -58,7 +55,10 @@ pub trait ToWide {
     fn to_wide_null(&self) -> Vec<u16>;
 }
 
-impl<T> ToWide for T where T: AsRef<OsStr> {
+impl<T> ToWide for T
+where
+    T: AsRef<OsStr>,
+{
     fn to_wide(&self) -> Vec<u16> {
         self.as_ref().encode_wide().collect()
     }
