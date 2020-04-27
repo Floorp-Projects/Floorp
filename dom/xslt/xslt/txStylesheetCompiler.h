@@ -102,7 +102,7 @@ class txStylesheetCompilerState : public txIParseContext {
   void addToplevelItem(txToplevelItem* aItem);
   nsresult openInstructionContainer(txInstructionContainer* aContainer);
   void closeInstructionContainer();
-  nsresult addInstruction(nsAutoPtr<txInstruction>&& aInstruction);
+  void addInstruction(nsAutoPtr<txInstruction>&& aInstruction);
   nsresult loadIncludedStylesheet(const nsAString& aURI);
   nsresult loadImportedStylesheet(const nsAString& aURI,
                                   txStylesheet::ImportFrame* aFrame);
