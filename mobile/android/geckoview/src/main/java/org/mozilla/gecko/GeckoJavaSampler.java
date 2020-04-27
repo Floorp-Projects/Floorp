@@ -8,16 +8,20 @@ package org.mozilla.gecko;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 
 // Bug 1618560: Currently we only profile the Java Main Thread. Ideally we should
 // be able to profile multiple threads.
 public class GeckoJavaSampler {
-    private static final String LOGTAG = "JavaSampler";
-    private static Thread sSamplingThread;
+    private static final String LOGTAG = "GeckoJavaSampler";
     private static SamplingRunnable sSamplingRunnable;
-    private static Thread sMainThread;
+    private static ScheduledExecutorService sSamplingScheduler;
+    private static ScheduledFuture<?> sSamplingFuture;
 
     // Use the same timer primitive as the profiler
     // to get a perfect sample syncing.
@@ -47,6 +51,7 @@ public class GeckoJavaSampler {
             }
         }
     }
+
     private static class Frame {
         public String fileName;
         public int lineNo;
@@ -55,59 +60,46 @@ public class GeckoJavaSampler {
     }
 
     private static class SamplingRunnable implements Runnable {
-        private final int mInterval;
+        // Sampling interval that is used by start and unpause
+        public final int mInterval;
         private final int mSampleCount;
 
-        private boolean mPauseSampler;
-        private boolean mStopSampler;
         private boolean mBufferOverflowed = false;
 
+        private Thread mMainThread;
         private Sample[] mSamples;
         private int mSamplePos;
 
         public SamplingRunnable(final int aInterval, final int aSampleCount) {
-            // If we sample faster then 10ms we get too many missed samples
-            mInterval = Math.max(10, aInterval);
+            // Sanity check of sampling interval.
+            mInterval = Math.max(1, aInterval);
             // Setting a limit of 100000 for now to make sure we are not
             // allocating too much.
             mSampleCount = Math.min(aSampleCount, 100000);
+            mSamples = new Sample[aSampleCount];
+            mSamplePos = 0;
+
+            // Find the main thread
+            mMainThread = Looper.getMainLooper().getThread();
+            if (mMainThread == null) {
+                Log.e(LOGTAG, "Main thread not found");
+            }
         }
 
         @Override
         public void run() {
             synchronized (GeckoJavaSampler.class) {
-                mSamples = new Sample[mSampleCount];
-                mSamplePos = 0;
-
-                // Find the main thread
-                sMainThread = Looper.getMainLooper().getThread();
-                if (sMainThread == null) {
-                    Log.e(LOGTAG, "Main thread not found");
+                if (mMainThread == null) {
                     return;
                 }
-            }
-
-            while (true) {
-                try {
-                    Thread.sleep(mInterval);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                synchronized (GeckoJavaSampler.class) {
-                    if (!mPauseSampler) {
-                        StackTraceElement[] bt = sMainThread.getStackTrace();
-                        mSamples[mSamplePos] = new Sample(bt);
-                        mSamplePos += 1;
-                        if (mSamplePos == mSampleCount) {
-                            // Sample array is full now, go back to start of
-                            // the array and override old samples
-                            mSamplePos = 0;
-                            mBufferOverflowed = true;
-                        }
-                    }
-                    if (mStopSampler) {
-                        break;
-                    }
+                final StackTraceElement[] bt = mMainThread.getStackTrace();
+                mSamples[mSamplePos] = new Sample(bt);
+                mSamplePos += 1;
+                if (mSamplePos == mSampleCount) {
+                    // Sample array is full now, go back to start of
+                    // the array and override old samples
+                    mSamplePos = 0;
+                    mBufferOverflowed = true;
                 }
             }
         }
@@ -168,49 +160,53 @@ public class GeckoJavaSampler {
             if (sSamplingRunnable != null) {
                 return;
             }
+
+            if (sSamplingFuture != null && !sSamplingFuture.isDone()) {
+                return;
+            }
+
             sSamplingRunnable = new SamplingRunnable(aInterval, aSamples);
-            sSamplingThread = new Thread(sSamplingRunnable, "Java Sampler");
-            sSamplingThread.start();
+            sSamplingScheduler = Executors.newSingleThreadScheduledExecutor();
+            sSamplingFuture = sSamplingScheduler.scheduleAtFixedRate(sSamplingRunnable, 0, sSamplingRunnable.mInterval, TimeUnit.MILLISECONDS);
         }
     }
 
     @WrapForJNI
     public static void pause() {
         synchronized (GeckoJavaSampler.class) {
-            sSamplingRunnable.mPauseSampler = true;
+            sSamplingFuture.cancel(false /* mayInterruptIfRunning */ );
+            sSamplingFuture = null;
         }
     }
 
     @WrapForJNI
     public static void unpause() {
         synchronized (GeckoJavaSampler.class) {
-            sSamplingRunnable.mPauseSampler = false;
+            if (sSamplingFuture != null) {
+                return;
+            }
+            sSamplingFuture = sSamplingScheduler.scheduleAtFixedRate(sSamplingRunnable, 0, sSamplingRunnable.mInterval, TimeUnit.MILLISECONDS);
         }
     }
 
     @WrapForJNI
     public static void stop() {
-        Thread samplingThread;
-
         synchronized (GeckoJavaSampler.class) {
-            if (sSamplingThread == null) {
+            if (sSamplingRunnable == null) {
                 return;
             }
 
-            sSamplingRunnable.mStopSampler = true;
-            samplingThread = sSamplingThread;
-            sSamplingThread = null;
-            sSamplingRunnable = null;
-        }
-
-        boolean retry = true;
-        while (retry) {
             try {
-                samplingThread.join();
-                retry = false;
+                sSamplingScheduler.shutdown();
+                // 1s is enough to wait shutdown.
+                sSamplingScheduler.awaitTermination(1000, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Log.e(LOGTAG, "Sampling scheduler isn't terminated. Last sampling data might be broken.");
+                sSamplingScheduler.shutdownNow();
             }
+            sSamplingScheduler = null;
+            sSamplingRunnable = null;
+            sSamplingFuture = null;
         }
     }
 }
