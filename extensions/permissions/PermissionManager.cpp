@@ -1515,6 +1515,15 @@ nsresult PermissionManager::CreateTable() {
                          ")"));
 }
 
+// Returns whether the given combination of expire type and expire time are
+// expired. Note that EXPIRE_SESSION only honors expireTime if it is nonzero.
+bool PermissionManager::HasExpired(uint32_t aExpireType, int64_t aExpireTime) {
+  return (aExpireType == nsIPermissionManager::EXPIRE_TIME ||
+          (aExpireType == nsIPermissionManager::EXPIRE_SESSION &&
+           aExpireTime != 0)) &&
+         aExpireTime <= EXPIRY_NOW;
+}
+
 NS_IMETHODIMP
 PermissionManager::AddFromPrincipal(nsIPrincipal* aPrincipal,
                                     const nsACString& aType,
@@ -1528,12 +1537,8 @@ PermissionManager::AddFromPrincipal(nsIPrincipal* aPrincipal,
                      aExpireType == nsIPermissionManager::EXPIRE_POLICY,
                  NS_ERROR_INVALID_ARG);
 
-  // Skip addition if the permission is already expired. Note that
-  // EXPIRE_SESSION only honors expireTime if it is nonzero.
-  if ((aExpireType == nsIPermissionManager::EXPIRE_TIME ||
-       (aExpireType == nsIPermissionManager::EXPIRE_SESSION &&
-        aExpireTime != 0)) &&
-      aExpireTime <= EXPIRY_NOW) {
+  // Skip addition if the permission is already expired.
+  if (HasExpired(aExpireType, aExpireTime)) {
     return NS_OK;
   }
 
@@ -2237,6 +2242,13 @@ NS_IMETHODIMP PermissionManager::GetAllWithTypePrefix(
         continue;
       }
 
+      // If the permission is expired, skip it. We're not deleting it here
+      // because we're iterating over a lot of permissions.
+      // It will be removed as part of the daily maintenance later.
+      if (HasExpired(permEntry.mExpireType, permEntry.mExpireTime)) {
+        continue;
+      }
+
       if (!aPrefix.IsEmpty() &&
           !StringBeginsWith(mTypeArray[permEntry.mType], aPrefix)) {
         continue;
@@ -2291,6 +2303,13 @@ PermissionManager::GetAllForPrincipal(
     for (const auto& permEntry : entry->GetPermissions()) {
       // Only return custom permissions
       if (permEntry.mPermission == nsIPermissionManager::UNKNOWN_ACTION) {
+        continue;
+      }
+
+      // If the permission is expired, skip it. We're not deleting it here
+      // because we're iterating over a lot of permissions.
+      // It will be removed as part of the daily maintenance later.
+      if (HasExpired(permEntry.mExpireType, permEntry.mExpireTime)) {
         continue;
       }
 
@@ -2497,11 +2516,7 @@ PermissionManager::PermissionHashKey* PermissionManager::GetPermissionHashKey(
     PermissionEntry permEntry = entry->GetPermission(aType);
 
     // if the entry is expired, remove and keep looking for others.
-    // Note that EXPIRE_SESSION only honors expireTime if it is nonzero.
-    if ((permEntry.mExpireType == nsIPermissionManager::EXPIRE_TIME ||
-         (permEntry.mExpireType == nsIPermissionManager::EXPIRE_SESSION &&
-          permEntry.mExpireTime != 0)) &&
-        permEntry.mExpireTime <= EXPIRY_NOW) {
+    if (HasExpired(permEntry.mExpireType, permEntry.mExpireTime)) {
       entry = nullptr;
       RemoveFromPrincipal(aPrincipal, mTypeArray[aType]);
     } else if (permEntry.mPermission == nsIPermissionManager::UNKNOWN_ACTION) {
@@ -2564,11 +2579,7 @@ PermissionManager::PermissionHashKey* PermissionManager::GetPermissionHashKey(
     PermissionEntry permEntry = entry->GetPermission(aType);
 
     // if the entry is expired, remove and keep looking for others.
-    // Note that EXPIRE_SESSION only honors expireTime if it is nonzero.
-    if ((permEntry.mExpireType == nsIPermissionManager::EXPIRE_TIME ||
-         (permEntry.mExpireType == nsIPermissionManager::EXPIRE_SESSION &&
-          permEntry.mExpireTime != 0)) &&
-        permEntry.mExpireTime <= EXPIRY_NOW) {
+    if (HasExpired(permEntry.mExpireType, permEntry.mExpireTime)) {
       entry = nullptr;
       // If we need to remove a permission we mint a principal.  This is a bit
       // inefficient, but hopefully this code path isn't super common.
