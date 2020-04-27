@@ -2469,12 +2469,16 @@ function losslessDecodeURI(aURI) {
     }
   }
 
-  // Encode invisible characters (C0/C1 control characters, U+007F [DEL],
-  // U+00A0 [no-break space], line and paragraph separator,
-  // object replacement character) (bug 452979, bug 909264)
+  // Encode potentially invisible characters:
+  //   U+0000-U+001F: C0/C1 control characters
+  //   U+007F-U+009F: commands
+  //   U+00A0, U+1680, U+2000-U+200A, U+202F, U+205F, U+3000: spaces
+  //   U+2028-U+2029: line and paragraph separators
+  //   U+2800: braille empty pattern
+  //   U+FFFC: object replacement character
   value = value.replace(
     // eslint-disable-next-line no-control-regex
-    /[\u0000-\u001f\u007f-\u00a0\u2028\u2029\ufffc]/g,
+    /[\u0000-\u001f\u007f-\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u2800\u3000\ufffc]/g,
     encodeURIComponent
   );
 
