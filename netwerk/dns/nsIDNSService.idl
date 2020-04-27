@@ -308,6 +308,12 @@ interface nsIDNSService : nsISupports
     void reloadParentalControlEnabled();
 
     /**
+     * Notifies the TRR service of a TRR that was automatically detected based
+     * on network preferences.
+     */
+    void setDetectedTrrURI(in AUTF8String aURI);
+
+    /**
      * @return the hostname of the operating system.
      */
     readonly attribute AUTF8String myHostName;

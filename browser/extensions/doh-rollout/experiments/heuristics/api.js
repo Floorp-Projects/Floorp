@@ -12,6 +12,10 @@ let pcs = Cc["@mozilla.org/parental-controls-service;1"].getService(
   Ci.nsIParentalControlsService
 );
 
+const gDNSService = Cc["@mozilla.org/network/dns-service;1"].getService(
+  Ci.nsIDNSService
+);
+
 const TELEMETRY_CATEGORY = "doh";
 
 const TELEMETRY_EVENTS = {
@@ -72,6 +76,10 @@ this.heuristics = class heuristics extends ExtensionAPI {
               decision,
               results
             );
+          },
+
+          setDetectedTrrURI(uri) {
+            gDNSService.setDetectedTrrURI(uri);
           },
 
           sendStatePing(state) {

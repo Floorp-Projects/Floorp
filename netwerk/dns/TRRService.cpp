@@ -131,6 +131,10 @@ void TRRService::GetParentalControlEnabledInternal() {
   }
 }
 
+void TRRService::SetDetectedTrrURI(const nsACString& aURI) {
+  // TODO
+}
+
 bool TRRService::Enabled(nsIRequest::TRRMode aMode) {
   if (mMode == MODE_TRROFF) {
     return false;
