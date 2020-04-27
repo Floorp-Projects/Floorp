@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #![warn(rust_2018_idioms)]
-mod bridged_engine;
 mod changeset;
 pub mod client;
 mod payload;
@@ -12,7 +11,6 @@ mod server_timestamp;
 mod store;
 pub mod telemetry;
 
-pub use bridged_engine::{ApplyResults, BridgedEngine};
 pub use changeset::{IncomingChangeset, OutgoingChangeset, RecordChangeset};
 pub use payload::Payload;
 pub use request::{CollectionRequest, RequestOrder};
