@@ -173,6 +173,12 @@ class nsNavHistory final : public nsSupportsWeakReference,
   static void GetMonthName(const PRExplodedTime& aTime, nsACString& aResult);
   static void GetMonthYear(const PRExplodedTime& aTime, nsACString& aResult);
 
+  // Returns true if the provided URI spec and scheme is allowed in history
+  static nsresult CanAddURIToHistory(nsIURI* aURI, bool* aCanAdd);
+
+  // The max URI spec length allowed for a URI to be added to history
+  static uint32_t MaxURILength();
+
   // Returns whether history is enabled or not.
   bool IsHistoryDisabled() { return !mHistoryEnabled; }
 
