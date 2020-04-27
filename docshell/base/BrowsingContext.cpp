@@ -292,6 +292,10 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
   const bool allowPlugins = inherit ? inherit->GetAllowPlugins() : true;
   context->mFields.SetWithoutSyncing<IDX_AllowPlugins>(allowPlugins);
 
+  const auto defaultLoadFlags =
+      inherit ? inherit->GetDefaultLoadFlags() : nsIRequest::LOAD_NORMAL;
+  context->mFields.SetWithoutSyncing<IDX_DefaultLoadFlags>(defaultLoadFlags);
+
   return context.forget();
 }
 
@@ -1873,6 +1877,29 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_WatchedByDevtools>,
                              const bool& aWatchedByDevtools,
                              ContentParent* aSource) {
   return CheckOnlyOwningProcessCanSet(aSource);
+}
+
+bool BrowsingContext::CanSet(FieldIndex<IDX_DefaultLoadFlags>,
+                             const uint32_t& aDefaultLoadFlags,
+                             ContentParent* aSource) {
+  // Bug 1623565 - Are these flags only used by the debugger, which makes it
+  // possible that this field can only be settable by the parent process?
+  return CheckOnlyOwningProcessCanSet(aSource);
+}
+
+void BrowsingContext::DidSet(FieldIndex<IDX_DefaultLoadFlags>) {
+  auto loadFlags = GetDefaultLoadFlags();
+  if (GetDocShell()) {
+    nsDocShell::Cast(GetDocShell())->SetLoadGroupDefaultLoadFlags(loadFlags);
+  }
+
+  if (XRE_IsParentProcess()) {
+    PreOrderWalk([&](BrowsingContext* aContext) {
+      if (aContext != this) {
+        aContext->SetDefaultLoadFlags(loadFlags);
+      }
+    });
+  }
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_UserAgentOverride>,
