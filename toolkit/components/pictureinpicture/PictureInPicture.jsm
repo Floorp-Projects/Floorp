@@ -140,9 +140,11 @@ var PictureInPicture = {
         return null;
       }
 
-      if (!playerWin.closed) {
-        return playerWin;
+      if (!playerWin || playerWin.closed) {
+        return null;
       }
+
+      return playerWin;
     }
     return null;
   },
