@@ -32,7 +32,10 @@ CanvasContext::CanvasContext()
     : mExternalImageId(layers::CompositorManagerChild::GetInstance()
                            ->GetNextExternalImageId()) {}
 
-CanvasContext::~CanvasContext() { Cleanup(); }
+CanvasContext::~CanvasContext() {
+  Cleanup();
+  RemovePostRefreshObserver();
+}
 
 void CanvasContext::Cleanup() {
   if (mSwapChain) {
