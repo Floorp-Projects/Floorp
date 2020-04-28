@@ -790,7 +790,7 @@ describe("ASRouter", () => {
       // Since we've previously gotten messages during init and we haven't advanced our fake timer,
       // no updates should be triggered.
       await Router.loadMessagesFromAllProviders();
-      assert.equal(Router.state, previousState);
+      assert.deepEqual(Router.state, previousState);
     });
     it("should not trigger an update if we only have local providers", async () => {
       await createRouterAndInit([
@@ -803,11 +803,14 @@ describe("ASRouter", () => {
       ]);
 
       const previousState = Router.state;
+      const stub = sandbox.stub(MessageLoaderUtils, "loadMessagesForProvider");
 
       clock.tick(300);
 
       await Router.loadMessagesFromAllProviders();
-      assert.equal(Router.state, previousState);
+
+      assert.deepEqual(Router.state, previousState);
+      assert.notCalled(stub);
     });
     it("should apply personalization if defined", async () => {
       personalizedCfrScores = { FOO: 1, BAR: 2 };
