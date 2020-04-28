@@ -19,77 +19,15 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/dom/CryptoBuffer.h"
 #include "mozilla/dom/CryptoKey.h"
+#include "mozilla/psm/PSMIPCCommon.h"
 #include "ipc/IPCMessageUtils.h"
 
 namespace mozilla {
 
-// This function will be moved to PSMIPCCommon.cpp in bug 1512478.
-static SECItem* WrapPrivateKeyInfoWithEmptyPassword(
-    SECKEYPrivateKey* pk) /* encrypt this private key */
-{
-  UniquePK11SlotInfo slot(PK11_GetInternalSlot());
-  if (!slot) {
-    return nullptr;
-  }
-
-  // For private keys, NSS cannot export anything other than RSA, but we need EC
-  // also. So, we use the private key encryption function to serialize instead,
-  // using a hard-coded dummy password; this is not intended to provide any
-  // additional security, it just works around a limitation in NSS.
-  SECItem dummyPassword = {siBuffer, nullptr, 0};
-  ScopedSECKEYEncryptedPrivateKeyInfo epki(PK11_ExportEncryptedPrivKeyInfo(
-      slot.get(), SEC_OID_AES_128_CBC, &dummyPassword, pk, 1, nullptr));
-
-  if (!epki) {
-    return nullptr;
-  }
-
-  return SEC_ASN1EncodeItem(
-      nullptr, nullptr, epki.get(),
-      NSS_Get_SECKEY_EncryptedPrivateKeyInfoTemplate(nullptr, false));
-}
-
-// This function will be moved to PSMIPCCommon.cpp in bug 1512478.
-static SECStatus UnwrapPrivateKeyInfoWithEmptyPassword(
-    SECItem* derPKI, SECItem* publicValue, KeyType type,
-    SECKEYPrivateKey** privk) {
-  UniquePK11SlotInfo slot(PK11_GetInternalSlot());
-  if (!slot) {
-    return SECFailure;
-  }
-
-  UniquePLArenaPool temparena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
-  if (!temparena) {
-    return SECFailure;
-  }
-
-  SECKEYEncryptedPrivateKeyInfo* epki =
-      PORT_ArenaZNew(temparena.get(), SECKEYEncryptedPrivateKeyInfo);
-  if (!epki) {
-    return SECFailure;
-  }
-
-  SECStatus rv = SEC_ASN1DecodeItem(
-      temparena.get(), epki,
-      NSS_Get_SECKEY_EncryptedPrivateKeyInfoTemplate(nullptr, false), derPKI);
-  if (rv != SECSuccess) {
-    /* If SEC_ASN1DecodeItem fails, we cannot assume anything about the
-     * validity of the data in epki. The best we can do is free the arena
-     * and return. */
-    return rv;
-  }
-
-  // See comment in WrapPrivateKeyInfoWithEmptyPassword about this
-  // dummy password stuff.
-  SECItem dummyPassword = {siBuffer, nullptr, 0};
-  return PK11_ImportEncryptedPrivateKeyInfoAndReturnKey(
-      slot.get(), epki, &dummyPassword, nullptr, publicValue, false, false,
-      type, KU_ALL, privk, nullptr);
-}
-
 nsresult DtlsIdentity::Serialize(nsTArray<uint8_t>* aKeyDer,
                                  nsTArray<uint8_t>* aCertDer) {
-  ScopedSECItem derPki(WrapPrivateKeyInfoWithEmptyPassword(private_key_.get()));
+  ScopedSECItem derPki(
+      psm::WrapPrivateKeyInfoWithEmptyPassword(private_key_.get()));
   if (!derPki) {
     return NS_ERROR_FAILURE;
   }
@@ -108,36 +46,12 @@ RefPtr<DtlsIdentity> DtlsIdentity::Deserialize(
   UniqueCERTCertificate cert(CERT_NewTempCertificate(
       CERT_GetDefaultCertDB(), &certDer, nullptr, true, true));
 
-  // Extract the public value needed for decryption of private key
-  // (why did we not need this for encryption?)
-  ScopedSECKEYPublicKey publicKey(CERT_ExtractPublicKey(cert.get()));
-  // This is a pointer to data inside publicKey
-  SECItem* publicValue = nullptr;
-  switch (publicKey->keyType) {
-    case dsaKey:
-      publicValue = &publicKey->u.dsa.publicValue;
-      break;
-    case dhKey:
-      publicValue = &publicKey->u.dh.publicValue;
-      break;
-    case rsaKey:
-      publicValue = &publicKey->u.rsa.modulus;
-      break;
-    case ecKey:
-      publicValue = &publicKey->u.ec.publicValue;
-      break;
-    default:
-      MOZ_ASSERT(false);
-      return nullptr;
-  }
-
   SECItem derPKI = {siBuffer, const_cast<uint8_t*>(aKeyDer.Elements()),
                     static_cast<unsigned int>(aKeyDer.Length())};
 
   SECKEYPrivateKey* privateKey;
-  if (UnwrapPrivateKeyInfoWithEmptyPassword(&derPKI, publicValue,
-                                            publicKey->keyType,
-                                            &privateKey) != SECSuccess) {
+  if (psm::UnwrapPrivateKeyInfoWithEmptyPassword(&derPKI, cert, &privateKey) !=
+      SECSuccess) {
     MOZ_ASSERT(false);
     return nullptr;
   }
