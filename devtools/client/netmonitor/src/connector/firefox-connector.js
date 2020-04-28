@@ -300,6 +300,11 @@ class FirefoxConnector {
    * @param {object} marker
    */
   onDocEvent(event) {
+    if (event.name === "dom-loading") {
+      // Netmonitor does not support dom-loading event yet.
+      return;
+    }
+
     if (this.actions) {
       this.actions.addTimingMarker(event);
     }
