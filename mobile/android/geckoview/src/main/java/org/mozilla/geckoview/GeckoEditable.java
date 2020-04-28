@@ -608,13 +608,39 @@ import android.view.inputmethod.EditorInfo;
 
                 // Because we get composition styling here essentially for free,
                 // we don't need to check if we're in batch mode.
-                if (!icMaybeSendComposition(
+                if (icMaybeSendComposition(
                         action.mSequence, SEND_COMPOSITION_USE_ENTIRE_TEXT)) {
-                    // Since we don't have a composition, we can try sending key events.
-                    sendCharKeyEvents(action);
+                    mFocusedChild.onImeReplaceText(
+                            action.mStart, action.mEnd, action.mSequence.toString());
+                    break;
+                }
+
+                // Since we don't have a composition, we can try sending key events.
+                sendCharKeyEvents(action);
+
+                // onImeReplaceText will set the selection range. But we don't
+                // know whether event state manager is processing text and
+                // selection. So current shadow may not be synchronized with
+                // Gecko's text and selection. So we have to avoid unnecessary
+                // selection update.
+                final int selStartOnShadow = Selection.getSelectionStart(mText.getShadowText());
+                final int selEndOnShadow = Selection.getSelectionEnd(mText.getShadowText());
+                int actionStart = action.mStart;
+                int actionEnd = action.mEnd;
+                // If action range is collapsed and selection of shadow text is
+                // collapsed, we may try to dispatch keypress on current caret
+                // position. Action range is previous range before dispatching
+                // keypress, and shadow range is new range after dispatching
+                // it.
+                if (action.mStart == action.mEnd && selStartOnShadow == selEndOnShadow &&
+                    action.mStart == selStartOnShadow + action.mSequence.toString().length()) {
+                    // Replacing range is same value as current shadow's selection.
+                    // So it is unnecessary to update the selection on Gecko.
+                    actionStart = -1;
+                    actionEnd = -1;
                 }
                 mFocusedChild.onImeReplaceText(
-                        action.mStart, action.mEnd, action.mSequence.toString());
+                        actionStart, actionEnd, action.mSequence.toString());
                 break;
 
             default:
