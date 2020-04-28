@@ -302,6 +302,7 @@ struct DIGroup {
   int32_t mAppUnitsPerDevPixel;
   gfx::Size mScale;
   ScrollableLayerGuid::ViewID mScrollId;
+  CompositorHitTestInfo mHitInfo;
   LayerPoint mResidualOffset;
   LayerIntRect mLayerBounds;  // mGroupBounds converted to Layer space
   // mLayerBounds clipped to the container/parent of the
@@ -313,7 +314,8 @@ struct DIGroup {
 
   DIGroup()
       : mAppUnitsPerDevPixel(0),
-        mScrollId(ScrollableLayerGuid::NULL_SCROLL_ID) {}
+        mScrollId(ScrollableLayerGuid::NULL_SCROLL_ID),
+        mHitInfo(CompositorHitTestInvisibleToHit) {}
 
   void InvalidateRect(const IntRect& aRect) {
     auto r = aRect.Intersect(mPreservedRect);
@@ -667,6 +669,9 @@ struct DIGroup {
       return;
     }
 
+    // Reset mHitInfo, it will get updated inside PaintItemRange
+    mHitInfo = CompositorHitTestInvisibleToHit;
+
     PaintItemRange(aGrouper, aStartItem, aEndItem, context, recorder,
                    rootManager, aResources);
 
@@ -741,9 +746,12 @@ struct DIGroup {
     bool backfaceHidden = false;
 
     // We don't really know the exact shape of this blob because it may contain
-    // SVG shapes so generate an irregular-area hit-test region for it.
-    CompositorHitTestInfo hitInfo(CompositorHitTestFlags::eVisibleToHitTest,
-                                  CompositorHitTestFlags::eIrregularArea);
+    // SVG shapes. Also mHitInfo may be a combination of hit info flags from
+    // different shapes so generate an irregular-area hit-test region for it.
+    CompositorHitTestInfo hitInfo = mHitInfo;
+    if (hitInfo.contains(CompositorHitTestFlags::eVisibleToHitTest)) {
+      hitInfo += CompositorHitTestFlags::eIrregularArea;
+    }
 
     // XXX - clipping the item against the paint rect breaks some content.
     // cf. Bug 1455422.
@@ -771,6 +779,19 @@ struct DIGroup {
       GP("Trying %s %p-%d %d %d %d %d\n", item->Name(), item->Frame(),
          item->GetPerFrameKey(), bounds.x, bounds.y, bounds.XMost(),
          bounds.YMost());
+
+      if (item->GetType() == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+        // Accumulate the hit-test info flags. In cases where there are multiple
+        // hittest-info display items with different flags, mHitInfo will have
+        // the union of all those flags. If that is the case, we will
+        // additionally set eIrregularArea (at the site that we use mHitInfo)
+        // so that downstream consumers of this (primarily APZ) will know that
+        // the exact shape of what gets hit with what is unknown.
+        mHitInfo +=
+            static_cast<nsDisplayCompositorHitTestInfo*>(item)->HitTestFlags();
+        continue;
+      }
+
       GP("paint check invalid %d %d - %d %d\n", bottomRight.x, bottomRight.y,
          size.width, size.height);
       // skip empty items
@@ -798,11 +819,6 @@ struct DIGroup {
         aGrouper->PaintContainerItem(this, item, data, bounds, children,
                                      aContext, aRecorder, aRootManager,
                                      aResources);
-        continue;
-      }
-      if (item->GetType() == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
-        // Hit test items don't have anything to paint so skip them.
-        // Ideally we would drop these items earlier...
         continue;
       }
       nsPaintedDisplayItem* paintedItem = item->AsPaintedDisplayItem();
