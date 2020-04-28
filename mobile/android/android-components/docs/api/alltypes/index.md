@@ -147,6 +147,7 @@
 | [mozilla.components.lib.crash.prompt.CrashReporterActivity](../mozilla.components.lib.crash.prompt/-crash-reporter-activity/index.md) | Activity showing the crash reporter prompt asking the user for confirmation before submitting a crash report. |
 | [mozilla.components.lib.crash.service.CrashReporterService](../mozilla.components.lib.crash.service/-crash-reporter-service/index.md) | Interface to be implemented by external services that accept crash reports. |
 | [mozilla.components.support.base.crash.CrashReporting](../mozilla.components.support.base.crash/-crash-reporting/index.md) | A  crash reporter interface that can report caught exception to multiple services. |
+| [mozilla.components.lib.crash.service.CrashTelemetryService](../mozilla.components.lib.crash.service/-crash-telemetry-service/index.md) | Interface to be implemented by external services that collect telemetry about crash reports. |
 | [org.mozilla.telemetry.measurement.CreatedDateMeasurement](../org.mozilla.telemetry.measurement/-created-date-measurement/index.md) |  |
 | [org.mozilla.telemetry.measurement.CreatedDateMeasurementNew](../org.mozilla.telemetry.measurement/-created-date-measurement-new/index.md) | The field 'created' from CreatedDateMeasurement will be deprecated for the `createdDate` field |
 | [org.mozilla.telemetry.measurement.CreatedTimestampMeasurement](../org.mozilla.telemetry.measurement/-created-timestamp-measurement/index.md) |  |
