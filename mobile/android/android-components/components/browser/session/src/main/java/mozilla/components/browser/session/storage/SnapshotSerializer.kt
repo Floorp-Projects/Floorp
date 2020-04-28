@@ -82,10 +82,11 @@ class SnapshotSerializer(
 
     fun itemFromJSON(engine: Engine, json: JSONObject): SessionManager.Snapshot.Item {
         val sessionJson = json.getJSONObject(Keys.SESSION_KEY)
+        val engineSessionJson = json.getJSONObject(Keys.ENGINE_SESSION_KEY)
         val session = deserializeSession(sessionJson, restoreSessionIds, restoreParentIds)
         val readerState =
             ReaderState(active = sessionJson.optBoolean(Keys.SESSION_READER_MODE_KEY, false))
-        val engineState = engine.createSessionState(sessionJson)
+        val engineState = engine.createSessionState(engineSessionJson)
 
         return SessionManager.Snapshot.Item(
             session,
