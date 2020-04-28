@@ -1302,7 +1302,6 @@ class AddonPageHeader extends HTMLElement {
     if (this.childElementCount === 0) {
       this.appendChild(importTemplate("addon-page-header"));
       this.heading = this.querySelector(".header-name");
-      this.searchLabel = this.querySelector(".search-label");
       this.backButton = this.querySelector(".back-button");
       this.pageOptionsMenuButton = this.querySelector(
         '[action="page-options"]'
@@ -1343,17 +1342,6 @@ class AddonPageHeader extends HTMLElement {
     if (viewType !== "detail") {
       document.l10n.setAttributes(this.heading, `${viewType}-heading`);
     }
-
-    let customSearchLabelTypes = {
-      shortcuts: "extension",
-      extension: "extension",
-      theme: "theme",
-    };
-    let searchLabelType = customSearchLabelTypes[viewType] || "default";
-    document.l10n.setAttributes(
-      this.searchLabel,
-      `${searchLabelType}-heading-search-label`
-    );
   }
 
   handleEvent(e) {
