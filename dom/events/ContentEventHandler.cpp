@@ -2552,9 +2552,8 @@ nsresult ContentEventHandler::OnQueryCharacterAtPoint(
   nsPoint ptInRoot = nsLayoutUtils::GetEventCoordinatesRelativeTo(
       &eventOnRoot, RelativeTo{rootFrame});
 
-  nsIFrame* targetFrame = nsLayoutUtils::GetFrameForPoint(
-      rootFrame, ptInRoot,
-      {nsLayoutUtils::FrameForPointOption::IsRelativeToLayoutViewport});
+  nsIFrame* targetFrame =
+      nsLayoutUtils::GetFrameForPoint(RelativeTo{rootFrame}, ptInRoot);
   if (!targetFrame || !targetFrame->GetContent() ||
       !targetFrame->GetContent()->IsInclusiveDescendantOf(mRootContent)) {
     // There is no character at the point.
@@ -2650,7 +2649,7 @@ nsresult ContentEventHandler::OnQueryDOMWidgetHittest(
           docFrameRect.y);
 
   Element* contentUnderMouse = mDocument->ElementFromPointHelper(
-      eventLocCSS.x, eventLocCSS.y, false, false, false);
+      eventLocCSS.x, eventLocCSS.y, false, false, ViewportType::Visual);
   if (contentUnderMouse) {
     nsIWidget* targetWidget = nullptr;
     nsIFrame* targetFrame = contentUnderMouse->GetPrimaryFrame();
