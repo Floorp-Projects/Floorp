@@ -4086,6 +4086,12 @@ class nsIFrame : public nsQueryFrame {
   inline bool IsFlexOrGridContainer() const;
 
   /**
+   * Return true if this frame has masonry layout in aAxis.
+   * @note only valid to call on nsGridContainerFrames
+   */
+  inline bool IsMasonry(mozilla::LogicalAxis aAxis) const;
+
+  /**
    * @return true if this frame is used as a table caption.
    */
   inline bool IsTableCaption() const;
