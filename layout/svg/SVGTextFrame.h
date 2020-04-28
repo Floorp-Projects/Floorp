@@ -317,7 +317,7 @@ class SVGTextFrame final : public nsSVGDisplayContainerFrame {
    * according to which rendered run the point hits.
    */
   Point TransformFramePointToTextChild(const Point& aPoint,
-                                       nsIFrame* aChildFrame);
+                                       const nsIFrame* aChildFrame);
 
   /**
    * Takes an app unit rectangle in the coordinate space of a given descendant

@@ -2549,8 +2549,8 @@ nsresult ContentEventHandler::OnQueryCharacterAtPoint(
     eventOnRoot.mRefPoint += aEvent->mWidget->WidgetToScreenOffset() -
                              rootWidget->WidgetToScreenOffset();
   }
-  nsPoint ptInRoot =
-      nsLayoutUtils::GetEventCoordinatesRelativeTo(&eventOnRoot, rootFrame);
+  nsPoint ptInRoot = nsLayoutUtils::GetEventCoordinatesRelativeTo(
+      &eventOnRoot, RelativeTo{rootFrame});
 
   nsIFrame* targetFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, ptInRoot);
   if (!targetFrame || !targetFrame->GetContent() ||
