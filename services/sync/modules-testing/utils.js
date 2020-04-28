@@ -244,6 +244,15 @@ var configureFxAccountIdentity = function(
       config.fxaccount.token.uid = config.username;
       return config.fxaccount.token;
     },
+    async getTokenFromOAuthToken(url, oauthToken) {
+      Assert.equal(
+        url,
+        Services.prefs.getStringPref("identity.sync.tokenserver.uri")
+      );
+      Assert.ok(oauthToken, "oauth token present");
+      config.fxaccount.token.uid = config.username;
+      return config.fxaccount.token;
+    },
   };
   authService._fxaService = fxa;
   authService._tokenServerClient = mockTSC;

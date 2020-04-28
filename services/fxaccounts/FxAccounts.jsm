@@ -1525,8 +1525,14 @@ FxAccountsInternal.prototype = {
     delete currentState.whenVerifiedDeferred;
   },
 
-  // Does the actual fetch of an oauth token for getOAuthToken()
-  async _doTokenFetch(scopeString) {
+  /**
+   * Does the actual fetch of an oauth token for getOAuthToken()
+   * @param scopeString
+   * @param ttl
+   * @returns {Promise<string>}
+   * @private
+   */
+  async _doTokenFetch(scopeString, ttl) {
     // Ideally, we would auth this call directly with our `sessionToken` rather than
     // going via a BrowserID assertion. Before we can do so we need to resolve some
     // data-volume processing issues in the server-side FxA metrics pipeline.
@@ -1536,7 +1542,8 @@ FxAccountsInternal.prototype = {
     try {
       let result = await this.fxAccountsOAuthGrantClient.getTokenFromAssertion(
         assertion,
-        scopeString
+        scopeString,
+        ttl
       );
       token = result.access_token;
     } catch (err) {
@@ -1552,7 +1559,8 @@ FxAccountsInternal.prototype = {
       assertion = await this.getAssertion(oAuthURL);
       let result = await this.fxAccountsOAuthGrantClient.getTokenFromAssertion(
         assertion,
-        scopeString
+        scopeString,
+        ttl
       );
       token = result.access_token;
     }
@@ -1597,7 +1605,7 @@ FxAccountsInternal.prototype = {
 
       // We need to start a new fetch and stick the promise in our in-flight map
       // and remove it when it resolves.
-      let promise = this._doTokenFetch(scopeString)
+      let promise = this._doTokenFetch(scopeString, options.ttl)
         .then(token => {
           // As a sanity check, ensure something else hasn't raced getting a token
           // of the same scope. If something has we just make noise rather than
