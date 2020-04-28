@@ -300,9 +300,9 @@ inline JSScript* GetTopJitJSScript(JSContext* cx) {
 }
 
 #ifdef JS_CODEGEN_MIPS32
-uint8_t* alignDoubleSpillWithOffset(uint8_t* pointer, int32_t offset);
+uint8_t* alignDoubleSpill(uint8_t* pointer);
 #else
-inline uint8_t* alignDoubleSpillWithOffset(uint8_t* pointer, int32_t offset) {
+inline uint8_t* alignDoubleSpill(uint8_t* pointer) {
   // This is NO-OP on non-MIPS platforms.
   return pointer;
 }
@@ -441,11 +441,24 @@ class ExitFooterFrame {
     return reinterpret_cast<const VMFunctionData*>(data_);
   }
 
+#ifdef JS_CODEGEN_MIPS32
+  uint8_t* alignedForABI() {
+    // See: MacroAssemblerMIPSCompat::alignStackPointer()
+    uint8_t* address = reinterpret_cast<uint8_t*>(this);
+    address -= sizeof(intptr_t);
+    return alignDoubleSpill(address);
+  }
+#else
+  uint8_t* alignedForABI() {
+    // This is NO-OP on non-MIPS platforms.
+    return reinterpret_cast<uint8_t*>(this);
+  }
+#endif
+
   // This should only be called for function()->outParam == Type_Handle
   template <typename T>
   T* outParam() {
-    uint8_t* address = reinterpret_cast<uint8_t*>(this);
-    address = alignDoubleSpillWithOffset(address, sizeof(intptr_t));
+    uint8_t* address = alignedForABI();
     return reinterpret_cast<T*>(address - sizeof(T));
   }
 };
