@@ -2,49 +2,11 @@
 <link rel="help" href="https://drafts.css-houdini.org/css-properties-values-api-1/#at-property-rule">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="./resources/utils.js"></script>
 <div id="outer">
   <div id="target"></div>
 </div>
 <script>
-
-let g_id = 0;
-
-function generate_name() {
-  g_id++;
-  return `--property-${g_id}`;
-}
-
-function with_style_node(text, fn) {
-  let node = document.createElement('style');
-  node.textContent = text;
-  try {
-    document.body.append(node);
-    fn(node);
-  } finally {
-    node.remove();
-  }
-}
-
-function with_at_rule(desc, fn) {
-  let name = typeof(desc.name) === 'undefined' ? generate_name() : desc.name;
-  let text = `@property ${name} {`;
-  if (typeof(desc.syntax) !== 'undefined')
-    text += `syntax:${desc.syntax};`;
-  if (typeof(desc.initialValue) !== 'undefined')
-    text += `initial-value:${desc.initialValue};`;
-  if (typeof(desc.inherits) !== 'undefined')
-    text += `inherits:${desc.inherits};`;
-  text += '}';
-  with_style_node(text, (node) => fn(name, node.sheet.rules[0]));
-}
-
-function test_with_at_rule(desc, fn, description) {
-  test(() => with_at_rule(desc, fn), description);
-}
-
-function test_with_style_node(text, fn, description) {
-  test(() => with_style_node(text, fn), description);
-}
 
 // Parsing:
 
@@ -72,7 +34,7 @@ function test_descriptor(descriptor, specified_value, expected_value) {
   let camel = to_camel_case(descriptor);
   if (typeof(expected_value) === 'undefined')
     expected_value = specified_value;
-  test_with_at_rule({ [camel]: specified_value }, (name, rule) => {
+  test_with_at_property({ [camel]: specified_value }, (name, rule) => {
     assert_equals(get_cssom_descriptor_value(rule, descriptor), expected_value);
   }, `Attribute '${descriptor}' returns expected value for [${specified_value}]`);
 }
@@ -120,7 +82,7 @@ test_with_style_node('@property -foo { }', (node) => {
 // Applying @property rules
 
 function test_applied(syntax, initial, inherits, expected) {
-  test_with_at_rule({
+  test_with_at_property({
     syntax: `"${syntax}"`,
     initialValue: initial,
     inherits: inherits
@@ -131,7 +93,7 @@ function test_applied(syntax, initial, inherits, expected) {
 }
 
 function test_not_applied(syntax, initial, inherits) {
-  test_with_at_rule({
+  test_with_at_property({
     syntax: `"${syntax}"`,
     initialValue: initial,
     inherits: inherits
@@ -168,7 +130,7 @@ test_applied('<url>', 'url("http://a/")', false, 'url("http://a/")');
 test_applied('<color>', 'tomato', false, 'rgb(255, 99, 71)');
 test_applied('<color>', 'tomato', true, 'rgb(255, 99, 71)');
 
-test_with_at_rule({ syntax: '"*"', inherits: true }, (name, rule) => {
+test_with_at_property({ syntax: '"*"', inherits: true }, (name, rule) => {
   try {
     outer.style.setProperty(name, 'foo');
     let actual = getComputedStyle(target).getPropertyValue(name);
@@ -188,7 +150,7 @@ test_not_applied('<length>', '10em', false);
 
 // Inheritance
 
-test_with_at_rule({
+test_with_at_property({
   syntax: '"<length>"',
   inherits: false,
   initialValue: '0px'
@@ -202,7 +164,7 @@ test_with_at_rule({
   }
 }, 'Non-inherited properties do not inherit');
 
-test_with_at_rule({
+test_with_at_property({
   syntax: '"<length>"',
   inherits: true,
   initialValue: '0px'
@@ -216,7 +178,7 @@ test_with_at_rule({
   }
 }, 'Inherited properties inherit');
 
-test_with_at_rule({
+test_with_at_property({
   syntax: '"<color>"',
   inherits: true,
   initialValue: 'green'
