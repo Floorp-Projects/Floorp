@@ -8,6 +8,7 @@
 
 #include "InputData.h"
 #include "LayersTypes.h"
+#include "Units.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/APZUtils.h"
 #include "mozilla/layers/MatrixMessage.h"
@@ -97,10 +98,9 @@ class APZCCallbackHelper {
   static PresShell* GetRootContentDocumentPresShellForContent(
       nsIContent* aContent);
 
-  /* Apply a "callback transform" to |aInput|, which represents the coordinates
-     of an input event targeting content inside the scroll frame identified by
-    |aGuid|.
-    The callback transform has two components:
+  /* Return a "callback transform" to be applied to the coordinates of input
+     events targeting content inside the scroll frame identified by |aGuid|.
+     The callback transform has two components:
        1. The pres shell resolution, representing the pinch-zoom scale
           (if the scroll frame |aScrollId| is inside the resolution, which
           is most of the time).
@@ -112,6 +112,10 @@ class APZCCallbackHelper {
          The translation is accumulated for all scroll frames form |aGuid| up to
          the root, using values populated in UpdateCallbackTransform. See that
          method's documentation for additional details. */
+  static CSSToCSSMatrix4x4 GetCallbackTransform(
+      const ScrollableLayerGuid& aGuid);
+
+  /* Apply |GetCallbackTransform()| to |aInput| and return the result. */
   static CSSPoint ApplyCallbackTransform(const CSSPoint& aInput,
                                          const ScrollableLayerGuid& aGuid);
 
