@@ -203,6 +203,8 @@ include = [
   "ComputedJustifyItems",
   "AlignContent",
   "JustifyContent",
+  "AlignTracks",
+  "JustifyTracks",
   "TransformStyle",
   "Image",
   "ClipPath",
@@ -412,8 +414,10 @@ renaming_overrides_prefixing = true
   inline const T& Get(WritingMode, LogicalSide) const;
   inline const T& GetIStart(WritingMode) const;
   inline const T& GetBStart(WritingMode) const;
+  inline const T& Start(LogicalAxis, WritingMode) const;
   inline const T& GetIEnd(WritingMode) const;
   inline const T& GetBEnd(WritingMode) const;
+  inline const T& End(LogicalAxis, WritingMode) const;
 
   inline T& Get(mozilla::Side);
   inline T& Get(WritingMode, LogicalSide);
