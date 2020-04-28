@@ -17,7 +17,11 @@ const { SessionStore } = ChromeUtils.import(
 );
 const { HomePage } = ChromeUtils.import("resource:///modules/HomePage.jsm");
 
-const PREF_SSL_IMPACT_ROOTS = ["security.tls.version.", "security.ssl3."];
+const PREF_SSL_IMPACT_ROOTS = [
+  "security.tls.version.",
+  "security.ssl3.",
+  "security.tls13.",
+];
 
 ChromeUtils.defineModuleGetter(
   this,
