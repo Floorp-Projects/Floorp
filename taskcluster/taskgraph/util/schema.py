@@ -214,7 +214,7 @@ OptimizationSchema = voluptuous.Any(
     # skip this task if unless the change files' SCHEDULES contains any of these components
     {'skip-unless-schedules': list(schedules.ALL_COMPONENTS)},
     # optimize strategy aliases for the test kind
-    {'test': (list(schedules.ALL_COMPONENTS), None)},
+    {'test': (list(schedules.ALL_COMPONENTS), dict)},
     {'test-inclusive': list(schedules.ALL_COMPONENTS)},
     {'test-try': list(schedules.ALL_COMPONENTS)},
 )

@@ -425,6 +425,15 @@ class experimental(object):
     }
     """Restricts tests to debug platforms."""
 
+    bugbug_disperse = {
+        'test': Any(
+            'skip-unless-schedules',
+            Any('bugbug', 'platform-disperse'),
+            split_args=tuple
+        ),
+    }
+    """Disperse tests across platforms, medium confidence threshold."""
+
     bugbug_reduced = {
         'test': Any('skip-unless-schedules', 'bugbug-reduced', split_args=tuple),
     }
