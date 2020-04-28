@@ -2935,6 +2935,8 @@ class nsIFrame : public nsQueryFrame {
    * The frame decides which ancestor it will use as a reference point.
    * If this frame has no ancestor, aOutAncestor will be set to null.
    *
+   * @param aViewportType specifies whether the starting point is layout
+   *   or visual coordinates
    * @param aStopAtAncestor don't look further than aStopAtAncestor. If null,
    *   all ancestors (including across documents) will be traversed.
    * @param aOutAncestor [out] The ancestor frame the frame has chosen.  If
@@ -2943,14 +2945,16 @@ class nsIFrame : public nsQueryFrame {
    * document as this frame. If this frame IsTransformed(), then *aOutAncestor
    * will be the parent frame (if not preserve-3d) or the nearest
    * non-transformed ancestor (if preserve-3d).
-   * @return A Matrix4x4 that converts points in this frame's coordinate space
-   *   into points in aOutAncestor's coordinate space.
+   * @return A Matrix4x4 that converts points in the coordinate space
+   *   RelativeTo{this, aViewportType} into points in aOutAncestor's
+   *   coordinate space.
    */
   enum {
     IN_CSS_UNITS = 1 << 0,
     STOP_AT_STACKING_CONTEXT_AND_DISPLAY_PORT = 1 << 1
   };
-  Matrix4x4Flagged GetTransformMatrix(const nsIFrame* aStopAtAncestor,
+  Matrix4x4Flagged GetTransformMatrix(ViewportType aViewportType,
+                                      RelativeTo aStopAtAncestor,
                                       nsIFrame** aOutAncestor,
                                       uint32_t aFlags = 0) const;
 
