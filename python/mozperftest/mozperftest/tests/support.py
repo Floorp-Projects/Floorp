@@ -8,6 +8,11 @@ from mozperftest.metadata import Metadata
 from mozperftest.environment import MachEnvironment
 
 
+HERE = os.path.dirname(__file__)
+EXAMPLE_TESTS_DIR = os.path.join(HERE, "samples")
+EXAMPLE_TEST = os.path.join(EXAMPLE_TESTS_DIR, "perftest_example.js")
+
+
 @contextlib.contextmanager
 def temp_file(name="temp", content=None):
     tempdir = tempfile.mkdtemp()

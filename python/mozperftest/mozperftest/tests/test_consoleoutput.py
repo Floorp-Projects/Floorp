@@ -2,7 +2,7 @@
 import os
 import mozunit
 
-from mozperftest.tests.support import get_running_env, temp_dir
+from mozperftest.tests.support import EXAMPLE_TEST, get_running_env, temp_dir
 from mozperftest.environment import METRICS
 from mozperftest.utils import silence
 
@@ -26,7 +26,7 @@ def test_console_output():
 
         mach_cmd.run_process = _run_process
         metrics = env.layers[METRICS]
-        env.set_arg("tests", [os.path.join(HERE, "example.js")])
+        env.set_arg("tests", [EXAMPLE_TEST])
         metadata.set_result(os.path.join(HERE, "browsertime-results"))
 
         with metrics as console, silence():

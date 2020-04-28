@@ -5,23 +5,28 @@ from mozperftest.browser.browsertime import add_options
 
 url = "'https://www.example.com'"
 
-common_options = [("processStartTime", "true"),
-                  ("firefox.disableBrowsertimeExtension", "true"),
-                  ("firefox.android.intentArgument", "'-a'"),
-                  ("firefox.android.intentArgument", "'android.intent.action.VIEW'"),
-                  ("firefox.android.intentArgument", "'-d'"),
-                  ("firefox.android.intentArgument", url)]
+common_options = [
+    ("processStartTime", "true"),
+    ("firefox.disableBrowsertimeExtension", "true"),
+    ("firefox.android.intentArgument", "'-a'"),
+    ("firefox.android.intentArgument", "'android.intent.action.VIEW'"),
+    ("firefox.android.intentArgument", "'-d'"),
+    ("firefox.android.intentArgument", url),
+]
 
 app_options = {
     "org.mozilla.geckoview_example": [
-        ("firefox.android.activity", "'org.mozilla.geckoview_example.GeckoViewActivity'")
+        (
+            "firefox.android.activity",
+            "'org.mozilla.geckoview_example.GeckoViewActivity'",
+        )
     ],
     "org.mozilla.fennec_aurora": [
         ("firefox.android.activity", "'org.mozilla.fenix.IntentReceiverActivity'")
     ],
     "org.mozilla.firefox": [
         ("firefox.android.activity", "'org.mozilla.gecko.BrowserApp'")
-    ]
+    ],
 }
 
 

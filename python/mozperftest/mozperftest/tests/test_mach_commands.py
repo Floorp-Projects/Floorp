@@ -7,6 +7,7 @@ import os
 import mock
 import tempfile
 import shutil
+from contextlib import contextmanager
 
 from mach.registrar import Registrar
 
@@ -16,6 +17,7 @@ Registrar.commands_by_category = {"testing": set()}
 
 from mozperftest.environment import MachEnvironment
 from mozperftest.mach_commands import Perftest
+from mozperftest.tests.support import EXAMPLE_TESTS_DIR
 
 
 class _TestMachEnvironment(MachEnvironment):
@@ -29,8 +31,8 @@ class _TestMachEnvironment(MachEnvironment):
         pass
 
 
-@mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
-def test_command():
+@contextmanager
+def _get_perftest():
     from mozbuild.base import MozbuildObject
 
     config = MozbuildObject.from_environment()
@@ -43,10 +45,24 @@ def test_command():
         state_dir = tempfile.mkdtemp()
 
     try:
-        test = Perftest(context())
-        test.run_perftest()
+        yield Perftest(context())
     finally:
         shutil.rmtree(context.state_dir)
+
+
+@mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
+@mock.patch("mozperftest.mach_commands.MachCommandBase._activate_virtualenv")
+def test_command(mocked_func):
+    with _get_perftest() as test:
+        test.run_perftest(tests=[EXAMPLE_TESTS_DIR])
+        # XXX add assertions
+
+
+@mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
+@mock.patch("mozperftest.mach_commands.MachCommandBase._activate_virtualenv")
+def test_doc_flavor(mocked_func):
+    with _get_perftest() as test:
+        test.run_perftest(tests=[EXAMPLE_TESTS_DIR], flavor="doc")
 
 
 if __name__ == "__main__":
