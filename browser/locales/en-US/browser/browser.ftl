@@ -228,3 +228,8 @@ popup-select-microphone =
     .value = Microphone to share:
     .accesskey = M
 popup-all-windows-shared = All visible windows on your screen will be shared.
+
+## DevTools F12 popup
+
+enable-devtools-popup-description = To use the F12 shortcut, first open DevTools via the Web Developer menu.
+
