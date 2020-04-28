@@ -682,7 +682,7 @@ raptor-youtube-playback-firefox:
             windows10-64-ref-hw-2017/opt: ['mozilla-central', 'try']
             (linux|windows|macos)(?!.*shippable).*: []
             default: ['mozilla-central', 'try']
-    max-run-time: 2700
+    max-run-time: 3000
     tier: 2
     mozharness:
         extra-options:
@@ -728,6 +728,120 @@ raptor-youtube-playback-h264-power-firefox:
         extra-options:
             - --test=raptor-youtube-playback-h264
             - --power-test
+
+raptor-youtube-playback-av1-sfr-firefox:
+    description: "Raptor YouTube Playback AV1 SFR on Firefox"
+    variants: ["fission"]
+    try-name: raptor-youtube-playback-av1-sfr-firefox
+    treeherder-symbol: Rap(ytp-av1-sfr)
+    run-on-projects:
+        by-test-platform:
+            windows10-64-ref-hw-2017/opt: ['mozilla-central', 'try']
+            (linux|windows|macos)(?!.*shippable).*: []
+            default: ['mozilla-central', 'try']
+    max-run-time:
+        by-test-platform:
+            windows10-aarch64/opt: 3600
+            default: 1800
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-av1-sfr
+
+raptor-youtube-playback-h264-sfr-firefox:
+    description: "Raptor YouTube Playback H264 SFR on Firefox"
+    variants: ["fission"]
+    try-name: raptor-youtube-playback-h264-sfr-firefox
+    treeherder-symbol: Rap(ytp-h264-sfr)
+    run-on-projects:
+        by-test-platform:
+            windows10-64-ref-hw-2017/opt: ['mozilla-central', 'try']
+            (linux|windows|macos)(?!.*shippable).*: []
+            default: ['mozilla-central', 'try']
+    max-run-time:
+        by-test-platform:
+            windows10-aarch64/opt: 3600
+            default: 1800
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-h264-sfr
+
+raptor-youtube-playback-vp9-sfr-firefox:
+    description: "Raptor YouTube Playback VP9 SFR on Firefox"
+    variants: ["fission"]
+    try-name: raptor-youtube-playback-vp9-sfr-firefox
+    treeherder-symbol: Rap(ytp-vp9-sfr)
+    run-on-projects:
+        by-test-platform:
+            windows10-64-ref-hw-2017/opt: ['mozilla-central', 'try']
+            (linux|windows|macos)(?!.*shippable).*: []
+            default: ['mozilla-central', 'try']
+    max-run-time:
+        by-test-platform:
+            windows10-aarch64/opt: 3600
+            default: 1800
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-vp9-sfr
+
+raptor-youtube-playback-widevine-hfr-firefox:
+    description: "Raptor YouTube Playback Widevine HFR on Firefox"
+    variants: ["fission"]
+    try-name: raptor-youtube-playback-widevine-hfr-firefox
+    treeherder-symbol: Rap(ytp-widevine-hfr)
+    run-on-projects:
+        by-test-platform:
+            windows10-64-ref-hw-2017/opt: ['mozilla-central', 'try']
+            (linux|windows|macos)(?!.*shippable).*: []
+            default: ['mozilla-central', 'try']
+    max-run-time:
+        by-test-platform:
+            windows10-aarch64/opt: 3600
+            default: 2700
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-widevine-hfr
+
+raptor-youtube-playback-widevine-h264-sfr-firefox:
+    description: "Raptor YouTube Playback Widevine H264 SFR on Firefox"
+    variants: ["fission"]
+    try-name: raptor-youtube-playback-widevine-h264-sfr-firefox
+    treeherder-symbol: Rap(ytp-widevine-h264-sfr)
+    run-on-projects:
+        by-test-platform:
+            windows10-64-ref-hw-2017/opt: ['mozilla-central', 'try']
+            (linux|windows|macos)(?!.*shippable).*: []
+            default: ['mozilla-central', 'try']
+    max-run-time:
+        by-test-platform:
+            windows10-aarch64/opt: 3600
+            default: 2700
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-widevine-h264-sfr
+
+raptor-youtube-playback-widevine-vp9-sfr-firefox:
+    description: "Raptor YouTube Playback Widevine VP9 SFR on Firefox"
+    variants: ["fission"]
+    try-name: raptor-youtube-playback-widevine-vp9-sfr-firefox
+    treeherder-symbol: Rap(ytp-widevine-vp9-sfr)
+    run-on-projects:
+        by-test-platform:
+            windows10-64-ref-hw-2017/opt: ['mozilla-central', 'try']
+            (linux|windows|macos)(?!.*shippable).*: []
+            default: ['mozilla-central', 'try']
+    max-run-time:
+        by-test-platform:
+            windows10-aarch64/opt: 3600
+            default: 2700
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-widevine-vp9-sfr
 
 raptor-tp6-1-firefox-cold:
     description: "Raptor tp6-1 cold page-load on Firefox"

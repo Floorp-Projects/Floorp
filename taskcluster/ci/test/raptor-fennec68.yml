@@ -322,10 +322,85 @@ raptor-youtube-playback-fennec68:
             android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
             android-hw-g5.*/pgo: ['mozilla-central']
             default: []
-    max-run-time: 3600
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-fennec68
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-youtube-playback-av1-sfr-fennec68:
+    description: "Raptor YouTube Playback AV1 SFR on Fennec68"
+    try-name: raptor-youtube-playback-av1-sfr-fennec68
+    treeherder-symbol: Rap(ytp-av1-sfr)
+    run-on-projects:
+        by-test-platform:
+            android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
+            android-hw-g5.*/pgo: ['mozilla-central']
+            default: []
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-av1-sfr-fennec68
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-youtube-playback-h264-sfr-fennec68:
+    description: "Raptor YouTube Playback H264 SFR on Fennec68"
+    try-name: raptor-youtube-playback-h264-sfr-fennec68
+    treeherder-symbol: Rap(ytp-h264-sfr)
+    run-on-projects:
+        by-test-platform:
+            android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
+            android-hw-g5.*/pgo: ['mozilla-central']
+            default: []
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-h264-sfr-fennec68
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-youtube-playback-vp9-sfr-fennec68:
+    description: "Raptor YouTube Playback VP9 SFR on Fennec68"
+    try-name: raptor-youtube-playback-vp9-sfr-fennec68
+    treeherder-symbol: Rap(ytp-vp9-sfr)
+    run-on-projects:
+        by-test-platform:
+            android-hw-p2.*aarch64.*/pgo: ['mozilla-central']
+            default: []
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-vp9-sfr-fennec68
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-youtube-playback-widevine-hfr-fennec68:
+    description: "Raptor YouTube Playback Widevine HFR on Fennec68"
+    try-name: raptor-youtube-playback-widevine-hfr-fennec68
+    treeherder-symbol: Rap(ytp-widevine-hfr)
+    max-run-time: 3000
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-widevine-hfr-fennec68
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-youtube-playback-widevine-h264-sfr-fennec68:
+    description: "Raptor YouTube Playback Widevine H264 SFR on Fennec68"
+    try-name: raptor-youtube-playback-widevine-h264-sfr-fennec68
+    treeherder-symbol: Rap(ytp-widevine-h264-sfr)
+    max-run-time: 3000
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-widevine-h264-sfr-fennec68
+            - --app=fennec
+            - --binary=org.mozilla.firefox
+
+raptor-youtube-playback-widevine-vp9-sfr-fennec68:
+    description: "Raptor YouTube Playback Widevine VP9 SFR on Fennec68"
+    try-name: raptor-youtube-playback-widevine-vp9-sfr-fennec68
+    treeherder-symbol: Rap(ytp-widevine-vp9-sfr)
+    max-run-time: 3000
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-widevine-vp9-sfr-fennec68
             - --app=fennec
             - --binary=org.mozilla.firefox
