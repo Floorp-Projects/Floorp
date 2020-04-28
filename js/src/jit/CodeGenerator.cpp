@@ -6556,6 +6556,9 @@ void CodeGenerator::emitDebugResultChecks(LInstruction* ins) {
 }
 
 void CodeGenerator::emitDebugForceBailing(LInstruction* lir) {
+  if (MOZ_LIKELY(!gen->options.ionBailAfterEnabled())) {
+    return;
+  }
   if (!lir->snapshot()) {
     return;
   }
@@ -6567,20 +6570,21 @@ void CodeGenerator::emitDebugForceBailing(LInstruction* lir) {
   }
 
   masm.comment("emitDebugForceBailing");
-  const void* bailAfterAddr = gen->realm->zone()->addressOfIonBailAfter();
+  const void* bailAfterCounterAddr =
+      gen->runtime->addressOfIonBailAfterCounter();
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
 
   Label done, notBail, bail;
-  masm.branch32(Assembler::Equal, AbsoluteAddress(bailAfterAddr), Imm32(0),
-                &done);
+  masm.branch32(Assembler::Equal, AbsoluteAddress(bailAfterCounterAddr),
+                Imm32(0), &done);
   {
     Register temp = regs.takeAny();
 
     masm.push(temp);
-    masm.load32(AbsoluteAddress(bailAfterAddr), temp);
+    masm.load32(AbsoluteAddress(bailAfterCounterAddr), temp);
     masm.sub32(Imm32(1), temp);
-    masm.store32(temp, AbsoluteAddress(bailAfterAddr));
+    masm.store32(temp, AbsoluteAddress(bailAfterCounterAddr));
 
     masm.branch32(Assembler::NotEqual, temp, Imm32(0), &notBail);
     {
