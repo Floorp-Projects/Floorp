@@ -4,6 +4,8 @@
 import logging
 import contextlib
 import sys
+import os
+
 from six import StringIO
 
 
@@ -54,3 +56,20 @@ class MachLogger:
 
     def error(self, msg, name="mozperftest", **kwargs):
         self._logger(logging.ERROR, name, kwargs, msg)
+
+
+def install_package(virtualenv_manager, package):
+    from pip._internal.req.constructors import install_req_from_line
+
+    req = install_req_from_line(package)
+    req.check_if_exists(use_user_site=False)
+    # already installed, check if it's in our venv
+    if req.satisfied_by is not None:
+        venv_site_lib = os.path.abspath(
+            os.path.join(virtualenv_manager.bin_path, "..", "lib")
+        )
+        site_packages = os.path.abspath(req.satisfied_by.location)
+        if site_packages.startswith(venv_site_lib):
+            # already installed in this venv, we can skip
+            return
+    virtualenv_manager._run_pip(["install", package])

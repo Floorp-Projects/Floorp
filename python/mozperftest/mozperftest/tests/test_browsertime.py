@@ -4,7 +4,7 @@ import mozunit
 import mock
 import shutil
 
-from mozperftest.tests.support import get_running_env
+from mozperftest.tests.support import get_running_env, EXAMPLE_TEST
 from mozperftest.environment import BROWSER
 from mozperftest.browser.browsertime import add_options
 from mozperftest.utils import silence
@@ -28,7 +28,7 @@ def fetch(self, url):
 def test_browser():
     mach_cmd, metadata, env = get_running_env()
     browser = env.layers[BROWSER]
-    env.set_arg("tests", [os.path.join(HERE, "example.js")])
+    env.set_arg("tests", [EXAMPLE_TEST])
 
     try:
         with browser as b, silence():
@@ -38,7 +38,7 @@ def test_browser():
 
     assert mach_cmd.run_process.call_count == 1
     # XXX more checks
-    assert mach_cmd.run_process.call_args[0][-1][-1] == os.path.join(HERE, "example.js")
+    assert mach_cmd.run_process.call_args[0][-1][-1] == EXAMPLE_TEST
 
 
 def test_add_options():

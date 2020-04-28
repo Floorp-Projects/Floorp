@@ -23,6 +23,7 @@ mozilla.pth:third_party/python/distro
 mozilla.pth:third_party/python/dlmanager
 mozilla.pth:third_party/python/ecdsa/src
 mozilla.pth:third_party/python/enum34
+mozilla.pth:third_party/python/esprima
 mozilla.pth:third_party/python/fluent.migrate
 mozilla.pth:third_party/python/fluent.syntax
 mozilla.pth:third_party/python/funcsigs

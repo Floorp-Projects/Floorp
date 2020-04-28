@@ -23,6 +23,7 @@ compare-locales==7.2.5
 cookies==2.2.1
 distro==1.4.0
 ecdsa==0.15
+esprima==4.0.1
 jsmin==2.1.0
 json-e==2.7.0
 mozilla-version==0.3.0

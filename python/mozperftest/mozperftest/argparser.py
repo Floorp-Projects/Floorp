@@ -19,10 +19,18 @@ from mozperftest.system import get_layers as system_layers
 from mozperftest.browser import get_layers as browser_layers
 from mozperftest.metrics import get_layers as metrics_layers
 
+FLAVORS = ["script", "doc"]
+
 
 class Options:
 
     general_args = {
+        "--flavor": {
+            "choices": FLAVORS,
+            "metavar": "{{{}}}".format(", ".join(FLAVORS)),
+            "default": None,
+            "help": "Only run tests of this flavor.",
+        },
         "tests": {
             "nargs": "*",
             "metavar": "TEST",
