@@ -83,7 +83,7 @@ class MediaController final
 
   // These methods are only being used to notify the state changes of controlled
   // media in ContentParent or MediaControlUtils.
-  void NotifyMediaStateChanged(ControlledMediaState aState);
+  void NotifyMediaPlaybackChanged(MediaPlaybackState aState);
   void NotifyMediaAudibleChanged(MediaAudibleState aState);
 
  private:

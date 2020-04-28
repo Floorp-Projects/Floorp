@@ -26,7 +26,7 @@ class BrowsingContext;
  * state (2) Do not notify same state again (3) `ePaused` can only be used after
  * notifying `ePlayed`.
  */
-enum class ControlledMediaState : uint32_t {
+enum class MediaPlaybackState : uint32_t {
   eStarted,
   ePlayed,
   ePaused,
@@ -89,10 +89,10 @@ class ContentMediaAgent {
   static ContentMediaAgent* Get(BrowsingContext* aBC);
 
   // Use this method to update the media playback state of controlled media, and
-  // MUST follow the rule of ControlledMediaState.
-  virtual void NotifyMediaStateChanged(
+  // MUST follow the rule of MediaPlaybackState.
+  virtual void NotifyPlaybackStateChanged(
       const ContentControlKeyEventReceiver* aMedia,
-      ControlledMediaState aState) = 0;
+      MediaPlaybackState aState) = 0;
 
   // Use this method to update the audible state of controlled media, and MUST
   // follow the following rules in which `audible` and `inaudible` should be a
@@ -143,8 +143,8 @@ class ContentMediaController final : public ContentMediaAgent,
   // ContentMediaAgent methods
   void AddReceiver(ContentControlKeyEventReceiver* aListener) override;
   void RemoveReceiver(ContentControlKeyEventReceiver* aListener) override;
-  void NotifyMediaStateChanged(const ContentControlKeyEventReceiver* aMedia,
-                               ControlledMediaState aState) override;
+  void NotifyPlaybackStateChanged(const ContentControlKeyEventReceiver* aMedia,
+                                  MediaPlaybackState aState) override;
   void NotifyAudibleStateChanged(const ContentControlKeyEventReceiver* aMedia,
                                  MediaAudibleState aState) override;
   void NotifyPictureInPictureModeChanged(

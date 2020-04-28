@@ -1243,9 +1243,9 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvStoreUserInteractionAsPermission(
       const Principal& aPrincipal);
 
-  mozilla::ipc::IPCResult RecvNotifyMediaStateChanged(
+  mozilla::ipc::IPCResult RecvNotifyMediaPlaybackChanged(
       const MaybeDiscarded<BrowsingContext>& aContext,
-      ControlledMediaState aState);
+      MediaPlaybackState aState);
 
   mozilla::ipc::IPCResult RecvNotifyMediaAudibleChanged(
       const MaybeDiscarded<BrowsingContext>& aContext,
