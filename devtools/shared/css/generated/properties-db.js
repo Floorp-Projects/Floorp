@@ -3070,7 +3070,9 @@ exports.CSS_PROPERTIES = {
       "flex-direction",
       "flex-wrap",
       "justify-content",
+      "justify-tracks",
       "align-content",
+      "align-tracks",
       "align-items",
       "justify-items",
       "flex-grow",
@@ -3096,6 +3098,7 @@ exports.CSS_PROPERTIES = {
       "grid-column-end",
       "grid-auto-columns",
       "grid-template-columns",
+      "masonry-auto-flow",
       "grid-auto-flow",
       "grid-template-areas",
       "column-gap",
@@ -6535,6 +6538,7 @@ exports.CSS_PROPERTIES = {
       "fit-content",
       "inherit",
       "initial",
+      "masonry",
       "max-content",
       "min-content",
       "minmax",
@@ -6749,6 +6753,7 @@ exports.CSS_PROPERTIES = {
       "fit-content",
       "inherit",
       "initial",
+      "masonry",
       "max-content",
       "min-content",
       "minmax",
@@ -6783,6 +6788,7 @@ exports.CSS_PROPERTIES = {
       "fit-content",
       "inherit",
       "initial",
+      "masonry",
       "max-content",
       "min-content",
       "minmax",
@@ -6803,6 +6809,7 @@ exports.CSS_PROPERTIES = {
       "fit-content",
       "inherit",
       "initial",
+      "masonry",
       "max-content",
       "min-content",
       "minmax",
@@ -10702,6 +10709,10 @@ exports.PREFERENCES = [
     "layout.css.initial-letter.enabled"
   ],
   [
+    "masonry-auto-flow",
+    "layout.css.grid-template-masonry-value.enabled"
+  ],
+  [
     "-moz-osx-font-smoothing",
     "layout.css.osx-font-smoothing.enabled"
   ],
@@ -10774,12 +10785,20 @@ exports.PREFERENCES = [
     "layout.css.overscroll-behavior.enabled"
   ],
   [
+    "align-tracks",
+    "layout.css.grid-template-masonry-value.enabled"
+  ],
+  [
     "backdrop-filter",
     "layout.css.backdrop-filter.enabled"
   ],
   [
     "font-variation-settings",
     "layout.css.font-variations.enabled"
+  ],
+  [
+    "justify-tracks",
+    "layout.css.grid-template-masonry-value.enabled"
   ],
   [
     "offset-anchor",
