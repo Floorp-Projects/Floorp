@@ -131,54 +131,13 @@ class ContentDelegateTest : BaseSessionTest() {
         mainSession.waitForPageStop()
     }
 
-    @IgnoreCrash
-    @Test fun crashContentMultipleSessions() {
-        // This test doesn't make sense without multiprocess
-        assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
-
-        // XXX we need to make sure all sessions in a given content process receive onCrash().
-        // If we add multiple content processes, this test will need to be fixed to ensure the
-        // test sessions go into the same one.
-        val newSession = sessionRule.createOpenSession()
-
-        // We can inadvertently catch the `onCrash` call for the cached session if we don't specify
-        // individual sessions here. Therefore, assert 'onCrash' is called for the two sessions
-        // individually.
-        val mainSessionCrash = GeckoResult<Void>()
-        val newSessionCrash = GeckoResult<Void>()
-        sessionRule.delegateUntilTestEnd(object : Callbacks.ContentDelegate {
-            fun reportCrash(session: GeckoSession) {
-                if (session == mainSession) {
-                    mainSessionCrash.complete(null)
-                } else if (session == newSession) {
-                    newSessionCrash.complete(null)
-                }
-            }
-            // Slower devices may not catch crashes in a timely manner, so we check to see
-            // if either `onKill` or `onCrash` is called
-            override fun onCrash(session: GeckoSession) {
-                reportCrash(session)
-            }
-            override fun onKill(session: GeckoSession) {
-                reportCrash(session)
-            }
-        })
-
-        newSession.loadTestPath(HELLO_HTML_PATH)
-        newSession.waitForPageStop()
-
-        mainSession.loadUri(CONTENT_CRASH_URL)
-
-        sessionRule.waitForResult(newSessionCrash)
-        sessionRule.waitForResult(mainSessionCrash)
-    }
-
     @AnyThread
-    fun killContentProcess() {
+    fun killAllContentProcesses() {
         val context = GeckoAppShell.getApplicationContext()
         val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val expr = ".*:tab\\d+$".toRegex()
         for (info in manager.runningAppProcesses) {
-            if (info.processName.endsWith(":tab0")) {
+            if (info.processName.matches(expr)) {
                 Process.killProcess(info.pid)
             }
         }
@@ -190,7 +149,7 @@ class ContentDelegateTest : BaseSessionTest() {
         assumeThat(sessionRule.env.isDebugBuild && sessionRule.env.isX86,
                 equalTo(false))
 
-        killContentProcess()
+        killAllContentProcesses()
         mainSession.waitUntilCalled(object : Callbacks.ContentDelegate {
             @AssertCalled(count = 1)
             override fun onKill(session: GeckoSession) {
@@ -207,26 +166,6 @@ class ContentDelegateTest : BaseSessionTest() {
                 assertThat("Page should load successfully", success, equalTo(true))
             }
         })
-    }
-
-    @IgnoreCrash
-    @Test fun killContentMultipleSessions() {
-        assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
-        assumeThat(sessionRule.env.isDebugBuild && sessionRule.env.isX86,
-                equalTo(false))
-
-        val newSession = sessionRule.createOpenSession()
-        killContentProcess()
-
-        val remainingSessions = mutableListOf(newSession, mainSession)
-        while (remainingSessions.isNotEmpty()) {
-            sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
-                @AssertCalled(count = 1)
-                override fun onKill(session: GeckoSession) {
-                    remainingSessions.remove(session)
-                }
-            })
-        }
     }
 
     private fun goFullscreen() {
