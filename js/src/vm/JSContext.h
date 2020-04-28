@@ -1103,7 +1103,7 @@ class MOZ_RAII AutoArrayRooter : private JS::AutoGCRooter {
  public:
   AutoArrayRooter(JSContext* cx, size_t len,
                   Value* vec MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : JS::AutoGCRooter(cx, JS::AutoGCRooter::Tag::Array),
+      : JS::AutoGCRooter(cx, JS::AutoGCRooter::Kind::Array),
         array_(vec),
         length_(len) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;

@@ -154,10 +154,10 @@ ParserSharedBase::ParserSharedBase(JSContext* cx,
     : JS::AutoGCRooter(
           cx,
 #ifdef JS_BUILD_BINAST
-          kind == Kind::Parser ? JS::AutoGCRooter::Tag::Parser
-                               : JS::AutoGCRooter::Tag::BinASTParser
+          kind == Kind::Parser ? JS::AutoGCRooter::Kind::Parser
+                               : JS::AutoGCRooter::Kind::BinASTParser
 #else
-          JS::AutoGCRooter::Tag::Parser
+          JS::AutoGCRooter::Kind::Parser
 #endif
           ),
       cx_(cx),
