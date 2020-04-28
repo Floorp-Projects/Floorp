@@ -617,6 +617,14 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
     return nullptr;
   }
 
+  // Verify the hardcoded sizes in header are accurate.
+  static_assert(SizeOf_OsiIndex == sizeof(OsiIndex),
+                "IonScript has wrong size for OsiIndex");
+  static_assert(SizeOf_SafepointIndex == sizeof(SafepointIndex),
+                "IonScript has wrong size for SafepointIndex");
+  static_assert(SizeOf_SnapshotOffset == sizeof(SnapshotOffset),
+                "IonScript has wrong size for SnapshotOffset");
+
   CheckedInt<Offset> allocSize = sizeof(IonScript);
   allocSize += CheckedInt<Offset>(constants) * sizeof(Value);
   allocSize += CheckedInt<Offset>(runtimeSize);
@@ -645,51 +653,54 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
   Offset offsetCursor = sizeof(IonScript);
 
   MOZ_ASSERT(offsetCursor % alignof(Value) == 0);
-  script->constantTable_ = offsetCursor;
-  script->constantEntries_ = constants;
+  script->constantTableOffset_ = offsetCursor;
   offsetCursor += constants * sizeof(Value);
 
   MOZ_ASSERT(offsetCursor % alignof(uint64_t) == 0);
-  script->runtimeData_ = offsetCursor;
-  script->runtimeSize_ = runtimeSize;
+  script->runtimeDataOffset_ = offsetCursor;
   offsetCursor += runtimeSize;
 
   MOZ_ASSERT(offsetCursor % alignof(OsiIndex) == 0);
   script->osiIndexOffset_ = offsetCursor;
-  script->osiIndexEntries_ = osiIndices;
   offsetCursor += osiIndices * sizeof(OsiIndex);
 
   MOZ_ASSERT(offsetCursor % alignof(SafepointIndex) == 0);
   script->safepointIndexOffset_ = offsetCursor;
-  script->safepointIndexEntries_ = safepointIndices;
   offsetCursor += safepointIndices * sizeof(SafepointIndex);
 
   MOZ_ASSERT(offsetCursor % alignof(SnapshotOffset) == 0);
-  script->bailoutTable_ = offsetCursor;
-  script->bailoutEntries_ = bailoutEntries;
+  script->bailoutTableOffset_ = offsetCursor;
   offsetCursor += bailoutEntries * sizeof(SnapshotOffset);
 
   MOZ_ASSERT(offsetCursor % alignof(uint32_t) == 0);
-  script->icIndex_ = offsetCursor;
-  script->icEntries_ = icEntries;
+  script->icIndexOffset_ = offsetCursor;
   offsetCursor += icEntries * sizeof(uint32_t);
 
-  script->safepointsStart_ = offsetCursor;
-  script->safepointsSize_ = safepointsSize;
+  script->safepointsOffset_ = offsetCursor;
   offsetCursor += safepointsSize;
 
-  script->snapshots_ = offsetCursor;
-  script->snapshotsListSize_ = snapshotsListSize;
-  script->snapshotsRVATableSize_ = snapshotsRVATableSize;
+  script->snapshotsOffset_ = offsetCursor;
   offsetCursor += snapshotsListSize;
+
+  script->rvaTableOffset_ = offsetCursor;
   offsetCursor += snapshotsRVATableSize;
 
-  script->recovers_ = offsetCursor;
-  script->recoversSize_ = recoversSize;
+  script->recoversOffset_ = offsetCursor;
   offsetCursor += recoversSize;
 
   script->allocBytes_ = offsetCursor;
-  MOZ_ASSERT(offsetCursor == allocSize.value());
+
+  MOZ_ASSERT(script->numConstants() == constants);
+  MOZ_ASSERT(script->runtimeSize() == runtimeSize);
+  MOZ_ASSERT(script->numOsiIndices() == osiIndices);
+  MOZ_ASSERT(script->numSafepointIndices() == safepointIndices);
+  MOZ_ASSERT(script->numBailoutEntries() == bailoutEntries);
+  MOZ_ASSERT(script->numICs() == icEntries);
+  MOZ_ASSERT(script->safepointsSize() == safepointsSize);
+  MOZ_ASSERT(script->snapshotsListSize() == snapshotsListSize);
+  MOZ_ASSERT(script->snapshotsRVATableSize() == snapshotsRVATableSize);
+  MOZ_ASSERT(script->recoversSize() == recoversSize);
+  MOZ_ASSERT(script->endOffset() == offsetCursor);
 
   return script;
 }
@@ -717,31 +728,34 @@ void IonScript::writeBarrierPre(Zone* zone, IonScript* ionScript) {
 }
 
 void IonScript::copySnapshots(const SnapshotWriter* writer) {
-  MOZ_ASSERT(writer->listSize() == snapshotsListSize_);
-  memcpy((uint8_t*)this + snapshots_, writer->listBuffer(), snapshotsListSize_);
+  MOZ_ASSERT(writer->listSize() == snapshotsListSize());
+  memcpy(offsetToPointer<uint8_t>(snapshotsOffset()), writer->listBuffer(),
+         snapshotsListSize());
 
-  MOZ_ASSERT(snapshotsRVATableSize_);
-  MOZ_ASSERT(writer->RVATableSize() == snapshotsRVATableSize_);
-  memcpy((uint8_t*)this + snapshots_ + snapshotsListSize_,
-         writer->RVATableBuffer(), snapshotsRVATableSize_);
+  MOZ_ASSERT(snapshotsRVATableSize());
+  MOZ_ASSERT(writer->RVATableSize() == snapshotsRVATableSize());
+  memcpy(offsetToPointer<uint8_t>(rvaTableOffset()), writer->RVATableBuffer(),
+         snapshotsRVATableSize());
 }
 
 void IonScript::copyRecovers(const RecoverWriter* writer) {
-  MOZ_ASSERT(writer->size() == recoversSize_);
-  memcpy((uint8_t*)this + recovers_, writer->buffer(), recoversSize_);
+  MOZ_ASSERT(writer->size() == recoversSize());
+  memcpy(offsetToPointer<uint8_t>(recoversOffset()), writer->buffer(),
+         recoversSize());
 }
 
 void IonScript::copySafepoints(const SafepointWriter* writer) {
-  MOZ_ASSERT(writer->size() == safepointsSize_);
-  memcpy((uint8_t*)this + safepointsStart_, writer->buffer(), safepointsSize_);
+  MOZ_ASSERT(writer->size() == safepointsSize());
+  memcpy(offsetToPointer<uint8_t>(safepointsOffset()), writer->buffer(),
+         safepointsSize());
 }
 
 void IonScript::copyBailoutTable(const SnapshotOffset* table) {
-  memcpy(bailoutTable(), table, bailoutEntries_ * sizeof(uint32_t));
+  memcpy(bailoutTable(), table, numBailoutEntries() * sizeof(SnapshotOffset));
 }
 
 void IonScript::copyConstants(const Value* vp) {
-  for (size_t i = 0; i < constantEntries_; i++) {
+  for (size_t i = 0; i < numConstants(); i++) {
     constants()[i].init(vp[i]);
   }
 }
@@ -749,13 +763,13 @@ void IonScript::copyConstants(const Value* vp) {
 void IonScript::copySafepointIndices(const CodegenSafepointIndex* si) {
   // Convert CodegenSafepointIndex to more compact form.
   SafepointIndex* table = safepointIndices();
-  for (size_t i = 0; i < safepointIndexEntries_; ++i) {
+  for (size_t i = 0; i < numSafepointIndices(); ++i) {
     table[i] = SafepointIndex(si[i]);
   }
 }
 
 void IonScript::copyOsiIndices(const OsiIndex* oi) {
-  memcpy(osiIndices(), oi, osiIndexEntries_ * sizeof(OsiIndex));
+  memcpy(osiIndices(), oi, numOsiIndices() * sizeof(OsiIndex));
 }
 
 void IonScript::copyRuntimeData(const uint8_t* data) {
@@ -772,16 +786,16 @@ void IonScript::copyICEntries(const uint32_t* icEntries) {
 }
 
 const SafepointIndex* IonScript::getSafepointIndex(uint32_t disp) const {
-  MOZ_ASSERT(safepointIndexEntries_ > 0);
+  MOZ_ASSERT(numSafepointIndices() > 0);
 
   const SafepointIndex* table = safepointIndices();
-  if (safepointIndexEntries_ == 1) {
+  if (numSafepointIndices() == 1) {
     MOZ_ASSERT(disp == table[0].displacement());
     return &table[0];
   }
 
   size_t minEntry = 0;
-  size_t maxEntry = safepointIndexEntries_ - 1;
+  size_t maxEntry = numSafepointIndices() - 1;
   uint32_t min = table[minEntry].displacement();
   uint32_t max = table[maxEntry].displacement();
 
@@ -822,7 +836,7 @@ const SafepointIndex* IonScript::getSafepointIndex(uint32_t disp) const {
 }
 
 const OsiIndex* IonScript::getOsiIndex(uint32_t disp) const {
-  const OsiIndex* end = osiIndices() + osiIndexEntries_;
+  const OsiIndex* end = osiIndices() + numOsiIndices();
   for (const OsiIndex* it = osiIndices(); it != end; ++it) {
     if (it->returnPointDisplacement() == disp) {
       return it;
