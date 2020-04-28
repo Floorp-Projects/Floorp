@@ -765,4 +765,3 @@ ASSERT-PRECONDITION: infrastructure/expected-fail/precondition-in-promise.html
 ASSERT-PRECONDITION: resources/testharness.js
 ASSERT-PRECONDITION: webrtc/protocol/crypto-suite.https.html
 ASSERT-PRECONDITION: webrtc-extensions/RTCRtpSynchronizationSource-captureTimestamp.html
-ASSERT-PRECONDITION: workers/modules/dedicated-worker-parse-error-failure.html
