@@ -66,45 +66,6 @@ TEST(MediaController, AudibleChanged)
   ASSERT_TRUE(!controller->IsAudible());
 }
 
-TEST(MediaController, AlwaysInaudibleIfControllerIsNotPlaying)
-{
-  RefPtr<MediaController> controller = new MediaController(CONTROLLER_ID);
-  ASSERT_TRUE(!controller->IsAudible());
-
-  controller->NotifyMediaAudibleChanged(MediaAudibleState::eAudible);
-  ASSERT_TRUE(!controller->IsAudible());
-
-  controller->Play();
-  ASSERT_TRUE(controller->IsAudible());
-
-  controller->Pause();
-  ASSERT_TRUE(!controller->IsAudible());
-
-  controller->Play();
-  ASSERT_TRUE(controller->IsAudible());
-
-  controller->Stop();
-  ASSERT_TRUE(!controller->IsAudible());
-}
-
-TEST(MediaController, ChangePlayingStateViaPlayPauseStop)
-{
-  RefPtr<MediaController> controller = new MediaController(CONTROLLER_ID);
-  ASSERT_TRUE(controller->GetState() == MediaSessionPlaybackState::None);
-
-  controller->Play();
-  ASSERT_TRUE(controller->GetState() == MediaSessionPlaybackState::Playing);
-
-  controller->Pause();
-  ASSERT_TRUE(controller->GetState() == MediaSessionPlaybackState::Paused);
-
-  controller->Play();
-  ASSERT_TRUE(controller->GetState() == MediaSessionPlaybackState::Playing);
-
-  controller->Stop();
-  ASSERT_TRUE(controller->GetState() == MediaSessionPlaybackState::None);
-}
-
 class FakeControlledMedia final {
  public:
   explicit FakeControlledMedia(MediaController* aController)
