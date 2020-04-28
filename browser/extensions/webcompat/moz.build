@@ -71,7 +71,6 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['js'] += [
   'injections/js/bug1610358-pcloud.com-appVersion-change.js',
   'injections/js/bug1623375-salesforce-communities-hide-unsupported.js',
   'injections/js/bug1625224-sixt-neuwagen.de-window-netscape-shim.js',
-  'injections/js/bug1629926-mail.google.com-hangouts-mic-fix.js',
 ]
 
 FINAL_TARGET_FILES.features['webcompat@mozilla.org']['lib'] += [
