@@ -3559,7 +3559,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   bool haveRadii = mOuter->GetPaddingBoxBorderRadii(radii);
   if (mIsRoot) {
     clipRect.SizeTo(nsLayoutUtils::CalculateCompositionSizeForFrame(mOuter));
-    if (!aBuilder->IsPaintingToWindow() &&
+    if (aBuilder->IsRelativeToLayoutViewport() &&
         mOuter->PresContext()->IsRootContentDocument()) {
       double res = mOuter->PresShell()->GetResolution();
       clipRect.width = NSToCoordRound(clipRect.width / res);
