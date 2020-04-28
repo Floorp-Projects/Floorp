@@ -206,7 +206,7 @@ class AutoTaskDispatcher : public TaskDispatcher {
    private:
     void MaybeDrainDirectTasks() {
       AbstractThread* currentThread = AbstractThread::GetCurrent();
-      if (currentThread) {
+      if (currentThread && currentThread->MightHaveTailTasks()) {
         currentThread->TailDispatcher().DrainDirectTasks();
       }
     }
