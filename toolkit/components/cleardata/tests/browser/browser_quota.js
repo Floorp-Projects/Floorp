@@ -122,6 +122,7 @@ const ORG_DOMAIN = "example.com";
 const ORG_ORIGIN = `https://${ORG_DOMAIN}`;
 const COM_DOMAIN = "example.org";
 const COM_ORIGIN = `https://${COM_DOMAIN}`;
+const LH_DOMAIN = "localhost";
 
 add_task(async function test_deleteFromHost() {
   const sites = [
@@ -132,6 +133,10 @@ add_task(async function test_deleteFromHost() {
     {
       args: [COM_DOMAIN, true, Ci.nsIClearDataService.CLEAR_DOM_QUOTA],
       origin: COM_ORIGIN,
+    },
+    {
+      args: [LH_DOMAIN, true, Ci.nsIClearDataService.CLEAR_DOM_QUOTA],
+      origin: `http://${LH_DOMAIN}:8000`,
     },
   ];
 
@@ -201,4 +206,27 @@ add_task(async function test_deleteAll() {
 
   ok(!hasQuotaStorage(ORG_ORIGIN), `${ORG_ORIGIN} has no quota storage`);
   ok(!hasQuotaStorage(COM_ORIGIN), `${COM_ORIGIN} has no quota storage`);
+});
+
+add_task(async function test_deleteSubdomain() {
+  const ANOTHER_ORIGIN = `https://wwww.${ORG_DOMAIN}`;
+  info(`Adding quota storage`);
+  await addQuotaStorage(getPrincipal(ORG_ORIGIN));
+  await addQuotaStorage(getPrincipal(ANOTHER_ORIGIN));
+
+  info(`Verifying deleteDataFromHost for subdomain`);
+  await new Promise(aResolve => {
+    Services.clearData.deleteDataFromHost(
+      ORG_DOMAIN,
+      true,
+      Ci.nsIClearDataService.CLEAR_DOM_QUOTA,
+      value => {
+        Assert.equal(value, 0);
+        aResolve();
+      }
+    );
+  });
+
+  ok(!hasQuotaStorage(ORG_ORIGIN), `${ORG_ORIGIN} has no quota storage`);
+  ok(!hasQuotaStorage(COM_ORIGIN), `${ANOTHER_ORIGIN} has no quota storage`);
 });
