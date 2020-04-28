@@ -4,18 +4,6 @@
 
 // Tests that after clicking a function in edtior, outline focuses that function
 
-function getItems(dbg) {
-  return findAllElements(dbg, "outlineItems");
-}
-
-function getFocusedNode(dbg) {
-  return findElementWithSelector(dbg, ".outline-list__element.focused");
-}
-
-function getFocusedFunction(dbg) {
-  return getFocusedNode(dbg).innerText;
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-sources.html", "long");
 
@@ -35,3 +23,15 @@ add_task(async function() {
   await clickAtPos(dbg, { line: 13, ch: 2 });
   is(getFocusedNode(dbg), null, "should not exist");
 });
+
+function getItems(dbg) {
+  return findAllElements(dbg, "outlineItems");
+}
+
+function getFocusedNode(dbg) {
+  return findElementWithSelector(dbg, ".outline-list__element.focused");
+}
+
+function getFocusedFunction(dbg) {
+  return getFocusedNode(dbg).innerText;
+}

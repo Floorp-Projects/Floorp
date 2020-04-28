@@ -4,19 +4,6 @@
 
 // Tests the search bar correctly responds to queries, enter, shift enter
 
-function waitForSearchState(dbg) {
-  return waitForState(dbg, () => getCM(dbg).state.search);
-}
-
-function getFocusedEl(dbg) {
-  const doc = dbg.win.document;
-  return doc.activeElement;
-}
-
-function pressMouseDown(dbg, node) {
-  EventUtils.sendMouseEvent({ type: "mousedown" }, node, dbg.win);
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js", "simple2.js");
   const {
@@ -69,3 +56,16 @@ add_task(async function() {
   pressKey(dbg, "Enter");
   is(cm.state.search.posFrom.line, 1);
 });
+
+function waitForSearchState(dbg) {
+  return waitForState(dbg, () => getCM(dbg).state.search);
+}
+
+function getFocusedEl(dbg) {
+  const doc = dbg.win.document;
+  return doc.activeElement;
+}
+
+function pressMouseDown(dbg, node) {
+  EventUtils.sendMouseEvent({ type: "mousedown" }, node, dbg.win);
+}

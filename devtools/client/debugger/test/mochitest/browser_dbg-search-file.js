@@ -4,16 +4,7 @@
 
 // Tests the search bar correctly responds to queries, enter, shift enter
 
-const isMacOS = AppConstants.platform === "macosx";
-
-function waitForSearchState(dbg) {
-  return waitForState(dbg, () => getCM(dbg).state.search);
-}
-
-function getFocusedEl(dbg) {
-  const doc = dbg.win.document;
-  return doc.activeElement;
-}
+const IS_MAC_OSX = AppConstants.platform === "macosx";
 
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
@@ -52,7 +43,7 @@ add_task(async function() {
   pressKey(dbg, "ShiftEnter");
   is(state.posFrom.line, 3);
 
-  if (isMacOS) {
+  if (IS_MAC_OSX) {
     info('cmd+G and cmdShift+G shortcut for traversing results only work for macOS');
     pressKey(dbg, "fileSearchNext");
     is(state.posFrom.line, 4);
@@ -78,3 +69,12 @@ add_task(async function() {
   is(dbg.win.document.activeElement.tagName, "INPUT", "Search field focused");
   
 });
+
+function waitForSearchState(dbg) {
+  return waitForState(dbg, () => getCM(dbg).state.search);
+}
+
+function getFocusedEl(dbg) {
+  const doc = dbg.win.document;
+  return doc.activeElement;
+}

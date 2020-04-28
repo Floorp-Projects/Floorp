@@ -2,31 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function toggleBreakpoint(dbg, index) {
-  const bp = findAllElements(dbg, "breakpointItems")[index];
-  const input = bp.querySelector("input");
-  input.click();
-}
-
-async function disableBreakpoint(dbg, index) {
-  const disabled = waitForDispatch(dbg, "SET_BREAKPOINT");
-  toggleBreakpoint(dbg, index);
-  await disabled;
-}
-
-async function enableBreakpoint(dbg, index) {
-  const enabled = waitForDispatch(dbg, "SET_BREAKPOINT");
-  toggleBreakpoint(dbg, index);
-  await enabled;
-}
-
-async function cleanupBreakpoints(dbg) {
-  clickElement(dbg, "gutter", 3);
-  clickElement(dbg, "gutter", 5);
-  await waitForBreakpointRemoved(dbg, "simple2", 3);
-  await waitForBreakpointRemoved(dbg, "simple2", 5);
-}
-
 // Test enabling and disabling a breakpoint using the check boxes
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple2");
@@ -93,3 +68,28 @@ add_task(async function() {
   // Cleanup
   await cleanupBreakpoints(dbg);
 });
+
+function toggleBreakpoint(dbg, index) {
+  const bp = findAllElements(dbg, "breakpointItems")[index];
+  const input = bp.querySelector("input");
+  input.click();
+}
+
+async function disableBreakpoint(dbg, index) {
+  const disabled = waitForDispatch(dbg, "SET_BREAKPOINT");
+  toggleBreakpoint(dbg, index);
+  await disabled;
+}
+
+async function enableBreakpoint(dbg, index) {
+  const enabled = waitForDispatch(dbg, "SET_BREAKPOINT");
+  toggleBreakpoint(dbg, index);
+  await enabled;
+}
+
+async function cleanupBreakpoints(dbg) {
+  clickElement(dbg, "gutter", 3);
+  clickElement(dbg, "gutter", 5);
+  await waitForBreakpointRemoved(dbg, "simple2", 3);
+  await waitForBreakpointRemoved(dbg, "simple2", 5);
+}

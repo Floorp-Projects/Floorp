@@ -1,13 +1,6 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
-function uncaughtException() {
-  return invokeInTab("uncaughtException").catch(() => {});
-}
-
-function caughtException() {
-  return invokeInTab("caughtException");
-}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /*
   Tests Pausing on exception
@@ -107,3 +100,11 @@ add_task(async function() {
   assertPausedAtSourceAndLine(dbg, source.id, 77);
   await resume(dbg);
 });
+
+function uncaughtException() {
+  return invokeInTab("uncaughtException").catch(() => {});
+}
+
+function caughtException() {
+  return invokeInTab("caughtException");
+}

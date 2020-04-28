@@ -5,6 +5,17 @@
 // Tests for stepping through Babel's compile output.
 requestLongerTimeout(4);
 
+add_task(async function() {
+  const dbg = await initDebugger("doc-sourcemapped.html");
+
+  await testStepOverForOf(dbg);
+  await testStepOverForOfArray(dbg);
+  await testStepOveForOfClosure(dbg);
+  await testStepOverForOfArrayClosure(dbg);
+  await testStepOverFunctionParams(dbg);
+  await testStepOverRegeneratorAwait(dbg);
+});
+
 async function breakpointSteps(dbg, target, fixture, { line, column }, steps) {
   const filename = `${target}://./${fixture}/input.`;
   const fnName = `${target}-${fixture}`.replace(/-([a-z])/g, (s, c) =>
@@ -150,14 +161,3 @@ function testStepOverRegeneratorAwait(dbg) {
     ]
   );
 }
-
-add_task(async function() {
-  const dbg = await initDebugger("doc-sourcemapped.html");
-
-  await testStepOverForOf(dbg);
-  await testStepOverForOfArray(dbg);
-  await testStepOveForOfClosure(dbg);
-  await testStepOverForOfArrayClosure(dbg);
-  await testStepOverFunctionParams(dbg);
-  await testStepOverRegeneratorAwait(dbg);
-});

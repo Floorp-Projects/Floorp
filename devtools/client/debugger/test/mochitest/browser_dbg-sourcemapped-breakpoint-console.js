@@ -1,45 +1,9 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // This test can be really slow on debug platforms and should be split.
 requestLongerTimeout(3);
-
-async function evalInConsoleAtPoint(
-  dbg,
-  target,
-  fixture,
-  { line, column },
-  statements
-) {
-  const filename = `${target}://./${fixture}/input.`;
-  const fnName = (target + "-" + fixture).replace(/-([a-z])/g, (s, c) =>
-    c.toUpperCase()
-  );
-
-  await invokeWithBreakpoint(
-    dbg,
-    fnName,
-    filename,
-    { line, column },
-    async () => {
-      await assertConsoleEval(dbg, statements);
-    }
-  );
-
-  ok(true, `Ran tests for ${fixture} at line ${line} column ${column}`);
-}
-
-async function assertConsoleEval(dbg, statements) {
-  const { hud } = await dbg.toolbox.selectTool("webconsole");
-
-  for (const [index, statement] of statements.entries()) {
-    await dbg.client.evaluate(`window.TEST_RESULT = false;`);
-    await evaluateExpressionInConsole(hud, `TEST_RESULT = ${statement};`);
-
-    const result = await dbg.client.evaluate(`window.TEST_RESULT`);
-    is(result.result, true, `'${statement}' evaluates to true`);
-  }
-}
 
 add_task(async function() {
   const dbg = await initDebugger("doc-sourcemapped.html");
@@ -87,3 +51,40 @@ add_task(async function() {
     [`this.hasOwnProperty("bound")`]
   );
 });
+
+async function evalInConsoleAtPoint(
+  dbg,
+  target,
+  fixture,
+  { line, column },
+  statements
+) {
+  const filename = `${target}://./${fixture}/input.`;
+  const fnName = (target + "-" + fixture).replace(/-([a-z])/g, (s, c) =>
+    c.toUpperCase()
+  );
+
+  await invokeWithBreakpoint(
+    dbg,
+    fnName,
+    filename,
+    { line, column },
+    async () => {
+      await assertConsoleEval(dbg, statements);
+    }
+  );
+
+  ok(true, `Ran tests for ${fixture} at line ${line} column ${column}`);
+}
+
+async function assertConsoleEval(dbg, statements) {
+  const { hud } = await dbg.toolbox.selectTool("webconsole");
+
+  for (const [index, statement] of statements.entries()) {
+    await dbg.client.evaluate(`window.TEST_RESULT = false;`);
+    await evaluateExpressionInConsole(hud, `TEST_RESULT = ${statement};`);
+
+    const result = await dbg.client.evaluate(`window.TEST_RESULT`);
+    is(result.result, true, `'${statement}' evaluates to true`);
+  }
+}

@@ -1,3 +1,15 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+add_task(async function() {
+  const dbg = await initDebugger("doc-return-values.html");
+  await togglePauseOnExceptions(dbg, true, true);
+
+  await testReturnValue(dbg, "to sender");
+  await testThrowValue(dbg, "a fit");
+});
+
 function getLabel(dbg, index) {
   return findElement(dbg, "scopeNode", index).innerText;
 }
@@ -51,11 +63,3 @@ async function testThrowValue(dbg, val) {
   await resume(dbg);
   assertNotPaused(dbg);
 }
-
-add_task(async function() {
-  const dbg = await initDebugger("doc-return-values.html");
-  await togglePauseOnExceptions(dbg, true, true);
-
-  await testReturnValue(dbg, "to sender");
-  await testThrowValue(dbg, "a fit");
-});

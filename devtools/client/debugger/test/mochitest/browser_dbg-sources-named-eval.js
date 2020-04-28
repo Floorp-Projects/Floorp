@@ -1,21 +1,8 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Make sure named eval sources appear in the list.
-
-async function waitForSourceCount(dbg, i) {
-  // We are forced to wait until the DOM nodes appear because the
-  // source tree batches its rendering.
-  await waitUntil(() => {
-    return findAllElements(dbg, "sourceNodes").length === i;
-  }, `waiting for source count ${i}`);
-}
-
-function getLabel(dbg, index) {
-  return findElement(dbg, "sourceNode", index)
-    .textContent.trim()
-    .replace(/^[\s\u200b]*/g, "");
-}
 
 add_task(async function() {
   const dbg = await initDebugger(
@@ -39,3 +26,17 @@ add_task(async function() {
   // is(getLabel(dbg, 3), "evaled.js", "evaled exists");
   ok(true);
 });
+
+async function waitForSourceCount(dbg, i) {
+  // We are forced to wait until the DOM nodes appear because the
+  // source tree batches its rendering.
+  await waitUntil(() => {
+    return findAllElements(dbg, "sourceNodes").length === i;
+  }, `waiting for source count ${i}`);
+}
+
+function getLabel(dbg, index) {
+  return findElement(dbg, "sourceNode", index)
+    .textContent.trim()
+    .replace(/^[\s\u200b]*/g, "");
+}

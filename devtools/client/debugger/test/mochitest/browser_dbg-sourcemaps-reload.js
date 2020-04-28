@@ -8,24 +8,6 @@
  * 2. re-sync breakpoints
  */
 
-async function waitForBreakpoint(dbg, location) {
-  return waitForState(
-    dbg,
-    state => {
-      return dbg.selectors.getBreakpoint(location);
-    },
-    "Waiting for breakpoint"
-  );
-}
-
-function getBreakpoints(dbg) {
-  return dbg.selectors.getBreakpointsList();
-}
-
-function getBreakpointCount(dbg) {
-  return dbg.selectors.getBreakpointCount();
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-minified.html");
 
@@ -64,3 +46,21 @@ add_task(async function() {
 
   is(getBreakpointCount(dbg), 0, "No breakpoints");
 });
+
+async function waitForBreakpoint(dbg, location) {
+  return waitForState(
+    dbg,
+    state => {
+      return dbg.selectors.getBreakpoint(location);
+    },
+    "Waiting for breakpoint"
+  );
+}
+
+function getBreakpoints(dbg) {
+  return dbg.selectors.getBreakpointsList();
+}
+
+function getBreakpointCount(dbg) {
+  return dbg.selectors.getBreakpointCount();
+}

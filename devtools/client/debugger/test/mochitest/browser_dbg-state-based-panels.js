@@ -4,10 +4,6 @@
 
 // Tests that breakpoint panels open when their relevant breakpoint is hit
 
-function getPaneElements(dbg) {
-  return findElementWithSelector(dbg, '.breakpoints-pane').childNodes;
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-sources.html", "simple1");
 
@@ -31,3 +27,7 @@ add_task(async function() {
   info("Confirm the breakpoints pane is closed again");
   is(getPaneElements(dbg).length, 1);
 });
+
+function getPaneElements(dbg) {
+  return findElementWithSelector(dbg, '.breakpoints-pane').childNodes;
+}

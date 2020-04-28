@@ -1,8 +1,18 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Tests for preview through Babel's compile output.
 requestLongerTimeout(3);
+
+add_task(async function() {
+  const dbg = await initDebugger("doc-sourcemapped.html");
+  dbg.actions.toggleMapScopes();
+
+  await testForOf(dbg);
+  await testShadowing(dbg);
+  await testImportedBindings(dbg);
+});
 
 async function breakpointPreviews(
   dbg,
@@ -195,12 +205,3 @@ function testImportedBindings(dbg) {
     ]
   );
 }
-
-add_task(async function() {
-  const dbg = await initDebugger("doc-sourcemapped.html");
-  dbg.actions.toggleMapScopes();
-
-  await testForOf(dbg);
-  await testShadowing(dbg);
-  await testImportedBindings(dbg);
-});

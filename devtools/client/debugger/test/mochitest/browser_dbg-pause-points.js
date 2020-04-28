@@ -4,17 +4,6 @@
 
 requestLongerTimeout(2);
 
-async function stepOvers(dbg, count, onStep = () => {}) {
-  for (let i = 0; i < count; i++) {
-    await dbg.actions.stepOver(getThreadContext(dbg));
-    await waitForPaused(dbg);
-    onStep();
-  }
-}
-function formatSteps(steps) {
-  return steps.map(loc => `(${loc.join(",")})`).join(", ");
-}
-
 async function testCase(dbg, { name, steps }) {
   invokeInTab(name);
   const locations = [];
@@ -74,3 +63,15 @@ add_task(async function test() {
     ]
   });
 });
+
+async function stepOvers(dbg, count, onStep = () => {}) {
+  for (let i = 0; i < count; i++) {
+    await dbg.actions.stepOver(getThreadContext(dbg));
+    await waitForPaused(dbg);
+    onStep();
+  }
+}
+
+function formatSteps(steps) {
+  return steps.map(loc => `(${loc.join(",")})`).join(", ");
+}

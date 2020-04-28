@@ -1,32 +1,6 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
-function findNode(dbg, text) {
-  for (let index = 0;; index++) {
-    var elem = findElement(dbg, "scopeNode", index);
-    if (elem && elem.innerText == text) {
-      return elem;
-    }
-  }
-}
-
-function toggleNode(dbg, text) {
-  return toggleObjectInspectorNode(findNode(dbg, text));
-}
-
-function findNodeValue(dbg, text) {
-  for (let index = 0;; index++) {
-    var elem = findElement(dbg, "scopeNode", index);
-    if (elem && elem.innerText == text) {
-      return findElement(dbg, "scopeValue", index).innerText;
-    }
-  }
-}
-
-async function checkObjectNode(dbg, text, value) {
-  await toggleNode(dbg, text);
-  ok(findNodeValue(dbg, "a") == value, "object value");
-}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Test that xrays do not interfere with examining objects in the scopes pane.
 add_task(async function() {
@@ -61,3 +35,30 @@ add_task(async function() {
   await checkObjectNode(dbg, "<value>", "6");
   await toggleNode(dbg, "weakmap");
 });
+
+function findNode(dbg, text) {
+  for (let index = 0;; index++) {
+    const elem = findElement(dbg, "scopeNode", index);
+    if (elem?.innerText == text) {
+      return elem;
+    }
+  }
+}
+
+function toggleNode(dbg, text) {
+  return toggleObjectInspectorNode(findNode(dbg, text));
+}
+
+function findNodeValue(dbg, text) {
+  for (let index = 0;; index++) {
+    const elem = findElement(dbg, "scopeNode", index);
+    if (elem?.innerText == text) {
+      return findElement(dbg, "scopeValue", index).innerText;
+    }
+  }
+}
+
+async function checkObjectNode(dbg, text, value) {
+  await toggleNode(dbg, text);
+  ok(findNodeValue(dbg, "a") == value, "object value");
+}

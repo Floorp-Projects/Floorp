@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function firstBreakpoint(dbg) {
-  return dbg.selectors.getBreakpointsList()[0];
-}
-
 // tests to make sure we do not accidentally slide the breakpoint up to the first
 // function with the same name in the file.
 add_task(async function() {
@@ -20,5 +16,7 @@ add_task(async function() {
 
   await reload(dbg, source.url);
   await waitForState(dbg, state => dbg.selectors.getBreakpointCount() == 1);
-  is(firstBreakpoint(dbg).location.line, 19, "Breakpoint is on line 19");
+
+  const firstBreakpoint = dbg.selectors.getBreakpointsList()[0];
+  is(firstBreakpoint.location.line, 19, "Breakpoint is on line 19");
 });

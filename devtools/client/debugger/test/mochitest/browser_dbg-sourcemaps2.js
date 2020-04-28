@@ -3,16 +3,6 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 requestLongerTimeout(2);
 
-function assertBpInGutter(dbg, lineNumber) {
-  const el = findElement(dbg, "breakpoint");
-  const bpLineNumber = +el.querySelector(".CodeMirror-linenumber").innerText;
-  is(
-    bpLineNumber,
-    lineNumber,
-    "Breakpoint is on the correct line in the gutter"
-  );
-}
-
 // Tests loading sourcemapped sources, setting breakpoints, and
 // stepping in them.
 
@@ -57,3 +47,13 @@ add_task(async function() {
     "No Sourcemap link exists in generated source"
   );
 });
+
+function assertBpInGutter(dbg, lineNumber) {
+  const el = findElement(dbg, "breakpoint");
+  const bpLineNumber = +el.querySelector(".CodeMirror-linenumber").innerText;
+  is(
+    bpLineNumber,
+    lineNumber,
+    "Breakpoint is on the correct line in the gutter"
+  );
+}

@@ -8,16 +8,6 @@
  * 2. re-sync breakpoints
  */
 
-async function waitForBreakpoint(dbg, location) {
-  return waitForState(
-    dbg,
-    state => {
-      return dbg.selectors.getBreakpoint(location);
-    },
-    "Waiting for breakpoint"
-  );
-}
-
 add_task(async function() {
   const dbg = await initDebugger(
     "ember/quickstart/dist/",
@@ -44,3 +34,13 @@ add_task(async function() {
   await waitForPaused(dbg);
   assertPausedLocation(dbg, "ember-application/index.js", 4);
 });
+
+async function waitForBreakpoint(dbg, location) {
+  return waitForState(
+    dbg,
+    state => {
+      return dbg.selectors.getBreakpoint(location);
+    },
+    "Waiting for breakpoint"
+  );
+}

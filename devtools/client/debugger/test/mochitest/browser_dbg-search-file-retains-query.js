@@ -4,10 +4,6 @@
 
 // Tests the search bar retains previous query on re-opening.
 
-function waitForSearchState(dbg) {
-  return waitForState(dbg, () => getCM(dbg).state.search);
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
   const {
@@ -43,3 +39,7 @@ add_task(async function() {
   await waitForDispatch(dbg, "UPDATE_FILE_SEARCH_QUERY");
   is(getFileSearchQuery(), "con");
 });
+
+function waitForSearchState(dbg) {
+  return waitForState(dbg, () => getCM(dbg).state.search);
+}

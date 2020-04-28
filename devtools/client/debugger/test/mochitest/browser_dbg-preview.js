@@ -2,32 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-async function previews(dbg, fnName, previews) {
-  const invokeResult = invokeInTab(fnName);
-  await waitForPaused(dbg);
-
-  await assertPreviews(dbg, previews);
-  await resume(dbg);
-
-  info(`Ran tests for ${fnName}`);
-}
-
-async function testBucketedArray(dbg) {
-  const invokeResult = invokeInTab("largeArray");
-  await waitForPaused(dbg);
-  const preview = await hoverOnToken(dbg, 34, 10, "popup");
-
-  is(
-    preview.properties.map(p => p.name).join(" "),
-    "[0…99] [100…100] length <prototype>",
-    "Popup properties are bucketed"
-  );
-
-  is(preview.properties[0].meta.endIndex, 99, "first bucket ends at 99");
-  is(preview.properties[2].contents.value, 101, "length is 101");
-  await resume(dbg);
-}
-
 // Test hovering on an object, which will show a popup and on a
 // simple value, which will show a tooltip.
 add_task(async function() {
@@ -64,3 +38,29 @@ add_task(async function() {
     },
   ]);
 });
+
+async function previews(dbg, fnName, previews) {
+  const invokeResult = invokeInTab(fnName);
+  await waitForPaused(dbg);
+
+  await assertPreviews(dbg, previews);
+  await resume(dbg);
+
+  info(`Ran tests for ${fnName}`);
+}
+
+async function testBucketedArray(dbg) {
+  const invokeResult = invokeInTab("largeArray");
+  await waitForPaused(dbg);
+  const preview = await hoverOnToken(dbg, 34, 10, "popup");
+
+  is(
+    preview.properties.map(p => p.name).join(" "),
+    "[0…99] [100…100] length <prototype>",
+    "Popup properties are bucketed"
+  );
+
+  is(preview.properties[0].meta.endIndex, 99, "first bucket ends at 99");
+  is(preview.properties[2].contents.value, 101, "length is 101");
+  await resume(dbg);
+}
