@@ -28,22 +28,15 @@ LazyLogModule gStateWatchingLog("StateWatching");
 StaticRefPtr<AbstractThread> sMainThread;
 MOZ_THREAD_LOCAL(AbstractThread*) AbstractThread::sCurrentThreadTLS;
 
-class XPCOMThreadWrapper : public AbstractThread {
+class XPCOMThreadWrapper final : public AbstractThread,
+                                 public nsIThreadObserver {
  public:
   explicit XPCOMThreadWrapper(nsIThreadInternal* aThread,
                               bool aRequireTailDispatch)
-      : AbstractThread(aRequireTailDispatch), mThread(aThread) {
-    // Our current mechanism of implementing tail dispatch is appshell-specific.
-    // This is because a very similar mechanism already exists on the main
-    // thread, and we want to avoid making event dispatch on the main thread
-    // more complicated than it already is.
-    //
-    // If you need to use tail dispatch on other XPCOM threads, you'll need to
-    // implement an nsIThreadObserver to fire the tail dispatcher at the
-    // appropriate times. You will also need to modify this assertion.
-    MOZ_ASSERT_IF(aRequireTailDispatch,
-                  NS_IsMainThread() && aThread->IsOnCurrentThread());
-  }
+      : AbstractThread(aRequireTailDispatch), mThread(aThread) {}
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSITHREADOBSERVER
 
   nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable,
                     DispatchReason aReason = NormalDispatch) override {
@@ -88,22 +81,12 @@ class XPCOMThreadWrapper : public AbstractThread {
     return mThread->IsOnCurrentThread();
   }
 
-  void FireTailDispatcher() {
-    MOZ_DIAGNOSTIC_ASSERT(mTailDispatcher.isSome());
-    mTailDispatcher.ref().DrainDirectTasks();
-    mTailDispatcher.reset();
-  }
-
   TaskDispatcher& TailDispatcher() override {
     MOZ_ASSERT(IsCurrentThreadIn());
     MOZ_ASSERT(IsTailDispatcherAvailable());
     if (!mTailDispatcher.isSome()) {
       mTailDispatcher.emplace(/* aIsTailDispatcher = */ true);
-
-      nsCOMPtr<nsIRunnable> event =
-          NewRunnableMethod("XPCOMThreadWrapper::FireTailDispatcher", this,
-                            &XPCOMThreadWrapper::FireTailDispatcher);
-      nsContentUtils::RunInStableState(event.forget());
+      mThread->AddObserver(this);
     }
 
     return mTailDispatcher.ref();
@@ -124,6 +107,16 @@ class XPCOMThreadWrapper : public AbstractThread {
  private:
   const RefPtr<nsIThreadInternal> mThread;
   Maybe<AutoTaskDispatcher> mTailDispatcher;
+
+  ~XPCOMThreadWrapper() = default;
+
+  void MaybeFireTailDispatcher() {
+    if (mTailDispatcher.isSome()) {
+      mTailDispatcher.ref().DrainDirectTasks();
+      mThread->RemoveObserver(this);
+      mTailDispatcher.reset();
+    }
+  }
 
   class Runner : public Runnable {
    public:
@@ -306,4 +299,30 @@ already_AddRefed<AbstractThread> AbstractThread::CreateXPCOMThreadWrapper(
   aThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
   return wrapper.forget();
 }
+
+NS_IMPL_ISUPPORTS_INHERITED(XPCOMThreadWrapper, AbstractThread,
+                            nsIThreadObserver);
+
+NS_IMETHODIMP
+XPCOMThreadWrapper::OnDispatchedEvent() { return NS_OK; }
+
+NS_IMETHODIMP
+XPCOMThreadWrapper::AfterProcessNextEvent(nsIThreadInternal* thread,
+                                          bool eventWasProcessed) {
+  // This is the primary case.
+  MaybeFireTailDispatcher();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+XPCOMThreadWrapper::OnProcessNextEvent(nsIThreadInternal* thread,
+                                       bool mayWait) {
+  // In general, the tail dispatcher is handled at the end of the current in
+  // AfterProcessNextEvent() above. However, if start spinning a nested event
+  // loop, it's generally better to fire the tail dispatcher before the first
+  // nested event, rather than after it. This check handles that case.
+  MaybeFireTailDispatcher();
+  return NS_OK;
+}
+
 }  // namespace mozilla
