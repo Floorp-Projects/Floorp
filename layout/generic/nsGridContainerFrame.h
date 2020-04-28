@@ -45,7 +45,7 @@ struct ComputedGridTrackInfo {
       nsTArray<uint32_t>&& aStates, nsTArray<bool>&& aRemovedRepeatTracks,
       uint32_t aRepeatFirstTrack,
       nsTArray<nsTArray<StyleCustomIdent>>&& aResolvedLineNames,
-      bool aIsSubgrid)
+      bool aIsSubgrid, bool aIsMasonry)
       : mNumLeadingImplicitTracks(aNumLeadingImplicitTracks),
         mNumExplicitTracks(aNumExplicitTracks),
         mStartFragmentTrack(aStartFragmentTrack),
@@ -56,7 +56,8 @@ struct ComputedGridTrackInfo {
         mRemovedRepeatTracks(aRemovedRepeatTracks),
         mResolvedLineNames(std::move(aResolvedLineNames)),
         mRepeatFirstTrack(aRepeatFirstTrack),
-        mIsSubgrid(aIsSubgrid) {}
+        mIsSubgrid(aIsSubgrid),
+        mIsMasonry(aIsMasonry) {}
   uint32_t mNumLeadingImplicitTracks;
   uint32_t mNumExplicitTracks;
   uint32_t mStartFragmentTrack;
@@ -74,6 +75,7 @@ struct ComputedGridTrackInfo {
   nsTArray<nsTArray<StyleCustomIdent>> mResolvedLineNames;
   uint32_t mRepeatFirstTrack;
   bool mIsSubgrid;
+  bool mIsMasonry;
 };
 
 struct ComputedGridLineInfo {
@@ -243,6 +245,14 @@ class nsGridContainerFrame final : public nsContainerFrame {
     return GetProperty(ExplicitNamedAreasProperty());
   }
 
+  using nsContainerFrame::IsMasonry;
+
+  /** Return true if this frame has masonry layout in any axis. */
+  bool IsMasonry() const {
+    return HasAnyStateBits(NS_STATE_GRID_IS_ROW_MASONRY |
+                           NS_STATE_GRID_IS_COL_MASONRY);
+  }
+
   /** Return true if this frame is subgridded in its aAxis. */
   bool IsSubgrid(LogicalAxis aAxis) const {
     return HasAnyStateBits(aAxis == mozilla::eLogicalAxisBlock
@@ -298,6 +308,13 @@ class nsGridContainerFrame final : public nsContainerFrame {
   /** Return our parent grid container; |this| MUST be a subgrid. */
   nsGridContainerFrame* ParentGridContainerForSubgrid() const;
 
+  // https://drafts.csswg.org/css-sizing/#constraints
+  enum class SizingConstraint {
+    MinContent,   // sizing under min-content constraint
+    MaxContent,   // sizing under max-content constraint
+    NoConstraint  // no constraint, used during Reflow
+  };
+
  protected:
   typedef mozilla::LogicalPoint LogicalPoint;
   typedef mozilla::LogicalRect LogicalRect;
@@ -352,6 +369,7 @@ class nsGridContainerFrame final : public nsContainerFrame {
    */
   nscoord ReflowChildren(GridReflowInput& aState,
                          const LogicalRect& aContentArea,
+                         const nsSize& aContainerSize,
                          ReflowOutput& aDesiredSize, nsReflowStatus& aStatus);
 
   /**
@@ -443,11 +461,12 @@ class nsGridContainerFrame final : public nsContainerFrame {
   void UpdateSubgridFrameState();
 
   /**
-   * Return the NS_STATE_GRID_IS_COL/ROW_SUBGRID bits we ought to have.
+   * Return the NS_STATE_GRID_IS_COL/ROW_SUBGRID and
+   * NS_STATE_GRID_IS_ROW/COL_MASONRY bits we ought to have.
    */
-  nsFrameState ComputeSelfSubgridBits() const;
+  nsFrameState ComputeSelfSubgridMasonryBits() const;
 
-  /** Helper for ComputeSelfSubgridBits(). */
+  /** Helper for ComputeSelfSubgridMasonryBits(). */
   bool WillHaveAtLeastOneTrackInAxis(LogicalAxis aAxis) const;
 
  private:
@@ -504,6 +523,21 @@ class nsGridContainerFrame final : public nsContainerFrame {
                          const GridReflowInput& aState,
                          const LogicalRect& aContentArea,
                          ReflowOutput& aDesiredSize, nsReflowStatus& aStatus);
+
+  /**
+   * Places and reflows items when we have masonry layout.
+   * It handles unconstrained reflow and also fragmentation when the row axis
+   * is the masonry axis.  ReflowInFragmentainer handles the case when we're
+   * fragmenting and our row axis is a grid axis and it handles masonry layout
+   * in the column axis in that case.
+   * @return the intrinsic size in the masonry axis
+   */
+  nscoord MasonryLayout(GridReflowInput& aState,
+                        const LogicalRect& aContentArea,
+                        SizingConstraint aConstraint,
+                        ReflowOutput& aDesiredSize, nsReflowStatus& aStatus,
+                        Fragmentainer* aFragmentainer,
+                        const nsSize& aContainerSize);
 
   // Return the stored UsedTrackSizes, if any.
   UsedTrackSizes* GetUsedTrackSizes() const;

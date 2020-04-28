@@ -814,6 +814,8 @@ struct ReflowInput : public SizeComputationInput {
     // the containing block, i.e. at LogicalPoint(0, 0). (Note that this
     // doesn't necessarily mean that (0, 0) is the *correct* static position
     // for the frame in question.)
+    // @note In a Grid container's masonry axis we'll always use
+    // the placeholder's position in that axis regardless of this flag.
     STATIC_POS_IS_CB_ORIGIN = (1 << 4),
 
     // Pass ComputeSizeFlags::eIClampMarginBoxMinSize to ComputeSize().
