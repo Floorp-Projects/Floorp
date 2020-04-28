@@ -33,6 +33,7 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
+#define NSAccessibilityRequiredAttribute @"AXRequired"
 #define NSAccessibilityARIACurrentAttribute @"AXARIACurrent"
 #define NSAccessibilityDOMIdentifierAttribute @"AXDOMIdentifier"
 #define NSAccessibilityHasPopupAttribute @"AXHasPopup"
@@ -211,6 +212,7 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
                         NSAccessibilityHelpAttribute, NSAccessibilityTitleUIElementAttribute,
                         NSAccessibilityTopLevelUIElementAttribute, NSAccessibilityHasPopupAttribute,
                         NSAccessibilityARIACurrentAttribute, NSAccessibilitySelectedAttribute,
+                        NSAccessibilityRequiredAttribute,
 #if DEBUG
                         @"AXMozDescription",
 #endif
@@ -394,6 +396,10 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
     else
       proxy->DOMNodeID(id);
     return nsCocoaUtils::ToNSString(id);
+  }
+
+  if ([attribute isEqualToString:NSAccessibilityRequiredAttribute]) {
+    return [NSNumber numberWithBool:[self stateWithMask:states::REQUIRED] != 0];
   }
 
   switch (mRole) {
