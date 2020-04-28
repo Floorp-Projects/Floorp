@@ -3881,13 +3881,14 @@ AbortReasonOr<Ok> IonBuilder::jsop_tonumeric() {
     return Ok();
   }
 
-  // Otherwise, pop the value and add an MToNumeric.
+  // Otherwise, pop the value and add an MUnaryCache.
   MDefinition* popped = current->pop();
-  MToNumeric* ins = MToNumeric::New(alloc(), popped, types);
+  MInstruction* ins = MUnaryCache::New(alloc(), popped);
+  ins->setResultTypeSet(types);  // Improve type information for the result.
   current->add(ins);
   current->push(ins);
 
-  // toValue() is effectful, so add a resume point.
+  // ToNumeric is effectful for objects (calls valueOf), so add a resume point.
   return resumeAfter(ins);
 }
 
