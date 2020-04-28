@@ -50,7 +50,8 @@ class XPCOMThreadWrapper : public AbstractThread {
     nsCOMPtr<nsIRunnable> r = aRunnable;
     AbstractThread* currentThread;
     if (aReason != TailDispatch && (currentThread = GetCurrent()) &&
-        RequiresTailDispatch(currentThread)) {
+        RequiresTailDispatch(currentThread) &&
+        currentThread->IsTailDispatcherAvailable()) {
       return currentThread->TailDispatcher().AddTask(this, r.forget());
     }
 
@@ -95,6 +96,7 @@ class XPCOMThreadWrapper : public AbstractThread {
 
   TaskDispatcher& TailDispatcher() override {
     MOZ_ASSERT(IsCurrentThreadIn());
+    MOZ_ASSERT(IsTailDispatcherAvailable());
     if (!mTailDispatcher.isSome()) {
       mTailDispatcher.emplace(/* aIsTailDispatcher = */ true);
 
@@ -105,6 +107,14 @@ class XPCOMThreadWrapper : public AbstractThread {
     }
 
     return mTailDispatcher.ref();
+  }
+
+  bool IsTailDispatcherAvailable() override {
+    // Our tail dispatching implementation relies on nsIThreadObserver
+    // callbacks. If we're not doing event processing, it won't work.
+    bool inEventLoop =
+        static_cast<nsThread*>(mThread.get())->RecursionDepth() > 0;
+    return inEventLoop;
   }
 
   bool MightHaveTailTasks() override { return mTailDispatcher.isSome(); }
@@ -237,13 +247,31 @@ void AbstractThread::InitMainThread() {
 
 void AbstractThread::DispatchStateChange(
     already_AddRefed<nsIRunnable> aRunnable) {
-  GetCurrent()->TailDispatcher().AddStateChangeTask(this, std::move(aRunnable));
+  AbstractThread* currentThread = GetCurrent();
+  if (currentThread->IsTailDispatcherAvailable()) {
+    currentThread->TailDispatcher().AddStateChangeTask(this,
+                                                       std::move(aRunnable));
+  } else {
+    // If the tail dispatcher isn't available, we just avoid sending state
+    // updates.
+    //
+    // This happens, specifically (1) During async shutdown (via the media
+    // shutdown blocker), and (2) During the final shutdown cycle collection.
+    // Both of these trigger changes to various watched and mirrored state.
+    nsCOMPtr<nsIRunnable> neverDispatched = aRunnable;
+  }
 }
 
 /* static */
 void AbstractThread::DispatchDirectTask(
     already_AddRefed<nsIRunnable> aRunnable) {
-  GetCurrent()->TailDispatcher().AddDirectTask(std::move(aRunnable));
+  AbstractThread* currentThread = GetCurrent();
+  if (currentThread->IsTailDispatcherAvailable()) {
+    currentThread->TailDispatcher().AddDirectTask(std::move(aRunnable));
+  } else {
+    // If the tail dispatcher isn't available, we post as a regular task.
+    currentThread->Dispatch(std::move(aRunnable));
+  }
 }
 
 /* static */

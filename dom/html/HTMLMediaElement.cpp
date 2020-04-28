@@ -5316,7 +5316,7 @@ void HTMLMediaElement::NotifyMediaStreamTrackAdded(
 
   // The set of enabled AudioTracks and selected video track might have changed.
   mWatchManager.ManualNotify(&HTMLMediaElement::UpdateReadyStateInternal);
-  mAbstractMainThread->TailDispatcher().AddDirectTask(
+  AbstractThread::DispatchDirectTask(
       NewRunnableMethod("HTMLMediaElement::FirstFrameLoaded", this,
                         &HTMLMediaElement::FirstFrameLoaded));
 }

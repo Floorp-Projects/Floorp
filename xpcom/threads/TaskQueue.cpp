@@ -95,7 +95,8 @@ nsresult TaskQueue::DispatchLocked(nsCOMPtr<nsIRunnable>& aRunnable,
 
   AbstractThread* currentThread;
   if (aReason != TailDispatch && (currentThread = GetCurrent()) &&
-      RequiresTailDispatch(currentThread)) {
+      RequiresTailDispatch(currentThread) &&
+      currentThread->IsTailDispatcherAvailable()) {
     MOZ_ASSERT(aFlags == NS_DISPATCH_NORMAL,
                "Tail dispatch doesn't support flags");
     return currentThread->TailDispatcher().AddTask(this, aRunnable.forget());
