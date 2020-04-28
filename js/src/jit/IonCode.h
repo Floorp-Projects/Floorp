@@ -384,7 +384,7 @@ struct alignas(8) IonScript final : public TrailingArray {
                         uint32_t frameSize, size_t snapshotsListSize,
                         size_t snapshotsRVATableSize, size_t recoversSize,
                         size_t bailoutEntries, size_t constants,
-                        size_t safepointIndexEntries, size_t osiIndexEntries,
+                        size_t safepointIndices, size_t osiIndices,
                         size_t icEntries, size_t runtimeSize,
                         size_t safepointsSize,
                         OptimizationLevel optimizationLevel);
@@ -504,10 +504,10 @@ struct alignas(8) IonScript final : public TrailingArray {
   void copyRecovers(const RecoverWriter* writer);
   void copyBailoutTable(const SnapshotOffset* table);
   void copyConstants(const Value* vp);
-  void copySafepointIndices(const CodegenSafepointIndex* firstSafepointIndex);
-  void copyOsiIndices(const OsiIndex* firstOsiIndex);
+  void copySafepointIndices(const CodegenSafepointIndex* si);
+  void copyOsiIndices(const OsiIndex* oi);
   void copyRuntimeData(const uint8_t* data);
-  void copyICEntries(const uint32_t* caches);
+  void copyICEntries(const uint32_t* icEntries);
   void copySafepoints(const SafepointWriter* writer);
 
   bool invalidated() const { return invalidationCount_ != 0; }
