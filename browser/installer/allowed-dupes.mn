@@ -74,6 +74,8 @@ browser/chrome/browser/search-extensions/amazondotcn/favicon.ico
 browser/chrome/browser/search-extensions/amazondotcom/favicon.ico
 browser/chrome/browser/search-extensions/mercadolibre/favicon.ico
 browser/chrome/browser/search-extensions/mercadolivre/favicon.ico
+browser/chrome/browser/search-extensions/qwant/favicon.ico
+browser/chrome/browser/search-extensions/qwantjr/favicon.ico
 
 # Bug 1550165 - We want to support both Norwegian languages codes (nb and nn) for App Store and Play Store icons
 browser/chrome/browser/content/browser/aboutlogins/third-party/app-store/app_nb.png
