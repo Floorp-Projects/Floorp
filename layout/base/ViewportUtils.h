@@ -34,7 +34,8 @@ class ViewportUtils {
        up to the root, using values populated in
        APZCCallbackHelper::UpdateCallbackTransform. See that method's
        documentation for additional details. */
-  static CSSToCSSMatrix4x4 GetVisualToLayoutTransform(
+  template <typename Units = CSSPixel>
+  static gfx::Matrix4x4Typed<Units, Units> GetVisualToLayoutTransform(
       layers::ScrollableLayerGuid::ViewID aScrollId);
 
   /* The functions below apply GetVisualToLayoutTransform() or its inverse
@@ -50,6 +51,18 @@ class ViewportUtils {
   static nsRect VisualToLayout(const nsRect& aRect, PresShell* aContext);
   static nsPoint LayoutToVisual(const nsPoint& aPt, PresShell* aContext);
 };
+
+// Forward declare explicit instantiations of GetVisualToLayoutTransform() for
+// CSSPixel and LayoutDevicePixel, the only two types it gets used with.
+// These declarations promise to callers in any translation unit that _some_
+// translation unit (in this case, ViewportUtils.cpp) will contain the
+// definitions of these instantiations. This allows us to keep the definition
+// out-of-line in the source.
+extern template CSSToCSSMatrix4x4 ViewportUtils::GetVisualToLayoutTransform<
+    CSSPixel>(layers::ScrollableLayerGuid::ViewID);
+extern template LayoutDeviceToLayoutDeviceMatrix4x4
+    ViewportUtils::GetVisualToLayoutTransform<LayoutDevicePixel>(
+        layers::ScrollableLayerGuid::ViewID);
 
 }  // namespace mozilla
 
