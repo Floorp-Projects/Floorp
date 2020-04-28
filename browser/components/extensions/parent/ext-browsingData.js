@@ -108,22 +108,25 @@ const clearIndexedDB = async function(options) {
           principal.schemeIs("https") ||
           principal.schemeIs("file")
         ) {
-          promises.push(
-            new Promise((resolve, reject) => {
-              let clearRequest = quotaManagerService.clearStoragesForPrincipal(
-                principal,
-                null,
-                "idb"
-              );
-              clearRequest.callback = () => {
-                if (clearRequest.resultCode == Cr.NS_OK) {
-                  resolve();
-                } else {
-                  reject({ message: "Clear indexedDB failed" });
-                }
-              };
-            })
-          );
+          let host = principal.URI.hostPort;
+          if (!options.hostnames || options.hostnames.includes(host)) {
+            promises.push(
+              new Promise((resolve, reject) => {
+                let clearRequest = quotaManagerService.clearStoragesForPrincipal(
+                  principal,
+                  null,
+                  "idb"
+                );
+                clearRequest.callback = () => {
+                  if (clearRequest.resultCode == Cr.NS_OK) {
+                    resolve();
+                  } else {
+                    reject({ message: "Clear indexedDB failed" });
+                  }
+                };
+              })
+            );
+          }
         }
       }
 
