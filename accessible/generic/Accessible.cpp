@@ -527,16 +527,8 @@ Accessible* Accessible::ChildAtPoint(int32_t aX, int32_t aY,
   nsPoint offset(presContext->DevPixelsToAppUnits(aX) - screenRect.X(),
                  presContext->DevPixelsToAppUnits(aY) - screenRect.Y());
 
-  // We need to take into account a non-1 resolution set on the presshell.
-  // This happens in mobile platforms with async pinch zooming.
-  offset = offset.RemoveResolution(presContext->PresShell()->GetResolution());
-
-  // We need to translate with the offset of the edge of the visual
-  // viewport from top edge of the layout viewport.
-  offset += presContext->PresShell()->GetVisualViewportOffset() -
-            presContext->PresShell()->GetLayoutViewportOffset();
-
-  nsIFrame* foundFrame = nsLayoutUtils::GetFrameForPoint(startFrame, offset);
+  nsIFrame* foundFrame = nsLayoutUtils::GetFrameForPoint(
+      RelativeTo{startFrame, ViewportType::Visual}, offset);
 
   nsIContent* content = nullptr;
   if (!foundFrame || !(content = foundFrame->GetContent()))

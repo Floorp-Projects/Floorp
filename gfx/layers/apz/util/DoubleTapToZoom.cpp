@@ -27,13 +27,12 @@ namespace {
 using FrameForPointOption = nsLayoutUtils::FrameForPointOption;
 
 // Returns the DOM element found at |aPoint|, interpreted as being relative to
-// the root frame of |aPresShell|. If the point is inside a subdocument, returns
-// an element inside the subdocument, rather than the subdocument element
-// (and does so recursively).
-// The implementation was adapted from DocumentOrShadowRoot::ElementFromPoint(),
-// with the notable exception that we don't pass nsLayoutUtils::IGNORE_CROSS_DOC
-// to GetFrameForPoint(), so as to get the behaviour described above in the
-// presence of subdocuments.
+// the root frame of |aPresShell| in visual coordinates. If the point is inside
+// a subdocument, returns an element inside the subdocument, rather than the
+// subdocument element (and does so recursively). The implementation was adapted
+// from DocumentOrShadowRoot::ElementFromPoint(), with the notable exception
+// that we don't pass nsLayoutUtils::IGNORE_CROSS_DOC to GetFrameForPoint(), so
+// as to get the behaviour described above in the presence of subdocuments.
 static already_AddRefed<dom::Element> ElementFromPoint(
     const RefPtr<PresShell>& aPresShell, const CSSPoint& aPoint) {
   nsIFrame* rootFrame = aPresShell->GetRootFrame();
@@ -41,7 +40,7 @@ static already_AddRefed<dom::Element> ElementFromPoint(
     return nullptr;
   }
   nsIFrame* frame = nsLayoutUtils::GetFrameForPoint(
-      rootFrame, CSSPoint::ToAppUnits(aPoint),
+      RelativeTo{rootFrame, ViewportType::Visual}, CSSPoint::ToAppUnits(aPoint),
       {FrameForPointOption::IgnorePaintSuppression});
   while (frame && (!frame->GetContent() ||
                    frame->GetContent()->IsInAnonymousSubtree())) {

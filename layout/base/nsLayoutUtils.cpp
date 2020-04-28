@@ -3172,23 +3172,24 @@ struct AutoNestedPaintCount {
 #endif
 
 nsIFrame* nsLayoutUtils::GetFrameForPoint(
-    const nsIFrame* aFrame, nsPoint aPt,
+    RelativeTo aRelativeTo, nsPoint aPt,
     EnumSet<FrameForPointOption> aOptions) {
   AUTO_PROFILER_LABEL("nsLayoutUtils::GetFrameForPoint", LAYOUT);
 
   nsresult rv;
   AutoTArray<nsIFrame*, 8> outFrames;
-  rv = GetFramesForArea(aFrame, nsRect(aPt, nsSize(1, 1)), outFrames, aOptions);
+  rv = GetFramesForArea(aRelativeTo, nsRect(aPt, nsSize(1, 1)), outFrames,
+                        aOptions);
   NS_ENSURE_SUCCESS(rv, nullptr);
   return outFrames.Length() ? outFrames.ElementAt(0) : nullptr;
 }
 
 nsresult nsLayoutUtils::GetFramesForArea(
-    const nsIFrame* aFrame, const nsRect& aRect,
+    RelativeTo aRelativeTo, const nsRect& aRect,
     nsTArray<nsIFrame*>& aOutFrames, EnumSet<FrameForPointOption> aOptions) {
   AUTO_PROFILER_LABEL("nsLayoutUtils::GetFramesForArea", LAYOUT);
 
-  nsIFrame* frame = const_cast<nsIFrame*>(aFrame);
+  nsIFrame* frame = const_cast<nsIFrame*>(aRelativeTo.mFrame);
 
   nsDisplayListBuilder builder(frame, nsDisplayListBuilderMode::EventDelivery,
                                false);
@@ -3199,12 +3200,12 @@ nsresult nsLayoutUtils::GetFramesForArea(
     builder.IgnorePaintSuppression();
   }
   if (aOptions.contains(FrameForPointOption::IgnoreRootScrollFrame)) {
-    nsIFrame* rootScrollFrame = aFrame->PresShell()->GetRootScrollFrame();
+    nsIFrame* rootScrollFrame = frame->PresShell()->GetRootScrollFrame();
     if (rootScrollFrame) {
       builder.SetIgnoreScrollFrame(rootScrollFrame);
     }
   }
-  if (aOptions.contains(FrameForPointOption::IsRelativeToLayoutViewport)) {
+  if (aRelativeTo.mViewportType == ViewportType::Layout) {
     builder.SetIsRelativeToLayoutViewport();
   }
   if (aOptions.contains(FrameForPointOption::IgnoreCrossDoc)) {
