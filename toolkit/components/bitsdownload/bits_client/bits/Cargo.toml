@@ -16,7 +16,7 @@ serde = { version = "1.0.80", optional = true }
 serde_derive = { version = "1.0.80", optional = true }
 
 [dependencies.winapi]
-version = "0.3.6"
+version = "0.3.7"
 features = ["basetsd",
             "bits",
             "bits2_5",
