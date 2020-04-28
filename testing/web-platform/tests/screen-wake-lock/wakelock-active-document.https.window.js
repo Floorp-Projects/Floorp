@@ -18,14 +18,14 @@ promise_test(async t => {
   // We first got to page1.html, grab a WakeLock object.
   const wakeLock1 = await getWakeLockObject(
     iframe,
-    "/wake-lock/resources/page1.html"
+    "/screen-wake-lock/resources/page1.html"
   );
   // Save the DOMException of page1.html before navigating away.
   const frameDOMException1 = iframe.contentWindow.DOMException;
   // We navigate the iframe again, putting wakeLock1's document into an inactive state.
   const wakeLock2 = await getWakeLockObject(
     iframe,
-    "/wake-lock/resources/page2.html"
+    "/screen-wake-lock/resources/page2.html"
   );
   // Now, wakeLock1's relevant global object's document is no longer active.
   // So, call .request(), and make sure it rejects appropriately.
@@ -47,7 +47,7 @@ promise_test(async t => {
   // Load the outer iframe (we don't care about the awaited request)
   await getWakeLockObject(
     outerIframe,
-    "/wake-lock/resources/page1.html"
+    "/screen-wake-lock/resources/page1.html"
   );
 
   // Now we create the inner iframe
@@ -59,7 +59,7 @@ promise_test(async t => {
   // load innerIframe, and get the WakeLock instance
   const wakeLock = await getWakeLockObject(
     innerIframe,
-    "/wake-lock/resources/page2.html"
+    "/screen-wake-lock/resources/page2.html"
   );
   // Save DOMException from innerIframe before navigating away.
   const innerIframeDOMException = innerIframe.contentWindow.DOMException;
@@ -68,7 +68,7 @@ promise_test(async t => {
   // Wait for the load event to fire.
   await new Promise(resolve => {
     outerIframe.addEventListener("load", resolve);
-    outerIframe.src = "/wake-lock/resources/page2.html";
+    outerIframe.src = "/screen-wake-lock/resources/page2.html";
   });
 
   // Now, request's relevant global object's document is still active
