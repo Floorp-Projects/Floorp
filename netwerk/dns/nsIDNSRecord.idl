@@ -32,6 +32,9 @@ interface nsIDNSRecord : nsISupports
      * the record was not fetched with the RESOLVE_CANONICAL_NAME flag.
      *
      * e.g., www.mozilla.org --> rheet.mozilla.org
+     *
+     * That the result, if IDN will be returned as punycode.
+     * e.g., élève.w3c-test.org --> xn--lve-6lad.w3c-test.org
      */
     readonly attribute ACString canonicalName;
 
