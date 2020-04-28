@@ -9,6 +9,7 @@
 #include <knownfolders.h>
 #include <winioctl.h>
 
+#include "GeckoProfiler.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "nsWindow.h"
@@ -736,8 +737,12 @@ void WinUtils::WaitForMessage(DWORD aTimeoutMs) {
     if (elapsed >= aTimeoutMs) {
       break;
     }
-    DWORD result = ::MsgWaitForMultipleObjectsEx(0, NULL, aTimeoutMs - elapsed,
-                                                 MOZ_QS_ALLEVENT, waitFlags);
+    DWORD result;
+    {
+      AUTO_PROFILER_THREAD_SLEEP;
+      result = ::MsgWaitForMultipleObjectsEx(0, NULL, aTimeoutMs - elapsed,
+                                             MOZ_QS_ALLEVENT, waitFlags);
+    }
     NS_WARNING_ASSERTION(result != WAIT_FAILED, "Wait failed");
     if (result == WAIT_TIMEOUT) {
       break;
