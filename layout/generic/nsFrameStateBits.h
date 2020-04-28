@@ -389,6 +389,14 @@ FRAME_STATE_BIT(GridContainer, 27, NS_STATE_GRID_HAS_ROW_SUBGRID_ITEM)
 // We've merged some OverflowList children since last reflow.
 FRAME_STATE_BIT(GridContainer, 28, NS_STATE_GRID_HAS_CHILD_NIFS)
 
+// True if the container has masonry layout in its inline axis.
+// (mutually exclusive with NS_STATE_GRID_IS_ROW_MASONRY)
+FRAME_STATE_BIT(GridContainer, 29, NS_STATE_GRID_IS_COL_MASONRY)
+
+// True if the container has masonry layout in its block axis.
+// (mutually exclusive with NS_STATE_GRID_IS_COL_MASONRY)
+FRAME_STATE_BIT(GridContainer, 30, NS_STATE_GRID_IS_ROW_MASONRY)
+
 // == Frame state bits that apply to SVG frames ===============================
 
 FRAME_STATE_GROUP_NAME(SVG)

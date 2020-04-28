@@ -1494,14 +1494,13 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
   if ((iStartIsAuto && iEndIsAuto) || (bStartIsAuto && bEndIsAuto)) {
     nsPlaceholderFrame* placeholderFrame = mFrame->GetPlaceholderFrame();
     MOZ_ASSERT(placeholderFrame, "no placeholder frame");
+    nsIFrame* placeholderParent = placeholderFrame->GetParent();
+    MOZ_ASSERT(placeholderParent, "shouldn't have unparented placeholders");
 
     if (placeholderFrame->HasAnyStateBits(
             PLACEHOLDER_STATICPOS_NEEDS_CSSALIGN)) {
-      DebugOnly<nsIFrame*> placeholderParent = placeholderFrame->GetParent();
-      MOZ_ASSERT(placeholderParent, "shouldn't have unparented placeholders");
       MOZ_ASSERT(placeholderParent->IsFlexOrGridContainer(),
                  "This flag should only be set on grid/flex children");
-
       // If the (as-yet unknown) static position will determine the inline
       // and/or block offsets, set flags to note those offsets aren't valid
       // until we can do CSS Box Alignment on the OOF frame.
@@ -1513,6 +1512,22 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
       hypotheticalPos.mWritingMode = cbwm;
       hypotheticalPos.mIStart = nscoord(0);
       hypotheticalPos.mBStart = nscoord(0);
+      if (placeholderParent->IsGridContainerFrame() &&
+          placeholderParent->HasAnyStateBits(NS_STATE_GRID_IS_COL_MASONRY |
+                                             NS_STATE_GRID_IS_ROW_MASONRY)) {
+        // Disable CSS alignment in Masonry layout since we don't have real grid
+        // areas in that axis.  We'll use the placeholder position instead as it
+        // was calculated by nsGridContainerFrame::MasonryLayout.
+        auto cbsz = aCBSize.GetPhysicalSize(cbwm);
+        LogicalPoint pos = placeholderFrame->GetLogicalPosition(cbwm, cbsz);
+        if (placeholderParent->HasAnyStateBits(NS_STATE_GRID_IS_COL_MASONRY)) {
+          mFlags.mIOffsetsNeedCSSAlign = false;
+          hypotheticalPos.mIStart = pos.I(cbwm);
+        } else {
+          mFlags.mBOffsetsNeedCSSAlign = false;
+          hypotheticalPos.mBStart = pos.B(cbwm);
+        }
+      }
     } else {
       // XXXmats all this is broken for orthogonal writing-modes: bug 1521988.
       CalculateHypotheticalPosition(aPresContext, placeholderFrame,

@@ -6170,6 +6170,7 @@ LogicalSize nsFrame::ComputeSize(gfxContext* aRenderingContext, WritingMode aWM,
        // in mainAxisCoord. So we proceed w/o touching mainAxisCoord.
   }
 
+  const bool isOrthogonal = aWM.IsOrthogonalTo(alignCB->GetWritingMode());
   // Compute inline-axis size
   if (!inlineStyleCoord->IsAuto()) {
     result.ISize(aWM) = ComputeISizeValue(
@@ -6180,11 +6181,12 @@ LogicalSize nsFrame::ComputeSize(gfxContext* aRenderingContext, WritingMode aWM,
     // 'normal' and clamp it to the CB if requested:
     bool stretch = false;
     if (!(aFlags & nsIFrame::eShrinkWrap) &&
-        !StyleMargin()->HasInlineAxisAuto(aWM)) {
+        !StyleMargin()->HasInlineAxisAuto(aWM) &&
+        !alignCB->IsMasonry(isOrthogonal ? eLogicalAxisBlock
+                                         : eLogicalAxisInline)) {
       auto inlineAxisAlignment =
-          aWM.IsOrthogonalTo(alignCB->GetWritingMode())
-              ? StylePosition()->UsedAlignSelf(alignCB->Style())._0
-              : StylePosition()->UsedJustifySelf(alignCB->Style())._0;
+          isOrthogonal ? StylePosition()->UsedAlignSelf(alignCB->Style())._0
+                       : StylePosition()->UsedJustifySelf(alignCB->Style())._0;
       stretch = inlineAxisAlignment == StyleAlignFlags::NORMAL ||
                 inlineAxisAlignment == StyleAlignFlags::STRETCH;
     }
@@ -6255,7 +6257,9 @@ LogicalSize nsFrame::ComputeSize(gfxContext* aRenderingContext, WritingMode aWM,
           aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
           blockStyleCoord->AsLengthPercentage());
     } else if (MOZ_UNLIKELY(isGridItem) && blockStyleCoord->IsAuto() &&
-               !IS_TRUE_OVERFLOW_CONTAINER(this)) {
+               !IS_TRUE_OVERFLOW_CONTAINER(this) &&
+               !alignCB->IsMasonry(isOrthogonal ? eLogicalAxisInline
+                                                : eLogicalAxisBlock)) {
       auto cbSize = aCBSize.BSize(aWM);
       if (cbSize != NS_UNCONSTRAINEDSIZE) {
         // 'auto' block-size for grid-level box - fill the CB for 'stretch' /
@@ -6263,9 +6267,9 @@ LogicalSize nsFrame::ComputeSize(gfxContext* aRenderingContext, WritingMode aWM,
         bool stretch = false;
         if (!StyleMargin()->HasBlockAxisAuto(aWM)) {
           auto blockAxisAlignment =
-              !aWM.IsOrthogonalTo(alignCB->GetWritingMode())
-                  ? StylePosition()->UsedAlignSelf(alignCB->Style())._0
-                  : StylePosition()->UsedJustifySelf(alignCB->Style())._0;
+              isOrthogonal
+                  ? StylePosition()->UsedJustifySelf(alignCB->Style())._0
+                  : StylePosition()->UsedAlignSelf(alignCB->Style())._0;
           stretch = blockAxisAlignment == StyleAlignFlags::NORMAL ||
                     blockAxisAlignment == StyleAlignFlags::STRETCH;
         }
@@ -6460,6 +6464,7 @@ LogicalSize nsFrame::ComputeSizeWithIntrinsicDimensions(
   Stretch stretchI = eNoStretch;  // stretch behavior in the inline axis
   Stretch stretchB = eNoStretch;  // stretch behavior in the block axis
 
+  const bool isOrthogonal = aWM.IsOrthogonalTo(parentFrame->GetWritingMode());
   const bool isVertical = aWM.IsVertical();
   const auto& isizeCoord =
       isVertical ? aIntrinsicSize.height : aIntrinsicSize.width;
@@ -6475,16 +6480,17 @@ LogicalSize nsFrame::ComputeSizeWithIntrinsicDimensions(
     iSize = ComputeISizeValue(
         aRenderingContext, aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM),
         boxSizingToMarginEdgeISize, *inlineStyleCoord, aFlags);
-  } else if (MOZ_UNLIKELY(isGridItem)) {
+  } else if (MOZ_UNLIKELY(isGridItem) &&
+             !parentFrame->IsMasonry(isOrthogonal ? eLogicalAxisBlock
+                                                  : eLogicalAxisInline)) {
     MOZ_ASSERT(!IS_TRUE_OVERFLOW_CONTAINER(this));
     // 'auto' inline-size for grid-level box - apply 'stretch' as needed:
     auto cbSize = aCBSize.ISize(aWM);
     if (cbSize != NS_UNCONSTRAINEDSIZE) {
       if (!StyleMargin()->HasInlineAxisAuto(aWM)) {
         auto inlineAxisAlignment =
-            aWM.IsOrthogonalTo(GetParent()->GetWritingMode())
-                ? stylePos->UsedAlignSelf(GetParent()->Style())._0
-                : stylePos->UsedJustifySelf(GetParent()->Style())._0;
+            isOrthogonal ? stylePos->UsedAlignSelf(GetParent()->Style())._0
+                         : stylePos->UsedJustifySelf(GetParent()->Style())._0;
         // Note: 'normal' means 'start' for elements with an intrinsic size
         // or ratio in the relevant dimension, otherwise 'stretch'.
         // https://drafts.csswg.org/css-grid/#grid-item-sizing
@@ -6542,16 +6548,17 @@ LogicalSize nsFrame::ComputeSizeWithIntrinsicDimensions(
     bSize = nsLayoutUtils::ComputeBSizeValue(
         aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
         blockStyleCoord->AsLengthPercentage());
-  } else if (MOZ_UNLIKELY(isGridItem)) {
+  } else if (MOZ_UNLIKELY(isGridItem) &&
+             !parentFrame->IsMasonry(isOrthogonal ? eLogicalAxisInline
+                                                  : eLogicalAxisBlock)) {
     MOZ_ASSERT(!IS_TRUE_OVERFLOW_CONTAINER(this));
     // 'auto' block-size for grid-level box - apply 'stretch' as needed:
     auto cbSize = aCBSize.BSize(aWM);
     if (cbSize != NS_UNCONSTRAINEDSIZE) {
       if (!StyleMargin()->HasBlockAxisAuto(aWM)) {
         auto blockAxisAlignment =
-            !aWM.IsOrthogonalTo(GetParent()->GetWritingMode())
-                ? stylePos->UsedAlignSelf(GetParent()->Style())._0
-                : stylePos->UsedJustifySelf(GetParent()->Style())._0;
+            !isOrthogonal ? stylePos->UsedAlignSelf(GetParent()->Style())._0
+                          : stylePos->UsedJustifySelf(GetParent()->Style())._0;
         // Note: 'normal' means 'start' for elements with an intrinsic size
         // or ratio in the relevant dimension, otherwise 'stretch'.
         // https://drafts.csswg.org/css-grid/#grid-item-sizing
