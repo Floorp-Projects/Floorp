@@ -53,19 +53,6 @@ TEST(MediaController, ActiveAndDeactiveController)
   ASSERT_TRUE(service->GetActiveControllersNum() == 0);
 }
 
-TEST(MediaController, AudibleChanged)
-{
-  RefPtr<MediaController> controller = new MediaController(CONTROLLER_ID);
-  controller->Play();
-  ASSERT_TRUE(!controller->IsAudible());
-
-  controller->NotifyMediaAudibleChanged(MediaAudibleState::eAudible);
-  ASSERT_TRUE(controller->IsAudible());
-
-  controller->NotifyMediaAudibleChanged(MediaAudibleState::eInaudible);
-  ASSERT_TRUE(!controller->IsAudible());
-}
-
 class FakeControlledMedia final {
  public:
   explicit FakeControlledMedia(MediaController* aController)
@@ -82,6 +69,14 @@ class FakeControlledMedia final {
     mIsPlaying = aIsPlaying;
   }
 
+  void SetAudible(MediaAudibleState aState) {
+    if (mAudibleState == aState) {
+      return;
+    }
+    mController->NotifyMediaAudibleChanged(aState);
+    mAudibleState = aState;
+  }
+
   ~FakeControlledMedia() {
     if (mIsPlaying) {
       mController->NotifyMediaPlaybackChanged(MediaPlaybackState::ePaused);
@@ -91,8 +86,24 @@ class FakeControlledMedia final {
 
  private:
   bool mIsPlaying = false;
+  MediaAudibleState mAudibleState = MediaAudibleState::eInaudible;
   RefPtr<MediaController> mController;
 };
+
+TEST(MediaController, AudibleChanged)
+{
+  RefPtr<MediaController> controller = new MediaController(CONTROLLER_ID);
+
+  FakeControlledMedia fakeMedia(controller);
+  fakeMedia.SetPlaying(true);
+  ASSERT_TRUE(!controller->IsAudible());
+
+  fakeMedia.SetAudible(MediaAudibleState::eAudible);
+  ASSERT_TRUE(controller->IsAudible());
+
+  fakeMedia.SetAudible(MediaAudibleState::eInaudible);
+  ASSERT_TRUE(!controller->IsAudible());
+}
 
 TEST(MediaController, PlayingStateChangeViaControlledMedia)
 {
