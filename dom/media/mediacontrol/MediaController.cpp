@@ -44,14 +44,12 @@ void MediaController::Focus() {
 
 void MediaController::Play() {
   LOG("Play");
-  SetGuessedPlayState(MediaSessionPlaybackState::Playing);
   UpdateMediaControlKeysEventToContentMediaIfNeeded(
       MediaControlKeysEvent::ePlay);
 }
 
 void MediaController::Pause() {
   LOG("Pause");
-  SetGuessedPlayState(MediaSessionPlaybackState::Paused);
   UpdateMediaControlKeysEventToContentMediaIfNeeded(
       MediaControlKeysEvent::ePause);
 }
@@ -82,7 +80,6 @@ void MediaController::SeekForward() {
 
 void MediaController::Stop() {
   LOG("Stop");
-  SetGuessedPlayState(MediaSessionPlaybackState::None);
   UpdateMediaControlKeysEventToContentMediaIfNeeded(
       MediaControlKeysEvent::eStop);
 }
@@ -109,7 +106,6 @@ void MediaController::UpdateMediaControlKeysEventToContentMediaIfNeeded(
 
 void MediaController::Shutdown() {
   MOZ_ASSERT(!mShutdown, "Do not call shutdown twice!");
-  SetGuessedPlayState(MediaSessionPlaybackState::None);
   // The media controller would be removed from the service when we receive a
   // notification from the content process about all controlled media has been
   // stoppped. However, if controlled media is stopped after detaching
