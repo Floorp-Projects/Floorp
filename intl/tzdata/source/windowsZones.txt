@@ -466,7 +466,7 @@ windowsZones:table(nofallback){
         }
         "Pacific Standard Time"{
             001{"America/Los_Angeles"}
-            CA{"America/Vancouver America/Dawson America/Whitehorse"}
+            CA{"America/Vancouver"}
             US{"America/Los_Angeles"}
             ZZ{"PST8PDT"}
         }
@@ -674,7 +674,10 @@ windowsZones:table(nofallback){
         }
         "US Mountain Standard Time"{
             001{"America/Phoenix"}
-            CA{"America/Dawson_Creek America/Creston America/Fort_Nelson"}
+            CA{
+                "America/Whitehorse America/Creston  America/Dawson  America/Dawson_C"
+                "reek America/Fort_Nelson"
+            }
             MX{"America/Hermosillo"}
             US{"America/Phoenix"}
             ZZ{"Etc/GMT+7"}
