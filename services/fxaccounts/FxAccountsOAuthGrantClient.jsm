@@ -78,10 +78,11 @@ FxAccountsOAuthGrantClient.prototype = {
    *
    * @param {Object} assertion BrowserID assertion
    * @param {String} scope OAuth scope
+   * @param {Number} ttl token time to live
    * @return Promise
    *        Resolves: {Object} Object with access_token property
    */
-  getTokenFromAssertion(assertion, scope) {
+  getTokenFromAssertion(assertion, scope, ttl) {
     if (!assertion) {
       throw new Error("Missing 'assertion' parameter");
     }
@@ -93,6 +94,7 @@ FxAccountsOAuthGrantClient.prototype = {
       client_id: this.parameters.client_id,
       assertion,
       response_type: "token",
+      ttl,
     };
 
     return this._createRequest(AUTH_ENDPOINT, "POST", params);

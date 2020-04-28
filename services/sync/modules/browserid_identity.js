@@ -62,6 +62,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "services.sync.debug.ignoreCachedAuthCredentials"
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "USE_OAUTH_FOR_SYNC_TOKEN",
+  "identity.sync.useOAuthForSyncToken"
+);
+
 // FxAccountsCommon.js doesn't use a "namespace", so create one here.
 var fxAccountsCommon = {};
 ChromeUtils.import(
@@ -396,16 +402,22 @@ this.BrowserIDManager.prototype = {
     // Do the assertion/certificate/token dance, with a retry.
     let getToken = async keys => {
       this._log.info("Getting an assertion from", this._tokenServerUrl);
-      const audience = Services.io.newURI(this._tokenServerUrl).prePath;
-      const assertion = await fxa._internal.getAssertion(audience);
+      let token;
 
-      this._log.debug("Getting a token");
-      const headers = { "X-Client-State": keys.kXCS };
-      const token = await this._tokenServerClient.getTokenFromBrowserIDAssertion(
-        this._tokenServerUrl,
-        assertion,
-        headers
-      );
+      if (USE_OAUTH_FOR_SYNC_TOKEN) {
+        token = await this._fetchTokenUsingOAuth();
+      } else {
+        const audience = Services.io.newURI(this._tokenServerUrl).prePath;
+        const assertion = await fxa._internal.getAssertion(audience);
+        this._log.debug("Getting a token using an Assertion");
+        const headers = { "X-Client-State": keys.kXCS };
+        token = await this._tokenServerClient.getTokenFromBrowserIDAssertion(
+          this._tokenServerUrl,
+          assertion,
+          headers
+        );
+      }
+
       this._log.trace("Successfully got a token");
       return token;
     };
@@ -471,6 +483,32 @@ this.BrowserIDManager.prototype = {
       }
       throw err;
     }
+  },
+
+  /**
+   * Fetches an OAuth token using the OLD_SYNC scope and later exchanges it
+   * for a TokenServer token.
+   *
+   * @returns {Promise}
+   * @private
+   */
+  async _fetchTokenUsingOAuth() {
+    this._log.debug("Getting a token using OAuth");
+    const fxa = this._fxaService;
+    const clientId = fxAccountsCommon.FX_OAUTH_CLIENT_ID;
+    const scope = fxAccountsCommon.SCOPE_OLD_SYNC;
+    const ttl = fxAccountsCommon.OAUTH_TOKEN_FOR_SYNC_LIFETIME_SECONDS;
+    const oauthToken = await fxa.getOAuthToken({ scope, ttl });
+    const scopedKeys = await fxa.keys.getScopedKeys(scope, clientId);
+    const key = scopedKeys[scope];
+    const headers = {
+      "X-KeyId": key.kid,
+    };
+    return this._tokenServerClient.getTokenFromOAuthToken(
+      this._tokenServerUrl,
+      oauthToken,
+      headers
+    );
   },
 
   // Returns a promise that is resolved with a valid token for the current

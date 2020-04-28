@@ -105,12 +105,15 @@ function MockFxAccountsOAuthGrantClient(activeTokens) {
 
 MockFxAccountsOAuthGrantClient.prototype = {
   serverURL: { href: "http://localhost" },
-  getTokenFromAssertion(assertion, scope) {
-    let token = "token" + this.numTokenFetches;
+  getTokenFromAssertion(assertion, scope, ttl) {
+    let token = `token${this.numTokenFetches}`;
+    if (ttl) {
+      token += `-ttl-${ttl}`;
+    }
     this.numTokenFetches += 1;
     this.activeTokens.add(token);
     print("getTokenFromAssertion returning token", token);
-    return Promise.resolve({ access_token: token });
+    return Promise.resolve({ access_token: token, ttl });
   },
 };
 
@@ -250,4 +253,11 @@ add_task(async function testTokenRaces() {
   await fxa.removeCachedOAuthToken({ token: results[2] });
   equal(oauthClient.activeTokens.size, 0);
   ok(client.oauthDestroy.calledTwice);
+});
+
+add_task(async function testTokenTTL() {
+  // This tests the TTL option passed into the method
+  let fxa = await createMockFxA();
+  let token = await fxa.getOAuthToken({ scope: "test-ttl", ttl: 1000 });
+  equal(token, "token0-ttl-1000");
 });
