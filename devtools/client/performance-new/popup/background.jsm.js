@@ -13,12 +13,12 @@
 
 // The following are not lazily loaded as they are needed during initialization.
 
-/** @type {import("resource://gre/modules/Services.jsm")} */
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-/** @type {import("resource://gre/modules/AppConstants.jsm")} */
-const { AppConstants } = ChromeUtils.import(
+// For some reason TypeScript was giving me an error when de-structuring AppConstants. I
+// suspect a bug in TypeScript was at play.
+const AppConstants = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
-);
+).AppConstants;
 
 /**
  * @typedef {import("../@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
@@ -73,20 +73,17 @@ function requireLazy(callback) {
 }
 
 const lazyOS = requireLazy(() =>
-  /** @type {import("resource://gre/modules/osfile.jsm")} */
-  (ChromeUtils.import("resource://gre/modules/osfile.jsm"))
+  ChromeUtils.import("resource://gre/modules/osfile.jsm")
 );
 
 const lazyProfilerGetSymbols = requireLazy(() =>
-  /** @type {import("resource://gre/modules/ProfilerGetSymbols.jsm")} */
-  (ChromeUtils.import("resource://gre/modules/ProfilerGetSymbols.jsm"))
+  ChromeUtils.import("resource://gre/modules/ProfilerGetSymbols.jsm")
 );
 
 const lazyBrowserModule = requireLazy(() => {
   const { require } = ChromeUtils.import(
     "resource://devtools/shared/Loader.jsm"
   );
-  /** @type {import("devtools/client/performance-new/browser")} */
   const browserModule = require("devtools/client/performance-new/browser");
   return browserModule;
 });
@@ -96,7 +93,6 @@ const lazyPreferenceManagement = requireLazy(() => {
     "resource://devtools/shared/Loader.jsm"
   );
 
-  /** @type {import("devtools/client/performance-new/preference-management")} */
   const preferenceManagementModule = require("devtools/client/performance-new/preference-management");
   return preferenceManagementModule;
 });
@@ -106,7 +102,6 @@ const lazyRecordingUtils = requireLazy(() => {
     "resource://devtools/shared/Loader.jsm"
   );
 
-  /** @type {import("devtools/shared/performance-new/recording-utils")} */
   const recordingUtils = require("devtools/shared/performance-new/recording-utils");
   return recordingUtils;
 });
@@ -115,21 +110,18 @@ const lazyUtils = requireLazy(() => {
   const { require } = ChromeUtils.import(
     "resource://devtools/shared/Loader.jsm"
   );
-  /** @type {import("devtools/client/performance-new/utils")} */
   const recordingUtils = require("devtools/client/performance-new/utils");
   return recordingUtils;
 });
 
 const lazyProfilerMenuButton = requireLazy(() =>
-  /** @type {import("devtools/client/performance-new/popup/menu-button.jsm.js")} */
-  (ChromeUtils.import(
+  ChromeUtils.import(
     "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
-  ))
+  )
 );
 
 const lazyCustomizableUI = requireLazy(() =>
-  /** @type {import("resource:///modules/CustomizableUI.jsm")} */
-  (ChromeUtils.import("resource:///modules/CustomizableUI.jsm"))
+  ChromeUtils.import("resource:///modules/CustomizableUI.jsm")
 );
 
 /** @type {Presets} */
