@@ -501,12 +501,12 @@ class GitRepository(Repository):
     def get_outgoing_files(self, diff_filter='ADM', upstream='default'):
         assert all(f.lower() in self._valid_diff_filter for f in diff_filter)
 
-        if upstream == 'default':
-            upstream = self.base_ref
+        not_condition = '--remotes' if upstream == 'default' else upstream
 
-        compare = '{}..HEAD'.format(upstream)
-        files = self._run('log', '--name-only', '--diff-filter={}'.format(diff_filter.upper()),
-                          '--oneline', '--pretty=format:', compare).splitlines()
+        files = self._run(
+                    'log', '--name-only', '--diff-filter={}'.format(diff_filter.upper()),
+                    '--oneline', '--pretty=format:', 'HEAD', '--not', not_condition
+                ).splitlines()
         return [f for f in files if f]
 
     def add_remove_files(self, *paths):
