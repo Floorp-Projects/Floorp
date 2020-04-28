@@ -13,5 +13,6 @@ docker build --pull -t <tag> .
 docker push <tag>
 ```
 
-Then update `.taskcluster.yml` in the top-level directory to point to the new
-image you have uploaded.
+Then update the following Taskcluster configurations to use the new image:
+* `.taskcluster.yml` (the decision task)
+* `tools/ci/tc/tasks/test.yml` (all the other tasks)
