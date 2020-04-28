@@ -70,7 +70,6 @@ dictionary RTCReceivedRtpStreamStats : RTCRtpStreamStats {
 };
 
 dictionary RTCInboundRtpStreamStats : RTCReceivedRtpStreamStats {
- required DOMString   trackId;
  required DOMString   receiverId;
  DOMString            remoteId;
  unsigned long        framesDecoded;
@@ -131,7 +130,6 @@ dictionary RTCSentRtpStreamStats : RTCRtpStreamStats {
 
 dictionary RTCOutboundRtpStreamStats : RTCSentRtpStreamStats {
              unsigned long        rtxSsrc;
-             DOMString            trackId;
              DOMString            mediaSourceId;
              DOMString            senderId;
              DOMString            remoteId;
