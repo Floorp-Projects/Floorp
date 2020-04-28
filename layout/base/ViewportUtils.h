@@ -8,7 +8,11 @@
 #include "Units.h"
 #include "mozilla/layers/ScrollableLayerGuid.h"
 
+class nsIFrame;
+
 namespace mozilla {
+
+class PresShell;
 
 class ViewportUtils {
  public:
@@ -32,6 +36,19 @@ class ViewportUtils {
        documentation for additional details. */
   static CSSToCSSMatrix4x4 GetVisualToLayoutTransform(
       layers::ScrollableLayerGuid::ViewID aScrollId);
+
+  /* The functions below apply GetVisualToLayoutTransform() or its inverse
+   * to various quantities.
+   *
+   * To determine the appropriate scroll id to pass into
+   * GetVisualToLayoutTransform(), these functions prefer to use the one
+   * from InputAPZContext::GetTargetLayerGuid() if one is available.
+   * If one is not available, they use the scroll id of the root scroll
+   * frame of the pres shell passed in as |aContext| as a fallback.
+   */
+  static nsPoint VisualToLayout(const nsPoint& aPt, PresShell* aContext);
+  static nsRect VisualToLayout(const nsRect& aRect, PresShell* aContext);
+  static nsPoint LayoutToVisual(const nsPoint& aPt, PresShell* aContext);
 };
 
 }  // namespace mozilla
