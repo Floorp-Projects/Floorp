@@ -7984,9 +7984,7 @@ function BrowserOpenAddonsMgr(aView) {
 
     // This must be a new load, else the ping/pong would have
     // found the window above.
-    let whereToOpen =
-      window.gBrowser && gBrowser.selectedTab.isEmpty ? "current" : "tab";
-    openTrustedLinkIn("about:addons", whereToOpen);
+    switchToTabHavingURI("about:addons", true);
 
     Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
       Services.obs.removeObserver(observer, aTopic);
