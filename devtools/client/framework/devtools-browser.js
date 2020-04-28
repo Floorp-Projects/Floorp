@@ -57,6 +57,12 @@ loader.lazyRequireGetter(
   "ResponsiveUIManager",
   "devtools/client/responsive/manager"
 );
+loader.lazyRequireGetter(
+  this,
+  "toggleEnableDevToolsPopup",
+  "devtools/client/framework/enable-devtools-popup",
+  true
+);
 loader.lazyImporter(
   this,
   "BrowserToolboxLauncher",
@@ -314,7 +320,9 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
           false
         );
 
-        if (!isF12Disabled) {
+        if (isF12Disabled) {
+          toggleEnableDevToolsPopup(window.document);
+        } else {
           await gDevToolsBrowser.toggleToolboxCommand(
             window.gBrowser,
             startTime
