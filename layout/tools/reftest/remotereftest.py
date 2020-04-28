@@ -40,9 +40,21 @@ class RemoteReftestResolver(ReftestResolver):
         return os.path.normpath(rv)
 
     def manifestURL(self, options, path):
-        # Dynamically build the reftest URL if possible, beware that args[0] should exist 'inside'
-        # webroot. It's possible for this url to have a leading "..", but reftest.js will fix that
-        relPath = os.path.relpath(path, SCRIPT_DIRECTORY)
+        # Dynamically build the reftest URL if possible, beware that
+        # args[0] should exist 'inside' webroot. It's possible for
+        # this url to have a leading "..", but reftest.js will fix
+        # that.  Use the httpdPath to determine if we are running in
+        # production or locally.  If we are running the jsreftests
+        # locally, strip text up to jsreftest.  We want the docroot of
+        # the server to include a link jsreftest that points to the
+        # test-stage location of the test files. The desktop oriented
+        # setup has already created a link for tests which points
+        # directly into the source tree. For the remote tests we need
+        # a separate symbolic link to point to the staged test files.
+        if 'jsreftest' not in path or os.environ.get('MOZ_AUTOMATION'):
+            relPath = os.path.relpath(path, SCRIPT_DIRECTORY)
+        else:
+            relPath = 'jsreftest/' + path.split('jsreftest/')[-1]
         return "http://%s:%s/%s" % (options.remoteWebServer, options.httpPort, relPath)
 
 
@@ -305,7 +317,10 @@ class RemoteReftest(RefTest):
 
         try:
             self.device.push(profileDir, options.remoteProfile)
-            self.device.chmod(options.remoteProfile, recursive=True, root=True)
+            # make sure the parent directories of the profile which
+            # may have been created by the push, also have their
+            # permissions set to allow access.
+            self.device.chmod(options.remoteTestRoot, recursive=True, root=True)
         except Exception:
             print("Automation Error: Failed to copy profiledir to device")
             raise
@@ -386,8 +401,19 @@ def run_test_harness(parser, options):
     parser.validate_remote(options)
     parser.validate(options, reftest)
 
-    # Hack in a symbolic link for jsreftest
-    os.system("ln -s ../jsreftest " + str(os.path.join(SCRIPT_DIRECTORY, "jsreftest")))
+    # Hack in a symbolic link for jsreftest in the SCRIPT_DIRECTORY
+    # which is the document root for the reftest web server. This
+    # allows a separate redirection for the jsreftests which must
+    # run through the web server using the staged tests files and
+    # the desktop which will use the tests symbolic link to find
+    # the JavaScript tests.
+    jsreftest_target = str(os.path.join(SCRIPT_DIRECTORY, "jsreftest"))
+    if os.environ.get('MOZ_AUTOMATION'):
+        os.system("ln -s ../jsreftest " + jsreftest_target)
+    else:
+        jsreftest_source = os.path.join(build_obj.topobjdir, "dist", "test-stage", "jsreftest")
+        if not os.path.islink(jsreftest_target):
+            os.symlink(jsreftest_source, jsreftest_target)
 
     # Despite our efforts to clean up servers started by this script, in practice
     # we still see infrequent cases where a process is orphaned and interferes

@@ -49,7 +49,9 @@ class ReftestRunner(MozbuildObject):
         sys.path.insert(0, self.reftest_dir)
 
         tests = os.path.join(self.reftest_dir, 'tests')
-        if not os.path.isdir(tests):
+        if not os.path.isdir(tests) and not os.path.islink(tests):
+            # This symbolic link is used by the desktop tests to
+            # locate the actual test files when running using file:.
             os.symlink(self.topsrcdir, tests)
 
     def run_desktop_test(self, **kwargs):
@@ -101,7 +103,8 @@ class ReftestRunner(MozbuildObject):
         default_manifest = {
             "reftest": (self.topsrcdir, "layout", "reftests", "reftest.list"),
             "crashtest": (self.topsrcdir, "testing", "crashtest", "crashtests.list"),
-            "jstestbrowser": ("jsreftest", "tests", "jstests.list")
+            "jstestbrowser": (self.topobjdir, "dist", "test-stage", "jsreftest", "tests",
+                              "js", "src", "tests", "jstests.list")
         }
 
         if not args.tests:
@@ -145,12 +148,13 @@ class ReftestRunner(MozbuildObject):
         if args.suite == "jstestbrowser":
             staged_js_dir = os.path.join(self.topobjdir, "dist", "test-stage", "jsreftest")
             tests = os.path.join(self.reftest_dir, 'jsreftest')
-            if not os.path.isdir(tests):
+            if not os.path.isdir(tests) and not os.path.islink(tests):
                 os.symlink(staged_js_dir, tests)
-            args.extraProfileFiles.append(os.path.join(staged_js_dir, "tests", "user.js"))
+            args.extraProfileFiles.append(os.path.join(staged_js_dir, "tests", "js", "src",
+                                                       "tests", "user.js"))
         else:
             tests = os.path.join(self.reftest_dir, "tests")
-            if not os.path.isdir(tests):
+            if not os.path.isdir(tests) and not os.path.islink(tests):
                 os.symlink(self.topsrcdir, tests)
             for i, path in enumerate(args.tests):
                 # Non-absolute paths are relative to the packaged directory, which
