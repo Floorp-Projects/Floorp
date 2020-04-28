@@ -3,16 +3,6 @@ bits\_client
 
 Interfaces for BITS.
 
-building
---------
-
-This relies on a few things that are not yet in a released `winapi`, you can use the following patch in `Cargo.toml`:
-
-```toml
-[patch.crates-io]
-winapi = { git = "https://github.com/froydnj/winapi-rs", branch = "aarch64" }
-```
-
 bits\_client lib
 ---------------
 
