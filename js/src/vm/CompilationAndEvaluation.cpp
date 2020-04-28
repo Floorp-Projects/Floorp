@@ -262,7 +262,7 @@ class FunctionCompiler {
   }
 
   JSFunction* finish(HandleObjectVector envChain,
-                     const ReadOnlyCompileOptions& options) {
+                     const ReadOnlyCompileOptions& optionsArg) {
     if (!funStr_.append(FunctionConstructorFinalBrace)) {
       return nullptr;
     }
@@ -301,6 +301,10 @@ class FunctionCompiler {
     // non-syntactic scope.
     MOZ_ASSERT_IF(!IsGlobalLexicalEnvironment(enclosingEnv),
                   enclosingScope->hasOnChain(ScopeKind::NonSyntactic));
+
+    CompileOptions options(cx_, optionsArg);
+    options.setNonSyntacticScope(
+        enclosingScope->hasOnChain(ScopeKind::NonSyntactic));
 
     if (!js::frontend::CompileStandaloneFunction(
             cx_, &fun, options, newSrcBuf, mozilla::Some(parameterListEnd_),
@@ -474,6 +478,8 @@ static bool EvaluateSourceBuffer(JSContext* cx, ScopeKind scopeKind,
   cx->check(env);
   MOZ_ASSERT_IF(!IsGlobalLexicalEnvironment(env),
                 scopeKind == ScopeKind::NonSyntactic);
+  MOZ_ASSERT_IF(scopeKind == ScopeKind::NonSyntactic,
+                options.nonSyntacticScope);
 
   options.setIsRunOnce(true);
 
