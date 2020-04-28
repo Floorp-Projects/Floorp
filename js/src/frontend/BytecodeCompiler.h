@@ -201,17 +201,6 @@ bool IsIdentifierNameOrPrivateName(const char16_t* chars, size_t length);
 /* True if str is a keyword. Defined in TokenStream.cpp. */
 bool IsKeyword(JSLinearString* str);
 
-/* Trace all GC things reachable from parser. Defined in Parser.cpp. */
-void TraceParser(JSTracer* trc, JS::AutoGCRooter* parser);
-
-#if defined(JS_BUILD_BINAST)
-
-/* Trace all GC things reachable from binjs parser. Defined in
- * BinASTParserPerTokenizer.cpp. */
-void TraceBinASTParser(JSTracer* trc, JS::AutoGCRooter* parser);
-
-#endif  // defined(JS_BUILD_BINAST)
-
 class MOZ_STACK_CLASS AutoFrontendTraceLog {
 #ifdef JS_TRACE_LOGGING
   TraceLoggerThread* logger_;

@@ -244,7 +244,7 @@ class AutoAwaitIsKeyword;
 template <class ParseHandler, typename Unit>
 class AutoInParametersOfAsyncFunction;
 
-class MOZ_STACK_CLASS ParserSharedBase : private JS::AutoGCRooter {
+class MOZ_STACK_CLASS ParserSharedBase : public JS::AutoGCRooter {
  public:
   enum class Kind { Parser, BinASTParser };
 
@@ -270,16 +270,6 @@ class MOZ_STACK_CLASS ParserSharedBase : private JS::AutoGCRooter {
   UsedNameTracker& usedNames_;
 
   RootedScriptSourceObject sourceObject_;
-
- private:
-  // This is needed to cast a parser to JS::AutoGCRooter.
-  friend void js::frontend::TraceParser(JSTracer* trc,
-                                        JS::AutoGCRooter* parser);
-
-#if defined(JS_BUILD_BINAST)
-  friend void js::frontend::TraceBinASTParser(JSTracer* trc,
-                                              JS::AutoGCRooter* parser);
-#endif  // JS_BUILD_BINAST
 
  public:
   CompilationInfo& getCompilationInfo() { return compilationInfo_; }

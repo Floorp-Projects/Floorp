@@ -346,10 +346,6 @@ void ParserBase::trace(JSTracer* trc) {
   FunctionBox::TraceList(trc, traceListHead_);
 }
 
-void TraceParser(JSTracer* trc, AutoGCRooter* parser) {
-  static_cast<ParserBase*>(parser)->trace(trc);
-}
-
 bool ParserBase::setSourceMapInfo() {
   // Not all clients initialize ss. Can't update info to an object that isn't
   // there.

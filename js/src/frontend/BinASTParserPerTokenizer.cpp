@@ -808,10 +808,6 @@ bool BinASTParserPerTokenizer<Tok>::computeErrorMetadata(
   return true;
 }
 
-void TraceBinASTParser(JSTracer* trc, JS::AutoGCRooter* parser) {
-  static_cast<BinASTParserBase*>(parser)->trace(trc);
-}
-
 template <typename Tok>
 void BinASTParserPerTokenizer<Tok>::doTrace(JSTracer* trc) {
   if (tokenizer_) {

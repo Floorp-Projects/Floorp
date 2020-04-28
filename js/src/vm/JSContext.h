@@ -1099,7 +1099,7 @@ namespace js {
 /************************************************************************/
 
 /* AutoArrayRooter roots an external array of Values. */
-class MOZ_RAII AutoArrayRooter : private JS::AutoGCRooter {
+class MOZ_RAII AutoArrayRooter : public JS::AutoGCRooter {
  public:
   AutoArrayRooter(JSContext* cx, size_t len,
                   Value* vec MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
@@ -1113,7 +1113,7 @@ class MOZ_RAII AutoArrayRooter : private JS::AutoGCRooter {
 
   size_t length() { return length_; }
 
-  friend void JS::AutoGCRooter::trace(JSTracer* trc);
+  void trace(JSTracer* trc);
 
  private:
   Value* array_;
