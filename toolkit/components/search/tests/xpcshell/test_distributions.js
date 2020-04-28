@@ -230,6 +230,19 @@ tests.push({
 });
 
 tests.push({
+  locale: "de",
+  distribution: "mail.com",
+  test: engines =>
+    hasParams(engines, "mail.com search", "searchbar", "enc=UTF-8"),
+});
+
+tests.push({
+  locale: "de",
+  distribution: "webde",
+  test: engines => hasParams(engines, "WEB.DE Suche", "searchbar", "enc=UTF-8"),
+});
+
+tests.push({
   locale: "ru",
   distribution: "yandex-drp",
   test: engines => hasParams(engines, "Яндекс", "searchbar", "clid=2039342"),
