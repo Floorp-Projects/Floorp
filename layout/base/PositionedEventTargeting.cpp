@@ -244,10 +244,12 @@ static nsIContent* GetClickableAncestor(
 
 static nscoord AppUnitsFromMM(RelativeTo aFrame, uint32_t aMM) {
   nsPresContext* pc = aFrame.mFrame->PresContext();
-  PresShell* presShell = pc->PresShell();
   float result = float(aMM) * (pc->DeviceContext()->AppUnitsPerPhysicalInch() /
                                MM_PER_INCH_FLOAT);
-  result = result / presShell->GetResolution();
+  if (aFrame.mViewportType == ViewportType::Layout) {
+    PresShell* presShell = pc->PresShell();
+    result = result / presShell->GetResolution();
+  }
   return NSToCoordRound(result);
 }
 
