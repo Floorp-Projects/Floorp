@@ -110,5 +110,8 @@ pub mod task;
 
 pub use crate::log::LogSink;
 pub use error::{Error, Result};
-pub use golden_gate_traits::{BridgedEngine, Interrupted, Interruptee};
+// Re-export items from `interrupt-support` and `sync15-traits`, so that
+// consumers of `golden_gate` don't have to depend on them.
+pub use interrupt_support::{Interrupted, Interruptee};
+pub use sync15_traits::BridgedEngine;
 pub use task::{ApplyTask, FerryTask};

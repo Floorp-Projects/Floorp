@@ -55,6 +55,7 @@ unic-langid-ffi = { path = "../../../../intl/locale/rust/unic-langid-ffi" }
 fluent-langneg = { version = "0.12.1", features = ["cldr"] }
 fluent-langneg-ffi = { path = "../../../../intl/locale/rust/fluent-langneg-ffi" }
 webext-storage = { git = "https://github.com/mozilla/application-services", rev = "c17198fa5a88295f2cca722586c539280e10201c", optional = true }
+golden_gate = { path = "../../../../services/sync/golden_gate", optional = true }
 
 # Note: `modern_sqlite` means rusqlite's bindings file be for a sqlite with
 # version less than or equal to what we link to. This isn't a problem because we
@@ -64,8 +65,6 @@ rusqlite = { version = "0.23.1", features = ["modern_sqlite", "in_gecko"] }
 
 fluent = { version = "0.11" , features = ["fluent-pseudo"] }
 fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
-
-sync15-traits = { git = "https://github.com/mozilla/application-services", rev = "c17198fa5a88295f2cca722586c539280e10201c" }
 
 [build-dependencies]
 rustc_version = "0.2"
@@ -99,6 +98,7 @@ webgpu = ["wgpu_bindings"]
 remote_agent = ["remote"]
 glean = ["fog"]
 new_webext_storage = ["webext_storage_bridge"]
+services_sync = ["golden_gate"]
 
 [lib]
 path = "lib.rs"
