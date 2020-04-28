@@ -2443,15 +2443,27 @@ SI T mix(T x, T y, vec4_scalar a) {
            mix(x.w, y.w, a.w)};
 }
 
+// Scale texture coords for quantization, subtract offset for filtering,
+// and round to nearest 1/scale increment
+template <typename T>
+SI T linearQuantize(T P, float scale) {
+  return P * scale + (0.5f - 0.5f * scale);
+}
+
+// Helper version that also scales normalized texture coords for sampler
+template <typename T, typename S>
+SI T linearQuantize(T P, float scale, S sampler) {
+  P.x *= sampler->width;
+  P.y *= sampler->height;
+  return linearQuantize(P, scale);
+}
+
 template <typename S>
 vec4 textureLinearRGBA8(S sampler, vec2 P, I32 zoffset = 0) {
   assert(sampler->format == TextureFormat::RGBA8);
 
 #if USE_SSE2
-  P.x *= sampler->width * 256.0f;
-  P.y *= sampler->height * 256.0f;
-  P -= 0.5f * 256.0f;
-  ivec2 i(P);
+  ivec2 i(linearQuantize(P, 256, sampler));
   ivec2 frac = i & (I32)0xFF;
   i >>= 8;
 
@@ -2515,10 +2527,7 @@ vec4 textureLinearRGBA8(S sampler, vec2 P, I32 zoffset = 0) {
   _MM_TRANSPOSE4_PS(r0, r1, r2, r3);
   return vec4(r2, r1, r0, r3) * (1.0f / 0xFF00);
 #else
-  P.x *= sampler->width * 128.0f;
-  P.y *= sampler->height * 128.0f;
-  P -= 0.5f * 128.0f;
-  ivec2 i(P);
+  ivec2 i(linearQuantize(P, 128, sampler));
   ivec2 frac = i & (I32)0x7F;
   i >>= 7;
 
@@ -2615,10 +2624,7 @@ vec4 textureLinearR8(S sampler, vec2 P, I32 zoffset = 0) {
   assert(sampler->format == TextureFormat::R8);
 
 #if USE_SSE2
-  P.x *= sampler->width * 256.0f;
-  P.y *= sampler->height * 256.0f;
-  P -= 0.5f * 256.0f;
-  ivec2 i(P);
+  ivec2 i(linearQuantize(P, 256, sampler));
   ivec2 frac = i & (I32)0xFF;
   i >>= 8;
 
@@ -2671,10 +2677,8 @@ vec4 textureLinearR8(S sampler, vec2 P, I32 zoffset = 0) {
   __m128 r = _mm_cvtepi32_ps(_mm_madd_epi16(cc, fracx));
   return vec4((Float)r * (1.0f / 0xFF00), 0.0f, 0.0f, 1.0f);
 #else
-  P.x *= sampler->width * 128.0f;
-  P.y *= sampler->height * 128.0f;
-  P -= 0.5f * 128.0f;
-  Float r = CONVERT(textureLinearPackedR8(sampler, ivec2(P), zoffset), Float);
+  ivec2 i(linearQuantize(P, 128, sampler));
+  Float r = CONVERT(textureLinearPackedR8(sampler, i, zoffset), Float);
   return vec4(r * (1.0f / 255.0f), 0.0f, 0.0f, 1.0f);
 #endif
 }
