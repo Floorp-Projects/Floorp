@@ -6338,10 +6338,6 @@ AttachDecision UnaryArithIRGenerator::tryAttachInt32() {
       writer.int32DecResult(intId);
       trackAttached("UnaryArith.Int32Dec");
       break;
-    case JSOp::ToNumeric:
-      writer.loadInt32Result(intId);
-      trackAttached("UnaryArith.Int32ToNumeric");
-      break;
     default:
       MOZ_CRASH("unexpected OP");
   }
@@ -6381,10 +6377,6 @@ AttachDecision UnaryArithIRGenerator::tryAttachNumber() {
       writer.doubleDecResult(numId);
       trackAttached("UnaryArith.DoubleDec");
       break;
-    case JSOp::ToNumeric:
-      writer.loadDoubleResult(numId);
-      trackAttached("UnaryArith.DoubleToNumeric");
-      break;
     default:
       MOZ_CRASH("Unexpected OP");
   }
@@ -6420,10 +6412,6 @@ AttachDecision UnaryArithIRGenerator::tryAttachBigInt() {
     case JSOp::Dec:
       writer.bigIntDecResult(bigIntId);
       trackAttached("UnaryArith.BigIntDec");
-      break;
-    case JSOp::ToNumeric:
-      writer.loadBigIntResult(bigIntId);
-      trackAttached("UnaryArith.BigIntToNumeric");
       break;
     default:
       MOZ_CRASH("Unexpected OP");
@@ -6468,10 +6456,6 @@ AttachDecision UnaryArithIRGenerator::tryAttachStringInt32() {
       writer.int32DecResult(intId);
       trackAttached("UnaryArith.StringInt32Dec");
       break;
-    case JSOp::ToNumeric:
-      writer.loadInt32Result(intId);
-      trackAttached("UnaryArith.StringInt32ToNumeric");
-      break;
     default:
       MOZ_CRASH("Unexpected OP");
   }
@@ -6512,10 +6496,6 @@ AttachDecision UnaryArithIRGenerator::tryAttachStringNumber() {
     case JSOp::Dec:
       writer.doubleDecResult(numId);
       trackAttached("UnaryArith.StringNumberDec");
-      break;
-    case JSOp::ToNumeric:
-      writer.loadDoubleResult(numId);
-      trackAttached("UnaryArith.StringNumberToNumeric");
       break;
     default:
       MOZ_CRASH("Unexpected OP");

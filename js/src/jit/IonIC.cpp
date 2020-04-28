@@ -550,13 +550,6 @@ bool IonUnaryArithIC::update(JSContext* cx, HandleScript outerScript,
       }
       break;
     }
-    case JSOp::ToNumeric: {
-      res.set(val);
-      if (!ToNumeric(cx, res)) {
-        return false;
-      }
-      break;
-    }
     default:
       MOZ_CRASH("Unexpected op");
   }
