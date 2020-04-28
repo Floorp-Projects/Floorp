@@ -5,51 +5,28 @@
 "use strict";
 
 /**
- * @typedef {import("../@types/perf").PerformancePref} PerformancePref
- */
-
-/**
  * This file controls the enabling and disabling of the menu button for the profiler.
  * Care should be taken to keep it minimal as it can be run with browser initialization.
  */
 
-/**
- * TS-TODO
- *
- * This function replaces lazyRequireGetter, and TypeScript can understand it. It's
- * currently duplicated until we have consensus that TypeScript is a good idea.
- *
- * @template T
- * @type {(callback: () => T) => () => T}
- */
-function requireLazy(callback) {
-  /** @type {T | undefined} */
-  let cache;
-  return () => {
-    if (cache === undefined) {
-      cache = callback();
-    }
-    return cache;
-  };
-}
-
 // Provide an exports object for the JSM to be properly read by TypeScript.
 /** @type {any} */ (this).exports = {};
 
-const lazyServices = requireLazy(() =>
-  ChromeUtils.import("resource://gre/modules/Services.jsm")
+const { createLazyLoaders } = ChromeUtils.import(
+  "resource://devtools/client/performance-new/typescript-lazy-load.jsm.js"
 );
-const lazyCustomizableUI = requireLazy(() =>
-  ChromeUtils.import("resource:///modules/CustomizableUI.jsm")
-);
-const lazyCustomizableWidgets = requireLazy(() =>
-  ChromeUtils.import("resource:///modules/CustomizableWidgets.jsm")
-);
-const lazyPopupPanel = requireLazy(() =>
-  ChromeUtils.import(
-    "resource://devtools/client/performance-new/popup/panel.jsm.js"
-  )
-);
+
+const lazy = createLazyLoaders({
+  Services: () => ChromeUtils.import("resource://gre/modules/Services.jsm"),
+  CustomizableUI: () =>
+    ChromeUtils.import("resource:///modules/CustomizableUI.jsm"),
+  CustomizableWidgets: () =>
+    ChromeUtils.import("resource:///modules/CustomizableWidgets.jsm"),
+  PopupPanel: () =>
+    ChromeUtils.import(
+      "resource://devtools/client/performance-new/popup/panel.jsm.js"
+    ),
+});
 
 const WIDGET_ID = "profiler-button";
 
@@ -60,7 +37,7 @@ const WIDGET_ID = "profiler-button";
  * @return {void}
  */
 function addToNavbar(document) {
-  const { CustomizableUI } = lazyCustomizableUI();
+  const { CustomizableUI } = lazy.CustomizableUI();
 
   CustomizableUI.addWidgetToArea(WIDGET_ID, CustomizableUI.AREA_NAVBAR);
 }
@@ -72,7 +49,7 @@ function addToNavbar(document) {
  * @return {void}
  */
 function remove() {
-  const { CustomizableUI } = lazyCustomizableUI();
+  const { CustomizableUI } = lazy.CustomizableUI();
   CustomizableUI.removeWidgetFromArea(WIDGET_ID);
 }
 
@@ -83,7 +60,7 @@ function remove() {
  * @return {boolean}
  */
 function isInNavbar() {
-  const { CustomizableUI } = lazyCustomizableUI();
+  const { CustomizableUI } = lazy.CustomizableUI();
   return Boolean(CustomizableUI.getPlacementOfWidget("profiler-button"));
 }
 
@@ -108,9 +85,9 @@ function openPopup(document) {
  * @return {void}
  */
 function initialize(toggleProfilerKeyShortcuts) {
-  const { CustomizableUI } = lazyCustomizableUI();
-  const { CustomizableWidgets } = lazyCustomizableWidgets();
-  const { Services } = lazyServices();
+  const { CustomizableUI } = lazy.CustomizableUI();
+  const { CustomizableWidgets } = lazy.CustomizableWidgets();
+  const { Services } = lazy.Services();
 
   const widget = CustomizableUI.getWidget(WIDGET_ID);
   if (widget && widget.provider == CustomizableUI.PROVIDER_API) {
@@ -143,7 +120,7 @@ function initialize(toggleProfilerKeyShortcuts) {
     if (!isEnabled) {
       // The profiler menu button is no longer in the navbar, make sure that the
       // "intro-displayed" preference is reset.
-      /** @type {PerformancePref["PopupIntroDisplayed"]} */
+      /** @type {import("../@types/perf").PerformancePref["PopupIntroDisplayed"]} */
       const popupIntroDisplayedPref =
         "devtools.performance.popup.intro-displayed";
       Services.prefs.setBoolPref(popupIntroDisplayedPref, false);
@@ -179,7 +156,7 @@ function initialize(toggleProfilerKeyShortcuts) {
             createViewControllers,
             addPopupEventHandlers,
             initializePopup,
-          } = lazyPopupPanel();
+          } = lazy.PopupPanel();
 
           const panelElements = selectElementsInPanelview(event.target);
           const panelView = createViewControllers(panelState, panelElements);
@@ -209,7 +186,7 @@ function initialize(toggleProfilerKeyShortcuts) {
      * @type {(document: HTMLDocument) => void}
      */
     onBeforeCreated: document => {
-      /** @type {PerformancePref["PopupIntroDisplayed"]} */
+      /** @type {import("../@types/perf").PerformancePref["PopupIntroDisplayed"]} */
       const popupIntroDisplayedPref =
         "devtools.performance.popup.intro-displayed";
 
