@@ -212,15 +212,6 @@ loader.lazyRequireGetter(
   "devtools/shared/picker-constants"
 );
 
-loader.lazyRequireGetter(
-  this,
-  "getF12SessionId",
-  "devtools/client/framework/enable-devtools-popup",
-  true
-);
-
-const DEVTOOLS_F12_DISABLED_PREF = "devtools.experiment.f12.shortcut_disabled";
-
 /**
  * A "Toolbox" is the component that holds all the tools for one specific
  * target. Visually, it's a document that includes the tools tabs and all
@@ -261,25 +252,6 @@ function Toolbox(
   // toolbox session. Because we use Amplitude to analyse the telemetry data we
   // must use the time since the system wide epoch as the session ID.
   this.sessionId = msSinceProcessStart;
-
-  // If the user opened the toolbox, we can now enable the F12 shortcut.
-  if (Services.prefs.getBoolPref(DEVTOOLS_F12_DISABLED_PREF, false)) {
-    // If the toolbox is opening while F12 was disabled, the user might have
-    // pressed F12 and seen the "enable devtools" notification.
-    // A telemetry session_id was generated for the f12_popup_displayed event.
-    // Reuse it here in order to link the toolbox session to the
-    // f12_popup_displayed events.
-    // getF12SessionId() might return null if the popup was never displayed.
-    // In this case, fallback on the provided `msSinceProcessStart`.
-    this.sessionId = getF12SessionId() || msSinceProcessStart;
-
-    this.telemetry.recordEvent("f12_enabled", "tools", null, {
-      session_id: this.sessionId,
-    });
-
-    // Flip the preference.
-    Services.prefs.setBoolPref(DEVTOOLS_F12_DISABLED_PREF, false);
-  }
 
   // Map of the available DevTools WebExtensions:
   //   Map<extensionUUID, extensionName>
@@ -1476,7 +1448,6 @@ Toolbox.prototype = {
 
     const browserWin = this.topWindow;
     this.telemetry.preparePendingEvent(browserWin, "open", "tools", null, [
-      "enable_f12",
       "entrypoint",
       "first_panel",
       "host",
