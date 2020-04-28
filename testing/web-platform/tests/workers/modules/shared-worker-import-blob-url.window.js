@@ -1,4 +1,3 @@
-// META: global=!worker
 // META: script=/workers/modules/resources/import-test-cases.js
 
 // Imports |testCase.scriptURL| on a shared worker loaded from a blob URL,
