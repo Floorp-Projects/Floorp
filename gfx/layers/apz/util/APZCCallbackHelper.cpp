@@ -466,7 +466,9 @@ CSSPoint APZCCallbackHelper::ApplyCallbackTransform(
   // resolution to cancel the scale-to-resolution transform that the
   // compositor adds to the layer with the pres shell resolution. The points
   // sent to Gecko by APZ don't have this transform unapplied (unlike other
-  // compositor-side transforms) because APZ doesn't know about it.
+  // compositor-side transforms) because Gecko needs it applied when hit
+  // testing against content that's conceptually outside the resolution,
+  // such as scrollbars.
   if (PresShell* presShell =
           GetRootContentDocumentPresShellForContent(content)) {
     input = input / presShell->GetResolution();
