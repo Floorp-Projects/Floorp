@@ -1829,7 +1829,15 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
     return NS_OK;
   }
 
+  nsresult rv;
   if (XRE_IsContentProcess()) {
+    bool canAddURI = false;
+    rv = nsNavHistory::CanAddURIToHistory(aURI, &canAddURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!canAddURI) {
+      return NS_OK;
+    }
+
     NS_ENSURE_ARG(aWidget);
     BrowserChild* browserChild = aWidget->GetOwningBrowserChild();
     NS_ENSURE_TRUE(browserChild, NS_ERROR_FAILURE);
@@ -1842,7 +1850,7 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
 
   // Silently return if URI is something we shouldn't add to DB.
   bool canAdd;
-  nsresult rv = navHistory->CanAddURI(aURI, &canAdd);
+  rv = navHistory->CanAddURI(aURI, &canAdd);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!canAdd) {
     return NS_OK;
