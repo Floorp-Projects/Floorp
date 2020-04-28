@@ -17,7 +17,7 @@
   ],
   "chrome_settings_overrides": {
     "search_provider": {
-      "name": "Qwant",
+      "name": "mail.com search",
       "search_url": "https://go.mail.com/br/moz_search_web/",
       "search_url_get_params": "q={searchTerms}&enc=UTF-8",
       "suggest_url": "https://search.mail.com/SuggestSearch/s",
