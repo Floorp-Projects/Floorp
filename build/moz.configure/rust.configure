@@ -453,9 +453,10 @@ def rustc_natvis_ldflags(target, compiler_info, rustc):
         sysroot = check_cmd_output(rustc, '--print', 'sysroot').strip()
         etc = os.path.join(sysroot, 'lib/rustlib/etc')
         ldflags = []
-        for f in os.listdir(etc):
-            if f.endswith('.natvis'):
-                ldflags.append('-NATVIS:' + normsep(os.path.join(etc, f)))
+        if os.path.isdir(etc):
+            for f in os.listdir(etc):
+                if f.endswith('.natvis'):
+                    ldflags.append('-NATVIS:' + normsep(os.path.join(etc, f)))
         return ldflags
 
 
