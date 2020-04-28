@@ -451,26 +451,6 @@ PresShell* APZCCallbackHelper::GetRootContentDocumentPresShellForContent(
   return context->PresShell();
 }
 
-static PresShell* GetRootDocumentPresShell(nsIContent* aContent) {
-  dom::Document* doc = aContent->GetComposedDoc();
-  if (!doc) {
-    return nullptr;
-  }
-  PresShell* presShell = doc->GetPresShell();
-  if (!presShell) {
-    return nullptr;
-  }
-  nsPresContext* context = presShell->GetPresContext();
-  if (!context) {
-    return nullptr;
-  }
-  context = context->GetRootPresContext();
-  if (!context) {
-    return nullptr;
-  }
-  return context->PresShell();
-}
-
 CSSPoint APZCCallbackHelper::ApplyCallbackTransform(
     const CSSPoint& aInput, const ScrollableLayerGuid& aGuid) {
   CSSPoint input = aInput;
@@ -487,29 +467,16 @@ CSSPoint APZCCallbackHelper::ApplyCallbackTransform(
   // compositor adds to the layer with the pres shell resolution. The points
   // sent to Gecko by APZ don't have this transform unapplied (unlike other
   // compositor-side transforms) because APZ doesn't know about it.
-  if (PresShell* presShell = GetRootDocumentPresShell(content)) {
+  if (PresShell* presShell =
+          GetRootContentDocumentPresShellForContent(content)) {
     input = input / presShell->GetResolution();
   }
 
-  // This represents any resolution on the Root Content Document (RCD)
-  // that's not on the Root Document (RD). That is, on platforms where
-  // RCD == RD, it's 1, and on platforms where RCD != RD, it's the RCD
-  // resolution. 'input' has this resolution applied, but the scroll
-  // delta retrieved below do not, so we need to apply them to the
-  // delta before adding the delta to 'input'. (Technically, deltas
-  // from scroll frames outside the RCD would already have this
-  // resolution applied, but we don't have such scroll frames in
-  // practice.)
-  float nonRootResolution = 1.0f;
-  if (PresShell* presShell =
-          GetRootContentDocumentPresShellForContent(content)) {
-    nonRootResolution = presShell->GetCumulativeNonRootScaleResolution();
-  }
   // Now apply the callback-transform. This is only approximately correct,
   // see the comment on GetCumulativeApzCallbackTransform for details.
   CSSPoint transform = nsLayoutUtils::GetCumulativeApzCallbackTransform(
       content->GetPrimaryFrame());
-  return input + transform * nonRootResolution;
+  return input + transform;
 }
 
 LayoutDeviceIntPoint APZCCallbackHelper::ApplyCallbackTransform(
@@ -631,24 +598,6 @@ static dom::Element* GetRootDocumentElementFor(nsIWidget* aWidget) {
     }
   }
   return nullptr;
-}
-
-static nsIFrame* UpdateRootFrameForTouchTargetDocument(nsIFrame* aRootFrame) {
-#if defined(MOZ_WIDGET_ANDROID)
-  // Re-target so that the hit test is performed relative to the frame for the
-  // Root Content Document instead of the Root Document which are different in
-  // Android. See bug 1229752 comment 16 for an explanation of why this is
-  // necessary.
-  if (dom::Document* doc =
-          aRootFrame->PresShell()->GetPrimaryContentDocument()) {
-    if (PresShell* presShell = doc->GetPresShell()) {
-      if (nsIFrame* frame = presShell->GetRootFrame()) {
-        return frame;
-      }
-    }
-  }
-#endif
-  return aRootFrame;
 }
 
 namespace {
@@ -836,8 +785,6 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
   sLastTargetAPZCNotificationInputBlock = aInputBlockId;
   if (PresShell* presShell = aDocument->GetPresShell()) {
     if (nsIFrame* rootFrame = presShell->GetRootFrame()) {
-      rootFrame = UpdateRootFrameForTouchTargetDocument(rootFrame);
-
       bool waitForRefresh = false;
       nsTArray<ScrollableLayerGuid> targets;
 
@@ -882,8 +829,6 @@ void APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
   }
   if (PresShell* presShell = aDocument->GetPresShell()) {
     if (nsIFrame* rootFrame = presShell->GetRootFrame()) {
-      rootFrame = UpdateRootFrameForTouchTargetDocument(rootFrame);
-
       nsTArray<TouchBehaviorFlags> flags;
       for (uint32_t i = 0; i < aEvent.mTouches.Length(); i++) {
         flags.AppendElement(TouchActionHelper::GetAllowedTouchBehavior(
