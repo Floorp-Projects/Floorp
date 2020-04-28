@@ -32,7 +32,7 @@
  * want to "leak" on shutdown.
  *
  * Although ClearOnShutdown will work with any smart pointer (i.e., nsCOMPtr,
- * nsRefPtr, nsAutoPtr, StaticRefPtr, and StaticAutoPtr), you probably want to
+ * RefPtr, StaticRefPtr, and StaticAutoPtr), you probably want to
  * use it only with StaticRefPtr and StaticAutoPtr.  There is no way to undo a
  * call to ClearOnShutdown, so you can call it only on smart pointers which you
  * know will live until the program shuts down.  In practice, these are likely
