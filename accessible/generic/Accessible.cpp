@@ -536,17 +536,7 @@ Accessible* Accessible::ChildAtPoint(int32_t aX, int32_t aY,
   offset += presContext->PresShell()->GetVisualViewportOffset() -
             presContext->PresShell()->GetLayoutViewportOffset();
 
-  EnumSet<nsLayoutUtils::FrameForPointOption> options = {
-#ifdef MOZ_WIDGET_ANDROID
-      // This is needed in Android to ignore the clipping of the scroll frame
-      // when zoomed in. May regress something on other platforms, so
-      // keeping it Android-exclusive for now.
-      nsLayoutUtils::FrameForPointOption::IgnoreRootScrollFrame
-#endif
-  };
-
-  nsIFrame* foundFrame =
-      nsLayoutUtils::GetFrameForPoint(startFrame, offset, options);
+  nsIFrame* foundFrame = nsLayoutUtils::GetFrameForPoint(startFrame, offset);
 
   nsIContent* content = nullptr;
   if (!foundFrame || !(content = foundFrame->GetContent()))

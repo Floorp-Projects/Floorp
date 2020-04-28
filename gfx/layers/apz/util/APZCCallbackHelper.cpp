@@ -475,7 +475,6 @@ nsEventStatus APZCCallbackHelper::DispatchSynthesizedMouseEvent(
   if (aMsg == eMouseLongTap) {
     event.mFlags.mOnlyChromeDispatch = true;
   }
-  event.mIgnoreRootScrollFrame = true;
   if (aMsg != eMouseMove) {
     event.mClickCount = aClickCount;
   }
@@ -568,17 +567,7 @@ static bool PrepareForSetTargetAPZCNotification(
   ScrollableLayerGuid guid(aLayersId, 0, ScrollableLayerGuid::NULL_SCROLL_ID);
   nsPoint point = nsLayoutUtils::GetEventCoordinatesRelativeTo(
       aWidget, aRefPoint, aRootFrame);
-  EnumSet<FrameForPointOption> options;
-  if (nsLayoutUtils::AllowZoomingForDocument(
-          aRootFrame->PresShell()->GetDocument())) {
-    // If zooming is enabled, we need IgnoreRootScrollFrame for correct
-    // hit testing. Otherwise, don't use it because it interferes with
-    // hit testing for some purposes such as scrollbar dragging (this will
-    // need to be fixed before enabling zooming by default on desktop).
-    options += FrameForPointOption::IgnoreRootScrollFrame;
-  }
-  nsIFrame* target =
-      nsLayoutUtils::GetFrameForPoint(aRootFrame, point, options);
+  nsIFrame* target = nsLayoutUtils::GetFrameForPoint(aRootFrame, point);
   nsIScrollableFrame* scrollAncestor =
       target ? nsLayoutUtils::GetAsyncScrollableAncestorFrame(target)
              : aRootFrame->PresShell()->GetRootScrollFrameAsScrollable();
