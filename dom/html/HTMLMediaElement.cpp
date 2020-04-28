@@ -505,17 +505,17 @@ class HTMLMediaElement::MediaControlEventListener final
     }
   }
 
+  BrowsingContext* GetBrowsingContext() const override {
+    nsPIDOMWindowInner* window = Owner()->OwnerDoc()->GetInnerWindow();
+    return window ? window->GetBrowsingContext() : nullptr;
+  }
+
  private:
   ~MediaControlEventListener() = default;
 
   bool InitMediaAgent() {
     MOZ_ASSERT(NS_IsMainThread());
-    nsPIDOMWindowInner* window = Owner()->OwnerDoc()->GetInnerWindow();
-    if (!window) {
-      return false;
-    }
-
-    mControlAgent = ContentMediaAgent::Get(window->GetBrowsingContext());
+    mControlAgent = ContentMediaAgent::Get(GetBrowsingContext());
     if (!mControlAgent) {
       return false;
     }

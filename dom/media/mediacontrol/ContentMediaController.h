@@ -51,6 +51,10 @@ class ContentControlKeyEventReceiver {
 
   // Use this method to handle the event from `ContentMediaAgent`.
   virtual void HandleEvent(MediaControlKeysEvent aKeyEvent) = 0;
+
+  // Use this method to get the browsing context from which the receiver is
+  // created.
+  virtual BrowsingContext* GetBrowsingContext() const { return nullptr; }
 };
 
 /**
@@ -141,7 +145,6 @@ class ContentMediaController final : public ContentMediaAgent,
 
  private:
   ~ContentMediaController() = default;
-  already_AddRefed<BrowsingContext> GetTopLevelBrowsingContext() const;
 
   nsTArray<RefPtr<ContentControlKeyEventReceiver>> mReceivers;
   uint64_t mTopLevelBrowsingContextId;
