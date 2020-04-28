@@ -48,9 +48,9 @@ const DOMTokenListSupportedToken HTMLAnchorElement::sSupportedRelValues[] = {
 
 HTMLAnchorElement::~HTMLAnchorElement() = default;
 
-bool HTMLAnchorElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const {
+bool HTMLAnchorElement::IsInteractiveHTMLContent() const {
   return HasAttr(kNameSpaceID_None, nsGkAtoms::href) ||
-         nsGenericHTMLElement::IsInteractiveHTMLContent(aIgnoreTabindex);
+         nsGenericHTMLElement::IsInteractiveHTMLContent();
 }
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLAnchorElement,

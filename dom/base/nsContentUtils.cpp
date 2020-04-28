@@ -2483,7 +2483,7 @@ nsINode* nsContentUtils::GetCommonAncestorUnderInteractiveContent(
   do {
     parents1.AppendElement(aNode1);
     if (aNode1->IsElement() &&
-        aNode1->AsElement()->IsInteractiveHTMLContent(true)) {
+        aNode1->AsElement()->IsInteractiveHTMLContent()) {
       break;
     }
     aNode1 = aNode1->GetFlattenedTreeParentNode();
@@ -2493,7 +2493,7 @@ nsINode* nsContentUtils::GetCommonAncestorUnderInteractiveContent(
   do {
     parents2.AppendElement(aNode2);
     if (aNode2->IsElement() &&
-        aNode2->AsElement()->IsInteractiveHTMLContent(true)) {
+        aNode2->AsElement()->IsInteractiveHTMLContent()) {
       break;
     }
     aNode2 = aNode2->GetFlattenedTreeParentNode();
@@ -5189,7 +5189,7 @@ bool nsContentUtils::IsInInteractiveHTMLContent(const Element* aElement,
                                                 const Element* aStop) {
   const Element* element = aElement;
   while (element && element != aStop) {
-    if (element->IsInteractiveHTMLContent(true)) {
+    if (element->IsInteractiveHTMLContent()) {
       return true;
     }
     element = element->GetFlattenedTreeParentElement();

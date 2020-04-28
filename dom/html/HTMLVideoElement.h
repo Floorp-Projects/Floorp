@@ -62,7 +62,7 @@ class HTMLVideoElement final : public HTMLMediaElement {
   virtual nsresult SetAcceptHeader(nsIHttpChannel* aChannel) override;
 
   // Element
-  virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override;
+  virtual bool IsInteractiveHTMLContent() const override;
 
   // WebIDL
 

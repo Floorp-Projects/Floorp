@@ -2962,10 +2962,9 @@ bool HTMLInputElement::IsNodeApzAwareInternal() const {
 }
 #endif
 
-bool HTMLInputElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const {
+bool HTMLInputElement::IsInteractiveHTMLContent() const {
   return mType != NS_FORM_INPUT_HIDDEN ||
-         nsGenericHTMLFormElementWithState::IsInteractiveHTMLContent(
-             aIgnoreTabindex);
+         nsGenericHTMLFormElementWithState::IsInteractiveHTMLContent();
 }
 
 void HTMLInputElement::AsyncEventRunning(AsyncEventDispatcher* aEvent) {

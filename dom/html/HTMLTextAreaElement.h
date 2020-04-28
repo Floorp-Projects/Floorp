@@ -52,9 +52,7 @@ class HTMLTextAreaElement final : public TextControlElement,
   virtual int32_t TabIndexDefault() override;
 
   // Element
-  virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override {
-    return true;
-  }
+  virtual bool IsInteractiveHTMLContent() const override { return true; }
 
   // nsIFormControl
   MOZ_CAN_RUN_SCRIPT_BOUNDARY

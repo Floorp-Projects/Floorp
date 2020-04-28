@@ -482,7 +482,7 @@ class nsXULElement : public nsStyledElement {
     return parent ? parent : nsStyledElement::GetScopeChainParent();
   }
 
-  bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override;
+  bool IsInteractiveHTMLContent() const override;
 
   void MaybeUpdatePrivateLifetime();
 

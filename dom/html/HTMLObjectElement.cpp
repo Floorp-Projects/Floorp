@@ -52,9 +52,9 @@ HTMLObjectElement::~HTMLObjectElement() {
   DestroyImageLoadingContent();
 }
 
-bool HTMLObjectElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const {
+bool HTMLObjectElement::IsInteractiveHTMLContent() const {
   return HasAttr(kNameSpaceID_None, nsGkAtoms::usemap) ||
-         nsGenericHTMLFormElement::IsInteractiveHTMLContent(aIgnoreTabindex);
+         nsGenericHTMLFormElement::IsInteractiveHTMLContent();
 }
 
 void HTMLObjectElement::AsyncEventRunning(AsyncEventDispatcher* aEvent) {

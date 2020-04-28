@@ -1868,9 +1868,7 @@ void Element::SetSMILOverrideStyleDeclaration(DeclarationBlock& aDeclaration) {
 
 bool Element::IsLabelable() const { return false; }
 
-bool Element::IsInteractiveHTMLContent(bool aIgnoreTabindex) const {
-  return false;
-}
+bool Element::IsInteractiveHTMLContent() const { return false; }
 
 DeclarationBlock* Element::GetInlineStyleDeclaration() const {
   if (!MayHaveStyle()) {

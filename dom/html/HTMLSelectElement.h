@@ -112,9 +112,7 @@ class HTMLSelectElement final : public nsGenericHTMLFormElementWithState,
   virtual int32_t TabIndexDefault() override;
 
   // Element
-  virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override {
-    return true;
-  }
+  virtual bool IsInteractiveHTMLContent() const override { return true; }
 
   // WebIdl HTMLSelectElement
   bool Autofocus() const { return GetBoolAttr(nsGkAtoms::autofocus); }

@@ -378,7 +378,7 @@ class Element : public FragmentOrElement {
   /**
    * Returns if the element is interactive content as per HTML specification.
    */
-  virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const;
+  virtual bool IsInteractiveHTMLContent() const;
 
   /**
    * Returns |this| as an nsIMozBrowserFrame* if the element is a frame or

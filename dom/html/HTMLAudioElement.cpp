@@ -58,9 +58,9 @@ HTMLAudioElement::~HTMLAudioElement() {
   DecoderDoctorLogger::LogDestruction(this);
 }
 
-bool HTMLAudioElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const {
+bool HTMLAudioElement::IsInteractiveHTMLContent() const {
   return HasAttr(kNameSpaceID_None, nsGkAtoms::controls) ||
-         HTMLMediaElement::IsInteractiveHTMLContent(aIgnoreTabindex);
+         HTMLMediaElement::IsInteractiveHTMLContent();
 }
 
 already_AddRefed<HTMLAudioElement> HTMLAudioElement::Audio(

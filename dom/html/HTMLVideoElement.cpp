@@ -237,9 +237,9 @@ nsresult HTMLVideoElement::SetAcceptHeader(nsIHttpChannel* aChannel) {
   return aChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"), value, false);
 }
 
-bool HTMLVideoElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const {
+bool HTMLVideoElement::IsInteractiveHTMLContent() const {
   return HasAttr(kNameSpaceID_None, nsGkAtoms::controls) ||
-         HTMLMediaElement::IsInteractiveHTMLContent(aIgnoreTabindex);
+         HTMLMediaElement::IsInteractiveHTMLContent();
 }
 
 uint32_t HTMLVideoElement::MozParsedFrames() const {

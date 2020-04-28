@@ -139,9 +139,9 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLImageElement,
 
 NS_IMPL_ELEMENT_CLONE(HTMLImageElement)
 
-bool HTMLImageElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const {
+bool HTMLImageElement::IsInteractiveHTMLContent() const {
   return HasAttr(kNameSpaceID_None, nsGkAtoms::usemap) ||
-         nsGenericHTMLElement::IsInteractiveHTMLContent(aIgnoreTabindex);
+         nsGenericHTMLElement::IsInteractiveHTMLContent();
 }
 
 void HTMLImageElement::AsyncEventRunning(AsyncEventDispatcher* aEvent) {

@@ -38,7 +38,7 @@ class HTMLAnchorElement final : public nsGenericHTMLElement, public Link {
   virtual bool Draggable() const override;
 
   // Element
-  virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override;
+  virtual bool IsInteractiveHTMLContent() const override;
 
   // DOM memory reporter participant
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
