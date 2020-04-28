@@ -89,12 +89,6 @@ function* do_run_test() {
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
   do_check_throws(function() {
-    let file = profile.clone();
-    file.append("cookies.txt");
-    Services.cookiemgr.importCookies(file);
-  }, Cr.NS_ERROR_NOT_AVAILABLE);
-
-  do_check_throws(function() {
     Services.cookiemgr.cookieExists(cookie.host, cookie.path, cookie.name, {});
   }, Cr.NS_ERROR_NOT_AVAILABLE);
 
