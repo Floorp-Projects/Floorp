@@ -2,7 +2,7 @@
 
 # CrashReporter
 
-`class CrashReporter : `[`CrashReporting`](../../mozilla.components.support.base.crash/-crash-reporting/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L55)
+`class CrashReporter : `[`CrashReporting`](../../mozilla.components.support.base.crash/-crash-reporting/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L56)
 
 A generic crash reporter that can report crashes to multiple services.
 
@@ -30,7 +30,7 @@ crashes and forward them to the configured crash reporting services.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `CrashReporter(services: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`CrashReporterService`](../../mozilla.components.lib.crash.service/-crash-reporter-service/index.md)`> = emptyList(), telemetryServices: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`CrashReporterService`](../../mozilla.components.lib.crash.service/-crash-reporter-service/index.md)`> = emptyList(), shouldPrompt: `[`Prompt`](-prompt/index.md)` = Prompt.NEVER, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true, promptConfiguration: `[`PromptConfiguration`](-prompt-configuration/index.md)` = PromptConfiguration(), nonFatalCrashIntent: <ERROR CLASS>? = null, scope: CoroutineScope = CoroutineScope(Dispatchers.IO))`<br>A generic crash reporter that can report crashes to multiple services. |
+| [&lt;init&gt;](-init-.md) | `CrashReporter(services: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`CrashReporterService`](../../mozilla.components.lib.crash.service/-crash-reporter-service/index.md)`> = emptyList(), telemetryServices: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`CrashTelemetryService`](../../mozilla.components.lib.crash.service/-crash-telemetry-service/index.md)`> = emptyList(), shouldPrompt: `[`Prompt`](-prompt/index.md)` = Prompt.NEVER, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true, promptConfiguration: `[`PromptConfiguration`](-prompt-configuration/index.md)` = PromptConfiguration(), nonFatalCrashIntent: <ERROR CLASS>? = null, scope: CoroutineScope = CoroutineScope(Dispatchers.IO))`<br>A generic crash reporter that can report crashes to multiple services. |
 
 ### Properties
 
