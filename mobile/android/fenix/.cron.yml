@@ -10,7 +10,6 @@ jobs:
           treeherder-symbol: Nd
           target-tasks-method: nightly
       when:
-          - {hour: 6, minute: 0}
           - {hour: 18, minute: 0}
     # This is a temporary hook in order to not overload Google Play.
     # See bug 1628413 for more context.
@@ -20,9 +19,7 @@ jobs:
           treeherder-symbol: Nd-gp
           target-tasks-method: nightly-on-google-play
       when:
-          - {weekday: Monday, hour: 6, minute: 0}
-          - {weekday: Wednesday, hour: 6, minute: 0}
-          - {weekday: Friday, hour: 6, minute: 0}
+          - {hour: 6, minute: 0}
     - name: fennec-beta
       job:
           type: decision-task
