@@ -75,13 +75,30 @@
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="generatedPassword"] > .two-line-wrapper > .ac-site-icon,
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] > .two-line-wrapper > .ac-site-icon,
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon {
-  display: initial;
-  list-style-image: url(chrome://browser/skin/login.svg);
-  -moz-context-properties: fill;
   fill: GrayText;
+  list-style-image: url(chrome://browser/skin/login.svg);
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="importableLogins"] > .two-line-wrapper > .ac-site-icon {
+  fill: GrayText;
+  list-style-image: url(chrome://browser/skin/import.svg);
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="importableLogins"] > .two-line-wrapper > .ac-info-icon {
+  background: url(chrome://global/skin/icons/identity-icon.svg) center no-repeat;
+  -moz-context-properties: fill;
+  cursor: pointer;
+  fill: GrayText;
+  width: 20px;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="importableLogins"] > .two-line-wrapper > .ac-info-icon:hover {
+  fill: -moz-DialogText;
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="generatedPassword"][selected] > .two-line-wrapper > .ac-site-icon,
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="importableLogins"][selected] > .two-line-wrapper > .ac-site-icon,
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="importableLogins"][selected] > .two-line-wrapper > .ac-info-icon,
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"][selected] > .two-line-wrapper > .ac-site-icon,
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon[selected] {
   fill: HighlightText;
@@ -89,6 +106,7 @@
 
 /* Login form autocompletion with origin showing and generated passwords */
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="generatedPassword"] > .two-line-wrapper,
+#PopupAutoComplete > richlistbox > richlistitem[originaltype="importableLogins"] > .two-line-wrapper,
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="loginWithOrigin"] > .two-line-wrapper {
   padding: 4px;
 }

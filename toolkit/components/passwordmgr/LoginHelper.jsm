@@ -37,6 +37,7 @@ this.LoginHelper = {
   privateBrowsingCaptureEnabled: null,
   schemeUpgrades: null,
   showAutoCompleteFooter: null,
+  showAutoCompleteImport: null,
   testOnlyUserHasInteractedWithDocument: null,
   userInputRequiredToCapture: null,
 
@@ -86,6 +87,10 @@ this.LoginHelper = {
     this.schemeUpgrades = Services.prefs.getBoolPref("signon.schemeUpgrades");
     this.showAutoCompleteFooter = Services.prefs.getBoolPref(
       "signon.showAutoCompleteFooter"
+    );
+    this.showAutoCompleteImport = Services.prefs.getStringPref(
+      "signon.showAutoCompleteImport",
+      ""
     );
     this.storeWhenAutocompleteOff = Services.prefs.getBoolPref(
       "signon.storeWhenAutocompleteOff"
