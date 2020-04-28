@@ -216,6 +216,13 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
             dest, mFrame->PresContext()->AppUnitsPerDevPixel());
 
+        const RGBDescriptor rgbDesc(canvasSizeInPx, canvasData->mFormat, false);
+        const auto targetStride = ImageDataSerializer::GetRGBStride(rgbDesc);
+        const bool preferCompositorSurface = true;
+        const wr::ImageDescriptor imageDesc(
+            canvasSizeInPx, targetStride, canvasData->mFormat,
+            wr::OpacityType::Opaque, preferCompositorSurface);
+
         wr::ImageKey imageKey;
         auto imageKeyMaybe = canvasContext->GetImageKey();
         // Check that the key exists, and its namespace matches the active
@@ -225,16 +232,8 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
           imageKey = imageKeyMaybe.value();
         } else {
           imageKey = canvasContext->CreateImageKey(aManager);
-          const RGBDescriptor rgbDesc(canvasSizeInPx, canvasData->mFormat,
-                                      false);
-          const auto targetStride = ImageDataSerializer::GetRGBStride(rgbDesc);
-          const bool preferCompositorSurface = true;
-          const wr::ImageDescriptor imageDesc(
-              canvasSizeInPx, targetStride, canvasData->mFormat,
-              wr::OpacityType::Opaque, preferCompositorSurface);
           aResources.AddPrivateExternalImage(canvasContext->mExternalImageId,
                                              imageKey, imageDesc);
-          canvasData->mDescriptor = imageDesc;
         }
 
         mozilla::wr::ImageRendering rendering = wr::ToImageRendering(
@@ -242,6 +241,7 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         aBuilder.PushImage(wr::ToLayoutRect(bounds), wr::ToLayoutRect(bounds),
                            !BackfaceIsHidden(), rendering, imageKey);
 
+        canvasData->mDescriptor = imageDesc;
         canvasData->mImageKey = imageKey;
         canvasData->RequestFrameReadback();
         break;
