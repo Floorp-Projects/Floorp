@@ -57,6 +57,10 @@
     width: $larger-icon-size;
   }
 
+  &.icon-mail {
+    background-image: url('#{$image-path}glyph-mail-16.svg');
+  }
+
   &.icon-dismiss {
     background-image: url('#{$image-path}glyph-dismiss-16.svg');
   }
