@@ -1,0 +1,10 @@
+[
+  {
+    "algorithm": "sha512",
+    "visibility": "internal",
+    "filename": "com.android.chrome-v.80.0.3987.162.apk",
+    "unpack": false,
+    "digest": "2e41de938372ba2658479e2f1e7f8392659efe9d39f0200308f2b2adbf18654421e2878eb4a74ae9c75ff5987b03b61553f6f8fcc3e0c39cf24de320e35c2168",
+    "size": 131273700
+  }
+]

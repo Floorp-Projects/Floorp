@@ -7,6 +7,7 @@ config = {
         "clobber",
         "download-and-extract",
         "populate-webroot",
+        "install-chrome-android",
         "install-chromium-distribution",
         "create-virtualenv",
         "install",
