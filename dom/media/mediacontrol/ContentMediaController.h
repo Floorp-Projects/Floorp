@@ -34,6 +34,15 @@ enum class ControlledMediaState : uint32_t {
 };
 
 /**
+ * This enum is used to update controlled media audible audible state to the
+ * media controller in the chrome process.
+ */
+enum class MediaAudibleState : bool {
+  eInaudible = false,
+  eAudible = true,
+};
+
+/**
  * ContentControlKeyEventReceiver is an interface which is used to receive media
  * control key events sent from the chrome process, this class MUST only be used
  * in PlaybackController.
@@ -94,7 +103,8 @@ class ContentMediaAgent {
   //     (X) `audible` -> `audible`      [notify `audible` twice]
   //     (X) `audible` -> (media pauses) [forgot to notify `inaudible`]
   virtual void NotifyAudibleStateChanged(
-      const ContentControlKeyEventReceiver* aMedia, bool aAudible) = 0;
+      const ContentControlKeyEventReceiver* aMedia,
+      MediaAudibleState aState) = 0;
 
   // Use this method to update the picture in picture mode state of controlled
   // media, and it's safe to notify same state again.
@@ -136,7 +146,7 @@ class ContentMediaController final : public ContentMediaAgent,
   void NotifyMediaStateChanged(const ContentControlKeyEventReceiver* aMedia,
                                ControlledMediaState aState) override;
   void NotifyAudibleStateChanged(const ContentControlKeyEventReceiver* aMedia,
-                                 bool aAudible) override;
+                                 MediaAudibleState aState) override;
   void NotifyPictureInPictureModeChanged(
       const ContentControlKeyEventReceiver* aMedia, bool aEnabled) override;
 
