@@ -1136,7 +1136,6 @@ var SocialTracking = {
  * Utility object to handle manipulations of the protections indicators in the UI
  */
 var gProtectionsHandler = {
-  PREF_ANIMATIONS_ENABLED: "toolkit.cosmeticAnimations.enabled",
   PREF_REPORT_BREAKAGE_URL: "browser.contentblocking.reportBreakage.url",
   PREF_CB_CATEGORY: "browser.contentblocking.category",
 
@@ -1365,13 +1364,6 @@ var gProtectionsHandler = {
       this.iconBox.removeAttribute("animate")
     );
 
-    this.updateAnimationsEnabled = () => {
-      this.iconBox.toggleAttribute(
-        "animationsenabled",
-        Services.prefs.getBoolPref(this.PREF_ANIMATIONS_ENABLED, false)
-      );
-    };
-
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
       "_protectionsPopupToastTimeout",
@@ -1421,13 +1413,6 @@ var gProtectionsHandler = {
       }
     }
 
-    this.updateAnimationsEnabled();
-
-    Services.prefs.addObserver(
-      this.PREF_ANIMATIONS_ENABLED,
-      this.updateAnimationsEnabled
-    );
-
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
     document.getElementById(
       "protections-popup-sendReportView-learn-more"
@@ -1443,11 +1428,6 @@ var gProtectionsHandler = {
         blocker.uninit();
       }
     }
-
-    Services.prefs.removeObserver(
-      this.PREF_ANIMATIONS_ENABLED,
-      this.updateAnimationsEnabled
-    );
 
     Services.obs.removeObserver(this, "browser:purge-session-history");
   },
