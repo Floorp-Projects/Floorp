@@ -917,6 +917,19 @@ namespace JS {
 
 class JS_PUBLIC_API AutoGCRooter;
 
+enum class AutoGCRooterKind : uint8_t {
+  Array,         /* js::AutoArrayRooter */
+  ValueArray,    /* js::AutoValueArray */
+  Parser,        /* js::frontend::Parser */
+  BinASTParser,  /* js::frontend::BinASTParser; only used if built with
+                  * JS_BUILD_BINAST support */
+  WrapperVector, /* js::AutoWrapperVector */
+  Wrapper,       /* js::AutoWrapperRooter */
+  Custom,        /* js::CustomAutoRooter */
+
+  Limit
+};
+
 // Our instantiations of Rooted<void*> and PersistentRooted<void*> require an
 // instantiation of MapTypeToRootKind.
 template <>
@@ -927,17 +940,21 @@ struct MapTypeToRootKind<void*> {
 using RootedListHeads =
     mozilla::EnumeratedArray<RootKind, RootKind::Limit, Rooted<void*>*>;
 
+using AutoRooterListHeads =
+    mozilla::EnumeratedArray<AutoGCRooterKind, AutoGCRooterKind::Limit,
+                             AutoGCRooter*>;
+
 // Superclass of JSContext which can be used for rooting data in use by the
 // current thread but that does not provide all the functions of a JSContext.
 class RootingContext {
   // Stack GC roots for Rooted GC heap pointers.
   RootedListHeads stackRoots_;
   template <typename T>
-  friend class JS::Rooted;
+  friend class Rooted;
 
   // Stack GC roots for AutoFooRooter classes.
-  JS::AutoGCRooter* autoGCRooters_;
-  friend class JS::AutoGCRooter;
+  AutoRooterListHeads autoGCRooters_;
+  friend class AutoGCRooter;
 
   // Gecko profiling metadata.
   // This isn't really rooting related. It's only here because we want
@@ -949,6 +966,12 @@ class RootingContext {
   RootingContext();
 
   void traceStackRoots(JSTracer* trc);
+
+  /* Implemented in gc/RootMarking.cpp. */
+  void traceAllGCRooters(JSTracer* trc);
+  void traceWrapperGCRooters(JSTracer* trc);
+  static void traceGCRooterList(JSTracer* trc, AutoGCRooter* head);
+
   void checkNoGCRooters();
 
   js::GeckoProfilerThread& geckoProfiler() { return geckoProfiler_; }
@@ -959,10 +982,10 @@ class RootingContext {
   // that inlined API functions can directly access the data.
 
   /* The current realm. */
-  JS::Realm* realm_;
+  Realm* realm_;
 
   /* The current zone. */
-  JS::Zone* zone_;
+  Zone* zone_;
 
  public:
   /* Limit pointer for checking native stack consumption. */
@@ -981,23 +1004,15 @@ class RootingContext {
 };
 
 class JS_PUBLIC_API AutoGCRooter {
- protected:
-  enum class Tag : uint8_t {
-    Array,         /* js::AutoArrayRooter */
-    ValueArray,    /* js::AutoValueArray */
-    Parser,        /* js::frontend::Parser */
-    BinASTParser,  /* js::frontend::BinASTParser; only used if built with
-                    * JS_BUILD_BINAST support */
-    WrapperVector, /* js::AutoWrapperVector */
-    Wrapper,       /* js::AutoWrapperRooter */
-    Custom         /* js::CustomAutoRooter */
-  };
-
  public:
-  AutoGCRooter(JSContext* cx, Tag tag)
-      : AutoGCRooter(JS::RootingContext::get(cx), tag) {}
-  AutoGCRooter(JS::RootingContext* cx, Tag tag)
-      : down(cx->autoGCRooters_), stackTop(&cx->autoGCRooters_), tag_(tag) {
+  using Kind = AutoGCRooterKind;
+
+  AutoGCRooter(JSContext* cx, Kind kind)
+      : AutoGCRooter(JS::RootingContext::get(cx), kind) {}
+  AutoGCRooter(RootingContext* cx, Kind kind)
+      : down(cx->autoGCRooters_[kind]),
+        stackTop(&cx->autoGCRooters_[kind]),
+        kind_(kind) {
     MOZ_ASSERT(this != *stackTop);
     *stackTop = this;
   }
@@ -1007,20 +1022,19 @@ class JS_PUBLIC_API AutoGCRooter {
     *stackTop = down;
   }
 
-  /* Implemented in gc/RootMarking.cpp. */
-  inline void trace(JSTracer* trc);
-  static void traceAll(JSContext* cx, JSTracer* trc);
-  static void traceAllWrappers(JSContext* cx, JSTracer* trc);
+  void trace(JSTracer* trc);
 
  private:
+  friend class RootingContext;
+
   AutoGCRooter* const down;
   AutoGCRooter** const stackTop;
 
   /*
    * Discriminates actual subclass of this being used. The meaning is
-   * indicated by the corresponding value in the Tag enum.
+   * indicated by the corresponding value in the Kind enum.
    */
-  Tag tag_;
+  Kind kind_;
 
   /* No copy or assignment semantics. */
   AutoGCRooter(AutoGCRooter& ida) = delete;

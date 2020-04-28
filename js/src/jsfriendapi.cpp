@@ -49,10 +49,12 @@ using namespace js;
 
 using mozilla::PodArrayZero;
 
-JS::RootingContext::RootingContext()
-    : autoGCRooters_(nullptr), realm_(nullptr), zone_(nullptr) {
-  for (auto& stackRootPtr : stackRoots_) {
-    stackRootPtr = nullptr;
+JS::RootingContext::RootingContext() : realm_(nullptr), zone_(nullptr) {
+  for (auto& listHead : stackRoots_) {
+    listHead = nullptr;
+  }
+  for (auto& listHead : autoGCRooters_) {
+    listHead = nullptr;
   }
 
   PodArrayZero(nativeStackLimit);

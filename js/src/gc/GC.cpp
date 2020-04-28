@@ -6550,7 +6550,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
       [[fallthrough]];
 
     case State::Mark:
-      AutoGCRooter::traceAllWrappers(rt->mainContextFromOwnThread(), &marker);
+      rt->mainContextFromOwnThread()->traceWrapperGCRooters(&marker);
 
       if (markUntilBudgetExhausted(budget, gcstats::PhaseKind::MARK) ==
           NotFinished) {
@@ -6597,7 +6597,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
       MOZ_ASSERT(nursery().isEmpty());
       storeBuffer().checkEmpty();
 
-      AutoGCRooter::traceAllWrappers(rt->mainContextFromOwnThread(), &marker);
+      rt->mainContextFromOwnThread()->traceWrapperGCRooters(&marker);
 
       if (performSweepActions(budget) == NotFinished) {
         break;

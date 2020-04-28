@@ -497,7 +497,7 @@ class MOZ_RAII AutoWrapperVector : public JS::GCVector<WrapperValue, 8>,
  public:
   explicit AutoWrapperVector(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : JS::GCVector<WrapperValue, 8>(cx),
-        JS::AutoGCRooter(cx, JS::AutoGCRooter::Tag::WrapperVector) {
+        JS::AutoGCRooter(cx, JS::AutoGCRooter::Kind::WrapperVector) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   }
 
@@ -510,7 +510,7 @@ class MOZ_RAII AutoWrapperRooter : private JS::AutoGCRooter {
  public:
   AutoWrapperRooter(JSContext* cx,
                     const WrapperValue& v MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : JS::AutoGCRooter(cx, JS::AutoGCRooter::Tag::Wrapper), value(v) {
+      : JS::AutoGCRooter(cx, JS::AutoGCRooter::Kind::Wrapper), value(v) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   }
 
