@@ -33,6 +33,23 @@ const SECOND_MS = 1000;
 const MINUTE_MS = SECOND_MS * 60;
 const HOUR_MS = MINUTE_MS * 60;
 
+const MOCK_TOKEN_RESPONSE = {
+  access_token:
+    "e3c5caf17f27a0d9e351926a928938b3737df43e91d4992a5a5fca9a7bdef8ba",
+  token_type: "bearer",
+  scope: "https://identity.mozilla.com/apps/oldsync",
+  expires_in: 3600 * 6,
+  auth_at: 1587762898,
+};
+const MOCK_SCOPED_KEY_RESPONSE = {
+  "https://identity.mozilla.com/apps/oldsync": {
+    identifier: "https://identity.mozilla.com/apps/oldsync",
+    keyRotationSecret:
+      "0000000000000000000000000000000000000000000000000000000000000000",
+    keyRotationTimestamp: 1510726317123,
+  },
+};
+
 var globalIdentityConfig = makeIdentityConfig();
 var globalBrowseridManager = new BrowserIDManager();
 configureFxAccountIdentity(globalBrowseridManager, globalIdentityConfig);
@@ -53,30 +70,6 @@ MockFxAccountsClient.prototype = {
   },
 };
 
-function MockFxAccounts() {
-  let fxa = new FxAccounts({
-    _now_is: Date.now(),
-
-    now() {
-      return this._now_is;
-    },
-
-    fxAccountsClient: new MockFxAccountsClient(),
-  });
-  fxa._internal.currentAccountState.getCertificate = function(
-    data,
-    keyPair,
-    mustBeValidUntil
-  ) {
-    this.cert = {
-      validUntil: fxa._internal.now() + CERT_LIFETIME,
-      cert: "certificate",
-    };
-    return Promise.resolve(this.cert.cert);
-  };
-  return fxa;
-}
-
 add_test(function test_initial_state() {
   _("Verify initial state");
   Assert.ok(!globalBrowseridManager._token);
@@ -89,6 +82,26 @@ add_task(async function test_initialialize() {
   await globalBrowseridManager._ensureValidToken();
   Assert.ok(!!globalBrowseridManager._token);
   Assert.ok(globalBrowseridManager._hasValidToken());
+});
+
+add_task(async function test_initialialize_via_oauth_token() {
+  _("Verify start after fetching token using the oauth token flow");
+  Services.prefs.setBoolPref("identity.sync.useOAuthForSyncToken", true);
+  let browseridManager = new BrowserIDManager();
+
+  let identityConfig = makeIdentityConfig();
+  let fxaInternal = makeFxAccountsInternalMock(identityConfig);
+  configureFxAccountIdentity(browseridManager, identityConfig, fxaInternal);
+  browseridManager._fxaService._internal.initialize();
+  browseridManager._fxaService._internal.fxAccountsOAuthGrantClient.getTokenFromAssertion = () =>
+    Promise.resolve(MOCK_TOKEN_RESPONSE);
+  browseridManager._fxaService._internal._fxAccountsClient.getScopedKeyData = () =>
+    Promise.resolve(MOCK_SCOPED_KEY_RESPONSE);
+
+  await browseridManager._ensureValidToken();
+  Assert.ok(!!browseridManager._token);
+  Assert.ok(browseridManager._hasValidToken());
+  Services.prefs.setBoolPref("identity.sync.useOAuthForSyncToken", false);
 });
 
 add_task(async function test_initialializeWithAuthErrorAndDeletedAccount() {

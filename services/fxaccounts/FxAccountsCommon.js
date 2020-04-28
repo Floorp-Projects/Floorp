@@ -51,6 +51,7 @@ exports.ASSERTION_LIFETIME = 1000 * 3600 * 24 * 365 * 25; // 25 years
 // period).
 exports.ASSERTION_USE_PERIOD = 1000 * 60 * 5; // 5 minutes
 exports.CERT_LIFETIME = 1000 * 3600 * 6; // 6 hours
+exports.OAUTH_TOKEN_FOR_SYNC_LIFETIME_SECONDS = 3600 * 6; // 6 hours
 exports.KEY_LIFETIME = 1000 * 3600 * 12; // 12 hours
 
 // After we start polling for account verification, we stop polling when this
