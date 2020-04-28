@@ -182,12 +182,6 @@ bool FramingChecker::CheckFrameOptions(nsIChannel* aChannel,
     return true;
   }
 
-  // if the load is triggered by an extension, then xfo should
-  // not apply and we should allow the load.
-  if (loadInfo->TriggeringPrincipal()->GetIsAddonOrExpandedAddonPrincipal()) {
-    return true;
-  }
-
   nsCOMPtr<nsIHttpChannel> httpChannel;
   nsresult rv = nsContentSecurityUtils::GetHttpChannelFromPotentialMultiPart(
       aChannel, getter_AddRefs(httpChannel));
