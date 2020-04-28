@@ -2282,9 +2282,6 @@ nsRange* Selection::GetRangeAt(int32_t aIndex) const {
   return mStyledRanges.mRanges.SafeElementAt(aIndex, empty).mRange;
 }
 
-/*
-utility function
-*/
 nsresult Selection::SetAnchorFocusToRange(nsRange* aRange) {
   NS_ENSURE_STATE(mAnchorFocusRange);
 
