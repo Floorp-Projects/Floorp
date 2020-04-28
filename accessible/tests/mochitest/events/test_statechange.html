@@ -54,6 +54,12 @@
       await p;
     }
 
+    async function changeRequiredState(aID, aIsRequired) {
+      let p = waitForEvent(...stateChange(STATE_REQUIRED, false, aIsRequired, aID));
+      getNode(aID).required = aIsRequired;
+      await p;
+    }
+
     async function stateChangeOnFileInput(aID, aAttr, aValue,
                                     aState, aIsExtraState, aIsEnabled) {
       let fileControlNode = getNode(aID);
@@ -154,6 +160,9 @@
       await changeCheckInput("checkbox", false);
       await changeCheckInput("radio", true);
       await changeCheckInput("radio", false);
+
+      // required state change
+      await changeRequiredState("checkbox", true);
 
       // file input inherited state changes
       await stateChangeOnFileInput("file", "aria-busy", "true",

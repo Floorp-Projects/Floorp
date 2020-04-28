@@ -1113,6 +1113,12 @@ void DocAccessible::ContentStateChanged(dom::Document* aDocument,
     FireDelayedEvent(event);
   }
 
+  if (aStateMask.HasState(NS_EVENT_STATE_REQUIRED)) {
+    RefPtr<AccEvent> event =
+        new AccStateChangeEvent(accessible, states::REQUIRED, true);
+    FireDelayedEvent(event);
+  }
+
   if (aStateMask.HasState(NS_EVENT_STATE_VISITED)) {
     RefPtr<AccEvent> event =
         new AccStateChangeEvent(accessible, states::TRAVERSED, true);
