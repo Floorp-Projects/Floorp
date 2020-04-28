@@ -78,15 +78,15 @@ inline MediaSessionPlaybackTestState ConvertToMediaSessionPlaybackTestState(
   }
 }
 
-inline const char* ToControlledMediaStateStr(ControlledMediaState aState) {
+inline const char* ToMediaPlaybackStateStr(MediaPlaybackState aState) {
   switch (aState) {
-    case ControlledMediaState::eStarted:
+    case MediaPlaybackState::eStarted:
       return "started";
-    case ControlledMediaState::ePlayed:
+    case MediaPlaybackState::ePlayed:
       return "played";
-    case ControlledMediaState::ePaused:
+    case MediaPlaybackState::ePaused:
       return "paused";
-    case ControlledMediaState::eStopped:
+    case MediaPlaybackState::eStopped:
       return "stopped";
     default:
       MOZ_ASSERT_UNREACHABLE("Invalid media state.");
