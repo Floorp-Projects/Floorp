@@ -638,7 +638,6 @@ ENameValueFlag HTMLFigureAccessible::NativeName(nsString& aName) const {
   if (captionContent)
     nsTextEquivUtils::AppendTextEquivFromContent(this, captionContent, &aName);
 
-  aName.CompressWhitespace();
   return eNameOK;
 }
 
