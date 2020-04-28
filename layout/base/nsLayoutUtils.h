@@ -979,6 +979,38 @@ class nsLayoutUtils {
    * flag in aFlags will return CSS pixels, by default it returns device
    * pixels.
    * More info can be found in nsIFrame::GetTransformMatrix.
+   *
+   * Some notes on the possible combinations of |aFrame.mViewportType| and
+   * |aAncestor.mViewportType|:
+   *
+   * | aFrame.       | aAncestor.    | Notes
+   * | mViewportType | mViewportType |
+   * ==========================================================================
+   * | Layout        | Layout        | Commonplace, when both source and target
+   * |               |               | are inside zoom boundary.
+   * |               |               |
+   * |               |               | Could also happen in non-e10s setups
+   * |               |               | when both source and target are outside
+   * |               |               | the zoom boundary and the code is
+   * |               |               | oblivious to the existence of a zoom
+   * |               |               | boundary.
+   * ==========================================================================
+   * | Layout        | Visual        | Commonplace, used when hit testing visual
+   * |               |               | coordinates (e.g. coming from user input
+   * |               |               | events). We expected to encounter a
+   * |               |               | zoomed content root during traversal and
+   * |               |               | apply a layout-to-visual transform.
+   * ==========================================================================
+   * | Visual        | Layout        | Should never happen, will assert.
+   * ==========================================================================
+   * | Visual        | Visual        | In e10s setups, should only happen if
+   * |               |               | aFrame and aAncestor are both the
+   * |               |               | RCD viewport frame.
+   * |               |               |
+   * |               |               | In non-e10s setups, could happen with
+   * |               |               | different frames if they are both
+   * |               |               | outside the zoom boundary.
+   * ==========================================================================
    */
   static Matrix4x4Flagged GetTransformToAncestor(
       RelativeTo aFrame, RelativeTo aAncestor, uint32_t aFlags = 0,
