@@ -975,12 +975,6 @@ class PresShell final : public nsStubDocumentObserver,
   bool IsResolutionUpdatedByApz() const { return mResolutionUpdatedByApz; }
 
   /**
-   * Calculate the cumulative scale resolution from this document up to
-   * but not including the root document.
-   */
-  float GetCumulativeNonRootScaleResolution();
-
-  /**
    * Used by session restore code to restore a resolution before the first
    * paint.
    */
