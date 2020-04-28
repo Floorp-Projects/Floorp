@@ -139,14 +139,17 @@ class ProviderTopSites extends UrlbarProvider {
             })
           );
 
-          let tabs = UrlbarProviderOpenTabs.openTabs.get(
-            queryContext.userContextId || 0
-          );
+          let tabs;
+          if (UrlbarPrefs.get("suggest.openpage")) {
+            tabs = UrlbarProviderOpenTabs.openTabs.get(
+              queryContext.userContextId || 0
+            );
+          }
 
           if (tabs && tabs.includes(site.url.replace(/#.*$/, ""))) {
             result.type = UrlbarUtils.RESULT_TYPE.TAB_SWITCH;
             result.source = UrlbarUtils.RESULT_SOURCE.TABS;
-          } else {
+          } else if (UrlbarPrefs.get("suggest.bookmark")) {
             let bookmark = await PlacesUtils.bookmarks.fetch({
               url: new URL(result.payload.url),
             });
