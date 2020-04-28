@@ -465,7 +465,7 @@ static MOZ_ALWAYS_INLINE void GetGCThingMarkWordAndMask(const uintptr_t addr,
   *wordp = &bitmap[bit / nbits];
 }
 
-static MOZ_ALWAYS_INLINE JS::Zone* GetGCThingZone(const uintptr_t addr) {
+static MOZ_ALWAYS_INLINE JS::Zone* GetTenuredGCThingZone(const uintptr_t addr) {
   MOZ_ASSERT(addr);
   const uintptr_t zone_addr = (addr & ~ArenaMask) | ArenaZoneOffset;
   return *reinterpret_cast<JS::Zone**>(zone_addr);
@@ -550,7 +550,7 @@ MOZ_ALWAYS_INLINE bool IsCellPointerValid(const void* cell) {
   }
   auto location = detail::GetCellLocation(cell);
   if (location == ChunkLocation::TenuredHeap) {
-    return !!detail::GetGCThingZone(addr);
+    return !!detail::GetTenuredGCThingZone(addr);
   }
   if (location == ChunkLocation::Nursery) {
     return detail::NurseryCellHasStoreBuffer(cell);
@@ -572,14 +572,25 @@ namespace JS {
 
 static MOZ_ALWAYS_INLINE Zone* GetTenuredGCThingZone(GCCellPtr thing) {
   MOZ_ASSERT(!js::gc::IsInsideNursery(thing.asCell()));
-  return js::gc::detail::GetGCThingZone(thing.unsafeAsUIntPtr());
+  return js::gc::detail::GetTenuredGCThingZone(thing.unsafeAsUIntPtr());
+}
+
+extern JS_PUBLIC_API Zone* GetNurseryGCThingZone(GCCellPtr thing);
+
+static MOZ_ALWAYS_INLINE Zone* GetGCThingZone(GCCellPtr thing) {
+  if (!js::gc::IsInsideNursery(thing.asCell())) {
+    return js::gc::detail::GetTenuredGCThingZone(thing.unsafeAsUIntPtr());
+  }
+
+  return GetNurseryGCThingZone(thing);
 }
 
 extern JS_PUBLIC_API Zone* GetNurseryStringZone(JSString* str);
 
 static MOZ_ALWAYS_INLINE Zone* GetStringZone(JSString* str) {
   if (!js::gc::IsInsideNursery(str)) {
-    return js::gc::detail::GetGCThingZone(reinterpret_cast<uintptr_t>(str));
+    return js::gc::detail::GetTenuredGCThingZone(
+        reinterpret_cast<uintptr_t>(str));
   }
   return GetNurseryStringZone(str);
 }
@@ -686,7 +697,8 @@ static MOZ_ALWAYS_INLINE bool EdgeNeedsSweepUnbarriered(JSObject** objp) {
     return false;
   }
 
-  auto zone = JS::shadow::Zone::from(detail::GetGCThingZone(uintptr_t(*objp)));
+  auto zone =
+      JS::shadow::Zone::from(detail::GetTenuredGCThingZone(uintptr_t(*objp)));
   if (!zone->isGCSweepingOrCompacting()) {
     return false;
   }
