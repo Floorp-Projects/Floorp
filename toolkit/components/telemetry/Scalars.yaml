@@ -1106,7 +1106,7 @@ pictureinpicture:
     description: >
       The number of times a Picture-in-Picture window was opened, per trigger
       mechanism (e.g.: the video toggle, the context menu).
-    expires: "78"
+    expires: "82"
     kind: uint
     keyed: true
     notification_emails:
@@ -1115,8 +1115,6 @@ pictureinpicture:
     release_channel_collection: opt-out
     products:
       - 'firefox'
-      - 'fennec'
-      - 'geckoview'
     record_in_processes:
       - content
   closed_method:
@@ -1127,7 +1125,7 @@ pictureinpicture:
       The number of times a Picture-in-Picture window was closed, per trigger
       mechanism (e.g.: the close button, the unpip button, originating tab going away,
       process shutdown, etc).
-    expires: "78"
+    expires: "82"
     kind: uint
     keyed: true
     notification_emails:
@@ -1136,8 +1134,6 @@ pictureinpicture:
     release_channel_collection: opt-out
     products:
       - 'firefox'
-      - 'fennec'
-      - 'geckoview'
     record_in_processes:
       - main
 
