@@ -248,7 +248,13 @@ function initialize(toggleProfilerKeyShortcuts) {
      * @type {(buttonElement: HTMLElement) => void}
      */
     onCreated: buttonElement => {
-      const window = buttonElement.ownerDocument.defaultView;
+      const window = buttonElement?.ownerDocument?.defaultView;
+      if (!window) {
+        console.error(
+          "Unable to find the window of the profiler button element."
+        );
+        return;
+      }
 
       function updateButtonColor() {
         // Use photon blue-60 when active.

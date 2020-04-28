@@ -150,8 +150,13 @@ export interface Library {
   arch: string;
 }
 
-export interface GeckoProfile {
-  // Only type properties that we rely on.
+/**
+ * Only provide types for the GeckoProfile as much as we need it. There is no
+ * reason to maintain a full type definition here.
+ */
+export interface MinimallyTypedGeckoProfile {
+  libs: Array<{ debugName: string, breakpadId: string }>;
+  processes: Array<MinimallyTypedGeckoProfile>;
 }
 
 export type GetSymbolTableCallback = (
@@ -160,7 +165,7 @@ export type GetSymbolTableCallback = (
 ) => Promise<SymbolTableAsTuple>;
 
 export type ReceiveProfile = (
-  geckoProfile: GeckoProfile,
+  geckoProfile: MinimallyTypedGeckoProfile,
   getSymbolTableCallback: GetSymbolTableCallback
 ) => void;
 
@@ -189,7 +194,7 @@ export type GetActiveBrowsingContextID = () => number;
  * This interface is injected into profiler.firefox.com
  */
 interface GeckoProfilerFrameScriptInterface {
-  getProfile: () => Promise<object>;
+  getProfile: () => Promise<MinimallyTypedGeckoProfile>;
   getSymbolTable: GetSymbolTableCallback;
 }
 
@@ -221,7 +226,7 @@ export interface InitializedValues {
   // Determine the current page context.
   pageContext: PageContext;
   // The popup and devtools panel use different codepaths for getting symbol tables.
-  getSymbolTableGetter: (profile: object) => GetSymbolTableCallback;
+  getSymbolTableGetter: (profile: MinimallyTypedGeckoProfile) => GetSymbolTableCallback;
   // The list of profiler features that the current target supports. Note that
   // this value is only null to support older Firefox browsers that are targeted
   // by the actor system. This compatibility can be required when the ESR version
@@ -282,7 +287,7 @@ export type Action =
       openAboutProfiling?: () => void,
       openRemoteDevTools?: () => void,
       recordingSettingsFromPreferences: RecordingStateFromPreferences;
-      getSymbolTableGetter: (profile: object) => GetSymbolTableCallback;
+      getSymbolTableGetter: (profile: MinimallyTypedGeckoProfile) => GetSymbolTableCallback;
       supportedFeatures: string[] | null;
     }
   | {
@@ -299,7 +304,7 @@ export interface InitializeStoreValues {
   pageContext: PageContext;
   recordingPreferences: RecordingStateFromPreferences;
   supportedFeatures: string[] | null;
-  getSymbolTableGetter: (profile: object) => GetSymbolTableCallback;
+  getSymbolTableGetter: (profile: MinimallyTypedGeckoProfile) => GetSymbolTableCallback;
   openAboutProfiling?: () => void;
   openRemoteDevTools?: () => void;
 }

@@ -48,6 +48,7 @@ declare namespace MockedExports {
 
   interface ChromeWindow {
     gBrowser: Browser;
+    focus: () => void;
   }
 
   interface ChromeBrowser {
