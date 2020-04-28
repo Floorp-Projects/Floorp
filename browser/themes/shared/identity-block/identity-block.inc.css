@@ -223,14 +223,13 @@
   width: 16px;
   height: 16px;
 }
-#tracking-protection-icon-box:not([hasException])[active][animationsenabled] > #tracking-protection-icon,
-#tracking-protection-icon-box:not([animationsenabled])[active] > #tracking-protection-icon,
-#tracking-protection-icon-box:not([animationsenabled]):not([active]) > #tracking-protection-icon-animatable-box,
+
+#tracking-protection-icon-box:not([hasException])[active] > #tracking-protection-icon,
 #tracking-protection-icon-box:not([active]) > #tracking-protection-icon-animatable-box {
   display: none;
 }
 
-#tracking-protection-icon-box > #tracking-protection-icon-animatable-box {
+#tracking-protection-icon-animatable-box {
   display: block;
   position: absolute;
   overflow: hidden;
@@ -238,7 +237,7 @@
   height: 16px;
 }
 
-#tracking-protection-icon-box:not([hasException])[active] #tracking-protection-icon-animatable-image {
+#tracking-protection-icon-box:not([hasException])[active] > #tracking-protection-icon-animatable-box > #tracking-protection-icon-animatable-image {
   /* Overrides the default 'display: -moz-box' to prevent icon shifting issue
      with scaled text, see Bug 1591049 */
   display: block;
@@ -259,23 +258,25 @@
   z-index: 1;
 }
 
-:root[lwt-toolbar-field-brighttext] #tracking-protection-icon-box:not([hasException])[active] #tracking-protection-icon-animatable-image {
+:root[lwt-toolbar-field-brighttext] #tracking-protection-icon-box:not([hasException])[active] > #tracking-protection-icon-animatable-box > #tracking-protection-icon-animatable-image {
   background-image: url(chrome://browser/skin/tracking-protection-animation-brighttext.svg);
 }
 
-#tracking-protection-icon-box[active] #tracking-protection-icon-animatable-image:-moz-locale-dir(rtl) {
+#tracking-protection-icon-box[active] > #tracking-protection-icon-animatable-box > #tracking-protection-icon-animatable-image:-moz-locale-dir(rtl) {
   transform: scaleX(-1) translateX(-256px);
 }
 
-#tracking-protection-icon-box[animationsenabled][active][animate] #tracking-protection-icon-animatable-image {
-  animation-name: tp-icon-animation;
-  animation-timing-function: steps(16);
-  animation-duration: 1s;
-  animation-fill-mode: forwards;
-}
+@media (prefers-reduced-motion: no-preference) {
+  #tracking-protection-icon-box[active][animate] > #tracking-protection-icon-animatable-box > #tracking-protection-icon-animatable-image {
+    animation-name: tp-icon-animation;
+    animation-timing-function: steps(16);
+    animation-duration: 1s;
+    animation-fill-mode: forwards;
+  }
 
-#tracking-protection-icon-box[animationsenabled][active][animate] #tracking-protection-icon-animatable-image:-moz-locale-dir(rtl) {
-  animation-name: tp-icon-animation-rtl;
+  #tracking-protection-icon-box[active][animate] > #tracking-protection-icon-animatable-box > #tracking-protection-icon-animatable-image:-moz-locale-dir(rtl) {
+    animation-name: tp-icon-animation-rtl;
+  }
 }
 
 #tracking-protection-icon-tooltip {
