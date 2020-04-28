@@ -877,7 +877,21 @@ bool GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
     // the replaced text does not match our composition.
     textChanged |= RemoveComposition();
 
+#ifdef DEBUG_ANDROID_IME
     {
+      nsEventStatus status = nsEventStatus_eIgnore;
+      WidgetQueryContentEvent selection(true, eQuerySelectedText, widget);
+      widget->DispatchEvent(&selection, status);
+      if (selection.mSucceeded) {
+        ALOGIME("IME: Current selection: { Offset=%u, Length=%u }",
+                selection.mReply.mOffset, selection.mReply.mString.Length());
+      }
+    }
+#endif
+
+    // If aStart or aEnd is negative value, we use current selection instead
+    // of updating the selection.
+    if (aStart >= 0 && aEnd >= 0) {
       // Use text selection to set target position(s) for
       // insert, or replace, of text.
       WidgetSelectionEvent event(true, eSetSelection, widget);
