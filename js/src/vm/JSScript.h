@@ -37,6 +37,7 @@
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "util/StructuredSpewer.h"
+#include "util/TrailingArray.h"
 #include "vm/BigIntType.h"
 #include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"
@@ -1409,28 +1410,16 @@ struct FieldInitializers {
 // [SMDOC] - JSScript data layout (unshared)
 //
 // PrivateScriptData stores variable-length data associated with a script.
-// Abstractly a PrivateScriptData consists of all these arrays:
+// Abstractly a PrivateScriptData consists of the following:
 //
 //   * A non-empty array of GCCellPtr in gcthings()
 //
 // Accessing this array just requires calling the appropriate public
 // Span-computing function.
-class alignas(uintptr_t) PrivateScriptData final {
+class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
   uint32_t ngcthings = 0;
 
   js::FieldInitializers fieldInitializers_ = js::FieldInitializers::Invalid();
-
-  // Translate an offset into a concrete pointer.
-  template <typename T>
-  T* offsetToPointer(size_t offset) {
-    uintptr_t base = reinterpret_cast<uintptr_t>(this);
-    uintptr_t elem = base + offset;
-    return reinterpret_cast<T*>(elem);
-  }
-
-  // Helpers for creating initializing trailing data
-  template <typename T>
-  void initElements(size_t offset, size_t length);
 
   // Size to allocate
   static size_t AllocationSize(uint32_t ngcthings);
@@ -1445,7 +1434,7 @@ class alignas(uintptr_t) PrivateScriptData final {
 
   // Accessors for typed array spans.
   mozilla::Span<JS::GCCellPtr> gcthings() {
-    size_t offset = offsetOfGCThings();
+    Offset offset = offsetOfGCThings();
     return mozilla::MakeSpan(offsetToPointer<JS::GCCellPtr>(offset), ngcthings);
   }
 
@@ -1481,7 +1470,7 @@ class alignas(uintptr_t) PrivateScriptData final {
 };
 
 // Script data that is shareable across a JSRuntime.
-class RuntimeScriptData final {
+class alignas(uintptr_t) RuntimeScriptData final : public TrailingArray {
   // This class is reference counted as follows: each pointer from a JSScript
   // counts as one reference plus there may be one reference from the shared
   // script data table.
@@ -1497,14 +1486,8 @@ class RuntimeScriptData final {
   friend class ::JSScript;
 
  private:
-  // Layout of trailing arrays.
-  size_t atomOffset() const { return offsetOfAtoms(); }
-
   // Size to allocate.
   static size_t AllocationSize(uint32_t natoms);
-
-  template <typename T>
-  void initElements(size_t offset, size_t length);
 
   // Initialize to GC-safe state.
   explicit RuntimeScriptData(uint32_t natoms);
@@ -1528,15 +1511,13 @@ class RuntimeScriptData final {
 
   uint32_t natoms() const { return natoms_; }
   GCPtrAtom* atoms() {
-    uintptr_t base = reinterpret_cast<uintptr_t>(this);
-    return reinterpret_cast<GCPtrAtom*>(base + atomOffset());
+    Offset offset = offsetOfAtoms();
+    return offsetToPointer<GCPtrAtom>(offset);
   }
 
   mozilla::Span<const GCPtrAtom> atomsSpan() const {
-    uintptr_t base = reinterpret_cast<uintptr_t>(this);
-    const GCPtrAtom* p =
-        reinterpret_cast<const GCPtrAtom*>(base + atomOffset());
-    return mozilla::MakeSpan(p, natoms_);
+    Offset offset = offsetOfAtoms();
+    return mozilla::MakeSpan(offsetToPointer<GCPtrAtom>(offset), natoms_);
   }
 
   static constexpr size_t offsetOfAtoms() { return sizeof(RuntimeScriptData); }

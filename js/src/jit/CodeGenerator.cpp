@@ -13501,7 +13501,7 @@ void CodeGenerator::visitRecompileCheck(LRecompileCheck* ins) {
 
   // Check if warm-up counter is high enough.
   AbsoluteAddress warmUpCount =
-      AbsoluteAddress(jitScript->addressOfWarmUpCount());
+      AbsoluteAddress(jitScript).offset(JitScript::offsetOfWarmUpCount());
   if (ins->mir()->increaseWarmUpCounter()) {
     masm.load32(warmUpCount, tmp);
     masm.add32(Imm32(1), tmp);

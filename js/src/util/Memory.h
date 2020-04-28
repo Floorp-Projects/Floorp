@@ -41,21 +41,6 @@ static constexpr T AlignBytes(T bytes, U alignment) {
   return bytes + ComputeByteAlignment(bytes, alignment);
 }
 
-/*****************************************************************************/
-
-// Placement-new elements of an array. This should optimize away for types with
-// trivial default initiation.
-template <typename T>
-static void DefaultInitializeElements(void* arrayPtr, size_t length) {
-  uintptr_t elem = reinterpret_cast<uintptr_t>(arrayPtr);
-  MOZ_ASSERT(elem % alignof(T) == 0);
-
-  for (size_t i = 0; i < length; ++i) {
-    new (reinterpret_cast<void*>(elem)) T;
-    elem += sizeof(T);
-  }
-}
-
 } /* namespace js */
 
 #endif /* util_Memory_h */
