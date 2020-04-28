@@ -694,6 +694,7 @@ var loadManifest = async function(aPackage, aLocation, aOldAddon) {
     }
   }
 
+  addon.propagateDisabledState(aOldAddon);
   if (!aLocation.isSystem && !aLocation.isBuiltin) {
     if (addon.type === "extension" && !aLocation.isTemporary) {
       addon.recommendationState = await readRecommendationStates(
@@ -702,7 +703,6 @@ var loadManifest = async function(aPackage, aLocation, aOldAddon) {
       );
     }
 
-    addon.propagateDisabledState(aOldAddon);
     await addon.updateBlocklistState();
     addon.appDisabled = !XPIDatabase.isUsableAddon(addon);
   }
