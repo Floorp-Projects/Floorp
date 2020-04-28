@@ -96,8 +96,8 @@ CompileRuntime* CompileZone::runtime() {
 bool CompileZone::isAtomsZone() { return zone()->isAtomsZone(); }
 
 #ifdef DEBUG
-const void* CompileZone::addressOfIonBailAfter() {
-  return zone()->runtimeFromAnyThread()->jitRuntime()->addressOfIonBailAfter();
+const void* CompileRuntime::addressOfIonBailAfterCounter() {
+  return runtime()->jitRuntime()->addressOfIonBailAfterCounter();
 }
 #endif
 
@@ -220,4 +220,7 @@ JitCompileOptions::JitCompileOptions(JSContext* cx) {
       cx->runtime()->geckoProfiler().enabled() &&
       cx->runtime()->geckoProfiler().slowAssertionsEnabled();
   offThreadCompilationAvailable_ = OffThreadCompilationAvailable(cx);
+#ifdef DEBUG
+  ionBailAfterEnabled_ = cx->runtime()->jitRuntime()->ionBailAfterEnabled();
+#endif
 }

@@ -2940,7 +2940,14 @@ static bool testingFunc_bailAfter(JSContext* cx, unsigned argc, Value* vp) {
 
 #ifdef DEBUG
   if (auto* jitRuntime = cx->runtime()->jitRuntime()) {
-    jitRuntime->setIonBailAfter(args[0].toInt32());
+    uint32_t bailAfter = args[0].toInt32();
+    bool enableBailAfter = bailAfter > 0;
+    if (jitRuntime->ionBailAfterEnabled() != enableBailAfter) {
+      // Force JIT code to be recompiled with (or without) instrumentation.
+      ReleaseAllJITCode(cx->defaultFreeOp());
+      jitRuntime->setIonBailAfterEnabled(enableBailAfter);
+    }
+    jitRuntime->setIonBailAfterCounter(bailAfter);
   }
 #endif
 

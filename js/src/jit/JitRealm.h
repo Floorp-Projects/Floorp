@@ -219,9 +219,15 @@ class JitRuntime {
   UnprotectedData<JitcodeGlobalTable*> jitcodeGlobalTable_{nullptr};
 
 #ifdef DEBUG
-  // The number of possible bailing places encounters before forcefully bailing
-  // in that place. Zero means inactive.
-  MainThreadData<uint32_t> ionBailAfter_{false};
+  // The number of possible bailing places encountered before forcefully bailing
+  // in that place if the counter reaches zero. Note that zero also means
+  // inactive.
+  MainThreadData<uint32_t> ionBailAfterCounter_{0};
+
+  // Whether the bailAfter mechanism is enabled. Used to avoid generating the
+  // Ion code instrumentation for ionBailAfterCounter_ if the testing function
+  // isn't used.
+  MainThreadData<bool> ionBailAfterEnabled_{false};
 #endif
 
   // Number of Ion compilations which were finished off thread and are
@@ -419,11 +425,13 @@ class JitRuntime {
   }
 
 #ifdef DEBUG
-  void* addressOfIonBailAfter() { return &ionBailAfter_; }
+  void* addressOfIonBailAfterCounter() { return &ionBailAfterCounter_; }
 
   // Set after how many bailing places we should forcefully bail.
   // Zero disables this feature.
-  void setIonBailAfter(uint32_t after) { ionBailAfter_ = after; }
+  void setIonBailAfterCounter(uint32_t after) { ionBailAfterCounter_ = after; }
+  bool ionBailAfterEnabled() const { return ionBailAfterEnabled_; }
+  void setIonBailAfterEnabled(bool enabled) { ionBailAfterEnabled_ = enabled; }
 #endif
 
   size_t numFinishedOffThreadTasks() const {
