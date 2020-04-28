@@ -243,7 +243,7 @@ class WatchManager {
       mNotificationPending = true;
 
       // Queue up our notification jobs to run in a stable state.
-      mOwnerThread->TailDispatcher().AddDirectTask(
+      AbstractThread::DispatchDirectTask(
           NS_NewRunnableFunction("WatchManager::PerCallbackWatcher::Notify",
                                  [self = RefPtr<PerCallbackWatcher>(this),
                                   owner = RefPtr<OwnerType>(mOwner)]() {

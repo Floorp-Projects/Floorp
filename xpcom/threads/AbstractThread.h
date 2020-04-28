@@ -82,6 +82,10 @@ class AbstractThread : public nsISerialEventTarget {
   // Returns false if we definitely don't have any tail tasks.
   virtual bool MightHaveTailTasks() { return true; }
 
+  // Returns true if the tail dispatcher is available. In certain edge cases
+  // like shutdown, it might not be.
+  virtual bool IsTailDispatcherAvailable() { return true; }
+
   // Helper functions for methods on the tail TasklDispatcher. These check
   // HasTailTasks to avoid allocating a TailDispatcher if it isn't
   // needed.
