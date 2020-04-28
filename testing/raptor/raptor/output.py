@@ -672,7 +672,28 @@ class RaptorOutput(PerftestOutput):
                     subtests.append(new_subtest)
 
             elif test["type"] == "benchmark":
-                if "assorted-dom" in test["measurements"]:
+
+                # to reduce the conditions in the if below, i will use this list
+                # to check if we are running an youtube playback perf test
+                youtube_playback_tests = [
+                    "youtube-playbackperf-sfr-vp9-test",
+                    "youtube-playbackperf-sfr-h264-test",
+                    "youtube-playbackperf-sfr-av1-test",
+                    "youtube-playbackperf-hfr-test",
+                    "youtube-playbackperf-widevine-sfr-vp9-test",
+                    "youtube-playbackperf-widevine-sfr-h264-test",
+                    "youtube-playbackperf-widevine-hfr-test",
+                ]
+
+                youtube_playback_test_name = [
+                    i for i in youtube_playback_tests if i in test["measurements"]
+                ]
+
+                if youtube_playback_test_name:
+                    subtests, vals = self.parseYoutubePlaybackPerformanceOutput(
+                        test, test_name=youtube_playback_test_name[0]
+                    )
+                elif "assorted-dom" in test["measurements"]:
                     subtests, vals = self.parseAssortedDomOutput(test)
                 elif "ares6" in test["measurements"]:
                     subtests, vals = self.parseAresSixOutput(test)
@@ -692,8 +713,7 @@ class RaptorOutput(PerftestOutput):
                     subtests, vals = self.parseWASMMiscOutput(test)
                 elif "webaudio" in test["measurements"]:
                     subtests, vals = self.parseWebaudioOutput(test)
-                elif "youtube-playbackperf-test" in test["measurements"]:
-                    subtests, vals = self.parseYoutubePlaybackPerformanceOutput(test)
+
                 suite["subtests"] = subtests
 
             else:
@@ -1201,7 +1221,7 @@ class RaptorOutput(PerftestOutput):
 
         return subtests, vals
 
-    def parseYoutubePlaybackPerformanceOutput(self, test):
+    def parseYoutubePlaybackPerformanceOutput(self, test, test_name):
         """Parse the metrics for the Youtube playback performance test.
 
         For each video measured values for dropped and decoded frames will be
@@ -1215,7 +1235,7 @@ class RaptorOutput(PerftestOutput):
         All those three values will then be emitted as separate sub tests.
         """
         _subtests = {}
-        data = test["measurements"]["youtube-playbackperf-test"]
+        data = test["measurements"].get(test_name)
 
         def create_subtest_entry(
             name,
@@ -1252,7 +1272,7 @@ class RaptorOutput(PerftestOutput):
                     percent_dropped = 100.0
 
                 # Remove the not needed "PlaybackPerf." prefix from each test
-                _sub = _sub.split("PlaybackPerf.", 1)[-1]
+                _sub = _sub.split("PlaybackPerf", 1)[-1]
 
                 # build a list of subtests and append all related replicates
                 create_subtest_entry(

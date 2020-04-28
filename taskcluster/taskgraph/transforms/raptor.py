@@ -289,12 +289,8 @@ def add_extra_options(config, tests):
                     "branches": [],  # For all branches
                     "testnames": ["youtube-playback"],
                     "urlparams": [
-                        # param used for excluding youtube-playback tests from executing
-                        # it excludes the tests with videos >1080p
-                        "exclude=1,2,3,4,5,6,7,8,9,10,17,18,19,20,21,22,25,26,"
-                        "28,29,30,32,33,34,35,36,37,38,39,40,47,48,49,50,51,52,"
-                        "53,54,55,56,63,64,65,66,67,68,69,70,71,72,79,80,81,82,"
-                        "83,84,87,88,89,90,93,94,95,96",
+                        # it excludes all VP9 tests
+                        "exclude=1-34"
                     ]
                 },
             ]

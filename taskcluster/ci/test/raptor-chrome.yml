@@ -541,8 +541,85 @@ raptor-youtube-playback-chrome:
     try-name: raptor-youtube-playback-chrome
     treeherder-symbol: Rap-ChR(ytp)
     max-run-time: 2700
-    tier: 2
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback
+            - --app=chrome
+
+raptor-youtube-playback-av1-sfr-chrome:
+    description: "Raptor YouTube Playback AV1 SFR on Chrome"
+    try-name: raptor-youtube-playback-av1-sfr-chrome
+    treeherder-symbol: Rap-ChR(ytp-av1-sfr)
+    max-run-time:
+        by-test-platform:
+            windows10-aarch64/opt: 3600
+            default: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-av1-sfr
+            - --app=chrome
+
+raptor-youtube-playback-h264-sfr-chrome:
+    description: "Raptor YouTube Playback H264 SFR on Chrome"
+    try-name: raptor-youtube-playback-h264-sfr-chrome
+    treeherder-symbol: Rap-ChR(ytp-h264-sfr)
+    max-run-time:
+        by-test-platform:
+            windows10-aarch64/opt: 3600
+            default: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-h264-sfr
+            - --app=chrome
+
+raptor-youtube-playback-vp9-sfr-chrome:
+    description: "Raptor YouTube Playback VP9 SFR on Chrome"
+    try-name: raptor-youtube-playback-vp9-sfr-chrome
+    treeherder-symbol: Rap-ChR(ytp-vp9-sfr)
+    max-run-time:
+        by-test-platform:
+            windows10-aarch64/opt: 3600
+            default: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-vp9-sfr
+            - --app=chrome
+
+raptor-youtube-playback-widevine-hfr-chrome:
+    description: "Raptor YouTube Playback Widevine HFR on Chrome"
+    try-name: raptor-youtube-playback-widevine-hfr-chrome
+    treeherder-symbol: Rap-ChR(ytp-widevine-hfr)
+    max-run-time:
+        by-test-platform:
+            windows10-aarch64/opt: 3600
+            default: 2700
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-widevine-hfr
+            - --app=chrome
+
+raptor-youtube-playback-widevine-h264-sfr-chrome:
+    description: "Raptor YouTube Playback Widevine H264 SFR on Chrome"
+    try-name: raptor-youtube-playback-widevine-h264-sfr-chrome
+    treeherder-symbol: Rap-ChR(ytp-widevine-h264-sfr)
+    max-run-time:
+        by-test-platform:
+            windows10-aarch64/opt: 3600
+            default: 2700
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-widevine-h264-sfr
+            - --app=chrome
+
+raptor-youtube-playback-widevine-vp9-sfr-chrome:
+    description: "Raptor YouTube Playback Widevine VP9 SFR on Chrome"
+    try-name: raptor-youtube-playback-widevine-vp9-sfr-chrome
+    treeherder-symbol: Rap-ChR(ytp-widevine-vp9-sfr)
+    max-run-time:
+        by-test-platform:
+            windows10-aarch64/opt: 3600
+            default: 2700
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-widevine-vp9-sfr
             - --app=chrome
