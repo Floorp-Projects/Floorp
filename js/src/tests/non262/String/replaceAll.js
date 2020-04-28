@@ -1,5 +1,3 @@
-// |reftest| skip-if(!String.prototype.replaceAll)
-
 function neverCalled() {
   assertEq(true, false, "unexpected call");
 }
