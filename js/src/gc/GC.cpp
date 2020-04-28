@@ -1468,10 +1468,6 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return uint32_t(tunables.highFrequencyHeapGrowthMin() * 100);
     case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
       return uint32_t(tunables.lowFrequencyHeapGrowth() * 100);
-    case JSGC_DYNAMIC_HEAP_GROWTH:
-      return tunables.isDynamicHeapGrowthEnabled();
-    case JSGC_DYNAMIC_MARK_SLICE:
-      return tunables.isDynamicMarkSliceEnabled();
     case JSGC_ALLOCATION_THRESHOLD:
       return tunables.gcZoneAllocThresholdBase() / 1024 / 1024;
     case JSGC_NON_INCREMENTAL_FACTOR:
@@ -7300,8 +7296,7 @@ SliceBudget GCRuntime::defaultBudget(JS::GCReason reason, int64_t millis) {
   if (millis == 0) {
     if (reason == JS::GCReason::ALLOC_TRIGGER) {
       millis = defaultSliceBudgetMS();
-    } else if (schedulingState.inHighFrequencyGCMode() &&
-               tunables.isDynamicMarkSliceEnabled()) {
+    } else if (schedulingState.inHighFrequencyGCMode()) {
       millis = defaultSliceBudgetMS() * IGC_MARK_SLICE_MULTIPLIER;
     } else {
       millis = defaultSliceBudgetMS();
