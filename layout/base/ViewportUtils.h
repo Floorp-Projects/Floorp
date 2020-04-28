@@ -12,9 +12,12 @@ namespace mozilla {
 
 class ViewportUtils {
  public:
-  /* Return a "callback transform" to be applied to the coordinates of input
-     events targeting content inside the scroll frame identified by |aScrollId|.
-     The callback transform has two components:
+  /* Return a transform to be applied to the coordinates of input events
+     targeting content inside the scroll frame identified by |aScrollId|, which
+     converts from "visual coordinates" (which are the coordinates events have
+     when they arrive from APZ) to "layout coordinates" (which are the
+     coordinates used in most places by layout code). The transform has two
+     components:
      1. The pres shell resolution, representing the pinch-zoom scale
         (if the scroll frame |aScrollId| is inside the resolution, which
         is most of the time).
@@ -27,7 +30,7 @@ class ViewportUtils {
        up to the root, using values populated in
        APZCCallbackHelper::UpdateCallbackTransform. See that method's
        documentation for additional details. */
-  static CSSToCSSMatrix4x4 GetCallbackTransform(
+  static CSSToCSSMatrix4x4 GetVisualToLayoutTransform(
       layers::ScrollableLayerGuid::ViewID aScrollId);
 };
 
