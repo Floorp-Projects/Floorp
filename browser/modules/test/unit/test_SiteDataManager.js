@@ -5,7 +5,6 @@
 
 const EXAMPLE_ORIGIN = "https://www.example.com";
 const EXAMPLE_ORIGIN_2 = "https://example.org";
-const EXAMPLE_ORIGIN_3 = "http://localhost:8000";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { SiteDataManager } = ChromeUtils.import(
@@ -131,17 +130,10 @@ add_task(async function testRemove() {
   SiteDataTestUtils.addToCookies(EXAMPLE_ORIGIN_2, "foo", "bar");
   await SiteDataTestUtils.addToIndexedDB(EXAMPLE_ORIGIN_2, 2048);
   await SiteDataTestUtils.persist(EXAMPLE_ORIGIN_2);
-  await SiteDataTestUtils.addToIndexedDB(EXAMPLE_ORIGIN_3, 2048);
 
   await SiteDataManager.updateSites();
 
   let sites = await SiteDataManager.getSites();
-
-  Assert.equal(sites.length, 3, "Has three sites.");
-
-  await SiteDataManager.remove(["localhost"]);
-
-  sites = await SiteDataManager.getSites();
 
   Assert.equal(sites.length, 2, "Has two sites.");
 
