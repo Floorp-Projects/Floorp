@@ -820,9 +820,10 @@ void DocumentOrShadowRoot::Unlink(DocumentOrShadowRoot* tmp) {
     tmp->RemoveSheetFromStylesIfApplicable(*sheet);
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mStyleSheets);
-  for (StyleSheet* sheet : tmp->mAdoptedStyleSheets) {
-    sheet->RemoveAdopter(*tmp);
-  }
+  tmp->EnumerateUniqueAdoptedStyleSheetsBackToFront([&](StyleSheet& aSheet) {
+    aSheet.RemoveAdopter(*tmp);
+    tmp->RemoveSheetFromStylesIfApplicable(aSheet);
+  });
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAdoptedStyleSheets);
   tmp->mIdentifierMap.Clear();
   tmp->mRadioGroups.Clear();
