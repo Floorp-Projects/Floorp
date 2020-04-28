@@ -1836,6 +1836,19 @@ MOZ_MUST_USE JSObject* GetThisObject(JSContext* cx, const CallArgs& args,
   return &args.thisv().toObject();
 }
 
+static bool DefineToStringTag(JSContext* cx, HandleObject obj,
+                              const char* toStringTag) {
+  RootedString toStringTagStr(cx, JS_NewStringCopyZ(cx, toStringTag));
+  if (!toStringTagStr) {
+    return false;
+  }
+
+  RootedId toStringTagId(cx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(
+                                 cx, JS::SymbolCode::toStringTag)));
+  return JS_DefinePropertyById(cx, obj, toStringTagId, toStringTagStr,
+                               JSPROP_READONLY);
+}
+
 static JSObject* InitCTypeClass(JSContext* cx, HandleObject ctypesObj) {
   JSFunction* fun = JS_DefineFunction(cx, ctypesObj, "CType", ConstructAbstract,
                                       0, CTYPESCTOR_FLAGS);
@@ -1871,6 +1884,10 @@ static JSObject* InitCTypeClass(JSContext* cx, HandleObject ctypesObj) {
       !JS_DefineFunctions(cx, prototype, sCTypeFunctions))
     return nullptr;
 
+  if (!DefineToStringTag(cx, prototype, "CType")) {
+    return nullptr;
+  }
+
   if (!JS_FreezeObject(cx, ctor) || !JS_FreezeObject(cx, prototype)) {
     return nullptr;
   }
@@ -1886,6 +1903,10 @@ static JSObject* InitABIClass(JSContext* cx) {
   }
 
   if (!JS_DefineFunctions(cx, obj, sCABIFunctions)) {
+    return nullptr;
+  }
+
+  if (!DefineToStringTag(cx, obj, "CABI")) {
     return nullptr;
   }
 
@@ -1928,6 +1949,10 @@ static JSObject* InitCDataClass(JSContext* cx, HandleObject parent,
   if (!JS_DefineProperties(cx, prototype, sCDataProps) ||
       !JS_DefineFunctions(cx, prototype, sCDataFunctions))
     return nullptr;
+
+  if (!DefineToStringTag(cx, prototype, "CData")) {
+    return nullptr;
+  }
 
   if (  // !JS_FreezeObject(cx, prototype) || // XXX fixme - see bug 541212!
       !JS_FreezeObject(cx, ctor))
@@ -2043,6 +2068,17 @@ static JSObject* InitInt64Class(JSContext* cx, HandleObject parent,
     return nullptr;
   }
 
+  if (clasp == &sInt64ProtoClass) {
+    if (!DefineToStringTag(cx, prototype, "Int64")) {
+      return nullptr;
+    }
+  } else {
+    MOZ_ASSERT(clasp == &sUInt64ProtoClass);
+    if (!DefineToStringTag(cx, prototype, "UInt64")) {
+      return nullptr;
+    }
+  }
+
   RootedObject ctor(cx, JS_GetConstructor(cx, prototype));
   if (!ctor) {
     return nullptr;
@@ -2050,7 +2086,6 @@ static JSObject* InitInt64Class(JSContext* cx, HandleObject parent,
 
   // Define the 'join' function as an extended native and stash
   // ctypes.{Int64,UInt64}.prototype in a reserved slot of the new function.
-  MOZ_ASSERT(clasp == &sInt64ProtoClass || clasp == &sUInt64ProtoClass);
   JSNative native = (clasp == &sInt64ProtoClass) ? Int64::Join : UInt64::Join;
   JSFunction* fun = js::DefineFunctionWithReserved(cx, ctor, "join", native, 2,
                                                    CTYPESFN_FLAGS);
@@ -2344,6 +2379,10 @@ JS_PUBLIC_API bool JS_InitCTypesClass(JSContext* cx, HandleObject global) {
       !JS_DefineProperties(cx, ctypes, sModuleProps))
     return false;
 
+  if (!DefineToStringTag(cx, ctypes, "ctypes")) {
+    return false;
+  }
+
   // Set up ctypes.CDataFinalizer.prototype.
   RootedObject ctor(cx);
   if (!GetObjectProperty(cx, ctypes, "CDataFinalizer", &ctor)) {
@@ -2356,6 +2395,10 @@ JS_PUBLIC_API bool JS_InitCTypesClass(JSContext* cx, HandleObject global) {
   }
 
   if (!JS_DefineFunctions(cx, prototype, sCDataFinalizerFunctions)) {
+    return false;
+  }
+
+  if (!DefineToStringTag(cx, prototype, "CDataFinalizer")) {
     return false;
   }
 
