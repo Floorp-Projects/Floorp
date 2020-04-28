@@ -4,13 +4,22 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 39.0.0-SNAPSHOT (In Development)
+# 40.0.0-SNAPSHOT (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v38.0.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/98?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v39.0.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/100?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+
+# 39.0.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v38.0.0...v39.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/99?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v39.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v39.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v39.0.0/buildSrc/src/main/java/Config.kt)
 
 * **All components**
   * Increased `targetSdkVersion` to 29 (Android Q)
