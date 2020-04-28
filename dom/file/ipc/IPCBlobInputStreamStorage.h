@@ -34,6 +34,8 @@ class IPCBlobInputStreamStorage final : public nsIObserver {
 
   void ForgetStream(const nsID& aID);
 
+  bool HasStream(const nsID& aID);
+
   void GetStream(const nsID& aID, uint64_t aStart, uint64_t aLength,
                  nsIInputStream** aInputStream);
 
