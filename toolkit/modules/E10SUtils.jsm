@@ -770,6 +770,17 @@ var E10SUtils = {
 
     let mustChangeProcess = requiredRemoteType != currentRemoteType;
 
+    let newFrameloader = false;
+    if (
+      browser.getAttribute("preloadedState") === "consumed" &&
+      uri != "about:newtab"
+    ) {
+      // Leaving about:newtab from a used to be preloaded browser should run the process
+      // selecting algorithm again.
+      mustChangeProcess = true;
+      newFrameloader = true;
+    }
+
     // If we already have a content process, and the load will be
     // handled using DocumentChannel, then we can skip switching
     // for now, and let DocumentChannel do it during the response.
@@ -781,16 +792,7 @@ var E10SUtils = {
       documentChannelPermittedForURI(uriObject)
     ) {
       mustChangeProcess = false;
-    }
-    let newFrameloader = false;
-    if (
-      browser.getAttribute("preloadedState") === "consumed" &&
-      uri != "about:newtab"
-    ) {
-      // Leaving about:newtab from a used to be preloaded browser should run the process
-      // selecting algorithm again.
-      mustChangeProcess = true;
-      newFrameloader = true;
+      newFrameloader = false;
     }
 
     return {
@@ -841,20 +843,6 @@ var E10SUtils = {
 
     let webNav = aDocShell.QueryInterface(Ci.nsIWebNavigation);
     let sessionHistory = webNav.sessionHistory;
-    if (
-      !aHasPostData &&
-      remoteType == WEB_REMOTE_TYPE &&
-      sessionHistory.count == 1 &&
-      webNav.currentURI.spec == "about:newtab"
-    ) {
-      // This is possibly a preloaded browser and we're about to navigate away for
-      // the first time. On the child side there is no way to tell for sure if that
-      // is the case, so let's redirect this request to the parent to decide if a new
-      // process is needed. But we don't currently properly handle POST data in
-      // redirects (bug 1457520), so if there is POST data, don't return false here.
-      return false;
-    }
-
     let wantRemoteType = this.getRemoteTypeForURIObject(
       aURI,
       true,
@@ -873,6 +861,20 @@ var E10SUtils = {
       documentChannelPermittedForURI(aURI)
     ) {
       return true;
+    }
+
+    if (
+      !aHasPostData &&
+      remoteType == WEB_REMOTE_TYPE &&
+      sessionHistory.count == 1 &&
+      webNav.currentURI.spec == "about:newtab"
+    ) {
+      // This is possibly a preloaded browser and we're about to navigate away for
+      // the first time. On the child side there is no way to tell for sure if that
+      // is the case, so let's redirect this request to the parent to decide if a new
+      // process is needed. But we don't currently properly handle POST data in
+      // redirects (bug 1457520), so if there is POST data, don't return false here.
+      return false;
     }
 
     // If we are in a Large-Allocation process, and it wouldn't be content visible

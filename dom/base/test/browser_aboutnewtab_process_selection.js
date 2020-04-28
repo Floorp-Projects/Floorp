@@ -140,6 +140,11 @@ add_task(async function preloaded_state_attribute() {
 
   // Navigate away and check that the attribute has been removed altogether
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URL);
+  await BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    false,
+    TEST_URL
+  );
   let navigatedTabHasState = gBrowser.selectedBrowser.hasAttribute(
     "preloadedState"
   );
