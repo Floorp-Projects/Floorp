@@ -51,7 +51,7 @@ void PlaybackController::Play() {
     LOG("Handle 'play' in default behavior");
     if (RefPtr<ContentControlKeyEventReceiver> receiver =
             ContentControlKeyEventReceiver::Get(mBC)) {
-      receiver->OnKeyPressed(MediaControlKeysEvent::ePlay);
+      receiver->HandleEvent(MediaControlKeysEvent::ePlay);
     }
   } else {
     session->NotifyHandler(action);
@@ -67,7 +67,7 @@ void PlaybackController::Pause() {
     LOG("Handle 'pause' in default behavior");
     if (RefPtr<ContentControlKeyEventReceiver> receiver =
             ContentControlKeyEventReceiver::Get(mBC)) {
-      receiver->OnKeyPressed(MediaControlKeysEvent::ePause);
+      receiver->HandleEvent(MediaControlKeysEvent::ePause);
     }
   } else {
     session->NotifyHandler(action);
@@ -118,7 +118,7 @@ void PlaybackController::Stop() {
     RefPtr<ContentControlKeyEventReceiver> receiver =
         ContentControlKeyEventReceiver::Get(mBC);
     if (receiver) {
-      receiver->OnKeyPressed(MediaControlKeysEvent::eStop);
+      receiver->HandleEvent(MediaControlKeysEvent::eStop);
     }
   } else {
     session->NotifyHandler(action);

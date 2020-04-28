@@ -389,7 +389,7 @@ class nsSourceErrorEventRunner : public nsMediaEvent {
  * after successfully calling `Start()`.
  */
 class HTMLMediaElement::MediaControlEventListener final
-    : public MediaControlKeysEventListener {
+    : public ContentControlKeyEventReceiver {
  public:
   NS_INLINE_DECL_REFCOUNTING(MediaControlEventListener, override)
 
@@ -428,7 +428,7 @@ class HTMLMediaElement::MediaControlEventListener final
     NotifyMediaStateChanged(ControlledMediaState::eStopped);
 
     // Remove ourselves from media agent, which would stop receiving event.
-    mControlAgent->RemoveListener(this);
+    mControlAgent->RemoveReceiver(this);
     mControlAgent = nullptr;
   }
 
@@ -492,10 +492,10 @@ class HTMLMediaElement::MediaControlEventListener final
         this, mIsPictureInPictureEnabled);
   }
 
-  void OnKeyPressed(MediaControlKeysEvent aEvent) override {
+  void HandleEvent(MediaControlKeysEvent aEvent) override {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(IsStarted());
-    MEDIACONTROL_LOG("OnKeyPressed '%s'", ToMediaControlKeysEventStr(aEvent));
+    MEDIACONTROL_LOG("HandleEvent '%s'", ToMediaControlKeysEventStr(aEvent));
     if (aEvent == MediaControlKeysEvent::ePlay && Owner()->Paused()) {
       Owner()->Play();
     } else if ((aEvent == MediaControlKeysEvent::ePause ||
@@ -519,7 +519,7 @@ class HTMLMediaElement::MediaControlEventListener final
     if (!mControlAgent) {
       return false;
     }
-    mControlAgent->AddListener(this);
+    mControlAgent->AddReceiver(this);
     return true;
   }
 
