@@ -16,8 +16,14 @@ using layers::APZCCallbackHelper;
 using layers::InputAPZContext;
 using layers::ScrollableLayerGuid;
 
-CSSToCSSMatrix4x4 ViewportUtils::GetVisualToLayoutTransform(
+template <typename Units>
+gfx::Matrix4x4Typed<Units, Units> ViewportUtils::GetVisualToLayoutTransform(
     ScrollableLayerGuid::ViewID aScrollId) {
+  static_assert(
+      std::is_same_v<Units, CSSPixel> ||
+          std::is_same_v<Units, LayoutDevicePixel>,
+      "GetCallbackTransform() may only be used with CSS or LayoutDevice units");
+
   if (aScrollId == ScrollableLayerGuid::NULL_SCROLL_ID) {
     return {};
   }
@@ -42,10 +48,18 @@ CSSToCSSMatrix4x4 ViewportUtils::GetVisualToLayoutTransform(
 
   // Now apply the callback-transform. This is only approximately correct,
   // see the comment on GetCumulativeApzCallbackTransform for details.
-  CSSPoint transform = nsLayoutUtils::GetCumulativeApzCallbackTransform(
+  gfx::PointTyped<Units> transform;
+  CSSPoint transformCSS = nsLayoutUtils::GetCumulativeApzCallbackTransform(
       content->GetPrimaryFrame());
+  if constexpr (std::is_same_v<Units, CSSPixel>) {
+    transform = transformCSS;
+  } else {  // Units == LayoutDevicePixel
+    transform = transformCSS *
+                content->GetPrimaryFrame()->PresContext()->CSSToDevPixelScale();
+  }
 
-  return mozilla::CSSToCSSMatrix4x4::Scaling(1 / resolution, 1 / resolution, 1)
+  return gfx::Matrix4x4Typed<Units, Units>::Scaling(1 / resolution,
+                                                    1 / resolution, 1)
       .PostTranslate(transform.x, transform.y, 0);
 }
 
@@ -93,5 +107,14 @@ nsPoint ViewportUtils::LayoutToVisual(const nsPoint& aPt, PresShell* aContext) {
   auto transformed = visualToLayout.Inverse().TransformPoint(cssPt);
   return CSSPoint::ToAppUnits(transformed);
 }
+
+// Definitions of the two explicit instantiations forward declared in the header
+// file. This causes code for these instantiations to be emitted into the object
+// file for ViewportUtils.cpp.
+template CSSToCSSMatrix4x4 ViewportUtils::GetVisualToLayoutTransform<CSSPixel>(
+    ScrollableLayerGuid::ViewID);
+template LayoutDeviceToLayoutDeviceMatrix4x4
+    ViewportUtils::GetVisualToLayoutTransform<LayoutDevicePixel>(
+        ScrollableLayerGuid::ViewID);
 
 }  // namespace mozilla
