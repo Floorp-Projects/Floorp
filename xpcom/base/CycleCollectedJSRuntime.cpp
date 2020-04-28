@@ -1209,12 +1209,8 @@ struct CheckZoneTracer : public TraceCallbacks {
   virtual void Trace(JS::Heap<JS::Value>* aPtr, const char* aName,
                      void* aClosure) const override {
     JS::Value value = aPtr->unbarrieredGet();
-    if (value.isObject()) {
-      checkZone(js::GetObjectZoneFromAnyThread(&value.toObject()), aName);
-    } else if (value.isString()) {
-      checkZone(JS::GetStringZone(value.toString()), aName);
-    } else if (value.isGCThing()) {
-      checkZone(JS::GetTenuredGCThingZone(value.toGCCellPtr()), aName);
+    if (value.isGCThing()) {
+      checkZone(JS::GetGCThingZone(value.toGCCellPtr()), aName);
     }
   }
   virtual void Trace(JS::Heap<jsid>* aPtr, const char* aName,
