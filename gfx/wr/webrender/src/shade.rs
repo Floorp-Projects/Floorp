@@ -579,11 +579,7 @@ pub struct Shaders {
     // cache tiles at a lower level (e.g. in DWM for Windows); in that case we
     // directly hand the picture cache surfaces over to the OS Compositor, and
     // our own Composite shaders below never run.
-    // To composite external (RGB) surfaces we need various permutations of
-    // shaders with WR_FEATURE flags on or off based on the type of image
-    // buffer we're sourcing from (see IMAGE_BUFFER_KINDS).
-    pub composite_rgba: Vec<Option<LazilyCompiledShader>>,
-    // The same set of composite shaders but with WR_FEATURE_YUV added.
+    pub composite_rgba: LazilyCompiledShader,
     pub composite_yuv: Vec<Option<LazilyCompiledShader>>,
 }
 
@@ -888,16 +884,13 @@ impl Shaders {
 
         // All yuv_image configuration.
         let mut yuv_features = Vec::new();
-        let mut rgba_features = Vec::new();
         let yuv_shader_num = IMAGE_BUFFER_KINDS.len();
         let mut brush_yuv_image = Vec::new();
         let mut composite_yuv = Vec::new();
-        let mut composite_rgba = Vec::new();
         // PrimitiveShader is not clonable. Use push() to initialize the vec.
         for _ in 0 .. yuv_shader_num {
             brush_yuv_image.push(None);
             composite_yuv.push(None);
-            composite_rgba.push(None);
         }
         for image_buffer_kind in &IMAGE_BUFFER_KINDS {
             if image_buffer_kind.has_platform_support(&gl_type) {
@@ -906,7 +899,6 @@ impl Shaders {
                 let feature_string = image_buffer_kind.get_feature_string();
                 if feature_string != "" {
                     yuv_features.push(feature_string);
-                    rgba_features.push(feature_string);
                 }
 
                 let brush_shader = BrushShader::new(
@@ -920,7 +912,7 @@ impl Shaders {
                     use_pixel_local_storage,
                 )?;
 
-                let composite_yuv_shader = LazilyCompiledShader::new(
+                let composite_shader = LazilyCompiledShader::new(
                     ShaderKind::Composite,
                     "composite",
                     &yuv_features,
@@ -929,24 +921,13 @@ impl Shaders {
                     &shader_list,
                 )?;
 
-                let composite_rgba_shader = LazilyCompiledShader::new(
-                    ShaderKind::Composite,
-                    "composite",
-                    &rgba_features,
-                    device,
-                    options.precache_flags,
-                    &shader_list,
-                )?;
-
-                let index = Self::get_compositing_shader_index(
+                let index = Self::get_yuv_shader_index(
                     *image_buffer_kind,
                 );
                 brush_yuv_image[index] = Some(brush_shader);
-                composite_yuv[index] = Some(composite_yuv_shader);
-                composite_rgba[index] = Some(composite_rgba_shader);
+                composite_yuv[index] = Some(composite_shader);
 
                 yuv_features.clear();
-                rgba_features.clear()
             }
         }
 
@@ -986,6 +967,15 @@ impl Shaders {
             &shader_list,
         )?;
 
+        let composite_rgba = LazilyCompiledShader::new(
+            ShaderKind::Composite,
+            "composite",
+            &[],
+            device,
+            options.precache_flags,
+            &shader_list,
+        )?;
+
         Ok(Shaders {
             cs_blur_a8,
             cs_blur_rgba8,
@@ -1019,7 +1009,7 @@ impl Shaders {
         })
     }
 
-    fn get_compositing_shader_index(buffer_kind: ImageBufferKind) -> usize {
+    fn get_yuv_shader_index(buffer_kind: ImageBufferKind) -> usize {
         buffer_kind as usize
     }
 
@@ -1030,13 +1020,11 @@ impl Shaders {
     ) -> &mut LazilyCompiledShader {
         match format {
             CompositeSurfaceFormat::Rgba => {
-                let shader_index = Self::get_compositing_shader_index(buffer_kind);
-                self.composite_rgba[shader_index]
-                    .as_mut()
-                    .expect("bug: unsupported rgba shader requested")
+                debug_assert_eq!(buffer_kind, ImageBufferKind::Texture2DArray);
+                &mut self.composite_rgba
             }
             CompositeSurfaceFormat::Yuv => {
-                let shader_index = Self::get_compositing_shader_index(buffer_kind);
+                let shader_index = Self::get_yuv_shader_index(buffer_kind);
                 self.composite_yuv[shader_index]
                     .as_mut()
                     .expect("bug: unsupported yuv shader requested")
@@ -1084,7 +1072,7 @@ impl Shaders {
                     }
                     BrushBatchKind::YuvImage(image_buffer_kind, ..) => {
                         let shader_index =
-                            Self::get_compositing_shader_index(image_buffer_kind);
+                            Self::get_yuv_shader_index(image_buffer_kind);
                         self.brush_yuv_image[shader_index]
                             .as_mut()
                             .expect("Unsupported YUV shader kind")
@@ -1151,11 +1139,7 @@ impl Shaders {
         self.cs_line_decoration.deinit(device);
         self.cs_border_segment.deinit(device);
         self.ps_split_composite.deinit(device);
-        for shader in self.composite_rgba {
-            if let Some(shader) = shader {
-                shader.deinit(device);
-            }
-        }
+        self.composite_rgba.deinit(device);
         for shader in self.composite_yuv {
             if let Some(shader) = shader {
                 shader.deinit(device);
