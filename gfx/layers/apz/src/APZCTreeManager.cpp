@@ -2814,7 +2814,6 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetAPZCAtPointWR(
     APZCTM_LOG("Examining result with guid %s hit info 0x%d... ",
                Stringify(guid).c_str(), result.mHitInfo.serialize());
     if (result.mHitInfo == CompositorHitTestInvisibleToHit) {
-      MOZ_ASSERT(false);
       APZCTM_LOG("skipping due to invisibility.\n");
       continue;
     }
