@@ -47,14 +47,36 @@ class XPCOMThreadWrapper : public AbstractThread {
 
   nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable,
                     DispatchReason aReason = NormalDispatch) override {
+    nsCOMPtr<nsIRunnable> r = aRunnable;
     AbstractThread* currentThread;
     if (aReason != TailDispatch && (currentThread = GetCurrent()) &&
         RequiresTailDispatch(currentThread)) {
-      return currentThread->TailDispatcher().AddTask(this,
-                                                     std::move(aRunnable));
+      return currentThread->TailDispatcher().AddTask(this, r.forget());
     }
 
-    RefPtr<nsIRunnable> runner = new Runner(this, std::move(aRunnable));
+    // At a certain point during shutdown, we stop processing events from the
+    // main thread event queue (this happens long after all _other_ XPCOM
+    // threads have been shut down). However, various bits of subsequent
+    // teardown logic (the media shutdown blocker and the final shutdown cycle
+    // collection) can trigger state watching and state mirroring notifications
+    // that result in dispatch to the main thread. This causes shutdown leaks,
+    // because the |Runner| wrapper below creates a guaranteed cycle
+    // (Thread->EventQueue->Runnable->Thread) until the event is processed. So
+    // if we put the event into a queue that will never be processed, we'll wind
+    // up with a leak.
+    //
+    // We opt to just release the runnable in that case. Ordinarily, this
+    // approach could cause problems for runnables that are only safe to be
+    // released on the target thread (and not the dispatching thread). This is
+    // why XPCOM thread dispatch explicitly leaks the runnable when dispatch
+    // fails, rather than releasing it. But given that this condition only
+    // applies very late in shutdown when only one thread remains operational,
+    // that concern is unlikely to apply.
+    if (gXPCOMMainThreadEventsAreDoomed) {
+      return NS_ERROR_FAILURE;
+    }
+
+    RefPtr<nsIRunnable> runner = new Runner(this, r.forget());
     return mThread->Dispatch(runner.forget(), NS_DISPATCH_NORMAL);
   }
 
