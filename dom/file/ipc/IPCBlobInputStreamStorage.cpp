@@ -108,6 +108,12 @@ void IPCBlobInputStreamStorage::ForgetStream(const nsID& aID) {
   mStorage.Remove(aID);
 }
 
+bool IPCBlobInputStreamStorage::HasStream(const nsID& aID) {
+  mozilla::StaticMutexAutoLock lock(gMutex);
+  StreamData* data = mStorage.Get(aID);
+  return !!data;
+}
+
 void IPCBlobInputStreamStorage::GetStream(const nsID& aID, uint64_t aStart,
                                           uint64_t aLength,
                                           nsIInputStream** aInputStream) {

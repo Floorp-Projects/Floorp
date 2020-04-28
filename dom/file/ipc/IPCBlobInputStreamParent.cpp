@@ -191,10 +191,7 @@ mozilla::ipc::IPCResult IPCBlobInputStreamParent::Recv__delete__() {
 }
 
 bool IPCBlobInputStreamParent::HasValidStream() const {
-  nsCOMPtr<nsIInputStream> stream;
-  IPCBlobInputStreamStorage::Get()->GetStream(mID, 0, mSize,
-                                              getter_AddRefs(stream));
-  return !!stream;
+  return IPCBlobInputStreamStorage::Get()->HasStream(mID);
 }
 
 }  // namespace dom
