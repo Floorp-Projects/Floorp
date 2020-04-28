@@ -1827,6 +1827,7 @@ dependencies = [
  "fog",
  "geckoservo",
  "gkrust_utils",
+ "golden_gate",
  "jsrust_shared",
  "kvstore",
  "lmdb-rkv-sys",
@@ -1849,7 +1850,6 @@ dependencies = [
  "shift_or_euc_c",
  "static_prefs",
  "storage",
- "sync15-traits",
  "unic-langid",
  "unic-langid-ffi",
  "webext-storage",
@@ -1959,6 +1959,23 @@ dependencies = [
  "log",
  "plain",
  "scroll",
+]
+
+[[package]]
+name = "golden_gate"
+version = "0.1.0"
+dependencies = [
+ "atomic_refcell",
+ "cstr",
+ "interrupt-support",
+ "log",
+ "moz_task",
+ "nserror",
+ "nsstring",
+ "storage_variant",
+ "sync15-traits",
+ "thin-vec",
+ "xpcom",
 ]
 
 [[package]]

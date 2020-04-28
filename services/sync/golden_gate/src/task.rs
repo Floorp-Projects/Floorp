@@ -5,10 +5,11 @@
 use std::{fmt::Write, mem, sync::Arc};
 
 use atomic_refcell::AtomicRefCell;
-use golden_gate_traits::{BridgedEngine, Interruptee};
+use interrupt_support::Interruptee;
 use moz_task::{DispatchOptions, Task, TaskRunnable, ThreadPtrHandle, ThreadPtrHolder};
 use nserror::nsresult;
 use nsstring::{nsACString, nsCString};
+use sync15_traits::{ApplyResults, BridgedEngine};
 use thin_vec::ThinVec;
 use xpcom::{
     interfaces::{
@@ -283,7 +284,7 @@ pub struct ApplyTask<N: ?Sized + BridgedEngine, S> {
     engine: Arc<N>,
     signal: Arc<S>,
     callback: ThreadPtrHandle<mozIBridgedSyncEngineApplyCallback>,
-    result: AtomicRefCell<Result<Vec<String>, N::Error>>,
+    result: AtomicRefCell<Result<ApplyResults, N::Error>>,
 }
 
 impl<N, S> ApplyTask<N, S>
@@ -344,8 +345,11 @@ where
             &mut *self.result.borrow_mut(),
             Err(Error::DidNotRun(Self::name()).into()),
         ) {
-            Ok(outgoing) => {
-                let result = outgoing
+            Ok(ApplyResults {
+                records,
+                num_reconciled: _,
+            }) => {
+                let result = records
                     .into_iter()
                     .map(nsCString::from)
                     .collect::<ThinVec<_>>();
