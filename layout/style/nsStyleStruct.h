@@ -404,6 +404,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleMargin {
   // (defined in WritingModes.h since we need the full WritingMode type)
   inline bool HasBlockAxisAuto(mozilla::WritingMode aWM) const;
   inline bool HasInlineAxisAuto(mozilla::WritingMode aWM) const;
+  inline bool HasAuto(mozilla::LogicalAxis, mozilla::WritingMode) const;
 
   mozilla::StyleRect<mozilla::LengthPercentageOrAuto> mMargin;
   mozilla::StyleRect<mozilla::StyleLength> mScrollMargin;
@@ -711,6 +712,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   using StyleMaxSize = mozilla::StyleMaxSize;
   using StyleFlexBasis = mozilla::StyleFlexBasis;
   using WritingMode = mozilla::WritingMode;
+  using LogicalAxis = mozilla::LogicalAxis;
   using StyleImplicitGridTracks = mozilla::StyleImplicitGridTracks;
   using ComputedStyle = mozilla::ComputedStyle;
   using StyleAlignSelf = mozilla::StyleAlignSelf;
@@ -746,6 +748,33 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
    */
   StyleJustifySelf UsedJustifySelf(const ComputedStyle*) const;
 
+  /**
+   * Return the used value for 'justify/align-self' in aAxis given our parent
+   * ComputedStyle aParent (or null for the root).
+   * (defined in WritingModes.h since we need the full WritingMode type)
+   */
+  inline mozilla::StyleAlignFlags UsedSelfAlignment(
+      LogicalAxis aAxis, const mozilla::ComputedStyle* aParent) const;
+
+  /**
+   * Return the used value for 'justify/align-content' in aAxis.
+   * (defined in WritingModes.h since we need the full WritingMode type)
+   */
+  inline mozilla::StyleContentDistribution UsedContentAlignment(
+      LogicalAxis aAxis) const;
+
+  /**
+   * Return the used value for 'align-tracks'/'justify-tracks' for a track
+   * in the given axis.
+   * (defined in WritingModes.h since we need the full LogicalAxis type)
+   */
+  inline mozilla::StyleContentDistribution UsedTracksAlignment(
+      LogicalAxis aAxis, uint32_t aIndex) const;
+
+  // Each entry has the same encoding as *-content, see below.
+  mozilla::StyleAlignTracks mAlignTracks;
+  mozilla::StyleJustifyTracks mJustifyTracks;
+
   Position mObjectPosition;
   StyleRect<LengthPercentageOrAuto> mOffset;
   StyleSize mWidth;
@@ -759,7 +788,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   StyleImplicitGridTracks mGridAutoRows;
   float mAspectRatio;
   mozilla::StyleGridAutoFlow mGridAutoFlow;
-  mozilla::StyleBoxSizing mBoxSizing;
+  uint8_t mMasonryAutoFlow;  // NS_STYLE_MASONRY_*
 
   mozilla::StyleAlignContent mAlignContent;
   mozilla::StyleAlignItems mAlignItems;
@@ -770,6 +799,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   mozilla::StyleFlexDirection mFlexDirection;
   mozilla::StyleFlexWrap mFlexWrap;
   mozilla::StyleObjectFit mObjectFit;
+  mozilla::StyleBoxSizing mBoxSizing;
   int32_t mOrder;
   float mFlexGrow;
   float mFlexShrink;
@@ -800,6 +830,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   inline const StyleSize& BSize(WritingMode) const;
   inline const StyleSize& MinBSize(WritingMode) const;
   inline const StyleMaxSize& MaxBSize(WritingMode) const;
+  inline const StyleSize& Size(LogicalAxis, WritingMode) const;
+  inline const StyleSize& MinSize(LogicalAxis, WritingMode) const;
+  inline const StyleMaxSize& MaxSize(LogicalAxis, WritingMode) const;
   inline bool ISizeDependsOnContainer(WritingMode) const;
   inline bool MinISizeDependsOnContainer(WritingMode) const;
   inline bool MaxISizeDependsOnContainer(WritingMode) const;
