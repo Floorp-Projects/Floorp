@@ -62,10 +62,6 @@ CycleCollectedJSContext::CycleCollectedJSContext()
       mMicroTaskRecursionDepth(0) {
   MOZ_COUNT_CTOR(CycleCollectedJSContext);
 
-  // Reinitialize PerThreadAtomCache because dom/bindings/Codegen.py compares
-  // against zero rather than JSID_VOID to detect uninitialized jsid members.
-  memset(static_cast<PerThreadAtomCache*>(this), 0, sizeof(PerThreadAtomCache));
-
   nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
   mOwningThread = thread.forget().downcast<nsThread>().take();
   MOZ_RELEASE_ASSERT(mOwningThread);
