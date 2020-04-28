@@ -489,24 +489,6 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
       continue;
     }
 
-    matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX "gc_dynamic_heap_growth");
-    if (memPrefName == matchName ||
-        (gRuntimeServiceDuringInit && index == 10)) {
-      bool prefValue = GetWorkerPref(matchName, false);
-      UpdateOtherJSGCMemoryOption(rts, JSGC_DYNAMIC_HEAP_GROWTH,
-                                  prefValue ? 0 : 1);
-      continue;
-    }
-
-    matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX "gc_dynamic_mark_slice");
-    if (memPrefName == matchName ||
-        (gRuntimeServiceDuringInit && index == 11)) {
-      bool prefValue = GetWorkerPref(matchName, false);
-      UpdateOtherJSGCMemoryOption(rts, JSGC_DYNAMIC_MARK_SLICE,
-                                  prefValue ? 0 : 1);
-      continue;
-    }
-
     matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX "gc_min_empty_chunk_count");
     if (memPrefName == matchName ||
         (gRuntimeServiceDuringInit && index == 12)) {
