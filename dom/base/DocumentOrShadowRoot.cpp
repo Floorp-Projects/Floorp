@@ -457,32 +457,40 @@ static void QueryNodesFromPoint(DocumentOrShadowRoot& aRoot, float aX, float aY,
 }  // namespace
 
 Element* DocumentOrShadowRoot::ElementFromPoint(float aX, float aY) {
-  return ElementFromPointHelper(aX, aY, false, true);
+  return ElementFromPointHelper(aX, aY, false, true, true);
 }
 
 void DocumentOrShadowRoot::ElementsFromPoint(
     float aX, float aY, nsTArray<RefPtr<Element>>& aElements) {
-  QueryNodesFromPoint(*this, aX, aY, {}, FlushLayout::Yes, Multiple::Yes,
-                      aElements);
+  QueryNodesFromPoint(*this, aX, aY,
+                      FrameForPointOption::IsRelativeToLayoutViewport,
+                      FlushLayout::Yes, Multiple::Yes, aElements);
 }
 
 void DocumentOrShadowRoot::NodesFromPoint(float aX, float aY,
                                           nsTArray<RefPtr<nsINode>>& aNodes) {
-  QueryNodesFromPoint(*this, aX, aY, {}, FlushLayout::Yes, Multiple::Yes,
-                      aNodes);
+  QueryNodesFromPoint(*this, aX, aY,
+                      FrameForPointOption::IsRelativeToLayoutViewport,
+                      FlushLayout::Yes, Multiple::Yes, aNodes);
 }
 
 nsINode* DocumentOrShadowRoot::NodeFromPoint(float aX, float aY) {
   AutoTArray<RefPtr<nsINode>, 1> nodes;
-  QueryNodesFromPoint(*this, aX, aY, {}, FlushLayout::Yes, Multiple::No, nodes);
+  QueryNodesFromPoint(*this, aX, aY,
+                      FrameForPointOption::IsRelativeToLayoutViewport,
+                      FlushLayout::Yes, Multiple::No, nodes);
   return nodes.SafeElementAt(0);
 }
 
 Element* DocumentOrShadowRoot::ElementFromPointHelper(
-    float aX, float aY, bool aIgnoreRootScrollFrame, bool aFlushLayout) {
+    float aX, float aY, bool aIgnoreRootScrollFrame, bool aFlushLayout,
+    bool aIsRelativeToLayoutViewport) {
   EnumSet<FrameForPointOption> options;
   if (aIgnoreRootScrollFrame) {
     options += FrameForPointOption::IgnoreRootScrollFrame;
+  }
+  if (aIsRelativeToLayoutViewport) {
+    options += FrameForPointOption::IsRelativeToLayoutViewport;
   }
 
   auto flush = aFlushLayout ? FlushLayout::Yes : FlushLayout::No;
