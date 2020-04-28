@@ -932,4 +932,36 @@ class SessionTest {
         assertFalse(parentSession.hasParentSession)
         assertTrue(session.hasParentSession)
     }
+
+    @Test
+    fun `action is dispatched when back navigation state changes`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+        session.canGoBack = true
+        verify(store).dispatch(ContentAction.UpdateBackNavigationStateAction(session.id, true))
+
+        session.canGoBack = false
+        verify(store).dispatch(ContentAction.UpdateBackNavigationStateAction(session.id, false))
+
+        verifyNoMoreInteractions(store)
+    }
+
+    @Test
+    fun `action is dispatched when forward navigation state changes`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+        session.canGoForward = true
+        verify(store).dispatch(ContentAction.UpdateForwardNavigationStateAction(session.id, true))
+
+        session.canGoForward = false
+        verify(store).dispatch(ContentAction.UpdateForwardNavigationStateAction(session.id, false))
+
+        verifyNoMoreInteractions(store)
+    }
 }

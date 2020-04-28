@@ -259,6 +259,16 @@ sealed class ContentAction : BrowserAction() {
      * @property layoutInDisplayCutoutMode value of defined in https://developer.android.com/reference/android/view/WindowManager.LayoutParams#layoutInDisplayCutoutMode
      */
     data class ViewportFitChangedAction(val sessionId: String, val layoutInDisplayCutoutMode: Int) : ContentAction()
+
+    /**
+     * Updates the [ContentState] of the given [sessionId] to indicate whether or not a back navigation is possible.
+     */
+    data class UpdateBackNavigationStateAction(val sessionId: String, val canGoBack: Boolean) : ContentAction()
+
+    /**
+     * Updates the [ContentState] of the given [sessionId] to indicate whether or not a forward navigation is possible.
+     */
+    data class UpdateForwardNavigationStateAction(val sessionId: String, val canGoForward: Boolean) : ContentAction()
 }
 
 /**

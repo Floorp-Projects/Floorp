@@ -192,7 +192,7 @@ class ContentActionTest {
     }
 
     @Test
-    fun `UpdateSecurityInfo updates searchInfo`() {
+    fun `UpdateSecurityInfo updates securityInfo`() {
         val newSecurityInfo = SecurityInfoState(true, "mozilla.org", "The Mozilla Team")
 
         assertNotEquals(newSecurityInfo, tab.content.securityInfo)
@@ -526,5 +526,37 @@ class ContentActionTest {
         ).joinBlocking()
 
         assertNull(tab.content.windowRequest)
+    }
+
+    @Test
+    fun `UpdateBackNavigationStateAction updates canGoBack`() {
+        assertFalse(tab.content.canGoBack)
+        assertFalse(otherTab.content.canGoBack)
+
+        store.dispatch(ContentAction.UpdateBackNavigationStateAction(tab.id, true)).joinBlocking()
+
+        assertTrue(tab.content.canGoBack)
+        assertFalse(otherTab.content.canGoBack)
+
+        store.dispatch(ContentAction.UpdateBackNavigationStateAction(tab.id, false)).joinBlocking()
+
+        assertFalse(tab.content.canGoBack)
+        assertFalse(otherTab.content.canGoBack)
+    }
+
+    @Test
+    fun `UpdateForwardNavigationStateAction updates canGoForward`() {
+        assertFalse(tab.content.canGoForward)
+        assertFalse(otherTab.content.canGoForward)
+
+        store.dispatch(ContentAction.UpdateForwardNavigationStateAction(tab.id, true)).joinBlocking()
+
+        assertTrue(tab.content.canGoForward)
+        assertFalse(otherTab.content.canGoForward)
+
+        store.dispatch(ContentAction.UpdateForwardNavigationStateAction(tab.id, false)).joinBlocking()
+
+        assertFalse(tab.content.canGoForward)
+        assertFalse(otherTab.content.canGoForward)
     }
 }
