@@ -59,9 +59,9 @@ const {
   setRecordingPreferences,
   presets,
   getRecordingPreferences,
-} = /** @type {import("resource://devtools/client/performance-new/popup/background.jsm.js")} */ (ChromeUtils.import(
+} = ChromeUtils.import(
   "resource://devtools/client/performance-new/popup/background.jsm.js"
-));
+);
 
 /**
  * This file initializes the DevTools Panel UI. It is in charge of initializing

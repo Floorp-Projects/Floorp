@@ -43,18 +43,15 @@ function requireLazy(callback) {
 /** @type {any} */ (this).module = {};
 
 const lazyServices = requireLazy(() =>
-  /** @type {import("resource://gre/modules/Services.jsm")} */
-  (ChromeUtils.import("resource://gre/modules/Services.jsm"))
+  ChromeUtils.import("resource://gre/modules/Services.jsm")
 );
 const lazyPanelMultiView = requireLazy(() =>
-  /** @type {import("resource:///modules/PanelMultiView.jsm")} */
-  (ChromeUtils.import("resource:///modules/PanelMultiView.jsm"))
+  ChromeUtils.import("resource:///modules/PanelMultiView.jsm")
 );
 const lazyBackground = requireLazy(() =>
-  /** @type {import("resource://devtools/client/performance-new/popup/background.jsm.js")} */
-  (ChromeUtils.import(
+  ChromeUtils.import(
     "resource://devtools/client/performance-new/popup/background.jsm.js"
-  ))
+  )
 );
 
 /**
