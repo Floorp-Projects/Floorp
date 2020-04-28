@@ -66,7 +66,8 @@
         "*://*/assorted-dom/assorted/results.html*",
         "*://*.mozaws.net/*",
         "*://*/ARES-6/index.html*",
-        "*://*/JetStream2/index.html*"
+        "*://*/JetStream2/index.html*",
+        "*://*.amazonaws.com/*"
       ],
       "js": ["benchmark.js"],
       "run_at": "document_end"

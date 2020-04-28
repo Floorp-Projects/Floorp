@@ -628,7 +628,7 @@ raptor-youtube-playback-fenix:
     treeherder-symbol: Rap-fenix(ytp)
     run-on-projects: []
     e10s: true
-    max-run-time: 3600
+    max-run-time: 3000
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback
@@ -638,6 +638,93 @@ raptor-youtube-playback-fenix:
             # Bug 1558456 - Stop tracking youtube-playback-test on motoG5 for >1080p cases
             # - --test-url-params is dynamically added from setup_raptor transform depending
             # on platform and project
+
+raptor-youtube-playback-av1-sfr-fenix:
+    description: "Raptor YouTube Playback AV1 SFR on Fenix"
+    try-name: raptor-youtube-playback-av1-sfr-fenix
+    treeherder-symbol: Rap-fenix(ytp-av1-sfr)
+    run-on-projects: []
+    e10s: true
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-av1-sfr
+            - --app=fenix
+            - --binary-path=org.mozilla.fenix.performancetest
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
+
+raptor-youtube-playback-h264-sfr-fenix:
+    description: "Raptor YouTube Playback H264 SFR on Fenix"
+    try-name: raptor-youtube-playback-h264-sfr-fenix
+    treeherder-symbol: Rap-fenix(ytp-h264-sfr)
+    run-on-projects: []
+    e10s: true
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-h264-sfr
+            - --app=fenix
+            - --binary-path=org.mozilla.fenix.performancetest
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
+
+raptor-youtube-playback-vp9-sfr-fenix:
+    description: "Raptor YouTube Playback VP9 SFR on Fenix"
+    try-name: raptor-youtube-playback-vp9-sfr-fenix
+    treeherder-symbol: Rap-fenix(ytp-vp9-sfr)
+    run-on-projects: []
+    e10s: true
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-vp9-sfr
+            - --app=fenix
+            - --binary-path=org.mozilla.fenix.performancetest
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
+
+raptor-youtube-playback-widevine-hfr-fenix:
+    description: "Raptor YouTube Playback Widevine HFR on Fenix"
+    try-name: raptor-youtube-playback-widevine-hfr-fenix
+    treeherder-symbol: Rap-fenix(ytp-widevine-hfr)
+    run-on-projects: []
+    e10s: true
+    max-run-time: 3000
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-widevine-hfr
+            - --app=fenix
+            - --binary-path=org.mozilla.fenix.performancetest
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
+
+raptor-youtube-playback-widevine-h264-sfr-fenix:
+    description: "Raptor YouTube Playback Widevine H264 SFR on Fenix"
+    try-name: raptor-youtube-playback-widevine-h264-sfr
+    treeherder-symbol: Rap-fenix(ytp-widevine-h264-sfr)
+    run-on-projects: []
+    e10s: true
+    max-run-time: 3000
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-widevine-h264-sfr
+            - --app=fenix
+            - --binary-path=org.mozilla.fenix.performancetest
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
+
+raptor-youtube-playback-widevine-vp9-sfr-fenix:
+    description: "Raptor YouTube Playback Widevine VP9 SFR on Fenix"
+    try-name: raptor-youtube-playback-widevine-vp9-sfr
+    treeherder-symbol: Rap-fenix(ytp-widevine-vp9-sfr)
+    run-on-projects: []
+    e10s: true
+    max-run-time: 3000
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-youtube-playback-widevine-vp9-sfr
+            - --app=fenix
+            - --binary-path=org.mozilla.fenix.performancetest
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-speedometer-fenix:
     description: "Raptor Speedometer on Fenix"
