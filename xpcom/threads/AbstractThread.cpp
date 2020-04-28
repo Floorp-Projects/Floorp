@@ -15,7 +15,9 @@
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
+#include "nsIThreadInternal.h"
 #include "nsServiceManagerUtils.h"
+#include "nsThreadManager.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -26,11 +28,11 @@ LazyLogModule gStateWatchingLog("StateWatching");
 StaticRefPtr<AbstractThread> sMainThread;
 MOZ_THREAD_LOCAL(AbstractThread*) AbstractThread::sCurrentThreadTLS;
 
-class EventTargetWrapper : public AbstractThread {
+class XPCOMThreadWrapper : public AbstractThread {
  public:
-  explicit EventTargetWrapper(nsIEventTarget* aTarget,
+  explicit XPCOMThreadWrapper(nsIThreadInternal* aThread,
                               bool aRequireTailDispatch)
-      : AbstractThread(aRequireTailDispatch), mTarget(aTarget) {
+      : AbstractThread(aRequireTailDispatch), mThread(aThread) {
     // Our current mechanism of implementing tail dispatch is appshell-specific.
     // This is because a very similar mechanism already exists on the main
     // thread, and we want to avoid making event dispatch on the main thread
@@ -40,7 +42,7 @@ class EventTargetWrapper : public AbstractThread {
     // implement an nsIThreadObserver to fire the tail dispatcher at the
     // appropriate times. You will also need to modify this assertion.
     MOZ_ASSERT_IF(aRequireTailDispatch,
-                  NS_IsMainThread() && aTarget->IsOnCurrentThread());
+                  NS_IsMainThread() && aThread->IsOnCurrentThread());
   }
 
   nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable,
@@ -53,14 +55,14 @@ class EventTargetWrapper : public AbstractThread {
     }
 
     RefPtr<nsIRunnable> runner = new Runner(this, std::move(aRunnable));
-    return mTarget->Dispatch(runner.forget(), NS_DISPATCH_NORMAL);
+    return mThread->Dispatch(runner.forget(), NS_DISPATCH_NORMAL);
   }
 
   // Prevent a GCC warning about the other overload of Dispatch being hidden.
   using AbstractThread::Dispatch;
 
   bool IsCurrentThreadIn() const override {
-    return mTarget->IsOnCurrentThread();
+    return mThread->IsOnCurrentThread();
   }
 
   void FireTailDispatcher() {
@@ -75,8 +77,8 @@ class EventTargetWrapper : public AbstractThread {
       mTailDispatcher.emplace(/* aIsTailDispatcher = */ true);
 
       nsCOMPtr<nsIRunnable> event =
-          NewRunnableMethod("EventTargetWrapper::FireTailDispatcher", this,
-                            &EventTargetWrapper::FireTailDispatcher);
+          NewRunnableMethod("XPCOMThreadWrapper::FireTailDispatcher", this,
+                            &XPCOMThreadWrapper::FireTailDispatcher);
       nsContentUtils::RunInStableState(event.forget());
     }
 
@@ -85,17 +87,17 @@ class EventTargetWrapper : public AbstractThread {
 
   bool MightHaveTailTasks() override { return mTailDispatcher.isSome(); }
 
-  nsIEventTarget* AsEventTarget() override { return mTarget; }
+  nsIEventTarget* AsEventTarget() override { return mThread; }
 
  private:
-  const RefPtr<nsIEventTarget> mTarget;
+  const RefPtr<nsIThreadInternal> mThread;
   Maybe<AutoTaskDispatcher> mTailDispatcher;
 
   class Runner : public Runnable {
    public:
-    explicit Runner(EventTargetWrapper* aThread,
+    explicit Runner(XPCOMThreadWrapper* aThread,
                     already_AddRefed<nsIRunnable> aRunnable)
-        : Runnable("EventTargetWrapper::Runner"),
+        : Runnable("XPCOMThreadWrapper::Runner"),
           mThread(aThread),
           mRunnable(aRunnable) {}
 
@@ -121,7 +123,7 @@ class EventTargetWrapper : public AbstractThread {
 #endif
 
    private:
-    const RefPtr<EventTargetWrapper> mThread;
+    const RefPtr<XPCOMThreadWrapper> mThread;
     const RefPtr<nsIRunnable> mRunnable;
   };
 };
@@ -196,10 +198,10 @@ void AbstractThread::InitTLS() {
 void AbstractThread::InitMainThread() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sMainThread);
-  nsCOMPtr<nsIThread> mainThread;
-  NS_GetMainThread(getter_AddRefs(mainThread));
+  nsCOMPtr<nsIThreadInternal> mainThread =
+      do_QueryInterface(nsThreadManager::get().GetMainThreadWeak());
   MOZ_DIAGNOSTIC_ASSERT(mainThread);
-  sMainThread = new EventTargetWrapper(mainThread.get(),
+  sMainThread = new XPCOMThreadWrapper(mainThread.get(),
                                        /* aRequireTailDispatch = */ true);
   ClearOnShutdown(&sMainThread);
 
@@ -225,8 +227,10 @@ void AbstractThread::DispatchDirectTask(
 /* static */
 already_AddRefed<AbstractThread> AbstractThread::CreateXPCOMThreadWrapper(
     nsIThread* aThread, bool aRequireTailDispatch) {
-  RefPtr<EventTargetWrapper> wrapper =
-      new EventTargetWrapper(aThread, aRequireTailDispatch);
+  nsCOMPtr<nsIThreadInternal> internalThread = do_QueryInterface(aThread);
+  MOZ_ASSERT(internalThread, "Need an nsThread for AbstractThread");
+  RefPtr<XPCOMThreadWrapper> wrapper =
+      new XPCOMThreadWrapper(internalThread, aRequireTailDispatch);
 
   bool onCurrentThread = false;
   Unused << aThread->IsOnCurrentThread(&onCurrentThread);
@@ -234,7 +238,7 @@ already_AddRefed<AbstractThread> AbstractThread::CreateXPCOMThreadWrapper(
   if (onCurrentThread) {
     MOZ_ASSERT(
         !sCurrentThreadTLS.get(),
-        "There can only be a single EventTargetWrapper available on a thread");
+        "There can only be a single XPCOMThreadWrapper available on a thread");
     sCurrentThreadTLS.set(wrapper);
     return wrapper.forget();
   }
@@ -245,7 +249,7 @@ already_AddRefed<AbstractThread> AbstractThread::CreateXPCOMThreadWrapper(
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
       "AbstractThread::CreateXPCOMThreadWrapper", [wrapper]() {
         MOZ_ASSERT(!sCurrentThreadTLS.get(),
-                   "There can only be a single EventTargetWrapper available on "
+                   "There can only be a single XPCOMThreadWrapper available on "
                    "a thread");
         sCurrentThreadTLS.set(wrapper);
       });
