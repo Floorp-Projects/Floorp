@@ -155,91 +155,91 @@ class IonIC;
 struct IonScript {
  private:
   // Code pointer containing the actual method.
-  HeapPtrJitCode method_;
+  HeapPtrJitCode method_ = nullptr;
 
   // Entrypoint for OSR, or nullptr.
-  jsbytecode* osrPc_;
+  jsbytecode* osrPc_ = nullptr;
 
   // Offset to OSR entrypoint from method_->raw(), or 0.
-  uint32_t osrEntryOffset_;
+  uint32_t osrEntryOffset_ = 0;
 
   // Offset to entrypoint skipping type arg check from method_->raw().
-  uint32_t skipArgCheckEntryOffset_;
+  uint32_t skipArgCheckEntryOffset_ = 0;
 
   // Offset of the invalidation epilogue (which pushes this IonScript
   // and calls the invalidation thunk).
-  uint32_t invalidateEpilogueOffset_;
+  uint32_t invalidateEpilogueOffset_ = 0;
 
   // The offset immediately after the IonScript immediate.
   // NOTE: technically a constant delta from
   // |invalidateEpilogueOffset_|, so we could hard-code this
   // per-platform if we want.
-  uint32_t invalidateEpilogueDataOffset_;
+  uint32_t invalidateEpilogueDataOffset_ = 0;
 
   // Number of times this script bailed out without invalidation.
-  uint32_t numBailouts_;
+  uint32_t numBailouts_ = 0;
 
   // Flag set if IonScript was compiled with profiling enabled.
-  bool hasProfilingInstrumentation_;
+  bool hasProfilingInstrumentation_ = false;
 
   // Flag for if this script is getting recompiled.
-  uint32_t recompiling_;
+  uint32_t recompiling_ = 0;
 
   // Any kind of data needed by the runtime, these can be either cache
   // information or profiling info.
-  uint32_t runtimeData_;
-  uint32_t runtimeSize_;
+  uint32_t runtimeData_ = 0;
+  uint32_t runtimeSize_ = 0;
 
   // State for polymorphic caches in the compiled code. All caches are stored
   // in the runtimeData buffer and indexed by the icIndex which gives a
   // relative offset in the runtimeData array.
-  uint32_t icIndex_;
-  uint32_t icEntries_;
+  uint32_t icIndex_ = 0;
+  uint32_t icEntries_ = 0;
 
   // Map code displacement to safepoint / OSI-patch-delta.
-  uint32_t safepointIndexOffset_;
-  uint32_t safepointIndexEntries_;
+  uint32_t safepointIndexOffset_ = 0;
+  uint32_t safepointIndexEntries_ = 0;
 
   // Offset to and length of the safepoint table in bytes.
-  uint32_t safepointsStart_;
-  uint32_t safepointsSize_;
+  uint32_t safepointsStart_ = 0;
+  uint32_t safepointsSize_ = 0;
 
   // Number of bytes this function reserves on the stack.
-  uint32_t frameSlots_;
+  uint32_t frameSlots_ = 0;
 
   // Number of bytes used passed in as formal arguments or |this|.
-  uint32_t argumentSlots_;
+  uint32_t argumentSlots_ = 0;
 
   // Frame size is the value that can be added to the StackPointer along
   // with the frame prefix to get a valid JitFrameLayout.
-  uint32_t frameSize_;
+  uint32_t frameSize_ = 0;
 
   // Table mapping bailout IDs to snapshot offsets.
-  uint32_t bailoutTable_;
-  uint32_t bailoutEntries_;
+  uint32_t bailoutTable_ = 0;
+  uint32_t bailoutEntries_ = 0;
 
   // Map OSI-point displacement to snapshot.
-  uint32_t osiIndexOffset_;
-  uint32_t osiIndexEntries_;
+  uint32_t osiIndexOffset_ = 0;
+  uint32_t osiIndexEntries_ = 0;
 
   // Offset from the start of the code buffer to its snapshot buffer.
-  uint32_t snapshots_;
-  uint32_t snapshotsListSize_;
-  uint32_t snapshotsRVATableSize_;
+  uint32_t snapshots_ = 0;
+  uint32_t snapshotsListSize_ = 0;
+  uint32_t snapshotsRVATableSize_ = 0;
 
   // List of instructions needed to recover stack frames.
-  uint32_t recovers_;
-  uint32_t recoversSize_;
+  uint32_t recovers_ = 0;
+  uint32_t recoversSize_ = 0;
 
   // Constant table for constants stored in snapshots.
-  uint32_t constantTable_;
-  uint32_t constantEntries_;
+  uint32_t constantTable_ = 0;
+  uint32_t constantEntries_ = 0;
 
   // The size of this allocation.
   uint32_t allocBytes_ = 0;
 
   // Number of references from invalidation records.
-  uint32_t invalidationCount_;
+  uint32_t invalidationCount_ = 0;
 
   // Identifier of the compilation which produced this code.
   IonCompilationId compilationId_;
@@ -249,7 +249,7 @@ struct IonScript {
 
   // Number of times we tried to enter this script via OSR but failed due to
   // a LOOPENTRY pc other than osrPc_.
-  uint32_t osrPcMismatchCounter_;
+  uint32_t osrPcMismatchCounter_ = 0;
 
   // TraceLogger events that are baked into the IonScript.
   TraceLoggerEventVector traceLoggerEvents_;
@@ -282,10 +282,12 @@ struct IonScript {
   uint32_t* icIndex() { return (uint32_t*)&bottomBuffer()[icIndex_]; }
   uint8_t* runtimeData() { return &bottomBuffer()[runtimeData_]; }
 
- public:
-  // Do not call directly, use IonScript::New. This is public for cx->new_.
-  explicit IonScript(IonCompilationId compilationId);
+ private:
+  IonScript(IonCompilationId compilationId, uint32_t frameSlots,
+            uint32_t argumentSlots, uint32_t frameSize,
+            OptimizationLevel optimizationLevel);
 
+ public:
   static IonScript* New(JSContext* cx, IonCompilationId compilationId,
                         uint32_t frameSlots, uint32_t argumentSlots,
                         uint32_t frameSize, size_t snapshotsListSize,

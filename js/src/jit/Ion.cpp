@@ -592,42 +592,14 @@ void JitCode::finalize(JSFreeOp* fop) {
   pool_ = nullptr;
 }
 
-IonScript::IonScript(IonCompilationId compilationId)
-    : method_(nullptr),
-      osrPc_(nullptr),
-      osrEntryOffset_(0),
-      skipArgCheckEntryOffset_(0),
-      invalidateEpilogueOffset_(0),
-      invalidateEpilogueDataOffset_(0),
-      numBailouts_(0),
-      hasProfilingInstrumentation_(false),
-      recompiling_(false),
-      runtimeData_(0),
-      runtimeSize_(0),
-      icIndex_(0),
-      icEntries_(0),
-      safepointIndexOffset_(0),
-      safepointIndexEntries_(0),
-      safepointsStart_(0),
-      safepointsSize_(0),
-      frameSlots_(0),
-      argumentSlots_(0),
-      frameSize_(0),
-      bailoutTable_(0),
-      bailoutEntries_(0),
-      osiIndexOffset_(0),
-      osiIndexEntries_(0),
-      snapshots_(0),
-      snapshotsListSize_(0),
-      snapshotsRVATableSize_(0),
-      recovers_(0),
-      recoversSize_(0),
-      constantTable_(0),
-      constantEntries_(0),
-      invalidationCount_(0),
+IonScript::IonScript(IonCompilationId compilationId, uint32_t frameSlots,
+                     uint32_t argumentSlots, uint32_t frameSize,
+                     OptimizationLevel optimizationLevel)
+    : frameSlots_(frameSlots),
+      argumentSlots_(argumentSlots),
+      frameSize_(frameSize),
       compilationId_(compilationId),
-      optimizationLevel_(OptimizationLevel::Normal),
-      osrPcMismatchCounter_(0) {}
+      optimizationLevel_(optimizationLevel) {}
 
 IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
                           uint32_t frameSlots, uint32_t argumentSlots,
@@ -674,7 +646,8 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
   if (!script) {
     return nullptr;
   }
-  new (script) IonScript(compilationId);
+  new (script) IonScript(compilationId, frameSlots, argumentSlots, frameSize,
+                         optimizationLevel);
 
   uint32_t offsetCursor = sizeof(IonScript);
 
@@ -717,13 +690,6 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
 
   script->allocBytes_ = sizeof(IonScript) + bytes;
   MOZ_ASSERT(offsetCursor == script->allocBytes_);
-
-  script->frameSlots_ = frameSlots;
-  script->argumentSlots_ = argumentSlots;
-
-  script->frameSize_ = frameSize;
-
-  script->optimizationLevel_ = optimizationLevel;
 
   return script;
 }
