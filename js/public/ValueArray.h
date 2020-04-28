@@ -30,7 +30,7 @@ class MOZ_RAII AutoValueArray : public AutoGCRooter {
 
  public:
   explicit AutoValueArray(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, AutoGCRooter::Tag::ValueArray), length_(N) {
+      : AutoGCRooter(cx, AutoGCRooter::Kind::ValueArray), length_(N) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   }
 
