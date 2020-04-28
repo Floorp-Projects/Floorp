@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include "mozilla/EventForwards.h"
+#include "nsLayoutUtils.h"
 
 class nsIFrame;
 struct nsPoint;
@@ -22,7 +23,7 @@ enum { INPUT_IGNORE_ROOT_SCROLL_FRAME = 0x01 };
  * that are suitable targets, to account for inaccurate pointing devices.
  */
 nsIFrame* FindFrameTargetedByInputEvent(
-    WidgetGUIEvent* aEvent, nsIFrame* aRootFrame,
+    WidgetGUIEvent* aEvent, RelativeTo aRootFrame,
     const nsPoint& aPointRelativeToRootFrame, uint32_t aFlags = 0);
 
 class MOZ_RAII EventRetargetSuppression {
