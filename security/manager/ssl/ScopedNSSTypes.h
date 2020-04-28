@@ -61,6 +61,11 @@ inline void PK11_DestroyContext_true(PK11Context* ctx) {
   PK11_DestroyContext(ctx, true);
 }
 
+inline void SECKEYEncryptedPrivateKeyInfo_true(
+    SECKEYEncryptedPrivateKeyInfo* epki) {
+  SECKEY_DestroyEncryptedPrivateKeyInfo(epki, true);
+}
+
 }  // namespace internal
 
 // Emulates MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE, but for UniquePtrs.
@@ -322,6 +327,9 @@ MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSEC_PKCS12DecoderContext,
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSEC_PKCS12ExportContext,
                                       SEC_PKCS12ExportContext,
                                       SEC_PKCS12DestroyExportContext)
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(
+    UniqueSECKEYEncryptedPrivateKeyInfo, SECKEYEncryptedPrivateKeyInfo,
+    internal::SECKEYEncryptedPrivateKeyInfo_true)
 }  // namespace mozilla
 
 #endif  // ScopedNSSTypes_h

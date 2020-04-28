@@ -18,6 +18,9 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryIPC.h"
 #include "nsIHttpActivityObserver.h"
+#include "nsNSSIOLayer.h"
+#include "PSMIPCCommon.h"
+#include "secerr.h"
 #ifdef MOZ_WEBRTC
 #  include "mozilla/dom/ContentProcessManager.h"
 #  include "mozilla/dom/BrowserParent.h"
@@ -259,6 +262,66 @@ already_AddRefed<PAltServiceParent>
 SocketProcessParent::AllocPAltServiceParent() {
   RefPtr<AltServiceParent> actor = new AltServiceParent();
   return actor.forget();
+}
+
+mozilla::ipc::IPCResult SocketProcessParent::RecvGetTLSClientCert(
+    const nsCString& aHostName, const OriginAttributes& aOriginAttributes,
+    const int32_t& aPort, const uint32_t& aProviderFlags,
+    const uint32_t& aProviderTlsFlags, const ByteArray& aServerCert,
+    Maybe<ByteArray>&& aClientCert, nsTArray<ByteArray>&& aCollectedCANames,
+    bool* aSucceeded, ByteArray* aOutCert, ByteArray* aOutKey,
+    nsTArray<ByteArray>* aBuiltChain) {
+  *aSucceeded = false;
+
+  SECItem serverCertItem = {
+      siBuffer, const_cast<uint8_t*>(aServerCert.data().Elements()),
+      static_cast<unsigned int>(aServerCert.data().Length())};
+  UniqueCERTCertificate serverCert(CERT_NewTempCertificate(
+      CERT_GetDefaultCertDB(), &serverCertItem, nullptr, false, true));
+  if (!serverCert) {
+    return IPC_OK();
+  }
+
+  RefPtr<nsIX509Cert> clientCert;
+  if (aClientCert) {
+    clientCert = nsNSSCertificate::ConstructFromDER(
+        BitwiseCast<char*, uint8_t*>(aClientCert->data().Elements()),
+        aClientCert->data().Length());
+    if (!clientCert) {
+      return IPC_OK();
+    }
+  }
+
+  ClientAuthInfo info(aHostName, aOriginAttributes, aPort, aProviderFlags,
+                      aProviderTlsFlags, clientCert);
+  nsTArray<nsTArray<uint8_t>> collectedCANames;
+  for (auto& name : aCollectedCANames) {
+    collectedCANames.AppendElement(std::move(name.data()));
+  }
+
+  UniqueCERTCertificate cert;
+  UniqueSECKEYPrivateKey key;
+  UniqueCERTCertList builtChain;
+  SECStatus status =
+      DoGetClientAuthData(std::move(info), serverCert,
+                          std::move(collectedCANames), cert, key, builtChain);
+  if (status != SECSuccess) {
+    return IPC_OK();
+  }
+
+  SerializeClientCertAndKey(cert, key, *aOutCert, *aOutKey);
+
+  if (builtChain) {
+    for (CERTCertListNode* n = CERT_LIST_HEAD(builtChain);
+         !CERT_LIST_END(n, builtChain); n = CERT_LIST_NEXT(n)) {
+      ByteArray array;
+      array.data().AppendElements(n->cert->derCert.data, n->cert->derCert.len);
+      aBuiltChain->AppendElement(std::move(array));
+    }
+  }
+
+  *aSucceeded = true;
+  return IPC_OK();
 }
 
 // To ensure that IPDL is finished before SocketParent gets deleted.
