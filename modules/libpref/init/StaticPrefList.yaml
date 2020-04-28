@@ -5594,6 +5594,13 @@
   mirror: always
   rust: true
 
+# Is support for CSS masonry layout enabled?
+- name: layout.css.grid-template-masonry-value.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Is support for CSS individual transform enabled?
 - name: layout.css.individual-transform.enabled
   type: bool
