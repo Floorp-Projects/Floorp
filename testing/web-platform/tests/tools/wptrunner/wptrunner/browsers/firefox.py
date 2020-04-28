@@ -428,8 +428,11 @@ class OutputHandler(object):
 
         self.symbols_path = symbols_path
         if stackfix_dir:
+            # We hide errors because they cause disconcerting `CRITICAL`
+            # warnings in web platform test output.
             self.stack_fixer = get_stack_fixer_function(stackfix_dir,
-                                                        self.symbols_path)
+                                                        self.symbols_path,
+                                                        hideErrors=True)
         else:
             self.stack_fixer = None
         self.asan = asan
