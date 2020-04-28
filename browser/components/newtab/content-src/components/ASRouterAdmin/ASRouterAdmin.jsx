@@ -791,9 +791,8 @@ export class ASRouterAdminInner extends React.PureComponent {
     const isBlockedByGroup = this.state.groups
       .filter(group => msg.groups.includes(group.id))
       .some(group => !group.enabled);
-    const msgProvider = this.state.providers.find(
-      provider => provider.id === msg.provider
-    );
+    const msgProvider =
+      this.state.providers.find(provider => provider.id === msg.provider) || {};
     const isProviderExcluded =
       msgProvider.exclude && msgProvider.exclude.includes(msg.id);
     const isMessageBlocked =
