@@ -222,15 +222,35 @@ static const nsIContent* GetBlockParent(const Text& aNode) {
   return nullptr;
 }
 
+static bool NodeForcesBreak(const nsIContent& aContent) {
+  nsIFrame* frame = aContent.GetPrimaryFrame();
+  // TODO(emilio): Maybe we should treat <br> more like a space instead of a
+  // forced break? Unclear...
+  return frame && frame->IsBrFrame();
+}
+
+static bool ForceBreakBetweenText(const Text& aPrevious, const Text& aNext) {
+  if (!nsContentUtils::IsInSameAnonymousTree(&aPrevious, &aNext)) {
+    // TODO(emilio): This should ideally work, probably at least for finding
+    // across Shadow DOM?
+    return true;
+  }
+
+  return GetBlockParent(aPrevious) != GetBlockParent(aNext);
+}
+
 struct nsFind::State final {
   State(bool aFindBackward, nsIContent& aRoot, const nsRange& aStartPoint)
       : mFindBackward(aFindBackward),
         mInitialized(false),
+        mFoundBreak(false),
         mIterOffset(-1),
         mIterator(aRoot),
         mStartPoint(aStartPoint) {}
 
   void PositionAt(Text& aNode) { mIterator.Seek(aNode); }
+
+  bool ForcedBreak() const { return mFoundBreak; }
 
   Text* GetCurrentNode() const {
     if (MOZ_UNLIKELY(!mInitialized)) {
@@ -245,7 +265,7 @@ struct nsFind::State final {
     if (MOZ_UNLIKELY(!mInitialized)) {
       Initialize();
     } else {
-      Advance();
+      Advance(Initializing::No);
       mIterOffset = -1;  // mIterOffset only really applies to the first node.
     }
     return GetCurrentNode();
@@ -256,8 +276,10 @@ struct nsFind::State final {
   const nsTextFragment* GetNextNonEmptyTextFragmentInSameBlock();
 
  private:
+  enum class Initializing { No, Yes };
+
   // Advance to the next visible text-node.
-  void Advance();
+  void Advance(Initializing);
   // Sets up the first node position and offset.
   void Initialize();
 
@@ -271,6 +293,8 @@ struct nsFind::State final {
   bool mInitialized;
 
  public:
+  // Whether we've found a forced break from the last node to the current one.
+  bool mFoundBreak;
   // An offset into the text of the first node we're starting to search at.
   int mIterOffset;
   TreeIterator<StyleChildrenIterator> mIterator;
@@ -279,16 +303,28 @@ struct nsFind::State final {
   const nsRange& mStartPoint;
 };
 
-void nsFind::State::Advance() {
+void nsFind::State::Advance(Initializing aInitializing) {
   MOZ_ASSERT(mInitialized);
+
+  // The Advance() call during Initialize() calls us in a partial state, where
+  // mIterator may not be pointing to a text node yet. aInitializing prevents
+  // tripping the invariants of GetCurrentNode().
+  const Text* prev =
+      aInitializing == Initializing::Yes ? nullptr : GetCurrentNode();
+  mFoundBreak = false;
 
   while (true) {
     nsIContent* current =
         mFindBackward ? mIterator.GetPrev() : mIterator.GetNext();
-
-    if (!current || ValidTextNode(*current)) {
+    if (!current) {
       return;
     }
+    if (ValidTextNode(*current)) {
+      mFoundBreak = mFoundBreak ||
+                    (prev && ForceBreakBetweenText(*prev, *current->AsText()));
+      return;
+    }
+    mFoundBreak = mFoundBreak || NodeForcesBreak(*current);
   }
 }
 
@@ -322,7 +358,7 @@ void nsFind::State::Initialize() {
   }
 
   if (!ValidTextNode(*current)) {
-    Advance();
+    Advance(Initializing::Yes);
     current = mIterator.GetCurrent();
     if (!current) {
       return;
@@ -342,9 +378,11 @@ class MOZ_STACK_CLASS nsFind::StateRestorer final {
   explicit StateRestorer(State& aState)
       : mState(aState),
         mIterOffset(aState.mIterOffset),
+        mFoundBreak(aState.mFoundBreak),
         mCurrNode(aState.GetCurrentNode()) {}
 
   ~StateRestorer() {
+    mState.mFoundBreak = mFoundBreak;
     mState.mIterOffset = mIterOffset;
     if (mCurrNode) {
       mState.PositionAt(*mCurrNode);
@@ -355,6 +393,7 @@ class MOZ_STACK_CLASS nsFind::StateRestorer final {
   State& mState;
 
   int32_t mIterOffset;
+  bool mFoundBreak;
   Text* mCurrNode;
 };
 
@@ -471,23 +510,12 @@ bool nsFind::BreakInBetween(char32_t x, char32_t y) const {
   return mWordBreaker->BreakInBetween(x16, x16len, y16, y16len);
 }
 
-static bool ForceBreakBetween(const Text& aPrevious, const Text& aNext) {
-  if (!nsContentUtils::IsInSameAnonymousTree(&aPrevious, &aNext)) {
-    // TODO(emilio): This should ideally work, probably at least for finding
-    // across Shadow DOM?
-    return true;
-  }
-
-  return GetBlockParent(aPrevious) != GetBlockParent(aNext);
-}
-
 char32_t nsFind::PeekNextChar(State& aState) const {
   // We need to restore the necessary state before this function returns.
   StateRestorer restorer(aState);
 
-  const Text* previous = aState.GetCurrentNode();
   const Text* text = aState.GetNextNode();
-  if (!text || (previous && ForceBreakBetween(*previous, *text))) {
+  if (!text || aState.ForcedBreak()) {
     return L'\0';
   }
 
@@ -602,17 +630,15 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
 
     // If this is our first time on a new node, reset the pointers:
     if (!frag) {
-      const Text* prevNode = state.GetCurrentNode();
       current = state.GetNextNode();
       if (!current) {
         return NS_OK;
       }
 
-      // We have a new text content. If its block parent is different from the
-      // block parent of the last text content, then we need to clear the match
-      // since we don't want to find across block boundaries.
-      if (prevNode && ForceBreakBetween(*prevNode, *current)) {
-        DEBUG_FIND_PRINTF("Different block parent!\n");
+      // We have a new text content. See if we need to force a break due to
+      // <br>, different blocks or what not.
+      if (state.ForcedBreak()) {
+        DEBUG_FIND_PRINTF("Forced break!\n");
         // End any pending match:
         matchAnchorNode = nullptr;
         matchAnchorOffset = 0;

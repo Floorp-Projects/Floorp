@@ -152,6 +152,8 @@ let runTests = t.step_func_done(function() {
   testFindable(true, "\0", function(document) {
     document.documentElement.appendChild(document.createTextNode("\0"));
   }, "Inserted null characters are findable");
+
+  testFindable(false, "ab", `a<br>b`, "<br> forces a break even if there's no whitespace in between");
 });
 
 window.onload = function() {
