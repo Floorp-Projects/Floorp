@@ -6,6 +6,7 @@
 
 #include "jit/Ion.h"
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/MemoryReporting.h"
@@ -610,86 +611,85 @@ IonScript* IonScript::New(JSContext* cx, IonCompilationId compilationId,
                           size_t icEntries, size_t runtimeSize,
                           size_t safepointsSize,
                           OptimizationLevel optimizationLevel) {
-  constexpr size_t DataAlignment = sizeof(void*);
-
   if (snapshotsListSize >= MAX_BUFFER_SIZE ||
       (bailoutEntries >= MAX_BUFFER_SIZE / sizeof(uint32_t))) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
 
-  // This should not overflow on x86, because the memory is already allocated
-  // *somewhere* and if their total overflowed there would be no memory left
-  // at all.
-  size_t paddedSnapshotsSize =
-      AlignBytes(snapshotsListSize + snapshotsRVATableSize, DataAlignment);
-  size_t paddedRecoversSize = AlignBytes(recoversSize, DataAlignment);
-  size_t paddedBailoutSize =
-      AlignBytes(bailoutEntries * sizeof(uint32_t), DataAlignment);
-  size_t paddedConstantsSize =
-      AlignBytes(constants * sizeof(Value), DataAlignment);
-  size_t paddedSafepointIndicesSize =
-      AlignBytes(safepointIndices * sizeof(SafepointIndex), DataAlignment);
-  size_t paddedOsiIndicesSize =
-      AlignBytes(osiIndices * sizeof(OsiIndex), DataAlignment);
-  size_t paddedICEntriesSize =
-      AlignBytes(icEntries * sizeof(uint32_t), DataAlignment);
-  size_t paddedRuntimeSize = AlignBytes(runtimeSize, DataAlignment);
-  size_t paddedSafepointSize = AlignBytes(safepointsSize, DataAlignment);
+  CheckedInt<Offset> allocSize = sizeof(IonScript);
+  allocSize += CheckedInt<Offset>(constants) * sizeof(Value);
+  allocSize += CheckedInt<Offset>(runtimeSize);
+  allocSize += CheckedInt<Offset>(osiIndices) * sizeof(OsiIndex);
+  allocSize += CheckedInt<Offset>(safepointIndices) * sizeof(SafepointIndex);
+  allocSize += CheckedInt<Offset>(bailoutEntries) * sizeof(SnapshotOffset);
+  allocSize += CheckedInt<Offset>(icEntries) * sizeof(uint32_t);
+  allocSize += CheckedInt<Offset>(safepointsSize);
+  allocSize += CheckedInt<Offset>(snapshotsListSize);
+  allocSize += CheckedInt<Offset>(snapshotsRVATableSize);
+  allocSize += CheckedInt<Offset>(recoversSize);
 
-  size_t bytes = paddedRuntimeSize + paddedICEntriesSize +
-                 paddedSafepointIndicesSize + paddedSafepointSize +
-                 paddedBailoutSize + paddedOsiIndicesSize +
-                 paddedSnapshotsSize + paddedRecoversSize + paddedConstantsSize;
-
-  IonScript* script = cx->pod_malloc_with_extra<IonScript, uint8_t>(bytes);
-  if (!script) {
+  if (!allocSize.isValid()) {
+    ReportAllocationOverflow(cx);
     return nullptr;
   }
-  new (script) IonScript(compilationId, frameSlots, argumentSlots, frameSize,
-                         optimizationLevel);
 
-  uint32_t offsetCursor = sizeof(IonScript);
+  void* raw = cx->pod_malloc<uint8_t>(allocSize.value());
+  MOZ_ASSERT(uintptr_t(raw) % alignof(IonScript) == 0);
+  if (!raw) {
+    return nullptr;
+  }
+  IonScript* script = new (raw) IonScript(
+      compilationId, frameSlots, argumentSlots, frameSize, optimizationLevel);
 
+  Offset offsetCursor = sizeof(IonScript);
+
+  MOZ_ASSERT(offsetCursor % alignof(Value) == 0);
+  script->constantTable_ = offsetCursor;
+  script->constantEntries_ = constants;
+  offsetCursor += constants * sizeof(Value);
+
+  MOZ_ASSERT(offsetCursor % alignof(uint64_t) == 0);
   script->runtimeData_ = offsetCursor;
   script->runtimeSize_ = runtimeSize;
-  offsetCursor += paddedRuntimeSize;
+  offsetCursor += runtimeSize;
 
-  script->icIndex_ = offsetCursor;
-  script->icEntries_ = icEntries;
-  offsetCursor += paddedICEntriesSize;
+  MOZ_ASSERT(offsetCursor % alignof(OsiIndex) == 0);
+  script->osiIndexOffset_ = offsetCursor;
+  script->osiIndexEntries_ = osiIndices;
+  offsetCursor += osiIndices * sizeof(OsiIndex);
 
+  MOZ_ASSERT(offsetCursor % alignof(SafepointIndex) == 0);
   script->safepointIndexOffset_ = offsetCursor;
   script->safepointIndexEntries_ = safepointIndices;
-  offsetCursor += paddedSafepointIndicesSize;
+  offsetCursor += safepointIndices * sizeof(SafepointIndex);
+
+  MOZ_ASSERT(offsetCursor % alignof(SnapshotOffset) == 0);
+  script->bailoutTable_ = offsetCursor;
+  script->bailoutEntries_ = bailoutEntries;
+  offsetCursor += bailoutEntries * sizeof(SnapshotOffset);
+
+  MOZ_ASSERT(offsetCursor % alignof(uint32_t) == 0);
+  script->icIndex_ = offsetCursor;
+  script->icEntries_ = icEntries;
+  offsetCursor += icEntries * sizeof(uint32_t);
 
   script->safepointsStart_ = offsetCursor;
   script->safepointsSize_ = safepointsSize;
-  offsetCursor += paddedSafepointSize;
-
-  script->bailoutTable_ = offsetCursor;
-  script->bailoutEntries_ = bailoutEntries;
-  offsetCursor += paddedBailoutSize;
-
-  script->osiIndexOffset_ = offsetCursor;
-  script->osiIndexEntries_ = osiIndices;
-  offsetCursor += paddedOsiIndicesSize;
+  offsetCursor += safepointsSize;
 
   script->snapshots_ = offsetCursor;
   script->snapshotsListSize_ = snapshotsListSize;
   script->snapshotsRVATableSize_ = snapshotsRVATableSize;
-  offsetCursor += paddedSnapshotsSize;
+  offsetCursor += snapshotsListSize;
+  offsetCursor += snapshotsRVATableSize;
 
   script->recovers_ = offsetCursor;
   script->recoversSize_ = recoversSize;
-  offsetCursor += paddedRecoversSize;
+  offsetCursor += recoversSize;
 
-  script->constantTable_ = offsetCursor;
-  script->constantEntries_ = constants;
-  offsetCursor += paddedConstantsSize;
-
-  script->allocBytes_ = sizeof(IonScript) + bytes;
-  MOZ_ASSERT(offsetCursor == script->allocBytes_);
+  script->allocBytes_ = offsetCursor;
+  MOZ_ASSERT(offsetCursor == allocSize.value());
 
   return script;
 }

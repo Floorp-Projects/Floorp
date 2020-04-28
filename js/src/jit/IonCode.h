@@ -17,6 +17,7 @@
 #include "jit/IonOptimizationLevels.h"
 #include "jit/IonTypes.h"
 #include "js/UbiNode.h"
+#include "util/TrailingArray.h"
 #include "vm/TraceLogging.h"
 
 namespace js {
@@ -151,8 +152,69 @@ class SafepointIndex;
 class OsiIndex;
 class IonIC;
 
-// An IonScript attaches Ion-generated information to a JSScript.
-struct IonScript {
+// An IonScript attaches Ion-generated information to a JSScript. The header
+// structure is followed by several arrays of data. These trailing arrays have a
+// layout based on offsets (bytes from 'this') stored in the IonScript header.
+//
+//    <IonScript itself>
+//    --
+//    PreBarrieredValue[]   constantTable()
+//    uint8_t[]             runtimeData()
+//    OsiIndex[]            osiIndex()
+//    SafepointIndex[]      safepointIndex()
+//    SnapshotOffset[]      bailoutTable()
+//    uint32_t[]            icIndex()
+//    --
+//    uint8_t[]             safepoints()
+//    uint8_t[]             snapshots()
+//    uint8_t[]             snapshotsRVATable()
+//    uint8_t[]             recovers()
+//
+// Note: These are arranged in order of descending alignment requirements to
+// avoid the need for padding. The `runtimeData` uses uint64_t alignement due to
+// its use of mozilla::AlignedStorage2.
+struct alignas(8) IonScript final : public TrailingArray {
+ private:
+  // Table of constants referenced in snapshots. (JS::Value alignment)
+  uint32_t constantTable_ = 0;
+  uint32_t constantEntries_ = 0;
+
+  // IonIC data structures. (uint64_t alignment)
+  uint32_t runtimeData_ = 0;
+  uint32_t runtimeSize_ = 0;
+
+  // Map OSI-point displacement to snapshot.
+  uint32_t osiIndexOffset_ = 0;
+  uint32_t osiIndexEntries_ = 0;
+
+  // Map code displacement to safepoint / OSI-patch-delta.
+  uint32_t safepointIndexOffset_ = 0;
+  uint32_t safepointIndexEntries_ = 0;
+
+  // Table mapping bailout IDs to snapshot offsets.
+  uint32_t bailoutTable_ = 0;
+  uint32_t bailoutEntries_ = 0;
+
+  // Offset into `runtimeData` for each (variable-length) IonIC.
+  uint32_t icIndex_ = 0;
+  uint32_t icEntries_ = 0;
+
+  // Safepoint table as a CompactBuffer.
+  uint32_t safepointsStart_ = 0;
+  uint32_t safepointsSize_ = 0;
+
+  // Snapshot and RValueAllocation tables as CompactBuffers.
+  uint32_t snapshots_ = 0;
+  uint32_t snapshotsListSize_ = 0;
+  uint32_t snapshotsRVATableSize_ = 0;
+
+  // Recover instruction table as a CompactBuffer.
+  uint32_t recovers_ = 0;
+  uint32_t recoversSize_ = 0;
+
+  // The size of this allocation.
+  uint32_t allocBytes_ = 0;
+
  private:
   // Code pointer containing the actual method.
   HeapPtrJitCode method_ = nullptr;
@@ -185,25 +247,6 @@ struct IonScript {
   // Flag for if this script is getting recompiled.
   uint32_t recompiling_ = 0;
 
-  // Any kind of data needed by the runtime, these can be either cache
-  // information or profiling info.
-  uint32_t runtimeData_ = 0;
-  uint32_t runtimeSize_ = 0;
-
-  // State for polymorphic caches in the compiled code. All caches are stored
-  // in the runtimeData buffer and indexed by the icIndex which gives a
-  // relative offset in the runtimeData array.
-  uint32_t icIndex_ = 0;
-  uint32_t icEntries_ = 0;
-
-  // Map code displacement to safepoint / OSI-patch-delta.
-  uint32_t safepointIndexOffset_ = 0;
-  uint32_t safepointIndexEntries_ = 0;
-
-  // Offset to and length of the safepoint table in bytes.
-  uint32_t safepointsStart_ = 0;
-  uint32_t safepointsSize_ = 0;
-
   // Number of bytes this function reserves on the stack.
   uint32_t frameSlots_ = 0;
 
@@ -213,30 +256,6 @@ struct IonScript {
   // Frame size is the value that can be added to the StackPointer along
   // with the frame prefix to get a valid JitFrameLayout.
   uint32_t frameSize_ = 0;
-
-  // Table mapping bailout IDs to snapshot offsets.
-  uint32_t bailoutTable_ = 0;
-  uint32_t bailoutEntries_ = 0;
-
-  // Map OSI-point displacement to snapshot.
-  uint32_t osiIndexOffset_ = 0;
-  uint32_t osiIndexEntries_ = 0;
-
-  // Offset from the start of the code buffer to its snapshot buffer.
-  uint32_t snapshots_ = 0;
-  uint32_t snapshotsListSize_ = 0;
-  uint32_t snapshotsRVATableSize_ = 0;
-
-  // List of instructions needed to recover stack frames.
-  uint32_t recovers_ = 0;
-  uint32_t recoversSize_ = 0;
-
-  // Constant table for constants stored in snapshots.
-  uint32_t constantTable_ = 0;
-  uint32_t constantEntries_ = 0;
-
-  // The size of this allocation.
-  uint32_t allocBytes_ = 0;
 
   // Number of references from invalidation records.
   uint32_t invalidationCount_ = 0;
