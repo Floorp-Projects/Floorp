@@ -1666,13 +1666,9 @@ void CodeGeneratorARM::generateInvalidateEpilogue() {
   // is).
   invalidateEpilogueData_ = masm.pushWithPatch(ImmWord(uintptr_t(-1)));
 
+  // Jump to the invalidator which will replace the current frame.
   TrampolinePtr thunk = gen->jitRuntime()->getInvalidationThunk();
   masm.jump(thunk);
-
-  // We should never reach this point in JIT code -- the invalidation thunk
-  // should pop the invalidated JS frame and return directly to its caller.
-  masm.assumeUnreachable(
-      "Should have returned directly to its caller instead of here.");
 }
 
 void CodeGenerator::visitCompareExchangeTypedArrayElement(

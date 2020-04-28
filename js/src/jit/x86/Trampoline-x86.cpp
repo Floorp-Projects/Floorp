@@ -343,14 +343,11 @@ void JitRuntime::generateInvalidator(MacroAssembler& masm, Label* bailoutTail) {
   // We do the minimum amount of work in assembly and shunt the rest
   // off to InvalidationBailout. Assembly does:
   //
-  // - Pop the return address from the invalidation epilogue call.
   // - Push the machine state onto the stack.
   // - Call the InvalidationBailout routine with the stack pointer.
   // - Now that the frame has been bailed out, convert the invalidated
   //   frame into an exit frame.
   // - Do the normal check-return-code-and-thunk-to-the-interpreter dance.
-
-  masm.addl(Imm32(sizeof(uintptr_t)), esp);
 
   // Push registers such that we can access them from [base + code].
   DumpAllRegs(masm);
