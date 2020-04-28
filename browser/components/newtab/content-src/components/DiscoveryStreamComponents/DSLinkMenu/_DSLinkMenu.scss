@@ -1,6 +1,7 @@
 .ds-hero-item,
 .ds-list-item,
-.ds-card {
+.ds-card,
+.ds-signup {
   @include context-menu-button;
 
   .context-menu {

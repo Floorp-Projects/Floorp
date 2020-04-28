@@ -76,6 +76,7 @@ export const LinkMenuOptions = {
       type: at.BLOCK_URL,
       data: tiles.map(site => ({
         url: site.open_url || site.url,
+        // pocket_id is only for pocket stories being in highlights, and then dismissed.
         pocket_id: site.pocket_id,
         ...(site.flight_id ? { flight_id: site.flight_id } : {}),
       })),

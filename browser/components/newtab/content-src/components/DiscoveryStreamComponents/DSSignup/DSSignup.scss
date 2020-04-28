@@ -1,0 +1,52 @@
+.ds-signup {
+  max-width: 300px;
+  margin: 0 auto;
+  padding: 8px;
+  position: relative;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 600;
+
+  &:hover {
+    background: var(--newtab-element-hover-color);
+    border-radius: 4px;
+  }
+
+  .icon-mail {
+    height: 40px;
+    width: 40px;
+    margin-inline-end: 8px;
+    fill: #{$grey-40};
+    background-size: 30px;
+    flex-shrink: 0;
+  }
+
+  .ds-signup-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+
+    .ds-chevron-link {
+      margin-top: 4px;
+      box-shadow: none;
+      display: block;
+      white-space: nowrap;
+    }
+  }
+
+  @media (min-width: $break-point-large) {
+    min-width: 756px;
+    width: max-content;
+    text-align: start;
+
+    .ds-signup-content {
+      flex-direction: row;
+
+      .ds-chevron-link {
+        margin-top: 0;
+        display: inline;
+      }
+    }
+  }
+}

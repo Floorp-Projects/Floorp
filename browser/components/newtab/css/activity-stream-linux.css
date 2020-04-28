@@ -171,6 +171,8 @@ body {
     background-size: 32px;
     height: 32px;
     width: 32px; }
+  .icon.icon-mail {
+    background-image: url("../data/content/assets/glyph-mail-16.svg"); }
   .icon.icon-dismiss {
     background-image: url("../data/content/assets/glyph-dismiss-16.svg"); }
   .icon.icon-info {
@@ -2685,7 +2687,8 @@ main {
 
 .ds-hero-item .context-menu-button,
 .ds-list-item .context-menu-button,
-.ds-card .context-menu-button {
+.ds-card .context-menu-button,
+.ds-signup .context-menu-button {
   background-clip: padding-box;
   background-color: var(--newtab-contextmenu-button-color);
   background-image: url("chrome://global/skin/icons/more.svg");
@@ -2706,23 +2709,27 @@ main {
   width: 27px; }
   .ds-hero-item .context-menu-button:-moz-any(:active, :focus),
   .ds-list-item .context-menu-button:-moz-any(:active, :focus),
-  .ds-card .context-menu-button:-moz-any(:active, :focus) {
+  .ds-card .context-menu-button:-moz-any(:active, :focus),
+  .ds-signup .context-menu-button:-moz-any(:active, :focus) {
     opacity: 1;
     transform: scale(1); }
 
 .ds-hero-item .context-menu,
 .ds-list-item .context-menu,
-.ds-card .context-menu {
+.ds-card .context-menu,
+.ds-signup .context-menu {
   opacity: 0; }
 
 .ds-hero-item.active .context-menu,
 .ds-list-item.active .context-menu,
-.ds-card.active .context-menu {
+.ds-card.active .context-menu,
+.ds-signup.active .context-menu {
   opacity: 1; }
 
 .ds-hero-item.last-item .context-menu,
 .ds-list-item.last-item .context-menu,
-.ds-card.last-item .context-menu {
+.ds-card.last-item .context-menu,
+.ds-signup.last-item .context-menu {
   margin-inline-end: 5px;
   margin-inline-start: auto;
   inset-inline-end: 0;
@@ -2730,22 +2737,26 @@ main {
 
 .ds-hero-item.last-item .context-menu,
 .ds-list-item.last-item .context-menu,
-.ds-card.last-item .context-menu {
+.ds-card.last-item .context-menu,
+.ds-signup.last-item .context-menu {
   opacity: 1; }
 
 .ds-hero-item:-moz-any(:hover, :focus, .active),
 .ds-list-item:-moz-any(:hover, :focus, .active),
-.ds-card:-moz-any(:hover, :focus, .active) {
+.ds-card:-moz-any(:hover, :focus, .active),
+.ds-signup:-moz-any(:hover, :focus, .active) {
   outline: none; }
   .ds-hero-item:-moz-any(:hover, :focus, .active) .context-menu-button,
   .ds-list-item:-moz-any(:hover, :focus, .active) .context-menu-button,
-  .ds-card:-moz-any(:hover, :focus, .active) .context-menu-button {
+  .ds-card:-moz-any(:hover, :focus, .active) .context-menu-button,
+  .ds-signup:-moz-any(:hover, :focus, .active) .context-menu-button {
     opacity: 1;
     transform: scale(1);
     transition-delay: 333ms; }
   .ds-hero-item:-moz-any(:hover, :focus, .active).ds-card-grid-border,
   .ds-list-item:-moz-any(:hover, :focus, .active).ds-card-grid-border,
-  .ds-card:-moz-any(:hover, :focus, .active).ds-card-grid-border {
+  .ds-card:-moz-any(:hover, :focus, .active).ds-card-grid-border,
+  .ds-signup:-moz-any(:hover, :focus, .active).ds-card-grid-border {
     box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
     transition: box-shadow 150ms; }
 
@@ -3232,6 +3243,45 @@ main {
     display: inline-block; }
     [lwt-newtab-brighttext] .ds-chevron-link::after {
       background-color: #45A1FF; }
+
+.ds-signup {
+  max-width: 300px;
+  margin: 0 auto;
+  padding: 8px;
+  position: relative;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 600; }
+  .ds-signup:hover {
+    background: var(--newtab-element-hover-color);
+    border-radius: 4px; }
+  .ds-signup .icon-mail {
+    height: 40px;
+    width: 40px;
+    margin-inline-end: 8px;
+    fill: #B1B1B3;
+    background-size: 30px;
+    flex-shrink: 0; }
+  .ds-signup .ds-signup-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column; }
+    .ds-signup .ds-signup-content .ds-chevron-link {
+      margin-top: 4px;
+      box-shadow: none;
+      display: block;
+      white-space: nowrap; }
+  @media (min-width: 866px) {
+    .ds-signup {
+      min-width: 756px;
+      width: max-content;
+      text-align: start; }
+      .ds-signup .ds-signup-content {
+        flex-direction: row; }
+        .ds-signup .ds-signup-content .ds-chevron-link {
+          margin-top: 0;
+          display: inline; } }
 
 .ds-privacy-modal .modal-link {
   display: flex;
