@@ -67,7 +67,8 @@ ParentProcessDocumentChannel::OnRedirectVerifyCallback(nsresult aResult) {
       ("ParentProcessDocumentChannel OnRedirectVerifyCallback [this=%p "
        "aResult=%d]",
        this, int(aResult)));
-  MOZ_ASSERT(mDocumentLoadListener);
+
+  MOZ_ASSERT(mCanceled || mDocumentLoadListener);
 
   if (NS_FAILED(aResult)) {
     Cancel(aResult);
@@ -160,6 +161,9 @@ NS_IMETHODIMP ParentProcessDocumentChannel::Cancel(nsresult aStatus) {
 }
 
 void ParentProcessDocumentChannel::DisconnectDocumentLoadListener() {
+  if (!mDocumentLoadListener) {
+    return;
+  }
   if (nsCOMPtr<nsIObserverService> observerService =
           mozilla::services::GetObserverService()) {
     observerService->RemoveObserver(this, NS_HTTP_ON_MODIFY_REQUEST_TOPIC);
