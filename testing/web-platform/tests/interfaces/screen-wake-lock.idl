@@ -1,7 +1,7 @@
 // GENERATED CONTENT - DO NOT EDIT
 // Content was automatically extracted by Reffy into reffy-reports
 // (https://github.com/tidoust/reffy-reports)
-// Source: Screen Wake Lock API (https://w3c.github.io/wake-lock/)
+// Source: Screen Wake Lock API (https://w3c.github.io/screen-wake-lock/)
 
 [SecureContext]
 partial interface Navigator {
