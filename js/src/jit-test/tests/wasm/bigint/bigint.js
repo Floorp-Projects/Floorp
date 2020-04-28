@@ -37,10 +37,6 @@ function testId() {
     assertEq(f(2n ** 63n, 1n), -(2n ** 63n));
     assertEq(f(2n ** 64n + 123n, 1n), 123n);
     assertEq(f("5", 1n), 5n);
-    assertEq(f(true, 1n), 1n);
-    assertEq(f(false, 1n), 0n);
-    assertEq(f({ toString() { return "5"; }, }, 1n), 5n);
-    assertEq(f({ valueOf() { return 5n; }, }, 1n), 5n);
 
     assertEq(f2(1n, 0n), 0n);
     assertEq(f2(1n, -0n), -0n);
@@ -49,42 +45,10 @@ function testId() {
     assertEq(f2(1n, 2n ** 63n), -(2n ** 63n));
     assertEq(f2(1n, 2n ** 64n + 123n), 123n);
     assertEq(f2(1n, "5"), 5n);
-    assertEq(f2(1n, true), 1n);
-    assertEq(f2(1n, false), 0n);
-    assertEq(f2(1n, { toString() { return "5"; }, }), 5n);
-    assertEq(f2(1n, { valueOf() { return 5n; }, }), 5n);
+
+    assertErrorMessage(() => f(5, 1n), TypeError, "can't convert 5 to BigInt");
+    assertErrorMessage(() => f2(1n, 5), TypeError, "can't convert 5 to BigInt");
   });
-}
-
-function testNonBigIntArgs() {
-  var f = wasmEvalText(`(module
-    (func (export "f") (param i64) (result i64)
-      (local.get 0)
-    )
-  )`).exports.f;
-
-  assertErrorMessage(() => f(5), TypeError, "can't convert 5 to BigInt");
-  assertErrorMessage(() => f({ valueOf() { return 5; }, }),
-                     TypeError,
-                     "can't convert 5 to BigInt");
-  assertErrorMessage(() => f(5.3), TypeError, "can't convert 5.3 to BigInt");
-  assertErrorMessage(() => f(), TypeError, "can't convert undefined to BigInt");
-  assertErrorMessage(
-    () => f(undefined),
-    TypeError,
-    "can't convert undefined to BigInt"
-  );
-  assertErrorMessage(() => f(null), TypeError, "can't convert null to BigInt");
-  assertErrorMessage(
-    () => f(Symbol("foo")),
-    TypeError,
-    'can\'t convert Symbol("foo") to BigInt'
-  );
-  assertErrorMessage(() => f({}), SyntaxError, "invalid BigInt syntax");
-  assertErrorMessage(() => f({ valueof() { return "foo"; }, }),
-                     SyntaxError,
-                     "invalid BigInt syntax");
-  assertErrorMessage(() => f("x"), SyntaxError, "invalid BigInt syntax");
 }
 
 function testIdPlus() {
@@ -102,32 +66,9 @@ function testIdPlus() {
   });
 }
 
-// Test functions with many parameters to stress ABI cases. We want to test
-// spilled arguments both under and over the Ion call inlining limit.
+// Test functions with many parameters to stress ABI cases.
 function testManyArgs() {
-  var f1 = wasmEvalText(`(module
-    (func (export "f")
-      (param i64 i64 i64 i64 i64 i64 i64 i64)
-      (result i64)
-      (get_local 0)
-      (get_local 1)
-      (get_local 2)
-      (get_local 3)
-      (get_local 4)
-      (get_local 5)
-      (get_local 6)
-      (get_local 7)
-      (i64.add)
-      (i64.add)
-      (i64.add)
-      (i64.add)
-      (i64.add)
-      (i64.add)
-      (i64.add)
-    )
-  )`).exports.f;
-
-  var f2 = wasmEvalText(`(module
+  var f = wasmEvalText(`(module
     (func (export "f")
       (param i64 i64 i64 i64 i64 i64 i64 i64 i64 i64 i64 i64 i64 i64)
       (result i64)
@@ -162,8 +103,7 @@ function testManyArgs() {
   )`).exports.f;
 
   testWithJit(() => {
-    assertEq(f1(1n, 1n, 1n, 1n, 1n, 1n, 1n, 1n), 8n);
-    assertEq(f2(1n, 1n, 1n, 1n, 1n, 1n, 1n, 1n, 1n, 1n, 1n, 1n, 1n, 1n), 14n);
+    assertEq(f(1n, 1n, 1n, 1n, 1n, 1n, 1n, 1n, 1n, 1n, 1n, 1n, 1n, 1n), 14n);
   });
 }
 
@@ -454,7 +394,6 @@ function testGlobalI64SetWrongType() {
 testRet();
 testId();
 testIdPlus();
-testNonBigIntArgs();
 testManyArgs();
 testImportExport();
 testMixedArgs();
