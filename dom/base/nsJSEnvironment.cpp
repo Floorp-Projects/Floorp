@@ -2608,16 +2608,6 @@ void nsJSContext::EnsureStatics() {
       (void*)JSGC_HIGH_FREQUENCY_TIME_LIMIT);
 
   Preferences::RegisterCallbackAndCall(
-      SetMemoryPrefChangedCallbackBool,
-      "javascript.options.mem.gc_dynamic_mark_slice",
-      (void*)JSGC_DYNAMIC_MARK_SLICE);
-
-  Preferences::RegisterCallbackAndCall(
-      SetMemoryPrefChangedCallbackBool,
-      "javascript.options.mem.gc_dynamic_heap_growth",
-      (void*)JSGC_DYNAMIC_HEAP_GROWTH);
-
-  Preferences::RegisterCallbackAndCall(
       SetMemoryPrefChangedCallbackInt,
       "javascript.options.mem.gc_low_frequency_heap_growth",
       (void*)JSGC_LOW_FREQUENCY_HEAP_GROWTH);
