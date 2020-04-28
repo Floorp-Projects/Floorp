@@ -19,40 +19,19 @@
  * @property {boolean} isInfoCollapsed
  */
 
-/**
- * TS-TODO
- *
- * This function replaces lazyRequireGetter, and TypeScript can understand it. It's
- * currently duplicated until we have consensus that TypeScript is a good idea.
- *
- * @template T
- * @type {(callback: () => T) => () => T}
- */
-function requireLazy(callback) {
-  /** @type {T | undefined} */
-  let cache;
-  return () => {
-    if (cache === undefined) {
-      cache = callback();
-    }
-    return cache;
-  };
-}
+const { createLazyLoaders } = ChromeUtils.import(
+  "resource://devtools/client/performance-new/typescript-lazy-load.jsm.js"
+);
 
-// Provide an exports object for the JSM to be properly read by TypeScript.
-/** @type {any} */ (this).module = {};
-
-const lazyServices = requireLazy(() =>
-  ChromeUtils.import("resource://gre/modules/Services.jsm")
-);
-const lazyPanelMultiView = requireLazy(() =>
-  ChromeUtils.import("resource:///modules/PanelMultiView.jsm")
-);
-const lazyBackground = requireLazy(() =>
-  ChromeUtils.import(
-    "resource://devtools/client/performance-new/popup/background.jsm.js"
-  )
-);
+const lazy = createLazyLoaders({
+  Services: () => ChromeUtils.import("resource://gre/modules/Services.jsm"),
+  PanelMultiView: () =>
+    ChromeUtils.import("resource:///modules/PanelMultiView.jsm"),
+  Background: () =>
+    ChromeUtils.import(
+      "resource://devtools/client/performance-new/popup/background.jsm.js"
+    ),
+});
 
 /**
  * This function collects all of the selection of the elements inside of the panel.
@@ -127,8 +106,8 @@ function createViewControllers(state, elements) {
     },
 
     updatePresets() {
-      const { Services } = lazyServices();
-      const { presets, getRecordingPreferences } = lazyBackground();
+      const { Services } = lazy.Services();
+      const { presets, getRecordingPreferences } = lazy.Background();
       const { presetName } = getRecordingPreferences(
         "aboutprofiling",
         Services.profiler.GetFeatures()
@@ -143,13 +122,13 @@ function createViewControllers(state, elements) {
         elements.presetDescription.style.display = "none";
         elements.presetCustom.style.display = "block";
       }
-      const { PanelMultiView } = lazyPanelMultiView();
+      const { PanelMultiView } = lazy.PanelMultiView();
       // Update the description height sizing.
       PanelMultiView.forNode(elements.panelview).descriptionHeightWorkaround();
     },
 
     updateProfilerActive() {
-      const { Services } = lazyServices();
+      const { Services } = lazy.Services();
       const isProfilerActive = Services.profiler.IsActive();
       elements.inactive.setAttribute(
         "hidden",
@@ -170,8 +149,8 @@ function createViewControllers(state, elements) {
         // The presets were already built.
         return;
       }
-      const { Services } = lazyServices();
-      const { presets } = lazyBackground();
+      const { Services } = lazy.Services();
+      const { presets } = lazy.Background();
       const currentPreset = Services.prefs.getCharPref(
         "devtools.performance.recording.preset"
       );
@@ -230,7 +209,7 @@ function initializePopup(state, elements, view) {
 
     // XUL <description> elements don't vertically size correctly, this is
     // the workaround for it.
-    const { PanelMultiView } = lazyPanelMultiView();
+    const { PanelMultiView } = lazy.PanelMultiView();
     PanelMultiView.forNode(elements.panelview).descriptionHeightWorkaround();
 
     // Now wait for another rAF, and turn the animations back on.
@@ -255,7 +234,7 @@ function addPopupEventHandlers(state, elements, view) {
     startProfiler,
     stopProfiler,
     captureProfile,
-  } = lazyBackground();
+  } = lazy.Background();
 
   /**
    * Adds a handler that automatically is removed once the panel is hidden.
@@ -326,7 +305,7 @@ function addPopupEventHandlers(state, elements, view) {
   });
 
   // Update the view when the profiler starts/stops.
-  const { Services } = lazyServices();
+  const { Services } = lazy.Services();
   Services.obs.addObserver(view.updateProfilerActive, "profiler-started");
   Services.obs.addObserver(view.updateProfilerActive, "profiler-stopped");
   state.cleanup.push(() => {
@@ -334,6 +313,9 @@ function addPopupEventHandlers(state, elements, view) {
     Services.obs.removeObserver(view.updateProfilerActive, "profiler-stopped");
   });
 }
+
+// Provide an exports object for the JSM to be properly read by TypeScript.
+/** @type {any} */ (this).module = {};
 
 module.exports = {
   selectElementsInPanelview,
