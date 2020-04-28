@@ -189,23 +189,6 @@ typedef enum JSGCParamKey {
   JSGC_LOW_FREQUENCY_HEAP_GROWTH = 16,
 
   /**
-   * If false, the heap growth factor is fixed at 3. If true, it is determined
-   * based on whether GCs are high- or low- frequency.
-   *
-   * Pref: javascript.options.mem.gc_dynamic_heap_growth
-   * Default: DynamicHeapGrowthEnabled
-   */
-  JSGC_DYNAMIC_HEAP_GROWTH = 17,
-
-  /**
-   * If true, high-frequency GCs will use a longer mark slice.
-   *
-   * Pref: javascript.options.mem.gc_dynamic_mark_slice
-   * Default: DynamicMarkSliceEnabled
-   */
-  JSGC_DYNAMIC_MARK_SLICE = 18,
-
-  /**
    * Lower limit for collecting a zone.
    *
    * Zones smaller than this size will not normally be collected.
