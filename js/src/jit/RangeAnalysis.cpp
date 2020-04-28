@@ -1707,10 +1707,6 @@ void MTruncateToInt32::computeRange(TempAllocator& alloc) {
   setRange(output);
 }
 
-void MToInt64::computeRange(TempAllocator& alloc) {
-  setRange(new (alloc) Range(getOperand(0)));
-}
-
 void MToNumeric::computeRange(TempAllocator& alloc) {
   setRange(new (alloc) Range(getOperand(0)));
 }

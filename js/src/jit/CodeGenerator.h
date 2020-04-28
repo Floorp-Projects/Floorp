@@ -265,9 +265,6 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   template <class OrderedHashTable>
   void emitLoadIteratorValues(Register result, Register temp, Register front);
 
-  void emitStringToInt64(LInstruction* lir, Register input, Register temp,
-                         Register64 output);
-
   template <size_t NumDefs>
   void emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir);
 
