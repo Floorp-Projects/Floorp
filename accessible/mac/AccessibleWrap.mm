@@ -182,9 +182,7 @@ Class a11y::GetTypeFromRole(roles::Role aRole) {
   switch (aRole) {
     case roles::COMBOBOX:
     case roles::PUSHBUTTON:
-    case roles::SPLITBUTTON: {
       return [mozButtonAccessible class];
-    }
 
     case roles::PAGETAB:
       return [mozTabAccessible class];
@@ -194,8 +192,9 @@ Class a11y::GetTypeFromRole(roles::Role aRole) {
     case roles::RADIOBUTTON:
       return [mozCheckboxAccessible class];
 
+    case roles::SPINBUTTON:
     case roles::SLIDER:
-      return [mozSliderAccessible class];
+      return [mozIncrementableAccessible class];
 
     case roles::HEADING:
       return [mozHeadingAccessible class];
