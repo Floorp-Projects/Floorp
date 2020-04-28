@@ -1267,12 +1267,6 @@ var gProtectionsHandler = {
       "protections-popup-sendReportView-report-error"
     ));
   },
-  get _protectionsPopupSendReportLearnMore() {
-    delete this._protectionsPopupSendReportLearnMore;
-    return (this._protectionsPopupSendReportLearnMore = document.getElementById(
-      "protections-popup-sendReportView-learn-more"
-    ));
-  },
   get _protectionsPopupSendReportURL() {
     delete this._protectionsPopupSendReportURL;
     return (this._protectionsPopupSendReportURL = document.getElementById(
@@ -1435,8 +1429,9 @@ var gProtectionsHandler = {
     );
 
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
-    gProtectionsHandler._protectionsPopupSendReportLearnMore.href =
-      baseURL + "blocking-breakage";
+    document.getElementById(
+      "protections-popup-sendReportView-learn-more"
+    ).href = baseURL + "blocking-breakage";
 
     // Add an observer to observe that the history has been cleared.
     Services.obs.addObserver(this, "browser:purge-session-history");
