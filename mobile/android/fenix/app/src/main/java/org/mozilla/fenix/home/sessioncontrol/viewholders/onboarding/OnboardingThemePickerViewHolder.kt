@@ -9,11 +9,17 @@ import android.os.Build.VERSION.SDK_INT
 import android.view.View
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.onboarding_theme_picker.view.*
+import kotlinx.android.synthetic.main.onboarding_theme_picker.view.clickable_region_automatic
+import kotlinx.android.synthetic.main.onboarding_theme_picker.view.theme_automatic_radio_button
+import kotlinx.android.synthetic.main.onboarding_theme_picker.view.theme_dark_image
+import kotlinx.android.synthetic.main.onboarding_theme_picker.view.theme_dark_radio_button
+import kotlinx.android.synthetic.main.onboarding_theme_picker.view.theme_light_image
+import kotlinx.android.synthetic.main.onboarding_theme_picker.view.theme_light_radio_button
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.onboarding.OnboardingRadioButton
 
 class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
@@ -54,10 +60,12 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
         }
 
         radioLightTheme.onClickListener {
+            setLightIllustrationSelected()
             setNewTheme(AppCompatDelegate.MODE_NIGHT_NO)
         }
 
         radioDarkTheme.onClickListener {
+            setDarkIllustrationSelected()
             view.context.components.analytics.metrics.track(
                 Event.DarkThemeSelected(
                     Event.DarkThemeSelected.Source.ONBOARDING
@@ -67,6 +75,7 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
         }
 
         radioFollowDeviceTheme.onClickListener {
+            setNoIllustrationSelected()
             if (SDK_INT >= Build.VERSION_CODES.P) {
                 setNewTheme(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
             } else {
@@ -75,13 +84,38 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
         }
 
         with(view.context.settings()) {
-            val radio = when {
-                this.shouldUseLightTheme -> radioLightTheme
-                this.shouldUseDarkTheme -> radioDarkTheme
-                else -> radioFollowDeviceTheme
+            val radio: OnboardingRadioButton
+            when {
+                shouldUseLightTheme -> {
+                    radio = radioLightTheme
+                    setLightIllustrationSelected()
+                }
+                shouldUseDarkTheme -> {
+                    radio = radioDarkTheme
+                    setDarkIllustrationSelected()
+                }
+                else -> {
+                    radio = radioFollowDeviceTheme
+                    setNoIllustrationSelected()
+                }
             }
             radio.isChecked = true
         }
+    }
+
+    private fun setNoIllustrationSelected() {
+        itemView.theme_dark_image.isSelected = false
+        itemView.theme_light_image.isSelected = false
+    }
+
+    private fun setDarkIllustrationSelected() {
+        itemView.theme_dark_image.isSelected = true
+        itemView.theme_light_image.isSelected = false
+    }
+
+    private fun setLightIllustrationSelected() {
+        itemView.theme_dark_image.isSelected = false
+        itemView.theme_light_image.isSelected = true
     }
 
     private fun setNewTheme(mode: Int) {

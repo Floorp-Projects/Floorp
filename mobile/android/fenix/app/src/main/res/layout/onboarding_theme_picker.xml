@@ -7,8 +7,7 @@
     android:id="@+id/onboarding_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="16dp"
-    android:background="@drawable/onboarding_card_background_light"
+    style="@style/OnboardingCardLight"
     android:paddingTop="16dp">
 
     <TextView
@@ -56,6 +55,7 @@
         android:translationY="@dimen/onboarding_dual_pane_radio_button_translation_y"
         app:layout_constraintStart_toStartOf="@+id/theme_light_image"
         app:layout_constraintTop_toTopOf="@+id/theme_light_image"
+        android:buttonTint="@color/onboarding_radio_button_color"
         app:onboardingKey="@string/pref_key_light_theme" />
 
     <ImageButton
@@ -82,6 +82,7 @@
         android:translationY="@dimen/onboarding_dual_pane_radio_button_translation_y"
         app:layout_constraintStart_toStartOf="@+id/theme_dark_image"
         app:layout_constraintTop_toTopOf="@+id/theme_dark_image"
+        android:buttonTint="@color/onboarding_radio_button_color"
         app:onboardingKey="@string/pref_key_dark_theme" />
 
     <ImageButton
@@ -145,6 +146,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/divider"
+        android:buttonTint="@color/onboarding_radio_button_color"
         app:onboardingKey="@string/pref_key_follow_device_theme" />
 
     <TextView
