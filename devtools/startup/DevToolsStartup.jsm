@@ -28,7 +28,6 @@ const kDebuggerPrefs = [
 ];
 
 const DEVTOOLS_ENABLED_PREF = "devtools.enabled";
-const DEVTOOLS_F12_DISABLED_PREF = "devtools.experiment.f12.shortcut_disabled";
 
 const DEVTOOLS_POLICY_DISABLED_PREF = "devtools.policy.disabled";
 
@@ -364,13 +363,6 @@ DevToolsStartup.prototype = {
       // Enable devtools for all users on startup (onboarding experiment from Bug 1408969
       // is over).
       Services.prefs.setBoolPref(DEVTOOLS_ENABLED_PREF, true);
-
-      // The F12 shortcut might be disabled to avoid accidental usage.
-      // Users who are already considered as devtools users should not be
-      // impacted.
-      if (this.isDevToolsUser()) {
-        Services.prefs.setBoolPref(DEVTOOLS_F12_DISABLED_PREF, false);
-      }
 
       // Store devtoolsFlag to check it later in onWindowReady.
       this.devtoolsFlag = flags.devtools;

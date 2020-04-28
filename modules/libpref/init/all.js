@@ -4911,9 +4911,6 @@ pref("devtools.devices.url", "https://code.cdn.mozilla.net/devices/devices.json"
 // Enable Inactive CSS detection; used both by the client and the server.
 pref("devtools.inspector.inactive.css.enabled", true);
 
-// The F12 experiment aims at disabling f12 on selected profiles.
-pref("devtools.experiment.f12.shortcut_disabled", false);
-
 #if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
 // Define in StaticPrefList.yaml and override here since StaticPrefList.yaml
 // doesn't provide a way to lock the pref
