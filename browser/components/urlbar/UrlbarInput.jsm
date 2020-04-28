@@ -2451,30 +2451,34 @@ function losslessDecodeURI(aURI) {
     } else {
       try {
         value = decodeURI(value)
-          // 1. decodeURI decodes %25 to %, which creates unintended
-          //    encoding sequences. Re-encode it, unless it's part of
-          //    a sequence that survived decodeURI, i.e. one for:
-          //    ';', '/', '?', ':', '@', '&', '=', '+', '$', ',', '#'
-          //    (RFC 3987 section 3.2)
-          // 2. Re-encode select whitespace so that it doesn't get eaten
-          //    away by the location bar (bug 410726). Re-encode all
-          //    adjacent whitespace, to prevent spoofing attempts where
-          //    invisible characters would push part of the URL to
-          //    overflow the location bar (bug 1395508).
+          // decodeURI decodes %25 to %, which creates unintended encoding
+          // sequences. Re-encode it, unless it's part of a sequence that
+          // survived decodeURI, i.e. one for:
+          // ';', '/', '?', ':', '@', '&', '=', '+', '$', ',', '#'
+          // (RFC 3987 section 3.2)
           .replace(
-            /%(?!3B|2F|3F|3A|40|26|3D|2B|24|2C|23)|[\r\n\t]|\s(?=\s)|\s$/gi,
+            /%(?!3B|2F|3F|3A|40|26|3D|2B|24|2C|23)/gi,
             encodeURIComponent
           );
       } catch (e) {}
     }
   }
 
-  // Encode invisible characters (C0/C1 control characters, U+007F [DEL],
-  // U+00A0 [no-break space], line and paragraph separator,
-  // object replacement character) (bug 452979, bug 909264)
+  // Encode potentially invisible characters:
+  //   U+0000-001F: C0/C1 control characters
+  //   U+007F-009F: commands
+  //   U+2028-2029: line and paragraph separators
+  //   U+2800: braille empty pattern
+  //   U+FFFC: object replacement character
+  // Encode select whitespace so that it doesn't get eaten away by the location
+  // bar (bug 410726). Encode all adjacent whitespace, to prevent spoofing
+  // attempts where invisible characters would push part of the URL to overflow
+  // the location bar (bug 1395508).
+  // The following spaces are handled by \s:
+  //   U+0020, U+00A0, U+1680, U+2000-200A, U+202F, U+205F, U+3000
   value = value.replace(
     // eslint-disable-next-line no-control-regex
-    /[\u0000-\u001f\u007f-\u00a0\u2028\u2029\ufffc]/g,
+    /[\u0000-\u001f\u007f-\u00a0\u2028\u2029\u2800\ufffc]|[\r\n\t]|\s(?=\s)|\s$/g,
     encodeURIComponent
   );
 
