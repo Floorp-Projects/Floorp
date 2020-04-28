@@ -12,6 +12,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.lib.crash.service.CrashReporterService
+import mozilla.components.lib.crash.service.CrashTelemetryService
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.expectException
@@ -72,7 +73,7 @@ class CrashReporterTest {
     @Test
     fun `CrashReporter will submit report immediately if setup with Prompt-NEVER`() {
         val service: CrashReporterService = mock()
-        val telemetryService: CrashReporterService = mock()
+        val telemetryService: CrashTelemetryService = mock()
 
         val reporter = spy(CrashReporter(
             services = listOf(service),
@@ -93,7 +94,7 @@ class CrashReporterTest {
     @Test
     fun `CrashReporter will show prompt if setup with Prompt-ALWAYS`() {
         val service: CrashReporterService = mock()
-        val telemetryService: CrashReporterService = mock()
+        val telemetryService: CrashTelemetryService = mock()
 
         val reporter = spy(CrashReporter(
             services = listOf(service),
@@ -114,7 +115,7 @@ class CrashReporterTest {
     @Test
     fun `CrashReporter will submit report immediately for non native crash and with setup Prompt-ONLY_NATIVE_CRASH`() {
         val service: CrashReporterService = mock()
-        val telemetryService: CrashReporterService = mock()
+        val telemetryService: CrashTelemetryService = mock()
 
         val reporter = spy(CrashReporter(
             services = listOf(service),
@@ -135,7 +136,7 @@ class CrashReporterTest {
     @Test
     fun `CrashReporter will show prompt for fatal native crash and with setup Prompt-ONLY_NATIVE_CRASH`() {
         val service: CrashReporterService = mock()
-        val telemetryService: CrashReporterService = mock()
+        val telemetryService: CrashTelemetryService = mock()
 
         val reporter = spy(CrashReporter(
             services = listOf(service),
@@ -162,7 +163,7 @@ class CrashReporterTest {
     @Test
     fun `CrashReporter will submit crash telemetry even if crash report requires prompt`() {
         val service: CrashReporterService = mock()
-        val telemetryService: CrashReporterService = mock()
+        val telemetryService: CrashTelemetryService = mock()
 
         val reporter = spy(CrashReporter(
             services = listOf(service),
@@ -181,7 +182,7 @@ class CrashReporterTest {
 
     @Test
     fun `CrashReporter will not prompt the user if there is no crash services`() {
-        val telemetryService: CrashReporterService = mock()
+        val telemetryService: CrashTelemetryService = mock()
 
         val reporter = spy(CrashReporter(
             telemetryServices = listOf(telemetryService),
@@ -381,15 +382,14 @@ class CrashReporterTest {
     fun `CrashReporter forwards native crashes to telemetry service`() {
         var nativeCrash = false
 
-        val telemetryService = object : CrashReporterService {
-            override fun report(crash: Crash.UncaughtExceptionCrash): String? = null
+        val telemetryService = object : CrashTelemetryService {
+            override fun record(crash: Crash.UncaughtExceptionCrash) = Unit
 
-            override fun report(crash: Crash.NativeCodeCrash): String? {
+            override fun record(crash: Crash.NativeCodeCrash) {
                 nativeCrash = true
-                return null
             }
 
-            override fun report(throwable: Throwable): String? = null
+            override fun record(throwable: Throwable) = Unit
         }
 
         val reporter = spy(CrashReporter(
@@ -460,7 +460,7 @@ class CrashReporterTest {
     @Test
     fun `CrashReporter sends telemetry but don't send native crash if the crash is non-fatal and nonFatalPendingIntent is not null`() {
         val service: CrashReporterService = mock()
-        val telemetryService: CrashReporterService = mock()
+        val telemetryService: CrashTelemetryService = mock()
 
         val reporter = spy(CrashReporter(
             services = listOf(service),
@@ -486,7 +486,7 @@ class CrashReporterTest {
     @Test
     fun `CrashReporter sends telemetry and crash if the crash is non-fatal and nonFatalPendingIntent is null`() {
         val service: CrashReporterService = mock()
-        val telemetryService: CrashReporterService = mock()
+        val telemetryService: CrashTelemetryService = mock()
 
         val reporter = spy(CrashReporter(
             services = listOf(service),

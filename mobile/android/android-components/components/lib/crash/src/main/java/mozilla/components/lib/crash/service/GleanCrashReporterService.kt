@@ -22,7 +22,7 @@ class GleanCrashReporterService(
     val context: Context,
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val file: File = File(context.applicationInfo.dataDir, CRASH_FILE_NAME)
-) : CrashReporterService {
+) : CrashTelemetryService {
     companion object {
         // This file is stored in the application's data directory, so it should be located in the
         // same location as the application.
@@ -158,7 +158,7 @@ class GleanCrashReporterService(
      * or [NONFATAL_NATIVE_CODE_CRASH_KEY]
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun reportCrash(crash: String) {
+    internal fun recordCrash(crash: String) {
         // Persist the crash in a file so that it can be recorded on the next application start. We
         // cannot directly record to Glean here because CrashHandler process is not the same process
         // as Glean is initialized in.
@@ -173,22 +173,19 @@ class GleanCrashReporterService(
         }
     }
 
-    override fun report(crash: Crash.UncaughtExceptionCrash): String? {
-        reportCrash(UNCAUGHT_EXCEPTION_KEY)
-        return null
+    override fun record(crash: Crash.UncaughtExceptionCrash) {
+        recordCrash(UNCAUGHT_EXCEPTION_KEY)
     }
 
-    override fun report(crash: Crash.NativeCodeCrash): String? {
+    override fun record(crash: Crash.NativeCodeCrash) {
         if (crash.isFatal) {
-            reportCrash(FATAL_NATIVE_CODE_CRASH_KEY)
+            recordCrash(FATAL_NATIVE_CODE_CRASH_KEY)
         } else {
-            reportCrash(NONFATAL_NATIVE_CODE_CRASH_KEY)
+            recordCrash(NONFATAL_NATIVE_CODE_CRASH_KEY)
         }
-        return null
     }
 
-    override fun report(throwable: Throwable): String? {
-        reportCrash(CAUGHT_EXCEPTION_KEY)
-        return null
+    override fun record(throwable: Throwable) {
+        recordCrash(CAUGHT_EXCEPTION_KEY)
     }
 }
