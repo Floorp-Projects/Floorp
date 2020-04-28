@@ -30,7 +30,8 @@ class CrashApplication : Application() {
         Log.addSink(AndroidLogSink())
 
         crashReporter = CrashReporter(
-            services = listOf(createDummyCrashService(this), GleanCrashReporterService(applicationContext)),
+            services = listOf(createDummyCrashService(this)),
+            telemetryServices = listOf(GleanCrashReporterService(applicationContext)),
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             promptConfiguration = CrashReporter.PromptConfiguration(
                 appName = "Sample App",

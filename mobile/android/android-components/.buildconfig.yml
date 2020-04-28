@@ -1,4 +1,4 @@
-componentsVersion: 39.0.0
+componentsVersion: 40.0.0
 projects:
   concept-awesomebar:
     path: components/concept/awesomebar
@@ -223,6 +223,10 @@ projects:
   ui-colors:
     path: components/ui/colors
     description: 'The standard set of Photon colors.'
+    publish: true
+  ui-widgets:
+    path: components/ui/widgets
+    description: 'The standard set of Mozilla widgets.'
     publish: true
   ui-fonts:
     path: components/ui/fonts

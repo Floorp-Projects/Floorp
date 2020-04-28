@@ -2,7 +2,7 @@
 
 # Crash
 
-`sealed class Crash` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Crash.kt#L29)
+`sealed class Crash` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/Crash.kt#L31)
 
 Crash types that are handled by this library.
 
@@ -12,6 +12,12 @@ Crash types that are handled by this library.
 |---|---|
 | [NativeCodeCrash](-native-code-crash/index.md) | `data class NativeCodeCrash : `[`Crash`](./index.md)<br>A crash that happened in native code. |
 | [UncaughtExceptionCrash](-uncaught-exception-crash/index.md) | `data class UncaughtExceptionCrash : `[`Crash`](./index.md)<br>A crash caused by an uncaught exception. |
+
+### Properties
+
+| Name | Summary |
+|---|---|
+| [uuid](uuid.md) | `abstract val uuid: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Unique ID identifying this crash. |
 
 ### Companion Object Functions
 

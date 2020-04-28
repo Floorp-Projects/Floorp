@@ -66,6 +66,10 @@
     <string name="mozac_feature_addons_settings_on">Hendypyre</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Mboguepyre</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Emoneĩ kundahára ñemíme</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Emomba’apo kundahára ñemíme</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Myandypyre</string>
     <!-- Indicates the add-on is disabled. -->

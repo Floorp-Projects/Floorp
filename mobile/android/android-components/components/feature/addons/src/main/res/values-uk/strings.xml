@@ -66,6 +66,10 @@
     <string name="mozac_feature_addons_settings_on">Увімк.</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Вимк.</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Дозволити у приватному перегляді</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Запуск у приватному перегляді</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Увімкнено</string>
     <!-- Indicates the add-on is disabled. -->

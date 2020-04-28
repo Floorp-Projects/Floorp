@@ -52,6 +52,10 @@ class CrashHandlerServiceTest {
             "mozilla.components.lib.crash.handler.CrashHandlerService"
         )
         intent?.putExtra(
+            "uuid",
+            "94f66ed7-50c7-41d1-96a7-299139a8c2af"
+        )
+        intent?.putExtra(
             "minidumpPath",
             "/data/data/org.mozilla.samples.browser/files/mozilla/Crash Reports/pending/3ba5f665-8422-dc8e-a88e-fc65c081d304.dmp"
         )

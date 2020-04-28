@@ -4,13 +4,30 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 39.0.0-SNAPSHOT (In Development)
+# 40.0.0-SNAPSHOT (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v38.0.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/98?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v39.0.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/100?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+* **feature-top-sites**
+  * Added `isDefault` to the top site entity, which allows application to specify a default top site that is added by the application. This is called through `TopSiteStorage.addTopSite`.
+
+# 39.0.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v38.0.0...v39.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/99?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v39.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v39.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v39.0.0/buildSrc/src/main/java/Config.kt)
+
+* **All components**
+  * Increased `targetSdkVersion` to 29 (Android Q)
+
+* **browser-session**
+  * `SnapshotSerializer` no longer restores source of a `Session`, added `Session.Source.RESTORED`
 
 * **feature-downloads**
   * Fixed issue [#6764](https://github.com/mozilla-mobile/android-components/issues/6764).
@@ -20,6 +37,10 @@ permalink: /changelog/
 
 * **feature-sitepermissions**
   * ⚠️ **This is a breaking change**: The `SitePermissionsFeature`'s constructor, now requires a new parameter `onShouldShowRequestPermissionRationale` a lambda to allow the feature to query [ActivityCompat.shouldShowRequestPermissionRationale](https://developer.android.com/reference/androidx/core/app/ActivityCompat#shouldShowRequestPermissionRationale(android.app.Activity,%20java.lang.String)) or [Fragment.shouldShowRequestPermissionRationale](https://developer.android.com/reference/androidx/fragment/app/Fragment#shouldShowRequestPermissionRationale(java.lang.String)). This allows the `SitePermissionsFeature` to handle when a user clicks "Deny & don't ask again" button in a system permission dialog, for more information see [issue #6565](https://github.com/mozilla-mobile/android-components/issues/6565).
+
+* **ui-widgets**
+  * 🆕 New component for standardized Mozilla widgets and styles. A living style guide will be published soon that helps explain design choices made.
+  * First version includes styling for buttons: `NeutralButton`, `PositiveButton`, and `DestructiveButton`
 
 * **feature-addons**
   * Added `AddonsManagerAdapter.updateAddon` and `AddonsManagerAdapter.updateAddons` to allow partial updates.
@@ -42,6 +63,12 @@ permalink: /changelog/
   * **feature-qr**
     * Moved `AutoFitTextureView` from `support-base` to `feature-qr`.
 
+* **feature-session**
+  * ⚠️ **This is a breaking change**: Added `viewportFitChanged` to `FullScreenFeature` for supporting Android display cutouts.
+
+* **feature-qr**
+  * Moved `AutoFitTextureView` from `support-base` to `feature-qr`.
+
 * **service-sync-logins**
   * Adds fun `LoginsStorage.getPotentialDupesIgnoringUsername` for fetching list of potential duplicate logins from the underlying storage layer, ignoring username.
 
@@ -53,11 +80,12 @@ permalink: /changelog/
   * The iconView is no longer required in the template.
   * The URL text for items may be styled.
 
+* **service-glean**
+  * Glean was updated to v28.0.0
+    * The baseline ping is now sent when the application goes to foreground, in addition to background and dirty-startup.
+
 * **Developer ergonomics**
   * Improved autoPublication workflow. See https://mozac.org/contributing/testing-components-inside-app for updated documentation.
-
-* **feature-top-sites**
-  * Added `isDefault` to the top site entity, which allows application to specify a default top site that is added by the application. This is called through `TopSiteStorage.addTopSite`.
 
 # 38.0.0
 
