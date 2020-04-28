@@ -218,9 +218,11 @@ class Selection final : public nsSupportsWeakReference,
   nsDirection GetDirection() const { return mDirection; }
 
   void SetDirection(nsDirection aDir) { mDirection = aDir; }
+  MOZ_CAN_RUN_SCRIPT nsresult SetAnchorFocusToRange(nsRange* aRange);
+
   // TODO: annotate with `MOZ_CAN_RUN_SCRIPT` instead.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult SetAnchorFocusToRange(nsRange* aRange);
-  void ReplaceAnchorFocusRange(nsRange* aRange);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void ReplaceAnchorFocusRange(nsRange* aRange);
+
   void AdjustAnchorFocusForMultiRange(nsDirection aDirection);
 
   nsresult GetPrimaryFrameForAnchorNode(nsIFrame** aReturnFrame);
