@@ -44,8 +44,6 @@ testChangeParam("highFrequencyHighLimit");
 testChangeParam("highFrequencyHeapGrowthMax");
 testChangeParam("highFrequencyHeapGrowthMin");
 testChangeParam("lowFrequencyHeapGrowth");
-testChangeParam("dynamicHeapGrowth");
-testChangeParam("dynamicMarkSlice");
 testChangeParam("allocationThreshold");
 testChangeParam("nonIncrementalFactor");
 testChangeParam("minEmptyChunkCount");
