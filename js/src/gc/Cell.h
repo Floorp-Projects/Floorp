@@ -231,6 +231,10 @@ struct alignas(gc::CellAlignBytes) Cell {
  protected:
   uintptr_t address() const;
   inline Chunk* chunk() const;
+
+ private:
+  // Cells are destroyed by the GC. Do not delete them directly.
+  void operator delete(void*) = delete;
 } JS_HAZ_GC_THING;
 
 // A GC TenuredCell gets behaviors that are valid for things in the Tenured
