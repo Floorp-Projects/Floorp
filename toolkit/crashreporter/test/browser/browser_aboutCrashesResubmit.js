@@ -13,7 +13,7 @@ function cleanup_and_finish() {
  * Check that the list of crashes displayed by about:crashes matches
  * the list of crashes that we placed in the pending+submitted directories.
  *
- * This function is run in a separate JS context via ContentTask.spawn, so
+ * This function is run in a separate JS context via SpecialPowers.spawn, so
  * it has no access to other functions or variables in this file.
  */
 function check_crash_list(crashes) {
