@@ -798,41 +798,44 @@ struct DIGroup {
         aGrouper->PaintContainerItem(this, item, data, bounds, children,
                                      aContext, aRecorder, aRootManager,
                                      aResources);
-      } else {
-        nsPaintedDisplayItem* paintedItem = item->AsPaintedDisplayItem();
-        if (paintedItem &&
-            // Hit test items don't have anything to paint so skip them.
-            // Ideally we would drop these items earlier...
-            item->GetType() != DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
-          if (dirty) {
-            // What should the clip settting strategy be? We can set the full
-            // clip everytime. this is probably easiest for now. An alternative
-            // would be to put the push and the pop into separate items and let
-            // invalidation handle it that way.
-            DisplayItemClip currentClip = paintedItem->GetClip();
+        continue;
+      }
+      if (item->GetType() == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+        // Hit test items don't have anything to paint so skip them.
+        // Ideally we would drop these items earlier...
+        continue;
+      }
+      nsPaintedDisplayItem* paintedItem = item->AsPaintedDisplayItem();
+      if (!paintedItem) {
+        continue;
+      }
+      if (dirty) {
+        // What should the clip settting strategy be? We can set the full
+        // clip everytime. this is probably easiest for now. An alternative
+        // would be to put the push and the pop into separate items and let
+        // invalidation handle it that way.
+        DisplayItemClip currentClip = paintedItem->GetClip();
 
-            if (currentClip.HasClip()) {
-              aContext->Save();
-              currentClip.ApplyTo(aContext, aGrouper->mAppUnitsPerDevPixel);
-            }
-            aContext->NewPath();
-            GP("painting %s %p-%d\n", paintedItem->Name(), paintedItem->Frame(),
-               paintedItem->GetPerFrameKey());
-            if (aGrouper->mDisplayListBuilder->IsPaintingToWindow()) {
-              paintedItem->Frame()->AddStateBits(NS_FRAME_PAINTED_THEBES);
-            }
+        if (currentClip.HasClip()) {
+          aContext->Save();
+          currentClip.ApplyTo(aContext, aGrouper->mAppUnitsPerDevPixel);
+        }
+        aContext->NewPath();
+        GP("painting %s %p-%d\n", paintedItem->Name(), paintedItem->Frame(),
+           paintedItem->GetPerFrameKey());
+        if (aGrouper->mDisplayListBuilder->IsPaintingToWindow()) {
+          paintedItem->Frame()->AddStateBits(NS_FRAME_PAINTED_THEBES);
+        }
 
-            paintedItem->Paint(aGrouper->mDisplayListBuilder, aContext);
-            TakeExternalSurfaces(aRecorder, data->mExternalSurfaces,
-                                 aRootManager, aResources);
+        paintedItem->Paint(aGrouper->mDisplayListBuilder, aContext);
+        TakeExternalSurfaces(aRecorder, data->mExternalSurfaces, aRootManager,
+                             aResources);
 
-            if (currentClip.HasClip()) {
-              aContext->Restore();
-            }
-          }
-          aContext->GetDrawTarget()->FlushItem(bounds);
+        if (currentClip.HasClip()) {
+          aContext->Restore();
         }
       }
+      aContext->GetDrawTarget()->FlushItem(bounds);
     }
   }
 
