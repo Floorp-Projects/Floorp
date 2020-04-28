@@ -6,29 +6,36 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.onboarding_toolbar_position_picker.view.*
+import kotlinx.android.synthetic.main.onboarding_toolbar_position_picker.view.toolbar_bottom_image
+import kotlinx.android.synthetic.main.onboarding_toolbar_position_picker.view.toolbar_bottom_radio_button
+import kotlinx.android.synthetic.main.onboarding_toolbar_position_picker.view.toolbar_top_image
+import kotlinx.android.synthetic.main.onboarding_toolbar_position_picker.view.toolbar_top_radio_button
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.onboarding.OnboardingRadioButton
 
 class OnboardingToolbarPositionPickerViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     init {
         val radioTopToolbar = view.toolbar_top_radio_button
         val radioBottomToolbar = view.toolbar_bottom_radio_button
+        val radio: OnboardingRadioButton
 
         radioTopToolbar.addToRadioGroup(radioBottomToolbar)
         radioBottomToolbar.addToRadioGroup(radioTopToolbar)
 
-        with(view.context.settings()) {
-            val radio = when {
-                this.shouldUseBottomToolbar -> radioBottomToolbar
-                else -> radioTopToolbar
-            }
-            radio.isChecked = true
+        if (view.context.settings().shouldUseBottomToolbar) {
+            radio = radioBottomToolbar
+            setBottomIllustrationSelected()
+        } else {
+            radio = radioTopToolbar
+            setTopIllustrationSelected()
         }
+        radio.isChecked = true
 
         radioBottomToolbar.onClickListener {
+            setBottomIllustrationSelected()
             itemView.context.asActivity()?.recreate()
         }
 
@@ -37,12 +44,23 @@ class OnboardingToolbarPositionPickerViewHolder(view: View) : RecyclerView.ViewH
         }
 
         radioTopToolbar.onClickListener {
+            setTopIllustrationSelected()
             itemView.context.asActivity()?.recreate()
         }
 
         view.toolbar_top_image.setOnClickListener {
             radioTopToolbar.performClick()
         }
+    }
+
+    private fun setTopIllustrationSelected() {
+        itemView.toolbar_top_image.isSelected = true
+        itemView.toolbar_bottom_image.isSelected = false
+    }
+
+    private fun setBottomIllustrationSelected() {
+        itemView.toolbar_top_image.isSelected = false
+        itemView.toolbar_bottom_image.isSelected = true
     }
 
     companion object {

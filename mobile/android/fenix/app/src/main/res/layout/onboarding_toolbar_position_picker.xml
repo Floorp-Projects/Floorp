@@ -7,8 +7,7 @@
     android:id="@+id/onboarding_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="16dp"
-    android:background="@drawable/onboarding_card_background_light"
+    style="@style/OnboardingCardLight"
     android:paddingTop="16dp"
     android:paddingBottom="16dp">
 
@@ -57,8 +56,9 @@
         android:translationX="@dimen/onboarding_dual_pane_radio_button_translation_x"
         android:translationY="@dimen/onboarding_dual_pane_radio_button_translation_y"
         app:layout_constraintStart_toStartOf="@+id/toolbar_top_image"
-        app:layout_constraintTop_toTopOf="@+id/toolbar_top_image"
         app:layout_constraintTop_toBottomOf="@+id/description_text"
+        app:layout_constraintTop_toTopOf="@+id/toolbar_top_image"
+        android:buttonTint="@color/onboarding_radio_button_color"
         app:onboardingKey="@string/pref_key_toolbar_top" />
 
     <ImageButton
@@ -86,6 +86,7 @@
         app:layout_constraintStart_toStartOf="@+id/toolbar_bottom_image"
         app:layout_constraintTop_toTopOf="@+id/toolbar_bottom_image"
         app:layout_constraintTop_toBottomOf="@+id/description_text"
+        android:buttonTint="@color/onboarding_radio_button_color"
         app:onboardingKey="@string/pref_key_toolbar_bottom" />
 
     <ImageButton
