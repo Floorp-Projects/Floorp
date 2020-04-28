@@ -1,5 +1,5 @@
-commit 4d027901ef4d3288b2ca264ba1f532cf826190ac
+commit 3ad70644b1a16452c60e0aa5a7e241e7ce87c98f
 Author: Yoshito Umaoka <yumaoka@users.noreply.github.com>
-Date:   Fri Sep 13 18:23:18 2019 -0400
+Date:   Sat Apr 25 14:17:09 2020 -0400
 
-    ICU-20823 ICU time zone data updates for 2019c
+    ICU-21094 ICU data updates for tzdata2020a. (#11)

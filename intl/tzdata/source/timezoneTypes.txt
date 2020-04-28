@@ -27,6 +27,7 @@ timezoneTypes:table(nofallback){
             "America:Indiana:Indianapolis"{"America/Indianapolis"}
             "America:Kentucky:Louisville"{"America/Louisville"}
             "America:Knox_IN"{"America/Indiana/Knox"}
+            "America:Nuuk"{"America/Godthab"}
             "America:Porto_Acre"{"America/Rio_Branco"}
             "America:Rosario"{"America/Cordoba"}
             "America:Shiprock"{"America/Denver"}
