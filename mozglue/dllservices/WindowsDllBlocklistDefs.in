@@ -260,6 +260,10 @@ BROWSER_PROCESS += [
     # NXP Semiconductors (formerly Athena) PKCS11 module causes crashes,
     # bug 1560052
     DllBlocklistEntry("asepkcs.dll", (6, 5, 0, 5)),
+
+    # Hancom Office shell extension causes crashes when the file picker is
+    # opened. See bug 1581092.
+    DllBlocklistEntry("hncshellext64.dll", (1, 0, 0 ,3)),
 ]
 
 CHILD_PROCESSES += [
