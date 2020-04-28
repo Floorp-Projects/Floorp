@@ -10788,7 +10788,7 @@ bool CodeGenerator::generateWasm(wasm::FuncTypeIdDesc funcTypeId,
 
   // Convert the safepoints to stackmaps and add them to our running
   // collection thereof.
-  for (SafepointIndex& index : safepointIndices_) {
+  for (CodegenSafepointIndex& index : safepointIndices_) {
     wasm::StackMap* stackMap = nullptr;
     if (!CreateStackMapFromLSafepoint(*index.safepoint(), trapExitLayout,
                                       trapExitLayoutNumWords,

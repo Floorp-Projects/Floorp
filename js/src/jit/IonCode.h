@@ -146,6 +146,7 @@ class JitCode : public gc::TenuredCell {
 class SnapshotWriter;
 class RecoverWriter;
 class SafepointWriter;
+class CodegenSafepointIndex;
 class SafepointIndex;
 class OsiIndex;
 class IonIC;
@@ -426,7 +427,7 @@ struct IonScript {
   void copyRecovers(const RecoverWriter* writer);
   void copyBailoutTable(const SnapshotOffset* table);
   void copyConstants(const Value* vp);
-  void copySafepointIndices(const SafepointIndex* firstSafepointIndex);
+  void copySafepointIndices(const CodegenSafepointIndex* firstSafepointIndex);
   void copyOsiIndices(const OsiIndex* firstOsiIndex);
   void copyRuntimeData(const uint8_t* data);
   void copyICEntries(const uint32_t* caches);

@@ -780,12 +780,12 @@ void IonScript::copyConstants(const Value* vp) {
   }
 }
 
-void IonScript::copySafepointIndices(const SafepointIndex* si) {
-  // Jumps in the caches reflect the offset of those jumps in the compiled
-  // code, not the absolute positions of the jumps. Update according to the
-  // final code address now.
+void IonScript::copySafepointIndices(const CodegenSafepointIndex* si) {
+  // Convert CodegenSafepointIndex to more compact form.
   SafepointIndex* table = safepointIndices();
-  memcpy(table, si, safepointIndexEntries_ * sizeof(SafepointIndex));
+  for (size_t i = 0; i < safepointIndexEntries_; ++i) {
+    table[i] = SafepointIndex(si[i]);
+  }
 }
 
 void IonScript::copyOsiIndices(const OsiIndex* oi) {

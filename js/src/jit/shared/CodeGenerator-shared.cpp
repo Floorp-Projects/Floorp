@@ -620,14 +620,12 @@ bool CodeGeneratorShared::assignBailoutId(LSnapshot* snapshot) {
 }
 
 bool CodeGeneratorShared::encodeSafepoints() {
-  for (SafepointIndex& index : safepointIndices_) {
+  for (CodegenSafepointIndex& index : safepointIndices_) {
     LSafepoint* safepoint = index.safepoint();
 
     if (!safepoint->encoded()) {
       safepoints_.encode(safepoint);
     }
-
-    index.resolve();
   }
 
   return !safepoints_.oom();
@@ -840,8 +838,8 @@ void CodeGeneratorShared::markSafepointAt(uint32_t offset, LInstruction* ins) {
   MOZ_ASSERT_IF(
       !safepointIndices_.empty() && !masm.oom(),
       offset - safepointIndices_.back().displacement() >= sizeof(uint32_t));
-  masm.propagateOOM(
-      safepointIndices_.append(SafepointIndex(offset, ins->safepoint())));
+  masm.propagateOOM(safepointIndices_.append(
+      CodegenSafepointIndex(offset, ins->safepoint())));
 }
 
 void CodeGeneratorShared::ensureOsiSpace() {
