@@ -50,7 +50,6 @@ RELEASE_OR_BETA = set([
     "Intl.DateTimeFormat-fractionalSecondDigits",
     "Promise.any",
     "AggregateError",
-    "String.prototype.replaceAll",
     "logical-assignment-operators",
 ])
 
