@@ -732,8 +732,11 @@ interface nsIDocShell : nsIDocShellTreeItem
   /**
    * Checks whether the channel associated with the root docShell is equal to
    * mMixedContentChannel. If they are the same, allowMixedContent is set to true.
+   * Checks if the root document has a secure connection. If it is, sets
+   * rootHasSecureConnection to true. If the docShell is the root doc shell,
+   * isRootDocShell is set to true.
    */
-  void GetAllowMixedContentAndConnectionData(out boolean allowMixedContent);
+  void GetAllowMixedContentAndConnectionData(out boolean rootHasSecureConnection, out boolean allowMixedContent, out boolean isRootDocShell);
 
 
   /**
