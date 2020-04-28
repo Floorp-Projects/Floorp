@@ -13,6 +13,24 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const EN_US_TOPSITES =
   "https://www.youtube.com/,https://www.facebook.com/,https://www.amazon.com/,https://www.reddit.com/,https://www.wikipedia.org/,https://twitter.com/";
 
+async function addTestVisits() {
+  // Add some visits to a URL.
+  for (let i = 0; i < 5; i++) {
+    await PlacesTestUtils.addVisits("http://example.com/");
+  }
+
+  // Wait for example.com to be listed first.
+  await updateTopSites(sites => {
+    return sites && sites[0] && sites[0].url == "http://example.com/";
+  });
+
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "https://www.youtube.com/",
+    title: "YouTube",
+  });
+}
+
 add_task(async function init() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -127,27 +145,7 @@ add_task(async function selectSearchTopSite() {
 });
 
 add_task(async function topSitesBookmarksAndTabs() {
-  // Add some visits to a URL.
-  for (let i = 0; i < 5; i++) {
-    await PlacesTestUtils.addVisits("http://example.com/");
-  }
-
-  // Wait for example.com to be listed first.
-  await updateTopSites(sites => {
-    return sites && sites[0] && sites[0].url == "http://example.com/";
-  });
-
-  await PlacesUtils.bookmarks.insert({
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    url: "https://www.youtube.com/",
-    title: "YouTube",
-  });
-
-  registerCleanupFunction(async function() {
-    await PlacesUtils.bookmarks.eraseEverything();
-    await PlacesUtils.history.clear();
-  });
-
+  await addTestVisits();
   let sites = AboutNewTab.getTopSites();
   Assert.equal(
     sites.length,
@@ -196,9 +194,13 @@ add_task(async function topSitesBookmarksAndTabs() {
   await UrlbarTestUtils.promisePopupClose(window, () => {
     window.gURLBar.blur();
   });
+
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function topSitesKeywordNavigationPageproxystate() {
+  await addTestVisits();
   Assert.equal(
     gURLBar.getAttribute("pageproxystate"),
     "valid",
@@ -244,9 +246,12 @@ add_task(async function topSitesKeywordNavigationPageproxystate() {
     "valid",
     "Double ESC should restore state"
   );
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function topSitesPinned() {
+  await addTestVisits();
   let info = { url: "http://example.com/" };
   NewTabUtils.pinnedLinks.pin(info, 0);
 
@@ -293,6 +298,72 @@ add_task(async function topSitesPinned() {
     window.gURLBar.blur();
   });
   NewTabUtils.pinnedLinks.unpin(info);
+
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.history.clear();
+});
+
+add_task(async function topSitesBookmarksAndTabsDisabled() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.suggest.openpage", false],
+      ["browser.urlbar.suggest.bookmark", false],
+    ],
+  });
+  await addTestVisits();
+
+  let sites = AboutNewTab.getTopSites();
+  Assert.equal(
+    sites.length,
+    7,
+    "The test suite browser should have 7 Top Sites."
+  );
+
+  await UrlbarTestUtils.promisePopupOpen(window, () => {
+    if (gURLBar.getAttribute("pageproxystate") == "invalid") {
+      gURLBar.handleRevert();
+    }
+    EventUtils.synthesizeMouseAtCenter(window.gURLBar.inputField, {});
+  });
+  Assert.ok(window.gURLBar.view.isOpen, "UrlbarView should be open.");
+  await UrlbarTestUtils.promiseSearchComplete(window);
+
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(window),
+    7,
+    "The number of results should be the same as the number of Top Sites (7)."
+  );
+
+  let exampleResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
+  Assert.equal(
+    exampleResult.url,
+    "http://example.com/",
+    "The example.com Top Site should be the second result."
+  );
+  Assert.equal(
+    exampleResult.source,
+    UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+    "The example.com Top Site should appear as a normal result even though it's open in a tab."
+  );
+
+  let youtubeResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+  Assert.equal(
+    youtubeResult.url,
+    "https://www.youtube.com/",
+    "The YouTube Top Site should be the third result."
+  );
+  Assert.equal(
+    youtubeResult.source,
+    UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+    "The YouTube Top Site should appear as a normal result even though it's bookmarked."
+  );
+  await UrlbarTestUtils.promisePopupClose(window, () => {
+    window.gURLBar.blur();
+  });
+
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.history.clear();
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function topSitesDisabled() {
@@ -302,8 +373,6 @@ add_task(async function topSitesDisabled() {
   });
 
   // Add some visits.
-  await PlacesUtils.bookmarks.eraseEverything();
-  await PlacesUtils.history.clear();
   let urlCount = 5;
   for (let i = 0; i < urlCount; i++) {
     await PlacesTestUtils.addVisits(`http://example.com/${i}`);
