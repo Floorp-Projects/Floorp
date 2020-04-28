@@ -17,6 +17,7 @@
  * @typedef {import("./@types/perf").RestartBrowserWithEnvironmentVariable} RestartBrowserWithEnvironmentVariable
  * @typedef {import("./@types/perf").GetEnvironmentVariable} GetEnvironmentVariable
  * @typedef {import("./@types/perf").GetActiveBrowsingContextID} GetActiveBrowsingContextID
+ * @typedef {import("./@types/perf").MinimallyTypedGeckoProfile} MinimallyTypedGeckoProfile
  */
 
 /**
@@ -75,7 +76,7 @@ const UI_BASE_URL_PATH_DEFAULT = "/from-addon";
  * profiler.firefox.com to be analyzed. This function opens up profiler.firefox.com
  * into a new browser tab, and injects the profile via a frame script.
  *
- * @param {object} profile - The Gecko profile.
+ * @param {MinimallyTypedGeckoProfile} profile - The Gecko profile.
  * @param {GetSymbolTableCallback} getSymbolTableCallback - A callback function with the signature
  *   (debugName, breakpadId) => Promise<SymbolTableAsTuple>, which will be invoked
  *   when profiler.firefox.com sends SYMBOL_TABLE_REQUEST_EVENT messages to us. This
@@ -168,14 +169,14 @@ function receiveProfile(profile, getSymbolTableCallback) {
  *    retains it on the returned closure so that it can be consulted after the
  *    profile has been passed to the UI.
  *
- * @param {object} profile - The profile JSON object
+ * @param {MinimallyTypedGeckoProfile} profile - The profile JSON object
  * @returns {(debugName: string, breakpadId: string) => Library | undefined}
  */
 function createLibraryMap(profile) {
   const map = new Map();
 
   /**
-   * @param {object} processProfile
+   * @param {MinimallyTypedGeckoProfile} processProfile
    */
   function fillMapForProcessRecursive(processProfile) {
     for (const lib of processProfile.libs) {
@@ -293,7 +294,7 @@ async function getSymbolTableFromLocalBinary(objdirs, filename, breakpadId) {
  * The profiler popup uses a more simplified version of this function as
  * it's dealing with a simpler situation.
  *
- * @param {object} profile - The raw profie (not gzipped).
+ * @param {MinimallyTypedGeckoProfile} profile - The raw profie (not gzipped).
  * @param {() => string[]} getObjdirs - A function that returns an array of objdir paths
  *   on the host machine that should be searched for relevant build artifacts.
  * @param {PerfFront} perfFront
