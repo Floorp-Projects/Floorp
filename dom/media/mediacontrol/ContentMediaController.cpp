@@ -120,7 +120,7 @@ void ContentMediaController::NotifyMediaStateChanged(
 }
 
 void ContentMediaController::NotifyAudibleStateChanged(
-    const ContentControlKeyEventReceiver* aMedia, bool aAudible) {
+    const ContentControlKeyEventReceiver* aMedia, MediaAudibleState aState) {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mReceivers.Contains(aMedia)) {
     return;
@@ -132,16 +132,17 @@ void ContentMediaController::NotifyAudibleStateChanged(
   }
 
   LOG("Notify media became %s in BC %" PRId64,
-      aAudible ? "audible" : "inaudible", bc->Id());
+      aState == MediaAudibleState::eAudible ? "audible" : "inaudible",
+      bc->Id());
   if (XRE_IsContentProcess()) {
     ContentChild* contentChild = ContentChild::GetSingleton();
-    Unused << contentChild->SendNotifyMediaAudibleChanged(bc, aAudible);
+    Unused << contentChild->SendNotifyMediaAudibleChanged(bc, aState);
   } else {
     // Currently this only happen when we disable e10s, otherwise all controlled
     // media would be run in the content process.
     if (RefPtr<MediaController> controller =
             bc->Canonical()->GetMediaController()) {
-      controller->NotifyMediaAudibleChanged(aAudible);
+      controller->NotifyMediaAudibleChanged(aState);
     }
   }
 }

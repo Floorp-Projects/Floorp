@@ -5802,13 +5802,13 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaStateChanged(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaAudibleChanged(
-    const MaybeDiscarded<BrowsingContext>& aContext, bool aAudible) {
+    const MaybeDiscarded<BrowsingContext>& aContext, MediaAudibleState aState) {
   if (aContext.IsNullOrDiscarded()) {
     return IPC_OK();
   }
   if (RefPtr<MediaController> controller =
           aContext.get_canonical()->GetMediaController()) {
-    controller->NotifyMediaAudibleChanged(aAudible);
+    controller->NotifyMediaAudibleChanged(aState);
   }
   return IPC_OK();
 }

@@ -138,14 +138,14 @@ void MediaController::NotifyMediaStateChanged(ControlledMediaState aState) {
   }
 }
 
-void MediaController::NotifyMediaAudibleChanged(bool aAudible) {
+void MediaController::NotifyMediaAudibleChanged(MediaAudibleState aState) {
   if (mShutdown) {
     return;
   }
-  mAudible = aAudible;
+  mAudibleState = aState;
   RefPtr<MediaControlService> service = MediaControlService::GetService();
   MOZ_ASSERT(service);
-  if (mAudible) {
+  if (mAudibleState == MediaAudibleState::eAudible) {
     service->GetAudioFocusManager().RequestAudioFocus(this);
   } else {
     service->GetAudioFocusManager().RevokeAudioFocus(this);
@@ -276,7 +276,7 @@ MediaSessionPlaybackState MediaController::GetState() const {
 
 bool MediaController::IsAudible() const {
   return mGuessedPlaybackState == MediaSessionPlaybackState::Playing &&
-         mAudible;
+         mAudibleState == MediaAudibleState::eAudible;
 }
 
 uint64_t MediaController::ControlledMediaNum() const {
