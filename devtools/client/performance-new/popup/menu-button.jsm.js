@@ -37,22 +37,18 @@ function requireLazy(callback) {
 /** @type {any} */ (this).exports = {};
 
 const lazyServices = requireLazy(() =>
-  /** @type {import("resource://gre/modules/Services.jsm")} */
-  (ChromeUtils.import("resource://gre/modules/Services.jsm"))
+  ChromeUtils.import("resource://gre/modules/Services.jsm")
 );
 const lazyCustomizableUI = requireLazy(() =>
-  /** @type {import("resource:///modules/CustomizableUI.jsm")} */
-  (ChromeUtils.import("resource:///modules/CustomizableUI.jsm"))
+  ChromeUtils.import("resource:///modules/CustomizableUI.jsm")
 );
 const lazyCustomizableWidgets = requireLazy(() =>
-  /** @type {import("resource:///modules/CustomizableWidgets.jsm")} */
-  (ChromeUtils.import("resource:///modules/CustomizableWidgets.jsm"))
+  ChromeUtils.import("resource:///modules/CustomizableWidgets.jsm")
 );
 const lazyPopupPanel = requireLazy(() =>
-  /** @type {import("devtools/client/performance-new/popup/panel.jsm.js")} */
-  (ChromeUtils.import(
+  ChromeUtils.import(
     "resource://devtools/client/performance-new/popup/panel.jsm.js"
-  ))
+  )
 );
 
 const WIDGET_ID = "profiler-button";
