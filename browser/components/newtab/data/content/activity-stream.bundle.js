@@ -1520,7 +1520,7 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
 
   renderMessageItem(msg) {
     const isBlockedByGroup = this.state.groups.filter(group => msg.groups.includes(group.id)).some(group => !group.enabled);
-    const msgProvider = this.state.providers.find(provider => provider.id === msg.provider);
+    const msgProvider = this.state.providers.find(provider => provider.id === msg.provider) || {};
     const isProviderExcluded = msgProvider.exclude && msgProvider.exclude.includes(msg.id);
     const isMessageBlocked = this.state.messageBlockList.includes(msg.id) || this.state.messageBlockList.includes(msg.campaign);
     const isBlocked = isMessageBlocked || isBlockedByGroup || isProviderExcluded;
