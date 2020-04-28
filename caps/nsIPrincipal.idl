@@ -10,7 +10,7 @@
 #include "nsIAboutModule.idl"
 #include "nsIReferrerInfo.idl"
 interface nsIChannel;
-
+#include "mozIDOMWindow.idl"
 
 %{C++
 struct JSPrincipals;
@@ -330,6 +330,14 @@ interface nsIPrincipal : nsISerializable
     ACString getPrefLightCacheKey(in nsIURI aURI ,in bool aWithCredentials);
 
 
+    /*
+    *  Checks if the Principals URI has first party storage access 
+    *  when loaded inside the provided 3rd party resource window. 
+    *  See also: ContentBlocking::ShouldAllowAccessFor
+    */
+    bool hasFirstpartyStorageAccess(in mozIDOMWindow aWindow, out uint32_t rejectedReason);
+    
+    
     /*
     * Returns a Key for the LocalStorage Manager, used to 
     * check the Principals Origin Storage usage. 
