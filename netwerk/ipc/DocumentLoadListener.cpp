@@ -700,6 +700,8 @@ void DocumentLoadListener::Cancel(const nsresult& aStatusCode) {
       ("DocumentLoadListener Cancel [this=%p, "
        "aStatusCode=%" PRIx32 " ]",
        this, static_cast<uint32_t>(aStatusCode)));
+  mCancelled = true;
+
   if (mDoingProcessSwitch) {
     // If we've already initiated process-switching
     // then we can no longer be cancelled and we'll
@@ -1431,8 +1433,13 @@ DocumentLoadListener::RedirectToRealChannel(
 
   return EnsureBridge()->Then(
       GetCurrentThreadSerialEventTarget(), __func__,
-      [endpoints = std::move(aStreamFilterEndpoints), aRedirectFlags,
+      [self = RefPtr<DocumentLoadListener>(this),
+       endpoints = std::move(aStreamFilterEndpoints), aRedirectFlags,
        aLoadFlags](ADocumentChannelBridge* aBridge) mutable {
+        if (self->mCancelled) {
+          return PDocumentChannelParent::RedirectToRealChannelPromise::
+              CreateAndResolve(NS_BINDING_ABORTED, __func__);
+        }
         return aBridge->RedirectToRealChannel(std::move(endpoints),
                                               aRedirectFlags, aLoadFlags);
       },

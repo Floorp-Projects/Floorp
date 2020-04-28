@@ -434,6 +434,9 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // This identifier is set by MaybeTriggerProcessSwitch, and is later
   // passed to the childChannel in order to identify it in the new process.
   uint64_t mCrossProcessRedirectIdentifier = 0;
+
+  // True if cancelled.
+  bool mCancelled = false;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DocumentLoadListener, DOCUMENT_LOAD_LISTENER_IID)
