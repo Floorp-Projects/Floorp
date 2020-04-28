@@ -2,10 +2,6 @@
 
 const SEPARATE_ABOUT_WELCOME_PREF = "browser.aboutwelcome.enabled";
 
-const { FxAccounts } = ChromeUtils.import(
-  "resource://gre/modules/FxAccounts.jsm"
-);
-
 /**
  * Sets the aboutwelcome pref to enabled simplified welcome UI
  */
@@ -86,72 +82,3 @@ add_task(async function test_Separate_About_Welcome_branches() {
     ]
   );
 });
-
-/**
- * Test click of StartBrowsing button on simplified about:welcome
- * page changes focus to location bar
- */
-test_newtab(
-  {
-    async before({ pushPrefs }) {
-      await pushPrefs(["browser.aboutwelcome.enabled", true]);
-    },
-    test: async function test_startBrowsing() {
-      await ContentTaskUtils.waitForCondition(
-        () =>
-          content.document.querySelector(
-            "button[data-l10n-id=onboarding-start-browsing-button-label]"
-          ),
-        "Wait for start browsing button to load"
-      );
-
-      const startBrowsingButton = content.document.querySelector(
-        "button[data-l10n-id=onboarding-start-browsing-button-label]"
-      );
-
-      startBrowsingButton.click();
-    },
-    after() {
-      ok(
-        gURLBar.focused,
-        "Start Browsing click should move focus to awesome bar"
-      );
-    },
-  },
-  "about:welcome"
-);
-
-add_task(function setup() {
-  const sandbox = sinon.createSandbox();
-  sandbox.stub(FxAccounts.config, "promiseMetricsFlowURI").resolves("");
-
-  registerCleanupFunction(() => {
-    sandbox.restore();
-  });
-});
-
-test_newtab(
-  {
-    async before({ pushPrefs }) {
-      await pushPrefs(["browser.aboutwelcome.enabled", true]);
-    },
-    test: async function test_startBrowsing() {
-      await ContentTaskUtils.waitForCondition(
-        () => content.document.querySelector(".start-button"),
-        "Wait for start browsing button to load"
-      );
-    },
-    after() {
-      ok(
-        FxAccounts.config.promiseMetricsFlowURI.callCount === 1,
-        "Stub was called"
-      );
-      Assert.equal(
-        FxAccounts.config.promiseMetricsFlowURI.firstCall.args[0],
-        "aboutwelcome",
-        "Called by AboutWelcomeParent"
-      );
-    },
-  },
-  "about:welcome"
-);
