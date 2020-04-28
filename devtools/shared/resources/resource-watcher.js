@@ -314,6 +314,7 @@ ResourceWatcher.TYPES = ResourceWatcher.prototype.TYPES = {
   CONSOLE_MESSAGES: "console-messages",
   ERROR_MESSAGES: "error-messages",
   PLATFORM_MESSAGES: "platform-messages",
+  DOCUMENT_EVENTS: "document-events",
 };
 module.exports = { ResourceWatcher };
 
@@ -327,4 +328,63 @@ const LegacyListeners = {
     .ERROR_MESSAGES]: require("devtools/shared/resources/legacy-listeners/error-messages"),
   [ResourceWatcher.TYPES
     .PLATFORM_MESSAGES]: require("devtools/shared/resources/legacy-listeners/platform-messages"),
+  // Bug 1620243 aims at implementing this from the actor and will eventually replace
+  // this client side code.
+  async [ResourceWatcher.TYPES.CONSOLE_MESSAGES]({
+    targetList,
+    targetType,
+    targetFront,
+    isTopLevel,
+    onAvailable,
+  }) {
+    // Allow the top level target unconditionnally.
+    // Also allow frame, but only in content toolbox, when the fission/content toolbox pref is
+    // set. i.e. still ignore them in the content of the browser toolbox as we inspect
+    // messages via the process targets
+    // Also ignore workers as they are not supported yet. (see bug 1592584)
+    const isContentToolbox = targetList.targetFront.isLocalTab;
+    const listenForFrames =
+      isContentToolbox &&
+      Services.prefs.getBoolPref("devtools.contenttoolbox.fission");
+    const isAllowed =
+      isTopLevel ||
+      targetType === targetList.TYPES.PROCESS ||
+      (targetType === targetList.TYPES.FRAME && listenForFrames);
+
+    if (!isAllowed) {
+      return;
+    }
+
+    const webConsoleFront = await targetFront.getFront("console");
+
+    // Request notifying about new messages
+    await webConsoleFront.startListeners(["ConsoleAPI"]);
+
+    // Fetch already existing messages
+    // /!\ The actor implementation requires to call startListeners(ConsoleAPI) first /!\
+    const { messages } = await webConsoleFront.getCachedMessages([
+      "ConsoleAPI",
+    ]);
+    // Wrap the message into a `message` attribute, to match `consoleAPICall` behavior
+    messages.map(message => ({ message })).forEach(onAvailable);
+
+    // Forward new message events
+    webConsoleFront.on("consoleAPICall", onAvailable);
+  },
+  async [ResourceWatcher.TYPES.DOCUMENT_EVENTS]({
+    targetList,
+    targetType,
+    targetFront,
+    isTopLevel,
+    onAvailable,
+  }) {
+    // DocumentEventsListener of webconsole handles only top level document.
+    if (!isTopLevel) {
+      return;
+    }
+
+    const webConsoleFront = await targetFront.getFront("console");
+    webConsoleFront.on("documentEvent", onAvailable);
+    await webConsoleFront.startListeners(["DocumentEvents"]);
+  },
 };
