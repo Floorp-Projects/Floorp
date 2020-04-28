@@ -4027,12 +4027,6 @@ void JSScript::relazify(JSRuntime* rt) {
   swapData(scriptData);
   freeSharedData();
 
-  // Clear flags that are only set by the BytecodeEmitter. This ensures that
-  // CheckFlagsOnDelazification is still valid on next compile.
-  //
-  // NOTE: Keep in sync with CheckFlagsOnDelazification.
-  clearFlag(ImmutableFlags::HasNonSyntacticScope);
-
   // We should not still be in any side-tables for the debugger or
   // code-coverage. The finalizer will not be able to clean them up once
   // bytecode is released. We check in JSFunction::maybeRelazify() for these
@@ -4849,15 +4843,16 @@ static JSScript* CopyScriptImpl(JSContext* cx, HandleScript src,
   // Some embeddings are not careful to use ExposeObjectToActiveJS as needed.
   JS::AssertObjectIsNotGray(sourceObject);
 
+  ImmutableScriptFlags flags = src->immutableFlags();
+  flags.setFlag(JSScript::ImmutableFlags::HasNonSyntacticScope,
+                scopes[0]->hasOnChain(ScopeKind::NonSyntactic));
+
   // Create a new JSScript to fill in.
   RootedScript dst(cx, JSScript::Create(cx, functionOrGlobal, sourceObject,
-                                        src->extent(), src->immutableFlags()));
+                                        src->extent(), flags));
   if (!dst) {
     return nullptr;
   }
-
-  dst->setFlag(JSScript::ImmutableFlags::HasNonSyntacticScope,
-               scopes[0]->hasOnChain(ScopeKind::NonSyntactic));
 
   // Reset the mutable flags to request arguments analysis as needed.
   dst->resetArgsUsageAnalysis();
