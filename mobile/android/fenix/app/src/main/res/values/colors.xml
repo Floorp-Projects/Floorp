@@ -3,6 +3,21 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
+    <!-- Photon colors -->
+    <color name="dark_grey_05">#5B5B66</color>
+    <color name="dark_grey_10">#52525E</color>
+    <color name="dark_grey_50">#32313C</color>
+    <color name="dark_grey_80">#1C1B22</color>
+    <color name="ink_50">#291D4F</color>
+    <color name="ink_80">#20123A</color>
+    <color name="ink_90">#1D1133</color>
+    <color name="light_grey_05">#FBFBFE</color>
+    <color name="light_grey_10">#F9F9FB</color>
+    <color name="light_grey_30">#E0E0E6</color>
+    <color name="light_grey_60">#AFAFBB</color>
+    <color name="violet_50_32a">#529059FF</color>
+    <color name="violet_70_12a">#1F592ACB</color>
+    
     <!-- Light theme color palette -->
     <color name="primary_text_light_theme">#20123A</color>
     <color name="secondary_text_light_theme">@color/photonGrey50</color>
@@ -39,10 +54,10 @@
     <color name="swipe_delete_background_light_theme">#E0E0E6</color>
 
     <!-- Tab Tray -->
-    <color name="tab_tray_item_text_light_theme">@color/primary_text_light_theme</color>
-    <color name="tab_tray_item_selected_text_light_theme">@color/foundation_light_theme</color>
-    <color name="tab_tray_item_background_light_theme">@color/foundation_light_theme</color>
-    <color name="tab_tray_item_selected_background_light_theme">@color/accent_bright_light_theme</color>
+    <color name="tab_tray_item_text_light_theme">@color/ink_80</color>
+    <color name="tab_tray_item_url_light_theme">@color/dark_grey_05</color>
+    <color name="tab_tray_item_background_light_theme">@color/light_grey_10</color>
+    <color name="tab_tray_item_selected_background_light_theme">@color/violet_70_12a</color>
 
     <!-- Dark theme color palette -->
     <color name="primary_text_dark_theme">#FBFBFE</color>
@@ -78,10 +93,10 @@
     <color name="swipe_delete_background_dark_theme">#4A4A55</color>
 
     <!-- Tab Tray -->
-    <color name="tab_tray_item_text_dark_theme">@color/primary_text_dark_theme</color>
-    <color name="tab_tray_item_selected_text_dark_theme">@color/primary_text_dark_theme</color>
-    <color name="tab_tray_item_background_dark_theme">@color/foundation_dark_theme</color>
-    <color name="tab_tray_item_selected_background_dark_theme">@color/accent_bright_dark_theme</color>
+    <color name="tab_tray_item_text_dark_theme">@color/light_grey_05</color>
+    <color name="tab_tray_item_url_dark_theme">@color/light_grey_60</color>
+    <color name="tab_tray_item_background_dark_theme">@color/dark_grey_80</color>
+    <color name="tab_tray_item_selected_background_dark_theme">@color/violet_50_32a</color>
 
     <!-- Private theme color palette -->
     <color name="primary_text_private_theme">#FBFBFE</color>
@@ -115,10 +130,10 @@
     <color name="swipe_delete_background_private_theme">#312A65</color>
 
     <!-- Tab Tray -->
-    <color name="tab_tray_item_text_private_theme">@color/primary_text_private_theme</color>
-    <color name="tab_tray_item_selected_text_private_theme">@color/primary_text_private_theme</color>
-    <color name="tab_tray_item_background_private_theme">@color/foundation_private_theme</color>
-    <color name="tab_tray_item_selected_background_private_theme">@color/accent_bright_private_theme</color>
+    <color name="tab_tray_item_text_private_theme">@color/light_grey_05</color>
+    <color name="tab_tray_item_url_private_theme">@color/light_grey_60</color>
+    <color name="tab_tray_item_background_private_theme">@color/ink_90</color>
+    <color name="tab_tray_item_selected_background_private_theme">@color/violet_50_32a</color>
 
     <!-- Normal theme colors for light mode -->
     <color name="primary_text_normal_theme">@color/primary_text_light_theme</color>
@@ -152,7 +167,7 @@
 
     <!-- Tab tray -->
     <color name="tab_tray_item_text_normal_theme">@color/tab_tray_item_text_light_theme</color>
-    <color name="tab_tray_item_selected_text_normal_theme">@color/tab_tray_item_selected_text_light_theme</color>
+    <color name="tab_tray_item_url_normal_theme">@color/tab_tray_item_url_light_theme</color>
     <color name="tab_tray_item_background_normal_theme">@color/tab_tray_item_background_light_theme</color>
     <color name="tab_tray_item_selected_background_normal_theme">@color/tab_tray_item_selected_background_light_theme</color>
 
@@ -228,7 +243,6 @@
     <color name="suggestion_highlight_color">#5C592ACB</color>
     <color name="private_browsing_button_accent_color">@color/foundation_private_theme</color>
     <color name="white_color">#FBFBFE</color>
-    <color name="light_grey_05">#FBFBFE</color>
     <color name="dark_grey_90">#15141A</color>
     <color name="neutral_text">@color/white_color</color>
     <color name="disabled_text">#cccccc</color>

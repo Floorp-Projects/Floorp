@@ -46,7 +46,7 @@
 
     <!-- Tab tray -->
     <attr name="tabTrayItemText" format="reference"/>
-    <attr name="tabTrayItemSelectedText" format="reference" />
+    <attr name="tabTrayItemUrl" format="reference" />
     <attr name="tabTrayItemBackground" format="reference" />
     <attr name="tabTrayItemSelectedBackground" format="reference" />
 

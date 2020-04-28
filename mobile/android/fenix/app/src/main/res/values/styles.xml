@@ -68,7 +68,7 @@
         <item name="swipeDeleteBackground">@color/swipe_delete_background_normal_theme</item>
 
         <item name="tabTrayItemText">@color/tab_tray_item_text_normal_theme</item>
-        <item name="tabTrayItemSelectedText">@color/tab_tray_item_selected_text_normal_theme</item>
+        <item name="tabTrayItemUrl">@color/tab_tray_item_url_normal_theme</item>
         <item name="tabTrayItemBackground">@color/foundation_normal_theme</item>
         <item name="tabTrayItemSelectedBackground">@color/tab_tray_item_selected_background_normal_theme</item>
 
@@ -179,7 +179,7 @@
 
         <!-- Tab Tray -->
         <item name="tabTrayItemText">@color/tab_tray_item_text_private_theme</item>
-        <item name="tabTrayItemSelectedText">@color/tab_tray_item_selected_text_private_theme</item>
+        <item name="tabTrayItemUrl">@color/tab_tray_item_url_private_theme</item>
         <item name="tabTrayItemBackground">@color/foundation_private_theme</item>
         <item name="tabTrayItemSelectedBackground">@color/tab_tray_item_selected_background_private_theme</item>
 
