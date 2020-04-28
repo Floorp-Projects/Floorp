@@ -26,8 +26,8 @@
 @end
 
 /**
- * Accessible for a slider
+ * Base accessible for an incrementable
  */
-@interface mozSliderAccessible : mozAccessible
+@interface mozIncrementableAccessible : mozAccessible
 
 @end
