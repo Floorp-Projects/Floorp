@@ -1115,7 +1115,7 @@ void DocAccessible::ContentStateChanged(dom::Document* aDocument,
 
   if (aStateMask.HasState(NS_EVENT_STATE_REQUIRED)) {
     RefPtr<AccEvent> event =
-        new AccStateChangeEvent(accessible, states::REQUIRED, true);
+        new AccStateChangeEvent(accessible, states::REQUIRED);
     FireDelayedEvent(event);
   }
 
