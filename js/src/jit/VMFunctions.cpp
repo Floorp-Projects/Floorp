@@ -1989,6 +1989,11 @@ bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result) {
   return true;
 }
 
+bool DoToNumeric(JSContext* cx, HandleValue arg, MutableHandleValue ret) {
+  ret.set(arg);
+  return ToNumeric(cx, ret);
+}
+
 void* AllocateBigIntNoGC(JSContext* cx, bool requestMinorGC) {
   AutoUnsafeCallWithABI unsafe;
 

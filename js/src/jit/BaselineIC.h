@@ -1721,7 +1721,6 @@ class ICRest_Fallback : public ICFallbackStub {
 //     JSOp::Neg
 //     JSOp::Inc
 //     JSOp::Dec
-//     JSOp::ToNumeric
 
 class ICUnaryArith_Fallback : public ICFallbackStub {
   friend class ICStubSpace;
