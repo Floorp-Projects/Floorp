@@ -5,45 +5,6 @@
 // Test opening conditional panel using keyboard shortcut.
 // Should access the closest breakpoint to a passed in cursorPosition.
 
-// from test/mochitest/browser_dbg-breakpoints-cond-source-maps.js
-function getConditionalPanel(dbg, line) {
-  return getCM(dbg).doc.getLineHandle(line - 1).widgets[0];
-}
-
-// from devtools browser_dbg-breakpoints-cond-source-maps.js
-async function waitForConditionalPanelFocus(dbg) {
-  await waitFor(() => dbg.win.document.activeElement.tagName === "TEXTAREA");
-}
-
-// from browser_dbg-breakpoints-columns.js
-async function enableFirstBreakpoint(dbg) {
-  getCM(dbg).setCursor({ line: 32, ch: 0 });
-  await addBreakpoint(dbg, "long", 32);
-  const bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
-
-  ok(bpMarkers.length === 2, "2 column breakpoints");
-  assertClass(bpMarkers[0], "active");
-  assertClass(bpMarkers[1], "active", false);
-}
-
-async function enableSecondBreakpoint(dbg) {
-  let bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
-
-  bpMarkers[1].click();
-  await waitForBreakpointCount(dbg, 2);
-
-  bpMarkers = findAllElements(dbg, "columnBreakpoints");
-  assertClass(bpMarkers[1], "active");
-  await waitForAllElements(dbg, "breakpointItems", 2);
-}
-
-// modified method from browser_dbg-breakpoints-columns.js
-// use shortcut to open conditional panel.
-function setConditionalBreakpoint(dbg, condition) {
-  pressKey(dbg, "toggleCondPanel");
-  typeInPanel(dbg, condition);
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "long");
 
@@ -124,5 +85,43 @@ add_task(async function() {
     !! waitForCondition(dbg, "13"),
     "breakpoint closest to cursor position has been edited"
   );
-
 });
+
+// from test/mochitest/browser_dbg-breakpoints-cond-source-maps.js
+function getConditionalPanel(dbg, line) {
+  return getCM(dbg).doc.getLineHandle(line - 1).widgets[0];
+}
+
+// from devtools browser_dbg-breakpoints-cond-source-maps.js
+async function waitForConditionalPanelFocus(dbg) {
+  await waitFor(() => dbg.win.document.activeElement.tagName === "TEXTAREA");
+}
+
+// from browser_dbg-breakpoints-columns.js
+async function enableFirstBreakpoint(dbg) {
+  getCM(dbg).setCursor({ line: 32, ch: 0 });
+  await addBreakpoint(dbg, "long", 32);
+  const bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
+
+  ok(bpMarkers.length === 2, "2 column breakpoints");
+  assertClass(bpMarkers[0], "active");
+  assertClass(bpMarkers[1], "active", false);
+}
+
+async function enableSecondBreakpoint(dbg) {
+  let bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
+
+  bpMarkers[1].click();
+  await waitForBreakpointCount(dbg, 2);
+
+  bpMarkers = findAllElements(dbg, "columnBreakpoints");
+  assertClass(bpMarkers[1], "active");
+  await waitForAllElements(dbg, "breakpointItems", 2);
+}
+
+// modified method from browser_dbg-breakpoints-columns.js
+// use shortcut to open conditional panel.
+function setConditionalBreakpoint(dbg, condition) {
+  pressKey(dbg, "toggleCondPanel");
+  typeInPanel(dbg, condition);
+}

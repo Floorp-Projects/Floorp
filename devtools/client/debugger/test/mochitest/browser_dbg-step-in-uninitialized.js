@@ -5,15 +5,6 @@
 // When stepping into a function, 'let' variables should show as uninitialized
 // instead of undefined.
 
-function findNodeValue(dbg, text) {
-  for (let index = 0;; index++) {
-    var elem = findElement(dbg, "scopeNode", index);
-    if (elem && elem.innerText == text) {
-      return findElement(dbg, "scopeValue", index).innerText;
-    }
-  }
-}
-
 add_task(async function test() {
   const dbg = await initDebugger("doc-step-in-uninitialized.html");
   invokeInTab("main");
@@ -36,3 +27,12 @@ add_task(async function test() {
 
   ok(findNodeValue(dbg, "y") == "3", "y initialized");
 });
+
+function findNodeValue(dbg, text) {
+  for (let index = 0;; index++) {
+    const elem = findElement(dbg, "scopeNode", index);
+    if (elem?.innerText == text) {
+      return findElement(dbg, "scopeValue", index).innerText;
+    }
+  }
+}

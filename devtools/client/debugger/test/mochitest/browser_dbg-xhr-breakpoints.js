@@ -2,60 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-async function addXHRBreakpoint(dbg, text, method) {
-  info(`Adding a XHR breakpoint for pattern ${text} and method ${method}`);
-
-  const plusIcon = findElementWithSelector(dbg, ".xhr-breakpoints-pane .plus");
-  if (plusIcon) {
-    plusIcon.click();
-  }
-  findElementWithSelector(dbg, ".xhr-input-url").focus();
-  type(dbg, text);
-
-  if (method) {
-    findElementWithSelector(dbg, ".xhr-input-method").value = method;
-  }
-
-  pressKey(dbg, "Enter");
-
-  await waitForDispatch(dbg, "SET_XHR_BREAKPOINT");
-}
-
-async function removeXHRBreakpoint(dbg, index) {
-  info("Removing a XHR breakpoint");
-
-  const closeButtons = dbg.win.document.querySelectorAll(
-    ".xhr-breakpoints-pane .close-btn"
-  );
-  if (closeButtons[index]) {
-    closeButtons[index].click();
-  }
-
-  await waitForDispatch(dbg, "REMOVE_XHR_BREAKPOINT");
-}
-
-function getXHRBreakpointsElements(dbg) {
-  return [
-    ...dbg.win.document.querySelectorAll(".xhr-breakpoints-pane .xhr-container")
-  ];
-}
-
-function getXHRBreakpointLabels(elements) {
-  return elements.map(element => element.title);
-}
-
-function getXHRBreakpointCheckbox(dbg) {
-  return findElementWithSelector(
-    dbg,
-    ".xhr-breakpoints-pane .breakpoints-exceptions input"
-  );
-}
-
-async function clickPauseOnAny(dbg, expectedEvent) {
-  getXHRBreakpointCheckbox(dbg).click();
-  await waitForDispatch(dbg, expectedEvent);
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-xhr.html", "fetch.js");
 
@@ -127,3 +73,57 @@ add_task(async function() {
     "Only the desired breakpoint was removed"
   );
 });
+
+async function addXHRBreakpoint(dbg, text, method) {
+  info(`Adding a XHR breakpoint for pattern ${text} and method ${method}`);
+
+  const plusIcon = findElementWithSelector(dbg, ".xhr-breakpoints-pane .plus");
+  if (plusIcon) {
+    plusIcon.click();
+  }
+  findElementWithSelector(dbg, ".xhr-input-url").focus();
+  type(dbg, text);
+
+  if (method) {
+    findElementWithSelector(dbg, ".xhr-input-method").value = method;
+  }
+
+  pressKey(dbg, "Enter");
+
+  await waitForDispatch(dbg, "SET_XHR_BREAKPOINT");
+}
+
+async function removeXHRBreakpoint(dbg, index) {
+  info("Removing a XHR breakpoint");
+
+  const closeButtons = dbg.win.document.querySelectorAll(
+    ".xhr-breakpoints-pane .close-btn"
+  );
+  if (closeButtons[index]) {
+    closeButtons[index].click();
+  }
+
+  await waitForDispatch(dbg, "REMOVE_XHR_BREAKPOINT");
+}
+
+function getXHRBreakpointsElements(dbg) {
+  return [
+    ...dbg.win.document.querySelectorAll(".xhr-breakpoints-pane .xhr-container")
+  ];
+}
+
+function getXHRBreakpointLabels(elements) {
+  return elements.map(element => element.title);
+}
+
+function getXHRBreakpointCheckbox(dbg) {
+  return findElementWithSelector(
+    dbg,
+    ".xhr-breakpoints-pane .breakpoints-exceptions input"
+  );
+}
+
+async function clickPauseOnAny(dbg, expectedEvent) {
+  getXHRBreakpointCheckbox(dbg).click();
+  await waitForDispatch(dbg, expectedEvent);
+}

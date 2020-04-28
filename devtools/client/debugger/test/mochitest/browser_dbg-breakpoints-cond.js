@@ -2,64 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function getLineEl(dbg, line) {
-  const lines = dbg.win.document.querySelectorAll(".CodeMirror-code > div");
-  return lines[line - 1];
-}
-
-function assertEditorBreakpoint(
-  dbg,
-  line,
-  { hasCondition = false, hasLog = false } = {}
-) {
-  const hasConditionClass = getLineEl(dbg, line).classList.contains(
-    "has-condition"
-  );
-
-  ok(
-    hasConditionClass === hasCondition,
-    `Breakpoint condition ${
-      hasCondition ? "exists" : "does not exist"
-    } on line ${line}`
-  );
-
-  const hasLogClass = getLineEl(dbg, line).classList.contains("has-log");
-
-  ok(
-    hasLogClass === hasLog,
-    `Breakpoint log ${hasLog ? "exists" : "does not exist"} on line ${line}`
-  );
-}
-
-function waitForBreakpointWithoutCondition(dbg, url, line) {
-  return waitForState(dbg, () => {
-    const bp = findBreakpoint(dbg, url, line);
-    return bp && !bp.options.condition;
-  });
-}
-
-async function setConditionalBreakpoint(dbg, index, condition) {
-  // Make this work with either add or edit menu items
-  const { addConditionItem, editConditionItem } = selectors;
-  const selector = `${addConditionItem},${editConditionItem}`;
-  rightClickElement(dbg, "gutter", index);
-  selectContextMenuItem(dbg, selector);
-  typeInPanel(dbg, condition);
-}
-
-async function setLogPoint(dbg, index, value) {
-  rightClickElement(dbg, "gutter", index);
-  selectContextMenuItem(
-    dbg,
-    `${selectors.addLogItem},${selectors.editLogItem}`
-  );
-  await typeInPanel(dbg, value);
-}
-
-async function waitForConditionalPanelFocus(dbg) {
-  await waitFor(() => dbg.win.document.activeElement.tagName === "TEXTAREA");
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple2");
   await pushPref("devtools.debugger.features.column-breakpoints", true);
@@ -167,3 +109,61 @@ add_task(async function() {
   const logPointPanel = findElement(dbg, "logPointPanel");
   is(logPointPanel, null, "The logpoint panel is closed");
 });
+
+function getLineEl(dbg, line) {
+  const lines = dbg.win.document.querySelectorAll(".CodeMirror-code > div");
+  return lines[line - 1];
+}
+
+function assertEditorBreakpoint(
+  dbg,
+  line,
+  { hasCondition = false, hasLog = false } = {}
+) {
+  const hasConditionClass = getLineEl(dbg, line).classList.contains(
+    "has-condition"
+  );
+
+  ok(
+    hasConditionClass === hasCondition,
+    `Breakpoint condition ${
+      hasCondition ? "exists" : "does not exist"
+    } on line ${line}`
+  );
+
+  const hasLogClass = getLineEl(dbg, line).classList.contains("has-log");
+
+  ok(
+    hasLogClass === hasLog,
+    `Breakpoint log ${hasLog ? "exists" : "does not exist"} on line ${line}`
+  );
+}
+
+function waitForBreakpointWithoutCondition(dbg, url, line) {
+  return waitForState(dbg, () => {
+    const bp = findBreakpoint(dbg, url, line);
+    return bp && !bp.options.condition;
+  });
+}
+
+async function setConditionalBreakpoint(dbg, index, condition) {
+  // Make this work with either add or edit menu items
+  const { addConditionItem, editConditionItem } = selectors;
+  const selector = `${addConditionItem},${editConditionItem}`;
+  rightClickElement(dbg, "gutter", index);
+  selectContextMenuItem(dbg, selector);
+  typeInPanel(dbg, condition);
+}
+
+async function setLogPoint(dbg, index, value) {
+  rightClickElement(dbg, "gutter", index);
+  selectContextMenuItem(
+    dbg,
+    `${selectors.addLogItem},${selectors.editLogItem}`
+  );
+  await typeInPanel(dbg, value);
+}
+
+async function waitForConditionalPanelFocus(dbg) {
+  await waitFor(() => dbg.win.document.activeElement.tagName === "TEXTAREA");
+}

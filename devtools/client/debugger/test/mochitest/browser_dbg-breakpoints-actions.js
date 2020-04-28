@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function openFirstBreakpointContextMenu(dbg) {
-  rightClickElement(dbg, "breakpointItem", 2);
-}
-
 // Tests to see if we can trigger a breakpoint action via the context menu
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple2");
@@ -84,3 +80,7 @@ add_task(async function() {
   await dispatched;
   ok(true, "remaining breakpoint should be on line 4");
 });
+
+function openFirstBreakpointContextMenu(dbg) {
+  rightClickElement(dbg, "breakpointItem", 2);
+}

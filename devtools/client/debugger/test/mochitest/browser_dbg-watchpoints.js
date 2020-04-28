@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-async function getScopeValue(dbg, index) {
-  return (await waitForElement(dbg, "scopeValue", index)).innerText;
-}
-
 // - Tests adding a watchpoint
 // - Tests removing a watchpoint
 // - Tests adding a watchpoint, resuming to after the youngest frame has popped,
@@ -103,3 +99,8 @@ add_task(async function() {
   assertPausedAtSourceAndLine(dbg, sourceId, 25);
   await waitForRequestsToSettle(dbg);
 });
+
+async function getScopeValue(dbg, index) {
+  return (await waitForElement(dbg, "scopeValue", index)).innerText;
+}
+

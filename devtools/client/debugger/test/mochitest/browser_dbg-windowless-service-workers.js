@@ -2,19 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-async function checkWorkerThreads(dbg, count) {
-  await waitUntil(() => dbg.selectors.getThreads().length == count);
-  ok(true, `Have ${count} threads`);
-}
-
-async function checkWorkerStatus(dbg, status) {
-  await waitUntil(() => {
-    const threads = dbg.selectors.getThreads();
-    return threads.some(t => t.serviceWorkerStatus == status);
-  });
-  ok(true, `Have thread with status ${status}`);
-}
-
 // Test that we can detect a new service worker and hit breakpoints that we've
 // set in it.
 add_task(async function() {
@@ -164,3 +151,16 @@ add_task(async function() {
   await waitForRequestsToSettle(dbg);
   await removeTab(gBrowser.selectedTab);
 });
+
+async function checkWorkerThreads(dbg, count) {
+  await waitUntil(() => dbg.selectors.getThreads().length == count);
+  ok(true, `Have ${count} threads`);
+}
+
+async function checkWorkerStatus(dbg, status) {
+  await waitUntil(() => {
+    const threads = dbg.selectors.getThreads();
+    return threads.some(t => t.serviceWorkerStatus == status);
+  });
+  ok(true, `Have thread with status ${status}`);
+}

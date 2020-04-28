@@ -5,18 +5,6 @@
 // Tests for preview through Babel's compile output.
 requestLongerTimeout(3);
 
-function getOriginalScope(dbg) {
-  return dbg.selectors.getSelectedOriginalScope(
-    dbg.selectors.getCurrentThread()
-  );
-}
-
-async function previewToken(dbg, line, column, value) {
-  const previewEl = await tryHovering(dbg, line, column, "previewPopup");
-  is(previewEl.innerText, value);
-  dbg.actions.clearPreview(getContext(dbg));
-}
-
 // Test pausing with mapScopes enabled and disabled
 add_task(async function() {
   const dbg = await initDebugger("doc-sourcemapped.html");
@@ -44,3 +32,15 @@ add_task(async function() {
   await previewToken(dbg, 20, 16, "undefined");
   ok(getOriginalScope(dbg) == null, "Scopes are not mapped");
 });
+
+function getOriginalScope(dbg) {
+  return dbg.selectors.getSelectedOriginalScope(
+    dbg.selectors.getCurrentThread()
+  );
+}
+
+async function previewToken(dbg, line, column, value) {
+  const previewEl = await tryHovering(dbg, line, column, "previewPopup");
+  is(previewEl.innerText, value);
+  dbg.actions.clearPreview(getContext(dbg));
+}

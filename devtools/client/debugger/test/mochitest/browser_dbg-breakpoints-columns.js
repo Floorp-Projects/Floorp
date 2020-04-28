@@ -2,6 +2,41 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+add_task(async function() {
+  const dbg = await initDebugger("doc-scripts.html", "simple1");
+  await selectSource(dbg, "long");
+
+  info("1. Add a column breakpoint on line 32");
+  await enableFirstBreakpoint(dbg);
+
+  info("2. Click on the second breakpoint on line 32");
+  await enableSecondBreakpoint(dbg);
+
+  info("3. Disable second breakpoint using shift-click");
+  await shiftClickDisable(dbg);
+
+  info("4. Re-enable second breakpoint using shift-click");
+  await shiftClickEnable(dbg);
+
+  info("5. Add a condition to the first breakpoint");
+  await setConditionalBreakpoint(dbg, 0, "foo");
+
+  info("6. Add a log to the first breakpoint");
+  await setLogPoint(dbg, 0, "bar");
+
+  info("7. Disable the first breakpoint");
+  await disableBreakpoint(dbg, 0);
+
+  info("8. Remove the first breakpoint");
+  await removeFirstBreakpoint(dbg);
+
+  info("9. Add a condition to the second breakpoint");
+  await setConditionalBreakpoint(dbg, 1, "foo2");
+
+  info("10. Test removing the breakpoints by clicking in the gutter");
+  await removeAllBreakpoints(dbg, 32, 0);
+});
+
 async function enableFirstBreakpoint(dbg) {
   getCM(dbg).setCursor({ line: 32, ch: 0 });
   await addBreakpoint(dbg, "long", 32);
@@ -89,38 +124,3 @@ async function removeAllBreakpoints(dbg, line, count) {
 
   ok(findAllElements(dbg, "columnBreakpoints").length == 0);
 }
-
-add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html", "simple1");
-  await selectSource(dbg, "long");
-
-  info("1. Add a column breakpoint on line 32");
-  await enableFirstBreakpoint(dbg);
-
-  info("2. Click on the second breakpoint on line 32");
-  await enableSecondBreakpoint(dbg);
-
-  info("3. Disable second breakpoint using shift-click");
-  await shiftClickDisable(dbg);
-
-  info("4. Re-enable second breakpoint using shift-click");
-  await shiftClickEnable(dbg);
-
-  info("5. Add a condition to the first breakpoint");
-  await setConditionalBreakpoint(dbg, 0, "foo");
-
-  info("6. Add a log to the first breakpoint");
-  await setLogPoint(dbg, 0, "bar");
-
-  info("7. Disable the first breakpoint");
-  await disableBreakpoint(dbg, 0);
-
-  info("8. Remove the first breakpoint");
-  await removeFirstBreakpoint(dbg);
-
-  info("9. Add a condition to the second breakpoint");
-  await setConditionalBreakpoint(dbg, 1, "foo2");
-
-  info("10. Test removing the breakpoints by clicking in the gutter");
-  await removeAllBreakpoints(dbg, 32, 0);
-});

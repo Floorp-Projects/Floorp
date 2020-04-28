@@ -6,23 +6,6 @@
 // might take more than 30s to complete on a slow machine.
 requestLongerTimeout(2);
 
-async function waitForConsoleLink(dbg, text) {
-  const toolbox = dbg.toolbox;
-  const console = await toolbox.selectTool("webconsole");
-  const hud = console.hud;
-
-  return waitFor(() => {
-    // Wait until the message updates.
-    const linkEl = hud.ui.outputNode.querySelector(".frame-link-source");
-    if (!linkEl) {
-      return false;
-    }
-
-    const linkText = linkEl.textContent;
-    return linkText == text ? linkEl : null;
-  });
-}
-
 // Tests that pretty-printing updates console messages.
 add_task(async function() {
   const dbg = await initDebugger("doc-minified.html");
@@ -54,3 +37,20 @@ add_task(async function() {
   await selectSource(dbg, "math.min.js:formatted");
   await waitForSelectedLocation(dbg, 22);
 });
+
+async function waitForConsoleLink(dbg, text) {
+  const toolbox = dbg.toolbox;
+  const console = await toolbox.selectTool("webconsole");
+  const hud = console.hud;
+
+  return waitFor(() => {
+    // Wait until the message updates.
+    const linkEl = hud.ui.outputNode.querySelector(".frame-link-source");
+    if (!linkEl) {
+      return false;
+    }
+
+    const linkText = linkEl.textContent;
+    return linkText == text ? linkEl : null;
+  });
+}

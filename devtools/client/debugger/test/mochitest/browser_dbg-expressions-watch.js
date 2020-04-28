@@ -10,18 +10,6 @@
  * - disappears when all expressions are removed
  */
 
-function getLabel(dbg, index) {
-  return findElement(dbg, "expressionNode", index).innerText;
-}
-
-function getValue(dbg, index) {
-  return findElement(dbg, "expressionValue", index).innerText;
-}
-
-function getRefreshExpressionsElement(dbg) {
-  return findElement(dbg, "expressionRefresh", 1);
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-script-switching.html");
 
@@ -71,3 +59,15 @@ add_task(async function() {
     "The refresh button is no longer displayed after removing watch expressions"
   );
 });
+
+function getLabel(dbg, index) {
+  return findElement(dbg, "expressionNode", index).innerText;
+}
+
+function getValue(dbg, index) {
+  return findElement(dbg, "expressionValue", index).innerText;
+}
+
+function getRefreshExpressionsElement(dbg) {
+  return findElement(dbg, "expressionRefresh", 1);
+}

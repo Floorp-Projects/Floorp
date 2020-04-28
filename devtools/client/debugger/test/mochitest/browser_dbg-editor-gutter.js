@@ -9,11 +9,6 @@
 // rejections and make bug 1512742 permafail.
 PromiseTestUtils.whitelistRejectionsGlobally(/NS_ERROR_NOT_INITIALIZED/);
 
-// Utilities for interacting with the editor
-function clickGutter(dbg, line) {
-  clickElement(dbg, "gutter", line);
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
   const { getState } = dbg;
@@ -67,3 +62,8 @@ add_task(async function() {
   await waitForPaused(dbg);
   ok(true, "source is un-blackboxed");
 });
+
+// Utilities for interacting with the editor
+function clickGutter(dbg, line) {
+  clickElement(dbg, "gutter", line);
+}

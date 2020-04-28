@@ -2,21 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function getScrollTop(dbg) {
-  return getCM(dbg).doc.scrollTop;
-}
-
-async function waitForMatch(dbg, { matchIndex, count }) {
-  await waitForState(
-    dbg,
-    state => {
-      const result = dbg.selectors.getFileSearchResults();
-      return result.matchIndex == matchIndex && result.count == count;
-    },
-    "wait for match"
-  );
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html");
 
@@ -42,3 +27,18 @@ add_task(async function() {
   const matchScrollTop = getScrollTop(dbg);
   ok(pauseScrollTop != matchScrollTop, "did not jump to debug line");
 });
+
+function getScrollTop(dbg) {
+  return getCM(dbg).doc.scrollTop;
+}
+
+async function waitForMatch(dbg, { matchIndex, count }) {
+  await waitForState(
+    dbg,
+    state => {
+      const result = dbg.selectors.getFileSearchResults();
+      return result.matchIndex == matchIndex && result.count == count;
+    },
+    "wait for match"
+  );
+}

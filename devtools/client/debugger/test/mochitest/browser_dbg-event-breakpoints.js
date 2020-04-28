@@ -2,17 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function assertPauseLocation(dbg, line) {
-  const { location } = dbg.selectors.getVisibleSelectedFrame();
-
-  const source = findSource(dbg, "event-breakpoints.js");
-
-  is(location.sourceId, source.id, `correct sourceId`);
-  is(location.line, line, `correct line`);
-
-  assertPausedLocation(dbg);
-}
-
 add_task(async function() {
   await pushPref(
     "devtools.debugger.features.event-listeners-breakpoints",
@@ -69,3 +58,14 @@ add_task(async function() {
   await clickElement(dbg, "blackbox");
   await waitForDispatch(dbg, "BLACKBOX");
 });
+
+function assertPauseLocation(dbg, line) {
+  const { location } = dbg.selectors.getVisibleSelectedFrame();
+
+  const source = findSource(dbg, "event-breakpoints.js");
+
+  is(location.sourceId, source.id, `correct sourceId`);
+  is(location.line, line, `correct line`);
+
+  assertPausedLocation(dbg);
+}

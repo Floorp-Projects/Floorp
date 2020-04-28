@@ -1,13 +1,6 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
-function getItems(dbg) {
-  return findAllElements(dbg, "outlineItems");
-}
-
-function getNthItem(dbg, index) {
-  return findElement(dbg, "outlineItem", index);
-}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Tests the outline pane fuzzy filtering of outline items
 add_task(async function() {
@@ -80,3 +73,11 @@ add_task(async function() {
   ok(getItems(dbg)[0].textContent.includes("TodoModel(key)"), "item TodoModel");
   ok(getItems(dbg)[1].textContent.includes("addTodo(title)"), "item addTodo");
 });
+
+function getItems(dbg) {
+  return findAllElements(dbg, "outlineItems");
+}
+
+function getNthItem(dbg, index) {
+  return findElement(dbg, "outlineItem", index);
+}

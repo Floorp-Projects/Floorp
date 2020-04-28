@@ -5,28 +5,6 @@
 PromiseTestUtils.whitelistRejectionsGlobally(/Current state is running/);
 PromiseTestUtils.whitelistRejectionsGlobally(/Connection closed/);
 
-function findNode(dbg, text) {
-  for (let index = 0; ; index++) {
-    var elem = findElement(dbg, "scopeNode", index);
-    if (elem && elem.innerText == text) {
-      return elem;
-    }
-  }
-}
-
-function toggleNode(dbg, text) {
-  return toggleObjectInspectorNode(findNode(dbg, text));
-}
-
-function findNodeValue(dbg, text) {
-  for (let index = 0; ; index++) {
-    var elem = findElement(dbg, "scopeNode", index);
-    if (elem && elem.innerText == text) {
-      return findElement(dbg, "scopeValue", index).innerText;
-    }
-  }
-}
-
 // Test that unusual objects have their contents shown in worker thread scopes.
 add_task(async function() {
   const dbg = await initDebugger("doc-worker-scopes.html", "scopes-worker.js");
@@ -94,3 +72,25 @@ add_task(async function() {
   await toggleScopes(dbg);
   await waitForRequestsToSettle(dbg);
 });
+
+function findNode(dbg, text) {
+  for (let index = 0; ; index++) {
+    const elem = findElement(dbg, "scopeNode", index);
+    if (elem?.innerText == text) {
+      return elem;
+    }
+  }
+}
+
+function toggleNode(dbg, text) {
+  return toggleObjectInspectorNode(findNode(dbg, text));
+}
+
+function findNodeValue(dbg, text) {
+  for (let index = 0; ; index++) {
+    const elem = findElement(dbg, "scopeNode", index);
+    if (elem?.innerText == text) {
+      return findElement(dbg, "scopeValue", index).innerText;
+    }
+  }
+}

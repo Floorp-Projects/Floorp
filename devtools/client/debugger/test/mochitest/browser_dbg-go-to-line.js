@@ -4,26 +4,6 @@
 
 // Test the "go to line" feature correctly responses to keyboard shortcuts.
 
-function assertEnabled(dbg) {
-  is(dbg.selectors.getQuickOpenEnabled(), true, "quickOpen enabled");
-}
-
-function assertDisabled(dbg) {
-  is(dbg.selectors.getQuickOpenEnabled(), false, "quickOpen disabled");
-}
-
-async function waitForGoToLineBoxFocus(dbg) {
-  await waitFor(() => dbg.win.document.activeElement.tagName === "INPUT");
-}
-
-function assertLine(dbg, lineNumber) {
-  is(
-    dbg.selectors.getSelectedLocation().line,
-    lineNumber,
-    `goto line is ${lineNumber}`
-  );
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "long.js");
   await selectSource(dbg, "long");
@@ -58,3 +38,23 @@ add_task(async function() {
   pressKey(dbg, "Enter");
   assertLine(dbg, 66);
 });
+
+function assertEnabled(dbg) {
+  is(dbg.selectors.getQuickOpenEnabled(), true, "quickOpen enabled");
+}
+
+function assertDisabled(dbg) {
+  is(dbg.selectors.getQuickOpenEnabled(), false, "quickOpen disabled");
+}
+
+async function waitForGoToLineBoxFocus(dbg) {
+  await waitFor(() => dbg.win.document.activeElement.tagName === "INPUT");
+}
+
+function assertLine(dbg, lineNumber) {
+  is(
+    dbg.selectors.getSelectedLocation().line,
+    lineNumber,
+    `goto line is ${lineNumber}`
+  );
+}

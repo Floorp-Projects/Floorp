@@ -1,5 +1,6 @@
-/* Any copyright is dedicated to the Public Domain.
- http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 "use strict";
 
@@ -35,27 +36,6 @@ server.registerPathHandler("/inline-cache.html", (request, response) => {
 const SOURCE_URL = `http://localhost:${
   server.identity.primaryPort
 }/inline-cache.html`;
-
-/**
- * This is meant to simulate the developer editing the inline source and saving.
- * Effectively, we change the source during the test at specific controlled points.
- */
-function makeChanges() {
-  docValue++;
-}
-
-function getPageValue(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [], function() {
-    return content.document.querySelector("script").textContent.trim();
-  });
-}
-
-async function reloadTabAndDebugger(tab, dbg) {
-  let navigated = waitForDispatch(dbg, "NAVIGATE");
-  let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  await reload(dbg, "inline-cache.html");
-  return Promise.all([navigated, loaded]);
-}
 
 add_task(async function() {
   info("Load document with inline script");
@@ -147,3 +127,24 @@ add_task(async function() {
   await toolbox.destroy();
   await removeTab(tab);
 });
+
+/**
+ * This is meant to simulate the developer editing the inline source and saving.
+ * Effectively, we change the source during the test at specific controlled points.
+ */
+function makeChanges() {
+  docValue++;
+}
+
+function getPageValue(tab) {
+  return SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+    return content.document.querySelector("script").textContent.trim();
+  });
+}
+
+async function reloadTabAndDebugger(tab, dbg) {
+  let navigated = waitForDispatch(dbg, "NAVIGATE");
+  let loaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await reload(dbg, "inline-cache.html");
+  return Promise.all([navigated, loaded]);
+}

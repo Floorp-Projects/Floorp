@@ -6,48 +6,6 @@
 // stepping in them.
 requestLongerTimeout(2);
 
-function assertBreakpointExists(dbg, source, line) {
-  const {
-    selectors: { getBreakpoint },
-    getState
-  } = dbg;
-
-  ok(
-    getBreakpoint({ sourceId: source.id, line }),
-    "Breakpoint has correct line"
-  );
-}
-
-async function assertEditorBreakpoint(dbg, line, shouldExist) {
-  const el = await getLineEl(dbg, line);
-  const exists = !!el.querySelector(".new-breakpoint");
-  ok(
-    exists === shouldExist,
-    `Breakpoint ${shouldExist ? "exists" : "does not exist"} on line ${line}`
-  );
-}
-
-async function getLineEl(dbg, line) {
-  let el = await codeMirrorGutterElement(dbg, line);
-  while (el && !el.matches(".CodeMirror-code > div")) {
-    el = el.parentElement;
-  }
-  return el;
-}
-
-async function clickGutter(dbg, line) {
-  const el = await codeMirrorGutterElement(dbg, line);
-  clickDOMElement(dbg, el);
-}
-
-async function waitForBreakpointCount(dbg, count) {
-  const {
-    selectors: { getBreakpointCount },
-    getState
-  } = dbg;
-  await waitForState(dbg, state => getBreakpointCount() == count);
-}
-
 add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
   const dbg = await initDebugger(
@@ -111,3 +69,45 @@ add_task(async function() {
   assertPausedLocation(dbg);
   assertDebugLine(dbg, 16);
 });
+
+function assertBreakpointExists(dbg, source, line) {
+  const {
+    selectors: { getBreakpoint },
+    getState
+  } = dbg;
+
+  ok(
+    getBreakpoint({ sourceId: source.id, line }),
+    "Breakpoint has correct line"
+  );
+}
+
+async function assertEditorBreakpoint(dbg, line, shouldExist) {
+  const el = await getLineEl(dbg, line);
+  const exists = !!el.querySelector(".new-breakpoint");
+  ok(
+    exists === shouldExist,
+    `Breakpoint ${shouldExist ? "exists" : "does not exist"} on line ${line}`
+  );
+}
+
+async function getLineEl(dbg, line) {
+  let el = await codeMirrorGutterElement(dbg, line);
+  while (el && !el.matches(".CodeMirror-code > div")) {
+    el = el.parentElement;
+  }
+  return el;
+}
+
+async function clickGutter(dbg, line) {
+  const el = await codeMirrorGutterElement(dbg, line);
+  clickDOMElement(dbg, el);
+}
+
+async function waitForBreakpointCount(dbg, count) {
+  const {
+    selectors: { getBreakpointCount },
+    getState
+  } = dbg;
+  await waitForState(dbg, state => getBreakpointCount() == count);
+}
