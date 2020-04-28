@@ -2,7 +2,7 @@
 
 # onNotYetSupportedSectionClicked
 
-`open fun onNotYetSupportedSectionClicked(unsupportedAddons: `[`ArrayList`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-array-list/index.html)`<`[`Addon`](../../mozilla.components.feature.addons/-addon/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/AddonsManagerAdapterDelegate.kt#L32)
+`open fun onNotYetSupportedSectionClicked(unsupportedAddons: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Addon`](../../mozilla.components.feature.addons/-addon/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/ui/AddonsManagerAdapterDelegate.kt#L32)
 
 Handler for when the not yet supported section is clicked.
 

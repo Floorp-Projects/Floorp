@@ -12,7 +12,7 @@ Provides methods for handling the add-on items in the add-on manager.
 |---|---|
 | [onAddonItemClicked](on-addon-item-clicked.md) | `open fun onAddonItemClicked(addon: `[`Addon`](../../mozilla.components.feature.addons/-addon/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Handler for when an add-on item is clicked. |
 | [onInstallAddonButtonClicked](on-install-addon-button-clicked.md) | `open fun onInstallAddonButtonClicked(addon: `[`Addon`](../../mozilla.components.feature.addons/-addon/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Handler for when the install add-on button is clicked. |
-| [onNotYetSupportedSectionClicked](on-not-yet-supported-section-clicked.md) | `open fun onNotYetSupportedSectionClicked(unsupportedAddons: `[`ArrayList`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-array-list/index.html)`<`[`Addon`](../../mozilla.components.feature.addons/-addon/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Handler for when the not yet supported section is clicked. |
+| [onNotYetSupportedSectionClicked](on-not-yet-supported-section-clicked.md) | `open fun onNotYetSupportedSectionClicked(unsupportedAddons: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Addon`](../../mozilla.components.feature.addons/-addon/index.md)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Handler for when the not yet supported section is clicked. |
 
 ### Extension Functions
 
