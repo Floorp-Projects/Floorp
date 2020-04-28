@@ -5479,23 +5479,6 @@ class LGuardReceiverPolymorphic : public LInstructionHelper<1, 1, 1> {
   }
 };
 
-// Ensure that a value is numeric, possibly via a VM call-out that invokes
-// valueOf().
-class LToNumeric : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 0> {
- public:
-  LIR_HEADER(ToNumeric)
-
-  explicit LToNumeric(const LBoxAllocation& input)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(Input, input);
-  }
-
-  static const size_t Input = 0;
-
-  const MToNumeric* mir() const { return mir_->toToNumeric(); }
-  const LDefinition* temp() { return getTemp(0); }
-};
-
 // Convert a Boolean to an Int64, following ToBigInt.
 class LBooleanToInt64 : public LInstructionHelper<INT64_PIECES, 1, 0> {
  public:
