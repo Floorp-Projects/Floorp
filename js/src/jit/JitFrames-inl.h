@@ -16,13 +16,9 @@
 namespace js {
 namespace jit {
 
-inline void SafepointIndex::resolve() {
-  MOZ_ASSERT(!resolved);
-  safepointOffset_ = safepoint_->offset();
-#ifdef DEBUG
-  resolved = true;
-#endif
-}
+inline SafepointIndex::SafepointIndex(const CodegenSafepointIndex& csi)
+    : displacement_(csi.displacement()),
+      safepointOffset_(csi.safepoint()->offset()) {}
 
 inline BaselineFrame* GetTopBaselineFrame(JSContext* cx) {
   JSJitFrameIter frame(cx->activation()->asJit());

@@ -90,44 +90,36 @@ JSScript* MaybeForwardedScriptFromCalleeToken(CalleeToken token);
 // C++ code will always begin iterating from the topmost exit frame.
 
 class LSafepoint;
+class CodegenSafepointIndex;
 
 // Two-tuple that lets you look up the safepoint entry given the
 // displacement of a call instruction within the JIT code.
 class SafepointIndex {
   // The displacement is the distance from the first byte of the JIT'd code
   // to the return address (of the call that the safepoint was generated for).
-  uint32_t displacement_;
+  uint32_t displacement_ = 0;
 
-  union {
-    LSafepoint* safepoint_;
-
-    // Offset to the start of the encoded safepoint in the safepoint stream.
-    uint32_t safepointOffset_;
-  };
-
-#ifdef DEBUG
-  bool resolved;
-#endif
+  // Offset within the safepoint buffer.
+  uint32_t safepointOffset_ = 0;
 
  public:
-  SafepointIndex(uint32_t displacement, LSafepoint* safepoint)
-      : displacement_(displacement),
-        safepoint_(safepoint)
-#ifdef DEBUG
-        ,
-        resolved(false)
-#endif
-  {
-  }
+  inline explicit SafepointIndex(const CodegenSafepointIndex& csi);
 
-  void resolve();
-
-  LSafepoint* safepoint() {
-    MOZ_ASSERT(!resolved);
-    return safepoint_;
-  }
   uint32_t displacement() const { return displacement_; }
   uint32_t safepointOffset() const { return safepointOffset_; }
+};
+
+class CodegenSafepointIndex {
+  uint32_t displacement_ = 0;
+
+  LSafepoint* safepoint_ = nullptr;
+
+ public:
+  CodegenSafepointIndex(uint32_t displacement, LSafepoint* safepoint)
+      : displacement_(displacement), safepoint_(safepoint) {}
+
+  LSafepoint* safepoint() const { return safepoint_; }
+  uint32_t displacement() const { return displacement_; }
   void adjustDisplacement(uint32_t offset) {
     MOZ_ASSERT(offset >= displacement_);
     displacement_ = offset;
