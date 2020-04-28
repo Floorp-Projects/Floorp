@@ -8,12 +8,13 @@ edition = "2018"
 [dependencies]
 atomic_refcell = "0.1"
 cstr = "0.1"
+interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "c17198fa5a88295f2cca722586c539280e10201c" }
 log = "0.4"
-golden_gate_traits = { path = "../golden_gate_traits" }
 moz_task = { path = "../../../xpcom/rust/moz_task" }
 nserror = { path = "../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../xpcom/rust/nsstring" }
 storage_variant = { path = "../../../storage/variant" }
+sync15-traits = { git = "https://github.com/mozilla/application-services", rev = "c17198fa5a88295f2cca722586c539280e10201c" }
 xpcom = { path = "../../../xpcom/rust/xpcom" }
 
 [dependencies.thin-vec]
