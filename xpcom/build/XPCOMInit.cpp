@@ -148,6 +148,7 @@ nsresult nsLocalFileConstructor(nsISupports* aOuter, const nsIID& aIID,
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = nullptr;
 bool gXPCOMShuttingDown = false;
 bool gXPCOMThreadsShutDown = false;
+bool gXPCOMMainThreadEventsAreDoomed = false;
 char16_t* gGREBinPath = nullptr;
 
 static NS_DEFINE_CID(kINIParserFactoryCID, NS_INIPARSERFACTORY_CID);
@@ -652,7 +653,10 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
     // the main thread) have exited.
     nsThreadManager::get().Shutdown();
 
+    // Process our last round of events, and then mark that we've finished main
+    // thread event processing.
     NS_ProcessPendingEvents(thread);
+    gXPCOMMainThreadEventsAreDoomed = true;
 
     BackgroundHangMonitor().NotifyActivity();
 
