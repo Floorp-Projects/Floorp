@@ -36,9 +36,7 @@ class HTMLButtonElement final : public nsGenericHTMLFormElementWithState,
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLButtonElement, button)
 
   // Element
-  virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override {
-    return true;
-  }
+  virtual bool IsInteractiveHTMLContent() const override { return true; }
 
   // overriden nsIFormControl methods
   NS_IMETHOD Reset() override;

@@ -25,7 +25,7 @@ class HTMLAudioElement final : public HTMLMediaElement {
   explicit HTMLAudioElement(already_AddRefed<NodeInfo>&& aNodeInfo);
 
   // Element
-  virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override;
+  virtual bool IsInteractiveHTMLContent() const override;
 
   // nsIDOMHTMLMediaElement
   using HTMLMediaElement::GetPaused;

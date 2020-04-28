@@ -29,9 +29,7 @@ class HTMLLabelElement final : public nsGenericHTMLElement {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLLabelElement, nsGenericHTMLElement)
 
   // Element
-  virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override {
-    return true;
-  }
+  virtual bool IsInteractiveHTMLContent() const override { return true; }
 
   HTMLFormElement* GetForm() const;
   void GetHtmlFor(nsString& aHtmlFor) {
