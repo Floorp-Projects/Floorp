@@ -236,6 +236,18 @@ const clearPluginData = options => {
   return Sanitizer.items.pluginData.clear(makeRange(options));
 };
 
+const clearServiceWorkers = options => {
+  if (!options.hostnames) {
+    return ServiceWorkerCleanUp.removeAll();
+  }
+
+  return Promise.all(
+    options.hostnames.map(host => {
+      return ServiceWorkerCleanUp.removeFromHost(host);
+    })
+  );
+};
+
 const doRemoval = (options, dataToRemove, extension) => {
   if (
     options.originTypes &&
@@ -280,7 +292,7 @@ const doRemoval = (options, dataToRemove, extension) => {
           removalPromises.push(clearPluginData(options));
           break;
         case "serviceWorkers":
-          removalPromises.push(ServiceWorkerCleanUp.removeAll());
+          removalPromises.push(clearServiceWorkers(options));
           break;
         default:
           invalidDataTypes.push(dataType);

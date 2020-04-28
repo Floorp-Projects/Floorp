@@ -23,7 +23,10 @@ add_task(async function testServiceWorkers() {
     });
 
     browser.test.onMessage.addListener(async msg => {
-      await browser.browsingData.remove({}, { serviceWorkers: true });
+      await browser.browsingData.remove(
+        { hostnames: msg.hostnames },
+        { serviceWorkers: true }
+      );
       browser.test.sendMessage("serviceWorkersRemoved");
     });
 
@@ -76,25 +79,39 @@ add_task(async function testServiceWorkers() {
   await extension.awaitMessage("serviceWorkerRegistered");
   await extension.awaitMessage("serviceWorkerRegistered");
 
-  let serviceWorkers = [];
   // Even though we await the registrations by waiting for the messages,
   // sometimes the serviceWorkers are still not registered at this point.
-  while (serviceWorkers.length < 2) {
-    serviceWorkers = serviceWorkerManager.getAllRegistrations();
-    await new Promise(resolve => setTimeout(resolve, 1));
+  async function getRegistrations(count) {
+    await BrowserTestUtils.waitForCondition(
+      () => serviceWorkerManager.getAllRegistrations().length === count,
+      `Wait for ${count} service workers to be registered`
+    );
+    return serviceWorkerManager.getAllRegistrations();
   }
+
+  let serviceWorkers = await getRegistrations(2);
   is(serviceWorkers.length, 2, "ServiceWorkers have been registered.");
 
-  extension.sendMessage();
-
+  extension.sendMessage({ hostnames: ["example.com"] });
   await extension.awaitMessage("serviceWorkersRemoved");
 
-  // The serviceWorkers and not necessarily removed immediately.
-  while (serviceWorkers.length) {
-    serviceWorkers = serviceWorkerManager.getAllRegistrations();
-    await new Promise(resolve => setTimeout(resolve, 1));
-  }
-  is(serviceWorkers.length, 0, "ServiceWorkers have been removed.");
+  serviceWorkers = await getRegistrations(1);
+  is(
+    serviceWorkers.length,
+    1,
+    "ServiceWorkers for example.com have been removed."
+  );
+  let host = serviceWorkers.queryElementAt(
+    0,
+    Ci.nsIServiceWorkerRegistrationInfo
+  ).principal.URI.host;
+  is(host, "mochi.test", "ServiceWorkers for example.com have been removed.");
+
+  extension.sendMessage({});
+  await extension.awaitMessage("serviceWorkersRemoved");
+
+  serviceWorkers = await getRegistrations(0);
+  is(serviceWorkers.length, 0, "All ServiceWorkers have been removed.");
 
   await extension.unload();
   await BrowserTestUtils.closeWindow(win);
