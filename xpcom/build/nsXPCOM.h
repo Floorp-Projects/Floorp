@@ -32,6 +32,7 @@ DECL_CLASS(nsIDebug2);
 #ifdef __cplusplus
 extern bool gXPCOMShuttingDown;
 extern bool gXPCOMThreadsShutDown;
+extern bool gXPCOMMainThreadEventsAreDoomed;
 #endif
 
 #ifdef __cplusplus
