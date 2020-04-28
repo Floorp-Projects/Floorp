@@ -357,9 +357,6 @@ static const float NonIncrementalFactor = 1.12f;
 /* JSGC_ZONE_ALLOC_DELAY_KB */
 static const size_t ZoneAllocDelayBytes = 1024 * 1024;
 
-/* JSGC_DYNAMIC_HEAP_GROWTH */
-static const bool DynamicHeapGrowthEnabled = false;
-
 /* JSGC_HIGH_FREQUENCY_TIME_LIMIT */
 static const auto HighFrequencyThreshold = 1;  // in seconds
 
@@ -377,9 +374,6 @@ static const float HighFrequencyHeapGrowthMin = 1.5f;
 
 /* JSGC_LOW_FREQUENCY_HEAP_GROWTH */
 static const float LowFrequencyHeapGrowth = 1.5f;
-
-/* JSGC_DYNAMIC_MARK_SLICE */
-static const bool DynamicMarkSliceEnabled = false;
 
 /* JSGC_MIN_EMPTY_CHUNK_COUNT */
 static const uint32_t MinEmptyChunkCount = 1;
@@ -468,14 +462,6 @@ class GCSchedulingTunables {
   UnprotectedData<size_t> zoneAllocDelayBytes_;
 
   /*
-   * JSGC_DYNAMIC_HEAP_GROWTH
-   *
-   * Totally disables |highFrequencyGC|, the HeapGrowthFactor, and other
-   * tunables that make GC non-deterministic.
-   */
-  MainThreadOrGCTaskData<bool> dynamicHeapGrowthEnabled_;
-
-  /*
    * JSGC_HIGH_FREQUENCY_TIME_LIMIT
    *
    * We enter high-frequency mode if we GC a twice within this many
@@ -504,13 +490,6 @@ class GCSchedulingTunables {
    * "HeapGrowthFactor".
    */
   MainThreadOrGCTaskData<float> lowFrequencyHeapGrowth_;
-
-  /*
-   * JSGC_DYNAMIC_MARK_SLICE
-   *
-   * Doubles the length of IGC slices when in the |highFrequencyGC| mode.
-   */
-  MainThreadData<bool> dynamicMarkSliceEnabled_;
 
   /*
    * JSGC_MIN_EMPTY_CHUNK_COUNT
@@ -581,7 +560,6 @@ class GCSchedulingTunables {
   size_t gcZoneAllocThresholdBase() const { return gcZoneAllocThresholdBase_; }
   double nonIncrementalFactor() const { return nonIncrementalFactor_; }
   size_t zoneAllocDelayBytes() const { return zoneAllocDelayBytes_; }
-  bool isDynamicHeapGrowthEnabled() const { return dynamicHeapGrowthEnabled_; }
   const mozilla::TimeDuration& highFrequencyThreshold() const {
     return highFrequencyThreshold_;
   }
@@ -598,7 +576,6 @@ class GCSchedulingTunables {
     return highFrequencyHeapGrowthMin_;
   }
   double lowFrequencyHeapGrowth() const { return lowFrequencyHeapGrowth_; }
-  bool isDynamicMarkSliceEnabled() const { return dynamicMarkSliceEnabled_; }
   unsigned minEmptyChunkCount(const AutoLockGC&) const {
     return minEmptyChunkCount_;
   }
@@ -658,9 +635,11 @@ class GCSchedulingState {
   void updateHighFrequencyMode(const mozilla::TimeStamp& lastGCTime,
                                const mozilla::TimeStamp& currentTime,
                                const GCSchedulingTunables& tunables) {
+#ifndef JS_MORE_DETERMINISTIC
     inHighFrequencyGCMode_ =
-        tunables.isDynamicHeapGrowthEnabled() && !lastGCTime.IsNull() &&
+        !lastGCTime.IsNull() &&
         lastGCTime + tunables.highFrequencyThreshold() > currentTime;
+#endif
   }
 };
 
