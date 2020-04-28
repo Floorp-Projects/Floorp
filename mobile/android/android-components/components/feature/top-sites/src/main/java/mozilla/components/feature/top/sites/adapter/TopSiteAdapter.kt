@@ -19,6 +19,9 @@ internal class TopSiteAdapter(
     override val url: String
         get() = entity.url
 
+    override val isDefault: Boolean
+        get() = entity.isDefault
+
     override fun equals(other: Any?): Boolean {
         if (other !is TopSiteAdapter) {
             return false

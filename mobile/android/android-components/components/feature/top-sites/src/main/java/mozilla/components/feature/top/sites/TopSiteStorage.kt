@@ -22,11 +22,17 @@ class TopSiteStorage(
 
     /**
      * Adds a new [TopSite].
+     *
+     * @param title The title string.
+     * @param url The URL string.
+     * @param isDefault Whether or not the top site added should be a default top site. This is
+     * used to identify top sites that are added by the application.
      */
-    fun addTopSite(title: String, url: String) {
+    fun addTopSite(title: String, url: String, isDefault: Boolean = false) {
         TopSiteEntity(
             title = title,
             url = url,
+            isDefault = isDefault,
             createdAt = System.currentTimeMillis()
         ).also { entity ->
             entity.id = database.value.topSiteDao().insertTopSite(entity)

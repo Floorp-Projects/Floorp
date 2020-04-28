@@ -22,4 +22,9 @@ interface TopSite {
      * The URL of the top site.
      */
     val url: String
+
+    /**
+     * Whether or not the top site is a default top site (added as a default by the application).
+     */
+    val isDefault: Boolean
 }

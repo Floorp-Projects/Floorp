@@ -271,7 +271,7 @@ class FennecMigratorTest {
         assertTrue(historyStore.getVisited().isEmpty())
         assertTrue(bookmarksStore.searchBookmarks("mozilla").isEmpty())
 
-        verify(topSiteStorage, never()).addTopSite(any(), any())
+        verify(topSiteStorage, never()).addTopSite(any(), any(), anyBoolean())
 
         // Can run once.
         with(migrator.migrateAsync(mock()).await()) {
@@ -299,7 +299,7 @@ class FennecMigratorTest {
 
         assertEquals(5, historyStore.getVisited().size)
         assertEquals(2, bookmarksStore.searchBookmarks("mozilla").size)
-        verify(topSiteStorage, times(2)).addTopSite(any(), any())
+        verify(topSiteStorage, times(2)).addTopSite(any(), any(), anyBoolean())
         verify(topSiteStorage).addTopSite(
             "Featured extensions for Android – Add-ons for Firefox Android (en-US)",
             "https://addons.mozilla.org/en-US/android/collections/4757633/mob/?page=1&collection_sort=-popularity"
