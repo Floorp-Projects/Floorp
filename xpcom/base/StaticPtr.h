@@ -15,7 +15,7 @@
 namespace mozilla {
 
 /**
- * StaticAutoPtr and StaticRefPtr are like nsAutoPtr and nsRefPtr, except they
+ * StaticAutoPtr and StaticRefPtr are like UniquePtr and RefPtr, except they
  * are suitable for use as global variables.
  *
  * In particular, a global instance of Static{Auto,Ref}Ptr doesn't cause the

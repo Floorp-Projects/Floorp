@@ -15,7 +15,7 @@
 namespace mozilla {
 
 /**
- * StaticLocalAutoPtr and StaticLocalRefPtr are like nsAutoPtr and nsRefPtr,
+ * StaticLocalAutoPtr and StaticLocalRefPtr are like UniquePtr and RefPtr,
  * except they are suitable for use as "magic static" local variables -- that
  * is, they are able to take advantage of C++11's guarantee of thread safety
  * during initialization by atomically constructing both the smart pointer
