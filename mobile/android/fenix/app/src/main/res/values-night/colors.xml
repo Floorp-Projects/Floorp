@@ -35,6 +35,13 @@
     <color name="sync_disconnected_icon_fill_normal_theme">@color/sync_disconnected_icon_fill_dark_theme</color>
     <color name="sync_disconnected_background_normal_theme">@color/sync_disconnected_background_dark_theme</color>
     <color name="swipe_delete_background_normal_theme">@color/swipe_delete_background_dark_theme</color>
+    <color name="onboarding_card_background_start_gradient_normal_theme">@color/onboarding_card_background_start_gradient_dark_theme</color>
+    <color name="onboarding_card_background_end_gradient_normal_theme">@color/onboarding_card_background_end_gradient_dark_theme</color>
+    <color name="onboarding_card_button_normal_theme">@color/onboarding_card_button_dark_theme</color>
+    <color name="onboarding_card_finish_button_normal_theme">@color/onboarding_card_finish_button_dark_theme</color>
+    <color name="onboarding_finish_button_text_normal_theme">@color/primary_text_dark_theme</color>
+    <color name="onboarding_illustration_selected_normal_theme">@color/onboarding_illustration_selected_dark_theme</color>
+    <color name="onboarding_illustration_deselected_normal_theme">@color/onboarding_illustration_deselected_dark_theme</color>
 
     <!-- Tab tray -->
     <color name="tab_tray_item_text_normal_theme">@color/tab_tray_item_text_dark_theme</color>
@@ -52,7 +59,4 @@
 
     <!-- Reader View colors -->
     <color name="mozac_feature_readerview_text_color">@color/primary_text_dark_theme</color>
-
-    <!-- Onboarding colors -->
-    <color name="onboarding_card_icon">@color/accent_dark_theme</color>
 </resources>

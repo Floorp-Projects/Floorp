@@ -66,6 +66,13 @@
         <item name="syncDisconnected">@color/sync_disconnected_icon_fill_normal_theme</item>
         <item name="syncDisconnectedBackground">@color/sync_disconnected_background_normal_theme</item>
         <item name="swipeDeleteBackground">@color/swipe_delete_background_normal_theme</item>
+        <item name="onboardingDarkGradientStartBackground">@color/onboarding_card_background_start_gradient_normal_theme</item>
+        <item name="onboardingDarkGradientEndBackground">@color/onboarding_card_background_end_gradient_normal_theme</item>
+        <item name="onboardingActionButtonBackground">@color/onboarding_card_button_normal_theme</item>
+        <item name="onboardingFinishButtonBackground">@color/onboarding_card_finish_button_normal_theme</item>
+        <item name="onboardingFinishButtonText">@color/onboarding_finish_button_text_normal_theme</item>
+        <item name="onboardingSelected">@color/onboarding_illustration_selected_normal_theme</item>
+        <item name="onboardingDeselected">@color/onboarding_illustration_deselected_normal_theme</item>
 
         <item name="tabTrayItemText">@color/tab_tray_item_text_normal_theme</item>
         <item name="tabTrayItemUrl">@color/tab_tray_item_url_normal_theme</item>
@@ -95,6 +102,10 @@
     <style name="DialogStyleLight" parent="BaseDialogStyle">
         <item name="buttonBarNegativeButtonStyle">@style/DialogButtonStyleLight</item>
         <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyleLight</item>
+    </style>
+
+    <style name="Switch.Colored" parent="Theme.AppCompat">
+        <item name="colorControlActivated">?attr/onboardingSelected</item>
     </style>
 
     <style name="DialogStyleDark" parent="BaseDialogStyle">
@@ -177,6 +188,13 @@
         <item name="syncDisconnected">@color/sync_disconnected_icon_fill_private_theme</item>
         <item name="syncDisconnectedBackground">@color/sync_disconnected_background_private_theme</item>
         <item name="swipeDeleteBackground">@color/swipe_delete_background_private_theme</item>
+        <item name="onboardingDarkGradientStartBackground">@color/onboarding_card_background_start_gradient_private_theme</item>
+        <item name="onboardingDarkGradientEndBackground">@color/onboarding_card_background_end_gradient_private_theme</item>
+        <item name="onboardingActionButtonBackground">@color/onboarding_card_button_private_theme</item>
+        <item name="onboardingFinishButtonBackground">@color/onboarding_card_finish_button_private_theme</item>
+        <item name="onboardingFinishButtonText">@color/onboarding_finish_button_text_private_theme</item>
+        <item name="onboardingSelected">@color/onboarding_illustration_selected_private_theme</item>
+        <item name="onboardingDeselected">@color/onboarding_illustration_deselected_private_theme</item>
 
         <!-- Tab Tray -->
         <item name="tabTrayItemText">@color/tab_tray_item_text_private_theme</item>
@@ -227,7 +245,7 @@
 
     <!-- Ideally we should consolidate this with NeutralButton in the future -->
     <style name="NeutralOnboardingButton" parent="NeutralButton">
-        <item name="backgroundTint">?neutralFaded</item>
+        <item name="backgroundTint">?onboardingActionButtonBackground</item>
         <item name="android:textColor">?primaryText</item>
     </style>
 
@@ -241,6 +259,12 @@
         <item name="iconTint">?contrastText</item>
         <item name="android:textColor">?contrastText</item>
     </style>
+
+    <style name="FinishOnboardingButton" parent="NeutralButton">
+        <item name="backgroundTint">?onboardingFinishButtonBackground</item>
+        <item name="android:textColor">?onboardingFinishButtonText</item>
+    </style>
+
 
     <style name="search_pill" parent="Widget.AppCompat.Button.Borderless">
         <item name="android:layout_width">wrap_content</item>
@@ -404,12 +428,17 @@
 
     <style name="OnboardingCardLight">
         <item name="android:background">@drawable/onboarding_card_background_light</item>
-        <item name="android:padding">16dp</item>
         <item name="android:layout_marginBottom">16dp</item>
+        <item name="android:elevation">5dp</item>
     </style>
 
-    <style name="OnboardingCardDark" parent="OnboardingCardLight">
+    <style name="OnboardingCardLightWithPadding" parent="OnboardingCardLight">
+        <item name="android:padding">16dp</item>
+    </style>
+
+    <style name="OnboardingCardDark" parent="OnboardingCardLightWithPadding">
         <item name="android:background">@drawable/onboarding_card_background_dark</item>
+        <item name="android:elevation">0dp</item>
     </style>
 
     <style name="SearchShortcutsLabelStyle">

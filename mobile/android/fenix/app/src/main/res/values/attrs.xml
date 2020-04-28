@@ -43,6 +43,13 @@
     <attr name="syncDisconnected" format="reference" />
     <attr name="syncDisconnectedBackground" format="reference" />
     <attr name="swipeDeleteBackground" format="reference" />
+    <attr name="onboardingDarkGradientStartBackground" format="reference" />
+    <attr name="onboardingDarkGradientEndBackground" format="reference" />
+    <attr name="onboardingActionButtonBackground" format="reference" />
+    <attr name="onboardingFinishButtonBackground" format="reference" />
+    <attr name="onboardingFinishButtonText" format="reference" />
+    <attr name="onboardingSelected" format="reference"/>
+    <attr name="onboardingDeselected" format="reference"/>
 
     <!-- Tab tray -->
     <attr name="tabTrayItemText" format="reference"/>
