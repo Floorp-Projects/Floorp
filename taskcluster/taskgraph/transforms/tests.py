@@ -147,6 +147,13 @@ def runs_on_central(test):
     return match_run_on_projects('mozilla-central', test['run-on-projects'])
 
 
+def gv_e10s_multi_filter(test):
+    return (
+        get_mobile_project(test) == 'geckoview' and
+        test['e10s']
+    )
+
+
 def fission_filter(test):
     return (
         runs_on_central(test) and
@@ -156,6 +163,18 @@ def fission_filter(test):
 
 
 TEST_VARIANTS = {
+    'geckoview-e10s-multi': {
+        'description': "{description} with e10s-multi enabled",
+        'filterfn': gv_e10s_multi_filter,
+        'suffix': 'e10s-multi',
+        'merge': {
+            'mozharness': {
+                'extra-options': [
+                    '--setpref=dom.ipc.processCount=3',
+                ],
+            },
+        },
+    },
     'fission': {
         'description': "{description} with fission enabled",
         'filterfn': fission_filter,

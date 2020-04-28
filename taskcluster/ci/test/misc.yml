@@ -5,6 +5,7 @@
 geckoview-junit:
     description: "Geckoview junit run"
     suite: geckoview-junit
+    variants: ["geckoview-e10s-multi"]
     treeherder-symbol: gv-junit
     loopback-video: true
     e10s: true
