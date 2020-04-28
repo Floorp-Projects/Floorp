@@ -21,7 +21,7 @@ line_re = re.compile("#\d+: .+\[.+ \+0x[0-9A-Fa-f]+\]")
 fix_stacks = None
 
 
-def fixSymbols(line, jsonMode=False, slowWarning=False, breakpadSymsDir=None, hide_errors=False):
+def fixSymbols(line, jsonMode=False, slowWarning=False, breakpadSymsDir=None):
     global fix_stacks
 
     result = line_re.search(line)
@@ -59,10 +59,7 @@ def fixSymbols(line, jsonMode=False, slowWarning=False, breakpadSymsDir=None, hi
             args.append('-b')
             args.append(breakpadSymsDir + "," + fileid_exe)
 
-        # Sometimes we need to prevent errors from going to stderr.
-        stderr = open(os.devnull) if hide_errors else None
-
-        fix_stacks = Popen(args, stdin=PIPE, stdout=PIPE, stderr=stderr)
+        fix_stacks = Popen(args, stdin=PIPE, stdout=PIPE, stderr=None)
 
         if slowWarning:
             print("Initializing stack-fixing for the first stack frame, this may take a while...")
