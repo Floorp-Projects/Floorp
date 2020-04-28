@@ -2452,14 +2452,9 @@ LayoutDeviceIntPoint BrowserParent::GetChildProcessOffset() {
   // any events we send to the child, and reverse them for any screen
   // coordinates that we retrieve from the child.
 
-  // TODO: Once we take into account transforms here, set viewportType
-  // correctly. For now we use Visual as this means we don't apply
-  // the layout-to-visual transform in TranslateViewToWidget().
-  ViewportType viewportType = ViewportType::Visual;
-
   nsPoint pt = targetFrame->GetOffsetTo(rootFrame);
   return -nsLayoutUtils::TranslateViewToWidget(presContext, rootView, pt,
-                                               viewportType, widget);
+                                               widget);
 }
 
 LayoutDeviceIntPoint BrowserParent::GetClientOffset() {

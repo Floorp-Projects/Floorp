@@ -1186,7 +1186,7 @@ bool nsTypeAheadFind::IsRangeRendered(nsRange* aRange) {
              nsPresContext::CSSPixelsToAppUnits((float)rect->Height()));
     // Append visible frames to frames array.
     nsLayoutUtils::GetFramesForArea(
-        RelativeTo{rootFrame}, r, frames,
+        rootFrame, r, frames,
         {FrameForPointOption::IgnorePaintSuppression,
          FrameForPointOption::IgnoreRootScrollFrame,
          FrameForPointOption::OnlyVisible});

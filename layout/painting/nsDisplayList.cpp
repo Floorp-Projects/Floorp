@@ -34,7 +34,6 @@
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPrefs_layout.h"
-#include "mozilla/ViewportUtils.h"
 #include "nsCSSRendering.h"
 #include "nsCSSRenderingGradients.h"
 #include "nsRegion.h"
@@ -102,7 +101,6 @@
 #include "nsFocusManager.h"
 #include "ClientLayerManager.h"
 #include "mozilla/layers/AnimationHelper.h"
-#include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TreeTraversal.h"
@@ -1228,7 +1226,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mIsInActiveDocShell(false),
       mBuildAsyncZoomContainer(false),
       mContainsBackdropFilter(false),
-      mIsRelativeToLayoutViewport(false),
       mHitTestArea(),
       mHitTestInfo(CompositorHitTestInvisibleToHit) {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
@@ -1451,15 +1448,9 @@ AnimatedGeometryRoot* nsDisplayListBuilder::FindAnimatedGeometryRootFor(
   return FindAnimatedGeometryRootFor(aItem->Frame());
 }
 
-void nsDisplayListBuilder::SetIsRelativeToLayoutViewport() {
-  mIsRelativeToLayoutViewport = true;
-  UpdateShouldBuildAsyncZoomContainer();
-}
-
 void nsDisplayListBuilder::UpdateShouldBuildAsyncZoomContainer() {
   Document* document = mReferenceFrame->PresContext()->Document();
-  mBuildAsyncZoomContainer = !mIsRelativeToLayoutViewport &&
-                             nsLayoutUtils::AllowZoomingForDocument(document);
+  mBuildAsyncZoomContainer = nsLayoutUtils::AllowZoomingForDocument(document);
 }
 
 // Certain prefs may cause display list items to be added or removed when they
@@ -1847,29 +1838,8 @@ void nsDisplayListBuilder::MarkFramesForDisplayList(
     const DisplayItemClipChain* combinedClipChain =
         mClipState.GetCurrentCombinedClipChain(this);
     const ActiveScrolledRoot* asr = mCurrentActiveScrolledRoot;
-    nsRect visibleRect = GetVisibleRect();
-    nsRect dirtyRect = GetDirtyRect();
-
-    // If we are entering content that is fixed to the RCD-RSF, we are
-    // crossing the async zoom container boundary, and need to convert from
-    // visual to layout coordinates.
-    if (ViewportFrame* viewportFrame = do_QueryFrame(aDirtyFrame)) {
-      if (IsForEventDelivery() && ShouldBuildAsyncZoomContainer() &&
-          viewportFrame->PresContext()->IsRootContentDocument()) {
-#ifdef DEBUG
-        for (nsIFrame* f : aFrames) {
-          MOZ_ASSERT(ViewportUtils::IsZoomedContentRoot(f));
-        }
-#endif
-        visibleRect = ViewportUtils::VisualToLayout(visibleRect,
-                                                    viewportFrame->PresShell());
-        dirtyRect = ViewportUtils::VisualToLayout(dirtyRect,
-                                                  viewportFrame->PresShell());
-      }
-    }
-
     OutOfFlowDisplayData* data = new OutOfFlowDisplayData(
-        clipChain, combinedClipChain, asr, visibleRect, dirtyRect);
+        clipChain, combinedClipChain, asr, GetVisibleRect(), GetDirtyRect());
     aDirtyFrame->SetProperty(
         nsDisplayListBuilder::OutOfFlowDisplayDataProperty(), data);
     mFramesWithOOFData.AppendElement(aDirtyFrame);
@@ -2246,8 +2216,8 @@ void nsDisplayListBuilder::AdjustWindowDraggingRegion(nsIFrame* aFrame) {
     // RTL mode - it should be able to exclude itself from the draggable region.
     referenceFrameToRootReferenceFrame =
         ViewAs<LayoutDeviceToLayoutDeviceMatrix4x4>(
-            nsLayoutUtils::GetTransformToAncestor(RelativeTo{referenceFrame},
-                                                  RelativeTo{mReferenceFrame})
+            nsLayoutUtils::GetTransformToAncestor(referenceFrame,
+                                                  mReferenceFrame)
                 .GetMatrix());
     Matrix referenceFrameToRootReferenceFrame2d;
     if (!referenceFrameToRootReferenceFrame.Is2D(
@@ -7178,6 +7148,14 @@ nsDisplayResolution::nsDisplayResolution(nsDisplayListBuilder* aBuilder,
   MOZ_COUNT_CTOR(nsDisplayResolution);
 }
 
+void nsDisplayResolution::HitTest(nsDisplayListBuilder* aBuilder,
+                                  const nsRect& aRect, HitTestState* aState,
+                                  nsTArray<nsIFrame*>* aOutFrames) {
+  PresShell* presShell = mFrame->PresShell();
+  nsRect rect = aRect.RemoveResolution(presShell->GetResolution());
+  mList.HitTest(aBuilder, rect, aState, aOutFrames);
+}
+
 already_AddRefed<Layer> nsDisplayResolution::BuildLayer(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     const ContainerLayerParameters& aContainerParameters) {
@@ -7912,18 +7890,6 @@ nsDisplayAsyncZoom::~nsDisplayAsyncZoom() {
 }
 #endif
 
-void nsDisplayAsyncZoom::HitTest(nsDisplayListBuilder* aBuilder,
-                                 const nsRect& aRect, HitTestState* aState,
-                                 nsTArray<nsIFrame*>* aOutFrames) {
-#ifdef DEBUG
-  nsIScrollableFrame* scrollFrame = do_QueryFrame(mFrame);
-  MOZ_ASSERT(scrollFrame && ViewportUtils::IsZoomedContentRoot(
-                                scrollFrame->GetScrolledFrame()));
-#endif
-  nsRect rect = ViewportUtils::VisualToLayout(aRect, mFrame->PresShell());
-  mList.HitTest(aBuilder, rect, aState, aOutFrames);
-}
-
 already_AddRefed<Layer> nsDisplayAsyncZoom::BuildLayer(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     const ContainerLayerParameters& aContainerParameters) {
@@ -8437,8 +8403,7 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
   nsSize maxSize = Min(relativeLimit, absoluteLimit);
 
   const auto transform = nsLayoutUtils::GetTransformToAncestor(
-      RelativeTo{aFrame},
-      RelativeTo{nsLayoutUtils::GetDisplayRootFrame(aFrame)});
+      aFrame, nsLayoutUtils::GetDisplayRootFrame(aFrame));
   const gfxRect transformedBounds = transform.TransformAndClipBounds(
       gfxRect(overflow.x, overflow.y, overflow.width, overflow.height),
       gfxRect::MaxIntRect());

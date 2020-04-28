@@ -363,7 +363,7 @@ template <typename NodeOrElement>
 static void QueryNodesFromRect(DocumentOrShadowRoot& aRoot, const nsRect& aRect,
                                EnumSet<FrameForPointOption> aOptions,
                                FlushLayout aShouldFlushLayout,
-                               Multiple aMultiple, ViewportType aViewportType,
+                               Multiple aMultiple,
                                nsTArray<RefPtr<NodeOrElement>>& aNodes) {
   static_assert(std::is_same<nsINode, NodeOrElement>::value ||
                     std::is_same<Element, NodeOrElement>::value,
@@ -395,8 +395,7 @@ static void QueryNodesFromRect(DocumentOrShadowRoot& aRoot, const nsRect& aRect,
   aOptions += FrameForPointOption::IgnoreCrossDoc;
 
   AutoTArray<nsIFrame*, 8> frames;
-  nsLayoutUtils::GetFramesForArea({rootFrame, aViewportType}, aRect, frames,
-                                  aOptions);
+  nsLayoutUtils::GetFramesForArea(rootFrame, aRect, frames, aOptions);
 
   for (nsIFrame* frame : frames) {
     nsIContent* content = doc->GetContentInThisDocument(frame);
@@ -440,7 +439,7 @@ template <typename NodeOrElement>
 static void QueryNodesFromPoint(DocumentOrShadowRoot& aRoot, float aX, float aY,
                                 EnumSet<FrameForPointOption> aOptions,
                                 FlushLayout aShouldFlushLayout,
-                                Multiple aMultiple, ViewportType aViewportType,
+                                Multiple aMultiple,
                                 nsTArray<RefPtr<NodeOrElement>>& aNodes) {
   // As per the spec, we return null if either coord is negative.
   if (!aOptions.contains(FrameForPointOption::IgnoreRootScrollFrame) &&
@@ -452,37 +451,35 @@ static void QueryNodesFromPoint(DocumentOrShadowRoot& aRoot, float aX, float aY,
   nscoord y = nsPresContext::CSSPixelsToAppUnits(aY);
   nsPoint pt(x, y);
   QueryNodesFromRect(aRoot, nsRect(pt, nsSize(1, 1)), aOptions,
-                     aShouldFlushLayout, aMultiple, aViewportType, aNodes);
+                     aShouldFlushLayout, aMultiple, aNodes);
 }
 
 }  // namespace
 
 Element* DocumentOrShadowRoot::ElementFromPoint(float aX, float aY) {
-  return ElementFromPointHelper(aX, aY, false, true, ViewportType::Layout);
+  return ElementFromPointHelper(aX, aY, false, true);
 }
 
 void DocumentOrShadowRoot::ElementsFromPoint(
     float aX, float aY, nsTArray<RefPtr<Element>>& aElements) {
   QueryNodesFromPoint(*this, aX, aY, {}, FlushLayout::Yes, Multiple::Yes,
-                      ViewportType::Layout, aElements);
+                      aElements);
 }
 
 void DocumentOrShadowRoot::NodesFromPoint(float aX, float aY,
                                           nsTArray<RefPtr<nsINode>>& aNodes) {
   QueryNodesFromPoint(*this, aX, aY, {}, FlushLayout::Yes, Multiple::Yes,
-                      ViewportType::Layout, aNodes);
+                      aNodes);
 }
 
 nsINode* DocumentOrShadowRoot::NodeFromPoint(float aX, float aY) {
   AutoTArray<RefPtr<nsINode>, 1> nodes;
-  QueryNodesFromPoint(*this, aX, aY, {}, FlushLayout::Yes, Multiple::No,
-                      ViewportType::Layout, nodes);
+  QueryNodesFromPoint(*this, aX, aY, {}, FlushLayout::Yes, Multiple::No, nodes);
   return nodes.SafeElementAt(0);
 }
 
 Element* DocumentOrShadowRoot::ElementFromPointHelper(
-    float aX, float aY, bool aIgnoreRootScrollFrame, bool aFlushLayout,
-    ViewportType aViewportType) {
+    float aX, float aY, bool aIgnoreRootScrollFrame, bool aFlushLayout) {
   EnumSet<FrameForPointOption> options;
   if (aIgnoreRootScrollFrame) {
     options += FrameForPointOption::IgnoreRootScrollFrame;
@@ -491,8 +488,7 @@ Element* DocumentOrShadowRoot::ElementFromPointHelper(
   auto flush = aFlushLayout ? FlushLayout::Yes : FlushLayout::No;
 
   AutoTArray<RefPtr<Element>, 1> elements;
-  QueryNodesFromPoint(*this, aX, aY, options, flush, Multiple::No,
-                      aViewportType, elements);
+  QueryNodesFromPoint(*this, aX, aY, options, flush, Multiple::No, elements);
   return elements.SafeElementAt(0);
 }
 
@@ -524,8 +520,7 @@ void DocumentOrShadowRoot::NodesFromRect(float aX, float aY, float aTopSize,
   }
 
   auto flush = aFlushLayout ? FlushLayout::Yes : FlushLayout::No;
-  QueryNodesFromRect(*this, rect, options, flush, Multiple::Yes,
-                     ViewportType::Layout, aReturn);
+  QueryNodesFromRect(*this, rect, options, flush, Multiple::Yes, aReturn);
 }
 
 Element* DocumentOrShadowRoot::AddIDTargetObserver(nsAtom* aID,

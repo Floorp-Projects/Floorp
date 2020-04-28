@@ -115,7 +115,6 @@
 #include "mozilla/TextControlState.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
-#include "mozilla/ViewportUtils.h"
 #include "nsArrayUtils.h"
 #include "nsAString.h"
 #include "nsAttrName.h"
@@ -7866,11 +7865,11 @@ int16_t nsContentUtils::GetButtonsFlagForButton(int32_t aButton) {
 LayoutDeviceIntPoint nsContentUtils::ToWidgetPoint(
     const CSSPoint& aPoint, const nsPoint& aOffset,
     nsPresContext* aPresContext) {
-  nsPoint layoutRelative = CSSPoint::ToAppUnits(aPoint) + aOffset;
-  nsPoint visualRelative =
-      ViewportUtils::LayoutToVisual(layoutRelative, aPresContext->PresShell());
   return LayoutDeviceIntPoint::FromAppUnitsRounded(
-      visualRelative, aPresContext->AppUnitsPerDevPixel());
+      (CSSPoint::ToAppUnits(aPoint) + aOffset)
+          .ApplyResolution(nsLayoutUtils::GetCurrentAPZResolutionScale(
+              aPresContext->PresShell())),
+      aPresContext->AppUnitsPerDevPixel());
 }
 
 nsView* nsContentUtils::GetViewToDispatchEvent(nsPresContext* aPresContext,

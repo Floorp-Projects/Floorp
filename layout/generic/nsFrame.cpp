@@ -27,7 +27,6 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/ToString.h"
-#include "mozilla/ViewportUtils.h"
 
 #include "nsCOMPtr.h"
 #include "nsFlexContainerFrame.h"
@@ -4735,7 +4734,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
         // coordinate stuff is the fix for bug #55921
         if ((mRect - GetPosition())
                 .Contains(nsLayoutUtils::GetEventCoordinatesRelativeTo(
-                    mouseEvent, RelativeTo{this}))) {
+                    mouseEvent, this))) {
           return NS_OK;
         }
       }
@@ -4796,8 +4795,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
     return HandleMultiplePress(aPresContext, mouseEvent, aEventStatus, control);
   }
 
-  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mouseEvent,
-                                                            RelativeTo{this});
+  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mouseEvent, this);
   ContentOffsets offsets = GetContentOffsetsFromPoint(pt, SKIP_HIDDEN);
 
   if (!offsets.content) return NS_ERROR_FAILURE;
@@ -4978,8 +4976,8 @@ nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  nsPoint relPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(
-      mouseEvent, RelativeTo{this});
+  nsPoint relPoint =
+      nsLayoutUtils::GetEventCoordinatesRelativeTo(mouseEvent, this);
   return SelectByTypeAtPoint(aPresContext, relPoint, beginAmount, endAmount,
                              (aControlHeld ? SELECT_ACCUMULATE : 0));
 }
@@ -5092,8 +5090,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
       return result;
     }
   } else {
-    nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mouseEvent,
-                                                              RelativeTo{this});
+    nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mouseEvent, this);
     frameselection->HandleDrag(this, pt);
   }
 
@@ -5111,8 +5108,8 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   if (scrollFrame) {
     nsIFrame* capturingFrame = scrollFrame->GetScrolledFrame();
     if (capturingFrame) {
-      nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(
-          mouseEvent, RelativeTo{capturingFrame});
+      nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mouseEvent,
+                                                                capturingFrame);
       frameselection->StartAutoScrollTimer(capturingFrame, pt, 30);
     }
   }
@@ -5216,8 +5213,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
       // Place the caret before continuing!
 
       if (frameselection->MouseDownRecorded()) {
-        nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(
-            aEvent, RelativeTo{this});
+        nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
         offsets = GetContentOffsetsFromPoint(pt, SKIP_HIDDEN);
         handleTableSelection = false;
       } else {
@@ -5691,8 +5687,8 @@ nsIFrame::ContentOffsets nsIFrame::GetContentOffsetsFromPoint(
   nsPoint pt;
   if (closest.frame != this) {
     if (nsSVGUtils::IsInSVGTextSubtree(closest.frame)) {
-      pt = nsLayoutUtils::TransformAncestorPointToFrame(
-          RelativeTo{closest.frame}, aPoint, RelativeTo{this});
+      pt = nsLayoutUtils::TransformAncestorPointToFrame(closest.frame, aPoint,
+                                                        this);
     } else {
       pt = aPoint - closest.frame->GetOffsetTo(this);
     }
@@ -7248,8 +7244,7 @@ nsIWidget* nsIFrame::GetNearestWidget(nsPoint& aOffset) const {
   return widget;
 }
 
-Matrix4x4Flagged nsIFrame::GetTransformMatrix(ViewportType aViewportType,
-                                              RelativeTo aStopAtAncestor,
+Matrix4x4Flagged nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
                                               nsIFrame** aOutAncestor,
                                               uint32_t aFlags) const {
   MOZ_ASSERT(aOutAncestor, "Need a place to put the ancestor!");
@@ -7258,53 +7253,20 @@ Matrix4x4Flagged nsIFrame::GetTransformMatrix(ViewportType aViewportType,
    * transform/translate matrix that will apply our current transform, then
    * shift us to our parent.
    */
-  bool isTransformed = IsTransformed();
-  const nsIFrame* zoomedContentRoot = nullptr;
-  if (aStopAtAncestor.mViewportType == ViewportType::Visual) {
-    zoomedContentRoot = ViewportUtils::IsZoomedContentRoot(this);
-    if (zoomedContentRoot) {
-      MOZ_ASSERT(aViewportType != ViewportType::Visual);
-    }
-  }
-
-  if (isTransformed || zoomedContentRoot) {
-    Matrix4x4 result;
+  if (IsTransformed()) {
+    /* Compute the delta to the parent, which we need because we are converting
+     * coordinates to our parent.
+     */
+    NS_ASSERTION(nsLayoutUtils::GetCrossDocParentFrame(this),
+                 "Cannot transform the viewport frame!");
     int32_t scaleFactor =
         ((aFlags & IN_CSS_UNITS) ? AppUnitsPerCSSPixel()
                                  : PresContext()->AppUnitsPerDevPixel());
 
-    /* Compute the delta to the parent, which we need because we are converting
-     * coordinates to our parent.
-     */
-    if (isTransformed) {
-      NS_ASSERTION(nsLayoutUtils::GetCrossDocParentFrame(this),
-                   "Cannot transform the viewport frame!");
-
-      result = result * nsDisplayTransform::GetResultingTransformMatrix(
-                            this, nsPoint(0, 0), scaleFactor,
-                            nsDisplayTransform::INCLUDE_PERSPECTIVE |
-                                nsDisplayTransform::OFFSET_BY_ORIGIN);
-    }
-
-    if (zoomedContentRoot) {
-      Matrix4x4 layoutToVisual;
-      ScrollableLayerGuid::ViewID targetScrollId =
-          nsLayoutUtils::FindOrCreateIDFor(zoomedContentRoot->GetContent());
-      if (aFlags & nsIFrame::IN_CSS_UNITS) {
-        layoutToVisual =
-            ViewportUtils::GetVisualToLayoutTransform(targetScrollId)
-                .Inverse()
-                .ToUnknownMatrix();
-      } else {
-        layoutToVisual =
-            ViewportUtils::GetVisualToLayoutTransform<LayoutDevicePixel>(
-                targetScrollId)
-                .Inverse()
-                .ToUnknownMatrix();
-      }
-      result = result * layoutToVisual;
-    }
-
+    Matrix4x4 result = nsDisplayTransform::GetResultingTransformMatrix(
+        this, nsPoint(0, 0), scaleFactor,
+        nsDisplayTransform::INCLUDE_PERSPECTIVE |
+            nsDisplayTransform::OFFSET_BY_ORIGIN);
     *aOutAncestor = nsLayoutUtils::GetCrossDocParentFrame(this);
     nsPoint delta = GetOffsetToCrossDoc(*aOutAncestor);
     /* Combine the raw transform with a translation to our parent. */
@@ -7341,8 +7303,7 @@ Matrix4x4Flagged nsIFrame::GetTransformMatrix(ViewportType aViewportType,
 
         *aOutAncestor = docRootFrame;
         Matrix4x4 docRootTransformToTop =
-            nsLayoutUtils::GetTransformToAncestor(RelativeTo{docRootFrame},
-                                                  RelativeTo{nullptr})
+            nsLayoutUtils::GetTransformToAncestor(docRootFrame, nullptr)
                 .GetMatrix();
         if (docRootTransformToTop.IsSingular()) {
           NS_WARNING(
@@ -7370,16 +7331,12 @@ Matrix4x4Flagged nsIFrame::GetTransformMatrix(ViewportType aViewportType,
 
   /* Keep iterating while the frame can't possibly be transformed. */
   const nsIFrame* current = this;
-  auto shouldStopAt = [](const nsIFrame* aCurrent, nsIFrame* aAncestor,
-                         uint32_t aFlags) {
-    return aAncestor->IsTransformed() || nsLayoutUtils::IsPopup(aAncestor) ||
-           ViewportUtils::IsZoomedContentRoot(aAncestor) ||
-           ((aFlags & STOP_AT_STACKING_CONTEXT_AND_DISPLAY_PORT) &&
-            (aAncestor->IsStackingContext() ||
-             nsLayoutUtils::FrameHasDisplayPort(aAncestor, aCurrent)));
-  };
-  while (*aOutAncestor != aStopAtAncestor.mFrame &&
-         !shouldStopAt(current, *aOutAncestor, aFlags)) {
+  while (!(*aOutAncestor)->IsTransformed() &&
+         !nsLayoutUtils::IsPopup(*aOutAncestor) &&
+         *aOutAncestor != aStopAtAncestor &&
+         (!(aFlags & STOP_AT_STACKING_CONTEXT_AND_DISPLAY_PORT) ||
+          (!(*aOutAncestor)->IsStackingContext() &&
+           !nsLayoutUtils::FrameHasDisplayPort(*aOutAncestor, current)))) {
     /* If no parent, stop iterating.  Otherwise, update the ancestor. */
     nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(*aOutAncestor);
     if (!parent) break;

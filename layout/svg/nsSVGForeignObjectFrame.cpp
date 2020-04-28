@@ -308,7 +308,7 @@ nsIFrame* nsSVGForeignObjectFrame::GetFrameForPoint(const gfxPoint& aPoint) {
   gfxPoint pt = (aPoint + gfxPoint(x, y)) * AppUnitsPerCSSPixel();
   nsPoint point = nsPoint(NSToIntRound(pt.x), NSToIntRound(pt.y));
 
-  return nsLayoutUtils::GetFrameForPoint(RelativeTo{kid}, point);
+  return nsLayoutUtils::GetFrameForPoint(kid, point);
 }
 
 void nsSVGForeignObjectFrame::ReflowSVG() {

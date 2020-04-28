@@ -466,8 +466,7 @@ nsPoint nsComboboxControlFrame::GetCSSTransformTranslation() {
   Matrix transform;
   while (frame) {
     nsIFrame* parent;
-    Matrix4x4Flagged ctm = frame->GetTransformMatrix(
-        ViewportType::Layout, RelativeTo{nullptr}, &parent);
+    Matrix4x4Flagged ctm = frame->GetTransformMatrix(nullptr, &parent);
     Matrix matrix;
     if (ctm.Is2D(&matrix)) {
       transform = transform * matrix;

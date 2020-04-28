@@ -585,10 +585,6 @@ class nsDisplayListBuilder {
    * Get the scrollframe to ignore, if any.
    */
   nsIFrame* GetIgnoreScrollFrame() { return mIgnoreScrollFrame; }
-  void SetIsRelativeToLayoutViewport();
-  bool IsRelativeToLayoutViewport() const {
-    return mIsRelativeToLayoutViewport;
-  }
   /**
    * Get the ViewID of the nearest scrolling ancestor frame.
    */
@@ -1521,12 +1517,6 @@ class nsDisplayListBuilder {
     const DisplayItemClipChain*
         mCombinedClipChain;  // only necessary for the special case of top layer
     const ActiveScrolledRoot* mContainingBlockActiveScrolledRoot;
-
-    // If this OutOfFlowDisplayData is associated with the ViewportFrame
-    // of a document that has a resolution (creating separate visual and
-    // layout viewports with their own coordinate spaces), these rects
-    // are in layout coordinates. Similarly, GetVisibleRectForFrame() in
-    // such a case returns a quantity in layout coordinates.
     nsRect mVisibleRect;
     nsRect mDirtyRect;
 
@@ -2034,7 +2024,6 @@ class nsDisplayListBuilder {
   bool mIsInActiveDocShell;
   bool mBuildAsyncZoomContainer;
   bool mContainsBackdropFilter;
-  bool mIsRelativeToLayoutViewport;
 
   nsRect mHitTestArea;
   CompositorHitTestInfo mHitTestInfo;
@@ -6186,6 +6175,8 @@ class nsDisplayResolution : public nsDisplaySubDocument {
 
   NS_DISPLAY_DECL_NAME("Resolution", TYPE_RESOLUTION)
 
+  void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+               HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) override;
   already_AddRefed<Layer> BuildLayer(
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,
       const ContainerLayerParameters& aContainerParameters) override;
@@ -6513,12 +6504,10 @@ class nsDisplayAsyncZoom : public nsDisplayOwnLayer {
 
   NS_DISPLAY_DECL_NAME("AsyncZoom", TYPE_ASYNC_ZOOM)
 
-  void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
-               HitTestState* aState, nsTArray<nsIFrame*>* aOutFrames) override;
-  already_AddRefed<Layer> BuildLayer(
+  virtual already_AddRefed<Layer> BuildLayer(
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,
       const ContainerLayerParameters& aContainerParameters) override;
-  LayerState GetLayerState(
+  virtual LayerState GetLayerState(
       nsDisplayListBuilder* aBuilder, LayerManager* aManager,
       const ContainerLayerParameters& aParameters) override {
     return mozilla::LayerState::LAYER_ACTIVE_FORCE;
