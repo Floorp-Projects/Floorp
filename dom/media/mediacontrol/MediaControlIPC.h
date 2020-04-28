@@ -27,6 +27,13 @@ struct ParamTraits<mozilla::dom::ControlledMediaState>
           mozilla::dom::ControlledMediaState::eStarted,
           mozilla::dom::ControlledMediaState::eStopped> {};
 
+template <>
+struct ParamTraits<mozilla::dom::MediaAudibleState>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::dom::MediaAudibleState,
+          mozilla::dom::MediaAudibleState::eInaudible,
+          mozilla::dom::MediaAudibleState::eAudible> {};
+
 }  // namespace IPC
 
 #endif  // mozilla_MediaControlIPC_hh

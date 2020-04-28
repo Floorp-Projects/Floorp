@@ -59,10 +59,10 @@ TEST(MediaController, AudibleChanged)
   controller->Play();
   ASSERT_TRUE(!controller->IsAudible());
 
-  controller->NotifyMediaAudibleChanged(true);
+  controller->NotifyMediaAudibleChanged(MediaAudibleState::eAudible);
   ASSERT_TRUE(controller->IsAudible());
 
-  controller->NotifyMediaAudibleChanged(false);
+  controller->NotifyMediaAudibleChanged(MediaAudibleState::eInaudible);
   ASSERT_TRUE(!controller->IsAudible());
 }
 
@@ -71,7 +71,7 @@ TEST(MediaController, AlwaysInaudibleIfControllerIsNotPlaying)
   RefPtr<MediaController> controller = new MediaController(CONTROLLER_ID);
   ASSERT_TRUE(!controller->IsAudible());
 
-  controller->NotifyMediaAudibleChanged(true);
+  controller->NotifyMediaAudibleChanged(MediaAudibleState::eAudible);
   ASSERT_TRUE(!controller->IsAudible());
 
   controller->Play();
