@@ -9,7 +9,10 @@ add_task(async function testIndexedDB() {
       "/browser/browser/components/extensions/test/browser/file_indexedDB.html";
 
     browser.test.onMessage.addListener(async msg => {
-      await browser.browsingData.remove({}, { indexedDB: true });
+      await browser.browsingData.remove(
+        { hostnames: msg.hostnames },
+        { indexedDB: true }
+      );
       browser.test.sendMessage("indexedDBRemoved");
     });
 
@@ -79,12 +82,21 @@ add_task(async function testIndexedDB() {
   let origins = await getOrigins();
   is(origins.length, 2, "IndexedDB databases have been populated.");
 
-  extension.sendMessage();
-
+  extension.sendMessage({ hostnames: ["example.com"] });
   await extension.awaitMessage("indexedDBRemoved");
 
   origins = await getOrigins();
-  is(origins.length, 0, "IndexedDB data has been removed.");
+  is(origins.length, 1, "IndexedDB data only for only one domain left");
+  ok(
+    origins[0].startsWith("http://mochi.test"),
+    "IndexedDB data for 'example.com' has been removed."
+  );
+
+  extension.sendMessage({});
+  await extension.awaitMessage("indexedDBRemoved");
+
+  origins = await getOrigins();
+  is(origins.length, 0, "All IndexedDB data has been removed.");
 
   await extension.unload();
   await BrowserTestUtils.closeWindow(win);
