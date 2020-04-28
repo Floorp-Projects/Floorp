@@ -7,7 +7,6 @@ package org.mozilla.fenix.settings.advanced
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.component_locale_settings.view.*
 import org.mozilla.fenix.R
@@ -38,17 +37,6 @@ class LocaleSettingsView(
             adapter = localeAdapter
             layoutManager = LinearLayoutManager(context)
         }
-        val searchView: SearchView = view.toolbar_container
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String): Boolean {
-                return false
-            }
-
-            override fun onQueryTextChange(newText: String): Boolean {
-                interactor.onSearchQueryTyped(newText)
-                return false
-            }
-        })
     }
 
     fun update(state: LocaleSettingsState) {

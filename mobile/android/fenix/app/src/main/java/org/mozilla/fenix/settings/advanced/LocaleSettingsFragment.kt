@@ -6,8 +6,12 @@ package org.mozilla.fenix.settings.advanced
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_locale_settings.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -23,6 +27,11 @@ class LocaleSettingsFragment : Fragment() {
     private lateinit var store: LocaleSettingsStore
     private lateinit var interactor: LocaleSettingsInteractor
     private lateinit var localeView: LocaleSettingsView
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -40,6 +49,25 @@ class LocaleSettingsFragment : Fragment() {
         )
         localeView = LocaleSettingsView(view.locale_container, interactor)
         return view
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.languages_list, menu)
+        val searchItem = menu.findItem(R.id.search)
+        val searchView: SearchView = searchItem.actionView as SearchView
+        searchView.imeOptions = EditorInfo.IME_ACTION_DONE
+        searchView.queryHint = getString(R.string.locale_search_hint)
+
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String): Boolean {
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String): Boolean {
+                interactor.onSearchQueryTyped(newText)
+                return false
+            }
+        })
     }
 
     override fun onResume() {

@@ -6,23 +6,6 @@
     android:focusable="true"
     android:focusableInTouchMode="true">
 
-    <SearchView
-        android:id="@+id/toolbar_container"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/locale_search_bar_margin"
-        android:background="@drawable/search_url_background"
-        android:closeIcon="@drawable/ic_close"
-        android:iconifiedByDefault="false"
-        android:paddingStart="@dimen/locale_search_bar_padding_start"
-        android:paddingEnd="0dp"
-        android:queryBackground="@android:color/transparent"
-        android:queryHint="@string/locale_search_hint"
-        android:searchIcon="@drawable/ic_search"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/locale_list"
         android:layout_width="match_parent"
@@ -31,6 +14,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar_container" />
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
