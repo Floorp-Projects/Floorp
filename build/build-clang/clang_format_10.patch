@@ -1,0 +1,187 @@
+diff --git a/clang/lib/Format/TokenAnnotator.cpp b/clang/lib/Format/TokenAnnotator.cpp
+index 70bcd7048c5..8cb786a4d34 100644
+--- a/clang/lib/Format/TokenAnnotator.cpp
++++ b/clang/lib/Format/TokenAnnotator.cpp
+@@ -2176,6 +2176,10 @@ static bool isFunctionDeclarationName(const FormatToken &Current,
+         Next = Next->Next;
+         continue;
+       }
++      if (Next->is(TT_TemplateOpener) && Next->MatchingParen) {
++        Next = Next->MatchingParen;
++        continue;
++      }
+ 
+       break;
+     }
+@@ -2705,20 +2709,40 @@ bool TokenAnnotator::spaceRequiredBetween(const AnnotatedLine &Line,
+                                     tok::l_square));
+   if (Right.is(tok::star) && Left.is(tok::l_paren))
+     return false;
+-  if (Right.isOneOf(tok::star, tok::amp, tok::ampamp) &&
+-      (Left.is(tok::identifier) || Left.isSimpleTypeSpecifier()) &&
+-      // Space between the type and the * in:
+-      //   operator void*()
+-      //   operator char*()
+-      //   operator /*comment*/ const char*()
+-      //   operator volatile /*comment*/ char*()
+-      //   operator Foo*()
+-      // dependent on PointerAlignment style.
+-      Left.Previous &&
+-      (Left.Previous->endsSequence(tok::kw_operator) ||
+-       Left.Previous->endsSequence(tok::kw_const, tok::kw_operator) ||
+-       Left.Previous->endsSequence(tok::kw_volatile, tok::kw_operator)))
+-    return (Style.PointerAlignment != FormatStyle::PAS_Left);
++  if (Right.is(tok::star) && Left.is(tok::star))
++    return false;
++  if (Right.isOneOf(tok::star, tok::amp, tok::ampamp)) {
++    const FormatToken *Previous = &Left;
++    while (Previous && !Previous->is(tok::kw_operator)) {
++      if (Previous->is(tok::identifier) || Previous->isSimpleTypeSpecifier()) {
++        Previous = Previous->getPreviousNonComment();
++        continue;
++      }
++      if (Previous->is(TT_TemplateCloser) && Previous->MatchingParen) {
++        Previous = Previous->MatchingParen->getPreviousNonComment();
++        continue;
++      }
++      if (Previous->is(tok::coloncolon)) {
++        Previous = Previous->getPreviousNonComment();
++        continue;
++      }
++      break;
++    }
++    // Space between the type and the * in:
++    //   operator void*()
++    //   operator char*()
++    //   operator /*comment*/ const char*()
++    //   operator volatile /*comment*/ char*()
++    //   operator Foo*()
++    //   operator C<T>*()
++    //   operator std::Foo*()
++    //   operator C<T>::D<U>*()
++    // dependent on PointerAlignment style.
++    if (Previous && (Previous->endsSequence(tok::kw_operator) ||
++       Previous->endsSequence(tok::kw_const, tok::kw_operator) ||
++       Previous->endsSequence(tok::kw_volatile, tok::kw_operator)))
++      return (Style.PointerAlignment != FormatStyle::PAS_Left);
++  }
+   const auto SpaceRequiredForArrayInitializerLSquare =
+       [](const FormatToken &LSquareTok, const FormatStyle &Style) {
+         return Style.SpacesInContainerLiterals ||
+diff --git a/clang/unittests/Format/FormatTest.cpp b/clang/unittests/Format/FormatTest.cpp
+index a5a26b5c1e8..7f8a3795e6e 100644
+--- a/clang/unittests/Format/FormatTest.cpp
++++ b/clang/unittests/Format/FormatTest.cpp
+@@ -6185,7 +6185,17 @@ TEST_F(FormatTest, ReturnTypeBreakingStyle) {
+                "void\n"
+                "A::operator[]() {}\n"
+                "void\n"
+-               "A::operator!() {}\n",
++               "A::operator!() {}\n"
++               "void\n"
++               "A::operator**() {}\n"
++               "void\n"
++               "A::operator<Foo> *() {}\n"
++               "void\n"
++               "A::operator<Foo> **() {}\n"
++               "void\n"
++               "A::operator<Foo> &() {}\n"
++               "void\n"
++               "A::operator void **() {}\n",
+                Style);
+   verifyFormat("constexpr auto\n"
+                "operator()() const -> reference {}\n"
+@@ -6202,6 +6212,10 @@ TEST_F(FormatTest, ReturnTypeBreakingStyle) {
+                "constexpr auto\n"
+                "operator void *() const -> reference {}\n"
+                "constexpr auto\n"
++               "operator void **() const -> reference {}\n"
++               "constexpr auto\n"
++               "operator void *() const -> reference {}\n"
++               "constexpr auto\n"
+                "operator void &() const -> reference {}\n"
+                "constexpr auto\n"
+                "operator void &&() const -> reference {}\n"
+@@ -14986,9 +15000,20 @@ TEST_F(FormatTest, OperatorSpacing) {
+   Style.PointerAlignment = FormatStyle::PAS_Right;
+   verifyFormat("Foo::operator*();", Style);
+   verifyFormat("Foo::operator void *();", Style);
++  verifyFormat("Foo::operator void **();", Style);
+   verifyFormat("Foo::operator()(void *);", Style);
+   verifyFormat("Foo::operator*(void *);", Style);
+   verifyFormat("Foo::operator*();", Style);
++  verifyFormat("Foo::operator**();", Style);
++  verifyFormat("Foo::operator&();", Style);
++  verifyFormat("Foo::operator<int> *();", Style);
++  verifyFormat("Foo::operator<Foo> *();", Style);
++  verifyFormat("Foo::operator<int> **();", Style);
++  verifyFormat("Foo::operator<Foo> **();", Style);
++  verifyFormat("Foo::operator<int> &();", Style);
++  verifyFormat("Foo::operator<Foo> &();", Style);
++  verifyFormat("Foo::operator<int> &&();", Style);
++  verifyFormat("Foo::operator<Foo> &&();", Style);
+   verifyFormat("operator*(int (*)(), class Foo);", Style);
+ 
+   verifyFormat("Foo::operator&();", Style);
+@@ -14999,21 +15024,39 @@ TEST_F(FormatTest, OperatorSpacing) {
+   verifyFormat("operator&(int (&)(), class Foo);", Style);
+ 
+   verifyFormat("Foo::operator&&();", Style);
++  verifyFormat("Foo::operator**();", Style);
+   verifyFormat("Foo::operator void &&();", Style);
+   verifyFormat("Foo::operator()(void &&);", Style);
+   verifyFormat("Foo::operator&&(void &&);", Style);
+   verifyFormat("Foo::operator&&();", Style);
+   verifyFormat("operator&&(int(&&)(), class Foo);", Style);
++  verifyFormat("operator const nsTArrayRight<E> &()", Style);
++  verifyFormat("[[nodiscard]] operator const nsTArrayRight<E, Allocator> &()",
++               Style);
++  verifyFormat("operator void **()", Style);
++  verifyFormat("operator const FooRight<Object> &()", Style);
++  verifyFormat("operator const FooRight<Object> *()", Style);
++  verifyFormat("operator const FooRight<Object> **()", Style);
+ 
+   Style.PointerAlignment = FormatStyle::PAS_Left;
+   verifyFormat("Foo::operator*();", Style);
++  verifyFormat("Foo::operator**();", Style);
+   verifyFormat("Foo::operator void*();", Style);
++  verifyFormat("Foo::operator void**();", Style);
+   verifyFormat("Foo::operator/*comment*/ void*();", Style);
+   verifyFormat("Foo::operator/*a*/ const /*b*/ void*();", Style);
+   verifyFormat("Foo::operator/*a*/ volatile /*b*/ void*();", Style);
+   verifyFormat("Foo::operator()(void*);", Style);
+   verifyFormat("Foo::operator*(void*);", Style);
+   verifyFormat("Foo::operator*();", Style);
++  verifyFormat("Foo::operator<int>*();", Style);
++  verifyFormat("Foo::operator<Foo>*();", Style);
++  verifyFormat("Foo::operator<int>**();", Style);
++  verifyFormat("Foo::operator<Foo>**();", Style);
++  verifyFormat("Foo::operator<int>&();", Style);
++  verifyFormat("Foo::operator<Foo>&();", Style);
++  verifyFormat("Foo::operator<int>&&();", Style);
++  verifyFormat("Foo::operator<Foo>&&();", Style);
+   verifyFormat("operator*(int (*)(), class Foo);", Style);
+ 
+   verifyFormat("Foo::operator&();", Style);
+@@ -15035,6 +15078,21 @@ TEST_F(FormatTest, OperatorSpacing) {
+   verifyFormat("Foo::operator&&(void&&);", Style);
+   verifyFormat("Foo::operator&&();", Style);
+   verifyFormat("operator&&(int(&&)(), class Foo);", Style);
++  verifyFormat("operator const nsTArrayLeft<E>&()", Style);
++  verifyFormat("[[nodiscard]] operator const nsTArrayLeft<E, Allocator>&()",
++               Style);
++  verifyFormat("operator void**()", Style);
++  verifyFormat("operator const FooLeft<Object>&()", Style);
++  verifyFormat("operator const FooLeft<Object>*()", Style);
++  verifyFormat("operator const FooLeft<Object>**()", Style);
++
++  // PR45107
++  verifyFormat("operator Vector<String>&();", Style);
++  verifyFormat("operator const Vector<String>&();", Style);
++  verifyFormat("operator foo::Bar*();", Style);
++  verifyFormat("operator const Foo<X>::Bar<Y>*();", Style);
++  verifyFormat("operator/*a*/ const /*b*/ Foo /*c*/<X> /*d*/ ::Bar<Y>*();",
++               Style);
+ 
+   Style.PointerAlignment = FormatStyle::PAS_Middle;
+   verifyFormat("Foo::operator*();", Style);

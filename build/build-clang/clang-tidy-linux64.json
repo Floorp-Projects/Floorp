@@ -12,6 +12,6 @@
     "patches": [
         "clang-tidy-ci.patch",
         "clang-tidy-no-errors.patch",
-        "revert_D69573_clang_10.patch"
+        "clang_format_10.patch"
     ]
 }
