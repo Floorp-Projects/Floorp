@@ -14,6 +14,9 @@
 // The following are not lazily loaded as they are needed during initialization.
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { createLazyLoaders } = ChromeUtils.import(
+  "resource://devtools/client/performance-new/typescript-lazy-load.jsm.js"
+);
 // For some reason TypeScript was giving me an error when de-structuring AppConstants. I
 // suspect a bug in TypeScript was at play.
 const AppConstants = ChromeUtils.import(
@@ -48,81 +51,33 @@ const PRESET_PREF = "devtools.performance.recording.preset";
 /** @type {PerformancePref["PopupFeatureFlag"]} */
 const POPUP_FEATURE_FLAG_PREF = "devtools.performance.popup.feature-flag";
 
+// Lazily load the require function, when it's needed.
+ChromeUtils.defineModuleGetter(
+  this,
+  "require",
+  "resource://devtools/shared/Loader.jsm"
+);
+
 // The following utilities are lazily loaded as they are not needed when controlling the
 // global state of the profiler, and only are used during specific funcationality like
 // symbolication or capturing a profile.
-
-/**
- * TS-TODO
- *
- * This function replaces lazyRequireGetter, and TypeScript can understand it. It's
- * currently duplicated until we have consensus that TypeScript is a good idea.
- *
- * @template T
- * @type {(callback: () => T) => () => T}
- */
-function requireLazy(callback) {
-  /** @type {T | undefined} */
-  let cache;
-  return () => {
-    if (cache === undefined) {
-      cache = callback();
-    }
-    return cache;
-  };
-}
-
-const lazyOS = requireLazy(() =>
-  ChromeUtils.import("resource://gre/modules/osfile.jsm")
-);
-
-const lazyProfilerGetSymbols = requireLazy(() =>
-  ChromeUtils.import("resource://gre/modules/ProfilerGetSymbols.jsm")
-);
-
-const lazyBrowserModule = requireLazy(() => {
-  const { require } = ChromeUtils.import(
-    "resource://devtools/shared/Loader.jsm"
-  );
-  const browserModule = require("devtools/client/performance-new/browser");
-  return browserModule;
+const lazy = createLazyLoaders({
+  OS: () => ChromeUtils.import("resource://gre/modules/osfile.jsm"),
+  Utils: () => require("devtools/client/performance-new/utils"),
+  BrowserModule: () => require("devtools/client/performance-new/browser"),
+  RecordingUtils: () =>
+    require("devtools/shared/performance-new/recording-utils"),
+  CustomizableUI: () =>
+    ChromeUtils.import("resource:///modules/CustomizableUI.jsm"),
+  PreferenceManagement: () =>
+    require("devtools/client/performance-new/preference-management"),
+  ProfilerGetSymbols: () =>
+    ChromeUtils.import("resource://gre/modules/ProfilerGetSymbols.jsm"),
+  ProfilerMenuButton: () =>
+    ChromeUtils.import(
+      "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
+    ),
 });
-
-const lazyPreferenceManagement = requireLazy(() => {
-  const { require } = ChromeUtils.import(
-    "resource://devtools/shared/Loader.jsm"
-  );
-
-  const preferenceManagementModule = require("devtools/client/performance-new/preference-management");
-  return preferenceManagementModule;
-});
-
-const lazyRecordingUtils = requireLazy(() => {
-  const { require } = ChromeUtils.import(
-    "resource://devtools/shared/Loader.jsm"
-  );
-
-  const recordingUtils = require("devtools/shared/performance-new/recording-utils");
-  return recordingUtils;
-});
-
-const lazyUtils = requireLazy(() => {
-  const { require } = ChromeUtils.import(
-    "resource://devtools/shared/Loader.jsm"
-  );
-  const recordingUtils = require("devtools/client/performance-new/utils");
-  return recordingUtils;
-});
-
-const lazyProfilerMenuButton = requireLazy(() =>
-  ChromeUtils.import(
-    "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
-  )
-);
-
-const lazyCustomizableUI = requireLazy(() =>
-  ChromeUtils.import("resource:///modules/CustomizableUI.jsm")
-);
 
 /** @type {Presets} */
 const presets = {
@@ -210,7 +165,7 @@ async function getSymbolsFromThisBrowser(debugName, breakpadId) {
   }
 
   const { path, debugPath } = cachedLibInfo;
-  const { OS } = lazyOS();
+  const { OS } = lazy.OS();
   if (!OS.Path.split(path).absolute) {
     throw new Error(
       "Services.profiler.sharedLibraries did not contain an absolute path for " +
@@ -219,7 +174,7 @@ async function getSymbolsFromThisBrowser(debugName, breakpadId) {
     );
   }
 
-  const { ProfilerGetSymbols } = lazyProfilerGetSymbols();
+  const { ProfilerGetSymbols } = lazy.ProfilerGetSymbols();
 
   return ProfilerGetSymbols.getSymbolTable(path, debugPath, breakpadId);
 }
@@ -247,7 +202,7 @@ async function captureProfile() {
       }
     );
 
-  const receiveProfile = lazyBrowserModule().receiveProfile;
+  const receiveProfile = lazy.BrowserModule().receiveProfile;
   receiveProfile(profile, getSymbolsFromThisBrowser);
 
   Services.profiler.StopProfiler();
@@ -259,7 +214,7 @@ async function captureProfile() {
  * @param {PageContext} pageContext
  */
 function startProfiler(pageContext) {
-  const { translatePreferencesToState } = lazyPreferenceManagement();
+  const { translatePreferencesToState } = lazy.PreferenceManagement();
   const {
     entries,
     interval,
@@ -271,7 +226,7 @@ function startProfiler(pageContext) {
   );
 
   // Get the active BrowsingContext ID from browser.
-  const { getActiveBrowsingContextID } = lazyRecordingUtils();
+  const { getActiveBrowsingContextID } = lazy.RecordingUtils();
   const activeBrowsingContextID = getActiveBrowsingContextID();
 
   Services.profiler.StartProfiler(
@@ -352,7 +307,7 @@ function getPrefPostfix(pageContext) {
     case "aboutprofiling-remote":
       return ".remote";
     default: {
-      const { UnhandledCaseError } = lazyUtils();
+      const { UnhandledCaseError } = lazy.Utils();
       throw new UnhandledCaseError(pageContext, "Page Context");
     }
   }
@@ -526,7 +481,7 @@ function handleWebChannelMessage(channel, id, message, target) {
     case "STATUS_QUERY": {
       // The content page wants to know if this channel exists. It does, so respond
       // back to the ping.
-      const { ProfilerMenuButton } = lazyProfilerMenuButton();
+      const { ProfilerMenuButton } = lazy.ProfilerMenuButton();
       channel.send(
         {
           type: "STATUS_RESPONSE",
@@ -549,12 +504,12 @@ function handleWebChannelMessage(channel, id, message, target) {
       Services.prefs.setBoolPref(POPUP_FEATURE_FLAG_PREF, true);
 
       // Enable the profiler menu button.
-      const { ProfilerMenuButton } = lazyProfilerMenuButton();
+      const { ProfilerMenuButton } = lazy.ProfilerMenuButton();
       ProfilerMenuButton.addToNavbar(ownerDocument);
 
       // Dispatch the change event manually, so that the shortcuts will also be
       // added.
-      const { CustomizableUI } = lazyCustomizableUI();
+      const { CustomizableUI } = lazy.CustomizableUI();
       CustomizableUI.dispatchToolboxEvent("customizationchange");
 
       // Open the popup with a message.

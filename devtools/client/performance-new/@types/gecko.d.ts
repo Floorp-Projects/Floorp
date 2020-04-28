@@ -45,6 +45,8 @@ declare namespace MockedExports {
     "resource://devtools/client/shared/browser-loader.js": any;
     "resource://devtools/client/performance-new/popup/menu-button.jsm.js":
       typeof import("devtools/client/performance-new/popup/menu-button.jsm.js");
+    "resource://devtools/client/performance-new/typescript-lazy-load.jsm.js":
+      typeof import("devtools/client/performance-new/typescript-lazy-load.jsm.js");
     "resource://devtools/client/performance-new/popup/panel.jsm.js":
       typeof import("devtools/client/performance-new/popup/panel.jsm.js");
     "resource:///modules/PanelMultiView.jsm":
@@ -65,6 +67,7 @@ declare namespace MockedExports {
     createObjectIn: (content: ContentWindow) => object;
     exportFunction: (fn: Function, scope: object, options?: object) => void;
     cloneInto: (value: any, scope: object, options?: object) => void;
+    defineModuleGetter: (target: any, variable: string, path: string) => void;
   }
 
   interface MessageManager {
@@ -281,6 +284,10 @@ declare module "Services" {
 
 declare module "chrome" {
   export = MockedExports.chrome;
+}
+
+declare module "ChromeUtils" {
+  export = ChromeUtils;
 }
 
 declare module "resource://gre/modules/osfile.jsm" {
