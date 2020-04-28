@@ -144,6 +144,13 @@ class NotNull {
     return mBasePtr.operator->();
   }
   constexpr decltype(*mBasePtr) operator*() const { return *mBasePtr; }
+
+  // NotNull can be copied, but not moved. Moving a NotNull with a smart base
+  // pointer would leave a nullptr NotNull behind. The move operations must not
+  // be explicitly deleted though, since that would cause overload resolution to
+  // fail in situations where a copy is possible.
+  NotNull(const NotNull&) = default;
+  NotNull& operator=(const NotNull&) = default;
 };
 
 // Specialization for T* to allow adding MOZ_NONNULL_RETURN attributes.

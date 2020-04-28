@@ -288,6 +288,14 @@ void TestNotNullWithRefPtr() {
 
   // At this point the refcount is 4.
 
+  NotNull<RefPtr<MyRefType>> r6 = std::move(r2);
+  mozilla::Unused << r6;
+
+  CHECK(r2.get());
+  CHECK(r6.get());
+
+  // At this point the refcount is 5 again, since NotNull is not movable.
+
   // At function's end all RefPtrs are destroyed and the refcount drops to 0
   // and the MyRefType is destroyed.
 }
