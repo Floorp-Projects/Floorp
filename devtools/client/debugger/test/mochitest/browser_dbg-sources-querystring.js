@@ -1,18 +1,8 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Tests that the source tree works.
-
-function getLabel(dbg, index) {
-  return findElement(dbg, "sourceNode", index)
-    .textContent.trim()
-    .replace(/^[\s\u200b]*/g, "");
-}
-
-function assertBreakpointHeading(dbg, label, index) {
-  const breakpointHeading = findElement(dbg, "breakpointItem", index).innerText;
-  is(breakpointHeading, label, `Breakpoint heading is ${label}`);
-}
 
 add_task(async function() {
   const dbg = await initDebugger("doc-sources-querystring.html", "simple1.js?x=1", "simple1.js?x=2");
@@ -58,3 +48,14 @@ add_task(async function() {
   type(dbg, "simple1.js?x");
   ok(findElement(dbg, "resultItems")[0].innerText.includes("simple.js?x=1"));
 });
+
+function getLabel(dbg, index) {
+  return findElement(dbg, "sourceNode", index)
+    .textContent.trim()
+    .replace(/^[\s\u200b]*/g, "");
+}
+
+function assertBreakpointHeading(dbg, label, index) {
+  const breakpointHeading = findElement(dbg, "breakpointItem", index).innerText;
+  is(breakpointHeading, label, `Breakpoint heading is ${label}`);
+}

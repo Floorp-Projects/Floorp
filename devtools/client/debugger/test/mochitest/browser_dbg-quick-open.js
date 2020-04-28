@@ -2,67 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function assertEnabled(dbg) {
-  is(dbg.selectors.getQuickOpenEnabled(), true, "quickOpen enabled");
-}
-
-function assertDisabled(dbg) {
-  is(dbg.selectors.getQuickOpenEnabled(), false, "quickOpen disabled");
-}
-
-function assertLine(dbg, lineNumber) {
-  is(
-    dbg.selectors.getSelectedLocation().line,
-    lineNumber,
-    `goto line is ${lineNumber}`
-  );
-}
-
-function assertColumn(dbg, columnNumber) {
-  is(
-    dbg.selectors.getSelectedLocation().column,
-    columnNumber,
-    `goto column is ${columnNumber}`
-  );
-}
-
-function waitForSymbols(dbg, url) {
-  const source = findSource(dbg, url);
-  return waitForState(dbg, state => dbg.selectors.getSymbols(state, source.id));
-}
-
-function resultCount(dbg) {
-  return findAllElements(dbg, "resultItems").length;
-}
-
-async function quickOpen(dbg, query, shortcut = "quickOpen") {
-  pressKey(dbg, shortcut);
-  assertEnabled(dbg);
-  query !== "" && type(dbg, query);
-}
-
-async function waitForResults(dbg, results) {
-  await waitForAllElements(dbg, "resultItems", results.length, true);
-
-  for (let i = 0; i < results.length; ++i) {
-    if (results[i] !== undefined) {
-      await waitForElement(dbg, "resultItemName", results[i], i + 1);
-    }
-  }
-}
-
-function findResultEl(dbg, index = 1) {
-  return waitForElementWithSelector(dbg, `.result-item:nth-child(${index})`);
-}
-
-async function assertResultIsTab(dbg, index) {
-  const el = await findResultEl(dbg, index);
-  ok(
-    el && !!el.querySelector(".tab.result-item-icon"),
-    "Result should be a tab"
-  );
-}
-
 // Testing quick open
 add_task(async function() {
   const dbg = await initDebugger("doc-script-switching.html");
@@ -136,3 +75,64 @@ add_task(async function() {
   await waitForSelectedSource(dbg, "switching-01");
   assertLine(dbg, 5);
 });
+
+function assertEnabled(dbg) {
+  is(dbg.selectors.getQuickOpenEnabled(), true, "quickOpen enabled");
+}
+
+function assertDisabled(dbg) {
+  is(dbg.selectors.getQuickOpenEnabled(), false, "quickOpen disabled");
+}
+
+function assertLine(dbg, lineNumber) {
+  is(
+    dbg.selectors.getSelectedLocation().line,
+    lineNumber,
+    `goto line is ${lineNumber}`
+  );
+}
+
+function assertColumn(dbg, columnNumber) {
+  is(
+    dbg.selectors.getSelectedLocation().column,
+    columnNumber,
+    `goto column is ${columnNumber}`
+  );
+}
+
+function waitForSymbols(dbg, url) {
+  const source = findSource(dbg, url);
+  return waitForState(dbg, state => dbg.selectors.getSymbols(state, source.id));
+}
+
+function resultCount(dbg) {
+  return findAllElements(dbg, "resultItems").length;
+}
+
+async function quickOpen(dbg, query, shortcut = "quickOpen") {
+  pressKey(dbg, shortcut);
+  assertEnabled(dbg);
+  query !== "" && type(dbg, query);
+}
+
+async function waitForResults(dbg, results) {
+  await waitForAllElements(dbg, "resultItems", results.length, true);
+
+  for (let i = 0; i < results.length; ++i) {
+    if (results[i] !== undefined) {
+      await waitForElement(dbg, "resultItemName", results[i], i + 1);
+    }
+  }
+}
+
+function findResultEl(dbg, index = 1) {
+  return waitForElementWithSelector(dbg, `.result-item:nth-child(${index})`);
+}
+
+async function assertResultIsTab(dbg, index) {
+  const el = await findResultEl(dbg, index);
+  ok(
+    el && !!el.querySelector(".tab.result-item-icon"),
+    "Result should be a tab"
+  );
+}

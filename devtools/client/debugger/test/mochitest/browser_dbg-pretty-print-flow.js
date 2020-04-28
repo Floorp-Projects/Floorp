@@ -4,13 +4,6 @@
 
 // Tests that loader and new tab appear when pretty printing,
 // and the selected location is mapped afterwards
-function waitForTabCounts(dbg, counts) {
-  return waitForState(dbg, state => {
-    const tabCounts = countTabs(dbg);
-
-    return tabCounts == counts;
-  });
-}
 
 add_task(async function() {
   const dbg = await initDebugger("doc-pretty.html", "pretty.js");
@@ -22,3 +15,11 @@ add_task(async function() {
   await waitForElementWithSelector(dbg, selectors.prettyPrintLoader);
   await waitForSelectedLocation(dbg, 5);
 });
+
+function waitForTabCounts(dbg, counts) {
+  return waitForState(dbg, state => {
+    const tabCounts = countTabs(dbg);
+
+    return tabCounts == counts;
+  });
+}

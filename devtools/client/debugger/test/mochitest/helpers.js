@@ -15,8 +15,8 @@ Services.scriptloader.loadSubScript(
 );
 
 var { Toolbox } = require("devtools/client/framework/toolbox");
-var { Task } = require("devtools/shared/task");
-var asyncStorage = require("devtools/shared/async-storage");
+const { Task } = require("devtools/shared/task");
+const asyncStorage = require("devtools/shared/async-storage");
 
 const {
   getSelectedLocation,

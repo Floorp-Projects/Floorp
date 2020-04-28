@@ -10,24 +10,6 @@
  * 4. expanding properties when not paused
  */
 
-function getLabel(dbg, index) {
-  return findElement(dbg, "expressionNode", index).innerText;
-}
-
-function getValue(dbg, index) {
-  return findElement(dbg, "expressionValue", index).innerText;
-}
-
-function assertEmptyValue(dbg, index) {
-  const value = findElement(dbg, "expressionValue", index);
-  if (value) {
-    is(value.innerText, "");
-    return;
-  }
-
-  is(value, null);
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-script-switching.html");
 
@@ -67,3 +49,21 @@ add_task(async function() {
   await deleteExpression(dbg, "location");
   is(findAllElements(dbg, "expressionNodes").length, 0);
 });
+
+function getLabel(dbg, index) {
+  return findElement(dbg, "expressionNode", index).innerText;
+}
+
+function getValue(dbg, index) {
+  return findElement(dbg, "expressionValue", index).innerText;
+}
+
+function assertEmptyValue(dbg, index) {
+  const value = findElement(dbg, "expressionValue", index);
+  if (value) {
+    is(value.innerText, "");
+    return;
+  }
+
+  is(value, null);
+}

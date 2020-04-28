@@ -2,37 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-async function assertNoTooltip(dbg) {
-  await waitForTime(200);
-  const el = findElement(dbg, "tooltip");
-  is(el, null, "Tooltip should not exist");
-}
-
-function assertPreviewTooltip(dbg, { result, expression }) {
-  const previewEl = findElement(dbg, "tooltip");
-  is(previewEl.innerText, result, "Preview text shown to user");
-
-  const preview = dbg.selectors.getPreview();
-  is(`${preview.result}`, result, "Preview.result");
-  is(preview.updating, false, "Preview.updating");
-  is(preview.expression, expression, "Preview.expression");
-}
-
-function assertPreviewPopup(dbg, { field, value, expression }) {
-  const previewEl = findElement(dbg, "popup");
-  is(previewEl.innerText, "", "Preview text shown to user");
-
-  const preview = dbg.selectors.getPreview();
-
-  is(
-    `${preview.result.preview.ownProperties[field].value}`,
-    value,
-    "Preview.result"
-  );
-  is(preview.updating, false, "Preview.updating");
-  is(preview.expression, expression, "Preview.expression");
-}
-
 add_task(async function() {
   const dbg = await initDebugger(
     "doc-sourcemaps.html",
@@ -66,3 +35,34 @@ add_task(async function() {
   await hoverAtPos(dbg, { line: 2, ch: 16 });
   await assertNoTooltip(dbg);
 });
+
+async function assertNoTooltip(dbg) {
+  await waitForTime(200);
+  const el = findElement(dbg, "tooltip");
+  is(el, null, "Tooltip should not exist");
+}
+
+function assertPreviewTooltip(dbg, { result, expression }) {
+  const previewEl = findElement(dbg, "tooltip");
+  is(previewEl.innerText, result, "Preview text shown to user");
+
+  const preview = dbg.selectors.getPreview();
+  is(`${preview.result}`, result, "Preview.result");
+  is(preview.updating, false, "Preview.updating");
+  is(preview.expression, expression, "Preview.expression");
+}
+
+function assertPreviewPopup(dbg, { field, value, expression }) {
+  const previewEl = findElement(dbg, "popup");
+  is(previewEl.innerText, "", "Preview text shown to user");
+
+  const preview = dbg.selectors.getPreview();
+
+  is(
+    `${preview.result.preview.ownProperties[field].value}`,
+    value,
+    "Preview.result"
+  );
+  is(preview.updating, false, "Preview.updating");
+  is(preview.expression, expression, "Preview.expression");
+}
