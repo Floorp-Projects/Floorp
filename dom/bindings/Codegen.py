@@ -14059,7 +14059,7 @@ def initIdsClassMethod(identifiers, atomCacheName):
     idinit.reverse()
     body = fill(
         """
-        MOZ_ASSERT(!*reinterpret_cast<jsid**>(atomsCache));
+        MOZ_ASSERT(JSID_IS_VOID(*reinterpret_cast<jsid*>(atomsCache)));
 
         // Initialize these in reverse order so that any failure leaves the first one
         // uninitialized.
@@ -14149,7 +14149,8 @@ class CGDictionary(CGThing):
                 ${dictName}Atoms* atomsCache = nullptr;
                 if (cx) {
                   atomsCache = GetAtomCache<${dictName}Atoms>(cx);
-                  if (!*reinterpret_cast<jsid**>(atomsCache) && !InitIds(cx, atomsCache)) {
+                  if (JSID_IS_VOID(*reinterpret_cast<jsid*>(atomsCache)) &&
+                      !InitIds(cx, atomsCache)) {
                     return false;
                   }
                 }
@@ -14332,7 +14333,8 @@ class CGDictionary(CGThing):
             body += fill(
                 """
                 ${dictName}Atoms* atomsCache = GetAtomCache<${dictName}Atoms>(cx);
-                if (!*reinterpret_cast<jsid**>(atomsCache) && !InitIds(cx, atomsCache)) {
+                if (JSID_IS_VOID(*reinterpret_cast<jsid*>(atomsCache)) &&
+                    !InitIds(cx, atomsCache)) {
                   return false;
                 }
 
@@ -17712,7 +17714,8 @@ class CallbackOperationBase(CallbackMethod):
         getCallableFromProp = fill(
             """
             ${atomCacheName}* atomsCache = GetAtomCache<${atomCacheName}>(cx);
-            if ((!*reinterpret_cast<jsid**>(atomsCache) && !InitIds(cx, atomsCache)) ||
+            if ((JSID_IS_VOID(*reinterpret_cast<jsid*>(atomsCache)) &&
+                 !InitIds(cx, atomsCache)) ||
                 !GetCallableProperty(cx, atomsCache->${methodAtomName}, &callable)) {
               aRv.Throw(NS_ERROR_UNEXPECTED);
               return${errorReturn};
@@ -17794,7 +17797,8 @@ class CallbackGetter(CallbackAccessor):
             """
             JS::Rooted<JSObject *> callback(cx, mCallback);
             ${atomCacheName}* atomsCache = GetAtomCache<${atomCacheName}>(cx);
-            if ((!*reinterpret_cast<jsid**>(atomsCache) && !InitIds(cx, atomsCache)) ||
+            if ((JSID_IS_VOID(*reinterpret_cast<jsid*>(atomsCache))
+                 && !InitIds(cx, atomsCache)) ||
                 !JS_GetPropertyById(cx, callback, atomsCache->${attrAtomName}, &rval)) {
               aRv.Throw(NS_ERROR_UNEXPECTED);
               return${errorReturn};
@@ -17822,7 +17826,8 @@ class CallbackSetter(CallbackAccessor):
             """
             MOZ_ASSERT(argv.length() == 1);
             ${atomCacheName}* atomsCache = GetAtomCache<${atomCacheName}>(cx);
-            if ((!*reinterpret_cast<jsid**>(atomsCache) && !InitIds(cx, atomsCache)) ||
+            if ((JSID_IS_VOID(*reinterpret_cast<jsid*>(atomsCache)) &&
+                 !InitIds(cx, atomsCache)) ||
                 !JS_SetPropertyById(cx, CallbackKnownNotGray(), atomsCache->${attrAtomName}, argv[0])) {
               aRv.Throw(NS_ERROR_UNEXPECTED);
               return${errorReturn};
