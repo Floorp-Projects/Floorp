@@ -227,6 +227,14 @@ class GeneratedPasswordAutocompleteItem extends AutocompleteItem {
   }
 }
 
+class ImportableLoginsAutocompleteItem extends AutocompleteItem {
+  constructor(browserId, hostname) {
+    super("importableLogins");
+    this.label = browserId;
+    this.comment = hostname;
+  }
+}
+
 class LoginsFooterAutocompleteItem extends AutocompleteItem {
   constructor(formHostname, telemetryEventData) {
     super("loginsFooter");
@@ -255,6 +263,7 @@ function LoginAutoCompleteResult(
   {
     generatedPassword,
     willAutoSaveGeneratedPassword,
+    importable,
     isSecure,
     actor,
     hasBeenTypePassword,
@@ -263,6 +272,8 @@ function LoginAutoCompleteResult(
   }
 ) {
   let hidingFooterOnPWFieldAutoOpened = false;
+  const importableBrowsers =
+    importable?.state === "import" && importable?.browsers;
   function isFooterEnabled() {
     // We need to check LoginHelper.enabled here since the insecure warning should
     // appear even if pwmgr is disabled but the footer should never appear in that case.
@@ -278,6 +289,7 @@ function LoginAutoCompleteResult(
     }
 
     if (
+      !importableBrowsers &&
       !matchingLogins.length &&
       !generatedPassword &&
       hasBeenTypePassword &&
@@ -331,6 +343,16 @@ function LoginAutoCompleteResult(
         )
       );
     }
+
+    // Suggest importing logins if there are none found.
+    if (!logins.length && importableBrowsers) {
+      this._rows.push(
+        ...importableBrowsers.map(
+          browserId => new ImportableLoginsAutocompleteItem(browserId, hostname)
+        )
+      );
+    }
+
     this._rows.push(
       new LoginsFooterAutocompleteItem(hostname, telemetryEventData)
     );
@@ -495,6 +517,7 @@ LoginAutoComplete.prototype = {
 
       let {
         generatedPassword,
+        importable,
         logins,
         willAutoSaveGeneratedPassword,
       } = await autoCompleteLookupPromise;
@@ -525,6 +548,7 @@ LoginAutoComplete.prototype = {
         {
           generatedPassword,
           willAutoSaveGeneratedPassword,
+          importable,
           actor: loginManagerActor,
           isSecure,
           hasBeenTypePassword,
@@ -644,6 +668,7 @@ LoginAutoComplete.prototype = {
 
     return {
       generatedPassword: result.generatedPassword,
+      importable: result.importable,
       logins: LoginHelper.vanillaObjectsToLogins(result.logins),
       willAutoSaveGeneratedPassword: result.willAutoSaveGeneratedPassword,
     };
@@ -691,7 +716,7 @@ let gAutoCompleteListener = {
       }
 
       case "FormAutoComplete:PopupClosed": {
-        this.onPopupClosed(data.selectedRowStyle, target);
+        this.onPopupClosed(data, target);
         let { chromeEventHandler } = target.docShell;
         chromeEventHandler.removeEventListener("keydown", this, true);
         break;
@@ -715,23 +740,29 @@ let gAutoCompleteListener = {
     this.keyDownEnterForInput = focusedElement;
   },
 
-  onPopupClosed(selectedRowStyle, window) {
+  onPopupClosed({ selectedRowComment, selectedRowStyle }, window) {
     let focusedElement = formFillController.focusedInput;
     let eventTarget = this.keyDownEnterForInput;
-    if (
-      !eventTarget ||
-      eventTarget !== focusedElement ||
-      selectedRowStyle != "loginsFooter"
-    ) {
-      this.keyDownEnterForInput = null;
+    this.keyDownEnterForInput = null;
+    if (!eventTarget || eventTarget !== focusedElement) {
       return;
     }
 
     let loginManager = window.windowGlobalChild.getActor("LoginManager");
-    let hostname = eventTarget.ownerDocument.documentURIObject.host;
-    loginManager.sendAsyncMessage("PasswordManager:OpenPreferences", {
-      hostname,
-      entryPoint: "autocomplete",
-    });
+    switch (selectedRowStyle) {
+      case "importableLogins":
+        loginManager.sendAsyncMessage(
+          "PasswordManager:OpenMigrationWizard",
+          selectedRowComment
+        );
+        break;
+      case "loginsFooter":
+        let hostname = eventTarget.ownerDocument.documentURIObject.host;
+        loginManager.sendAsyncMessage("PasswordManager:OpenPreferences", {
+          hostname,
+          entryPoint: "autocomplete",
+        });
+        break;
+    }
   },
 };

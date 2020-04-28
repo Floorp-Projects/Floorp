@@ -39,7 +39,9 @@ var MigrationWizard = {
     this.isInitialMigration =
       entryPointId == MigrationUtils.MIGRATION_ENTRYPOINT_FIRSTRUN;
 
-    if (args.length > 1) {
+    if (args.length == 2) {
+      this._source = args[1];
+    } else if (args.length > 2) {
       this._source = args[1];
       this._migrator = args[2] instanceof kIMig ? args[2] : null;
       this._autoMigrate = args[3].QueryInterface(kIPStartup);
