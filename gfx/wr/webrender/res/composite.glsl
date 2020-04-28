@@ -23,9 +23,6 @@ varying vec2 vUv;
 #endif
 
 #ifdef WR_VERTEX_SHADER
-// CPU side data is in CompositeInstance (gpu_types.rs) and is
-// converted to GPU data using desc::COMPOSITE (renderer.rs) by
-// filling vaos.composite_vao with VertexArrayKind::Composite.
 PER_INSTANCE in vec4 aDeviceRect;
 PER_INSTANCE in vec4 aDeviceClipRect;
 PER_INSTANCE in vec4 aColor;
@@ -111,13 +108,9 @@ void main(void) {
     );
 #else
     // The color is just the texture sample modulated by a supplied color
-#   if defined(WR_FEATURE_TEXTURE_EXTERNAL) || defined(WR_FEATURE_TEXTURE_2D) || defined(WR_FEATURE_TEXTURE_RECT)
-    vec4 texel = TEX_SAMPLE(sColor0, vec3(vUv, vLayer));
-#   else
-    vec4 texel = textureLod(sColor0, vec3(vUv, vLayer), 0.0);
-#   endif
+	vec4 texel = textureLod(sColor0, vec3(vUv, vLayer), 0.0);
     vec4 color = vColor * texel;
 #endif
-    write_output(color);
+	write_output(color);
 }
 #endif

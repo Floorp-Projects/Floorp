@@ -51,9 +51,6 @@ void ShareableCanvasRenderer::Initialize(const CanvasInitializeData& aData) {
     mFlags |= TextureFlags::NON_PREMULTIPLIED;
   }
 
-  if (!aData.mHasAlpha) {
-    mFlags |= TextureFlags::IS_OPAQUE;
-  }
   UniquePtr<gl::SurfaceFactory> factory =
       gl::GLScreenBuffer::CreateFactory(mGLContext, caps, forwarder, mFlags);
   if (factory) {
