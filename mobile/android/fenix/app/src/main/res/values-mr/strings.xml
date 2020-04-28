@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_2">खाजगी Firefox पूर्वावलोकन</string>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_3">Firefox पूर्वावलोकन (खाजगी)</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">खाजगी %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (खाजगी)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">अधिक पर्याय</string>
@@ -18,13 +18,12 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">आपले उघडे टॅब येथे दाखविले जातील.</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s Mozilla द्वारा निर्मित केले गेले आहे.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">आपण खाजगी सत्रात आहात</string>
-    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">आपण अप किंवा सर्व खाजगी टॅब बंद केल्यावर आपला शोध किंवा ब्राऊझिंग इतिहास %1$s मिटवते. यामुळे आपण वापरणाऱ्या साईट किंवा इंटरनेट सेवा देणार्यांपासून आपण होत नाही,
-         पण  आपण ऑनलाईन काय करता हे आपले डिव्हाईस वापरणाऱ्या इतरांपासून खाजगी ठेवण्यास सोपे होते.</string>
     <string name="private_browsing_common_myths">खाजगी ब्राउझिंग बद्दल सामान्य समजुती</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">सत्र हटवा</string>
@@ -276,10 +275,6 @@
     <string name="sync_last_synced_summary">शेवटचे सिंक: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">शेवटचे सिंक: कधीच नाही</string>
-    <!-- Text for displaying the default device name.
-        The first parameter is the application name, the second is the device manufacturer name
-        and the third is the device model. -->
-    <string name="default_device_name">%s %s %s वर</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
