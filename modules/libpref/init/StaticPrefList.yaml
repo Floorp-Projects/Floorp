@@ -673,7 +673,11 @@
 
 - name: browser.cache.offline.storage.enable
   type: bool
+#ifdef EARLY_BETA_OR_EARLIER
   value: false
+#else
+  value: true
+#endif
   mirror: always
 
 - name: browser.cache.disk.enable
