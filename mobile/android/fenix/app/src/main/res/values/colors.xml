@@ -278,4 +278,7 @@
 
     <!-- Static Shortcut Background Color -->
     <color name="static_shortcut_background">#F5F5F5</color>
+
+    <!-- SearchView Hint Color -->
+    <color name="search_view_hint_color">#5B5B66</color>
 </resources>
