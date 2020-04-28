@@ -44,6 +44,7 @@ GCSchedulingTunables::GCSchedulingTunables()
       gcZoneAllocThresholdBase_(TuningDefaults::GCZoneAllocThresholdBase),
       nonIncrementalFactor_(TuningDefaults::NonIncrementalFactor),
       zoneAllocDelayBytes_(TuningDefaults::ZoneAllocDelayBytes),
+      dynamicHeapGrowthEnabled_(TuningDefaults::DynamicHeapGrowthEnabled),
       highFrequencyThreshold_(
           TimeDuration::FromSeconds(TuningDefaults::HighFrequencyThreshold)),
       highFrequencyLowLimitBytes_(TuningDefaults::HighFrequencyLowLimitBytes),
@@ -51,6 +52,7 @@ GCSchedulingTunables::GCSchedulingTunables()
       highFrequencyHeapGrowthMax_(TuningDefaults::HighFrequencyHeapGrowthMax),
       highFrequencyHeapGrowthMin_(TuningDefaults::HighFrequencyHeapGrowthMin),
       lowFrequencyHeapGrowth_(TuningDefaults::LowFrequencyHeapGrowth),
+      dynamicMarkSliceEnabled_(TuningDefaults::DynamicMarkSliceEnabled),
       minEmptyChunkCount_(TuningDefaults::MinEmptyChunkCount),
       maxEmptyChunkCount_(TuningDefaults::MaxEmptyChunkCount),
       nurseryFreeThresholdForIdleCollection_(
@@ -130,6 +132,12 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       setLowFrequencyHeapGrowth(newGrowth);
       break;
     }
+    case JSGC_DYNAMIC_HEAP_GROWTH:
+      dynamicHeapGrowthEnabled_ = value != 0;
+      break;
+    case JSGC_DYNAMIC_MARK_SLICE:
+      dynamicMarkSliceEnabled_ = value != 0;
+      break;
     case JSGC_ALLOCATION_THRESHOLD:
       gcZoneAllocThresholdBase_ = value * 1024 * 1024;
       break;
@@ -283,6 +291,12 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
     case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
       setLowFrequencyHeapGrowth(TuningDefaults::LowFrequencyHeapGrowth);
       break;
+    case JSGC_DYNAMIC_HEAP_GROWTH:
+      dynamicHeapGrowthEnabled_ = TuningDefaults::DynamicHeapGrowthEnabled;
+      break;
+    case JSGC_DYNAMIC_MARK_SLICE:
+      dynamicMarkSliceEnabled_ = TuningDefaults::DynamicMarkSliceEnabled;
+      break;
     case JSGC_ALLOCATION_THRESHOLD:
       gcZoneAllocThresholdBase_ = TuningDefaults::GCZoneAllocThresholdBase;
       break;
@@ -356,6 +370,10 @@ void HeapThreshold::setSliceThreshold(ZoneAllocator* zone,
 float GCHeapThreshold::computeZoneHeapGrowthFactorForHeapSize(
     size_t lastBytes, const GCSchedulingTunables& tunables,
     const GCSchedulingState& state) {
+  if (!tunables.isDynamicHeapGrowthEnabled()) {
+    return 3.0f;
+  }
+
   // For small zones, our collection heuristics do not matter much: favor
   // something simple in this case.
   if (lastBytes < 1 * 1024 * 1024) {

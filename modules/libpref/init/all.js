@@ -1189,6 +1189,14 @@ pref("javascript.options.mem.gc_high_frequency_heap_growth_min", 150);
 // JSGC_LOW_FREQUENCY_HEAP_GROWTH
 pref("javascript.options.mem.gc_low_frequency_heap_growth", 150);
 
+// JSGC_DYNAMIC_HEAP_GROWTH
+// Override SpiderMonkey default (false).
+pref("javascript.options.mem.gc_dynamic_heap_growth", true);
+
+// JSGC_DYNAMIC_MARK_SLICE
+// Override SpiderMonkey default (false).
+pref("javascript.options.mem.gc_dynamic_mark_slice", true);
+
 // JSGC_ALLOCATION_THRESHOLD
 pref("javascript.options.mem.gc_allocation_threshold_mb", 27);
 
