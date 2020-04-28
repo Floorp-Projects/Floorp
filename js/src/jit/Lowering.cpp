@@ -2200,66 +2200,6 @@ void LIRGenerator::visitTruncateToInt32(MTruncateToInt32* truncate) {
   }
 }
 
-void LIRGenerator::visitToInt64(MToInt64* ins) {
-  MDefinition* opd = ins->input();
-
-  switch (opd->type()) {
-    case MIRType::Value: {
-      LValueToInt64* lir =
-          new (alloc()) LValueToInt64(useBox(opd), temp(), tempToUnbox());
-      assignSnapshot(lir, Bailout_NonPrimitiveInput);
-      defineInt64(lir, ins);
-      assignSafepoint(lir, ins);
-      break;
-    }
-
-    case MIRType::Boolean: {
-      LBooleanToInt64* lir =
-          new (alloc()) LBooleanToInt64(useRegisterAtStart(opd));
-      defineInt64(lir, ins);
-      assignSafepoint(lir, ins);
-      break;
-    }
-
-    case MIRType::String: {
-      LStringToInt64* lir =
-          new (alloc()) LStringToInt64(useRegister(opd), temp());
-      // May bail out on parse failure.
-      assignSnapshot(lir, Bailout_NonPrimitiveInput);
-      defineInt64(lir, ins);
-      assignSafepoint(lir, ins);
-      break;
-    }
-
-    // An Int64 may be passed here from a BigInt to Int64 conversion.
-    case MIRType::Int64: {
-      redefine(ins, opd);
-      break;
-    }
-
-    default:
-      // Undefined, Null, Number, and Symbol throw.
-      // Objects may be effectful.
-      // BigInt operands are eliminated by the type policy.
-      MOZ_CRASH("unexpected type");
-  }
-}
-
-void LIRGenerator::visitTruncateBigIntToInt64(MTruncateBigIntToInt64* ins) {
-  MOZ_ASSERT(ins->input()->type() == MIRType::BigInt);
-  LTruncateBigIntToInt64* lir =
-      new (alloc()) LTruncateBigIntToInt64(useRegister(ins->input()));
-  defineInt64(lir, ins);
-}
-
-void LIRGenerator::visitInt64ToBigInt(MInt64ToBigInt* ins) {
-  MOZ_ASSERT(ins->input()->type() == MIRType::Int64);
-  LInt64ToBigInt* lir =
-      new (alloc()) LInt64ToBigInt(useInt64(ins->input()), temp(), temp());
-  define(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitWasmTruncateToInt32(MWasmTruncateToInt32* ins) {
   MDefinition* input = ins->input();
   switch (input->type()) {
@@ -5196,8 +5136,6 @@ void LIRGenerator::visitIonToWasmCall(MIonToWasmCall* ins) {
   LInstruction* lir;
   if (ins->type() == MIRType::Value) {
     lir = allocateVariadic<LIonToWasmCallV>(ins->numOperands(), scratch, fp);
-  } else if (ins->type() == MIRType::Int64) {
-    lir = allocateVariadic<LIonToWasmCallI64>(ins->numOperands(), scratch, fp);
   } else {
     lir = allocateVariadic<LIonToWasmCall>(ins->numOperands(), scratch, fp);
   }
