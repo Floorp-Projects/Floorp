@@ -720,17 +720,6 @@ CookieService::RemoveNative(const nsACString& aHost, const nsACString& aName,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-CookieService::ImportCookies(nsIFile* aCookieFile) {
-  if (!IsInitialized()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  mPersistentStorage->EnsureReadComplete();
-
-  return mPersistentStorage->ImportCookies(aCookieFile);
-}
-
 void CookieService::GetCookiesForURI(
     nsIURI* aHostURI, nsIChannel* aChannel, bool aIsForeign,
     bool aIsThirdPartyTrackingResource,

@@ -51,8 +51,6 @@ class CookiePersistentStorage final : public CookieStorage {
   void CleanupCachedStatements();
   void CleanupDBConnection();
 
-  nsresult ImportCookies(nsIFile* aCookieFile);
-
   void Activate();
 
   void RebuildCorruptDB();
