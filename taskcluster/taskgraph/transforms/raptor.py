@@ -243,7 +243,11 @@ def split_browsertime_page_load_by_url(config, tests):
 @transforms.add
 def add_extra_options(config, tests):
     for test in tests:
-        extra_options = test.setdefault('mozharness', {}).setdefault('extra-options', [])
+        mozharness = test.setdefault('mozharness', {})
+        if test.get('app', '') == 'chrome-m':
+            mozharness['tooltool-downloads'] = 'internal'
+
+        extra_options = mozharness.setdefault('extra-options', [])
 
         # Adding device name if we're on android
         test_platform = test['test-platform']

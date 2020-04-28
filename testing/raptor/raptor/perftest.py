@@ -470,7 +470,7 @@ either Raptor or browsertime."""
 
     def get_playback_config(self, test):
         platform = self.config["platform"]
-        playback_dir = os.path.join(here, "playback")
+        playback_dir = os.path.join(here, "tooltool-manifests", "playback")
 
         self.config.update(
             {
