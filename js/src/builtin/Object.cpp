@@ -1889,33 +1889,9 @@ static bool obj_isSealed(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool ProtoGetter(JSContext* cx, unsigned argc, Value* vp) {
+bool js::obj_setProto(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-
-  RootedValue thisv(cx, args.thisv());
-  if (thisv.isPrimitive()) {
-    if (thisv.isNullOrUndefined()) {
-      ReportIncompatible(cx, args);
-      return false;
-    }
-
-    if (!BoxNonStrictThis(cx, thisv, &thisv)) {
-      return false;
-    }
-  }
-
-  RootedObject obj(cx, &thisv.toObject());
-  RootedObject proto(cx);
-  if (!GetPrototype(cx, obj, &proto)) {
-    return false;
-  }
-
-  args.rval().setObjectOrNull(proto);
-  return true;
-}
-
-static bool ProtoSetter(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
 
   HandleValue thisv = args.thisv();
   if (thisv.isNullOrUndefined()) {
@@ -1928,14 +1904,13 @@ static bool ProtoSetter(JSContext* cx, unsigned argc, Value* vp) {
     return true;
   }
 
-  Rooted<JSObject*> obj(cx, &args.thisv().toObject());
-
   /* Do nothing if __proto__ isn't being set to an object or null. */
-  if (args.length() == 0 || !args[0].isObjectOrNull()) {
+  if (!args[0].isObjectOrNull()) {
     args.rval().setUndefined();
     return true;
   }
 
+  Rooted<JSObject*> obj(cx, &args.thisv().toObject());
   Rooted<JSObject*> newProto(cx, args[0].toObjectOrNull());
   if (!SetPrototype(cx, obj, newProto)) {
     return false;
@@ -1960,7 +1935,9 @@ static const JSFunctionSpec object_methods[] = {
     JS_FS_END};
 
 static const JSPropertySpec object_properties[] = {
-    JS_PSGS("__proto__", ProtoGetter, ProtoSetter, 0), JS_PS_END};
+    JS_SELF_HOSTED_GETSET("__proto__", "$ObjectProtoGetter",
+                          "$ObjectProtoSetter", 0),
+    JS_PS_END};
 
 static const JSFunctionSpec object_static_methods[] = {
     JS_FN("assign", obj_assign, 2, 0),

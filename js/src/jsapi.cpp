@@ -3020,7 +3020,7 @@ static bool DefineSelfHostedProperty(JSContext* cx, HandleObject obj,
 
     RootedValue setterValue(cx);
     if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), setterNameName,
-                                             name, 0, &setterValue)) {
+                                             name, 1, &setterValue)) {
       return false;
     }
     MOZ_ASSERT(setterValue.isObject() &&

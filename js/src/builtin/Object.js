@@ -61,6 +61,20 @@ function Object_hasOwnProperty(V) {
     return hasOwn(V, this);
 }
 
+// ES 2021 draft rev 0b988b7700de675331ac360d164c978d6ea452ec
+// B.2.2.1.1 get Object.prototype.__proto__
+function $ObjectProtoGetter() {
+    return std_Reflect_getPrototypeOf(ToObject(this));
+}
+_SetCanonicalName($ObjectProtoGetter, "get __proto__");
+
+// ES 2021 draft rev 0b988b7700de675331ac360d164c978d6ea452ec
+// B.2.2.1.2 set Object.prototype.__proto__
+function $ObjectProtoSetter(proto) {
+    return callFunction(std_Object_setProto, this, proto);
+}
+_SetCanonicalName($ObjectProtoSetter, "set __proto__");
+
 // ES7 draft (2016 March 8) B.2.2.3
 function ObjectDefineSetter(name, setter) {
     // Step 1.
