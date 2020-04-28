@@ -44,7 +44,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ScrollbarPreferences.h"
-#include "mozilla/ViewportUtils.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
@@ -3559,7 +3558,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   bool haveRadii = mOuter->GetPaddingBoxBorderRadii(radii);
   if (mIsRoot) {
     clipRect.SizeTo(nsLayoutUtils::CalculateCompositionSizeForFrame(mOuter));
-    if (aBuilder->IsRelativeToLayoutViewport() &&
+    if (!aBuilder->IsPaintingToWindow() &&
         mOuter->PresContext()->IsRootContentDocument()) {
       double res = mOuter->PresShell()->GetResolution();
       clipRect.width = NSToCoordRound(clipRect.width / res);
@@ -3668,22 +3667,8 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         scrolledRectClipState.SetClippedToDisplayPort();
       }
 
-      nsRect visibleRectForChildren = visibleRect;
-      nsRect dirtyRectForChildren = dirtyRect;
-
-      // If we are entering the RCD-RSF, we are crossing the async zoom
-      // container boundary, and need to convert from visual to layout
-      // coordinates.
-      if (willBuildAsyncZoomContainer && aBuilder->IsForEventDelivery()) {
-        MOZ_ASSERT(ViewportUtils::IsZoomedContentRoot(mScrolledFrame));
-        visibleRectForChildren = ViewportUtils::VisualToLayout(
-            visibleRectForChildren, mOuter->PresShell());
-        dirtyRectForChildren = ViewportUtils::VisualToLayout(
-            dirtyRectForChildren, mOuter->PresShell());
-      }
-
       nsDisplayListBuilder::AutoBuildingDisplayList building(
-          aBuilder, mOuter, visibleRectForChildren, dirtyRectForChildren);
+          aBuilder, mOuter, visibleRect, dirtyRect);
 
       mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, set);
 
@@ -7055,8 +7040,7 @@ bool ScrollFrameHelper::DragScroll(WidgetEvent* aEvent) {
   // far as it can go in both directions. Return false so that an ancestor
   // scrollframe can scroll instead.
   bool willScroll = false;
-  nsPoint pnt =
-      nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, RelativeTo{mOuter});
+  nsPoint pnt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, mOuter);
   nsPoint scrollPoint = GetScrollPosition();
   nsRect rangeRect = GetLayoutScrollRange();
 

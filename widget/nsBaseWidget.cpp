@@ -968,6 +968,17 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
   InputAPZContext context(aApzResult.mTargetGuid, inputBlockId,
                           aApzResult.mStatus);
 
+  // If this is an event that the APZ has targeted to an APZC in the root
+  // process, apply that APZC's callback-transform before dispatching the
+  // event. If the event is instead targeted to an APZC in the child process,
+  // the transform will be applied in the child process before dispatching
+  // the event there (see e.g. BrowserChild::RecvRealTouchEvent()).
+  if (aApzResult.mTargetGuid.mLayersId ==
+      mCompositorSession->RootLayerTreeId()) {
+    APZCCallbackHelper::ApplyCallbackTransform(*aEvent, targetGuid,
+                                               GetDefaultScale());
+  }
+
   // Make a copy of the original event for the APZCCallbackHelper helpers that
   // we call later, because the event passed to DispatchEvent can get mutated in
   // ways that we don't want (i.e. touch points can get stripped out).

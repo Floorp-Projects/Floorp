@@ -140,8 +140,7 @@ nsresult nsImageControlFrame::HandleEvent(nsPresContext* aPresContext,
         mContent->GetProperty(nsGkAtoms::imageClickedPoint));
     if (lastClickPoint) {
       // normally lastClickedPoint is not null, as it's allocated in Init()
-      nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(
-          aEvent, RelativeTo{this});
+      nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
       TranslateEventCoords(pt, *lastClickPoint);
     }
   }

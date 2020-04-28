@@ -2261,8 +2261,7 @@ nsresult nsImageFrame::GetContentForEvent(WidgetEvent* aEvent,
   if (nsImageMap* map = GetImageMap()) {
     nsIntPoint p;
     TranslateEventCoords(
-        nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, RelativeTo{this}),
-        p);
+        nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this), p);
     nsCOMPtr<nsIContent> area = map->GetArea(p.x, p.y);
     if (area) {
       area.forget(aContent);
@@ -2288,9 +2287,8 @@ nsresult nsImageFrame::HandleEvent(nsPresContext* aPresContext,
     bool isServerMap = IsServerImageMap();
     if (map || isServerMap) {
       nsIntPoint p;
-      TranslateEventCoords(nsLayoutUtils::GetEventCoordinatesRelativeTo(
-                               aEvent, RelativeTo{this}),
-                           p);
+      TranslateEventCoords(
+          nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this), p);
       bool inside = false;
       // Even though client-side image map triggering happens
       // through content, we need to make sure we're not inside

@@ -1195,8 +1195,7 @@ void nsBoxFrame::WrapListsInRedirector(nsDisplayListBuilder* aBuilder,
 bool nsBoxFrame::GetEventPoint(WidgetGUIEvent* aEvent, nsPoint& aPoint) {
   LayoutDeviceIntPoint refPoint;
   bool res = GetEventPoint(aEvent, refPoint);
-  aPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, refPoint,
-                                                        RelativeTo{this});
+  aPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, refPoint, this);
   return res;
 }
 

@@ -47,7 +47,7 @@ static void UpdateAllowedBehavior(StyleTouchAction aTouchActionValue,
 }
 
 TouchBehaviorFlags TouchActionHelper::GetAllowedTouchBehavior(
-    nsIWidget* aWidget, RelativeTo aRootFrame,
+    nsIWidget* aWidget, nsIFrame* aRootFrame,
     const LayoutDeviceIntPoint& aPoint) {
   TouchBehaviorFlags behavior = AllowedTouchBehavior::VERTICAL_PAN |
                                 AllowedTouchBehavior::HORIZONTAL_PAN |
@@ -57,7 +57,9 @@ TouchBehaviorFlags TouchActionHelper::GetAllowedTouchBehavior(
   nsPoint relativePoint =
       nsLayoutUtils::GetEventCoordinatesRelativeTo(aWidget, aPoint, aRootFrame);
 
-  nsIFrame* target = nsLayoutUtils::GetFrameForPoint(aRootFrame, relativePoint);
+  nsIFrame* target = nsLayoutUtils::GetFrameForPoint(
+      aRootFrame, relativePoint,
+      nsLayoutUtils::FrameForPointOption::IgnoreRootScrollFrame);
   if (!target) {
     return behavior;
   }
