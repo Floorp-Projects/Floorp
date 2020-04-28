@@ -109,14 +109,15 @@ async function test_save_change(testData) {
     async function(browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
 
-      // Submit the form in the content page with the credentials from the test
-      // case. This will cause the doorhanger notification to be displayed.
+      // Update the form with credentials from the test case.
       info(`update form with username: ${username}, password: ${password}`);
       await changeContentFormValues(browser, {
         "#form-basic-username": username,
         "#form-basic-password": password,
       });
 
+      // Submit the form with the new credentials. This will cause the doorhanger
+      // notification to be displayed.
       let formSubmittedPromise = listenForTestNotification("FormSubmit");
       await SpecialPowers.spawn(browser, [], async function() {
         let doc = this.content.document;
