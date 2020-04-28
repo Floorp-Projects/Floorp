@@ -898,6 +898,23 @@ GetUserUpdateDirectory(const wchar_t* installPath, const char* vendor,
 }
 
 /**
+ * This is a much more limited version of the GetCommonUpdateDirectory that can
+ * be called from Rust.
+ * The result parameter must be a valid pointer to a buffer of length
+ * MAX_PATH + 1
+ */
+extern "C" HRESULT get_common_update_directory(const wchar_t* installPath,
+                                               wchar_t* result) {
+  mozilla::UniquePtr<wchar_t[]> uniqueResult;
+  HRESULT hr = GetCommonUpdateDirectory(
+      installPath, SetPermissionsOf::BaseDirIfNotExists, uniqueResult);
+  if (FAILED(hr)) {
+    return hr;
+  }
+  return StringCchCopyW(result, MAX_PATH + 1, uniqueResult.get());
+}
+
+/**
  * This is a helper function that does all of the work for
  * GetCommonUpdateDirectory and GetUserUpdateDirectory. It partially exists to
  * prevent callers of GetUserUpdateDirectory from having to pass a useless
