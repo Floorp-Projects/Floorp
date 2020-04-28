@@ -178,6 +178,8 @@ test_with_at_property({
   }
 }, 'Inherited properties inherit');
 
+// Initial values
+
 test_with_at_property({
   syntax: '"<color>"',
   inherits: true,
@@ -190,5 +192,33 @@ test_with_at_property({
     target.style = '';
   }
 }, 'Initial values substituted as computed value');
+
+test_with_at_property({
+  syntax: '"<length>"',
+  inherits: false,
+  initialValue: undefined
+}, (name, rule) => {
+  try {
+    target.style = `${name}: calc(1px + 1px);`;
+    assert_equals(getComputedStyle(target).getPropertyValue(name), ' calc(1px + 1px)');
+  } finally {
+    target.style = '';
+  }
+}, 'Non-universal registration are invalid without an initial value');
+
+test_with_at_property({
+  syntax: '"*"',
+  inherits: false,
+  initialValue: undefined
+}, (name, rule) => {
+  try {
+    // If the registration suceeded, ${name} does *not* inherit, and hence
+    // the computed value on 'target' should be empty.
+    outer.style = `${name}: calc(1px + 1px);`;
+    assert_equals(getComputedStyle(target).getPropertyValue(name), '');
+  } finally {
+    outer.style = '';
+  }
+}, 'Initial value may be omitted for universal registration');
 
 </script>
