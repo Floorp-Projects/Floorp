@@ -876,12 +876,13 @@ class nsLayoutUtils {
    * @param aPresContext the PresContext for the view
    * @param aView the view
    * @param aPt the point relative to the view
+   * @param aViewportType whether the point is in visual or layout coordinates
    * @param aWidget the widget to which returned coordinates are relative
    * @return the point in the view's coordinates
    */
   static mozilla::LayoutDeviceIntPoint TranslateViewToWidget(
       nsPresContext* aPresContext, nsView* aView, nsPoint aPt,
-      nsIWidget* aWidget);
+      ViewportType aViewportType, nsIWidget* aWidget);
 
   static mozilla::LayoutDeviceIntPoint WidgetToWidgetOffset(
       nsIWidget* aFromWidget, nsIWidget* aToWidget);
