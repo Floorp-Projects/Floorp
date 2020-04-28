@@ -1737,7 +1737,7 @@ void MacroAssemblerMIPSCompat::checkStackAlignment() {
 
 void MacroAssemblerMIPSCompat::alignStackPointer() {
   movePtr(StackPointer, SecondScratchReg);
-  asMasm().subPtr(Imm32(sizeof(uintptr_t)), StackPointer);
+  asMasm().subPtr(Imm32(sizeof(intptr_t)), StackPointer);
   asMasm().andPtr(Imm32(~(ABIStackAlignment - 1)), StackPointer);
   storePtr(SecondScratchReg, Address(StackPointer, 0));
 }

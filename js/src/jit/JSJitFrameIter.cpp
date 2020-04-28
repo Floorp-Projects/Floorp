@@ -219,8 +219,7 @@ MachineState JSJitFrameIter::machineState() const {
     machine.setRegisterLocation(*iter, --spill);
   }
 
-  uint8_t* spillAlign =
-      alignDoubleSpillWithOffset(reinterpret_cast<uint8_t*>(spill), 0);
+  uint8_t* spillAlign = alignDoubleSpill(reinterpret_cast<uint8_t*>(spill));
 
   char* floatSpill = reinterpret_cast<char*>(spillAlign);
   FloatRegisterSet fregs = reader.allFloatSpills().set();
