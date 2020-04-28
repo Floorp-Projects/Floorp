@@ -34,7 +34,8 @@
 #include "prnetdb.h"
 #include "nsIURIFixup.h"
 #include "mozilla/dom/StorageUtils.h"
-
+#include "mozilla/ContentBlocking.h"
+#include "nsPIDOMWindow.h"
 #include "nsIURIMutator.h"
 
 #include "json/json.h"
@@ -686,6 +687,24 @@ BasePrincipal::GetPrefLightCacheKey(nsIURI* aURI, bool aWithCredentials,
 
   _retval.Append(space + scheme + space + host + space + port + space + spec);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BasePrincipal::HasFirstpartyStorageAccess(mozIDOMWindow* aCheckWindow,
+                                          uint32_t* aRejectedReason,
+                                          bool* aOutAllowed) {
+  *aRejectedReason = 0;
+  *aOutAllowed = false;
+
+  nsPIDOMWindowInner* win = nsPIDOMWindowInner::From(aCheckWindow);
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = GetURI(getter_AddRefs(uri));
+  if (NS_FAILED(rv)) {
+    return NS_OK;
+  }
+  *aOutAllowed =
+      ContentBlocking::ShouldAllowAccessFor(win, uri, aRejectedReason);
   return NS_OK;
 }
 
