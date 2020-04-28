@@ -19,6 +19,7 @@
 #include "nsIContent.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewerPrint.h"
+#include "nsIScreen.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/BeforeUnloadEvent.h"
 #include "mozilla/dom/PopupBlocker.h"
