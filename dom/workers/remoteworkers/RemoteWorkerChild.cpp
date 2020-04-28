@@ -158,11 +158,11 @@ class MessagePortIdentifierRunnable final : public WorkerRunnable {
 // This is used to release WeakWorkerRefs which can only have their refcount
 // modified on the owning thread (worker thread in this case). It also keeps
 // alive the associated WorkerPrivate until the WeakWorkerRef is released.
-class ReleaseWorkerRunnable final : public WorkerRunnable {
+class ReleaseWorkerRunnable final : public WorkerControlRunnable {
  public:
   ReleaseWorkerRunnable(RefPtr<WorkerPrivate>&& aWorkerPrivate,
                         RefPtr<WeakWorkerRef>&& aWeakRef)
-      : WorkerRunnable(aWorkerPrivate),
+      : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
         mWorkerPrivate(std::move(aWorkerPrivate)),
         mWeakRef(std::move(aWeakRef)) {
     MOZ_ASSERT(mWorkerPrivate);
@@ -512,8 +512,17 @@ void RemoteWorkerChild::InitializeOnWorker() {
     NS_ProxyRelease(__func__, mOwningEventTarget, self.forget());
   });
 
+  // Let RemoteWorkerChild own the WorkerPrivate; RemoteWorkerChild's state
+  // transitions should guarantee the WorkerPrivate is cleaned up correctly.
+  // This also reduces some complexity around thread lifetimes guarantees that
+  // RemoteWorkerChild's state transitions rely on (e.g. the worker thread
+  // terminating unexpectedly).
+  RefPtr<StrongWorkerRef> strongRef =
+      StrongWorkerRef::Create(workerPrivate, __func__);
+
   RefPtr<WeakWorkerRef> workerRef = WeakWorkerRef::Create(
-      workerPrivate, [selfWeakRef = std::move(selfWeakRef)]() mutable {
+      workerPrivate, [selfWeakRef = std::move(selfWeakRef),
+                      strongRef = std::move(strongRef)]() mutable {
         RefPtr<RemoteWorkerChild> self(selfWeakRef);
 
         if (NS_WARN_IF(!self)) {
