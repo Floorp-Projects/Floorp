@@ -360,8 +360,6 @@ void JitRuntime::generateInvalidator(MacroAssembler& masm, Label* bailoutTail) {
 
   invalidatorOffset_ = startTrampolineCode(masm);
 
-  masm.addq(Imm32(sizeof(uintptr_t)), rsp);
-
   // Push registers such that we can access them from [base + code].
   DumpAllRegs(masm);
 
