@@ -68,8 +68,8 @@ nsresult nsScrollbarButtonFrame::HandleEvent(nsPresContext* aPresContext,
       mCursorOnThis = false;
       break;
     case eMouseMove: {
-      nsPoint cursor =
-          nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
+      nsPoint cursor = nsLayoutUtils::GetEventCoordinatesRelativeTo(
+          aEvent, RelativeTo{this});
       nsRect frameRect(nsPoint(0, 0), GetSize());
       mCursorOnThis = frameRect.Contains(cursor);
       break;

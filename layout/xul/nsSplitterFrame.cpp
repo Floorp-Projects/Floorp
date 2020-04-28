@@ -385,8 +385,8 @@ void nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext,
 
     bool isHorizontal = !mOuter->IsXULHorizontal();
     // convert coord to pixels
-    nsPoint pt =
-        nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, mParentBox);
+    nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(
+        aEvent, RelativeTo{mParentBox});
     nscoord pos = isHorizontal ? pt.x : pt.y;
 
     // mDragStart is in frame coordinates

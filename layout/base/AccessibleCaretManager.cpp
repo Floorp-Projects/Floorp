@@ -565,7 +565,8 @@ nsresult AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint) {
   // something under the original point will be selected, which may not be the
   // original text the user wants to select.
   nsPoint ptInFrame = aPoint;
-  nsLayoutUtils::TransformPoint(rootFrame, ptFrame, ptInFrame);
+  nsLayoutUtils::TransformPoint(RelativeTo{rootFrame}, RelativeTo{ptFrame},
+                                ptInFrame);
 
   // Firstly check long press on an empty editable content.
   Element* newFocusEditingHost = GetEditingHostForFrame(ptFrame);
@@ -1229,7 +1230,8 @@ nsresult AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint) {
   nsIFrame* newFrame = nullptr;
   nsPoint newPoint;
   nsPoint ptInFrame = point;
-  nsLayoutUtils::TransformPoint(rootFrame, ptFrame, ptInFrame);
+  nsLayoutUtils::TransformPoint(RelativeTo{rootFrame}, RelativeTo{ptFrame},
+                                ptInFrame);
   result = fs->ConstrainFrameAndPointToAnchorSubtree(ptFrame, ptInFrame,
                                                      &newFrame, newPoint);
   if (NS_FAILED(result) || !newFrame) {
@@ -1378,7 +1380,8 @@ void AccessibleCaretManager::StartSelectionAutoScrollTimer(
   nsIFrame* rootFrame = mPresShell->GetRootFrame();
   MOZ_ASSERT(rootFrame);
   nsPoint ptInScrolled = aPoint;
-  nsLayoutUtils::TransformPoint(rootFrame, capturingFrame, ptInScrolled);
+  nsLayoutUtils::TransformPoint(RelativeTo{rootFrame},
+                                RelativeTo{capturingFrame}, ptInScrolled);
 
   RefPtr<nsFrameSelection> fs = GetFrameSelection();
   MOZ_ASSERT(fs);
