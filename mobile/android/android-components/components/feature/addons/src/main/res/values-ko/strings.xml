@@ -23,7 +23,7 @@
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">파일을 다운로드하고 브라우저의 다운로드 기록을 변경함</string>
     <!-- Description for downloads_open permission. -->
-    <string name="mozac_feature_addons_permissions_downloads_open_description">기기에 다운로드 된 파일 열기</string>
+    <string name="mozac_feature_addons_permissions_downloads_open_description">기기에 다운로드한 파일 열기</string>
     <!-- Description for find permission. -->
     <string name="mozac_feature_addons_permissions_find_description">열려있는 모든 탭의 텍스트 읽기</string>
     <!-- Description for geolocation permission. -->
@@ -66,6 +66,10 @@
     <string name="mozac_feature_addons_settings_on">켜짐</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">꺼짐</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">사생활 보호 모드에서 허용</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">사생활 보호 모드에서 실행</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">사용함</string>
     <!-- Indicates the add-on is disabled. -->
@@ -103,7 +107,7 @@
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">부가 기능</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
-    <string name="mozac_feature_addons_updater_notification_allow_button">허가</string>
+    <string name="mozac_feature_addons_updater_notification_allow_button">허용</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
     <string name="mozac_feature_addons_updater_notification_deny_button">거부</string>
     <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons-->

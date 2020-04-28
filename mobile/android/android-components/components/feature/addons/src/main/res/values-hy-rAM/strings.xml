@@ -66,6 +66,10 @@
     <string name="mozac_feature_addons_settings_on">Միաց.</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Անջ.</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Թույլատրել Գաղտնի դիտարկմամբ</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Աշխատեցնել Գաղտնի դիտարկմամբ</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Միացված է</string>
     <!-- Indicates the add-on is disabled. -->

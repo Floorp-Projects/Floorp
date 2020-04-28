@@ -61,12 +61,12 @@
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">연결 시간 초과</string>
     <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>요청하신 사이트가 연결 요청에 반응하지 않아서 브라우저가 회신 대기를 중단했습니다.</p>
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>요청하신 사이트가 연결 요청에 응답하지 않아 브라우저가 응답 대기를 중단했습니다.</p>
 	<ul>
-		<li>서버 폭주일까요, 일시적으로 닫힌 것일까요? 나중에 다시 시도해보십시오.</li>
-		<li>다른 사이트도 열리지 않습니까? 컴퓨터의 네트워크 연결을 점검해보십시오.</li>
-		<li>컴퓨터 또는 네트워크가 방화벽 또는 프록시에 의해 보호되고 있습니까? 부정확한 설정은 웹 탐색에 지장을 줄 수 있습니다.</li>
-		<li>여전히 문제가 있습니까? 네트워크 관리자 또는 인터넷 서비스 제공자에게 지원을 요청하십시오.</li>
+		<li>서버의 사용량이 많거나, 일시적 가동 중지일 수 있습니다. 나중에 다시 시도해 보십시오.</li>
+		<li>다른 사이트도 열리지 않습니까? 컴퓨터의 네트워크 연결을 점검해 보십시오.</li>
+		<li>사용자의 컴퓨터 또는 네트워크가 방화벽 또는 프록시에 의해 보호되고 있습니까? 설정이 잘못되면 웹 탐색에 방해가 될 수 있습니다.</li>
+		<li>여전히 문제가 있습니까? 네트워크 관리자 또는 인터넷 서비스 제공자에게 지원을 요청하세요.</li>
 	</ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
