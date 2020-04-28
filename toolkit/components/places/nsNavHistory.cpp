@@ -883,19 +883,30 @@ nsNavHistory::CanAddURI(nsIURI* aURI, bool* canAdd) {
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG_POINTER(canAdd);
 
-  // Default to false.
-  *canAdd = false;
-
   // If history is disabled, don't add any entry.
   if (IsHistoryDisabled()) {
+    *canAdd = false;
     return NS_OK;
   }
+
+  return CanAddURIToHistory(aURI, canAdd);
+}
+
+// nsNavHistory::CanAddURIToHistory
+//
+//    Helper for nsNavHistory::CanAddURI to be callable from a child process
+
+// static
+nsresult
+nsNavHistory::CanAddURIToHistory(nsIURI* aURI, bool* aCanAdd) {
+  // Default to false.
+  *aCanAdd = false;
 
   // If the url length is over a threshold, don't add it.
   nsCString spec;
   nsresult rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!mDB || spec.Length() > mDB->MaxUrlLength()) {
+  if (spec.Length() > MaxURILength()) {
     return NS_OK;
   }
 
@@ -903,28 +914,39 @@ nsNavHistory::CanAddURI(nsIURI* aURI, bool* canAdd) {
   rv = aURI->GetScheme(scheme);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // first check the most common cases (HTTP, HTTPS) to allow in to avoid most
-  // of the work
-  if (scheme.EqualsLiteral("http")) {
-    *canAdd = true;
-    return NS_OK;
-  }
-  if (scheme.EqualsLiteral("https")) {
-    *canAdd = true;
+  // first check the most common cases
+  if (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https")) {
+    *aCanAdd = true;
     return NS_OK;
   }
 
   // now check for all bad things
-  if (scheme.EqualsLiteral("about") || scheme.EqualsLiteral("blob") ||
-      scheme.EqualsLiteral("chrome") || scheme.EqualsLiteral("data") ||
-      scheme.EqualsLiteral("imap") || scheme.EqualsLiteral("javascript") ||
-      scheme.EqualsLiteral("mailbox") || scheme.EqualsLiteral("moz-anno") ||
-      scheme.EqualsLiteral("news") || scheme.EqualsLiteral("page-icon") ||
-      scheme.EqualsLiteral("resource") || scheme.EqualsLiteral("view-source")) {
-    return NS_OK;
-  }
-  *canAdd = true;
+  *aCanAdd =
+      !scheme.EqualsLiteral("about") && !scheme.EqualsLiteral("blob") &&
+      !scheme.EqualsLiteral("chrome") && !scheme.EqualsLiteral("data") &&
+      !scheme.EqualsLiteral("imap") && !scheme.EqualsLiteral("javascript") &&
+      !scheme.EqualsLiteral("mailbox") && !scheme.EqualsLiteral("moz-anno") &&
+      !scheme.EqualsLiteral("news") && !scheme.EqualsLiteral("page-icon") &&
+      !scheme.EqualsLiteral("resource") && !scheme.EqualsLiteral("view-source");
+
   return NS_OK;
+}
+
+// nsNavHistory::MaxURILength
+
+// static
+uint32_t nsNavHistory::MaxURILength() {
+  // Duplicates Database::MaxUrlLength() for use in
+  // child processes without a database instance.
+  static uint32_t maxSpecLength = 0;
+  if (!maxSpecLength) {
+    maxSpecLength = Preferences::GetInt(PREF_HISTORY_MAXURLLEN,
+                                        PREF_HISTORY_MAXURLLEN_DEFAULT);
+    if (maxSpecLength < 255 || maxSpecLength > INT32_MAX) {
+      maxSpecLength = PREF_HISTORY_MAXURLLEN_DEFAULT;
+    }
+  }
+  return maxSpecLength;
 }
 
 // nsNavHistory::GetNewQuery
