@@ -302,6 +302,15 @@ Interceptor::GetMarshalSizeMax(REFIID riid, void* pv, DWORD dwDestContext,
     return hr;
   }
 
+#if defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
+  if (XRE_IsContentProcess() && IsCallerExternalProcess()) {
+    // The caller isn't our chrome process, so we do not provide a handler
+    // payload. Even though we're only getting the size here, calculating the
+    // payload size might actually require building the payload.
+    return hr;
+  }
+#endif  // defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
+
   DWORD payloadSize = 0;
   hr = mEventSink->GetHandlerPayloadSize(WrapNotNull(this),
                                          WrapNotNull(&payloadSize));
