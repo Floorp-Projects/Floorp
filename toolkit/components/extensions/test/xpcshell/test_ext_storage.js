@@ -114,47 +114,6 @@ add_task(async function test_local_cache_invalidation() {
   await extension.unload();
 });
 
-add_task(async function test_single_initialization() {
-  // Grab access to this via the backstage pass to check if we're calling openConnection too often.
-  const { FirefoxAdapter } = ChromeUtils.import(
-    "resource://gre/modules/ExtensionStorageSync.jsm",
-    null
-  );
-  const origOpenConnection = FirefoxAdapter.openConnection;
-  let callCount = 0;
-  FirefoxAdapter.openConnection = function(...args) {
-    ++callCount;
-    return origOpenConnection.apply(this, args);
-  };
-  function background() {
-    let promises = ["foo", "bar", "baz", "quux"].map(key =>
-      browser.storage.sync.get(key)
-    );
-    Promise.all(promises).then(() =>
-      browser.test.notifyPass("initialize once")
-    );
-  }
-  try {
-    let extension = ExtensionTestUtils.loadExtension({
-      manifest: {
-        permissions: ["storage"],
-      },
-      background: `(${background})()`,
-    });
-
-    await extension.startup();
-    await extension.awaitFinish("initialize once");
-    await extension.unload();
-    equal(
-      callCount,
-      1,
-      "Initialized FirefoxAdapter connection and Kinto exactly once"
-    );
-  } finally {
-    FirefoxAdapter.openConnection = origOpenConnection;
-  }
-});
-
 add_task(function test_config_flag_needed() {
   async function testFn() {
     function background() {
