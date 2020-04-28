@@ -9,6 +9,7 @@
 /**
  * @typedef {import("./@types/perf").GetSymbolTableCallback} GetSymbolTableCallback
  * @typedef {import("./@types/perf").ContentFrameMessageManager} ContentFrameMessageManager
+ * @typedef {import("./@types/perf").MinimallyTypedGeckoProfile} MinimallyTypedGeckoProfile
  */
 
 /**
@@ -20,7 +21,7 @@ const TRANSFER_EVENT = "devtools:perf-html-transfer-profile";
 const SYMBOL_TABLE_REQUEST_EVENT = "devtools:perf-html-request-symbol-table";
 const SYMBOL_TABLE_RESPONSE_EVENT = "devtools:perf-html-reply-symbol-table";
 
-/** @type {null | Object} */
+/** @type {null | MinimallyTypedGeckoProfile} */
 let gProfile = null;
 const symbolReplyPromiseMap = new Map();
 
@@ -66,7 +67,12 @@ function connectToPage() {
     unsafeWindow.connectToGeckoProfiler(
       makeAccessibleToPage(
         {
-          getProfile: () => Promise.resolve(gProfile),
+          getProfile: () =>
+            gProfile
+              ? Promise.resolve(gProfile)
+              : Promise.reject(
+                  new Error("No profile was available to inject into the page.")
+                ),
           getSymbolTable: (debugName, breakpadId) =>
             getSymbolTable(debugName, breakpadId),
         },
@@ -100,7 +106,7 @@ function getSymbolTable(debugName, breakpadId) {
  *
  * @template T
  * @param {(resolve: Function, reject: Function) => Promise<T>} fun
- * @param {object} contentGlobal
+ * @param {any} contentGlobal
  * @returns Promise<T>
  */
 function createPromiseInPage(fun, contentGlobal) {
@@ -141,7 +147,7 @@ function createPromiseInPage(fun, contentGlobal) {
  * Returns a function that calls the original function and tries to make the
  * return value available to the page.
  * @param {Function} fun
- * @param {object} contentGlobal
+ * @param {any} contentGlobal
  * @return {Function}
  */
 function wrapFunction(fun, contentGlobal) {
@@ -168,7 +174,7 @@ function wrapFunction(fun, contentGlobal) {
  * consumed by the page.
  * @template T
  * @param {T} obj
- * @param {object} contentGlobal
+ * @param {any} contentGlobal
  * @return {T}
  */
 function makeAccessibleToPage(obj, contentGlobal) {

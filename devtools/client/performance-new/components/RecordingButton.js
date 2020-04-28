@@ -53,13 +53,6 @@ const selectors = require("devtools/client/performance-new/store/selectors");
  * @extends {React.PureComponent<Props>}
  */
 class RecordingButton extends PureComponent {
-  /** @param {Props} props */
-  constructor(props) {
-    super(props);
-    this._getProfileAndStopProfiler = () =>
-      this.props.getProfileAndStopProfiler(window);
-  }
-
   render() {
     const {
       startRecording,
@@ -67,6 +60,7 @@ class RecordingButton extends PureComponent {
       recordingState,
       isSupportedPlatform,
       recordingUnexpectedlyStopped,
+      getProfileAndStopProfiler,
     } = this.props;
 
     if (!isSupportedPlatform) {
@@ -121,7 +115,7 @@ class RecordingButton extends PureComponent {
             })
           ),
           isPrimary: true,
-          onClick: this._getProfileAndStopProfiler,
+          onClick: getProfileAndStopProfiler,
           disabled: recordingState === "request-to-start-recording",
           additionalButton: {
             label: "Cancel recording",

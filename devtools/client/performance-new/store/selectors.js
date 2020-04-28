@@ -137,7 +137,7 @@ const getSetRecordingPreferencesFn = state =>
 /** @type {Selector<PageContext>} */
 const getPageContext = state => getInitializedValues(state).pageContext;
 
-/** @type {Selector<(profile: Object) => GetSymbolTableCallback>} */
+/** @type {Selector<(profile: MinimallyTypedGeckoProfile) => GetSymbolTableCallback>} */
 const getSymbolTableGetter = state =>
   getInitializedValues(state).getSymbolTableGetter;
 
