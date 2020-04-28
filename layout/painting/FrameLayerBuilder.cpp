@@ -6503,9 +6503,7 @@ gfxSize FrameLayerBuilder::GetPaintedLayerScaleForFrame(nsIFrame* aFrame) {
   Matrix4x4Flagged transform = Matrix4x4::Scaling(resolution, resolution, 1.0);
   if (aFrame != root) {
     // aTransform is applied first, then the scale is applied to the result
-    transform = nsLayoutUtils::GetTransformToAncestor(RelativeTo{aFrame},
-                                                      RelativeTo{root}) *
-                transform;
+    transform = nsLayoutUtils::GetTransformToAncestor(aFrame, root) * transform;
   }
 
   Matrix transform2d;

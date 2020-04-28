@@ -421,6 +421,7 @@ WidgetMouseEvent MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const {
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
   event.mClickCount = clickCount;
   event.mInputSource = mInputSource;
+  event.mIgnoreRootScrollFrame = true;
   event.mFocusSequenceNumber = mFocusSequenceNumber;
 
   return event;

@@ -8,7 +8,6 @@
 
 #include "mozilla/PresShell.h"
 
-#include "Units.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
@@ -37,7 +36,6 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
-#include "mozilla/ViewportUtils.h"
 #include <algorithm>
 
 #ifdef XP_WIN
@@ -3654,8 +3652,7 @@ bool PresShell::ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
     }
     nsIFrame* parent;
     if (container->IsTransformed()) {
-      container->GetTransformMatrix(ViewportType::Layout, RelativeTo{nullptr},
-                                    &parent);
+      container->GetTransformMatrix(nullptr, &parent);
       rect =
           nsLayoutUtils::TransformFrameRectToAncestor(container, rect, parent);
     } else {
@@ -5300,6 +5297,24 @@ float PresShell::GetCumulativeResolution() {
   return resolution;
 }
 
+float PresShell::GetCumulativeNonRootScaleResolution() {
+  float resolution = 1.0;
+  PresShell* currentPresShell = this;
+  while (currentPresShell) {
+    nsPresContext* currentCtx = currentPresShell->GetPresContext();
+    if (currentCtx != currentCtx->GetRootPresContext()) {
+      resolution *= currentPresShell->GetResolution();
+    }
+    nsPresContext* parentCtx = currentCtx->GetParentPresContext();
+    if (parentCtx) {
+      currentPresShell = parentCtx->PresShell();
+    } else {
+      currentPresShell = nullptr;
+    }
+  }
+  return resolution;
+}
+
 void PresShell::SetRestoreResolution(float aResolution,
                                      LayoutDeviceIntSize aDisplaySize) {
   if (mMobileViewportManager) {
@@ -6403,8 +6418,8 @@ void PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent) {
           mPresContext, aEvent->mWidget, aEvent->mRefPoint, rootView);
       mMouseEventTargetGuid = InputAPZContext::GetTargetLayerGuid();
     } else {
-      mMouseLocation = nsLayoutUtils::GetEventCoordinatesRelativeTo(
-          aEvent, RelativeTo{rootFrame, ViewportType::Visual});
+      mMouseLocation =
+          nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, rootFrame);
       mMouseEventTargetGuid = InputAPZContext::GetTargetLayerGuid();
     }
     mMouseLocationWasSetBySynthesizedMouseEventForTests =
@@ -6854,14 +6869,8 @@ nsIFrame* PresShell::EventHandler::GetFrameToHandleNonTouchEvent(
   MOZ_ASSERT(aGUIEvent);
   MOZ_ASSERT(aGUIEvent->mClass != eTouchEventClass);
 
-  ViewportType viewportType = ViewportType::Layout;
-  if (aRootFrameToHandleEvent->Type() == LayoutFrameType::Viewport &&
-      aRootFrameToHandleEvent->PresContext()->IsRootContentDocument()) {
-    viewportType = ViewportType::Visual;
-  }
-  RelativeTo relativeTo{aRootFrameToHandleEvent, viewportType};
-  nsPoint eventPoint =
-      nsLayoutUtils::GetEventCoordinatesRelativeTo(aGUIEvent, relativeTo);
+  nsPoint eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(
+      aGUIEvent, aRootFrameToHandleEvent);
 
   uint32_t flags = 0;
   if (aGUIEvent->mClass == eMouseEventClass) {
@@ -6871,8 +6880,8 @@ nsIFrame* PresShell::EventHandler::GetFrameToHandleNonTouchEvent(
     }
   }
 
-  nsIFrame* targetFrame =
-      FindFrameTargetedByInputEvent(aGUIEvent, relativeTo, eventPoint, flags);
+  nsIFrame* targetFrame = FindFrameTargetedByInputEvent(
+      aGUIEvent, aRootFrameToHandleEvent, eventPoint, flags);
   if (!targetFrame) {
     return aRootFrameToHandleEvent;
   }
@@ -6901,8 +6910,8 @@ nsIFrame* PresShell::EventHandler::GetFrameToHandleNonTouchEvent(
   }
 
   // Finally, we need to recompute the target with the latest layout.
-  targetFrame =
-      FindFrameTargetedByInputEvent(aGUIEvent, relativeTo, eventPoint, flags);
+  targetFrame = FindFrameTargetedByInputEvent(
+      aGUIEvent, aRootFrameToHandleEvent, eventPoint, flags);
 
   return targetFrame ? targetFrame : aRootFrameToHandleEvent;
 }
@@ -8605,12 +8614,6 @@ bool PresShell::EventHandler::AdjustContextMenuKeyEvent(
   if (PrepareToUseCaretPosition(MOZ_KnownLive(aMouseEvent->mWidget),
                                 caretPoint)) {
     // caret position is good
-    int32_t devPixelRatio = GetPresContext()->AppUnitsPerDevPixel();
-    caretPoint = LayoutDeviceIntPoint::FromAppUnitsToNearest(
-        ViewportUtils::LayoutToVisual(
-            LayoutDeviceIntPoint::ToAppUnits(caretPoint, devPixelRatio),
-            GetPresContext()->PresShell()),
-        devPixelRatio);
     aMouseEvent->mRefPoint = caretPoint;
     return true;
   }
@@ -11126,15 +11129,14 @@ nsIContent* PresShell::EventHandler::GetOverrideClickTarget(
   WidgetMouseEvent* mouseEvent = aGUIEvent->AsMouseEvent();
 
   uint32_t flags = 0;
-  RelativeTo relativeTo{aFrame};
   nsPoint eventPoint =
-      nsLayoutUtils::GetEventCoordinatesRelativeTo(aGUIEvent, relativeTo);
+      nsLayoutUtils::GetEventCoordinatesRelativeTo(aGUIEvent, aFrame);
   if (mouseEvent->mIgnoreRootScrollFrame) {
     flags |= INPUT_IGNORE_ROOT_SCROLL_FRAME;
   }
 
   nsIFrame* target =
-      FindFrameTargetedByInputEvent(aGUIEvent, relativeTo, eventPoint, flags);
+      FindFrameTargetedByInputEvent(aGUIEvent, aFrame, eventPoint, flags);
   if (!target) {
     return nullptr;
   }

@@ -20,7 +20,6 @@
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TouchEvents.h"
-#include "mozilla/ViewportUtils.h"
 #include "nsContainerFrame.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
@@ -452,6 +451,89 @@ PresShell* APZCCallbackHelper::GetRootContentDocumentPresShellForContent(
   return context->PresShell();
 }
 
+static PresShell* GetRootDocumentPresShell(nsIContent* aContent) {
+  dom::Document* doc = aContent->GetComposedDoc();
+  if (!doc) {
+    return nullptr;
+  }
+  PresShell* presShell = doc->GetPresShell();
+  if (!presShell) {
+    return nullptr;
+  }
+  nsPresContext* context = presShell->GetPresContext();
+  if (!context) {
+    return nullptr;
+  }
+  context = context->GetRootPresContext();
+  if (!context) {
+    return nullptr;
+  }
+  return context->PresShell();
+}
+
+CSSPoint APZCCallbackHelper::ApplyCallbackTransform(
+    const CSSPoint& aInput, const ScrollableLayerGuid& aGuid) {
+  CSSPoint input = aInput;
+  if (aGuid.mScrollId == ScrollableLayerGuid::NULL_SCROLL_ID) {
+    return input;
+  }
+  nsCOMPtr<nsIContent> content = nsLayoutUtils::FindContentFor(aGuid.mScrollId);
+  if (!content) {
+    return input;
+  }
+
+  // First, scale inversely by the root content document's pres shell
+  // resolution to cancel the scale-to-resolution transform that the
+  // compositor adds to the layer with the pres shell resolution. The points
+  // sent to Gecko by APZ don't have this transform unapplied (unlike other
+  // compositor-side transforms) because APZ doesn't know about it.
+  if (PresShell* presShell = GetRootDocumentPresShell(content)) {
+    input = input / presShell->GetResolution();
+  }
+
+  // This represents any resolution on the Root Content Document (RCD)
+  // that's not on the Root Document (RD). That is, on platforms where
+  // RCD == RD, it's 1, and on platforms where RCD != RD, it's the RCD
+  // resolution. 'input' has this resolution applied, but the scroll
+  // delta retrieved below do not, so we need to apply them to the
+  // delta before adding the delta to 'input'. (Technically, deltas
+  // from scroll frames outside the RCD would already have this
+  // resolution applied, but we don't have such scroll frames in
+  // practice.)
+  float nonRootResolution = 1.0f;
+  if (PresShell* presShell =
+          GetRootContentDocumentPresShellForContent(content)) {
+    nonRootResolution = presShell->GetCumulativeNonRootScaleResolution();
+  }
+  // Now apply the callback-transform. This is only approximately correct,
+  // see the comment on GetCumulativeApzCallbackTransform for details.
+  CSSPoint transform = nsLayoutUtils::GetCumulativeApzCallbackTransform(
+      content->GetPrimaryFrame());
+  return input + transform * nonRootResolution;
+}
+
+LayoutDeviceIntPoint APZCCallbackHelper::ApplyCallbackTransform(
+    const LayoutDeviceIntPoint& aPoint, const ScrollableLayerGuid& aGuid,
+    const CSSToLayoutDeviceScale& aScale) {
+  LayoutDevicePoint point = LayoutDevicePoint(aPoint.x, aPoint.y);
+  point = ApplyCallbackTransform(point / aScale, aGuid) * aScale;
+  return LayoutDeviceIntPoint::Round(point);
+}
+
+void APZCCallbackHelper::ApplyCallbackTransform(
+    WidgetEvent& aEvent, const ScrollableLayerGuid& aGuid,
+    const CSSToLayoutDeviceScale& aScale) {
+  if (aEvent.AsTouchEvent()) {
+    WidgetTouchEvent& event = *(aEvent.AsTouchEvent());
+    for (size_t i = 0; i < event.mTouches.Length(); i++) {
+      event.mTouches[i]->mRefPoint =
+          ApplyCallbackTransform(event.mTouches[i]->mRefPoint, aGuid, aScale);
+    }
+  } else {
+    aEvent.mRefPoint = ApplyCallbackTransform(aEvent.mRefPoint, aGuid, aScale);
+  }
+}
+
 nsEventStatus APZCCallbackHelper::DispatchWidgetEvent(WidgetGUIEvent& aEvent) {
   nsEventStatus status = nsEventStatus_eConsumeNoDefault;
   if (aEvent.mWidget) {
@@ -475,6 +557,7 @@ nsEventStatus APZCCallbackHelper::DispatchSynthesizedMouseEvent(
   if (aMsg == eMouseLongTap) {
     event.mFlags.mOnlyChromeDispatch = true;
   }
+  event.mIgnoreRootScrollFrame = true;
   if (aMsg != eMouseMove) {
     event.mClickCount = aClickCount;
   }
@@ -550,6 +633,24 @@ static dom::Element* GetRootDocumentElementFor(nsIWidget* aWidget) {
   return nullptr;
 }
 
+static nsIFrame* UpdateRootFrameForTouchTargetDocument(nsIFrame* aRootFrame) {
+#if defined(MOZ_WIDGET_ANDROID)
+  // Re-target so that the hit test is performed relative to the frame for the
+  // Root Content Document instead of the Root Document which are different in
+  // Android. See bug 1229752 comment 16 for an explanation of why this is
+  // necessary.
+  if (dom::Document* doc =
+          aRootFrame->PresShell()->GetPrimaryContentDocument()) {
+    if (PresShell* presShell = doc->GetPresShell()) {
+      if (nsIFrame* frame = presShell->GetRootFrame()) {
+        return frame;
+      }
+    }
+  }
+#endif
+  return aRootFrame;
+}
+
 namespace {
 
 using FrameForPointOption = nsLayoutUtils::FrameForPointOption;
@@ -565,10 +666,19 @@ static bool PrepareForSetTargetAPZCNotification(
     const LayoutDeviceIntPoint& aRefPoint,
     nsTArray<ScrollableLayerGuid>* aTargets) {
   ScrollableLayerGuid guid(aLayersId, 0, ScrollableLayerGuid::NULL_SCROLL_ID);
-  RelativeTo relativeTo{aRootFrame, ViewportType::Visual};
   nsPoint point = nsLayoutUtils::GetEventCoordinatesRelativeTo(
-      aWidget, aRefPoint, relativeTo);
-  nsIFrame* target = nsLayoutUtils::GetFrameForPoint(relativeTo, point);
+      aWidget, aRefPoint, aRootFrame);
+  EnumSet<FrameForPointOption> options;
+  if (nsLayoutUtils::AllowZoomingForDocument(
+          aRootFrame->PresShell()->GetDocument())) {
+    // If zooming is enabled, we need IgnoreRootScrollFrame for correct
+    // hit testing. Otherwise, don't use it because it interferes with
+    // hit testing for some purposes such as scrollbar dragging (this will
+    // need to be fixed before enabling zooming by default on desktop).
+    options += FrameForPointOption::IgnoreRootScrollFrame;
+  }
+  nsIFrame* target =
+      nsLayoutUtils::GetFrameForPoint(aRootFrame, point, options);
   nsIScrollableFrame* scrollAncestor =
       target ? nsLayoutUtils::GetAsyncScrollableAncestorFrame(target)
              : aRootFrame->PresShell()->GetRootScrollFrameAsScrollable();
@@ -726,6 +836,8 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
   sLastTargetAPZCNotificationInputBlock = aInputBlockId;
   if (PresShell* presShell = aDocument->GetPresShell()) {
     if (nsIFrame* rootFrame = presShell->GetRootFrame()) {
+      rootFrame = UpdateRootFrameForTouchTargetDocument(rootFrame);
+
       bool waitForRefresh = false;
       nsTArray<ScrollableLayerGuid> targets;
 
@@ -770,11 +882,12 @@ void APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
   }
   if (PresShell* presShell = aDocument->GetPresShell()) {
     if (nsIFrame* rootFrame = presShell->GetRootFrame()) {
+      rootFrame = UpdateRootFrameForTouchTargetDocument(rootFrame);
+
       nsTArray<TouchBehaviorFlags> flags;
       for (uint32_t i = 0; i < aEvent.mTouches.Length(); i++) {
         flags.AppendElement(TouchActionHelper::GetAllowedTouchBehavior(
-            aWidget, RelativeTo{rootFrame, ViewportType::Visual},
-            aEvent.mTouches[i]->mRefPoint));
+            aWidget, rootFrame, aEvent.mTouches[i]->mRefPoint));
       }
       aCallback(aInputBlockId, std::move(flags));
     }

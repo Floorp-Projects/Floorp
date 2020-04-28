@@ -519,6 +519,11 @@ static EnumSet<nsLayoutUtils::FrameForPointOption> GetHitTestOptions() {
   EnumSet<nsLayoutUtils::FrameForPointOption> options = {
       nsLayoutUtils::FrameForPointOption::IgnorePaintSuppression,
       nsLayoutUtils::FrameForPointOption::IgnoreCrossDoc};
+#ifdef MOZ_WIDGET_ANDROID
+  // On Android, we need IgnoreRootScrollFrame for correct hit testing when
+  // zoomed in or out.
+  options += nsLayoutUtils::FrameForPointOption::IgnoreRootScrollFrame;
+#endif
   return options;
 }
 
@@ -544,8 +549,8 @@ nsresult AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint) {
   }
 
   // Find the frame under point.
-  AutoWeakFrame ptFrame = nsLayoutUtils::GetFrameForPoint(
-      RelativeTo{rootFrame}, aPoint, GetHitTestOptions());
+  AutoWeakFrame ptFrame =
+      nsLayoutUtils::GetFrameForPoint(rootFrame, aPoint, GetHitTestOptions());
   if (!ptFrame.GetFrame()) {
     return NS_ERROR_FAILURE;
   }
@@ -565,8 +570,7 @@ nsresult AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint) {
   // something under the original point will be selected, which may not be the
   // original text the user wants to select.
   nsPoint ptInFrame = aPoint;
-  nsLayoutUtils::TransformPoint(RelativeTo{rootFrame}, RelativeTo{ptFrame},
-                                ptInFrame);
+  nsLayoutUtils::TransformPoint(rootFrame, ptFrame, ptInFrame);
 
   // Firstly check long press on an empty editable content.
   Element* newFocusEditingHost = GetEditingHostForFrame(ptFrame);
@@ -1217,8 +1221,8 @@ nsresult AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint) {
 
   // Find out which content we point to
 
-  nsIFrame* ptFrame = nsLayoutUtils::GetFrameForPoint(
-      RelativeTo{rootFrame}, point, GetHitTestOptions());
+  nsIFrame* ptFrame =
+      nsLayoutUtils::GetFrameForPoint(rootFrame, point, GetHitTestOptions());
   if (!ptFrame) {
     return NS_ERROR_FAILURE;
   }
@@ -1230,8 +1234,7 @@ nsresult AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint) {
   nsIFrame* newFrame = nullptr;
   nsPoint newPoint;
   nsPoint ptInFrame = point;
-  nsLayoutUtils::TransformPoint(RelativeTo{rootFrame}, RelativeTo{ptFrame},
-                                ptInFrame);
+  nsLayoutUtils::TransformPoint(rootFrame, ptFrame, ptInFrame);
   result = fs->ConstrainFrameAndPointToAnchorSubtree(ptFrame, ptInFrame,
                                                      &newFrame, newPoint);
   if (NS_FAILED(result) || !newFrame) {
@@ -1380,8 +1383,7 @@ void AccessibleCaretManager::StartSelectionAutoScrollTimer(
   nsIFrame* rootFrame = mPresShell->GetRootFrame();
   MOZ_ASSERT(rootFrame);
   nsPoint ptInScrolled = aPoint;
-  nsLayoutUtils::TransformPoint(RelativeTo{rootFrame},
-                                RelativeTo{capturingFrame}, ptInScrolled);
+  nsLayoutUtils::TransformPoint(rootFrame, capturingFrame, ptInScrolled);
 
   RefPtr<nsFrameSelection> fs = GetFrameSelection();
   MOZ_ASSERT(fs);
