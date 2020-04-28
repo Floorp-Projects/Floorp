@@ -521,7 +521,7 @@ nsresult nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(
       nsIFrame* rootFrame = mPresShell->GetRootFrame();
       nsPoint ptInRoot = aPoint + aFrame->GetOffsetTo(rootFrame);
       nsIFrame* cursorFrame =
-          nsLayoutUtils::GetFrameForPoint(rootFrame, ptInRoot);
+          nsLayoutUtils::GetFrameForPoint(RelativeTo{rootFrame}, ptInRoot);
 
       // If the mouse cursor in on a frame which is descendant of same
       // selection root, we can expand the selection to the frame.
