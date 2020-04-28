@@ -986,7 +986,6 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
     scopeKind = ScopeKind::Global;
   } else {
     scopeKind = ScopeKind::NonSyntactic;
-    options.setNonSyntacticScope(true);
   }
 
   if (frame) {

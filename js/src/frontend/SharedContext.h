@@ -150,7 +150,33 @@ class SharedContext {
  public:
   SharedContext(JSContext* cx, Kind kind, CompilationInfo& compilationInfo,
                 Directives directives, SourceExtent extent,
-                ImmutableScriptFlags immutableFlags = {});
+                ImmutableScriptFlags immutableFlags = {})
+      : cx_(cx),
+        kind_(kind),
+        compilationInfo_(compilationInfo),
+        thisBinding_(ThisBinding::Global),
+        extent(extent),
+        allowNewTarget_(false),
+        allowSuperProperty_(false),
+        allowSuperCall_(false),
+        allowArguments_(true),
+        inWith_(false),
+        needsThisTDZChecks_(false),
+        localStrict(false),
+        hasExplicitUseStrict_(false),
+        immutableFlags_(immutableFlags) {
+    if (kind_ == Kind::FunctionBox) {
+      immutableFlags_.setFlag(ImmutableFlags::IsFunction);
+    } else if (kind_ == Kind::Module) {
+      immutableFlags_.setFlag(ImmutableFlags::IsModule);
+    } else if (kind_ == Kind::Eval) {
+      immutableFlags_.setFlag(ImmutableFlags::IsForEval);
+    } else {
+      MOZ_ASSERT(kind_ == Kind::Global);
+    }
+
+    immutableFlags_.setFlag(ImmutableFlags::Strict, directives.strict());
+  }
 
   // If this is the outermost SharedContext, the Scope that encloses
   // it. Otherwise nullptr.
