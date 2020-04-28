@@ -524,7 +524,15 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
 
         # Run chrome and chromium on all platforms available
         if '-chrome' in try_name:
-            return True
+            if 'android' in platform:
+                # Run only on pgo android builds
+                if 'pgo' in platform:
+                    return True
+                else:
+                    return False
+            else:
+                # Run on all desktop builds
+                return True
         if '-chromium' in try_name:
             return True
 
