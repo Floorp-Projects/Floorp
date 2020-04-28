@@ -81,9 +81,9 @@ class MozillaSocorroService(
                 versionName = applicationContext.packageManager
                     .getPackageInfo(applicationContext.packageName, 0).versionName
             } catch (e: PackageManager.NameNotFoundException) {
-                Logger.error("package name not found, failed to get application version")
+                logger.error("package name not found, failed to get application version")
             } catch (e: IllegalStateException) {
-                Logger.error("failed to get application version")
+                logger.error("failed to get application version")
             }
         }
 
@@ -150,15 +150,15 @@ class MozillaSocorroService(
 
                 val id = map?.get(KEY_CRASH_ID)
                 if (id != null) {
-                    Logger.info("Crash reported to Socorro: $id")
+                    logger.info("Crash reported to Socorro: $id")
                 } else {
-                    Logger.info("Server rejected crash report")
+                    logger.info("Server rejected crash report")
                 }
 
                 return id
             }
         } catch (e: IOException) {
-            Logger.error("failed to send report to Socorro", e)
+            logger.error("failed to send report to Socorro", e)
             return null
         } finally {
             conn?.disconnect()
@@ -272,7 +272,7 @@ class MozillaSocorroService(
             sendPart(os, boundary, "InstallTime", TimeUnit.MILLISECONDS.toSeconds(
                     packageInfo.lastUpdateTime).toString(), nameSet)
         } catch (e: PackageManager.NameNotFoundException) {
-            Logger.error("Error getting package info", e)
+            logger.error("Error getting package info", e)
         }
     }
 
@@ -331,7 +331,7 @@ class MozillaSocorroService(
             fileInputStream.transferTo(0, fileInputStream.size(), Channels.newChannel(os))
             fileInputStream.close()
         } catch (e: IOException) {
-            Logger.error("failed to send file", e)
+            logger.error("failed to send file", e)
         }
     }
 
@@ -366,7 +366,7 @@ class MozillaSocorroService(
                 line = bufReader.readLine()
             }
         } catch (e: IOException) {
-            Logger.error("failed to convert extras to map", e)
+            logger.error("failed to convert extras to map", e)
         } finally {
             try {
                 fileReader?.close()
@@ -395,11 +395,11 @@ class MozillaSocorroService(
                 }
             }
         } catch (e: FileNotFoundException) {
-            Logger.error("failed to find extra file", e)
+            logger.error("failed to find extra file", e)
         } catch (e: IOException) {
-            Logger.error("failed read the extra file", e)
+            logger.error("failed read the extra file", e)
         } catch (e: JSONException) {
-            Logger.info("extras file JSON syntax error, trying legacy format")
+            logger.info("extras file JSON syntax error, trying legacy format")
             notJson = true
         }
 
