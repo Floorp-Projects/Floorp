@@ -9,7 +9,7 @@
         android:color="?neutralFaded" />
     <gradient
         android:angle="45"
-        android:endColor="@color/accent_high_contrast_dark_theme"
-        android:startColor="@color/accent_bright_dark_theme" />
+        android:endColor="?onboardingDarkGradientEndBackground"
+        android:startColor="?onboardingDarkGradientStartBackground" />
     <corners android:radius="8dp" />
 </shape>

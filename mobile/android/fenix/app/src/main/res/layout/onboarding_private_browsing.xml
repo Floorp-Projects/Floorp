@@ -7,7 +7,7 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/onboarding_card"
-        style="@style/OnboardingCardLight"
+        style="@style/OnboardingCardLightWithPadding"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
     <TextView

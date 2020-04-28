@@ -5,7 +5,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/onboarding_card"
-    style="@style/OnboardingCardLight"
+    style="@style/OnboardingCardLightWithPadding"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -29,6 +29,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="@id/header_text"
         app:layout_constraintEnd_toEndOf="parent"
+        android:theme="@style/Switch.Colored"
         app:layout_constraintTop_toTopOf="@id/header_text" />
 
     <TextView
@@ -63,6 +64,7 @@
         android:paddingEnd="8dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/description_text"
+        android:buttonTint="@color/onboarding_radio_button_color"
         app:onboardingKey="@string/pref_key_tracking_protection_standard_option" />
 
     <TextView
@@ -109,6 +111,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tracking_protection_standard_option"
+        android:buttonTint="@color/onboarding_radio_button_color"
         app:onboardingKey="@string/pref_key_tracking_protection_strict_default" />
 
     <TextView
