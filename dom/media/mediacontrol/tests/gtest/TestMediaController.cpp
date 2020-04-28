@@ -60,13 +60,12 @@ class FakeControlledMedia final {
     mController->NotifyMediaPlaybackChanged(MediaPlaybackState::eStarted);
   }
 
-  void SetPlaying(bool aIsPlaying) {
-    if (mIsPlaying == aIsPlaying) {
+  void SetPlaying(MediaPlaybackState aState) {
+    if (mPlaybackState == aState) {
       return;
     }
-    mController->NotifyMediaPlaybackChanged(
-        aIsPlaying ? MediaPlaybackState::ePlayed : MediaPlaybackState::ePaused);
-    mIsPlaying = aIsPlaying;
+    mController->NotifyMediaPlaybackChanged(aState);
+    mPlaybackState = aState;
   }
 
   void SetAudible(MediaAudibleState aState) {
@@ -78,14 +77,14 @@ class FakeControlledMedia final {
   }
 
   ~FakeControlledMedia() {
-    if (mIsPlaying) {
+    if (mPlaybackState == MediaPlaybackState::ePlayed) {
       mController->NotifyMediaPlaybackChanged(MediaPlaybackState::ePaused);
     }
     mController->NotifyMediaPlaybackChanged(MediaPlaybackState::eStopped);
   }
 
  private:
-  bool mIsPlaying = false;
+  MediaPlaybackState mPlaybackState = MediaPlaybackState::eStopped;
   MediaAudibleState mAudibleState = MediaAudibleState::eInaudible;
   RefPtr<MediaController> mController;
 };
@@ -95,7 +94,7 @@ TEST(MediaController, AudibleChanged)
   RefPtr<MediaController> controller = new MediaController(CONTROLLER_ID);
 
   FakeControlledMedia fakeMedia(controller);
-  fakeMedia.SetPlaying(true);
+  fakeMedia.SetPlaying(MediaPlaybackState::ePlayed);
   ASSERT_TRUE(!controller->IsAudible());
 
   fakeMedia.SetAudible(MediaAudibleState::eAudible);
@@ -114,13 +113,13 @@ TEST(MediaController, PlayingStateChangeViaControlledMedia)
     FakeControlledMedia foo(controller);
     ASSERT_TRUE(controller->GetState() == MediaSessionPlaybackState::None);
 
-    foo.SetPlaying(true);
+    foo.SetPlaying(MediaPlaybackState::ePlayed);
     ASSERT_TRUE(controller->GetState() == MediaSessionPlaybackState::Playing);
 
-    foo.SetPlaying(false);
+    foo.SetPlaying(MediaPlaybackState::ePaused);
     ASSERT_TRUE(controller->GetState() == MediaSessionPlaybackState::Paused);
 
-    foo.SetPlaying(true);
+    foo.SetPlaying(MediaPlaybackState::ePlayed);
     ASSERT_TRUE(controller->GetState() == MediaSessionPlaybackState::Playing);
   }
 
@@ -136,22 +135,22 @@ TEST(MediaController, ControllerShouldRemainPlayingIfAnyPlayingMediaExists)
     FakeControlledMedia foo(controller);
     ASSERT_TRUE(controller->GetState() == MediaSessionPlaybackState::None);
 
-    foo.SetPlaying(true);
+    foo.SetPlaying(MediaPlaybackState::ePlayed);
     ASSERT_TRUE(controller->GetState() == MediaSessionPlaybackState::Playing);
 
     // foo is playing, so controller is in `playing` state.
     FakeControlledMedia bar(controller);
     ASSERT_TRUE(controller->GetState() == MediaSessionPlaybackState::Playing);
 
-    bar.SetPlaying(true);
+    bar.SetPlaying(MediaPlaybackState::ePlayed);
     ASSERT_TRUE(controller->GetState() == MediaSessionPlaybackState::Playing);
 
     // Although we paused bar, but foo is still playing, so the controller would
     // still be in `playing`.
-    bar.SetPlaying(false);
+    bar.SetPlaying(MediaPlaybackState::ePaused);
     ASSERT_TRUE(controller->GetState() == MediaSessionPlaybackState::Playing);
 
-    foo.SetPlaying(false);
+    foo.SetPlaying(MediaPlaybackState::ePaused);
     ASSERT_TRUE(controller->GetState() == MediaSessionPlaybackState::Paused);
   }
 
