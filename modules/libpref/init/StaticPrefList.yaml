@@ -6018,9 +6018,12 @@
   value: true
   mirror: once
 
+# On Android, don't synth mouse move events after scrolling, as they cause
+# unexpected user-visible behaviour. Can remove this after bug 1633450 is
+# satisfactorily resolved.
 - name: layout.reflow.synthMouseMove
   type: bool
-  value: true
+  value: @IS_NOT_ANDROID@
   mirror: always
 
 # This pref is to be set by test code only.
