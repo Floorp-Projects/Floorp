@@ -601,13 +601,6 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
   return NSAccessibilityActionDescription(action);
 }
 
-- (BOOL)providesLabelNotTitle {
-  // These accessible types are the exception to the rule of label vs. title:
-  // They may be named explicitly, but they still provide a label not a title.
-  return mRole == roles::GROUPING || mRole == roles::RADIO_GROUP || mRole == roles::FIGURE ||
-         mRole == roles::GRAPHIC;
-}
-
 - (NSString*)accessibilityLabel {
   AccessibleWrap* accWrap = [self getGeckoAccessible];
   ProxyAccessible* proxy = [self getProxyAccessible];
@@ -620,7 +613,7 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
   /* If our accessible is:
    * 1. Named by invisible text, or
    * 2. Has more than one labeling relation, or
-   * 3. Is a special role defined in providesLabelNotTitle
+   * 3. Is a grouping
    *   ... return its name as a label (AXDescription).
    */
   if (accWrap) {
@@ -629,7 +622,7 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
       return nil;
     }
 
-    if (![self providesLabelNotTitle]) {
+    if (mRole != roles::GROUPING && mRole != roles::RADIO_GROUP) {
       Relation rel = accWrap->RelationByType(RelationType::LABELLED_BY);
       if (rel.Next() && !rel.Next()) {
         return nil;
@@ -641,7 +634,7 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
       return nil;
     }
 
-    if (![self providesLabelNotTitle]) {
+    if (mRole != roles::GROUPING && mRole != roles::RADIO_GROUP) {
       nsTArray<ProxyAccessible*> rels = proxy->RelationByType(RelationType::LABELLED_BY);
       if (rels.Length() == 1) {
         return nil;
@@ -1135,8 +1128,8 @@ struct RoleDescrComparator {
 - (NSString*)title {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  // In some special cases we provide the name in the label (AXDescription).
-  if ([self providesLabelNotTitle]) {
+  // If this is a grouping we provide the name in the label (AXDescription).
+  if (mRole == roles::GROUPING || mRole == roles::RADIO_GROUP) {
     return nil;
   }
 
