@@ -123,17 +123,17 @@ void MediaController::Shutdown() {
   mShutdown = true;
 }
 
-void MediaController::NotifyMediaStateChanged(ControlledMediaState aState) {
+void MediaController::NotifyMediaPlaybackChanged(MediaPlaybackState aState) {
   if (mShutdown) {
     return;
   }
-  if (aState == ControlledMediaState::eStarted) {
+  if (aState == MediaPlaybackState::eStarted) {
     IncreaseControlledMediaNum();
-  } else if (aState == ControlledMediaState::eStopped) {
+  } else if (aState == MediaPlaybackState::eStopped) {
     DecreaseControlledMediaNum();
-  } else if (aState == ControlledMediaState::ePlayed) {
+  } else if (aState == MediaPlaybackState::ePlayed) {
     IncreasePlayingControlledMediaNum();
-  } else if (aState == ControlledMediaState::ePaused) {
+  } else if (aState == MediaPlaybackState::ePaused) {
     DecreasePlayingControlledMediaNum();
   }
 }

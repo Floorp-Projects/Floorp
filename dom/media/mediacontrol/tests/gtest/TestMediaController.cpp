@@ -20,21 +20,21 @@ TEST(MediaController, DefaultValueCheck)
   ASSERT_TRUE(!controller->IsAudible());
 }
 
-TEST(MediaController, NotifyMediaStateChanged)
+TEST(MediaController, NotifyMediaPlaybackChanged)
 {
   RefPtr<MediaController> controller = new MediaController(CONTROLLER_ID);
   ASSERT_TRUE(controller->ControlledMediaNum() == 0);
 
-  controller->NotifyMediaStateChanged(ControlledMediaState::eStarted);
+  controller->NotifyMediaPlaybackChanged(MediaPlaybackState::eStarted);
   ASSERT_TRUE(controller->ControlledMediaNum() == 1);
 
-  controller->NotifyMediaStateChanged(ControlledMediaState::eStarted);
+  controller->NotifyMediaPlaybackChanged(MediaPlaybackState::eStarted);
   ASSERT_TRUE(controller->ControlledMediaNum() == 2);
 
-  controller->NotifyMediaStateChanged(ControlledMediaState::eStopped);
+  controller->NotifyMediaPlaybackChanged(MediaPlaybackState::eStopped);
   ASSERT_TRUE(controller->ControlledMediaNum() == 1);
 
-  controller->NotifyMediaStateChanged(ControlledMediaState::eStopped);
+  controller->NotifyMediaPlaybackChanged(MediaPlaybackState::eStopped);
   ASSERT_TRUE(controller->ControlledMediaNum() == 0);
 }
 
@@ -46,10 +46,10 @@ TEST(MediaController, ActiveAndDeactiveController)
   RefPtr<MediaController> controller1 =
       new MediaController(FIRST_CONTROLLER_ID);
 
-  controller1->NotifyMediaStateChanged(ControlledMediaState::eStarted);
+  controller1->NotifyMediaPlaybackChanged(MediaPlaybackState::eStarted);
   ASSERT_TRUE(service->GetActiveControllersNum() == 1);
 
-  controller1->NotifyMediaStateChanged(ControlledMediaState::eStopped);
+  controller1->NotifyMediaPlaybackChanged(MediaPlaybackState::eStopped);
   ASSERT_TRUE(service->GetActiveControllersNum() == 0);
 }
 
@@ -109,24 +109,23 @@ class FakeControlledMedia final {
  public:
   explicit FakeControlledMedia(MediaController* aController)
       : mController(aController) {
-    mController->NotifyMediaStateChanged(ControlledMediaState::eStarted);
+    mController->NotifyMediaPlaybackChanged(MediaPlaybackState::eStarted);
   }
 
   void SetPlaying(bool aIsPlaying) {
     if (mIsPlaying == aIsPlaying) {
       return;
     }
-    mController->NotifyMediaStateChanged(aIsPlaying
-                                             ? ControlledMediaState::ePlayed
-                                             : ControlledMediaState::ePaused);
+    mController->NotifyMediaPlaybackChanged(
+        aIsPlaying ? MediaPlaybackState::ePlayed : MediaPlaybackState::ePaused);
     mIsPlaying = aIsPlaying;
   }
 
   ~FakeControlledMedia() {
     if (mIsPlaying) {
-      mController->NotifyMediaStateChanged(ControlledMediaState::ePaused);
+      mController->NotifyMediaPlaybackChanged(MediaPlaybackState::ePaused);
     }
-    mController->NotifyMediaStateChanged(ControlledMediaState::eStopped);
+    mController->NotifyMediaPlaybackChanged(MediaPlaybackState::eStopped);
   }
 
  private:

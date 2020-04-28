@@ -92,8 +92,8 @@ void ContentMediaController::RemoveReceiver(
   }
 }
 
-void ContentMediaController::NotifyMediaStateChanged(
-    const ContentControlKeyEventReceiver* aMedia, ControlledMediaState aState) {
+void ContentMediaController::NotifyPlaybackStateChanged(
+    const ContentControlKeyEventReceiver* aMedia, MediaPlaybackState aState) {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mReceivers.Contains(aMedia)) {
     return;
@@ -104,17 +104,17 @@ void ContentMediaController::NotifyMediaStateChanged(
     return;
   }
 
-  LOG("Notify media %s in BC %" PRId64, ToControlledMediaStateStr(aState),
+  LOG("Notify media %s in BC %" PRId64, ToMediaPlaybackStateStr(aState),
       bc->Id());
   if (XRE_IsContentProcess()) {
     ContentChild* contentChild = ContentChild::GetSingleton();
-    Unused << contentChild->SendNotifyMediaStateChanged(bc, aState);
+    Unused << contentChild->SendNotifyMediaPlaybackChanged(bc, aState);
   } else {
     // Currently this only happen when we disable e10s, otherwise all controlled
     // media would be run in the content process.
     if (RefPtr<MediaController> controller =
             bc->Canonical()->GetMediaController()) {
-      controller->NotifyMediaStateChanged(aState);
+      controller->NotifyMediaPlaybackChanged(aState);
     }
   }
 }

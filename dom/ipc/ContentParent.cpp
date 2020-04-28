@@ -5788,15 +5788,15 @@ mozilla::ipc::IPCResult ContentParent::RecvStoreUserInteractionAsPermission(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaStateChanged(
+mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaPlaybackChanged(
     const MaybeDiscarded<BrowsingContext>& aContext,
-    ControlledMediaState aState) {
+    MediaPlaybackState aState) {
   if (aContext.IsNullOrDiscarded()) {
     return IPC_OK();
   }
   if (RefPtr<MediaController> controller =
           aContext.get_canonical()->GetMediaController()) {
-    controller->NotifyMediaStateChanged(aState);
+    controller->NotifyMediaPlaybackChanged(aState);
   }
   return IPC_OK();
 }
