@@ -78,12 +78,12 @@ impl StorageSyncArea {
         Ok(())
     }
 
-    /// Sets up the storage area.
     xpcom_method!(
         configure => Configure(
             database_file: *const nsIFile
         )
     );
+    /// Sets up the storage area.
     fn configure(&self, database_file: &nsIFile) -> Result<()> {
         let mut raw_path = nsString::new();
         // `nsIFile::GetPath` gives us a UTF-16-encoded version of its
@@ -110,7 +110,6 @@ impl StorageSyncArea {
         Ok(())
     }
 
-    /// Sets one or more key-value pairs.
     xpcom_method!(
         set => Set(
             ext_id: *const ::nsstring::nsACString,
@@ -118,6 +117,7 @@ impl StorageSyncArea {
             callback: *const mozIExtensionStorageCallback
         )
     );
+    /// Sets one or more key-value pairs.
     fn set(
         &self,
         ext_id: &nsACString,
@@ -129,7 +129,6 @@ impl StorageSyncArea {
         Ok(())
     }
 
-    /// Gets values for one or more keys.
     xpcom_method!(
         get => Get(
             ext_id: *const ::nsstring::nsACString,
@@ -137,6 +136,7 @@ impl StorageSyncArea {
             callback: *const mozIExtensionStorageCallback
         )
     );
+    /// Gets values for one or more keys.
     fn get(
         &self,
         ext_id: &nsACString,
@@ -147,7 +147,6 @@ impl StorageSyncArea {
         self.dispatch(ext_id, StorageOp::Get(keys), callback)
     }
 
-    /// Removes one or more keys and their values.
     xpcom_method!(
         remove => Remove(
             ext_id: *const ::nsstring::nsACString,
@@ -155,6 +154,7 @@ impl StorageSyncArea {
             callback: *const mozIExtensionStorageCallback
         )
     );
+    /// Removes one or more keys and their values.
     fn remove(
         &self,
         ext_id: &nsACString,
@@ -165,19 +165,19 @@ impl StorageSyncArea {
         self.dispatch(ext_id, StorageOp::Remove(keys), callback)
     }
 
-    /// Removes all keys and values.
     xpcom_method!(
         clear => Clear(
             ext_id: *const ::nsstring::nsACString,
             callback: *const mozIExtensionStorageCallback
         )
     );
+    /// Removes all keys and values.
     fn clear(&self, ext_id: &nsACString, callback: &mozIExtensionStorageCallback) -> Result<()> {
         self.dispatch(ext_id, StorageOp::Clear, callback)
     }
 
-    /// Tears down the storage area, closing the backing database connection.
     xpcom_method!(teardown => Teardown(callback: *const mozIExtensionStorageCallback));
+    /// Tears down the storage area, closing the backing database connection.
     fn teardown(&self, callback: &mozIExtensionStorageCallback) -> Result<()> {
         // Each storage task holds a `Weak` reference to the store, which it
         // upgrades to an `Arc` (strong reference) when the task runs on the
