@@ -3593,14 +3593,6 @@ void Document::SetDocumentURI(nsIURI* aURI) {
   if (inner && inner->GetWindowGlobalChild()) {
     inner->GetWindowGlobalChild()->SetDocumentURI(mDocumentURI);
   }
-
-  auto* browsingContext = GetBrowsingContext();
-  if (browsingContext) {
-    nsCOMPtr<nsIURI> innerDocURI = NS_GetInnermostURI(mDocumentURI);
-    if (innerDocURI) {
-      browsingContext->SetIsSecure(innerDocURI->SchemeIs("https"));
-    }
-  }
 }
 
 static void GetFormattedTimeString(PRTime aTime,
