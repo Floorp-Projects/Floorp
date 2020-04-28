@@ -1605,6 +1605,19 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         dismissedPrompt = true;
       }
 
+      let docState = this.stateForDocument(doc);
+      let fieldsModified = this._formHasModifiedFields(form);
+      if (!fieldsModified && LoginHelper.userInputRequiredToCapture) {
+        if (targetField) {
+          throw new Error("No user input on targetField");
+        }
+        // we know no fields in this form had user modifications, so don't prompt
+        log(
+          `(${logMessagePrefix} ignored -- submitting values that are not changed by the user)`
+        );
+        return;
+      }
+
       if (
         this._compareAndUpdatePreviouslySentValues(
           form.rootElement,
@@ -1615,19 +1628,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       ) {
         log(
           `(${logMessagePrefix} ignored -- already submitted with the same username and password)`
-        );
-        return;
-      }
-
-      let docState = this.stateForDocument(doc);
-      let fieldsModified = this._formHasModifiedFields(form);
-      if (!fieldsModified && LoginHelper.userInputRequiredToCapture) {
-        if (targetField) {
-          throw new Error("No user input on targetField");
-        }
-        // we know no fields in this form had user modifications, so don't prompt
-        log(
-          `(${logMessagePrefix} ignored -- submitting values that are not changed by the user)`
         );
         return;
       }
