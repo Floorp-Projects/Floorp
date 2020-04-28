@@ -21,6 +21,7 @@ include MemoryReportTypes;
 include NeckoChannelParams;
 include PBrowserOrId;
 include PrefsTypes;
+include PSMIPCTypes;
 
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
 using mozilla::Telemetry::HistogramAccumulation from "mozilla/TelemetryComms.h";
@@ -36,7 +37,7 @@ using PRTime from "prtime.h";
 namespace mozilla {
 namespace net {
 
-protocol PSocketProcess
+sync protocol PSocketProcess
 {
   manages PDNSRequest;
   manages PWebrtcTCPSocket;
@@ -72,6 +73,15 @@ parent:
                             nsCString aExtraStringData);
   async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
   async PAltService();
+  sync GetTLSClientCert(nsCString aHostName,
+                        OriginAttributes aOriginAttributes,
+                        int32_t aPort,
+                        uint32_t aProviderFlags,
+                        uint32_t aProviderTlsFlags,
+                        ByteArray aServerCert,
+                        ByteArray? aClientCert,
+                        ByteArray[] aCollectedCANames)
+    returns (bool aSucceeded, ByteArray aOutCert, ByteArray aOutKey, ByteArray[] aBuiltChain);
 
 child:
   async PreferenceUpdate(Pref pref);

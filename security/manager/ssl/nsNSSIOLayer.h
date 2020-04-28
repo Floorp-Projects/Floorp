@@ -239,6 +239,36 @@ class nsNSSSocketInfo final : public CommonSocketControl {
   RefPtr<mozilla::psm::SharedSSLState> mOwningSharedRef;
 };
 
+// This class is used to store the needed information for invoking the client
+// cert selection UI.
+class ClientAuthInfo final {
+ public:
+  explicit ClientAuthInfo(const nsACString& hostName,
+                          const OriginAttributes& originAttributes,
+                          int32_t port, uint32_t providerFlags,
+                          uint32_t providerTlsFlags, nsIX509Cert* clientCert);
+  ~ClientAuthInfo() = default;
+  ClientAuthInfo(ClientAuthInfo&& aOther) noexcept;
+
+  const nsACString& HostName() const;
+  const OriginAttributes& OriginAttributesRef() const;
+  int32_t Port() const;
+  already_AddRefed<nsIX509Cert> GetClientCert() const;
+  uint32_t ProviderFlags() const;
+  uint32_t ProviderTlsFlags() const;
+
+ private:
+  ClientAuthInfo(const ClientAuthInfo&) = delete;
+  void operator=(const ClientAuthInfo&) = delete;
+
+  nsCString mHostName;
+  OriginAttributes mOriginAttributes;
+  int32_t mPort;
+  uint32_t mProviderFlags;
+  uint32_t mProviderTlsFlags;
+  nsCOMPtr<nsIX509Cert> mClientCert;
+};
+
 class nsSSLIOLayerHelpers {
  public:
   explicit nsSSLIOLayerHelpers(uint32_t aTlsFlags = 0);
@@ -316,6 +346,11 @@ nsresult nsSSLIOLayerAddToSocket(int32_t family, const char* host, int32_t port,
                                  bool forSTARTTLS, uint32_t flags,
                                  uint32_t tlsFlags);
 
-nsresult nsSSLIOLayerFreeTLSIntolerantSites();
+SECStatus DoGetClientAuthData(ClientAuthInfo&& info,
+                              const mozilla::UniqueCERTCertificate& serverCert,
+                              nsTArray<nsTArray<uint8_t>>&& collectedCANames,
+                              mozilla::UniqueCERTCertificate& outCert,
+                              mozilla::UniqueSECKEYPrivateKey& outKey,
+                              mozilla::UniqueCERTCertList& outBuiltChain);
 
 #endif  // nsNSSIOLayer_h
