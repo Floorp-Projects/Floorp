@@ -12,12 +12,15 @@
 
 #include "builtin/MapObject.h"
 #include "debugger/DebugAPI.h"
+#include "frontend/BinASTParserBase.h"
 #include "frontend/BytecodeCompiler.h"
+#include "frontend/Parser.h"
 #include "gc/ClearEdgesTracer.h"
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #include "jit/MacroAssembler.h"
 #include "js/HashTable.h"
+#include "js/ValueArray.h"
 #include "vm/JSContext.h"
 #include "vm/JSONParser.h"
 
@@ -156,67 +159,76 @@ void JSRuntime::finishPersistentRoots() {
 void AutoGCRooter::trace(JSTracer* trc) {
   switch (kind_) {
     case Kind::Parser:
-      frontend::TraceParser(trc, this);
+      static_cast<frontend::ParserBase*>(this)->trace(trc);
       break;
 
-    case Kind::BinASTParser:
 #if defined(JS_BUILD_BINAST)
-      frontend::TraceBinASTParser(trc, this);
-#endif  // defined(JS_BUILD_BINAST)
+    case Kind::BinASTParser:
+      static_cast<frontend::BinASTParserBase*>(this)->trace(trc);
       break;
+#endif  // defined(JS_BUILD_BINAST)
 
     case Kind::ValueArray: {
       /*
        * We don't know the template size parameter, but we can safely treat it
        * as an AutoValueArray<1> because the length is stored separately.
        */
-      AutoValueArray<1>* array = static_cast<AutoValueArray<1>*>(this);
-      TraceRootRange(trc, array->length(), array->begin(),
-                     "js::AutoValueArray");
+      static_cast<AutoValueArray<1>*>(this)->trace(trc);
       break;
     }
 
-    case Kind::Wrapper: {
-      /*
-       * We need to use TraceManuallyBarrieredEdge here because we trace
-       * wrapper roots in every slice. This is because of some rule-breaking
-       * in RemapAllWrappersForObject; see comment there.
-       */
-      TraceManuallyBarrieredEdge(
-          trc, &static_cast<AutoWrapperRooter*>(this)->value.get(),
-          "js::AutoWrapperRooter.value");
+    case Kind::Wrapper:
+      static_cast<AutoWrapperRooter*>(this)->trace(trc);
       break;
-    }
 
-    case Kind::WrapperVector: {
-      auto vector = static_cast<AutoWrapperVector*>(this);
-      /*
-       * We need to use TraceManuallyBarrieredEdge here because we trace
-       * wrapper roots in every slice. This is because of some rule-breaking
-       * in RemapAllWrappersForObject; see comment there.
-       */
-      for (WrapperValue* p = vector->begin(); p < vector->end(); p++) {
-        TraceManuallyBarrieredEdge(trc, &p->get(),
-                                   "js::AutoWrapperVector.vector");
-      }
+    case Kind::WrapperVector:
+      static_cast<AutoWrapperVector*>(this)->trace(trc);
       break;
-    }
 
     case Kind::Custom:
       static_cast<JS::CustomAutoRooter*>(this)->trace(trc);
       break;
 
     case Kind::Array: {
-      auto array = static_cast<AutoArrayRooter*>(this);
-      if (Value* vp = array->begin()) {
-        TraceRootRange(trc, array->length(), vp, "js::AutoArrayRooter");
-      }
+      static_cast<AutoArrayRooter*>(this)->trace(trc);
       break;
     }
 
     default:
       MOZ_CRASH("Bad AutoGCRooter::Kind");
       break;
+  }
+}
+
+template <size_t N>
+void JS::AutoValueArray<N>::trace(JSTracer* trc) {
+  TraceRootRange(trc, length(), begin(), "js::AutoValueArray");
+}
+
+void AutoWrapperRooter::trace(JSTracer* trc) {
+  /*
+   * We need to use TraceManuallyBarrieredEdge here because we trace wrapper
+   * roots in every slice. This is because of some rule-breaking in
+   * RemapAllWrappersForObject; see comment there.
+   */
+  TraceManuallyBarrieredEdge(trc, &value.get(), "js::AutoWrapperRooter.value");
+}
+
+void AutoWrapperVector::trace(JSTracer* trc) {
+  /*
+   * We need to use TraceManuallyBarrieredEdge here because we trace wrapper
+   * roots in every slice. This is because of some rule-breaking in
+   * RemapAllWrappersForObject; see comment there.
+   */
+  for (WrapperValue& value : *this) {
+    TraceManuallyBarrieredEdge(trc, &value.get(),
+                               "js::AutoWrapperVector.vector");
+  }
+}
+
+void AutoArrayRooter::trace(JSTracer* trc) {
+  if (Value* vp = begin()) {
+    TraceRootRange(trc, length(), vp, "js::AutoArrayRooter");
   }
 }
 

@@ -47,6 +47,8 @@ class MOZ_RAII AutoValueArray : public AutoGCRooter {
     return MutableHandleValue::fromMarkedLocation(&elements_[i]);
   }
 
+  void trace(JSTracer* trc);
+
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
