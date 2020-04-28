@@ -411,20 +411,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1629926",
-    platform: "desktop",
-    domain: "GMail Hangouts microphone fix",
-    bug: "1629926",
-    contentScripts: {
-      matches: ["https://mail.google.com/*"],
-      js: [
-        {
-          file: "injections/js/bug1629926-mail.google.com-hangouts-mic-fix.js",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1631960",
     platform: "all",
     domain: "websube.ckbogazici.com.tr",
