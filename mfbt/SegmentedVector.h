@@ -30,6 +30,11 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/OperatorNewExtensions.h"
 
+#ifdef IMPL_LIBXUL
+#  include "mozilla/Likely.h"
+#  include "mozilla/mozalloc_oom.h"
+#endif  // IMPL_LIBXUL
+
 namespace mozilla {
 
 // |IdealSegmentSize| specifies how big each segment will be in bytes (or as
@@ -170,7 +175,14 @@ class SegmentedVector : private AllocPolicy {
   template <typename U>
   void InfallibleAppend(U&& aU) {
     bool ok = Append(std::forward<U>(aU));
+
+#ifdef IMPL_LIBXUL
+    if (MOZ_UNLIKELY(!ok)) {
+      mozalloc_handle_oom(sizeof(Segment));
+    }
+#else
     MOZ_RELEASE_ASSERT(ok);
+#endif  // MOZ_INTERNAL_API
   }
 
   void Clear() {
