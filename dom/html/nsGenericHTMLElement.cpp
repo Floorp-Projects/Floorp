@@ -1546,16 +1546,6 @@ already_AddRefed<nsINodeList> nsGenericHTMLElement::Labels() {
   return labels.forget();
 }
 
-bool nsGenericHTMLElement::IsInteractiveHTMLContent(
-    bool aIgnoreTabindex) const {
-  // XXXedgar: this doesn't match with the spec, an invalid tabindex should not
-  // make element into interactive content, see:
-  // - https://html.spec.whatwg.org/multipage/interaction.html#attr-tabindex
-  // - https://html.spec.whatwg.org/multipage/dom.html#interactive-content
-  // However, currently all callers pass true for aIgnoreTabindex ..
-  return !aIgnoreTabindex && HasAttr(kNameSpaceID_None, nsGkAtoms::tabindex);
-}
-
 // static
 bool nsGenericHTMLElement::LegacyTouchAPIEnabled(JSContext* aCx,
                                                  JSObject* aGlobal) {

@@ -1166,9 +1166,9 @@ JSObject* nsXULElement::WrapNode(JSContext* aCx,
   return dom::XULElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-bool nsXULElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const {
+bool nsXULElement::IsInteractiveHTMLContent() const {
   return IsXULElement(nsGkAtoms::menupopup) ||
-         Element::IsInteractiveHTMLContent(aIgnoreTabindex);
+         Element::IsInteractiveHTMLContent();
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULPrototypeNode)

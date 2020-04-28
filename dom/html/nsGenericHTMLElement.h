@@ -642,8 +642,6 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
 
   already_AddRefed<nsINodeList> Labels();
 
-  virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override;
-
   static bool LegacyTouchAPIEnabled(JSContext* aCx, JSObject* aObj);
 
   static inline bool CanHaveName(nsAtom* aTag) {
