@@ -567,13 +567,7 @@ nsIEventTarget* GetCurrentThreadEventTarget() {
 }
 
 nsIEventTarget* GetMainThreadEventTarget() {
-  nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  return thread->EventTarget();
+  return GetMainThreadSerialEventTarget();
 }
 
 nsISerialEventTarget* GetCurrentThreadSerialEventTarget() {
@@ -587,13 +581,7 @@ nsISerialEventTarget* GetCurrentThreadSerialEventTarget() {
 }
 
 nsISerialEventTarget* GetMainThreadSerialEventTarget() {
-  nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  return thread->SerialEventTarget();
+  return static_cast<nsThread*>(nsThreadManager::get().GetMainThreadWeak());
 }
 
 size_t GetNumberOfProcessors() {
