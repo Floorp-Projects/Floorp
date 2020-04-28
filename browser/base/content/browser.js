@@ -416,10 +416,15 @@ XPCOMUtils.defineLazyGetter(this, "PopupNotifications", () => {
     // We also have to hide notifications explicitly when the window is
     // minimized because of the effects of the "noautohide" attribute on Linux.
     // This can be removed once bug 545265 and bug 1320361 are fixed.
+    // Hide popup notifications when system tab prompts are shown so they
+    // don't cover up the prompt.
     let shouldSuppress = () => {
       return (
         window.windowState == window.STATE_MINIMIZED ||
-        (gURLBar.getAttribute("pageproxystate") != "valid" && gURLBar.focused)
+        (gURLBar.getAttribute("pageproxystate") != "valid" &&
+          gURLBar.focused) ||
+        (gBrowser &&
+          gBrowser?.selectedBrowser.hasAttribute("tabmodalChromePromptShowing"))
       );
     };
     return new PopupNotifications(
@@ -8873,6 +8878,18 @@ TabModalPromptBox.prototype = {
     );
     browser.setAttribute("tabmodalPromptShowing", true);
 
+    // Indicate if a tab modal chrome prompt is being shown so that
+    // PopupNotifications are suppressed.
+    if (
+      args.modalType === Ci.nsIPrompt.MODAL_TYPE_TAB &&
+      !browser.hasAttribute("tabmodalChromePromptShowing")
+    ) {
+      browser.setAttribute("tabmodalChromePromptShowing", true);
+      // Notify PopupNotifications of the UI change so it hides the notification
+      // panel.
+      PopupNotifications.anchorVisibilityChange();
+    }
+
     let prompts = this.listPrompts(args.modalType);
     if (prompts.length > 1) {
       // Let's hide ourself behind the current prompt.
@@ -8918,7 +8935,8 @@ TabModalPromptBox.prototype = {
   },
 
   removePrompt(aPrompt) {
-    if (aPrompt.modalType === Ci.nsIPrompt.MODAL_TYPE_TAB) {
+    let { modalType } = aPrompt.args;
+    if (modalType === Ci.nsIPrompt.MODAL_TYPE_TAB) {
       this._tabPrompts.delete(aPrompt.element);
     } else {
       this._contentPrompts.delete(aPrompt.element);
@@ -8927,34 +8945,73 @@ TabModalPromptBox.prototype = {
     let browser = this.browser;
     aPrompt.element.remove();
 
-    let prompts = this.listPrompts(aPrompt.modalType);
+    let prompts = this.listPrompts(modalType);
     if (prompts.length) {
       let prompt = prompts[prompts.length - 1];
       prompt.element.hidden = false;
       // Because we were hidden before, this won't have been possible, so do it now:
       prompt.Dialog.setDefaultFocus();
-    } else {
+    } else if (modalType === Ci.nsIPrompt.MODAL_TYPE_TAB) {
+      // If we remove the last tab chrome prompt, also remove the browser
+      // attribute.
+      browser.removeAttribute("tabmodalChromePromptShowing");
+      // Notify PopupNotifications of the UI change so it shows the notification
+      // panel again.
+      PopupNotifications.anchorVisibilityChange();
+    }
+    // Check if all prompts are closed
+    if (!this._hasPrompts()) {
       browser.removeAttribute("tabmodalPromptShowing");
       browser.focus();
     }
   },
 
-  listPrompts(aModalType = null) {
-    // Get the nodelist, then return the TabModalPrompt instances as an array
+  /**
+   * Checks if the prompt box has prompt elements.
+   * @returns {Boolean} - true if there are prompt elements.
+   */
+  _hasPrompts() {
+    return !!this._getPromptElements().length;
+  },
+
+  /**
+   * Get list of current prompt elements.
+   * @param {Number} [aModalType] - Optionally filter by
+   * Ci.nsIPrompt.MODAL_TYPE_.
+   * @returns {NodeList} - A list of tabmodalprompt elements.
+   */
+  _getPromptElements(aModalType = null) {
     let selector = "tabmodalprompt";
-    let promptMap;
 
     if (aModalType != null) {
       if (aModalType === Ci.nsIPrompt.MODAL_TYPE_TAB) {
         selector += ".tab-prompt";
-        promptMap = this._tabPrompts;
       } else {
         selector += ".content-prompt";
+      }
+    }
+    return this.browser.parentNode.querySelectorAll(selector);
+  },
+
+  /**
+   * Get a list of all TabModalPrompt objects associated with the prompt box.
+   * @param {Number} [aModalType] - Optionally filter by
+   * Ci.nsIPrompt.MODAL_TYPE_.
+   * @returns {TabModalPrompt[]} - An array of TabModalPrompt objects.
+   */
+  listPrompts(aModalType = null) {
+    // Get the nodelist, then return the TabModalPrompt instances as an array
+    let promptMap;
+
+    if (aModalType) {
+      if (aModalType === Ci.nsIPrompt.MODAL_TYPE_TAB) {
+        promptMap = this._tabPrompts;
+      } else {
         promptMap = this._contentPrompts;
       }
     }
 
-    let elements = this.browser.parentNode.querySelectorAll(selector);
+    let elements = this._getPromptElements(aModalType);
 
     if (promptMap) {
       return [...elements].map(el => promptMap.get(el));
