@@ -1,4 +1,3 @@
-// META: global=!worker
 // META: script=/workers/modules/resources/import-test-cases.js
 
 // Starts a shared worker for |testCase.scriptURL| and waits until the list
