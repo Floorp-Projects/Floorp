@@ -2443,8 +2443,9 @@ SI T mix(T x, T y, vec4_scalar a) {
            mix(x.w, y.w, a.w)};
 }
 
-// Scale texture coords for quantization, subtract offset for filtering,
-// and round to nearest 1/scale increment
+// Scale texture coords for quantization, subtract offset for filtering
+// (assuming coords already offset to texel centers), and round to nearest
+// 1/scale increment
 template <typename T>
 SI T linearQuantize(T P, float scale) {
   return P * scale + (0.5f - 0.5f * scale);

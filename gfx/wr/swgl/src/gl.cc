@@ -3545,8 +3545,8 @@ static void linear_blit(Texture& srctex, const IntRect& srcReq, int srcZ,
                      float(srcReq.height()) / dstReq.height());
   // Skip to clamped source start
   srcUV += srcDUV * vec2_scalar(dstBounds.x0, dstBounds.y0);
-  // Scale source UVs by linear-interpolation precision
-  srcUV = linearQuantize(srcUV, 128);
+  // Offset source UVs to texel centers and scale by lerp precision
+  srcUV = linearQuantize(srcUV + 0.5f, 128);
   srcDUV *= 128.0f;
   // Calculate dest pointer from clamped offsets
   int bpp = dsttex.bpp();
