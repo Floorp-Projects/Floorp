@@ -26,6 +26,9 @@ job-defaults:
         script: raptor_script.py
         config:
             - raptor/android_hw_config.py
+    optimization:
+        push-interval-25:
+            - android
 
 raptor-tp6m-1-geckoview:
     description: "Raptor tp6m-1 on GeckoView"
