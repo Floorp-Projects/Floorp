@@ -394,6 +394,7 @@
             "autofill-clear-button",
             "autofill-insecureWarning",
             "generatedPassword",
+            "importableLogins",
             "insecureWarning",
             "loginsFooter",
             "loginWithOrigin",
@@ -423,6 +424,9 @@
               break;
             case "autofill-insecureWarning":
               options = { is: "autocomplete-creditcard-insecure-field" };
+              break;
+            case "importableLogins":
+              options = { is: "autocomplete-importable-logins-richlistitem" };
               break;
             case "generatedPassword":
               options = { is: "autocomplete-generated-password-richlistitem" };

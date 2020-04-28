@@ -17,21 +17,13 @@ const LoginInfo = new Components.Constructor(
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "LoginHelper",
-  "resource://gre/modules/LoginHelper.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "PasswordGenerator",
-  "resource://gre/modules/PasswordGenerator.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ChromeMigrationUtils: "resource:///modules/ChromeMigrationUtils.jsm",
+  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
+  MigrationUtils: "resource:///modules/MigrationUtils.jsm",
+  PasswordGenerator: "resource://gre/modules/PasswordGenerator.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+});
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -126,6 +118,24 @@ Services.ppmm.addMessageListener("PasswordManager:findRecipes", message => {
   let formHost = new URL(message.data.formOrigin).host;
   return gRecipeManager.getRecipesForHost(formHost);
 });
+
+/**
+ * Lazily create a Map of origins to array of browsers with importable logins.
+ *
+ * @param {origin} formOrigin
+ * @returns {Object?} containing array of migration browsers and experiment state.
+ */
+async function getImportableLogins(formOrigin) {
+  // Include the experiment state for data and UI decisions; otherwise skip
+  // importing if not supported or disabled.
+  const state = LoginHelper.showAutoCompleteImport;
+  return state
+    ? {
+        browsers: await ChromeMigrationUtils.getImportableLogins(formOrigin),
+        state,
+      }
+    : null;
+}
 
 class LoginManagerParent extends JSWindowActorParent {
   // This is used by tests to listen to form submission.
@@ -255,6 +265,16 @@ class LoginManagerParent extends JSWindowActorParent {
       case "PasswordManager:removeLogin": {
         let login = LoginHelper.vanillaObjectToLogin(data.login);
         Services.logins.removeLogin(login);
+        break;
+      }
+
+      case "PasswordManager:OpenMigrationWizard": {
+        // Open the migration wizard pre-selecting the appropriate browser.
+        let window = this.getRootBrowser().ownerGlobal;
+        MigrationUtils.showMigrationWizard(window, [
+          MigrationUtils.MIGRATION_ENTRYPOINT_PASSWORDS,
+          msg.data,
+        ]);
         break;
       }
 
@@ -408,7 +428,11 @@ class LoginManagerParent extends JSWindowActorParent {
     // Convert the array of nsILoginInfo to vanilla JS objects since nsILoginInfo
     // doesn't support structured cloning.
     let jsLogins = LoginHelper.loginsToVanillaObjects(logins);
-    return { logins: jsLogins, recipes };
+    return {
+      importable: await getImportableLogins(formOrigin),
+      logins: jsLogins,
+      recipes,
+    };
   }
 
   async doAutocompleteSearch({
@@ -508,6 +532,7 @@ class LoginManagerParent extends JSWindowActorParent {
     let jsLogins = LoginHelper.loginsToVanillaObjects(matchingLogins);
     return {
       generatedPassword,
+      importable: await getImportableLogins(formOrigin),
       logins: jsLogins,
       willAutoSaveGeneratedPassword,
     };

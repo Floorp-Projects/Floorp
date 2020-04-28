@@ -173,11 +173,16 @@ class AutoCompleteParent extends JSWindowActorParent {
 
       case "popuphidden": {
         let selectedIndex = this.openedPopup.selectedIndex;
+        let selectedRowComment =
+          selectedIndex != -1
+            ? AutoCompleteResultView.getCommentAt(selectedIndex)
+            : "";
         let selectedRowStyle =
           selectedIndex != -1
             ? AutoCompleteResultView.getStyleAt(selectedIndex)
             : "";
         this.sendAsyncMessage("FormAutoComplete:PopupClosed", {
+          selectedRowComment,
           selectedRowStyle,
         });
         AutoCompleteResultView.clearResults();

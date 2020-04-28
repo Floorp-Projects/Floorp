@@ -5,11 +5,16 @@
 
 var EXPORTED_SYMBOLS = ["ChromeMigrationUtils"];
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
+  MigrationUtils: "resource:///modules/MigrationUtils.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 const S100NS_FROM1601TO1970 = 0x19db1ded53e8000;
 const S100NS_PER_MS = 10;
@@ -354,5 +359,70 @@ var ChromeMigrationUtils = {
    */
   dateToChromeTime(aDate) {
     return (aDate * 10000 + S100NS_FROM1601TO1970) / S100NS_PER_MS;
+  },
+
+  /**
+   * Returns an array of chromium browser ids that have importable logins.
+   */
+  _importableLoginsCache: null,
+  async getImportableLogins(formOrigin) {
+    // Lazily fill the cache with all importable login browsers.
+    if (!this._importableLoginsCache) {
+      this._importableLoginsCache = new Map();
+
+      // Just handle these chromium-based browsers for now.
+      for (const browserId of ["chrome", "chromium-edge", "chromium"]) {
+        // Skip if there's no profile data.
+        const migrator = await MigrationUtils.getMigrator(browserId);
+        if (!migrator) {
+          continue;
+        }
+
+        // Check each profile for logins.
+        const dataPath = await migrator.wrappedJSObject._getChromeUserDataPathIfExists();
+        for (const profile of await migrator.getSourceProfiles()) {
+          const path = OS.Path.join(dataPath, profile.id, "Login Data");
+          // Skip if login data is missing.
+          if (!(await OS.File.exists(path))) {
+            Cu.reportError(`Missing file at ${path}`);
+            continue;
+          }
+
+          try {
+            for (const row of await MigrationUtils.getRowsFromDBWithoutLocks(
+              path,
+              `Importable ${browserId} logins`,
+              `SELECT origin_url
+               FROM logins
+               WHERE blacklisted_by_user = 0`
+            )) {
+              const url = row.getString(0);
+              try {
+                // Initialize an array if it doesn't exist for the origin yet.
+                const origin = LoginHelper.getLoginOrigin(url);
+                const entries = this._importableLoginsCache.get(origin) || [];
+                if (!entries.length) {
+                  this._importableLoginsCache.set(origin, entries);
+                }
+
+                // Add the browser if it doesn't exist yet.
+                if (!entries.includes(browserId)) {
+                  entries.push(browserId);
+                }
+              } catch (ex) {
+                Cu.reportError(
+                  `Failed to process importable url ${url} from ${browserId} ${ex}`
+                );
+              }
+            }
+          } catch (ex) {
+            Cu.reportError(
+              `Failed to get importable logins from ${browserId} ${ex}`
+            );
+          }
+        }
+      }
+    }
+    return this._importableLoginsCache.get(formOrigin);
   },
 };
