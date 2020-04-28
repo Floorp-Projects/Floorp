@@ -784,11 +784,11 @@ add_task(async function test_privacy_other_prefs() {
     "network.tlsVersionRestriction",
     {},
     {
-      "security.tls.version.min": 3,
+      "security.tls.version.min": tlsMinPref,
       "security.tls.version.max": 4,
     },
     {
-      minimum: "TLSv1.2",
+      minimum: tlsMinVer,
       maximum: "TLSv1.3",
     }
   );
