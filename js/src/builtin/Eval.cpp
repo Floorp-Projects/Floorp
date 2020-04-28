@@ -311,6 +311,8 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
       options.setFileAndLine("eval", 1);
       options.setIntroductionType("eval");
     }
+    options.setNonSyntacticScope(
+        enclosing->hasOnChain(ScopeKind::NonSyntactic));
 
     AutoStableStringChars linearChars(cx);
     if (!linearChars.initTwoByte(cx, linearStr)) {
@@ -411,6 +413,8 @@ bool js::DirectEvalStringFromIon(JSContext* cx, HandleObject env,
       options.setFileAndLine("eval", 1);
       options.setIntroductionType("eval");
     }
+    options.setNonSyntacticScope(
+        enclosing->hasOnChain(ScopeKind::NonSyntactic));
 
     AutoStableStringChars linearChars(cx);
     if (!linearChars.initTwoByte(cx, linearStr)) {
