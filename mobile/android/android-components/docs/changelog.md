@@ -13,7 +13,8 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
 * **feature-top-sites**
-  * Added `isDefault` to the top site entity, which allows application to specify a default top site that is added by the application. This is called through `TopSiteStorage.addTopSite`.
+  * ⚠️ **This is a breaking change**: Added `isDefault` to the top site entity, which allows application to specify a default top site that is added by the application. This is called through `TopSiteStorage.addTopSite`.
+    * If your application is using Nightly Snapshots of v40.0.0, please test that the Top Sites feature still works and update to the latest v40.0.0 if any schema errors are encountered.
 
 # 39.0.0
 
