@@ -8,7 +8,7 @@ const TRACKING_PAGE =
 const BENIGN_PAGE =
   "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/benignPage.html";
 const TP_PREF = "privacy.trackingprotection.enabled";
-const ANIMATIONS_PREF = "toolkit.cosmeticAnimations.enabled";
+const PREFER_REDUCED_MOTION_PREF = "ui.prefersReducedMotion";
 const DTSCBN_PREF = "dom.testing.sync-content-blocking-notifications";
 
 // Test that the shield icon animation can be controlled by the cosmetic
@@ -25,7 +25,7 @@ add_task(async function testShieldAnimation() {
   );
   let noAnimationIcon = document.getElementById("tracking-protection-icon");
 
-  Services.prefs.setBoolPref(ANIMATIONS_PREF, true);
+  Services.prefs.setIntPref(PREFER_REDUCED_MOTION_PREF, 0);
   await Promise.all([
     promiseTabLoadEvent(tab, TRACKING_PAGE),
     waitForContentBlockingEvent(2, tab.linkedBrowser.ownerGlobal),
@@ -46,7 +46,7 @@ add_task(async function testShieldAnimation() {
     "the default icon is visible"
   );
 
-  Services.prefs.setBoolPref(ANIMATIONS_PREF, false);
+  Services.prefs.setIntPref(PREFER_REDUCED_MOTION_PREF, 1);
   await Promise.all([
     promiseTabLoadEvent(tab, TRACKING_PAGE),
     waitForContentBlockingEvent(2, tab.linkedBrowser.ownerGlobal),
@@ -65,7 +65,7 @@ add_task(async function testShieldAnimation() {
   );
 
   gBrowser.removeCurrentTab();
-  Services.prefs.clearUserPref(ANIMATIONS_PREF);
+  Services.prefs.clearUserPref(PREFER_REDUCED_MOTION_PREF);
   Services.prefs.clearUserPref(TP_PREF);
   Services.prefs.clearUserPref(DTSCBN_PREF);
   UrlClassifierTestUtils.cleanupTestTrackers();
