@@ -7423,14 +7423,12 @@ class MLoadElement : public MBinaryInstruction,
                      public SingleObjectPolicy::Data {
   bool needsHoleCheck_;
   bool loadDoubles_;
-  int32_t offsetAdjustment_;
 
   MLoadElement(MDefinition* elements, MDefinition* index, bool needsHoleCheck,
-               bool loadDoubles, int32_t offsetAdjustment = 0)
+               bool loadDoubles)
       : MBinaryInstruction(classOpcode, elements, index),
         needsHoleCheck_(needsHoleCheck),
-        loadDoubles_(loadDoubles),
-        offsetAdjustment_(offsetAdjustment) {
+        loadDoubles_(loadDoubles) {
     if (needsHoleCheck) {
       // Uses may be optimized away based on this instruction's result
       // type. This means it's invalid to DCE this instruction, as we
@@ -7450,7 +7448,6 @@ class MLoadElement : public MBinaryInstruction,
 
   bool needsHoleCheck() const { return needsHoleCheck_; }
   bool loadDoubles() const { return loadDoubles_; }
-  int32_t offsetAdjustment() const { return offsetAdjustment_; }
   bool fallible() const { return needsHoleCheck(); }
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isLoadElement()) {
@@ -7461,9 +7458,6 @@ class MLoadElement : public MBinaryInstruction,
       return false;
     }
     if (loadDoubles() != other->loadDoubles()) {
-      return false;
-    }
-    if (offsetAdjustment() != other->offsetAdjustment()) {
       return false;
     }
     return congruentIfOperandsEqual(other);
@@ -7572,13 +7566,11 @@ class MStoreElement
       public MStoreElementCommon,
       public MixPolicy<SingleObjectPolicy, NoFloatPolicy<2>>::Data {
   bool needsHoleCheck_;
-  int32_t offsetAdjustment_;
 
   MStoreElement(MDefinition* elements, MDefinition* index, MDefinition* value,
-                bool needsHoleCheck, int32_t offsetAdjustment = 0)
+                bool needsHoleCheck)
       : MTernaryInstruction(classOpcode, elements, index, value) {
     needsHoleCheck_ = needsHoleCheck;
-    offsetAdjustment_ = offsetAdjustment;
     MOZ_ASSERT(elements->type() == MIRType::Elements);
     MOZ_ASSERT(index->type() == MIRType::Int32);
   }
@@ -7592,7 +7584,6 @@ class MStoreElement
     return AliasSet::Store(AliasSet::Element);
   }
   bool needsHoleCheck() const { return needsHoleCheck_; }
-  int32_t offsetAdjustment() const { return offsetAdjustment_; }
   bool fallible() const { return needsHoleCheck(); }
 
   ALLOW_CLONE(MStoreElement)
@@ -7783,20 +7774,18 @@ enum MemoryBarrierRequirement {
 // Load an unboxed scalar value from a typed array or other object.
 class MLoadUnboxedScalar : public MBinaryInstruction,
                            public SingleObjectPolicy::Data {
+  int32_t offsetAdjustment_ = 0;
   Scalar::Type storageType_;
   Scalar::Type readType_;
   bool requiresBarrier_;
-  int32_t offsetAdjustment_;
 
   MLoadUnboxedScalar(
       MDefinition* elements, MDefinition* index, Scalar::Type storageType,
-      MemoryBarrierRequirement requiresBarrier = DoesNotRequireMemoryBarrier,
-      int32_t offsetAdjustment = 0)
+      MemoryBarrierRequirement requiresBarrier = DoesNotRequireMemoryBarrier)
       : MBinaryInstruction(classOpcode, elements, index),
         storageType_(storageType),
         readType_(storageType),
-        requiresBarrier_(requiresBarrier == DoesRequireMemoryBarrier),
-        offsetAdjustment_(offsetAdjustment) {
+        requiresBarrier_(requiresBarrier == DoesRequireMemoryBarrier) {
     setResultType(MIRType::Value);
     if (requiresBarrier_) {
       setGuard();  // Not removable or movable
@@ -7960,19 +7949,16 @@ class MStoreUnboxedScalar : public MTernaryInstruction,
   TruncateInputKind truncateInput_;
 
   bool requiresBarrier_;
-  int32_t offsetAdjustment_;
 
   MStoreUnboxedScalar(
       MDefinition* elements, MDefinition* index, MDefinition* value,
       Scalar::Type storageType, TruncateInputKind truncateInput,
-      MemoryBarrierRequirement requiresBarrier = DoesNotRequireMemoryBarrier,
-      int32_t offsetAdjustment = 0)
+      MemoryBarrierRequirement requiresBarrier = DoesNotRequireMemoryBarrier)
       : MTernaryInstruction(classOpcode, elements, index, value),
         StoreUnboxedScalarBase(storageType),
         storageType_(storageType),
         truncateInput_(truncateInput),
-        requiresBarrier_(requiresBarrier == DoesRequireMemoryBarrier),
-        offsetAdjustment_(offsetAdjustment) {
+        requiresBarrier_(requiresBarrier == DoesRequireMemoryBarrier) {
     if (requiresBarrier_) {
       setGuard();  // Not removable or movable
     } else {
@@ -7994,7 +7980,6 @@ class MStoreUnboxedScalar : public MTernaryInstruction,
   }
   TruncateInputKind truncateInput() const { return truncateInput_; }
   bool requiresMemoryBarrier() const { return requiresBarrier_; }
-  int32_t offsetAdjustment() const { return offsetAdjustment_; }
   TruncateKind operandTruncateKind(size_t index) const override;
 
   bool canConsumeFloat32(MUse* use) const override {
