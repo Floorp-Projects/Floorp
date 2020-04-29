@@ -1,5 +1,5 @@
-// Note: this file tests only valid syntax (of user pref files, not default
-// pref files). See modules/libpref/test/gtest/Parser.cpp for tests if invalid
+// Note: this file tests only valid syntax (of default pref files, not user
+// pref files). See modules/libpref/test/gtest/Parser.cpp for tests of invalid
 // syntax.
 
 #
