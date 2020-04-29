@@ -8,25 +8,11 @@
  * @typedef {import("react-redux").ResolveThunks<P>} ResolveThunks<P>
  */
 
-/**
- * @typedef {Object} StateProps
- * @property {string} presetName
- * @property {import("../@types/perf").Presets} presets
- */
-
-/**
- * @typedef {Object} ThunkDispatchProps
- * @property {typeof actions.changePreset} changePreset
- */
-
-/**
- * @typedef {ResolveThunks<ThunkDispatchProps>} DispatchProps
- * @typedef {StateProps & DispatchProps} Props
- * @typedef {import("../@types/perf").State} StoreState
- */
-
 "use strict";
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  PureComponent,
+  createElement,
+} = require("devtools/client/shared/vendor/react");
 const {
   div,
   label,
@@ -37,33 +23,30 @@ const actions = require("devtools/client/performance-new/store/actions");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 /**
+ * @typedef {Object} PresetProps
+ * @property {string} presetName
+ * @property {boolean} selected
+ * @property {import("../@types/perf").PresetDefinition | null} preset
+ * @property {(presetName: string) => void} onChange
+ */
+
+/**
  * Switch between various profiler presets, which will override the individualized
  * settings for the profiler.
  *
- * @extends {React.PureComponent<Props>}
+ * @extends {React.PureComponent<PresetProps>}
  */
-class Presets extends PureComponent {
-  /** @param {Props} props */
-  constructor(props) {
-    super(props);
-    this.onChange = this.onChange.bind(this);
-  }
-
+class Preset extends PureComponent {
   /**
    * Handle the checkbox change.
    * @param {React.ChangeEvent<HTMLInputElement>} event
    */
-  onChange(event) {
-    const { presets } = this.props;
-    this.props.changePreset(presets, event.target.value);
-  }
+  onChange = event => {
+    this.props.onChange(event.target.value);
+  };
 
-  /**
-   * @param {string} presetName
-   * @returns {React.ReactNode}
-   */
-  renderPreset(presetName) {
-    const preset = this.props.presets[presetName];
+  render() {
+    const { preset, presetName, selected } = this.props;
     let labelText, description;
     if (preset) {
       labelText = preset.label;
@@ -80,7 +63,7 @@ class Presets extends PureComponent {
           type: "radio",
           name: "presets",
           value: presetName,
-          checked: this.props.presetName === presetName,
+          checked: selected,
           onChange: this.onChange,
         })
       ),
@@ -93,14 +76,68 @@ class Presets extends PureComponent {
       )
     );
   }
+}
+
+/**
+ * @typedef {Object} StateProps
+ * @property {string} selectedPresetName
+ * @property {import("../@types/perf").Presets} presets
+ */
+
+/**
+ * @typedef {Object} ThunkDispatchProps
+ * @property {typeof actions.changePreset} changePreset
+ */
+
+/**
+ * @typedef {ResolveThunks<ThunkDispatchProps>} DispatchProps
+ * @typedef {StateProps & DispatchProps} Props
+ * @typedef {import("../@types/perf").State} StoreState
+ */
+
+/**
+ * Switch between various profiler presets, which will override the individualized
+ * settings for the profiler.
+ *
+ * @extends {React.PureComponent<Props>}
+ */
+class Presets extends PureComponent {
+  /** @param {Props} props */
+  constructor(props) {
+    super(props);
+    this.onChange = this.onChange.bind(this);
+  }
+
+  /**
+   * Handle the checkbox change.
+   * @param {string} presetName
+   */
+  onChange(presetName) {
+    const { presets } = this.props;
+    this.props.changePreset(presets, presetName);
+  }
 
   render() {
+    const { presets, selectedPresetName } = this.props;
+
     return div(
       { className: "perf-presets" },
-      this.renderPreset("web-developer"),
-      this.renderPreset("firefox-platform"),
-      this.renderPreset("firefox-front-end"),
-      this.renderPreset("custom")
+      Object.entries(presets).map(([presetName, preset]) =>
+        createElement(Preset, {
+          key: presetName,
+          presetName,
+          preset,
+          selected: presetName === selectedPresetName,
+          onChange: this.onChange,
+        })
+      ),
+      createElement(Preset, {
+        key: "custom",
+        presetName: "custom",
+        selected: selectedPresetName == "custom",
+        preset: null,
+        onChange: this.onChange,
+      })
     );
   }
 }
@@ -111,7 +148,7 @@ class Presets extends PureComponent {
  */
 function mapStateToProps(state) {
   return {
-    presetName: selectors.getPresetName(state),
+    selectedPresetName: selectors.getPresetName(state),
     presets: selectors.getPresets(state),
   };
 }
