@@ -54,7 +54,7 @@ unic-langid = { version = "0.8", features = ["likelysubtags"] }
 unic-langid-ffi = { path = "../../../../intl/locale/rust/unic-langid-ffi" }
 fluent-langneg = { version = "0.12.1", features = ["cldr"] }
 fluent-langneg-ffi = { path = "../../../../intl/locale/rust/fluent-langneg-ffi" }
-webext-storage = { git = "https://github.com/mozilla/application-services", rev = "c17198fa5a88295f2cca722586c539280e10201c", optional = true }
+webext-storage = { git = "https://github.com/mozilla/application-services", rev = "775fc33603d722b75ff3579a5f2c52dbd4715b45", optional = true }
 golden_gate = { path = "../../../../services/sync/golden_gate", optional = true }
 
 # Note: `modern_sqlite` means rusqlite's bindings file be for a sqlite with

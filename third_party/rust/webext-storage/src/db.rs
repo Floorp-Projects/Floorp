@@ -9,18 +9,20 @@ use rusqlite::Connection;
 use rusqlite::OpenFlags;
 use sql_support::ConnExt;
 use std::fs;
+use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::result;
 use url::Url;
 
-/// The entry-point to getting a database connection. No enforcement of this
-/// as a singleton is made - that's up to the caller. If you make multiple
-/// StorageDbs pointing at the same physical database, you are going to have a
-/// bad time. We only support a single writer connection - so that's the only
-/// thing we store. It's still a bit overkill, but there's only so many yaks
-/// in a day.
+/// A `StorageDb` wraps a read-write SQLite connection, and handles schema
+/// migrations and recovering from database file corruption. It can be used
+/// anywhere a `rusqlite::Connection` is expected, thanks to its `Deref{Mut}`
+/// implementations.
+///
+/// We only support a single writer connection - so that's the only thing we
+/// store. It's still a bit overkill, but there's only so many yaks in a day.
 pub struct StorageDb {
-    pub writer: Arc<Mutex<Connection>>,
+    writer: Connection,
 }
 impl StorageDb {
     /// Create a new, or fetch an already open, StorageDb backed by a file on disk.
@@ -31,7 +33,7 @@ impl StorageDb {
 
     /// Create a new, or fetch an already open, memory-based StorageDb. You must
     /// provide a name, but you are still able to have a single writer and many
-    ///  reader connections to the same memory DB open.
+    /// reader connections to the same memory DB open.
     #[cfg(test)]
     pub fn new_memory(db_path: &str) -> Result<Self> {
         let name = PathBuf::from(format!("file:{}?mode=memory&cache=shared", db_path));
@@ -48,9 +50,7 @@ impl StorageDb {
 
         let conn = Connection::open_with_flags(db_path.clone(), flags)?;
         match init_sql_connection(&conn, true) {
-            Ok(()) => Ok(Self {
-                writer: Arc::new(Mutex::new(conn)),
-            }),
+            Ok(()) => Ok(Self { writer: conn }),
             Err(e) => {
                 // like with places, failure to upgrade means "you lose your data"
                 if let ErrorKind::DatabaseUpgradeError = e.kind() {
@@ -61,6 +61,33 @@ impl StorageDb {
                 }
             }
         }
+    }
+
+    /// Closes the database connection. If there are any unfinalized prepared
+    /// statements on the connection, `close` will fail and the `StorageDb` will
+    /// be returned to the caller so that it can retry, drop (via `mem::drop`)
+    // or leak (`mem::forget`) the connection.
+    ///
+    /// Keep in mind that dropping the connection tries to close it again, and
+    /// panics on error.
+    pub fn close(self) -> result::Result<(), (StorageDb, Error)> {
+        self.writer
+            .close()
+            .map_err(|(writer, err)| (StorageDb { writer }, err.into()))
+    }
+}
+
+impl Deref for StorageDb {
+    type Target = Connection;
+
+    fn deref(&self) -> &Self::Target {
+        &self.writer
+    }
+}
+
+impl DerefMut for StorageDb {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.writer
     }
 }
 
@@ -90,6 +117,7 @@ fn define_functions(_c: &Connection) -> Result<()> {
 }
 
 // These should be somewhere else...
+#[allow(dead_code)]
 pub fn put_meta(db: &Connection, key: &str, value: &dyn ToSql) -> Result<()> {
     db.conn().execute_named_cached(
         "REPLACE INTO meta (key, value) VALUES (:key, :value)",
@@ -98,6 +126,7 @@ pub fn put_meta(db: &Connection, key: &str, value: &dyn ToSql) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 pub fn get_meta<T: FromSql>(db: &Connection, key: &str) -> Result<Option<T>> {
     let res = db.conn().try_query_one(
         "SELECT value FROM meta WHERE key = :key",
@@ -107,6 +136,7 @@ pub fn get_meta<T: FromSql>(db: &Connection, key: &str) -> Result<Option<T>> {
     Ok(res)
 }
 
+#[allow(dead_code)]
 pub fn delete_meta(db: &Connection, key: &str) -> Result<()> {
     db.conn()
         .execute_named_cached("DELETE FROM meta WHERE key = :key", &[(":key", &key)])?;
@@ -141,6 +171,7 @@ fn unurl_path(p: impl AsRef<Path>) -> PathBuf {
 ///
 /// Errors if `p` is a relative non-url path, or if it's a URL path
 /// that's isn't a `file:` URL.
+#[allow(dead_code)]
 pub fn ensure_url_path(p: impl AsRef<Path>) -> Result<Url> {
     if let Some(u) = p.as_ref().to_str().and_then(|s| Url::parse(s).ok()) {
         if u.scheme() == "file" {
@@ -218,8 +249,7 @@ mod tests {
 
     #[test]
     fn test_meta() -> Result<()> {
-        let db = new_mem_db();
-        let writer = db.writer.lock().unwrap();
+        let writer = new_mem_db();
         assert_eq!(get_meta::<String>(&writer, "foo")?, None);
         put_meta(&writer, "foo", &"bar".to_string())?;
         assert_eq!(get_meta(&writer, "foo")?, Some("bar".to_string()));
