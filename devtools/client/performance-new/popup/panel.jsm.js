@@ -121,6 +121,7 @@ function createViewControllers(state, elements) {
       } else {
         elements.presetDescription.style.display = "none";
         elements.presetCustom.style.display = "block";
+        elements.presetsMenuList.value = "custom";
       }
       const { PanelMultiView } = lazy.PanelMultiView();
       // Update the description height sizing.
