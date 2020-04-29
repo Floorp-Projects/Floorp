@@ -1227,12 +1227,12 @@ class UrlbarInput {
   }
 
   _setValue(val, allowTrim) {
-    this._untrimmedValue = val;
-
+    // Don't expose internal about:reader URLs to the user.
     let originalUrl = ReaderMode.getOriginalUrlObjectForDisplay(val);
     if (originalUrl) {
       val = originalUrl.displaySpec;
     }
+    this._untrimmedValue = val;
 
     if (allowTrim) {
       val = this._trimValue(val);
