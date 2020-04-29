@@ -11,6 +11,8 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
+import mozilla.appservices.push.GeneralError
+import mozilla.appservices.push.MissingRegistrationTokenError
 import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushError
 import mozilla.components.concept.push.PushService
@@ -21,6 +23,7 @@ import mozilla.components.feature.push.AutoPushFeature.Companion.PREF_TOKEN
 import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.nullable
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
@@ -41,16 +44,19 @@ import org.mockito.Mockito.verifyNoMoreInteractions
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
-@Suppress("Deprecation")
 class AutoPushFeatureTest {
 
     private var lastVerified: Long
         get() = preference(testContext).getLong(LAST_VERIFIED, System.currentTimeMillis())
         set(value) = preference(testContext).edit().putLong(LAST_VERIFIED, value).apply()
 
+    private val connection: PushConnection = mock()
+
     @Before
     fun setup() {
         lastVerified = 0L
+
+        whenever(connection.isInitialized()).thenReturn(true)
     }
 
     @Test
@@ -68,17 +74,13 @@ class AutoPushFeatureTest {
 
     @Test
     fun `updateToken not called if no token in prefs`() = runBlockingTest {
-        val connection: PushConnection = spy(TestPushConnection())
-
-        spy(AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection))
+        AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection)
 
         verify(connection, never()).updateToken(anyString())
     }
 
     @Test
     fun `updateToken called if token is in prefs`() = runBlockingTest {
-        val connection: PushConnection = spy(TestPushConnection())
-
         preference(testContext).edit().putString(PREF_TOKEN, "token").apply()
 
         AutoPushFeature(
@@ -92,7 +94,6 @@ class AutoPushFeatureTest {
     @Test
     fun `shutdown stops service and unsubscribes all`() = runBlockingTest {
         val service: PushService = mock()
-        val connection: PushConnection = mock()
         whenever(connection.isInitialized()).thenReturn(true)
 
         spy(AutoPushFeature(testContext, service, mock(), coroutineContext, connection)).also {
@@ -104,8 +105,9 @@ class AutoPushFeatureTest {
 
     @Test
     fun `onNewToken updates connection and saves pref`() = runBlockingTest {
-        val connection: PushConnection = mock()
         val feature = spy(AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection))
+
+        whenever(connection.subscribe(anyString(), nullable())).thenReturn(mock())
 
         feature.onNewToken("token")
 
@@ -130,14 +132,12 @@ class AutoPushFeatureTest {
 
     @Test
     fun `onMessageReceived decrypts message and notifies observers`() = runBlockingTest {
-        val connection: PushConnection = mock()
         val encryptedMessage: EncryptedPushMessage = mock()
         val owner: LifecycleOwner = mock()
         val lifecycle: Lifecycle = mock()
         val observer: AutoPushFeature.Observer = mock()
         whenever(owner.lifecycle).thenReturn(lifecycle)
         whenever(lifecycle.currentState).thenReturn(Lifecycle.State.STARTED)
-        whenever(connection.isInitialized()).thenReturn(true)
         whenever(encryptedMessage.channelId).thenReturn("992a0f0542383f1ea5ef51b7cf4ae6c4")
         whenever(connection.decryptMessage(any(), any(), any(), any(), any()))
             .thenReturn(null) // If we get null, we shouldn't notify observers.
@@ -159,12 +159,9 @@ class AutoPushFeatureTest {
     @Test
     fun `subscribe calls native layer and notifies observers`() = runBlockingTest {
         val connection: PushConnection = mock()
-        val observer: AutoPushFeature.Observer = mock()
         val subscription: AutoPushSubscription = mock()
         var invoked = false
-
         val feature = spy(AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection))
-        feature.register(observer)
 
         feature.subscribe("testScope") {
             invoked = true
@@ -173,7 +170,7 @@ class AutoPushFeatureTest {
         assertFalse(invoked)
 
         whenever(connection.isInitialized()).thenReturn(true)
-        whenever(connection.subscribe(anyString(), nullable(String::class.java))).thenReturn(subscription)
+        whenever(connection.subscribe(anyString(), nullable())).thenReturn(subscription)
         whenever(subscription.scope).thenReturn("testScope")
 
         feature.subscribe("testScope") {
@@ -184,18 +181,59 @@ class AutoPushFeatureTest {
     }
 
     @Test
+    fun `subscribe invokes error callback`() = runBlockingTest {
+        val connection: PushConnection = mock()
+        val subscription: AutoPushSubscription = mock()
+        var invoked = false
+        var errorInvoked = false
+        val feature = spy(AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection))
+
+        feature.subscribe(
+            scope = "testScope",
+            onSubscribeError = {
+                errorInvoked = true
+            }, onSubscribe = {
+                invoked = true
+            }
+        )
+
+        assertFalse(invoked)
+        assertFalse(errorInvoked)
+
+        whenever(connection.isInitialized()).thenReturn(true)
+        whenever(connection.subscribe(anyString(), nullable())).thenAnswer { throw MissingRegistrationTokenError() }
+        whenever(subscription.scope).thenReturn("testScope")
+
+        feature.subscribe(
+            scope = "testScope",
+            onSubscribeError = {
+                errorInvoked = true
+            }, onSubscribe = {
+                invoked = true
+            }
+        )
+
+        assertFalse(invoked)
+        assertTrue(errorInvoked)
+    }
+
+    @Test
     fun `unsubscribe calls native layer and notifies observers`() = runBlockingTest {
         val connection: PushConnection = mock()
-        val observer: AutoPushFeature.Observer = mock()
         var invoked = false
         var errorInvoked = false
 
         val feature = spy(AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection))
-        feature.register(observer)
 
-        feature.unsubscribe("testScope", { errorInvoked = true }) {
-            invoked = true
-        }
+        feature.unsubscribe(
+            scope = "testScope",
+            onUnsubscribeError = {
+                errorInvoked = true
+            },
+            onUnsubscribe = {
+                invoked = true
+            }
+        )
 
         assertFalse(errorInvoked)
         assertFalse(invoked)
@@ -203,19 +241,55 @@ class AutoPushFeatureTest {
         whenever(connection.unsubscribe(anyString())).thenReturn(false)
         whenever(connection.isInitialized()).thenReturn(true)
 
-        feature.unsubscribe("testScope", { errorInvoked = true }) {
-            invoked = true
-        }
+        feature.unsubscribe(
+            scope = "testScope",
+            onUnsubscribeError = {
+                errorInvoked = true
+            },
+            onUnsubscribe = {
+                invoked = true
+            }
+        )
 
         assertTrue(errorInvoked)
+        errorInvoked = false
 
         whenever(connection.unsubscribe(anyString())).thenReturn(true)
 
-        feature.unsubscribe("testScope") {
-            invoked = true
-        }
+        feature.unsubscribe(
+            scope = "testScope",
+            onUnsubscribeError = {
+                errorInvoked = true
+            },
+            onUnsubscribe = {
+                invoked = true
+            }
+        )
 
         assertTrue(invoked)
+        assertFalse(errorInvoked)
+    }
+
+    @Test
+    fun `unsubscribe invokes error callback on native exception`() = runBlockingTest {
+        val feature = AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection)
+        var invoked = false
+        var errorInvoked = false
+
+        whenever(connection.unsubscribe(anyString())).thenAnswer { throw MissingRegistrationTokenError() }
+
+        feature.unsubscribe(
+            scope = "testScope",
+            onUnsubscribeError = {
+                errorInvoked = true
+            },
+            onUnsubscribe = {
+                invoked = true
+            }
+        )
+
+        assertFalse(invoked)
+        assertTrue(errorInvoked)
     }
 
     @Test
@@ -315,6 +389,48 @@ class AutoPushFeatureTest {
             )
         )
         feature.onError(PushError.Rust(PushError.MalformedMessage("Bad things happened!")))
+
+        verify(crashReporter).submitCaughtException(any<PushError.Rust>())
+    }
+
+    @Test
+    fun `non-fatal errors are ignored`() = runBlockingTest {
+        val crashReporter: CrashReporting = mock()
+        val feature = spy(
+            AutoPushFeature(
+                context = testContext,
+                service = mock(),
+                config = mock(),
+                coroutineContext = coroutineContext,
+                connection = connection,
+                crashReporter = crashReporter
+            )
+        )
+
+        whenever(connection.unsubscribe(any())).thenAnswer { throw GeneralError("test") }
+
+        feature.unsubscribe("123") {}
+
+        verify(crashReporter, never()).submitCaughtException(any<PushError.Rust>())
+    }
+
+    @Test
+    fun `only fatal errors are reported`() = runBlockingTest {
+        val crashReporter: CrashReporting = mock()
+        val feature = spy(
+            AutoPushFeature(
+                context = testContext,
+                service = mock(),
+                config = mock(),
+                coroutineContext = coroutineContext,
+                connection = connection,
+                crashReporter = crashReporter
+            )
+        )
+
+        whenever(connection.unsubscribe(any())).thenAnswer { throw MissingRegistrationTokenError() }
+
+        feature.unsubscribe("123") {}
 
         verify(crashReporter).submitCaughtException(any<PushError.Rust>())
     }

@@ -334,6 +334,7 @@ class WebURLFinder {
             Pattern.compile(autolinkWebUrlPattern, regexFlags)
         }
 
+        @Deprecated("This and the expensive regex it relies on are being removed for performance issues")
         internal val fuzzyUrlRegex by lazy {
             ("^" +
                     "\\s*" +
@@ -343,6 +344,7 @@ class WebURLFinder {
                     ).toRegex(RegexOption.IGNORE_CASE)
         }
 
+        @Deprecated("This and the expensive regex it relies on are being removed for performance issues")
         internal val fuzzyUrlNonWebRegex by lazy {
             ("^" +
                     "\\s*" +

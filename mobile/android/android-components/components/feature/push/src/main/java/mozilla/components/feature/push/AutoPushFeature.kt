@@ -7,35 +7,29 @@ package mozilla.components.feature.push
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
-import mozilla.appservices.push.AlreadyRegisteredError
 import mozilla.appservices.push.CommunicationError
 import mozilla.appservices.push.CommunicationServerError
 import mozilla.appservices.push.CryptoError
 import mozilla.appservices.push.GeneralError
-import mozilla.appservices.push.MissingRegistrationTokenError
-import mozilla.appservices.push.RecordNotFoundError
-import mozilla.appservices.push.StorageError
-import mozilla.appservices.push.StorageSqlError
-import mozilla.appservices.push.TranscodingError
-import mozilla.appservices.push.UrlParseError
 import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushError
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.concept.push.PushService
 import mozilla.components.support.base.crash.CrashReporting
+import mozilla.components.feature.push.ext.launchAndTry
+import mozilla.components.feature.push.ext.ifInitialized
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import java.io.File
 import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
-import mozilla.appservices.push.PushError as RustPushError
 
 /**
  * A implementation of a [PushProcessor] that should live as a singleton by being installed
@@ -82,9 +76,8 @@ class AutoPushFeature(
         serviceType = config.serviceType,
         databasePath = File(context.filesDir, DB_NAME).canonicalPath
     ),
-    private val crashReporter: CrashReporting? = null,
-    delegate: Observable<Observer> = ObserverRegistry()
-) : PushProcessor, Observable<AutoPushFeature.Observer> by delegate {
+    private val crashReporter: CrashReporting? = null
+) : PushProcessor, Observable<AutoPushFeature.Observer> by ObserverRegistry() {
 
     private val logger = Logger("AutoPushFeature")
 
@@ -95,7 +88,7 @@ class AutoPushFeature(
         get() = preferences(context).getLong(LAST_VERIFIED, System.currentTimeMillis())
         set(value) = preferences(context).edit().putLong(LAST_VERIFIED, value).apply()
 
-    private val coroutineScope = CoroutineScope(coroutineContext) + SupervisorJob()
+    private val coroutineScope = CoroutineScope(coroutineContext) + SupervisorJob() + exceptionHandler { onError(it) }
 
     init {
         // If we have a token, initialize the rust component first.
@@ -129,7 +122,7 @@ class AutoPushFeature(
      * This should only be done on an account logout or app data deletion.
      */
     override fun shutdown() {
-        DeliveryManager.runWithInitialized(connection) {
+        connection.ifInitialized {
             coroutineScope.launch {
                 unsubscribeAll()
             }
@@ -163,7 +156,7 @@ class AutoPushFeature(
      * New encrypted messages received from a supported push messaging service.
      */
     override fun onMessageReceived(message: EncryptedPushMessage) {
-        DeliveryManager.runWithInitialized(connection) {
+        connection.ifInitialized {
             coroutineScope.launchAndTry {
                 logger.info("New push message decrypted.")
 
@@ -200,7 +193,7 @@ class AutoPushFeature(
         onSubscribeError: () -> Unit = {},
         onSubscribe: ((AutoPushSubscription) -> Unit) = {}
     ) {
-        DeliveryManager.runWithInitialized(connection) {
+        connection.ifInitialized {
             coroutineScope.launchAndTry(errorBlock = {
                 onSubscribeError()
             }, block = {
@@ -222,7 +215,7 @@ class AutoPushFeature(
         onUnsubscribeError: () -> Unit = {},
         onUnsubscribe: (Boolean) -> Unit = {}
     ) {
-        DeliveryManager.runWithInitialized(connection) {
+        connection.ifInitialized {
             coroutineScope.launchAndTry(errorBlock = {
                 onUnsubscribeError()
             }, block = {
@@ -260,7 +253,7 @@ class AutoPushFeature(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun verifyActiveSubscriptions() {
-        DeliveryManager.runWithInitialized(connection) {
+        connection.ifInitialized {
             coroutineScope.launchAndTry {
                 val subscriptionChanges = verifyConnection()
 
@@ -284,16 +277,6 @@ class AutoPushFeature(
 
             prefLastVerified = System.currentTimeMillis()
         }
-    }
-
-    private fun CoroutineScope.launchAndTry(
-        errorBlock: () -> Unit = {},
-        block: suspend CoroutineScope.() -> Unit
-    ): Job {
-        return launchAndTry(block, { e ->
-            errorBlock()
-            onError(PushError.Rust(e, e.message.orEmpty()))
-        })
     }
 
     private fun saveToken(context: Context, value: String) {
@@ -340,53 +323,18 @@ class AutoPushFeature(
     }
 }
 
-/**
- * Catches all known non-fatal push errors logs.
- */
-internal fun CoroutineScope.launchAndTry(
-    block: suspend CoroutineScope.() -> Unit,
-    errorBlock: (Exception) -> Unit
-): Job {
-    return launch {
-        try {
-            block()
-        } catch (e: RustPushError) {
-            val result = when (e) {
-                is GeneralError,
-                is CryptoError,
-                is CommunicationError,
-                is CommunicationServerError,
-                is AlreadyRegisteredError,
-                is StorageError,
-                is MissingRegistrationTokenError,
-                is StorageSqlError,
-                is TranscodingError,
-                is RecordNotFoundError,
-                is UrlParseError -> false
-                else -> true
-            }
-
-            if (result) {
-                throw e
-            }
-
-            errorBlock(e)
-        }
+internal inline fun exceptionHandler(crossinline onError: (PushError) -> Unit) = CoroutineExceptionHandler { _, e ->
+    val isFatal = when (e) {
+        is PushError.MalformedMessage,
+        is GeneralError,
+        is CryptoError,
+        is CommunicationError,
+        is CommunicationServerError -> false
+        else -> true
     }
-}
 
-/**
- * This is manager mapping of service type to channel ID, it will eventually be replaced by the
- * Application Service implementation.
- */
-internal object DeliveryManager {
-    /**
-     * Executes the block if the Push Manager is initialized.
-     */
-    fun runWithInitialized(connection: PushConnection, block: PushConnection.() -> Unit) {
-        if (connection.isInitialized()) {
-            block(connection)
-        }
+    if (isFatal) {
+        onError(PushError.Rust(e, e.message.orEmpty()))
     }
 }
 
