@@ -3,6 +3,10 @@
 
 "use strict";
 
+const { ExtensionTestUtils } = ChromeUtils.import(
+  "resource://testing-common/ExtensionXPCShellUtils.jsm"
+);
+
 const {
   createAppInfo,
   promiseRestartManager,
@@ -10,7 +14,9 @@ const {
   promiseStartupManager,
 } = AddonTestUtils;
 
-SearchTestUtils.initXPCShellAddonManager(this);
+ExtensionTestUtils.init(this);
+AddonTestUtils.usePrivilegedSignatures = false;
+AddonTestUtils.overrideCertDB();
 
 async function restart() {
   Services.search.reset();
@@ -21,6 +27,31 @@ async function restart() {
 async function getEngineNames() {
   let engines = await Services.search.getEngines();
   return engines.map(engine => engine._name);
+}
+
+async function installSearchExtension(id, name) {
+  let extensionInfo = {
+    useAddonManager: "permanent",
+    manifest: {
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: id + "@tests.mozilla.org",
+        },
+      },
+      chrome_settings_overrides: {
+        search_provider: {
+          name,
+          search_url: "https://example.com/?q={searchTerms}",
+        },
+      },
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionInfo);
+  await extension.startup();
+
+  return extension;
 }
 
 add_task(async function setup() {
@@ -43,7 +74,7 @@ add_task(async function basic_install_test() {
   Assert.deepEqual(await getEngineNames(), ["Plain", "Special"]);
 
   // User installs a new search engine
-  let extension = await SearchTestUtils.installSearchExtension();
+  let extension = await installSearchExtension("example", "Example");
   Assert.deepEqual((await getEngineNames()).sort(), [
     "Example",
     "Plain",
