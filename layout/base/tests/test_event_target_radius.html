@@ -57,6 +57,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780847
   <div id="t10_top" class="target" style="top:-50px;" onmousedown="x=1" hidden></div>
   <div id="t10_bottom" class="target" style="top:auto;bottom:-50px;" onmousedown="x=1" hidden></div>
   <div id="t10_over" style="position:absolute; left:0; top:0; width:100%; height:100%; background:yellow;" hidden></div>
+
+  <div id="t11" class="target" style="cursor:pointer" hidden></div>
+  <div id="t11_with_child" class="target" style="cursor:pointer" hidden><div id="t11_child" style="width:100px; height:100px; background:green;"></div></div>
+  <div id="t11_covered" class="target" style="cursor:pointer" hidden><div id="t11_coverer" style="width:100px; height:100px; background:green; cursor:text"></div></div>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -294,6 +298,21 @@ function test3() {
   setShowing("t10_right", false);
   setShowing("t10_top", false);
   setShowing("t10_bottom", false);
+
+  setShowing("t11", true);
+  testMouseClick("t11", 100 + 11*mm, 10, "t11",
+                 "Elements with cursor:pointer are fluff targets");
+  setShowing("t11", false);
+
+  setShowing("t11_with_child", true);
+  testMouseClick("t11_with_child", 100 + 11*mm, 10, "t11_child",
+                 "Elements that inherit cursor:pointer are fluff targets");
+  setShowing("t11_with_child", false);
+
+  setShowing("t11_covered", true);
+  testMouseClick("t11_covered", 100 + 11*mm, 10, "body",
+                 "Elements that override an inherited cursor:pointer are not fluff targets");
+  setShowing("t11_covered", false);
 
   // Not yet tested:
   // -- visited link weight
