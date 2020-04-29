@@ -4221,7 +4221,7 @@
 
 - name: gfx.webrender.enable-item-cache
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: once
 
 - name: gfx.webrender.use-optimized-shaders
