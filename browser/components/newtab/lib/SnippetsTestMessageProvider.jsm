@@ -10,6 +10,75 @@ const TEST_ICON_BW =
 
 const MESSAGES = () => [
   {
+    template: "simple_snippet",
+    template_version: "1.1.2",
+    content: {
+      text: "This is for <link0>preferences</link0> and <link1>about</link1>",
+      icon:
+        "https://snippets.cdn.mozilla.net/media/icons/1a8bb10e-8166-4e14-9e41-c1f85a41bcd2.png",
+      button_label: "Button Label",
+      section_title_icon:
+        "https://snippets.cdn.mozilla.net/media/icons/5878847e-a1fb-4204-aad9-09f6cf7f99ee.png",
+      section_title_text: "Messages from Firefox",
+      section_title_url:
+        "https://support.mozilla.org/kb/snippets-firefox-faq?utm_source=desktop-snippet&utm_medium=snippet&utm_campaign=&utm_term=&utm_content=",
+      tall: false,
+      block_button_text: "Remove this",
+      do_not_autoblock: true,
+      links: {
+        link0: {
+          action: "OPEN_PREFERENCES_PAGE",
+          entrypoint_value: "snippet",
+          args: "sync",
+        },
+        link1: {
+          action: "OPEN_ABOUT_PAGE",
+          args: "about",
+          entrypoint_name: "entryPoint",
+          entrypoint_value: "snippet",
+        },
+      },
+      button_action: "OPEN_PREFERENCES_PAGE",
+      button_entrypoint_value: "snippet",
+    },
+    id: "preview-13516_button_preferences",
+  },
+  {
+    template: "simple_snippet",
+    template_version: "1.1.2",
+    content: {
+      text: "This is for <link0>preferences</link0> and <link1>about</link1>",
+      icon:
+        "https://snippets.cdn.mozilla.net/media/icons/1a8bb10e-8166-4e14-9e41-c1f85a41bcd2.png",
+      button_label: "Button Label",
+      section_title_icon:
+        "https://snippets.cdn.mozilla.net/media/icons/5878847e-a1fb-4204-aad9-09f6cf7f99ee.png",
+      section_title_text: "Messages from Firefox",
+      section_title_url:
+        "https://support.mozilla.org/kb/snippets-firefox-faq?utm_source=desktop-snippet&utm_medium=snippet&utm_campaign=&utm_term=&utm_content=",
+      tall: false,
+      block_button_text: "Remove this",
+      do_not_autoblock: true,
+      links: {
+        link0: {
+          action: "OPEN_PREFERENCES_PAGE",
+          entrypoint_value: "snippet",
+        },
+        link1: {
+          action: "OPEN_ABOUT_PAGE",
+          args: "about",
+          entrypoint_name: "entryPoint",
+          entrypoint_value: "snippet",
+        },
+      },
+      button_action: "OPEN_ABOUT_PAGE",
+      button_action_args: "logins",
+      button_entrypoint_name: "entryPoint",
+      button_entrypoint_value: "snippet",
+    },
+    id: "preview-13517_button_about",
+  },
+  {
     id: "SIMPLE_TEST_1",
     template: "simple_snippet",
     campaign: "test_campaign_blocking",
