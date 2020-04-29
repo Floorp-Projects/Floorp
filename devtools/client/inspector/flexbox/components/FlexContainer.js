@@ -37,7 +37,6 @@ class FlexContainer extends PureComponent {
   constructor(props) {
     super(props);
 
-    this.swatchContainer = createRef();
     this.swatchEl = createRef();
 
     this.setFlexboxColor = this.setFlexboxColor.bind(this);
@@ -65,7 +64,7 @@ class FlexContainer extends PureComponent {
   }
 
   setFlexboxColor() {
-    const color = this.swatchContainer.current.dataset.color;
+    const color = this.swatchEl.current.dataset.color;
     this.props.onSetFlexboxOverlayColor(color);
   }
 
@@ -84,8 +83,6 @@ class FlexContainer extends PureComponent {
       dom.div(
         {
           className: "flex-header-container-label",
-          "data-color": color,
-          ref: this.swatchContainer,
         },
         getNodeRep(nodeFront, {
           onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
@@ -93,6 +90,7 @@ class FlexContainer extends PureComponent {
         }),
         dom.div({
           className: "layout-color-swatch",
+          "data-color": color,
           ref: this.swatchEl,
           style: {
             backgroundColor: color,
