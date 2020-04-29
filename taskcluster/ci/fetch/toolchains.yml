@@ -356,9 +356,9 @@ sccache:
     description: sccache source code
     fetch:
         type: git
-        repo: https://github.com/mozilla/sccache
-        # 0.2.13 release + fix for clang-cl on Linux
-        revision: 2aadef2c5a07a59658c0cc3da4a90b153293f543
+        repo: https://github.com/glandium/sccache
+        # 0.2.13 release + various changes
+        revision: 5afa5b1579949c03dbe9f77415c6d3d9824d0844
 
 fxc2:
     description: fxc2 source code
