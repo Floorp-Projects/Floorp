@@ -2021,9 +2021,6 @@ HttpChannelChild::ConnectParent(uint32_t registrarId) {
     browserChild =
         static_cast<mozilla::dom::BrowserChild*>(iBrowserChild.get());
   }
-  if (MissingRequiredBrowserChild(browserChild, "http")) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
 
   if (browserChild && !browserChild->IPCOpen()) {
     return NS_ERROR_FAILURE;
@@ -2650,9 +2647,6 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   if (iBrowserChild) {
     browserChild =
         static_cast<mozilla::dom::BrowserChild*>(iBrowserChild.get());
-  }
-  if (MissingRequiredBrowserChild(browserChild, "http")) {
-    return NS_ERROR_ILLEGAL_VALUE;
   }
 
   // This id identifies the inner window's top-level document,
