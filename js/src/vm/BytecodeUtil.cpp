@@ -31,6 +31,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
 #include "gc/PublicIterators.h"
+#include "jit/IonScript.h"  // IonBlockCounts
 #include "js/CharacterEncoding.h"
 #include "js/Printf.h"
 #include "js/Symbol.h"

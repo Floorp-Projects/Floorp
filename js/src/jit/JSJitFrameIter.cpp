@@ -8,6 +8,7 @@
 
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineIC.h"
+#include "jit/IonScript.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitFrames.h"
 #include "jit/JitScript.h"

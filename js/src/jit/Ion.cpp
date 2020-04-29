@@ -33,6 +33,7 @@
 #include "jit/IonCompileTask.h"
 #include "jit/IonIC.h"
 #include "jit/IonOptimizationLevels.h"
+#include "jit/IonScript.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitCommon.h"
 #include "jit/JitRealm.h"
