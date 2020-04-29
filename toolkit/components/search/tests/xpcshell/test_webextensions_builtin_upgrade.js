@@ -3,13 +3,19 @@
 
 "use strict";
 
+const { ExtensionTestUtils } = ChromeUtils.import(
+  "resource://testing-common/ExtensionXPCShellUtils.jsm"
+);
+
 const {
   createAppInfo,
   promiseShutdownManager,
   promiseStartupManager,
 } = AddonTestUtils;
 
-SearchTestUtils.initXPCShellAddonManager(this);
+ExtensionTestUtils.init(this);
+AddonTestUtils.usePrivilegedSignatures = false;
+AddonTestUtils.overrideCertDB();
 
 const TEST_CONFIG = [
   {
