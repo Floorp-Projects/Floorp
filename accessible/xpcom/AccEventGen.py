@@ -11,11 +11,13 @@ import os
 import buildconfig
 import mozpack.path as mozpath
 
-# The xpidl parser cache directory is not incorporated in the in-tree virtualenv.
+# The xpidl parser is not incorporated in the in-tree virtualenv.
+xpidl_dir = mozpath.join(buildconfig.topsrcdir, 'xpcom', 'idl-parser',
+                         'xpidl')
 xpidl_cachedir = mozpath.join(buildconfig.topobjdir, 'xpcom', 'idl-parser',
                               'xpidl')
-sys.path.append(xpidl_cachedir)
-from xpidl import xpidl
+sys.path.extend([xpidl_dir, xpidl_cachedir])
+import xpidl
 
 # Load the webidl configuration file.
 glbl = {}
