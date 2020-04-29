@@ -7417,16 +7417,6 @@ class MSpectreMaskIndex
   ALLOW_CLONE(MSpectreMaskIndex)
 };
 
-// Instructions which access an object's elements can either do so on a
-// definition accessing that elements pointer, or on the object itself, if its
-// elements are inline. In the latter case there must be an offset associated
-// with the access.
-static inline bool IsValidElementsType(MDefinition* elements,
-                                       int32_t offsetAdjustment) {
-  return elements->type() == MIRType::Elements ||
-         (elements->type() == MIRType::Object && offsetAdjustment != 0);
-}
-
 // Load a value from a dense array's element vector and does a hole check if the
 // array is not known to be packed.
 class MLoadElement : public MBinaryInstruction,
@@ -7449,7 +7439,7 @@ class MLoadElement : public MBinaryInstruction,
     }
     setResultType(MIRType::Value);
     setMovable();
-    MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
+    MOZ_ASSERT(elements->type() == MIRType::Elements);
     MOZ_ASSERT(index->type() == MIRType::Int32);
   }
 
@@ -7589,7 +7579,7 @@ class MStoreElement
       : MTernaryInstruction(classOpcode, elements, index, value) {
     needsHoleCheck_ = needsHoleCheck;
     offsetAdjustment_ = offsetAdjustment;
-    MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
+    MOZ_ASSERT(elements->type() == MIRType::Elements);
     MOZ_ASSERT(index->type() == MIRType::Int32);
   }
 
@@ -7813,7 +7803,7 @@ class MLoadUnboxedScalar : public MBinaryInstruction,
     } else {
       setMovable();
     }
-    MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
+    MOZ_ASSERT(elements->type() == MIRType::Elements);
     MOZ_ASSERT(index->type() == MIRType::Int32);
     MOZ_ASSERT(storageType >= 0 && storageType < Scalar::MaxTypedArrayViewType);
   }
@@ -7988,7 +7978,7 @@ class MStoreUnboxedScalar : public MTernaryInstruction,
     } else {
       setMovable();
     }
-    MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
+    MOZ_ASSERT(elements->type() == MIRType::Elements);
     MOZ_ASSERT(index->type() == MIRType::Int32);
     MOZ_ASSERT(storageType >= 0 && storageType < Scalar::MaxTypedArrayViewType);
   }
