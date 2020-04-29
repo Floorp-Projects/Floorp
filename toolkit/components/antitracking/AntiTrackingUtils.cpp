@@ -27,6 +27,19 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+/* static */ already_AddRefed<nsPIDOMWindowInner>
+AntiTrackingUtils::GetInnerWindow(BrowsingContext* aBrowsingContext) {
+  MOZ_ASSERT(aBrowsingContext);
+
+  nsCOMPtr<nsPIDOMWindowOuter> outer = aBrowsingContext->GetDOMWindow();
+  if (!outer) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsPIDOMWindowInner> inner = outer->GetCurrentInnerWindow();
+  return inner.forget();
+}
+
 /* static */ already_AddRefed<nsPIDOMWindowOuter>
 AntiTrackingUtils::GetTopWindow(nsPIDOMWindowInner* aWindow) {
   Document* document = aWindow->GetExtantDoc();
@@ -419,7 +432,6 @@ bool AntiTrackingUtils::GetPrincipalAndTrackingOrigin(
     BrowsingContext* aBrowsingContext, nsIPrincipal** aPrincipal,
     nsACString& aTrackingOrigin) {
   MOZ_ASSERT(aBrowsingContext);
-  MOZ_ASSERT(aPrincipal);
 
   // Passing an out-of-process browsing context in child processes to
   // this API won't get any result, so just assert.
@@ -437,7 +449,9 @@ bool AntiTrackingUtils::GetPrincipalAndTrackingOrigin(
     return false;
   }
 
-  principal.forget(aPrincipal);
+  if (aPrincipal) {
+    principal.forget(aPrincipal);
+  }
 
   return true;
 };
