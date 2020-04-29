@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 yue{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"阿比讓"}
@@ -1754,7 +1754,9 @@ yue{
             ls{"紐埃島時間"}
         }
         "meta:Norfolk"{
-            ls{"諾福克島時間"}
+            ld{"諾福克島夏令時間"}
+            lg{"諾福克島時間"}
+            ls{"諾福克島標準時間"}
         }
         "meta:Noronha"{
             ld{"費爾南多 - 迪諾羅尼亞夏令時間"}

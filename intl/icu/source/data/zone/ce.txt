@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ce{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Абиджан"}
@@ -1704,7 +1704,9 @@ ce{
             ls{"Ниуэ"}
         }
         "meta:Norfolk"{
-            ls{"Норфолк"}
+            ld{"Норфолк, аьхкенан хан"}
+            lg{"Норфолк"}
+            ls{"Норфолк, стандартан хан"}
         }
         "meta:Noronha"{
             ld{"Фернанду-ди-Норонья, аьхкенан хан"}

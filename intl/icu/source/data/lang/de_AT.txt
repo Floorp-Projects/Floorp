@@ -16,5 +16,5 @@ de_AT{
         sh{"Serbokroatisch"}
         szl{"Schlesisch"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

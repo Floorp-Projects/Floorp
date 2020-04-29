@@ -1,13 +1,13 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 fr_CA{
-    Version{"36.1"}
+    Version{"37"}
     units{
         acceleration{
             g-force{
                 dnam{"force G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 one{"{0} mètre par seconde carrée"}
                 other{"{0} mètres par seconde carrée"}
             }
@@ -72,18 +72,18 @@ fr_CA{
             }
         }
         concentr{
-            part-per-million{
-                dnam{"parties par million"}
-                one{"{0} partie par million"}
-                other{"{0} parties par million"}
-            }
             permille{
                 one{"{0} pour mille"}
                 other{"{0} pour mille"}
             }
+            permillion{
+                dnam{"parties par million"}
+                one{"{0} partie par million"}
+                other{"{0} parties par million"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"litres aux 100 kilomètres"}
                 one{"{0} litre aux 100 kilomètres"}
                 other{"{0} litres aux 100 kilomètres"}
@@ -408,7 +408,7 @@ fr_CA{
                 one{"{0} hectopascal"}
                 other{"{0} hectopascals"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0} pouce de mercure"}
                 other{"{0} pouces de mercure"}
             }
@@ -512,7 +512,7 @@ fr_CA{
     }
     unitsNarrow{
         acceleration{
-            meter-per-second-squared{
+            meter-per-square-second{
                 one{"{0}m/s²"}
                 other{"{0}m/s²"}
             }
@@ -524,7 +524,7 @@ fr_CA{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100 km"}
                 one{"{0} L/100 km"}
                 other{"{0} L/100 km"}
@@ -632,14 +632,14 @@ fr_CA{
             }
         }
         pressure{
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 one{"{0}mmHg"}
                 other{"{0}mmHg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 one{"{0}psi"}
                 other{"{0}psi"}
@@ -676,7 +676,7 @@ fr_CA{
                 one{"{0} G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 one{"{0} m/s²"}
                 other{"{0} m/s²"}
             }
@@ -740,7 +740,7 @@ fr_CA{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100 km"}
                 one{"{0} L/100 km"}
                 other{"{0} L/100 km"}
@@ -1063,7 +1063,7 @@ fr_CA{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"po Hg"}
                 one{"{0} po Hg"}
                 other{"{0} po Hg"}
@@ -1072,12 +1072,12 @@ fr_CA{
                 one{"{0} mbar"}
                 other{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 one{"{0} psi"}
                 other{"{0} psi"}
@@ -1112,7 +1112,7 @@ fr_CA{
             }
         }
         torque{
-            pound-foot{
+            pound-force-foot{
                 dnam{"lb-pi"}
                 one{"{0} lb-pi"}
                 other{"{0} lb-pi"}

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 te{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ te{
                 one{"{0} గు-శక్తి"}
                 other{"{0} గు-శక్తి"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"మీటర్లు/స్క్వేర్ సెకన్లు"}
                 one{"{0} మీటరు/స్క్వేర్ సెకను"}
                 other{"{0} మీటర్లు/స్క్వేర్ సెకన్లు"}
@@ -128,11 +128,6 @@ te{
                 one{"{0} మోల్"}
                 other{"{0} మోల్‌లు"}
             }
-            part-per-million{
-                dnam{"భాగాలు/మిలియన్"}
-                one{"{0} భాగం/మిలియన్"}
-                other{"{0} భాగాలు/మిలియన్"}
-            }
             percent{
                 dnam{"శాతం"}
                 one{"{0} శాతం"}
@@ -143,6 +138,11 @@ te{
                 one{"{0}/మైలుకు"}
                 other{"{0}/మైలుకు"}
             }
+            permillion{
+                dnam{"భాగాలు/మిలియన్"}
+                one{"{0} భాగం/మిలియన్"}
+                other{"{0} భాగాలు/మిలియన్"}
+            }
             permyriad{
                 dnam{"పెర్మేరియాడ్"}
                 one{"{0} పెర్మేరియాడ్"}
@@ -150,7 +150,7 @@ te{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"లీటర్లు/100 కీలోమీటర్లు"}
                 one{"{0} లీటరు/100 కీలోమీటర్లు"}
                 other{"{0} లీటర్లు/100 కీలోమీటర్లు"}
@@ -677,7 +677,7 @@ te{
                 one{"{0} హెక్టోపాస్కల్"}
                 other{"{0} హెక్టోపాస్కల్‌లు"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"అంగుళాల పాదరసం"}
                 one{"{0} అంగుళం పాదరసం"}
                 other{"{0} అంగుళాల పాదరసం"}
@@ -697,7 +697,7 @@ te{
                 one{"{0} మిల్లీబార్"}
                 other{"{0} మిల్లీబార్‌లు"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"మిల్లీమీటర్ల పాదరసం"}
                 one{"{0} మిల్లీమీటర్ పాదరసం"}
                 other{"{0} మిల్లీమీటర్ల పాదరసం"}
@@ -707,7 +707,7 @@ te{
                 one{"{0} పాస్కల్"}
                 other{"{0} పాస్కల్‌లు"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"చదరపు అంగుళానికి పౌండ్లు"}
                 one{"చదరపు అంగుళానికి {0} పౌండు"}
                 other{"చదరపు అంగుళానికి {0} పౌండ్లు"}
@@ -763,7 +763,7 @@ te{
                 one{"{0} న్యూటన్-మీటరు"}
                 other{"{0} న్యూటన్-మీటర్లు"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"పౌండ్-ఫీట్"}
                 one{"{0} పౌండ్-ఫూట్"}
                 other{"{0} పౌండ్-ఫీట్"}
@@ -962,7 +962,7 @@ te{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"లీ/100కి.మీ."}
                 one{"{0}లీ/100కి.మీ."}
                 other{"{0}లీ/100కి.మీ."}
@@ -1137,7 +1137,7 @@ te{
                 one{"{0} హె.పా"}
                 other{"{0} హె.పా"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"అం.పాద"}
                 one{"{0} అం.పాద"}
                 other{"{0} అం.పాద"}
@@ -1147,12 +1147,12 @@ te{
                 one{"{0} మి.బార్"}
                 other{"{0} మి.బార్"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"మిమీ. పాద"}
                 one{"{0} మిమీ. పాద"}
                 other{"{0} మిమీ. పాద"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"పౌ/చ.అం"}
                 one{"{0} పౌ/చ.అం"}
                 other{"{0} పౌ/చ.అం"}
@@ -1220,7 +1220,7 @@ te{
                 one{"{0} గు"}
                 other{"{0} గు"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"మీటర్లు/సెక²"}
                 one{"{0} మీ/సె²"}
                 other{"{0} మీ/సె²"}
@@ -1335,11 +1335,6 @@ te{
                 one{"{0} mol"}
                 other{"{0} mol"}
             }
-            part-per-million{
-                dnam{"భాగాలు/మిలియన్"}
-                one{"{0} భా./మి."}
-                other{"{0} భా./మి."}
-            }
             percent{
                 dnam{"శాతం"}
                 one{"{0}%"}
@@ -1350,12 +1345,17 @@ te{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"భాగాలు/మిలియన్"}
+                one{"{0} భా./మి."}
+                other{"{0} భా./మి."}
+            }
             permyriad{
                 dnam{"పెర్మేరియాడ్"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"లీ/100 కి.మీ."}
                 one{"{0} లీ/100 కి.మీ."}
                 other{"{0} లీ/100 కి.మీ."}
@@ -1864,7 +1864,7 @@ te{
                 one{"{0} హె.పా"}
                 other{"{0} హె.పా"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"అం.పాద"}
                 one{"{0} అం.పాద"}
                 other{"{0} అం.పాద"}
@@ -1877,7 +1877,7 @@ te{
                 one{"{0} మి.బార్"}
                 other{"{0} మి.బార్"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"మిమీ. పాద"}
                 one{"{0} మిమీ. పాద"}
                 other{"{0} మిమీ. పాద"}
@@ -1887,7 +1887,7 @@ te{
                 one{"{0} పాస్క."}
                 other{"{0} పాస్క."}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"పౌ/చ.అం"}
                 one{"{0} పౌ/చ.అం"}
                 other{"{0} పౌ/చ.అం"}
@@ -1943,7 +1943,7 @@ te{
                 one{"{0} N⋅m"}
                 other{"{0} N⋅m"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"lbf⋅ft"}
             }
         }

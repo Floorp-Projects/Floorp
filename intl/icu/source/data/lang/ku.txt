@@ -36,7 +36,6 @@ ku{
         br{"bretonî"}
         bs{"bosnî"}
         bug{"bugî"}
-        byn{"byn"}
         ca{"katalanî"}
         ce{"çeçenî"}
         ceb{"sebwanoyî"}
@@ -74,7 +73,6 @@ ku{
         fy{"frîsî"}
         ga{"îrî"}
         gd{"gaelîka skotî"}
-        gez{"gez"}
         gil{"kîrîbatî"}
         gl{"galîsî"}
         gn{"guwaranî"}
@@ -238,9 +236,6 @@ ku{
         zu{"zuluyî"}
         zza{"zazakî"}
     }
-    Languages%short{
-        az{"azerî"}
-    }
     Scripts{
         Arab{"erebî"}
         Armn{"ermenî"}
@@ -273,7 +268,7 @@ ku{
             roman{"hejmarên romî"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     codePatterns{
         language{"ziman: {0}"}
         script{"nivîs: {0}"}

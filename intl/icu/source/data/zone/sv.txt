@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sv{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1768,7 +1768,9 @@ sv{
             ls{"Niuetid"}
         }
         "meta:Norfolk"{
-            ls{"Norfolköns tid"}
+            ld{"Norfolköns, sommartid"}
+            lg{"Norfolköns tid"}
+            ls{"Norfolköns, normaltid"}
         }
         "meta:Noronha"{
             ld{"Fernando de Noronha, sommartid"}

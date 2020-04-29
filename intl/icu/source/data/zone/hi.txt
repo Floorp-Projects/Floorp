@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 hi{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"अबिदजान"}
@@ -1721,7 +1721,9 @@ hi{
             ls{"नीयू समय"}
         }
         "meta:Norfolk"{
-            ls{"नॉरफ़ॉक द्वीप समय"}
+            ld{"नॉरफ़ॉक द्वीप डेलाइट समय"}
+            lg{"नॉरफ़ॉक द्वीप समय"}
+            ls{"नॉरफ़ॉक द्वीप मानक समय"}
         }
         "meta:Noronha"{
             ld{"फ़र्नांर्डो डे नोरोन्हा ग्रीष्मकालीन समय"}

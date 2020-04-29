@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 am{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"አቢጃን"}
@@ -1720,7 +1720,9 @@ am{
             ls{"የኒዩዌ ሰዓት"}
         }
         "meta:Norfolk"{
-            ls{"የኖርፎልክ ደሴቶች ሰዓት"}
+            ld{"የኖርፎልክ ደሴቶች የቀን የሰዓት አቆጣጠር"}
+            lg{"የኖርፎልክ ደሴቶች ሰዓት"}
+            ls{"የኖርፎልክ ደሴቶች መደበኛ የሰዓት አቆጣጠር"}
         }
         "meta:Noronha"{
             ld{"የፈርናንዶ ዲ ኖሮንሃ የበጋ የሰዓት አቆጣጠር"}

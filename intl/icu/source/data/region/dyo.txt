@@ -111,5 +111,5 @@ dyo{
         TG{"Togo"}
         TH{"Tailand"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

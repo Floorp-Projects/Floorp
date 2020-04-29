@@ -11,5 +11,5 @@ se_SE{
             "ruoŧŧa kruvdno",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

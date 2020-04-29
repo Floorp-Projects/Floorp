@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 jv{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -13,7 +13,7 @@ jv{
                 dnam{"tenaga-g"}
                 other{"{0} tenaga-g"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"meter saben detik kuadrat"}
                 other{"{0} meter saben detik kuadrat"}
             }
@@ -99,10 +99,6 @@ jv{
                 dnam{"milimol saben liter"}
                 other{"{0} milimol saben liter"}
             }
-            part-per-million{
-                dnam{"bagean saben yuta"}
-                other{"{0} bagean saben yuta"}
-            }
             percent{
                 dnam{"persen"}
                 other{"{0} persen"}
@@ -111,13 +107,17 @@ jv{
                 dnam{"permil"}
                 other{"{0} permil"}
             }
+            permillion{
+                dnam{"bagean saben yuta"}
+                other{"{0} bagean saben yuta"}
+            }
             permyriad{
                 dnam{"permiriad"}
                 other{"{0} permiriad"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"liter saben 100 kilometer"}
                 other{"{0} liter saben 100 kilometer"}
             }
@@ -535,7 +535,7 @@ jv{
                 dnam{"hektopaskal"}
                 other{"{0} hektopaskal"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inci saka raksa"}
                 other{"{0} inci saka raksa"}
             }
@@ -551,7 +551,7 @@ jv{
                 dnam{"milibar"}
                 other{"{0} milibar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"milimeter saka raksa"}
                 other{"{0} milimeter saka raksa"}
             }
@@ -559,7 +559,7 @@ jv{
                 dnam{"paskal"}
                 other{"{0} paskal"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"pon saben inci kuadrat"}
                 other{"{0} pon saben inci kuadrat"}
             }
@@ -605,7 +605,7 @@ jv{
                 dnam{"newton-meter"}
                 other{"{0} newton-meter"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"pon-kaki"}
                 other{"{0} pon-kaki"}
             }
@@ -733,7 +733,7 @@ jv{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100 km"}
                 other{"{0} L/100 km"}
             }
@@ -832,7 +832,7 @@ jv{
                 dnam{"tenaga-g"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"meter/detik²"}
                 other{"{0} meter/detik²"}
             }
@@ -918,10 +918,6 @@ jv{
                 dnam{"mmol/L"}
                 other{"{0} mmol/L"}
             }
-            part-per-million{
-                dnam{"bagean/yuta"}
-                other{"{0} bagean saben yuta"}
-            }
             percent{
                 dnam{"persen"}
                 other{"{0}%"}
@@ -930,12 +926,16 @@ jv{
                 dnam{"permil"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"bagean/yuta"}
+                other{"{0} bagean saben yuta"}
+            }
             permyriad{
                 dnam{"permiriad"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100 km"}
                 other{"{0} L/100 km"}
             }
@@ -1332,7 +1332,7 @@ jv{
                 dnam{"hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
                 other{"{0} inHg"}
             }
@@ -1340,11 +1340,11 @@ jv{
                 dnam{"mbar"}
                 other{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 other{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 other{"{0} psi"}
             }
@@ -1386,7 +1386,7 @@ jv{
             }
         }
         torque{
-            pound-foot{
+            pound-force-foot{
                 dnam{"pon-kaki"}
                 other{"{0} pon-kaki"}
             }

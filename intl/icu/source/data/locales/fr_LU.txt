@@ -9,5 +9,5 @@ fr_LU{
             }
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

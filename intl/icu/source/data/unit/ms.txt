@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ms{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -13,7 +13,7 @@ ms{
                 dnam{"daya g"}
                 other{"{0} daya g"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"meter sesaat ganda dua"}
                 other{"{0} meter sesaat ganda dua"}
             }
@@ -99,10 +99,6 @@ ms{
                 dnam{"milimol setiap liter"}
                 other{"{0} milimol setiap liter"}
             }
-            part-per-million{
-                dnam{"bahagian setiap juta"}
-                other{"{0} bahagian setiap juta"}
-            }
             percent{
                 dnam{"peratus"}
                 other{"{0} peratus"}
@@ -111,13 +107,17 @@ ms{
                 dnam{"per seribu"}
                 other{"{0} per seribu"}
             }
+            permillion{
+                dnam{"bahagian setiap juta"}
+                other{"{0} bahagian setiap juta"}
+            }
             permyriad{
                 dnam{"permyriad"}
                 other{"{0} permyriad"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"liter setiap 100 kilometer"}
                 other{"{0} liter setiap 100 kilometer"}
             }
@@ -556,7 +556,7 @@ ms{
                 dnam{"hektopascal"}
                 other{"{0} hektopascal"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inci raksa"}
                 other{"{0} inci raksa"}
             }
@@ -572,7 +572,7 @@ ms{
                 dnam{"milibar"}
                 other{"{0} milibar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"milimeter raksa"}
                 other{"{0} milimeter raksa"}
             }
@@ -580,7 +580,7 @@ ms{
                 dnam{"Pascal"}
                 other{"{0} Pascal"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"paun seinci persegi"}
                 other{"{0} paun seinci persegi"}
             }
@@ -626,7 +626,7 @@ ms{
                 dnam{"newton meter"}
                 other{"{0} newton meter"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"kaki paun"}
                 other{"{0} kaki paun"}
             }
@@ -745,7 +745,7 @@ ms{
                 dnam{"daya g"}
                 other{"{0} g"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 other{"{0}m/s²"}
             }
         }
@@ -755,6 +755,9 @@ ms{
             }
             arc-second{
                 other{"{0}″"}
+            }
+            degree{
+                other{"{0}°"}
             }
         }
         area{
@@ -787,7 +790,7 @@ ms{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 other{"{0} L/100km"}
             }
@@ -1002,7 +1005,7 @@ ms{
                 dnam{"hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
                 other{"{0} inHg"}
             }
@@ -1010,11 +1013,11 @@ ms{
                 dnam{"mbar"}
                 other{"{0} mb"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 other{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 other{"{0} psi"}
             }
@@ -1072,7 +1075,7 @@ ms{
                 dnam{"daya g"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"meter/s²"}
                 other{"{0} m/s²"}
             }
@@ -1159,10 +1162,6 @@ ms{
                 dnam{"mmol/L"}
                 other{"{0} mmol/L"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"peratus"}
                 other{"{0}%"}
@@ -1171,9 +1170,13 @@ ms{
                 dnam{"per seribu"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"ppm"}
+                other{"{0} ppm"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 other{"{0} L/100km"}
             }
@@ -1585,7 +1588,7 @@ ms{
                 dnam{"hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
                 other{"{0} inHg"}
             }
@@ -1593,7 +1596,7 @@ ms{
                 dnam{"mbar"}
                 other{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 other{"{0} mm Hg"}
             }
@@ -1601,7 +1604,7 @@ ms{
                 dnam{"Pa"}
                 other{"{0} Pa"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 other{"{0} psi"}
             }

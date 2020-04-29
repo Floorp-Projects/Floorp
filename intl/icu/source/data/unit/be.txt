@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 be{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"hh:mm"}
         hms{"hh:mm:ss"}
@@ -16,7 +16,7 @@ be{
                 one{"{0} g"}
                 other{"{0} g"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"м/с²"}
                 few{"{0} м/с²"}
                 many{"{0} м/с²"}
@@ -170,13 +170,6 @@ be{
                 one{"{0} моль"}
                 other{"{0} моля"}
             }
-            part-per-million{
-                dnam{"частак на мільён"}
-                few{"{0} часткі на мільён"}
-                many{"{0} частак на мільён"}
-                one{"{0} частка на мільён"}
-                other{"{0} часткі на мільён"}
-            }
             percent{
                 dnam{"працэнтаў"}
                 few{"{0} працэнты"}
@@ -191,6 +184,13 @@ be{
                 one{"{0} праміле"}
                 other{"{0} праміле"}
             }
+            permillion{
+                dnam{"частак на мільён"}
+                few{"{0} часткі на мільён"}
+                many{"{0} частак на мільён"}
+                one{"{0} частка на мільён"}
+                other{"{0} часткі на мільён"}
+            }
             permyriad{
                 dnam{"базісныя пункты"}
                 few{"{0} базісныя пункты"}
@@ -200,7 +200,7 @@ be{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"літры на 100 кіламетраў"}
                 few{"{0} літры на 100 кіламетраў"}
                 many{"{0} літраў на 100 кіламетраў"}
@@ -919,7 +919,7 @@ be{
                 one{"{0} гектапаскаль"}
                 other{"{0} гектапаскаля"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"цалі ртутнага слупа"}
                 few{"{0} цалі ртутнага слупа"}
                 many{"{0} цаляў ртутнага слупа"}
@@ -947,7 +947,7 @@ be{
                 one{"{0} мілібар"}
                 other{"{0} мілібара"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"міліметры ртутнага слупа"}
                 few{"{0} міліметры ртутнага слупа"}
                 many{"{0} міліметраў ртутнага слупа"}
@@ -961,7 +961,7 @@ be{
                 one{"{0} паскаль"}
                 other{"{0} паскаля"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"фунты на квадратную цалю"}
                 few{"{0} фунты на квадратную цалю"}
                 many{"{0} фунтаў на квадратную цалю"}
@@ -1037,7 +1037,7 @@ be{
                 one{"{0} ньютан-метр"}
                 other{"{0} ньютан-метра"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"фунт-футы"}
                 few{"{0} фунт-футы"}
                 many{"{0} фунт-футаў"}
@@ -1249,7 +1249,7 @@ be{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"л/100 км"}
                 few{"{0} л/100 км"}
                 many{"{0} л/100 км"}
@@ -1401,7 +1401,7 @@ be{
                 one{"{0} g"}
                 other{"{0} g"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"м/с²"}
                 few{"{0} м/с²"}
                 many{"{0} м/с²"}
@@ -1556,13 +1556,6 @@ be{
                 one{"{0} моль"}
                 other{"{0} моля"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                few{"{0} ppm"}
-                many{"{0} ppm"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"%"}
                 few{"{0} %"}
@@ -1577,6 +1570,13 @@ be{
                 one{"{0} ‰"}
                 other{"{0} ‰"}
             }
+            permillion{
+                dnam{"ppm"}
+                few{"{0} ppm"}
+                many{"{0} ppm"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
             permyriad{
                 dnam{"‱"}
                 few{"{0} ‱"}
@@ -1586,7 +1586,7 @@ be{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"л/100 км"}
                 few{"{0} л/100 км"}
                 many{"{0} л/100 км"}
@@ -2305,7 +2305,7 @@ be{
                 one{"{0} гПа"}
                 other{"{0} гПа"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"цалі рт. сл."}
                 few{"{0} цалі рт. сл."}
                 many{"{0} цаляў рт. сл."}
@@ -2333,7 +2333,7 @@ be{
                 one{"{0} мбар"}
                 other{"{0} мбар"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"мм рт. сл."}
                 few{"{0} мм рт. сл."}
                 many{"{0} мм рт. сл."}
@@ -2347,7 +2347,7 @@ be{
                 one{"{0} Па"}
                 other{"{0} Па"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"фунты на кв. цалю"}
                 few{"{0} фунты на кв. цалю"}
                 many{"{0} фунтаў на кв. цалю"}
@@ -2423,7 +2423,7 @@ be{
                 one{"{0} Н⋅м"}
                 other{"{0} Н⋅м"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"фунт-футы"}
                 few{"{0} фунт-футы"}
                 many{"{0} фунт-футаў"}

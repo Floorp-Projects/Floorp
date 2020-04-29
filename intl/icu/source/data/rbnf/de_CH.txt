@@ -180,5 +180,5 @@ de_CH{
             "0: =%spellout-ordinal=s;",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

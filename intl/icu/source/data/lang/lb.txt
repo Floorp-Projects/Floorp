@@ -385,7 +385,6 @@ lb{
         nb{"Norwegesch Bokmål"}
         nd{"Nord-Ndebele-Sprooch"}
         nds{"Nidderdäitsch"}
-        nds_NL{"nds_NL"}
         ne{"Nepalesesch"}
         new{"Newari"}
         ng{"Ndonga"}
@@ -622,7 +621,6 @@ lb{
     }
     Scripts{
         Arab{"Arabesch"}
-        Armi{"Armi"}
         Armn{"Armenesch"}
         Avst{"Avestesch"}
         Bali{"Balinesesch"}
@@ -636,7 +634,6 @@ lb{
         Buhd{"Buhid"}
         Cans{"UCAS"}
         Cari{"Karesch"}
-        Cham{"Cham"}
         Cher{"Cherokee"}
         Cirt{"Cirth"}
         Copt{"Koptesch"}
@@ -875,7 +872,7 @@ lb{
         VALENCIA{"Valencianesch"}
         WADEGILE{"Wade-Giles"}
     }
-    Version{"36.1"}
+    Version{"37"}
     codePatterns{
         language{"Sprooch: {0}"}
         script{"Schrëft: {0}"}

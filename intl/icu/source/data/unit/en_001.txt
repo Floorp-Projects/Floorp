@@ -1,10 +1,10 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_001{
-    Version{"36.1"}
+    Version{"37"}
     units{
         acceleration{
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"metres per second squared"}
                 one{"{0} metre per second squared"}
                 other{"{0} metres per second squared"}
@@ -58,7 +58,7 @@ en_001{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"litres per 100 kilometres"}
                 one{"{0} litre per 100 kilometres"}
                 other{"{0} litres per 100 kilometres"}
@@ -149,7 +149,7 @@ en_001{
             }
         }
         pressure{
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"millimetres of mercury"}
                 one{"{0} millimetre of mercury"}
                 other{"{0} millimetres of mercury"}
@@ -268,7 +268,7 @@ en_001{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100km"}
                 one{"{0}l/100km"}
                 other{"{0}l/100km"}
@@ -363,7 +363,7 @@ en_001{
     }
     unitsShort{
         acceleration{
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"metres/sec²"}
             }
         }
@@ -396,7 +396,7 @@ en_001{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 one{"{0} l/100 km"}
                 other{"{0} l/100 km"}
@@ -445,7 +445,7 @@ en_001{
             }
         }
         pressure{
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHG"}
             }
         }

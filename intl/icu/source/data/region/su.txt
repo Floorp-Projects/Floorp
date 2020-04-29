@@ -1,0 +1,18 @@
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
+su{
+    Countries{
+        BR{"Brasil"}
+        CN{"Tiongkok"}
+        DE{"Jérman"}
+        FR{"Prancis"}
+        GB{"Inggris Raya"}
+        IN{"India"}
+        IT{"Italia"}
+        JP{"Jepang"}
+        RU{"Rusia"}
+        US{"Amérika Sarikat"}
+        ZZ{"Wilayah Teu Dipikaterang"}
+    }
+    Version{"37"}
+}

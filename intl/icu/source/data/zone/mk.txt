@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 mk{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Абиџан"}
@@ -1729,7 +1729,9 @@ mk{
             ls{"Време во Ниуе"}
         }
         "meta:Norfolk"{
-            ls{"Време на Островите Норфолк"}
+            ld{"Летно сметање на Островите Норфолк"}
+            lg{"Време на Островите Норфолк"}
+            ls{"Стандардно време на Островите Норфолк"}
         }
         "meta:Noronha"{
             ld{"Летно сметање на времето на Фернандо де Нороња"}

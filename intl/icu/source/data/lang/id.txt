@@ -164,6 +164,7 @@ id{
         eu{"Basque"}
         ewo{"Ewondo"}
         fa{"Persia"}
+        fa_AF{"Persia Dari"}
         fan{"Fang"}
         fat{"Fanti"}
         ff{"Fula"}
@@ -586,6 +587,7 @@ id{
         Afak{"Afaka"}
         Aghb{"Albania Kaukasia"}
         Arab{"Arab"}
+        Aran{"Nastaliq"}
         Armi{"Aram Imperial"}
         Armn{"Armenia"}
         Avst{"Avesta"}
@@ -669,7 +671,6 @@ id{
         Merc{"Kursif Meroitik"}
         Mero{"Meroitik"}
         Mlym{"Malayalam"}
-        Modi{"Modi"}
         Mong{"Mongolia"}
         Moon{"Moon"}
         Mroo{"Mro"}
@@ -694,6 +695,7 @@ id{
         Phnx{"Phoenix"}
         Plrd{"Fonetik Pollard"}
         Prti{"Prasasti Parthia"}
+        Qaag{"Zawgyi"}
         Rjng{"Rejang"}
         Roro{"Rongorongo"}
         Runr{"Runik"}
@@ -952,7 +954,7 @@ id{
         VALENCIA{"Valencia"}
         WADEGILE{"Wade-Giles Latin"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — Semua"}
         category-list{"{0}: {1}"}

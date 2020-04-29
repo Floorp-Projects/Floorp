@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 fil{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1720,7 +1720,9 @@ fil{
             ls{"Oras sa Niue"}
         }
         "meta:Norfolk"{
-            ls{"Oras sa Norfolk Island"}
+            ld{"Daylight Time sa Norfolk Island"}
+            lg{"Oras sa Norfolk Island"}
+            ls{"Standard na Norfolk Island"}
         }
         "meta:Noronha"{
             ld{"Oras sa Tag-init ng Fernando de Noronha"}

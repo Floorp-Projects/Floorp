@@ -183,6 +183,7 @@ tr{
         ewo{"Ewondo"}
         ext{"Ekstremadura Dili"}
         fa{"Farsça"}
+        fa_AF{"Darice"}
         fan{"Fang"}
         fat{"Fanti"}
         ff{"Fula dili"}
@@ -646,6 +647,8 @@ tr{
         zh_Hant{"Geleneksel Çince (Mandarin)"}
     }
     Languages%menu{
+        ars{"Arapça, Necd"}
+        ckb{"Kürtçe, Sorani"}
         yue{"Çince, Kantonca"}
         zh{"Çince, Mandarin"}
     }
@@ -658,6 +661,7 @@ tr{
         Afak{"Afaka"}
         Aghb{"Kafkas Albanyası"}
         Arab{"Arap"}
+        Aran{"Nestâlik"}
         Armi{"İmparatorluk Aramicesi"}
         Armn{"Ermeni"}
         Avst{"Avesta"}
@@ -722,7 +726,7 @@ tr{
         Khmr{"Kmer"}
         Khoj{"Khojki"}
         Knda{"Kannada"}
-        Kore{"Kore"}
+        Kore{"Korece"}
         Kpel{"Kpelle"}
         Kthi{"Kaithi"}
         Lana{"Lanna"}
@@ -740,7 +744,6 @@ tr{
         Lydi{"Lidya"}
         Mahj{"Mahajani"}
         Mand{"Manden"}
-        Mani{"Mani"}
         Maya{"Maya Hiyeroglifleri"}
         Mend{"Mende"}
         Merc{"Meroitik El Yazısı"}
@@ -772,6 +775,7 @@ tr{
         Phnx{"Fenike"}
         Plrd{"Pollard Fonetik"}
         Prti{"Partça Kitabe Dili"}
+        Qaag{"Zawgyi"}
         Rjng{"Rejang"}
         Roro{"Rongorongo"}
         Runr{"Runik"}
@@ -1047,7 +1051,7 @@ tr{
         VALENCIA{"Valensiyaca"}
         WADEGILE{"Wade-Giles (Latin Alfabesinde Yazımı)"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — tümü"}
         category-list{"{0}: {1}"}

@@ -182,6 +182,7 @@ th{
         ewo{"อีวันโด"}
         ext{"เอกซ์เตรมาดูรา"}
         fa{"เปอร์เซีย"}
+        fa_AF{"ดารี"}
         fan{"ฟอง"}
         fat{"ฟันติ"}
         ff{"ฟูลาห์"}
@@ -650,6 +651,7 @@ th{
         en_US{"อังกฤษ - อเมริกัน"}
     }
     Languages%variant{
+        ckb{"เคิร์ดโซรานี"}
         ps{"พุชโต"}
     }
     Scripts{
@@ -1060,7 +1062,7 @@ th{
         VALLADER{"วัลลาเดอร์"}
         WADEGILE{"การถอดอักษรแบบเวด-ไจลส์"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — ทั้งหมด"}
         category-list{"{0}: {1}"}

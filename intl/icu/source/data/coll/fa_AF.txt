@@ -1,11 +1,11 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 fa_AF{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         standard{
             Sequence{"[import ps]"}
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

@@ -259,5 +259,5 @@ vai{
     Countries%short{
         MO{"ꕮꗛꖺ"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

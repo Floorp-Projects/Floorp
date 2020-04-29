@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ta{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         standard{
             Sequence{
@@ -34,7 +34,7 @@ ta{
                 "&[before 1]ஹ<ஹ்"
                 "&[before 1]க்ஷ<க்ஷ்"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

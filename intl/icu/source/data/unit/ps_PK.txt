@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ps_PK{
-    Version{"36.1"}
+    Version{"37"}
     units{
         acceleration{
             g-force{
@@ -58,12 +58,12 @@ ps_PK{
             }
         }
         pressure{
-            inch-hg{
+            inch-ofhg{
                 dnam{"د پارے انچے"}
                 one{"{0} د پارے انچ"}
                 other{"{0} د پارے انچے"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"د پارے ملي مترز"}
                 one{"{0} د پارے ملي متر"}
                 other{"{0} د پارے ملي مترز"}

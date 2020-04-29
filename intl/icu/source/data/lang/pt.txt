@@ -153,6 +153,7 @@ pt{
         eu{"basco"}
         ewo{"ewondo"}
         fa{"persa"}
+        fa_AF{"dari"}
         fan{"fangue"}
         fat{"fanti"}
         ff{"fula"}
@@ -553,14 +554,13 @@ pt{
         yue{"cantonês (tradicional)"}
         zh{"chinês, mandarim"}
     }
-    Languages%short{
-        az{"azerbaijano"}
-    }
     Languages%variant{
+        ckb{"curdo sorâni"}
         ps{"pushto"}
     }
     Scripts{
         Arab{"árabe"}
+        Aran{"nastaliq"}
         Armi{"armi"}
         Armn{"armênio"}
         Avst{"avéstico"}
@@ -656,6 +656,7 @@ pt{
         Phnx{"fenício"}
         Plrd{"fonético pollard"}
         Prti{"prti"}
+        Qaag{"zawgyi"}
         Rjng{"rejang"}
         Roro{"rongorongo"}
         Runr{"rúnico"}
@@ -888,7 +889,7 @@ pt{
         VALENCIA{"valenciano"}
         WADEGILE{"romanização Wade-Giles"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — todos"}
         category-list{"{0}: {1}"}

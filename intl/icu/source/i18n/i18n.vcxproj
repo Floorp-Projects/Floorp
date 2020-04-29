@@ -76,7 +76,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>icuucd.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>..\..\$(IcuBinOutputDir)\icuin66d.dll</OutputFile>
+      <OutputFile>..\..\$(IcuBinOutputDir)\icuin67d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\$(IcuLibOutputDir)\icuind.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\$(IcuLibOutputDir)\icuind.lib</ImportLibrary>
     </Link>
@@ -89,7 +89,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>..\..\$(IcuBinOutputDir)\icuin66.dll</OutputFile>
+      <OutputFile>..\..\$(IcuBinOutputDir)\icuin67.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\$(IcuLibOutputDir)\icuin.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\$(IcuLibOutputDir)\icuin.lib</ImportLibrary>
     </Link>
@@ -187,6 +187,7 @@
     <ClCompile Include="ulistformatter.cpp" />
     <ClCompile Include="measfmt.cpp" />
     <ClCompile Include="measunit.cpp" />
+    <ClCompile Include="measunit_extra.cpp" />
     <ClCompile Include="measure.cpp" />
     <ClCompile Include="msgfmt.cpp" />
     <ClCompile Include="nfrs.cpp" />
@@ -392,6 +393,7 @@
     <ClInclude Include="indiancal.h" />
     <ClInclude Include="islamcal.h" />
     <ClInclude Include="japancal.h" />
+    <ClInclude Include="measunit_impl.h" />
     <ClInclude Include="msgfmt_impl.h" />
     <ClInclude Include="nfrlist.h" />
     <ClInclude Include="nfrs.h" />

@@ -4,5 +4,5 @@ ar_EH{
     NumberElements{
         default{"latn"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

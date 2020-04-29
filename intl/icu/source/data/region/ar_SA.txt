@@ -14,5 +14,5 @@ ar_SA{
     Countries%variant{
         CZ{"التشيك"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

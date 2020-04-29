@@ -7,5 +7,5 @@ ro_MD{
             "leu moldovenesc",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

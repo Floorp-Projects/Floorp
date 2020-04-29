@@ -8,5 +8,5 @@ pt_AO{
             "kwanza angolano",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

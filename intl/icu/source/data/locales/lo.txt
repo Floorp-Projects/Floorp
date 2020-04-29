@@ -263,7 +263,7 @@ lo{
         }
         native{"laoo"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         chinese{
             DateTimePatterns{
@@ -736,6 +736,22 @@ lo{
                     G{"GGGGG M/y – GGGGG M/y"}
                     M{"GGGGG M/y – M/y"}
                     y{"GGGGG M/y – M/y"}
+                }
+                GyMEd{
+                    G{"E, d/M GGGGG y – E, d/M GGGGG y"}
+                    M{"E, d/M GGGGG y – E, d/M GGGGG y"}
+                    d{"E, d/M GGGGG y – E, d/M GGGGG y"}
+                }
+                GyMMMEd{
+                    G{"E, d MMM G y – E, d MMM G y"}
+                    M{"E, d MMM – E, d MMM G y"}
+                    d{"E, d MMM – E, d MMM G y"}
+                    y{"E, d MMM G y – E, d MMM G y"}
+                }
+                GyMMMd{
+                    G{"d MMM G y– d MMM G y"}
+                    M{"d MMM – d MMM G y"}
+                    y{"d MMM G y– d MMM G y"}
                 }
                 GyMd{
                     G{"GGGGG d/M/y – GGGGG d/M/y"}

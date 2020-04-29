@@ -298,10 +298,8 @@ lv{
         ZZ{"nezināms reģions"}
     }
     Countries%short{
-        GB{"Apvienotā Karaliste"}
         HK{"Honkonga"}
         MO{"Makao"}
-        PS{"Palestīna"}
         UN{"ANO"}
         US{"ASV"}
     }
@@ -312,7 +310,6 @@ lv{
         CZ{"Čehijas Republika"}
         FK{"Folklenda (Malvinu) salas"}
         SZ{"Svazilenda"}
-        TL{"Austrumtimora"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

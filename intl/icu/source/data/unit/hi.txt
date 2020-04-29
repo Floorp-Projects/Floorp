@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 hi{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ hi{
                 one{"{0} गुरुत्व–बल"}
                 other{"{0} गुरुत्व–बल"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"मीटर/से²"}
                 one{"{0} मीटर प्रति सेकंड वर्ग"}
                 other{"{0} मीटर प्रति सेकंड वर्ग"}
@@ -128,11 +128,6 @@ hi{
                 one{"{0} मोल"}
                 other{"{0} मोल"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                one{"{0} ppm"}
-                other{"{0} हिस्सा प्रति दस लाख"}
-            }
             percent{
                 dnam{"प्रतिशत"}
                 one{"{0} प्रतिशत"}
@@ -143,6 +138,11 @@ hi{
                 one{"{0} प्रति हज़ार"}
                 other{"{0} प्रति हज़ार"}
             }
+            permillion{
+                dnam{"ppm"}
+                one{"{0} ppm"}
+                other{"{0} हिस्सा प्रति दस लाख"}
+            }
             permyriad{
                 dnam{"प्रति दस हज़ार"}
                 one{"{0} प्रति दस हज़ार"}
@@ -150,7 +150,7 @@ hi{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"लीटर प्रति 100 किलोमीटर"}
                 one{"{0} लीटर प्रति 100 किलोमीटर"}
                 other{"{0} लीटर प्रति 100 किलोमीटर"}
@@ -675,7 +675,7 @@ hi{
                 one{"{0} हैक्टोपास्कल"}
                 other{"{0} हैक्टोपास्कल"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"मर्करी इंच"}
                 one{"{0} मर्करी इंच"}
                 other{"{0} मर्करी इंच"}
@@ -695,7 +695,7 @@ hi{
                 one{"{0} मिलीबार"}
                 other{"{0} मिलीबार"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"मर्क्यूरी मिलीमीटर"}
                 one{"{0} मर्क्यूरी मिलीमीटर"}
                 other{"{0} मर्क्यूरी मिलीमीटर"}
@@ -705,7 +705,7 @@ hi{
                 one{"{0} पास्कल"}
                 other{"{0} पास्कल"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"पाउंड प्रति वर्ग इंच"}
                 one{"{0} पाउंड प्रति वर्ग इंच"}
                 other{"{0} पाउंड प्रति वर्ग इंच"}
@@ -761,7 +761,7 @@ hi{
                 one{"{0} न्यूटन-मीटर"}
                 other{"{0} न्यूटन-मीटर"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"पाउंड-फ़ुट"}
                 one{"{0} पाउंड-फ़ुट"}
                 other{"{0} पाउंड-फ़ुट"}
@@ -964,7 +964,7 @@ hi{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ली॰/100 कि॰मी॰"}
                 one{"{0}ली/100कि"}
                 other{"{0}ली/100कि"}
@@ -1104,7 +1104,7 @@ hi{
                 one{"{0}hPa"}
                 other{"{0}hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0}\u0022 Hg"}
                 other{"{0}\u0022 Hg"}
             }
@@ -1162,7 +1162,7 @@ hi{
                 one{"{0} G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"मीटर/से²"}
                 one{"{0} मी॰/व॰से॰"}
                 other{"{0} मी॰/व॰से॰"}
@@ -1276,11 +1276,6 @@ hi{
                 one{"{0} मोल"}
                 other{"{0} मोल"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"प्रतिशत"}
                 one{"{0}%"}
@@ -1291,9 +1286,14 @@ hi{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"ppm"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ली॰/100 कि॰मी॰"}
                 one{"{0} ली॰/100 कि॰मी॰"}
                 other{"{0} ली॰/100 कि॰मी॰"}
@@ -1756,7 +1756,7 @@ hi{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
                 one{"{0} inHg"}
                 other{"{0} inHg"}
@@ -1776,7 +1776,7 @@ hi{
                 one{"{0} mbar"}
                 other{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
@@ -1786,7 +1786,7 @@ hi{
                 one{"{0} पा॰"}
                 other{"{0} पा॰"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 one{"{0} psi"}
                 other{"{0} psi"}

@@ -152,5 +152,5 @@ lkt{
         zu{"Zulu Iyápi"}
         zza{"Zaza Iyápi"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

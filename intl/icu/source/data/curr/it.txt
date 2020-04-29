@@ -220,7 +220,7 @@ it{
         }
         CNH{
             "CNH",
-            "CNH",
+            "renmimbi cinese offshore",
         }
         CNY{
             "CN¥",
@@ -1325,8 +1325,8 @@ it{
             other{"pesos cileni"}
         }
         CNH{
-            one{"CNH"}
-            other{"CNH"}
+            one{"renmimbi cinese offshore"}
+            other{"renmimbi cinesi offshore"}
         }
         CNY{
             one{"renmimbi cinese"}
@@ -1877,5 +1877,5 @@ it{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

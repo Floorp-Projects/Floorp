@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 vi{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -97,7 +97,7 @@ vi{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"lít/100km"}
                 other{"{0} l/100km"}
             }
@@ -485,7 +485,7 @@ vi{
                 dnam{"héctô pascal"}
                 other{"{0} héctô pascal"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inch thủy ngân"}
                 other{"{0} inch thủy ngân"}
             }
@@ -493,11 +493,11 @@ vi{
                 dnam{"millibar"}
                 other{"{0} millibar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"milimét thủy ngân"}
                 other{"{0} milimét thủy ngân"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"pound/inch vuông"}
                 other{"{0} pound/inch vuông"}
             }
@@ -539,7 +539,7 @@ vi{
                 dnam{"newton-mét"}
                 other{"{0} newton-mét"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"pound-feet"}
                 other{"{0} pound-feet"}
             }
@@ -671,7 +671,7 @@ vi{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 other{"{0}L/100km"}
             }
@@ -784,7 +784,7 @@ vi{
             hectopascal{
                 other{"{0}hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 other{"{0}\u0022 Hg"}
             }
             millibar{
@@ -1147,17 +1147,17 @@ vi{
             hectopascal{
                 dnam{"hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
             }
             millibar{
                 dnam{"mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 other{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
             }
         }
@@ -1176,7 +1176,7 @@ vi{
                 dnam{"N⋅m"}
                 other{"{0} N⋅m"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"lbf⋅ft"}
                 other{"{0} lbf⋅ft"}
             }

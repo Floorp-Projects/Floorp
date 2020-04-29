@@ -48,5 +48,5 @@ bas{
         zh{"Hɔp u kinà"}
         zu{"Hɔp u zulù"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

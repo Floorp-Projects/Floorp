@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 yo{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Etc:UTC"{
             ls{"Àpapọ̀ Àkókò Àgbáyé"}
@@ -159,6 +159,11 @@ yo{
             lg{"Chile Time"}
             ls{"Chile Standard Time"}
         }
+        "meta:China"{
+            ld{"Àkókò Ojúmọmọ Ṣáínà"}
+            lg{"Àkókò Ṣáínà"}
+            ls{"Àkókò Ìfẹnukòsí Ṣáínà"}
+        }
         "meta:Choibalsan"{
             ld{"Choibalsan Summer Time"}
             lg{"Choibalsan Time"}
@@ -180,11 +185,19 @@ yo{
             lg{"Cook Islands Time"}
             ls{"Cook Islands Standard Time"}
         }
+        "meta:Cuba"{
+            ld{"Àkókò Ojúmọmọ Kúbà"}
+            lg{"Àkókò Kúbà"}
+            ls{"Àkókò Àfẹnukò Kúbà"}
+        }
         "meta:Davis"{
             ls{"Davis Time"}
         }
         "meta:DumontDUrville"{
             ls{"Dumont-d’Urville Time"}
+        }
+        "meta:East_Timor"{
+            ls{"Àkókò Ìlà oorùn Timor"}
         }
         "meta:Easter"{
             ld{"Easter Island Summer Time"}
@@ -245,6 +258,16 @@ yo{
         "meta:Gilbert_Islands"{
             ls{"Gilbert Islands Time"}
         }
+        "meta:Greenland_Eastern"{
+            ld{"Àkókò ìgbà Ooru Greenland"}
+            lg{"Àkókò Ìlà oorùn Greenland"}
+            ls{"Àkókò Ìwọ̀ Ìfẹnukò oorùn Greenland"}
+        }
+        "meta:Greenland_Western"{
+            ld{"Àkókò Àfẹnukò Ìgba Oòru Greenland"}
+            lg{"Àkókò Ìwọ̀ oorùn Greenland"}
+            ls{"Àkókò Àfẹnukò Ìwọ̀ Oòrùn Greenland"}
+        }
         "meta:Gulf"{
             ls{
                 "Gulf Standard Time [translation hint: translate as just \u0022Gulf T"
@@ -253,6 +276,11 @@ yo{
         }
         "meta:Guyana"{
             ls{"Guyana Time"}
+        }
+        "meta:Hawaii_Aleutian"{
+            ld{"Àkókò Ojúmọmọ Hawaii-Aleutian"}
+            lg{"Àkókò Hawaii-Aleutian"}
+            ls{"Àkókò Àfẹnukò Hawaii-Aleutian"}
         }
         "meta:Hong_Kong"{
             ld{"Hong Kong Summer Time"}
@@ -270,8 +298,17 @@ yo{
         "meta:Indian_Ocean"{
             ls{"Indian Ocean Time"}
         }
+        "meta:Indochina"{
+            ls{"Àkókò Indochina"}
+        }
+        "meta:Indonesia_Central"{
+            ls{"Àkókò Ààrin Gbùngbùn Indonesia"}
+        }
         "meta:Indonesia_Eastern"{
             ls{"Eastern Indonesia Time"}
+        }
+        "meta:Indonesia_Western"{
+            ls{"Àkókò Ìwọ̀ oorùn Indonesia"}
         }
         "meta:Iran"{
             ld{"Iran Daylight Time"}
@@ -351,6 +388,16 @@ yo{
         "meta:Mawson"{
             ls{"Mawson Time"}
         }
+        "meta:Mexico_Northwest"{
+            ld{"Àkókò Ojúmọmọ Apá Ìwọ̀ Oorùn Mẹ́ṣíkò"}
+            lg{"Àkókò Apá Ìwọ̀ Oorùn Mẹ́ṣíkò"}
+            ls{"Àkókò Àfẹnukò Apá Ìwọ̀ Oorùn Mẹ́ṣíkò"}
+        }
+        "meta:Mexico_Pacific"{
+            ld{"Àkókò Ojúmọmọ Pásífíìkì Mẹ́síkò"}
+            lg{"Àkókò Pásífíìkì Mẹ́ṣíkò"}
+            ls{"Àkókò Àfẹnukò Pásífíìkì Mẹ́síkò"}
+        }
         "meta:Mongolia"{
             ld{"Ulaanbaatar Summer Time"}
             lg{"Ulaanbaatar Time"}
@@ -380,11 +427,18 @@ yo{
             lg{"New Zealand Time"}
             ls{"New Zealand Standard Time"}
         }
+        "meta:Newfoundland"{
+            ld{"Àkókò Ojúmọmọ Newfoundland"}
+            lg{"Àkókò Newfoundland"}
+            ls{"Àkókò Àfẹnukò Newfoundland"}
+        }
         "meta:Niue"{
             ls{"Niue Time"}
         }
         "meta:Norfolk"{
-            ls{"Norfolk Island Time"}
+            ld{"Norfolk Island Daylight Time"}
+            lg{"Norfolk Island Time"}
+            ls{"Norfolk Island Standard Time"}
         }
         "meta:Noronha"{
             ld{"Fernando de Noronha Summer Time"}
@@ -429,6 +483,11 @@ yo{
         }
         "meta:Phoenix_Islands"{
             ls{"Phoenix Islands Time"}
+        }
+        "meta:Pierre_Miquelon"{
+            ld{"Àkókò Ojúmọmọ Pierre & Miquelon"}
+            lg{"Àkókò Pierre & Miquelon"}
+            ls{"Àkókò Àfẹnukò Pierre & Miquelon"}
         }
         "meta:Pitcairn"{
             ls{"Pitcairn Time"}

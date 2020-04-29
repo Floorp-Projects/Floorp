@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 lt{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidžanas"}
@@ -1754,7 +1754,9 @@ lt{
             ls{"Niujė laikas"}
         }
         "meta:Norfolk"{
-            ls{"Norfolko Salų laikas"}
+            ld{"Norfolko Salų vasaros laikas"}
+            lg{"Norfolko Salų laikas"}
+            ls{"Norfolko Salų žiemos laikas"}
         }
         "meta:Noronha"{
             ld{"Fernando de Noronjos vasaros laikas"}

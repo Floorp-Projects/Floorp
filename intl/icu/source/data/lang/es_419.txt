@@ -22,6 +22,7 @@ es_419{
         es_ES{"español de España"}
         es_MX{"español de México"}
         eu{"vasco"}
+        fa_AF{"darí"}
         fr_CA{"francés canadiense"}
         fr_CH{"francés suizo"}
         goh{"alemán de la alta edad antigua"}
@@ -69,10 +70,12 @@ es_419{
         Laoo{"lao"}
         Latn{"latín"}
         Mlym{"malayalam"}
+        Olck{"ol chiki"}
     }
     Types{
         calendar{
-            islamic-umalqura{"islamic-umalqura"}
+            islamic-rgsa{"calendario islámico (Arabia Saudita)"}
+            islamic-tbla{"calendario islámico tabular"}
         }
         colAlternate{
             non-ignorable{"ordenar símbolos"}
@@ -102,7 +105,7 @@ es_419{
             wara{"dígitos en Warang Citi"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         enclosed{"{0} — Adjunto"}
         extended{"{0} — Extendido"}

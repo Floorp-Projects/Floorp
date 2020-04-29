@@ -1,8 +1,5 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
-/**
- * ICU <specials> source: <path>/xml/rbnf/nb.xml
- */
 nb{
     RBNFRules{
         SpelloutRules{
@@ -311,5 +308,5 @@ nb{
             "1: er =%spellout-ordinal-plural=;",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

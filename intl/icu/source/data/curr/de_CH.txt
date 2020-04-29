@@ -36,5 +36,5 @@ de_CH{
             other{"São-toméischer Dobra (2018)"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sk{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -16,7 +16,7 @@ sk{
                 one{"{0} jednotka preťaženia"}
                 other{"{0} jednotiek preťaženia"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"metre za sekundu na druhú"}
                 few{"{0} metre za sekundu na druhú"}
                 many{"{0} metra za sekundu na druhú"}
@@ -171,13 +171,6 @@ sk{
                 one{"{0} mol"}
                 other{"{0} molov"}
             }
-            part-per-million{
-                dnam{"milióntiny"}
-                few{"{0} milióntiny"}
-                many{"{0} milióntiny"}
-                one{"{0} milióntina"}
-                other{"{0} milióntin"}
-            }
             percent{
                 dnam{"percentá"}
                 few{"{0} percentá"}
@@ -192,6 +185,13 @@ sk{
                 one{"{0} promile"}
                 other{"{0} promile"}
             }
+            permillion{
+                dnam{"milióntiny"}
+                few{"{0} milióntiny"}
+                many{"{0} milióntiny"}
+                one{"{0} milióntina"}
+                other{"{0} milióntin"}
+            }
             permyriad{
                 dnam{"desatiny promile"}
                 few{"{0} desatiny promile"}
@@ -201,7 +201,7 @@ sk{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"litre na 100 kilometrov"}
                 few{"{0} litre na 100 kilometrov"}
                 many{"{0} litra na 100 kilometrov"}
@@ -920,7 +920,7 @@ sk{
                 one{"{0} hektopascal"}
                 other{"{0} hektopascalov"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"palce ortuťového stĺpca"}
                 few{"{0} palce ortuťového stĺpca"}
                 many{"{0} palca ortuťového stĺpca"}
@@ -948,7 +948,7 @@ sk{
                 one{"{0} milibar"}
                 other{"{0} milibarov"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"milimetre ortuťového stĺpca"}
                 few{"{0} milimetre ortuťového stĺpca"}
                 many{"{0} milimetra ortuťového stĺpca"}
@@ -962,7 +962,7 @@ sk{
                 one{"pascal"}
                 other{"{0} pascalov"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"libry sily na štvorcový palec"}
                 few{"{0} libry sily na štvorcový palec"}
                 many{"{0} libry sily na štvorcový palec"}
@@ -1038,7 +1038,7 @@ sk{
                 one{"{0} newtonmeter"}
                 other{"{0} newtonmetrov"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"librostopy"}
                 few{"{0} librostopy"}
                 many{"{0} librostopy"}
@@ -1245,7 +1245,7 @@ sk{
                 one{"{0}G"}
                 other{"{0}G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 few{"{0} m/s²"}
                 many{"{0} m/s²"}
@@ -1355,7 +1355,7 @@ sk{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 few{"{0} l/100 km"}
                 many{"{0} l/100 km"}
@@ -1746,7 +1746,7 @@ sk{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
                 few{"{0}\u0022 Hg"}
                 many{"{0}\u0022 Hg"}
@@ -1760,14 +1760,14 @@ sk{
                 one{"{0} mb"}
                 other{"{0} mb"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 few{"{0} mm Hg"}
                 many{"{0} mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 few{"{0} psi"}
                 many{"{0} psi"}
@@ -1974,7 +1974,7 @@ sk{
                 one{"{0} G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 few{"{0} m/s²"}
                 many{"{0} m/s²"}
@@ -2129,13 +2129,6 @@ sk{
                 one{"{0} mol"}
                 other{"{0} mol"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                few{"{0} ppm"}
-                many{"{0} ppm"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"%"}
                 few{"{0} %"}
@@ -2150,6 +2143,13 @@ sk{
                 one{"{0} ‰"}
                 other{"{0} ‰"}
             }
+            permillion{
+                dnam{"ppm"}
+                few{"{0} ppm"}
+                many{"{0} ppm"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
             permyriad{
                 dnam{"‱"}
                 few{"{0} ‱"}
@@ -2159,7 +2159,7 @@ sk{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 few{"{0} l/100 km"}
                 many{"{0} l/100 km"}
@@ -2878,7 +2878,7 @@ sk{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
                 few{"{0} inHg"}
                 many{"{0} inHg"}
@@ -2906,14 +2906,14 @@ sk{
                 one{"{0} mbar"}
                 other{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 few{"{0} mm Hg"}
                 many{"{0} mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 few{"{0} psi"}
                 many{"{0} psi"}
@@ -2989,7 +2989,7 @@ sk{
                 one{"{0} Nm"}
                 other{"{0} Nm"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"lbf⋅ft"}
                 few{"{0} lbf⋅ft"}
                 many{"{0} lbf⋅ft"}

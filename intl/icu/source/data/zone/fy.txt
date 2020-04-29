@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 fy{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Addis_Ababa"{
             ec{"Addis Abeba"}
@@ -805,7 +805,9 @@ fy{
             ls{"Niuese tiid"}
         }
         "meta:Norfolk"{
-            ls{"Norfolkeilânske tiid"}
+            ld{"Norfolkeilânske simmertiid"}
+            lg{"Norfolkeilânske tiid"}
+            ls{"Norfolkeilânske standerttiid"}
         }
         "meta:Noronha"{
             ld{"Fernando de Noronha-simmertiid"}

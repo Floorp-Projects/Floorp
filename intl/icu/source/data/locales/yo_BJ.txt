@@ -6,6 +6,48 @@ yo_BJ{
         "\u0301} {ɔ\u0300} p r s {sh} t u ú ù w y]"
     }
     NumberElements{
+        latn{
+            patternsLong{
+                decimalFormat{
+                    1000{
+                        other{"0 ɛgbɛ̀rún"}
+                    }
+                    10000{
+                        other{"00 ɛgbɛ̀rún"}
+                    }
+                    100000{
+                        other{"000 ɛgbɛ̀rún"}
+                    }
+                    1000000{
+                        other{"0 mílíɔ̀nù"}
+                    }
+                    10000000{
+                        other{"00 mílíɔ̀nù"}
+                    }
+                    100000000{
+                        other{"000 mílíɔ̀nù"}
+                    }
+                    1000000000{
+                        other{"0 bilíɔ̀nù"}
+                    }
+                    10000000000{
+                        other{"00 bilíɔ̀nù"}
+                    }
+                    100000000000{
+                        other{"000 bilíɔ̀nù"}
+                    }
+                    1000000000000{
+                        other{"0 tiriliɔ̀nù"}
+                    }
+                    10000000000000{
+                        other{"00 tiriliɔ̀nù"}
+                    }
+                    100000000000000{
+                        other{"000 tiriliɔ̀nù"}
+                    }
+                }
+            }
+        }
         minimalPairs{
             ordinal{
                 other{"Mú {0} apá ɔ̀tún"}
@@ -15,7 +57,7 @@ yo_BJ{
             }
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         gregorian{
             AmPmMarkers{
@@ -283,6 +325,13 @@ yo_BJ{
                 "-1"{"Ɔjɔ́ Àìkú tó kɔjá"}
                 "0"{"Ɔjɔ́ Àìkú yìí"}
                 "1"{"Ɔjɔ́ Àìkú tó ń bɔ̀"}
+            }
+        }
+        sun-narrow{
+            relativeTime{
+                future{
+                    other{"Ɔjɔ́ Àíkú +{0}"}
+                }
             }
         }
         week{

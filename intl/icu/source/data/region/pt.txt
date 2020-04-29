@@ -298,7 +298,6 @@ pt{
         ZZ{"Região desconhecida"}
     }
     Countries%short{
-        GB{"Reino Unido"}
         HK{"Hong Kong"}
         MO{"Macau"}
         PS{"Palestina"}
@@ -314,5 +313,5 @@ pt{
         SZ{"Suazilândia"}
         TL{"República Democrática de Timor-Leste"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

@@ -48,5 +48,5 @@ kam{
         zh{"Kichina"}
         zu{"Kizulu"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

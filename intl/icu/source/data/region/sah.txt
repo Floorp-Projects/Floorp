@@ -31,5 +31,5 @@ sah{
     Countries%short{
         US{"АХШ"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

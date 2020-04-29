@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 kea{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -13,7 +13,7 @@ kea{
                 dnam{"forsa G"}
                 other{"{0} forsa G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"metru pur sigundu kuadradu"}
                 other{"{0} metru pur sigundu kuadradu"}
             }
@@ -100,10 +100,6 @@ kea{
                 dnam{"milimol pur litru"}
                 other{"{0} milimol pur litru"}
             }
-            part-per-million{
-                dnam{"parti pur milhãu"}
-                other{"{0} parti pur milhãu"}
-            }
             percent{
                 dnam{"pursentu"}
                 other{"{0} pursentu"}
@@ -112,13 +108,17 @@ kea{
                 dnam{"pur mil"}
                 other{"{0} pur mil"}
             }
+            permillion{
+                dnam{"parti pur milhãu"}
+                other{"{0} parti pur milhãu"}
+            }
             permyriad{
                 dnam{"pontu bazi"}
                 other{"{0} pontu bazi"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"litru pur 100 kilómetru"}
                 other{"{0} litru pur 100 kilómetru"}
             }
@@ -546,7 +546,7 @@ kea{
                 dnam{"ektopaskal"}
                 other{"{0} ektopaskal"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"pulegada di merkúriu"}
                 other{"{0} pulegada di merkúriu"}
             }
@@ -562,7 +562,7 @@ kea{
                 dnam{"milibar"}
                 other{"{0} milibar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"milímetru di merkúriu"}
                 other{"{0} milímetru di merkúriu"}
             }
@@ -570,7 +570,7 @@ kea{
                 dnam{"paskal"}
                 other{"{0} paskal"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"libra pur pulegada kuadradu"}
                 other{"{0} libra pur pulegada kuadradu"}
             }
@@ -612,7 +612,7 @@ kea{
                 dnam{"newton-metru"}
                 other{"{0} newton-metru"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"pe-libra"}
                 other{"{0} pe-libra"}
             }
@@ -731,7 +731,7 @@ kea{
     }
     unitsNarrow{
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100km"}
                 other{"{0} l/100km"}
             }
@@ -896,13 +896,13 @@ kea{
                 dnam{"milimol/litru"}
                 other{"{0} mmol/l"}
             }
-            part-per-million{
+            permillion{
                 dnam{"parti/milhãu"}
                 other{"{0} ppm"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"litru/100km"}
                 other{"{0} l/100 km"}
             }

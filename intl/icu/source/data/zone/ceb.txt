@@ -1,13 +1,13 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ceb{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Etc:UTC"{
-            ls{"Koordinado nga Unibersohanong Oras"}
+            ls{"Gikoordinar nga Kinatibuk-ang Oras"}
         }
         "Etc:Unknown"{
-            ec{"Wala Mailhing Siyudad"}
+            ec{"Wala Mailhing Lungsod"}
         }
         "Europe:Dublin"{
             ld{"Tamdanang Oras sa Irish"}
@@ -33,7 +33,7 @@ ceb{
             ls{"Tamdanang Oras sa West Africa"}
         }
         "meta:Alaska"{
-            ld{"Oras sa Adlawan sa Alaska"}
+            ld{"Oras sa Tag-init sa Alaska"}
             lg{"Oras sa Alaska"}
             ls{"Tamdanang Oras sa Alaska"}
         }
@@ -43,27 +43,27 @@ ceb{
             ls{"Tamdanang Oras sa Amazon"}
         }
         "meta:America_Central"{
-            ld{"Taliwala sa Kahayag sa Adlawng Oras Norte Amerika"}
-            lg{"Taliwala nga Oras Norte Amerika"}
-            ls{"Taliwala nga Sukdanang Oras Norte Amerika"}
+            ld{"Sentrong Oras sa Tag-init"}
+            lg{"Sentrong Oras"}
+            ls{"Sentong Tamdanan nga Oras"}
         }
         "meta:America_Eastern"{
-            ld{"Norte Amerika Oras sa Sidlakan sa Kahayag sa Adlaw"}
-            lg{"Norte Amerika Oras sa Sidlakan"}
-            ls{"Norte Amerika Sukdanang Oras"}
+            ld{"Oras sa Tag-init sa Sidlakan"}
+            lg{"Oras sa Sidlakan"}
+            ls{"Tamdanan nga Oras sa Sidlakan"}
         }
         "meta:America_Mountain"{
-            ld{"Norte Amerika Oras sa Kahayag sa Adlaw sa Kabukiran"}
-            lg{"Norte Amerika Oras sa Kabukiran"}
-            ls{"Norte Amerika Sukdanang Oras sa Kabukiran"}
+            ld{"Oras sa Tag-init sa Kabukiran"}
+            lg{"Oras sa Kabukiran"}
+            ls{"Tamdanang Oras sa Kabukiran"}
         }
         "meta:America_Pacific"{
-            ld{"Norte Amerika Oras sa Kahayag sa Adlaw sa Pasipiko"}
-            lg{"Norte Amerika Oras sa Pasipiko"}
-            ls{"Norte Amerika Sukdanang Oras sa Pasipiko"}
+            ld{"Oras sa Tag-init sa Pasipiko"}
+            lg{"Oras sa Pasipiko"}
+            ls{"Tamdanang Oras sa Pasipiko"}
         }
         "meta:Apia"{
-            ld{"Oras sa Adlawan sa Apia"}
+            ld{"Oras sa Tag-init sa Apia"}
             lg{"Oras sa Apia"}
             ls{"Tamdanang Oras sa Apia"}
         }
@@ -88,27 +88,27 @@ ceb{
             ls{"Tamdanang Oras sa Armenia"}
         }
         "meta:Atlantic"{
-            ld{"Norte Amerika Oras sa Kahayag sa Adlaw sa Atlantiko"}
-            lg{"Norte Amerika Oras sa Atlantiko"}
-            ls{"Norte Amerika Sukdanang Oras sa Atlantiko"}
+            ld{"Oras sa Tag-init sa Atlantiko"}
+            lg{"Oras sa Atlantiko"}
+            ls{"Tamdanang Oras sa Atlantiko"}
         }
         "meta:Australia_Central"{
-            ld{"Oras sa Adlawan sa Central Australia"}
+            ld{"Oras sa Tag-init sa Central Australia"}
             lg{"Oras sa Central Australia"}
             ls{"Tamdanang Oras sa Central Australia"}
         }
         "meta:Australia_CentralWestern"{
-            ld{"Oras sa Adlawan sa Central Western Australia"}
+            ld{"Oras sa Tag-init sa Central Western Australia"}
             lg{"Oras sa Central Western Australia"}
             ls{"Tamdanang Oras sa Central Western Australia"}
         }
         "meta:Australia_Eastern"{
-            ld{"Oras sa Adlawan sa Eastern Australia"}
+            ld{"Oras sa Tag-init sa Eastern Australia"}
             lg{"Oras sa Eastern Australia"}
             ls{"Tamdanang Oras sa Eastern Australia"}
         }
         "meta:Australia_Western"{
-            ld{"Oras sa Adlawan sa Western Australia"}
+            ld{"Oras sa Tag-init sa Western Australia"}
             lg{"Oras sa Western Australia"}
             ls{"Tamdanang Oras sa Western Australia"}
         }
@@ -150,7 +150,7 @@ ceb{
             ls{"Tamdanang Oras sa Chamorro"}
         }
         "meta:Chatham"{
-            ld{"Oras sa Adlawan sa Chatham"}
+            ld{"Oras sa Tag-init sa Chatham"}
             lg{"Oras sa Chatham"}
             ls{"Tamdanang Oras sa Chatham"}
         }
@@ -186,7 +186,7 @@ ceb{
             ls{"Tamdanang Oras sa Cook Islands"}
         }
         "meta:Cuba"{
-            ld{"Oras sa Adlawan sa Cuba"}
+            ld{"Oras sa Tag-init sa Cuba"}
             lg{"Oras sa Cuba"}
             ls{"Tamdanang Oras sa Cuba"}
         }
@@ -208,22 +208,22 @@ ceb{
             ls{"Oras sa Ecuador"}
         }
         "meta:Europe_Central"{
-            ld{"Oras sa Europa Taliwala sa Adlaw sa Tag-init"}
-            lg{"Oras sa Europa sa Taliwala sa Adlaw"}
-            ls{"Sukdanang Oras sa Europa sa Taliwala sa Adlaw"}
+            ld{"Oras sa Tag-init sa Central Europe"}
+            lg{"Oras sa Central Europe"}
+            ls{"Tamdanang Oras sa Central Europe"}
         }
         "meta:Europe_Eastern"{
-            ld{"Oras sa Taga-Oryente sa Europa sa Tag-int"}
-            lg{"Oras sa Taga-Oryente sa Europa"}
-            ls{"Sukdanang Oras sa Taga-Oryente sa Europa"}
+            ld{"Oras sa Tag-init sa Eastern Europe"}
+            lg{"Oras sa Eastern Europe"}
+            ls{"Tamdanang Oras sa Eastern Europe"}
         }
         "meta:Europe_Further_Eastern"{
             ls{"Oras sa Further-eastern Europe"}
         }
         "meta:Europe_Western"{
-            ld{"Oras sa Kasadpanon sa Europa sa Tag-init"}
-            lg{"Oras sa Kasadpanon sa Europa"}
-            ls{"Sukadanang Oras sa Kasadpanon sa Europa"}
+            ld{"Oras sa Tag-init sa Western Europe"}
+            lg{"Oras sa Western Europe"}
+            ls{"Tamdanang Oras sa Western Europe"}
         }
         "meta:Falkland"{
             ld{"Oras sa Tag-init sa Falkland Islands"}
@@ -242,7 +242,7 @@ ceb{
             ls{"Oras sa French Southern ug Antarctic"}
         }
         "meta:GMT"{
-            ls{"Kasarangang Oras sa Greenwich"}
+            ls{"Oras sa Greenwich Mean"}
         }
         "meta:Galapagos"{
             ls{"Oras sa Galapagos"}
@@ -275,7 +275,7 @@ ceb{
             ls{"Oras sa Guyana"}
         }
         "meta:Hawaii_Aleutian"{
-            ld{"Oras sa Adlawan sa Hawaii-Aleutian"}
+            ld{"Oras sa Tag-init sa Hawaii-Aleutian"}
             lg{"Oras sa Hawaii-Aleutian"}
             ls{"Tamdanang Oras sa Hawaii-Aleutian"}
         }
@@ -353,7 +353,7 @@ ceb{
             ls{"Oras sa Line Islands"}
         }
         "meta:Lord_Howe"{
-            ld{"Oras sa Adlawan sa Lord Howe"}
+            ld{"Oras sa Tag-init sa Lord Howe"}
             lg{"Oras sa Lord Howe"}
             ls{"Tamdanang Oras sa Lord Howe"}
         }
@@ -386,12 +386,12 @@ ceb{
             ls{"Oras sa Mawson"}
         }
         "meta:Mexico_Northwest"{
-            ld{"Oras sa Adlawan sa Northwest Mexico"}
+            ld{"Oras sa Tag-init sa Northwest Mexico"}
             lg{"Oras sa Northwest Mexico"}
             ls{"Tamdanang Oras sa Northwest Mexico"}
         }
         "meta:Mexico_Pacific"{
-            ld{"Oras sa Adlawan sa Mexican Pacific"}
+            ld{"Oras sa Tag-init sa Mexican Pacific"}
             lg{"Oras sa Mexican Pacific"}
             ls{"Tamdanang Oras sa Mexican Pacific"}
         }
@@ -420,12 +420,12 @@ ceb{
             ls{"Tamdanang Oras sa New Caledonia"}
         }
         "meta:New_Zealand"{
-            ld{"Oras sa Adlawan sa New Zealand"}
+            ld{"Oras sa Tag-init sa New Zealand"}
             lg{"Oras sa New Zealand"}
             ls{"Tamdanang Oras sa New Zealand"}
         }
         "meta:Newfoundland"{
-            ld{"Oras sa Adlawan sa Newfoundland"}
+            ld{"Oras sa Tag-init sa Newfoundland"}
             lg{"Oras sa Newfoundland"}
             ls{"Tamdanang Oras sa Newfoundland"}
         }
@@ -433,7 +433,9 @@ ceb{
             ls{"Oras sa Niue"}
         }
         "meta:Norfolk"{
-            ls{"Oras sa Norfolk Island"}
+            ld{"Oras sa Tag-init sa Norfolk Island"}
+            lg{"Oras sa Norfolk Island"}
+            ls{"Tamdanang Oras sa Norfolk Island"}
         }
         "meta:Noronha"{
             ld{"Oras sa Tag-init sa Fernando de Noronha"}
@@ -480,7 +482,7 @@ ceb{
             ls{"Oras sa Phoenix Islands"}
         }
         "meta:Pierre_Miquelon"{
-            ld{"Oras sa Adlawan sa St. Pierre & Miquelon"}
+            ld{"Oras sa Tag-init sa St.Pierre & Miquelon"}
             lg{"Oras sa St. Pierre & Miquelon"}
             ls{"Tamdanang Oras sa St. Pierre & Miquelon"}
         }
@@ -505,7 +507,7 @@ ceb{
             ls{"Tamdanang Oras sa Sakhalin"}
         }
         "meta:Samoa"{
-            ld{"Oras sa Adlawan sa Samoa"}
+            ld{"Oras sa Tag-init sa Samoa"}
             lg{"Oras sa Samoa"}
             ls{"Tamdanang Oras sa Samoa"}
         }
@@ -608,8 +610,8 @@ ceb{
         gmtFormat{"GMT {0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
-        regionFormat{"Oras {0}"}
-        regionFormatDaylight{"Tag-init Oras {0}"}
-        regionFormatStandard{"Sukdanang Oras {0}"}
+        regionFormat{"{0} Oras"}
+        regionFormatDaylight{"{0} Oras sa Tag-init"}
+        regionFormatStandard{"{0} Tamdanang Oras"}
     }
 }

@@ -15,7 +15,7 @@ en_ZA{
             }
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{

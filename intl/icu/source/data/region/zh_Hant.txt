@@ -299,21 +299,16 @@ zh_Hant{
         ZZ{"未知區域"}
     }
     Countries%short{
-        GB{"英國"}
         HK{"香港"}
         MO{"澳門"}
         PS{"巴勒斯坦"}
-        UN{"聯合國"}
-        US{"美國"}
     }
     Countries%variant{
         CD{"剛果民主共和國"}
         CG{"剛果共和國"}
-        CI{"象牙海岸"}
         CZ{"捷克共和國"}
         FK{"福克蘭群島（馬爾維納斯群島）"}
         SZ{"史瓦濟蘭"}
-        TL{"東帝汶"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

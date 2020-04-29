@@ -8,5 +8,5 @@ es_PR{
             "dólar estadounidense",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

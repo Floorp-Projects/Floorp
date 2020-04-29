@@ -11,5 +11,5 @@ qu_BO{
             "Sol Peruano",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

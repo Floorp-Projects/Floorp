@@ -173,6 +173,7 @@ nb{
         ewo{"ewondo"}
         ext{"ekstremaduransk"}
         fa{"persisk"}
+        fa_AF{"dari"}
         fan{"fang"}
         fat{"fanti"}
         ff{"fulfulde"}
@@ -632,6 +633,7 @@ nb{
         zh_Hant{"tradisjonell mandarinkinesisk"}
     }
     Languages%menu{
+        ars{"arabisk (najd)"}
         zh{"kinesisk, mandarin"}
     }
     Languages%short{
@@ -645,6 +647,7 @@ nb{
         Aghb{"kaukasus-albansk"}
         Ahom{"ahom"}
         Arab{"arabisk"}
+        Aran{"nastaliq"}
         Armi{"arameisk"}
         Armn{"armensk"}
         Avst{"avestisk"}
@@ -761,6 +764,7 @@ nb{
         Phnx{"fønikisk"}
         Plrd{"pollard-fonetisk"}
         Prti{"inskripsjonsparthisk"}
+        Qaag{"zawgyi"}
         Rjng{"rejang"}
         Roro{"rongorongo"}
         Runr{"runer"}
@@ -1021,7 +1025,6 @@ nb{
         KSCOR{"standard ortografi"}
         LAUKIKA{"laukika"}
         LIPAW{"resia med Lipovaz-dialekt"}
-        LUNA1918{"LUNA1918"}
         METELKO{"Metelko-alfabet"}
         MONOTON{"monotonisk rettskriving"}
         NDYUKA{"ndyuka-dialekt"}
@@ -1030,15 +1033,12 @@ nb{
         NULIK{"moderne volapük"}
         OSOJS{"oseacco- og osojanedialekt"}
         PAMAKA{"Pamaka-dialekt"}
-        PETR1708{"PETR1708"}
         PINYIN{"pinyin"}
         POLYTON{"polytonisk rettskriving"}
         POSIX{"dataspråk"}
-        PUTER{"PUTER"}
         REVISED{"revidert ortografi"}
         RIGIK{"klassisk volapük"}
         ROZAJ{"resisk dialekt"}
-        RUMGR{"RUMGR"}
         SAAHO{"saho"}
         SCOTLAND{"skotsk standard engelsk"}
         SCOUSE{"scouse dialekt"}
@@ -1057,7 +1057,7 @@ nb{
         VALLADER{"vallader"}
         WADEGILE{"Wade-Giles-romanisering"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} – alt"}
         category-list{"{0}: {1}"}

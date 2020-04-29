@@ -151,6 +151,7 @@ bn{
         eu{"বাস্ক"}
         ewo{"ইওন্ডো"}
         fa{"ফার্সি"}
+        fa_AF{"দারি"}
         fan{"ফ্যাঙ্গ"}
         fat{"ফান্তি"}
         ff{"ফুলাহ্"}
@@ -879,7 +880,7 @@ bn{
             wara{"ওয়ারেং সিটি সংখ্যা"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — সমস্ত"}
         category-list{"{0}: {1}"}

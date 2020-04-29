@@ -4,5 +4,5 @@ kl{
     Countries{
         GL{"Kalaallit Nunaat"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

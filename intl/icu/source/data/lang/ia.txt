@@ -532,7 +532,7 @@ ia{
             tibt{"cifras tibetan"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — toto"}
         category-list{"{0}: {1}"}

@@ -222,7 +222,7 @@ am{
         minimumGroupingDigits{"1"}
         traditional{"ethi"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1045,7 +1045,7 @@ am{
                     "ዓ/ም",
                 }
                 abbreviated%variant{
-                    "BCE",
+                    "ዓ/ዓ",
                     "CE",
                 }
                 narrow{

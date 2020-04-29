@@ -312,7 +312,6 @@ gl{
         CZ{"República Checa"}
         FK{"Illas Malvinas (Falkland)"}
         SZ{"Suacilandia"}
-        TL{"TL"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

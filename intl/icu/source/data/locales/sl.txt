@@ -288,7 +288,7 @@ sl{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         buddhist{
             eras{

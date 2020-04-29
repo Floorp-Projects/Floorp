@@ -951,7 +951,7 @@ compact-short currency/EUR sign-accounting-except-zero
   bn-BD
     ০€
     +৯২ হা€
-    (০.২২ €)
+    (০.২২€)
 
 compact-short measure-unit/length-furlong sign-accounting-except-zero
   es-MX
@@ -993,7 +993,7 @@ scientific/+ee/sign-always currency/EUR sign-accounting-except-zero
   bn-BD
     ০.০০E+০০€
     +৯.১৮E+০৪€
-    (২.২২E-০১ €)
+    (২.২২E-০১€)
 
 scientific/+ee/sign-always measure-unit/length-furlong sign-accounting-except-zero
   es-MX
@@ -2273,15 +2273,15 @@ compact-short precision-integer sign-accounting-except-zero
   es-MX
     0
     +92 k
-    -0
+    0
   zh-TW
     0
     +9萬
-    -0
+    0
   bn-BD
     ০
     +৯২ হা
-    -০
+    ০
 
 compact-short .000 sign-accounting-except-zero
   es-MX
@@ -3877,7 +3877,7 @@ currency/EUR unit-width-narrow sign-accounting-except-zero
   bn-BD
     ০.০০€
     +৯১,৮২৭.৩৬€
-    (০.২২ €)
+    (০.২২€)
 
 currency/EUR unit-width-full-name sign-accounting-except-zero
   es-MX
@@ -4849,15 +4849,15 @@ percent precision-integer sign-accounting-except-zero
   es-MX
     0 %
     +91,827 %
-    -0 %
+    0 %
   zh-TW
     0%
     +91,827%
-    -0%
+    0%
   bn-BD
     ০%
     +৯১,৮২৭%
-    -০%
+    ০%
 
 percent .000 sign-accounting-except-zero
   es-MX
@@ -4905,15 +4905,15 @@ currency/EUR precision-integer sign-accounting-except-zero
   es-MX
     EUR 0
     +EUR 91,827
-    -EUR 0
+    EUR 0
   zh-TW
     €0
     +€91,827
-    (€0)
+    €0
   bn-BD
     ০€
     +৯১,৮২৭€
-    (০ €)
+    ০€
 
 currency/EUR .000 sign-accounting-except-zero
   es-MX
@@ -4927,7 +4927,7 @@ currency/EUR .000 sign-accounting-except-zero
   bn-BD
     ০.০০০€
     +৯১,৮২৭.৩৬৪€
-    (০.২২২ €)
+    (০.২২২€)
 
 currency/EUR .##/@@@+ sign-accounting-except-zero
   es-MX
@@ -4941,7 +4941,7 @@ currency/EUR .##/@@@+ sign-accounting-except-zero
   bn-BD
     ০€
     +৯১,৮২৭.৩৬€
-    (০.২২২ €)
+    (০.২২২€)
 
 currency/EUR @@ sign-accounting-except-zero
   es-MX
@@ -4955,21 +4955,21 @@ currency/EUR @@ sign-accounting-except-zero
   bn-BD
     ০.০€
     +৯২,০০০€
-    (০.২২ €)
+    (০.২২€)
 
 measure-unit/length-furlong precision-integer sign-accounting-except-zero
   es-MX
     0 fur
     +91,827 fur
-    -0 fur
+    0 fur
   zh-TW
     0 化朗
     +91,827 化朗
-    -0 化朗
+    0 化朗
   bn-BD
     ০ ফার্লং
     +৯১,৮২৭ ফার্লং
-    -০ ফার্লং
+    ০ ফার্লং
 
 measure-unit/length-furlong .000 sign-accounting-except-zero
   es-MX
@@ -5375,7 +5375,7 @@ currency/EUR rounding-mode-floor sign-accounting-except-zero
   bn-BD
     ০.০০€
     +৯১,৮২৭.৩৬€
-    (০.২৩ €)
+    (০.২৩€)
 
 measure-unit/length-furlong rounding-mode-floor sign-accounting-except-zero
   es-MX
@@ -5585,7 +5585,7 @@ currency/EUR integer-width/##00 sign-accounting-except-zero
   bn-BD
     ০০.০০€
     +১,৮২৭.৩৬€
-    (০০.২২ €)
+    (০০.২২€)
 
 measure-unit/length-furlong integer-width/##00 sign-accounting-except-zero
   es-MX
@@ -5753,7 +5753,7 @@ currency/EUR scale/0.5 sign-accounting-except-zero
   bn-BD
     ০.০০€
     +৪৫,৯১৩.৬৮€
-    (০.১১ €)
+    (০.১১€)
 
 measure-unit/length-furlong scale/0.5 sign-accounting-except-zero
   es-MX
@@ -5879,7 +5879,7 @@ currency/EUR group-on-aligned sign-accounting-except-zero
   bn-BD
     ০.০০€
     +৯১,৮২৭.৩৬€
-    (০.২২ €)
+    (০.২২€)
 
 measure-unit/length-furlong group-on-aligned sign-accounting-except-zero
   es-MX
@@ -5963,7 +5963,7 @@ currency/EUR latin sign-accounting-except-zero
   bn-BD
     0.00€
     +91,827.36€
-    (0.22 €)
+    (0.22€)
 
 measure-unit/length-furlong latin sign-accounting-except-zero
   es-MX
@@ -6047,7 +6047,7 @@ currency/EUR sign-accounting-except-zero decimal-always
   bn-BD
     ০.০০€
     +৯১,৮২৭.৩৬€
-    (০.২২ €)
+    (০.২২€)
 
 measure-unit/length-furlong sign-accounting-except-zero decimal-always
   es-MX
@@ -6627,15 +6627,15 @@ unit-width-narrow precision-integer sign-accounting-except-zero
   es-MX
     0
     +91,827
-    -0
+    0
   zh-TW
     0
     +91,827
-    -0
+    0
   bn-BD
     ০
     +৯১,৮২৭
-    -০
+    ০
 
 unit-width-narrow .000 sign-accounting-except-zero
   es-MX
@@ -6683,15 +6683,15 @@ unit-width-full-name precision-integer sign-accounting-except-zero
   es-MX
     0
     +91,827
-    -0
+    0
   zh-TW
     0
     +91,827
-    -0
+    0
   bn-BD
     ০
     +৯১,৮২৭
-    -০
+    ০
 
 unit-width-full-name .000 sign-accounting-except-zero
   es-MX
@@ -7943,15 +7943,15 @@ precision-integer integer-width/##00 sign-accounting-except-zero
   es-MX
     00
     +1827
-    -00
+    00
   zh-TW
     00
     +1,827
-    -00
+    00
   bn-BD
     ০০
     +১,৮২৭
-    -০০
+    ০০
 
 .000 integer-width/##00 sign-accounting-except-zero
   es-MX
@@ -8167,15 +8167,15 @@ precision-integer scale/0.5 sign-accounting-except-zero
   es-MX
     0
     +45,914
-    -0
+    0
   zh-TW
     0
     +45,914
-    -0
+    0
   bn-BD
     ০
     +৪৫,৯১৪
-    -০
+    ০
 
 .000 scale/0.5 sign-accounting-except-zero
   es-MX
@@ -8335,15 +8335,15 @@ precision-integer group-on-aligned sign-accounting-except-zero
   es-MX
     0
     +91,827
-    -0
+    0
   zh-TW
     0
     +91,827
-    -0
+    0
   bn-BD
     ০
     +৯১,৮২৭
-    -০
+    ০
 
 .000 group-on-aligned sign-accounting-except-zero
   es-MX
@@ -8447,15 +8447,15 @@ precision-integer latin sign-accounting-except-zero
   es-MX
     0
     +91,827
-    -0
+    0
   zh-TW
     0
     +91,827
-    -0
+    0
   bn-BD
     0
     +91,827
-    -0
+    0
 
 .000 latin sign-accounting-except-zero
   es-MX
@@ -8559,15 +8559,15 @@ precision-integer sign-accounting-except-zero decimal-always
   es-MX
     0.
     +91,827.
-    -0.
+    0.
   zh-TW
     0.
     +91,827.
-    -0.
+    0.
   bn-BD
     ০.
     +৯১,৮২৭.
-    -০.
+    ০.
 
 .000 sign-accounting-except-zero decimal-always
   es-MX

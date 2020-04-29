@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 eu{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -806,6 +806,9 @@ eu{
         }
         "Asia:Qatar"{
             ec{"Qatar"}
+        }
+        "Asia:Qostanay"{
+            ec{"Kostanay"}
         }
         "Asia:Qyzylorda"{
             ec{"Kyzylorda"}
@@ -1724,7 +1727,9 @@ eu{
             ls{"Niueko ordua"}
         }
         "meta:Norfolk"{
-            ls{"Norfolk uharteetako ordua"}
+            ld{"Norfolk uharteetako udako ordua"}
+            lg{"Norfolk uharteetako ordua"}
+            ls{"Norfolk uharteetako ordua estandarra"}
         }
         "meta:Noronha"{
             ld{"Fernando de Noronhako udako ordua"}

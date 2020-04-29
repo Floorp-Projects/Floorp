@@ -108,6 +108,7 @@ sd{
         eu{"باسڪي"}
         ewo{"اوانڊو"}
         fa{"فارسي"}
+        fa_AF{"دري"}
         ff{"فلاهه"}
         fi{"فنش"}
         fil{"فلپائني"}
@@ -549,7 +550,7 @@ sd{
             tibt{"تبتي عدد"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — سڀئي"}
         category-list{"{0}: {1}"}

@@ -149,7 +149,6 @@ ku{
         MC{"Monako"}
         MD{"Moldova"}
         ME{"Montenegro"}
-        MF{"MF"}
         MG{"Madagaskar"}
         MH{"Giravên Marşal"}
         MK{"Makedonya"}
@@ -265,5 +264,5 @@ ku{
         FK{"Giravên Falkland"}
         TL{"Tîmora Rojhilat"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

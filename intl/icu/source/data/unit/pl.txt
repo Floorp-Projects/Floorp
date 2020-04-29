@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 pl{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -12,7 +12,7 @@ pl{
             g-force{
                 dnam{"stała grawitacji"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"metry na sekundę do kwadratu"}
                 few{"{0} metry na sekundę do kwadratu"}
                 many{"{0} metrów na sekundę do kwadratu"}
@@ -166,13 +166,6 @@ pl{
                 one{"{0} mol"}
                 other{"{0} mola"}
             }
-            part-per-million{
-                dnam{"części na milion"}
-                few{"{0} części na milion"}
-                many{"{0} części na milion"}
-                one{"{0} część na milion"}
-                other{"{0} części na milion"}
-            }
             percent{
                 dnam{"procent"}
                 few{"{0} procent"}
@@ -187,6 +180,13 @@ pl{
                 one{"{0} promil"}
                 other{"{0} promila"}
             }
+            permillion{
+                dnam{"części na milion"}
+                few{"{0} części na milion"}
+                many{"{0} części na milion"}
+                one{"{0} część na milion"}
+                other{"{0} części na milion"}
+            }
             permyriad{
                 dnam{"punkt bazowy"}
                 few{"{0} punkty bazowe"}
@@ -196,7 +196,7 @@ pl{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"litry na 100 kilometrów"}
                 few{"{0} litry na 100 kilometrów"}
                 many{"{0} litrów na 100 kilometrów"}
@@ -887,7 +887,7 @@ pl{
                 one{"{0} hektopaskal"}
                 other{"{0} hektopaskala"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"cale słupa rtęci"}
                 few{"{0} cale słupa rtęci"}
                 many{"{0} cali słupa rtęci"}
@@ -915,7 +915,7 @@ pl{
                 one{"{0} millibar"}
                 other{"{0} millibara"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"milimetry słupa rtęci"}
                 few{"{0} milimetry słupa rtęci"}
                 many{"{0} milimetrów słupa rtęci"}
@@ -929,7 +929,7 @@ pl{
                 one{"{0} paskal"}
                 other{"{0} paskala"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"funty na cal kwadratowy"}
                 few{"{0} funty na cal kwadratowy"}
                 many{"{0} funtów na cal kwadratowy"}
@@ -1005,7 +1005,7 @@ pl{
                 one{"{0} niutonometr"}
                 other{"{0} niutonometra"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"stopofunty"}
                 few{"{0} stopofunty"}
                 many{"{0} stopofuntów"}
@@ -1232,7 +1232,7 @@ pl{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 few{"{0} l/100 km"}
                 many{"{0} l/100 km"}
@@ -1246,10 +1246,10 @@ pl{
         duration{
             day{
                 dnam{"dzień"}
-                few{"{0} dn."}
-                many{"{0} dn."}
+                few{"{0} d."}
+                many{"{0} d."}
                 one{"{0} d."}
-                other{"{0} dn."}
+                other{"{0} d."}
                 per{"{0}/d."}
             }
             hour{
@@ -1442,7 +1442,7 @@ pl{
                 one{"{0} mol"}
                 other{"{0} mola"}
             }
-            part-per-million{
+            permillion{
                 dnam{"części/milion"}
             }
             permyriad{
@@ -1453,7 +1453,7 @@ pl{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 few{"{0} l/100 km"}
                 many{"{0} l/100 km"}
@@ -1591,11 +1591,11 @@ pl{
                 other{"{0} eV"}
             }
             foodcalorie{
-                dnam{"cal"}
-                few{"{0} cal"}
-                many{"{0} cal"}
-                one{"{0} cal"}
-                other{"{0} cal"}
+                dnam{"kcal"}
+                few{"{0} kcal"}
+                many{"{0} kcal"}
+                one{"{0} kcal"}
+                other{"{0} kcal"}
             }
             joule{
                 dnam{"J"}
@@ -1809,7 +1809,7 @@ pl{
                 one{"{0} N⋅m"}
                 other{"{0} N⋅m"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"lbf⋅ft"}
                 few{"{0} lbf⋅ft"}
                 many{"{0} lbf⋅ft"}

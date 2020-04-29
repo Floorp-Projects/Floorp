@@ -1143,6 +1143,8 @@ AC_ARG_ENABLE(fuzzer,
 	fuzzer=false)
 ICU_CONDITIONAL(FUZZER, test "$fuzzer" = true)
 
+ICU_CONDITIONAL(DATA, test "$tools" = true || test "$cross_compiling" = "yes")
+
 AC_ARG_WITH(data-packaging,
 	[  --with-data-packaging     specify how to package ICU data. Possible values:
         files    raw files (.res, etc)

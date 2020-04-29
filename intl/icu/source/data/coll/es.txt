@@ -1,18 +1,18 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         search{
             Sequence{
                 "[import und-u-co-search]"
                 "&N<ñ<<<Ñ"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
         standard{
             Sequence{"&N<ñ<<<Ñ"}
-            Version{"36.1"}
+            Version{"37"}
         }
         traditional{
             Sequence{
@@ -20,7 +20,7 @@ es{
                 "&C<ch<<<Ch<<<CH"
                 "&l<ll<<<Ll<<<LL"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

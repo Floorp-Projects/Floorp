@@ -82,6 +82,7 @@ so{
         CL{"Jili"}
         CM{"Kaameruun"}
         CN{"Shiinaha"}
+        CO{"Koloombiya"}
         CP{"Jasiiradda Kilibarton"}
         CR{"Kosta Riika"}
         CU{"Kuuba"}
@@ -131,6 +132,7 @@ so{
         GT{"Guwaatamaala"}
         GU{"Guaam"}
         GW{"Gini-Bisaaw"}
+        GY{"Guyana"}
         HK{"Hong Kong"}
         HM{"Jasiiradda Haad & MakDonald"}
         HN{"Honduras"}
@@ -285,6 +287,8 @@ so{
         VU{"Fanuaatu"}
         WF{"Walis & Futuna"}
         WS{"Samoowa"}
+        XA{"Shigshiga"}
+        XB{"Pseudo-Bidi"}
         XK{"Koosofo"}
         YE{"Yaman"}
         YT{"Mayotte"}
@@ -295,8 +299,6 @@ so{
     }
     Countries%short{
         GB{"UK"}
-        HK{"Hong Kong"}
-        MO{"Makaaw"}
         PS{"Falastiin"}
     }
     Countries%variant{
@@ -308,5 +310,5 @@ so{
         SZ{"Iswaasilaan"}
         TL{"Timoor Bari"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

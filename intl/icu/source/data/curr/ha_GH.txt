@@ -4,8 +4,8 @@ ha_GH{
     Currencies{
         GHS{
             "GH₵",
-            "GHS",
+            "Kudin Ghana",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

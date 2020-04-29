@@ -1,0 +1,18 @@
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
+sat{
+    Countries{
+        BR{"ᱵᱨᱟᱡᱤᱞ"}
+        CN{"ᱪᱤᱱ"}
+        DE{"ᱡᱟᱨᱢᱟᱱᱤ"}
+        FR{"ᱯᱷᱨᱟᱱᱥ"}
+        GB{"ᱭᱩᱱᱤᱭᱴᱮᱰ ᱠᱤᱝᱰᱚᱢ"}
+        IN{"ᱤᱱᱰᱤᱭᱟ"}
+        IT{"ᱤᱴᱞᱤ"}
+        JP{"ᱡᱟᱯᱟᱱ"}
+        RU{"ᱨᱩᱥ"}
+        US{"ᱭᱩᱱᱟᱭᱴᱮᱰ ᱮᱥᱴᱮᱴ"}
+        ZZ{"ᱵᱟᱝᱩᱨᱩᱢ ᱴᱚᱴᱷᱟ"}
+    }
+    Version{"37"}
+}

@@ -287,6 +287,8 @@ lt{
         VU{"Vanuatu"}
         WF{"Volisas ir Futūna"}
         WS{"Samoa"}
+        XA{"pseudo A"}
+        XB{"pseudo B"}
         XK{"Kosovas"}
         YE{"Jemenas"}
         YT{"Majotas"}
@@ -309,7 +311,6 @@ lt{
         CI{"Dramblio Kaulo Kranto Respublika"}
         CZ{"Čekijos Respublika"}
         FK{"Folklando (Malvinų) Salos"}
-        SZ{"Svazilandas"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

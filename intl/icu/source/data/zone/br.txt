@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 br{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1224,7 +1224,9 @@ br{
             ls{"eur Niue"}
         }
         "meta:Norfolk"{
-            ls{"eur Enez Norfolk"}
+            ld{"eur hañv Enez Norfolk"}
+            lg{"eur Enez Norfolk"}
+            ls{"eur cʼhoañv Enez Norfolk"}
         }
         "meta:Noronha"{
             ld{"eur hañv Fernando de Noronha"}

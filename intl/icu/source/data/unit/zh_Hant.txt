@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 zh_Hant{
     %%Parent{"root"}
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ zh_Hant{
                 dnam{"G 力"}
                 other{"{0} G 力"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"每平方秒公尺"}
                 other{"每平方秒 {0} 公尺"}
             }
@@ -108,10 +108,6 @@ zh_Hant{
                 dnam{"莫耳"}
                 other{"{0} 莫耳"}
             }
-            part-per-million{
-                dnam{"百萬分率"}
-                other{"{0} 百萬分率"}
-            }
             percent{
                 dnam{"百分比"}
                 other{"{0}%"}
@@ -120,9 +116,13 @@ zh_Hant{
                 dnam{"千分比"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"百萬分率"}
+                other{"{0} 百萬分率"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"每 100 公里公升"}
                 other{"每 100 公里 {0} 公升"}
             }
@@ -545,7 +545,7 @@ zh_Hant{
                 dnam{"百帕"}
                 other{"{0} 百帕"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"英寸汞柱"}
                 other{"{0} 英寸汞柱"}
             }
@@ -561,7 +561,7 @@ zh_Hant{
                 dnam{"毫巴"}
                 other{"{0} 毫巴"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"毫米汞柱"}
                 other{"{0} 毫米汞柱"}
             }
@@ -569,7 +569,7 @@ zh_Hant{
                 dnam{"帕斯卡"}
                 other{"{0} 帕斯卡"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"每平方英寸磅力"}
                 other{"每平方英寸 {0} 磅力"}
             }
@@ -615,7 +615,7 @@ zh_Hant{
                 dnam{"牛頓米"}
                 other{"{0} 牛頓米"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"磅英尺"}
                 other{"{0} 磅英尺"}
             }
@@ -742,7 +742,7 @@ zh_Hant{
                 dnam{"G 力"}
                 other{"{0}G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"公尺/平方秒"}
                 other{"{0}m/s²"}
             }
@@ -823,17 +823,17 @@ zh_Hant{
                 dnam{"毫莫耳/公升"}
                 other{"{0}mmol/L"}
             }
-            part-per-million{
-                dnam{"百萬分率"}
-                other{"{0}ppm"}
-            }
             percent{
                 dnam{"百分比"}
                 other{"{0}%"}
             }
+            permillion{
+                dnam{"百萬分率"}
+                other{"{0}ppm"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"升/100公里"}
                 other{"{0}升/100公里"}
             }
@@ -1184,7 +1184,7 @@ zh_Hant{
                 dnam{"百帕"}
                 other{"{0}百帕"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"英寸汞柱"}
                 other{"{0}英吋汞柱"}
             }
@@ -1192,11 +1192,11 @@ zh_Hant{
                 dnam{"毫巴"}
                 other{"{0}毫巴"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"毫米汞柱"}
                 other{"{0}mmHg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"磅力/平方英寸"}
                 other{"{0}psi"}
             }
@@ -1348,7 +1348,7 @@ zh_Hant{
                 dnam{"G 力"}
                 other{"{0} G 力"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"公尺/平方秒"}
                 other{"{0} 公尺/平方秒"}
             }
@@ -1442,10 +1442,6 @@ zh_Hant{
                 dnam{"mol"}
                 other{"{0} mol"}
             }
-            part-per-million{
-                dnam{"百萬分率"}
-                other{"{0} 百萬分率"}
-            }
             percent{
                 dnam{"百分比"}
                 other{"{0}%"}
@@ -1454,13 +1450,17 @@ zh_Hant{
                 dnam{"千分比"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"百萬分率"}
+                other{"{0} 百萬分率"}
+            }
             permyriad{
                 dnam{"‱"}
                 other{"{0}‱"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"升/100 公里"}
                 other{"{0} 升/100 公里"}
             }
@@ -1869,7 +1869,7 @@ zh_Hant{
                 dnam{"百帕"}
                 other{"{0} 百帕"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"英寸汞柱"}
                 other{"{0} 英寸汞柱"}
             }
@@ -1885,7 +1885,7 @@ zh_Hant{
                 dnam{"毫巴"}
                 other{"{0} 毫巴"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"毫米汞柱"}
                 other{"{0} 毫米汞柱"}
             }
@@ -1893,7 +1893,7 @@ zh_Hant{
                 dnam{"Pa"}
                 other{"{0} Pa"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"磅力/平方英寸"}
                 other{"{0} 磅力/平方英寸"}
             }
@@ -1939,7 +1939,7 @@ zh_Hant{
                 dnam{"N⋅m"}
                 other{"{0} N⋅m"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"lbf⋅ft"}
                 other{"{0} lbf⋅ft"}
             }

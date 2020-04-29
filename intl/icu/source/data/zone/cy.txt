@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 cy{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1711,7 +1711,9 @@ cy{
             ls{"Amser Niue"}
         }
         "meta:Norfolk"{
-            ls{"Amser Ynys Norfolk"}
+            ld{"Amser Haf Ynys Norfolk"}
+            lg{"Amser Ynys Norfolk"}
+            ls{"Amser Safonol Ynys Norfolk"}
         }
         "meta:Noronha"{
             ld{"Amser Haf Fernando de Noronha"}

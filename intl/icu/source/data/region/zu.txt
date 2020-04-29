@@ -107,7 +107,6 @@ zu{
         ES{"i-Spain"}
         ET{"i-Ethiopia"}
         EU{"i-European Union"}
-        EZ{"EZ"}
         FI{"i-Finland"}
         FJ{"i-Fiji"}
         FK{"i-Falkland Islands"}
@@ -313,5 +312,5 @@ zu{
         FK{"i-Falkland Islands (Islas Malvinas)"}
         TL{"i-East Timor"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

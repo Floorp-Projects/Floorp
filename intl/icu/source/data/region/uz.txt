@@ -311,8 +311,7 @@ uz{
         CI{"Fil suyagi qirg‘og‘i"}
         CZ{"Chexiya Respublikasi"}
         FK{"Folklend (Malvin) orollari"}
-        SZ{"Svazilend"}
         TL{"Sharqiy Timor"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

@@ -154,6 +154,7 @@ is{
         eu{"baskneska"}
         ewo{"evondó"}
         fa{"persneska"}
+        fa_AF{"darí"}
         fan{"fang"}
         fat{"fantí"}
         ff{"fúla"}
@@ -197,7 +198,6 @@ is{
         gwi{"gvísín"}
         ha{"hása"}
         hai{"haída"}
-        hak{"hak"}
         haw{"havaíska"}
         he{"hebreska"}
         hi{"hindí"}
@@ -207,7 +207,6 @@ is{
         ho{"hírímótú"}
         hr{"króatíska"}
         hsb{"hásorbneska"}
-        hsn{"hsn"}
         ht{"haítíska"}
         hu{"ungverska"}
         hup{"húpa"}
@@ -341,7 +340,6 @@ is{
         myv{"ersja"}
         mzn{"masanderaní"}
         na{"nárúska"}
-        nan{"nan"}
         nap{"napólíska"}
         naq{"nama"}
         nb{"norskt bókmál"}
@@ -520,7 +518,6 @@ is{
         was{"vasjó"}
         wbp{"varlpiri"}
         wo{"volof"}
-        wuu{"wuu"}
         xal{"kalmúkska"}
         xh{"sósa"}
         xog{"sóga"}
@@ -553,7 +550,6 @@ is{
         zh{"kínverska, mandarín"}
     }
     Languages%short{
-        az{"aserska"}
         en_GB{"enska (bresk)"}
     }
     Scripts{
@@ -759,7 +755,7 @@ is{
             vaii{"Vai-tölustafir"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — allt"}
         category-list{"{0}: {1}"}

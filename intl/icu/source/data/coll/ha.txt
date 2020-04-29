@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ha{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         standard{
             Sequence{
@@ -12,7 +12,7 @@ ha{
                 "&T<ts<<<Ts<<<TS"
                 "&Y<ƴ<<<ʼy<<<''y<<<Ƴ<<<ʼY<<<''Y"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

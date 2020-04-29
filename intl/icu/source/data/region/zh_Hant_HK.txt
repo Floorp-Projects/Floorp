@@ -95,5 +95,5 @@ zh_Hant_HK{
         ZM{"贊比亞"}
         ZW{"津巴布韋"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

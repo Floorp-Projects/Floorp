@@ -103,6 +103,7 @@ km{
         eu{"បាសខ៍"}
         ewo{"អ៊ីវ៉ុនដូ"}
         fa{"ភឺសៀន"}
+        fa_AF{"ដារី"}
         ff{"ហ្វ៊ូឡា"}
         fi{"ហ្វាំងឡង់"}
         fil{"ហ្វីលីពីន"}
@@ -544,7 +545,7 @@ km{
             tibt{"លេខទីបេ"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — ទាំងអស់"}
         category-list{"{0}: {1}"}

@@ -8,5 +8,5 @@ en_DM{
             "East Caribbean Dollar",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

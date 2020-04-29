@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 
 {
-    "cldrVersion": "36.1",
+    "cldrVersion": "37",
     "aliases": {
         "ars": "ar_SA",
         "in": "id",
@@ -21,12 +21,17 @@
         "sr_ME": "sr_Cyrl_ME",
         "sr_RS": "sr_Cyrl_RS",
         "yue": "zh_Hant",
-        "yue_CN": "yue_Hans_CN",
+        "yue_CN": "zh_Hans",
         "yue_Hans": "zh_Hans",
+        "yue_Hans_CN": "zh_Hans",
+        "yue_Hant": "zh_Hant",
         "zh_CN": "zh_Hans_CN",
         "zh_HK": "zh_Hant_HK",
         "zh_MO": "zh_Hant_MO",
         "zh_SG": "zh_Hans_SG",
         "zh_TW": "zh_Hant_TW"
+    },
+    "parents": {
+        "ff_Adlm": "root"
     }
 }

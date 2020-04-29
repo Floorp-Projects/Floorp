@@ -12,5 +12,5 @@ es_CO{
             "dólar estadounidense",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

@@ -48,5 +48,5 @@ lg{
         zh{"Lucayina"}
         zu{"Luzzulu"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

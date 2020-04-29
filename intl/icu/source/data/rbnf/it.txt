@@ -388,5 +388,5 @@ it{
             "10: o\u00AD=%spellout-ordinal-feminine=;",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

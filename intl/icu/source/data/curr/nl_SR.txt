@@ -7,5 +7,5 @@ nl_SR{
             "Surinaamse dollar",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

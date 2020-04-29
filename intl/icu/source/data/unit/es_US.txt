@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_US{
     %%Parent{"es_419"}
-    Version{"36.1"}
+    Version{"37"}
     units{
         angle{
             arc-minute{
@@ -24,7 +24,7 @@ es_US{
             millimole-per-liter{
                 dnam{"mmol/L"}
             }
-            part-per-million{
+            permillion{
                 dnam{"ppm"}
             }
         }

@@ -182,6 +182,10 @@ ee{
         zu{"zulugbe"}
         zxx{"gbegbɔgblɔ manɔmee"}
     }
+    Languages%short{
+        en_GB{"Yevugbe (GB)"}
+        en_US{"Yevugbe (US)"}
+    }
     Scripts{
         Arab{"Arabiagbeŋɔŋlɔ"}
         Armn{"armeniagbeŋɔŋlɔ"}
@@ -295,7 +299,7 @@ ee{
             tibt{"tibet digitwo"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     codePatterns{
         language{"gbegbɔgblɔ {0}"}
         script{"gbeŋɔŋlɔ {0}"}

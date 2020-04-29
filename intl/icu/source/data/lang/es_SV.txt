@@ -11,5 +11,5 @@ es_SV{
         ss{"siswati"}
         wo{"wolof"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

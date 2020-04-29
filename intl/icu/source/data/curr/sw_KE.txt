@@ -721,5 +721,5 @@ sw_KE{
             other{"riali za Yemeni"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

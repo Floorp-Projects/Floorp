@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sw_KE{
-    Version{"36.1"}
+    Version{"37"}
     units{
         duration{
             decade{
@@ -126,7 +126,7 @@ sw_KE{
                 one{"baa {0}"}
                 other{"baa {0}"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"inHg {0}"}
                 other{"inHg {0}"}
             }

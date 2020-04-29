@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 mk{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ mk{
                 one{"{0} гравитациска сила"}
                 other{"{0} гравитациска сила"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"метри во секунда на квадрат"}
                 one{"{0} метар во секунда на квадрат"}
                 other{"{0} метри во секунда на квадрат"}
@@ -129,11 +129,6 @@ mk{
                 one{"{0} мол"}
                 other{"{0} молови"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"процент"}
                 one{"{0} процент"}
@@ -144,6 +139,11 @@ mk{
                 one{"{0} промили"}
                 other{"{0} промили"}
             }
+            permillion{
+                dnam{"ppm"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
             permyriad{
                 dnam{"десетилјадити дел"}
                 one{"{0} десетилјадити дел"}
@@ -151,7 +151,7 @@ mk{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"литри на 100 километри"}
                 one{"{0} литар на 100 километри"}
                 other{"{0} литри на 100 километри"}
@@ -656,7 +656,7 @@ mk{
                 one{"{0} хектопаскал"}
                 other{"{0} хектопаскали"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"инчи жива"}
                 one{"{0} инч жива"}
                 other{"{0} инчи жива"}
@@ -676,12 +676,12 @@ mk{
                 one{"{0} милибар"}
                 other{"{0} милибари"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"милиметри жива"}
                 one{"{0} милиметар жива"}
                 other{"{0} милиметри жива"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"фунти на квадратен инч"}
                 one{"{0} фунта на квадратен инч"}
                 other{"{0} фунти на квадратен инч"}
@@ -737,7 +737,7 @@ mk{
                 one{"{0} њутнметар"}
                 other{"{0} њутнметри"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"стапки фунти"}
                 one{"{0} стапка фунта"}
                 other{"{0} стапки фунти"}
@@ -891,7 +891,7 @@ mk{
             g-force{
                 dnam{"G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"м/с²"}
                 one{"{0} м/с²"}
                 other{"{0} м/с²"}
@@ -965,7 +965,7 @@ mk{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 one{"{0} L/100km"}
                 other{"{0} L/100km"}
@@ -1278,7 +1278,7 @@ mk{
                 one{"{0} хПа"}
                 other{"{0} хПа"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0} inHg"}
                 other{"{0} inHg"}
             }
@@ -1287,7 +1287,7 @@ mk{
                 one{"{0} мб"}
                 other{"{0} мб"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"мм жива"}
                 one{"{0}mm Hg"}
                 other{"{0}mm Hg"}
@@ -1426,7 +1426,7 @@ mk{
                 one{"{0} G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"метри/сек²"}
                 one{"{0} м/с²"}
                 other{"{0} м/с²"}
@@ -1541,11 +1541,6 @@ mk{
                 one{"{0} mol"}
                 other{"{0} mol"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"процент"}
                 one{"{0} %"}
@@ -1556,6 +1551,11 @@ mk{
                 one{"{0} ‰"}
                 other{"{0} ‰"}
             }
+            permillion{
+                dnam{"ppm"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
             permyriad{
                 dnam{"‱"}
                 one{"{0}‱"}
@@ -1563,7 +1563,7 @@ mk{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 one{"{0} L/100km"}
                 other{"{0} L/100km"}
@@ -2105,7 +2105,7 @@ mk{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
                 one{"{0} inHg"}
                 other{"{0} inHg"}
@@ -2125,7 +2125,7 @@ mk{
                 one{"{0} мбар"}
                 other{"{0} мб."}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mmHg"}
                 one{"{0} mmHg"}
                 other{"{0} mmHg"}
@@ -2135,7 +2135,7 @@ mk{
                 one{"{0} Pa"}
                 other{"{0} Pa"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 one{"{0} psi"}
                 other{"{0} psi"}
@@ -2191,7 +2191,7 @@ mk{
                 one{"{0} N⋅m"}
                 other{"{0} N⋅m"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"lbf⋅ft"}
                 one{"{0} lbf⋅ft"}
                 other{"{0} lbf⋅ft"}

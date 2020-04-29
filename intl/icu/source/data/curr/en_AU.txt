@@ -669,5 +669,5 @@ en_AU{
             other{"Samoan talas"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

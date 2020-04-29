@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ks{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"عابِدجان"}
@@ -1559,7 +1559,9 @@ ks{
             ls{"نِیوٗ ٹایِم"}
         }
         "meta:Norfolk"{
-            ls{"نورفعاک ٹایِم"}
+            ld{"نورفعاک سَمَر ٹایِم"}
+            lg{"نورفعاک ٹایِم"}
+            ls{"نورفعاک سٹینڑاڑ ٹایِم"}
         }
         "meta:Noronha"{
             ld{"نورونہا سَمَر ٹایِم"}

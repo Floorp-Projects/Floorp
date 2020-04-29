@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 gd{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -16,7 +16,7 @@ gd{
                 other{"{0} forsa-g"}
                 two{"{0} fhorsa-g"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"meatair san diog cheàrnagach"}
                 few{"{0} meatairean san diog cheàrnagach"}
                 one{"{0} mheatair san diog cheàrnagach"}
@@ -170,13 +170,6 @@ gd{
                 other{"{0} mòl"}
                 two{"{0} mhòl"}
             }
-            part-per-million{
-                dnam{"pàirt sa mhillean"}
-                few{"{0} pàirtean sa mhillean"}
-                one{"{0} phàirt sa mhillean"}
-                other{"{0} pàirt sa mhillean"}
-                two{"{0} phàirt sa mhillean"}
-            }
             percent{
                 dnam{"sa cheud"}
                 few{"{0} sa cheud"}
@@ -191,6 +184,13 @@ gd{
                 other{"{0} sa mhìle"}
                 two{"{0} sa mhìle"}
             }
+            permillion{
+                dnam{"pàirt sa mhillean"}
+                few{"{0} pàirtean sa mhillean"}
+                one{"{0} phàirt sa mhillean"}
+                other{"{0} pàirt sa mhillean"}
+                two{"{0} phàirt sa mhillean"}
+            }
             permyriad{
                 dnam{"sna deich mìltean"}
                 few{"{0} sna deich mìltean"}
@@ -200,7 +200,7 @@ gd{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"liotair sa 100 chilemeatair"}
                 few{"{0} liotairean sa 100 chilemeatair"}
                 one{"{0} liotair sa 100 chilemeatair"}
@@ -936,7 +936,7 @@ gd{
                 other{"{0} heacta-pascal"}
                 two{"{0} heacta-pascal"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"òirleach de dh’airgead-beò"}
                 few{"{0} òirlich de dh’airgead-beò"}
                 one{"{0} òirleach de dh’airgead-beò"}
@@ -964,7 +964,7 @@ gd{
                 other{"{0} milibàr"}
                 two{"{0} mhilibàr"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"milimeatair de dh’airgead-beò"}
                 few{"{0} milimeatairean de dh’airgead-beò"}
                 one{"{0} mhilimeatair de dh’airgead-beò"}
@@ -978,7 +978,7 @@ gd{
                 other{"{0} pascal"}
                 two{"{0} phascal"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"punnd san òirleach cheàrnagach"}
                 few{"{0} puinnd san òirleach cheàrnagach"}
                 one{"{0} phunnd san òirleach cheàrnagach"}
@@ -1054,7 +1054,7 @@ gd{
                 other{"{0} newton-mheatair"}
                 two{"{0} newton-mheatair"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"troigh-phuinnd"}
                 few{"{0} troighean-puinnd"}
                 one{"{0} troigh-phuinnd"}
@@ -1268,7 +1268,7 @@ gd{
                 other{"{0}G"}
                 two{"{0}G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 few{"{0}m/s²"}
                 one{"{0}m/s²"}
@@ -1422,13 +1422,6 @@ gd{
                 other{"{0}mòl"}
                 two{"{0}mòl"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                few{"{0}ppm"}
-                one{"{0}ppm"}
-                other{"{0}ppm"}
-                two{"{0}ppm"}
-            }
             percent{
                 dnam{"%"}
                 few{"{0}%"}
@@ -1443,6 +1436,13 @@ gd{
                 other{"{0}‰"}
                 two{"{0}‰"}
             }
+            permillion{
+                dnam{"ppm"}
+                few{"{0}ppm"}
+                one{"{0}ppm"}
+                other{"{0}ppm"}
+                two{"{0}ppm"}
+            }
             permyriad{
                 few{"{0}‱"}
                 one{"{0}‱"}
@@ -1451,7 +1451,7 @@ gd{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 few{"{0}L/100km"}
                 one{"{0}L/100km"}
@@ -2176,7 +2176,7 @@ gd{
                 other{"{0}hPa"}
                 two{"{0}hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"″ Hg"}
                 few{"{0}″ Hg"}
                 one{"{0}″ Hg"}
@@ -2202,7 +2202,7 @@ gd{
                 other{"{0}mb"}
                 two{"{0}mb"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 few{"{0}mm Hg"}
                 one{"{0}mm Hg"}
@@ -2215,7 +2215,7 @@ gd{
                 other{"{0}Pa"}
                 two{"{0}Pa"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 few{"{0}psi"}
                 one{"{0}psi"}
@@ -2290,7 +2290,7 @@ gd{
                 other{"{0}N⋅m"}
                 two{"{0}N⋅m"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"lbf⋅ft"}
                 few{"{0}lbf⋅ft"}
                 one{"{0}lbf⋅ft"}
@@ -2503,7 +2503,7 @@ gd{
                 other{"{0} G"}
                 two{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"meatair/diog²"}
                 few{"{0} m/s²"}
                 one{"{0} m/s²"}
@@ -2657,13 +2657,6 @@ gd{
                 other{"{0} mòl"}
                 two{"{0} mòl"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                few{"{0} ppm"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-                two{"{0} ppm"}
-            }
             percent{
                 dnam{"sa cheud"}
                 few{"{0}%"}
@@ -2678,12 +2671,19 @@ gd{
                 other{"{0}‰"}
                 two{"{0}‰"}
             }
+            permillion{
+                dnam{"ppm"}
+                few{"{0} ppm"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+                two{"{0} ppm"}
+            }
             permyriad{
                 dnam{"sna deich mìltean"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 few{"{0} L/100km"}
                 one{"{0} L/100km"}
@@ -3341,7 +3341,7 @@ gd{
                 other{"{0} hPa"}
                 two{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"in Hg"}
                 few{"{0} inHg"}
                 one{"{0} inHg"}
@@ -3361,14 +3361,14 @@ gd{
                 other{"{0} mbàr"}
                 two{"{0} mbàr"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 few{"{0} mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
                 two{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 few{"{0} psi"}
                 one{"{0} psi"}
@@ -3437,7 +3437,7 @@ gd{
             }
         }
         torque{
-            pound-foot{
+            pound-force-foot{
                 dnam{"lbf⋅ft"}
                 few{"{0} lbf⋅ft"}
                 one{"{0} lbf⋅ft"}

@@ -4,8 +4,11 @@ ha{
     Keys{
         calendar{"Kalanda"}
         cf{"Yanayin Kudi"}
+        collation{"Tsarin Rabewa"}
         currency{"Kudin Kasa"}
         hc{"Zagayen Awowi"}
+        lb{"Salo na Raba Layi"}
+        ms{"Tsarin Awo"}
         numbers{"Lambobi"}
     }
     Languages{
@@ -184,6 +187,7 @@ ha{
         rof{"Rombo"}
         ru{"Rashanci"}
         rw{"Kiniyaruwanda"}
+        rwk{"yaren Rwa"}
         sa{"Sanskrit"}
         sah{"Sakha"}
         saq{"Samburu"}
@@ -241,6 +245,7 @@ ha{
         zh_Hans{"Sauƙaƙaƙƙen Sinanci"}
         zh_Hant{"Sinanci na gargajiya"}
         zu{"Harshen Zulu"}
+        zxx{"Babu abun-ciki na yare"}
     }
     Languages%menu{
         yue{"Sinanci"}
@@ -256,6 +261,7 @@ ha{
         Armn{"Armeniyawa"}
         Beng{"Bangla"}
         Bopo{"Bopomofo"}
+        Brai{"Rubutun Makafi"}
         Cyrl{"Cyrillic"}
         Deva{"Devanagari"}
         Ethi{"Ethiopic"}
@@ -264,12 +270,34 @@ ha{
         Gujr{"Gujarati"}
         Guru{"Gurmukhi"}
         Hanb{"Han with Bopomofo"}
+        Hang{"Yaren Hangul"}
+        Hani{"Mutanen Han na ƙasar Sin"}
         Hans{"Sauƙaƙaƙƙen"}
         Hant{"Na gargajiya"}
         Hebr{"Ibrananci"}
+        Hira{"Tsarin Rubutun Hiragana"}
+        Hrkt{"kalaman Jafananci"}
+        Jpan{"Jafanis"}
+        Kana{"Tsarin Rubutun Katakana"}
+        Khmr{"Yaren Khmer"}
+        Knda{"Yaren Kannada"}
+        Kore{"Koriya"}
+        Laoo{"Mutanen Laos"}
         Latn{"Latin"}
+        Mlym{"Yaren Malayalam"}
+        Mong{"Na kasar Mongolia"}
+        Mymr{"Ƙasar Myanmar"}
+        Orya{"Yaren Odia"}
+        Sinh{"Yaren Sinhala"}
+        Taml{"Yaren Tamil"}
+        Telu{"Yaren Telugu"}
+        Thaa{"Yaren Thaana"}
+        Tibt{"Yaren Tibet"}
+        Zmth{"Alamar Lissafi"}
+        Zsye{"Alama ta hoto"}
         Zsym{"Alamomi"}
         Zxxx{"Ba rubutacce ba"}
+        Zyyy{"Gama-gari"}
         Zzzz{"Rubutun da ba sani ba"}
     }
     Scripts%stand-alone{
@@ -288,8 +316,15 @@ ha{
             iso8601{"Kalanda ISO-8601"}
             japanese{"Kalanda Jafan"}
             persian{"Kalanda Farisa"}
+            roc{"Kalandar kasar Sin"}
+        }
+        cf{
+            account{"Tsarin Kudi na Kididdiga"}
+            standard{"Tsarin Kudi Nagartacce"}
         }
         collation{
+            ducet{"Tsarin Rabewa na Dan-maƙalu na Asali"}
+            search{"Bincike na Dalilai-Gamagari"}
             standard{"Daidai ta ce Kasà"}
         }
         hc{
@@ -298,12 +333,55 @@ ha{
             h23{"Tsarin Awowi 24(0–23)"}
             h24{"Tsarin Awowi 24(1–24)"}
         }
+        lb{
+            loose{"Salo na Raba Layi Sakakke"}
+            normal{"Salo na Raba Layi na Kodayaushe"}
+            strict{"Salo na Raba Layi mai Tsauri"}
+        }
+        ms{
+            metric{"Tsarin Awo na Metric"}
+            uksystem{"Tsarin Awo na Imperial"}
+            ussystem{"Tsarin Awo na Amurka"}
+        }
         numbers{
             arab{"Lambobi na larabawan a gabas"}
+            arabext{"Fitattun lambobin lissafi na Larabci"}
+            armn{"Lambobin ƙirga na Armenia"}
+            armnlow{"Kananan Haruffan Armenia"}
+            beng{"Lambobin Yaren Bangla"}
+            deva{"Lambobin Tsarin Rubutu na Devangari"}
+            ethi{"Lambobin ƙirga na Ethiopia"}
+            fullwide{"Lambobi masu Cikakken-Faɗi"}
+            geor{"Lambobin ƙirga na Georgia"}
+            grek{"Lambobin ƙirga na Girka"}
+            greklow{"Kananan Haruffa na Girka"}
+            gujr{"Lambobin Yaren Gujarati"}
+            guru{"Lambobi na Tsarin Rubutun Gurmukhi"}
+            hanidec{"Lambobin Gomiya na Yaren ƙasar Sin"}
+            hans{"Lambobin ƙirga na Yaren ƙasar Sin wanda aka Sauƙaƙa"}
+            hansfin{"Lambobin Ƙirgan Kudi na Yaren ƙasar Sin wanda aka Sauƙaƙa"}
+            hant{"Lambobin Ƙirga na Yaren ƙasar Sin na Alʼada"}
+            hantfin{"Lambobin Ƙirgan Kudi na Yaren ƙasar Sin na Alʼada"}
+            hebr{"Lambobin ƙirga na Hebrew"}
+            jpan{"Lambobin ƙirga na Jafananci"}
+            jpanfin{"Lambobin ƙirgan Kudi na Jafananci"}
+            khmr{"Lambobin Yaren Khmer"}
+            knda{"Lambobin Yaren Kannada"}
+            laoo{"Lambobin Yaren Lao"}
             latn{"Lambobi na yammacin"}
+            mlym{"Lambobin Yaren Malayalam"}
+            mymr{"Lambobin Myanmar"}
+            orya{"Lambobin Yaren Odia"}
+            roman{"Lambobin Rumawa"}
+            romanlow{"Lambobin Kirga Kanana na Rumawa"}
+            taml{"Lambobin ƙirga na Tamil na Alʼada"}
+            tamldec{"Lambobin Tamil"}
+            telu{"Lambobin yaren Telugu"}
+            thai{"Lambobin yaren Thai"}
+            tibt{"Lambobin yaren Tibet"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     codePatterns{
         language{"Harshe: {0}"}
         script{"Rubutu: {0}"}

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 gu{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ gu{
                 one{"{0} ગુ-બળ"}
                 other{"{0} ગુ-બળ"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"મીટર પ્રતિ સેકન્ડ²"}
                 one{"{0} મીટર પ્રતિ સેકન્ડ²"}
                 other{"{0} મીટર પ્રતિ સેકન્ડ²"}
@@ -129,11 +129,6 @@ gu{
                 one{"{0} મોલ"}
                 other{"{0} મોલ"}
             }
-            part-per-million{
-                dnam{"કણ પ્રતિ મિલિયન"}
-                one{"{0} કણ પ્રતિ મિલિયન"}
-                other{"{0} કણ પ્રતિ મિલિયન"}
-            }
             percent{
                 dnam{"ટકા"}
                 one{"{0} ટકા"}
@@ -144,6 +139,11 @@ gu{
                 one{"{0} પ્રતિમાઈલ"}
                 other{"{0} પ્રતિમાઈલ"}
             }
+            permillion{
+                dnam{"કણ પ્રતિ મિલિયન"}
+                one{"{0} કણ પ્રતિ મિલિયન"}
+                other{"{0} કણ પ્રતિ મિલિયન"}
+            }
             permyriad{
                 dnam{"પરમિરિયડ"}
                 one{"{0} પરમિરિયડ"}
@@ -151,7 +151,7 @@ gu{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"લિટર પ્રતિ 100 કિલોમીટર"}
                 one{"{0} લિટર પ્રતિ 100 કિલોમીટર"}
                 other{"{0} લિટર પ્રતિ 100 કિલોમીટર"}
@@ -676,7 +676,7 @@ gu{
                 one{"{0} હેક્ટૉપાસ્કલ"}
                 other{"{0} હેક્ટૉપાસ્કલ"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"પારાના ઇંચ"}
                 one{"{0} પારાના ઇંચ"}
                 other{"{0} પારાના ઇંચ"}
@@ -696,7 +696,7 @@ gu{
                 one{"{0} મિલિબાર"}
                 other{"{0} મિલિબાર"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"પારાનું મિલિમીટર"}
                 one{"{0} પારાનું મિલિમીટર"}
                 other{"{0} પારાનું મિલિમીટર"}
@@ -706,7 +706,7 @@ gu{
                 one{"{0} પાસ્કલ"}
                 other{"{0} પાસ્કલ"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"પાઉન્ડ પ્રતિ વર્ગ ઇંચ"}
                 one{"{0} પાઉન્ડ પ્રતિ વર્ગ ઇંચ"}
                 other{"{0} પાઉન્ડ પ્રતિ વર્ગ ઇંચ"}
@@ -762,7 +762,7 @@ gu{
                 one{"{0} ન્યૂટન-મીટર"}
                 other{"{0} ન્યૂટન-મીટર"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"પાઉન્ડ ફૂટ"}
                 one{"{0} પાઉન્ડ ફૂટ"}
                 other{"{0} પાઉન્ડ ફૂટ"}
@@ -937,7 +937,7 @@ gu{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"લિ/100 કિમી"}
                 one{"{0}લિ/100કિમી"}
                 other{"{0}લિ/100કિમી"}
@@ -1111,7 +1111,7 @@ gu{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0} inHg"}
                 other{"{0} inHg"}
             }
@@ -1159,7 +1159,7 @@ gu{
                 one{"{0} ગુ"}
                 other{"{0} ગુ"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"મીટર/સેકન્ડ²"}
                 one{"{0} મી/સે²"}
                 other{"{0} મી/સે²"}
@@ -1273,11 +1273,6 @@ gu{
                 one{"{0} મોલ"}
                 other{"{0} મોલ"}
             }
-            part-per-million{
-                dnam{"કણ/મિલિયન"}
-                one{"{0} પીપીએમ"}
-                other{"{0} પીપીએમ"}
-            }
             percent{
                 dnam{"ટકા"}
                 one{"{0}%"}
@@ -1288,6 +1283,11 @@ gu{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"કણ/મિલિયન"}
+                one{"{0} પીપીએમ"}
+                other{"{0} પીપીએમ"}
+            }
             permyriad{
                 dnam{"પરમિરિયડ"}
                 one{"{0}‱"}
@@ -1295,7 +1295,7 @@ gu{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"લિ/100 કિમી"}
                 one{"{0} લિ/100 કિમી"}
                 other{"{0} લિ/100 કિમી"}
@@ -1795,7 +1795,7 @@ gu{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
                 one{"{0} inHg"}
                 other{"{0} inHg"}
@@ -1815,7 +1815,7 @@ gu{
                 one{"{0} mbar"}
                 other{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
@@ -1825,7 +1825,7 @@ gu{
                 one{"{0} Pa"}
                 other{"{0} Pa"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 one{"{0} psi"}
                 other{"{0} psi"}
@@ -1881,7 +1881,7 @@ gu{
                 one{"{0} N⋅m"}
                 other{"{0} N⋅m"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"lbf⋅ft"}
                 one{"{0} lbf⋅ft"}
                 other{"{0} lbf⋅ft"}

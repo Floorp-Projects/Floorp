@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ro{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -15,7 +15,7 @@ ro{
                 one{"{0} forță g"}
                 other{"{0} forță g"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"metri pe secundă la pătrat"}
                 few{"{0} metri pe secundă la pătrat"}
                 one{"{0} metru pe secundă la pătrat"}
@@ -150,12 +150,6 @@ ro{
                 one{"{0} mol"}
                 other{"{0} de moli"}
             }
-            part-per-million{
-                dnam{"părți pe milion"}
-                few{"{0} părți pe milion"}
-                one{"{0} parte pe milion"}
-                other{"{0} de părți pe milion"}
-            }
             percent{
                 dnam{"procent"}
                 few{"{0} procente"}
@@ -168,6 +162,12 @@ ro{
                 one{"la mie"}
                 other{"{0} la mie"}
             }
+            permillion{
+                dnam{"părți pe milion"}
+                few{"{0} părți pe milion"}
+                one{"{0} parte pe milion"}
+                other{"{0} de părți pe milion"}
+            }
             permyriad{
                 few{"{0} la zece mii"}
                 one{"{0} la zece mii"}
@@ -175,7 +175,7 @@ ro{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"litri la suta de kilometri"}
                 few{"{0} litri la suta de kilometri"}
                 one{"{0} litru la suta de kilometri"}
@@ -795,7 +795,7 @@ ro{
                 one{"{0} hectopascal"}
                 other{"{0} de hectopascali"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inchi coloană de mercur"}
                 few{"{0} inchi coloană de mercur"}
                 one{"{0} inch coloană de mercur"}
@@ -819,7 +819,7 @@ ro{
                 one{"{0} milibar"}
                 other{"{0} de milibari"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"milimetri coloană de mercur"}
                 few{"{0} milimetri coloană de mercur"}
                 one{"{0} milimetru coloană de mercur"}
@@ -831,7 +831,7 @@ ro{
                 one{"{0} pascal"}
                 other{"{0} de pascali"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"livre pe inch pătrat"}
                 few{"{0} livre pe inch pătrat"}
                 one{"{0} livră pe inch pătrat"}
@@ -897,7 +897,7 @@ ro{
                 one{"{0} newton metru"}
                 other{"{0} de newton metri"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"livră-forță picioare"}
                 few{"{0} livră-forță picioare"}
                 one{"{0} livră-forță picior"}
@@ -1075,7 +1075,7 @@ ro{
                 one{"{0} G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 few{"{0} m/s²"}
                 one{"{0} m/s²"}
@@ -1144,7 +1144,7 @@ ro{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 few{"{0} l/100 km"}
                 one{"{0} l/100 km"}
@@ -1444,7 +1444,7 @@ ro{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"in Hg"}
             }
             millibar{
@@ -1453,13 +1453,13 @@ ro{
                 one{"{0} mb"}
                 other{"{0} mb"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 few{"{0} mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 few{"{0} psi"}
                 one{"{0} psi"}
@@ -1542,7 +1542,7 @@ ro{
                 one{"{0} G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 few{"{0} m/s²"}
                 one{"{0} m/s²"}
@@ -1676,12 +1676,6 @@ ro{
                 one{"{0} mol"}
                 other{"{0} moli"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                few{"{0} ppm"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"%"}
                 few{"{0}%"}
@@ -1694,9 +1688,15 @@ ro{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"ppm"}
+                few{"{0} ppm"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 few{"{0} l/100 km"}
                 one{"{0} l/100 km"}
@@ -2280,7 +2280,7 @@ ro{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"in Hg"}
                 few{"{0} in Hg"}
                 one{"{0} in Hg"}
@@ -2304,13 +2304,13 @@ ro{
                 one{"{0} mbar"}
                 other{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 few{"{0} mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 few{"{0} psi"}
                 one{"{0} psi"}
@@ -2376,7 +2376,7 @@ ro{
                 one{"{0} N⋅m"}
                 other{"{0} N⋅m"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"livră-forță picior"}
             }
         }

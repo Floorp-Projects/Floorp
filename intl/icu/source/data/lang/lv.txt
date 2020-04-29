@@ -153,6 +153,7 @@ lv{
         eu{"basku"}
         ewo{"evondu"}
         fa{"persiešu"}
+        fa_AF{"darī"}
         fan{"fangu"}
         fat{"fantu"}
         ff{"fulu"}
@@ -223,7 +224,7 @@ lv{
         iu{"inuītu"}
         ja{"japāņu"}
         jbo{"ložbans"}
-        jgo{"jgo"}
+        jgo{"ngomba"}
         jmc{"mačamu"}
         jpr{"jūdpersiešu"}
         jrb{"jūdarābu"}
@@ -549,7 +550,6 @@ lv{
         zh{"ķīniešu (mandarīnu)"}
     }
     Languages%short{
-        az{"azerbaidžāņu"}
         en_GB{"angļu (Lielbritānija)"}
     }
     Scripts{
@@ -806,7 +806,7 @@ lv{
         VALENCIA{"valensiešu"}
         WADEGILE{"Veida-Džailza romanizācija"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — visas"}
         category-list{"{0}: {1}"}

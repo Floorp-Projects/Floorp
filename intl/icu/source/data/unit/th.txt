@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 th{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -13,7 +13,7 @@ th{
                 dnam{"แรง G"}
                 other{"{0} แรง G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"เมตรต่อวินาทีกำลังสอง"}
                 other{"{0} เมตรต่อวินาทีกำลังสอง"}
             }
@@ -107,10 +107,6 @@ th{
                 dnam{"โมล"}
                 other{"{0} โมล"}
             }
-            part-per-million{
-                dnam{"ส่วนต่อล้าน"}
-                other{"{0} ส่วนต่อล้าน"}
-            }
             percent{
                 dnam{"เปอร์เซ็นต์"}
                 other{"{0} เปอร์เซ็นต์"}
@@ -119,13 +115,17 @@ th{
                 dnam{"เปอร์มิลล์"}
                 other{"{0} เปอร์มิลล์"}
             }
+            permillion{
+                dnam{"ส่วนต่อล้าน"}
+                other{"{0} ส่วนต่อล้าน"}
+            }
             permyriad{
                 dnam{"เปอร์มีเรียด"}
                 other{"{0} เปอร์มีเรียด"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ลิตรต่อ100 กิโลเมตร"}
                 other{"{0} ลิตรต่อ100 กิโลเมตร"}
             }
@@ -552,7 +552,7 @@ th{
                 dnam{"เฮกโตปาสกาล"}
                 other{"{0} เฮกโตปาสกาล"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"นิ้วปรอท"}
                 other{"{0} นิ้วปรอท"}
             }
@@ -568,7 +568,7 @@ th{
                 dnam{"มิลลิบาร์"}
                 other{"{0} มิลลิบาร์"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"มิลลิเมตรปรอท"}
                 other{"{0} มิลลิเมตรปรอท"}
             }
@@ -576,7 +576,7 @@ th{
                 dnam{"ปาสกาล"}
                 other{"{0} ปาสกาล"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"ปอนด์ต่อตารางนิ้ว"}
                 other{"{0} ปอนด์ต่อตารางนิ้ว"}
             }
@@ -622,7 +622,7 @@ th{
                 dnam{"นิวตันเมตร"}
                 other{"{0} นิวตันเมตร"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"ปอนด์-ฟุต"}
                 other{"{0} ปอนด์-ฟุต"}
             }
@@ -780,7 +780,7 @@ th{
             per{"{0}/{1}"}
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ล. /100 กม."}
                 other{"{0} ล./100กม."}
             }
@@ -908,7 +908,7 @@ th{
                 dnam{"เฮกโตปาสกาล"}
                 other{"{0}hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 other{"{0}\u0022 Hg"}
             }
             millibar{
@@ -955,7 +955,7 @@ th{
                 dnam{"แรง G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"เมตร/วินาที²"}
                 other{"{0} ม./วิ²"}
             }
@@ -1049,22 +1049,22 @@ th{
                 dnam{"โมล"}
                 other{"{0} โมล"}
             }
-            part-per-million{
-                dnam{"ส่วน/ล้าน"}
-                other{"{0} สตล."}
-            }
             percent{
                 dnam{"เปอร์เซ็นต์"}
             }
             permille{
                 dnam{"เปอร์มิลล์"}
             }
+            permillion{
+                dnam{"ส่วน/ล้าน"}
+                other{"{0} สตล."}
+            }
             permyriad{
                 dnam{"เปอร์มีเรียด"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ล./100 กม."}
                 other{"{0} ล./100กม."}
             }
@@ -1456,7 +1456,7 @@ th{
                 dnam{"เฮกโตปาสกาล"}
                 other{"{0} เฮกโตปาสกาล"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"นิ้วปรอท"}
                 other{"{0} นิ้วปรอท"}
             }
@@ -1464,11 +1464,11 @@ th{
                 dnam{"มิลลิบาร์"}
                 other{"{0} มิลลิบาร์"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"มม. ปรอท"}
                 other{"{0} มม. ปรอท"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"ปอนด์/ตร.นิ้ว"}
                 other{"{0} ปอนด์/ตร.นิ้ว"}
             }

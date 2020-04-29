@@ -16,5 +16,5 @@ sr_Latn_BA{
         VG{"Britanska Djevičanska Ostrva"}
         VI{"Američka Djevičanska Ostrva"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

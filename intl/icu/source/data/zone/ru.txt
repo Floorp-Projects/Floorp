@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ru{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Абиджан"}
@@ -1754,7 +1754,9 @@ ru{
             ls{"Ниуэ"}
         }
         "meta:Norfolk"{
-            ls{"Норфолк"}
+            ld{"Норфолк, летнее время"}
+            lg{"Норфолк"}
+            ls{"Норфолк, стандартное время"}
         }
         "meta:Noronha"{
             ld{"Фернанду-ди-Норонья, летнее время"}

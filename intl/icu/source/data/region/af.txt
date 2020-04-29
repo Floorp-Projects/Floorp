@@ -311,8 +311,6 @@ af{
         CI{"Cote d’Ivoire"}
         CZ{"Tsjeggiese Republiek"}
         FK{"Falklandeilande (Malvinas)"}
-        SZ{"Eswatini"}
-        TL{"Oos-Timor"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

@@ -242,10 +242,6 @@ zh_Hant_HK{
             "TZS",
             "坦桑尼亞先令",
         }
-        VES{
-            "VES",
-            "VES",
-        }
         VUV{
             "VUV",
             "瓦努阿圖瓦圖",
@@ -472,5 +468,5 @@ zh_Hant_HK{
             other{"贊比亞克瓦查"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

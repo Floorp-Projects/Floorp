@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 lv{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -15,7 +15,7 @@ lv{
                 other{"{0} smagumspēks"}
                 zero{"{0} smagumspēku"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"metri kvadrātsekundē"}
                 one{"{0} metrs kvadrātsekundē"}
                 other{"{0} metri kvadrātsekundē"}
@@ -148,12 +148,6 @@ lv{
                 other{"{0} moli"}
                 zero{"{0} molu"}
             }
-            part-per-million{
-                dnam{"miljonās daļas"}
-                one{"{0} miljonā daļa"}
-                other{"{0} miljonās daļas"}
-                zero{"{0} miljono daļu"}
-            }
             percent{
                 dnam{"procents"}
                 one{"{0} procents"}
@@ -166,6 +160,12 @@ lv{
                 other{"{0} promiles"}
                 zero{"{0} promiļu"}
             }
+            permillion{
+                dnam{"miljonās daļas"}
+                one{"{0} miljonā daļa"}
+                other{"{0} miljonās daļas"}
+                zero{"{0} miljono daļu"}
+            }
             permyriad{
                 dnam{"promiriāde"}
                 one{"{0} promiriāde"}
@@ -174,7 +174,7 @@ lv{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"litri uz 100 kilometriem"}
                 one{"{0} litrs uz 100 kilometriem"}
                 other{"{0} litri uz 100 kilometriem"}
@@ -809,7 +809,7 @@ lv{
                 other{"{0} hektopaskāli"}
                 zero{"{0} hektopaskālu"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"dzīvsudraba stabiņa collas"}
                 one{"{0} dzīvsudraba stabiņa colla"}
                 other{"{0} dzīvsudraba stabiņa collas"}
@@ -833,7 +833,7 @@ lv{
                 other{"{0} milibāri"}
                 zero{"{0} milibāru"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"dzīvsudraba stabiņa milimetri"}
                 one{"{0} dzīvsudraba stabiņa milimetrs"}
                 other{"{0} dzīvsudraba stabiņa milimetri"}
@@ -845,7 +845,7 @@ lv{
                 other{"{0} paskāli"}
                 zero{"{0} paskālu"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"mārciņas uz kvadrātcollu"}
                 one{"{0} mārciņa uz kvadrātcollu"}
                 other{"{0} mārciņas uz kvadrātcollu"}
@@ -911,7 +911,7 @@ lv{
                 other{"{0} ņūtonmetri"}
                 zero{"{0} ņūtonmetru"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"mārciņpēda"}
                 one{"{0} mārciņpēda"}
                 other{"{0} mārciņpēdas"}
@@ -1152,7 +1152,7 @@ lv{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 one{"{0} l/100 km"}
                 other{"{0} l/100 km"}
@@ -1383,7 +1383,7 @@ lv{
                 other{"{0}hPa"}
                 zero{"{0}hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0}inHg"}
                 other{"{0}inHg"}
                 zero{"{0}inHg"}
@@ -1393,7 +1393,7 @@ lv{
                 other{"{0}mbar"}
                 zero{"{0}mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mmHg"}
                 one{"{0} mmHg"}
                 other{"{0} mmHg"}
@@ -1465,7 +1465,7 @@ lv{
                 other{"{0} G"}
                 zero{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"metri kvadrātsekundē"}
                 one{"{0} m/s²"}
                 other{"{0} m/s²"}
@@ -1598,12 +1598,6 @@ lv{
                 other{"{0} mol"}
                 zero{"{0} mol"}
             }
-            part-per-million{
-                dnam{"miljonās daļas"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-                zero{"{0} ppm"}
-            }
             percent{
                 dnam{"procents"}
                 one{"{0}%"}
@@ -1616,6 +1610,12 @@ lv{
                 other{"{0}‰"}
                 zero{"{0}‰"}
             }
+            permillion{
+                dnam{"miljonās daļas"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+                zero{"{0} ppm"}
+            }
             permyriad{
                 dnam{"promiriāde"}
                 one{"{0}‱"}
@@ -1624,7 +1624,7 @@ lv{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 one{"{0} l/100 km"}
                 other{"{0} l/100 km"}
@@ -2213,7 +2213,7 @@ lv{
                 other{"{0} hPa"}
                 zero{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
                 one{"{0} inHg"}
                 other{"{0} inHg"}
@@ -2237,13 +2237,13 @@ lv{
                 other{"{0} mbar"}
                 zero{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mmHg"}
                 one{"{0} mmHg"}
                 other{"{0} mmHg"}
                 zero{"{0} mmHg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 one{"{0} psi"}
                 other{"{0} psi"}
@@ -2306,7 +2306,7 @@ lv{
                 other{"{0} N⋅m"}
                 zero{"{0} N⋅m"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"mārciņpēda"}
                 one{"{0} mārc. pēda"}
                 other{"{0} mārc. pēdas"}

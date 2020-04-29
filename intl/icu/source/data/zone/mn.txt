@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 mn{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Абижан"}
@@ -1710,7 +1710,9 @@ mn{
             ls{"Ниуэгийн цаг"}
         }
         "meta:Norfolk"{
-            ls{"Норфолк арлын цаг"}
+            ld{"Норфолк арлын зуны цаг"}
+            lg{"Норфолк арлын цаг"}
+            ls{"Норфолк арлын стандарт цаг"}
         }
         "meta:Noronha"{
             ld{"Фернандо де Норонагийн зуны цаг"}

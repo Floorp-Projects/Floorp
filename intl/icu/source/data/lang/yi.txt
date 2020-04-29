@@ -126,7 +126,6 @@ yi{
         sk{"סלאוואַקיש"}
         sl{"סלאוועניש"}
         sli{"אונטער שלעזיש"}
-        sly{"sly"}
         sm{"סאַמאאַניש"}
         sn{"שאנאַ"}
         so{"סאמאַליש"}
@@ -155,6 +154,7 @@ yi{
         zu{"זולו"}
     }
     Languages%short{
+        en_GB{"ענגליש (GB)"}
         en_US{"ענגליש (US)"}
     }
     Scripts{
@@ -170,7 +170,7 @@ yi{
             gregorian{"גרעגארישער קאַלענדאַר"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     codePatterns{
         language{"שפראַך: {0}"}
         script{"שריפֿט: {0}"}

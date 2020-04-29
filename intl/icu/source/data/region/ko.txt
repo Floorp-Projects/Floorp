@@ -298,12 +298,9 @@ ko{
         ZZ{"알려지지 않은 지역"}
     }
     Countries%short{
-        GB{"영국"}
         HK{"홍콩"}
         MO{"마카오"}
         PS{"팔레스타인"}
-        UN{"유엔"}
-        US{"미국"}
     }
     Countries%variant{
         CD{"콩고민주공화국"}
@@ -314,5 +311,5 @@ ko{
         SZ{"스와질란드"}
         TL{"티모르레스테"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

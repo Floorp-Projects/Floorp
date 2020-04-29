@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 yi{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         search{
             Sequence{
@@ -11,7 +11,7 @@ yi{
                 "‎&״"
                 "<<'\u0022'"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
         standard{
             Sequence{
@@ -28,7 +28,7 @@ yi{
                 "&ש<שׂ"
                 "&[before 1]ת<תּ"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

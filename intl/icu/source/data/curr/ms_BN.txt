@@ -7,5 +7,5 @@ ms_BN{
             "Dolar Brunei",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

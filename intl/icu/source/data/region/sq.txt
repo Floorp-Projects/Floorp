@@ -303,7 +303,6 @@ sq{
         MO{"Makao"}
         PS{"Palestinë"}
         UN{"OKB"}
-        US{"SHBA"}
     }
     Countries%variant{
         CD{"Kongo (RDK)"}
@@ -314,5 +313,5 @@ sq{
         SZ{"Suazilend"}
         TL{"Timori Lindor"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

@@ -10,5 +10,5 @@ uz_Arab{
     Scripts{
         Arab{"عربی"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

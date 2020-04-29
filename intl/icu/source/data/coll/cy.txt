@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 cy{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         standard{
             Sequence{
@@ -14,7 +14,7 @@ cy{
                 "&R<rh<<<Rh<<<RH"
                 "&T<th<<<Th<<<TH"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

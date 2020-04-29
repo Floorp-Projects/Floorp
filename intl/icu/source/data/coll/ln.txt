@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ln{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         phonetic{
             Sequence{
@@ -16,14 +16,14 @@ ln{
                 "&S<sh<<<sH<<<Sh<<<SH"
                 "&T<ts<<<tS<<<Ts<<<TS"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
         standard{
             Sequence{
                 "&E<ɛ<<<Ɛ"
                 "&O<<ɔ<<<Ɔ"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

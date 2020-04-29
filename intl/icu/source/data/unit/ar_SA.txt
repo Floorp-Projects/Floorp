@@ -1,10 +1,10 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ar_SA{
-    Version{"36.1"}
+    Version{"37"}
     units{
         acceleration{
-            meter-per-second-squared{
+            meter-per-square-second{
                 few{"{0} أمتار في الثانية المربعة"}
                 many{"{0} مترًا في الثانية المربعة"}
                 one{"{0} متر في الثانية المربعة"}
@@ -98,7 +98,7 @@ ar_SA{
             }
         }
         concentr{
-            part-per-million{
+            permillion{
                 few{"{0} أجزاء في المليون"}
                 many{"{0} جزءًا في المليون"}
                 one{"{0} جزء في المليون"}
@@ -278,7 +278,7 @@ ar_SA{
             }
         }
         pressure{
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 few{"{0} أرطال لكل بوصة مربعة"}
                 many{"{0} رطلًا لكل بوصة مربعة"}
                 one{"{0} رطل لكل بوصة مربعة"}
@@ -502,7 +502,7 @@ ar_SA{
                 two{"قيراطان"}
                 zero{"{0} قيراط"}
             }
-            part-per-million{
+            permillion{
                 few{"{0} أجزاء/مليون"}
                 many{"{0} جزءًا/مليون"}
                 one{"{0} جزء/مليون"}
@@ -512,7 +512,7 @@ ar_SA{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 few{"{0} لترات/١٠٠ كم"}
                 many{"{0} لترًا/١٠٠ كم"}
                 one{"{0} لتر/١٠٠ كم"}
@@ -707,7 +707,7 @@ ar_SA{
                 two{"{0} ميغاباسكال"}
                 zero{"{0} ميغاباسكال"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 few{"{0} أرطال/بوصة²"}
                 many{"{0} رطلًا/بوصة²"}
                 one{"{0} رطل/بوصة²"}

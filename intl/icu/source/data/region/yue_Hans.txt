@@ -299,20 +299,16 @@ yue_Hans{
         ZZ{"未知区域"}
     }
     Countries%short{
-        GB{"英国"}
         HK{"香港"}
         MO{"澳门"}
         PS{"巴勒斯坦"}
-        US{"美国"}
     }
     Countries%variant{
         CD{"刚果民主共和国"}
         CG{"刚果共和国"}
-        CI{"象牙海岸"}
         CZ{"捷克共和国"}
         FK{"福克兰群岛 (马尔维纳斯群岛)"}
         SZ{"斯威士兰"}
-        TL{"东帝汶"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

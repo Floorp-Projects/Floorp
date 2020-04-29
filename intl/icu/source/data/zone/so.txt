@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 so{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjaan"}
@@ -830,6 +830,7 @@ so{
         }
         "Etc:UTC"{
             ls{"Waqtiga Isku-xiran ee Caalamka"}
+            ss{"Waqtiga UTC"}
         }
         "Etc:Unknown"{
             ec{"Magaalo Aan La Garanayn"}
@@ -1115,6 +1116,11 @@ so{
         "Pacific:Wallis"{
             ec{"Walis"}
         }
+        "meta:Acre"{
+            ld{"Wakhtiga Kulka ee Acre"}
+            lg{"Wakhtiga Acre"}
+            ls{"Wakhtiga Caadiga ah ee Acre"}
+        }
         "meta:Afghanistan"{
             ls{"Waqtiga Afggaanistaan"}
         }
@@ -1136,6 +1142,11 @@ so{
             ld{"Waqtiga Dharaarta ee Alaska"}
             lg{"Waqtiga Alaska"}
             ls{"Waqtiga Caadiga Ah ee Alaska"}
+        }
+        "meta:Almaty"{
+            ld{"Saacada Waqtiga Kulaylaha ee Almaty"}
+            lg{"Waqtiga Almaty"}
+            ls{"Waqtiga Caadiga ah ee Almaty"}
         }
         "meta:Amazon"{
             ld{"Waqtiga Xagaaga ee Amason"}
@@ -1162,10 +1173,25 @@ so{
             lg{"Waqtiga Basifika ee Waqooyiga Ameerika"}
             ls{"Waqtiga Caadiga ah ee Basifika Waqooyiga Ameerika"}
         }
+        "meta:Anadyr"{
+            ld{"Wakhtiga Kulka ee Anadyr"}
+            lg{"Wakhtiga Anadyr"}
+            ls{"Wakhtiga Caadiga ah ee Anadyr"}
+        }
         "meta:Apia"{
             ld{"Waqtiga Dharaarta ee Abiya"}
             lg{"Waqtiga Abiya"}
             ls{"Waqtiga Caadiga Ah ee Abiya"}
+        }
+        "meta:Aqtau"{
+            ld{"Saacada Waqtiga Kulaylaha Aqtau"}
+            lg{"Waqtiga Aqtau"}
+            ls{"Waqtiga Caadiga ah ee Aqtau"}
+        }
+        "meta:Aqtobe"{
+            ld{"Saacada Waqtiga kulaylaha Aqtobe"}
+            lg{"Waqtiga Aqtobe"}
+            ls{"Waqtiga Caadiga ah ee Aqtobe"}
         }
         "meta:Arabian"{
             ld{"Waqtiga Dharaarta ee Carabta"}
@@ -1378,6 +1404,9 @@ so{
             ld{"Waqtiga Dharaarta ee Hawaay-Alutiyaan"}
             lg{"Waqtiga Hawaay-Alutiyaan"}
             ls{"Waqtiga Caadiga Ah ee Hawaay-Alutiyaan"}
+            sd{"HADT"}
+            sg{"HAT"}
+            ss{"HAST"}
         }
         "meta:Hong_Kong"{
             ld{"Waqtiga Xagaaga ee Hoong Koong"}
@@ -1426,6 +1455,11 @@ so{
             ld{"Waqtiga Dharaarta ee Jabaan"}
             lg{"Waqtiga Jabaan"}
             ls{"Waqtiga Caadiga Ah ee Jabaan"}
+        }
+        "meta:Kamchatka"{
+            ld{"Wakhtiga Kulka ee Petropavlovsk-Kamchatski"}
+            lg{"Wakhtiga Petropavlovsk-Kamchatski"}
+            ls{"Wakhtiga Caadiga ah ee Petropavlovsk-Kamchatski"}
         }
         "meta:Kazakhstan_Eastern"{
             ls{"Waqtiga Bariga Kasakhistaan"}
@@ -1533,7 +1567,9 @@ so{
             ls{"Waqtiga Niyuu"}
         }
         "meta:Norfolk"{
-            ls{"Waqtiga Noorfek Aylaan"}
+            ld{"Waqtiga Xagaaga ee Noorfek Aylaan"}
+            lg{"Waqtiga Noorfek Aylaan"}
+            ls{"Waqtiga Caadiga Ah ee Noorfek Aylaan"}
         }
         "meta:Noronha"{
             ld{"Waqtiga Xagaaga ee Farnaando de Nooronha"}
@@ -1593,6 +1629,11 @@ so{
         "meta:Pyongyang"{
             ls{"Waqtiga Boyongyang"}
         }
+        "meta:Qyzylorda"{
+            ld{"Saacada Waqtiga Kulaylaha Qyzylorda"}
+            lg{"Waqtiga Qyzylorda"}
+            ls{"Waqtiga Caadiga ah ee Qyzylorda"}
+        }
         "meta:Reunion"{
             ls{"Waqtiga Riyuuniyon"}
         }
@@ -1603,6 +1644,11 @@ so{
             ld{"Waqtiga Xagaaga ee Sakhalin"}
             lg{"Waqtiga Sakhalin"}
             ls{"Waqtiga Caadiga Ah ee Sakhalin"}
+        }
+        "meta:Samara"{
+            ld{"Wakhtiga Kulka ee Samara"}
+            lg{"Wakhtiga Samara"}
+            ls{"Wakhtiga Caadiga ah ee Samara"}
         }
         "meta:Samoa"{
             ld{"Waqtiga Dharaarta ee Samoa"}

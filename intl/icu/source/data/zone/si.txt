@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 si{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"අබිජාන්"}
@@ -1713,7 +1713,9 @@ si{
             ls{"නියු වේලාව"}
         }
         "meta:Norfolk"{
-            ls{"නොෆොල්ක් දුපත් වේලාව"}
+            ld{"නොෆොල්ක් දුපත් ග්‍රීෂ්ම වේලාව"}
+            lg{"නොෆොල්ක් දුපත් වේලාව"}
+            ls{"නොෆොල්ක් දුපත් සම්මත වේලාව"}
         }
         "meta:Noronha"{
             ld{"ෆර්නැන්ඩෝ ඩි නොරොන්හා ග්‍රීෂ්ම කාලය"}

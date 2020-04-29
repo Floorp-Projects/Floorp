@@ -109,6 +109,7 @@ sq{
         eu{"baskisht"}
         ewo{"euondoisht"}
         fa{"persisht"}
+        fa_AF{"darisht"}
         ff{"fulaisht"}
         fi{"finlandisht"}
         fil{"filipinisht"}
@@ -414,6 +415,10 @@ sq{
         zxx{"nuk ka përmbajtje gjuhësore"}
         zza{"zazaisht"}
     }
+    Languages%long{
+        zh_Hans{"kinezishte mandarine (e thjeshtuar)"}
+        zh_Hant{"kinezishte mandarine (tradicionale)"}
+    }
     Languages%menu{
         yue{"kinezishte kantoneze"}
         zh{"kinezishte mandarine"}
@@ -562,7 +567,7 @@ sq{
             tibt{"shifra tibetiane"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — Të gjitha"}
         category-list{"{0}: {1}"}

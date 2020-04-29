@@ -240,6 +240,10 @@ LIBDIR=$(top_builddir)/lib
 # Location of the executables before "make install" is used
 BINDIR=$(top_builddir)/bin
 
+# Defined here so that it can be overriden by mh-mingw*.
+# For MinGW/MSYS2 we want the DLLs to go into the bin location.
+MINGW_MOVEDLLSTOBINDIR = NO
+
 # overridden by icucross.mk
 TOOLBINDIR=$(BINDIR)
 TOOLLIBDIR=$(LIBDIR)

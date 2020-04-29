@@ -210,7 +210,7 @@ eu{
             }
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         buddhist{
             eras{
@@ -811,18 +811,18 @@ eu{
                         "A",
                     }
                     wide{
-                        "urtarrila",
-                        "otsaila",
-                        "martxoa",
-                        "apirila",
-                        "maiatza",
-                        "ekaina",
-                        "uztaila",
-                        "abuztua",
-                        "iraila",
-                        "urria",
-                        "azaroa",
-                        "abendua",
+                        "urtarrilak",
+                        "otsailak",
+                        "martxoak",
+                        "apirilak",
+                        "maiatzak",
+                        "ekainak",
+                        "uztailak",
+                        "abuztuak",
+                        "irailak",
+                        "urriak",
+                        "azaroak",
+                        "abenduak",
                     }
                 }
                 stand-alone{

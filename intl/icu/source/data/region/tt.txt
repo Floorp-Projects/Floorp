@@ -252,5 +252,5 @@ tt{
     Countries%variant{
         CD{"Конго (КДР)"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

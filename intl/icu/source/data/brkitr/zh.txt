@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 zh{
-    Version{"36.1"}
+    Version{"37"}
     boundaries{
         line:process(dependency){"line_cj.brk"}
         line_loose:process(dependency){"line_loose_cj.brk"}

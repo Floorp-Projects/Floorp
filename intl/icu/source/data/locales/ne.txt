@@ -26,9 +26,9 @@ ne{
         default{"deva"}
         deva{
             patterns{
-                currencyFormat{"¤ #,##0.00"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
+                currencyFormat{"¤ #,##,##0.00"}
+                decimalFormat{"#,##,##0.###"}
+                percentFormat{"#,##,##0%"}
                 scientificFormat{"#E0"}
             }
             symbols{
@@ -53,10 +53,10 @@ ne{
                 range{"{0}–{1}"}
             }
             patterns{
-                accountingFormat{"¤ #,##0.00"}
-                currencyFormat{"¤ #,##0.00"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
+                accountingFormat{"¤ #,##,##0.00"}
+                currencyFormat{"¤ #,##,##0.00"}
+                decimalFormat{"#,##,##0.###"}
+                percentFormat{"#,##,##0%"}
                 scientificFormat{"#E0"}
             }
             patternsLong{
@@ -241,7 +241,7 @@ ne{
         minimumGroupingDigits{"1"}
         native{"deva"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{

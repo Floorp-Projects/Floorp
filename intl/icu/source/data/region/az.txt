@@ -312,7 +312,6 @@ az{
         CZ{"Çex Respublikası"}
         FK{"Folklend adaları (Malvin adaları)"}
         SZ{"Svazilend"}
-        TL{"Şərqi Timor"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

@@ -292,9 +292,6 @@ ksh{
         ZZ{"- Jähjend onbikannt -"}
     }
     Countries%short{
-        GB{"Jruußbrettannije"}
-        HK{"Hongkong"}
-        MO{"Makau"}
         US{"USA"}
     }
     Countries%variant{
@@ -303,5 +300,5 @@ ksh{
         CI{"de Älfebeijnköß"}
         FK{"de malleviinesche Enselle"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

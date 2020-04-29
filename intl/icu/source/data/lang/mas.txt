@@ -48,5 +48,5 @@ mas{
         zh{"nkʉtʉ́k ɔ́ɔ̄ lchina"}
         zu{"nkʉtʉ́k ɔ́ɔ̄ lzulu"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

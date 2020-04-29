@@ -6,10 +6,6 @@ to{
             "AUD$",
             "Tola fakaʻaositelēlia",
         }
-        BRL{
-            "R$",
-            "BRL",
-        }
         FJD{
             "FJD",
             "Tola fakafisi",
@@ -92,5 +88,5 @@ to{
     CurrencyUnitPatterns{
         other{"{1} {0}"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

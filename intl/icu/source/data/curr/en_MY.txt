@@ -8,5 +8,5 @@ en_MY{
             "Malaysian Ringgit",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }
