@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
-import { perfService as perfSvc } from "common/PerfService.jsm";
+import { perfService as perfSvc } from "content-src/lib/perf-service";
 import React from "react";
 
 // Currently record only a fixed set of sections. This will prevent data

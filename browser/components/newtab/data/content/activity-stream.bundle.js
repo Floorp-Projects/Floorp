@@ -9001,7 +9001,7 @@ const ScreenshotUtils = {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ComponentPerfTimer", function() { return ComponentPerfTimer; });
 /* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
-/* harmony import */ var common_PerfService_jsm__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(60);
+/* harmony import */ var content_src_lib_perf_service__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(60);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(9);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_2__);
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -9017,7 +9017,7 @@ class ComponentPerfTimer extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Co
   constructor(props) {
     super(props); // Just for test dependency injection:
 
-    this.perfSvc = this.props.perfSvc || common_PerfService_jsm__WEBPACK_IMPORTED_MODULE_1__["perfService"];
+    this.perfSvc = this.props.perfSvc || content_src_lib_perf_service__WEBPACK_IMPORTED_MODULE_1__["perfService"];
     this._sendBadStateEvent = this._sendBadStateEvent.bind(this);
     this._sendPaintedEvent = this._sendPaintedEvent.bind(this);
     this._reportMissingData = false;
@@ -9281,7 +9281,7 @@ _PerfService.prototype = {
   }
 
 };
-var perfService = new _PerfService();
+const perfService = new _PerfService();
 
 /***/ }),
 /* 61 */
@@ -11252,7 +11252,7 @@ const Search = Object(react_redux__WEBPACK_IMPORTED_MODULE_1__["connect"])()(_Se
 __webpack_require__.r(__webpack_exports__);
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DetectUserSessionStart", function() { return DetectUserSessionStart; });
 /* harmony import */ var common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
-/* harmony import */ var common_PerfService_jsm__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(60);
+/* harmony import */ var content_src_lib_perf_service__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(60);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11265,7 +11265,7 @@ class DetectUserSessionStart {
     this._store = store; // Overrides for testing
 
     this.document = options.document || global.document;
-    this._perfService = options.perfService || common_PerfService_jsm__WEBPACK_IMPORTED_MODULE_1__["perfService"];
+    this._perfService = options.perfService || content_src_lib_perf_service__WEBPACK_IMPORTED_MODULE_1__["perfService"];
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
   }
   /**

@@ -6,7 +6,7 @@
 
 let usablePerfObj = window.performance;
 
-function _PerfService(options) {
+export function _PerfService(options) {
   // For testing, so that we can use a fake Window.performance object with
   // known state.
   if (options && options.performanceObj) {
@@ -101,5 +101,4 @@ _PerfService.prototype = {
   },
 };
 
-this.perfService = new _PerfService();
-const EXPORTED_SYMBOLS = ["_PerfService", "perfService"];
+export const perfService = new _PerfService();
