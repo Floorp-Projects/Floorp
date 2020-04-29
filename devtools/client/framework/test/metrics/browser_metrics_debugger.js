@@ -40,6 +40,9 @@ add_task(async function() {
     "resource://devtools/client/shared/vendor/redux.js",
     "resource://devtools/client/debugger/src/workers/parser/index.js",
     "resource://devtools/client/shared/source-map/index.js",
+    "resource://devtools/client/shared/components/menu/MenuButton.js",
+    "resource://devtools/client/shared/components/menu/MenuItem.js",
+    "resource://devtools/client/shared/components/menu/MenuList.js",
   ];
   runDuplicatedModulesTest(loaders, whitelist);
 
