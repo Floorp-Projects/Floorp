@@ -9,7 +9,6 @@ UNIFIED_SOURCES += [
     'TestArenaAllocator.cpp',
     'TestArrayAlgorithm.cpp',
     'TestAtoms.cpp',
-    'TestAutoPtr.cpp',
     'TestAutoRef.cpp',
     'TestAutoRefCnt.cpp',
     'TestBase64.cpp',
