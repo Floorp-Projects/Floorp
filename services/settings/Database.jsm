@@ -19,7 +19,7 @@ var EXPORTED_SYMBOLS = ["Database"];
 
 // IndexedDB name.
 const DB_NAME = "remote-settings";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 /**
  * Wrap IndexedDB errors to catch them more easily.
@@ -239,6 +239,42 @@ class Database {
     }
   }
 
+  async getAttachment(attachmentId) {
+    let entry = null;
+    try {
+      await executeIDB(
+        "attachments",
+        store => {
+          store.get([this.identifier, attachmentId]).onsuccess = e => {
+            entry = e.target.result;
+          };
+        },
+        { mode: "readonly" }
+      );
+    } catch (e) {
+      throw new IndexedDBError(e, "getAttachment()", this.identifier);
+    }
+    return entry ? entry.attachment : null;
+  }
+
+  async saveAttachment(attachmentId, attachment) {
+    try {
+      await executeIDB(
+        "attachments",
+        store => {
+          if (attachment) {
+            store.put({ cid: this.identifier, attachmentId, attachment });
+          } else {
+            store.delete([this.identifier, attachmentId]);
+          }
+        },
+        { desc: "saveAttachment(" + attachmentId + ") in " + this.identifier }
+      );
+    } catch (e) {
+      throw new IndexedDBError(e, "saveAttachment()", this.identifier);
+    }
+  }
+
   async clear() {
     try {
       await this.saveLastModified(null);
@@ -364,6 +400,12 @@ async function openIDB(callback) {
           // Collections store
           db.createObjectStore("collections", {
             keyPath: "cid",
+          });
+        }
+        if (event.oldVersion < 3) {
+          // Attachment store
+          db.createObjectStore("attachments", {
+            keyPath: ["cid", "attachmentId"],
           });
         }
       };

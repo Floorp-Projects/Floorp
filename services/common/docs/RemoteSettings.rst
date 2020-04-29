@@ -154,7 +154,18 @@ The provided helper will:
 
 .. note::
 
+    By default, the ``download()`` method is prone to leaving extraneous files in the profile directory
+    (see `Bug 1634127 <https://bugzilla.mozilla.org/show_bug.cgi?id=1634127>`_).
+    Pass the ``useCache`` option to use an IndexedDB-based cache, and unlock the following features:
+
+    The ``fallbackToCache`` option allows callers to fall back to the cached file and record, if the requested record's attachment fails to download.
+    This enables callers to always have a valid pair of attachment and record,
+    provided that the attachment has been retrieved at least once.
+
+.. note::
+
     A ``downloadAsBytes()`` method returning an ``ArrayBuffer`` is also available, if writing the attachment into the user profile is not necessary.
+
 
 
 .. _services/initial-data:
