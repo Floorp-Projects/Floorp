@@ -297,14 +297,8 @@ class alignas(uint32_t) ImmutableScriptData final : public TrailingArray {
     return getOptionalOffset(flags().tryNotesEndIndex);
   }
 
-  // Size to allocate
-  static size_t AllocationSize(uint32_t codeLength, uint32_t noteLength,
-                               uint32_t numResumeOffsets,
-                               uint32_t numScopeNotes, uint32_t numTryNotes);
-
-  void initOptionalArrays(size_t* cursor, Flags* flags,
-                          uint32_t numResumeOffsets, uint32_t numScopeNotes,
-                          uint32_t numTryNotes);
+  void initOptionalArrays(Offset* cursor, uint32_t numResumeOffsets,
+                          uint32_t numScopeNotes, uint32_t numTryNotes);
 
   // Initialize to GC-safe state
   ImmutableScriptData(uint32_t codeLength, uint32_t noteLength,
