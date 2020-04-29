@@ -24,7 +24,7 @@
 #include "js/UniquePtr.h"    // UniquePtr
 #include "js/Vector.h"       // Vector
 
-class JSAtom;
+class JS_PUBLIC_API JSAtom;
 struct JS_PUBLIC_API JSContext;
 
 namespace js {
