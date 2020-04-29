@@ -486,6 +486,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "cascade_bloom_filter"
+version = "0.1.0"
+dependencies = [
+ "nserror",
+ "nsstring",
+ "rental",
+ "rust_cascade",
+ "thin-vec",
+ "xpcom",
+]
+
+[[package]]
 name = "cast"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1812,6 +1824,7 @@ dependencies = [
  "authenticator",
  "bitsdownload",
  "bookmark_sync",
+ "cascade_bloom_filter",
  "cert_storage",
  "chardetng_c",
  "cose-c",
