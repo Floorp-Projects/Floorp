@@ -65,8 +65,7 @@ mod tests {
     #[test]
     fn test_create_schema_twice() {
         let db = new_mem_db();
-        let conn = db.writer.lock().unwrap();
-        conn.execute_batch(CREATE_SCHEMA_SQL)
+        db.execute_batch(CREATE_SCHEMA_SQL)
             .expect("should allow running twice");
     }
 }

@@ -191,14 +191,16 @@ impl StorageSyncArea {
         let mut maybe_store = self.store.borrow_mut();
         match mem::take(&mut *maybe_store) {
             Some(store) => {
-                // "Hey, wait a second, if `store` is our only strong reference,
-                // why are we cloning it here?" Because we want to put our owned
-                // reference back if dispatch fails, so that we don't leak the
-                // store.
-                if let Err(error) = teardown(&self.queue, Arc::clone(&store), callback) {
-                    *maybe_store = Some(store);
-                    return Err(error);
-                }
+                // If dispatching the runnable fails, we'll drop the store and
+                // close its database connection on the main thread. This is a
+                // last resort, and can also happen if the last `RefPtr` to this
+                // storage area is released without calling `teardown`. In that
+                // case, the destructor for `self.store` will run, which
+                // automatically closes its database connection. mozStorage's
+                // `Connection::Release` also falls back to closing the
+                // connection on the main thread if it can't dispatch to the
+                // background thread.
+                teardown(&self.queue, store, callback)?;
             }
             None => return Err(Error::AlreadyTornDown),
         }

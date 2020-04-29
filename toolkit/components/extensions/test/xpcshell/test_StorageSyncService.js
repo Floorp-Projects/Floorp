@@ -52,10 +52,10 @@ add_task(
         [
           {
             hi: {
-              newValue: JSON.stringify("hello! 💖"),
+              newValue: "hello! 💖",
             },
             bye: {
-              newValue: JSON.stringify("adiós"),
+              newValue: "adiós",
             },
           },
         ],
