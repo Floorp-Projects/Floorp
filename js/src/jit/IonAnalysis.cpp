@@ -1563,6 +1563,8 @@ class TypeAnalyzer {
     return phi;
   }
 
+  MOZ_MUST_USE bool propagateAllPhiSpecializations();
+
   bool respecialize(MPhi* phi, MIRType type);
   bool propagateSpecialization(MPhi* phi);
   bool specializePhis();
@@ -1729,6 +1731,21 @@ bool TypeAnalyzer::propagateSpecialization(MPhi* phi) {
   return true;
 }
 
+bool TypeAnalyzer::propagateAllPhiSpecializations() {
+  while (!phiWorklist_.empty()) {
+    if (mir->shouldCancel("Specialize Phis (worklist)")) {
+      return false;
+    }
+
+    MPhi* phi = popPhi();
+    if (!propagateSpecialization(phi)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 bool TypeAnalyzer::specializePhis() {
   Vector<MPhi*, 0, SystemAllocPolicy> phisWithEmptyInputTypes;
 
@@ -1768,15 +1785,8 @@ bool TypeAnalyzer::specializePhis() {
   }
 
   do {
-    while (!phiWorklist_.empty()) {
-      if (mir->shouldCancel("Specialize Phis (worklist)")) {
-        return false;
-      }
-
-      MPhi* phi = popPhi();
-      if (!propagateSpecialization(phi)) {
-        return false;
-      }
+    if (!propagateAllPhiSpecializations()) {
+      return false;
     }
 
     // When two phis have a cyclic dependency and inputs that have an empty
@@ -1797,6 +1807,7 @@ bool TypeAnalyzer::specializePhis() {
     }
   } while (!phiWorklist_.empty());
 
+  MOZ_ASSERT(phiWorklist_.empty());
   return true;
 }
 
