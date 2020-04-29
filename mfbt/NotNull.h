@@ -213,12 +213,17 @@ constexpr NotNull<T> WrapNotNull(const T aBasePtr) {
 template <typename T>
 MOZ_NONNULL(1)
 constexpr NotNull<T*> WrapNotNullUnchecked(T* const aBasePtr) {
-#if defined(__GNUC__)
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wpointer-bool-conversion"
+#elif defined(__GNUC__)
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wnonnull-compare"
 #endif
   MOZ_ASSERT(aBasePtr);
-#if defined(__GNUC__)
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#elif defined(__GNUC__)
 #  pragma GCC diagnostic pop
 #endif
   return NotNull<T*>{aBasePtr};
