@@ -1335,7 +1335,6 @@ menuitem.panel-subview-footer@menuStateActive@,
 }
 
 #widget-overflow-mainView > .panel-subview-body > toolbarseparator,
-.PanelUI-subView menuseparator,
 .PanelUI-subView toolbarseparator,
 .cui-widget-panelview menuseparator,
 .cui-widget-panel toolbarseparator {
@@ -1347,15 +1346,10 @@ menuitem.panel-subview-footer@menuStateActive@,
   padding: 0;
 }
 
-.PanelUI-subView menuseparator {
-  margin-inline: -5px -4px;
-}
-
 .PanelUI-subView toolbarseparator {
   margin-inline: 0;
 }
 
-.PanelUI-subView menuseparator.small-separator,
 .PanelUI-subView toolbarseparator.small-separator {
   margin-inline: 5px;
 }
