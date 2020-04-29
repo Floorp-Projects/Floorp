@@ -20,7 +20,6 @@ class WindowGlobalParent;
 #define MOZ_EACH_WC_FIELD(FIELD)                                       \
   FIELD(OuterWindowId, uint64_t)                                       \
   FIELD(CookieJarSettings, Maybe<mozilla::net::CookieJarSettingsArgs>) \
-  FIELD(HasStoragePermission, bool)                                    \
   /* Whether the given window hierarchy is third party. See            \
    * ThirdPartyUtil::IsThirdPartyWindow for details */                 \
   FIELD(IsThirdPartyWindow, bool)                                      \
@@ -104,11 +103,6 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   bool CanSet(FieldIndex<IDX_CookieJarSettings>,
               const Maybe<mozilla::net::CookieJarSettingsArgs>& aValue,
-              ContentParent* aSource) {
-    return true;
-  }
-
-  bool CanSet(FieldIndex<IDX_HasStoragePermission>, const bool& aValue,
               ContentParent* aSource) {
     return true;
   }

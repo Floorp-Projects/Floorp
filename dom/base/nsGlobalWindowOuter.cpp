@@ -2415,12 +2415,6 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    // We would check the storage access in below function, so we need to
-    // set the flag before it.
-    newInnerWindow->GetWindowGlobalChild()
-        ->WindowContext()
-        ->SetHasStoragePermission(aDocument->HasStoragePermission());
-
     // When replacing an initial about:blank document we call
     // ExecutionReady again to update the client creation URL.
     rv = newInnerWindow->ExecutionReady();
