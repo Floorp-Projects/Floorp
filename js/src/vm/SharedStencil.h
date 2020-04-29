@@ -368,7 +368,9 @@ class alignas(uint32_t) ImmutableScriptData final : public TrailingArray {
   jsbytecode* code() { return offsetToPointer<jsbytecode>(codeOffset()); }
   mozilla::Span<jsbytecode> codeSpan() { return {code(), codeLength()}; }
 
-  uint32_t noteLength() const { return optionalOffsetsOffset() - noteOffset(); }
+  uint32_t noteLength() const {
+    return numElements<SrcNote>(noteOffset(), optionalOffsetsOffset());
+  }
   SrcNote* notes() { return offsetToPointer<SrcNote>(noteOffset()); }
   mozilla::Span<SrcNote> notesSpan() { return {notes(), noteLength()}; }
 

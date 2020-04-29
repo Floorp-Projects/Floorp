@@ -61,6 +61,19 @@ class TrailingArray {
     }
   }
 
+  // Compute the length of an array from its start and end offset.
+  template <typename T>
+  size_t numElements(Offset start, Offset end) const {
+    constexpr size_t ElemSize = sizeof(T);
+    return numElements<ElemSize>(start, end);
+  }
+  template <size_t ElemSize>
+  size_t numElements(Offset start, Offset end) const {
+    MOZ_ASSERT(start <= end);
+    MOZ_ASSERT((end - start) % ElemSize == 0);
+    return (end - start) / ElemSize;
+  }
+
   // Constructor is protected so a derived type is required.
   TrailingArray() = default;
 

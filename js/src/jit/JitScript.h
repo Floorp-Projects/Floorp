@@ -304,11 +304,11 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   }
 
   uint32_t numICEntries() const {
-    return (typeSetOffset() - icEntriesOffset()) / sizeof(ICEntry);
+    return numElements<ICEntry>(icEntriesOffset(), typeSetOffset());
   }
   uint32_t numTypeSets() const {
     MOZ_ASSERT(IsTypeInferenceEnabled());
-    return (bytecodeTypeMapOffset() - typeSetOffset()) / sizeof(StackTypeSet);
+    return numElements<StackTypeSet>(typeSetOffset(), bytecodeTypeMapOffset());
   }
 
   uint32_t* bytecodeTypeMapHint() { return &bytecodeTypeMapHint_; }
