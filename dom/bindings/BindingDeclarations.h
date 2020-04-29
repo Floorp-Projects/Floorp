@@ -418,6 +418,26 @@ class Sequence : public FallibleTArray<T> {
       : FallibleTArray<T>(std::move(aArray)) {}
   MOZ_IMPLICIT Sequence(nsTArray<T>&& aArray)
       : FallibleTArray<T>(std::move(aArray)) {}
+
+  Sequence(Sequence&&) = default;
+  Sequence& operator=(Sequence&&) = default;
+
+  // XXX(Bug 1631461) Codegen.py must be adapted to allow making Sequence
+  // uncopyable.
+  Sequence(const Sequence& aOther) {
+    if (!this->AppendElements(aOther, fallible)) {
+      MOZ_CRASH("Out of memory");
+    }
+  }
+  Sequence& operator=(const Sequence& aOther) {
+    if (this != &aOther) {
+      this->Clear();
+      if (!this->AppendElements(aOther, fallible)) {
+        MOZ_CRASH("Out of memory");
+      }
+    }
+    return *this;
+  }
 };
 
 inline nsWrapperCache* GetWrapperCache(nsWrapperCache* cache) { return cache; }
@@ -467,7 +487,7 @@ class AutoSequence : public AutoTArray<T, 16> {
   AutoSequence() : AutoTArray<T, 16>() {}
 
   // Allow converting to const sequences as needed
-  operator const Sequence<T>&() const {
+  operator const Sequence<T> &() const {
     return *reinterpret_cast<const Sequence<T>*>(this);
   }
 };
