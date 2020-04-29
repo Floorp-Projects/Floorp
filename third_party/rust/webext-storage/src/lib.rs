@@ -6,7 +6,7 @@
 #![warn(rust_2018_idioms)]
 
 mod api;
-pub mod db;
+mod db;
 pub mod error;
 mod schema;
 pub mod store;

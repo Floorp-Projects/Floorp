@@ -64,17 +64,16 @@ fn remove_from_db(tx: &Transaction<'_>, ext_id: &str) -> Result<()> {
 
 // This is a "helper struct" for the callback part of the chrome.storage spec,
 // but shaped in a way to make it more convenient from the rust side of the
-// world. The strings are all json, we keeping them as strings here makes
-// various things easier and avoid a round-trip to/from json/string.
+// world.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StorageValueChange {
     #[serde(skip_serializing)]
     key: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    old_value: Option<String>,
+    old_value: Option<JsonValue>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    new_value: Option<String>,
+    new_value: Option<JsonValue>,
 }
 
 // This is, largely, a helper so that this serializes correctly as per the
@@ -141,18 +140,15 @@ pub fn set(tx: &Transaction<'_>, ext_id: &str, val: JsonValue) -> Result<Storage
         if current.len() >= MAX_ITEMS {
             return Err(ErrorKind::QuotaError(QuotaReason::MaxItems).into());
         }
-        // Setup the change entry for this key, and we can leverage it to check
-        // for the quota.
-        let new_value_s = v.to_string();
         // Reading the chrome docs literally re the quota, the length of the key
         // is just the string len, but the value is the json val, as bytes
-        if k.len() + new_value_s.len() >= QUOTA_BYTES_PER_ITEM {
+        if k.len() + v.to_string().len() >= QUOTA_BYTES_PER_ITEM {
             return Err(ErrorKind::QuotaError(QuotaReason::ItemBytes).into());
         }
         let change = StorageValueChange {
             key: k.clone(),
-            old_value: old_value.map(|ov| ov.to_string()),
-            new_value: Some(new_value_s),
+            old_value,
+            new_value: Some(v.clone()),
         };
         changes.push(change);
         current.insert(k, v);
@@ -226,7 +222,7 @@ pub fn remove(tx: &Transaction<'_>, ext_id: &str, keys: JsonValue) -> Result<Sto
         if let Some(v) = existing.remove(&key) {
             result.push(StorageValueChange {
                 key,
-                old_value: Some(v.to_string()),
+                old_value: Some(v),
                 new_value: None,
             });
         }
@@ -250,7 +246,7 @@ pub fn clear(tx: &Transaction<'_>, ext_id: &str) -> Result<StorageChanges> {
         result.push(StorageValueChange {
             key: key.to_string(),
             new_value: None,
-            old_value: Some(val.to_string()),
+            old_value: Some(val),
         });
     }
     remove_from_db(tx, ext_id)?;
@@ -270,11 +266,22 @@ mod tests {
         let c = StorageChanges {
             changes: vec![StorageValueChange {
                 key: "key".to_string(),
-                old_value: Some("old".to_string()),
+                old_value: Some(json!("old")),
                 new_value: None,
             }],
         };
         assert_eq!(serde_json::to_string(&c)?, r#"{"key":{"oldValue":"old"}}"#);
+        let c = StorageChanges {
+            changes: vec![StorageValueChange {
+                key: "key".to_string(),
+                old_value: None,
+                new_value: Some(json!({"foo": "bar"})),
+            }],
+        };
+        assert_eq!(
+            serde_json::to_string(&c)?,
+            r#"{"key":{"newValue":{"foo":"bar"}}}"#
+        );
         Ok(())
     }
 
@@ -283,8 +290,8 @@ mod tests {
         for (name, old_value, new_value) in changes {
             r.push(StorageValueChange {
                 key: (*name).to_string(),
-                old_value: old_value.as_ref().map(|v| v.to_string()),
-                new_value: new_value.as_ref().map(|v| v.to_string()),
+                old_value: old_value.clone(),
+                new_value: new_value.clone(),
             });
         }
         r
@@ -293,9 +300,8 @@ mod tests {
     #[test]
     fn test_simple() -> Result<()> {
         let ext_id = "x";
-        let db = new_mem_db();
-        let mut conn = db.writer.lock().unwrap();
-        let tx = conn.transaction()?;
+        let mut db = new_mem_db();
+        let tx = db.transaction()?;
 
         // an empty store.
         for q in vec![
@@ -350,11 +356,20 @@ mod tests {
             remove(&tx, &ext_id, json!("foo"))?,
             make_changes(&[("foo", Some(json!("new")), None)]),
         );
+
+        assert_eq!(
+            set(&tx, &ext_id, json!({"foo": {"sub-object": "sub-value"}}))?,
+            make_changes(&[("foo", None, Some(json!({"sub-object": "sub-value"}))),])
+        );
+
         // XXX - other variants.
 
         assert_eq!(
             clear(&tx, &ext_id)?,
-            make_changes(&[("other", Some(json!("also new")), None)]),
+            make_changes(&[
+                ("foo", Some(json!({"sub-object": "sub-value"})), None),
+                ("other", Some(json!("also new")), None),
+            ]),
         );
         assert_eq!(get(&tx, &ext_id, JsonValue::Null)?, json!({}));
 
@@ -365,9 +380,8 @@ mod tests {
     fn test_check_get_impl() -> Result<()> {
         // This is a port of checkGetImpl in test_ext_storage.js in Desktop.
         let ext_id = "x";
-        let db = new_mem_db();
-        let mut conn = db.writer.lock().unwrap();
-        let tx = conn.transaction()?;
+        let mut db = new_mem_db();
+        let tx = db.transaction()?;
 
         let prop = "test-prop";
         let value = "test-value";
@@ -421,9 +435,8 @@ mod tests {
     fn test_bug_1621162() -> Result<()> {
         // apparently Firefox, unlike Chrome, will not optimize the changes.
         // See bug 1621162 for more!
-        let db = new_mem_db();
-        let mut conn = db.writer.lock().unwrap();
-        let tx = conn.transaction()?;
+        let mut db = new_mem_db();
+        let tx = db.transaction()?;
         let ext_id = "xyz";
 
         set(&tx, &ext_id, json!({"foo": "bar" }))?;
@@ -437,9 +450,8 @@ mod tests {
 
     #[test]
     fn test_quota_maxitems() -> Result<()> {
-        let db = new_mem_db();
-        let mut conn = db.writer.lock().unwrap();
-        let tx = conn.transaction()?;
+        let mut db = new_mem_db();
+        let tx = db.transaction()?;
         let ext_id = "xyz";
         for i in 1..MAX_ITEMS + 1 {
             set(
@@ -458,9 +470,8 @@ mod tests {
 
     #[test]
     fn test_quota_bytesperitem() -> Result<()> {
-        let db = new_mem_db();
-        let mut conn = db.writer.lock().unwrap();
-        let tx = conn.transaction()?;
+        let mut db = new_mem_db();
+        let tx = db.transaction()?;
         let ext_id = "xyz";
         // A string 5 bytes less than the max. This should be counted as being
         // 3 bytes less than the max as the quotes are counted.

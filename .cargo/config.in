@@ -20,7 +20,7 @@ tag = "v0.2.4"
 [source."https://github.com/mozilla/application-services"]
 git = "https://github.com/mozilla/application-services"
 replace-with = "vendored-sources"
-rev = "c17198fa5a88295f2cca722586c539280e10201c"
+rev = "775fc33603d722b75ff3579a5f2c52dbd4715b45"
 
 [source."https://github.com/mozilla-spidermonkey/jsparagus"]
 git = "https://github.com/mozilla-spidermonkey/jsparagus"

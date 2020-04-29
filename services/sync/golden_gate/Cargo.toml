@@ -8,13 +8,13 @@ edition = "2018"
 [dependencies]
 atomic_refcell = "0.1"
 cstr = "0.1"
-interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "c17198fa5a88295f2cca722586c539280e10201c" }
+interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "775fc33603d722b75ff3579a5f2c52dbd4715b45" }
 log = "0.4"
 moz_task = { path = "../../../xpcom/rust/moz_task" }
 nserror = { path = "../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../xpcom/rust/nsstring" }
 storage_variant = { path = "../../../storage/variant" }
-sync15-traits = { git = "https://github.com/mozilla/application-services", rev = "c17198fa5a88295f2cca722586c539280e10201c" }
+sync15-traits = { git = "https://github.com/mozilla/application-services", rev = "775fc33603d722b75ff3579a5f2c52dbd4715b45" }
 xpcom = { path = "../../../xpcom/rust/xpcom" }
 
 [dependencies.thin-vec]
