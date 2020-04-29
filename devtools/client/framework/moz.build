@@ -26,6 +26,7 @@ DevToolsModules(
     'browser-menus.js',
     'devtools-browser.js',
     'devtools.js',
+    'enable-devtools-popup.js',
     'menu-item.js',
     'menu.js',
     'selection.js',
