@@ -6,6 +6,16 @@
 
 var EXPORTED_SYMBOLS = ["SyncTelemetry"];
 
+// Support for Sync-and-FxA-related telemetry, which is submitted in a special-purpose
+// telemetry ping called the "sync ping", documented here:
+//
+//  ../../../toolkit/components/telemetry/docs/data/sync-ping.rst
+//
+// The sync ping contains identifiers that are linked to the user's Firefox Account
+// and are separate from the main telemetry client_id, so this file is also responsible
+// for ensuring that we can delete those pings upon user request, by plumbing its
+// identifiers into the "deletion-request" ping.
+
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -50,10 +60,19 @@ const log = Log.repository.getLogger("Sync.Telemetry");
 
 const TOPICS = [
   "profile-before-change",
+
+  // For tracking change to account/device identifiers.
+  "fxaccounts:new_device_id",
+  "fxaccounts:onlogout",
+  "weave:service:ready",
+  "weave:service:login:change",
+
+  // For whole-of-sync metrics.
   "weave:service:sync:start",
   "weave:service:sync:finish",
   "weave:service:sync:error",
 
+  // For individual engine metrics.
   "weave:engine:sync:start",
   "weave:engine:sync:finish",
   "weave:engine:sync:error",
@@ -63,9 +82,9 @@ const TOPICS = [
   "weave:engine:validate:finish",
   "weave:engine:validate:error",
 
+  // For ad-hoc telemetry events.
   "weave:telemetry:event",
   "weave:telemetry:histogram",
-  // and we are now used by FxA, so a custom event for that.
   "fxa:telemetry:event",
 ];
 
@@ -372,12 +391,7 @@ class TelemetryRecord {
       this.failureReason = SyncTelemetry.transformError(error);
     }
 
-    try {
-      this.uid = Weave.Service.identity.hashedUID();
-    } catch (e) {
-      this.uid = EMPTY_UID;
-    }
-
+    this.uid = fxAccounts.telemetry.getSanitizedUID() || EMPTY_UID;
     this.syncNodeType = Weave.Service.identity.telemetryNodeType;
 
     // Check for engine statuses. -- We do this now, and not in engine.finished
@@ -566,15 +580,7 @@ class SyncTelemetryImpl {
   }
 
   sanitizeFxaDeviceId(deviceId) {
-    if (!this.syncIsEnabled()) {
-      return null;
-    }
-    try {
-      return Weave.Service.identity.hashedDeviceID(deviceId);
-    } catch {
-      // sadly this can happen in various scenarios, so don't complain.
-    }
-    return null;
+    fxAccounts.telemetry.sanitizeDeviceId(deviceId);
   }
 
   prepareFxaDevices(devices) {
@@ -708,11 +714,7 @@ class SyncTelemetryImpl {
   }
 
   submit(record) {
-    if (
-      Services.prefs.prefHasUserValue("identity.sync.tokenserver.uri") ||
-      Services.prefs.prefHasUserValue("services.sync.tokenServerURI")
-    ) {
-      log.trace(`Not sending telemetry ping for self-hosted Sync user`);
+    if (!this.isProductionSyncUser()) {
       return false;
     }
     // We still call submit() with possibly illegal payloads so that tests can
@@ -731,6 +733,17 @@ class SyncTelemetryImpl {
     return false;
   }
 
+  isProductionSyncUser() {
+    if (
+      Services.prefs.prefHasUserValue("identity.sync.tokenserver.uri") ||
+      Services.prefs.prefHasUserValue("services.sync.tokenServerURI")
+    ) {
+      log.trace(`Not sending telemetry ping for self-hosted Sync user`);
+      return false;
+    }
+    return true;
+  }
+
   onSyncStarted(data) {
     const why = data && JSON.parse(data).why;
     if (this.current) {
@@ -741,6 +754,49 @@ class SyncTelemetryImpl {
       this.current = null;
     }
     this.current = new TelemetryRecord(this.allowedEngines, why);
+  }
+
+  // We need to ensure that the telemetry `deletion-request` ping always contains the user's
+  // current sync device ID, because if the user opts out of telemetry then the deletion ping
+  // will be immediately triggered for sending, and we won't have a chance to fill it in later.
+  // This keeps the `deletion-ping` up-to-date when the user's account state changes.
+  onAccountInitOrChange() {
+    // We don't submit sync pings for self-hosters, so don't need to collect their device ids either.
+    if (!this.isProductionSyncUser()) {
+      return;
+    }
+    // Awkwardly async, but no need to await. If the user's account state changes while
+    // this promise is in flight, it will reject and we won't record any data in the ping.
+    // (And a new notification will trigger us to try again with the new state).
+    fxAccounts.device
+      .getLocalId()
+      .then(deviceId => {
+        let sanitizedDeviceId = fxAccounts.telemetry.sanitizeDeviceId(deviceId);
+        // In the past we did not persist the FxA metrics identifiers to disk,
+        // so this might be missing until we can fetch it from the server for the
+        // first time. There will be a fresh notification tirggered when it's available.
+        if (sanitizedDeviceId) {
+          // Sanitized device ids are 64 characters long, but telemetry limits scalar strings to 50.
+          // The first 32 chars are sufficient to uniquely identify the device, so just send those.
+          // It's hard to change the sync ping itself to only send 32 chars, to b/w compat reasons.
+          sanitizedDeviceId = sanitizedDeviceId.substr(0, 32);
+          Services.telemetry.scalarSet(
+            "deletion.request.sync_device_id",
+            sanitizedDeviceId
+          );
+        }
+      })
+      .catch(err => {
+        log.warn(
+          `Failed to set sync identifiers in the deletion-request ping: ${err}`
+        );
+      });
+  }
+
+  // This keeps the `deletion-request` ping up-to-date when the user signs out,
+  // clearing the now-nonexistent sync device id.
+  onAccountLogout() {
+    Services.telemetry.scalarSet("deletion.request.sync_device_id", "");
   }
 
   _checkCurrent(topic) {
@@ -874,6 +930,16 @@ class SyncTelemetryImpl {
     switch (topic) {
       case "profile-before-change":
         this.shutdown();
+        break;
+
+      case "weave:service:ready":
+      case "weave:service:login:change":
+      case "fxaccounts:new_device_id":
+        this.onAccountInitOrChange();
+        break;
+
+      case "fxaccounts:onlogout":
+        this.onAccountLogout();
         break;
 
       /* sync itself state changes */

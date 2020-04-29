@@ -130,19 +130,20 @@ this.BrowserIDManager.prototype = {
   _userUid: null,
 
   hashedUID() {
-    if (!this._hashedUID) {
+    const id = this._fxaService.telemetry.getSanitizedUID();
+    if (!id) {
       throw new Error("hashedUID: Don't seem to have previously seen a token");
     }
-    return this._hashedUID;
+    return id;
   },
 
   // Return a hashed version of a deviceID, suitable for telemetry.
   hashedDeviceID(deviceID) {
-    let uid = this.hashedUID();
-    // Combine the raw device id with the metrics uid to create a stable
-    // unique identifier that can't be mapped back to the user's FxA
-    // identity without knowing the metrics HMAC key.
-    return Utils.sha256(deviceID + uid);
+    const id = this._fxaService.telemetry.sanitizeDeviceId(deviceID);
+    if (!id) {
+      throw new Error("hashedUID: Don't seem to have previously seen a token");
+    }
+    return id;
   },
 
   // The "node type" reported to telemetry or null if not specified.
@@ -282,7 +283,6 @@ this.BrowserIDManager.prototype = {
   resetCredentials() {
     this._syncKeyBundle = null;
     this._token = null;
-    this._hashedUID = null;
     // The cluster URL comes from the token, so resetting it to empty will
     // force Sync to not accidentally use a value from an earlier token.
     Weave.Service.clusterURL = null;
@@ -550,10 +550,11 @@ this.BrowserIDManager.prototype = {
     try {
       let token = await this._fetchTokenForUser();
       this._token = token;
-      // we store the hashed UID from the token so that if we see a transient
-      // error fetching a new token we still know the "most recent" hashed
-      // UID for telemetry.
-      this._hashedUID = token.hashed_fxa_uid;
+      // This is a little bit of a hack. The tokenserver tells us a HMACed version
+      // of the FxA uid which we can use for metrics purposes without revealing the
+      // user's true uid. It conceptually belongs to FxA but we get it from tokenserver
+      // for legacy reasons. Hand it back to the FxA client code to deal with.
+      this._fxaService.telemetry._setHashedUID(token.hashed_fxa_uid);
       return token;
     } finally {
       Services.obs.notifyObservers(null, "weave:service:login:change");
