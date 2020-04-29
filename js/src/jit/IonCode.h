@@ -173,7 +173,7 @@ class IonIC;
 // Note: These are arranged in order of descending alignment requirements to
 // avoid the need for padding. The `runtimeData` uses uint64_t alignement due to
 // its use of mozilla::AlignedStorage2.
-struct alignas(8) IonScript final : public TrailingArray {
+class alignas(8) IonScript final : public TrailingArray {
  private:
   // Offset (in bytes) from `this` to the start of each trailing array. Each
   // array ends where following one begins. There is no implicit padding (except
