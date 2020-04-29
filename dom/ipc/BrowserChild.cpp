@@ -2284,7 +2284,9 @@ mozilla::ipc::IPCResult BrowserChild::RecvHandleAccessKey(
 mozilla::ipc::IPCResult BrowserChild::RecvSetUseGlobalHistory(
     const bool& aUse) {
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
-  MOZ_ASSERT(docShell);
+  if (!docShell) {
+    return IPC_OK();
+  }
 
   nsresult rv = docShell->SetUseGlobalHistory(aUse);
   if (NS_FAILED(rv)) {
