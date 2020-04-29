@@ -11,6 +11,9 @@ const { RotaryEngine } = ChromeUtils.import(
   "resource://testing-common/services/sync/rotaryengine.js"
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const { fxAccounts } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
+);
 
 function SteamStore(engine) {
   Store.call(this, "Steam", engine);
@@ -1286,4 +1289,59 @@ add_task(async function test_node_type_change() {
   equal(pings[1].syncs.length, 1, "1 sync in second ping");
   equal(pings[1].syncNodeType, "second-node-type");
   await promiseStopServer(server);
+});
+
+add_task(async function test_deletion_request_ping() {
+  async function assertRecordedSyncDeviceID(expected) {
+    // The scalar gets updated asynchronously, so wait a tick before checking.
+    await Promise.resolve();
+    const scalars =
+      Services.telemetry.getSnapshotForScalars("deletion-request").parent || {};
+    equal(scalars["deletion.request.sync_device_id"], expected);
+  }
+
+  const MOCK_HASHED_UID = "00112233445566778899aabbccddeeff";
+  const MOCK_DEVICE_ID1 = "ffeeddccbbaa99887766554433221100";
+  const MOCK_DEVICE_ID2 = "aabbccddeeff99887766554433221100";
+
+  // Calculated by hand using SHA256(DEVICE_ID + HASHED_UID)[:32]
+  const SANITIZED_DEVICE_ID1 = "dd7c845006df9baa1c6d756926519c8c";
+  const SANITIZED_DEVICE_ID2 = "0d06919a736fc029007e1786a091882c";
+
+  let currentDeviceID = null;
+  sinon.stub(fxAccounts.device, "getLocalId").callsFake(() => {
+    return Promise.resolve(currentDeviceID);
+  });
+  let telem = get_sync_test_telemetry();
+  sinon.stub(telem, "isProductionSyncUser").callsFake(() => true);
+  fxAccounts.telemetry._setHashedUID(false);
+  try {
+    // The scalar should start out undefined, since no user is actually logged in.
+    await assertRecordedSyncDeviceID(undefined);
+
+    // If we start up without knowing the hashed UID, it should stay undefined.
+    Services.obs.notifyObservers(null, "weave:service:ready");
+    await assertRecordedSyncDeviceID(undefined);
+
+    // But now let's say we've discovered the hashed UID from the server.
+    fxAccounts.telemetry._setHashedUID(MOCK_HASHED_UID);
+    currentDeviceID = MOCK_DEVICE_ID1;
+
+    // Now when we load up, we'll record the sync device id.
+    Services.obs.notifyObservers(null, "weave:service:ready");
+    await assertRecordedSyncDeviceID(SANITIZED_DEVICE_ID1);
+
+    // When the device-id changes we'll update it.
+    currentDeviceID = MOCK_DEVICE_ID2;
+    Services.obs.notifyObservers(null, "fxaccounts:new_device_id");
+    await assertRecordedSyncDeviceID(SANITIZED_DEVICE_ID2);
+
+    // When the user signs out we'll clear it.0
+    Services.obs.notifyObservers(null, "fxaccounts:onlogout");
+    await assertRecordedSyncDeviceID("");
+  } finally {
+    fxAccounts.telemetry._setHashedUID(false);
+    telem.isProductionSyncUser.restore();
+    fxAccounts.device.getLocalId.restore();
+  }
 });

@@ -14,12 +14,24 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  log: "resource://gre/modules/FxAccountsCommon.js",
   // We use this observers module because we leverage its support for richer
   // "subject" data.
   Observers: "resource://services-common/observers.js",
   Services: "resource://gre/modules/Services.jsm",
+  CryptoUtils: "resource://services-crypto/utils.js",
 });
+
+const { PREF_ACCOUNT_ROOT, log } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsCommon.js"
+);
+
+const PREF_SANITIZED_UID = PREF_ACCOUNT_ROOT + "telemetry.sanitized_uid";
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "pref_sanitizedUid",
+  PREF_SANITIZED_UID,
+  ""
+);
 
 class FxAccountsTelemetry {
   constructor(fxai) {
@@ -44,23 +56,36 @@ class FxAccountsTelemetry {
       .slice(1, -1);
   }
 
+  // Secret back-channel by which tokenserver client code can set the hashed UID.
+  // This value conceptually belongs to FxA, but we currently get it from tokenserver,
+  // so there's some light hackery to put it in the right place.
+  _setHashedUID(hashedUID) {
+    if (!hashedUID) {
+      Services.prefs.clearUserPref(PREF_SANITIZED_UID);
+    } else {
+      Services.prefs.setStringPref(PREF_SANITIZED_UID, hashedUID);
+    }
+  }
+
+  getSanitizedUID() {
+    // Sadly, we can only currently obtain this value if the user has enabled sync.
+    return pref_sanitizedUid || null;
+  }
+
   // Sanitize the ID of a device into something suitable for including in the
   // ping. Returns null if no transformation is possible.
   sanitizeDeviceId(deviceId) {
-    // We only know how to hash it for sync users, which kinda sucks.
-    let xps =
-      this._weaveXPCOM ||
-      Cc["@mozilla.org/weave/service;1"].getService(Ci.nsISupports)
-        .wrappedJSObject;
-    if (!xps.enabled) {
+    const uid = this.getSanitizedUID();
+    if (!uid) {
+      // Sadly, we can only currently get this if the user has enabled sync.
       return null;
     }
-    try {
-      return xps.Weave.Service.identity.hashedDeviceID(deviceId);
-    } catch {
-      // sadly this can happen in various scenarios, so don't complain.
-    }
-    return null;
+    // Combine the raw device id with the sanitized uid to create a stable
+    // unique identifier that can't be mapped back to the user's FxA
+    // identity without knowing the metrics HMAC key.
+    // The result is 64 bytes long, which in retrospect is probably excessive,
+    // but it's already shipping...
+    return CryptoUtils.sha256(deviceId + uid);
   }
 
   // Record the connection of FxA or one of its services.

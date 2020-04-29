@@ -4184,6 +4184,24 @@ deletion.request:
     record_into_store:
       - 'deletion-request'
 
+  sync_device_id:
+    bug_numbers:
+      - 1604844
+    description: >
+      An identifier used by sync ping, to identify the current Firefox profile for a specific Account.
+    expires: never
+    kind: string
+    notification_emails:
+      - rfkelly@mozilla.com
+      - sync-team@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - 'deletion-request'
+
 fxrPC:
   isFirstRun:
     bug_numbers:
