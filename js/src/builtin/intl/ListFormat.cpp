@@ -80,9 +80,7 @@ static const JSFunctionSpec listFormat_methods[] = {
     JS_SELF_HOSTED_FN("resolvedOptions", "Intl_ListFormat_resolvedOptions", 0,
                       0),
     JS_SELF_HOSTED_FN("format", "Intl_ListFormat_format", 1, 0),
-#ifndef U_HIDE_DRAFT_API
     JS_SELF_HOSTED_FN("formatToParts", "Intl_ListFormat_formatToParts", 1, 0),
-#endif
     JS_FN(js_toSource_str, listFormat_toSource, 0, 0), JS_FS_END};
 
 static const JSPropertySpec listFormat_properties[] = {
@@ -274,7 +272,6 @@ static bool FormatList(JSContext* cx, UListFormatter* lf,
   return true;
 }
 
-#ifndef U_HIDE_DRAFT_API
 static JSString* FormattedValueToString(JSContext* cx,
                                         const UFormattedValue* formattedValue) {
   UErrorCode status = U_ZERO_ERROR;
@@ -434,7 +431,6 @@ static bool FormatListToParts(JSContext* cx, UListFormatter* lf,
   result.setObject(*partsArray);
   return true;
 }
-#endif  // U_HIDE_DRAFT_API
 
 bool js::intl_FormatList(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -505,13 +501,8 @@ bool js::intl_FormatList(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Use the UListFormatter to actually format the strings.
-#ifndef U_HIDE_DRAFT_API
   if (formatToParts) {
     return FormatListToParts(cx, lf, strings, stringLengths, args.rval());
   }
-#else
-  MOZ_ASSERT(!formatToParts);
-#endif
-
   return FormatList(cx, lf, strings, stringLengths, args.rval());
 }
