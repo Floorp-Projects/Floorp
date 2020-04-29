@@ -11,6 +11,9 @@
 #include "nsDependentSubstring.h"  // Substring
 #include "nsReadableUtils.h"       // ToLowerCase
 
+using mozilla::dom::IsSpaceCharacter;
+using mozilla::dom::WindowFeatures;
+
 #ifdef DEBUG
 /* static */
 bool WindowFeatures::IsLowerCase(const char* text) {

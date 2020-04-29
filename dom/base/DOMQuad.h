@@ -13,6 +13,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
+#include "nsIGlobalObject.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/ErrorResult.h"
 #include "Units.h"

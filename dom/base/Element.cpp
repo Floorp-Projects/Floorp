@@ -13,6 +13,7 @@
 #include "mozilla/dom/ElementInlines.h"
 
 #include "AnimationCommon.h"
+#include "ExpandedPrincipal.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_layout.h"
@@ -29,6 +30,7 @@
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/gfx/Matrix.h"
 #include "nsAtom.h"
+#include "nsDocShell.h"
 #include "nsDOMAttributeMap.h"
 #include "nsIContentInlines.h"
 #include "mozilla/dom/NodeInfo.h"

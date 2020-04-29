@@ -30,6 +30,7 @@
 #include "nsIPromptFactory.h"
 #include "nsIWindowWatcher.h"
 #include "nsPresContext.h"
+#include "nsProxyRelease.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIStringBundle.h"
 #include "nsIConsoleService.h"

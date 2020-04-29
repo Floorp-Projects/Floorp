@@ -19,14 +19,13 @@
 #include "mozilla/dom/TreeOrderedArray.h"
 #include "nsAtom.h"
 #include "nsCOMPtr.h"
+#include "nsContentList.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 
 class nsIContent;
 class nsINode;
-class nsContentList;
-class nsBaseContentList;
 
 namespace mozilla {
 namespace dom {

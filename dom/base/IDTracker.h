@@ -13,6 +13,7 @@
 #include "nsAtom.h"
 #include "mozilla/dom/Document.h"
 #include "nsThreadUtils.h"
+#include "plstr.h"
 
 class nsIURI;
 class nsIReferrerInfo;

@@ -85,6 +85,7 @@
 #include "ChildIterator.h"
 #include "nsSerializationHelper.h"
 #include "nsICertOverrideService.h"
+#include "nsXULElement.h"
 #include "nsIX509Cert.h"
 #include "nsIX509CertValidity.h"
 #include "nsITransportSecurityInfo.h"

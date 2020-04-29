@@ -8,6 +8,7 @@
 #define MOZILLA_DOM_DOMMATRIX_H_
 
 #include "js/StructuredClone.h"
+#include "nsAutoPtr.h"
 #include "nsWrapperCache.h"
 #include "nsISupports.h"
 #include "nsCycleCollectionParticipant.h"
