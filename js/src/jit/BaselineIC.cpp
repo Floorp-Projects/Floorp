@@ -275,7 +275,8 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
       case JSOp::Pos:
       case JSOp::Neg:
       case JSOp::Inc:
-      case JSOp::Dec: {
+      case JSOp::Dec:
+      case JSOp::ToNumeric: {
         ICStub* stub = alloc.newStub<ICUnaryArith_Fallback>(Kind::UnaryArith);
         if (!addIC(loc, stub)) {
           return false;
@@ -3454,6 +3455,13 @@ bool DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame,
     }
     case JSOp::Dec: {
       if (!DecOperation(cx, val, res)) {
+        return false;
+      }
+      break;
+    }
+    case JSOp::ToNumeric: {
+      res.set(val);
+      if (!ToNumeric(cx, res)) {
         return false;
       }
       break;
