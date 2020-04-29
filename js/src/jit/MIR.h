@@ -7776,7 +7776,6 @@ class MLoadUnboxedScalar : public MBinaryInstruction,
                            public SingleObjectPolicy::Data {
   int32_t offsetAdjustment_ = 0;
   Scalar::Type storageType_;
-  Scalar::Type readType_;
   bool requiresBarrier_;
 
   MLoadUnboxedScalar(
@@ -7784,7 +7783,6 @@ class MLoadUnboxedScalar : public MBinaryInstruction,
       MemoryBarrierRequirement requiresBarrier = DoesNotRequireMemoryBarrier)
       : MBinaryInstruction(classOpcode, elements, index),
         storageType_(storageType),
-        readType_(storageType),
         requiresBarrier_(requiresBarrier == DoesRequireMemoryBarrier) {
     setResultType(MIRType::Value);
     if (requiresBarrier_) {
@@ -7802,12 +7800,10 @@ class MLoadUnboxedScalar : public MBinaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, elements), (1, index))
 
-  Scalar::Type readType() const { return readType_; }
-
   Scalar::Type storageType() const { return storageType_; }
   bool fallible() const {
     // Bailout if the result does not fit in an int32.
-    return readType_ == Scalar::Uint32 && type() == MIRType::Int32;
+    return storageType_ == Scalar::Uint32 && type() == MIRType::Int32;
   }
   bool requiresMemoryBarrier() const { return requiresBarrier_; }
   int32_t offsetAdjustment() const { return offsetAdjustment_; }
@@ -7832,9 +7828,6 @@ class MLoadUnboxedScalar : public MBinaryInstruction,
     }
     const MLoadUnboxedScalar* other = ins->toLoadUnboxedScalar();
     if (storageType_ != other->storageType_) {
-      return false;
-    }
-    if (readType_ != other->readType_) {
       return false;
     }
     if (offsetAdjustment() != other->offsetAdjustment()) {
