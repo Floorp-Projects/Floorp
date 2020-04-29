@@ -848,8 +848,6 @@ class BrowserParent final : public PBrowserParent,
   // Recomputes sFocus and returns it.
   static BrowserParent* UpdateFocus();
 
-  void OnSubFrameCrashed();
-
   struct APZData {
     bool operator==(const APZData& aOther) {
       return aOther.guid == guid && aOther.blockId == blockId &&

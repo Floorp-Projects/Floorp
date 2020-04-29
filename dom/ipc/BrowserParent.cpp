@@ -739,7 +739,7 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
   if (frameLoader) {
     ReceiveMessage(CHILD_PROCESS_SHUTDOWN_MESSAGE, false, nullptr);
 
-    if (!mBrowsingContext->GetParent()) {
+    if (mBrowsingContext->IsTop()) {
       // If this is a top-level BrowsingContext, tell the frameloader it's time
       // to go away. Otherwise, this is a subframe crash, and we can keep the
       // frameloader around.
@@ -750,8 +750,19 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
     if (why == AbnormalShutdown) {
       frameLoader->MaybeNotifyCrashed(mBrowsingContext, GetIPCChannel());
 
-      if (!mBrowsingContext->IsTopContent()) {
-        OnSubFrameCrashed();
+      auto* bridge = GetBrowserBridgeParent();
+      if (bridge && bridge->CanSend() && !mBrowsingContext->IsDiscarded()) {
+        MOZ_ASSERT(!mBrowsingContext->IsTop());
+
+        // Set the owner process of the root context belonging to a crashed
+        // process to the embedding process, since we'll be showing the crashed
+        // page in that process.
+        mBrowsingContext->SetOwnerProcessId(
+            bridge->Manager()->Manager()->ChildID());
+        mBrowsingContext->SetCurrentInnerWindowId(0);
+
+        // Tell the browser bridge to show the subframe crashed page.
+        Unused << bridge->SendSubFrameCrashed();
       }
     }
   }
@@ -4081,25 +4092,6 @@ FakeChannel::OnAuthCancelled(nsISupports* aContext, bool userCancel) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
-}
-
-void BrowserParent::OnSubFrameCrashed() {
-  if (mBrowsingContext->IsDiscarded()) {
-    return;
-  }
-  BrowserBridgeParent* bridge = GetBrowserBridgeParent();
-  if (!bridge || !bridge->CanSend()) {
-    return;
-  }
-
-  // Set the owner process of the root context belonging to a crashed process to
-  // the embedding process, since we'll be showing the crashed page in that
-  // process.
-  mBrowsingContext->SetOwnerProcessId(bridge->Manager()->Manager()->ChildID());
-  mBrowsingContext->SetCurrentInnerWindowId(0);
-
-  // Tell the browser bridge to show the subframe crashed page.
-  Unused << bridge->SendSubFrameCrashed(mBrowsingContext);
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvIsWindowSupportingProtectedMedia(
