@@ -650,12 +650,6 @@ async function test_delayed_tabattr_removal() {
   );
 }
 
-add_task(async function() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.tabs.showAudioPlayingIcon", true]],
-  });
-});
-
 requestLongerTimeout(2);
 add_task(async function test_page() {
   await BrowserTestUtils.withNewTab(
