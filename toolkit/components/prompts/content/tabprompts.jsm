@@ -14,7 +14,7 @@ const { AppConstants } = ChromeUtils.import(
 var TabModalPrompt = class {
   constructor(win) {
     this.win = win;
-    let newPrompt = (this.element = win.document.createElement(
+    let newPrompt = (this.element = win.document.createXULElement(
       "tabmodalprompt"
     ));
     newPrompt.setAttribute("role", "dialog");
@@ -25,38 +25,50 @@ var TabModalPrompt = class {
     newPrompt.appendChild(
       win.MozXULElement.parseXULToFragment(
         `
-        <div class="tabmodalprompt-mainContainer" xmlns="http://www.w3.org/1999/xhtml" xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-          <div class="tabmodalprompt-topContainer">
-            <div class="tabmodalprompt-infoContainer">
-              <div class="tabmodalprompt-infoTitle infoTitle" hidden="hidden"/>
-              <div class="tabmodalprompt-infoBody infoBody" id="infoBody-${randomIdSuffix}" tabindex="-1"/>
-            </div>
+      <spacer class="spacer-top" flex="1"/>
+        <hbox pack="center">
+          <vbox class="tabmodalprompt-mainContainer">
+            <grid class="tabmodalprompt-topContainer" flex="1">
+              <columns>
+                <column/>
+                <column flex="1"/>
+              </columns>
 
-            <div class="tabmodalprompt-loginContainer" hidden="hidden">
-              <xul:label class="tabmodalprompt-loginLabel" value="&editfield0.label;" control="loginTextbox-${randomIdSuffix}"/>
-              <input class="tabmodalprompt-loginTextbox" id="loginTextbox-${randomIdSuffix}"/>
-            </div>
+              <rows class="tabmodalprompt-rows">
+                <vbox class="tabmodalprompt-infoContainer" align="center" pack="center" flex="1">
+                  <description class="tabmodalprompt-infoTitle infoTitle" hidden="true" />
+                  <description class="tabmodalprompt-infoBody infoBody" id="infoBody-${randomIdSuffix}"/>
+                </vbox>
 
-            <div class="tabmodalprompt-password1Container" hidden="hidden">
-              <xul:label class="tabmodalprompt-password1Label" value="&editfield1.label;" control="password1Textbox-${randomIdSuffix}"/>
-              <input class="tabmodalprompt-password1Textbox" type="password" id="password1Textbox-${randomIdSuffix}"/>
-            </div>
+                <row class="tabmodalprompt-loginContainer" hidden="true" align="center">
+                  <label class="tabmodalprompt-loginLabel" value="&editfield0.label;" control="loginTextbox-${randomIdSuffix}"/>
+                  <html:input class="tabmodalprompt-loginTextbox" id="loginTextbox-${randomIdSuffix}"/>
+                </row>
 
-            <div class="tabmodalprompt-checkboxContainer" hidden="hidden">
-              <div/>
-              <xul:checkbox class="tabmodalprompt-checkbox"/>
-            </div>
+                <row class="tabmodalprompt-password1Container" hidden="true" align="center">
+                  <label class="tabmodalprompt-password1Label" value="&editfield1.label;" control="password1Textbox-${randomIdSuffix}"/>
+                  <html:input class="tabmodalprompt-password1Textbox" type="password" id="password1Textbox-${randomIdSuffix}"/>
+                </row>
 
-            <!-- content goes here -->
-          </div>
-          <div class="tabmodalprompt-buttonContainer">
-            <xul:button class="tabmodalprompt-button3" hidden="true"/>
-            <div class="tabmodalprompt-buttonSpacer"/>
-            <xul:button class="tabmodalprompt-button0" label="&okButton.label;"/>
-            <xul:button class="tabmodalprompt-button2" hidden="true"/>
-            <xul:button class="tabmodalprompt-button1" label="&cancelButton.label;"/>
-          </div>
-        </div>`,
+                <row class="tabmodalprompt-checkboxContainer" hidden="true">
+                  <spacer/>
+                  <checkbox class="tabmodalprompt-checkbox"/>
+                </row>
+
+                <!-- content goes here -->
+              </rows>
+            </grid>
+            <hbox class="tabmodalprompt-buttonContainer">
+              <button class="tabmodalprompt-button3" hidden="true"/>
+              <spacer class="tabmodalprompt-buttonSpacer" flex="1"/>
+              <button class="tabmodalprompt-button0" label="&okButton.label;"/>
+              <button class="tabmodalprompt-button2" hidden="true"/>
+              <button class="tabmodalprompt-button1" label="&cancelButton.label;"/>
+            </hbox>
+          </vbox>
+      </hbox>
+      <spacer flex="2"/>
+    `,
         [
           "chrome://global/locale/commonDialog.dtd",
           "chrome://global/locale/dialogOverlay.dtd",
@@ -82,7 +94,7 @@ var TabModalPrompt = class {
       infoBody: newPrompt.querySelector(".tabmodalprompt-infoBody"),
       infoTitle: newPrompt.querySelector(".tabmodalprompt-infoTitle"),
       infoIcon: null,
-      rows: newPrompt.querySelector(".tabmodalprompt-topContainer"),
+      rows: newPrompt.querySelector(".tabmodalprompt-rows"),
       checkbox: newPrompt.querySelector(".tabmodalprompt-checkbox"),
       checkboxContainer: newPrompt.querySelector(
         ".tabmodalprompt-checkboxContainer"
@@ -238,6 +250,8 @@ var TabModalPrompt = class {
 
     // TODO: should unhide buttonSpacer on Windows when there are 4 buttons.
     //       Better yet, just drop support for 4-button dialogs. (bug 609510)
+
+    this.onResize();
   }
 
   shutdownPrompt() {
@@ -266,10 +280,55 @@ var TabModalPrompt = class {
 
   handleEvent(aEvent) {
     switch (aEvent.type) {
+      case "resize":
+        this.onResize();
+        break;
       case "unload":
       case "TabClose":
         this.abortPrompt();
         break;
+    }
+  }
+
+  onResize() {
+    let availWidth = this.element.clientWidth;
+    let availHeight = this.element.clientHeight;
+    if (availWidth == this.availWidth && availHeight == this.availHeight) {
+      return;
+    }
+    this.availWidth = availWidth;
+    this.availHeight = availHeight;
+
+    let main = this.ui.mainContainer;
+    let info = this.ui.infoContainer;
+    let body = this.ui.infoBody;
+
+    // cap prompt dimensions at 60% width and 60% height of content area
+    if (!this.minWidth) {
+      this.minWidth = parseInt(this.win.getComputedStyle(main).minWidth);
+    }
+    if (!this.minHeight) {
+      this.minHeight = parseInt(this.win.getComputedStyle(main).minHeight);
+    }
+    let maxWidth =
+      Math.max(Math.floor(availWidth * 0.6), this.minWidth) +
+      info.clientWidth -
+      main.clientWidth;
+    let maxHeight =
+      Math.max(Math.floor(availHeight * 0.6), this.minHeight) +
+      info.clientHeight -
+      main.clientHeight;
+    body.style.maxWidth = maxWidth + "px";
+    info.style.overflow = info.style.width = info.style.height = "";
+
+    // when prompt text is too long, use scrollbars
+    if (info.clientWidth > maxWidth) {
+      info.style.overflow = "auto";
+      info.style.width = maxWidth + "px";
+    }
+    if (info.clientHeight > maxHeight) {
+      info.style.overflow = "auto";
+      info.style.height = maxHeight + "px";
     }
   }
 
