@@ -180,27 +180,7 @@ void nsFrameLoaderOwner::ChangeRemotenessCommon(
 void nsFrameLoaderOwner::ChangeRemoteness(
     const mozilla::dom::RemotenessOptions& aOptions, mozilla::ErrorResult& rv) {
   std::function<void()> frameLoaderInit = [&] {
-    if (aOptions.mError.WasPassed()) {
-      RefPtr<nsFrameLoader> frameLoader = mFrameLoader;
-      nsresult error = static_cast<nsresult>(aOptions.mError.Value());
-      nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
-          "nsFrameLoaderOwner::DisplayLoadError", [frameLoader, error]() {
-            nsCOMPtr<nsIURI> uri;
-            nsresult rv = NS_NewURI(getter_AddRefs(uri), "about:blank");
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              return;
-            }
-
-            RefPtr<nsDocShell> docShell =
-                frameLoader->GetDocShell(IgnoreErrors());
-            if (NS_WARN_IF(!docShell)) {
-              return;
-            }
-            bool displayed = false;
-            docShell->DisplayLoadError(error, uri, u"about:blank", nullptr,
-                                       &displayed);
-          }));
-    } else if (aOptions.mPendingSwitchID.WasPassed()) {
+    if (aOptions.mPendingSwitchID.WasPassed()) {
       mFrameLoader->ResumeLoad(aOptions.mPendingSwitchID.Value());
     } else {
       mFrameLoader->LoadFrame(false);
@@ -240,4 +220,32 @@ void nsFrameLoaderOwner::ChangeRemotenessWithBridge(BrowserBridgeChild* aBridge,
       /* preserve */ ChangeRemotenessContextType::PRESERVE,
       /* switching in progress load */ true,
       NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE), frameLoaderInit, rv);
+}
+
+void nsFrameLoaderOwner::SubframeCrashed() {
+  MOZ_ASSERT(XRE_IsContentProcess());
+
+  std::function<void()> frameLoaderInit = [&] {
+    RefPtr<nsFrameLoader> frameLoader = mFrameLoader;
+    nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+        "nsFrameLoaderOwner::SubframeCrashed", [frameLoader]() {
+          nsCOMPtr<nsIURI> uri;
+          nsresult rv = NS_NewURI(getter_AddRefs(uri), "about:blank");
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return;
+          }
+
+          RefPtr<nsDocShell> docShell =
+              frameLoader->GetDocShell(IgnoreErrors());
+          if (NS_WARN_IF(!docShell)) {
+            return;
+          }
+          bool displayed = false;
+          docShell->DisplayLoadError(NS_ERROR_FRAME_CRASHED, uri,
+                                     u"about:blank", nullptr, &displayed);
+        }));
+  };
+
+  ChangeRemotenessCommon(ChangeRemotenessContextType::PRESERVE, false,
+                         VoidString(), frameLoaderInit, IgnoreErrors());
 }

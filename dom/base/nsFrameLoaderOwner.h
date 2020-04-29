@@ -56,6 +56,8 @@ class nsFrameLoaderOwner : public nsISupports {
   void ChangeRemotenessWithBridge(mozilla::dom::BrowserBridgeChild* aBridge,
                                   mozilla::ErrorResult& rv);
 
+  void SubframeCrashed();
+
  private:
   bool UseRemoteSubframes();
   bool ShouldPreserveBrowsingContext(
