@@ -68,6 +68,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val PUSH_HTML_PATH = "/assets/www/push/push.html"
         const val OPEN_WINDOW_PATH = "/assets/www/worker/open_window.html"
         const val OPEN_WINDOW_TARGET_PATH = "/assets/www/worker/open_window_target.html"
+        const val DATA_URI_PATH = "/assets/www/data_uri.html"
 
         const val TEST_ENDPOINT = GeckoSessionTestRule.TEST_ENDPOINT
     }
