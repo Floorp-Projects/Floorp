@@ -271,6 +271,23 @@
         ],
         "revision": "default"
     },
+    "ckb": {
+        "platforms": [
+            "linux",
+            "linux-devedition",
+            "linux64",
+            "linux64-devedition",
+            "macosx64",
+            "macosx64-devedition",
+            "win32",
+            "win32-devedition",
+            "win64",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
+            "win64-devedition"
+        ],
+        "revision": "default"
+    },
     "cs": {
         "platforms": [
             "linux",
@@ -798,6 +815,23 @@
         ],
         "revision": "default"
     },
+    "hye": {
+        "platforms": [
+            "linux",
+            "linux-devedition",
+            "linux64",
+            "linux64-devedition",
+            "macosx64",
+            "macosx64-devedition",
+            "win32",
+            "win32-devedition",
+            "win64",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
+            "win64-devedition"
+        ],
+        "revision": "default"
+    },
     "ia": {
         "platforms": [
             "linux",
@@ -1059,6 +1093,23 @@
         "revision": "default"
     },
     "lv": {
+        "platforms": [
+            "linux",
+            "linux-devedition",
+            "linux64",
+            "linux64-devedition",
+            "macosx64",
+            "macosx64-devedition",
+            "win32",
+            "win32-devedition",
+            "win64",
+            "win64-aarch64",
+            "win64-aarch64-devedition",
+            "win64-devedition"
+        ],
+        "revision": "default"
+    },
+    "meh": {
         "platforms": [
             "linux",
             "linux-devedition",
