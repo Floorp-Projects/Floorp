@@ -3420,7 +3420,8 @@ void LIRGenerator::visitLoadUnboxedScalar(MLoadUnboxedScalar* ins) {
 
   // We need a temp register for Uint32Array with known double result.
   LDefinition tempDef = LDefinition::BogusTemp();
-  if (ins->readType() == Scalar::Uint32 && IsFloatingPointType(ins->type())) {
+  if (ins->storageType() == Scalar::Uint32 &&
+      IsFloatingPointType(ins->type())) {
     tempDef = temp();
   }
 
