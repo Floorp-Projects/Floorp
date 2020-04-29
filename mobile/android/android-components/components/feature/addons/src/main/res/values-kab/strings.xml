@@ -66,6 +66,10 @@
     <string name="mozac_feature_addons_settings_on">Yermed</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Yensa</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Sireg di tunigin tusligt</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Selkem di tunigin tusligt</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Irmed</string>
     <!-- Indicates the add-on is disabled. -->
