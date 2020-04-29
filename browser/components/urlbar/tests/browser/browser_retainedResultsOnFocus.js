@@ -71,10 +71,7 @@ async function checkDoesNotOpenOnFocus(win) {
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.autoFill", true],
-      ["browser.urlbar.openViewOnFocus", true],
-    ],
+    set: [["browser.urlbar.autoFill", true]],
   });
   // Add some history for the empty panel and autofill.
   await PlacesTestUtils.addVisits([

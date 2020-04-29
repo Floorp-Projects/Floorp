@@ -577,12 +577,7 @@ const tests = [
   },
 
   async function(win) {
-    info(
-      "With pageproxystate=invalid, open the panel with openViewOnFocus, Enter."
-    );
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.urlbar.openViewOnFocus", true]],
-    });
+    info("With pageproxystate=invalid, open retained results, Enter.");
     await addTopSite("http://example.org/");
     win.gURLBar.value = "example.org";
     win.gURLBar.setPageProxyState("invalid");
@@ -590,7 +585,6 @@ const tests = [
     await UrlbarTestUtils.promisePopupOpen(win, () => {
       win.document.getElementById("Browser:OpenLocation").doCommand();
     });
-    await SpecialPowers.popPrefEnv();
     await UrlbarTestUtils.promiseSearchComplete(win);
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
@@ -609,12 +603,7 @@ const tests = [
   },
 
   async function(win) {
-    info(
-      "With pageproxystate=invalid, open the panel with openViewOnFocus, click on entry."
-    );
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.urlbar.openViewOnFocus", true]],
-    });
+    info("With pageproxystate=invalid, open retained results, click on entry.");
     // This value must be different from the previous test, to avoid reopening
     // the view.
     win.gURLBar.value = "example.com";
@@ -623,7 +612,6 @@ const tests = [
     await UrlbarTestUtils.promisePopupOpen(win, () => {
       win.document.getElementById("Browser:OpenLocation").doCommand();
     });
-    await SpecialPowers.popPrefEnv();
     await UrlbarTestUtils.promiseSearchComplete(win);
     let element = UrlbarTestUtils.getSelectedRow(win);
     EventUtils.synthesizeMouseAtCenter(element, {}, win);
@@ -644,9 +632,6 @@ const tests = [
 
   async function(win) {
     info("Reopen the view: type, blur, focus, confirm.");
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.urlbar.openViewOnFocus", true]],
-    });
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
       waitForFocus: SimpleTest.waitForFocus,
@@ -663,7 +648,6 @@ const tests = [
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
-    await SpecialPowers.popPrefEnv();
     return [
       {
         category: "urlbar",
@@ -718,9 +702,6 @@ const tests = [
 
   async function(win) {
     info("Reopen the view: type, blur, focus, backspace, type, confirm.");
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.urlbar.openViewOnFocus", true]],
-    });
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
       waitForFocus: SimpleTest.waitForFocus,
@@ -740,7 +721,6 @@ const tests = [
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
-    await SpecialPowers.popPrefEnv();
     return [
       {
         category: "urlbar",
@@ -769,9 +749,6 @@ const tests = [
 
   async function(win) {
     info("Reopen the view: type, blur, focus, type (overwrite), confirm.");
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.urlbar.openViewOnFocus", true]],
-    });
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
       waitForFocus: SimpleTest.waitForFocus,
@@ -789,7 +766,6 @@ const tests = [
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
-    await SpecialPowers.popPrefEnv();
     return [
       {
         category: "urlbar",
@@ -908,15 +884,13 @@ const tests = [
 
   async function(win) {
     info(
-      "With pageproxystate=invalid, open the panel with openViewOnFocus, don't type, blur it."
+      "With pageproxystate=invalid, open retained results, don't type, blur it."
     );
     win.gURLBar.value = "mochi.test";
     win.gURLBar.setPageProxyState("invalid");
-    Services.prefs.setBoolPref("browser.urlbar.openViewOnFocus", true);
     await UrlbarTestUtils.promisePopupOpen(win, () => {
       win.document.getElementById("Browser:OpenLocation").doCommand();
     });
-    Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
     win.gURLBar.blur();
     return {
       category: "urlbar",
