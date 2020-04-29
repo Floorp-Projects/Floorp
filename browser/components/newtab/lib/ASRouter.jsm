@@ -1950,14 +1950,18 @@ class _ASRouter {
         );
         break;
       case ra.OPEN_ABOUT_PAGE:
+        let aboutPageURL = new URL(`about:${action.data.args}`);
+        if (action.data.entrypoint) {
+          aboutPageURL.search = action.data.entrypoint;
+        }
         target.browser.ownerGlobal.openTrustedLinkIn(
-          `about:${action.data.args}`,
+          aboutPageURL.toString(),
           "tab"
         );
         break;
       case ra.OPEN_PREFERENCES_PAGE:
         target.browser.ownerGlobal.openPreferences(
-          action.data.category,
+          action.data.category || action.data.args,
           action.data.entrypoint && {
             urlParams: { entrypoint: action.data.entrypoint },
           }

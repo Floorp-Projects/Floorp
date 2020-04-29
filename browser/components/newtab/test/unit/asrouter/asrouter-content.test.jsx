@@ -447,6 +447,51 @@ describe("ASRouterUISurface", () => {
       );
       assert.propertyVal(payload, "source", "NEWTAB_FOOTER_BAR");
     });
+
+    it("should construct a OPEN_ABOUT_PAGE action with attribution", () => {
+      wrapper.setState({ message: FAKE_MESSAGE });
+      const stub = sandbox.stub(ASRouterUtils, "executeAction");
+
+      wrapper.instance().sendClick({
+        target: {
+          dataset: {
+            metric: "",
+            entrypoint_value: "snippet",
+            action: "OPEN_PREFERENCES_PAGE",
+            args: "home",
+          },
+        },
+      });
+
+      assert.calledOnce(stub);
+      assert.calledWithExactly(stub, {
+        type: "OPEN_PREFERENCES_PAGE",
+        data: { args: "home", entrypoint: "snippet" },
+      });
+    });
+
+    it("should construct a OPEN_ABOUT_PAGE action with attribution", () => {
+      wrapper.setState({ message: FAKE_MESSAGE });
+      const stub = sandbox.stub(ASRouterUtils, "executeAction");
+
+      wrapper.instance().sendClick({
+        target: {
+          dataset: {
+            metric: "",
+            entrypoint_name: "entryPoint",
+            entrypoint_value: "snippet",
+            action: "OPEN_ABOUT_PAGE",
+            args: "logins",
+          },
+        },
+      });
+
+      assert.calledOnce(stub);
+      assert.calledWithExactly(stub, {
+        type: "OPEN_ABOUT_PAGE",
+        data: { args: "logins", entrypoint: "entryPoint=snippet" },
+      });
+    });
   });
 
   describe(".fetchFlowParams", () => {
