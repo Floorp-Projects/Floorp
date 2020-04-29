@@ -12,12 +12,27 @@
 class nsHTTPSOnlyUtils {
  public:
   /**
-   * Determines if a request should get because of the HTTPS-Only mode
-   * @param  aURI           nsIURI of request
-   * @param  aLoadInfo      nsILoadInfo of request
-   * @param  aShouldUpgrade true if request should get upgraded
+   * Determines if a request should get upgraded because of the HTTPS-Only mode.
+   * If true, the httpsOnlyStatus flag in LoadInfo gets updated and a message is
+   * logged in the console.
+   * @param  aURI      nsIURI of request
+   * @param  aLoadInfo nsILoadInfo of request
+   * @return           true if request should get upgraded
    */
   static bool ShouldUpgradeRequest(nsIURI* aURI, nsILoadInfo* aLoadInfo);
+
+  /**
+   * Determines if a request should get upgraded because of the HTTPS-Only mode.
+   * If true, a message is logged in the console.
+   * @param  aURI               nsIURI of request
+   * @param  innerWindowId      Inner Window ID
+   * @param  aFromPrivateWindow Whether this request comes from a private window
+   * @param  httpsOnlyStatus    httpsOnlyStatus from nsILoadInfo
+   * @return                    true if request should get upgraded
+   */
+  static bool ShouldUpgradeWebSocket(nsIURI* aURI, int32_t aInnerWindowId,
+                                     bool aFromPrivateWindow,
+                                     uint32_t aHttpsOnlyStatus);
 
   /**
    * Logs localized message to either content console or browser console
@@ -46,6 +61,19 @@ class nsHTTPSOnlyUtils {
   static void LogMessage(const nsAString& aMessage, uint32_t aFlags,
                          uint64_t aInnerWindowID, bool aFromPrivateWindow,
                          nsIURI* aURI = nullptr);
-};
 
+  /**
+   * Checks whether the URI ends with .onion
+   * @param  aURI URI object
+   * @return      true if the URI is an Onion URI
+   */
+  static bool OnionException(nsIURI* aURI);
+
+  /**
+   * Checks whether the URI is a loopback- or local-IP
+   * @param  aURI URI object
+   * @return      true if the URI is either loopback or local
+   */
+  static bool LoopbackOrLocalException(nsIURI* aURI);
+};
 #endif /* nsHTTPSOnlyUtils_h___ */
