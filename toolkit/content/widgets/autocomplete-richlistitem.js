@@ -603,12 +603,7 @@
           "resource://gre/modules/LoginHelper.jsm"
         );
 
-        // ac-label gets populated from getCommentAt despite the attribute name.
-        // The "comment" is used to populate additional visible text.
-        let { formHostname } = JSON.parse(this.getAttribute("ac-label"));
-
         LoginHelper.openPasswordManager(this.ownerGlobal, {
-          filterString: formHostname,
           entryPoint: "autocomplete",
         });
       }

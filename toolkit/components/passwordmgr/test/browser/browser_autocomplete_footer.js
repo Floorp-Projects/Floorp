@@ -55,18 +55,17 @@ add_task(async function test_autocomplete_footer_onclick() {
       }, "Waiting for footer to become visible");
 
       let openingFunc = () => EventUtils.synthesizeMouseAtCenter(footer, {});
-      let passwordManager = await openPasswordManager(openingFunc, true);
+      let passwordManager = await openPasswordManager(openingFunc, false);
 
       info("Password Manager was opened");
 
-      is(
-        passwordManager.filterValue,
-        "example.com",
-        "Search string should be set to filter logins"
+      ok(
+        !passwordManager.filterValue,
+        "Search string should not be set to filter logins"
       );
 
-      // open_management + filter
-      await LoginTestUtils.telemetry.waitForEventCount(2);
+      // open_management
+      await LoginTestUtils.telemetry.waitForEventCount(1);
 
       // Check event telemetry recorded when opening management UI
       TelemetryTestUtils.assertEvents(
@@ -106,13 +105,12 @@ add_task(async function test_autocomplete_footer_keydown() {
       await EventUtils.synthesizeKey("KEY_ArrowDown");
       let openingFunc = () => EventUtils.synthesizeKey("KEY_Enter");
 
-      let passwordManager = await openPasswordManager(openingFunc, true);
+      let passwordManager = await openPasswordManager(openingFunc, false);
       info("Login dialog was opened");
 
-      is(
-        passwordManager.filterValue,
-        "example.com",
-        "Search string should be set to filter logins"
+      ok(
+        !passwordManager.filterValue,
+        "Search string should not be set to filter logins"
       );
 
       // Check event telemetry recorded when opening management UI
