@@ -568,9 +568,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     final override fun onPause() {
         super.onPause()
         // If we didn't enter PiP, exit full screen on pause
-        if (!enteredPip) {
+        if (!enteredPip && fullScreenFeature.onBackPressed()) {
             fullScreenChanged(false)
-            fullScreenFeature.onBackPressed()
         }
         enteredPip = false
         if (findNavController().currentDestination?.id != R.id.searchFragment) {
