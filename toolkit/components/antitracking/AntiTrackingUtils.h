@@ -24,6 +24,9 @@ class BrowsingContext;
 
 class AntiTrackingUtils final {
  public:
+  static already_AddRefed<nsPIDOMWindowInner> GetInnerWindow(
+      dom::BrowsingContext* aBrowsingContext);
+
   static already_AddRefed<nsPIDOMWindowOuter> GetTopWindow(
       nsPIDOMWindowInner* aWindow);
 
