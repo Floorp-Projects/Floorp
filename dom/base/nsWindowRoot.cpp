@@ -24,6 +24,7 @@
 #include "nsIContent.h"
 #include "nsIControllers.h"
 #include "nsIController.h"
+#include "nsQueryObject.h"
 #include "xpcpublic.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/BrowserParent.h"

@@ -12,6 +12,7 @@
 #include "nsIOService.h"
 #include "nsIURL.h"
 #include "nsIJARURI.h"
+#include "nsIURIMutator.h"
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"
 #include "nsEscape.h"

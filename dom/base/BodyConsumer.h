@@ -10,6 +10,7 @@
 #include "mozilla/dom/AbortSignal.h"
 #include "mozilla/dom/MutableBlobStorage.h"
 #include "nsIInputStreamPump.h"
+#include "nsNetUtil.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 

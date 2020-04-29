@@ -10,9 +10,13 @@
 #include "jsapi.h"
 #include "js/Stream.h"
 #include "nsIAsyncInputStream.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsIObserver.h"
 #include "nsISupportsImpl.h"
+#include "nsNetCID.h"
 #include "nsWeakReference.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/Mutex.h"
 
 class nsIGlobalObject;
 

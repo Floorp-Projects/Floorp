@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_WindowFeatures_h
 #define mozilla_dom_WindowFeatures_h
 
+#include "nsString.h"
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/HashTable.h"   // mozilla::HashMap
 
