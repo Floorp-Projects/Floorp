@@ -54,7 +54,8 @@ class Perftest(MachCommandBase):
         if flavor == "doc":
             from mozperftest.utils import install_package
 
-            install_package(self.virtualenv_manager, "esprima")
+            location = os.path.join(self.topsrcdir, "third_party", "python", "esprima")
+            install_package(self.virtualenv_manager, location)
 
             from mozperftest.scriptinfo import ScriptInfo
 
