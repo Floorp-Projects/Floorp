@@ -2,36 +2,38 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/private_session_description_wrapper"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/private_session_description_wrapper"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="0.5dp"
+    android:importantForAccessibility="no"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/private_session_description"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="0.5dp"
-        android:importantForAccessibility="no"
-        android:orientation="vertical">
+        android:ellipsize="none"
+        android:gravity="center_vertical"
+        android:lineSpacingExtra="6dp"
+        android:padding="4dp"
+        android:scrollHorizontally="false"
+        android:textColor="?primaryText"
+        android:textSize="14sp"
+        tools:text="@string/private_browsing_placeholder_description_2" />
+
     <TextView
-            android:id="@+id/private_session_description"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ellipsize="none"
-            android:padding="4dp"
-            android:lineSpacingExtra="6dp"
-            android:gravity="center_vertical"
-            android:scrollHorizontally="false"
-            tools:text="@string/private_browsing_placeholder_description_2"
-            android:textColor="?primaryText"
-            android:textSize="14sp" />
-    <TextView
-            android:id="@+id/private_session_common_myths"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="4dp"
-            android:lineSpacingExtra="6dp"
-            android:ellipsize="none"
-            android:gravity="center_vertical"
-            android:scrollHorizontally="false"
-            android:text="@string/private_browsing_common_myths"
-            android:textColor="?primaryText"
-            android:textSize="14sp" />
+        android:id="@+id/private_session_common_myths"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="none"
+        android:gravity="center_vertical"
+        android:lineSpacingExtra="6dp"
+        android:padding="4dp"
+        android:scrollHorizontally="false"
+        android:text="@string/private_browsing_common_myths"
+        android:textColor="?primaryText"
+        android:textSize="14sp" />
 </LinearLayout>
