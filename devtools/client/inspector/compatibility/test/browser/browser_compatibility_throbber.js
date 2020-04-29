@@ -11,10 +11,9 @@ const TEST_URI = `
     color: blue;
     border-block-color: lime;
     user-modify: read-only;
-    font-variant-alternates: historical-forms;
   }
   div {
-    margin-inline-start: 5px;
+    font-variant-alternates: historical-forms;
   }
   </style>
   <body>
