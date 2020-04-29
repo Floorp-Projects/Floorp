@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const PREF_MULTISELECT_TABS = "browser.tabs.multiselect";
-
 function synthesizeKeyAndWaitForFocus(element, keyCode, options) {
   let focused = BrowserTestUtils.waitForEvent(element, "focus");
   EventUtils.synthesizeKey(keyCode, options);
@@ -18,10 +16,6 @@ function synthesizeKeyAndWaitForTabToGetKeyboardFocus(tab, keyCode, options) {
 }
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[PREF_MULTISELECT_TABS, true]],
-  });
-
   // The DevEdition has the DevTools button in the toolbar by default. Remove it
   // to prevent branch-specific rules what button should be focused.
   CustomizableUI.removeWidgetFromArea("developer-button");
@@ -34,10 +28,6 @@ add_task(async function setup() {
 });
 
 add_task(async function changeSelectionUsingKeyboard() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[PREF_MULTISELECT_TABS, true]],
-  });
-
   const tab1 = await addTab("http://mochi.test:8888/1");
   const tab2 = await addTab("http://mochi.test:8888/2");
   const tab3 = await addTab("http://mochi.test:8888/3");
