@@ -898,22 +898,11 @@ static XDRResult XDRImmutableScriptData(XDRState<mode>* xdr,
   return Ok();
 }
 
-/* static */ size_t RuntimeScriptData::AllocationSize(uint32_t natoms) {
-  size_t size = sizeof(RuntimeScriptData);
-
-  size += natoms * sizeof(GCPtrAtom);
-
-  return size;
-}
-
 RuntimeScriptData::RuntimeScriptData(uint32_t natoms) : natoms_(natoms) {
   // Variable-length data begins immediately after RuntimeScriptData itself.
-  size_t cursor = sizeof(*this);
+  Offset cursor = sizeof(RuntimeScriptData);
 
   // Default-initialize trailing arrays.
-
-  static_assert(alignof(RuntimeScriptData) >= alignof(GCPtrAtom),
-                "Incompatible alignment");
   initElements<GCPtrAtom>(cursor, natoms);
   cursor += natoms * sizeof(GCPtrAtom);
 
@@ -921,7 +910,7 @@ RuntimeScriptData::RuntimeScriptData(uint32_t natoms) : natoms_(natoms) {
   MOZ_ASSERT(this->natoms() == natoms);
 
   // Sanity check
-  MOZ_ASSERT(AllocationSize(natoms) == cursor);
+  MOZ_ASSERT(endOffset() == cursor);
 }
 
 template <XDRMode mode>
@@ -3960,11 +3949,16 @@ js::UniquePtr<ImmutableScriptData> js::ImmutableScriptData::new_(
 }
 
 RuntimeScriptData* js::RuntimeScriptData::new_(JSContext* cx, uint32_t natoms) {
-  // Compute size including trailing arrays
-  size_t size = AllocationSize(natoms);
+  // Compute size including trailing arrays.
+  CheckedInt<Offset> size = sizeof(RuntimeScriptData);
+  size += CheckedInt<Offset>(natoms) * sizeof(GCPtrAtom);
+  if (!size.isValid()) {
+    ReportAllocationOverflow(cx);
+    return nullptr;
+  }
 
   // Allocate contiguous raw buffer
-  void* raw = cx->pod_malloc<uint8_t>(size);
+  void* raw = cx->pod_malloc<uint8_t>(size.value());
   MOZ_ASSERT(uintptr_t(raw) % alignof(RuntimeScriptData) == 0);
   if (!raw) {
     return nullptr;
@@ -3972,7 +3966,12 @@ RuntimeScriptData* js::RuntimeScriptData::new_(JSContext* cx, uint32_t natoms) {
 
   // Constuct the RuntimeScriptData. Trailing arrays are uninitialized but
   // GCPtrs are put into a safe state.
-  return new (raw) RuntimeScriptData(natoms);
+  RuntimeScriptData* result = new (raw) RuntimeScriptData(natoms);
+
+  // Sanity check
+  MOZ_ASSERT(result->endOffset() == size.value());
+
+  return result;
 }
 
 bool JSScript::createScriptData(JSContext* cx, uint32_t natoms) {
@@ -4076,18 +4075,7 @@ void js::SweepScriptData(JSRuntime* rt) {
   }
 }
 
-/* static */
-size_t PrivateScriptData::AllocationSize(uint32_t ngcthings) {
-  size_t size = sizeof(PrivateScriptData);
-
-  size += ngcthings * sizeof(JS::GCCellPtr);
-
-  return size;
-}
-
-inline size_t PrivateScriptData::allocationSize() const {
-  return AllocationSize(ngcthings);
-}
+inline size_t PrivateScriptData::allocationSize() const { return endOffset(); }
 
 // Initialize and placement-new the trailing arrays.
 PrivateScriptData::PrivateScriptData(uint32_t ngcthings)
@@ -4095,23 +4083,30 @@ PrivateScriptData::PrivateScriptData(uint32_t ngcthings)
   // Variable-length data begins immediately after PrivateScriptData itself.
   // NOTE: Alignment is computed using cursor/offset so the alignment of
   // PrivateScriptData must be stricter than any trailing array type.
-  size_t cursor = sizeof(*this);
+  Offset cursor = sizeof(PrivateScriptData);
 
   // Layout and initialize the gcthings array.
   {
     initElements<JS::GCCellPtr>(cursor, ngcthings);
-
     cursor += ngcthings * sizeof(JS::GCCellPtr);
   }
 
-  // Sanity check
-  MOZ_ASSERT(AllocationSize(ngcthings) == cursor);
+  // Sanity check.
+  MOZ_ASSERT(endOffset() == cursor);
 }
 
 /* static */
 PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t ngcthings) {
+  // Compute size including trailing arrays.
+  CheckedInt<Offset> size = sizeof(PrivateScriptData);
+  size += CheckedInt<Offset>(ngcthings) * sizeof(JS::GCCellPtr);
+  if (!size.isValid()) {
+    ReportAllocationOverflow(cx);
+    return nullptr;
+  }
+
   // Allocate contiguous raw buffer for the trailing arrays.
-  void* raw = cx->pod_malloc<uint8_t>(AllocationSize(ngcthings));
+  void* raw = cx->pod_malloc<uint8_t>(size.value());
   MOZ_ASSERT(uintptr_t(raw) % alignof(PrivateScriptData) == 0);
   if (!raw) {
     return nullptr;
@@ -4119,7 +4114,15 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t ngcthings) {
 
   // Constuct the PrivateScriptData. Trailing arrays are uninitialized but
   // GCPtrs are put into a safe state.
-  return new (raw) PrivateScriptData(ngcthings);
+  PrivateScriptData* result = new (raw) PrivateScriptData(ngcthings);
+  if (!result) {
+    return nullptr;
+  }
+
+  // Sanity check.
+  MOZ_ASSERT(result->endOffset() == size.value());
+
+  return result;
 }
 
 /* static */

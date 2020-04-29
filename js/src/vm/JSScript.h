@@ -1417,12 +1417,20 @@ struct FieldInitializers {
 // Accessing this array just requires calling the appropriate public
 // Span-computing function.
 class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
+ private:
   uint32_t ngcthings = 0;
 
   js::FieldInitializers fieldInitializers_ = js::FieldInitializers::Invalid();
 
-  // Size to allocate
-  static size_t AllocationSize(uint32_t ngcthings);
+  // End of fields.
+
+ private:
+  // Layout helpers
+  Offset gcThingsOffset() { return offsetOfGCThings(); }
+  Offset endOffset() const {
+    uintptr_t size = ngcthings * sizeof(JS::GCCellPtr);
+    return offsetOfGCThings() + size;
+  }
 
   // Initialize header and PackedSpans
   explicit PrivateScriptData(uint32_t ngcthings);
@@ -1486,8 +1494,12 @@ class alignas(uintptr_t) RuntimeScriptData final : public TrailingArray {
   friend class ::JSScript;
 
  private:
-  // Size to allocate.
-  static size_t AllocationSize(uint32_t natoms);
+  // Layout helpers
+  Offset atomsOffset() { return offsetOfAtoms(); }
+  Offset endOffset() const {
+    uintptr_t size = natoms_ * sizeof(GCPtrAtom);
+    return offsetOfAtoms() + size;
+  }
 
   // Initialize to GC-safe state.
   explicit RuntimeScriptData(uint32_t natoms);
