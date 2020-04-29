@@ -4,142 +4,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_IonCode_h
-#define jit_IonCode_h
+#ifndef jit_IonScript_h
+#define jit_IonScript_h
 
-#include "mozilla/Atomics.h"
-#include "mozilla/MemoryReporting.h"
+#include "mozilla/MemoryReporting.h"  // MallocSizeOf
+
+#include <stddef.h>  // size_t
+#include <stdint.h>  // uint8_t, uint32_t
 
 #include "jstypes.h"
 
-#include "jit/ExecutableAllocator.h"
-#include "jit/ICStubSpace.h"
-#include "jit/IonOptimizationLevels.h"
-#include "jit/IonTypes.h"
-#include "js/UbiNode.h"
-#include "util/TrailingArray.h"
-#include "vm/TraceLogging.h"
+#include "jit/IonOptimizationLevels.h"  // OptimizationLevel
+#include "jit/IonTypes.h"               // IonCompilationId
+#include "jit/JitCode.h"                // JitCode
+#include "js/TypeDecls.h"               // jsbytecode
+#include "util/TrailingArray.h"         // TrailingArray
+#include "vm/TraceLogging.h"            // TraceLoggerEvent
 
 namespace js {
 namespace jit {
 
-class JitCode;
-class MacroAssembler;
-
 using TraceLoggerEventVector = Vector<TraceLoggerEvent, 0, SystemAllocPolicy>;
-
-// Header at start of raw code buffer
-struct JitCodeHeader {
-  // Link back to corresponding gcthing
-  JitCode* jitCode_;
-
-  // !!! NOTE !!!
-  // If we are running on AMD Bobcat, insert a NOP-slide at end of the JitCode
-  // header so we can try to recover when the CPU screws up the branch landing
-  // site. See Bug 1281759.
-  void* nops_;
-
-  void init(JitCode* jitCode);
-
-  static JitCodeHeader* FromExecutable(uint8_t* buffer) {
-    return (JitCodeHeader*)(buffer - sizeof(JitCodeHeader));
-  }
-};
-
-class JitCode : public gc::TenuredCell {
- protected:
-  using CellHeaderWithCodePtr = gc::CellHeaderWithNonGCPointer<uint8_t>;
-  CellHeaderWithCodePtr cellHeaderAndCode_;
-  ExecutablePool* pool_;
-  uint32_t bufferSize_;  // Total buffer size. Does not include headerSize_.
-  uint32_t insnSize_;    // Instruction stream size.
-  uint32_t dataSize_;    // Size of the read-only data area.
-  uint32_t jumpRelocTableBytes_;  // Size of the jump relocation table.
-  uint32_t dataRelocTableBytes_;  // Size of the data relocation table.
-  uint8_t headerSize_ : 5;        // Number of bytes allocated before codeStart.
-  uint8_t kind_ : 3;              // jit::CodeKind, for the memory reporters.
-  bool invalidated_ : 1;     // Whether the code object has been invalidated.
-                             // This is necessary to prevent GC tracing.
-  bool hasBytecodeMap_ : 1;  // Whether the code object has been registered with
-                             // native=>bytecode mapping tables.
-
-  JitCode() = delete;
-  JitCode(uint8_t* code, uint32_t bufferSize, uint32_t headerSize,
-          ExecutablePool* pool, CodeKind kind)
-      : cellHeaderAndCode_(code),
-        pool_(pool),
-        bufferSize_(bufferSize),
-        insnSize_(0),
-        dataSize_(0),
-        jumpRelocTableBytes_(0),
-        dataRelocTableBytes_(0),
-        headerSize_(headerSize),
-        kind_(uint8_t(kind)),
-        invalidated_(false),
-        hasBytecodeMap_(false) {
-    MOZ_ASSERT(CodeKind(kind_) == kind);
-    MOZ_ASSERT(headerSize_ == headerSize);
-  }
-
-  uint32_t dataOffset() const { return insnSize_; }
-  uint32_t jumpRelocTableOffset() const { return dataOffset() + dataSize_; }
-  uint32_t dataRelocTableOffset() const {
-    return jumpRelocTableOffset() + jumpRelocTableBytes_;
-  }
-
- public:
-  uint8_t* raw() const { return cellHeaderAndCode_.ptr(); }
-  uint8_t* rawEnd() const { return raw() + insnSize_; }
-  bool containsNativePC(const void* addr) const {
-    const uint8_t* addr_u8 = (const uint8_t*)addr;
-    return raw() <= addr_u8 && addr_u8 < rawEnd();
-  }
-  size_t instructionsSize() const { return insnSize_; }
-  size_t bufferSize() const { return bufferSize_; }
-  size_t headerSize() const { return headerSize_; }
-
-  void traceChildren(JSTracer* trc);
-  void finalize(JSFreeOp* fop);
-  void setInvalidated() { invalidated_ = true; }
-
-  void setHasBytecodeMap() { hasBytecodeMap_ = true; }
-
-  // If this JitCode object has been, effectively, corrupted due to
-  // invalidation patching, then we have to remember this so we don't try and
-  // trace relocation entries that may now be corrupt.
-  bool invalidated() const { return !!invalidated_; }
-
-  template <typename T>
-  T as() const {
-    return JS_DATA_TO_FUNC_PTR(T, raw());
-  }
-
-  void copyFrom(MacroAssembler& masm);
-
-  static JitCode* FromExecutable(uint8_t* buffer) {
-    JitCode* code = JitCodeHeader::FromExecutable(buffer)->jitCode_;
-    MOZ_ASSERT(code->raw() == buffer);
-    return code;
-  }
-
-  static size_t offsetOfCode() {
-    return offsetof(JitCode, cellHeaderAndCode_) +
-           CellHeaderWithCodePtr::offsetOfPtr();
-  }
-
-  uint8_t* jumpRelocTable() { return raw() + jumpRelocTableOffset(); }
-
-  // Allocates a new JitCode object which will be managed by the GC. If no
-  // object can be allocated, nullptr is returned. On failure, |pool| is
-  // automatically released, so the code may be freed.
-  template <AllowGC allowGC>
-  static JitCode* New(JSContext* cx, uint8_t* code, uint32_t totalSize,
-                      uint32_t headerSize, ExecutablePool* pool, CodeKind kind);
-
- public:
-  static const JS::TraceKind TraceKind = JS::TraceKind::JitCode;
-  const gc::CellHeader& cellHeader() const { return cellHeaderAndCode_; }
-};
 
 class SnapshotWriter;
 class RecoverWriter;
@@ -684,35 +569,7 @@ struct IonScriptCounts {
 }  // namespace jit
 }  // namespace js
 
-// JS::ubi::Nodes can point to js::jit::JitCode instances; they're js::gc::Cell
-// instances with no associated compartment.
 namespace JS {
-namespace ubi {
-template <>
-class Concrete<js::jit::JitCode> : TracerConcrete<js::jit::JitCode> {
- protected:
-  explicit Concrete(js::jit::JitCode* ptr)
-      : TracerConcrete<js::jit::JitCode>(ptr) {}
-
- public:
-  static void construct(void* storage, js::jit::JitCode* ptr) {
-    new (storage) Concrete(ptr);
-  }
-
-  CoarseType coarseType() const final { return CoarseType::Script; }
-
-  Size size(mozilla::MallocSizeOf mallocSizeOf) const override {
-    Size size = js::gc::Arena::thingSize(get().asTenured().getAllocKind());
-    size += get().bufferSize();
-    size += get().headerSize();
-    return size;
-  }
-
-  const char16_t* typeName() const override { return concreteTypeName; }
-  static const char16_t concreteTypeName[];
-};
-
-}  // namespace ubi
 
 template <>
 struct DeletePolicy<js::jit::IonScript> {
@@ -725,4 +582,4 @@ struct DeletePolicy<js::jit::IonScript> {
 
 }  // namespace JS
 
-#endif /* jit_IonCode_h */
+#endif /* jit_IonScript_h */

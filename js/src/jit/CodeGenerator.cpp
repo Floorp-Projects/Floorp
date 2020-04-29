@@ -38,6 +38,7 @@
 #include "jit/BaselineCodeGen.h"
 #include "jit/IonIC.h"
 #include "jit/IonOptimizationLevels.h"
+#include "jit/IonScript.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitSpewer.h"
 #include "jit/Linker.h"
