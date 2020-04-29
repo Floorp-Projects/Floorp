@@ -45,6 +45,35 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
  * It just wraps a standard Tooltip and sets its content with an instance of a
  * color picker.
  *
+ * The activeSwatch element expected by the tooltip must follow some guidelines
+ * to be compatible with this feature:
+ * - the background-color of the activeSwatch should be set to the current
+ *   color, it will be updated when the color is changed via the color-picker.
+ * - the `data-color` attribute should be set either on the activeSwatch or on
+ *   a parent node, and should also contain the current color.
+ * - finally if the color value should be displayed next to the swatch as text,
+ *   the activeSwatch should have a nextSibling. Note that this sibling may
+ *   contain more than just text initially, but it will be updated after a color
+ *   change and will only contain the text.
+ *
+ * An example of valid markup (with data-color on a parent and a nextSibling):
+ *
+ * <span data-color="#FFF"> <!-- activeSwatch.closest("[data-color]") -->
+ *   <span
+ *     style="background-color: rgb(255, 255, 255);"
+ *   ></span> <!-- activeSwatch -->
+ *   <span>#FFF</span> <!-- activeSwatch.nextSibling -->
+ * </span>
+ *
+ * Another example with everything on the activeSwatch itself:
+ *
+ * <span> <!-- container, to illustrate that the swatch has no sibling here. -->
+ *   <span
+ *      data-color="#FFF"
+ *      style="background-color: rgb(255, 255, 255);"
+ *   ></span> <!-- activeSwatch & activeSwatch.closest("[data-color]") -->
+ * </span>
+ *
  * @param {Document} document
  *        The document to attach the SwatchColorPickerTooltip. This is either the toolbox
  *        document if the tooltip is a popup tooltip or the panel's document if it is an
