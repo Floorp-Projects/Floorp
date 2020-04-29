@@ -31,7 +31,7 @@ typedef struct _stack_t {
 
 extern unsigned int g_stringsize;
 extern stack_t** g_stacktop;
-extern int(__stdcall* g_executeCodeSegment)(int, HWND);
+extern int(__stdcall* g_executeCodeSegment)(int pos, HWND hwndProgress);
 extern HWND g_hwndParent;
 extern HINSTANCE gHInst;
 
@@ -60,7 +60,7 @@ typedef UINT_PTR (*NSISPLUGINCALLBACK)(enum NSPIM);
 
 typedef struct {
   exec_flags* exec_flags;
-  int(__stdcall* ExecuteCodeSegment)(int, HWND);
+  int(__stdcall* ExecuteCodeSegment)(int pos, HWND hwndProgress);
   void(__stdcall* validate_filename)(LPWSTR);
   int(__stdcall* RegisterPluginCallback)(
       HMODULE,
