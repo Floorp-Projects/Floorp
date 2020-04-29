@@ -274,7 +274,7 @@ enum class MutableScriptFlagsEnum : uint32_t {
   // Script has an entry in Realm::debugScriptMap.
   HasDebugScript = 1 << 11,
 
-  // See comments below.
+  // See: JSScript::ensureHasAnalyzedArgsUsage.
   NeedsArgsAnalysis = 1 << 12,
   NeedsArgsObj = 1 << 13,
 
@@ -284,7 +284,7 @@ enum class MutableScriptFlagsEnum : uint32_t {
   // NOTE: Must check for isRelazifiable() before setting this flag.
   AllowRelazify = 1 << 14,
 
-  // Set if the script has opted into spew
+  // Set if the script has opted into spew.
   SpewEnabled = 1 << 15,
 
   //
@@ -304,14 +304,18 @@ enum class MutableScriptFlagsEnum : uint32_t {
   // Script has had hoisted shape guard fail.
   FailedShapeGuard = 1 << 19,
 
+  // Script experienced frequent bailouts.
   HadFrequentBailouts = 1 << 20,
 
+  // An overflow happened where Range Analysis hoped it would not. The next
+  // compile should be more conservative.
   HadOverflowBailout = 1 << 21,
 
-  // Explicitly marked as uninlineable.
+  // This script should not be inlined into others. This happens after inlining
+  // has failed.
   Uninlineable = 1 << 22,
 
-  // Idempotent cache has triggered invalidation.
+  // An idempotent IC has triggered invalidation and should be deoptimized.
   InvalidatedIdempotentCache = 1 << 23,
 
   // Lexical check did fail and bail out.
