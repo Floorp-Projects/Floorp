@@ -293,7 +293,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
 
     private fun getRemoveBookmarksSnackBarMessage(selected: Set<BookmarkNode>): String {
         return if (selected.size > 1) {
-            getString(R.string.bookmark_deletion_multiple_snackbar_message)
+            getString(R.string.bookmark_deletion_multiple_snackbar_message_2)
         } else {
             val bookmarkNode = selected.first()
             getString(
