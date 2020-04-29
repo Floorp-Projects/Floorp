@@ -6,7 +6,6 @@ package org.mozilla.fenix.customtabs
 
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import androidx.core.app.NotificationCompat
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -41,5 +40,6 @@ class WebAppSiteControlsBuilder(
 
     override fun getFilter() = inner.getFilter()
 
-    override fun onReceiveBroadcast(context: Context, session: Session, intent: Intent) = inner.onReceiveBroadcast(context, session, intent)
+    override fun onReceiveBroadcast(context: Context, session: Session, intent: Intent) =
+        inner.onReceiveBroadcast(context, session, intent)
 }
