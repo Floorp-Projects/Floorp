@@ -1439,6 +1439,10 @@ extern template class nsTSubstringSplitter<char16_t>;
  * Span integration
  */
 namespace mozilla {
+Span(nsTSubstring<char>&)->Span<char>;
+Span(const nsTSubstring<char>&)->Span<const char>;
+Span(nsTSubstring<char16_t>&)->Span<char16_t>;
+Span(const nsTSubstring<char16_t>&)->Span<const char16_t>;
 
 inline Span<char> MakeSpan(nsTSubstring<char>& aString) { return aString; }
 
