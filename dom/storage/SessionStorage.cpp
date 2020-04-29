@@ -31,10 +31,11 @@ NS_IMPL_RELEASE_INHERITED(SessionStorage, Storage)
 
 SessionStorage::SessionStorage(nsPIDOMWindowInner* aWindow,
                                nsIPrincipal* aPrincipal,
+                               nsIPrincipal* aStoragePrincipal,
                                SessionStorageCache* aCache,
                                SessionStorageManager* aManager,
                                const nsAString& aDocumentURI, bool aIsPrivate)
-    : Storage(aWindow, aPrincipal, aPrincipal),
+    : Storage(aWindow, aPrincipal, aStoragePrincipal),
       mCache(aCache),
       mManager(aManager),
       mDocumentURI(aDocumentURI),
