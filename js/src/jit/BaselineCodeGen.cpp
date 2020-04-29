@@ -248,7 +248,7 @@ MethodStatus BaselineCompiler::compile() {
 
   UniquePtr<BaselineScript> baselineScript(
       BaselineScript::New(
-          script, warmUpCheckPrologueOffset_.offset(),
+          cx, warmUpCheckPrologueOffset_.offset(),
           profilerEnterFrameToggleOffset_.offset(),
           profilerExitFrameToggleOffset_.offset(),
           handler.retAddrEntries().length(), handler.osrEntries().length(),
