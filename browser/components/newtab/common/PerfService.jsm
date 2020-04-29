@@ -4,26 +4,7 @@
 
 "use strict";
 
-if (typeof ChromeUtils !== "undefined") {
-  // Use a var here instead of let outside to avoid creating a locally scoped
-  // variable that hides the global, which we modify for testing.
-  // eslint-disable-next-line no-var, vars-on-top
-  var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-}
-
-let usablePerfObj;
-
-/* istanbul ignore else */
-// eslint-disable-next-line block-scoped-var
-if (typeof Services !== "undefined") {
-  // Borrow the high-resolution timer from the hidden window....
-  // eslint-disable-next-line block-scoped-var
-  usablePerfObj = Services.appShell.hiddenDOMWindow.performance;
-} else {
-  // we must be running in content space
-  // eslint-disable-next-line no-undef
-  usablePerfObj = performance;
-}
+let usablePerfObj = window.performance;
 
 function _PerfService(options) {
   // For testing, so that we can use a fake Window.performance object with

@@ -1,9 +1,4 @@
-import {
-  EventEmitter,
-  FakePerformance,
-  FakePrefs,
-  GlobalOverrider,
-} from "test/unit/utils";
+import { EventEmitter, FakePrefs, GlobalOverrider } from "test/unit/utils";
 import Adapter from "enzyme-adapter-react-16";
 import { chaiAssertions } from "test/schemas/pings";
 import chaiJsonSchema from "chai-json-schema";
@@ -247,7 +242,6 @@ const TEST_GLOBAL = {
       addMessageListener: (msg, cb) => this.receiveMessage(),
       removeMessageListener() {},
     },
-    appShell: { hiddenDOMWindow: { performance: new FakePerformance() } },
     obs: {
       addObserver() {},
       removeObserver() {},
