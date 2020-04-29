@@ -3834,10 +3834,15 @@ var SessionStoreInternal = {
    */
   async _asyncNavigateAndRestore(tab) {
     let permanentKey = tab.linkedBrowser.permanentKey;
+    let browser = tab.linkedBrowser;
+
+    browser.messageManager.sendAsyncMessage(
+      "SessionStore:prepareForProcessChange"
+    );
 
     // NOTE: This is currently the only async operation used, but this is likely
     // to change in the future.
-    await TabStateFlusher.flush(tab.linkedBrowser);
+    await TabStateFlusher.flush(browser);
 
     // Now that we have flushed state, our loadArguments, etc. may have been
     // overwritten by multiple calls to navigateAndRestore. Load the most
