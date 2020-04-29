@@ -48,25 +48,17 @@ BrowsingContextGroup::BrowsingContextGroup(uint64_t aId) : mId(aId) {
       GetMainThreadSerialEventTarget(), "BrowsingContextGroup worker queue");
 }
 
-bool BrowsingContextGroup::Contains(BrowsingContext* aBrowsingContext) {
-  return aBrowsingContext->Group() == this;
+void BrowsingContextGroup::Register(nsISupports* aContext) {
+  MOZ_DIAGNOSTIC_ASSERT(aContext);
+  mContexts.PutEntry(aContext);
 }
 
-void BrowsingContextGroup::Register(BrowsingContext* aBrowsingContext) {
-  MOZ_DIAGNOSTIC_ASSERT(aBrowsingContext);
-  MOZ_DIAGNOSTIC_ASSERT(this == sChromeGroup ? aBrowsingContext->IsChrome()
-                                             : aBrowsingContext->IsContent(),
-                        "Only chrome BCs may exist in the chrome group, and "
-                        "only content BCs may exist in other groups");
-  mContexts.PutEntry(aBrowsingContext);
-}
-
-void BrowsingContextGroup::Unregister(BrowsingContext* aBrowsingContext) {
-  MOZ_DIAGNOSTIC_ASSERT(aBrowsingContext);
-  mContexts.RemoveEntry(aBrowsingContext);
+void BrowsingContextGroup::Unregister(nsISupports* aContext) {
+  MOZ_DIAGNOSTIC_ASSERT(aContext);
+  mContexts.RemoveEntry(aContext);
 
   if (mContexts.IsEmpty()) {
-    // There are no browsing context still referencing this group. We can clear
+    // There are no synced contexts still referencing this group. We can clear
     // all subscribers.
     UnsubscribeAllContentParents();
 
@@ -87,14 +79,14 @@ void BrowsingContextGroup::Unsubscribe(ContentParent* aOriginProcess) {
   mSubscribers.RemoveEntry(aOriginProcess);
   aOriginProcess->OnBrowsingContextGroupUnsubscribe(this);
 
-  // If this origin process still embeds any non-discarded BrowsingContexts in
-  // this BrowsingContextGroup, make sure to discard them, as this process is
-  // going away.
+  // If this origin process embeds any non-discarded windowless
+  // BrowsingContexts, make sure to discard them, as this process is going away.
+  // Nested subframes will be discarded by WindowGlobalParent when it is
+  // destroyed by IPC.
   nsTArray<RefPtr<BrowsingContext>> toDiscard;
-  for (auto& context : mContexts) {
-    if (context.GetKey()->Canonical()->IsEmbeddedInProcess(
-            aOriginProcess->ChildID())) {
-      toDiscard.AppendElement(context.GetKey());
+  for (auto& context : mToplevels) {
+    if (context->Canonical()->IsEmbeddedInProcess(aOriginProcess->ChildID())) {
+      toDiscard.AppendElement(context);
     }
   }
   for (auto& context : toDiscard) {
@@ -128,7 +120,7 @@ void BrowsingContextGroup::EnsureSubscribed(ContentParent* aProcess) {
   // FIXME: This won't send non-discarded children of discarded BCs, but those
   // BCs will be in the process of being destroyed anyway.
   // FIXME: Prevent that situation from occuring.
-  nsTArray<SyncedContextInitializer> inits(mContexts.Count() * 2);
+  nsTArray<SyncedContextInitializer> inits(mContexts.Count());
   CollectContextInitializers(mToplevels, inits);
 
   // Send all of our contexts to the target content process.
