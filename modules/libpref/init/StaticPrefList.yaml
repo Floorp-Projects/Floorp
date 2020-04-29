@@ -4596,12 +4596,6 @@
   value: true
   mirror: always
 
-# Whether we attempt to decode AVIF images or not.
-- name: image.avif.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "intl."
 #---------------------------------------------------------------------------

@@ -40,10 +40,6 @@ AutoInitializeImageLib::AutoInitializeImageLib() {
   nsresult rv = Preferences::SetBool("image.webp.enabled", true);
   EXPECT_TRUE(rv == NS_OK);
 
-  // Ensure AVIF is enabled to run decoder tests.
-  rv = Preferences::SetBool("image.avif.enabled", true);
-  EXPECT_TRUE(rv == NS_OK);
-
   // Ensure that ImageLib services are initialized.
   nsCOMPtr<imgITools> imgTools =
       do_CreateInstance("@mozilla.org/image/tools;1");
@@ -137,6 +133,7 @@ already_AddRefed<nsIInputStream> LoadFile(const char* aRelativePath) {
   rv = dirService->Get(NS_OS_CURRENT_WORKING_DIR, NS_GET_IID(nsIFile),
                        getter_AddRefs(file));
   ASSERT_TRUE_OR_RETURN(NS_SUCCEEDED(rv), nullptr);
+
   // Construct the final path by appending the working path to the current
   // working directory.
   file->AppendNative(nsDependentCString(aRelativePath));
@@ -425,17 +422,8 @@ ImageTestCase GreenWebPTestCase() {
   return ImageTestCase("green.webp", "image/webp", IntSize(100, 100));
 }
 
-ImageTestCase GreenAVIFTestCase() {
-  return ImageTestCase("green.avif", "image/avif", IntSize(100, 100));
-}
-
 ImageTestCase LargeWebPTestCase() {
   return ImageTestCase("large.webp", "image/webp", IntSize(1200, 660),
-                       TEST_CASE_IGNORE_OUTPUT);
-}
-
-ImageTestCase LargeAVIFTestCase() {
-  return ImageTestCase("large.avif", "image/avif", IntSize(1200, 660),
                        TEST_CASE_IGNORE_OUTPUT);
 }
 
@@ -606,11 +594,6 @@ ImageTestCase DownscaledIconTestCase() {
 
 ImageTestCase DownscaledWebPTestCase() {
   return ImageTestCase("downscaled.webp", "image/webp", IntSize(100, 100),
-                       IntSize(20, 20));
-}
-
-ImageTestCase DownscaledAVIFTestCase() {
-  return ImageTestCase("downscaled.avif", "image/avif", IntSize(100, 100),
                        IntSize(20, 20));
 }
 
