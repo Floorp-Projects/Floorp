@@ -54,7 +54,7 @@ class MachRegistrar(object):
     def _condition_failed_message(cls, name, conditions):
         msg = ['\n']
         for c in conditions:
-            part = ['  %s' % c.__name__]
+            part = ['  %s' % getattr(c, '__name__', c)]
             if c.__doc__ is not None:
                 part.append(c.__doc__)
             msg.append(' - '.join(part))
