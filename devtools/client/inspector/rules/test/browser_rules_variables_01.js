@@ -44,7 +44,7 @@ add_task(async function() {
     "background-color"
   ).valueSpan.querySelector(".ruleview-unmatched-variable");
   const setVar = unsetVar.nextElementSibling;
-  const setVarName = setVar.firstElementChild.firstElementChild;
+  const setVarName = setVar.querySelector(".ruleview-variable");
   is(
     unsetVar.textContent,
     "--not-set",
