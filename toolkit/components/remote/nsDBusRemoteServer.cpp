@@ -23,7 +23,7 @@
 
 #include <dlfcn.h>
 
-static const char* introspect_template =
+const char* introspect_template =
     "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection "
     "1.0//EN\"\n"
     "\"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\";>\n"
