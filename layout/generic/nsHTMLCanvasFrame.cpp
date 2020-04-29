@@ -162,7 +162,7 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         // the iframe. That happens in WebRenderCompositableHolder.
 
         wr::LayoutRect r = wr::ToLayoutRect(bounds);
-        aBuilder.PushIFrame(r, data->GetPipelineId().ref(),
+        aBuilder.PushIFrame(r, !BackfaceIsHidden(), data->GetPipelineId().ref(),
                             /*ignoreMissingPipelines*/ false);
 
         gfx::Matrix4x4 scTransform;
