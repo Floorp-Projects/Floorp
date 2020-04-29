@@ -36,7 +36,6 @@ rawPackets.set(`new Date(0)`, {
     },
     "actorID": "server0.conn0.child1/obj23"
   },
-  "startTime": 1572867483805,
   "timestamp": 1572867483805
 });
 
@@ -84,7 +83,6 @@ rawPackets.set(`asdf()`, {
   "result": {
     "type": "undefined"
   },
-  "startTime": 1572867483805,
   "timestamp": 1572867483805
 });
 
@@ -123,7 +121,6 @@ rawPackets.set(`1 + @`, {
   "result": {
     "type": "undefined"
   },
-  "startTime": 1572867483805,
   "timestamp": 1572867483805
 });
 
@@ -165,7 +162,6 @@ rawPackets.set(`inspect({a: 1})`, {
   "result": {
     "type": "undefined"
   },
-  "startTime": 1572867483805,
   "timestamp": 1572867483805
 });
 
@@ -179,7 +175,6 @@ rawPackets.set(`cd(document)`, {
   "result": {
     "type": "undefined"
   },
-  "startTime": 1572867483805,
   "timestamp": 1572867483805
 });
 
@@ -189,7 +184,6 @@ rawPackets.set(`undefined`, {
   "result": {
     "type": "undefined"
   },
-  "startTime": 1572867483805,
   "timestamp": 1572867483805
 });
 
@@ -252,7 +246,6 @@ rawPackets.set(`longString message Error`, {
   "result": {
     "type": "undefined"
   },
-  "startTime": 1572867483805,
   "timestamp": 1572867483805
 });
 
@@ -279,7 +272,6 @@ rawPackets.set(`eval throw ""`, {
   "result": {
     "type": "undefined"
   },
-  "startTime": 1572867483805,
   "timestamp": 1572867483805
 });
 
@@ -306,7 +298,6 @@ rawPackets.set(`eval throw "tomato"`, {
   "result": {
     "type": "undefined"
   },
-  "startTime": 1572867483805,
   "timestamp": 1572867483805
 });
 
