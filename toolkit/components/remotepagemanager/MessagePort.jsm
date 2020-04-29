@@ -6,12 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["MessagePort", "MessageListener"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(
-  this,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
 ChromeUtils.defineModuleGetter(
   this,
   "PromiseUtils",
@@ -32,11 +26,6 @@ ChromeUtils.defineModuleGetter(
  */
 let RPMAccessManager = {
   accessMap: {
-    "about:privatebrowsing": {
-      // "sendAsyncMessage": handled within AboutPrivateBrowsingHandler.jsm
-      getFormatURLPref: ["app.support.baseURL"],
-      isWindowPrivate: ["yes"],
-    },
     "about:newinstall": {
       getUpdateChannel: ["yes"],
       getFxAccountsEndpoint: ["yes"],
@@ -380,28 +369,6 @@ class MessagePort {
     return new this.window.Promise((resolve, reject) =>
       promise.then(resolve, reject)
     );
-  }
-
-  getFormatURLPref(aFormatURL) {
-    let doc = this.window.document;
-    if (
-      !RPMAccessManager.checkAllowAccess(doc, "getFormatURLPref", aFormatURL)
-    ) {
-      throw new Error(
-        "RPMAccessManager does not allow access to getFormatURLPref"
-      );
-    }
-    return Services.urlFormatter.formatURLPref(aFormatURL);
-  }
-
-  isWindowPrivate() {
-    let doc = this.window.document;
-    if (!RPMAccessManager.checkAllowAccess(doc, "isWindowPrivate", "yes")) {
-      throw new Error(
-        "RPMAccessManager does not allow access to isWindowPrivate"
-      );
-    }
-    return PrivateBrowsingUtils.isContentWindowPrivate(this.window);
   }
 
   getUpdateChannel() {
