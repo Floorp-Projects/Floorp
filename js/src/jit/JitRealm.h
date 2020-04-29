@@ -200,11 +200,6 @@ class JitRuntime {
   // Code for trampolines and VMFunction wrappers.
   WriteOnceData<JitCode*> trampolineCode_{nullptr};
 
-  // Map VMFunction addresses to the offset of the wrapper in
-  // trampolineCode_.
-  using VMWrapperMap = HashMap<const VMFunction*, uint32_t, VMFunction>;
-  WriteOnceData<VMWrapperMap*> functionWrappers_{nullptr};
-
   // Maps VMFunctionId to the offset of the wrapper code in trampolineCode_.
   using VMWrapperOffsets = Vector<uint32_t, 0, SystemAllocPolicy>;
   VMWrapperOffsets functionWrapperOffsets_;
@@ -327,8 +322,6 @@ class JitRuntime {
 
   uint8_t* allocateIonOsrTempData(size_t size);
   void freeIonOsrTempData();
-
-  TrampolinePtr getVMWrapper(const VMFunction& f) const;
 
   TrampolinePtr getVMWrapper(VMFunctionId funId) const {
     MOZ_ASSERT(trampolineCode_);
