@@ -22,7 +22,7 @@ add_task(async function test_pip_keyboard_shortcut() {
       // shortcut.
       const VIDEO_ID = "with-controls";
 
-      let domWindowOpened = BrowserTestUtils.domWindowOpened(null);
+      let domWindowOpened = BrowserTestUtils.domWindowOpenedAndLoaded(null);
       let videoReady = SpecialPowers.spawn(
         browser,
         [VIDEO_ID],
@@ -37,7 +37,6 @@ add_task(async function test_pip_keyboard_shortcut() {
       EventUtils.synthesizeKey("]", { accelKey: true, shiftKey: true });
 
       let pipWin = await domWindowOpened;
-      await BrowserTestUtils.waitForEvent(pipWin, "load");
       await videoReady;
 
       ok(pipWin, "Got Picture-in-Picture window.");

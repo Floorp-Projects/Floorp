@@ -891,6 +891,24 @@ var BrowserTestUtils = {
 
   /**
    * @param win (optional)
+   *        The window we should wait to have "domwindowopened" sent through
+   *        the observer service for. If this is not supplied, we'll just
+   *        resolve when the first "domwindowopened" notification is seen.
+   *        The promise will be resolved once the new window's document has been
+   *        loaded.
+   * @return {Promise}
+   *         A Promise which resolves when a "domwindowopened" notification
+   *         has been fired by the window watcher.
+   */
+  domWindowOpenedAndLoaded(win) {
+    return this.domWindowOpened(win, async win => {
+      await this.waitForEvent(win, "load");
+      return true;
+    });
+  },
+
+  /**
+   * @param win (optional)
    *        The window we should wait to have "domwindowclosed" sent through
    *        the observer service for. If this is not supplied, we'll just
    *        resolve when the first "domwindowclosed" notification is seen.
