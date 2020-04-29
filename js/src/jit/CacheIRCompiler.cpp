@@ -4159,6 +4159,20 @@ bool CacheIRCompiler::emitLoadInt32Result(Int32OperandId valId) {
   return true;
 }
 
+bool CacheIRCompiler::emitLoadBigIntResult(BigIntOperandId valId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  Register val = allocator.useRegister(masm, valId);
+
+  if (output.hasValue()) {
+    masm.tagValue(JSVAL_TYPE_BIGINT, val, output.valueReg());
+  } else {
+    masm.mov(val, output.typedReg().gpr());
+  }
+
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadDoubleResult(NumberOperandId valId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);
