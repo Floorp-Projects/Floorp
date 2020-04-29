@@ -71,6 +71,15 @@ class AndroidWebAuthnResult {
     }
   }
 
+  AndroidWebAuthnResult(const AndroidWebAuthnResult& aOther)
+      : mAttObj(aOther.mAttObj.InfallibleClone()),
+        mKeyHandle(aOther.mKeyHandle.InfallibleClone()),
+        mClientDataJSON(aOther.mClientDataJSON),
+        mAuthData(aOther.mAuthData.InfallibleClone()),
+        mSignature(aOther.mSignature.InfallibleClone()),
+        mUserHandle(aOther.mUserHandle.InfallibleClone()),
+        mErrorCode(aOther.mErrorCode) {}
+
   // Attestation-only
   CryptoBuffer mAttObj;
 
