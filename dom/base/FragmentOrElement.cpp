@@ -1019,12 +1019,6 @@ bool nsIContent::IsFocusable(int32_t* aTabIndex, bool aWithMouse) {
   // Ensure that the return value and aTabIndex are consistent in the case
   // we're in userfocusignored context.
   if (focusable || (aTabIndex && *aTabIndex != -1)) {
-    if (nsContentUtils::IsUserFocusIgnored(this)) {
-      if (aTabIndex) {
-        *aTabIndex = -1;
-      }
-      return false;
-    }
     return focusable;
   }
   return false;
