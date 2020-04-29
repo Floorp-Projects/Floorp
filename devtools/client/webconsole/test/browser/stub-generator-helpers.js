@@ -277,10 +277,6 @@ function cleanTimeStamp(packet) {
     packet.timeStamp = uniqueTimeStamp;
   }
 
-  if (packet.startTime) {
-    packet.startTime = uniqueTimeStamp;
-  }
-
   if (packet?.message?.timeStamp) {
     packet.message.timeStamp = uniqueTimeStamp;
   }
