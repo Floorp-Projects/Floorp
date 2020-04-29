@@ -198,16 +198,32 @@ class Database {
       await executeIDB(
         "records",
         store => {
-          const range = IDBKeyRange.only(this.identifier);
-          const request = store.index("cid").openKeyCursor(range);
-          request.onsuccess = event => {
-            const cursor = event.target.result;
-            if (cursor) {
-              store.delete(cursor.primaryKey);
-              cursor.continue();
-            }
-          };
-          return request;
+          // Our index is over the _cid and id fields. We want to remove
+          // all of the items in the collection for which the object was
+          // created, ie with _cid == this.identifier.
+          // We would like to just tell IndexedDB:
+          // store.index(IDBKeyRange.only(this.identifier)).delete();
+          // to delete all records matching the first part of the 2-part key.
+          // Unfortunately such an API does not exist.
+          // While we could iterate over the index with a cursor, we'd do
+          // a roundtrip to PBackground for each item. Once you have 1000
+          // items, the result is very slow because of all the overhead of
+          // jumping between threads and serializing/deserializing.
+          // So instead, we tell the store to delete everything between
+          // "our" _cid identifier, and what would be the next identifier
+          // (via lexicographical sorting). Unfortunately there does not
+          // seem to be a way to specify bounds for all items that share
+          // the same first part of the key using just that first part, hence
+          // the use of the hypothetical [] for the second part of the end of
+          // the bounds.
+          return store.delete(
+            IDBKeyRange.bound(
+              [this.identifier],
+              [this.identifier, []],
+              false,
+              true
+            )
+          );
         },
         { desc: "clear() in " + this.identifier }
       );
