@@ -53,7 +53,7 @@ Tests the alwaysOnTop window feature for the Windows OS.
     ok(false, "This test is only designed to run on Windows.");
   } else {
     add_task(async function() {
-      let normalWinOpened = BrowserTestUtils.domWindowOpened();
+      let normalWinOpened = BrowserTestUtils.domWindowOpenedAndLoaded();
       window.openDialog("about:blank",
                         "_blank", "chrome,width=100,height=100,noopener", null);
       let normalWin = await normalWinOpened;
@@ -61,7 +61,7 @@ Tests the alwaysOnTop window feature for the Windows OS.
       assertAlwaysOnTop(normalWin, false);
       await BrowserTestUtils.closeWindow(normalWin);
 
-      let alwaysOnTopWinOpened = BrowserTestUtils.domWindowOpened();
+      let alwaysOnTopWinOpened = BrowserTestUtils.domWindowOpenedAndLoaded();
       window.openDialog("about:blank",
                         "_blank", "chrome,width=100,height=100,alwaysOnTop,noopener", null);
       let alwaysOnTopWin = await alwaysOnTopWinOpened;

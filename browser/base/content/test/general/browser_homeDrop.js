@@ -20,7 +20,7 @@ add_task(async function() {
   ok(homeButton, "home button present");
 
   async function drop(dragData, homepage) {
-    let setHomepageDialogPromise = BrowserTestUtils.domWindowOpened();
+    let setHomepageDialogPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
 
     EventUtils.synthesizeDrop(
       dragSrcElement,
@@ -34,7 +34,6 @@ add_task(async function() {
 
     let setHomepageDialog = await setHomepageDialogPromise;
     ok(true, "dialog appeared in response to home button drop");
-    await BrowserTestUtils.waitForEvent(setHomepageDialog, "load", false);
 
     let setHomepagePromise = new Promise(function(resolve) {
       let observer = {
