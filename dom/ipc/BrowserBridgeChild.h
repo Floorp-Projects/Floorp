@@ -95,8 +95,7 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
       const ScrollAxis& aHorizontal, const ScrollFlags& aScrollFlags,
       const int32_t& aAppUnitsPerDevPixel);
 
-  mozilla::ipc::IPCResult RecvSubFrameCrashed(
-      const MaybeDiscarded<BrowsingContext>& aContext);
+  mozilla::ipc::IPCResult RecvSubFrameCrashed();
 
   mozilla::ipc::IPCResult RecvAddBlockedNodeByClassifier();
 

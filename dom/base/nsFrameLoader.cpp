@@ -3438,7 +3438,7 @@ void nsFrameLoader::MaybeNotifyCrashed(BrowsingContext* aBrowsingContext,
   init.mCancelable = true;
   if (aBrowsingContext) {
     init.mBrowsingContextId = aBrowsingContext->Id();
-    init.mIsTopFrame = !aBrowsingContext->GetParent();
+    init.mIsTopFrame = aBrowsingContext->IsTop();
   }
 
   RefPtr<FrameCrashedEvent> event = FrameCrashedEvent::Constructor(
