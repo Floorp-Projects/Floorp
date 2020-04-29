@@ -1081,7 +1081,37 @@ void AudioCallbackDriver::PanOutputIfNeeded(bool aMicrophoneActive) {
     return;
   }
 
-  if (!strncmp(name, "MacBookPro", 10)) {
+  int major,minor;
+  for (uint32_t i = 0; i < length; i++) {
+    // skip the model name
+    if (isalpha(name[i])) {
+      continue;
+    }
+    sscanf(name+i, "%d,%d", &major, &minor);
+    break;
+  }
+
+  enum MacbookModel {
+    MacBook,
+    MacBookPro,
+    MacBookAir,
+    NotAMacbook
+  };
+
+  MacbookModel model;
+
+  if (!strncmp(name, "MacBookPro", length)) {
+    model = MacBookPro;
+  } else if (strncmp(name, "MacBookAir", length)) {
+    model = MacBookAir;
+  } else if (strncmp(name, "MacBook", length)) {
+    model = MacBook;
+  } else {
+    model = NotAMacbook;
+  }
+  // For macbook pro before 2016 model (change of chassis), hard pan the audio
+  // to the right if the speakers are in use to avoid feedback.
+  if (model == MacBookPro && major <= 12) {
     if (cubeb_stream_get_current_device(mAudioStream, &out) == CUBEB_OK) {
       MOZ_ASSERT(out);
       // Check if we are currently outputing sound on external speakers.
