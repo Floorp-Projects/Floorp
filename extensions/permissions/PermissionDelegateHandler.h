@@ -29,9 +29,9 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
 #include "nsIPermissionDelegateHandler.h"
+#include "nsIPermissionManager.h"
 #include "nsCOMPtr.h"
 
-class nsIPermissionManager;
 class nsIPrincipal;
 class nsIContentPermissionRequest;
 

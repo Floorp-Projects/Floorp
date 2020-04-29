@@ -12,13 +12,13 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
+#include "nsGlobalWindowInner.h"
 #include "nsCycleCollectionParticipant.h"
 #include "GeckoProfiler.h"
 
 class nsIEventTarget;
 class nsIPrincipal;
 class nsIEventTarget;
-class nsGlobalWindowInner;
 
 namespace mozilla {
 namespace dom {

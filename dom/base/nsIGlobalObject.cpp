@@ -29,6 +29,8 @@ using mozilla::Maybe;
 using mozilla::MicroTaskRunnable;
 using mozilla::dom::BlobURLProtocolHandler;
 using mozilla::dom::ClientInfo;
+using mozilla::dom::Report;
+using mozilla::dom::ReportingObserver;
 using mozilla::dom::ServiceWorker;
 using mozilla::dom::ServiceWorkerDescriptor;
 using mozilla::dom::ServiceWorkerRegistration;
@@ -210,7 +212,7 @@ Maybe<nsID> nsIGlobalObject::GetAgentClusterId() const {
   if (ci.isSome()) {
     return ci.value().AgentClusterId();
   }
-  return Nothing();
+  return mozilla::Nothing();
 }
 
 Maybe<ServiceWorkerDescriptor> nsIGlobalObject::GetController() const {
@@ -288,7 +290,8 @@ void nsIGlobalObject::RegisterReportingObserver(ReportingObserver* aObserver,
     return;
   }
 
-  if (NS_WARN_IF(!mReportingObservers.AppendElement(aObserver, fallible))) {
+  if (NS_WARN_IF(
+          !mReportingObservers.AppendElement(aObserver, mozilla::fallible))) {
     return;
   }
 
@@ -314,7 +317,7 @@ void nsIGlobalObject::BroadcastReport(Report* aReport) {
     observer->MaybeReport(aReport);
   }
 
-  if (NS_WARN_IF(!mReportRecords.AppendElement(aReport, fallible))) {
+  if (NS_WARN_IF(!mReportRecords.AppendElement(aReport, mozilla::fallible))) {
     return;
   }
 
