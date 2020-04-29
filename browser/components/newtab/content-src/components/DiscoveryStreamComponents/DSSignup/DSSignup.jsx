@@ -88,7 +88,7 @@ export class DSSignup extends React.PureComponent {
     }
     // Grab the first item in the array as we only have 1 spoc position.
     const [spoc] = data.spocs;
-    const { title, url, context, flight_id, id, shim } = spoc;
+    const { title, url, excerpt, flight_id, id, shim } = spoc;
 
     const SIGNUP_CONTEXT_MENU_OPTIONS = [
       "OpenInNewWindow",
@@ -118,7 +118,7 @@ export class DSSignup extends React.PureComponent {
               onLinkClick={this.onLinkClick}
               url={url}
             >
-              {context}
+              {excerpt}
             </SafeAnchor>
           </span>
           <ImpressionStats
