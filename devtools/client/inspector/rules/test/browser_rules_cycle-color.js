@@ -17,10 +17,14 @@ const TEST_URI = `
     div {
       color: green;
     }
+    p {
+      color: blue;
+    }
   </style>
   <body>
     <span>Test</span>
     <div>cycling color types in the rule view!</div>
+    <p>cycling color and using the color picker</p>
   </body>
 `;
 
@@ -31,6 +35,7 @@ add_task(async function() {
   await checkColorCycling(view);
   await checkAlphaColorCycling(inspector, view);
   await checkColorCyclingWithDifferentDefaultType(inspector, view);
+  await checkColorCyclingWithColorPicker(inspector, view);
 });
 
 async function checkColorCycling(view) {
@@ -131,6 +136,46 @@ async function checkColorCyclingWithDifferentDefaultType(inspector, view) {
       comment: "Color displayed as an HSL value again",
     },
   ]);
+}
+
+async function checkColorCyclingWithColorPicker(inspector, view) {
+  // Enforce hex format for this test
+  await pushPref("devtools.defaultColorUnit", "hex");
+
+  info("Select a new node for this test");
+  await selectNode("p", inspector);
+  const { valueSpan } = getRuleViewProperty(view, "p", "color");
+
+  checkColorValue(valueSpan, "#00f", "Color has the expected initial value");
+
+  checkSwatchShiftClick(
+    view,
+    valueSpan,
+    "hsl(240, 100%, 50%)",
+    "Color has the expected value after a shift+click"
+  );
+
+  info("Opening the color picker");
+  const swatchElement = valueSpan.querySelector(".ruleview-colorswatch");
+  const picker = view.tooltips.getTooltip("colorPicker");
+  const onColorPickerReady = picker.once("ready");
+  swatchElement.click();
+  await onColorPickerReady;
+
+  info("Hide the color picker with escape");
+  const cPicker = view.tooltips.getTooltip("colorPicker");
+  const { spectrum } = cPicker;
+  const onHidden = cPicker.tooltip.once("hidden");
+  const onModifications = view.once("ruleview-changed");
+  EventUtils.sendKey("ESCAPE", spectrum.element.ownerDocument.defaultView);
+  await onHidden;
+  await onModifications;
+
+  is(
+    swatchElement.parentNode.dataset.color,
+    "hsl(240, 100%, 50%)",
+    "data-color is still using the correct format"
+  );
 }
 
 async function runSwatchShiftClickTests(view, valueSpan, tests) {
