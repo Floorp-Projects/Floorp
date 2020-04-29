@@ -30,6 +30,8 @@ sealed class HistoryFragmentAction : Action {
     object ExitEditMode : HistoryFragmentAction()
     data class AddItemForRemoval(val item: HistoryItem) : HistoryFragmentAction()
     data class RemoveItemForRemoval(val item: HistoryItem) : HistoryFragmentAction()
+    data class AddPendingDeletionSet(val itemIds: Set<Long>) : HistoryFragmentAction()
+    data class UndoRemovePendingDeletionSet(val itemIds: Set<Long>) : HistoryFragmentAction()
     object EnterDeletionMode : HistoryFragmentAction()
     object ExitDeletionMode : HistoryFragmentAction()
     object StartSync : HistoryFragmentAction()
@@ -41,12 +43,16 @@ sealed class HistoryFragmentAction : Action {
  * @property items List of HistoryItem to display
  * @property mode Current Mode of History
  */
-data class HistoryFragmentState(val items: List<HistoryItem>, val mode: Mode) : State {
+data class HistoryFragmentState(
+    val items: List<HistoryItem>,
+    val mode: Mode,
+    val pendingDeletionIds: Set<Long>,
+    val isDeletingItems: Boolean
+) : State {
     sealed class Mode {
         open val selectedItems = emptySet<HistoryItem>()
 
         object Normal : Mode()
-        object Deleting : Mode()
         object Syncing : Mode()
         data class Editing(override val selectedItems: Set<HistoryItem>) : Mode()
     }
@@ -73,9 +79,17 @@ private fun historyStateReducer(
             )
         }
         is HistoryFragmentAction.ExitEditMode -> state.copy(mode = HistoryFragmentState.Mode.Normal)
-        is HistoryFragmentAction.EnterDeletionMode -> state.copy(mode = HistoryFragmentState.Mode.Deleting)
-        is HistoryFragmentAction.ExitDeletionMode -> state.copy(mode = HistoryFragmentState.Mode.Normal)
+        is HistoryFragmentAction.EnterDeletionMode -> state.copy(isDeletingItems = true)
+        is HistoryFragmentAction.ExitDeletionMode -> state.copy(isDeletingItems = false)
         is HistoryFragmentAction.StartSync -> state.copy(mode = HistoryFragmentState.Mode.Syncing)
         is HistoryFragmentAction.FinishSync -> state.copy(mode = HistoryFragmentState.Mode.Normal)
+        is HistoryFragmentAction.AddPendingDeletionSet ->
+            state.copy(
+                pendingDeletionIds = state.pendingDeletionIds + action.itemIds
+            )
+        is HistoryFragmentAction.UndoRemovePendingDeletionSet ->
+            state.copy(
+                pendingDeletionIds = state.pendingDeletionIds - action.itemIds
+            )
     }
 }
