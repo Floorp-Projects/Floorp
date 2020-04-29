@@ -926,7 +926,7 @@ void nsFrame::DestroyFrom(nsIFrame* aDestructRoot,
   presShell->FreeFrame(id, this);
 }
 
-nsresult nsFrame::GetOffsets(int32_t& aStart, int32_t& aEnd) const {
+nsresult nsIFrame::GetOffsets(int32_t& aStart, int32_t& aEnd) const {
   aStart = 0;
   aEnd = 0;
   return NS_OK;
@@ -2073,17 +2073,17 @@ bool nsIFrame::GetShapeBoxBorderRadii(nscoord aRadii[8]) const {
   }
 }
 
-ComputedStyle* nsFrame::GetAdditionalComputedStyle(int32_t aIndex) const {
+ComputedStyle* nsIFrame::GetAdditionalComputedStyle(int32_t aIndex) const {
   MOZ_ASSERT(aIndex >= 0, "invalid index number");
   return nullptr;
 }
 
-void nsFrame::SetAdditionalComputedStyle(int32_t aIndex,
-                                         ComputedStyle* aComputedStyle) {
+void nsIFrame::SetAdditionalComputedStyle(int32_t aIndex,
+                                          ComputedStyle* aComputedStyle) {
   MOZ_ASSERT(aIndex >= 0, "invalid index number");
 }
 
-nscoord nsFrame::GetLogicalBaseline(WritingMode aWritingMode) const {
+nscoord nsIFrame::GetLogicalBaseline(WritingMode aWritingMode) const {
   NS_ASSERTION(!NS_SUBTREE_DIRTY(this), "frame must not be dirty");
   // Baseline for inverted line content is the top (block-start) margin edge,
   // as the frame is in effect "flipped" for alignment purposes.
@@ -2096,7 +2096,7 @@ nscoord nsFrame::GetLogicalBaseline(WritingMode aWritingMode) const {
          GetLogicalUsedMargin(aWritingMode).BEnd(aWritingMode);
 }
 
-const nsFrameList& nsFrame::GetChildList(ChildListID aListID) const {
+const nsFrameList& nsIFrame::GetChildList(ChildListID aListID) const {
   if (IsAbsoluteContainer() && aListID == GetAbsoluteListID()) {
     return GetAbsoluteContainingBlock()->GetChildList();
   } else {
@@ -2104,7 +2104,7 @@ const nsFrameList& nsFrame::GetChildList(ChildListID aListID) const {
   }
 }
 
-void nsFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
+void nsIFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
   if (IsAbsoluteContainer()) {
     nsFrameList absoluteList = GetAbsoluteContainingBlock()->GetChildList();
     absoluteList.AppendIfNonempty(aLists, GetAbsoluteListID());
@@ -4475,8 +4475,8 @@ void nsIFrame::MarkAbsoluteFramesForDisplayList(
   }
 }
 
-nsresult nsFrame::GetContentForEvent(WidgetEvent* aEvent,
-                                     nsIContent** aContent) {
+nsresult nsIFrame::GetContentForEvent(WidgetEvent* aEvent,
+                                      nsIContent** aContent) {
   nsIFrame* f = nsLayoutUtils::GetNonGeneratedAncestor(this);
   *aContent = f->GetContent();
   NS_IF_ADDREF(*aContent);
@@ -5815,30 +5815,30 @@ void nsIFrame::MarkSubtreeDirty() {
 }
 
 /* virtual */
-nscoord nsFrame::GetMinISize(gfxContext* aRenderingContext) {
+nscoord nsIFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord result = 0;
   DISPLAY_MIN_INLINE_SIZE(this, result);
   return result;
 }
 
 /* virtual */
-nscoord nsFrame::GetPrefISize(gfxContext* aRenderingContext) {
+nscoord nsIFrame::GetPrefISize(gfxContext* aRenderingContext) {
   nscoord result = 0;
   DISPLAY_PREF_INLINE_SIZE(this, result);
   return result;
 }
 
 /* virtual */
-void nsFrame::AddInlineMinISize(gfxContext* aRenderingContext,
-                                nsIFrame::InlineMinISizeData* aData) {
+void nsIFrame::AddInlineMinISize(gfxContext* aRenderingContext,
+                                 nsIFrame::InlineMinISizeData* aData) {
   nscoord isize = nsLayoutUtils::IntrinsicForContainer(
       aRenderingContext, this, nsLayoutUtils::MIN_ISIZE);
   aData->DefaultAddInlineMinISize(this, isize);
 }
 
 /* virtual */
-void nsFrame::AddInlinePrefISize(gfxContext* aRenderingContext,
-                                 nsIFrame::InlinePrefISizeData* aData) {
+void nsIFrame::AddInlinePrefISize(gfxContext* aRenderingContext,
+                                  nsIFrame::InlinePrefISizeData* aData) {
   nscoord isize = nsLayoutUtils::IntrinsicForContainer(
       aRenderingContext, this, nsLayoutUtils::PREF_ISIZE);
   aData->DefaultAddInlinePrefISize(isize);
@@ -6060,7 +6060,7 @@ static nsIFrame::IntrinsicSizeOffsetData IntrinsicSizeOffsets(
   return result;
 }
 
-/* virtual */ nsIFrame::IntrinsicSizeOffsetData nsFrame::IntrinsicISizeOffsets(
+/* virtual */ nsIFrame::IntrinsicSizeOffsetData nsIFrame::IntrinsicISizeOffsets(
     nscoord aPercentageBasis) {
   return IntrinsicSizeOffsets(this, aPercentageBasis, true);
 }
@@ -6071,12 +6071,12 @@ nsIFrame::IntrinsicSizeOffsetData nsIFrame::IntrinsicBSizeOffsets(
 }
 
 /* virtual */
-IntrinsicSize nsFrame::GetIntrinsicSize() {
+IntrinsicSize nsIFrame::GetIntrinsicSize() {
   return IntrinsicSize();  // default is width/height set to eStyleUnit_None
 }
 
 /* virtual */
-AspectRatio nsFrame::GetIntrinsicRatio() { return AspectRatio(); }
+AspectRatio nsIFrame::GetIntrinsicRatio() { return AspectRatio(); }
 
 /* virtual */
 LogicalSize nsFrame::ComputeSize(gfxContext* aRenderingContext, WritingMode aWM,
@@ -6964,7 +6964,7 @@ void nsFrame::PushDirtyBitToAbsoluteFrames() {
 }
 
 /* virtual */
-bool nsFrame::CanContinueTextRun() const {
+bool nsIFrame::CanContinueTextRun() const {
   // By default, a frame will *not* allow a text run to be continued
   // through it.
   return false;
@@ -6990,39 +6990,39 @@ bool nsIFrame::IsContentDisabled() const {
   return element && element->IsDisabled();
 }
 
-nsresult nsFrame::CharacterDataChanged(const CharacterDataChangeInfo&) {
+nsresult nsIFrame::CharacterDataChanged(const CharacterDataChangeInfo&) {
   MOZ_ASSERT_UNREACHABLE("should only be called for text frames");
   return NS_OK;
 }
 
-nsresult nsFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                   int32_t aModType) {
+nsresult nsIFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                                    int32_t aModType) {
   return NS_OK;
 }
 
 // Flow member functions
 
-nsIFrame* nsFrame::GetPrevContinuation() const { return nullptr; }
+nsIFrame* nsIFrame::GetPrevContinuation() const { return nullptr; }
 
-void nsFrame::SetPrevContinuation(nsIFrame* aPrevContinuation) {
+void nsIFrame::SetPrevContinuation(nsIFrame* aPrevContinuation) {
   MOZ_ASSERT(false, "not splittable");
 }
 
-nsIFrame* nsFrame::GetNextContinuation() const { return nullptr; }
+nsIFrame* nsIFrame::GetNextContinuation() const { return nullptr; }
 
-void nsFrame::SetNextContinuation(nsIFrame*) {
+void nsIFrame::SetNextContinuation(nsIFrame*) {
   MOZ_ASSERT(false, "not splittable");
 }
 
-nsIFrame* nsFrame::GetPrevInFlow() const { return nullptr; }
+nsIFrame* nsIFrame::GetPrevInFlow() const { return nullptr; }
 
-void nsFrame::SetPrevInFlow(nsIFrame* aPrevInFlow) {
+void nsIFrame::SetPrevInFlow(nsIFrame* aPrevInFlow) {
   MOZ_ASSERT(false, "not splittable");
 }
 
-nsIFrame* nsFrame::GetNextInFlow() const { return nullptr; }
+nsIFrame* nsIFrame::GetNextInFlow() const { return nullptr; }
 
-void nsFrame::SetNextInFlow(nsIFrame*) { MOZ_ASSERT(false, "not splittable"); }
+void nsIFrame::SetNextInFlow(nsIFrame*) { MOZ_ASSERT(false, "not splittable"); }
 
 nsIFrame* nsIFrame::GetTailContinuation() {
   nsIFrame* frame = this;
@@ -7926,12 +7926,12 @@ bool nsIFrame::UpdateOverflow() {
 }
 
 /* virtual */
-bool nsFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) {
+bool nsIFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) {
   return true;
 }
 
 /* virtual */
-void nsFrame::UnionChildOverflow(nsOverflowAreas& aOverflowAreas) {
+void nsIFrame::UnionChildOverflow(nsOverflowAreas& aOverflowAreas) {
   if (!DoesClipChildren() &&
       !(IsXULCollapsed() && (IsXULBoxFrame() || ::IsXULBoxWrapped(this)))) {
     nsLayoutUtils::UnionChildOverflow(this, aOverflowAreas);
@@ -8273,7 +8273,7 @@ bool nsIFrame::IsVisibleOrCollapsedForPainting() {
 }
 
 /* virtual */
-bool nsFrame::IsEmpty() { return false; }
+bool nsIFrame::IsEmpty() { return false; }
 
 bool nsIFrame::CachedIsEmpty() {
   MOZ_ASSERT(!(GetStateBits() & NS_FRAME_IS_DIRTY),
@@ -8282,10 +8282,10 @@ bool nsIFrame::CachedIsEmpty() {
 }
 
 /* virtual */
-bool nsFrame::IsSelfEmpty() { return false; }
+bool nsIFrame::IsSelfEmpty() { return false; }
 
-nsresult nsFrame::GetSelectionController(nsPresContext* aPresContext,
-                                         nsISelectionController** aSelCon) {
+nsresult nsIFrame::GetSelectionController(nsPresContext* aPresContext,
+                                          nsISelectionController** aSelCon) {
   if (!aPresContext || !aSelCon) return NS_ERROR_INVALID_ARG;
 
   nsIFrame* frame = this;
@@ -8326,7 +8326,7 @@ bool nsIFrame::IsFrameSelected() const {
   return GetContent()->IsSelected(0, GetContent()->GetChildCount());
 }
 
-nsresult nsFrame::GetPointFromOffset(int32_t inOffset, nsPoint* outPoint) {
+nsresult nsIFrame::GetPointFromOffset(int32_t inOffset, nsPoint* outPoint) {
   MOZ_ASSERT(outPoint != nullptr, "Null parameter");
   nsRect contentRect = GetContentRectRelativeToSelf();
   nsPoint pt = contentRect.TopLeft();
@@ -8355,16 +8355,16 @@ nsresult nsFrame::GetPointFromOffset(int32_t inOffset, nsPoint* outPoint) {
   return NS_OK;
 }
 
-nsresult nsFrame::GetCharacterRectsInRange(int32_t aInOffset, int32_t aLength,
-                                           nsTArray<nsRect>& aOutRect) {
+nsresult nsIFrame::GetCharacterRectsInRange(int32_t aInOffset, int32_t aLength,
+                                            nsTArray<nsRect>& aOutRect) {
   /* no text */
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsFrame::GetChildFrameContainingOffset(int32_t inContentOffset,
-                                                bool inHint,
-                                                int32_t* outFrameContentOffset,
-                                                nsIFrame** outChildFrame) {
+nsresult nsIFrame::GetChildFrameContainingOffset(int32_t inContentOffset,
+                                                 bool inHint,
+                                                 int32_t* outFrameContentOffset,
+                                                 nsIFrame** outChildFrame) {
   MOZ_ASSERT(outChildFrame && outFrameContentOffset, "Null parameter");
   *outFrameContentOffset = (int32_t)inHint;
   // the best frame to reflect any given offset would be a visible frame if
@@ -9150,14 +9150,14 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
   return NS_OK;
 }
 
-nsIFrame::FrameSearchResult nsFrame::PeekOffsetNoAmount(bool aForward,
-                                                        int32_t* aOffset) {
+nsIFrame::FrameSearchResult nsIFrame::PeekOffsetNoAmount(bool aForward,
+                                                         int32_t* aOffset) {
   NS_ASSERTION(aOffset && *aOffset <= 1, "aOffset out of range");
   // Sure, we can stop right here.
   return FOUND;
 }
 
-nsIFrame::FrameSearchResult nsFrame::PeekOffsetCharacter(
+nsIFrame::FrameSearchResult nsIFrame::PeekOffsetCharacter(
     bool aForward, int32_t* aOffset, PeekOffsetCharacterOptions aOptions) {
   NS_ASSERTION(aOffset && *aOffset <= 1, "aOffset out of range");
   int32_t startOffset = *aOffset;
@@ -9237,8 +9237,8 @@ bool nsFrame::BreakWordBetweenPunctuation(const PeekWordState* aState,
   return aState->mSeenNonPunctuationSinceWhitespace;
 }
 
-nsresult nsFrame::CheckVisibility(nsPresContext*, int32_t, int32_t, bool, bool*,
-                                  bool*) {
+nsresult nsIFrame::CheckVisibility(nsPresContext*, int32_t, int32_t, bool,
+                                   bool*, bool*) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -9428,14 +9428,14 @@ nsView* nsIFrame::GetClosestView(nsPoint* aOffset) const {
 }
 
 /* virtual */
-void nsFrame::ChildIsDirty(nsIFrame* aChild) {
+void nsIFrame::ChildIsDirty(nsIFrame* aChild) {
   MOZ_ASSERT_UNREACHABLE(
       "should never be called on a frame that doesn't "
       "inherit from nsContainerFrame");
 }
 
 #ifdef ACCESSIBILITY
-a11y::AccType nsFrame::AccessibleType() {
+a11y::AccType nsIFrame::AccessibleType() {
   if (IsTableCaption() && !GetRect().IsEmpty()) {
     return a11y::eHTMLCaptionType;
   }

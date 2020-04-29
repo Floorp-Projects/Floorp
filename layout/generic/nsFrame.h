@@ -155,27 +155,11 @@ class nsFrame : public nsIFrame {
             nsIFrame* aPrevInFlow) override;
   void DestroyFrom(nsIFrame* aDestructRoot,
                    PostDestroyData& aPostDestroyData) override;
-  ComputedStyle* GetAdditionalComputedStyle(int32_t aIndex) const override;
-  void SetAdditionalComputedStyle(int32_t aIndex,
-                                  ComputedStyle* aComputedStyle) override;
-  nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
-  const nsFrameList& GetChildList(ChildListID aListID) const override;
-  void GetChildLists(nsTArray<ChildList>* aLists) const override;
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult HandleEvent(nsPresContext* aPresContext,
                        mozilla::WidgetGUIEvent* aEvent,
                        nsEventStatus* aEventStatus) override;
-  nsresult GetContentForEvent(mozilla::WidgetEvent* aEvent,
-                              nsIContent** aContent) override;
-
-  nsresult GetPointFromOffset(int32_t inOffset, nsPoint* outPoint) override;
-  nsresult GetCharacterRectsInRange(int32_t aInOffset, int32_t aLength,
-                                    nsTArray<nsRect>& aOutRect) override;
-
-  nsresult GetChildFrameContainingOffset(int32_t inContentOffset, bool inHint,
-                                         int32_t* outFrameContentOffset,
-                                         nsIFrame** outChildFrame) override;
 
   static nsresult GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
                                                  nsPeekOffsetStruct* aPos,
@@ -183,27 +167,6 @@ class nsFrame : public nsIFrame {
                                                  int32_t aLineStart,
                                                  int8_t aOutSideLimit);
 
-  nsresult CharacterDataChanged(const CharacterDataChangeInfo& aInfo) override;
-  nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                            int32_t aModType) override;
-  nsIFrame* GetPrevContinuation() const override;
-  void SetPrevContinuation(nsIFrame*) override;
-  nsIFrame* GetNextContinuation() const override;
-  void SetNextContinuation(nsIFrame*) override;
-  nsIFrame* GetPrevInFlow() const override;
-  void SetPrevInFlow(nsIFrame*) override;
-  nsIFrame* GetNextInFlow() const override;
-  void SetNextInFlow(nsIFrame*) override;
-
-  nsresult GetSelectionController(nsPresContext* aPresContext,
-                                  nsISelectionController** aSelCon) override;
-
-  FrameSearchResult PeekOffsetNoAmount(bool aForward,
-                                       int32_t* aOffset) override;
-  FrameSearchResult PeekOffsetCharacter(
-      bool aForward, int32_t* aOffset,
-      PeekOffsetCharacterOptions aOptions =
-          PeekOffsetCharacterOptions()) override;
   FrameSearchResult PeekOffsetWord(bool aForward, bool aWordSelectEatSpace,
                                    bool aIsKeyboardSelect, int32_t* aOffset,
                                    PeekWordState* aState,
@@ -220,17 +183,6 @@ class nsFrame : public nsIFrame {
                                           bool aForward, bool aPunctAfter,
                                           bool aWhitespaceAfter,
                                           bool aIsKeyboardSelect);
-
-  nsresult CheckVisibility(nsPresContext* aContext, int32_t aStartIndex,
-                           int32_t aEndIndex, bool aRecurse, bool* aFinished,
-                           bool* _retval) override;
-
-  nsresult GetOffsets(int32_t& aStart, int32_t& aEnd) const override;
-  void ChildIsDirty(nsIFrame* aChild) override;
-
-#ifdef ACCESSIBILITY
-  mozilla::a11y::AccType AccessibleType() override;
-#endif
 
   ComputedStyle* GetParentComputedStyle(
       nsIFrame** aProviderFrame) const override {
@@ -252,20 +204,7 @@ class nsFrame : public nsIFrame {
    */
   ComputedStyle* DoGetParentComputedStyle(nsIFrame** aProviderFrame) const;
 
-  bool IsEmpty() override;
-  bool IsSelfEmpty() override;
-
   void MarkIntrinsicISizesDirty() override;
-  nscoord GetMinISize(gfxContext* aRenderingContext) override;
-  nscoord GetPrefISize(gfxContext* aRenderingContext) override;
-  void AddInlineMinISize(gfxContext* aRenderingContext,
-                         InlineMinISizeData* aData) override;
-  void AddInlinePrefISize(gfxContext* aRenderingContext,
-                          InlinePrefISizeData* aData) override;
-  IntrinsicSizeOffsetData IntrinsicISizeOffsets(
-      nscoord aPercentageBasis = NS_UNCONSTRAINEDSIZE) override;
-  mozilla::IntrinsicSize GetIntrinsicSize() override;
-  mozilla::AspectRatio GetIntrinsicRatio() override;
 
   mozilla::LogicalSize ComputeSize(
       gfxContext* aRenderingContext, mozilla::WritingMode aWM,
@@ -373,12 +312,6 @@ class nsFrame : public nsIFrame {
    * when a multipass layout algorithm is used.
    */
   void PushDirtyBitToAbsoluteFrames();
-
-  bool CanContinueTextRun() const override;
-
-  bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) override;
-
-  void UnionChildOverflow(nsOverflowAreas& aOverflowAreas) override;
 
   // Selection Methods
 
