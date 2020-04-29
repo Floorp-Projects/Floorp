@@ -48,7 +48,7 @@ When the `AboutRedirector` in the "privileged about content process" notices tha
 
 If, at this point, nothing has been streamed from the parent, we fall back to loading the dynamic `about:home` document. This might occur if the cache doesn't exist yet, or if we were too slow to pull it off of the disk.
 
-The `AboutHomeStartupCacheChild` will also be responsible for updating the cache over time. The `AboutHomeStartupCacheChild` will periodically request the most up-to-date state for `about:home` from the parent process, and then generate document markup using ReactDOMServer within a `ChromeWorker`. After that's generated, the "privileged about content process" will send up `nsIInputStream` instances for both the markup and the script for the initial page state. The `AboutHomeStartupCache` singleton inside of `BrowserGlue` is responsible for receiving those `nsIInputStream`'s and persisting them in the HTTP cache for the next start.
+The `AboutHomeStartupCacheChild` will also be responsible for generating the cache periodically. Periodically, the `AboutNewTabService` will send down the most up-to-date state for `about:home` from the parent process, and then the `AboutHomeStartupCacheChild` will generate document markup using ReactDOMServer within a `ChromeWorker`. After that's generated, the "privileged about content process" will send up `nsIInputStream` instances for both the markup and the script for the initial page state. The `AboutHomeStartupCache` singleton inside of `BrowserGlue` is responsible for receiving those `nsIInputStream`'s and persisting them in the HTTP cache for the next start.
 
 ## What is cached?
 
@@ -60,6 +60,12 @@ Two things are cached:
 The JavaScript being cached cannot be put directly into the HTML mark-up as inline script due to the CSP of `about:home`, which does not allow inline scripting. Instead, we load a script from `about:home?jscache`. This goes through the same mechanism for retrieving the HTML document from the cache, but instead pulls down the cached script.
 
 If the HTML mark-up is cached, then we presume that the script is also cached. We cannot cache one and not the other. If only one cache exists, or only one has been sent down to the "privileged about content process" by the time the `about:home` document is requested, then we fallback to loading the dynamic `about:home` document.
+
+## Refreshing the cache
+
+The cache is refreshed periodically by having `ActivityStreamMessageChannel` tell `AboutHomeStartupCache` when it has sent any messages down to the preloaded `about:newtab`. In general, such messages are a good hint that something visual has updated for the next `about:newtab`, and that the cache should probably be refreshed.
+
+`AboutHomeStartupCache` debounces notifications about such messages, since they tend to be bursty.
 
 ## Invalidating the cache
 
