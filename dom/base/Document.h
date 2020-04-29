@@ -1433,7 +1433,7 @@ class Document : public nsINode,
   nsICookieJarSettings* CookieJarSettings();
 
   // Returns whether this document has the storage permission.
-  bool HasStoragePermission() { return mHasStoragePermission; }
+  bool HasStoragePermission();
 
   // Increments the document generation.
   inline void Changed() { ++mGeneration; }
