@@ -166,33 +166,40 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // Parser Flags for Functions
   // ----
 
-  // Set if this function is an async function or async generator.
+  // This function's initial prototype is one of Function, GeneratorFunction,
+  // AsyncFunction, or AsyncGeneratorFunction as indicated by these flags.
+  //
+  // If either of these flags is set, the script may suspend and resume as it
+  // executes. Stack frames for this script also have a generator object.
   IsAsync = 1 << 14,
-
-  // Set if this function is a generator function or async generator.
   IsGenerator = 1 << 15,
 
-  // This function does something that can extend the set of bindings in its
-  // call objects --- it does a direct eval in non-strict code, or includes a
-  // function statement (as opposed to a function definition).
-  //
-  // This flag is *not* inherited by enclosed or enclosing functions; it
-  // applies only to the function in whose flags it appears.
-  //
+  // This function's body serves as the `var` environment for a non-strict
+  // direct eval. This matters because it's the only way bindings can be
+  // dynamically added to a local environment, possibly shadowing other
+  // variables.
   FunHasExtensibleScope = 1 << 16,
 
-  // Whether this function has a .this binding. If true, we need to emit
-  // JSOp::FunctionThis in the prologue to initialize it.
+  // This function has an internal .this binding and we need to emit
+  // JSOp::FunctionThis in the prologue to initialize it. This binding may be
+  // used directly for "this", or indirectly (such as class constructors).
   FunctionHasThisBinding = 1 << 17,
 
+  // This function is a class method that must uses an internal [[HomeObject]]
+  // slot. This slot is initialized when the class definition is executed in the
+  // enclosing function.
   NeedsHomeObject = 1 << 18,
 
+  // This function is a constructor for a derived class. This is a class that
+  // uses the `extends` syntax.
   IsDerivedClassConstructor = 1 << 19,
 
-  // Set if this function has a rest parameter.
+  // This function has a rest (`...`) parameter.
   HasRest = 1 << 20,
 
-  // Whether this function needs a call object or named lambda environment.
+  // This function needs a call object or named lambda environment to be created
+  // in order to execute the function. This is done in the Stack or JIT frame
+  // setup code _before_ the bytecode prologue starts.
   NeedsFunctionEnvironmentObjects = 1 << 21,
 
   // An extra VarScope is used as the body scope instead of the normal
@@ -201,44 +208,52 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   //    `function(x = eval("")) { var y; }`
   FunctionHasExtraBodyVarScope = 1 << 22,
 
-  // Whether the Parser declared 'arguments'.
+  // This function must define the implicit `arguments` binding on the function
+  // scope. If there are no free uses or an appropriate explicit binding exists,
+  // then this flag is unset.
+  //
+  // Note: Parameter expressions will not see an explicit `var arguments;`
+  // binding in the body and an implicit binding on the function-scope must
+  // still be used in that case.
   ShouldDeclareArguments = 1 << 23,
 
-  // Whether 'arguments' has a local binding.
+  // This function has a local (implicit or explicit) `arguments` binding. This
+  // binding is initialized by the JSOp::Arguments bytecode.
   //
-  // Technically, every function has a binding named 'arguments'. Internally,
-  // this binding is only added when 'arguments' is mentioned by the function
-  // body. This flag indicates whether 'arguments' has been bound either
-  // through implicit use:
-  //   function f() { return arguments }
-  // or explicit redeclaration:
-  //   function f() { var arguments; return arguments }
+  // Technically, every function has a binding named `arguments`. Internally,
+  // this binding is only added when `arguments` is mentioned by the function
+  // body.
   //
-  // Note 1: overwritten arguments (function() { arguments = 3 }) will cause
-  // this flag to be set but otherwise require no special handling:
-  // 'arguments' is just a local variable and uses of 'arguments' will just
-  // read the local's current slot which may have been assigned. The only
-  // special semantics is that the initial value of 'arguments' is the
-  // arguments object (not undefined, like normal locals).
+  // Examples:
+  //   ```
+  //    // Explicit definition
+  //    function f() { var arguments; return arguments; }
   //
-  // Note 2: if 'arguments' is bound as a formal parameter, there will be an
-  // 'arguments' in Bindings, but, as the "LOCAL" in the name indicates, this
-  // flag will not be set. This is because, as a formal, 'arguments' will
-  // have no special semantics: the initial value is unconditionally the
-  // actual argument (or undefined if nactual < nformal).
+  //    // Implicit use
+  //    function f() { return arguments; }
+  //
+  //    // Implicit use in arrow function
+  //    function f() { return () => arguments; }
+  //
+  //    // Implicit use in parameter expression
+  //    function f(a = arguments) { return a; }
+  //   ```
   ArgumentsHasVarBinding = 1 << 24,
 
-  // Whether 'arguments' always must be the arguments object. If this is unset,
-  // but ArgumentsHasVarBinding is set then an analysis pass is performed at
-  // runtime to decide if we can optimize it away.
+  // This function requires the `arguments` binding to be initialized with the
+  // real arguments object. If unset, but ArgumentsHasVarBinding is set then an
+  // analysis pass will determine if an efficient placeholder value can be used
+  // instead.
+  // See the implementation of JSOp::Arguments opcode.
   AlwaysNeedsArgsObj = 1 << 25,
 
-  // Whether the arguments object for this script, if it needs one, should be
-  // mapped (alias formal parameters).
+  // This function must use the "mapped" form of an arguments object. This flag
+  // is set independently of whether we actually use an `arguments` binding. The
+  // conditions are specified in the ECMAScript spec.
   HasMappedArgsObj = 1 << 26,
 
-  // 'this', 'arguments' and f.apply() are used. This is likely to be a
-  // wrapper.
+  // All of 'this', 'arguments' and f.apply() are used. This is likely to be a
+  // wrapper. This is a heuristic that affects Type Inference.
   IsLikelyConstructorWrapper = 1 << 27,
 };
 
