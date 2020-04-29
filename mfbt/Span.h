@@ -395,6 +395,17 @@ class Span {
       : storage_(aStartPtr, std::distance(aStartPtr, aEndPtr)) {}
 
   /**
+   * Constructor for pair of Span iterators.
+   */
+  template <typename OtherElementType, size_t OtherExtent, bool IsConst>
+  constexpr Span(
+      span_details::span_iterator<Span<OtherElementType, OtherExtent>, IsConst>
+          aBegin,
+      span_details::span_iterator<Span<OtherElementType, OtherExtent>, IsConst>
+          aEnd)
+      : storage_(aBegin == aEnd ? nullptr : &*aBegin, aEnd - aBegin) {}
+
+  /**
    * Constructor for C array.
    */
   template <size_t N>
@@ -731,6 +742,11 @@ class Span {
 
   storage_type<span_details::extent_type<Extent>> storage_;
 };
+
+template <typename T, size_t OtherExtent, bool IsConst>
+Span(span_details::span_iterator<Span<T, OtherExtent>, IsConst> aBegin,
+     span_details::span_iterator<Span<T, OtherExtent>, IsConst> aEnd)
+    -> Span<std::conditional_t<IsConst, std::add_const_t<T>, T>>;
 
 template <typename T, size_t Extent>
 Span(T (&aArr)[Extent]) -> Span<T, Extent>;
