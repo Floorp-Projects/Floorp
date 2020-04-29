@@ -88,7 +88,7 @@ add_task(async function test_reader_button() {
   is_element_visible(iconEl, "Favicon should be visible");
   is(iconEl.src, favicon, "Correct favicon should be loaded");
 
-  is(gURLBar.untrimmedValue, readerUrl, "gURLBar value is about:reader URL");
+  is(gURLBar.untrimmedValue, url, "gURLBar value is about:reader URL");
   is(
     gURLBar.value,
     url.substring("http://".length),
