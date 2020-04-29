@@ -189,6 +189,13 @@ static bool ToWebAssemblyValue_funcref(JSContext* cx, HandleValue val,
   Debug::print(*loc);
   return true;
 }
+template <typename Debug = NoDebug>
+static bool ToWebAssemblyValue_typeref(JSContext* cx, HandleValue val,
+                                       void** loc) {
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           JSMSG_WASM_TYPEREF_FROM_JS);
+  return false;
+}
 
 template <typename Debug = NoDebug>
 static bool ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
@@ -211,7 +218,7 @@ static bool ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
         case RefType::Null:
           return ToWebAssemblyValue_nullref<Debug>(cx, val, (void**)loc);
         case RefType::TypeIndex:
-          MOZ_CRASH("temporarily unsupported Ref type in ToWebAssemblyValue");
+          return ToWebAssemblyValue_typeref<Debug>(cx, val, (void**)loc);
       }
   }
   MOZ_CRASH("unreachable");
@@ -269,7 +276,9 @@ static bool ToJSValue_anyref(JSContext* cx, void* src, MutableHandleValue dst) {
 template <typename Debug = NoDebug>
 static bool ToJSValue_typeref(JSContext* cx, void* src,
                               MutableHandleValue dst) {
-  MOZ_CRASH("temporarily unsupported conversion of typeref to JS value");
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           JSMSG_WASM_TYPEREF_TO_JS);
+  return false;
 }
 
 template <typename Debug = NoDebug>
