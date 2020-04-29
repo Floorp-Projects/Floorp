@@ -2546,7 +2546,8 @@ pub extern "C" fn wr_dp_push_iframe(
     state: &mut WrState,
     rect: LayoutRect,
     clip: LayoutRect,
-    spatial_id: WrSpatialId,
+    _is_backface_visible: bool,
+    parent: &WrSpaceAndClipChain,
     pipeline_id: WrPipelineId,
     ignore_missing_pipeline: bool,
 ) {
@@ -2555,7 +2556,7 @@ pub extern "C" fn wr_dp_push_iframe(
     state.frame_builder.dl_builder.push_iframe(
         rect,
         clip,
-        spatial_id.to_webrender(state.pipeline_id),
+        &parent.to_webrender(state.pipeline_id),
         pipeline_id,
         ignore_missing_pipeline,
     );

@@ -1315,11 +1315,12 @@ void DisplayListBuilder::PushYCbCrInterleavedImage(
 }
 
 void DisplayListBuilder::PushIFrame(const wr::LayoutRect& aBounds,
+                                    bool aIsBackfaceVisible,
                                     PipelineId aPipeline,
                                     bool aIgnoreMissingPipeline) {
   mRemotePipelineIds.AppendElement(aPipeline);
   wr_dp_push_iframe(mWrState, aBounds, MergeClipLeaf(aBounds),
-                    mCurrentSpaceAndClipChain.space, aPipeline,
+                    aIsBackfaceVisible, &mCurrentSpaceAndClipChain, aPipeline,
                     aIgnoreMissingPipeline);
 }
 
