@@ -2108,12 +2108,6 @@ void BrowsingContext::DidSet(FieldIndex<IDX_FullZoom>, float aOldValue) {
     doc = win->GetExtantDoc();
   }
 
-  if (doc) {
-    nsContentUtils::DispatchChromeEvent(doc, ToSupports(doc),
-                                        NS_LITERAL_STRING("PreFullZoomChange"),
-                                        CanBubble::eYes, Cancelable::eYes);
-  }
-
   if (nsIDocShell* shell = GetDocShell()) {
     if (nsPresContext* pc = shell->GetPresContext()) {
       pc->RecomputeBrowsingContextDependentData();
