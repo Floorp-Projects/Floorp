@@ -1125,8 +1125,6 @@ MOZ_MUST_USE bool TrySkipAwait(JSContext* cx, HandleValue val,
 
 bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result);
 
-bool DoToNumeric(JSContext* cx, HandleValue arg, MutableHandleValue ret);
-
 void* AllocateBigIntNoGC(JSContext* cx, bool requestMinorGC);
 
 template <EqualityKind Kind>
