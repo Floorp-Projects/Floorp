@@ -914,7 +914,7 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                     thread->mCpuKernel = entry.cpuKernel;
                     thread->mTid = entry.tid;
                   }
-                  procInfo.mThreads = threads;
+                  procInfo.mThreads = std::move(threads);
 
                   mozilla::dom::Sequence<mozilla::dom::ChildProcInfoDictionary>
                       children;
@@ -950,9 +950,9 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                       thread->mTid = entry.tid;
                       thread->mName.Assign(entry.name);
                     }
-                    childProcInfo->mThreads = threads;
+                    childProcInfo->mThreads = std::move(threads);
                   }
-                  procInfo.mChildren = children;
+                  procInfo.mChildren = std::move(children);
                   domPromise->MaybeResolve(procInfo);
                 };  // end of ProcInfoResolver
 
