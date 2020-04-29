@@ -86,7 +86,7 @@ already_AddRefed<nsIURI> AntiTrackingUtils::MaybeGetDocumentURIBeingLoaded(
 
 // static
 void AntiTrackingUtils::CreateStoragePermissionKey(
-    const nsCString& aTrackingOrigin, nsACString& aPermissionKey) {
+    const nsACString& aTrackingOrigin, nsACString& aPermissionKey) {
   MOZ_ASSERT(aPermissionKey.IsEmpty());
 
   static const nsLiteralCString prefix =
@@ -470,4 +470,23 @@ bool AntiTrackingUtils::IsFirstLevelSubContext(
   // We can know if it is first-level sub context by checking whether the
   // parent is the top.
   return parentBC->IsTopContent();
+}
+
+/* static */
+uint32_t AntiTrackingUtils::GetCookieBehavior(
+    BrowsingContext* aBrowsingContext) {
+  MOZ_ASSERT(aBrowsingContext);
+
+  RefPtr<dom::WindowContext> win = aBrowsingContext->GetCurrentWindowContext();
+  if (!win) {
+    return nsICookieService::BEHAVIOR_REJECT;
+  }
+
+  Maybe<net::CookieJarSettingsArgs> cookieJarSetting =
+      win->GetCookieJarSettings();
+  if (cookieJarSetting.isNothing()) {
+    return nsICookieService::BEHAVIOR_REJECT;
+  }
+
+  return cookieJarSetting->cookieBehavior();
 }
