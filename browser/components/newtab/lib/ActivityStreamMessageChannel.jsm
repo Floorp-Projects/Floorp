@@ -10,6 +10,12 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/AboutNewTab.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "AboutHomeStartupCache",
+  "resource:///modules/BrowserGlue.jsm"
+);
+
 const { RemotePages } = ChromeUtils.import(
   "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm"
 );
@@ -106,6 +112,10 @@ this.ActivityStreamMessageChannel = class ActivityStreamMessageChannel {
    * @param  {object} action A Redux action
    */
   broadcast(action) {
+    // We're trying to update all tabs, so signal the AboutHomeStartupCache
+    // that its likely time to refresh the cache.
+    AboutHomeStartupCache.onPreloadedNewTabMessage();
+
     this.channel.sendAsyncMessage(this.outgoingMessageName, action);
   }
 
@@ -158,6 +168,11 @@ this.ActivityStreamMessageChannel = class ActivityStreamMessageChannel {
    * @param  {obj} action A redux action
    */
   sendToPreloaded(action) {
+    // We're trying to update the preloaded about:newtab, so signal
+    // the AboutHomeStartupCache that its likely time to refresh
+    // the cache.
+    AboutHomeStartupCache.onPreloadedNewTabMessage();
+
     const preloadedBrowsers = this.getPreloadedBrowser();
     if (preloadedBrowsers && action.data) {
       for (let preloadedBrowser of preloadedBrowsers) {
