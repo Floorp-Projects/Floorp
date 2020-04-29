@@ -994,17 +994,16 @@
   value: true
   mirror: always
 
-# If set, use DocumentChannel with parent process' sDocShell
 - name: browser.tabs.documentchannel.ppdc
   type: bool
-  value: true
+  value: false
   mirror: always
 
 # If set, use DocumentChannel to directly initiate loads from
 # parent-process BrowsingContexts
 - name: browser.tabs.documentchannel.parent-initiated
   type: bool
-  value: true
+  value: true 
   mirror: always
 
 - name: browser.tabs.remote.desktopbehavior
