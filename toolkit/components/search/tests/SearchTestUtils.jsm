@@ -7,6 +7,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
+  ExtensionTestUtils: "resource://testing-common/ExtensionXPCShellUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
@@ -125,5 +127,67 @@ var SearchTestUtils = Object.freeze({
       engines.push(engine);
     }
     return engines;
+  },
+
+  /**
+   * Provides various setup for xpcshell-tests installing WebExtensions. Should
+   * be called from the global scope of the test.
+   *
+   * @param {object} scope
+   *  The global scope of the test being run.
+   */
+  initXPCShellAddonManager(scope) {
+    ExtensionTestUtils.init(scope);
+    AddonTestUtils.usePrivilegedSignatures = false;
+    AddonTestUtils.overrideCertDB();
+  },
+
+  /**
+   * Add a search engine as a WebExtension. For xpcshell-tests only.
+   *
+   * Note: You should call `initXPCShellAddonManager` before calling this.
+   *
+   * @param {object} [options]
+   * @param {string} [options.id]
+   *   The id to use for the WebExtension (postfixed by `@tests.mozilla.org`).
+   * @param {string} [options.name]
+   *   The display name to use for the WebExtension.
+   * @param {string} [options.version]
+   *   The version to use for the WebExtension.
+   * @param {string} [options.keyword]
+   *   The keyword to use for the WebExtension.
+   */
+  async installSearchExtension(options = {}) {
+    options.id = options.id ?? "example";
+    options.name = options.name ?? "Example";
+    options.version = options.version ?? "1.0";
+
+    let extensionInfo = {
+      useAddonManager: "permanent",
+      manifest: {
+        version: options.version,
+        applications: {
+          gecko: {
+            id: options.id + "@tests.mozilla.org",
+          },
+        },
+        chrome_settings_overrides: {
+          search_provider: {
+            name: options.name,
+            search_url: "https://example.com/",
+            search_url_get_params: "?q={searchTerms}",
+          },
+        },
+      },
+    };
+    if (options.keyword) {
+      extensionInfo.manifest.chrome_settings_overrides.search_provider.keyword =
+        options.keyword;
+    }
+
+    let extension = ExtensionTestUtils.loadExtension(extensionInfo);
+    await extension.startup();
+    await AddonTestUtils.waitForSearchProviderStartup(extension);
+    return extension;
   },
 });
