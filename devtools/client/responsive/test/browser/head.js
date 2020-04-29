@@ -924,22 +924,22 @@ function promiseContentReflow(ui) {
 // This function returns a promise that will be resolved when the
 // RDM zoom has been set and the content has finished rescaling
 // to the new size.
-function promiseRDMZoom(ui, browser, zoom) {
-  return new Promise(resolve => {
-    const currentZoom = ZoomManager.getZoomForBrowser(browser);
-    if (currentZoom.toFixed(2) == zoom.toFixed(2)) {
-      resolve();
-      return;
-    }
+async function promiseRDMZoom(ui, browser, zoom) {
+  const currentZoom = ZoomManager.getZoomForBrowser(browser);
+  if (currentZoom.toFixed(2) == zoom.toFixed(2)) {
+    return;
+  }
 
-    const zoomComplete = BrowserTestUtils.waitForEvent(
-      browser,
-      "FullZoomResolutionStable"
-    );
-    ZoomManager.setZoomForBrowser(browser, zoom);
+  const width = browser.getBoundingClientRect().width;
 
-    // Await the zoom complete event, then reflow.
-    zoomComplete.then(promiseContentReflow(ui)).then(resolve);
+  ZoomManager.setZoomForBrowser(browser, zoom);
+
+  // RDM resizes the browser as a result of a zoom change, so we wait for that.
+  //
+  // This also has the side effect of updating layout which ensures that any
+  // remote frame dimension update message gets there in time.
+  await BrowserTestUtils.waitForCondition(function() {
+    return browser.getBoundingClientRect().width != width;
   });
 }
 
