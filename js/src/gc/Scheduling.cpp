@@ -26,14 +26,14 @@ using mozilla::TimeDuration;
  * GCRuntime::maybeGC() is called for that zone or we start collecting other
  * zones. These eager threshold factors are not configurable.
  */
-static constexpr float HighFrequencyEagerAllocTriggerFactor = 0.85f;
-static constexpr float LowFrequencyEagerAllocTriggerFactor = 0.9f;
+static constexpr double HighFrequencyEagerAllocTriggerFactor = 0.85;
+static constexpr double LowFrequencyEagerAllocTriggerFactor = 0.9;
 
 /*
  * Don't allow heap growth factors to be set so low that eager collections could
  * reduce the trigger threshold.
  */
-static constexpr float MinHeapGrowthFactor =
+static constexpr double MinHeapGrowthFactor =
     1.0f / std::min(HighFrequencyEagerAllocTriggerFactor,
                     LowFrequencyEagerAllocTriggerFactor);
 
@@ -69,7 +69,7 @@ GCSchedulingTunables::GCSchedulingTunables()
 bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
                                         const AutoLockGC& lock) {
   // Limit heap growth factor to one hundred times size of current heap.
-  const float MaxHeapGrowthFactor = 100;
+  const double MaxHeapGrowthFactor = 100;
   const size_t MaxNurseryBytes = 128 * 1024 * 1024;
 
   switch (key) {
@@ -109,7 +109,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       break;
     }
     case JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH: {
-      float newGrowth = value / 100.0f;
+      double newGrowth = value / 100.0;
       if (newGrowth < MinHeapGrowthFactor || newGrowth > MaxHeapGrowthFactor) {
         return false;
       }
@@ -117,7 +117,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       break;
     }
     case JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH: {
-      float newGrowth = value / 100.0f;
+      double newGrowth = value / 100.0;
       if (newGrowth < MinHeapGrowthFactor || newGrowth > MaxHeapGrowthFactor) {
         return false;
       }
@@ -125,7 +125,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       break;
     }
     case JSGC_LOW_FREQUENCY_HEAP_GROWTH: {
-      float newGrowth = value / 100.0f;
+      double newGrowth = value / 100.0;
       if (newGrowth < MinHeapGrowthFactor || newGrowth > MaxHeapGrowthFactor) {
         return false;
       }
@@ -136,7 +136,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       gcZoneAllocThresholdBase_ = value * 1024 * 1024;
       break;
     case JSGC_NON_INCREMENTAL_FACTOR: {
-      float newFactor = value / 100.0f;
+      double newFactor = value / 100.0;
       if (newFactor < 1.0f) {
         return false;
       }
@@ -159,14 +159,14 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       if (value == 0 || value > 100) {
         return false;
       }
-      nurseryFreeThresholdForIdleCollectionFraction_ = value / 100.0f;
+      nurseryFreeThresholdForIdleCollectionFraction_ = value / 100.0;
       break;
     case JSGC_PRETENURE_THRESHOLD: {
       // 100 disables pretenuring
       if (value == 0 || value > 100) {
         return false;
       }
-      pretenureThreshold_ = value / 100.0f;
+      pretenureThreshold_ = value / 100.0;
       break;
     }
     case JSGC_PRETENURE_GROUP_THRESHOLD:
@@ -185,7 +185,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       mallocThresholdBase_ = value * 1024 * 1024;
       break;
     case JSGC_MALLOC_GROWTH_FACTOR: {
-      float newGrowth = value / 100.0f;
+      double newGrowth = value / 100.0;
       if (newGrowth < MinHeapGrowthFactor || newGrowth > MaxHeapGrowthFactor) {
         return false;
       }
@@ -215,7 +215,7 @@ void GCSchedulingTunables::setLargeHeapSizeMinBytes(size_t value) {
   MOZ_ASSERT(largeHeapSizeMinBytes_ > smallHeapSizeMaxBytes_);
 }
 
-void GCSchedulingTunables::setHighFrequencyLargeHeapGrowth(float value) {
+void GCSchedulingTunables::setHighFrequencyLargeHeapGrowth(double value) {
   highFrequencyLargeHeapGrowth_ = value;
   if (highFrequencyLargeHeapGrowth_ > highFrequencySmallHeapGrowth_) {
     highFrequencySmallHeapGrowth_ = highFrequencyLargeHeapGrowth_;
@@ -224,7 +224,7 @@ void GCSchedulingTunables::setHighFrequencyLargeHeapGrowth(float value) {
   MOZ_ASSERT(highFrequencyLargeHeapGrowth_ <= highFrequencySmallHeapGrowth_);
 }
 
-void GCSchedulingTunables::setHighFrequencySmallHeapGrowth(float value) {
+void GCSchedulingTunables::setHighFrequencySmallHeapGrowth(double value) {
   highFrequencySmallHeapGrowth_ = value;
   if (highFrequencySmallHeapGrowth_ < highFrequencyLargeHeapGrowth_) {
     highFrequencyLargeHeapGrowth_ = highFrequencySmallHeapGrowth_;
@@ -233,7 +233,7 @@ void GCSchedulingTunables::setHighFrequencySmallHeapGrowth(float value) {
   MOZ_ASSERT(highFrequencyLargeHeapGrowth_ <= highFrequencySmallHeapGrowth_);
 }
 
-void GCSchedulingTunables::setLowFrequencyHeapGrowth(float value) {
+void GCSchedulingTunables::setLowFrequencyHeapGrowth(double value) {
   lowFrequencyHeapGrowth_ = value;
   MOZ_ASSERT(lowFrequencyHeapGrowth_ >= MinHeapGrowthFactor);
 }
@@ -342,10 +342,10 @@ size_t HeapThreshold::nonIncrementalBytes(
   return bytes;
 }
 
-float HeapThreshold::eagerAllocTrigger(bool highFrequencyGC) const {
-  float eagerTriggerFactor = highFrequencyGC
-                                 ? HighFrequencyEagerAllocTriggerFactor
-                                 : LowFrequencyEagerAllocTriggerFactor;
+double HeapThreshold::eagerAllocTrigger(bool highFrequencyGC) const {
+  double eagerTriggerFactor = highFrequencyGC
+                                  ? HighFrequencyEagerAllocTriggerFactor
+                                  : LowFrequencyEagerAllocTriggerFactor;
   return eagerTriggerFactor * startBytes();
 }
 
@@ -357,7 +357,7 @@ void HeapThreshold::setSliceThreshold(ZoneAllocator* zone,
 }
 
 /* static */
-float GCHeapThreshold::computeZoneHeapGrowthFactorForHeapSize(
+double GCHeapThreshold::computeZoneHeapGrowthFactorForHeapSize(
     size_t lastBytes, const GCSchedulingTunables& tunables,
     const GCSchedulingState& state) {
   // For small zones, our collection heuristics do not matter much: favor
@@ -391,15 +391,15 @@ float GCHeapThreshold::computeZoneHeapGrowthFactorForHeapSize(
 
 /* static */
 size_t GCHeapThreshold::computeZoneTriggerBytes(
-    float growthFactor, size_t lastBytes, JSGCInvocationKind gckind,
+    double growthFactor, size_t lastBytes, JSGCInvocationKind gckind,
     const GCSchedulingTunables& tunables, const AutoLockGC& lock) {
   size_t baseMin = gckind == GC_SHRINK
                        ? tunables.minEmptyChunkCount(lock) * ChunkSize
                        : tunables.gcZoneAllocThresholdBase();
   size_t base = std::max(lastBytes, baseMin);
-  float trigger = float(base) * growthFactor;
-  float triggerMax =
-      float(tunables.gcMaxBytes()) / tunables.nonIncrementalFactor();
+  double trigger = double(base) * growthFactor;
+  double triggerMax =
+      double(tunables.gcMaxBytes()) / tunables.nonIncrementalFactor();
   return size_t(std::min(triggerMax, trigger));
 }
 
@@ -409,7 +409,7 @@ void GCHeapThreshold::updateStartThreshold(size_t lastBytes,
                                            const GCSchedulingState& state,
                                            bool isAtomsZone,
                                            const AutoLockGC& lock) {
-  float growthFactor =
+  double growthFactor =
       computeZoneHeapGrowthFactorForHeapSize(lastBytes, tunables, state);
 
   // Discourage collection of the atoms zone during page load as this can block
@@ -423,16 +423,16 @@ void GCHeapThreshold::updateStartThreshold(size_t lastBytes,
 }
 
 /* static */
-size_t MallocHeapThreshold::computeZoneTriggerBytes(float growthFactor,
+size_t MallocHeapThreshold::computeZoneTriggerBytes(double growthFactor,
                                                     size_t lastBytes,
                                                     size_t baseBytes,
                                                     const AutoLockGC& lock) {
-  return size_t(float(std::max(lastBytes, baseBytes)) * growthFactor);
+  return size_t(double(std::max(lastBytes, baseBytes)) * growthFactor);
 }
 
 void MallocHeapThreshold::updateStartThreshold(size_t lastBytes,
                                                size_t baseBytes,
-                                               float growthFactor,
+                                               double growthFactor,
                                                const AutoLockGC& lock) {
   startBytes_ =
       computeZoneTriggerBytes(growthFactor, lastBytes, baseBytes, lock);
