@@ -1779,8 +1779,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
 
   LazyScriptCreationData data(cx_);
   if (!data.init(cx_, pc_->closedOverBindingsForLazy(),
-                 std::move(pc_->innerFunctionIndexesForLazy),
-                 options().forceStrictMode())) {
+                 std::move(pc_->innerFunctionIndexesForLazy))) {
     return false;
   }
 
@@ -1839,7 +1838,6 @@ bool LazyScriptCreationData::create(JSContext* cx,
   ImmutableScriptFlags immutableFlags = funbox->immutableFlags();
 
   // Compute the flags that frontend doesn't directly compute.
-  immutableFlags.setFlag(ImmutableFlags::ForceStrict, forceStrict);
   immutableFlags.setFlag(ImmutableFlags::HasMappedArgsObj,
                          funbox->hasMappedArgsObj());
 

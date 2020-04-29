@@ -49,6 +49,9 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
 
   immutableFlags_.setFlag(ImmutableFlags::Strict, directives.strict());
 
+  immutableFlags_.setFlag(ImmutableFlags::ForceStrict,
+                          compilationInfo.options.forceStrictMode());
+
   immutableFlags_.setFlag(ImmutableFlags::HasNonSyntacticScope,
                           compilationInfo.options.nonSyntacticScope);
 }
