@@ -5251,12 +5251,13 @@ class MMathFunction : public MUnaryInstruction,
 
 class MAdd : public MBinaryArithInstruction {
   MAdd(MDefinition* left, MDefinition* right, MIRType type)
-      : MBinaryArithInstruction(classOpcode, left, right, type) {}
+      : MBinaryArithInstruction(classOpcode, left, right, type) {
+    setCommutative();
+  }
 
   MAdd(MDefinition* left, MDefinition* right, TruncateKind truncateKind)
       : MAdd(left, right, MIRType::Int32) {
     setTruncateKind(truncateKind);
-    setCommutative();
   }
 
  public:
@@ -5268,7 +5269,6 @@ class MAdd : public MBinaryArithInstruction {
     auto* ret = new (alloc) MAdd(left, right, type);
     if (type == MIRType::Int32) {
       ret->setTruncateKind(Truncate);
-      ret->setCommutative();
     }
     return ret;
   }
@@ -5340,12 +5340,12 @@ class MMul : public MBinaryArithInstruction {
       : MBinaryArithInstruction(classOpcode, left, right, type),
         canBeNegativeZero_(true),
         mode_(mode) {
+    setCommutative();
     if (mode == Integer) {
       // This implements the required behavior for Math.imul, which
       // can never fail and always truncates its output to int32.
       canBeNegativeZero_ = false;
       setTruncateKind(Truncate);
-      setCommutative();
     }
     MOZ_ASSERT_IF(mode != Integer, mode == Normal);
   }
