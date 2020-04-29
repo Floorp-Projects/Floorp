@@ -66,6 +66,10 @@
     <string name="mozac_feature_addons_settings_on">Vklopljen</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Izklopljen</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Dovoli v zasebnem brskanju</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Zaženi v zasebnem brskanju</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Omogočeno</string>
     <!-- Indicates the add-on is disabled. -->
