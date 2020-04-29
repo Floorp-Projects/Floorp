@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/WindowGlobalChild.h"
 
+#include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/BrowsingContext.h"
@@ -389,6 +390,28 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvGetSecurityInfo(
   }
 
   aResolve(result);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult WindowGlobalChild::RecvSaveStorageAccessGranted(
+    const nsCString& aPermissionKey) {
+  nsCOMPtr<nsPIDOMWindowInner> window = GetWindowGlobal();
+  if (!window) {
+    return IPC_OK();
+  }
+
+#ifdef DEBUG
+  nsAutoCString trackingOrigin;
+  nsCOMPtr<nsIPrincipal> principal = DocumentPrincipal();
+  if (principal && NS_SUCCEEDED(principal->GetOriginNoSuffix(trackingOrigin))) {
+    nsAutoCString permissionKey;
+    AntiTrackingUtils::CreateStoragePermissionKey(trackingOrigin,
+                                                  permissionKey);
+    MOZ_ASSERT(permissionKey == aPermissionKey);
+  }
+#endif
+
+  window->SaveStorageAccessGranted(aPermissionKey);
   return IPC_OK();
 }
 
