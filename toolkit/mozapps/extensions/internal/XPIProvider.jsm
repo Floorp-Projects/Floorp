@@ -2045,7 +2045,14 @@ class BootstrapScope {
     // from the manifest.
     let existingAddon = this.addon;
 
-    if (callUpdate) {
+    let extraArgs = {
+      oldVersion: existingAddon.version,
+      newVersion: newAddon.version,
+    };
+
+    // If we're updating an extension, we may need to read data to
+    // calculate permission changes.
+    if (callUpdate && existingAddon.type === "extension") {
       if (this.addon instanceof XPIState) {
         // The existing addon will be cached in the database.
         existingAddon = await XPIDatabase.getAddonByID(this.addon.id);
@@ -2057,16 +2064,14 @@ class BootstrapScope {
           newAddon.location
         );
       }
-    }
 
-    let extraArgs = {
-      oldVersion: existingAddon.version,
-      newVersion: newAddon.version,
-      userPermissions: newAddon.userPermissions,
-      optionalPermissions: newAddon.optionalPermissions,
-      oldPermissions: existingAddon.userPermissions,
-      oldOptionalPermissions: existingAddon.optionalPermissions,
-    };
+      Object.assign(extraArgs, {
+        userPermissions: newAddon.userPermissions,
+        optionalPermissions: newAddon.optionalPermissions,
+        oldPermissions: existingAddon.userPermissions,
+        oldOptionalPermissions: existingAddon.optionalPermissions,
+      });
+    }
 
     await this._uninstall(reason, callUpdate, extraArgs);
 
