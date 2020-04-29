@@ -34,7 +34,9 @@
   <pre id="test">
   </pre>
 
-  <iframe id="iframe" src="doc.html"></iframe>
+  <!-- Use an http url so the document is loaded with content privileges to
+       avoid a tooltip node from automatically being created. -->
+  <iframe id="iframe" src="http://mochi.test:8888/a11y/accessible/tests/mochitest/text/doc.html"></iframe>
 
 </body>
 </html>
