@@ -13,7 +13,7 @@
 #include "mozilla/Sprintf.h"
 
 #include "jit/CompactBuffer.h"
-#include "jit/IonCode.h"
+#include "jit/JitCode.h"
 #include "jit/JitRealm.h"
 #include "jit/JitSpewer.h"
 #include "jit/mips-shared/Architecture-mips-shared.h"

@@ -31,7 +31,7 @@
 #include "frontend/SourceNotes.h"  // SrcNote
 #include "gc/Barrier.h"
 #include "gc/Rooting.h"
-#include "jit/IonCode.h"
+#include "jit/JitCode.h"
 #include "js/CompileOptions.h"
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"
