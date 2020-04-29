@@ -78,5 +78,7 @@ if test -n "$bucket"; then
     fi
     export CCACHE="$MOZ_FETCHES_DIR/sccache/sccache"
     export SCCACHE_VERBOSE_STATS=1
+    # Workaround for https://github.com/mozilla/sccache/issues/459#issuecomment-618756635
+    mk_add_options "export SCCACHE_MAX_FRAME_LENGTH=50000000"
     mk_add_options MOZBUILD_MANAGE_SCCACHE_DAEMON=${MOZ_FETCHES_DIR}/sccache/sccache
 fi
