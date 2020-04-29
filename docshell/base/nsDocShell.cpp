@@ -11034,7 +11034,8 @@ nsresult nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType) {
   return rv;
 }
 
-nsresult nsDocShell::PersistLayoutHistoryState() {
+NS_IMETHODIMP
+nsDocShell::PersistLayoutHistoryState() {
   nsresult rv = NS_OK;
 
   if (mOSHE) {
