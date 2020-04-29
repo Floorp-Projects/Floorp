@@ -64,7 +64,7 @@ add_task(async function() {
 
 async function openColorPickerForSwatch(swatch, view) {
   const cPicker = view.tooltips.getTooltip("colorPicker");
-  ok(cPicker, "The rule-view has the expected colorPicker property");
+  ok(cPicker, "The rule-view has an expected colorPicker widget");
 
   const cPickerPanel = cPicker.tooltip.panel;
   ok(cPickerPanel, "The XUL panel for the color picker exists");

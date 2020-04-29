@@ -3,18 +3,20 @@
 
 "use strict";
 
-// Tests that color pickers appear when clicking or using keyboard on color swatches.
+// Tests color pickers work with CSS variables.
 
 const TEST_URI = `
   <style type="text/css">
+    :root {
+      --main-bg-color: coral;
+    }
     body {
       color: red;
-      background-color: #ededed;
-      background-image: url(chrome://global/skin/icons/warning-64.png);
-      border: 2em solid rgba(120, 120, 120, .5);
+      background-color: var(--main-bg-color);
+      border: 1px solid var(--main-bg-color);
     }
   </style>
-  Testing the color picker tooltip!
+  Testing the color picker tooltip with CSS variables!
 `;
 
 add_task(async function() {
