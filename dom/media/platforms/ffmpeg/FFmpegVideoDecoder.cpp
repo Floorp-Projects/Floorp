@@ -215,9 +215,8 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
   auto layersBackend = mImageAllocator
                            ? mImageAllocator->GetCompositorBackendType()
                            : layers::LayersBackend::LAYERS_BASIC;
-  if (layersBackend != layers::LayersBackend::LAYERS_OPENGL &&
-      layersBackend != layers::LayersBackend::LAYERS_WR) {
-    FFMPEG_LOG("VA-API works with HW accelerated backend only!");
+  if (layersBackend != layers::LayersBackend::LAYERS_WR) {
+    FFMPEG_LOG("VA-API works with WebRender only!");
     return NS_ERROR_NOT_AVAILABLE;
   }
 
