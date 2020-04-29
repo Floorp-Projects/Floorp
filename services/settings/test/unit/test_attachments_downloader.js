@@ -296,3 +296,95 @@ add_task(async function test_downloader_reports_offline_error() {
   });
 });
 add_task(clear_state);
+
+add_task(async function test_download_cached() {
+  const client = RemoteSettings("main", "some-collection");
+  const attachmentId = "dummy filename";
+  const badRecord = {
+    attachment: {
+      ...RECORD.attachment,
+      hash: "non-matching hash",
+      location: "non-existing-location-should-fail.bin",
+    },
+  };
+  async function downloadWithCache(record, options) {
+    options = { ...options, useCache: true };
+    return client.attachments.download(record, options);
+  }
+  function checkInfo(downloadResult, expectedSource, msg) {
+    Assert.deepEqual(
+      downloadResult.record,
+      RECORD,
+      `${msg} : expected identical record`
+    );
+    // Simple check: assume that content is identical if the size matches.
+    Assert.equal(
+      downloadResult.buffer.byteLength,
+      RECORD.attachment.size,
+      `${msg} : expected buffer`
+    );
+    Assert.equal(
+      downloadResult._source,
+      expectedSource,
+      `${msg} : expected source of the result`
+    );
+  }
+
+  await Assert.rejects(
+    downloadWithCache(null, { attachmentId }),
+    /DownloadError: Could not download dummy filename/,
+    "Download without record or cache should fail."
+  );
+
+  // Populate cache.
+  const info1 = await downloadWithCache(RECORD, { attachmentId });
+  checkInfo(info1, "remote_match", "first time download");
+
+  await Assert.rejects(
+    downloadWithCache(null, { attachmentId }),
+    /DownloadError: Could not download dummy filename/,
+    "Download without record still fails even if there is a cache."
+  );
+
+  await Assert.rejects(
+    downloadWithCache(badRecord, { attachmentId }),
+    /DownloadError: Could not download .*non-existing-location-should-fail.bin/,
+    "Download with non-matching record still fails even if there is a cache."
+  );
+
+  // Download from cache.
+  const info2 = await downloadWithCache(RECORD, { attachmentId });
+  checkInfo(info2, "cache_match", "download matching record from cache");
+
+  const info3 = await downloadWithCache(RECORD, {
+    attachmentId,
+    fallbackToCache: true,
+  });
+  checkInfo(info3, "cache_match", "fallbackToCache accepts matching record");
+
+  const info4 = await downloadWithCache(null, {
+    attachmentId,
+    fallbackToCache: true,
+  });
+  checkInfo(info4, "cache_fallback", "fallbackToCache accepts null record");
+
+  const info5 = await downloadWithCache(badRecord, {
+    attachmentId,
+    fallbackToCache: true,
+  });
+  checkInfo(info5, "cache_fallback", "fallbackToCache ignores bad record");
+
+  // Bye bye cache.
+  await client.attachments.deleteCached(attachmentId);
+  await Assert.rejects(
+    downloadWithCache(null, { attachmentId, fallbackToCache: true }),
+    /DownloadError: Could not download dummy filename/,
+    "Download without cache should fail again."
+  );
+  await Assert.rejects(
+    downloadWithCache(badRecord, { attachmentId, fallbackToCache: true }),
+    /DownloadError: Could not download .*non-existing-location-should-fail.bin/,
+    "Download should fail to fall back to a download of a non-existing record"
+  );
+});
+add_task(clear_state);

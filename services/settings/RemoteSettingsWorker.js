@@ -17,7 +17,7 @@ importScripts(
 );
 
 const IDB_NAME = "remote-settings";
-const IDB_VERSION = 2;
+const IDB_VERSION = 3;
 const IDB_RECORDS_STORE = "records";
 const IDB_TIMESTAMPS_STORE = "timestamps";
 
