@@ -432,7 +432,6 @@ pref("browser.link.open_newwindow.restriction", 2);
 #endif
 
 // Tabbed browser
-pref("browser.tabs.multiselect", true);
 pref("browser.tabs.closeTabByDblclick", false);
 pref("browser.tabs.closeWindowWithLastTab", true);
 pref("browser.tabs.allowTabDetach", true);

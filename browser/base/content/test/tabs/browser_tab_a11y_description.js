@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const PREF_MULTISELECT_TABS = "browser.tabs.multiselect";
-
 async function waitForFocusAfterKey(ariaFocus, element, key, accel = false) {
   let event = ariaFocus ? "AriaFocus" : "focus";
   let friendlyKey = key;
@@ -27,12 +25,6 @@ function getA11yDescription(element) {
   }
   return descElem.textContent;
 }
-
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[PREF_MULTISELECT_TABS, true]],
-  });
-});
 
 add_task(async function testTabA11yDescription() {
   const tab1 = await addTab("http://mochi.test:8888/1", { userContextId: 1 });
