@@ -84,6 +84,7 @@ const startupPhases = {
         "nsPlacesExpiration.js",
       ]),
       modules: new Set([
+        "resource://gre/modules/Blocklist.jsm",
         // Bug 1391495 - BrowserWindowTracker.jsm is intermittently used.
         // "resource:///modules/BrowserWindowTracker.jsm",
         "resource://gre/modules/BookmarkHTMLUtils.jsm",
