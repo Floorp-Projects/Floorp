@@ -36,11 +36,6 @@ const { PersistentCache } = ChromeUtils.import(
 
 ChromeUtils.defineModuleGetter(
   this,
-  "perfService",
-  "resource://activity-stream/common/PerfService.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "pktApi",
   "chrome://pocket/content/pktApi.jsm"
 );
@@ -241,12 +236,12 @@ this.TopStoriesFeed = class TopStoriesFeed {
       return provider;
     }
 
-    const start = perfService.absNow();
+    const start = Cu.now();
     const v1Provider = this.UserDomainAffinityProvider(...args);
     this.store.dispatch(
       ac.PerfEvent({
         event: "topstories.domain.affinity.calculation.ms",
-        value: Math.round(perfService.absNow() - start),
+        value: Math.round(Cu.now() - start),
       })
     );
 
@@ -359,7 +354,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
       this.store.dispatch(
         ac.PerfEvent({
           event,
-          value: Math.round(perfService.absNow() - start),
+          value: Math.round(Cu.now() - start),
         })
       );
     }
@@ -370,7 +365,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
       return [];
     }
 
-    const scoreStart = perfService.absNow();
+    const scoreStart = Cu.now();
     const calcResult = items
       .filter(s => !NewTabUtils.blockedLinks.isBlocked({ url: s.url }))
       .map(s => {
