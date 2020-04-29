@@ -509,6 +509,7 @@ const MESSAGES = [
   "SessionStore:resetRestore",
   "SessionStore:flush",
   "SessionStore:becomeActiveProcess",
+  "SessionStore:prepareForProcessChange",
 ];
 
 class ContentSessionStore {
@@ -617,6 +618,15 @@ class ContentSessionStore {
         if (!this._shistoryInParent) {
           SessionHistoryListener.collect();
         }
+        break;
+      case "SessionStore:prepareForProcessChange":
+        // During normal in-process navigations, the DocShell would take
+        // care of automatically persisting layout history state to record
+        // scroll positions on the nsSHEntry. Unfortunately, process switching
+        // is not a normal navigation, so for now we do this ourselves. This
+        // is a workaround until session history state finally lives in the
+        // parent process.
+        this.mm.docShell.persistLayoutHistoryState();
         break;
       default:
         debug("received unknown message '" + name + "'");

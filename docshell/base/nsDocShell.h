@@ -1005,7 +1005,6 @@ class nsDocShell final : public nsDocLoader,
                  mozilla::dom::WindowGlobalChild* aWindowActor = nullptr);
   nsPresContext* GetEldestPresContext();
   nsresult CheckLoadingPermissions();
-  nsresult PersistLayoutHistoryState();
   nsresult LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType);
   nsresult GetHttpChannel(nsIChannel* aChannel, nsIHttpChannel** aReturn);
   nsresult ConfirmRepost(bool* aRepost);

@@ -1072,4 +1072,14 @@ interface nsIDocShell : nsIDocShellTreeItem
    * @see nsISHEntry synchronizeLayoutHistoryState().
    */
   void synchronizeLayoutHistoryState();
+
+  /**
+   * This attempts to save any applicable layout history state (like
+   * scroll position) in the nsISHEntry. This is normally done
+   * automatically when transitioning from page to page in the
+   * same process. We expose this function to support transitioning
+   * from page to page across processes as a workaround for bug 1630234
+   * until session history state is moved into the parent process.
+   */
+  void persistLayoutHistoryState();
 };
