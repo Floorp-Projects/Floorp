@@ -5,6 +5,7 @@
 #ifndef _JSEPSESSIONIMPL_H_
 #define _JSEPSESSIONIMPL_H_
 
+#include <map>
 #include <set>
 #include <string>
 #include <vector>
@@ -131,12 +132,13 @@ class JsepSessionImpl : public JsepSession {
     return !mOldIceUfrag.empty();
   }
 
-  virtual const std::vector<RefPtr<JsepTransceiver>>& GetTransceivers()
+  virtual const std::map<size_t, RefPtr<JsepTransceiver>>& GetTransceivers()
       const override {
     return mTransceivers;
   }
 
-  virtual std::vector<RefPtr<JsepTransceiver>>& GetTransceivers() override {
+  virtual std::map<size_t, RefPtr<JsepTransceiver>>& GetTransceivers()
+      override {
     return mTransceivers;
   }
 
@@ -225,11 +227,12 @@ class JsepSessionImpl : public JsepSession {
   const Sdp* GetAnswer() const;
   void SetIceRestarting(bool restarting);
 
-  // !!!NOT INDEXED BY LEVEL!!! These are in the order they were created in. The
-  // level mapping is done with JsepTransceiver::mLevel.
-  std::vector<RefPtr<JsepTransceiver>> mTransceivers;
+  // !!!NOT INDEXED BY LEVEL!!! The level mapping is done with
+  // JsepTransceiver::mLevel. The keys are opaque, stable identifiers that are
+  // unique within the JsepSession.
+  std::map<size_t, RefPtr<JsepTransceiver>> mTransceivers;
   // So we can rollback. Not as simple as just going back to the old, though...
-  std::vector<RefPtr<JsepTransceiver>> mOldTransceivers;
+  std::map<size_t, RefPtr<JsepTransceiver>> mOldTransceivers;
 
   Maybe<bool> mIsPendingOfferer;
   Maybe<bool> mIsCurrentOfferer;
@@ -247,6 +250,7 @@ class JsepSessionImpl : public JsepSession {
   size_t mMidCounter;
   std::set<std::string> mUsedMids;
   size_t mTransportIdCounter;
+  size_t mTransceiverIdCounter = 0;
   std::vector<JsepExtmapMediaType> mRtpExtensions;
   UniquePtr<JsepUuidGenerator> mUuidGen;
   std::string mDefaultRemoteStreamId;
