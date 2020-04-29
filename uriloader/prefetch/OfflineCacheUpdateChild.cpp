@@ -356,16 +356,6 @@ OfflineCacheUpdateChild::Schedule() {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIBrowserChild> tabchild = docshell->GetBrowserChild();
-  // because owner implements nsIBrowserChild, we can assume that it is
-  // the one and only BrowserChild.
-  BrowserChild* child =
-      tabchild ? static_cast<BrowserChild*>(tabchild.get()) : nullptr;
-
-  if (MissingRequiredBrowserChild(child, "offlinecacheupdate")) {
-    return NS_ERROR_FAILURE;
-  }
-
   nsresult rv = NS_OK;
   PrincipalInfo loadingPrincipalInfo;
   rv = PrincipalToPrincipalInfo(mLoadingPrincipal, &loadingPrincipalInfo);
