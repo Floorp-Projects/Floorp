@@ -766,33 +766,42 @@ void DocumentOrShadowRoot::GetAdoptedStyleSheets(
   aAdoptedStyleSheets = mAdoptedStyleSheets;
 }
 
+void DocumentOrShadowRoot::TraverseSheetRefInStylesIfApplicable(
+    StyleSheet& aSheet, nsCycleCollectionTraversalCallback& cb) {
+  if (!aSheet.IsApplicable()) {
+    return;
+  }
+  if (mKind == Kind::ShadowRoot) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mServoStyles->sheets[i]");
+    cb.NoteXPCOMChild(&aSheet);
+  } else if (AsNode().AsDocument()->StyleSetFilled()) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
+        cb, "mStyleSet->mRawSet.stylist.stylesheets.<origin>[i]");
+    cb.NoteXPCOMChild(&aSheet);
+  }
+}
+
+void DocumentOrShadowRoot::TraverseStyleSheets(
+    nsTArray<RefPtr<StyleSheet>>& aSheets, const char* aEdgeName,
+    nsCycleCollectionTraversalCallback& cb) {
+  MOZ_ASSERT(aEdgeName);
+  MOZ_ASSERT(&aSheets != &mAdoptedStyleSheets);
+  for (StyleSheet* sheet : aSheets) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, aEdgeName);
+    cb.NoteXPCOMChild(sheet);
+    TraverseSheetRefInStylesIfApplicable(*sheet, cb);
+  }
+}
+
 void DocumentOrShadowRoot::Traverse(DocumentOrShadowRoot* tmp,
                                     nsCycleCollectionTraversalCallback& cb) {
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMStyleSheets)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAdoptedStyleSheets)
+  tmp->TraverseStyleSheets(tmp->mStyleSheets, "mStyleSheets[i]", cb);
 
-  auto NoteSheetIfApplicable = [&](StyleSheet& aSheet) {
-    if (!aSheet.IsApplicable()) {
-      return;
-    }
-    // The style set or mServoStyles keep more references to it if the sheet
-    // is applicable.
-    if (tmp->mKind == Kind::ShadowRoot) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mServoStyles->sheets[i]");
-      cb.NoteXPCOMChild(&aSheet);
-    } else if (tmp->AsNode().AsDocument()->StyleSetFilled()) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
-          cb, "mStyleSet->mRawSet.stylist.stylesheets.author[i]");
-      cb.NoteXPCOMChild(&aSheet);
-    }
-  };
-
-  for (auto& sheet : tmp->mStyleSheets) {
-    NoteSheetIfApplicable(*sheet);
-  }
-
-  tmp->EnumerateUniqueAdoptedStyleSheetsBackToFront(NoteSheetIfApplicable);
+  tmp->EnumerateUniqueAdoptedStyleSheetsBackToFront([&](StyleSheet& aSheet) {
+    tmp->TraverseSheetRefInStylesIfApplicable(aSheet, cb);
+  });
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAdoptedStyleSheets);
 
   for (auto iter = tmp->mIdentifierMap.ConstIter(); !iter.Done(); iter.Next()) {
     iter.Get()->Traverse(&cb);
@@ -813,13 +822,19 @@ void DocumentOrShadowRoot::Traverse(DocumentOrShadowRoot* tmp,
   }
 }
 
+void DocumentOrShadowRoot::UnlinkStyleSheets(
+    nsTArray<RefPtr<StyleSheet>>& aSheets) {
+  MOZ_ASSERT(&aSheets != &mAdoptedStyleSheets);
+  for (StyleSheet* sheet : aSheets) {
+    sheet->ClearAssociatedDocumentOrShadowRoot();
+    RemoveSheetFromStylesIfApplicable(*sheet);
+  }
+  aSheets.Clear();
+}
+
 void DocumentOrShadowRoot::Unlink(DocumentOrShadowRoot* tmp) {
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMStyleSheets);
-  for (StyleSheet* sheet : tmp->mStyleSheets) {
-    sheet->ClearAssociatedDocumentOrShadowRoot();
-    tmp->RemoveSheetFromStylesIfApplicable(*sheet);
-  }
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStyleSheets);
+  tmp->UnlinkStyleSheets(tmp->mStyleSheets);
   tmp->EnumerateUniqueAdoptedStyleSheetsBackToFront([&](StyleSheet& aSheet) {
     aSheet.RemoveAdopter(*tmp);
     tmp->RemoveSheetFromStylesIfApplicable(aSheet);
