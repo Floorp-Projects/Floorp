@@ -397,11 +397,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       let relationObject;
       for (const target of targets) {
         // Target of the relation is not part of the current root document.
-        try {
-          if (target.rootDocument !== doc.rawAccessible) {
-            continue;
-          }
-        } catch (e) {
+        if (target.rootDocument !== doc.rawAccessible) {
           continue;
         }
 
