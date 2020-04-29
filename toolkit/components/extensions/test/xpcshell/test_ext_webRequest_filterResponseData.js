@@ -24,6 +24,25 @@ server.registerPathHandler("/redirect301", (request, response) => {
   response.setHeader("Access-Control-Allow-Origin", "*");
 });
 
+server.registerPathHandler("/script302.js", (request, response) => {
+  response.setStatusLine(request.httpVersion, 302, "Moved Temporarily");
+  response.setHeader("Location", "http://example.com/script.js");
+});
+
+server.registerPathHandler("/script.js", (request, response) => {
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.setHeader("Content-Type", "application/javascript");
+  response.write(String.raw`console.log("HELLO!");`);
+});
+
+server.registerPathHandler("/302.html", (request, response) => {
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.setHeader("Content-Type", "text/html");
+  response.write(String.raw`
+    <script type="application/javascript" src="http://example.com/script302.js"></script>
+  `);
+});
+
 server.registerPathHandler("/dummy", (request, response) => {
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.setHeader("Access-Control-Allow-Origin", "*");
@@ -343,6 +362,60 @@ add_task(async function test_filter_301() {
   await extension.awaitFinish("stream-filter");
 
   await contentPage.close();
+  await extension.unload();
+});
+
+add_task(async function test_filter_302() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.webRequest.onBeforeRequest.addListener(
+        details => {
+          let filter = browser.webRequest.filterResponseData(details.requestId);
+          browser.test.sendMessage("filter-created");
+
+          filter.ondata = event => {
+            const script = "forceError();";
+            filter.write(
+              new Uint8Array(new TextEncoder("utf-8").encode(script))
+            );
+            filter.close();
+            browser.test.sendMessage("filter-ondata");
+          };
+
+          filter.onerror = () => {
+            browser.test.assertEq(filter.error, "Channel redirected");
+            browser.test.sendMessage("filter-redirect");
+          };
+        },
+        {
+          urls: ["http://example.com/*.js"],
+        },
+        ["blocking"]
+      );
+    },
+
+    manifest: {
+      permissions: ["webRequest", "webRequestBlocking", "http://example.com/"],
+    },
+  });
+
+  await extension.startup();
+
+  let { messages } = await promiseConsoleOutput(async () => {
+    let contentPage = await ExtensionTestUtils.loadContentPage(
+      "http://example.com/302.html"
+    );
+
+    await extension.awaitMessage("filter-created");
+    await extension.awaitMessage("filter-redirect");
+    await extension.awaitMessage("filter-created");
+    await extension.awaitMessage("filter-ondata");
+    await contentPage.close();
+  });
+  AddonTestUtils.checkMessages(messages, {
+    expected: [{ message: /forceError is not defined/ }],
+  });
+
   await extension.unload();
 });
 
