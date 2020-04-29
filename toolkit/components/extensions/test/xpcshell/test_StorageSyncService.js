@@ -27,62 +27,67 @@ function promisify(func, ...params) {
   });
 }
 
-add_task(async function test_storage_sync_service() {
-  // So that we can write to the profile directory.
-  do_get_profile();
-
-  const service = Cc["@mozilla.org/extensions/storage/sync;1"]
-    .getService(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.mozIExtensionStorageArea);
+add_task(
   {
-    let { changes, value } = await promisify(
-      service.set,
-      "ext-1",
-      JSON.stringify({
-        hi: "hello! 💖",
-        bye: "adiós",
-      })
-    );
-    deepEqual(
-      changes,
-      [
+    skip_if: () => !AppConstants.MOZ_NEW_WEBEXT_STORAGE,
+  },
+  async function test_storage_sync_service() {
+    // So that we can write to the profile directory.
+    do_get_profile();
+
+    const service = Cc["@mozilla.org/extensions/storage/sync;1"]
+      .getService(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.mozIExtensionStorageArea);
+    {
+      let { changes, value } = await promisify(
+        service.set,
+        "ext-1",
+        JSON.stringify({
+          hi: "hello! 💖",
+          bye: "adiós",
+        })
+      );
+      deepEqual(
+        changes,
+        [
+          {
+            hi: {
+              newValue: JSON.stringify("hello! 💖"),
+            },
+            bye: {
+              newValue: JSON.stringify("adiós"),
+            },
+          },
+        ],
+        "`set` should notify listeners about changes"
+      );
+      ok(!value, "`set` should not return a value");
+    }
+
+    {
+      let { changes, value } = await promisify(
+        service.get,
+        "ext-1",
+        JSON.stringify(["hi"])
+      );
+      deepEqual(changes, [], "`get` should not notify listeners");
+      deepEqual(
+        value,
         {
-          hi: {
-            newValue: JSON.stringify("hello! 💖"),
-          },
-          bye: {
-            newValue: JSON.stringify("adiós"),
-          },
+          hi: "hello! 💖",
         },
-      ],
-      "`set` should notify listeners about changes"
-    );
-    ok(!value, "`set` should not return a value");
-  }
+        "`get` with key should return value"
+      );
 
-  {
-    let { changes, value } = await promisify(
-      service.get,
-      "ext-1",
-      JSON.stringify(["hi"])
-    );
-    deepEqual(changes, [], "`get` should not notify listeners");
-    deepEqual(
-      value,
-      {
-        hi: "hello! 💖",
-      },
-      "`get` with key should return value"
-    );
-
-    let { value: allValues } = await promisify(service.get, "ext-1", "null");
-    deepEqual(
-      allValues,
-      {
-        hi: "hello! 💖",
-        bye: "adiós",
-      },
-      "`get` without a key should return all values"
-    );
+      let { value: allValues } = await promisify(service.get, "ext-1", "null");
+      deepEqual(
+        allValues,
+        {
+          hi: "hello! 💖",
+          bye: "adiós",
+        },
+        "`get` without a key should return all values"
+      );
+    }
   }
-});
+);

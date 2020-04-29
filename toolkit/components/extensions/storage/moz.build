@@ -17,7 +17,7 @@ XPIDL_SOURCES += [
 # a delegate for consumers to use instead. Android Components can then provide
 # an implementation of the delegate that's backed by the Rust component. For
 # details, please see bug 1626506, comment 4.
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != "android":
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != "android" and CONFIG['MOZ_NEW_WEBEXT_STORAGE']:
     EXPORTS.mozilla.extensions.storage += [
         'ExtensionStorageComponents.h',
     ]
