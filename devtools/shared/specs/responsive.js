@@ -148,13 +148,6 @@ const responsiveSpec = generateActorSpec({
       },
     },
 
-    setDocumentInRDMPane: {
-      request: {
-        state: Arg(0, "boolean"),
-      },
-      response: {},
-    },
-
     setFloatingScrollbars: {
       request: {
         state: Arg(0, "boolean"),
