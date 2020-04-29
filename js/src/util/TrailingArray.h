@@ -14,19 +14,6 @@
 
 namespace js {
 
-// Placement-new the elements of an array. This should optimize away for types
-// with trivial default initialization.
-template <typename T>
-static void DefaultInitializeElements(void* arrayPtr, size_t nelem) {
-  uintptr_t elem = reinterpret_cast<uintptr_t>(arrayPtr);
-  MOZ_ASSERT(elem % alignof(T) == 0);
-
-  for (size_t i = 0; i < nelem; ++i) {
-    new (reinterpret_cast<void*>(elem)) T;
-    elem += sizeof(T);
-  }
-}
-
 // This is a mixin class to use for types that have trailing arrays and use
 // offsets to delimit them. It provides helper methods to do casting and
 // initialization while avoiding C++ undefined behaviour.
@@ -34,6 +21,12 @@ class TrailingArray {
  protected:
   // Offsets are measured in bytes relative to 'this'.
   using Offset = uint32_t;
+
+  // Test if offset is correctly aligned for type.
+  template <typename T>
+  static constexpr bool isAlignedOffset(Offset offset) {
+    return offset % alignof(T) == 0;
+  }
 
   // Translate an offset into a concrete pointer.
   template <typename T>
@@ -47,12 +40,21 @@ class TrailingArray {
     return reinterpret_cast<const T*>(base + offset);
   }
 
-  // Placement-new the elements of an array. This should optimize away for types
-  // with trivial default initialization.
+  // Placement-new the elements of an array. This optimizes away for types with
+  // trivial default initialization and plays nicely with compiler vectorization
+  // passes.
   template <typename T>
   void initElements(Offset offset, size_t nelem) {
-    void* raw = offsetToPointer<void>(offset);
-    DefaultInitializeElements<T>(raw, nelem);
+    MOZ_ASSERT(isAlignedOffset<T>(offset));
+
+    // Address of first array element.
+    uintptr_t elem = reinterpret_cast<uintptr_t>(this) + offset;
+
+    for (size_t i = 0; i < nelem; ++i) {
+      void* raw = reinterpret_cast<void*>(elem);
+      new (raw) T;
+      elem += sizeof(T);
+    }
   }
 
   // Constructor is protected so a derived type is required.
