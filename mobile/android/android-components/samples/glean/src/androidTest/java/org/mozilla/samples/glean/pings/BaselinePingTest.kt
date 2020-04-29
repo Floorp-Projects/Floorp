@@ -54,6 +54,7 @@ class BaselinePingTest {
 
     private fun waitForPingContent(
         pingName: String,
+        pingReason: String?,
         maxAttempts: Int = 3
     ): JSONObject?
     {
@@ -63,7 +64,16 @@ class BaselinePingTest {
             val request = server.takeRequest(20L, TimeUnit.SECONDS)
             val docType = request.path.split("/")[3]
             if (pingName == docType) {
-                return JSONObject(request.body.readUtf8())
+                val parsedPayload = JSONObject(request.body.readUtf8())
+                if (pingReason == null) {
+                    return parsedPayload
+                }
+
+                // If we requested a specific ping reason, look for it.
+                val reason = parsedPayload.getJSONObject("ping_info").getString("reason")
+                if (reason == pingReason) {
+                    return parsedPayload
+                }
             }
         } while (attempts < maxAttempts)
 
@@ -85,7 +95,7 @@ class BaselinePingTest {
         device.pressHome()
 
         // Validate the received data.
-        val baselinePing = waitForPingContent("baseline")!!
+        val baselinePing = waitForPingContent("baseline", "background")!!
         val metrics = baselinePing.getJSONObject("metrics")
 
         // Make sure we have a 'duration' field with a reasonable value: it should be >= 1, since
