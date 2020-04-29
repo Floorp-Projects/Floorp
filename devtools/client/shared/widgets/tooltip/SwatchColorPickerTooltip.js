@@ -134,8 +134,7 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
 
     // Then set spectrum's color and listen to color changes to preview them
     if (this.activeSwatch) {
-      this.currentSwatchColor = this.activeSwatch.nextSibling;
-      this._originalColor = this.currentSwatchColor.textContent;
+      this._originalColor = this.activeSwatch.parentNode.dataset.color;
       const color = this.activeSwatch.style.backgroundColor;
 
       this.spectrum.off("changed", this._onSpectrumColorChange);
@@ -208,10 +207,13 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
   _selectColor(color) {
     if (this.activeSwatch) {
       this.activeSwatch.style.backgroundColor = color;
-      this.activeSwatch.parentNode.dataset.color = color;
 
       color = this._toDefaultType(color);
-      this.currentSwatchColor.textContent = color;
+
+      this.activeSwatch.parentNode.dataset.color = color;
+      if (this.activeSwatch.nextSibling) {
+        this.activeSwatch.nextSibling.textContent = color;
+      }
       this.preview(color);
 
       if (this.eyedropperOpen) {
@@ -318,7 +320,6 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
   destroy() {
     super.destroy();
     this.inspector = null;
-    this.currentSwatchColor = null;
     this.spectrum.off("changed", this._onSpectrumColorChange);
     this.spectrum.destroy();
   }
