@@ -321,7 +321,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
         );
 
         if (isF12Disabled) {
-          toggleEnableDevToolsPopup(window.document);
+          toggleEnableDevToolsPopup(window.document, startTime);
         } else {
           await gDevToolsBrowser.toggleToolboxCommand(
             window.gBrowser,
