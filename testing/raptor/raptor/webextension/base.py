@@ -99,7 +99,9 @@ class WebExtension(Perftest):
         # we also need to give time for results processing, not just page/browser cycles!
         timeout += 60
 
-        elapsed_time = 0
+        # stop 5 seconds early
+        end_time = time.time() + timeout - 5
+
         while not self.control_server._finished:
             # Ignore check if the control server shutdown the app
             if not self.control_server._is_shutting_down:
@@ -116,21 +118,22 @@ class WebExtension(Perftest):
                         self.cpu_profiler.generate_android_cpu_profile(test["name"])
 
                     self.control_server_wait_continue()
+
+            # Sleep for a moment to not check the process too often
             time.sleep(1)
+
             # we only want to force browser-shutdown on timeout if not in debug mode;
             # in debug-mode we leave the browser running (require manual shutdown)
-            if not self.debug_mode:
-                elapsed_time += 1
-                if elapsed_time > (timeout) - 5:  # stop 5 seconds early
-                    self.control_server.wait_for_quit()
+            if not self.debug_mode and end_time < time.time():
+                self.control_server.wait_for_quit()
 
-                    if not self.control_server.is_webextension_loaded:
-                        raise RuntimeError("Connection to Raptor webextension failed!")
+                if not self.control_server.is_webextension_loaded:
+                    raise RuntimeError("Connection to Raptor webextension failed!")
 
-                    raise RuntimeError(
-                        "Test failed to finish. "
-                        "Application timed out after {} seconds".format(timeout)
-                    )
+                raise RuntimeError(
+                    "Test failed to finish. "
+                    "Application timed out after {} seconds".format(timeout)
+                )
 
         if self.control_server._runtime_error:
             raise RuntimeError("Failed to run {}: {}\nStack:\n{}".format(
