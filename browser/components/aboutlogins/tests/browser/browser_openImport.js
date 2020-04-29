@@ -12,7 +12,7 @@ add_task(async function setup() {
 });
 
 add_task(async function test_open_import() {
-  let promiseImportWindow = BrowserTestUtils.domWindowOpened();
+  let promiseImportWindow = BrowserTestUtils.domWindowOpenedAndLoaded();
 
   let browser = gBrowser.selectedBrowser;
   await BrowserTestUtils.synthesizeMouseAtCenter("menu-button", {}, browser);
@@ -42,10 +42,6 @@ add_task(async function test_open_import() {
   info("waiting for Import to get opened");
   let importWindow = await promiseImportWindow;
   ok(true, "Import opened");
-  await TestUtils.waitForCondition(
-    () => importWindow.document.readyState == "complete",
-    "waiting for Import to fully load before closing it so observers will be correctly removed"
-  );
 
   importWindow.close();
 });
