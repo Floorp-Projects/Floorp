@@ -23,12 +23,9 @@
 namespace js {
 namespace jit {
 
-class IonBuilder;
-class JitAllocPolicy;
 class JitCode;
 class MacroAssembler;
 
-using ObjectVector = Vector<JSObject*, 4, JitAllocPolicy>;
 using TraceLoggerEventVector = Vector<TraceLoggerEvent, 0, SystemAllocPolicy>;
 
 // Header at start of raw code buffer
@@ -250,11 +247,6 @@ class alignas(8) IonScript final : public TrailingArray {
   // End of fields.
 
  private:
-  inline uint8_t* bottomBuffer() { return reinterpret_cast<uint8_t*>(this); }
-  inline const uint8_t* bottomBuffer() const {
-    return reinterpret_cast<const uint8_t*>(this);
-  }
-
   // Layout helpers
   Offset constantTableOffset() const { return constantTableOffset_; }
   Offset runtimeDataOffset() const { return runtimeDataOffset_; }
@@ -395,13 +387,6 @@ class alignas(8) IonScript final : public TrailingArray {
 
   void trace(JSTracer* trc);
 
-  static inline size_t offsetOfMethod() { return offsetof(IonScript, method_); }
-  static inline size_t offsetOfOsrEntryOffset() {
-    return offsetof(IonScript, osrEntryOffset_);
-  }
-  static inline size_t offsetOfSkipArgCheckEntryOffset() {
-    return offsetof(IonScript, skipArgCheckEntryOffset_);
-  }
   static inline size_t offsetOfInvalidationCount() {
     return offsetof(IonScript, invalidationCount_);
   }
@@ -539,8 +524,6 @@ class alignas(8) IonScript final : public TrailingArray {
   void clearRecompiling() { recompiling_ = false; }
 
   size_t allocBytes() const { return allocBytes_; }
-
-  enum ShouldIncreaseAge { IncreaseAge = true, KeepAge = false };
 
   static void writeBarrierPre(Zone* zone, IonScript* ionScript);
 };
@@ -698,20 +681,7 @@ struct IonScriptCounts {
   }
 };
 
-struct VMFunction;
-
 }  // namespace jit
-
-namespace gc {
-
-inline bool IsMarked(JSRuntime* rt, const jit::VMFunction*) {
-  // VMFunction are only static objects which are used by WeakMaps as keys.
-  // It is considered as a root object which is always marked.
-  return true;
-}
-
-}  // namespace gc
-
 }  // namespace js
 
 // JS::ubi::Nodes can point to js::jit::JitCode instances; they're js::gc::Cell
