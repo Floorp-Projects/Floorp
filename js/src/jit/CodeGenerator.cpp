@@ -11845,18 +11845,18 @@ void CodeGenerator::visitLoadUnboxedScalar(LLoadUnboxedScalar* lir) {
 
   const MLoadUnboxedScalar* mir = lir->mir();
 
-  Scalar::Type readType = mir->readType();
-  size_t width = Scalar::byteSize(mir->storageType());
+  Scalar::Type storageType = mir->storageType();
+  size_t width = Scalar::byteSize(storageType);
 
   Label fail;
   if (lir->index()->isConstant()) {
     Address source(elements,
                    ToInt32(lir->index()) * width + mir->offsetAdjustment());
-    masm.loadFromTypedArray(readType, source, out, temp, &fail);
+    masm.loadFromTypedArray(storageType, source, out, temp, &fail);
   } else {
     BaseIndex source(elements, ToRegister(lir->index()),
                      ScaleFromElemWidth(width), mir->offsetAdjustment());
-    masm.loadFromTypedArray(readType, source, out, temp, &fail);
+    masm.loadFromTypedArray(storageType, source, out, temp, &fail);
   }
 
   if (fail.used()) {
