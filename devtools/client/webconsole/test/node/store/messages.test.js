@@ -1116,4 +1116,30 @@ describe("Message reducer:", () => {
       expect(repeat[getLastMessage(getState()).id]).toBe(undefined);
     });
   });
+
+  describe("messageRemove", () => {
+    it("removes the message from the store", () => {
+      const { dispatch, getState } = setupStore([
+        "console.trace()",
+        "console.log(undefined)",
+        "console.trace()",
+        "console.log(undefined)",
+      ]);
+
+      let expanded = getAllMessagesUiById(getState());
+      expect(expanded.length).toBe(2);
+
+      const secondTraceMessage = getMessageAt(getState(), 2);
+      dispatch(actions.messageRemove(secondTraceMessage.id));
+
+      const messages = getAllMessagesById(getState());
+      // The messages was removed
+      expect(messages.size).toBe(3);
+
+      // Its id was removed from the messagesUI property as well
+      expanded = getAllMessagesUiById(getState());
+      expect(expanded.length).toBe(1);
+      expect(expanded.includes(secondTraceMessage.id)).toBeFalsy();
+    });
+  });
 });
