@@ -850,6 +850,25 @@ TEST(TArray, MakeBackInserter_Move)
   ASSERT_EQ(1u, destructionCounter);
 }
 
+TEST(TArray, ConvertToSpan)
+{
+  nsTArray<int> arr = {1, 2, 3, 4, 5};
+
+  // from const
+  {
+    const auto& constArrRef = arr;
+
+    auto span = Span{constArrRef};
+    static_assert(std::is_same_v<decltype(span), Span<const int>>);
+  }
+
+  // from non-const
+  {
+    auto span = Span{arr};
+    static_assert(std::is_same_v<decltype(span), Span<int>>);
+  }
+}
+
 // This should compile:
 struct RefCounted;
 
