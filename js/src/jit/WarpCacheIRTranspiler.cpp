@@ -157,6 +157,19 @@ bool WarpCacheIRTranspiler::emitGuardToString(ValOperandId inputId) {
   return emitGuardTo(inputId, MIRType::String);
 }
 
+bool WarpCacheIRTranspiler::emitGuardToInt32(ValOperandId inputId,
+                                             Int32OperandId resultId) {
+  MDefinition* input = getOperand(inputId);
+  if (input->type() == MIRType::Int32) {
+    return defineOperand(resultId, input);
+  }
+
+  auto* ins = MUnbox::New(alloc(), input, MIRType::Int32, MUnbox::Fallible);
+  current->add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
 bool WarpCacheIRTranspiler::emitGuardToInt32Index(ValOperandId inputId,
                                                   Int32OperandId resultId) {
   MDefinition* input = getOperand(inputId);
@@ -174,6 +187,13 @@ bool WarpCacheIRTranspiler::emitGuardToTypedArrayIndex(
   current->add(ins);
 
   return defineOperand(resultId, ins);
+}
+
+bool WarpCacheIRTranspiler::emitLoadInt32Result(Int32OperandId valId) {
+  MDefinition* val = getOperand(valId);
+  MOZ_ASSERT(val->type() == MIRType::Int32);
+  setResult(val);
+  return true;
 }
 
 bool WarpCacheIRTranspiler::emitLoadEnclosingEnvironment(
@@ -375,6 +395,46 @@ bool WarpCacheIRTranspiler::emitLoadStringCharResult(StringOperandId strId,
   current->add(fromCharCode);
 
   setResult(fromCharCode);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitInt32IncResult(Int32OperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* constOne = MConstant::New(alloc(), Int32Value(1));
+  current->add(constOne);
+
+  auto* ins = MAdd::New(alloc(), input, constOne, MIRType::Int32);
+  current->add(ins);
+
+  setResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitInt32DecResult(Int32OperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* constOne = MConstant::New(alloc(), Int32Value(1));
+  current->add(constOne);
+
+  auto* ins = MSub::New(alloc(), input, constOne, MIRType::Int32);
+  current->add(ins);
+
+  setResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitCompareInt32Result(JSOp op,
+                                                   Int32OperandId lhsId,
+                                                   Int32OperandId rhsId) {
+  MDefinition* lhs = getOperand(lhsId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* ins = MCompare::New(alloc(), lhs, rhs, op);
+  ins->setCompareType(MCompare::Compare_Int32);
+  current->add(ins);
+
+  setResult(ins);
   return true;
 }
 
