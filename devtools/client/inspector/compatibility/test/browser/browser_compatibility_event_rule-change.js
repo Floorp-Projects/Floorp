@@ -12,7 +12,7 @@ const TEST_URI = `
     border-block-color: lime;
   }
   div {
-    margin-inline-start: 5px;
+    font-variant-alternates: historical-forms;
   }
   </style>
   <div class="test-class">test class</div>
@@ -23,7 +23,7 @@ const TEST_DATA_SELECTED = {
   fullRule: {
     expectedProperties: [
       { property: "border-block-color" },
-      { property: "margin-inline-start" },
+      { property: "font-variant-alternates" },
     ],
     expectedNodes: [
       {
@@ -31,7 +31,7 @@ const TEST_DATA_SELECTED = {
         nodes: [],
       },
       {
-        property: "margin-inline-start",
+        property: "font-variant-alternates",
         nodes: [],
       },
     ],
@@ -46,10 +46,10 @@ const TEST_DATA_SELECTED = {
     ],
   },
   elementRule: {
-    expectedProperties: [{ property: "margin-inline-start" }],
+    expectedProperties: [{ property: "font-variant-alternates" }],
     expectedNodes: [
       {
-        property: "margin-inline-start",
+        property: "font-variant-alternates",
         nodes: [],
       },
     ],
@@ -60,7 +60,7 @@ const TEST_DATA_ALL = {
   fullRule: {
     expectedProperties: [
       { property: "border-block-color" },
-      { property: "margin-inline-start" },
+      { property: "font-variant-alternates" },
     ],
     expectedNodes: [
       {
@@ -68,7 +68,7 @@ const TEST_DATA_ALL = {
         nodes: ["div.test-class"],
       },
       {
-        property: "margin-inline-start",
+        property: "font-variant-alternates",
         nodes: ["div.test-class", "div"],
       },
     ],
@@ -83,10 +83,10 @@ const TEST_DATA_ALL = {
     ],
   },
   elementRule: {
-    expectedProperties: [{ property: "margin-inline-start" }],
+    expectedProperties: [{ property: "font-variant-alternates" }],
     expectedNodes: [
       {
-        property: "margin-inline-start",
+        property: "font-variant-alternates",
         nodes: ["div.test-class", "div"],
       },
     ],

@@ -12,7 +12,7 @@ const TEST_DATA_ISSUES = {
       border-block-color: lime;
     }
     div {
-      margin-inline-start: 5px;
+      font-variant-alternates: historical-forms;
     }
     </style>
     <body>
@@ -22,7 +22,7 @@ const TEST_DATA_ISSUES = {
   expectedIssuesOnSelected: [{ property: "border-block-color" }],
   expectedIssuesOnAll: [
     { property: "border-block-color" },
-    { property: "margin-inline-start" },
+    { property: "font-variant-alternates" },
   ],
 };
 
