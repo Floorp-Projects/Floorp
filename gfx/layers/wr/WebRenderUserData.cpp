@@ -266,7 +266,7 @@ void WebRenderImageData::CreateAsyncImageWebRenderCommands(
   // where it will be done when we build the display list for the iframe.
   // That happens in AsyncImagePipelineManager.
   wr::LayoutRect r = wr::ToLayoutRect(aBounds);
-  aBuilder.PushIFrame(r, mPipelineId.ref(),
+  aBuilder.PushIFrame(r, aIsBackfaceVisible, mPipelineId.ref(),
                       /*ignoreMissingPipelines*/ false);
 
   WrBridge()->AddWebRenderParentCommand(
