@@ -6,7 +6,7 @@
 #include "exdll.h"
 
 static void APIENTRY TimerCallback(LPVOID NSISFunctionAddr, DWORD, DWORD) {
-  g_executeCodeSegment((int)NSISFunctionAddr, g_hwndParent);
+  g_executeCodeSegment((int)NSISFunctionAddr, nullptr);
 }
 
 PLUGINFUNCTION(CreateTimer) {

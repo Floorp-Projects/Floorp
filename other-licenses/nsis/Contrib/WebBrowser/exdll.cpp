@@ -6,7 +6,7 @@
 
 unsigned int g_stringsize;
 stack_t** g_stacktop;
-int(__stdcall* g_executeCodeSegment)(int, HWND);
+int(__stdcall* g_executeCodeSegment)(int pos, HWND hwndProgress);
 HWND g_hwndParent;
 
 int popstring(TCHAR* str) {
