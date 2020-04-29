@@ -433,11 +433,16 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
       renderRootDL->mScrollData.emplace(std::move(mScrollData));
     }
 
-    WrBridge()->EndTransaction(renderRootDLs, mLatestTransactionId,
-                               containsSVGGroup,
-                               mTransactionIdAllocator->GetVsyncId(),
-                               mTransactionIdAllocator->GetVsyncStart(),
-                               refreshStart, mTransactionStart, mURL);
+    bool ret = WrBridge()->EndTransaction(
+        renderRootDLs, mLatestTransactionId, containsSVGGroup,
+        mTransactionIdAllocator->GetVsyncId(),
+        mTransactionIdAllocator->GetVsyncStart(), refreshStart,
+        mTransactionStart, mURL);
+    if (!ret) {
+      // Failed to send display list, reset display item cache state.
+      mDisplayItemCache.Clear();
+    }
+
     WrBridge()->SendSetFocusTarget(mFocusTarget);
     mFocusTarget = FocusTarget();
   }
@@ -615,6 +620,7 @@ void WebRenderLayerManager::WrUpdated() {
   ClearAsyncAnimations();
   mWebRenderCommandBuilder.ClearCachedResources();
   DiscardLocalImages();
+  mDisplayItemCache.Clear();
 
   if (mWidget) {
     if (dom::BrowserChild* browserChild = mWidget->GetOwningBrowserChild()) {
