@@ -691,7 +691,7 @@ class ADBDevice(ADBCommand):
         # there is /sbin/ls which embeds ansi escape codes to colorize
         # the output.  Detect if we are using busybox ls. We want each
         # entry on a single line and we don't want . or ..
-        ls_dir = "/sdcard"
+        ls_dir = "/system"
 
         # Using self.is_file is problematic on emulators either
         # using ls or test to check for their existence.
