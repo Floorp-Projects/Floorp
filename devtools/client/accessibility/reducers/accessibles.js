@@ -123,7 +123,7 @@ function onReceiveChildren(cache, action) {
   }
 
   if (accessible.actorID) {
-    console.warn(`Error fetching children: `, error);
+    console.warn(`Error fetching children: `, accessible, error);
     return cache;
   }
 
