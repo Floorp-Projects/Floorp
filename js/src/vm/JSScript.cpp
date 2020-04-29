@@ -10,6 +10,7 @@
 
 #include "vm/JSScript-inl.h"
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
@@ -723,46 +724,18 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
   return Ok();
 }
 
-/* static */ size_t ImmutableScriptData::AllocationSize(
-    uint32_t codeLength, uint32_t noteLength, uint32_t numResumeOffsets,
-    uint32_t numScopeNotes, uint32_t numTryNotes) {
-  size_t size = sizeof(ImmutableScriptData);
-
-  size += sizeof(Flags);
-  size += codeLength * sizeof(jsbytecode);
-  size += noteLength * sizeof(SrcNote);
-
-#ifdef DEBUG
-  // The compact arrays need to maintain uint32_t alignment. This should have
-  // been done by padding out source notes.
-  MOZ_ASSERT(size % sizeof(uint32_t) == 0,
-             "Source notes should have been padded already");
-#endif
-
-  unsigned numOptionalArrays = unsigned(numResumeOffsets > 0) +
-                               unsigned(numScopeNotes > 0) +
-                               unsigned(numTryNotes > 0);
-  size += numOptionalArrays * sizeof(Offset);
-
-  size += numResumeOffsets * sizeof(uint32_t);
-  size += numScopeNotes * sizeof(ScopeNote);
-  size += numTryNotes * sizeof(TryNote);
-
-  return size;
-}
-
 // Initialize the optional arrays in the trailing allocation. This is a set of
 // offsets that delimit each optional array followed by the arrays themselves.
 // See comment before 'ImmutableScriptData' for more details.
-void ImmutableScriptData::initOptionalArrays(size_t* pcursor,
-                                             ImmutableScriptData::Flags* flags,
+void ImmutableScriptData::initOptionalArrays(Offset* pcursor,
                                              uint32_t numResumeOffsets,
                                              uint32_t numScopeNotes,
                                              uint32_t numTryNotes) {
-  size_t cursor = (*pcursor);
+  Offset cursor = (*pcursor);
 
   // The byte arrays must have already been padded.
-  MOZ_ASSERT(cursor % sizeof(uint32_t) == 0);
+  MOZ_ASSERT(isAlignedOffset<CodeNoteAlign>(cursor),
+             "Bytecode and source notes should be padded to keep alignment");
 
   // Each non-empty optional array needs will need an offset to its end.
   unsigned numOptionalArrays = unsigned(numResumeOffsets > 0) +
@@ -770,8 +743,6 @@ void ImmutableScriptData::initOptionalArrays(size_t* pcursor,
                                unsigned(numTryNotes > 0);
 
   // Default-initialize the optional-offsets.
-  static_assert(alignof(ImmutableScriptData) >= alignof(Offset),
-                "Incompatible alignment");
   initElements<Offset>(cursor, numOptionalArrays);
   cursor += numOptionalArrays * sizeof(Offset);
 
@@ -788,35 +759,29 @@ void ImmutableScriptData::initOptionalArrays(size_t* pcursor,
   // Default-initialize optional 'resumeOffsets'.
   MOZ_ASSERT(resumeOffsetsOffset() == cursor);
   if (numResumeOffsets > 0) {
-    static_assert(sizeof(Offset) >= alignof(uint32_t),
-                  "Incompatible alignment");
     initElements<uint32_t>(cursor, numResumeOffsets);
     cursor += numResumeOffsets * sizeof(uint32_t);
     setOptionalOffset(++offsetIndex, cursor);
   }
-  flags->resumeOffsetsEndIndex = offsetIndex;
+  flagsRef().resumeOffsetsEndIndex = offsetIndex;
 
   // Default-initialize optional 'scopeNotes'.
   MOZ_ASSERT(scopeNotesOffset() == cursor);
   if (numScopeNotes > 0) {
-    static_assert(sizeof(uint32_t) >= alignof(ScopeNote),
-                  "Incompatible alignment");
     initElements<ScopeNote>(cursor, numScopeNotes);
     cursor += numScopeNotes * sizeof(ScopeNote);
     setOptionalOffset(++offsetIndex, cursor);
   }
-  flags->scopeNotesEndIndex = offsetIndex;
+  flagsRef().scopeNotesEndIndex = offsetIndex;
 
   // Default-initialize optional 'tryNotes'
   MOZ_ASSERT(tryNotesOffset() == cursor);
   if (numTryNotes > 0) {
-    static_assert(sizeof(ScopeNote) >= alignof(TryNote),
-                  "Incompatible alignment");
     initElements<TryNote>(cursor, numTryNotes);
     cursor += numTryNotes * sizeof(TryNote);
     setOptionalOffset(++offsetIndex, cursor);
   }
-  flags->tryNotesEndIndex = offsetIndex;
+  flagsRef().tryNotesEndIndex = offsetIndex;
 
   MOZ_ASSERT(endOffset() == cursor);
   (*pcursor) = cursor;
@@ -829,42 +794,36 @@ ImmutableScriptData::ImmutableScriptData(uint32_t codeLength,
                                          uint32_t numTryNotes)
     : codeLength_(codeLength) {
   // Variable-length data begins immediately after ImmutableScriptData itself.
-  size_t cursor = sizeof(*this);
+  Offset cursor = sizeof(ImmutableScriptData);
 
   // The following arrays are byte-aligned with additional padding to ensure
   // that together they maintain uint32_t-alignment.
   {
-    MOZ_ASSERT(cursor % CodeNoteAlign == 0);
+    MOZ_ASSERT(isAlignedOffset<CodeNoteAlign>(cursor));
 
     // Zero-initialize 'flags'
-    static_assert(CodeNoteAlign >= alignof(Flags), "Incompatible alignment");
+    MOZ_ASSERT(isAlignedOffset<Flags>(cursor));
     new (offsetToPointer<void>(cursor)) Flags{};
     cursor += sizeof(Flags);
 
-    static_assert(alignof(Flags) >= alignof(jsbytecode),
-                  "Incompatible alignment");
     initElements<jsbytecode>(cursor, codeLength);
     cursor += codeLength * sizeof(jsbytecode);
 
-    static_assert(alignof(jsbytecode) >= alignof(SrcNote),
-                  "Incompatible alignment");
     initElements<SrcNote>(cursor, noteLength);
     cursor += noteLength * sizeof(SrcNote);
 
-    MOZ_ASSERT(cursor % CodeNoteAlign == 0);
+    MOZ_ASSERT(isAlignedOffset<CodeNoteAlign>(cursor));
   }
 
   // Initialization for remaining arrays.
-  initOptionalArrays(&cursor, &flagsRef(), numResumeOffsets, numScopeNotes,
-                     numTryNotes);
+  initOptionalArrays(&cursor, numResumeOffsets, numScopeNotes, numTryNotes);
 
   // Check that we correctly recompute the expected values.
   MOZ_ASSERT(this->codeLength() == codeLength);
   MOZ_ASSERT(this->noteLength() == noteLength);
 
   // Sanity check
-  MOZ_ASSERT(AllocationSize(codeLength, noteLength, numResumeOffsets,
-                            numScopeNotes, numTryNotes) == cursor);
+  MOZ_ASSERT(endOffset() == cursor);
 }
 
 template <XDRMode mode>
@@ -3960,12 +3919,27 @@ bool ScriptSource::setSourceMapURL(JSContext* cx, UniqueTwoByteChars&& url) {
 js::UniquePtr<ImmutableScriptData> js::ImmutableScriptData::new_(
     JSContext* cx, uint32_t codeLength, uint32_t noteLength,
     uint32_t numResumeOffsets, uint32_t numScopeNotes, uint32_t numTryNotes) {
-  // Compute size including trailing arrays
-  size_t size = AllocationSize(codeLength, noteLength, numResumeOffsets,
-                               numScopeNotes, numTryNotes);
+  // Take a count of which optional arrays will be used and need offset info.
+  unsigned numOptionalArrays = unsigned(numResumeOffsets > 0) +
+                               unsigned(numScopeNotes > 0) +
+                               unsigned(numTryNotes > 0);
 
-  // Allocate contiguous raw buffer
-  void* raw = cx->pod_malloc<uint8_t>(size);
+  // Compute size including trailing arrays.
+  CheckedInt<Offset> size = sizeof(ImmutableScriptData);
+  size += sizeof(Flags);
+  size += CheckedInt<Offset>(codeLength) * sizeof(jsbytecode);
+  size += CheckedInt<Offset>(noteLength) * sizeof(SrcNote);
+  size += CheckedInt<Offset>(numOptionalArrays) * sizeof(Offset);
+  size += CheckedInt<Offset>(numResumeOffsets) * sizeof(uint32_t);
+  size += CheckedInt<Offset>(numScopeNotes) * sizeof(ScopeNote);
+  size += CheckedInt<Offset>(numTryNotes) * sizeof(TryNote);
+  if (!size.isValid()) {
+    ReportAllocationOverflow(cx);
+    return nullptr;
+  }
+
+  // Allocate contiguous raw buffer.
+  void* raw = cx->pod_malloc<uint8_t>(size.value());
   MOZ_ASSERT(uintptr_t(raw) % alignof(ImmutableScriptData) == 0);
   if (!raw) {
     return nullptr;
@@ -3975,6 +3949,13 @@ js::UniquePtr<ImmutableScriptData> js::ImmutableScriptData::new_(
   // GCPtrs are put into a safe state.
   UniquePtr<ImmutableScriptData> result(new (raw) ImmutableScriptData(
       codeLength, noteLength, numResumeOffsets, numScopeNotes, numTryNotes));
+  if (!result) {
+    return nullptr;
+  }
+
+  // Sanity check
+  MOZ_ASSERT(result->endOffset() == size.value());
+
   return result;
 }
 
@@ -4118,8 +4099,6 @@ PrivateScriptData::PrivateScriptData(uint32_t ngcthings)
 
   // Layout and initialize the gcthings array.
   {
-    static_assert(alignof(PrivateScriptData) >= alignof(JS::GCCellPtr),
-                  "Incompatible alignment");
     initElements<JS::GCCellPtr>(cursor, ngcthings);
 
     cursor += ngcthings * sizeof(JS::GCCellPtr);
