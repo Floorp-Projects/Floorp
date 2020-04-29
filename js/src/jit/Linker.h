@@ -8,7 +8,7 @@
 #define jit_Linker_h
 
 #include "jit/ExecutableAllocator.h"
-#include "jit/IonCode.h"
+#include "jit/JitCode.h"
 #include "jit/JitRealm.h"
 #include "jit/MacroAssembler.h"
 #include "vm/JSContext.h"

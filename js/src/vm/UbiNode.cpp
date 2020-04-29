@@ -13,7 +13,7 @@
 #include <algorithm>
 
 #include "debugger/Debugger.h"
-#include "jit/IonCode.h"
+#include "jit/JitCode.h"
 #include "js/Debug.h"
 #include "js/TracingAPI.h"
 #include "js/TypeDecls.h"

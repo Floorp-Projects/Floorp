@@ -11,7 +11,7 @@
 
 #  include "vtune/jitprofiling.h"
 
-#  include "jit/IonCode.h"
+#  include "jit/JitCode.h"
 #  include "vm/JSScript.h"
 
 namespace js {
