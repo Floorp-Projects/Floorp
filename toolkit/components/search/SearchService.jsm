@@ -2506,7 +2506,10 @@ SearchService.prototype = {
       SearchUtils.fail("Invalid template passed to addEngineWithDetails!");
     }
     let existingEngine = this._engines.get(name);
+    // In the modern configuration, distributions are app-provided engines,
+    // so we don't need this separate check.
     if (
+      !gModernConfig &&
       existingEngine &&
       existingEngine._loadPath.startsWith("[distribution]")
     ) {
