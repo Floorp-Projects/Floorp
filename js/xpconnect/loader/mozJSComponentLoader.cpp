@@ -620,12 +620,6 @@ bool mozJSComponentLoader::ReuseGlobal(nsIURI* aURI) {
     return false;
   }
 
-  // XXX For historical reasons, this uses its own global, which should not be
-  // necessary. Bug 1631021 covers removing this.
-  if (spec.EqualsASCII("resource://testing-common/BrowserTestUtils.jsm")) {
-    return false;
-  }
-
   // Some SpecialPowers jsms call Cu.forcePermissiveCOWs(),
   // which sets a per-compartment flag that disables certain
   // security wrappers, so don't use the shared global for them
