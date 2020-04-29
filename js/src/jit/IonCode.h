@@ -283,8 +283,8 @@ struct alignas(8) IonScript final : public TrailingArray {
     return offsetToPointer<PreBarrieredValue>(constantTableOffset());
   }
   size_t numConstants() const {
-    return (runtimeDataOffset() - constantTableOffset()) /
-           sizeof(PreBarrieredValue);
+    return numElements<PreBarrieredValue>(constantTableOffset(),
+                                          runtimeDataOffset());
   }
 
   //
@@ -294,7 +294,7 @@ struct alignas(8) IonScript final : public TrailingArray {
     return offsetToPointer<uint8_t>(runtimeDataOffset());
   }
   size_t runtimeSize() const {
-    return (osiIndexOffset() - runtimeDataOffset()) / sizeof(uint8_t);
+    return numElements<uint8_t>(runtimeDataOffset(), osiIndexOffset());
   }
 
   //
@@ -305,7 +305,8 @@ struct alignas(8) IonScript final : public TrailingArray {
     return offsetToPointer<OsiIndex>(osiIndexOffset());
   }
   size_t numOsiIndices() const {
-    return (safepointIndexOffset() - osiIndexOffset()) / SizeOf_OsiIndex;
+    return numElements<SizeOf_OsiIndex>(osiIndexOffset(),
+                                        safepointIndexOffset());
   }
 
   //
@@ -318,8 +319,8 @@ struct alignas(8) IonScript final : public TrailingArray {
     return offsetToPointer<SafepointIndex>(safepointIndexOffset());
   }
   size_t numSafepointIndices() const {
-    return (bailoutTableOffset() - safepointIndexOffset()) /
-           SizeOf_SafepointIndex;
+    return numElements<SizeOf_SafepointIndex>(safepointIndexOffset(),
+                                              bailoutTableOffset());
   }
 
   //
@@ -329,7 +330,8 @@ struct alignas(8) IonScript final : public TrailingArray {
     return offsetToPointer<SnapshotOffset>(bailoutTableOffset());
   }
   size_t numBailoutEntries() const {
-    return (icIndexOffset() - bailoutTableOffset()) / SizeOf_SnapshotOffset;
+    return numElements<SizeOf_SnapshotOffset>(bailoutTableOffset(),
+                                              icIndexOffset());
   }
 
   //
@@ -337,7 +339,7 @@ struct alignas(8) IonScript final : public TrailingArray {
   //
   uint32_t* icIndex() { return offsetToPointer<uint32_t>(icIndexOffset()); }
   size_t numICs() const {
-    return (safepointsOffset() - icIndexOffset()) / sizeof(uint32_t);
+    return numElements<uint32_t>(icIndexOffset(), safepointsOffset());
   }
 
   //
@@ -347,7 +349,7 @@ struct alignas(8) IonScript final : public TrailingArray {
     return offsetToPointer<uint8_t>(safepointsOffset());
   }
   size_t safepointsSize() const {
-    return (snapshotsOffset() - safepointsOffset()) / sizeof(uint8_t);
+    return numElements<uint8_t>(safepointsOffset(), snapshotsOffset());
   }
 
   //
@@ -357,10 +359,10 @@ struct alignas(8) IonScript final : public TrailingArray {
     return offsetToPointer<uint8_t>(snapshotsOffset());
   }
   size_t snapshotsListSize() const {
-    return (rvaTableOffset() - snapshotsOffset()) / sizeof(uint8_t);
+    return numElements<uint8_t>(snapshotsOffset(), rvaTableOffset());
   }
   size_t snapshotsRVATableSize() const {
-    return (recoversOffset() - rvaTableOffset()) / sizeof(uint8_t);
+    return numElements<uint8_t>(rvaTableOffset(), recoversOffset());
   }
 
   //
@@ -370,7 +372,7 @@ struct alignas(8) IonScript final : public TrailingArray {
     return offsetToPointer<uint8_t>(recoversOffset());
   }
   size_t recoversSize() const {
-    return (endOffset() - recoversOffset()) / sizeof(uint8_t);
+    return numElements<uint8_t>(recoversOffset(), endOffset());
   }
 
  private:
