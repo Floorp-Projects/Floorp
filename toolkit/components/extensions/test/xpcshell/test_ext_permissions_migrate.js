@@ -1,5 +1,9 @@
 "use strict";
 
+const { ExtensionPermissions } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionPermissions.jsm"
+);
+
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 AddonTestUtils.createAppInfo(
@@ -178,6 +182,62 @@ add_task(async function test_granted_permissions_removed() {
     !Services.prefs.getBoolPref("signon.rememberSignons"),
     "privacy setting is still set after upgrade"
   );
+
+  await extension.unload();
+});
+
+add_task(async function test_theme_update() {
+  let id = "theme-test@test";
+  let extData = {
+    manifest: {
+      applications: { gecko: { id } },
+      version: "1.0",
+      optional_permissions: ["tabs"],
+    },
+    async background() {
+      browser.test.onMessage.addListener(async msg => {
+        await browser.permissions.request({ permissions: msg.permissions });
+        browser.test.sendMessage("done");
+      });
+    },
+    useAddonManager: "permanent",
+  };
+  let extension = ExtensionTestUtils.loadExtension(extData);
+  await extension.startup();
+
+  await withHandlingUserInput(extension, async () => {
+    extension.sendMessage({ permissions: ["tabs"] });
+    await extension.awaitMessage("done");
+  });
+
+  let policy = WebExtensionPolicy.getByID(id);
+  ok(policy.hasPermission("tabs"), "addon has tabs permission");
+
+  await extension.upgrade({
+    manifest: {
+      applications: { gecko: { id } },
+      version: "2.0",
+      theme: {
+        images: {
+          theme_frame: "image1.png",
+        },
+      },
+    },
+    useAddonManager: "permanent",
+  });
+
+  policy = WebExtensionPolicy.getByID(id);
+  ok(!policy.hasPermission("tabs"), "addon tabs permission was removed");
+  let perms = await ExtensionPermissions._get(id);
+  ok(!perms?.permissions?.length, "no retained permissions");
+
+  extData.manifest.version = "3.0";
+  extData.manifest.permissions = ["privacy"];
+  await extension.upgrade(extData);
+
+  policy = WebExtensionPolicy.getByID(id);
+  ok(!policy.hasPermission("tabs"), "addon tabs permission not added");
+  ok(policy.hasPermission("privacy"), "addon privacy permission added");
 
   await extension.unload();
 });
