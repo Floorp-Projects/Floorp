@@ -250,7 +250,10 @@ const AboutNewTab = {
   observe(subject, topic, data) {
     switch (topic) {
       case TOPIC_APP_QUIT: {
-        this.uninit();
+        // We defer to this to the next tick of the event loop since the
+        // AboutHomeStartupCache might want to read from the ActivityStream
+        // store during TOPIC_APP_QUIT.
+        Services.tm.dispatchToMainThread(() => this.uninit());
         break;
       }
       case BROWSER_READY_NOTIFICATION: {
