@@ -675,6 +675,25 @@ ContentBlocking::SaveAccessForOriginOnParentProcess(
 }
 
 /* static */
+bool ContentBlocking::HasStorageAccessGranted(nsPIDOMWindowInner* aWindow) {
+  if (!aWindow) {
+    return false;
+  }
+
+  nsAutoCString trackingOrigin;
+  if (!GetTrackingOrigin(nsGlobalWindowInner::Cast(aWindow), trackingOrigin)) {
+    LOG(("Failed to obtain the the tracking origin"));
+    return false;
+  }
+
+  nsAutoCString permissionKey;
+  AntiTrackingUtils::CreateStoragePermissionKey(trackingOrigin, permissionKey);
+
+  return ContentBlocking::HasStorageAccessGranted(aWindow->GetBrowsingContext(),
+                                                  permissionKey);
+}
+
+/* static */
 bool ContentBlocking::HasStorageAccessGranted(
     BrowsingContext* aBrowsingContext, const nsACString& aPermissionKey) {
   MOZ_ASSERT(aBrowsingContext);
@@ -835,44 +854,6 @@ bool ContentBlocking::ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow,
     return false;
   }
 
-  BrowsingContext* topBC = aWindow->GetBrowsingContext()->Top();
-  nsGlobalWindowOuter* topWindow = nullptr;
-  if (topBC->IsInProcess()) {
-    topWindow = nsGlobalWindowOuter::Cast(topBC->GetDOMWindow());
-  } else {
-    // For out-of-process top frames, we need to be able to access three things
-    // from the top BrowsingContext in order to be able to port this code to
-    // Fission successfully:
-    //   * The CookieJarSettings of the top BrowsingContext.
-    //   * The HasStorageAccessGranted() API on BrowsingContext.
-    // For now, if we face an out-of-process top frame, instead of failing here,
-    // we revert back to looking at the in-process top frame.  This is of course
-    // the wrong thing to do, but we seem to have a number of tests in the tree
-    // which are depending on this incorrect behaviour.  This path is intended
-    // to temporarily keep those tests working...
-    nsGlobalWindowOuter* outerWindow =
-        nsGlobalWindowOuter::Cast(aWindow->GetOuterWindow());
-    if (!outerWindow) {
-      LOG(("Our window has no outer window"));
-      return false;
-    }
-
-    nsCOMPtr<nsPIDOMWindowOuter> topOuterWindow =
-        outerWindow->GetInProcessTop();
-    topWindow = nsGlobalWindowOuter::Cast(topOuterWindow);
-  }
-
-  if (NS_WARN_IF(!topWindow)) {
-    LOG(("No top outer window"));
-    return false;
-  }
-
-  nsPIDOMWindowInner* topInnerWindow = topWindow->GetCurrentInnerWindow();
-  if (NS_WARN_IF(!topInnerWindow)) {
-    LOG(("No top inner window."));
-    return false;
-  }
-
   uint32_t cookiePermission = CheckCookiePermissionForPrincipal(
       document->CookieJarSettings(), document->NodePrincipal());
   if (cookiePermission != nsICookiePermission::ACCESS_DEFAULT) {
@@ -1008,32 +989,18 @@ bool ContentBlocking::ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow,
     return false;
   }
 
-  nsAutoCString trackingOrigin;
-  if (!GetTrackingOrigin(nsGlobalWindowInner::Cast(aWindow), trackingOrigin)) {
-    LOG(("Failed to obtain the the tracking origin"));
-    *aRejectedReason = blockedReason;
-    return false;
-  }
-
-  nsAutoCString type;
-  AntiTrackingUtils::CreateStoragePermissionKey(trackingOrigin, type);
-
-  if (topInnerWindow->HasStorageAccessGranted(type)) {
-    LOG(("Permission stored in the window. All good."));
-    return true;
-  }
-
-  RefPtr<WindowContext> wc = aWindow->GetWindowContext();
-  if (!wc) {
-    LOG(("Failed to obtain the window context from the window."));
-    *aRejectedReason = blockedReason;
-    return false;
-  }
-
-  bool allowed = wc->GetHasStoragePermission();
+  bool allowed = document->HasStoragePermission();
 
   if (!allowed) {
     *aRejectedReason = blockedReason;
+  } else {
+    // Document::HasStoragePermission already checks HasStorageAccessGranted,
+    // we just show log here to know whether the permission is granted because
+    // of permission update.
+    if (MOZ_LOG_TEST(gAntiTrackingLog, mozilla::LogLevel::Debug) &&
+        ContentBlocking::HasStorageAccessGranted(aWindow)) {
+      LOG(("Permission stored in the window. All good."));
+    }
   }
 
   return allowed;
@@ -1213,52 +1180,33 @@ bool ContentBlocking::ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
     return false;
   }
 
-  nsAutoCString type;
-  AntiTrackingUtils::CreateStoragePermissionKey(trackingOrigin, type);
+  // HasStorageAccessGranted only applies to channels that load documents,
+  // for sub-resources loads, just returns the result from loadInfo.
+  bool isDocument = false;
+  aChannel->GetIsDocument(&isDocument);
 
-  auto checkPermission = [loadInfo, aRejectedReason, blockedReason]() -> bool {
-    bool allowed = loadInfo->GetHasStoragePermission();
+  if (isDocument) {
+    RefPtr<BrowsingContext> browsingContext;
+    rv = loadInfo->GetTargetBrowsingContext(getter_AddRefs(browsingContext));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      LOG(("Failed to get the channel's target browsing context"));
+    } else {
+      nsAutoCString type;
+      AntiTrackingUtils::CreateStoragePermissionKey(trackingOrigin, type);
 
-    if (!allowed) {
-      *aRejectedReason = blockedReason;
+      if (ContentBlocking::HasStorageAccessGranted(browsingContext, type)) {
+        LOG(("Permission stored in the window. All good."));
+        return true;
+      }
     }
-
-    return allowed;
-  };
-
-  // Call HasStorageAccessGranted() in the top-level inner window to check
-  // if the storage permission has been granted by the heuristic or the
-  // StorageAccessAPI. Note that calling the HasStorageAccessGranted() is still
-  // not fission-compatible. This would be modified in Bug 1612376.
-  RefPtr<BrowsingContext> bc;
-  loadInfo->GetBrowsingContext(getter_AddRefs(bc));
-  if (!bc) {
-    return checkPermission();
   }
 
-  bc = bc->Top();
-  if (!bc || !bc->IsInProcess()) {
-    return checkPermission();
+  bool allowed = loadInfo->GetHasStoragePermission();
+  if (!allowed) {
+    *aRejectedReason = blockedReason;
   }
 
-  nsGlobalWindowOuter* topWindow =
-      nsGlobalWindowOuter::Cast(bc->GetDOMWindow());
-
-  if (!topWindow) {
-    return checkPermission();
-  }
-
-  nsPIDOMWindowInner* topInnerWindow = topWindow->GetCurrentInnerWindow();
-  // We use the 'hasStoragePermission' flag to check the storage permission.
-  // However, this flag won't get updated once the permission is granted by
-  // the heuristic or the StorageAccessAPI. So, we need to check the
-  // HasStorageAccessGranted() in order to get the correct storage access before
-  // we check the 'hasStoragePermission' flag.
-  if (topInnerWindow && topInnerWindow->HasStorageAccessGranted(type)) {
-    return true;
-  }
-
-  return checkPermission();
+  return allowed;
 }
 
 bool ContentBlocking::ShouldAllowAccessFor(
