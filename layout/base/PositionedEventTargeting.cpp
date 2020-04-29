@@ -181,6 +181,25 @@ static bool IsDescendant(nsIFrame* aFrame, nsIContent* aAncestor,
 static nsIContent* GetClickableAncestor(
     nsIFrame* aFrame, nsAtom* stopAt = nullptr,
     nsAutoString* aLabelTargetId = nullptr) {
+
+  // If the frame is `cursor:pointer` or inherits `cursor:pointer` from an
+  // ancestor, treat it as clickable. This is a heuristic to deal with pages
+  // where the click event listener is on the <body> or <html> element but it
+  // triggers an action on some specific element. We want the specific element
+  // to be considered clickable, and at least some pages that do this indicate
+  // the clickability by setting `cursor:pointer`, so we use that here.
+  // Note that descendants of `cursor:pointer` elements that override the
+  // inherited `pointer` to `auto` or any other value are NOT treated as
+  // clickable, because it seems like the content author is trying to express
+  // non-clickability on that sub-element.
+  // In the future depending on real-world cases it might make sense to expand
+  // this check to any non-auto cursor. Such a change would also pick up things
+  // like contenteditable or input fields, which can then be removed from the
+  // loop below, and would have better performance.
+  if (aFrame->StyleUI()->mCursor.keyword == StyleCursorKind::Pointer) {
+    return aFrame->GetContent();
+  }
+
   // Input events propagate up the content tree so we'll follow the content
   // ancestors to look for elements accepting the click.
   for (nsIContent* content = aFrame->GetContent(); content;
