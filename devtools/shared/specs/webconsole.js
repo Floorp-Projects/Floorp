@@ -57,7 +57,6 @@ const webconsoleSpecPrototype = {
       input: Option(0, "nullable:string"),
       notes: Option(0, "nullable:string"),
       result: Option(0, "nullable:json"),
-      startTime: Option(0, "number"),
       timestamp: Option(0, "string"),
       topLevelAwaitRejected: Option(0, "nullable:boolean"),
     },

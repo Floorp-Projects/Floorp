@@ -649,14 +649,6 @@ function messages(
         forceTimestampSort: !prefsState.groupWarnings,
       });
 
-    case constants.MESSAGE_REMOVE:
-      return removeMessagesFromState(
-        {
-          ...state,
-        },
-        [action.id]
-      );
-
     case constants.FILTER_TOGGLE:
     case constants.FILTER_TEXT_SET:
     case constants.FILTERS_CLEAR:
