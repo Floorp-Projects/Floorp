@@ -7797,18 +7797,16 @@ class MLoadUnboxedScalar : public MBinaryInstruction,
   Scalar::Type readType_;
   bool requiresBarrier_;
   int32_t offsetAdjustment_;
-  bool canonicalizeDoubles_;
 
   MLoadUnboxedScalar(
       MDefinition* elements, MDefinition* index, Scalar::Type storageType,
       MemoryBarrierRequirement requiresBarrier = DoesNotRequireMemoryBarrier,
-      int32_t offsetAdjustment = 0, bool canonicalizeDoubles = true)
+      int32_t offsetAdjustment = 0)
       : MBinaryInstruction(classOpcode, elements, index),
         storageType_(storageType),
         readType_(storageType),
         requiresBarrier_(requiresBarrier == DoesRequireMemoryBarrier),
-        offsetAdjustment_(offsetAdjustment),
-        canonicalizeDoubles_(canonicalizeDoubles) {
+        offsetAdjustment_(offsetAdjustment) {
     setResultType(MIRType::Value);
     if (requiresBarrier_) {
       setGuard();  // Not removable or movable
@@ -7833,7 +7831,6 @@ class MLoadUnboxedScalar : public MBinaryInstruction,
     return readType_ == Scalar::Uint32 && type() == MIRType::Int32;
   }
   bool requiresMemoryBarrier() const { return requiresBarrier_; }
-  bool canonicalizeDoubles() const { return canonicalizeDoubles_; }
   int32_t offsetAdjustment() const { return offsetAdjustment_; }
   void setOffsetAdjustment(int32_t offsetAdjustment) {
     offsetAdjustment_ = offsetAdjustment;
@@ -7862,9 +7859,6 @@ class MLoadUnboxedScalar : public MBinaryInstruction,
       return false;
     }
     if (offsetAdjustment() != other->offsetAdjustment()) {
-      return false;
-    }
-    if (canonicalizeDoubles() != other->canonicalizeDoubles()) {
       return false;
     }
     return congruentIfOperandsEqual(other);
