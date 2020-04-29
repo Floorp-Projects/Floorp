@@ -87,8 +87,9 @@ class JitFrameLayout;
 class ExitFrameLayout;
 
 class BaselineFrame;
-
 class JitActivation;
+class SafepointIndex;
+class OsiIndex;
 
 // Iterate over the JIT stack to assert that all invariants are respected.
 //  - Check that all entry frames are aligned on JitStackAlignment.

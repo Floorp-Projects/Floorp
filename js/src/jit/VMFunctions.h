@@ -13,6 +13,7 @@
 #include "jspubtd.h"
 
 #include "jit/CompileInfo.h"
+#include "jit/IonScript.h"
 #include "jit/JitFrames.h"
 #include "vm/Interpreter.h"
 
