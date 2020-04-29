@@ -80,7 +80,6 @@ web-platform-tests:
 
 web-platform-tests-backlog:
     description: "Web platform test (backlog) run"
-    suite: web-platform-tests
     treeherder-symbol: W-b(wpt)
     chunks:
         by-test-platform:
@@ -164,8 +163,6 @@ web-platform-tests-reftest-backlog:
 
 web-platform-tests-wdspec:
     description: "Web platform webdriver-spec run"
-    suite:
-        name: web-platform-tests-wdspec
     schedules-component: web-platform-tests-wdspec
     treeherder-symbol: W(Wd)
     chunks:
