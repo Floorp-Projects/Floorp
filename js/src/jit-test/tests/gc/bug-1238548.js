@@ -1,2 +1,2 @@
 // |jit-test| error: Error
-gcparam("highFrequencyHeapGrowthMax", 1);
+gcparam("highFrequencySmallHeapGrowth", 1);

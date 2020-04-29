@@ -2614,23 +2614,23 @@ void nsJSContext::EnsureStatics() {
 
   Preferences::RegisterCallbackAndCall(
       SetMemoryPrefChangedCallbackInt,
-      "javascript.options.mem.gc_high_frequency_heap_growth_min",
-      (void*)JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN);
+      "javascript.options.mem.gc_high_frequency_large_heap_growth",
+      (void*)JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH);
 
   Preferences::RegisterCallbackAndCall(
       SetMemoryPrefChangedCallbackInt,
-      "javascript.options.mem.gc_high_frequency_heap_growth_max",
-      (void*)JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX);
+      "javascript.options.mem.gc_high_frequency_small_heap_growth",
+      (void*)JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH);
 
   Preferences::RegisterCallbackAndCall(
       SetMemoryPrefChangedCallbackInt,
-      "javascript.options.mem.gc_high_frequency_low_limit_mb",
-      (void*)JSGC_HIGH_FREQUENCY_LOW_LIMIT);
+      "javascript.options.mem.gc_small_heap_size_max_mb",
+      (void*)JSGC_SMALL_HEAP_SIZE_MAX);
 
   Preferences::RegisterCallbackAndCall(
       SetMemoryPrefChangedCallbackInt,
-      "javascript.options.mem.gc_high_frequency_high_limit_mb",
-      (void*)JSGC_HIGH_FREQUENCY_HIGH_LIMIT);
+      "javascript.options.mem.gc_large_heap_size_min_mb",
+      (void*)JSGC_LARGE_HEAP_SIZE_MIN);
 
   Preferences::RegisterCallbackAndCall(
       SetMemoryPrefChangedCallbackInt,

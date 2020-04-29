@@ -46,10 +46,12 @@ GCSchedulingTunables::GCSchedulingTunables()
       zoneAllocDelayBytes_(TuningDefaults::ZoneAllocDelayBytes),
       highFrequencyThreshold_(
           TimeDuration::FromSeconds(TuningDefaults::HighFrequencyThreshold)),
-      highFrequencyLowLimitBytes_(TuningDefaults::HighFrequencyLowLimitBytes),
-      highFrequencyHighLimitBytes_(TuningDefaults::HighFrequencyHighLimitBytes),
-      highFrequencyHeapGrowthMax_(TuningDefaults::HighFrequencyHeapGrowthMax),
-      highFrequencyHeapGrowthMin_(TuningDefaults::HighFrequencyHeapGrowthMin),
+      smallHeapSizeMaxBytes_(TuningDefaults::SmallHeapSizeMaxBytes),
+      largeHeapSizeMinBytes_(TuningDefaults::LargeHeapSizeMinBytes),
+      highFrequencySmallHeapGrowth_(
+          TuningDefaults::HighFrequencySmallHeapGrowth),
+      highFrequencyLargeHeapGrowth_(
+          TuningDefaults::HighFrequencyLargeHeapGrowth),
       lowFrequencyHeapGrowth_(TuningDefaults::LowFrequencyHeapGrowth),
       minEmptyChunkCount_(TuningDefaults::MinEmptyChunkCount),
       maxEmptyChunkCount_(TuningDefaults::MaxEmptyChunkCount),
@@ -90,36 +92,36 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
     case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
       highFrequencyThreshold_ = TimeDuration::FromMilliseconds(value);
       break;
-    case JSGC_HIGH_FREQUENCY_LOW_LIMIT: {
+    case JSGC_SMALL_HEAP_SIZE_MAX: {
       CheckedInt<size_t> newLimit = CheckedInt<size_t>(value) * 1024 * 1024;
       if (!newLimit.isValid()) {
         return false;
       }
-      setHighFrequencyLowLimit(newLimit.value());
+      setSmallHeapSizeMaxBytes(newLimit.value());
       break;
     }
-    case JSGC_HIGH_FREQUENCY_HIGH_LIMIT: {
+    case JSGC_LARGE_HEAP_SIZE_MIN: {
       size_t newLimit = (size_t)value * 1024 * 1024;
       if (newLimit == 0) {
         return false;
       }
-      setHighFrequencyHighLimit(newLimit);
+      setLargeHeapSizeMinBytes(newLimit);
       break;
     }
-    case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX: {
+    case JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH: {
       float newGrowth = value / 100.0f;
       if (newGrowth < MinHeapGrowthFactor || newGrowth > MaxHeapGrowthFactor) {
         return false;
       }
-      setHighFrequencyHeapGrowthMax(newGrowth);
+      setHighFrequencySmallHeapGrowth(newGrowth);
       break;
     }
-    case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN: {
+    case JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH: {
       float newGrowth = value / 100.0f;
       if (newGrowth < MinHeapGrowthFactor || newGrowth > MaxHeapGrowthFactor) {
         return false;
       }
-      setHighFrequencyHeapGrowthMin(newGrowth);
+      setHighFrequencyLargeHeapGrowth(newGrowth);
       break;
     }
     case JSGC_LOW_FREQUENCY_HEAP_GROWTH: {
@@ -197,38 +199,38 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
   return true;
 }
 
-void GCSchedulingTunables::setHighFrequencyLowLimit(size_t newLimit) {
-  highFrequencyLowLimitBytes_ = newLimit;
-  if (highFrequencyLowLimitBytes_ >= highFrequencyHighLimitBytes_) {
-    highFrequencyHighLimitBytes_ = highFrequencyLowLimitBytes_ + 1;
+void GCSchedulingTunables::setSmallHeapSizeMaxBytes(size_t value) {
+  smallHeapSizeMaxBytes_ = value;
+  if (smallHeapSizeMaxBytes_ >= largeHeapSizeMinBytes_) {
+    largeHeapSizeMinBytes_ = smallHeapSizeMaxBytes_ + 1;
   }
-  MOZ_ASSERT(highFrequencyHighLimitBytes_ > highFrequencyLowLimitBytes_);
+  MOZ_ASSERT(largeHeapSizeMinBytes_ > smallHeapSizeMaxBytes_);
 }
 
-void GCSchedulingTunables::setHighFrequencyHighLimit(size_t newLimit) {
-  highFrequencyHighLimitBytes_ = newLimit;
-  if (highFrequencyHighLimitBytes_ <= highFrequencyLowLimitBytes_) {
-    highFrequencyLowLimitBytes_ = highFrequencyHighLimitBytes_ - 1;
+void GCSchedulingTunables::setLargeHeapSizeMinBytes(size_t value) {
+  largeHeapSizeMinBytes_ = value;
+  if (largeHeapSizeMinBytes_ <= smallHeapSizeMaxBytes_) {
+    smallHeapSizeMaxBytes_ = largeHeapSizeMinBytes_ - 1;
   }
-  MOZ_ASSERT(highFrequencyHighLimitBytes_ > highFrequencyLowLimitBytes_);
+  MOZ_ASSERT(largeHeapSizeMinBytes_ > smallHeapSizeMaxBytes_);
 }
 
-void GCSchedulingTunables::setHighFrequencyHeapGrowthMin(float value) {
-  highFrequencyHeapGrowthMin_ = value;
-  if (highFrequencyHeapGrowthMin_ > highFrequencyHeapGrowthMax_) {
-    highFrequencyHeapGrowthMax_ = highFrequencyHeapGrowthMin_;
+void GCSchedulingTunables::setHighFrequencyLargeHeapGrowth(float value) {
+  highFrequencyLargeHeapGrowth_ = value;
+  if (highFrequencyLargeHeapGrowth_ > highFrequencySmallHeapGrowth_) {
+    highFrequencySmallHeapGrowth_ = highFrequencyLargeHeapGrowth_;
   }
-  MOZ_ASSERT(highFrequencyHeapGrowthMin_ >= MinHeapGrowthFactor);
-  MOZ_ASSERT(highFrequencyHeapGrowthMin_ <= highFrequencyHeapGrowthMax_);
+  MOZ_ASSERT(highFrequencyLargeHeapGrowth_ >= MinHeapGrowthFactor);
+  MOZ_ASSERT(highFrequencyLargeHeapGrowth_ <= highFrequencySmallHeapGrowth_);
 }
 
-void GCSchedulingTunables::setHighFrequencyHeapGrowthMax(float value) {
-  highFrequencyHeapGrowthMax_ = value;
-  if (highFrequencyHeapGrowthMax_ < highFrequencyHeapGrowthMin_) {
-    highFrequencyHeapGrowthMin_ = highFrequencyHeapGrowthMax_;
+void GCSchedulingTunables::setHighFrequencySmallHeapGrowth(float value) {
+  highFrequencySmallHeapGrowth_ = value;
+  if (highFrequencySmallHeapGrowth_ < highFrequencyLargeHeapGrowth_) {
+    highFrequencyLargeHeapGrowth_ = highFrequencySmallHeapGrowth_;
   }
-  MOZ_ASSERT(highFrequencyHeapGrowthMin_ >= MinHeapGrowthFactor);
-  MOZ_ASSERT(highFrequencyHeapGrowthMin_ <= highFrequencyHeapGrowthMax_);
+  MOZ_ASSERT(highFrequencyLargeHeapGrowth_ >= MinHeapGrowthFactor);
+  MOZ_ASSERT(highFrequencyLargeHeapGrowth_ <= highFrequencySmallHeapGrowth_);
 }
 
 void GCSchedulingTunables::setLowFrequencyHeapGrowth(float value) {
@@ -268,17 +270,19 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
       highFrequencyThreshold_ =
           TimeDuration::FromSeconds(TuningDefaults::HighFrequencyThreshold);
       break;
-    case JSGC_HIGH_FREQUENCY_LOW_LIMIT:
-      setHighFrequencyLowLimit(TuningDefaults::HighFrequencyLowLimitBytes);
+    case JSGC_SMALL_HEAP_SIZE_MAX:
+      setSmallHeapSizeMaxBytes(TuningDefaults::SmallHeapSizeMaxBytes);
       break;
-    case JSGC_HIGH_FREQUENCY_HIGH_LIMIT:
-      setHighFrequencyHighLimit(TuningDefaults::HighFrequencyHighLimitBytes);
+    case JSGC_LARGE_HEAP_SIZE_MIN:
+      setLargeHeapSizeMinBytes(TuningDefaults::LargeHeapSizeMinBytes);
       break;
-    case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX:
-      setHighFrequencyHeapGrowthMax(TuningDefaults::HighFrequencyHeapGrowthMax);
+    case JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH:
+      setHighFrequencySmallHeapGrowth(
+          TuningDefaults::HighFrequencySmallHeapGrowth);
       break;
-    case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN:
-      setHighFrequencyHeapGrowthMin(TuningDefaults::HighFrequencyHeapGrowthMin);
+    case JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH:
+      setHighFrequencyLargeHeapGrowth(
+          TuningDefaults::HighFrequencyLargeHeapGrowth);
       break;
     case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
       setLowFrequencyHeapGrowth(TuningDefaults::LowFrequencyHeapGrowth);
@@ -362,42 +366,27 @@ float GCHeapThreshold::computeZoneHeapGrowthFactorForHeapSize(
     return tunables.lowFrequencyHeapGrowth();
   }
 
-  // If GC's are not triggering in rapid succession, use a lower threshold so
-  // that we will collect garbage sooner.
+  // The heap growth factor depends on the heap size after a GC and the GC
+  // frequency. If GC's are not triggering in rapid succession, use a lower
+  // threshold so that we will collect garbage sooner.
   if (!state.inHighFrequencyGCMode()) {
     return tunables.lowFrequencyHeapGrowth();
   }
 
-  // The heap growth factor depends on the heap size after a GC and the GC
-  // frequency. For low frequency GCs (more than 1sec between GCs) we let
-  // the heap grow to 150%. For high frequency GCs we let the heap grow
-  // depending on the heap size:
-  //   lastBytes < highFrequencyLowLimit: 300%
-  //   lastBytes > highFrequencyHighLimit: 150%
-  //   otherwise: linear interpolation between 300% and 150% based on lastBytes
+  // For high frequency GCs we let the heap grow depending on whether we
+  // classify the heap as small, medium or large. There are parameters for small
+  // and large heap sizes and linear interpolation is used between them for
+  // medium sized heaps.
 
-  float minRatio = tunables.highFrequencyHeapGrowthMin();
-  float maxRatio = tunables.highFrequencyHeapGrowthMax();
-  size_t lowLimit = tunables.highFrequencyLowLimitBytes();
-  size_t highLimit = tunables.highFrequencyHighLimitBytes();
+  MOZ_ASSERT(tunables.smallHeapSizeMaxBytes() <=
+             tunables.largeHeapSizeMinBytes());
+  MOZ_ASSERT(tunables.highFrequencyLargeHeapGrowth() <=
+             tunables.highFrequencySmallHeapGrowth());
 
-  MOZ_ASSERT(minRatio <= maxRatio);
-  MOZ_ASSERT(lowLimit < highLimit);
-
-  if (lastBytes <= lowLimit) {
-    return maxRatio;
-  }
-
-  if (lastBytes >= highLimit) {
-    return minRatio;
-  }
-
-  float factor = maxRatio - ((maxRatio - minRatio) *
-                             ((lastBytes - lowLimit) / (highLimit - lowLimit)));
-
-  MOZ_ASSERT(factor >= minRatio);
-  MOZ_ASSERT(factor <= maxRatio);
-  return factor;
+  return LinearInterpolate(lastBytes, tunables.smallHeapSizeMaxBytes(),
+                           tunables.highFrequencySmallHeapGrowth(),
+                           tunables.largeHeapSizeMinBytes(),
+                           tunables.highFrequencyLargeHeapGrowth());
 }
 
 /* static */

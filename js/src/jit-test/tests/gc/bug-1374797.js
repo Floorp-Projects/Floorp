@@ -6,8 +6,8 @@ gczeal(0);
 
 // Reduce some GC parameters so that we can trigger a GC more easily.
 gcparam('lowFrequencyHeapGrowth', 120);
-gcparam('highFrequencyHeapGrowthMin', 120);
-gcparam('highFrequencyHeapGrowthMax', 120);
+gcparam('highFrequencyLargeHeapGrowth', 120);
+gcparam('highFrequencySmallHeapGrowth', 120);
 gcparam('allocationThreshold', 1);
 gc();
 

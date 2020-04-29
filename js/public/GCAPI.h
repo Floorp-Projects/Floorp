@@ -149,39 +149,50 @@ typedef enum JSGCParamKey {
   JSGC_HIGH_FREQUENCY_TIME_LIMIT = 11,
 
   /**
-   * Start of dynamic heap growth (MB).
+   * Upper limit for classifying a heap as small (MB).
    *
-   * Pref: javascript.options.mem.gc_high_frequency_low_limit_mb
-   * Default: HighFrequencyLowLimitBytes
+   * Dynamic heap growth thresholds are based on whether the heap is small,
+   * medium or large. Heaps smaller than this size are classified as small;
+   * larger heaps are classified as medium or large.
+   *
+   * Pref: javascript.options.mem.gc_small_heap_size_max_mb
+   * Default: SmallHeapSizeMaxBytes
    */
-  JSGC_HIGH_FREQUENCY_LOW_LIMIT = 12,
+  JSGC_SMALL_HEAP_SIZE_MAX = 12,
 
   /**
-   * End of dynamic heap growth (MB).
+   * Lower limit for classifying a heap as large (MB).
    *
-   * Pref: javascript.options.mem.gc_high_frequency_high_limit_mb
-   * Default: HighFrequencyHighLimitBytes
+   * Dynamic heap growth thresholds are based on whether the heap is small,
+   * medium or large. Heaps larger than this size are classified as large;
+   * smaller heaps are classified as small or medium.
+   *
+   * Pref: javascript.options.mem.gc_large_heap_size_min_mb
+   * Default: LargeHeapSizeMinBytes
    */
-  JSGC_HIGH_FREQUENCY_HIGH_LIMIT = 13,
+  JSGC_LARGE_HEAP_SIZE_MIN = 13,
 
   /**
-   * Upper bound of heap growth percentage.
+   * Heap growth factor for small heaps in the high-frequency GC state.
    *
-   * Pref: javascript.options.mem.gc_high_frequency_heap_growth_max
-   * Default: HighFrequencyHeapGrowthMax
+   * Pref: javascript.options.mem.gc_high_frequency_small_heap_growth
+   * Default: HighFrequencySmallHeapGrowth
    */
-  JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX = 14,
+  JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH = 14,
 
   /**
-   * Lower bound of heap growth percentage.
+   * Heap growth factor for large heaps in the high-frequency GC state.
    *
-   * Pref: javascript.options.mem.gc_high_frequency_heap_growth_min
-   * Default: HighFrequencyHeapGrowthMin
+   * Pref: javascript.options.mem.gc_high_frequency_large_heap_growth
+   * Default: HighFrequencyLargeHeapGrowth
    */
-  JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN = 15,
+  JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH = 15,
 
   /**
-   * Heap growth percentage for low frequency GCs.
+   * Heap growth factor for low frequency GCs.
+   *
+   * This factor is applied regardless of the size of the heap when not in the
+   * high-frequency GC state.
    *
    * Pref: javascript.options.mem.gc_low_frequency_heap_growth
    * Default: LowFrequencyHeapGrowth
