@@ -223,7 +223,6 @@ static MMul* EvaluateExactReciprocal(TempAllocator& alloc, MDiv* ins) {
   ins->block()->insertBefore(ins, foldedRhs);
 
   MMul* mul = MMul::New(alloc, left, foldedRhs, ins->type());
-  mul->setCommutative();
   mul->setMustPreserveNaN(ins->mustPreserveNaN());
   return mul;
 }

@@ -3643,13 +3643,8 @@ MIRType IonBuilder::binaryArithNumberSpecialization(MDefinition* left,
 AbortReasonOr<MBinaryArithInstruction*> IonBuilder::binaryArithEmitSpecialized(
     MDefinition::Opcode op, MIRType specialization, MDefinition* left,
     MDefinition* right) {
-  MBinaryArithInstruction* ins =
+  auto* ins =
       MBinaryArithInstruction::New(alloc(), op, left, right, specialization);
-
-  if (op == MDefinition::Opcode::Add || op == MDefinition::Opcode::Mul) {
-    ins->setCommutative();
-  }
-
   current->add(ins);
   current->push(ins);
 
