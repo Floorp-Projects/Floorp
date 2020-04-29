@@ -58,19 +58,9 @@ impl StorageSyncArea {
     }
 
     /// Dispatches a task for a storage operation to the task queue.
-    fn dispatch(
-        &self,
-        ext_id: &nsACString,
-        op: StorageOp,
-        callback: &mozIExtensionStorageCallback,
-    ) -> Result<()> {
+    fn dispatch(&self, op: StorageOp, callback: &mozIExtensionStorageCallback) -> Result<()> {
         let name = op.name();
-        let task = StorageTask::new(
-            Arc::downgrade(&*self.store()?),
-            str::from_utf8(&*ext_id)?,
-            op,
-            callback,
-        )?;
+        let task = StorageTask::new(Arc::downgrade(&*self.store()?), op, callback)?;
         let runnable = TaskRunnable::new(name, Box::new(task))?;
         // `may_block` schedules the runnable on a dedicated I/O pool.
         runnable
@@ -124,8 +114,13 @@ impl StorageSyncArea {
         json: &nsACString,
         callback: &mozIExtensionStorageCallback,
     ) -> Result<()> {
-        let value = serde_json::from_str(str::from_utf8(&*json)?)?;
-        self.dispatch(ext_id, StorageOp::Set(value), callback)?;
+        self.dispatch(
+            StorageOp::Set {
+                ext_id: str::from_utf8(&*ext_id)?.into(),
+                value: serde_json::from_str(str::from_utf8(&*json)?)?,
+            },
+            callback,
+        )?;
         Ok(())
     }
 
@@ -143,8 +138,13 @@ impl StorageSyncArea {
         json: &nsACString,
         callback: &mozIExtensionStorageCallback,
     ) -> Result<()> {
-        let keys = serde_json::from_str(str::from_utf8(&*json)?)?;
-        self.dispatch(ext_id, StorageOp::Get(keys), callback)
+        self.dispatch(
+            StorageOp::Get {
+                ext_id: str::from_utf8(&*ext_id)?.into(),
+                keys: serde_json::from_str(str::from_utf8(&*json)?)?,
+            },
+            callback,
+        )
     }
 
     xpcom_method!(
@@ -161,8 +161,13 @@ impl StorageSyncArea {
         json: &nsACString,
         callback: &mozIExtensionStorageCallback,
     ) -> Result<()> {
-        let keys = serde_json::from_str(str::from_utf8(&*json)?)?;
-        self.dispatch(ext_id, StorageOp::Remove(keys), callback)
+        self.dispatch(
+            StorageOp::Remove {
+                ext_id: str::from_utf8(&*ext_id)?.into(),
+                keys: serde_json::from_str(str::from_utf8(&*json)?)?,
+            },
+            callback,
+        )
     }
 
     xpcom_method!(
@@ -173,7 +178,12 @@ impl StorageSyncArea {
     );
     /// Removes all keys and values.
     fn clear(&self, ext_id: &nsACString, callback: &mozIExtensionStorageCallback) -> Result<()> {
-        self.dispatch(ext_id, StorageOp::Clear, callback)
+        self.dispatch(
+            StorageOp::Clear {
+                ext_id: str::from_utf8(&*ext_id)?.into(),
+            },
+            callback,
+        )
     }
 
     xpcom_method!(teardown => Teardown(callback: *const mozIExtensionStorageCallback));

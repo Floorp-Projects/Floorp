@@ -11,8 +11,12 @@ use nserror::{
 use serde_json::error::Error as JsonError;
 use webext_storage::error::Error as WebextStorageError;
 
+/// A specialized `Result` type for extension storage operations.
 pub type Result<T> = result::Result<T, Error>;
 
+/// The error type for extension storage operations. Errors can be converted
+/// into `nsresult` codes, and include more detailed messages that can be passed
+/// to callbacks.
 #[derive(Debug)]
 pub enum Error {
     Nsresult(nsresult),

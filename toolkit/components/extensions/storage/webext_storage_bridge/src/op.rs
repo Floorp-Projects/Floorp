@@ -26,20 +26,25 @@ use crate::store::LazyStore;
 
 /// A storage operation, dispatched to the background task queue.
 pub enum StorageOp {
-    Get(JsonValue),
-    Set(JsonValue),
-    Remove(JsonValue),
-    Clear,
+    /// Get the values of the keys for an extension.
+    Get { ext_id: String, keys: JsonValue },
+    /// Set a key-value pair for an extension.
+    Set { ext_id: String, value: JsonValue },
+    /// Remove one or more keys for an extension.
+    Remove { ext_id: String, keys: JsonValue },
+    /// Clear all keys and values for an extension.
+    Clear { ext_id: String },
 }
 
 impl StorageOp {
-    /// Returns the operation name, used to label the task runnable.
+    /// Returns the operation name, used to label the task runnable and report
+    /// errors.
     pub fn name(&self) -> &'static str {
         match self {
             StorageOp::Get { .. } => "webext_storage::get",
             StorageOp::Set { .. } => "webext_storage::set",
             StorageOp::Remove { .. } => "webext_storage::remove",
-            StorageOp::Clear => "webext_storage::clear",
+            StorageOp::Clear { .. } => "webext_storage::clear",
         }
     }
 }
@@ -83,16 +88,17 @@ pub struct StorageTask {
     /// if a consumer calls `get` and then `teardown`, without waiting for
     /// `get` to finish).
     store: Weak<LazyStore>,
-    ext_id: String,
     op: AtomicRefCell<Option<StorageOp>>,
     callback: ThreadPtrHandle<mozIExtensionStorageCallback>,
     result: AtomicRefCell<Result<StorageResult>>,
 }
 
 impl StorageTask {
+    /// Creates a storage task for the given operation. Returns an error if
+    /// the task couldn't be created because the thread manager is shutting
+    /// down.
     pub fn new(
         store: Weak<LazyStore>,
-        ext_id: &str,
         op: StorageOp,
         callback: &mozIExtensionStorageCallback,
     ) -> Result<Self> {
@@ -100,7 +106,6 @@ impl StorageTask {
         Ok(Self {
             name,
             store,
-            ext_id: ext_id.into(),
             op: AtomicRefCell::new(Some(op)),
             callback: ThreadPtrHolder::new(
                 cstr!("mozIExtensionStorageCallback"),
@@ -112,6 +117,10 @@ impl StorageTask {
 
     /// Upgrades the task's weak `LazyStore` reference to a strong one. Returns
     /// an error if the store has been torn down.
+    ///
+    /// It's important that this is called on the background queue, after the
+    /// task has been dispatched. Storage tasks shouldn't hold strong references
+    /// to the store on the main thread, because then they might block teardown.
     fn store(&self) -> Result<Arc<LazyStore>> {
         match self.store.upgrade() {
             Some(store) => Ok(store),
@@ -119,19 +128,20 @@ impl StorageTask {
         }
     }
 
+    /// Runs this task's storage operation on the background queue.
     fn run_with_op(&self, op: StorageOp) -> Result<StorageResult> {
         Ok(match op {
-            StorageOp::Set(value) => {
-                StorageResult::with_changes(self.store()?.get()?.set(&self.ext_id, value)?)
+            StorageOp::Set { ext_id, value } => {
+                StorageResult::with_changes(self.store()?.get()?.set(&ext_id, value)?)
             }
-            StorageOp::Get(keys) => {
-                StorageResult::with_value(self.store()?.get()?.get(&self.ext_id, keys)?)
+            StorageOp::Get { ext_id, keys } => {
+                StorageResult::with_value(self.store()?.get()?.get(&ext_id, keys)?)
             }
-            StorageOp::Remove(keys) => {
-                StorageResult::with_changes(self.store()?.get()?.remove(&self.ext_id, keys)?)
+            StorageOp::Remove { ext_id, keys } => {
+                StorageResult::with_changes(self.store()?.get()?.remove(&ext_id, keys)?)
             }
-            StorageOp::Clear => {
-                StorageResult::with_changes(self.store()?.get()?.clear(&self.ext_id)?)
+            StorageOp::Clear { ext_id } => {
+                StorageResult::with_changes(self.store()?.get()?.clear(&ext_id)?)
             }
         }?)
     }
@@ -141,12 +151,16 @@ impl Task for StorageTask {
     fn run(&self) {
         *self.result.borrow_mut() = match mem::take(&mut *self.op.borrow_mut()) {
             Some(op) => self.run_with_op(op),
+            // A task should never run on the background queue twice, but we
+            // return an error just in case.
             None => Err(Error::AlreadyRan(self.name)),
         };
     }
 
     fn done(&self) -> result::Result<(), nsresult> {
         let callback = self.callback.get().unwrap();
+        // As above, `done` should never be called multiple times, but we handle
+        // that by returning an error.
         match mem::replace(
             &mut *self.result.borrow_mut(),
             Err(Error::AlreadyRan(self.name)),
@@ -176,12 +190,18 @@ impl Task for StorageTask {
 
 /// A task to tear down the store on the background task queue.
 pub struct TeardownTask {
+    /// Unlike storage tasks, the teardown task holds a strong reference to
+    /// the store, which it drops on the background queue. This is the only
+    /// task that should do that.
     store: AtomicRefCell<Option<Arc<LazyStore>>>,
     callback: ThreadPtrHandle<mozIExtensionStorageCallback>,
     result: AtomicRefCell<Result<()>>,
 }
 
 impl TeardownTask {
+    /// Creates a teardown task. This should only be created and dispatched
+    /// once, to clean up the store at shutdown. Returns an error if the task
+    /// couldn't be created because the thread manager is shutting down.
     pub fn new(store: Arc<LazyStore>, callback: &mozIExtensionStorageCallback) -> Result<Self> {
         Ok(Self {
             store: AtomicRefCell::new(Some(store)),
@@ -193,11 +213,12 @@ impl TeardownTask {
         })
     }
 
-    /// Returns the task name, used to label its runnable.
+    /// Returns the task name, used to label its runnable and report errors.
     pub fn name() -> &'static str {
         "webext_storage::teardown"
     }
 
+    /// Tears down and drops the store on the background queue.
     fn run_with_store(&self, store: Arc<LazyStore>) -> Result<()> {
         // At this point, we should be holding the only strong reference
         // to the store, since 1) `StorageSyncArea` gave its one strong
