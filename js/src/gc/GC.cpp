@@ -3083,9 +3083,9 @@ void GCRuntime::maybeGC() {
 
 bool GCRuntime::checkEagerAllocTrigger(const HeapSize& size,
                                        const HeapThreshold& threshold) {
-  float thresholdBytes =
+  double thresholdBytes =
       threshold.eagerAllocTrigger(schedulingState.inHighFrequencyGCMode());
-  float usedBytes = size.bytes();
+  double usedBytes = size.bytes();
   if (usedBytes <= 1024 * 1024 || usedBytes < thresholdBytes) {
     return false;
   }

@@ -352,7 +352,7 @@ static const size_t GCZoneAllocThresholdBase = 27 * 1024 * 1024;
 static const size_t GCMinNurseryBytes = 256 * 1024;
 
 /* JSGC_NON_INCREMENTAL_FACTOR */
-static const float NonIncrementalFactor = 1.12f;
+static const double NonIncrementalFactor = 1.12;
 
 /* JSGC_ZONE_ALLOC_DELAY_KB */
 static const size_t ZoneAllocDelayBytes = 1024 * 1024;
@@ -367,13 +367,13 @@ static const size_t SmallHeapSizeMaxBytes = 100 * 1024 * 1024;
 static const size_t LargeHeapSizeMinBytes = 500 * 1024 * 1024;
 
 /* JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH */
-static const float HighFrequencySmallHeapGrowth = 3.0f;
+static const double HighFrequencySmallHeapGrowth = 3.0;
 
 /* JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH */
-static const float HighFrequencyLargeHeapGrowth = 1.5f;
+static const double HighFrequencyLargeHeapGrowth = 1.5;
 
 /* JSGC_LOW_FREQUENCY_HEAP_GROWTH */
-static const float LowFrequencyHeapGrowth = 1.5f;
+static const double LowFrequencyHeapGrowth = 1.5;
 
 /* JSGC_MIN_EMPTY_CHUNK_COUNT */
 static const uint32_t MinEmptyChunkCount = 1;
@@ -397,13 +397,13 @@ static const bool IncrementalWeakMapMarkingEnabled = true;
 static const uint32_t NurseryFreeThresholdForIdleCollection = ChunkSize / 4;
 
 /* JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT */
-static const float NurseryFreeThresholdForIdleCollectionFraction = 0.25f;
+static const double NurseryFreeThresholdForIdleCollectionFraction = 0.25;
 
 /* JSGC_PRETENURE_THRESHOLD */
-static const float PretenureThreshold = 0.6f;
+static const double PretenureThreshold = 0.6;
 
 /* JSGC_PRETENURE_GROUP_THRESHOLD */
-static const float PretenureGroupThreshold = 3000;
+static const double PretenureGroupThreshold = 3000;
 
 /* JSGC_MIN_LAST_DITCH_GC_PERIOD */
 static const auto MinLastDitchGCPeriod = 60;  // in seconds
@@ -412,7 +412,7 @@ static const auto MinLastDitchGCPeriod = 60;  // in seconds
 static const size_t MallocThresholdBase = 38 * 1024 * 1024;
 
 /* JSGC_MALLOC_GROWTH_FACTOR */
-static const float MallocGrowthFactor = 1.5f;
+static const double MallocGrowthFactor = 1.5;
 
 }  // namespace TuningDefaults
 
@@ -451,7 +451,7 @@ class GCSchedulingTunables {
    *
    * Multiple of threshold.bytes() which triggers a non-incremental GC.
    */
-  UnprotectedData<float> nonIncrementalFactor_;
+  UnprotectedData<double> nonIncrementalFactor_;
 
   /*
    * Number of bytes to allocate between incremental slices in GCs triggered by
@@ -480,8 +480,8 @@ class GCSchedulingTunables {
    */
   MainThreadOrGCTaskData<size_t> smallHeapSizeMaxBytes_;
   MainThreadOrGCTaskData<size_t> largeHeapSizeMinBytes_;
-  MainThreadOrGCTaskData<float> highFrequencySmallHeapGrowth_;
-  MainThreadOrGCTaskData<float> highFrequencyLargeHeapGrowth_;
+  MainThreadOrGCTaskData<double> highFrequencySmallHeapGrowth_;
+  MainThreadOrGCTaskData<double> highFrequencyLargeHeapGrowth_;
 
   /*
    * JSGC_LOW_FREQUENCY_HEAP_GROWTH
@@ -489,7 +489,7 @@ class GCSchedulingTunables {
    * When not in |highFrequencyGC| mode, this is the global (stored per-zone)
    * "HeapGrowthFactor".
    */
-  MainThreadOrGCTaskData<float> lowFrequencyHeapGrowth_;
+  MainThreadOrGCTaskData<double> lowFrequencyHeapGrowth_;
 
   /*
    * JSGC_MIN_EMPTY_CHUNK_COUNT
@@ -509,7 +509,7 @@ class GCSchedulingTunables {
    * large and the percentage when it is small.  See Nursery::shouldCollect()
    */
   UnprotectedData<uint32_t> nurseryFreeThresholdForIdleCollection_;
-  UnprotectedData<float> nurseryFreeThresholdForIdleCollectionFraction_;
+  UnprotectedData<double> nurseryFreeThresholdForIdleCollectionFraction_;
 
   /*
    * JSGC_PRETENURE_THRESHOLD
@@ -519,7 +519,7 @@ class GCSchedulingTunables {
    * tenured. If this is 1.0f (actually if it is not < 1.0f) then pretenuring
    * is disabled.
    */
-  UnprotectedData<float> pretenureThreshold_;
+  UnprotectedData<double> pretenureThreshold_;
 
   /*
    * JSGC_PRETENURE_GROUP_THRESHOLD
@@ -549,7 +549,7 @@ class GCSchedulingTunables {
    *
    * Malloc memory growth factor.
    */
-  MainThreadOrGCTaskData<float> mallocGrowthFactor_;
+  MainThreadOrGCTaskData<double> mallocGrowthFactor_;
 
  public:
   GCSchedulingTunables();
@@ -579,12 +579,12 @@ class GCSchedulingTunables {
   uint32_t nurseryFreeThresholdForIdleCollection() const {
     return nurseryFreeThresholdForIdleCollection_;
   }
-  float nurseryFreeThresholdForIdleCollectionFraction() const {
+  double nurseryFreeThresholdForIdleCollectionFraction() const {
     return nurseryFreeThresholdForIdleCollectionFraction_;
   }
 
-  bool attemptPretenuring() const { return pretenureThreshold_ < 1.0f; }
-  float pretenureThreshold() const { return pretenureThreshold_; }
+  bool attemptPretenuring() const { return pretenureThreshold_ < 1.0; }
+  double pretenureThreshold() const { return pretenureThreshold_; }
   uint32_t pretenureGroupThreshold() const { return pretenureGroupThreshold_; }
 
   mozilla::TimeDuration minLastDitchGCPeriod() const {
@@ -592,7 +592,7 @@ class GCSchedulingTunables {
   }
 
   size_t mallocThresholdBase() const { return mallocThresholdBase_; }
-  float mallocGrowthFactor() const { return mallocGrowthFactor_; }
+  double mallocGrowthFactor() const { return mallocGrowthFactor_; }
 
   MOZ_MUST_USE bool setParameter(JSGCParamKey key, uint32_t value,
                                  const AutoLockGC& lock);
@@ -601,9 +601,9 @@ class GCSchedulingTunables {
  private:
   void setSmallHeapSizeMaxBytes(size_t value);
   void setLargeHeapSizeMinBytes(size_t value);
-  void setHighFrequencySmallHeapGrowth(float value);
-  void setHighFrequencyLargeHeapGrowth(float value);
-  void setLowFrequencyHeapGrowth(float value);
+  void setHighFrequencySmallHeapGrowth(double value);
+  void setHighFrequencyLargeHeapGrowth(double value);
+  void setLowFrequencyHeapGrowth(double value);
   void setMinEmptyChunkCount(uint32_t value);
   void setMaxEmptyChunkCount(uint32_t value);
 };
@@ -741,7 +741,7 @@ class HeapThreshold {
   size_t sliceBytes() const { return sliceBytes_; }
   size_t nonIncrementalBytes(ZoneAllocator* zone,
                              const GCSchedulingTunables& tunables) const;
-  float eagerAllocTrigger(bool highFrequencyGC) const;
+  double eagerAllocTrigger(bool highFrequencyGC) const;
 
   void setSliceThreshold(ZoneAllocator* zone, const HeapSize& heapSize,
                          const GCSchedulingTunables& tunables);
@@ -760,10 +760,10 @@ class GCHeapThreshold : public HeapThreshold {
                             const AutoLockGC& lock);
 
  private:
-  static float computeZoneHeapGrowthFactorForHeapSize(
+  static double computeZoneHeapGrowthFactorForHeapSize(
       size_t lastBytes, const GCSchedulingTunables& tunables,
       const GCSchedulingState& state);
-  static size_t computeZoneTriggerBytes(float growthFactor, size_t lastBytes,
+  static size_t computeZoneTriggerBytes(double growthFactor, size_t lastBytes,
                                         JSGCInvocationKind gckind,
                                         const GCSchedulingTunables& tunables,
                                         const AutoLockGC& lock);
@@ -775,10 +775,10 @@ class GCHeapThreshold : public HeapThreshold {
 class MallocHeapThreshold : public HeapThreshold {
  public:
   void updateStartThreshold(size_t lastBytes, size_t baseBytes,
-                            float growthFactor, const AutoLockGC& lock);
+                            double growthFactor, const AutoLockGC& lock);
 
  private:
-  static size_t computeZoneTriggerBytes(float growthFactor, size_t lastBytes,
+  static size_t computeZoneTriggerBytes(double growthFactor, size_t lastBytes,
                                         size_t baseBytes,
                                         const AutoLockGC& lock);
 };
