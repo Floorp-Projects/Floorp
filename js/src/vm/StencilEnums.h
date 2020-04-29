@@ -117,43 +117,50 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // enclosing script is compiled, this flag is updated to the same definition
   // the eventual non-lazy function will use.
   TreatAsRunOnce = 1 << 7,
+  // ----
 
-  // Code is in strict mode.
+  // Parser Flags
+  //
+  // Flags computed by the Parser from the source text and input flags.
+  // ----
+
+  // Generated code will execute in strict mode. This is due to either the
+  // ForceStrict flag being specified above, or due to source text itself (such
+  // as "use strict" directives).
   Strict = 1 << 8,
 
   // Script is parsed with a top-level goal of Module. This may be a top-level
   // or an inner-function script.
   HasModuleGoal = 1 << 9,
 
-  // Script contains inner functions. Used to check if we can relazify the
-  // script.
+  // Script contains inner functions.
+  //
+  // Note: This prevents relazification since inner function close-over the
+  // current scripts scopes.
   HasInnerFunctions = 1 << 10,
 
-  // Whether this script contains a direct eval statement.
+  // There is a direct eval statement in this script OR in any of its inner
+  // functions.
+  //
+  // Note: This prevents relazification since it can introduce inner functions.
   HasDirectEval = 1 << 11,
 
-  // The (static) bindings of this script need to support dynamic name
-  // read/write access. Here, 'dynamic' means dynamic dictionary lookup on
-  // the scope chain for a dynamic set of keys. The primary examples are:
-  //  - direct eval
-  //  - function:
-  //  - with
-  // since both effectively allow any name to be accessed. Non-examples are:
-  //  - upvars of nested functions
-  //  - function statement
-  // since the set of assigned name is known dynamically.
+  // The (static) bindings of this script must support dynamic name access for
+  // read/write. The environment chain is used to do these dynamic lookups and
+  // optimizations to avoid allocating environments are suppressed.
   //
-  // Note: access through the arguments object is not considered dynamic
-  // binding access since it does not go through the normal name lookup
-  // mechanism. This is debatable and could be changed (although care must be
-  // taken not to turn off the whole 'arguments' optimization). To answer the
-  // more general "is this argument aliased" question, script->needsArgsObj
-  // should be tested (see JSScript::argIsAliased).
+  // This includes direct-eval, `with`, and `delete` in this script OR in any of
+  // its inner functions.
+  //
+  // Note: Access through the arguments object is not considered dynamic binding
+  // access since it does not go through the normal name lookup mechanism.
   BindingsAccessedDynamically = 1 << 12,
 
-  // True if a tagged template exists in the body => Bytecode contains
-  // JSOp::CallSiteObj
-  // (We don't relazify functions with template strings, due to observability)
+  // A tagged template exists in the body (which will use JSOp::CallSiteObj in
+  // bytecode).
+  //
+  // Note: This prevents relazification since the template's object is
+  // observable to the user and cannot be recreated.
   HasCallSiteObj = 1 << 13,
 
   // Parser Flags for Functions
