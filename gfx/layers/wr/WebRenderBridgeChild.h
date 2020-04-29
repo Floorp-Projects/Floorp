@@ -73,7 +73,7 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
   void UpdateResources(wr::IpcResourceUpdateQueue& aResources,
                        wr::RenderRoot aRenderRoot);
   void BeginTransaction();
-  void EndTransaction(nsTArray<RenderRootDisplayListData>& aRenderRoots,
+  bool EndTransaction(nsTArray<RenderRootDisplayListData>& aRenderRoots,
                       TransactionId aTransactionId, bool aContainsSVGroup,
                       const mozilla::VsyncId& aVsyncId,
                       const mozilla::TimeStamp& aVsyncStartTime,

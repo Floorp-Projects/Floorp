@@ -104,7 +104,7 @@ void WebRenderBridgeChild::UpdateResources(
                             std::move(largeShmems), aRenderRoot);
 }
 
-void WebRenderBridgeChild::EndTransaction(
+bool WebRenderBridgeChild::EndTransaction(
     nsTArray<RenderRootDisplayListData>& aRenderRoots,
     TransactionId aTransactionId, bool aContainsSVGGroup,
     const mozilla::VsyncId& aVsyncId, const mozilla::TimeStamp& aVsyncStartTime,
@@ -127,7 +127,7 @@ void WebRenderBridgeChild::EndTransaction(
   }
 
   mSentDisplayList = true;
-  this->SendSetDisplayList(
+  bool ret = this->SendSetDisplayList(
       std::move(aRenderRoots), mDestroyedActors, GetFwdTransactionId(),
       aTransactionId, aContainsSVGGroup, aVsyncId, aVsyncStartTime,
       aRefreshStartTime, aTxnStartTime, aTxnURL, fwdTime, payloads);
@@ -138,6 +138,8 @@ void WebRenderBridgeChild::EndTransaction(
   ProcessWebRenderParentCommands();
   mDestroyedActors.Clear();
   mIsInTransaction = false;
+
+  return ret;
 }
 
 void WebRenderBridgeChild::EndEmptyTransaction(
