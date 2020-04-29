@@ -66,28 +66,37 @@ enum class TryNoteKind : uint8_t {
 // one specific instance of a BaseScript.
 
 enum class ImmutableScriptFlagsEnum : uint32_t {
-  // Script came from eval().
+  // Input Flags
+  //
+  // These flags are from CompileOptions or the Parser entry point. They
+  // generally cannot be derived from the source text alone.
+  // ----
+
+  // A script may have one of the following kinds: Global, Eval, Module,
+  // Function. At most one flag can be set, with a default of Global.
   IsForEval = 1 << 0,
-
-  // Script is parsed with a top-level goal of Module. This may be a top-level
-  // or an inner-function script.
   IsModule = 1 << 1,
-
-  // Script is for function.
   IsFunction = 1 << 2,
 
-  // See Parser::selfHostingMode.
+  // The script is compiled as engine-internal self-hosted JavaScript. This mode
+  // is used to implement certain library functions and has special parse,
+  // bytecode, and runtime behaviour that differs from normal script.
   SelfHosted = 1 << 3,
 
-  // Code was forced into strict mode using CompileOptions.
+  // The script was compiled with the default mode set to strict mode. Note that
+  // this tracks the default value, while the actual mode used (after processing
+  // source and its directives) is the `Strict` flag below.
   ForceStrict = 1 << 4,
 
-  // True if the script has a non-syntactic scope on its dynamic scope chain.
-  // That is, there are objects about which we know nothing between the
-  // outermost syntactic scope and the global.
+  // The script has a non-syntactic scope on its environment chain. That is,
+  // there may be objects about which we know nothing between the outermost
+  // syntactic scope and the global.
   HasNonSyntacticScope = 1 << 5,
 
-  // No need for result value of last expression statement.
+  // The script return value will not be used and simplified code will be
+  // generated. This can only be applied to top-level scripts. The value this
+  // script returns will be UndefinedValue instead of what the spec normally
+  // prescribes.
   NoScriptRval = 1 << 6,
 
   // TreatAsRunOnce roughly indicates that a script is expected to be run no
