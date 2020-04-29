@@ -99,29 +99,6 @@ inline bool IsSocketProcessChild() {
   return amChild;
 }
 
-namespace NeckoCommonInternal {
-extern bool gSecurityDisabled;
-}  // namespace NeckoCommonInternal
-
-// This should always return true unless xpcshell tests are being used
-inline bool UsingNeckoIPCSecurity() {
-  return !NeckoCommonInternal::gSecurityDisabled;
-}
-
-inline bool MissingRequiredBrowserChild(
-    mozilla::dom::BrowserChild* browserChild, const char* context) {
-  if (UsingNeckoIPCSecurity()) {
-    if (!browserChild) {
-      printf_stderr(
-          "WARNING: child tried to open %s IPDL channel w/o "
-          "security info\n",
-          context);
-      return true;
-    }
-  }
-  return false;
-}
-
 class HttpChannelSecurityWarningReporter : public nsISupports {
  public:
   [[nodiscard]] virtual nsresult ReportSecurityMessage(

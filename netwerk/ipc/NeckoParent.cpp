@@ -133,88 +133,17 @@ static already_AddRefed<nsIPrincipal> GetRequestingPrincipal(
   return GetRequestingPrincipal(args.loadInfo());
 }
 
-// Bug 1289001 - If GetValidatedOriginAttributes returns an error string, that
-// usually leads to a content crash with very little info about the cause.
-// We prefer to crash on the parent, so we get the reason in the crash report.
-static MOZ_COLD void CrashWithReason(const char* reason) {
-#ifndef RELEASE_OR_BETA
-  MOZ_CRASH_UNSAFE(reason);
-#endif
-}
-
 const char* NeckoParent::GetValidatedOriginAttributes(
     const SerializedLoadContext& aSerialized, PContentParent* aContent,
     nsIPrincipal* aRequestingPrincipal, OriginAttributes& aAttrs) {
-  if (!UsingNeckoIPCSecurity()) {
-    if (!aSerialized.IsNotNull()) {
-      // If serialized is null, we cannot validate anything. We have to assume
-      // that this requests comes from a SystemPrincipal.
-      aAttrs = OriginAttributes(false);
-    } else {
-      aAttrs = aSerialized.mOriginAttributes;
-    }
-    return nullptr;
-  }
-
   if (!aSerialized.IsNotNull()) {
-    CrashWithReason(
-        "GetValidatedOriginAttributes | SerializedLoadContext from child is "
-        "null");
-    return "SerializedLoadContext from child is null";
-  }
-
-  nsAutoCString serializedSuffix;
-  aSerialized.mOriginAttributes.CreateAnonymizedSuffix(serializedSuffix);
-
-  nsAutoCString debugString;
-  const auto& browsers = aContent->ManagedPBrowserParent();
-  for (auto iter = browsers.ConstIter(); !iter.Done(); iter.Next()) {
-    auto* browserParent = BrowserParent::GetFrom(iter.Get()->GetKey());
-
-    if (!ChromeUtils::IsOriginAttributesEqual(
-            aSerialized.mOriginAttributes,
-            browserParent->OriginAttributesRef())) {
-      debugString.AppendLiteral("(");
-      debugString.Append(serializedSuffix);
-      debugString.AppendLiteral(",");
-
-      nsAutoCString tabSuffix;
-      browserParent->OriginAttributesRef().CreateAnonymizedSuffix(tabSuffix);
-      debugString.Append(tabSuffix);
-
-      debugString.AppendLiteral(")");
-      continue;
-    }
-
+    // If serialized is null, we cannot validate anything. We have to assume
+    // that this requests comes from a SystemPrincipal.
+    aAttrs = OriginAttributes(false);
+  } else {
     aAttrs = aSerialized.mOriginAttributes;
-    return nullptr;
   }
-
-  // This may be a ServiceWorker: when a push notification is received, FF wakes
-  // up the corrisponding service worker so that it can manage the PushEvent. At
-  // that time we probably don't have any valid tabcontext, but still, we want
-  // to support http channel requests coming from that ServiceWorker.
-  if (aRequestingPrincipal) {
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    if (swm &&
-        swm->MayHaveActiveServiceWorkerInstance(
-            static_cast<ContentParent*>(aContent), aRequestingPrincipal)) {
-      aAttrs = aSerialized.mOriginAttributes;
-      return nullptr;
-    }
-  }
-
-  nsAutoCString errorString;
-  errorString.AppendLiteral(
-      "GetValidatedOriginAttributes | App does not have permission -");
-  errorString.Append(debugString);
-
-  // Leak the buffer on the heap to make sure that it lives long enough, as
-  // MOZ_CRASH_ANNOTATE expects the pointer passed to it to live to the end of
-  // the program.
-  char* error = strdup(errorString.BeginReading());
-  CrashWithReason(error);
-  return "App does not have permission";
+  return nullptr;
 }
 
 const char* NeckoParent::CreateChannelLoadContext(

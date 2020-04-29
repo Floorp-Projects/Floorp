@@ -168,9 +168,6 @@ FTPChannelChild::AsyncOpen(nsIStreamListener* aListener) {
     browserChild =
         static_cast<mozilla::dom::BrowserChild*>(iBrowserChild.get());
   }
-  if (MissingRequiredBrowserChild(browserChild, "ftp")) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
 
   mListener = listener;
 

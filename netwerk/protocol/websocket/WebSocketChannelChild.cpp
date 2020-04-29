@@ -443,9 +443,6 @@ WebSocketChannelChild::AsyncOpen(nsIURI* aURI, const nsACString& aOrigin,
     browserChild =
         static_cast<mozilla::dom::BrowserChild*>(iBrowserChild.get());
   }
-  if (MissingRequiredBrowserChild(browserChild, "websocket")) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
 
   ContentChild* cc = static_cast<ContentChild*>(gNeckoChild->Manager());
   if (cc->IsShuttingDown()) {
