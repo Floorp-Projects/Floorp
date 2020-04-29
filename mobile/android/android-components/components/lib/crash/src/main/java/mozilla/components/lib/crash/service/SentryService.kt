@@ -17,6 +17,7 @@ import io.sentry.event.Event
 import io.sentry.event.EventBuilder
 import io.sentry.event.interfaces.ExceptionInterface
 import mozilla.components.Build
+import mozilla.components.lib.crash.Breadcrumb as crashBreadCrumbs
 import mozilla.components.lib.crash.Crash
 
 /**
@@ -73,6 +74,7 @@ class SentryService(
                 .withLevel(Event.Level.FATAL)
                 .withSentryInterface(ExceptionInterface(crash.throwable))
         client.sendEvent(eventBuilder)
+        client.context.clearBreadcrumbs()
 
         return eventBuilder.event.id.toString()
     }
@@ -88,6 +90,7 @@ class SentryService(
                 .withLevel(Event.Level.INFO)
 
             client.sendEvent(eventBuilder)
+            client.context.clearBreadcrumbs()
 
             return eventBuilder.event.id.toString()
         }
@@ -95,12 +98,17 @@ class SentryService(
         return null
     }
 
-    override fun report(throwable: Throwable): String? {
+    override fun report(throwable: Throwable, breadcrumbs: ArrayList<crashBreadCrumbs>): String? {
+        breadcrumbs.forEach {
+            client.context.recordBreadcrumb(it.toSentryBreadcrumb())
+        }
+
         val eventBuilder = EventBuilder().withMessage(createMessage(throwable))
                 .withLevel(Event.Level.INFO)
                 .withSentryInterface(ExceptionInterface(throwable))
 
         client.sendEvent(eventBuilder)
+        client.context.clearBreadcrumbs()
 
         return eventBuilder.event.id.toString()
     }

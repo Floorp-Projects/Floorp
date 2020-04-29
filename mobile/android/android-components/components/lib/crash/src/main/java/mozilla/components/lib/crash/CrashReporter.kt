@@ -130,7 +130,7 @@ class CrashReporter(
 
         return scope.launch {
             services.forEach {
-                it.report(throwable)
+                it.report(throwable, crashBreadcrumbs.toSortedArrayList())
             }
         }
     }

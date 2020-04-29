@@ -4,6 +4,7 @@
 
 package mozilla.components.lib.crash.service
 
+import mozilla.components.lib.crash.Breadcrumb
 import mozilla.components.lib.crash.Crash
 
 internal const val INFO_PREFIX = "[INFO]"
@@ -34,5 +35,5 @@ interface CrashReporterService {
      * @return Unique identifier that can be used by/with this crash reporter service to find this
      * crash - or null if no identifier can be provided.
      */
-    fun report(throwable: Throwable): String?
+    fun report(throwable: Throwable, breadcrumbs: ArrayList<Breadcrumb>): String?
 }

@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
+import mozilla.components.lib.crash.Breadcrumb
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
@@ -64,7 +65,7 @@ class ExceptionHandlerTest {
 
                     override fun report(crash: Crash.NativeCodeCrash): String? = null
 
-                    override fun report(throwable: Throwable): String? = null
+                    override fun report(throwable: Throwable, breadcrumbs: ArrayList<Breadcrumb>): String? = null
                 }),
                 scope = scope
         ).install(testContext)
