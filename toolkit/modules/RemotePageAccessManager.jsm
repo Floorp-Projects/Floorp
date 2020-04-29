@@ -93,6 +93,19 @@ let RemotePageAccessManager = {
       RPMPrefIsLocked: ["security.tls.version.min"],
       RPMAddToHistogram: ["*"],
     },
+    "about:privatebrowsing": {
+      RPMSendAsyncMessage: [
+        "OpenPrivateWindow",
+        "SearchBannerDismissed",
+        "OpenSearchPreferences",
+        "SearchHandoff",
+      ],
+      RPMSendQuery: ["ShouldShowSearchBanner"],
+      RPMAddMessageListener: ["*"],
+      RPMRemoveMessageListener: ["*"],
+      RPMGetFormatURLPref: ["app.support.baseURL"],
+      RPMIsWindowPrivate: ["*"],
+    },
     "about:protections": {
       RPMSendAsyncMessage: [
         "OpenContentBlockingPreferences",

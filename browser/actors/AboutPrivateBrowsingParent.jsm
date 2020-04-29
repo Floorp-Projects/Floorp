@@ -4,11 +4,8 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["AboutPrivateBrowsingHandler"];
+var EXPORTED_SYMBOLS = ["AboutPrivateBrowsingParent"];
 
-const { RemotePages } = ChromeUtils.import(
-  "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -29,49 +26,29 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-var AboutPrivateBrowsingHandler = {
-  _inited: false,
-  // We only show the private search banner once per browser session.
-  _searchBannerShownThisSession: false,
-  _topics: [
-    "OpenPrivateWindow",
-    "OpenSearchPreferences",
-    "SearchHandoff",
-    "ShouldShowSearchBanner",
-    "SearchBannerDismissed",
-  ],
+// We only show the private search banner once per browser session.
+let gSearchBannerShownThisSession;
 
-  init() {
-    if (this._inited) {
-      return;
-    }
-    this.receiveMessage = this.receiveMessage.bind(this);
-    this.pageListener = new RemotePages("about:privatebrowsing");
-    for (let topic of this._topics) {
-      this.pageListener.addMessageListener(topic, this.receiveMessage);
-    }
-    this._inited = true;
-  },
-
-  uninit() {
-    if (!this._inited) {
-      return;
-    }
-    for (let topic of this._topics) {
-      this.pageListener.removeMessageListener(topic, this.receiveMessage);
-    }
-    this.pageListener.destroy();
-  },
+class AboutPrivateBrowsingParent extends JSWindowActorParent {
+  // Used by tests
+  static setShownThisSession(shown) {
+    gSearchBannerShownThisSession = shown;
+  }
 
   receiveMessage(aMessage) {
+    let browser = this.browsingContext.top.embedderElement;
+    if (!browser) {
+      return undefined;
+    }
+
+    let win = browser.ownerGlobal;
+
     switch (aMessage.name) {
       case "OpenPrivateWindow": {
-        let win = aMessage.target.browser.ownerGlobal;
         win.OpenBrowserWindow({ private: true });
         break;
       }
       case "OpenSearchPreferences": {
-        let win = aMessage.target.browser.ownerGlobal;
         win.openPreferences("search", { origin: "about-privatebrowsing" });
         break;
       }
@@ -83,7 +60,7 @@ var AboutPrivateBrowsingHandler = {
         if (searchAliases && searchAliases.length) {
           searchAlias = `${searchAliases[0]} `;
         }
-        let urlBar = aMessage.target.browser.ownerGlobal.gURLBar;
+        let urlBar = win.gURLBar;
         let isFirstChange = true;
 
         if (!aMessage.data || !aMessage.data.text) {
@@ -102,7 +79,7 @@ var AboutPrivateBrowsingHandler = {
             isFirstChange = false;
             urlBar.removeHiddenFocus();
             urlBar.search(searchAlias);
-            aMessage.target.sendAsyncMessage("HideSearch");
+            this.sendAsyncMessage("HideSearch");
             urlBar.removeEventListener("compositionstart", checkFirstChange);
             urlBar.removeEventListener("paste", checkFirstChange);
           }
@@ -121,7 +98,7 @@ var AboutPrivateBrowsingHandler = {
 
         let onDone = () => {
           // We are done. Show in-content search again and cleanup.
-          aMessage.target.sendAsyncMessage("ShowSearch");
+          this.sendAsyncMessage("ShowSearch");
           urlBar.removeHiddenFocus();
 
           urlBar.removeEventListener("keydown", onKeydown);
@@ -145,42 +122,31 @@ var AboutPrivateBrowsingHandler = {
         // This has the minor downside of not displaying the banner if
         // you go into private browsing via opening a link, and then opening
         // a new tab, we won't display the banner, for now, that's ok.
-        if (
-          aMessage.target.browser.getAttribute("preloadedState") === "preloaded"
-        ) {
-          aMessage.target.sendAsyncMessage("ShowSearchBanner", {
-            show: false,
-          });
-          return;
+        if (browser.getAttribute("preloadedState") === "preloaded") {
+          return null;
         }
 
-        if (!isPrivateSearchUIEnabled || this._searchBannerShownThisSession) {
-          aMessage.target.sendAsyncMessage("ShowSearchBanner", {
-            show: false,
-          });
-          return;
+        if (!isPrivateSearchUIEnabled || gSearchBannerShownThisSession) {
+          return null;
         }
-        this._searchBannerShownThisSession = true;
+        gSearchBannerShownThisSession = true;
         const shownTimes = Services.prefs.getIntPref(SHOWN_PREF, 0);
         if (shownTimes >= MAX_SEARCH_BANNER_SHOW_COUNT) {
-          aMessage.target.sendAsyncMessage("ShowSearchBanner", {
-            show: false,
-          });
-          return;
+          return null;
         }
         Services.prefs.setIntPref(SHOWN_PREF, shownTimes + 1);
-        Services.search.getDefaultPrivate().then(engine => {
-          aMessage.target.sendAsyncMessage("ShowSearchBanner", {
-            engineName: engine.name,
-            show: true,
+        return new Promise(resolve => {
+          Services.search.getDefaultPrivate().then(engine => {
+            resolve(engine.name);
           });
         });
-        break;
       }
       case "SearchBannerDismissed": {
         Services.prefs.setIntPref(SHOWN_PREF, MAX_SEARCH_BANNER_SHOW_COUNT);
         break;
       }
     }
-  },
-};
+
+    return undefined;
+  }
+}
