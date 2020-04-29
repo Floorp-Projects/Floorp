@@ -42,6 +42,8 @@
     <color name="onboarding_finish_button_text_normal_theme">@color/primary_text_dark_theme</color>
     <color name="onboarding_illustration_selected_normal_theme">@color/onboarding_illustration_selected_dark_theme</color>
     <color name="onboarding_illustration_deselected_normal_theme">@color/onboarding_illustration_deselected_dark_theme</color>
+    <color name="add_on_private_browsing_exterior_circle_background_normal_theme">@color/add_on_private_browsing_exterior_circle_background_dark_theme</color>
+    <color name="add_on_private_browsing_interior_icon_background_normal_theme">@color/add_on_private_browsing_interior_icon_background_dark_theme</color>
 
     <!-- Tab tray -->
     <color name="tab_tray_item_text_normal_theme">@color/tab_tray_item_text_dark_theme</color>

@@ -47,6 +47,8 @@
     <attr name="onboardingDarkGradientEndBackground" format="reference" />
     <attr name="onboardingSelected" format="reference"/>
     <attr name="onboardingDeselected" format="reference"/>
+    <attr name="addOnPrivateBrowsingExteriorCircleBackground" format="reference"/>
+    <attr name="addOnPrivateBrowsingInteriorIconBackground" format="reference"/>
 
     <!-- Tab tray -->
     <attr name="tabTrayItemText" format="reference"/>

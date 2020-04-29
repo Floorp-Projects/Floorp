@@ -70,6 +70,8 @@
         <item name="onboardingDarkGradientEndBackground">@color/onboarding_card_background_end_gradient_normal_theme</item>
         <item name="onboardingSelected">@color/onboarding_illustration_selected_normal_theme</item>
         <item name="onboardingDeselected">@color/onboarding_illustration_deselected_normal_theme</item>
+        <item name="addOnPrivateBrowsingExteriorCircleBackground">@color/add_on_private_browsing_exterior_circle_background_normal_theme</item>
+        <item name="addOnPrivateBrowsingInteriorIconBackground">@color/add_on_private_browsing_interior_icon_background_normal_theme</item>
 
         <item name="tabTrayItemText">@color/tab_tray_item_text_normal_theme</item>
         <item name="tabTrayItemUrl">@color/tab_tray_item_url_normal_theme</item>
@@ -190,6 +192,8 @@
         <item name="onboardingDarkGradientEndBackground">@color/onboarding_card_background_end_gradient_private_theme</item>
         <item name="onboardingSelected">@color/onboarding_illustration_selected_private_theme</item>
         <item name="onboardingDeselected">@color/onboarding_illustration_deselected_private_theme</item>
+        <item name="addOnPrivateBrowsingExteriorCircleBackground">@color/add_on_private_browsing_exterior_circle_background_private_theme</item>
+        <item name="addOnPrivateBrowsingInteriorIconBackground">@color/add_on_private_browsing_interior_icon_background_private_theme</item>
 
         <!-- Tab Tray -->
         <item name="tabTrayItemText">@color/tab_tray_item_text_private_theme</item>
