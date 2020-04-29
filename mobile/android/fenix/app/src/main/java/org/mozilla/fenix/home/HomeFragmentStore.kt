@@ -34,12 +34,6 @@ data class Tab(
     val mediaState: MediaState.State
 )
 
-data class TopSiteItem(
-    override val id: Long,
-    override val title: String,
-    override val url: String
-) : TopSite
-
 fun List<Tab>.toSessionBundle(sessionManager: SessionManager): List<Session> {
     return this.mapNotNull { sessionManager.findSessionById(it.sessionId) }
 }
