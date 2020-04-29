@@ -147,10 +147,9 @@ nsresult nsCanvasFrame::CreateAnonymousContent(
     mCustomContentContainer->AppendChildTo(&anonContent->ContentNode(), false);
   }
 
-  // Create a popupgroup element for chrome privileged top level non-XUL
-  // documents to support context menus and tooltips.
-  if (PresContext()->IsChrome() && PresContext()->IsRoot() &&
-      doc->AllowXULXBL()) {
+  // Create a popupgroup element for system privileged non-XUL documents to
+  // support context menus and tooltips.
+  if (XRE_IsParentProcess() && doc->NodePrincipal()->IsSystemPrincipal()) {
     nsNodeInfoManager* nodeInfoManager = doc->NodeInfoManager();
     RefPtr<NodeInfo> nodeInfo =
         nodeInfoManager->GetNodeInfo(nsGkAtoms::popupgroup, nullptr,
