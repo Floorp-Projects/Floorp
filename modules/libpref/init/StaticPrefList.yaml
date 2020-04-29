@@ -7438,6 +7438,11 @@
   value: false
   mirror: always
 
+- name: network.data.max-uri-length-mobile
+  type: RelaxedAtomicUint32
+  value: 2 * 1024 * 1024
+  mirror: always
+
 # false=real referer, true=spoof referer (use target URI as referer).
 - name: network.http.referer.spoofSource
   type: bool
