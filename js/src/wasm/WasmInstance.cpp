@@ -335,7 +335,7 @@ static bool IterableToArray(JSContext* cx, HandleValue iterable,
       return false;
     }
     if (done) {
-      return true;
+      break;
     }
 
     if (!NewbornArrayPush(cx, array, nextValue)) {

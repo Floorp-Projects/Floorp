@@ -12,7 +12,9 @@
 
 #include <stdint.h>  // uint8_t, uint16_t
 
-class JSAtom;
+#include "jstypes.h"  // JS_PUBLIC_API
+
+class JS_PUBLIC_API JSAtom;
 
 namespace js {
 
