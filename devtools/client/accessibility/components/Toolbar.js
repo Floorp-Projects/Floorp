@@ -41,6 +41,7 @@ class Toolbar extends Component {
       toolboxDoc: PropTypes.object.isRequired,
       audit: PropTypes.func.isRequired,
       simulate: PropTypes.func,
+      autoInit: PropTypes.bool.isRequired,
     };
   }
 
@@ -64,7 +65,7 @@ class Toolbar extends Component {
   }
 
   render() {
-    const { canBeDisabled, simulate, toolboxDoc, audit } = this.props;
+    const { canBeDisabled, simulate, toolboxDoc, audit, autoInit } = this.props;
     const { disabling } = this.state;
     const disableButtonStr = disabling
       ? "accessibility.disabling"
@@ -95,21 +96,23 @@ class Toolbar extends Component {
         className: "devtools-toolbar",
         role: "toolbar",
       },
-      Button(
-        {
-          className: "disable",
-          id: "accessibility-disable-button",
-          onClick: this.onDisable,
-          disabled: disabling || isDisabled,
-          busy: disabling,
-          title,
-        },
-        L10N.getStr(disableButtonStr)
-      ),
-      div({
-        role: "separator",
-        className: "devtools-separator",
-      }),
+      !autoInit &&
+        Button(
+          {
+            className: "disable",
+            id: "accessibility-disable-button",
+            onClick: this.onDisable,
+            disabled: disabling || isDisabled,
+            busy: disabling,
+            title,
+          },
+          L10N.getStr(disableButtonStr)
+        ),
+      !autoInit &&
+        div({
+          role: "separator",
+          className: "devtools-separator",
+        }),
       // @remove after release 68 (See Bug 1551574)
       span(
         {
@@ -131,8 +134,14 @@ class Toolbar extends Component {
   }
 }
 
-const mapStateToProps = ({ ui }) => ({
-  canBeDisabled: ui.canBeDisabled,
+const mapStateToProps = ({
+  ui: {
+    canBeDisabled,
+    supports: { autoInit },
+  },
+}) => ({
+  canBeDisabled,
+  autoInit,
 });
 
 // Exports from this module
