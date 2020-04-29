@@ -24,7 +24,6 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
                              Directives directives, SourceExtent extent,
                              ImmutableScriptFlags immutableFlags)
     : cx_(cx),
-      kind_(kind),
       compilationInfo_(compilationInfo),
       thisBinding_(ThisBinding::Global),
       extent(extent),
@@ -37,15 +36,15 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
       localStrict(false),
       hasExplicitUseStrict_(false),
       immutableFlags_(immutableFlags) {
-  if (kind_ == Kind::FunctionBox) {
+  if (kind == Kind::FunctionBox) {
     immutableFlags_.setFlag(ImmutableFlags::IsFunction);
-  } else if (kind_ == Kind::Module) {
+  } else if (kind == Kind::Module) {
     MOZ_ASSERT(!compilationInfo.options.nonSyntacticScope);
     immutableFlags_.setFlag(ImmutableFlags::IsModule);
-  } else if (kind_ == Kind::Eval) {
+  } else if (kind == Kind::Eval) {
     immutableFlags_.setFlag(ImmutableFlags::IsForEval);
   } else {
-    MOZ_ASSERT(kind_ == Kind::Global);
+    MOZ_ASSERT(kind == Kind::Global);
   }
 
   immutableFlags_.setFlag(ImmutableFlags::Strict, directives.strict());
