@@ -26,6 +26,12 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref(DTSCBN_PREF);
 });
 
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["ui.prefersReducedMotion", 0]],
+  });
+});
+
 async function testTrackingProtectionAnimation(tabbrowser) {
   Services.prefs.setBoolPref(DTSCBN_PREF, true);
 
