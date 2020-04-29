@@ -23,4 +23,9 @@ class ExtensionsTest {
     fun `shouldReport - when cause is a CancellationException must NOT be reported`() {
         assertFalse(Exception(CancellationException()).shouldReport())
     }
+
+    @Test
+    fun `shouldReport - when cause the exception is a CancellationException must NOT be reported`() {
+        assertFalse(CancellationException().shouldReport())
+    }
 }
