@@ -15,12 +15,12 @@
       "search_url": "https://example.com",
       "params": [
         {
-          "name": "search",
-          "value": "{searchTerms}"
-        },
-        {
           "name": "sourceId",
           "value": "Mozilla-search"
+        },
+        {
+          "name": "search",
+          "value": "{searchTerms}"
         }
       ],
       "suggest_url": "https://example.com?search={searchTerms}"
