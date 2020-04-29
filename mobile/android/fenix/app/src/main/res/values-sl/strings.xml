@@ -19,6 +19,9 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Tu bodo prikazani vaši odprti zavihki.</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s izdeluje Mozilla.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Ste v zasebni seji</string>
@@ -853,8 +856,13 @@
     <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button">Prenesite brskalnik Mozilla Firefox</string>
 
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly se je preselil</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_installed">Preklopite na novi Nightly</string>
+
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Prenesite novi Nigthly</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message

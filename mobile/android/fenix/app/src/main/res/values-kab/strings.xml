@@ -867,6 +867,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button">Awi iminig Web Mozilla Firefox</string>
 
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly yuɣan sanga-nniḍen</string>
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description_preview_installed">. 
         Asnas-agi ur yettɛawad ara ad yermes ileqman n tɣellist. Ur seqdac ara asnas-agi, beddel ɣer Nightly amaynut.
@@ -874,6 +876,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_installed">Beddel ɣer Nightly amaynut</string>
 
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly yuɣan sanga-nniḍen</string>
     <!-- text for firefox preview moving tip description -->
     <string name="tip_firefox_preview_moved_description_preview_not_installed">Asnas-agi ur yettɛawad ara ad yermes ileqman n tɣellist. Awi Nightlu amaynut u seḥbes aseqdec n usnas-agi.
         \n\nAkken ad tazneḍ ticraḍ n yisebtar, inekcam, akked umazray ɣer usnas-nniḍen, rnu amiḍan Firefox.</string>

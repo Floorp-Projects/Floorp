@@ -18,14 +18,13 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">De åpne fanene dine vises her.</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s er produsert av Mozilla.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Du er i en privat økt</string>
 
-    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">%1$s fjerner søk- og nettleserhistorikken når du avslutter appen eller lukker alle private faner. Selv om dette ikke gjør deg anonym for nettsteder eller internett-leverandøren din, vil det gjøre det lettere
-        å beholde det du gjør på nettet privat fra alle andre som bruker denne datamaskinen.</string>
     <string name="private_browsing_common_myths">Vanlige myter om privat nettlesing</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Slett økt</string>
@@ -205,6 +204,8 @@
     <string name="preferences_private_browsing_options">Privat nettlesing</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Åpne lenke i en privat fane</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Tillat å ta skjermbilder i privat nettlesing</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Legg til snarvei for privat nettlesing</string>
     <!-- Preference for accessibility -->
