@@ -42,7 +42,9 @@ void WriteZeroesToAudioBlock(AudioBlock* aChunk, uint32_t aStart,
                              uint32_t aLength) {
   MOZ_ASSERT(aStart + aLength <= WEBAUDIO_BLOCK_SIZE);
   MOZ_ASSERT(!aChunk->IsNull(), "You should pass a non-null chunk");
-  if (aLength == 0) return;
+  if (aLength == 0) {
+    return;
+  }
 
   for (uint32_t i = 0; i < aChunk->ChannelCount(); ++i) {
     PodZero(aChunk->ChannelFloatsForWrite(i) + aStart, aLength);
@@ -303,9 +305,9 @@ void AudioBlockPanStereoToStereo(const float aInputL[WEBAUDIO_BLOCK_SIZE],
 
 void AudioBlockPanStereoToStereo(const float aInputL[WEBAUDIO_BLOCK_SIZE],
                                  const float aInputR[WEBAUDIO_BLOCK_SIZE],
-                                 float aGainL[WEBAUDIO_BLOCK_SIZE],
-                                 float aGainR[WEBAUDIO_BLOCK_SIZE],
-                                 bool aIsOnTheLeft[WEBAUDIO_BLOCK_SIZE],
+                                 const float aGainL[WEBAUDIO_BLOCK_SIZE],
+                                 const float aGainR[WEBAUDIO_BLOCK_SIZE],
+                                 const bool aIsOnTheLeft[WEBAUDIO_BLOCK_SIZE],
                                  float aOutputL[WEBAUDIO_BLOCK_SIZE],
                                  float aOutputR[WEBAUDIO_BLOCK_SIZE]) {
 #ifdef USE_NEON
