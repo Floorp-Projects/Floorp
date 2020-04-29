@@ -2882,7 +2882,7 @@ void TrackBuffersManager::GetDebugInfo(
       range->mStart = ranges.Start(i).ToSeconds();
       range->mEnd = ranges.End(i).ToSeconds();
     }
-    aInfo.mRanges = items;
+    aInfo.mRanges = std::move(items);
   } else if (HasVideo()) {
     aInfo.mNextSampleTime = mVideoTracks.mNextSampleTime.ToSeconds();
     aInfo.mNumSamples = mVideoTracks.mBuffers[0].Length();
@@ -2901,7 +2901,7 @@ void TrackBuffersManager::GetDebugInfo(
       range->mStart = ranges.Start(i).ToSeconds();
       range->mEnd = ranges.End(i).ToSeconds();
     }
-    aInfo.mRanges = items;
+    aInfo.mRanges = std::move(items);
   }
 }
 

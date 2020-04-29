@@ -93,8 +93,8 @@ bool MoofParser::RebuildFragmentedIndex(BoxContext& aContext) {
         mMoofs.LastElement().FixRounding(moof);
       }
 
-      mMoofs.AppendElement(moof);
       mMediaRanges.AppendElement(moof.mRange);
+      mMoofs.AppendElement(std::move(moof));
       foundValidMoof = true;
     } else if (box.IsType("mdat") && !Moofs().IsEmpty()) {
       // Check if we have all our data from last moof.
