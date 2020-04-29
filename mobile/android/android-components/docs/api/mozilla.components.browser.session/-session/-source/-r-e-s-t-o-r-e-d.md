@@ -2,7 +2,7 @@
 
 # RESTORED
 
-`RESTORED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L182)
+`RESTORED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L184)
 
 This session was restored
 
