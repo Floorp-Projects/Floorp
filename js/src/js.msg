@@ -429,7 +429,8 @@ MSG_DEF(JSMSG_WASM_TEXT_FAIL,          1, JSEXN_SYNTAXERR,   "wasm text error: {
 MSG_DEF(JSMSG_WASM_MISSING_MAXIMUM,    0, JSEXN_TYPEERR,     "'shared' is true but maximum is not specified")
 MSG_DEF(JSMSG_WASM_GLOBAL_IMMUTABLE,   0, JSEXN_TYPEERR,     "can't set value of immutable global")
 MSG_DEF(JSMSG_WASM_NULL_REQUIRED,      0, JSEXN_TYPEERR,     "nullref requires a null value")
-MSG_DEF(JSMSG_WASM_MULTIPLE_RESULT_ENTRY_UNIMPLEMENTED, 0, JSEXN_TYPEERR, "calling WebAssembly functions with multiple results from JavaScript not yet implemented")
+MSG_DEF(JSMSG_WASM_TYPEREF_FROM_JS,    0, JSEXN_TYPEERR,     "conversion from JavaScript value to WebAssembly typed ref unimplemented")
+MSG_DEF(JSMSG_WASM_TYPEREF_TO_JS,      0, JSEXN_TYPEERR,     "conversion from WebAssembly typed ref to JavaScript value unimplemented")
 MSG_DEF(JSMSG_WASM_WRONG_NUMBER_OF_VALUES, 2, JSEXN_TYPEERR, "wrong number of values returned by JavaScript to WebAssembly (expected {0}, got {1})")
 
 // Proxy
