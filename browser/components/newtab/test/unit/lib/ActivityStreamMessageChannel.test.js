@@ -37,6 +37,7 @@ describe("ActivityStreamMessageChannel", () => {
       reset: globals.sandbox.spy(),
     });
     globals.set("RemotePages", RP);
+    globals.set("AboutHomeStartupCache", { onPreloadedNewTabMessage() {} });
     dispatch = globals.sandbox.spy();
     mm = new ActivityStreamMessageChannel({ dispatch });
   });
