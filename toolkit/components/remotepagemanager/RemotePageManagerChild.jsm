@@ -32,18 +32,6 @@ class ChildMessagePort extends MessagePort {
       defineAs: "RPMRemoveMessageListener",
       allowCallbacks: true,
     });
-    Cu.exportFunction(this.getIntPref.bind(this), window, {
-      defineAs: "RPMGetIntPref",
-    });
-    Cu.exportFunction(this.getStringPref.bind(this), window, {
-      defineAs: "RPMGetStringPref",
-    });
-    Cu.exportFunction(this.getBoolPref.bind(this), window, {
-      defineAs: "RPMGetBoolPref",
-    });
-    Cu.exportFunction(this.setBoolPref.bind(this), window, {
-      defineAs: "RPMSetBoolPref",
-    });
     Cu.exportFunction(this.getFormatURLPref.bind(this), window, {
       defineAs: "RPMGetFormatURLPref",
     });
@@ -55,9 +43,6 @@ class ChildMessagePort extends MessagePort {
     });
     Cu.exportFunction(this.getFxAccountsEndpoint.bind(this), window, {
       defineAs: "RPMGetFxAccountsEndpoint",
-    });
-    Cu.exportFunction(this.recordTelemetryEvent.bind(this), window, {
-      defineAs: "RPMRecordTelemetryEvent",
     });
 
     // The actor form only needs the functions set up above. The actor

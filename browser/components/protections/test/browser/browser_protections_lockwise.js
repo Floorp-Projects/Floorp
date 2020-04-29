@@ -4,10 +4,9 @@
 
 "use strict";
 
-const { AboutProtectionsHandler } = ChromeUtils.import(
-  "resource:///modules/aboutpages/AboutProtectionsHandler.jsm"
+const { AboutProtectionsParent } = ChromeUtils.import(
+  "resource:///actors/AboutProtectionsParent.jsm"
 );
-
 const nsLoginInfo = new Components.Constructor(
   "@mozilla.org/login-manager/loginInfo;1",
   Ci.nsILoginInfo,
@@ -39,7 +38,6 @@ add_task(async function() {
     url: "about:protections",
     gBrowser,
   });
-  const { getLoginData } = AboutProtectionsHandler;
 
   info("Check that the correct content is displayed for non-logged in users.");
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
@@ -144,7 +142,7 @@ add_task(async function() {
   info(
     "Mock login data with synced devices and check that the correct number and content is displayed."
   );
-  AboutProtectionsHandler.getLoginData = mockGetLoginDataWithSyncedDevices(5);
+  AboutProtectionsParent.setTestOverride(mockGetLoginDataWithSyncedDevices(5));
   await reloadTab(tab);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
@@ -198,6 +196,6 @@ add_task(async function() {
   Services.logins.removeLogin(TEST_LOGIN1);
   Services.logins.removeLogin(TEST_LOGIN2);
 
-  AboutProtectionsHandler.getLoginData = getLoginData;
+  AboutProtectionsParent.setTestOverride(null);
   await BrowserTestUtils.removeTab(tab);
 });

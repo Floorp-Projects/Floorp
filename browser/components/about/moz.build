@@ -23,7 +23,6 @@ XPCOM_MANIFESTS += [
 
 EXTRA_JS_MODULES.aboutpages = [
     'AboutPrivateBrowsingHandler.jsm',
-    'AboutProtectionsHandler.jsm',
 ]
 
 FINAL_LIBRARY = 'browsercomps'

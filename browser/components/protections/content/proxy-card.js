@@ -21,11 +21,9 @@ export default class ProxyCard {
     proxyExtensionLink.href = PROXY_EXTENSION_URL;
 
     // Show the Proxy card
-    RPMAddMessageListener("SendShowProxyCard", () => {
+    RPMSendQuery("GetShowProxyCard", {}).then(shouldShow => {
       const proxyCard = this.doc.querySelector(".proxy-card");
-      proxyCard.classList.remove("hidden");
+      proxyCard.classList.toggle("hidden", !shouldShow);
     });
-
-    RPMSendAsyncMessage("GetShowProxyCard");
   }
 }
