@@ -181,6 +181,11 @@ reads it.
 These files are not JavaScript; the `.js` suffix is present for historical
 reasons. They are read by a custom parser within libpref.
 
+User pref file syntax is slightly more restrictive than default pref file
+syntax. In user pref files `user_pref` definitions are allowed but `pref` and
+`sticky_pref` definitions are not, and attributes (such as `locked`) are not
+allowed.
+
 **Problem:** geckodriver has a separate prefs parser in the mozprofile crate.
 
 **Problem:** there is no versioning of these files, for either the syntax or
