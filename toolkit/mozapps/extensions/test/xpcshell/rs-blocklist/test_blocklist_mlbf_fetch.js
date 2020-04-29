@@ -1,0 +1,174 @@
+/* Any copyright is dedicated to the Public Domain.
+ * https://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+/**
+ * @fileOverview Tests the MLBF and RemoteSettings synchronization logic.
+ */
+
+Services.prefs.setBoolPref("extensions.blocklist.useMLBF", true);
+
+const { Downloader } = ChromeUtils.import(
+  "resource://services-settings/Attachments.jsm"
+);
+
+const { ExtensionBlocklistMLBF } = ChromeUtils.import(
+  "resource://gre/modules/Blocklist.jsm",
+  null
+);
+
+// This test needs to interact with the RemoteSettings client.
+ExtensionBlocklistMLBF.ensureInitialized();
+
+add_task(async function fetch_invalid_mlbf_record() {
+  let invalidRecord = {
+    attachment: { size: 1, hash: "definitely not valid" },
+    generation_time: 1,
+  };
+
+  let resultPromise = ExtensionBlocklistMLBF._fetchMLBF(invalidRecord);
+
+  // TODO bug ...: When the MLBF is packaged with the application, this
+  // assertion should be updated to pass.
+  await Assert.rejects(resultPromise, /NetworkError/, "record not found");
+
+  // Forget about the packaged attachment.
+  Downloader._RESOURCE_BASE_URL = "invalid://bogus";
+  await Assert.rejects(
+    ExtensionBlocklistMLBF._fetchMLBF(invalidRecord),
+    /NetworkError/,
+    "record not found when there is no packaged MLBF"
+  );
+});
+
+// Other tests can mock _testMLBF, so let's verify that it works as expected.
+add_task(async function fetch_valid_mlbf() {
+  const url = Services.io.newFileURI(
+    do_get_file("../data/mlbf-blocked1-unblocked2.bin")
+  ).spec;
+  Cu.importGlobalProperties(["fetch"]);
+  const blob = await (await fetch(url)).blob();
+
+  await ExtensionBlocklistMLBF._client.db.saveAttachment(
+    ExtensionBlocklistMLBF.RS_ATTACHMENT_ID,
+    { record: JSON.parse(JSON.stringify(MLBF_RECORD)), blob }
+  );
+
+  const result = await ExtensionBlocklistMLBF._fetchMLBF(MLBF_RECORD);
+  Assert.equal(result.cascadeHash, MLBF_RECORD.attachment.hash, "hash OK");
+  Assert.equal(result.generationTime, MLBF_RECORD.generation_time, "time OK");
+  Assert.ok(result.cascadeFilter.has("@blocked:1"), "item blocked");
+  Assert.ok(!result.cascadeFilter.has("@unblocked:2"), "item not blocked");
+
+  const result2 = await ExtensionBlocklistMLBF._fetchMLBF({
+    attachment: { size: 1, hash: "invalid" },
+    generation_time: Date.now(),
+  });
+  Assert.equal(
+    result2.cascadeHash,
+    MLBF_RECORD.attachment.hash,
+    "The cached MLBF should be used when the attachment is invalid"
+  );
+
+  // The attachment is kept in the database for use by the next test task.
+});
+
+// Test that results of the public API are consistent with the MLBF file.
+add_task(async function public_api_uses_mlbf() {
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
+  await promiseStartupManager();
+
+  const blockedAddon = {
+    id: "@blocked",
+    version: "1",
+    signedState: 2, // = AddonManager.SIGNEDSTATE_SIGNED.
+    signedDate: 0, // a date in the past, before MLBF's generationTime.
+  };
+  const nonBlockedAddon = {
+    id: "@unblocked",
+    version: "2",
+    signedState: 2, // = AddonManager.SIGNEDSTATE_SIGNED.
+    signedDate: 0, // a date in the past, before MLBF's generationTime.
+  };
+
+  await AddonTestUtils.loadBlocklistRawData({ extensionsMLBF: [MLBF_RECORD] });
+
+  Assert.deepEqual(
+    await Blocklist.getAddonBlocklistEntry(blockedAddon),
+    {
+      state: Ci.nsIBlocklistService.STATE_BLOCKED,
+      url:
+        "https://addons.mozilla.org/en-US/xpcshell/blocked-addon/@blocked/1/",
+    },
+    "Blocked addon should have blocked entry"
+  );
+
+  Assert.deepEqual(
+    await Blocklist.getAddonBlocklistEntry(nonBlockedAddon),
+    null,
+    "Non-blocked addon should not be blocked"
+  );
+
+  Assert.equal(
+    await Blocklist.getAddonBlocklistState(blockedAddon),
+    Ci.nsIBlocklistService.STATE_BLOCKED,
+    "Blocked entry should have blocked state"
+  );
+
+  Assert.equal(
+    await Blocklist.getAddonBlocklistState(nonBlockedAddon),
+    Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
+    "Non-blocked entry should have unblocked state"
+  );
+
+  // Note: Blocklist collection and attachment carries over to the next test.
+});
+
+// Checks the remaining cases of database corruption that haven't been handled
+// before.
+add_task(async function handle_database_corruption() {
+  const blockedAddon = {
+    id: "@blocked",
+    version: "1",
+    signedState: 2, // = AddonManager.SIGNEDSTATE_SIGNED.
+    signedDate: 0, // a date in the past, before MLBF's generationTime.
+  };
+  async function checkBlocklistWorks() {
+    Assert.equal(
+      await Blocklist.getAddonBlocklistState(blockedAddon),
+      Ci.nsIBlocklistService.STATE_BLOCKED,
+      "Add-on should be blocked by the blocklist"
+    );
+  }
+
+  // In the fetch_invalid_mlbf_record we checked that a cached / packaged MLBF
+  // attachment is used as a fallback when the record is invalid. Here we also
+  // check that there is a fallback when there is no record at all.
+
+  await AddonTestUtils.loadBlocklistRawData({ extensionsMLBF: [] });
+  // When the collection is empty, the last known MLBF should be used anyway.
+  await checkBlocklistWorks();
+
+  // Now we also remove the cached file...
+  await ExtensionBlocklistMLBF._client.db.saveAttachment(
+    ExtensionBlocklistMLBF.RS_ATTACHMENT_ID,
+    null
+  );
+  // Deleting the file shouldn't cause issues because the MLBF is loaded once
+  // and then kept in memory.
+  await checkBlocklistWorks();
+
+  // Force an update while we don't have any blocklist data nor cache.
+  await ExtensionBlocklistMLBF._onUpdate();
+  // As a fallback, continue to use the in-memory version of the blocklist.
+  await checkBlocklistWorks();
+
+  // Memory gone, e.g. after a browser restart.
+  delete ExtensionBlocklistMLBF._mlbfData;
+  Assert.equal(
+    await Blocklist.getAddonBlocklistState(blockedAddon),
+    Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
+    "Blocklist can't work if all blocklist data is gone"
+  );
+});
