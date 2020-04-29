@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Tests for preview through Babel's compile output.
-requestLongerTimeout(3);
+requestLongerTimeout(5);
 
 // Test pausing with mapScopes enabled and disabled
 add_task(async function() {

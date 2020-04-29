@@ -431,4 +431,5 @@ export type Panel = {|
   highlightDomElement: (grip: Object) => void,
   unHighlightDomElement: (grip: Object) => void,
   getToolboxStore: () => any,
+  panelWin: Object,
 |};

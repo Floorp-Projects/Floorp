@@ -77,6 +77,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.features.watchpoints", true);
   pref("devtools.debugger.features.frame-step", true);
   pref("devtools.editor.tabsize", 2);
+  pref("javascript.enabled", true);
 }
 
 export const prefs = new PrefsHelper("devtools", {
@@ -119,6 +120,10 @@ export const prefs = new PrefsHelper("devtools", {
   logActions: ["Bool", "debugger.log-actions"],
   logEventBreakpoints: ["Bool", "debugger.log-event-breakpoints"],
   indentSize: ["Int", "editor.tabsize"],
+});
+
+export const javascriptPrefs = new PrefsHelper("javascript", {
+  enableJavaScript: ["Bool", "enabled"],
 });
 
 // The pref may not be defined. Defaulting to null isn't viable (cursor never blinks).
