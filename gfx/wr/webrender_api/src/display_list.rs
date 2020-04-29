@@ -1836,14 +1836,14 @@ impl DisplayListBuilder {
         &mut self,
         bounds: LayoutRect,
         clip_rect: LayoutRect,
-        space_and_clip: &di::SpaceAndClipInfo,
+        spatial_id: di::SpatialId,
         pipeline_id: PipelineId,
         ignore_missing_pipeline: bool
     ) {
         let item = di::DisplayItem::Iframe(di::IframeDisplayItem {
             bounds,
             clip_rect,
-            space_and_clip: *space_and_clip,
+            spatial_id,
             pipeline_id,
             ignore_missing_pipeline,
         });

@@ -1136,7 +1136,7 @@ impl FilterData {
 pub struct IframeDisplayItem {
     pub bounds: LayoutRect,
     pub clip_rect: LayoutRect,
-    pub space_and_clip: SpaceAndClipInfo,
+    pub spatial_id: SpatialId,
     pub pipeline_id: PipelineId,
     pub ignore_missing_pipeline: bool,
 }

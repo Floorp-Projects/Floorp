@@ -1624,10 +1624,7 @@ impl YamlFrameReader {
         dl.push_iframe(
             bounds,
             info.clip_rect,
-            &SpaceAndClipInfo {
-                spatial_id: info.spatial_id,
-                clip_id: info.clip_id
-            },
+            info.spatial_id,
             pipeline_id,
             ignore
         );
