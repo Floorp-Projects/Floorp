@@ -264,18 +264,22 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
         for implementation_status in c["skip_implementation_status"]:
             cmd.append("--skip-implementation-status=%s" % implementation_status)
 
+        test_paths = set()
         if not (self.verify_enabled or self.per_test_coverage):
-            test_paths = json.loads(os.environ.get('MOZHARNESS_TEST_PATHS', '""'))
-            if test_paths:
+            mozharness_test_paths = json.loads(os.environ.get('MOZHARNESS_TEST_PATHS', '""'))
+            if mozharness_test_paths:
                 keys = (['web-platform-tests-%s' % test_type for test_type in test_types] +
                         ['web-platform-tests'])
                 for key in keys:
-                    if key in test_paths:
-                        relpaths = [os.path.relpath(p, 'testing/web-platform')
-                                    for p in test_paths.get(key, [])]
-                        paths = [os.path.join(dirs["abs_wpttest_dir"], relpath)
-                                 for relpath in relpaths]
-                        cmd.extend(paths)
+                    paths = mozharness_test_paths.get(key, [])
+                    for path in paths:
+                        if not path.startswith("/"):
+                            # Assume this is a filesystem path rather than a test id
+                            path = os.path.relpath(path, 'testing/web-platform')
+                            if ".." in path:
+                                self.fatal("Invalid WPT path: {}".format(path))
+                            path = os.path.join(dirs["abs_wpttest_dir"], path)
+                        test_paths.add(path)
             else:
                 for opt in ["total_chunks", "this_chunk"]:
                     val = c.get(opt)
@@ -308,6 +312,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
                                              str_format_values=str_format_values))
         if "include" in c and c["include"]:
             cmd.append("--include=%s" % c["include"])
+
+        cmd.extend(test_paths)
 
         return cmd
 
