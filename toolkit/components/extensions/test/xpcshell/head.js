@@ -41,6 +41,7 @@ PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 
 // These values may be changed in later head files and tested in check_remote
 // below.
+Services.prefs.setBoolPref("browser.tabs.remote.autostart", false);
 Services.prefs.setBoolPref("extensions.webextensions.remote", false);
 const testEnv = {
   expectRemote: false,
