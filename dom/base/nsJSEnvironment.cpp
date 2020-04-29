@@ -2636,10 +2636,15 @@ void nsJSContext::EnsureStatics() {
       SetMemoryPrefChangedCallbackInt,
       "javascript.options.mem.gc_allocation_threshold_mb",
       (void*)JSGC_ALLOCATION_THRESHOLD);
+
   Preferences::RegisterCallbackAndCall(
       SetMemoryPrefChangedCallbackInt,
-      "javascript.options.mem.gc_non_incremental_factor",
-      (void*)JSGC_NON_INCREMENTAL_FACTOR);
+      "javascript.options.mem.gc_small_heap_incremental_limit",
+      (void*)JSGC_SMALL_HEAP_INCREMENTAL_LIMIT);
+  Preferences::RegisterCallbackAndCall(
+      SetMemoryPrefChangedCallbackInt,
+      "javascript.options.mem.gc_large_heap_incremental_limit",
+      (void*)JSGC_LARGE_HEAP_INCREMENTAL_LIMIT);
 
   Preferences::RegisterCallbackAndCall(SetIncrementalCCPrefChangedCallback,
                                        "dom.cycle_collector.incremental");

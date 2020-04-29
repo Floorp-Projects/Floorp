@@ -130,9 +130,10 @@ typedef enum JSGCParamKey {
    *   GrowthFactor: A number above 1, calculated based on some of the
    *                 following parameters.
    *                 See computeZoneHeapGrowthFactorForHeapSize() in GC.cpp
-   *   ThresholdFactor: 1.0 for incremental collections or
-   *                    JSGC_NON_INCREMENTAL_FACTOR for non-incremental
-   *                    collections.
+   *   ThresholdFactor: 1.0 to trigger an incremental collections or between
+   *                    JSGC_SMALL_HEAP_INCREMENTAL_LIMIT and
+   *                    JSGC_LARGE_HEAP_INCREMENTAL_LIMIT to trigger a
+   *                    non-incremental collection.
    *
    * The RHS of the equation above is calculated and sets
    * zone->gcHeapThreshold.bytes(). When gcHeapSize.bytes() exeeds
@@ -236,17 +237,26 @@ typedef enum JSGCParamKey {
   JSGC_COMPACTING_ENABLED = 23,
 
   /**
-   * Percentage for how far over a trigger threshold we go before triggering a
-   * non-incremental GC.
+   * Limit of how far over the incremental trigger threshold we allow the heap
+   * to grow before finishing a collection non-incrementally, for small heaps.
    *
    * We trigger an incremental GC when a trigger threshold is reached but the
    * collection may not be fast enough to keep up with the mutator. At some
    * point we finish the collection non-incrementally.
    *
-   * Default: NonIncrementalFactor
-   * Pref: None
+   * Default: SmallHeapIncrementalLimit
+   * Pref: javascript.options.mem.gc_small_heap_incremental_limit
    */
-  JSGC_NON_INCREMENTAL_FACTOR = 25,
+  JSGC_SMALL_HEAP_INCREMENTAL_LIMIT = 25,
+
+  /**
+   * Limit of how far over the incremental trigger threshold we allow the heap
+   * to grow before finishing a collection non-incrementally, for large heaps.
+   *
+   * Default: LargeHeapIncrementalLimit
+   * Pref: javascript.options.mem.gc_large_heap_incremental_limit
+   */
+  JSGC_LARGE_HEAP_INCREMENTAL_LIMIT = 26,
 
   /**
    * Attempt to run a minor GC in the idle time if the free space falls

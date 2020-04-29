@@ -569,7 +569,8 @@ static bool MinorGC(JSContext* cx, unsigned argc, Value* vp) {
     true)                                                                  \
   _("lowFrequencyHeapGrowth", JSGC_LOW_FREQUENCY_HEAP_GROWTH, true)        \
   _("allocationThreshold", JSGC_ALLOCATION_THRESHOLD, true)                \
-  _("nonIncrementalFactor", JSGC_NON_INCREMENTAL_FACTOR, true)             \
+  _("smallHeapIncrementalLimit", JSGC_SMALL_HEAP_INCREMENTAL_LIMIT, true)  \
+  _("largeHeapIncrementalLimit", JSGC_LARGE_HEAP_INCREMENTAL_LIMIT, true)  \
   _("minEmptyChunkCount", JSGC_MIN_EMPTY_CHUNK_COUNT, true)                \
   _("maxEmptyChunkCount", JSGC_MAX_EMPTY_CHUNK_COUNT, true)                \
   _("compactingEnabled", JSGC_COMPACTING_ENABLED, true)                    \

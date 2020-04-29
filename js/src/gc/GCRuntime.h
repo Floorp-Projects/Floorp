@@ -1135,7 +1135,7 @@ class GCRuntime {
   MainThreadData<int> zealFrequency;
   MainThreadData<int> nextScheduled;
   MainThreadData<bool> deterministicOnly;
-  MainThreadData<int> incrementalLimit;
+  MainThreadData<int> zealSliceBudget;
 
   MainThreadData<PersistentRooted<GCVector<JSObject*, 0, SystemAllocPolicy>>>
       selectedForMarking;
