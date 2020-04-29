@@ -225,6 +225,13 @@
         ]
       }
     },
+    "ckb": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google-b-d", "ddg", "wikipedia"
+        ]
+      }
+    },
     "cs": {
       "default": {
         "searchOrder": ["Google", "Seznam"],
@@ -504,6 +511,13 @@
         ]
       }
     },
+    "hye": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google-b-d", "ddg", "wikipedia"
+        ]
+      }
+    },
     "hy-AM": {
       "default": {
         "visibleDefaultEngines": [
@@ -641,6 +655,13 @@
       "default": {
         "visibleDefaultEngines": [
           "google-b-d", "ddg", "salidzinilv", "sslv", "wikipedia-lv"
+        ]
+      }
+    },
+    "meh": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google-b-d", "ddg", "wikipedia"
         ]
       }
     },
