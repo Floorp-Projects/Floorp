@@ -177,11 +177,7 @@ class span_iterator {
     return ret -= n;
   }
 
-  constexpr span_iterator& operator-=(difference_type n)
-
-  {
-    return *this += -n;
-  }
+  constexpr span_iterator& operator-=(difference_type n) { return *this += -n; }
 
   constexpr difference_type operator-(const span_iterator& rhs) const {
     MOZ_RELEASE_ASSERT(span_ == rhs.span_);
@@ -750,6 +746,12 @@ Span(span_details::span_iterator<Span<T, OtherExtent>, IsConst> aBegin,
 
 template <typename T, size_t Extent>
 Span(T (&aArr)[Extent]) -> Span<T, Extent>;
+
+template <class Container>
+Span(Container&) -> Span<typename Container::value_type>;
+
+template <class Container>
+Span(const Container&) -> Span<const typename Container::value_type>;
 
 // [Span.comparison], Span comparison operators
 template <class ElementType, size_t FirstExtent, size_t SecondExtent>

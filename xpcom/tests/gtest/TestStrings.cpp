@@ -1948,6 +1948,40 @@ TEST_F(Strings, latin1_to_utf8) {
   EXPECT_TRUE(t.Equals("\xC3\xA4"));
 }
 
+TEST_F(Strings, ConvertToSpan) {
+  nsString string;
+
+  // from const string
+  {
+    const auto& constStringRef = string;
+
+    auto span = Span{constStringRef};
+    static_assert(std::is_same_v<decltype(span), Span<const char16_t>>);
+  }
+
+  // from non-const string
+  {
+    auto span = Span{string};
+    static_assert(std::is_same_v<decltype(span), Span<char16_t>>);
+  }
+
+  nsCString cstring;
+
+  // from const string
+  {
+    const auto& constCStringRef = cstring;
+
+    auto span = Span{constCStringRef};
+    static_assert(std::is_same_v<decltype(span), Span<const char>>);
+  }
+
+  // from non-const string
+  {
+    auto span = Span{cstring};
+    static_assert(std::is_same_v<decltype(span), Span<char>>);
+  }
+}
+
 // Note the five calls in the loop, so divide by 100k
 MOZ_GTEST_BENCH_F(Strings, PerfStripWhitespace, [this] {
   nsCString test1(mExample1Utf8);
