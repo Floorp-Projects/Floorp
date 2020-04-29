@@ -45,7 +45,7 @@ namespace js {
 
 namespace jit {
 
-struct IonScript;
+class IonScript;
 class TempAllocator;
 
 }  // namespace jit
