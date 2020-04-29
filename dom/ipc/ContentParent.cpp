@@ -5737,11 +5737,18 @@ mozilla::ipc::IPCResult ContentParent::RecvAutomaticStorageAccessCanBeGranted(
 
 mozilla::ipc::IPCResult
 ContentParent::RecvFirstPartyStorageAccessGrantedForOrigin(
-    uint64_t aParentWindowId, const Principal& aTrackingPrincipal,
-    const nsCString& aTrackingOrigin, const int& aAllowMode,
+    uint64_t aTopLevelWindowId,
+    const MaybeDiscarded<BrowsingContext>& aParentContext,
+    const Principal& aTrackingPrincipal, const nsCString& aTrackingOrigin,
+    const int& aAllowMode,
     FirstPartyStorageAccessGrantedForOriginResolver&& aResolver) {
+  if (aParentContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
   ContentBlocking::SaveAccessForOriginOnParentProcess(
-      aParentWindowId, aTrackingPrincipal, aTrackingOrigin, aAllowMode)
+      aTopLevelWindowId, aParentContext.get_canonical(), aTrackingPrincipal,
+      aTrackingOrigin, aAllowMode)
       ->Then(
           GetCurrentThreadSerialEventTarget(), __func__,
           [aResolver = std::move(aResolver)](

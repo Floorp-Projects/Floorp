@@ -1229,8 +1229,10 @@ class ContentParent final
       AutomaticStorageAccessCanBeGrantedResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvFirstPartyStorageAccessGrantedForOrigin(
-      uint64_t aParentWindowId, const Principal& aTrackingPrincipal,
-      const nsCString& aTrackingOrigin, const int& aAllowMode,
+      uint64_t aTopLevelWindowId,
+      const MaybeDiscarded<BrowsingContext>& aParentContext,
+      const Principal& aTrackingPrincipal, const nsCString& aTrackingOrigin,
+      const int& aAllowMode,
       FirstPartyStorageAccessGrantedForOriginResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvCompleteAllowAccessFor(

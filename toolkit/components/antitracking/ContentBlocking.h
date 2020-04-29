@@ -111,8 +111,9 @@ class ContentBlocking final {
           StaticPrefs::privacy_restrict3rdpartystorage_expiration());
 
   static RefPtr<ParentAccessGrantPromise> SaveAccessForOriginOnParentProcess(
-      uint64_t aParentWindowId, nsIPrincipal* aTrackingPrinciapl,
-      const nsCString& aTrackingOrigin, int aAllowMode,
+      uint64_t aTopLevelWindowId, dom::BrowsingContext* aParentContext,
+      nsIPrincipal* aTrackingPrinciapl, const nsCString& aTrackingOrigin,
+      int aAllowMode,
       uint64_t aExpirationTime =
           StaticPrefs::privacy_restrict3rdpartystorage_expiration());
 
