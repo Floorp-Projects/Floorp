@@ -2219,3 +2219,85 @@ SPAN_TEST(split_at_static) {
   static_assert(splitAt3Result.first.Elements() == s.Elements());
   static_assert(splitAt3Result.second.Elements() == s.Elements() + 3);
 }
+
+SPAN_TEST(construct_from_iterators_dynamic) {
+  const int constArr[5] = {1, 2, 3, 4, 5};
+  auto constSpan = Span{constArr};
+
+  // const from const
+  {
+    const auto wholeSpan = Span{constSpan.cbegin(), constSpan.cend()};
+    static_assert(std::is_same_v<decltype(wholeSpan), const Span<const int>>);
+    ASSERT_TRUE(constSpan == wholeSpan);
+
+    const auto emptyBeginSpan = Span{constSpan.cbegin(), constSpan.cbegin()};
+    ASSERT_TRUE(emptyBeginSpan.IsEmpty());
+
+    const auto emptyEndSpan = Span{constSpan.cend(), constSpan.cend()};
+    ASSERT_TRUE(emptyEndSpan.IsEmpty());
+
+    const auto subSpan = Span{constSpan.cbegin() + 1, constSpan.cend() - 1};
+    ASSERT_EQ(constSpan.Length() - 2, subSpan.Length());
+    ASSERT_EQ(constSpan.Elements() + 1, subSpan.Elements());
+  }
+
+  int arr[5] = {1, 2, 3, 4, 5};
+  auto span = Span{arr};
+
+  // const from non-const
+  {
+    const auto wholeSpan = Span{span.cbegin(), span.cend()};
+    static_assert(std::is_same_v<decltype(wholeSpan), const Span<const int>>);
+    // XXX Can't use span == wholeSpan because of difference in constness.
+    ASSERT_EQ(span.Elements(), wholeSpan.Elements());
+    ASSERT_EQ(span.Length(), wholeSpan.Length());
+
+    const auto emptyBeginSpan = Span{span.cbegin(), span.cbegin()};
+    ASSERT_TRUE(emptyBeginSpan.IsEmpty());
+
+    const auto emptyEndSpan = Span{span.cend(), span.cend()};
+    ASSERT_TRUE(emptyEndSpan.IsEmpty());
+
+    const auto subSpan = Span{span.cbegin() + 1, span.cend() - 1};
+    ASSERT_EQ(span.Length() - 2, subSpan.Length());
+    ASSERT_EQ(span.Elements() + 1, subSpan.Elements());
+  }
+
+  // non-const from non-const
+  {
+    const auto wholeSpan = Span{span.begin(), span.end()};
+    static_assert(std::is_same_v<decltype(wholeSpan), const Span<int>>);
+    ASSERT_TRUE(span == wholeSpan);
+
+    const auto emptyBeginSpan = Span{span.begin(), span.begin()};
+    ASSERT_TRUE(emptyBeginSpan.IsEmpty());
+
+    const auto emptyEndSpan = Span{span.end(), span.end()};
+    ASSERT_TRUE(emptyEndSpan.IsEmpty());
+
+    const auto subSpan = Span{span.begin() + 1, span.end() - 1};
+    ASSERT_EQ(span.Length() - 2, subSpan.Length());
+  }
+}
+
+SPAN_TEST(construct_from_iterators_static) {
+  static constexpr int arr[5] = {1, 2, 3, 4, 5};
+  constexpr auto constSpan = Span{arr};
+
+  // const
+  {
+    const auto wholeSpan = Span{constSpan.cbegin(), constSpan.cend()};
+    static_assert(std::is_same_v<decltype(wholeSpan), const Span<const int>>);
+    ASSERT_TRUE(constSpan == wholeSpan);
+
+    const auto emptyBeginSpan = Span{constSpan.cbegin(), constSpan.cbegin()};
+    ASSERT_TRUE(emptyBeginSpan.IsEmpty());
+
+    const auto emptyEndSpan = Span{constSpan.cend(), constSpan.cend()};
+    ASSERT_TRUE(emptyEndSpan.IsEmpty());
+
+    const auto subSpan = Span{constSpan.cbegin() + 1, constSpan.cend() - 1};
+    ASSERT_EQ(constSpan.Length() - 2, subSpan.Length());
+    ASSERT_EQ(constSpan.Elements() + 1, subSpan.Elements());
+  }
+}
