@@ -312,65 +312,15 @@ void MacroAssembler::lshift32(Register shift, Register srcDest) {
   shll_cl(srcDest);
 }
 
-// All the shift instructions have the same requirement; the shift amount
-// must be in ecx. In order to handle arbitrary input registers, we divide this
-// operation into phases:
-//
-// [PUSH]     Preserve any registers which may be clobbered
-// [MOVE]     Move the shift to ecx and the amount to be shifted to an
-//            arbitrarily chosen preserved register that is not ecx.
-// [SHIFT]    Do the shift operation
-// [MOVE]     Move the result back to the destination
-// [POP]      Restore the registers which were preserved.
-inline void FlexibleShift32(MacroAssembler& masm, Register shift,
-                            Register srcDest, bool left,
-                            bool arithmetic = false) {
-  // Choose an arbitrary register that's not ecx
-  Register internalSrcDest = (srcDest != ecx) ? srcDest : ebx;
-  MOZ_ASSERT(internalSrcDest != ecx);
-
-  // Add registers we may clobber and want to ensure are restored as live, and
-  // remove what we definitely clobber (the destination)
-  LiveRegisterSet preserve;
-
-  if (shift != ecx) {
-    preserve.add(ecx);
-  }
-  preserve.add(internalSrcDest);
-
-  preserve.takeUnchecked(srcDest);
-
-  // [PUSH]
-  masm.PushRegsInMask(preserve);
-
-  // [MOVE]
-  masm.moveRegPair(shift, srcDest, ecx, internalSrcDest);
-  if (masm.oom()) {
-    return;
-  }
-
-  // [SHIFT]
-  if (left) {
-    masm.lshift32(ecx, internalSrcDest);
-  } else {
-    if (arithmetic) {
-      masm.rshift32Arithmetic(ecx, internalSrcDest);
-    } else {
-      masm.rshift32(ecx, internalSrcDest);
-    }
-  }
-
-  // [MOVE]
-  if (internalSrcDest != srcDest) {
-    masm.mov(internalSrcDest, srcDest);
-  }
-
-  // [POP]
-  masm.PopRegsInMask(preserve);
-}
-
 void MacroAssembler::flexibleLshift32(Register shift, Register srcDest) {
-  FlexibleShift32(*this, shift, srcDest, true);
+  if (shift == ecx) {
+    shll_cl(srcDest);
+  } else {
+    // Shift amount must be in ecx.
+    xchg(shift, ecx);
+    shll_cl(shift == srcDest ? ecx : srcDest == ecx ? shift : srcDest);
+    xchg(shift, ecx);
+  }
 }
 
 void MacroAssembler::rshift32(Register shift, Register srcDest) {
@@ -379,7 +329,14 @@ void MacroAssembler::rshift32(Register shift, Register srcDest) {
 }
 
 void MacroAssembler::flexibleRshift32(Register shift, Register srcDest) {
-  FlexibleShift32(*this, shift, srcDest, false, false);
+  if (shift == ecx) {
+    shrl_cl(srcDest);
+  } else {
+    // Shift amount must be in ecx.
+    xchg(shift, ecx);
+    shrl_cl(shift == srcDest ? ecx : srcDest == ecx ? shift : srcDest);
+    xchg(shift, ecx);
+  }
 }
 
 void MacroAssembler::rshift32Arithmetic(Register shift, Register srcDest) {
@@ -389,7 +346,14 @@ void MacroAssembler::rshift32Arithmetic(Register shift, Register srcDest) {
 
 void MacroAssembler::flexibleRshift32Arithmetic(Register shift,
                                                 Register srcDest) {
-  FlexibleShift32(*this, shift, srcDest, false, true);
+  if (shift == ecx) {
+    sarl_cl(srcDest);
+  } else {
+    // Shift amount must be in ecx.
+    xchg(shift, ecx);
+    sarl_cl(shift == srcDest ? ecx : srcDest == ecx ? shift : srcDest);
+    xchg(shift, ecx);
+  }
 }
 
 void MacroAssembler::lshift32(Imm32 shift, Register srcDest) {
