@@ -32,7 +32,7 @@ static void CustomFunctionWrapper(void* NSISFunctionAddr, VARIANT jsArg,
   }
 
   // Call the NSIS function.
-  int rv = g_executeCodeSegment((int)NSISFunctionAddr, g_hwndParent);
+  int rv = g_executeCodeSegment((int)NSISFunctionAddr, nullptr);
 
   // Retrieve the return value from the NSIS stack.
   TCHAR* nsisRetval =
