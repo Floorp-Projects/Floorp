@@ -840,6 +840,11 @@ bool WarpBuilder::build_Pos(BytecodeLocation loc) {
 
 bool WarpBuilder::buildUnaryOp(BytecodeLocation loc) {
   MDefinition* value = current->pop();
+
+  if (auto* snapshot = getOpSnapshot<WarpCacheIR>(loc)) {
+    return buildCacheIR(loc, snapshot, {value});
+  }
+
   MInstruction* ins = MUnaryCache::New(alloc(), value);
   current->add(ins);
   current->push(ins);
@@ -900,6 +905,11 @@ bool WarpBuilder::build_Ursh(BytecodeLocation loc) {
 bool WarpBuilder::buildCompareOp(BytecodeLocation loc) {
   MDefinition* right = current->pop();
   MDefinition* left = current->pop();
+
+  if (auto* snapshot = getOpSnapshot<WarpCacheIR>(loc)) {
+    return buildCacheIR(loc, snapshot, {left, right});
+  }
+
   MInstruction* ins = MBinaryCache::New(alloc(), left, right, MIRType::Boolean);
   current->add(ins);
   current->push(ins);

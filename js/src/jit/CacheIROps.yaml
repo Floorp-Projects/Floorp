@@ -123,7 +123,7 @@
 
 - name: GuardToInt32
   shared: true
-  transpile: false
+  transpile: true
   args:
     input: ValId
     result: Int32Id
@@ -955,7 +955,7 @@
 
 - name: LoadInt32Result
   shared: true
-  transpile: false
+  transpile: true
   args:
     val: Int32Id
 
@@ -1303,13 +1303,13 @@
 
 - name: Int32IncResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     input: Int32Id
 
 - name: Int32DecResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     input: Int32Id
 
@@ -1427,7 +1427,7 @@
 
 - name: CompareInt32Result
   shared: true
-  transpile: false
+  transpile: true
   args:
     op: JSOpImm
     lhs: Int32Id
