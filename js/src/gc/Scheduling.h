@@ -351,8 +351,15 @@ static const size_t GCZoneAllocThresholdBase = 27 * 1024 * 1024;
  */
 static const size_t GCMinNurseryBytes = 256 * 1024;
 
-/* JSGC_NON_INCREMENTAL_FACTOR */
-static const double NonIncrementalFactor = 1.12;
+/*
+ * JSGC_SMALL_HEAP_INCREMENTAL_LIMIT
+ *
+ * This must be greater than 1.3 to maintain performance on splay-latency.
+ */
+static const double SmallHeapIncrementalLimit = 1.40;
+
+/* JSGC_LARGE_HEAP_INCREMENTAL_LIMIT */
+static const double LargeHeapIncrementalLimit = 1.10;
 
 /* JSGC_ZONE_ALLOC_DELAY_KB */
 static const size_t ZoneAllocDelayBytes = 1024 * 1024;
@@ -447,11 +454,18 @@ class GCSchedulingTunables {
   MainThreadOrGCTaskData<size_t> gcZoneAllocThresholdBase_;
 
   /*
-   * JSGC_NON_INCREMENTAL_FACTOR
+   * JSGC_SMALL_HEAP_INCREMENTAL_LIMIT
    *
    * Multiple of threshold.bytes() which triggers a non-incremental GC.
    */
-  UnprotectedData<double> nonIncrementalFactor_;
+  UnprotectedData<double> smallHeapIncrementalLimit_;
+
+  /*
+   * JSGC_LARGE_HEAP_INCREMENTAL_LIMIT
+   *
+   * Multiple of threshold.bytes() which triggers a non-incremental GC.
+   */
+  UnprotectedData<double> largeHeapIncrementalLimit_;
 
   /*
    * Number of bytes to allocate between incremental slices in GCs triggered by
@@ -558,7 +572,12 @@ class GCSchedulingTunables {
   size_t gcMinNurseryBytes() const { return gcMinNurseryBytes_; }
   size_t gcMaxNurseryBytes() const { return gcMaxNurseryBytes_; }
   size_t gcZoneAllocThresholdBase() const { return gcZoneAllocThresholdBase_; }
-  double nonIncrementalFactor() const { return nonIncrementalFactor_; }
+  double smallHeapIncrementalLimit() const {
+    return smallHeapIncrementalLimit_;
+  }
+  double largeHeapIncrementalLimit() const {
+    return largeHeapIncrementalLimit_;
+  }
   size_t zoneAllocDelayBytes() const { return zoneAllocDelayBytes_; }
   const mozilla::TimeDuration& highFrequencyThreshold() const {
     return highFrequencyThreshold_;
@@ -724,13 +743,20 @@ class HeapSize {
 // GC heap and malloc thresholds defined below.
 class HeapThreshold {
  protected:
-  HeapThreshold() : startBytes_(SIZE_MAX), sliceBytes_(SIZE_MAX) {}
+  HeapThreshold()
+      : startBytes_(SIZE_MAX),
+        incrementalLimitBytes_(SIZE_MAX),
+        sliceBytes_(SIZE_MAX) {}
 
-  // The threshold at which to start a new collection.
+  // The threshold at which to start a new incremental collection.
   //
   // TODO: This is currently read off-thread during parsing, but at some point
   // we should be able to make this MainThreadData<>.
   AtomicByteCount startBytes_;
+
+  // The threshold at which start a new non-incremental collection or finish an
+  // ongoing collection non-incrementally.
+  size_t incrementalLimitBytes_;
 
   // The threshold at which to trigger a slice during an ongoing incremental
   // collection.
@@ -739,14 +765,17 @@ class HeapThreshold {
  public:
   size_t startBytes() const { return startBytes_; }
   size_t sliceBytes() const { return sliceBytes_; }
-  size_t nonIncrementalBytes(ZoneAllocator* zone,
-                             const GCSchedulingTunables& tunables) const;
+  size_t incrementalLimitBytes() const { return incrementalLimitBytes_; }
   double eagerAllocTrigger(bool highFrequencyGC) const;
 
   void setSliceThreshold(ZoneAllocator* zone, const HeapSize& heapSize,
                          const GCSchedulingTunables& tunables);
   void clearSliceThreshold() { sliceBytes_ = SIZE_MAX; }
   bool hasSliceThreshold() const { return sliceBytes_ != SIZE_MAX; }
+
+ protected:
+  void setIncrementalLimitFromStartBytes(size_t retainedBytes,
+                                         const GCSchedulingTunables& tunables);
 };
 
 // A heap threshold that is based on a multiple of the retained size after the
@@ -774,8 +803,9 @@ class GCHeapThreshold : public HeapThreshold {
 // GC based on malloc data.
 class MallocHeapThreshold : public HeapThreshold {
  public:
-  void updateStartThreshold(size_t lastBytes, size_t baseBytes,
-                            double growthFactor, const AutoLockGC& lock);
+  void updateStartThreshold(size_t lastBytes,
+                            const GCSchedulingTunables& tunables,
+                            const AutoLockGC& lock);
 
  private:
   static size_t computeZoneTriggerBytes(double growthFactor, size_t lastBytes,
