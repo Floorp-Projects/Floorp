@@ -10,10 +10,27 @@ add_task(async function test() {
   let tab0 = gBrowser.tabs[0];
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
+  const staleAttributes = [
+    "activemedia-blocked",
+    "busy",
+    "pendingicon",
+    "progress",
+    "soundplaying",
+  ];
+  for (let attr of staleAttributes) {
+    tab0.toggleAttribute(attr, true);
+  }
   gBrowser.discardBrowser(tab0);
   ok(!tab0.linkedPanel, "tab0 is suspended");
+  for (let attr of staleAttributes) {
+    ok(
+      !tab0.hasAttribute(attr),
+      `discarding browser removes "${attr}" tab attribute`
+    );
+  }
 
   await BrowserTestUtils.switchTab(gBrowser, tab0);
+  ok(tab0.linkedPanel, "selecting tab unsuspends it");
 
   // Test that active tab is not able to be suspended.
   gBrowser.discardBrowser(tab0);
