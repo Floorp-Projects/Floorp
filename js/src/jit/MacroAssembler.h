@@ -2753,8 +2753,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   template <typename T>
   void loadFromTypedArray(Scalar::Type arrayType, const T& src,
-                          AnyRegister dest, Register temp, Label* fail,
-                          bool canonicalizeDoubles = true);
+                          AnyRegister dest, Register temp, Label* fail);
 
   template <typename T>
   void loadFromTypedArray(Scalar::Type arrayType, const T& src,
