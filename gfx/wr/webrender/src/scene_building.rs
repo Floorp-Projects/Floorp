@@ -952,16 +952,14 @@ impl<'a> SceneBuilder<'a> {
             },
         };
 
-        let space_and_clip = SpaceAndClipInfo {
-            spatial_id: info.spatial_id,
-            clip_id: ClipId::root(self.scene.root_pipeline_id.unwrap()),
-        };
-
         let current_offset = self.current_offset(spatial_node_index);
-        let clip_chain_index = self.add_rect_clip_node(
+        let clip_chain_index = self.add_clip_node(
             ClipId::root(iframe_pipeline_id),
-            &space_and_clip,
-            &info.clip_rect.translate(current_offset),
+            &info.space_and_clip,
+            ClipRegion::create_for_clip_node_with_local_clip(
+                &info.clip_rect,
+                &current_offset,
+            ),
         );
         self.pipeline_clip_chain_stack.push(clip_chain_index);
 
@@ -1378,7 +1376,7 @@ impl<'a> SceneBuilder<'a> {
                 );
             }
             DisplayItem::Iframe(ref info) => {
-                let space = self.get_space(&info.spatial_id);
+                let space = self.get_space(&info.space_and_clip.spatial_id);
                 self.build_iframe(
                     info,
                     space,
