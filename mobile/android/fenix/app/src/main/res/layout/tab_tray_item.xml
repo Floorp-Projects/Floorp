@@ -6,14 +6,14 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="72dp">
+    android:layout_height="88dp">
 
     <androidx.cardview.widget.CardView
         android:id="@+id/mozac_browser_tabstray_card"
-        android:layout_width="100dp"
-        android:layout_height="56dp"
+        android:layout_width="92dp"
+        android:layout_height="69dp"
         android:layout_marginTop="8dp"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="16dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:cardBackgroundColor="@color/photonWhite">
@@ -22,8 +22,8 @@
             android:id="@+id/mozac_browser_tabstray_icon"
             android:layout_width="50dp"
             android:layout_height="28dp"
-            android:layout_marginTop="14dp"
-            android:layout_marginStart="25dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="21dp"
             android:importantForAccessibility="no" />
 
         <mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
@@ -42,9 +42,9 @@
         android:ellipsize="end"
         android:lines="1"
         android:textSize="16sp"
-        android:paddingTop="16dp"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
+        android:paddingTop="22dp"
+        android:paddingStart="16dp"
+        android:layout_marginEnd="20dp"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintEnd_toStartOf="@id/mozac_browser_tabstray_close"
         app:layout_constraintStart_toEndOf="@id/mozac_browser_tabstray_card"
@@ -54,12 +54,11 @@
         android:id="@+id/mozac_browser_tabstray_url"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="20dp"
         android:layout_alignParentTop="true"
         android:ellipsize="end"
         android:lines="1"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
+        android:paddingStart="16dp"
         android:textColor="@color/tab_tray_item_selected_text_normal_theme"
         android:alpha="0.50"
         app:layout_constraintHorizontal_bias="0.0"
@@ -71,7 +70,7 @@
         android:id="@+id/mozac_browser_tabstray_close"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="32dp"
         android:layout_marginEnd="16dp"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintEnd_toEndOf="parent"
