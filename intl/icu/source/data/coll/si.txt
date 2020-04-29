@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 si{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         dictionary{
             Sequence{
@@ -10,7 +10,7 @@ si{
                 "&ඖ<ං<ඃ"
                 "&ජ්ඤ<<ඥ"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
         standard{
             Sequence{
@@ -19,7 +19,7 @@ si{
                 "&ඖ<ං<ඃ"
                 "&ඥ<ඤ"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

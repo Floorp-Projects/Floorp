@@ -1,14 +1,14 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 is{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         search{
             Sequence{
                 "[import und-u-co-search]"
                 "[import is-u-co-standard]"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
         standard{
             Sequence{
@@ -21,7 +21,7 @@ is{
                 "&[before 1]z<ý<<<Ý"
                 "&[before 1]ǀ<æ<<<Æ<<ä<<<Ä<ö<<<Ö<<ø<<<Ø<å<<<Å"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 eu{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ eu{
                 one{"{0} grabitate-indar"}
                 other{"{0} grabitate-indar"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"metroak segundo karratu bakoitzeko"}
                 one{"{0} metro segundo karratu bakoitzeko"}
                 other{"{0} metro segundo karratu bakoitzeko"}
@@ -101,6 +101,7 @@ eu{
         }
         compound{
             per{"{0}/{1}"}
+            times{"{0}-{1}"}
         }
         concentr{
             karat{
@@ -118,11 +119,6 @@ eu{
                 one{"{0} milimole litro bakoitzeko"}
                 other{"{0} milimole litro bakoitzeko"}
             }
-            part-per-million{
-                dnam{"zati milioi bakoitzeko"}
-                one{"{0} zati milioi bakoitzeko"}
-                other{"{0} zati milioi bakoitzeko"}
-            }
             percent{
                 dnam{"ehuneko"}
                 one{"ehuneko {0}"}
@@ -133,13 +129,18 @@ eu{
                 one{"milako {0}"}
                 other{"milako {0}"}
             }
+            permillion{
+                dnam{"zati milioi bakoitzeko"}
+                one{"{0} zati milioi bakoitzeko"}
+                other{"{0} zati milioi bakoitzeko"}
+            }
             permyriad{
                 one{"‱ {0}"}
                 other{"‱ {0}"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"litro 100 kilometro bakoitzeko"}
                 one{"{0} litro 100 kilometro bakoitzeko"}
                 other{"{0} litro 100 kilometro bakoitzeko"}
@@ -345,6 +346,11 @@ eu{
                 dnam{"kilowatt-ordu"}
                 one{"{0} kilowatt-ordu"}
                 other{"{0} kilowatt-ordu"}
+            }
+            therm-us{
+                dnam{"AEBko termiak"}
+                one{"{0} AEBko termia"}
+                other{"{0} AEBko termia"}
             }
         }
         force{
@@ -646,7 +652,7 @@ eu{
                 one{"{0} hektopascal"}
                 other{"{0} hektopascal"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"merkurio-hazbeteak"}
                 one{"{0} merkurio-hazbete"}
                 other{"{0} merkurio-hazbete"}
@@ -666,16 +672,17 @@ eu{
                 one{"{0} milibar"}
                 other{"{0} milibar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"merkurio-milimetroak"}
                 one{"{0} merkurio-milimetro"}
                 other{"{0} merkurio-milimetro"}
             }
             pascal{
+                dnam{"pascal"}
                 one{"{0} pascal"}
                 other{"{0} pascal"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"libra hazbete karratuko"}
                 one{"{0} libra hazbete karratuko"}
                 other{"{0} libra hazbete karratuko"}
@@ -731,7 +738,7 @@ eu{
                 one{"{0} newton-metro"}
                 other{"{0} newton-metro"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"oin-libra"}
                 one{"{0} oin-libra"}
                 other{"{0} oin-libra"}
@@ -922,6 +929,7 @@ eu{
         }
         compound{
             per{"{0}/{1}"}
+            times{"{0}{1}"}
         }
         concentr{
             percent{
@@ -931,7 +939,7 @@ eu{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 one{"{0} l/100 km"}
                 other{"{0} l/100 km"}
@@ -1071,7 +1079,7 @@ eu{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0} inHg"}
                 other{"{0} inHg"}
             }
@@ -1129,7 +1137,7 @@ eu{
                 one{"{0} G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 one{"{0} m/s²"}
                 other{"{0} m/s²"}
@@ -1216,6 +1224,7 @@ eu{
         }
         compound{
             per{"{0}/{1}"}
+            times{"{0}{1}"}
         }
         concentr{
             karat{
@@ -1233,11 +1242,6 @@ eu{
                 one{"{0} mmol/l"}
                 other{"{0} mmol/l"}
             }
-            part-per-million{
-                dnam{"zati/milioi"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"%"}
                 one{"% {0}"}
@@ -1248,13 +1252,18 @@ eu{
                 one{"‰ {0}"}
                 other{"‰ {0}"}
             }
+            permillion{
+                dnam{"zati/milioi"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
             permyriad{
                 one{"‱ {0}"}
                 other{"‱ {0}"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 one{"{0} l/100 km"}
                 other{"{0} l/100 km"}
@@ -1461,6 +1470,11 @@ eu{
                 one{"{0} kWh"}
                 other{"{0} kWh"}
             }
+            therm-us{
+                dnam{"AEBko termia"}
+                one{"{0} AEBko termia"}
+                other{"{0} AEBko termia"}
+            }
         }
         force{
             newton{
@@ -1510,9 +1524,13 @@ eu{
             }
             megapixel{
                 dnam{"megapixel"}
+                one{"{0} Mp"}
+                other{"{0} Mp"}
             }
             pixel{
                 dnam{"pixel"}
+                one{"{0} p"}
+                other{"{0} p"}
             }
             pixel-per-centimeter{
                 dnam{"ppcm"}
@@ -1752,7 +1770,7 @@ eu{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
                 one{"{0} inHg"}
                 other{"{0} inHg"}
@@ -1772,7 +1790,7 @@ eu{
                 one{"{0} mb"}
                 other{"{0} mb"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
@@ -1782,7 +1800,7 @@ eu{
                 one{"{0} Pa"}
                 other{"{0} Pa"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 one{"{0} psi"}
                 other{"{0} psi"}
@@ -1838,7 +1856,7 @@ eu{
                 one{"{0} Nm"}
                 other{"{0} Nm"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"oin-libra"}
                 one{"{0} oin-libra"}
                 other{"{0} oin-libra"}

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 my{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"အာဘီဂျန်"}
@@ -1718,7 +1718,9 @@ my{
             ls{"နီဦးအေ အချိန်"}
         }
         "meta:Norfolk"{
-            ls{"နောဖော့ခ်ကျွန်းအချိန်"}
+            ld{"နောဖော့ခ်ကျွန်း နွေရာသီ စံတော်ချိန်"}
+            lg{"နောဖော့ခ်ကျွန်း အချိန်"}
+            ls{"နောဖော့ခ်ကျွန်း စံတော်ချိန်"}
         }
         "meta:Noronha"{
             ld{"ဖာနန်ဒိုးဒီနိုးရိုးညာ နွေရာသီအချိန်"}

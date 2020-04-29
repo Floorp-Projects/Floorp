@@ -70,6 +70,7 @@ gl{
         bug{"buginés"}
         byn{"blin"}
         ca{"catalán"}
+        ccp{"chakma"}
         ce{"checheno"}
         ceb{"cebuano"}
         cgg{"kiga"}
@@ -121,6 +122,7 @@ gl{
         eu{"éuscaro"}
         ewo{"ewondo"}
         fa{"persa"}
+        fa_AF{"dari"}
         ff{"fula"}
         fi{"finés"}
         fil{"filipino"}
@@ -632,7 +634,7 @@ gl{
             vaii{"Díxitos Vai"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} (todo)"}
         category-list{"{0}: {1}"}

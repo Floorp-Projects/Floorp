@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 dsb{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Accra"{
             ec{"Akkra"}
@@ -790,7 +790,9 @@ dsb{
             ls{"Niueski cas"}
         }
         "meta:Norfolk"{
-            ls{"cas kupy Norfolk"}
+            ld{"lěśojski cas kupy Norfolk"}
+            lg{"cas kupy Norfolk"}
+            ls{"standardny cas kupy Norfolk"}
         }
         "meta:Noronha"{
             ld{"lěśojski cas Fernando de Noronha"}

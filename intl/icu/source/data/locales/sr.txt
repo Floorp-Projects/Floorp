@@ -249,7 +249,7 @@ sr{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         buddhist{
             eras{
@@ -692,10 +692,6 @@ sr{
             }
             eras{
                 abbreviated{
-                    "п. н. е.",
-                    "н. е.",
-                }
-                abbreviated%variant{
                     "п. н. е.",
                     "н. е.",
                 }

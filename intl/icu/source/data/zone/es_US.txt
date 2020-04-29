@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_US{
     %%Parent{"es_419"}
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "America:Fort_Nelson"{
             ec{"Fort Nelson"}
@@ -147,7 +147,9 @@ es_US{
             ls{"hora de las Islas Marshall"}
         }
         "meta:Norfolk"{
-            ls{"hora de la isla Norfolk"}
+            ld{"hora de verano de la isla Norfolk"}
+            lg{"hora de la isla Norfolk"}
+            ls{"hora estándar de la isla Norfolk"}
         }
         "meta:Phoenix_Islands"{
             ls{"hora de las islas Fénix"}

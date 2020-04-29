@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 uz{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         standard{
             Sequence{
@@ -10,7 +10,7 @@ uz{
                 "<sh<<<Sh<<<SH"
                 "<ch<<<Ch<<<CH"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

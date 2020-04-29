@@ -97,7 +97,7 @@ uspoof.o uspoof_impl.o uspoof_build.o uspoof_conf.o smpdtfst.o \
 ztrans.o zrule.o vzone.o fphdlimp.o fpositer.o ufieldpositer.o \
 decNumber.o decContext.o alphaindex.o tznames.o tznames_impl.o tzgnames.o \
 tzfmt.o compactdecimalformat.o gender.o region.o scriptset.o \
-uregion.o reldatefmt.o quantityformatter.o measunit.o \
+uregion.o reldatefmt.o quantityformatter.o measunit.o measunit_extra.o \
 sharedbreakiterator.o scientificnumberformatter.o dayperiodrules.o nounit.o \
 number_affixutils.o number_compact.o number_decimalquantity.o \
 number_decimfmtprops.o number_fluent.o number_formatimpl.o number_grouping.o \
@@ -153,11 +153,17 @@ ifneq ($(ENABLE_STATIC),)
 	$(INSTALL-L) $(TARGET) $(DESTDIR)$(libdir)
 endif
 ifneq ($(ENABLE_SHARED),)
+# For MinGW, do we want the DLL to go in the bin location?
+ifeq ($(MINGW_MOVEDLLSTOBINDIR),YES)
+	$(MKINSTALLDIRS) $(DESTDIR)$(bindir)
+	$(INSTALL-L) $(FINAL_SO_TARGET) $(DESTDIR)$(bindir)
+else
 	$(INSTALL-L) $(FINAL_SO_TARGET) $(DESTDIR)$(libdir)
 ifneq ($(FINAL_SO_TARGET),$(SO_TARGET))
 	cd $(DESTDIR)$(libdir) && $(RM) $(notdir $(SO_TARGET)) && ln -s $(notdir $(FINAL_SO_TARGET)) $(notdir $(SO_TARGET))
 ifneq ($(FINAL_SO_TARGET),$(MIDDLE_SO_TARGET))
 	cd $(DESTDIR)$(libdir) && $(RM) $(notdir $(MIDDLE_SO_TARGET)) && ln -s $(notdir $(FINAL_SO_TARGET)) $(notdir $(MIDDLE_SO_TARGET))
+endif
 endif
 endif
 ifneq ($(IMPORT_LIB_EXT),)

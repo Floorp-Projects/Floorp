@@ -298,7 +298,6 @@ to{
         ZZ{"Potu fonua taʻeʻiloa pe hala"}
     }
     Countries%short{
-        GB{"Pilitānia"}
         HK{"Hongi Kongi"}
         MO{"Makau"}
         PS{"Palesitaine"}
@@ -307,11 +306,9 @@ to{
     Countries%variant{
         CD{"Kongo (LTK)"}
         CG{"Kongo (Lepupelika)"}
-        CI{"Matafonua ʻAivolī"}
         CZ{"Lepupelika Seki"}
         FK{"ʻOtumotu Malivina"}
         SZ{"Suasilani"}
-        TL{"Timoa fakahahake"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

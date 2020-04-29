@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 de{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1763,7 +1763,9 @@ de{
             ls{"Niue-Zeit"}
         }
         "meta:Norfolk"{
-            ls{"Norfolkinsel-Zeit"}
+            ld{"Norfolkinsel-Sommerzeit"}
+            lg{"Norfolkinsel-Zeit"}
+            ls{"Norfolkinsel-Normalzeit"}
         }
         "meta:Noronha"{
             ld{"Fernando de Noronha-Sommerzeit"}

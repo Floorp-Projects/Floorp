@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ka{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ ka{
                 one{"{0} ინერციის ძალა"}
                 other{"{0} ინერციის ძალა"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"მეტრი კვადრატულ წამში"}
                 one{"{0} მ/წმ²"}
                 other{"{0} მ/წმ²"}
@@ -123,11 +123,6 @@ ka{
                 one{"{0} მილიმოლი ლიტრზე"}
                 other{"{0} მილიმოლი ლიტრზე"}
             }
-            part-per-million{
-                dnam{"ნაწილი მილიონზე"}
-                one{"{0} ნაწილი მილიონზე"}
-                other{"{0} ნაწილი მილიონზე"}
-            }
             percent{
                 dnam{"პროცენტი"}
                 one{"{0} პროცენტი"}
@@ -138,9 +133,14 @@ ka{
                 one{"{0} პრომილე"}
                 other{"{0} პრომილე"}
             }
+            permillion{
+                dnam{"ნაწილი მილიონზე"}
+                one{"{0} ნაწილი მილიონზე"}
+                other{"{0} ნაწილი მილიონზე"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ლიტრი 100 კილომეტრში"}
                 one{"{0} ლიტრი 100 კილომეტრში"}
                 other{"{0} ლიტრი 100 კილომეტრში"}
@@ -645,7 +645,7 @@ ka{
                 one{"{0} ჰექტოპასკალი"}
                 other{"{0} ჰექტოპასკალი"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"ვერცხლისწყლის დუიმი"}
                 one{"{0} ვერცხლისწყლის დუიმი"}
                 other{"{0} ვერცხლისწყლის დუიმი"}
@@ -665,7 +665,7 @@ ka{
                 one{"{0} მილიბარი"}
                 other{"{0} მილიბარი"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"მილიმეტრი ვერცხლისწყლის სვეტისა"}
                 one{"{0} მილიმეტრი ვერცხლისწყლის სვეტისა"}
                 other{"{0} მილიმეტრი ვერცხლისწყლის სვეტისა"}
@@ -675,7 +675,7 @@ ka{
                 one{"{0} პასკალი"}
                 other{"{0} პასკალი"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"ფუნტი კვადრატულ დუიმზე"}
                 one{"{0} ფუნტი კვადრატულ დუიმზე"}
                 other{"{0} ფუნტი კვადრატულ დუიმზე"}
@@ -921,7 +921,7 @@ ka{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ლ/100კმ"}
                 one{"{0}ლ/100კმ"}
                 other{"{0}ლ/100კმ"}
@@ -1061,7 +1061,7 @@ ka{
                 one{"{0} ჰპა"}
                 other{"{0} ჰპა"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0} ვრც. დმ."}
                 other{"{0} ვრც. დმ."}
             }
@@ -1119,7 +1119,7 @@ ka{
                 one{"{0} ინ. ძ."}
                 other{"{0} ინ. ძ."}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"მ/წმ²"}
                 one{"{0} მ/წმ²"}
                 other{"{0} მ/წმ²"}
@@ -1228,11 +1228,6 @@ ka{
                 one{"{0} მმოლ/ლ"}
                 other{"{0} მმოლ/ლ"}
             }
-            part-per-million{
-                dnam{"ნაწილი/მილიონზე"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"%"}
                 one{"{0}%"}
@@ -1243,9 +1238,14 @@ ka{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"ნაწილი/მილიონზე"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ლ/100კმ"}
                 one{"{0} ლ/100კმ"}
                 other{"{0} ლ/100კმ"}
@@ -1740,7 +1740,7 @@ ka{
                 one{"{0} ჰპა"}
                 other{"{0} ჰპა"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"ვრც. დმ."}
                 one{"{0} ვრც. დმ."}
                 other{"{0} ვრც. დმ."}
@@ -1760,7 +1760,7 @@ ka{
                 one{"{0} მბარი"}
                 other{"{0} მბარი"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"მმ ვწყ. სვ."}
                 one{"{0} მმ ვწყ. სვ."}
                 other{"{0} მმ ვწყ. სვ."}
@@ -1770,7 +1770,7 @@ ka{
                 one{"{0} პა"}
                 other{"{0} პა"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"ფნტ. კვ. დმ."}
                 one{"{0} ფნტ. კვ. დმ."}
                 other{"{0} ფნტ. კვ. დმ."}

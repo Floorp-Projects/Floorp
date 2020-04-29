@@ -7,5 +7,5 @@ ln_AO{
             "Kwanza ya Angóla",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

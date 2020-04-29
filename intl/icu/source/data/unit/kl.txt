@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 kl{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -57,7 +57,7 @@ kl{
             }
         }
         pressure{
-            inch-hg{
+            inch-ofhg{
                 one{"{0} inHg"}
                 other{"{0} inHg"}
             }
@@ -111,7 +111,7 @@ kl{
             }
         }
         pressure{
-            inch-hg{
+            inch-ofhg{
                 one{"{0} inHg"}
                 other{"{0} inHg"}
             }

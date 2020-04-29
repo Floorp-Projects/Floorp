@@ -182,6 +182,7 @@ sv{
         ewo{"ewondo"}
         ext{"extremaduriska"}
         fa{"persiska"}
+        fa_AF{"dari"}
         fan{"fang"}
         fat{"fanti"}
         ff{"fulani"}
@@ -645,7 +646,8 @@ sv{
         zh_Hant{"traditionell kinesiska"}
     }
     Languages%menu{
-        yue{"kantonesiska"}
+        ars{"arabiska (najd)"}
+        ckb{"kurdiska (sorani)"}
         zh{"mandarin"}
     }
     Languages%short{
@@ -661,6 +663,7 @@ sv{
         Aghb{"kaukasiska albanska"}
         Ahom{"ahom"}
         Arab{"arabiska"}
+        Aran{"nastaliq"}
         Armi{"imperisk arameiska"}
         Armn{"armeniska"}
         Avst{"avestiska"}
@@ -789,6 +792,7 @@ sv{
         Phnx{"feniciska"}
         Plrd{"pollardtecken"}
         Prti{"tidig parthianska"}
+        Qaag{"zawgyi"}
         Rjng{"rejang"}
         Rohg{"hanifiska"}
         Roro{"rongo-rongo"}
@@ -1140,7 +1144,7 @@ sv{
         WADEGILE{"Wade-Giles"}
         XSISTEMO{"x-system"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} – alla"}
         category-list{"{0}: {1}"}

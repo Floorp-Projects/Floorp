@@ -2,61 +2,13 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 mi{
     Currencies{
-        ANG{
-            "ANG",
-            "ANG",
-        }
-        ARS{
-            "ARS",
-            "ARS",
-        }
-        AWG{
-            "AWG",
-            "AWG",
-        }
-        BBD{
-            "BBD",
-            "BBD",
-        }
-        BMD{
-            "BMD",
-            "BMD",
-        }
         BRL{
             "R$",
             "Real Parahi",
         }
-        BSD{
-            "BSD",
-            "BSD",
-        }
-        BZD{
-            "BZD",
-            "BZD",
-        }
-        CAD{
-            "CA$",
-            "CAD",
-        }
         CNY{
             "CN¥",
             "Yuan Haina",
-        }
-        CRC{
-            "CRC",
-            "CRC",
-        }
-        CUC{
-            "CUC",
-            "CUC",
-        }
-        CUP{
-            "CUP",
-            "CUP",
-        }
-        DOP{
-            "DOP",
-            "DOP",
         }
         EUR{
             "€",
@@ -66,65 +18,25 @@ mi{
             "£",
             "Pāuna Piritene",
         }
-        GTQ{
-            "GTQ",
-            "GTQ",
-        }
-        HNL{
-            "HNL",
-            "HNL",
-        }
-        HTG{
-            "HTG",
-            "HTG",
-        }
         INR{
             "₹",
             "Rupī Iniana",
-        }
-        JMD{
-            "JMD",
-            "JMD",
         }
         JPY{
             "¥",
             "Yen Hapanihi",
         }
-        KYD{
-            "KYD",
-            "KYD",
-        }
-        MXN{
-            "MX$",
-            "MXN",
-        }
-        NIO{
-            "NIO",
-            "NIO",
-        }
         NZD{
             "$",
             "Tāra o Aotearoa",
-        }
-        PAB{
-            "PAB",
-            "PAB",
         }
         RUB{
             "RUB",
             "Rūpera Ruhiana",
         }
-        TTD{
-            "TTD",
-            "TTD",
-        }
         USD{
             "US$",
             "Tāra US",
-        }
-        XCD{
-            "EC$",
-            "XCD",
         }
         XXX{
             "¤",
@@ -132,47 +44,11 @@ mi{
         }
     }
     CurrencyPlurals{
-        ANG{
-            other{"ANG"}
-        }
-        ARS{
-            other{"ARS"}
-        }
-        AWG{
-            other{"AWG"}
-        }
-        BBD{
-            other{"BBD"}
-        }
-        BMD{
-            other{"BMD"}
-        }
         BRL{
             other{"real Parahi"}
         }
-        BSD{
-            other{"BSD"}
-        }
-        BZD{
-            other{"BZD"}
-        }
-        CAD{
-            other{"CAD"}
-        }
         CNY{
             other{"yuan Haina"}
-        }
-        CRC{
-            other{"CRC"}
-        }
-        CUC{
-            other{"CUC"}
-        }
-        CUP{
-            other{"CUP"}
-        }
-        DOP{
-            other{"DOP"}
         }
         EUR{
             other{"euro"}
@@ -180,50 +56,20 @@ mi{
         GBP{
             other{"pāuna Piritene"}
         }
-        GTQ{
-            other{"GTQ"}
-        }
-        HNL{
-            other{"HNL"}
-        }
-        HTG{
-            other{"HTG"}
-        }
         INR{
             other{"rupī Iniana"}
-        }
-        JMD{
-            other{"JMD"}
         }
         JPY{
             other{"yen Hapanihi"}
         }
-        KYD{
-            other{"KYD"}
-        }
-        MXN{
-            other{"MXN"}
-        }
-        NIO{
-            other{"NIO"}
-        }
         NZD{
             other{"tāra o Aotearoa"}
-        }
-        PAB{
-            other{"PAB"}
         }
         RUB{
             other{"rūpera Ruhiana"}
         }
-        TTD{
-            other{"TTD"}
-        }
         USD{
             other{"tāra US"}
-        }
-        XCD{
-            other{"XCD"}
         }
         XXX{
             other{"(moni tē mōhiotia)"}
@@ -232,5 +78,5 @@ mi{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

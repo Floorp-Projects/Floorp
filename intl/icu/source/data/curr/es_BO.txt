@@ -8,5 +8,5 @@ es_BO{
             "boliviano",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_419{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "America:Fort_Nelson"{
             ec{"Fuerte Nelson"}
@@ -99,7 +99,9 @@ es_419{
             ls{"hora de Myanmar (Birmania)"}
         }
         "meta:Norfolk"{
-            ls{"hora de la Isla Norfolk"}
+            ld{"hora de verano de la Isla Norfolk"}
+            lg{"hora de la Isla Norfolk"}
+            ls{"hora estándar de la Isla Norfolk"}
         }
         "meta:Pyongyang"{
             ls{"hora de Pionyang"}

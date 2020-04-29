@@ -2539,5 +2539,5 @@ bs_Cyrl{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ceb{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -13,7 +13,7 @@ ceb{
                 one{"{0} g-force"}
                 other{"{0} g-force"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"mga metro kada second squared"}
                 one{"{0} ka metro kada second squared"}
                 other{"{0} ka mga metro kada second squared"}
@@ -127,11 +127,6 @@ ceb{
                 one{"{0} ka mole"}
                 other{"{0} ka mga mole"}
             }
-            part-per-million{
-                dnam{"mga part per million"}
-                one{"{0} ka part per million"}
-                other{"{0} ka mga part per million"}
-            }
             percent{
                 dnam{"porsyento"}
                 one{"{0} ka porsyento"}
@@ -142,6 +137,11 @@ ceb{
                 one{"{0} ka permille"}
                 other{"{0} ka permille"}
             }
+            permillion{
+                dnam{"mga part per million"}
+                one{"{0} ka part per million"}
+                other{"{0} ka mga part per million"}
+            }
             permyriad{
                 dnam{"permyriad"}
                 one{"{0} ka permyriad"}
@@ -149,7 +149,7 @@ ceb{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"mga litro kada 100 kilometro"}
                 one{"{0} ka litro kada 100 kilometro"}
                 other{"{0} ka litro kada 100 kilometro"}
@@ -676,7 +676,7 @@ ceb{
                 one{"{0} ka hectopascal"}
                 other{"{0} ka mga hectopascal"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"mga pulgada sa mercury"}
                 one{"{0} ka pulgada sa mercury"}
                 other{"{0} ka mga pulgada sa mercury"}
@@ -696,7 +696,7 @@ ceb{
                 one{"{0} ka millibar"}
                 other{"{0} ka mga millibar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mga millimetro sa mercury"}
                 one{"{0} ka millimetro sa mercury"}
                 other{"{0} ka mga millimetro sa mercury"}
@@ -706,7 +706,7 @@ ceb{
                 one{"{0} ka pascal"}
                 other{"{0} ka mga pascal"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"mga pound kada kuwadradong pulgada"}
                 one{"{0} ka pound kada kuwadradong pulgada"}
                 other{"{0} ka mga pound kada kuwadradong pulgada"}
@@ -757,10 +757,10 @@ ceb{
                 one{"{0} ka newton-meter"}
                 other{"{0} ka mga newton-meter"}
             }
-            pound-foot{
-                dnam{"mga pound-foot"}
-                one{"{0} ka pound-foot"}
-                other{"{0} ka mga pound-foot"}
+            pound-force-foot{
+                dnam{"mga pound-force-foot"}
+                one{"{0} ka pound-force-foot"}
+                other{"{0} ka mga pound-force-foot"}
             }
         }
         volume{
@@ -902,8 +902,13 @@ ceb{
         }
     }
     unitsNarrow{
+        concentr{
+            percent{
+                dnam{"%"}
+            }
+        }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 one{"{0}L/100km"}
                 other{"{0}L/100km"}
@@ -911,6 +916,10 @@ ceb{
         }
         coordinate{
             dnam{"direksyon"}
+            east{"{0}E"}
+            north{"{0}N"}
+            south{"{0}S"}
+            west{"{0}W"}
         }
         duration{
             day{
@@ -931,7 +940,7 @@ ceb{
             minute{
                 dnam{"minuto"}
                 one{"{0} minuto"}
-                other{"{0}minuto"}
+                other{"{0} minuto"}
             }
             month{
                 dnam{"buwan"}
@@ -1004,7 +1013,7 @@ ceb{
     }
     unitsShort{
         acceleration{
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"mga metro/sec²"}
             }
         }
@@ -1076,21 +1085,21 @@ ceb{
                 one{"{0} mol"}
                 other{"{0} mol"}
             }
-            part-per-million{
-                dnam{"mga part/million"}
-            }
             percent{
                 dnam{"porsyento"}
             }
             permille{
                 dnam{"permille"}
             }
+            permillion{
+                dnam{"mga part/million"}
+            }
             permyriad{
                 dnam{"permyriad"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100 km"}
                 one{"{0} L/100 km"}
                 other{"{0} L/100 km"}
@@ -1350,7 +1359,7 @@ ceb{
                 one{"{0} ka mbar"}
                 other{"{0} ka mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mmHg"}
                 one{"{0} mmHg"}
                 other{"{0} mmHg"}

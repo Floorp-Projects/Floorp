@@ -57,7 +57,7 @@ ckb{
         minimumGroupingDigits{"1"}
         native{"arab"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{

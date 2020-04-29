@@ -298,7 +298,6 @@ is{
         ZZ{"Óþekkt svæði"}
     }
     Countries%short{
-        GB{"Bretland"}
         HK{"Hong Kong"}
         MO{"Makaó"}
         PS{"Palestína"}
@@ -308,11 +307,8 @@ is{
     Countries%variant{
         CD{"Kongó (Lýðstjórnarlýðveldið)"}
         CG{"Kongó (Lýðveldið)"}
-        CI{"Fílabeinsströndin"}
-        CZ{"Tékkland"}
         FK{"Falklandseyjar (Malvinas)"}
-        SZ{"Svasíland"}
         TL{"Austur-Tímor"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

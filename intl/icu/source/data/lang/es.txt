@@ -160,6 +160,7 @@ es{
         eu{"euskera"}
         ewo{"ewondo"}
         fa{"persa"}
+        fa_AF{"darí"}
         fan{"fang"}
         fat{"fanti"}
         ff{"fula"}
@@ -573,6 +574,7 @@ es{
     }
     Scripts{
         Arab{"árabe"}
+        Aran{"nastaliq"}
         Armn{"armenio"}
         Avst{"avéstico"}
         Bali{"balinés"}
@@ -657,6 +659,7 @@ es{
         Phag{"phags-pa"}
         Phnx{"fenicio"}
         Plrd{"Pollard Miao"}
+        Qaag{"zawgyi"}
         Rjng{"rejang"}
         Roro{"rongo-rongo"}
         Runr{"rúnico"}
@@ -858,7 +861,7 @@ es{
         VALENCIA{"Valenciano"}
         WADEGILE{"Romanización Wade-Giles"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — Todo"}
         category-list{"{0}: {1}"}

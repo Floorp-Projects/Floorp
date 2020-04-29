@@ -17,7 +17,7 @@ pl{
         latn{
             miscPatterns{
                 approximately{"~{0}"}
-                atLeast{"{0}+"}
+                atLeast{"≥{0}"}
                 atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
@@ -271,7 +271,7 @@ pl{
         }
         minimalPairs{
             ordinal{
-                other{"Skręć w {0} w prawo."}
+                other{"Skręć w {0}. w prawo."}
             }
             plural{
                 few{"{0} miesiące"}
@@ -282,7 +282,7 @@ pl{
         }
         minimumGroupingDigits{"2"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         buddhist{
             eras{

@@ -140,6 +140,7 @@ plurals:table(nofallback){
         osa{"set0"}
         pa{"set6"}
         pap{"set8"}
+        pcm{"set1"}
         pl{"set25"}
         prg{"set13"}
         ps{"set8"}
@@ -153,6 +154,7 @@ plurals:table(nofallback){
         rwk{"set8"}
         sah{"set0"}
         saq{"set8"}
+        sat{"set16"}
         sc{"set4"}
         scn{"set4"}
         sd{"set8"}

@@ -644,7 +644,6 @@ lt{
         zh_Hant{"tradicinė mandarinų kinų"}
     }
     Languages%menu{
-        yue{"kinų kalbos Kantono tarmė"}
         zh{"kinų, mandarinų"}
     }
     Languages%short{
@@ -1030,7 +1029,7 @@ lt{
         VALENCIA{"Valenciečiai"}
         WADEGILE{"Wade-Giles Romanization"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} – visi"}
         category-list{"{0}: {1}"}

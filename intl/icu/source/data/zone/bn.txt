@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 bn{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"আবিদজান"}
@@ -1721,7 +1721,9 @@ bn{
             ls{"নিউই সময়"}
         }
         "meta:Norfolk"{
-            ls{"নরফোক দ্বীপ সময়"}
+            ld{"নরফোক দ্বীপ দিবালোক সময়"}
+            lg{"নরফোক দ্বীপ সময়"}
+            ls{"নরফোক দ্বীপ মানক সময়"}
         }
         "meta:Noronha"{
             ld{"ফার্নান্দো ডি নোরোনহা গ্রীষ্মকালীন সময়"}

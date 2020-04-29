@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 lo{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"ອາບິດແຈນ"}
@@ -1744,7 +1744,9 @@ lo{
             ls{"ເວລານິອູເອ"}
         }
         "meta:Norfolk"{
-            ls{"ເວ​ລາ​ເກາະ​ນໍ​ຟອ​ລ໌ກ"}
+            ld{"ເວ​ລາ​ລະ​ດູ​ຮ້ອນເກາະ​ນໍ​ຟອ​ລ໌ກ"}
+            lg{"ເວ​ລາ​ເກາະ​ນໍ​ຟອ​ລ໌ກ"}
+            ls{"ເວ​ລາ​ມາດ​ຕະ​ຖານເກາະ​ນໍ​ຟອ​ລ໌ກ"}
         }
         "meta:Noronha"{
             ld{"ເວລາລະດູຮ້ອນເຟນັນໂດເດໂນຮອນຮາ"}

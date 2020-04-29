@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 km{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"អាប៊ីដ្យាន"}
@@ -1710,7 +1710,9 @@ km{
             ls{"ម៉ោងនៅ​នីវ៉េ"}
         }
         "meta:Norfolk"{
-            ls{"ម៉ោង​នៅ​កោះ​ន័រហ្វក់"}
+            ld{"ម៉ោងនៅ​ណ័រហ្វក់នា​រដូវ​ក្ដៅ"}
+            lg{"ម៉ោង​នៅ​កោះ​ន័រហ្វក់"}
+            ls{"ម៉ោង​ស្ដង់ដារ​នៅ​ណ័រហ្វក់"}
         }
         "meta:Noronha"{
             ld{"ម៉ោង​នៅហ្វ៊ែណាន់ដូ​ដឺណូរ៉ូញ៉ានារដូវក្តៅ"}

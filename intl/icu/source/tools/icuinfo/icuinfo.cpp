@@ -58,6 +58,12 @@ static void do_init() {
     }
 }
 
+static void do_cleanup() {
+  if (icuInitted) {
+    u_cleanup();
+    icuInitted = FALSE;
+  }
+}
 
 void cmd_millis()
 {
@@ -294,6 +300,8 @@ main(int argc, char* argv[]) {
     if(!didSomething) {
       cmd_version(FALSE, errorCode);  /* at least print the version # */
     }
+
+    do_cleanup();
 
     return U_FAILURE(errorCode);
 }

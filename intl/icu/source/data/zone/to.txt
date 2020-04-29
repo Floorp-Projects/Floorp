@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 to{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1751,7 +1751,9 @@ to{
             ls{"houa fakaniuē"}
         }
         "meta:Norfolk"{
-            ls{"houa fakanoafōki"}
+            ld{"houa fakanoafōki taimi liliu"}
+            lg{"houa fakanoafōki"}
+            ls{"houa fakanoafōki taimi totonu"}
         }
         "meta:Noronha"{
             ld{"houa fakafēnanito-te-nolōnia taimi liliu"}

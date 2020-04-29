@@ -72,7 +72,7 @@
       <SetChecksum>true</SetChecksum>
       <TurnOffAssemblyGeneration>true</TurnOffAssemblyGeneration>
       <!-- Note: stubdata is somewhat odd in that it doesn't suffix the Debug output DLL/LIB with a "d" like common/i18n/etc. -->
-      <OutputFile>..\..\$(IcuBinOutputDir)\icudt66.dll</OutputFile>
+      <OutputFile>..\..\$(IcuBinOutputDir)\icudt67.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\$(IcuLibOutputDir)\icudt.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\$(IcuLibOutputDir)\icudt.lib</ImportLibrary>
     </Link>

@@ -4,5 +4,5 @@ ro_MD{
     Countries{
         MM{"Myanmar"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

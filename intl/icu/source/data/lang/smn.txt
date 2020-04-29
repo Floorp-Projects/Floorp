@@ -397,7 +397,7 @@ smn{
         zxx{"ij kielâlâš siskáldâs"}
         zza{"zazakielâ"}
     }
-    Version{"36.1"}
+    Version{"37"}
     codePatterns{
         language{"kielâ: {0}"}
         script{"čäällimvuáhádâh: {0}"}

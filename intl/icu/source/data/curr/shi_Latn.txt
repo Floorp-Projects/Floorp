@@ -236,5 +236,5 @@ shi_Latn{
             "adular n zimbabwi",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

@@ -2,7 +2,6 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ro{
     Keys{
-        calendar{"calendar"}
         cf{"Format monedă"}
         colAlternate{"sortare cu ignorarea simbolurilo"}
         colBackwards{"sortare inversă după accent"}
@@ -153,6 +152,7 @@ ro{
         eu{"bască"}
         ewo{"ewondo"}
         fa{"persană"}
+        fa_AF{"dari"}
         fan{"fang"}
         fat{"fanti"}
         ff{"fulah"}
@@ -407,7 +407,6 @@ ro{
         ro{"română"}
         rof{"rombo"}
         rom{"romani"}
-        root{"root"}
         ru{"rusă"}
         rup{"aromână"}
         rw{"kinyarwanda"}
@@ -554,14 +553,15 @@ ro{
         zh{"chineză, mandarină"}
     }
     Languages%short{
-        az{"azeră"}
         en_US{"engleză (S.U.A)"}
     }
     Languages%variant{
+        ckb{"kurdă sorani"}
         ps{"pushto"}
     }
     Scripts{
         Arab{"arabă"}
+        Aran{"nastaaliq"}
         Armn{"armeană"}
         Bali{"balineză"}
         Beng{"bengaleză"}
@@ -613,9 +613,12 @@ ro{
         Maya{"hieroglife maya"}
         Mlym{"malayalam"}
         Mong{"mongolă"}
+        Mtei{"meitei mayek"}
         Mymr{"birmană"}
+        Olck{"ol chiki"}
         Orya{"oriya"}
         Phnx{"feniciană"}
+        Qaag{"zawgyi"}
         Runr{"runică"}
         Sinh{"singaleză"}
         Syrc{"siriacă"}
@@ -790,7 +793,7 @@ ro{
         SCOTLAND{"engleză standard scoțiană"}
         WADEGILE{"Wade-Giles"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} – toate"}
         category-list{"{0}: {1}"}

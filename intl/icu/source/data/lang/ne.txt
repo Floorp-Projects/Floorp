@@ -3,11 +3,11 @@
 ne{
     Keys{
         calendar{"पात्रो"}
-        cf{"cf"}
+        cf{"मुद्राको ढाँचा"}
         collation{"क्रमबद्ध सुची"}
         currency{"मुद्रा"}
-        hc{"hc"}
-        lb{"lb"}
+        hc{"समय चक्र (12 तथा 24)"}
+        lb{"पङ्क्ति विच्छेदको शैली"}
         ms{"मापन प्रणाली"}
         numbers{"अङ्कहरू"}
     }
@@ -169,6 +169,7 @@ ne{
         ewo{"इवोन्डो"}
         ext{"एक्सट्रेमादुराली"}
         fa{"फारसी"}
+        fa_AF{"दारी"}
         fan{"फाङ"}
         fat{"फान्टी"}
         ff{"फुलाह"}
@@ -707,16 +708,12 @@ ne{
         Xpeo{"पुरानो पर्सियन"}
         Yiii{"यी"}
         Zinh{"इन्हेरिटेड"}
-        Zmth{"Zmth"}
-        Zsye{"Zsye"}
+        Zmth{"गणितीय चिन्ह"}
+        Zsye{"इमोजी"}
         Zsym{"प्रतीकहरू"}
         Zxxx{"नलेखिएको"}
         Zyyy{"साझा"}
         Zzzz{"अज्ञात लिपि"}
-    }
-    Scripts%stand-alone{
-        Hans{"सरलिकृत चिनियाँ"}
-        Hant{"परम्परागत चिनियाँ"}
     }
     Types{
         calendar{
@@ -756,9 +753,9 @@ ne{
             h24{"hc-h24"}
         }
         lb{
-            loose{"loose"}
-            normal{"normal"}
-            strict{"strict"}
+            loose{"पङ्क्ति विच्छेदको खुला शैली"}
+            normal{"पङ्क्ति विच्छेदको सामान्य शैली"}
+            strict{"पङ्क्ति विच्छेदको कडा शैली"}
         }
         ms{
             metric{"मेट्रिक प्रणाली"}
@@ -807,7 +804,7 @@ ne{
         AREVELA{"पूर्वी आर्मेनियाली"}
         POSIX{"कम्प्युटर"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0}-सबै"}
         category-list{"{0}: {1}"}

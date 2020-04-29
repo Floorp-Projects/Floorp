@@ -13,5 +13,5 @@ sr_Latn_XK{
         UM{"Manja udaljena ostrva SAD"}
         VC{"Sveti Vinsent i Grenadini"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

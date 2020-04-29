@@ -10,7 +10,7 @@ es_BO{
             }
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         gregorian{
             AmPmMarkers{

@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_MX{
     %%Parent{"es_419"}
-    Version{"36.1"}
+    Version{"37"}
     units{
         concentr{
             milligram-per-deciliter{
@@ -12,7 +12,7 @@ es_MX{
             millimole-per-liter{
                 dnam{"mmol/L"}
             }
-            part-per-million{
+            permillion{
                 dnam{"ppm"}
             }
         }

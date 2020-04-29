@@ -267,5 +267,5 @@ fr_CA{
             other{"rials yéménites"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

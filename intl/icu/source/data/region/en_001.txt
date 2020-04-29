@@ -12,5 +12,5 @@ en_001{
         VC{"St Vincent & Grenadines"}
         VI{"US Virgin Islands"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

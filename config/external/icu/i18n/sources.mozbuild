@@ -73,6 +73,7 @@ SOURCES += [
    '/intl/icu/source/i18n/listformatter.cpp',
    '/intl/icu/source/i18n/measfmt.cpp',
    '/intl/icu/source/i18n/measunit.cpp',
+   '/intl/icu/source/i18n/measunit_extra.cpp',
    '/intl/icu/source/i18n/measure.cpp',
    '/intl/icu/source/i18n/msgfmt.cpp',
    '/intl/icu/source/i18n/nfrs.cpp',

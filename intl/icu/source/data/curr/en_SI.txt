@@ -2,5 +2,5 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_SI{
     %%Parent{"en_150"}
-    Version{"36.1"}
+    Version{"37"}
 }

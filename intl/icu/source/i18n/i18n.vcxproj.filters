@@ -204,6 +204,9 @@
     <ClCompile Include="measunit.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
+    <ClCompile Include="measunit_extra.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
     <ClCompile Include="measure.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
@@ -828,6 +831,9 @@
       <Filter>formatting</Filter>
     </ClInclude>
     <ClInclude Include="japancal.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="measunit_impl.h">
       <Filter>formatting</Filter>
     </ClInclude>
     <ClInclude Include="msgfmt_impl.h">

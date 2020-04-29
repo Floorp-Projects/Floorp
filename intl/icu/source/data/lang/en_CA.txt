@@ -52,5 +52,5 @@ en_CA{
             upper{"To Upper Case"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

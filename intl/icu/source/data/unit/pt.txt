@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 pt{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ pt{
                 one{"{0} força g"}
                 other{"{0} força g"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"metros por segundo ao quadrado"}
                 one{"{0} metro por segundo ao quadrado"}
                 other{"{0} metros por segundo ao quadrado"}
@@ -128,11 +128,6 @@ pt{
                 one{"{0} mol"}
                 other{"{0} mols"}
             }
-            part-per-million{
-                dnam{"partes por milhão"}
-                one{"{0} parte por milhão"}
-                other{"{0} partes por milhão"}
-            }
             percent{
                 dnam{"por cento"}
                 one{"{0} por cento"}
@@ -143,13 +138,18 @@ pt{
                 one{"{0} por mil"}
                 other{"{0} por mil"}
             }
+            permillion{
+                dnam{"partes por milhão"}
+                one{"{0} parte por milhão"}
+                other{"{0} partes por milhão"}
+            }
             permyriad{
                 one{"{0} ponto base"}
                 other{"{0} pontos base"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"litros por 100 quilômetros"}
                 one{"{0} litro por 100 quilômetros"}
                 other{"{0} litros por 100 quilômetros"}
@@ -689,7 +689,7 @@ pt{
                 one{"{0} hectopascal"}
                 other{"{0} hectopascais"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"polegadas de mercúrio"}
                 one{"{0} polegada de mercúrio"}
                 other{"{0} polegadas de mercúrio"}
@@ -709,7 +709,7 @@ pt{
                 one{"{0} milibar"}
                 other{"{0} milibares"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"milímetros de mercúrio"}
                 one{"{0} milímetro de mercúrio"}
                 other{"{0} milímetros de mercúrio"}
@@ -719,7 +719,7 @@ pt{
                 one{"{0} pascal"}
                 other{"{0} pascais"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"libras por polegada quadrada"}
                 one{"{0} libra por polegada quadrada"}
                 other{"{0} libras por polegada quadrada"}
@@ -770,7 +770,7 @@ pt{
                 one{"{0} newton-metro"}
                 other{"{0} newton-metros"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"pés-libra"}
                 one{"{0} pé-libra"}
                 other{"{0} pés-libra"}
@@ -944,7 +944,7 @@ pt{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 one{"{0} l/100 km"}
                 other{"{0} l/100 km"}
@@ -1075,7 +1075,7 @@ pt{
             }
         }
         pressure{
-            inch-hg{
+            inch-ofhg{
                 one{"{0}\u0022 Hg"}
                 other{"{0}\u0022 Hg"}
             }
@@ -1083,7 +1083,7 @@ pt{
                 one{"{0} mb"}
                 other{"{0} mb"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mmHg"}
                 one{"{0} mmHg"}
                 other{"{0} mmHg"}
@@ -1132,7 +1132,7 @@ pt{
             g-force{
                 dnam{"força g"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"metros/seg²"}
             }
         }
@@ -1201,9 +1201,6 @@ pt{
                 one{"{0} mmol/l"}
                 other{"{0} mmol/l"}
             }
-            part-per-million{
-                dnam{"partes/milhão"}
-            }
             percent{
                 dnam{"por cento"}
                 one{"{0}%"}
@@ -1214,12 +1211,15 @@ pt{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"partes/milhão"}
+            }
             permyriad{
                 dnam{"ponto base"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 one{"{0} l/100 km"}
                 other{"{0} l/100 km"}
@@ -1517,7 +1517,7 @@ pt{
                 one{"{0} bar"}
                 other{"{0} bars"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mmHg"}
                 one{"{0} mmHg"}
                 other{"{0} mmHg"}

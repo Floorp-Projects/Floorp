@@ -49,5 +49,5 @@ shi_Latn{
         zh{"Tacinwit"}
         zu{"Tazulut"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

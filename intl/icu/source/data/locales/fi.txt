@@ -216,7 +216,7 @@ fi{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -528,6 +528,23 @@ fi{
                     M{"E d.M. – E d.M.y G"}
                     d{"E d.M. – E d.M.y G"}
                     y{"E d.M.y – E d.M.y G"}
+                }
+                GyMMMM{
+                    G{"LLLL y G – LLLL y G"}
+                    M{"LLLL–LLLL y G"}
+                    y{"LLLL y – LLLL y G"}
+                }
+                GyMMMMEd{
+                    G{"E d. MMMM y G – E d. MMMM y G"}
+                    M{"E d. MMMM – E d. MMMM y G"}
+                    d{"E d. – E d. MMMM y G"}
+                    y{"E d. MMMM y – E d. MMMM y G"}
+                }
+                GyMMMMd{
+                    G{"d. MMMM y G – d. MMMM y G"}
+                    M{"d. MMMM – d. MMMM y G"}
+                    d{"d.–d. MMMM y G"}
+                    y{"d. MMMM y – d. MMMM y G"}
                 }
                 GyMMMd{
                     G{"d.M.y G – d.M.y G"}
@@ -923,15 +940,32 @@ fi{
                     y{"E d.M.y – E d.M.y GGGGG"}
                 }
                 GyMMM{
-                    G{"MMM y G – MMM y G"}
-                    M{"MMM–MMM y G"}
-                    y{"MMM y – MMM y G"}
+                    G{"M.y G – M.y G"}
+                    M{"M.–M.y G"}
+                    y{"M.y–M.y G"}
                 }
                 GyMMMEd{
                     G{"E d.M.y – E d.M.y G"}
                     M{"E d.M. – E d.M.y G"}
                     d{"E d.M – E d.M.y G"}
                     y{"E d.M.y – E d.M.y G"}
+                }
+                GyMMMM{
+                    G{"LLLL y G – LLLL y G"}
+                    M{"LLLL–LLLL y G"}
+                    y{"LLLL y – LLLL y G"}
+                }
+                GyMMMMEd{
+                    G{"E d. MMMM y G – E d. MMMM y G"}
+                    M{"E d. MMMM – E d. MMMM y G"}
+                    d{"E d. – E d. MMMM y G"}
+                    y{"E d. MMMM y – E d. MMMM y G"}
+                }
+                GyMMMMd{
+                    G{"d. MMMM y G – d. MMMM y G"}
+                    M{"d. MMMM – d. MMMM y G"}
+                    d{"d.–d. MMMM y G"}
+                    y{"d. MMMM y – d. MMMM y G"}
                 }
                 GyMMMd{
                     G{"d.M.y. G – d.M.y G"}

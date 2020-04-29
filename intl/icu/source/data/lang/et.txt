@@ -180,6 +180,7 @@ et{
         ewo{"evondo"}
         ext{"estremenju"}
         fa{"pärsia"}
+        fa_AF{"dari"}
         fan{"fangi"}
         fat{"fanti"}
         ff{"fula"}
@@ -201,7 +202,6 @@ et{
         fur{"friuuli"}
         fy{"läänefriisi"}
         ga{"iiri"}
-        gaa{"gaa"}
         gag{"gagauusi"}
         gan{"kani"}
         gay{"gajo"}
@@ -470,7 +470,6 @@ et{
         ro_MD{"moldova"}
         rof{"rombo"}
         rom{"mustlaskeel"}
-        root{"root"}
         rtm{"rotuma"}
         ru{"vene"}
         rue{"russiini"}
@@ -1047,7 +1046,7 @@ et{
         VALENCIA{"valentsia"}
         WADEGILE{"Wade’i-Gilesi latinisatsioon"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} – kõik"}
         category-list{"{0}: {1}"}

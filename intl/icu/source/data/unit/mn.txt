@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 mn{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"hh:mm"}
         hms{"hh:mm:ss"}
@@ -14,7 +14,7 @@ mn{
                 one{"{0} жи-хүч"}
                 other{"{0} жи-хүч"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"квадрат секундэд ногдох метр"}
                 one{"квадрат секундэд {0} метр"}
                 other{"квадрат секундэд {0} метр"}
@@ -128,11 +128,6 @@ mn{
                 one{"{0} моль"}
                 other{"{0} моль"}
             }
-            part-per-million{
-                dnam{"саяны хувь"}
-                one{"саяны {0} хувь"}
-                other{"саяны {0} хувь"}
-            }
             percent{
                 dnam{"хувь"}
                 one{"{0} хувь"}
@@ -143,6 +138,11 @@ mn{
                 one{"мянганы {0} хувь"}
                 other{"мянганы {0} хувь"}
             }
+            permillion{
+                dnam{"саяны хувь"}
+                one{"саяны {0} хувь"}
+                other{"саяны {0} хувь"}
+            }
             permyriad{
                 dnam{"арван мянганы хувь"}
                 one{"арван мянганы {0} хувь"}
@@ -150,7 +150,7 @@ mn{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"100 километр тутамд ногдох литр"}
                 one{"100 километр тутамд {0} литр"}
                 other{"100 километр тутамд {0} литр"}
@@ -657,7 +657,7 @@ mn{
                 one{"{0} гектоПаскал"}
                 other{"{0} гектоПаскал"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"мөнгөн усны баганын инч"}
                 one{"{0} мөнгөн усны баганын инч"}
                 other{"{0} мөнгөн усны баганын инч"}
@@ -677,7 +677,7 @@ mn{
                 one{"{0} миллибар"}
                 other{"{0} миллибар"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"мөнгөн усны баганын миллиметр"}
                 one{"{0} мөнгөн усны баганын миллиметр"}
                 other{"{0} мөнгөн усны баганын миллиметр"}
@@ -687,7 +687,7 @@ mn{
                 one{"{0} Паскаль"}
                 other{"{0} Паскаль"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"квадрат инч тутамд ногдох фунт"}
                 one{"квадрат инч тутамд {0} фунт"}
                 other{"квадрат инч тутамд {0} фунт"}
@@ -741,7 +741,7 @@ mn{
                 one{"{0} ньютон метр"}
                 other{"{0} ньютон метр"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"фунт фүүт"}
                 one{"{0} фунт фүүт"}
                 other{"{0} фунт фүүт"}
@@ -943,7 +943,7 @@ mn{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"л/100км"}
                 one{"{0} л/100км"}
                 other{"{0}л/100км"}
@@ -1083,7 +1083,7 @@ mn{
                 one{"{0} гПа"}
                 other{"{0} гПа"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0} муб"}
                 other{"{0} муб"}
             }
@@ -1141,7 +1141,7 @@ mn{
                 one{"{0} Жи"}
                 other{"{0} Жи"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"метр/сек²"}
                 one{"{0} м/с²"}
                 other{"{0} м/с²"}
@@ -1255,11 +1255,6 @@ mn{
                 one{"{0} моль"}
                 other{"{0} моль"}
             }
-            part-per-million{
-                dnam{"хувь/сая"}
-                one{"{0}x10⁻⁶"}
-                other{"{0}x10⁻⁶"}
-            }
             percent{
                 dnam{"хувь"}
                 one{"{0}%"}
@@ -1270,12 +1265,17 @@ mn{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"хувь/сая"}
+                one{"{0}x10⁻⁶"}
+                other{"{0}x10⁻⁶"}
+            }
             permyriad{
                 dnam{"арван мянганы хувь"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"л/100км"}
                 one{"{0} л/100км"}
                 other{"{0} л/100км"}
@@ -1760,7 +1760,7 @@ mn{
                 one{"{0} гПа"}
                 other{"{0} гПа"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"инч.муб"}
                 one{"{0} инч.муб"}
                 other{"{0} инч.муб"}
@@ -1780,7 +1780,7 @@ mn{
                 one{"{0} мбар"}
                 other{"{0} мбар"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"мм.муб"}
                 one{"{0} мм.муб"}
                 other{"{0} мм.муб"}
@@ -1790,7 +1790,7 @@ mn{
                 one{"{0} Па"}
                 other{"{0} Па"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"фунт/инч²"}
                 one{"{0} фунт/инч²"}
                 other{"{0} фунт/инч²"}

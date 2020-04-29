@@ -23,5 +23,5 @@ ur_IN{
             tibt{"تبتی ہندسے"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

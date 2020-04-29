@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 dsb{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -16,7 +16,7 @@ dsb{
                 other{"{0} jadnotkow zemskego póspěšenja"}
                 two{"{0} jadnotce zemskego póspěšenja"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"metry na kwadratnu sekundu"}
                 few{"{0} metry na kwadratnu sekundu"}
                 one{"{0} meter na kwadratnu sekundu"}
@@ -641,7 +641,7 @@ dsb{
                 other{"{0} hektopascalow"}
                 two{"{0} hektopascala"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"cole žywoslobrowego słupika"}
                 few{"{0} cole słupika žywego slobra"}
                 one{"{0} col słupika žywego slobra"}
@@ -655,14 +655,14 @@ dsb{
                 other{"{0} milibarow"}
                 two{"{0} milibara"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"milimetry słupika žywego slobra"}
                 few{"{0} milimetry słupika žywego slobra"}
                 one{"{0} milimeter słupika žywego slobra"}
                 other{"{0} milimetrow słupika žywego slobra"}
                 two{"{0} milimetra słupika žywego slobra"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"punty na kwadratny col"}
                 few{"{0} punty na kwadratny col"}
                 one{"{0} punt na kwadratny col"}
@@ -1112,7 +1112,7 @@ dsb{
                 other{"{0} hPa"}
                 two{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 few{"{0} inHg"}
                 one{"{0} inHg"}
                 other{"{0} inHg"}
@@ -1192,7 +1192,7 @@ dsb{
                 other{"{0} G"}
                 two{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 few{"{0} m/s²"}
                 one{"{0} m/s²"}
@@ -1817,7 +1817,7 @@ dsb{
                 other{"{0} hPa"}
                 two{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
                 few{"{0} inHg"}
                 one{"{0} inHg"}
@@ -1831,14 +1831,14 @@ dsb{
                 other{"{0} mbar"}
                 two{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 few{"{0} mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
                 two{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 few{"{0} psi"}
                 one{"{0} psi"}

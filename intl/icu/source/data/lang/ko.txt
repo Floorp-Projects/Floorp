@@ -159,6 +159,7 @@ ko{
         eu{"바스크어"}
         ewo{"이원도어"}
         fa{"페르시아어"}
+        fa_AF{"다리어"}
         fan{"팡그어"}
         fat{"판티어"}
         ff{"풀라어"}
@@ -566,6 +567,7 @@ ko{
         zh_Hant{"중국어(만다린, 번체)"}
     }
     Languages%menu{
+        ckb{"쿠르드어(소라니)"}
         yue{"중국어(광둥어)"}
         zh{"중국어(만다린)"}
     }
@@ -576,6 +578,7 @@ ko{
         Afak{"아파카 문자"}
         Aghb{"코카시안 알바니아 문자"}
         Arab{"아랍 문자"}
+        Aran{"나스탈리크체"}
         Armi{"아랍제국 문자"}
         Armn{"아르메니아 문자"}
         Avst{"아베스타 문자"}
@@ -688,6 +691,7 @@ ko{
         Phnx{"페니키아 문자"}
         Plrd{"폴라드 표음 문자"}
         Prti{"명문 파라티아 문자"}
+        Qaag{"저지 문자"}
         Rjng{"레장 문자"}
         Roro{"롱고롱고"}
         Runr{"룬 문자"}
@@ -930,7 +934,7 @@ ko{
         VAIDIKA{"바이디카"}
         VALLADER{"발라더"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — 전체"}
         category-list{"{0}: {1}"}

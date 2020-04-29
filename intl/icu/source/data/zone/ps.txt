@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ps{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"ابيجان"}
@@ -539,6 +539,9 @@ ps{
         }
         "America:Sao_Paulo"{
             ec{"ساو پاولو"}
+        }
+        "America:Scoresbysund"{
+            ec{"اټوکوټورمیټ"}
         }
         "America:Sitka"{
             ec{"سیټکا"}
@@ -1175,6 +1178,9 @@ ps{
         "Pacific:Auckland"{
             ec{"اکلند"}
         }
+        "Pacific:Bougainville"{
+            ec{"بوګن ویل"}
+        }
         "Pacific:Chatham"{
             ec{"چاتام"}
         }
@@ -1701,7 +1707,9 @@ ps{
             ls{"نییو وخت"}
         }
         "meta:Norfolk"{
-            ls{"د نورفکاس ټاپو وخت"}
+            ld{"د نورفکاس ټاپو اوړي وخت"}
+            lg{"د نورفکاس ټاپو وخت"}
+            ls{"د نورفکاس ټاپو معياري وخت"}
         }
         "meta:Noronha"{
             ld{"فرنانڈو دي نورونھا اوړي وخت"}

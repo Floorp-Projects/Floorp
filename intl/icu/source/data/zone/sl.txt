@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sl{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidžan"}
@@ -1720,7 +1720,9 @@ sl{
             ls{"Niuejski čas"}
         }
         "meta:Norfolk"{
-            ls{"Čas: Norfolški otoki"}
+            ld{"Norfolški otoki poletni čas"}
+            lg{"Norfolški otoki čas"}
+            ls{"Norfolški otoki standardni čas"}
         }
         "meta:Noronha"{
             ld{"Fernando de Noronški poletni čas"}

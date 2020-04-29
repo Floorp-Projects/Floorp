@@ -214,5 +214,5 @@ zh_Hant{
             "0: \u7B2C=%spellout-numbering=;",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

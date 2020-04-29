@@ -33,7 +33,7 @@ ii{
             islamic{"ꑳꌦꇂꑍꉖ"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     codePatterns{
         language{"ꅇꉙ: {0}"}
         script{"ꇇꁱ: {0}"}

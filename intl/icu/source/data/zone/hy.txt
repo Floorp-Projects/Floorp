@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 hy{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Աբիջան"}
@@ -1710,7 +1710,9 @@ hy{
             ls{"Նիուեյի ժամանակ"}
         }
         "meta:Norfolk"{
-            ls{"Նորֆոլկ կղզու ժամանակ"}
+            ld{"Նորֆոլկ կղզու ամառային ժամանակ"}
+            lg{"Նորֆոլկ կղզու ժամանակ"}
+            ls{"Նորֆոլկ կղզու ստանդարտ ժամանակ"}
         }
         "meta:Noronha"{
             ld{"Ֆերնանդու դի Նորոնյայի ամառային ժամանակ"}

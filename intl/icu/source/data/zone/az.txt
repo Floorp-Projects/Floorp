@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 az{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abican"}
@@ -1707,7 +1707,9 @@ az{
             ls{"Niue Vaxtı"}
         }
         "meta:Norfolk"{
-            ls{"Norfolk Adası Vaxtı"}
+            ld{"Norfolk Adası Yay Vaxtı"}
+            lg{"Norfolk Adası Vaxtı"}
+            ls{"Norfolk Adası Standart Vaxtı"}
         }
         "meta:Noronha"{
             ld{"Fernando de Noronya Yay Vaxtı"}

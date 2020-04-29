@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 kn{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ kn{
                 one{"{0} ಜಿ-ಫೋರ್ಸ್"}
                 other{"{0} ಜಿ-ಫೋರ್ಸ್"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"ಮೀಟರ್‌ಗಳು ಪ್ರತಿ ಸೆಕೆಂಡ್‌ ಸ್ಕ್ವೇರ್‌ಗಳಿಗೆ"}
                 one{"{0} ಮೀಟರ್‌ ಪ್ರತಿ ಸೆಕೆಂಡ್‌ ಸ್ಕ್ವೇರ್‌ಗಳಿಗೆ"}
                 other{"{0} ಮೀಟರ್‌ಗಳು ಪ್ರತಿ ಸೆಕೆಂಡ್‌ ಸ್ಕ್ವೇರ್‌ಗಳಿಗೆ"}
@@ -128,11 +128,6 @@ kn{
                 one{"{0} ಮೋಲ್‌ಗಳು"}
                 other{"{0} ಮೋಲ್‌ಗಳು"}
             }
-            part-per-million{
-                dnam{"ಪ್ರತಿ ಮಿಲಿಯನ್ ಭಾಗಗಳು"}
-                one{"{0} ಪ್ರತಿ ಮಿಲಿಯನ್ ಭಾಗ"}
-                other{"{0} ಪ್ರತಿ ಮಿಲಿಯನ್ ಭಾಗಗಳು"}
-            }
             percent{
                 dnam{"ಶೇಕಡಾ"}
                 one{"{0} ಶೇಕಡಾ"}
@@ -143,6 +138,11 @@ kn{
                 one{"{0} ಪ್ರತಿ ಸಾವಿರಕ್ಕೆ"}
                 other{"{0} ಪ್ರತಿ ಸಾವಿರಕ್ಕೆ"}
             }
+            permillion{
+                dnam{"ಪ್ರತಿ ಮಿಲಿಯನ್ ಭಾಗಗಳು"}
+                one{"{0} ಪ್ರತಿ ಮಿಲಿಯನ್ ಭಾಗ"}
+                other{"{0} ಪ್ರತಿ ಮಿಲಿಯನ್ ಭಾಗಗಳು"}
+            }
             permyriad{
                 dnam{"ಪರ್ಮಿರೈಡ್"}
                 one{"{0} ಪರ್ಮಿರೈಡ್"}
@@ -150,7 +150,7 @@ kn{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ಪ್ರತಿ 100 ಕಿಲೋಮೀಟರ್‌ಗಳಿಗೆ ಲೀಟರ್‌ಗಳು"}
                 one{"{0} ಪ್ರತಿ 100 ಕಿಲೋಮೀಟರ್‌ಗಳಿಗೆ ಲೀಟರ್‌ಗಳು"}
                 other{"{0} ಪ್ರತಿ 100 ಕಿಲೋಮೀಟರ್‌ಗಳಿಗೆ ಲೀಟರ್‌ಗಳು"}
@@ -682,7 +682,7 @@ kn{
                 one{"{0} ಹೆಕ್ಟೋಪ್ಯಾಸ್ಕಲ್"}
                 other{"{0} ಹೆಕ್ಟೋಪ್ಯಾಸ್ಕಲ್‌ಗಳು"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"ಮರ್ಕ್ಯುರಿ ಅಂಗುಲಗಳು"}
                 one{"{0} ಮರ್ಕ್ಯುರಿ ಅಂಗುಲ"}
                 other{"{0} ಮರ್ಕ್ಯುರಿ ಅಂಗುಲಗಳು"}
@@ -702,7 +702,7 @@ kn{
                 one{"{0} ಮಿಲಿಬಾರ್"}
                 other{"{0} ಮಿಲಿಬಾರ್‌ಗಳು"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"ಮರ್ಕ್ಯುರಿ ಮಿಲಿಮೀಟರ್‌ಗಳು"}
                 one{"{0} ಮರ್ಕ್ಯುರಿ ಮಿಲಿಮೀಟರ್‌"}
                 other{"{0} ಮರ್ಕ್ಯುರಿ ಮಿಲಿಮೀಟರ್‌ಗಳು"}
@@ -712,7 +712,7 @@ kn{
                 one{"{0} ಪ್ಯಾಸ್ಕಲ್"}
                 other{"{0} ಪ್ಯಾಸ್ಕಲ್ಸ್"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"ಪ್ರತಿ ಚದರ ಇಂಚಿಗೆ ಪೌಂಡ್‌ಗಳು"}
                 one{"{0} ಪ್ರತಿ ಚದರ ಇಂಚಿಗೆ ಪೌಂಡ್‌"}
                 other{"{0} ಪ್ರತಿ ಚದರ ಇಂಚಿಗೆ ಪೌಂಡ್‌ಗಳು"}
@@ -768,7 +768,7 @@ kn{
                 one{"{0} ನ್ಯೂಟನ್-ಮೀಟರ್"}
                 other{"{0} ನ್ಯೂಟನ್-ಮೀಟರ್"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"ಪೌಂಡ್-ಅಡಿ"}
                 one{"{0} ಪೌಂಡ್-ಅಡಿ"}
                 other{"{0} ಪೌಂಡ್-ಅಡಿ"}
@@ -966,7 +966,7 @@ kn{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ಲೀ/100ಕಿ.ಮೀ"}
                 one{"{0} ಲೀ/100ಕಿಮೀ"}
                 other{"{0} ಲೀ/100ಕಿಮೀ"}
@@ -1142,7 +1142,7 @@ kn{
                 one{"{0}ಹೆ.ಪ್ಯಾ"}
                 other{"{0}ಹೆ.ಪ್ಯಾ"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"ಮರ್ಕ್ಯು.ಅಂ."}
                 one{"{0}\u0022 Hg"}
                 other{"{0}\u0022 Hg"}
@@ -1152,12 +1152,12 @@ kn{
                 one{"{0}ಮಿ.ಬಾ."}
                 other{"{0}ಮಿ.ಬಾ."}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"ಮರ್ಕ್ಯು.ಮಿ.ಮೀ."}
                 one{"{0}mmHg"}
                 other{"{0}mmHg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"ಪ್ರ.ಚ.ಇಂ.ಪೌಂ."}
                 one{"{0}psi"}
                 other{"{0}psi"}
@@ -1225,7 +1225,7 @@ kn{
                 one{"{0} ಜಿ"}
                 other{"{0} ಜಿ"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"ಮೀಟರ್‌ಗಳು/ಸೆ²"}
                 one{"{0} ಮೀ/ಸೆ²"}
                 other{"{0} ಮೀ/ಸೆ²"}
@@ -1340,11 +1340,6 @@ kn{
                 one{"{0} ಮೋಲ್"}
                 other{"{0} ಮೋಲ್"}
             }
-            part-per-million{
-                dnam{"ಭಾಗಗಳು/ಮಿಲಿಯನ್"}
-                one{"{0} ಭಾಪ್ರಮಿ"}
-                other{"{0} ಭಾಪ್ರಮಿ"}
-            }
             percent{
                 dnam{"ಶೇಕಡಾ"}
                 one{"{0}%"}
@@ -1355,6 +1350,11 @@ kn{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"ಭಾಗಗಳು/ಮಿಲಿಯನ್"}
+                one{"{0} ಭಾಪ್ರಮಿ"}
+                other{"{0} ಭಾಪ್ರಮಿ"}
+            }
             permyriad{
                 dnam{"ಪರ್ಮಿರೈಡ್"}
                 one{"{0}‱"}
@@ -1362,7 +1362,7 @@ kn{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ಲೀ/100ಕಿಮೀ"}
                 one{"{0} ಲೀ/100ಕಿಮೀ"}
                 other{"{0} ಲೀ/100ಕಿ.ಮೀ"}
@@ -1892,7 +1892,7 @@ kn{
                 one{"{0} ಹೆ.ಪ್ಯಾ"}
                 other{"{0} ಹೆ.ಪ್ಯಾ"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"ಮರ್ಕ್ಯು.ಅಂ."}
                 one{"{0} ಮರ್ಕ್ಯುಅಂ"}
                 other{"{0} ಮರ್ಕ್ಯುಅಂ"}
@@ -1912,7 +1912,7 @@ kn{
                 one{"{0} ಮಿ.ಬಾರ್"}
                 other{"{0} ಮಿ.ಬಾರ್"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"ಮರ್ಕ್ಯು.ಮಿ.ಮೀ."}
                 one{"{0} ಮರ್ಕ್ಯು ಮಿಮೀ"}
                 other{"{0} ಮರ್ಕ್ಯು ಮಿಮೀ"}
@@ -1922,7 +1922,7 @@ kn{
                 one{"{0} ಪಾ"}
                 other{"{0} ಪ್ಯಾ"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"ಪ್ರ.ಚ.ಇಂ.ಪೌಂ."}
                 one{"{0} ಪ್ರಚಇಂಪೌಂ"}
                 other{"{0} ಪ್ರಚಇಂಪೌಂ"}
@@ -1978,7 +1978,7 @@ kn{
                 one{"{0} ನ್ಯೂ.ಮೀ"}
                 other{"{0} ನ್ಯೂ.ಮೀ"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"ಎಲ್‌ಬಿಎಫ್-ಎಫ್‌ಟಿ"}
                 one{"{0} ಎಲ್‌ಬಿಎಫ್-ಎಫ್‌ಟಿ"}
                 other{"{0} ಎಲ್‌ಬಿಎಫ್-ಎಫ್‌ಟಿ"}

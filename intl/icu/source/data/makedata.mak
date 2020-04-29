@@ -12,11 +12,11 @@
 
 ##############################################################################
 # Keep the following in sync with the version - see common/unicode/uvernum.h
-U_ICUDATA_NAME=icudt66
+U_ICUDATA_NAME=icudt67
 ##############################################################################
 !IF "$(UWP)" == "UWP"
 # Optionally change the name of the data file for the UWP version.
-U_ICUDATA_NAME=icudt66
+U_ICUDATA_NAME=icudt67
 !ENDIF
 U_ICUDATA_ENDIAN_SUFFIX=l
 UNICODE_VERSION=13.0
@@ -213,6 +213,9 @@ COMMON_ICUDATA_DEPENDENCIES="$(ICUPBIN)\pkgdata.exe" "$(ICUTMP)\icudata.res" "$(
 COMMON_ICUDATA_ARGUMENTS=-f -e $(U_ICUDATA_NAME) -v $(ICU_PACKAGE_MODE) -c -p $(ICUPKG) -T "$(ICUTMP)" -L $(U_ICUDATA_NAME) -d "$(ICUBLD_PKG)" -s .
 !IF "$(UWP)" == "UWP"
 COMMON_ICUDATA_ARGUMENTS=$(COMMON_ICUDATA_ARGUMENTS) -u
+!ENDIF
+!IF "$(CFG)" == "x64\Release" || "$(CFG)" == "x64\Debug"
+COMMON_ICUDATA_ARGUMENTS=$(COMMON_ICUDATA_ARGUMENTS) -a X64
 !ENDIF
 !IF "$(CFG)" == "ARM\Release" || "$(CFG)" == "ARM\Debug"
 COMMON_ICUDATA_ARGUMENTS=$(COMMON_ICUDATA_ARGUMENTS) -a ARM

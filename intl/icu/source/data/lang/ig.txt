@@ -94,7 +94,7 @@ ig{
             latn{"Ọnụ Ọgụgụ Mpaghara Ọdịda Anyanwụ"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     codePatterns{
         language{"Asụsụ: {0}"}
         script{"Mkpụrụ Okwu: {0}"}

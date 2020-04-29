@@ -18,5 +18,5 @@ es_NI{
         wo{"wolof"}
         zgh{"tamazight marroquí estándar"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

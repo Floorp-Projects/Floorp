@@ -8,5 +8,5 @@ en_GY{
             "Guyanaese Dollar",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

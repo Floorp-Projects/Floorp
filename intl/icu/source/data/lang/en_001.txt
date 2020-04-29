@@ -21,7 +21,7 @@ en_001{
             h24{"24-Hour System (1–24)"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} – all"}
         compatibility{"{0} – compatibility"}

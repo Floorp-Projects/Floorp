@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ast{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ ast{
                 one{"{0} fuercia g"}
                 other{"{0} fuercies gues"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"metros per segundu al cuadráu"}
                 one{"{0} metru per segundu al cuadráu"}
                 other{"{0} metros por segundu al cuadráu"}
@@ -118,14 +118,14 @@ ast{
                 one{"{0} milimol per llitru"}
                 other{"{0} milimoles per llitru"}
             }
-            part-per-million{
+            permillion{
                 dnam{"partes per millón"}
                 one{"{0} parte per millón"}
                 other{"{0} partes per millón"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"llitros per 100 quilómetros"}
                 one{"{0} llitru per 100 quilómetros"}
                 other{"{0} llitros per 100 quilómetros"}
@@ -557,7 +557,7 @@ ast{
                 one{"{0} hectopascal"}
                 other{"{0} hectopascales"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"pulgaes de mercuriu"}
                 one{"{0} pulgada de mercuriu"}
                 other{"{0} pulgaes de mercuriu"}
@@ -567,12 +567,12 @@ ast{
                 one{"{0} milibar"}
                 other{"{0} milibares"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"milímetros de mercuriu"}
                 one{"{0} milímetru de mercuriu"}
                 other{"{0} milímetros de mercuriu"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"llibres per pulgada cuadrada"}
                 one{"{0} llibra per pulgada cuadrada"}
                 other{"{0} llibres per pulgada cuadrada"}
@@ -762,7 +762,7 @@ ast{
                 one{"{0}G"}
                 other{"{0}Gs"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 one{"{0}m/s²"}
                 other{"{0}m/s²"}
@@ -866,14 +866,14 @@ ast{
                 one{"{0}mmol/L"}
                 other{"{0}mmol/L"}
             }
-            part-per-million{
+            permillion{
                 dnam{"ppm"}
                 one{"{0}ppm"}
                 other{"{0}ppm"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 one{"{0}L/100km"}
                 other{"{0}L/100km"}
@@ -1300,7 +1300,7 @@ ast{
                 one{"{0}hPa"}
                 other{"{0}hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"″ Hg"}
                 one{"{0}″ Hg"}
                 other{"{0}″ Hg"}
@@ -1310,12 +1310,12 @@ ast{
                 one{"{0}mb"}
                 other{"{0}mb"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 one{"{0}mm Hg"}
                 other{"{0}mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 one{"{0}psi"}
                 other{"{0}psi"}
@@ -1505,7 +1505,7 @@ ast{
                 one{"{0} G"}
                 other{"{0} Gs"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 one{"{0} m/s²"}
                 other{"{0} m/s²"}
@@ -1609,14 +1609,14 @@ ast{
                 one{"{0} mmol/L"}
                 other{"{0} mmol/L"}
             }
-            part-per-million{
+            permillion{
                 dnam{"ppm"}
                 one{"{0} ppm"}
                 other{"{0} ppm"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100 km"}
                 one{"{0} L/100 km"}
                 other{"{0} L/100 km"}
@@ -2048,7 +2048,7 @@ ast{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"in Hg"}
                 one{"{0} inHg"}
                 other{"{0} inHg"}
@@ -2058,12 +2058,12 @@ ast{
                 one{"{0} mbar"}
                 other{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 one{"{0} psi"}
                 other{"{0} psi"}

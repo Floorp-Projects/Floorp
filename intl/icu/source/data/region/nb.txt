@@ -106,7 +106,7 @@ nb{
         ER{"Eritrea"}
         ES{"Spania"}
         ET{"Etiopia"}
-        EU{"EU"}
+        EU{"Den europeiske union"}
         EZ{"eurosonen"}
         FI{"Finland"}
         FJ{"Fiji"}
@@ -298,21 +298,17 @@ nb{
         ZZ{"ukjent område"}
     }
     Countries%short{
-        GB{"Storbritannia"}
         HK{"Hongkong"}
         MO{"Macao"}
         PS{"Palestina"}
-        UN{"FN"}
-        US{"USA"}
     }
     Countries%variant{
         CD{"Den demokratiske republikken Kongo"}
         CG{"Republikken Kongo"}
-        CI{"Elfenbenskysten"}
         CZ{"Den tsjekkiske republikk"}
         FK{"Falklandsøyene (Islas Malvinas)"}
         SZ{"Swaziland"}
         TL{"Timor-Leste"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ml{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"അബിദ്‌ജാൻ‌"}
@@ -1752,7 +1752,9 @@ ml{
             ls{"ന്യൂയി സമയം"}
         }
         "meta:Norfolk"{
-            ls{"നോർഫാക്ക് ദ്വീപുകൾ സമയം"}
+            ld{"നോർഫാക്ക് ദ്വീപുകൾ ഡേലൈറ്റ് സമയം"}
+            lg{"നോർഫാക്ക് ദ്വീപുകൾ സമയം"}
+            ls{"നോർഫാക്ക് ദ്വീപുകൾ സ്റ്റാൻഡേർഡ് സമയം"}
         }
         "meta:Noronha"{
             ld{"ഫെർണാഡോ ഡി നൊറോൻഹ ഗ്രീഷ്‌മകാല സമയം"}

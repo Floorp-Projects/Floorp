@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 hu{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1761,7 +1761,9 @@ hu{
             ls{"niuei idő"}
         }
         "meta:Norfolk"{
-            ls{"norfolk-szigeteki idő"}
+            ld{"norfolk-szigeteki nyári idő"}
+            lg{"norfolk-szigeteki idő"}
+            ls{"norfolk-szigeteki téli idő"}
         }
         "meta:Noronha"{
             ld{"Fernando de Noronha-i nyári idő"}

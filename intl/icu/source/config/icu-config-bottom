@@ -5,7 +5,13 @@
 ## Copyright (c) 2002-2013, International Business Machines Corporation and
 ## others. All Rights Reserved.
 
-ICUUC_FILE="${libdir}/${ICULIBS_COMMON_LIB_NAME}"
+# For MinGW do we want the common DLL to go into the bin location?
+if [ "$MINGW_MOVEDLLSTOBINDIR" = "YES" ]; then
+	ICUUC_FILE="${bindir}/${ICULIBS_COMMON_LIB_NAME}"
+else
+	ICUUC_FILE="${libdir}/${ICULIBS_COMMON_LIB_NAME}"
+fi
+
 ICUUC_FILE_A="${libdir}/${ICULIBS_COMMON_LIB_NAME_A}"
 
 #  echo ENABLE RPATH $ENABLE_RPATH and RPATHLDFLAGS=${RPATH_LDFLAGS}

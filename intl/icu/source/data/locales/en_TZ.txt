@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_TZ{
     %%Parent{"en_001"}
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         gregorian{
             DateTimePatterns{

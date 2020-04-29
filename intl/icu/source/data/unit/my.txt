@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 my{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -13,7 +13,7 @@ my{
                 dnam{"ဆွဲငင်အား"}
                 other{"{0} ဆွဲငင်အား"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"မီတာ/စက္ကန့်နှစ်ထပ်ကိန်း"}
                 other{"{0} မီတာ/စက္ကန့်နှစ်ထပ်ကိန်း"}
             }
@@ -107,10 +107,6 @@ my{
                 dnam{"mol"}
                 other{"{0} mol"}
             }
-            part-per-million{
-                dnam{"တစ်သန်းပုံ တစ်ပုံ"}
-                other{"တစ်သန်းပုံ {0} ပုံ"}
-            }
             percent{
                 dnam{"ရာခိုင်နှုန်း"}
                 other{"{0} ရာခိုင်နှုန်း"}
@@ -119,13 +115,17 @@ my{
                 dnam{"ထောင်လီစိတ်"}
                 other{"{0} ထောင်လီစိတ်"}
             }
+            permillion{
+                dnam{"တစ်သန်းပုံ တစ်ပုံ"}
+                other{"တစ်သန်းပုံ {0} ပုံ"}
+            }
             permyriad{
                 dnam{"ပါမီရိတ်"}
                 other{"{0} ပါမီရိတ်"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"တစ်ရာကီလိုမီတာရှိ လီတာ"}
                 other{"တစ်ရာကီလိုမီတာရှိ {0} လီတာ"}
             }
@@ -526,7 +526,7 @@ my{
                 dnam{"ဟက်တိုပါစကယ်"}
                 other{"{0} ဟက်တိုပါစကယ်"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"ပြဒါးလက်မ"}
                 other{"{0} ပြဒါးလက်မ"}
             }
@@ -542,11 +542,11 @@ my{
                 dnam{"မီလီဘား"}
                 other{"{0} မီလီဘား"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"ပြဒါးမီလီမီတာ"}
                 other{"{0} ပြဒါးမီလီမီတာ"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"ပေါင်/စတုရန်းလက်မ"}
                 other{"တစ်စတုရန်းလက်မလျှင် {0} ပေါင်"}
             }
@@ -592,7 +592,7 @@ my{
                 dnam{"နယူတန်−မီတာ"}
                 other{"{0} နယူတန်−မီတာ"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"lbf.ft"}
                 other{"{0} lbf.ft"}
             }
@@ -756,7 +756,7 @@ my{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 other{"{0} L/100km"}
             }
@@ -869,7 +869,7 @@ my{
             hectopascal{
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 other{"{0} inHg"}
             }
             millibar{
@@ -916,7 +916,7 @@ my{
                 dnam{"ဆွဲငင်အား"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"မီတာ/စက္ကန့်နှစ်ထပ်ကိန်း"}
                 other{"{0} m/s²"}
             }
@@ -1010,10 +1010,6 @@ my{
                 dnam{"mol"}
                 other{"{0} mol"}
             }
-            part-per-million{
-                dnam{"တစ်သန်းပုံ တစ်ပုံ"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"%"}
                 other{"{0}%"}
@@ -1022,13 +1018,17 @@ my{
                 dnam{"‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"တစ်သန်းပုံ တစ်ပုံ"}
+                other{"{0} ppm"}
+            }
             permyriad{
                 dnam{"ပါမီရိတ်"}
                 other{"{0}‱"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"တစ်ရာကီလိုမီတာရှိ လီတာ"}
                 other{"{0} L/100 km"}
             }
@@ -1426,7 +1426,7 @@ my{
                 dnam{"hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
                 other{"{0} inHg"}
             }
@@ -1442,11 +1442,11 @@ my{
                 dnam{"မီလီဘား"}
                 other{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 other{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"ပေါင်/စတုရန်းလက်မ"}
                 other{"{0} psi"}
             }
@@ -1492,7 +1492,7 @@ my{
                 dnam{"N.m"}
                 other{"{0} N.m"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"lbf.ft"}
                 other{"{0} lbf.ft"}
             }

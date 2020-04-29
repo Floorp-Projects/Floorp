@@ -287,6 +287,8 @@ bs{
         VU{"Vanuatu"}
         WF{"Ostrva Valis i Futuna"}
         WS{"Samoa"}
+        XA{"Pseudo naglasci"}
+        XB{"Pseudo bidi"}
         XK{"Kosovo"}
         YE{"Jemen"}
         YT{"Majote"}
@@ -311,5 +313,5 @@ bs{
         FK{"Folklandska (Malvinska) ostrva"}
         SZ{"Svazilend"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

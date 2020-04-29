@@ -234,7 +234,7 @@ dz{
             tibt{"ང་བཅས་ཀྱི་ཨང་ཡིག"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     codePatterns{
         language{"ཁ་སྐད་: {0}"}
         script{"ཡིག་གཟུགས་: {0}"}

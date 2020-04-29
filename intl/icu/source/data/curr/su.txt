@@ -1,0 +1,86 @@
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
+su{
+    Currencies{
+        BRL{
+            "R$",
+            "Real Brasil",
+        }
+        CNY{
+            "CN¥",
+            "Yuan Tiongkok",
+        }
+        EUR{
+            "€",
+            "Euro",
+        }
+        GBP{
+            "£",
+            "Pound Inggris",
+        }
+        IDR{
+            "Rp",
+            "Rupee Indonésia",
+        }
+        INR{
+            "₹",
+            "Rupee India",
+        }
+        JPY{
+            "¥",
+            "Yén Jepang",
+        }
+        RUB{
+            "RUB",
+            "Rubel Rusia",
+        }
+        USD{
+            "$",
+            "Dolar A.S.",
+        }
+    }
+    Currencies%narrow{
+        BRL{"R$"}
+        CNY{"¥"}
+        EUR{"€"}
+        GBP{"£"}
+        IDR{"Rp"}
+        INR{"₹"}
+        JPY{"¥"}
+        RUB{"₽"}
+        USD{"$"}
+    }
+    CurrencyPlurals{
+        BRL{
+            other{"real Brasil"}
+        }
+        CNY{
+            other{"yuan Tiongkok"}
+        }
+        EUR{
+            other{"euro"}
+        }
+        GBP{
+            other{"pound Inggris"}
+        }
+        IDR{
+            other{"rupee Indonésia"}
+        }
+        INR{
+            other{"rupee India"}
+        }
+        JPY{
+            other{"yén Jepang"}
+        }
+        RUB{
+            other{"rubel Rusia"}
+        }
+        USD{
+            other{"dolar A.S."}
+        }
+    }
+    CurrencyUnitPatterns{
+        other{"{0} {1}"}
+    }
+    Version{"37"}
+}

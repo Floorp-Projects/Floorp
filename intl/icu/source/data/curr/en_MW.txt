@@ -8,5 +8,5 @@ en_MW{
             "Malawian Kwacha",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

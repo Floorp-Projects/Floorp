@@ -178,7 +178,7 @@ km{
         minimumGroupingDigits{"1"}
         native{"khmr"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -1736,6 +1736,13 @@ km{
             end{"{0} និង {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
+        }
+        standard-narrow{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
+        }
+        standard-short{
+            2{"{0} និង {1}"}
         }
         unit{
             2{"{0} {1}"}

@@ -1,14 +1,14 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ca{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         search{
             Sequence{
                 "[import und-u-co-search]"
                 "&L<ŀ=l·<<<Ŀ=L·"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

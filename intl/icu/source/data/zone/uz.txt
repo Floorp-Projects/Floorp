@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 uz{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -809,6 +809,9 @@ uz{
         }
         "Asia:Qatar"{
             ec{"Qatar"}
+        }
+        "Asia:Qostanay"{
+            ec{"Kustanay"}
         }
         "Asia:Qyzylorda"{
             ec{"Qizilo‘rda"}
@@ -1707,7 +1710,9 @@ uz{
             ls{"Niuye vaqti"}
         }
         "meta:Norfolk"{
-            ls{"Norfolk oroli vaqti"}
+            ld{"Norfolk oroli yozgi vaqti"}
+            lg{"Norfolk oroli vaqti"}
+            ls{"Norfolk oroli standart vaqti"}
         }
         "meta:Noronha"{
             ld{"Fernandu-di-Noronya yozgi vaqti"}

@@ -1,14 +1,14 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 smn{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         search{
             Sequence{
                 "[import und-u-co-search]"
                 "[import smn-u-co-standard]"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
         standard{
             Sequence{
@@ -19,7 +19,7 @@ smn{
                 "&S<š<<<Š"
                 "&Z<ž<<<Ž<æ<<<Æ<ø<<<Ø<å<<<Å<ã<<<Ã<ä<<<Ä<á<<<Á<ö<<<Ö"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

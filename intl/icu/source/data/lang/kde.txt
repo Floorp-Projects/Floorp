@@ -48,5 +48,5 @@ kde{
         zh{"Chichina"}
         zu{"Chizulu"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

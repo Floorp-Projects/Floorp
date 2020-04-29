@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 brx{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"अबिद्जान"}
@@ -1566,6 +1566,8 @@ brx{
             ls{"नीऊई स्टैंडर्ड टाईम"}
         }
         "meta:Norfolk"{
+            ld{"नॉरफोक डेलाईट टाईम"}
+            lg{"नॉरफोक टाईम"}
             ls{"नॉरफोक स्टैंडर्ड टाईम"}
         }
         "meta:Noronha"{

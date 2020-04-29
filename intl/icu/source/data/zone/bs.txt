@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 bs{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1751,7 +1751,9 @@ bs{
             ls{"Vrijeme na Ostrvu Niue"}
         }
         "meta:Norfolk"{
-            ls{"Norfolško vrijeme"}
+            ld{"Norfolško ljetno vrijeme"}
+            lg{"Norfolško vrijeme"}
+            ls{"Norfolško standardno vrijeme"}
         }
         "meta:Noronha"{
             ld{"Ljetno vrijeme na ostrvu Fernando di Noronja"}

@@ -7,5 +7,5 @@ sq_MK{
             "Denari maqedonas",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

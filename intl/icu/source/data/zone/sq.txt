@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sq{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abixhan"}
@@ -1754,7 +1754,9 @@ sq{
             ls{"Ora e Niuesë"}
         }
         "meta:Norfolk"{
-            ls{"Ora e Ishullit Norfolk"}
+            ld{"Ora verore e Ishullit Norfolk"}
+            lg{"Ora e Ishullit Norfolk"}
+            ls{"Ora standarde e Ishullit Norfolk"}
         }
         "meta:Noronha"{
             ld{"Ora verore e Fernando-de-Noronjës"}

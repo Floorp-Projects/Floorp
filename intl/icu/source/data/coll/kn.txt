@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 kn{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         standard{
             Sequence{
@@ -9,7 +9,7 @@ kn{
                 "[reorder Knda Deva Beng Guru Gujr Orya Taml Telu Mlym Sinh]"
                 "&ಔ<ಂ<ಃ<ೱ<ೲ"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
         traditional{
             Sequence{
@@ -651,7 +651,7 @@ kn{
                 "&ಫೋ<<<ಫ಼ೋ"
                 "&ಫೌ<<<ಫ಼ೌ"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

@@ -4,5 +4,5 @@ ar_KW{
     NumberElements{
         default{"arab"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 yo_BJ{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Etc:UTC"{
             ls{"Àpapɔ̀ Àkókò Àgbáyé"}
@@ -34,6 +34,16 @@ yo_BJ{
             lg{"Àkókò Àtìláńtíìkì"}
             ls{"Àkókò àsikò Àtìláńtíìkì"}
         }
+        "meta:China"{
+            ld{"Àkókò Ojúmɔmɔ Sháínà"}
+            lg{"Àkókò Sháínà"}
+            ls{"Àkókò Ìfɛnukòsí Sháínà"}
+        }
+        "meta:Cuba"{
+            ld{"Àkókò Ojúmɔmɔ Kúbà"}
+            lg{"Àkókò Kúbà"}
+            ls{"Àkókò Àfɛnukò Kúbà"}
+        }
         "meta:Europe_Central"{
             ld{"Àkókò Àárin Sɔmà Europe"}
             lg{"Àkókò Àárin Europe"}
@@ -48,6 +58,44 @@ yo_BJ{
             ld{"Àkókò Sɔmà Ìhà Ìwɔ Oòrùn Europe"}
             lg{"Àkókò Ìwɔ Oòrùn Europe"}
             ls{"Àkókò àsikò Ìwɔ Oòrùn Europe"}
+        }
+        "meta:Greenland_Eastern"{
+            ld{"Àkókò ìgbà Ooru Greenland"}
+            lg{"Àkókò Ìlà oorùn Greenland"}
+            ls{"Àkókò Ìwɔ̀ Ìfɛnukò oorùn Greenland"}
+        }
+        "meta:Greenland_Western"{
+            ld{"Àkókò Àfɛnukò Ìgba Oòru Greenland"}
+            lg{"Àkókò Ìwɔ̀ oorùn Greenland"}
+            ls{"Àkókò Àfɛnukò Ìwɔ̀ Oòrùn Greenland"}
+        }
+        "meta:Hawaii_Aleutian"{
+            ld{"Àkókò Ojúmɔmɔ Hawaii-Aleutian"}
+            lg{"Àkókò Hawaii-Aleutian"}
+            ls{"Àkókò Àfɛnukò Hawaii-Aleutian"}
+        }
+        "meta:Indonesia_Western"{
+            ls{"Àkókò Ìwɔ̀ oorùn Indonesia"}
+        }
+        "meta:Mexico_Northwest"{
+            ld{"Àkókò Ojúmɔmɔ Apá Ìwɔ̀ Oorùn Mɛ́shíkò"}
+            lg{"Àkókò Apá Ìwɔ̀ Oorùn Mɛ́shíkò"}
+            ls{"Àkókò Àfɛnukò Apá Ìwɔ̀ Oorùn Mɛ́shíkò"}
+        }
+        "meta:Mexico_Pacific"{
+            ld{"Àkókò Ojúmɔmɔ Pásífíìkì Mɛ́síkò"}
+            lg{"Àkókò Pásífíìkì Mɛ́shíkò"}
+            ls{"Àkókò Àfɛnukò Pásífíìkì Mɛ́síkò"}
+        }
+        "meta:Newfoundland"{
+            ld{"Àkókò Ojúmɔmɔ Newfoundland"}
+            lg{"Àkókò Newfoundland"}
+            ls{"Àkókò Àfɛnukò Newfoundland"}
+        }
+        "meta:Pierre_Miquelon"{
+            ld{"Àkókò Ojúmɔmɔ Pierre & Miquelon"}
+            lg{"Àkókò Pierre & Miquelon"}
+            ls{"Àkókò Àfɛnukò Pierre & Miquelon"}
         }
         regionFormatDaylight{"{0} Àkókò ojúmɔmɔ"}
     }

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sw_KE{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "America:Barbados"{
             ec{"Babadosi"}
@@ -47,9 +47,6 @@ sw_KE{
         }
         "Asia:Macau"{
             ec{"Makao"}
-        }
-        "Asia:Qostanay"{
-            ec{"Kostanay"}
         }
         "Asia:Rangoon"{
             ec{"Yangon"}

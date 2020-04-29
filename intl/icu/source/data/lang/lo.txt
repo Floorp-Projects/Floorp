@@ -81,6 +81,7 @@ lo{
         car{"ຄາຣິບ"}
         cay{"ຄາຢູກາ"}
         cch{"ອາດແຊມ"}
+        ccp{"Chakma"}
         ce{"ຊີເຄນ"}
         ceb{"ຊີບູໂນ"}
         cgg{"ຊີກາ"}
@@ -148,6 +149,7 @@ lo{
         eu{"ບັສກີ"}
         ewo{"ອີວອນດູ"}
         fa{"ເປີຊຽນ"}
+        fa_AF{"ດາຣີ"}
         fan{"ແຟງ"}
         fat{"ແຟນຕີ"}
         ff{"ຟູລາ"}
@@ -542,6 +544,7 @@ lo{
         zh_Hant{"ພາສາຈີນແມນດາຣິນດັ້ງເດີມ"}
     }
     Languages%menu{
+        yue{"ພາສາຈີນ, ຈີກວາງຕຸ້ງ"}
         zh{"ພາສາຈີນ, ພາສາຈີນກາງ"}
     }
     Languages%short{
@@ -884,7 +887,7 @@ lo{
         VALLADER{"ວັລລາເດີ"}
         WADEGILE{"ການຖອດອັກສອນແບບເວດ-ໄຈລ໌"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — ທັງໝົດ"}
         category-list{"{0}: {1}"}

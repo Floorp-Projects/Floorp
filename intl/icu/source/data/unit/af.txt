@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 af{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ af{
                 one{"{0} swaartekrag"}
                 other{"{0} swaartekrag"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"meter per vierkante sekonde"}
                 one{"{0} meter per vierkante sekonde"}
                 other{"{0} meter per vierkante sekonde"}
@@ -123,11 +123,6 @@ af{
                 one{"{0} millimol per liter"}
                 other{"{0} millimol per liter"}
             }
-            part-per-million{
-                dnam{"dele per miljoen"}
-                one{"{0} deel per miljoen"}
-                other{"{0} dele per miljoen"}
-            }
             percent{
                 dnam{"persent"}
                 one{"{0} persent"}
@@ -138,6 +133,11 @@ af{
                 one{"{0} per duisend"}
                 other{"{0} per duisend"}
             }
+            permillion{
+                dnam{"dele per miljoen"}
+                one{"{0} deel per miljoen"}
+                other{"{0} dele per miljoen"}
+            }
             permyriad{
                 dnam{"per tienduisend"}
                 one{"{0} per tienduisend"}
@@ -145,7 +145,7 @@ af{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"liter per 100 kilometer"}
                 one{"{0} liter per 100 kilometer"}
                 other{"{0} liter per 100 kilometer"}
@@ -650,7 +650,7 @@ af{
                 one{"{0} hektopascal"}
                 other{"{0} hektopascal"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"duim kwik"}
                 one{"{0} duim kwik"}
                 other{"{0} duim kwik"}
@@ -670,12 +670,12 @@ af{
                 one{"{0} millibar"}
                 other{"{0} millibar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"millimeter kwik"}
                 one{"{0} millimeter kwik"}
                 other{"{0} millimeter kwik"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"pond per vierkante duim"}
                 one{"{0} pond per vierkante duim"}
                 other{"{0} pond per vierkante duim"}
@@ -731,7 +731,7 @@ af{
                 one{"{0} newtonmeter"}
                 other{"{0} newtonmeter"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"pondvoet"}
                 one{"{0} pondvoet"}
                 other{"{0} pondvoet"}
@@ -933,7 +933,7 @@ af{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ℓ/100 km"}
                 one{"{0} ℓ/100 km"}
                 other{"{0} ℓ/100 km"}
@@ -1073,7 +1073,7 @@ af{
                 one{"{0}hPa"}
                 other{"{0}hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0} dm.Hg"}
                 other{"{0} dm.Hg"}
             }
@@ -1131,7 +1131,7 @@ af{
                 one{"{0} G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 one{"{0} m/s²"}
                 other{"{0} m/s²"}
@@ -1246,11 +1246,6 @@ af{
                 one{"{0} mol"}
                 other{"{0} mol"}
             }
-            part-per-million{
-                dnam{"dele/miljoen"}
-                one{"{0} d.p.m."}
-                other{"{0} d.p.m."}
-            }
             percent{
                 dnam{"percent"}
                 one{"{0}%"}
@@ -1261,6 +1256,11 @@ af{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"dele/miljoen"}
+                one{"{0} d.p.m."}
+                other{"{0} d.p.m."}
+            }
             permyriad{
                 dnam{"per tienduisend"}
                 one{"{0}‱"}
@@ -1268,7 +1268,7 @@ af{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ℓ/100 km"}
                 one{"{0} ℓ/100 km"}
                 other{"{0} ℓ/100 km"}
@@ -1794,7 +1794,7 @@ af{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"duim Hg"}
                 one{"{0} duim Hg"}
                 other{"{0} duim Hg"}
@@ -1814,7 +1814,7 @@ af{
                 one{"{0} mbar"}
                 other{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
@@ -1824,7 +1824,7 @@ af{
                 one{"{0} Pa"}
                 other{"{0} Pa"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"lb./vk. duim"}
                 one{"{0} pd.vk.dm."}
                 other{"{0} pd.vk.dm."}
@@ -1880,7 +1880,7 @@ af{
                 one{"{0} Nm"}
                 other{"{0} Nm"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"lb.vt."}
                 one{"{0} lb.vt."}
                 other{"{0} lb.vt."}

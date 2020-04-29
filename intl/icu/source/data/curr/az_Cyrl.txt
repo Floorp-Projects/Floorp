@@ -11,5 +11,5 @@ az_Cyrl{
     Currencies%variant{
         AZN{"ман."}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

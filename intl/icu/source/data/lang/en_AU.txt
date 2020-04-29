@@ -2,6 +2,9 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_AU{
     %%Parent{"en_001"}
+    Keys{
+        colCaseFirst{"Upper case / Lower case Ordering"}
+    }
     Languages{
         ar_001{"Modern Standard Arabic"}
         bn{"Bengali"}
@@ -25,9 +28,15 @@ en_AU{
         zh_Hans{"Simplified Chinese"}
         zh_Hant{"Traditional Chinese"}
     }
+    Languages%menu{
+        ckb{"Kurdish (Central)"}
+    }
     Languages%short{
         en_GB{"UK English"}
         en_US{"US English"}
+    }
+    Languages%variant{
+        ckb{"Kurdish (Sorani)"}
     }
     Scripts{
         Beng{"Bengali"}
@@ -38,5 +47,5 @@ en_AU{
             ethiopic{"Ethiopian Calendar"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

@@ -142,6 +142,7 @@ az{
         eu{"bask"}
         ewo{"evondo"}
         fa{"fars"}
+        fa_AF{"dari"}
         fan{"fang"}
         fat{"fanti"}
         ff{"fula"}
@@ -751,7 +752,7 @@ az{
             tibt{"Tibet Rəqəmləri"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — Bütün"}
         category-list{"{0}: {1}"}

@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 uz_Cyrl{
     %%Parent{"root"}
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -171,7 +171,7 @@ uz_Cyrl{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0} inHg"}
                 other{"{0} inHg"}
             }
@@ -382,7 +382,7 @@ uz_Cyrl{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0} inHg"}
                 other{"{0} inHg"}
             }
@@ -593,7 +593,7 @@ uz_Cyrl{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0} inHg"}
                 other{"{0} inHg"}
             }

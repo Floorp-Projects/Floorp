@@ -183,7 +183,7 @@ th{
         minimumGroupingDigits{"1"}
         native{"thai"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1488,14 +1488,14 @@ th{
                 }
                 GyM{
                     G{"MM/GGGGG y – MM/GGGGG y"}
-                    M{"M/y – M/y"}
-                    y{"M/y – M/y"}
+                    M{"M/y – M/y G"}
+                    y{"M/y – M/y G"}
                 }
                 GyMEd{
                     G{"E d/MM/GGGGG y – E d/MM/GGGGG y"}
-                    M{"E d/M/y – E d/M/y"}
-                    d{"E d/M/y – E d/M/y"}
-                    y{"E d/M/y – E d/M/y"}
+                    M{"E d/M/y – E d/M/y G"}
+                    d{"E d/M/y – E d/M/y G"}
+                    y{"E d/M/y – E d/M/y G"}
                 }
                 GyMMM{
                     G{"MMM G y – MMM G y"}
@@ -1516,9 +1516,9 @@ th{
                 }
                 GyMd{
                     G{"d/MM/GGGGG y – d/MM/GGGGG y"}
-                    M{"d/M/y – d/M/y"}
-                    d{"d/M/y – d/M/y"}
-                    y{"d/M/y – d/M/y"}
+                    M{"d/M/y – d/M/y G"}
+                    d{"d/M/y – d/M/y G"}
+                    y{"d/M/y – d/M/y G"}
                 }
                 H{
                     H{"HH–HH"}

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 fi{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1755,7 +1755,9 @@ fi{
             ls{"Niuen aika"}
         }
         "meta:Norfolk"{
-            ls{"Norfolkinsaaren aika"}
+            ld{"Norfolkinsaaren kesäaika"}
+            lg{"Norfolkinsaaren aika"}
+            ls{"Norfolkinsaaren normaaliaika"}
         }
         "meta:Noronha"{
             ld{"Fernando de Noronhan kesäaika"}

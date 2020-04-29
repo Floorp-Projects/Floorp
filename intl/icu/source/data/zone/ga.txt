@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ga{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1766,7 +1766,9 @@ ga{
             ls{"Am Niue"}
         }
         "meta:Norfolk"{
-            ls{"Am Oileán Norfolk"}
+            ld{"Am Samhraidh Oileán Norfolk"}
+            lg{"Am Oileán Norfolk"}
+            ls{"Am Caighdeánach Oileán Norfolk"}
         }
         "meta:Noronha"{
             ld{"Am Samhraidh Fhernando de Noronha"}

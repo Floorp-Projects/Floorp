@@ -298,7 +298,6 @@ tk{
         ZZ{"Näbelli sebit"}
     }
     Countries%short{
-        GB{"Birleşen Patyşalyk"}
         HK{"Gonkong"}
         MO{"Makao"}
         PS{"Palestina"}
@@ -313,5 +312,5 @@ tk{
         SZ{"Swazilend"}
         TL{"Gündogar Timor"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

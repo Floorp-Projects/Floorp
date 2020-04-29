@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 br{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -9,7 +9,7 @@ br{
     }
     units{
         acceleration{
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"metroù dre eilenn garrez"}
                 few{"{0} metr dre eilenn garrez"}
                 many{"{0} a vetroù dre eilenn garrez"}
@@ -194,7 +194,7 @@ br{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"litroù dre 100 kilometr"}
                 few{"{0} litr dre 100 kilometr"}
                 many{"{0} a litroù dre 100 kilometr"}
@@ -1032,7 +1032,7 @@ br{
                 other{"{0} paskal"}
                 two{"{0} baskal"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"lurioù dre veutad karrez"}
                 few{"{0} lur dre veutad karrez"}
                 many{"{0} a lurioù dre veutad karrez"}
@@ -1353,7 +1353,7 @@ br{
                 other{"{0}G"}
                 two{"{0}G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 few{"{0}m/s²"}
                 many{"{0}m/s²"}
@@ -1548,7 +1548,7 @@ br{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100km"}
                 few{"{0}l/100km"}
                 many{"{0}l/100km"}
@@ -2344,7 +2344,7 @@ br{
                 other{"{0}hPa"}
                 two{"{0}hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"″Hg"}
                 few{"{0}″Hg"}
                 many{"{0}″Hg"}
@@ -2374,7 +2374,7 @@ br{
                 other{"{0}mbar"}
                 two{"{0}mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mmHg"}
                 few{"{0}mmHg"}
                 many{"{0}mmHg"}
@@ -2389,7 +2389,7 @@ br{
                 other{"{0}Pa"}
                 two{"{0}Pa"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"lb/in²"}
                 few{"{0}lb/in²"}
                 many{"{0}lb/in²"}
@@ -2474,7 +2474,7 @@ br{
                 other{"{0}N⋅m"}
                 two{"{0}N⋅m"}
             }
-            pound-foot{
+            pound-force-foot{
                 few{"{0}lbf⋅ft"}
                 many{"{0}lbf⋅ft"}
                 one{"{0}lbf⋅ft"}
@@ -2707,7 +2707,7 @@ br{
             g-force{
                 dnam{"G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 few{"{0} m/s²"}
                 many{"{0} m/s²"}
@@ -2888,7 +2888,7 @@ br{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100km"}
                 few{"{0} l/100km"}
                 many{"{0} l/100km"}
@@ -3598,7 +3598,7 @@ br{
                 other{"{0} hPa"}
                 two{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
                 few{"{0} inHg"}
                 many{"{0} inHg"}
@@ -3614,7 +3614,7 @@ br{
                 other{"{0} mbar"}
                 two{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mmHg"}
                 few{"{0} mmHg"}
                 many{"{0} mmHg"}
@@ -3622,7 +3622,7 @@ br{
                 other{"{0} mmHg"}
                 two{"{0} mmHg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"lb/in²"}
                 few{"{0} lb/in²"}
                 many{"{0} lb/in²"}

@@ -512,7 +512,7 @@ ksh{
         VALENCIA{"valenzijaanesche Dijaläk"}
         WADEGILE{"lateijnesche Ömschreff noh Wade-Giles"}
     }
-    Version{"36.1"}
+    Version{"37"}
     codePatterns{
         language{"de Schprohch afjekööz met „{0}“"}
         script{"de Schreff afjekööz met „{0}“"}

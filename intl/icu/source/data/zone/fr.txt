@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 fr{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1743,7 +1743,9 @@ fr{
             ls{"heure de Nioué"}
         }
         "meta:Norfolk"{
-            ls{"heure de l’île Norfolk"}
+            ld{"heure d’été de l’île Norfolk"}
+            lg{"heure de l’île Norfolk"}
+            ls{"heure normale de l’île Norfolk"}
         }
         "meta:Noronha"{
             ld{"heure d’été de Fernando de Noronha"}

@@ -14,7 +14,7 @@ ur_IN{
             }
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     fields{
         day-narrow{
             relativeTime{

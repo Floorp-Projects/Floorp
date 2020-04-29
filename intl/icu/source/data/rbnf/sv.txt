@@ -221,5 +221,5 @@ sv{
             "0: =%spellout-ordinal-neuter=;",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

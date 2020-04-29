@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 lt{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"hh:mm"}
         hms{"hh:mm:ss"}
@@ -16,7 +16,7 @@ lt{
                 one{"{0} laisvojo kritimo pagreitis"}
                 other{"{0} laisvojo kritimo pagreičių"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"metrai per kvadratinę sekundę"}
                 few{"{0} m/s²"}
                 many{"{0} m/s²"}
@@ -170,13 +170,6 @@ lt{
                 one{"{0} molis"}
                 other{"{0} molių"}
             }
-            part-per-million{
-                dnam{"milijoninės dalys"}
-                few{"{0} milijoninės dalys"}
-                many{"{0} milijoninės dalies"}
-                one{"{0} milijoninė dalis"}
-                other{"{0} milijoninių dalių"}
-            }
             percent{
                 dnam{"procentas"}
                 few{"{0} %"}
@@ -191,9 +184,16 @@ lt{
                 one{"{0} promilė"}
                 other{"{0} promilė"}
             }
+            permillion{
+                dnam{"milijoninės dalys"}
+                few{"{0} milijoninės dalys"}
+                many{"{0} milijoninės dalies"}
+                one{"{0} milijoninė dalis"}
+                other{"{0} milijoninių dalių"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"litrai 100 kilometrų"}
                 few{"{0} litrai 100 kilometrų"}
                 many{"{0} litro 100 kilometrų"}
@@ -909,7 +909,7 @@ lt{
                 one{"{0} hektopaskalis"}
                 other{"{0} hektopaskalių"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"gyvsidabrio stulpelio coliai"}
                 few{"{0} gyvsidabrio stulpelio coliai"}
                 many{"{0} gyvsidabrio stulpelio colio"}
@@ -937,7 +937,7 @@ lt{
                 one{"{0} milibaras"}
                 other{"{0} milibarų"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"gysidabrio stulpelio milimetrai"}
                 few{"{0} gysidabrio stulpelio milimetrai"}
                 many{"{0} gysidabrio stulpelio milimetro"}
@@ -951,7 +951,7 @@ lt{
                 one{"{0} paskalis"}
                 other{"{0} paskalių"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"svarai kv. colyje"}
                 few{"{0} svarai kv. colyje"}
                 many{"{0} svaro kv. colyje"}
@@ -1027,7 +1027,7 @@ lt{
                 one{"{0} niutonmetras"}
                 other{"{0} niutonmetrų"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"svarų pėdos"}
             }
         }
@@ -1237,7 +1237,7 @@ lt{
                 one{"{0} G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 few{"{0} m/s²"}
                 many{"{0} m/s²"}
@@ -1316,7 +1316,7 @@ lt{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 few{"{0} l/100 km"}
                 many{"{0} l/100 km"}
@@ -1595,7 +1595,7 @@ lt{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
                 few{"{0} inHg"}
                 many{"{0} inHg"}
@@ -1609,14 +1609,14 @@ lt{
                 one{"{0} mbar"}
                 other{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 few{"{0} mm Hg"}
                 many{"{0} mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"lb in²"}
                 few{"{0} lb in²"}
                 many{"{0} lb in²"}
@@ -1741,7 +1741,7 @@ lt{
                 one{"{0} G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 few{"{0} m/s²"}
                 many{"{0} m/s²"}
@@ -1888,13 +1888,6 @@ lt{
                 one{"{0} mmol/l"}
                 other{"{0} mmol/l"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                few{"{0} ppm"}
-                many{"{0} ppm"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"procentas"}
                 few{"{0} %"}
@@ -1909,9 +1902,16 @@ lt{
                 one{"{0} ‰"}
                 other{"{0} ‰"}
             }
+            permillion{
+                dnam{"ppm"}
+                few{"{0} ppm"}
+                many{"{0} ppm"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 few{"{0} l/100 km"}
                 many{"{0} l/100 km"}
@@ -2574,7 +2574,7 @@ lt{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
                 few{"{0} inHg"}
                 many{"{0} inHg"}
@@ -2588,7 +2588,7 @@ lt{
                 one{"{0} mbar"}
                 other{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 few{"{0} mm Hg"}
                 many{"{0} mm Hg"}
@@ -2598,7 +2598,7 @@ lt{
             pascal{
                 dnam{"paskaliai"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"lb in²"}
                 few{"{0} lb in²"}
                 many{"{0} lb in²"}

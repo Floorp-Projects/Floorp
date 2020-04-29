@@ -1,7 +1,7 @@
-commit 5f681ecbc75898a6484217b322f3883b6d1b2049
-Author: Jeff Genovy <29107334+jefgen@users.noreply.github.com>
-Date:   Mon Mar 9 17:38:44 2020 -0700
+commit 125e29d54990e74845e1546851b5afa3efab06ce
+Author: Peter Edberg <pedberg@unicode.org>
+Date:   Wed Apr 15 23:30:01 2020 -0700
 
-    ICU-20965 Remove VS2015 from CI builds, no longer supported by Azure Pipelines
+    ICU-21061 integrate CLDR release-37-beta3 to master
     
-    (cherry-picked from f411b4197db5c86fb52cbd788c0646e513303828)
+    (cherry-picked from 71fa037844dbee3f58b7928097437b2fc635db61)

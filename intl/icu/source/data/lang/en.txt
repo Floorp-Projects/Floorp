@@ -666,6 +666,8 @@ en{
         zh_Hant{"Traditional Mandarin Chinese"}
     }
     Languages%menu{
+        ars{"Arabic, Najdi"}
+        ckb{"Kurdish, Central"}
         yue{"Chinese, Cantonese"}
         zh{"Chinese, Mandarin"}
     }
@@ -675,6 +677,7 @@ en{
         en_US{"US English"}
     }
     Languages%variant{
+        ckb{"Kurdish, Sorani"}
         ky{"Kirghiz"}
         my{"Myanmar Language"}
         ps{"Pushto"}
@@ -686,6 +689,7 @@ en{
         Aghb{"Caucasian Albanian"}
         Ahom{"Ahom"}
         Arab{"Arabic"}
+        Aran{"Nastaliq"}
         Armi{"Imperial Aramaic"}
         Armn{"Armenian"}
         Avst{"Avestan"}
@@ -1171,6 +1175,7 @@ en{
             roman{"Roman Numerals"}
             romanlow{"Roman Lowercase Numerals"}
             saur{"Saurashtra Digits"}
+            segment{"Segmented Digits"}
             shrd{"Sharada Digits"}
             sind{"Khudawadi Digits"}
             sinh{"Sinhala Lith Digits"}
@@ -1270,7 +1275,7 @@ en{
         VALENCIA{"Valencian"}
         WADEGILE{"Wade-Giles Romanization"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — all"}
         category-list{"{0}: {1}"}

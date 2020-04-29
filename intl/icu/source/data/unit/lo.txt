@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 lo{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -13,7 +13,7 @@ lo{
                 dnam{"ແຮງຕົກຕາມລຳພັງ"}
                 other{"{0} ແຮງຕົກຕາມລຳພັງ"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 other{"{0} m/s²"}
             }
@@ -107,10 +107,6 @@ lo{
                 dnam{"ໂມ​ລ"}
                 other{"{0} ໂມ​ລ"}
             }
-            part-per-million{
-                dnam{"ພາດຕໍ່ລ້ານ"}
-                other{"{0} ພາດຕໍ່ລ້ານ"}
-            }
             percent{
                 dnam{"ເປີເຊັນ"}
                 other{"{0} ເປີເຊັນ"}
@@ -119,13 +115,17 @@ lo{
                 dnam{"ຕໍ່ພັນ"}
                 other{"{0} ຕໍ່ພັນ"}
             }
+            permillion{
+                dnam{"ພາດຕໍ່ລ້ານ"}
+                other{"{0} ພາດຕໍ່ລ້ານ"}
+            }
             permyriad{
                 dnam{"ເປີ​ມີ​ຣຽດ"}
                 other{"{0} ເປີ​ມີ​ຣຽດ"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ລິດ ຕໍ່ 100 ກິໂລເເມັດ"}
                 other{"{0} ລິດຕໍ່ 100 ກີໂລແມັດ"}
             }
@@ -518,7 +518,7 @@ lo{
                 dnam{"hectopascals"}
                 other{"{0} hectopascals"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"in Hg"}
                 other{"{0} inches of mercury"}
             }
@@ -534,11 +534,11 @@ lo{
                 dnam{"ມິນລິບາ"}
                 other{"{0} ມິນລິບາ"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 other{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"pounds per square inch"}
                 other{"{0} pounds per square inch"}
             }
@@ -584,7 +584,7 @@ lo{
                 dnam{"ນິວ​ເຕິນ​ແມັດ"}
                 other{"{0} ນິວ​ເຕິນ​ແມັດ"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"ປອນ​-ຟຸດ"}
                 other{"{0} ປອນ​-ຟຸດ"}
             }
@@ -741,7 +741,7 @@ lo{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ລ/ 100 ກມ"}
                 other{"{0} ລ / 100 ກມ"}
             }
@@ -861,7 +861,7 @@ lo{
                 dnam{"hPA"}
                 other{"{0} hPA"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"in Hg"}
                 other{"{0} in Hg"}
             }
@@ -910,7 +910,7 @@ lo{
                 dnam{"ແຮງຕົກຕາມລຳພັງ"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 other{"{0} m/s²"}
             }
@@ -1000,10 +1000,6 @@ lo{
                 dnam{"ມິລິໂມນ/ລິດ"}
                 other{"{0} mmol/L"}
             }
-            part-per-million{
-                dnam{"ພາດ/ລ້ານ"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"ເປີເຊັນ"}
                 other{"{0}%"}
@@ -1012,9 +1008,13 @@ lo{
                 dnam{"ຕໍ່ພັນ"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"ພາດ/ລ້ານ"}
+                other{"{0} ppm"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ລ/ 100 ກມ"}
                 other{"{0} L/100km"}
             }
@@ -1369,7 +1369,7 @@ lo{
                 dnam{"hPA"}
                 other{"{0} hPA"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"in Hg"}
                 other{"{0} in Hg"}
             }
@@ -1377,11 +1377,11 @@ lo{
                 dnam{"mbar"}
                 other{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 other{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 other{"{0} psi"}
             }

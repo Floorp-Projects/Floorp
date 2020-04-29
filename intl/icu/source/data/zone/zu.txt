@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 zu{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"i-Abidjan"}
@@ -1717,7 +1717,9 @@ zu{
             ls{"Isikhathi sase-Niue"}
         }
         "meta:Norfolk"{
-            ls{"Isikhathi sase-Norfolk Islands"}
+            ld{"Isikhathi sase-Norfolk Islands sasehlobo"}
+            lg{"Isikhathi sase-Norfolk Islands"}
+            ls{"Isikhathi sase-Norfolk Islands esivamile"}
         }
         "meta:Noronha"{
             ld{"Isikhathi sase-Fernando de Noronha sasehlobo"}

@@ -221,6 +221,7 @@ likelySubtags:table(nofallback){
     bzh{"bzh_Latn_ZZ"}
     bzw{"bzw_Latn_ZZ"}
     ca{"ca_Latn_ES"}
+    cad{"cad_Latn_US"}
     can{"can_Latn_ZZ"}
     cbj{"cbj_Latn_ZZ"}
     cch{"cch_Latn_NG"}
@@ -461,6 +462,7 @@ likelySubtags:table(nofallback){
     he{"he_Hebr_IL"}
     hhy{"hhy_Latn_ZZ"}
     hi{"hi_Deva_IN"}
+    hi_Latn{"hi_Latn_IN"}
     hia{"hia_Latn_ZZ"}
     hif{"hif_Latn_FJ"}
     hig{"hig_Latn_ZZ"}
@@ -637,6 +639,7 @@ likelySubtags:table(nofallback){
     krs{"krs_Latn_ZZ"}
     kru{"kru_Deva_IN"}
     ks{"ks_Arab_IN"}
+    ks_Deva{"ks_Deva_IN"}
     ksb{"ksb_Latn_TZ"}
     ksd{"ksd_Latn_ZZ"}
     ksf{"ksf_Latn_CM"}
@@ -837,7 +840,7 @@ likelySubtags:table(nofallback){
     mro{"mro_Mroo_BD"}
     ms{"ms_Latn_MY"}
     ms_CC{"ms_Arab_CC"}
-    ms_ID{"ms_Arab_ID"}
+    ms_ID{"ms_Latn_ID"}
     mt{"mt_Latn_MT"}
     mtc{"mtc_Latn_ZZ"}
     mtf{"mtf_Latn_ZZ"}
@@ -1047,7 +1050,7 @@ likelySubtags:table(nofallback){
     sah{"sah_Cyrl_RU"}
     saq{"saq_Latn_KE"}
     sas{"sas_Latn_ID"}
-    sat{"sat_Latn_IN"}
+    sat{"sat_Olck_IN"}
     sav{"sav_Latn_SN"}
     saz{"saz_Saur_IN"}
     sba{"sba_Latn_ZZ"}

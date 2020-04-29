@@ -23,14 +23,9 @@ es_US{
         QO{"Territorios alejados de Oceanía"}
         TA{"Tristán de Acuña"}
         UM{"Islas menores alejadas de EE. UU."}
-        UN{"UN"}
     }
     Countries%short{
         GB{"RU"}
     }
-    Countries%variant{
-        CI{"CI"}
-        TL{"TL"}
-    }
-    Version{"36.1"}
+    Version{"37"}
 }

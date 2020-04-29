@@ -1,14 +1,14 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 et{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         standard{
             Sequence{
                 "&[before 1]T<š<<<Š<z<<<Z<ž<<<Ž"
                 "&[before 1]X<õ<<<Õ<ä<<<Ä<ö<<<Ö<ü<<<Ü"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

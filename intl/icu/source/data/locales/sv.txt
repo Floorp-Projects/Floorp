@@ -251,7 +251,7 @@ sv{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         buddhist{
             availableFormats{
@@ -571,10 +571,25 @@ sv{
                     h{"h:mm – h:mm B"}
                     m{"h:mm – h:mm B"}
                 }
+                Gy{
+                    y{"y – y G"}
+                }
+                GyMEd{
+                    G{"y-MM-dd, E GGGG – y-MM-dd, E GGGG"}
+                    M{"E, M/d/y – E, M/d/y GGGGG"}
+                    d{"y-MM-dd, E – y-MM-dd, E GGGGG"}
+                    y{"E, M/d/y – E, M/d/y GGGGG"}
+                }
                 GyMMM{
                     G{"MMM y G – MMM y G"}
                     M{"MMM – MMM y G"}
                     y{"MMM y G – MMM y"}
+                }
+                GyMMMEd{
+                    G{"E d MMM y G – E d MMM y G"}
+                    M{"E d MMM – E d MMM y G"}
+                    d{"E d MMM – E d MMM y G"}
+                    y{"E d MMM y – E d MMM y G"}
                 }
                 GyMMMd{
                     G{"d MMM y G – d MMM y G"}

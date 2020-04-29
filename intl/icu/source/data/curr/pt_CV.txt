@@ -17,5 +17,5 @@ pt_CV{
             "escudo português",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

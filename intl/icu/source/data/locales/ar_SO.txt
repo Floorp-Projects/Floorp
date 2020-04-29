@@ -10,5 +10,5 @@ ar_SO{
             }
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

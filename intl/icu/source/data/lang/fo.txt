@@ -302,7 +302,6 @@ fo{
         ro{"rumenskt"}
         ro_MD{"moldaviskt"}
         rof{"rombo"}
-        root{"root"}
         ru{"russiskt"}
         rup{"aromenskt"}
         rw{"kinyarwanda"}
@@ -557,7 +556,7 @@ fo{
         POLYTON{"polytonísk"}
         WADEGILE{"Wade-Giles"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — Alt"}
         category-list{"{0}: {1}"}

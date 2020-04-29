@@ -2,5 +2,5 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 uz_Arab{
     %%Parent{"root"}
-    Version{"36.1"}
+    Version{"37"}
 }

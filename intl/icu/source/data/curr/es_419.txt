@@ -60,5 +60,5 @@ es_419{
             other{"(moneda desconocida)"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

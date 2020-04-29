@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sk{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1761,7 +1761,9 @@ sk{
             ls{"niuejský čas"}
         }
         "meta:Norfolk"{
-            ls{"norfolský čas"}
+            ld{"norfolský letný čas"}
+            lg{"norfolský čas"}
+            ls{"norfolský štandardný čas"}
         }
         "meta:Noronha"{
             ld{"letný čas súostrovia Fernando de Noronha"}

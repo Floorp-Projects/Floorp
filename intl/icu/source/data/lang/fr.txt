@@ -182,6 +182,7 @@ fr{
         ewo{"éwondo"}
         ext{"estrémègne"}
         fa{"persan"}
+        fa_AF{"dari"}
         fan{"fang"}
         fat{"fanti"}
         ff{"peul"}
@@ -645,11 +646,9 @@ fr{
         zh_Hant{"mandarin traditionnel"}
     }
     Languages%menu{
+        ckb{"kurde sorani"}
         yue{"chinois cantonais"}
         zh{"chinois mandarin"}
-    }
-    Languages%short{
-        az{"azéri"}
     }
     Languages%variant{
         ps{"pashto"}
@@ -657,6 +656,7 @@ fr{
     }
     Scripts{
         Arab{"arabe"}
+        Aran{"nastaliq"}
         Armi{"araméen impérial"}
         Armn{"arménien"}
         Avst{"avestique"}
@@ -752,6 +752,7 @@ fr{
         Phnx{"phénicien"}
         Plrd{"phonétique de Pollard"}
         Prti{"parthe des inscriptions"}
+        Qaag{"zawgyi"}
         Rjng{"rejang"}
         Roro{"rongorongo"}
         Runr{"runique"}
@@ -983,7 +984,7 @@ fr{
         VALENCIA{"valencien"}
         WADEGILE{"Wade-Giles"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — tout"}
         category-list{"{0} : {1}"}

@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_AU{
     %%Parent{"en_001"}
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -69,7 +69,7 @@ en_AU{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 one{"{0}L/100km"}
                 other{"{0}L/100km"}
@@ -181,7 +181,7 @@ en_AU{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100 km"}
                 one{"{0} L/100 km"}
                 other{"{0} L/100 km"}
@@ -264,7 +264,7 @@ en_AU{
             }
         }
         pressure{
-            inch-hg{
+            inch-ofhg{
                 dnam{"in Hg"}
             }
             millibar{
@@ -272,7 +272,7 @@ en_AU{
                 one{"{0} mb"}
                 other{"{0} mb"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}

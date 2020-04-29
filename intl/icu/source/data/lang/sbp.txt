@@ -48,5 +48,5 @@ sbp{
         zh{"Ishishina"}
         zu{"Ishisulu"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

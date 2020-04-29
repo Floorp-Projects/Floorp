@@ -103,6 +103,7 @@ tk{
         eu{"bask dili"}
         ewo{"ewondo dili"}
         fa{"pars dili"}
+        fa_AF{"dari dili"}
         ff{"fula dili"}
         fi{"fin dili"}
         fil{"filippin dili"}
@@ -534,7 +535,7 @@ tk{
             tibt{"Tibet sanlary"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — ähli"}
         category-list{"{0}: {1}"}

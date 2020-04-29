@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ug{
-    Version{"36.1"}
+    Version{"37"}
     units{
         acceleration{
             g-force{
@@ -157,7 +157,7 @@ ug{
                 one{"{0} يۈز پاسكال"}
                 other{"{0} يۈز پاسكال"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0} ديۇيم سىماب تۈۋرۇكى"}
                 other{"{0} ديۇيم سىماب تۈۋرۇكى"}
             }
@@ -349,7 +349,7 @@ ug{
                 one{"{0}hPa"}
                 other{"{0}hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0}\u0022 Hg"}
                 other{"{0}\u0022 Hg"}
             }
@@ -552,7 +552,7 @@ ug{
                 one{"{0} ھېكتوپاسكال"}
                 other{"{0} ھېكتوپاسكال"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0} inHg"}
                 other{"{0} inHg"}
             }

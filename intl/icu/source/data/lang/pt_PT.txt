@@ -49,6 +49,7 @@ pt_PT{
         es_ES{"espanhol europeu"}
         es_MX{"espanhol mexicano"}
         et{"estónio"}
+        fa_AF{"dari"}
         fon{"fon"}
         fr_CA{"francês canadiano"}
         fr_CH{"francês suíço"}
@@ -95,7 +96,6 @@ pt_PT{
         pt_PT{"português europeu"}
         raj{"rajastanês"}
         ro_MD{"moldávio"}
-        root{"root"}
         se{"sami do norte"}
         sga{"irlandês antigo"}
         shu{"árabe do Chade"}
@@ -125,6 +125,7 @@ pt_PT{
         zh_Hant{"chinês mandarim tradicional"}
     }
     Languages%menu{
+        ckb{"curdo sorani"}
         zh{"chinês mandarim"}
     }
     Languages%short{
@@ -132,6 +133,7 @@ pt_PT{
         en_GB{"inglês (RU)"}
     }
     Scripts{
+        Aran{"nasta’liq"}
         Armn{"arménio"}
         Beng{"bengalês"}
         Egyd{"egípcio demótico"}
@@ -269,7 +271,7 @@ pt_PT{
         MONOTON{"monotónico"}
         POLYTON{"politónico"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} – tudo"}
         compatibility{"{0} – compatibilidade"}

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 si{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h.mm"}
         hms{"h.mm.ss"}
@@ -14,7 +14,7 @@ si{
                 one{"g-බලය {0}"}
                 other{"g-බලය {0}"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"තත්පර වර්ගයට මීටර"}
                 one{"තත්පර වර්ගයට මීටර {0}"}
                 other{"තත්පර වර්ගයට මීටර {0}"}
@@ -128,11 +128,6 @@ si{
                 one{"{0} මවුල"}
                 other{"{0} මවුල"}
             }
-            part-per-million{
-                dnam{"මිලියනයට කොටස්"}
-                one{"මිලියනයට කොටස් {0}"}
-                other{"මිලියනයට කොටස් {0}"}
-            }
             percent{
                 dnam{"ප්‍රතිශතය"}
                 one{"ප්‍රතිශතය {0}"}
@@ -143,6 +138,11 @@ si{
                 one{"ප්‍රතිසහශ්‍රක {0}"}
                 other{"ප්‍රතිසහශ්‍රක {0}"}
             }
+            permillion{
+                dnam{"මිලියනයට කොටස්"}
+                one{"මිලියනයට කොටස් {0}"}
+                other{"මිලියනයට කොටස් {0}"}
+            }
             permyriad{
                 dnam{"පර්මැරියඩ්"}
                 one{"{0} පර්මැරියඩ්"}
@@ -150,7 +150,7 @@ si{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"කිලෝ මීටර 100 ට ලීටර"}
                 one{"කිලෝ මීටර 100 ට ලීටර {0}"}
                 other{"කිලෝ මීටර 100 ට ලීටර {0}"}
@@ -675,7 +675,7 @@ si{
                 one{"හෙක්ටොපැස්කල් {0}"}
                 other{"හෙක්ටොපැස්කල් {0}"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"රසදිය අඟල්"}
                 one{"රසදිය අඟල් {0}"}
                 other{"රසදිය අඟල් {0}"}
@@ -695,7 +695,7 @@ si{
                 one{"මිලිබාර් {0}"}
                 other{"මිලිබාර් {0}"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"රසදිය මිලිමීටර"}
                 one{"රසදිය මිලිමීටර {0}"}
                 other{"රසදිය මිලිමීටර {0}"}
@@ -705,7 +705,7 @@ si{
                 one{"පැස්කල් {0}"}
                 other{"පැස්කල් {0}"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"වර්ග අලඟකට රාත්තල්"}
                 one{"වර්ග අලඟකට රාත්තල් {0}"}
                 other{"වර්ග අලඟකට රාත්තල් {0}"}
@@ -761,7 +761,7 @@ si{
                 one{"{0} නිව්ටන්-මීටර්"}
                 other{"{0} නිව්ටන්-මීටර්"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"රාත්තල්-පාදය"}
                 one{"{0} රාත්තල්-පාදය"}
                 other{"{0} රාත්තල්-පාදය"}
@@ -963,7 +963,7 @@ si{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ලී/කිමී100"}
                 one{"ලී/කිමී100 {0}"}
                 other{"ලී/කිමී100 {0}"}
@@ -1103,7 +1103,7 @@ si{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"රසදිය {0}\u0022"}
                 other{"රසදිය {0}\u0022"}
             }
@@ -1161,7 +1161,7 @@ si{
                 one{"{0} G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"මීටර/තත්පර වර්ගයට"}
                 one{"මී/තව {0}"}
                 other{"මී/තව {0}"}
@@ -1276,11 +1276,6 @@ si{
                 one{"{0} මවුල"}
                 other{"{0} මවුල"}
             }
-            part-per-million{
-                dnam{"කොටස්/මිලියනය"}
-                one{"{0} මිලිකො"}
-                other{"{0} මිලිකො"}
-            }
             percent{
                 dnam{"ප්‍රතිශතය"}
                 one{"{0}%"}
@@ -1291,6 +1286,11 @@ si{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"කොටස්/මිලියනය"}
+                one{"{0} මිලිකො"}
+                other{"{0} මිලිකො"}
+            }
             permyriad{
                 dnam{"පර්මැරියඩ්"}
                 one{"{0}‱"}
@@ -1298,7 +1298,7 @@ si{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ලී/කිමී100"}
                 one{"ලී/කිමී100 {0}"}
                 other{"ලී/100කිමී {0}"}
@@ -1825,7 +1825,7 @@ si{
                 one{"හෙ.පැ {0}"}
                 other{"හෙ.පැ {0}"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"ර අඟ"}
                 one{"ර අඟ {0}"}
                 other{"ර අඟ {0}"}
@@ -1845,7 +1845,7 @@ si{
                 one{"මි.බාර් {0}"}
                 other{"මි.බාර් {0}"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"ර මිමී"}
                 one{"ර මිමී {0}"}
                 other{"ර මිමී {0}"}
@@ -1855,7 +1855,7 @@ si{
                 one{"පැස් {0}"}
                 other{"පැස් {0}"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"වඅ රා"}
                 one{"වඅ රා {0}"}
                 other{"වඅ රා {0}"}
@@ -1911,7 +1911,7 @@ si{
                 one{"{0} නි-මී"}
                 other{"{0} නි-මී"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"රාත්-පාද"}
                 one{"{0} රාත්-පාද"}
                 other{"{0} රාත්-පාද"}

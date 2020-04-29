@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ja{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"アビジャン"}
@@ -1757,7 +1757,9 @@ ja{
             ls{"ニウエ時間"}
         }
         "meta:Norfolk"{
-            ls{"ノーフォーク島時間"}
+            ld{"ノーフォーク島夏時間"}
+            lg{"ノーフォーク島時間"}
+            ls{"ノーフォーク島標準時"}
         }
         "meta:Noronha"{
             ld{"フェルナンド・デ・ノローニャ夏時間"}

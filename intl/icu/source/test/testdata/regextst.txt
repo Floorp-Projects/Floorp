@@ -317,11 +317,21 @@
 "(\S+).*?(\S+).*"              "<0><1>Not-spaces</1>   <2>more-non-spaces</2>  </0>"
 
 # \X  consume one Grapheme Cluster.
-"(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?"   "<0><1>A</1><2>B</2><3> </3><4>\r\n</4></0>"
-"(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?"   "<0><1>A\u0301</1><2>\n</2><3>\u0305</3><4>a\u0302\u0303\u0304</4></0>"
-"(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?"   "<0><1>\u1100\u1161\u11a8</1><2>\u115f\u11a2\u11f9</2></0>"
-"(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?"   "<0><1>\u1100\uac01</1><2>\uac02</2><3>\uac03\u11b0</3></0>"
-"(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?"   "<0><1>\u1100\u1101\uac02\u0301</1><2>\u1100</2></0>"
+"(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?"  v  "<0><1>A</1><2>B</2><3> </3><4>\r\n</4></0>"
+"(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?"  v  "<0><1>A\u0301</1><2>\n</2><3>\u0305</3><4>a\u0302\u0303\u0304</4></0>"
+"(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?"  v  "<0><1>\u1100\u1161\u11a8</1><2>\u115f\u11a2\u11f9</2></0>"
+"(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?"  v  "<0><1>\u1100\uac01</1><2>\uac02</2><3>\uac03\u11b0</3></0>"
+"(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?"  v  "<0><1>\u1100\u1101\uac02\u0301</1><2>\u1100</2></0>"
+# Regional indicator pairs are grapheme clusters
+"(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?"  v  "<0><1>\U0001f1e6\U0001f1e8</1><2>\U0001f1ea\U0001f1ff</2></0>"
+# Grapheme Break rule 9b:  Prepend x
+"(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?(\X)?"	v  "<0><1>\U000111C2x</1></0>"
+
+# Grapheme clusters that straddle a match region. Matching is pinned to the region limits,
+# giving boundaries inside grapheme clusters
+"(\X)?(\X)?(\X)?"        v      "a\u0301<r><0><1>\u0301\u0301</1><2>z\u0302</2></0></r>\u0302\u0302"
+# Same as previous test case, but without the region limits.
+"(\X)?(\X)?(\X)?"        v      "<0><1>a\u0301\u0301\u0301</1><2>z\u0302\u0302\u0302</2></0>"
 
 # ^ matches only at beginning of line
 ".*^(Hello)"                   "<0><1>Hello</1></0> Hello Hello Hello Goodbye"
@@ -1482,6 +1492,10 @@
 #
 "(?<=(?<=b?(?=a)))"               "hello, world."
 
+# Bug ICU-20939
+# Incorrect word \b boundaries w UTF-8 input and non-ASCII text
+#
+"(?w)\b"                     v2     "äää<0></0> äää"
 
 #  Random debugging, Temporary
 #

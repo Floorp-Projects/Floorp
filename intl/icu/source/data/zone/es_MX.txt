@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_MX{
     %%Parent{"es_419"}
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Bujumbura"{
             ec{"Buyumbura"}
@@ -97,7 +97,9 @@ es_MX{
             ls{"hora de las Islas Marshall"}
         }
         "meta:Norfolk"{
-            ls{"hora de la isla Norfolk"}
+            ld{"hora de verano de la isla Norfolk"}
+            lg{"hora de la isla Norfolk"}
+            ls{"hora estándar de la isla Norfolk"}
         }
         "meta:Pyongyang"{
             ls{"hora de Pyongyang"}

@@ -300,7 +300,6 @@ sl{
     Countries%short{
         GB{"ZK"}
         HK{"Hongkong"}
-        MO{"Posebno administrativno območje LR Kitajske Macao"}
         PS{"Palestina"}
         UN{"ZN"}
         US{"ZDA"}
@@ -314,5 +313,5 @@ sl{
         SZ{"Svazi"}
         TL{"Vzhodni Timor"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

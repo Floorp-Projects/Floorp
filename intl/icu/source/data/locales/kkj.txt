@@ -24,7 +24,7 @@ kkj{
         }
         native{"latn"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -184,7 +184,7 @@ kkj{
                         "fɛ",
                         "njapi",
                         "nyukul",
-                        "11",
+                        "M11",
                         "ɓulɓusɛ",
                     }
                 }
@@ -200,7 +200,7 @@ kkj{
                         "fɛ",
                         "njapi",
                         "nyukul",
-                        "11",
+                        "M11",
                         "ɓulɓusɛ",
                     }
                 }

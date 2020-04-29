@@ -251,7 +251,7 @@ lv{
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         buddhist{
             eras{
@@ -800,10 +800,6 @@ lv{
             }
             eras{
                 abbreviated{
-                    "p.m.ē.",
-                    "m.ē.",
-                }
-                abbreviated%variant{
                     "p.m.ē.",
                     "m.ē.",
                 }

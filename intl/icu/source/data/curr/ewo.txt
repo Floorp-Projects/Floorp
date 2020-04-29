@@ -235,5 +235,5 @@ ewo{
             "Dolár yá Zimbabwé",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

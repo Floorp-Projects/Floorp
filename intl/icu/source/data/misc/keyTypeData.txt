@@ -668,6 +668,7 @@ keyTypeData:table(nofallback){
             roman{""}
             romanlow{""}
             saur{""}
+            segment{""}
             shrd{""}
             sind{""}
             sinh{""}

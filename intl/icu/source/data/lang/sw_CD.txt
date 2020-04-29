@@ -19,7 +19,6 @@ sw_CD{
         ky{"Kikirigizi"}
         lam{"Kilamba"}
         li{"Kilimburgi"}
-        mak{"mak"}
         mdf{"Kimoksha"}
         mic{"Kimikmaki"}
         mk{"Kimasedonia"}
@@ -36,5 +35,5 @@ sw_CD{
         udm{"Kiudumurti"}
         yi{"Kiyidi"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

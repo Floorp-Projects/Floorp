@@ -124,7 +124,7 @@ uz{
         }
         CNH{
             "CNH",
-            "CNH",
+            "Xitoy yuani (ofshor)",
         }
         CNY{
             "CN¥",
@@ -873,8 +873,8 @@ uz{
             other{"Chili pesosi"}
         }
         CNH{
-            one{"CNH"}
-            other{"CNH"}
+            one{"Xitoy yuani (ofshor)"}
+            other{"Xitoy yuani (ofshor)"}
         }
         CNY{
             one{"Xitoy yuani"}
@@ -1405,5 +1405,5 @@ uz{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

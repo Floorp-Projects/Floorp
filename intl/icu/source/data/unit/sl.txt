@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sl{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h.mm"}
         hms{"h.mm.ss"}
@@ -16,7 +16,7 @@ sl{
                 other{"{0} G"}
                 two{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"meter na kvadratno sekundo"}
                 few{"{0} metri na kvadratno sekundo"}
                 one{"{0} meter na kvadratno sekundo"}
@@ -170,13 +170,6 @@ sl{
                 other{"{0} molov"}
                 two{"{0} mola"}
             }
-            part-per-million{
-                dnam{"delci na milijon"}
-                few{"{0} delcev na milijon"}
-                one{"{0} delec na milijon"}
-                other{"{0} delcev na milijon"}
-                two{"{0} delca na milijon"}
-            }
             percent{
                 dnam{"odstotek"}
                 few{"{0} %"}
@@ -191,6 +184,13 @@ sl{
                 other{"{0} promilov"}
                 two{"{0} ‰"}
             }
+            permillion{
+                dnam{"delci na milijon"}
+                few{"{0} delcev na milijon"}
+                one{"{0} delec na milijon"}
+                other{"{0} delcev na milijon"}
+                two{"{0} delca na milijon"}
+            }
             permyriad{
                 dnam{"desettisočine"}
                 few{"{0} desettisočine"}
@@ -200,7 +200,7 @@ sl{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 few{"{0} litri na 100 kilometrov"}
                 one{"{0} liter na 100 kilometrov"}
                 other{"{0} litrov na 100 kilometrov"}
@@ -858,7 +858,7 @@ sl{
                 other{"{0} hektopaskalov"}
                 two{"{0} hektopaskala"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"palci živega srebra"}
                 few{"{0} palci živega srebra"}
                 one{"{0} palec živega srebra"}
@@ -886,7 +886,7 @@ sl{
                 other{"{0} milibarov"}
                 two{"{0} milibara"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"milimetri živega srebra"}
                 few{"{0} milimetri živega srebra"}
                 one{"{0} milimeter živega srebra"}
@@ -900,7 +900,7 @@ sl{
                 other{"{0} paskalov"}
                 two{"{0} paskala"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"funti na kvadratni palec"}
                 few{"{0} funti na kvadratni palec"}
                 one{"{0} funt na kvadratni palec"}
@@ -976,7 +976,7 @@ sl{
                 other{"{0} newton metrov"}
                 two{"{0} newton metra"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"funt-čevelj"}
                 few{"{0} funt-čevlji"}
                 one{"{0} funt-čevelj"}
@@ -1221,7 +1221,7 @@ sl{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 few{"{0} l/100 km"}
                 one{"{0} l/100 km"}
@@ -1427,7 +1427,7 @@ sl{
                 other{"{0} hPa"}
                 two{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 few{"{0} inHg"}
                 one{"{0} inHg"}
                 other{"{0} inHg"}
@@ -1495,7 +1495,7 @@ sl{
                 other{"{0} G"}
                 two{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 few{"{0} m/s²"}
                 one{"{0} m/s²"}
@@ -1650,13 +1650,6 @@ sl{
                 other{"{0} mol"}
                 two{"{0} mol"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                few{"{0} ppm"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-                two{"{0} ppm"}
-            }
             percent{
                 dnam{"odstotek"}
                 few{"{0} %"}
@@ -1671,6 +1664,13 @@ sl{
                 other{"{0} ‰"}
                 two{"{0} ‰"}
             }
+            permillion{
+                dnam{"ppm"}
+                few{"{0} ppm"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+                two{"{0} ppm"}
+            }
             permyriad{
                 dnam{"‱"}
                 few{"{0} ‱"}
@@ -1680,7 +1680,7 @@ sl{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 few{"{0} l/100 km"}
                 one{"{0} l/100 km"}
@@ -2405,7 +2405,7 @@ sl{
                 other{"{0} hPa"}
                 two{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
                 few{"{0} inHg"}
                 one{"{0} inHg"}
@@ -2433,7 +2433,7 @@ sl{
                 other{"{0} mbar"}
                 two{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mmHg"}
                 few{"{0} mmHG"}
                 one{"{0} mmHG"}
@@ -2447,7 +2447,7 @@ sl{
                 other{"{0} Pa"}
                 two{"{0} Pa"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 few{"{0} psi"}
                 one{"{0} psi"}
@@ -2523,7 +2523,7 @@ sl{
                 other{"{0} N⋅m"}
                 two{"{0} N⋅m"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"lbf⋅ft"}
                 few{"{0} lbf⋅ft"}
                 one{"{0} lbf⋅ft"}

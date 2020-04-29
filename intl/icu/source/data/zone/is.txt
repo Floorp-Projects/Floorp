@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 is{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1720,7 +1720,9 @@ is{
             ls{"Niue-tími"}
         }
         "meta:Norfolk"{
-            ls{"Tími á Norfolk-eyju"}
+            ld{"Sumartími á Norfolk-eyju"}
+            lg{"Tími á Norfolk-eyju"}
+            ls{"Staðaltími á Norfolk-eyju"}
         }
         "meta:Noronha"{
             ld{"Sumartími í Fernando de Noronha"}

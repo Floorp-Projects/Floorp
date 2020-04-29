@@ -1,10 +1,10 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 zh_Hant_HK{
-    Version{"36.1"}
+    Version{"37"}
     units{
         acceleration{
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"米/平方秒"}
                 other{"{0} 米/平方秒"}
             }
@@ -53,12 +53,12 @@ zh_Hant_HK{
                 dnam{"每公升毫摩爾"}
                 other{"每公升 {0} 毫摩爾"}
             }
-            part-per-million{
+            permillion{
                 other{"{0} ppm"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"公升/100公里"}
             }
             liter-per-kilometer{
@@ -221,7 +221,7 @@ zh_Hant_HK{
                 dnam{"百帕斯卡"}
                 other{"{0} 百帕斯卡"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"英吋汞柱"}
                 other{"{0} 英吋汞柱"}
             }
@@ -229,7 +229,7 @@ zh_Hant_HK{
                 dnam{"兆帕斯卡"}
                 other{"{0} 兆帕斯卡"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"磅/平方吋"}
                 other{"{0} 磅/平方吋"}
             }
@@ -259,7 +259,7 @@ zh_Hant_HK{
             }
         }
         torque{
-            pound-foot{
+            pound-force-foot{
                 dnam{"磅尺"}
                 other{"{0} 磅尺"}
             }
@@ -315,7 +315,7 @@ zh_Hant_HK{
     }
     unitsNarrow{
         acceleration{
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"米每平方秒"}
             }
         }
@@ -357,12 +357,12 @@ zh_Hant_HK{
             millimole-per-liter{
                 dnam{"毫摩爾/公升"}
             }
-            part-per-million{
+            permillion{
                 other{"{0} ppm"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 other{"{0}L/100km"}
             }
         }
@@ -488,11 +488,11 @@ zh_Hant_HK{
             }
         }
         pressure{
-            inch-hg{
+            inch-ofhg{
                 dnam{"英吋汞柱"}
                 other{"{0}″ Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"磅每平方吋"}
             }
         }
@@ -554,7 +554,7 @@ zh_Hant_HK{
             g-force{
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"米每平方秒"}
                 other{"{0} 米每平方秒"}
             }
@@ -610,7 +610,7 @@ zh_Hant_HK{
                 dnam{"毫摩爾/公升"}
                 other{"{0} 毫摩爾/公升"}
             }
-            part-per-million{
+            permillion{
                 other{"{0} ppm"}
             }
         }
@@ -778,7 +778,7 @@ zh_Hant_HK{
             }
         }
         pressure{
-            inch-hg{
+            inch-ofhg{
                 dnam{"英吋汞柱"}
                 other{"{0} 英吋汞柱"}
             }
@@ -786,7 +786,7 @@ zh_Hant_HK{
                 dnam{"帕"}
                 other{"{0} 帕"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"磅每平方吋"}
                 other{"{0} 磅每平方吋"}
             }

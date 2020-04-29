@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 so{
-    Version{"36.1"}
+    Version{"37"}
     units{
         acceleration{
             g-force{
@@ -9,7 +9,7 @@ so{
                 one{"{0} cadaadis dib ku riixaya"}
                 other{"{0} cadaadis dib ku riixaya"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"mitir ilbiriqsigii jibaaranba"}
                 one{"{0} mitir ilbiriqsigii jibaaranba"}
                 other{"{0} mitir ilbiriqsigii jibaaranba"}
@@ -120,11 +120,6 @@ so{
                 one{"{0} mool"}
                 other{"{0} mool"}
             }
-            part-per-million{
-                dnam{"baart milyankiiba"}
-                one{"{0} baart milyankiiba"}
-                other{"{0} baart milyankiiba"}
-            }
             percent{
                 dnam{"boqolkiiba"}
                 one{"boqolkiiba {0}"}
@@ -135,6 +130,11 @@ so{
                 one{"{0} baarmiil"}
                 other{"{0} baarmiil"}
             }
+            permillion{
+                dnam{"baart milyankiiba"}
+                one{"{0} baart milyankiiba"}
+                other{"{0} baart milyankiiba"}
+            }
             permyriad{
                 dnam{"bermiraad"}
                 one{"{0} bermiraad"}
@@ -142,7 +142,7 @@ so{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"litar 100-kii kiilomitirba"}
                 one{"{0} litar 100-kii kiilomitirba"}
                 other{"{0} litar 100-kii kiilomitirba"}
@@ -628,7 +628,7 @@ so{
                 one{"{0} hektobaskal"}
                 other{"{0} hektobaskal"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"injis maarkuri"}
                 one{"{0} inji maarkuri"}
                 other{"{0} inji maarkuri"}
@@ -648,12 +648,12 @@ so{
                 one{"{0} milibaar"}
                 other{"{0} milibaar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"milimitir maarkuri"}
                 one{"{0} milimitir maarkuri"}
                 other{"{0} milimitir maarkuri"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"bownd injigii jibaaranba"}
                 one{"{0} bownd injigii jibaaranba"}
                 other{"{0} bownd injigii jibaaranba"}
@@ -704,7 +704,7 @@ so{
                 one{"{0} nuyuuton-mitir"}
                 other{"{0} nuyuuton-mitir"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"bownd-fiit"}
                 one{"{0} bownd-fiit"}
                 other{"{0} bownd-fiit"}
@@ -720,6 +720,11 @@ so{
                 dnam{"foosto"}
                 one{"{0} foosto"}
                 other{"{0} foosto"}
+            }
+            bushel{
+                dnam{"cabirka bushels"}
+                one{"{0}cabirka bushel"}
+                other{"{0}cabirka bushels"}
             }
             centiliter{
                 dnam{"sentilitar"}
@@ -849,6 +854,11 @@ so{
         }
     }
     unitsNarrow{
+        area{
+            square-yard{
+                dnam{"yd²"}
+            }
+        }
         concentr{
             percent{
                 dnam{"%"}
@@ -867,6 +877,11 @@ so{
                 one{"{0}m"}
                 other{"{0}m"}
                 per{"{0}M/K"}
+            }
+            decade{
+                dnam{"toban sano"}
+                one{"{0}diis"}
+                other{"{0}diis"}
             }
             hour{
                 dnam{"scd"}
@@ -947,6 +962,12 @@ so{
             }
         }
         volume{
+            bushel{
+                dnam{"cabirka bushel"}
+            }
+            cup-metric{
+                dnam{"mkoob"}
+            }
             liter{
                 dnam{"litar"}
                 one{"{0}L"}
@@ -961,7 +982,7 @@ so{
                 one{"{0} C"}
                 other{"{0} C"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"mitir/ilbrqsi²"}
                 one{"{0} m/i²"}
                 other{"{0} m/i²"}
@@ -1040,16 +1061,16 @@ so{
                 one{"{0} mool"}
                 other{"{0} mool"}
             }
-            part-per-million{
-                dnam{"baart/milyan"}
-                one{"{0} bbm"}
-                other{"{0} bbm"}
-            }
             percent{
                 dnam{"boqolkiiba"}
             }
             permille{
                 dnam{"baarmiil"}
+            }
+            permillion{
+                dnam{"baart/milyan"}
+                one{"{0} bbm"}
+                other{"{0} bbm"}
             }
             permyriad{
                 dnam{"bermiraad"}
@@ -1396,12 +1417,12 @@ so{
                 one{"{0} Mba"}
                 other{"{0} Mba"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mmHg"}
                 one{"{0} mmHg"}
                 other{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"bij"}
                 one{"{0} bij"}
                 other{"{0} bij"}
@@ -1443,7 +1464,7 @@ so{
                 one{"{0} N⋅m"}
                 other{"{0} N⋅m"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"bwd⋅ft"}
                 one{"{0} bwd⋅ft"}
                 other{"{0} bwd⋅ft"}
@@ -1459,6 +1480,9 @@ so{
                 dnam{"foosto"}
                 one{"{0} fsto"}
                 other{"{0} fsto"}
+            }
+            bushel{
+                dnam{"cabirka bushels"}
             }
             centiliter{
                 dnam{"sL"}

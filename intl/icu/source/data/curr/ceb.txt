@@ -124,7 +124,7 @@ ceb{
         }
         CNY{
             "CN¥",
-            "Intsik nga Yuan",
+            "Chinese Yuan",
         }
         COP{
             "COP",
@@ -192,7 +192,7 @@ ceb{
         }
         GBP{
             "£",
-            "Inglatera nga Libra",
+            "British Pound",
         }
         GEL{
             "GEL",
@@ -252,7 +252,7 @@ ceb{
         }
         INR{
             "₹",
-            "Rupee sa India",
+            "Indian Rupee",
         }
         IQD{
             "IQD",
@@ -276,7 +276,7 @@ ceb{
         }
         JPY{
             "JP¥",
-            "Hapon nga Yen",
+            "Japanese Yen",
         }
         KES{
             "KES",
@@ -460,7 +460,7 @@ ceb{
         }
         RUB{
             "RUB",
-            "Rusong ruble",
+            "Russian Ruble",
         }
         RWF{
             "RWF",
@@ -568,7 +568,7 @@ ceb{
         }
         USD{
             "US $",
-            "Dolyar sa US",
+            "US Dollar",
         }
         UYU{
             "UYU",
@@ -706,7 +706,7 @@ ceb{
         }
         BRL{
             one{"Brazilian real"}
-            other{"Brazilian reals"}
+            other{"Mga Brazilian real"}
         }
         BSD{
             one{"Bahamian dollar"}
@@ -738,7 +738,7 @@ ceb{
         }
         CHF{
             one{"Swiss franc"}
-            other{"Swiss francs"}
+            other{"Mga Swiss franc"}
         }
         CLP{
             one{"Chilean peso"}
@@ -749,8 +749,8 @@ ceb{
             other{"Chinese yuan (layo sa baybayon)"}
         }
         CNY{
-            one{"Intsik ng yuan"}
-            other{"Intsik ng yuan"}
+            one{"Chinese yuan"}
+            other{"Chinese yuan"}
         }
         COP{
             one{"Colombian peso"}
@@ -817,8 +817,8 @@ ceb{
             other{"Mga Falkland Islands pound"}
         }
         GBP{
-            one{"Inglatera nga libra"}
-            other{"Inglatera nga libra"}
+            one{"British pound"}
+            other{"Mga British pound"}
         }
         GEL{
             one{"Georgian lari"}
@@ -877,8 +877,8 @@ ceb{
             other{"Mga Israeli new shekel"}
         }
         INR{
-            one{"rupee sa India"}
-            other{"Mga rupee sa India"}
+            one{"Indian rupee"}
+            other{"Mga Indian rupee"}
         }
         IQD{
             one{"Iraqi dinar"}
@@ -901,8 +901,8 @@ ceb{
             other{"Mga Jordanian dinar"}
         }
         JPY{
-            one{"Hapon nga yen"}
-            other{"Hapon nga yen"}
+            one{"Japanese yen"}
+            other{"Japanese yen"}
         }
         KES{
             one{"Kenyan shilling"}
@@ -1085,8 +1085,8 @@ ceb{
             other{"Mga Serbian dinar"}
         }
         RUB{
-            one{"Rusong ruble"}
-            other{"Rusong ruble"}
+            one{"Russian ruble"}
+            other{"Mga Russian ruble"}
         }
         RWF{
             one{"Rwandan franc"}
@@ -1193,8 +1193,8 @@ ceb{
             other{"Mga Ugandan shilling"}
         }
         USD{
-            one{"dolyar sa US"}
-            other{"dolyares sa US"}
+            one{"US dollar"}
+            other{"Mga US dollar"}
         }
         UYU{
             one{"Uruguayan peso"}
@@ -1257,5 +1257,5 @@ ceb{
         one{"{1} {0}"}
         other{"{1} {0}"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

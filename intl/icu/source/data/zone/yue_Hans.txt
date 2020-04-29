@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 yue_Hans{
     %%Parent{"root"}
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"阿比让"}
@@ -1755,7 +1755,9 @@ yue_Hans{
             ls{"纽埃岛时间"}
         }
         "meta:Norfolk"{
-            ls{"诺福克岛时间"}
+            ld{"诺福克岛夏令时间"}
+            lg{"诺福克岛时间"}
+            ls{"诺福克岛标准时间"}
         }
         "meta:Noronha"{
             ld{"费尔南多 - 迪诺罗尼亚夏令时间"}

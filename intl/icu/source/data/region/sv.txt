@@ -298,21 +298,14 @@ sv{
         ZZ{"okänd region"}
     }
     Countries%short{
-        GB{"Storbritannien"}
-        HK{"Hongkong"}
-        MO{"Macao"}
         PS{"Palestina"}
         UN{"FN"}
-        US{"USA"}
     }
     Countries%variant{
         CD{"Demokratiska republiken Kongo"}
         CG{"Republiken Kongo"}
-        CI{"Côte d’Ivoire"}
-        CZ{"Tjeckien"}
-        FK{"Falklandsöarna"}
         SZ{"Eswatini"}
         TL{"Timor-Leste"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

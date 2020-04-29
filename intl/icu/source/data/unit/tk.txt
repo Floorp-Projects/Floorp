@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 tk{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"hh:mm:ss"}
@@ -14,7 +14,7 @@ tk{
                 one{"{0} G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"inedördül sekuntda metr"}
                 one{"{0} metr/inedördül sekunt"}
                 other{"{0} metr/inedördül sekunt"}
@@ -128,11 +128,6 @@ tk{
                 one{"{0} mol"}
                 other{"{0} mol"}
             }
-            part-per-million{
-                dnam{"bölejik/million"}
-                one{"{0} bölejik/million"}
-                other{"{0} bölejik/million"}
-            }
             percent{
                 dnam{"göterim"}
                 one{"{0} göterim"}
@@ -143,6 +138,11 @@ tk{
                 one{"{0} promille"}
                 other{"{0} promille"}
             }
+            permillion{
+                dnam{"bölejik/million"}
+                one{"{0} bölejik/million"}
+                other{"{0} bölejik/million"}
+            }
             permyriad{
                 dnam{"permiriad"}
                 one{"{0} permiriad"}
@@ -150,7 +150,7 @@ tk{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"litr/100 kilometr"}
                 one{"{0} litr/100 kilometr"}
                 other{"{0} litr/100 kilometr"}
@@ -409,10 +409,12 @@ tk{
         }
         graphics{
             dot-per-centimeter{
+                dnam{"santimetr başyna nokat"}
                 one{"{0} santimetr başyna nokat"}
                 other{"{0} santimetr başyna nokat"}
             }
             dot-per-inch{
+                dnam{"dýuým başyna nokat"}
                 one{"{0} dýuým başyna nokat"}
                 other{"{0} dýuým başyna nokat"}
             }
@@ -432,10 +434,12 @@ tk{
                 other{"{0} piksel"}
             }
             pixel-per-centimeter{
+                dnam{"santimetr başyna piksel"}
                 one{"{0} santimetr başyna piksel"}
                 other{"{0} santimetr başyna piksel"}
             }
             pixel-per-inch{
+                dnam{"dýuým başyna piksel"}
                 one{"{0} dýuým başyna piksel"}
                 other{"{0} dýuým başyna piksel"}
             }
@@ -673,7 +677,7 @@ tk{
                 one{"{0} gektopaskal"}
                 other{"{0} gektopaskal"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"dýuým simap sütüni"}
                 one{"{0} dýuým simap sütüni"}
                 other{"{0} dýuým simap sütüni"}
@@ -693,7 +697,7 @@ tk{
                 one{"{0} millibar"}
                 other{"{0} millibar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"millimetr simap sütüni"}
                 one{"{0} millimetr simap sütüni"}
                 other{"{0} millimetr simap sütüni"}
@@ -703,7 +707,7 @@ tk{
                 one{"{0} paskal"}
                 other{"{0} paskal"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"funt/inedördül dýuým"}
                 one{"{0} funt/inedördül dýuým"}
                 other{"{0} funt/inedördül dýuým"}
@@ -759,7 +763,7 @@ tk{
                 one{"{0} nýuton-metr"}
                 other{"{0} nýuton-metr"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"funt-futlar"}
                 one{"{0} funt-fut"}
                 other{"{0} funt-fut"}
@@ -916,7 +920,7 @@ tk{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 one{"{0} l/100 km"}
                 other{"{0} l/100 km"}
@@ -1034,7 +1038,7 @@ tk{
                 one{"{0} G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 one{"{0} m/s²"}
                 other{"{0} m/s²"}
@@ -1149,11 +1153,6 @@ tk{
                 one{"{0} mol"}
                 other{"{0} mol"}
             }
-            part-per-million{
-                dnam{"bölejik/million"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"göterim"}
                 one{"{0}%"}
@@ -1164,6 +1163,11 @@ tk{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"bölejik/million"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
             permyriad{
                 dnam{"permiriad"}
                 one{"{0}‱"}
@@ -1171,7 +1175,7 @@ tk{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 one{"{0} l/100 km"}
                 other{"{0} l/100 km"}
@@ -1686,7 +1690,7 @@ tk{
                 one{"{0} gPa"}
                 other{"{0} gPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"dý sim.süt."}
                 one{"{0} dý sim.süt."}
                 other{"{0} dý sim.süt."}
@@ -1706,12 +1710,12 @@ tk{
                 one{"{0} mbar"}
                 other{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm sim.süt."}
                 one{"{0} mm sim.süt."}
                 other{"{0} mm sim.süt."}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 one{"{0} psi"}
                 other{"{0} psi"}
@@ -1767,7 +1771,7 @@ tk{
                 one{"{0} N⋅m"}
                 other{"{0} N⋅m"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"lbf⋅ft"}
                 one{"{0} lbf⋅ft"}
                 other{"{0} lbf⋅ft"}

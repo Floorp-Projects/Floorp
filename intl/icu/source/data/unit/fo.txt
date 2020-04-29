@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 fo{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ fo{
                 one{"{0} G-kraft"}
                 other{"{0} G-kreftir"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"metrar um sekundi²"}
                 one{"{0} metur um sekundi²"}
                 other{"{0} metrar um sekundi²"}
@@ -118,11 +118,6 @@ fo{
                 one{"{0} millimol fyri hvønn litur"}
                 other{"{0} millimol fyri hvønn litur"}
             }
-            part-per-million{
-                dnam{"partar fyri hvørja millión"}
-                one{"{0} partur fyri hvørja millión"}
-                other{"{0} partar fyri hvørja millión"}
-            }
             percent{
                 dnam{"prosent"}
                 one{"{0} prosent"}
@@ -133,6 +128,11 @@ fo{
                 one{"{0} promilla"}
                 other{"{0} promillur"}
             }
+            permillion{
+                dnam{"partar fyri hvørja millión"}
+                one{"{0} partur fyri hvørja millión"}
+                other{"{0} partar fyri hvørja millión"}
+            }
             permyriad{
                 dnam{"promyriad"}
                 one{"{0} promyriad"}
@@ -140,7 +140,7 @@ fo{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"litrar fyri hvørjar 100 kilometrar"}
                 one{"{0} litur fyri hvørjar 100 kilometrar"}
                 other{"{0} litrar fyri hvørjar 100 kilometrar"}
@@ -660,7 +660,7 @@ fo{
                 one{"{0} hektopascal"}
                 other{"{0} hektopascal"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"tummar av kviksilvur"}
                 one{"{0} tummi av kviksilvur"}
                 other{"{0} tummar av kviksilvur"}
@@ -680,7 +680,7 @@ fo{
                 one{"{0} millibar"}
                 other{"{0} millibar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"millimetrar av kviksilvur"}
                 one{"{0} millimetur av kviksilvur"}
                 other{"{0} millimetrar av kviksilvur"}
@@ -690,7 +690,7 @@ fo{
                 one{"{0} Pascal"}
                 other{"{0} Pascal"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 one{"{0} psi"}
                 other{"{0} psi"}
@@ -746,7 +746,7 @@ fo{
                 one{"{0} newtonmetur"}
                 other{"{0} newtonmetrar"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"pund føtur"}
                 one{"{0} pund fótur"}
                 other{"{0} pund føtur"}
@@ -935,7 +935,7 @@ fo{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100km"}
                 one{"{0}l/100km"}
                 other{"{0}l/100km"}
@@ -1089,7 +1089,7 @@ fo{
                 one{"{0} G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 one{"{0} m/s²"}
                 other{"{0} m/s²"}
@@ -1193,11 +1193,6 @@ fo{
                 one{"{0} mmol/l"}
                 other{"{0} mmol/l"}
             }
-            part-per-million{
-                dnam{"partar/millión"}
-                one{"{0} partur/mill."}
-                other{"{0} partar/mill."}
-            }
             percent{
                 dnam{"prosent"}
                 one{"{0} %"}
@@ -1208,6 +1203,11 @@ fo{
                 one{"{0} ‰"}
                 other{"{0} ‰"}
             }
+            permillion{
+                dnam{"partar/millión"}
+                one{"{0} partur/mill."}
+                other{"{0} partar/mill."}
+            }
             permyriad{
                 dnam{"promyriad"}
                 one{"{0} ‱"}
@@ -1215,7 +1215,7 @@ fo{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 one{"{0} l/100 km"}
                 other{"{0} l/100 km"}
@@ -1682,7 +1682,7 @@ fo{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
                 one{"{0} inHg"}
                 other{"{0} inHg"}
@@ -1692,7 +1692,7 @@ fo{
                 one{"{0} mb"}
                 other{"{0} mb"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mmHg"}
                 one{"{0} mmHg"}
                 other{"{0} mmHg"}
@@ -1700,7 +1700,7 @@ fo{
             pascal{
                 dnam{"pascal"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 one{"{0} psi"}
                 other{"{0} psi"}

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 th{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"อาบีจาน"}
@@ -1754,7 +1754,9 @@ th{
             ls{"เวลานีอูเอ"}
         }
         "meta:Norfolk"{
-            ls{"เวลาเกาะนอร์ฟอล์ก"}
+            ld{"เวลาฤดูร้อนเกาะนอร์ฟอล์ก"}
+            lg{"เวลาเกาะนอร์ฟอล์ก"}
+            ls{"เวลามาตรฐานเกาะนอร์ฟอล์ก"}
         }
         "meta:Noronha"{
             ld{"เวลาฤดูร้อนของหมู่เกาะเฟอร์นันโด"}

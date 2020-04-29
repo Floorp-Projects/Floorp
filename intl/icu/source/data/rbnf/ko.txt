@@ -246,5 +246,5 @@ ko{
             "3: =%%spellout-ordinal-native-smaller=;",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

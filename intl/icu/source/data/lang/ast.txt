@@ -1005,7 +1005,7 @@ ast{
         VALENCIA{"valencianu"}
         WADEGILE{"romanización de Wade-Giles"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — too"}
         category-list{"{0}: {1}"}

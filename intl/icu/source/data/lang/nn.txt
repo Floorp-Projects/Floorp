@@ -761,7 +761,7 @@ nn{
         TARASK{"taraskievica-ortografi"}
         VALENCIA{"valensisk dialekt"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} – alt"}
         category-list{"{0}: {1}"}

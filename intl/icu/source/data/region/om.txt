@@ -15,5 +15,5 @@ om{
         RU{"Russia"}
         US{"United States"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

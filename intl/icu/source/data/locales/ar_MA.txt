@@ -12,7 +12,7 @@ ar_MA{
             }
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         gregorian{
             DateTimePatterns{

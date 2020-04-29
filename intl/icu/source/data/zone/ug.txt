@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ug{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Sao_Tome"{
             ec{"سان-تومې"}
@@ -487,7 +487,9 @@ ug{
             ls{"نىيۇئې ۋاقتى"}
         }
         "meta:Norfolk"{
-            ls{"نورفولك ئاراللىرى ۋاقتى"}
+            ld{"نورفولك ئاراللىرى يازلىق ۋاقتى"}
+            lg{"نورفولك ئاراللىرى ۋاقتى"}
+            ls{"نورفولك ئاراللىرى ئۆلچەملىك ۋاقتى"}
         }
         "meta:Noronha"{
             ld{"فېرناندو-نورونخا يازلىق ۋاقتى"}

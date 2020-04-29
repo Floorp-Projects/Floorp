@@ -414,7 +414,7 @@
                <exclude name="zone/tzdbNames.txt" /> 
                <include name="unit/*.txt" /> 
                <include name="unit/resfiles.mk" /> 
-	    </fileset>
+            </fileset>
             <fileset id="collation" dir="${env.ICU4C_DIR}/source/data/coll">
                 <include name="*.txt" />
             </fileset>
