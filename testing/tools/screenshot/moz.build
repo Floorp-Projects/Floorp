@@ -12,6 +12,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk' and CONFIG['MOZ_X11']:
     CXXFLAGS += CONFIG['TK_CFLAGS']
     LDFLAGS += CONFIG['XLDFLAGS']
     OS_LIBS += CONFIG['TK_LIBS']
+    if CONFIG['MOZ_ENABLE_DBUS']:
+        OS_LIBS += CONFIG['MOZ_DBUS_GLIB_LIBS']
+
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     Program('screenshot')
     SOURCES += [
