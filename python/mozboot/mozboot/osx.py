@@ -298,24 +298,25 @@ class OSXBootstrapper(BaseBootstrapper):
 
     def _ensure_homebrew_packages(self, packages, extra_brew_args=[]):
         self._ensure_homebrew_found()
+        self._ensure_package_manager_updated()
         cmd = [self.brew] + extra_brew_args
 
-        installed = self.check_output(cmd + ['list'],
-                                      universal_newlines=True).split()
+        installed = set(self.check_output(cmd + ['list'],
+                                          universal_newlines=True).split())
+        to_install = [package for package in packages if package not in installed]
 
-        printed = False
+        # The "-q" tells "brew" to only list the package names, and not the
+        # comparison between current and new version.
+        outdated = set(self.check_output(cmd + ['outdated', '-q'],
+                                         universal_newlines=True).split())
+        to_upgrade = [package for package in packages if package in outdated]
 
-        for package in packages:
-            if package in installed:
-                continue
-
-            if not printed:
-                print(PACKAGE_MANAGER_PACKAGES % ('Homebrew',))
-                printed = True
-
-            subprocess.check_call(cmd + ['install', package])
-
-        return printed
+        if to_install or to_upgrade:
+            print(PACKAGE_MANAGER_PACKAGES % ('Homebrew',))
+        if to_install:
+            subprocess.check_call(cmd + ['install'] + to_install)
+        if to_upgrade:
+            subprocess.check_call(cmd + ['upgrade'] + to_upgrade)
 
     def _ensure_homebrew_casks(self, casks):
         self._ensure_homebrew_found()
@@ -334,7 +335,7 @@ class OSXBootstrapper(BaseBootstrapper):
             self.check_output([self.brew, 'untap', 'caskroom/versions'])
 
         # Change |brew install cask| into |brew cask install cask|.
-        return self._ensure_homebrew_packages(casks, extra_brew_args=['cask'])
+        self._ensure_homebrew_packages(casks, extra_brew_args=['cask'])
 
     def ensure_homebrew_system_packages(self, install_mercurial):
         # We need to install Python because Mercurial requires the
