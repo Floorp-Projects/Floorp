@@ -126,6 +126,15 @@ class ContentBlocking final {
       uint32_t aCookieBehavior,
       ContentBlockingNotifier::StorageAccessGrantedReason aReason,
       const PerformFinalChecks& aPerformFinalChecks = nullptr);
+
+  static bool HasStorageAccessGranted(dom::BrowsingContext* aBrowsingContext,
+                                      const nsACString& aPermissionKey);
+
+  static void UpdateAllowAccessOnCurrentProcess(
+      dom::BrowsingContext* aParentContext, const nsACString& aTrackingOrigin);
+
+  static void UpdateAllowAccessOnParentProcess(
+      dom::BrowsingContext* aParentContext, const nsACString& aTrackingOrigin);
 };
 
 }  // namespace mozilla

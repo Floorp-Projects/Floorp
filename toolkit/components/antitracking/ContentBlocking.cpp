@@ -554,29 +554,16 @@ ContentBlocking::CompleteAllowAccessFor(
     ContentBlockingNotifier::StorageAccessGrantedReason aReason) {
   MOZ_ASSERT(aParentContext->IsInProcess());
 
-  nsCOMPtr<nsPIDOMWindowInner> parentInner =
-      aParentContext->GetDOMWindow()->GetCurrentInnerWindow();
-
-  // TODO: This is not fission-compatible, will be fixed in another patch.
-  nsCOMPtr<nsPIDOMWindowOuter> topOuterWindow =
-      AntiTrackingUtils::GetTopWindow(parentInner);
-  if (!topOuterWindow) {
-    return;
-  }
-
-  nsCOMPtr<nsPIDOMWindowInner> topInnerWindow =
-      topOuterWindow->GetCurrentInnerWindow();
-  if (!topInnerWindow) {
-    return;
-  }
-
-  nsAutoCString permissionKey;
-  AntiTrackingUtils::CreateStoragePermissionKey(aTrackingOrigin, permissionKey);
-
-  // Let's store the permission in the current parent window.
-  topInnerWindow->SaveStorageAccessGranted(permissionKey);
+  // Let's store the permission in the current parent window and other
+  // windows having the same tracking origin.
+  ContentBlocking::UpdateAllowAccessOnCurrentProcess(aParentContext,
+                                                     aTrackingOrigin);
 
   // Let's inform the parent window.
+  nsCOMPtr<nsPIDOMWindowInner> parentInner =
+      AntiTrackingUtils::GetInnerWindow(aParentContext);
+  MOZ_ASSERT(parentInner);
+
   nsGlobalWindowInner::Cast(parentInner)->StorageAccessGranted();
 
   // Theoratically this can be done in the parent process. But right now,
@@ -604,6 +591,13 @@ ContentBlocking::SaveAccessForOriginOnParentProcess(
   if (!wgp) {
     LOG(("Can't get window global parent"));
     return ParentAccessGrantPromise::CreateAndReject(false, __func__);
+  }
+
+  // While granting permission on a first-party window, also have to update
+  // the result to all tracker's frames, if any.
+  BrowsingContext* bc = wgp->BrowsingContext();
+  if (bc->IsTop()) {
+    ContentBlocking::UpdateAllowAccessOnParentProcess(bc, aTrackingOrigin);
   }
 
   return ContentBlocking::SaveAccessForOriginOnParentProcess(
@@ -678,6 +672,145 @@ ContentBlocking::SaveAccessForOriginOnParentProcess(
 
   LOG(("Result: %s", NS_SUCCEEDED(rv) ? "success" : "failure"));
   return ParentAccessGrantPromise::CreateAndResolve(rv, __func__);
+}
+
+/* static */
+bool ContentBlocking::HasStorageAccessGranted(
+    BrowsingContext* aBrowsingContext, const nsACString& aPermissionKey) {
+  MOZ_ASSERT(aBrowsingContext);
+
+  bool useRemoteSubframes;
+  aBrowsingContext->GetUseRemoteSubframes(&useRemoteSubframes);
+
+  // For non-fission, the permission is stored in the top-level window.
+  // For fission, the permission is stored in the tracking window.
+  nsCOMPtr<nsPIDOMWindowInner> inner;
+  if (useRemoteSubframes) {
+    inner = AntiTrackingUtils::GetInnerWindow(aBrowsingContext);
+  } else {
+    inner = AntiTrackingUtils::GetInnerWindow(aBrowsingContext->Top());
+  }
+
+  if (!inner) {
+    return false;
+  }
+
+  return inner->HasStorageAccessGranted(aPermissionKey);
+}
+
+// There are two methods to handle permisson update:
+// 1. UpdateAllowAccessOnCurrentProcess
+// 2. UpdateAllowAccessOnParentProcess
+//
+// For non-fission mode, only UpdateAllowAccessOnCurrentProcess is used.
+// A permission key (constructed by tracking origin) is stored in the top-level
+// window, so every subframe can check if they have the permission by looking
+// up their key.
+//
+// For fission, both methods will be used. Which method to use depends on if the
+// storage access heuristic is triggered by a first-party window or a
+// third-party window (aParentWindow). When the heuristic is triggered by a
+// 3rd-party window, we can update the permission in the content process because
+// frames with the same tracking origin are in the same process
+// (UpdateAllowAccessOnCurrentProcess). When the heuristic is triggered by a
+// first-party window, for instance, a first-party script calls
+// window.open(tracker), we can't update the permission in the content process
+// because they are not in the same process as the first- party window. In this
+// case, we update the storage permission while saving the storage permission in
+// the parent process (UpdateAllowAccessOnParentProcess).
+
+// This function is used to update permission to all in-process windows, so it
+// can be called either from the parent or the child.
+/* static */
+void ContentBlocking::UpdateAllowAccessOnCurrentProcess(
+    BrowsingContext* aParentContext, const nsACString& aTrackingOrigin) {
+  MOZ_ASSERT(aParentContext && aParentContext->IsInProcess());
+
+  nsAutoCString permissionKey;
+  AntiTrackingUtils::CreateStoragePermissionKey(aTrackingOrigin, permissionKey);
+
+  bool useRemoteSubframes;
+  aParentContext->GetUseRemoteSubframes(&useRemoteSubframes);
+
+  // For non-fission mode, save access granted decision in the top-level window.
+  // However, in fission, top-level window is not accessible from a 3rd-party
+  // subframe. So we traverse browsing context tree to find all subframes having
+  // the same tracking origin, and save the decision in the subframe.
+  if (useRemoteSubframes) {
+    if (aParentContext->IsTopContent()) {
+      // If we are a first-party, we can't access tracker's frames.
+      // For this case, we should update the result in the parent process.
+      // See UpdateAllowAccessOnParentProcess.
+      return;
+    }
+
+    BrowsingContext* top = aParentContext->Top();
+    top->PreOrderWalk([&](BrowsingContext* aContext) {
+      // Only check browsing contexts that are in-process.
+      if (aContext->IsInProcess()) {
+        nsAutoCString origin;
+        Unused << AntiTrackingUtils::GetPrincipalAndTrackingOrigin(
+            aContext, nullptr, origin);
+
+        uint32_t behavior = AntiTrackingUtils::GetCookieBehavior(aContext);
+        if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER &&
+            !AntiTrackingUtils::IsFirstLevelSubContext(aContext)) {
+          return;
+        }
+
+        if (aTrackingOrigin == origin) {
+          nsCOMPtr<nsPIDOMWindowInner> inner =
+              AntiTrackingUtils::GetInnerWindow(aContext);
+          if (inner) {
+            inner->SaveStorageAccessGranted(permissionKey);
+          }
+        }
+      }
+    });
+  } else {
+    nsCOMPtr<nsPIDOMWindowInner> topInner =
+        AntiTrackingUtils::GetInnerWindow(aParentContext->Top());
+    if (topInner) {
+      topInner->SaveStorageAccessGranted(permissionKey);
+    }
+  }
+}
+
+/* static */
+void ContentBlocking::UpdateAllowAccessOnParentProcess(
+    BrowsingContext* aParentContext, const nsACString& aTrackingOrigin) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(aParentContext && aParentContext->IsTop());
+
+  bool useRemoteSubframes;
+  aParentContext->GetUseRemoteSubframes(&useRemoteSubframes);
+  if (!useRemoteSubframes) {
+    // We can always save the access granted result to the top-level window
+    // in non-fission mode, skip here.
+    return;
+  }
+
+  nsAutoCString permissionKey;
+  AntiTrackingUtils::CreateStoragePermissionKey(aTrackingOrigin, permissionKey);
+
+  aParentContext->PreOrderWalk([&](BrowsingContext* aContext) {
+    WindowGlobalParent* wgp = aContext->Canonical()->GetCurrentWindowGlobal();
+    if (!wgp) {
+      return;
+    }
+
+    uint32_t behavior = AntiTrackingUtils::GetCookieBehavior(aContext);
+    if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER &&
+        !AntiTrackingUtils::IsFirstLevelSubContext(aContext)) {
+      return;
+    }
+
+    nsAutoCString origin;
+    AntiTrackingUtils::GetPrincipalAndTrackingOrigin(aContext, nullptr, origin);
+    if (aTrackingOrigin == origin) {
+      Unused << wgp->SendSaveStorageAccessGranted(permissionKey);
+    }
+  });
 }
 
 bool ContentBlocking::ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow,
