@@ -204,11 +204,6 @@ fn tile_to_svg(key: TileOffset,
                                 &format!("<b>Content: Descriptor</b> changed for uid {}<br/>",
                                          old.prim_uid.get_uid()));
                             let mut changes = String::new();
-                            if old.origin != new.origin {
-                                changes += &format!("<li><b>origin</b> changed from ({},{}) to ({},{})</li>",
-                                                    old.origin.x, old.origin.y,
-                                                    new.origin.x, new.origin.y);
-                            }
                             if old.prim_clip_rect != new.prim_clip_rect {
                                 changes += &format!("<li><b>prim_clip_rect</b> changed from {}x{} at ({},{})",
                                                     old.prim_clip_rect.w,
