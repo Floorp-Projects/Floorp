@@ -455,7 +455,10 @@ mochitest-remote:
         name: mochitest-remote
     treeherder-symbol: M(remote)
     loopback-video: true
-    run-on-projects: ["trunk", "try"]
+    run-on-projects:
+        by-test-platform:
+            (linux1804-64|windows7-32|windows10-64)(?:-qr)?/opt: ['mozilla-central']
+            default: ["trunk", "try"]
     fission-run-on-projects: []
     fission-tier: 2
     max-run-time: 5400
