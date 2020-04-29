@@ -76,11 +76,9 @@ namespace intl {
 
 using FieldType = js::ImmutablePropertyNamePtr JSAtomState::*;
 
-#ifndef U_HIDE_DRAFT_API
 MOZ_MUST_USE bool FormattedRelativeTimeToParts(
     JSContext* cx, const UFormattedValue* formattedValue, double timeValue,
     FieldType relativeTimeUnit, MutableHandleValue result);
-#endif
 
 }  // namespace intl
 }  // namespace js

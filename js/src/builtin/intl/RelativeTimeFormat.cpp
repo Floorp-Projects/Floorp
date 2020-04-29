@@ -76,10 +76,8 @@ static const JSFunctionSpec relativeTimeFormat_methods[] = {
     JS_SELF_HOSTED_FN("resolvedOptions",
                       "Intl_RelativeTimeFormat_resolvedOptions", 0, 0),
     JS_SELF_HOSTED_FN("format", "Intl_RelativeTimeFormat_format", 2, 0),
-#ifndef U_HIDE_DRAFT_API
     JS_SELF_HOSTED_FN("formatToParts", "Intl_RelativeTimeFormat_formatToParts",
                       2, 0),
-#endif
     JS_FN(js_toSource_str, relativeTimeFormat_toSource, 0, 0), JS_FS_END};
 
 static const JSPropertySpec relativeTimeFormat_properties[] = {
@@ -277,7 +275,6 @@ static bool intl_FormatRelativeTime(JSContext* cx,
   return true;
 }
 
-#ifndef U_HIDE_DRAFT_API
 static bool intl_FormatToPartsRelativeTime(JSContext* cx,
                                            URelativeDateTimeFormatter* rtf,
                                            double t, URelativeDateTimeUnit unit,
@@ -342,7 +339,6 @@ static bool intl_FormatToPartsRelativeTime(JSContext* cx,
   return intl::FormattedRelativeTimeToParts(cx, formattedValue, t, unitType,
                                             result);
 }
-#endif
 
 bool js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -433,15 +429,9 @@ bool js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-#ifndef U_HIDE_DRAFT_API
   return formatToParts
              ? intl_FormatToPartsRelativeTime(cx, rtf, t, relDateTimeUnit,
                                               relDateTimeNumeric, args.rval())
              : intl_FormatRelativeTime(cx, rtf, t, relDateTimeUnit,
                                        relDateTimeNumeric, args.rval());
-#else
-  MOZ_ASSERT(!formatToParts);
-  return intl_FormatRelativeTime(cx, rtf, t, relDateTimeUnit,
-                                 relDateTimeNumeric, args.rval());
-#endif
 }
