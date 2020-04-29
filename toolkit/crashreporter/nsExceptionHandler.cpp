@@ -114,6 +114,8 @@ using google_breakpad::ClientInfo;
 using google_breakpad::CrashGenerationServer;
 #ifdef XP_LINUX
 using google_breakpad::MinidumpDescriptor;
+#elif defined(XP_WIN)
+using google_breakpad::ExceptionHandler;
 #endif
 #if defined(MOZ_WIDGET_ANDROID)
 using google_breakpad::auto_wasteful_vector;
@@ -1766,28 +1768,29 @@ static void PrepareForMinidump() {
  * Filters out floating point exceptions which are handled by nsSigHandlers.cpp
  * and should not be handled as crashes.
  */
-static bool FPEFilter(void* context, EXCEPTION_POINTERS* exinfo,
-                      MDRawAssertionInfo* assertion) {
-  if (IsCrashingException(exinfo)) {
-    PrepareForMinidump();
-    return true;
-  }
-
-  return false;
-}
-
-static bool ChildFPEFilter(void* context, EXCEPTION_POINTERS* exinfo,
-                           MDRawAssertionInfo* assertion) {
+static ExceptionHandler::FilterResult FPEFilter(void* context,
+                                                EXCEPTION_POINTERS* exinfo,
+                                                MDRawAssertionInfo* assertion) {
   if (!IsCrashingException(exinfo)) {
-    return false;
-  }
-
-  if (gEncounteredChildException.exchange(true)) {
-    return false;
+    return ExceptionHandler::FilterResult::ContinueSearch;
   }
 
   PrepareForMinidump();
-  return true;
+  return ExceptionHandler::FilterResult::HandleException;
+}
+
+static ExceptionHandler::FilterResult ChildFPEFilter(
+    void* context, EXCEPTION_POINTERS* exinfo, MDRawAssertionInfo* assertion) {
+  if (!IsCrashingException(exinfo)) {
+    return ExceptionHandler::FilterResult::ContinueSearch;
+  }
+
+  if (gEncounteredChildException.exchange(true)) {
+    return ExceptionHandler::FilterResult::AbortWithoutMinidump;
+  }
+
+  PrepareForMinidump();
+  return ExceptionHandler::FilterResult::HandleException;
 }
 
 static bool ChildMinidumpCallback(const wchar_t* dump_path,
