@@ -65,7 +65,7 @@ class LCovSource;
 
 namespace jit {
 class AutoKeepJitScripts;
-struct BaselineScript;
+class BaselineScript;
 struct IonScriptCounts;
 class JitScript;
 }  // namespace jit

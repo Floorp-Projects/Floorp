@@ -394,6 +394,8 @@ class alignas(uint32_t) ImmutableScriptData final : public TrailingArray {
   static constexpr size_t offsetOfResumeOffsetsOffset() {
     // Resume-offsets are the first optional array if they exist. Locate the
     // array with the 'optArrayOffset_' field.
+    static_assert(sizeof(Offset) == sizeof(uint32_t),
+                  "JIT expect Offset to be uint32_t");
     return offsetof(ImmutableScriptData, optArrayOffset_);
   }
   static constexpr size_t offsetOfNfixed() {
