@@ -7563,7 +7563,7 @@ class DSSignup extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponen
     const {
       title,
       url,
-      context,
+      excerpt,
       flight_id,
       id,
       shim
@@ -7581,7 +7581,7 @@ class DSSignup extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponen
       dispatch: dispatch,
       onLinkClick: this.onLinkClick,
       url: url
-    }, context)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(_DiscoveryStreamImpressionStats_ImpressionStats__WEBPACK_IMPORTED_MODULE_3__["ImpressionStats"], {
+    }, excerpt)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(_DiscoveryStreamImpressionStats_ImpressionStats__WEBPACK_IMPORTED_MODULE_3__["ImpressionStats"], {
       flightId: flight_id,
       rows: [{
         id,
