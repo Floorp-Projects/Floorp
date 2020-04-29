@@ -5,7 +5,6 @@
 "use strict";
 
 module.exports = {
-  appinfo: "",
-  prefs: { getBoolPref: () => {}, addObserver: () => {} },
-  obs: { addObserver: () => {} },
+  Cu: {},
+  components: {},
 };
