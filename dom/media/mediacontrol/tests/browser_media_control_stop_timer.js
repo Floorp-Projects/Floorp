@@ -52,7 +52,7 @@ add_task(async function testNotToStopMediaControlForPIPVideo() {
   await playMedia(tab, testVideoId);
 
   info(`trigger PIP mode`);
-  await triggerPictureInPicture(tab.linkedBrowser, testVideoId);
+  const winPIP = await triggerPictureInPicture(tab.linkedBrowser, testVideoId);
 
   info(`pause media and the stop timer would not stop media control`);
   await pauseMedia(tab, testVideoId);
@@ -62,6 +62,7 @@ add_task(async function testNotToStopMediaControlForPIPVideo() {
   await checkOrWaitUntilMediaStartedPlaying(tab, testVideoId);
 
   info(`remove tab`);
+  await BrowserTestUtils.closeWindow(winPIP);
   await BrowserTestUtils.removeTab(tab);
 });
 

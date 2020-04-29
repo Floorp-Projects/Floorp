@@ -132,7 +132,7 @@ add_task(async function testPIPControllerIsAlwaysMainController() {
   await isCurrentMetadataEqualTo(tab0.metadata);
 
   info(`trigger Picture-in-Picture mode for tab0`);
-  await triggerPictureInPicture(tab0.linkedBrowser, testVideoId);
+  const winPIP = await triggerPictureInPicture(tab0.linkedBrowser, testVideoId);
 
   info(`start media for tab1, main controller should still be tab0`);
   await playMediaAndWaitUntilRegisteringController(tab1, testVideoId);
@@ -141,6 +141,7 @@ add_task(async function testPIPControllerIsAlwaysMainController() {
   await isCurrentMetadataEqualTo(tab0.metadata);
 
   info(`remove tab0 and wait until main controller changes`);
+  await BrowserTestUtils.closeWindow(winPIP);
   await Promise.all([
     waitUntilMainMediaControllerChanged(),
     BrowserTestUtils.removeTab(tab0),
