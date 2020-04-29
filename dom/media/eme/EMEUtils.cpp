@@ -5,6 +5,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/EMEUtils.h"
+
+#include "jsfriendapi.h"
 #include "mozilla/dom/UnionTypes.h"
 
 namespace mozilla {
@@ -23,6 +25,7 @@ ArrayData GetArrayBufferViewOrArrayBufferData(
     const dom::ArrayBufferViewOrArrayBuffer& aBufferOrView) {
   MOZ_ASSERT(aBufferOrView.IsArrayBuffer() ||
              aBufferOrView.IsArrayBufferView());
+  JS::AutoCheckCannotGC nogc;
   if (aBufferOrView.IsArrayBuffer()) {
     const dom::ArrayBuffer& buffer = aBufferOrView.GetAsArrayBuffer();
     buffer.ComputeState();
@@ -39,12 +42,21 @@ ArrayData GetArrayBufferViewOrArrayBufferData(
 void CopyArrayBufferViewOrArrayBufferData(
     const dom::ArrayBufferViewOrArrayBuffer& aBufferOrView,
     nsTArray<uint8_t>& aOutData) {
+  JS::AutoCheckCannotGC nogc;
   ArrayData data = GetArrayBufferViewOrArrayBufferData(aBufferOrView);
   aOutData.Clear();
   if (!data.IsValid()) {
     return;
   }
   aOutData.AppendElements(data.mData, data.mLength);
+}
+
+void CopyArrayBufferViewOrArrayBufferData(const dom::ArrayBuffer& aBuffer,
+                                          nsTArray<uint8_t>& aOutData) {
+  JS::AutoCheckCannotGC nogc;
+  aBuffer.ComputeState();
+  aOutData.Clear();
+  aOutData.AppendElements(aBuffer.Data(), aBuffer.Length());
 }
 
 bool IsClearkeyKeySystem(const nsAString& aKeySystem) {
