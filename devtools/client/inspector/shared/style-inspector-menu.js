@@ -317,7 +317,7 @@ StyleInspectorMenu.prototype = {
       return false;
     }
 
-    const colorNode = container.closest("[data-color");
+    const colorNode = container.closest("[data-color]");
     if (!colorNode) {
       return false;
     }
