@@ -51,13 +51,6 @@ XPCOMUtils.defineLazyGetter(this, "strBundle", function() {
 var { ExtensionError } = ExtensionUtils;
 
 const TABHIDE_PREFNAME = "extensions.webextensions.tabhide.enabled";
-const MULTISELECT_PREFNAME = "browser.tabs.multiselect";
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gMultiSelectEnabled",
-  MULTISELECT_PREFNAME,
-  false
-);
 
 const TAB_HIDE_CONFIRMED_TYPE = "tabHideNotification";
 
@@ -846,11 +839,6 @@ this.tabs = class extends ExtensionAPI {
             tabbrowser.selectedTab = nativeTab;
           }
           if (updateProperties.highlighted !== null) {
-            if (!gMultiSelectEnabled) {
-              throw new ExtensionError(
-                `updateProperties.highlight is currently experimental and must be enabled with the ${MULTISELECT_PREFNAME} preference.`
-              );
-            }
             if (updateProperties.highlighted) {
               if (!nativeTab.selected && !nativeTab.multiselected) {
                 tabbrowser.addToMultiSelectedTabs(nativeTab, {
@@ -1606,11 +1594,6 @@ this.tabs = class extends ExtensionAPI {
         },
 
         highlight(highlightInfo) {
-          if (!gMultiSelectEnabled) {
-            throw new ExtensionError(
-              `tabs.highlight is currently experimental and must be enabled with the ${MULTISELECT_PREFNAME} preference.`
-            );
-          }
           let { windowId, tabs, populate } = highlightInfo;
           if (windowId == null) {
             windowId = Window.WINDOW_ID_CURRENT;

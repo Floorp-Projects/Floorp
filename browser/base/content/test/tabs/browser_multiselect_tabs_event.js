@@ -1,12 +1,6 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
-const PREF_MULTISELECT_TABS = "browser.tabs.multiselect";
-
 add_task(async function clickWithPrefSet() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[PREF_MULTISELECT_TABS, true]],
-  });
-
   let detectUnexpected = true;
   window.addEventListener("TabMultiSelect", () => {
     if (detectUnexpected) {
