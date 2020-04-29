@@ -170,9 +170,9 @@ SessionStorageManager::CreateStorage(mozIDOMWindow* aWindow,
 
   nsCOMPtr<nsPIDOMWindowInner> inner = nsPIDOMWindowInner::From(aWindow);
 
-  // No StoragePrincipal for sessionStorage.
-  RefPtr<SessionStorage> storage = new SessionStorage(
-      inner, aPrincipal, cache, this, aDocumentURI, aPrivate);
+  RefPtr<SessionStorage> storage =
+      new SessionStorage(inner, aPrincipal, aStoragePrincipal, cache, this,
+                         aDocumentURI, aPrivate);
 
   storage.forget(aRetval);
   return NS_OK;
@@ -194,8 +194,9 @@ SessionStorageManager::GetStorage(mozIDOMWindow* aWindow,
 
   nsCOMPtr<nsPIDOMWindowInner> inner = nsPIDOMWindowInner::From(aWindow);
 
-  RefPtr<SessionStorage> storage = new SessionStorage(
-      inner, aStoragePrincipal, cache, this, EmptyString(), aPrivate);
+  RefPtr<SessionStorage> storage =
+      new SessionStorage(inner, aPrincipal, aStoragePrincipal, cache, this,
+                         EmptyString(), aPrivate);
 
   storage.forget(aRetval);
   return NS_OK;
