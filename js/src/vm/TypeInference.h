@@ -39,7 +39,7 @@ class PlainObject;
 
 namespace jit {
 
-struct IonScript;
+class IonScript;
 class JitScript;
 class TempAllocator;
 

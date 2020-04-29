@@ -140,7 +140,7 @@ static const uint32_t BAILOUT_TABLE_SIZE = 16;
 class BailoutStack;
 class InvalidationBailoutStack;
 
-struct IonScript;
+class IonScript;
 class JitActivation;
 class JitActivationIterator;
 struct ResumeFromException;
