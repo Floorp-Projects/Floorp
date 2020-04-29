@@ -116,7 +116,7 @@ use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureStat
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::{UvRectKind, ZBufferId};
 use plane_split::{Clipper, Polygon, Splitter};
-use crate::prim_store::{SpaceMapper, PrimitiveVisibilityMask, PointKey, PrimitiveTemplateKind};
+use crate::prim_store::{SpaceMapper, PrimitiveVisibilityMask, PrimitiveTemplateKind};
 use crate::prim_store::{SpaceSnapper, PictureIndex, PrimitiveInstance, PrimitiveInstanceKind};
 use crate::prim_store::{get_raster_rects, PrimitiveScratchBuffer, RectangleKey};
 use crate::prim_store::{OpacityBindingStorage, ImageInstanceStorage, OpacityBindingIndex};
@@ -644,9 +644,6 @@ struct PrimitiveDependencyInfo {
     /// Unique content identifier of the primitive.
     prim_uid: ItemUid,
 
-    /// The picture space origin of this primitive.
-    prim_origin: PicturePoint,
-
     /// The (conservative) clipped area in picture space this primitive occupies.
     prim_clip_rect: PictureRect,
 
@@ -673,12 +670,10 @@ impl PrimitiveDependencyInfo {
     /// Construct dependency info for a new primitive.
     fn new(
         prim_uid: ItemUid,
-        prim_origin: PicturePoint,
         prim_clip_rect: PictureRect,
     ) -> Self {
         PrimitiveDependencyInfo {
             prim_uid,
-            prim_origin,
             images: SmallVec::new(),
             opacity_bindings: SmallVec::new(),
             color_binding: None,
@@ -1250,10 +1245,10 @@ impl Tile {
                 self.current_descriptor.color_bindings.len(), info.color_binding.unwrap());
         }
 
-        // TODO(gw): The origin of background rects produced by APZ changes
+        // TODO(gw): The clip rect of background rects produced by APZ changes
         //           in Gecko during scrolling. Consider investigating this so the
         //           hack / workaround below is not required.
-        let (prim_origin, prim_clip_rect) = if info.clip_by_tile {
+        let prim_clip_rect = if info.clip_by_tile {
             let tile_p0 = self.local_tile_rect.origin;
             let tile_p1 = self.local_tile_rect.bottom_right();
 
@@ -1267,21 +1262,15 @@ impl Tile {
                 clampf(info.prim_clip_rect.origin.y + info.prim_clip_rect.size.height, tile_p0.y, tile_p1.y),
             );
 
-            (
-                PicturePoint::new(
-                    clampf(info.prim_origin.x, tile_p0.x, tile_p1.x),
-                    clampf(info.prim_origin.y, tile_p0.y, tile_p1.y),
-                ),
-                PictureRect::new(
-                    clip_p0,
-                    PictureSize::new(
-                        clip_p1.x - clip_p0.x,
-                        clip_p1.y - clip_p0.y,
-                    ),
+            PictureRect::new(
+                clip_p0,
+                PictureSize::new(
+                    clip_p1.x - clip_p0.x,
+                    clip_p1.y - clip_p0.y,
                 ),
             )
         } else {
-            (info.prim_origin, info.prim_clip_rect)
+            info.prim_clip_rect
         };
 
         // Update the tile descriptor, used for tile comparison during scene swaps.
@@ -1296,7 +1285,6 @@ impl Tile {
 
         self.current_descriptor.prims.push(PrimitiveDescriptor {
             prim_uid: info.prim_uid,
-            origin: prim_origin.into(),
             prim_clip_rect: prim_clip_rect.into(),
             transform_dep_count: info.spatial_nodes.len()  as u8,
             clip_dep_count: info.clips.len() as u8,
@@ -1557,8 +1545,6 @@ impl Tile {
 pub struct PrimitiveDescriptor {
     /// Uniquely identifies the content of the primitive template.
     pub prim_uid: ItemUid,
-    /// The origin in world space of this primitive.
-    pub origin: PointKey,
     /// The clip rect for this primitive. Included here in
     /// dependencies since there is no entry in the clip chain
     /// dependencies for the local clip rect.
@@ -1576,13 +1562,6 @@ impl PartialEq for PrimitiveDescriptor {
         const EPSILON: f32 = 0.001;
 
         if self.prim_uid != other.prim_uid {
-            return false;
-        }
-
-        if !self.origin.x.approx_eq_eps(&other.origin.x, &EPSILON) {
-            return false;
-        }
-        if !self.origin.y.approx_eq_eps(&other.origin.y, &EPSILON) {
             return false;
         }
 
@@ -1738,7 +1717,6 @@ impl TileDescriptor {
         pt.new_level("prims".to_string());
         for prim in &self.prims {
             pt.new_level(format!("prim uid={}", prim.prim_uid.get_uid()));
-            pt.add_item(format!("origin: {},{}", prim.origin.x, prim.origin.y));
             pt.add_item(format!("clip: origin={},{} size={}x{}",
                 prim.prim_clip_rect.x,
                 prim.prim_clip_rect.y,
@@ -3036,7 +3014,6 @@ impl TileCacheInstance {
         // Build the list of resources that this primitive has dependencies on.
         let mut prim_info = PrimitiveDependencyInfo::new(
             prim_instance.uid(),
-            prim_rect.origin,
             pic_clip_rect,
         );
 
