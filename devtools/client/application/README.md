@@ -6,7 +6,7 @@ The Application panel is a Firefox Developer Tools panel meant to allow the insp
 
 ### How to enable the Application panel
 
-At the moment, the panel is shown by default on Nightly builds only, behind a configuration flag. In order to enable it, type `about:config` in the address bar, look for the `devtools.application.enabled` flag and set it to true. It will then appear as a tab with the rest of the panels within the Developer Tools toolbox.
+At the moment, the panel is shown by default on Nightly and Dev Edition builds only, behind a configuration flag. In order to enable it, type `about:config` in the address bar, look for the `devtools.application.enabled` flag and set it to true. It will then appear as a tab with the rest of the panels within the Developer Tools toolbox.
 
 ## Technical overview
 
