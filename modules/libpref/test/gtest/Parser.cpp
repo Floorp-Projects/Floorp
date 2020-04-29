@@ -374,8 +374,17 @@ pref("parse.error", true))",
   );
 
   USER(R"(
-pref("parse.error", true;
-pref("int.ok", 1);
+pref("parse.error", true);
+sticky_pref("parse.error", true);
+user_pref("int.ok", 1);
+    )",
+    "test:2: prefs parse error: expected 'user_pref' at start of pref definition\n"
+    "test:3: prefs parse error: expected 'user_pref' at start of pref definition\n"
+  );
+
+  USER(R"(
+user_pref("parse.error", true;
+user_pref("int.ok", 1);
     )",
     "test:2: prefs parse error: expected ')' after pref value\n"
   );
@@ -418,7 +427,7 @@ pref("parse.error", true)",
   );
 
   USER(R"(
-pref("parse.error", true)",
+user_pref("parse.error", true)",
     "test:2: prefs parse error: expected ')' after pref value\n"
   );
 
