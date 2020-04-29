@@ -41,28 +41,28 @@ const ActionSchemas = {
         minItems: 1,
         items: {
           type: "object",
-          required: ["slug", "value", "ratio"],
+          required: ["slug", "value", "ratio", "groups"],
           properties: {
             slug: {
               description:
-                "Unique identifier for this branch of the experiment",
+                "Unique identifier for this branch of the experiment.",
               type: "string",
               pattern: "^[A-Za-z0-9\\-_]+$",
             },
             value: {
-              description: "Message content",
+              description: "Message content.",
               type: "object",
               properties: {},
             },
             ratio: {
               description:
-                "Ratio of users who should be grouped into this branch",
+                "Ratio of users who should be grouped into this branch.",
               type: "integer",
               minimum: 1,
             },
             groups: {
               description:
-                "A list of experiment groups that can be used to exclude or select related experiments",
+                "A list of experiment groups that can be used to exclude or select related experiments. May be empty.",
               type: "array",
               items: {
                 type: "string",
