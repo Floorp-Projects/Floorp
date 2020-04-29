@@ -927,7 +927,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       zealFrequency(0),
       nextScheduled(0),
       deterministicOnly(false),
-      incrementalLimit(0),
+      zealSliceBudget(0),
       selectedForMarking(rt),
 #endif
       fullCompartmentChecks(false),
@@ -1470,8 +1470,10 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return uint32_t(tunables.lowFrequencyHeapGrowth() * 100);
     case JSGC_ALLOCATION_THRESHOLD:
       return tunables.gcZoneAllocThresholdBase() / 1024 / 1024;
-    case JSGC_NON_INCREMENTAL_FACTOR:
-      return uint32_t(tunables.nonIncrementalFactor() * 100);
+    case JSGC_SMALL_HEAP_INCREMENTAL_LIMIT:
+      return uint32_t(tunables.smallHeapIncrementalLimit() * 100);
+    case JSGC_LARGE_HEAP_INCREMENTAL_LIMIT:
+      return uint32_t(tunables.largeHeapIncrementalLimit() * 100);
     case JSGC_MIN_EMPTY_CHUNK_COUNT:
       return tunables.minEmptyChunkCount(lock);
     case JSGC_MAX_EMPTY_CHUNK_COUNT:
@@ -2994,7 +2996,7 @@ TriggerResult GCRuntime::checkHeapThreshold(
     return TriggerResult{TriggerKind::None, 0, 0};
   }
 
-  size_t niThreshold = heapThreshold.nonIncrementalBytes(zone, tunables);
+  size_t niThreshold = heapThreshold.incrementalLimitBytes();
   if (usedBytes >= niThreshold) {
     // We have passed the non-incremental threshold: immediately trigger a
     // non-incremental GC.
@@ -6788,7 +6790,7 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
     }
 
     if (zone->gcHeapSize.bytes() >=
-        zone->gcHeapThreshold.nonIncrementalBytes(zone, tunables)) {
+        zone->gcHeapThreshold.incrementalLimitBytes()) {
       checkZoneIsScheduled(zone, reason, "GC bytes");
       budget.makeUnlimited();
       stats().nonincremental(AbortReason::GCBytesTrigger);
@@ -6798,7 +6800,7 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
     }
 
     if (zone->mallocHeapSize.bytes() >=
-        zone->mallocHeapThreshold.nonIncrementalBytes(zone, tunables)) {
+        zone->mallocHeapThreshold.incrementalLimitBytes()) {
       checkZoneIsScheduled(zone, reason, "malloc bytes");
       budget.makeUnlimited();
       stats().nonincremental(AbortReason::MallocBytesTrigger);
@@ -6808,7 +6810,7 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
     }
 
     if (zone->jitHeapSize.bytes() >=
-        zone->jitHeapThreshold.nonIncrementalBytes(zone, tunables)) {
+        zone->jitHeapThreshold.incrementalLimitBytes()) {
       checkZoneIsScheduled(zone, reason, "JIT code bytes");
       budget.makeUnlimited();
       stats().nonincremental(AbortReason::JitCodeBytesTrigger);
@@ -7782,11 +7784,11 @@ void GCRuntime::runDebugGC() {
      * completion.
      */
     if (!isIncrementalGCInProgress()) {
-      incrementalLimit = zealFrequency / 2;
+      zealSliceBudget = zealFrequency / 2;
     } else {
-      incrementalLimit *= 2;
+      zealSliceBudget *= 2;
     }
-    budget = SliceBudget(WorkBudget(incrementalLimit));
+    budget = SliceBudget(WorkBudget(zealSliceBudget));
 
     js::gc::State initialState = incrementalState;
     Maybe<JSGCInvocationKind> gckind =
@@ -7796,7 +7798,7 @@ void GCRuntime::runDebugGC() {
     /* Reset the slice size when we get to the sweep or compact phases. */
     if ((initialState == State::Mark && incrementalState == State::Sweep) ||
         (initialState == State::Sweep && incrementalState == State::Compact)) {
-      incrementalLimit = zealFrequency / 2;
+      zealSliceBudget = zealFrequency / 2;
     }
   } else if (hasIncrementalTwoSliceZealMode()) {
     // These modes trigger incremental GC that happens in two slices and the
