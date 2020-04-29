@@ -20,7 +20,7 @@
 
 #include "jit/JSJitFrameIter.h"  // js::jit::{InlineFrameIterator,JSJitFrameIter}
 #include "js/RootingAPI.h"       // JS::Handle, JS::Rooted
-#include "js/TypeDecls.h"        // jsbytecode
+#include "js/TypeDecls.h"  // jsbytecode, JSContext, JSAtom, JSFunction, JSObject, JSScript
 #include "js/UniquePtr.h"        // js::UniquePtr
 #include "js/Value.h"            // JS::Value
 #include "vm/Activation.h"       // js::InterpreterActivation
@@ -29,13 +29,7 @@
 #include "wasm/WasmFrameIter.h"  // js::wasm::{ExitReason,RegisterState,WasmFrameIter}
 #include "wasm/WasmTypes.h"  // js::wasm::{Frame,TrapData}
 
-struct JS_PUBLIC_API JSContext;
-
-class JSAtom;
-class JSFunction;
-class JSObject;
 struct JSPrincipals;
-class JSScript;
 
 namespace JS {
 
