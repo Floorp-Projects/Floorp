@@ -340,7 +340,7 @@ add_task(async function test_check_synchronization_with_signatures() {
   };
 
   const twoItemsResponses = {
-    "GET:/v1/buckets/main/collections/signed/changeset?_expected=3000&_since=1000": [
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=3000&_since=%221000%22": [
       RESPONSE_TWO_ADDED,
     ],
   };
@@ -380,7 +380,7 @@ add_task(async function test_check_synchronization_with_signatures() {
   };
 
   const oneAddedOneRemovedResponses = {
-    "GET:/v1/buckets/main/collections/signed/changeset?_expected=4000&_since=3000": [
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=4000&_since=%223000%22": [
       RESPONSE_ONE_ADDED_ONE_REMOVED,
     ],
   };
@@ -417,7 +417,7 @@ add_task(async function test_check_synchronization_with_signatures() {
   };
 
   const noOpResponses = {
-    "GET:/v1/buckets/main/collections/signed/changeset?_expected=4100&_since=4000": [
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=4100&_since=%224000%22": [
       RESPONSE_EMPTY_NO_UPDATE,
     ],
   };
@@ -476,7 +476,7 @@ add_task(async function test_check_synchronization_with_signatures() {
     // The first collection state is the three item collection (since
     // there was sync with no updates before) - but, since the signature is wrong,
     // another request will be made...
-    "GET:/v1/buckets/main/collections/signed/changeset?_expected=5000&_since=4000": [
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=5000&_since=%224000%22": [
       RESPONSE_EMPTY_NO_UPDATE_BAD_SIG,
     ],
     // Subsequent signature returned is a valid one for the three item
@@ -526,7 +526,7 @@ add_task(async function test_check_synchronization_with_signatures() {
   const badSigGoodOldResponses = {
     // The first collection state is the current state (since there's no update
     // - but, since the signature is wrong, another request will be made)
-    "GET:/v1/buckets/main/collections/signed/changeset?_expected=5000&_since=4000": [
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=5000&_since=%224000%22": [
       RESPONSE_EMPTY_NO_UPDATE_BAD_SIG,
     ],
     // The next request is for the full collection. This will be
@@ -648,7 +648,7 @@ add_task(async function test_check_synchronization_with_signatures() {
     }),
   };
   const allBadSigResponses = {
-    "GET:/v1/buckets/main/collections/signed/changeset?_expected=6000&_since=4000": [
+    "GET:/v1/buckets/main/collections/signed/changeset?_expected=6000&_since=%224000%22": [
       RESPONSE_EMPTY_NO_UPDATE_BAD_SIG,
     ],
     "GET:/v1/buckets/main/collections/signed/changeset?_expected=6000": [

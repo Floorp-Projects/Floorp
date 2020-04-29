@@ -941,7 +941,7 @@ wNuvFqc=
         ],
       },
     },
-    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=3001&_since=3000": {
+    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=3001&_since=%223000%22": {
       sampleHeaders: [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
@@ -969,7 +969,7 @@ wNuvFqc=
         ],
       },
     },
-    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=4001&_since=4000": {
+    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=4001&_since=%224000%22": {
       sampleHeaders: [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
@@ -989,7 +989,7 @@ wNuvFqc=
         ],
       },
     },
-    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=10000&_since=9999": {
+    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=10000&_since=%229999%22": {
       sampleHeaders: [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
@@ -1003,7 +1003,7 @@ wNuvFqc=
         error: "Service Unavailable",
       },
     },
-    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=10001&_since=10000": {
+    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=10001&_since=%2210000%22": {
       sampleHeaders: [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
@@ -1014,7 +1014,7 @@ wNuvFqc=
       status: { status: 200, statusText: "OK" },
       responseBody: "<invalid json",
     },
-    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=11001&_since=11000": {
+    "GET:/v1/buckets/main/collections/password-fields/changeset?_expected=11001&_since=%2211000%22": {
       sampleHeaders: [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
@@ -1175,7 +1175,7 @@ wNuvFqc=
         ],
       },
     },
-    "GET:/v1/buckets/main/collections/with-local-fields/changeset?_expected=3000&_since=2000": {
+    "GET:/v1/buckets/main/collections/with-local-fields/changeset?_expected=3000&_since=%222000%22": {
       sampleHeaders: [
         "Access-Control-Allow-Origin: *",
         "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
