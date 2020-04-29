@@ -392,7 +392,7 @@ void MacroAssembler::storeToTypedBigIntArray(Scalar::Type arrayType,
 template <typename T>
 void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src,
                                         AnyRegister dest, Register temp,
-                                        Label* fail, bool canonicalizeDoubles) {
+                                        Label* fail) {
   switch (arrayType) {
     case Scalar::Int8:
       load8SignExtend(src, dest.gpr());
@@ -429,9 +429,7 @@ void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src,
       break;
     case Scalar::Float64:
       loadDouble(src, dest.fpu());
-      if (canonicalizeDoubles) {
-        canonicalizeDouble(dest.fpu());
-      }
+      canonicalizeDouble(dest.fpu());
       break;
     case Scalar::BigInt64:
     case Scalar::BigUint64:
@@ -443,13 +441,11 @@ void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src,
 template void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType,
                                                  const Address& src,
                                                  AnyRegister dest,
-                                                 Register temp, Label* fail,
-                                                 bool canonicalizeDoubles);
+                                                 Register temp, Label* fail);
 template void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType,
                                                  const BaseIndex& src,
                                                  AnyRegister dest,
-                                                 Register temp, Label* fail,
-                                                 bool canonicalizeDoubles);
+                                                 Register temp, Label* fail);
 
 template <typename T>
 void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src,
