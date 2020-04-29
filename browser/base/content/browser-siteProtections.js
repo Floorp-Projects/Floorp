@@ -1697,8 +1697,7 @@ var gProtectionsHandler = {
     }
 
     this.anyDetected = false;
-    this.anyBlocking = false;
-
+    let anyBlocking = false;
     this.noTrackersDetectedDescription.hidden = false;
 
     for (let blocker of this.blockers) {
@@ -1713,22 +1712,22 @@ var gProtectionsHandler = {
       let detected = blocker.isDetected(event);
       blocker.categoryItem.classList.toggle("notFound", !detected);
       this.anyDetected = this.anyDetected || detected;
-      this.anyBlocking = this.anyBlocking || blocker.activated;
+      anyBlocking = anyBlocking || blocker.activated;
     }
 
     // Check whether the user has added an exception for this site.
-    this.hasException = ContentBlockingAllowList.includes(
+    let hasException = ContentBlockingAllowList.includes(
       gBrowser.selectedBrowser
     );
 
     // Reset the animation in case the user is switching tabs or if no blockers were detected
     // (this is most likely happening because the user navigated on to a different site). This
     // allows us to play it from the start without choppiness next time.
-    if (isSimulated || !this.anyBlocking) {
+    if (isSimulated || !anyBlocking) {
       this.iconBox.removeAttribute("animate");
       // Only play the animation when the shield is not already shown on the page (the visibility
       // of the shield based on this onSecurityChange be determined afterwards).
-    } else if (this.anyBlocking && !this.iconBox.hasAttribute("active")) {
+    } else if (anyBlocking && !this.iconBox.hasAttribute("active")) {
       this.iconBox.setAttribute("animate", "true");
     }
 
@@ -1736,21 +1735,16 @@ var gProtectionsHandler = {
     // occurs on the page.  Note that merely allowing the loading of content that
     // we could have blocked does not trigger the appearance of the shield.
     // This state will be overriden later if there's an exception set for this site.
-    let isPanelOpen = ["showing", "open"].includes(
-      this._protectionsPopup.state
-    );
-    if (isPanelOpen) {
-      this._protectionsPopup.toggleAttribute("detected", this.anyDetected);
-      this._protectionsPopup.toggleAttribute("blocking", this.anyBlocking);
-      this._protectionsPopup.toggleAttribute("hasException", this.hasException);
-    }
+    this._protectionsPopup.toggleAttribute("detected", this.anyDetected);
+    this._protectionsPopup.toggleAttribute("blocking", anyBlocking);
+    this._protectionsPopup.toggleAttribute("hasException", hasException);
 
     this._categoryItemOrderInvalidated = true;
 
     if (this.anyDetected) {
       this.noTrackersDetectedDescription.hidden = true;
 
-      if (isPanelOpen) {
+      if (["showing", "open"].includes(this._protectionsPopup.state)) {
         this.reorderCategoryItems();
 
         // Until we encounter a site that triggers them, category elements might
@@ -1763,16 +1757,16 @@ var gProtectionsHandler = {
       }
     }
 
-    this.iconBox.toggleAttribute("active", this.anyBlocking);
-    this.iconBox.toggleAttribute("hasException", this.hasException);
+    this.iconBox.toggleAttribute("active", anyBlocking);
+    this.iconBox.toggleAttribute("hasException", hasException);
 
-    if (this.hasException) {
+    if (hasException) {
       this.showDisabledTooltipForTPIcon();
       if (!this.hadShieldState && !isSimulated) {
         this.hadShieldState = true;
         this.shieldHistogramAdd(1);
       }
-    } else if (this.anyBlocking) {
+    } else if (anyBlocking) {
       this.showActiveTooltipForTPIcon();
       if (!this.hadShieldState && !isSimulated) {
         this.hadShieldState = true;
@@ -1852,7 +1846,7 @@ var gProtectionsHandler = {
       [host]
     );
 
-    let currentlyEnabled = !this.hasException;
+    let currentlyEnabled = !this._protectionsPopup.hasAttribute("hasException");
 
     for (let tpSwitch of [
       this._protectionsPopupTPSwitch,
@@ -1911,10 +1905,6 @@ var gProtectionsHandler = {
     } else {
       this._protectionsPopup.removeAttribute("milestone");
     }
-
-    this._protectionsPopup.toggleAttribute("detected", this.anyDetected);
-    this._protectionsPopup.toggleAttribute("blocking", this.anyBlocking);
-    this._protectionsPopup.toggleAttribute("hasException", this.hasException);
   },
 
   /*
