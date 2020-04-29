@@ -463,6 +463,7 @@ ImageTestCase GreenBMPTestCase();
 ImageTestCase GreenICOTestCase();
 ImageTestCase GreenIconTestCase();
 ImageTestCase GreenWebPTestCase();
+ImageTestCase GreenAVIFTestCase();
 
 ImageTestCase LargeWebPTestCase();
 ImageTestCase GreenWebPIccSrgbTestCase();
