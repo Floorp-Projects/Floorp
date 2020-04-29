@@ -25,11 +25,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Services.jsm"
 );
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
-ChromeUtils.defineModuleGetter(
-  this,
-  "perfService",
-  "resource://activity-stream/common/PerfService.jsm"
-);
 const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
 );
@@ -336,12 +331,12 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     const cachedData = (await this.cache.get()) || {};
     let { layout } = cachedData;
     if (this.isExpired({ cachedData, key: "layout", isStartup })) {
-      const start = perfService.absNow();
+      const start = Cu.now();
       const layoutResponse = await this.fetchFromEndpoint(
         this.config.layout_endpoint
       );
       if (layoutResponse && layoutResponse.layout) {
-        this.layoutRequestTime = Math.round(perfService.absNow() - start);
+        this.layoutRequestTime = Math.round(Cu.now() - start);
         layout = {
           lastUpdated: Date.now(),
           spocs: layoutResponse.spocs,
@@ -546,7 +541,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     // Reset the flag that indicates whether or not at least one API request
     // was issued to fetch the component feed in `getComponentFeed()`.
     this.componentFeedFetched = false;
-    const start = perfService.absNow();
+    const start = Cu.now();
     const { newFeedsPromises, newFeeds } = this.buildFeedPromises(
       DiscoveryStream.layout,
       isStartup,
@@ -558,7 +553,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 
     if (this.componentFeedFetched) {
       this.cleanUpTopRecImpressionPref(newFeeds);
-      this.componentFeedRequestTime = Math.round(perfService.absNow() - start);
+      this.componentFeedRequestTime = Math.round(Cu.now() - start);
     }
     await this.cache.set("feeds", newFeeds);
     sendUpdate({
@@ -613,7 +608,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       if (this.isExpired({ cachedData, key: "spocs", isStartup })) {
         const endpoint = this.store.getState().DiscoveryStream.spocs
           .spocs_endpoint;
-        const start = perfService.absNow();
+        const start = Cu.now();
 
         const headers = new Headers();
         headers.append("content-type", "application/json");
@@ -633,7 +628,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         });
 
         if (spocsResponse) {
-          this.spocsRequestTime = Math.round(perfService.absNow() - start);
+          this.spocsRequestTime = Math.round(Cu.now() - start);
           spocsState = {
             lastUpdated: Date.now(),
             spocs: {
@@ -860,7 +855,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 
   async scoreItems(items) {
     const filtered = [];
-    const scoreStart = perfService.absNow();
+    const scoreStart = Cu.now();
 
     const data = (await Promise.all(items.map(item => this.scoreItem(item))))
       // Remove spocs that are scored too low.
@@ -1401,11 +1396,11 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   async enable() {
     // Note that cache age needs to be reported prior to refreshAll.
     await this.reportCacheAge();
-    const start = perfService.absNow();
+    const start = Cu.now();
     await this.refreshAll({ updateOpenTabs: true, isStartup: true });
     Services.obs.addObserver(this, "idle-daily");
     this.loaded = true;
-    this.totalRequestTime = Math.round(perfService.absNow() - start);
+    this.totalRequestTime = Math.round(Cu.now() - start);
     this.reportRequestTime();
   }
 

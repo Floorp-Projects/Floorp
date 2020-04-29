@@ -15,11 +15,6 @@ ChromeUtils.defineModuleGetter(
 const { actionTypes: at, actionCreators: ac } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "perfService",
-  "resource://activity-stream/common/PerfService.jsm"
-);
 const PREF_PERSONALIZATION_VERSION = "discoverystream.personalization.version";
 const PREF_PERSONALIZATION_MODEL_KEYS =
   "discoverystream.personalization.modelKeys";
@@ -77,13 +72,13 @@ this.RecommendationProviderSwitcher = class RecommendationProviderSwitcher {
       return;
     }
 
-    const start = perfService.absNow();
+    const start = Cu.now();
     // Otherwise, if we get this far, we fallback to a v1 personalization provider.
     this.affinityProvider = new UserDomainAffinityProvider(...args);
     this.store.dispatch(
       ac.PerfEvent({
         event: "topstories.domain.affinity.calculation.ms",
-        value: Math.round(perfService.absNow() - start),
+        value: Math.round(Cu.now() - start),
       })
     );
   }
@@ -144,7 +139,7 @@ this.RecommendationProviderSwitcher = class RecommendationProviderSwitcher {
         this.store.dispatch(
           ac.PerfEvent({
             event: "PERSONALIZATION_V1_ITEM_RELEVANCE_SCORE_DURATION",
-            value: Math.round(perfService.absNow() - scoreStart),
+            value: Math.round(Cu.now() - scoreStart),
           })
         );
       }
