@@ -43,6 +43,7 @@ class StringTest {
         assertNotEquals("Tweet:", url)
     }
 
+    @Suppress("DEPRECATION") // the method under test is being removed so this test will be too.
     @Test
     fun isUrlStrict() {
         assertTrue("mozilla.org".isUrlStrict())

@@ -17,6 +17,11 @@ object URLStringUtils {
      * to execute than isURLLike() but checks whether, e.g., the TLD is ICANN-recognized. Consider
      * using isURLLike() unless these guarantees are required.
      */
+    @Deprecated(
+        "Consider using the less strict isURLLike or creating a new method using" +
+            ":lib-publicsuffixlist instead. This method is being removed for performance issues"
+    )
+    @Suppress("DEPRECATION") // we've also deprecated the elements this method relies on.
     fun isURLLikeStrict(string: String, safe: Boolean = false) =
         if (safe) {
             string.matches(WebURLFinder.fuzzyUrlRegex)
