@@ -374,12 +374,6 @@ const ResponsiveActor = protocol.ActorClassWithSpec(responsiveSpec, {
     return this.screenshotActor.capture({});
   },
 
-  async setDocumentInRDMPane(inRDMPane) {
-    if (this.docShell && this.docShell.document) {
-      this.docShell.browsingContext.inRDMPane = inRDMPane;
-    }
-  },
-
   /**
    * Applies a mobile scrollbar overlay to the content document.
    *
