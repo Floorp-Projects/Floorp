@@ -442,34 +442,32 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
     }
 
     matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX
-                            "gc_high_frequency_heap_growth_min");
+                            "gc_high_frequency_large_heap_growth");
     if (memPrefName == matchName || (gRuntimeServiceDuringInit && index == 4)) {
       UpdateCommonJSGCMemoryOption(rts, matchName,
-                                   JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN);
+                                   JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH);
       continue;
     }
 
     matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX
-                            "gc_high_frequency_heap_growth_max");
+                            "gc_high_frequency_small_heap_growth");
     if (memPrefName == matchName || (gRuntimeServiceDuringInit && index == 5)) {
       UpdateCommonJSGCMemoryOption(rts, matchName,
-                                   JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX);
+                                   JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH);
       continue;
     }
 
     matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX
-                            "gc_high_frequency_low_limit_mb");
+                            "gc_small_heap_size_max_mb");
     if (memPrefName == matchName || (gRuntimeServiceDuringInit && index == 6)) {
-      UpdateCommonJSGCMemoryOption(rts, matchName,
-                                   JSGC_HIGH_FREQUENCY_LOW_LIMIT);
+      UpdateCommonJSGCMemoryOption(rts, matchName, JSGC_SMALL_HEAP_SIZE_MAX);
       continue;
     }
 
     matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX
-                            "gc_high_frequency_high_limit_mb");
+                            "gc_large_heap_size_min_mb");
     if (memPrefName == matchName || (gRuntimeServiceDuringInit && index == 7)) {
-      UpdateCommonJSGCMemoryOption(rts, matchName,
-                                   JSGC_HIGH_FREQUENCY_HIGH_LIMIT);
+      UpdateCommonJSGCMemoryOption(rts, matchName, JSGC_LARGE_HEAP_SIZE_MIN);
       continue;
     }
 

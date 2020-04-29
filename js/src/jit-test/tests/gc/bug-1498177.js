@@ -8,10 +8,10 @@ for (i=0; i < 300000; i++) {
 
 gc();
 
-// GCRuntime::setHighFrequencyHighLimit will change the low value to be one
+// GCRuntime::setLargeHeapSizeMinBytes will change the low value to be one
 // byte lower than the high value (if necessary).  But this blew up later
 // when the values were mistakingly cast to float then compared, rather than
 // kept as size_t.
-gcparam('highFrequencyHighLimit', 99);
+gcparam('largeHeapSizeMin', 99);
 
 
