@@ -32,12 +32,6 @@ class ChildMessagePort extends MessagePort {
       defineAs: "RPMRemoveMessageListener",
       allowCallbacks: true,
     });
-    Cu.exportFunction(this.getFormatURLPref.bind(this), window, {
-      defineAs: "RPMGetFormatURLPref",
-    });
-    Cu.exportFunction(this.isWindowPrivate.bind(this), window, {
-      defineAs: "RPMIsWindowPrivate",
-    });
     Cu.exportFunction(this.getUpdateChannel.bind(this), window, {
       defineAs: "RPMGetUpdateChannel",
     });

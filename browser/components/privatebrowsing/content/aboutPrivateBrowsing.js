@@ -27,12 +27,12 @@ document.addEventListener("DOMContentLoaded", function() {
   // Set up the private search banner.
   const privateSearchBanner = document.getElementById("search-banner");
 
-  RPMAddMessageListener("ShowSearchBanner", msg => {
-    if (msg.data.show) {
+  RPMSendQuery("ShouldShowSearchBanner", {}).then(engineName => {
+    if (engineName) {
       document.l10n.setAttributes(
         document.getElementById("about-private-browsing-search-banner-title"),
         "about-private-browsing-search-banner-title",
-        { engineName: msg.data.engineName }
+        { engineName }
       );
       privateSearchBanner.removeAttribute("hidden");
       document.body.classList.add("showBanner");
@@ -41,7 +41,6 @@ document.addEventListener("DOMContentLoaded", function() {
     // We set this attribute so that tests know when we are done.
     document.documentElement.setAttribute("SearchBannerInitialized", true);
   });
-  RPMSendAsyncMessage("ShouldShowSearchBanner");
 
   function hideSearchBanner() {
     privateSearchBanner.setAttribute("hidden", "true");
