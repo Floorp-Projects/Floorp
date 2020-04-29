@@ -58,6 +58,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import java.lang.IllegalStateException
 import kotlin.random.Random
 
 /**
@@ -369,13 +370,13 @@ abstract class AbstractFetchDownloadService : Service() {
 
         response.body.useStream { inStream ->
             val newDownloadState = download.withResponse(response.headers, inStream)
-            downloadJobs[download.id]?.state = newDownloadState
+            currentDownloadJobState.state = newDownloadState
 
             useFileStream(newDownloadState, isResumingDownload) { outStream ->
-                copyInChunks(downloadJobs[download.id]!!, inStream, outStream)
+                copyInChunks(currentDownloadJobState, inStream, outStream)
             }
 
-            verifyDownload(downloadJobs[download.id]!!)
+            verifyDownload(currentDownloadJobState)
         }
     }
 
@@ -510,8 +511,9 @@ abstract class AbstractFetchDownloadService : Service() {
     @TargetApi(Build.VERSION_CODES.P)
     @Suppress("Deprecation")
     private fun useFileStreamLegacy(download: DownloadState, append: Boolean, block: (OutputStream) -> Unit) {
+        val fileName = download.fileName ?: throw IllegalStateException("A fileName for a download is required")
         val dir = Environment.getExternalStoragePublicDirectory(download.destinationDirectory)
-        val file = File(dir, download.fileName!!)
+        val file = File(dir, fileName)
 
         FileOutputStream(file, append).use(block)
 
@@ -519,8 +521,8 @@ abstract class AbstractFetchDownloadService : Service() {
         if (getDownloadJobStatus(downloadJobState) != DownloadJobStatus.COMPLETED) { return }
 
         addCompletedDownload(
-            title = download.fileName!!,
-            description = download.fileName!!,
+            title = fileName,
+            description = fileName,
             isMediaScannerScannable = true,
             mimeType = download.contentType ?: "*/*",
             path = file.absolutePath,
