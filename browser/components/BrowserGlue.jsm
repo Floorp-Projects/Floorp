@@ -105,6 +105,21 @@ let ACTORS = {
     remoteTypes: ["privilegedabout"],
   },
 
+  AboutProtections: {
+    parent: {
+      moduleURI: "resource:///actors/AboutProtectionsParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/AboutProtectionsChild.jsm",
+
+      events: {
+        DOMWindowCreated: { capture: true },
+      },
+    },
+
+    matches: ["about:protections"],
+  },
+
   AboutWelcome: {
     parent: {
       moduleURI: "resource:///actors/AboutWelcomeParent.jsm",
@@ -576,8 +591,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AboutCertViewerHandler: "resource://gre/modules/AboutCertViewerHandler.jsm",
   AboutPrivateBrowsingHandler:
     "resource:///modules/aboutpages/AboutPrivateBrowsingHandler.jsm",
-  AboutProtectionsHandler:
-    "resource:///modules/aboutpages/AboutProtectionsHandler.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
@@ -1690,7 +1703,10 @@ BrowserGlue.prototype = {
 
     AboutPrivateBrowsingHandler.init();
 
-    AboutProtectionsHandler.init();
+    Services.telemetry.setEventRecordingEnabled(
+      "security.ui.protections",
+      true
+    );
 
     PageActions.init();
 
@@ -1939,7 +1955,6 @@ BrowserGlue.prototype = {
     NewTabUtils.uninit();
     AboutCertViewerHandler.uninit();
     AboutPrivateBrowsingHandler.uninit();
-    AboutProtectionsHandler.uninit();
 
     Normandy.uninit();
     RFPHelper.uninit();

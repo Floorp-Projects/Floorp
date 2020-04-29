@@ -6,12 +6,9 @@
 
 Cu.importGlobalProperties(["fetch"]);
 
-var EXPORTED_SYMBOLS = ["AboutProtectionsHandler"];
+var EXPORTED_SYMBOLS = ["AboutProtectionsParent"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
-);
-const { RemotePages } = ChromeUtils.import(
-  "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -59,44 +56,19 @@ const UNKNOWN_ERROR = "Unknown error";
 // Valid response info for successful Monitor data
 const MONITOR_RESPONSE_PROPS = ["monitoredEmails", "numBreaches", "passwords"];
 
-var AboutProtectionsHandler = {
-  _inited: false,
-  monitorResponse: null,
-  _topics: [
-    "ClearMonitorCache",
-    // Opening about:* pages
-    "OpenAboutLogins",
-    "OpenContentBlockingPreferences",
-    "OpenSyncPreferences",
-    // Fetching data
-    "FetchContentBlockingEvents",
-    "FetchMonitorData",
-    "FetchUserLoginsData",
-    "GetShowProxyCard",
-  ],
+let gTestOverride = null;
 
-  init() {
-    this.receiveMessage = this.receiveMessage.bind(this);
-    this.pageListener = new RemotePages("about:protections");
-    for (let topic of this._topics) {
-      this.pageListener.addMessageListener(topic, this.receiveMessage);
-    }
-    Services.telemetry.setEventRecordingEnabled(
-      "security.ui.protections",
-      true
-    );
-    this._inited = true;
-  },
+class AboutProtectionsParent extends JSWindowActorParent {
+  constructor() {
+    super();
 
-  uninit() {
-    if (!this._inited) {
-      return;
-    }
-    for (let topic of this._topics) {
-      this.pageListener.removeMessageListener(topic, this.receiveMessage);
-    }
-    this.pageListener.destroy();
-  },
+    this.monitorResponse = null;
+  }
+
+  // Some tests wish to override certain functions with ones that mostly do nothing.
+  static setTestOverride(callback) {
+    gTestOverride = callback;
+  }
 
   /**
    * Fetches and validates data from the Monitor endpoint. If successful, then return
@@ -162,7 +134,7 @@ var AboutProtectionsHandler = {
       throw this.monitorResponse;
     }
     return this.monitorResponse;
-  },
+  }
 
   /**
    * Retrieves login data for the user.
@@ -174,6 +146,10 @@ var AboutProtectionsHandler = {
    *         The login data.
    */
   async getLoginData() {
+    if (gTestOverride && "getLoginData" in gTestOverride) {
+      return gTestOverride.getLoginData();
+    }
+
     let hasFxa = false;
 
     try {
@@ -202,7 +178,7 @@ var AboutProtectionsHandler = {
         : 0,
       mobileDeviceConnected,
     };
-  },
+  }
 
   /**
    * Retrieves monitor data for the user.
@@ -216,6 +192,10 @@ var AboutProtectionsHandler = {
    *         Monitor data.
    */
   async getMonitorData() {
+    if (gTestOverride && "getMonitorData" in gTestOverride) {
+      return gTestOverride.getMonitorData();
+    }
+
     let monitorData = {};
     let potentiallyBreachedLogins = null;
     let userEmail = null;
@@ -277,7 +257,7 @@ var AboutProtectionsHandler = {
         : 0,
       error: !!monitorData.errorMessage,
     };
-  },
+  }
 
   async getMonitorScopedOAuthToken() {
     let token = null;
@@ -292,7 +272,7 @@ var AboutProtectionsHandler = {
     }
 
     return token;
-  },
+  }
 
   /**
    * The proxy card will only show if the user is in the US, has the browser language in "en-US",
@@ -313,27 +293,10 @@ var AboutProtectionsHandler = {
       !alreadyInstalled &&
       languages.data.toLowerCase().includes("en-us")
     );
-  },
-
-  /**
-   * Sends a response from message target.
-   *
-   * @param {Object}  target
-   *        The message target.
-   * @param {String}  message
-   *        The topic of the message to send.
-   * @param {Object}  payload
-   *        The payload of the message to send.
-   */
-  sendMessage(target, message, payload) {
-    // Make sure the target's browser is available before sending.
-    if (target.browser) {
-      target.sendAsyncMessage(message, payload);
-    }
-  },
+  }
 
   async receiveMessage(aMessage) {
-    let win = aMessage.target.browser.ownerGlobal;
+    let win = this.browsingContext.top.embedderElement.ownerGlobal;
     switch (aMessage.name) {
       case "OpenAboutLogins":
         LoginHelper.openPasswordManager(win, {
@@ -368,12 +331,7 @@ var AboutProtectionsHandler = {
 
         if (PrivateBrowsingUtils.isWindowPrivate(win)) {
           dataToSend.isPrivate = true;
-          this.sendMessage(
-            aMessage.target,
-            "SendContentBlockingRecords",
-            dataToSend
-          );
-          return;
+          return dataToSend;
         }
         let sumEvents = await TrackingDBService.sumAllEvents();
         let earliestDate = await TrackingDBService.getEarliestRecordedDate();
@@ -400,42 +358,23 @@ var AboutProtectionsHandler = {
         dataToSend.earliestDate = earliestDate;
         dataToSend.sumEvents = sumEvents;
 
-        this.sendMessage(
-          aMessage.target,
-          "SendContentBlockingRecords",
-          dataToSend
-        );
-        break;
+        return dataToSend;
+
       case "FetchMonitorData":
-        this.sendMessage(
-          aMessage.target,
-          "SendMonitorData",
-          await this.getMonitorData()
-        );
-        break;
+        return this.getMonitorData();
+
       case "FetchUserLoginsData":
-        let {
-          hasFxa,
-          numLogins,
-          numSyncedDevices,
-          mobileDeviceConnected,
-        } = await this.getLoginData();
-        this.sendMessage(aMessage.target, "SendUserLoginsData", {
-          hasFxa,
-          numLogins,
-          numSyncedDevices,
-        });
-        this.sendMessage(aMessage.target, "SendUserMobileDeviceData", {
-          mobileDeviceConnected,
-        });
-        break;
+        return this.getLoginData();
+
       case "ClearMonitorCache":
         this.monitorResponse = null;
         break;
+
       case "GetShowProxyCard":
-        if (await this.shouldShowProxyCard()) {
-          this.sendMessage(aMessage.target, "SendShowProxyCard");
-        }
+        let card = await this.shouldShowProxyCard();
+        return card;
     }
-  },
-};
+
+    return undefined;
+  }
+}

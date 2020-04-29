@@ -24,7 +24,6 @@ export default class MonitorClass {
   init() {
     // Wait for monitor data and display the card.
     this.getMonitorData();
-    RPMSendAsyncMessage("FetchMonitorData");
 
     let monitorReportLink = this.doc.getElementById("full-report-link");
     monitorReportLink.addEventListener("click", () => {
@@ -46,11 +45,10 @@ export default class MonitorClass {
   }
 
   /**
-   * Adds a listener for receiving the monitor data. Once received then display this data
-   * in the card.
+   * Retrieves the monitor data and displays this data in the card.
    **/
   getMonitorData() {
-    RPMAddMessageListener("SendMonitorData", ({ data: monitorData }) => {
+    RPMSendQuery("FetchMonitorData", {}).then(monitorData => {
       // Once data for the user is retrieved, display the monitor card.
       this.buildContent(monitorData);
 
