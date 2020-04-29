@@ -2443,6 +2443,7 @@
 
       // Remove potentially stale attributes.
       let attributesToRemove = [
+        "activemedia-blocked",
         "busy",
         "pendingicon",
         "progress",
