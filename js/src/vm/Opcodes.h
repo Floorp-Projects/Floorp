@@ -715,7 +715,7 @@
      * not possible to get the right behavior using `JSOp::Add` and `JSOp::Sub`
      * alone. For one thing, `JSOp::Add` sometimes does string concatenation,
      * while `++` always does numeric addition. More fundamentally, the result
-     * of evaluating `--x` is ToNumeric(old value of `x`), a value that the
+     * of evaluating `x--` is ToNumeric(old value of `x`), a value that the
      * sequence `GetLocal "x"; One; Sub; SetLocal "x"` does not give us.
      *
      * [1]: https://tc39.es/ecma262/#sec-tonumeric
@@ -726,7 +726,7 @@
      *   Operands:
      *   Stack: val => ToNumeric(val)
      */ \
-    MACRO(ToNumeric, to_numeric, NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(ToNumeric, to_numeric, NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
     /*
      * Convert a value to a string.
      *
