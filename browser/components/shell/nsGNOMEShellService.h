@@ -10,6 +10,9 @@
 #include "nsToolkitShellService.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"
+#ifdef MOZ_ENABLE_DBUS
+#  include "nsGNOMEShellSearchProvider.h"
+#endif
 
 class nsGNOMEShellService final : public nsIGNOMEShellService,
                                   public nsToolkitShellService {
@@ -28,6 +31,9 @@ class nsGNOMEShellService final : public nsIGNOMEShellService,
   bool KeyMatchesAppName(const char* aKeyValue) const;
   bool CheckHandlerMatchesAppName(const nsACString& handler) const;
 
+#ifdef MOZ_ENABLE_DBUS
+  nsGNOMEShellSearchProvider mSearchProvider;
+#endif
   bool GetAppPathFromLauncher();
   bool mUseLocaleFilenames;
   nsCString mAppPath;

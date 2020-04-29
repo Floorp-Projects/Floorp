@@ -40,6 +40,13 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     SOURCES += [
         'nsGNOMEShellService.cpp',
     ]
+    if CONFIG['MOZ_ENABLE_DBUS']:
+        SOURCES += [
+            'nsGNOMEShellDBusHelper.cpp',
+            'nsGNOMEShellSearchProvider.cpp',
+        ]
+        include('/ipc/chromium/chromium-config.mozbuild')
+
 elif CONFIG['OS_ARCH'] == 'WINNT':
     XPIDL_SOURCES += [
         'nsIWindowsShellService.idl',
@@ -66,6 +73,8 @@ for var in ('MOZ_APP_NAME', 'MOZ_APP_VERSION'):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
 CXXFLAGS += CONFIG['TK_CFLAGS']
+if CONFIG['MOZ_ENABLE_DBUS']:
+    CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
 
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Shell Integration')

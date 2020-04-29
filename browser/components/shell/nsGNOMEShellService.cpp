@@ -101,6 +101,14 @@ nsresult nsGNOMEShellService::Init() {
 
   if (!giovfs && !gsettings) return NS_ERROR_NOT_AVAILABLE;
 
+#ifdef MOZ_ENABLE_DBUS
+  const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
+  if (currentDesktop && strstr(currentDesktop, "GNOME") != nullptr &&
+      Preferences::GetBool("browser.gnome-search-provider.enabled", false)) {
+    mSearchProvider.Startup();
+  }
+#endif
+
   // Check G_BROKEN_FILENAMES.  If it's set, then filenames in glib use
   // the locale encoding.  If it's not set, they use UTF-8.
   mUseLocaleFilenames = PR_GetEnv("G_BROKEN_FILENAMES") != nullptr;
