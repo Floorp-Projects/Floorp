@@ -25,6 +25,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
             'nsDBusRemoteServer.cpp',
         ]
         CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
+        EXPORTS += [
+            'nsUnixRemoteServer.h',
+            'RemoteUtils.h',
+        ]
     CXXFLAGS += CONFIG['TK_CFLAGS']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
