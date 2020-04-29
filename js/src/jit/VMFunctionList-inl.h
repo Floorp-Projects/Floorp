@@ -115,7 +115,6 @@ namespace jit {
   _(DoCallFallback, js::jit::DoCallFallback)                                   \
   _(DoConcatStringObject, js::jit::DoConcatStringObject)                       \
   _(DoSpreadCallFallback, js::jit::DoSpreadCallFallback)                       \
-  _(DoToNumeric, js::jit::DoToNumeric)                                         \
   _(DoTypeUpdateFallback, js::jit::DoTypeUpdateFallback)                       \
   _(EnterWith, js::jit::EnterWith)                                             \
   _(FinalSuspend, js::jit::FinalSuspend)                                       \

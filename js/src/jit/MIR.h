@@ -4036,40 +4036,6 @@ class MInt64ToFloatingPoint : public MUnaryInstruction,
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
-// Takes a boxed Value and returns a Value containing either a Number or a
-// BigInt.  Usually this will be the value itself, but it may be an object that
-// has a @@toPrimitive, valueOf, or toString method.
-class MToNumeric : public MUnaryInstruction, public BoxInputsPolicy::Data {
-  MToNumeric(MDefinition* arg, TemporaryTypeSet* types)
-      : MUnaryInstruction(classOpcode, arg) {
-    if (!JitOptions.warpBuilder) {
-      // Note: unlike IonBuilder, WarpBuilder always adds MToNumeric and relies
-      // on specializing it later on.
-      MOZ_ASSERT(!IsNumericType(arg->type()),
-                 "Unboxable definitions don't need ToNumeric");
-    }
-    setResultType(MIRType::Value);
-    // Although `types' is always Int32|Double|BigInt, we have to compute it in
-    // IonBuilder to know whether emitting an MToNumeric is needed, so we just
-    // pass it through as an argument instead of recomputing it here.
-    setResultTypeSet(types);
-    setGuard();
-    setMovable();
-  }
-
- public:
-  INSTRUCTION_HEADER(ToNumeric)
-  TRIVIAL_NEW_WRAPPERS
-
-  void computeRange(TempAllocator& alloc) override;
-  bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
-  }
-  MDefinition* foldsTo(TempAllocator& alloc) override;
-
-  ALLOW_CLONE(MToNumeric)
-};
-
 // Applies ECMA's ToNumber on a primitive (either typed or untyped) and expects
 // the result to be precisely representable as an Int32, otherwise bails.
 //
