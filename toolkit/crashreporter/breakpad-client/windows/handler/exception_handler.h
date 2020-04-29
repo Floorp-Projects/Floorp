@@ -88,6 +88,13 @@ using std::wstring;
 
 class ExceptionHandler {
  public:
+  // The result value for the filter callback, see below.
+  enum class FilterResult {
+    HandleException,
+    AbortWithoutMinidump,
+    ContinueSearch
+  };
+
   // A callback function to run before Breakpad performs any substantial
   // processing of an exception.  A FilterCallback is called before writing
   // a minidump.  context is the parameter supplied by the user as
@@ -95,12 +102,16 @@ class ExceptionHandler {
   // exception record, if any; assertion points to assertion information,
   // if any.
   //
-  // If a FilterCallback returns true, Breakpad will continue processing,
-  // attempting to write a minidump.  If a FilterCallback returns false,
-  // Breakpad will immediately report the exception as unhandled without
-  // writing a minidump, allowing another handler the opportunity to handle it.
-  typedef bool (*FilterCallback)(void* context, EXCEPTION_POINTERS* exinfo,
-                                 MDRawAssertionInfo* assertion);
+  // If a FilterCallback returns HandleException, Breakpad will attempt to
+  // write a minidump.  If a FilterCallback returns ContinueSearch Breakpad
+  // will immediately report the exception as unhandled without writing a
+  // minidump, allowing another handler the opportunity to handle it.
+  // If a FilterCallback returns AbortWithoutMinidump, Breakpad will report the
+  // exception as handled but will not write a minidump, letting the process
+  // terminate itself instead.
+  typedef FilterResult (*FilterCallback)(void* context,
+                                         EXCEPTION_POINTERS* exinfo,
+                                         MDRawAssertionInfo* assertion);
 
   // A callback function to run after the minidump has been written.
   // minidump_id is a unique id for the dump, so the minidump
@@ -344,15 +355,27 @@ class ExceptionHandler {
   bool WriteMinidumpOnHandlerThread(EXCEPTION_POINTERS* exinfo,
                                     MDRawAssertionInfo* assertion);
 
+  // The return value for WriteMinidumpWithException(), see below.
+  enum class MinidumpResult {
+    Success,
+    Failure,
+    Ignored
+  };
+
   // This function is called on the handler thread.  It calls into
   // WriteMinidumpWithExceptionForProcess() with a handle to the
   // current process.  requesting_thread_id is the ID of the thread
   // that requested the dump.  If the dump is requested as a result of
   // an exception, exinfo contains exception information, otherwise,
-  // it is NULL.
-  bool WriteMinidumpWithException(DWORD requesting_thread_id,
-                                  EXCEPTION_POINTERS* exinfo,
-                                  MDRawAssertionInfo* assertion);
+  // it is NULL. It will return Success in case the minidump has been written
+  // successfully, Failure if we couldn't write out the minidump because of an
+  // error and Ignored if we didn't even try to write the minidump because the
+  // filter callback indicated that we should ignore this exception and abort.
+  // The latter condition is only relevent for a top-level exception handler,
+  // other callers should equate it to a failure.
+  MinidumpResult WriteMinidumpWithException(DWORD requesting_thread_id,
+                                            EXCEPTION_POINTERS* exinfo,
+                                            MDRawAssertionInfo* assertion);
 
   // This function does the actual writing of a minidump.  It is
   // called on the handler thread.  requesting_thread_id is the ID of
@@ -466,7 +489,7 @@ class ExceptionHandler {
 
   // The return value of the handler, passed from the handler thread back to
   // the requesting thread.
-  bool handler_return_value_;
+  MinidumpResult handler_return_value_;
 
   // If true, the handler will intercept EXCEPTION_BREAKPOINT and
   // EXCEPTION_SINGLE_STEP exceptions.  Leave this false (the default)
