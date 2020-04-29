@@ -18,10 +18,9 @@ class FileSystemRootDirectoryEntry final : public FileSystemDirectoryEntry {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileSystemRootDirectoryEntry,
                                            FileSystemDirectoryEntry)
 
-  FileSystemRootDirectoryEntry(
-      nsIGlobalObject* aGlobalObject,
-      const Sequence<RefPtr<FileSystemEntry>>& aEntries,
-      FileSystem* aFileSystem);
+  FileSystemRootDirectoryEntry(nsIGlobalObject* aGlobalObject,
+                               Sequence<RefPtr<FileSystemEntry>> aEntries,
+                               FileSystem* aFileSystem);
 
   virtual void GetName(nsAString& aName, ErrorResult& aRv) const override;
 
