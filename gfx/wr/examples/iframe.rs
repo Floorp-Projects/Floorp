@@ -83,13 +83,7 @@ impl Example for App {
             sub_bounds,
             ColorF::new(1.0, 0.0, 0.0, 1.0)
         );
-        builder.push_iframe(
-            sub_bounds,
-            sub_bounds,
-            space_and_clip.spatial_id,
-            sub_pipeline_id,
-            false,
-        );
+        builder.push_iframe(sub_bounds, sub_bounds, &space_and_clip, sub_pipeline_id, false);
         builder.pop_stacking_context();
         builder.pop_reference_frame();
     }
