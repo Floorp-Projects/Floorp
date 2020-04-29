@@ -53,6 +53,7 @@ EXPORTS += [
     '!ErrorNamesInternal.h',
     'CodeAddressService.h',
     'nsAlgorithm.h',
+    'nsAutoPtr.h',
     'nsAutoRef.h',
     'nsCom.h',
     'nsCOMPtr.h',
