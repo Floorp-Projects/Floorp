@@ -356,7 +356,7 @@ sccache:
     description: sccache source code
     fetch:
         type: git
-        repo: https://github.com/glandium/sccache
+        repo: https://github.com/mozilla/sccache
         # 0.2.13 release + various changes
         revision: 5afa5b1579949c03dbe9f77415c6d3d9824d0844
 
