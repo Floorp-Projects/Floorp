@@ -66,16 +66,29 @@ enum class TryNoteKind : uint8_t {
 // one specific instance of a BaseScript.
 
 enum class ImmutableScriptFlagsEnum : uint32_t {
-  // Input Flags
-  //
-  // Flags that come from CompileOptions.
-  // ----
+  // Script came from eval().
+  IsForEval = 1 << 0,
 
-  // No need for result value of last expression statement.
-  NoScriptRval = 1 << 0,
+  // Script is parsed with a top-level goal of Module. This may be a top-level
+  // or an inner-function script.
+  IsModule = 1 << 1,
+
+  // Script is for function.
+  IsFunction = 1 << 2,
 
   // See Parser::selfHostingMode.
-  SelfHosted = 1 << 1,
+  SelfHosted = 1 << 3,
+
+  // Code was forced into strict mode using CompileOptions.
+  ForceStrict = 1 << 4,
+
+  // True if the script has a non-syntactic scope on its dynamic scope chain.
+  // That is, there are objects about which we know nothing between the
+  // outermost syntactic scope and the global.
+  HasNonSyntacticScope = 1 << 5,
+
+  // No need for result value of last expression statement.
+  NoScriptRval = 1 << 6,
 
   // TreatAsRunOnce roughly indicates that a script is expected to be run no
   // more than once. This affects optimizations and heuristics.
@@ -94,29 +107,21 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // not yet compiled, this flag is undefined and should not be used. As the
   // enclosing script is compiled, this flag is updated to the same definition
   // the eventual non-lazy function will use.
-  TreatAsRunOnce = 1 << 2,
+  TreatAsRunOnce = 1 << 7,
 
-  // Code was forced into strict mode using CompileOptions.
-  ForceStrict = 1 << 3,
-
-  // Script came from eval().
-  IsForEval = 1 << 4,
+  // Code is in strict mode.
+  Strict = 1 << 8,
 
   // Script is parsed with a top-level goal of Module. This may be a top-level
   // or an inner-function script.
-  IsModule = 1 << 5,
+  HasModuleGoal = 1 << 9,
 
-  // Script is for function.
-  IsFunction = 1 << 6,
-  // ----
+  // Script contains inner functions. Used to check if we can relazify the
+  // script.
+  HasInnerFunctions = 1 << 10,
 
-  // Parser Flags
-  //
-  // Flags that come from the parser.
-  // ----
-
-  // Code is in strict mode.
-  Strict = 1 << 7,
+  // Whether this script contains a direct eval statement.
+  HasDirectEval = 1 << 11,
 
   // The (static) bindings of this script need to support dynamic name
   // read/write access. Here, 'dynamic' means dynamic dictionary lookup on
@@ -135,7 +140,21 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // taken not to turn off the whole 'arguments' optimization). To answer the
   // more general "is this argument aliased" question, script->needsArgsObj
   // should be tested (see JSScript::argIsAliased).
-  BindingsAccessedDynamically = 1 << 8,
+  BindingsAccessedDynamically = 1 << 12,
+
+  // True if a tagged template exists in the body => Bytecode contains
+  // JSOp::CallSiteObj
+  // (We don't relazify functions with template strings, due to observability)
+  HasCallSiteObj = 1 << 13,
+
+  // Parser Flags for Functions
+  // ----
+
+  // Set if this function is an async function or async generator.
+  IsAsync = 1 << 14,
+
+  // Set if this function is a generator function or async generator.
+  IsGenerator = 1 << 15,
 
   // This function does something that can extend the set of bindings in its
   // call objects --- it does a direct eval in non-strict code, or includes a
@@ -144,44 +163,30 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // This flag is *not* inherited by enclosed or enclosing functions; it
   // applies only to the function in whose flags it appears.
   //
-  FunHasExtensibleScope = 1 << 9,
-
-  // True if a tagged template exists in the body => Bytecode contains
-  // JSOp::CallSiteObj
-  // (We don't relazify functions with template strings, due to observability)
-  HasCallSiteObj = 1 << 10,
-
-  // Script is parsed with a top-level goal of Module. This may be a top-level
-  // or an inner-function script.
-  HasModuleGoal = 1 << 11,
+  FunHasExtensibleScope = 1 << 16,
 
   // Whether this function has a .this binding. If true, we need to emit
   // JSOp::FunctionThis in the prologue to initialize it.
-  FunctionHasThisBinding = 1 << 12,
+  FunctionHasThisBinding = 1 << 17,
 
-  // Whether the arguments object for this script, if it needs one, should be
-  // mapped (alias formal parameters).
-  HasMappedArgsObj = 1 << 13,
+  NeedsHomeObject = 1 << 18,
 
-  // Script contains inner functions. Used to check if we can relazify the
-  // script.
-  HasInnerFunctions = 1 << 14,
-
-  NeedsHomeObject = 1 << 15,
-  IsDerivedClassConstructor = 1 << 16,
-
-  // 'this', 'arguments' and f.apply() are used. This is likely to be a
-  // wrapper.
-  IsLikelyConstructorWrapper = 1 << 17,
-
-  // Set if this function is a generator function or async generator.
-  IsGenerator = 1 << 18,
-
-  // Set if this function is an async function or async generator.
-  IsAsync = 1 << 19,
+  IsDerivedClassConstructor = 1 << 19,
 
   // Set if this function has a rest parameter.
   HasRest = 1 << 20,
+
+  // Whether this function needs a call object or named lambda environment.
+  NeedsFunctionEnvironmentObjects = 1 << 21,
+
+  // An extra VarScope is used as the body scope instead of the normal
+  // FunctionScope. This is needed when parameter expressions are used AND the
+  // function has var bindings or a sloppy-direct-eval. For example,
+  //    `function(x = eval("")) { var y; }`
+  FunctionHasExtraBodyVarScope = 1 << 22,
+
+  // Whether the Parser declared 'arguments'.
+  ShouldDeclareArguments = 1 << 23,
 
   // Whether 'arguments' has a local binding.
   //
@@ -205,38 +210,20 @@ enum class ImmutableScriptFlagsEnum : uint32_t {
   // flag will not be set. This is because, as a formal, 'arguments' will
   // have no special semantics: the initial value is unconditionally the
   // actual argument (or undefined if nactual < nformal).
-  ArgumentsHasVarBinding = 1 << 21,
+  ArgumentsHasVarBinding = 1 << 24,
 
   // Whether 'arguments' always must be the arguments object. If this is unset,
   // but ArgumentsHasVarBinding is set then an analysis pass is performed at
   // runtime to decide if we can optimize it away.
-  AlwaysNeedsArgsObj = 1 << 22,
+  AlwaysNeedsArgsObj = 1 << 25,
 
-  // Whether the Parser declared 'arguments'.
-  ShouldDeclareArguments = 1 << 23,
+  // Whether the arguments object for this script, if it needs one, should be
+  // mapped (alias formal parameters).
+  HasMappedArgsObj = 1 << 26,
 
-  // Whether this script contains a direct eval statement.
-  HasDirectEval = 1 << 24,
-
-  // An extra VarScope is used as the body scope instead of the normal
-  // FunctionScope. This is needed when parameter expressions are used AND the
-  // function has var bindings or a sloppy-direct-eval. For example,
-  //    `function(x = eval("")) { var y; }`
-  FunctionHasExtraBodyVarScope = 1 << 25,
-
-  // Whether this function needs a call object or named lambda environment.
-  NeedsFunctionEnvironmentObjects = 1 << 26,
-  // ----
-
-  // Bytecode Emitter Flags
-  //
-  // Flags that are initialized by the BCE.
-  // ----
-
-  // True if the script has a non-syntactic scope on its dynamic scope chain.
-  // That is, there are objects about which we know nothing between the
-  // outermost syntactic scope and the global.
-  HasNonSyntacticScope = 1 << 27,
+  // 'this', 'arguments' and f.apply() are used. This is likely to be a
+  // wrapper.
+  IsLikelyConstructorWrapper = 1 << 27,
 };
 
 enum class MutableScriptFlagsEnum : uint32_t {
@@ -244,19 +231,21 @@ enum class MutableScriptFlagsEnum : uint32_t {
   // reset when a script is successfully jit-compiled.
   WarmupResets_MASK = 0xFF,
 
-  // (1 << 8) is unused
-
   // If treatAsRunOnce, whether script has executed.
-  HasRunOnce = 1 << 9,
+  HasRunOnce = 1 << 8,
 
   // Script has been reused for a clone.
-  HasBeenCloned = 1 << 10,
+  HasBeenCloned = 1 << 9,
 
   // Script has an entry in Realm::scriptCountsMap.
-  HasScriptCounts = 1 << 12,
+  HasScriptCounts = 1 << 10,
 
   // Script has an entry in Realm::debugScriptMap.
-  HasDebugScript = 1 << 13,
+  HasDebugScript = 1 << 11,
+
+  // See comments below.
+  NeedsArgsAnalysis = 1 << 12,
+  NeedsArgsObj = 1 << 13,
 
   // Script supports relazification where it releases bytecode and gcthings to
   // save memory. This process is opt-in since various complexities may disallow
@@ -264,39 +253,38 @@ enum class MutableScriptFlagsEnum : uint32_t {
   // NOTE: Must check for isRelazifiable() before setting this flag.
   AllowRelazify = 1 << 14,
 
+  // Set if the script has opted into spew
+  SpewEnabled = 1 << 15,
+
+  //
   // IonMonkey compilation hints.
-
-  // Script has had hoisted bounds checks fail.
-  FailedBoundsCheck = 1 << 15,
-
-  // Script has had hoisted shape guard fail.
-  FailedShapeGuard = 1 << 16,
-
-  HadFrequentBailouts = 1 << 17,
-  HadOverflowBailout = 1 << 18,
+  //
 
   // Whether Baseline or Ion compilation has been disabled for this script.
   // IonDisabled is equivalent to |jitScript->canIonCompile() == false| but
   // JitScript can be discarded on GC and we don't want this to affect
   // observable behavior (see ArgumentsGetterImpl comment).
-  BaselineDisabled = 1 << 19,
-  IonDisabled = 1 << 20,
+  BaselineDisabled = 1 << 16,
+  IonDisabled = 1 << 17,
+
+  // Script has had hoisted bounds checks fail.
+  FailedBoundsCheck = 1 << 18,
+
+  // Script has had hoisted shape guard fail.
+  FailedShapeGuard = 1 << 19,
+
+  HadFrequentBailouts = 1 << 20,
+
+  HadOverflowBailout = 1 << 21,
 
   // Explicitly marked as uninlineable.
-  Uninlineable = 1 << 21,
+  Uninlineable = 1 << 22,
 
   // Idempotent cache has triggered invalidation.
-  InvalidatedIdempotentCache = 1 << 22,
+  InvalidatedIdempotentCache = 1 << 23,
 
   // Lexical check did fail and bail out.
-  FailedLexicalCheck = 1 << 23,
-
-  // See comments below.
-  NeedsArgsAnalysis = 1 << 24,
-  NeedsArgsObj = 1 << 25,
-
-  // Set if the script has opted into spew
-  SpewEnabled = 1 << 26,
+  FailedLexicalCheck = 1 << 24,
 };
 
 }  // namespace js
