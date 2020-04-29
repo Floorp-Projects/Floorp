@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 km{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -13,7 +13,7 @@ km{
                 dnam{"កម្លាំង​ទំនាញ"}
                 other{"{0} កម្លាំង​ទំនាញ"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"ម៉ែត្រ​ក្នុង​មួយ​វិនាទី​ការ៉េ"}
                 other{"{0} ម៉ែត្រ​ក្នុង​មួយ​វិនាទី​ការ៉េ"}
             }
@@ -102,10 +102,6 @@ km{
                 dnam{"មិល្លីម៉ូលក្នុងមួយលីត្រ"}
                 other{"{0} មិល្លីម៉ូលក្នុងមួយលីត្រ"}
             }
-            part-per-million{
-                dnam{"ផ្នែកក្នុងមួយលាន"}
-                other{"{0} ផ្នែកក្នុងមួយលាន"}
-            }
             percent{
                 dnam{"ភាគរយ"}
                 other{"{0} ភាគរយ"}
@@ -114,9 +110,13 @@ km{
                 dnam{"‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"ផ្នែកក្នុងមួយលាន"}
+                other{"{0} ផ្នែកក្នុងមួយលាន"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"លីត្រក្នុង 100 គីឡូម៉ែត្រ"}
                 other{"{0} លីត្រក្នុង 100 គីឡូម៉ែត្រ"}
             }
@@ -471,7 +471,7 @@ km{
                 dnam{"ហិចតូប៉ាស្កាល់"}
                 other{"{0} ហិចតូប៉ាស្កាល់"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"អ៊ីញនៃបារត"}
                 other{"{0} អ៊ីញនៃបារត"}
             }
@@ -479,11 +479,11 @@ km{
                 dnam{"មិល្លីបារ"}
                 other{"{0} មិល្លីបារ"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"មិល្លីម៉ែត្រនៃ​បារត"}
                 other{"{0} មិល្លីម៉ែត្រនៃ​បារត"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"ផោន​ក្នុង​មួយ​អ៊ីញ​ការ៉េ"}
                 other{"{0} ផោន​ក្នុង​មួយ​អ៊ីញ​ការ៉េ"}
             }
@@ -675,7 +675,7 @@ km{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 other{"{0}L/100km"}
             }
@@ -788,7 +788,7 @@ km{
             hectopascal{
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 other{"{0}\u0022 Hg"}
             }
             millibar{
@@ -835,7 +835,7 @@ km{
                 dnam{"កម្លាំង​ទំនាញ"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"ម៉ែត្រ​/​វិនាទី​ការ៉េ"}
                 other{"{0} m/s²"}
             }
@@ -924,10 +924,6 @@ km{
                 dnam{"mmol/L"}
                 other{"{0} mmol/L"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"ភាគរយ"}
                 other{"{0}%"}
@@ -936,9 +932,13 @@ km{
                 dnam{"‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"ppm"}
+                other{"{0} ppm"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 other{"{0} L/100km"}
             }
@@ -1296,7 +1296,7 @@ km{
                 dnam{"hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
                 other{"{0} inHg"}
             }
@@ -1304,11 +1304,11 @@ km{
                 dnam{"mbar"}
                 other{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 other{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 other{"{0} psi"}
             }

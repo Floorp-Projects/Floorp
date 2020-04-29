@@ -36,7 +36,7 @@ lrc{
         }
         native{"arabext"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         default{"persian"}
         generic{
@@ -145,10 +145,6 @@ lrc{
             }
             eras{
                 abbreviated{
-                    "BCE",
-                    "CE",
-                }
-                abbreviated%variant{
                     "BCE",
                     "CE",
                 }

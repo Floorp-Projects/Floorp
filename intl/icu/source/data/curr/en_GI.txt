@@ -12,5 +12,5 @@ en_GI{
             "Gibraltar Pound",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

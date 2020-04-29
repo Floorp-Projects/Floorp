@@ -2540,3 +2540,46 @@
 # Before ICU 55, the following reordered together with Gothic.
 <1 𐌈  # Old Italic
 <1 𐑐  # Shavian
+
+# Check for presence of certain chars 乛冂刂卜又小彑艹日月爫牛辶 in
+# zh pinyin and stroke, ICU-13790
+# (bracket pinyin test with 卬..作, stroke test with 一..乾)
+
+** test: DataDrivenCollationTest/VerifyCertainCharsInPinyin
+@ locale zh-u-co-pinyin
+* compare
+< 卬
+< 卜
+< 艹
+< 辶
+< 刂
+< 彑
+< 冂
+< 牛
+< 日
+< 小
+< 乛
+< 又
+< 月
+< 爫
+< 作
+
+** test: DataDrivenCollationTest/VerifyCertainCharsInStroke
+@ locale zh-u-co-stroke
+* compare
+< 一
+< 乛
+< 冂
+< 刂
+< 卜
+< 又
+< 小
+< 彑
+< 艹
+< 日
+< 月
+< 爫
+< 牛
+< 辶
+< 乾
+

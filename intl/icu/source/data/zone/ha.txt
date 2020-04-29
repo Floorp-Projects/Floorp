@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ha{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "America:North_Dakota:Beulah"{
             ec{"Beulah, Arewacin Dakota"}
@@ -346,6 +346,11 @@ ha{
         "meta:Marshall_Islands"{
             ls{"Marshall Islands Time"}
         }
+        "meta:Mauritius"{
+            ld{"Bazarar Mauritius"}
+            lg{"Lokacin Mauritius"}
+            ls{"TsaTsayayyar Lokacin Mauritius"}
+        }
         "meta:Mawson"{
             ls{"Mawson Time"}
         }
@@ -397,7 +402,9 @@ ha{
             ls{"Niue Time"}
         }
         "meta:Norfolk"{
-            ls{"Norfolk Island Time"}
+            ld{"Norfolk Island Daylight Time"}
+            lg{"Norfolk Island Time"}
+            ls{"Norfolk Island Standard Time"}
         }
         "meta:Novosibirsk"{
             ld{"Novosibirsk Summer Time"}

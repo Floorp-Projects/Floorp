@@ -26,6 +26,22 @@ so{
             "AOA",
             "Kawansada Angola",
         }
+        ARA{
+            "ARA",
+            "Argentine Austral",
+        }
+        ARL{
+            "ARL",
+            "Beesada Ley ee Arjentiin (1970–1983)",
+        }
+        ARM{
+            "ARM",
+            "Beesada Ley ee Arjentiin (1881–1970)",
+        }
+        ARP{
+            "ARP",
+            "Beesada Ley ee Arjentiin (1883–1985)",
+        }
         ARS{
             "ARS",
             "Beesada Arjentiin",
@@ -41,6 +57,10 @@ so{
         AZN{
             "AZN",
             "Manaata Asarbeyjan",
+        }
+        BAD{
+            "BAD",
+            "Diinaarka BBosnia-Hersogofina 1.00 konfatibal maakta Bosnia-Hersogofina 1 konfatibal maaka Bosnia-Hersogofina (1992–1994)",
         }
         BAM{
             "BAM",
@@ -77,6 +97,10 @@ so{
         BOB{
             "BOB",
             "Bolifiyanada Bolifiya",
+        }
+        BOL{
+            "BOL",
+            "Bolifiyaabka Bolifiyaano(1863–1963)",
         }
         BRL{
             "R$",
@@ -166,6 +190,10 @@ so{
             "DZD",
             "Dinaarka Aljeriya",
         }
+        EEK{
+            "EEK",
+            "Kroonka Estooniya",
+        }
         EGP{
             "EGP",
             "Bowndka Masar",
@@ -181,6 +209,10 @@ so{
         EUR{
             "€",
             "Yuuroo",
+        }
+        FIM{
+            "FIM",
+            "Markkada Fiinishka ah",
         }
         FJD{
             "FJD",
@@ -245,6 +277,10 @@ so{
         IDR{
             "IDR",
             "Rubiah Indonesiya",
+        }
+        IEP{
+            "IEP",
+            "baawnka Ayrishka",
         }
         ILS{
             "₪",
@@ -329,6 +365,10 @@ so{
         LRD{
             "LRD",
             "Doolarka Liberiya",
+        }
+        LVR{
+            "LVR",
+            "Rubalka Latfiya",
         }
         LYD{
             "LYD",
@@ -663,6 +703,22 @@ so{
             one{"kawansada Angola"}
             other{"kawansada Angola"}
         }
+        ARA{
+            one{"Argentine Austral"}
+            other{"Argentine Australs"}
+        }
+        ARL{
+            one{"Beesada Ley ee Arjentiin (1970–1983)"}
+            other{"Beesada Ley ee Arjentiin (1970–1983)"}
+        }
+        ARM{
+            one{"Beesada Ley ee Arjentiin (1881–1970)"}
+            other{"Beesada Ley ee Arjentiin (1881–1970)"}
+        }
+        ARP{
+            one{"Beesada Ley ee Arjentiin (1883–1985)"}
+            other{"Beesada Ley ee Arjentiin (1883–1985)"}
+        }
         ARS{
             one{"Beesada Arjentiin"}
             other{"Beesada Arjentiin"}
@@ -678,6 +734,13 @@ so{
         AZN{
             one{"manaata Asarbeyjan"}
             other{"manaata Asarbeyjan"}
+        }
+        BAD{
+            one{"Diinaarka BBosnia-Hersogofina (1992–1994)"}
+            other{
+                "Diinaarka BBosnia-Hersogofina 1.00 konfatibal maakta Bosnia-Hersogof"
+                "ina 1 konfatibal maaka Bosnia-Hersogofina (1992–1994)"
+            }
         }
         BAM{
             one{"konfatibal maakta Bosnia-Hersogofina"}
@@ -714,6 +777,10 @@ so{
         BOB{
             one{"Bolifiyanada Bolifiya"}
             other{"Bolifiyanada Bolifiya"}
+        }
+        BOL{
+            one{"Bolifiyaabka Bolifiyaano(1863–1963)"}
+            other{"Bolifiyaabka Bolifiyaano(1863–1963)"}
         }
         BRL{
             one{"Realka Barasil"}
@@ -803,6 +870,10 @@ so{
             one{"dinaarka Aljeriya"}
             other{"dinaarka Aljeriya"}
         }
+        EEK{
+            one{"Kroonka Estooniya"}
+            other{"Kroonka Estooniya"}
+        }
         EGP{
             one{"bowndka Masar"}
             other{"bowndka Masar"}
@@ -818,6 +889,10 @@ so{
         EUR{
             one{"yuuroo"}
             other{"yuuroo"}
+        }
+        FIM{
+            one{"Markkada Fiinishka ah"}
+            other{"Markkada Fiinishka ah"}
         }
         FJD{
             one{"doolarka Fiji"}
@@ -883,6 +958,10 @@ so{
             one{"rubiah Indonesiya"}
             other{"rubiah Indonesiya"}
         }
+        IEP{
+            one{"baawnka Ayrishka"}
+            other{"baawnka Ayrishka"}
+        }
         ILS{
             one{"niyuu shekelka Israaiil"}
             other{"niyuu shekelka Israaiil"}
@@ -898,6 +977,10 @@ so{
         IRR{
             one{"riyaalka Iran"}
             other{"riyaalka Iran"}
+        }
+        ISJ{
+            one{"krónaha Iceland (1918–1981)"}
+            other{"krónaha Iceland (1918–1981)"}
         }
         ISK{
             one{"Koronada Eysland"}
@@ -966,6 +1049,10 @@ so{
         LRD{
             one{"doolarka Liberiya"}
             other{"doolarka Liberiya"}
+        }
+        LVR{
+            one{"rubalka Latvia"}
+            other{"rubalka Latfiya"}
         }
         LYD{
             one{"dinaarka Libya"}
@@ -1268,5 +1355,5 @@ so{
             other{"Kawajada Sambiya"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

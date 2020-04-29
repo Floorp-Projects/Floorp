@@ -312,7 +312,6 @@ ga{
         CZ{"Poblacht na Seice"}
         FK{"Oileáin Fháclainne (Islas Malvinas)"}
         SZ{"an tSuasalainn"}
-        TL{"TL"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

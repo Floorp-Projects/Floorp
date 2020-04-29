@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ne{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ ne{
                 one{"{0} गुरूत्वाकर्षण शक्ति"}
                 other{"{0} गुरूत्वाकर्षण शक्ति"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"मिटर प्रति वर्ग सेकेन्ड"}
                 one{"{0}मिटर प्रति सेकेण्ड वर्ग"}
                 other{"{0}मिटर प्रति सेकेण्ड वर्ग"}
@@ -128,11 +128,6 @@ ne{
                 one{"{0} मोल"}
                 other{"{0} मोल"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"प्रतिशत"}
                 one{"{0} प्रतिशत"}
@@ -143,6 +138,11 @@ ne{
                 one{"{0} प्रति मिल"}
                 other{"{0} प्रति मिल"}
             }
+            permillion{
+                dnam{"ppm"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
             permyriad{
                 dnam{"पर्माइराइड"}
                 one{"{0} पर्माइराइड"}
@@ -150,7 +150,7 @@ ne{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"लिटर प्रति १०० किलोमिटर"}
                 one{"{0}लिटर प्रति १०० किलोमिटर"}
                 other{"{0}लिटर प्रति १०० किलोमिटर"}
@@ -675,7 +675,7 @@ ne{
                 one{"{0} हेक्टो पास्कल"}
                 other{"{0} हेक्टो पास्कल"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"इन्च पारो"}
                 one{"{0} इन्च पारो"}
                 other{"{0} इन्च पारो"}
@@ -695,7 +695,7 @@ ne{
                 one{"{0} मिलिबार"}
                 other{"{0} मिलिबार"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"मिलिमिटर पारो"}
                 one{"{0} मिलिमिटर पारो"}
                 other{"{0} मिलिमिटर पारो"}
@@ -705,7 +705,7 @@ ne{
                 one{"{0} पास्कल"}
                 other{"{0} पास्कल"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"पाउन्ड प्रति वर्ग इन्च"}
                 one{"{0} पाउन्ड प्रति वर्ग इन्च"}
                 other{"{0}पाउन्ड प्रति वर्ग इन्च"}
@@ -761,7 +761,7 @@ ne{
                 one{"{0} न्युटन मिटर"}
                 other{"{0} न्युटन मिटर"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"पाउन्ड फिट"}
                 one{"{0} पाउन्ड फुट"}
                 other{"{0} पाउन्ड फिट"}
@@ -963,7 +963,7 @@ ne{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"लि./१००कि.मि."}
                 one{"{0}L/100km"}
                 other{"{0}L/100km"}
@@ -1105,7 +1105,7 @@ ne{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0} ईञ्‍च पारो"}
                 other{"{0} ईञ्‍च पारो"}
             }
@@ -1163,7 +1163,7 @@ ne{
                 one{"{0} G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 one{"{0} m/s²"}
                 other{"{0} m/s²"}
@@ -1278,11 +1278,6 @@ ne{
                 one{"{0} मोल"}
                 other{"{0} मोल"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"प्रतिशत"}
                 one{"{0}प्रतिशत"}
@@ -1293,12 +1288,17 @@ ne{
                 one{"{0}प्रति मिल"}
                 other{"{0}प्रतिशत १"}
             }
+            permillion{
+                dnam{"ppm"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
             permyriad{
                 dnam{"पर्माइराइड"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"लि./१००कि.मि."}
                 one{"{0}लि./१००कि.मि."}
                 other{"{0}लि./१००कि.मि."}
@@ -1819,7 +1819,7 @@ ne{
                 one{"{0}hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"इन्च पारो"}
                 one{"{0} इन्च पारो"}
                 other{"{0} इन्च पारो"}
@@ -1839,7 +1839,7 @@ ne{
                 one{"{0} मिलिबार"}
                 other{"{0} मिलिबार"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
@@ -1849,7 +1849,7 @@ ne{
                 one{"{0} Pa"}
                 other{"{0} Pa"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 one{"{0} psi"}
                 other{"{0} psi"}

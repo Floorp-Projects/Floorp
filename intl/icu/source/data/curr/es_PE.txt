@@ -8,5 +8,5 @@ es_PE{
             "sol peruano",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

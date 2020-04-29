@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 my{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         standard{
             Sequence{
@@ -373,7 +373,7 @@ my{
                 "&ထမင်း=ထ္မင်း"
                 "&လက်ဘက်=လ္ဘက်"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

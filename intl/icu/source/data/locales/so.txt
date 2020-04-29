@@ -8,6 +8,98 @@ so{
         "′ ″]"
     }
     NumberElements{
+        arab{
+            symbols{
+                exponential{"E"}
+                superscriptingExponent{"×"}
+            }
+        }
+        arabext{
+            symbols{
+                exponential{"E"}
+            }
+        }
+        bali{
+            symbols{
+                nan{"NaN"}
+            }
+        }
+        beng{
+            symbols{
+                plusSign{"+"}
+                superscriptingExponent{"×"}
+            }
+        }
+        cham{
+            symbols{
+                nan{"NaN"}
+            }
+        }
+        fullwide{
+            symbols{
+                superscriptingExponent{"(^)"}
+            }
+        }
+        gong{
+            symbols{
+                nan{"NaN"}
+                superscriptingExponent{"×"}
+            }
+        }
+        gonm{
+            symbols{
+                superscriptingExponent{"×"}
+            }
+        }
+        gujr{
+            symbols{
+                superscriptingExponent{"×"}
+            }
+        }
+        guru{
+            symbols{
+                superscriptingExponent{"×"}
+            }
+        }
+        java{
+            symbols{
+                superscriptingExponent{"×"}
+            }
+        }
+        kali{
+            symbols{
+                nan{"NaN"}
+                superscriptingExponent{"×"}
+            }
+        }
+        khmr{
+            symbols{
+                superscriptingExponent{"×"}
+            }
+        }
+        knda{
+            symbols{
+                nan{"NaN"}
+                superscriptingExponent{"×"}
+            }
+        }
+        lana{
+            symbols{
+                infinity{"∞"}
+                nan{"NaN"}
+            }
+        }
+        lanatham{
+            symbols{
+                nan{"NaN"}
+                superscriptingExponent{"×"}
+            }
+        }
+        laoo{
+            symbols{
+                superscriptingExponent{"×"}
+            }
+        }
         latn{
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
@@ -135,6 +227,17 @@ so{
                 nan{"MaL"}
             }
         }
+        lepc{
+            symbols{
+                nan{"NaN"}
+                superscriptingExponent{"(^)"}
+            }
+        }
+        limb{
+            symbols{
+                nan{"NaN"}
+            }
+        }
         minimalPairs{
             ordinal{
                 other{"U leexo dhanka midig ee {0}aad"}
@@ -144,9 +247,278 @@ so{
                 other{"{0} maalmood"}
             }
         }
+        mlym{
+            symbols{
+                superscriptingExponent{"×"}
+            }
+        }
+        mong{
+            symbols{
+                nan{"NaN"}
+            }
+        }
+        mtei{
+            symbols{
+                superscriptingExponent{"×"}
+            }
+        }
+        mymr{
+            symbols{
+                nan{"NaN"}
+            }
+        }
+        mymrshan{
+            symbols{
+                nan{"NaN"}
+            }
+        }
+        orya{
+            symbols{
+                superscriptingExponent{"×"}
+            }
+        }
+        osma{
+            symbols{
+                superscriptingExponent{"(^)"}
+            }
+        }
+        rohg{
+            symbols{
+                superscriptingExponent{"×"}
+            }
+        }
+        saur{
+            symbols{
+                superscriptingExponent{"×"}
+            }
+        }
+        sund{
+            symbols{
+                nan{"NaN"}
+            }
+        }
+        takr{
+            symbols{
+                nan{"NaN"}
+            }
+        }
+        talu{
+            symbols{
+                nan{"NaN"}
+            }
+        }
+        tamldec{
+            symbols{
+                nan{"NaN"}
+                superscriptingExponent{"×"}
+            }
+        }
+        telu{
+            symbols{
+                nan{"NaN"}
+                superscriptingExponent{"×"}
+            }
+        }
+        thai{
+            symbols{
+                nan{"NaN"}
+                superscriptingExponent{"×"}
+            }
+        }
+        tibt{
+            symbols{
+                nan{"NaN"}
+                superscriptingExponent{"×"}
+            }
+        }
+        vaii{
+            symbols{
+                nan{"NaN"}
+            }
+        }
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
+        chinese{
+            cyclicNameSets{
+                solarTerms{
+                    format{
+                        abbreviated{
+                            "guga ayaa bilaabmaya",
+                            "biyaha roobka",
+                            "xayayaan lakiciyay",
+                            "guga ekuinikis",
+                            "dhalaalaya cad na",
+                            "hadhuudha roobka",
+                            "jiilaalka ayaa bilaabmaya",
+                            "hadhuudh buuxda",
+                            "hadhuudh dhagta kujirta",
+                            "xaalka kulka",
+                            "kulayl yar",
+                            "kulayl weeyn",
+                            "daayrta ayaa bilaabmaysa",
+                            "dhamaadka kulaylka",
+                            "dhado cad",
+                            "ekuinokiska daayrta",
+                            "dhado qaboow",
+                            "baraf soo dhacaya",
+                            "qaboowbaha ayaa bilaabmaya",
+                            "baraf yar",
+                            "baraf weeyn",
+                            "qorax qabow",
+                            "qaboow yar",
+                            "qaboow weeyn",
+                        }
+                        narrow{
+                            "guga ayaa bilaabmaya",
+                            "biyaha roobka",
+                            "cayayaan kacay",
+                            "guga ekuinikis",
+                            "dhalaalya cad na",
+                            "hadhuudha roobka",
+                            "kulka ayaa bilaabmaya",
+                            "hadhuudh buuxda",
+                            "hadhuudh ku jirta dhagaha",
+                            "xaalada kulka",
+                            "kuleeyl yar",
+                            "kulayl weeyn",
+                            "deyrta ayaa bilaameeysa",
+                            "dhamaadka kulaylka",
+                            "dhado cad",
+                            "ekuinokiska daayrta",
+                            "dhado qaboow",
+                            "baraf soo dhacaya",
+                            "kulka ayaa bilaabmaya",
+                            "barafka yar",
+                            "baraf weeyn",
+                            "xaalada qaboobaha",
+                            "qaboow weeyn",
+                            "qaboow weeyn",
+                        }
+                        wide{
+                            "guga ayaa bilaabmaya",
+                            "biyaha roobka",
+                            "cayayaan lakiciyay",
+                            "guga ekuinikis",
+                            "dhalaalaya cad na",
+                            "hadhuudha roobka",
+                            "jiilaalka ayaa bilaabmaya",
+                            "hadhuudh buuxda",
+                            "hadhuudh dhagta kujirta",
+                            "xaalada kulka",
+                            "kulayl yar",
+                            "kulayl weeyn",
+                            "daayrta ayaa bilaabmaysa",
+                            "dhamaadka kulaylka",
+                            "dhado cad",
+                            "ekuinokiska daayrta",
+                            "dhado qaboow",
+                            "baraf soo dhacaya",
+                            "qaboowbaha ayaa bilaabmaya",
+                            "baraf yar",
+                            "baraf weeyn",
+                            "qorax qabow",
+                            "qaboow yar",
+                            "qaboow weeyn",
+                        }
+                    }
+                }
+                zodiacs{
+                    format{
+                        abbreviated{
+                            "Jiir",
+                            "Dibi",
+                            "Shabeel",
+                            "Bakeeyle",
+                            "Masduullaa",
+                            "Mas",
+                            "Faras",
+                            "Ri",
+                            "Daanyeer",
+                            "Diiq",
+                            "Eey",
+                            "Doofaar",
+                        }
+                        narrow{
+                            "Jiir",
+                            "Dibi",
+                            "Shabeel",
+                            "Bakeeyle",
+                            "Masduullaa",
+                            "Mas",
+                            "Faras",
+                            "Ri",
+                            "Daanyeer",
+                            "Diiq",
+                            "Eey",
+                            "Doofaar",
+                        }
+                        wide{
+                            "Jiir",
+                            "Dibi",
+                            "Shabeel",
+                            "Bakeeyle",
+                            "Masduullaa",
+                            "Mas",
+                            "Faras",
+                            "Ri",
+                            "daanyeer",
+                            "Diiq",
+                            "Eey",
+                            "Doofaar",
+                        }
+                    }
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Bisha1",
+                        "Bisha2",
+                        "Bisha3",
+                        "Bisha4",
+                        "Bisha5",
+                        "Bisha6",
+                        "Bisha7",
+                        "Bisha8",
+                        "Bisha9",
+                        "Bisha10",
+                        "Bisha11",
+                        "Bisha12",
+                    }
+                    wide{
+                        "Bisha Koobaad",
+                        "bisha labaad",
+                        "bisha saddexaad",
+                        "bisha afaraad",
+                        "bisha shanaad",
+                        "bisha lixaad",
+                        "bisha todobaad",
+                        "bisha siddedad",
+                        "bisha sagaalad",
+                        "bisha tobnaad",
+                        "bisha kow iyo tobnaad",
+                        "bisha laba iyo tobnaad",
+                    }
+                }
+                stand-alone{
+                    wide{
+                        "Bisha Koobaad",
+                        "Bisha Labaad",
+                        "Bisha Sadexaad",
+                        "Bisha Afraad",
+                        "Bisha Shanaad",
+                        "Bisha Lixaad",
+                        "Bisha Todabaad",
+                        "Bisha Sideedaad",
+                        "Bisha Sagaalaad",
+                        "Bisha Tobnaad",
+                        "Bisha Kow iyo Tobnaad",
+                        "Bisha laba iyo Tobnaad",
+                    }
+                }
+            }
+        }
         generic{
             DateTimePatterns{
                 "h:mm:ss a zzzz",
@@ -230,6 +602,20 @@ so{
                     M{"M/d/y – M/d/y GGGGG"}
                     d{"M/d/y – M/d/y GGGGG"}
                     y{"M/d/y – M/d/y GGGGG"}
+                }
+                H{
+                    H{"HH – HH"}
+                }
+                Hm{
+                    H{"HH:mm – HH:mm"}
+                    m{"HH:mm – HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm – HH:mm v"}
+                    m{"HH:mm – HH:mm v"}
+                }
+                Hv{
+                    H{"HH – HH v"}
                 }
                 M{
                     M{"M–M"}
@@ -444,6 +830,14 @@ so{
                 abbreviated%variant{
                     "KTM",
                     "TM",
+                }
+                narrow{
+                    "B",
+                    "A",
+                }
+                narrow%variant{
+                    "KTM",
+                    "CE",
                 }
                 wide{
                     "Ciise Hortii",
@@ -670,10 +1064,50 @@ so{
                 }
             }
         }
+        hebrew{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, MMMM d, y G",
+                "MMMM d, y G",
+                "MMM d, y G",
+                "M/d/y GGGGG",
+                "{1}, {0}",
+                "{1} 'barta' {0}",
+                "{1} 'barta' {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+        }
+        indian{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, MMMM d, y G",
+                "MMMM d, y G",
+                "MMM d, y G",
+                "M/d/y GGGGG",
+                "{1}, {0}",
+                "{1} 'barta' {0}",
+                "{1} 'barta' {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+        }
         islamic{
             eras{
                 abbreviated{
                     "HD",
+                }
+                narrow{
+                    "AH",
+                }
+                wide{
+                    "AH",
                 }
             }
             monthNames{
@@ -736,6 +1170,42 @@ so{
                         "Dul al-qacdah",
                         "Dul xijjah",
                     }
+                }
+            }
+        }
+        persian{
+            monthNames{
+                format{
+                    wide{
+                        "Janaayo",
+                        "Feebraayo",
+                        "Maarso",
+                        "Abril",
+                        "Maayo",
+                        "Juun",
+                        "Luuliyo",
+                        "Agoosto",
+                        "Sabteembar",
+                        "Oktoobar",
+                        "Noofeembar",
+                        "Diiseembar",
+                    }
+                }
+            }
+        }
+        roc{
+            eras{
+                abbreviated{
+                    "Kahor R.O.C.",
+                    "Minguo",
+                }
+                narrow{
+                    "Kahor R.O.C.",
+                    "Minguo",
+                }
+                wide{
+                    "Kahor R.O.C.",
+                    "Minguo",
                 }
             }
         }
@@ -1079,6 +1549,11 @@ so{
         }
         quarter-short{
             dn{"rbc"}
+            relative{
+                "-1"{"Rubucii ugu dambeeyay"}
+                "0"{"Rubucan"}
+                "1"{"Rubuca xiga"}
+            }
             relativeTime{
                 future{
                     one{"{0} rbc"}
@@ -1142,6 +1617,9 @@ so{
         }
         second-short{
             dn{"ilbrqsi"}
+            relative{
+                "0"{"Iminka"}
+            }
             relativeTime{
                 future{
                     one{"{0} ilbrqsi"}

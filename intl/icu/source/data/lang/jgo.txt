@@ -28,5 +28,5 @@ jgo{
             latn{"pɛnɔ́mba"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

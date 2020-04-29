@@ -33,6 +33,7 @@ def generate(config, io, common_vars):
     requests += generate_unames(config, io, common_vars)
     requests += generate_misc(config, io, common_vars)
     requests += generate_curr_supplemental(config, io, common_vars)
+    requests += generate_zone_supplemental(config, io, common_vars)
     requests += generate_translit(config, io, common_vars)
 
     # Res Tree Files
@@ -399,6 +400,29 @@ def generate_curr_supplemental(config, io, common_vars):
     ]
 
 
+def generate_zone_supplemental(config, io, common_vars):
+    # tzdbNames Res File
+    input_file = InFile("zone/tzdbNames.txt")
+    input_basename = "tzdbNames.txt"
+    output_file = OutFile("zone/tzdbNames.res")
+    return [
+        SingleExecutionRequest(
+            name = "zone_supplemental_res",
+            category = "zone_supplemental",
+            dep_targets = [],
+            input_files = [input_file],
+            output_files = [output_file],
+            tool = IcuTool("genrb"),
+            args = "-s {IN_DIR}/zone -d {OUT_DIR}/zone -i {OUT_DIR} "
+                "-k "
+                "{INPUT_BASENAME}",
+            format_with = {
+                "INPUT_BASENAME": input_basename
+            }
+        )
+    ]
+
+
 def generate_translit(config, io, common_vars):
     input_files = [
         InFile("translit/root.txt"),
@@ -444,10 +468,11 @@ def generate_tree(
     requests = []
     category = "%s_tree" % sub_dir
     out_prefix = "%s/" % out_sub_dir if out_sub_dir else ""
-    # TODO: Clean this up for curr
     input_files = [InFile(filename) for filename in io.glob("%s/*.txt" % sub_dir)]
     if sub_dir == "curr":
         input_files.remove(InFile("curr/supplementalData.txt"))
+    if sub_dir == "zone":
+        input_files.remove(InFile("zone/tzdbNames.txt"))
     input_basenames = [v.filename[len(sub_dir)+1:] for v in input_files]
     output_files = [
         OutFile("%s%s.res" % (out_prefix, v[:-4]))

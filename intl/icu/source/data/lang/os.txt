@@ -96,7 +96,7 @@ os{
             latn{"Нырыккон цифрӕтӕ"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     codePatterns{
         language{"Ӕвзаг: {0}"}
         script{"Скрипт: {0}"}

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 mr{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"अबिद्जान"}
@@ -1752,7 +1752,9 @@ mr{
             ls{"न्युए वेळ"}
         }
         "meta:Norfolk"{
-            ls{"नॉरफोक बेट वेळ"}
+            ld{"नॉरफोक बेट सूर्यप्रकाश वेळ"}
+            lg{"नॉरफोक बेट वेळ"}
+            ls{"नॉरफोक बेट प्रमाण वेळ"}
         }
         "meta:Noronha"{
             ld{"फर्नांडो दी नोरोन्हा उन्हाळी वेळ"}

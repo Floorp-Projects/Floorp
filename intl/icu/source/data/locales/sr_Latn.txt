@@ -250,7 +250,7 @@ sr_Latn{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         buddhist{
             eras{
@@ -693,10 +693,6 @@ sr_Latn{
             }
             eras{
                 abbreviated{
-                    "p. n. e.",
-                    "n. e.",
-                }
-                abbreviated%variant{
                     "p. n. e.",
                     "n. e.",
                 }

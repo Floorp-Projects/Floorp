@@ -10,6 +10,11 @@
 # This file is similar to mh-mingw64
 # Any changes made here may also need to be made in mh-mingw64
 
+# On Windows we generally have the DLLs in the bin directory rather than the lib directory.
+# This setting moves the ICU DLLs into the bin folder for MinGW/MSYS2 when "make install" is run.
+# If you prefer to have the DLLs in the lib folder, then set this to NO instead.
+MINGW_MOVEDLLSTOBINDIR = YES
+
 # We install sbin tools into the same bin directory because
 # pkgdata needs some of the tools in sbin, and we can't always depend on
 # icu-config working on Windows.
@@ -97,7 +102,10 @@ LIBICU = $(STATIC_PREFIX_WHEN_USED)$(ICUPREFIX)
 #SH#ICULIBS_COMMON_LIB_NAME_A="${LIBICU}${COMMON_STUBNAME}${ICULIBSUFFIX}.${A}"
 
 #SH#ICULIBS_DATA="-l$(ICUPREFIX)$(DATA_STUBNAME)$(ICULIBSUFFIX)$(ICULIBSUFFIX_VERSION)"
-#SH#ICULIBS_I18N="-l$(ICUPREFIX)$(I18N_STUBNAME)$(ICULIBSUFFIX)$(ICULIBSUFFIX_VERSION)"
+ICULIBS_DT="-l$(ICUPREFIX)$(DATA_STUBNAME)$(ICULIBSUFFIX)$(ICULIBSUFFIX_VERSION)"
+ICULIBS_I18N="-l$(ICUPREFIX)$(I18N_STUBNAME)$(ICULIBSUFFIX)$(ICULIBSUFFIX_VERSION)"
+ICULIBS_IO="-l$(ICUPREFIX)$(IO_STUBNAME)$(ICULIBSUFFIX)$(ICULIBSUFFIX_VERSION)"
+ICULIBS_UC="-l$(ICUPREFIX)$(COMMON_STUBNAME)$(ICULIBSUFFIX)$(ICULIBSUFFIX_VERSION)"
 #SH#
 #SH## ICULIBS is the set of libraries your application should link
 #SH## with usually. Many applications will want to add ${ICULIBS_I18N} as well. 
@@ -163,8 +171,6 @@ MIDDLE_IMPORT_LIB = $(FINAL_IMPORT_LIB)#M#
 
 ## Special pkgdata information that is needed
 PKGDATA_VERSIONING = -r $(SO_TARGET_VERSION_MAJOR)
-#ICUPKGDATA_INSTALL_DIR = $(shell cygpath -dma $(DESTDIR)$(ICUPKGDATA_DIR))#M#
-#ICUPKGDATA_INSTALL_LIBDIR = $(shell cygpath -dma $(DESTDIR)$(libdir))#M#
 
 ## Versioned libraries rules
 #%$(SO_TARGET_VERSION_MAJOR).$(SO): %$(SO_TARGET_VERSION).$(SO)

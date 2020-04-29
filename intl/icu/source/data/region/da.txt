@@ -303,16 +303,14 @@ da{
         MO{"Macao"}
         PS{"Palæstina"}
         UN{"FN"}
-        US{"USA"}
     }
     Countries%variant{
         CD{"Den Demokratiske Republik Congo (DRC)"}
         CG{"Republikken Congo"}
-        CI{"Elfenbenskysten"}
         CZ{"Den Tjekkiske Republik"}
         FK{"Falklandsøerne (Islas Malvinas)"}
         SZ{"Swaziland"}
         TL{"Østtimor"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

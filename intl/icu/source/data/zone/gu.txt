@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 gu{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"આબિદ્જાન"}
@@ -1752,7 +1752,9 @@ gu{
             ls{"નીયુ સમય"}
         }
         "meta:Norfolk"{
-            ls{"નોરફૉક આઇલેન્ડ સમય"}
+            ld{"નોરફૉક આઇલેન્ડ ગ્રીષ્મ સમય"}
+            lg{"નોરફૉક આઇલેન્ડ સમય"}
+            ls{"નોરફૉક આઇલેન્ડ માનક સમય"}
         }
         "meta:Noronha"{
             ld{"ફર્નાન્ડો દે નોરોહા ગ્રીષ્મ સમય"}

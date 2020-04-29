@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_GB{
     %%Parent{"en_001"}
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -18,6 +18,13 @@ en_GB{
         }
     }
     unitsShort{
+        duration{
+            microsecond{
+                dnam{"μsecs"}
+                one{"{0} μs"}
+                other{"{0} μs"}
+            }
+        }
         volume{
             fluid-ounce-imperial{
                 dnam{"fl oz"}

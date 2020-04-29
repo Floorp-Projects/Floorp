@@ -1,10 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
-/**
- * ICU <specials> source: <path>/common/main/root.xml
- */
 root{
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — all"}
         category-list{"{0}: {1}"}

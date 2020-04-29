@@ -217,7 +217,7 @@ class LocaleFilter(Filter):
             return "root"
         i = locale.rfind("_")
         if i < 0:
-            assert locale == "root"
+            assert locale == "root", "Invalid locale: %s/%s" % (tree, locale)
             return None
         return locale[:i]
 

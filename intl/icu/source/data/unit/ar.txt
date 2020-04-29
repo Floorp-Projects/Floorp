@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ar{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -18,7 +18,7 @@ ar{
                 two{"{0} قوة تسارع"}
                 zero{"{0} قوة تسارع"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"متر في الثانية المربعة"}
                 few{"{0} متر في الثانية المربعة"}
                 many{"{0} متر في الثانية المربعة"}
@@ -212,15 +212,6 @@ ar{
                 two{"{0} مول"}
                 zero{"{0} مول"}
             }
-            part-per-million{
-                dnam{"جزء في المليون"}
-                few{"{0} أجزاء في المليون"}
-                many{"{0} جزءًا في المليون"}
-                one{"{0} جزء في المليون"}
-                other{"{0} جزء في المليون"}
-                two{"جزآن في المليون"}
-                zero{"{0} جزء في المليون"}
-            }
             percent{
                 dnam{"بالمائة"}
                 few{"{0}٪"}
@@ -239,9 +230,18 @@ ar{
                 two{"{0} في الألف"}
                 zero{"{0} في الألف"}
             }
+            permillion{
+                dnam{"جزء في المليون"}
+                few{"{0} أجزاء في المليون"}
+                many{"{0} جزءًا في المليون"}
+                one{"{0} جزء في المليون"}
+                other{"{0} جزء في المليون"}
+                two{"جزآن في المليون"}
+                zero{"{0} جزء في المليون"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"لتر لكل ١٠٠ كيلومتر"}
                 few{"{0} لترات لكل ١٠٠ كيلومتر"}
                 many{"{0} لترًا لكل ١٠٠ كيلومتر"}
@@ -1152,7 +1152,7 @@ ar{
                 two{"{0} هكتوباسكال"}
                 zero{"{0} هكتوباسكال"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"بوصة زئبقية"}
                 few{"{0} بوصة زئبقية"}
                 many{"{0} بوصة زئبقية"}
@@ -1188,7 +1188,7 @@ ar{
                 two{"{0} ملي بار"}
                 zero{"{0} ملي بار"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"مليمتر زئبقي"}
                 few{"{0} مليمتر زئبقي"}
                 many{"{0} مليمتر زئبقي"}
@@ -1206,7 +1206,7 @@ ar{
                 two{"{0} باسكال"}
                 zero{"{0} باسكال"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"رطل لكل بوصة مربعة"}
                 few{"{0} رطل لكل بوصة مربعة"}
                 many{"{0} رطل لكل بوصة مربعة"}
@@ -1302,7 +1302,7 @@ ar{
                 two{"{0} نيوتن متر"}
                 zero{"{0} نيوتن متر"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"باوند قدم"}
                 few{"{0} باوند قدم"}
                 many{"{0} باوند قدم"}
@@ -1656,7 +1656,7 @@ ar{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ل/١٠٠كم"}
                 few{"{0} ل/١٠٠كم"}
                 many{"{0} ل/١٠٠كم"}
@@ -1906,7 +1906,7 @@ ar{
                 two{"{0} هكب"}
                 zero{"{0} هكب"}
             }
-            inch-hg{
+            inch-ofhg{
                 few{"{0} ب ز"}
                 many{"{0} ب ز"}
                 one{"{0} ب ز"}
@@ -2008,7 +2008,7 @@ ar{
                 two{"{0} قوة تسارع"}
                 zero{"{0} قوة تسارع"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"م/ث²"}
                 few{"{0} م/ث²"}
                 many{"{0} م/ث²"}
@@ -2203,15 +2203,6 @@ ar{
                 two{"{0} مول"}
                 zero{"{0} مول"}
             }
-            part-per-million{
-                dnam{"جزء/مليون"}
-                few{"{0} جزء/مليون"}
-                many{"{0} جزء/مليون"}
-                one{"{0} جزء/مليون"}
-                other{"{0} جزء/مليون"}
-                two{"{0} جزء/مليون"}
-                zero{"{0} جزء/مليون"}
-            }
             percent{
                 dnam{"بالمائة"}
                 few{"{0}٪"}
@@ -2223,10 +2214,25 @@ ar{
             }
             permille{
                 dnam{"في الألف"}
+                few{"{0}؉"}
+                many{"{0}؉"}
+                one{"{0}؉"}
+                other{"{0}؉"}
+                two{"{0}؉"}
+                zero{"{0}؉"}
+            }
+            permillion{
+                dnam{"جزء/مليون"}
+                few{"{0} جزء/مليون"}
+                many{"{0} جزء/مليون"}
+                one{"{0} جزء/مليون"}
+                other{"{0} جزء/مليون"}
+                two{"{0} جزء/مليون"}
+                zero{"{0} جزء/مليون"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"لتر/‏١٠٠ كم"}
                 few{"{0} لتر/١٠٠ كم"}
                 many{"{0} لتر/١٠٠ كم"}
@@ -3137,7 +3143,7 @@ ar{
                 two{"{0} هكتوباسكال"}
                 zero{"{0} هكتوباسكال"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"ب. زئبقية"}
                 few{"{0} ب. زئبقية"}
                 many{"{0} ب. زئبقية"}
@@ -3173,7 +3179,7 @@ ar{
                 two{"{0} م. بار"}
                 zero{"{0} م. بار"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"ملم زئبقي"}
                 few{"{0} ملم زئبقي"}
                 many{"{0} ملم زئبقي"}
@@ -3191,7 +3197,7 @@ ar{
                 two{"{0} باسكال"}
                 zero{"{0} باسكال"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"رطل/بوصة مربعة"}
                 few{"{0} رطل/بوصة²"}
                 many{"{0} رطل/بوصة²"}
@@ -3287,7 +3293,7 @@ ar{
                 two{"{0} نيوتن متر"}
                 zero{"{0} نيوتن متر"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"باوند قدم"}
                 few{"{0} باوند قدم"}
                 many{"{0} باوند قدم"}

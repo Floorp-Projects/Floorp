@@ -8,5 +8,5 @@ uz_Arab{
             "افغانی",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

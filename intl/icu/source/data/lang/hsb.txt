@@ -374,7 +374,7 @@ hsb{
             tibt{"tibetske cyfry"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     codePatterns{
         language{"rěč: {0}"}
         script{"pismo: {0}"}

@@ -308,11 +308,10 @@ id{
     Countries%variant{
         CD{"Kongo (RDK)"}
         CG{"Kongo (Republik)"}
-        CI{"Côte d’Ivoire"}
         CZ{"Republik Ceko"}
         FK{"Kepulauan Falkland (Malvinas)"}
         SZ{"Swaziland"}
         TL{"Timor Timur"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

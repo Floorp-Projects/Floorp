@@ -254,5 +254,5 @@ wo{
         CD{"Kongo (R K D)"}
         CG{"Réewum Kongo"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

@@ -212,7 +212,7 @@ da{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         buddhist{
             eras{
@@ -774,14 +774,14 @@ da{
                     y{"y–y G"}
                 }
                 GyM{
-                    G{"M/y GGGG–M/y GGGG"}
-                    M{"M/y–M/y GGGGG"}
-                    y{"M/y–M/y GGGGG"}
+                    G{"MM.y GGGGG–MM.y GGGGG"}
+                    M{"MM.y–MM.y GGGGG"}
+                    y{"MM.y–MM.y GGGGG"}
                 }
                 GyMEd{
-                    G{"E, d/M/y GGGGG–E, d/M/y GGGGG"}
+                    G{"E dd.MM.y GGGGG–E dd.MM.y GGGGG"}
                     M{"E dd.MM.y–E dd.MM.y GGGGG"}
-                    d{"E dd. MM. y–E dd. MM. y GGGGG"}
+                    d{"E dd.MM.y–E dd.MM.y GGGGG"}
                     y{"E dd.MM.y–E dd.MM.y GGGGG"}
                 }
                 GyMMM{
@@ -802,9 +802,9 @@ da{
                     y{"d. MMM y–d. MMM y G"}
                 }
                 GyMd{
-                    G{"d/M/y GGGGG–d/M/y GGGGG"}
+                    G{"dd.MM.y GGGGG–dd.MM.y GGGGG"}
                     M{"dd.MM.y–dd.MM.y GGGGG"}
-                    d{"d/M/y–d/M/y GGGGG"}
+                    d{"dd.MM.y–dd.MM.y GGGGG"}
                     y{"dd.MM.y–dd.MM.y GGGGG"}
                 }
                 H{

@@ -7,5 +7,5 @@ om_KE{
             "KES",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

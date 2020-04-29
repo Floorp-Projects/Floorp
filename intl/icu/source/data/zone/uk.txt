@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 uk{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Абіджан"}
@@ -1728,7 +1728,9 @@ uk{
             ls{"за часом на острові Ніуе"}
         }
         "meta:Norfolk"{
-            ls{"за часом на острові Норфолк"}
+            ld{"за літнім часом на острові Норфолк"}
+            lg{"за часом на острові Норфолк"}
+            ls{"за стандартним часом на острові Норфолк"}
         }
         "meta:Noronha"{
             ld{"за літнім часом на архіпелазі Фернанду-ді-Норонья"}

@@ -170,6 +170,7 @@ ca{
         ewo{"ewondo"}
         ext{"extremeny"}
         fa{"persa"}
+        fa_AF{"dari"}
         fan{"fang"}
         fat{"fanti"}
         ff{"ful"}
@@ -609,6 +610,7 @@ ca{
         en_GB{"anglès (GB)"}
     }
     Languages%variant{
+        ckb{"kurd sorani"}
         ps{"pushtu"}
     }
     Scripts{
@@ -617,6 +619,7 @@ ca{
         Aghb{"albanès caucàsic"}
         Ahom{"ahom"}
         Arab{"àrab"}
+        Aran{"nastaliq"}
         Armi{"arameu imperial"}
         Armn{"armeni"}
         Avst{"avèstic"}
@@ -735,6 +738,7 @@ ca{
         Phnx{"fenici"}
         Plrd{"pollard miao"}
         Prti{"parthià inscripcional"}
+        Qaag{"zawgyi"}
         Rjng{"rejang"}
         Roro{"rongo-rongo"}
         Runr{"rúnic"}
@@ -1007,7 +1011,7 @@ ca{
         VALLADER{"baix engiadinès"}
         WADEGILE{"romanització Wade-Giles"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — tot"}
         category-list{"{0}: {1}"}

@@ -1,8 +1,5 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
-/**
- * ICU <specials> source: <path>/xml/rbnf/ga.xml
- */
 ga{
     RBNFRules{
         DurationRules{
@@ -245,5 +242,5 @@ ga{
             "20: =%%is= =%%quadrillions=;",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

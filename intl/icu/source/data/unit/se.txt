@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 se{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -242,7 +242,7 @@ se{
                 other{"{0} hehtopascal"}
                 two{"{0} hehtopascal"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"bealgi kvikksølv"}
                 one{"{0} bealgi kvikksølv"}
                 other{"{0} bealgi kvikksølv"}
@@ -509,7 +509,7 @@ se{
                 other{"{0}hPa"}
                 two{"{0}hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0} bealgi Hg"}
                 other{"{0} bealgi Hg"}
                 two{"{0} bealgi Hg"}
@@ -802,7 +802,7 @@ se{
                 other{"{0} hPa"}
                 two{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"bealgi kvikksølv"}
                 one{"{0} bealgi Hg"}
                 other{"{0} bealgi Hg"}

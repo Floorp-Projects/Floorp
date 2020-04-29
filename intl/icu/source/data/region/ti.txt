@@ -261,14 +261,12 @@ ti{
     }
     Countries%short{
         GB{"ዩኬይ"}
-        HK{"ሆንግ ኮንግ"}
         MO{"ማካው"}
         PS{"ፍልስጤም"}
         US{"ዩኤስ"}
     }
     Countries%variant{
         CI{"አይቮሪ ኮስት"}
-        CZ{"CZ"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

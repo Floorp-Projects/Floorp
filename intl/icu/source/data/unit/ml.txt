@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ml{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ ml{
                 one{"{0} ജി-ഫോഴ്‌സ്"}
                 other{"{0} ജി-ഫോഴ്‌സ്"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"മീറ്റർ/സെക്കൻഡ്²"}
                 one{"{0} മീറ്റർ/സെക്കൻഡ്²"}
                 other{"{0} മീറ്റർ/സെക്കൻഡ്²"}
@@ -128,11 +128,6 @@ ml{
                 one{"{0} മോൾ"}
                 other{"{0} മോളുകൾ"}
             }
-            part-per-million{
-                dnam{"പാർട്‌സ് / മില്ല്യൺ"}
-                one{"പാർട്ട് / മില്ല്യൺ"}
-                other{"{0} പാർട്‌സ് / മില്ല്യൺ"}
-            }
             percent{
                 dnam{"%"}
                 one{"{0}%"}
@@ -143,13 +138,18 @@ ml{
                 one{"{0} പ്രതിമില്ലി"}
                 other{"{0} പ്രതിമില്ലി"}
             }
+            permillion{
+                dnam{"പാർട്‌സ് / മില്ല്യൺ"}
+                one{"പാർട്ട് / മില്ല്യൺ"}
+                other{"{0} പാർട്‌സ് / മില്ല്യൺ"}
+            }
             permyriad{
                 one{"{0} പിരമിഡ്"}
                 other{"{0} പിരമിഡ്"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ലിറ്റർ/100 കിലോമീറ്റർ"}
                 one{"{0} ലിറ്റർ/100 കിലോമീറ്റർ"}
                 other{"{0} ലിറ്റർ/100 കിലോമീറ്റർ"}
@@ -642,7 +642,7 @@ ml{
                 one{"{0} ഹെക്‌ടോപാസ്‌ക്കൽ"}
                 other{"{0} ഹെക്‌ടോപാസ്‌ക്കൽ"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"ഇഞ്ച് ഓഫ് മെർക്കുറി"}
                 one{"{0} ഇഞ്ച് ഓഫ് മെർക്കുറി"}
                 other{"{0} ഇഞ്ച് ഓഫ് മെർക്കുറി"}
@@ -662,7 +662,7 @@ ml{
                 one{"{0} മില്ലിബാർ"}
                 other{"{0} മില്ലിബാർ"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"മില്ലീമീറ്റർ മെർക്കുറി"}
                 one{"{0} മില്ലീമീറ്റർ മെർക്കുറി"}
                 other{"{0} മില്ലീമീറ്റർ മെർക്കുറി"}
@@ -672,7 +672,7 @@ ml{
                 one{"{0} പാസ്കൽ"}
                 other{"{0} പാസ്കൽസ്"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"പൗണ്ട് / ചതുരശ്ര ഇഞ്ച്"}
                 one{"{0} പൗണ്ട് / ചതുരശ്ര ഇഞ്ച്"}
                 other{"{0} പൗണ്ട് / ചതുരശ്ര ഇഞ്ച്"}
@@ -728,7 +728,7 @@ ml{
                 one{"{0} ന്യൂട്ടൺ മീറ്റർ"}
                 other{"{0} ന്യൂട്ടൺ മീറ്ററുകൾ"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"പൗണ്ട് ഫീറ്റ്"}
                 one{"{0} പൗണ്ട് ഫൂട്ട്"}
                 other{"{0} പൗണ്ട് ഫീറ്റ്"}
@@ -874,7 +874,7 @@ ml{
                 one{"{0} ജി"}
                 other{"{0} ജി"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"മീ/സെ²"}
                 one{"{0}മീ/സെ²"}
                 other{"{0}മീ/സെ²"}
@@ -927,7 +927,7 @@ ml{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ലി./100 കി.മീ."}
                 one{"{0}ലി/100കിമി"}
                 other{"{0}ലി/100കിമി"}
@@ -1186,7 +1186,7 @@ ml{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"ഇഞ്ച് മെ."}
                 one{"{0}\u0022 Hg"}
                 other{"{0}\u0022 Hg"}
@@ -1196,12 +1196,12 @@ ml{
                 one{"{0} മിബാ"}
                 other{"{0} മിബാ"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"മിമീ.മെ."}
                 one{"{0}മിമീ.മെ."}
                 other{"{0}മിമീ.മെ."}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"പിഎസ്ഐ"}
             }
         }
@@ -1272,7 +1272,7 @@ ml{
                 one{"{0} ജി"}
                 other{"{0} ജി"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"മീറ്റർ/സെക്കൻഡ്²"}
                 one{"{0} മീ/സെ²"}
                 other{"{0} മീ/സെ²"}
@@ -1387,11 +1387,6 @@ ml{
                 one{"{0} മോൾ"}
                 other{"{0} മോൾ"}
             }
-            part-per-million{
-                dnam{"പാർട്‌സ്/മില്ല്യൺ"}
-                one{"{0} പാ.പെ.മി."}
-                other{"{0} പാ.പെ.മി."}
-            }
             percent{
                 dnam{"%"}
                 one{"{0}%"}
@@ -1402,12 +1397,17 @@ ml{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"പാർട്‌സ്/മില്ല്യൺ"}
+                one{"{0} പാ.പെ.മി."}
+                other{"{0} പാ.പെ.മി."}
+            }
             permyriad{
                 dnam{"പിരമിഡ്"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ലി./100 കി.മീ."}
                 one{"{0} ലി./100 കി.മീ."}
                 other{"{0} ലി./100 കി.മീ."}
@@ -1930,7 +1930,7 @@ ml{
                 one{"{0} ഹെ.പാ."}
                 other{"{0} ഹെ.പാ."}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"ഇഞ്ച് മെ."}
                 one{"{0} ഇഞ്ച് മെ."}
                 other{"{0} ഇഞ്ച് മെ."}
@@ -1940,7 +1940,7 @@ ml{
                 one{"{0} മി.ബാ"}
                 other{"{0} മി.ബാ"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"മിമീ.മെ."}
                 one{"{0} മിമീ.മെ."}
                 other{"{0} മിമീ.മെ."}
@@ -1950,7 +1950,7 @@ ml{
                 one{"{0} പാ"}
                 other{"{0} പാ"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"പിഎസ്ഐ"}
                 one{"{0} പിഎസ്ഐ"}
                 other{"{0} പിഎസ്ഐ"}

@@ -110,6 +110,7 @@ pa{
         eu{"ਬਾਸਕ"}
         ewo{"ਇਵੋਂਡੋ"}
         fa{"ਫ਼ਾਰਸੀ"}
+        fa_AF{"ਦਾਰੀ"}
         ff{"ਫੁਲਾਹ"}
         fi{"ਫਿਨਿਸ਼"}
         fil{"ਫਿਲੀਪਿਨੋ"}
@@ -436,6 +437,7 @@ pa{
     }
     Scripts{
         Arab{"ਅਰਬੀ"}
+        Aran{"ਨਸਤਾਲੀਕ"}
         Armn{"ਅਰਮੀਨੀਆਈ"}
         Beng{"ਬੰਗਾਲੀ"}
         Bopo{"ਬੋਪੋਮੋਫੋ"}
@@ -573,7 +575,7 @@ pa{
             tibt{"ਤਿੱਬਤੀ ਅੰਕ"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — ਸਭ"}
         category-list{"{0}: {1}"}

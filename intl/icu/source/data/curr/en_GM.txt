@@ -8,5 +8,5 @@ en_GM{
             "Gambian Dalasi",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

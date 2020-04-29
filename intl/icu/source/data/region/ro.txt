@@ -298,7 +298,6 @@ ro{
         ZZ{"Regiune necunoscută"}
     }
     Countries%short{
-        GB{"Regatul Unit"}
         HK{"Hong Kong"}
         MO{"Macao"}
         PS{"Palestina"}
@@ -314,5 +313,5 @@ ro{
         SZ{"Swaziland"}
         TL{"Timorul de Est"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

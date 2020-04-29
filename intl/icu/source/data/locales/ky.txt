@@ -214,7 +214,7 @@ ky{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -590,10 +590,6 @@ ky{
             }
             eras{
                 abbreviated{
-                    "б.з.ч.",
-                    "б.з.",
-                }
-                abbreviated%variant{
                     "б.з.ч.",
                     "б.з.",
                 }

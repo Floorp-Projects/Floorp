@@ -83,8 +83,8 @@ $(DISTY_FILE_TGZ) $(DISTY_FILE_ZIP) $(DISTY_DATA_ZIP):  $(DISTY_DAT) $(DISTY_TMP
 	ln -f $(DISTY_DATA_ZIP) $(DISTY_FILE_DIR)/icu4c-$(DISTY_VER)-data.zip
 	ls -l $(DISTY_FILE_TGZ) $(DISTY_FILE_ZIP) $(DISTY_DATA_ZIP)
 
-
 dist-local: $(DISTY_FILES)
+	VERSION=$(VERSION) $(SHELL) $(top_srcdir)/config/dist-data.sh
 
 distcheck: distcheck-tgz
 

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ne{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"अविड्जान"}
@@ -1710,7 +1710,9 @@ ne{
             ls{"निउए समय"}
         }
         "meta:Norfolk"{
-            ls{"नोर्फल्क टापू समय"}
+            ld{"नोर्फल्क टापू ग्रीष्मकालीन समय"}
+            lg{"नोर्फल्क टापू समय"}
+            ls{"नोर्फल्क टापू मानक समय"}
         }
         "meta:Noronha"{
             ld{"फर्नान्डो डे नोरोन्हा ग्रीष्मकालीन समय"}

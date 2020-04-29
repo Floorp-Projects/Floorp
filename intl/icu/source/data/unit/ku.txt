@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ku{
-    Version{"36.1"}
+    Version{"37"}
     units{
         angle{
             arc-minute{
@@ -100,7 +100,7 @@ ku{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100km"}
                 one{"{0}l/100km"}
                 other{"{0}l/100km"}
@@ -181,7 +181,7 @@ ku{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 one{"{0} l/100 km"}
                 other{"{0} l/100 km"}

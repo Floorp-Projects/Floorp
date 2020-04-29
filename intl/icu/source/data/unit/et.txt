@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 et{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ et{
                 one{"{0} Maa raskuskiirendus"}
                 other{"{0} Maa raskuskiirendust"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"meetrid sekundi ruudu kohta"}
                 one{"{0} meeter sekundi ruudu kohta"}
                 other{"{0} meetrit sekundi ruudu kohta"}
@@ -129,11 +129,6 @@ et{
                 one{"{0} mool"}
                 other{"{0} mooli"}
             }
-            part-per-million{
-                dnam{"osa miljoni kohta"}
-                one{"{0} osa miljoni kohta"}
-                other{"{0} osa miljoni kohta"}
-            }
             percent{
                 dnam{"protsent"}
                 one{"{0} protsent"}
@@ -144,6 +139,11 @@ et{
                 one{"{0} promill"}
                 other{"{0} promilli"}
             }
+            permillion{
+                dnam{"osa miljoni kohta"}
+                one{"{0} osa miljoni kohta"}
+                other{"{0} osa miljoni kohta"}
+            }
             permyriad{
                 dnam{"promüriaad"}
                 one{"{0} promüriaad"}
@@ -151,7 +151,7 @@ et{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"liitrid 100 kilomeetri kohta"}
                 one{"liiter 100 kilomeetri kohta"}
                 other{"{0} liitrit 100 kilomeetri kohta"}
@@ -691,7 +691,7 @@ et{
                 one{"{0} hektopaskal"}
                 other{"{0} hektopaskalit"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"tollid elavhõbedasammast"}
                 one{"{0} toll elavhõbedasammast"}
                 other{"{0} tolli elavhõbedasammast"}
@@ -711,7 +711,7 @@ et{
                 one{"{0} millibaar"}
                 other{"{0} millibaari"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"millimeetrid elavhõbedasammast"}
                 one{"{0} millimeeter elavhõbedasammast"}
                 other{"{0} millimeetrit elavhõbedasammast"}
@@ -721,7 +721,7 @@ et{
                 one{"{0} paskal"}
                 other{"{0} paskalit"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"naelad ruuttolli kohta"}
                 one{"{0} nael ruuttolli kohta"}
                 other{"{0} naela ruuttolli kohta"}
@@ -777,7 +777,7 @@ et{
                 one{"{0} njuutonmeeter"}
                 other{"{0} njuutonmeetrit"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"naeljalad"}
                 one{"{0} naeljalg"}
                 other{"{0} naeljalga"}
@@ -978,7 +978,7 @@ et{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 one{"{0} l/100km"}
                 other{"{0} l/100km"}
@@ -1157,7 +1157,7 @@ et{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"″ Hg"}
                 one{"{0} toll Hg"}
                 other{"{0} tolli Hg"}
@@ -1167,7 +1167,7 @@ et{
                 one{"{0} mbar"}
                 other{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
@@ -1219,7 +1219,7 @@ et{
                 one{"{0} G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 one{"{0} m/s²"}
                 other{"{0} m/s²"}
@@ -1334,11 +1334,6 @@ et{
                 one{"{0} mol"}
                 other{"{0} mol"}
             }
-            part-per-million{
-                dnam{"osa/miljon"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"%"}
                 one{"{0}%"}
@@ -1349,6 +1344,11 @@ et{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"osa/miljon"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
             permyriad{
                 dnam{"promüriaad"}
                 one{"{0}‱"}
@@ -1356,7 +1356,7 @@ et{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100 km"}
                 one{"{0} l/100 km"}
                 other{"{0} l/100 km"}
@@ -1891,7 +1891,7 @@ et{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"in Hg"}
                 one{"{0} in Hg"}
                 other{"{0} in Hg"}
@@ -1911,12 +1911,12 @@ et{
                 one{"{0} mbar"}
                 other{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 one{"{0} psi"}
                 other{"{0} psi"}
@@ -1972,7 +1972,7 @@ et{
                 one{"{0} Nm"}
                 other{"{0} Nm"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"lbf⋅ft"}
                 one{"{0} lbf⋅ft"}
                 other{"{0} lbf⋅ft"}

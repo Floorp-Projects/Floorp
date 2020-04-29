@@ -13,7 +13,7 @@ en_AU{
             }
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         chinese{
             monthNames{
@@ -85,6 +85,18 @@ en_AU{
                 yMd{"dd/MM/y"}
             }
             intervalFormats{
+                GyMEd{
+                    G{"E dd/MM/y GGGGG – E dd/MM/y GGGGG"}
+                    M{"E dd/MM/y – E dd/MM/y GGGGG"}
+                    d{"E dd/MM/y – E dd/MM/y GGGGG"}
+                    y{"E dd/MM/y – E dd/MM/y GGGGG"}
+                }
+                GyMMMEd{
+                    G{"E d MMM y G – E d MMM y G"}
+                    M{"E d MMM – E d MMM y G"}
+                    d{"E d MMM – E d MMM y G"}
+                    y{"E d MMM y – E d MMM y G"}
+                }
                 MEd{
                     M{"E, d/M – E, d/M"}
                     d{"E, d/M – E, d/M"}

@@ -289,7 +289,7 @@ be{
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -686,10 +686,6 @@ be{
             }
             eras{
                 abbreviated{
-                    "да н.э.",
-                    "н.э.",
-                }
-                abbreviated%variant{
                     "да н.э.",
                     "н.э.",
                 }

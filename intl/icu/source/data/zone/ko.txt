@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ko{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"아비장"}
@@ -1748,7 +1748,9 @@ ko{
             ls{"니우에 시간"}
         }
         "meta:Norfolk"{
-            ls{"노퍽섬 시간"}
+            ld{"노퍽섬 하계 표준시"}
+            lg{"노퍽섬 시간"}
+            ls{"노퍽섬 표준시"}
         }
         "meta:Noronha"{
             ld{"페르난도 데 노로냐 하계 표준시"}

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ee{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1707,7 +1707,9 @@ ee{
             ls{"Niue gaƒoƒo me"}
         }
         "meta:Norfolk"{
-            ls{"Norfolk Island gaƒoƒo me"}
+            ld{"Norfolk Island dzomeŋɔli gaƒoƒo me"}
+            lg{"Norfolk Island gaƒoƒo me"}
+            ls{"Norfolk Island nutome gaƒoƒo me"}
         }
         "meta:Noronha"{
             ld{"Fernando de Noronha dzomeŋɔli gaƒoƒo me"}

@@ -57,5 +57,5 @@ ak{
             "2: a-\u025B-t\u0254-so-=%spellout-cardinal=;",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

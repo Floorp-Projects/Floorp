@@ -154,6 +154,7 @@ te{
         eu{"బాస్క్యూ"}
         ewo{"ఎవోండొ"}
         fa{"పర్షియన్"}
+        fa_AF{"డారి"}
         fan{"ఫాంగ్"}
         fat{"ఫాంటి"}
         ff{"ఫ్యుల"}
@@ -853,7 +854,7 @@ te{
         REVISED{"సవరించబడిన వర్ణక్రమం"}
         WADEGILE{"వేడ్-గైల్స్ రోమనైజేషన్"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — అన్ని"}
         category-list{"{0}: {1}"}

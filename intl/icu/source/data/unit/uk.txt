@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 uk{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -16,7 +16,7 @@ uk{
                 one{"{0} сила тяжіння"}
                 other{"{0} сили тяжіння"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"метри на секунду в квадраті"}
                 few{"{0} метри на секунду в квадраті"}
                 many{"{0} метрів на секунду в квадраті"}
@@ -170,13 +170,6 @@ uk{
                 one{"{0} моль"}
                 other{"{0} моля"}
             }
-            part-per-million{
-                dnam{"мільйонні долі"}
-                few{"{0} мільйонні долі"}
-                many{"{0} мільйонних доль"}
-                one{"{0} мільйонна доля"}
-                other{"{0} мільйонної долі"}
-            }
             percent{
                 dnam{"відсоток"}
                 few{"{0} відсотки"}
@@ -191,6 +184,13 @@ uk{
                 one{"{0} проміле"}
                 other{"{0} проміле"}
             }
+            permillion{
+                dnam{"мільйонні долі"}
+                few{"{0} мільйонні долі"}
+                many{"{0} мільйонних доль"}
+                one{"{0} мільйонна доля"}
+                other{"{0} мільйонної долі"}
+            }
             permyriad{
                 dnam{"проміріада"}
                 few{"{0} проміріади"}
@@ -200,7 +200,7 @@ uk{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"літри на 100 кілометрів"}
                 few{"{0} літри на 100 кілометрів"}
                 many{"{0} літрів на 100 кілометрів"}
@@ -330,6 +330,13 @@ uk{
                 one{"{0} день"}
                 other{"{0} дня"}
                 per{"{0} на день"}
+            }
+            decade{
+                dnam{"декади"}
+                few{"{0} декади"}
+                many{"{0} декад"}
+                one{"{0} декада"}
+                other{"{0} декади"}
             }
             hour{
                 dnam{"години"}
@@ -489,6 +496,7 @@ uk{
                 other{"{0} кіловат-години"}
             }
             therm-us{
+                dnam{"американський терм"}
                 few{"{0} американських терми"}
                 many{"{0} американських термів"}
                 one{"{0} американський терм"}
@@ -876,7 +884,7 @@ uk{
                 one{"{0} гектопаскаль"}
                 other{"{0} гектопаскаля"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"дюйми ртутного стовпа"}
                 few{"{0} дюйми ртутного стовпа"}
                 many{"{0} дюймів ртутного стовпа"}
@@ -904,7 +912,7 @@ uk{
                 one{"{0} мілібар"}
                 other{"{0} мілібара"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"міліметри ртутного стовпа"}
                 few{"{0} міліметри ртутного стовпа"}
                 many{"{0} міліметрів ртутного стовпа"}
@@ -918,7 +926,7 @@ uk{
                 one{"{0} паскаль"}
                 other{"{0} паскаля"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"фунти на квадратний дюйм"}
                 few{"{0} фунти на квадратний дюйм"}
                 many{"{0} фунтів на квадратний дюйм"}
@@ -994,7 +1002,7 @@ uk{
                 one{"{0} ньютон-метр"}
                 other{"{0} ньютон-метра"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"фунт-фути"}
                 few{"{0} фунт-фути"}
                 many{"{0} фунт-футів"}
@@ -1208,7 +1216,7 @@ uk{
                 one{"{0} G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"м/с²"}
                 few{"{0}м/с²"}
                 many{"{0}м/с²"}
@@ -1303,7 +1311,7 @@ uk{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"л/100 км"}
                 few{"{0} л/100 км"}
                 many{"{0} л/100 км"}
@@ -1685,14 +1693,14 @@ uk{
                 one{"{0} мбар"}
                 other{"{0} мбара"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"ммрс"}
                 few{"{0}ммрс"}
                 many{"{0}ммрс"}
                 one{"{0}ммрс"}
                 other{"{0}ммрс"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 few{"{0}psi"}
                 many{"{0}psi"}
                 one{"{0}psi"}
@@ -1731,6 +1739,7 @@ uk{
         }
         temperature{
             celsius{
+                dnam{"° Цельсія"}
                 few{"{0}°C"}
                 many{"{0}°C"}
                 one{"{0}°C"}
@@ -1763,7 +1772,7 @@ uk{
                 one{"{0}Н·м"}
                 other{"{0}Н·м"}
             }
-            pound-foot{
+            pound-force-foot{
                 few{"{0}фн-фт"}
                 many{"{0}фн-фт"}
                 one{"{0}фн-фт"}
@@ -1817,8 +1826,12 @@ uk{
         acceleration{
             g-force{
                 dnam{"сили тяжіння"}
+                few{"{0} g"}
+                many{"{0} g"}
+                one{"{0} g"}
+                other{"{0} g"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"метри/с²"}
                 few{"{0} м/с²"}
                 many{"{0} м/с²"}
@@ -1973,13 +1986,6 @@ uk{
                 one{"{0} моль"}
                 other{"{0} моль"}
             }
-            part-per-million{
-                dnam{"мільйонні долі"}
-                few{"{0} ppm"}
-                many{"{0} ppm"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"відсоток"}
                 few{"{0}%"}
@@ -1994,12 +2000,19 @@ uk{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"мільйонні долі"}
+                few{"{0} ppm"}
+                many{"{0} ppm"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
             permyriad{
                 dnam{"проміріада"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"л/100 км"}
                 few{"{0} л/100 км"}
                 many{"{0} л/100 км"}
@@ -2129,6 +2142,13 @@ uk{
                 one{"{0} д."}
                 other{"{0} дн."}
                 per{"{0}/дн."}
+            }
+            decade{
+                dnam{"10-річчя"}
+                few{"{0} 10-річчя"}
+                many{"{0} 10-річ"}
+                one{"{0} 10-річчя"}
+                other{"{0} 10-річчя"}
             }
             hour{
                 dnam{"год"}
@@ -2287,6 +2307,13 @@ uk{
                 one{"{0} кВт год"}
                 other{"{0} кВт год"}
             }
+            therm-us{
+                dnam{"ам. терми"}
+                few{"{0} ам. терми"}
+                many{"{0} ам. термів"}
+                one{"{0} ам. терм"}
+                other{"{0} ам. терма"}
+            }
         }
         force{
             newton{
@@ -2335,12 +2362,54 @@ uk{
             }
         }
         graphics{
+            dot-per-centimeter{
+                dnam{"dpcm"}
+                few{"{0} dpcm"}
+                many{"{0} dpcm"}
+                one{"{0} dpcm"}
+                other{"{0} dpcm"}
+            }
+            dot-per-inch{
+                dnam{"dpi"}
+                few{"{0} dpi"}
+                many{"{0} dpi"}
+                one{"{0} dpi"}
+                other{"{0} dpi"}
+            }
+            em{
+                dnam{"em"}
+                few{"{0} em"}
+                many{"{0} em"}
+                one{"{0} em"}
+                other{"{0} em"}
+            }
             megapixel{
                 dnam{"Мп"}
                 few{"{0} Мп"}
                 many{"{0} Мп"}
                 one{"{0} Мп"}
                 other{"{0} Мп"}
+            }
+            pixel{
+                dnam{"px"}
+                few{"{0} px"}
+                many{"{0} px"}
+                one{"{0} px"}
+                other{"{0} px"}
+            }
+            pixel-per-centimeter{
+                dnam{"ppcm"}
+                few{"{0} ppcm"}
+                many{"{0} ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                dnam{"ppi"}
+                few{"{0} ppi"}
+                many{"{0} ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
             }
         }
         length{
@@ -2633,6 +2702,7 @@ uk{
                 other{"{0} атм"}
             }
             bar{
+                dnam{"бар"}
                 few{"{0} бар"}
                 many{"{0} бар"}
                 one{"{0} бар"}
@@ -2645,7 +2715,7 @@ uk{
                 one{"{0} гПа"}
                 other{"{0} гПа"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"дюйми рт. ст."}
                 few{"{0} дюйми рт. ст."}
                 many{"{0} дюймів рт. ст."}
@@ -2673,7 +2743,7 @@ uk{
                 one{"{0} мбар"}
                 other{"{0} мбара"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"мм рт. ст."}
                 few{"{0} мм рт. ст."}
                 many{"{0} мм рт. ст."}
@@ -2687,7 +2757,7 @@ uk{
                 one{"{0} Па"}
                 other{"{0} Па"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"фунт/дюйм²"}
                 few{"{0} фунти/дюйм²"}
                 many{"{0} фунтів/дюйм²"}
@@ -2763,7 +2833,7 @@ uk{
                 one{"{0} Н·м"}
                 other{"{0} Н·м"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"фунт-фут"}
                 few{"{0} фнт-фт"}
                 many{"{0} фнт-фт"}

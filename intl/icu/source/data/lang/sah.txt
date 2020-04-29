@@ -91,7 +91,7 @@ sah{
             h24{"24 чаастаах тиһик (0–24)"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         strokes{
             other{"{0} Strokes"}

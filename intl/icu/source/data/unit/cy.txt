@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 cy{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -18,7 +18,7 @@ cy{
                 two{"{0} G"}
                 zero{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"metrau yr eiliad sgwâr"}
                 few{"{0} m/eil²"}
                 many{"{0} m/eil²"}
@@ -212,15 +212,6 @@ cy{
                 two{"{0} môl"}
                 zero{"{0} môl"}
             }
-            part-per-million{
-                dnam{"rhannau pob miliwn"}
-                few{"{0} rhan pob miliwn"}
-                many{"{0} rhan pob miliwn"}
-                one{"{0} rhan pob miliwn"}
-                other{"{0} rhan pob miliwn"}
-                two{"{0} rhan pob miliwn"}
-                zero{"{0} rhan pob miliwn"}
-            }
             percent{
                 dnam{"y cant"}
                 few{"{0}%"}
@@ -239,6 +230,15 @@ cy{
                 two{"{0}‰"}
                 zero{"{0}‰"}
             }
+            permillion{
+                dnam{"rhannau pob miliwn"}
+                few{"{0} rhan pob miliwn"}
+                many{"{0} rhan pob miliwn"}
+                one{"{0} rhan pob miliwn"}
+                other{"{0} rhan pob miliwn"}
+                two{"{0} rhan pob miliwn"}
+                zero{"{0} rhan pob miliwn"}
+            }
             permyriad{
                 dnam{"permyriad"}
                 few{"{0}‱"}
@@ -250,7 +250,7 @@ cy{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"litrau y 100 cilometr"}
                 few{"{0} L/100km"}
                 many{"{0} L/100km"}
@@ -1161,7 +1161,7 @@ cy{
                 two{"{0} hPa"}
                 zero{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"modfeddi o fercwri"}
                 few{"{0} ″ Hg"}
                 many{"{0} ″ Hg"}
@@ -1197,7 +1197,7 @@ cy{
                 two{"{0} filibar"}
                 zero{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"milimetrau o fercwri"}
                 few{"{0} mm Hg"}
                 many{"{0} mm Hg"}
@@ -1209,7 +1209,7 @@ cy{
             pascal{
                 dnam{"pascals"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"pwysau y fodfedd sgwar"}
                 few{"{0} psi"}
                 many{"{0} psi"}
@@ -1305,7 +1305,7 @@ cy{
                 two{"{0} N⋅m"}
                 zero{"{0} N⋅m"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"pwys-troedfeddi"}
                 few{"{0} lbf⋅ft"}
                 many{"{0} lbf⋅ft"}
@@ -1694,7 +1694,7 @@ cy{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 few{"{0}L/100km"}
                 many{"{0}L/100km"}
@@ -2316,7 +2316,7 @@ cy{
                 two{"{0}hPa"}
                 zero{"{0}hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"″ Hg"}
                 few{"{0}\u0022 Hg"}
                 many{"{0}\u0022 Hg"}
@@ -2334,7 +2334,7 @@ cy{
                 two{"{0}mb"}
                 zero{"{0}mb"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mmHg"}
                 few{"{0}mmHg"}
                 many{"{0}mmHg"}
@@ -2343,7 +2343,7 @@ cy{
                 two{"{0}mmHg"}
                 zero{"{0}mmHg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 few{"{0}psi"}
                 many{"{0}psi"}
@@ -2548,7 +2548,7 @@ cy{
             g-force{
                 dnam{"grym disgyrchedd"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"metrau/eil²"}
                 few{"{0} m/eil²"}
                 many{"{0} m/eil²"}
@@ -2740,15 +2740,6 @@ cy{
                 two{"{0} môl"}
                 zero{"{0} môl"}
             }
-            part-per-million{
-                dnam{"rhan/miliwn"}
-                few{"{0} ppm"}
-                many{"{0} ppm"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-                two{"{0} ppm"}
-                zero{"{0} ppm"}
-            }
             percent{
                 dnam{"y cant"}
                 few{"{0}%"}
@@ -2767,12 +2758,21 @@ cy{
                 two{"{0}‰"}
                 zero{"{0}‰"}
             }
+            permillion{
+                dnam{"rhan/miliwn"}
+                few{"{0} ppm"}
+                many{"{0} ppm"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+                two{"{0} ppm"}
+                zero{"{0} ppm"}
+            }
             permyriad{
                 dnam{"permyriad"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 few{"{0} L/100km"}
                 many{"{0} L/100km"}
@@ -3517,7 +3517,7 @@ cy{
                 two{"{0} hPa"}
                 zero{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"\u0022 Hg"}
                 few{"{0} ″ Hg"}
                 many{"{0} ″ Hg"}
@@ -3535,7 +3535,7 @@ cy{
                 two{"{0} mbar"}
                 zero{"{0} mbar"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 few{"{0} psi"}
                 many{"{0} psi"}
                 one{"{0} psi"}

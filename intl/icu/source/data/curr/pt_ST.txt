@@ -8,5 +8,5 @@ pt_ST{
             "dobra de São Tomé e Príncipe",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

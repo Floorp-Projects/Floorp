@@ -552,7 +552,7 @@ mn{
             tibt{"төвд тоо"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} - Бүгд"}
         category-list{"{0}: {1}"}

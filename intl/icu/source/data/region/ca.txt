@@ -312,7 +312,6 @@ ca{
         CZ{"República Txeca"}
         FK{"Illes Malvines (Illes Falkland)"}
         SZ{"Swazilàndia"}
-        TL{"Timor Oriental"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

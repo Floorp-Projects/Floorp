@@ -4,5 +4,5 @@ dua{
     Languages{
         dua{"duálá"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

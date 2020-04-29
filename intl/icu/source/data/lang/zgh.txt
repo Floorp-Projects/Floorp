@@ -61,5 +61,5 @@ zgh{
             islamic{"ⴰⵙⵎⵍⵓⵙⵙⴰⵏ ⵏ ⵍⵉⵙⵍⴰⵎ"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

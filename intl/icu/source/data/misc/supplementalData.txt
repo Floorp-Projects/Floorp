@@ -2104,7 +2104,7 @@ supplementalData:table(nofallback){
             "islamic-tbla",
         }
     }
-    cldrVersion{"36.1"}
+    cldrVersion{"37"}
     codeMappings{
         {
             "AA",
@@ -7860,6 +7860,7 @@ supplementalData:table(nofallback){
                 "Qaaj~p",
             }
             special{
+                "Aran",
                 "Qaag",
                 "Zanb",
                 "Zinh",
@@ -7943,7 +7944,6 @@ supplementalData:table(nofallback){
                 "czus",
                 "czvy",
                 "czzl",
-                "escn",
                 "fi01",
                 "fra~b",
                 "frbl",
@@ -7981,17 +7981,25 @@ supplementalData:table(nofallback){
                 "gbdgn",
                 "gbdow",
                 "gbdry",
+                "gbeaw",
+                "gbeng",
                 "gbfer",
+                "gbgbn",
                 "gblmv",
                 "gblrn",
                 "gblsb",
                 "gbmft",
                 "gbmyl",
                 "gbndn",
+                "gbnir",
                 "gbnta",
                 "gbnym",
                 "gbomh",
+                "gbsct",
                 "gbstb",
+                "gbukm",
+                "gbwls",
+                "ghba",
                 "glqa",
                 "gr01",
                 "gr03~7",
@@ -8006,6 +8014,15 @@ supplementalData:table(nofallback){
                 "gr91~4",
                 "gra1",
                 "is0",
+                "itao",
+                "itci",
+                "itgo",
+                "itog",
+                "itot",
+                "itpn",
+                "itts",
+                "itud",
+                "itvs",
                 "laxn",
                 "lud",
                 "lug",
@@ -8014,18 +8031,15 @@ supplementalData:table(nofallback){
                 "mammd",
                 "mammn",
                 "masyb",
-                "mk01",
-                "mk09",
-                "mk15",
-                "mk17",
-                "mk28~9",
-                "mk31",
-                "mk38~9",
-                "mk57",
-                "mk68",
-                "mk77",
-                "mk79",
-                "mk84",
+                "mk01~9",
+                "mk10~9",
+                "mk20~9",
+                "mk30~9",
+                "mk40~9",
+                "mk50~9",
+                "mk60~9",
+                "mk70~9",
+                "mk80~5",
                 "mrnkc",
                 "mvce",
                 "mvnc",
@@ -8039,10 +8053,12 @@ supplementalData:table(nofallback){
                 "nlcw",
                 "nlsx",
                 "no16~7",
+                "no23",
                 "nzn",
                 "nzs",
                 "omba",
                 "omsh",
+                "pkta",
                 "plds",
                 "plkp",
                 "pllb",
@@ -8072,6 +8088,8 @@ supplementalData:table(nofallback){
                 "uspr",
                 "usum",
                 "usvi",
+                "zagt",
+                "zanl",
             }
             regular{
                 "ad02~8",
@@ -8784,8 +8802,7 @@ supplementalData:table(nofallback){
                 "esc",
                 "esca~c",
                 "esce",
-                "escl~m",
-                "esco",
+                "escl~o",
                 "escr~u",
                 "esex",
                 "esga",
@@ -8936,13 +8953,12 @@ supplementalData:table(nofallback){
                 "gbdud",
                 "gbdur",
                 "gbeal",
-                "gbeaw",
                 "gbeay",
                 "gbedh",
                 "gbedu",
                 "gbeln",
                 "gbels",
-                "gbenf~g",
+                "gbenf",
                 "gberw",
                 "gbery",
                 "gbess",
@@ -8952,7 +8968,6 @@ supplementalData:table(nofallback){
                 "gbfln",
                 "gbfmo",
                 "gbgat",
-                "gbgbn",
                 "gbglg",
                 "gbgls",
                 "gbgre",
@@ -9007,7 +9022,6 @@ supplementalData:table(nofallback){
                 "gbnet",
                 "gbnfk",
                 "gbngm",
-                "gbnir",
                 "gbnlk",
                 "gbnln",
                 "gbnmd",
@@ -9041,7 +9055,6 @@ supplementalData:table(nofallback){
                 "gbsaw",
                 "gbsay",
                 "gbscb",
-                "gbsct",
                 "gbsfk",
                 "gbsft",
                 "gbsgc",
@@ -9070,7 +9083,6 @@ supplementalData:table(nofallback){
                 "gbtof",
                 "gbtrf",
                 "gbtwh",
-                "gbukm",
                 "gbvgl",
                 "gbwar",
                 "gbwbk",
@@ -9081,7 +9093,6 @@ supplementalData:table(nofallback){
                 "gbwkf",
                 "gbwll",
                 "gbwln",
-                "gbwls",
                 "gbwlv",
                 "gbwnd",
                 "gbwnm",
@@ -9108,14 +9119,20 @@ supplementalData:table(nofallback){
                 "gesz",
                 "getb",
                 "ghaa",
+                "ghaf",
                 "ghah",
-                "ghba",
+                "ghbe",
+                "ghbo",
                 "ghcp",
                 "ghep",
+                "ghne",
                 "ghnp",
+                "ghot",
+                "ghsv",
                 "ghtv",
                 "ghue",
                 "ghuw",
+                "ghwn",
                 "ghwp",
                 "glav",
                 "glku",
@@ -9361,6 +9378,7 @@ supplementalData:table(nofallback){
                 "injk",
                 "inka",
                 "inkl",
+                "inla",
                 "inld",
                 "inmh",
                 "inml",
@@ -9422,7 +9440,8 @@ supplementalData:table(nofallback){
                 "it88",
                 "itag",
                 "ital",
-                "itan~r",
+                "itan",
+                "itap~r",
                 "itat",
                 "itav",
                 "itba",
@@ -9434,7 +9453,7 @@ supplementalData:table(nofallback){
                 "itbz",
                 "itca~b",
                 "itce",
-                "itch~i",
+                "itch",
                 "itcl",
                 "itcn~o",
                 "itcr~t",
@@ -9447,7 +9466,6 @@ supplementalData:table(nofallback){
                 "itfm",
                 "itfr",
                 "itge",
-                "itgo",
                 "itgr",
                 "itim",
                 "itis",
@@ -9465,14 +9483,12 @@ supplementalData:table(nofallback){
                 "itna",
                 "itno",
                 "itnu",
-                "itog",
                 "itor",
-                "itot",
                 "itpa",
                 "itpc~e",
                 "itpg",
                 "itpi",
-                "itpn~o",
+                "itpo",
                 "itpr",
                 "itpt~v",
                 "itpz",
@@ -9483,6 +9499,7 @@ supplementalData:table(nofallback){
                 "itri",
                 "itrm~o",
                 "itsa",
+                "itsd",
                 "itsi",
                 "itso~p",
                 "itsr~s",
@@ -9490,13 +9507,13 @@ supplementalData:table(nofallback){
                 "itta",
                 "itte",
                 "ittn~p",
-                "ittr~s",
+                "ittr",
                 "ittv",
-                "itud",
                 "itva~c",
                 "itve",
                 "itvi",
-                "itvr~t",
+                "itvr",
+                "itvt",
                 "itvv",
                 "jm01~9",
                 "jm10~4",
@@ -9834,7 +9851,7 @@ supplementalData:table(nofallback){
                 "mdun",
                 "me01~9",
                 "me10~9",
-                "me20~3",
+                "me20~4",
                 "mga",
                 "mgd",
                 "mgf",
@@ -9865,22 +9882,20 @@ supplementalData:table(nofallback){
                 "mhuti",
                 "mhwth",
                 "mhwtj",
-                "mk02~8",
-                "mk10~4",
-                "mk16",
-                "mk18~9",
-                "mk20~7",
-                "mk30",
-                "mk32~7",
-                "mk40~9",
-                "mk50~6",
-                "mk58~9",
-                "mk60~7",
-                "mk69",
-                "mk70~6",
-                "mk78",
-                "mk80~3",
-                "mk85",
+                "mk101~9",
+                "mk201~9",
+                "mk210~1",
+                "mk301",
+                "mk303~4",
+                "mk307~8",
+                "mk310~3",
+                "mk401~9",
+                "mk410",
+                "mk501~9",
+                "mk601~9",
+                "mk701~6",
+                "mk801~9",
+                "mk810~7",
                 "ml1",
                 "ml10",
                 "ml2~9",
@@ -10092,7 +10107,8 @@ supplementalData:table(nofallback){
                 "no10~2",
                 "no14~5",
                 "no18~9",
-                "no20~3",
+                "no20~2",
+                "no50",
                 "np1~5",
                 "npba",
                 "npbh",
@@ -10279,7 +10295,6 @@ supplementalData:table(nofallback){
                 "pkkp",
                 "pkpb",
                 "pksd",
-                "pkta",
                 "pl02",
                 "pl04",
                 "pl06",
@@ -10958,11 +10973,11 @@ supplementalData:table(nofallback){
                 "yeta",
                 "zaec",
                 "zafs",
-                "zagt",
+                "zagp",
+                "zakzn",
                 "zalp",
                 "zamp",
                 "zanc",
-                "zanl",
                 "zanw",
                 "zawc",
                 "zm01~9",
@@ -11237,10 +11252,19 @@ supplementalData:table(nofallback){
             }
         }
         unit{
-            deprecated{"proportion-karat"}
+            deprecated{
+                "acceleration-meter-per-second-squared",
+                "consumption-liter-per-100kilometers",
+                "concentr-part-per-million",
+                "pressure-inch-hg",
+                "pressure-pound-per-square-inch",
+                "pressure-millimeter-of-mercury",
+                "proportion-karat",
+                "torque-pound-foot",
+            }
             regular{
                 "acceleration-g-force",
-                "acceleration-meter-per-second-squared",
+                "acceleration-meter-per-square-second",
                 "angle-arc-minute",
                 "angle-arc-second",
                 "angle-degree",
@@ -11259,12 +11283,14 @@ supplementalData:table(nofallback){
                 "concentr-karat",
                 "concentr-milligram-per-deciliter",
                 "concentr-millimole-per-liter",
-                "concentr-part-per-million",
                 "concentr-percent",
                 "concentr-permille",
                 "concentr-permyriad",
+                "concentr-permillion",
                 "concentr-mole",
-                "consumption-liter-per-100kilometers",
+                "concentr-item",
+                "concentr-portion",
+                "consumption-liter-per-100-kilometer",
                 "consumption-liter-per-kilometer",
                 "consumption-mile-per-gallon",
                 "consumption-mile-per-gallon-imperial",
@@ -11314,6 +11340,7 @@ supplementalData:table(nofallback){
                 "frequency-hertz",
                 "frequency-kilohertz",
                 "frequency-megahertz",
+                "graphics-dot",
                 "graphics-dot-per-centimeter",
                 "graphics-dot-per-inch",
                 "graphics-em",
@@ -11321,6 +11348,7 @@ supplementalData:table(nofallback){
                 "graphics-pixel",
                 "graphics-pixel-per-centimeter",
                 "graphics-pixel-per-inch",
+                "length-100-kilometer",
                 "length-astronomical-unit",
                 "length-centimeter",
                 "length-decimeter",
@@ -11341,7 +11369,9 @@ supplementalData:table(nofallback){
                 "length-picometer",
                 "length-point",
                 "length-yard",
+                "length-earth-radius",
                 "length-solar-radius",
+                "light-candela",
                 "light-lux",
                 "light-solar-luminosity",
                 "mass-carat",
@@ -11366,14 +11396,15 @@ supplementalData:table(nofallback){
                 "power-watt",
                 "pressure-atmosphere",
                 "pressure-hectopascal",
-                "pressure-inch-hg",
+                "pressure-inch-ofhg",
                 "pressure-bar",
                 "pressure-millibar",
-                "pressure-millimeter-of-mercury",
-                "pressure-pound-per-square-inch",
+                "pressure-millimeter-ofhg",
+                "pressure-pound-force-per-square-inch",
                 "pressure-pascal",
                 "pressure-kilopascal",
                 "pressure-megapascal",
+                "pressure-ofhg",
                 "speed-kilometer-per-hour",
                 "speed-knot",
                 "speed-meter-per-second",
@@ -11382,7 +11413,7 @@ supplementalData:table(nofallback){
                 "temperature-fahrenheit",
                 "temperature-generic",
                 "temperature-kelvin",
-                "torque-pound-foot",
+                "torque-pound-force-foot",
                 "torque-newton-meter",
                 "volume-acre-foot",
                 "volume-bushel",
@@ -13554,7 +13585,10 @@ supplementalData:table(nofallback){
                 territories{"IN"}
             }
             secondary{
-                scripts{"Mahj"}
+                scripts{
+                    "Latn",
+                    "Mahj",
+                }
                 territories{
                     "FJ",
                     "ZA",
@@ -15832,13 +15866,13 @@ supplementalData:table(nofallback){
         }
         sat{
             primary{
-                scripts{"Latn"}
+                scripts{"Olck"}
             }
             secondary{
                 scripts{
                     "Beng",
                     "Deva",
-                    "Olck",
+                    "Latn",
                     "Orya",
                 }
                 territories{"IN"}
@@ -18248,625 +18282,613 @@ supplementalData:table(nofallback){
             {
                 "ab",
                 "ru",
-                "10",
+                "30",
                 "1",
             }
             {
                 "ach",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "af",
                 "nl",
-                "10",
+                "20",
                 "1",
             }
             {
                 "ak",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "ay",
                 "es",
-                "10",
+                "20",
                 "1",
             }
             {
                 "az",
                 "ru",
-                "10",
+                "30",
                 "1",
             }
             {
                 "be",
                 "ru",
-                "10",
+                "20",
                 "1",
             }
             {
                 "bem",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "bh",
                 "hi",
-                "10",
+                "30",
                 "1",
             }
             {
                 "bn",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "br",
                 "fr",
-                "10",
+                "20",
                 "1",
             }
             {
                 "ceb",
                 "fil",
-                "10",
+                "30",
                 "1",
             }
             {
                 "chr",
                 "en",
-                "10",
+                "20",
                 "1",
             }
             {
                 "ckb",
                 "ar",
-                "10",
+                "30",
                 "1",
             }
             {
                 "co",
                 "fr",
-                "10",
+                "20",
                 "1",
             }
             {
                 "crs",
                 "fr",
-                "10",
+                "20",
                 "1",
             }
             {
                 "cy",
                 "en",
-                "10",
+                "20",
                 "1",
             }
             {
                 "ee",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "eo",
                 "en",
-                "10",
-                "1",
-            }
-            {
-                "et",
-                "fi",
-                "10",
+                "30",
                 "1",
             }
             {
                 "eu",
                 "es",
-                "10",
+                "20",
                 "1",
             }
             {
                 "fo",
                 "da",
-                "10",
+                "20",
                 "1",
             }
             {
                 "fy",
                 "nl",
-                "10",
+                "20",
                 "1",
             }
             {
                 "ga",
                 "en",
-                "10",
+                "20",
                 "1",
             }
             {
                 "gaa",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "gd",
                 "en",
-                "10",
+                "20",
                 "1",
             }
             {
                 "gl",
                 "es",
-                "10",
+                "20",
                 "1",
             }
             {
                 "gn",
                 "es",
-                "10",
+                "20",
                 "1",
             }
             {
                 "gu",
                 "hi",
-                "10",
+                "30",
                 "1",
             }
             {
                 "ha",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "haw",
                 "en",
-                "10",
+                "20",
                 "1",
             }
             {
                 "ht",
                 "fr",
-                "10",
+                "20",
                 "1",
             }
             {
                 "hy",
                 "ru",
-                "10",
+                "30",
                 "1",
             }
             {
                 "ia",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "ig",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "is",
                 "en",
-                "10",
+                "20",
                 "1",
             }
             {
                 "jv",
                 "id",
-                "10",
+                "20",
                 "1",
             }
             {
                 "ka",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "kg",
                 "fr",
-                "10",
+                "30",
                 "1",
             }
             {
                 "kk",
                 "ru",
-                "10",
+                "30",
                 "1",
             }
             {
                 "km",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "kn",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "kri",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "ku",
                 "tr",
-                "10",
+                "30",
                 "1",
             }
             {
                 "ky",
                 "ru",
-                "10",
+                "30",
                 "1",
             }
             {
                 "la",
                 "it",
-                "10",
+                "20",
                 "1",
             }
             {
                 "lg",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "ln",
                 "fr",
-                "10",
+                "30",
                 "1",
             }
             {
                 "lo",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "loz",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "lua",
                 "fr",
-                "10",
+                "30",
                 "1",
             }
             {
                 "mfe",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "mg",
                 "fr",
-                "10",
+                "30",
                 "1",
             }
             {
                 "mi",
                 "en",
-                "10",
-                "1",
-            }
-            {
-                "mk",
-                "bg",
-                "10",
+                "20",
                 "1",
             }
             {
                 "ml",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "mn",
                 "ru",
-                "10",
+                "30",
                 "1",
             }
             {
                 "mr",
                 "hi",
-                "10",
+                "30",
                 "1",
             }
             {
                 "ms",
                 "id",
-                "10",
+                "30",
                 "1",
             }
             {
                 "mt",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "my",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "ne",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "nn",
                 "nb",
-                "10",
+                "20",
                 "0",
             }
             {
                 "nn",
                 "no",
-                "10",
-                "1",
+                "20",
+                "0",
             }
             {
                 "nso",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "ny",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "nyn",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "oc",
                 "fr",
-                "10",
+                "20",
                 "1",
             }
             {
                 "om",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "or",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "pa",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "pcm",
                 "en",
-                "10",
+                "20",
                 "1",
             }
             {
                 "ps",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "qu",
                 "es",
-                "10",
+                "30",
                 "1",
             }
             {
                 "rm",
                 "de",
-                "10",
+                "20",
                 "1",
             }
             {
                 "rn",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "rw",
                 "fr",
-                "10",
+                "30",
                 "1",
             }
             {
                 "sa",
                 "hi",
-                "10",
+                "30",
                 "1",
             }
             {
                 "sd",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "si",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "sn",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "so",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "sq",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "st",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "su",
                 "id",
-                "10",
+                "20",
                 "1",
             }
             {
                 "sw",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "ta",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "te",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "tg",
                 "ru",
-                "10",
+                "30",
                 "1",
             }
             {
                 "ti",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "tk",
                 "ru",
-                "10",
+                "30",
                 "1",
             }
             {
                 "tlh",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "tn",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "to",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "tt",
                 "ru",
-                "10",
+                "30",
                 "1",
             }
             {
                 "tum",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "ug",
                 "zh",
-                "10",
+                "20",
                 "1",
             }
             {
                 "ur",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "uz",
                 "ru",
-                "10",
+                "30",
                 "1",
             }
             {
                 "wo",
                 "fr",
-                "10",
+                "30",
                 "1",
             }
             {
                 "xh",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "yi",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "yo",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
                 "zu",
                 "en",
-                "10",
+                "30",
                 "1",
             }
             {
@@ -20142,6 +20164,144 @@ supplementalData:table(nofallback){
                 "1",
             }
             {
+                "zh_Hani",
+                "zh_Hans",
+                "20",
+                "1",
+            }
+            {
+                "zh_Hani",
+                "zh_Hant",
+                "20",
+                "1",
+            }
+            {
+                "ar_Latn",
+                "ar_Arab",
+                "20",
+                "1",
+            }
+            {
+                "bn_Latn",
+                "bn_Beng",
+                "20",
+                "1",
+            }
+            {
+                "gu_Latn",
+                "gu_Gujr",
+                "20",
+                "1",
+            }
+            {
+                "hi_Latn",
+                "hi_Deva",
+                "20",
+                "1",
+            }
+            {
+                "kn_Latn",
+                "kn_Knda",
+                "20",
+                "1",
+            }
+            {
+                "ml_Latn",
+                "ml_Mlym",
+                "20",
+                "1",
+            }
+            {
+                "mr_Latn",
+                "mr_Deva",
+                "20",
+                "1",
+            }
+            {
+                "ta_Latn",
+                "ta_Taml",
+                "20",
+                "1",
+            }
+            {
+                "te_Latn",
+                "te_Telu",
+                "20",
+                "1",
+            }
+            {
+                "zh_Latn",
+                "zh_Hans",
+                "20",
+                "1",
+            }
+            {
+                "ja_Latn",
+                "ja_Jpan",
+                "5",
+                "1",
+            }
+            {
+                "ja_Hani",
+                "ja_Jpan",
+                "5",
+                "1",
+            }
+            {
+                "ja_Hira",
+                "ja_Jpan",
+                "5",
+                "1",
+            }
+            {
+                "ja_Kana",
+                "ja_Jpan",
+                "5",
+                "1",
+            }
+            {
+                "ja_Hrkt",
+                "ja_Jpan",
+                "5",
+                "1",
+            }
+            {
+                "ja_Hira",
+                "ja_Hrkt",
+                "5",
+                "1",
+            }
+            {
+                "ja_Kana",
+                "ja_Hrkt",
+                "5",
+                "1",
+            }
+            {
+                "ko_Hani",
+                "ko_Kore",
+                "5",
+                "1",
+            }
+            {
+                "ko_Hang",
+                "ko_Kore",
+                "5",
+                "1",
+            }
+            {
+                "ko_Jamo",
+                "ko_Kore",
+                "5",
+                "1",
+            }
+            {
+                "ko_Jamo",
+                "ko_Hang",
+                "5",
+                "1",
+            }
+            {
                 "*_*",
                 "*_*",
                 "50",
@@ -20532,15 +20692,19 @@ supplementalData:table(nofallback){
             "ff_Adlm",
             "ff_Arab",
             "ha_Arab",
+            "hi_Latn",
             "iu_Latn",
             "kk_Arab",
+            "ks_Deva",
             "ku_Arab",
             "ky_Arab",
             "ky_Latn",
             "ml_Arab",
             "mn_Mong",
+            "mni_Mtei",
             "ms_Arab",
             "pa_Arab",
+            "sat_Deva",
             "sd_Deva",
             "sd_Khoj",
             "sd_Sind",
@@ -21622,13 +21786,223 @@ supplementalData:table(nofallback){
             "ga9",
         }
         GB{
-            "gbeaw",
-            "gbeng",
-            "gbgbn",
-            "gbnir",
-            "gbsct",
-            "gbukm",
-            "gbwls",
+            "gbabc",
+            "gbabd",
+            "gbabe",
+            "gbagb",
+            "gbagy",
+            "gband",
+            "gbann",
+            "gbans",
+            "gbbas",
+            "gbbbd",
+            "gbbdf",
+            "gbbdg",
+            "gbben",
+            "gbbex",
+            "gbbfs",
+            "gbbge",
+            "gbbgw",
+            "gbbir",
+            "gbbkm",
+            "gbbmh",
+            "gbbne",
+            "gbbnh",
+            "gbbns",
+            "gbbol",
+            "gbbpl",
+            "gbbrc",
+            "gbbrd",
+            "gbbry",
+            "gbbst",
+            "gbbur",
+            "gbcam",
+            "gbcay",
+            "gbcbf",
+            "gbccg",
+            "gbcgn",
+            "gbche",
+            "gbchw",
+            "gbcld",
+            "gbclk",
+            "gbcma",
+            "gbcmd",
+            "gbcmn",
+            "gbcon",
+            "gbcov",
+            "gbcrf",
+            "gbcry",
+            "gbcwy",
+            "gbdal",
+            "gbdby",
+            "gbden",
+            "gbder",
+            "gbdev",
+            "gbdgy",
+            "gbdnc",
+            "gbdnd",
+            "gbdor",
+            "gbdrs",
+            "gbdud",
+            "gbdur",
+            "gbeal",
+            "gbeay",
+            "gbedh",
+            "gbedu",
+            "gbeln",
+            "gbels",
+            "gbenf",
+            "gberw",
+            "gbery",
+            "gbess",
+            "gbesx",
+            "gbfal",
+            "gbfif",
+            "gbfln",
+            "gbfmo",
+            "gbgat",
+            "gbglg",
+            "gbgls",
+            "gbgre",
+            "gbgwn",
+            "gbhal",
+            "gbham",
+            "gbhav",
+            "gbhck",
+            "gbhef",
+            "gbhil",
+            "gbhld",
+            "gbhmf",
+            "gbhns",
+            "gbhpl",
+            "gbhrt",
+            "gbhrw",
+            "gbhry",
+            "gbios",
+            "gbiow",
+            "gbisl",
+            "gbivc",
+            "gbkec",
+            "gbken",
+            "gbkhl",
+            "gbkir",
+            "gbktt",
+            "gbkwl",
+            "gblan",
+            "gblbc",
+            "gblbh",
+            "gblce",
+            "gblds",
+            "gblec",
+            "gblew",
+            "gblin",
+            "gbliv",
+            "gblnd",
+            "gblut",
+            "gbman",
+            "gbmdb",
+            "gbmdw",
+            "gbmea",
+            "gbmik",
+            "gbmln",
+            "gbmon",
+            "gbmrt",
+            "gbmry",
+            "gbmty",
+            "gbmul",
+            "gbnay",
+            "gbnbl",
+            "gbnel",
+            "gbnet",
+            "gbnfk",
+            "gbngm",
+            "gbnlk",
+            "gbnln",
+            "gbnmd",
+            "gbnsm",
+            "gbnth",
+            "gbntl",
+            "gbntt",
+            "gbnty",
+            "gbnwm",
+            "gbnwp",
+            "gbnyk",
+            "gbold",
+            "gbork",
+            "gboxf",
+            "gbpem",
+            "gbpkn",
+            "gbply",
+            "gbpol",
+            "gbpor",
+            "gbpow",
+            "gbpte",
+            "gbrcc",
+            "gbrch",
+            "gbrct",
+            "gbrdb",
+            "gbrdg",
+            "gbrfw",
+            "gbric",
+            "gbrot",
+            "gbrut",
+            "gbsaw",
+            "gbsay",
+            "gbscb",
+            "gbsfk",
+            "gbsft",
+            "gbsgc",
+            "gbshf",
+            "gbshn",
+            "gbshr",
+            "gbskp",
+            "gbslf",
+            "gbslg",
+            "gbslk",
+            "gbsnd",
+            "gbsol",
+            "gbsom",
+            "gbsos",
+            "gbsry",
+            "gbste",
+            "gbstg",
+            "gbsth",
+            "gbstn",
+            "gbsts",
+            "gbstt",
+            "gbsty",
+            "gbswa",
+            "gbswd",
+            "gbswk",
+            "gbtam",
+            "gbtfw",
+            "gbthr",
+            "gbtob",
+            "gbtof",
+            "gbtrf",
+            "gbtwh",
+            "gbvgl",
+            "gbwar",
+            "gbwbk",
+            "gbwdu",
+            "gbwft",
+            "gbwgn",
+            "gbwil",
+            "gbwkf",
+            "gbwll",
+            "gbwln",
+            "gbwlv",
+            "gbwnd",
+            "gbwnm",
+            "gbwok",
+            "gbwor",
+            "gbwrl",
+            "gbwrt",
+            "gbwrx",
+            "gbwsm",
+            "gbwsx",
+            "gbyor",
+            "gbzet",
         }
         GD{
             "gd01",
@@ -21655,14 +22029,20 @@ supplementalData:table(nofallback){
         }
         GH{
             "ghaa",
+            "ghaf",
             "ghah",
-            "ghba",
+            "ghbe",
+            "ghbo",
             "ghcp",
             "ghep",
+            "ghne",
             "ghnp",
+            "ghot",
+            "ghsv",
             "ghtv",
             "ghue",
             "ghuw",
+            "ghwn",
             "ghwp",
         }
         GL{
@@ -21894,6 +22274,7 @@ supplementalData:table(nofallback){
             "injk",
             "inka",
             "inkl",
+            "inla",
             "inld",
             "inmh",
             "inml",
@@ -22661,6 +23042,7 @@ supplementalData:table(nofallback){
             "me21",
             "me22",
             "me23",
+            "me24",
         }
         MG{
             "mga",
@@ -22675,77 +23057,86 @@ supplementalData:table(nofallback){
             "mht",
         }
         MK{
-            "mk02",
-            "mk03",
-            "mk04",
-            "mk05",
-            "mk06",
-            "mk07",
-            "mk08",
-            "mk10",
-            "mk11",
-            "mk12",
-            "mk13",
-            "mk14",
-            "mk16",
-            "mk18",
-            "mk19",
-            "mk20",
-            "mk21",
-            "mk22",
-            "mk23",
-            "mk24",
-            "mk25",
-            "mk26",
-            "mk27",
-            "mk30",
-            "mk32",
-            "mk33",
-            "mk34",
-            "mk35",
-            "mk36",
-            "mk37",
-            "mk40",
-            "mk41",
-            "mk42",
-            "mk43",
-            "mk44",
-            "mk45",
-            "mk46",
-            "mk47",
-            "mk48",
-            "mk49",
-            "mk50",
-            "mk51",
-            "mk52",
-            "mk53",
-            "mk54",
-            "mk55",
-            "mk56",
-            "mk58",
-            "mk59",
-            "mk60",
-            "mk61",
-            "mk62",
-            "mk63",
-            "mk64",
-            "mk65",
-            "mk66",
-            "mk67",
-            "mk69",
-            "mk70",
-            "mk71",
-            "mk72",
-            "mk73",
-            "mk74",
-            "mk75",
-            "mk76",
-            "mk78",
-            "mk80",
-            "mk81",
-            "mk82",
-            "mk83",
-            "mk85",
+            "mk101",
+            "mk102",
+            "mk103",
+            "mk104",
+            "mk105",
+            "mk106",
+            "mk107",
+            "mk108",
+            "mk109",
+            "mk201",
+            "mk202",
+            "mk203",
+            "mk204",
+            "mk205",
+            "mk206",
+            "mk207",
+            "mk208",
+            "mk209",
+            "mk210",
+            "mk211",
+            "mk301",
+            "mk303",
+            "mk304",
+            "mk307",
+            "mk308",
+            "mk310",
+            "mk311",
+            "mk312",
+            "mk313",
+            "mk401",
+            "mk402",
+            "mk403",
+            "mk404",
+            "mk405",
+            "mk406",
+            "mk407",
+            "mk408",
+            "mk409",
+            "mk410",
+            "mk501",
+            "mk502",
+            "mk503",
+            "mk504",
+            "mk505",
+            "mk506",
+            "mk507",
+            "mk508",
+            "mk509",
+            "mk601",
+            "mk602",
+            "mk603",
+            "mk604",
+            "mk605",
+            "mk606",
+            "mk607",
+            "mk608",
+            "mk609",
+            "mk701",
+            "mk702",
+            "mk703",
+            "mk704",
+            "mk705",
+            "mk706",
+            "mk801",
+            "mk802",
+            "mk803",
+            "mk804",
+            "mk805",
+            "mk806",
+            "mk807",
+            "mk808",
+            "mk809",
+            "mk810",
+            "mk811",
+            "mk812",
+            "mk813",
+            "mk814",
+            "mk815",
+            "mk816",
+            "mk817",
         }
         ML{
             "ml1",
@@ -23282,7 +23673,6 @@ supplementalData:table(nofallback){
             "pkkp",
             "pkpb",
             "pksd",
-            "pkta",
         }
         PL{
             "pl02",
@@ -24638,11 +25028,11 @@ supplementalData:table(nofallback){
         ZA{
             "zaec",
             "zafs",
-            "zagt",
+            "zagp",
+            "zakzn",
             "zalp",
             "zamp",
             "zanc",
-            "zanl",
             "zanw",
             "zawc",
         }
@@ -25240,231 +25630,6 @@ supplementalData:table(nofallback){
             "fr72",
             "fr85",
         }
-        gbeng{
-            "gbbas",
-            "gbbbd",
-            "gbbdf",
-            "gbbdg",
-            "gbben",
-            "gbbex",
-            "gbbir",
-            "gbbkm",
-            "gbbmh",
-            "gbbne",
-            "gbbnh",
-            "gbbns",
-            "gbbol",
-            "gbbpl",
-            "gbbrc",
-            "gbbrd",
-            "gbbry",
-            "gbbst",
-            "gbbur",
-            "gbcam",
-            "gbcbf",
-            "gbche",
-            "gbchw",
-            "gbcld",
-            "gbcma",
-            "gbcmd",
-            "gbcon",
-            "gbcov",
-            "gbcry",
-            "gbdal",
-            "gbdby",
-            "gbder",
-            "gbdev",
-            "gbdnc",
-            "gbdor",
-            "gbdud",
-            "gbdur",
-            "gbeal",
-            "gbenf",
-            "gbery",
-            "gbess",
-            "gbesx",
-            "gbgat",
-            "gbgls",
-            "gbgre",
-            "gbhal",
-            "gbham",
-            "gbhav",
-            "gbhck",
-            "gbhef",
-            "gbhil",
-            "gbhmf",
-            "gbhns",
-            "gbhpl",
-            "gbhrt",
-            "gbhrw",
-            "gbhry",
-            "gbios",
-            "gbiow",
-            "gbisl",
-            "gbkec",
-            "gbken",
-            "gbkhl",
-            "gbkir",
-            "gbktt",
-            "gbkwl",
-            "gblan",
-            "gblbh",
-            "gblce",
-            "gblds",
-            "gblec",
-            "gblew",
-            "gblin",
-            "gbliv",
-            "gblnd",
-            "gblut",
-            "gbman",
-            "gbmdb",
-            "gbmdw",
-            "gbmik",
-            "gbmrt",
-            "gbnbl",
-            "gbnel",
-            "gbnet",
-            "gbnfk",
-            "gbngm",
-            "gbnln",
-            "gbnsm",
-            "gbnth",
-            "gbntt",
-            "gbnty",
-            "gbnwm",
-            "gbnyk",
-            "gbold",
-            "gboxf",
-            "gbply",
-            "gbpol",
-            "gbpor",
-            "gbpte",
-            "gbrcc",
-            "gbrch",
-            "gbrdb",
-            "gbrdg",
-            "gbric",
-            "gbrot",
-            "gbrut",
-            "gbsaw",
-            "gbsfk",
-            "gbsft",
-            "gbsgc",
-            "gbshf",
-            "gbshn",
-            "gbshr",
-            "gbskp",
-            "gbslf",
-            "gbslg",
-            "gbsnd",
-            "gbsol",
-            "gbsom",
-            "gbsos",
-            "gbsry",
-            "gbste",
-            "gbsth",
-            "gbstn",
-            "gbsts",
-            "gbstt",
-            "gbsty",
-            "gbswd",
-            "gbswk",
-            "gbtam",
-            "gbtfw",
-            "gbthr",
-            "gbtob",
-            "gbtrf",
-            "gbtwh",
-            "gbwar",
-            "gbwbk",
-            "gbwft",
-            "gbwgn",
-            "gbwil",
-            "gbwkf",
-            "gbwll",
-            "gbwlv",
-            "gbwnd",
-            "gbwnm",
-            "gbwok",
-            "gbwor",
-            "gbwrl",
-            "gbwrt",
-            "gbwsm",
-            "gbwsx",
-            "gbyor",
-        }
-        gbnir{
-            "gbabc",
-            "gband",
-            "gbann",
-            "gbbfs",
-            "gbccg",
-            "gbdrs",
-            "gbfmo",
-            "gblbc",
-            "gbmea",
-            "gbmul",
-            "gbnmd",
-        }
-        gbsct{
-            "gbabd",
-            "gbabe",
-            "gbagb",
-            "gbans",
-            "gbclk",
-            "gbdgy",
-            "gbdnd",
-            "gbeay",
-            "gbedh",
-            "gbedu",
-            "gbeln",
-            "gbels",
-            "gberw",
-            "gbfal",
-            "gbfif",
-            "gbglg",
-            "gbhld",
-            "gbivc",
-            "gbmln",
-            "gbmry",
-            "gbnay",
-            "gbnlk",
-            "gbork",
-            "gbpkn",
-            "gbrfw",
-            "gbsay",
-            "gbscb",
-            "gbslk",
-            "gbstg",
-            "gbwdu",
-            "gbwln",
-            "gbzet",
-        }
-        gbwls{
-            "gbagy",
-            "gbbge",
-            "gbbgw",
-            "gbcay",
-            "gbcgn",
-            "gbcmn",
-            "gbcrf",
-            "gbcwy",
-            "gbden",
-            "gbfln",
-            "gbgwn",
-            "gbmon",
-            "gbmty",
-            "gbntl",
-            "gbnwp",
-            "gbpem",
-            "gbpow",
-            "gbrct",
-            "gbswa",
-            "gbtof",
-            "gbvgl",
-            "gbwrx",
-        }
         gnb{
             "gnbf",
             "gnbk",
@@ -25629,7 +25794,6 @@ supplementalData:table(nofallback){
             "itvb",
             "itvc",
         }
-        it23{"itao"}
         it25{
             "itbg",
             "itbs",
@@ -25777,47 +25941,47 @@ supplementalData:table(nofallback){
             "kn12",
         }
         lk1{
-            "lk52",
-            "lk71",
-            "lk81",
+            "lk11",
+            "lk12",
+            "lk13",
         }
         lk2{
-            "lk11",
-            "lk31",
-            "lk51",
+            "lk21",
+            "lk22",
+            "lk23",
         }
         lk3{
-            "lk12",
+            "lk31",
+            "lk32",
             "lk33",
-            "lk41",
         }
         lk4{
-            "lk13",
-            "lk21",
+            "lk41",
             "lk42",
-            "lk61",
-            "lk92",
+            "lk43",
+            "lk44",
+            "lk45",
         }
         lk5{
-            "lk22",
-            "lk32",
-            "lk43",
+            "lk51",
+            "lk52",
+            "lk53",
         }
         lk6{
-            "lk45",
-            "lk82",
+            "lk61",
+            "lk62",
         }
         lk7{
-            "lk23",
+            "lk71",
             "lk72",
         }
         lk8{
-            "lk62",
-            "lk91",
+            "lk81",
+            "lk82",
         }
         lk9{
-            "lk44",
-            "lk53",
+            "lk91",
+            "lk92",
         }
         ma01{
             "mache",
@@ -26675,7 +26839,6 @@ supplementalData:table(nofallback){
                 "ES",
                 "FI",
                 "FR",
-                "GB",
                 "GR",
                 "HR",
                 "HU",
@@ -29433,8 +29596,11 @@ supplementalData:table(nofallback){
                 literacyShareF:int{49100000}
                 populationShareF:int{48300000}
             }
+            ms{
+                populationShareF:int{48340000}
+            }
             ms_Arab{
-                populationShareF:int{48460000}
+                populationShareF:int{48120000}
             }
             mwv{
                 populationShareF:int{46240000}
@@ -33086,6 +33252,9 @@ supplementalData:table(nofallback){
             }
         }
         US{
+            cad{
+                populationShareF:int{0}
+            }
             cho{
                 populationShareF:int{45330000}
             }
@@ -35598,70 +35767,131 @@ supplementalData:table(nofallback){
     }
     unitPreferenceData{
         001{
-            area-land-agricult{"hectare"}
-            area-land-commercl{"hectare"}
-            area-land-residntl{"hectare"}
-            concentr-blood-glucose{"milligram-per-deciliter"}
-            consumption-vehicle-fuel{"liter-per-100kilometers"}
-            duration-music-track{"minute second"}
-            duration-person-age{"year-person month-person"}
-            duration-tv-program{"minute second"}
-            energy-food{"foodcalorie"}
-            energy-person-usage{"kilocalorie"}
+            area-default{
+                "square-kilometer",
+                "hectare",
+                "square-meter",
+                "square-centimeter",
+            }
+            area-geograph{"square-kilometer"}
+            area-land{"hectare"}
+            concentration-default{"item-per-cubic-meter"}
+            consumption-default{"liter-per-100-kilometer"}
+            consumption-inverse-default{"kilometer-per-centiliter"}
+            consumption-inverse-vehicle-fuel{"kilometer-per-centiliter"}
+            consumption-vehicle-fuel{"liter-per-100-kilometer"}
+            duration-default{
+                "day",
+                "hour",
+                "minute",
+                "second",
+                "millisecond",
+                "microsecond",
+                "nanosecond",
+            }
+            duration-media{
+                "minute-and-second",
+                "second",
+            }
+            energy-default{"kilowatt-hour"}
+            energy-food{"kilocalorie"}
+            length-default{
+                "kilometer",
+                "meter",
+                "centimeter",
+            }
             length-person{"centimeter"}
-            length-person-small{"centimeter"}
+            length-person-height{"centimeter"}
             length-rainfall{"millimeter"}
-            length-road{"kilometer"}
-            length-road-small{"meter"}
+            length-road{"meter"}
             length-snowfall{"centimeter"}
             length-vehicle{"meter"}
-            length-visiblty{"kilometer"}
-            length-visiblty-small{"meter"}
-            mass-person{"kilogram"}
-            mass-person-small{"gram"}
+            length-visiblty{"meter"}
+            mass-default{
+                "metric-ton",
+                "kilogram",
+                "gram",
+                "milligram",
+                "microgram",
+            }
+            mass-density-blood-glucose{"milligram-per-deciliter"}
+            mass-density-default{"kilogram-per-cubic-meter"}
+            mass-person{
+                "kilogram",
+                "gram",
+            }
+            power-default{
+                "gigawatt",
+                "megawatt",
+                "kilowatt",
+                "watt",
+                "milliwatt",
+            }
+            power-engine{"kilowatt"}
             pressure-baromtrc{"hectopascal"}
-            speed-road-travel{"kilometer-per-hour"}
+            pressure-default{
+                "megapascal",
+                "pascal",
+            }
+            speed-default{"kilometer-per-hour"}
             speed-wind{"kilometer-per-hour"}
-            temperature-person{"celsius"}
+            temperature-default{"celsius"}
             temperature-weather{"celsius"}
-            volume-vehicle-fuel{"liter"}
+            volume-default{
+                "cubic-meter",
+                "cubic-centimeter",
+            }
+            volume-fluid{
+                "liter",
+                "milliliter",
+            }
+            volume-oil{"barrel"}
+            volume-vehicle{"liter"}
+            year-duration-default{
+                "year",
+                "month",
+            }
+            year-duration-person-age{
+                "year-person-and-month-person",
+                "month-person",
+            }
         }
         AG{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         AI{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         AO{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         AT{
-            length-person{"meter centimeter"}
+            length-person-height{"meter-and-centimeter"}
         }
         AU{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         BA{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         BE{
-            length-person{"meter centimeter"}
+            length-person-height{"meter-and-centimeter"}
         }
         BG{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         BH{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         BM{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         BN{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         BR{
             consumption-vehicle-fuel{"liter-per-kilometer"}
-            length-person-informal{"meter centimeter"}
+            length-person-height{"meter-and-centimeter"}
             length-rainfall{"centimeter"}
             pressure-baromtrc{"millibar"}
         }
@@ -35669,326 +35899,389 @@ supplementalData:table(nofallback){
             temperature-weather{"fahrenheit"}
         }
         BW{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         BY{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         BZ{
             temperature-weather{"fahrenheit"}
         }
         CA{
-            concentr-blood-glucose{"millimole-per-liter"}
-            consumption-vehicle-fuel-informal{"mile-per-gallon-imperial"}
-            length-person-informal{"foot inch"}
-            length-person-small-informal{"inch"}
+            concentration-blood-glucose{"millimole-per-liter"}
+            consumption-inverse-vehicle-fuel{"mile-per-gallon-imperial"}
+            length-person{"inch"}
+            length-person-height{"inch"}
         }
         CH{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         CM{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         CN{
-            concentr-blood-glucose{"millimole-per-liter"}
-            length-person-informal{"meter centimeter"}
+            concentration-blood-glucose{"millimole-per-liter"}
+            length-person-height{"meter-and-centimeter"}
         }
         CZ{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         DE{
-            length-person-informal{"meter centimeter"}
+            length-person-height{"meter-and-centimeter"}
             length-visiblty{"meter"}
         }
         DK{
-            concentr-blood-glucose{"millimole-per-liter"}
-            length-person-informal{"meter centimeter"}
+            concentration-blood-glucose{"millimole-per-liter"}
+            length-person-height{"meter-and-centimeter"}
         }
         DM{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         DZ{
-            length-person{"meter centimeter"}
-            mass-person-small{"kilogram gram"}
+            length-person-height{"meter-and-centimeter"}
+            mass-person{"kilogram-and-gram"}
         }
         EE{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         EG{
-            length-person{"meter centimeter"}
-            mass-person-small{"kilogram gram"}
+            length-person-height{"meter-and-centimeter"}
+            mass-person{"kilogram-and-gram"}
             pressure-baromtrc{"millibar"}
         }
         ES{
-            length-person{"meter centimeter"}
-            mass-person-small{"kilogram gram"}
+            length-person-height{"meter-and-centimeter"}
+            mass-person{"kilogram-and-gram"}
         }
         FI{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
             speed-wind{"meter-per-second"}
         }
         FJ{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         FR{
-            length-person{"meter centimeter"}
+            length-person-height{"meter-and-centimeter"}
         }
         GB{
-            area-land-agricult{"acre"}
-            area-land-commercl{"acre"}
-            area-land-residntl{"acre"}
-            concentr-blood-glucose{"millimole-per-liter"}
-            consumption-vehicle-fuel-informal{"mile-per-gallon-imperial"}
-            length-person-informal{"foot inch"}
-            length-person-small-informal{"inch"}
-            length-road{"mile"}
-            length-road-small{"yard"}
-            length-vehicle{"foot inch"}
-            length-visiblty{"mile"}
-            length-visiblty-small{"foot"}
-            mass-person{"stone pound"}
-            mass-person-small{"pound ounce"}
+            area-default{
+                "square-mile",
+                "acre",
+                "square-foot",
+                "square-inch",
+            }
+            area-geograph{"square-mile"}
+            area-land{"acre"}
+            concentration-blood-glucose{"millimole-per-liter"}
+            consumption-inverse-vehicle-fuel{"mile-per-gallon-imperial"}
+            length-default{
+                "mile",
+                "foot",
+                "inch",
+            }
+            length-person{"inch"}
+            length-person-height{"inch"}
+            length-road{"yard"}
+            length-vehicle{"foot-and-inch"}
+            length-visiblty{
+                "mile",
+                "foot",
+            }
+            mass-default{
+                "ton",
+                "pound",
+                "ounce",
+            }
+            mass-person{
+                "stone-and-pound",
+                "pound-and-ounce",
+            }
+            power-engine{"horsepower"}
             pressure-baromtrc{"millibar"}
-            speed-road-travel{"mile-per-hour"}
+            pressure-default{"pound-force-per-square-inch"}
+            speed-default{"mile-per-hour"}
+            volume-default{
+                "cubic-foot",
+                "cubic-inch",
+            }
+            volume-fluid{
+                "gallon-imperial",
+                "fluid-ounce-imperial",
+            }
         }
         GD{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         HK{
-            concentr-blood-glucose{"millimole-per-liter"}
-            length-person{"meter centimeter"}
-            mass-person-small{"pound ounce"}
+            concentration-blood-glucose{"millimole-per-liter"}
+            length-person-height{"meter-and-centimeter"}
+            mass-person{"pound-and-ounce"}
         }
         HR{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         HU{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         ID{
-            length-person{"meter centimeter"}
+            length-person-height{"meter-and-centimeter"}
         }
         IE{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         IL{
-            length-person{"meter centimeter"}
+            length-person-height{"meter-and-centimeter"}
             pressure-baromtrc{"millibar"}
         }
         IM{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         IN{
-            length-person-informal{"foot inch"}
-            length-person-small-informal{"inch"}
-            pressure-baromtrc{"inch-hg"}
+            length-person{"inch"}
+            length-person-height{"inch"}
+            pressure-baromtrc{"inch-ofhg"}
         }
         IS{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         IT{
             consumption-vehicle-fuel{"liter-per-kilometer"}
-            length-person{"meter centimeter"}
+            length-person-height{"meter-and-centimeter"}
         }
         JO{
-            length-person{"meter centimeter"}
-            mass-person-small{"kilogram gram"}
+            length-person-height{"meter-and-centimeter"}
+            mass-person{"kilogram-and-gram"}
         }
         JP{
             consumption-vehicle-fuel{"liter-per-kilometer"}
         }
         KE{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         KN{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         KR{
             consumption-vehicle-fuel{"liter-per-kilometer"}
             speed-wind{"meter-per-second"}
         }
         KW{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         KY{
             temperature-weather{"fahrenheit"}
         }
         KZ{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         LC{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         LI{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         LT{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         LU{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         LV{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         ME{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         MG{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         MK{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         MO{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         MS{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         MT{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         MU{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         MX{
             consumption-vehicle-fuel{"liter-per-kilometer"}
-            length-person-informal{"meter centimeter"}
-            length-vehicle{"meter centimeter"}
-            pressure-baromtrc{"millimeter-of-mercury"}
+            length-person-height{"meter-and-centimeter"}
+            length-vehicle{"meter-and-centimeter"}
+            pressure-baromtrc{"millimeter-ofhg"}
         }
         MY{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
             consumption-vehicle-fuel{"liter-per-kilometer"}
-            length-person{"meter centimeter"}
+            length-person-height{"meter-and-centimeter"}
         }
         MZ{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         NA{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         NL{
-            concentr-blood-glucose{"millimole-per-liter"}
-            consumption-vehicle-fuel-informal{"liter-per-kilometer"}
-            length-person-informal{"meter centimeter"}
+            concentration-blood-glucose{"millimole-per-liter"}
+            consumption-vehicle-fuel{"liter-per-kilometer"}
+            length-person-height{"meter-and-centimeter"}
             length-visiblty{"meter"}
         }
         NO{
-            concentr-blood-glucose{"millimole-per-liter"}
-            length-person-informal{"meter centimeter"}
+            concentration-blood-glucose{"millimole-per-liter"}
+            length-person-height{"meter-and-centimeter"}
             speed-wind{"meter-per-second"}
         }
         NZ{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         OM{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         PG{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         PL{
-            length-person-informal{"meter centimeter"}
+            length-person-height{"meter-and-centimeter"}
             speed-wind{"meter-per-second"}
         }
         PR{
             temperature-weather{"fahrenheit"}
         }
         PT{
-            length-person-informal{"meter centimeter"}
+            length-person-height{"meter-and-centimeter"}
         }
         PW{
             temperature-weather{"fahrenheit"}
         }
         RS{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         RU{
-            concentr-blood-glucose{"millimole-per-liter"}
-            length-person-informal{"meter centimeter"}
-            pressure-baromtrc{"millimeter-of-mercury"}
+            concentration-blood-glucose{"millimole-per-liter"}
+            length-person-height{"meter-and-centimeter"}
+            pressure-baromtrc{"millimeter-ofhg"}
             speed-wind{"meter-per-second"}
         }
         SA{
-            length-person{"meter centimeter"}
-            mass-person-small{"kilogram gram"}
+            length-person-height{"meter-and-centimeter"}
+            mass-person{"kilogram-and-gram"}
         }
         SE{
-            concentr-blood-glucose{"millimole-per-liter"}
-            length-person{"meter centimeter"}
-            length-road-informal{"mile-scandinavian"}
+            concentration-blood-glucose{"millimole-per-liter"}
+            length-person-height{"meter-and-centimeter"}
+            length-road{
+                "mile-scandinavian",
+                "kilometer",
+            }
             speed-wind{"meter-per-second"}
         }
         SG{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         SI{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         SK{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         TC{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         TH{
             consumption-vehicle-fuel{"liter-per-kilometer"}
             pressure-baromtrc{"millibar"}
         }
         TO{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         TR{
             consumption-vehicle-fuel{"liter-per-kilometer"}
-            length-person{"meter centimeter"}
+            length-person-height{"meter-and-centimeter"}
         }
         UA{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         UG{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         US{
-            area-land-agricult{"acre"}
-            area-land-commercl{"acre"}
-            area-land-residntl{"acre"}
-            consumption-vehicle-fuel{"mile-per-gallon"}
+            area-default{
+                "square-mile",
+                "acre",
+                "square-foot",
+                "square-inch",
+            }
+            area-geograph{"square-mile"}
+            area-land{"acre"}
+            consumption-inverse-vehicle-fuel{"mile-per-gallon"}
+            energy-food{"foodcalorie"}
+            length-default{
+                "mile",
+                "foot",
+                "inch",
+            }
             length-person{"inch"}
-            length-person-informal{"foot inch"}
-            length-person-small{"inch"}
+            length-person-height{"inch"}
             length-rainfall{"inch"}
-            length-road{"mile"}
-            length-road-small{"foot"}
             length-snowfall{"inch"}
-            length-vehicle{"foot inch"}
-            length-visiblty{"mile"}
-            length-visiblty-small{"foot"}
-            mass-person{"pound"}
-            mass-person-small{"pound ounce"}
-            pressure-baromtrc{"inch-hg"}
-            speed-road-travel{"mile-per-hour"}
+            length-vehicle{"foot-and-inch"}
+            length-visiblty{
+                "mile",
+                "foot",
+            }
+            mass-default{
+                "ton",
+                "pound",
+                "ounce",
+            }
+            mass-person{
+                "pound",
+                "pound-and-ounce",
+            }
+            power-engine{"horsepower"}
+            pressure-baromtrc{"inch-ofhg"}
+            pressure-default{"pound-force-per-square-inch"}
+            speed-default{"mile-per-hour"}
             speed-wind{"mile-per-hour"}
-            temperature-person{"fahrenheit"}
+            temperature-default{"fahrenheit"}
             temperature-weather{"fahrenheit"}
-            volume-vehicle-fuel{"gallon"}
+            volume-default{
+                "cubic-foot",
+                "cubic-inch",
+            }
+            volume-fluid{
+                "gallon",
+                "quart",
+                "pint",
+                "cup",
+                "fluid-ounce",
+                "tablespoon",
+                "teaspoon",
+            }
+            volume-vehicle{"gallon"}
         }
         VC{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         VG{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         VN{
-            concentr-blood-glucose{"millimole-per-liter"}
-            length-person{"meter centimeter"}
+            concentration-blood-glucose{"millimole-per-liter"}
+            length-person-height{"meter-and-centimeter"}
         }
         VU{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
         ZA{
-            concentr-blood-glucose{"millimole-per-liter"}
+            concentration-blood-glucose{"millimole-per-liter"}
         }
     }
     weekData{

@@ -311,10 +311,11 @@ en{
         CD{"Congo (DRC)"}
         CG{"Congo (Republic)"}
         CI{"Ivory Coast"}
+        CV{"Cabo Verde"}
         CZ{"Czech Republic"}
         FK{"Falkland Islands (Islas Malvinas)"}
         SZ{"Swaziland"}
         TL{"East Timor"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

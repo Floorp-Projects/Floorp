@@ -8,5 +8,5 @@ en_SC{
             "Seychellois Rupee",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

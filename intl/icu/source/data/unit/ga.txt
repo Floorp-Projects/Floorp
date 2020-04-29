@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ga{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -17,7 +17,7 @@ ga{
                 other{"{0} g-fhórsa"}
                 two{"{0} g-fhórsa"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"méadair sa soicind cearnaithe"}
                 few{"{0} mhéadar sa soicind cearnaithe"}
                 many{"{0} méadar sa soicind cearnaithe"}
@@ -191,14 +191,6 @@ ga{
                 other{"{0} mól"}
                 two{"{0} mhól"}
             }
-            part-per-million{
-                dnam{"codanna sa mhilliún"}
-                few{"{0} sa mhilliún"}
-                many{"{0} sa mhilliún"}
-                one{"{0} sa mhilliún"}
-                other{"{0} sa mhilliún"}
-                two{"{0} sa mhilliún"}
-            }
             percent{
                 dnam{"faoin gcéad"}
                 few{"{0}%"}
@@ -215,6 +207,14 @@ ga{
                 other{"{0} faoin míle"}
                 two{"{0}‰"}
             }
+            permillion{
+                dnam{"codanna sa mhilliún"}
+                few{"{0} sa mhilliún"}
+                many{"{0} sa mhilliún"}
+                one{"{0} sa mhilliún"}
+                other{"{0} sa mhilliún"}
+                two{"{0} sa mhilliún"}
+            }
             permyriad{
                 dnam{"permeiriad"}
                 few{"{0}‱"}
@@ -225,7 +225,7 @@ ga{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"lítir sa 100 ciliméadar"}
                 few{"{0} lítear sa 100 ciliméadar"}
                 many{"{0} lítear sa 100 ciliméadar"}
@@ -1059,7 +1059,7 @@ ga{
                 other{"{0} heicteapascal"}
                 two{"{0} heicteapascal"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"orlaí mearcair"}
                 few{"{0} orlach mearcair"}
                 many{"{0} n-orlach mearcair"}
@@ -1091,7 +1091,7 @@ ga{
                 other{"{0} milleabar"}
                 two{"{0} mhilleabar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"milliméadair mhearcair"}
                 few{"{0} mhilliméadar mearcair"}
                 many{"{0} milliméadar mearcair"}
@@ -1099,7 +1099,7 @@ ga{
                 other{"{0} milliméadar mearcair"}
                 two{"{0} mhilliméadar mearcair"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"puint san orlach cearnach"}
                 few{"{0} phunt san orlach cearnach"}
                 many{"{0} bpunt san orlach cearnach"}
@@ -1185,7 +1185,7 @@ ga{
                 other{"{0} méadar niútain"}
                 two{"{0} N⋅m"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"punt-troigh"}
                 few{"{0} lbf⋅ft"}
                 many{"{0} lbf⋅ft"}
@@ -1428,7 +1428,7 @@ ga{
                 other{"{0}G"}
                 two{"{0}G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 few{"{0}m/s²"}
                 many{"{0}m/s²"}
@@ -1586,14 +1586,6 @@ ga{
                 other{"{0} mmol/L"}
                 two{"{0} mmol/L"}
             }
-            part-per-million{
-                dnam{"codanna/milliún"}
-                few{"{0}/milliún"}
-                many{"{0}/milliún"}
-                one{"{0}/milliún"}
-                other{"{0}/milliún"}
-                two{"{0}/milliún"}
-            }
             percent{
                 dnam{"%"}
                 few{"{0}%"}
@@ -1602,9 +1594,17 @@ ga{
                 other{"{0}%"}
                 two{"{0}%"}
             }
+            permillion{
+                dnam{"codanna/milliún"}
+                few{"{0}/milliún"}
+                many{"{0}/milliún"}
+                one{"{0}/milliún"}
+                other{"{0}/milliún"}
+                two{"{0}/milliún"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100km"}
                 few{"{0}l/100km"}
                 many{"{0}l/100km"}
@@ -2271,7 +2271,7 @@ ga{
                 other{"{0}hPa"}
                 two{"{0}hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"orlaí Hg"}
                 few{"{0}\u0022 Hg"}
                 many{"{0}\u0022 Hg"}
@@ -2287,7 +2287,7 @@ ga{
                 other{"{0}mb"}
                 two{"{0}mb"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 few{"{0}mmHg"}
                 many{"{0}mmHg"}
@@ -2295,7 +2295,7 @@ ga{
                 other{"{0}mmHg"}
                 two{"{0}mmHg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psoc"}
                 few{"{0}psoc"}
                 many{"{0}psoc"}
@@ -2590,7 +2590,7 @@ ga{
                 other{"{0} G"}
                 two{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 few{"{0} m/s²"}
                 many{"{0} m/s²"}
@@ -2764,14 +2764,6 @@ ga{
                 other{"{0} mól"}
                 two{"{0} mhól"}
             }
-            part-per-million{
-                dnam{"codanna/milliún"}
-                few{"{0}/milliún"}
-                many{"{0}/milliún"}
-                one{"{0}/milliún"}
-                other{"{0}/milliún"}
-                two{"{0}/milliún"}
-            }
             percent{
                 dnam{"faoin gcéad"}
                 few{"{0}%"}
@@ -2788,6 +2780,14 @@ ga{
                 other{"{0}‰"}
                 two{"{0}‰"}
             }
+            permillion{
+                dnam{"codanna/milliún"}
+                few{"{0}/milliún"}
+                many{"{0}/milliún"}
+                one{"{0}/milliún"}
+                other{"{0}/milliún"}
+                two{"{0}/milliún"}
+            }
             permyriad{
                 dnam{"permeiriad"}
                 few{"{0}‱"}
@@ -2798,7 +2798,7 @@ ga{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100km"}
                 few{"{0} l/100km"}
                 many{"{0} l/100km"}
@@ -3579,7 +3579,7 @@ ga{
                 other{"{0} hPa"}
                 two{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"orlaí Hg"}
                 few{"{0} or. Hg"}
                 many{"{0} n-or. Hg"}
@@ -3611,7 +3611,7 @@ ga{
                 other{"{0} mbar"}
                 two{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 few{"{0} mm Hg"}
                 many{"{0} mm Hg"}
@@ -3619,7 +3619,7 @@ ga{
                 other{"{0} mm Hg"}
                 two{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psoc"}
                 few{"{0} psoc"}
                 many{"{0} psoc"}
@@ -3705,7 +3705,7 @@ ga{
                 other{"{0} N⋅m"}
                 two{"{0} N⋅m"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"lbf⋅ft"}
                 few{"{0} lbf⋅ft"}
                 many{"{0} lbf⋅ft"}

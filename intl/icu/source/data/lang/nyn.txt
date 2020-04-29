@@ -48,5 +48,5 @@ nyn{
         zh{"Oruchaina"}
         zu{"Oruzuru"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

@@ -84,5 +84,5 @@ ta{
             "21: =#,##,##0=\u0BBE\u0BB5\u0BA4\u0BC1;",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

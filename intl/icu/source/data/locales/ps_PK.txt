@@ -7,7 +7,7 @@ ps_PK{
         " ء ب پ ت ټ ث ج ځ چ څ ح خ د ډ ذ ر ړ ز ژ ږ س ش ښ ص ض ط ظ ع غ ف ق ک ګ گ ل م ن ڼ"
         " ه ة و ؤ ی ے ي ې ۍ ئ]"
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         gregorian{
             DateTimePatterns{

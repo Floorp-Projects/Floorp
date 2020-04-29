@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sw{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -809,6 +809,9 @@ sw{
         }
         "Asia:Qatar"{
             ec{"Qatar"}
+        }
+        "Asia:Qostanay"{
+            ec{"Kostanay"}
         }
         "Asia:Qyzylorda"{
             ec{"Qyzylorda"}
@@ -1717,7 +1720,9 @@ sw{
             ls{"Saa za Niue"}
         }
         "meta:Norfolk"{
-            ls{"Saa za Kisiwa cha Norfolk"}
+            ld{"Saa za Majira ya joto za Kisiwa cha Norfolk"}
+            lg{"Saa za Kisiwa cha Norfolk"}
+            ls{"Saa za Wastani za Kisiwa cha Norfolk"}
         }
         "meta:Noronha"{
             ld{"Saa za Majira ya joto za Fernando de Noronha"}

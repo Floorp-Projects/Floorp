@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 hr{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         search{
             Sequence{
@@ -9,7 +9,7 @@ hr{
                 "[import hr-u-co-standard]"
                 "[reorder others]"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
         standard{
             Sequence{
@@ -21,7 +21,7 @@ hr{
                 "&S<š<<<Š"
                 "&Z<ž<<<Ž"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

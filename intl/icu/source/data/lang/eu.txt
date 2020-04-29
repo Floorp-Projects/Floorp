@@ -119,6 +119,7 @@ eu{
         eu{"euskara"}
         ewo{"ewondera"}
         fa{"persiera"}
+        fa_AF{"daria"}
         ff{"fula"}
         fi{"finlandiera"}
         fil{"filipinera"}
@@ -433,7 +434,6 @@ eu{
         zh{"mandarin"}
     }
     Languages%short{
-        az{"azerbaijanera"}
         en_GB{"Erresuma Batuko ingeles"}
         en_US{"AEBko ingelesa"}
     }
@@ -635,7 +635,7 @@ eu{
         SCOTLAND{"ESKOZIAR INGELESA"}
         VALENCIA{"VALENTZIERA"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — Guztiak"}
         category-list{"{0}: {1}"}

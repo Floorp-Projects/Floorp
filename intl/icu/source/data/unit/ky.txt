@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ky{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ ky{
                 one{"{0} оордук күчү"}
                 other{"{0} оордук күчү"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"квадраттык секундасына метр"}
                 one{"квадраттык секундасына {0} метр"}
                 other{"квадраттык секундасына {0} метр"}
@@ -128,11 +128,6 @@ ky{
                 one{"{0} моль"}
                 other{"{0} мольдор"}
             }
-            part-per-million{
-                dnam{"миллионго бөлүктөр"}
-                one{"миллионго {0} бөлүк"}
-                other{"миллионго {0} бөлүк"}
-            }
             percent{
                 dnam{"пайыз"}
                 one{"{0} пайыз"}
@@ -143,6 +138,11 @@ ky{
                 one{"{0} промилле"}
                 other{"{0} промилле"}
             }
+            permillion{
+                dnam{"миллионго бөлүктөр"}
+                one{"миллионго {0} бөлүк"}
+                other{"миллионго {0} бөлүк"}
+            }
             permyriad{
                 dnam{"‱"}
                 one{"{0}‱"}
@@ -150,7 +150,7 @@ ky{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"100 километрге литр"}
                 one{"100 километрге {0} литр"}
                 other{"100 километрге {0} литр"}
@@ -635,7 +635,7 @@ ky{
                 one{"{0} гектопаскаль"}
                 other{"{0} гектопаскаль"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"дюйм сымап мамычасы"}
                 one{"{0} дюйм сымап мамычасы"}
                 other{"{0} дюйм сымап мамычасы"}
@@ -655,12 +655,12 @@ ky{
                 one{"{0} миллибар"}
                 other{"{0} миллибар"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"миллиметр сымап мамычасы"}
                 one{"{0} миллиметр сымап мамычасы"}
                 other{"{0} миллиметр сымап мамычасы"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"чарчы дюймга фунт"}
                 one{"чарчы дюймга {0} фунт"}
                 other{"чарчы дюймга {0} фунт"}
@@ -716,7 +716,7 @@ ky{
                 one{"ньютон-метри"}
                 other{"{0} ньютон-метрлери"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"lbf⋅ft"}
                 one{"{0} lbf⋅ft"}
                 other{"{0} lbf⋅ft"}
@@ -918,7 +918,7 @@ ky{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"100 км/л"}
                 one{"{0} л/100км"}
                 other{"{0} л/100км"}
@@ -1058,7 +1058,7 @@ ky{
                 one{"{0} гПа"}
                 other{"{0} гПа"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0} inHg"}
                 other{"{0} inHg"}
             }
@@ -1116,7 +1116,7 @@ ky{
                 one{"{0} о.к."}
                 other{"{0} о.к."}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"метр/сек²"}
                 one{"{0} м/сек²"}
                 other{"{0} м/сек²"}
@@ -1230,11 +1230,6 @@ ky{
                 one{"{0} моль"}
                 other{"{0} моль"}
             }
-            part-per-million{
-                dnam{"миллионго/бөлүк"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"пайыз"}
                 one{"{0}%"}
@@ -1245,6 +1240,11 @@ ky{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"миллионго/бөлүк"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
             permyriad{
                 dnam{"‱"}
                 one{"{0}‱"}
@@ -1252,7 +1252,7 @@ ky{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"100 км/л"}
                 one{"{0} л/100км"}
                 other{"{0} л/100км"}
@@ -1737,7 +1737,7 @@ ky{
                 one{"{0} гПа"}
                 other{"{0} гПа"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"дюйм сымап мамычасы"}
                 one{"{0} inHg"}
                 other{"{0} inHg"}
@@ -1757,12 +1757,12 @@ ky{
                 one{"{0} мбар"}
                 other{"{0} мбар"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"мм.с.м."}
                 one{"{0} мм.с. м."}
                 other{"{0} мм.с. м."}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"фчд"}
                 one{"{0} фчд"}
                 other{"{0} фчд"}
@@ -1818,7 +1818,7 @@ ky{
                 one{"{0} N⋅m"}
                 other{"{0} N⋅m"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"lbf⋅ft"}
                 one{"{0} lbf⋅ft"}
                 other{"{0} lbf⋅ft"}

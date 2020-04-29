@@ -26,6 +26,7 @@ zh_Hant_HK{
         es_419{"拉丁美洲西班牙文"}
         es_ES{"歐洲西班牙文"}
         es_MX{"墨西哥西班牙文"}
+        fa_AF{"達利文"}
         fr_CA{"加拿大法文"}
         fr_CH{"瑞士法文"}
         gil{"吉爾伯特文"}
@@ -123,12 +124,10 @@ zh_Hant_HK{
     Variants{
         1901{"傳統德國拼字法"}
         1996{"1996 德國拼字法"}
-        ABL1943{"ABL1943"}
         REVISED{"已修訂拼字法"}
         SCOTLAND{"蘇格蘭標準英語"}
-        SOTAV{"SOTAV"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         enclosed{"{0} — 包含"}
         historic{"{0} — 舊式"}

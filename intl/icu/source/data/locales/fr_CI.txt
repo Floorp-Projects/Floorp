@@ -8,5 +8,5 @@ fr_CI{
             }
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 uz_Cyrl{
     %%Parent{"root"}
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Asmera"{
             ec{"Asmara"}
@@ -503,7 +503,9 @@ uz_Cyrl{
             ls{"Ниуе вақти"}
         }
         "meta:Norfolk"{
-            ls{"Норфолк ороли вақти"}
+            ld{"Норфолк ороли ёзги вақти"}
+            lg{"Норфолк ороли вақти"}
+            ls{"Норфолк ороли стандарт вақти"}
         }
         "meta:Noronha"{
             ld{"Фернандо де Норонья ёзги вақти"}

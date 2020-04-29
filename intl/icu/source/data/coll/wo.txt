@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 wo{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         standard{
             Sequence{
@@ -11,7 +11,7 @@ wo{
                 "&N<ñ<<<Ñ<ŋ<<<Ŋ"
                 "&O<ó<<<Ó"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

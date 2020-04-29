@@ -66,7 +66,7 @@ en_IN{
             }
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -99,6 +99,18 @@ en_IN{
                 yyyyMd{"d/M/y G"}
             }
             intervalFormats{
+                GyMEd{
+                    G{"E, d/M/y GGGGG – E, d/M/y GGGGG"}
+                    M{"E, d/M/y – E, d/M/y GGGGG"}
+                    d{"E, d/M/y – E, d/M/y GGGGG"}
+                    y{"E, d/M/y – E, d/M/y GGGGG"}
+                }
+                GyMd{
+                    G{"d/M/y GGGGG – d/M/y GGGGG"}
+                    M{"d/M/y – d/M/y GGGGG"}
+                    d{"d/M/y – d/M/y GGGGG"}
+                    y{"d/M/y – d/M/y GGGGG"}
+                }
                 MEd{
                     M{"E, dd/MM – E, dd/MM"}
                     d{"E, dd/MM – E, dd/MM"}

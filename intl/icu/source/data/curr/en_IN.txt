@@ -22,5 +22,5 @@ en_IN{
             other{"VES"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

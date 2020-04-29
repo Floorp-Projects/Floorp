@@ -287,6 +287,8 @@ fi{
         VU{"Vanuatu"}
         WF{"Wallis ja Futuna"}
         WS{"Samoa"}
+        XA{"pseudoaksentit"}
+        XB{"kaksisuuntainen pseudo"}
         XK{"Kosovo"}
         YE{"Jemen"}
         YT{"Mayotte"}
@@ -312,5 +314,5 @@ fi{
         SZ{"Eswatini"}
         TL{"Timor-Leste"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

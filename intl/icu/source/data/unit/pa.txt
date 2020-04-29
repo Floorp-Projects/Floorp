@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 pa{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ pa{
                 one{"{0} ਗੁਰੂਤਾਕਰਸ਼ਣ ਬਲ"}
                 other{"{0} ਗੁਰੂਤਾਕਰਸ਼ਣ ਬਲ"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"ਮੀਟਰ ਪ੍ਰਤੀ ਵਰਗ ਸਕਿੰਟ"}
                 one{"{0} ਮੀਟਰ ਪ੍ਰਤੀ ਵਰਗ ਸਕਿੰਟ"}
                 other{"{0} ਮੀਟਰ ਪ੍ਰਤੀ ਵਰਗ ਸਕਿੰਟ"}
@@ -128,11 +128,6 @@ pa{
                 one{"{0} ਮੋਲ"}
                 other{"{0} ਮੋਲ"}
             }
-            part-per-million{
-                dnam{"ਹਿੱਸੇ ਪ੍ਰਤੀ ਮਿਲੀਅਨ"}
-                one{"{0} ਹਿੱਸਾ ਪ੍ਰਤੀ ਮਿਲੀਅਨ"}
-                other{"{0} ਹਿੱਸੇ ਪ੍ਰਤੀ ਮਿਲੀਅਨ"}
-            }
             percent{
                 dnam{"ਪ੍ਰਤੀਸ਼ਤ"}
                 one{"{0} ਪ੍ਰਤੀਸ਼ਤ"}
@@ -143,6 +138,11 @@ pa{
                 one{"{0} ਪਰਮਾਈਲ"}
                 other{"{0} ਪਰਮਾਈਲ"}
             }
+            permillion{
+                dnam{"ਹਿੱਸੇ ਪ੍ਰਤੀ ਮਿਲੀਅਨ"}
+                one{"{0} ਹਿੱਸਾ ਪ੍ਰਤੀ ਮਿਲੀਅਨ"}
+                other{"{0} ਹਿੱਸੇ ਪ੍ਰਤੀ ਮਿਲੀਅਨ"}
+            }
             permyriad{
                 dnam{"ਪ੍ਰਤੀ ਦਸ ਹਜ਼ਾਰ"}
                 one{"{0} ਪ੍ਰਤੀ ਦਸ ਹਜ਼ਾਰ"}
@@ -150,7 +150,7 @@ pa{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ਲਿਟਰ ਪ੍ਰਤੀ 100 ਕਿਲੋਮੀਟਰ"}
                 one{"{0} ਲਿਟਰ ਪ੍ਰਤੀ 100 ਕਿਲੋਮੀਟਰ"}
                 other{"{0} ਲਿਟਰ ਪ੍ਰਤੀ 100 ਕਿਲੋਮੀਟਰ"}
@@ -690,7 +690,7 @@ pa{
                 one{"{0} ਹੈਕਟੋਪਾਸਕਲ"}
                 other{"{0} ਹੈਕਟੋਪਾਸਕਲ"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"ਇੰਚ ਪਾਰਾ"}
                 one{"{0} ਇੰਚ ਪਾਰਾ"}
                 other{"{0} ਇੰਚ ਪਾਰਾ"}
@@ -710,7 +710,7 @@ pa{
                 one{"{0} ਮਿਲੀਬਾਰ"}
                 other{"{0} ਮਿਲੀਬਾਰ"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"ਮਿਲੀਮੀਟਰ ਪਾਰਾ"}
                 one{"{0} ਮਿਲੀਮੀਟਰ ਪਾਰਾ"}
                 other{"{0} ਮਿਲੀਮੀਟਰ ਪਾਰਾ"}
@@ -720,7 +720,7 @@ pa{
                 one{"{0} ਪੈਸਕਲ"}
                 other{"{0} ਪੈਸਕਲ"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"ਪੌਂਡ ਪ੍ਰਤੀ ਵਰਗ ਇੰਚ"}
                 one{"{0} ਪੌਂਡ ਪ੍ਰਤੀ ਵਰਗ ਇੰਚ"}
                 other{"{0} ਪੌਂਡ ਪ੍ਰਤੀ ਵਰਗ ਇੰਚ"}
@@ -776,7 +776,7 @@ pa{
                 one{"{0} ਨਿਊਟਨ-ਮੀਟਰ"}
                 other{"{0} ਨਿਊਟਨ-ਮੀਟਰ"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"ਪੌਂਡ-ਫੁੱਟ"}
                 one{"{0} ਪੌਂਡ-ਫੁੱਟ"}
                 other{"{0} ਪੌਂਡ-ਫੁੱਟ"}
@@ -931,7 +931,7 @@ pa{
                 one{"{0}G"}
                 other{"{0}Gs"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 one{"{0}ਮੀ/ਸ²"}
                 other{"{0}ਮੀ/ਸ²"}
             }
@@ -1007,7 +1007,7 @@ pa{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ਲਿ./100ਕਿ.ਮੀ."}
             }
             liter-per-kilometer{
@@ -1352,7 +1352,7 @@ pa{
                 one{"{0} ਹੈ.ਪਾ."}
                 other{"{0} ਹੈ.ਪਾ."}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"ਇੰਚ ਪਾਰਾ"}
                 one{"{0}\u0022 ਪਾਰਾ"}
                 other{"{0}\u0022 ਪਾਰਾ"}
@@ -1362,12 +1362,12 @@ pa{
                 one{"{0} ਮਿ.ਬਾ."}
                 other{"{0} ਮਿ.ਬਾ."}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"ਮਿ.ਮੀ. ਪਾਰਾ"}
                 one{"{0} ਮਿ.ਮੀ. ਪਾਰਾ"}
                 other{"{0} ਮਿ.ਮੀ. ਪਾਰਾ"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"ਪੌਂ.ਵ.ਇੰਚ"}
                 one{"{0} ਪੌਂ.ਵ.ਇੰਚ"}
                 other{"{0} ਪੌਂ.ਵ.ਇੰਚ"}
@@ -1503,7 +1503,7 @@ pa{
                 one{"{0} G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"ਮੀਟਰ/ਸਕਿੰਟ²"}
                 one{"{0} ਮੀ/ਸ²"}
                 other{"{0} ਮੀ/ਸ²"}
@@ -1618,11 +1618,6 @@ pa{
                 one{"{0} ਮੋਲ"}
                 other{"{0} ਮੋਲ"}
             }
-            part-per-million{
-                dnam{"ਹਿੱਸੇ/ਮਿਲੀਅਨ"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"ਪ੍ਰਤੀਸ਼ਤ"}
                 one{"{0}%"}
@@ -1633,12 +1628,17 @@ pa{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"ਹਿੱਸੇ/ਮਿਲੀਅਨ"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
             permyriad{
                 dnam{"ਪ੍ਰਤੀ ਦਸ ਹਜ਼ਾਰ"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ਲਿ./100ਕਿ.ਮੀ."}
                 one{"{0}ਲਿ/100 ਕਿਮੀ"}
                 other{"{0}ਲਿ/100 ਕਿਮੀ"}
@@ -2166,7 +2166,7 @@ pa{
                 one{"{0} ਹੈ.ਪਾ."}
                 other{"{0} ਹੈ.ਪਾ."}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"ਇੰਚ ਪਾਰਾ"}
                 one{"{0} ਇੰਚ ਪਾਰਾ"}
                 other{"{0} ਇੰਚ ਪਾਰਾ"}
@@ -2186,7 +2186,7 @@ pa{
                 one{"{0} ਮਿਲੀਬਾਰ"}
                 other{"{0} ਮਿਲੀਬਾਰ"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"ਮਿ.ਮੀ. ਪਾਰਾ"}
                 one{"{0} ਮਿ.ਮੀ. ਪਾਰਾ"}
                 other{"{0} ਮਿ.ਮੀ. ਪਾਰਾ"}
@@ -2196,7 +2196,7 @@ pa{
                 one{"{0} Pa"}
                 other{"{0} Pa"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"ਪੌਂ.ਵ.ਇੰਚ"}
                 one{"{0} ਪੌਂ.ਵ.ਇੰਚ"}
                 other{"{0} ਪੌਂ.ਵ.ਇੰਚ"}

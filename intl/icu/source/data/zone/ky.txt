@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ky{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Абиджан"}
@@ -1710,7 +1710,9 @@ ky{
             ls{"Ниуэ убактысы"}
         }
         "meta:Norfolk"{
-            ls{"Норфолк убактысы"}
+            ld{"Норфолк жайкы убактысы"}
+            lg{"Норфолк убактысы"}
+            ls{"Норфолк кышкы убактысы"}
         }
         "meta:Noronha"{
             ld{"Фернандо де Норонья жайкы убактысы"}

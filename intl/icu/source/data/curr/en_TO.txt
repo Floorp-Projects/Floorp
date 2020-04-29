@@ -8,5 +8,5 @@ en_TO{
             "Tongan Paʻanga",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

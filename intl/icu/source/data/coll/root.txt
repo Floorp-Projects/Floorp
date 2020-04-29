@@ -1,11 +1,8 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
-/**
- * ICU <specials> source: <path>/xml/collation/root.xml
- */
 root{
     UCARules:process(uca_rules){"../unidata/UCARules.txt"}
-    Version{"36.1"}
+    Version{"37"}
     collations{
         default{"standard"}
         emoji{
@@ -400,7 +397,7 @@ root{
                 "& 👨 << 🧔 <<👱‍♂ <<👱🏻‍♂ <<👱🏼‍♂ <<👱🏽‍♂ <<👱🏾‍♂ <<👱🏿‍♂"
                 "& 👩 << 👱‍♀ << 👱🏻‍♀ << 👱🏼‍♀ << 👱🏽‍♀ << 👱🏾‍♀ << 👱🏿‍♀"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
         eor{
             Sequence{
@@ -940,7 +937,7 @@ root{
                 "&ք"
                 "<և"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
         private-unihan{
             Sequence{
@@ -1183,7 +1180,7 @@ root{
                 "&龟=\uFDD0龟"
                 "&龠=\uFDD0龠"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
         search{
             Sequence{
@@ -1302,11 +1299,11 @@ root{
                 "&ᅳᅵ"
                 "=ᅴ"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
         standard{
             Sequence{""}
-            Version{"36.1"}
+            Version{"37"}
         }
     }
     depends:process(dependency){"ucadata.icu"}

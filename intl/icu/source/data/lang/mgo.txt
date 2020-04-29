@@ -18,7 +18,7 @@ mgo{
             latn{"inu"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     codePatterns{
         language{"{0}"}
         script{"{0}"}

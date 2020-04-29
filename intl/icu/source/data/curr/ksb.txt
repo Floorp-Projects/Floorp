@@ -235,5 +235,5 @@ ksb{
             "dola ya Zimbabwe",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

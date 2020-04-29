@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 hi{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         standard{
             Sequence{
@@ -9,7 +9,7 @@ hi{
                 "[reorder Deva Beng Guru Gujr Orya Taml Telu Knda Mlym Sinh]"
                 "&ॐ<ं<<ँ<ः"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

@@ -5,5 +5,5 @@ es_PR{
     Countries{
         UM{"Islas menores alejadas de EE. UU."}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

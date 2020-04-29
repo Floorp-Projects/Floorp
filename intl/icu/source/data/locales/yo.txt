@@ -21,6 +21,46 @@ yo{
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
+            patternsLong{
+                decimalFormat{
+                    1000{
+                        other{"0 ẹgbẹ̀rún"}
+                    }
+                    10000{
+                        other{"00 ẹgbẹ̀rún"}
+                    }
+                    100000{
+                        other{"000 ẹgbẹ̀rún"}
+                    }
+                    1000000{
+                        other{"0 mílíọ̀nù"}
+                    }
+                    10000000{
+                        other{"00 mílíọ̀nù"}
+                    }
+                    100000000{
+                        other{"000 mílíọ̀nù"}
+                    }
+                    1000000000{
+                        other{"0 bilíọ̀nù"}
+                    }
+                    10000000000{
+                        other{"00 bilíọ̀nù"}
+                    }
+                    100000000000{
+                        other{"000 bilíọ̀nù"}
+                    }
+                    1000000000000{
+                        other{"0 tiriliọ̀nù"}
+                    }
+                    10000000000000{
+                        other{"00 tiriliọ̀nù"}
+                    }
+                    100000000000000{
+                        other{"000 tiriliọ̀nù"}
+                    }
+                }
+            }
             symbols{
                 decimal{"."}
                 exponential{"E"}
@@ -44,7 +84,7 @@ yo{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -542,6 +582,13 @@ yo{
                 "-1"{"Ọjọ́ Àìkú tó kọjá"}
                 "0"{"Ọjọ́ Àìkú yìí"}
                 "1"{"Ọjọ́ Àìkú tó ń bọ̀"}
+            }
+        }
+        sun-narrow{
+            relativeTime{
+                future{
+                    other{"Ọjọ́ Àíkú +{0}"}
+                }
             }
         }
         week{

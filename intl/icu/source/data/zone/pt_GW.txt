@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 pt_GW{
     %%Parent{"pt_PT"}
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "meta:Azores"{
             sd{"∅∅∅"}

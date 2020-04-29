@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 vi{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1778,7 +1778,9 @@ vi{
             ls{"Giờ Niue"}
         }
         "meta:Norfolk"{
-            ls{"Giờ đảo Norfolk"}
+            ld{"Giờ Mùa Hè Đảo Norfolk"}
+            lg{"Giờ Đảo Norfolk"}
+            ls{"Giờ Chuẩn Đảo Norfolk"}
         }
         "meta:Noronha"{
             ld{"Giờ Mùa Hè Fernando de Noronha"}

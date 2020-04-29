@@ -173,6 +173,7 @@ yue{
         ewo{"依汪都文"}
         ext{"埃斯特雷馬杜拉文"}
         fa{"波斯文"}
+        fa_AF{"達里文"}
         fan{"芳族文"}
         fat{"芳蒂文"}
         ff{"富拉文"}
@@ -634,9 +635,6 @@ yue{
         yue{"中文 (粵語)"}
         zh{"中文 (普通話)"}
     }
-    Languages%short{
-        az{"亞塞拜然文"}
-    }
     Scripts{
         Afak{"阿法卡文字"}
         Aghb{"高加索阿爾巴尼亞文"}
@@ -1033,7 +1031,7 @@ yue{
         VALLADER{"瑞士瓦勒德方言"}
         WADEGILE{"威妥瑪式拼音"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — 全部"}
         category-list{"{0}: {1}"}

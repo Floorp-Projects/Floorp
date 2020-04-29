@@ -84,6 +84,7 @@ fr_CA{
         zh_Hant{"chinois, mandarin traditionnel"}
     }
     Languages%menu{
+        ckb{"sorani"}
         yue{"chinois, cantonais"}
         zh{"chinois, mandarin"}
     }
@@ -97,6 +98,7 @@ fr_CA{
         Hans{"idéogrammes han simplifiés"}
         Hant{"idéogrammes han traditionnels"}
         Hrkt{"syllabaires japonais"}
+        Olck{"ol chiki"}
         Zsye{"zsye"}
     }
     Scripts%stand-alone{
@@ -127,7 +129,7 @@ fr_CA{
             mong{"Chiffres mongols"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         category-list{"{0} : {1}"}
     }

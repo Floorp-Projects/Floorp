@@ -293,7 +293,7 @@ uk{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         buddhist{
             eras{
@@ -935,10 +935,6 @@ uk{
             }
             eras{
                 abbreviated{
-                    "до н. е.",
-                    "н. е.",
-                }
-                abbreviated%variant{
                     "до н. е.",
                     "н. е.",
                 }

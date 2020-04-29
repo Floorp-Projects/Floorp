@@ -680,10 +680,6 @@ ug{
         Zyyy{"ئورتاق"}
         Zzzz{"يوچۇن يېزىق"}
     }
-    Scripts%stand-alone{
-        Hans{"ئاددىي خەنچە"}
-        Hant{"مۇرەككەپ خەنچە"}
-    }
     Types{
         calendar{
             buddhist{"بۇددا يىلنامەسى"}
@@ -830,7 +826,7 @@ ug{
         VALENCIA{"ۋالېنسىيە"}
         WADEGILE{"ۋېي ئائىلىسى پىنيىن لاتىنلاشتۇرۇش"}
     }
-    Version{"36.1"}
+    Version{"37"}
     codePatterns{
         language{"تىل: {0}"}
         script{"يېزىق: {0}"}

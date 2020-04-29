@@ -38,7 +38,7 @@ subdir = .
 @TOOLS_TRUE@@TESTS_TRUE@TEST = test
 @SAMPLES_TRUE@SAMPLE = samples
 @TOOLS_TRUE@TOOLS = tools
-@TOOLS_TRUE@DATASUBDIR = data
+@DATA_TRUE@DATASUBDIR = data
 
 ## pkgconfig setup. Always have uc and i18n. Others are optional.
 ALL_PKGCONFIG_SUFFIX=uc i18n

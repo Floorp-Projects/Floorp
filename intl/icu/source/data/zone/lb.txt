@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 lb{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Accra"{
             ec{"Accra"}
@@ -769,7 +769,9 @@ lb{
             ls{"Niue-Zäit"}
         }
         "meta:Norfolk"{
-            ls{"Norfolkinselen-Zäit"}
+            ld{"Norfolkinselen-Summerzäit"}
+            lg{"Norfolkinselen-Zäit"}
+            ls{"Norfolkinselen-Normalzäit"}
         }
         "meta:Noronha"{
             ld{"Fernando-de-Noronha-Summerzäit"}

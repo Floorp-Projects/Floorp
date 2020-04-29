@@ -95,5 +95,5 @@ fa_AF{
     Countries%short{
         HK{"هانگ کانگ"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

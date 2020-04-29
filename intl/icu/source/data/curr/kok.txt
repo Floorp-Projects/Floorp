@@ -793,7 +793,7 @@ kok{
             other{"भुतानीज नागल्ट्रम्स"}
         }
         BWP{
-            other{"Vote बोत्सवाना पुलास"}
+            other{"बोत्सवाना पुलास"}
         }
         BYN{
             other{"बैलोरुसियन् रूबल्स"}
@@ -911,9 +911,6 @@ kok{
         }
         ILS{
             other{"इस्त्रायली न्यु शेकेल्स"}
-        }
-        INR{
-            other{"भारतीय रुपया"}
         }
         IQD{
             other{"इराकी डिनार्स"}
@@ -1198,5 +1195,5 @@ kok{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 tk{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abijan"}
@@ -1701,7 +1701,9 @@ tk{
             ls{"Niue wagty"}
         }
         "meta:Norfolk"{
-            ls{"Norfolk adasy wagty"}
+            ld{"Norfolk adasy tomusky wagty"}
+            lg{"Norfolk adasy wagty"}
+            ls{"Norfolk adasy standart wagty"}
         }
         "meta:Noronha"{
             ld{"Fernandu-di-Noronýa tomusky wagty"}

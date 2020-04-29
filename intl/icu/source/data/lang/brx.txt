@@ -609,7 +609,7 @@ brx{
         SOLBA{"श्टोलविज़्ज़ा या सोलबीका डायलेक्ट"}
         TARASK{"तारास्कीएवीचा वर्तनी"}
     }
-    Version{"36.1"}
+    Version{"37"}
     codePatterns{
         script{"देवनागरी: {0}"}
         territory{"क्षेत्र:भारत {0}"}

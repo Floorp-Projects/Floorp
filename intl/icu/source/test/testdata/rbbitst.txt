@@ -1991,3 +1991,23 @@ Bangkok)•</data>
 •
 •より<400>詳しい<400>こと<400>を<400>お<400>知<400>り<400>に<400>なり<400>たい<400>方<400>は<400>、•Glossary<200>,• •Technical<200> •Introduction<200> •および<400> •Useful<200> •Resources<200>を<400>ご<400>参照<400>くだ<400>さい<400>。•
 •</data>
+
+
+#
+# Bug 20303 Multiple Look-ahead rules with similar contexts.
+#           Check that samples of such rules are being handled correctly.
+#
+
+<rules>
+!!forward;
+!!quoted_literals_only;
+!!chain;
+[a] [b] / [c] [d];
+[a] [b] / [c] [d] {100};
+[a] [b] / [e] [f] {200};
+[a] [b] / [e] [g] {300};
+[a] [b] [c] [h] {400};
+[x] [a] [b] / [c] [d] {500};
+[y] [a] [b] [c] [d] {600};
+</rules>
+<data>•ab<100>c•d•ab<200>e•f•ab<300>e•g•abch<400>xab<500>c•d•yabcd<600></data>

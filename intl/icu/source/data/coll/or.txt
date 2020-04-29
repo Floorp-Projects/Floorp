@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 or{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         standard{
             Sequence{
@@ -11,7 +11,7 @@ or{
                 "&ହ<କ୍ଷ"
                 "&ଯ<<ୟ"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

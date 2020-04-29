@@ -312,7 +312,6 @@ it{
         CZ{"Repubblica Ceca"}
         FK{"Isole Falkland (Isole Malvine)"}
         SZ{"Regno di eSwatini"}
-        TL{"Timor Est"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

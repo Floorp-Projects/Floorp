@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 yue_Hans{
     %%Parent{"root"}
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ yue_Hans{
                 dnam{"G 力"}
                 other{"{0} G 力"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"每平方秒公尺"}
                 other{"每平方秒 {0} 米"}
             }
@@ -108,10 +108,6 @@ yue_Hans{
                 dnam{"摩尔"}
                 other{"{0} 摩尔"}
             }
-            part-per-million{
-                dnam{"百万分率"}
-                other{"{0} 百万分率"}
-            }
             percent{
                 dnam{"%"}
                 other{"{0}%"}
@@ -120,13 +116,17 @@ yue_Hans{
                 dnam{"‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"百万分率"}
+                other{"{0} 百万分率"}
+            }
             permyriad{
                 dnam{"点子"}
                 other{"{0} 点子"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"每 100 公里公升"}
                 other{"每 100 公里 {0} 公升"}
             }
@@ -569,7 +569,7 @@ yue_Hans{
                 dnam{"百帕"}
                 other{"{0} 百帕"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"英寸汞柱"}
                 other{"{0} 英寸汞柱"}
             }
@@ -585,7 +585,7 @@ yue_Hans{
                 dnam{"毫巴"}
                 other{"{0} 毫巴"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"毫米汞柱"}
                 other{"{0} 毫米汞柱"}
             }
@@ -593,7 +593,7 @@ yue_Hans{
                 dnam{"帕斯卡"}
                 other{"{0} 帕斯卡"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"每平方英寸磅力"}
                 other{"每平方吋 {0} 磅"}
             }
@@ -639,7 +639,7 @@ yue_Hans{
                 dnam{"牛顿米"}
                 other{"{0} 牛顿米"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"尺磅"}
                 other{"{0} 尺磅"}
             }
@@ -765,7 +765,7 @@ yue_Hans{
             g-force{
                 other{"{0}G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 other{"{0}m/s²"}
             }
         }
@@ -825,7 +825,7 @@ yue_Hans{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"升/100公里"}
                 other{"每100公里{0}升"}
             }
@@ -1092,16 +1092,16 @@ yue_Hans{
             hectopascal{
                 other{"{0}百帕"}
             }
-            inch-hg{
+            inch-ofhg{
                 other{"{0}″ Hg"}
             }
             millibar{
                 other{"{0}毫巴"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 other{"{0}mmHg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 other{"{0}psi"}
             }
         }
@@ -1207,7 +1207,7 @@ yue_Hans{
                 dnam{"G 力"}
                 other{"{0} G 力"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"公尺/平方秒"}
                 other{"每平方秒{0}米"}
             }
@@ -1301,10 +1301,6 @@ yue_Hans{
                 dnam{"摩尔"}
                 other{"{0} 摩尔"}
             }
-            part-per-million{
-                dnam{"百万分率"}
-                other{"{0} 百万分率"}
-            }
             percent{
                 dnam{"%"}
                 other{"{0}%"}
@@ -1313,13 +1309,17 @@ yue_Hans{
                 dnam{"‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"百万分率"}
+                other{"{0} 百万分率"}
+            }
             permyriad{
                 dnam{"点子"}
                 other{"{0} 点子"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"升/100 公里"}
                 other{"每100公里 {0} 升"}
             }
@@ -1762,7 +1762,7 @@ yue_Hans{
                 dnam{"百帕"}
                 other{"{0} 百帕"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"英寸汞柱"}
                 other{"{0} 英寸汞柱"}
             }
@@ -1778,7 +1778,7 @@ yue_Hans{
                 dnam{"毫巴"}
                 other{"{0} 毫巴"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"毫米汞柱"}
                 other{"{0} 毫米汞柱"}
             }
@@ -1786,7 +1786,7 @@ yue_Hans{
                 dnam{"帕斯卡"}
                 other{"{0} 帕斯卡"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"磅力/平方英寸"}
                 other{"每平方吋{0}磅"}
             }
@@ -1832,7 +1832,7 @@ yue_Hans{
                 dnam{"牛顿米"}
                 other{"{0} 牛顿米"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"尺磅"}
                 other{"{0} 尺磅"}
             }

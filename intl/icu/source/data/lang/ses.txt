@@ -48,5 +48,5 @@ ses{
         zh{"Sinuwa senni, Mandareŋ"}
         zu{"Zulu senni"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

@@ -34,7 +34,6 @@ es_MX{
         nr{"ndebele meridional"}
         nso{"sotho septentrional"}
         pa{"punyabí"}
-        pcm{"pcm"}
         shu{"árabe chadiano"}
         ss{"siswati"}
         sw{"suajili"}
@@ -43,7 +42,7 @@ es_MX{
         tet{"tetún"}
         tn{"setswana"}
         tyv{"tuviniano"}
-        wuu{"wuu"}
+        wuu{"chino wu"}
         xal{"kalmyk"}
         zgh{"tamazight marroquí estándar"}
         zh_Hans{"chino simplificado"}
@@ -77,7 +76,7 @@ es_MX{
             gujr{"dígitos en gujarati"}
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         historic{"{0} — Históricos"}
         miscellaneous{"{0} — Varios"}

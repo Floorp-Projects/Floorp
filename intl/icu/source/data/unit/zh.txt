@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 zh{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -13,7 +13,7 @@ zh{
                 dnam{"G力"}
                 other{"{0}G力"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"米/秒²"}
                 other{"每平方秒{0}米"}
             }
@@ -108,10 +108,6 @@ zh{
                 dnam{"摩尔"}
                 other{"{0}摩尔"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                other{"百万分之{0}"}
-            }
             percent{
                 dnam{"%"}
                 other{"{0}%"}
@@ -120,9 +116,13 @@ zh{
                 dnam{"‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"ppm"}
+                other{"百万分之{0}"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"升/100千米"}
                 other{"{0}升/100千米"}
             }
@@ -565,7 +565,7 @@ zh{
                 dnam{"百帕斯卡"}
                 other{"{0}百帕斯卡"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"英寸汞柱"}
                 other{"{0}英寸汞柱"}
             }
@@ -581,7 +581,7 @@ zh{
                 dnam{"毫巴"}
                 other{"{0}毫巴"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"毫米汞柱"}
                 other{"{0}毫米汞柱"}
             }
@@ -589,7 +589,7 @@ zh{
                 dnam{"帕斯卡"}
                 other{"{0}帕斯卡"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"磅/平方英寸"}
                 other{"每平方英寸{0}磅"}
             }
@@ -635,7 +635,7 @@ zh{
                 dnam{"牛顿米"}
                 other{"{0}牛顿米"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"磅英尺"}
                 other{"{0}磅英尺"}
             }
@@ -762,7 +762,7 @@ zh{
                 dnam{"G力"}
                 other{"{0}G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"米/秒²"}
                 other{"{0}米/秒²"}
             }
@@ -832,7 +832,7 @@ zh{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"升/100千米"}
                 other{"{0}L/100km"}
             }
@@ -1037,7 +1037,7 @@ zh{
             hectopascal{
                 other{"{0}hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 other{"{0}\u0022 Hg"}
             }
             millibar{
@@ -1185,7 +1185,7 @@ zh{
                 dnam{"G力"}
                 other{"{0}G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"米/秒²"}
                 other{"{0}米/秒²"}
             }
@@ -1280,10 +1280,6 @@ zh{
                 dnam{"摩尔"}
                 other{"{0}摩尔"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                other{"{0}ppm"}
-            }
             percent{
                 dnam{"%"}
                 other{"{0}%"}
@@ -1292,9 +1288,13 @@ zh{
                 dnam{"‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"ppm"}
+                other{"{0}ppm"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"升/100千米"}
                 other{"{0}升/100千米"}
             }
@@ -1707,7 +1707,7 @@ zh{
                 dnam{"百帕"}
                 other{"{0}百帕"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"英寸汞柱"}
                 other{"{0}英寸汞柱"}
             }
@@ -1723,7 +1723,7 @@ zh{
                 dnam{"毫巴"}
                 other{"{0}毫巴"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"毫米汞柱"}
                 other{"{0}毫米汞柱"}
             }
@@ -1731,7 +1731,7 @@ zh{
                 dnam{"帕"}
                 other{"{0}帕"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"磅/平方英寸"}
                 other{"每平方英寸{0}磅"}
             }
@@ -1777,7 +1777,7 @@ zh{
                 dnam{"牛米"}
                 other{"{0}牛米"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"磅英尺"}
                 other{"{0}磅英尺"}
             }

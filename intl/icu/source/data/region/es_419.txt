@@ -31,5 +31,5 @@ es_419{
     Countries%variant{
         CD{"Congo (República Democrática del Congo)"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

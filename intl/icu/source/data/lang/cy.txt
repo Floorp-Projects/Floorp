@@ -148,6 +148,7 @@ cy{
         ewo{"Ewondo"}
         ext{"Extremadureg"}
         fa{"Perseg"}
+        fa_AF{"Dari"}
         fat{"Ffanti"}
         ff{"Ffwla"}
         fi{"Ffinneg"}
@@ -723,7 +724,7 @@ cy{
         POSIX{"Cyfrifiadur"}
         SCOTLAND{"Saesneg Safonol yr Alban"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — y cwbl"}
         category-list{"{0}: {1}"}

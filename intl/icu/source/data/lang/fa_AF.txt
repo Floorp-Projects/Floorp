@@ -46,5 +46,5 @@ fa_AF{
     Scripts{
         Mong{"مغلی"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

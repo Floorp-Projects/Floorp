@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sk{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         search{
             Sequence{
@@ -21,7 +21,7 @@ sk{
                 "&Y<ý<<<Ý"
                 "&Z<ž<<<Ž"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
         standard{
             Sequence{
@@ -33,7 +33,7 @@ sk{
                 "&S<š<<<Š"
                 "&Z<ž<<<Ž"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

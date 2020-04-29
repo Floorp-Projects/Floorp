@@ -1951,10 +1951,6 @@ metadata:table(nofallback){
                 reason{"deprecated"}
                 replacement{"cz72"}
             }
-            escn{
-                reason{"overlong"}
-                replacement{"IC"}
-            }
             fi01{
                 reason{"overlong"}
                 replacement{"AX"}
@@ -4897,6 +4893,7 @@ metadata:table(nofallback){
         "bss_CM",
         "byn_ER",
         "ca_ES",
+        "cad_US",
         "cch_NG",
         "ccp_BD",
         "ce_RU",
@@ -4954,6 +4951,7 @@ metadata:table(nofallback){
         "haw_US",
         "he_IL",
         "hi_IN",
+        "hi_Latn_IN",
         "hr_HR",
         "hsb_DE",
         "hu_HU",
@@ -4992,7 +4990,9 @@ metadata:table(nofallback){
         "ko_KR",
         "kok_IN",
         "kpe_LR",
-        "ks_IN",
+        "ks_Arab",
+        "ks_Arab_IN",
+        "ks_Deva_IN",
         "ksb_TZ",
         "ksf_CM",
         "ksh_DE",
@@ -5011,6 +5011,7 @@ metadata:table(nofallback){
         "luo_KE",
         "luy_KE",
         "lv_LV",
+        "mai_IN",
         "mas_KE",
         "mer_KE",
         "mfe_MU",
@@ -5022,7 +5023,9 @@ metadata:table(nofallback){
         "ml_IN",
         "mn_MN",
         "mn_Mong_CN",
-        "mni_IN",
+        "mni_Beng",
+        "mni_Beng_IN",
+        "mni_Mtei_IN",
         "moh_CA",
         "mr_IN",
         "ms_Arab_MY",
@@ -5056,6 +5059,7 @@ metadata:table(nofallback){
         "pa_Arab_PK",
         "pa_Guru",
         "pa_Guru_IN",
+        "pcm_NG",
         "pl_PL",
         "prg_001",
         "ps_AF",
@@ -5072,10 +5076,15 @@ metadata:table(nofallback){
         "sa_IN",
         "sah_RU",
         "saq_KE",
+        "sat_Deva_IN",
+        "sat_Olck",
+        "sat_Olck_IN",
         "sbp_TZ",
         "sc_IT",
         "scn_IT",
-        "sd_PK",
+        "sd_Arab",
+        "sd_Arab_PK",
+        "sd_Deva_IN",
         "sdh_IR",
         "se_NO",
         "seh_MZ",

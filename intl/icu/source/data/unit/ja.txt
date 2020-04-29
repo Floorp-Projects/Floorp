@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ja{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -13,7 +13,7 @@ ja{
                 dnam{"重力加速度"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"メートル毎秒毎秒"}
                 other{"{0} メートル毎秒毎秒"}
             }
@@ -108,10 +108,6 @@ ja{
                 dnam{"モル"}
                 other{"{0} モル"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"パーセント"}
                 other{"{0} パーセント"}
@@ -120,13 +116,17 @@ ja{
                 dnam{"パーミル"}
                 other{"{0} パーミル"}
             }
+            permillion{
+                dnam{"ppm"}
+                other{"{0} ppm"}
+            }
             permyriad{
                 dnam{"パーミリアド"}
                 other{"{0} パーミリアド"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"リットル毎100キロメートル"}
                 other{"{0} リットル毎100キロメートル"}
             }
@@ -568,7 +568,7 @@ ja{
                 dnam{"ヘクトパスカル"}
                 other{"{0} ヘクトパスカル"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"水銀柱インチ"}
                 other{"{0} 水銀柱インチ"}
             }
@@ -584,7 +584,7 @@ ja{
                 dnam{"ミリバール"}
                 other{"{0} ミリバール"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"水銀柱ミリメートル"}
                 other{"{0} 水銀柱ミリメートル"}
             }
@@ -592,7 +592,7 @@ ja{
                 dnam{"パスカル"}
                 other{"{0} パスカル"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"重量ポンド毎平方インチ"}
                 other{"{0} 重量ポンド毎平方インチ"}
             }
@@ -638,7 +638,7 @@ ja{
                 dnam{"ニュートンメートル"}
                 other{"{0} ニュートンメートル"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"ポンドフィート"}
                 other{"{0} ポンドフィート"}
             }
@@ -765,7 +765,7 @@ ja{
                 dnam{"重力加速度"}
                 other{"{0}G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 other{"{0}m/s²"}
             }
@@ -818,7 +818,7 @@ ja{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 other{"{0}L/100km"}
             }
@@ -1125,7 +1125,7 @@ ja{
                 dnam{"hPa"}
                 other{"{0}hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"水銀柱インチ"}
                 other{"{0}\u0022 Hg"}
             }
@@ -1133,11 +1133,11 @@ ja{
                 dnam{"ミリバール"}
                 other{"{0}mb"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"水銀柱ミリメートル"}
                 other{"{0}mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"重量ポンド毎平方インチ"}
                 other{"{0}psi"}
             }
@@ -1254,7 +1254,7 @@ ja{
                 dnam{"重力加速度"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 other{"{0} m/s²"}
             }
@@ -1349,10 +1349,6 @@ ja{
                 dnam{"モル"}
                 other{"{0} mol"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"パーセント"}
                 other{"{0}%"}
@@ -1361,13 +1357,17 @@ ja{
                 dnam{"パーミル"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"ppm"}
+                other{"{0} ppm"}
+            }
             permyriad{
                 dnam{"パーミリアド"}
                 other{"{0}‱"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 other{"{0} L/100km"}
             }
@@ -1810,7 +1810,7 @@ ja{
                 dnam{"hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"水銀柱インチ"}
                 other{"{0} inHg"}
             }
@@ -1826,7 +1826,7 @@ ja{
                 dnam{"ミリバール"}
                 other{"{0} mb"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"水銀柱ミリメートル"}
                 other{"{0} mm Hg"}
             }
@@ -1834,7 +1834,7 @@ ja{
                 dnam{"パスカル"}
                 other{"{0} Pa"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"重量ポンド毎平方インチ"}
                 other{"{0} psi"}
             }
@@ -1880,7 +1880,7 @@ ja{
                 dnam{"ニュートンメートル"}
                 other{"{0} N⋅m"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"ポンドフィート"}
                 other{"{0} lbf⋅ft"}
             }

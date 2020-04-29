@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 he{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"אביג׳אן"}
@@ -1743,7 +1743,9 @@ he{
             ls{"שעון ניואה"}
         }
         "meta:Norfolk"{
-            ls{"שעון האי נורפוק"}
+            ld{"שעון האי נורפוק (קיץ)"}
+            lg{"שעון האי נורפוק"}
+            ls{"שעון האי נורפוק (חורף)"}
         }
         "meta:Noronha"{
             ld{"שעון פרננדו די נורוניה (קיץ)"}

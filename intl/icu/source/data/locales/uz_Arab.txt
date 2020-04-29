@@ -29,8 +29,9 @@ uz_Arab{
         }
         native{"arabext"}
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
+        default{"persian"}
         gregorian{
             dayNames{
                 format{

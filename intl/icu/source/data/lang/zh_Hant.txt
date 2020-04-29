@@ -630,11 +630,8 @@ zh_Hant{
         zza{"扎扎文"}
     }
     Languages%menu{
-        yue{"粵語"}
-        zh{"中文"}
-    }
-    Languages%short{
-        az{"亞塞拜然文"}
+        ars{"阿拉伯文（納吉迪）"}
+        ckb{"庫德文（索拉尼）"}
     }
     Scripts{
         Adlm{"富拉文"}
@@ -642,6 +639,7 @@ zh_Hant{
         Aghb{"高加索阿爾巴尼亞文"}
         Ahom{"阿洪姆文"}
         Arab{"阿拉伯文"}
+        Aran{"波斯體"}
         Armi{"皇室亞美尼亞文"}
         Armn{"亞美尼亞文"}
         Avst{"阿維斯陀文"}
@@ -763,6 +761,7 @@ zh_Hant{
         Phnx{"腓尼基文"}
         Plrd{"柏格理拼音符"}
         Prti{"帕提亞文（碑銘體）"}
+        Qaag{"佐基文"}
         Rjng{"拉讓文"}
         Roro{"朗格朗格象形文"}
         Runr{"古北歐文字"}
@@ -1079,7 +1078,7 @@ zh_Hant{
         VALLADER{"瑞士瓦勒德方言"}
         WADEGILE{"威妥瑪式拼音"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — 全部"}
         category-list{"{0}: {1}"}

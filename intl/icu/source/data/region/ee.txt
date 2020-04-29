@@ -296,5 +296,5 @@ ee{
         FK{"Falkland ƒudomekpowo (Islas Malvinas) nutome"}
         TL{"Ɣedzeƒe Timɔ nutome"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

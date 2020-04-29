@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 hy{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ hy{
                 one{"{0} g"}
                 other{"{0} g"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"մետրեր/վայրկյան քառակուսի"}
                 one{"{0} մետր/վայրկյան քառակուսի"}
                 other{"{0} մետր/վայրկյան քառակուսի"}
@@ -128,11 +128,6 @@ hy{
                 one{"{0} մոլ"}
                 other{"{0} մոլ"}
             }
-            part-per-million{
-                dnam{"մասնիկներ միլիոնի վրա"}
-                one{"{0} մասնիկ միլիոնի վրա"}
-                other{"{0} մասնիկ միլիոնի վրա"}
-            }
             percent{
                 dnam{"տոկոս"}
                 one{"{0} տոկոս"}
@@ -143,6 +138,11 @@ hy{
                 one{"{0} պրոմիլ"}
                 other{"{0} պրոմիլ"}
             }
+            permillion{
+                dnam{"մասնիկներ միլիոնի վրա"}
+                one{"{0} մասնիկ միլիոնի վրա"}
+                other{"{0} մասնիկ միլիոնի վրա"}
+            }
             permyriad{
                 dnam{"պերմիրիադ"}
                 one{"{0} պերմիրիադ"}
@@ -150,7 +150,7 @@ hy{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"լիտրեր 100 կիլոմետրի վրա"}
                 one{"{0} լիտր 100 կիլոմետրի վրա"}
                 other{"{0} լիտր 100 կիլոմետրի վրա"}
@@ -675,7 +675,7 @@ hy{
                 one{"{0} հեկտոպասկալ"}
                 other{"{0} հեկտոպասկալ"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"սնդիկի սյան դյույմեր"}
                 one{"{0} դյույմ սնդիկի սյուն"}
                 other{"{0} դյույմ սնդիկի սյուն"}
@@ -695,7 +695,7 @@ hy{
                 one{"{0} միլիբար"}
                 other{"{0} միլիբար"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"սնդիկի սյան միլիմետրեր"}
                 one{"{0} միլիմետր սնդիկի սյուն"}
                 other{"{0} միլիմետր սնդիկի սյուն"}
@@ -705,7 +705,7 @@ hy{
                 one{"{0} պասկալ"}
                 other{"{0} պասկալ"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"ֆունտեր քառակուսի դյույմի վրա"}
                 one{"{0} ֆունտ քառակուսի դյույմի վրա"}
                 other{"{0} ֆունտ քառակուսի դյույմի վրա"}
@@ -761,7 +761,7 @@ hy{
                 one{"{0} նյուտոն-մետր"}
                 other{"{0} նյուտոն-մետր"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"ֆունտ-ֆուտեր"}
                 one{"{0} ֆունտ-ֆուտ"}
                 other{"{0} ֆունտ-ֆուտ"}
@@ -963,7 +963,7 @@ hy{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"լ/100 կմ"}
                 one{"{0} լ/100 կմ"}
                 other{"{0} լ/100 կմ"}
@@ -1103,7 +1103,7 @@ hy{
                 one{"{0} հՊա"}
                 other{"{0} հՊա"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0}\u0022 ս. ս."}
                 other{"{0}\u0022 ս. ս"}
             }
@@ -1161,7 +1161,7 @@ hy{
                 one{"{0} g"}
                 other{"{0} g"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"մ/վ²"}
                 one{"{0} մ/վ²"}
                 other{"{0} մ/վ²"}
@@ -1275,11 +1275,6 @@ hy{
                 one{"{0} մոլ"}
                 other{"{0} մոլ"}
             }
-            part-per-million{
-                dnam{"մասնիկ/միլիոն"}
-                one{"{0} մասնիկ/միլիոն"}
-                other{"{0} մասնիկ/միլիոն"}
-            }
             percent{
                 dnam{"տոկոս"}
                 one{"{0}%"}
@@ -1290,6 +1285,11 @@ hy{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"մասնիկ/միլիոն"}
+                one{"{0} մասնիկ/միլիոն"}
+                other{"{0} մասնիկ/միլիոն"}
+            }
             permyriad{
                 dnam{"‱"}
                 one{"{0}‱"}
@@ -1297,7 +1297,7 @@ hy{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"լ/100 կմ"}
                 one{"{0} լ/100 կմ"}
                 other{"{0} լ/100 կմ"}
@@ -1799,7 +1799,7 @@ hy{
                 one{"{0} հՊա"}
                 other{"{0} հՊա"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"դյույմ ս.ս."}
                 one{"{0} դյմ. ս.ս."}
                 other{"{0} դյմ. ս.ս."}
@@ -1819,7 +1819,7 @@ hy{
                 one{"{0} մբար"}
                 other{"{0} մբար"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"մմ ս.ս."}
                 one{"{0} մմ ս.ս."}
                 other{"{0} մմ ս.ս."}
@@ -1829,7 +1829,7 @@ hy{
                 one{"{0} Պա"}
                 other{"{0} Պա"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"ֆ․/քառ․ դյմ"}
                 one{"{0} ֆ./քառ․ դյմ"}
                 other{"{0} ֆ./քառ․ դյմ"}
@@ -1885,7 +1885,7 @@ hy{
                 one{"{0} Ն·մ"}
                 other{"{0} Ն·մ"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"ֆնտ-ֆտ"}
                 one{"{0} ֆնտ-ֆտ"}
                 other{"{0} ֆնտ-ֆտ"}

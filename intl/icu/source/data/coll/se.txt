@@ -1,14 +1,14 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 se{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         search{
             Sequence{
                 "[import und-u-co-search]"
                 "[import se-u-co-standard]"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
         standard{
             Sequence{
@@ -53,7 +53,7 @@ se{
                 "<<<Ô<<ǫ"
                 "<<<Ǫ"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

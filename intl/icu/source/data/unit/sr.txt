@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sr{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -15,7 +15,7 @@ sr{
                 one{"{0} ге сила"}
                 other{"{0} ге сила"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"метри у секунди на квадрат"}
                 few{"{0} метра у секунди на квадрат"}
                 one{"{0} метар у секунди на квадрат"}
@@ -150,12 +150,6 @@ sr{
                 one{"{0} мол"}
                 other{"{0} мола"}
             }
-            part-per-million{
-                dnam{"честица на милион"}
-                few{"{0} честице на милион"}
-                one{"{0} честица на милион"}
-                other{"{0} честица на милион"}
-            }
             percent{
                 dnam{"проценат"}
                 few{"{0} процената"}
@@ -168,9 +162,15 @@ sr{
                 one{"{0} промил"}
                 other{"{0} промила"}
             }
+            permillion{
+                dnam{"честица на милион"}
+                few{"{0} честице на милион"}
+                one{"{0} честица на милион"}
+                other{"{0} честица на милион"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 few{"{0} литра на 100 километара"}
                 one{"{0} литар на 100 километара"}
@@ -740,7 +740,7 @@ sr{
                 one{"{0} хектопаскал"}
                 other{"{0} хектопаскала"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"инчи живиног стуба"}
                 few{"{0} инча живиног стуба"}
                 one{"{0} инч живиног стуба"}
@@ -764,7 +764,7 @@ sr{
                 one{"{0} милибар"}
                 other{"{0} милибара"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"милиметри живиног стуба"}
                 few{"{0} милиметра живиног стуба"}
                 one{"{0} милиметар живиног стуба"}
@@ -776,7 +776,7 @@ sr{
                 one{"{0} паскал"}
                 other{"{0} паскала"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"фунте по квадратном инчу"}
                 few{"{0} фунте по квадратном инчу"}
                 one{"{0} фунта по квадратном инчу"}
@@ -842,7 +842,7 @@ sr{
                 one{"{0} њутн-метар"}
                 other{"{0} њутн-метара"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"фунта-фити"}
                 few{"{0} фунта-фита"}
                 one{"{0} фунта-фит"}
@@ -1083,7 +1083,7 @@ sr{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 few{"{0} L/100km"}
                 one{"{0} L/100km"}
@@ -1251,7 +1251,7 @@ sr{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 few{"{0} inHg"}
                 one{"{0} inHg"}
                 other{"{0} inHg"}
@@ -1320,7 +1320,7 @@ sr{
                 one{"{0} G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 few{"{0} m/s²"}
                 one{"{0} m/s²"}
@@ -1449,12 +1449,6 @@ sr{
                 one{"{0} mmol/L"}
                 other{"{0} mmol/L"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                few{"{0} ppm"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"проценат"}
                 few{"{0}%"}
@@ -1467,9 +1461,15 @@ sr{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"ppm"}
+                few{"{0} ppm"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100 km"}
                 few{"{0} L/100 km"}
                 one{"{0} L/100 km"}
@@ -2047,7 +2047,7 @@ sr{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inHg"}
                 few{"{0} inHg"}
                 one{"{0} inHg"}
@@ -2059,7 +2059,7 @@ sr{
                 one{"{0} mbar"}
                 other{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 few{"{0} mm Hg"}
                 one{"{0} mm Hg"}
@@ -2071,7 +2071,7 @@ sr{
                 one{"{0} Pa"}
                 other{"{0} Pa"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 few{"{0} psi"}
                 one{"{0} psi"}

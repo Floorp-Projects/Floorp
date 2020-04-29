@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 de{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         phonebook{
             Sequence{
@@ -9,14 +9,14 @@ de{
                 "&OE<<ö<<<Ö"
                 "&UE<<ü<<<Ü"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
         search{
             Sequence{
                 "[import und-u-co-search]"
                 "[import de-u-co-phonebk]"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

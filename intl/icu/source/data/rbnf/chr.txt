@@ -53,5 +53,5 @@ chr{
             "1: ' =%spellout-numbering=;",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

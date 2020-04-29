@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sw{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ sw{
                 one{"mvuto wa graviti {0}"}
                 other{"mvuto wa graviti {0}"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"mita kwa kila sekunde mraba"}
                 one{"mita {0} kwa kila sekunde mraba"}
                 other{"mita {0} kwa kila sekunde mraba"}
@@ -128,11 +128,6 @@ sw{
                 one{"moli {0}"}
                 other{"moli {0}"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                one{"ppm {0}"}
-                other{"ppm {0}"}
-            }
             percent{
                 dnam{"asilimia"}
                 one{"asilimia {0}"}
@@ -143,6 +138,11 @@ sw{
                 one{"{0} kwa kila elfu"}
                 other{"{0} kwa kila elfu"}
             }
+            permillion{
+                dnam{"ppm"}
+                one{"ppm {0}"}
+                other{"ppm {0}"}
+            }
             permyriad{
                 dnam{"permyriadi"}
                 one{"permyriadi {0}"}
@@ -150,7 +150,7 @@ sw{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"lita kwa kilomita 100"}
                 one{"lita {0} kwa kilomita 100"}
                 other{"lita {0} kwa kilomita 100"}
@@ -647,7 +647,7 @@ sw{
                 one{"hektopaskali {0}"}
                 other{"hektopaskali {0}"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inchi za zebaki"}
                 one{"inchi {0} ya zebaki"}
                 other{"inchi {0} za zebaki"}
@@ -667,7 +667,7 @@ sw{
                 one{"kipimo cha milibari {0}"}
                 other{"kipimo cha milibari {0}"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"milimita za zebaki"}
                 one{"milimita {0} ya zebaki"}
                 other{"milimita {0} za zebaki"}
@@ -677,7 +677,7 @@ sw{
                 one{"paskali {0}"}
                 other{"paskali {0}"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"pauni kwa kila inchi mraba"}
                 one{"pauni {0} kwa kila inchi mraba"}
                 other{"pauni {0} kwa kila inchi mraba"}
@@ -733,7 +733,7 @@ sw{
                 one{"newtonimita {0}"}
                 other{"newtonimita {0}"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"paunifuti"}
                 one{"paunifuti {0}"}
                 other{"paunifuti {0}"}
@@ -930,7 +930,7 @@ sw{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"lita kwa kilomita 100"}
                 one{"{0}L/100km"}
                 other{"{0}L/100km"}
@@ -1077,7 +1077,7 @@ sw{
                 one{"hPa {0}"}
                 other{"hPa {0}"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0} inHg"}
                 other{"{0} inHg"}
             }
@@ -1135,7 +1135,7 @@ sw{
                 one{"G {0}"}
                 other{"G {0}"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"mita kwa kila sekunde mraba"}
                 one{"m {0}/s²"}
                 other{"m {0}/s²"}
@@ -1249,11 +1249,6 @@ sw{
                 one{"moli {0}"}
                 other{"moli {0}"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                one{"ppm {0}"}
-                other{"ppm {0}"}
-            }
             percent{
                 dnam{"asilimia"}
                 one{"asilimia {0}"}
@@ -1264,12 +1259,17 @@ sw{
                 one{"{0} kwa elfu"}
                 other{"{0} kwa elfu"}
             }
+            permillion{
+                dnam{"ppm"}
+                one{"ppm {0}"}
+                other{"ppm {0}"}
+            }
             permyriad{
                 dnam{"permyriadi"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"lita kwa kilomita 100"}
                 one{"lita {0} kwa kilomita 100"}
                 other{"lita {0}/km100"}
@@ -1754,7 +1754,7 @@ sw{
                 one{"hPa {0}"}
                 other{"hPa {0}"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"inchi za zebaki"}
                 one{"{0} inHg"}
                 other{"{0} inHg"}
@@ -1772,7 +1772,7 @@ sw{
                 one{"mbar {0}"}
                 other{"mbar {0}"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"milimita za zebaki"}
                 one{"milimita {0} ya zebaki"}
                 other{"mm Hg {0}"}
@@ -1781,7 +1781,7 @@ sw{
                 one{"Pa {0}"}
                 other{"Pa {0}"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"pauni kwa kila inchi mraba"}
                 one{"psi {0}"}
                 other{"psi {0}"}

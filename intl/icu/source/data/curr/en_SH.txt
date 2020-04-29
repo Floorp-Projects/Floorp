@@ -12,5 +12,5 @@ en_SH{
             "St Helena Pound",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

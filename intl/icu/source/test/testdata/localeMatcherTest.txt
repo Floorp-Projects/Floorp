@@ -733,7 +733,7 @@ ja >> fr
 @favor=script
 en-GB >> en-GB
 en-US >> en
-fr >> en-GB
+fr >> en
 ja >> fr
 
 ** test: testEmptyWithDefault
@@ -761,8 +761,8 @@ en-GB >> en-GB
 en-US >> en
 fr-FR >> fr
 ja-JP >> fr
+zu >> en
 # For a language that doesn't match anything, return the default.
-zu >> en-GB
 zxx >> fr
 
 @favor=script
@@ -770,7 +770,7 @@ en-GB >> en-GB
 en-US >> en
 fr-FR >> fr
 ja-JP >> fr
-zu >> en-GB
+zu >> en
 zxx >> en
 
 ** test: TestExactMatch
@@ -1052,9 +1052,9 @@ en >> en-DE
 ar-EG >> ar-SY
 pt-BR >> pt
 ar-XB >> ar-XB
-ar-PSBIDI >> ar-XB  # These are equivalent.
+ar-PSBIDI >> ar-PSBIDI
 en-XA >> en-XA
-en-PSACCENT >> en-XA  # These are equivalent.
+en-PSACCENT >> en-PSACCENT
 ar-PSCRACK >> ar-PSCRACK
 
 @favor=script
@@ -1063,9 +1063,9 @@ en >> en-DE
 ar-EG >> ar-SY
 pt-BR >> pt
 ar-XB >> ar-XB
-ar-PSBIDI >> ar-XB  # These are equivalent.
+ar-PSBIDI >> ar-PSBIDI
 en-XA >> en-XA
-en-PSACCENT >> en-XA  # These are equivalent.
+en-PSACCENT >> en-PSACCENT
 ar-PSCRACK >> ar-PSCRACK
 
 ** test: BestMatchForTraditionalChinese
@@ -1322,7 +1322,7 @@ en >> en-US
 @favor=script
 und >> und
 ja >> und
-fr-CA >> en-GB
+fr-CA >> en-US
 en-AU >> en-GB
 en-BZ >> en-GB
 en-CA >> en-GB
@@ -1359,8 +1359,8 @@ fr >> und
 @supported=en-GB, en-US, en, en-AU
 und >> und
 ja >> und
-fr-CA >> en-GB
-fr >> en-GB
+fr-CA >> en-US
+fr >> en-US
 @supported=en-AU, ja, ca
 fr >> en-AU
 @supported=pl, ja, ca
@@ -1464,10 +1464,10 @@ da >> no
 @supported=en, nb
 da >> nb
 
-** test: prefer matching languages over language variants.
+** test: prefer matching languages over language variants. Get en-GB, should get nn?
 @supported=nn, en-GB
-no, en-US >> nn
-nb, en-US >> nn
+no, en-US >> en-GB
+nb, en-US >> en-GB
 
 @favor=script
 no, en-US >> nn
@@ -1544,50 +1544,44 @@ zh-TW, en >> en-US
 zh-Hant-CN, en >> en-US
 zh-Hans, en >> zh-Hans-CN
 
-** test: return first among likely-subtags equivalent locales
-# Was: more specific script should win in case regions are identical
-# with some different results.
+** test: return most originally similar among likely-subtags equivalent locales
 @supported=af, af-Latn, af-Arab
 af >> af
 af-ZA >> af
-af-Latn-ZA >> af
-af-Latn >> af
+af-Latn-ZA >> af-Latn
+af-Latn >> af-Latn
 
 @favor=script
 af >> af
 af-ZA >> af
-af-Latn-ZA >> af
-af-Latn >> af
+af-Latn-ZA >> af-Latn
+af-Latn >> af-Latn
 
-# Was: more specific region should win
-# with some different results.
 @supported=nl, nl-NL, nl-BE
 @favor=
 nl >> nl
 nl-Latn >> nl
-nl-Latn-NL >> nl
-nl-NL >> nl
+nl-Latn-NL >> nl-NL
+nl-NL >> nl-NL
 
 @favor=script
 nl >> nl
 nl-Latn >> nl
-nl-Latn-NL >> nl
-nl-NL >> nl
+nl-Latn-NL >> nl-NL
+nl-NL >> nl-NL
 
-# Was: more specific region wins over more specific script
-# with some different results.
 @supported=nl, nl-Latn, nl-NL, nl-BE
 @favor=
 nl >> nl
-nl-Latn >> nl
-nl-NL >> nl
-nl-Latn-NL >> nl
+nl-Latn >> nl-Latn
+nl-NL >> nl-NL
+nl-Latn-NL >> nl-Latn
 
 @favor=script
 nl >> nl
-nl-Latn >> nl
-nl-NL >> nl
-nl-Latn-NL >> nl
+nl-Latn >> nl-Latn
+nl-NL >> nl-NL
+nl-Latn-NL >> nl-Latn
 
 ** test: region may replace matched if matched is enclosing
 @supported=es-419, es
@@ -1670,22 +1664,22 @@ ja-Jpan-JP, en-GB >> ja
 ** test: pick best maximized tag
 @supported=ja, ja-Jpan-US, ja-JP, en, ru
 ja-Jpan, ru >> ja
-ja-JP, ru >> ja
+ja-JP, ru >> ja-JP
 ja-US, ru >> ja-Jpan-US
 
 @favor=script
 ja-Jpan, ru >> ja
-ja-JP, ru >> ja
+ja-JP, ru >> ja-JP
 ja-US, ru >> ja-Jpan-US
 
 ** test: termination: pick best maximized match
 @supported=ja, ja-Jpan, ja-JP, en, ru
-ja-Jpan-JP, ru >> ja
-ja-Jpan, ru >> ja
+ja-Jpan-JP, ru >> ja-Jpan
+ja-Jpan, ru >> ja-Jpan
 
 @favor=script
-ja-Jpan-JP, ru >> ja
-ja-Jpan, ru >> ja
+ja-Jpan-JP, ru >> ja-Jpan
+ja-Jpan, ru >> ja-Jpan
 
 ** test: same language over exact, but distinguish when user is explicit
 @supported=fr, en-GB, ja, es-ES, es-MX
@@ -1900,14 +1894,14 @@ zh-TW >> zh
 ** test: testGetBestMatchWithMinMatchScore
 @supported=fr-FR, fr, fr-CA, en
 @default=und
-fr >> fr-FR # First likely-subtags equivalent match is chosen.
+fr >> fr
 @supported=en, fr, fr-CA
 fr-FR >> fr # Parent match is chosen.
 @supported=en, fr-CA
 fr-FR >> fr-CA # Sibling match is chosen.
 @supported=fr-CA, fr-FR
 fr >> fr-FR # Inferred region match is chosen.
-fr-SN >> fr-CA
+fr-SN >> fr-FR
 @supported=en, fr-FR
 fr >> fr-FR # Child match is chosen.
 @supported=de, en, it
@@ -1930,14 +1924,14 @@ ru >> und
 
 @favor=script
 @supported=fr-FR, fr, fr-CA, en
-fr >> fr-FR
+fr >> fr
 @supported=en, fr, fr-CA
 fr-FR >> fr
 @supported=en, fr-CA
 fr-FR >> fr-CA
 @supported=fr-CA, fr-FR
 fr >> fr-FR
-fr-SN >> fr-CA
+fr-SN >> fr-FR
 @supported=en, fr-FR
 fr >> fr-FR
 @supported=de, en, it
@@ -1957,3 +1951,10 @@ ru >> uk
 zh-CN >> zh-TW
 @supported=ja
 ru >> und
+
+** test: favor a more-default locale among equally imperfect matches
+@supported=fr-CA, fr-CH, fr-FR, fr-GB
+fr-SN >> fr-FR
+@supported=sr-Latn, sr-Cyrl, sr-Grek
+@threshold=60
+sr-Thai >> sr-Cyrl

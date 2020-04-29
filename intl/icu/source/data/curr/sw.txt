@@ -152,7 +152,7 @@ sw{
         }
         CZK{
             "CZK",
-            "CZK",
+            "koruna ya Jamhuri ya Czech",
         }
         DJF{
             "DJF",
@@ -1441,5 +1441,5 @@ sw{
         one{"{1} {0}"}
         other{"{1} {0}"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

@@ -8,5 +8,5 @@ es_BZ{
             "dólar beliceño",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

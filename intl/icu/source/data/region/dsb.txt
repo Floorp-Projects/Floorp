@@ -305,5 +305,5 @@ dsb{
         FK{"Falklandske kupy (Malwiny)"}
         TL{"Pódzajtšny Timor"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

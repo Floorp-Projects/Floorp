@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 fr_CA{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Ndjamena"{
             ec{"Ndjamena"}
@@ -401,6 +401,11 @@ fr_CA{
             sd{"HAT"}
             sg{"HT"}
             ss{"HNT"}
+        }
+        "meta:Norfolk"{
+            ld{"heure avancée de l’île Norfolk"}
+            lg{"heure de l’île Norfolk"}
+            ls{"heure normale de l’île Norfolk"}
         }
         "meta:Noronha"{
             ld{"heure avancée de Fernando de Noronha"}

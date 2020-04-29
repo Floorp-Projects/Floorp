@@ -1,14 +1,14 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 om{
-    Version{"36.1"}
+    Version{"37"}
     collations{
         standard{
             Sequence{
                 "&Z<ch<<<Ch<<<CH<dh<<<Dh<<<DH<kh<<<Kh<<<KH<ny<<<Ny<<<NY<ph<<<Ph<<<PH<"
                 "sh<<<Sh"
             }
-            Version{"36.1"}
+            Version{"37"}
         }
     }
 }

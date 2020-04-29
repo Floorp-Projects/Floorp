@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ta{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ ta{
                 one{"{0} ஜி-ஃபோர்ஸ்"}
                 other{"{0} ஜி-ஃபோர்ஸ்"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"மீட்டர்/சதுரவிநாடி"}
                 one{"{0} மீட்டர்/சதுரவிநாடி"}
                 other{"{0} மீட்டர்கள்/சதுரவிநாடி"}
@@ -128,11 +128,6 @@ ta{
                 one{"{0} மோல்"}
                 other{"{0} மோல்ஸ்"}
             }
-            part-per-million{
-                dnam{"பகுதிகள்/மில்லியன்"}
-                one{"{0} பகுதி/மில்லியன்"}
-                other{"{0} பகுதிகள்/மில்லியன்"}
-            }
             percent{
                 dnam{"சதவீதம்"}
                 one{"{0} சதவீதம்"}
@@ -143,6 +138,11 @@ ta{
                 one{"மில்லி ஒன்றுக்கு {0}"}
                 other{"மில்லி ஒன்றுக்கு {0}"}
             }
+            permillion{
+                dnam{"பகுதிகள்/மில்லியன்"}
+                one{"{0} பகுதி/மில்லியன்"}
+                other{"{0} பகுதிகள்/மில்லியன்"}
+            }
             permyriad{
                 dnam{"பெர்மிரியட்"}
                 one{"{0} பெர்மிரியட்"}
@@ -150,7 +150,7 @@ ta{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"லிட்டர்/100கி.மீ"}
                 one{"{0} லிட்டர்/100கி.மீ"}
                 other{"{0} லிட்டர்/100கி.மீ"}
@@ -682,7 +682,7 @@ ta{
                 one{"{0} ஹெக்டோபாஸ்கல்"}
                 other{"{0} ஹெக்டோபாஸ்கல்"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"பாதரச அங்குலங்கள்"}
                 one{"{0} பாதரச அங்குலம்"}
                 other{"{0} பாதரச அங்குலங்கள்"}
@@ -702,7 +702,7 @@ ta{
                 one{"{0} மில்லிபார்"}
                 other{"{0} மில்லிபார்கள்"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"பாதரச மில்லிமீட்டர்கள்"}
                 one{"{0} பாதரச மில்லிமீட்டர்"}
                 other{"{0} பாதரச மில்லிமீட்டர்கள்"}
@@ -712,7 +712,7 @@ ta{
                 one{"{0} பாஸ்கல்"}
                 other{"{0} பாஸ்கல்கள்"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"பவுண்டுகள்/சதுர அங்குலம்"}
                 one{"{0} பவுண்டு/சதுர அங்குலம்"}
                 other{"{0} பவுண்டுகள்/சதுர அங்குலம்"}
@@ -768,7 +768,7 @@ ta{
                 one{"{0} நியூட்டன் மீட்டர்"}
                 other{"{0} நியூட்டன் மீட்டர்கள்"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"பவுண்ட்-அடி"}
                 one{"{0} பவுண்ட்-அடி"}
                 other{"{0} பவுண்ட்-அடி"}
@@ -970,7 +970,7 @@ ta{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"லி./100கி.மீ"}
                 one{"{0}லி./100கி.மீ"}
                 other{"{0}லி./100கி.மீ"}
@@ -1145,7 +1145,7 @@ ta{
                 one{"{0} ஹெ.பா."}
                 other{"{0} ஹெ.பா."}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"பா. அங்."}
                 one{"{0} பா.அங்."}
                 other{"{0} பா.அங்."}
@@ -1155,12 +1155,12 @@ ta{
                 one{"{0} மி.பா."}
                 other{"{0} மி.பா."}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"பாத. மி.மீ."}
                 one{"{0} பாத. மி.மீ."}
                 other{"{0} பாத. மி.மீ."}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 one{"{0} psi"}
                 other{"{0} psi"}
@@ -1228,7 +1228,7 @@ ta{
                 one{"{0} ஜி.ஃபோ."}
                 other{"{0} ஜி.ஃபோ."}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"மீ/வி²"}
                 one{"{0} மீ/வி²"}
                 other{"{0} மீ/வி²"}
@@ -1342,11 +1342,6 @@ ta{
                 one{"{0} மோல்"}
                 other{"{0} மோல்"}
             }
-            part-per-million{
-                dnam{"ப./மி."}
-                one{"{0} ப./மி."}
-                other{"{0} ப./மி."}
-            }
             percent{
                 dnam{"சதவீதம்"}
                 one{"{0}%"}
@@ -1357,12 +1352,17 @@ ta{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"ப./மி."}
+                one{"{0} ப./மி."}
+                other{"{0} ப./மி."}
+            }
             permyriad{
                 dnam{"பெர்மிரியட்"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"லி./100கி.மீ"}
                 one{"{0} லி./100கி.மீ"}
                 other{"{0} லி./100கி.மீ"}
@@ -1882,7 +1882,7 @@ ta{
                 one{"{0} ஹெ.பாஸ்."}
                 other{"{0} ஹெ.பாஸ்."}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"பாத. அங்."}
                 one{"{0} பாத. அங்."}
                 other{"{0} பாத. அங்."}
@@ -1902,7 +1902,7 @@ ta{
                 one{"{0} மி.பா."}
                 other{"{0} மி.பா."}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"பாத. மி.மீ."}
                 one{"{0} பாத. மி.மீ."}
                 other{"{0} பாத. மி.மீ."}
@@ -1912,7 +1912,7 @@ ta{
                 one{"{0} பா."}
                 other{"{0} பா."}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 one{"{0} psi"}
                 other{"{0} psi"}
@@ -1968,7 +1968,7 @@ ta{
                 one{"{0} நியூ.மீ"}
                 other{"{0} நியூ.மீ"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"ப.அடி"}
                 one{"{0} ப.அடி"}
                 other{"{0} ப.அடி"}

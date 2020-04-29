@@ -149,7 +149,7 @@ mi{
             }
         }
     }
-    Version{"36.1"}
+    Version{"37"}
     calendar{
         generic{
             DateTimePatterns{
@@ -399,10 +399,6 @@ mi{
             }
             eras{
                 abbreviated{
-                    "BCE",
-                    "CE",
-                }
-                abbreviated%variant{
                     "BCE",
                     "CE",
                 }

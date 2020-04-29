@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 he{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -16,7 +16,7 @@ he{
                 other{"{0} כוחות ג׳י"}
                 two{"שני כוחות ג׳י"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"מטר לשנייה בריבוע"}
                 many{"{0} מטר לשנייה בריבוע"}
                 one{"{0} מטר לשנייה בריבוע"}
@@ -170,13 +170,6 @@ he{
                 other{"{0} מול"}
                 two{"{0} מול"}
             }
-            part-per-million{
-                dnam{"חלקים למיליון"}
-                many{"{0} חלקים למיליון"}
-                one{"{0} חלקים למיליון"}
-                other{"{0} חלקים למיליון"}
-                two{"{0} חלקים למיליון"}
-            }
             percent{
                 dnam{"אחוז"}
                 many{"{0} אחוז"}
@@ -191,6 +184,13 @@ he{
                 other{"{0} פרומיל"}
                 two{"{0} פרומיל"}
             }
+            permillion{
+                dnam{"חלקים למיליון"}
+                many{"{0} חלקים למיליון"}
+                one{"{0} חלקים למיליון"}
+                other{"{0} חלקים למיליון"}
+                two{"{0} חלקים למיליון"}
+            }
             permyriad{
                 dnam{"רבבית"}
                 many{"{0} רבביות"}
@@ -200,7 +200,7 @@ he{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ליטר/100 ק״מ"}
                 many{"{0} ליטר/100 ק״מ"}
                 one{"ליטר/100 ק״מ"}
@@ -918,7 +918,7 @@ he{
                 other{"{0} הקטופסקל"}
                 two{"{0} הקטופסקל"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"אינץ׳ כספית"}
                 many{"{0} אינץ׳ כספית"}
                 one{"אינץ׳ כספית {0}"}
@@ -946,7 +946,7 @@ he{
                 other{"{0} מיליבר"}
                 two{"{0} מיליבר"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"מילימטר כספית"}
                 many{"{0} מילימטר כספית"}
                 one{"מילימטר כספית אחד"}
@@ -960,7 +960,7 @@ he{
                 other{"{0} פסקל"}
                 two{"{0} פסקל"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"פאונד לאינץ׳ רבוע"}
                 many{"{0} פאונד לאינץ׳ רבוע"}
                 one{"פאונד אחד לאינץ׳ רבוע"}
@@ -1036,7 +1036,7 @@ he{
                 other{"{0} ניוטון-מטר"}
                 two{"{0} ניוטון-מטר"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"כוח פאונד"}
                 many{"{0} כוח פאונד"}
                 one{"{0} כוח פאונד"}
@@ -1243,7 +1243,7 @@ he{
                 other{"{0} G"}
                 two{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 many{"{0} m/s²"}
                 one{"{0} m/s²"}
@@ -1322,7 +1322,7 @@ he{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ל׳/100ק״מ"}
                 many{"{0}ל׳/100ק״מ"}
                 one{"{0}ל׳/100ק״מ"}
@@ -1689,7 +1689,7 @@ he{
                 other{"{0} hPa"}
                 two{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"in Hg"}
                 many{"{0} inHg"}
                 one{"{0} inHg"}
@@ -1703,14 +1703,14 @@ he{
                 other{"{0} מיליבר"}
                 two{"{0} מיליבר"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 many{"{0} mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
                 two{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 many{"{0} psi"}
                 one{"{0} psi"}
@@ -1809,7 +1809,7 @@ he{
                 other{"{0} G"}
                 two{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 many{"{0} m/s²"}
                 one{"{0} m/s²"}
@@ -1957,13 +1957,6 @@ he{
                 other{"{0} mmol/L"}
                 two{"{0} mmol/L"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                many{"{0} ppm"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-                two{"{0} ppm"}
-            }
             percent{
                 dnam{"%"}
                 many{"{0}%"}
@@ -1978,9 +1971,16 @@ he{
                 other{"{0}‰"}
                 two{"{0}‰"}
             }
+            permillion{
+                dnam{"ppm"}
+                many{"{0} ppm"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+                two{"{0} ppm"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ל׳/100 ק״מ"}
                 many{"{0} ל׳/100 ק״מ"}
                 one{"ל׳ {0}/100 ק״מ"}
@@ -2636,7 +2636,7 @@ he{
                 other{"{0} hPa"}
                 two{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"in Hg"}
                 many{"{0} inHg"}
                 one{"{0} inHg"}
@@ -2650,14 +2650,14 @@ he{
                 other{"{0} mbar"}
                 two{"{0} mbar"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 many{"{0} mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
                 two{"{0} mm Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 many{"{0} psi"}
                 one{"{0} psi"}

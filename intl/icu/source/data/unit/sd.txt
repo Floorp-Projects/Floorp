@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sd{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ sd{
                 one{"{0} ڪشش ثقل"}
                 other{"{0} ڪشش ثقل"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"ميٽر في سيڪنڊ اسڪوائر"}
                 one{"{0} m/s²"}
                 other{"{0} ميٽر في سيڪنڊ اسڪوائر"}
@@ -129,11 +129,6 @@ sd{
                 one{"{0} مول"}
                 other{"{0} مولز"}
             }
-            part-per-million{
-                dnam{"حصا في ملين"}
-                one{"{0} حصا في ملين"}
-                other{"{0} حصا في ملين"}
-            }
             percent{
                 dnam{"%"}
                 one{"{0}%"}
@@ -144,6 +139,11 @@ sd{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"حصا في ملين"}
+                one{"{0} حصا في ملين"}
+                other{"{0} حصا في ملين"}
+            }
             permyriad{
                 dnam{"پيرمائيرڊ"}
                 one{"{0} پيرمائيرڊ"}
@@ -151,7 +151,7 @@ sd{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ليٽرز في 100 ڪلو ميٽر"}
                 one{"{0} L/100km"}
                 other{"{0} ليٽرز في 100 ڪلو ميٽر"}
@@ -678,7 +678,7 @@ sd{
                 one{"{0} هيڪٽوپاسڪلز"}
                 other{"{0} هيڪٽوپاسڪلز"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"مرڪري جا انچز"}
                 one{"مرڪري جا {0} انچز"}
                 other{"مرڪري جا {0} انچز"}
@@ -698,7 +698,7 @@ sd{
                 one{"{0} ملي بارز"}
                 other{"{0} ملي بارز"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"مرڪري جو ملي ميٽر"}
                 one{"مرڪري جو {0} ملي ميٽر"}
                 other{"مرڪري جو {0} ملي ميٽر"}
@@ -708,7 +708,7 @@ sd{
                 one{"{0} پاسڪل"}
                 other{"{0} پاسڪلز"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"پائونڊز في اسڪوائر انچ"}
                 one{"{0} psi"}
                 other{"{0} پائونڊز في اسڪوائر انچ"}
@@ -764,7 +764,7 @@ sd{
                 one{"{0} نيوٽن-ميٽر"}
                 other{"{0} نيوٽن-ميٽرز"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"پائونڊ-فيٽ"}
                 one{"{0} پائونڊ-فوٽ"}
                 other{"{0} پائونڊ-فيٽ"}
@@ -921,7 +921,7 @@ sd{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 one{"{0} L/100km"}
                 other{"{0} L/100km"}
@@ -1051,7 +1051,7 @@ sd{
                 one{"{0} ڪشش ثقل"}
                 other{"{0} ڪشش ثقل"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"ميٽر في سيڪنڊ اسڪوائر"}
                 one{"{0} m/s²"}
                 other{"{0} m/s²"}
@@ -1166,11 +1166,6 @@ sd{
                 one{"{0} mol"}
                 other{"{0} mol"}
             }
-            part-per-million{
-                dnam{"حصا في ملين"}
-                one{"{0} حصا في ملين"}
-                other{"{0} حصا في ملين"}
-            }
             percent{
                 dnam{"%"}
                 one{"{0}%"}
@@ -1181,6 +1176,11 @@ sd{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"حصا في ملين"}
+                one{"{0} حصا في ملين"}
+                other{"{0} حصا في ملين"}
+            }
             permyriad{
                 dnam{"پيرمائيرڊ"}
                 one{"{0}‱"}
@@ -1188,7 +1188,7 @@ sd{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"L/100km"}
                 one{"{0} L/100km"}
                 other{"{0} L/100km"}
@@ -1686,7 +1686,7 @@ sd{
                 one{"{0} هيڪٽوپاسڪلز"}
                 other{"{0} هيڪٽوپاسڪلز"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"مرڪري جا انچز"}
                 one{"مرڪري جا {0} انچز"}
                 other{"مرڪري جا {0} انچز"}
@@ -1706,12 +1706,12 @@ sd{
                 one{"{0} ملي بارز"}
                 other{"{0} ملي بارز"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"مرڪري جو ملي ميٽر"}
                 one{"مرڪري جو {0} ملي ميٽر"}
                 other{"مرڪري جو {0} ملي ميٽر"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"پائونڊز في اسڪوائر انچ"}
                 one{"{0} psi"}
                 other{"{0} psi"}
@@ -1767,7 +1767,7 @@ sd{
                 one{"{0} N⋅m"}
                 other{"{0} N⋅m"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"lbf⋅ft"}
                 one{"{0} lbf⋅ft"}
                 other{"{0} lbf⋅ft"}

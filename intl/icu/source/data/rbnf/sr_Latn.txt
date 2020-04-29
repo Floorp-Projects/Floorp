@@ -146,5 +146,5 @@ sr_Latn{
             "400: <%spellout-cardinal-feminine<sto>%%ordti>;",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

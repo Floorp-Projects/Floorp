@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 pl{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidżan"}
@@ -1311,7 +1311,7 @@ pl{
         }
         "meta:Alaska"{
             ld{"Alaska (czas letni)"}
-            lg{"Alaska"}
+            lg{"czas Alaska"}
             ls{"Alaska (czas standardowy)"}
         }
         "meta:Amazon"{
@@ -1346,27 +1346,27 @@ pl{
         }
         "meta:Apia"{
             ld{"Apia (czas letni)"}
-            lg{"Apia"}
+            lg{"czas Apia"}
             ls{"Apia (czas standardowy)"}
         }
         "meta:Arabian"{
             ld{"Półwysep Arabski (czas letni)"}
-            lg{"Półwysep Arabski"}
+            lg{"czas Półwysep Arabski"}
             ls{"Półwysep Arabski (czas standardowy)"}
         }
         "meta:Argentina"{
             ld{"Argentyna (czas letni)"}
-            lg{"Argentyna"}
+            lg{"czas Argentyna"}
             ls{"Argentyna (czas standardowy)"}
         }
         "meta:Argentina_Western"{
             ld{"Argentyna Zachodnia (czas letni)"}
-            lg{"Argentyna Zachodnia"}
+            lg{"czas Argentyna Zachodnia"}
             ls{"Argentyna Zachodnia (czas standardowy)"}
         }
         "meta:Armenia"{
             ld{"Armenia (czas letni)"}
-            lg{"Armenia"}
+            lg{"czas Armenia"}
             ls{"Armenia (czas standardowy)"}
         }
         "meta:Atlantic"{
@@ -1396,98 +1396,89 @@ pl{
         }
         "meta:Azerbaijan"{
             ld{"Azerbejdżan (czas letni)"}
-            lg{"Azerbejdżan"}
+            lg{"czas Azerbejdżan"}
             ls{"Azerbejdżan (czas standardowy)"}
         }
         "meta:Azores"{
             ld{"Azory (czas letni)"}
-            lg{"Azory"}
+            lg{"czas Azory"}
             ls{"Azory (czas standardowy)"}
         }
         "meta:Bangladesh"{
             ld{"Bangladesz (czas letni)"}
-            lg{"Bangladesz"}
+            lg{"czas Bangladesz"}
             ls{"Bangladesz (czas standardowy)"}
         }
-        "meta:Bhutan"{
-            ls{"Bhutan"}
-        }
         "meta:Bolivia"{
-            ls{"Boliwia"}
+            ls{"czas Boliwia"}
         }
         "meta:Brasilia"{
             ld{"Brasília (czas letni)"}
-            lg{"Brasília"}
+            lg{"czas Brasília"}
             ls{"Brasília (czas standardowy)"}
-        }
-        "meta:Brunei"{
-            ls{"Brunei"}
         }
         "meta:Cape_Verde"{
             ld{"Wyspy Zielonego Przylądka (czas letni)"}
-            lg{"Wyspy Zielonego Przylądka"}
+            lg{"czas Wyspy Zielonego Przylądka"}
             ls{"Wyspy Zielonego Przylądka (czas standardowy)"}
         }
         "meta:Chamorro"{
-            ls{"Czamorro"}
+            ls{"czas Czamorro"}
         }
         "meta:Chatham"{
             ld{"Chatham (czas letni)"}
-            lg{"Chatham"}
+            lg{"czas Chatham"}
             ls{"Chatham (czas standardowy)"}
         }
         "meta:Chile"{
             ld{"Chile (czas letni)"}
-            lg{"Chile"}
+            lg{"czas Chile"}
             ls{"Chile (czas standardowy)"}
         }
         "meta:China"{
             ld{"Chiny (czas letni)"}
-            lg{"Chiny"}
+            lg{"czas Chiny"}
             ls{"Chiny (czas standardowy)"}
         }
         "meta:Choibalsan"{
             ld{"Czojbalsan (czas letni)"}
-            lg{"Czojbalsan"}
+            lg{"czas Czojbalsan"}
             ls{"Czojbalsan (czas standardowy)"}
         }
         "meta:Christmas"{
-            ls{"Wyspa Bożego Narodzenia"}
+            ls{"czas Wyspa Bożego Narodzenia"}
         }
         "meta:Cocos"{
-            ls{"Wyspy Kokosowe"}
+            ls{"czas Wyspy Kokosowe"}
         }
         "meta:Colombia"{
             ld{"Kolumbia (czas letni)"}
-            lg{"Kolumbia"}
+            lg{"czas Kolumbia"}
             ls{"Kolumbia (czas standardowy)"}
         }
         "meta:Cook"{
             ld{"Wyspy Cooka (czas letni)"}
-            lg{"Wyspy Cooka"}
+            lg{"czas Wyspy Cooka"}
             ls{"Wyspy Cooka (czas standardowy)"}
         }
         "meta:Cuba"{
             ld{"Kuba (czas letni)"}
-            lg{"Kuba"}
+            lg{"czas Kuba"}
             ls{"Kuba (czas standardowy)"}
         }
-        "meta:Davis"{
-            ls{"Davis"}
-        }
         "meta:DumontDUrville"{
-            ls{"Dumont-d’Urville"}
+            ls{"czas Dumont-d’Urville"}
         }
         "meta:East_Timor"{
-            ls{"Timor Wschodni"}
+            ls{"czas Timor Wschodni"}
         }
         "meta:Easter"{
             ld{"Wyspa Wielkanocna (czas letni)"}
-            lg{"Wyspa Wielkanocna"}
+            lg{"czas Wyspa Wielkanocna"}
             ls{"Wyspa Wielkanocna (czas standardowy)"}
         }
         "meta:Ecuador"{
-            ls{"Ekwador"}
+            ls{"czas Ekwador"}
         }
         "meta:Europe_Central"{
             ld{"czas środkowoeuropejski letni"}
@@ -1518,104 +1509,101 @@ pl{
         }
         "meta:Falkland"{
             ld{"Falklandy (czas letni)"}
-            lg{"Falklandy"}
+            lg{"czas Falklandy"}
             ls{"Falklandy (czas standardowy)"}
         }
         "meta:Fiji"{
             ld{"Fidżi (czas letni)"}
-            lg{"Fidżi"}
+            lg{"czas Fidżi"}
             ls{"Fidżi (czas standardowy)"}
         }
         "meta:French_Guiana"{
-            ls{"Gujana Francuska"}
+            ls{"czas Gujana Francuska"}
         }
         "meta:French_Southern"{
-            ls{"Francuskie Terytoria Południowe i Antarktyczne"}
+            ls{"czas Francuskie Terytoria Południowe i Antarktyczne"}
         }
         "meta:GMT"{
             ls{"czas uniwersalny"}
         }
-        "meta:Galapagos"{
-            ls{"Galapagos"}
-        }
         "meta:Gambier"{
-            ls{"Wyspy Gambiera"}
+            ls{"czas Wyspy Gambiera"}
         }
         "meta:Georgia"{
             ld{"Gruzja (czas letni)"}
-            lg{"Gruzja"}
+            lg{"czas Gruzja"}
             ls{"Gruzja (czas standardowy)"}
         }
         "meta:Gilbert_Islands"{
-            ls{"Wyspy Gilberta"}
+            ls{"czas Wyspy Gilberta"}
         }
         "meta:Greenland_Eastern"{
             ld{"Grenlandia Wschodnia (czas letni)"}
-            lg{"Grenlandia Wschodnia"}
+            lg{"czas Grenlandia Wschodnia"}
             ls{"Grenlandia Wschodnia (czas standardowy)"}
         }
         "meta:Greenland_Western"{
             ld{"Grenlandia Zachodnia (czas letni)"}
-            lg{"Grenlandia Zachodnia"}
+            lg{"czas Grenlandia Zachodnia"}
             ls{"Grenlandia Zachodnia (czas standardowy)"}
         }
         "meta:Gulf"{
-            ls{"Zatoka Perska"}
+            ls{"czas Zatoka Perska"}
         }
         "meta:Guyana"{
-            ls{"Gujana"}
+            ls{"czas Gujana"}
         }
         "meta:Hawaii_Aleutian"{
             ld{"Hawaje-Aleuty (czas letni)"}
-            lg{"Hawaje-Aleuty"}
+            lg{"czas Hawaje-Aleuty"}
             ls{"Hawaje-Aleuty (czas standardowy)"}
         }
         "meta:Hong_Kong"{
             ld{"Hongkong (czas letni)"}
-            lg{"Hongkong"}
+            lg{"czas Hongkong"}
             ls{"Hongkong (czas standardowy)"}
         }
         "meta:Hovd"{
             ld{"Kobdo (czas letni)"}
-            lg{"Kobdo"}
+            lg{"czas Kobdo"}
             ls{"Kobdo (czas standardowy)"}
         }
         "meta:India"{
             ls{"czas indyjski standardowy"}
         }
         "meta:Indian_Ocean"{
-            ls{"Ocean Indyjski"}
+            ls{"czas Ocean Indyjski"}
         }
         "meta:Indochina"{
             ls{"czas indochiński"}
         }
         "meta:Indonesia_Central"{
-            ls{"Indonezja Środkowa"}
+            ls{"czas Indonezja Środkowa"}
         }
         "meta:Indonesia_Eastern"{
-            ls{"Indonezja Wschodnia"}
+            ls{"czas Indonezja Wschodnia"}
         }
         "meta:Indonesia_Western"{
-            ls{"Indonezja Zachodnia"}
+            ls{"czas Indonezja Zachodnia"}
         }
         "meta:Iran"{
             ld{"Iran (czas letni)"}
-            lg{"Iran"}
+            lg{"czas Iran"}
             ls{"Iran (czas standardowy)"}
         }
         "meta:Irkutsk"{
             ld{"Irkuck (czas letni)"}
-            lg{"Irkuck"}
+            lg{"czas Irkuck"}
             ls{"Irkuck (czas standardowy)"}
         }
         "meta:Israel"{
             ld{"Izrael (czas letni)"}
-            lg{"Izrael"}
+            lg{"czas Izrael"}
             ls{"Izrael (czas standardowy)"}
         }
         "meta:Japan"{
             ld{"Japonia (czas letni)"}
-            lg{"Japonia"}
+            lg{"czas Japonia"}
             ls{"Japonia (czas standardowy)"}
         }
         "meta:Kamchatka"{
@@ -1624,66 +1612,57 @@ pl{
             ls{"czas standardowy Pietropawłowsk Kamczacki"}
         }
         "meta:Kazakhstan_Eastern"{
-            ls{"Kazachstan Wschodni"}
+            ls{"czas Kazachstan Wschodni"}
         }
         "meta:Kazakhstan_Western"{
-            ls{"Kazachstan Zachodni"}
+            ls{"czas Kazachstan Zachodni"}
         }
         "meta:Korea"{
             ld{"Korea (czas letni)"}
-            lg{"Korea"}
+            lg{"czas Korea"}
             ls{"Korea (czas standardowy)"}
-        }
-        "meta:Kosrae"{
-            ls{"Kosrae"}
         }
         "meta:Krasnoyarsk"{
             ld{"Krasnojarsk (czas letni)"}
-            lg{"Krasnojarsk"}
+            lg{"czas Krasnojarsk"}
             ls{"Krasnojarsk (czas standardowy)"}
         }
         "meta:Kyrgystan"{
-            ls{"Kirgistan"}
+            ls{"czas Kirgistan"}
         }
         "meta:Line_Islands"{
-            ls{"Line Islands"}
+            ls{"czas Line Islands"}
         }
         "meta:Lord_Howe"{
             ld{"Lord Howe (czas letni)"}
-            lg{"Lord Howe"}
+            lg{"czas Lord Howe"}
             ls{"Lord Howe (czas standardowy)"}
-        }
-        "meta:Macquarie"{
-            ls{"Macquarie"}
         }
         "meta:Magadan"{
             ld{"Magadan (czas letni)"}
-            lg{"Magadan"}
+            lg{"czas Magadan"}
             ls{"Magadan (czas standardowy)"}
         }
         "meta:Malaysia"{
-            ls{"Malezja"}
+            ls{"czas Malezja"}
         }
         "meta:Maldives"{
-            ls{"Malediwy"}
+            ls{"czas Malediwy"}
         }
         "meta:Marquesas"{
-            ls{"Markizy"}
+            ls{"czas Markizy"}
         }
         "meta:Marshall_Islands"{
-            ls{"Wyspy Marshalla"}
+            ls{"czas Wyspy Marshalla"}
         }
         "meta:Mauritius"{
             ld{"Mauritius (czas letni)"}
-            lg{"Mauritius"}
+            lg{"czas Mauritius"}
             ls{"Mauritius (czas standardowy)"}
-        }
-        "meta:Mawson"{
-            ls{"Mawson"}
         }
         "meta:Mexico_Northwest"{
             ld{"Meksyk Północno-Zachodni (czas letni)"}
-            lg{"Meksyk Północno-Zachodni"}
+            lg{"czas Meksyk Północno-Zachodni"}
             ls{"Meksyk Północno-Zachodni (czas standardowy)"}
         }
         "meta:Mexico_Pacific"{
@@ -1693,111 +1672,87 @@ pl{
         }
         "meta:Mongolia"{
             ld{"Ułan Bator (czas letni)"}
-            lg{"Ułan Bator"}
+            lg{"czas Ułan Bator"}
             ls{"Ułan Bator (czas standardowy)"}
         }
         "meta:Moscow"{
             ld{"Moskwa (czas letni)"}
-            lg{"Moskwa"}
+            lg{"czas Moskwa"}
             ls{"Moskwa (czas standardowy)"}
         }
         "meta:Myanmar"{
-            ls{"Mjanma"}
-        }
-        "meta:Nauru"{
-            ls{"Nauru"}
-        }
-        "meta:Nepal"{
-            ls{"Nepal"}
+            ls{"czas Mjanma"}
         }
         "meta:New_Caledonia"{
             ld{"Nowa Kaledonia (czas letni)"}
-            lg{"Nowa Kaledonia"}
+            lg{"czas Nowa Kaledonia"}
             ls{"Nowa Kaledonia (czas standardowy)"}
         }
         "meta:New_Zealand"{
             ld{"Nowa Zelandia (czas letni)"}
-            lg{"Nowa Zelandia"}
+            lg{"czas Nowa Zelandia"}
             ls{"Nowa Zelandia (czas standardowy)"}
         }
         "meta:Newfoundland"{
             ld{"Nowa Fundlandia (czas letni)"}
-            lg{"Nowa Fundlandia"}
+            lg{"czas Nowa Fundlandia"}
             ls{"Nowa Fundlandia (czas standardowy)"}
-        }
-        "meta:Niue"{
-            ls{"Niue"}
-        }
-        "meta:Norfolk"{
-            ls{"Norfolk"}
         }
         "meta:Noronha"{
             ld{"Fernando de Noronha (czas letni)"}
-            lg{"Fernando de Noronha"}
+            lg{"czas Fernando de Noronha"}
             ls{"Fernando de Noronha (czas standardowy)"}
         }
         "meta:Novosibirsk"{
             ld{"Nowosybirsk (czas letni)"}
-            lg{"Nowosybirsk"}
+            lg{"czas Nowosybirsk"}
             ls{"Nowosybirsk (czas standardowy)"}
         }
         "meta:Omsk"{
             ld{"Omsk (czas letni)"}
-            lg{"Omsk"}
+            lg{"czas Omsk"}
             ls{"Omsk (czas standardowy)"}
         }
         "meta:Pakistan"{
             ld{"Pakistan (czas letni)"}
-            lg{"Pakistan"}
+            lg{"czas Pakistan"}
             ls{"Pakistan (czas standardowy)"}
         }
-        "meta:Palau"{
-            ls{"Palau"}
-        }
         "meta:Papua_New_Guinea"{
-            ls{"Papua-Nowa Gwinea"}
+            ls{"czas Papua-Nowa Gwinea"}
         }
         "meta:Paraguay"{
             ld{"Paragwaj (czas letni)"}
-            lg{"Paragwaj"}
+            lg{"czas Paragwaj"}
             ls{"Paragwaj (czas standardowy)"}
         }
         "meta:Peru"{
             ld{"Peru (czas letni)"}
-            lg{"Peru"}
+            lg{"czas Peru"}
             ls{"Peru (czas standardowy)"}
         }
         "meta:Philippines"{
             ld{"Filipiny (czas letni)"}
-            lg{"Filipiny"}
+            lg{"czas Filipiny"}
             ls{"Filipiny (czas standardowy)"}
         }
         "meta:Phoenix_Islands"{
-            ls{"Feniks"}
+            ls{"czas Feniks"}
         }
         "meta:Pierre_Miquelon"{
             ld{"Saint-Pierre i Miquelon (czas letni)"}
-            lg{"Saint-Pierre i Miquelon"}
+            lg{"czas Saint-Pierre i Miquelon"}
             ls{"Saint-Pierre i Miquelon (czas standardowy)"}
         }
-        "meta:Pitcairn"{
-            ls{"Pitcairn"}
-        }
         "meta:Ponape"{
-            ls{"Pohnpei"}
+            ls{"czas Pohnpei"}
         }
         "meta:Pyongyang"{
-            ls{"Pjongjang"}
-        }
-        "meta:Reunion"{
-            ls{"Reunion"}
-        }
-        "meta:Rothera"{
-            ls{"Rothera"}
+            ls{"czas Pjongjang"}
         }
         "meta:Sakhalin"{
             ld{"Sachalin (czas letni)"}
-            lg{"Sachalin"}
+            lg{"czas Sachalin"}
             ls{"Sachalin (czas standardowy)"}
         }
         "meta:Samara"{
@@ -1807,102 +1762,87 @@ pl{
         }
         "meta:Samoa"{
             ld{"Samoa (czas letni)"}
-            lg{"Samoa"}
+            lg{"czas Samoa"}
             ls{"Samoa (czas standardowy)"}
         }
         "meta:Seychelles"{
-            ls{"Seszele"}
+            ls{"czas Seszele"}
         }
         "meta:Singapore"{
-            ls{"Singapur"}
+            ls{"czas Singapur"}
         }
         "meta:Solomon"{
-            ls{"Wyspy Salomona"}
+            ls{"czas Wyspy Salomona"}
         }
         "meta:South_Georgia"{
-            ls{"Georgia Południowa"}
+            ls{"czas Georgia Południowa"}
         }
         "meta:Suriname"{
-            ls{"Surinam"}
-        }
-        "meta:Syowa"{
-            ls{"Syowa"}
-        }
-        "meta:Tahiti"{
-            ls{"Tahiti"}
+            ls{"czas Surinam"}
         }
         "meta:Taipei"{
             ld{"Tajpej (czas letni)"}
-            lg{"Tajpej"}
+            lg{"czas Tajpej"}
             ls{"Tajpej (czas standardowy)"}
         }
         "meta:Tajikistan"{
-            ls{"Tadżykistan"}
-        }
-        "meta:Tokelau"{
-            ls{"Tokelau"}
+            ls{"czas Tadżykistan"}
         }
         "meta:Tonga"{
             ld{"Tonga (czas letni)"}
-            lg{"Tonga"}
+            lg{"czas Tonga"}
             ls{"Tonga (czas standardowy)"}
         }
         "meta:Truk"{
-            ls{"Chuuk"}
+            ls{"czas Chuuk"}
         }
         "meta:Turkmenistan"{
             ld{"Turkmenistan (czas letni)"}
-            lg{"Turkmenistan"}
+            lg{"czas Turkmenistan"}
             ls{"Turkmenistan (czas standardowy)"}
-        }
-        "meta:Tuvalu"{
-            ls{"Tuvalu"}
         }
         "meta:Uruguay"{
             ld{"Urugwaj (czas letni)"}
-            lg{"Urugwaj"}
+            lg{"czas Urugwaj"}
             ls{"Urugwaj (czas standardowy)"}
         }
         "meta:Uzbekistan"{
             ld{"Uzbekistan (czas letni)"}
-            lg{"Uzbekistan"}
+            lg{"czas Uzbekistan"}
             ls{"Uzbekistan (czas standardowy)"}
         }
         "meta:Vanuatu"{
             ld{"Vanuatu (czas letni)"}
-            lg{"Vanuatu"}
+            lg{"czas Vanuatu"}
             ls{"Vanuatu (czas standardowy)"}
         }
         "meta:Venezuela"{
-            ls{"Wenezuela"}
+            ls{"czas Wenezuela"}
         }
         "meta:Vladivostok"{
             ld{"Władywostok (czas letni)"}
-            lg{"Władywostok"}
+            lg{"czas Władywostok"}
             ls{"Władywostok (czas standardowy)"}
         }
         "meta:Volgograd"{
             ld{"Wołgograd (czas letni)"}
-            lg{"Wołgograd"}
+            lg{"czas Wołgograd"}
             ls{"Wołgograd (czas standardowy)"}
         }
         "meta:Vostok"{
-            ls{"Wostok"}
-        }
-        "meta:Wake"{
-            ls{"Wake"}
+            ls{"czas Wostok"}
         }
         "meta:Wallis"{
-            ls{"Wallis i Futuna"}
+            ls{"czas Wallis i Futuna"}
         }
         "meta:Yakutsk"{
             ld{"Jakuck (czas letni)"}
-            lg{"Jakuck"}
+            lg{"czas Jakuck"}
             ls{"Jakuck (czas standardowy)"}
         }
         "meta:Yekaterinburg"{
             ld{"Jekaterynburg (czas letni)"}
-            lg{"Jekaterynburg"}
+            lg{"czas Jekaterynburg"}
             ls{"Jekaterynburg (czas standardowy)"}
         }
         fallbackFormat{"{1} ({0})"}

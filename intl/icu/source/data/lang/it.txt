@@ -182,6 +182,7 @@ it{
         ewo{"ewondo"}
         ext{"estremegno"}
         fa{"persiano"}
+        fa_AF{"dari"}
         fan{"fang"}
         fat{"fanti"}
         ff{"fulah"}
@@ -472,7 +473,6 @@ it{
         ro_MD{"moldavo"}
         rof{"rombo"}
         rom{"romani"}
-        root{"root"}
         rtm{"rotumano"}
         ru{"russo"}
         rue{"ruteno"}
@@ -648,6 +648,7 @@ it{
     Scripts{
         Afak{"afaka"}
         Arab{"arabo"}
+        Aran{"nastaliq"}
         Armi{"aramaico imperiale"}
         Armn{"armeno"}
         Avst{"avestico"}
@@ -758,6 +759,7 @@ it{
         Phnx{"fenicio"}
         Plrd{"fonetica di pollard"}
         Prti{"partico delle iscrizioni"}
+        Qaag{"zawgyi"}
         Rjng{"rejang"}
         Roro{"rongorongo"}
         Runr{"runico"}
@@ -1026,7 +1028,7 @@ it{
         VALENCIA{"valenziano"}
         WADEGILE{"romanizzazione Wade-Giles"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} — Tutto"}
         category-list{"{0}: {1}"}

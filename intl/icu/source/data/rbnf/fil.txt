@@ -56,5 +56,5 @@ fil{
             "0: ika =%spellout-cardinal=;",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

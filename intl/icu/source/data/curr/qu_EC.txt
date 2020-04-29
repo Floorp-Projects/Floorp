@@ -11,5 +11,5 @@ qu_EC{
             "Dólar Americano",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 am{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ am{
                 one{"{0} ጂ-ኃይል"}
                 other{"{0} ጂ-ኃይል"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"ሜ/ሰ²"}
                 one{"{0} ሜ/ሰ²"}
                 other{"{0} ሜ/ሰ²"}
@@ -123,11 +123,6 @@ am{
                 one{"{0} mmol/L"}
                 other{"{0} mmol/L"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"ፐርሰንት"}
                 one{"{0} ፐርሰንት"}
@@ -138,9 +133,14 @@ am{
                 one{"{0} በማይል"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"ppm"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ሊትሮች በ100 ኪሎሜትሮች"}
                 one{"{0} ሊትር በ100 ኪሎሜትሮች"}
                 other{"{0} ሊትሮች በ100 ኪሎሜትሮች"}
@@ -622,7 +622,7 @@ am{
                 one{"{0} ሄክቶፓስካል"}
                 other{"{0} ሄክቶፓስካል"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"ኢንች ሜርኩሪ"}
                 one{"{0} ኢንች ሜርኩሪ"}
                 other{"{0} ኢንች ሜርኩሪ"}
@@ -642,7 +642,7 @@ am{
                 one{"{0} ሚሊባር"}
                 other{"{0} ሚሊባር"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
@@ -652,7 +652,7 @@ am{
                 one{"{0} ፓስካል"}
                 other{"{0} ፓስካል"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 one{"{0} psi"}
                 other{"{0} psi"}
@@ -900,7 +900,7 @@ am{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ሊትር በ100 ኪሎሜትሮች"}
                 one{"{0}ሊበ100ኪሜ"}
                 other{"{0}ሊበ100ኪሜ"}
@@ -1045,7 +1045,7 @@ am{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0} inHg"}
                 other{"{0} inHg"}
             }
@@ -1103,7 +1103,7 @@ am{
                 one{"{0} ጂ"}
                 other{"{0} ጂ"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"ሜ/ሰ²"}
                 one{"{0} ሜ/ሰ²"}
                 other{"{0} ሜ/ሰ²"}
@@ -1212,11 +1212,6 @@ am{
                 one{"{0} mmol/L"}
                 other{"{0} mmol/L"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"ፐርሰንት"}
                 one{"{0}%"}
@@ -1227,9 +1222,14 @@ am{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"ppm"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"ሊትር በ100 ኪሎሜትሮች"}
                 one{"{0} ሊ/100ኪሜ"}
                 other{"{0} ሊ/100ኪሜ"}
@@ -1711,7 +1711,7 @@ am{
                 one{"{0} ሄክቶፓስካል"}
                 other{"{0} ሄክቶፓስካል"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"ኢንች ሜርኩሪ"}
                 one{"{0} ኢሜ"}
                 other{"{0} ኢንሜር"}
@@ -1731,7 +1731,7 @@ am{
                 one{"{0} ሚባ"}
                 other{"{0} ሚባ"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
@@ -1741,7 +1741,7 @@ am{
                 one{"{0} ፓስካል"}
                 other{"{0} ፓስካል"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 one{"{0} psi"}
                 other{"{0} psi"}

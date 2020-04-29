@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ta{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"அபிட்ஜான்"}
@@ -1752,7 +1752,9 @@ ta{
             ls{"நியு நேரம்"}
         }
         "meta:Norfolk"{
-            ls{"நார்ஃபோக் தீவு நேரம்"}
+            ld{"நார்ஃபோக் தீவு கோடை நேரம்"}
+            lg{"நார்ஃபோக் தீவு நேரம்"}
+            ls{"நார்ஃபோக் தீவு நிலையான நேரம்"}
         }
         "meta:Noronha"{
             ld{"பெர்னான்டோ டி நோரோன்ஹா கோடை நேரம்"}

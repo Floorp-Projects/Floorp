@@ -262,10 +262,9 @@ mzn{
         Kana{"کاتاکانا"}
     }
     Scripts%stand-alone{
-        Hans{"ساده‌بَیی هان"}
         Hant{"استاندارد ِسنتی هانت"}
     }
-    Version{"36.1"}
+    Version{"37"}
     codePatterns{
         language{"زوون: {0}"}
         script{"اسکریپت: {0}"}

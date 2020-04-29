@@ -160,6 +160,7 @@ da{
         eu{"baskisk"}
         ewo{"ewondo"}
         fa{"persisk"}
+        fa_AF{"dari"}
         fan{"fang"}
         fat{"fanti"}
         ff{"fulah"}
@@ -556,11 +557,14 @@ da{
         zza{"zaza"}
     }
     Languages%menu{
+        ars{"arabisk, najdi"}
+        ckb{"kurdisk, sorani"}
         yue{"kantonesisk (Kina)"}
         zh{"mandarin (Kina)"}
     }
     Languages%short{
         az{"azeri"}
+        en_US{"amerikansk engelsk"}
     }
     Languages%variant{
         ps{"pushto"}
@@ -569,6 +573,7 @@ da{
     Scripts{
         Afak{"afaka"}
         Arab{"arabisk"}
+        Aran{"nastaliq"}
         Armi{"armi"}
         Armn{"armensk"}
         Avst{"avestansk"}
@@ -679,6 +684,7 @@ da{
         Phnx{"fønikisk"}
         Plrd{"pollardtegn"}
         Prti{"prti"}
+        Qaag{"zawgyi"}
         Rjng{"rejang"}
         Roro{"rongo-rongo"}
         Runr{"runer"}
@@ -961,7 +967,7 @@ da{
         VALLADER{"vallader"}
         WADEGILE{"Wade-Giles"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} – alle"}
         category-list{"{0}: {1}"}

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 to{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -13,7 +13,7 @@ to{
                 dnam{"k-mālohi"}
                 other{"k-mālohi ʻe {0}"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"mita he sekoni sikuea"}
                 other{"mita he sekoni sikuea ʻe {0}"}
             }
@@ -107,10 +107,6 @@ to{
                 dnam{"molo"}
                 other{"molo ʻe {0}"}
             }
-            part-per-million{
-                dnam{"konga he miliona"}
-                other{"konga ʻe {0} he miliona"}
-            }
             percent{
                 dnam{"peseti"}
                 other{"peseti ʻe {0}"}
@@ -119,13 +115,17 @@ to{
                 dnam{"pemili"}
                 other{"pemili ʻe {0}"}
             }
+            permillion{
+                dnam{"konga he miliona"}
+                other{"konga ʻe {0} he miliona"}
+            }
             permyriad{
                 dnam{"pemano"}
                 other{"pemano ʻe {0}"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"lita he kilomita ʻe 100"}
                 other{"lita ʻe {0} he kilomita ʻe 100"}
             }
@@ -568,7 +568,7 @@ to{
                 dnam{"hēkitopasikale"}
                 other{"hēkitopasikale ʻe {0}"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"ʻinisi meakuli"}
                 other{"ʻinisi meakuli ʻe {0}"}
             }
@@ -584,7 +584,7 @@ to{
                 dnam{"milipā"}
                 other{"milipā ʻe {0}"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"milimita meakuli"}
                 other{"milimita meakuli ʻe {0}"}
             }
@@ -592,7 +592,7 @@ to{
                 dnam{"pasikale"}
                 other{"pasikale ʻe {0}"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"pāuni he ʻinisi sikuea"}
                 other{"pāuni he ʻinisi sikuea ʻe {0}"}
             }
@@ -638,7 +638,7 @@ to{
                 dnam{"Niutonimita"}
                 other{"Niutonimita ʻe {0}"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"pāunifute"}
                 other{"pāunifute ʻe {0}"}
             }
@@ -765,7 +765,7 @@ to{
                 dnam{"k-mā"}
                 other{"{0} k-mā"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 other{"{0} m/s²"}
             }
@@ -844,7 +844,7 @@ to{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100km"}
                 other{"{0} l/100km"}
             }
@@ -1172,7 +1172,7 @@ to{
                 dnam{"hPa"}
                 other{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"in-Hg"}
                 other{"{0} in-Hg"}
             }
@@ -1180,11 +1180,11 @@ to{
                 dnam{"mpā"}
                 other{"{0} mpā"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm-Hg"}
                 other{"{0} mm-Hg"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"pā/in²"}
                 other{"{0} pā/in²"}
             }
@@ -1314,7 +1314,7 @@ to{
                 dnam{"k-mā"}
                 other{"k-mā ʻe {0}"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"m/s²"}
                 other{"m/s² ʻe {0}"}
             }
@@ -1408,10 +1408,6 @@ to{
                 dnam{"mol"}
                 other{"mol ʻe {0}"}
             }
-            part-per-million{
-                dnam{"khm"}
-                other{"khm ʻe {0}"}
-            }
             percent{
                 dnam{"%"}
                 other{"% ʻe {0}"}
@@ -1420,12 +1416,16 @@ to{
                 dnam{"‰"}
                 other{"‰ ʻe {0}"}
             }
+            permillion{
+                dnam{"khm"}
+                other{"khm ʻe {0}"}
+            }
             permyriad{
                 other{"‱ ʻe {0}"}
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"l/100km"}
                 other{"l ʻe {0}/100km"}
             }
@@ -1866,7 +1866,7 @@ to{
                 dnam{"hPa"}
                 other{"hPa ʻe {0}"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"in-Hg"}
                 other{"in-Hg ʻe {0}"}
             }
@@ -1880,14 +1880,14 @@ to{
                 dnam{"mpā"}
                 other{"mpā ʻe {0}"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"mm-Hg"}
                 other{"mm-Hg ʻe {0}"}
             }
             pascal{
                 other{"Pā ʻe {0}"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"pā/in²"}
                 other{"pā/in² ʻe {0}"}
             }
@@ -1932,7 +1932,7 @@ to{
             newton-meter{
                 other{"N⋅m ʻe {0}"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"pā⋅ft"}
                 other{"pā⋅ft ʻe {0}"}
             }

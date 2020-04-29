@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ro{
-    Version{"36.1"}
+    Version{"37"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -1732,7 +1732,9 @@ ro{
             ls{"Ora din Niue"}
         }
         "meta:Norfolk"{
-            ls{"Ora Insulelor Norfolk"}
+            ld{"Ora de vară Insulelor Norfolk"}
+            lg{"Ora Insulelor Norfolk"}
+            ls{"Ora standard Insulelor Norfolk"}
         }
         "meta:Noronha"{
             ld{"Ora de vară din Fernando de Noronha"}

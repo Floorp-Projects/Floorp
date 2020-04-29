@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 kk{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,7 +14,7 @@ kk{
                 one{"{0} гравитациялық күш"}
                 other{"{0} гравитациялық күш"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"метр/шаршы секунд"}
                 one{"{0} метр/шаршы секунд"}
                 other{"{0} метр/шаршы секунд"}
@@ -128,11 +128,6 @@ kk{
                 one{"{0} моль"}
                 other{"{0} моль"}
             }
-            part-per-million{
-                dnam{"миллиондық үлес"}
-                one{"{0} миллиондық үлес"}
-                other{"{0} миллиондық үлес"}
-            }
             percent{
                 dnam{"пайыз"}
                 one{"{0} пайыз"}
@@ -143,6 +138,11 @@ kk{
                 one{"{0} промилле"}
                 other{"{0} промилле"}
             }
+            permillion{
+                dnam{"миллиондық үлес"}
+                one{"{0} миллиондық үлес"}
+                other{"{0} миллиондық үлес"}
+            }
             permyriad{
                 dnam{"промириад"}
                 one{"{0} промириад"}
@@ -150,7 +150,7 @@ kk{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"литр/100 километр"}
                 one{"{0} литр/100 километр"}
                 other{"{0} литр/100 километр"}
@@ -366,6 +366,11 @@ kk{
                 dnam{"киловатт-сағат"}
                 one{"{0} киловатт-сағат"}
                 other{"{0} киловатт-сағат"}
+            }
+            therm-us{
+                dnam{"америка термі"}
+                one{"{0} америка термі"}
+                other{"{0} америка термі"}
             }
         }
         force{
@@ -672,7 +677,7 @@ kk{
                 one{"{0} гектопаскаль"}
                 other{"{0} гектопаскаль"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"дюйм сынап бағанасы"}
                 one{"{0} дюйм сынап бағанасы"}
                 other{"{0} дюйм сынап бағанасы"}
@@ -692,7 +697,7 @@ kk{
                 one{"{0} миллибар"}
                 other{"{0} миллибар"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"миллиметр сынап бағанасы"}
                 one{"{0} миллиметр сынап бағанасы"}
                 other{"{0} миллиметр сынап бағанасы"}
@@ -702,7 +707,7 @@ kk{
                 one{"{0} паскаль"}
                 other{"{0} паскаль"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"фунт/шаршы дюйм"}
                 one{"{0} фунт/шаршы дюйм"}
                 other{"{0} фунт/шаршы дюйм"}
@@ -758,7 +763,7 @@ kk{
                 one{"{0} ньютон-метр"}
                 other{"{0} ньютон-метр"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"фунт-фут"}
                 one{"{0} фунт-фут"}
                 other{"{0} фунт-фут"}
@@ -960,7 +965,7 @@ kk{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"л/100 км"}
                 one{"{0} л/100 км"}
                 other{"{0} л/100 км"}
@@ -1100,7 +1105,7 @@ kk{
                 one{"{0} гПа"}
                 other{"{0} гПа"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0} inHg"}
                 other{"{0} inHg"}
             }
@@ -1158,7 +1163,7 @@ kk{
                 one{"{0} G"}
                 other{"{0} G"}
             }
-            meter-per-second-squared{
+            meter-per-square-second{
                 dnam{"метр/сек²"}
                 one{"{0} м/с²"}
                 other{"{0} м/с²"}
@@ -1272,11 +1277,6 @@ kk{
                 one{"{0} моль"}
                 other{"{0} моль"}
             }
-            part-per-million{
-                dnam{"ppm"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
-            }
             percent{
                 dnam{"пайыз"}
                 one{"{0}%"}
@@ -1287,6 +1287,11 @@ kk{
                 one{"{0}‰"}
                 other{"{0}‰"}
             }
+            permillion{
+                dnam{"ppm"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
             permyriad{
                 dnam{"‱"}
                 one{"{0}‱"}
@@ -1294,7 +1299,7 @@ kk{
             }
         }
         consumption{
-            liter-per-100kilometers{
+            liter-per-100-kilometer{
                 dnam{"л/100 км"}
                 one{"{0} л/100 км"}
                 other{"{0} л/100 км"}
@@ -1512,6 +1517,7 @@ kk{
                 other{"{0} кВт-сағ"}
             }
             therm-us{
+                dnam{"америка термі"}
                 one{"{0} амер. термі"}
                 other{"{0} амер. термі"}
             }
@@ -1810,7 +1816,7 @@ kk{
                 one{"{0} гПа"}
                 other{"{0} гПа"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"дюйм сынап бағанасы"}
                 one{"{0} дюйм с.б."}
                 other{"{0} дюйм с.б."}
@@ -1830,7 +1836,7 @@ kk{
                 one{"{0} мбар"}
                 other{"{0} мбар"}
             }
-            millimeter-of-mercury{
+            millimeter-ofhg{
                 dnam{"мм с.б."}
                 one{"{0} мм с.б."}
                 other{"{0} мм с.б."}
@@ -1840,7 +1846,7 @@ kk{
                 one{"{0} Па"}
                 other{"{0} Па"}
             }
-            pound-per-square-inch{
+            pound-force-per-square-inch{
                 dnam{"psi"}
                 one{"{0} psi"}
                 other{"{0} psi"}
@@ -1896,7 +1902,7 @@ kk{
                 one{"{0} Н⋅м"}
                 other{"{0} Н⋅м"}
             }
-            pound-foot{
+            pound-force-foot{
                 dnam{"lbf⋅ft"}
                 one{"{0} lbf⋅ft"}
                 other{"{0} lbf⋅ft"}

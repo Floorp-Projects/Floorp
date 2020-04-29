@@ -8,5 +8,5 @@ en_PH{
             "Philippine Piso",
         }
     }
-    Version{"36.1"}
+    Version{"37"}
 }

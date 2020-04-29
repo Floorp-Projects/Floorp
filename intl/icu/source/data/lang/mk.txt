@@ -171,6 +171,7 @@ mk{
         ewo{"евондо"}
         ext{"екстремадурски"}
         fa{"персиски"}
+        fa_AF{"дари"}
         fan{"фанг"}
         fat{"фанти"}
         ff{"фула"}
@@ -916,7 +917,7 @@ mk{
         PINYIN{"Пинјин романизација"}
         WADEGILE{"Вејд-Џајлс романизација"}
     }
-    Version{"36.1"}
+    Version{"37"}
     characterLabelPattern{
         all{"{0} - сите"}
         category-list{"{0}: {1}"}

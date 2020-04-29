@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ksh{
-    Version{"36.1"}
+    Version{"37"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -230,7 +230,7 @@ ksh{
                 other{"{0} Hektopascal"}
                 zero{"{0} Hektopascal"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"Dumm Quecksilbersäule"}
                 one{"{0} Dumm Quecksilbersäule"}
                 other{"{0} Dumm Quecksilbersäule"}
@@ -472,7 +472,7 @@ ksh{
                 other{"{0}hPa"}
                 zero{"{0}hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 one{"{0} inHg"}
                 other{"{0} inHg"}
                 zero{"{0} inHg"}
@@ -744,7 +744,7 @@ ksh{
                 other{"{0} hPa"}
                 zero{"{0} hPa"}
             }
-            inch-hg{
+            inch-ofhg{
                 dnam{"Dumm Quecksilbersäule"}
                 one{"{0} inHg"}
                 other{"{0} inHg"}

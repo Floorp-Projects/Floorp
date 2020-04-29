@@ -122,10 +122,6 @@ zu{
             "CLP",
             "i-Chilean Peso",
         }
-        CNH{
-            "CNH",
-            "CNH",
-        }
         CNY{
             "CN¥",
             "i-Chinese Yuan",
@@ -880,8 +876,8 @@ zu{
             other{"i-Chilean Peso"}
         }
         CNH{
-            one{"CNH"}
-            other{"CNH"}
+            one{"i-Chinese yuan (offshore)"}
+            other{"i-CNH"}
         }
         CNY{
             one{"i-Chinese Yuan"}
@@ -1404,5 +1400,5 @@ zu{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

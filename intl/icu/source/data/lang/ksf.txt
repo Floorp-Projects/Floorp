@@ -48,5 +48,5 @@ ksf{
         zh{"ricinɔá"}
         zu{"rizúlu"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }

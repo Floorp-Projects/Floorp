@@ -14,5 +14,5 @@ ru_BY{
     Currencies%narrow{
         BYN{"Br"}
     }
-    Version{"36.1"}
+    Version{"37"}
 }
