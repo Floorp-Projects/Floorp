@@ -1507,7 +1507,7 @@ OutputParser.prototype = {
         }
 
         // The swatch is a <span> instead of a <button> intentionally. See Bug 1597125.
-        // It is made keyboard accessbile via `tabindex` and has keydown handlers
+        // It is made keyboard accessible via `tabindex` and has keydown handlers
         // attached for pressing SPACE and RETURN in SwatchBasedEditorTooltip.js
         const swatch = this._createNode("span", attributes);
         this.colorSwatches.set(swatch, colorObj);
@@ -1590,6 +1590,7 @@ OutputParser.prototype = {
     const val = color.nextColorUnit();
 
     swatch.nextElementSibling.textContent = val;
+    swatch.parentNode.dataset.color = val;
     swatch.emit("unit-change", val);
   },
 
