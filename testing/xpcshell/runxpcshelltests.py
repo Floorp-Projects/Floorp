@@ -970,13 +970,20 @@ class XPCShellTests(object):
 
     def buildPrefsFile(self, extraPrefs):
         # Create the prefs.js file
-        profile_data_dir = os.path.join(SCRIPT_DIR, 'profile_data')
 
+        # In test packages used in CI, the profile_data directory is installed
+        # in the SCRIPT_DIR.
+        profile_data_dir = os.path.join(SCRIPT_DIR, 'profile_data')
         # If possible, read profile data from topsrcdir. This prevents us from
         # requiring a re-build to pick up newly added extensions in the
         # <profile>/extensions directory.
         if build:
             path = os.path.join(build.topsrcdir, 'testing', 'profiles')
+            if os.path.isdir(path):
+                profile_data_dir = path
+        # Still not found? Look for testing/profiles relative to testing/xpcshell.
+        if not os.path.isdir(profile_data_dir):
+            path = os.path.abspath(os.path.join(SCRIPT_DIR, '..', 'profiles'))
             if os.path.isdir(path):
                 profile_data_dir = path
 

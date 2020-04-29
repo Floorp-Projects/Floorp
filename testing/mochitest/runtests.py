@@ -1869,13 +1869,20 @@ toolbar#nav-bar {
 
     def merge_base_profiles(self, options, category):
         """Merge extra profile data from testing/profiles."""
-        profile_data_dir = os.path.join(SCRIPT_DIR, 'profile_data')
 
+        # In test packages used in CI, the profile_data directory is installed
+        # in the SCRIPT_DIR.
+        profile_data_dir = os.path.join(SCRIPT_DIR, 'profile_data')
         # If possible, read profile data from topsrcdir. This prevents us from
         # requiring a re-build to pick up newly added extensions in the
         # <profile>/extensions directory.
         if build_obj:
             path = os.path.join(build_obj.topsrcdir, 'testing', 'profiles')
+            if os.path.isdir(path):
+                profile_data_dir = path
+        # Still not found? Look for testing/profiles relative to testing/mochitest.
+        if not os.path.isdir(profile_data_dir):
+            path = os.path.abspath(os.path.join(SCRIPT_DIR, '..', 'profiles'))
             if os.path.isdir(path):
                 profile_data_dir = path
 
