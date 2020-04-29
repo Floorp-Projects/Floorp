@@ -389,7 +389,7 @@ class UrlbarView {
       return false;
     }
 
-    if (!this.input.openViewOnFocus || !queryOptions.event) {
+    if (!queryOptions.event) {
       return false;
     }
 
@@ -400,6 +400,7 @@ class UrlbarView {
       if (
         // Do not show Top Sites in private windows.
         !this.input.isPrivate &&
+        this.input.openViewOnFocus &&
         !this.isOpen &&
         ["mousedown", "command"].includes(queryOptions.event.type)
       ) {
