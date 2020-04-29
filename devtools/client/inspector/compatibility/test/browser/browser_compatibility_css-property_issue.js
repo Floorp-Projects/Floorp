@@ -13,10 +13,9 @@ const TEST_URI = `
     color: blue;
     border-block-color: lime;
     user-modify: read-only;
-    font-variant-alternates: historical-forms;
   }
   div {
-    margin-inline-start: 5px;
+    font-variant-alternates: historical-forms;
   }
   </style>
   <body>
@@ -33,13 +32,6 @@ const TEST_DATA_SELECTED = [
     experimental: false,
   },
   {
-    type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
-    property: "font-variant-alternates",
-    url: "https://developer.mozilla.org/docs/Web/CSS/font-variant-alternates",
-    deprecated: true,
-    experimental: true,
-  },
-  {
     type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY_ALIASES,
     property: "user-modify",
     url: "https://developer.mozilla.org/docs/Web/CSS/user-modify",
@@ -52,10 +44,10 @@ const TEST_DATA_SELECTED = [
 const TEST_DATA_ALL = [
   ...TEST_DATA_SELECTED,
   {
-    type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY_ALIASES,
-    property: "margin-inline-start",
-    url: "https://developer.mozilla.org/docs/Web/CSS/margin-inline-start",
-    deprecated: false,
+    type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
+    property: "font-variant-alternates",
+    url: "https://developer.mozilla.org/docs/Web/CSS/font-variant-alternates",
+    deprecated: true,
     experimental: false,
   },
 ];

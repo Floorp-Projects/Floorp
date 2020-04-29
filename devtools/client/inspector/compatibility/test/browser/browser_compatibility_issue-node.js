@@ -8,11 +8,11 @@
 const TEST_URI = `
   <style>
   body {
-    margin-inline-start: 5px;
+    user-modify: read-only;
   }
   div {
-    margin-inline-start: 5px;
-    margin-inline-end: 5px;
+    user-modify: read-only;
+    font-variant-alternates: historical-forms;
   }
   </style>
   <body>
@@ -22,11 +22,11 @@ const TEST_URI = `
 
 const TEST_DATA_ALL = [
   {
-    property: "margin-inline-start",
+    property: "user-modify",
     nodes: ["body", "div"],
   },
   {
-    property: "margin-inline-end",
+    property: "font-variant-alternates",
     nodes: ["div"],
   },
 ];

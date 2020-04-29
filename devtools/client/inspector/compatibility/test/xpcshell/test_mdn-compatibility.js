@@ -84,7 +84,7 @@ const TEST_DATA = [
         url:
           "https://developer.mozilla.org/docs/Web/CSS/font-variant-alternates",
         deprecated: true,
-        experimental: true,
+        experimental: false,
         unsupportedBrowsers: [FIREFOX_1],
       },
     ],
