@@ -411,15 +411,23 @@ class RaptorControlServer:
     def wait_for_quit(self, timeout=15):
         """Wait timeout seconds for the process to exit. If it hasn't
         exited by then, kill it.
+
+        The sleep calls are required to give those new values enough time
+        to sync-up between threads. It would be better to maybe use signals
+        for synchronization (bug 1633975)
         """
         self._is_shutting_down = True
+        time.sleep(.25)
+
         if self.device is not None:
             self.device.stop_application(self.app_name)
         else:
             self.browser_proc.wait(timeout)
             if self.browser_proc.poll() is None:
                 self.browser_proc.kill()
+
         self._finished = True
+        time.sleep(.25)
         self._is_shutting_down = False
 
     def submit_supporting_data(self, supporting_data):
