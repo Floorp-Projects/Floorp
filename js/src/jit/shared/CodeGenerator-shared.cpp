@@ -959,15 +959,12 @@ bool CodeGeneratorShared::omitOverRecursedCheck() const {
 }
 
 void CodeGeneratorShared::emitPreBarrier(Register elements,
-                                         const LAllocation* index,
-                                         int32_t offsetAdjustment) {
+                                         const LAllocation* index) {
   if (index->isConstant()) {
-    Address address(elements,
-                    ToInt32(index) * sizeof(Value) + offsetAdjustment);
+    Address address(elements, ToInt32(index) * sizeof(Value));
     masm.guardedCallPreBarrier(address, MIRType::Value);
   } else {
-    BaseObjectElementIndex address(elements, ToRegister(index),
-                                   offsetAdjustment);
+    BaseObjectElementIndex address(elements, ToRegister(index));
     masm.guardedCallPreBarrier(address, MIRType::Value);
   }
 }
