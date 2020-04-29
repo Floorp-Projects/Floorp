@@ -110,8 +110,6 @@ class SharedContext {
  protected:
   enum class Kind : uint8_t { FunctionBox, Global, Eval, Module };
 
-  Kind kind_;
-
   CompilationInfo& compilationInfo_;
 
   ThisBinding thisBinding_;
@@ -156,25 +154,29 @@ class SharedContext {
   // it. Otherwise nullptr.
   virtual Scope* compilationEnclosingScope() const = 0;
 
-  bool isFunctionBox() const { return kind_ == Kind::FunctionBox; }
+  bool isFunctionBox() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::IsFunction);
+  }
   inline FunctionBox* asFunctionBox();
-  bool isModuleContext() const { return kind_ == Kind::Module; }
+  bool isModuleContext() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::IsModule);
+  }
   inline ModuleSharedContext* asModuleContext();
-  bool isGlobalContext() const { return kind_ == Kind::Global; }
+  bool isGlobalContext() const {
+    return !(isFunctionBox() || isModuleContext() || isEvalContext());
+  }
   inline GlobalSharedContext* asGlobalContext();
-  bool isEvalContext() const { return kind_ == Kind::Eval; }
+  bool isEvalContext() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::IsForEval);
+  }
   inline EvalSharedContext* asEvalContext();
 
   bool isTopLevelContext() const {
-    switch (kind_) {
-      case Kind::Module:
-      case Kind::Global:
-      case Kind::Eval:
-        return true;
-      case Kind::FunctionBox:
-        break;
+    if (isModuleContext() || isEvalContext() || isGlobalContext()) {
+      return true;
     }
-    MOZ_ASSERT(kind_ == Kind::FunctionBox);
+
+    MOZ_ASSERT(isFunctionBox());
     return false;
   }
 
