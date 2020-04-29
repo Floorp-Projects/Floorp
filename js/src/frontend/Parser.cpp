@@ -328,7 +328,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
       cx_, traceListHead_, extent, this->getCompilationInfo(),
-      inheritedDirectives, generatorKind, asyncKind, fcd.get().atom,
+      inheritedDirectives, generatorKind, asyncKind, fcd.get().explicitName,
       fcd.get().flags, index);
 
   if (!funbox) {
@@ -2076,15 +2076,16 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
   return finishLexicalScope(pc_->varScope(), body, ScopeKind::FunctionLexical);
 }
 
-FunctionCreationData::FunctionCreationData(HandleAtom atom,
+FunctionCreationData::FunctionCreationData(HandleAtom explicitName,
                                            FunctionSyntaxKind kind,
                                            GeneratorKind generatorKind,
                                            FunctionAsyncKind asyncKind,
                                            bool isSelfHosting /* = false */,
                                            bool inFunctionBox /* = false */)
-    : atom(atom) {
+    : explicitName(explicitName) {
   bool isExtendedUnclonedSelfHostedFunctionName =
-      isSelfHosting && atom && IsExtendedUnclonedSelfHostedFunctionName(atom);
+      isSelfHosting && explicitName &&
+      IsExtendedUnclonedSelfHostedFunctionName(explicitName);
   MOZ_ASSERT_IF(isExtendedUnclonedSelfHostedFunctionName, !inFunctionBox);
 
   gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
@@ -2145,10 +2146,10 @@ FunctionCreationData::FunctionCreationData(HandleAtom atom,
   }
 }
 
-HandleAtom FunctionCreationData::getAtom(JSContext* cx) const {
+HandleAtom FunctionCreationData::getExplicitName(JSContext* cx) const {
   // We can create a handle here because atoms are traced
   // by FunctionCreationData.
-  return HandleAtom::fromMarkedLocation(&atom);
+  return HandleAtom::fromMarkedLocation(&explicitName);
 }
 
 JSFunction* AllocNewFunction(JSContext* cx,
@@ -2173,8 +2174,8 @@ JSFunction* AllocNewFunction(JSContext* cx,
                                 ? gc::AllocKind::FUNCTION_EXTENDED
                                 : gc::AllocKind::FUNCTION;
   RootedFunction fun(cx, NewFunctionWithProto(cx, nullptr, 0, data.flags,
-                                              nullptr, data.getAtom(cx), proto,
-                                              allocKind, TenuredObject));
+                                              nullptr, data.getExplicitName(cx),
+                                              proto, allocKind, TenuredObject));
   if (!fun) {
     return nullptr;
   }

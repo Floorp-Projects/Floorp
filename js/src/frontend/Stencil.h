@@ -110,7 +110,7 @@ struct LazyScriptCreationData {
 // metadata without requiring immediate access to the garbage
 // collector.
 struct FunctionCreationData {
-  FunctionCreationData(HandleAtom atom, FunctionSyntaxKind kind,
+  FunctionCreationData(HandleAtom explicitName, FunctionSyntaxKind kind,
                        GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                        bool isSelfHosting = false, bool inFunctionBox = false);
 
@@ -126,7 +126,7 @@ struct FunctionCreationData {
   // To ensure that we never lose a lazyScriptData however, we guarantee that
   // when this copy constructor is run, it doesn't have any lazyScriptData.
   FunctionCreationData(const FunctionCreationData& data)
-      : atom(data.atom),
+      : explicitName(data.explicitName),
         flags(data.flags),
         immutableFlags(data.immutableFlags) {
     MOZ_RELEASE_ASSERT(!data.lazyScriptData);
@@ -135,17 +135,17 @@ struct FunctionCreationData {
   FunctionCreationData(FunctionCreationData&& data) = default;
 
   // The Parser uses KeepAtoms to prevent GC from collecting atoms
-  JSAtom* atom = nullptr;
+  JSAtom* explicitName = nullptr;
 
   FunctionFlags flags = {};
   ImmutableScriptFlags immutableFlags = {};
 
   mozilla::Maybe<LazyScriptCreationData> lazyScriptData = {};
 
-  HandleAtom getAtom(JSContext* cx) const;
+  HandleAtom getExplicitName(JSContext* cx) const;
 
   void trace(JSTracer* trc) {
-    TraceNullableRoot(trc, &atom, "FunctionCreationData atom");
+    TraceNullableRoot(trc, &explicitName, "FunctionCreationData explicitName");
   }
 };
 
