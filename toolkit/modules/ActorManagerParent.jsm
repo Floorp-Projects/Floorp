@@ -405,27 +405,6 @@ let ACTORS = {
       moduleURI: "resource://gre/actors/WebNavigationChild.jsm",
     },
   },
-
-  Zoom: {
-    parent: {
-      moduleURI: "resource://gre/actors/ZoomParent.jsm",
-    },
-    child: {
-      moduleURI: "resource://gre/actors/ZoomChild.jsm",
-      events: {
-        DoZoomEnlargeBy10: {
-          capture: true,
-          mozSystemGroup: true,
-        },
-        DoZoomReduceBy10: {
-          capture: true,
-          mozSystemGroup: true,
-        },
-      },
-    },
-
-    allFrames: true,
-  },
 };
 
 /*

@@ -6,8 +6,11 @@
 
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 
+#include "mozilla/EventForwards.h"
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
+#include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/ContentProcessManager.h"
 #include "mozilla/dom/MediaController.h"
@@ -185,6 +188,19 @@ nsISHistory* CanonicalBrowsingContext::GetSessionHistory() {
 JSObject* CanonicalBrowsingContext::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return CanonicalBrowsingContext_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+void CanonicalBrowsingContext::DispatchWheelZoomChange(bool aIncrease) {
+  Element* element = Top()->GetEmbedderElement();
+  if (!element) {
+    return;
+  }
+
+  auto event = aIncrease ? NS_LITERAL_STRING("DoZoomEnlargeBy10")
+                         : NS_LITERAL_STRING("DoZoomReduceBy10");
+  auto dispatcher = MakeRefPtr<AsyncEventDispatcher>(
+      element, event, CanBubble::eYes, ChromeOnlyDispatch::eYes);
+  dispatcher->PostDOMEvent();
 }
 
 void CanonicalBrowsingContext::CanonicalDiscard() {

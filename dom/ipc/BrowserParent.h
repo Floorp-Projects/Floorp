@@ -410,6 +410,8 @@ class BrowserParent final : public PBrowserParent,
   mozilla::ipc::IPCResult RecvRequestFocus(const bool& aCanRaise,
                                            const CallerType aCallerType);
 
+  mozilla::ipc::IPCResult RecvWheelZoomChange(bool aIncrease);
+
   mozilla::ipc::IPCResult RecvLookUpDictionary(
       const nsString& aText, nsTArray<mozilla::FontRange>&& aFontRangeArray,
       const bool& aIsVertical, const LayoutDeviceIntPoint& aPoint);

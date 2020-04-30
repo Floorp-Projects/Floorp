@@ -79,6 +79,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
+  // Dispatches a wheel zoom change to the embedder element.
+  void DispatchWheelZoomChange(bool aIncrease);
+
   // This function is used to start the autoplay media which are delayed to
   // start. If needed, it would also notify the content browsing context which
   // are related with the canonical browsing content tree to start delayed
