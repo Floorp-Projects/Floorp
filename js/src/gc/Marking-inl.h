@@ -45,7 +45,7 @@ struct TaggedPtr<JS::Value> {
 template <>
 struct TaggedPtr<jsid> {
   static jsid wrap(JSString* str) {
-    return NON_INTEGER_ATOM_TO_JSID(&str->asAtom());
+    return JS::PropertyKey::fromNonIntAtom(str);
   }
   static jsid wrap(JS::Symbol* sym) { return SYMBOL_TO_JSID(sym); }
   static jsid empty() { return JSID_VOID; }

@@ -1433,7 +1433,7 @@ static_assert(sizeof(PropertyName) == sizeof(JSString),
               "string subclasses must be binary-compatible with JSString");
 
 static MOZ_ALWAYS_INLINE jsid NameToId(PropertyName* name) {
-  return NON_INTEGER_ATOM_TO_JSID(name);
+  return JS::PropertyKey::fromNonIntAtom(name);
 }
 
 using PropertyNameVector = JS::GCVector<PropertyName*>;
