@@ -710,11 +710,9 @@ class TestResolver(MozbuildObject):
         sys.path = [wpt_path] + sys.path
 
         import manifestupdate
-        # Import and redirect the logger to sys.stderr.
         import logging
         logger = logging.getLogger("manifestupdate")
-        handler = logging.StreamHandler(sys.stderr)
-        logger.addHandler(handler)
+        logger.disabled = True
 
         manifests = manifestupdate.run(self.topsrcdir, self.topobjdir, rebuild=False,
                                        download=True, config_path=None, rewrite_config=True,
