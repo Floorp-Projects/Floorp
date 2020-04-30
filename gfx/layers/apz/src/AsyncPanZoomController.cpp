@@ -2637,7 +2637,7 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent,
     // scroll events from unexpectedly causing scrolling later if somehow
     // the APZC becomes scrollable again in this direction (e.g. if the user
     // uses some other input method to scroll in the opposite direction).
-    mState = NOTHING;
+    SetState(NOTHING);
   }
 
   return nsEventStatus_eConsumeNoDefault;
