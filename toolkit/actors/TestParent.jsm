@@ -4,9 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["TestProcessActorParent"];
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-class TestProcessActorParent extends JSProcessActorParent {
+var EXPORTED_SYMBOLS = ["TestParent"];
+
+class TestParent extends JSWindowActorParent {
   constructor() {
     super();
     this.wrappedJSObject = this;
@@ -25,12 +27,20 @@ class TestProcessActorParent extends JSProcessActorParent {
       case "asyncMul":
         let { a, b } = aMessage.data;
         return { result: a * b };
+
+      case "event":
+        Services.obs.notifyObservers(
+          this,
+          "test-js-window-actor-parent-event",
+          aMessage.data.type
+        );
+        break;
     }
 
     return undefined;
   }
 
   show() {
-    return "TestProcessActorParent";
+    return "TestParent";
   }
 }

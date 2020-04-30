@@ -49,8 +49,6 @@ WEBIDL_FILES = [
     'HeapSnapshot.webidl',
     'InspectorUtils.webidl',
     'IteratorResult.webidl',
-    'JSActor.webidl',
-    'JSProcessActor.webidl',
     'JSWindowActor.webidl',
     'L10nOverlays.webidl',
     'Localization.webidl',

@@ -311,8 +311,6 @@ module.exports = {
     InstallTriggerImpl: false,
     IntersectionObserver: false,
     IntersectionObserverEntry: false,
-    JSProcessActorChild: false,
-    JSProcessActorParent: false,
     JSWindowActorChild: false,
     JSWindowActorParent: false,
     KeyEvent: false,

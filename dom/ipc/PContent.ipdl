@@ -127,8 +127,6 @@ using refcounted class mozilla::dom::CrossProcessSHEntry from "mozilla/dom/Maybe
 using mozilla::ContentBlockingNotifier::StorageAccessGrantedReason from "mozilla/ContentBlockingNotifier.h";
 using mozilla::ContentBlockingNotifier::BlockingDecision from "mozilla/ContentBlockingNotifier.h";
 using mozilla::ContentBlocking::StorageAccessPromptChoices from "mozilla/ContentBlocking.h";
-using JSActorMessageKind from "mozilla/dom/JSActor.h";
-using JSActorMessageMeta from "mozilla/dom/PWindowGlobal.h";
 
 union ChromeRegistryItem
 {
@@ -241,29 +239,13 @@ struct JSWindowActorInfo
 {
   nsCString name;
   bool allFrames;
-
-  // The module of the url.
   nsCString? url;
 
   JSWindowActorEventDecl[] events;
-
-  // Observer notifications this actor listens to.
   nsCString[] observers;
   nsString[] matches;
   nsString[] remoteTypes;
   nsString[] messageManagerGroups;
-};
-
-struct JSProcessActorInfo
-{
-    // The name of the actor.
-    nsCString name;
-    // The module of the url.
-    nsCString? url;
-
-    // Observer notifications this actor listens to.
-    nsCString[] observers;
-    nsString[] remoteTypes;
 };
 
 struct GMPAPITags
@@ -461,9 +443,6 @@ both:
     async PWebBrowserPersistDocument(nullable PBrowser aBrowser,
                                      MaybeDiscardedBrowsingContext aContext);
 
-    async RawMessage(JSActorMessageMeta aMetadata, ClonedMessageData aData,
-                     ClonedMessageData aStack);
-
 child:
     async InitGMPService(Endpoint<PGMPServiceChild> service);
     async InitProcessHangMonitor(Endpoint<PProcessHangMonitorChild> hangMonitor);
@@ -631,19 +610,14 @@ child:
     async InitBlobURLs(BlobURLRegistrationData[] registrations);
 
     /**
-     * Send JS{Content, Window}ActorInfos to child process.
+     * Send JSWindowActorInfos to child process.
      */
-    async InitJSActorInfos(JSProcessActorInfo[] aContentInfos, JSWindowActorInfo[] aWindowInfos);
+    async InitJSWindowActorInfos(JSWindowActorInfo[] aInfos);
 
     /**
      * Unregister a previously registered JSWindowActor in the child process.
      */
     async UnregisterJSWindowActor(nsCString name);
-
-    /**
-     * Unregister a previously registered JSProcessActor in the child process.
-     */
-    async UnregisterJSProcessActor(nsCString name);
 
     async SetXPCOMProcessAttributes(XPCOMInitData xpcomInit,
                                     StructuredCloneData initialData,

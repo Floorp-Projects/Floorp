@@ -5,10 +5,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/JSActorService.h"
+#include "mozilla/dom/JSWindowActorService.h"
+#include "mozilla/dom/ChromeUtilsBinding.h"
+#include "mozilla/dom/EventListenerBinding.h"
+#include "mozilla/dom/Event.h"
+#include "mozilla/dom/EventTargetBinding.h"
+#include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/JSWindowActorBinding.h"
+#include "mozilla/dom/JSWindowActorChild.h"
+#include "mozilla/dom/MessageManagerBinding.h"
+#include "mozilla/dom/PContent.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/WindowGlobalChild.h"
+#include "mozilla/StaticPtr.h"
+#include "mozilla/Logging.h"
 
 namespace mozilla {
 namespace dom {
+namespace {
+StaticRefPtr<JSWindowActorService> gJSWindowActorService;
+}
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(JSWindowActorProtocol)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(JSWindowActorProtocol)
@@ -126,7 +142,7 @@ JSWindowActorProtocol::FromWebIDLOptions(const nsACString& aName,
       // We don't support the mOnce field, as it doesn't work well in this
       // environment. For now, throw an error in that case.
       if (entry.mValue.mOnce) {
-        aRv.ThrowNotSupportedError("mOnce is not supported");
+        aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
         return nullptr;
       }
 
@@ -360,6 +376,138 @@ bool JSWindowActorProtocol::Matches(BrowsingContext* aBrowsingContext,
   }
 
   return true;
+}
+
+JSWindowActorService::JSWindowActorService() { MOZ_ASSERT(NS_IsMainThread()); }
+
+JSWindowActorService::~JSWindowActorService() { MOZ_ASSERT(NS_IsMainThread()); }
+
+/* static */
+already_AddRefed<JSWindowActorService> JSWindowActorService::GetSingleton() {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!gJSWindowActorService) {
+    gJSWindowActorService = new JSWindowActorService();
+    ClearOnShutdown(&gJSWindowActorService);
+  }
+
+  RefPtr<JSWindowActorService> service = gJSWindowActorService.get();
+  return service.forget();
+}
+
+void JSWindowActorService::RegisterWindowActor(
+    const nsACString& aName, const WindowActorOptions& aOptions,
+    ErrorResult& aRv) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  auto entry = mDescriptors.LookupForAdd(aName);
+  if (entry) {
+    aRv.ThrowNotSupportedError(nsPrintfCString(
+        "'%s' actor is already registered.", PromiseFlatCString(aName).get()));
+    return;
+  }
+
+  // Insert a new entry for the protocol.
+  RefPtr<JSWindowActorProtocol> proto =
+      JSWindowActorProtocol::FromWebIDLOptions(aName, aOptions, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    entry.OrRemove();
+    return;
+  }
+
+  entry.OrInsert([&] { return proto; });
+
+  // Send information about the newly added entry to every existing content
+  // process.
+  AutoTArray<JSWindowActorInfo, 1> ipcInfos{proto->ToIPC()};
+  for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
+    Unused << cp->SendInitJSWindowActorInfos(ipcInfos);
+  }
+
+  // Register event listeners for any existing chrome targets.
+  for (EventTarget* target : mChromeEventTargets) {
+    proto->RegisterListenersFor(target);
+  }
+
+  // Add observers to the protocol.
+  proto->AddObservers();
+}
+
+void JSWindowActorService::UnregisterWindowActor(const nsACString& aName) {
+  nsAutoCString name(aName);
+
+  RefPtr<JSWindowActorProtocol> proto;
+  if (mDescriptors.Remove(aName, getter_AddRefs(proto))) {
+    // If we're in the parent process, also unregister the window actor in all
+    // live content processes.
+    if (XRE_IsParentProcess()) {
+      for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
+        Unused << cp->SendUnregisterJSWindowActor(name);
+      }
+    }
+
+    // Remove listeners for this actor from each of our chrome targets.
+    for (EventTarget* target : mChromeEventTargets) {
+      proto->UnregisterListenersFor(target);
+    }
+
+    // Remove observers for this actor from observer serivce.
+    proto->RemoveObservers();
+  }
+}
+
+void JSWindowActorService::LoadJSWindowActorInfos(
+    nsTArray<JSWindowActorInfo>& aInfos) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(XRE_IsContentProcess());
+
+  for (uint32_t i = 0, len = aInfos.Length(); i < len; i++) {
+    // Create our JSWindowActorProtocol, register it in mDescriptors.
+    RefPtr<JSWindowActorProtocol> proto =
+        JSWindowActorProtocol::FromIPC(aInfos[i]);
+    mDescriptors.Put(aInfos[i].name(), RefPtr{proto});
+
+    // Register listeners for each chrome target.
+    for (EventTarget* target : mChromeEventTargets) {
+      proto->RegisterListenersFor(target);
+    }
+
+    // Add observers for each actor.
+    proto->AddObservers();
+  }
+}
+
+void JSWindowActorService::GetJSWindowActorInfos(
+    nsTArray<JSWindowActorInfo>& aInfos) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  for (auto iter = mDescriptors.ConstIter(); !iter.Done(); iter.Next()) {
+    aInfos.AppendElement(iter.Data()->ToIPC());
+  }
+}
+
+void JSWindowActorService::RegisterChromeEventTarget(EventTarget* aTarget) {
+  MOZ_ASSERT(!mChromeEventTargets.Contains(aTarget));
+  mChromeEventTargets.AppendElement(aTarget);
+
+  // Register event listeners on the newly added Window Root.
+  for (auto iter = mDescriptors.Iter(); !iter.Done(); iter.Next()) {
+    iter.Data()->RegisterListenersFor(aTarget);
+  }
+}
+
+/* static */
+void JSWindowActorService::UnregisterChromeEventTarget(EventTarget* aTarget) {
+  if (gJSWindowActorService) {
+    // NOTE: No need to unregister listeners here, as the target is going away.
+    gJSWindowActorService->mChromeEventTargets.RemoveElement(aTarget);
+  }
+}
+
+already_AddRefed<JSWindowActorProtocol> JSWindowActorService::GetProtocol(
+    const nsACString& aName) {
+  return mDescriptors.Get(aName);
 }
 
 }  // namespace dom
