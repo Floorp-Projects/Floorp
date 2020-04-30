@@ -413,8 +413,6 @@ let ACTORS = {
     child: {
       moduleURI: "resource://gre/actors/ZoomChild.jsm",
       events: {
-        FullZoomChange: {},
-        TextZoomChange: {},
         DoZoomEnlargeBy10: {
           capture: true,
           mozSystemGroup: true,
