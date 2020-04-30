@@ -42,7 +42,7 @@ tasks:
       $if: should_run
       then:
         # For the docker-worker tasks, the Docker image used
-        # (staktrace/webrender-test:debian-v4) was created using the Dockerfile in
+        # (staktrace/webrender-test:debian-v5) was created using the Dockerfile in
         # ci-scripts/docker-image.
         #
         # The docker image may need to be updated over time if the set of required
@@ -61,7 +61,7 @@ tasks:
           deadline: {$fromNow: '1 day'}
           payload:
             maxRunTime: 7200
-            image: 'staktrace/webrender-test:debian-v4'
+            image: 'staktrace/webrender-test:debian-v5'
             env:
               RUST_BACKTRACE: 'full'
               RUSTFLAGS: '--deny warnings'
@@ -70,14 +70,11 @@ tasks:
               - '--login'
               - '-c'
               - >-
-                export PATH=$PATH:$HOME/clang/bin &&
-                export LLVM_CONFIG=no &&
                 curl https://sh.rustup.rs -sSf | sh -s -- -y &&
                 source $HOME/.cargo/env &&
                 git clone ${repo_url} webrender && cd webrender &&
                 git checkout ${sha} &&
                 servo-tidy &&
-                env &&
                 ci-scripts/linux-release-tests.sh
           routes:
             - "index.project.webrender.ci.${login}.${branch}.linux-release"
@@ -91,7 +88,7 @@ tasks:
           deadline: {$fromNow: '1 day'}
           payload:
             maxRunTime: 7200
-            image: 'staktrace/webrender-test:debian-v4'
+            image: 'staktrace/webrender-test:debian-v5'
             env:
               RUST_BACKTRACE: 'full'
               RUSTFLAGS: '--deny warnings'
@@ -100,14 +97,11 @@ tasks:
               - '--login'
               - '-c'
               - >-
-                export PATH=$PATH:$HOME/clang/bin &&
-                export LLVM_CONFIG=no &&
                 curl https://sh.rustup.rs -sSf | sh -s -- -y &&
                 source $HOME/.cargo/env &&
                 git clone ${repo_url} webrender && cd webrender &&
                 git checkout ${sha} &&
                 servo-tidy &&
-                env &&
                 ci-scripts/linux-debug-tests.sh
           routes:
             - "index.project.webrender.ci.${login}.${branch}.linux-debug"
