@@ -207,6 +207,47 @@ TEST_VARIANTS = {
 }
 
 
+CHUNK_SUITES_BLACKLIST = (
+    'awsy',
+    'cppunittest',
+    'crashtest',
+    'crashtest-qr',
+    'firefox-ui-functional-local',
+    'firefox-ui-functional-remote',
+    'geckoview-junit',
+    'gtest',
+    'jittest',
+    'jsreftest',
+    'marionette',
+    'mochitest-browser-chrome-screenshots',
+    'mochitest-browser-chrome-thunderbird',
+    'mochitest-valgrind-plain',
+    'mochitest-webgl1-core',
+    'mochitest-webgl1-ext',
+    'mochitest-webgl2-core',
+    'mochitest-webgl2-ext',
+    'raptor',
+    'reftest',
+    'reftest-qr',
+    'reftest-gpu',
+    'reftest-no-accel',
+    'talos',
+    'telemetry-tests-client',
+    'test-coverage',
+    'test-coverage-wpt',
+    'test-verify',
+    'test-verify-gpu',
+    'test-verify-wpt',
+    'web-platform-tests',
+    'web-platform-tests-backlog',
+    'web-platform-tests-crashtest',
+    'web-platform-tests-reftest',
+    'web-platform-tests-reftest-backlog',
+    'web-platform-tests-wdspec',
+)
+"""These suites will be chunked at test runtime rather than here in the taskgraph."""
+
+
 logger = logging.getLogger(__name__)
 
 transforms = TransformSequence()
@@ -1279,56 +1320,11 @@ def split_e10s(config, tasks):
             yield task
 
 
-CHUNK_SUITES_BLACKLIST = (
-    'awsy',
-    'cppunittest',
-    'crashtest',
-    'crashtest-qr',
-    'firefox-ui-functional-local',
-    'firefox-ui-functional-remote',
-    'geckoview-junit',
-    'gtest',
-    'jittest',
-    'jsreftest',
-    'marionette',
-    'mochitest-browser-chrome-screenshots',
-    'mochitest-browser-chrome-thunderbird',
-    'mochitest-valgrind-plain',
-    'mochitest-webgl1-core',
-    'mochitest-webgl1-ext',
-    'mochitest-webgl2-core',
-    'mochitest-webgl2-ext',
-    'raptor',
-    'reftest',
-    'reftest-qr',
-    'reftest-gpu',
-    'reftest-no-accel',
-    'talos',
-    'telemetry-tests-client',
-    'test-coverage',
-    'test-coverage-wpt',
-    'test-verify',
-    'test-verify-gpu',
-    'test-verify-wpt',
-    'web-platform-tests',
-    'web-platform-tests-backlog',
-    'web-platform-tests-crashtest',
-    'web-platform-tests-reftest',
-    'web-platform-tests-reftest-backlog',
-    'web-platform-tests-wdspec',
-)
-"""These suites will be chunked at test runtime rather than here in the taskgraph."""
-
-
 @transforms.add
-def split_chunks(config, tasks):
-    """Based on the 'chunks' key, split tests up into chunks by duplicating
-    them and assigning 'this-chunk' appropriately and updating the treeherder
-    symbol."""
-
+def set_test_verify_chunks(config, tasks):
+    """Set the number of chunks we use for test-verify."""
     for task in tasks:
-        if task['suite'].startswith('test-verify') or \
-           task['suite'].startswith('test-coverage'):
+        if any(task['suite'].startswith(s) for s in ('test-verify', 'test-coverage')):
             env = config.params.get('try_task_config', {}) or {}
             env = env.get('templates', {}).get('env', {})
             task['chunks'] = perfile_number_of_chunks(config.params.is_try(),
@@ -1345,6 +1341,16 @@ def split_chunks(config, tasks):
             if task['chunks'] > maximum_number_verify_chunks:
                 task['chunks'] = maximum_number_verify_chunks
 
+        yield task
+
+
+@transforms.add
+def split_chunks(config, tasks):
+    """Based on the 'chunks' key, split tests up into chunks by duplicating
+    them and assigning 'this-chunk' appropriately and updating the treeherder
+    symbol."""
+
+    for task in tasks:
         chunked_manifests = None
         if not taskgraph.fast and task['suite'] not in CHUNK_SUITES_BLACKLIST:
             suite_definition = TEST_SUITES[task['suite']]
