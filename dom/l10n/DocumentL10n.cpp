@@ -55,20 +55,25 @@ bool DocumentL10n::Init() {
   return true;
 }
 
-void DocumentL10n::Activate() {
+void DocumentL10n::Activate(const bool aLazy) {
   if (mState > DocumentL10nState::Uninitialized) {
     return;
   }
 
-  Element* elem = mDocument->GetDocumentElement();
-  bool isSync = false;
-  if (elem) {
-    isSync = elem->HasAttr(kNameSpaceID_None, nsGkAtoms::datal10nsync);
+  if (aLazy) {
+    DOMLocalization::Activate(false, true, {});
+    mReady->MaybeResolveWithUndefined();
+    mState = DocumentL10nState::Ready;
+  } else {
+    Element* elem = mDocument->GetDocumentElement();
+    if (NS_WARN_IF(!elem)) {
+      return;
+    }
+    bool isSync = elem->HasAttr(kNameSpaceID_None, nsGkAtoms::datal10nsync);
+
+    DOMLocalization::Activate(isSync, true, {});
+    mState = DocumentL10nState::Activated;
   }
-
-  DOMLocalization::Activate(isSync, true, {});
-
-  mState = DocumentL10nState::Activated;
 }
 
 JSObject* DocumentL10n::WrapObject(JSContext* aCx,
@@ -233,7 +238,7 @@ void DocumentL10n::TriggerInitialTranslation() {
 }
 
 void DocumentL10n::InitialTranslationCompleted() {
-  if (mState >= DocumentL10nState::InitialTranslationCompleted) {
+  if (mState >= DocumentL10nState::Ready) {
     return;
   }
 
@@ -242,7 +247,7 @@ void DocumentL10n::InitialTranslationCompleted() {
     SetRootInfo(documentElement);
   }
 
-  mState = DocumentL10nState::InitialTranslationCompleted;
+  mState = DocumentL10nState::Ready;
 
   mDocument->InitialTranslationCompleted();
 

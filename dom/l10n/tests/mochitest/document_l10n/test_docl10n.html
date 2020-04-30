@@ -10,7 +10,10 @@
   "use strict";
   SimpleTest.waitForExplicitFinish();
 
-  document.addEventListener("DOMContentLoaded", async function() {
+  is(document.l10n.ready && document.l10n.ready.then !== undefined, true,
+    "document.l10n.ready exists and is a Promise");
+
+  (async function() {
     await document.l10n.ready;
 
     // Test for initial localization applied.
@@ -43,7 +46,7 @@
     let l10nArgs = document.l10n.getAttributes(label);
     is(l10nArgs.id, "date-crashed-heading");
     is(l10nArgs.args.name, "John");
-  }, { once: true});
+  })();
   </script>
 </head>
 <body>
