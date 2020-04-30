@@ -15,6 +15,7 @@ extern crate authenticator;
 extern crate bitsdownload;
 #[cfg(feature = "moz_places")]
 extern crate bookmark_sync;
+extern crate cascade_bloom_filter;
 #[cfg(feature = "new_cert_storage")]
 extern crate cert_storage;
 extern crate chardetng_c;
