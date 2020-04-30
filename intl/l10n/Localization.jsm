@@ -234,7 +234,7 @@ class Localization {
   }
 
   init(eager = false) {
-    this.onChange(eager);
+    this.regenerateBundles(eager);
   }
 
   cached(iterable) {
@@ -247,12 +247,10 @@ class Localization {
 
   /**
    * @param {Array<String>} resourceIds - List of resource IDs
-   * @param {bool}                eager - whether the I/O for new context should
-   *                                      begin eagerly
    */
-  addResourceIds(resourceIds, eager = false) {
+  addResourceIds(resourceIds) {
     this.resourceIds.push(...resourceIds);
-    this.onChange(eager);
+    this.onChange();
     return this.resourceIds.length;
   }
 
@@ -489,13 +487,17 @@ class Localization {
     }
   }
 
+  onChange() {
+    this.regenerateBundles(false);
+  }
+
   /**
    * This method should be called when there's a reason to believe
    * that language negotiation or available resources changed.
    *
    * @param {bool} eager - whether the I/O for new context should begin eagerly
    */
-  onChange(eager = false) {
+  regenerateBundles(eager = false) {
     let generateMessages = this.isSync ? this.generateBundlesSync : this.generateBundles;
     this.bundles = this.cached(generateMessages(this.resourceIds));
     if (eager) {
