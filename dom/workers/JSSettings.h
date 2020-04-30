@@ -24,25 +24,6 @@ namespace workerinternals {
 const uint32_t kJSPrincipalsDebugToken = 0x7e2df9d2;
 
 struct JSSettings {
-  enum {
-    // All the GC parameters that we support.
-    JSSettings_JSGC_MAX_BYTES = 0,
-    JSSettings_JSGC_HIGH_FREQUENCY_TIME_LIMIT,
-    JSSettings_JSGC_LOW_FREQUENCY_HEAP_GROWTH,
-    JSSettings_JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH,
-    JSSettings_JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH,
-    JSSettings_JSGC_SMALL_HEAP_SIZE_MAX,
-    JSSettings_JSGC_LARGE_HEAP_SIZE_MIN,
-    JSSettings_JSGC_ALLOCATION_THRESHOLD,
-    JSSettings_JSGC_SLICE_TIME_BUDGET,
-    JSSettings_JSGC_DYNAMIC_HEAP_GROWTH,
-    JSSettings_JSGC_DYNAMIC_MARK_SLICE,
-    // JSGC_MODE not supported
-
-    // This must be last so that we get an accurate count.
-    kGCSettingsArraySize
-  };
-
   struct JSGCSetting {
     JSGCParamKey key;
     // Nothing() represents the default value, the result of calling
