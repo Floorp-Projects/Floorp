@@ -6,9 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["TabObserver"];
 
-const { DOMContentLoadedPromise } = ChromeUtils.import(
-  "chrome://remote/content/Sync.jsm"
-);
+const { EventPromise } = ChromeUtils.import("chrome://remote/content/Sync.jsm");
 const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
@@ -41,8 +39,8 @@ class WindowObserver {
 
   async start() {
     if (this.registerExisting) {
-      for (const window of Services.wm.getEnumerator("navigator:browser")) {
-        await this.onOpenDOMWindow(window);
+      for (const win of Services.wm.getEnumerator("navigator:browser")) {
+        this.onOpenDOMWindow(win);
       }
     }
 
@@ -53,15 +51,26 @@ class WindowObserver {
     Services.wm.removeListener(this);
   }
 
-  async onOpenDOMWindow(window) {
-    await new DOMContentLoadedPromise(window);
-    this.emit("open", window);
+  onOpenDOMWindow(win) {
+    this.emit("open", win);
   }
 
   // nsIWindowMediatorListener
 
   async onOpenWindow(xulWindow) {
-    await this.onOpenDOMWindow(xulWindow.docShell.domWindow);
+    const win = xulWindow.docShell.domWindow;
+
+    await new EventPromise(win, "load");
+
+    // Return early if it's not a browser window
+    if (
+      win.document.documentElement.getAttribute("windowtype") !=
+      "navigator:browser"
+    ) {
+      return;
+    }
+
+    this.onOpenDOMWindow(win);
   }
 
   onCloseWindow(xulWindow) {
@@ -124,11 +133,6 @@ class TabObserver {
   // WindowObserver
 
   async onWindowOpen(eventName, window) {
-    // Return early if it's not a browser window
-    if (!window.gBrowser) {
-      return;
-    }
-
     for (const tab of window.gBrowser.tabs) {
       // a missing linkedBrowser means the tab is still initialising,
       // and a TabOpen event will fire once it is ready

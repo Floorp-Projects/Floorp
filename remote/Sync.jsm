@@ -5,7 +5,6 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = [
-  "DOMContentLoadedPromise",
   "EventPromise",
   "executeSoon",
   "MessagePromise",
@@ -96,16 +95,6 @@ function executeSoon(fn) {
   }
 
   Services.tm.dispatchToMainThread(fn);
-}
-
-function DOMContentLoadedPromise(window, options = { mozSystemGroup: true }) {
-  if (
-    window.document.readyState == "complete" ||
-    window.document.readyState == "interactive"
-  ) {
-    return Promise.resolve();
-  }
-  return new EventPromise(window, "DOMContentLoaded", options);
 }
 
 /**
