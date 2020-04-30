@@ -5344,21 +5344,35 @@ void PresShell::SynthesizeMouseMove(bool aFromScroll) {
 }
 
 /**
- * Find the first floating view with a widget in a postorder traversal of the
- * view tree that contains the point. Thus more deeply nested floating views
- * are preferred over their ancestors, and floating views earlier in the
- * view hierarchy (i.e., added later) are preferred over their siblings.
- * This is adequate for finding the "topmost" floating view under a point,
- * given that floating views don't supporting having a specific z-index.
+ * Find the first floating view with a frame and a widget in a postorder
+ * traversal of the view tree that contains the point. Thus more deeply nested
+ * floating views are preferred over their ancestors, and floating views earlier
+ * in the view hierarchy (i.e., added later) are preferred over their siblings.
+ * This is adequate for finding the "topmost" floating view under a point, given
+ * that floating views don't supporting having a specific z-index.
  *
  * We cannot exit early when aPt is outside the view bounds, because floating
  * views aren't necessarily included in their parent's bounds, so this could
  * traverse the entire view hierarchy --- use carefully.
+ *
+ * aPt is relative aRelativeToView with the viewport type
+ * aRelativeToViewportType. aRelativeToView will always have a frame. If aView
+ * has a frame then aRelativeToView will be aView. (The reason aRelativeToView
+ * and aView are separate is because we need to traverse into views without
+ * frames (ie the inner view of a subdocument frame) but we can only easily
+ * transform between views using TransformPoint which takes frames.)
  */
-static nsView* FindFloatingViewContaining(nsView* aView, nsPoint aPt) {
-  if (aView->GetVisibility() == nsViewVisibility_kHide)
+static nsView* FindFloatingViewContaining(nsView* aRelativeToView,
+                                          ViewportType aRelativeToViewportType,
+                                          nsView* aView, nsPoint aPt) {
+  MOZ_ASSERT(aRelativeToView->GetFrame());
+
+  if (aView->GetVisibility() == nsViewVisibility_kHide) {
     // No need to look into descendants.
     return nullptr;
+  }
+
+  bool crossingZoomBoundary = false;
 
   nsIFrame* frame = aView->GetFrame();
   if (frame) {
@@ -5367,32 +5381,91 @@ static nsView* FindFloatingViewContaining(nsView* aView, nsPoint aPt) {
         !frame->PresShell()->IsActive()) {
       return nullptr;
     }
+
+    // We start out in visual coords and then if we cross the zoom boundary we
+    // become in layout coords. The zoom boundary always occurs in a document
+    // with IsRootContentDocumentCrossProcess. The root view of such a document
+    // is outside the zoom boundary and any child view must be inside the zoom
+    // boundary because we only create views for certain kinds of frames and
+    // none of them can be between the root frame and the zoom boundary.
+    if (!aRelativeToView->GetParent() ||
+        aRelativeToView->GetViewManager() !=
+            aRelativeToView->GetParent()->GetViewManager()) {
+      if (aRelativeToView->GetFrame()
+              ->PresContext()
+              ->IsRootContentDocumentCrossProcess()) {
+        crossingZoomBoundary = true;
+      }
+    }
+
+    ViewportType nextRelativeToViewportType = aRelativeToViewportType;
+    if (crossingZoomBoundary) {
+      nextRelativeToViewportType = ViewportType::Layout;
+    }
+
+    nsLayoutUtils::TransformResult result = nsLayoutUtils::TransformPoint(
+        RelativeTo{aRelativeToView->GetFrame(), aRelativeToViewportType},
+        RelativeTo{frame, nextRelativeToViewportType}, aPt);
+    if (result != nsLayoutUtils::TRANSFORM_SUCCEEDED) {
+      return nullptr;
+    }
+
+    aRelativeToView = aView;
+    aRelativeToViewportType = nextRelativeToViewportType;
   }
 
   for (nsView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
-    nsView* r = FindFloatingViewContaining(v, v->ConvertFromParentCoords(aPt));
+    nsView* r = FindFloatingViewContaining(aRelativeToView,
+                                           aRelativeToViewportType, v, aPt);
     if (r) return r;
   }
 
-  if (aView->GetFloating() && aView->HasWidget() &&
-      aView->GetDimensions().Contains(aPt))
-    return aView;
+  if (!frame || !aView->GetFloating() || !aView->HasWidget()) {
+    return nullptr;
+  }
+
+  // Even though aPt is in visual coordinates until we cross the zoom boundary
+  // it is valid to compare it to view coords (which are in layout coords)
+  // because visual coords are the same as layout coords for every view outside
+  // of the zoom boundary except for the root view of the root content document.
+  // For the root view of the root content document, its bounds don't actually
+  // correspond to what is visible when we have a MobileViewportManager. So we
+  // skip the hit test. This is okay because the point has already been hit
+  // test: 1) if we are the root view in the process then the point comes from a
+  // real mouse event so it must have been over our widget, or 2) if we are the
+  // root of a subdocument then hittesting against the view of the subdocument
+  // frame that contains us already happened and succeeded before getting here.
+  if (!crossingZoomBoundary) {
+    if (aView->GetDimensions().Contains(aPt)) {
+      return aView;
+    }
+  }
 
   return nullptr;
 }
 
 /*
- * This finds the first view containing the given point in a postorder
- * traversal of the view tree that contains the point, assuming that the
- * point is not in a floating view.  It assumes that only floating views
- * extend outside the bounds of their parents.
+ * This finds the first view with a frame that contains the given point in a
+ * postorder traversal of the view tree, assuming that the point is not in a
+ * floating view.  It assumes that only floating views extend outside the bounds
+ * of their parents.
  *
- * This methods should only be called if FindFloatingViewContaining
- * returns null.
+ * This methods should only be called if FindFloatingViewContaining returns
+ * null.
+ *
+ * aPt is relative aRelativeToView with the viewport type
+ * aRelativeToViewportType. aRelativeToView will always have a frame. If aView
+ * has a frame then aRelativeToView will be aView. (The reason aRelativeToView
+ * and aView are separate is because we need to traverse into views without
+ * frames (ie the inner view of a subdocument frame) but we can only easily
+ * transform between views using TransformPoint which takes frames.)
  */
-static nsView* FindViewContaining(nsView* aView, nsPoint aPt) {
-  if (!aView->GetDimensions().Contains(aPt) ||
-      aView->GetVisibility() == nsViewVisibility_kHide) {
+static nsView* FindViewContaining(nsView* aRelativeToView,
+                                  ViewportType aRelativeToViewportType,
+                                  nsView* aView, nsPoint aPt) {
+  MOZ_ASSERT(aRelativeToView->GetFrame());
+
+  if (aView->GetVisibility() == nsViewVisibility_kHide) {
     return nullptr;
   }
 
@@ -5403,14 +5476,66 @@ static nsView* FindViewContaining(nsView* aView, nsPoint aPt) {
         !frame->PresShell()->IsActive()) {
       return nullptr;
     }
+
+    // We start out in visual coords and then if we cross the zoom boundary we
+    // become in layout coords. The zoom boundary always occurs in a document
+    // with IsRootContentDocumentCrossProcess. The root view of such a document
+    // is outside the zoom boundary and any child view must be inside the zoom
+    // boundary because we only create views for certain kinds of frames and
+    // none of them can be between the root frame and the zoom boundary.
+    bool crossingZoomBoundary = false;
+    if (!aRelativeToView->GetParent() ||
+        aRelativeToView->GetViewManager() !=
+            aRelativeToView->GetParent()->GetViewManager()) {
+      if (aRelativeToView->GetFrame()
+              ->PresContext()
+              ->IsRootContentDocumentCrossProcess()) {
+        crossingZoomBoundary = true;
+      }
+    }
+
+    ViewportType nextRelativeToViewportType = aRelativeToViewportType;
+    if (crossingZoomBoundary) {
+      nextRelativeToViewportType = ViewportType::Layout;
+    }
+
+    nsLayoutUtils::TransformResult result = nsLayoutUtils::TransformPoint(
+        RelativeTo{aRelativeToView->GetFrame(), aRelativeToViewportType},
+        RelativeTo{frame, nextRelativeToViewportType}, aPt);
+    if (result != nsLayoutUtils::TRANSFORM_SUCCEEDED) {
+      return nullptr;
+    }
+
+    // Even though aPt is in visual coordinates until we cross the zoom boundary
+    // it is valid to compare it to view coords (which are in layout coords)
+    // because visual coords are the same as layout coords for every view
+    // outside of the zoom boundary except for the root view of the root content
+    // document.
+    // For the root view of the root content document, its bounds don't
+    // actually correspond to what is visible when we have a
+    // MobileViewportManager. So we skip the hit test. This is okay because the
+    // point has already been hit test: 1) if we are the root view in the
+    // process then the point comes from a real mouse event so it must have been
+    // over our widget, or 2) if we are the root of a subdocument then
+    // hittesting against the view of the subdocument frame that contains us
+    // already happened and succeeded before getting here.
+    if (!crossingZoomBoundary) {
+      if (!aView->GetDimensions().Contains(aPt)) {
+        return nullptr;
+      }
+    }
+
+    aRelativeToView = aView;
+    aRelativeToViewportType = nextRelativeToViewportType;
   }
 
   for (nsView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
-    nsView* r = FindViewContaining(v, v->ConvertFromParentCoords(aPt));
+    nsView* r =
+        FindViewContaining(aRelativeToView, aRelativeToViewportType, v, aPt);
     if (r) return r;
   }
 
-  return aView;
+  return frame ? aView : nullptr;
 }
 
 static BrowserBridgeChild* GetChildBrowser(nsView* aView) {
@@ -5482,11 +5607,19 @@ void PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll) {
 
   // This could be a bit slow (traverses entire view hierarchy)
   // but it's OK to do it once per synthetic mouse event
-  view = FindFloatingViewContaining(rootView, mMouseLocation);
+  if (rootView->GetFrame()) {
+    view = FindFloatingViewContaining(rootView, ViewportType::Visual, rootView,
+                                      mMouseLocation);
+  }
   nsView* pointView = view;
   if (!view) {
     view = rootView;
-    pointView = FindViewContaining(rootView, mMouseLocation);
+    if (rootView->GetFrame()) {
+      pointView = FindViewContaining(rootView, ViewportType::Visual, rootView,
+                                     mMouseLocation);
+    } else {
+      pointView = rootView;
+    }
     // pointView can be null in situations related to mouse capture
     pointVM = (pointView ? pointView : view)->GetViewManager();
     refpoint = mMouseLocation + rootView->ViewToWidgetOffset();
@@ -5496,8 +5629,12 @@ void PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll) {
     nsIFrame* frame = view->GetFrame();
     NS_ASSERTION(frame, "floating views can't be anonymous");
     viewAPD = frame->PresContext()->AppUnitsPerDevPixel();
-    refpoint = mMouseLocation.ScaleToOtherAppUnits(APD, viewAPD);
-    refpoint -= view->GetOffsetTo(rootView);
+    refpoint = mMouseLocation;
+    DebugOnly<nsLayoutUtils::TransformResult> result =
+        nsLayoutUtils::TransformPoint(
+            RelativeTo{rootView->GetFrame(), ViewportType::Visual},
+            RelativeTo{frame, ViewportType::Layout}, refpoint);
+    MOZ_ASSERT(result == nsLayoutUtils::TRANSFORM_SUCCEEDED);
     refpoint += view->ViewToWidgetOffset();
   }
   NS_ASSERTION(view->GetWidget(), "view should have a widget here");
