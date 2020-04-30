@@ -750,13 +750,15 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
     auto sink = MakeUnique<HostWebGLCommandSinkP>(commandPcq->TakeConsumer(),
                                                   responsePcq->TakeProducer());
 
-    // Use the error/warning and command queues to construct a
-    // ClientWebGLContext in this process and a HostWebGLContext
-    // in the host process.
-    outOfProcess.mWebGLChild = new dom::WebGLChild(*this);
-    if (!cbc->SendPWebGLConstructor(outOfProcess.mWebGLChild.get(), initDesc,
-                                    &notLost.info)) {
+    outOfProcess.mWebGLChild = new WebGLChild(*this);
+    outOfProcess.mWebGLChild = static_cast<dom::WebGLChild*>(
+        cbc->SendPWebGLConstructor(outOfProcess.mWebGLChild));
+    if (!outOfProcess.mWebGLChild) {
       return Err("SendPWebGLConstructor failed");
+    }
+
+    if (!outOfProcess.mWebGLChild->SendInitialize(initDesc, &notLost.info)) {
+      return Err("WebGL actor Initialize failed");
     }
 
     notLost.outOfProcess = Some(std::move(outOfProcess));
