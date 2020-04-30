@@ -30,7 +30,7 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
-#include "mozilla/dom/JSWindowActorService.h"
+#include "mozilla/dom/JSActorService.h"
 
 #ifdef MOZ_XUL
 #  include "nsXULElement.h"
@@ -50,7 +50,7 @@ nsWindowRoot::~nsWindowRoot() {
   }
 
   if (XRE_IsContentProcess()) {
-    JSWindowActorService::UnregisterChromeEventTarget(this);
+    JSActorService::UnregisterChromeEventTarget(this);
   }
 }
 
@@ -379,7 +379,7 @@ already_AddRefed<EventTarget> NS_NewWindowRoot(nsPIDOMWindowOuter* aWindow) {
   nsCOMPtr<EventTarget> result = new nsWindowRoot(aWindow);
 
   if (XRE_IsContentProcess()) {
-    RefPtr<JSWindowActorService> wasvc = JSWindowActorService::GetSingleton();
+    RefPtr<JSActorService> wasvc = JSActorService::GetSingleton();
     wasvc->RegisterChromeEventTarget(result);
   }
 
