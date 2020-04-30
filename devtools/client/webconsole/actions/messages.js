@@ -24,6 +24,7 @@ const {
   MESSAGE_OPEN,
   MESSAGE_CLOSE,
   MESSAGE_TYPE,
+  MESSAGE_REMOVE,
   MESSAGE_UPDATE_PAYLOAD,
   PRIVATE_MESSAGES_CLEAR,
 } = require("devtools/client/webconsole/constants");
@@ -129,6 +130,13 @@ function messageUpdatePayload(id, data) {
   };
 }
 
+function messageRemove(id) {
+  return {
+    type: MESSAGE_REMOVE,
+    id,
+  };
+}
+
 function networkMessageUpdate(packet, idGenerator = null, response) {
   if (idGenerator == null) {
     idGenerator = defaultIdGenerator;
@@ -157,6 +165,7 @@ module.exports = {
   messagesClearLogpoint,
   messageOpen,
   messageClose,
+  messageRemove,
   messageGetMatchingElements,
   messageUpdatePayload,
   networkMessageUpdate,
