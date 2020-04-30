@@ -30,6 +30,10 @@
 struct CraneliftCompiler;
 
 extern "C" {
+
+// Returns true if the platform is supported by Cranelift.
+bool cranelift_supports_platform();
+
 // A static initializer, that must be called only once.
 void cranelift_initialize();
 
