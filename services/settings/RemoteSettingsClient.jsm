@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource://gre/modules/components-utils/ClientEnvironment.jsm",
   Database: "resource://services-settings/Database.jsm",
   Downloader: "resource://services-settings/Attachments.jsm",
+  IDBHelpers: "resource://services-settings/IDBHelpers.jsm",
   KintoHttpClient: "resource://services-common/kinto-http-client.js",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   PerformanceCounters: "resource://gre/modules/PerformanceCounters.jsm",
@@ -273,7 +274,7 @@ class RemoteSettingsClient extends EventEmitter {
       timestamp = await this.db.getLastModified();
     } catch (err) {
       console.warn(
-        `Error retrieving the getLastModified timestamp from ${this.identifier} RemoteSettingClient`,
+        `Error retrieving the getLastModified timestamp from ${this.identifier} RemoteSettingsClient`,
         err
       );
     }
@@ -644,7 +645,7 @@ class RemoteSettingsClient extends EventEmitter {
     } else if (e instanceof RemoteSettingsClient.MissingSignatureError) {
       // Collection metadata has no signature info, no need to retry.
       reportStatus = UptakeTelemetry.STATUS.SIGNATURE_ERROR;
-    } else if (e instanceof Database.ShutdownError) {
+    } else if (e instanceof IDBHelpers.ShutdownError) {
       reportStatus = UptakeTelemetry.STATUS.SHUTDOWN_ERROR;
     } else if (/unparseable/.test(e.message)) {
       reportStatus = UptakeTelemetry.STATUS.PARSE_ERROR;
@@ -658,7 +659,7 @@ class RemoteSettingsClient extends EventEmitter {
       reportStatus = UptakeTelemetry.STATUS.BACKOFF;
     } else if (
       // Errors from kinto.js IDB adapter.
-      e instanceof Database.IDBError ||
+      e instanceof IDBHelpers.IndexedDBError ||
       // Other IndexedDB errors (eg. RemoteSettingsWorker).
       /IndexedDB/.test(e.message)
     ) {

@@ -13,41 +13,12 @@
 importScripts(
   "resource://gre/modules/workers/require.js",
   "resource://gre/modules/CanonicalJSON.jsm",
+  "resource://services-settings/IDBHelpers.jsm",
   "resource://gre/modules/third_party/jsesc/jsesc.js"
 );
 
-const IDB_NAME = "remote-settings";
-const IDB_VERSION = 2;
 const IDB_RECORDS_STORE = "records";
 const IDB_TIMESTAMPS_STORE = "timestamps";
-
-// We batch operations in order to reduce round-trip latency to the IndexedDB
-// database thread. The trade-offs are that the more records in the batch, the
-// more time we spend on this thread in structured serialization, and the
-// greater the chance to jank PBackground and this thread when the responses
-// come back. The initial choice of 250 was made targeting 2-3ms on a fast
-// machine and 10-15ms on a slow machine.
-// Every chunk waits for success before starting the next, and
-// the final chunk's completion will fire transaction.oncomplete .
-function bulkOperationHelper(store, operation, list, listIndex = 0) {
-  const CHUNK_LENGTH = 250;
-  const max = Math.min(listIndex + CHUNK_LENGTH, list.length);
-  let request;
-  for (; listIndex < max; listIndex++) {
-    request = store[operation](list[listIndex]);
-  }
-  if (listIndex < list.length) {
-    // On error, `transaction.onerror` is called.
-    request.onsuccess = bulkOperationHelper.bind(
-      null,
-      store,
-      operation,
-      list,
-      listIndex
-    );
-  }
-  // otherwise, we're done, and the transaction will complete on its own.
-}
 
 const Agent = {
   /**
@@ -186,85 +157,32 @@ async function loadJSONDump(bucket, collection) {
 async function importDumpIDB(bucket, collection, records) {
   // Open the DB. It will exist since if we are running this, it means
   // we already tried to read the timestamp in `remote-settings.js`
-  const db = await openIDB(IDB_NAME, IDB_VERSION);
+  const db = await IDBHelpers.openIDB(false /* do not allow upgrades */);
 
   // Each entry of the dump will be stored in the records store.
   // They are indexed by `_cid`.
   const cid = bucket + "/" + collection;
-  await executeIDB(db, IDB_RECORDS_STORE, store => {
-    // We can just modify the items in-place, as we got them from loadJSONDump.
-    records.forEach(item => {
-      item._cid = cid;
-    });
-    bulkOperationHelper(store, "put", records);
+  // We can just modify the items in-place, as we got them from loadJSONDump.
+  records.forEach(item => {
+    item._cid = cid;
   });
+  await IDBHelpers.executeIDB(
+    db,
+    IDB_RECORDS_STORE,
+    "readwrite",
+    (store, rejectTransaction) => {
+      IDBHelpers.bulkOperationHelper(store, rejectTransaction, "put", records);
+    }
+  ).promise;
 
   // Store the highest timestamp as the collection timestamp (or zero if dump is empty).
   const timestamp =
     records.length === 0
       ? 0
       : Math.max(...records.map(record => record.last_modified));
-  await executeIDB(db, IDB_TIMESTAMPS_STORE, store =>
+  await IDBHelpers.executeIDB(db, IDB_TIMESTAMPS_STORE, "readwrite", store =>
     store.put({ cid, value: timestamp })
-  );
+  ).promise;
   // Close now that we're done.
   db.close();
-}
-
-/**
- * Wrap IndexedDB errors to catch them more easily.
- */
-class IndexedDBError extends Error {
-  constructor(error) {
-    super(`IndexedDB: ${error.message}`);
-    this.name = error.name;
-    this.stack = error.stack;
-  }
-}
-
-/**
- * Helper to wrap indexedDB.open() into a promise.
- */
-async function openIDB(dbname, version) {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(dbname, version);
-    request.onupgradeneeded = () => {
-      // We should never have to initialize the DB here.
-      reject(
-        new Error(
-          `IndexedDB: Error accessing ${dbname} Chrome IDB at version ${version}`
-        )
-      );
-    };
-    request.onerror = event => reject(new IndexedDBError(event.target.error));
-    request.onsuccess = event => {
-      const db = event.target.result;
-      resolve(db);
-    };
-  });
-}
-
-/**
- * Helper to wrap some IDBObjectStore operations into a promise.
- *
- * @param {IDBDatabase} db
- * @param {String} storeName
- * @param {function} callback
- */
-async function executeIDB(db, storeName, callback) {
-  const mode = "readwrite";
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([storeName], mode);
-    const store = transaction.objectStore(storeName);
-    let result;
-    try {
-      result = callback(store);
-    } catch (e) {
-      transaction.abort();
-      reject(new IndexedDBError(e));
-    }
-    transaction.onerror = event =>
-      reject(new IndexedDBError(event.target.error));
-    transaction.oncomplete = event => resolve(result);
-  });
 }
