@@ -290,7 +290,7 @@ class nsTextControlFrame : public nsContainerFrame,
                                          mozilla::WritingMode aWM,
                                          float aFontSizeInflation) const;
 
-  nsresult ScrollSelectionIntoView() override;
+  void ScrollSelectionIntoViewAsync();
 
  private:
   // helper methods
