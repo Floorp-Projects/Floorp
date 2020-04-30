@@ -45,6 +45,7 @@ import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.downloads.manager.FetchDownloadManager
 import mozilla.components.feature.intent.ext.EXTRA_SESSION_ID
+import mozilla.components.feature.media.fullscreen.MediaFullscreenOrientationFeature
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.prompts.share.ShareDelegate
 import mozilla.components.feature.readerview.ReaderViewFeature
@@ -128,6 +129,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     private val swipeRefreshFeature = ViewBoundFeatureWrapper<SwipeRefreshFeature>()
     private val webchannelIntegration = ViewBoundFeatureWrapper<FxaWebChannelFeature>()
     private val sitePermissionWifiIntegration = ViewBoundFeatureWrapper<SitePermissionsWifiIntegration>()
+    private var fullScreenMediaFeature = ViewBoundFeatureWrapper<MediaFullscreenOrientationFeature>()
     private var pipFeature: PictureInPictureFeature? = null
 
     var customTabSessionId: String? = null
@@ -256,6 +258,15 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     engineView = view.engineView,
                     useCases = context.components.useCases.contextMenuUseCases,
                     tabId = customTabSessionId
+                ),
+                owner = this,
+                view = view
+            )
+
+            fullScreenMediaFeature.set(
+                feature = MediaFullscreenOrientationFeature(
+                    requireActivity(),
+                    context.components.core.store
                 ),
                 owner = this,
                 view = view
