@@ -9,7 +9,7 @@
 #include "TexUnpackBlob.h"
 #include "WebGLCrossProcessCommandQueue.h"
 #include "HostWebGLContext.h"
-#include "WebGLPcqParamTraits.h"
+#include "WebGLQueueParamTraits.h"
 
 namespace mozilla {
 
