@@ -492,12 +492,7 @@ class FunctionBox : public SharedContext {
   bool needsPromiseResult() const { return isAsync() && !isGenerator(); }
 
   bool isArrow() const { return flags_.isArrow(); }
-  bool isLambda() const {
-    if (hasFunction()) {
-      return function()->isLambda();
-    }
-    return functionCreationData().get().flags.isLambda();
-  }
+  bool isLambda() const { return flags_.isLambda(); }
 
   void setDeclaredArguments() {
     immutableFlags_.setFlag(ImmutableFlags::ShouldDeclareArguments);
@@ -572,15 +567,11 @@ class FunctionBox : public SharedContext {
     immutableFlags_.setFlag(ImmutableFlags::AlwaysNeedsArgsObj);
   }
   void setNeedsHomeObject() {
-    MOZ_ASSERT_IF(hasFunction(), function()->allowSuperProperty());
-    MOZ_ASSERT_IF(!hasFunction(),
-                  functionCreationData().get().flags.allowSuperProperty());
+    MOZ_ASSERT(flags_.allowSuperProperty());
     immutableFlags_.setFlag(ImmutableFlags::NeedsHomeObject);
   }
   void setDerivedClassConstructor() {
-    MOZ_ASSERT_IF(hasFunction(), function()->isClassConstructor());
-    MOZ_ASSERT_IF(!hasFunction(),
-                  functionCreationData().get().flags.isClassConstructor());
+    MOZ_ASSERT(flags_.isClassConstructor());
     immutableFlags_.setFlag(ImmutableFlags::IsDerivedClassConstructor);
   }
   void setFunctionHasExtraBodyVarScope() {

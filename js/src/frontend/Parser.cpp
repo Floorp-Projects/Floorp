@@ -7192,6 +7192,10 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
   }
 
   if (FunctionBox* ctorbox = classStmt.constructorBox) {
+    // The ctorbox must not have emitted a JSFunction yet since we are still
+    // updating it.
+    MOZ_ASSERT(!ctorbox->hasFunction());
+
     // Amend the toStringEnd offset for the constructor now that we've
     // finished parsing the class.
     ctorbox->extent.toStringEnd = classEndOffset;
@@ -7199,20 +7203,6 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
     if (numFields > 0) {
       // Field initialization need access to `this`.
       ctorbox->setHasThisBinding();
-    }
-
-    // Set the same information, but on the lazyScript.
-    if (ctorbox->hasFunction()) {
-      if (!ctorbox->emitBytecode) {
-        ctorbox->function()->baseScript()->setToStringEnd(classEndOffset);
-
-        if (numFields > 0) {
-          ctorbox->function()->baseScript()->setFunctionHasThisBinding();
-        }
-      } else {
-        // There should not be any non-lazy script yet.
-        MOZ_ASSERT(ctorbox->function()->isIncomplete());
-      }
     }
   }
 
