@@ -47,9 +47,6 @@ var AboutTabCrashed = {
   },
 
   init() {
-    this.MESSAGES.forEach(msg =>
-      RPMAddMessageListener(msg, this.receiveMessage.bind(this))
-    );
     addEventListener("DOMContentLoaded", this);
 
     document.title = this.pageData.title;
@@ -90,6 +87,10 @@ var AboutTabCrashed = {
   },
 
   onDOMContentLoaded() {
+    this.MESSAGES.forEach(msg =>
+      RPMAddMessageListener(msg, this.receiveMessage.bind(this))
+    );
+
     this.CLICK_TARGETS.forEach(targetID => {
       let el = document.getElementById(targetID);
       el.addEventListener("click", this);

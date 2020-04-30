@@ -164,6 +164,11 @@ let RemotePageAccessManager = {
       ],
       RPMRecordTelemetryEvent: ["*"],
     },
+    "about:tabcrashed": {
+      RPMSendAsyncMessage: ["Load", "closeTab", "restoreTab", "restoreAll"],
+      RPMAddMessageListener: ["*"],
+      RPMRemoveMessageListener: ["*"],
+    },
   },
 
   /**
