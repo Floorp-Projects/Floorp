@@ -70,7 +70,10 @@ class DevToolsFrameChild extends JSWindowActorChild {
     const connection = DevToolsServer.connectToParentWindowActor(prefix, this);
 
     // Create the actual target actor.
-    const targetActor = new FrameTargetActor(connection, this.docShell);
+    const targetActor = new FrameTargetActor(connection, this.docShell, {
+      followWindowGlobalLifeCycle: true,
+      doNotFireFrameUpdates: true,
+    });
 
     // Add the newly created actor to the connection pool.
     const actorPool = new ActorPool(connection, "frame-child");
