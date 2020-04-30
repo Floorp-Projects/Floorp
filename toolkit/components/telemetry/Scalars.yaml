@@ -7,29 +7,12 @@
 
 # The following section contains the accessibility scalars.
 a11y:
-  sitezoom:
-    bug_numbers:
-      - 1590485
-    description: >
-      Boolean tracking if the user has the site-specific zoom enabled or disabled.
-    expires: "78"
-    kind: boolean
-    notification_emails:
-      - accessibility@mozilla.com
-      - mreschenberg@mozilla.com
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
-    release_channel_collection: opt-out
-    keyed: false
-
   backplate:
     bug_numbers:
       - 1539212
     description: >
       Boolean tracking if the user has the backplate preference enabled or disabled.
-    expires: "78"
+    expires: "80"
     kind: boolean
     notification_emails:
       - accessibility@mozilla.com
@@ -90,7 +73,7 @@ a11y:
       The result is split into keys which represent the values of
       browser.display.document_color_use: "default", "always", or "never".
     keyed: true
-    expires: "78"
+    expires: "80"
     kind: boolean
     notification_emails:
       - accessibility@mozilla.com
