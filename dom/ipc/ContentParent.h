@@ -338,6 +338,7 @@ class ContentParent final
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ContentParent, nsIObserver)
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_NSICONTENTPARENT
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIDOMGEOPOSITIONCALLBACK
   NS_DECL_NSIDOMGEOPOSITIONERRORCALLBACK
@@ -1323,8 +1324,6 @@ class ContentParent final
   void UpdateNetworkLinkType();
 
   static bool ShouldSyncPreference(const char16_t* aData);
-
-  NS_IMETHOD GetChildID(uint64_t* aChildID) override;
 
   JSActor::Type GetSide() override { return JSActor::Type::Parent; }
 
