@@ -123,10 +123,9 @@ function onZoomReset(aCallback) {
     SimpleTest.executeSoon(aCallback);
     return;
   }
-  // Zoom causes a resize of the viewport.
-  window.addEventListener("resize", function onResize(event) {
+  SpecialPowers.addChromeEventListener("FullZoomChange", function onFullZoomChange(event) {
     is(SpecialPowers.getFullZoom(window), 1, "Zoom should be reset to 1");
-    window.removeEventListener("resize", onResize);
+    SpecialPowers.removeChromeEventListener("FullZoomChange", onFullZoomChange);
     SimpleTest.executeSoon(aCallback);
   });
 }
@@ -2766,10 +2765,9 @@ function doTestZoom(aSettings, aCallback)
 
     fullZoomChangePromise = new Promise(resolve => {
       if (currentTest.expected & (kNegative | kPositive)) {
-        // Zoom causes a resize of the viewport.
-        window.addEventListener("resize", function onResize() {
+        SpecialPowers.addChromeEventListener("FullZoomChange", function onFullZoomChange() {
           if (SpecialPowers.getFullZoom(window) != 1) {
-            window.removeEventListener("resize", onResize);
+            SpecialPowers.removeChromeEventListener("FullZoomChange", onFullZoomChange)
             setTimeout(() => resolve(), 0);
           }
         });
