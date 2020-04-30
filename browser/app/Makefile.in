@@ -56,7 +56,7 @@ endif
 # steps. See bug 1431342.
 libs:: $(srcdir)/profile/channel-prefs.js
 	$(NSINSTALL) -D $(DIST)/bin/defaults/pref
-	$(call py3_action,preprocessor,-Fsubstitution $(PREF_PPFLAGS) $(ACDEFINES) $^ -o $(DIST)/bin/defaults/pref/channel-prefs.js)
+	$(call py_action,preprocessor,-Fsubstitution $(PREF_PPFLAGS) $(ACDEFINES) $^ -o $(DIST)/bin/defaults/pref/channel-prefs.js)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 

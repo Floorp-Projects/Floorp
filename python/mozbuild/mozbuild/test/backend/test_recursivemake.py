@@ -416,7 +416,7 @@ class TestRecursiveMakeBackend(BackendTester):
             'EXTRA_MDDEPEND_FILES += $(MDDEPDIR)/bar.c.pp',
             '$(MDDEPDIR)/bar.c.stub: %s/generate-bar.py' % env.topsrcdir,
             '$(REPORT_BUILD)',
-            '$(call py3_action,file_generate,%s/generate-bar.py baz bar.c $(MDDEPDIR)/bar.c.pp $(MDDEPDIR)/bar.c.stub)' % env.topsrcdir,  # noqa
+            '$(call py_action,file_generate,%s/generate-bar.py baz bar.c $(MDDEPDIR)/bar.c.pp $(MDDEPDIR)/bar.c.stub)' % env.topsrcdir,  # noqa
             '@$(TOUCH) $@',
             '',
             'export:: $(MDDEPDIR)/foo.h.stub',
@@ -426,7 +426,7 @@ class TestRecursiveMakeBackend(BackendTester):
             'EXTRA_MDDEPEND_FILES += $(MDDEPDIR)/foo.h.pp',
             '$(MDDEPDIR)/foo.h.stub: %s/generate-foo.py $(srcdir)/foo-data' % (env.topsrcdir),
             '$(REPORT_BUILD)',
-            '$(call py3_action,file_generate,%s/generate-foo.py main foo.h $(MDDEPDIR)/foo.h.pp $(MDDEPDIR)/foo.h.stub $(srcdir)/foo-data)' % (env.topsrcdir),  # noqa
+            '$(call py_action,file_generate,%s/generate-foo.py main foo.h $(MDDEPDIR)/foo.h.pp $(MDDEPDIR)/foo.h.stub $(srcdir)/foo-data)' % (env.topsrcdir),  # noqa
             '@$(TOUCH) $@',
             '',
         ]
@@ -449,7 +449,7 @@ class TestRecursiveMakeBackend(BackendTester):
             'EXTRA_MDDEPEND_FILES += $(MDDEPDIR)/bar.c.pp',
             '$(MDDEPDIR)/bar.c.stub: %s/generate-bar.py FORCE' % env.topsrcdir,
             '$(REPORT_BUILD)',
-            '$(call py3_action,file_generate,%s/generate-bar.py baz bar.c $(MDDEPDIR)/bar.c.pp $(MDDEPDIR)/bar.c.stub)' % env.topsrcdir,  # noqa
+            '$(call py_action,file_generate,%s/generate-bar.py baz bar.c $(MDDEPDIR)/bar.c.pp $(MDDEPDIR)/bar.c.stub)' % env.topsrcdir,  # noqa
             '@$(TOUCH) $@',
             '',
             'foo.c: $(MDDEPDIR)/foo.c.stub ;',
@@ -458,7 +458,7 @@ class TestRecursiveMakeBackend(BackendTester):
             'EXTRA_MDDEPEND_FILES += $(MDDEPDIR)/foo.c.pp',
             '$(MDDEPDIR)/foo.c.stub: %s/generate-foo.py $(srcdir)/foo-data' % (env.topsrcdir),
             '$(REPORT_BUILD)',
-            '$(call py3_action,file_generate,%s/generate-foo.py main foo.c $(MDDEPDIR)/foo.c.pp $(MDDEPDIR)/foo.c.stub $(srcdir)/foo-data)' % (env.topsrcdir),  # noqa
+            '$(call py_action,file_generate,%s/generate-foo.py main foo.c $(MDDEPDIR)/foo.c.pp $(MDDEPDIR)/foo.c.stub $(srcdir)/foo-data)' % (env.topsrcdir),  # noqa
             '@$(TOUCH) $@',
             '',
         ]
@@ -482,7 +482,7 @@ class TestRecursiveMakeBackend(BackendTester):
             'EXTRA_MDDEPEND_FILES += $(MDDEPDIR)/foo.xyz.pp',
             '$(MDDEPDIR)/foo.xyz.stub: %s/generate-foo.py $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input $(if $(IS_LANGUAGE_REPACK),FORCE)' % env.topsrcdir,  # noqa
             '$(REPORT_BUILD)',
-            '$(call py3_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main foo.xyz $(MDDEPDIR)/foo.xyz.pp $(MDDEPDIR)/foo.xyz.stub $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,  # noqa
+            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main foo.xyz $(MDDEPDIR)/foo.xyz.pp $(MDDEPDIR)/foo.xyz.stub $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,  # noqa
             '@$(TOUCH) $@',
             '',
             'LOCALIZED_FILES_0_FILES += foo.xyz',
@@ -510,7 +510,7 @@ class TestRecursiveMakeBackend(BackendTester):
             'EXTRA_MDDEPEND_FILES += $(MDDEPDIR)/foo.xyz.pp',
             '$(MDDEPDIR)/foo.xyz.stub: %s/generate-foo.py $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input $(if $(IS_LANGUAGE_REPACK),FORCE)' % env.topsrcdir,  # noqa
             '$(REPORT_BUILD)',
-            '$(call py3_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main foo.xyz $(MDDEPDIR)/foo.xyz.pp $(MDDEPDIR)/foo.xyz.stub $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,  # noqa
+            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main foo.xyz $(MDDEPDIR)/foo.xyz.pp $(MDDEPDIR)/foo.xyz.stub $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,  # noqa
             '@$(TOUCH) $@',
             '',
             'libs:: $(MDDEPDIR)/abc.xyz.stub',
@@ -520,7 +520,7 @@ class TestRecursiveMakeBackend(BackendTester):
             'EXTRA_MDDEPEND_FILES += $(MDDEPDIR)/abc.xyz.pp',
             '$(MDDEPDIR)/abc.xyz.stub: %s/generate-foo.py $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input FORCE' % env.topsrcdir,  # noqa
             '$(REPORT_BUILD)',
-            '$(call py3_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main abc.xyz $(MDDEPDIR)/abc.xyz.pp $(MDDEPDIR)/abc.xyz.stub $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,  # noqa
+            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main abc.xyz $(MDDEPDIR)/abc.xyz.pp $(MDDEPDIR)/abc.xyz.stub $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,  # noqa
             '@$(TOUCH) $@',
             '',
         ]
@@ -545,7 +545,7 @@ class TestRecursiveMakeBackend(BackendTester):
             'EXTRA_MDDEPEND_FILES += $(MDDEPDIR)/foo$(AB_CD).xyz.pp',
             '$(MDDEPDIR)/foo$(AB_CD).xyz.stub: %s/generate-foo.py $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input $(if $(IS_LANGUAGE_REPACK),FORCE)' % env.topsrcdir,  # noqa
             '$(REPORT_BUILD)',
-            '$(call py3_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main foo$(AB_CD).xyz $(MDDEPDIR)/foo$(AB_CD).xyz.pp $(MDDEPDIR)/foo$(AB_CD).xyz.stub $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,  # noqa
+            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main foo$(AB_CD).xyz $(MDDEPDIR)/foo$(AB_CD).xyz.pp $(MDDEPDIR)/foo$(AB_CD).xyz.stub $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,  # noqa
             '@$(TOUCH) $@',
             '',
             'bar$(AB_rCD).xyz: $(MDDEPDIR)/bar$(AB_rCD).xyz.stub ;',
@@ -554,7 +554,7 @@ class TestRecursiveMakeBackend(BackendTester):
             'EXTRA_MDDEPEND_FILES += $(MDDEPDIR)/bar$(AB_rCD).xyz.pp',
             '$(MDDEPDIR)/bar$(AB_rCD).xyz.stub: %s/generate-foo.py $(call MERGE_RELATIVE_FILE,localized-input,inner/locales) $(srcdir)/non-localized-input $(if $(IS_LANGUAGE_REPACK),FORCE)' % env.topsrcdir,  # noqa
             '$(REPORT_BUILD)',
-            '$(call py3_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main bar$(AB_rCD).xyz $(MDDEPDIR)/bar$(AB_rCD).xyz.pp $(MDDEPDIR)/bar$(AB_rCD).xyz.stub $(call MERGE_RELATIVE_FILE,localized-input,inner/locales) $(srcdir)/non-localized-input)' % env.topsrcdir,  # noqa
+            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main bar$(AB_rCD).xyz $(MDDEPDIR)/bar$(AB_rCD).xyz.pp $(MDDEPDIR)/bar$(AB_rCD).xyz.stub $(call MERGE_RELATIVE_FILE,localized-input,inner/locales) $(srcdir)/non-localized-input)' % env.topsrcdir,  # noqa
             '@$(TOUCH) $@',
             '',
             'zot$(AB_rCD).xyz: $(MDDEPDIR)/zot$(AB_rCD).xyz.stub ;',
@@ -563,7 +563,7 @@ class TestRecursiveMakeBackend(BackendTester):
             'EXTRA_MDDEPEND_FILES += $(MDDEPDIR)/zot$(AB_rCD).xyz.pp',
             '$(MDDEPDIR)/zot$(AB_rCD).xyz.stub: %s/generate-foo.py $(call MERGE_RELATIVE_FILE,localized-input,locales) $(srcdir)/non-localized-input $(if $(IS_LANGUAGE_REPACK),FORCE)' % env.topsrcdir,  # noqa
             '$(REPORT_BUILD)',
-            '$(call py3_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main zot$(AB_rCD).xyz $(MDDEPDIR)/zot$(AB_rCD).xyz.pp $(MDDEPDIR)/zot$(AB_rCD).xyz.stub $(call MERGE_RELATIVE_FILE,localized-input,locales) $(srcdir)/non-localized-input)' % env.topsrcdir,  # noqa
+            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main zot$(AB_rCD).xyz $(MDDEPDIR)/zot$(AB_rCD).xyz.pp $(MDDEPDIR)/zot$(AB_rCD).xyz.stub $(call MERGE_RELATIVE_FILE,localized-input,locales) $(srcdir)/non-localized-input)' % env.topsrcdir,  # noqa
             '@$(TOUCH) $@',
             '',
         ]
