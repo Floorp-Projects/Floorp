@@ -4289,7 +4289,7 @@ void HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
         MovePreviousSiblings(*firstChildOfRightNode,
                              EditorRawDOMPoint(&aNewLeftNode, 0), aError);
         NS_WARNING_ASSERTION(!aError.Failed(),
-                             "EditorBase::MovePreviousSiblings() failed");
+                             "HTMLEditor::MovePreviousSiblings() failed");
       }
     }
   }
