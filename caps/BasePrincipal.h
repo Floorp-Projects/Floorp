@@ -237,6 +237,8 @@ class BasePrincipal : public nsJSPrincipals {
   inline bool FastSubsumesIgnoringFPD(nsIPrincipal* aOther);
   inline bool FastSubsumesConsideringDomainIgnoringFPD(nsIPrincipal* aOther);
 
+  inline bool EqualsIgnoringFPD(nsIPrincipal* aOther);
+
   // Fast way to check whether we have a system principal.
   inline bool IsSystemPrincipal() const;
 
@@ -417,6 +419,32 @@ inline bool BasePrincipal::FastSubsumesConsideringDomainIgnoringFPD(
 
 inline bool BasePrincipal::IsSystemPrincipal() const {
   return Kind() == eSystemPrincipal;
+}
+
+inline bool BasePrincipal::EqualsIgnoringFPD(nsIPrincipal* aOther) {
+  MOZ_ASSERT(aOther);
+
+  auto other = Cast(aOther);
+  if (Kind() != other->Kind()) {
+    // Principals of different kinds can't be equal.
+    return false;
+  }
+
+  // Two principals are considered to be equal if their origins are the same.
+  // If the two principals are content principals, their origin attributes
+  // (aka the origin suffix) must also match.
+  if (Kind() == eSystemPrincipal) {
+    return this == other;
+  }
+
+  if (Kind() == eContentPrincipal || Kind() == eNullPrincipal) {
+    return mOriginNoSuffix == other->mOriginNoSuffix &&
+           dom::ChromeUtils::IsOriginAttributesEqualIgnoringFPD(
+               mOriginAttributes, other->mOriginAttributes);
+  }
+
+  MOZ_ASSERT(Kind() == eExpandedPrincipal);
+  return mOriginNoSuffix == other->mOriginNoSuffix;
 }
 
 }  // namespace mozilla
