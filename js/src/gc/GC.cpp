@@ -534,7 +534,10 @@ static inline bool FinalizeTypedArenas(JSFreeOp* fop, Arena** src,
   size_t thingsPerArena = Arena::thingsPerArena(thingKind);
 
   while (Arena* arena = *src) {
-    *src = arena->next;
+    Arena* next = arena->next;
+    MOZ_ASSERT_IF(next, next->zone == arena->zone);
+    *src = next;
+
     size_t nmarked = arena->finalize<T>(fop, thingKind, thingSize);
     size_t nfree = thingsPerArena - nmarked;
 
@@ -2809,6 +2812,48 @@ void ArenaLists::queueForegroundThingsForSweep() {
   gcScriptArenasToUpdate = arenaListsToSweep(AllocKind::SCRIPT);
 }
 
+void ArenaLists::checkSweepStateNotInUse() {
+  // Called before and after sweeping to check the sweep state is as expected.
+#ifdef DEBUG
+  checkNoArenasToUpdate();
+  MOZ_ASSERT(incrementalSweptArenaKind == AllocKind::LIMIT);
+  MOZ_ASSERT(incrementalSweptArenas.ref().isEmpty());
+  MOZ_ASSERT(!savedEmptyArenas);
+  for (auto i : AllAllocKinds()) {
+    MOZ_ASSERT(concurrentUse(i) == ConcurrentUse::None);
+    MOZ_ASSERT(!arenaListsToSweep(i));
+  }
+#endif
+}
+
+void ArenaLists::checkNoArenasToUpdate() {
+  MOZ_ASSERT(!gcShapeArenasToUpdate);
+  MOZ_ASSERT(!gcAccessorShapeArenasToUpdate);
+  MOZ_ASSERT(!gcScriptArenasToUpdate);
+  MOZ_ASSERT(!gcObjectGroupArenasToUpdate);
+}
+
+void ArenaLists::checkNoArenasToUpdateForKind(AllocKind kind) {
+#ifdef DEBUG
+  switch (kind) {
+    case AllocKind::SHAPE:
+      MOZ_ASSERT(!gcShapeArenasToUpdate);
+      break;
+    case AllocKind::ACCESSOR_SHAPE:
+      MOZ_ASSERT(!gcShapeArenasToUpdate);
+      break;
+    case AllocKind::SCRIPT:
+      MOZ_ASSERT(!gcScriptArenasToUpdate);
+      break;
+    case AllocKind::OBJECT_GROUP:
+      MOZ_ASSERT(!gcObjectGroupArenasToUpdate);
+      break;
+    default:
+      break;
+  }
+#endif
+}
+
 TimeStamp SliceBudget::unlimitedDeadline;
 
 void SliceBudget::Init() {
@@ -3247,6 +3292,8 @@ void GCRuntime::sweepBackgroundThings(ZoneList& zones) {
   // zones may have direct pointers into it.
   while (!zones.isEmpty()) {
     Zone* zone = zones.removeFront();
+    MOZ_ASSERT(zone->isGCFinished());
+
     Arena* emptyArenas = nullptr;
 
     AutoSetThreadIsSweeping threadIsSweeping(zone);
@@ -5221,6 +5268,7 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
     zone->changeGCState(Zone::MarkBlackAndGray, Zone::Sweep);
 
     /* Purge the ArenaLists before sweeping. */
+    zone->arenas.checkSweepStateNotInUse();
     zone->arenas.unmarkPreMarkedFreeCells();
     zone->arenas.clearFreeLists();
 
@@ -5379,6 +5427,7 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(JSFreeOp* fop,
     AutoLockGC lock(this);
     zone->changeGCState(Zone::Sweep, Zone::Finished);
     zone->arenas.unmarkPreMarkedFreeCells();
+    zone->arenas.checkNoArenasToUpdate();
   }
 
   /*
@@ -5435,6 +5484,8 @@ void GCRuntime::beginSweepPhase(JS::GCReason reason, AutoGCSession& session) {
 bool ArenaLists::foregroundFinalize(JSFreeOp* fop, AllocKind thingKind,
                                     SliceBudget& sliceBudget,
                                     SortedArenaList& sweepList) {
+  checkNoArenasToUpdateForKind(thingKind);
+
   if (!arenaListsToSweep(thingKind) && incrementalSweptArenas.ref().isEmpty()) {
     return true;
   }
@@ -5454,6 +5505,7 @@ bool ArenaLists::foregroundFinalize(JSFreeOp* fop, AllocKind thingKind,
   }
 
   // Clear any previous incremental sweep state we may have saved.
+  incrementalSweptArenaKind = AllocKind::LIMIT;
   incrementalSweptArenas.ref().clear();
 
   sweepList.extractEmpty(&savedEmptyArenas.ref());
@@ -5519,11 +5571,16 @@ template <typename T>
 static bool SweepArenaList(JSFreeOp* fop, Arena** arenasToSweep,
                            SliceBudget& sliceBudget) {
   while (Arena* arena = *arenasToSweep) {
+    MOZ_ASSERT(arena->zone->isGCSweeping());
+
     for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
       SweepThing(fop, i.get<T>());
     }
 
-    *arenasToSweep = (*arenasToSweep)->next;
+    Arena* next = arena->next;
+    MOZ_ASSERT_IF(next, next->zone == arena->zone);
+    *arenasToSweep = next;
+
     AllocKind kind = MapTypeToFinalizeKind<T>::kind;
     sliceBudget.step(Arena::thingsPerArena(kind));
     if (sliceBudget.isOverBudget()) {
@@ -5706,6 +5763,8 @@ IncrementalProgress GCRuntime::sweepWeakCaches(JSFreeOp* fop,
 
 IncrementalProgress GCRuntime::finalizeAllocKind(JSFreeOp* fop,
                                                  SliceBudget& budget) {
+  MOZ_ASSERT(sweepZone->isGCSweeping());
+
   // Set the number of things per arena for this AllocKind.
   size_t thingsPerArena = Arena::thingsPerArena(sweepAllocKind);
   auto& sweepList = incrementalSweepList.ref();
@@ -6249,6 +6308,7 @@ void GCRuntime::finishCollection() {
       zone->clearGCSliceThresholds();
       zone->notifyObservingDebuggers();
       zone->updateGCStartThresholds(*this, invocationKind, lock);
+      zone->arenas.checkSweepStateNotInUse();
     }
   }
 
