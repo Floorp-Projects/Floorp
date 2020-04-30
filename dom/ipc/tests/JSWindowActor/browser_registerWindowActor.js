@@ -5,7 +5,7 @@
 declTest("double register", {
   async test() {
     SimpleTest.doesThrow(
-      () => ChromeUtils.registerWindowActor("Test", windowActorOptions),
+      () => ChromeUtils.registerWindowActor("TestWindow", windowActorOptions),
       "Should throw if register has duplicate name."
     );
   },

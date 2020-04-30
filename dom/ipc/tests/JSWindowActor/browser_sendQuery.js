@@ -20,7 +20,7 @@ function maybeAsyncStack(offset, column) {
 declTest("sendQuery Error", {
   async test(browser) {
     let parent = browser.browsingContext.currentWindowGlobal;
-    let actorParent = parent.getActor("Test");
+    let actorParent = parent.getActor("TestWindow");
 
     let asyncStack = maybeAsyncStack(2, 8);
     let error = await actorParent
@@ -31,7 +31,7 @@ declTest("sendQuery Error", {
     is(error.name, "SyntaxError", "Error should have the correct name");
     is(
       error.stack,
-      "receiveMessage@resource://testing-common/TestChild.jsm:28:31\n" +
+      "receiveMessage@resource://testing-common/TestWindowChild.jsm:28:31\n" +
         asyncStack,
       "Error should have the correct stack"
     );
@@ -41,7 +41,7 @@ declTest("sendQuery Error", {
 declTest("sendQuery Exception", {
   async test(browser) {
     let parent = browser.browsingContext.currentWindowGlobal;
-    let actorParent = parent.getActor("Test");
+    let actorParent = parent.getActor("TestWindow");
 
     let asyncStack = maybeAsyncStack(2, 8);
     let error = await actorParent
@@ -59,7 +59,7 @@ declTest("sendQuery Exception", {
     );
     is(
       error.stack,
-      "receiveMessage@resource://testing-common/TestChild.jsm:31:22\n" +
+      "receiveMessage@resource://testing-common/TestWindowChild.jsm:31:22\n" +
         asyncStack,
       "Error should have the correct stack"
     );
@@ -69,7 +69,7 @@ declTest("sendQuery Exception", {
 declTest("sendQuery testing", {
   async test(browser) {
     let parent = browser.browsingContext.currentWindowGlobal;
-    let actorParent = parent.getActor("Test");
+    let actorParent = parent.getActor("TestWindow");
     ok(actorParent, "JSWindowActorParent should have value.");
 
     let { result } = await actorParent.sendQuery("asyncAdd", { a: 10, b: 20 });
@@ -85,7 +85,7 @@ declTest("sendQuery in-process early lifetime", {
     let iframe = browser.contentDocument.createElement("iframe");
     browser.contentDocument.body.appendChild(iframe);
     let wgc = iframe.contentWindow.windowGlobalChild;
-    let actorChild = wgc.getActor("Test");
+    let actorChild = wgc.getActor("TestWindow");
     let { result } = await actorChild.sendQuery("asyncMul", { a: 10, b: 20 });
     is(result, 200);
   },

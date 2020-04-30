@@ -17,7 +17,7 @@ declTest("crash actor", {
       let newTabBrowser = newTab.linkedBrowser;
 
       let parent = newTabBrowser.browsingContext.currentWindowGlobal.getActor(
-        "Test"
+        "TestWindow"
       );
       ok(parent, "JSWindowActorParent should have value.");
 
@@ -30,8 +30,12 @@ declTest("crash actor", {
           "Actor should be loaded in the content process."
         );
         // Make sure that the actor is loaded.
-        let actorChild = child.getActor("Test");
-        is(actorChild.show(), "TestChild", "actor show should have value.");
+        let actorChild = child.getActor("TestWindow");
+        is(
+          actorChild.show(),
+          "TestWindowChild",
+          "actor show should have value."
+        );
         is(
           actorChild.manager,
           child,
@@ -62,7 +66,7 @@ declTest("crash actor", {
       let newTabBrowser = newTab.linkedBrowser;
 
       let parent = newTabBrowser.browsingContext.currentWindowGlobal.getActor(
-        "Test"
+        "TestWindow"
       );
       ok(parent, "JSWindowActorParent should have value.");
 
@@ -75,8 +79,12 @@ declTest("crash actor", {
           "Actor should be loaded in the content process."
         );
         // Make sure that the actor is loaded.
-        let actorChild = child.getActor("Test");
-        is(actorChild.show(), "TestChild", "actor show should have value.");
+        let actorChild = child.getActor("TestWindow");
+        is(
+          actorChild.show(),
+          "TestWindowChild",
+          "actor show should have value."
+        );
         is(
           actorChild.manager,
           child,
