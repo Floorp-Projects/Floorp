@@ -5,12 +5,12 @@
 declTest("asyncMessage testing", {
   async test(browser) {
     let parent = browser.browsingContext.currentWindowGlobal;
-    let actorParent = parent.getActor("Test");
+    let actorParent = parent.getActor("TestWindow");
     ok(actorParent, "JSWindowActorParent should have value.");
 
     await ContentTask.spawn(browser, {}, async function() {
       let child = content.windowGlobalChild;
-      let actorChild = child.getActor("Test");
+      let actorChild = child.getActor("TestWindow");
       ok(actorChild, "JSWindowActorChild should have value.");
 
       let promise = new Promise(resolve => {
@@ -33,7 +33,7 @@ declTest("asyncMessage without both sides", {
     // gets created by having sent the message.
     await ContentTask.spawn(browser, {}, async function() {
       let child = content.windowGlobalChild;
-      let actorChild = child.getActor("Test");
+      let actorChild = child.getActor("TestWindow");
       ok(actorChild, "JSWindowActorChild should have value.");
 
       let promise = new Promise(resolve => {

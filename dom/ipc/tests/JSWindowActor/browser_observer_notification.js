@@ -10,12 +10,12 @@ declTest("test observer triggering actor creation", {
       Services.obs.notifyObservers(content.window, TOPIC, "dataString");
 
       let child = content.windowGlobalChild;
-      let actorChild = child.getActor("Test");
+      let actorChild = child.getActor("TestWindow");
       ok(actorChild, "JSWindowActorChild should have value.");
       let { subject, topic, data } = actorChild.lastObserved;
 
       is(
-        subject.windowGlobalChild.getActor("Test"),
+        subject.windowGlobalChild.getActor("TestWindow"),
         actorChild,
         "Should have been recieved on the right actor"
       );
@@ -32,12 +32,12 @@ declTest("test observers with null data", {
       Services.obs.notifyObservers(content.window, TOPIC);
 
       let child = content.windowGlobalChild;
-      let actorChild = child.getActor("Test");
+      let actorChild = child.getActor("TestWindow");
       ok(actorChild, "JSWindowActorChild should have value.");
       let { subject, topic, data } = actorChild.lastObserved;
 
       is(
-        subject.windowGlobalChild.getActor("Test"),
+        subject.windowGlobalChild.getActor("TestWindow"),
         actorChild,
         "Should have been recieved on the right actor"
       );
@@ -53,7 +53,7 @@ declTest("observers don't notify with wrong window", {
       const TOPIC = "test-js-window-actor-child-observer";
       Services.obs.notifyObservers(null, TOPIC);
       let child = content.windowGlobalChild;
-      let actorChild = child.getActor("Test");
+      let actorChild = child.getActor("TestWindow");
       ok(actorChild, "JSWindowActorChild should have value.");
       is(
         actorChild.lastObserved,
@@ -74,7 +74,7 @@ declTest("observers notify with audio-playback", {
       audio.play();
 
       let child = content.windowGlobalChild;
-      let actorChild = child.getActor("Test");
+      let actorChild = child.getActor("TestWindow");
       ok(actorChild, "JSWindowActorChild should have value.");
 
       let observePromise = new Promise(resolve => {
