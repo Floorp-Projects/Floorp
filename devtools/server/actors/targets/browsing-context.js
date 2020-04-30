@@ -237,9 +237,24 @@ const browsingContextTargetPrototype = {
    *
    * @param connection DevToolsServerConnection
    *        The conection to the client.
+   * @param options Object
+   *        Object with following attributes:
+   *        - followWindowGlobalLifeCycle Boolean
+   *          If true, the target actor will only inspect the current WindowGlobal (and its children windows).
+   *          But won't inspect next document loaded in the same BrowsingContext.
+   *          The actor will behave more like a WindowGlobalTarget rather than a BrowsingContextTarget.
+   *          We may eventually switch everything to this, i.e. uses only WindowGlobalTarget.
+   *          But for now, we restrict this behavior to remoted iframes.
+   *        - doNotFireFrameUpdates Boolean
+   *          If true, omit emitting `frameUpdate` events. This is only useful
+   *          for the top level target, in order to populate the toolbox iframe selector dropdown.
+   *          But we can avoid sending these RDP messages for any additional remote target.
    */
-  initialize: function(connection) {
+  initialize: function(connection, options = {}) {
     Actor.prototype.initialize.call(this, connection);
+
+    this.followWindowGlobalLifeCycle = options.followWindowGlobalLifeCycle;
+    this.doNotFireFrameUpdates = options.doNotFireFrameUpdates;
 
     // A map of actor names to actor instances provided by extensions.
     this._extraActors = {};
@@ -870,6 +885,12 @@ const browsingContextTargetPrototype = {
   },
 
   _notifyDocShellsUpdate(docshells) {
+    // Only top level target uses frameUpdate in order to update the iframe dropdown.
+    // This may eventually be replaced by Target listening and target switching.
+    if (this.doNotFireFrameUpdates) {
+      return;
+    }
+
     const windows = this._docShellsToWindows(docshells);
 
     // Do not send the `frameUpdate` event if the windows array is empty.
@@ -887,6 +908,12 @@ const browsingContextTargetPrototype = {
   },
 
   _notifyDocShellDestroy(webProgress) {
+    // Only top level target uses frameUpdate in order to update the iframe dropdown.
+    // This may eventually be replaced by Target listening and target switching.
+    if (this.doNotFireFrameUpdates) {
+      return;
+    }
+
     webProgress = webProgress.QueryInterface(Ci.nsIWebProgress);
     const id = webProgress.DOMWindow.windowUtils.outerWindowID;
     this.emit("frameUpdate", {
@@ -900,6 +927,12 @@ const browsingContextTargetPrototype = {
   },
 
   _notifyDocShellDestroyAll() {
+    // Only top level target uses frameUpdate in order to update the iframe dropdown.
+    // This may eventually be replaced by Target listening and target switching.
+    if (this.doNotFireFrameUpdates) {
+      return;
+    }
+
     this.emit("frameUpdate", {
       destroyAll: true,
     });
@@ -980,6 +1013,13 @@ const browsingContextTargetPrototype = {
     }
 
     this._attached = false;
+
+    // When the target actor acts as a WindowGlobalTarget, the actor will be destroyed
+    // without having to send an RDP event. The parent process will receive a window-global-destroyed
+    // and report the target actor as destroyed via the Watcher actor.
+    if (this.followWindowGlobalLifeCycle) {
+      return true;
+    }
 
     this.emit("tabDetached");
 
@@ -1391,12 +1431,16 @@ const browsingContextTargetPrototype = {
       return;
     }
 
-    this.emit("tabNavigated", {
-      url: newURI,
-      nativeConsoleAPI: true,
-      state: "start",
-      isFrameSwitching: isFrameSwitching,
-    });
+    // When the actor acts as a WindowGlobalTarget, will-navigate won't fired.
+    // Instead we will receive a new top level target with isTargetSwitching=true.
+    if (!this.followWindowGlobalLifeCycle) {
+      this.emit("tabNavigated", {
+        url: newURI,
+        nativeConsoleAPI: true,
+        state: "start",
+        isFrameSwitching: isFrameSwitching,
+      });
+    }
 
     if (reset) {
       this._setWindow(this._originalWindow);
@@ -1422,6 +1466,17 @@ const browsingContextTargetPrototype = {
     // We don't do anything for inner frames here.
     // (we will only update thread actor on window-ready)
     if (!isTopLevel) {
+      return;
+    }
+
+    // We may still significate when the document is done loading, via navigate.
+    // But as we no longer fire the "will-navigate", may be it is better to find
+    // other ways to get to our means.
+    // Listening to "navigate" is misleading as the document may already be loaded
+    // if we just opened the DevTools. So it is better to use "watch" pattern
+    // and instead have the actor either emit immediately resources as they are
+    // already available, or later on as the load progresses.
+    if (this.followWindowGlobalLifeCycle) {
       return;
     }
 

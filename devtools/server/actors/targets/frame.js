@@ -34,11 +34,17 @@ const frameTargetPrototype = extend({}, browsingContextTargetPrototype);
  *
  * @param connection DevToolsServerConnection
  *        The conection to the client.
- * @param docShell
+ * @param docShell nsIDocShell
  *        The |docShell| for the debugged frame.
+ * @param options Object
+ *        See BrowsingContextTargetActor.initialize doc.
  */
-frameTargetPrototype.initialize = function(connection, docShell) {
-  BrowsingContextTargetActor.prototype.initialize.call(this, connection);
+frameTargetPrototype.initialize = function(connection, docShell, options) {
+  BrowsingContextTargetActor.prototype.initialize.call(
+    this,
+    connection,
+    options
+  );
 
   this.traits.reconfigure = false;
 
