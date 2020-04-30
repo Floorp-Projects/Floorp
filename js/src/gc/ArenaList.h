@@ -350,6 +350,10 @@ class ArenaLists {
 
   void setParallelAllocEnabled(bool enabled);
 
+  void checkSweepStateNotInUse();
+  void checkNoArenasToUpdate();
+  void checkNoArenasToUpdateForKind(AllocKind kind);
+
  private:
   inline JSRuntime* runtime();
   inline JSRuntime* runtimeFromAnyThread();
