@@ -1064,6 +1064,15 @@ wr::WrClipId DisplayListBuilder::DefineRoundedRectClip(
   return clipId;
 }
 
+wr::WrClipId DisplayListBuilder::DefineRectClip(wr::LayoutRect aClipRect) {
+  CancelGroup();
+
+  WrClipId clipId = wr_dp_define_rect_clip_with_parent_clip_chain(
+      mWrState, &mCurrentSpaceAndClipChain, aClipRect);
+
+  return clipId;
+}
+
 wr::WrSpatialId DisplayListBuilder::DefineStickyFrame(
     const wr::LayoutRect& aContentRect, const float* aTopMargin,
     const float* aRightMargin, const float* aBottomMargin,
@@ -1447,7 +1456,7 @@ void DisplayListBuilder::SuspendClipLeafMerging() {
     mSuspendedClipChainLeaf = mClipChainLeaf;
     mSuspendedSpaceAndClipChain = Some(mCurrentSpaceAndClipChain);
 
-    auto clipId = DefineClip(Nothing(), *mClipChainLeaf);
+    auto clipId = DefineRectClip(*mClipChainLeaf);
     auto clipChainId = DefineClipChain({clipId}, true);
 
     mCurrentSpaceAndClipChain.clip_chain = clipChainId.id;
