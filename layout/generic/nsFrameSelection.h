@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/Result.h"
 #include "mozilla/TextRange.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIFrame.h"
@@ -567,6 +568,74 @@ class nsFrameSelection final {
                                                      bool aExtend);
 
   /**
+   * CreateRangeExtendedToNextGraphemeClusterBoundary() returns range which is
+   * extended from normal selection range to start of next grapheme cluster
+   * boundary.
+   */
+  template <typename RangeType>
+  MOZ_CAN_RUN_SCRIPT mozilla::Result<RefPtr<RangeType>, nsresult>
+  CreateRangeExtendedToNextGraphemeClusterBoundary() {
+    return CreateRangeExtendedToSomewhere<RangeType>(eDirNext, eSelectCluster,
+                                                     eLogical);
+  }
+
+  /**
+   * CreateRangeExtendedToPreviousCharacterBoundary() returns range which is
+   * extended from normal selection range to start of previous character
+   * boundary.
+   */
+  template <typename RangeType>
+  MOZ_CAN_RUN_SCRIPT mozilla::Result<RefPtr<RangeType>, nsresult>
+  CreateRangeExtendedToPreviousCharacterBoundary() {
+    return CreateRangeExtendedToSomewhere<RangeType>(
+        eDirPrevious, eSelectCharacter, eLogical);
+  }
+
+  /**
+   * CreateRangeExtendedToNextWordBoundary() returns range which is
+   * extended from normal selection range to start of next word boundary.
+   */
+  template <typename RangeType>
+  MOZ_CAN_RUN_SCRIPT mozilla::Result<RefPtr<RangeType>, nsresult>
+  CreateRangeExtendedToNextWordBoundary() {
+    return CreateRangeExtendedToSomewhere<RangeType>(eDirNext, eSelectWord,
+                                                     eLogical);
+  }
+
+  /**
+   * CreateRangeExtendedToPreviousWordBoundary() returns range which is
+   * extended from normal selection range to start of previous word boundary.
+   */
+  template <typename RangeType>
+  MOZ_CAN_RUN_SCRIPT mozilla::Result<RefPtr<RangeType>, nsresult>
+  CreateRangeExtendedToPreviousWordBoundary() {
+    return CreateRangeExtendedToSomewhere<RangeType>(eDirPrevious, eSelectWord,
+                                                     eLogical);
+  }
+
+  /**
+   * CreateRangeExtendedToPreviousHardLineBreak() returns range which is
+   * extended from normal selection range to previous hard line break.
+   */
+  template <typename RangeType>
+  MOZ_CAN_RUN_SCRIPT mozilla::Result<RefPtr<RangeType>, nsresult>
+  CreateRangeExtendedToPreviousHardLineBreak() {
+    return CreateRangeExtendedToSomewhere<RangeType>(
+        eDirPrevious, eSelectBeginLine, eLogical);
+  }
+
+  /**
+   * CreateRangeExtendedToNextHardLineBreak() returns range which is extended
+   * from normal selection range to next hard line break.
+   */
+  template <typename RangeType>
+  MOZ_CAN_RUN_SCRIPT mozilla::Result<RefPtr<RangeType>, nsresult>
+  CreateRangeExtendedToNextHardLineBreak() {
+    return CreateRangeExtendedToSomewhere<RangeType>(eDirNext, eSelectEndLine,
+                                                     eLogical);
+  }
+
+  /**
    * Select All will generally be called from the nsiselectioncontroller
    * implementations. it will select the whole doc
    */
@@ -770,6 +839,49 @@ class nsFrameSelection final {
                                         nsSelectionAmount aAmount,
                                         CaretMovementStyle aMovementStyle);
 
+  /**
+   * PeekOffsetForCaretMove() only peek offset for caret move.  I.e., won't
+   * change selection ranges nor bidi information.
+   */
+  mozilla::Result<nsPeekOffsetStruct, nsresult> PeekOffsetForCaretMove(
+      nsDirection aDirection, bool aContinueSelection,
+      const nsSelectionAmount aAmount, CaretMovementStyle aMovementStyle,
+      const nsPoint& aDesiredPos) const;
+
+  /**
+   * CreateRangeExtendedToSomewhere() is common method to implement
+   * CreateRangeExtendedTo*().  This method creates a range extended from
+   * normal selection range.
+   */
+  template <typename RangeType>
+  MOZ_CAN_RUN_SCRIPT mozilla::Result<RefPtr<RangeType>, nsresult>
+  CreateRangeExtendedToSomewhere(nsDirection aDirection,
+                                 const nsSelectionAmount aAmount,
+                                 CaretMovementStyle aMovementStyle);
+
+  /**
+   * IsIntraLineCaretMove() is a helper method for PeekOffsetForCaretMove()
+   * and CreateRangeExtendedToSomwhereFromNormalSelection().  This returns
+   * whether aAmount is intra line move or is crossing hard line break.
+   * This returns error if aMount is not supported by the methods.
+   */
+  static mozilla::Result<bool, nsresult> IsIntraLineCaretMove(
+      nsSelectionAmount aAmount) {
+    switch (aAmount) {
+      case eSelectCharacter:
+      case eSelectCluster:
+      case eSelectWord:
+      case eSelectWordNoSpace:
+      case eSelectBeginLine:
+      case eSelectEndLine:
+        return true;
+      case eSelectLine:
+        return false;
+      default:
+        return mozilla::Err(NS_ERROR_FAILURE);
+    }
+  }
+
   nsresult FetchDesiredPos(
       nsPoint& aDesiredPos);  // the position requested by the Key Handling for
                               // up down
@@ -902,6 +1014,14 @@ class nsFrameSelection final {
     CaretAssociateHint mHint = mozilla::CARET_ASSOCIATE_BEFORE;
     nsBidiLevel mBidiLevel = BIDI_LEVEL_UNDEFINED;
     int8_t mMovementStyle = 0;
+
+    bool IsVisualMovement(bool aContinueSelection,
+                          CaretMovementStyle aMovementStyle) const {
+      return aMovementStyle == eVisual ||
+             (aMovementStyle == eUsePrefStyle &&
+              (mMovementStyle == 1 ||
+               (mMovementStyle == 2 && !aContinueSelection)));
+    }
   };
 
   Caret mCaret;
