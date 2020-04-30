@@ -1471,50 +1471,6 @@ class EditorBase : public nsIEditor,
       Element& aDestElement, Element& aSourceElement);
 
   /**
-   * InsertContainerWithTransaction() creates new element whose name is
-   * aTagName, moves aContent into the new element, then, inserts the new
-   * element into where aContent was.
-   * Note that this method does not check if aContent is valid child of
-   * the new element.  So, callers need to guarantee it.
-   *
-   * @param aContent            The content which will be wrapped with new
-   *                            element.
-   * @param aTagName            Element name of new element which will wrap
-   *                            aContent and be inserted into where aContent
-   *                            was.
-   * @return                    The new element.
-   */
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> InsertContainerWithTransaction(
-      nsIContent& aContent, nsAtom& aTagName) {
-    return InsertContainerWithTransactionInternal(
-        aContent, aTagName, *nsGkAtoms::_empty, EmptyString());
-  }
-
-  /**
-   * InsertContainerWithTransaction() creates new element whose name is
-   * aTagName, sets its aAttribute to aAttributeValue, moves aContent into the
-   * new element, then, inserts the new element into where aContent was.
-   * Note that this method does not check if aContent is valid child of
-   * the new element.  So, callers need to guarantee it.
-   *
-   * @param aContent            The content which will be wrapped with new
-   *                            element.
-   * @param aTagName            Element name of new element which will wrap
-   *                            aContent and be inserted into where aContent
-   *                            was.
-   * @param aAttribute          Attribute which should be set to the new
-   *                            element.
-   * @param aAttributeValue     Value to be set to aAttribute.
-   * @return                    The new element.
-   */
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> InsertContainerWithTransaction(
-      nsIContent& aContent, nsAtom& aTagName, nsAtom& aAttribute,
-      const nsAString& aAttributeValue) {
-    return InsertContainerWithTransactionInternal(aContent, aTagName,
-                                                  aAttribute, aAttributeValue);
-  }
-
-  /**
    * SplitNodeWithTransaction() creates a transaction to create a new node
    * (left node) identical to an existing node (right node), and split the
    * contents between the same point in both nodes, then, execute the
@@ -1718,29 +1674,6 @@ class EditorBase : public nsIEditor,
   MOZ_CAN_RUN_SCRIPT nsresult DeleteTextWithTransaction(dom::Text& aTextNode,
                                                         uint32_t aOffset,
                                                         uint32_t aLength);
-
-  /**
-   * InsertContainerWithTransactionInternal() creates new element whose name is
-   * aTagName, moves aContent into the new element, then, inserts the new
-   * element into where aContent was.  If aAttribute is not nsGkAtoms::_empty,
-   * aAttribute of the new element will be set to aAttributeValue.
-   *
-   * @param aContent            The content which will be wrapped with new
-   *                            element.
-   * @param aTagName            Element name of new element which will wrap
-   *                            aContent and be inserted into where aContent
-   *                            was.
-   * @param aAttribute          Attribute which should be set to the new
-   *                            element.  If this is nsGkAtoms::_empty,
-   *                            this does not set any attributes to the new
-   *                            element.
-   * @param aAttributeValue     Value to be set to aAttribute.
-   * @return                    The new element.
-   */
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element>
-  InsertContainerWithTransactionInternal(nsIContent& aContent, nsAtom& aTagName,
-                                         nsAtom& aAttribute,
-                                         const nsAString& aAttributeValue);
 
   /**
    * DoSplitNode() creates a new node (left node) identical to an existing

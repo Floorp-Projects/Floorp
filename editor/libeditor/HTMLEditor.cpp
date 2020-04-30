@@ -3355,6 +3355,68 @@ already_AddRefed<Element> HTMLEditor::InsertBRElementWithTransaction(
   return newBRElement.forget();
 }
 
+already_AddRefed<Element> HTMLEditor::InsertContainerWithTransactionInternal(
+    nsIContent& aContent, nsAtom& aTagName, nsAtom& aAttribute,
+    const nsAString& aAttributeValue) {
+  EditorDOMPoint pointToInsertNewContainer(&aContent);
+  if (NS_WARN_IF(!pointToInsertNewContainer.IsSet())) {
+    return nullptr;
+  }
+  // aContent will be moved to the new container before inserting the new
+  // container.  So, when we insert the container, the insertion point
+  // is before the next sibling of aContent.
+  // XXX If pointerToInsertNewContainer stores offset here, the offset and
+  //     referring child node become mismatched.  Although, currently this
+  //     is not a problem since InsertNodeTransaction refers only child node.
+  DebugOnly<bool> advanced = pointToInsertNewContainer.AdvanceOffset();
+  NS_WARNING_ASSERTION(advanced, "Failed to advance offset to after aContent");
+
+  // Create new container.
+  RefPtr<Element> newContainer = CreateHTMLContent(&aTagName);
+  if (NS_WARN_IF(!newContainer)) {
+    return nullptr;
+  }
+
+  // Set attribute if needed.
+  if (&aAttribute != nsGkAtoms::_empty) {
+    nsresult rv = newContainer->SetAttr(kNameSpaceID_None, &aAttribute,
+                                        aAttributeValue, true);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Element::SetAttr() failed");
+      return nullptr;
+    }
+  }
+
+  // Notify our internal selection state listener
+  AutoInsertContainerSelNotify selNotify(RangeUpdaterRef());
+
+  // Put aNode in the new container, first.
+  // XXX Perhaps, we should not remove the container if it's not editable.
+  nsresult rv = EditorBase::DeleteNodeWithTransaction(aContent);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+    return nullptr;
+  }
+
+  {
+    AutoTransactionsConserveSelection conserveSelection(*this);
+    rv = InsertNodeWithTransaction(aContent, EditorDOMPoint(newContainer, 0));
+    if (NS_FAILED(rv)) {
+      NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
+      return nullptr;
+    }
+  }
+
+  // Put the new container where aNode was.
+  rv = InsertNodeWithTransaction(*newContainer, pointToInsertNewContainer);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
+    return nullptr;
+  }
+
+  return newContainer.forget();
+}
+
 already_AddRefed<Element> HTMLEditor::ReplaceContainerWithTransactionInternal(
     Element& aOldContainer, nsAtom& aTagName, nsAtom& aAttribute,
     const nsAString& aAttributeValue, bool aCloneAllAttributes) {
@@ -4697,7 +4759,7 @@ nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
     lastClonedElement = InsertContainerWithTransaction(*lastClonedElement,
                                                        MOZ_KnownLive(*tagName));
     if (!lastClonedElement) {
-      NS_WARNING("EditorBase::InsertContainerWithTransaction() failed");
+      NS_WARNING("HTMLEditor::InsertContainerWithTransaction() failed");
       return NS_ERROR_FAILURE;
     }
     CloneAttributesWithTransaction(*lastClonedElement, *elementInPreviousBlock);

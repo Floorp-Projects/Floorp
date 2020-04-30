@@ -4947,7 +4947,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
     if (!newListItemElement) {
-      NS_WARNING("EditorBase::InsertContainerWithTransaction() failed");
+      NS_WARNING("HTMLEditor::InsertContainerWithTransaction() failed");
       return EditActionResult(NS_ERROR_FAILURE);
     }
     // If current node is not a block element, new list item should have
