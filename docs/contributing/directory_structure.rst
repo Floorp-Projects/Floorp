@@ -1,23 +1,17 @@
-Mozilla Source Code Directory Structure
+Firefox Source Code Directory Structure
 =======================================
 
-The code for some projects in the Mozilla family (such
-as `Firefox <https://www.mozilla.org/en-US/firefox/products/>`__ , `Gecko <https://developer.mozilla.org/docs/Mozilla/Gecko/>`__ , `etc. <https://www.mozilla.org/products/>`__)
-is combined into a single source tree. The tree contains the source code
-as well as the code required to build each project on supported
-platforms (Linux, Windows, macOS, etc). This article provides an
-overview of what the various directories contain.
+This article provides an overview of what the various directories contain.
 
-To simply take a look at the Mozilla source code, you do not need to
+To simply take a look at the Firefox source code, you do not need to
 download it. You can look at the source directly with your web browser
 using Searchfox (start at https://searchfox.org/mozilla-central/source for
-the complete mozilla source code of branch HEAD).
+the complete firefox source code of branch HEAD).
 
 In order to modify the source, you have to acquire it either by
 downloading a
 `snapshot <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Source_Code/Downloading_Source_Archives>`__
-of the sources or by `checking out the current sources from
-Mercurial <How to contribute to Firefox>`__.
+of the sources or by checking out the current sources from :ref:`Mercurial <How to contribute to Firefox>`.
 
 This document describes the directory structure -- i.e., directories that
 are used by at least some of the
@@ -581,7 +575,7 @@ Components used by the Mozilla frontend, as well as implementations of
 interfaces that other parts of mozilla expect.
 
 
-More documentation about Mozilla Source Code Directory Structure
+More documentation about Firefox Source Code Directory Structure
 ----------------------------------------------------------------
 
 https://developer.mozilla.org/docs/Mozilla/Developer_guide/Source_Code/Directory_structure
