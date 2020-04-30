@@ -1956,11 +1956,10 @@ dependencies = [
 
 [[package]]
 name = "glslopt"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "91cc19a37d1c89655d9bd58c56b58c00ed4ff5402d7cedde141af7d018e119c3"
+checksum = "f22b383fcf6f85c4a268af39a0758ec40970e5f9f8fe9809e4415d48409b8379"
 dependencies = [
- "bindgen",
  "cc",
 ]
 

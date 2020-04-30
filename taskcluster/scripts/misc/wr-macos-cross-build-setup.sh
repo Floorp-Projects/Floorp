@@ -31,13 +31,14 @@ END_PKGCONFIG_WRAPPER
 chmod +x "${TARGET_TRIPLE}-pkg-config"
 popd
 
-# Set LLVM_CONFIG=no to disable building llvmpipe, otherwise it will
-# be built automatically because clang is present in PATH (which is
-# required for bindgen), and that will fail because we don't have a
-# target libLLVM library to link with. We don't need llvmpipe anyway
-# since we only use the softpipe driver.
-export LLVM_CONFIG=no
-export PATH="${MOZ_FETCHES_DIR}/clang/bin:${MOZ_FETCHES_DIR}/rustc/bin:${MOZ_FETCHES_DIR}/cctools/bin:${MOZ_FETCHES_DIR}/llvm-dsymutil/bin:${PATH}"
+# The PATH intentionally excludes clang/bin because osmesa will try to
+# build llvmpipe if it finds a llvm-config. And that will fail because
+# we don't have a target libLLVM library to link with. We don't need
+# llvmpipe anyway since we only use the softpipe driver. If for whatever
+# reason we need to add clang/bin to the path here, we should be able to
+# instead set LLVM_CONFIG=no to disable llvmpipe, but that might impact
+# other parts of the build.
+export PATH="${MOZ_FETCHES_DIR}/rustc/bin:${MOZ_FETCHES_DIR}/cctools/bin:${MOZ_FETCHES_DIR}/llvm-dsymutil/bin:${PATH}"
 
 # The x86_64-darwin11-ld linker from cctools requires libraries provided
 # by clang, so we need to set LD_LIBRARY_PATH for that to work.
