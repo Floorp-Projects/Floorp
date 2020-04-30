@@ -1428,6 +1428,7 @@ pub enum PrimitiveInstanceKind {
         /// Handle to the common interned data for this primitive.
         data_handle: ImageDataHandle,
         image_instance_index: ImageInstanceIndex,
+        is_compositor_surface: bool,
     },
     LinearGradient {
         /// Handle to the common interned data for this primitive.

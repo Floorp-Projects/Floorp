@@ -236,6 +236,8 @@ impl ResolveInstanceData {
 }
 
 /// Vertex format for picture cache composite shader.
+/// When editing the members, update desc::COMPOSITE
+/// so its list of instance_attributes matches:
 #[derive(Debug, Clone)]
 #[repr(C)]
 pub struct CompositeInstance {
@@ -248,7 +250,8 @@ pub struct CompositeInstance {
 
     // Packed into a single vec4 (aParams)
     z_id: f32,
-    yuv_color_space: f32,       // YuvColorSpace
+    color_space_or_uv_type: f32, // YuvColorSpace for YUV;
+                                 // UV coordinate space for RGB
     yuv_format: f32,            // YuvFormat
     yuv_rescale: f32,
 
@@ -267,16 +270,38 @@ impl CompositeInstance {
         layer: f32,
         z_id: ZBufferId,
     ) -> Self {
+        let uv = TexelRect::new(0.0, 0.0, 1.0, 1.0);
         CompositeInstance {
             rect,
             clip_rect,
             color,
             z_id: z_id.0 as f32,
-            yuv_color_space: 0.0,
+            color_space_or_uv_type: pack_as_float(0u32),
             yuv_format: 0.0,
             yuv_rescale: 0.0,
             texture_layers: [layer, 0.0, 0.0],
-            uv_rects: [TexelRect::invalid(); 3],
+            uv_rects: [uv, uv, uv],
+        }
+    }
+
+    pub fn new_rgb(
+        rect: DeviceRect,
+        clip_rect: DeviceRect,
+        color: PremultipliedColorF,
+        layer: f32,
+        z_id: ZBufferId,
+        uv_rect: TexelRect,
+    ) -> Self {
+        CompositeInstance {
+            rect,
+            clip_rect,
+            color,
+            z_id: z_id.0 as f32,
+            color_space_or_uv_type: pack_as_float(1u32),
+            yuv_format: 0.0,
+            yuv_rescale: 0.0,
+            texture_layers: [layer, 0.0, 0.0],
+            uv_rects: [uv_rect, uv_rect, uv_rect],
         }
     }
 
@@ -295,7 +320,7 @@ impl CompositeInstance {
             clip_rect,
             color: PremultipliedColorF::WHITE,
             z_id: z_id.0 as f32,
-            yuv_color_space: pack_as_float(yuv_color_space as u32),
+            color_space_or_uv_type: pack_as_float(yuv_color_space as u32),
             yuv_format: pack_as_float(yuv_format as u32),
             yuv_rescale,
             texture_layers,

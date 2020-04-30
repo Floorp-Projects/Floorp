@@ -22,6 +22,10 @@ bool ClientCanvasRenderer::CreateCompositable() {
       flags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
     }
 
+    if (IsOpaque()) {
+      flags |= TextureFlags::IS_OPAQUE;
+    }
+
     if (!mIsAlphaPremultiplied) {
       flags |= TextureFlags::NON_PREMULTIPLIED;
     }
