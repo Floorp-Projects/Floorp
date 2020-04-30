@@ -13,6 +13,10 @@ using mozilla::webgl::ContextLossReason from "mozilla/dom/WebGLIpdl.h";
 using std::string from "ipc/IPCMessageUtils.h";
 using mozilla::webgl::InitContextDesc from "mozilla/dom/WebGLIpdl.h";
 using mozilla::webgl::InitContextResult from "mozilla/dom/WebGLIpdl.h";
+using mozilla::HostWebGLCommandSinkP from "mozilla/dom/WebGLCrossProcessCommandQueue.h";
+using mozilla::HostWebGLCommandSinkI from "mozilla/dom/WebGLCrossProcessCommandQueue.h";
+using mozilla::dom::IpdlQueueBuffer from "mozilla/dom/IpdlQueue.h";
+using mozilla::dom::IpdlQueueBuffers from "mozilla/dom/IpdlQueue.h";
 
 namespace mozilla {
 namespace dom {
@@ -27,7 +31,8 @@ sync refcounted protocol PWebGL
   manager PCompositorBridge;
 
 parent:
-  sync Initialize(InitContextDesc desc)
+  sync Initialize(InitContextDesc desc, UniquePtr<HostWebGLCommandSinkP> sinkP,
+      UniquePtr<HostWebGLCommandSinkI> sinkI)
     returns (InitContextResult res);
 
   async __delete__();
@@ -36,11 +41,16 @@ parent:
   sync UpdateCompositableHandle(PLayerTransaction aLayerTrans,
                          CompositableHandle aHandle);
 
+  sync ExchangeIpdlQueueData(IpdlQueueBuffer aMsg) returns (IpdlQueueBuffers aResponse);
+
 child:
   async JsWarning(string text);
 
   // Tell client that this queue needs to be shut down
   async OnContextLoss(ContextLossReason aReason);
+
+both:
+  async TransmitIpdlQueueData(IpdlQueueBuffer aData);
 };
 
 } // dom
