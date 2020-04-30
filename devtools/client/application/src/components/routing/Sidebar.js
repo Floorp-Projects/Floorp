@@ -31,7 +31,7 @@ class Sidebar extends PureComponent {
   }
 
   render() {
-    const navItems = Object.values(PAGE_TYPES);
+    const navItems = [PAGE_TYPES.SERVICE_WORKERS, PAGE_TYPES.MANIFEST];
 
     const isSelected = page => {
       return page === this.props.selectedPage;

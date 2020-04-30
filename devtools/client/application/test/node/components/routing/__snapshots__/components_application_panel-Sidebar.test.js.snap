@@ -9,13 +9,13 @@ exports[`Sidebar renders the expected snapshot when no page is selected 1`] = `
   >
     <Connect(SidebarItem)
       isSelected={false}
-      key="sidebar-item-manifest"
-      page="manifest"
+      key="sidebar-item-service-workers"
+      page="service-workers"
     />
     <Connect(SidebarItem)
       isSelected={false}
-      key="sidebar-item-service-workers"
-      page="service-workers"
+      key="sidebar-item-manifest"
+      page="manifest"
     />
   </ul>
 </aside>
@@ -29,14 +29,14 @@ exports[`Sidebar renders the expected snapshot when the manifest page is selecte
     className="sidebar__list"
   >
     <Connect(SidebarItem)
-      isSelected={true}
-      key="sidebar-item-manifest"
-      page="manifest"
-    />
-    <Connect(SidebarItem)
       isSelected={false}
       key="sidebar-item-service-workers"
       page="service-workers"
+    />
+    <Connect(SidebarItem)
+      isSelected={true}
+      key="sidebar-item-manifest"
+      page="manifest"
     />
   </ul>
 </aside>
@@ -50,14 +50,14 @@ exports[`Sidebar renders the expected snapshot when the service workers page is 
     className="sidebar__list"
   >
     <Connect(SidebarItem)
-      isSelected={false}
-      key="sidebar-item-manifest"
-      page="manifest"
-    />
-    <Connect(SidebarItem)
       isSelected={true}
       key="sidebar-item-service-workers"
       page="service-workers"
+    />
+    <Connect(SidebarItem)
+      isSelected={false}
+      key="sidebar-item-manifest"
+      page="manifest"
     />
   </ul>
 </aside>
