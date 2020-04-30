@@ -3942,20 +3942,21 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
         GetInvisibleBRElementAt(atLeftBlockChild);
     EditActionResult ret(NS_OK);
     if (mergeListElements) {
-      // XXX Why do we ignore the error from MoveChildren()?
+      // XXX Why do we ignore the error from MoveChildrenWithTransaction()?
       // XXX Why is it guaranteed that `atLeftBlockChild.GetContainer()` is
       //     `leftListElement` here?  Looks like that above code may run
       //     mutation event listeners.
       NS_WARNING_ASSERTION(leftListElement == atLeftBlockChild.GetContainer(),
                            "This is not guaranteed, but assumed");
-      MoveNodeResult moveNodeResult = MoveChildren(
+      MoveNodeResult moveNodeResult = MoveChildrenWithTransaction(
           *rightListElement,
           EditorDOMPoint(leftListElement, atLeftBlockChild.Offset()));
       if (NS_WARN_IF(moveNodeResult.EditorDestroyed())) {
         return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
       }
-      NS_WARNING_ASSERTION(moveNodeResult.Succeeded(),
-                           "HTMLEditor::MoveChildren() failed, but ignored");
+      NS_WARNING_ASSERTION(
+          moveNodeResult.Succeeded(),
+          "HTMLEditor::MoveChildrenWithTransaction() failed, but ignored");
       if (moveNodeResult.Succeeded()) {
         ret |= moveNodeResult;
       }
@@ -4154,11 +4155,11 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContents(
     // get the node to act on
     if (HTMLEditUtils::IsBlockElement(content)) {
       // For block nodes, move their contents only, then delete block.
-      result |=
-          MoveChildren(MOZ_KnownLive(*content->AsElement()),
-                       EditorDOMPoint(aPointToInsert.GetContainer(), offset));
+      result |= MoveChildrenWithTransaction(
+          MOZ_KnownLive(*content->AsElement()),
+          EditorDOMPoint(aPointToInsert.GetContainer(), offset));
       if (result.Failed()) {
-        NS_WARNING("HTMLEditor::MoveChildren() failed");
+        NS_WARNING("HTMLEditor::MoveChildrenWithTransaction() failed");
         return result;
       }
       offset = result.NextInsertionPointRef().Offset();
@@ -4184,7 +4185,7 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContents(
     // XXX Different from the above block, we ignore error of moving nodes.
     // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
     // keep it alive.
-    MoveNodeResult moveNodeResult = MoveNodeOrChildren(
+    MoveNodeResult moveNodeResult = MoveNodeOrChildrenWithTransaction(
         MOZ_KnownLive(content),
         EditorDOMPoint(aPointToInsert.GetContainer(), offset));
     if (NS_WARN_IF(moveNodeResult.EditorDestroyed())) {
@@ -4192,19 +4193,20 @@ MoveNodeResult HTMLEditor::MoveOneHardLineContents(
     }
     NS_WARNING_ASSERTION(
         moveNodeResult.Succeeded(),
-        "HTMLEditor::MoveNodeOrChildren() failed, but ignored");
+        "HTMLEditor::MoveNodeOrChildrenWithTransaction() failed, but ignored");
     if (moveNodeResult.Succeeded()) {
       offset = moveNodeResult.NextInsertionPointRef().Offset();
       result |= moveNodeResult;
     }
   }
 
-  NS_WARNING_ASSERTION(result.Succeeded(),
-                       "Last HTMLEditor::MoveNodeOrChildren() failed");
+  NS_WARNING_ASSERTION(
+      result.Succeeded(),
+      "Last HTMLEditor::MoveNodeOrChildrenWithTransaction() failed");
   return result;
 }
 
-MoveNodeResult HTMLEditor::MoveNodeOrChildren(
+MoveNodeResult HTMLEditor::MoveNodeOrChildrenWithTransaction(
     nsIContent& aContent, const EditorDOMPoint& aPointToInsert) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aPointToInsert.IsSet());
@@ -4230,9 +4232,10 @@ MoveNodeResult HTMLEditor::MoveNodeOrChildren(
   // If it can't, move its children (if any), and then delete it.
   MoveNodeResult result;
   if (aContent.IsElement()) {
-    result = MoveChildren(MOZ_KnownLive(*aContent.AsElement()), aPointToInsert);
+    result = MoveChildrenWithTransaction(MOZ_KnownLive(*aContent.AsElement()),
+                                         aPointToInsert);
     if (result.Failed()) {
-      NS_WARNING("HTMLEditor::MoveChildren() failed");
+      NS_WARNING("HTMLEditor::MoveChildrenWithTransaction() failed");
       return result;
     }
   } else {
@@ -4259,8 +4262,8 @@ MoveNodeResult HTMLEditor::MoveNodeOrChildren(
   return result;
 }
 
-MoveNodeResult HTMLEditor::MoveChildren(Element& aElement,
-                                        const EditorDOMPoint& aPointToInsert) {
+MoveNodeResult HTMLEditor::MoveChildrenWithTransaction(
+    Element& aElement, const EditorDOMPoint& aPointToInsert) {
   MOZ_ASSERT(aPointToInsert.IsSet());
 
   if (NS_WARN_IF(&aElement == aPointToInsert.GetContainer())) {
@@ -4269,10 +4272,10 @@ MoveNodeResult HTMLEditor::MoveChildren(Element& aElement,
 
   MoveNodeResult result = MoveNodeIgnored(aPointToInsert);
   while (aElement.GetFirstChild()) {
-    result |= MoveNodeOrChildren(MOZ_KnownLive(*aElement.GetFirstChild()),
-                                 result.NextInsertionPoint());
+    result |= MoveNodeOrChildrenWithTransaction(
+        MOZ_KnownLive(*aElement.GetFirstChild()), result.NextInsertionPoint());
     if (result.Failed()) {
-      NS_WARNING("HTMLEditor::MoveNodeOrChildren() failed");
+      NS_WARNING("HTMLEditor::MoveNodeOrChildrenWithTransaction() failed");
       return result;
     }
   }

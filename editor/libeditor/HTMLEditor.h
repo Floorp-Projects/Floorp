@@ -2183,29 +2183,31 @@ class HTMLEditor final : public TextEditor,
   }
 
   /**
-   * MoveNodeOrChildren() moves aContent to aPointToInsert.  If cannot insert
-   * aContent due to invalid relation, moves only its children recursively
-   * and removes aContent from the DOM tree.
+   * MoveNodeOrChildrenWithTransaction() moves aContent to aPointToInsert.  If
+   * cannot insert aContent due to invalid relation, moves only its children
+   * recursively and removes aContent from the DOM tree.
    *
    * @param aContent            Content which should be moved.
    * @param aPointToInsert      The point to be inserted aContent or its
    *                            descendants.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult
-  MoveNodeOrChildren(nsIContent& aNode, const EditorDOMPoint& aPointToInsert);
+  MoveNodeOrChildrenWithTransaction(nsIContent& aNode,
+                                    const EditorDOMPoint& aPointToInsert);
 
   /**
-   * MoveChildren() moves the children of aElement to aPointToInsert.  If
-   * cannot insert some children due to invalid relation, calls
-   * MoveNodeOrChildren() to remove the children but keep moving its children.
+   * MoveChildrenWithTransaction() moves the children of aElement to
+   * aPointToInsert.  If cannot insert some children due to invalid relation,
+   * calls MoveNodeOrChildrenWithTransaction() to remove the children but keep
+   * moving its children.
    *
    * @param aElement            Container element whose children should be
    *                            moved.
    * @param aPointToInsert      The point to be inserted children of aElement
    *                            or its descendants.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult
-  MoveChildren(Element& aElement, const EditorDOMPoint& aPointToInsert);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult MoveChildrenWithTransaction(
+      Element& aElement, const EditorDOMPoint& aPointToInsert);
 
   /**
    * MoveAllChildren() moves all children of aContainer to before
