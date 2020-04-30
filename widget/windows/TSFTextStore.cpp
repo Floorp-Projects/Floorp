@@ -931,7 +931,7 @@ class InputScopeImpl final : public ITfInputScope {
 
  public:
   explicit InputScopeImpl(const nsTArray<InputScope>& aList)
-      : mInputScopes(aList) {
+      : mInputScopes(aList.Clone()) {
     MOZ_LOG(
         sTextStoreLog, LogLevel::Info,
         ("0x%p InputScopeImpl(%s)", this, GetInputScopeString(aList).get()));

@@ -1035,7 +1035,7 @@ class WidgetEvent : public WidgetEventTime {
  ******************************************************************************/
 
 class NativeEventData final {
-  nsTArray<uint8_t> mBuffer;
+  CopyableTArray<uint8_t> mBuffer;
 
   friend struct IPC::ParamTraits<mozilla::NativeEventData>;
 

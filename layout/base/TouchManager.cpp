@@ -83,7 +83,8 @@ void TouchManager::EvictTouchPoint(RefPtr<Touch>& aTouch,
 }
 
 /*static*/
-void TouchManager::AppendToTouchList(WidgetTouchEvent::TouchArray* aTouchList) {
+void TouchManager::AppendToTouchList(
+    WidgetTouchEvent::TouchArrayBase* aTouchList) {
   for (auto iter = sCaptureTouchList->Iter(); !iter.Done(); iter.Next()) {
     RefPtr<Touch>& touch = iter.Data().mTouch;
     touch->mChanged = false;

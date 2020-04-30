@@ -216,7 +216,7 @@ class MultiTouchInput : public InputData {
   // Warning, this class is serialized and sent over IPC. Any change to its
   // fields must be reflected in its ParamTraits<>, in nsGUIEventIPC.h
   MultiTouchType mType;
-  nsTArray<SingleTouchData> mTouches;
+  CopyableTArray<SingleTouchData> mTouches;
   // The screen offset of the root widget. This can be changing along with
   // the touch interaction, so we sstore it in the event.
   ExternalPoint mScreenOffset;
@@ -693,7 +693,7 @@ class KeyboardInput : public InputData {
   KeyboardEventType mType;
   uint32_t mKeyCode;
   uint32_t mCharCode;
-  nsTArray<ShortcutKeyCandidate> mShortcutCandidates;
+  CopyableTArray<ShortcutKeyCandidate> mShortcutCandidates;
 
   bool mHandledByAPZ;
 
