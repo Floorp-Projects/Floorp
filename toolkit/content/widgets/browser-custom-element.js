@@ -96,8 +96,6 @@
       this._characterSet = null;
       this._documentContentType = null;
 
-      this._fullZoom = 1.0;
-
       /**
        * These are managed by the tabbrowser:
        */
@@ -111,12 +109,6 @@
 
       LazyModules.XPCOMUtils.defineLazyGetter(this, "popupBlocker", () => {
         return new LazyModules.PopupBlocker(this);
-      });
-
-      this.addEventListener("FullZoomChange", function() {
-        if (!this.browsingContext.inRDMPane) {
-          this._fullZoom = this.browsingContext.fullZoom;
-        }
       });
 
       this.addEventListener(
@@ -812,28 +804,21 @@
       }
     }
 
+    set fullZoom(val) {
+      if (val.toFixed(2) == this.fullZoom.toFixed(2)) {
+        return;
+      }
+      this.browsingContext.fullZoom = val;
+    }
+
     get referrerInfo() {
       return this.isRemoteBrowser
         ? this._referrerInfo
         : this.contentDocument.referrerInfo;
     }
 
-    set fullZoom(val) {
-      if (val.toFixed(2) == this.fullZoom.toFixed(2)) {
-        return;
-      }
-      this._fullZoom = val;
-      if (this.browsingContext.inRDMPane) {
-        let event = document.createEvent("Events");
-        event.initEvent("FullZoomChange", true, false);
-        this.dispatchEvent(event);
-      } else {
-        this.browsingContext.fullZoom = val;
-      }
-    }
-
     get fullZoom() {
-      return this._fullZoom;
+      return this.browsingContext.fullZoom;
     }
 
     set textZoom(val) {
@@ -845,16 +830,6 @@
 
     get textZoom() {
       return this.browsingContext.textZoom;
-    }
-
-    enterResponsiveMode() {
-      this.browsingContext.inRDMPane = true;
-      this.browsingContext.fullZoom = 1.0;
-    }
-
-    leaveResponsiveMode() {
-      this.browsingContext.inRDMPane = false;
-      this.browsingContext.fullZoom = this._fullZoom;
     }
 
     get isSyntheticDocument() {
@@ -1811,7 +1786,7 @@
       // DOMLinkAdded/Removed, onStateChange) should not be swapped here,
       // because these notifications are dispatched again once the docshells
       // are swapped.
-      var fieldsToSwap = ["_webBrowserFind", "_fullZoom"];
+      var fieldsToSwap = ["_webBrowserFind"];
 
       if (this.isRemoteBrowser) {
         fieldsToSwap.push(
