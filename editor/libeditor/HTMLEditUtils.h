@@ -299,6 +299,12 @@ class HTMLEditUtils final {
     return !end.GetChildAtOffset() ? childAtStart->AsElement() : nullptr;
   }
 
+  static Element* GetTableCellElementIfOnlyOneSelected(
+      const dom::AbstractRange& aRange) {
+    Element* element = HTMLEditUtils::GetElementIfOnlyOneSelected(aRange);
+    return element && HTMLEditUtils::IsTableCell(element) ? element : nullptr;
+  }
+
   static EditAction GetEditActionForInsert(const nsAtom& aTagName);
   static EditAction GetEditActionForRemoveList(const nsAtom& aTagName);
   static EditAction GetEditActionForInsert(const Element& aElement);
