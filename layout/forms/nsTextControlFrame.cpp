@@ -729,7 +729,7 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint) {
     }
     if (!(lastFocusMethod & nsIFocusManager::FLAG_BYMOUSE)) {
       // NOTE(emilio): This is asynchronous, so it can't cause havoc.
-      ScrollSelectionIntoView();
+      ScrollSelectionIntoViewAsync();
     }
   }
 
@@ -843,19 +843,18 @@ nsresult nsTextControlFrame::SetSelectionInternal(
   return NS_OK;
 }
 
-nsresult nsTextControlFrame::ScrollSelectionIntoView() {
+void nsTextControlFrame::ScrollSelectionIntoViewAsync() {
   auto* textControlElement = TextControlElement::FromNode(GetContent());
   MOZ_ASSERT(textControlElement);
   nsISelectionController* selCon = textControlElement->GetSelectionController();
-  if (selCon) {
-    // Scroll the selection into view (see bug 231389).
-    return selCon->ScrollSelectionIntoView(
-        nsISelectionController::SELECTION_NORMAL,
-        nsISelectionController::SELECTION_FOCUS_REGION,
-        nsISelectionController::SCROLL_FIRST_ANCESTOR_ONLY);
+  if (!selCon) {
+    return;
   }
-
-  return NS_ERROR_FAILURE;
+  // Scroll the selection into view (see bug 231389).
+  selCon->ScrollSelectionIntoView(
+      nsISelectionController::SELECTION_NORMAL,
+      nsISelectionController::SELECTION_FOCUS_REGION,
+      nsISelectionController::SCROLL_FIRST_ANCESTOR_ONLY);
 }
 
 nsresult nsTextControlFrame::SelectAllOrCollapseToEndOfText(bool aSelect) {
@@ -897,7 +896,8 @@ nsresult nsTextControlFrame::SelectAllOrCollapseToEndOfText(bool aSelect) {
                             numChildren);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return ScrollSelectionIntoView();
+  ScrollSelectionIntoViewAsync();
+  return NS_OK;
 }
 
 nsresult nsTextControlFrame::SetSelectionEndPoints(

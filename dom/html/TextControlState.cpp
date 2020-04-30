@@ -2081,7 +2081,7 @@ void TextControlState::SetSelectionRange(
       return;
     }
     if (mBoundFrame) {
-      rv = mBoundFrame->ScrollSelectionIntoView();
+      mBoundFrame->ScrollSelectionIntoViewAsync();
     }
     // Press on to firing the event even if that failed, like our old code did.
     // But is that really what we want?  Firing the event _and_ throwing from
