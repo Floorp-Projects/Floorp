@@ -1577,63 +1577,16 @@ nsresult EditorBase::InsertNodeWithTransaction(
   return rv;
 }
 
-EditorDOMPoint EditorBase::PrepareToInsertBRElement(
-    const EditorDOMPoint& aPointToInsert) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  if (NS_WARN_IF(!aPointToInsert.IsSet())) {
-    return EditorDOMPoint();
-  }
-
-  if (!aPointToInsert.IsInTextNode()) {
-    return aPointToInsert;
-  }
-
-  if (aPointToInsert.IsStartOfContainer()) {
-    // Insert before the text node.
-    EditorDOMPoint pointInContainer(aPointToInsert.GetContainer());
-    NS_WARNING_ASSERTION(pointInContainer.IsSet(),
-                         "Failed to climb up the DOM tree from text node");
-    return pointInContainer;
-  }
-
-  if (aPointToInsert.IsEndOfContainer()) {
-    // Insert after the text node.
-    EditorDOMPoint pointInContainer(aPointToInsert.GetContainer());
-    if (NS_WARN_IF(!pointInContainer.IsSet())) {
-      return pointInContainer;
-    }
-    DebugOnly<bool> advanced = pointInContainer.AdvanceOffset();
-    NS_WARNING_ASSERTION(advanced,
-                         "Failed to advance offset to after the text node");
-    return pointInContainer;
-  }
-
-  MOZ_DIAGNOSTIC_ASSERT(aPointToInsert.IsSetAndValid());
-
-  // Unfortunately, we need to split the text node at the offset.
-  IgnoredErrorResult ignoredError;
-  nsCOMPtr<nsIContent> newLeftNode =
-      SplitNodeWithTransaction(aPointToInsert, ignoredError);
-  NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                       "EditorBase::SplitNodeWithTransaction() failed");
-  if (ignoredError.Failed()) {
-    return EditorDOMPoint();
-  }
-  Unused << newLeftNode;
-  // Insert new <br> before the right node.
-  EditorDOMPoint pointInContainer(aPointToInsert.GetContainer());
-  NS_WARNING_ASSERTION(pointInContainer.IsSet(),
-                       "Failed to split the text node");
-  return pointInContainer;
-}
-
 CreateElementResult
 EditorBase::InsertPaddingBRElementForEmptyLastLineWithTransaction(
     const EditorDOMPoint& aPointToInsert) {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(IsHTMLEditor() || !aPointToInsert.IsInTextNode());
 
-  EditorDOMPoint pointToInsert = PrepareToInsertBRElement(aPointToInsert);
+  EditorDOMPoint pointToInsert =
+      IsTextEditor() ? aPointToInsert
+                     : MOZ_KnownLive(AsHTMLEditor())
+                           ->PrepareToInsertBRElement(aPointToInsert);
   if (NS_WARN_IF(!pointToInsert.IsSet())) {
     return CreateElementResult(NS_ERROR_FAILURE);
   }
