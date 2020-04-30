@@ -11,8 +11,11 @@ const { TestUtils } = ChromeUtils.import(
 const { RemoteSettingsWorker } = ChromeUtils.import(
   "resource://services-settings/RemoteSettingsWorker.jsm"
 );
-const { Kinto } = ChromeUtils.import(
-  "resource://services-common/kinto-offline-client.js"
+const { RemoteSettingsClient } = ChromeUtils.import(
+  "resource://services-settings/RemoteSettingsClient.jsm"
+);
+const { Database } = ChromeUtils.import(
+  "resource://services-settings/Database.jsm"
 );
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["indexedDB"]);
@@ -42,20 +45,18 @@ add_task(async function test_import_json_dump_into_idb() {
     // Skip test: we don't ship remote settings dumps on Android (see package-manifest).
     return;
   }
-  const kintoCollection = new Kinto({
-    bucket: "main",
-    adapter: Kinto.adapters.IDB,
-    adapterOptions: { dbName: "remote-settings" },
-  }).collection("language-dictionaries");
-  const { data: before } = await kintoCollection.list();
+  const client = new RemoteSettingsClient("language-dictionaries", {
+    bucketNamePref: "services.settings.default_bucket",
+  });
+  const before = await client.get({ syncIfEmpty: false });
   Assert.equal(before.length, 0);
 
   await RemoteSettingsWorker.importJSONDump("main", "language-dictionaries");
 
-  const { data: after } = await kintoCollection.list();
+  const after = await client.get();
   Assert.ok(after.length > 0);
-  // Close this connection, so that we can delete the DB further down.
-  await kintoCollection.db.close();
+  // Force a DB close for shutdown so we can delete the DB later.
+  Database._shutdownHandler();
 });
 
 add_task(async function test_throws_error_if_worker_fails() {
