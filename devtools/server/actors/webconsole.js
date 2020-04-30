@@ -1011,11 +1011,12 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    *         `resultID` field.
    */
   evaluateJSAsync: async function(request) {
+    const startTime = Date.now();
     // Use Date instead of UUID as this code is used by workers, which
     // don't have access to the UUID XPCOM component.
     // Also use a counter in order to prevent mixing up response when calling
     // evaluateJSAsync during the same millisecond.
-    const resultID = Date.now() + "-" + this._evalCounter++;
+    const resultID = startTime + "-" + this._evalCounter++;
 
     // Execute the evaluation in the next event loop in order to immediately
     // reply with the resultID.
@@ -1032,6 +1033,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
         this.emit("evaluationResult", {
           type: "evaluationResult",
           resultID,
+          startTime,
           ...response,
         });
         return;

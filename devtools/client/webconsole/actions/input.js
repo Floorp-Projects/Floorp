@@ -66,7 +66,7 @@ function evaluateExpression(expression, from = "input") {
     }
 
     // We use the messages action as it's doing additional transformation on the message.
-    dispatch(
+    const { messages } = dispatch(
       messagesActions.messagesAdd([
         new ConsoleCommand({
           messageText: expression,
@@ -74,6 +74,8 @@ function evaluateExpression(expression, from = "input") {
         }),
       ])
     );
+    const [consoleCommandMessage] = messages;
+
     dispatch({
       type: EVALUATE_EXPRESSION,
       expression,
@@ -97,6 +99,34 @@ function evaluateExpression(expression, from = "input") {
         mapped,
       })
       .then(onSettled, onSettled);
+
+    // Before Firefox 77, the response did not have a `startTime` property, so we're using
+    // the `resultID`, which does contain the server time at which the evaluation started
+    // (its shape is `${timestamp}-${someId}`).
+    const serverConsoleCommandTimestamp =
+      response.startTime ||
+      (response.resultID && Number(response.resultID.replace(/\-\d*$/, ""))) ||
+      null;
+
+    // In case of remote debugging, it might happen that the debuggee page does not have
+    // the exact same clock time as the client. This could cause some ordering issues
+    // where the result message is displayed *before* the expression that lead to it.
+    if (
+      serverConsoleCommandTimestamp &&
+      consoleCommandMessage.timeStamp > serverConsoleCommandTimestamp
+    ) {
+      // If we're in such case, we remove the original command message, and add it again,
+      // with the timestamp coming from the server.
+      dispatch(messagesActions.messageRemove(consoleCommandMessage.id));
+      dispatch(
+        messagesActions.messagesAdd([
+          new ConsoleCommand({
+            messageText: expression,
+            timeStamp: serverConsoleCommandTimestamp,
+          }),
+        ])
+      );
+    }
 
     return dispatch(onExpressionEvaluated(response));
   };
