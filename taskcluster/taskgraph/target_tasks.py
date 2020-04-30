@@ -18,16 +18,24 @@ _target_task_methods = {}
 # uncommon tasks, or tasks running against limited hardware set that they
 # should only be selectable with --full.
 TARGET_TASK_BLACKLIST = [
-    r'-ccov/',
-    r'windows10-aarch64/opt',
-    r'win64-aarch64-laptop',
-    r'windows10-64-ref-hw-2017',
-    r'android-hw',
+    # Platforms and/or Build types
+    r'build-.*-gcp',  # Bug 1631990
+    r'build-.*-aarch64',  # Bug 1631990
+    r'mingwclang',  # Bug 1631990
+    r'valgrind',  # Bug 1631990
+    # Android tasks
     r'android-geckoview-docs',
-    r'linux1804-32',   # hide linux32 tests - bug 1599197
+    r'android-hw',
+    # Windows tasks
+    r'windows10-64-ref-hw',
+    r'windows10-aarch64',
+    # Linux tasks
     r'linux-',  # hide all linux32 tasks by default - bug 1599197
+    r'linux1804-32',  # hide linux32 tests - bug 1599197
     r'linux.*web-platform-tests.*-fis-',  # hide wpt linux fission tests - bug 1610879
+    # Test tasks
     r'web-platform-tests.*backlog',  # hide wpt jobs that are not implemented yet - bug 1572820
+    r'-ccov/',
 ]
 
 
@@ -81,10 +89,12 @@ def filter_tasks_by_blacklist(task, optional_filters=None):
 
     Args:
         task (str): String representing the task name.
+        optional_filters (list, optional):
+            Additional filters to apply to task filtering.
 
     Returns:
         (Boolean): True if task does not match any known filters.
-        False otherwise.
+            False otherwise.
     """
     if optional_filters:
         for item in optional_filters:
