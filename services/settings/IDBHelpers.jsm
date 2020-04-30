@@ -5,7 +5,7 @@
 var EXPORTED_SYMBOLS = ["IDBHelpers"];
 
 const DB_NAME = "remote-settings";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 // `indexedDB` is accessible in the worker global, but not the JSM global,
 // where we have to import it - and the worker global doesn't have Cu.
@@ -170,6 +170,12 @@ async function openIDB(allowUpgrades = true) {
         // Collections store
         db.createObjectStore("collections", {
           keyPath: "cid",
+        });
+      }
+      if (event.oldVersion < 3) {
+        // Attachment store
+        db.createObjectStore("attachments", {
+          keyPath: ["cid", "attachmentId"],
         });
       }
     };
