@@ -481,6 +481,10 @@
     <string name="history_delete_all">Geschiedenis verwijderen</string>
     <!-- Text for the dialog to confirm clearing all history -->
     <string name="history_delete_all_dialog">Weet u zeker dat u uw geschiedenis wilt verwijderen?</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Geschiedenis verwijderd</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">%1$s verwijderd</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Wissen</string>
     <!-- History overflow menu copy button -->
@@ -535,6 +539,10 @@
     <string name="bookmark_edit">Bladwijzer bewerken</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Map selecteren</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">Weet u zeker dat u deze map wilt verwijderen?</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">%1$s verwijderd</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Map toevoegen</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
@@ -588,7 +596,7 @@
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s verwijderd</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">Geselecteerde bladwijzers worden verwijderd</string>
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Bladwijzers verwijderd</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ONGEDAAN MAKEN</string>
 
