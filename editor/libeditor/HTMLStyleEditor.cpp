@@ -579,7 +579,7 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aContent,
       spanElement = InsertContainerWithTransaction(aContent, *nsGkAtoms::span);
       if (!spanElement) {
         NS_WARNING(
-            "EditorBase::InsertContainerWithTransaction(nsGkAtoms::span) "
+            "HTMLEditor::InsertContainerWithTransaction(nsGkAtoms::span) "
             "failed");
         return NS_ERROR_FAILURE;
       }
@@ -609,7 +609,7 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aContent,
       aContent, aProperty, aAttribute ? *aAttribute : *nsGkAtoms::_empty,
       aValue);
   NS_WARNING_ASSERTION(newContainerElement,
-                       "EditorBase::InsertContainerWithTransaction() failed");
+                       "HTMLEditor::InsertContainerWithTransaction() failed");
   return newContainerElement ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -1041,7 +1041,7 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
         }
         if (!spanElement) {
           NS_WARNING(
-              "EditorBase::InsertContainerWithTransaction(nsGkAtoms::span) "
+              "HTMLEditor::InsertContainerWithTransaction(nsGkAtoms::span) "
               "failed");
           return NS_ERROR_FAILURE;
         }
@@ -2301,7 +2301,7 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
   RefPtr<Element> newElement = InsertContainerWithTransaction(
       *textNodeForTheRange, MOZ_KnownLive(*nodeType));
   NS_WARNING_ASSERTION(newElement,
-                       "EditorBase::InsertContainerWithTransaction() failed");
+                       "HTMLEditor::InsertContainerWithTransaction() failed");
   return newElement ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -2429,7 +2429,7 @@ nsresult HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
     RefPtr<Element> newElement =
         InsertContainerWithTransaction(*aNode, MOZ_KnownLive(*atom));
     NS_WARNING_ASSERTION(newElement,
-                         "EditorBase::InsertContainerWithTransaction() failed");
+                         "HTMLEditor::InsertContainerWithTransaction() failed");
     return newElement ? NS_OK : NS_ERROR_FAILURE;
   }
 
