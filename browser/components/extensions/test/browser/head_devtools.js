@@ -3,7 +3,7 @@
 "use strict";
 
 /* exported openToolboxForTab, closeToolboxForTab, getToolboxTargetForTab,
-            registerBlankToolboxPanel, TOOLBOX_BLANK_PANEL_ID, assertDevToolsExtensionEnabled */
+            registerBlankToolboxPanel, TOOLBOX_BLANK_PANEL_ID */
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -18,12 +18,6 @@ XPCOMUtils.defineLazyGetter(this, "TargetFactory", () => {
   const { TargetFactory } = loader.require("devtools/client/framework/target");
   return TargetFactory;
 });
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "DevToolsShim",
-  "chrome://devtools-startup/content/DevToolsShim.jsm"
-);
 
 const TOOLBOX_BLANK_PANEL_ID = "testBlankPanel";
 
@@ -91,14 +85,4 @@ async function closeToolboxForTab(tab) {
       outerWindowID,
     })}`
   );
-}
-
-function assertDevToolsExtensionEnabled(uuid, enabled) {
-  for (let toolbox of DevToolsShim.getToolboxes()) {
-    is(
-      enabled,
-      !!toolbox.isWebExtensionEnabled(uuid),
-      `extension is ${enabled ? "enabled" : "disabled"} on toolbox`
-    );
-  }
 }
