@@ -332,3 +332,9 @@ b4662b6db1b34414494d070e33481193625403d1 - Ehsan Akhgari - Bug 1508472 - Part 4:
 10d5143647cfda21649cf254adcb21d116524c5d - Sylvestre Ledru - Bug 1489454 - Remove all trailing whitespaces (again) r=Ehsan
 6a629adbb62a299d7208373d1c6f375149d2afdb - Sylvestre Ledru - Bug 1378712 - Remove all trailing whitespaces r=Ehsan
 c7e91f614eb78c4447a623f1c88a66421113ab07 - Victor Porof - Bug 1563300 - Add a js-format git commit hook, r=sylvestre
+07f6f62a24f58129ecd3a0463e66b605ae5599e7 - Kartikaya Gupta - Bug 1519636 - Follow-up to properly turn off clang formatting for debug logging code. r=me
+2307fb1cfa80a5d4cf05c404917344510a982194 - Sylvestre Ledru - Bug 1519636 - Ride along: remove unbreakable spaces r=Ehsan
+6d386a2162b90d72529adbc283391fc4732eff32 - Csoregi Natalia - Backed out changeset 4ad80127f89f (bug 1519636) for bustage on MarkupMap.h and nsAccessibilityService.cpp. CLOSED TREE
+7d46c1872ba7920465cdf33b52672a374a66e360 - Sylvestre Ledru - Bug 1519636 - Ride along: Add more commits to the git ignore list r=ehsan
+9e48fefcf1aca74fd97036121180907de52756e8 - Narcis Beleuzu - Backed out changeset 389b6bbd76db (bug 1519636) for bustages on MarkupMap.h . CLOSED TREE
+fa3daa92292dde4bf9405c56e43a464e53c349a2 - Sylvestre Ledru - Bug 1519636 - Ride along: Add media/libdav1d/version.h to the ignore list r=andi
