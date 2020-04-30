@@ -53,6 +53,7 @@ class nsIWidget;
 namespace mozilla {
 
 class CancelableRunnable;
+class HostWebGLCommandSink;
 
 namespace dom {
 class WebGLParent;
@@ -302,7 +303,8 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
     return IPC_FAIL_NO_REASON(this);
   }
 
-  virtual already_AddRefed<PWebGLParent> AllocPWebGLParent() = 0;
+  virtual already_AddRefed<PWebGLParent> AllocPWebGLParent(
+      const webgl::InitContextDesc&, webgl::InitContextResult* out) = 0;
 
   bool mCanSend;
 
@@ -692,7 +694,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   WebRenderBridgeParent* GetWrBridge() { return mWrBridge; }
   webgpu::WebGPUParent* GetWebGPUBridge() { return mWebGPUBridge; }
 
-  already_AddRefed<PWebGLParent> AllocPWebGLParent() override {
+  already_AddRefed<PWebGLParent> AllocPWebGLParent(
+      const webgl::InitContextDesc&, webgl::InitContextResult*) override {
     MOZ_ASSERT_UNREACHABLE(
         "This message is CrossProcessCompositorBridgeParent only");
     return nullptr;

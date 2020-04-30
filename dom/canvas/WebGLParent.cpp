@@ -5,7 +5,6 @@
 
 #include "WebGLParent.h"
 
-#include "WebGLChild.h"
 #include "mozilla/dom/WebGLCrossProcessCommandQueue.h"
 #include "mozilla/layers/LayerTransactionParent.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
@@ -15,31 +14,30 @@ namespace mozilla {
 
 namespace dom {
 
-mozilla::ipc::IPCResult WebGLParent::RecvInitialize(
-    const webgl::InitContextDesc& desc,
-    UniquePtr<HostWebGLCommandSinkP>&& aSinkP,
-    UniquePtr<HostWebGLCommandSinkI>&& aSinkI,
-    webgl::InitContextResult* const out) {
+/* static */
+RefPtr<WebGLParent> WebGLParent::Create(const webgl::InitContextDesc& desc,
+                                        webgl::InitContextResult* const out) {
+  RefPtr<WebGLParent> parent = new WebGLParent;
   auto remotingData = Some(HostWebGLContext::RemotingData{
-      *this, {},  // std::move(commandSink),
+      *parent, {},  // std::move(commandSink),
   });
 
-  mHost = HostWebGLContext::Create(
+  parent->mHost = HostWebGLContext::Create(
       {
           {},
           std::move(remotingData),
       },
       desc, out);
 
-  if (!mHost) {
-    return IPC_FAIL(this, "Failed to create HostWebGLContext");
+  if (!parent->mHost) {
+    WEBGL_BRIDGE_LOGE("Failed to create HostWebGLContext");
+    return nullptr;
   }
-
-  if (!BeginCommandQueueDrain()) {
-    return IPC_FAIL(this, "Failed to start WebGL command queue drain");
+  if (!parent->BeginCommandQueueDrain()) {
+    WEBGL_BRIDGE_LOGE("Failed to start WebGL command queue drain");
+    return nullptr;
   }
-
-  return IPC_OK();
+  return parent;
 }
 
 WebGLParent::WebGLParent() = default;
