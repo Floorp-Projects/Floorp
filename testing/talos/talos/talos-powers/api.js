@@ -352,7 +352,7 @@ TalosPowersService.prototype = {
         "resource://gre/modules/Troubleshoot.jsm"
       );
       Troubleshoot.snapshot(function(snapshot) {
-        dump("about:support\t" + JSON.stringify(snapshot));
+        dump("about:support\t" + JSON.stringify(snapshot) + "\n");
       });
       callback();
     },
