@@ -15,11 +15,8 @@ function stopReloadMutationCallback() {
   );
 }
 
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["ui.prefersReducedMotion", 0]],
-  });
-});
+// Force-enable the animation
+gReduceMotionOverride = false;
 
 add_task(async function checkDontShowStopOnNewTab() {
   let stopReloadContainer = document.getElementById("stop-reload-button");

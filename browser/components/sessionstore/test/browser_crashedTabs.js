@@ -15,11 +15,7 @@ const PAGE_2 =
 
 // Turn off tab animations for testing and use a single content process
 // for these tests since we want to test tabs within the crashing process here.
-add_task(async function test_initialize() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["toolkit.cosmeticAnimations.enabled", false]],
-  });
-});
+gReduceMotionOverride = true;
 
 // Allow tabs to restore on demand so we can test pending states
 Services.prefs.clearUserPref("browser.sessionstore.restore_on_demand");

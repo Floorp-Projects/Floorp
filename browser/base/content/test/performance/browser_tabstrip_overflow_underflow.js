@@ -29,6 +29,9 @@ const EXPECTED_UNDERFLOW_REFLOWS = [
  * underflow.
  */
 add_task(async function() {
+  // Force-enable tab animations
+  gReduceMotionOverride = false;
+
   await ensureNoPreloadedBrowser();
 
   const TAB_COUNT_FOR_OVERFLOW = computeMaxTabCount();

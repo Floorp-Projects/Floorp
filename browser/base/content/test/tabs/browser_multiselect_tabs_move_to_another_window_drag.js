@@ -1,12 +1,7 @@
-const PREF_ANIMATIONS_ENABLED = "toolkit.cosmeticAnimations.enabled";
-
-add_task(async function setPref() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[PREF_ANIMATIONS_ENABLED, false]],
-  });
-});
-
 add_task(async function test() {
+  // Disable tab animations
+  gReduceMotionOverride = true;
+
   let tab1 = await addTab();
   let tab2 = await addTab();
   let tab3 = await addTab("http://mochi.test:8888/3");

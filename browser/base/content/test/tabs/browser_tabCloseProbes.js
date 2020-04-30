@@ -59,6 +59,9 @@ function waitForSnapshotCount(histogram, expectedCount) {
 }
 
 add_task(async function setup() {
+  // Force-enable tab animations
+  gReduceMotionOverride = false;
+
   // These probes are opt-in, meaning we only capture them if extended
   // Telemetry recording is enabled.
   let oldCanRecord = Services.telemetry.canRecordExtended;
