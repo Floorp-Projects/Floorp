@@ -28,13 +28,15 @@ class WebGLParent final : public PWebGLParent,
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebGLParent, override);
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLParent)
 
-  static RefPtr<WebGLParent> Create(const webgl::InitContextDesc&,
-                                    webgl::InitContextResult* out);
+  mozilla::ipc::IPCResult RecvInitialize(const webgl::InitContextDesc&,
+                                         webgl::InitContextResult* out);
 
   RefPtr<layers::SharedSurfaceTextureClient> GetVRFrame(webgl::ObjectId);
 
- private:
+  // For IPDL:
   WebGLParent();
+
+ private:
   ~WebGLParent();
 
   bool BeginCommandQueueDrain();
