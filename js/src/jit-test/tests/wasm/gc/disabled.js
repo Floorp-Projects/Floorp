@@ -2,7 +2,7 @@
 
 const { CompileError, validate } = WebAssembly;
 
-const UNRECOGNIZED_OPCODE_OR_BAD_TYPE = /unrecognized opcode|(Structure|reference) types not enabled|invalid inline block type|bad type/;
+const UNRECOGNIZED_OPCODE_OR_BAD_TYPE = /unrecognized opcode|(Structure|reference) types not enabled|invalid inline block type|bad type|Cranelift error in clifFunc/;
 
 let simpleTests = [
     "(module (func (drop (ref.null))))",
