@@ -153,7 +153,7 @@ class UrlClassifierPrefixSetTest : public ::testing::TestWithParam<uint32_t> {
   }
 
   void SetupPrefixesAndVerify(_PrefixArray& aArray) {
-    mArray = aArray;
+    mArray = aArray.Clone();
     PrefixArrayToPrefixStringMap(mArray, mMap);
 
     ASSERT_TRUE(NS_SUCCEEDED(mCache->Build(mMap)));

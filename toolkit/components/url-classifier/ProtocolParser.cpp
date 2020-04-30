@@ -176,7 +176,7 @@ nsresult ProtocolParserV2::ProcessControl(bool* aDone) {
       }
     } else if (line.EqualsLiteral("r:pleasereset")) {
       PARSER_LOG(("All tables will be reset."));
-      mTablesToReset = mRequestedTables;
+      mTablesToReset = mRequestedTables.Clone();
     } else if (StringBeginsWith(line, NS_LITERAL_CSTRING("u:"))) {
       rv = ProcessForward(line);
       NS_ENSURE_SUCCESS(rv, rv);
