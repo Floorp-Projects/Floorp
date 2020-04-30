@@ -48,11 +48,12 @@ already_AddRefed<DOMLocalization> DOMLocalization::Constructor(
   }
 
   RefPtr<DOMLocalization> domLoc = new DOMLocalization(global);
-  domLoc->Init(aResourceIds, aSync, aBundleGenerator, aRv);
 
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
+  if (aResourceIds.Length()) {
+    domLoc->AddResourceIds(aResourceIds);
   }
+
+  domLoc->Activate(aSync, true, aBundleGenerator);
 
   return domLoc.forget();
 }

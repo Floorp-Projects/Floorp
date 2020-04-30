@@ -14,9 +14,22 @@ namespace mozilla {
 namespace dom {
 
 enum class DocumentL10nState {
-  Initialized = 0,
+  // State set when the DocumentL10n gets constructed.
+  Uninitialized = 0,
+
+  // State set when the DocumentL10n is activated and ready to be used.
+  Activated,
+
+  // State set when the initial translation got triggered. This happens
+  // if DocumentL10n was constructed during parsing of the document.
+  //
+  // If the DocumentL10n gets constructed later, we'll skip directly to
+  // Ready state.
   InitialTranslationTriggered,
-  InitialTranslationCompleted
+
+  // State set the DocumentL10n has been fully initialized, potentially
+  // with initial translation being completed.
+  InitialTranslationCompleted,
 };
 
 /**
@@ -34,10 +47,14 @@ class DocumentL10n final : public DOMLocalization {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DocumentL10n, DOMLocalization)
 
-  explicit DocumentL10n(Document* aDocument);
-  void Init(Sequence<nsString>& aResourceIds, ErrorResult& aRv);
+  static RefPtr<DocumentL10n> Create(Document* aDocument);
+
+  void Activate();
 
  protected:
+  explicit DocumentL10n(Document* aDocument);
+  bool Init();
+
   virtual ~DocumentL10n() = default;
 
   RefPtr<Document> mDocument;

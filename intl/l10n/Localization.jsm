@@ -211,30 +211,40 @@ function maybeReportErrorToGecko(error) {
  */
 class Localization {
   /**
-   * @param {Array<String>} resourceIds         - List of resource IDs
+   * `Activate` has to be called for this object to be usable.
    *
    * @returns {Localization}
    */
-  constructor(resourceIds = []) {
-    this.resourceIds = resourceIds;
-    this.generateBundles = defaultGenerateBundles;
-    this.generateBundlesSync = defaultGenerateBundlesSync;
+  constructor() {
+    this.resourceIds = [];
+    this.generateBundles = undefined;
+    this.generateBundlesSync = undefined;
+    this.isSync = undefined;
+    this.bundles = undefined;
   }
 
-  setGenerateBundles(generateBundles) {
+  /**
+   * Activate the instance of the `Localization` class.
+   *
+   * @param {bool}                    sync - Whether the instance should be
+   *                                         synchronous.
+   * @param {bool}                   eager - Whether the initial bundles should be
+   *                                         fetched eagerly.
+   * @param {Function}     generateBundles - Custom FluentBundle asynchronous generator.
+   * @param {Function} generateBundlesSync - Custom FluentBundle generator.
+   */
+  activate(sync, eager, generateBundles = defaultGenerateBundles, generateBundlesSync = defaultGenerateBundlesSync) {
+    if (this.bundles) {
+      throw new Error("Attempt to initialize an already initialized instance.");
+    }
     this.generateBundles = generateBundles;
-  }
-
-  setGenerateBundlesSync(generateBundlesSync) {
     this.generateBundlesSync = generateBundlesSync;
+    this.isSync = sync;
+    this.regenerateBundles(eager);
   }
 
   setIsSync(isSync) {
     this.isSync = isSync;
-  }
-
-  init(eager = false) {
-    this.regenerateBundles(eager);
   }
 
   cached(iterable) {
@@ -273,6 +283,9 @@ class Localization {
    * @private
    */
   async formatWithFallback(keys, method) {
+    if (!this.bundles) {
+      throw new Error("Attempt to format on an uninitialized instance.");
+    }
     const translations = new Array(keys.length).fill(null);
     let hasAtLeastOneBundle = false;
 
@@ -312,6 +325,10 @@ class Localization {
     if (!this.isSync) {
       throw new Error("Can't use sync formatWithFallback when state is async.");
     }
+    if (!this.bundles) {
+      throw new Error("Attempt to format on an uninitialized instance.");
+    }
+
     const translations = new Array(keys.length).fill(null);
     let hasAtLeastOneBundle = false;
 
@@ -488,7 +505,9 @@ class Localization {
   }
 
   onChange() {
-    this.regenerateBundles(false);
+    if (this.bundles) {
+      this.regenerateBundles(false);
+    }
   }
 
   /**
@@ -641,8 +660,8 @@ function keysFromBundle(method, bundle, keys, translations) {
  * Helper function which allows us to construct a new
  * Localization from Localization.
  */
-var getLocalization = (resourceIds) => {
-  return new Localization(resourceIds);
+var getLocalization = () => {
+  return new Localization();
 };
 
 this.Localization = Localization;
