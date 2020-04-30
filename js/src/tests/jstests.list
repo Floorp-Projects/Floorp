@@ -438,19 +438,6 @@ skip script test262/intl402/ListFormat/constructor/constructor/proto-from-ctor-r
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1362154
 skip script test262/built-ins/String/prototype/replaceAll/searchValue-replacer-RegExp-call.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1610512
-skip script test262/intl402/NumberFormat/prototype/formatToParts/signDisplay-en-US.js
-skip script test262/intl402/NumberFormat/prototype/formatToParts/signDisplay-zh-TW.js
-skip script test262/intl402/NumberFormat/prototype/formatToParts/signDisplay-ja-JP.js
-skip script test262/intl402/NumberFormat/prototype/formatToParts/signDisplay-ko-KR.js
-skip script test262/intl402/NumberFormat/prototype/formatToParts/signDisplay-de-DE.js
-skip script test262/intl402/NumberFormat/prototype/format/signDisplay-en-US.js
-skip script test262/intl402/NumberFormat/prototype/format/signDisplay-zh-TW.js
-skip script test262/intl402/NumberFormat/prototype/format/signDisplay-ja-JP.js
-skip script test262/intl402/NumberFormat/prototype/format/signDisplay-ko-KR.js
-skip script test262/intl402/NumberFormat/prototype/format/signDisplay-de-DE.js
-skip script test262/intl402/NumberFormat/prototype/format/signDisplay-rounding.js
-
 # https://github.com/tc39/proposal-weakrefs/pull/187
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1629796
 skip script test262/built-ins/FinalizationRegistry/gc-has-one-chance-to-call-cleanupCallback.js
@@ -724,3 +711,25 @@ skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle-d
 
 # Tests expects RangeError, but should instead expect TypeError.
 skip script test262/intl402/NumberFormat/constructor-order.js
+
+# Need to be updated to match new output from ICU 67.
+skip script test262/intl402/NumberFormat/prototype/formatToParts/signDisplay-zh-TW.js
+skip script test262/intl402/NumberFormat/prototype/formatToParts/signDisplay-en-US.js
+skip script test262/intl402/NumberFormat/prototype/formatToParts/signDisplay-ko-KR.js
+skip script test262/intl402/NumberFormat/prototype/formatToParts/signDisplay-ja-JP.js
+skip script test262/intl402/NumberFormat/prototype/formatToParts/signDisplay-de-DE.js
+skip script test262/intl402/NumberFormat/prototype/formatToParts/signDisplay-currency-de-DE.js
+skip script test262/intl402/NumberFormat/prototype/formatToParts/signDisplay-currency-zh-TW.js
+skip script test262/intl402/NumberFormat/prototype/formatToParts/signDisplay-currency-ja-JP.js
+skip script test262/intl402/NumberFormat/prototype/formatToParts/signDisplay-currency-ko-KR.js
+skip script test262/intl402/NumberFormat/prototype/formatToParts/signDisplay-currency-en-US.js
+skip script test262/intl402/NumberFormat/prototype/format/signDisplay-en-US.js
+skip script test262/intl402/NumberFormat/prototype/format/signDisplay-zh-TW.js
+skip script test262/intl402/NumberFormat/prototype/format/signDisplay-ja-JP.js
+skip script test262/intl402/NumberFormat/prototype/format/signDisplay-ko-KR.js
+skip script test262/intl402/NumberFormat/prototype/format/signDisplay-de-DE.js
+skip script test262/intl402/NumberFormat/prototype/format/signDisplay-currency-de-DE.js
+skip script test262/intl402/NumberFormat/prototype/format/signDisplay-currency-zh-TW.js
+skip script test262/intl402/NumberFormat/prototype/format/signDisplay-currency-ja-JP.js
+skip script test262/intl402/NumberFormat/prototype/format/signDisplay-currency-ko-KR.js
+skip script test262/intl402/NumberFormat/prototype/format/signDisplay-currency-en-US.js
