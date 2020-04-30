@@ -39,6 +39,7 @@ gcloud:
 
   test-targets:
    - package org.mozilla.fenix.ui
+   - package org.mozilla.fenix.glean
 
   device:
    - model: Pixel2
