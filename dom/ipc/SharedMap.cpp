@@ -246,7 +246,7 @@ WritableSharedMap::WritableSharedMap() : SharedMap() {
 
 SharedMap* WritableSharedMap::GetReadOnly() {
   if (!mReadOnly) {
-    nsTArray<RefPtr<BlobImpl>> blobs(mBlobImpls);
+    nsTArray<RefPtr<BlobImpl>> blobs(mBlobImpls.Clone());
     mReadOnly =
         new SharedMap(ContentProcessMessageManager::Get()->GetParentObject(),
                       CloneMapFile(), MapSize(), std::move(blobs));
@@ -369,7 +369,7 @@ void WritableSharedMap::BroadcastChanges() {
   }
 
   if (mReadOnly) {
-    nsTArray<RefPtr<BlobImpl>> blobImpls(mBlobImpls);
+    nsTArray<RefPtr<BlobImpl>> blobImpls(mBlobImpls.Clone());
     mReadOnly->Update(CloneMapFile(), mMap.size(), std::move(blobImpls),
                       std::move(mChangedKeys));
   }

@@ -17,6 +17,7 @@
 #include "mozilla/dom/PContent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/WindowGlobalChild.h"
+#include "mozilla/ArrayAlgorithm.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Logging.h"
 
@@ -37,32 +38,32 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION(JSWindowActorProtocol, mURIMatcher)
 
 /* static */ already_AddRefed<JSWindowActorProtocol>
-JSWindowActorProtocol::FromIPC(const JSWindowActorInfo& aInfo) {
+JSWindowActorProtocol::FromIPC(JSWindowActorInfo&& aInfo) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsContentProcess());
 
-  RefPtr<JSWindowActorProtocol> proto = new JSWindowActorProtocol(aInfo.name());
+  RefPtr<JSWindowActorProtocol> proto =
+      new JSWindowActorProtocol(std::move(aInfo.name()));
   // Content processes cannot load chrome browsing contexts, so this flag is
   // irrelevant and not propagated.
   proto->mIncludeChrome = false;
   proto->mAllFrames = aInfo.allFrames();
-  proto->mMatches = aInfo.matches();
-  proto->mRemoteTypes = aInfo.remoteTypes();
-  proto->mMessageManagerGroups = aInfo.messageManagerGroups();
-  proto->mChild.mModuleURI = aInfo.url();
+  proto->mMatches = std::move(aInfo.matches());
+  proto->mRemoteTypes = std::move(aInfo.remoteTypes());
+  proto->mMessageManagerGroups = std::move(aInfo.messageManagerGroups());
+  proto->mChild.mModuleURI = std::move(aInfo.url());
 
-  proto->mChild.mEvents.SetCapacity(aInfo.events().Length());
-  for (auto& ipc : aInfo.events()) {
-    auto event = proto->mChild.mEvents.AppendElement();
-    event->mName.Assign(ipc.name());
-    event->mFlags.mCapture = ipc.capture();
-    event->mFlags.mInSystemGroup = ipc.systemGroup();
-    event->mFlags.mAllowUntrustedEvents = ipc.allowUntrusted();
-    if (ipc.passive()) {
-      event->mPassive.Construct(ipc.passive().value());
-    }
-  }
+  proto->mChild.mEvents =
+      TransformIntoNewArray(aInfo.events(), [](auto& ipc) -> EventDecl {
+        EventDecl event;
+        event.mName = std::move(ipc.name());
+        event.mFlags.mCapture = ipc.capture();
+        event.mFlags.mInSystemGroup = ipc.systemGroup();
+        event.mFlags.mAllowUntrustedEvents = ipc.allowUntrusted();
+        event.mPassive = ipc.passive();
+        return event;
+      });
 
-  proto->mChild.mObservers = aInfo.observers();
+  proto->mChild.mObservers = std::move(aInfo.observers());
   return proto.forget();
 }
 
@@ -84,9 +85,7 @@ JSWindowActorInfo JSWindowActorProtocol::ToIPC() {
     ipc->capture() = event.mFlags.mCapture;
     ipc->systemGroup() = event.mFlags.mInSystemGroup;
     ipc->allowUntrusted() = event.mFlags.mAllowUntrustedEvents;
-    if (event.mPassive.WasPassed()) {
-      ipc->passive() = Some(event.mPassive.Value());
-    }
+    ipc->passive() = event.mPassive;
   }
 
   info.observers() = mChild.mObservers;
@@ -99,7 +98,8 @@ JSWindowActorProtocol::FromWebIDLOptions(const nsACString& aName,
                                          ErrorResult& aRv) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
 
-  RefPtr<JSWindowActorProtocol> proto = new JSWindowActorProtocol(aName);
+  RefPtr<JSWindowActorProtocol> proto =
+      new JSWindowActorProtocol(nsCString{aName});
   proto->mAllFrames = aOptions.mAllFrames;
   proto->mIncludeChrome = aOptions.mIncludeChrome;
 
@@ -156,7 +156,7 @@ JSWindowActorProtocol::FromWebIDLOptions(const nsACString& aName,
               ? entry.mValue.mWantUntrusted.Value()
               : false;
       if (entry.mValue.mPassive.WasPassed()) {
-        evt->mPassive.Construct(entry.mValue.mPassive.Value());
+        evt->mPassive.emplace(entry.mValue.mPassive.Value());
       }
     }
   }
@@ -265,8 +265,10 @@ void JSWindowActorProtocol::RegisterListenersFor(EventTarget* aTarget) {
   EventListenerManager* elm = aTarget->GetOrCreateListenerManager();
 
   for (auto& event : mChild.mEvents) {
-    elm->AddEventListenerByType(EventListenerHolder(this), event.mName,
-                                event.mFlags, event.mPassive);
+    elm->AddEventListenerByType(
+        EventListenerHolder(this), event.mName, event.mFlags,
+        event.mPassive ? Optional<bool>{event.mPassive.value()}
+                       : Optional<bool>{});
   }
 }
 
@@ -457,15 +459,16 @@ void JSWindowActorService::UnregisterWindowActor(const nsACString& aName) {
 }
 
 void JSWindowActorService::LoadJSWindowActorInfos(
-    nsTArray<JSWindowActorInfo>& aInfos) {
+    nsTArray<JSWindowActorInfo>&& aInfos) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(XRE_IsContentProcess());
 
-  for (uint32_t i = 0, len = aInfos.Length(); i < len; i++) {
+  for (auto& info : aInfos) {
     // Create our JSWindowActorProtocol, register it in mDescriptors.
+    auto name = info.name();
     RefPtr<JSWindowActorProtocol> proto =
-        JSWindowActorProtocol::FromIPC(aInfos[i]);
-    mDescriptors.Put(aInfos[i].name(), RefPtr{proto});
+        JSWindowActorProtocol::FromIPC(std::move(info));
+    mDescriptors.Put(std::move(name), RefPtr{proto});
 
     // Register listeners for each chrome target.
     for (EventTarget* target : mChromeEventTargets) {
