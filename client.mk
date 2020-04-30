@@ -32,7 +32,7 @@ ifeq "$(CWD)" "/"
 CWD   := /.
 endif
 
-PYTHON ?= $(shell which python2.7 > /dev/null 2>&1 && echo python2.7 || echo python)
+PYTHON3 ?= python3
 
 ####################################
 # Load mozconfig Options
@@ -46,7 +46,7 @@ endif
 
 # Automatically add -jN to make flags if not defined. N defaults to number of cores.
 ifeq (,$(findstring -j,$(MOZ_MAKE_FLAGS)))
-  cores=$(shell $(PYTHON) -c 'import multiprocessing; print(multiprocessing.cpu_count())')
+  cores=$(shell $(PYTHON3) -c 'import multiprocessing; print(multiprocessing.cpu_count())')
   MOZ_MAKE_FLAGS += -j$(cores)
 endif
 
