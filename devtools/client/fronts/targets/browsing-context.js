@@ -113,6 +113,8 @@ class BrowsingContextTargetFront extends TargetMixin(
     return response;
   }
 
+  // TODO: This can be removed once FF77 is the release
+  // This is only kept to support older version. FF77+ uses watchTargets.
   listRemoteFrames() {
     return this.client.mainRoot.listRemoteFrames(this.browsingContextID);
   }

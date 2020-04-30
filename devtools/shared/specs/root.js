@@ -17,6 +17,8 @@ types.addDictType("root.listWorkers", {
 types.addDictType("root.listServiceWorkerRegistrations", {
   registrations: "array:serviceWorkerRegistration",
 });
+// TODO: This can be removed once FF77 is the release
+// This is only kept to support older version. FF77+ uses watchTargets.
 types.addDictType("root.listRemoteFrames", {
   frames: "array:frameDescriptor",
 });
@@ -99,6 +101,8 @@ const rootSpecPrototype = {
       },
     },
 
+    // TODO: This can be removed once FF77 is the release
+    // This is only kept to support older version. FF77+ uses watchTargets.
     listRemoteFrames: {
       request: {
         id: Arg(0, "number"),
