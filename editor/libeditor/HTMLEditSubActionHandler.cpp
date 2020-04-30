@@ -4730,7 +4730,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
             return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
           }
           if (error.Failed()) {
-            NS_WARNING("EditorBase::SplitNodeWithTransaction() failed");
+            NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
             return EditActionResult(error.StealNSResult());
           }
           curList = CreateNodeWithTransaction(
@@ -8197,7 +8197,7 @@ nsresult HTMLEditor::SplitTextNodesAtRangeEnd(
       }
       if (error.Failed()) {
         NS_WARNING_ASSERTION(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED),
-                             "EditorBase::SplitNodeWithTransaction() failed");
+                             "HTMLEditor::SplitNodeWithTransaction() failed");
         return error.StealNSResult();
       }
 
@@ -8917,7 +8917,7 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
         }
         if (error.Failed()) {
           NS_WARNING_ASSERTION(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED),
-                               "EditorBase::SplitNodeWithTransaction() failed");
+                               "HTMLEditor::SplitNodeWithTransaction() failed");
           return EditActionResult(error.StealNSResult());
         }
         pointToSplitParentDivOrP.SetToEndOf(newLeftDivOrP);
@@ -9115,7 +9115,7 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(Element& aListItem,
       }
       if (error.Failed()) {
         NS_WARNING_ASSERTION(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED),
-                             "EditorBase::SplitNodeWithTransaction() failed");
+                             "HTMLEditor::SplitNodeWithTransaction() failed");
         return error.StealNSResult();
       }
     }
@@ -10745,12 +10745,12 @@ nsresult HTMLEditor::LiftUpListItemElement(
     }
     if (error.Failed()) {
       NS_WARNING_ASSERTION(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED),
-                           "EditorBase::SplitNodeWithTransaction() failed");
+                           "HTMLEditor::SplitNodeWithTransaction() failed");
       return error.StealNSResult();
     }
     if (!maybeLeftListContent->IsElement()) {
       NS_WARNING(
-          "EditorBase::SplitNodeWithTransaction() didn't return left list "
+          "HTMLEditor::SplitNodeWithTransaction() didn't return left list "
           "element");
       return NS_ERROR_FAILURE;
     }
