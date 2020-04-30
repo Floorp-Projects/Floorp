@@ -1877,6 +1877,11 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_AllowPlugins>,
   return CheckOnlyOwningProcessCanSet(aSource);
 }
 
+bool BrowsingContext::CanSet(FieldIndex<IDX_IsSecure>, const bool& aIsSecure,
+                             ContentParent* aSource) {
+  return CheckOnlyOwningProcessCanSet(aSource);
+}
+
 bool BrowsingContext::CanSet(FieldIndex<IDX_WatchedByDevtools>,
                              const bool& aWatchedByDevtools,
                              ContentParent* aSource) {

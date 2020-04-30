@@ -721,6 +721,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_AllowPlugins>, const bool& aAllowPlugins,
               ContentParent* aSource);
+  bool CanSet(FieldIndex<IDX_IsSecure>, const bool& aIsSecure,
+              ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_WatchedByDevtools>, const bool& aWatchedByDevtools,
               ContentParent* aSource);
 
