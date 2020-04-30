@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1629390
+-->
+<head>
+  <title>Test for Bug 1629390</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1629390">Mozilla Bug 1629390</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 1629390 **/
+let headerNames = [
+  ['aÀªb', 'a\uFFFD\uFFFDb'],
+  ['Àaª', '\uFFFDa\uFFFD'],
+  ['Àªb', '\uFFFD\uFFFDb'],
+  ['\xEAa', '\uFFFDa'],
+  ['\xC2\x7F', '\uFFFD\x7F'],
+];
+for ([invalid, corrected] of headerNames) {
+  try {
+    new Headers([[invalid, '']]);
+  } catch(e) {
+    is(e.message, `Headers constructor: ${corrected} is an invalid header name.`);
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>
