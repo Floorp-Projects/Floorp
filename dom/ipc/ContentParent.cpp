@@ -6011,21 +6011,6 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateBrowsingContext(
   return IPC_OK();
 }
 
-bool ContentParent::CheckBrowsingContextOwnership(
-    CanonicalBrowsingContext* aBC, const char* aOperation) const {
-  if (!aBC->IsOwnedByProcess(ChildID())) {
-    MOZ_DIAGNOSTIC_ASSERT(ChildID() == aBC->GetInFlightProcessId(),
-                          "Attempt to modify a BrowsingContext from a child "
-                          "which doesn't own it");
-
-    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Warning,
-            ("ParentIPC: Trying to %s out of process context 0x%08" PRIx64,
-             aOperation, aBC->Id()));
-    return false;
-  }
-  return true;
-}
-
 bool ContentParent::CheckBrowsingContextEmbedder(CanonicalBrowsingContext* aBC,
                                                  const char* aOperation) const {
   if (!aBC->IsEmbeddedInProcess(ChildID())) {
