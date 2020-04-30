@@ -79,9 +79,9 @@ class AndroidDevice:
             # See android_emulator_pgo.py run_tests for more
             # details on why test_root must be /sdcard/tests
             # for android pgo due to Android 4.3.
-            self.device = ADBDevice(verbose=self.verbose,
-                                    logger_name="adb",
-                                    test_root='/sdcard/tests')
+            self.device = ADBDevice(
+                verbose=self.verbose, logger_name="adb", test_root="/sdcard/tests"
+            )
         except Exception:
             logger.error("Cannot initialize device")
             raise

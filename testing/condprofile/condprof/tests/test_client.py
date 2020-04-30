@@ -9,7 +9,7 @@ import tarfile
 
 from mozprofile.prefs import Preferences
 
-from condprof.client import get_profile, ROOT_URL
+from condprof.client import get_profile, TC_SERVICE, ROOT_URL
 from condprof.util import _DEFAULT_SERVER
 
 
@@ -52,6 +52,8 @@ class TestClient(unittest.TestCase):
             headers={"content-length": str(len(self.profile_data)), "ETag": "'12345'"},
             status=200,
         )
+
+        responses.add(responses.HEAD, TC_SERVICE, body="", status=200)
 
         secret = {"secret": {"username": "user", "password": "pass"}}
         secret = json.dumps(secret)
@@ -97,7 +99,7 @@ class TestClient(unittest.TestCase):
 
         # and do a single extra HEAD call, everything else is cached,
         # even the TC secret
-        self.assertEqual(len(responses.calls), 1)
+        self.assertEqual(len(responses.calls), 2)
 
         prefs_js = os.path.join(self.target, "prefs.js")
         prefs = Preferences.read_prefs(prefs_js)
