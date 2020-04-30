@@ -420,13 +420,13 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
         MOZ_KnownLive(*pointToInsert.GetContainerAsContent()), pointToInsert,
         SplitAtEdges::eAllowToCreateEmptyContainer);
     if (splitNodeResult.Failed()) {
-      NS_WARNING("EditorBase::SplitNodeDeepWithTransaction() failed");
+      NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
       return splitNodeResult.Rv();
     }
     pointToInsert = splitNodeResult.SplitPoint();
     if (!pointToInsert.IsSet()) {
       NS_WARNING(
-          "EditorBase::SplitNodeDeepWithTransaction() didn't return split "
+          "HTMLEditor::SplitNodeDeepWithTransaction() didn't return split "
           "point");
       return NS_ERROR_FAILURE;
     }
@@ -760,7 +760,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
       *linkElement, pointToPutCaret, SplitAtEdges::eDoNotCreateEmptyContainer);
   NS_WARNING_ASSERTION(
       splitLinkResult.Succeeded(),
-      "EditorBase::SplitNodeDeepWithTransaction() failed, but ignored");
+      "HTMLEditor::SplitNodeDeepWithTransaction() failed, but ignored");
   if (splitLinkResult.GetPreviousNode()) {
     EditorRawDOMPoint afterLeftLink(splitLinkResult.GetPreviousNode());
     if (afterLeftLink.AdvanceOffset()) {

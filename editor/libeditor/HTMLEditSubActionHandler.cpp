@@ -2063,7 +2063,7 @@ nsresult HTMLEditor::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
       }
       if (splitLinkNodeResult.Failed()) {
         NS_WARNING(
-            "EditorBase::SplitNodeDeepWithTransaction(SplitAtEdges::"
+            "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
             "eDoNotCreateEmptyContainer) failed");
         return splitLinkNodeResult.Rv();
       }
@@ -2197,7 +2197,7 @@ EditActionResult HTMLEditor::SplitMailCiteElements(
   }
   if (splitCiteNodeResult.Failed()) {
     NS_WARNING(
-        "EditorBase::SplitNodeDeepWithTransaction(SplitAtEdges::"
+        "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
         "eDoNotCreateEmptyContainer) failed");
     return EditActionIgnored(splitCiteNodeResult.Rv());
   }
@@ -5143,7 +5143,7 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (splitNodeResult.Failed()) {
-        NS_WARNING("EditorBase::SplitNodeDeepWithTransaction() failed");
+        NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
         return splitNodeResult.Rv();
       }
       EditorDOMPoint pointToInsertBRNode(splitNodeResult.SplitPoint());
@@ -6475,7 +6475,7 @@ SplitRangeOffFromNodeResult HTMLEditor::SplitRangeOffFromBlock(
     return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(splitAtStartResult.Succeeded(),
-                       "EditorBase::SplitNodeDeepWithTransaction(SplitAtEdges::"
+                       "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
                        "eDoNotCreateEmptyContainer) failed");
 
   // Split at after the end
@@ -6488,7 +6488,7 @@ SplitRangeOffFromNodeResult HTMLEditor::SplitRangeOffFromBlock(
     return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(splitAtEndResult.Succeeded(),
-                       "EditorBase::SplitNodeDeepWithTransaction(SplitAtEdges::"
+                       "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
                        "eDoNotCreateEmptyContainer) failed");
 
   return SplitRangeOffFromNodeResult(splitAtStartResult, splitAtEndResult);
@@ -6648,7 +6648,7 @@ nsresult HTMLEditor::CreateStyleForInsertText(AbstractRange& aAbstractRange) {
       }
       if (splitTextNodeResult.Failed()) {
         NS_WARNING(
-            "EditorBase::SplitNodeDeepWithTransaction(SplitAtEdges::"
+            "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
             "eAllowToCreateEmptyContainer) failed");
         return splitTextNodeResult.Rv();
       }
@@ -8480,14 +8480,14 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
       }
       if (splitEndInlineResult.Failed()) {
         NS_WARNING(
-            "EditorBase::SplitNodeDeepWithTransaction(SplitAtEdges::"
+            "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
             "eDoNotCreateEmptyContainer) failed");
         return splitEndInlineResult.Rv();
       }
       EditorRawDOMPoint splitPointAtEnd(splitEndInlineResult.SplitPoint());
       if (!splitPointAtEnd.IsSet()) {
         NS_WARNING(
-            "EditorBase::SplitNodeDeepWithTransaction(SplitAtEdges::"
+            "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
             "eDoNotCreateEmptyContainer) didn't return split point");
         return NS_ERROR_FAILURE;
       }
@@ -8508,7 +8508,7 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
     }
     if (splitStartInlineResult.Failed()) {
       NS_WARNING(
-          "EditorBase::SplitNodeDeepWithTransaction(SplitAtEdges::"
+          "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
           "eDoNotCreateEmptyContainer) failed");
       return splitStartInlineResult.Rv();
     }
@@ -8518,7 +8518,7 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
     EditorRawDOMPoint splitPointAtStart(splitStartInlineResult.SplitPoint());
     if (!splitPointAtStart.IsSet()) {
       NS_WARNING(
-          "EditorBase::SplitNodeDeepWithTransaction(SplitAtEdges::"
+          "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
           "eDoNotCreateEmptyContainer) didn't return split point");
       return NS_ERROR_FAILURE;
     }
@@ -8558,7 +8558,7 @@ nsresult HTMLEditor::SplitElementsAtEveryBRElement(
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (splitNodeResult.Failed()) {
-      NS_WARNING("EditorBase::SplitNodeDeepWithTransaction() failed");
+      NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
       return splitNodeResult.Rv();
     }
 
@@ -8703,7 +8703,7 @@ nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(Element& aHeader,
   }
   NS_WARNING_ASSERTION(
       splitHeaderResult.Succeeded(),
-      "EditorBase::SplitNodeDeepWithTransaction() failed, but ignored");
+      "HTMLEditor::SplitNodeDeepWithTransaction() failed, but ignored");
 
   // If the previous heading of split point is empty, put a padding <br>
   // element for empty last line into it.
@@ -9010,12 +9010,12 @@ nsresult HTMLEditor::SplitParagraph(
     return NS_ERROR_EDITOR_DESTROYED;
   }
   if (splitDivOrPResult.Failed()) {
-    NS_WARNING("EditorBase::SplitNodeDeepWithTransaction() failed");
+    NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
     return splitDivOrPResult.Rv();
   }
   if (!splitDivOrPResult.DidSplit()) {
     NS_WARNING(
-        "EditorBase::SplitNodeDeepWithTransaction() didn't split any nodes");
+        "HTMLEditor::SplitNodeDeepWithTransaction() didn't split any nodes");
     return NS_ERROR_FAILURE;
   }
 
@@ -9211,7 +9211,7 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(Element& aListItem,
   }
   NS_WARNING_ASSERTION(
       splitListItemResult.Succeeded(),
-      "EditorBase::SplitNodeDeepWithTransaction() failed, but ignored");
+      "HTMLEditor::SplitNodeDeepWithTransaction() failed, but ignored");
 
   // Hack: until I can change the damaged doc range code back to being
   // extra-inclusive, I have to manually detect certain list items that may be
@@ -9866,7 +9866,7 @@ SplitNodeResult HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction(
     return SplitNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(splitNodeResult.Succeeded(),
-                       "EditorBase::SplitNodeDeepWithTransaction(SplitAtEdges::"
+                       "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
                        "eAllowToCreateEmptyContainer) failed");
   return splitNodeResult;
 }
