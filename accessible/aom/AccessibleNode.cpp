@@ -87,12 +87,12 @@ void AccessibleNode::GetStates(nsTArray<nsString>& aStates) {
   }
 
   if (mStates) {
-    aStates = mStates->StringArray();
+    aStates = mStates->StringArray().Clone();
     return;
   }
 
   mStates = accService->GetStringStates(mIntl->State());
-  aStates = mStates->StringArray();
+  aStates = mStates->StringArray().Clone();
 }
 
 void AccessibleNode::GetAttributes(nsTArray<nsString>& aAttributes) {

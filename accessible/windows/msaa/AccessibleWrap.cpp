@@ -630,9 +630,9 @@ AccessibleWrap::get_accFocus(
 class AccessibleEnumerator final : public IEnumVARIANT {
  public:
   explicit AccessibleEnumerator(const nsTArray<Accessible*>& aArray)
-      : mArray(aArray), mCurIndex(0) {}
+      : mArray(aArray.Clone()), mCurIndex(0) {}
   AccessibleEnumerator(const AccessibleEnumerator& toCopy)
-      : mArray(toCopy.mArray), mCurIndex(toCopy.mCurIndex) {}
+      : mArray(toCopy.mArray.Clone()), mCurIndex(toCopy.mCurIndex) {}
   ~AccessibleEnumerator() {}
 
   // IUnknown
