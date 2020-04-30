@@ -118,8 +118,7 @@ PostMessageEvent::Run() {
     //       don't do that in other places it seems better to hold the line for
     //       now.  Long-term, we want HTML5 to address this so that we can
     //       be compliant while being safer.
-    if (!BasePrincipal::Cast(targetPrin)
-             ->EqualsIgnoringFPD(mProvidedPrincipal)) {
+    if (!targetPrin->Equals(mProvidedPrincipal)) {
       OriginAttributes sourceAttrs = mProvidedPrincipal->OriginAttributesRef();
       OriginAttributes targetAttrs = targetPrin->OriginAttributesRef();
 
