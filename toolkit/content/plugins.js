@@ -17,7 +17,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
  */
 navigator.plugins.refresh(false);
 
-RPMAddMessageListener("PluginList", function({ data: aPlugins }) {
+RPMSendQuery("RequestPlugins", {}).then(aPlugins => {
   var fragment = document.createDocumentFragment();
 
   // "Installed plugins"
@@ -195,5 +195,3 @@ RPMAddMessageListener("PluginList", function({ data: aPlugins }) {
 
   document.getElementById("outside").appendChild(fragment);
 });
-
-RPMSendAsyncMessage("RequestPlugins");

@@ -93,6 +93,9 @@ let RemotePageAccessManager = {
       RPMPrefIsLocked: ["security.tls.version.min"],
       RPMAddToHistogram: ["*"],
     },
+    "about:plugins": {
+      RPMSendQuery: ["RequestPlugins"],
+    },
     "about:privatebrowsing": {
       RPMSendAsyncMessage: [
         "OpenPrivateWindow",

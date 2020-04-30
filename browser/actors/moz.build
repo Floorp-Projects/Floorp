@@ -27,6 +27,8 @@ with Files("WebRTCChild.jsm"):
 
 FINAL_TARGET_FILES.actors += [
     'AboutNewTabChild.jsm',
+    'AboutPluginsChild.jsm',
+    'AboutPluginsParent.jsm',
     'AboutPrivateBrowsingChild.jsm',
     'AboutPrivateBrowsingParent.jsm',
     'AboutProtectionsChild.jsm',
