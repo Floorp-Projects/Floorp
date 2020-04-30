@@ -3885,7 +3885,7 @@ void Document::LocalizationLinkAdded(Element* aLinkElement) {
       return;
     }
     InitializeLocalization(resourceIds);
-    mDocumentL10n->TriggerInitialDocumentTranslation();
+    mDocumentL10n->TriggerInitialTranslation();
   } else {
     // Otherwise, we're still parsing the document.
     // In that case, add it to the pending list. This list
@@ -3944,18 +3944,18 @@ void Document::OnL10nResourceContainerParsed() {
   }
 }
 
-void Document::TriggerInitialDocumentTranslation() {
+void Document::TriggerInitialTranslation() {
   // Let's call it again, in case the resource
   // container has not been closed, and only
   // now we're closing the document.
   OnL10nResourceContainerParsed();
 
   if (mDocumentL10n) {
-    mDocumentL10n->TriggerInitialDocumentTranslation();
+    mDocumentL10n->TriggerInitialTranslation();
   }
 }
 
-void Document::InitialDocumentTranslationCompleted() {
+void Document::InitialTranslationCompleted() {
   if (mPendingInitialTranslation) {
     // This means we blocked the load event in LocalizationLinkAdded.  It's
     // important that the load blocker removal here be async, because our caller

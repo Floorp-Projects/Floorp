@@ -586,7 +586,7 @@ nsresult PrototypeDocumentContentSink::ResumeWalkInternal() {
   return MaybeDoneWalking();
 }
 
-void PrototypeDocumentContentSink::InitialDocumentTranslationCompleted() {
+void PrototypeDocumentContentSink::InitialTranslationCompleted() {
   MaybeDoneWalking();
 }
 
@@ -596,7 +596,7 @@ nsresult PrototypeDocumentContentSink::MaybeDoneWalking() {
   }
 
   if (mDocument->HasPendingInitialTranslation()) {
-    mDocument->TriggerInitialDocumentTranslation();
+    mDocument->TriggerInitialTranslation();
     return NS_OK;
   }
 

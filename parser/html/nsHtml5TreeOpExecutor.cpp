@@ -176,7 +176,7 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated) {
   }
 
   if (!destroying) {
-    mDocument->TriggerInitialDocumentTranslation();
+    mDocument->TriggerInitialTranslation();
 
     if (!mLayoutStarted) {
       // We never saw the body, and layout never got started. Force
@@ -244,7 +244,7 @@ nsHtml5TreeOpExecutor::SetParser(nsParserBase* aParser) {
   return NS_OK;
 }
 
-void nsHtml5TreeOpExecutor::InitialDocumentTranslationCompleted() {
+void nsHtml5TreeOpExecutor::InitialTranslationCompleted() {
   nsContentSink::StartLayout(false);
 }
 

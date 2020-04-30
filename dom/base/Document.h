@@ -3719,7 +3719,7 @@ class Document : public nsINode,
    * It triggers the initial translation of the
    * document.
    */
-  void TriggerInitialDocumentTranslation();
+  void TriggerInitialTranslation();
 
   /**
    * This method is called when the initial translation
@@ -3727,7 +3727,7 @@ class Document : public nsINode,
    *
    * It unblocks the load event if translation was blocking it.
    */
-  void InitialDocumentTranslationCompleted();
+  void InitialTranslationCompleted();
 
   /**
    * Returns whether the document allows localization.
