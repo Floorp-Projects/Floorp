@@ -122,7 +122,7 @@ UrlClassifierFeatureBase::GetTables(nsIUrlClassifierFeature::listType aListType,
     return NS_ERROR_INVALID_ARG;
   }
 
-  aTables = mTables[aListType];
+  aTables = mTables[aListType].Clone();
   return NS_OK;
 }
 
