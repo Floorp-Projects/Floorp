@@ -635,10 +635,7 @@ class ExtensionData {
       this.manifest.permissions
     );
 
-    if (
-      this.manifest.devtools_page &&
-      !this.manifest.optional_permissions.includes("devtools")
-    ) {
+    if (this.manifest.devtools_page) {
       permissions.add("devtools");
     }
 
@@ -2436,18 +2433,6 @@ class Extension extends ExtensionData {
           });
           this.permissions.add(PRIVATE_ALLOWED_PERMISSION);
         }
-      }
-
-      // Ensure devtools permission is set
-      if (
-        this.manifest.devtools_page &&
-        !this.manifest.optional_permissions.includes("devtools")
-      ) {
-        ExtensionPermissions.add(this.id, {
-          permissions: ["devtools"],
-          origins: [],
-        });
-        this.permissions.add("devtools");
       }
 
       GlobalManager.init(this);
