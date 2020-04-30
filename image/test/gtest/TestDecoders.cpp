@@ -653,6 +653,26 @@ TEST_F(ImageDecoders, WebPTransparentNoAlphaHeaderSingleChunk) {
   CheckDecoderSingleChunk(TransparentNoAlphaHeaderWebPTestCase());
 }
 
+TEST_F(ImageDecoders, AVIFSingleChunk) {
+  CheckDecoderSingleChunk(GreenAVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFDelayedChunk) {
+  CheckDecoderDelayedChunk(GreenAVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFMultiChunk) {
+  CheckDecoderMultiChunk(GreenAVIFTestCase());
+}
+
+TEST_F(ImageDecoders, AVIFLargeMultiChunk) {
+  CheckDecoderMultiChunk(LargeAVIFTestCase(), /* aChunkSize */ 64);
+}
+
+TEST_F(ImageDecoders, AVIFDownscaleDuringDecode) {
+  CheckDownscaleDuringDecode(DownscaledAVIFTestCase());
+}
+
 TEST_F(ImageDecoders, AnimatedGIFSingleChunk) {
   CheckDecoderSingleChunk(GreenFirstFrameAnimatedGIFTestCase());
 }
