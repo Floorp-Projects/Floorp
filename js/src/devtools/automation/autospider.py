@@ -580,7 +580,7 @@ if args.variant == 'msan':
 
 # Generate stacks from minidumps.
 if use_minidump:
-    venv_python = os.path.join(OBJDIR, "_virtualenvs", "init", "bin", "python")
+    venv_python = os.path.join(OBJDIR, "_virtualenvs", "init_py3", "bin", "python3")
     run_command([
         venv_python,
         os.path.join(DIR.source, "testing/mozbase/mozcrash/mozcrash/mozcrash.py"),
