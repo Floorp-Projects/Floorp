@@ -28,7 +28,7 @@ const kStateHover = 0x00000004; // NS_EVENT_STATE_HOVER
 
 // Duplicated in SelectParent.jsm
 // Please keep these lists in sync.
-const SUPPORTED_PROPERTIES = [
+const SUPPORTED_OPTION_OPTGROUP_PROPERTIES = [
   "direction",
   "color",
   "background-color",
@@ -37,6 +37,12 @@ const SUPPORTED_PROPERTIES = [
   "font-weight",
   "font-size",
   "font-style",
+];
+
+const SUPPORTED_SELECT_PROPERTIES = [
+  ...SUPPORTED_OPTION_OPTGROUP_PROPERTIES,
+  "scrollbar-width",
+  "scrollbar-color",
 ];
 
 // A process global state for whether or not content thinks
@@ -124,8 +130,8 @@ SelectContentHelper.prototype = {
       options,
       rect,
       selectedIndex: this.element.selectedIndex,
-      style: supportedStyles(computedStyles),
-      defaultStyle: supportedStyles(defaultStyles),
+      style: supportedStyles(computedStyles, SUPPORTED_SELECT_PROPERTIES),
+      defaultStyle: supportedStyles(defaultStyles, SUPPORTED_SELECT_PROPERTIES),
     });
     this._clearPseudoClassStyles();
     gOpen = true;
@@ -193,8 +199,8 @@ SelectContentHelper.prototype = {
     this.actor.sendAsyncMessage("Forms:UpdateDropDown", {
       options: this._buildOptionList(),
       selectedIndex: this.element.selectedIndex,
-      style: supportedStyles(computedStyles),
-      defaultStyle: supportedStyles(defaultStyles),
+      style: supportedStyles(computedStyles, SUPPORTED_SELECT_PROPERTIES),
+      defaultStyle: supportedStyles(defaultStyles, SUPPORTED_SELECT_PROPERTIES),
     });
     this._clearPseudoClassStyles();
   },
@@ -330,7 +336,7 @@ SelectContentHelper.prototype = {
         }
         break;
       case "transitionend":
-        if (SUPPORTED_PROPERTIES.includes(event.propertyName)) {
+        if (SUPPORTED_SELECT_PROPERTIES.includes(event.propertyName)) {
           this._updateTimer.arm();
         }
         break;
@@ -342,16 +348,16 @@ function getComputedStyles(element) {
   return element.ownerGlobal.getComputedStyle(element);
 }
 
-function supportedStyles(cs) {
+function supportedStyles(cs, supportedProps) {
   let styles = {};
-  for (let property of SUPPORTED_PROPERTIES) {
+  for (let property of supportedProps) {
     styles[property] = cs.getPropertyValue(property);
   }
   return styles;
 }
 
 function supportedStylesEqual(styles, otherStyles) {
-  for (let property of SUPPORTED_PROPERTIES) {
+  for (let property in styles) {
     if (styles[property] !== otherStyles[property]) {
       return false;
     }
@@ -360,7 +366,7 @@ function supportedStylesEqual(styles, otherStyles) {
 }
 
 function uniqueStylesIndex(cs, uniqueStyles) {
-  let styles = supportedStyles(cs);
+  let styles = supportedStyles(cs, SUPPORTED_OPTION_OPTGROUP_PROPERTIES);
   for (let i = uniqueStyles.length; i--; ) {
     if (supportedStylesEqual(uniqueStyles[i], styles)) {
       return i;
