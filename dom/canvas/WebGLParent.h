@@ -12,7 +12,6 @@
 
 namespace mozilla {
 
-class HostWebGLCommandSink;
 class HostWebGLContext;
 
 namespace layers {
