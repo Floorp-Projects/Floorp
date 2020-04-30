@@ -93,15 +93,6 @@ impl Store {
         Ok(result)
     }
 
-    /// Wipe all local data without syncing or returning any information about
-    /// the deletion.
-    pub fn wipe_all(&self) -> Result<()> {
-        let tx = self.db.unchecked_transaction()?;
-        api::wipe_all(&tx)?;
-        tx.commit()?;
-        Ok(())
-    }
-
     /// Closes the store and its database connection. See the docs for
     /// `StorageDb::close` for more details on when this can fail.
     pub fn close(self) -> result::Result<(), (Store, Error)> {

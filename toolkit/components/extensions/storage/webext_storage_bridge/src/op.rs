@@ -34,8 +34,6 @@ pub enum StorageOp {
     Remove { ext_id: String, keys: JsonValue },
     /// Clear all keys and values for an extension.
     Clear { ext_id: String },
-    /// Clear all keys and values for all extensions.
-    WipeAll,
 }
 
 impl StorageOp {
@@ -47,7 +45,6 @@ impl StorageOp {
             StorageOp::Set { .. } => "webext_storage::set",
             StorageOp::Remove { .. } => "webext_storage::remove",
             StorageOp::Clear { .. } => "webext_storage::clear",
-            StorageOp::WipeAll => "webext_storage::wipe_all",
         }
     }
 }
@@ -145,10 +142,6 @@ impl StorageTask {
             }
             StorageOp::Clear { ext_id } => {
                 StorageResult::with_changes(self.store()?.get()?.clear(&ext_id)?)
-            }
-            StorageOp::WipeAll => {
-                self.store()?.get()?.wipe_all()?;
-                Ok(StorageResult::default())
             }
         }?)
     }

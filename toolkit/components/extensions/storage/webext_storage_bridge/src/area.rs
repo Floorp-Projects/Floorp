@@ -176,7 +176,7 @@ impl StorageSyncArea {
             callback: *const mozIExtensionStorageCallback
         )
     );
-    /// Removes all keys and values for the specified extension.
+    /// Removes all keys and values.
     fn clear(&self, ext_id: &nsACString, callback: &mozIExtensionStorageCallback) -> Result<()> {
         self.dispatch(
             StorageOp::Clear {
@@ -184,16 +184,6 @@ impl StorageSyncArea {
             },
             callback,
         )
-    }
-
-    xpcom_method!(
-        wipe_all => WipeAll(
-            callback: *const mozIExtensionStorageCallback
-        )
-    );
-    /// Removes all keys and values for all extensions.
-    fn wipe_all(&self, callback: &mozIExtensionStorageCallback) -> Result<()> {
-        self.dispatch(StorageOp::WipeAll, callback)
     }
 
     xpcom_method!(teardown => Teardown(callback: *const mozIExtensionStorageCallback));
