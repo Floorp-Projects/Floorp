@@ -37,7 +37,7 @@ namespace {
 
 class AsyncMessageToChild : public Runnable {
  public:
-  AsyncMessageToChild(const JSWindowActorMessageMeta& aMetadata,
+  AsyncMessageToChild(const JSActorMessageMeta& aMetadata,
                       ipc::StructuredCloneData&& aData,
                       ipc::StructuredCloneData&& aStack,
                       WindowGlobalParent* aManager)
@@ -57,7 +57,7 @@ class AsyncMessageToChild : public Runnable {
   }
 
  private:
-  JSWindowActorMessageMeta mMetadata;
+  JSActorMessageMeta mMetadata;
   ipc::StructuredCloneData mData;
   ipc::StructuredCloneData mStack;
   RefPtr<WindowGlobalParent> mManager;
@@ -65,7 +65,7 @@ class AsyncMessageToChild : public Runnable {
 
 }  // anonymous namespace
 
-void JSWindowActorParent::SendRawMessage(const JSWindowActorMessageMeta& aMeta,
+void JSWindowActorParent::SendRawMessage(const JSActorMessageMeta& aMeta,
                                          ipc::StructuredCloneData&& aData,
                                          ipc::StructuredCloneData&& aStack,
                                          ErrorResult& aRv) {
@@ -115,26 +115,25 @@ CanonicalBrowsingContext* JSWindowActorParent::GetBrowsingContext(
 }
 
 void JSWindowActorParent::StartDestroy() {
-  JSWindowActor::StartDestroy();
+  JSActor::StartDestroy();
   mCanSend = false;
 }
 
 void JSWindowActorParent::AfterDestroy() {
-  JSWindowActor::AfterDestroy();
+  JSActor::AfterDestroy();
   mManager = nullptr;
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(JSWindowActorParent, JSWindowActor, mManager)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(JSWindowActorParent, JSActor, mManager)
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(JSWindowActorParent,
-                                               JSWindowActor)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(JSWindowActorParent, JSActor)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JSWindowActorParent)
-NS_INTERFACE_MAP_END_INHERITING(JSWindowActor)
+NS_INTERFACE_MAP_END_INHERITING(JSActor)
 
-NS_IMPL_ADDREF_INHERITED(JSWindowActorParent, JSWindowActor)
-NS_IMPL_RELEASE_INHERITED(JSWindowActorParent, JSWindowActor)
+NS_IMPL_ADDREF_INHERITED(JSWindowActorParent, JSActor)
+NS_IMPL_RELEASE_INHERITED(JSWindowActorParent, JSActor)
 
 }  // namespace dom
 }  // namespace mozilla

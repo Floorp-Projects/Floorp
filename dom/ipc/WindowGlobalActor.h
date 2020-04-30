@@ -13,7 +13,7 @@
 #include "mozilla/ErrorResult.h"
 #include "nsIURI.h"
 #include "nsString.h"
-#include "mozilla/dom/JSWindowActor.h"
+#include "mozilla/dom/JSActor.h"
 
 namespace mozilla {
 namespace dom {
@@ -34,7 +34,7 @@ class WindowGlobalActor : public nsISupports {
                       ErrorResult& aRv);
   virtual nsIURI* GetDocumentURI() = 0;
   virtual const nsAString& GetRemoteType() = 0;
-  virtual JSWindowActor::Type GetSide() = 0;
+  virtual JSActor::Type GetSide() = 0;
   virtual dom::BrowsingContext* BrowsingContext() = 0;
 };
 
