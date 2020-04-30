@@ -28,7 +28,7 @@ class Options:
         "--flavor": {
             "choices": FLAVORS,
             "metavar": "{{{}}}".format(", ".join(FLAVORS)),
-            "default": None,
+            "default": "script",
             "help": "Only run tests of this flavor.",
         },
         "tests": {

@@ -5,6 +5,7 @@ import logging
 import contextlib
 import sys
 import os
+import random
 
 from six import StringIO
 
@@ -73,3 +74,25 @@ def install_package(virtualenv_manager, package):
             # already installed in this venv, we can skip
             return
     virtualenv_manager._run_pip(["install", package])
+
+
+def build_test_list(tests, randomized=False):
+    if isinstance(tests, str):
+        tests = [tests]
+    res = []
+    for test in tests:
+        if os.path.isfile(test):
+            res.append(test)
+        elif os.path.isdir(test):
+            for root, dirs, files in os.walk(test):
+                for file in files:
+                    if not file.startswith("perftest"):
+                        continue
+                    res.append(os.path.join(root, file))
+    if not randomized:
+        res.sort()
+    else:
+        # random shuffling is used to make sure
+        # we don't always run tests in the same order
+        random.shuffle(res)
+    return res

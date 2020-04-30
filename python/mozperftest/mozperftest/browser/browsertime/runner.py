@@ -12,6 +12,7 @@ import shutil
 from mozbuild.util import mkdir
 import mozpack.path as mozpath
 
+from mozperftest.utils import install_package
 from mozperftest.browser.noderunner import NodeRunner
 from mozperftest.browser.browsertime.setup import (
     system_prerequisites,
@@ -106,8 +107,7 @@ class BrowsertimeRunner(NodeRunner):
 
         # installing Python deps on the fly
         for dep in ("Pillow==%s" % PILLOW_VERSION, "pyssim==%s" % PYSSIM_VERSION):
-            if self._need_install(dep):
-                self.virtualenv_manager._run_pip(["install", dep])
+            install_package(self.virtualenv_manager, dep)
 
         # check if the browsertime package has been deployed correctly
         # for this we just check for the browsertime directory presence
