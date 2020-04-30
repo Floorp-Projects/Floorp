@@ -2265,7 +2265,7 @@ already_AddRefed<a11y::Accessible> nsChildView::GetDocumentAccessible() {
 class WidgetsReleaserRunnable final : public mozilla::Runnable {
  public:
   explicit WidgetsReleaserRunnable(nsTArray<nsCOMPtr<nsIWidget>>&& aWidgetArray)
-      : mozilla::Runnable("WidgetsReleaserRunnable"), mWidgetArray(aWidgetArray) {}
+      : mozilla::Runnable("WidgetsReleaserRunnable"), mWidgetArray(std::move(aWidgetArray)) {}
 
   // Do nothing; all this runnable does is hold a reference the widgets in
   // mWidgetArray, and those references will be dropped when this runnable

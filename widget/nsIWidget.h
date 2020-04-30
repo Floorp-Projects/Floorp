@@ -1030,7 +1030,7 @@ class nsIWidget : public nsISupports {
     uintptr_t mWindowID;  // e10s specific, the unique plugin port id
     bool mVisible;        // e10s specific, widget visibility
     LayoutDeviceIntRect mBounds;
-    nsTArray<LayoutDeviceIntRect> mClipRegion;
+    CopyableTArray<LayoutDeviceIntRect> mClipRegion;
   };
 
   /**
