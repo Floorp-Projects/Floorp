@@ -100,6 +100,7 @@ class DefaultQuickSettingsController(
                     val newPermissions = permissions.toggle(featureToggled).also {
                         handlePermissionsChange(it)
                     }
+                    sitePermissions = newPermissions
 
                     quickSettingsStore.dispatch(
                         WebsitePermissionAction.TogglePermission(
