@@ -1676,6 +1676,15 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
 
   mConsoleService = nullptr;
 
+  // Destroy our JSProcessActors, and reject any pending queries.
+  nsRefPtrHashtable<nsCStringHashKey, JSProcessActorParent> processActors;
+  mProcessActors.SwapElements(processActors);
+  for (auto iter = processActors.Iter(); !iter.Done(); iter.Next()) {
+    iter.Data()->RejectPendingQueries();
+    iter.Data()->AfterDestroy();
+  }
+  mProcessActors.Clear();
+
   if (obs) {
     RefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
 
@@ -6450,9 +6459,9 @@ void ContentParent::ReceiveRawMessage(const JSActorMessageMeta& aMeta,
 already_AddRefed<JSProcessActorParent> ContentParent::GetActor(
     const nsACString& aName, ErrorResult& aRv) {
   if (!CanSend()) {
-    aRv.ThrowInvalidStateError(nsPrintfCString("Cannot get actor '%s': content parent is ready to communicate.",
-      PromiseFlatCString(aName).get()
-    ));
+    aRv.ThrowInvalidStateError(nsPrintfCString(
+        "Cannot get actor '%s': content parent is ready to communicate.",
+        PromiseFlatCString(aName).get()));
     return nullptr;
   }
 
