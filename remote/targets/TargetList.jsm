@@ -19,7 +19,7 @@ const { MainProcessTarget } = ChromeUtils.import(
   "chrome://remote/content/targets/MainProcessTarget.jsm"
 );
 const { TabObserver } = ChromeUtils.import(
-  "chrome://remote/content/targets/TabObserver.jsm"
+  "chrome://remote/content/observers/TargetObserver.jsm"
 );
 
 class TargetList {
