@@ -72,7 +72,7 @@ if CONFIG['MOZ_BUILD_APP'].startswith('comm/'):
 
 # We run shlibsign as part of packaging, not build.
 gyp_vars['sign_libs'] = 0
-gyp_vars['python'] = CONFIG['PYTHON']
+gyp_vars['python'] = CONFIG['PYTHON3']
 # The NSS gyp files do not have a default for this.
 gyp_vars['nss_dist_dir'] = '$PRODUCT_DIR/dist'
 # NSS wants to put public headers in $nss_dist_dir/public/nss by default,
