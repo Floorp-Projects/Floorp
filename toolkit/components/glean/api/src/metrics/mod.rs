@@ -19,6 +19,7 @@ mod ping;
 mod string;
 mod string_list;
 mod timespan;
+mod timing_distribution;
 mod uuid;
 
 pub use self::boolean::BooleanMetric;
@@ -28,6 +29,7 @@ pub use self::ping::Ping;
 pub use self::string::StringMetric;
 pub use self::string_list::StringListMetric;
 pub use self::timespan::TimespanMetric;
+pub use self::timing_distribution::{TimerId, TimingDistributionMetric};
 pub use self::uuid::UuidMetric;
 
 /// An instant in time.
