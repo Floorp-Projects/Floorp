@@ -1187,19 +1187,6 @@ mozilla::ipc::IPCResult BrowserChild::RecvUpdateDimensions(
                         screenRect.y + mClientOffset.y + mChromeOffset.y,
                         screenSize.width, screenSize.height, true);
 
-  // For our devtools Responsive Design Mode, we need to send a special
-  // event to indicate that we've finished processing a frame size change.
-  // This is used by RDM to respond correctly to changes to full zoom,
-  // which also change the window size.
-  RefPtr<Document> doc = GetTopLevelDocument();
-  BrowsingContext* bc = doc ? doc->GetBrowsingContext() : nullptr;
-  if (bc && bc->InRDMPane()) {
-    RefPtr<AsyncEventDispatcher> dispatcher = new AsyncEventDispatcher(
-        doc, NS_LITERAL_STRING("mozupdatedremoteframedimensions"),
-        CanBubble::eYes, ChromeOnlyDispatch::eYes);
-    dispatcher->PostDOMEvent();
-  }
-
   RecvSafeAreaInsetsChanged(mPuppetWidget->GetSafeAreaInsets());
 
   return IPC_OK();
