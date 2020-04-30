@@ -1595,6 +1595,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSuspendedDoc)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentStoragePrincipal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentIntrinsicStoragePrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDoc)
 
   // Traverse stuff from nsPIDOMWindow
@@ -1626,6 +1627,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSuspendedDoc)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentPrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentStoragePrincipal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentIntrinsicStoragePrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDoc)
 
   // Unlink stuff from nsPIDOMWindow
@@ -2065,6 +2067,8 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
              "mDocumentPrincipal prematurely set!");
   MOZ_ASSERT(mDocumentStoragePrincipal == nullptr,
              "mDocumentStoragePrincipal prematurely set!");
+  MOZ_ASSERT(mDocumentIntrinsicStoragePrincipal == nullptr,
+             "mDocumentIntrinsicStoragePrincipal prematurely set!");
   MOZ_ASSERT(aDocument);
 
   // Bail out early if we're in process of closing down the window.
@@ -2755,6 +2759,7 @@ void nsGlobalWindowOuter::DetachFromDocShell(bool aIsBeingDiscarded) {
     // Remember the document's principal and URI.
     mDocumentPrincipal = mDoc->NodePrincipal();
     mDocumentStoragePrincipal = mDoc->EffectiveStoragePrincipal();
+    mDocumentIntrinsicStoragePrincipal = mDoc->IntrinsicStoragePrincipal();
     mDocumentURI = mDoc->GetDocumentURI();
 
     // Release our document reference
@@ -3022,6 +3027,29 @@ nsIPrincipal* nsGlobalWindowOuter::GetEffectiveStoragePrincipal() {
 
   if (objPrincipal) {
     return objPrincipal->GetEffectiveStoragePrincipal();
+  }
+
+  return nullptr;
+}
+
+nsIPrincipal* nsGlobalWindowOuter::IntrinsicStoragePrincipal() {
+  if (mDoc) {
+    // If we have a document, get the principal from the document
+    return mDoc->IntrinsicStoragePrincipal();
+  }
+
+  if (mDocumentIntrinsicStoragePrincipal) {
+    return mDocumentIntrinsicStoragePrincipal;
+  }
+
+  // If we don't have a storage principal and we don't have a document we ask
+  // the parent window for the storage principal.
+
+  nsCOMPtr<nsIScriptObjectPrincipal> objPrincipal =
+      do_QueryInterface(GetInProcessParentInternal());
+
+  if (objPrincipal) {
+    return objPrincipal->IntrinsicStoragePrincipal();
   }
 
   return nullptr;
