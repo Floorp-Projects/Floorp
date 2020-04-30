@@ -33,6 +33,12 @@
 #include "ProcessUtils.h"
 #include "SocketProcessBridgeParent.h"
 
+#if defined(XP_WIN)
+#  include <process.h>
+#else
+#  include <unistd.h>
+#endif
+
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 #  include "mozilla/Sandbox.h"
 #endif
@@ -156,7 +162,7 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvRequestMemoryReport(
     const uint32_t& aGeneration, const bool& aAnonymize,
     const bool& aMinimizeMemoryUsage,
     const Maybe<ipc::FileDescriptor>& aDMDFile) {
-  nsPrintfCString processName("SocketProcess");
+  nsPrintfCString processName("Socket (pid %u)", (unsigned)getpid());
 
   mozilla::dom::MemoryReportRequestClient::Start(
       aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile, processName,
