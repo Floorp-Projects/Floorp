@@ -176,7 +176,7 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated) {
   }
 
   if (!destroying) {
-    mDocument->TriggerInitialTranslation();
+    mDocument->OnParsingCompleted();
 
     if (!mLayoutStarted) {
       // We never saw the body, and layout never got started. Force
