@@ -17,7 +17,7 @@ Test auto selector
           "target_tasks_method": "try_auto",
           "try_mode": "try_auto",
           "try_task_config": {
-              "optimize-strategies": "taskgraph.optimize:tryselect.bugbug_debug"
+              "optimize-strategies": "taskgraph.optimize:tryselect.bugbug_reduced"
           }
       },
       "version": 2
@@ -37,7 +37,7 @@ Test auto selector
           "target_tasks_method": "try_auto",
           "try_mode": "try_auto",
           "try_task_config": {
-              "optimize-strategies": "taskgraph.optimize:tryselect.bugbug_debug"
+              "optimize-strategies": "taskgraph.optimize:tryselect.bugbug_reduced"
           }
       },
       "version": 2
@@ -56,7 +56,7 @@ Test auto selector
           "target_tasks_method": "try_auto",
           "try_mode": "try_auto",
           "try_task_config": {
-              "optimize-strategies": "taskgraph.optimize:tryselect.bugbug_debug"
+              "optimize-strategies": "taskgraph.optimize:tryselect.bugbug_reduced"
           }
       },
       "version": 2
