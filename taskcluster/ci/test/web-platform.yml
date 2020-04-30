@@ -95,8 +95,9 @@ web-platform-tests-backlog:
             default: 3
     max-run-time:
         by-test-platform:
-            android-em-7.0-x86_64/debug: 7200
+            .*/debug: 7200
             default: 3600
+    variants: []
     e10s: true
     run-on-projects: ['mozilla-central']
     tier: 2
@@ -152,6 +153,7 @@ web-platform-tests-reftest-backlog:
             windows.*-(32|64)(-qr)?/debug: 2
             android.*: 2
             default: 1
+    variants: []
     e10s: true
     run-on-projects: ['mozilla-central']
     tier: 2
