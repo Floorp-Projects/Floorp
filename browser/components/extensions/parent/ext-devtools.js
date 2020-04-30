@@ -29,9 +29,7 @@ function getDevToolsPrefBranchName(extensionId) {
 }
 
 /**
- * Retrieve the devtools target for the devtools extension proxy context
- * (lazily cloned from the target of the toolbox associated to the context
- * the first time that it is accessed).
+ * Retrieve the tabId for the given devtools toolbox.
  *
  * @param {Toolbox} toolbox
  *   A devtools toolbox instance.
@@ -257,6 +255,7 @@ class DevToolsPageDefinition {
       if (this.devtoolsPageForToolbox.size === 0) {
         DevToolsShim.off("theme-changed", this.onThemeChanged);
       }
+      this.extension.emit("devtools-page-shutdown", toolbox);
     }
   }
 
@@ -311,11 +310,33 @@ this.devtools = class extends ExtensionAPI {
   constructor(extension) {
     super(extension);
 
+    this._initialized = false;
+
     // DevToolsPageDefinition instance (created in onManifestEntry).
     this.pageDefinition = null;
 
     this.onToolboxCreated = this.onToolboxCreated.bind(this);
     this.onToolboxDestroy = this.onToolboxDestroy.bind(this);
+
+    /* eslint-disable mozilla/balanced-listeners */
+    extension.on("add-permissions", (ignoreEvent, permissions) => {
+      if (permissions.permissions.includes("devtools")) {
+        this._initialize();
+      }
+    });
+    extension.on("remove-permissions", (ignoreEvent, permissions) => {
+      Services.prefs.setBoolPref(
+        `${getDevToolsPrefBranchName(extension.id)}.enabled`,
+        false
+      );
+      if (permissions.permissions.includes("devtools")) {
+        this._uninitialize();
+      }
+    });
+  }
+
+  onManifestEntry() {
+    this._initialize();
   }
 
   static onUninstall(extensionId) {
@@ -327,8 +348,12 @@ this.devtools = class extends ExtensionAPI {
     prefBranch.deleteBranch("");
   }
 
-  onManifestEntry(entryName) {
+  _initialize() {
     const { extension } = this;
+
+    if (!extension.hasPermission("devtools") || this._initialized) {
+      return;
+    }
 
     this.initDevToolsPref();
 
@@ -346,9 +371,17 @@ this.devtools = class extends ExtensionAPI {
 
     DevToolsShim.on("toolbox-created", this.onToolboxCreated);
     DevToolsShim.on("toolbox-destroy", this.onToolboxDestroy);
+    this._initialized = true;
   }
 
-  onShutdown() {
+  _uninitialize() {
+    // devtoolsPrefBranch is set in onManifestEntry, and nullified
+    // later in onShutdown.  If it isn't set, then onManifestEntry
+    // did not initialize devtools for the extension.
+    if (!this._initialized) {
+      return;
+    }
+
     DevToolsShim.off("toolbox-created", this.onToolboxCreated);
     DevToolsShim.off("toolbox-destroy", this.onToolboxDestroy);
 
@@ -362,6 +395,11 @@ this.devtools = class extends ExtensionAPI {
     }
 
     this.uninitDevToolsPref();
+    this._initialized = false;
+  }
+
+  onShutdown() {
+    this._uninitialize();
   }
 
   getAPI(context) {
