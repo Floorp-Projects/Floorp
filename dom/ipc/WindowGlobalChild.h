@@ -23,7 +23,7 @@ class BrowsingContext;
 class WindowContext;
 class WindowGlobalParent;
 class JSWindowActorChild;
-class JSActorMessageMeta;
+class JSWindowActorMessageMeta;
 class BrowserChild;
 
 /**
@@ -89,7 +89,7 @@ class WindowGlobalChild final : public WindowGlobalActor,
   // |nullptr| if the actor has been torn down, or is in-process.
   already_AddRefed<BrowserChild> GetBrowserChild();
 
-  void ReceiveRawMessage(const JSActorMessageMeta& aMeta,
+  void ReceiveRawMessage(const JSWindowActorMessageMeta& aMeta,
                          ipc::StructuredCloneData&& aData,
                          ipc::StructuredCloneData&& aStack);
 
@@ -114,10 +114,10 @@ class WindowGlobalChild final : public WindowGlobalActor,
 
  protected:
   const nsAString& GetRemoteType() override;
-  JSActor::Type GetSide() override { return JSActor::Type::Child; }
+  JSWindowActor::Type GetSide() override { return JSWindowActor::Type::Child; }
 
   // IPC messages
-  mozilla::ipc::IPCResult RecvRawMessage(const JSActorMessageMeta& aMeta,
+  mozilla::ipc::IPCResult RecvRawMessage(const JSWindowActorMessageMeta& aMeta,
                                          const ClonedMessageData& aData,
                                          const ClonedMessageData& aStack);
 

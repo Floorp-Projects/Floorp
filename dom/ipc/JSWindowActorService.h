@@ -4,32 +4,35 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_JSWindowActorProtocol_h
-#define mozilla_dom_JSWindowActorProtocol_h
+#ifndef mozilla_dom_JSWindowActorService_h
+#define mozilla_dom_JSWindowActorService_h
 
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/ErrorResult.h"
 #include "nsIURI.h"
+#include "nsRefPtrHashtable.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "mozilla/dom/JSWindowActor.h"
+
 #include "nsIObserver.h"
 #include "nsIDOMEventListener.h"
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/extensions/WebExtensionContentScript.h"
 
 namespace mozilla {
 namespace dom {
-
 struct WindowActorOptions;
 class JSWindowActorInfo;
 class EventTarget;
 
 /**
- * Object corresponding to a single window actor protocol. This object acts as
- * an Event listener for the actor which is called for events which would
+ * Object corresponding to a single actor protocol. This object acts as an
+ * Event listener for the actor which is called for events which would
  * trigger actor creation.
  *
  * This object also can act as a carrier for methods and other state related to
- * a single protocol managed by the JSActorService.
+ * a single protocol managed by the JSWindowActorService.
  */
 class JSWindowActorProtocol final : public nsIObserver,
                                     public nsIDOMEventListener {
@@ -94,7 +97,42 @@ class JSWindowActorProtocol final : public nsIObserver,
   RefPtr<extensions::MatchPatternSet> mURIMatcher;
 };
 
+class JSWindowActorService final {
+ public:
+  NS_INLINE_DECL_REFCOUNTING(JSWindowActorService)
+
+  static already_AddRefed<JSWindowActorService> GetSingleton();
+
+  void RegisterWindowActor(const nsACString& aName,
+                           const WindowActorOptions& aOptions,
+                           ErrorResult& aRv);
+
+  void UnregisterWindowActor(const nsACString& aName);
+
+  // Register child's Window Actor from JSWindowActorInfos for content process.
+  void LoadJSWindowActorInfos(nsTArray<JSWindowActorInfo>& aInfos);
+
+  // Get the named of Window Actor and the child's WindowActorOptions
+  // from mDescriptors to JSWindowActorInfos.
+  void GetJSWindowActorInfos(nsTArray<JSWindowActorInfo>& aInfos);
+
+  // Register or unregister a chrome event target.
+  void RegisterChromeEventTarget(EventTarget* aTarget);
+
+  // NOTE: This method is static, as it may be called during shutdown.
+  static void UnregisterChromeEventTarget(EventTarget* aTarget);
+
+  already_AddRefed<JSWindowActorProtocol> GetProtocol(const nsACString& aName);
+
+ private:
+  JSWindowActorService();
+  ~JSWindowActorService();
+
+  nsTArray<EventTarget*> mChromeEventTargets;
+  nsRefPtrHashtable<nsCStringHashKey, JSWindowActorProtocol> mDescriptors;
+};
+
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_JSWindowActorProtocol_h
+#endif  // mozilla_dom_JSWindowActorService_h

@@ -4,16 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/**
- * An actor architecture designed to allow compositional parent/content
- * communications. The lifetime of a JSWindowActor{Child, Parent} is the `WindowGlobalParent`
- * (for the parent-side) / `WindowGlobalChild` (for the child-side).
- *
- * See https://firefox-source-docs.mozilla.org/dom/Fission.html#jswindowactor for
- * more details on how to use this architecture.
- */
-
 interface nsISupports;
+interface nsIContentChild;
+interface nsIContentParent;
+
+interface mixin JSWindowActor {
+  [Throws]
+  void sendAsyncMessage(DOMString messageName,
+                        optional any obj);
+
+  [Throws]
+  Promise<any> sendQuery(DOMString messageName,
+                         optional any obj);
+};
 
 [ChromeOnly, Exposed=Window]
 interface JSWindowActorParent {
@@ -30,13 +33,13 @@ interface JSWindowActorParent {
   [Throws]
   readonly attribute CanonicalBrowsingContext? browsingContext;
 };
-JSWindowActorParent includes JSActor;
+JSWindowActorParent includes JSWindowActor;
 
 [ChromeOnly, Exposed=Window]
 interface JSWindowActorChild {
   [ChromeOnly]
   constructor();
-
+  
   /**
    * Actor initialization occurs after the constructor is called but before the
    * first message is delivered. Until the actor is initialized, accesses to
@@ -61,7 +64,45 @@ interface JSWindowActorChild {
   [Throws]
   readonly attribute WindowProxy? contentWindow;
 };
-JSWindowActorChild includes JSActor;
+JSWindowActorChild includes JSWindowActor;
+
+/**
+ * WebIDL callback interface version of the nsIObserver interface for use when
+ * calling the observe method on JSWindowActors.
+ *
+ * NOTE: This isn't marked as ChromeOnly, as it has no interface object, and
+ * thus cannot be conditionally exposed.
+ */
+[Exposed=Window]
+callback interface MozObserverCallback {
+  void observe(nsISupports subject, ByteString topic, DOMString? data);
+};
+
+/**
+ * WebIDL callback interface calling the `willDestroy`, `didDestroy`, and
+ * `actorCreated` methods on JSWindowActors.
+ */
+[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
+callback MozJSWindowActorCallback = void();
+
+/**
+ * The willDestroy method, if present, will be called at the last opportunity
+ * to send messages to the remote side, giving implementers the chance to clean
+ * up and send final messages.
+ * The didDestroy method, if present, will be called after the actor is no
+ * longer able to receive any more messages.
+ * The actorCreated method, if present, will be called immediately after the
+ * actor has been created and initialized.
+ *
+ * NOTE: Messages may be received between willDestroy and didDestroy, but they
+ * may not be sent.
+ */
+[GenerateInit]
+dictionary MozJSWindowActorCallbacks {
+  [ChromeOnly] MozJSWindowActorCallback willDestroy;
+  [ChromeOnly] MozJSWindowActorCallback didDestroy;
+  [ChromeOnly] MozJSWindowActorCallback actorCreated;
+};
 
 /**
  * Used by ChromeUtils.registerWindowActor() to register JS window actor.

@@ -38,7 +38,7 @@ namespace dom {
 
 class WindowGlobalChild;
 class JSWindowActorParent;
-class JSActorMessageMeta;
+class JSWindowActorMessageMeta;
 
 /**
  * A handle in the parent process to a specific nsGlobalWindowInner object.
@@ -81,7 +81,7 @@ class WindowGlobalParent final : public WindowContext,
   // |nullptr| if the actor has been torn down, or is in-process.
   already_AddRefed<BrowserParent> GetBrowserParent();
 
-  void ReceiveRawMessage(const JSActorMessageMeta& aMeta,
+  void ReceiveRawMessage(const JSWindowActorMessageMeta& aMeta,
                          ipc::StructuredCloneData&& aData,
                          ipc::StructuredCloneData&& aStack);
 
@@ -177,7 +177,7 @@ class WindowGlobalParent final : public WindowContext,
 
  protected:
   const nsAString& GetRemoteType() override;
-  JSActor::Type GetSide() override { return JSActor::Type::Parent; }
+  JSWindowActor::Type GetSide() override { return JSWindowActor::Type::Parent; }
 
   // IPC messages
   mozilla::ipc::IPCResult RecvLoadURI(
@@ -204,7 +204,7 @@ class WindowGlobalParent final : public WindowContext,
   mozilla::ipc::IPCResult RecvSetClientInfo(
       const IPCClientInfo& aIPCClientInfo);
   mozilla::ipc::IPCResult RecvDestroy();
-  mozilla::ipc::IPCResult RecvRawMessage(const JSActorMessageMeta& aMeta,
+  mozilla::ipc::IPCResult RecvRawMessage(const JSWindowActorMessageMeta& aMeta,
                                          const ClonedMessageData& aData,
                                          const ClonedMessageData& aStack);
 

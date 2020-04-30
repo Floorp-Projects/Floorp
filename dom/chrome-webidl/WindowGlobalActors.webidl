@@ -8,7 +8,6 @@ interface URI;
 interface nsIDocShell;
 interface RemoteTab;
 interface nsITransportSecurityInfo;
-interface nsIContentParent;
 
 [Exposed=Window, ChromeOnly]
 interface WindowContext {
