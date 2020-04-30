@@ -9,11 +9,27 @@
     window.parent.postMessage({result: status}, "*");
   }
 
-  navigator.serviceWorker.ready.then(finish.bind(null, 'allowed'),
-                                     finish.bind(null, 'blocked'));
-  navigator.serviceWorker
-           .register("file_service_worker.js", {scope: "."})
-           .catch(finish.bind(null, 'blocked'));
+  const BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN = 5;
+  const cookieBehavior = SpecialPowers.getIntPref("network.cookie.cookieBehavior");
+
+  const promises = [
+    navigator.serviceWorker.ready,
+    navigator.serviceWorker.register("file_service_worker.js", { scope: "." })
+  ];
+
+  if (cookieBehavior == BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) {
+    Promise.allSettled(promises).then(results => {
+      const resultValues = results
+        .map(result =>
+          result.status === "fulfilled" ? "allowed" : "blocked"
+        )
+        .join(",");
+      finish(resultValues);
+    });
+  } else {
+    Promise.race(promises).then(finish.bind(null, 'allowed'),
+                                finish.bind(null, 'blocked'));
+  }
   </script>
 </body>
 </html>
