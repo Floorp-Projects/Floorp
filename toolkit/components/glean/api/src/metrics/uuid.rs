@@ -4,7 +4,7 @@
 
 use uuid::Uuid;
 
-use glean_core::CommonMetricData;
+use super::CommonMetricData;
 
 /// A UUID metric.
 ///
