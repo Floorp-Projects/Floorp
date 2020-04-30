@@ -88,9 +88,8 @@ const {
   openFilePickerForObjdir,
 } = require("devtools/client/performance-new/browser");
 
-// sizeof(double) + sizeof(char)
-// http://searchfox.org/mozilla-central/rev/e8835f52eff29772a57dca7bcc86a9a312a23729/tools/profiler/core/ProfileEntry.h#73
-const PROFILE_ENTRY_SIZE = 9;
+// The Gecko Profiler interprets the "entries" setting as 8 bytes per entry.
+const PROFILE_ENTRY_SIZE = 8;
 
 /**
  * @typedef {{ name: string, id: string, title: string }} ThreadColumn
