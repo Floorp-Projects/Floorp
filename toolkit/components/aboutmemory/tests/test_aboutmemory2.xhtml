@@ -38,7 +38,7 @@
   let fakeReporters = [
     { collectReports: function(aCbObj, aClosure, aAnonymize) {
         function f(aP, aK, aA) {
-          aCbObj.callback("", aP, aK, BYTES, aA, "Desc.", aClosure);
+          aCbObj.callback("Main Process ABC", aP, aK, BYTES, aA, "Desc.", aClosure);
         }
         f("heap-allocated",     OTHER,   250 * MB);
         f("explicit/a/b",       HEAP,     50 * MB);
@@ -143,7 +143,7 @@
 
   let startExpected =
 "\
-Main Process\n\
+Main Process ABC\n\
 Explicit Allocations\n\
 \n\
 250.00 MB (100.0%) -- explicit\n\
@@ -165,12 +165,12 @@ Other Measurements\n\
 \n\
 250.00 MB ── heap-allocated\n\
 \n\
-End of Main Process\n\
+End of Main Process ABC\n\
 ";
 
   let acCollapsedExpected =
 "\
-Main Process\n\
+Main Process ABC\n\
 Explicit Allocations\n\
 \n\
 250.00 MB (100.0%) -- explicit\n\
@@ -190,12 +190,12 @@ Other Measurements\n\
 \n\
 250.00 MB ── heap-allocated\n\
 \n\
-End of Main Process\n\
+End of Main Process ABC\n\
 ";
 
   let alExpandedExpected =
 "\
-Main Process\n\
+Main Process ABC\n\
 Explicit Allocations\n\
 \n\
 250.00 MB (100.0%) -- explicit\n\
@@ -217,12 +217,12 @@ Other Measurements\n\
 \n\
 250.00 MB ── heap-allocated\n\
 \n\
-End of Main Process\n\
+End of Main Process ABC\n\
 ";
 
   let aCollapsedExpected =
 "\
-Main Process\n\
+Main Process ABC\n\
 Explicit Allocations\n\
 \n\
 250.00 MB (100.0%) -- explicit\n\
@@ -238,12 +238,12 @@ Other Measurements\n\
 \n\
 250.00 MB ── heap-allocated\n\
 \n\
-End of Main Process\n\
+End of Main Process ABC\n\
 ";
 
   let hCollapsedExpected =
 "\
-Main Process\n\
+Main Process ABC\n\
 Explicit Allocations\n\
 \n\
 250.00 MB (100.0%) -- explicit\n\
@@ -257,12 +257,12 @@ Other Measurements\n\
 \n\
 250.00 MB ── heap-allocated\n\
 \n\
-End of Main Process\n\
+End of Main Process ABC\n\
 ";
 
   let jExpandedExpected =
 "\
-Main Process\n\
+Main Process ABC\n\
 Explicit Allocations\n\
 \n\
 250.00 MB (100.0%) -- explicit\n\
@@ -278,7 +278,7 @@ Other Measurements\n\
 \n\
 250.00 MB ── heap-allocated\n\
 \n\
-End of Main Process\n\
+End of Main Process ABC\n\
 ";
 
   // The important thing here is that two values have been swapped.
@@ -286,7 +286,7 @@ End of Main Process\n\
   // expanded.  See bug 724863.
   let updatedExpected =
 "\
-Main Process\n\
+Main Process ABC\n\
 Explicit Allocations\n\
 \n\
 250.00 MB (100.0%) -- explicit\n\
@@ -302,12 +302,12 @@ Other Measurements\n\
 \n\
 250.00 MB ── heap-allocated\n\
 \n\
-End of Main Process\n\
+End of Main Process ABC\n\
 ";
 
   let aExpandedExpected =
 "\
-Main Process\n\
+Main Process ABC\n\
 Explicit Allocations\n\
 \n\
 250.00 MB (100.0%) -- explicit\n\
@@ -329,12 +329,12 @@ Other Measurements\n\
 \n\
 250.00 MB ── heap-allocated\n\
 \n\
-End of Main Process\n\
+End of Main Process ABC\n\
 ";
 
   let acExpandedExpected =
 "\
-Main Process\n\
+Main Process ABC\n\
 Explicit Allocations\n\
 \n\
 250.00 MB (100.0%) -- explicit\n\
@@ -358,12 +358,12 @@ Other Measurements\n\
 \n\
 250.00 MB ── heap-allocated\n\
 \n\
-End of Main Process\n\
+End of Main Process ABC\n\
 ";
 
   let alCollapsedExpected =
 "\
-Main Process\n\
+Main Process ABC\n\
 Explicit Allocations\n\
 \n\
 250.00 MB (100.0%) -- explicit\n\
@@ -385,7 +385,7 @@ Other Measurements\n\
 \n\
 250.00 MB ── heap-allocated\n\
 \n\
-End of Main Process\n\
+End of Main Process ABC\n\
 ";
 
   // Test the following cases:
@@ -401,16 +401,16 @@ End of Main Process\n\
   //   upon update (and should remain expanded)
   //
   let idsToClick = [
-    { id: "measureButton",             swap: 0, expected: startExpected },
-    { id: "Main Process:explicit/a/c", swap: 0, expected: acCollapsedExpected },
-    { id: "Main Process:explicit/a/l", swap: 0, expected: alExpandedExpected },
-    { id: "Main Process:explicit/a",   swap: 0, expected: aCollapsedExpected },
-    { id: "Main Process:explicit/h",   swap: 0, expected: hCollapsedExpected },
-    { id: "Main Process:explicit/j",   swap: 0, expected: jExpandedExpected },
-    { id: "measureButton",             swap: 1, expected: updatedExpected },
-    { id: "Main Process:explicit/a",   swap: 0, expected: aExpandedExpected },
-    { id: "Main Process:explicit/a/c", swap: 0, expected: acExpandedExpected },
-    { id: "Main Process:explicit/a/l", swap: 0, expected: alCollapsedExpected }
+    { id: "measureButton",                 swap: 0, expected: startExpected },
+    { id: "Main Process ABC:explicit/a/c", swap: 0, expected: acCollapsedExpected },
+    { id: "Main Process ABC:explicit/a/l", swap: 0, expected: alExpandedExpected },
+    { id: "Main Process ABC:explicit/a",   swap: 0, expected: aCollapsedExpected },
+    { id: "Main Process ABC:explicit/h",   swap: 0, expected: hCollapsedExpected },
+    { id: "Main Process ABC:explicit/j",   swap: 0, expected: jExpandedExpected },
+    { id: "measureButton",                 swap: 1, expected: updatedExpected },
+    { id: "Main Process ABC:explicit/a",   swap: 0, expected: aExpandedExpected },
+    { id: "Main Process ABC:explicit/a/c", swap: 0, expected: acExpandedExpected },
+    { id: "Main Process ABC:explicit/a/l", swap: 0, expected: alCollapsedExpected }
   ];
 
   SimpleTest.waitForFocus(chain(idsToClick));

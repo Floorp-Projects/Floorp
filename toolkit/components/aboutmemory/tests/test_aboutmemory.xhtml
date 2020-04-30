@@ -42,7 +42,7 @@
   let fakeReporters = [
     { collectReports: function(aCbObj, aClosure, aAnonymize) {
         function f(aP, aK, aU, aA) {
-          aCbObj.callback("", aP, aK, aU, aA, "Desc.", aClosure);
+          aCbObj.callback("Main Process", aP, aK, aU, aA, "Desc.", aClosure);
         }
         f("heap-allocated",     OTHER,   BYTES, 500 * MB);
         f("heap-unallocated",   OTHER,   BYTES, 100 * MB);
@@ -79,7 +79,7 @@
     },
     { collectReports: function(aCbObj, aClosure, aAnonymize) {
         function f(aP, aK, aU, aA) {
-          aCbObj.callback("", aP, aK, aU, aA, "Desc.", aClosure);
+          aCbObj.callback("Main Process", aP, aK, aU, aA, "Desc.", aClosure);
         }
         f("explicit/c/d",     NONHEAP, BYTES,  13 * MB);
         f("explicit/c/d",     NONHEAP, BYTES,  10 * MB); // dup
@@ -94,7 +94,7 @@
     },
     { collectReports: function(aCbObj, aClosure, aAnonymize) {
         function f(aP, aK, aU, aA) {
-          aCbObj.callback("", aP, aK, aU, aA, "Desc.", aClosure);
+          aCbObj.callback("Main Process", aP, aK, aU, aA, "Desc.", aClosure);
         }
         f("other3",           OTHER,   COUNT, 777);
         f("other2",           OTHER,   BYTES, 222 * MB);
@@ -105,7 +105,7 @@
     },
     { collectReports: function(aCbObj, aClosure, aAnonymize) {
         function f(aP) {
-          aCbObj.callback("", aP, OTHER, COUNT, 1, "Desc.", aClosure);
+          aCbObj.callback("Main Process", aP, OTHER, COUNT, 1, "Desc.", aClosure);
         }
         f("compartments/user/bar");
         f("compartments/system/bar");

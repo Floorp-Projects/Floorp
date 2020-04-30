@@ -32,7 +32,7 @@
   let fakeReporters = [
     { collectReports: function(aCbObj, aClosure, aAnonymize) {
         function f(aP, aK, aA) {
-          aCbObj.callback("", aP, aK, BYTES, aA, "Desc.", aClosure);
+          aCbObj.callback("Main Process", aP, aK, BYTES, aA, "Desc.", aClosure);
         }
         f("heap-allocated",     OTHER,   250 * MB);
         f("explicit/a/b",       HEAP,     50 * MB);
