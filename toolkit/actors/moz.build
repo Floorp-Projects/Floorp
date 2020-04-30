@@ -62,6 +62,4 @@ FINAL_TARGET_FILES.actors += [
     'WebChannelChild.jsm',
     'WebChannelParent.jsm',
     'WebNavigationChild.jsm',
-    'ZoomChild.jsm',
-    'ZoomParent.jsm',
 ]
