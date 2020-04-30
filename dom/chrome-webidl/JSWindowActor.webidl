@@ -4,6 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * An actor architecture designed to allow compositional parent/content
+ * communications. The lifetime of a JSWindowActor{Child, Parent} is the `WindowGlobalParent`
+ * (for the parent-side) / `WindowGlobalChild` (for the child-side).
+ *
+ * See https://firefox-source-docs.mozilla.org/dom/Fission.html#jswindowactor for
+ * more details on how to use this architecture.
+ */
+
 interface nsISupports;
 
 [ChromeOnly, Exposed=Window]
