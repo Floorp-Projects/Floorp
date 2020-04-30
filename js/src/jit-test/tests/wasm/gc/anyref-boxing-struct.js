@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled() || wasmCompileMode() != 'baseline'
+// |jit-test| skip-if: !wasmReftypesEnabled() || !wasmGcEnabled() || wasmCompileMode() != 'baseline'
 
 // Moving a JS value through a wasm anyref is a pair of boxing/unboxing
 // conversions that leaves the value unchanged.  There are many cases,

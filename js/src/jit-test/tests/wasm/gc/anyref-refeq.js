@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled()
+// |jit-test| skip-if: !wasmReftypesEnabled() || !wasmGcEnabled()
 //
 // ref.eq is part of the gc feature, not the reftypes feature.
 
