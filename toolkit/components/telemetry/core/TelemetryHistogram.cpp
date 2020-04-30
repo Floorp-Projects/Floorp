@@ -156,8 +156,8 @@ struct HistogramInfo {
 // Structs used to keep information about the histograms for which a
 // snapshot should be created.
 struct HistogramSnapshotData {
-  nsTArray<base::Histogram::Sample> mBucketRanges;
-  nsTArray<base::Histogram::Count> mBucketCounts;
+  CopyableTArray<base::Histogram::Sample> mBucketRanges;
+  CopyableTArray<base::Histogram::Count> mBucketCounts;
   int64_t mSampleSum;  // Same type as base::Histogram::SampleSet::sum_
 };
 

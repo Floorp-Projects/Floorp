@@ -60,12 +60,13 @@ TEST_F(TelemetryTestFixture, RecordEventNative) {
                          Nothing(), Nothing());
 
   // Try recording with normal value, extra
-  nsTArray<EventExtraEntry> extra({EventExtraEntry{extraKey, extraValue}});
+  CopyableTArray<EventExtraEntry> extra(
+      {EventExtraEntry{extraKey, extraValue}});
   Telemetry::RecordEvent(Telemetry::EventID::TelemetryTest_Test1_Object2,
                          mozilla::Some(value), mozilla::Some(extra));
 
   // Try recording with too-long value, extra
-  nsTArray<EventExtraEntry> longish(
+  CopyableTArray<EventExtraEntry> longish(
       {EventExtraEntry{extraKey, extraValueLong}});
   Telemetry::RecordEvent(Telemetry::EventID::TelemetryTest_Test2_Object2,
                          mozilla::Some(valueLong), mozilla::Some(longish));

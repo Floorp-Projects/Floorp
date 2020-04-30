@@ -609,7 +609,7 @@ class MOZ_RAII AutoScalarTimer {
  */
 void RecordEvent(mozilla::Telemetry::EventID aId,
                  const mozilla::Maybe<nsCString>& aValue,
-                 const mozilla::Maybe<nsTArray<EventExtraEntry>>& aExtra);
+                 const mozilla::Maybe<CopyableTArray<EventExtraEntry>>& aExtra);
 
 /**
  * Enables recording of events in a category.

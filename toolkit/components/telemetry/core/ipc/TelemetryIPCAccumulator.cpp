@@ -232,9 +232,9 @@ void TelemetryIPCAccumulator::RecordChildEvent(
   }
 
   // Store the event.
-  gChildEvents->AppendElement(ChildEventData{
-      timestamp, nsCString(category), nsCString(method), nsCString(object),
-      value, nsTArray<mozilla::Telemetry::EventExtraEntry>(extra)});
+  gChildEvents->AppendElement(
+      ChildEventData{timestamp, nsCString(category), nsCString(method),
+                     nsCString(object), value, extra.Clone()});
   ArmIPCTimer(locker);
 }
 
