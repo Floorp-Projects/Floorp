@@ -2173,7 +2173,7 @@ class HTMLEditor final : public TextEditor,
   MoveNodeOrChildren(nsIContent& aNode, const EditorDOMPoint& aPointToInsert);
 
   /**
-   * MoveContents() moves the children of aElement to aPointToInsert.  If
+   * MoveChildren() moves the children of aElement to aPointToInsert.  If
    * cannot insert some children due to invalid relation, calls
    * MoveNodeOrChildren() to remove the children but keep moving its children.
    *
@@ -2184,6 +2184,25 @@ class HTMLEditor final : public TextEditor,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult
   MoveChildren(Element& aElement, const EditorDOMPoint& aPointToInsert);
+
+  using EditorBase::MoveChildren;
+
+  /**
+   * MoveAllChildren() moves all children of aContainer to before
+   * aPointToInsert.GetChild().
+   * See explanation of EditorBase::MoveChildren() for the detail of the
+   * behavior.
+   *
+   * @param aContainer          The container node whose all children should
+   *                            be moved.
+   * @param aPointToInsert      The insertion point.  The container must not
+   *                            be a data node like a text node.
+   * @param aError              The result.  If this succeeds to move children,
+   *                            returns NS_OK.  Otherwise, an error.
+   */
+  void MoveAllChildren(nsINode& aContainer,
+                       const EditorRawDOMPoint& aPointToInsert,
+                       ErrorResult& aError);
 
   /**
    * MoveOneHardLineContents() moves the content in a hard line which contains
