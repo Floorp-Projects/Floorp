@@ -34,7 +34,7 @@
 
 #include "mozilla/dom/JSWindowActorBinding.h"
 #include "mozilla/dom/JSWindowActorChild.h"
-#include "mozilla/dom/JSWindowActorService.h"
+#include "mozilla/dom/JSActorService.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIURIMutator.h"
 
@@ -440,7 +440,7 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvDispatchSecurityPolicyViolation(
 }
 
 IPCResult WindowGlobalChild::RecvRawMessage(
-    const JSWindowActorMessageMeta& aMeta, const ClonedMessageData& aData,
+    const JSActorMessageMeta& aMeta, const ClonedMessageData& aData,
     const ClonedMessageData& aStack) {
   StructuredCloneData data;
   data.BorrowFromClonedMessageDataForChild(aData);
@@ -450,7 +450,7 @@ IPCResult WindowGlobalChild::RecvRawMessage(
   return IPC_OK();
 }
 
-void WindowGlobalChild::ReceiveRawMessage(const JSWindowActorMessageMeta& aMeta,
+void WindowGlobalChild::ReceiveRawMessage(const JSActorMessageMeta& aMeta,
                                           StructuredCloneData&& aData,
                                           StructuredCloneData&& aStack) {
   RefPtr<JSWindowActorChild> actor =
@@ -535,7 +535,7 @@ void WindowGlobalChild::ActorDestroy(ActorDestroyReason aWhy) {
   profiler_unregister_page(mInnerWindowId);
 #endif
 
-  // Destroy our JSWindowActors, and reject any pending queries.
+  // Destroy our JSActors, and reject any pending queries.
   nsRefPtrHashtable<nsCStringHashKey, JSWindowActorChild> windowActors;
   mWindowActors.SwapElements(windowActors);
   for (auto iter = windowActors.Iter(); !iter.Done(); iter.Next()) {

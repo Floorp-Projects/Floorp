@@ -26,7 +26,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/IdleDeadline.h"
-#include "mozilla/dom/JSWindowActorService.h"
+#include "mozilla/dom/JSActorService.h"
 #include "mozilla/dom/MediaControlUtils.h"
 #include "mozilla/dom/MediaControlService.h"
 #include "mozilla/dom/MediaMetadata.h"
@@ -1204,7 +1204,7 @@ void ChromeUtils::RegisterWindowActor(const GlobalObject& aGlobal,
                                       ErrorResult& aRv) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  RefPtr<JSWindowActorService> service = JSWindowActorService::GetSingleton();
+  RefPtr<JSActorService> service = JSActorService::GetSingleton();
   service->RegisterWindowActor(aName, aOptions, aRv);
 }
 
@@ -1213,7 +1213,7 @@ void ChromeUtils::UnregisterWindowActor(const GlobalObject& aGlobal,
                                         const nsACString& aName) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  RefPtr<JSWindowActorService> service = JSWindowActorService::GetSingleton();
+  RefPtr<JSActorService> service = JSActorService::GetSingleton();
   service->UnregisterWindowActor(aName);
 }
 
