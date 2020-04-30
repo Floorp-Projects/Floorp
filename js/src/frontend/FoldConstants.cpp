@@ -769,7 +769,7 @@ static bool FoldAndOrCoalesce(JSContext* cx, ParseNode** nodePtr) {
   // its element.
   if (node->count() == 1) {
     ParseNode* first = node->head();
-    ReplaceNode(nodePtr, first);
+    TryReplaceNode(nodePtr, first);
   }
 
   return true;
