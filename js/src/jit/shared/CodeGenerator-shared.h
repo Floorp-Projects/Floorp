@@ -271,7 +271,8 @@ class CodeGeneratorShared : public LElementVisitor {
   void emitTruncateFloat32(FloatRegister src, Register dest,
                            MTruncateToInt32* mir);
 
-  void emitPreBarrier(Register elements, const LAllocation* index);
+  void emitPreBarrier(Register elements, const LAllocation* index,
+                      int32_t offsetAdjustment);
   void emitPreBarrier(Address address);
 
   // We don't emit code for trivial blocks, so if we want to branch to the
