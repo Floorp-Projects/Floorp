@@ -1069,7 +1069,6 @@ class WebExtensionTest : BaseSessionTest() {
         testIframeTopLevel()
     }
 
-    @Ignore // Broken with browser.tabs.documentchannel == true
     @Test
     fun loadWebExtensionPage() {
         val result = GeckoResult<String>()
