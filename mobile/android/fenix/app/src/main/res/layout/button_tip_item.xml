@@ -26,7 +26,7 @@
         android:layout_margin="16dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toStartOf="@id/tip_close" />
 
     <ImageButton
         android:id="@+id/tip_close"
@@ -41,7 +41,7 @@
 
     <TextView
         android:id="@+id/tip_description_text"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:lineSpacingExtra="2dp"
         android:textAppearance="@style/Body14TextStyle"
@@ -51,7 +51,7 @@
         android:layout_marginHorizontal="16dp"
         app:layout_constraintTop_toBottomOf="@id/tip_header_text"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toStartOf="@id/tip_close"/>
 
     <TextView
         android:id="@+id/tip_learn_more"
@@ -68,7 +68,7 @@
     <Button
         style="@style/NeutralButton"
         android:id="@+id/tip_button"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="16dp"
         tools:text="Call to action"
         android:layout_height="36dp"
         android:layout_marginHorizontal="16dp"
