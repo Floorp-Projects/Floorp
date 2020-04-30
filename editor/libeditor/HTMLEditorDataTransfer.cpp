@@ -312,7 +312,7 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
   if (!cellSelectionMode) {
     rv = DeleteSelectionAndPrepareToCreateNode();
     if (NS_FAILED(rv)) {
-      NS_WARNING("TextEditor::DeleteSelectionAndPrepareToCreateNode() failed");
+      NS_WARNING("HTMLEditor::DeleteSelectionAndPrepareToCreateNode() failed");
       return rv;
     }
 
@@ -2096,7 +2096,7 @@ nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
       DeleteSelectionAndCreateElement(*nsGkAtoms::blockquote);
   if (!newBlockquoteElement) {
     NS_WARNING(
-        "TextEditor::DeleteSelectionAndCreateElement(nsGkAtoms::blockquote) "
+        "HTMLEditor::DeleteSelectionAndCreateElement(nsGkAtoms::blockquote) "
         "failed");
     return NS_ERROR_FAILURE;
   }
@@ -2494,7 +2494,7 @@ nsresult HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
       DeleteSelectionAndCreateElement(*nsGkAtoms::span);
   NS_WARNING_ASSERTION(
       newSpanElement,
-      "TextEditor::DeleteSelectionAndCreateElement() failed, but ignored");
+      "HTMLEditor::DeleteSelectionAndCreateElement() failed, but ignored");
 
   // If this succeeded, then set selection inside the pre
   // so the inserted text will end up there.
@@ -2742,7 +2742,7 @@ nsresult HTMLEditor::InsertAsCitedQuotationInternal(
   }
   if (!newBlockquoteElement) {
     NS_WARNING(
-        "TextEditor::DeleteSelectionAndCreateElement(nsGkAtoms::blockquote) "
+        "HTMLEditor::DeleteSelectionAndCreateElement(nsGkAtoms::blockquote) "
         "failed");
     return NS_ERROR_FAILURE;
   }

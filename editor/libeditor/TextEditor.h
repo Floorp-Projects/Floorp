@@ -724,25 +724,6 @@ class TextEditor : public EditorBase, public nsITimerCallback, public nsINamed {
   InsertTextFromTransferable(nsITransferable* transferable);
 
   /**
-   * DeleteSelectionAndCreateElement() creates a element whose name is aTag.
-   * And insert it into the DOM tree after removing the selected content.
-   *
-   * @param aTag                The element name to be created.
-   * @return                    Created new element.
-   */
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> DeleteSelectionAndCreateElement(
-      nsAtom& aTag);
-
-  /**
-   * This method first deletes the selection, if it's not collapsed.  Then if
-   * the selection lies in a CharacterData node, it splits it.  If the
-   * selection is at this point collapsed in a CharacterData node, it's
-   * adjusted to be collapsed right before or after the node instead (which is
-   * always possible, since the node was split).
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult DeleteSelectionAndPrepareToCreateNode();
-
-  /**
    * Shared outputstring; returns whether selection is collapsed and resulting
    * string.
    */

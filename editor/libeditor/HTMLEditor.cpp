@@ -1656,7 +1656,7 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
 
     nsresult rv = DeleteSelectionAndPrepareToCreateNode();
     if (NS_FAILED(rv)) {
-      NS_WARNING("TextEditor::DeleteSelectionAndPrepareToCreateNode() failed");
+      NS_WARNING("HTMLEditor::DeleteSelectionAndPrepareToCreateNode() failed");
       return rv;
     }
   }
@@ -4138,6 +4138,111 @@ nsresult HTMLEditor::JoinNodesWithTransaction(nsINode& aLeftNode,
   }
 
   return rv;
+}
+
+already_AddRefed<Element> HTMLEditor::DeleteSelectionAndCreateElement(
+    nsAtom& aTag) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  nsresult rv = DeleteSelectionAndPrepareToCreateNode();
+  if (NS_FAILED(rv)) {
+    NS_WARNING("HTMLEditor::DeleteSelectionAndPrepareToCreateNode() failed");
+    return nullptr;
+  }
+
+  EditorDOMPoint pointToInsert(SelectionRefPtr()->AnchorRef());
+  if (!pointToInsert.IsSet()) {
+    return nullptr;
+  }
+  RefPtr<Element> newElement = CreateNodeWithTransaction(aTag, pointToInsert);
+  if (!newElement) {
+    NS_WARNING("EditorBase::CreateNodeWithTransaction() failed");
+    return nullptr;
+  }
+
+  // We want the selection to be just after the new node
+  EditorRawDOMPoint afterNewElement(EditorRawDOMPoint::After(newElement));
+  MOZ_ASSERT(afterNewElement.IsSetAndValid());
+  IgnoredErrorResult ignoredError;
+  SelectionRefPtr()->Collapse(afterNewElement, ignoredError);
+  if (ignoredError.Failed()) {
+    NS_WARNING("Selection::Collapse() failed");
+    // XXX Even if it succeeded to create new element, this returns error
+    //     when Selection.Collapse() fails something.  This could occur with
+    //     mutation observer or mutation event listener.
+    return nullptr;
+  }
+  return newElement.forget();
+}
+
+nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(IsHTMLEditor());  // TODO: Move this method to `HTMLEditor`
+
+  if (NS_WARN_IF(!SelectionRefPtr()->GetAnchorFocusRange())) {
+    return NS_OK;
+  }
+
+  if (!SelectionRefPtr()->GetAnchorFocusRange()->Collapsed()) {
+    nsresult rv =
+        DeleteSelectionAsSubAction(nsIEditor::eNone, nsIEditor::eStrip);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("EditorBase::DeleteSelectionAsSubAction() failed");
+      return rv;
+    }
+    MOZ_ASSERT(SelectionRefPtr()->GetAnchorFocusRange() &&
+                   SelectionRefPtr()->GetAnchorFocusRange()->Collapsed(),
+               "Selection not collapsed after delete");
+  }
+
+  // If the selection is a chardata node, split it if necessary and compute
+  // where to put the new node
+  EditorDOMPoint atAnchor(SelectionRefPtr()->AnchorRef());
+  if (NS_WARN_IF(!atAnchor.IsSet()) || !atAnchor.IsInDataNode()) {
+    return NS_OK;
+  }
+
+  if (NS_WARN_IF(!atAnchor.GetContainerParent())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (atAnchor.IsStartOfContainer()) {
+    EditorRawDOMPoint atAnchorContainer(atAnchor.GetContainer());
+    if (NS_WARN_IF(!atAnchorContainer.IsSetAndValid())) {
+      return NS_ERROR_FAILURE;
+    }
+    ErrorResult error;
+    SelectionRefPtr()->Collapse(atAnchorContainer, error);
+    NS_WARNING_ASSERTION(!error.Failed(), "Selection::Collapse() failed");
+    return error.StealNSResult();
+  }
+
+  if (atAnchor.IsEndOfContainer()) {
+    EditorRawDOMPoint afterAnchorContainer(atAnchor.GetContainer());
+    if (NS_WARN_IF(!afterAnchorContainer.AdvanceOffset())) {
+      return NS_ERROR_FAILURE;
+    }
+    ErrorResult error;
+    SelectionRefPtr()->Collapse(afterAnchorContainer, error);
+    NS_WARNING_ASSERTION(!error.Failed(), "Selection::Collapse() failed");
+    return error.StealNSResult();
+  }
+
+  ErrorResult error;
+  nsCOMPtr<nsIContent> newLeftNode = SplitNodeWithTransaction(atAnchor, error);
+  if (error.Failed()) {
+    NS_WARNING("EditorBase::SplitNodeWithTransaction() failed");
+    return error.StealNSResult();
+  }
+
+  EditorRawDOMPoint atRightNode(atAnchor.GetContainer());
+  if (NS_WARN_IF(!atRightNode.IsSet())) {
+    return NS_ERROR_FAILURE;
+  }
+  MOZ_ASSERT(atRightNode.IsSetAndValid());
+  SelectionRefPtr()->Collapse(atRightNode, error);
+  NS_WARNING_ASSERTION(!error.Failed(), "Selection::Collapse() failed");
+  return error.StealNSResult();
 }
 
 nsIContent* HTMLEditor::GetPriorHTMLSibling(nsINode* aNode,
