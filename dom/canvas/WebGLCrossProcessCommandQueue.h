@@ -7,8 +7,15 @@
 #define WEBGLCROSSPROCESSCOMMANDQUEUE_H_
 
 #include "mozilla/dom/WebGLCommandQueue.h"
+#include "ProducerConsumerQueue.h"
+#include "IpdlQueue.h"
 
 namespace mozilla {
+
+namespace dom {
+class WebGLParent;
+class WebGLChild;
+}  // namespace dom
 
 namespace layers {
 class PCompositorBridgeParent;
@@ -42,18 +49,36 @@ class HostWebGLCommandSink final
 
   HostWebGLContext* mHostContext = nullptr;
 
- protected:
   // For IPDL:
-  friend struct mozilla::ipc::IPDLParamTraits<HostWebGLCommandSink>;
-  friend class mozilla::layers::PCompositorBridgeParent;
   HostWebGLCommandSink() = default;
 
-  bool DispatchCommand(size_t command) override;
+ protected:
+  friend struct mozilla::ipc::IPDLParamTraits<HostWebGLCommandSink>;
+  friend class mozilla::layers::PCompositorBridgeParent;
+
+  bool DispatchCommand(size_t command) override {
+    MOZ_CRASH("TODO:");
+    return false;
+  }
 };
 
 using HostWebGLCommandSinkP =
     HostWebGLCommandSink<mozilla::webgl::PcqConsumer,
                          mozilla::webgl::ProducerConsumerQueue>;
+
+using IpdlWebGLCommandQueue =
+    mozilla::dom::IpdlQueue<mozilla::dom::WebGLChild,
+                            mozilla::dom::WebGLParent>;
+using IpdlWebGLResponseQueue =
+    mozilla::dom::IpdlQueue<mozilla::dom::WebGLParent,
+                            mozilla::dom::WebGLChild>;
+
+using ClientWebGLCommandSourceI =
+    SyncCommandSource<size_t, typename IpdlWebGLCommandQueue::Producer,
+                      IpdlWebGLResponseQueue>;
+using HostWebGLCommandSinkI =
+    HostWebGLCommandSink<typename IpdlWebGLCommandQueue::Consumer,
+                         IpdlWebGLResponseQueue>;
 
 namespace ipc {
 

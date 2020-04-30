@@ -732,24 +732,6 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
       return Err("!CompositorBridgeChild::Get()");
     }
 
-    // Construct the WebGL command queue, used to send commands from the client
-    // process to the host for execution.  It takes a response queue that is
-    // used to return responses to synchronous messages.
-    // TODO: Be smarter in choosing these.
-    static constexpr size_t CommandQueueSize = 256 * 1024;  // 256K
-    static constexpr size_t ResponseQueueSize = 8 * 1024;   // 8K
-    using mozilla::webgl::ProducerConsumerQueue;
-    auto commandPcq = ProducerConsumerQueue::Create(cbc, CommandQueueSize);
-    auto responsePcq = ProducerConsumerQueue::Create(cbc, ResponseQueueSize);
-    if (!commandPcq || !responsePcq) {
-      return Err("Failed to create command/response PCQ");
-    }
-
-    outOfProcess.mCommandSource = MakeUnique<ClientWebGLCommandSourceP>(
-        commandPcq->TakeProducer(), responsePcq->TakeConsumer());
-    auto sink = MakeUnique<HostWebGLCommandSinkP>(commandPcq->TakeConsumer(),
-                                                  responsePcq->TakeProducer());
-
     outOfProcess.mWebGLChild = new WebGLChild(*this);
     outOfProcess.mWebGLChild = static_cast<dom::WebGLChild*>(
         cbc->SendPWebGLConstructor(outOfProcess.mWebGLChild));
@@ -757,7 +739,45 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
       return Err("SendPWebGLConstructor failed");
     }
 
-    if (!outOfProcess.mWebGLChild->SendInitialize(initDesc, &notLost.info)) {
+    UniquePtr<HostWebGLCommandSinkP> sinkP;
+    UniquePtr<HostWebGLCommandSinkI> sinkI;
+    switch (StaticPrefs::webgl_prototype_ipc_pcq()) {
+      case 0: {
+        using mozilla::webgl::ProducerConsumerQueue;
+        static constexpr size_t CommandQueueSize = 256 * 1024;  // 256K
+        static constexpr size_t ResponseQueueSize = 8 * 1024;   // 8K
+        auto command = ProducerConsumerQueue::Create(cbc, CommandQueueSize);
+        auto response = ProducerConsumerQueue::Create(cbc, ResponseQueueSize);
+        if (!command || !response) {
+          return Err("Failed to create command/response PCQ");
+        }
+
+        outOfProcess.mCommandSourcePcq = MakeUnique<ClientWebGLCommandSourceP>(
+            command->TakeProducer(), response->TakeConsumer());
+        sinkP = MakeUnique<HostWebGLCommandSinkP>(command->TakeConsumer(),
+                                                  response->TakeProducer());
+        break;
+      }
+      default:
+        using mozilla::IpdlWebGLCommandQueue;
+        using mozilla::IpdlWebGLResponseQueue;
+        auto command =
+            IpdlWebGLCommandQueue::Create(outOfProcess.mWebGLChild.get());
+        auto response =
+            IpdlWebGLResponseQueue::Create(outOfProcess.mWebGLChild.get());
+        if (!command || !response) {
+          return Err("Failed to create command/response IpdlQueue");
+        }
+
+        outOfProcess.mCommandSourceIpdl = MakeUnique<ClientWebGLCommandSourceI>(
+            command->TakeProducer(), response->TakeConsumer());
+        sinkI = MakeUnique<HostWebGLCommandSinkI>(command->TakeConsumer(),
+                                                  response->TakeProducer());
+        break;
+    }
+
+    if (!outOfProcess.mWebGLChild->SendInitialize(
+            initDesc, std::move(sinkP), std::move(sinkI), &notLost.info)) {
       return Err("WebGL actor Initialize failed");
     }
 

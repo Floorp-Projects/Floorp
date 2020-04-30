@@ -17,6 +17,7 @@
 #include "WebGLCommandQueue.h"
 #include "WebGLCrossProcessCommandQueue.h"
 #include "ProducerConsumerQueue.h"
+#include "IpdlQueue.h"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -80,7 +81,8 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
 
   struct RemotingData final {
     dom::WebGLParent& mParent;
-    UniquePtr<HostWebGLCommandSinkP> mCommandSink;
+    UniquePtr<HostWebGLCommandSinkP> mCommandSinkP;
+    UniquePtr<HostWebGLCommandSinkI> mCommandSinkI;
   };
   struct OwnerData final {
     Maybe<ClientWebGLContext*> inProcess;
