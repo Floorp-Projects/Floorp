@@ -51,9 +51,9 @@ class DocumentL10n final : public DOMLocalization {
 
   Promise* Ready();
 
-  void TriggerInitialDocumentTranslation();
+  void TriggerInitialTranslation();
 
-  void InitialDocumentTranslationCompleted();
+  void InitialTranslationCompleted();
 
   Document* GetDocument() { return mDocument; };
   void OnCreatePresShell();

@@ -130,7 +130,7 @@ class nsHtml5TreeOpExecutor final
    */
   NS_IMETHOD WillResume() override;
 
-  virtual void InitialDocumentTranslationCompleted() override;
+  virtual void InitialTranslationCompleted() override;
 
   /**
    * Sets the parser.
