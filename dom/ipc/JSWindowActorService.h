@@ -43,7 +43,7 @@ class JSWindowActorProtocol final : public nsIObserver,
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(JSWindowActorProtocol, nsIObserver)
 
   static already_AddRefed<JSWindowActorProtocol> FromIPC(
-      const JSWindowActorInfo& aInfo);
+      JSWindowActorInfo&& aInfo);
   JSWindowActorInfo ToIPC();
 
   static already_AddRefed<JSWindowActorProtocol> FromWebIDLOptions(
@@ -59,7 +59,7 @@ class JSWindowActorProtocol final : public nsIObserver,
   struct EventDecl {
     nsString mName;
     EventListenerFlags mFlags;
-    Optional<bool> mPassive;
+    Maybe<bool> mPassive;
   };
 
   struct ChildSide : public Sided {
@@ -78,7 +78,7 @@ class JSWindowActorProtocol final : public nsIObserver,
                const nsAString& aRemoteType);
 
  private:
-  explicit JSWindowActorProtocol(const nsACString& aName) : mName(aName) {}
+  explicit JSWindowActorProtocol(nsCString aName) : mName(std::move(aName)) {}
   extensions::MatchPatternSet* GetURIMatcher();
   bool RemoteTypePrefixMatches(const nsDependentSubstring& aRemoteType);
   bool MessageManagerGroupMatches(BrowsingContext* aBrowsingContext);
@@ -110,7 +110,7 @@ class JSWindowActorService final {
   void UnregisterWindowActor(const nsACString& aName);
 
   // Register child's Window Actor from JSWindowActorInfos for content process.
-  void LoadJSWindowActorInfos(nsTArray<JSWindowActorInfo>& aInfos);
+  void LoadJSWindowActorInfos(nsTArray<JSWindowActorInfo>&& aInfos);
 
   // Get the named of Window Actor and the child's WindowActorOptions
   // from mDescriptors to JSWindowActorInfos.

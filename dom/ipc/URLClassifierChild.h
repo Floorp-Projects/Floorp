@@ -44,7 +44,7 @@ class URLClassifierLocalChild : public PURLClassifierLocalChild {
       const nsTArray<RefPtr<nsIUrlClassifierFeature>>& aFeatures,
       nsIUrlClassifierFeatureCallback* aCallback) {
     mCallback = aCallback;
-    mFeatures = aFeatures;
+    mFeatures = aFeatures.Clone();
   }
 
   mozilla::ipc::IPCResult Recv__delete__(
