@@ -4202,6 +4202,42 @@ NS_IMETHODIMP ContentChild::GetChildID(uint64_t* aOut) {
   return NS_OK;
 }
 
+NS_IMETHODIMP ContentChild::GetActor(const nsACString& aName,
+                                     JSProcessActorChild** retval) {
+  if (!CanSend()) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  // Check if this actor has already been created, and return it if it has.
+  if (mProcessActors.Contains(aName)) {
+    RefPtr<JSProcessActorChild> actor(mProcessActors.Get(aName));
+    actor.forget(retval);
+    return NS_OK;
+  }
+
+  // Otherwise, we want to create a new instance of this actor.
+  JS::RootedObject obj(RootingCx());
+  ErrorResult result;
+  ConstructActor(aName, &obj, result);
+  if (result.Failed()) {
+    return result.StealNSResult();
+  }
+
+  // Unwrap our actor to a JSProcessActorChild object.
+  RefPtr<JSProcessActorChild> actor;
+  nsresult rv = UNWRAP_OBJECT(JSProcessActorChild, &obj, actor);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  MOZ_RELEASE_ASSERT(!actor->Manager(),
+                     "mManager was already initialized once!");
+  actor->Init(aName, this);
+  mProcessActors.Put(aName, RefPtr{actor});
+  actor.forget(retval);
+  return NS_OK;
+}
+
 IPCResult ContentChild::RecvRawMessage(const JSActorMessageMeta& aMeta,
                                        const ClonedMessageData& aData,
                                        const ClonedMessageData& aStack) {
