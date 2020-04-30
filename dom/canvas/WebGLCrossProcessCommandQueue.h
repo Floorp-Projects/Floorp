@@ -29,7 +29,7 @@ using ClientWebGLCommandSource = SyncCommandSource<size_t>;
  * then uses for executing methods.  Add new commands to DispatchCommand using
  * the WEBGL_SYNC_COMMAND and WEBGL_ASYNC_COMMAND macros.
  */
-class HostWebGLCommandSink : public SyncCommandSink<size_t> {
+class HostWebGLCommandSink final : public SyncCommandSink<size_t> {
  public:
   HostWebGLCommandSink(UniquePtr<Consumer>&& aConsumer,
                        UniquePtr<Producer>&& aResponseProducer)

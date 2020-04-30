@@ -2081,9 +2081,9 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
    template <size_t command, typename... Args>
    void DispatchAsync(Args&&... aArgs) const {
      const auto& oop = *mNotLost->outOfProcess;
-     PcqStatus status = oop.mCommandSource->RunAsyncCommand(command, aArgs...);
-     if (!IsSuccess(status)) {
-       if (status == PcqStatus::PcqOOMError) {
+     QueueStatus status = oop.mCommandSource->RunAsyncCommand(command,
+   aArgs...);
+     if (!IsSuccess(status)) { if (status == QueueStatus::kOOMError) {
          JsWarning("Ran out-of-memory during WebGL IPC.");
        }
        // Not much to do but shut down.  Since this was a Pcq failure and
@@ -2098,11 +2098,11 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
    ReturnType DispatchSync(Args&&... aArgs) const {
      const auto& oop = *mNotLost->outOfProcess;
      ReturnType returnValue;
-     PcqStatus status =
+     QueueStatus status =
          oop.mCommandSource->RunSyncCommand(command, returnValue, aArgs...);
 
      if (!IsSuccess(status)) {
-       if (status == PcqStatus::PcqOOMError) {
+       if (status == QueueStatus::kOOMError) {
          JsWarning("Ran out-of-memory during WebGL IPC.");
        }
        // Not much to do but shut down.  Since this was a Pcq failure and
@@ -2120,7 +2120,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
      const auto status =
          oop.mCommandSource->RunVoidSyncCommand(command, aArgs...);
      if (!IsSuccess(status)) {
-       if (status == PcqStatus::PcqOOMError) {
+       if (status == QueueStatus::kOOMError) {
          JsWarning("Ran out-of-memory during WebGL IPC.");
        }
        // Not much to do but shut down.  Since this was a Pcq failure and
