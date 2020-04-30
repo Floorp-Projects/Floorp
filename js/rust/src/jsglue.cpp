@@ -513,7 +513,7 @@ void RUST_SET_JITINFO(JSFunction* func, const JSJitInfo* info) {
 }
 
 jsid RUST_INTERNED_STRING_TO_JSID(JSContext* cx, JSString* str) {
-  return PropertyKey::fromPinnedString(str);
+  return JS::PropertyKey::fromPinnedString(str);
 }
 
 const JSErrorFormatString* RUST_js_GetErrorMessage(void* userRef,
