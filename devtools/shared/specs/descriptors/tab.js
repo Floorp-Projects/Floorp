@@ -21,6 +21,10 @@ const tabDescriptorSpec = generateActorSpec({
         favicon: RetVal("string"),
       },
     },
+    getWatcher: {
+      request: {},
+      response: RetVal("watcher"),
+    },
   },
 });
 

@@ -29,6 +29,7 @@ class ProcessDescriptorFront extends FrontClassWithSpec(processDescriptorSpec) {
   form(json) {
     this.id = json.id;
     this.isParent = json.isParent;
+    this.traits = json.traits || {};
   }
 
   async _createProcessTargetFront(form) {
@@ -90,6 +91,15 @@ class ProcessDescriptorFront extends FrontClassWithSpec(processDescriptorSpec) {
       return targetFront;
     })();
     return this._targetFrontPromise;
+  }
+
+  getCachedWatcher() {
+    for (const child of this.poolChildren()) {
+      if (child.typeName == "watcher") {
+        return child;
+      }
+    }
+    return null;
   }
 
   destroy() {
