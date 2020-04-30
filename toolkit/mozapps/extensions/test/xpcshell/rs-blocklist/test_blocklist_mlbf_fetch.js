@@ -27,11 +27,10 @@ add_task(async function fetch_invalid_mlbf_record() {
     generation_time: 1,
   };
 
-  let resultPromise = ExtensionBlocklistMLBF._fetchMLBF(invalidRecord);
-
-  // TODO bug ...: When the MLBF is packaged with the application, this
-  // assertion should be updated to pass.
-  await Assert.rejects(resultPromise, /NetworkError/, "record not found");
+  // _fetchMLBF(invalidRecord) may succeed if there is a MLBF dump packaged with
+  // the application. This test intentionally hides the actual path to get
+  // deterministic results. To check whether the dump is correctly registered,
+  // run test_blocklist_mlbf_dump.js
 
   // Forget about the packaged attachment.
   Downloader._RESOURCE_BASE_URL = "invalid://bogus";
