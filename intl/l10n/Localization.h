@@ -33,8 +33,8 @@ class Localization : public nsIObserver,
   NS_DECL_NSIOBSERVER
 
   explicit Localization(nsIGlobalObject* aGlobal);
-  void Init(const Sequence<nsString>& aResourceIds, const bool aSync,
-            const BundleGenerator& aBundleGenerator, ErrorResult& aRv);
+  void Activate(const bool aSync, const bool aEager,
+                const BundleGenerator& aBundleGenerator);
 
   static already_AddRefed<Localization> Constructor(
       const GlobalObject& aGlobal, const Sequence<nsString>& aResourceIds,

@@ -14,11 +14,9 @@
 [scriptable, uuid(7d468600-551f-4fe0-98c9-92a53b63ec8d)]
 interface mozILocalization : nsISupports
 {
-  void setGenerateBundles(in jsval generateBundles);
-  void setGenerateBundlesSync(in jsval generateBundlesSync);
-  void setIsSync(in boolean isSync);
+  void activate(in bool aSync, in bool aEager, in jsval aGenerateBundles, in jsval aGenerateBundlesSync);
 
-  void init(in boolean aEager);
+  void setIsSync(in boolean isSync);
 
   unsigned long addResourceIds(in Array<AString> resourceIds);
   unsigned long removeResourceIds(in Array<AString> resourceIds);
@@ -37,5 +35,5 @@ interface mozILocalization : nsISupports
 [scriptable, uuid(96632d26-1422-12e9-b1ce-9bb586acd241)]
 interface mozILocalizationJSM : nsISupports
 {
-  mozILocalization getLocalization(in Array<AString> resourceIds);
+  mozILocalization getLocalization();
 };

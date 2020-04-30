@@ -29,28 +29,46 @@ NS_IMPL_RELEASE_INHERITED(DocumentL10n, DOMLocalization)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DocumentL10n)
 NS_INTERFACE_MAP_END_INHERITING(DOMLocalization)
 
+/* static */
+RefPtr<DocumentL10n> DocumentL10n::Create(Document* aDocument) {
+  RefPtr<DocumentL10n> l10n = new DocumentL10n(aDocument);
+
+  if (!l10n->Init()) {
+    return nullptr;
+  }
+  return l10n.forget();
+}
+
 DocumentL10n::DocumentL10n(Document* aDocument)
     : DOMLocalization(aDocument->GetScopeObject()),
       mDocument(aDocument),
-      mState(DocumentL10nState::Initialized) {
+      mState(DocumentL10nState::Uninitialized) {
   mContentSink = do_QueryInterface(aDocument->GetCurrentContentSink());
-
-  Element* elem = mDocument->GetDocumentElement();
-  if (elem) {
-    mIsSync = elem->HasAttr(kNameSpaceID_None, nsGkAtoms::datal10nsync);
-  }
 }
 
-void DocumentL10n::Init(Sequence<nsString>& aResourceIds, ErrorResult& aRv) {
-  DOMLocalization::Init(aResourceIds, mIsSync, {}, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
+bool DocumentL10n::Init() {
+  ErrorResult rv;
+  mReady = Promise::Create(mGlobal, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return false;
+  }
+  return true;
+}
+
+void DocumentL10n::Activate() {
+  if (mState > DocumentL10nState::Uninitialized) {
     return;
   }
 
-  mReady = Promise::Create(mGlobal, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
+  Element* elem = mDocument->GetDocumentElement();
+  bool isSync = false;
+  if (elem) {
+    isSync = elem->HasAttr(kNameSpaceID_None, nsGkAtoms::datal10nsync);
   }
+
+  DOMLocalization::Activate(isSync, true, {});
+
+  mState = DocumentL10nState::Activated;
 }
 
 JSObject* DocumentL10n::WrapObject(JSContext* aCx,
