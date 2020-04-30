@@ -1320,6 +1320,12 @@ void nsCocoaWindow::MoveToWorkspace(const nsAString& workspaceIDStr) {
     return;
   }
 
+  if ([NSScreen screensHaveSeparateSpaces] && [[NSScreen screens] count] > 1) {
+    // We don't support moving to a workspace when the user has this option
+    // enabled in Mission Control.
+    return;
+  }
+
   nsresult rv = NS_OK;
   int32_t workspaceID = workspaceIDStr.ToInteger(&rv);
   if (NS_FAILED(rv)) {
