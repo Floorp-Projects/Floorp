@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test Web Component connecting into Document's l10n</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    // In this test we are introducing two widgets. The only difference between them
+    // is that the first one is using `connectRoot` with the `aTranslate` argument set to `true`,
+    // and the other one to `false`.
+    //
+    // In this test, we will inject both of them lazily, after initial parsing is completed.
+    // For a test that verifies the behavior when they're injected during parsing, see
+    // `test_connectRoot_webcomponent.html` test.
+    //
+    // The expected difference is that when both get lazily injected into the DOM, the first one
+    // will get translated, while the other will not.
+    // The latter behavior will be used by widgets that will want to translate the initial DOM on their
+    // own before connecting the root.
+
+    let firstWidgetTranslated = false;
+
+    class FluentWidget extends HTMLElement {
+      constructor() {
+        super();
+        const shadowRoot = this.attachShadow({mode: "open"});
+        const t = document.querySelector("#fluent-widget-template");
+        const instance = t.content.cloneNode(true);
+        shadowRoot.appendChild(instance);
+      }
+      connectedCallback() {
+        MozXULElement.insertFTLIfNeeded("browser/preferences/preferences.ftl");
+
+        document.l10n.connectRoot(this.shadowRoot, true);
+
+        let label = this.shadowRoot.getElementById("label");
+
+        let verifyL10n = () => {
+          if (label.textContent.length > 0) {
+            window.removeEventListener("MozAfterPaint", verifyL10n);
+            is(label.textContent, "Learn more", "localization content applied to element");
+            firstWidgetTranslated = true;
+          }
+        };
+        window.addEventListener("MozAfterPaint", verifyL10n);
+      }
+    }
+
+    class FluentWidget2 extends HTMLElement {
+      constructor() {
+        super();
+        const shadowRoot = this.attachShadow({mode: "open"});
+        const t = document.querySelector("#fluent-widget-template");
+        const instance = t.content.cloneNode(true);
+        shadowRoot.appendChild(instance);
+      }
+      connectedCallback() {
+        MozXULElement.insertFTLIfNeeded("browser/preferences/preferences.ftl");
+
+        document.l10n.connectRoot(this.shadowRoot, false);
+
+        let label = this.shadowRoot.getElementById("label");
+
+        let verifyL10n = () => {
+          if (firstWidgetTranslated) {
+            is(label.textContent.length, 0, "This widget should remain untranslated.");
+            window.removeEventListener("MozAfterPaint", verifyL10n);
+            SimpleTest.finish();
+          }
+        };
+        window.addEventListener("MozAfterPaint", verifyL10n);
+      }
+    }
+
+    customElements.define("fluent-widget", FluentWidget);
+    customElements.define("fluent-widget2", FluentWidget2);
+
+    window.addEventListener("load", () => {
+      window.requestIdleCallback(async () => {
+        let widget = document.createElement("fluent-widget");
+        document.body.appendChild(widget);
+        let widget2 = document.createElement("fluent-widget2");
+        document.body.appendChild(widget2);
+      });
+    }, { once: true });
+  </script>
+</head>
+<body>
+  <template id="fluent-widget-template">
+    <div>
+      <button id="label" data-l10n-id="do-not-track-learn-more"></button>
+    </div>
+  </template>
+</body>
+</html>
