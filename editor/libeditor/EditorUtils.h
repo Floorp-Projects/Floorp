@@ -383,7 +383,7 @@ inline MoveNodeResult MoveNodeHandled(
 
 /***************************************************************************
  * SplitNodeResult is a simple class for
- * EditorBase::SplitNodeDeepWithTransaction().
+ * HTMLEditor::SplitNodeDeepWithTransaction().
  * This makes the callers' code easier to read.
  */
 class MOZ_STACK_CLASS SplitNodeResult final {
