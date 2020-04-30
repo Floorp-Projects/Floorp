@@ -596,10 +596,10 @@ nsNavHistoryQuery::nsNavHistoryQuery(const nsNavHistoryQuery& aOther)
       mUri(aOther.mUri),
       mAnnotationIsNot(aOther.mAnnotationIsNot),
       mAnnotation(aOther.mAnnotation),
-      mParents(aOther.mParents),
-      mTags(aOther.mTags),
+      mParents(aOther.mParents.Clone()),
+      mTags(aOther.mTags.Clone()),
       mTagsAreNot(aOther.mTagsAreNot),
-      mTransitions(aOther.mTransitions) {}
+      mTransitions(aOther.mTransitions.Clone()) {}
 
 NS_IMETHODIMP nsNavHistoryQuery::GetBeginTime(PRTime* aBeginTime) {
   *aBeginTime = mBeginTime;
@@ -875,7 +875,7 @@ NS_IMETHODIMP nsNavHistoryQuery::SetTagsAreNot(bool aTagsAreNot) {
 }
 
 NS_IMETHODIMP nsNavHistoryQuery::GetParents(nsTArray<nsCString>& aGuids) {
-  aGuids = mParents;
+  aGuids = mParents.Clone();
   return NS_OK;
 }
 
@@ -895,7 +895,7 @@ NS_IMETHODIMP nsNavHistoryQuery::SetParents(const nsTArray<nsCString>& aGuids) {
 
 NS_IMETHODIMP nsNavHistoryQuery::GetTransitions(
     nsTArray<uint32_t>& aTransitions) {
-  aTransitions = mTransitions;
+  aTransitions = mTransitions.Clone();
   return NS_OK;
 }
 

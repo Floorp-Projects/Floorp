@@ -84,7 +84,7 @@ struct IconData {
   enum AsyncFaviconFetchMode fetchMode;
   uint16_t status;  // This is a bitset, see ICON_STATUS_* defines above.
   uint8_t rootIcon;
-  nsTArray<IconPayload> payloads;
+  CopyableTArray<IconPayload> payloads;
 };
 
 /**
