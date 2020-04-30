@@ -7,4 +7,3 @@ toolkit.jar:
         content/global/remote-test-ipc.js (remote-test.js)
         content/global/BrowserElementChild.js (../browser-element/BrowserElementChild.js)
         content/global/BrowserElementChildPreload.js (../browser-element/BrowserElementChildPreload.js)
-        content/global/BrowserElementCopyPaste.js (../browser-element/BrowserElementCopyPaste.js)

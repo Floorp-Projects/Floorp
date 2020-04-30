@@ -587,3 +587,11 @@ menupopup::part(drop-indicator) {
   display: block;
   margin-bottom: 4px; /* matches the margin-bottom on description elements */
 }
+
+/* ENABLE DEVTOOLS POPUP */
+
+#enable-devtools-popup {
+%if defined(XP_MACOSX) || defined(XP_WIN)
+  font-size: 1.18em;
+%endif
+}

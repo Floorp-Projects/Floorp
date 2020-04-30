@@ -209,22 +209,31 @@ export class ASRouterUISurface extends React.PureComponent {
   // telemetry field which can have arbitrary values.
   // Used for router messages with links as part of the content.
   sendClick(event) {
+    const { dataset } = event.target;
     const metric = {
-      event_context: event.target.dataset.metric,
+      event_context: dataset.metric,
       // Used for the `source` of the event. Needed to differentiate
       // from other snippet or onboarding events that may occur.
       id: "NEWTAB_FOOTER_BAR_CONTENT",
     };
+    const { entrypoint_name, entrypoint_value } = dataset;
+    // Assign the snippet referral for the action
+    const entrypoint = entrypoint_name
+      ? new URLSearchParams([[entrypoint_name, entrypoint_value]]).toString()
+      : entrypoint_value;
     const action = {
-      type: event.target.dataset.action,
-      data: { args: event.target.dataset.args },
+      type: dataset.action,
+      data: {
+        args: dataset.args,
+        ...(entrypoint && { entrypoint }),
+      },
     };
     if (action.type) {
       ASRouterUtils.executeAction(action);
     }
     if (
       !this.state.message.content.do_not_autoblock &&
-      !event.target.dataset.do_not_autoblock
+      !dataset.do_not_autoblock
     ) {
       ASRouterUtils.blockById(this.state.message.id);
     }

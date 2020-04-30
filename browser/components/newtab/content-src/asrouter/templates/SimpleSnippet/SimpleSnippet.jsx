@@ -26,12 +26,25 @@ export class SimpleSnippet extends React.PureComponent {
         id: this.props.UISurface,
       });
     }
-    const { button_url } = this.props.content;
+    const {
+      button_url,
+      button_entrypoint_value,
+      button_entrypoint_name,
+    } = this.props.content;
     // If button_url is defined handle it as OPEN_URL action
     const type = this.props.content.button_action || (button_url && "OPEN_URL");
+    // Assign the snippet referral for the action
+    const entrypoint = button_entrypoint_name
+      ? new URLSearchParams([
+          [button_entrypoint_name, button_entrypoint_value],
+        ]).toString()
+      : button_entrypoint_value;
     this.props.onAction({
       type,
-      data: { args: this.props.content.button_action_args || button_url },
+      data: {
+        args: this.props.content.button_action_args || button_url,
+        ...(entrypoint && { entrypoint }),
+      },
     });
     if (!this.props.content.do_not_autoblock) {
       this.props.onBlock();

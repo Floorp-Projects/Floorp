@@ -7,6 +7,8 @@
 #include "FluentBundle.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/UnionTypes.h"
+#include "nsStringFwd.h"
+#include "nsTArray.h"
 #include "unicode/numberformatter.h"
 #include "unicode/datefmt.h"
 
@@ -70,12 +72,13 @@ already_AddRefed<FluentBundle> FluentBundle::Constructor(
   UniquePtr<ffi::FluentBundleRc> raw;
 
   if (aLocales.IsUTF8String()) {
-    nsTArray<nsCString> locales;
-    locales.AppendElement(aLocales.GetAsUTF8String());
-    raw.reset(ffi::fluent_bundle_new(&locales, useIsolating, &pseudoStrategy));
+    const nsACString& locale = aLocales.GetAsUTF8String();
+    raw.reset(
+        ffi::fluent_bundle_new_single(&locale, useIsolating, &pseudoStrategy));
   } else {
-    nsTArray<nsCString> locales(aLocales.GetAsUTF8StringSequence());
-    raw.reset(ffi::fluent_bundle_new(&locales, useIsolating, &pseudoStrategy));
+    const auto& locales = aLocales.GetAsUTF8StringSequence();
+    raw.reset(ffi::fluent_bundle_new(locales.Elements(), locales.Length(),
+                                     useIsolating, &pseudoStrategy));
   }
 
   if (!raw) {

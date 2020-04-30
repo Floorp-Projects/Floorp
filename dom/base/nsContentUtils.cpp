@@ -6181,27 +6181,6 @@ bool nsContentUtils::IsSubDocumentTabbable(nsIContent* aContent) {
   return true;
 }
 
-bool nsContentUtils::IsUserFocusIgnored(nsINode* aNode) {
-  if (!StaticPrefs::dom_mozBrowserFramesEnabled()) {
-    return false;
-  }
-
-  // Check if our mozbrowser iframe ancestors has ignoreuserfocus attribute.
-  while (aNode) {
-    nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(aNode);
-    if (browserFrame &&
-        aNode->AsElement()->HasAttr(kNameSpaceID_None,
-                                    nsGkAtoms::ignoreuserfocus) &&
-        browserFrame->GetReallyIsBrowser()) {
-      return true;
-    }
-    nsPIDOMWindowOuter* win = aNode->OwnerDoc()->GetWindow();
-    aNode = win ? win->GetFrameElementInternal() : nullptr;
-  }
-
-  return false;
-}
-
 bool nsContentUtils::HasScrollgrab(nsIContent* aContent) {
   // If we ever standardize this feature we'll want to hook this up properly
   // again. For now we're removing all the DOM-side code related to it but

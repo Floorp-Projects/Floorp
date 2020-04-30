@@ -1,11 +1,3 @@
-const PREF_MULTISELECT_TABS = "browser.tabs.multiselect";
-
-add_task(async function setPref() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[PREF_MULTISELECT_TABS, true]],
-  });
-});
-
 add_task(async function test() {
   let tab1 = gBrowser.selectedTab;
   let tab2 = await addTab();

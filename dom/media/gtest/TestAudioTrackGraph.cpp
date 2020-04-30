@@ -102,10 +102,8 @@ TEST(TestAudioTrackGraph, SetOutputDeviceID)
       MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE,
       /*OutputDeviceID*/ reinterpret_cast<cubeb_devid>(2));
 
-  // Cubeb stream has not been init yet, confirm invalid device id `-1`
-  EXPECT_EQ(cubeb->GetCurrentOutputDeviceID(),
-            reinterpret_cast<cubeb_devid>(-1))
-      << "Initial state, invalid output device id";
+  EXPECT_EQ(cubeb->CurrentStream(), nullptr)
+      << "Cubeb stream has not been initialized yet";
 
   // Dummy track to make graph rolling. Add it and remove it to remove the
   // graph from the global hash table and let it shutdown.
@@ -116,7 +114,7 @@ TEST(TestAudioTrackGraph, SetOutputDeviceID)
   RefPtr<GenericPromise> p = graph->NotifyWhenDeviceStarted(dummySource);
   p->Then(GetMainThreadSerialEventTarget(), __func__,
           [&mon, cubeb, dummySource]() {
-            EXPECT_EQ(cubeb->GetCurrentOutputDeviceID(),
+            EXPECT_EQ(cubeb->CurrentStream()->GetOutputDeviceID(),
                       reinterpret_cast<cubeb_devid>(2))
                 << "After init confirm the expected output device id";
             // Test has finished, destroy the track to shutdown the MTG.
@@ -155,6 +153,36 @@ TEST(TestAudioTrackGraph, NotifyDeviceStarted)
     dummySource->Destroy();
     mon.SetFinished();
   });
+
+  mon.AwaitFinished();
+}
+
+TEST(TestAudioTrackGraph, ErrorStateCrash)
+{
+  MockCubeb* cubeb = new MockCubeb();
+  CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
+
+  MediaTrackGraph* graph = MediaTrackGraph::GetInstance(
+      MediaTrackGraph::AUDIO_THREAD_DRIVER, /*window*/ nullptr,
+      MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE, nullptr);
+
+  // Dummy track to make graph rolling. Add it and remove it to remove the
+  // graph from the global hash table and let it shutdown.
+  RefPtr<SourceMediaTrack> dummySource =
+      graph->CreateSourceTrack(MediaSegment::AUDIO);
+
+  RefPtr<GenericPromise> p = graph->NotifyWhenDeviceStarted(dummySource);
+
+  GMPTestMonitor mon;
+
+  p->Then(GetMainThreadSerialEventTarget(), __func__,
+          [&mon, dummySource, cubeb]() {
+            cubeb->CurrentStream()->ForceError();
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            // Test has finished, destroy the track to shutdown the MTG.
+            dummySource->Destroy();
+            mon.SetFinished();
+          });
 
   mon.AwaitFinished();
 }

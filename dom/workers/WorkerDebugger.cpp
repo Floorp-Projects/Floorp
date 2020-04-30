@@ -532,7 +532,7 @@ RefPtr<PerformanceInfoPromise> WorkerDebugger::ReportPerformanceInfo() {
       ->Then(
           mainThread, __func__,
           [workerRef, url, pid, perfId, windowID, duration, isTopLevel,
-           items](const PerformanceMemoryInfo& aMemoryInfo) {
+           items = std::move(items)](const PerformanceMemoryInfo& aMemoryInfo) {
             return PerformanceInfoPromise::CreateAndResolve(
                 PerformanceInfo(url, pid, windowID, duration, perfId, true,
                                 isTopLevel, aMemoryInfo, items),

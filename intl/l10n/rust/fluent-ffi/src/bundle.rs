@@ -68,21 +68,55 @@ fn format_numbers(num: &FluentValue, intls: &IntlLangMemoizer) -> Option<String>
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fluent_bundle_new(
-    locales: &ThinVec<nsCString>,
+pub unsafe extern "C" fn fluent_bundle_new_single(
+    locale: &nsACString,
     use_isolating: bool,
     pseudo_strategy: &nsACString,
 ) -> *mut FluentBundleRc {
-    let mut langids = Vec::with_capacity(locales.len());
+    // We can use as_str_unchecked because this string comes from WebIDL and is
+    // guaranteed utf-8.
+    let id = match locale.as_str_unchecked().parse::<LanguageIdentifier>() {
+        Ok(id) => id,
+        Err(..) => return std::ptr::null_mut(),
+    };
 
+    Box::into_raw(fluent_bundle_new_internal(
+        &[id],
+        use_isolating,
+        pseudo_strategy,
+    ))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fluent_bundle_new(
+    locales: *const nsCString,
+    locale_count: usize,
+    use_isolating: bool,
+    pseudo_strategy: &nsACString,
+) -> *mut FluentBundleRc {
+    let mut langids = Vec::with_capacity(locale_count);
+    let locales = std::slice::from_raw_parts(locales, locale_count);
     for locale in locales {
-        let langid: Result<LanguageIdentifier, _> = locale.to_string().parse();
-        match langid {
-            Ok(langid) => langids.push(langid),
-            Err(_) => return std::ptr::null_mut(),
-        }
+        let id = match locale.as_str_unchecked().parse::<LanguageIdentifier>() {
+            Ok(id) => id,
+            Err(..) => return std::ptr::null_mut(),
+        };
+        langids.push(id);
     }
-    let mut bundle = FluentBundle::new(&langids);
+
+    Box::into_raw(fluent_bundle_new_internal(
+        &langids,
+        use_isolating,
+        pseudo_strategy,
+    ))
+}
+
+fn fluent_bundle_new_internal(
+    langids: &[LanguageIdentifier],
+    use_isolating: bool,
+    pseudo_strategy: &nsACString,
+) -> Box<FluentBundleRc> {
+    let mut bundle = FluentBundle::new(langids.iter());
     bundle.set_use_isolating(use_isolating);
 
     bundle.set_formatter(Some(format_numbers));
@@ -132,7 +166,7 @@ pub unsafe extern "C" fn fluent_bundle_new(
             _ => bundle.set_transform(None),
         }
     }
-    Box::into_raw(Box::new(bundle.into()))
+    Box::new(bundle.into())
 }
 
 #[no_mangle]

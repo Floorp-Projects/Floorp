@@ -189,12 +189,12 @@ var tests = [
   },
   {
     loadURL: "http://example.com/a%E3%80%80test",
-    expectedURL: "example.com/a\u{3000}test",
+    expectedURL: "example.com/a%E3%80%80test",
     copyExpected: "http://example.com/a%E3%80%80test",
   },
   {
     loadURL: "http://example.com/a%20%C2%A0test",
-    expectedURL: "example.com/a%20%C2%A0test",
+    expectedURL: "example.com/a %C2%A0test",
     copyExpected: "http://example.com/a%20%C2%A0test",
   },
   {

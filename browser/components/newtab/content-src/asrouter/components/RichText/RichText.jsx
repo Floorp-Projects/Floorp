@@ -44,6 +44,8 @@ export function convertLinks(
           data-action={action}
           data-args={links[linkTag].args}
           data-do_not_autoblock={doNotAutoBlock}
+          data-entrypoint_name={links[linkTag].entrypoint_name}
+          data-entrypoint_value={links[linkTag].entrypoint_value}
           onClick={sendClick}
         />
       );

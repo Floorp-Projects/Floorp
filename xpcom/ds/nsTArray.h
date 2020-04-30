@@ -296,15 +296,8 @@ constexpr bool SpecializableIsCopyConstructibleValue =
 // copy-constructible. nsTArray_Impl never makes use of E's copy assignment
 // operator, so the decision is made solely based on E's copy-constructibility.
 template <typename E, typename Impl, typename Alloc,
-          bool IsCopyConstructible = SpecializableIsCopyConstructibleValue<E>
-          // XXX Bug 1628692: We should disallow copy constructors/assignment
-          // operators for FallibleTArray, since copying may fail but there's no
-          // way to signal that to the caller. However, there are several uses,
-          // including in ipdlc generated code, that do this, which need to be
-          // fixed first.
-          //
-          // && std::is_same_v<Alloc, nsTArrayInfallibleAllocator>
-          >
+          bool IsCopyConstructible = SpecializableIsCopyConstructibleValue<E>&&
+              std::is_same_v<Alloc, nsTArrayInfallibleAllocator>>
 class nsTArray_CopyEnabler;
 
 template <typename E, typename Impl, typename Alloc>
@@ -322,37 +315,17 @@ class nsTArray_CopyEnabler<E, Impl, Alloc, true> {
   nsTArray_CopyEnabler() = default;
 
   nsTArray_CopyEnabler(const nsTArray_CopyEnabler& aOther) {
-    /// XXX Bug 1628692 will make FallibleTArray uncopyable. The Fallible
-    /// variant should be removed then again.
-    if constexpr (std::is_same_v<Alloc, nsTArrayFallibleAllocator>) {
-      auto res = static_cast<Impl*>(this)->AppendElements(
-          static_cast<const Impl&>(aOther), mozilla::fallible);
-#ifdef DEBUG
-      MOZ_ASSERT(res);
-#else
-      (void)res;
-#endif
-    } else {
-      static_cast<Impl*>(this)->template AppendElementsInternal<Alloc>(
-          static_cast<const Impl&>(aOther).Elements(),
-          static_cast<const Impl&>(aOther).Length());
-    }
+    static_cast<Impl*>(this)->template AppendElementsInternal<Alloc>(
+        static_cast<const Impl&>(aOther).Elements(),
+        static_cast<const Impl&>(aOther).Length());
   }
 
   nsTArray_CopyEnabler& operator=(const nsTArray_CopyEnabler& aOther) {
     if (this != &aOther) {
-      /// XXX Bug 1628692 will make FallibleTArray uncopyable. Checking of the
-      /// return value should be removed then again.
-      E* const res =
-          static_cast<Impl*>(this)->template ReplaceElementsAtInternal<Alloc>(
-              0, static_cast<Impl*>(this)->Length(),
-              static_cast<const Impl&>(aOther).Elements(),
-              static_cast<const Impl&>(aOther).Length());
-#ifdef DEBUG
-      MOZ_ASSERT(res);
-#else
-      (void)res;
-#endif
+      static_cast<Impl*>(this)->template ReplaceElementsAtInternal<Alloc>(
+          0, static_cast<Impl*>(this)->Length(),
+          static_cast<const Impl&>(aOther).Elements(),
+          static_cast<const Impl&>(aOther).Length());
     }
     return *this;
   }
