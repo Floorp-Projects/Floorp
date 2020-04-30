@@ -8,7 +8,7 @@ const tests = [
   {
       date: new Date("2019-01-01T00:00:00.123"),
       digits: {
-          1: [FractionalSecond("1"), Literal(" (second: "), Second("0"), Literal(")")],
+          1: [Second("0"), Literal("."), FractionalSecond("1")],
           2: [Second("0"), Literal("."), FractionalSecond("12")],
           3: [Second("0"), Literal("."), FractionalSecond("123")],
       }
@@ -16,7 +16,7 @@ const tests = [
   {
       date: new Date("2019-01-01T00:00:00.023"),
       digits: {
-          1: [FractionalSecond("0"), Literal(" (second: "), Second("0"), Literal(")")],
+          1: [Second("0"), Literal("."), FractionalSecond("0")],
           2: [Second("0"), Literal("."), FractionalSecond("02")],
           3: [Second("0"), Literal("."), FractionalSecond("023")],
       }
@@ -24,7 +24,7 @@ const tests = [
   {
       date: new Date("2019-01-01T00:00:00.003"),
       digits: {
-          1: [FractionalSecond("0"), Literal(" (second: "), Second("0"), Literal(")")],
+          1: [Second("0"), Literal("."), FractionalSecond("0")],
           2: [Second("0"), Literal("."), FractionalSecond("00")],
           3: [Second("0"), Literal("."), FractionalSecond("003")],
       }
