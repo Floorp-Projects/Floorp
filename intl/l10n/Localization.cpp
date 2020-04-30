@@ -149,6 +149,24 @@ void Localization::OnChange() {
   }
 }
 
+uint32_t Localization::AddResourceId(const nsAString& aResourceId) {
+  uint32_t ret = 0;
+  mLocalization->AddResourceId(aResourceId, &ret);
+  return ret;
+}
+
+uint32_t Localization::RemoveResourceId(const nsAString& aResourceId) {
+  // We need to guard against a scenario where the
+  // mLocalization has been unlinked, but the elements
+  // are only now removed from DOM.
+  if (!mLocalization) {
+    return 0;
+  }
+  uint32_t ret = 0;
+  mLocalization->RemoveResourceId(aResourceId, &ret);
+  return ret;
+}
+
 /**
  * Localization API
  */

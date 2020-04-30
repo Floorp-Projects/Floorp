@@ -256,6 +256,24 @@ class Localization {
   }
 
   /**
+   * @param {String} resourceId - Resource IDs
+   */
+  addResourceId(resourceId) {
+    this.resourceIds.push(resourceId);
+    this.onChange();
+    return this.resourceIds.length;
+  }
+
+  /**
+   * @param {String} resourceId - Resource IDs
+   */
+  removeResourceId(resourceId) {
+    this.resourceIds = this.resourceIds.filter(r => r !== resourceId);
+    this.onChange();
+    return this.resourceIds.length;
+  }
+
+  /**
    * @param {Array<String>} resourceIds - List of resource IDs
    */
   addResourceIds(resourceIds) {
@@ -264,6 +282,9 @@ class Localization {
     return this.resourceIds.length;
   }
 
+  /**
+   * @param {Array<String>} resourceIds - List of resource IDs
+   */
   removeResourceIds(resourceIds) {
     this.resourceIds = this.resourceIds.filter(r => !resourceIds.includes(r));
     this.onChange();

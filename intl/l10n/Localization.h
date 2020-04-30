@@ -46,6 +46,9 @@ class Localization : public nsIObserver,
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
+  uint32_t AddResourceId(const nsAString& aResourceId);
+  uint32_t RemoveResourceId(const nsAString& aResourceId);
+
   /**
    * Localization API
    *
