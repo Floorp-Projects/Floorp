@@ -4857,7 +4857,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
         return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
       }
       if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::RemoveContainerWithTransaction() failed");
+        NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
         return EditActionResult(rv);
       }
       // Extend the loop length to handle all children collected here.
@@ -11049,7 +11049,7 @@ nsresult HTMLEditor::RemoveAlignFromDescendants(Element& aElement,
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::RemoveContainerWithTransaction() failed");
+        NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
         return rv;
       }
       continue;
@@ -11300,7 +11300,7 @@ nsresult HTMLEditor::ChangeMarginStart(Element& aElement,
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::RemoveContainerWithTransaction() failed");
+                       "HTMLEditor::RemoveContainerWithTransaction() failed");
   return rv;
 }
 

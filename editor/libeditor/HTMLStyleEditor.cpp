@@ -1073,7 +1073,7 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::RemoveContainerWithTransaction() failed");
+        NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
         return rv;
       }
     }
@@ -1086,7 +1086,7 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
           return NS_ERROR_EDITOR_DESTROYED;
         }
         if (NS_FAILED(rv)) {
-          NS_WARNING("EditorBase::RemoveContainerWithTransaction() failed");
+          NS_WARNING("HTMLEditor::RemoveContainerWithTransaction() failed");
           return rv;
         }
       } else {
@@ -1128,7 +1128,7 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
       }
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
-          "EditorBase::RemoveContainerWithTransaction() failed, but ignored");
+          "HTMLEditor::RemoveContainerWithTransaction() failed, but ignored");
     }
   }
 
@@ -1141,7 +1141,7 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
       return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "EditorBase::RemoveContainerWithTransaction() failed");
+                         "HTMLEditor::RemoveContainerWithTransaction() failed");
     return rv;
   }
 
@@ -2392,7 +2392,7 @@ nsresult HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
     // in that case, just remove this node and pull up the children
     rv = RemoveContainerWithTransaction(MOZ_KnownLive(*aNode->AsElement()));
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "EditorBase::RemoveContainerWithTransaction() failed");
+                         "HTMLEditor::RemoveContainerWithTransaction() failed");
     return rv;
   }
 
