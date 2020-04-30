@@ -13,16 +13,11 @@
 [package]
 edition = "2018"
 name = "glslopt"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Jamie Nicol <jnicol@mozilla.com>"]
 description = "Optimizes GLSL shader code"
 keywords = ["opengl", "gl", "gles", "glsl", "shader"]
 license = "MIT"
 repository = "https://github.com/jamienicol/glslopt-rs"
-[build-dependencies.bindgen]
-version = "0.53"
-features = ["runtime"]
-default-features = false
-
 [build-dependencies.cc]
 version = "1.0"
