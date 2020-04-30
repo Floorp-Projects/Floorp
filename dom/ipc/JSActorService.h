@@ -14,6 +14,8 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/dom/JSActor.h"
+#include "mozilla/dom/JSProcessActorProtocol.h"
+#include "mozilla/dom/JSWindowActorProtocol.h"
 
 #include "nsIObserver.h"
 #include "nsIDOMEventListener.h"
@@ -22,7 +24,9 @@
 
 namespace mozilla {
 namespace dom {
+struct ProcessActorOptions;
 struct WindowActorOptions;
+class JSProcessActorInfo;
 class JSWindowActorInfo;
 class EventTarget;
 
@@ -50,14 +54,26 @@ class JSActorService final {
 
   void UnregisterWindowActor(const nsACString& aName);
 
-  // Register child's Window Actor from JSWindowActorInfos for content process.
-  void LoadJSWindowActorInfos(nsTArray<JSWindowActorInfo>& aInfos);
-
   // Get the named of Window Actor and the child's WindowActorOptions
   // from mDescriptors to JSWindowActorInfos.
   void GetJSWindowActorInfos(nsTArray<JSWindowActorInfo>& aInfos);
 
   already_AddRefed<JSWindowActorProtocol> GetJSWindowActorProtocol(
+      const nsACString& aName);
+
+  // -- Content Actor
+
+  void RegisterProcessActor(const nsACString& aName,
+                            const ProcessActorOptions& aOptions,
+                            ErrorResult& aRv);
+
+  void UnregisterProcessActor(const nsACString& aName);
+
+  // Get the named of Content Actor and the child's ProcessActorOptions
+  // from mDescriptors to JSProcessActorInfos.
+  void GetJSProcessActorInfos(nsTArray<JSProcessActorInfo>& aInfos);
+
+  already_AddRefed<JSProcessActorProtocol> GetJSProcessActorProtocol(
       const nsACString& aName);
 
  private:
