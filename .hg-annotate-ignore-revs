@@ -312,6 +312,7 @@ d437391bafa1ec497443aedac9500cbfa172ec26 - Ted Campbell - Bug 1508255 - Allow cl
 ab5ae5f1e381afd603d9b3032c7705a4f620bfdb - Jan de Mooij - Bug 1508176 - Some clang-format fixes for generated unicode files. r=tcampbell,sylvestre
 834b61114235c7a2f2413d135ad11e5b4148c09b - Jan de Mooij - Bug 1509010 - Fix some clang-format comment issues in js/public. r=tcampbell
 34e7b9fa3a761d8e761c9aeaa50983d0cb3cc50c - Karl Tomlinson - Bug 1508905 Remove from clang-format-ignore WebAudio files forked from Blink r=Ehsan
+2ec7bd511b7f5ab1b6f11beca250dd094a79943b - Karl Tomlinson - Bug 1508909 revert reformat of third-party ffmpeg headers r=jya
 5d83d28c9ae59e31271fc400de7a63f0221a0ebe - Jan de Mooij - Bug 1509025 - Remove js/src/jsapi-tests from .clang-format-ignore. r=sylvestre,tcampbell
 fb09acfff1684500e989acc798e97fa7f9358dc0 - Ehsan Akhgari - Bug 1508472 - Part 1: First batch of comment fix-ups in preparation for the tree reformat r=sylvestre
 11d6688b953f800e234162bc8ed5842954de087f - Ehsan Akhgari - Bug 1508472 - Part 2: Second batch of comment fix-ups in preparation for the tree reformat r=sylvestre
