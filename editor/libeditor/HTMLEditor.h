@@ -2185,13 +2185,10 @@ class HTMLEditor final : public TextEditor,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT MoveNodeResult
   MoveChildren(Element& aElement, const EditorDOMPoint& aPointToInsert);
 
-  using EditorBase::MoveChildren;
-
   /**
    * MoveAllChildren() moves all children of aContainer to before
    * aPointToInsert.GetChild().
-   * See explanation of EditorBase::MoveChildren() for the detail of the
-   * behavior.
+   * See explanation of MoveChildrenBetween() for the detail of the behavior.
    *
    * @param aContainer          The container node whose all children should
    *                            be moved.
@@ -2205,10 +2202,31 @@ class HTMLEditor final : public TextEditor,
                        ErrorResult& aError);
 
   /**
+   * MoveChildrenBetween() moves all children between aFirstChild and aLastChild
+   * to before aPointToInsert.GetChild(). If some children are moved to
+   * different container while this method moves other children, they are just
+   * ignored. If the child node referred by aPointToInsert is moved to different
+   * container while this method moves children, returns error.
+   *
+   * @param aFirstChild         The first child which should be moved to
+   *                            aPointToInsert.
+   * @param aLastChild          The last child which should be moved.  This
+   *                            must be a sibling of aFirstChild and it should
+   *                            be positioned after aFirstChild in the DOM tree
+   *                            order.
+   * @param aPointToInsert      The insertion point.  The container must not
+   *                            be a data node like a text node.
+   * @param aError              The result.  If this succeeds to move children,
+   *                            returns NS_OK.  Otherwise, an error.
+   */
+  void MoveChildrenBetween(nsIContent& aFirstChild, nsIContent& aLastChild,
+                           const EditorRawDOMPoint& aPointToInsert,
+                           ErrorResult& aError);
+
+  /**
    * MovePreviousSiblings() moves all siblings before aChild (i.e., aChild
    * won't be moved) to before aPointToInsert.GetChild().
-   * See explanation of EditorBase::MoveChildren() for the detail of the
-   * behavior.
+   * See explanation of MoveChildrenBetween() for the detail of the behavior.
    *
    * @param aChild              The node which is next sibling of the last
    *                            node to be moved.
