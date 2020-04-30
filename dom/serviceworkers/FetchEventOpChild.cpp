@@ -16,8 +16,6 @@
 #include "nsIChannel.h"
 #include "nsIConsoleReportCollector.h"
 #include "nsIContentPolicy.h"
-#include "nsIHttpChannelInternal.h"
-#include "nsIHttpHeaderVisitor.h"
 #include "nsIInputStream.h"
 #include "nsILoadInfo.h"
 #include "nsINetworkInterceptController.h"
@@ -25,7 +23,6 @@
 #include "nsIScriptError.h"
 #include "nsISupportsImpl.h"
 #include "nsIURI.h"
-#include "nsIUploadChannel2.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
 #include "nsTArray.h"
@@ -40,7 +37,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/dom/InternalHeaders.h"
-#include "mozilla/dom/InternalRequest.h"
 #include "mozilla/dom/InternalResponse.h"
 #include "mozilla/dom/PRemoteWorkerControllerChild.h"
 #include "mozilla/dom/ServiceWorkerRegistrationInfo.h"
@@ -185,168 +181,6 @@ class SynthesizeResponseWatcher final : public nsIInterceptedBodyCallback {
 
 NS_IMPL_ISUPPORTS(SynthesizeResponseWatcher, nsIInterceptedBodyCallback)
 
-class HeaderFiller final : public nsIHttpHeaderVisitor {
- public:
-  NS_DECL_ISUPPORTS
-
-  explicit HeaderFiller(HeadersGuardEnum aGuard)
-      : mInternalHeaders(new InternalHeaders(aGuard)) {
-    MOZ_ASSERT(mInternalHeaders);
-  }
-
-  NS_IMETHOD
-  VisitHeader(const nsACString& aHeader, const nsACString& aValue) override {
-    ErrorResult result;
-    mInternalHeaders->Append(aHeader, aValue, result);
-
-    if (NS_WARN_IF(result.Failed())) {
-      return result.StealNSResult();
-    }
-
-    return NS_OK;
-  }
-
-  RefPtr<InternalHeaders> Extract() {
-    return RefPtr<InternalHeaders>(std::move(mInternalHeaders));
-  }
-
- private:
-  ~HeaderFiller() = default;
-
-  RefPtr<InternalHeaders> mInternalHeaders;
-};
-
-NS_IMPL_ISUPPORTS(HeaderFiller, nsIHttpHeaderVisitor)
-
-nsresult GetIPCInternalRequest(nsIInterceptedChannel* aChannel,
-                               IPCInternalRequest* aOutRequest,
-                               UniquePtr<AutoIPCStream>& aAutoStream) {
-  AssertIsOnMainThread();
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aChannel->GetSecureUpgradedChannelURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIURI> uriNoFragment;
-  rv = NS_GetURIWithoutRef(uri, getter_AddRefs(uriNoFragment));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIChannel> underlyingChannel;
-  rv = aChannel->GetChannel(getter_AddRefs(underlyingChannel));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(underlyingChannel);
-  MOZ_ASSERT(httpChannel, "How come we don't have an HTTP channel?");
-
-  nsCOMPtr<nsIHttpChannelInternal> internalChannel =
-      do_QueryInterface(httpChannel);
-  NS_ENSURE_TRUE(internalChannel, NS_ERROR_NOT_AVAILABLE);
-
-  nsCOMPtr<nsICacheInfoChannel> cacheInfoChannel =
-      do_QueryInterface(underlyingChannel);
-
-  nsAutoCString spec;
-  rv = uriNoFragment->GetSpec(spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoCString fragment;
-  rv = uri->GetRef(fragment);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoCString method;
-  rv = httpChannel->GetRequestMethod(method);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // This is safe due to static_asserts in ServiceWorkerManager.cpp
-  uint32_t cacheModeInt;
-  rv = internalChannel->GetFetchCacheMode(&cacheModeInt);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  RequestCache cacheMode = static_cast<RequestCache>(cacheModeInt);
-
-  RequestMode requestMode =
-      InternalRequest::MapChannelToRequestMode(underlyingChannel);
-
-  // This is safe due to static_asserts in ServiceWorkerManager.cpp
-  uint32_t redirectMode;
-  rv = internalChannel->GetRedirectMode(&redirectMode);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  RequestRedirect requestRedirect = static_cast<RequestRedirect>(redirectMode);
-
-  RequestCredentials requestCredentials =
-      InternalRequest::MapChannelToRequestCredentials(underlyingChannel);
-
-  nsAutoString referrer;
-  ReferrerPolicy referrerPolicy = ReferrerPolicy::_empty;
-
-  nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
-  if (referrerInfo) {
-    referrerPolicy = referrerInfo->ReferrerPolicy();
-    Unused << referrerInfo->GetComputedReferrerSpec(referrer);
-  }
-
-  uint32_t loadFlags;
-  rv = underlyingChannel->GetLoadFlags(&loadFlags);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  rv = underlyingChannel->GetLoadInfo(getter_AddRefs(loadInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_STATE(loadInfo);
-
-  nsContentPolicyType contentPolicyType = loadInfo->InternalContentPolicyType();
-
-  nsAutoString integrity;
-  rv = internalChannel->GetIntegrityMetadata(integrity);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  RefPtr<HeaderFiller> headerFiller =
-      MakeRefPtr<HeaderFiller>(HeadersGuardEnum::Request);
-  rv = httpChannel->VisitNonDefaultRequestHeaders(headerFiller);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  RefPtr<InternalHeaders> internalHeaders = headerFiller->Extract();
-
-  ErrorResult result;
-  internalHeaders->SetGuard(HeadersGuardEnum::Immutable, result);
-  if (NS_WARN_IF(result.Failed())) {
-    return result.StealNSResult();
-  }
-
-  nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(httpChannel);
-  nsCOMPtr<nsIInputStream> uploadStream;
-  int64_t uploadStreamContentLength = -1;
-  if (uploadChannel) {
-    rv = uploadChannel->CloneUploadStream(&uploadStreamContentLength,
-                                          getter_AddRefs(uploadStream));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  RefPtr<InternalRequest> internalRequest = new InternalRequest(
-      spec, fragment, method, internalHeaders.forget(), cacheMode, requestMode,
-      requestRedirect, requestCredentials, referrer, referrerPolicy,
-      contentPolicyType, integrity);
-  internalRequest->SetBody(uploadStream, uploadStreamContentLength);
-
-  nsAutoCString alternativeDataType;
-  if (cacheInfoChannel &&
-      !cacheInfoChannel->PreferredAlternativeDataTypes().IsEmpty()) {
-    // TODO: the internal request probably needs all the preferred types.
-    alternativeDataType.Assign(
-        cacheInfoChannel->PreferredAlternativeDataTypes()[0].type());
-    internalRequest->SetPreferredAlternativeDataType(alternativeDataType);
-  }
-
-  PBackgroundChild* bgChild = BackgroundChild::GetForCurrentThread();
-
-  if (NS_WARN_IF(!bgChild)) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  }
-
-  internalRequest->ToIPC(aOutRequest, bgChild, aAutoStream);
-
-  return NS_OK;
-}
-
 }  // anonymous namespace
 
 /* static */ RefPtr<GenericPromise> FetchEventOpChild::SendFetchEvent(
@@ -364,28 +198,7 @@ nsresult GetIPCInternalRequest(nsIInterceptedChannel* aChannel,
       std::move(aArgs), std::move(aInterceptedChannel),
       std::move(aRegistration), std::move(aKeepAliveToken));
 
-  // autoStream will contain a pointer into the IPCInternalRequest passed into
-  // GetIPCInternalRequest, so autoStream shouldn't outlive that
-  // IPCInternalRequest or the containing FetchEventOpChild.
-  auto autoStream = MakeUnique<AutoIPCStream>();
-
-  // const_cast-ing the IPCInternalRequest is okay because this is conceptually
-  // part of initializing actor->mArgs, and `autoStream` needs its
-  // IPCStream (physically part of actor->mArgs.internalRequest()) to be in its
-  // final location in memory, so actor->mArgs must be created before this call.
-  nsresult rv = GetIPCInternalRequest(
-      actor->mInterceptedChannel,
-      const_cast<IPCInternalRequest*>(&actor->mArgs.internalRequest()),
-      autoStream);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    // `actor` must be manually delete-d before the actor tree can manage its
-    // lifetime starting with SendPFetchEventOpConstructor.
-    delete actor;
-    return GenericPromise::CreateAndReject(rv, __func__);
-  }
-
   Unused << aManager->SendPFetchEventOpConstructor(actor, actor->mArgs);
-  autoStream->TakeOptionalValue();
 
   return actor->mPromiseHolder.Ensure(__func__);
 }

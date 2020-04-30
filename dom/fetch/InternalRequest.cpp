@@ -6,18 +6,17 @@
 
 #include "InternalRequest.h"
 
-#include "nsIContentPolicy.h"
-#include "mozilla/dom/Document.h"
-#include "nsStreamUtils.h"
-
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/FetchTypes.h"
+#include "mozilla/dom/IPCBlobInputStreamChild.h"
 #include "mozilla/dom/ScriptSettings.h"
-
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "nsIContentPolicy.h"
+#include "nsStreamUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -146,7 +145,6 @@ InternalRequest::InternalRequest(const IPCInternalRequest& aIPCRequest)
       mURLList(aIPCRequest.urlList()),
       mHeaders(new InternalHeaders(aIPCRequest.headers(),
                                    aIPCRequest.headersGuard())),
-      mBodyStream(mozilla::ipc::DeserializeIPCStream(aIPCRequest.body())),
       mBodyLength(aIPCRequest.bodySize()),
       mPreferredAlternativeDataType(aIPCRequest.preferredAlternativeDataType()),
       mContentPolicyType(
@@ -163,48 +161,20 @@ InternalRequest::InternalRequest(const IPCInternalRequest& aIPCRequest)
     mPrincipalInfo = MakeUnique<mozilla::ipc::PrincipalInfo>(
         aIPCRequest.principalInfo().ref());
   }
+
+  const Maybe<BodyStreamVariant>& body = aIPCRequest.body();
+
+  // This constructor is (currently) only used for parent -> child communication
+  // (constructed on the child side).
+  if (body) {
+    MOZ_ASSERT(body->type() == BodyStreamVariant::TParentToChildStream);
+    mBodyStream = static_cast<IPCBlobInputStreamChild*>(
+                      body->get_ParentToChildStream().actorChild())
+                      ->CreateStream();
+  }
 }
 
 InternalRequest::~InternalRequest() = default;
-
-template void InternalRequest::ToIPC<mozilla::ipc::PBackgroundChild>(
-    IPCInternalRequest* aIPCRequest, mozilla::ipc::PBackgroundChild* aManager,
-    UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream);
-
-template <typename M>
-void InternalRequest::ToIPC(
-    IPCInternalRequest* aIPCRequest, M* aManager,
-    UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream) {
-  MOZ_ASSERT(aIPCRequest);
-  MOZ_ASSERT(aManager);
-  MOZ_ASSERT(!mURLList.IsEmpty());
-
-  aIPCRequest->method() = mMethod;
-  aIPCRequest->urlList() = mURLList;
-  mHeaders->ToIPC(aIPCRequest->headers(), aIPCRequest->headersGuard());
-
-  if (mBodyStream) {
-    aAutoStream.reset(new mozilla::ipc::AutoIPCStream(aIPCRequest->body()));
-    DebugOnly<bool> ok = aAutoStream->Serialize(mBodyStream, aManager);
-    MOZ_ASSERT(ok);
-  }
-
-  aIPCRequest->bodySize() = mBodyLength;
-  aIPCRequest->preferredAlternativeDataType() = mPreferredAlternativeDataType;
-  aIPCRequest->contentPolicyType() = static_cast<uint32_t>(mContentPolicyType);
-  aIPCRequest->referrer() = mReferrer;
-  aIPCRequest->referrerPolicy() = mReferrerPolicy;
-  aIPCRequest->requestMode() = mMode;
-  aIPCRequest->requestCredentials() = mCredentialsMode;
-  aIPCRequest->cacheMode() = mCacheMode;
-  aIPCRequest->requestRedirect() = mRedirectMode;
-  aIPCRequest->integrity() = mIntegrity;
-  aIPCRequest->fragment() = mFragment;
-
-  if (mPrincipalInfo) {
-    aIPCRequest->principalInfo().emplace(*mPrincipalInfo);
-  }
-}
 
 void InternalRequest::SetContentPolicyType(
     nsContentPolicyType aContentPolicyType) {
