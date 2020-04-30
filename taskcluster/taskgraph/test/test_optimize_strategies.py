@@ -4,20 +4,29 @@
 from __future__ import absolute_import
 
 import time
+from datetime import datetime
+from time import mktime
 
 import pytest
-from datetime import datetime
 from mozunit import main
-from time import mktime
 
 from taskgraph.optimize.backstop import Backstop
 from taskgraph.optimize.bugbug import (
     BugBugPushSchedules,
-    BugbugTimeoutException,
     DisperseGroups,
     SkipUnlessDebug,
 )
 from taskgraph.task import Task
+from taskgraph.util.bugbug import (
+    BUGBUG_BASE_URL,
+    BugbugTimeoutException,
+    push_schedules,
+)
+
+
+@pytest.fixture(autouse=True)
+def clear_push_schedules_memoize():
+    push_schedules.clear()
 
 
 @pytest.fixture(scope='module')
@@ -206,7 +215,7 @@ def test_optimization_strategy(responses, params, opt, tasks, arg, expected):
 ], ids=idfn)
 def test_bugbug_push_schedules(responses, params, args, data, expected):
     query = "/push/{branch}/{head_rev}/schedules".format(**params)
-    url = BugBugPushSchedules.BUGBUG_BASE_URL + query
+    url = BUGBUG_BASE_URL + query
 
     responses.add(
         responses.GET,
@@ -222,7 +231,7 @@ def test_bugbug_push_schedules(responses, params, args, data, expected):
 
 def test_bugbug_timeout(monkeypatch, responses, params):
     query = "/push/{branch}/{head_rev}/schedules".format(**params)
-    url = BugBugPushSchedules.BUGBUG_BASE_URL + query
+    url = BUGBUG_BASE_URL + query
     responses.add(
         responses.GET,
         url,
