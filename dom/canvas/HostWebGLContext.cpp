@@ -67,7 +67,12 @@ UniquePtr<HostWebGLContext> HostWebGLContext::Create(
 HostWebGLContext::HostWebGLContext(OwnerData&& ownerData)
     : mOwnerData(std::move(ownerData)) {
   if (mOwnerData.outOfProcess) {
-    mOwnerData.outOfProcess->mCommandSink->mHostContext = this;
+    if (mOwnerData.outOfProcess->mCommandSinkP) {
+      mOwnerData.outOfProcess->mCommandSinkP->mHostContext = this;
+    }
+    if (mOwnerData.outOfProcess->mCommandSinkI) {
+      mOwnerData.outOfProcess->mCommandSinkI->mHostContext = this;
+    }
   }
 
   {

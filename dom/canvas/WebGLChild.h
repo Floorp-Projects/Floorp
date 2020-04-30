@@ -9,6 +9,7 @@
 #include <string>
 
 #include "mozilla/dom/PWebGLChild.h"
+#include "mozilla/dom/IpdlQueue.h"
 
 namespace mozilla {
 
@@ -16,15 +17,24 @@ class ClientWebGLContext;
 
 namespace dom {
 
-class WebGLChild final : public PWebGLChild {
+class WebGLChild final : public PWebGLChild,
+                         public SyncProducerActor<WebGLChild>,
+                         public AsyncConsumerActor<WebGLChild>,
+                         public SupportsWeakPtr<WebGLChild> {
  public:
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLChild)
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebGLChild, override);
+  using OtherSideActor = WebGLParent;
 
   ClientWebGLContext& mContext;
 
   explicit WebGLChild(ClientWebGLContext&);
 
+  // For SyncProducerActor:
+  static bool ShouldSendSync(size_t aCmd, ...);
+
  private:
+  friend PWebGLChild;
   virtual ~WebGLChild();
 
  public:

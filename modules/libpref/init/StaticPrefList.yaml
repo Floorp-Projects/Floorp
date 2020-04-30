@@ -8953,6 +8953,12 @@
   value: true
   mirror: always
 
+# value is 0 for PCQ, 1 for Ipdl
+- name: webgl.prototype.ipc-pcq
+  type: uint32_t
+  value: 0
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "widget."
 #---------------------------------------------------------------------------
