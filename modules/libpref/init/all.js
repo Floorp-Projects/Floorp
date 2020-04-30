@@ -1076,7 +1076,7 @@ pref("privacy.restrict3rdpartystorage.url_decorations", "");
 pref("privacy.popups.maxReported", 100);
 
 // Purging first-party tracking cookies.
-#ifdef NIGHTLY_BUILD
+#ifdef EARLY_BETA_OR_EARLIER
   pref("privacy.purge_trackers.enabled", true);
   pref("privacy.purge_trackers.logging.level", "All");
 #else
