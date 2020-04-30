@@ -54,7 +54,9 @@ pub enum Reloc {
     X86GOTPCRel4,
     /// Arm32 call target
     Arm32Call,
-    /// Arm64 call target
+    /// Arm64 call target. Encoded as bottom 26 bits of instruction. This
+    /// value is sign-extended, multiplied by 4, and added to the PC of
+    /// the call instruction to form the destination address.
     Arm64Call,
     /// RISC-V call target
     RiscvCall,
@@ -169,36 +171,6 @@ pub trait CodeSink {
     fn add_call_site(&mut self, _: Opcode, _: SourceLoc) {
         // Default implementation doesn't need to do anything.
     }
-}
-
-/// Type of the frame unwind information.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum FrameUnwindKind {
-    /// Windows fastcall unwinding (as in .pdata).
-    Fastcall,
-    /// FDE entry for libunwind (similar to .eh_frame format).
-    Libunwind,
-}
-
-/// Offset in frame unwind information buffer.
-pub type FrameUnwindOffset = usize;
-
-/// Sink for frame unwind information.
-pub trait FrameUnwindSink {
-    /// Get the current position.
-    fn len(&self) -> FrameUnwindOffset;
-
-    /// Add bytes to the code section.
-    fn bytes(&mut self, _: &[u8]);
-
-    /// Reserves bytes in the buffer.
-    fn reserve(&mut self, _len: usize) {}
-
-    /// Add a relocation entry.
-    fn reloc(&mut self, _: Reloc, _: FrameUnwindOffset);
-
-    /// Specified offset to main structure.
-    fn set_entry_offset(&mut self, _: FrameUnwindOffset);
 }
 
 /// Report a bad encoding error.
