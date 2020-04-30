@@ -1931,6 +1931,10 @@ void TypeAnalyzer::replaceRedundantPhi(MPhi* phi) {
     case MIRType::MagicUninitializedLexical:
       v = MagicValue(JS_UNINITIALIZED_LEXICAL);
       break;
+    case MIRType::MagicIsConstructing:
+      v = MagicValue(JS_IS_CONSTRUCTING);
+      break;
+    case MIRType::MagicHole:
     default:
       MOZ_CRASH("unexpected type");
   }
@@ -1953,14 +1957,11 @@ bool TypeAnalyzer::insertConversions() {
     for (MPhiIterator iter(block->phisBegin()), end(block->phisEnd());
          iter != end;) {
       MPhi* phi = *iter++;
-      if (phi->type() == MIRType::Undefined || phi->type() == MIRType::Null ||
-          phi->type() == MIRType::MagicOptimizedArguments ||
-          phi->type() == MIRType::MagicOptimizedOut ||
-          phi->type() == MIRType::MagicUninitializedLexical) {
+      if (IsNullOrUndefined(phi->type()) || IsMagicType(phi->type())) {
+        // We can replace this phi with a constant.
         if (!alloc().ensureBallast()) {
           return false;
         }
-
         replaceRedundantPhi(phi);
         block->discardPhi(phi);
       } else {
