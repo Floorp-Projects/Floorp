@@ -406,125 +406,98 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
     return;
   }
 
+  struct WorkerGCPref {
+    nsLiteralCString name;
+    JSGCParamKey key;
+  };
+
+#define PREF(suffix_, key_) \
+  { nsLiteralCString(PREF_MEM_OPTIONS_PREFIX suffix_), key_ }
+  constexpr WorkerGCPref kWorkerPrefs[] = {
+      PREF("max", JSGC_MAX_BYTES),
+      PREF("gc_high_frequency_time_limit_ms", JSGC_HIGH_FREQUENCY_TIME_LIMIT),
+      PREF("gc_low_frequency_heap_growth", JSGC_LOW_FREQUENCY_HEAP_GROWTH),
+      PREF("gc_high_frequency_large_heap_growth",
+           JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH),
+      PREF("gc_high_frequency_small_heap_growth",
+           JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH),
+      PREF("gc_small_heap_size_max_mb", JSGC_SMALL_HEAP_SIZE_MAX),
+      PREF("gc_large_heap_size_min_mb", JSGC_LARGE_HEAP_SIZE_MIN),
+      PREF("gc_allocation_threshold_mb", JSGC_ALLOCATION_THRESHOLD),
+      PREF("gc_incremental_slice_ms", JSGC_SLICE_TIME_BUDGET_MS),
+      PREF("gc_min_empty_chunk_count", JSGC_MIN_EMPTY_CHUNK_COUNT),
+      PREF("gc_max_empty_chunk_count", JSGC_MAX_EMPTY_CHUNK_COUNT),
+      PREF("gc_compacting", JSGC_COMPACTING_ENABLED),
+  };
+#undef PREF
+
+  auto pref = kWorkerPrefs;
+  auto end = kWorkerPrefs + ArrayLength(kWorkerPrefs);
+
+  if (gRuntimeServiceDuringInit) {
+    // During init, we want to update every pref in kWorkerPrefs.
+    MOZ_ASSERT(memPrefName.EqualsLiteral(PREF_MEM_OPTIONS_PREFIX),
+               "Pref branch prefix only expected during init");
+  } else {
+    // Otherwise, find the single pref that changed.
+    while (pref != end) {
+      if (pref->name == memPrefName) {
+        end = pref + 1;
+        break;
+      }
+      ++pref;
+    }
 #ifdef DEBUG
-  // During Init() we get called back with a branch string here, so there should
-  // be no just a "mem." pref here.
-  if (!rts) {
-    NS_ASSERTION(memPrefName.EqualsLiteral(PREF_MEM_OPTIONS_PREFIX), "Huh?!");
+    if (pref == end) {
+      nsAutoCString message("Workers don't support the '");
+      message.Append(memPrefName);
+      message.AppendLiteral("' preference!");
+      NS_WARNING(message.get());
+    }
+#endif
   }
-#endif
 
-  // If we're running in Init() then do this for every pref we care about.
-  // Otherwise we just want to update the parameter that changed.
-  for (uint32_t index = !gRuntimeServiceDuringInit
-                            ? JSSettings::kGCSettingsArraySize - 1
-                            : 0;
-       index < JSSettings::kGCSettingsArraySize; index++) {
-    LiteralRebindingCString matchName;
-
-    matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX "max");
-    if (memPrefName == matchName || (gRuntimeServiceDuringInit && index == 0)) {
-      int32_t prefValue = GetWorkerPref(matchName, -1);
-      Maybe<uint32_t> value = (prefValue <= 0 || prefValue >= 0x1000)
-                                  ? Nothing()
-                                  : Some(uint32_t(prefValue) * 1024 * 1024);
-      UpdateOtherJSGCMemoryOption(rts, JSGC_MAX_BYTES, value);
-      continue;
+  while (pref != end) {
+    switch (pref->key) {
+      case JSGC_MAX_BYTES: {
+        int32_t prefValue = GetWorkerPref(pref->name, -1);
+        Maybe<uint32_t> value = (prefValue <= 0 || prefValue >= 0x1000)
+                                    ? Nothing()
+                                    : Some(uint32_t(prefValue) * 1024 * 1024);
+        UpdateOtherJSGCMemoryOption(rts, pref->key, value);
+        break;
+      }
+      case JSGC_SLICE_TIME_BUDGET_MS: {
+        int32_t prefValue = GetWorkerPref(pref->name, -1);
+        Maybe<uint32_t> value = (prefValue <= 0 || prefValue >= 100000)
+                                    ? Nothing()
+                                    : Some(uint32_t(prefValue));
+        UpdateOtherJSGCMemoryOption(rts, pref->key, value);
+        break;
+      }
+      case JSGC_COMPACTING_ENABLED: {
+        bool present;
+        bool prefValue = GetWorkerPref(pref->name, false, &present);
+        Maybe<uint32_t> value = present ? Some(prefValue ? 1 : 0) : Nothing();
+        UpdateOtherJSGCMemoryOption(rts, pref->key, value);
+        break;
+      }
+      case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
+      case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
+      case JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH:
+      case JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH:
+      case JSGC_SMALL_HEAP_SIZE_MAX:
+      case JSGC_LARGE_HEAP_SIZE_MIN:
+      case JSGC_ALLOCATION_THRESHOLD:
+      case JSGC_MIN_EMPTY_CHUNK_COUNT:
+      case JSGC_MAX_EMPTY_CHUNK_COUNT:
+        UpdateCommonJSGCMemoryOption(rts, pref->name, pref->key);
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unknown JSGCParamKey value");
+        break;
     }
-
-    matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX
-                            "gc_high_frequency_time_limit_ms");
-    if (memPrefName == matchName || (gRuntimeServiceDuringInit && index == 2)) {
-      UpdateCommonJSGCMemoryOption(rts, matchName,
-                                   JSGC_HIGH_FREQUENCY_TIME_LIMIT);
-      continue;
-    }
-
-    matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX
-                            "gc_low_frequency_heap_growth");
-    if (memPrefName == matchName || (gRuntimeServiceDuringInit && index == 3)) {
-      UpdateCommonJSGCMemoryOption(rts, matchName,
-                                   JSGC_LOW_FREQUENCY_HEAP_GROWTH);
-      continue;
-    }
-
-    matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX
-                            "gc_high_frequency_large_heap_growth");
-    if (memPrefName == matchName || (gRuntimeServiceDuringInit && index == 4)) {
-      UpdateCommonJSGCMemoryOption(rts, matchName,
-                                   JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH);
-      continue;
-    }
-
-    matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX
-                            "gc_high_frequency_small_heap_growth");
-    if (memPrefName == matchName || (gRuntimeServiceDuringInit && index == 5)) {
-      UpdateCommonJSGCMemoryOption(rts, matchName,
-                                   JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH);
-      continue;
-    }
-
-    matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX
-                            "gc_small_heap_size_max_mb");
-    if (memPrefName == matchName || (gRuntimeServiceDuringInit && index == 6)) {
-      UpdateCommonJSGCMemoryOption(rts, matchName, JSGC_SMALL_HEAP_SIZE_MAX);
-      continue;
-    }
-
-    matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX
-                            "gc_large_heap_size_min_mb");
-    if (memPrefName == matchName || (gRuntimeServiceDuringInit && index == 7)) {
-      UpdateCommonJSGCMemoryOption(rts, matchName, JSGC_LARGE_HEAP_SIZE_MIN);
-      continue;
-    }
-
-    matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX
-                            "gc_allocation_threshold_mb");
-    if (memPrefName == matchName || (gRuntimeServiceDuringInit && index == 8)) {
-      UpdateCommonJSGCMemoryOption(rts, matchName, JSGC_ALLOCATION_THRESHOLD);
-      continue;
-    }
-
-    matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX "gc_incremental_slice_ms");
-    if (memPrefName == matchName || (gRuntimeServiceDuringInit && index == 9)) {
-      int32_t prefValue = GetWorkerPref(matchName, -1);
-      Maybe<uint32_t> value = (prefValue <= 0 || prefValue >= 100000)
-                                  ? Nothing()
-                                  : Some(uint32_t(prefValue));
-      UpdateOtherJSGCMemoryOption(rts, JSGC_SLICE_TIME_BUDGET_MS, value);
-      continue;
-    }
-
-    matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX "gc_min_empty_chunk_count");
-    if (memPrefName == matchName ||
-        (gRuntimeServiceDuringInit && index == 12)) {
-      UpdateCommonJSGCMemoryOption(rts, matchName, JSGC_MIN_EMPTY_CHUNK_COUNT);
-      continue;
-    }
-
-    matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX "gc_max_empty_chunk_count");
-    if (memPrefName == matchName ||
-        (gRuntimeServiceDuringInit && index == 13)) {
-      UpdateCommonJSGCMemoryOption(rts, matchName, JSGC_MAX_EMPTY_CHUNK_COUNT);
-      continue;
-    }
-
-    matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX "gc_compacting");
-    if (memPrefName == matchName ||
-        (gRuntimeServiceDuringInit && index == 14)) {
-      bool present;
-      bool prefValue = GetWorkerPref(matchName, false, &present);
-      Maybe<uint32_t> value = present ? Some(prefValue ? 1 : 0) : Nothing();
-      UpdateOtherJSGCMemoryOption(rts, JSGC_COMPACTING_ENABLED, value);
-      continue;
-    }
-
-#ifdef DEBUG
-    nsAutoCString message("Workers don't support the 'mem.");
-    message.Append(memPrefName);
-    message.AppendLiteral("' preference!");
-    NS_WARNING(message.get());
-#endif
+    ++pref;
   }
 }
 
