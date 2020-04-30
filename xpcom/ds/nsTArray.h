@@ -116,11 +116,19 @@ class JSStructuredCloneData;
 // The public classes defined in this header are
 //
 //   nsTArray<T>,
+//   CopyableTArray<T>,
 //   FallibleTArray<T>,
-//   AutoTArray<T, N>, and
+//   AutoTArray<T, N>,
+//   CopyableAutoTArray<T, N>
 //
-// nsTArray and AutoTArray are infallible by default. To opt-in to fallible
-// behaviour, use the `mozilla::fallible` parameter and check the return value.
+// nsTArray, CopyableTArray, AutoTArray and CopyableAutoTArray are infallible by
+// default. To opt-in to fallible behaviour, use the `mozilla::fallible`
+// parameter and check the return value.
+//
+// CopyableTArray and CopyableAutoTArray< are copy-constructible and
+// copy-assignable. Use these only when syntactically necessary to avoid implcit
+// unintentional copies. nsTArray/AutoTArray can be conveniently copied using
+// the Clone() member function. Consider using std::move where possible.
 //
 // If you just want to declare the nsTArray types (e.g., if you're in a header
 // file and don't need the full nsTArray definitions) consider including
@@ -2662,6 +2670,16 @@ class nsTArray : public nsTArray_Impl<E, nsTArrayInfallibleAllocator> {
     AppendElements(aIL.begin(), aIL.size());
   }
 
+  template <class Item>
+  nsTArray(const Item* aArray, size_type aArrayLen) {
+    AppendElements(aArray, aArrayLen);
+  }
+
+  template <class Item>
+  explicit nsTArray(mozilla::Span<Item> aSpan) {
+    AppendElements(aSpan);
+  }
+
   template <class Allocator>
   explicit nsTArray(const nsTArray_Impl<E, Allocator>& aOther)
       : base_type(aOther) {}
@@ -2737,6 +2755,12 @@ class nsTArray : public nsTArray_Impl<E, nsTArrayInfallibleAllocator> {
   mozilla::NotNull<elem_type*> AppendElement() {
     return mozilla::WrapNotNullUnchecked(
         this->template AppendElementsInternal<InfallibleAlloc>(1));
+  }
+
+  self_type Clone() const {
+    self_type result;
+    result.Assign(*this);
+    return result;
   }
 
   mozilla::NotNull<elem_type*> InsertElementsAt(index_type aIndex,
@@ -2848,6 +2872,47 @@ class nsTArray : public nsTArray_Impl<E, nsTArrayInfallibleAllocator> {
   }
 };
 
+template <class E>
+class CopyableTArray : public nsTArray<E> {
+ public:
+  using nsTArray<E>::nsTArray;
+
+  CopyableTArray(const CopyableTArray& aOther) : nsTArray<E>() {
+    this->Assign(aOther);
+  }
+  CopyableTArray& operator=(const CopyableTArray& aOther) {
+    if (this != &aOther) {
+      this->Assign(aOther);
+    }
+    return *this;
+  }
+  template <typename Allocator>
+  MOZ_IMPLICIT CopyableTArray(const nsTArray_Impl<E, Allocator>& aOther) {
+    this->Assign(aOther);
+  }
+  template <typename Allocator>
+  CopyableTArray& operator=(const nsTArray_Impl<E, Allocator>& aOther) {
+    if constexpr (std::is_same_v<Allocator, nsTArrayInfallibleAllocator>) {
+      if (this == &aOther) {
+        return *this;
+      }
+    }
+    this->Assign(aOther);
+    return *this;
+  }
+  template <typename Allocator>
+  MOZ_IMPLICIT CopyableTArray(nsTArray_Impl<E, Allocator>&& aOther)
+      : nsTArray<E>{std::move(aOther)} {}
+  template <typename Allocator>
+  CopyableTArray& operator=(nsTArray_Impl<E, Allocator>&& aOther) {
+    static_cast<nsTArray<E>&>(*this) = std::move(aOther);
+    return *this;
+  }
+
+  CopyableTArray(CopyableTArray&&) = default;
+  CopyableTArray& operator=(CopyableTArray&&) = default;
+};
+
 //
 // FallibleTArray is a fallible vector class.
 //
@@ -2949,6 +3014,14 @@ class MOZ_NON_MEMMOVABLE AutoTArray : public nsTArray<E> {
     return *this;
   }
 
+  // Intentionally hides nsTArray_Impl::Clone to make clones usually be
+  // AutoTArray as well.
+  self_type Clone() const {
+    self_type result;
+    result.Assign(*this);
+    return result;
+  }
+
  private:
   // nsTArray_base casts itself as an nsAutoArrayBase in order to get a pointer
   // to mAutoBuf.
@@ -3000,7 +3073,9 @@ class MOZ_NON_MEMMOVABLE AutoTArray : public nsTArray<E> {
 // inline header overhead.
 //
 template <class E>
-class AutoTArray<E, 0> : public nsTArray<E> {};
+class AutoTArray<E, 0> : public nsTArray<E> {
+  using nsTArray<E>::nsTArray;
+};
 
 template <class E, size_t N>
 struct nsTArray_RelocationStrategy<AutoTArray<E, N>> {
