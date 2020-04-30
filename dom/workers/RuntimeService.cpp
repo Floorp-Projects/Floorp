@@ -2235,6 +2235,13 @@ WorkerThreadPrimaryRunnable::Run() {
 
   SetThreadHelper threadHelper(mWorkerPrivate, mThread);
 
+  auto failureCleanup = MakeScopeExit([&]() {
+    // The creation of threadHelper above is the point at which a worker is
+    // considered to have run, because the `mPreStartRunnables` are all
+    // re-dispatched after `mThread` is set.
+    mWorkerPrivate->ScheduleDeletion(WorkerPrivate::WorkerRan);
+  });
+
   mWorkerPrivate->AssertIsOnWorkerThread();
 
   // These need to be initialized on the worker thread before being used on
@@ -2264,6 +2271,8 @@ WorkerThreadPrimaryRunnable::Run() {
           mWorkerPrivate);
       return NS_ERROR_FAILURE;
     }
+
+    failureCleanup.release();
 
     {
       PROFILER_SET_JS_CONTEXT(cx);
