@@ -3,6 +3,10 @@
 
 "use strict";
 
+// Enable SCOPE_APPLICATION for builtin testing.  Default in tests is only SCOPE_PROFILE.
+// AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_APPLICATION == 5;
+Services.prefs.setIntPref("extensions.enabledScopes", 5);
+
 const {
   createAppInfo,
   promiseShutdownManager,
