@@ -110,4 +110,5 @@ mozilla.pth:third_party/python/pyasn1
 mozilla.pth:third_party/python/pyasn1-modules
 mozilla.pth:third_party/python/rsa
 mozilla.pth:toolkit/components/telemetry/tests/marionette/harness
+mozilla.pth:xpcom/idl-parser
 optional:packages.txt:comm/build/virtualenv_packages.txt
