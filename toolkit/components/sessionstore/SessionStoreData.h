@@ -13,7 +13,7 @@
 
 typedef mozilla::Variant<nsString, bool,
                          mozilla::dom::CollectedNonMultipleSelectValue,
-                         nsTArray<nsString>>
+                         CopyableTArray<nsString>>
     InputDataValue;
 
 /*
