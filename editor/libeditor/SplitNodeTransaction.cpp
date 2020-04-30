@@ -5,8 +5,8 @@
 
 #include "SplitNodeTransaction.h"
 
-#include "mozilla/EditorBase.h"      // for EditorBase
 #include "mozilla/EditorDOMPoint.h"  // for RangeBoundary, EditorRawDOMPoint
+#include "mozilla/HTMLEditor.h"      // for HTMLEditor
 #include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsDebug.h"     // for NS_ASSERTION, etc.
@@ -18,30 +18,30 @@ namespace mozilla {
 using namespace dom;
 
 template already_AddRefed<SplitNodeTransaction> SplitNodeTransaction::Create(
-    EditorBase& aEditorBase, const EditorDOMPoint& aStartOfRightContent);
+    HTMLEditor& aHTMLEditor, const EditorDOMPoint& aStartOfRightContent);
 template already_AddRefed<SplitNodeTransaction> SplitNodeTransaction::Create(
-    EditorBase& aEditorBase, const EditorRawDOMPoint& aStartOfRightContent);
+    HTMLEditor& aHTMLEditor, const EditorRawDOMPoint& aStartOfRightContent);
 
 // static
 template <typename PT, typename CT>
 already_AddRefed<SplitNodeTransaction> SplitNodeTransaction::Create(
-    EditorBase& aEditorBase,
+    HTMLEditor& aHTMLEditor,
     const EditorDOMPointBase<PT, CT>& aStartOfRightContent) {
   RefPtr<SplitNodeTransaction> transaction =
-      new SplitNodeTransaction(aEditorBase, aStartOfRightContent);
+      new SplitNodeTransaction(aHTMLEditor, aStartOfRightContent);
   return transaction.forget();
 }
 
 template <typename PT, typename CT>
 SplitNodeTransaction::SplitNodeTransaction(
-    EditorBase& aEditorBase,
+    HTMLEditor& aHTMLEditor,
     const EditorDOMPointBase<PT, CT>& aStartOfRightContent)
-    : mEditorBase(&aEditorBase), mStartOfRightContent(aStartOfRightContent) {
+    : mHTMLEditor(&aHTMLEditor), mStartOfRightContent(aStartOfRightContent) {
   MOZ_DIAGNOSTIC_ASSERT(aStartOfRightContent.IsInContentNode());
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(SplitNodeTransaction, EditTransactionBase,
-                                   mEditorBase, mStartOfRightContent,
+                                   mHTMLEditor, mStartOfRightContent,
                                    mContainerParentNode, mNewLeftContent)
 
 NS_IMPL_ADDREF_INHERITED(SplitNodeTransaction, EditTransactionBase)
@@ -50,7 +50,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SplitNodeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 NS_IMETHODIMP SplitNodeTransaction::DoTransaction() {
-  if (NS_WARN_IF(!mEditorBase) ||
+  if (NS_WARN_IF(!mHTMLEditor) ||
       NS_WARN_IF(!mStartOfRightContent.IsInContentNode())) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -77,14 +77,14 @@ NS_IMETHODIMP SplitNodeTransaction::DoTransaction() {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  OwningNonNull<EditorBase> editorBase = *mEditorBase;
+  OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
   OwningNonNull<nsIContent> newLeftContent = *mNewLeftContent;
   OwningNonNull<nsINode> containerParentNode = *mContainerParentNode;
   EditorDOMPoint startOfRightContent(mStartOfRightContent);
 
   if (RefPtr<Element> startOfRightNode =
           startOfRightContent.GetContainerAsElement()) {
-    nsresult rv = editorBase->MarkElementDirty(*startOfRightNode);
+    nsresult rv = htmlEditor->MarkElementDirty(*startOfRightNode);
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return EditorBase::ToGenericNSResult(rv);
     }
@@ -93,21 +93,21 @@ NS_IMETHODIMP SplitNodeTransaction::DoTransaction() {
   }
 
   // Insert the new node
-  editorBase->DoSplitNode(startOfRightContent, newLeftContent, error);
+  htmlEditor->DoSplitNode(startOfRightContent, newLeftContent, error);
   if (error.Failed()) {
-    NS_WARNING("EditorBase::DoSplitNode() failed");
+    NS_WARNING("HTMLEditor::DoSplitNode() failed");
     return error.StealNSResult();
   }
 
-  if (!editorBase->AllowsTransactionsToChangeSelection()) {
+  if (!htmlEditor->AllowsTransactionsToChangeSelection()) {
     return NS_OK;
   }
 
   NS_WARNING_ASSERTION(
-      !editorBase->Destroyed(),
+      !htmlEditor->Destroyed(),
       "The editor has gone but SplitNodeTransaction keeps trying to modify "
       "Selection");
-  RefPtr<Selection> selection = editorBase->GetSelection();
+  RefPtr<Selection> selection = htmlEditor->GetSelection();
   if (NS_WARN_IF(!selection)) {
     return NS_ERROR_FAILURE;
   }
@@ -118,7 +118,7 @@ NS_IMETHODIMP SplitNodeTransaction::DoTransaction() {
 }
 
 NS_IMETHODIMP SplitNodeTransaction::UndoTransaction() {
-  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mNewLeftContent) ||
+  if (NS_WARN_IF(!mHTMLEditor) || NS_WARN_IF(!mNewLeftContent) ||
       NS_WARN_IF(!mContainerParentNode) ||
       NS_WARN_IF(!mStartOfRightContent.IsInContentNode())) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -127,11 +127,11 @@ NS_IMETHODIMP SplitNodeTransaction::UndoTransaction() {
   // This assumes Do inserted the new node in front of the prior existing node
   // XXX Perhaps, we should reset mStartOfRightNode with current first child
   //     of the right node.
-  OwningNonNull<EditorBase> editorBase = *mEditorBase;
+  OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
   OwningNonNull<nsIContent> containerContent =
       *mStartOfRightContent.ContainerAsContent();
   OwningNonNull<nsIContent> newLeftContent = *mNewLeftContent;
-  nsresult rv = editorBase->DoJoinNodes(containerContent, newLeftContent);
+  nsresult rv = htmlEditor->DoJoinNodes(containerContent, newLeftContent);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::DoJoinNodes() failed");
   return rv;
 }
@@ -143,11 +143,11 @@ NS_IMETHODIMP SplitNodeTransaction::UndoTransaction() {
 NS_IMETHODIMP SplitNodeTransaction::RedoTransaction() {
   if (NS_WARN_IF(!mNewLeftContent) || NS_WARN_IF(!mContainerParentNode) ||
       NS_WARN_IF(!mStartOfRightContent.IsInContentNode()) ||
-      NS_WARN_IF(!mEditorBase)) {
+      NS_WARN_IF(!mHTMLEditor)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  OwningNonNull<EditorBase> editorBase = *mEditorBase;
+  OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
   OwningNonNull<nsINode> newLeftContent = *mNewLeftContent;
   OwningNonNull<nsINode> containerParentNode = *mContainerParentNode;
   EditorDOMPoint startOfRightContent(mStartOfRightContent);
@@ -156,7 +156,7 @@ NS_IMETHODIMP SplitNodeTransaction::RedoTransaction() {
   ErrorResult error;
   if (startOfRightContent.IsInTextNode()) {
     Text* rightTextNode = startOfRightContent.ContainerAsText();
-    editorBase->DoDeleteText(MOZ_KnownLive(*rightTextNode), 0,
+    htmlEditor->DoDeleteText(MOZ_KnownLive(*rightTextNode), 0,
                              startOfRightContent.Offset(), error);
     if (error.Failed()) {
       NS_WARNING("EditorBase::DoDeleteText() failed");

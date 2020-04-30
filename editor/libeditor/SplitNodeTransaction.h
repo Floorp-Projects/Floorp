@@ -16,7 +16,7 @@
 
 namespace mozilla {
 
-class EditorBase;
+class HTMLEditor;
 
 /**
  * A transaction that splits a node into two identical nodes, with the children
@@ -25,7 +25,7 @@ class EditorBase;
 class SplitNodeTransaction final : public EditTransactionBase {
  private:
   template <typename PT, typename CT>
-  SplitNodeTransaction(EditorBase& aEditorBase,
+  SplitNodeTransaction(HTMLEditor& aHTMLEditor,
                        const EditorDOMPointBase<PT, CT>& aStartOfRightContent);
 
  public:
@@ -34,7 +34,7 @@ class SplitNodeTransaction final : public EditTransactionBase {
    * existing node (right node), and split the contents between the same point
    * in both nodes.
    *
-   * @param aEditorBase             The provider of core editing operations.
+   * @param aHTMLEditor             The provider of core editing operations.
    * @param aStartOfRightContent    The point to split.  Its container will be
    *                                the right node, i.e., become the new node's
    *                                next sibling.  And the point will be start
@@ -42,7 +42,7 @@ class SplitNodeTransaction final : public EditTransactionBase {
    */
   template <typename PT, typename CT>
   static already_AddRefed<SplitNodeTransaction> Create(
-      EditorBase& aEditorBase,
+      HTMLEditor& aHTMLEditor,
       const EditorDOMPointBase<PT, CT>& aStartOfRightContent);
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -59,7 +59,7 @@ class SplitNodeTransaction final : public EditTransactionBase {
  protected:
   virtual ~SplitNodeTransaction() = default;
 
-  RefPtr<EditorBase> mEditorBase;
+  RefPtr<HTMLEditor> mHTMLEditor;
 
   // The container is existing right node (will be split).
   // The point referring this is start of the right node after it's split.
