@@ -36,7 +36,7 @@ PlaceInfo::PlaceInfo(int64_t aId, const nsCString& aGUID,
       mURI(aURI),
       mTitle(aTitle),
       mFrecency(aFrecency),
-      mVisits(aVisits),
+      mVisits(aVisits.Clone()),
       mVisitsAvailable(true) {
   MOZ_ASSERT(mURI, "Must provide a non-null uri!");
 }

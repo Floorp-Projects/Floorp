@@ -1559,7 +1559,7 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
       mLiveUpdate(getUpdateRequirements(aQuery, aOptions, &mHasSearchTerms)),
       mContentsValid(false),
       mBatchChanges(0),
-      mTransitions(aQuery->Transitions()) {}
+      mTransitions(aQuery->Transitions().Clone()) {}
 
 nsNavHistoryQueryResultNode::~nsNavHistoryQueryResultNode() {
   // Remove this node from result's observers.  We don't need to be notified
@@ -3774,7 +3774,7 @@ void nsNavHistoryResult::requestRefresh(
   PR_BEGIN_MACRO                                                             \
   FolderObserverList* _fol = BookmarkFolderObserversForId(_folderId, false); \
   if (_fol) {                                                                \
-    FolderObserverList _listCopy(*_fol);                                     \
+    FolderObserverList _listCopy(_fol->Clone());                             \
     for (uint32_t _fol_i = 0; _fol_i < _listCopy.Length(); ++_fol_i) {       \
       if (_listCopy[_fol_i]) _listCopy[_fol_i]->_functionCall;               \
     }                                                                        \
@@ -3783,7 +3783,7 @@ void nsNavHistoryResult::requestRefresh(
 #define ENUMERATE_LIST_OBSERVERS(_listType, _functionCall, _observersList, \
                                  _conditionCall)                           \
   PR_BEGIN_MACRO                                                           \
-  _listType _listCopy(_observersList);                                     \
+  _listType _listCopy(_observersList.Clone());                             \
   for (uint32_t _obs_i = 0; _obs_i < _listCopy.Length(); ++_obs_i) {       \
     if (_listCopy[_obs_i] && _listCopy[_obs_i]->_conditionCall)            \
       _listCopy[_obs_i]->_functionCall;                                    \
