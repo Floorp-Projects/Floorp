@@ -30,6 +30,7 @@ struct MediaMetadataInit;
 class MozQueryInterface;
 class PrecompiledScript;
 class Promise;
+struct ProcessActorOptions;
 struct WindowActorOptions;
 
 class ChromeUtils {
@@ -199,6 +200,14 @@ class ChromeUtils {
 
   static void UnregisterWindowActor(const GlobalObject& aGlobal,
                                     const nsACString& aName);
+
+  static void RegisterProcessActor(const GlobalObject& aGlobal,
+                                   const nsACString& aName,
+                                   const ProcessActorOptions& aOptions,
+                                   ErrorResult& aRv);
+
+  static void UnregisterProcessActor(const GlobalObject& aGlobal,
+                                     const nsACString& aName);
 
   static bool IsClassifierBlockingErrorCode(GlobalObject& aGlobal,
                                             uint32_t aError);

@@ -1218,6 +1218,26 @@ void ChromeUtils::UnregisterWindowActor(const GlobalObject& aGlobal,
 }
 
 /* static */
+void ChromeUtils::RegisterProcessActor(const GlobalObject& aGlobal,
+                                       const nsACString& aName,
+                                       const ProcessActorOptions& aOptions,
+                                       ErrorResult& aRv) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  RefPtr<JSActorService> service = JSActorService::GetSingleton();
+  service->RegisterProcessActor(aName, aOptions, aRv);
+}
+
+/* static */
+void ChromeUtils::UnregisterProcessActor(const GlobalObject& aGlobal,
+                                         const nsACString& aName) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  RefPtr<JSActorService> service = JSActorService::GetSingleton();
+  service->UnregisterProcessActor(aName);
+}
+
+/* static */
 bool ChromeUtils::IsClassifierBlockingErrorCode(GlobalObject& aGlobal,
                                                 uint32_t aError) {
   return net::UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(
