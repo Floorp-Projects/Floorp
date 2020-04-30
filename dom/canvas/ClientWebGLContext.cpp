@@ -461,15 +461,7 @@ void ClientWebGLContext::ClearVRFrame() const { Run<RPROC(ClearVRFrame)>(); }
 
 RefPtr<layers::SharedSurfaceTextureClient> ClientWebGLContext::GetVRFrame(
     const WebGLFramebufferJS* fb) const {
-  const auto notLost =
-      mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
-  if (!notLost) return nullptr;
-  const auto& inProcessContext = notLost->inProcess;
-  if (inProcessContext) {
-    return inProcessContext->GetVRFrame(fb ? fb->mId : 0);
-  }
-  MOZ_ASSERT_UNREACHABLE("TODO: Remote GetVRFrame");
-  return nullptr;
+  return Run<RPROC(GetVRFrame)>(fb ? fb->mId : 0);
 }
 
 already_AddRefed<layers::Layer> ClientWebGLContext::GetCanvasLayer(
@@ -732,53 +724,30 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
       return Err("!CompositorBridgeChild::Get()");
     }
 
-    outOfProcess.mWebGLChild = new WebGLChild(*this);
-    outOfProcess.mWebGLChild = static_cast<dom::WebGLChild*>(
-        cbc->SendPWebGLConstructor(outOfProcess.mWebGLChild));
-    if (!outOfProcess.mWebGLChild) {
+    // Construct the WebGL command queue, used to send commands from the client
+    // process to the host for execution.  It takes a response queue that is
+    // used to return responses to synchronous messages.
+    // TODO: Be smarter in choosing these.
+    static constexpr size_t CommandQueueSize = 256 * 1024;  // 256K
+    static constexpr size_t ResponseQueueSize = 8 * 1024;   // 8K
+    auto commandPcq = ProducerConsumerQueue::Create(cbc, CommandQueueSize);
+    auto responsePcq = ProducerConsumerQueue::Create(cbc, ResponseQueueSize);
+    if (!commandPcq || !responsePcq) {
+      return Err("Failed to create command/response PCQ");
+    }
+
+    outOfProcess.mCommandSource = MakeUnique<ClientWebGLCommandSource>(
+        std::move(commandPcq->mProducer), std::move(responsePcq->mConsumer));
+    auto sink = MakeUnique<HostWebGLCommandSink>(
+        std::move(commandPcq->mConsumer), std::move(responsePcq->mProducer));
+
+    // Use the error/warning and command queues to construct a
+    // ClientWebGLContext in this process and a HostWebGLContext
+    // in the host process.
+    outOfProcess.mWebGLChild = new dom::WebGLChild(*this);
+    if (!cbc->SendPWebGLConstructor(outOfProcess.mWebGLChild.get(), initDesc,
+                                    &notLost.info)) {
       return Err("SendPWebGLConstructor failed");
-    }
-
-    UniquePtr<HostWebGLCommandSinkP> sinkP;
-    UniquePtr<HostWebGLCommandSinkI> sinkI;
-    switch (StaticPrefs::webgl_prototype_ipc_pcq()) {
-      case 0: {
-        using mozilla::webgl::ProducerConsumerQueue;
-        static constexpr size_t CommandQueueSize = 256 * 1024;  // 256K
-        static constexpr size_t ResponseQueueSize = 8 * 1024;   // 8K
-        auto command = ProducerConsumerQueue::Create(cbc, CommandQueueSize);
-        auto response = ProducerConsumerQueue::Create(cbc, ResponseQueueSize);
-        if (!command || !response) {
-          return Err("Failed to create command/response PCQ");
-        }
-
-        outOfProcess.mCommandSourcePcq = MakeUnique<ClientWebGLCommandSourceP>(
-            command->TakeProducer(), response->TakeConsumer());
-        sinkP = MakeUnique<HostWebGLCommandSinkP>(command->TakeConsumer(),
-                                                  response->TakeProducer());
-        break;
-      }
-      default:
-        using mozilla::IpdlWebGLCommandQueue;
-        using mozilla::IpdlWebGLResponseQueue;
-        auto command =
-            IpdlWebGLCommandQueue::Create(outOfProcess.mWebGLChild.get());
-        auto response =
-            IpdlWebGLResponseQueue::Create(outOfProcess.mWebGLChild.get());
-        if (!command || !response) {
-          return Err("Failed to create command/response IpdlQueue");
-        }
-
-        outOfProcess.mCommandSourceIpdl = MakeUnique<ClientWebGLCommandSourceI>(
-            command->TakeProducer(), response->TakeConsumer());
-        sinkI = MakeUnique<HostWebGLCommandSinkI>(command->TakeConsumer(),
-                                                  response->TakeProducer());
-        break;
-    }
-
-    if (!outOfProcess.mWebGLChild->SendInitialize(
-            initDesc, std::move(sinkP), std::move(sinkI), &notLost.info)) {
-      return Err("WebGL actor Initialize failed");
     }
 
     notLost.outOfProcess = Some(std::move(outOfProcess));
@@ -972,16 +941,8 @@ already_AddRefed<gfx::SourceSurface> ClientWebGLContext::GetSurfaceSnapshot(
 
     const auto range = Range<uint8_t>(map.GetData(), stride * size.y);
     auto view = RawBufferView(range);
+    Run<RPROC(ReadPixels)>(desc, view);
 
-    const auto notLost =
-        mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
-    if (!notLost) return nullptr;
-    const auto& inProcessContext = notLost->inProcess;
-    if (inProcessContext) {
-      inProcessContext->ReadPixels(desc, view);
-    } else {
-      MOZ_ASSERT_UNREACHABLE("TODO: Remote GetSurfaceSnapshot");
-    }
     // -
 
     const auto swapRowRedBlue = [&](uint8_t* const row) {
@@ -1623,18 +1584,8 @@ void ClientWebGLContext::GetInternalformatParameter(
     JSContext* cx, GLenum target, GLenum internalformat, GLenum pname,
     JS::MutableHandle<JS::Value> retval, ErrorResult& rv) {
   retval.set(JS::NullValue());
-  const auto notLost =
-      mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
-  if (!notLost) return;
-  const auto& inProcessContext = notLost->inProcess;
-  Maybe<std::vector<int>> maybe;
-  if (inProcessContext) {
-    maybe = inProcessContext->GetInternalformatParameter(target, internalformat,
-                                                         pname);
-  } else {
-    MOZ_ASSERT_UNREACHABLE("TODO: Remote GetInternalformatParameter");
-  }
-
+  auto maybe =
+      Run<RPROC(GetInternalformatParameter)>(target, internalformat, pname);
   if (!maybe) {
     return;
   }
@@ -2835,15 +2786,7 @@ void ClientWebGLContext::GetBufferSubData(GLenum target, GLintptr srcByteOffset,
   }
   auto view = RawBuffer<uint8_t>(byteLen, bytes);
 
-  const auto notLost =
-      mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
-  if (!notLost) return;
-  const auto& inProcessContext = notLost->inProcess;
-  if (inProcessContext) {
-    inProcessContext->GetBufferSubData(target, srcByteOffset, view);
-  } else {
-    MOZ_ASSERT_UNREACHABLE("TODO: Remote GetBufferSubData");
-  }
+  Run<RPROC(GetBufferSubData)>(target, srcByteOffset, view);
 }
 
 ////
@@ -3591,18 +3534,10 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
     }
   }
 
-  const auto notLost =
-      mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
-  if (!notLost) return;
-  const auto& inProcessContext = notLost->inProcess;
-  Maybe<std::vector<int>> maybe;
-  if (inProcessContext) {
-    inProcessContext->TexImage(imageTarget, static_cast<uint32_t>(level),
-                               respecFormat, CastUvec3(offset), CastUvec3(size),
-                               pi, src, *GetCanvas());
-  } else {
-    MOZ_ASSERT_UNREACHABLE("TODO: Remote GetInternalformatParameter");
-  }
+  // TODO: Convert TexImageSource into something IPC-capable.
+  Run<RPROC(TexImage)>(imageTarget, static_cast<uint32_t>(level), respecFormat,
+                       CastUvec3(offset), CastUvec3(size), pi, src,
+                       *GetCanvas());
 }
 
 void ClientWebGLContext::CompressedTexImage(bool sub, uint8_t funcDims,
@@ -4088,16 +4023,7 @@ void ClientWebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
                                           state.mPixelPackState};
   const auto range = Range<uint8_t>(bytes, byteLen);
   auto view = RawBufferView(range);
-
-  const auto notLost =
-      mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
-  if (!notLost) return;
-  const auto& inProcessContext = notLost->inProcess;
-  if (inProcessContext) {
-    inProcessContext->ReadPixels(desc, view);
-  } else {
-    MOZ_ASSERT_UNREACHABLE("TODO: Remote ReadPixels");
-  }
+  Run<RPROC(ReadPixels)>(desc, view);
 }
 
 bool ClientWebGLContext::ReadPixels_SharedPrecheck(
@@ -5385,15 +5311,7 @@ const webgl::CompileResult& ClientWebGLContext::GetCompileResult(
 const webgl::LinkResult& ClientWebGLContext::GetLinkResult(
     const WebGLProgramJS& prog) const {
   if (prog.mResult->pending) {
-    const auto notLost =
-        mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
-    if (!notLost) return *(prog.mResult);
-    const auto& inProcessContext = notLost->inProcess;
-    if (inProcessContext) {
-      *(prog.mResult) = inProcessContext->GetLinkResult(prog.mId);
-    } else {
-      MOZ_ASSERT_UNREACHABLE("TODO: Remote GetLinkResult");
-    }
+    *(prog.mResult) = Run<RPROC(GetLinkResult)>(prog.mId);
     prog.mUniformBlockBindings.resize(
         prog.mResult->active.activeUniformBlocks.size());
 

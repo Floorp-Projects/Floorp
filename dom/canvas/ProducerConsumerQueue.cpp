@@ -9,7 +9,6 @@ namespace mozilla {
 namespace webgl {
 
 mozilla::LazyLogModule gPCQLog("pcq");
-mozilla::LazyLogModule gIpdlQueueLog("ipdlqueue");
 
 }  // namespace webgl
 }  // namespace mozilla
