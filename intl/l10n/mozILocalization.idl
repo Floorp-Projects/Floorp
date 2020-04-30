@@ -18,6 +18,9 @@ interface mozILocalization : nsISupports
 
   void setIsSync(in boolean isSync);
 
+  unsigned long addResourceId(in AString resourceId);
+  unsigned long removeResourceId(in AString resourceId);
+
   unsigned long addResourceIds(in Array<AString> resourceIds);
   unsigned long removeResourceIds(in Array<AString> resourceIds);
 

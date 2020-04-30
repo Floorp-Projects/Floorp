@@ -3874,11 +3874,7 @@ void Document::LocalizationLinkAdded(Element* aLinkElement) {
   // If the link is added after the DocumentL10n instance
   // has been initialized, just pass the resource ID to it.
   if (mDocumentL10n) {
-    Sequence<nsString> resourceIds;
-    if (NS_WARN_IF(!resourceIds.AppendElement(href, fallible))) {
-      return;
-    }
-    mDocumentL10n->AddResourceIds(resourceIds);
+    mDocumentL10n->AddResourceId(href);
   } else if (mReadyState >= READYSTATE_INTERACTIVE) {
     // Otherwise, if the document has already been parsed
     // we need to lazily initialize the localization.
@@ -3916,9 +3912,7 @@ void Document::LocalizationLinkRemoved(Element* aLinkElement) {
   nsAutoString href;
   aLinkElement->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
   if (mDocumentL10n) {
-    AutoTArray<nsString, 1> resourceIds;
-    resourceIds.AppendElement(href);
-    uint32_t remaining = mDocumentL10n->RemoveResourceIds(resourceIds);
+    uint32_t remaining = mDocumentL10n->RemoveResourceId(href);
     if (remaining == 0) {
       mDocumentL10n = nullptr;
     }
