@@ -9755,13 +9755,15 @@ class OutOfLineStoreElementHole : public OutOfLineCodeBase<CodeGenerator> {
 
 void CodeGenerator::emitStoreHoleCheck(Register elements,
                                        const LAllocation* index,
+                                       int32_t offsetAdjustment,
                                        LSnapshot* snapshot) {
   Label bail;
   if (index->isConstant()) {
-    Address dest(elements, ToInt32(index) * sizeof(js::Value));
+    Address dest(elements,
+                 ToInt32(index) * sizeof(js::Value) + offsetAdjustment);
     masm.branchTestMagic(Assembler::Equal, dest, &bail);
   } else {
-    BaseObjectElementIndex dest(elements, ToRegister(index));
+    BaseObjectElementIndex dest(elements, ToRegister(index), offsetAdjustment);
     masm.branchTestMagic(Assembler::Equal, dest, &bail);
   }
   bailoutFrom(&bail, snapshot);
@@ -9775,17 +9777,16 @@ static ConstantOrRegister ToConstantOrRegister(const LAllocation* value,
   return TypedOrValueRegister(valueType, ToAnyRegister(value));
 }
 
-void CodeGenerator::emitStoreElementTyped(const LAllocation* value,
-                                          MIRType valueType,
-                                          MIRType elementType,
-                                          Register elements,
-                                          const LAllocation* index) {
+void CodeGenerator::emitStoreElementTyped(
+    const LAllocation* value, MIRType valueType, MIRType elementType,
+    Register elements, const LAllocation* index, int32_t offsetAdjustment) {
   ConstantOrRegister v = ToConstantOrRegister(value, valueType);
   if (index->isConstant()) {
-    Address dest(elements, ToInt32(index) * sizeof(js::Value));
+    Address dest(elements,
+                 ToInt32(index) * sizeof(js::Value) + offsetAdjustment);
     masm.storeUnboxedValue(v, valueType, dest, elementType);
   } else {
-    BaseObjectElementIndex dest(elements, ToRegister(index));
+    BaseObjectElementIndex dest(elements, ToRegister(index), offsetAdjustment);
     masm.storeUnboxedValue(v, valueType, dest, elementType);
   }
 }
@@ -9795,15 +9796,17 @@ void CodeGenerator::visitStoreElementT(LStoreElementT* store) {
   const LAllocation* index = store->index();
 
   if (store->mir()->needsBarrier()) {
-    emitPreBarrier(elements, index);
+    emitPreBarrier(elements, index, store->mir()->offsetAdjustment());
   }
 
   if (store->mir()->needsHoleCheck()) {
-    emitStoreHoleCheck(elements, index, store->snapshot());
+    emitStoreHoleCheck(elements, index, store->mir()->offsetAdjustment(),
+                       store->snapshot());
   }
 
   emitStoreElementTyped(store->value(), store->mir()->value()->type(),
-                        store->mir()->elementType(), elements, index);
+                        store->mir()->elementType(), elements, index,
+                        store->mir()->offsetAdjustment());
 }
 
 void CodeGenerator::visitStoreElementV(LStoreElementV* lir) {
@@ -9812,18 +9815,21 @@ void CodeGenerator::visitStoreElementV(LStoreElementV* lir) {
   const LAllocation* index = lir->index();
 
   if (lir->mir()->needsBarrier()) {
-    emitPreBarrier(elements, index);
+    emitPreBarrier(elements, index, lir->mir()->offsetAdjustment());
   }
 
   if (lir->mir()->needsHoleCheck()) {
-    emitStoreHoleCheck(elements, index, lir->snapshot());
+    emitStoreHoleCheck(elements, index, lir->mir()->offsetAdjustment(),
+                       lir->snapshot());
   }
 
   if (lir->index()->isConstant()) {
-    Address dest(elements, ToInt32(lir->index()) * sizeof(js::Value));
+    Address dest(elements, ToInt32(lir->index()) * sizeof(js::Value) +
+                               lir->mir()->offsetAdjustment());
     masm.storeValue(value, dest);
   } else {
-    BaseObjectElementIndex dest(elements, ToRegister(lir->index()));
+    BaseObjectElementIndex dest(elements, ToRegister(lir->index()),
+                                lir->mir()->offsetAdjustment());
     masm.storeValue(value, dest);
   }
 }
@@ -9846,7 +9852,7 @@ void CodeGenerator::emitStoreElementHoleT(T* lir) {
   masm.spectreBoundsCheck32(index, initLength, spectreTemp, ool->entry());
 
   if (lir->mir()->needsBarrier()) {
-    emitPreBarrier(elements, lir->index());
+    emitPreBarrier(elements, lir->index(), 0);
   }
 
   if (std::is_same_v<T, LFallibleStoreElementT>) {
@@ -9864,7 +9870,7 @@ void CodeGenerator::emitStoreElementHoleT(T* lir) {
 
   masm.bind(ool->rejoinStore());
   emitStoreElementTyped(lir->value(), lir->mir()->value()->type(),
-                        lir->mir()->elementType(), elements, lir->index());
+                        lir->mir()->elementType(), elements, lir->index(), 0);
 
   masm.bind(ool->rejoin());
 }
@@ -9905,7 +9911,7 @@ void CodeGenerator::emitStoreElementHoleV(T* lir) {
   }
 
   if (lir->mir()->needsBarrier()) {
-    emitPreBarrier(elements, lir->index());
+    emitPreBarrier(elements, lir->index(), 0);
   }
 
   masm.bind(ool->rejoinStore());
@@ -10027,11 +10033,11 @@ void CodeGenerator::visitOutOfLineStoreElementHole(
     // store the type tag.
     if (ins->isStoreElementHoleT()) {
       emitStoreElementTyped(ins->toStoreElementHoleT()->value(), valueType,
-                            MIRType::None, elements, index);
+                            MIRType::None, elements, index, 0);
       masm.jump(ool->rejoin());
     } else if (ins->isFallibleStoreElementT()) {
       emitStoreElementTyped(ins->toFallibleStoreElementT()->value(), valueType,
-                            MIRType::None, elements, index);
+                            MIRType::None, elements, index, 0);
       masm.jump(ool->rejoin());
     }
   } else {
@@ -11764,12 +11770,14 @@ void CodeGenerator::emitLoadElementT(LLoadElementT* lir, const T& source) {
 void CodeGenerator::visitLoadElementT(LLoadElementT* lir) {
   Register elements = ToRegister(lir->elements());
   const LAllocation* index = lir->index();
-
   if (index->isConstant()) {
-    int32_t offset = ToInt32(index) * sizeof(js::Value);
+    int32_t offset =
+        ToInt32(index) * sizeof(js::Value) + lir->mir()->offsetAdjustment();
     emitLoadElementT(lir, Address(elements, offset));
   } else {
-    emitLoadElementT(lir, BaseObjectElementIndex(elements, ToRegister(index)));
+    emitLoadElementT(lir,
+                     BaseObjectElementIndex(elements, ToRegister(index),
+                                            lir->mir()->offsetAdjustment()));
   }
 }
 
@@ -11779,10 +11787,12 @@ void CodeGenerator::visitLoadElementV(LLoadElementV* load) {
 
   if (load->index()->isConstant()) {
     NativeObject::elementsSizeMustNotOverflow();
-    int32_t offset = ToInt32(load->index()) * sizeof(Value);
+    int32_t offset = ToInt32(load->index()) * sizeof(Value) +
+                     load->mir()->offsetAdjustment();
     masm.loadValue(Address(elements, offset), out);
   } else {
-    masm.loadValue(BaseObjectElementIndex(elements, ToRegister(load->index())),
+    masm.loadValue(BaseObjectElementIndex(elements, ToRegister(load->index()),
+                                          load->mir()->offsetAdjustment()),
                    out);
   }
 
@@ -11845,18 +11855,21 @@ void CodeGenerator::visitLoadUnboxedScalar(LLoadUnboxedScalar* lir) {
 
   const MLoadUnboxedScalar* mir = lir->mir();
 
-  Scalar::Type storageType = mir->storageType();
-  size_t width = Scalar::byteSize(storageType);
+  Scalar::Type readType = mir->readType();
+  size_t width = Scalar::byteSize(mir->storageType());
+  bool canonicalizeDouble = mir->canonicalizeDoubles();
 
   Label fail;
   if (lir->index()->isConstant()) {
     Address source(elements,
                    ToInt32(lir->index()) * width + mir->offsetAdjustment());
-    masm.loadFromTypedArray(storageType, source, out, temp, &fail);
+    masm.loadFromTypedArray(readType, source, out, temp, &fail,
+                            canonicalizeDouble);
   } else {
     BaseIndex source(elements, ToRegister(lir->index()),
                      ScaleFromElemWidth(width), mir->offsetAdjustment());
-    masm.loadFromTypedArray(storageType, source, out, temp, &fail);
+    masm.loadFromTypedArray(readType, source, out, temp, &fail,
+                            canonicalizeDouble);
   }
 
   if (fail.used()) {
@@ -12166,11 +12179,12 @@ void CodeGenerator::visitStoreUnboxedScalar(LStoreUnboxedScalar* lir) {
   size_t width = Scalar::byteSize(mir->storageType());
 
   if (lir->index()->isConstant()) {
-    Address dest(elements, ToInt32(lir->index()) * width);
+    Address dest(elements,
+                 ToInt32(lir->index()) * width + mir->offsetAdjustment());
     StoreToTypedArray(masm, writeType, value, dest);
   } else {
     BaseIndex dest(elements, ToRegister(lir->index()),
-                   ScaleFromElemWidth(width));
+                   ScaleFromElemWidth(width), mir->offsetAdjustment());
     StoreToTypedArray(masm, writeType, value, dest);
   }
 }
