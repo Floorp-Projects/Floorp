@@ -134,20 +134,7 @@ class Layers(Layer):
                 "%r tried to set %r, but does not own it" % (self.name, name)
             )
 
-        # XXX see if we want to protect and make args read-only
-        # if this group of layers does not own it
         return self.env.set_arg(name, value)
 
     def get_arg(self, name, default=None):
         return self.env.get_arg(name, default)
-
-    # XXX not needed?
-    def _call_env(self, name):
-        def _call(*args, **kw):
-            return [getattr(layer, name)(*args, **kw) for layer in self.layers]
-
-        return _call
-
-    # XXX not needed?
-    def __getattr__(self, name):
-        return self._call_env(name)
