@@ -122,7 +122,13 @@
   }
   .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-url {
     margin-top: 2px;
-    padding-inline-start: calc(@urlbarViewItemInlinePadding@ + @identityBoxMarginInlineEnd@ + /* favicon */ 16px);
+  }
+  /* urlbarView-url is forced to be LTR for RTL locales, so set the padding based on the browser's directionality. */
+  .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-url:-moz-locale-dir(ltr) {
+    padding-left: calc(@urlbarViewItemInlinePadding@ + @identityBoxMarginInlineEnd@ + /* favicon */ 16px);
+  }
+  .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-url:-moz-locale-dir(rtl) {
+    padding-right: calc(@urlbarViewItemInlinePadding@ + @identityBoxMarginInlineEnd@ + /* favicon */ 16px);
   }
   /* Note: switchtab entries show the url only in override mode,
      remotetab only when selected or :hover */
