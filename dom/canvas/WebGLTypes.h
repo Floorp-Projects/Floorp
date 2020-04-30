@@ -94,9 +94,12 @@ inline auto AutoAssertCast(const From val) {
   return detail::AutoAssertCastT<From>(val);
 }
 
-namespace webgl {
+namespace ipc {
 template <typename T>
-struct QueueParamTraits;
+struct PcqParamTraits;
+}
+
+namespace webgl {
 class TexUnpackBytes;
 class TexUnpackImage;
 class TexUnpackSurface;
@@ -730,7 +733,7 @@ class RawBuffer {
   // true if we should delete[] the mData on destruction
   bool mOwnsData = false;
 
-  friend struct mozilla::webgl::QueueParamTraits<RawBuffer<T>>;
+  friend mozilla::ipc::PcqParamTraits<RawBuffer>;
 
  public:
   using ElementType = T;
