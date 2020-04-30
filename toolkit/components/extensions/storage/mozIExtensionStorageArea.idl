@@ -41,6 +41,11 @@ interface mozIExtensionStorageArea : nsISupports {
     // method will be called with all removed key-value pairs.
     void clear(in AUTF8String extensionId,
                in mozIExtensionStorageCallback callback);
+
+    // Wipes all data from the storage area for all extensions. The deletion
+    // will not be synced, and no callback facility is provided for notification
+    // of the deletions.
+    void wipeAll(in mozIExtensionStorageCallback callback);
 };
 
 // A configurable storage area has additional methods for setting up and tearing
