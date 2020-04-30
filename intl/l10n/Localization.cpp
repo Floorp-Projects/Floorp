@@ -146,7 +146,7 @@ Localization::Observe(nsISupports* aSubject, const char* aTopic,
 
 void Localization::OnChange() {
   if (mLocalization) {
-    mLocalization->OnChange(false);
+    mLocalization->OnChange();
   }
 }
 
@@ -154,10 +154,9 @@ void Localization::OnChange() {
  * Localization API
  */
 
-uint32_t Localization::AddResourceIds(const nsTArray<nsString>& aResourceIds,
-                                      bool aEager) {
+uint32_t Localization::AddResourceIds(const nsTArray<nsString>& aResourceIds) {
   uint32_t ret = 0;
-  mLocalization->AddResourceIds(aResourceIds, aEager, &ret);
+  mLocalization->AddResourceIds(aResourceIds, &ret);
   return ret;
 }
 

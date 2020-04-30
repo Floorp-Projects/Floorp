@@ -3876,7 +3876,7 @@ void Document::LocalizationLinkAdded(Element* aLinkElement) {
     if (NS_WARN_IF(!resourceIds.AppendElement(href, fallible))) {
       return;
     }
-    mDocumentL10n->AddResourceIds(resourceIds, false);
+    mDocumentL10n->AddResourceIds(resourceIds);
   } else if (mReadyState >= READYSTATE_INTERACTIVE) {
     // Otherwise, if the document has already been parsed
     // we need to lazily initialize the localization.
