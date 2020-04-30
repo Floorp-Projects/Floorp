@@ -10700,7 +10700,7 @@ const selectLayoutRender = ({
   }
 
   const positions = {};
-  const DS_COMPONENTS = ["Message", "TextPromo", "SectionTitle", "Navigation", "CardGrid", "CollectionCardGrid", "Hero", "HorizontalRule", "List"];
+  const DS_COMPONENTS = ["Message", "TextPromo", "SectionTitle", "Signup", "Navigation", "CardGrid", "CollectionCardGrid", "Hero", "HorizontalRule", "List"];
   const filterArray = [];
 
   if (!prefs["feeds.topsites"]) {

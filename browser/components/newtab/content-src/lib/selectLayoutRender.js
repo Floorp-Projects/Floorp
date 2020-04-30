@@ -55,6 +55,7 @@ export const selectLayoutRender = ({
     "Message",
     "TextPromo",
     "SectionTitle",
+    "Signup",
     "Navigation",
     "CardGrid",
     "CollectionCardGrid",
