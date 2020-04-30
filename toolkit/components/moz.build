@@ -23,7 +23,6 @@ DIRS += [
     'backgroundhangmonitor',
     'bitsdownload',
     'browser',
-    'cascade_bloom_filter',
     'certviewer',
     'cleardata',
     'clearsitedata',

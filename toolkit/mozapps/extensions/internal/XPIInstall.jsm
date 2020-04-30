@@ -678,7 +678,6 @@ var loadManifest = async function(aPackage, aLocation, aOldAddon) {
 
   let { signedState, cert } = await aPackage.verifySignedState(addon);
   addon.signedState = signedState;
-  addon.signedDate = cert?.validity?.notBefore / 1000 || null;
   if (!addon.isPrivileged) {
     addon.hidden = false;
   }

@@ -460,7 +460,6 @@ const JSON_FIELDS = Object.freeze([
   "rootURI",
   "runInSafeMode",
   "signedState",
-  "signedDate",
   "startupData",
   "telemetryKey",
   "type",
@@ -552,7 +551,6 @@ class XPIState {
       rootURI: this.rootURI,
       runInSafeMode: this.runInSafeMode,
       signedState: this.signedState,
-      signedDate: this.signedDate,
       telemetryKey: this.telemetryKey,
       version: this.version,
     };
@@ -641,7 +639,6 @@ class XPIState {
     this.dependencies = aDBAddon.dependencies;
     this.runInSafeMode = canRunInSafeMode(aDBAddon);
     this.signedState = aDBAddon.signedState;
-    this.signedDate = aDBAddon.signedDate;
     this.file = aDBAddon._sourceBundle;
     this.rootURI = aDBAddon.rootURI;
 
