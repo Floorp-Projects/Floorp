@@ -70,6 +70,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/dom/StaticRange.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/SelectionBinding.h"
@@ -304,6 +305,15 @@ struct MOZ_RAII AutoPrepareFocusRange {
 }  // namespace mozilla
 
 ////////////BEGIN nsFrameSelection methods
+
+template Result<RefPtr<nsRange>, nsresult>
+nsFrameSelection::CreateRangeExtendedToSomewhere(
+    nsDirection aDirection, const nsSelectionAmount aAmount,
+    CaretMovementStyle aMovementStyle);
+template Result<RefPtr<StaticRange>, nsresult>
+nsFrameSelection::CreateRangeExtendedToSomewhere(
+    nsDirection aDirection, const nsSelectionAmount aAmount,
+    CaretMovementStyle aMovementStyle);
 
 nsFrameSelection::nsFrameSelection(PresShell* aPresShell, nsIContent* aLimiter,
                                    const bool aAccessibleCaretEnabled) {
@@ -640,11 +650,6 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
                                      bool aContinueSelection,
                                      const nsSelectionAmount aAmount,
                                      CaretMovementStyle aMovementStyle) {
-  bool visualMovement = aMovementStyle == eVisual ||
-                        (aMovementStyle == eUsePrefStyle &&
-                         (mCaret.mMovementStyle == 1 ||
-                          (mCaret.mMovementStyle == 2 && !aContinueSelection)));
-
   NS_ENSURE_STATE(mPresShell);
   // Flush out layout, since we need it to be up to date to do caret
   // positioning.
@@ -668,8 +673,7 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
   }
 
   int32_t scrollFlags = Selection::SCROLL_FOR_CARET_MOVE;
-  const bool isEditorSelection = sel->IsEditorSelection();
-  if (isEditorSelection) {
+  if (sel->IsEditorSelection()) {
     // If caret moves in editor, it should cause scrolling even if it's in
     // overflow: hidden;.
     scrollFlags |= Selection::SCROLL_OVERFLOW_HIDDEN;
@@ -728,55 +732,33 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     return NS_OK;
   }
 
+  bool visualMovement =
+      mCaret.IsVisualMovement(aContinueSelection, aMovementStyle);
   nsIFrame* frame;
   int32_t offsetused = 0;
-  nsresult result =
+  nsresult rv =
       sel->GetPrimaryFrameForFocusNode(&frame, &offsetused, visualMovement);
-
-  if (NS_FAILED(result) || !frame)
-    return NS_FAILED(result) ? result : NS_ERROR_FAILURE;
-
-  const auto forceEditableRegion =
-      isEditorSelection ? nsPeekOffsetStruct::ForceEditableRegion::Yes
-                        : nsPeekOffsetStruct::ForceEditableRegion::No;
-  const nsBidiDirection paraDir = nsBidiPresUtils::ParagraphDirection(frame);
+  if (NS_FAILED(rv) || !frame) {
+    return NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
+  }
 
   CaretAssociateHint tHint(mCaret.mHint);  // temporary variable so we dont set
                                            // mCaret.mHint until it is necessary
 
-  nsDirection direction{eDirPrevious};
-  switch (aAmount) {
-    case eSelectCharacter:
-    case eSelectCluster:
-    case eSelectWord:
-    case eSelectWordNoSpace:
-      InvalidateDesiredPos();
-      direction = (visualMovement && paraDir == NSBIDI_RTL)
-                      ? nsDirection(1 - aDirection)
-                      : aDirection;
-      break;
-    case eSelectLine:
-      direction = aDirection;
-      break;
-    case eSelectBeginLine:
-    case eSelectEndLine:
-      InvalidateDesiredPos();
-      direction = (visualMovement && paraDir == NSBIDI_RTL)
-                      ? nsDirection(1 - aDirection)
-                      : aDirection;
-      break;
-    default:
-      return NS_ERROR_FAILURE;
+  Result<bool, nsresult> isIntraLineCaretMove = IsIntraLineCaretMove(aAmount);
+  if (isIntraLineCaretMove.isErr()) {
+    return NS_ERROR_FAILURE;
+  }
+  if (isIntraLineCaretMove.inspect()) {
+    // Forget old caret position for moving caret to different line since
+    // caret position may be changed.
+    InvalidateDesiredPos();
   }
 
-  // set data using mLimiters.mLimiter to stop on scroll views.  If we have a
-  // limiter then we stop peeking when we hit scrollable views.  If no limiter
-  // then just let it go ahead
-  nsPeekOffsetStruct pos(aAmount, direction, offsetused, desiredPos, true,
-                         mLimiters.mLimiter != nullptr, true, visualMovement,
-                         aContinueSelection, forceEditableRegion);
-
-  if (NS_SUCCEEDED(result = frame->PeekOffset(&pos)) && pos.mResultContent) {
+  Result<nsPeekOffsetStruct, nsresult> result = PeekOffsetForCaretMove(
+      aDirection, aContinueSelection, aAmount, aMovementStyle, desiredPos);
+  if (result.isOk() && result.inspect().mResultContent) {
+    const nsPeekOffsetStruct& pos = result.inspect();
     nsIFrame* theFrame;
     int32_t currentOffset, frameStart, frameEnd;
 
@@ -837,8 +819,8 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
     const FocusMode focusMode = aContinueSelection
                                     ? FocusMode::kExtendSelection
                                     : FocusMode::kCollapseToNewPoint;
-    result = TakeFocus(MOZ_KnownLive(pos.mResultContent), pos.mContentOffset,
-                       pos.mContentOffset, tHint, focusMode);
+    rv = TakeFocus(MOZ_KnownLive(pos.mResultContent), pos.mContentOffset,
+                   pos.mContentOffset, tHint, focusMode);
   } else if (aAmount <= eSelectWordNoSpace && aDirection == eDirNext &&
              !aContinueSelection) {
     // Collapse selection if PeekOffset failed, we either
@@ -851,14 +833,69 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
       mCaret.mHint = CARET_ASSOCIATE_BEFORE;  // We're now at the end of the
                                               // frame to the left.
     }
-    result = NS_OK;
+    rv = NS_OK;
+  } else {
+    rv = result.isErr() ? result.unwrapErr() : NS_OK;
   }
-  if (NS_SUCCEEDED(result)) {
-    result = sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
-                                 ScrollAxis(), ScrollAxis(), scrollFlags);
+  if (NS_SUCCEEDED(rv)) {
+    rv = sel->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
+                             ScrollAxis(), ScrollAxis(), scrollFlags);
   }
 
-  return result;
+  return rv;
+}
+
+Result<nsPeekOffsetStruct, nsresult> nsFrameSelection::PeekOffsetForCaretMove(
+    nsDirection aDirection, bool aContinueSelection,
+    const nsSelectionAmount aAmount, CaretMovementStyle aMovementStyle,
+    const nsPoint& aDesiredPos) const {
+  Selection* selection =
+      mDomSelections[GetIndexFromSelectionType(SelectionType::eNormal)];
+  if (!selection) {
+    return Err(NS_ERROR_NULL_POINTER);
+  }
+
+  const bool visualMovement =
+      mCaret.IsVisualMovement(aContinueSelection, aMovementStyle);
+
+  nsIFrame* frame = nullptr;
+  int32_t offsetused = 0;
+  nsresult rv = selection->GetPrimaryFrameForFocusNode(&frame, &offsetused,
+                                                       visualMovement);
+  if (NS_FAILED(rv) || !frame) {
+    return Err(NS_FAILED(rv) ? rv : NS_ERROR_FAILURE);
+  }
+
+  const auto kForceEditableRegion =
+      selection->IsEditorSelection()
+          ? nsPeekOffsetStruct::ForceEditableRegion::Yes
+          : nsPeekOffsetStruct::ForceEditableRegion::No;
+  const nsBidiDirection kParagraphDirection =
+      nsBidiPresUtils::ParagraphDirection(frame);
+
+  nsDirection direction{aDirection};
+  Result<bool, nsresult> isIntraLineCareMove = IsIntraLineCaretMove(aAmount);
+  if (isIntraLineCareMove.isErr()) {
+    return Err(NS_ERROR_FAILURE);
+  }
+  if (isIntraLineCareMove.inspect()) {
+    // If caret is moving in same line and user expects visual movement,
+    // we revert the direction if direction of current paragraph is RTL.
+    direction = (visualMovement && kParagraphDirection == NSBIDI_RTL)
+                    ? nsDirection(1 - aDirection)
+                    : aDirection;
+  }
+
+  // set data using mLimiters.mLimiter to stop on scroll views.  If we have a
+  // limiter then we stop peeking when we hit scrollable views.  If no limiter
+  // then just let it go ahead
+  nsPeekOffsetStruct pos(aAmount, direction, offsetused, aDesiredPos, true,
+                         !!mLimiters.mLimiter, true, visualMovement,
+                         aContinueSelection, kForceEditableRegion);
+  if (NS_FAILED(rv = frame->PeekOffset(&pos))) {
+    return Err(rv);
+  }
+  return pos;
 }
 
 nsPrevNextBidiLevels nsFrameSelection::GetPrevNextBidiLevels(
@@ -1997,6 +2034,58 @@ nsresult nsFrameSelection::IntraLineMove(bool aForward, bool aExtend) {
   } else {
     return MoveCaret(eDirPrevious, aExtend, eSelectBeginLine, eLogical);
   }
+}
+
+template <typename RangeType>
+Result<RefPtr<RangeType>, nsresult>
+nsFrameSelection::CreateRangeExtendedToSomewhere(
+    nsDirection aDirection, const nsSelectionAmount aAmount,
+    CaretMovementStyle aMovementStyle) {
+  MOZ_ASSERT(aDirection == eDirNext || aDirection == eDirPrevious);
+  MOZ_ASSERT(aAmount == eSelectCharacter || aAmount == eSelectCluster ||
+             aAmount == eSelectWord || aAmount == eSelectBeginLine ||
+             aAmount == eSelectEndLine);
+  MOZ_ASSERT(aMovementStyle == eLogical || aMovementStyle == eVisual ||
+             aMovementStyle == eUsePrefStyle);
+
+  if (!mPresShell) {
+    return Err(NS_ERROR_UNEXPECTED);
+  }
+  OwningNonNull<PresShell> presShell(*mPresShell);
+  presShell->FlushPendingNotifications(FlushType::Layout);
+  if (!mPresShell) {
+    return Err(NS_ERROR_FAILURE);
+  }
+  Selection* selection =
+      mDomSelections[GetIndexFromSelectionType(SelectionType::eNormal)];
+  if (!selection || selection->RangeCount() != 1) {
+    return Err(NS_ERROR_FAILURE);
+  }
+  RefPtr<nsRange> firstRange = selection->GetRangeAt(0);
+  if (!firstRange || !firstRange->IsPositioned()) {
+    return Err(NS_ERROR_FAILURE);
+  }
+  Result<nsPeekOffsetStruct, nsresult> result = PeekOffsetForCaretMove(
+      aDirection, true, aAmount, aMovementStyle, nsPoint(0, 0));
+  if (result.isErr()) {
+    return Err(NS_ERROR_FAILURE);
+  }
+  const nsPeekOffsetStruct& pos = result.inspect();
+  RefPtr<RangeType> range;
+  if (NS_WARN_IF(!pos.mResultContent)) {
+    return range;
+  }
+  if (aDirection == eDirPrevious) {
+    range = RangeType::Create(
+        RawRangeBoundary(pos.mResultContent, pos.mContentOffset),
+        firstRange->EndRef(), IgnoreErrors());
+  } else {
+    range = RangeType::Create(
+        firstRange->StartRef(),
+        RawRangeBoundary(pos.mResultContent, pos.mContentOffset),
+        IgnoreErrors());
+  }
+  return range;
 }
 
 nsresult nsFrameSelection::SelectAll() {
