@@ -1009,12 +1009,21 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
   if (NS_WARN_IF(!GetOrCreateDOMReflector(cx, aElement, &v))) {
     return NS_ERROR_FAILURE;
   }
+
+  RefPtr<ScriptFetchOptions> fetchOptions = new ScriptFetchOptions(
+      CORS_NONE, aElement->OwnerDoc()->GetReferrerPolicy(), aElement,
+      aElement->OwnerDoc()->NodePrincipal());
+  NS_ENSURE_TRUE(fetchOptions, NS_ERROR_OUT_OF_MEMORY);
+
+  RefPtr<EventScript> eventScript = new EventScript(fetchOptions, uri);
+  NS_ENSURE_TRUE(eventScript, NS_ERROR_OUT_OF_MEMORY);
+
   JS::CompileOptions options(cx);
   // Use line 0 to make the function body starts from line 1.
   options.setIntroductionType("eventHandler")
       .setFileAndLine(url.get(), 0)
-      .setElement(&v.toObject())
-      .setElementAttributeName(jsStr);
+      .setElementAttributeName(jsStr)
+      .setPrivateValue(JS::PrivateValue(eventScript));
 
   JS::Rooted<JSObject*> handler(cx);
   result = nsJSUtils::CompileFunction(jsapi, scopeChain, options,

@@ -61,6 +61,7 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/RootingAPI.h"  // JS::PersistentRooted, JS::Rooted
+#include "js/Value.h"
 
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSObject;
@@ -151,7 +152,7 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   const char* filename() const { return filename_; }
   const char* introducerFilename() const { return introducerFilename_; }
   const char16_t* sourceMapURL() const { return sourceMapURL_; }
-  virtual JSObject* element() const = 0;
+  virtual Value privateValue() const = 0;
   virtual JSString* elementAttributeName() const = 0;
   virtual JSScript* introductionScript() const = 0;
 
@@ -241,17 +242,17 @@ class JS_PUBLIC_API ReadOnlyCompileOptions : public TransitiveCompileOptions {
  * anything else it entrains, will never be freed.
  */
 class JS_PUBLIC_API OwningCompileOptions final : public ReadOnlyCompileOptions {
-  PersistentRooted<JSObject*> elementRoot;
   PersistentRooted<JSString*> elementAttributeNameRoot;
   PersistentRooted<JSScript*> introductionScriptRoot;
   PersistentRooted<JSScript*> scriptOrModuleRoot;
+  PersistentRooted<Value> privateValueRoot;
 
  public:
   // A minimal constructor, for use with OwningCompileOptions::copy.
   explicit OwningCompileOptions(JSContext* cx);
   ~OwningCompileOptions();
 
-  JSObject* element() const override { return elementRoot; }
+  Value privateValue() const override { return privateValueRoot; }
   JSString* elementAttributeName() const override {
     return elementAttributeNameRoot;
   }
@@ -281,10 +282,10 @@ class JS_PUBLIC_API OwningCompileOptions final : public ReadOnlyCompileOptions {
 class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     : public ReadOnlyCompileOptions {
  private:
-  Rooted<JSObject*> elementRoot;
   Rooted<JSString*> elementAttributeNameRoot;
   Rooted<JSScript*> introductionScriptRoot;
   Rooted<JSScript*> scriptOrModuleRoot;
+  Rooted<Value> privateValueRoot;
 
  public:
   // Default options determined using the JSContext.
@@ -293,16 +294,16 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
   // Copy the transitive options from another options object.
   CompileOptions(JSContext* cx, const TransitiveCompileOptions& rhs)
       : ReadOnlyCompileOptions(),
-        elementRoot(cx),
         elementAttributeNameRoot(cx),
         introductionScriptRoot(cx),
-        scriptOrModuleRoot(cx) {
+        scriptOrModuleRoot(cx),
+        privateValueRoot(cx) {
     copyPODTransitiveOptions(rhs);
 
     filename_ = rhs.filename();
     introducerFilename_ = rhs.introducerFilename();
     sourceMapURL_ = rhs.sourceMapURL();
-    elementRoot = rhs.element();
+    privateValueRoot = rhs.privateValue();
     elementAttributeNameRoot = rhs.elementAttributeName();
     introductionScriptRoot = rhs.introductionScript();
     scriptOrModuleRoot = rhs.scriptOrModule();
@@ -315,7 +316,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     copyPODNonTransitiveOptions(rhs);
   }
 
-  JSObject* element() const override { return elementRoot; }
+  Value privateValue() const override { return privateValueRoot; }
 
   JSString* elementAttributeName() const override {
     return elementAttributeNameRoot;
@@ -348,8 +349,8 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     return *this;
   }
 
-  CompileOptions& setElement(JSObject* e) {
-    elementRoot = e;
+  CompileOptions& setPrivateValue(const Value& v) {
+    privateValueRoot = v;
     return *this;
   }
 
