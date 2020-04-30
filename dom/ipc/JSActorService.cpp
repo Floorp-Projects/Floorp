@@ -11,10 +11,13 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/JSProcessActorBinding.h"
+#include "mozilla/dom/JSProcessActorChild.h"
 #include "mozilla/dom/JSWindowActorBinding.h"
 #include "mozilla/dom/JSWindowActorChild.h"
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/PContent.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/ArrayAlgorithm.h"
@@ -49,7 +52,7 @@ void JSActorService::RegisterWindowActor(const nsACString& aName,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  auto entry = mDescriptors.LookupForAdd(aName);
+  auto entry = mWindowActorDescriptors.LookupForAdd(aName);
   if (entry) {
     aRv.ThrowNotSupportedError(nsPrintfCString(
         "'%s' actor is already registered.", PromiseFlatCString(aName).get()));
@@ -68,9 +71,10 @@ void JSActorService::RegisterWindowActor(const nsACString& aName,
 
   // Send information about the newly added entry to every existing content
   // process.
-  AutoTArray<JSWindowActorInfo, 1> ipcInfos{proto->ToIPC()};
+  AutoTArray<JSWindowActorInfo, 1> windowInfos{proto->ToIPC()};
+  nsTArray<JSProcessActorInfo> contentInfos{};
   for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
-    Unused << cp->SendInitJSWindowActorInfos(ipcInfos);
+    Unused << cp->SendInitJSActorInfos(contentInfos, windowInfos);
   }
 
   // Register event listeners for any existing chrome targets.
@@ -86,7 +90,7 @@ void JSActorService::UnregisterWindowActor(const nsACString& aName) {
   nsAutoCString name(aName);
 
   RefPtr<JSWindowActorProtocol> proto;
-  if (mDescriptors.Remove(aName, getter_AddRefs(proto))) {
+  if (mWindowActorDescriptors.Remove(aName, getter_AddRefs(proto))) {
     // If we're in the parent process, also unregister the window actor in all
     // live content processes.
     if (XRE_IsParentProcess()) {
@@ -105,21 +109,32 @@ void JSActorService::UnregisterWindowActor(const nsACString& aName) {
   }
 }
 
-void JSActorService::LoadJSWindowActorInfos(
-    nsTArray<JSWindowActorInfo>& aInfos) {
+void JSActorService::LoadJSActorInfos(nsTArray<JSProcessActorInfo>& aProcess,
+                                      nsTArray<JSWindowActorInfo>& aWindow) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(XRE_IsContentProcess());
 
-  for (auto& info : aInfos) {
-    // Create our JSWindowActorProtocol, register it in mDescriptors.
+  for (auto& info: aProcess) {
+    // Create our JSProcessActorProtocol, register it in
+    // mProcessActorDescriptors.
+    auto name = info.name();
+    RefPtr<JSProcessActorProtocol> proto =
+        JSProcessActorProtocol::FromIPC(std::move(info));
+    mProcessActorDescriptors.Put(std::move(name), RefPtr{proto});
+
+    // Add observers for each actor.
+    proto->AddObservers();
+  }
+
+  for (auto& info: aWindow) {
     auto name = info.name();
     RefPtr<JSWindowActorProtocol> proto =
-        JSWindowActorProtocol::FromIPC(std::move(info));
-    mDescriptors.Put(std::move(name), RefPtr{proto});
+    JSWindowActorProtocol::FromIPC(std::move(info));
+    mWindowActorDescriptors.Put(std::move(name), RefPtr{proto});
 
     // Register listeners for each chrome target.
     for (EventTarget* target : mChromeEventTargets) {
-      proto->RegisterListenersFor(target);
+        proto->RegisterListenersFor(target);
     }
 
     // Add observers for each actor.
@@ -132,7 +147,8 @@ void JSActorService::GetJSWindowActorInfos(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  for (auto iter = mDescriptors.ConstIter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mWindowActorDescriptors.ConstIter(); !iter.Done();
+       iter.Next()) {
     aInfos.AppendElement(iter.Data()->ToIPC());
   }
 }
@@ -142,7 +158,7 @@ void JSActorService::RegisterChromeEventTarget(EventTarget* aTarget) {
   mChromeEventTargets.AppendElement(aTarget);
 
   // Register event listeners on the newly added Window Root.
-  for (auto iter = mDescriptors.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mWindowActorDescriptors.Iter(); !iter.Done(); iter.Next()) {
     iter.Data()->RegisterListenersFor(aTarget);
   }
 }
