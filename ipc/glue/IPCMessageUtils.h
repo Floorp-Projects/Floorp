@@ -610,6 +610,9 @@ struct ParamTraits<nsTArray<E>> {
 };
 
 template <typename E>
+struct ParamTraits<CopyableTArray<E>> : ParamTraits<nsTArray<E>> {};
+
+template <typename E>
 struct ParamTraits<FallibleTArray<E>> {
   typedef FallibleTArray<E> paramType;
 
