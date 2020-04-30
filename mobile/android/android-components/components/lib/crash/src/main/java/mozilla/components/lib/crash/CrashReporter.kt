@@ -15,6 +15,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import mozilla.components.lib.crash.db.CrashDatabase
+import mozilla.components.lib.crash.db.insertCrashSafely
+import mozilla.components.lib.crash.db.insertReportSafely
+import mozilla.components.lib.crash.db.toEntity
+import mozilla.components.lib.crash.db.toReportEntity
 import mozilla.components.lib.crash.handler.ExceptionHandler
 import mozilla.components.lib.crash.notification.CrashNotification
 import mozilla.components.lib.crash.prompt.CrashPrompt
@@ -55,6 +60,7 @@ import mozilla.components.support.base.log.logger.Logger
  */
 @Suppress("TooManyFunctions")
 class CrashReporter(
+    context: Context,
     private val services: List<CrashReporterService> = emptyList(),
     private val telemetryServices: List<CrashTelemetryService> = emptyList(),
     private val shouldPrompt: Prompt = Prompt.NEVER,
@@ -63,6 +69,8 @@ class CrashReporter(
     private val nonFatalCrashIntent: PendingIntent? = null,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) : CrashReporting {
+    private val database: CrashDatabase by lazy { CrashDatabase.get(context) }
+
     internal val logger = Logger("mozac/CrashReporter")
     internal val crashBreadcrumbs = BreadcrumbPriorityQueue(BREADCRUMB_MAX_NUM)
 
@@ -91,9 +99,13 @@ class CrashReporter(
     fun submitReport(crash: Crash, then: () -> Unit = {}): Job {
         return scope.launch {
             services.forEach { service ->
-                when (crash) {
+                val reportId = when (crash) {
                     is Crash.NativeCodeCrash -> service.report(crash)
                     is Crash.UncaughtExceptionCrash -> service.report(crash)
+                }
+
+                if (reportId != null) {
+                    database.crashDao().insertReportSafely(service.toReportEntity(crash, reportId))
                 }
             }
 
@@ -155,6 +167,8 @@ class CrashReporter(
         }
 
         logger.info("Received crash: $crash")
+
+        database.crashDao().insertCrashSafely(crash.toEntity())
 
         if (telemetryServices.isNotEmpty()) {
             sendCrashTelemetry(context, crash)
@@ -228,6 +242,10 @@ class CrashReporter(
             // If this is a non-fatal native code crash then we can recover and can notify the app
             crash is Crash.NativeCodeCrash && !crash.isFatal
         }
+    }
+
+    internal fun getCrashReporterServiceById(id: String): CrashReporterService {
+        return services.first { it.id == id }
     }
 
     enum class Prompt {

@@ -76,6 +76,14 @@ class MozillaSocorroService(
     private val logger = Logger("mozac/MozillaSocorroCrashHelperService")
     private val startTime = System.currentTimeMillis()
 
+    override val id: String = "socorro"
+
+    override val name: String = "Socorro"
+
+    override fun createCrashReportUrl(identifier: String): String? {
+        return "https://crash-stats.mozilla.org/report/index/$identifier"
+    }
+
     init {
         if (versionName == DEFAULT_VERSION_NAME) {
             try {
@@ -150,6 +158,7 @@ class MozillaSocorroService(
                 val map = parseResponse(reader)
 
                 val id = map?.get(KEY_CRASH_ID)
+
                 if (id != null) {
                     logger.info("Crash reported to Socorro: $id")
                 } else {

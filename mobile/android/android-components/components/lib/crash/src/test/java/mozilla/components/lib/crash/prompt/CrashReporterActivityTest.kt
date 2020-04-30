@@ -57,6 +57,7 @@ class CrashReporterActivityTest {
     @Test
     fun `Pressing close button sends report`() = runBlockingTest {
         CrashReporter(
+            context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
             scope = scope
@@ -80,6 +81,7 @@ class CrashReporterActivityTest {
     @Test
     fun `Pressing restart button sends report`() = runBlockingTest {
         CrashReporter(
+            context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
             scope = scope
@@ -103,6 +105,7 @@ class CrashReporterActivityTest {
     @Test
     fun `Custom message is set on CrashReporterActivity`() = runBlockingTest {
         CrashReporter(
+            context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             promptConfiguration = CrashReporter.PromptConfiguration(
                 message = "Hello World!",
@@ -123,6 +126,7 @@ class CrashReporterActivityTest {
     @Test
     fun `Sending crash report saves checkbox state`() = runBlockingTest {
         CrashReporter(
+            context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
             scope = scope

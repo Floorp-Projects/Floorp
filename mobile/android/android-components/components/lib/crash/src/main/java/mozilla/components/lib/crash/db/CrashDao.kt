@@ -4,11 +4,14 @@
 
 package mozilla.components.lib.crash.db
 
+import android.annotation.SuppressLint
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
+import java.lang.Exception
 
 /**
  * Dao for saving and accessing crash related information.
@@ -33,4 +36,36 @@ internal interface CrashDao {
     @Transaction
     @Query("SELECT * FROM crashes ORDER BY created_at DESC")
     fun getCrashesWithReports(): LiveData<List<CrashWithReports>>
+}
+
+/**
+ * Insert crash into database safely, ignoring any exceptions.
+ *
+ * When handling a crash we want to avoid causing another crash when writing to the database. In the
+ * case of an error we will just ignore it and continue without saving to the database.
+ */
+@SuppressLint("LogUsage") // We do not want to use our custom logger while handling the crash
+@Suppress("TooGenericExceptionCaught")
+internal fun CrashDao.insertCrashSafely(entity: CrashEntity) {
+    try {
+        insertCrash(entity)
+    } catch (e: Exception) {
+        Log.e("CrashDao", "Failed to insert crash into database", e)
+    }
+}
+
+/**
+ * Insert report into database safely, ignoring any exceptions.
+ *
+ * When handling a crash we want to avoid causing another crash when writing to the database. In the
+ * case of an error we will just ignore it and continue without saving to the database.
+ */
+@SuppressLint("LogUsage") // We do not want to use our custom logger while handling the crash
+@Suppress("TooGenericExceptionCaught")
+internal fun CrashDao.insertReportSafely(entity: ReportEntity) {
+    try {
+        insertReport(entity)
+    } catch (e: Exception) {
+        Log.e("CrashDao", "Failed to insert report into database", e)
+    }
 }

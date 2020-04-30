@@ -26,8 +26,14 @@ class ExceptionHandler(
 
         try {
             crashing = true
-            crashReporter.onCrash(context, Crash.UncaughtExceptionCrash(throwable,
-                    crashReporter.crashBreadcrumbs.toSortedArrayList()))
+
+            crashReporter.onCrash(
+                context,
+                Crash.UncaughtExceptionCrash(
+                    throwable = throwable,
+                    breadcrumbs = crashReporter.crashBreadcrumbs.toSortedArrayList()
+                )
+            )
 
             defaultExceptionHandler?.uncaughtException(thread, throwable)
         } finally {
