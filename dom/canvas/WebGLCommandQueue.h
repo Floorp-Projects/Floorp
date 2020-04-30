@@ -544,11 +544,19 @@ struct MethodDispatcher {
         MOZ_CRASH("Impossible -- Unhandled command ID");                       \
         return false;                                                          \
       }                                                                        \
+      static MOZ_ALWAYS_INLINE CommandSyncType SyncType(size_t aId) {          \
+        MOZ_ASSERT_UNREACHABLE("Impossible -- Unhandled command ID");          \
+        return CommandSyncType::ASYNC;                                         \
+      }                                                                        \
     };                                                                         \
     template <typename SinkType, size_t commandId = 0>                         \
     static MOZ_ALWAYS_INLINE bool DispatchCommand(size_t aId, SinkType& aSink, \
                                                   ObjectType& aObj) {          \
       return IdDispatcher<commandId>::DispatchCommand(aId, aSink, aObj);       \
+    }                                                                          \
+    template <size_t commandId = 0>                                            \
+    static MOZ_ALWAYS_INLINE CommandSyncType SyncType(size_t aId) {            \
+      return IdDispatcher<commandId>::SyncType(aId);                           \
     }                                                                          \
     template <size_t commandId>                                                \
     struct MethodInfo;                                                         \
@@ -578,11 +586,15 @@ struct MethodDispatcher {
   template <>                                                                  \
   struct _DISPATCHER::IdDispatcher<_ID> {                                      \
     template <typename SinkType>                                               \
-    static bool MOZ_ALWAYS_INLINE DispatchCommand(size_t aId, SinkType& aSink, \
+    static MOZ_ALWAYS_INLINE bool DispatchCommand(size_t aId, SinkType& aSink, \
                                                   ObjectType& aObj) {          \
       return (_ID == aId) ? DispatchMethod<_SYNC>::Run(aSink, &_METHOD, aObj)  \
                           : _DISPATCHER::DispatchCommand<SinkType, _ID + 1>(   \
                                 aId, aSink, aObj);                             \
+    }                                                                          \
+    static MOZ_ALWAYS_INLINE CommandSyncType SyncType(size_t aId) {            \
+      return (_ID == aId) ? _DISPATCHER::SyncType<_ID>()                       \
+                          : _DISPATCHER::SyncType<_ID + 1>(aId);               \
     }                                                                          \
   };
 
