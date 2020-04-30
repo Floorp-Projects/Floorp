@@ -89,5 +89,29 @@ add_task(
         "`get` without a key should return all values"
       );
     }
+
+    {
+      await promisify(
+        service.set,
+        "ext-2",
+        JSON.stringify({
+          hi: "hola! 👋",
+        })
+      );
+      await promisify(service.clear, "ext-1");
+      let { value: allValues } = await promisify(service.get, "ext-1", "null");
+      deepEqual(allValues, {}, "clear removed ext-1");
+
+      let { value: allValues2 } = await promisify(service.get, "ext-2", "null");
+      deepEqual(allValues2, { hi: "hola! 👋" }, "clear didn't remove ext-2");
+
+      await promisify(service.wipeAll);
+
+      deepEqual(
+        (await promisify(service.get, "ext-2", "null")).value,
+        {},
+        "wipeAll removed ext-2"
+      );
+    }
   }
 );
