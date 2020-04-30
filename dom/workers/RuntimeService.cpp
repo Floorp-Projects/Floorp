@@ -1525,6 +1525,9 @@ nsresult RuntimeService::Init() {
   MOZ_ASSERT(!gRuntimeServiceDuringInit, "This should be false!");
   gRuntimeServiceDuringInit = true;
 
+#define WORKER_PREF(name, callback) \
+  NS_FAILED(Preferences::RegisterCallbackAndCall(callback, name))
+
   if (NS_FAILED(Preferences::RegisterPrefixCallback(
           LoadJSGCMemoryOptions,
           PREF_JS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX)) ||
@@ -1535,24 +1538,21 @@ nsresult RuntimeService::Init() {
       NS_FAILED(Preferences::RegisterCallback(
           LoadGCZealOptions, PREF_JS_OPTIONS_PREFIX PREF_GCZEAL)) ||
 #endif
-
-#define WORKER_PREF(name, callback) \
-  NS_FAILED(Preferences::RegisterCallbackAndCall(callback, name)) ||
-      WORKER_PREF("intl.accept_languages", PrefLanguagesChanged) WORKER_PREF(
-          "general.appname.override", AppNameOverrideChanged)
-          WORKER_PREF("general.appversion.override", AppVersionOverrideChanged)
-              WORKER_PREF("general.platform.override", PlatformOverrideChanged)
+      WORKER_PREF("intl.accept_languages", PrefLanguagesChanged) ||
+      WORKER_PREF("general.appname.override", AppNameOverrideChanged) ||
+      WORKER_PREF("general.appversion.override", AppVersionOverrideChanged) ||
+      WORKER_PREF("general.platform.override", PlatformOverrideChanged) ||
 #ifdef JS_GC_ZEAL
-                  WORKER_PREF("dom.workers.options.gcZeal", LoadGCZealOptions)
+      WORKER_PREF("dom.workers.options.gcZeal", LoadGCZealOptions) ||
 #endif
-#undef WORKER_PREF
-
-                      NS_FAILED(Preferences::RegisterPrefixCallbackAndCall(
-                          LoadContextOptions, PREF_WORKERS_OPTIONS_PREFIX)) ||
+      NS_FAILED(Preferences::RegisterPrefixCallbackAndCall(
+          LoadContextOptions, PREF_WORKERS_OPTIONS_PREFIX)) ||
       NS_FAILED(Preferences::RegisterPrefixCallback(LoadContextOptions,
                                                     PREF_JS_OPTIONS_PREFIX))) {
     NS_WARNING("Failed to register pref callbacks!");
   }
+
+#undef WORKER_PREF
 
   MOZ_ASSERT(gRuntimeServiceDuringInit, "Should be true!");
   gRuntimeServiceDuringInit = false;
@@ -1802,27 +1802,22 @@ void RuntimeService::Cleanup() {
 
   NS_ASSERTION(!mWindowMap.Count(), "All windows should have been released!");
 
+#define WORKER_PREF(name, callback) \
+  NS_FAILED(Preferences::UnregisterCallback(callback, name))
+
   if (mObserved) {
     if (NS_FAILED(Preferences::UnregisterPrefixCallback(
             LoadContextOptions, PREF_JS_OPTIONS_PREFIX)) ||
         NS_FAILED(Preferences::UnregisterPrefixCallback(
             LoadContextOptions, PREF_WORKERS_OPTIONS_PREFIX)) ||
-#define WORKER_PREF(name, callback) \
-  NS_FAILED(Preferences::UnregisterCallback(callback, name)) ||
-        WORKER_PREF("intl.accept_languages", PrefLanguagesChanged) WORKER_PREF(
-            "general.appname.override",
-            AppNameOverrideChanged) WORKER_PREF("general.appversion.override",
-                                                AppVersionOverrideChanged)
-            WORKER_PREF("general.platform.override", PlatformOverrideChanged)
+        WORKER_PREF("intl.accept_languages", PrefLanguagesChanged) ||
+        WORKER_PREF("general.appname.override", AppNameOverrideChanged) ||
+        WORKER_PREF("general.appversion.override", AppVersionOverrideChanged) ||
+        WORKER_PREF("general.platform.override", PlatformOverrideChanged) ||
 #ifdef JS_GC_ZEAL
-                WORKER_PREF("dom.workers.options.gcZeal", LoadGCZealOptions)
-#endif
-#undef WORKER_PREF
-
-#ifdef JS_GC_ZEAL
-                    NS_FAILED(Preferences::UnregisterCallback(
-                        LoadGCZealOptions,
-                        PREF_JS_OPTIONS_PREFIX PREF_GCZEAL)) ||
+        WORKER_PREF("dom.workers.options.gcZeal", LoadGCZealOptions) ||
+        NS_FAILED(Preferences::UnregisterCallback(
+            LoadGCZealOptions, PREF_JS_OPTIONS_PREFIX PREF_GCZEAL)) ||
 #endif
         NS_FAILED(Preferences::UnregisterPrefixCallback(
             LoadJSGCMemoryOptions,
@@ -1832,6 +1827,8 @@ void RuntimeService::Cleanup() {
             PREF_WORKERS_OPTIONS_PREFIX PREF_MEM_OPTIONS_PREFIX))) {
       NS_WARNING("Failed to unregister pref callbacks!");
     }
+
+#undef WORKER_PREF
 
     if (obs) {
       if (NS_FAILED(obs->RemoveObserver(this, GC_REQUEST_OBSERVER_TOPIC))) {
