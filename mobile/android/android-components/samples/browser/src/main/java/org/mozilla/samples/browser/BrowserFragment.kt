@@ -10,9 +10,9 @@ import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import mozilla.components.browser.thumbnails.BrowserThumbnails
-import mozilla.components.concept.engine.media.Media
 import mozilla.components.feature.awesomebar.AwesomeBarFeature
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
+import mozilla.components.feature.media.fullscreen.MediaFullscreenOrientationFeature
 import mozilla.components.feature.search.SearchFeature
 import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.feature.session.SessionUseCases
@@ -22,7 +22,6 @@ import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.WebExtensionToolbarFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.view.enterToImmersiveMode
 import mozilla.components.support.ktx.android.view.exitImmersiveModeIfNeeded
 import org.mozilla.samples.browser.ext.components
@@ -37,9 +36,15 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private val webExtToolbarFeature = ViewBoundFeatureWrapper<WebExtensionToolbarFeature>()
     private val searchFeature = ViewBoundFeatureWrapper<SearchFeature>()
     private val fullScreenFeature = ViewBoundFeatureWrapper<FullScreenFeature>()
+    private val fullScreenMediaFeature =
+        ViewBoundFeatureWrapper<MediaFullscreenOrientationFeature>()
 
     @Suppress("LongMethod")
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         val layout = super.onCreateView(inflater, container, savedInstanceState)
 
         ToolbarAutocompleteFeature(layout.toolbar, components.engine).apply {
@@ -94,22 +99,20 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 sessionId
             ) { inFullScreen ->
                 if (inFullScreen) {
-                    // TODO how do I get access to the "focused" media being opened in
-                    //  full screen if it's not currently playing?
-                    // I tried adding a metadata "fullscreen" to onFullscreenChange
-                    // in Media but it's called after this callback
-                    val media =
-                        components.sessionManager.selectedSessionOrThrow.media.firstOrNull {
-                            it.state == Media.State.PLAYING
-                        }
-                    val height = media?.metadata?.height
-                    val width = media?.metadata?.width
-                    Logger("Height $height Width $width")
                     activity?.enterToImmersiveMode()
                 } else {
                     activity?.exitImmersiveModeIfNeeded()
                 }
             },
+            owner = this,
+            view = layout
+        )
+
+        fullScreenMediaFeature.set(
+            feature = MediaFullscreenOrientationFeature(
+                activity!!,
+                components.store
+            ),
             owner = this,
             view = layout
         )

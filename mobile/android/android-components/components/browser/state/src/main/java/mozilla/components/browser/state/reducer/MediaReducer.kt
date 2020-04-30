@@ -48,6 +48,10 @@ internal object MediaReducer {
                 it.copy(volume = action.volume)
             }
 
+            is MediaAction.UpdateMediaFullscreenAction -> state.updateMediaElement(action.tabId, action.mediaId) {
+                it.copy(fullscreen = action.fullScreen)
+            }
+
             is MediaAction.UpdateMediaAggregateAction -> state.copy(
                 media = state.media.copy(aggregate = action.aggregate)
             )

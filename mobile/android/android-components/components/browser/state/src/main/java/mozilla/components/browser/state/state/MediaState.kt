@@ -38,6 +38,7 @@ data class MediaState(
      * @property controller The [Media.Controller] for controlling playback of this media element.
      * @property metadata The [Media.Metadata] for this media element.
      * @property volume The [Media.Volume] for this media element.
+     * @property fullscreen The [Media.fullscreen] for this media element.
      */
     data class Element(
         val id: String = UUID.randomUUID().toString(),
@@ -45,8 +46,17 @@ data class MediaState(
         val playbackState: PlaybackState,
         val controller: Controller,
         val metadata: Media.Metadata,
-        val volume: Media.Volume
+        val volume: Media.Volume,
+        val fullscreen: Boolean
     )
+
+    /**
+     * Enum of predicted media screen orientation.
+     */
+    enum class FullscreenOrientation {
+        PORTRAIT,
+        LANDSCAPE
+    }
 
     /**
      * Value type representing the aggregated "global" media state.
@@ -56,10 +66,12 @@ data class MediaState(
      * tab or a custom tab.
      * @property activeMedia A list of ids (String) of currently active media elements on the active
      * tab.
+     * @property activeFullscreenOrientation The current predicted orientation of active fullscreen media (or null).
      */
     data class Aggregate(
         val state: State = State.NONE,
         val activeTabId: String? = null,
-        val activeMedia: List<String> = emptyList()
+        val activeMedia: List<String> = emptyList(),
+        val activeFullscreenOrientation: FullscreenOrientation? = null
     )
 }

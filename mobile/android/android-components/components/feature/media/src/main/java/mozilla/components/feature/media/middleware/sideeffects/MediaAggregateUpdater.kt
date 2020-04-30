@@ -15,6 +15,7 @@ import mozilla.components.browser.state.action.MediaAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.MediaState
 import mozilla.components.feature.media.ext.findPlayingSession
+import mozilla.components.feature.media.ext.findFullscreenMediaOrientation
 import mozilla.components.feature.media.ext.getPausedMedia
 import mozilla.components.feature.media.ext.getPlayingMediaIdsForTab
 import mozilla.components.feature.media.ext.hasMediaWithSufficientLongDuration
@@ -54,7 +55,12 @@ internal class MediaAggregateUpdater(
         if (mediaState.aggregate.state == MediaState.State.PLAYING) {
             val media = mediaState.getPlayingMediaIdsForTab(mediaState.aggregate.activeTabId)
             if (media.isNotEmpty()) {
-                return MediaState.Aggregate(MediaState.State.PLAYING, mediaState.aggregate.activeTabId, media)
+                return MediaState.Aggregate(
+                    MediaState.State.PLAYING,
+                    mediaState.aggregate.activeTabId,
+                    media,
+                    mediaState.findFullscreenMediaOrientation()
+                )
             }
         }
 
@@ -66,7 +72,12 @@ internal class MediaAggregateUpdater(
             // duration and audio. Otherwise we let just Gecko play it and do not request audio focus or show
             // a media notification. This will let us ignore short audio effects (Beeep!).
             return if (media.hasMediaWithSufficientLongDuration() && media.hasMediaWithAudibleAudio()) {
-                MediaState.Aggregate(MediaState.State.PLAYING, session, media.map { it.id })
+                MediaState.Aggregate(
+                    MediaState.State.PLAYING,
+                    session,
+                    media.map { it.id },
+                    mediaState.findFullscreenMediaOrientation()
+                )
             } else {
                 MediaState.Aggregate(MediaState.State.NONE)
             }
@@ -88,8 +99,8 @@ internal class MediaAggregateUpdater(
                 return MediaState.Aggregate(
                     MediaState.State.PAUSED,
                     mediaState.aggregate.activeTabId,
-                    media
-
+                    media,
+                    mediaState.findFullscreenMediaOrientation()
                 )
             }
         }
@@ -102,7 +113,8 @@ internal class MediaAggregateUpdater(
                 return MediaState.Aggregate(
                     MediaState.State.PAUSED,
                     mediaState.aggregate.activeTabId,
-                    media.map { it.id }
+                    media.map { it.id },
+                    mediaState.findFullscreenMediaOrientation()
                 )
             }
         }

@@ -32,6 +32,11 @@ internal class GeckoMedia(
     }
     internal set
 
+    override var fullscreen: Boolean by Delegates.observable(false) { _, old, new ->
+        notifyObservers(old, new) { onFullscreenChanged(this@GeckoMedia, new) }
+    }
+    internal set
+
     override var volume: Volume by Delegates.observable(Volume()) {
             _, old, new -> notifyObservers(old, new) { onVolumeChanged(this@GeckoMedia, new) }
     }
@@ -75,17 +80,20 @@ private class MediaDelegate(
     }
 
     override fun onMetadataChange(mediaElement: MediaElement, metaData: MediaElement.Metadata) {
-        media.metadata = Media.Metadata(metaData.duration)
+        media.metadata = Media.Metadata(metaData.duration, metaData.height, metaData.width)
     }
 
     override fun onVolumeChange(mediaElement: MediaElement, volume: Double, muted: Boolean) {
         media.volume = Media.Volume(muted)
     }
 
+    override fun onFullscreenChange(mediaElement: MediaElement, fullscreen: Boolean) {
+        media.fullscreen = fullscreen
+    }
+
     override fun onReadyStateChange(mediaElement: MediaElement, readyState: Int) = Unit
     override fun onLoadProgress(mediaElement: MediaElement, progressInfo: MediaElement.LoadProgressInfo) = Unit
     override fun onTimeChange(mediaElement: MediaElement, time: Double) = Unit
     override fun onPlaybackRateChange(mediaElement: MediaElement, rate: Double) = Unit
-    override fun onFullscreenChange(mediaElement: MediaElement, fullscreen: Boolean) = Unit
     override fun onError(mediaElement: MediaElement, errorCode: Int) = Unit
 }

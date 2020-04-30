@@ -90,7 +90,8 @@ class MediaMiddleware(
             is MediaAction.RemoveMediaAction,
             is MediaAction.RemoveTabMediaAction,
             is MediaAction.UpdateMediaVolumeAction,
-            is MediaAction.UpdateMediaStateAction -> {
+            is MediaAction.UpdateMediaStateAction,
+            is MediaAction.UpdateMediaFullscreenAction -> {
                 mediaAggregateUpdate.process(store)
             }
 

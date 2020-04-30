@@ -12,5 +12,6 @@ internal fun Media.toElement() = MediaState.Element(
     playbackState = playbackState,
     controller = controller,
     metadata = metadata,
-    volume = volume
+    volume = volume,
+    fullscreen = fullscreen
 )

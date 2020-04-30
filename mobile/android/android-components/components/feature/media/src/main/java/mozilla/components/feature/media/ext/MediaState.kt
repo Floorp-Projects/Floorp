@@ -29,6 +29,26 @@ fun MediaState.getPlayingMediaIdsForTab(tabId: String?): List<String> {
 }
 
 /**
+ * Finds any fullscreen video status and orientation of fullscreen media.
+ */
+internal fun MediaState.findFullscreenMediaOrientation(): MediaState.FullscreenOrientation? {
+    elements.forEach { (_, media) ->
+        val mediaInFullScreen = media.find { it.fullscreen } ?: return null
+        // Don't predict the orientation if we're not in full screen or we don't have media height/width
+        if (mediaInFullScreen.metadata.height != 0L &&
+            mediaInFullScreen.metadata.width != 0L
+        ) {
+            return if (mediaInFullScreen.metadata.height > mediaInFullScreen.metadata.width) {
+                MediaState.FullscreenOrientation.PORTRAIT
+            } else {
+                MediaState.FullscreenOrientation.LANDSCAPE
+            }
+        }
+    }
+    return null
+}
+
+/**
  * Find a [SessionState] with playing [Media] and return this [Pair] or `null` if no such
  * [SessionState] could be found.
  */
@@ -97,8 +117,9 @@ internal fun MediaState.toPlaybackState() =
     PlaybackStateCompat.Builder()
         .setActions(
             PlaybackStateCompat.ACTION_PLAY_PAUSE or
-                PlaybackStateCompat.ACTION_PLAY or
-                PlaybackStateCompat.ACTION_PAUSE)
+                    PlaybackStateCompat.ACTION_PLAY or
+                    PlaybackStateCompat.ACTION_PAUSE
+        )
         .setState(
             when (aggregate.state) {
                 MediaState.State.PLAYING -> PlaybackStateCompat.STATE_PLAYING
@@ -113,7 +134,8 @@ internal fun MediaState.toPlaybackState() =
                 // https://github.com/mozilla-mobile/android-components/issues/2459
                 MediaState.State.PLAYING -> 1.0f
                 else -> 0.0f
-            })
+            }
+        )
         .build()
 
 /**
