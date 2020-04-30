@@ -8,6 +8,7 @@
 #include "HTMLEditorEventListener.h"
 #include "HTMLEditUtils.h"
 #include "JoinNodeTransaction.h"
+#include "SplitNodeTransaction.h"
 #include "TypeInState.h"
 #include "WSRunObject.h"
 
@@ -3315,7 +3316,7 @@ EditorDOMPoint HTMLEditor::PrepareToInsertBRElement(
   nsCOMPtr<nsIContent> newLeftNode =
       SplitNodeWithTransaction(aPointToInsert, ignoredError);
   NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                       "EditorBase::SplitNodeWithTransaction() failed");
+                       "HTMLEditor::SplitNodeWithTransaction() failed");
   if (ignoredError.Failed()) {
     return EditorDOMPoint();
   }
@@ -4029,6 +4030,77 @@ nsresult HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
   return rv;
 }
 
+already_AddRefed<nsIContent> HTMLEditor::SplitNodeWithTransaction(
+    const EditorDOMPoint& aStartOfRightNode, ErrorResult& aError) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (NS_WARN_IF(!aStartOfRightNode.IsInContentNode())) {
+    aError.Throw(NS_ERROR_INVALID_ARG);
+    return nullptr;
+  }
+  MOZ_ASSERT(aStartOfRightNode.IsSetAndValid());
+
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this, EditSubAction::eSplitNode, nsIEditor::eNext, aError);
+  if (NS_WARN_IF(aError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return nullptr;
+  }
+  NS_WARNING_ASSERTION(
+      !aError.Failed(),
+      "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
+  aError.SuppressException();
+
+  // XXX Unfortunately, storing offset of the split point in
+  //     SplitNodeTransaction is necessary for now.  We should fix this
+  //     in a follow up bug.
+  Unused << aStartOfRightNode.Offset();
+
+  RefPtr<SplitNodeTransaction> transaction =
+      SplitNodeTransaction::Create(*this, aStartOfRightNode);
+  aError = DoTransactionInternal(transaction);
+  NS_WARNING_ASSERTION(!aError.Failed(),
+                       "EditorBase::DoTransactionInternal() failed");
+
+  nsCOMPtr<nsIContent> newLeftContent = transaction->GetNewLeftContent();
+  NS_WARNING_ASSERTION(newLeftContent, "Failed to create a new left node");
+
+  if (newLeftContent) {
+    // XXX Some other transactions manage range updater by themselves.
+    //     Why doesn't SplitNodeTransaction do it?
+    DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjSplitNode(
+        *aStartOfRightNode.GetContainerAsContent(), *newLeftContent);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "RangeUpdater::SelAdjSplitNode() failed, but ignored");
+  }
+  if (AsHTMLEditor() && newLeftContent) {
+    TopLevelEditSubActionDataRef().DidSplitContent(
+        *this, *aStartOfRightNode.GetContainerAsContent(), *newLeftContent);
+  }
+
+  if (mInlineSpellChecker) {
+    RefPtr<mozInlineSpellChecker> spellChecker = mInlineSpellChecker;
+    spellChecker->DidSplitNode(aStartOfRightNode.GetContainer(),
+                               newLeftContent);
+  }
+
+  if (!mActionListeners.IsEmpty()) {
+    AutoActionListenerArray listeners(mActionListeners);
+    for (auto& listener : listeners) {
+      DebugOnly<nsresult> rvIgnored = listener->DidSplitNode(
+          aStartOfRightNode.GetContainer(), newLeftContent);
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rvIgnored),
+          "nsIEditActionListener::DidSplitNode() failed, but ignored");
+    }
+  }
+
+  if (aError.Failed()) {
+    return nullptr;
+  }
+
+  return newLeftContent.forget();
+}
+
 SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
     nsIContent& aMostAncestorToSplit,
     const EditorDOMPoint& aStartOfDeepestRightNode,
@@ -4072,7 +4144,7 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
       nsCOMPtr<nsIContent> newLeftNode =
           SplitNodeWithTransaction(atStartOfRightNode, error);
       if (error.Failed()) {
-        NS_WARNING("EditorBase::SplitNodeWithTransaction() failed");
+        NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
         return SplitNodeResult(error.StealNSResult());
       }
 
@@ -4282,7 +4354,7 @@ nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {
   ErrorResult error;
   nsCOMPtr<nsIContent> newLeftNode = SplitNodeWithTransaction(atAnchor, error);
   if (error.Failed()) {
-    NS_WARNING("EditorBase::SplitNodeWithTransaction() failed");
+    NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
     return error.StealNSResult();
   }
 
