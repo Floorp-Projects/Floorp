@@ -461,7 +461,15 @@ void ClientWebGLContext::ClearVRFrame() const { Run<RPROC(ClearVRFrame)>(); }
 
 RefPtr<layers::SharedSurfaceTextureClient> ClientWebGLContext::GetVRFrame(
     const WebGLFramebufferJS* fb) const {
-  return Run<RPROC(GetVRFrame)>(fb ? fb->mId : 0);
+  const auto notLost =
+      mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
+  if (!notLost) return nullptr;
+  const auto& inProcessContext = notLost->inProcess;
+  if (inProcessContext) {
+    return inProcessContext->GetVRFrame(fb ? fb->mId : 0);
+  }
+  MOZ_ASSERT_UNREACHABLE("TODO: Remote GetVRFrame");
+  return nullptr;
 }
 
 already_AddRefed<layers::Layer> ClientWebGLContext::GetCanvasLayer(
@@ -941,8 +949,16 @@ already_AddRefed<gfx::SourceSurface> ClientWebGLContext::GetSurfaceSnapshot(
 
     const auto range = Range<uint8_t>(map.GetData(), stride * size.y);
     auto view = RawBufferView(range);
-    Run<RPROC(ReadPixels)>(desc, view);
 
+    const auto notLost =
+        mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
+    if (!notLost) return nullptr;
+    const auto& inProcessContext = notLost->inProcess;
+    if (inProcessContext) {
+      inProcessContext->ReadPixels(desc, view);
+    } else {
+      MOZ_ASSERT_UNREACHABLE("TODO: Remote GetSurfaceSnapshot");
+    }
     // -
 
     const auto swapRowRedBlue = [&](uint8_t* const row) {
@@ -1584,8 +1600,18 @@ void ClientWebGLContext::GetInternalformatParameter(
     JSContext* cx, GLenum target, GLenum internalformat, GLenum pname,
     JS::MutableHandle<JS::Value> retval, ErrorResult& rv) {
   retval.set(JS::NullValue());
-  auto maybe =
-      Run<RPROC(GetInternalformatParameter)>(target, internalformat, pname);
+  const auto notLost =
+      mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
+  if (!notLost) return;
+  const auto& inProcessContext = notLost->inProcess;
+  Maybe<std::vector<int>> maybe;
+  if (inProcessContext) {
+    maybe = inProcessContext->GetInternalformatParameter(target, internalformat,
+                                                         pname);
+  } else {
+    MOZ_ASSERT_UNREACHABLE("TODO: Remote GetInternalformatParameter");
+  }
+
   if (!maybe) {
     return;
   }
@@ -2786,7 +2812,15 @@ void ClientWebGLContext::GetBufferSubData(GLenum target, GLintptr srcByteOffset,
   }
   auto view = RawBuffer<uint8_t>(byteLen, bytes);
 
-  Run<RPROC(GetBufferSubData)>(target, srcByteOffset, view);
+  const auto notLost =
+      mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
+  if (!notLost) return;
+  const auto& inProcessContext = notLost->inProcess;
+  if (inProcessContext) {
+    inProcessContext->GetBufferSubData(target, srcByteOffset, view);
+  } else {
+    MOZ_ASSERT_UNREACHABLE("TODO: Remote GetBufferSubData");
+  }
 }
 
 ////
@@ -3534,10 +3568,18 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
     }
   }
 
-  // TODO: Convert TexImageSource into something IPC-capable.
-  Run<RPROC(TexImage)>(imageTarget, static_cast<uint32_t>(level), respecFormat,
-                       CastUvec3(offset), CastUvec3(size), pi, src,
-                       *GetCanvas());
+  const auto notLost =
+      mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
+  if (!notLost) return;
+  const auto& inProcessContext = notLost->inProcess;
+  Maybe<std::vector<int>> maybe;
+  if (inProcessContext) {
+    inProcessContext->TexImage(imageTarget, static_cast<uint32_t>(level),
+                               respecFormat, CastUvec3(offset), CastUvec3(size),
+                               pi, src, *GetCanvas());
+  } else {
+    MOZ_ASSERT_UNREACHABLE("TODO: Remote GetInternalformatParameter");
+  }
 }
 
 void ClientWebGLContext::CompressedTexImage(bool sub, uint8_t funcDims,
@@ -4023,7 +4065,16 @@ void ClientWebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
                                           state.mPixelPackState};
   const auto range = Range<uint8_t>(bytes, byteLen);
   auto view = RawBufferView(range);
-  Run<RPROC(ReadPixels)>(desc, view);
+
+  const auto notLost =
+      mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
+  if (!notLost) return;
+  const auto& inProcessContext = notLost->inProcess;
+  if (inProcessContext) {
+    inProcessContext->ReadPixels(desc, view);
+  } else {
+    MOZ_ASSERT_UNREACHABLE("TODO: Remote ReadPixels");
+  }
 }
 
 bool ClientWebGLContext::ReadPixels_SharedPrecheck(
@@ -5311,7 +5362,15 @@ const webgl::CompileResult& ClientWebGLContext::GetCompileResult(
 const webgl::LinkResult& ClientWebGLContext::GetLinkResult(
     const WebGLProgramJS& prog) const {
   if (prog.mResult->pending) {
-    *(prog.mResult) = Run<RPROC(GetLinkResult)>(prog.mId);
+    const auto notLost =
+        mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
+    if (!notLost) return *(prog.mResult);
+    const auto& inProcessContext = notLost->inProcess;
+    if (inProcessContext) {
+      *(prog.mResult) = inProcessContext->GetLinkResult(prog.mId);
+    } else {
+      MOZ_ASSERT_UNREACHABLE("TODO: Remote GetLinkResult");
+    }
     prog.mUniformBlockBindings.resize(
         prog.mResult->active.activeUniformBlocks.size());
 

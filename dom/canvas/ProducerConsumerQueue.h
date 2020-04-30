@@ -1164,6 +1164,7 @@ class Consumer : public detail::PcqBase {
                              : status;
   }
 
+  template <>
   QueueStatus TryPeekRemoveHelper(ConsumerView&) {
     return QueueStatus::kSuccess;
   }
@@ -1917,9 +1918,9 @@ struct QueueParamTraits<Maybe<ElementType>> {
   using ParamType = Maybe<ElementType>;
 
   static QueueStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
-    aProducerView.WriteParam(aArg.mIsSome);
-    return (aArg.mIsSome) ? aProducerView.WriteParam(aArg.ref())
-                          : aProducerView.GetStatus();
+    aProducerView.WriteParam(static_cast<bool>(aArg));
+    return aArg ? aProducerView.WriteParam(aArg.ref())
+                : aProducerView.GetStatus();
   }
 
   static QueueStatus Read(ConsumerView& aConsumerView, ParamType* aArg) {
