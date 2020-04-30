@@ -2,7 +2,7 @@
 
 # AutoPushFeature
 
-`class AutoPushFeature : `[`PushProcessor`](../../mozilla.components.concept.push/-push-processor/index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L73)
+`class AutoPushFeature : `[`PushProcessor`](../../mozilla.components.concept.push/-push-processor/index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L67)
 
 A implementation of a [PushProcessor](../../mozilla.components.concept.push/-push-processor/index.md) that should live as a singleton by being installed
 in the Application's onCreate. It receives messages from a service and forwards them
@@ -28,7 +28,7 @@ Listen also for push messages:
         socketProtocol = config.protocol,
         serviceType = config.serviceType,
         databasePath = File(context.filesDir, DB_NAME).canonicalPath
-    ), crashReporter: `[`CrashReporting`](../../mozilla.components.support.base.crash/-crash-reporting/index.md)`? = null, delegate: `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`> = ObserverRegistry())`<br>A implementation of a [PushProcessor](../../mozilla.components.concept.push/-push-processor/index.md) that should live as a singleton by being installed in the Application's onCreate. It receives messages from a service and forwards them to be decrypted and routed. |
+    ), crashReporter: `[`CrashReporting`](../../mozilla.components.support.base.crash/-crash-reporting/index.md)`? = null)`<br>A implementation of a [PushProcessor](../../mozilla.components.concept.push/-push-processor/index.md) that should live as a singleton by being installed in the Application's onCreate. It receives messages from a service and forwards them to be decrypted and routed. |
 
 ### Functions
 
