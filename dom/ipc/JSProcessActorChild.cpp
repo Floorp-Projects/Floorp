@@ -42,9 +42,9 @@ void JSProcessActorChild::SendRawMessage(const JSActorMessageMeta& aMeta,
   if (NS_WARN_IF(
           !AllowMessage(aMeta, aData.DataLength() + aStack.DataLength()))) {
     aRv.ThrowDataCloneError(
-      nsPrintfCString("JSProcessActorChild serialization error: data too large, in actor '%s'",
-        PromiseFlatCString(aMeta.actorName()).get()
-    ));
+        nsPrintfCString("JSProcessActorChild serialization error: data too "
+                        "large, in actor '%s'",
+                        PromiseFlatCString(aMeta.actorName()).get()));
     return;
   }
 
@@ -52,28 +52,32 @@ void JSProcessActorChild::SendRawMessage(const JSActorMessageMeta& aMeta,
   ClonedMessageData stackData;
   if (NS_WARN_IF(!aData.BuildClonedMessageDataForChild(mManager, msgData)) ||
       NS_WARN_IF(!aStack.BuildClonedMessageDataForChild(mManager, stackData))) {
-    aRv.ThrowDataCloneError(
-      nsPrintfCString("JSProcessActorChild serialization error: cannot clone, in actor '%s'",
-        PromiseFlatCString(aMeta.actorName()).get()
-    ));
+    aRv.ThrowDataCloneError(nsPrintfCString(
+        "JSProcessActorChild serialization error: cannot clone, in actor '%s'",
+        PromiseFlatCString(aMeta.actorName()).get()));
     return;
   }
 
   if (NS_WARN_IF(!mManager->SendRawMessage(aMeta, msgData, stackData))) {
     aRv.ThrowOperationError(
-      nsPrintfCString("JSProcessActorChild send error in actor '%s'",
-        PromiseFlatCString(aMeta.actorName()).get()
-    ));
+        nsPrintfCString("JSProcessActorChild send error in actor '%s'",
+                        PromiseFlatCString(aMeta.actorName()).get()));
     return;
   }
 }
 
-void JSProcessActorChild::Init(const nsACString& aName, ContentChild* aManager) {
+void JSProcessActorChild::Init(const nsACString& aName,
+                               ContentChild* aManager) {
   MOZ_ASSERT(!mManager, "Cannot Init() a JSProcessActorChild twice!");
   SetName(aName);
   mManager = aManager;
 
   InvokeCallback(CallbackFunction::ActorCreated);
+}
+
+void JSProcessActorChild::AfterDestroy() {
+  JSActor::AfterDestroy();
+  mManager = nullptr;
 }
 
 }  // namespace dom
