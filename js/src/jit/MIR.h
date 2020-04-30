@@ -7417,18 +7417,30 @@ class MSpectreMaskIndex
   ALLOW_CLONE(MSpectreMaskIndex)
 };
 
+// Instructions which access an object's elements can either do so on a
+// definition accessing that elements pointer, or on the object itself, if its
+// elements are inline. In the latter case there must be an offset associated
+// with the access.
+static inline bool IsValidElementsType(MDefinition* elements,
+                                       int32_t offsetAdjustment) {
+  return elements->type() == MIRType::Elements ||
+         (elements->type() == MIRType::Object && offsetAdjustment != 0);
+}
+
 // Load a value from a dense array's element vector and does a hole check if the
 // array is not known to be packed.
 class MLoadElement : public MBinaryInstruction,
                      public SingleObjectPolicy::Data {
   bool needsHoleCheck_;
   bool loadDoubles_;
+  int32_t offsetAdjustment_;
 
   MLoadElement(MDefinition* elements, MDefinition* index, bool needsHoleCheck,
-               bool loadDoubles)
+               bool loadDoubles, int32_t offsetAdjustment = 0)
       : MBinaryInstruction(classOpcode, elements, index),
         needsHoleCheck_(needsHoleCheck),
-        loadDoubles_(loadDoubles) {
+        loadDoubles_(loadDoubles),
+        offsetAdjustment_(offsetAdjustment) {
     if (needsHoleCheck) {
       // Uses may be optimized away based on this instruction's result
       // type. This means it's invalid to DCE this instruction, as we
@@ -7437,7 +7449,7 @@ class MLoadElement : public MBinaryInstruction,
     }
     setResultType(MIRType::Value);
     setMovable();
-    MOZ_ASSERT(elements->type() == MIRType::Elements);
+    MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
     MOZ_ASSERT(index->type() == MIRType::Int32);
   }
 
@@ -7448,6 +7460,7 @@ class MLoadElement : public MBinaryInstruction,
 
   bool needsHoleCheck() const { return needsHoleCheck_; }
   bool loadDoubles() const { return loadDoubles_; }
+  int32_t offsetAdjustment() const { return offsetAdjustment_; }
   bool fallible() const { return needsHoleCheck(); }
   bool congruentTo(const MDefinition* ins) const override {
     if (!ins->isLoadElement()) {
@@ -7458,6 +7471,9 @@ class MLoadElement : public MBinaryInstruction,
       return false;
     }
     if (loadDoubles() != other->loadDoubles()) {
+      return false;
+    }
+    if (offsetAdjustment() != other->offsetAdjustment()) {
       return false;
     }
     return congruentIfOperandsEqual(other);
@@ -7566,12 +7582,14 @@ class MStoreElement
       public MStoreElementCommon,
       public MixPolicy<SingleObjectPolicy, NoFloatPolicy<2>>::Data {
   bool needsHoleCheck_;
+  int32_t offsetAdjustment_;
 
   MStoreElement(MDefinition* elements, MDefinition* index, MDefinition* value,
-                bool needsHoleCheck)
+                bool needsHoleCheck, int32_t offsetAdjustment = 0)
       : MTernaryInstruction(classOpcode, elements, index, value) {
     needsHoleCheck_ = needsHoleCheck;
-    MOZ_ASSERT(elements->type() == MIRType::Elements);
+    offsetAdjustment_ = offsetAdjustment;
+    MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
     MOZ_ASSERT(index->type() == MIRType::Int32);
   }
 
@@ -7584,6 +7602,7 @@ class MStoreElement
     return AliasSet::Store(AliasSet::Element);
   }
   bool needsHoleCheck() const { return needsHoleCheck_; }
+  int32_t offsetAdjustment() const { return offsetAdjustment_; }
   bool fallible() const { return needsHoleCheck(); }
 
   ALLOW_CLONE(MStoreElement)
@@ -7774,23 +7793,29 @@ enum MemoryBarrierRequirement {
 // Load an unboxed scalar value from a typed array or other object.
 class MLoadUnboxedScalar : public MBinaryInstruction,
                            public SingleObjectPolicy::Data {
-  int32_t offsetAdjustment_ = 0;
   Scalar::Type storageType_;
+  Scalar::Type readType_;
   bool requiresBarrier_;
+  int32_t offsetAdjustment_;
+  bool canonicalizeDoubles_;
 
   MLoadUnboxedScalar(
       MDefinition* elements, MDefinition* index, Scalar::Type storageType,
-      MemoryBarrierRequirement requiresBarrier = DoesNotRequireMemoryBarrier)
+      MemoryBarrierRequirement requiresBarrier = DoesNotRequireMemoryBarrier,
+      int32_t offsetAdjustment = 0, bool canonicalizeDoubles = true)
       : MBinaryInstruction(classOpcode, elements, index),
         storageType_(storageType),
-        requiresBarrier_(requiresBarrier == DoesRequireMemoryBarrier) {
+        readType_(storageType),
+        requiresBarrier_(requiresBarrier == DoesRequireMemoryBarrier),
+        offsetAdjustment_(offsetAdjustment),
+        canonicalizeDoubles_(canonicalizeDoubles) {
     setResultType(MIRType::Value);
     if (requiresBarrier_) {
       setGuard();  // Not removable or movable
     } else {
       setMovable();
     }
-    MOZ_ASSERT(elements->type() == MIRType::Elements);
+    MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
     MOZ_ASSERT(index->type() == MIRType::Int32);
     MOZ_ASSERT(storageType >= 0 && storageType < Scalar::MaxTypedArrayViewType);
   }
@@ -7800,12 +7825,15 @@ class MLoadUnboxedScalar : public MBinaryInstruction,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, elements), (1, index))
 
+  Scalar::Type readType() const { return readType_; }
+
   Scalar::Type storageType() const { return storageType_; }
   bool fallible() const {
     // Bailout if the result does not fit in an int32.
-    return storageType_ == Scalar::Uint32 && type() == MIRType::Int32;
+    return readType_ == Scalar::Uint32 && type() == MIRType::Int32;
   }
   bool requiresMemoryBarrier() const { return requiresBarrier_; }
+  bool canonicalizeDoubles() const { return canonicalizeDoubles_; }
   int32_t offsetAdjustment() const { return offsetAdjustment_; }
   void setOffsetAdjustment(int32_t offsetAdjustment) {
     offsetAdjustment_ = offsetAdjustment;
@@ -7830,7 +7858,13 @@ class MLoadUnboxedScalar : public MBinaryInstruction,
     if (storageType_ != other->storageType_) {
       return false;
     }
+    if (readType_ != other->readType_) {
+      return false;
+    }
     if (offsetAdjustment() != other->offsetAdjustment()) {
+      return false;
+    }
+    if (canonicalizeDoubles() != other->canonicalizeDoubles()) {
       return false;
     }
     return congruentIfOperandsEqual(other);
@@ -7942,22 +7976,25 @@ class MStoreUnboxedScalar : public MTernaryInstruction,
   TruncateInputKind truncateInput_;
 
   bool requiresBarrier_;
+  int32_t offsetAdjustment_;
 
   MStoreUnboxedScalar(
       MDefinition* elements, MDefinition* index, MDefinition* value,
       Scalar::Type storageType, TruncateInputKind truncateInput,
-      MemoryBarrierRequirement requiresBarrier = DoesNotRequireMemoryBarrier)
+      MemoryBarrierRequirement requiresBarrier = DoesNotRequireMemoryBarrier,
+      int32_t offsetAdjustment = 0)
       : MTernaryInstruction(classOpcode, elements, index, value),
         StoreUnboxedScalarBase(storageType),
         storageType_(storageType),
         truncateInput_(truncateInput),
-        requiresBarrier_(requiresBarrier == DoesRequireMemoryBarrier) {
+        requiresBarrier_(requiresBarrier == DoesRequireMemoryBarrier),
+        offsetAdjustment_(offsetAdjustment) {
     if (requiresBarrier_) {
       setGuard();  // Not removable or movable
     } else {
       setMovable();
     }
-    MOZ_ASSERT(elements->type() == MIRType::Elements);
+    MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
     MOZ_ASSERT(index->type() == MIRType::Int32);
     MOZ_ASSERT(storageType >= 0 && storageType < Scalar::MaxTypedArrayViewType);
   }
@@ -7973,6 +8010,7 @@ class MStoreUnboxedScalar : public MTernaryInstruction,
   }
   TruncateInputKind truncateInput() const { return truncateInput_; }
   bool requiresMemoryBarrier() const { return requiresBarrier_; }
+  int32_t offsetAdjustment() const { return offsetAdjustment_; }
   TruncateKind operandTruncateKind(size_t index) const override;
 
   bool canConsumeFloat32(MUse* use) const override {

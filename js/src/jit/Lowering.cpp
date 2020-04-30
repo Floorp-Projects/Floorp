@@ -3092,7 +3092,7 @@ void LIRGenerator::visitInArray(MInArray* ins) {
 }
 
 void LIRGenerator::visitLoadElement(MLoadElement* ins) {
-  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));
   MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
 
   switch (ins->type()) {
@@ -3210,7 +3210,7 @@ void LIRGenerator::visitLoadElementFromState(MLoadElementFromState* ins) {
 }
 
 void LIRGenerator::visitStoreElement(MStoreElement* ins) {
-  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));
   MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
 
   const LUse elements = useRegister(ins->elements());
@@ -3410,7 +3410,7 @@ void LIRGenerator::visitStringSplit(MStringSplit* ins) {
 }
 
 void LIRGenerator::visitLoadUnboxedScalar(MLoadUnboxedScalar* ins) {
-  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));
   MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
 
   const LUse elements = useRegister(ins->elements());
@@ -3420,8 +3420,7 @@ void LIRGenerator::visitLoadUnboxedScalar(MLoadUnboxedScalar* ins) {
 
   // We need a temp register for Uint32Array with known double result.
   LDefinition tempDef = LDefinition::BogusTemp();
-  if (ins->storageType() == Scalar::Uint32 &&
-      IsFloatingPointType(ins->type())) {
+  if (ins->readType() == Scalar::Uint32 && IsFloatingPointType(ins->type())) {
     tempDef = temp();
   }
 
@@ -3497,7 +3496,7 @@ void LIRGenerator::visitLoadTypedArrayElementHole(
 }
 
 void LIRGenerator::visitStoreUnboxedScalar(MStoreUnboxedScalar* ins) {
-  MOZ_ASSERT(ins->elements()->type() == MIRType::Elements);
+  MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));
   MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
 
   if (ins->isFloatWrite()) {
