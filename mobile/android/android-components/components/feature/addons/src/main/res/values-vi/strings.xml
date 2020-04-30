@@ -66,6 +66,10 @@
     <string name="mozac_feature_addons_settings_on">Bật</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Tắt</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Cho phép trong duyệt web riêng tư</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Chạy trong duyệt web riêng tư</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Đã bật</string>
     <!-- Indicates the add-on is disabled. -->

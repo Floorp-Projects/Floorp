@@ -66,6 +66,10 @@
     <string name="mozac_feature_addons_settings_on">Ymlaen</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Diffodd</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Caniatáu yn y pori preifat</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Rhedeg yn y pori preifat</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Galluogwyd</string>
     <!-- Indicates the add-on is disabled. -->
