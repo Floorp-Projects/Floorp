@@ -4301,6 +4301,30 @@ void HTMLEditor::MoveAllChildren(nsINode& aContainer,
   NS_WARNING_ASSERTION(!aError.Failed(), "EditorBase::MoveChildren() failed");
 }
 
+void HTMLEditor::MovePreviousSiblings(nsIContent& aChild,
+                                      const EditorRawDOMPoint& aPointToInsert,
+                                      ErrorResult& aError) {
+  MOZ_ASSERT(!aError.Failed());
+
+  if (NS_WARN_IF(!aChild.GetParentNode())) {
+    aError.Throw(NS_ERROR_INVALID_ARG);
+    return;
+  }
+  nsIContent* firstChild = aChild.GetParentNode()->GetFirstChild();
+  if (NS_WARN_IF(!firstChild)) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  nsIContent* lastChild =
+      &aChild == firstChild ? firstChild : aChild.GetPreviousSibling();
+  if (NS_WARN_IF(!lastChild)) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  MoveChildren(*firstChild, *lastChild, aPointToInsert, aError);
+  NS_WARNING_ASSERTION(!aError.Failed(), "EditorBase::MoveChildren() failed");
+}
+
 nsresult HTMLEditor::DeleteElementsExceptTableRelatedElements(nsINode& aNode) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 

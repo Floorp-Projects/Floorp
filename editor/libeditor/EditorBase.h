@@ -1477,22 +1477,6 @@ class EditorBase : public nsIEditor,
   }
 
   /**
-   * MovePreviousSiblings() moves all siblings before aChild (i.e., aChild
-   * won't be moved) to before aPointToInsert.GetChild().
-   * See explanation of MoveChildren() for the detail of the behavior.
-   *
-   * @param aChild              The node which is next sibling of the last
-   *                            node to be moved.
-   * @param aPointToInsert      The insertion point.  The container must not
-   *                            be a data node like a text node.
-   * @param aError              The result.  If this succeeds to move children,
-   *                            returns NS_OK.  Otherwise, an error.
-   */
-  void MovePreviousSiblings(nsIContent& aChild,
-                            const EditorRawDOMPoint& aPointToInsert,
-                            ErrorResult& aError);
-
-  /**
    * MoveChildren() moves all children between aFirstChild and aLastChild to
    * before aPointToInsert.GetChild().
    * If some children are moved to different container while this method
