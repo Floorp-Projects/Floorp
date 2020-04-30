@@ -27,6 +27,16 @@ const RECORD = {
   },
 };
 
+const RECORD_OF_DUMP = {
+  id: "filename-of-dump.txt",
+  attachment: {
+    filename: "filename-of-dump.txt",
+    hash: "4c46ef7e4f1951d210fe54c21e07c09bab265fd122580083ed1d6121547a8c6b",
+    size: 25,
+  },
+  some_key: "some metadata",
+};
+
 let downloader;
 let server;
 
@@ -387,4 +397,74 @@ add_task(async function test_download_cached() {
     "Download should fail to fall back to a download of a non-existing record"
   );
 });
+add_task(clear_state);
+
+add_task(async function test_download_from_dump() {
+  const bucketNamePref = "services.testing.custom-bucket-name-in-this-test";
+  Services.prefs.setCharPref(bucketNamePref, "dump-bucket");
+  const client = RemoteSettings("dump-collection", { bucketNamePref });
+
+  // Temporarily replace the resource:-URL with another resource:-URL.
+  const orig_RESOURCE_BASE_URL = Downloader._RESOURCE_BASE_URL;
+  Downloader._RESOURCE_BASE_URL = "resource://rs-downloader-test";
+  const resProto = Services.io
+    .getProtocolHandler("resource")
+    .QueryInterface(Ci.nsIResProtocolHandler);
+  resProto.setSubstitution(
+    "rs-downloader-test",
+    Services.io.newFileURI(do_get_file("test_attachments_downloader"))
+  );
+
+  function checkInfo(result, expectedSource) {
+    Assert.equal(
+      new TextDecoder().decode(new Uint8Array(result.buffer)),
+      "This would be a RS dump.\n",
+      "expected content from dump"
+    );
+    Assert.deepEqual(result.record, RECORD_OF_DUMP, "expected record for dump");
+    Assert.equal(result._source, expectedSource, "expected source of dump");
+  }
+
+  // If record matches, should happen before network request.
+  const dump1 = await client.attachments.download(RECORD_OF_DUMP, {
+    // Note: attachmentId not set, so should fall back to record.id.
+    useCache: true,
+    fallbackToDump: true,
+  });
+  checkInfo(dump1, "dump_match");
+
+  // If no record given, should try network first, but then fall back to dump.
+  const dump2 = await client.attachments.download(null, {
+    attachmentId: RECORD_OF_DUMP.id,
+    useCache: true,
+    fallbackToDump: true,
+  });
+  checkInfo(dump2, "dump_fallback");
+
+  await Assert.rejects(
+    client.attachments.download(null, {
+      attachmentId: "filename-without-meta.txt",
+      useCache: true,
+      fallbackToDump: true,
+    }),
+    /Could not download resource:\/\/rs-downloader-test\/settings\/dump-bucket\/dump-collection\/filename-without-meta\.txt/,
+    "Cannot download dump that lacks a .meta.json file"
+  );
+
+  await Assert.rejects(
+    client.attachments.download(null, {
+      attachmentId: "filename-without-content.txt",
+      useCache: true,
+      fallbackToDump: true,
+    }),
+    /Could not download resource:\/\/rs-downloader-test\/settings\/dump-bucket\/dump-collection\/filename-without-content\.txt/,
+    "Cannot download dump that is missing, despite the existing .meta.json"
+  );
+
+  // Restore, just in case.
+  Downloader._RESOURCE_BASE_URL = orig_RESOURCE_BASE_URL;
+  resProto.setSubstitution("rs-downloader-test", null);
+});
+// Not really needed because the last test doesn't modify the main collection,
+// but added for consistency with other tests tasks around here.
 add_task(clear_state);
