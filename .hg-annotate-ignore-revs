@@ -1,5 +1,6 @@
 ca251a28d3ddae784436d28829fb019025f4b127 - Birunthan Mohanathas - Bug 1016240 - Exterminate CR+LF line endings. r=briansmith,cpearce,ehsan,gavin
 a569f5a4bb6a27f25e99b5b45ee241db2660b7e3 - Paolo Amadini - Bug 1128203 - Reduce indentation from 4 to 2 spaces. rs=dolske DONTBUILD CLOSED TREE
+fdf90317de6820adc8c2b9b1e70f8d11fa859636 - Jared Wein - Bug 1298559 - Enable eslint for /browser/base/content/test/ r=mattn
 dcfc73c043c01c3185631262605e3511bebe4cca - Mark Banner - Bug 1309842 - Fix eslint/espree parsing errors for ignored directories in browser/. r=jaws
 82e347fa35820b3bab21c69356d7aa94696a920c - Mark Banner - Bug 1311315 - General small fixes for no-undef eslint issues in browser/. r=jaws
 8a39edd6beb73a5047ca318962d7e28badf63b07 - Mark Banner - Bug 1312278 - Turn on no-unused-vars for browser/tools/mozscreenshots. r=MattN
