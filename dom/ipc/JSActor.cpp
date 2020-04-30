@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/JSWindowActor.h"
-#include "mozilla/dom/JSWindowActorBinding.h"
+#include "mozilla/dom/JSActor.h"
+#include "mozilla/dom/JSActorBinding.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Telemetry.h"
@@ -24,30 +24,30 @@
 namespace mozilla {
 namespace dom {
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JSWindowActor)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JSActor)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(JSWindowActor)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(JSWindowActor)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(JSActor)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(JSActor)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(JSWindowActor)
+NS_IMPL_CYCLE_COLLECTION_CLASS(JSActor)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(JSWindowActor)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(JSActor)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWrappedJS)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingQueries)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(JSWindowActor)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(JSActor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWrappedJS)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingQueries)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(JSWindowActor)
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(JSActor)
 
-JSWindowActor::JSWindowActor() : mNextQueryId(0) {}
+JSActor::JSActor() : mNextQueryId(0) {}
 
 // RAII class to ensure that, if we crash while handling a message, the
 // crash will be annotated with the name of the actor and the message.
@@ -67,13 +67,13 @@ struct MOZ_RAII AutoAnnotateMessageInCaseOfCrash {
   }
 };
 
-void JSWindowActor::StartDestroy() {
+void JSActor::StartDestroy() {
   AutoAnnotateMessageInCaseOfCrash guard(/* aActorName = */ mName,
                                          NS_LITERAL_CSTRING("<WillDestroy>"));
   InvokeCallback(CallbackFunction::WillDestroy);
 }
 
-void JSWindowActor::AfterDestroy() {
+void JSActor::AfterDestroy() {
   AutoAnnotateMessageInCaseOfCrash guard(/* aActorName = */ mName,
                                          NS_LITERAL_CSTRING("<DidDestroy>"));
   InvokeCallback(CallbackFunction::DidDestroy);
@@ -81,12 +81,12 @@ void JSWindowActor::AfterDestroy() {
   RejectPendingQueries();
 }
 
-void JSWindowActor::InvokeCallback(CallbackFunction callback) {
+void JSActor::InvokeCallback(CallbackFunction callback) {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
 
-  AutoEntryScript aes(GetParentObject(), "JSWindowActor destroy callback");
+  AutoEntryScript aes(GetParentObject(), "JSActor destroy callback");
   JSContext* cx = aes.cx();
-  MozJSWindowActorCallbacks callbacksHolder;
+  MozJSActorCallbacks callbacksHolder;
   NS_ENSURE_TRUE_VOID(GetWrapper());
   JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*GetWrapper()));
   if (NS_WARN_IF(!callbacksHolder.Init(cx, val))) {
@@ -109,11 +109,11 @@ void JSWindowActor::InvokeCallback(CallbackFunction callback) {
   }
 }
 
-nsresult JSWindowActor::QueryInterfaceActor(const nsIID& aIID, void** aPtr) {
+nsresult JSActor::QueryInterfaceActor(const nsIID& aIID, void** aPtr) {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
 
   if (!mWrappedJS) {
-    AutoEntryScript aes(GetParentObject(), "JSWindowActor query interface");
+    AutoEntryScript aes(GetParentObject(), "JSActor query interface");
     JSContext* cx = aes.cx();
 
     JS::Rooted<JSObject*> self(cx, GetWrapper());
@@ -131,7 +131,7 @@ nsresult JSWindowActor::QueryInterfaceActor(const nsIID& aIID, void** aPtr) {
   return mWrappedJS->QueryInterface(aIID, aPtr);
 }
 
-void JSWindowActor::RejectPendingQueries() {
+void JSActor::RejectPendingQueries() {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
 
   // Take our queries out, in case somehow rejecting promises can trigger
@@ -144,8 +144,8 @@ void JSWindowActor::RejectPendingQueries() {
 }
 
 /* static */
-bool JSWindowActor::AllowMessage(const JSWindowActorMessageMeta& aMetadata,
-                                 size_t aDataLength) {
+bool JSActor::AllowMessage(const JSActorMessageMeta& aMetadata,
+                           size_t aDataLength) {
   // A message includes more than structured clone data, so subtract
   // 20KB to make it more likely that a message within this bound won't
   // result in an overly large IPC message.
@@ -170,7 +170,7 @@ bool JSWindowActor::AllowMessage(const JSWindowActorMessageMeta& aMetadata,
   return false;
 }
 
-void JSWindowActor::SetName(const nsACString& aName) {
+void JSActor::SetName(const nsACString& aName) {
   MOZ_ASSERT(mName.IsEmpty(), "Cannot set name twice!");
   mName = aName;
 }
@@ -203,10 +203,8 @@ static ipc::StructuredCloneData CaptureJSStack(JSContext* aCx) {
   return CloneJSStack(aCx, stack);
 }
 
-void JSWindowActor::SendAsyncMessage(JSContext* aCx,
-                                     const nsAString& aMessageName,
-                                     JS::Handle<JS::Value> aObj,
-                                     ErrorResult& aRv) {
+void JSActor::SendAsyncMessage(JSContext* aCx, const nsAString& aMessageName,
+                               JS::Handle<JS::Value> aObj, ErrorResult& aRv) {
   ipc::StructuredCloneData data;
   if (!nsFrameMessageManager::GetParamsForMessage(
           aCx, aObj, JS::UndefinedHandleValue, data)) {
@@ -214,17 +212,18 @@ void JSWindowActor::SendAsyncMessage(JSContext* aCx,
     return;
   }
 
-  JSWindowActorMessageMeta meta;
+  JSActorMessageMeta meta;
   meta.actorName() = mName;
   meta.messageName() = aMessageName;
-  meta.kind() = JSWindowActorMessageKind::Message;
+  meta.kind() = JSActorMessageKind::Message;
 
   SendRawMessage(meta, std::move(data), CaptureJSStack(aCx), aRv);
 }
 
-already_AddRefed<Promise> JSWindowActor::SendQuery(
-    JSContext* aCx, const nsAString& aMessageName, JS::Handle<JS::Value> aObj,
-    ErrorResult& aRv) {
+already_AddRefed<Promise> JSActor::SendQuery(JSContext* aCx,
+                                             const nsAString& aMessageName,
+                                             JS::Handle<JS::Value> aObj,
+                                             ErrorResult& aRv) {
   ipc::StructuredCloneData data;
   if (!nsFrameMessageManager::GetParamsForMessage(
           aCx, aObj, JS::UndefinedHandleValue, data)) {
@@ -243,11 +242,11 @@ already_AddRefed<Promise> JSWindowActor::SendQuery(
     return nullptr;
   }
 
-  JSWindowActorMessageMeta meta;
+  JSActorMessageMeta meta;
   meta.actorName() = mName;
   meta.messageName() = aMessageName;
   meta.queryId() = mNextQueryId++;
-  meta.kind() = JSWindowActorMessageKind::Query;
+  meta.kind() = JSActorMessageKind::Query;
 
   mPendingQueries.Put(meta.queryId(), RefPtr{promise});
 
@@ -264,15 +263,15 @@ already_AddRefed<Promise> JSWindowActor::SendQuery(
     }                                      \
   } while (0)
 
-void JSWindowActor::ReceiveRawMessage(const JSWindowActorMessageMeta& aMetadata,
-                                      ipc::StructuredCloneData&& aData,
-                                      ipc::StructuredCloneData&& aStack) {
+void JSActor::ReceiveRawMessage(const JSActorMessageMeta& aMetadata,
+                                ipc::StructuredCloneData&& aData,
+                                ipc::StructuredCloneData&& aStack) {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
   AutoAnnotateMessageInCaseOfCrash guard(
       /* aActorName = */ mName,
       NS_LossyConvertUTF16toASCII(aMetadata.messageName()));
 
-  AutoEntryScript aes(GetParentObject(), "JSWindowActor message handler");
+  AutoEntryScript aes(GetParentObject(), "JSActor message handler");
   JSContext* cx = aes.cx();
 
   // Read the message into a JS object from IPC.
@@ -296,18 +295,18 @@ void JSWindowActor::ReceiveRawMessage(const JSWindowActorMessageMeta& aMetadata,
         CHILD_DIAGNOSTIC_ASSERT(false, "Stack must be a SavedFrame object");
         return;
       }
-      stackSetter.emplace(cx, stack, "JSWindowActor query");
+      stackSetter.emplace(cx, stack, "JSActor query");
     }
   }
 
   switch (aMetadata.kind()) {
-    case JSWindowActorMessageKind::QueryResolve:
-    case JSWindowActorMessageKind::QueryReject:
+    case JSActorMessageKind::QueryResolve:
+    case JSActorMessageKind::QueryReject:
       ReceiveQueryReply(cx, aMetadata, data, error);
       break;
 
-    case JSWindowActorMessageKind::Message:
-    case JSWindowActorMessageKind::Query:
+    case JSActorMessageKind::Message:
+    case JSActorMessageKind::Query:
       ReceiveMessageOrQuery(cx, aMetadata, data, error);
       break;
 
@@ -318,9 +317,10 @@ void JSWindowActor::ReceiveRawMessage(const JSWindowActorMessageMeta& aMetadata,
   Unused << error.MaybeSetPendingException(cx);
 }
 
-void JSWindowActor::ReceiveMessageOrQuery(
-    JSContext* aCx, const JSWindowActorMessageMeta& aMetadata,
-    JS::Handle<JS::Value> aData, ErrorResult& aRv) {
+void JSActor::ReceiveMessageOrQuery(JSContext* aCx,
+                                    const JSActorMessageMeta& aMetadata,
+                                    JS::Handle<JS::Value> aData,
+                                    ErrorResult& aRv) {
   // The argument which we want to pass to IPC.
   RootedDictionary<ReceiveMessageArgument> argument(aCx);
   argument.mTarget = this;
@@ -336,7 +336,7 @@ void JSWindowActor::ReceiveMessageOrQuery(
   // will be resolved or rejected once the listener has been called. Our
   // listener on this promise will then send the reply.
   RefPtr<Promise> promise;
-  if (aMetadata.kind() == JSWindowActorMessageKind::Query) {
+  if (aMetadata.kind() == JSActorMessageKind::Query) {
     promise = Promise::Create(xpc::NativeGlobal(global), aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return;
@@ -351,7 +351,7 @@ void JSWindowActor::ReceiveMessageOrQuery(
   RefPtr<MessageListener> messageListener =
       new MessageListener(self, global, nullptr, nullptr);
   messageListener->ReceiveMessage(argument, &retval, aRv,
-                                  "JSWindowActor receive message",
+                                  "JSActor receive message",
                                   MessageListener::eRethrowExceptions);
 
   // If we have a promise, resolve or reject it respectively.
@@ -370,10 +370,9 @@ void JSWindowActor::ReceiveMessageOrQuery(
   }
 }
 
-void JSWindowActor::ReceiveQueryReply(JSContext* aCx,
-                                      const JSWindowActorMessageMeta& aMetadata,
-                                      JS::Handle<JS::Value> aData,
-                                      ErrorResult& aRv) {
+void JSActor::ReceiveQueryReply(JSContext* aCx,
+                                const JSActorMessageMeta& aMetadata,
+                                JS::Handle<JS::Value> aData, ErrorResult& aRv) {
   if (NS_WARN_IF(aMetadata.actorName() != mName)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return;
@@ -393,7 +392,7 @@ void JSWindowActor::ReceiveQueryReply(JSContext* aCx,
     return;
   }
 
-  if (aMetadata.kind() == JSWindowActorMessageKind::QueryResolve) {
+  if (aMetadata.kind() == JSActorMessageKind::QueryResolve) {
     promise->MaybeResolve(data);
   } else {
     promise->MaybeReject(data);
@@ -402,16 +401,16 @@ void JSWindowActor::ReceiveQueryReply(JSContext* aCx,
 
 // Native handler for our generated promise which is used to handle Queries and
 // send the reply when their promises have been resolved.
-JSWindowActor::QueryHandler::QueryHandler(
-    JSWindowActor* aActor, const JSWindowActorMessageMeta& aMetadata,
-    Promise* aPromise)
+JSActor::QueryHandler::QueryHandler(JSActor* aActor,
+                                    const JSActorMessageMeta& aMetadata,
+                                    Promise* aPromise)
     : mActor(aActor),
       mPromise(aPromise),
       mMessageName(aMetadata.messageName()),
       mQueryId(aMetadata.queryId()) {}
 
-void JSWindowActor::QueryHandler::RejectedCallback(
-    JSContext* aCx, JS::Handle<JS::Value> aValue) {
+void JSActor::QueryHandler::RejectedCallback(JSContext* aCx,
+                                             JS::Handle<JS::Value> aValue) {
   if (!mActor) {
     // Make sure that this rejection is reported. See comment below.
     Unused << JS::CallOriginalPromiseReject(aCx, aValue);
@@ -452,11 +451,11 @@ void JSWindowActor::QueryHandler::RejectedCallback(
     data->Write(aCx, JS::UndefinedHandleValue, rv);
   }
 
-  SendReply(aCx, JSWindowActorMessageKind::QueryReject, std::move(*data));
+  SendReply(aCx, JSActorMessageKind::QueryReject, std::move(*data));
 }
 
-void JSWindowActor::QueryHandler::ResolvedCallback(
-    JSContext* aCx, JS::Handle<JS::Value> aValue) {
+void JSActor::QueryHandler::ResolvedCallback(JSContext* aCx,
+                                             JS::Handle<JS::Value> aValue) {
   if (!mActor) {
     return;
   }
@@ -484,15 +483,14 @@ void JSWindowActor::QueryHandler::ResolvedCallback(
     return;
   }
 
-  SendReply(aCx, JSWindowActorMessageKind::QueryResolve, std::move(data));
+  SendReply(aCx, JSActorMessageKind::QueryResolve, std::move(data));
 }
 
-void JSWindowActor::QueryHandler::SendReply(JSContext* aCx,
-                                            JSWindowActorMessageKind aKind,
-                                            ipc::StructuredCloneData&& aData) {
+void JSActor::QueryHandler::SendReply(JSContext* aCx, JSActorMessageKind aKind,
+                                      ipc::StructuredCloneData&& aData) {
   MOZ_ASSERT(mActor);
 
-  JSWindowActorMessageMeta meta;
+  JSActorMessageMeta meta;
   meta.actorName() = mActor->Name();
   meta.messageName() = mMessageName;
   meta.queryId() = mQueryId;
@@ -507,14 +505,14 @@ void JSWindowActor::QueryHandler::SendReply(JSContext* aCx,
   mPromise = nullptr;
 }
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JSWindowActor::QueryHandler)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JSActor::QueryHandler)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(JSWindowActor::QueryHandler)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(JSWindowActor::QueryHandler)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(JSActor::QueryHandler)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(JSActor::QueryHandler)
 
-NS_IMPL_CYCLE_COLLECTION(JSWindowActor::QueryHandler, mActor, mPromise)
+NS_IMPL_CYCLE_COLLECTION(JSActor::QueryHandler, mActor, mPromise)
 
 }  // namespace dom
 }  // namespace mozilla
