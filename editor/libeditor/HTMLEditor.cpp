@@ -3355,6 +3355,85 @@ already_AddRefed<Element> HTMLEditor::InsertBRElementWithTransaction(
   return newBRElement.forget();
 }
 
+already_AddRefed<Element> HTMLEditor::ReplaceContainerWithTransactionInternal(
+    Element& aOldContainer, nsAtom& aTagName, nsAtom& aAttribute,
+    const nsAString& aAttributeValue, bool aCloneAllAttributes) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  EditorDOMPoint atOldContainer(&aOldContainer);
+  if (NS_WARN_IF(!atOldContainer.IsSet())) {
+    return nullptr;
+  }
+
+  RefPtr<Element> newContainer = CreateHTMLContent(&aTagName);
+  if (NS_WARN_IF(!newContainer)) {
+    return nullptr;
+  }
+
+  // Set or clone attribute if needed.
+  if (aCloneAllAttributes) {
+    MOZ_ASSERT(&aAttribute == nsGkAtoms::_empty);
+    CloneAttributesWithTransaction(*newContainer, aOldContainer);
+  } else if (&aAttribute != nsGkAtoms::_empty) {
+    nsresult rv = newContainer->SetAttr(kNameSpaceID_None, &aAttribute,
+                                        aAttributeValue, true);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Element::SetAttr() failed");
+      return nullptr;
+    }
+  }
+
+  // Notify our internal selection state listener.
+  // Note: An AutoSelectionRestorer object must be created before calling this
+  // to initialize RangeUpdaterRef().
+  AutoReplaceContainerSelNotify selStateNotify(RangeUpdaterRef(), aOldContainer,
+                                               *newContainer);
+  {
+    AutoTransactionsConserveSelection conserveSelection(*this);
+    // Move all children from the old container to the new container.
+    while (aOldContainer.HasChildren()) {
+      nsCOMPtr<nsIContent> child = aOldContainer.GetFirstChild();
+      if (NS_WARN_IF(!child)) {
+        return nullptr;
+      }
+      // HTMLEditor::DeleteNodeWithTransaction() does not move non-editable
+      // node, but we need to move non-editable nodes too.  Therefore, call
+      // EditorBase's method directly.
+      nsresult rv = EditorBase::DeleteNodeWithTransaction(*child);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+        return nullptr;
+      }
+
+      rv = InsertNodeWithTransaction(
+          *child, EditorDOMPoint(newContainer, newContainer->Length()));
+      if (NS_FAILED(rv)) {
+        NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
+        return nullptr;
+      }
+    }
+  }
+
+  // Insert new container into tree.
+  NS_WARNING_ASSERTION(atOldContainer.IsSetAndValid(),
+                       "The old container might be moved by mutation observer");
+  nsresult rv = InsertNodeWithTransaction(*newContainer, atOldContainer);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
+    return nullptr;
+  }
+
+  // Delete old container.
+  // XXX Perhaps, we should not remove the container if it's not editable.
+  rv = EditorBase::DeleteNodeWithTransaction(aOldContainer);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+    return nullptr;
+  }
+
+  return newContainer.forget();
+}
+
 MOZ_CAN_RUN_SCRIPT_BOUNDARY void HTMLEditor::ContentAppended(
     nsIContent* aFirstNewContent) {
   DoContentInserted(aFirstNewContent, eAppended);

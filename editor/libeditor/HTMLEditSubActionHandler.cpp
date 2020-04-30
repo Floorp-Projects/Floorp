@@ -4760,7 +4760,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
             return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
           }
           if (!newListItemElement) {
-            NS_WARNING("EditorBase::ReplaceContainerWithTransaction() failed");
+            NS_WARNING("HTMLEditor::ReplaceContainerWithTransaction() failed");
             return EditActionResult(NS_ERROR_FAILURE);
           }
         }
@@ -4794,7 +4794,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
             return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
           }
           if (!newListItemElement) {
-            NS_WARNING("EditorBase::ReplaceContainerWithTransaction() failed");
+            NS_WARNING("HTMLEditor::ReplaceContainerWithTransaction() failed");
             return EditActionResult(NS_ERROR_FAILURE);
           }
         }
@@ -4923,7 +4923,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
         return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
       }
       if (!newListItemElement) {
-        NS_WARNING("EditorBase::ReplaceContainerWithTransaction() failed");
+        NS_WARNING("HTMLEditor::ReplaceContainerWithTransaction() failed");
         return EditActionResult(NS_ERROR_FAILURE);
       }
       prevListItem = nullptr;
@@ -6562,7 +6562,7 @@ CreateElementResult HTMLEditor::ChangeListElementType(Element& aListElement,
         return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
       }
       if (!newListItemElement) {
-        NS_WARNING("EditorBase::ReplaceContainerWithTransaction() failed");
+        NS_WARNING("HTMLEditor::ReplaceContainerWithTransaction() failed");
         return CreateElementResult(NS_ERROR_FAILURE);
       }
       childContent = newListItemElement;
@@ -6595,7 +6595,7 @@ CreateElementResult HTMLEditor::ChangeListElementType(Element& aListElement,
     return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(listElement,
-                       "EditorBase::ReplaceContainerWithTransaction() failed");
+                       "HTMLEditor::ReplaceContainerWithTransaction() failed");
   return CreateElementResult(std::move(listElement));
 }
 
