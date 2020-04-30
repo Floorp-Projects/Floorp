@@ -169,6 +169,18 @@ CanonicalBrowsingContext::GetParentWindowGlobal() const {
   return nullptr;
 }
 
+already_AddRefed<CanonicalBrowsingContext>
+CanonicalBrowsingContext::GetParentCrossChromeBoundary() {
+  if (GetParent()) {
+    return do_AddRef(Cast(GetParent()));
+  }
+  if (GetEmbedderElement()) {
+    return do_AddRef(
+        Cast(GetEmbedderElement()->OwnerDoc()->GetBrowsingContext()));
+  }
+  return nullptr;
+}
+
 nsISHistory* CanonicalBrowsingContext::GetSessionHistory() {
   if (mSessionHistory) {
     return mSessionHistory;
