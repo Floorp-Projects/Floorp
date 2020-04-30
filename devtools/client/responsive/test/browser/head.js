@@ -272,8 +272,11 @@ function addRDMTask(rdmURL, rdmTask, options) {
   addRDMTaskWithPreAndPost(rdmURL, undefined, rdmTask, undefined, options);
 }
 
-function spawnViewportTask(ui, args, task) {
-  return ContentTask.spawn(ui.getViewportBrowser(), args, task);
+async function spawnViewportTask(ui, args, task) {
+  // Await a reflow after the task.
+  const result = await ContentTask.spawn(ui.getViewportBrowser(), args, task);
+  await promiseContentReflow(ui);
+  return result;
 }
 
 function waitForFrameLoad(ui, targetURL) {
@@ -351,16 +354,7 @@ var setViewportSize = async function(ui, manager, width, height) {
 // ensures that reflow of the viewport has completed.
 var setViewportSizeAndAwaitReflow = async function(ui, manager, width, height) {
   await setViewportSize(ui, manager, width, height);
-  const reflowed = SpecialPowers.spawn(
-    ui.getViewportBrowser(),
-    [],
-    async function() {
-      return new Promise(resolve => {
-        content.requestAnimationFrame(resolve);
-      });
-    }
-  );
-  await reflowed;
+  await promiseContentReflow(ui);
 };
 
 function getViewportDevicePixelRatio(ui) {
@@ -881,6 +875,7 @@ async function setTouchAndMetaViewportSupport(ui, value) {
     const browser = ui.getViewportBrowser();
     browser.reload();
     await reload;
+    await promiseContentReflow(ui);
   }
   return reloadNeeded;
 }
