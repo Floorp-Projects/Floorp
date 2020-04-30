@@ -96,7 +96,7 @@ void AggregatedResults::Abort(nsresult aReason) {
 void AggregatedResults::ResolveNow() {
   MOZ_ASSERT(!mHolder.IsEmpty());
   LOG(("[%s] Early resolve", nsIDToCString(mUUID).get()));
-  mHolder.Resolve(mData, __func__);
+  mHolder.Resolve(CopyableTArray(mData), __func__);
   mIPCTimeout = nullptr;
   mCollector->ForgetAggregatedResults(mUUID);
 }
@@ -161,7 +161,9 @@ void AggregatedResults::AppendResult(
     mIPCTimeout->Cancel();
     mIPCTimeout = nullptr;
   }
-  mHolder.Resolve(mData, __func__);
+  nsTArray<dom::PerformanceInfoDictionary> data;
+  data.Assign(mData);
+  mHolder.Resolve(std::move(data), __func__);
   mCollector->ForgetAggregatedResults(mUUID);
 }
 
