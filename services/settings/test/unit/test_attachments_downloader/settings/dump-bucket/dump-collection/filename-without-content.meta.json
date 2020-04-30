@@ -1,9 +1,0 @@
-{
-  "fyi": "This .meta.json file describes an attachment, but that attachment is missing.",
-  "attachment": {
-    "filename": "filename-without-content.txt",
-    "hash": "...",
-    "size": "..."
-  }
-}
-
