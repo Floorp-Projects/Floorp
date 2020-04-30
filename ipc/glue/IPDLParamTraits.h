@@ -237,6 +237,9 @@ struct IPDLParamTraits<nsTArray<T>> {
       (std::is_integral_v<T> || std::is_floating_point_v<T>);
 };
 
+template <typename T>
+struct IPDLParamTraits<CopyableTArray<T>> : IPDLParamTraits<nsTArray<T>> {};
+
 // Maybe support for IPDLParamTraits
 template <typename T>
 struct IPDLParamTraits<Maybe<T>> {
