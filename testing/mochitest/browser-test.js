@@ -561,6 +561,12 @@ Tester.prototype = {
         }
       }
 
+      // Spare tests cleanup work.
+      // Reset gReduceMotionOverride in case the test set it.
+      if (typeof gReduceMotionOverride == "boolean") {
+        gReduceMotionOverride = null;
+      }
+
       Services.obs.notifyObservers(null, "test-complete");
 
       if (

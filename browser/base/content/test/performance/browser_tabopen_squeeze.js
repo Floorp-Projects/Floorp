@@ -21,6 +21,9 @@ const EXPECTED_REFLOWS = [
  * cause the existing tabs to squeeze smaller.
  */
 add_task(async function() {
+  // Force-enable tab animations
+  gReduceMotionOverride = false;
+
   await ensureNoPreloadedBrowser();
   await disableFxaBadge();
 

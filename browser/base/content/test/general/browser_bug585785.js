@@ -3,6 +3,9 @@ var tab;
 function test() {
   waitForExplicitFinish();
 
+  // Force-enable tab animations
+  gReduceMotionOverride = false;
+
   tab = BrowserTestUtils.addTab(gBrowser);
   isnot(
     tab.getAttribute("fadein"),

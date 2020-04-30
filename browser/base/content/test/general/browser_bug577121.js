@@ -3,10 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function test() {
-  Services.prefs.setBoolPref("toolkit.cosmeticAnimations.enabled", false);
-  registerCleanupFunction(function() {
-    Services.prefs.clearUserPref("toolkit.cosmeticAnimations.enabled");
-  });
+  // Disable tab animations
+  gReduceMotionOverride = true;
 
   // Open 2 other tabs, and pin the second one. Like that, the initial tab
   // should get closed.

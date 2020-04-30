@@ -23,6 +23,9 @@ const EXPECTED_REFLOWS = [
  * uninterruptible reflows when opening new tabs.
  */
 add_task(async function() {
+  // Force-enable tab animations
+  gReduceMotionOverride = false;
+
   await ensureNoPreloadedBrowser();
   await disableFxaBadge();
 
