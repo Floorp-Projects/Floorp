@@ -162,6 +162,9 @@ The provided helper will:
     This enables callers to always have a valid pair of attachment and record,
     provided that the attachment has been retrieved at least once.
 
+    The ``fallbackToDump`` option activates a fallback to a dump that has been
+    packaged with the client, when other ways to load the attachment have failed.
+
 .. note::
 
     A ``downloadAsBytes()`` method returning an ``ArrayBuffer`` is also available, if writing the attachment into the user profile is not necessary.
