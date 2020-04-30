@@ -47,12 +47,13 @@ def get_running_env(**kwargs):
     mach_cmd._mach_context.state_dir = tempfile.mkdtemp()
 
     mach_args = {
+        "flavor": "script",
         "test_objects": None,
         "resolve_tests": True,
         "browsertime-clobber": False,
         "browsertime-install-url": None,
     }
     mach_args.update(kwargs)
-    env = MachEnvironment(mach_cmd, "script", **mach_args)
+    env = MachEnvironment(mach_cmd, **mach_args)
     metadata = Metadata(mach_cmd, env, "script")
     return mach_cmd, metadata, env
