@@ -331,4 +331,4 @@ b4662b6db1b34414494d070e33481193625403d1 - Ehsan Akhgari - Bug 1508472 - Part 4:
 020c8c871c0d3b3920fe95935cfef06501976c0f - Sylvestre Ledru - Bug 1552795 - Remove all trailing whitespaces in idl files r=ehsan
 10d5143647cfda21649cf254adcb21d116524c5d - Sylvestre Ledru - Bug 1489454 - Remove all trailing whitespaces (again) r=Ehsan
 6a629adbb62a299d7208373d1c6f375149d2afdb - Sylvestre Ledru - Bug 1378712 - Remove all trailing whitespaces r=Ehsan
-01f1c9d343947743bfd033bcfbb344dcee4b76fc - Victor Porof - Bug 1563300 - Add a js-format git commit hook, r=sylvestre
+c7e91f614eb78c4447a623f1c88a66421113ab07 - Victor Porof - Bug 1563300 - Add a js-format git commit hook, r=sylvestre
