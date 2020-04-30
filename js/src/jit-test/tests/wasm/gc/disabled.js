@@ -1,4 +1,4 @@
-// |jit-test| skip-if: wasmReftypesEnabled()
+// |jit-test| skip-if: wasmReftypesEnabled() || wasmGcEnabled()
 
 const { CompileError, validate } = WebAssembly;
 

@@ -107,6 +107,7 @@ extern bool enableSharedMemory;
 extern bool enableWasmBaseline;
 extern bool enableWasmIon;
 extern bool enableWasmCranelift;
+extern bool enableWasmReftypes;
 #ifdef ENABLE_WASM_GC
 extern bool enableWasmGc;
 #endif

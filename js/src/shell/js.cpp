@@ -502,6 +502,7 @@ bool shell::enableSharedMemory = SHARED_MEMORY_DEFAULT;
 bool shell::enableWasmBaseline = false;
 bool shell::enableWasmIon = false;
 bool shell::enableWasmCranelift = false;
+bool shell::enableWasmReftypes = true;
 #ifdef ENABLE_WASM_GC
 bool shell::enableWasmGc = false;
 #endif
@@ -10492,6 +10493,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     }
   }
 
+  enableWasmReftypes = !op.getBoolOption("no-wasm-reftypes");
 #ifdef ENABLE_WASM_GC
   enableWasmGc = op.getBoolOption("wasm-gc");
 #endif
@@ -10520,6 +10522,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setWasmForTrustedPrinciples(enableWasm)
       .setWasmBaseline(enableWasmBaseline)
       .setWasmIon(enableWasmIon)
+      .setWasmReftypes(enableWasmReftypes)
 #ifdef ENABLE_WASM_CRANELIFT
       .setWasmCranelift(enableWasmCranelift)
 #endif
@@ -11328,6 +11331,8 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "test-wasm-await-tier2",
                         "Forcibly activate tiering and block "
                         "instantiation on completion of tier2") ||
+      !op.addBoolOption('\0', "no-wasm-reftypes",
+                        "Disable wasm reference types features") ||
 #ifdef ENABLE_WASM_GC
       !op.addBoolOption('\0', "wasm-gc",
                         "Enable experimental wasm GC features") ||

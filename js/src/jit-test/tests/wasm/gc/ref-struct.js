@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled() || wasmCompileMode() != 'baseline'
+// |jit-test| skip-if: !wasmReftypesEnabled() || !wasmGcEnabled() || wasmCompileMode() != 'baseline'
 
 // We'll be running some binary-format tests shortly.
 

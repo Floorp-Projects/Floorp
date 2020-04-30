@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled() || wasmCompileMode() != 'baseline'
+// |jit-test| skip-if: !wasmReftypesEnabled() || !wasmGcEnabled() || wasmCompileMode() != 'baseline'
 
 // Basic private-to-module functionality.  At the moment all we have is null
 // pointers, not very exciting.

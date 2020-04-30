@@ -908,6 +908,8 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   bool useWasmCranelift =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_cranelift");
 #endif
+  bool useWasmReftypes =
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_reftypes");
 #ifdef ENABLE_WASM_GC
   bool useWasmGc = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_gc");
 #endif
@@ -965,6 +967,7 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       .setWasmForTrustedPrinciples(useWasmTrustedPrincipals)
       .setWasmIon(useWasmIon)
       .setWasmBaseline(useWasmBaseline)
+      .setWasmReftypes(useWasmReftypes)
 #ifdef ENABLE_WASM_CRANELIFT
       .setWasmCranelift(useWasmCranelift)
 #endif

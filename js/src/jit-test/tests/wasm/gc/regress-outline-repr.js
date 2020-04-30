@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled() || wasmCompileMode() != 'baseline'
+// |jit-test| skip-if: !wasmReftypesEnabled() || !wasmGcEnabled() || wasmCompileMode() != 'baseline'
 
 // White-box test for bug 1617908.  The significance of this test is that the
 // type $S is too large to fit in an inline TypedObject, and the write barrier

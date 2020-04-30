@@ -121,6 +121,7 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
   target->sharedMemoryEnabled =
       cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
   target->forceTiering = forceTiering;
+  target->reftypesEnabled = wasm::ReftypesAvailable(cx);
   target->gcEnabled = wasm::GcTypesAvailable(cx);
   target->hugeMemory = wasm::IsHugeMemoryEnabled();
   target->bigIntEnabled = wasm::I64BigIntConversionAvailable(cx);
@@ -452,6 +453,7 @@ void CompilerEnvironment::computeParameters(Decoder& d) {
     return;
   }
 
+  bool reftypesEnabled = args_->reftypesEnabled;
   bool gcEnabled = args_->gcEnabled;
   bool baselineEnabled = args_->baselineEnabled;
   bool ionEnabled = args_->ionEnabled;
@@ -490,8 +492,8 @@ void CompilerEnvironment::computeParameters(Decoder& d) {
       craneliftEnabled ? OptimizedBackend::Cranelift : OptimizedBackend::Ion;
 
   debug_ = debugEnabled ? DebugEnabled::True : DebugEnabled::False;
+  refTypes_ = reftypesEnabled;
   gcTypes_ = gcEnabled;
-  refTypes_ = true;
   multiValues_ = multiValuesEnabled;
   hugeMemory_ = hugeMemory;
   bigInt_ = bigIntEnabled;
