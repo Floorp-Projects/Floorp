@@ -1,7 +1,11 @@
 #include "nsISupports.idl"
 
+webidl JSProcessActorParent;
+
 [scriptable, builtinclass, uuid(81fc08b9-c901-471f-ab0d-876362eba770)]
 interface nsIContentParent: nsISupports {
     // Internal ID of the process.
     readonly attribute unsigned long long childID;
+
+    JSProcessActorParent getActor(in ACString name);
 };
