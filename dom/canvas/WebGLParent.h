@@ -9,6 +9,7 @@
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/dom/PWebGLParent.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/dom/IpdlQueue.h"
 
 namespace mozilla {
 
@@ -20,18 +21,25 @@ class SharedSurfaceTextureClient;
 
 namespace dom {
 
-class WebGLParent final : public PWebGLParent,
-                          public SupportsWeakPtr<WebGLParent> {
+class WebGLParent : public PWebGLParent,
+                    public AsyncProducerActor<WebGLParent>,
+                    public SyncConsumerActor<WebGLParent>,
+                    public SupportsWeakPtr<WebGLParent> {
   friend PWebGLParent;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebGLParent, override);
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLParent)
+  using OtherSideActor = WebGLChild;
 
-  mozilla::ipc::IPCResult RecvInitialize(const webgl::InitContextDesc&,
-                                         webgl::InitContextResult* out);
+  mozilla::ipc::IPCResult RecvInitialize(
+      const webgl::InitContextDesc&, UniquePtr<HostWebGLCommandSinkP>&& aSinkP,
+      UniquePtr<HostWebGLCommandSinkI>&& aSinkI, webgl::InitContextResult* out);
 
   RefPtr<layers::SharedSurfaceTextureClient> GetVRFrame(webgl::ObjectId);
+
+  // Drain the command queue now.  Used by synchronous IpdlQueue consumers.
+  bool RunQueue(uint64_t) { return RunCommandQueue(); }
 
   // For IPDL:
   WebGLParent();
