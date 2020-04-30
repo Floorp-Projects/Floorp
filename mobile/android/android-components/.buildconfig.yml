@@ -212,6 +212,10 @@ projects:
     path: components/browser/tabstray
     description: 'A tabs tray component for browsers.'
     publish: true
+  browser-thumbnails:
+    path: components/browser/thumbnails
+    description: 'A component for loading and storing website thumbnails.'
+    publish: true
   browser-toolbar:
     path: components/browser/toolbar
     description: 'A customizable toolbar for browsers.'

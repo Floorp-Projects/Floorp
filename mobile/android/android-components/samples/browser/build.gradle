@@ -73,6 +73,7 @@ dependencies {
     implementation project(':browser-session')
     implementation project(':browser-state')
     implementation project(':browser-tabstray')
+    implementation project(':browser-thumbnails')
     implementation project(':browser-toolbar')
     implementation project(':browser-menu')
     implementation project(':browser-storage-memory')
