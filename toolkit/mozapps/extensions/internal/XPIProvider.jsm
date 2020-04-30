@@ -702,6 +702,11 @@ class XPIStateLocation extends Map {
     this._installler = undefined;
   }
 
+  hasPrecedence(otherLocation) {
+    let locations = Array.from(XPIStates.locations());
+    return locations.indexOf(this) <= locations.indexOf(otherLocation);
+  }
+
   get installer() {
     if (this._installer === undefined) {
       this._installer = this.makeInstaller();
