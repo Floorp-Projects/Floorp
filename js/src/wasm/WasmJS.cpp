@@ -146,13 +146,19 @@ bool wasm::CraneliftAvailable(JSContext* cx) {
 bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
                                        JSStringBuilder* reason) {
   // Cranelift has no debugging support, no gc support, no multi-value support,
-  // no threads.
+  // no threads, and on ARM64, no reference types.
   bool debug = cx->realm() && cx->realm()->debuggerObservesAsmJS();
   bool gc = cx->options().wasmGc();
   bool multiValue = WasmMultiValueFlag(cx);
   bool threads =
       cx->realm() &&
       cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
+#if defined(JS_CODEGEN_ARM64)
+  bool reftypesOnArm64 = cx->options().wasmReftypes();
+#else
+  // On other platforms, assume reftypes has been implemented.
+  bool reftypesOnArm64 = false;
+#endif
   if (reason) {
     char sep = 0;
     if (debug && !Append(reason, "debug", &sep)) {
@@ -167,8 +173,11 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
     if (threads && !Append(reason, "threads", &sep)) {
       return false;
     }
+    if (reftypesOnArm64 && !Append(reason, "reftypes", &sep)) {
+      return false;
+    }
   }
-  *isDisabled = debug || gc || multiValue || threads;
+  *isDisabled = debug || gc || multiValue || threads || reftypesOnArm64;
   return true;
 }
 
@@ -181,9 +190,10 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
 // ensure that only compilers that actually support the feature are used.
 
 bool wasm::ReftypesAvailable(JSContext* cx) {
-  // All compilers support reference types.
+  // All compilers support reference types, except Cranelift on ARM64.
 #ifdef ENABLE_WASM_REFTYPES
-  return true;
+  return cx->options().wasmReftypes() &&
+         (BaselineAvailable(cx) || IonAvailable(cx) || CraneliftAvailable(cx));
 #else
   return false;
 #endif

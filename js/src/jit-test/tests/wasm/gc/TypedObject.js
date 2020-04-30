@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled() || wasmCompileMode() != 'baseline'
+// |jit-test| skip-if: !wasmReftypesEnabled() || !wasmGcEnabled() || wasmCompileMode() != 'baseline'
 
 // We can read the object fields from JS, and write them if they are mutable.
 

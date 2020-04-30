@@ -289,6 +289,7 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
       .setWasmBaseline(
           GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_baselinejit")))
       .setWasmIon(GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_ionjit")))
+      .setWasmReftypes(GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_reftypes")))
 #ifdef ENABLE_WASM_CRANELIFT
       .setWasmCranelift(
           GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_cranelift")))
