@@ -366,6 +366,13 @@
             app:popExitAnim="@anim/slide_out_right"
             app:destination="@id/aboutFragment" />
         <action
+            android:id="@+id/action_settingsFragment_to_secretSettingsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"
+            app:destination="@id/secretSettingsPreference" />
+        <action
             android:id="@+id/action_settingsFragment_to_customizationFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
@@ -500,6 +507,10 @@
     <fragment
         android:id="@+id/aboutFragment"
         android:name="org.mozilla.fenix.settings.about.AboutFragment"/>
+    <fragment
+        android:id="@+id/secretSettingsPreference"
+        android:name="org.mozilla.fenix.settings.SecretSettingsPreference"
+        android:label="@string/preferences_debug_settings" />
     <fragment
         android:id="@+id/crashReporterFragment"
         android:name="org.mozilla.fenix.crashes.CrashReporterFragment">

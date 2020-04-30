@@ -43,4 +43,9 @@ object FeatureFlags {
      * Enables tip feature
      */
     val tips = Config.channel.isDebug
+
+    /**
+     * Enables new tab tray pref
+     */
+    val tabTray = Config.channel.isDebug
 }

@@ -43,4 +43,8 @@
     <string name="tab_tray_menu_home" translatable="false">Go home</string>
     <!-- Shortcut action to toggle private mode -->
     <string name="tab_tray_menu_toggle" translatable="false">Toggle tab mode</string>
+
+    <!-- Label for the secret settings preference -->
+    <string name="preferences_debug_settings">Secret Settings</string>
+    <string name="preferences_debug_settings_enable_tab_tray">Use New Tab Tray</string>
 </resources>

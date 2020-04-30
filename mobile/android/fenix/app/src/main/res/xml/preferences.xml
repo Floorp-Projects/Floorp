@@ -159,5 +159,11 @@
             android:icon="@drawable/ic_info"
             android:key="@string/pref_key_about"
             android:title="@string/preferences_about" />
+
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_info"
+            android:key="@string/pref_key_debug_settings"
+            android:title="@string/preferences_debug_settings"
+            app:isPreferenceVisible="false" />
     </androidx.preference.PreferenceCategory>
 </androidx.preference.PreferenceScreen>

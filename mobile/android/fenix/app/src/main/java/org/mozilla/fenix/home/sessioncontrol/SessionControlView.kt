@@ -4,9 +4,9 @@
 
 package org.mozilla.fenix.home.sessioncontrol
 
+import android.content.Context
 import android.os.Build
 import android.view.View
-import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -14,15 +14,14 @@ import kotlinx.android.extensions.LayoutContainer
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
-import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.R
 import org.mozilla.fenix.home.HomeFragmentState
-import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.home.Tab
 import org.mozilla.fenix.components.tips.Tip
+import org.mozilla.fenix.ext.settings
 
 val noTabMessage = AdapterItem.NoContentMessageWithAction(
     R.string.no_open_tabs_header_2,
@@ -36,7 +35,11 @@ val noCollectionMessage = AdapterItem.NoContentMessage(
     R.string.collections_description
 )
 
+// This method got a little complex with the addition of the tab tray feature flag
+// When we remove the tabs from the home screen this will get much simpler again.
+@SuppressWarnings("LongParameterList", "ComplexMethod")
 private fun normalModeAdapterItems(
+    context: Context,
     tabs: List<Tab>,
     topSites: List<TopSite>,
     collections: List<TabCollection>,
@@ -52,26 +55,30 @@ private fun normalModeAdapterItems(
         items.add(AdapterItem.TopSiteList(topSites))
     }
 
-    items.add(AdapterItem.TabHeader(false, tabs.isNotEmpty()))
+    val useNewTabTray = context.settings().useNewTabTray
+
+    if (!useNewTabTray) {
+        items.add(AdapterItem.TabHeader(false, tabs.isNotEmpty()))
+    }
 
     when {
         tabs.isNotEmpty() && collections.isNotEmpty() -> {
-            showTabs(items, tabs)
+            if (!useNewTabTray) { showTabs(items, tabs) }
             showCollections(collections, expandedCollections, tabs, items)
         }
 
         tabs.isNotEmpty() && collections.isEmpty() -> {
-            showTabs(items, tabs)
+            if (!useNewTabTray) { showTabs(items, tabs) }
             items.add(AdapterItem.CollectionHeader)
             items.add(noCollectionMessage)
         }
 
         tabs.isEmpty() && collections.isNotEmpty() -> {
-            items.add(noTabMessage)
+            if (!useNewTabTray) { items.add(noTabMessage) }
             showCollections(collections, expandedCollections, tabs, items)
         }
 
-        tabs.isEmpty() && collections.isEmpty() -> {
+        tabs.isEmpty() && collections.isEmpty() && !useNewTabTray -> {
             items.add(noTabMessage)
         }
     }
@@ -105,14 +112,21 @@ private fun showCollections(
     }
 }
 
-private fun privateModeAdapterItems(tabs: List<Tab>): List<AdapterItem> {
+private fun privateModeAdapterItems(context: Context, tabs: List<Tab>): List<AdapterItem> {
     val items = mutableListOf<AdapterItem>()
-    items.add(AdapterItem.TabHeader(true, tabs.isNotEmpty()))
 
-    if (tabs.isNotEmpty()) {
-        items.addAll(tabs.reversed().map(AdapterItem::TabItem))
-    } else {
+    val useNewTabTray = context.settings().useNewTabTray
+
+    if (useNewTabTray) {
         items.add(AdapterItem.PrivateBrowsingDescription)
+    } else {
+        items.add(AdapterItem.TabHeader(true, tabs.isNotEmpty()))
+
+        if (tabs.isNotEmpty()) {
+            items.addAll(tabs.reversed().map(AdapterItem::TabItem))
+        } else {
+            items.add(AdapterItem.PrivateBrowsingDescription)
+        }
     }
 
     return items
@@ -153,9 +167,9 @@ private fun onboardingAdapterItems(onboardingState: OnboardingState): List<Adapt
     return items
 }
 
-private fun HomeFragmentState.toAdapterList(): List<AdapterItem> = when (mode) {
-    is Mode.Normal -> normalModeAdapterItems(tabs, topSites, collections, expandedCollections, tip)
-    is Mode.Private -> privateModeAdapterItems(tabs)
+private fun HomeFragmentState.toAdapterList(context: Context): List<AdapterItem> = when (mode) {
+    is Mode.Normal -> normalModeAdapterItems(context, tabs, topSites, collections, expandedCollections, tip)
+    is Mode.Private -> privateModeAdapterItems(context, tabs)
     is Mode.Onboarding -> onboardingAdapterItems(mode.state)
 }
 
@@ -165,10 +179,8 @@ private fun collectionTabItems(collection: TabCollection) = collection.tabs.mapI
 
 @ExperimentalCoroutinesApi
 class SessionControlView(
-    private val homeFragmentStore: HomeFragmentStore,
     override val containerView: View?,
     interactor: SessionControlInteractor,
-    private val viewLifecycleOwner: LifecycleOwner,
     private var homeScreenViewModel: HomeScreenViewModel
 ) : LayoutContainer {
 
@@ -187,10 +199,6 @@ class SessionControlView(
                     )
                 )
             itemTouchHelper.attachToRecyclerView(this)
-
-            view.consumeFrom(homeFragmentStore, viewLifecycleOwner) {
-                update(it)
-            }
         }
     }
 
@@ -200,7 +208,7 @@ class SessionControlView(
             sessionControlAdapter.submitList(null)
         }
 
-        val stateAdapterList = state.toAdapterList()
+        val stateAdapterList = state.toAdapterList(view.context)
 
         if (homeScreenViewModel.shouldScrollToTopSites) {
             sessionControlAdapter.submitList(stateAdapterList) {

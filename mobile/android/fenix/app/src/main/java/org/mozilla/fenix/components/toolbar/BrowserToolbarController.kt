@@ -313,6 +313,12 @@ class DefaultBrowserToolbarController(
     }
 
     private fun animateTabAndNavigateHome() {
+        if (activity.settings().useNewTabTray) {
+            val directions = BrowserFragmentDirections.actionBrowserFragmentToTabsTrayFragment()
+            navController.navigate(directions)
+            return
+        }
+
         scope.launch {
             browserAnimator.beginAnimateOut()
             // Delay for a short amount of time so the browser has time to start animating out

@@ -105,7 +105,7 @@
             android:contentDescription="@string/search_hint"
             android:focusable="true"
             app:layout_constraintBottom_toBottomOf="@id/bottom_bar"
-            app:layout_constraintEnd_toStartOf="@+id/add_tab_button"
+            app:layout_constraintEnd_toStartOf="@+id/accessory_button_barrier"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/bottom_bar">
 
@@ -135,6 +135,13 @@
                 android:textSize="15sp" />
         </FrameLayout>
 
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/accessory_button_barrier"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="start"
+            app:constraint_referenced_ids="tab_button,add_tab_button" />
+
         <ImageButton
             android:id="@+id/add_tab_button"
             android:layout_width="48dp"
@@ -142,6 +149,17 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/add_tab"
             app:srcCompat="@drawable/ic_new"
+            app:layout_constraintTop_toTopOf="@id/bottom_bar"
+            app:layout_constraintBottom_toBottomOf="@id/bottom_bar"
+            app:layout_constraintEnd_toStartOf="@+id/menuButton"
+            app:layout_constraintStart_toEndOf="@id/toolbar_wrapper"/>
+
+
+        <org.mozilla.fenix.components.toolbar.TabCounter
+            android:id="@+id/tab_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:visibility="gone"
             app:layout_constraintTop_toTopOf="@id/bottom_bar"
             app:layout_constraintBottom_toBottomOf="@id/bottom_bar"
             app:layout_constraintEnd_toStartOf="@+id/menuButton"

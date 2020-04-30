@@ -277,6 +277,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 startActivity(intent)
                 null
             }
+            resources.getString(R.string.pref_key_debug_settings) -> {
+                SettingsFragmentDirections.actionSettingsFragmentToSecretSettingsFragment()
+            }
             else -> null
         }
         directions?.let { navigateFromSettings(directions) }
@@ -327,6 +330,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
         preferenceFxAOverride?.onPreferenceChangeListener = syncFxAOverrideUpdater
         preferenceSyncOverride?.onPreferenceChangeListener = syncFxAOverrideUpdater
+        findPreference<Preference>(
+            getPreferenceKey(R.string.pref_key_debug_settings)
+        )?.isVisible = requireContext().settings().showSecretDebugMenuThisSession
     }
 
     private fun navigateFromSettings(directions: NavDirections) {

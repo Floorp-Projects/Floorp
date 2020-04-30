@@ -26,6 +26,7 @@ import androidx.constraintlayout.widget.ConstraintSet.PARENT_ID
 import androidx.constraintlayout.widget.ConstraintSet.TOP
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -64,6 +65,7 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.feature.media.ext.pauseIfPlaying
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
+import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
@@ -98,6 +100,7 @@ import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.FragmentPreDrawManager
+import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.whatsnew.WhatsNew
 import java.lang.ref.WeakReference
@@ -232,13 +235,19 @@ class HomeFragment : Fragment() {
         updateLayout(view)
         setOffset(view)
         sessionControlView = SessionControlView(
-            homeFragmentStore,
             view.sessionControlRecyclerView,
             sessionControlInteractor,
-            viewLifecycleOwner,
             homeViewModel
         )
         activity.themeManager.applyStatusBarTheme(activity)
+
+        view.consumeFrom(homeFragmentStore, viewLifecycleOwner) {
+            sessionControlView?.update(it)
+
+            if (context?.settings()?.useNewTabTray == true) {
+                view.tab_button.setCountWithAnimation(it.tabs.size)
+            }
+        }
 
         return view
     }
@@ -342,6 +351,12 @@ class HomeFragment : Fragment() {
             invokePendingDeleteJobs()
             hideOnboardingIfNeeded()
             navigateToSearch()
+        }
+
+        view.tab_button.setOnClickListener {
+            invokePendingDeleteJobs()
+            hideOnboardingIfNeeded()
+            findNavController().navigate(HomeFragmentDirections.actionGlobalTabTrayFragment())
         }
 
         PrivateBrowsingButtonView(
@@ -537,6 +552,11 @@ class HomeFragment : Fragment() {
         if (sharedViewModel.shouldScrollToSelectedTab) {
             scrollToSelectedTab()
             sharedViewModel.shouldScrollToSelectedTab = false
+        }
+
+        requireContext().settings().useNewTabTray.also {
+            view?.add_tab_button?.isVisible = !it
+            view?.tab_button?.isVisible = it
         }
     }
 
