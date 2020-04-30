@@ -34,7 +34,7 @@ const WIDTH = 200;
 const HEIGHT = 200;
 const TESTS = [
   { content: "width=600", res_target: 0.333 },
-  { content: "width=600, initial-scale=1.0", res_target: 0.333 },
+  { content: "width=600, initial-scale=1.0", res_target: 1.0 },
   { content: "width=device-width", res_target: 1.0 },
   { content: "width=device-width, initial-scale=2.0", res_target: 2.0 },
 ];
