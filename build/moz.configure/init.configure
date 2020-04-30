@@ -239,7 +239,7 @@ shell = help_shell | shell
 option(env='PYTHON3', nargs=1, help='Python 3 interpreter (3.5 or later)')
 
 
-@depends('PYTHON3', check_build_environment, 'MOZILLABUILD', mozconfig, '--help')
+@depends('PYTHON3', check_build_environment, mozconfig, '--help')
 @imports(_from='__builtin__', _import='Exception')
 @imports('os')
 @imports('sys')
@@ -252,7 +252,7 @@ option(env='PYTHON3', nargs=1, help='Python 3 interpreter (3.5 or later)')
 @imports(_from='mozbuild.pythonutil', _import='find_python3_executable')
 @imports(_from='mozbuild.pythonutil', _import='python_executable_version')
 @imports(_from='six', _import='ensure_text')
-def virtualenv_python3(env_python, build_env, mozillabuild, mozconfig, help):
+def virtualenv_python3(env_python, build_env, mozconfig, help):
     # Avoid re-executing python when running configure --help.
     if help:
         return
@@ -315,6 +315,8 @@ def virtualenv_python3(env_python, build_env, mozillabuild, mozconfig, help):
             0, os.path.join(topsrcdir, 'testing', 'mozbase', 'mozfile'))
         sys.path.insert(
             0, os.path.join(topsrcdir, 'third_party', 'python', 'backports'))
+    else:
+        python = sys.executable
 
     # If we know the Python executable the caller is asking for then verify its
     # version. If the caller did not ask for a specific executable then find
@@ -330,15 +332,6 @@ def virtualenv_python3(env_python, build_env, mozillabuild, mozconfig, help):
         except Exception as e:
             raise FatalCheckError('could not determine version of PYTHON3 '
                                   '(%s): %s' % (python, e))
-    elif mozillabuild:
-        # MozillaBuild provides a Python 3.
-        python = normsep('%s/python3/python3.exe' % mozillabuild)
-
-        try:
-            version = python_executable_version(python).version
-        except Exception as e:
-            raise FatalCheckError('could not determine version of '
-                                  'MozillaBuild python3: %s' % e)
     else:
         # Fall back to the search routine.
         python, version = find_python3_executable(min_version='3.5.0')
