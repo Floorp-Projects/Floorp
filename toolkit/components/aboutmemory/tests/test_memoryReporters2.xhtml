@@ -90,7 +90,7 @@
           numEmptyProcesses++;
         } else {
           ok(processes[i].startsWith("Browser (") || processes[i].startsWith("Web Content (") ||
-             (processes[i].startsWith("SocketProcess") && socketProcessRunning),
+             (processes[i].startsWith("Socket (") && socketProcessRunning),
              "correct non-empty process name prefix: " + processes[i]);
           numNonEmptyProcesses++;
         }
