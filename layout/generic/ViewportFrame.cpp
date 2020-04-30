@@ -85,7 +85,7 @@ static void BuildDisplayListForTopLayerFrame(nsDisplayListBuilder* aBuilder,
                                              nsDisplayList* aList) {
   nsRect visible;
   nsRect dirty;
-  DisplayListClipState::AutoClipMultiple clipState(aBuilder);
+  DisplayListClipState::AutoSaveRestore clipState(aBuilder);
   nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter asrSetter(aBuilder);
   nsDisplayListBuilder::OutOfFlowDisplayData* savedOutOfFlowData =
       nsDisplayListBuilder::GetOutOfFlowData(aFrame);
@@ -101,8 +101,6 @@ static void BuildDisplayListForTopLayerFrame(nsDisplayListBuilder* aBuilder,
     // root scroll frame.
     clipState.SetClipChainForContainingBlockDescendants(
         savedOutOfFlowData->mCombinedClipChain);
-    clipState.ClipContainingBlockDescendantsExtra(
-        visible + aBuilder->ToReferenceFrame(aFrame), nullptr);
     asrSetter.SetCurrentActiveScrolledRoot(
         savedOutOfFlowData->mContainingBlockActiveScrolledRoot);
   }
