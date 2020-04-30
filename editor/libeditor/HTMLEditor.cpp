@@ -4664,6 +4664,56 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
   return NS_OK;
 }
 
+nsresult HTMLEditor::MoveNodeWithTransaction(
+    nsIContent& aContent, const EditorDOMPoint& aPointToInsert) {
+  MOZ_ASSERT(aPointToInsert.IsSetAndValid());
+
+  EditorDOMPoint oldPoint(&aContent);
+  if (NS_WARN_IF(!oldPoint.IsSet())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Don't do anything if it's already in right place.
+  if (aPointToInsert == oldPoint) {
+    return NS_OK;
+  }
+
+  // Notify our internal selection state listener
+  AutoMoveNodeSelNotify selNotify(RangeUpdaterRef(), oldPoint, aPointToInsert);
+
+  // Hold a reference so aNode doesn't go away when we remove it (bug 772282)
+  // HTMLEditor::DeleteNodeWithTransaction() does not move non-editable
+  // node, but we need to move non-editable nodes too.  Therefore, call
+  // EditorBase's method directly.
+  // XXX Perhaps, this method and DeleteNodeWithTransaction() should take
+  //     new argument for making callers specify whether non-editable nodes
+  //     should be moved or not.
+  nsresult rv = EditorBase::DeleteNodeWithTransaction(aContent);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+    return rv;
+  }
+
+  // Mutation event listener could break insertion point. Let's check it.
+  EditorDOMPoint pointToInsert(selNotify.ComputeInsertionPoint());
+  if (NS_WARN_IF(!pointToInsert.IsSet())) {
+    return NS_ERROR_FAILURE;
+  }
+  // If some children have removed from the container, let's append to the
+  // container.
+  // XXX Perhaps, if mutation event listener inserts or removes some children
+  //     but the child node referring with aPointToInsert is still available,
+  //     we should insert aContent before it.  However, we should keep
+  //     traditional behavior for now.
+  if (NS_WARN_IF(!pointToInsert.IsSetAndValid())) {
+    pointToInsert.SetToEndOf(pointToInsert.GetContainer());
+  }
+  rv = InsertNodeWithTransaction(aContent, pointToInsert);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::InsertNodeWithTransaction() failed");
+  return rv;
+}
+
 already_AddRefed<Element> HTMLEditor::DeleteSelectionAndCreateElement(
     nsAtom& aTag) {
   MOZ_ASSERT(IsEditActionDataAvailable());
@@ -5138,8 +5188,8 @@ nsresult HTMLEditor::SetAttributeOrEquivalent(Element* aElement,
     return rv;
   }
 
-  // count is an integer that represents the number of CSS declarations applied
-  // to the element. If it is zero, we found no equivalence in this
+  // count is an integer that represents the number of CSS declarations
+  // applied to the element. If it is zero, we found no equivalence in this
   // implementation for the attribute
   if (aAttribute == nsGkAtoms::style) {
     // if it is the style attribute, just add the new value to the existing
@@ -5268,9 +5318,9 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
   if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
     return ignoredError.StealNSResult();
   }
-  NS_WARNING_ASSERTION(
-      !ignoredError.Failed(),
-      "HTMLEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
+  NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                       "HTMLEditor::OnStartToHandleTopLevelEditSubAction() "
+                       "failed, but ignored");
 
   {
     AutoSelectionRestorer restoreSelectionLater(*this);
@@ -5524,7 +5574,8 @@ nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
       continue;
     }
     nsAtom* tagName = elementInPreviousBlock->NodeInfo()->NameAtom();
-    // At first time, just create the most descendant inline container element.
+    // At first time, just create the most descendant inline container
+    // element.
     if (!firstClonsedElement) {
       firstClonsedElement = lastClonedElement = CreateNodeWithTransaction(
           MOZ_KnownLive(*tagName), EditorDOMPoint(newBlock, 0));
@@ -5642,7 +5693,8 @@ Element* HTMLEditor::GetSelectionContainerElement() const {
           focusNode = startContainer;
         } else if (focusNode != startContainer) {
           // XXX Looks odd to use parent of startContainer because previous
-          //     range may not be in the parent node of current startContainer.
+          //     range may not be in the parent node of current
+          //     startContainer.
           focusNode = startContainer->GetParentNode();
           // XXX Looks odd to break the for-loop here because we refer only
           //     first range and another range which starts from different
@@ -5843,8 +5895,8 @@ void HTMLEditor::NotifyEditingHostMaybeChanged() {
   // Update selection ancestor limit if current editing host includes the
   // previous editing host.
   if (ancestorLimiter->IsInclusiveDescendantOf(editingHost)) {
-    // Note that don't call HTMLEditor::InitializeSelectionAncestorLimit() here
-    // because it may collapse selection to the first editable node.
+    // Note that don't call HTMLEditor::InitializeSelectionAncestorLimit()
+    // here because it may collapse selection to the first editable node.
     EditorBase::InitializeSelectionAncestorLimit(*editingHost);
   }
 }
@@ -5895,7 +5947,8 @@ void HTMLEditor::NotifyRootChanged() {
   rv = MaybeCollapseSelectionAtFirstEditableNode(false);
   if (NS_FAILED(rv)) {
     NS_WARNING(
-        "HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(false) failed, "
+        "HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(false) "
+        "failed, "
         "but ignored");
     return;
   }
@@ -5928,8 +5981,8 @@ nsINode* HTMLEditor::GetFocusedNode() const {
     return nullptr;
   }
 
-  // focusedContent might be non-null even focusManager->GetFocusedContent() is
-  // null.  That's the designMode case, and in that case our
+  // focusedContent might be non-null even focusManager->GetFocusedContent()
+  // is null.  That's the designMode case, and in that case our
   // FocusedContent() returns the root element, but we want to return
   // the document.
 
@@ -5965,9 +6018,10 @@ bool HTMLEditor::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) {
     return false;
   }
 
-  // While there is composition, all composition events in its top level window
-  // are always fired on the composing editor.  Therefore, if this editor has
-  // composition, the composition events should be handled in this editor.
+  // While there is composition, all composition events in its top level
+  // window are always fired on the composing editor.  Therefore, if this
+  // editor has composition, the composition events should be handled in this
+  // editor.
   if (mComposition && aGUIEvent->AsCompositionEvent()) {
     return true;
   }
@@ -6007,8 +6061,8 @@ bool HTMLEditor::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) {
     return document == eventTargetNode->GetUncomposedDoc();
   }
 
-  // This HTML editor is for contenteditable.  We need to check the validity of
-  // the target.
+  // This HTML editor is for contenteditable.  We need to check the validity
+  // of the target.
   if (NS_WARN_IF(!eventTargetNode->IsContent())) {
     return false;
   }
@@ -6023,14 +6077,15 @@ bool HTMLEditor::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) {
       return false;
     }
     // If clicked on non-editable root element but the body element is the
-    // active editing host, we should assume that the click event is targetted.
+    // active editing host, we should assume that the click event is
+    // targetted.
     if (eventTargetNode == document->GetRootElement() &&
         !eventTargetNode->HasFlag(NODE_IS_EDITABLE) &&
         editingHost == document->GetBodyElement()) {
       eventTargetNode = editingHost;
     }
-    // If the target element is neither the active editing host nor a descendant
-    // of it, we may not be able to handle the event.
+    // If the target element is neither the active editing host nor a
+    // descendant of it, we may not be able to handle the event.
     if (!eventTargetNode->IsInclusiveDescendantOf(editingHost)) {
       return false;
     }
@@ -6044,8 +6099,8 @@ bool HTMLEditor::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) {
   }
 
   // If the target of the other events which target focused element isn't
-  // editable or has an independent selection, this editor shouldn't handle the
-  // event.
+  // editable or has an independent selection, this editor shouldn't handle
+  // the event.
   if (!eventTargetNode->HasFlag(NODE_IS_EDITABLE) ||
       eventTargetNode->AsContent()->HasIndependentSelection()) {
     return false;

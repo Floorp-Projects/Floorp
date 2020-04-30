@@ -2136,7 +2136,7 @@ nsresult HTMLEditor::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::MoveNodeWithTransaction() failed");
+        NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
         return rv;
       }
     }
@@ -4218,7 +4218,7 @@ MoveNodeResult HTMLEditor::MoveNodeOrChildren(
       return MoveNodeResult(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::MoveNodeWithTransaction() failed");
+      NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
       return MoveNodeResult(rv);
     }
     // Advance DOM point with offset for keeping backward compatibility.
@@ -4793,7 +4793,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
           return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
         }
         if (NS_FAILED(rv)) {
-          NS_WARNING("EditorBase::MoveNodeToEndWithTransaction() failed");
+          NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
           return EditActionResult(rv);
         }
         CreateElementResult convertListTypeResult =
@@ -4874,7 +4874,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
           return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
         }
         if (NS_FAILED(rv)) {
-          NS_WARNING("EditorBase::MoveNodeToEndWithTransaction() failed");
+          NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
           return EditActionResult(rv);
         }
         // Convert list item type if current node is different list item type.
@@ -4906,7 +4906,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
             return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
           }
           if (NS_FAILED(rv)) {
-            NS_WARNING("EditorBase::MoveNodeToEndWithTransaction() failed");
+            NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
             return EditActionResult(rv);
           }
         }
@@ -5030,7 +5030,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
         return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
       }
       if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::MoveNodeToEndWithTransaction() failed");
+        NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
         return EditActionResult(rv);
       }
       continue;
@@ -5087,7 +5087,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::MoveNodeToEndWithTransaction() failed");
+      NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
       return EditActionResult(rv);
     }
     // XXX Why don't we set `type` attribute here??
@@ -5493,7 +5493,7 @@ nsresult HTMLEditor::IndentListChild(RefPtr<Element>* aCurList,
         return NS_ERROR_EDITOR_DESTROYED;
       }
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "EditorBase::MoveNodeToEndWithTransaction() failed");
+                           "HTMLEditor::MoveNodeToEndWithTransaction() failed");
       return rv;
     }
   }
@@ -5534,7 +5534,7 @@ nsresult HTMLEditor::IndentListChild(RefPtr<Element>* aCurList,
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::MoveNodeToEndWithTransaction() failed");
+                       "HTMLEditor::MoveNodeToEndWithTransaction() failed");
   return rv;
 }
 
@@ -5808,7 +5808,7 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::MoveNodeToEndWithTransaction() failed");
+      NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
       return rv;
     }
   }
@@ -6008,7 +6008,7 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::MoveNodeToEndWithTransaction() failed");
+        NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
         return rv;
       }
 
@@ -6067,7 +6067,7 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::MoveNodeToEndWithTransaction() failed");
+      NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
       return rv;
     }
     // forget curList, if any
@@ -6497,7 +6497,7 @@ SplitRangeOffFromNodeResult HTMLEditor::HandleOutdentAtSelectionInternal() {
             return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
           }
           if (NS_FAILED(rv)) {
-            NS_WARNING("EditorBase::MoveNodeWithTransaction() failed");
+            NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
             return SplitRangeOffFromNodeResult(rv);
           }
           continue;
@@ -7283,7 +7283,7 @@ nsresult HTMLEditor::AlignNodesAndDescendants(
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::MoveNodeToEndWithTransaction() failed");
+      NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
       return rv;
     }
   }
@@ -7384,7 +7384,7 @@ nsresult HTMLEditor::AlignBlockContentsWithDivElement(
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::MoveNodeWithTransaction() failed");
+      NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
       return rv;
     }
     lastEditableContent = GetLastEditableChild(aBlockElement);
@@ -8703,7 +8703,7 @@ nsresult HTMLEditor::SplitElementsAtEveryBRElement(
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::MoveNodeWithTransaction() failed");
+      NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
       return rv;
     }
     aOutArrayOfContents.AppendElement(brElement);
@@ -9257,7 +9257,7 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(Element& aListItem,
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::MoveNodeWithTransaction() failed");
+        NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
         return rv;
       }
       rv = CollapseSelectionToStartOf(aListItem);
@@ -9523,7 +9523,7 @@ nsresult HTMLEditor::MoveNodesIntoNewBlockquoteElement(
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::MoveNodeToEndWithTransaction() failed");
+      NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
       return rv;
     }
   }
@@ -9844,7 +9844,7 @@ nsresult HTMLEditor::CreateOrChangeBlockContainerElement(
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::MoveNodeToEndWithTransaction() failed");
+        NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
         return rv;
       }
       continue;
@@ -9926,7 +9926,7 @@ nsresult HTMLEditor::CreateOrChangeBlockContainerElement(
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::MoveNodeToEndWithTransaction() failed");
+        NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
         return rv;
       }
     }
@@ -10015,7 +10015,7 @@ nsresult HTMLEditor::JoinNearestEditableNodesWithTransaction(
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::MoveNodeWithTransaction() failed");
+      NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
       return rv;
     }
   }
@@ -10903,7 +10903,7 @@ nsresult HTMLEditor::LiftUpListItemElement(
     return NS_ERROR_EDITOR_DESTROYED;
   }
   if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::MoveNodeWithTransaction() failed");
+    NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
     return rv;
   }
 
@@ -11755,7 +11755,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
         return NS_ERROR_EDITOR_DESTROYED;
       }
       if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::MoveNodeToEndWithTransaction() failed");
+        NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
         return rv;
       }
       handledListItemElement = std::move(listItemElement);
@@ -11804,7 +11804,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::MoveNodeToEndWithTransaction() failed");
+      NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
       return rv;
     }
     // Forget createdListElement, if any
