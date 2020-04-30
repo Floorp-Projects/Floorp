@@ -2295,18 +2295,6 @@ class EditorBase : public nsIEditor,
       NotificationForEditorObservers aNotification);
 
   /**
-   * PrepareToInsertBRElement() returns a point where new <br> element should
-   * be inserted.  If aPointToInsert points middle of a text node, this method
-   * splits the text node and returns the point before right node.
-   *
-   * @param aPointToInsert      Candidate point to insert new <br> element.
-   * @return                    Computed point to insert new <br> element.
-   *                            If something failed, this is unset.
-   */
-  MOZ_CAN_RUN_SCRIPT EditorDOMPoint
-  PrepareToInsertBRElement(const EditorDOMPoint& aPointToInsert);
-
-  /**
    * InsertLineBreakAsSubAction() inserts a line break, i.e., \n if it's
    * TextEditor or <br> if it's HTMLEditor.
    */
