@@ -11,7 +11,7 @@ declTest("getActor with mismatch", {
     let parent = browser.browsingContext.currentWindowGlobal;
     ok(parent, "WindowGlobalParent should have value.");
     Assert.throws(
-      () => parent.getActor("Test"),
+      () => parent.getActor("TestWindow"),
       /NS_ERROR_NOT_AVAILABLE/,
       "Should throw if it doesn't match."
     );
@@ -21,7 +21,7 @@ declTest("getActor with mismatch", {
       ok(child, "WindowGlobalChild should have value.");
 
       Assert.throws(
-        () => child.getActor("Test"),
+        () => child.getActor("TestWindow"),
         /NS_ERROR_NOT_AVAILABLE/,
         "Should throw if it doesn't match."
       );
@@ -35,12 +35,12 @@ declTest("getActor with matches", {
 
   async test(browser) {
     let parent = browser.browsingContext.currentWindowGlobal;
-    ok(parent.getActor("Test"), "JSWindowActorParent should have value.");
+    ok(parent.getActor("TestWindow"), "JSWindowActorParent should have value.");
 
     await SpecialPowers.spawn(browser, [], async function() {
       let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
-      ok(child.getActor("Test"), "JSWindowActorChild should have value.");
+      ok(child.getActor("TestWindow"), "JSWindowActorChild should have value.");
     });
   },
 });
@@ -61,7 +61,7 @@ declTest("getActor with iframe matches", {
       await content.SpecialPowers.spawn(frame, [], () => {
         let child = content.windowGlobalChild;
         Assert.ok(
-          child.getActor("Test"),
+          child.getActor("TestWindow"),
           "JSWindowActorChild should have value."
         );
       });
@@ -85,7 +85,7 @@ declTest("getActor with iframe mismatch", {
       await content.SpecialPowers.spawn(frame, [], () => {
         let child = content.windowGlobalChild;
         Assert.throws(
-          () => child.getActor("Test"),
+          () => child.getActor("TestWindow"),
           /NS_ERROR_NOT_AVAILABLE/,
           "Should throw if it doesn't match."
         );
@@ -99,12 +99,12 @@ declTest("getActor with remoteType match", {
 
   async test(browser) {
     let parent = browser.browsingContext.currentWindowGlobal;
-    ok(parent.getActor("Test"), "JSWindowActorParent should have value.");
+    ok(parent.getActor("TestWindow"), "JSWindowActorParent should have value.");
 
     await SpecialPowers.spawn(browser, [], async function() {
       let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
-      ok(child.getActor("Test"), "JSWindowActorChild should have value.");
+      ok(child.getActor("TestWindow"), "JSWindowActorChild should have value.");
     });
   },
 });
@@ -117,7 +117,7 @@ declTest("getActor with iframe remoteType match", {
     await SpecialPowers.spawn(browser, [TEST_URL], async function(url) {
       let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
-      ok(child.getActor("Test"), "JSWindowActorChild should have value.");
+      ok(child.getActor("TestWindow"), "JSWindowActorChild should have value.");
 
       // Create and append an iframe into the window's document.
       let frame = content.document.createElement("iframe");
@@ -129,7 +129,7 @@ declTest("getActor with iframe remoteType match", {
       await content.SpecialPowers.spawn(frame, [], () => {
         child = content.windowGlobalChild;
         Assert.ok(
-          child.getActor("Test"),
+          child.getActor("TestWindow"),
           "JSWindowActorChild should have value."
         );
       });
@@ -144,7 +144,7 @@ declTest("getActor with remoteType mismatch", {
   async test(browser) {
     let parent = browser.browsingContext.currentWindowGlobal;
     Assert.throws(
-      () => parent.getActor("Test"),
+      () => parent.getActor("TestWindow"),
       /NS_ERROR_NOT_AVAILABLE/,
       "Should throw if its remoteTypes don't match."
     );
@@ -153,7 +153,7 @@ declTest("getActor with remoteType mismatch", {
       let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
       Assert.throws(
-        () => child.getActor("Test"),
+        () => child.getActor("TestWindow"),
         /NS_ERROR_NOT_AVAILABLE/,
         "Should throw if its remoteTypes don't match."
       );
@@ -167,12 +167,12 @@ declTest("getActor with iframe messageManagerGroups match", {
 
   async test(browser) {
     let parent = browser.browsingContext.currentWindowGlobal;
-    ok(parent.getActor("Test"), "JSWindowActorParent should have value.");
+    ok(parent.getActor("TestWindow"), "JSWindowActorParent should have value.");
 
     await SpecialPowers.spawn(browser, [TEST_URL], async function(url) {
       let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
-      ok(child.getActor("Test"), "JSWindowActorChild should have value.");
+      ok(child.getActor("TestWindow"), "JSWindowActorChild should have value.");
     });
   },
 });
@@ -184,7 +184,7 @@ declTest("getActor with iframe messageManagerGroups mismatch", {
   async test(browser) {
     let parent = browser.browsingContext.currentWindowGlobal;
     Assert.throws(
-      () => parent.getActor("Test"),
+      () => parent.getActor("TestWindow"),
       /NS_ERROR_NOT_AVAILABLE/,
       "Should throw if its messageManagerGroups doesn't match."
     );
@@ -193,7 +193,7 @@ declTest("getActor with iframe messageManagerGroups mismatch", {
       let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
       Assert.throws(
-        () => child.getActor("Test"),
+        () => child.getActor("TestWindow"),
         /NS_ERROR_NOT_AVAILABLE/,
         "Should throw if its messageManagerGroups doesn't match."
       );
@@ -212,7 +212,7 @@ declTest("getActor without allFrames", {
       is(content.frames.length, 1, "There should be an iframe.");
       let child = frame.contentWindow.windowGlobalChild;
       Assert.throws(
-        () => child.getActor("Test"),
+        () => child.getActor("TestWindow"),
         /NS_ERROR_NOT_AVAILABLE/,
         "Should throw if allFrames is false."
       );
@@ -230,7 +230,7 @@ declTest("getActor with allFrames", {
       content.document.body.appendChild(frame);
       is(content.frames.length, 1, "There should be an iframe.");
       let child = frame.contentWindow.windowGlobalChild;
-      let actorChild = child.getActor("Test");
+      let actorChild = child.getActor("TestWindow");
       ok(actorChild, "JSWindowActorChild should have value.");
     });
   },
@@ -242,7 +242,7 @@ declTest("getActor without includeChrome", {
   async test(_browser, win) {
     let parent = win.docShell.browsingContext.currentWindowGlobal;
     SimpleTest.doesThrow(
-      () => parent.getActor("Test"),
+      () => parent.getActor("TestWindow"),
       "Should throw if includeChrome is false."
     );
   },
@@ -253,7 +253,7 @@ declTest("getActor with includeChrome", {
 
   async test(_browser, win) {
     let parent = win.docShell.browsingContext.currentWindowGlobal;
-    let actorParent = parent.getActor("Test");
+    let actorParent = parent.getActor("TestWindow");
     ok(actorParent, "JSWindowActorParent should have value.");
   },
 });
