@@ -15,6 +15,10 @@ const processDescriptorSpec = generateActorSpec({
         process: RetVal("json"),
       },
     },
+    getWatcher: {
+      request: {},
+      response: RetVal("watcher"),
+    },
   },
 });
 

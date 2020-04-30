@@ -25,7 +25,7 @@ loader.lazyRequireGetter(
 const FrameDescriptorActor = ActorClassWithSpec(frameDescriptorSpec, {
   initialize(connection, browsingContext) {
     if (typeof browsingContext.id != "number") {
-      throw Error("Frame Descriptor Connect requires a valid browsingContext.");
+      throw Error("Frame Descriptor requires a valid BrowsingContext.");
     }
     Actor.prototype.initialize.call(this, connection);
     this.destroy = this.destroy.bind(this);

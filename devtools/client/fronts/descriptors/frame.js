@@ -93,6 +93,15 @@ class FrameDescriptorFront extends FrontClassWithSpec(frameDescriptorSpec) {
     return parentDescriptor.getTarget();
   }
 
+  getCachedWatcher() {
+    for (const child of this.poolChildren()) {
+      if (child.typeName == "watcher") {
+        return child;
+      }
+    }
+    return null;
+  }
+
   destroy() {
     this._frameTargetFront = null;
     this._targetFrontPromise = null;

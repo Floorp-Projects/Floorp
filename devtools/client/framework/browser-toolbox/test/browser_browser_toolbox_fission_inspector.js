@@ -18,22 +18,20 @@ add_task(async function() {
   // Forces the Browser Toolbox to open on the inspector by default
   await pushPref("devtools.browsertoolbox.panel", "inspector");
 
-  // Open the tab *before* opening the Browser Toolbox in order to already have the document
-  // loaded before it starts iterating over additional frame targets.
-  // Bug 1593937 should make it optional and be able to care about dynamically added targets.
-  const tab = await addTab(
-    `data:text/html,<div id="my-div" style="color: red">Foo</div><div id="second-div" style="color: blue">Foo</div>`
-  );
-
-  // Set a custom attribute on the tab's browser, in order to easily select it in the markup view
-  tab.linkedBrowser.setAttribute("test-tab", "true");
-
   const ToolboxTask = await initBrowserToolboxTask({
     enableBrowserToolboxFission: true,
   });
   await ToolboxTask.importFunctions({
     selectNodeFront,
   });
+
+  // Open the tab *after* opening the Browser Toolbox in order to force creating the remote frames
+  // late and exercise frame target watching code.
+  const tab = await addTab(
+    `data:text/html,<div id="my-div" style="color: red">Foo</div><div id="second-div" style="color: blue">Foo</div>`
+  );
+  // Set a custom attribute on the tab's browser, in order to easily select it in the markup view
+  tab.linkedBrowser.setAttribute("test-tab", "true");
 
   const color = await ToolboxTask.spawn(null, async () => {
     /* global gToolbox */
