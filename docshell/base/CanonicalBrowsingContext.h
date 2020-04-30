@@ -72,6 +72,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // Same as GetEmbedderWindowGlobal but within the same browsing context group
   already_AddRefed<WindowGlobalParent> GetParentWindowGlobal() const;
 
+  already_AddRefed<CanonicalBrowsingContext> GetParentCrossChromeBoundary();
+
   nsISHistory* GetSessionHistory();
   void SetSessionHistory(nsISHistory* aSHistory) {
     mSessionHistory = aSHistory;
