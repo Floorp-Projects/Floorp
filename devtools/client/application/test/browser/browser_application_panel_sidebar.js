@@ -18,8 +18,8 @@ add_task(async function() {
   await waitUntil(() => doc.querySelector(".js-sidebar") !== null);
   ok(true, "Sidebar is being displayed");
 
-  await waitUntil(() => doc.querySelector(".js-manifest-page") !== null);
-  ok(true, "Manifest page was loaded per default.");
+  await waitUntil(() => doc.querySelector(".js-service-workers-page") !== null);
+  ok(true, "Service Workers page was loaded per default.");
 
   // close the tab
   info("Closing the tab.");

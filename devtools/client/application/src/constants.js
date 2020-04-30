@@ -25,7 +25,7 @@ const PAGE_TYPES = {
   SERVICE_WORKERS: "service-workers",
 };
 
-const DEFAULT_PAGE = PAGE_TYPES.MANIFEST;
+const DEFAULT_PAGE = PAGE_TYPES.SERVICE_WORKERS;
 
 const MANIFEST_CATEGORIES = {
   IDENTITY: "identity",
