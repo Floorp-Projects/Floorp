@@ -7,5 +7,4 @@
 DevToolsModules(
     'DevToolsFrameChild.jsm',
     'DevToolsFrameParent.jsm',
-    'frame-js-window-actor-connector.js',
 )

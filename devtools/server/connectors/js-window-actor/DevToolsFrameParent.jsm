@@ -137,8 +137,6 @@ class DevToolsFrameParent extends JSWindowActorParent {
 
       this._cleanupConnection(connection);
     }
-
-    this.emit("devtools-frame-parent-actor-destroyed");
   }
 
   /**

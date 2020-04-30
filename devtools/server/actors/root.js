@@ -31,12 +31,6 @@ loader.lazyRequireGetter(
   "devtools/server/actors/descriptors/process",
   true
 );
-loader.lazyRequireGetter(
-  this,
-  "FrameDescriptorActor",
-  "devtools/server/actors/descriptors/frame",
-  true
-);
 
 /* Root actor for the remote debugging protocol. */
 
@@ -553,82 +547,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     return processDescriptor;
   },
 
-  /**
-   * Note that this method behaves differently when called for a top level
-   * window.
-   * For a top level window, it will ONLY return remote browser elements.
-   * For any other window, it will return chidren elements, remote or not.
-   *
-   * Also important to note, this method only returns direct children, not the
-   * complete browsing context tree.
-   */
-  async _getChildBrowsingContexts(id) {
-    // If we have the id of the parent, then we need to get the child
-    // contexts in a special way. We have a method on the descriptor
-    // to take care of this.
-    const parentBrowsingContext = BrowsingContext.get(id);
-    // If this is a parent-process window, and it's top-level (not embedded in a browser),
-    // collect all the remote browsers in the window ourselves. getChildren() will not return
-    // these contexts otherwise.
-    if (
-      parentBrowsingContext.window &&
-      !parentBrowsingContext.embedderElement
-    ) {
-      const { window } = parentBrowsingContext;
-      return [
-        ...window.document.querySelectorAll(`browser[remote="true"]`),
-      ].map(browser => browser.browsingContext);
-    }
-    // for all other contexts, since we do not need to get contexts of
-    // a different type, we can just get the children directly from
-    // the BrowsingContext.
-    return (
-      parentBrowsingContext.children
-        // For now, we only return the "remote frames".
-        // i.e. the frames which are in a distinct process compared to their parent document
-        .filter(browsingContext => {
-          return (
-            !browsingContext.parent ||
-            browsingContext.currentWindowGlobal.osPid !=
-              browsingContext.parent.currentWindowGlobal.osPid
-          );
-        })
-    );
-  },
-
-  async listRemoteFrames(id) {
-    const frames = [];
-    const contextsToWalk = await this._getChildBrowsingContexts(id);
-
-    if (contextsToWalk.length == 0) {
-      return { frames };
-    }
-
-    const pool = new Pool(this.conn, "frame-descriptors");
-    while (contextsToWalk.length) {
-      const currentContext = contextsToWalk.pop();
-      let frameDescriptor = this._getKnownDescriptor(
-        currentContext.id,
-        this._frameDescriptorActorPool
-      );
-      if (!frameDescriptor) {
-        frameDescriptor = new FrameDescriptorActor(this.conn, currentContext);
-      }
-      pool.manage(frameDescriptor);
-      frames.push(frameDescriptor);
-      contextsToWalk.push(...currentContext.children);
-    }
-    // Do not destroy the pool before transfering ownership to the newly created
-    // pool, so that we do not accidently destroy actors that are still in use.
-    if (this._frameDescriptorActorPool) {
-      this._frameDescriptorActorPool.destroy();
-    }
-
-    this._frameDescriptorActorPool = pool;
-
-    return { frames };
-  },
-
   _getKnownDescriptor(id, pool) {
     // if there is no pool, then we do not have any descriptors
     if (!pool) {
@@ -667,33 +585,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       DevToolsServer.chromeWindowType
     );
     return id == window.docShell.browsingContext.id;
-  },
-
-  getBrowsingContextDescriptor(id) {
-    // since the id for frame descriptors is the same as the browsing
-    // context id, we can get the associated descriptor using
-    // _getKnownDescriptor.
-    const frameDescriptor = this._getKnownDescriptor(
-      id,
-      this._frameDescriptorActorPool
-    );
-    if (frameDescriptor) {
-      return frameDescriptor;
-    }
-
-    // if the descriptor cannot be found in the frames, it is probably
-    // the main process, which is a process descriptor
-    if (this._isParentBrowsingContext(id)) {
-      return this._getParentProcessDescriptor();
-    }
-
-    const context = BrowsingContext.get(id);
-    const newFrameDescriptor = new FrameDescriptorActor(this.conn, context);
-    if (!this._frameDescriptorActorPool) {
-      this._frameDescriptorActorPool = new Pool(this.conn, "frame-descriptors");
-    }
-    this._frameDescriptorActorPool.manage(newFrameDescriptor);
-    return newFrameDescriptor;
   },
 
   protocolDescription: function() {

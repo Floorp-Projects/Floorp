@@ -49,23 +49,6 @@ add_task(async function() {
   await client.close();
 });
 
-// Test against Frame targets
-add_task(async function() {
-  const client = await setupDebuggerClient();
-  const mainRoot = client.mainRoot;
-
-  const mainProcessDescriptor = await mainRoot.getMainProcess();
-  const mainProcess = await mainProcessDescriptor.getTarget();
-  const { frames } = await mainProcess.listRemoteFrames();
-
-  await testGetTargetWithConcurrentCalls(frames, frameTarget => {
-    // traits is one attribute to assert that a Frame Target is attached
-    return !!frameTarget.traits;
-  });
-
-  await client.close();
-});
-
 // Test against Webextension targets
 add_task(async function() {
   const client = await setupDebuggerClient();
