@@ -17,6 +17,7 @@ def fetch(self, url):
     return os.path.join(HERE, "fetched_artifact.zip")
 
 
+@mock.patch("mozperftest.browser.browsertime.runner.install_package")
 @mock.patch(
     "mozperftest.browser.noderunner.NodeRunner.verify_node_install", new=lambda x: True
 )
@@ -25,7 +26,7 @@ def fetch(self, url):
     "mozperftest.browser.browsertime.runner.BrowsertimeRunner._setup_node_packages",
     new=lambda x, y: None,
 )
-def test_browser():
+def test_browser(*mocked):
     mach_cmd, metadata, env = get_running_env()
     browser = env.layers[BROWSER]
     env.set_arg("tests", [EXAMPLE_TEST])

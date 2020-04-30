@@ -54,7 +54,7 @@ def _get_perftest():
 @mock.patch("mozperftest.mach_commands.MachCommandBase._activate_virtualenv")
 def test_command(mocked_func):
     with _get_perftest() as test:
-        test.run_perftest(tests=[EXAMPLE_TESTS_DIR])
+        test.run_perftest(tests=[EXAMPLE_TESTS_DIR], flavor="script")
         # XXX add assertions
 
 
