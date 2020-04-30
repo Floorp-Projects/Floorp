@@ -2,10 +2,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use glean_core::{metrics::MetricType, CommonMetricData, ErrorType};
 use std::sync::RwLock;
 
-use super::BooleanMetric;
+use glean_core::metrics::MetricType;
+
+use super::{BooleanMetric, CommonMetricData, ErrorType};
 
 /// Sealed traits protect against downstream implementations.
 ///

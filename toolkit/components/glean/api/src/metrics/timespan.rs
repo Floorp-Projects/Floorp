@@ -4,7 +4,7 @@
 
 use std::sync::RwLock;
 
-use glean_core::CommonMetricData;
+use super::CommonMetricData;
 
 use super::{Instant, TimeUnit};
 
