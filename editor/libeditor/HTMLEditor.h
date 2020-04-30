@@ -1981,6 +1981,18 @@ class HTMLEditor final : public TextEditor,
   Element* GetInvisibleBRElementAt(const EditorDOMPointBase<PT, CT>& aPoint);
 
   /**
+   * JoinNodesWithTransaction() joins aLeftNode and aRightNode.  Content of
+   * aLeftNode will be merged into aRightNode.  Actual implemenation of this
+   * method is JoinNodesImpl().  So, see its explanation for the detail.
+   *
+   * @param aLeftNode   Will be removed from the DOM tree.
+   * @param aRightNode  The node which will be new container of the content of
+   *                    aLeftNode.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult JoinNodesWithTransaction(nsINode& aLeftNode,
+                                                       nsINode& aRightNode);
+
+  /**
    * JoinNearestEditableNodesWithTransaction() joins two editable nodes which
    * are themselves or the nearest editable node of aLeftNode and aRightNode.
    * XXX This method's behavior is odd.  For example, if user types Backspace
