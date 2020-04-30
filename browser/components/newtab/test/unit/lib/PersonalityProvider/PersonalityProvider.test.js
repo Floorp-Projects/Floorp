@@ -130,6 +130,14 @@ describe("Personality Provider", () => {
       instance.teardown();
       assert.calledTwice(instance.teardownSyncAttachment);
     });
+    it("should terminate worker", () => {
+      const terminateStub = sandbox.stub().returns();
+      instance._personalityProviderWorker = {
+        terminate: terminateStub,
+      };
+      instance.teardown();
+      assert.calledOnce(terminateStub);
+    });
   });
   describe("#setupSyncAttachment", () => {
     it("should call remote settings on twice for setupSyncAttachment", () => {
