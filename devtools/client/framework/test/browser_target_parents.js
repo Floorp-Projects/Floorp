@@ -102,8 +102,8 @@ add_task(async function() {
     workers.map(workerTargetFront => {
       is(
         workerTargetFront.descriptorFront,
-        mainRoot,
-        "Got the Main Root as the descriptor for main root worker target."
+        null,
+        "For now, worker target don't have descriptor fronts (see bug 1573779)"
       );
     })
   );

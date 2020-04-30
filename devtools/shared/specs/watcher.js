@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { generateActorSpec, Arg } = require("devtools/shared/protocol");
+const { generateActorSpec, Arg, RetVal } = require("devtools/shared/protocol");
 
 const watcherSpecPrototype = {
   typeName: "watcher",
@@ -21,6 +21,15 @@ const watcherSpecPrototype = {
         targetType: Arg(0, "string"),
       },
       oneway: true,
+    },
+
+    getParentBrowsingContextID: {
+      request: {
+        browsingContextID: Arg(0, "number"),
+      },
+      response: {
+        browsingContextID: RetVal("nullable:number"),
+      },
     },
   },
 
