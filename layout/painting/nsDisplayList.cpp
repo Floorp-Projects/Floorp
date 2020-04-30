@@ -10408,7 +10408,7 @@ bool nsDisplayFilters::CreateWebRenderCommands(
     auto devPxRect = LayoutDeviceRect::FromAppUnits(
         filterClip.value() + ToReferenceFrame(), auPerDevPixel);
     wr::WrClipId clipId =
-        aBuilder.DefineClip(Nothing(), wr::ToLayoutRect(devPxRect));
+        aBuilder.DefineRectClip(wr::ToLayoutRect(devPxRect));
     clip = wr::WrStackingContextClip::ClipId(clipId);
   } else {
     clip = wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());

@@ -442,6 +442,7 @@ class DisplayListBuilder final {
 
   wr::WrClipId DefineImageMaskClip(const wr::ImageMask& aMask);
   wr::WrClipId DefineRoundedRectClip(const wr::ComplexClipRegion& aComplex);
+  wr::WrClipId DefineRectClip(wr::LayoutRect aClipRect);
 
   wr::WrSpatialId DefineStickyFrame(const wr::LayoutRect& aContentRect,
                                     const float* aTopMargin,
