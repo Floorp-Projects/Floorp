@@ -71,23 +71,25 @@
   </menupopup>
 </panel>
 
-<panel id="panic-button-success-notification"
-       type="arrow"
-       position="bottomcenter topright"
-       hidden="true"
-       role="alert"
-       orient="vertical">
-  <hbox id="panic-button-success-header">
-    <image id="panic-button-success-icon" alt=""/>
-    <vbox>
-      <description>&panicButton.thankyou.msg1;</description>
-      <description>&panicButton.thankyou.msg2;</description>
-    </vbox>
-  </hbox>
-  <button label="&panicButton.thankyou.buttonlabel;"
-          id="panic-button-success-closebutton"
-          oncommand="PanicButtonNotifier.close()"/>
-</panel>
+<html:template id="panicButtonNotificationTemplate">
+  <panel id="panic-button-success-notification"
+         type="arrow"
+         position="bottomcenter topright"
+         hidden="true"
+         role="alert"
+         orient="vertical">
+    <hbox id="panic-button-success-header">
+      <image id="panic-button-success-icon" alt=""/>
+      <vbox>
+        <description>&panicButton.thankyou.msg1;</description>
+        <description>&panicButton.thankyou.msg2;</description>
+      </vbox>
+    </hbox>
+    <button label="&panicButton.thankyou.buttonlabel;"
+            id="panic-button-success-closebutton"
+            oncommand="PanicButtonNotifier.close()"/>
+  </panel>
+</html:template>
 
 <panel id="appMenu-notification-popup"
        class="popup-notification-panel panel-no-padding"
