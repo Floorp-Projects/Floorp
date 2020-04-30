@@ -2313,6 +2313,16 @@ mozilla::ipc::IPCResult BrowserParent::RecvRequestFocus(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserParent::RecvWheelZoomChange(bool aIncrease) {
+  RefPtr<BrowsingContext> bc = GetBrowsingContext();
+  if (!bc) {
+    return IPC_OK();
+  }
+
+  bc->Canonical()->DispatchWheelZoomChange(aIncrease);
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult BrowserParent::RecvEnableDisableCommands(
     const MaybeDiscarded<BrowsingContext>& aContext, const nsString& aAction,
     nsTArray<nsCString>&& aEnabledCommands,

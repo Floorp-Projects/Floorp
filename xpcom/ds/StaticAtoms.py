@@ -1951,7 +1951,6 @@ STATIC_ATOMS = [
     Atom("onUAWidgetTeardown", "onUAWidgetTeardown"),
     Atom("onUnselectedTabHover_Disable", "onUnselectedTabHover:Disable"),
     Atom("onUnselectedTabHover_Enable", "onUnselectedTabHover:Enable"),
-    Atom("onZoomChangeUsingMouseWheel", "onZoomChangeUsingMouseWheel"),
     Atom("onmozshowdropdown", "onmozshowdropdown"),
     Atom("onmozshowdropdown_sourcetouch", "onmozshowdropdown-sourcetouch"),
     Atom("onprintPreviewUpdate", "onprintPreviewUpdate"),

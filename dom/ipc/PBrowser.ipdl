@@ -400,6 +400,12 @@ parent:
     async RequestFocus(bool canRaise, CallerType aCallerType);
 
     /**
+     * Sends a mouse wheel zoom change to the parent process, to be handled by
+     * the front end as needed.
+     */
+    async WheelZoomChange(bool increase);
+
+    /**
      * Indicate, based on the current state, that some commands are enabled and
      * some are disabled.
      */

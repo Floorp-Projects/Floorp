@@ -65,7 +65,6 @@ class FormValidationParent extends JSWindowActorParent {
     switch (aEvent.type) {
       case "FullZoomChange":
       case "TextZoomChange":
-      case "ZoomChangeUsingMouseWheel":
       case "scroll":
         this._hidePopup();
         break;
@@ -85,10 +84,6 @@ class FormValidationParent extends JSWindowActorParent {
     tabBrowser.selectedBrowser.removeEventListener("scroll", this, true);
     tabBrowser.selectedBrowser.removeEventListener("FullZoomChange", this);
     tabBrowser.selectedBrowser.removeEventListener("TextZoomChange", this);
-    tabBrowser.selectedBrowser.removeEventListener(
-      "ZoomChangeUsingMouseWheel",
-      this
-    );
 
     this._panel.hidden = true;
     this._panel = null;
@@ -132,10 +127,6 @@ class FormValidationParent extends JSWindowActorParent {
       tabBrowser.selectedBrowser.addEventListener("scroll", this, true);
       tabBrowser.selectedBrowser.addEventListener("FullZoomChange", this);
       tabBrowser.selectedBrowser.addEventListener("TextZoomChange", this);
-      tabBrowser.selectedBrowser.addEventListener(
-        "ZoomChangeUsingMouseWheel",
-        this
-      );
 
       // Open the popup
       this._panel.openPopup(this._anchor, aPanelData.position, 0, 0, false);
