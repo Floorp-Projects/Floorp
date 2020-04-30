@@ -15,11 +15,11 @@ add_task(async function test() {
   let tab3 = await BrowserTestUtils.openNewForegroundTab(gBrowser, testPage3);
 
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["toolkit.cosmeticAnimations.enabled", false],
-      ["browser.ctrlTab.recentlyUsedOrder", false],
-    ],
+    set: [["browser.ctrlTab.recentlyUsedOrder", false]],
   });
+
+  // Disable tab animations
+  gReduceMotionOverride = true;
 
   gBrowser.selectedTab = tab1;
   browser1.focus();

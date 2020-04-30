@@ -8,9 +8,8 @@
  * even when an underflow happens.
  */
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["toolkit.cosmeticAnimations.enabled", false]],
-  });
+  // Disable tab animations
+  gReduceMotionOverride = true;
 
   let downButton = gBrowser.tabContainer.arrowScrollbox._scrollButtonDown;
   let closingTabsSpacer = gBrowser.tabContainer._closingTabsSpacer;

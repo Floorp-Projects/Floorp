@@ -74,12 +74,6 @@
         E10SUtils: "resource://gre/modules/E10SUtils.jsm",
       });
 
-      XPCOMUtils.defineLazyPreferenceGetter(
-        this,
-        "animationsEnabled",
-        "toolkit.cosmeticAnimations.enabled"
-      );
-
       this._setupEventListeners();
       this._initialized = true;
     },
@@ -2598,7 +2592,7 @@
         !skipAnimation &&
         !pinned &&
         this.tabContainer.getAttribute("overflow") != "true" &&
-        this.animationsEnabled;
+        !gReduceMotion;
 
       // Related tab inherits current tab's user context unless a different
       // usercontextid is specified
@@ -3389,6 +3383,7 @@
 
       if (
         !animate /* the caller didn't opt in */ ||
+        gReduceMotion ||
         isLastTab ||
         aTab.pinned ||
         aTab.hidden ||
@@ -3397,8 +3392,7 @@
         aTab.getAttribute("fadein") !=
           "true" /* fade-in transition hasn't been triggered yet */ ||
         window.getComputedStyle(aTab).maxWidth ==
-          "0.1px" /* fade-in transition hasn't moved yet */ ||
-        !this.animationsEnabled
+          "0.1px" /* fade-in transition hasn't moved yet */
       ) {
         // We're not animating, so we can cancel the animation stopwatch.
         TelemetryStopwatch.cancel("FX_TAB_CLOSE_TIME_ANIM_MS", aTab);
@@ -4321,7 +4315,7 @@
       // Play the tab closing animation to give immediate feedback while
       // waiting for the new window to appear.
       // content area when the docshells are swapped.
-      if (this.animationsEnabled) {
+      if (!gReduceMotion) {
         aTab.style.maxWidth = ""; // ensure that fade-out transition happens
         aTab.removeAttribute("fadein");
       }
@@ -4358,7 +4352,7 @@
 
       // Play the closing animation for all selected tabs to give
       // immediate feedback while waiting for the new window to appear.
-      if (this.animationsEnabled) {
+      if (!gReduceMotion) {
         for (let tab of tabs) {
           tab.style.maxWidth = ""; // ensure that fade-out transition happens
           tab.removeAttribute("fadein");
@@ -5976,7 +5970,7 @@
             !aWebProgress.isLoadingDocument &&
             Components.isSuccessCode(aStatus) &&
             !gBrowser.tabAnimationsInProgress &&
-            Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")
+            !gReduceMotion
           ) {
             if (this.mTab._notselectedsinceload) {
               this.mTab.setAttribute("notselectedsinceload", "true");
