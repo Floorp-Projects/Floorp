@@ -30,7 +30,6 @@
 #include "mozilla/dom/SyncedContextInlines.h"
 #include "mozilla/net/DocumentLoadListener.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Components.h"
 #include "mozilla/HashTable.h"
@@ -2070,29 +2069,29 @@ void BrowsingContext::DidSet(FieldIndex<IDX_AncestorLoading>) {
 }
 
 void BrowsingContext::DidSet(FieldIndex<IDX_TextZoom>, float aOldValue) {
-  if (GetTextZoom() == aOldValue) {
+  if (!IsInProcess() || GetTextZoom() == aOldValue) {
     return;
   }
 
-  if (IsInProcess()) {
-    if (nsIDocShell* shell = GetDocShell()) {
-      if (nsPresContext* pc = shell->GetPresContext()) {
-        pc->RecomputeBrowsingContextDependentData();
-      }
-    }
+  RefPtr<Document> doc;
+  if (auto* win = GetDOMWindow()) {
+    doc = win->GetExtantDoc();
+  }
 
-    for (BrowsingContext* child : Children()) {
-      child->SetTextZoom(GetTextZoom());
+  if (nsIDocShell* shell = GetDocShell()) {
+    if (nsPresContext* pc = shell->GetPresContext()) {
+      pc->RecomputeBrowsingContextDependentData();
     }
   }
 
-  if (IsTop() && XRE_IsParentProcess()) {
-    if (Element* element = GetEmbedderElement()) {
-      auto dispatcher = MakeRefPtr<AsyncEventDispatcher>(
-          element, NS_LITERAL_STRING("TextZoomChange"), CanBubble::eYes,
-          ChromeOnlyDispatch::eYes);
-      dispatcher->RunDOMEventWhenSafe();
-    }
+  for (BrowsingContext* child : Children()) {
+    child->SetTextZoom(GetTextZoom());
+  }
+
+  if (doc) {
+    nsContentUtils::DispatchChromeEvent(doc, ToSupports(doc),
+                                        NS_LITERAL_STRING("TextZoomChange"),
+                                        CanBubble::eYes, Cancelable::eYes);
   }
 }
 
@@ -2100,29 +2099,35 @@ void BrowsingContext::DidSet(FieldIndex<IDX_TextZoom>, float aOldValue) {
 // on the Top() browsing context, but there are a lot of tests that rely on
 // zooming a subframe so...
 void BrowsingContext::DidSet(FieldIndex<IDX_FullZoom>, float aOldValue) {
-  if (GetFullZoom() == aOldValue) {
+  if (!IsInProcess() || GetFullZoom() == aOldValue) {
     return;
   }
 
-  if (IsInProcess()) {
-    if (nsIDocShell* shell = GetDocShell()) {
-      if (nsPresContext* pc = shell->GetPresContext()) {
-        pc->RecomputeBrowsingContextDependentData();
-      }
-    }
+  RefPtr<Document> doc;
+  if (auto* win = GetDOMWindow()) {
+    doc = win->GetExtantDoc();
+  }
 
-    for (BrowsingContext* child : Children()) {
-      child->SetFullZoom(GetFullZoom());
+  if (doc) {
+    nsContentUtils::DispatchChromeEvent(doc, ToSupports(doc),
+                                        NS_LITERAL_STRING("PreFullZoomChange"),
+                                        CanBubble::eYes, Cancelable::eYes);
+  }
+
+  if (nsIDocShell* shell = GetDocShell()) {
+    if (nsPresContext* pc = shell->GetPresContext()) {
+      pc->RecomputeBrowsingContextDependentData();
     }
   }
 
-  if (IsTop() && XRE_IsParentProcess()) {
-    if (Element* element = GetEmbedderElement()) {
-      auto dispatcher = MakeRefPtr<AsyncEventDispatcher>(
-          element, NS_LITERAL_STRING("FullZoomChange"), CanBubble::eYes,
-          ChromeOnlyDispatch::eYes);
-      dispatcher->RunDOMEventWhenSafe();
-    }
+  for (BrowsingContext* child : Children()) {
+    child->SetFullZoom(GetFullZoom());
+  }
+
+  if (doc) {
+    nsContentUtils::DispatchChromeEvent(doc, ToSupports(doc),
+                                        NS_LITERAL_STRING("FullZoomChange"),
+                                        CanBubble::eYes, Cancelable::eYes);
   }
 }
 
