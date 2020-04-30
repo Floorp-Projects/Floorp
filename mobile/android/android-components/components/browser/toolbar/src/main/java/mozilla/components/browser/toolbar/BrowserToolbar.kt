@@ -198,6 +198,10 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     override fun setSearchTerms(searchTerms: String) {
+        if (state == State.EDIT) {
+            edit.editSuggestion(searchTerms)
+        }
+
         this.searchTerms = searchTerms
     }
 

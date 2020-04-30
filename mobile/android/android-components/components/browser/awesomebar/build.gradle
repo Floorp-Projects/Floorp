@@ -30,6 +30,7 @@ dependencies {
     api project(':concept-awesomebar')
 
     implementation project(':support-ktx')
+    implementation project(':ui-icons')
     implementation project(':support-base')
 
     api Dependencies.androidx_recyclerview

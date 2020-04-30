@@ -4,11 +4,14 @@
 
 package mozilla.components.browser.awesomebar.layout
 
+import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.widget.ImageViewCompat
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
 import mozilla.components.browser.awesomebar.R
@@ -40,6 +43,9 @@ internal sealed class DefaultSuggestionViewHolder {
         }
         private val iconView: ImageView = view.findViewById(R.id.mozac_browser_awesomebar_icon)
         private val iconIndicatorView: ImageView = view.findViewById(R.id.mozac_browser_awesomebar_icon_indicator)
+        private val editView = view.findViewById<ImageButton>(R.id.mozac_browser_awesomebar_edit_suggestion).apply {
+            ImageViewCompat.setImageTintList(this, ColorStateList.valueOf(awesomeBar.styling.descriptionTextColor))
+        }
 
         override fun bind(suggestion: AwesomeBar.Suggestion, selectionListener: () -> Unit) {
             val title = if (suggestion.title.isNullOrEmpty()) suggestion.description else suggestion.title
@@ -67,6 +73,10 @@ internal sealed class DefaultSuggestionViewHolder {
             view.setOnClickListener {
                 suggestion.onSuggestionClicked?.invoke()
                 selectionListener.invoke()
+            }
+
+            editView.setOnClickListener {
+                awesomeBar.editSuggestionListener?.invoke(title.toString())
             }
         }
 

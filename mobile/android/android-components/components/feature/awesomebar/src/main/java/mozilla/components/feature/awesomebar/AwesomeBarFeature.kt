@@ -52,6 +52,7 @@ class AwesomeBarFeature(
         ))
 
         awesomeBar.setOnStopListener { toolbar.displayMode() }
+        awesomeBar.setOnEditSuggestionListener(toolbar::setSearchTerms)
     }
 
     /**

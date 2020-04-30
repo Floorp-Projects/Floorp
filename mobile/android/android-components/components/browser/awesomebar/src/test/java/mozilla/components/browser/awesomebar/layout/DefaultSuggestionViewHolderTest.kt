@@ -105,6 +105,32 @@ class DefaultSuggestionViewHolderTest {
     }
 
     @Test
+    fun `Clicking on edit suggestion button invokes callback`() {
+        val view = LayoutInflater.from(testContext).inflate(
+            R.layout.mozac_browser_awesomebar_item_generic, null, false)
+
+        var callbackExecuted = false
+
+        val viewHolder = DefaultSuggestionViewHolder.Default(
+                BrowserAwesomeBar(testContext).apply {
+                    setOnEditSuggestionListener { callbackExecuted = true }
+                },
+                view
+        )
+
+        val suggestion = AwesomeBar.Suggestion(
+            mock()
+        )
+
+        viewHolder.bind(suggestion) {
+            // Do nothing
+        }
+
+        view.findViewById<View>(R.id.mozac_browser_awesomebar_edit_suggestion).performClick()
+        assertTrue(callbackExecuted)
+    }
+
+    @Test
     fun `ChipsSuggestionViewHolder adds views for chips`() {
         val view = LayoutInflater.from(testContext).inflate(
             R.layout.mozac_browser_awesomebar_item_chips, null, false)

@@ -12,7 +12,7 @@
     android:focusable="true"
     android:clipToPadding="false"
     android:paddingStart="16dp"
-    android:paddingEnd="16dp">
+    android:paddingEnd="0dp">
 
     <ImageView
         android:id="@+id/mozac_browser_awesomebar_icon"
@@ -45,9 +45,9 @@
         android:ellipsize="end"
         android:lines="1"
         android:textSize="15sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/mozac_browser_awesomebar_icon"
         app:layout_constraintBottom_toTopOf="@+id/mozac_browser_awesomebar_description"
+        app:layout_constraintEnd_toStartOf="@+id/mozac_browser_awesomebar_edit_suggestion"
+        app:layout_constraintStart_toEndOf="@+id/mozac_browser_awesomebar_icon"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="Android Components" />
@@ -61,9 +61,22 @@
         android:ellipsize="end"
         android:lines="1"
         android:textSize="12sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/mozac_browser_awesomebar_icon"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/mozac_browser_awesomebar_edit_suggestion"
+        app:layout_constraintStart_toEndOf="@+id/mozac_browser_awesomebar_icon"
         app:layout_constraintTop_toBottomOf="@id/mozac_browser_awesomebar_title"
         tools:text="https://github.com/mozilla-mobile/android-components" />
+
+    <ImageButton
+        android:id="@+id/mozac_browser_awesomebar_edit_suggestion"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_marginStart="-8dp"
+        android:background="?android:selectableItemBackground"
+        android:contentDescription="@string/mozac_browser_awesomebar_edit_suggestion"
+        android:padding="8dp"
+        app:srcCompat="@drawable/mozac_ic_edit_suggestion"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -48,6 +48,7 @@ class BrowserAwesomeBar @JvmOverloads constructor(
     internal var scope = CoroutineScope(Dispatchers.Main)
     internal var job: Job? = null
     internal var listener: (() -> Unit)? = null
+    internal var editSuggestionListener: ((String) -> Unit)? = null
     internal val styling: BrowserAwesomeBarStyling
 
     /**
@@ -213,6 +214,10 @@ class BrowserAwesomeBar @JvmOverloads constructor(
 
     override fun setOnStopListener(listener: () -> Unit) {
         this.listener = listener
+    }
+
+    override fun setOnEditSuggestionListener(listener: (String) -> Unit) {
+        this.editSuggestionListener = listener
     }
 
     /**
