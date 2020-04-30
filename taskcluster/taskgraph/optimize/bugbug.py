@@ -4,28 +4,17 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import json
-import logging
-import time
 from collections import defaultdict
 
-import requests
-from mozbuild.util import memoize, memoized_property
 from six.moves.urllib.parse import urlsplit
 
 from taskgraph.optimize import register_strategy, OptimizationStrategy
-from taskgraph.util.taskcluster import requests_retry_session
-
-logger = logging.getLogger(__name__)
-
-# Preset confidence thresholds.
-CT_LOW = 0.5
-CT_MEDIUM = 0.7
-CT_HIGH = 0.9
-
-
-class BugbugTimeoutException(Exception):
-    pass
+from taskgraph.util.bugbug import (
+    push_schedules,
+    CT_HIGH,
+    CT_MEDIUM,
+    CT_LOW,
+)
 
 
 @register_strategy("bugbug", args=(CT_MEDIUM,))
@@ -46,50 +35,15 @@ class BugBugPushSchedules(OptimizationStrategy):
             groups within a task to find the overall task confidence. Otherwise
             the maximum confidence threshold is used (default: False).
     """
-    BUGBUG_BASE_URL = "https://bugbug.herokuapp.com"
-    RETRY_TIMEOUT = 4 * 60  # seconds
-    RETRY_INTERVAL = 5      # seconds
-
     def __init__(self, confidence_threshold, use_reduced_tasks=False, combine_weights=False):
         self.confidence_threshold = confidence_threshold
         self.use_reduced_tasks = use_reduced_tasks
         self.combine_weights = combine_weights
 
-    @memoized_property
-    def session(self):
-        s = requests.Session()
-        s.headers.update({'X-API-KEY': 'gecko-taskgraph'})
-        return requests_retry_session(retries=5, session=s)
-
-    @memoize
-    def run_query(self, query, data=None):
-        url = self.BUGBUG_BASE_URL + query
-
-        attempts = self.RETRY_TIMEOUT / self.RETRY_INTERVAL
-        i = 0
-        while i < attempts:
-            r = self.session.get(url)
-            r.raise_for_status()
-
-            if r.status_code != 202:
-                break
-
-            time.sleep(self.RETRY_INTERVAL)
-            i += 1
-
-        data = r.json()
-        logger.debug("Bugbug scheduler service returns:\n{}".format(
-                     json.dumps(data, indent=2)))
-
-        if r.status_code == 202:
-            raise BugbugTimeoutException("Timed out waiting for result from '{}'".format(url))
-
-        return data
-
     def should_remove_task(self, task, params, importance):
         branch = urlsplit(params['head_repository']).path.strip('/')
         rev = params['head_rev']
-        data = self.run_query('/push/{branch}/{rev}/schedules'.format(branch=branch, rev=rev))
+        data = push_schedules(branch, rev)
 
         key = "reduced_tasks" if self.use_reduced_tasks else "tasks"
         tasks = set(
