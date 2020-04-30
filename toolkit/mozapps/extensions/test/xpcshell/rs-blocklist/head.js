@@ -9,6 +9,6 @@ const MLBF_RECORD = {
     hash: "6af648a5d6ce6dbee99b0aab1780d24d204977a6606ad670d5372ef22fac1052",
     filename: "does-not-matter.bin",
   },
-  attachment_type: "bloomfilter-full",
+  attachment_type: "bloomfilter-base",
   generation_time: 1577833200000,
 };
