@@ -79,7 +79,28 @@ enum WindowsThemeColor {
 #define CMDBUTTONIDX_BUTTONBOX 3
 
 class nsUXThemeData {
-  static HANDLE sThemes[eUXNumClasses];
+  // This class makes sure we don't attempt to open a theme if the previous
+  // loading attempt has failed because OpenThemeData is a heavy task and
+  // it's less likely that the API returns a different result.
+  class ThemeHandle final {
+    Maybe<HANDLE> mHandle;
+
+   public:
+    ThemeHandle() = default;
+    ~ThemeHandle();
+
+    // Disallow copy and move
+    ThemeHandle(const ThemeHandle&) = delete;
+    ThemeHandle(ThemeHandle&&) = delete;
+    ThemeHandle& operator=(const ThemeHandle&) = delete;
+    ThemeHandle& operator=(ThemeHandle&&) = delete;
+
+    operator HANDLE();
+    void OpenOnce(HWND aWindow, LPCWSTR aClassList);
+    void Close();
+  };
+
+  static ThemeHandle sThemes[eUXNumClasses];
 
   // We initialize sCommandButtonBoxMetrics separately as a performance
   // optimization to avoid fetching dummy values for sCommandButtonMetrics
