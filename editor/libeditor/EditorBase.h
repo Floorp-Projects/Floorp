@@ -1455,28 +1455,6 @@ class EditorBase : public nsIEditor,
       Element& aDestElement, Element& aSourceElement);
 
   /**
-   * MoveNodeWithTransaction() moves aContent to aPointToInsert.
-   *
-   * @param aContent        The node to be moved.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult MoveNodeWithTransaction(
-      nsIContent& aContent, const EditorDOMPoint& aPointToInsert);
-
-  /**
-   * MoveNodeToEndWithTransaction() moves aContent to end of aNewContainer.
-   *
-   * @param aContent        The node to be moved.
-   * @param aNewContainer   The new container which will contain aContent as
-   *                        its last child.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult
-  MoveNodeToEndWithTransaction(nsIContent& aContent, nsINode& aNewContainer) {
-    EditorDOMPoint pointToInsert;
-    pointToInsert.SetToEndOf(&aNewContainer);
-    return MoveNodeWithTransaction(aContent, pointToInsert);
-  }
-
-  /**
    * CloneAttributeWithTransaction() copies aAttribute of aSourceElement to
    * aDestElement.  If aSourceElement doesn't have aAttribute, this removes
    * aAttribute from aDestElement.

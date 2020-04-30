@@ -1678,50 +1678,6 @@ nsresult EditorBase::DeleteNodeWithTransaction(nsIContent& aContent) {
   return rv;
 }
 
-nsresult EditorBase::MoveNodeWithTransaction(
-    nsIContent& aContent, const EditorDOMPoint& aPointToInsert) {
-  MOZ_ASSERT(aPointToInsert.IsSetAndValid());
-
-  EditorDOMPoint oldPoint(&aContent);
-  if (NS_WARN_IF(!oldPoint.IsSet())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Don't do anything if it's already in right place.
-  if (aPointToInsert == oldPoint) {
-    return NS_OK;
-  }
-
-  // Notify our internal selection state listener
-  AutoMoveNodeSelNotify selNotify(RangeUpdaterRef(), oldPoint, aPointToInsert);
-
-  // Hold a reference so aNode doesn't go away when we remove it (bug 772282)
-  nsresult rv = DeleteNodeWithTransaction(aContent);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
-    return rv;
-  }
-
-  // Mutation event listener could break insertion point. Let's check it.
-  EditorDOMPoint pointToInsert(selNotify.ComputeInsertionPoint());
-  if (NS_WARN_IF(!pointToInsert.IsSet())) {
-    return NS_ERROR_FAILURE;
-  }
-  // If some children have removed from the container, let's append to the
-  // container.
-  // XXX Perhaps, if mutation event listener inserts or removes some children
-  //     but the child node referring with aPointToInsert is still available,
-  //     we should insert aContent before it.  However, we should keep
-  //     traditional behavior for now.
-  if (NS_WARN_IF(!pointToInsert.IsSetAndValid())) {
-    pointToInsert.SetToEndOf(pointToInsert.GetContainer());
-  }
-  rv = InsertNodeWithTransaction(aContent, pointToInsert);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::InsertNodeWithTransaction() failed");
-  return rv;
-}
-
 NS_IMETHODIMP EditorBase::AddEditorObserver(nsIEditorObserver* aObserver) {
   // we don't keep ownership of the observers.  They must
   // remove themselves as observers before they are destroyed.

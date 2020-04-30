@@ -460,7 +460,7 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
         return NS_ERROR_EDITOR_DESTROYED;
       }
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "EditorBase::MoveNodeToEndWithTransaction() failed");
+                           "HTMLEditor::MoveNodeToEndWithTransaction() failed");
       return rv;
     }
     sibling = GetNextHTMLSibling(textNodeForTheRange);
@@ -472,7 +472,7 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
         return NS_ERROR_EDITOR_DESTROYED;
       }
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "EditorBase::MoveNodeWithTransaction() failed");
+                           "HTMLEditor::MoveNodeWithTransaction() failed");
       return rv;
     }
   }
@@ -529,7 +529,7 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aContent,
                              &aValue)) {
     nsresult rv = MoveNodeToEndWithTransaction(aContent, *previousSibling);
     if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::MoveNodeToEndWithTransaction() failed");
+      NS_WARNING("HTMLEditor::MoveNodeToEndWithTransaction() failed");
       return rv;
     }
     if (!IsSimpleModifiableNode(nextSibling, &aProperty, aAttribute, &aValue)) {
@@ -544,7 +544,7 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aContent,
     nsresult rv =
         MoveNodeWithTransaction(aContent, EditorDOMPoint(nextSibling, 0));
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "EditorBase::MoveNodeWithTransaction() failed");
+                         "HTMLEditor::MoveNodeWithTransaction() failed");
     return rv;
   }
 
@@ -953,7 +953,7 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
       return EditResult(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::MoveNodeWithTransaction() failed");
+      NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
       return EditResult(rv);
     }
     // Update the child.
@@ -2284,7 +2284,7 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
     // Previous sib is already right kind of inline node; slide this over
     nsresult rv = MoveNodeToEndWithTransaction(*textNodeForTheRange, *sibling);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "EditorBase::MoveNodeToEndWithTransaction() failed");
+                         "HTMLEditor::MoveNodeToEndWithTransaction() failed");
     return rv;
   }
   sibling = GetNextHTMLSibling(textNodeForTheRange);
@@ -2293,7 +2293,7 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
     nsresult rv = MoveNodeWithTransaction(*textNodeForTheRange,
                                           EditorDOMPoint(sibling, 0));
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "EditorBase::MoveNodeWithTransaction() failed");
+                         "HTMLEditor::MoveNodeWithTransaction() failed");
     return rv;
   }
 
@@ -2414,7 +2414,7 @@ nsresult HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
       // it
       nsresult rv = MoveNodeToEndWithTransaction(*aNode, *sibling);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "EditorBase::MoveNodeToEndWithTransaction() failed");
+                           "HTMLEditor::MoveNodeToEndWithTransaction() failed");
       return rv;
     }
 
