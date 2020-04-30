@@ -4,20 +4,23 @@ import tempfile
 import shutil
 import re
 import asyncio
+import tarfile
 
 import responses
 
-from condprof.runner import main
-from condprof.client import ROOT_URL
+from condprof.main import main
+from condprof.client import ROOT_URL, TC_SERVICE
+from condprof import client
 
+
+client.RETRIES = 1
+client.RETRY_PAUSE = 0
 GECKODRIVER = os.path.join(os.path.dirname(__file__), "fakegeckodriver.py")
 FIREFOX = os.path.join(os.path.dirname(__file__), "fakefirefox.py")
 CHANGELOG = re.compile(ROOT_URL + "/.*/changelog.json")
 FTP = "https://ftp.mozilla.org/pub/firefox/nightly/latest-mozilla-central/"
 PROFILE = re.compile(ROOT_URL + "/.*/.*tgz")
 
-with open(os.path.join(os.path.dirname(__file__), "profile.tgz"), "rb") as f:
-    PROFILE_DATA = f.read()
 
 with open(os.path.join(os.path.dirname(__file__), "ftp_mozilla.html")) as f:
     FTP_PAGE = f.read()
@@ -46,6 +49,17 @@ class TestRunner(unittest.TestCase):
         responses.add(
             responses.GET, FTP, content_type="text/html", body=FTP_PAGE, status=200
         )
+
+        profile_tgz = os.path.join(os.path.dirname(__file__), "profile.tgz")
+        profile = os.path.join(os.path.dirname(__file__), "profile")
+
+        with tarfile.open(profile_tgz, "w:gz") as tar:
+            tar.add(profile, arcname=".")
+
+        with open(profile_tgz, "rb") as f:
+            PROFILE_DATA = f.read()
+
+        os.remove(profile_tgz)
 
         responses.add(
             responses.GET,
@@ -80,6 +94,8 @@ class TestRunner(unittest.TestCase):
         responses.add(
             responses.HEAD, ADDON, body="", headers={"content-length": "1"}, status=200
         )
+
+        responses.add(responses.HEAD, TC_SERVICE, body="", status=200)
 
     def tearDown(self):
         shutil.rmtree(self.archive_dir)
