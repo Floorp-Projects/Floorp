@@ -1631,28 +1631,13 @@ class EditorBase : public nsIEditor,
                                                         uint32_t aOffset,
                                                         uint32_t aLength);
 
-  /**
-   * DoSplitNode() creates a new node (left node) identical to an existing
-   * node (right node), and split the contents between the same point in both
-   * nodes.
-   *
-   * @param aStartOfRightNode   The point to split.  Its container will be
-   *                            the right node, i.e., become the new node's
-   *                            next sibling.  And the point will be start
-   *                            of the right node.
-   * @param aNewLeftNode        The new node called as left node, so, this
-   *                            becomes the container of aPointToSplit's
-   *                            previous sibling.
-   * @param aError              Must have not already failed.
-   *                            If succeed to insert aLeftNode before the
-   *                            right node and remove unnecessary contents
-   *                            (and collapse selection at end of the left
-   *                            node if necessary), returns no error.
-   *                            Otherwise, an error.
-   */
-  MOZ_CAN_RUN_SCRIPT void DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
-                                      nsIContent& aNewLeftNode,
-                                      ErrorResult& aError);
+  struct MOZ_STACK_CLASS SavedRange final {
+    RefPtr<Selection> mSelection;
+    nsCOMPtr<nsINode> mStartContainer;
+    nsCOMPtr<nsINode> mEndContainer;
+    int32_t mStartOffset = 0;
+    int32_t mEndOffset = 0;
+  };
 
   /**
    * DoJoinNodes() merges contents in aContentToJoin to aContentToKeep and

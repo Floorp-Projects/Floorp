@@ -4184,6 +4184,214 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
   return SplitNodeResult(NS_ERROR_FAILURE);
 }
 
+void HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
+                             nsIContent& aNewLeftNode, ErrorResult& aError) {
+  if (NS_WARN_IF(aError.Failed())) {
+    return;
+  }
+
+  // XXX Perhaps, aStartOfRightNode may be invalid if this is a redo
+  //     operation after modifying DOM node with JS.
+  if (NS_WARN_IF(!aStartOfRightNode.IsSet())) {
+    aError.Throw(NS_ERROR_INVALID_ARG);
+    return;
+  }
+  MOZ_ASSERT(aStartOfRightNode.IsSetAndValid());
+
+  // Remember all selection points.
+  AutoTArray<SavedRange, 10> savedRanges;
+  for (SelectionType selectionType : kPresentSelectionTypes) {
+    SavedRange range;
+    range.mSelection = GetSelection(selectionType);
+    if (NS_WARN_IF(!range.mSelection &&
+                   selectionType == SelectionType::eNormal)) {
+      aError.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+    if (!range.mSelection) {
+      // For non-normal selections, skip over the non-existing ones.
+      continue;
+    }
+
+    for (uint32_t j = 0; j < range.mSelection->RangeCount(); ++j) {
+      RefPtr<nsRange> r = range.mSelection->GetRangeAt(j);
+      MOZ_ASSERT(r->IsPositioned());
+      // XXX Looks like that SavedRange should have mStart and mEnd which
+      //     are RangeBoundary.  Then, we can avoid to compute offset here.
+      range.mStartContainer = r->GetStartContainer();
+      range.mStartOffset = r->StartOffset();
+      range.mEndContainer = r->GetEndContainer();
+      range.mEndOffset = r->EndOffset();
+
+      savedRanges.AppendElement(range);
+    }
+  }
+
+  nsCOMPtr<nsINode> parent = aStartOfRightNode.GetContainerParent();
+  if (NS_WARN_IF(!parent)) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  // Fix the child before mutation observer may touch the DOM tree.
+  nsIContent* firstChildOfRightNode = aStartOfRightNode.GetChild();
+  parent->InsertBefore(aNewLeftNode, aStartOfRightNode.GetContainer(), aError);
+  if (aError.Failed()) {
+    NS_WARNING("nsINode::InsertBefore() failed");
+    return;
+  }
+
+  // At this point, the existing right node has all the children.  Move all
+  // the children which are before aStartOfRightNode.
+  if (!aStartOfRightNode.IsStartOfContainer()) {
+    // If it's a text node, just shuffle around some text
+    Text* rightAsText = aStartOfRightNode.GetContainerAsText();
+    Text* leftAsText = aNewLeftNode.GetAsText();
+    if (rightAsText && leftAsText) {
+      MOZ_DIAGNOSTIC_ASSERT(AsHTMLEditor(),
+                            "Text node in TextEditor shouldn't be split");
+      // Fix right node
+      nsAutoString leftText;
+      IgnoredErrorResult ignoredError;
+      rightAsText->SubstringData(0, aStartOfRightNode.Offset(), leftText,
+                                 ignoredError);
+      NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                           "Text::SubstringData() failed, but ignored");
+      ignoredError.SuppressException();
+
+      // XXX This call may destroy us.
+      DoDeleteText(MOZ_KnownLive(*rightAsText), 0, aStartOfRightNode.Offset(),
+                   ignoredError);
+      NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                           "EditorBase::DoDeleteText() failed, but ignored");
+      ignoredError.SuppressException();
+
+      // Fix left node
+      // XXX This call may destroy us.
+      DoSetText(MOZ_KnownLive(*leftAsText), leftText, ignoredError);
+      NS_WARNING_ASSERTION(!ignoredError.Failed(),
+                           "EditorBase::DoSetText() failed, but ignored");
+    } else {
+      MOZ_DIAGNOSTIC_ASSERT(!rightAsText && !leftAsText);
+      // Otherwise it's an interior node, so shuffle around the children. Go
+      // through list backwards so deletes don't interfere with the iteration.
+      if (!firstChildOfRightNode) {
+        MoveAllChildren(*aStartOfRightNode.GetContainer(),
+                        EditorRawDOMPoint(&aNewLeftNode, 0), aError);
+        NS_WARNING_ASSERTION(!aError.Failed(),
+                             "EditorBase::MoveAllChildren() failed");
+      } else if (NS_WARN_IF(aStartOfRightNode.GetContainer() !=
+                            firstChildOfRightNode->GetParentNode())) {
+        // firstChildOfRightNode has been moved by mutation observer.
+        // In this case, we what should we do?  Use offset?  But we cannot
+        // check if the offset is still expected.
+      } else {
+        MovePreviousSiblings(*firstChildOfRightNode,
+                             EditorRawDOMPoint(&aNewLeftNode, 0), aError);
+        NS_WARNING_ASSERTION(!aError.Failed(),
+                             "EditorBase::MovePreviousSiblings() failed");
+      }
+    }
+  }
+
+  // XXX Why do we ignore an error while moving nodes from the right node to
+  //     the left node?
+  NS_WARNING_ASSERTION(!aError.Failed(), "The previous error is ignored");
+  aError.SuppressException();
+
+  // Handle selection
+  if (RefPtr<PresShell> presShell = GetPresShell()) {
+    presShell->FlushPendingNotifications(FlushType::Frames);
+  }
+  NS_WARNING_ASSERTION(!Destroyed(),
+                       "The editor is destroyed during splitting a node");
+
+  bool allowedTransactionsToChangeSelection =
+      AllowsTransactionsToChangeSelection();
+
+  RefPtr<Selection> previousSelection;
+  for (size_t i = 0; i < savedRanges.Length(); ++i) {
+    // Adjust the selection if needed.
+    SavedRange& range = savedRanges[i];
+
+    // If we have not seen the selection yet, clear all of its ranges.
+    if (range.mSelection != previousSelection) {
+      range.mSelection->RemoveAllRanges(aError);
+      if (aError.Failed()) {
+        NS_WARNING("Selection::RemoveAllRanges() failed");
+        return;
+      }
+      previousSelection = range.mSelection;
+    }
+
+    // XXX Looks like that we don't need to modify normal selection here
+    //     because selection will be modified by the caller if
+    //     AllowsTransactionsToChangeSelection() will return true.
+    if (allowedTransactionsToChangeSelection &&
+        range.mSelection->Type() == SelectionType::eNormal) {
+      // If the editor should adjust the selection, don't bother restoring
+      // the ranges for the normal selection here.
+      continue;
+    }
+
+    // Split the selection into existing node and new node.
+    if (range.mStartContainer == aStartOfRightNode.GetContainer()) {
+      if (static_cast<uint32_t>(range.mStartOffset) <
+          aStartOfRightNode.Offset()) {
+        range.mStartContainer = &aNewLeftNode;
+      } else {
+        range.mStartOffset -= aStartOfRightNode.Offset();
+      }
+    }
+
+    if (range.mEndContainer == aStartOfRightNode.GetContainer()) {
+      if (static_cast<uint32_t>(range.mEndOffset) <
+          aStartOfRightNode.Offset()) {
+        range.mEndContainer = &aNewLeftNode;
+      } else {
+        range.mEndOffset -= aStartOfRightNode.Offset();
+      }
+    }
+
+    RefPtr<nsRange> newRange =
+        nsRange::Create(range.mStartContainer, range.mStartOffset,
+                        range.mEndContainer, range.mEndOffset, aError);
+    if (aError.Failed()) {
+      NS_WARNING("nsRange::Create() failed");
+      return;
+    }
+    // The `MOZ_KnownLive` annotation is only necessary because of a bug
+    // (https://bugzilla.mozilla.org/show_bug.cgi?id=1622253) in the
+    // static analyzer.
+    MOZ_KnownLive(range.mSelection)
+        ->AddRangeAndSelectFramesAndNotifyListeners(*newRange, aError);
+    if (aError.Failed()) {
+      NS_WARNING(
+          "Selection::AddRangeAndSelectFramesAndNotifyListeners() failed");
+      return;
+    }
+  }
+
+  // We don't need to set selection here because the caller should do that
+  // in any case.
+
+  // If splitting the node causes running mutation event listener and we've
+  // got unexpected result, we should return error because callers will
+  // continue to do their work without complicated DOM tree result.
+  // NOTE: Perhaps, we shouldn't do this immediately after each DOM tree change
+  //       because stopping handling it causes some data loss.  E.g., user
+  //       may loose the text which is moved to the new text node.
+  // XXX We cannot check all descendants in the right node and the new left
+  //     node for performance reason.  I think that if caller needs to access
+  //     some of the descendants, they should check by themselves.
+  if (NS_WARN_IF(parent != aStartOfRightNode.GetContainer()->GetParentNode()) ||
+      NS_WARN_IF(parent != aNewLeftNode.GetParentNode()) ||
+      NS_WARN_IF(aNewLeftNode.GetNextSibling() !=
+                 aStartOfRightNode.GetContainer())) {
+    aError.Throw(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
+}
+
 nsresult HTMLEditor::JoinNodesWithTransaction(nsINode& aLeftNode,
                                               nsINode& aRightNode) {
   MOZ_ASSERT(IsEditActionDataAvailable());
