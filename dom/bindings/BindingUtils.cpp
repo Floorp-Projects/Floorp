@@ -663,6 +663,19 @@ void TErrorResult<CleanupPolicy>::NoteJSContextException(JSContext* aCx) {
   }
 }
 
+/* static */
+template <typename CleanupPolicy>
+void TErrorResult<CleanupPolicy>::EnsureUTF8Validity(nsCString& aValue,
+                                                     size_t aValidUpTo) {
+  nsCString valid;
+  if (NS_SUCCEEDED(UTF_8_ENCODING->DecodeWithoutBOMHandling(aValue, valid,
+                                                            aValidUpTo))) {
+    aValue = valid;
+  } else {
+    aValue.SetLength(aValidUpTo);
+  }
+}
+
 template class TErrorResult<JustAssertCleanupPolicy>;
 template class TErrorResult<AssertAndSuppressCleanupPolicy>;
 template class TErrorResult<JustSuppressCleanupPolicy>;
