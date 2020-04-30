@@ -32,7 +32,7 @@ declTest("test event triggering actor creation", {
     is(data, "mozshowdropdown");
 
     let parent = browser.browsingContext.currentWindowGlobal;
-    let actorParent = parent.getActor("Test");
+    let actorParent = parent.getActor("TestWindow");
     ok(actorParent, "JSWindowActorParent should have value.");
     is(
       subject.wrappedJSObject,
