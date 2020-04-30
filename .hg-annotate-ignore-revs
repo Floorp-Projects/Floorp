@@ -1,5 +1,5 @@
 ca251a28d3ddae784436d28829fb019025f4b127 - Birunthan Mohanathas - Bug 1016240 - Exterminate CR+LF line endings. r=briansmith,cpearce,ehsan,gavin
-a569f5a4bb6a27f25e99b5b45ee241db2660b7e3 - Paolo Amadini - Bug 1128203 -  Reduce indentation from 4 to 2 spaces. rs=dolske DONTBUILD CLOSED TREE
+a569f5a4bb6a27f25e99b5b45ee241db2660b7e3 - Paolo Amadini - Bug 1128203 - Reduce indentation from 4 to 2 spaces. rs=dolske DONTBUILD CLOSED TREE
 dcfc73c043c01c3185631262605e3511bebe4cca - Mark Banner - Bug 1309842 - Fix eslint/espree parsing errors for ignored directories in browser/. r=jaws
 82e347fa35820b3bab21c69356d7aa94696a920c - Mark Banner - Bug 1311315 - General small fixes for no-undef eslint issues in browser/. r=jaws
 8a39edd6beb73a5047ca318962d7e28badf63b07 - Mark Banner - Bug 1312278 - Turn on no-unused-vars for browser/tools/mozscreenshots. r=MattN
@@ -190,14 +190,14 @@ a89326c8f25c65566e0d5c54bf86857671a8d97e - Mark Banner - Bug 1429705 - Enable ES
 698ae46fa6340bfc93f5e9f212391bf8bc6feaa5 - Mark Banner - Bug 1429701 - Enable ESLint rule mozilla/use-services for dom/indexedDB. r=bevis
 d5548c012d2b243be36751bcc5f3c7e9f30bb429 - Mark Banner - Bug 1430923 - Change existing instances of 'let EXPORTED_SYMBOLS = ' to use 'var'. r=mossop
 c1895745ba101970b61e9c938f8dd7f4ed73420a - Mark Banner - Bug 1430923 - Handle EXPORTED_SYMBOLS in ESLint to help define globals in jsm files, and disallow 'let EXPORTED_SYMBOLS = '. r=mossop
-d4a7c018420e408fbe0a13ffddd2861623fda5a7 - Kris Maglione - Bug 1431533 - Part 5a - Auto-rewrite code to use ChromeUtils import methods. r=florian
-12fc4dee861c812fd2bd032c63ef17af61800c70 - Kris Maglione - Bug 1431533 - Part 5a - Auto-rewrite code to use ChromeUtils import methods. r=florian
-34c999fa006bffe8705cf50c54708aa21a962e62 - Kris Maglione - Bug 1431533 - Part 5a - Auto-rewrite code to use ChromeUtils import methods. r=florian
-e6a7b5e11ba856ee3535f76c6bcca17ea29e3d5f - Kris Maglione - Bug 1431533 - Part 5a - Auto-rewrite code to use ChromeUtils import methods. r=florian
+d4a7c018420e408fbe0a13ffddd2861623fda5a7 - Kris Maglione - Bug 1431533: Part 5a - Auto-rewrite code to use ChromeUtils import methods. r=florian
+12fc4dee861c812fd2bd032c63ef17af61800c70 - Kris Maglione - Bug 1431533: Part 5a - Auto-rewrite code to use ChromeUtils import methods. r=florian
+34c999fa006bffe8705cf50c54708aa21a962e62 - Kris Maglione - Bug 1431533: Part 5a - Auto-rewrite code to use ChromeUtils import methods. r=florian
+e6a7b5e11ba856ee3535f76c6bcca17ea29e3d5f - Kris Maglione - Bug 1431533: Part 5a - Auto-rewrite code to use ChromeUtils import methods. r=florian
 8552acda5ec771a5c1873ed9222097727ef3cea8 - Mark Banner - Bug 1434449 - Enable no-unused-vars for the global (as well as local) scope on jsm files, whitelist directories still to be fixed. r=florian.
 d5a5ad1dbbf2c53a80386e7397ba6b32153b2b8e - Florian Quèze - Bug 1339461 - script-generated patch to convert foo.indexOf(...) == -1 to foo.includes(), r=Mossop.
 97ac300c64d0a0b2f0fc298c3d670c87a48c15d1 - Mark Banner - Bug 1421379 - Finish enabling ESLint's mozilla/use-services in browser/. r=mossop
-b38d59f71915f78922b46a7c7bc65a48488c45f1 - Andrew McCreight - Bug 1432992 - part 1 - Remove definitions of Ci, Cr, Cc, and Cu. r=florian
+b38d59f71915f78922b46a7c7bc65a48488c45f1 - Andrew McCreight - Bug 1432992, part 1 - Remove definitions of Ci, Cr, Cc, and Cu. r=florian
 76c1582d760e117d1ce2befbc2af998c24760231 - Mark Banner - Bug 1230369 - Manually fix some remaining instances of Ci/Cc/Cu definitions and switch Components.* to using the shorthand in some places. r=florian
 f58c1a70c026749c97d3df1bd9a22d2473c1c056 - Mark Banner - Bug 1230369 - Add ESLint rules to disallow defining Cc/Ci etc and to prefer the use of Cc/Ci rather than the Components.* equivalents. r=florian
 2ebcb42faee25c8eb2dd34d01c062bebcbc7b1ea - Mark Banner - Bug 1436389 - Fix space-unary-ops issues picked up by the new version of ESLint. r=mossop
@@ -232,7 +232,7 @@ a45a86e9a6e30917511555c9a2672109e19f5068 - Mark Banner - Bug 1451659 - Enable ES
 61c06428ee965fd976ecbfa810065019c3076b55 - Mark Banner - Bug 1453383 - Automatically fix ESLint issues in devtools/client/{webaudioeditor,webide}/. r=jdescottes
 166b59bcb4ce7d8165694eea8456de4da65744b6 - Mark Banner - Bug 1453383 - Enable ESLint for devtools/client/{webaudioeditor,webide}/. r=jdescottes
 e38dafe679416fcf85c2bf6cb19ebc4fe9088547 - Mark Banner - Bug 1455581 - Enable ESLint rules no-undef and no-unused-vars for devtools/client/framework/. r=jdescottes
-c58f0b4dd8494f4a81c69b0315af223576660200 - Kris Maglione - Bug 1456035 - Part 4 - Convert callers of XPCOMUtils.generateQI to ChromeUtils.generateQI. r=mccr8
+c58f0b4dd8494f4a81c69b0315af223576660200 - Kris Maglione - Bug 1456035: Part 4 - Convert callers of XPCOMUtils.generateQI to ChromeUtils.generateQI. r=mccr8
 4e512b622d80c276bed56fdb45fd573fc7639a92 - Mark Banner - Bug 1456755 - Enable ESLint rule no-undef for devtools/{client/scratchpad/,shared/tests/unit}. r=jdescottes
 53867132bf195f6be61840f0bda1147c73030089 - Mark Banner - Bug 1457835 - Enable ESLint for testing/mochitest (automatic changes). r=jmaher
 7da7e1e5be4976cd32b3ea79631858e9d8dbd749 - Mark Banner - Bug 1457835 - Enable ESLint for testing/mochitest (manual changes). r=jmaher
@@ -296,7 +296,7 @@ ea9a6719f0c7244a7d63316b1d0cb7dc41f9a0c3 - Mark Banner - Bug 1506042 - Enable ES
 ed063368a801e3bec682e03995ee4c0c0bf57eec - Sylvestre Ledru - Bug 1505949 - layout/style/{BorrowedTypeList.h,ServoArcTypeList.h,ServoBoxedTypeList.h}  content should remain on a single line r=heycam
 0f9d5e93e0ba6fb9bde4dfb9befd6b941d2007f6 - Sylvestre Ledru - Bug 1505943 - Add clang-format off to keep the line the same way r=andi
 92a23275c087fb829e45e766b23afeed7ea0b816 - Mark Banner - Bug 1506559 - Enable ESLint for memory/replace/dmd/test/. r=njn
-0ceae9db9ec0be18daa1a279511ad305723185d4 - Sylvestre Ledru - Bug 1204606 - Reformat of dom/media. r=jya
+0ceae9db9ec0be18daa1a279511ad305723185d4 - Sylvestre Ledru - Bug 1204606 - Reformat of dom/media r=jya
 c8dd8f4166c9287abf6964e55f3b86754d6cf806 - Ted Campbell - Bug 1508180 - Use uppercase names for high-order macros in js/ r=jandem
 1963c82b5abf500d7b8f5d843896028bd2380615 - Ted Campbell - Bug 1508064 - Use clang-format off in parts of js/ r=jandem
 b4ac72eabda04e933eea9b0e9a35fa4f8c786c7d - Ted Campbell - Bug 1508180 - Use uppercase macro names in mfbt/RecordReplay.h r=bhackett
@@ -337,5 +337,5 @@ a535962417c0d37bd82387093238f6457109e279 - Mark Banner - Bug 1515605 - Enable ES
 fa3daa92292dde4bf9405c56e43a464e53c349a2 - Sylvestre Ledru - Bug 1519636 - Ride along: Add media/libdav1d/version.h to the ignore list r=andi
 9e48fefcf1aca74fd97036121180907de52756e8 - Narcis Beleuzu - Backed out changeset 389b6bbd76db (bug 1519636) for bustages on MarkupMap.h . CLOSED TREE
 6d386a2162b90d72529adbc283391fc4732eff32 - Csoregi Natalia - Backed out changeset 4ad80127f89f (bug 1519636) for bustage on MarkupMap.h and nsAccessibilityService.cpp. CLOSED TREE
-020c8c871c0d3b3920fe95935cfef06501976c0f - Sylvestre Ledru - Bug 1552795 - Remove all trailing whitespaces in idl files r=ehsan
-c7e91f614eb78c4447a623f1c88a66421113ab07 - Victor Porof - Bug 1563300 - Add a js-format git commit hook, r=sylvestre
+020c8c871c0d3b3920fe95935cfef06501976c0f - Sylvestre Ledru - Bug 1552795 - Remove all trailing whitespaces in idl files r=Ehsan
+c7e91f614eb78c4447a623f1c88a66421113ab07 - Victor Porof - Bug 1563300 - Add a js-format git commit hook, r=sylvestre, CLOSED TREE
