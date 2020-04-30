@@ -6482,6 +6482,42 @@ already_AddRefed<JSProcessActorParent> ContentParent::GetActor(
   return actor.forget();
 }
 
+NS_IMETHODIMP ContentParent::GetActor(const nsACString& aName,
+                                      JSProcessActorParent** retval) {
+  if (!CanSend()) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  // Check if this actor has already been created, and return it if it has.
+  if (mProcessActors.Contains(aName)) {
+    RefPtr<JSProcessActorParent> actor(mProcessActors.Get(aName));
+    actor.forget(retval);
+    return NS_OK;
+  }
+
+  // Otherwise, we want to create a new instance of this actor.
+  JS::RootedObject obj(RootingCx());
+  ErrorResult result;
+  ConstructActor(aName, &obj, result);
+  if (result.Failed()) {
+    return result.StealNSResult();
+  }
+
+  // Unwrap our actor to a JSProcessActorParent object.
+  RefPtr<JSProcessActorParent> actor;
+  nsresult rv = UNWRAP_OBJECT(JSProcessActorParent, &obj, actor);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  MOZ_RELEASE_ASSERT(!actor->Manager(),
+                     "mManager was already initialized once!");
+  actor->Init(aName, this);
+  mProcessActors.Put(aName, RefPtr{actor});
+  actor.forget(retval);
+  return NS_OK;
+}
+
 }  // namespace dom
 }  // namespace mozilla
 

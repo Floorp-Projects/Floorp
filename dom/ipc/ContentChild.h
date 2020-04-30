@@ -907,7 +907,6 @@ class ContentChild final
   uint64_t mBrowsingContextFieldEpoch = 0;
 
   nsRefPtrHashtable<nsCStringHashKey, JSProcessActorChild> mProcessActors;
-
   DISALLOW_EVIL_CONSTRUCTORS(ContentChild);
 };
 
