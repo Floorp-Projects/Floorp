@@ -878,7 +878,7 @@ nsresult PeerConnectionImpl::GetDatachannelParameters(
   transportId->clear();
 
   RefPtr<JsepTransceiver> datachannelTransceiver;
-  for (const auto& [id, transceiver] : mJsepSession->GetTransceivers()) {
+  for (const auto& transceiver : mJsepSession->GetTransceivers()) {
     if ((transceiver->GetMediaType() == SdpMediaSection::kApplication) &&
         transceiver->mSendTrack.GetNegotiatedDetails()) {
       datachannelTransceiver = transceiver;
@@ -895,7 +895,7 @@ nsresult PeerConnectionImpl::GetDatachannelParameters(
     transportTransceiver = datachannelTransceiver;
   } else if (datachannelTransceiver->HasBundleLevel()) {
     // Find the actual transport.
-    for (const auto& [id, transceiver] : mJsepSession->GetTransceivers()) {
+    for (const auto& transceiver : mJsepSession->GetTransceivers()) {
       if (transceiver->HasLevel() &&
           transceiver->GetLevel() == datachannelTransceiver->BundleLevel() &&
           transceiver->HasOwnTransport()) {
@@ -1118,7 +1118,7 @@ PeerConnectionImpl::CreateDataChannel(
   CSFLogDebug(LOGTAG, "%s: making DOMDataChannel", __FUNCTION__);
 
   RefPtr<JsepTransceiver> dcTransceiver;
-  for (auto& [id, transceiver] : mJsepSession->GetTransceivers()) {
+  for (auto& transceiver : mJsepSession->GetTransceivers()) {
     if (transceiver->GetMediaType() == SdpMediaSection::kApplication) {
       dcTransceiver = transceiver;
       break;
@@ -1403,7 +1403,7 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
       return NS_ERROR_FAILURE;
   }
 
-  auto originalTransceivers = mJsepSession->GetTransceivers();
+  size_t originalTransceiverCount = mJsepSession->GetTransceivers().size();
   JsepSession::Result result =
       mJsepSession->SetRemoteDescription(sdpType, mRemoteRequestedSDP);
   if (result.mError.isSome()) {
@@ -1413,17 +1413,18 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
     mPCObserver->OnSetDescriptionError(*buildJSErrorData(result, errorString),
                                        jrv);
   } else {
-    for (const auto& [id, jsepTransceiver] : mJsepSession->GetTransceivers()) {
+    // Iterate over the JSEP transceivers that were just created
+    for (size_t i = originalTransceiverCount;
+         i < mJsepSession->GetTransceivers().size(); ++i) {
+      RefPtr<JsepTransceiver> jsepTransceiver =
+          mJsepSession->GetTransceivers()[i];
+
       if (jsepTransceiver->GetMediaType() ==
           SdpMediaSection::MediaType::kApplication) {
         continue;
       }
 
-      if (originalTransceivers.count(id)) {
-        continue;
-      }
-
-      // New audio or video transceiver, need to tell JS about it.
+      // Audio or video transceiver, need to tell JS about it.
       RefPtr<TransceiverImpl> transceiverImpl =
           CreateTransceiverImpl(jsepTransceiver, nullptr, jrv);
       if (jrv.Failed()) {
