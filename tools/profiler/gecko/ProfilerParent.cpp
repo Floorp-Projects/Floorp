@@ -71,10 +71,8 @@ ProfilerParentTracker::ProfilerParentTracker() {
 ProfilerParentTracker::~ProfilerParentTracker() {
   MOZ_COUNT_DTOR(ProfilerParentTracker);
 
-  nsTArray<ProfilerParent*> parents;
-  parents = mProfilerParents;
   // Close the channels of any profiler parents that haven't been destroyed.
-  for (ProfilerParent* profilerParent : parents) {
+  for (ProfilerParent* profilerParent : mProfilerParents.Clone()) {
     if (!profilerParent->mDestroyed) {
       // Keep the object alive until the call to Close() has completed.
       // Close() will trigger a call to DeallocPProfilerParent.
