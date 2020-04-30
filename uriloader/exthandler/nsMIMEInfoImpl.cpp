@@ -362,7 +362,7 @@ nsMIMEInfoBase::LaunchWithURI(nsIURI* aURI,
 void nsMIMEInfoBase::CopyBasicDataTo(nsMIMEInfoBase* aOther) {
   aOther->mSchemeOrType = mSchemeOrType;
   aOther->mDefaultAppDescription = mDefaultAppDescription;
-  aOther->mExtensions = mExtensions;
+  aOther->mExtensions = mExtensions.Clone();
 }
 
 /* static */
