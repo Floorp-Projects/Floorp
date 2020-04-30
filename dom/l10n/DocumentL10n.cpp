@@ -67,12 +67,12 @@ class L10nReadyHandler final : public PromiseNativeHandler {
       : mPromise(aPromise), mDocumentL10n(aDocumentL10n) {}
 
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
-    mDocumentL10n->InitialDocumentTranslationCompleted();
+    mDocumentL10n->InitialTranslationCompleted();
     mPromise->MaybeResolveWithUndefined();
   }
 
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
-    mDocumentL10n->InitialDocumentTranslationCompleted();
+    mDocumentL10n->InitialTranslationCompleted();
     mPromise->MaybeRejectWithUndefined();
   }
 
@@ -92,7 +92,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(L10nReadyHandler)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(L10nReadyHandler)
 
-void DocumentL10n::TriggerInitialDocumentTranslation() {
+void DocumentL10n::TriggerInitialTranslation() {
   if (mState >= DocumentL10nState::InitialTranslationTriggered) {
     return;
   }
@@ -101,7 +101,7 @@ void DocumentL10n::TriggerInitialDocumentTranslation() {
 
   Element* elem = mDocument->GetDocumentElement();
   if (!elem) {
-    InitialDocumentTranslationCompleted();
+    InitialTranslationCompleted();
     mReady->MaybeRejectWithUndefined();
     return;
   }
@@ -112,7 +112,7 @@ void DocumentL10n::TriggerInitialDocumentTranslation() {
   Sequence<OwningNonNull<Element>> elements;
   GetTranslatables(*elem, elements, rv);
   if (NS_WARN_IF(rv.Failed())) {
-    InitialDocumentTranslationCompleted();
+    InitialTranslationCompleted();
     mReady->MaybeRejectWithUndefined();
     return;
   }
@@ -160,7 +160,7 @@ void DocumentL10n::TriggerInitialDocumentTranslation() {
     if (!proto->WasL10nCached() && !elements.IsEmpty()) {
       RefPtr<Promise> translatePromise = TranslateElements(elements, proto, rv);
       if (NS_WARN_IF(!translatePromise || rv.Failed())) {
-        InitialDocumentTranslationCompleted();
+        InitialTranslationCompleted();
         mReady->MaybeRejectWithUndefined();
         return;
       }
@@ -174,7 +174,7 @@ void DocumentL10n::TriggerInitialDocumentTranslation() {
       RefPtr<Promise> nonProtoTranslatePromise =
           TranslateElements(nonProtoElements, nullptr, rv);
       if (NS_WARN_IF(!nonProtoTranslatePromise || rv.Failed())) {
-        InitialDocumentTranslationCompleted();
+        InitialTranslationCompleted();
         mReady->MaybeRejectWithUndefined();
         return;
       }
@@ -182,8 +182,7 @@ void DocumentL10n::TriggerInitialDocumentTranslation() {
     }
 
     // 2.1.4. Collect promises with Promise::All (maybe empty).
-    AutoEntryScript aes(mGlobal,
-                        "DocumentL10n InitialDocumentTranslationCompleted");
+    AutoEntryScript aes(mGlobal, "DocumentL10n InitialTranslationCompleted");
     promise = Promise::All(aes.cx(), promises, rv);
   } else {
     // 2.2. Handle the case when we don't have proto.
@@ -194,7 +193,7 @@ void DocumentL10n::TriggerInitialDocumentTranslation() {
   }
 
   if (NS_WARN_IF(!promise || rv.Failed())) {
-    InitialDocumentTranslationCompleted();
+    InitialTranslationCompleted();
     mReady->MaybeRejectWithUndefined();
     return;
   }
@@ -205,7 +204,7 @@ void DocumentL10n::TriggerInitialDocumentTranslation() {
   // 4. Check if the promise is already resolved.
   if (promise->State() == Promise::PromiseState::Resolved) {
     // 4.1. If it is, resolved immediatelly.
-    InitialDocumentTranslationCompleted();
+    InitialTranslationCompleted();
     mReady->MaybeResolveWithUndefined();
   } else {
     // 4.2. If not, schedule the L10nReadyHandler.
@@ -215,7 +214,7 @@ void DocumentL10n::TriggerInitialDocumentTranslation() {
   }
 }
 
-void DocumentL10n::InitialDocumentTranslationCompleted() {
+void DocumentL10n::InitialTranslationCompleted() {
   if (mState >= DocumentL10nState::InitialTranslationCompleted) {
     return;
   }
@@ -227,11 +226,11 @@ void DocumentL10n::InitialDocumentTranslationCompleted() {
 
   mState = DocumentL10nState::InitialTranslationCompleted;
 
-  mDocument->InitialDocumentTranslationCompleted();
+  mDocument->InitialTranslationCompleted();
 
   // In XUL scenario contentSink is nullptr.
   if (mContentSink) {
-    mContentSink->InitialDocumentTranslationCompleted();
+    mContentSink->InitialTranslationCompleted();
   }
 
   // If sync was true, we want to change the state of
