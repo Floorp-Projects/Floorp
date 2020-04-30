@@ -11,6 +11,8 @@
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/dom/MediaSessionBinding.h"
 #include "mozilla/dom/RemoteBrowser.h"
+#include "mozilla/dom/JSProcessActorParent.h"
+#include "mozilla/dom/ProcessActor.h"
 #include "mozilla/gfx/gfxVarReceiver.h"
 #include "mozilla/gfx/GPUProcessListener.h"
 #include "mozilla/ipc/BackgroundUtils.h"
@@ -141,7 +143,8 @@ class ContentParent final
       public mozilla::MemoryReportingProcess,
       public mozilla::dom::ipc::MessageManagerCallback,
       public mozilla::ipc::IShmemAllocator,
-      public mozilla::ipc::ParentToChildStreamActorManager {
+      public mozilla::ipc::ParentToChildStreamActorManager,
+      public ProcessActor {
   typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
   typedef mozilla::ipc::PFileDescriptorSetParent PFileDescriptorSetParent;
   typedef mozilla::ipc::TestShellParent TestShellParent;
@@ -237,7 +240,7 @@ class ContentParent final
 
   static void BroadcastFontListChanged();
 
-  const nsAString& GetRemoteType() const;
+  const nsAString& GetRemoteType() const override;
 
   virtual void DoGetRemoteType(nsAString& aRemoteType,
                                ErrorResult& aError) const override {
@@ -1284,6 +1287,10 @@ class ContentParent final
       PSHEntryParent* aNewLSHE, PSHEntryParent* aNewOSHE,
       const MaybeDiscarded<BrowsingContext>& aMaybeContext);
 
+  mozilla::ipc::IPCResult RecvRawMessage(const JSActorMessageMeta& aMeta,
+                                         const ClonedMessageData& aData,
+                                         const ClonedMessageData& aStack);
+
   mozilla::ipc::IPCResult RecvAbortOtherOrientationPendingPromises(
       const MaybeDiscarded<BrowsingContext>& aContext);
 
@@ -1319,6 +1326,8 @@ class ContentParent final
 
   NS_IMETHOD GetChildID(uint64_t* aChildID) override;
 
+  JSActor::Type GetSide() override { return JSActor::Type::Parent; }
+
   static const nsTArray<RefPtr<BrowsingContextGroup>>& BrowsingContextGroups() {
     return *sBrowsingContextGroupHolder;
   }
@@ -1329,6 +1338,13 @@ class ContentParent final
       ContentParent* aOpener, const nsAString& aRemoteType,
       nsTArray<ContentParent*>& aContentParents, uint32_t aMaxContentParents,
       bool aPreferUsed);
+
+  // Get a JS actor object by name.
+  already_AddRefed<JSProcessActorParent> GetActor(const nsACString& aName,
+                                                  ErrorResult& aRv);
+  void ReceiveRawMessage(const JSActorMessageMeta& aMeta,
+                         StructuredCloneData&& aData,
+                         StructuredCloneData&& aStack);
 
  private:
   // Released in ActorDealloc; deliberately not exposed to the CC.
@@ -1487,6 +1503,8 @@ class ContentParent final
   // A preference serializer used to share preferences with the process.
   // Cleared once startup is complete.
   UniquePtr<mozilla::ipc::SharedPreferenceSerializer> mPrefSerializer;
+
+  nsRefPtrHashtable<nsCStringHashKey, JSProcessActorParent> mProcessActors;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ContentParent, NS_CONTENTPARENT_IID)

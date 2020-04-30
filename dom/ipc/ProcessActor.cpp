@@ -4,42 +4,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/WindowGlobalActor.h"
+#include "mozilla/dom/ProcessActor.h"
 
 #include "nsContentUtils.h"
 #include "mozJSComponentLoader.h"
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/Logging.h"
 #include "mozilla/dom/JSActorService.h"
-#include "mozilla/dom/JSWindowActorParent.h"
-#include "mozilla/dom/JSWindowActorChild.h"
+#include "mozilla/dom/JSProcessActorParent.h"
+#include "mozilla/dom/JSProcessActorChild.h"
 
 namespace mozilla {
 namespace dom {
 
-WindowGlobalInit WindowGlobalActor::AboutBlankInitializer(
-    dom::BrowsingContext* aBrowsingContext, nsIPrincipal* aPrincipal) {
-  MOZ_ASSERT(aBrowsingContext);
-  MOZ_ASSERT(aPrincipal);
-
-  nsCOMPtr<nsIURI> documentURI;
-  Unused << NS_NewURI(getter_AddRefs(documentURI), "about:blank");
-
-  uint64_t outerWindowId = nsContentUtils::GenerateWindowId();
-  uint64_t innerWindowId = nsContentUtils::GenerateWindowId();
-
-  nsCOMPtr<nsIPrincipal> contentBlockingAllowListPrincipal;
-  ContentBlockingAllowList::ComputePrincipal(
-      aPrincipal, getter_AddRefs(contentBlockingAllowListPrincipal));
-
-  return WindowGlobalInit(aPrincipal, contentBlockingAllowListPrincipal,
-                          documentURI, aBrowsingContext, innerWindowId,
-                          outerWindowId);
-}
-
-void WindowGlobalActor::ConstructActor(const nsACString& aName,
-                                       JS::MutableHandleObject aActor,
-                                       ErrorResult& aRv) {
+void ProcessActor::ConstructActor(const nsACString& aName,
+                                  JS::MutableHandleObject aActor,
+                                  ErrorResult& aRv) {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
 
   JSActor::Type actorType = GetSide();
@@ -47,27 +27,28 @@ void WindowGlobalActor::ConstructActor(const nsACString& aName,
 
   // Constructing an actor requires a running script, so push an AutoEntryScript
   // onto the stack.
-  AutoEntryScript aes(xpc::PrivilegedJunkScope(),
-                      "WindowGlobalActor construction");
+  AutoEntryScript aes(xpc::PrivilegedJunkScope(), "ProcessActor construction");
   JSContext* cx = aes.cx();
 
   RefPtr<JSActorService> actorSvc = JSActorService::GetSingleton();
   if (!actorSvc) {
-    aRv.ThrowNotSupportedError("Could not acquire actor service");
+    aRv.ThrowInvalidStateError(
+        "While constructing JSProcessActor, could not acquire JSActorService.");
     return;
   }
 
-  RefPtr<JSWindowActorProtocol> proto =
-      actorSvc->GetJSWindowActorProtocol(aName);
+  RefPtr<JSProcessActorProtocol> proto =
+      actorSvc->GetJSProcessActorProtocol(aName);
   if (!proto) {
-    aRv.ThrowNotSupportedError(nsPrintfCString(
-        "Could not get JSWindowActorProtocol: %s is not registered",
-        PromiseFlatCString(aName).get()));
+    aRv.ThrowNotFoundError(nsPrintfCString("No such JSProcessActor '%s'",
+                                           PromiseFlatCString(aName).get()));
     return;
   }
 
-  if (!proto->Matches(BrowsingContext(), GetDocumentURI(), GetRemoteType())) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+  if (!proto->Matches(GetRemoteType())) {
+    aRv.ThrowTypeMismatchError(
+        nsPrintfCString("JSProcessActor '%s' does not match this process",
+                        PromiseFlatCString(aName).get()));
     return;
   }
 
@@ -78,7 +59,7 @@ void WindowGlobalActor::ConstructActor(const nsACString& aName,
   JS::RootedObject global(cx);
   JS::RootedObject exports(cx);
 
-  const JSWindowActorProtocol::Sided* side;
+  const JSProcessActorProtocol::Sided* side;
   if (actorType == JSActor::Type::Parent) {
     side = &proto->Parent();
   } else {
@@ -90,9 +71,9 @@ void WindowGlobalActor::ConstructActor(const nsACString& aName,
   if (!side->mModuleURI) {
     RefPtr<JSActor> actor;
     if (actorType == JSActor::Type::Parent) {
-      actor = new JSWindowActorParent();
+      actor = new JSProcessActorParent();
     } else {
-      actor = new JSWindowActorChild();
+      actor = new JSProcessActorChild();
     }
 
     JS::Rooted<JS::Value> wrapper(cx);
@@ -119,14 +100,15 @@ void WindowGlobalActor::ConstructActor(const nsACString& aName,
   ctorName.Append(actorType == JSActor::Type::Parent
                       ? NS_LITERAL_CSTRING("Parent")
                       : NS_LITERAL_CSTRING("Child"));
-  if (!JS_GetProperty(cx, exports, ctorName.get(), &ctor)) {
+  if (!JS_GetProperty(cx, exports, ctorName.get(),
+                        &ctor)) {
     aRv.NoteJSContextException(cx);
     return;
   }
 
   if (NS_WARN_IF(!ctor.isObject())) {
     nsPrintfCString message("Could not find actor constructor '%s'",
-                            ctorName.get());
+                            PromiseFlatCString(ctorName).get());
     aRv.ThrowNotFoundError(message);
     return;
   }
