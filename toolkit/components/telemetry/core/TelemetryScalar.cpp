@@ -2090,8 +2090,8 @@ nsresult internal_KeyedScalarSnapshotter(
           continue;
         }
         // Append it to our list.
-        processScalars.AppendElement(
-            mozilla::MakeTuple(info.name(), scalarKeyedData, info.kind));
+        processScalars.AppendElement(mozilla::MakeTuple(
+            info.name(), std::move(scalarKeyedData), info.kind));
       }
     }
     if (processScalars.Length() == 0) {

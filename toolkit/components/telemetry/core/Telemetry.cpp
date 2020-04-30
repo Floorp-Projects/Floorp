@@ -2229,9 +2229,9 @@ void ScalarSetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
   TelemetryScalar::SetMaximum(aId, aKey, aVal);
 }
 
-void RecordEvent(mozilla::Telemetry::EventID aId,
-                 const mozilla::Maybe<nsCString>& aValue,
-                 const mozilla::Maybe<nsTArray<EventExtraEntry>>& aExtra) {
+void RecordEvent(
+    mozilla::Telemetry::EventID aId, const mozilla::Maybe<nsCString>& aValue,
+    const mozilla::Maybe<CopyableTArray<EventExtraEntry>>& aExtra) {
   TelemetryEvent::RecordEventNative(aId, aValue, aExtra);
 }
 

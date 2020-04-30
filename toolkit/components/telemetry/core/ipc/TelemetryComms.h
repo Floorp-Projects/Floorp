@@ -90,7 +90,7 @@ struct ChildEventData {
   nsCString method;
   nsCString object;
   mozilla::Maybe<nsCString> value;
-  nsTArray<EventExtraEntry> extra;
+  CopyableTArray<EventExtraEntry> extra;
 };
 
 struct DiscardedData {
