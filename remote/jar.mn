@@ -18,6 +18,12 @@ remote.jar:
   content/TabManager.jsm (TabManager.jsm)
   content/WindowManager.jsm (WindowManager.jsm)
 
+  # observers
+  content/observers/ChannelEventSink.jsm (observers/ChannelEventSink.jsm)
+  content/observers/ContextObserver.jsm (observers/ContextObserver.jsm)
+  content/observers/NetworkObserver.jsm (observers/NetworkObserver.jsm)
+  content/observers/TargetObserver.jsm (observers/TargetObserver.jsm)
+
   # sessions
   content/sessions/frame-script.js (sessions/frame-script.js)
   content/sessions/ContentProcessSession.jsm (sessions/ContentProcessSession.jsm)
@@ -27,7 +33,6 @@ remote.jar:
 
   # targets
   content/targets/MainProcessTarget.jsm (targets/MainProcessTarget.jsm)
-  content/targets/TabObserver.jsm (targets/TabObserver.jsm)
   content/targets/TabTarget.jsm (targets/TabTarget.jsm)
   content/targets/Target.jsm (targets/Target.jsm)
   content/targets/TargetList.jsm (targets/TargetList.jsm)
@@ -35,7 +40,6 @@ remote.jar:
   # domains
   content/domains/ContentProcessDomain.jsm (domains/ContentProcessDomain.jsm)
   content/domains/ContentProcessDomains.jsm (domains/ContentProcessDomains.jsm)
-  content/domains/ContextObserver.jsm (domains/ContextObserver.jsm)
   content/domains/Domain.jsm (domains/Domain.jsm)
   content/domains/DomainCache.jsm (domains/DomainCache.jsm)
   content/domains/ParentProcessDomains.jsm (domains/ParentProcessDomains.jsm)
@@ -54,8 +58,6 @@ remote.jar:
   content/domains/parent/Input.jsm (domains/parent/Input.jsm)
   content/domains/parent/IO.jsm (domains/parent/IO.jsm)
   content/domains/parent/Network.jsm (domains/parent/Network.jsm)
-  content/domains/parent/network/ChannelEventSink.jsm (domains/parent/network/ChannelEventSink.jsm)
-  content/domains/parent/network/NetworkObserver.jsm (domains/parent/network/NetworkObserver.jsm)
   content/domains/parent/Page.jsm (domains/parent/Page.jsm)
   content/domains/parent/page/DialogHandler.jsm (domains/parent/page/DialogHandler.jsm)
   content/domains/parent/Security.jsm (domains/parent/Security.jsm)
