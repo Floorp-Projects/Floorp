@@ -123,7 +123,7 @@ class UrlClassifierDBServiceWorkerProxy final
         : mozilla::Runnable(
               "UrlClassifierDBServiceWorkerProxy::CacheCompletionsRunnable"),
           mTarget(aTarget),
-          mEntries(aEntries) {}
+          mEntries(aEntries.Clone()) {}
 
     NS_DECL_NSIRUNNABLE
 
