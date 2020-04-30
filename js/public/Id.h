@@ -110,6 +110,43 @@ struct PropertyKey {
   // Only use this API when absolutely necessary, otherwise use JS_StringToId.
   static PropertyKey fromPinnedString(JSString* str);
 
+  // Must not be used on atoms that are representable as integer PropertyKey.
+  // Prefer NameToId or AtomToId over this function:
+  //
+  // A PropertyName is an atom that does not contain an integer in the range
+  // [0, UINT32_MAX]. However, PropertyKey can only hold an integer in the range
+  // [0, JSID_INT_MAX] (where JSID_INT_MAX == 2^31-1).  Thus, for the range of
+  // integers (JSID_INT_MAX, UINT32_MAX], to represent as a 'id', it must be
+  // the case id.isString() and id.toString()->isIndex(). In most
+  // cases when creating a PropertyKey, code does not have to care about
+  // this corner case because:
+  //
+  // - When given an arbitrary JSAtom*, AtomToId must be used, which checks for
+  //   integer atoms representable as integer PropertyKey, and does this
+  //   conversion.
+  //
+  // - When given a PropertyName*, NameToId can be used which does not need
+  //   to do any dynamic checks.
+  //
+  // Thus, it is only the rare third case which needs this function, which
+  // handles any JSAtom* that is known not to be representable with an int
+  // PropertyKey.
+  static PropertyKey fromNonIntAtom(JSAtom* atom) {
+    MOZ_ASSERT((size_t(atom) & JSID_TYPE_MASK) == 0);
+    MOZ_ASSERT(PropertyKey::isNonIntAtom(atom));
+    return PropertyKey::fromRawBits(size_t(atom) | JSID_TYPE_STRING);
+  }
+
+  // The JSAtom/JSString type exposed to embedders is opaque.
+  static PropertyKey fromNonIntAtom(JSString* str) {
+    MOZ_ASSERT((size_t(str) & JSID_TYPE_MASK) == 0);
+    MOZ_ASSERT(PropertyKey::isNonIntAtom(str));
+    return PropertyKey::fromRawBits(size_t(str) | JSID_TYPE_STRING);
+  }
+
+ private:
+  static bool isNonIntAtom(JSAtom* atom);
+  static bool isNonIntAtom(JSString* atom);
 } JS_HAZ_GC_POINTER;
 
 }  // namespace JS
