@@ -1619,6 +1619,7 @@ fn define_simd(
     let x86_insertps = x86.by_name("x86_insertps");
     let x86_movlhps = x86.by_name("x86_movlhps");
     let x86_movsd = x86.by_name("x86_movsd");
+    let x86_packss = x86.by_name("x86_packss");
     let x86_pextr = x86.by_name("x86_pextr");
     let x86_pinsr = x86.by_name("x86_pinsr");
     let x86_pmaxs = x86.by_name("x86_pmaxs");
@@ -1631,6 +1632,8 @@ fn define_simd(
     let x86_psra = x86.by_name("x86_psra");
     let x86_psrl = x86.by_name("x86_psrl");
     let x86_ptest = x86.by_name("x86_ptest");
+    let x86_punpckh = x86.by_name("x86_punpckh");
+    let x86_punpckl = x86.by_name("x86_punpckl");
 
     // Shorthands for recipes.
     let rec_evex_reg_vvvv_rm_128 = r.template("evex_reg_vvvv_rm_128");
@@ -1781,6 +1784,30 @@ fn define_simd(
             // x86_64.
             e.enc64_maybe_isap(instruction, template.rex().w(), Some(use_sse41_simd));
         }
+    }
+
+    // SIMD packing/unpacking
+    for ty in ValueType::all_lane_types().filter(allowed_simd_type) {
+        let (high, low) = match ty.lane_bits() {
+            8 => (&PUNPCKHBW, &PUNPCKLBW),
+            16 => (&PUNPCKHWD, &PUNPCKLWD),
+            32 => (&PUNPCKHDQ, &PUNPCKLDQ),
+            64 => (&PUNPCKHQDQ, &PUNPCKLQDQ),
+            _ => panic!("invalid size for SIMD packing/unpacking"),
+        };
+
+        e.enc_both_inferred(
+            x86_punpckh.bind(vector(ty, sse_vector_size)),
+            rec_fa.opcodes(high),
+        );
+        e.enc_both_inferred(
+            x86_punpckl.bind(vector(ty, sse_vector_size)),
+            rec_fa.opcodes(low),
+        );
+    }
+    for (ty, opcodes) in &[(I16, &PACKSSWB), (I32, &PACKSSDW)] {
+        let x86_packss = x86_packss.bind(vector(*ty, sse_vector_size));
+        e.enc_both_inferred(x86_packss, rec_fa.opcodes(*opcodes));
     }
 
     // SIMD bitcast all 128-bit vectors to each other (for legalizing splat.x16x8).
@@ -2179,6 +2206,7 @@ fn define_entity_ref(
     let formats = &shared_defs.formats;
 
     // Shorthands for instructions.
+    let const_addr = shared.by_name("const_addr");
     let func_addr = shared.by_name("func_addr");
     let stack_addr = shared.by_name("stack_addr");
     let symbol_value = shared.by_name("symbol_value");
@@ -2188,6 +2216,7 @@ fn define_entity_ref(
     let rec_allones_fnaddr8 = r.template("allones_fnaddr8");
     let rec_fnaddr4 = r.template("fnaddr4");
     let rec_fnaddr8 = r.template("fnaddr8");
+    let rec_const_addr = r.template("const_addr");
     let rec_got_fnaddr8 = r.template("got_fnaddr8");
     let rec_got_gvaddr8 = r.template("got_gvaddr8");
     let rec_gvaddr4 = r.template("gvaddr4");
@@ -2285,6 +2314,10 @@ fn define_entity_ref(
     // don't get legalized to stack_addr + load/store.
     e.enc32(stack_addr.bind(I32), rec_spaddr4_id.opcodes(&LEA));
     e.enc64(stack_addr.bind(I64), rec_spaddr8_id.opcodes(&LEA).rex().w());
+
+    // Constant addresses (PIC).
+    e.enc64(const_addr.bind(I64), rec_const_addr.opcodes(&LEA).rex().w());
+    e.enc32(const_addr.bind(I32), rec_const_addr.opcodes(&LEA));
 }
 
 /// Control flow opcodes.
