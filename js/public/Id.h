@@ -103,6 +103,13 @@ struct PropertyKey {
 
   bool isWellKnownSymbol(JS::SymbolCode code) const;
 
+  // This API can be used by embedders to convert pinned (aka interned) strings,
+  // as created by JS_AtomizeAndPinJSString, into PropertyKeys.
+  // This means the string does not have to be explicitly rooted.
+  //
+  // Only use this API when absolutely necessary, otherwise use JS_StringToId.
+  static PropertyKey fromPinnedString(JSString* str);
+
 } JS_HAZ_GC_POINTER;
 
 }  // namespace JS
@@ -116,15 +123,6 @@ static MOZ_ALWAYS_INLINE bool JSID_IS_STRING(jsid id) { return id.isString(); }
 static MOZ_ALWAYS_INLINE JSString* JSID_TO_STRING(jsid id) {
   return id.toString();
 }
-
-/**
- * Only JSStrings that have been interned via the JSAPI can be turned into
- * jsids by API clients.
- *
- * N.B. if a jsid is backed by a string which has not been interned, that
- * string must be appropriately rooted to avoid being collected by the GC.
- */
-JS_PUBLIC_API jsid INTERNED_STRING_TO_JSID(JSContext* cx, JSString* str);
 
 static MOZ_ALWAYS_INLINE bool JSID_IS_INT(jsid id) { return id.isInt(); }
 

@@ -82,7 +82,7 @@ inline JSString* NPIdentifierToString(NPIdentifier id) {
 }
 
 inline NPIdentifier StringToNPIdentifier(JSContext* cx, JSString* str) {
-  return JSIdToNPIdentifier(INTERNED_STRING_TO_JSID(cx, str));
+  return JSIdToNPIdentifier(JS::PropertyKey::fromPinnedString(str));
 }
 
 inline bool NPIdentifierIsInt(NPIdentifier id) {

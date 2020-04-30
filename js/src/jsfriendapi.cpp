@@ -1328,11 +1328,11 @@ JS_FRIEND_API void js::SetXrayJitInfo(XrayJitInfo* info) {
 XrayJitInfo* js::GetXrayJitInfo() { return gXrayJitInfo; }
 
 bool js::detail::IdMatchesAtom(jsid id, JSAtom* atom) {
-  return id == INTERNED_STRING_TO_JSID(nullptr, atom);
+  return id == AtomToId(atom);
 }
 
 bool js::detail::IdMatchesAtom(jsid id, JSString* atom) {
-  return id == INTERNED_STRING_TO_JSID(nullptr, atom);
+  return id == AtomToId(&atom->asAtom());
 }
 
 JS_FRIEND_API void js::PrepareScriptEnvironmentAndInvoke(
