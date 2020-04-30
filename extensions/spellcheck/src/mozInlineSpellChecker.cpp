@@ -1430,7 +1430,7 @@ void mozInlineSpellChecker::CheckCurrentWordsNoSuggest(
   uint32_t token = mDisabledAsyncToken;
   mSpellCheck->CheckCurrentWordsNoSuggest(aWords)->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [self, spellCheckerSelection, aRanges,
+      [self, spellCheckerSelection, ranges = aRanges.Clone(),
        token](const nsTArray<bool>& aIsMisspelled) {
         if (token != self->mDisabledAsyncToken) {
           // This result is never used
@@ -1453,7 +1453,7 @@ void mozInlineSpellChecker::CheckCurrentWordsNoSuggest(
           }
 
           RefPtr<nsRange> wordRange =
-              mozInlineSpellWordUtil::MakeRange(aRanges[i]);
+              mozInlineSpellWordUtil::MakeRange(ranges[i]);
           // If we somehow can't make a range for this word, just ignore
           // it.
           if (wordRange) {
