@@ -140,9 +140,10 @@ function areTrackersBlocked(isPrivateBrowsing) {
   let blockedByTP = Services.prefs.getBoolPref(
     isPrivateBrowsing ? TP_PB_PREF : TP_PREF
   );
-  let blockedByTPC =
-    Services.prefs.getIntPref(TPC_PREF) ==
-    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER;
+  let blockedByTPC = [
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+  ].includes(Services.prefs.getIntPref(TPC_PREF));
   return blockedByTP || blockedByTPC;
 }
 
@@ -371,8 +372,10 @@ add_task(async function testThirdPartyCookies() {
   ok(ThirdPartyCookies, "TP is attached to the browser window");
   is(
     ThirdPartyCookies.enabled,
-    Services.prefs.getIntPref(TPC_PREF) ==
+    [
       Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+      Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+    ].includes(Services.prefs.getIntPref(TPC_PREF)),
     "TPC.enabled is based on the original pref value"
   );
 
