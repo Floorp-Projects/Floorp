@@ -9,6 +9,7 @@ from __future__ import absolute_import, print_function
 import os
 import json
 import hashlib
+import traceback
 import urllib
 from collections import defaultdict
 import time
@@ -26,6 +27,10 @@ from mitmproxy.proxy.protocol import tls
 from mitmproxy.proxy.protocol.http2 import Http2Layer, SafeH2Connection
 
 _PROTO = {}
+
+NO_CONTENT_STATUS_CODES = [100, 101,
+                           204,
+                           301, 302, 303, 304, 307, 308]
 
 
 @property
@@ -123,16 +128,16 @@ class AlternateServerPlayback:
             elif i.response:
                 # check if recorded request has a response associated
                 if self.mitm_version == "5.0.1":
-                    if i.response.content:
+                    if (i.response.content or
+                            i.response.status_code in NO_CONTENT_STATUS_CODES):
                         # Mitmproxy 5.0.1 Cannot assemble flow with missing content
 
                         l = self.flowmap.setdefault(self._hash(i), [])
                         l.append(i)
                     else:
-                        ctx.log.info(
-                             "Recorded response %s has no content. Removing from recording list"
-                             % i.request.url
-                        )
+                        ctx.log.info("Recorded request %s  with response status code %s has "
+                                     "no response content. Removing from recording list"
+                                     % (i.request.url, i.response.status_code))
                 if self.mitm_version in ("4.0.2", "4.0.4"):
                     # see: https://github.com/mitmproxy/mitmproxy/issues/3856
                     l = self.flowmap.setdefault(self._hash(i), [])
@@ -166,9 +171,9 @@ class AlternateServerPlayback:
                         )
                     )
                     _PROTO.update(recording_info["http_protocol"])
-        except Exception as e:
-            ctx.log.error("Could not load recording file! Stopping playback process!")
-            ctx.log.info(e)
+        except Exception:
+            ctx.log.error("Could not load recording file! Stopping playback process! ")
+            ctx.log.info(traceback.print_exc())
             ctx.master.shutdown()
 
     def _hash(self, flow):
