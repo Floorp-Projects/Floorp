@@ -2178,6 +2178,15 @@ void ContentChild::ActorDestroy(ActorDestroyReason why) {
   // keep persistent state.
   ProcessChild::QuickExit();
 #else
+  // Destroy our JSProcessActors, and reject any pending queries.
+  nsRefPtrHashtable<nsCStringHashKey, JSProcessActorChild> processActors;
+  mProcessActors.SwapElements(processActors);
+  for (auto iter = processActors.Iter(); !iter.Done(); iter.Next()) {
+    iter.Data()->RejectPendingQueries();
+    iter.Data()->AfterDestroy();
+  }
+  mProcessActors.Clear();
+
 #  if defined(XP_WIN)
   RefPtr<DllServices> dllSvc(DllServices::Get());
   dllSvc->DisableFull();
