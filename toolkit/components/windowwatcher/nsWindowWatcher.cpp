@@ -1070,8 +1070,9 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     if (subjectPrincipal &&
         !nsContentUtils::IsSystemOrExpandedPrincipal(subjectPrincipal) &&
         newBC->IsContent()) {
-      MOZ_DIAGNOSTIC_ASSERT(subjectPrincipal->OriginAttributesRef() ==
-                            newBC->OriginAttributesRef());
+      MOZ_DIAGNOSTIC_ASSERT(
+          subjectPrincipal->OriginAttributesRef().EqualsIgnoringFPD(
+              newBC->OriginAttributesRef()));
     }
 
     bool autoPrivateBrowsing =
