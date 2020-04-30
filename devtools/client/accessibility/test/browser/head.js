@@ -317,10 +317,13 @@ function relationsMatch(relations, expected) {
     let expTargets = expected[relationType];
     expTargets = Array.isArray(expTargets) ? expTargets : [expTargets];
 
-    let targets = relations[relationType];
+    let targets = relations ? relations[relationType] : [];
     targets = Array.isArray(targets) ? targets : [targets];
 
     for (const index in expTargets) {
+      if (!targets[index]) {
+        return false;
+      }
       if (
         expTargets[index].name !== targets[index].name ||
         expTargets[index].role !== targets[index].role
