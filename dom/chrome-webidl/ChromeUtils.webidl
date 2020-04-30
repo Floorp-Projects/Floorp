@@ -448,6 +448,18 @@ partial namespace ChromeUtils {
   [ChromeOnly]
   void unregisterWindowActor(UTF8String aName);
 
+  /**
+   * Register a new toplevel content global actor. This method may only be
+   * called in the parent process. |name| must be globally unique.
+   *
+   * See JSProcessActor.webidl for ProcessActorOptions fields documentation.
+   */
+  [ChromeOnly, Throws]
+  void registerProcessActor(UTF8String aName, optional ProcessActorOptions aOptions = {});
+
+  [ChromeOnly]
+  void unregisterProcessActor(UTF8String aName);
+
   [ChromeOnly]
   // aError should a nsresult.
   boolean isClassifierBlockingErrorCode(unsigned long aError);
