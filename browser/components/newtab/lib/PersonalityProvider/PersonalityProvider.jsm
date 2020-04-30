@@ -110,6 +110,9 @@ this.PersonalityProvider = class PersonalityProvider {
   teardown() {
     this.teardownSyncAttachment(RECIPE_NAME);
     this.teardownSyncAttachment(MODELS_NAME);
+    if (this._personalityProviderWorker) {
+      this._personalityProviderWorker.terminate();
+    }
   }
 
   setupSyncAttachment(collection) {
