@@ -303,7 +303,7 @@ ifndef MOZ_PROFILE_GENERATE
 ifeq ($(OS_ARCH), Linux)
 ifeq (,$(rustflags_sancov)$(MOZ_ASAN)$(MOZ_TSAN)$(MOZ_UBSAN))
 ifneq (,$(filter -Clto,$(cargo_rustc_flags)))
-	$(call py3_action,check_binary,--target --networking $@)
+	$(call py_action,check_binary,--target --networking $@)
 endif
 endif
 endif

@@ -42,7 +42,7 @@ endif # RUN_FIND_DUPES
 ifndef MOZ_IS_COMM_TOPDIR
 ifdef RUN_MOZHARNESS_ZIP
 	# Package mozharness
-	$(call py3_action,test_archive, \
+	$(call py_action,test_archive, \
 		mozharness \
 		$(ABS_DIST)/$(PKG_PATH)$(MOZHARNESS_PACKAGE))
 endif # RUN_MOZHARNESS_ZIP
@@ -211,14 +211,14 @@ endif
 # and places it in dist/bin/res - it should be used when packaging a build.
 multilocale.txt: LOCALES?=$(MOZ_CHROME_MULTILOCALE)
 multilocale.txt:
-	$(call py3_action,file_generate,$(MOZILLA_DIR)/toolkit/locales/gen_multilocale.py main '$(MULTILOCALE_DIR)/multilocale.txt' $(MDDEPDIR)/multilocale.txt.pp '$(MULTILOCALE_DIR)/multilocale.txt' $(ALL_LOCALES))
+	$(call py_action,file_generate,$(MOZILLA_DIR)/toolkit/locales/gen_multilocale.py main '$(MULTILOCALE_DIR)/multilocale.txt' $(MDDEPDIR)/multilocale.txt.pp '$(MULTILOCALE_DIR)/multilocale.txt' $(ALL_LOCALES))
 
 # This version of the target uses AB_CD to build multilocale.txt and places it
 # in the $(XPI_NAME)/res dir - it should be used when repackaging a build.
 multilocale.txt-%: LOCALES?=$(AB_CD)
 multilocale.txt-%: MULTILOCALE_DIR=$(DIST)/xpi-stage/$(XPI_NAME)/res
 multilocale.txt-%:
-	$(call py3_action,file_generate,$(MOZILLA_DIR)/toolkit/locales/gen_multilocale.py main '$(MULTILOCALE_DIR)/multilocale.txt' $(MDDEPDIR)/multilocale.txt.pp '$(MULTILOCALE_DIR)/multilocale.txt' $(ALL_LOCALES))
+	$(call py_action,file_generate,$(MOZILLA_DIR)/toolkit/locales/gen_multilocale.py main '$(MULTILOCALE_DIR)/multilocale.txt' $(MDDEPDIR)/multilocale.txt.pp '$(MULTILOCALE_DIR)/multilocale.txt' $(ALL_LOCALES))
 
 locale-manifest.in: LOCALES?=$(MOZ_CHROME_MULTILOCALE)
 locale-manifest.in: $(GLOBAL_DEPS) FORCE
