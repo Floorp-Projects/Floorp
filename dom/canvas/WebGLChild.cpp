@@ -6,6 +6,7 @@
 #include "WebGLChild.h"
 
 #include "ClientWebGLContext.h"
+#include "WebGLMethodDispatcher.h"
 
 namespace mozilla {
 namespace dom {
@@ -24,6 +25,11 @@ mozilla::ipc::IPCResult WebGLChild::RecvOnContextLoss(
     const webgl::ContextLossReason reason) const {
   mContext.OnContextLoss(reason);
   return IPC_OK();
+}
+
+/* static */
+bool WebGLChild::ShouldSendSync(size_t aCmd, ...) {
+  return WebGLMethodDispatcher::SyncType(aCmd) == CommandSyncType::SYNC;
 }
 
 }  // namespace dom
