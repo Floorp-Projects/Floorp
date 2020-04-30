@@ -12,7 +12,7 @@
         }
       },
       {
-        "$extend": "OptionalPermission",
+        "$extend": "Permission",
         "choices": [{
           "type": "string",
           "enum": [
