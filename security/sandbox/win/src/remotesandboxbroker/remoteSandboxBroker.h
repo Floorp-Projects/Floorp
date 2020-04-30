@@ -30,7 +30,7 @@ class RemoteSandboxBroker : public AbstractSandboxBroker {
   bool LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
                  base::EnvironmentMap& aEnvironment,
                  GeckoProcessType aProcessType, const bool aEnableLogging,
-                 void** aProcessHandle) override;
+                 const IMAGE_THUNK_DATA*, void** aProcessHandle) override;
 
   // Security levels for different types of processes
   void SetSecurityLevelForContentProcess(int32_t aSandboxLevel,

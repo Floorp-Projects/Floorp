@@ -222,6 +222,7 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
                               base::EnvironmentMap& aEnvironment,
                               GeckoProcessType aProcessType,
                               const bool aEnableLogging,
+                              const IMAGE_THUNK_DATA* aCachedNtdllThunk,
                               void** aProcessHandle) {
   if (!sBrokerService || !mPolicy) {
     return false;
@@ -295,7 +296,8 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
   if (XRE_GetChildProcBinPathType(aProcessType) == BinPathType::Self) {
     RefPtr<DllServices> dllSvc(DllServices::Get());
     LauncherVoidResultWithLineInfo blocklistInitOk =
-        dllSvc->InitDllBlocklistOOP(aPath, targetInfo.hProcess);
+        dllSvc->InitDllBlocklistOOP(aPath, targetInfo.hProcess,
+                                    aCachedNtdllThunk);
     if (blocklistInitOk.isErr()) {
       LOG_E("InitDllBlocklistOOP failed at %s:%d with HRESULT 0x%08lX",
             blocklistInitOk.unwrapErr().mFile,

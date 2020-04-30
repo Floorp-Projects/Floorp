@@ -14,6 +14,7 @@
 
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/Buffer.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/MozPromise.h"
@@ -134,6 +135,8 @@ class GeckoChildProcessHost : public ChildProcessHost,
 #endif
 
 #ifdef XP_WIN
+  static void CacheNtDllThunk();
+
   void AddHandleToShare(HANDLE aHandle) {
     mLaunchOptions->handles_to_inherit.push_back(aHandle);
   }
@@ -278,6 +281,9 @@ class GeckoChildProcessHost : public ChildProcessHost,
   static uint32_t sNextUniqueID;
   static StaticAutoPtr<LinkedList<GeckoChildProcessHost>>
       sGeckoChildProcessHosts;
+#ifdef XP_WIN
+  static StaticAutoPtr<Buffer<IMAGE_THUNK_DATA>> sCachedNtDllThunk;
+#endif
   static StaticMutex sMutex;
 };
 
