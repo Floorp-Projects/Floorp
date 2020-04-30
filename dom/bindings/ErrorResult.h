@@ -486,6 +486,11 @@ class TErrorResult {
   nsTArray<nsCString>& CreateErrorMessageHelper(const dom::ErrNum errorNumber,
                                                 nsresult errorType);
 
+  // Helper method to replace invalid UTF-8 characters with the replacement
+  // character. aValidUpTo is the number of characters that are known to be
+  // valid. The string might be truncated if we encounter an OOM error.
+  static void EnsureUTF8Validity(nsCString& aValue, size_t aValidUpTo);
+
   template <dom::ErrNum errorNumber, typename... Ts>
   void ThrowErrorWithMessage(nsresult errorType, Ts&&... messageArgs) {
 #if defined(DEBUG) && (defined(__clang__) || defined(__GNUC__))
@@ -512,6 +517,12 @@ class TErrorResult {
     }
     dom::CStringArrayAppender::Append(messageArgsArray, argCount,
                                       std::forward<Ts>(messageArgs)...);
+    for (nsCString& arg : messageArgsArray) {
+      size_t validUpTo = Utf8ValidUpTo(arg);
+      if (validUpTo != arg.Length()) {
+        EnsureUTF8Validity(arg, validUpTo);
+      }
+    }
 #ifdef DEBUG
     mUnionState = HasMessage;
 #endif  // DEBUG
