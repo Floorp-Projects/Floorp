@@ -50,7 +50,7 @@ rev = "5eb38163103b0dae86de81cdaf46070bdeedc0d1"
 [source."https://github.com/bytecodealliance/wasmtime"]
 git = "https://github.com/bytecodealliance/wasmtime"
 replace-with = "vendored-sources"
-rev = "6a68130d5b0296379fae0b8de5fbb8a1499b67a5"
+rev = "b7cfd39b531680217537cfcf5294a22077a0a58d"
 
 [source."https://github.com/badboy/failure"]
 git = "https://github.com/badboy/failure"
