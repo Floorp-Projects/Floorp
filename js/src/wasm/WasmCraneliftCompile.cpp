@@ -36,13 +36,7 @@ using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 
-bool wasm::CraneliftPlatformSupport() {
-#ifdef JS_CODEGEN_X64
-  return true;
-#else
-  return false;
-#endif
-}
+bool wasm::CraneliftPlatformSupport() { return cranelift_supports_platform(); }
 
 static inline SymbolicAddress ToSymbolicAddress(BD_SymbolicAddress bd) {
   switch (bd) {

@@ -35,7 +35,7 @@ use cranelift_wasm::{
 
 use crate::bindings::{self, GlobalDesc, SymbolicAddress};
 use crate::compile::{symbolic_function_name, wasm_function_name};
-use crate::isa::POINTER_SIZE;
+use crate::isa::{platform::USES_HEAP_REG, POINTER_SIZE};
 
 #[cfg(target_pointer_width = "64")]
 pub const POINTER_TYPE: ir::Type = ir::types::I64;
@@ -544,7 +544,7 @@ impl<'static_env, 'module_env> TransEnv<'static_env, 'module_env> {
     }
 
     fn load_pinned_reg(&self, pos: &mut FuncCursor, vmctx: ir::Value) {
-        if cfg!(feature = "cranelift_x86") && cfg!(target_pointer_width = "64") {
+        if USES_HEAP_REG {
             let heap_base = pos.ins().load(
                 POINTER_TYPE,
                 ir::MemFlags::trusted(),

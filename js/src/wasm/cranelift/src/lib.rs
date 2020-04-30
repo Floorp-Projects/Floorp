@@ -230,3 +230,9 @@ pub unsafe extern "C" fn cranelift_compile_function(
 
     true
 }
+
+/// Returns true whether a platform (target ISA) is supported or not.
+#[no_mangle]
+pub unsafe extern "C" fn cranelift_supports_platform() -> bool {
+    isa::platform::IS_SUPPORTED
+}
