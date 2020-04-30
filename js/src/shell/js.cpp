@@ -9700,7 +9700,12 @@ js::shell::AutoReportException::~AutoReportException() {
 
   // Get exception object and stack before printing and clearing exception.
   JS::ExceptionStack exnStack(cx);
-  JS::StealPendingExceptionStack(cx, &exnStack);
+  if (!JS::StealPendingExceptionStack(cx, &exnStack)) {
+    fprintf(stderr, "out of memory while stealing exception\n");
+    fflush(stderr);
+    JS_ClearPendingException(cx);
+    return;
+  }
 
   ShellContext* sc = GetShellContext(cx);
   js::ErrorReport report(cx);
