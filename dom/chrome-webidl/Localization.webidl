@@ -95,7 +95,7 @@ interface Localization {
    *
    * Returns a new count of resources used by the context.
    */
-  unsigned long addResourceIds(sequence<DOMString> aResourceIds, optional boolean aEager = false);
+  unsigned long addResourceIds(sequence<DOMString> aResourceIds);
 
   /**
    * A method for removing resources from the localization context.
