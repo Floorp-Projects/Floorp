@@ -69,7 +69,8 @@ def run_tests(mach_cmd, **kwargs):
     kwargs["tests"] = build_test_list(kwargs["tests"], randomized=flavor != "doc")
 
     if flavor == "doc":
-        install_package(mach_cmd.virtualenv_manager, "esprima")
+        location = os.path.join(mach_cmd.topsrcdir, "third_party", "python", "esprima")
+        install_package(mach_cmd.virtualenv_manager, location)
 
         from mozperftest.scriptinfo import ScriptInfo
 
