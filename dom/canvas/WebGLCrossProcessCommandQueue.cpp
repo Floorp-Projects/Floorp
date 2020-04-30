@@ -8,12 +8,14 @@
 
 namespace mozilla {
 
-bool HostWebGLCommandSink::DispatchCommand(size_t command) {
+#if 0
+bool HostWebGLCommandSink<Consumer, Queue>::DispatchCommand(size_t command) {
   if (!mHostContext) {
     return false;
   }
 
   return WebGLMethodDispatcher::DispatchCommand(command, *this, *mHostContext);
 }
+#endif
 
 }  // namespace mozilla

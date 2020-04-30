@@ -53,7 +53,6 @@ class nsIWidget;
 namespace mozilla {
 
 class CancelableRunnable;
-class HostWebGLCommandSink;
 
 namespace dom {
 class WebGLParent;
