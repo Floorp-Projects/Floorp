@@ -525,14 +525,14 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
       console.warn("Tried to open remote connection to an invalid frame.");
       return null;
     }
-    if (this._remoteFrameTarget) {
+    if (this._remoteFrameTarget && this._remoteFrameTarget.actorID) {
       return this._remoteFrameTarget;
     }
-    // First get the target actor form of this remote frame element
-    const descriptor = await this.targetFront.client.mainRoot.getBrowsingContextDescriptor(
+
+    // Get the target for this remote frame element
+    this._remoteFrameTarget = await this.targetFront.getBrowsingContextTarget(
       this._form.browsingContextID
     );
-    this._remoteFrameTarget = await descriptor.getTarget();
     return this._remoteFrameTarget;
   }
 

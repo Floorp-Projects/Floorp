@@ -59,8 +59,25 @@ async function testWatchAllFrames(mainRoot) {
     "The tab frame target BrowsingContextID is correct"
   );
 
+  const parentProcessTarget = await processDescriptor.getTarget();
+  is(
+    await parentProcessTarget.getWatcher(),
+    watcher,
+    "Parent process target getWatcher returns the same watcher"
+  );
+
+  const parentTarget = await tabTarget.getParentTarget();
+  is(
+    parentTarget,
+    parentProcessTarget,
+    "Tab parent target is the main process target"
+  );
+
+  const tabTarget2 = await watcher.getBrowsingContextTarget(tabId);
+  is(tabTarget, tabTarget2, "getBrowsingContextTarget returns the same target");
+
   // Assert that we also fetch the iframe targets
-  await assertTabIFrames(watcher, targets);
+  await assertTabIFrames(watcher, targets, tabTarget);
 
   await watcher.unwatchTargets("frame");
   watcher.off("target-available", onNewTarget);
@@ -72,6 +89,12 @@ async function testWatchOneTabFrames(tabTarget) {
 
   const tabDescriptor = tabTarget.descriptorFront;
   const watcher = await tabDescriptor.getWatcher();
+
+  is(
+    await tabTarget.getWatcher(),
+    watcher,
+    "Tab target getWatcher returns the same watcher"
+  );
 
   const onNewTarget = target => {
     dump(
@@ -89,13 +112,13 @@ async function testWatchOneTabFrames(tabTarget) {
     is(targets.length, 0, "Without fission no additional target is reported");
   }
 
-  await assertTabIFrames(watcher, targets);
+  await assertTabIFrames(watcher, targets, tabTarget);
 
   await watcher.unwatchTargets("frame");
   watcher.off("target-available", onNewTarget);
 }
 
-async function assertTabIFrames(watcher, targets) {
+async function assertTabIFrames(watcher, targets, tabTarget) {
   // - The existing <iframe>
   const existingIframeTarget = targets.find(f => f.url === TEST_DOC_URL1);
   const existingIframeId = await ContentTask.spawn(
@@ -113,6 +136,31 @@ async function assertTabIFrames(watcher, targets) {
       existingIframeTarget.browsingContextID,
       existingIframeId,
       "The iframe target BrowsingContextID is correct"
+    );
+    is(
+      await existingIframeTarget.getWatcher(),
+      watcher,
+      "Iframe target getWatcher returns the same watcher"
+    );
+    const sameTarget = await watcher.getBrowsingContextTarget(existingIframeId);
+    is(
+      sameTarget,
+      existingIframeTarget,
+      "getBrowsingContextTarget returns the same target"
+    );
+    const sameTabTarget = await watcher.getParentBrowsingContextTarget(
+      existingIframeId
+    );
+    is(
+      tabTarget,
+      sameTabTarget,
+      "getParentBrowsingContextTarget returned the tab target"
+    );
+    const existingIframeParentTarget = await existingIframeTarget.getParentTarget();
+    is(
+      existingIframeParentTarget,
+      tabTarget,
+      "The iframe parent target is the tab target"
     );
   } else {
     ok(
@@ -150,6 +198,12 @@ async function assertTabIFrames(watcher, targets) {
       existingIframeId,
       "The new iframe target BrowsingContextID is the same"
     );
+    const createdIframeParentTarget = await createdIframeTarget.getParentTarget();
+    is(
+      createdIframeParentTarget,
+      tabTarget,
+      "The created iframe parent target is also the tab target"
+    );
   }
 
   // Assert that we also get an event for iframes added after the call to watchTargets
@@ -175,6 +229,13 @@ async function assertTabIFrames(watcher, targets) {
       f => f.browsingContextID === newIframeId
     );
     ok(newIframeTarget, "We got the target for the new iframe");
+
+    const newIframeParentTarget = await newIframeTarget.getParentTarget();
+    is(
+      newIframeParentTarget,
+      tabTarget,
+      "The new iframe parent target is also the tab target"
+    );
 
     // Assert that we also get notified about destroyed frames
     const onDestroyed = watcher.once("target-destroyed");

@@ -119,4 +119,24 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   notifyTargetDestroyed(actor) {
     this.emit("target-destroyed-form", actor);
   },
+
+  getParentBrowsingContextID(browsingContextID) {
+    const browsingContext = BrowsingContext.get(browsingContextID);
+    if (!browsingContext) {
+      throw new Error(
+        `BrowsingContext with ID=${browsingContextID} doesn't exist.`
+      );
+    }
+    // Top-level documents of tabs, loaded in a <browser> element expose a null `parent`.
+    // i.e. Their BrowsingContext has no parent and is considered top level.
+    // But... in the context of the Browser Toolbox, we still consider them as child of the browser window.
+    // So, for them, fallback on `embedderWindowGlobal`, which will typically be the WindowGlobal for browser.xhtml.
+    if (browsingContext.parent) {
+      return browsingContext.parent.id;
+    }
+    if (browsingContext.embedderWindowGlobal) {
+      return browsingContext.embedderWindowGlobal.browsingContext.id;
+    }
+    return null;
+  },
 });
