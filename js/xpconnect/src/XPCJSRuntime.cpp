@@ -3068,7 +3068,7 @@ bool XPCJSRuntime::InitializeStrings(JSContext* cx) {
         mStrIDs[0] = JSID_VOID;
         return false;
       }
-      mStrIDs[i] = INTERNED_STRING_TO_JSID(cx, str);
+      mStrIDs[i] = PropertyKey::fromPinnedString(str);
       mStrJSVals[i].setString(str);
     }
 
