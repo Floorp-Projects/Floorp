@@ -90,7 +90,6 @@ const testcases = [
             {value:  Infinity, string: "+∞", parts: [PlusSign("+"), Inf("∞")]},
             {value: -Infinity, string: "-∞", parts: [MinusSign("-"), Inf("∞")]},
 
-            // Spec issue: https://github.com/tc39/proposal-unified-intl-numberformat/issues/60
             {value:  NaN, string: "+NaN", parts: [PlusSign("+"), Nan("NaN")]},
             {value: -NaN, string: "+NaN", parts: [PlusSign("+"), Nan("NaN")]},
         ],
@@ -104,8 +103,7 @@ const testcases = [
         },
         values: [
             {value: +0, string: "0", parts: [Integer("0")]},
-            // Spec issue: https://github.com/tc39/proposal-unified-intl-numberformat/issues/66
-            {value: -0, string: "-0", parts: [MinusSign("-"), Integer("0")]},
+            {value: -0, string: "0", parts: [Integer("0")]},
             {value: 0n, string: "0", parts: [Integer("0")]},
 
             {value:   1, string: "+1", parts: [PlusSign("+"), Integer("1")]},
@@ -177,10 +175,8 @@ const testcases = [
         },
 
         values: [
-            // ICU bug: https://unicode-org.atlassian.net/browse/ICU-20709
-            // Spec issue: https://github.com/tc39/proposal-unified-intl-numberformat/issues/66
-            {value: +0.1, string: "+0", parts: [PlusSign("+"), Integer("0")]},
-            {value: -0.1, string: "-0", parts: [MinusSign("-"), Integer("0")]},
+            {value: +0.1, string: "0", parts: [Integer("0")]},
+            {value: -0.1, string: "0", parts: [Integer("0")]},
         ],
     }
 ];
