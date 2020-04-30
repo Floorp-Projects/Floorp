@@ -676,7 +676,7 @@ nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {
   }
   rv = RemoveContainerWithTransaction(aElement);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::RemoveContainerWithTransaction() failed");
+                       "HTMLEditor::RemoveContainerWithTransaction() failed");
   return rv;
 }
 
