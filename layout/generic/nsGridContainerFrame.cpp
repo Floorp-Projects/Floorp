@@ -653,6 +653,12 @@ struct nsGridContainerFrame::GridItemInfo {
   }
 
   /**
+   * Adjust our grid areas to account for removed auto-fit tracks in aAxis.
+   */
+  void AdjustForRemovedTracks(LogicalAxis aAxis,
+                              const nsTArray<uint32_t>& aNumRemovedTracks);
+
+  /**
    * If the item is [align|justify]-self:[last ]baseline aligned in the given
    * axis then set aBaselineOffset to the baseline offset and return aAlign.
    * Otherwise, return a fallback alignment.
@@ -875,6 +881,28 @@ struct nsGridContainerFrame::Subgrid {
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(Prop, Subgrid)
 };
 using Subgrid = nsGridContainerFrame::Subgrid;
+
+void GridItemInfo::AdjustForRemovedTracks(
+    LogicalAxis aAxis, const nsTArray<uint32_t>& aNumRemovedTracks) {
+  const bool abspos = mFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW);
+  auto& lines = mArea.LineRangeForAxis(aAxis);
+  if (abspos) {
+    lines.AdjustAbsPosForRemovedTracks(aNumRemovedTracks);
+  } else {
+    lines.AdjustForRemovedTracks(aNumRemovedTracks);
+  }
+  if (IsSubgrid()) {
+    auto* subgrid = SubgridFrame()->GetProperty(Subgrid::Prop());
+    if (subgrid) {
+      auto& lines = subgrid->mArea.LineRangeForAxis(aAxis);
+      if (abspos) {
+        lines.AdjustAbsPosForRemovedTracks(aNumRemovedTracks);
+      } else {
+        lines.AdjustForRemovedTracks(aNumRemovedTracks);
+      }
+    }
+  }
+}
 
 /**
  * Track size data for use by subgrids (which don't do sizing of their own
@@ -4794,21 +4822,19 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
   if (numEmptyCols || numEmptyRows) {
     // Adjust the line numbers in the grid areas.
     for (auto& item : aState.mGridItems) {
-      GridArea& area = item.mArea;
       if (numEmptyCols) {
-        area.mCols.AdjustForRemovedTracks(*colAdjust);
+        item.AdjustForRemovedTracks(eLogicalAxisInline, *colAdjust);
       }
       if (numEmptyRows) {
-        area.mRows.AdjustForRemovedTracks(*rowAdjust);
+        item.AdjustForRemovedTracks(eLogicalAxisBlock, *rowAdjust);
       }
     }
     for (auto& item : aState.mAbsPosItems) {
-      GridArea& area = item.mArea;
       if (numEmptyCols) {
-        area.mCols.AdjustAbsPosForRemovedTracks(*colAdjust);
+        item.AdjustForRemovedTracks(eLogicalAxisInline, *colAdjust);
       }
       if (numEmptyRows) {
-        area.mRows.AdjustAbsPosForRemovedTracks(*rowAdjust);
+        item.AdjustForRemovedTracks(eLogicalAxisBlock, *rowAdjust);
       }
     }
     // Adjust the grid size.
