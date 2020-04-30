@@ -427,7 +427,7 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
     }
     if (error.Failed()) {
       NS_WARNING_ASSERTION(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED),
-                           "EditorBase::SplitNodeWithTransaction() failed");
+                           "HTMLEditor::SplitNodeWithTransaction() failed");
       return error.StealNSResult();
     }
   }
@@ -443,7 +443,7 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
     }
     if (error.Failed()) {
       NS_WARNING_ASSERTION(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED),
-                           "EditorBase::SplitNodeWithTransaction() failed");
+                           "HTMLEditor::SplitNodeWithTransaction() failed");
       return error.StealNSResult();
     }
     Unused << newLeftNode;
@@ -2259,7 +2259,7 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
     ErrorResult error;
     textNodeForTheRange = SplitNodeWithTransaction(atEnd, error);
     if (error.Failed()) {
-      NS_WARNING("EditorBase::SplitNodeWithTransaction() failed");
+      NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
       return error.StealNSResult();
     }
   }
@@ -2271,7 +2271,7 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
     ErrorResult error;
     nsCOMPtr<nsIContent> newLeftNode = SplitNodeWithTransaction(atStart, error);
     if (error.Failed()) {
-      NS_WARNING("EditorBase::SplitNodeWithTransaction() failed");
+      NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
       return error.StealNSResult();
     }
     Unused << newLeftNode;
