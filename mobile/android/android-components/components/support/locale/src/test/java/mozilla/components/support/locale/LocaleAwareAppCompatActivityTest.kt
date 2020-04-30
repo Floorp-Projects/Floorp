@@ -26,7 +26,7 @@ class LocaleAwareAppCompatActivityTest {
     }
 
     @Test
-    @Config(sdk = [Build.VERSION_CODES.O])
+    @Config(sdk = [Build.VERSION_CODES.O, Build.VERSION_CODES.O_MR1])
     fun `when version is Android 8 set layoutDirection`() {
         val activity = spy(Robolectric.buildActivity(LocaleAwareAppCompatActivity::class.java).get())
         activity.setLayoutDirectionIfNeeded()
