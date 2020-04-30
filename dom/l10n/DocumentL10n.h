@@ -79,6 +79,8 @@ class DocumentL10n final : public DOMLocalization {
   void ConnectRoot(nsINode& aNode, bool aTranslate, ErrorResult& aRv);
 
   DocumentL10nState GetState() { return mState; };
+
+  bool mBlockingLayout = false;
 };
 
 }  // namespace dom
