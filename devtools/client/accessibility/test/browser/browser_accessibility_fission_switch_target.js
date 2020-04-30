@@ -24,6 +24,16 @@ const CONTENT_PROCESS_EXPECTED = [
       sidebar: {
         name: "Test page",
         role: "document",
+        relations: {
+          "containing document": {
+            role: "document",
+            name: "Test page",
+          },
+          embeds: {
+            role: "document",
+            name: "Test page",
+          },
+        },
       },
     },
   },
