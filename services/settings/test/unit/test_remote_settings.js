@@ -243,6 +243,16 @@ add_task(
 );
 add_task(clear_state);
 
+add_task(async function test_get_does_not_load_dump_when_pref_is_false() {
+  Services.prefs.setBoolPref("services.settings.load_dump", false);
+
+  const data = await clientWithDump.get();
+
+  equal(data.map(r => r.id).join(", "), "pt-BR, xx"); // No dump, 2 pulled from test server.
+  Services.prefs.clearUserPref("services.settings.load_dump");
+});
+add_task(clear_state);
+
 add_task(async function test_get_does_not_sync_if_empty_dump_is_provided() {
   if (IS_ANDROID) {
     // Skip test: we don't ship remote settings dumps on Android (see package-manifest).

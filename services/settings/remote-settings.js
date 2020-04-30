@@ -36,7 +36,6 @@ const PREF_SETTINGS_SERVER_BACKOFF = "server.backoff";
 const PREF_SETTINGS_LAST_UPDATE = "last_update_seconds";
 const PREF_SETTINGS_LAST_ETAG = "last_etag";
 const PREF_SETTINGS_CLOCK_SKEW_SECONDS = "clock_skew_seconds";
-const PREF_SETTINGS_LOAD_DUMP = "load_dump";
 
 // Telemetry identifiers.
 const TELEMETRY_COMPONENT = "remotesettings";
@@ -294,9 +293,6 @@ function remoteSettingsFunction() {
     const checkedServerTimeInSeconds = Math.round(serverTimeMillis / 1000);
     gPrefs.setIntPref(PREF_SETTINGS_LAST_UPDATE, checkedServerTimeInSeconds);
 
-    // Should the clients try to load JSON dump? (mainly disabled in tests)
-    const loadDump = gPrefs.getBoolPref(PREF_SETTINGS_LOAD_DUMP, true);
-
     // Iterate through the collections version info and initiate a synchronization
     // on the related remote settings clients.
     let firstError;
@@ -311,7 +307,7 @@ function remoteSettingsFunction() {
       // Start synchronization! It will be a no-op if the specified `lastModified` equals
       // the one in the local database.
       try {
-        await client.maybeSync(last_modified, { loadDump, trigger });
+        await client.maybeSync(last_modified, { trigger });
 
         // Save last time this client was successfully synced.
         Services.prefs.setIntPref(

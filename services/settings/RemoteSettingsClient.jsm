@@ -38,6 +38,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gLoadDump",
+  "services.settings.load_dump",
+  true
+);
+
 /**
  * cacheProxy returns an object Proxy that will memoize properties of the target.
  * @param {Object} target the object to wrap.
@@ -320,7 +327,10 @@ class RemoteSettingsClient extends EventEmitter {
       try {
         // .get() was called before we had the chance to synchronize the local database.
         // We'll try to avoid returning an empty list.
-        if (await Utils.hasLocalDump(this.bucketName, this.collectionName)) {
+        if (
+          gLoadDump &&
+          (await Utils.hasLocalDump(this.bucketName, this.collectionName))
+        ) {
           // Since there is a JSON dump, load it as default data.
           console.debug(`${this.identifier} Local DB is empty, load JSON dump`);
           await this._importJSONDump();
@@ -402,12 +412,14 @@ class RemoteSettingsClient extends EventEmitter {
    *                                   This will be compared to the local timestamp, and will be used for
    *                                   cache busting if local data is out of date.
    * @param {Object} options           additional advanced options.
-   * @param {bool}   options.loadDump  load initial dump from disk on first sync (default: true)
+   * @param {bool}   options.loadDump  load initial dump from disk on first sync (default: true, unless
+   *                                   `services.settings.load_dump` says otherwise).
    * @param {string} options.trigger   label to identify what triggered this sync (eg. ``"timer"``, default: `"manual"`)
    * @return {Promise}                 which rejects on sync or process failure.
    */
   async maybeSync(expectedTimestamp, options = {}) {
-    const { loadDump = true, trigger = "manual" } = options;
+    // Should the clients try to load JSON dump? (mainly disabled in tests)
+    const { loadDump = gLoadDump, trigger = "manual" } = options;
 
     // Make sure we don't run several synchronizations in parallel, mainly
     // in order to avoid race conditions in "sync" events listeners.
