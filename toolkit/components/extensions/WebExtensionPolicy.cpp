@@ -576,9 +576,9 @@ WebExtensionContentScript::WebExtensionContentScript(
     : MozDocumentMatcher(aGlobal, aInit,
                          !aExtension.HasPermission(nsGkAtoms::mozillaAddons),
                          aRv),
-      mCssPaths(aInit.mCssPaths),
-      mJsPaths(aInit.mJsPaths),
       mRunAt(aInit.mRunAt) {
+  mCssPaths.Assign(aInit.mCssPaths);
+  mJsPaths.Assign(aInit.mJsPaths);
   mExtension = &aExtension;
 }
 
