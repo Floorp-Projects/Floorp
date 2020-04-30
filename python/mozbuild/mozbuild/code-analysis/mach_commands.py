@@ -2186,6 +2186,40 @@ class StaticAnalysis(MachCommandBase):
             process.wait()
             return process.returncode
 
+    def _get_clang_format_cfg(self, current_dir):
+        clang_format_cfg_path = mozpath.join(current_dir, '.clang-format')
+
+        if os.path.exists(clang_format_cfg_path):
+            # Return found path for .clang-format
+            return clang_format_cfg_path
+
+        if current_dir != self.topsrcdir:
+            # Go to parent directory
+            return self._get_clang_format_cfg(os.path.split(current_dir)[0])
+        # We have reached self.topsrcdir so return None
+        return None
+
+    def _copy_clang_format_for_show_diff(self, current_dir, cached_clang_format_cfg, tmpdir):
+        # Lookup for .clang-format first in cache
+        clang_format_cfg = cached_clang_format_cfg.get(current_dir, None)
+
+        if clang_format_cfg is None:
+            # Go through top directories
+            clang_format_cfg = self._get_clang_format_cfg(current_dir)
+
+            # This is unlikely to happen since we must have .clang-format from
+            # self.topsrcdir but in any case we should handle a potential error
+            if clang_format_cfg is None:
+                print("Cannot find corresponding .clang-format.")
+                return 1
+
+            # Cache clang_format_cfg for potential later usage
+            cached_clang_format_cfg[current_dir] = clang_format_cfg
+
+        # Copy .clang-format to the tmp dir where the formatted file is copied
+        shutil.copy(clang_format_cfg, tmpdir)
+        return 0
+
     def _run_clang_format_path(self, clang_format, paths, output_file, output_format):
 
         # Run clang-format on files or directories directly
@@ -2212,6 +2246,7 @@ class StaticAnalysis(MachCommandBase):
 
         if output_file:
             patches = {}
+            cached_clang_format_cfg = {}
             for i in range(0, len(path_list)):
                 l = path_list[i: (i + 1)]
 
@@ -2220,12 +2255,19 @@ class StaticAnalysis(MachCommandBase):
                 # and show the diff
                 original_path = l[0]
                 local_path = ntpath.basename(original_path)
+                current_dir = ntpath.dirname(original_path)
                 target_file = os.path.join(tmpdir, local_path)
                 faketmpdir = os.path.dirname(target_file)
                 if not os.path.isdir(faketmpdir):
                     os.makedirs(faketmpdir)
                 shutil.copy(l[0], faketmpdir)
                 l[0] = target_file
+
+                ret = self._copy_clang_format_for_show_diff(current_dir,
+                                                            cached_clang_format_cfg,
+                                                            faketmpdir)
+                if ret != 0:
+                    return ret
 
                 # Run clang-format on the list
                 try:
