@@ -181,27 +181,6 @@
 
   let expectedGood =
 "\
-Explicit-only process\n\
-\n\
-WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
-Explicit Allocations\n\
-\n\
-100,000 B (100.0%) -- explicit\n\
-└──100,000 B (100.0%) ── a/b\n\
-\n\
-End of Explicit-only process\n\
-Heap-unclassified process\n\
-Explicit Allocations\n\
-\n\
-262,144,000 B (100.0%) -- explicit\n\
-├──209,715,200 B (80.00%) ── heap-unclassified\n\
-└───52,428,800 B (20.00%) ── a/b\n\
-\n\
-Other Measurements\n\
-\n\
-262,144,000 B ── heap-allocated\n\
-\n\
-End of Heap-unclassified process\n\
 Main Process (pid NNN)\n\
 Explicit Allocations\n\
 \n\
@@ -236,6 +215,27 @@ Other Measurements\n\
 262,144,000 B ── heap-allocated\n\
 \n\
 End of Main Process (pid NNN)\n\
+Explicit-only process\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+Explicit Allocations\n\
+\n\
+100,000 B (100.0%) -- explicit\n\
+└──100,000 B (100.0%) ── a/b\n\
+\n\
+End of Explicit-only process\n\
+Heap-unclassified process\n\
+Explicit Allocations\n\
+\n\
+262,144,000 B (100.0%) -- explicit\n\
+├──209,715,200 B (80.00%) ── heap-unclassified\n\
+└───52,428,800 B (20.00%) ── a/b\n\
+\n\
+Other Measurements\n\
+\n\
+262,144,000 B ── heap-allocated\n\
+\n\
+End of Heap-unclassified process\n\
 Other-only process\n\
 Other Measurements\n\
 \n\
