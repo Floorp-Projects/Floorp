@@ -21,7 +21,7 @@ class mozEnglishWordUtils;
 namespace mozilla {
 class RemoteSpellcheckEngineChild;
 class TextServicesDocument;
-typedef MozPromise<nsTArray<bool>, nsresult, false> CheckWordPromise;
+typedef MozPromise<CopyableTArray<bool>, nsresult, false> CheckWordPromise;
 }  // namespace mozilla
 
 class mozSpellChecker final {

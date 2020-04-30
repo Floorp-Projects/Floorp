@@ -77,7 +77,7 @@ class mozPersonalDictionarySave final : public mozilla::Runnable {
                                      nsCOMPtr<nsIFile> aFile,
                                      nsTArray<nsString>&& aDictWords)
       : mozilla::Runnable("mozPersonalDictionarySave"),
-        mDictWords(aDictWords),
+        mDictWords(std::move(aDictWords)),
         mFile(aFile),
         mDict(aDict) {}
 
