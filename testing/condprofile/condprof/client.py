@@ -16,11 +16,18 @@ from mozprofile.prefs import Preferences
 
 from condprof import check_install  # NOQA
 from condprof import progress
-from condprof.util import download_file, TASK_CLUSTER, logger, ArchiveNotFound
+from condprof.util import (
+    download_file,
+    TASK_CLUSTER,
+    logger,
+    check_exists,
+    ArchiveNotFound,
+)
 from condprof.changelog import Changelog
 
 
-ROOT_URL = "https://firefox-ci-tc.services.mozilla.com/api/index"
+TC_SERVICE = "https://firefox-ci-tc.services.mozilla.com"
+ROOT_URL = TC_SERVICE + "/api/index"
 INDEX_PATH = "gecko.v2.%(repo)s.latest.firefox.condprof-%(platform)s"
 PUBLIC_DIR = "artifacts/public/condprof"
 TC_LINK = ROOT_URL + "/v1/task/" + INDEX_PATH + "/" + PUBLIC_DIR + "/"
@@ -28,10 +35,15 @@ ARTIFACT_NAME = "profile-%(platform)s-%(scenario)s-%(customization)s.tgz"
 CHANGELOG_LINK = (
     ROOT_URL + "/v1/task/" + INDEX_PATH + "/" + PUBLIC_DIR + "/changelog.json"
 )
-DIRECT_LINK = "https://taskcluster-artifacts.net/%(task_id)s/0/public/condprof/"
+ARTIFACTS_SERVICE = "https://taskcluster-artifacts.net"
+DIRECT_LINK = ARTIFACTS_SERVICE + "/%(task_id)s/0/public/condprof/"
 CONDPROF_CACHE = "~/.condprof-cache"
 RETRIES = 3
-RETRY_PAUSE = 30
+RETRY_PAUSE = 45
+
+
+class ServiceUnreachableError(Exception):
+    pass
 
 
 class ProfileNotFoundError(Exception):
@@ -40,6 +52,21 @@ class ProfileNotFoundError(Exception):
 
 class RetriesError(Exception):
     pass
+
+
+def _check_service(url):
+    """Sanity check to see if we can reach the service root url.
+    """
+
+    def _check():
+        exists, _ = check_exists(url, all_types=True)
+        if not exists:
+            raise ServiceUnreachableError(url)
+
+    try:
+        return _retries(_check)
+    except RetriesError:
+        raise ServiceUnreachableError(url)
 
 
 def _check_profile(profile_dir):
@@ -74,6 +101,8 @@ def _check_profile(profile_dir):
 
 def _retries(callable, onerror=None):
     retries = 0
+    pause = RETRY_PAUSE
+
     while retries < RETRIES:
         try:
             return callable()
@@ -82,7 +111,9 @@ def _retries(callable, onerror=None):
                 onerror(e)
             logger.info("Failed, retrying")
             retries += 1
-            time.sleep(RETRY_PAUSE)
+            time.sleep(pause)
+            pause *= 1.5
+
     # If we reach that point, it means all attempts failed
     logger.error("All attempt failed")
     raise RetriesError()
@@ -114,8 +145,10 @@ def get_profile(
     filename = ARTIFACT_NAME % params
     if task_id is None:
         url = TC_LINK % params + filename
+        _check_service(TC_SERVICE)
     else:
         url = DIRECT_LINK % params + filename
+        _check_service(ARTIFACTS_SERVICE)
 
     logger.info("preparing download dir")
     if not download_cache:
@@ -135,7 +168,6 @@ def get_profile(
             archive = download_file(url, target=downloaded_archive)
         except ArchiveNotFound:
             raise ProfileNotFoundError(url)
-
         try:
             with tarfile.open(archive, "r:gz") as tar:
                 logger.info("Extracting the tarball content in %s" % target_dir)
@@ -174,7 +206,7 @@ def get_profile(
 
     try:
         return _retries(_get_profile, onerror)
-    except Exception:
+    except RetriesError:
         raise ProfileNotFoundError(url)
 
 

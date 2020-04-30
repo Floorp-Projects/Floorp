@@ -164,7 +164,7 @@ def get_firefox_download_link():
     raise Exception()
 
 
-def check_exists(archive, server=None):
+def check_exists(archive, server=None, all_types=False):
     if server is not None:
         archive = server + "/" + archive
     try:
@@ -178,7 +178,11 @@ def check_exists(archive, server=None):
         return check_exists(resp.headers["Location"])
 
     # see Bug 1574854
-    if resp.status_code == 200 and "text/html" in resp.headers["Content-Type"]:
+    if (
+        not all_types
+        and resp.status_code == 200
+        and "text/html" in resp.headers["Content-Type"]
+    ):
         logger.info("Got an html page back")
         exists = False
     else:
