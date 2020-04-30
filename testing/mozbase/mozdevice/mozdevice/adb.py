@@ -820,10 +820,14 @@ class ADBDevice(ADBCommand):
         self._logger.info("Native pidof support: {}".format(self._have_pidof))
 
         if require_root:
-            # Guarantee that /data/local/tmp exists and is accessible to all.
-            if not self.exists("/data/local/tmp", timeout=timeout, root=True):
-                self.mkdir("/data/local/tmp", timeout=timeout, root=True)
-            self.chmod("/data/local/tmp", timeout=timeout, root=True)
+            try:
+                # Guarantee that /data/local/tmp exists and is accessible to all.
+                if not self.exists("/data/local/tmp", timeout=timeout, root=True):
+                    self.mkdir("/data/local/tmp", timeout=timeout, root=True)
+                self.chmod("/data/local/tmp", timeout=timeout, root=True)
+            except ADBRootError as e:
+                self._logger.warning(
+                    "{}: Device is not rooted. May have issues accessing test root.".format(e))
 
         # Bug 1529960 observed pidof intermittently returning no results for a
         # running process on the 7.0 x86_64 emulator.
