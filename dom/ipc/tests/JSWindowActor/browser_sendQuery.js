@@ -9,7 +9,7 @@ function maybeAsyncStack(offset, column) {
 
   let stack = Error().stack.replace(/^.*?\n/, "");
   return (
-    "JSWindowActor query*" +
+    "JSActor query*" +
     stack.replace(
       /^([^\n]+?):(\d+):\d+/,
       (m0, m1, m2) => `${m1}:${+m2 + offset}:${column}`

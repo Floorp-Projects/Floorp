@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_JSWindowActor_h
-#define mozilla_dom_JSWindowActor_h
+#ifndef mozilla_dom_JSActor_h
+#define mozilla_dom_JSActor_h
 
 #include "js/TypeDecls.h"
 #include "ipc/IPCMessageUtils.h"
@@ -23,7 +23,7 @@ class nsQueryActorParent;
 namespace mozilla {
 namespace dom {
 
-enum class JSWindowActorMessageKind {
+enum class JSActorMessageKind {
   Message,
   Query,
   QueryResolve,
@@ -31,16 +31,16 @@ enum class JSWindowActorMessageKind {
   EndGuard_,
 };
 
-class JSWindowActorMessageMeta;
+class JSActorMessageMeta;
 class QueryPromiseHandler;
 
 // Common base class for JSWindowActor{Parent,Child}.
-class JSWindowActor : public nsISupports, public nsWrapperCache {
+class JSActor : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(JSWindowActor)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(JSActor)
 
-  JSWindowActor();
+  JSActor();
 
   enum class Type { Parent, Child };
   enum class CallbackFunction { WillDestroy, DidDestroy, ActorCreated };
@@ -55,7 +55,7 @@ class JSWindowActor : public nsISupports, public nsWrapperCache {
                                       JS::Handle<JS::Value> aObj,
                                       ErrorResult& aRv);
 
-  void ReceiveRawMessage(const JSWindowActorMessageMeta& aMetadata,
+  void ReceiveRawMessage(const JSActorMessageMeta& aMetadata,
                          ipc::StructuredCloneData&& aData,
                          ipc::StructuredCloneData&& aStack);
 
@@ -67,17 +67,17 @@ class JSWindowActor : public nsISupports, public nsWrapperCache {
   // Send the message described by the structured clone data |aData|, and the
   // message metadata |aMetadata|. The underlying transport should call the
   // |ReceiveMessage| method on the other side asynchronously.
-  virtual void SendRawMessage(const JSWindowActorMessageMeta& aMetadata,
+  virtual void SendRawMessage(const JSActorMessageMeta& aMetadata,
                               ipc::StructuredCloneData&& aData,
                               ipc::StructuredCloneData&& aStack,
                               ErrorResult& aRv) = 0;
 
   // Check if a message is so large that IPC will probably crash if we try to
   // send it. If it is too large, record telemetry about the message.
-  static bool AllowMessage(const JSWindowActorMessageMeta& aMetadata,
+  static bool AllowMessage(const JSActorMessageMeta& aMetadata,
                            size_t aDataLength);
 
-  virtual ~JSWindowActor() = default;
+  virtual ~JSActor() = default;
 
   void SetName(const nsACString& aName);
 
@@ -94,11 +94,10 @@ class JSWindowActor : public nsISupports, public nsWrapperCache {
   nsresult QueryInterfaceActor(const nsIID& aIID, void** aPtr);
 
   void ReceiveMessageOrQuery(JSContext* aCx,
-                             const JSWindowActorMessageMeta& aMetadata,
+                             const JSActorMessageMeta& aMetadata,
                              JS::Handle<JS::Value> aData, ErrorResult& aRv);
 
-  void ReceiveQueryReply(JSContext* aCx,
-                         const JSWindowActorMessageMeta& aMetadata,
+  void ReceiveQueryReply(JSContext* aCx, const JSActorMessageMeta& aMetadata,
                          JS::Handle<JS::Value> aData, ErrorResult& aRv);
 
   // Helper object used while processing query messages to send the final reply
@@ -108,8 +107,8 @@ class JSWindowActor : public nsISupports, public nsWrapperCache {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(QueryHandler)
 
-    QueryHandler(JSWindowActor* aActor,
-                 const JSWindowActorMessageMeta& aMetadata, Promise* aPromise);
+    QueryHandler(JSActor* aActor, const JSActorMessageMeta& aMetadata,
+                 Promise* aPromise);
 
     void RejectedCallback(JSContext* aCx,
                           JS::Handle<JS::Value> aValue) override;
@@ -120,10 +119,10 @@ class JSWindowActor : public nsISupports, public nsWrapperCache {
    private:
     ~QueryHandler() = default;
 
-    void SendReply(JSContext* aCx, JSWindowActorMessageKind aKind,
+    void SendReply(JSContext* aCx, JSActorMessageKind aKind,
                    ipc::StructuredCloneData&& aData);
 
-    RefPtr<JSWindowActor> mActor;
+    RefPtr<JSActor> mActor;
     RefPtr<Promise> mPromise;
     nsString mMessageName;
     uint64_t mQueryId;
@@ -141,12 +140,12 @@ class JSWindowActor : public nsISupports, public nsWrapperCache {
 namespace IPC {
 
 template <>
-struct ParamTraits<mozilla::dom::JSWindowActorMessageKind>
+struct ParamTraits<mozilla::dom::JSActorMessageKind>
     : public ContiguousEnumSerializer<
-          mozilla::dom::JSWindowActorMessageKind,
-          mozilla::dom::JSWindowActorMessageKind::Message,
-          mozilla::dom::JSWindowActorMessageKind::EndGuard_> {};
+          mozilla::dom::JSActorMessageKind,
+          mozilla::dom::JSActorMessageKind::Message,
+          mozilla::dom::JSActorMessageKind::EndGuard_> {};
 
 }  // namespace IPC
 
-#endif  // !defined(mozilla_dom_JSWindowActor_h)
+#endif  // !defined(mozilla_dom_JSActor_h)
