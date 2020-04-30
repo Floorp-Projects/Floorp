@@ -106,16 +106,18 @@ template <typename T>
 struct QueueParamTraits<RawBuffer<T>> {
   using ParamType = RawBuffer<T>;
 
-  static QueueStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
+  template <typename U>
+  static QueueStatus Write(ProducerView<U>& aProducerView,
+                           const ParamType& aArg) {
     aProducerView.WriteParam(aArg.mLength);
     return (aArg.mLength > 0)
                ? aProducerView.Write(aArg.mData, aArg.mLength * sizeof(T))
                : aProducerView.GetStatus();
   }
 
-  template <
-      typename ElementType = std::remove_cv_t<typename ParamType::ElementType>>
-  static QueueStatus Read(ConsumerView& aConsumerView, ParamType* aArg) {
+  template <typename U, typename ElementType = typename std::remove_cv_t<
+                            typename ParamType::ElementType>>
+  static QueueStatus Read(ConsumerView<U>& aConsumerView, ParamType* aArg) {
     size_t len;
     QueueStatus status = aConsumerView.ReadParam(&len);
     if (!status) {
@@ -154,7 +156,7 @@ struct QueueParamTraits<RawBuffer<T>> {
         return mConsumerView.Read(buf, mLength * sizeof(T));
       }
 
-      ConsumerView& mConsumerView;
+      ConsumerView<U>& mConsumerView;
       ParamType* mArg;
       size_t mLength;
     };
@@ -316,11 +318,14 @@ template <>
 struct QueueParamTraits<webgl::ContextLossReason> {
   using ParamType = webgl::ContextLossReason;
 
-  static QueueStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
+  template <typename U>
+  static QueueStatus Write(ProducerView<U>& aProducerView,
+                           const ParamType& aArg) {
     return aProducerView.WriteParam(static_cast<uint8_t>(aArg));
   }
 
-  static QueueStatus Read(ConsumerView& aConsumerView, ParamType* aArg) {
+  template <typename U>
+  static QueueStatus Read(ConsumerView<U>& aConsumerView, ParamType* aArg) {
     uint8_t val;
     auto status = aConsumerView.ReadParam(&val);
     if (!status) return status;
@@ -341,7 +346,8 @@ template <typename V, typename E>
 struct QueueParamTraits<Result<V, E>> {
   using T = Result<V, E>;
 
-  static QueueStatus Write(ProducerView& aProducerView, const T& aArg) {
+  template <typename U>
+  static QueueStatus Write(ProducerView<U>& aProducerView, const T& aArg) {
     const auto ok = aArg.isOk();
     auto status = aProducerView.WriteParam(ok);
     if (!status) return status;
@@ -353,7 +359,8 @@ struct QueueParamTraits<Result<V, E>> {
     return status;
   }
 
-  static QueueStatus Read(ConsumerView& aConsumerView, T* const aArg) {
+  template <typename U>
+  static QueueStatus Read(ConsumerView<U>& aConsumerView, T* const aArg) {
     bool ok;
     auto status = aConsumerView.ReadParam(&ok);
     if (!status) return status;
@@ -389,14 +396,16 @@ template <>
 struct QueueParamTraits<std::string> {
   using T = std::string;
 
-  static QueueStatus Write(ProducerView& aProducerView, const T& aArg) {
+  template <typename U>
+  static QueueStatus Write(ProducerView<U>& aProducerView, const T& aArg) {
     auto status = aProducerView.WriteParam(aArg.size());
     if (!status) return status;
     status = aProducerView.Write(aArg.data(), aArg.size());
     return status;
   }
 
-  static QueueStatus Read(ConsumerView& aConsumerView, T* const aArg) {
+  template <typename U>
+  static QueueStatus Read(ConsumerView<U>& aConsumerView, T* const aArg) {
     size_t size;
     auto status = aConsumerView.ReadParam(&size);
     if (!status) return status;
@@ -426,14 +435,16 @@ template <typename U>
 struct QueueParamTraits<std::vector<U>> {
   using T = std::vector<U>;
 
-  static QueueStatus Write(ProducerView& aProducerView, const T& aArg) {
+  template <typename V>
+  static QueueStatus Write(ProducerView<V>& aProducerView, const T& aArg) {
     auto status = aProducerView.WriteParam(aArg.size());
     if (!status) return status;
     status = aProducerView.Write(aArg.data(), aArg.size());
     return status;
   }
 
-  static QueueStatus Read(ConsumerView& aConsumerView, T* const aArg) {
+  template <typename V>
+  static QueueStatus Read(ConsumerView<V>& aConsumerView, T* const aArg) {
     MOZ_CRASH("no way to fallibly resize vectors without exceptions");
     size_t size;
     auto status = aConsumerView.ReadParam(&size);
@@ -458,11 +469,13 @@ template <>
 struct QueueParamTraits<WebGLExtensionID> {
   using T = WebGLExtensionID;
 
-  static QueueStatus Write(ProducerView& aProducerView, const T& aArg) {
+  template <typename U>
+  static QueueStatus Write(ProducerView<U>& aProducerView, const T& aArg) {
     return aProducerView.WriteParam(mozilla::EnumValue(aArg));
   }
 
-  static QueueStatus Read(ConsumerView& aConsumerView, T* const aArg) {
+  template <typename U>
+  static QueueStatus Read(ConsumerView<U>& aConsumerView, T* const aArg) {
     QueueStatus status = QueueStatus::kSuccess;
     if (aArg) {
       status = aConsumerView.ReadParam(
@@ -485,14 +498,16 @@ template <>
 struct QueueParamTraits<CompileResult> {
   using T = CompileResult;
 
-  static QueueStatus Write(ProducerView& aProducerView, const T& aArg) {
+  template <typename U>
+  static QueueStatus Write(ProducerView<U>& aProducerView, const T& aArg) {
     aProducerView.WriteParam(aArg.pending);
     aProducerView.WriteParam(aArg.log);
     aProducerView.WriteParam(aArg.translatedSource);
     return aProducerView.WriteParam(aArg.success);
   }
 
-  static QueueStatus Read(ConsumerView& aConsumerView, T* const aArg) {
+  template <typename U>
+  static QueueStatus Read(ConsumerView<U>& aConsumerView, T* const aArg) {
     aConsumerView.ReadParam(aArg ? &aArg->pending : nullptr);
     aConsumerView.ReadParam(aArg ? &aArg->log : nullptr);
     aConsumerView.ReadParam(aArg ? &aArg->translatedSource : nullptr);
@@ -514,7 +529,8 @@ template <>
 struct QueueParamTraits<LinkResult> {
   using T = LinkResult;
 
-  static QueueStatus Write(ProducerView& aProducerView, const T& aArg) {
+  template <typename U>
+  static QueueStatus Write(ProducerView<U>& aProducerView, const T& aArg) {
     aProducerView.WriteParam(aArg.pending);
     aProducerView.WriteParam(aArg.log);
     aProducerView.WriteParam(aArg.active);
@@ -522,7 +538,8 @@ struct QueueParamTraits<LinkResult> {
     return aProducerView.WriteParam(aArg.success);
   }
 
-  static QueueStatus Read(ConsumerView& aConsumerView, T* const aArg) {
+  template <typename U>
+  static QueueStatus Read(ConsumerView<U>& aConsumerView, T* const aArg) {
     aConsumerView.ReadParam(aArg ? &aArg->pending : nullptr);
     aConsumerView.ReadParam(aArg ? &aArg->log : nullptr);
     aConsumerView.ReadParam(aArg ? &aArg->active : nullptr);
