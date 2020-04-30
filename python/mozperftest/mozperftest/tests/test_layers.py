@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import pytest
 import mozunit
 from mock import MagicMock
 from mozperftest.layers import Layer, Layers
@@ -9,7 +10,7 @@ class _TestLayer(Layer):
     name = "test"
     activated = True
     called = 0
-    arguments = {"arg1": {"type": str, "default": "xxx", "help": "arg1"}}
+    arguments = {"--arg1": {"type": str, "default": "xxx", "help": "arg1"}}
 
     def setup(self):
         self.called += 1
@@ -43,6 +44,10 @@ def test_layer():
         assert layer.get_arg("test-arg1") == "two"
         layer.set_arg("test-arg1", 1)
         assert layer.get_arg("test-arg1") == 1
+        with pytest.raises(KeyError):
+            layer.set_arg("another", 1)
+
+        layer(object())
 
     assert layer.called == 2
 
@@ -59,12 +64,17 @@ def test_layers():
         assert len(layers.layers) == 2
         layers.info("info")
         layers.debug("debug")
-        assert layers.get_arg("test2")
+        assert layers.get_arg("--test2")
         assert layers.get_arg("test-arg1") == "ok"
         layers.set_arg("test-arg1", "two")
         assert layers.get_arg("test-arg1") == "two"
-        layers.set_arg("test-arg1", 1)
+        layers.set_arg("--test-arg1", 1)
         assert layers.get_arg("test-arg1") == 1
+        assert layers.get_layer("test2").name == "test2"
+        assert layers.get_layer("test3") is None
+        assert layers.name == "test + test2"
+        with pytest.raises(KeyError):
+            layers.set_arg("another", 1)
 
     for layer in layers:
         assert layer.called == 2
