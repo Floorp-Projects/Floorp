@@ -34,6 +34,8 @@ FINAL_TARGET_FILES.actors += [
     'AboutProtectionsChild.jsm',
     'AboutProtectionsParent.jsm',
     'AboutReaderChild.jsm',
+    'AboutTabCrashedChild.jsm',
+    'AboutTabCrashedParent.jsm',
     'BlockedSiteChild.jsm',
     'BlockedSiteParent.jsm',
     'BrowserTabChild.jsm',
