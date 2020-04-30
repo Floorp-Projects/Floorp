@@ -6,6 +6,7 @@ package org.mozilla.fenix.onboarding
 
 import android.content.Context
 import android.util.AttributeSet
+import android.widget.ImageButton
 import androidx.appcompat.widget.AppCompatRadioButton
 import androidx.core.content.edit
 import androidx.core.content.withStyledAttributes
@@ -14,6 +15,7 @@ import org.mozilla.fenix.ext.settings
 
 class OnboardingRadioButton(context: Context, attrs: AttributeSet) : AppCompatRadioButton(context, attrs) {
     private val radioGroups = mutableListOf<OnboardingRadioButton>()
+    private var illustration: ImageButton? = null
     private var clickListener: (() -> Unit)? = null
     var key: Int = 0
 
@@ -31,6 +33,10 @@ class OnboardingRadioButton(context: Context, attrs: AttributeSet) : AppCompatRa
         radioGroups.add(radioButton)
     }
 
+    fun addIllustration(illustration: ImageButton) {
+        this.illustration = illustration
+    }
+
     fun onClickListener(listener: () -> Unit) {
         clickListener = listener
     }
@@ -43,8 +49,11 @@ class OnboardingRadioButton(context: Context, attrs: AttributeSet) : AppCompatRa
         }
     }
 
-    private fun updateRadioValue(isChecked: Boolean) {
+    fun updateRadioValue(isChecked: Boolean) {
         this.isChecked = isChecked
+        illustration?.let {
+            it.isSelected = isChecked
+        }
         context.settings().preferences.edit {
             putBoolean(context.getString(key), isChecked)
         }

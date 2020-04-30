@@ -23,19 +23,19 @@ class OnboardingToolbarPositionPickerViewHolder(view: View) : RecyclerView.ViewH
         val radio: OnboardingRadioButton
 
         radioTopToolbar.addToRadioGroup(radioBottomToolbar)
-        radioBottomToolbar.addToRadioGroup(radioTopToolbar)
+        radioTopToolbar.addIllustration(view.toolbar_top_image)
 
-        if (view.context.settings().shouldUseBottomToolbar) {
-            radio = radioBottomToolbar
-            setBottomIllustrationSelected()
+        radioBottomToolbar.addToRadioGroup(radioTopToolbar)
+        radioBottomToolbar.addIllustration(view.toolbar_bottom_image)
+
+        radio = if (view.context.settings().shouldUseBottomToolbar) {
+            radioBottomToolbar
         } else {
-            radio = radioTopToolbar
-            setTopIllustrationSelected()
+            radioTopToolbar
         }
-        radio.isChecked = true
+        radio.updateRadioValue(true)
 
         radioBottomToolbar.onClickListener {
-            setBottomIllustrationSelected()
             itemView.context.asActivity()?.recreate()
         }
 
@@ -44,23 +44,12 @@ class OnboardingToolbarPositionPickerViewHolder(view: View) : RecyclerView.ViewH
         }
 
         radioTopToolbar.onClickListener {
-            setTopIllustrationSelected()
             itemView.context.asActivity()?.recreate()
         }
 
         view.toolbar_top_image.setOnClickListener {
             radioTopToolbar.performClick()
         }
-    }
-
-    private fun setTopIllustrationSelected() {
-        itemView.toolbar_top_image.isSelected = true
-        itemView.toolbar_bottom_image.isSelected = false
-    }
-
-    private fun setBottomIllustrationSelected() {
-        itemView.toolbar_top_image.isSelected = false
-        itemView.toolbar_bottom_image.isSelected = true
     }
 
     companion object {

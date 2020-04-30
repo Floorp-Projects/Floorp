@@ -35,10 +35,12 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
         }
 
         radioLightTheme.addToRadioGroup(radioDarkTheme)
-        radioDarkTheme.addToRadioGroup(radioLightTheme)
-
         radioLightTheme.addToRadioGroup(radioFollowDeviceTheme)
+        radioLightTheme.addIllustration(view.theme_light_image)
+
+        radioDarkTheme.addToRadioGroup(radioLightTheme)
         radioDarkTheme.addToRadioGroup(radioFollowDeviceTheme)
+        radioDarkTheme.addIllustration(view.theme_dark_image)
 
         radioFollowDeviceTheme.addToRadioGroup(radioDarkTheme)
         radioFollowDeviceTheme.addToRadioGroup(radioLightTheme)
@@ -60,12 +62,10 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
         }
 
         radioLightTheme.onClickListener {
-            setLightIllustrationSelected()
             setNewTheme(AppCompatDelegate.MODE_NIGHT_NO)
         }
 
         radioDarkTheme.onClickListener {
-            setDarkIllustrationSelected()
             view.context.components.analytics.metrics.track(
                 Event.DarkThemeSelected(
                     Event.DarkThemeSelected.Source.ONBOARDING
@@ -75,7 +75,6 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
         }
 
         radioFollowDeviceTheme.onClickListener {
-            setNoIllustrationSelected()
             if (SDK_INT >= Build.VERSION_CODES.P) {
                 setNewTheme(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
             } else {
@@ -84,38 +83,19 @@ class OnboardingThemePickerViewHolder(view: View) : RecyclerView.ViewHolder(view
         }
 
         with(view.context.settings()) {
-            val radio: OnboardingRadioButton
-            when {
+            val radio: OnboardingRadioButton = when {
                 shouldUseLightTheme -> {
-                    radio = radioLightTheme
-                    setLightIllustrationSelected()
+                    radioLightTheme
                 }
                 shouldUseDarkTheme -> {
-                    radio = radioDarkTheme
-                    setDarkIllustrationSelected()
+                    radioDarkTheme
                 }
                 else -> {
-                    radio = radioFollowDeviceTheme
-                    setNoIllustrationSelected()
+                    radioFollowDeviceTheme
                 }
             }
-            radio.isChecked = true
+            radio.updateRadioValue(true)
         }
-    }
-
-    private fun setNoIllustrationSelected() {
-        itemView.theme_dark_image.isSelected = false
-        itemView.theme_light_image.isSelected = false
-    }
-
-    private fun setDarkIllustrationSelected() {
-        itemView.theme_dark_image.isSelected = true
-        itemView.theme_light_image.isSelected = false
-    }
-
-    private fun setLightIllustrationSelected() {
-        itemView.theme_dark_image.isSelected = false
-        itemView.theme_light_image.isSelected = true
     }
 
     private fun setNewTheme(mode: Int) {
