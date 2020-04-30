@@ -973,7 +973,7 @@ class MessageEventOp final : public ExtendableEventOp {
     // https://w3c.github.io/ServiceWorker/#service-worker-postmessage
     if (!deserializationFailed) {
       init.mData = messageData;
-      init.mPorts = ports;
+      init.mPorts = std::move(ports);
     }
 
     init.mSource.SetValue().SetAsClient() = new Client(

@@ -323,7 +323,7 @@
         gBrowser.warmupTab(gBrowser._findTabToBlurTo(this));
       }
 
-      if (event.button == 0 && tabContainer._multiselectEnabled) {
+      if (event.button == 0) {
         let shiftKey = event.shiftKey;
         let accelKey = event.getModifierState("Accel");
         if (shiftKey) {

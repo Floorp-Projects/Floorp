@@ -4,15 +4,11 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import hashlib
 import json
 import os
-import shutil
-
-from mozboot.util import get_state_dir
 
 from ..cli import BaseTryParser
-from ..push import push_to_try, history_path, build
+from ..push import push_to_try, history_path
 
 
 class AgainParser(BaseTryParser):
@@ -48,35 +44,7 @@ class AgainParser(BaseTryParser):
     common_groups = ['push']
 
 
-def migrate_old_history():
-    """Try to move existing history files from the old locations
-    to the new one.
-    """
-    old_history_dir = os.path.join(get_state_dir(), 'history')
-    topsrcdir_hash = hashlib.sha256(os.path.abspath(build.topsrcdir)).hexdigest()
-    old_history_paths = filter(os.path.isfile, [
-        os.path.join(old_history_dir, topsrcdir_hash, 'try_task_configs.json'),
-        os.path.join(old_history_dir, 'try_task_configs.json'),
-    ])
-
-    for path in old_history_paths:
-        if os.path.isfile(history_path):
-            break
-
-        history_dir = os.path.dirname(history_path)
-        if not os.path.isdir(history_dir):
-            os.makedirs(history_dir)
-
-        shutil.move(path, history_path)
-
-    if os.path.isdir(old_history_dir):
-        shutil.rmtree(old_history_dir)
-
-
 def run(index=0, purge=False, list_configs=False, list_tasks=0, message='{msg}', **pushargs):
-    # TODO: Remove after January 1st, 2020.
-    migrate_old_history()
-
     if purge:
         os.remove(history_path)
         return

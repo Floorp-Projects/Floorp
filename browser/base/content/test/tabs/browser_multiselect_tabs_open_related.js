@@ -1,10 +1,4 @@
-const PREF_MULTISELECT_TABS = "browser.tabs.multiselect";
-
 add_task(async function test() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[PREF_MULTISELECT_TABS, true]],
-  });
-
   let tab1 = await addTab("http://example.com/1");
   let tab2 = await addTab("http://example.com/2");
   let tab3 = await addTab("http://example.com/3");

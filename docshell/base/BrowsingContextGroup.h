@@ -36,10 +36,10 @@ class BrowsingContextGroup final : public nsWrapperCache {
 
   typedef nsTHashtable<nsRefPtrHashKey<ContentParent>> ContentParents;
 
-  // Interact with the list of BrowsingContexts.
-  bool Contains(BrowsingContext* aContext);
-  void Register(BrowsingContext* aContext);
-  void Unregister(BrowsingContext* aContext);
+  // Interact with the list of synced contexts. This controls the lifecycle of
+  // the BrowsingContextGroup and contexts loaded within them.
+  void Register(nsISupports* aContext);
+  void Unregister(nsISupports* aContext);
 
   // Interact with the list of ContentParents
   void Subscribe(ContentParent* aOriginProcess);
@@ -126,10 +126,15 @@ class BrowsingContextGroup final : public nsWrapperCache {
 
   uint64_t mId;
 
-  // A BrowsingContextGroup contains a series of BrowsingContext objects. They
-  // are addressed using a hashtable to avoid linear lookup when adding or
-  // removing elements from the set.
-  nsTHashtable<nsRefPtrHashKey<BrowsingContext>> mContexts;
+  // A BrowsingContextGroup contains a series of {Browsing,Window}Context
+  // objects. They are addressed using a hashtable to avoid linear lookup when
+  // adding or removing elements from the set.
+  //
+  // FIXME: This list is only required over a counter to keep nested
+  // non-discarded contexts within discarded contexts alive. It should be
+  // removed in the future.
+  // FIXME: Consider introducing a better common base than `nsISupports`?
+  nsTHashtable<nsRefPtrHashKey<nsISupports>> mContexts;
 
   // The set of toplevel browsing contexts in the current BrowsingContextGroup.
   nsTArray<RefPtr<BrowsingContext>> mToplevels;

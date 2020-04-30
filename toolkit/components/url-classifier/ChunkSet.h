@@ -31,6 +31,14 @@ class ChunkSet {
   nsresult Write(nsIOutputStream* aOut) const;
   nsresult Read(nsIInputStream* aIn, uint32_t aNumElements);
 
+  ChunkSet InfallibleClone() const {
+    ChunkSet result;
+    if (!result.mRanges.Assign(mRanges, fallible)) {
+      MOZ_CRASH("Out of memory");
+    }
+    return result;
+  }
+
  private:
   class Range {
    public:

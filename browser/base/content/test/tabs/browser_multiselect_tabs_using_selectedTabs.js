@@ -2,13 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const PREF_MULTISELECT_TABS = "browser.tabs.multiselect";
-
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[PREF_MULTISELECT_TABS, true]],
-  });
-
   function testSelectedTabs(tabs) {
     is(
       gBrowser.tabContainer.getAttribute("aria-multiselectable"),

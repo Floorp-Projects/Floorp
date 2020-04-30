@@ -1,7 +1,7 @@
 {
   "title": "SimpleSnippet",
   "description": "A simple template with an icon, text, and optional button.",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "type": "object",
   "definitions": {
     "plainText": {
@@ -69,6 +69,14 @@
     },
     "button_action_args": {
       "description": "Additional parameters for button action, example which specific menu the button should open"
+    },
+    "button_entrypoint_value": {
+      "description": "String used for telemetry attribution of clicks",
+      "type": "string"
+    },
+    "button_entrypoint_name": {
+      "description": "String used for telemetry attribution of clicks",
+      "type": "string"
     },
     "button_label": {
       "allOf": [
@@ -141,6 +149,7 @@
     "button_url": ["button_label"],
     "button_color": ["button_label"],
     "button_background_color": ["button_label"],
-    "section_title_url": ["section_title_text"]
+    "section_title_url": ["section_title_text"],
+    "button_entrypoint_name": ["button_entrypoint_value"]
   }
 }

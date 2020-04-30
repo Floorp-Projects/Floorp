@@ -192,6 +192,41 @@ describe("SimpleSnippet", () => {
       data: { args: "https://mozilla.org" },
     });
   });
+  it("should send an OPEN_ABOUT_PAGE action with entrypoint when the button is clicked", () => {
+    const wrapper = mountAndCheckProps({
+      button_label: "Button",
+      button_action: "OPEN_ABOUT_PAGE",
+      button_entrypoint_value: "snippet",
+      button_entrypoint_name: "entryPoint",
+      button_action_args: "logins",
+    });
+
+    const button = wrapper.find("button.ASRouterButton");
+    button.simulate("click");
+
+    assert.calledOnce(wrapper.props().onAction);
+    assert.calledWithExactly(wrapper.props().onAction, {
+      type: "OPEN_ABOUT_PAGE",
+      data: { args: "logins", entrypoint: "entryPoint=snippet" },
+    });
+  });
+  it("should send an OPEN_PREFERENCE_PAGE action with entrypoint when the button is clicked", () => {
+    const wrapper = mountAndCheckProps({
+      button_label: "Button",
+      button_action: "OPEN_PREFERENCE_PAGE",
+      button_entrypoint_value: "entry=snippet",
+      button_action_args: "home",
+    });
+
+    const button = wrapper.find("button.ASRouterButton");
+    button.simulate("click");
+
+    assert.calledOnce(wrapper.props().onAction);
+    assert.calledWithExactly(wrapper.props().onAction, {
+      type: "OPEN_PREFERENCE_PAGE",
+      data: { args: "home", entrypoint: "entry=snippet" },
+    });
+  });
   it("should call props.onBlock and sendUserActionTelemetry when CTA button is clicked", () => {
     const wrapper = mountAndCheckProps({ text: "bar" });
 

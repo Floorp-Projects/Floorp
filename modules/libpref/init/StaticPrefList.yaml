@@ -2084,12 +2084,6 @@
   value: true
   mirror: always
 
-# Is support for mozBrowser frames enabled?
-- name: dom.mozBrowserFramesEnabled
-  type: bool
-  value: false
-  mirror: always
-
 # Whether we disable triggering mutation events for changes to style
 # attribute via CSSOM.
 # NOTE: This preference is used in unit tests. If it is removed or its default

@@ -41,7 +41,7 @@ UserDataKey gfxContext::sDontUseAsSourceKey;
 #  define CURRENTSTATE_CHANGED()
 #endif
 
-PatternFromState::operator mozilla::gfx::Pattern&() {
+PatternFromState::operator mozilla::gfx::Pattern &() {
   gfxContext::AzureState& state = mContext->CurrentState();
 
   if (state.pattern) {
@@ -432,11 +432,9 @@ bool gfxContext::CurrentDash(FallibleTArray<Float>& dashes,
   const AzureState& state = CurrentState();
   int count = state.strokeOptions.mDashLength;
 
-  if (count <= 0 || !dashes.SetLength(count, fallible)) {
+  if (count <= 0 || !dashes.Assign(state.dashPattern, fallible)) {
     return false;
   }
-
-  dashes = state.dashPattern;
 
   *offset = state.strokeOptions.mDashOffset;
 

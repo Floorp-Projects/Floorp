@@ -453,7 +453,6 @@ class AesTask : public ReturnArrayBufferViewTask, public DeferredData {
   AesTask(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
           bool aEncrypt)
       : mMechanism(CKM_INVALID_MECHANISM),
-        mSymKey(aKey.GetSymKey()),
         mTagLength(0),
         mCounterLength(0),
         mEncrypt(aEncrypt) {
@@ -463,7 +462,6 @@ class AesTask : public ReturnArrayBufferViewTask, public DeferredData {
   AesTask(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
           const CryptoOperationData& aData, bool aEncrypt)
       : mMechanism(CKM_INVALID_MECHANISM),
-        mSymKey(aKey.GetSymKey()),
         mTagLength(0),
         mCounterLength(0),
         mEncrypt(aEncrypt) {
@@ -476,6 +474,11 @@ class AesTask : public ReturnArrayBufferViewTask, public DeferredData {
     nsString algName;
     mEarlyRv = GetAlgorithmName(aCx, aAlgorithm, algName);
     if (NS_FAILED(mEarlyRv)) {
+      return;
+    }
+
+    if (!mSymKey.Assign(aKey.GetSymKey())) {
+      mEarlyRv = NS_ERROR_OUT_OF_MEMORY;
       return;
     }
 
@@ -660,17 +663,13 @@ class AesKwTask : public ReturnArrayBufferViewTask, public DeferredData {
  public:
   AesKwTask(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
             bool aEncrypt)
-      : mMechanism(CKM_NSS_AES_KEY_WRAP),
-        mSymKey(aKey.GetSymKey()),
-        mEncrypt(aEncrypt) {
+      : mMechanism(CKM_NSS_AES_KEY_WRAP), mEncrypt(aEncrypt) {
     Init(aCx, aAlgorithm, aKey, aEncrypt);
   }
 
   AesKwTask(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
             const CryptoOperationData& aData, bool aEncrypt)
-      : mMechanism(CKM_NSS_AES_KEY_WRAP),
-        mSymKey(aKey.GetSymKey()),
-        mEncrypt(aEncrypt) {
+      : mMechanism(CKM_NSS_AES_KEY_WRAP), mEncrypt(aEncrypt) {
     Init(aCx, aAlgorithm, aKey, aEncrypt);
     SetData(aData);
   }
@@ -682,6 +681,11 @@ class AesKwTask : public ReturnArrayBufferViewTask, public DeferredData {
     nsString algName;
     mEarlyRv = GetAlgorithmName(aCx, aAlgorithm, algName);
     if (NS_FAILED(mEarlyRv)) {
+      return;
+    }
+
+    if (!mSymKey.Assign(aKey.GetSymKey())) {
+      mEarlyRv = NS_ERROR_OUT_OF_MEMORY;
       return;
     }
 
@@ -909,14 +913,17 @@ class HmacTask : public WebCryptoTask {
   HmacTask(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
            const CryptoOperationData& aSignature,
            const CryptoOperationData& aData, bool aSign)
-      : mMechanism(aKey.Algorithm().Mechanism()),
-        mSymKey(aKey.GetSymKey()),
-        mSign(aSign) {
+      : mMechanism(aKey.Algorithm().Mechanism()), mSign(aSign) {
     CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_HMAC);
 
     ATTEMPT_BUFFER_INIT(mData, aData);
     if (!aSign) {
       ATTEMPT_BUFFER_INIT(mSignature, aSignature);
+    }
+
+    if (!mSymKey.Assign(aKey.GetSymKey())) {
+      mEarlyRv = NS_ERROR_OUT_OF_MEMORY;
+      return;
     }
 
     // Check that we got a symmetric key
@@ -1885,13 +1892,17 @@ class ExportKeyTask : public WebCryptoTask {
  public:
   ExportKeyTask(const nsAString& aFormat, CryptoKey& aKey)
       : mFormat(aFormat),
-        mSymKey(aKey.GetSymKey()),
         mPrivateKey(aKey.GetPrivateKey()),
         mPublicKey(aKey.GetPublicKey()),
         mKeyType(aKey.GetKeyType()),
         mExtractable(aKey.Extractable()),
         mAlg(aKey.Algorithm().JwkAlg()) {
     aKey.GetUsages(mKeyUsages);
+
+    if (!mSymKey.Assign(aKey.GetSymKey())) {
+      mEarlyRv = NS_ERROR_OUT_OF_MEMORY;
+      return;
+    }
   }
 
  protected:
@@ -1921,7 +1932,9 @@ class ExportKeyTask : public WebCryptoTask {
         return NS_OK;
       }
 
-      mResult = mSymKey;
+      if (!mResult.Assign(mSymKey)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
       if (mResult.Length() == 0) {
         return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
       }
@@ -2317,16 +2330,13 @@ class DeriveHkdfBitsTask : public ReturnArrayBufferViewTask {
  public:
   DeriveHkdfBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
                      CryptoKey& aKey, uint32_t aLength)
-      : mSymKey(aKey.GetSymKey()), mMechanism(CKM_INVALID_MECHANISM) {
+      : mMechanism(CKM_INVALID_MECHANISM) {
     Init(aCx, aAlgorithm, aKey, aLength);
   }
 
   DeriveHkdfBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
                      CryptoKey& aKey, const ObjectOrString& aTargetAlgorithm)
-      : mLengthInBits(0),
-        mLengthInBytes(0),
-        mSymKey(aKey.GetSymKey()),
-        mMechanism(CKM_INVALID_MECHANISM) {
+      : mLengthInBits(0), mLengthInBytes(0), mMechanism(CKM_INVALID_MECHANISM) {
     size_t length;
     mEarlyRv = GetKeyLengthForAlgorithm(aCx, aTargetAlgorithm, length);
 
@@ -2339,6 +2349,11 @@ class DeriveHkdfBitsTask : public ReturnArrayBufferViewTask {
             uint32_t aLength) {
     Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_HKDF);
     CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_HKDF);
+
+    if (!mSymKey.Assign(aKey.GetSymKey())) {
+      mEarlyRv = NS_ERROR_OUT_OF_MEMORY;
+      return;
+    }
 
     // Check that we have a key.
     if (mSymKey.Length() == 0) {
@@ -2473,16 +2488,13 @@ class DerivePbkdfBitsTask : public ReturnArrayBufferViewTask {
  public:
   DerivePbkdfBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
                       CryptoKey& aKey, uint32_t aLength)
-      : mSymKey(aKey.GetSymKey()), mHashOidTag(SEC_OID_UNKNOWN) {
+      : mHashOidTag(SEC_OID_UNKNOWN) {
     Init(aCx, aAlgorithm, aKey, aLength);
   }
 
   DerivePbkdfBitsTask(JSContext* aCx, const ObjectOrString& aAlgorithm,
                       CryptoKey& aKey, const ObjectOrString& aTargetAlgorithm)
-      : mLength(0),
-        mIterations(0),
-        mSymKey(aKey.GetSymKey()),
-        mHashOidTag(SEC_OID_UNKNOWN) {
+      : mLength(0), mIterations(0), mHashOidTag(SEC_OID_UNKNOWN) {
     size_t length;
     mEarlyRv = GetKeyLengthForAlgorithm(aCx, aTargetAlgorithm, length);
 
@@ -2495,6 +2507,11 @@ class DerivePbkdfBitsTask : public ReturnArrayBufferViewTask {
             uint32_t aLength) {
     Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_PBKDF2);
     CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_PBKDF2);
+
+    if (!mSymKey.Assign(aKey.GetSymKey())) {
+      mEarlyRv = NS_ERROR_OUT_OF_MEMORY;
+      return;
+    }
 
     RootedDictionary<Pbkdf2Params> params(aCx);
     mEarlyRv = Coerce(aCx, params, aAlgorithm);

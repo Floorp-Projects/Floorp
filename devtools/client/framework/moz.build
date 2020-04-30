@@ -6,6 +6,8 @@
 
 BROWSER_CHROME_MANIFESTS += [
     'test/allocations/browser_allocations_target.ini',
+    'test/browser-enable-popup-devtools-user.ini',
+    'test/browser-enable-popup-new-user.ini',
     'test/browser-telemetry-startup.ini',
     'test/browser.ini',
     'test/metrics/browser_metrics_debugger.ini',
@@ -26,6 +28,7 @@ DevToolsModules(
     'browser-menus.js',
     'devtools-browser.js',
     'devtools.js',
+    'enable-devtools-popup.js',
     'menu-item.js',
     'menu.js',
     'selection.js',
