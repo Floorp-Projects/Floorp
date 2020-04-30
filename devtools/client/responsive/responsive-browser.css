@@ -31,6 +31,8 @@
   --resizer-offset: 4px;
   --browser-viewport-width: calc(var(--rdm-width) + var(--resizer-offset));
   --browser-viewport-height: calc(var(--rdm-height) + var(--resizer-offset));
+  --rdm-zoomed-width: calc(var(--rdm-width) * var(--rdm-zoom));
+  --rdm-zoomed-height: calc(var(--rdm-height) * var(--rdm-zoom));
   min-height: 0;
   min-width: 0;
   overflow: auto;
@@ -66,6 +68,12 @@ html[dir="rtl"] .browserContainer.responsive-mode.left-aligned > .browserStack {
 .browserContainer.responsive-mode > .browserStack > browser {
   border: 1px solid var(--devtools-splitter-color);
   box-shadow: var(--rdm-browser-box-shadow);
+  transform-origin: 50% 0;
+  transform: scale(var(--rdm-zoom), var(--rdm-zoom));
+}
+
+.browserContainer.responsive-mode.left-aligned > .browserStack > browser {
+  transform-origin: 0 0;
 }
 
 /* Resize handles */
@@ -81,18 +89,38 @@ html[dir="rtl"] .browserContainer.responsive-mode.left-aligned > .browserStack {
   cursor: nwse-resize;
   align-self: end;
   justify-self: right;
+  position: relative;
+  left: calc((var(--rdm-zoomed-width) - var(--rdm-width)) / 2);
+  top: calc(var(--rdm-zoomed-height) - var(--rdm-height));
+}
+
+.browserContainer.responsive-mode.left-aligned > .browserStack > .viewport-resize-handle {
+  left: calc(var(--rdm-zoomed-width) - var(--rdm-width));
 }
 
 .browserContainer.responsive-mode > .browserStack > .viewport-horizontal-resize-handle {
   width: 5px;
-  height: calc(var(--rdm-height) - 16px);
+  height: calc(var(--rdm-zoomed-height) - 16px);
   cursor: ew-resize;
   justify-self: right;
+  position: relative;
+  left: calc((var(--rdm-zoomed-width) - var(--rdm-width)) / 2);
+}
+
+.browserContainer.responsive-mode.left-aligned > .browserStack > .viewport-horizontal-resize-handle {
+  left: calc(var(--rdm-zoomed-width) - var(--rdm-width));
 }
 
 .browserContainer.responsive-mode > .browserStack > .viewport-vertical-resize-handle {
-  width: calc(var(--rdm-width) - 16px);
+  width: calc(var(--rdm-zoomed-width) - 16px);
   height: 5px;
   cursor: ns-resize;
   align-self: end;
+  position: relative;
+  top: calc(var(--rdm-zoomed-height) - var(--rdm-height));
+  left: calc((-1 * (var(--rdm-zoomed-width) - var(--rdm-width)) / 2));
+}
+
+.browserContainer.responsive-mode.left-aligned > .browserStack > .viewport-vertical-resize-handle {
+  left: 0;
 }

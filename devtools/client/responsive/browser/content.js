@@ -61,10 +61,8 @@ var global = this;
     }
 
     // At this point, a content viewer might not be loaded for this
-    // docshell. setDocumentInRDMPane and makeScrollbarsFloating will be
-    // triggered by onLocationChange.
+    // docshell. makeScrollbarsFloating will be triggered by onLocationChange.
     if (docShell.contentViewer) {
-      setDocumentInRDMPane(true);
       makeScrollbarsFloating();
     }
     active = true;
@@ -128,7 +126,6 @@ var global = this;
     webProgress.removeProgressListener(WebProgressListener);
     docShell.deviceSizeIsPageSize = gDeviceSizeWasPageSize;
     restoreScrollbars();
-    setDocumentInRDMPane(false);
     stopOnResize();
     sendAsyncMessage("ResponsiveMode:Stop:Done");
   }
@@ -169,11 +166,6 @@ var global = this;
       } catch (e) {}
     }
     flushStyle();
-  }
-
-  function setDocumentInRDMPane(inRDMPane) {
-    // We don't propegate this property to descendent documents.
-    docShell.browsingContext.inRDMPane = inRDMPane;
   }
 
   function flushStyle() {
