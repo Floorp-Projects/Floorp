@@ -1,5 +1,5 @@
 =================================
-Mozilla Source Tree Documentation
+Firefox Source Tree Documentation
 =================================
 
 .. toctree::
