@@ -60,6 +60,7 @@ EXPORTS.mozilla.dom += [
     'ImageUtils.h',
     'OffscreenCanvas.h',
     'ProducerConsumerQueue.h',
+    'QueueParamTraits.h',
     'TextMetrics.h',
     'WebGLChild.h',
     'WebGLCommandQueue.h',
