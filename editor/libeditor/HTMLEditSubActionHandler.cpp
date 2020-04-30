@@ -4279,6 +4279,28 @@ MoveNodeResult HTMLEditor::MoveChildren(Element& aElement,
   return result;
 }
 
+void HTMLEditor::MoveAllChildren(nsINode& aContainer,
+                                 const EditorRawDOMPoint& aPointToInsert,
+                                 ErrorResult& aError) {
+  MOZ_ASSERT(!aError.Failed());
+
+  if (!aContainer.HasChildren()) {
+    return;
+  }
+  nsIContent* firstChild = aContainer.GetFirstChild();
+  if (NS_WARN_IF(!firstChild)) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  nsIContent* lastChild = aContainer.GetLastChild();
+  if (NS_WARN_IF(!lastChild)) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  MoveChildren(*firstChild, *lastChild, aPointToInsert, aError);
+  NS_WARNING_ASSERTION(!aError.Failed(), "EditorBase::MoveChildren() failed");
+}
+
 nsresult HTMLEditor::DeleteElementsExceptTableRelatedElements(nsINode& aNode) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 

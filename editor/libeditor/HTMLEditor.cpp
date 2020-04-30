@@ -4279,7 +4279,7 @@ void HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
         MoveAllChildren(*aStartOfRightNode.GetContainer(),
                         EditorRawDOMPoint(&aNewLeftNode, 0), aError);
         NS_WARNING_ASSERTION(!aError.Failed(),
-                             "EditorBase::MoveAllChildren() failed");
+                             "HTMLEditor::MoveAllChildren() failed");
       } else if (NS_WARN_IF(aStartOfRightNode.GetContainer() !=
                             firstChildOfRightNode->GetParentNode())) {
         // firstChildOfRightNode has been moved by mutation observer.
