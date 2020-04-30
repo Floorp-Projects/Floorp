@@ -146,6 +146,7 @@ const PROP_JSON_FIELDS = [
   "targetApplications",
   "targetPlatforms",
   "signedState",
+  "signedDate",
   "seen",
   "dependencies",
   "incognito",
@@ -1363,7 +1364,7 @@ function defineAddonWrapperProperty(name, getter) {
   });
 });
 
-["installDate", "updateDate"].forEach(function(aProp) {
+["installDate", "updateDate", "signedDate"].forEach(function(aProp) {
   defineAddonWrapperProperty(aProp, function() {
     let addon = addonFor(this);
     if (addon[aProp]) {
@@ -2984,9 +2985,13 @@ this.XPIDatabaseReconcile = {
 
     let checkSigning =
       aOldAddon.signedState === undefined && SIGNED_TYPES.has(aOldAddon.type);
+    // signedDate must be set if signedState is set.
+    let signedDateMissing =
+      aOldAddon.signedDate === undefined &&
+      (aOldAddon.signedState || checkSigning);
 
     let manifest = null;
-    if (checkSigning || aReloadMetadata) {
+    if (checkSigning || aReloadMetadata || signedDateMissing) {
       try {
         manifest = XPIInstall.syncLoadManifest(aAddonState, aLocation);
       } catch (err) {
@@ -3001,6 +3006,10 @@ this.XPIDatabaseReconcile = {
     // then update that property now
     if (checkSigning) {
       aOldAddon.signedState = manifest.signedState;
+    }
+
+    if (signedDateMissing) {
+      aOldAddon.signedDate = manifest.signedDate;
     }
 
     // May be updating from a version of the app that didn't support all the
