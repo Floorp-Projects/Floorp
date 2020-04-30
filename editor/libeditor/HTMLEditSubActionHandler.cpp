@@ -130,6 +130,15 @@ class MOZ_RAII AutoSetTemporaryAncestorLimiter final {
   RefPtr<Selection> mSelection;
 };
 
+// Helper struct for DoJoinNodes() and DoSplitNode().
+struct MOZ_STACK_CLASS SavedRange final {
+  RefPtr<Selection> mSelection;
+  nsCOMPtr<nsINode> mStartContainer;
+  nsCOMPtr<nsINode> mEndContainer;
+  int32_t mStartOffset = 0;
+  int32_t mEndOffset = 0;
+};
+
 template void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
     RangeBoundary& aStartRef, RangeBoundary& aEndRef);
 template void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(

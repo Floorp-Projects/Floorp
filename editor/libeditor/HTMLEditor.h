@@ -46,6 +46,7 @@ class AutoSetTemporaryAncestorLimiter;
 class EditActionResult;
 class EditResult;
 class EmptyEditableFunctor;
+class JoinNodeTransaction;
 class ListElementSelectionState;
 class ListItemElementSelectionState;
 class MoveNodeResult;
@@ -1191,6 +1192,20 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT void DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
                                       nsIContent& aNewLeftNode,
                                       ErrorResult& aError);
+
+  /**
+   * DoJoinNodes() merges contents in aContentToJoin to aContentToKeep and
+   * remove aContentToJoin from the DOM tree.  aContentToJoin and aContentToKeep
+   * must have same parent, aParent.  Additionally, if one of aContentToJoin or
+   * aContentToKeep is a text node, the other must be a text node.
+   *
+   * @param aContentToKeep  The node that will remain after the join.
+   * @param aContentToJoin  The node that will be joined with aContentToKeep.
+   *                        There is no requirement that the two nodes be of the
+   *                        same type.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  DoJoinNodes(nsIContent& aContentToKeep, nsIContent& aContentToJoin);
 
  protected:  // edit sub-action handler
   /**
@@ -4750,6 +4765,7 @@ class HTMLEditor final : public TextEditor,
   friend class CSSEditUtils;
   friend class EditorBase;
   friend class EmptyEditableFunctor;
+  friend class JoinNodeTransaction;
   friend class ListElementSelectionState;
   friend class ListItemElementSelectionState;
   friend class ParagraphStateAtSelection;

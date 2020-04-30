@@ -1631,28 +1631,6 @@ class EditorBase : public nsIEditor,
                                                         uint32_t aOffset,
                                                         uint32_t aLength);
 
-  struct MOZ_STACK_CLASS SavedRange final {
-    RefPtr<Selection> mSelection;
-    nsCOMPtr<nsINode> mStartContainer;
-    nsCOMPtr<nsINode> mEndContainer;
-    int32_t mStartOffset = 0;
-    int32_t mEndOffset = 0;
-  };
-
-  /**
-   * DoJoinNodes() merges contents in aContentToJoin to aContentToKeep and
-   * remove aContentToJoin from the DOM tree.  aContentToJoin and aContentToKeep
-   * must have same parent, aParent.  Additionally, if one of aContentToJoin or
-   * aContentToKeep is a text node, the other must be a text node.
-   *
-   * @param aContentToKeep  The node that will remain after the join.
-   * @param aContentToJoin  The node that will be joined with aContentToKeep.
-   *                        There is no requirement that the two nodes be of the
-   *                        same type.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  DoJoinNodes(nsIContent& aContentToKeep, nsIContent& aContentToJoin);
-
   /**
    * EnsureNoPaddingBRElementForEmptyEditor() removes padding <br> element
    * for empty editor if there is.

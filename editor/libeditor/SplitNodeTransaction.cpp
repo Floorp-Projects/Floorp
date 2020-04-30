@@ -132,7 +132,7 @@ NS_IMETHODIMP SplitNodeTransaction::UndoTransaction() {
       *mStartOfRightContent.ContainerAsContent();
   OwningNonNull<nsIContent> newLeftContent = *mNewLeftContent;
   nsresult rv = htmlEditor->DoJoinNodes(containerContent, newLeftContent);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EditorBase::DoJoinNodes() failed");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HTMLEditor::DoJoinNodes() failed");
   return rv;
 }
 
