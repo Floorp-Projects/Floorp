@@ -191,6 +191,50 @@ class Database {
     }
   }
 
+  async getAttachment(attachmentId) {
+    let entry = null;
+    try {
+      await executeIDB(
+        "attachments",
+        store => {
+          store.get([this.identifier, attachmentId]).onsuccess = e => {
+            entry = e.target.result;
+          };
+        },
+        { mode: "readonly" }
+      );
+    } catch (e) {
+      throw new IDBHelpers.IndexedDBError(
+        e,
+        "getAttachment()",
+        this.identifier
+      );
+    }
+    return entry ? entry.attachment : null;
+  }
+
+  async saveAttachment(attachmentId, attachment) {
+    try {
+      await executeIDB(
+        "attachments",
+        store => {
+          if (attachment) {
+            store.put({ cid: this.identifier, attachmentId, attachment });
+          } else {
+            store.delete([this.identifier, attachmentId]);
+          }
+        },
+        { desc: "saveAttachment(" + attachmentId + ") in " + this.identifier }
+      );
+    } catch (e) {
+      throw new IDBHelpers.IndexedDBError(
+        e,
+        "saveAttachment()",
+        this.identifier
+      );
+    }
+  }
+
   async clear() {
     try {
       await this.saveLastModified(null);
