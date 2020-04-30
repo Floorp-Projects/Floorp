@@ -17,10 +17,14 @@
  */
 SimpleTest.waitForExplicitFinish();
 
+const BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN = 5;
+var cookieBehavior = SpecialPowers.getIntPref("network.cookie.cookieBehavior");
 var tests = [
   {
     policy: "default-src 'self'; script-src 'unsafe-inline'; child-src test1.example.com;",
-    expected: "blocked"
+    expected: cookieBehavior == BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
+              ? "blocked,blocked"
+              : "blocked"
   },
 ];
 
