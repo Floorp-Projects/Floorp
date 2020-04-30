@@ -105,6 +105,21 @@ let ACTORS = {
     remoteTypes: ["privilegedabout"],
   },
 
+  AboutPlugins: {
+    parent: {
+      moduleURI: "resource:///actors/AboutPluginsParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/AboutPluginsChild.jsm",
+
+      events: {
+        DOMWindowCreated: { capture: true },
+      },
+    },
+
+    matches: ["about:plugins"],
+  },
+
   AboutPrivateBrowsing: {
     parent: {
       moduleURI: "resource:///actors/AboutPrivateBrowsingParent.jsm",
