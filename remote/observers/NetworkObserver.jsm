@@ -16,7 +16,7 @@ const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
 const { ChannelEventSinkFactory } = ChromeUtils.import(
-  "chrome://remote/content/domains/parent/network/ChannelEventSink.jsm"
+  "chrome://remote/content/observers/ChannelEventSink.jsm"
 );
 
 const CC = Components.Constructor;

@@ -14,7 +14,7 @@ const { DomainCache } = ChromeUtils.import(
 );
 
 const { NetworkObserver } = ChromeUtils.import(
-  "chrome://remote/content/domains/parent/network/NetworkObserver.jsm"
+  "chrome://remote/content/observers/NetworkObserver.jsm"
 );
 
 /**

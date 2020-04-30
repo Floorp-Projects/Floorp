@@ -13,7 +13,7 @@ const { Domain } = ChromeUtils.import(
 ChromeUtils.defineModuleGetter(
   this,
   "ContextObserver",
-  "chrome://remote/content/domains/ContextObserver.jsm"
+  "chrome://remote/content/observers/ContextObserver.jsm"
 );
 
 class ContentProcessDomain extends Domain {
