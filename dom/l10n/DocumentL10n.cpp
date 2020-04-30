@@ -60,20 +60,23 @@ void DocumentL10n::Activate(const bool aLazy) {
     return;
   }
 
-  if (aLazy) {
-    DOMLocalization::Activate(false, true, {});
-    mReady->MaybeResolveWithUndefined();
-    mState = DocumentL10nState::Ready;
-  } else {
-    Element* elem = mDocument->GetDocumentElement();
-    if (NS_WARN_IF(!elem)) {
-      return;
-    }
-    bool isSync = elem->HasAttr(kNameSpaceID_None, nsGkAtoms::datal10nsync);
-
-    DOMLocalization::Activate(isSync, true, {});
-    mState = DocumentL10nState::Activated;
+  Element* elem = mDocument->GetDocumentElement();
+  if (NS_WARN_IF(!elem)) {
+    return;
   }
+  bool isSync = elem->HasAttr(kNameSpaceID_None, nsGkAtoms::datal10nsync);
+
+  if (aLazy) {
+    if (isSync) {
+      NS_WARNING(
+          "Document localization initialized lazy, data-l10n-sync attribute "
+          "has no effect.");
+    }
+    DOMLocalization::Activate(false, true, {});
+  } else {
+    DOMLocalization::Activate(isSync, true, {});
+  }
+  mState = DocumentL10nState::Activated;
 }
 
 JSObject* DocumentL10n::WrapObject(JSContext* aCx,

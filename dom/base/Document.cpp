@@ -3865,8 +3865,6 @@ void Document::LocalizationLinkAdded(Element* aLinkElement) {
     return;
   }
 
-  bool mWasDocumentL10nSet = mDocumentL10n;
-
   EnsureL10n();
 
   nsAutoString href;
@@ -3875,15 +3873,15 @@ void Document::LocalizationLinkAdded(Element* aLinkElement) {
   mDocumentL10n->AddResourceId(href);
 
   if (mReadyState >= READYSTATE_INTERACTIVE) {
-    // We're past the initial translation. No need to block layout, let's go
-    // directly to activate DocumentL10n.
     mDocumentL10n->Activate(true);
+    mDocumentL10n->TriggerInitialTranslation();
   } else {
-    if (!mWasDocumentL10nSet) {
+    if (!mDocumentL10n->mBlockingLayout) {
       // Our initial translation is going to block layout start.  Make sure
       // we don't fire the load event until after that stops happening and
       // layout has a chance to start.
       BlockOnload();
+      mDocumentL10n->mBlockingLayout = true;
     }
   }
 }
@@ -3933,13 +3931,14 @@ void Document::OnParsingCompleted() {
 }
 
 void Document::InitialTranslationCompleted() {
-  MOZ_ASSERT(mDocumentL10n,
-             "DocumentL10n must be initialized before this point.");
-  // This means we blocked the load event in LocalizationLinkAdded.  It's
-  // important that the load blocker removal here be async, because our caller
-  // will notify the content sink after us, and we want the content sync's
-  // work to happen before the load event fires.
-  UnblockOnload(/* aFireSync = */ false);
+  if (mDocumentL10n->mBlockingLayout) {
+    // This means we blocked the load event in LocalizationLinkAdded.  It's
+    // important that the load blocker removal here be async, because our caller
+    // will notify the content sink after us, and we want the content sync's
+    // work to happen before the load event fires.
+    UnblockOnload(/* aFireSync = */ false);
+    mDocumentL10n->mBlockingLayout = false;
+  }
 
   mL10nProtoElements.Clear();
 
