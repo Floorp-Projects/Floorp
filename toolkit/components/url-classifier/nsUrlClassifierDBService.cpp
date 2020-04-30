@@ -1023,7 +1023,7 @@ nsresult nsUrlClassifierDBServiceWorker::CacheCompletions(
 
   rv = mClassifier->ApplyFullHashes(updates);
   if (NS_SUCCEEDED(rv)) {
-    mLastResults = aResults;
+    mLastResults = aResults.Clone();
   }
   return rv;
 }
@@ -2558,7 +2558,9 @@ bool nsUrlClassifierDBService::AsyncClassifyLocalWithFeaturesUsingPreferences(
   nsCOMPtr<nsIUrlClassifierFeatureCallback> callback(aCallback);
   nsCOMPtr<nsIRunnable> cbRunnable = NS_NewRunnableFunction(
       "nsUrlClassifierDBService::AsyncClassifyLocalWithFeatures",
-      [callback, results]() { callback->OnClassifyComplete(results); });
+      [callback, results = std::move(results)]() {
+        callback->OnClassifyComplete(results);
+      });
 
   NS_DispatchToMainThread(cbRunnable);
   return true;

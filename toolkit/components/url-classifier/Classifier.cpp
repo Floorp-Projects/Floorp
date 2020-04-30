@@ -747,7 +747,7 @@ nsresult Classifier::AsyncApplyUpdates(const TableUpdateArray& aUpdates,
   RefPtr<Classifier> self = this;
   nsCOMPtr<nsIRunnable> bgRunnable = NS_NewRunnableFunction(
       "safebrowsing::Classifier::AsyncApplyUpdates",
-      [self, aUpdates, aCallback, callerThread]() mutable {
+      [self, aUpdates = aUpdates.Clone(), aCallback, callerThread]() mutable {
         MOZ_ASSERT(self->OnUpdateThread(), "MUST be on update thread");
 
         nsresult bgRv;
@@ -757,7 +757,7 @@ nsresult Classifier::AsyncApplyUpdates(const TableUpdateArray& aUpdates,
 
         // Make a copy of the array since we'll be removing entries as
         // we process them on the background thread.
-        if (updates.AppendElements(aUpdates, fallible)) {
+        if (updates.AppendElements(std::move(aUpdates), fallible)) {
           LOG(("Step 1. ApplyUpdatesBackground on update thread."));
           bgRv = self->ApplyUpdatesBackground(updates, failedTableNames);
         } else {
@@ -774,7 +774,8 @@ nsresult Classifier::AsyncApplyUpdates(const TableUpdateArray& aUpdates,
         // it in the udpate thread.
         nsCOMPtr<nsIRunnable> fgRunnable = NS_NewRunnableFunction(
             "safebrowsing::Classifier::AsyncApplyUpdates",
-            [self = std::move(self), aCallback, bgRv, failedTableNames,
+            [self = std::move(self), aCallback, bgRv,
+             failedTableNames = std::move(failedTableNames),
              callerThread]() mutable {
               RefPtr<Classifier> classifier = std::move(self);
 
@@ -1044,7 +1045,7 @@ nsresult Classifier::ScanStoreDir(nsIFile* aDirectory,
 }
 
 nsresult Classifier::ActiveTables(nsTArray<nsCString>& aTables) const {
-  aTables = mActiveTablesCache;
+  aTables = mActiveTablesCache.Clone();
   return NS_OK;
 }
 

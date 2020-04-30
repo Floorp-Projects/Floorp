@@ -34,7 +34,7 @@ class ProtocolParser {
   virtual void SetCurrentTable(const nsACString& aTable) = 0;
 
   void SetRequestedTables(const nsTArray<nsCString>& aRequestTables) {
-    mRequestedTables = aRequestTables;
+    mRequestedTables = aRequestTables.Clone();
   }
 
   nsresult Begin(const nsACString& aTable,
