@@ -401,11 +401,6 @@ class experimental(object):
     }
     """Doesn't limit platforms, medium confidence threshold."""
 
-    bugbug_all_low = {
-        'test': Any('skip-unless-schedules', 'bugbug-low', split_args=tuple),
-    }
-    """Doesn't limit platforms, low confidence threshold."""
-
     bugbug_all_high = {
         'test': Any('skip-unless-schedules', 'bugbug-high', split_args=tuple),
     }
