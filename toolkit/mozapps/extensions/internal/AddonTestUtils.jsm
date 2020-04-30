@@ -891,6 +891,7 @@ var AddonTestUtils = {
     );
     const blocklistMapping = {
       extensions: bsPass.ExtensionBlocklistRS,
+      extensionsMLBF: bsPass.ExtensionBlocklistMLBF,
       plugins: bsPass.PluginBlocklistRS,
     };
 
