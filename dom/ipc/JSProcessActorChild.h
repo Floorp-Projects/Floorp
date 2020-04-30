@@ -35,6 +35,7 @@ class JSProcessActorChild final : public JSActor {
   ContentChild* Manager() const { return mManager; }
 
   void Init(const nsACString& aName, ContentChild* aManager);
+  void AfterDestroy();
 
  protected:
   // Send the message described by the structured clone data |aData|, and the

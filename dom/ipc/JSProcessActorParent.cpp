@@ -75,5 +75,10 @@ void JSProcessActorParent::SendRawMessage(const JSActorMessageMeta& aMeta,
   }
 }
 
+void JSProcessActorParent::AfterDestroy() {
+  JSActor::AfterDestroy();
+  mManager = nullptr;
+}
+
 }  // namespace dom
 }  // namespace mozilla
