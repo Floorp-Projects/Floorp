@@ -3841,12 +3841,14 @@ bool Document::GetAllowPlugins() {
 void Document::InitializeLocalization(Sequence<nsString>& aResourceIds) {
   MOZ_ASSERT(!mDocumentL10n, "mDocumentL10n should not be initialized yet");
 
-  RefPtr<DocumentL10n> l10n = new DocumentL10n(this);
-  ErrorResult rv;
-  l10n->Init(aResourceIds, rv);
-  if (NS_WARN_IF(rv.Failed())) {
+  RefPtr<DocumentL10n> l10n = DocumentL10n::Create(this);
+  if (NS_WARN_IF(!l10n)) {
     return;
   }
+  if (aResourceIds.Length()) {
+    l10n->AddResourceIds(aResourceIds);
+  }
+  l10n->Activate();
   mDocumentL10n = l10n;
 }
 
