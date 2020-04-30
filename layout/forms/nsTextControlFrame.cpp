@@ -133,8 +133,6 @@ nsIScrollableFrame* nsTextControlFrame::GetScrollTargetFrame() {
 
 void nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                      PostDestroyData& aPostDestroyData) {
-  mScrollEvent.Revoke();
-
   RemoveProperty(TextControlInitializer());
 
   // Unbind the text editor state object from the frame.  The editor will live
@@ -683,33 +681,11 @@ bool nsTextControlFrame::IsXULCollapsed() {
   return false;
 }
 
-NS_IMETHODIMP
-nsTextControlFrame::ScrollOnFocusEvent::Run() {
-  if (mFrame) {
-    TextControlElement* textControlElement =
-        TextControlElement::FromNode(mFrame->GetContent());
-    MOZ_ASSERT(textControlElement);
-    nsISelectionController* selCon =
-        textControlElement->GetSelectionController();
-    if (selCon) {
-      mFrame->mScrollEvent.Forget();
-      selCon->ScrollSelectionIntoView(
-          nsISelectionController::SELECTION_NORMAL,
-          nsISelectionController::SELECTION_FOCUS_REGION,
-          nsISelectionController::SCROLL_SYNCHRONOUS);
-    }
-  }
-  return NS_OK;
-}
-
 // IMPLEMENTING NS_IFORMCONTROLFRAME
 void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint) {
   TextControlElement* textControlElement =
       TextControlElement::FromNode(GetContent());
   MOZ_ASSERT(textControlElement);
-
-  // Revoke the previous scroll event if one exists
-  mScrollEvent.Revoke();
 
   // If 'dom.placeholeder.show_on_focus' preference is 'false', focusing or
   // blurring the frame can have an impact on the placeholder visibility.
@@ -752,12 +728,8 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint) {
       }
     }
     if (!(lastFocusMethod & nsIFocusManager::FLAG_BYMOUSE)) {
-      RefPtr<ScrollOnFocusEvent> event = new ScrollOnFocusEvent(this);
-      nsresult rv =
-          mContent->OwnerDoc()->Dispatch(TaskCategory::Other, do_AddRef(event));
-      if (NS_SUCCEEDED(rv)) {
-        mScrollEvent = std::move(event);
-      }
+      // NOTE(emilio): This is asynchronous, so it can't cause havoc.
+      ScrollSelectionIntoView();
     }
   }
 
@@ -872,8 +844,7 @@ nsresult nsTextControlFrame::SetSelectionInternal(
 }
 
 nsresult nsTextControlFrame::ScrollSelectionIntoView() {
-  TextControlElement* textControlElement =
-      TextControlElement::FromNode(GetContent());
+  auto* textControlElement = TextControlElement::FromNode(GetContent());
   MOZ_ASSERT(textControlElement);
   nsISelectionController* selCon = textControlElement->GetSelectionController();
   if (selCon) {
