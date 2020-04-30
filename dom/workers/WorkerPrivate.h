@@ -284,7 +284,7 @@ class WorkerPrivate : public RelativeTimeline {
   void UpdateLanguagesInternal(const nsTArray<nsString>& aLanguages);
 
   void UpdateJSWorkerMemoryParameterInternal(JSContext* aCx, JSGCParamKey key,
-                                             uint32_t aValue);
+                                             Maybe<uint32_t> aValue);
 
   enum WorkerRanOrNot { WorkerNeverRan = 0, WorkerRan };
 
@@ -861,7 +861,7 @@ class WorkerPrivate : public RelativeTimeline {
 
   void UpdateLanguages(const nsTArray<nsString>& aLanguages);
 
-  void UpdateJSWorkerMemoryParameter(JSGCParamKey key, uint32_t value);
+  void UpdateJSWorkerMemoryParameter(JSGCParamKey key, Maybe<uint32_t> value);
 
 #ifdef JS_GC_ZEAL
   void UpdateGCZeal(uint8_t aGCZeal, uint32_t aFrequency);

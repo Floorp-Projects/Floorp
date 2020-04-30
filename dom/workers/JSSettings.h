@@ -44,78 +44,42 @@ struct JSSettings {
   };
 
   struct JSGCSetting {
-    mozilla::Maybe<JSGCParamKey> key;
-    uint32_t value;
+    JSGCParamKey key;
+    // Nothing() represents the default value, the result of calling
+    // JS_ResetGCParameter.
+    Maybe<uint32_t> value;
 
-    JSGCSetting() : key(), value(0) {}
+    // For the IndexOf call below.
+    bool operator==(JSGCParamKey k) const { return key == k; }
   };
-
-  // There are several settings that we know we need so it makes sense to
-  // preallocate here.
-  typedef JSGCSetting JSGCSettingsArray[kGCSettingsArraySize];
 
   // Settings that change based on chrome/content context.
   struct JSContentChromeSettings {
     JS::RealmOptions realmOptions;
-    int32_t maxScriptRuntime;
-
-    JSContentChromeSettings() : realmOptions(), maxScriptRuntime(0) {}
+    int32_t maxScriptRuntime = 0;
   };
 
   JSContentChromeSettings chrome;
   JSContentChromeSettings content;
-  JSGCSettingsArray gcSettings;
+  nsTArray<JSGCSetting> gcSettings;
   JS::ContextOptions contextOptions;
 
 #ifdef JS_GC_ZEAL
-  uint8_t gcZeal;
-  uint32_t gcZealFrequency;
+  uint8_t gcZeal = 0;
+  uint32_t gcZealFrequency = 0;
 #endif
 
-  JSSettings()
-#ifdef JS_GC_ZEAL
-      : gcZeal(0),
-        gcZealFrequency(0)
-#endif
-  {
-    for (uint32_t index = 0; index < ArrayLength(gcSettings); index++) {
-      new (gcSettings + index) JSGCSetting();
-    }
-  }
-
-  bool ApplyGCSetting(JSGCParamKey aKey, uint32_t aValue) {
-    JSSettings::JSGCSetting* firstEmptySetting = nullptr;
-    JSSettings::JSGCSetting* foundSetting = nullptr;
-
-    for (uint32_t index = 0; index < ArrayLength(gcSettings); index++) {
-      JSSettings::JSGCSetting& setting = gcSettings[index];
-      if (setting.key.isSome() && *setting.key == aKey) {
-        foundSetting = &setting;
-        break;
-      }
-      if (!firstEmptySetting && setting.key.isNothing()) {
-        firstEmptySetting = &setting;
-      }
-    }
-
-    if (aValue) {
-      if (!foundSetting) {
-        foundSetting = firstEmptySetting;
-        if (!foundSetting) {
-          NS_ERROR("Not enough space for this value!");
-          return false;
-        }
-      }
-      foundSetting->key = mozilla::Some(aKey);
-      foundSetting->value = aValue;
+  // Returns whether there was a change in the setting.
+  bool ApplyGCSetting(JSGCParamKey aKey, Maybe<uint32_t> aValue) {
+    size_t index = gcSettings.IndexOf(aKey);
+    if (index == gcSettings.NoIndex) {
+      gcSettings.AppendElement(JSGCSetting{aKey, aValue});
       return true;
     }
-
-    if (foundSetting) {
-      foundSetting->key.reset();
+    if (gcSettings[index].value != aValue) {
+      gcSettings[index].value = aValue;
       return true;
     }
-
     return false;
   }
 };

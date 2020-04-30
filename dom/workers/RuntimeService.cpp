@@ -214,12 +214,14 @@ struct PrefTraits<int32_t> {
 
 template <typename T>
 T GetWorkerPref(const nsACString& aPref,
-                const T aDefault = PrefTraits<T>::kDefaultValue) {
+                const T aDefault = PrefTraits<T>::kDefaultValue,
+                bool* aPresent = nullptr) {
   AssertIsOnMainThread();
 
   typedef PrefTraits<T> PrefHelper;
 
   T result;
+  bool present = true;
 
   nsAutoCString prefName;
   prefName.AssignLiteral(PREF_WORKERS_OPTIONS_PREFIX);
@@ -235,9 +237,13 @@ T GetWorkerPref(const nsACString& aPref,
       result = PrefHelper::Get(prefName.get());
     } else {
       result = aDefault;
+      present = false;
     }
   }
 
+  if (aPresent) {
+    *aPresent = present;
+  }
   return result;
 }
 
@@ -351,8 +357,9 @@ void UpdateCommonJSGCMemoryOption(RuntimeService* aRuntimeService,
   NS_ASSERTION(!aPrefName.IsEmpty(), "Empty pref name!");
 
   int32_t prefValue = GetWorkerPref(aPrefName, -1);
-  uint32_t value =
-      (prefValue < 0 || prefValue >= 10000) ? 0 : uint32_t(prefValue);
+  Maybe<uint32_t> value = (prefValue < 0 || prefValue >= 10000)
+                              ? Nothing()
+                              : Some(uint32_t(prefValue));
 
   RuntimeService::SetDefaultJSGCSettings(aKey, value);
 
@@ -362,7 +369,7 @@ void UpdateCommonJSGCMemoryOption(RuntimeService* aRuntimeService,
 }
 
 void UpdateOtherJSGCMemoryOption(RuntimeService* aRuntimeService,
-                                 JSGCParamKey aKey, uint32_t aValue) {
+                                 JSGCParamKey aKey, Maybe<uint32_t> aValue) {
   AssertIsOnMainThread();
 
   RuntimeService::SetDefaultJSGCSettings(aKey, aValue);
@@ -418,9 +425,9 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
     matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX "max");
     if (memPrefName == matchName || (gRuntimeServiceDuringInit && index == 0)) {
       int32_t prefValue = GetWorkerPref(matchName, -1);
-      uint32_t value = (prefValue <= 0 || prefValue >= 0x1000)
-                           ? uint32_t(-1)
-                           : uint32_t(prefValue) * 1024 * 1024;
+      Maybe<uint32_t> value = (prefValue <= 0 || prefValue >= 0x1000)
+                                  ? Nothing()
+                                  : Some(uint32_t(prefValue) * 1024 * 1024);
       UpdateOtherJSGCMemoryOption(rts, JSGC_MAX_BYTES, value);
       continue;
     }
@@ -481,8 +488,9 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
     matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX "gc_incremental_slice_ms");
     if (memPrefName == matchName || (gRuntimeServiceDuringInit && index == 9)) {
       int32_t prefValue = GetWorkerPref(matchName, -1);
-      uint32_t value =
-          (prefValue <= 0 || prefValue >= 100000) ? 0 : uint32_t(prefValue);
+      Maybe<uint32_t> value = (prefValue <= 0 || prefValue >= 100000)
+                                  ? Nothing()
+                                  : Some(uint32_t(prefValue));
       UpdateOtherJSGCMemoryOption(rts, JSGC_SLICE_TIME_BUDGET_MS, value);
       continue;
     }
@@ -504,9 +512,10 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
     matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX "gc_compacting");
     if (memPrefName == matchName ||
         (gRuntimeServiceDuringInit && index == 14)) {
-      bool prefValue = GetWorkerPref(matchName, false);
-      UpdateOtherJSGCMemoryOption(rts, JSGC_COMPACTING_ENABLED,
-                                  prefValue ? 1 : 0);
+      bool present;
+      bool prefValue = GetWorkerPref(matchName, false, &present);
+      Maybe<uint32_t> value = present ? Some(prefValue ? 1 : 0) : Nothing();
+      UpdateOtherJSGCMemoryOption(rts, JSGC_COMPACTING_ENABLED, value);
       continue;
     }
 
@@ -729,14 +738,12 @@ bool InitJSContextForWorker(WorkerPrivate* aWorkerPrivate,
 
   JS::ContextOptionsRef(aWorkerCx) = settings.contextOptions;
 
-  JSSettings::JSGCSettingsArray& gcSettings = settings.gcSettings;
-
   // This is the real place where we set the max memory for the runtime.
-  for (uint32_t index = 0; index < ArrayLength(gcSettings); index++) {
-    const JSSettings::JSGCSetting& setting = gcSettings[index];
-    if (setting.key.isSome()) {
-      NS_ASSERTION(setting.value, "Can't handle 0 values!");
-      JS_SetGCParameter(aWorkerCx, *setting.key, setting.value);
+  for (const auto& setting : settings.gcSettings) {
+    if (setting.value) {
+      JS_SetGCParameter(aWorkerCx, setting.key, *setting.value);
+    } else {
+      JS_ResetGCParameter(aWorkerCx, setting.key);
     }
   }
 
@@ -1082,7 +1089,7 @@ void PlatformOverrideChanged(const char* /* aPrefName */,
 } /* anonymous namespace */
 
 // This is only touched on the main thread. Initialized in Init() below.
-JSSettings RuntimeService::sDefaultJSSettings;
+UniquePtr<JSSettings> RuntimeService::sDefaultJSSettings;
 
 RuntimeService::RuntimeService()
     : mMutex("RuntimeService::mMutex"),
@@ -1470,18 +1477,12 @@ nsresult RuntimeService::Init() {
   nsLayoutStatics::AddRef();
 
   // Initialize JSSettings.
-  if (sDefaultJSSettings.gcSettings[0].key.isNothing()) {
-    sDefaultJSSettings.contextOptions = JS::ContextOptions();
-    sDefaultJSSettings.chrome.maxScriptRuntime = -1;
-    sDefaultJSSettings.content.maxScriptRuntime = MAX_SCRIPT_RUN_TIME_SEC;
-#ifdef JS_GC_ZEAL
-    sDefaultJSSettings.gcZealFrequency = JS_DEFAULT_ZEAL_FREQ;
-    sDefaultJSSettings.gcZeal = 0;
-#endif
-    SetDefaultJSGCSettings(JSGC_MAX_BYTES, WORKER_DEFAULT_RUNTIME_HEAPSIZE);
-    SetDefaultJSGCSettings(JSGC_ALLOCATION_THRESHOLD,
-                           WORKER_DEFAULT_ALLOCATION_THRESHOLD);
-  }
+  sDefaultJSSettings = MakeUnique<JSSettings>();
+  sDefaultJSSettings->chrome.maxScriptRuntime = -1;
+  sDefaultJSSettings->content.maxScriptRuntime = MAX_SCRIPT_RUN_TIME_SEC;
+  SetDefaultJSGCSettings(JSGC_MAX_BYTES, Some(WORKER_DEFAULT_RUNTIME_HEAPSIZE));
+  SetDefaultJSGCSettings(JSGC_ALLOCATION_THRESHOLD,
+                         Some(WORKER_DEFAULT_ALLOCATION_THRESHOLD));
 
   // nsIStreamTransportService is thread-safe but it must be initialized on the
   // main-thread. FileReader needs it, so, let's initialize it now.
@@ -1560,10 +1561,10 @@ nsresult RuntimeService::Init() {
   // We assume atomic 32bit reads/writes. If this assumption doesn't hold on
   // some wacky platform then the worst that could happen is that the close
   // handler will run for a slightly different amount of time.
-  Preferences::AddIntVarCache(&sDefaultJSSettings.content.maxScriptRuntime,
+  Preferences::AddIntVarCache(&sDefaultJSSettings->content.maxScriptRuntime,
                               PREF_MAX_SCRIPT_RUN_TIME_CONTENT,
                               MAX_SCRIPT_RUN_TIME_SEC);
-  Preferences::AddIntVarCache(&sDefaultJSSettings.chrome.maxScriptRuntime,
+  Preferences::AddIntVarCache(&sDefaultJSSettings->chrome.maxScriptRuntime,
                               PREF_MAX_SCRIPT_RUN_TIME_CHROME, -1);
 
   int32_t maxPerDomain =
@@ -1625,6 +1626,8 @@ void RuntimeService::Shutdown() {
       }
     }
   }
+
+  sDefaultJSSettings = nullptr;
 }
 
 namespace {
@@ -2026,7 +2029,7 @@ void RuntimeService::NoteIdleThread(WorkerThread* aThread) {
 
 void RuntimeService::UpdateAllWorkerContextOptions() {
   BROADCAST_ALL_WORKERS(UpdateContextOptions,
-                        sDefaultJSSettings.contextOptions);
+                        sDefaultJSSettings->contextOptions);
 }
 
 void RuntimeService::UpdateAppNameOverridePreference(const nsAString& aValue) {
@@ -2054,14 +2057,14 @@ void RuntimeService::UpdateAllWorkerLanguages(
 }
 
 void RuntimeService::UpdateAllWorkerMemoryParameter(JSGCParamKey aKey,
-                                                    uint32_t aValue) {
+                                                    Maybe<uint32_t> aValue) {
   BROADCAST_ALL_WORKERS(UpdateJSWorkerMemoryParameter, aKey, aValue);
 }
 
 #ifdef JS_GC_ZEAL
 void RuntimeService::UpdateAllWorkerGCZeal() {
-  BROADCAST_ALL_WORKERS(UpdateGCZeal, sDefaultJSSettings.gcZeal,
-                        sDefaultJSSettings.gcZealFrequency);
+  BROADCAST_ALL_WORKERS(UpdateGCZeal, sDefaultJSSettings->gcZeal,
+                        sDefaultJSSettings->gcZealFrequency);
 }
 #endif
 

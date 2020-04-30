@@ -72,7 +72,7 @@ class RuntimeService final : public nsIObserver {
   // Only used on the main thread.
   nsCOMPtr<nsITimer> mIdleThreadTimer;
 
-  static workerinternals::JSSettings sDefaultJSSettings;
+  static UniquePtr<workerinternals::JSSettings> sDefaultJSSettings;
 
  public:
   struct NavigatorProperties {
@@ -125,13 +125,13 @@ class RuntimeService final : public nsIObserver {
 
   static void GetDefaultJSSettings(workerinternals::JSSettings& aSettings) {
     AssertIsOnMainThread();
-    aSettings = sDefaultJSSettings;
+    aSettings = *sDefaultJSSettings;
   }
 
   static void SetDefaultContextOptions(
       const JS::ContextOptions& aContextOptions) {
     AssertIsOnMainThread();
-    sDefaultJSSettings.contextOptions = aContextOptions;
+    sDefaultJSSettings->contextOptions = aContextOptions;
   }
 
   void UpdateAppNameOverridePreference(const nsAString& aValue);
@@ -144,18 +144,20 @@ class RuntimeService final : public nsIObserver {
 
   void UpdateAllWorkerLanguages(const nsTArray<nsString>& aLanguages);
 
-  static void SetDefaultJSGCSettings(JSGCParamKey aKey, uint32_t aValue) {
+  static void SetDefaultJSGCSettings(JSGCParamKey aKey,
+                                     Maybe<uint32_t> aValue) {
     AssertIsOnMainThread();
-    sDefaultJSSettings.ApplyGCSetting(aKey, aValue);
+    sDefaultJSSettings->ApplyGCSetting(aKey, aValue);
   }
 
-  void UpdateAllWorkerMemoryParameter(JSGCParamKey aKey, uint32_t aValue);
+  void UpdateAllWorkerMemoryParameter(JSGCParamKey aKey,
+                                      Maybe<uint32_t> aValue);
 
 #ifdef JS_GC_ZEAL
   static void SetDefaultGCZeal(uint8_t aGCZeal, uint32_t aFrequency) {
     AssertIsOnMainThread();
-    sDefaultJSSettings.gcZeal = aGCZeal;
-    sDefaultJSSettings.gcZealFrequency = aFrequency;
+    sDefaultJSSettings->gcZeal = aGCZeal;
+    sDefaultJSSettings->gcZealFrequency = aFrequency;
   }
 
   void UpdateAllWorkerGCZeal();
