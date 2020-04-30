@@ -1477,29 +1477,6 @@ class EditorBase : public nsIEditor,
   }
 
   /**
-   * MoveChildren() moves all children between aFirstChild and aLastChild to
-   * before aPointToInsert.GetChild().
-   * If some children are moved to different container while this method
-   * moves other children, they are just ignored.
-   * If the child node referred by aPointToInsert is moved to different
-   * container while this method moves children, returns error.
-   *
-   * @param aFirstChild         The first child which should be moved to
-   *                            aPointToInsert.
-   * @param aLastChild          The last child which should be moved.  This
-   *                            must be a sibling of aFirstChild and it should
-   *                            be positioned after aFirstChild in the DOM tree
-   *                            order.
-   * @param aPointToInsert      The insertion point.  The container must not
-   *                            be a data node like a text node.
-   * @param aError              The result.  If this succeeds to move children,
-   *                            returns NS_OK.  Otherwise, an error.
-   */
-  void MoveChildren(nsIContent& aFirstChild, nsIContent& aLastChild,
-                    const EditorRawDOMPoint& aPointToInsert,
-                    ErrorResult& aError);
-
-  /**
    * CloneAttributeWithTransaction() copies aAttribute of aSourceElement to
    * aDestElement.  If aSourceElement doesn't have aAttribute, this removes
    * aAttribute from aDestElement.
