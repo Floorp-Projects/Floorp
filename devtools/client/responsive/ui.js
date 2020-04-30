@@ -197,22 +197,7 @@ class ResponsiveUI {
       this.rdmFrame.contentWindow.addEventListener("message", this);
     }
 
-    // Set the ui toolWindow to fullZoom and textZoom of 100%. Directly change
-    // the zoom levels of the toolwindow docshell. That doesn't affect the zoom
-    // of the RDM content, but it does send events that confuse the Zoom UI.
-    // So before we adjust the zoom levels of the toolWindow, we first cache
-    // the reported zoom levels of the RDM content, because we'll have to
-    // re-apply them to re-sync the Zoom UI.
-
-    // Cache the values now and we'll re-apply them near the end of this function.
-    // This is important since other steps here can also cause the Zoom UI update
-    // event to be sent for other browsers, and this means that the changes from
-    // our Zoom UI update event would be overwritten. After this function, future
-    // changes to zoom levels will send Zoom UI update events in an order that
-    // keeps the Zoom UI synchronized with the RDM content zoom levels.
-    const rdmContent = this.tab.linkedBrowser;
-    const fullZoom = rdmContent.fullZoom;
-    const textZoom = rdmContent.textZoom;
+    this.tab.linkedBrowser.enterResponsiveMode();
 
     // Listen to FullZoomChange events coming from the browser window,
     // so that we can zoom the size of the viewport by the same amount.
@@ -243,20 +228,6 @@ class ResponsiveUI {
 
     // Show the browser UI now that its state is ready.
     this.showBrowserUI();
-
-    if (!this.isBrowserUIEnabled) {
-      // Force the newly created Zoom actor to cache its 1.0 zoom level. This
-      // prevents it from sending out FullZoomChange events when the content
-      // full zoom level is changed the first time.
-      const bc = this._toolWindow.docShell.browsingContext;
-      const zoomActor = bc.currentWindowGlobal.getActor("Zoom");
-      zoomActor.sendAsyncMessage("FullZoom", { value: 1.0 });
-
-      // Re-apply our cached zoom levels. Other Zoom UI update events have finished
-      // by now.
-      rdmContent.fullZoom = fullZoom;
-      rdmContent.textZoom = textZoom;
-    }
 
     // Non-blocking message to tool UI to start any delayed init activities
     message.post(this.toolWindow, "post-init");
@@ -392,7 +363,6 @@ class ResponsiveUI {
       await this.updateMaxTouchPointsEnabled(false);
 
       if (this.isBrowserUIEnabled) {
-        await this.responsiveFront.setDocumentInRDMPane(false);
         await this.responsiveFront.setFloatingScrollbars(false);
 
         // Hide browser UI to avoid displaying weird intermediate states while closing.
@@ -409,6 +379,7 @@ class ResponsiveUI {
     this.tab.removeEventListener("TabClose", this);
     this.tab.removeEventListener("BeforeTabRemotenessChange", this);
     this.browserWindow.removeEventListener("unload", this);
+    this.tab.linkedBrowser.leaveResponsiveMode();
 
     if (!this.isBrowserUIEnabled) {
       this.tab.linkedBrowser.removeEventListener("FullZoomChange", this);
@@ -430,6 +401,7 @@ class ResponsiveUI {
       this.browserContainerEl.classList.remove("responsive-mode");
       this.browserStackEl.style.removeProperty("--rdm-width");
       this.browserStackEl.style.removeProperty("--rdm-height");
+      this.browserStackEl.style.removeProperty("--rdm-zoom");
     }
 
     if (!this.isBrowserUIEnabled && !isTabContentDestroying) {
@@ -908,11 +880,11 @@ class ResponsiveUI {
    */
   async restoreActorState() {
     if (this.isBrowserUIEnabled) {
-      // It's possible the target will switch to a page loaded in the parent-process
-      // (i.e: about:robots). When this happens, the values set on the BrowsingContext
-      // by RDM are not preserved. So we need to set setDocumentInRDMPane = true whenever
-      // there is a target switch.
-      await this.responsiveFront.setDocumentInRDMPane(true);
+      // It's possible the target will switch to a page loaded in the
+      // parent-process (i.e: about:robots). When this happens, the values set
+      // on the BrowsingContext by RDM are not preserved. So we need to call
+      // enterResponsiveMode whenever there is a target switch.
+      this.tab.linkedBrowser.enterResponsiveMode();
 
       // Apply floating scrollbar styles to document.
       await this.responsiveFront.setFloatingScrollbars(true);
@@ -1139,13 +1111,11 @@ class ResponsiveUI {
 
     const zoom = this.tab.linkedBrowser.fullZoom;
 
-    const scaledWidth = width * zoom;
-    const scaledHeight = height * zoom;
-
     // Setting this with a variable on the stack instead of directly as width/height
     // on the <browser> because we'll need to use this for the alert dialog as well.
-    this.browserStackEl.style.setProperty("--rdm-width", `${scaledWidth}px`);
-    this.browserStackEl.style.setProperty("--rdm-height", `${scaledHeight}px`);
+    this.browserStackEl.style.setProperty("--rdm-width", `${width}px`);
+    this.browserStackEl.style.setProperty("--rdm-height", `${height}px`);
+    this.browserStackEl.style.setProperty("--rdm-zoom", zoom);
 
     // This is a bit premature, but we emit a content-resize event here. It
     // would be preferrable to wait until the viewport is actually resized,
