@@ -554,7 +554,7 @@ nsresult CSSEditUtils::RemoveCSSInlineStyle(nsINode& aNode, nsAtom* aProperty,
   OwningNonNull<HTMLEditor> htmlEditor(*mHTMLEditor);
   rv = htmlEditor->RemoveContainerWithTransaction(element);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::RemoveContainerWithTransaction() failed");
+                       "HTMLEditor::RemoveContainerWithTransaction() failed");
   return rv;
 }
 

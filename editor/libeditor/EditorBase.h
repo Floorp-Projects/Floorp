@@ -1471,14 +1471,6 @@ class EditorBase : public nsIEditor,
       Element& aDestElement, Element& aSourceElement);
 
   /**
-   * RemoveContainerWithTransaction() removes aElement from the DOM tree and
-   * moves all its children to the parent of aElement.
-   *
-   * @param aElement            The element to be removed.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult RemoveContainerWithTransaction(Element& aElement);
-
-  /**
    * InsertContainerWithTransaction() creates new element whose name is
    * aTagName, moves aContent into the new element, then, inserts the new
    * element into where aContent was.

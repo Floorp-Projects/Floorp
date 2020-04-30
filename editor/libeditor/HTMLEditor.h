@@ -2058,6 +2058,14 @@ class HTMLEditor final : public TextEditor,
   }
 
   /**
+   * RemoveContainerWithTransaction() removes aElement from the DOM tree and
+   * moves all its children to the parent of aElement.
+   *
+   * @param aElement            The element to be removed.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult RemoveContainerWithTransaction(Element& aElement);
+
+  /**
    * MoveNodeOrChildren() moves aContent to aPointToInsert.  If cannot insert
    * aContent due to invalid relation, moves only its children recursively
    * and removes aContent from the DOM tree.

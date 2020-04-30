@@ -1875,48 +1875,6 @@ nsresult EditorBase::DeleteNodeWithTransaction(nsIContent& aContent) {
   return rv;
 }
 
-nsresult EditorBase::RemoveContainerWithTransaction(Element& aElement) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  EditorDOMPoint pointToInsertChildren(&aElement);
-  if (NS_WARN_IF(!pointToInsertChildren.IsSet())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Notify our internal selection state listener.
-  AutoRemoveContainerSelNotify selNotify(RangeUpdaterRef(),
-                                         pointToInsertChildren);
-
-  // Move all children from aNode to its parent.
-  while (aElement.HasChildren()) {
-    nsCOMPtr<nsIContent> child = aElement.GetLastChild();
-    if (NS_WARN_IF(!child)) {
-      return NS_ERROR_FAILURE;
-    }
-    nsresult rv = DeleteNodeWithTransaction(*child);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
-      return rv;
-    }
-
-    // Insert the last child before the previous last child.  So, we need to
-    // use offset here because previous child might have been moved to
-    // container.
-    rv = InsertNodeWithTransaction(
-        *child, EditorDOMPoint(pointToInsertChildren.GetContainer(),
-                               pointToInsertChildren.Offset()));
-    if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
-      return rv;
-    }
-  }
-
-  nsresult rv = DeleteNodeWithTransaction(aElement);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::DeleteNodeWithTransaction() failed");
-  return rv;
-}
-
 already_AddRefed<Element> EditorBase::InsertContainerWithTransactionInternal(
     nsIContent& aContent, nsAtom& aTagName, nsAtom& aAttribute,
     const nsAString& aAttributeValue) {
