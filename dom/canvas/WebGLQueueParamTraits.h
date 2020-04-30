@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WEBGLPCQPARAMTRAITS_H_
-#define WEBGLPCQPARAMTRAITS_H_
+#ifndef WEBGLQUEUEPARAMTRAITS_H_
+#define WEBGLQUEUEPARAMTRAITS_H_
 
 #include <type_traits>
 
@@ -17,7 +17,7 @@ namespace mozilla {
 
 namespace webgl {
 template <typename T>
-struct PcqParamTraits;
+struct QueueParamTraits;
 
 template <>
 struct IsTriviallySerializable<FloatOrInt> : std::true_type {};
@@ -58,10 +58,10 @@ template <>
 struct IsTriviallySerializable<webgl::TexUnpackBlob> : std::true_type {};
 /*
 template <>
-struct PcqParamTraits<WebGLActiveInfo> {
+struct QueueParamTraits<WebGLActiveInfo> {
   using ParamType = WebGLActiveInfo;
 
-  static PcqStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
+  static QueueStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
     aProducerView.WriteParam(aArg.mElemCount);
     aProducerView.WriteParam(aArg.mElemType);
     aProducerView.WriteParam(aArg.mBaseUserName);
@@ -71,7 +71,7 @@ struct PcqParamTraits<WebGLActiveInfo> {
     return aProducerView.WriteParam(aArg.mBaseType);
   }
 
-  static PcqStatus Read(ConsumerView& aConsumerView, ParamType* aArg) {
+  static QueueStatus Read(ConsumerView& aConsumerView, ParamType* aArg) {
     aConsumerView.ReadParam(aArg ? &aArg->mElemCount : nullptr);
     aConsumerView.ReadParam(aArg ? &aArg->mElemType : nullptr);
     aConsumerView.ReadParam(aArg ? &aArg->mBaseUserName : nullptr);
@@ -94,21 +94,21 @@ struct PcqParamTraits<WebGLActiveInfo> {
 };
 */
 template <typename T>
-struct PcqParamTraits<RawBuffer<T>> {
+struct QueueParamTraits<RawBuffer<T>> {
   using ParamType = RawBuffer<T>;
 
-  static PcqStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
+  static QueueStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
     aProducerView.WriteParam(aArg.mLength);
     return (aArg.mLength > 0)
                ? aProducerView.Write(aArg.mData, aArg.mLength * sizeof(T))
-               : aProducerView.Status();
+               : aProducerView.GetStatus();
   }
 
   template <
       typename ElementType = std::remove_cv_t<typename ParamType::ElementType>>
-  static PcqStatus Read(ConsumerView& aConsumerView, ParamType* aArg) {
+  static QueueStatus Read(ConsumerView& aConsumerView, ParamType* aArg) {
     size_t len;
-    PcqStatus status = aConsumerView.ReadParam(&len);
+    QueueStatus status = aConsumerView.ReadParam(&len);
     if (!status) {
       return status;
     }
@@ -118,7 +118,7 @@ struct PcqParamTraits<RawBuffer<T>> {
         aArg->mLength = 0;
         aArg->mData = nullptr;
       }
-      return PcqStatus::Success;
+      return QueueStatus::kSuccess;
     }
 
     if (!aArg) {
@@ -126,17 +126,17 @@ struct PcqParamTraits<RawBuffer<T>> {
     }
 
     struct RawBufferReadMatcher {
-      PcqStatus operator()(RefPtr<mozilla::ipc::SharedMemoryBasic>& smem) {
+      QueueStatus operator()(RefPtr<mozilla::ipc::SharedMemoryBasic>& smem) {
         if (!smem) {
-          return PcqStatus::PcqFatalError;
+          return QueueStatus::kFatalError;
         }
         mArg->mSmem = smem;
         mArg->mData = static_cast<ElementType*>(smem->memory());
         mArg->mLength = mLength;
         mArg->mOwnsData = false;
-        return PcqStatus::Success;
+        return QueueStatus::kSuccess;
       }
-      PcqStatus operator()() {
+      QueueStatus operator()() {
         mArg->mSmem = nullptr;
         ElementType* buf = new ElementType[mLength];
         mArg->mData = buf;
@@ -165,16 +165,16 @@ struct PcqParamTraits<RawBuffer<T>> {
 enum TexUnpackTypes : uint8_t { Bytes, Surface, Image, Pbo };
 
 template <>
-struct PcqParamTraits<webgl::TexUnpackBytes> {
+struct QueueParamTraits<webgl::TexUnpackBytes> {
   using ParamType = webgl::TexUnpackBytes;
 
-  static PcqStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
+  static QueueStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
     // Write TexUnpackBlob base class, then the RawBuffer.
     aProducerView.WriteParam(static_cast<const webgl::TexUnpackBlob&>(aArg));
     return aProducerView.WriteParam(aArg.mPtr);
   }
 
-  static PcqStatus Read(ConsumerView& aConsumerView, ParamType* aArg) {
+  static QueueStatus Read(ConsumerView& aConsumerView, ParamType* aArg) {
     // Read TexUnpackBlob base class, then the RawBuffer.
     aConsumerView.ReadParam(static_cast<webgl::TexUnpackBlob*>(aArg));
     return aConsumerView.ReadParam(aArg ? &aArg->mPtr : nullptr);
@@ -188,10 +188,10 @@ struct PcqParamTraits<webgl::TexUnpackBytes> {
 };
 
 template <>
-struct PcqParamTraits<webgl::TexUnpackSurface> {
+struct QueueParamTraits<webgl::TexUnpackSurface> {
   using ParamType = webgl::TexUnpackSurface;
 
-  static PcqStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
+  static QueueStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
     aProducerView.WriteParam(static_cast<const webgl::TexUnpackBlob&>(aArg));
     aProducerView.WriteParam(aArg.mSize);
     aProducerView.WriteParam(aArg.mFormat);
@@ -199,7 +199,7 @@ struct PcqParamTraits<webgl::TexUnpackSurface> {
     return aProducerView.WriteParam(aArg.mStride);
   }
 
-  static PcqStatus Read(ConsumerView& aConsumerView, ParamType* aArg) {
+  static QueueStatus Read(ConsumerView& aConsumerView, ParamType* aArg) {
     aConsumerView.ReadParam(static_cast<webgl::TexUnpackBlob*>(aArg));
     aConsumerView.ReadParam(aArg ? &aArg->mSize : nullptr);
     aConsumerView.ReadParam(aArg ? &aArg->mFormat : nullptr);
@@ -217,28 +217,28 @@ struct PcqParamTraits<webgl::TexUnpackSurface> {
   }
 };
 
-// Specialization of PcqParamTraits that adapts the TexUnpack type in order to
+// Specialization of QueueParamTraits that adapts the TexUnpack type in order to
 // efficiently convert types.  For example, a TexUnpackSurface may deserialize
 // as a TexUnpackBytes.
 template <>
-struct PcqParamTraits<WebGLTexUnpackVariant> {
+struct QueueParamTraits<WebGLTexUnpackVariant> {
   using ParamType = WebGLTexUnpackVariant;
 
-  static PcqStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
+  static QueueStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
     struct TexUnpackWriteMatcher {
-      PcqStatus operator()(const UniquePtr<webgl::TexUnpackBytes>& x) {
+      QueueStatus operator()(const UniquePtr<webgl::TexUnpackBytes>& x) {
         mProducerView.WriteParam(TexUnpackTypes::Bytes);
         return mProducerView.WriteParam(x);
       }
-      PcqStatus operator()(const UniquePtr<webgl::TexUnpackSurface>& x) {
+      QueueStatus operator()(const UniquePtr<webgl::TexUnpackSurface>& x) {
         mProducerView.WriteParam(TexUnpackTypes::Surface);
         return mProducerView.WriteParam(x);
       }
-      PcqStatus operator()(const UniquePtr<webgl::TexUnpackImage>& x) {
+      QueueStatus operator()(const UniquePtr<webgl::TexUnpackImage>& x) {
         MOZ_ASSERT_UNREACHABLE("TODO:");
-        return PcqStatus::PcqFatalError;
+        return QueueStatus::kFatalError;
       }
-      PcqStatus operator()(const WebGLTexPboOffset& x) {
+      QueueStatus operator()(const WebGLTexPboOffset& x) {
         mProducerView.WriteParam(TexUnpackTypes::Pbo);
         return mProducerView.WriteParam(x);
       }
@@ -247,14 +247,14 @@ struct PcqParamTraits<WebGLTexUnpackVariant> {
     return aArg.match(TexUnpackWriteMatcher{aProducerView});
   }
 
-  static PcqStatus Read(ConsumerView& aConsumerView, ParamType* aArg) {
+  static QueueStatus Read(ConsumerView& aConsumerView, ParamType* aArg) {
     if (!aArg) {
       // Not a great estimate but we can't do much better.
       return aConsumerView.template ReadParam<TexUnpackTypes>();
     }
     TexUnpackTypes unpackType;
     if (!aConsumerView.ReadParam(&unpackType)) {
-      return aConsumerView.Status();
+      return aConsumerView.GetStatus();
     }
     switch (unpackType) {
       case TexUnpackTypes::Bytes:
@@ -267,13 +267,13 @@ struct PcqParamTraits<WebGLTexUnpackVariant> {
             &aArg->as<UniquePtr<webgl::TexUnpackSurface>>());
       case TexUnpackTypes::Image:
         MOZ_ASSERT_UNREACHABLE("TODO:");
-        return PcqStatus::PcqFatalError;
+        return QueueStatus::kFatalError;
       case TexUnpackTypes::Pbo:
         *aArg = AsVariant(WebGLTexPboOffset());
         return aConsumerView.ReadParam(&aArg->as<WebGLTexPboOffset>());
     }
     MOZ_ASSERT_UNREACHABLE("Illegal texture unpack type");
-    return PcqStatus::PcqFatalError;
+    return QueueStatus::kFatalError;
   }
 
   template <typename View>
@@ -304,20 +304,20 @@ struct PcqParamTraits<WebGLTexUnpackVariant> {
 };
 */
 template <>
-struct PcqParamTraits<webgl::ContextLossReason> {
+struct QueueParamTraits<webgl::ContextLossReason> {
   using ParamType = webgl::ContextLossReason;
 
-  static PcqStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
+  static QueueStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
     return aProducerView.WriteParam(static_cast<uint8_t>(aArg));
   }
 
-  static PcqStatus Read(ConsumerView& aConsumerView, ParamType* aArg) {
+  static QueueStatus Read(ConsumerView& aConsumerView, ParamType* aArg) {
     uint8_t val;
     auto status = aConsumerView.ReadParam(&val);
     if (!status) return status;
     if (!ReadContextLossReason(val, aArg)) {
       MOZ_ASSERT_UNREACHABLE("Invalid ContextLossReason");
-      return PcqStatus::PcqFatalError;
+      return QueueStatus::kFatalError;
     }
     return status;
   }
@@ -329,10 +329,10 @@ struct PcqParamTraits<webgl::ContextLossReason> {
 };
 
 template <typename V, typename E>
-struct PcqParamTraits<Result<V, E>> {
+struct QueueParamTraits<Result<V, E>> {
   using T = Result<V, E>;
 
-  static PcqStatus Write(ProducerView& aProducerView, const T& aArg) {
+  static QueueStatus Write(ProducerView& aProducerView, const T& aArg) {
     const auto ok = aArg.isOk();
     auto status = aProducerView.WriteParam(ok);
     if (!status) return status;
@@ -344,7 +344,7 @@ struct PcqParamTraits<Result<V, E>> {
     return status;
   }
 
-  static PcqStatus Read(ConsumerView& aConsumerView, T* const aArg) {
+  static QueueStatus Read(ConsumerView& aConsumerView, T* const aArg) {
     bool ok;
     auto status = aConsumerView.ReadParam(&ok);
     if (!status) return status;
@@ -377,24 +377,24 @@ struct PcqParamTraits<Result<V, E>> {
 };
 
 template <>
-struct PcqParamTraits<std::string> {
+struct QueueParamTraits<std::string> {
   using T = std::string;
 
-  static PcqStatus Write(ProducerView& aProducerView, const T& aArg) {
+  static QueueStatus Write(ProducerView& aProducerView, const T& aArg) {
     auto status = aProducerView.WriteParam(aArg.size());
     if (!status) return status;
     status = aProducerView.Write(aArg.data(), aArg.size());
     return status;
   }
 
-  static PcqStatus Read(ConsumerView& aConsumerView, T* const aArg) {
+  static QueueStatus Read(ConsumerView& aConsumerView, T* const aArg) {
     size_t size;
     auto status = aConsumerView.ReadParam(&size);
     if (!status) return status;
 
     const UniqueBuffer temp = malloc(size);
     const auto dest = static_cast<char*>(temp.get());
-    if (!dest) return PcqStatus::PcqFatalError;
+    if (!dest) return QueueStatus::kFatalError;
 
     status = aConsumerView.Read(dest, size);
     if (aArg) {
@@ -414,17 +414,17 @@ struct PcqParamTraits<std::string> {
 };
 
 template <typename U>
-struct PcqParamTraits<std::vector<U>> {
+struct QueueParamTraits<std::vector<U>> {
   using T = std::string;
 
-  static PcqStatus Write(ProducerView& aProducerView, const T& aArg) {
+  static QueueStatus Write(ProducerView& aProducerView, const T& aArg) {
     auto status = aProducerView.WriteParam(aArg.size());
     if (!status) return status;
     status = aProducerView.Write(aArg.data(), aArg.size());
     return status;
   }
 
-  static PcqStatus Read(ConsumerView& aConsumerView, T* const aArg) {
+  static QueueStatus Read(ConsumerView& aConsumerView, T* const aArg) {
     MOZ_CRASH("no way to fallibly resize vectors without exceptions");
     size_t size;
     auto status = aConsumerView.ReadParam(&size);
@@ -446,21 +446,21 @@ struct PcqParamTraits<std::vector<U>> {
 };
 
 template <>
-struct PcqParamTraits<WebGLExtensionID> {
+struct QueueParamTraits<WebGLExtensionID> {
   using T = WebGLExtensionID;
 
-  static PcqStatus Write(ProducerView& aProducerView, const T& aArg) {
+  static QueueStatus Write(ProducerView& aProducerView, const T& aArg) {
     return aProducerView.WriteParam(mozilla::EnumValue(aArg));
   }
 
-  static PcqStatus Read(ConsumerView& aConsumerView, T* const aArg) {
-    PcqStatus status = PcqStatus::Success;
+  static QueueStatus Read(ConsumerView& aConsumerView, T* const aArg) {
+    QueueStatus status = QueueStatus::kSuccess;
     if (aArg) {
       status = aConsumerView.ReadParam(
           reinterpret_cast<typename std::underlying_type<T>::type*>(aArg));
       if (*aArg >= WebGLExtensionID::Max) {
         MOZ_ASSERT(false);
-        return PcqStatus::PcqFatalError;
+        return QueueStatus::kFatalError;
       }
     }
     return status;
@@ -475,4 +475,4 @@ struct PcqParamTraits<WebGLExtensionID> {
 }  // namespace webgl
 }  // namespace mozilla
 
-#endif  // WEBGLPCQPARAMTRAITS_H_
+#endif  // WEBGLQUEUEPARAMTRAITS_H_
