@@ -6,8 +6,6 @@
 #define mozilla_dom_RemoteWebProgress_h
 
 #include "nsIRemoteWebProgress.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsCOMPtr.h"
 
 namespace mozilla {
 namespace dom {

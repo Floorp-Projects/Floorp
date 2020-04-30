@@ -20,7 +20,7 @@
 #include "mozilla/dom/SameProcessMessageQueue.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/WindowProxyHolder.h"
-#include "mozilla/dom/JSActorService.h"
+#include "mozilla/dom/JSWindowActorService.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -37,7 +37,7 @@ InProcessBrowserChildMessageManager::Create(nsDocShell* aShell,
   NS_ENSURE_TRUE(mm->Init(), nullptr);
 
   if (XRE_IsParentProcess()) {
-    RefPtr<JSActorService> wasvc = JSActorService::GetSingleton();
+    RefPtr<JSWindowActorService> wasvc = JSWindowActorService::GetSingleton();
     wasvc->RegisterChromeEventTarget(mm);
   }
 
@@ -111,7 +111,7 @@ InProcessBrowserChildMessageManager::InProcessBrowserChildMessageManager(
 
 InProcessBrowserChildMessageManager::~InProcessBrowserChildMessageManager() {
   if (XRE_IsParentProcess()) {
-    JSActorService::UnregisterChromeEventTarget(this);
+    JSWindowActorService::UnregisterChromeEventTarget(this);
   }
 
   mAnonymousGlobalScopes.Clear();

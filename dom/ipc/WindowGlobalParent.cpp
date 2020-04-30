@@ -41,9 +41,9 @@
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
 
-#include "mozilla/dom/JSActorService.h"
 #include "mozilla/dom/JSWindowActorBinding.h"
 #include "mozilla/dom/JSWindowActorParent.h"
+#include "mozilla/dom/JSWindowActorService.h"
 
 using namespace mozilla::ipc;
 using namespace mozilla::dom::ipc;
@@ -326,9 +326,9 @@ IPCResult WindowGlobalParent::RecvDestroy() {
   return IPC_OK();
 }
 
-IPCResult WindowGlobalParent::RecvRawMessage(const JSActorMessageMeta& aMeta,
-                                             const ClonedMessageData& aData,
-                                             const ClonedMessageData& aStack) {
+IPCResult WindowGlobalParent::RecvRawMessage(
+    const JSWindowActorMessageMeta& aMeta, const ClonedMessageData& aData,
+    const ClonedMessageData& aStack) {
   StructuredCloneData data;
   data.BorrowFromClonedMessageDataForParent(aData);
   StructuredCloneData stack;
@@ -337,9 +337,9 @@ IPCResult WindowGlobalParent::RecvRawMessage(const JSActorMessageMeta& aMeta,
   return IPC_OK();
 }
 
-void WindowGlobalParent::ReceiveRawMessage(const JSActorMessageMeta& aMeta,
-                                           StructuredCloneData&& aData,
-                                           StructuredCloneData&& aStack) {
+void WindowGlobalParent::ReceiveRawMessage(
+    const JSWindowActorMessageMeta& aMeta, StructuredCloneData&& aData,
+    StructuredCloneData&& aStack) {
   RefPtr<JSWindowActorParent> actor =
       GetActor(aMeta.actorName(), IgnoreErrors());
   if (actor) {

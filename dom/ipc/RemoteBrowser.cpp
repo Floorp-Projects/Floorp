@@ -8,7 +8,6 @@
 
 #include "nsFrameLoader.h"
 #include "nsFrameLoaderOwner.h"
-#include "nsQueryObject.h"
 
 namespace mozilla {
 namespace dom {

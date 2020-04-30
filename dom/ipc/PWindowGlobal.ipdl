@@ -14,7 +14,7 @@ include DOMTypes;
 include ClientIPCTypes;
 include NeckoChannelParams;
 
-using JSActorMessageKind from "mozilla/dom/JSActor.h";
+using JSWindowActorMessageKind from "mozilla/dom/JSWindowActor.h";
 using mozilla::gfx::IntRect from "mozilla/gfx/Rect.h";
 using moveonly mozilla::gfx::PaintFragment from "mozilla/gfx/CrossProcessPaint.h";
 using nscolor from "nsColor.h";
@@ -24,11 +24,11 @@ using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 namespace mozilla {
 namespace dom {
 
-struct JSActorMessageMeta {
+struct JSWindowActorMessageMeta {
   nsCString actorName;
   nsString messageName;
   uint64_t queryId;
-  JSActorMessageKind kind;
+  JSWindowActorMessageKind kind;
 };
 
 struct IPCWebShareData
@@ -70,7 +70,7 @@ child:
   async SaveStorageAccessGranted(nsCString aPermissionKey);
 
 both:
-  async RawMessage(JSActorMessageMeta aMetadata, ClonedMessageData aData,
+  async RawMessage(JSWindowActorMessageMeta aMetadata, ClonedMessageData aData,
                    ClonedMessageData aStack);
 
 parent:

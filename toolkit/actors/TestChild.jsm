@@ -6,9 +6,9 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-var EXPORTED_SYMBOLS = ["TestWindowChild"];
+var EXPORTED_SYMBOLS = ["TestChild"];
 
-class TestWindowChild extends JSWindowActorChild {
+class TestChild extends JSWindowActorChild {
   constructor() {
     super();
   }
@@ -54,7 +54,7 @@ class TestWindowChild extends JSWindowActorChild {
   }
 
   show() {
-    return "TestWindowChild";
+    return "TestChild";
   }
 
   willDestroy() {

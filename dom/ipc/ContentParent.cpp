@@ -92,8 +92,7 @@
 #include "mozilla/dom/GetFilesHelper.h"
 #include "mozilla/dom/IPCBlobInputStreamParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
-#include "mozilla/dom/JSActorService.h"
-#include "mozilla/dom/JSProcessActorBinding.h"
+#include "mozilla/dom/JSWindowActorService.h"
 #include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/MediaController.h"
 #include "mozilla/dom/MemoryReportRequest.h"
@@ -1676,15 +1675,6 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
 
   mConsoleService = nullptr;
 
-  // Destroy our JSProcessActors, and reject any pending queries.
-  nsRefPtrHashtable<nsCStringHashKey, JSProcessActorParent> processActors;
-  mProcessActors.SwapElements(processActors);
-  for (auto iter = processActors.Iter(); !iter.Done(); iter.Next()) {
-    iter.Data()->RejectPendingQueries();
-    iter.Data()->AfterDestroy();
-  }
-  mProcessActors.Clear();
-
   if (obs) {
     RefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
 
@@ -2623,16 +2613,12 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
     }
   }
 
-  // Send down { Parent, Window }ActorOptions at startup to content process.
-  RefPtr<JSActorService> actorSvc = JSActorService::GetSingleton();
+  // Send down WindowActorOptions at startup to content process.
+  RefPtr<JSWindowActorService> actorSvc = JSWindowActorService::GetSingleton();
   if (actorSvc) {
-    nsTArray<JSProcessActorInfo> contentInfos;
-    actorSvc->GetJSProcessActorInfos(contentInfos);
-
-    nsTArray<JSWindowActorInfo> windowInfos;
-    actorSvc->GetJSWindowActorInfos(windowInfos);
-
-    Unused << SendInitJSActorInfos(contentInfos, windowInfos);
+    nsTArray<JSWindowActorInfo> infos;
+    actorSvc->GetJSWindowActorInfos(infos);
+    Unused << SendInitJSWindowActorInfos(infos);
   }
 
   // Start up nsPluginHost and run FindPlugins to cache the plugin list.
@@ -6431,99 +6417,6 @@ mozilla::ipc::IPCResult ContentParent::RecvCommitWindowContextTransaction(
 
 NS_IMETHODIMP ContentParent::GetChildID(uint64_t* aOut) {
   *aOut = this->ChildID();
-  return NS_OK;
-}
-
-IPCResult ContentParent::RecvRawMessage(const JSActorMessageMeta& aMeta,
-                                        const ClonedMessageData& aData,
-                                        const ClonedMessageData& aStack) {
-  StructuredCloneData data;
-  data.BorrowFromClonedMessageDataForParent(aData);
-  StructuredCloneData stack;
-  stack.BorrowFromClonedMessageDataForParent(aStack);
-  ReceiveRawMessage(aMeta, std::move(data), std::move(stack));
-  return IPC_OK();
-}
-
-void ContentParent::ReceiveRawMessage(const JSActorMessageMeta& aMeta,
-                                      StructuredCloneData&& aData,
-                                      StructuredCloneData&& aStack) {
-  RefPtr<JSProcessActorParent> actor =
-      GetActor(aMeta.actorName(), IgnoreErrors());
-  if (actor) {
-    actor->ReceiveRawMessage(aMeta, std::move(aData), std::move(aStack));
-  }
-}
-
-already_AddRefed<JSProcessActorParent> ContentParent::GetActor(
-    const nsACString& aName, ErrorResult& aRv) {
-  if (!CanSend()) {
-    aRv.ThrowInvalidStateError(nsPrintfCString(
-        "Cannot get actor '%s': content parent is ready to communicate.",
-        PromiseFlatCString(aName).get()));
-    return nullptr;
-  }
-
-  // Check if this actor has already been created, and return it if it has.
-  if (mProcessActors.Contains(aName)) {
-    return do_AddRef(mProcessActors.GetWeak(aName));
-  }
-
-  // Otherwise, we want to create a new instance of this actor.
-  JS::RootedObject obj(RootingCx());
-  ConstructActor(aName, &obj, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  // Unwrap our actor to a JSProcessActorParent object.
-  RefPtr<JSProcessActorParent> actor;
-  if (NS_FAILED(UNWRAP_OBJECT(JSProcessActorParent, &obj, actor))) {
-    aRv.ThrowTypeMismatchError(
-        "Constructed actor does not inherit from JSProcessActorParent");
-    return nullptr;
-  }
-
-  MOZ_RELEASE_ASSERT(!actor->Manager(),
-                     "mManager was already initialized once!");
-  actor->Init(aName, this);
-  mProcessActors.Put(aName, RefPtr{actor});
-  return actor.forget();
-}
-
-NS_IMETHODIMP ContentParent::GetActor(const nsACString& aName,
-                                      JSProcessActorParent** retval) {
-  if (!CanSend()) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  }
-
-  // Check if this actor has already been created, and return it if it has.
-  if (mProcessActors.Contains(aName)) {
-    RefPtr<JSProcessActorParent> actor(mProcessActors.Get(aName));
-    actor.forget(retval);
-    return NS_OK;
-  }
-
-  // Otherwise, we want to create a new instance of this actor.
-  JS::RootedObject obj(RootingCx());
-  ErrorResult result;
-  ConstructActor(aName, &obj, result);
-  if (result.Failed()) {
-    return result.StealNSResult();
-  }
-
-  // Unwrap our actor to a JSProcessActorParent object.
-  RefPtr<JSProcessActorParent> actor;
-  nsresult rv = UNWRAP_OBJECT(JSProcessActorParent, &obj, actor);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  MOZ_RELEASE_ASSERT(!actor->Manager(),
-                     "mManager was already initialized once!");
-  actor->Init(aName, this);
-  mProcessActors.Put(aName, RefPtr{actor});
-  actor.forget(retval);
   return NS_OK;
 }
 

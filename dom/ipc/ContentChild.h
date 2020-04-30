@@ -12,8 +12,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
-#include "mozilla/dom/ProcessActor.h"
-#include "mozilla/dom/JSProcessActorChild.h"
 #include "mozilla/dom/PBrowserOrId.h"
 #include "mozilla/dom/PContentChild.h"
 #include "mozilla/dom/RemoteBrowser.h"
@@ -44,7 +42,6 @@ struct LookAndFeelInt;
 class nsDocShellLoadState;
 class nsFrameLoader;
 class nsIOpenWindowInfo;
-class JSProcessActorChild;
 
 namespace mozilla {
 class RemoteSpellcheckEngineChild;
@@ -81,8 +78,7 @@ class ContentChild final
       public nsIContentChild,
       public nsIWindowProvider,
       public mozilla::ipc::IShmemAllocator,
-      public mozilla::ipc::ChildToParentStreamActorManager,
-      public ProcessActor {
+      public mozilla::ipc::ChildToParentStreamActorManager {
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
   typedef mozilla::ipc::FileDescriptor FileDescriptor;
   typedef mozilla::ipc::PFileDescriptorSetChild PFileDescriptorSetChild;
@@ -394,7 +390,7 @@ class ContentChild final
 
   // Call RemoteTypePrefix() on the result to remove URIs if you want to use
   // this for telemetry.
-  const nsAString& GetRemoteType() const override;
+  const nsAString& GetRemoteType() const;
 
   mozilla::ipc::IPCResult RecvInitServiceWorkers(
       const ServiceWorkerConfiguration& aConfig);
@@ -402,13 +398,10 @@ class ContentChild final
   mozilla::ipc::IPCResult RecvInitBlobURLs(
       nsTArray<BlobURLRegistrationData>&& aRegistations);
 
-  mozilla::ipc::IPCResult RecvInitJSActorInfos(
-      nsTArray<JSProcessActorInfo>&& aContentInfos,
-      nsTArray<JSWindowActorInfo>&& aWindowInfos);
+  mozilla::ipc::IPCResult RecvInitJSWindowActorInfos(
+      nsTArray<JSWindowActorInfo>&& aInfos);
 
   mozilla::ipc::IPCResult RecvUnregisterJSWindowActor(const nsCString& aName);
-
-  mozilla::ipc::IPCResult RecvUnregisterJSProcessActor(const nsCString& aName);
 
   mozilla::ipc::IPCResult RecvLastPrivateDocShellDestroyed();
 
@@ -708,10 +701,6 @@ class ContentChild final
   PFileDescriptorSetChild* SendPFileDescriptorSetConstructor(
       const FileDescriptor& aFD) override;
 
-  // Get a JS actor object by name.
-  already_AddRefed<mozilla::dom::JSProcessActorChild> GetActor(
-      const nsACString& aName, ErrorResult& aRv);
-
  private:
   static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
   void StartForceKillTimer();
@@ -804,17 +793,6 @@ class ContentChild final
   mozilla::ipc::IPCResult RecvDisplayLoadError(
       const MaybeDiscarded<BrowsingContext>& aContext, const nsAString& aURI);
 
-  mozilla::ipc::IPCResult RecvRawMessage(const JSActorMessageMeta& aMeta,
-                                         const ClonedMessageData& aData,
-                                         const ClonedMessageData& aStack);
-
-  void ReceiveRawMessage(const JSActorMessageMeta& aMeta,
-                         ipc::StructuredCloneData&& aData,
-                         ipc::StructuredCloneData&& aStack);
-
-  JSActor::Type GetSide() override { return JSActor::Type::Child; }
-
- private:
 #ifdef NIGHTLY_BUILD
   virtual PContentChild::Result OnMessageReceived(const Message& aMsg) override;
 #else
@@ -906,7 +884,6 @@ class ContentChild final
   // See `BrowsingContext::mEpochs` for an explanation of this field.
   uint64_t mBrowsingContextFieldEpoch = 0;
 
-  nsRefPtrHashtable<nsCStringHashKey, JSProcessActorChild> mProcessActors;
   DISALLOW_EVIL_CONSTRUCTORS(ContentChild);
 };
 

@@ -4,8 +4,6 @@
 
 #include "RemoteWebProgressRequest.h"
 
-#include "nsIURI.h"
-
 namespace mozilla {
 namespace dom {
 
