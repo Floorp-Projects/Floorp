@@ -17,6 +17,8 @@ with Files('KeyPressEventModelCheckerChild.jsm'):
     BUG_COMPONENT = ('Core', 'DOM: Events')
 
 TESTING_JS_MODULES += [
+    'TestProcessActorChild.jsm',
+    'TestProcessActorParent.jsm',
     'TestWindowChild.jsm',
     'TestWindowParent.jsm',
 ]
