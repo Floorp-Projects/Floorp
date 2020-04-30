@@ -7,9 +7,15 @@
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Blocklist Implementation')
 
-FINAL_TARGET_FILES.defaults.settings.blocklists += ['addons.json',
+FINAL_TARGET_FILES.defaults.settings.blocklists += ['addons-bloomfilters.json',
+                                                    'addons.json',
                                                     'gfx.json',
                                                     'plugins.json']
+
+FINAL_TARGET_FILES.defaults.settings.blocklists['addons-bloomfilters'] += [
+  'addons-bloomfilters/addons-mlbf.bin',
+  'addons-bloomfilters/addons-mlbf.bin.meta.json'
+]
 
 if CONFIG['MOZ_BUILD_APP'] == 'browser':
     DIST_SUBDIR = 'browser'
