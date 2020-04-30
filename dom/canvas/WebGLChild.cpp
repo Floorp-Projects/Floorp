@@ -29,7 +29,7 @@ mozilla::ipc::IPCResult WebGLChild::RecvOnContextLoss(
 
 /* static */
 bool WebGLChild::ShouldSendSync(size_t aCmd, ...) {
-  return WebGLMethodDispatcher::SyncType(aCmd) == CommandSyncType::SYNC;
+  return WebGLMethodDispatcher<>::SyncType(aCmd) == CommandSyncType::SYNC;
 }
 
 }  // namespace dom
