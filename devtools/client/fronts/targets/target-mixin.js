@@ -61,8 +61,104 @@ function TargetMixin(parentClass) {
       this._setupRemoteListeners();
     }
 
+    /**
+     * Get the descriptor front for this target.
+     *
+     * TODO: Should be removed. This is misleading as only the top level target should have a descriptor.
+     * This will return null for targets created by the Watcher actor and will still be defined
+     * by targets created by RootActor methods (listSomething methods).
+     */
     get descriptorFront() {
-      return this.parentFront;
+      if (this.parentFront.typeName.endsWith("Descriptor")) {
+        return this.parentFront;
+      }
+      return null;
+    }
+
+    /**
+     * Get the top level WatcherFront for this target.
+     *
+     * The targets should all ultimately be managed by a unique Watcher actor,
+     * created from the unique Descriptor actor which is passed to the Toolbox.
+     * For now, the top level target is still created by the top level Descriptor,
+     * but it is also meant to be created by the Watcher.
+     *
+     * @return {TargetMixin} the parent target.
+     */
+    getWatcher() {
+      // Starting with FF77, all additional frame targets are spawn by the WatcherActor and are managed by it.
+      if (this.parentFront.typeName == "watcher") {
+        return this.parentFront;
+      }
+
+      // Otherwise, for top level targets, the parent front is a Descriptor, from which we can retrieve the Watcher.
+      // TODO: top level target should also be exposed by the Watcher actor, like any target.
+      if (
+        this.parentFront.typeName.endsWith("Descriptor") &&
+        this.parentFront.traits &&
+        this.parentFront.traits.watcher
+      ) {
+        return this.parentFront.getWatcher();
+      }
+
+      // Finally, for FF<=76, there is no watcher.
+      return null;
+    }
+
+    /**
+     * Get the immediate parent target for this target.
+     *
+     * @return {TargetMixin} the parent target.
+     */
+    async getParentTarget() {
+      // Starting with FF77, we support frames watching via watchTargets for Tab and Process descriptors.
+      const watcher = await this.getWatcher();
+      if (watcher) {
+        // Safety check, in theory all watcher should support frames.
+        if (watcher.traits.frame) {
+          // Retrieve the Watcher, which manage all the targets and should already have a reference to
+          // to the parent target.
+          return watcher.getParentBrowsingContextTarget(this.browsingContextID);
+        }
+        return null;
+      }
+
+      // Other targets, like WebExtensions, don't have a Watcher yet, nor do expose `getParentTarget`.
+      // We can't fetch parent target yet for these targets.
+      if (!this.parentFront.getParentTarget) {
+        return null;
+      }
+
+      // Backward compat for FF<=76
+      //
+      // In these versions of Firefox, we still have FrameDescriptor for Frame targets
+      // and can fetch the parent target from it.
+      return this.parentFront.getParentTarget();
+    }
+
+    /**
+     * Get the target for the given Browsing Context ID.
+     *
+     * @return {TargetMixin} the requested target.
+     */
+    async getBrowsingContextTarget(browsingContextID) {
+      // Starting with FF77, Tab and Process Descriptor exposes a Watcher,
+      // which is creating the targets and should be used to fetch any.
+      const watcher = await this.getWatcher();
+      if (watcher) {
+        // Safety check, in theory all watcher should support frames.
+        if (watcher.traits.frame) {
+          return watcher.getBrowsingContextTarget(browsingContextID);
+        }
+        return null;
+      }
+
+      // Otherwise, on older server FF<=76, or for target whose descriptor don't have a Watcher like WebExtension,
+      // we have to go through the Root Actor, which is still the one to create the descriptors and targets.
+      const descriptor = await this.client.mainRoot.getBrowsingContextDescriptor(
+        browsingContextID
+      );
+      return descriptor.getTarget();
     }
 
     /**

@@ -179,10 +179,22 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     // If the contentDomReference has a different browsing context than the current one,
     // we are either in Fission or in the Multiprocess Browser Toolbox, so we need to
     // retrieve the walker of the BrowsingContextTarget.
-    const descriptor = await this.targetFront.client.mainRoot.getBrowsingContextDescriptor(
-      browsingContextId
-    );
-    const target = await descriptor.getTarget();
+    // Get the target for this remote frame element
+    const { descriptorFront } = this.targetFront;
+
+    // Starting with FF77, Tab and Process Descriptor exposes a Watcher,
+    // which should be used to fetch the node's target.
+    let target;
+    if (descriptorFront && descriptorFront.traits.watcher) {
+      const watcher = await descriptorFront.getWatcher();
+      target = await watcher.getBrowsingContextTarget(browsingContextId);
+    } else {
+      // FF<=76 backward compat code:
+      const descriptor = await this.targetFront.client.mainRoot.getBrowsingContextDescriptor(
+        browsingContextId
+      );
+      target = await descriptor.getTarget();
+    }
     const { walker } = await target.getFront("inspector");
     return walker.getNodeActorFromContentDomReference(contentDomReference);
   }

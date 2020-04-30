@@ -106,6 +106,7 @@ const rootSpecPrototype = {
       response: RetVal("root.listRemoteFrames"),
     },
 
+    // Can be removed when FF77 reach release channel
     getBrowsingContextDescriptor: {
       request: {
         id: Arg(0, "number"),

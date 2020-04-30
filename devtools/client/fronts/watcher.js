@@ -45,5 +45,39 @@ class WatcherFront extends FrontClassWithSpec(watcherSpec) {
     const front = this.actor(form.actor);
     this.emit("target-destroyed", front);
   }
+
+  /**
+   * Retrieve the already existing BrowsingContextTargetFront for the parent
+   * BrowsingContext of the given BrowsingContext ID.
+   */
+  async getParentBrowsingContextTarget(browsingContextID) {
+    const id = await this.getParentBrowsingContextID(browsingContextID);
+    if (!id) {
+      return null;
+    }
+    return this.getBrowsingContextTarget(id);
+  }
+
+  /**
+   * For a given BrowsingContext ID, return the already existing BrowsingContextTargetFront
+   */
+  async getBrowsingContextTarget(id) {
+    // First scan the watcher children as the watcher manages all the targets
+    for (const front of this.poolChildren()) {
+      if (front.browsingContextID == id) {
+        return front;
+      }
+    }
+    // But the top level target will be created by the Descriptor.getTarget() method
+    // and so be hosted in the Descriptor's pool.
+    // The parent front of the WatcherActor happens to be the Descriptor Actor.
+    // This code could go away or be simplified if the Descriptor starts fetch all
+    // the targets, including the top level one via the Watcher. i.e. drop Descriptor.getTarget().
+    const topLevelTarget = await this.parentFront.getTarget();
+    if (topLevelTarget.browsingContextID == id) {
+      return topLevelTarget;
+    }
+    return null;
+  }
 }
 registerFront(WatcherFront);
