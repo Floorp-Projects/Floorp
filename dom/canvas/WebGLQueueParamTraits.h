@@ -56,6 +56,15 @@ struct IsTriviallySerializable<avec3<T>> : std::true_type {};
 
 template <>
 struct IsTriviallySerializable<webgl::TexUnpackBlob> : std::true_type {};
+
+template <>
+struct IsTriviallySerializable<webgl::TypedQuad> : std::true_type {};
+template <>
+struct IsTriviallySerializable<webgl::VertAttribPointerDesc> : std::true_type {
+};
+template <>
+struct IsTriviallySerializable<webgl::ReadPixelsDesc> : std::true_type {};
+
 /*
 template <>
 struct QueueParamTraits<WebGLActiveInfo> {
@@ -415,7 +424,7 @@ struct QueueParamTraits<std::string> {
 
 template <typename U>
 struct QueueParamTraits<std::vector<U>> {
-  using T = std::string;
+  using T = std::vector<U>;
 
   static QueueStatus Write(ProducerView& aProducerView, const T& aArg) {
     auto status = aProducerView.WriteParam(aArg.size());
@@ -471,6 +480,66 @@ struct QueueParamTraits<WebGLExtensionID> {
     return sizeof(T);
   }
 };
+
+template <>
+struct QueueParamTraits<CompileResult> {
+  using T = CompileResult;
+
+  static QueueStatus Write(ProducerView& aProducerView, const T& aArg) {
+    aProducerView.WriteParam(aArg.pending);
+    aProducerView.WriteParam(aArg.log);
+    aProducerView.WriteParam(aArg.translatedSource);
+    return aProducerView.WriteParam(aArg.success);
+  }
+
+  static QueueStatus Read(ConsumerView& aConsumerView, T* const aArg) {
+    aConsumerView.ReadParam(aArg ? &aArg->pending : nullptr);
+    aConsumerView.ReadParam(aArg ? &aArg->log : nullptr);
+    aConsumerView.ReadParam(aArg ? &aArg->translatedSource : nullptr);
+    return aConsumerView.ReadParam(aArg ? &aArg->success : nullptr);
+  }
+
+  template <typename View>
+  static size_t MinSize(View& aView, const T* const aArg) {
+    return aView.MinSizeParam(aArg ? &aArg->pending : nullptr) +
+           aView.MinSizeParam(aArg ? &aArg->log : nullptr) +
+           aView.MinSizeParam(aArg ? &aArg->translatedSource : nullptr) +
+           aView.MinSizeParam(aArg ? &aArg->success : nullptr);
+  }
+};
+
+#if 0
+// TODO: QueueParamTraits for LinkActiveResult and friends.
+template <>
+struct QueueParamTraits<LinkResult> {
+  using T = LinkResult;
+
+  static QueueStatus Write(ProducerView& aProducerView, const T& aArg) {
+    aProducerView.WriteParam(aArg.pending);
+    aProducerView.WriteParam(aArg.log);
+    aProducerView.WriteParam(aArg.active);
+    aProducerView.WriteParam(aArg.tfBufferMode);
+    return aProducerView.WriteParam(aArg.success);
+  }
+
+  static QueueStatus Read(ConsumerView& aConsumerView, T* const aArg) {
+    aConsumerView.ReadParam(aArg ? &aArg->pending : nullptr);
+    aConsumerView.ReadParam(aArg ? &aArg->log : nullptr);
+    aConsumerView.ReadParam(aArg ? &aArg->active : nullptr);
+    aConsumerView.ReadParam(aArg ? &aArg->tfBufferMode : nullptr);
+    return aConsumerView.ReadParam(aArg ? &aArg->success : nullptr);
+  }
+
+  template <typename View>
+  static size_t MinSize(View& aView, const T* const aArg) {
+    return aView.MinSizeParam(aArg ? &aArg->pending : nullptr) +
+        aView.MinSizeParam(aArg ? &aArg->log : nullptr) +
+        aView.MinSizeParam(aArg ? &aArg->active : nullptr) +
+        aView.MinSizeParam(aArg ? &aArg->tfBufferMode : nullptr) +
+        aView.MinSizeParam(aArg ? &aArg->success : nullptr);
+  }
+};
+#endif
 
 }  // namespace webgl
 }  // namespace mozilla
