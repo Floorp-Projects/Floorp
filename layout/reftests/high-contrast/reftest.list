@@ -35,6 +35,7 @@ pref(browser.display.document_color_use,0) needs-focus != selection-001.html sel
 != color-transparent-002.html about:blank
 
 == links.html links-ref.html
+== links-2.html links-ref.html
 
 pref(browser.display.document_color_use,2) == non-themed-button-001.html non-themed-button-001-ref.html
 pref(browser.display.document_color_use,2) == non-themed-button-002.html non-themed-button-002-ref.html
