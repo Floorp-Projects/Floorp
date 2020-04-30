@@ -290,8 +290,7 @@ class ContentBlockingLog final {
         entry.mData->mLogs.RemoveElementAt(0);
       }
       entry.mData->mLogs.AppendElement(
-          LogEntry{aType, 1u, aBlocked, aReason,
-                   nsTArray<nsCString>(aTrackingFullHashes)});
+          LogEntry{aType, 1u, aBlocked, aReason, aTrackingFullHashes.Clone()});
       return;
     }
 
@@ -322,8 +321,7 @@ class ContentBlockingLog final {
       entry->mData->mHasSocialTrackerCookiesLoaded.emplace(aBlocked);
     } else {
       entry->mData->mLogs.AppendElement(
-          LogEntry{aType, 1u, aBlocked, aReason,
-                   nsTArray<nsCString>(aTrackingFullHashes)});
+          LogEntry{aType, 1u, aBlocked, aReason, aTrackingFullHashes.Clone()});
     }
   }
 
