@@ -26,6 +26,7 @@
       "toolbar": "#f5f6f7",
       "toolbar_bottom_separator": "#ccc",
       "toolbar_field": "#fff",
+      "toolbar_field_text": "rgb(24, 25, 26)",
       "toolbar_field_border": "#ccc"
     }
   },
