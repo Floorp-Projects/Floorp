@@ -21,6 +21,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/PublicSSL.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
@@ -852,8 +853,24 @@ nsresult nsNSSComponent::BlockUntilLoadableCertsLoaded() {
   return mLoadableCertsLoadedResult;
 }
 
+#ifndef MOZ_NO_SMART_CARDS
+static StaticMutex sCheckForSmartCardChangesMutex;
+static TimeStamp sLastCheckedForSmartCardChanges = TimeStamp::Now();
+#endif
+
 nsresult nsNSSComponent::CheckForSmartCardChanges() {
 #ifndef MOZ_NO_SMART_CARDS
+  {
+    StaticMutexAutoLock lock(sCheckForSmartCardChangesMutex);
+    // Do this at most once every 3 seconds.
+    TimeStamp now = TimeStamp::Now();
+    if (now - sLastCheckedForSmartCardChanges <
+        TimeDuration::FromSeconds(3.0)) {
+      return NS_OK;
+    }
+    sLastCheckedForSmartCardChanges = now;
+  }
+
   // SECMOD_UpdateSlotList attempts to acquire the list lock as well,
   // so we have to do this in two steps. The lock protects the list itself, so
   // if we get our own owned references to the modules we're interested in,
