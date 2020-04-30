@@ -4,6 +4,9 @@
 # a569f5a4bb6a27f25e99b5b45ee241db2660b7e3 - Paolo Amadini - Bug 1128203 - Reduce indentation from 4 to 2 spaces. rs=dolske DONTBUILD CLOSED TREE
 b8ffa2c11b99bd5762b5ed612acd755b29d1eae6 # cinnabar
 174ae94f90f1b5edc83b737b4006c82bb830db7c # gecko-dev
+# fdf90317de6820adc8c2b9b1e70f8d11fa859636 - Jared Wein - Bug 1298559 - Enable eslint for /browser/base/content/test/ r=mattn
+1087f182890c3439da164a95f53d82c6a19443eb # cinnabar
+a182a61bcecdf309b82ea77e2f4e214d6ded8cdb # gecko-dev
 # dcfc73c043c01c3185631262605e3511bebe4cca - Mark Banner - Bug 1309842 - Fix eslint/espree parsing errors for ignored directories in browser/. r=jaws
 90df05a8637c4c82ddea5b1619e7315eed3f13fd # cinnabar
 975effef478b7b8cf08809cd66f8607f3a48b6eb # gecko-dev
