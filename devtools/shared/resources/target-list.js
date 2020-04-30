@@ -77,6 +77,8 @@ class LegacyImplementationProcesses {
   }
 }
 
+// Bug 1593937 made this code only used to support FF76- and can be removed
+// once FF77 reach release channel.
 class LegacyImplementationFrames {
   constructor(targetList, onTargetAvailable) {
     this.targetList = targetList;
@@ -281,6 +283,13 @@ class TargetList {
    */
   constructor(rootFront, targetFront) {
     this.rootFront = rootFront;
+
+    // Once we have descriptor for all targets we create a toolbox for,
+    // we should try to only pass the descriptor to the Toolbox constructor,
+    // and, only receive the root and descriptor front as an argument to TargetList.
+    // Bug 1573779, we only miss descriptors for workers.
+    this.descriptorFront = targetFront.descriptorFront;
+
     // Note that this is a public attribute, used outside of this class
     // and helps knowing what is the current top level target we debug.
     this.targetFront = targetFront;
@@ -415,11 +424,23 @@ class TargetList {
       }
       this._setListening(type, true);
 
+      // Starting with FF77, we support frames watching via watchTargets for Tab and Process descriptors
+      const supportsWatcher = this.descriptorFront?.traits?.watcher;
+      if (supportsWatcher) {
+        const watcher = await this.descriptorFront.getWatcher();
+        if (watcher.traits[type]) {
+          if (!this._startedListeningToWatcher) {
+            this._startedListeningToWatcher = true;
+            watcher.on("target-available", this._onTargetAvailable);
+            watcher.on("target-destroyed", this._onTargetDestroyed);
+          }
+          await watcher.watchTargets(type);
+          continue;
+        }
+      }
       if (this.legacyImplementation[type]) {
         await this.legacyImplementation[type].listen();
       } else {
-        // TO BE IMPLEMENTED via this.targetFront.watchFronts(type)
-        // For now we always go throught "legacy" codepath.
         throw new Error(`Unsupported target type '${type}'`);
       }
     }
@@ -432,11 +453,18 @@ class TargetList {
       }
       this._setListening(type, false);
 
+      // Starting with FF77, we support frames watching via watchTargets for Tab and Process descriptors
+      const supportsWatcher = this.descriptorFront?.traits?.watcher;
+      if (supportsWatcher) {
+        const watcher = this.descriptorFront.getCachedWatcher();
+        if (watcher && watcher.traits[type]) {
+          watcher.unwatchTargets(type);
+          continue;
+        }
+      }
       if (this.legacyImplementation[type]) {
         this.legacyImplementation[type].unlisten();
       } else {
-        // TO BE IMPLEMENTED via this.targetFront.unwatchFronts(type)
-        // For now we always go throught "legacy" codepath.
         throw new Error(`Unsupported target type '${type}'`);
       }
     }

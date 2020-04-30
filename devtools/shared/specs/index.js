@@ -288,6 +288,11 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/client/fronts/walker",
   },
   {
+    types: ["watcher"],
+    spec: "devtools/shared/specs/watcher",
+    front: "devtools/client/fronts/watcher",
+  },
+  {
     types: ["console"],
     spec: "devtools/shared/specs/webconsole",
     front: "devtools/client/fronts/webconsole",
