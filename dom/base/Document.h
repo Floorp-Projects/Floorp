@@ -3744,7 +3744,7 @@ class Document : public nsINode,
  private:
   bool IsErrorPage() const;
 
-  void InitializeLocalization(Sequence<nsString>& aResourceIds);
+  void EnsureL10n();
 
   // Takes the bits from mStyleUseCounters if appropriate, and sets them in
   // mUseCounters.
@@ -3769,8 +3769,6 @@ class Document : public nsINode,
   already_AddRefed<mozilla::dom::FeaturePolicy> GetParentFeaturePolicy();
 
   FlashClassification DocumentFlashClassificationInternal();
-
-  Sequence<nsString> mL10nResources;
 
   // The application cache that this document is associated with, if
   // any.  This can change during the lifetime of the document.
@@ -5061,8 +5059,6 @@ class Document : public nsINode,
   // Pres shell resolution saved before creating a MobileViewportManager.
   float mSavedResolutionBeforeMVM;
 
-  bool mPendingInitialTranslation;
-
   nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
 
   bool mHasStoragePermission;
@@ -5093,7 +5089,7 @@ class Document : public nsINode,
   // Needs to be public because the bindings code pokes at it.
   js::ExpandoAndGeneration mExpandoAndGeneration;
 
-  bool HasPendingInitialTranslation() { return mPendingInitialTranslation; }
+  bool HasPendingInitialTranslation();
 
   nsRefPtrHashtable<nsRefPtrHashKey<Element>, nsXULPrototypeElement>
       mL10nProtoElements;
