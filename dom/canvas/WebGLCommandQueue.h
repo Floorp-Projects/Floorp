@@ -26,9 +26,6 @@ using mozilla::webgl::Producer;
 using mozilla::webgl::ProducerConsumerQueue;
 using mozilla::webgl::QueueStatus;
 
-template <typename Derived, typename SinkType>
-struct MethodDispatcher;
-
 enum CommandResult { kSuccess, kTimeExpired, kQueueEmpty, kError };
 
 enum CommandSyncType { ASYNC, SYNC };
@@ -231,10 +228,11 @@ class CommandSink {
   }
 
   template <typename T, typename MethodType, typename... Args,
-            size_t... Indices, typename ReturnType>
-  std::result_of<MethodType> CallMethod(T& aObj, MethodType aMethod,
-                                        std::tuple<Args...>& aArgs,
-                                        std::index_sequence<Indices...>) {
+            size_t... Indices,
+            typename ReturnType =
+                typename mozilla::FunctionTypeTraits<MethodType>::ReturnType>
+  ReturnType CallMethod(T& aObj, MethodType aMethod, std::tuple<Args...>& aArgs,
+                        std::index_sequence<Indices...>) {
     return (aObj.*aMethod)(std::forward<Args>(std::get<Indices>(aArgs))...);
   }
 
@@ -491,72 +489,56 @@ class SyncCommandSink : public CommandSink<Command> {
 };
 
 /**
- * Can be used by a sink to find and execute the handler for a given commandId.
- */
-template <typename Derived>
-struct CommandDispatchDriver {
-  /**
-   * Find and run the command.
-   */
-  template <size_t commandId, typename... Args>
-  static MOZ_ALWAYS_INLINE bool DispatchCommandHelper(size_t aId,
-                                                      Args&... aArgs) {
-    if (commandId == aId) {
-      return Derived::template Dispatch<commandId>(aArgs...);
-    }
-    return Derived::template DispatchCommand<commandId + 1>(aId, aArgs...);
-  }
-};
-
-/**
  * This CommandDispatcher provides helper methods that subclasses can
  * use to dispatch sync/async commands to a method via a CommandSink.
  * See DECLARE_METHOD_DISPATCHER and DEFINE_METHOD_DISPATCHER.
  */
-template <typename Derived, typename _SinkType>
+template <typename Derived>
 struct MethodDispatcher {
-  using SinkType = _SinkType;
-  template <CommandSyncType syncType>
+  template <CommandSyncType syncType, int = 0>
   struct DispatchMethod;
-};
 
-// Specialization for dispatching asynchronous methods
-template <typename Derived, typename _SinkType>
-template <>
-struct MethodDispatcher<Derived,
-                        _SinkType>::DispatchMethod<CommandSyncType::ASYNC> {
-  template <typename MethodType, typename ObjectType>
-  static MOZ_ALWAYS_INLINE bool Run(SinkType& aSink, MethodType mMethod,
-                                    ObjectType& aObj) {
-    return aSink.DispatchAsyncMethod(aObj, mMethod);
-  }
-};
+  // Specialization for dispatching asynchronous methods
+  template <int dummy>
+  struct DispatchMethod<CommandSyncType::ASYNC, dummy> {
+    template <typename MethodType, typename ObjectType, typename SinkType>
+    static MOZ_ALWAYS_INLINE bool Run(SinkType& aSink, MethodType mMethod,
+                                      ObjectType& aObj) {
+      return aSink.DispatchAsyncMethod(aObj, mMethod);
+    }
+  };
 
-// Specialization for dispatching synchronous methods
-template <typename Derived, typename _SinkType>
-template <>
-struct MethodDispatcher<Derived,
-                        _SinkType>::DispatchMethod<CommandSyncType::SYNC> {
-  template <typename MethodType, typename ObjectType>
-  static MOZ_ALWAYS_INLINE bool Run(SinkType& aSink, MethodType aMethod,
-                                    ObjectType& aObj) {
-    return aSink.DispatchSyncMethod(aObj, aMethod);
-  }
+  // Specialization for dispatching synchronous methods
+  template <int dummy>
+  struct DispatchMethod<CommandSyncType::SYNC, dummy> {
+    template <typename MethodType, typename ObjectType, typename SinkType>
+    static MOZ_ALWAYS_INLINE bool Run(SinkType& aSink, MethodType aMethod,
+                                      ObjectType& aObj) {
+      return aSink.DispatchSyncMethod(aObj, aMethod);
+    }
+  };
 };
 
 // Declares a MethodDispatcher with the given name and CommandSink type.
 // The ObjectType is the type of the object this class will dispatch methods to.
-#define DECLARE_METHOD_DISPATCHER(_DISPATCHER, _SINKTYPE, _OBJECTTYPE)         \
-  struct _DISPATCHER : public MethodDispatcher<_DISPATCHER, _SINKTYPE> {       \
+#define DECLARE_METHOD_DISPATCHER(_DISPATCHER, _OBJECTTYPE)                    \
+  struct _DISPATCHER : public MethodDispatcher<_DISPATCHER> {                  \
     using ObjectType = _OBJECTTYPE;                                            \
-    template <size_t commandId = 0>                                            \
+    template <size_t commandId>                                                \
+    struct IdDispatcher {                                                      \
+      template <typename SinkType>                                             \
+      static MOZ_ALWAYS_INLINE bool DispatchCommand(size_t aId,                \
+                                                    SinkType& aSink,           \
+                                                    ObjectType& aObj) {        \
+        MOZ_CRASH("Impossible -- Unhandled command ID");                       \
+        return false;                                                          \
+      }                                                                        \
+    };                                                                         \
+    template <typename SinkType, size_t commandId = 0>                         \
     static MOZ_ALWAYS_INLINE bool DispatchCommand(size_t aId, SinkType& aSink, \
                                                   ObjectType& aObj) {          \
-      MOZ_ASSERT_UNREACHABLE("Unhandled command ID");                          \
-      return false;                                                            \
+      return IdDispatcher<commandId>::DispatchCommand(aId, aSink, aObj);       \
     }                                                                          \
-    template <size_t commandId>                                                \
-    static MOZ_ALWAYS_INLINE bool Dispatch(SinkType& aSink, ObjectType& aObj); \
     template <size_t commandId>                                                \
     struct MethodInfo;                                                         \
     template <size_t commandId>                                                \
@@ -569,29 +551,29 @@ struct MethodDispatcher<Derived,
 // id.  The handler uses a CommandSink to read parameters, call the
 // given method using the given synchronization protocol, and provide
 // compile-time lookup of the ID by class method.
-#define DEFINE_METHOD_DISPATCHER(_DISPATCHER, _ID, _METHOD, _SYNC)           \
-  /*  template <>                                                            \
-    bool _DISPATCHER::DispatchCommand<_ID>(size_t aId, SinkType & aSink,     \
-                                           ObjectType & aObj) {              \
-      return CommandDispatchDriver<_DISPATCHER>::DispatchCommandHelper<_ID>( \
-          aId, aSink, aObj);                                                 \
-    }                                                                        \
-    template <>                                                              \
-    bool _DISPATCHER::Dispatch<_ID>(SinkType & aSink, ObjectType & aObj) {   \
-      return DispatchMethod<_SYNC>::Run(aSink, &_METHOD, aObj);              \
-    } */                                                                     \
-  template <>                                                                \
-  struct _DISPATCHER::MethodInfo<_ID> {                                      \
-    using MethodType = decltype(&_METHOD);                                   \
-  };                                                                         \
-  template <>                                                                \
-  constexpr CommandSyncType _DISPATCHER::SyncType<_ID>() {                   \
-    return _SYNC;                                                            \
-  }                                                                          \
-  template <>                                                                \
-  constexpr size_t _DISPATCHER::Id<decltype(&_METHOD), &_METHOD>() {         \
-    return _ID;                                                              \
-  }
+#define DEFINE_METHOD_DISPATCHER(_DISPATCHER, _ID, _METHOD, _SYNC)             \
+  template <>                                                                  \
+  struct _DISPATCHER::MethodInfo<_ID> {                                        \
+    using MethodType = decltype(&_METHOD);                                     \
+  };                                                                           \
+  template <>                                                                  \
+  constexpr CommandSyncType _DISPATCHER::SyncType<_ID>() {                     \
+    return _SYNC;                                                              \
+  }                                                                            \
+  template <>                                                                  \
+  constexpr size_t _DISPATCHER::Id<decltype(&_METHOD), &_METHOD>() {           \
+    return _ID;                                                                \
+  }                                                                            \
+  template <>                                                                  \
+  struct _DISPATCHER::IdDispatcher<_ID> {                                      \
+    template <typename SinkType>                                               \
+    static bool MOZ_ALWAYS_INLINE DispatchCommand(size_t aId, SinkType& aSink, \
+                                                  ObjectType& aObj) {          \
+      return (_ID == aId) ? DispatchMethod<_SYNC>::Run(aSink, &_METHOD, aObj)  \
+                          : _DISPATCHER::DispatchCommand<SinkType, _ID + 1>(   \
+                                aId, aSink, aObj);                             \
+    }                                                                          \
+  };
 
 namespace ipc {
 template <typename T>
