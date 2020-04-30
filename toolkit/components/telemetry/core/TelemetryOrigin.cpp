@@ -230,7 +230,7 @@ nsresult AppEncodeTo(const StaticMutexAutoLock& lock,
           metricData[shardIndex][index % PrioEncoder::gNumBooleans] = true;
         }
       }
-      aResult.AppendElement(std::make_pair(id, metricData));
+      aResult.EmplaceBack(id, std::move(metricData));
     } while (generation++ < maxGeneration);
   }
   return NS_OK;

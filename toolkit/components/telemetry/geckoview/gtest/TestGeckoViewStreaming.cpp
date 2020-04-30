@@ -64,7 +64,7 @@ TEST_F(TelemetryStreamingFixture, HistogramSamples) {
   const uint32_t kSampleOne = 401;
   const uint32_t kSampleTwo = 2019;
 
-  nsTArray<uint32_t> samplesArray;
+  CopyableTArray<uint32_t> samplesArray;
   samplesArray.AppendElement(kSampleOne);
   samplesArray.AppendElement(kSampleTwo);
 
@@ -83,7 +83,7 @@ TEST_F(TelemetryStreamingFixture, CategoricalHistogramSamples) {
       Telemetry::LABELS_TELEMETRY_TEST_CATEGORICAL_OPTOUT::CommonLabel;
   auto kSampleTwo = Telemetry::LABELS_TELEMETRY_TEST_CATEGORICAL_OPTOUT::Label5;
 
-  nsTArray<uint32_t> samplesArray;
+  CopyableTArray<uint32_t> samplesArray;
   samplesArray.AppendElement(static_cast<uint32_t>(kSampleOne));
   samplesArray.AppendElement(static_cast<uint32_t>(kSampleOne));
   samplesArray.AppendElement(static_cast<uint32_t>(kSampleTwo));
@@ -103,10 +103,10 @@ TEST_F(TelemetryStreamingFixture, MultipleHistograms) {
   const uint32_t kSample1 = 400;
   const uint32_t kSample2 = 1 << 31;
   const uint32_t kSample3 = 7;
-  nsTArray<uint32_t> samplesArray1;
+  CopyableTArray<uint32_t> samplesArray1;
   samplesArray1.AppendElement(kSample1);
   samplesArray1.AppendElement(kSample2);
-  nsTArray<uint32_t> samplesArray2;
+  CopyableTArray<uint32_t> samplesArray2;
   samplesArray2.AppendElement(kSample3);
 
   auto md = MakeRefPtr<MockDelegate>();
@@ -126,11 +126,11 @@ TEST_F(TelemetryStreamingFixture, MultipleHistograms) {
 // If we can find a way to convert the expectation's arg into an stl container,
 // we can use gmock's own ::testing::UnorderedElementsAre() instead.
 auto MatchUnordered(uint32_t sample1, uint32_t sample2) {
-  nsTArray<uint32_t> samplesArray1;
+  CopyableTArray<uint32_t> samplesArray1;
   samplesArray1.AppendElement(sample1);
   samplesArray1.AppendElement(sample2);
 
-  nsTArray<uint32_t> samplesArray2;
+  CopyableTArray<uint32_t> samplesArray2;
   samplesArray2.AppendElement(sample2);
   samplesArray2.AppendElement(sample1);
 
