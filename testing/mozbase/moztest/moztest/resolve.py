@@ -742,7 +742,7 @@ class TestResolver(MozbuildObject):
                         "here": mozpath.dirname(path),
                         "manifest": mozpath.dirname(full_path),
                         "manifest_relpath": mozpath.dirname(src_path),
-                        "name": test.path_parts[-1],
+                        "name": test.id,
                         "file_relpath": src_path,
                         "srcdir_relpath": src_path,
                         "dir_relpath": mozpath.dirname(src_path),
