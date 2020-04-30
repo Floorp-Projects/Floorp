@@ -48,8 +48,6 @@ using mozilla::wr::MaybeExternalImageId from "mozilla/webrender/WebRenderTypes.h
 using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";
 using struct DxgiAdapterDesc from "mozilla/D3DMessageUtils.h";
-using mozilla::webgl::InitContextDesc from "mozilla/dom/WebGLIpdl.h";
-using mozilla::webgl::InitContextResult from "mozilla/dom/WebGLIpdl.h";
 
 namespace mozilla {
 namespace layers {
@@ -300,9 +298,7 @@ parent:
   async RequestFxrOutput();
 
   // Actor that represents one WebGL context.
-  // (modeled after `sync PBackgroundLSSnapshot`)
-  sync PWebGL(InitContextDesc desc)
-    returns (InitContextResult res);
+  async PWebGL();
 
 child:
   // Send back Compositor Frame Metrics from APZCs so tiled layers can

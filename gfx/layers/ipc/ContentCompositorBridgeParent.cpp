@@ -766,11 +766,9 @@ mozilla::ipc::IPCResult ContentCompositorBridgeParent::RecvPreferredDXGIAdapter(
 }
 
 already_AddRefed<dom::PWebGLParent>
-ContentCompositorBridgeParent::AllocPWebGLParent(
-    const webgl::InitContextDesc& aInitDesc,
-    webgl::InitContextResult* const out) {
-  RefPtr<dom::PWebGLParent> ret = dom::WebGLParent::Create(aInitDesc, out);
-  return ret.forget();
+ContentCompositorBridgeParent::AllocPWebGLParent() {
+  RefPtr<dom::PWebGLParent> parent = new dom::WebGLParent();
+  return parent.forget();
 }
 
 }  // namespace layers

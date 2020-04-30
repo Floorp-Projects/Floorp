@@ -14,30 +14,28 @@ namespace mozilla {
 
 namespace dom {
 
-/* static */
-RefPtr<WebGLParent> WebGLParent::Create(const webgl::InitContextDesc& desc,
-                                        webgl::InitContextResult* const out) {
-  RefPtr<WebGLParent> parent = new WebGLParent;
+mozilla::ipc::IPCResult WebGLParent::RecvInitialize(
+    const webgl::InitContextDesc& desc, webgl::InitContextResult* const out) {
   auto remotingData = Some(HostWebGLContext::RemotingData{
-      *parent, {},  // std::move(commandSink),
+      *this, {},  // std::move(commandSink),
   });
 
-  parent->mHost = HostWebGLContext::Create(
+  mHost = HostWebGLContext::Create(
       {
           {},
           std::move(remotingData),
       },
       desc, out);
 
-  if (!parent->mHost) {
-    WEBGL_BRIDGE_LOGE("Failed to create HostWebGLContext");
-    return nullptr;
+  if (!mHost) {
+    return IPC_FAIL(this, "Failed to create HostWebGLContext");
   }
-  if (!parent->BeginCommandQueueDrain()) {
-    WEBGL_BRIDGE_LOGE("Failed to start WebGL command queue drain");
-    return nullptr;
+
+  if (!BeginCommandQueueDrain()) {
+    return IPC_FAIL(this, "Failed to start WebGL command queue drain");
   }
-  return parent;
+
+  return IPC_OK();
 }
 
 WebGLParent::WebGLParent() = default;
