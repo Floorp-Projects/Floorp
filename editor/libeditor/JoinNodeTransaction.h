@@ -17,7 +17,7 @@ class nsINode;
 
 namespace mozilla {
 
-class EditorBase;
+class HTMLEditor;
 
 /**
  * A transaction that joins two nodes E1 (left node) and E2 (right node) into a
@@ -27,7 +27,7 @@ class EditorBase;
  */
 class JoinNodeTransaction final : public EditTransactionBase {
  protected:
-  JoinNodeTransaction(EditorBase& aEditorBase, nsIContent& aLeftContent,
+  JoinNodeTransaction(HTMLEditor& aHTMLEditor, nsIContent& aLeftContent,
                       nsIContent& aRightContent);
 
  public:
@@ -35,12 +35,12 @@ class JoinNodeTransaction final : public EditTransactionBase {
    * Creates a join node transaction.  This returns nullptr if cannot join the
    * nodes.
    *
-   * @param aEditorBase     The provider of core editing operations.
+   * @param aHTMLEditor     The provider of core editing operations.
    * @param aLeftContent    The first of two nodes to join.
    * @param aRightContent   The second of two nodes to join.
    */
   static already_AddRefed<JoinNodeTransaction> MaybeCreate(
-      EditorBase& aEditorBase, nsIContent& aLeftContent,
+      HTMLEditor& aHTMLEditor, nsIContent& aLeftContent,
       nsIContent& aRightContent);
 
   /**
@@ -57,7 +57,7 @@ class JoinNodeTransaction final : public EditTransactionBase {
   NS_DECL_EDITTRANSACTIONBASE_GETASMETHODS_OVERRIDE(JoinNodeTransaction)
 
  protected:
-  RefPtr<EditorBase> mEditorBase;
+  RefPtr<HTMLEditor> mHTMLEditor;
 
   // The nodes to operate upon.  After the merge, mRightContent remains and
   // mLeftContent is removed from the content tree.
