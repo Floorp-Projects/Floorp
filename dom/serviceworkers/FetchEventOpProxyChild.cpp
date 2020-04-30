@@ -120,8 +120,14 @@ void FetchEventOpProxyChild::Initialize(
                  }
 
                  Unused << self->SendRespondWith(ipcArgs);
-                 autoBodyStream->TakeOptionalValue();
-                 autoAlternativeBodyStream->TakeOptionalValue();
+
+                 if (ipcArgs.internalResponse().body()) {
+                   autoBodyStream->TakeValue();
+                 }
+
+                 if (ipcArgs.internalResponse().alternativeBody()) {
+                   autoAlternativeBodyStream->TakeValue();
+                 }
                } else if (result.is<ResetInterceptionArgs>()) {
                  Unused << self->SendRespondWith(
                      result.extract<ResetInterceptionArgs>());
@@ -139,7 +145,7 @@ RefPtr<InternalRequest> FetchEventOpProxyChild::ExtractInternalRequest() {
   MOZ_ASSERT(IsCurrentThreadRunningWorker());
   MOZ_ASSERT(mInternalRequest);
 
-  return RefPtr<InternalRequest>(std::move(mInternalRequest));
+  return std::move(mInternalRequest);
 }
 
 void FetchEventOpProxyChild::ActorDestroy(ActorDestroyReason) {
