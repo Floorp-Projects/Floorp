@@ -1089,7 +1089,7 @@ int32_t GfxInfoBase::FindBlocklistedDeviceInList(
 void GfxInfoBase::SetFeatureStatus(
     const nsTArray<dom::GfxInfoFeatureStatus>& aFS) {
   MOZ_ASSERT(!sFeatureStatus);
-  sFeatureStatus = new nsTArray<dom::GfxInfoFeatureStatus>(aFS);
+  sFeatureStatus = new nsTArray<dom::GfxInfoFeatureStatus>(aFS.Clone());
 }
 
 bool GfxInfoBase::DoesDesktopEnvironmentMatch(

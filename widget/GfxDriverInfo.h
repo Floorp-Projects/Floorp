@@ -290,8 +290,8 @@ class GfxDeviceFamily final {
     int32_t mEnd;
   };
 
-  nsTArray<nsString> mIds;
-  nsTArray<DeviceRange> mRanges;
+  CopyableTArray<nsString> mIds;
+  CopyableTArray<DeviceRange> mRanges;
 };
 
 struct GfxDriverInfo {

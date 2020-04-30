@@ -365,7 +365,7 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
 
   // OS translated Unicode chars which are used for accesskey and accelkey
   // handling. The handlers will try from first character to last character.
-  nsTArray<AlternativeCharCode> mAlternativeCharCodes;
+  CopyableTArray<AlternativeCharCode> mAlternativeCharCodes;
   // DOM KeyboardEvent.key only when mKeyNameIndex is KEY_NAME_INDEX_USE_STRING.
   nsString mKeyValue;
   // DOM KeyboardEvent.code only when mCodeNameIndex is
@@ -753,9 +753,9 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
   // with InitEditCommandsFor().
   // XXX Ideally, this should be array of Command rather than CommandInt.
   //     However, ParamTraits isn't aware of enum array.
-  nsTArray<CommandInt> mEditCommandsForSingleLineEditor;
-  nsTArray<CommandInt> mEditCommandsForMultiLineEditor;
-  nsTArray<CommandInt> mEditCommandsForRichTextEditor;
+  CopyableTArray<CommandInt> mEditCommandsForSingleLineEditor;
+  CopyableTArray<CommandInt> mEditCommandsForMultiLineEditor;
+  CopyableTArray<CommandInt> mEditCommandsForRichTextEditor;
 
   nsTArray<CommandInt>& EditCommandsRef(
       nsIWidget::NativeKeyBindingsType aType) {
@@ -1111,7 +1111,7 @@ class WidgetQueryContentEvent : public WidgetGUIEvent {
     // Used by eQueryTextContent with font ranges requested
     AutoTArray<mozilla::FontRange, 1> mFontRanges;
     // Used by eQueryTextRectArray
-    nsTArray<mozilla::LayoutDeviceIntRect> mRectArray;
+    CopyableTArray<mozilla::LayoutDeviceIntRect> mRectArray;
     // true if selection is reversed (end < start)
     bool mReversed;
     // true if the selection exists

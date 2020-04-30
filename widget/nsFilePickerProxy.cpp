@@ -221,7 +221,7 @@ class SimpleEnumerator final : public nsSimpleEnumerator {
  public:
   explicit SimpleEnumerator(
       const nsTArray<OwningFileOrDirectory>& aFilesOrDirectories)
-      : mFilesOrDirectories(aFilesOrDirectories), mIndex(0) {}
+      : mFilesOrDirectories(aFilesOrDirectories.Clone()), mIndex(0) {}
 
   NS_IMETHOD
   HasMoreElements(bool* aRetvalue) override {
