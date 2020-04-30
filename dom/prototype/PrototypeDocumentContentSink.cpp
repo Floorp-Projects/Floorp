@@ -596,7 +596,7 @@ nsresult PrototypeDocumentContentSink::MaybeDoneWalking() {
   }
 
   if (mDocument->HasPendingInitialTranslation()) {
-    mDocument->TriggerInitialTranslation();
+    mDocument->OnParsingCompleted();
     return NS_OK;
   }
 

@@ -3946,7 +3946,7 @@ void Document::OnL10nResourceContainerParsed() {
   }
 }
 
-void Document::TriggerInitialTranslation() {
+void Document::OnParsingCompleted() {
   // Let's call it again, in case the resource
   // container has not been closed, and only
   // now we're closing the document.

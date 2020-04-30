@@ -3715,11 +3715,8 @@ class Document : public nsINode,
    * the document element.
    * In XUL it happens at `DoneWalking`, during
    * `MozBeforeInitialXULLayout`.
-   *
-   * It triggers the initial translation of the
-   * document.
    */
-  void TriggerInitialTranslation();
+  void OnParsingCompleted();
 
   /**
    * This method is called when the initial translation

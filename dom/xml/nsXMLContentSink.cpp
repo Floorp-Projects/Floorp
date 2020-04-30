@@ -1060,7 +1060,7 @@ nsresult nsXMLContentSink::HandleEndElement(const char16_t* aName,
     // probably need to deal here.... (and stop appending them on open).
     mState = eXMLContentSinkState_InEpilog;
 
-    mDocument->TriggerInitialTranslation();
+    mDocument->OnParsingCompleted();
 
     // We might have had no occasion to start layout yet.  Do so now.
     MaybeStartLayout(false);
