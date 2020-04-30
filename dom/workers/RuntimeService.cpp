@@ -506,7 +506,7 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
         (gRuntimeServiceDuringInit && index == 14)) {
       bool prefValue = GetWorkerPref(matchName, false);
       UpdateOtherJSGCMemoryOption(rts, JSGC_COMPACTING_ENABLED,
-                                  prefValue ? 0 : 1);
+                                  prefValue ? 1 : 0);
       continue;
     }
 
