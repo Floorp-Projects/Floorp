@@ -24,4 +24,24 @@ interface DocumentL10n : DOMLocalization {
    * fetching is complete and the initial translation of the DOM is finished.
    */
   readonly attribute Promise<any> ready;
+
+  /**
+   * An overload for the DOMLocalization::connectRoot which takes an optional second
+   * argument to allow the user to express an intent of translating the root
+   * as soon as the localization becomes available.
+   *
+   * If the root is being connected while the document is still being parsed,
+   * then irrelevant of the value of the second argument, it will be translated
+   * as part of the initial translation step right after the parsing completes.
+   *
+   * If the root is being connected after the document is parsed, then the
+   * second argument controls whether the root is also going to get translated,
+   * or just connected.
+   *
+   * This is a temporary workaround to avoid having to wait for the `DocumentL10n`
+   * to become active. It should be unnecessary once we remove JSM and make
+   * the `TranslateFragment` be available immediately when `DocumentL10n` becomes
+   * available.
+   */
+  [Throws] void connectRoot(Node aElement, optional boolean aTranslate = false);
 };
