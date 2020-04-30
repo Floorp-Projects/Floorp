@@ -38,12 +38,6 @@ ChromeUtils.defineModuleGetter(
   "resource://services-settings/remote-settings.js"
 );
 
-const CascadeFilter = Components.Constructor(
-  "@mozilla.org/cascade-filter;1",
-  "nsICascadeFilter",
-  "setFilterData"
-);
-
 // The whole ID should be surrounded by literal ().
 // IDs may contain alphanumerics, _, -, {}, @ and a literal '.'
 // They may also contain backslashes (needed to escape the {} and dot)
@@ -133,12 +127,9 @@ function doesAddonEntryMatch(matches, addonProps) {
 
 const TOOLKIT_ID = "toolkit@mozilla.org";
 const PREF_BLOCKLIST_ITEM_URL = "extensions.blocklist.itemURL";
-const PREF_BLOCKLIST_ADDONITEM_URL = "extensions.blocklist.addonItemURL";
 const PREF_BLOCKLIST_ENABLED = "extensions.blocklist.enabled";
 const PREF_BLOCKLIST_LEVEL = "extensions.blocklist.level";
 const PREF_BLOCKLIST_SUPPRESSUI = "extensions.blocklist.suppressUI";
-const PREF_BLOCKLIST_USE_MLBF = "extensions.blocklist.useMLBF";
-const PREF_BLOCKLIST_USE_MLBF_STASHES = "extensions.blocklist.useMLBF.stashes";
 const PREF_EM_LOGGING_ENABLED = "extensions.logging.enabled";
 const URI_BLOCKLIST_DIALOG =
   "chrome://mozapps/content/extensions/blocklist.xhtml";
@@ -160,17 +151,10 @@ const PREF_BLOCKLIST_PLUGINS_COLLECTION =
 const PREF_BLOCKLIST_PLUGINS_CHECKED_SECONDS =
   "services.blocklist.plugins.checked";
 const PREF_BLOCKLIST_PLUGINS_SIGNER = "services.blocklist.plugins.signer";
-// Blocklist v2 - legacy JSON format.
 const PREF_BLOCKLIST_ADDONS_COLLECTION = "services.blocklist.addons.collection";
 const PREF_BLOCKLIST_ADDONS_CHECKED_SECONDS =
   "services.blocklist.addons.checked";
 const PREF_BLOCKLIST_ADDONS_SIGNER = "services.blocklist.addons.signer";
-// Blocklist v3 - MLBF format.
-const PREF_BLOCKLIST_ADDONS3_COLLECTION =
-  "services.blocklist.addons-mlbf.collection";
-const PREF_BLOCKLIST_ADDONS3_CHECKED_SECONDS =
-  "services.blocklist.addons-mlbf.checked";
-const PREF_BLOCKLIST_ADDONS3_SIGNER = "services.blocklist.addons-mlbf.signer";
 
 const BlocklistTelemetry = {
   /**
@@ -1076,9 +1060,6 @@ this.PluginBlocklistRS = {
  *   "last_modified": 1480349215672,
  * }
  *
- * This is a legacy format, and implements deprecated operations (bug 1620580).
- * ExtensionBlocklistMLBF supersedes this implementation.
- *
  * Note: we assign to the global to allow tests to reach the object directly.
  */
 this.ExtensionBlocklistRS = {
@@ -1160,15 +1141,6 @@ this.ExtensionBlocklistRS = {
   shutdown() {
     if (this._client) {
       this._client.off("sync", this._onUpdate);
-      this._didShutdown = true;
-    }
-  },
-
-  // Called when the blocklist implementation is changed via a pref.
-  undoShutdown() {
-    if (this._didShutdown) {
-      this._client.on("sync", this._onUpdate);
-      this._didShutdown = false;
     }
   },
 
@@ -1314,304 +1286,6 @@ this.ExtensionBlocklistRS = {
   },
 };
 
-/**
- * The extensions blocklist implementation, the third version.
- *
- * The current blocklist is represented by a multi-level bloom filter (MLBF)
- * (aka "Cascade Bloom Filter") that works like a set, i.e. supports a has()
- * operation, except it is probabilistic. The MLBF is 100% accurate for known
- * entries and unreliable for unknown entries.  When the backend generates the
- * MLBF, all known add-ons are recorded, including their block state. Unknown
- * add-ons are identified by their signature date being newer than the MLBF's
- * generation time, and they are considered to not be blocked.
- *
- * Legacy blocklists used to distinguish between "soft block" and "hard block",
- * but the current blocklist only supports one type of block ("hard block").
- * After checking the blocklist states, any previous "soft blocked" addons will
- * either be (hard) blocked or unblocked based on the blocklist.
- *
- * The MLBF is attached to a RemoteSettings record, as follows:
- *
- * {
- *   "generation_time": 1585692000000,
- *   "attachment": { ... RemoteSettings attachment ... }
- *   "attachment_type": "bloomfilter-base",
- * }
- *
- * To update the blocklist, a replacement MLBF is published:
- *
- * {
- *   "generation_time": 1585692000000,
- *   "attachment": { ... RemoteSettings attachment ... }
- *   "attachment_type": "bloomfilter-full",
- * }
- *
- * The collection can also contain stashes:
- *
- * {
- *   "stash_time": 1585692000001,
- *   "stash": {
- *     "blocked": [ "addonid:1.0", ... ],
- *     "unblocked": [ "addonid:1.0", ... ]
- *  }
- *
- * Stashes can be used to update the blocklist without forcing the whole MLBF
- * to be downloaded again. These stashes are applied on top of the base MLBF.
- * The use of stashes is currently optional, and toggled via the
- * extensions.blocklist.useMLBF.stashes preference (true = use stashes).
- *
- * Note: we assign to the global to allow tests to reach the object directly.
- */
-this.ExtensionBlocklistMLBF = {
-  RS_ATTACHMENT_ID: "addons-mlbf.bin",
-
-  async _fetchMLBF(record) {
-    // |record| may be unset. In that case, the MLBF dump is used instead
-    // (provided that the client has been built with it included).
-    let hash = record?.attachment.hash;
-    if (this._mlbfData && hash && this._mlbfData.cascadeHash === hash) {
-      // Not changed, let's re-use it.
-      return this._mlbfData;
-    }
-    const {
-      buffer,
-      record: actualRecord,
-    } = await this._client.attachments.download(record, {
-      attachmentId: this.RS_ATTACHMENT_ID,
-      useCache: true,
-      fallbackToCache: true,
-      fallbackToDump: true,
-    });
-    return {
-      cascadeHash: actualRecord.attachment.hash,
-      cascadeFilter: new CascadeFilter(new Uint8Array(buffer)),
-      // Note: generation_time is semantically distinct from last_modified.
-      // generation_time is compared with the signing date of the add-on, so it
-      // should be in sync with the signing service's clock.
-      // In contrast, last_modified does not have such strong requirements.
-      generationTime: actualRecord.generation_time,
-    };
-  },
-
-  async _updateMLBF(forceUpdate = false) {
-    // The update process consists of fetching the collection, followed by
-    // potentially multiple network requests. As long as the collection has not
-    // been changed, repeated update requests can be coalesced. But when the
-    // collection has been updated, all pending update requests should await the
-    // new update request instead of the previous one.
-    if (!forceUpdate && this._updatePromise) {
-      return this._updatePromise;
-    }
-    const isUpdateReplaced = () => this._updatePromise != updatePromise;
-    const updatePromise = (async () => {
-      if (!gBlocklistEnabled) {
-        this._mlbfData = null;
-        this._stashes = null;
-        return;
-      }
-      let records = await this._client.get();
-      if (isUpdateReplaced()) {
-        return;
-      }
-
-      let mlbfRecords = records
-        .filter(r => r.attachment)
-        // Newest attachments first.
-        .sort((a, b) => b.generation_time - a.generation_time);
-      let mlbfRecord;
-      if (this.stashesEnabled) {
-        mlbfRecord = mlbfRecords.find(
-          r => r.attachment_type == "bloomfilter-base"
-        );
-        this._stashes = records
-          .filter(({ stash }) => {
-            return (
-              // Exclude non-stashes, e.g. MLBF attachments.
-              stash &&
-              // Sanity check for type.
-              Array.isArray(stash.blocked) &&
-              Array.isArray(stash.unblocked)
-            );
-          })
-          // Sort by stash time - newest first.
-          .sort((a, b) => b.stash_time - a.stash_time)
-          .map(({ stash }) => ({
-            blocked: new Set(stash.blocked),
-            unblocked: new Set(stash.unblocked),
-          }));
-      } else {
-        mlbfRecord = mlbfRecords.find(
-          r =>
-            r.attachment_type == "bloomfilter-full" ||
-            r.attachment_type == "bloomfilter-base"
-        );
-        this._stashes = null;
-      }
-
-      let mlbf = await this._fetchMLBF(mlbfRecord);
-      // When a MLBF dump is packaged with the browser, mlbf will always be
-      // non-null at this point.
-      if (isUpdateReplaced()) {
-        return;
-      }
-      this._mlbfData = mlbf;
-    })()
-      .catch(e => {
-        Cu.reportError(e);
-      })
-      .then(() => {
-        if (!isUpdateReplaced()) {
-          this._updatePromise = null;
-        }
-        return this._updatePromise;
-      });
-    this._updatePromise = updatePromise;
-    return updatePromise;
-  },
-
-  ensureInitialized() {
-    if (!gBlocklistEnabled || this._initialized) {
-      return;
-    }
-    this._initialized = true;
-    this._client = RemoteSettings(
-      Services.prefs.getCharPref(PREF_BLOCKLIST_ADDONS3_COLLECTION),
-      {
-        bucketNamePref: PREF_BLOCKLIST_BUCKET,
-        lastCheckTimePref: PREF_BLOCKLIST_ADDONS3_CHECKED_SECONDS,
-        signerName: Services.prefs.getCharPref(PREF_BLOCKLIST_ADDONS3_SIGNER),
-      }
-    );
-    this._onUpdate = this._onUpdate.bind(this);
-    this._client.on("sync", this._onUpdate);
-    this.stashesEnabled = Services.prefs.getBoolPref(
-      PREF_BLOCKLIST_USE_MLBF_STASHES,
-      false
-    );
-  },
-
-  shutdown() {
-    if (this._client) {
-      this._client.off("sync", this._onUpdate);
-      this._didShutdown = true;
-    }
-  },
-
-  // Called when the blocklist implementation is changed via a pref.
-  undoShutdown() {
-    if (this._didShutdown) {
-      this._client.on("sync", this._onUpdate);
-      this._didShutdown = false;
-    }
-  },
-
-  async _onUpdate() {
-    this.ensureInitialized();
-    await this._updateMLBF(true);
-
-    // Check add-ons from XPIProvider.
-    const types = ["extension", "theme", "locale", "dictionary"];
-    let addons = await AddonManager.getAddonsByTypes(types);
-    for (let addon of addons) {
-      let oldState = addon.blocklistState;
-      await addon.updateBlocklistState(false);
-      let state = addon.blocklistState;
-
-      LOG(
-        "Blocklist state for " +
-          addon.id +
-          " changed from " +
-          oldState +
-          " to " +
-          state
-      );
-
-      // We don't want to re-warn about add-ons
-      if (state == oldState) {
-        continue;
-      }
-
-      // Ensure that softDisabled is false if the add-on is not soft blocked
-      // (by a previous implementation of the blocklist).
-      if (state != Ci.nsIBlocklistService.STATE_SOFTBLOCKED) {
-        addon.softDisabled = false;
-      }
-    }
-
-    AddonManagerPrivate.updateAddonAppDisabledStates();
-  },
-
-  async getState(addon) {
-    let state = await this.getEntry(addon);
-    return state ? state.state : Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
-  },
-
-  async getEntry(addon) {
-    if (!this._mlbfData) {
-      this.ensureInitialized();
-      await this._updateMLBF(false);
-    }
-
-    let blockKey = addon.id + ":" + addon.version;
-
-    if (this._stashes) {
-      // Stashes are ordered by newest first.
-      for (let stash of this._stashes) {
-        // blocked and unblocked do not have overlapping entries.
-        if (stash.blocked.has(blockKey)) {
-          return this._createBlockEntry(addon);
-        }
-        if (stash.unblocked.has(blockKey)) {
-          return null;
-        }
-      }
-    }
-
-    if (!addon.signedState) {
-      // The MLBF does not apply to unsigned add-ons.
-      return null;
-    }
-
-    if (!this._mlbfData) {
-      // This could happen in theory in any of the following cases:
-      // - the blocklist is disabled.
-      // - The RemoteSettings backend served a malformed MLBF.
-      // - The RemoteSettings backend is unreachable, and this client was built
-      //   without including a dump of the MLBF.
-      //
-      // ... in other words, this shouldn't happen in practice.
-      return null;
-    }
-    let { cascadeFilter, generationTime } = this._mlbfData;
-    if (!cascadeFilter.has(blockKey)) {
-      // Add-on not blocked or unknown.
-      return null;
-    }
-    // Add-on blocked, or unknown add-on inadvertently labeled as blocked.
-
-    if (addon.signedDate > generationTime) {
-      // The bloom filter only reports 100% accurate results for known add-ons.
-      // Since the add-on was unknown when the bloom filter was generated, the
-      // block decision is incorrect and should be treated as unblocked.
-      return null;
-    }
-
-    return this._createBlockEntry(addon);
-  },
-
-  _createBlockEntry(addon) {
-    return {
-      state: Ci.nsIBlocklistService.STATE_BLOCKED,
-      url: this.createBlocklistURL(addon.id, addon.version),
-    };
-  },
-
-  createBlocklistURL(id, version) {
-    let url = Services.urlFormatter.formatURLPref(PREF_BLOCKLIST_ADDONITEM_URL);
-    return url.replace(/%addonID%/g, id).replace(/%addonVersion%/g, version);
-  },
-};
-
 const EXTENSION_BLOCK_FILTERS = [
   "id",
   "name",
@@ -1704,7 +1378,6 @@ let Blocklist = {
       Services.prefs.getIntPref(PREF_BLOCKLIST_LEVEL, DEFAULT_LEVEL),
       MAX_BLOCK_LEVEL
     );
-    this._chooseExtensionBlocklistImplementationFromPref();
     Services.prefs.addObserver("extensions.blocklist.", this);
     Services.prefs.addObserver(PREF_EM_LOGGING_ENABLED, this);
 
@@ -1725,7 +1398,7 @@ let Blocklist = {
   shutdown() {
     GfxBlocklistRS.shutdown();
     PluginBlocklistRS.shutdown();
-    this.ExtensionBlocklist.shutdown();
+    ExtensionBlocklistRS.shutdown();
 
     Services.obs.removeObserver(this, "xpcom-shutdown");
     Services.prefs.removeObserver("extensions.blocklist.", this);
@@ -1759,27 +1432,6 @@ let Blocklist = {
             );
             this._blocklistUpdated();
             break;
-          case PREF_BLOCKLIST_USE_MLBF:
-            let oldImpl = this.ExtensionBlocklist;
-            this._chooseExtensionBlocklistImplementationFromPref();
-            if (oldImpl._initialized) {
-              oldImpl.shutdown();
-              this.ExtensionBlocklist.undoShutdown();
-              this.ExtensionBlocklist._onUpdate();
-            } // else neither has been initialized yet. Wait for it to happen.
-            break;
-          case PREF_BLOCKLIST_USE_MLBF_STASHES:
-            ExtensionBlocklistMLBF.stashesEnabled = Services.prefs.getBoolPref(
-              PREF_BLOCKLIST_USE_MLBF_STASHES,
-              false
-            );
-            if (
-              ExtensionBlocklistMLBF._initialized &&
-              !ExtensionBlocklistMLBF._didShutdown
-            ) {
-              ExtensionBlocklistMLBF._onUpdate();
-            }
-            break;
         }
         break;
     }
@@ -1788,7 +1440,7 @@ let Blocklist = {
   loadBlocklistAsync() {
     // Need to ensure we notify gfx of new stuff.
     GfxBlocklistRS.checkForEntries();
-    this.ExtensionBlocklist.ensureInitialized();
+    ExtensionBlocklistRS.ensureInitialized();
     PluginBlocklistRS.ensureInitialized();
   },
 
@@ -1801,25 +1453,15 @@ let Blocklist = {
   },
 
   getAddonBlocklistState(addon, appVersion, toolkitVersion) {
-    // NOTE: appVersion/toolkitVersion are only used by ExtensionBlocklistRS.
-    return this.ExtensionBlocklist.getState(addon, appVersion, toolkitVersion);
+    return ExtensionBlocklistRS.getState(addon, appVersion, toolkitVersion);
   },
 
   getAddonBlocklistEntry(addon, appVersion, toolkitVersion) {
-    // NOTE: appVersion/toolkitVersion are only used by ExtensionBlocklistRS.
-    return this.ExtensionBlocklist.getEntry(addon, appVersion, toolkitVersion);
-  },
-
-  _chooseExtensionBlocklistImplementationFromPref() {
-    if (Services.prefs.getBoolPref(PREF_BLOCKLIST_USE_MLBF, false)) {
-      this.ExtensionBlocklist = ExtensionBlocklistMLBF;
-    } else {
-      this.ExtensionBlocklist = ExtensionBlocklistRS;
-    }
+    return ExtensionBlocklistRS.getEntry(addon, appVersion, toolkitVersion);
   },
 
   _blocklistUpdated() {
-    this.ExtensionBlocklist._onUpdate();
+    ExtensionBlocklistRS._onUpdate();
     PluginBlocklistRS._onUpdate();
   },
 };
