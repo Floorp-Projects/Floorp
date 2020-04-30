@@ -69,11 +69,14 @@ class DocumentL10n final : public DOMLocalization {
   Promise* Ready();
 
   void TriggerInitialTranslation();
+  already_AddRefed<Promise> TranslateDocument(ErrorResult& aRv);
 
   void InitialTranslationCompleted();
 
   Document* GetDocument() { return mDocument; };
   void OnCreatePresShell();
+
+  void ConnectRoot(nsINode& aNode, bool aTranslate, ErrorResult& aRv);
 
   DocumentL10nState GetState() { return mState; };
 };
