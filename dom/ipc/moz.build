@@ -239,6 +239,7 @@ JAR_MANIFESTS += ['jar.mn']
 
 BROWSER_CHROME_MANIFESTS += [
     'tests/browser.ini',
+    'tests/JSProcessActor/browser.ini',
     'tests/JSWindowActor/browser.ini',
 ]
 
