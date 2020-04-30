@@ -869,9 +869,16 @@ static bool RegisterScriptPathWithModuleLoader(JSContext* cx,
     return false;
   }
 
-  RootedObject infoObject(cx, JS_NewPlainObject(cx));
-  if (!infoObject) {
-    return false;
+  RootedObject infoObject(cx);
+
+  Value val = JS::GetScriptPrivate(script);
+  if (val.isUndefined()) {
+    infoObject = JS_NewPlainObject(cx);
+    if (!infoObject) {
+      return false;
+    }
+  } else {
+    infoObject = val.toObjectOrNull();
   }
 
   RootedValue pathValue(cx, StringValue(path));
@@ -1924,7 +1931,15 @@ static bool ParseCompileOptions(JSContext* cx, CompileOptions& options,
     return false;
   }
   if (v.isObject()) {
-    options.setElement(&v.toObject());
+    RootedObject infoObject(cx, JS_NewPlainObject(cx));
+    RootedValue elementValue(cx, v);
+    if (!JS_WrapValue(cx, &elementValue)) {
+      return false;
+    }
+    if (!JS_DefineProperty(cx, infoObject, "element", elementValue, 0)) {
+      return false;
+    }
+    options.setPrivateValue(ObjectValue(*infoObject));
   }
 
   if (!JS_GetProperty(cx, opts, "elementAttributeName", &v)) {
@@ -11034,6 +11049,23 @@ static MOZ_MUST_USE bool ReportUnhandledRejections(JSContext* cx) {
   return true;
 }
 
+JSObject* GetElementCallback(JSContext* cx, JS::HandleValue value) {
+  RootedValue privateValue(cx, value);
+  if (!privateValue.isObject()) {
+    return nullptr;
+  }
+
+  RootedObject infoObject(cx, privateValue.toObjectOrNull());
+  AutoRealm ar(cx, infoObject);
+
+  RootedValue elementValue(cx);
+  if (!JS_GetProperty(cx, infoObject, "element", &elementValue)) {
+    return nullptr;
+  }
+
+  return elementValue.toObjectOrNull();
+}
+
 static int Shell(JSContext* cx, OptionParser* op, char** envp) {
   if (JS::TraceLoggerSupported()) {
     JS::StartTraceLogger(cx);
@@ -11099,6 +11131,7 @@ static int Shell(JSContext* cx, OptionParser* op, char** envp) {
   }
 
   JSAutoRealm ar(cx, glob);
+  JS::SetGetElementCallback(cx, &GetElementCallback);
 
 #ifdef FUZZING_INTERFACES
   if (fuzzHaveModule) {

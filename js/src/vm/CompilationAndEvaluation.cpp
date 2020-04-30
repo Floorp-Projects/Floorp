@@ -360,25 +360,18 @@ JS_PUBLIC_API JSFunction* JS::CompileFunctionUtf8(
   return CompileFunction(cx, envChain, options, name, nargs, argnames, srcBuf);
 }
 
-JS_PUBLIC_API bool JS::InitScriptSourceElement(JSContext* cx,
-                                               HandleScript script,
-                                               HandleObject element,
-                                               HandleString elementAttrName) {
-  MOZ_ASSERT(cx);
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-
-  RootedScriptSourceObject sso(
-      cx, &script->sourceObject()->as<ScriptSourceObject>());
-  return ScriptSourceObject::initElementProperties(cx, sso, element,
-                                                   elementAttrName);
-}
-
 JS_PUBLIC_API void JS::ExposeScriptToDebugger(JSContext* cx,
                                               HandleScript script) {
   MOZ_ASSERT(cx);
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
 
   DebugAPI::onNewScript(cx, script);
+}
+
+JS_PUBLIC_API void JS::SetGetElementCallback(JSContext* cx,
+                                             JSGetElementCallback callback) {
+  MOZ_ASSERT(cx->runtime());
+  cx->runtime()->setElementCallback(cx->runtime(), callback);
 }
 
 MOZ_NEVER_INLINE static bool ExecuteScript(JSContext* cx, HandleObject scope,
