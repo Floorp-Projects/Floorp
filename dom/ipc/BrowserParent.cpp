@@ -1652,7 +1652,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvRequestNativeKeyBindings(
   }
 
   if (localEvent.InitEditCommandsFor(keyBindingsType)) {
-    *aCommands = localEvent.EditCommandsConstRef(keyBindingsType);
+    *aCommands = localEvent.EditCommandsConstRef(keyBindingsType).Clone();
   }
 
   return IPC_OK();
