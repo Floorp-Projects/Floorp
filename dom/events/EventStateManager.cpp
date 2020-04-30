@@ -3155,10 +3155,6 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           }
         }
 
-        if (!suppressBlur) {
-          suppressBlur = nsContentUtils::IsUserFocusIgnored(activeContent);
-        }
-
         // When a root content which isn't editable but has an editable HTML
         // <body> element is clicked, we should redirect the focus to the
         // the <body> element.  E.g., when an user click bottom of the editor

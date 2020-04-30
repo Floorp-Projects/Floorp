@@ -1,12 +1,8 @@
-const PREF_MULTISELECT_TABS = "browser.tabs.multiselect";
 const PREF_ANIMATIONS_ENABLED = "toolkit.cosmeticAnimations.enabled";
 
 add_task(async function setPref() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      [PREF_MULTISELECT_TABS, true],
-      [PREF_ANIMATIONS_ENABLED, false],
-    ],
+    set: [[PREF_ANIMATIONS_ENABLED, false]],
   });
 });
 

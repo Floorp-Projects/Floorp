@@ -197,13 +197,14 @@ TEST(TArray, int_AppendElements_FallibleArray_Rvalue)
 {
   nsTArray<int> array;
 
-  FallibleTArray<int> temp(DummyArray());
+  FallibleTArray<int> temp;
+  ASSERT_TRUE(temp.AppendElements(DummyArray(), fallible));
   int* ptr = array.AppendElements(std::move(temp));
   ASSERT_EQ(&array[0], ptr);
   ASSERT_EQ(DummyArray(), array);
   ASSERT_TRUE(temp.IsEmpty());
 
-  temp = DummyArray();
+  ASSERT_TRUE(temp.AppendElements(DummyArray(), fallible));
   ptr = array.AppendElements(std::move(temp));
   ASSERT_EQ(&array[DummyArray().Length()], ptr);
   nsTArray<int> expected;
@@ -217,13 +218,14 @@ TEST(TArray, int_AppendElements_FallibleArray_Rvalue_Fallible)
 {
   nsTArray<int> array;
 
-  FallibleTArray<int> temp(DummyArray());
+  FallibleTArray<int> temp;
+  ASSERT_TRUE(temp.AppendElements(DummyArray(), fallible));
   int* ptr = array.AppendElements(std::move(temp), fallible);
   ASSERT_EQ(&array[0], ptr);
   ASSERT_EQ(DummyArray(), array);
   ASSERT_TRUE(temp.IsEmpty());
 
-  temp = DummyArray();
+  ASSERT_TRUE(temp.AppendElements(DummyArray(), fallible));
   ptr = array.AppendElements(std::move(temp), fallible);
   ASSERT_EQ(&array[DummyArray().Length()], ptr);
   nsTArray<int> expected;

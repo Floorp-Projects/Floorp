@@ -3174,18 +3174,16 @@ void nsFrameLoader::InitializeBrowserAPI() {
   if (!OwnerIsMozBrowserFrame()) {
     return;
   }
-  if (!IsRemoteFrame()) {
-    nsresult rv = EnsureMessageManager();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-    if (mMessageManager) {
-      mMessageManager->LoadFrameScript(
-          NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js"),
-          /* allowDelayedLoad = */ true,
-          /* aRunInGlobalScope */ true, IgnoreErrors());
-    }
+
+  nsresult rv = EnsureMessageManager();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
   }
+  mMessageManager->LoadFrameScript(
+      NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js"),
+      /* allowDelayedLoad = */ true,
+      /* aRunInGlobalScope */ true, IgnoreErrors());
+
   nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(mOwnerContent);
   if (browserFrame) {
     browserFrame->InitializeBrowserAPI();

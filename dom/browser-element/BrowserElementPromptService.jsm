@@ -11,9 +11,6 @@ var EXPORTED_SYMBOLS = ["BrowserElementPromptService"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
-const BROWSER_FRAMES_ENABLED_PREF = "dom.mozBrowserFramesEnabled";
-
 function debug(msg) {
   // dump("BrowserElementPromptService - " + msg + "\n");
 }
@@ -648,16 +645,6 @@ var BrowserElementPromptService = {
       return;
     }
 
-    // If the pref is disabled, do nothing except wait for the pref to change.
-    if (!this._browserFramesPrefEnabled()) {
-      Services.prefs.addObserver(
-        BROWSER_FRAMES_ENABLED_PREF,
-        this,
-        /* ownsWeak = */ true
-      );
-      return;
-    }
-
     this._initialized = true;
     this._browserElementParentMap = new WeakMap();
 
@@ -734,17 +721,8 @@ var BrowserElementPromptService = {
     delete this._browserElementChildMap[outerWindowID.data];
   },
 
-  _browserFramesPrefEnabled() {
-    return Services.prefs.getBoolPref(BROWSER_FRAMES_ENABLED_PREF, false);
-  },
-
   observe(subject, topic, data) {
     switch (topic) {
-      case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
-        if (data == BROWSER_FRAMES_ENABLED_PREF) {
-          this._init();
-        }
-        break;
       case "outer-window-destroyed":
         this._observeOuterWindowDestroyed(subject);
         break;

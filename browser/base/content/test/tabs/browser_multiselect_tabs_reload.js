@@ -1,16 +1,8 @@
-const PREF_MULTISELECT_TABS = "browser.tabs.multiselect";
-
 async function tabLoaded(tab) {
   const browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
   return true;
 }
-
-add_task(async function setPref() {
-  await SpecialPowers.pushPrefEnv({
-    set: [[PREF_MULTISELECT_TABS, true]],
-  });
-});
 
 add_task(async function test_usingTabContextMenu() {
   let tab1 = await addTab();

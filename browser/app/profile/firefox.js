@@ -432,7 +432,6 @@ pref("browser.link.open_newwindow.restriction", 2);
 #endif
 
 // Tabbed browser
-pref("browser.tabs.multiselect", true);
 pref("browser.tabs.closeTabByDblclick", false);
 pref("browser.tabs.closeWindowWithLastTab", true);
 pref("browser.tabs.allowTabDetach", true);
@@ -1712,9 +1711,6 @@ pref("dom.ipc.processPrelaunch.enabled", true);
 // See comments in bug 1340115 on how we got to these numbers.
 pref("browser.migrate.chrome.history.limit", 2000);
 pref("browser.migrate.chrome.history.maxAgeInDays", 180);
-
-// Enable browser frames for use on desktop.  Only exposed to chrome callers.
-pref("dom.mozBrowserFramesEnabled", true);
 
 pref("extensions.pocket.api", "api.getpocket.com");
 pref("extensions.pocket.enabled", true);

@@ -154,6 +154,7 @@ void WindowContext::Init() {
 
   // Register this to the browsing context.
   mBrowsingContext->RegisterWindowContext(this);
+  Group()->Register(this);
 }
 
 void WindowContext::Discard() {
@@ -167,6 +168,7 @@ void WindowContext::Discard() {
   mIsDiscarded = true;
   gWindowContexts->Remove(InnerWindowId());
   mBrowsingContext->UnregisterWindowContext(this);
+  Group()->Unregister(this);
 }
 
 WindowContext::WindowContext(BrowsingContext* aBrowsingContext,

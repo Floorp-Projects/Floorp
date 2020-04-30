@@ -7,7 +7,6 @@
 #include "nsBrowserElement.h"
 
 #include "mozilla/Preferences.h"
-#include "mozilla/dom/BrowserElementBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -53,88 +52,6 @@ void nsBrowserElement::DestroyBrowserElementFrameScripts() {
     return;
   }
   mBrowserElementAPI->DestroyFrameScripts();
-}
-
-void nsBrowserElement::SendMouseEvent(const nsAString& aType, uint32_t aX,
-                                      uint32_t aY, uint32_t aButton,
-                                      uint32_t aClickCount, uint32_t aModifiers,
-                                      ErrorResult& aRv) {
-  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-
-  nsresult rv = mBrowserElementAPI->SendMouseEvent(aType, aX, aY, aButton,
-                                                   aClickCount, aModifiers);
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-  }
-}
-
-void nsBrowserElement::GoBack(ErrorResult& aRv) {
-  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-
-  nsresult rv = mBrowserElementAPI->GoBack();
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-  }
-}
-
-void nsBrowserElement::GoForward(ErrorResult& aRv) {
-  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-
-  nsresult rv = mBrowserElementAPI->GoForward();
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-  }
-}
-
-void nsBrowserElement::Reload(bool aHardReload, ErrorResult& aRv) {
-  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-
-  nsresult rv = mBrowserElementAPI->Reload(aHardReload);
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-  }
-}
-
-void nsBrowserElement::Stop(ErrorResult& aRv) {
-  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-
-  nsresult rv = mBrowserElementAPI->Stop();
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-  }
-}
-
-already_AddRefed<Promise> nsBrowserElement::GetCanGoBack(ErrorResult& aRv) {
-  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
-
-  RefPtr<Promise> p;
-  nsresult rv = mBrowserElementAPI->GetCanGoBack(getter_AddRefs(p));
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
-  return p.forget();
-}
-
-already_AddRefed<Promise> nsBrowserElement::GetCanGoForward(ErrorResult& aRv) {
-  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
-
-  RefPtr<Promise> p;
-  nsresult rv = mBrowserElementAPI->GetCanGoForward(getter_AddRefs(p));
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
-  return p.forget();
 }
 
 }  // namespace mozilla

@@ -54,8 +54,7 @@ class RequestManager {
     mozilla::StaticMutexAutoLock lock(sMutex);
 
     int id = ++sLastRequestId;
-    auto result =
-        sRequests.insert(std::make_pair(id, Request(id, aCallback, aParam)));
+    auto result = sRequests.try_emplace(id, id, aCallback, aParam);
 
     if (!result.second) {
       return nullptr;

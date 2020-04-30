@@ -2645,6 +2645,22 @@ describe("ASRouter", () => {
           "tab"
         );
       });
+      it("should call openLinkIn with the entrypoint params on OPEN_ABOUT_PAGE", async () => {
+        let [testMessage] = Router.state.messages;
+        testMessage.button_action = {
+          type: "OPEN_ABOUT_PAGE",
+          data: { args: "something", entrypoint: "entryPoint=foo" },
+        };
+        const msg = fakeExecuteUserAction(testMessage.button_action);
+        await Router.onMessage(msg);
+
+        assert.calledOnce(msg.target.browser.ownerGlobal.openTrustedLinkIn);
+        assert.calledWith(
+          msg.target.browser.ownerGlobal.openTrustedLinkIn,
+          "about:something?entryPoint=foo",
+          "tab"
+        );
+      });
       it("should call MigrationUtils.showMigrationWizard on SHOW_MIGRATION_WIZARD", async () => {
         let [testMessage] = Router.state.messages;
         testMessage.button_action = {
@@ -2706,6 +2722,21 @@ describe("ASRouter", () => {
         assert.calledWith(
           msg.target.browser.ownerGlobal.openPreferences,
           "something"
+        );
+      });
+      it("should call openPreferences with the correct params on OPEN_PREFERENCES_PAGE (snippets payload)", async () => {
+        let [testMessage] = Router.state.messages;
+        testMessage.button_action = {
+          type: "OPEN_PREFERENCES_PAGE",
+          data: { args: "arg_from_snippets" },
+        };
+        const msg = fakeExecuteUserAction(testMessage.button_action);
+        await Router.onMessage(msg);
+
+        assert.calledOnce(msg.target.browser.ownerGlobal.openPreferences);
+        assert.calledWith(
+          msg.target.browser.ownerGlobal.openPreferences,
+          "arg_from_snippets"
         );
       });
       it("should call openPreferences with the correct entrypoint if defined", async () => {

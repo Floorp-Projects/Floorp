@@ -2467,18 +2467,21 @@ function losslessDecodeURI(aURI) {
   // Encode potentially invisible characters:
   //   U+0000-001F: C0/C1 control characters
   //   U+007F-009F: commands
+  //   U+00A0, U+1680, U+2000-200A, U+202F, U+205F, U+3000: other spaces
   //   U+2028-2029: line and paragraph separators
   //   U+2800: braille empty pattern
   //   U+FFFC: object replacement character
-  // Encode select whitespace so that it doesn't get eaten away by the location
-  // bar (bug 410726). Encode all adjacent whitespace, to prevent spoofing
-  // attempts where invisible characters would push part of the URL to overflow
-  // the location bar (bug 1395508).
-  // The following spaces are handled by \s:
-  //   U+0020, U+00A0, U+1680, U+2000-200A, U+202F, U+205F, U+3000
+  // Encode any trailing whitespace that may be part of a pasted URL, so that it
+  // doesn't get eaten away by the location bar (bug 410726).
+  // Encode all adjacent space chars (U+0020), to prevent spoofing attempts
+  // where they would push part of the URL to overflow the location bar
+  // (bug 1395508). A single space, or the last space if the are many, is
+  // preserved to maintain readability of certain urls. We only do this for the
+  // common space, because others may be eaten when copied to the clipboard, so
+  // it's safer to preserve them encoded.
   value = value.replace(
     // eslint-disable-next-line no-control-regex
-    /[\u0000-\u001f\u007f-\u00a0\u2028\u2029\u2800\ufffc]|[\r\n\t]|\s(?=\s)|\s$/g,
+    /[\u0000-\u001f\u007f-\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u2800\u3000\ufffc]|[\r\n\t]|\u0020(?=\u0020)|\s$/g,
     encodeURIComponent
   );
 

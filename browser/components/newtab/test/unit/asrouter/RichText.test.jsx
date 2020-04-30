@@ -34,6 +34,8 @@ describe("convertLinks", () => {
       metric: "foo",
       action: "OPEN_MENU",
       args: "appMenu",
+      entrypoint_name: "entrypoint_name",
+      entrypoint_value: "entrypoint_value",
     };
     const stub = sandbox.stub();
     const result = convertLinks({ cta }, stub);
@@ -44,6 +46,16 @@ describe("convertLinks", () => {
     assert.propertyVal(result.cta.props, "data-metric", cta.metric);
     assert.propertyVal(result.cta.props, "data-action", cta.action);
     assert.propertyVal(result.cta.props, "data-args", cta.args);
+    assert.propertyVal(
+      result.cta.props,
+      "data-entrypoint_name",
+      cta.entrypoint_name
+    );
+    assert.propertyVal(
+      result.cta.props,
+      "data-entrypoint_value",
+      cta.entrypoint_value
+    );
     assert.propertyVal(result.cta.props, "onClick", stub);
   });
   it("should follow openNewWindow prop", () => {
