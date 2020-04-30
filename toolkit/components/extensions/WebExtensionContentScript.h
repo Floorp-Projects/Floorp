@@ -178,6 +178,15 @@ class MozDocumentMatcher : public nsISupports, public nsWrapperCache {
       aOutput.SetValue(aInput.Value());
     }
   }
+
+  template <typename T, typename U>
+  void ToNullable(const Nullable<T>& aInput, Nullable<nsTArray<U>>& aOutput) {
+    if (aInput.IsNull()) {
+      aOutput.SetNull();
+    } else {
+      aOutput.SetValue(aInput.Value().Clone());
+    }
+  }
 };
 
 class WebExtensionContentScript final : public MozDocumentMatcher {

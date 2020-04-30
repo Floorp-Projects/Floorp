@@ -72,16 +72,17 @@ class MatchGlob final : public nsISupports, public nsWrapperCache {
   JS::Heap<JSObject*> mRegExp;
 };
 
-class MatchGlobSet final : public nsTArray<RefPtr<MatchGlob>> {
+class MatchGlobSet final : public CopyableTArray<RefPtr<MatchGlob>> {
  public:
   // Note: We can't use the nsTArray constructors directly, since the static
   // analyzer doesn't handle their MOZ_IMPLICIT annotations correctly.
   MatchGlobSet() = default;
-  explicit MatchGlobSet(size_type aCapacity) : nsTArray(aCapacity) {}
-  explicit MatchGlobSet(const nsTArray& aOther) : nsTArray(aOther) {}
-  MOZ_IMPLICIT MatchGlobSet(nsTArray&& aOther) : nsTArray(std::move(aOther)) {}
+  explicit MatchGlobSet(size_type aCapacity) : CopyableTArray(aCapacity) {}
+  explicit MatchGlobSet(const nsTArray& aOther) : CopyableTArray(aOther) {}
+  MOZ_IMPLICIT MatchGlobSet(nsTArray&& aOther)
+      : CopyableTArray(std::move(aOther)) {}
   MOZ_IMPLICIT MatchGlobSet(std::initializer_list<RefPtr<MatchGlob>> aIL)
-      : nsTArray(aIL) {}
+      : CopyableTArray(aIL) {}
 
   bool Matches(const nsAString& aValue) const;
 };
