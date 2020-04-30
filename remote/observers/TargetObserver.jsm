@@ -21,38 +21,87 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 // we can likely get rid of this entire module.
 
 /**
- * Observes DOMWindows as they open and close.
+ * Observe Firefox tabs as they open and close.
  *
- * "open" fires when a window opens.
- * "close" fires when a window closes.
+ * "open" fires when a tab opens.
+ * "close" fires when a tab closes.
  */
-class WindowObserver {
+class TabObserver {
   /**
    * @param {boolean?} [false] registerExisting
-   *     Events will be despatched for the ChromeWindows that exist
-   *     at the time the observer is started.
+   *     Events will be fired for ChromeWIndows and their respective tabs
+   *     at the time when the observer is started.
    */
   constructor({ registerExisting = false } = {}) {
-    this.registerExisting = registerExisting;
     EventEmitter.decorate(this);
+
+    this.registerExisting = registerExisting;
+
+    this.onTabOpen = this.onTabOpen.bind(this);
+    this.onTabClose = this.onTabClose.bind(this);
   }
 
   async start() {
+    Services.wm.addListener(this);
+
     if (this.registerExisting) {
+      // Start listening for events on already open windows
       for (const win of Services.wm.getEnumerator("navigator:browser")) {
-        this.onOpenDOMWindow(win);
+        this._registerDOMWindow(win);
       }
     }
-
-    Services.wm.addListener(this);
   }
 
   stop() {
     Services.wm.removeListener(this);
+
+    // Stop listening for events on still opened windows
+    for (const win of Services.wm.getEnumerator("navigator:browser")) {
+      this._unregisterDOMWindow(win);
+    }
   }
 
-  onOpenDOMWindow(win) {
-    this.emit("open", win);
+  // Event emitters
+
+  onTabOpen({ target }) {
+    this.emit("open", target);
+  }
+
+  onTabClose({ target }) {
+    this.emit("close", target);
+  }
+
+  // Internal methods
+
+  _registerDOMWindow(win) {
+    for (const tab of win.gBrowser.tabs) {
+      // a missing linkedBrowser means the tab is still initialising,
+      // and a TabOpen event will fire once it is ready
+      if (!tab.linkedBrowser) {
+        continue;
+      }
+
+      this.onTabOpen({ target: tab });
+    }
+
+    win.gBrowser.tabContainer.addEventListener("TabOpen", this.onTabOpen);
+    win.gBrowser.tabContainer.addEventListener("TabClose", this.onTabClose);
+  }
+
+  _unregisterDOMWindow(win) {
+    for (const tab of win.gBrowser.tabs) {
+      // a missing linkedBrowser means the tab is still initialising
+      if (!tab.linkedBrowser) {
+        continue;
+      }
+
+      // Emulate custom "TabClose" events because that event is not
+      // fired for each of the tabs when the window closes.
+      this.onTabClose({ target: tab });
+    }
+
+    win.gBrowser.tabContainer.removeEventListener("TabOpen", this.onTabOpen);
+    win.gBrowser.tabContainer.removeEventListener("TabClose", this.onTabClose);
   }
 
   // nsIWindowMediatorListener
@@ -70,100 +119,26 @@ class WindowObserver {
       return;
     }
 
-    this.onOpenDOMWindow(win);
+    this._registerDOMWindow(win);
   }
 
   onCloseWindow(xulWindow) {
-    this.emit("close", xulWindow.docShell.domWindow);
+    const win = xulWindow.docShell.domWindow;
+
+    // Return early if it's not a browser window
+    if (
+      win.document.documentElement.getAttribute("windowtype") !=
+      "navigator:browser"
+    ) {
+      return;
+    }
+
+    this._unregisterDOMWindow(win);
   }
 
   // XPCOM
 
   get QueryInterface() {
     return ChromeUtils.generateQI([Ci.nsIWindowMediatorListener]);
-  }
-}
-
-/**
- * Observe Firefox tabs as they open and close.
- *
- * "open" fires when a tab opens.
- * "close" fires when a tab closes.
- */
-class TabObserver {
-  /**
-   * @param {boolean?} [false] registerExisting
-   *     Events will be fired for ChromeWIndows and their respective tabs
-   *     at the time when the observer is started.
-   */
-  constructor({ registerExisting = false } = {}) {
-    this.windows = new WindowObserver({ registerExisting });
-    EventEmitter.decorate(this);
-    this.onWindowOpen = this.onWindowOpen.bind(this);
-    this.onWindowClose = this.onWindowClose.bind(this);
-    this.onTabOpen = this.onTabOpen.bind(this);
-    this.onTabClose = this.onTabClose.bind(this);
-  }
-
-  async start() {
-    this.windows.on("open", this.onWindowOpen);
-    this.windows.on("close", this.onWindowClose);
-    await this.windows.start();
-  }
-
-  stop() {
-    this.windows.off("open", this.onWindowOpen);
-    this.windows.off("close", this.onWindowClose);
-    this.windows.stop();
-
-    // Stop listening for events on still opened windows
-    for (const window of Services.wm.getEnumerator("navigator:browser")) {
-      this.onWindowClose("close", window);
-    }
-  }
-
-  onTabOpen({ target }) {
-    this.emit("open", target);
-  }
-
-  onTabClose({ target }) {
-    this.emit("close", target);
-  }
-
-  // WindowObserver
-
-  async onWindowOpen(eventName, window) {
-    for (const tab of window.gBrowser.tabs) {
-      // a missing linkedBrowser means the tab is still initialising,
-      // and a TabOpen event will fire once it is ready
-      if (!tab.linkedBrowser) {
-        continue;
-      }
-      this.onTabOpen({ target: tab });
-    }
-
-    window.addEventListener("TabOpen", this.onTabOpen);
-    window.addEventListener("TabClose", this.onTabClose);
-  }
-
-  onWindowClose(eventName, window) {
-    // Return early if it's not a browser window
-    if (!window.gBrowser) {
-      return;
-    }
-
-    for (const tab of window.gBrowser.tabs) {
-      // a missing linkedBrowser means the tab is still initialising
-      if (!tab.linkedBrowser) {
-        continue;
-      }
-
-      // Emulate custom "TabClose" events because that event is not
-      // fired for each of the tabs when the window closes.
-      this.onTabClose({ target: tab });
-    }
-
-    window.removeEventListener("TabOpen", this.onTabOpen);
-    window.removeEventListener("TabClose", this.onTabClose);
   }
 }
