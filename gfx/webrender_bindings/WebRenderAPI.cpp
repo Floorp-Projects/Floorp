@@ -1054,6 +1054,16 @@ wr::WrClipId DisplayListBuilder::DefineImageMaskClip(
   return clipId;
 }
 
+wr::WrClipId DisplayListBuilder::DefineRoundedRectClip(
+    const wr::ComplexClipRegion& aComplex) {
+  CancelGroup();
+
+  WrClipId clipId = wr_dp_define_rounded_rect_clip_with_parent_clip_chain(
+      mWrState, &mCurrentSpaceAndClipChain, aComplex);
+
+  return clipId;
+}
+
 wr::WrSpatialId DisplayListBuilder::DefineStickyFrame(
     const wr::LayoutRect& aContentRect, const float* aTopMargin,
     const float* aRightMargin, const float* aBottomMargin,
@@ -1187,8 +1197,7 @@ void DisplayListBuilder::PushClearRectWithComplexRegion(
   WRDL_LOG("PushClearRectWithComplexRegion b=%s c=%s\n", mWrState,
            Stringify(aBounds).c_str(), Stringify(clip).c_str());
 
-  AutoTArray<wr::ComplexClipRegion, 1> clips;
-  auto clipId = DefineClip(Nothing(), aBounds, &clips);
+  auto clipId = DefineRoundedRectClip(aRegion);
   auto spaceAndClip = WrSpaceAndClip{mCurrentSpaceAndClipChain.space, clipId};
 
   wr_dp_push_clear_rect_with_parent_clip(mWrState, aBounds, clip,

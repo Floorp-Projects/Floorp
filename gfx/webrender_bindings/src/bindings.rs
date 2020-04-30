@@ -2486,6 +2486,24 @@ pub extern "C" fn wr_dp_define_image_mask_clip_with_parent_clip_chain(
 }
 
 #[no_mangle]
+pub extern "C" fn wr_dp_define_rounded_rect_clip_with_parent_clip_chain(
+    state: &mut WrState,
+    parent: &WrSpaceAndClipChain,
+    complex: ComplexClipRegion,
+) -> WrClipId {
+    debug_assert!(unsafe { is_in_main_thread() });
+
+    let clip_id = state
+        .frame_builder
+        .dl_builder
+        .define_clip_rounded_rect(
+            &parent.to_webrender(state.pipeline_id),
+            complex,
+        );
+    WrClipId::from_webrender(clip_id)
+}
+
+#[no_mangle]
 pub extern "C" fn wr_dp_define_sticky_frame(
     state: &mut WrState,
     parent_spatial_id: WrSpatialId,
