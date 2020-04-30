@@ -15,12 +15,20 @@ namespace mozilla {
 
 // The WebGLMethodDispatcher will dispatch commands read from the
 // HostWebGLCommandSink and issue them to a given HostWebGLContext.
-DECLARE_METHOD_DISPATCHER(WebGLMethodDispatcher, HostWebGLContext)
+template <size_t id = 0>
+class WebGLMethodDispatcher
+    : public EmptyMethodDispatcher<WebGLMethodDispatcher> {};
+
+#define DEFINE_METHOD_DISPATCHER(_ID, _METHOD, _SYNC)       \
+  template <>                                               \
+  class WebGLMethodDispatcher<_ID>                          \
+      : public MethodDispatcher<WebGLMethodDispatcher, _ID, \
+                                decltype(&_METHOD), &_METHOD, _SYNC> {};
 
 // Defines each method the WebGLMethodDispatcher handles.  The COUNTER value
 // is used as a cross-process ID for each of the methods.
 #define DEFINE_METHOD_HELPER(_METHOD, _SYNC) \
-  DEFINE_METHOD_DISPATCHER(WebGLMethodDispatcher, __COUNTER__, _METHOD, _SYNC)
+  DEFINE_METHOD_DISPATCHER(__COUNTER__, _METHOD, _SYNC)
 #define DEFINE_ASYNC(_METHOD) \
   DEFINE_METHOD_HELPER(_METHOD, CommandSyncType::ASYNC)
 #define DEFINE_SYNC(_METHOD) \
@@ -170,6 +178,7 @@ DEFINE_ASYNC(HostWebGLContext::SetFramebufferIsInOpaqueRAF)
 #undef DEFINE_METHOD_HELPER
 #undef DEFINE_ASYNC
 #undef DEFINE_SYNC
+#undef DEFINE_METHOD_DISPATCHER
 
 }  // namespace mozilla
 

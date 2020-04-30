@@ -2138,7 +2138,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   friend struct WebGLClientDispatcher;
 
   template <typename MethodType, MethodType method, typename ReturnType,
-            size_t Id, typename... Args>
+            typename... Args>
   friend ReturnType RunOn(const ClientWebGLContext& context, Args&&... aArgs);
 
   // If we are running WebGL in this process then call the HostWebGLContext

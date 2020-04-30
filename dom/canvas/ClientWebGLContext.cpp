@@ -362,7 +362,7 @@ inline void DefaultOrVoid<void>() {
 }
 
 template <typename MethodType, MethodType method, typename ReturnType,
-          size_t Id, typename... Args>
+          typename... Args>
 ReturnType RunOn(const ClientWebGLContext& context, Args&&... aArgs) {
   const auto notLost =
       context.mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
@@ -385,8 +385,7 @@ template <typename MethodType, MethodType method, typename ReturnType,
 //    typename ReturnType, size_t Id,
 //    typename... Args>
 ReturnType ClientWebGLContext::Run(Args&&... aArgs) const {
-  return RunOn<MethodType, method, ReturnType,
-               WebGLMethodDispatcher::Id<MethodType, method>(), Args...>(
+  return RunOn<MethodType, method, ReturnType, Args...>(
       *this, std::forward<Args>(aArgs)...);
 }
 
