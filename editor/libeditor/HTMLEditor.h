@@ -2279,7 +2279,7 @@ class HTMLEditor final : public TextEditor,
                                   nsIEditor::EDirection aDirectionAndAmount);
 
   /**
-   * GetExtendedRangeToIncludeInvisibleNodes() returns extended range.
+   * GetRangeExtendedToIncludeInvisibleNodes() returns extended range.
    * If there are some invisible nodes around aAbstractRange, they may
    * be included.
    *
@@ -2287,7 +2287,7 @@ class HTMLEditor final : public TextEditor,
    *                            and must be positioned.
    * @return                    Extended range.
    */
-  already_AddRefed<dom::StaticRange> GetExtendedRangeToIncludeInvisibleNodes(
+  already_AddRefed<dom::StaticRange> GetRangeExtendedToIncludeInvisibleNodes(
       const dom::AbstractRange& aAbstractRange);
 
   /**

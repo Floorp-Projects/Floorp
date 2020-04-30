@@ -4671,54 +4671,63 @@ nsresult EditorBase::ExtendSelectionForDelete(
     return NS_OK;
   }
 
-  nsCOMPtr<nsISelectionController> selectionController =
-      GetSelectionController();
-  if (NS_WARN_IF(!selectionController)) {
+  RefPtr<nsFrameSelection> frameSelection =
+      SelectionRefPtr()->GetFrameSelection();
+  if (NS_WARN_IF(!frameSelection)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  Result<RefPtr<StaticRange>, nsresult> result(NS_ERROR_UNEXPECTED);
+  nsIEditor::EDirection directionAndAmountResult = *aDirectionAndAmount;
   switch (*aDirectionAndAmount) {
-    case eNextWord: {
-      nsresult rv = selectionController->WordExtendForDelete(true);
+    case eNextWord:
+      result =
+          frameSelection->CreateRangeExtendedToNextWordBoundary<StaticRange>();
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "nsISelectionController::WordExtendForDelete(true) failed");
+          result.isOk(),
+          "nsFrameSelection::CreateRangeExtendedToNextWordBoundary() failed");
       // DeleteSelectionWithTransaction() doesn't handle these actions
       // because it's inside batching, so don't confuse it:
-      *aDirectionAndAmount = eNone;
-      return rv;
-    }
-    case ePreviousWord: {
-      nsresult rv = selectionController->WordExtendForDelete(false);
+      directionAndAmountResult = eNone;
+      break;
+    case ePreviousWord:
+      result = frameSelection
+                   ->CreateRangeExtendedToPreviousWordBoundary<StaticRange>();
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "nsISelectionController::WordExtendForDelete(false) failed");
-      *aDirectionAndAmount = eNone;
-      return rv;
-    }
-    case eNext: {
-      nsresult rv = selectionController->CharacterExtendForDelete();
+          result.isOk(),
+          "nsFrameSelection::CreateRangeExtendedToPreviousWordBoundary() "
+          "failed");
+      // DeleteSelectionWithTransaction() doesn't handle these actions
+      // because it's inside batching, so don't confuse it:
+      directionAndAmountResult = eNone;
+      break;
+    case eNext:
+      result =
+          frameSelection
+              ->CreateRangeExtendedToNextGraphemeClusterBoundary<StaticRange>();
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "nsISelectionController::CharacterExtendForDelete() failed");
+      NS_WARNING_ASSERTION(result.isOk(),
+                           "nsFrameSelection::"
+                           "CreateRangeExtendedToNextGraphemeClusterBoundary() "
+                           "failed");
       // Don't set aDirectionAndAmount to eNone (see Bug 502259)
-      return rv;
-    }
+      break;
     case ePrevious: {
       // Only extend the selection where the selection is after a UTF-16
       // surrogate pair or a variation selector.
       // For other cases we don't want to do that, in order
       // to make sure that pressing backspace will only delete the last
       // typed character.
+      // XXX This is odd if the previous one is a sequence for a grapheme
+      //     cluster.
       EditorRawDOMPoint atStartOfSelection =
           EditorBase::GetStartPoint(*SelectionRefPtr());
       if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
@@ -4734,52 +4743,80 @@ nsresult EditorBase::ExtendSelectionForDelete(
         return NS_OK;
       }
 
-      if (insertionPoint.IsInTextNode()) {
-        const nsTextFragment* data =
-            &insertionPoint.GetContainerAsText()->TextFragment();
-        uint32_t offset = insertionPoint.Offset();
-        if ((offset > 1 &&
-             data->IsLowSurrogateFollowingHighSurrogateAt(offset - 1)) ||
-            (offset > 0 &&
-             gfxFontUtils::IsVarSelector(data->CharAt(offset - 1)))) {
-          nsresult rv = selectionController->CharacterExtendForBackspace();
-          if (NS_WARN_IF(Destroyed())) {
-            return NS_ERROR_EDITOR_DESTROYED;
-          }
-          NS_WARNING_ASSERTION(
-              NS_SUCCEEDED(rv),
-              "nsISelectionController::CharacterExtendForBackspace() failed");
-          return rv;
-        }
+      if (!insertionPoint.IsInTextNode()) {
+        return NS_OK;
       }
-      return NS_OK;
-    }
-    case eToBeginningOfLine: {
-      // Select to beginning
-      nsresult rv = selectionController->IntraLineMove(false, true);
+
+      const nsTextFragment* data =
+          &insertionPoint.GetContainerAsText()->TextFragment();
+      uint32_t offset = insertionPoint.Offset();
+      if (!(offset > 1 &&
+            data->IsLowSurrogateFollowingHighSurrogateAt(offset - 1)) &&
+          !(offset > 0 &&
+            gfxFontUtils::IsVarSelector(data->CharAt(offset - 1)))) {
+        return NS_OK;
+      }
+      // Different from the `eNext` case, we look for character boundary.
+      // I'm not sure whether this inconsistency between "Delete" and
+      // "Backspace" is intentional or not.
+      result =
+          frameSelection
+              ->CreateRangeExtendedToPreviousCharacterBoundary<StaticRange>();
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "nsISelectionController::IntraLineMove(false, true) failed");
-      *aDirectionAndAmount = eNone;
-      return rv;
+          result.isOk(),
+          "nsFrameSelection::"
+          "CreateRangeExtendedToPreviousGraphemeClusterBoundary() failed");
+      break;
     }
-    case eToEndOfLine: {
-      nsresult rv = selectionController->IntraLineMove(true, true);
+    case eToBeginningOfLine:
+      result = frameSelection
+                   ->CreateRangeExtendedToPreviousHardLineBreak<StaticRange>();
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
       NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "nsISelectionController::IntraLineMove(true, true) failed");
-      *aDirectionAndAmount = eNext;
-      return rv;
-    }
+          result.isOk(),
+          "nsFrameSelection::CreateRangeExtendedToPreviousHardLineBreak() "
+          "failed");
+      directionAndAmountResult = eNone;
+      break;
+    case eToEndOfLine:
+      result =
+          frameSelection->CreateRangeExtendedToNextHardLineBreak<StaticRange>();
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      NS_WARNING_ASSERTION(
+          result.isOk(),
+          "nsFrameSelection::CreateRangeExtendedToNextHardLineBreak() failed");
+      directionAndAmountResult = eNext;
+      break;
     default:
       return NS_OK;
   }
+
+  if (result.isErr()) {
+    return result.unwrapErr();
+  }
+  *aDirectionAndAmount = directionAndAmountResult;
+  StaticRange* range = result.inspect().get();
+  if (!range || NS_WARN_IF(!range->IsPositioned())) {
+    return NS_OK;
+  }
+  ErrorResult error;
+  MOZ_KnownLive(SelectionRefPtr())
+      ->SetStartAndEndInLimiter(range->StartRef().AsRaw(),
+                                range->EndRef().AsRaw(), error);
+  if (NS_WARN_IF(Destroyed())) {
+    error.SuppressException();
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(!error.Failed(),
+                       "Selection::SetBaseAndExtentInLimiter() failed");
+  return error.StealNSResult();
 }
 
 nsresult EditorBase::DeleteSelectionWithTransaction(

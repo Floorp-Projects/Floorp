@@ -3140,10 +3140,10 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
   if (SelectionRefPtr()->RangeCount() == 1) {
     if (nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0)) {
       RefPtr<StaticRange> extendedRange =
-          GetExtendedRangeToIncludeInvisibleNodes(*firstRange);
+          GetRangeExtendedToIncludeInvisibleNodes(*firstRange);
       if (!extendedRange) {
         NS_WARNING(
-            "HTMLEditor::GetExtendedRangeToIncludeInvisibleNodes() failed");
+            "HTMLEditor::GetRangeExtendedToIncludeInvisibleNodes() failed");
         return EditActionResult(NS_ERROR_FAILURE);
       }
       ErrorResult error;
@@ -7473,7 +7473,7 @@ size_t HTMLEditor::CollectChildren(
 }
 
 already_AddRefed<StaticRange>
-HTMLEditor::GetExtendedRangeToIncludeInvisibleNodes(
+HTMLEditor::GetRangeExtendedToIncludeInvisibleNodes(
     const AbstractRange& aAbstractRange) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!aAbstractRange.Collapsed());
