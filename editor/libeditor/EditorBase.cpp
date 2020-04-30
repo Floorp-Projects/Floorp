@@ -1875,67 +1875,6 @@ nsresult EditorBase::DeleteNodeWithTransaction(nsIContent& aContent) {
   return rv;
 }
 
-already_AddRefed<Element> EditorBase::InsertContainerWithTransactionInternal(
-    nsIContent& aContent, nsAtom& aTagName, nsAtom& aAttribute,
-    const nsAString& aAttributeValue) {
-  EditorDOMPoint pointToInsertNewContainer(&aContent);
-  if (NS_WARN_IF(!pointToInsertNewContainer.IsSet())) {
-    return nullptr;
-  }
-  // aContent will be moved to the new container before inserting the new
-  // container.  So, when we insert the container, the insertion point
-  // is before the next sibling of aContent.
-  // XXX If pointerToInsertNewContainer stores offset here, the offset and
-  //     referring child node become mismatched.  Although, currently this
-  //     is not a problem since InsertNodeTransaction refers only child node.
-  DebugOnly<bool> advanced = pointToInsertNewContainer.AdvanceOffset();
-  NS_WARNING_ASSERTION(advanced, "Failed to advance offset to after aContent");
-
-  // Create new container.
-  RefPtr<Element> newContainer = CreateHTMLContent(&aTagName);
-  if (NS_WARN_IF(!newContainer)) {
-    return nullptr;
-  }
-
-  // Set attribute if needed.
-  if (&aAttribute != nsGkAtoms::_empty) {
-    nsresult rv = newContainer->SetAttr(kNameSpaceID_None, &aAttribute,
-                                        aAttributeValue, true);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Element::SetAttr() failed");
-      return nullptr;
-    }
-  }
-
-  // Notify our internal selection state listener
-  AutoInsertContainerSelNotify selNotify(RangeUpdaterRef());
-
-  // Put aNode in the new container, first.
-  nsresult rv = DeleteNodeWithTransaction(aContent);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
-    return nullptr;
-  }
-
-  {
-    AutoTransactionsConserveSelection conserveSelection(*this);
-    rv = InsertNodeWithTransaction(aContent, EditorDOMPoint(newContainer, 0));
-    if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
-      return nullptr;
-    }
-  }
-
-  // Put the new container where aNode was.
-  rv = InsertNodeWithTransaction(*newContainer, pointToInsertNewContainer);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
-    return nullptr;
-  }
-
-  return newContainer.forget();
-}
-
 nsresult EditorBase::MoveNodeWithTransaction(
     nsIContent& aContent, const EditorDOMPoint& aPointToInsert) {
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
