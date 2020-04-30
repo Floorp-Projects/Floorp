@@ -191,6 +191,15 @@ const SELECT_FONT_INHERITS_TO_OPTION = `
    </select></body></html>
 `;
 
+const SELECT_SCROLLBAR_PROPS = `
+   <html><head><style>
+     select { scrollbar-width: thin; scrollbar-color: red blue }
+   </style></head><body><select id='one'>
+     <option>One</option>
+     <option style="font-family: sans-serif">Two</option>
+   </select></body></html>
+`;
+
 function getSystemColor(color) {
   // Need to convert system color to RGB color.
   let textarea = document.createElementNS(
@@ -657,6 +666,17 @@ add_task(async function test_select_font_inherits_to_option() {
     secondItemFont,
     "Second menuitem's font should be the author specified one"
   );
+
+  await hideSelectPopup(selectPopup, "escape");
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_scrollbar_props() {
+  let { tab, selectPopup } = await openSelectPopup(SELECT_SCROLLBAR_PROPS);
+
+  let popupStyle = getComputedStyle(selectPopup);
+  is(popupStyle.scrollbarWidth, "thin");
+  is(popupStyle.scrollbarColor, "rgb(255, 0, 0) rgb(0, 0, 255)");
 
   await hideSelectPopup(selectPopup, "escape");
   BrowserTestUtils.removeTab(tab);
