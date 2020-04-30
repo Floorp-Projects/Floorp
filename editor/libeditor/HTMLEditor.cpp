@@ -5,6 +5,12 @@
 
 #include "HTMLEditor.h"
 
+#include "HTMLEditorEventListener.h"
+#include "HTMLEditUtils.h"
+#include "JoinNodeTransaction.h"
+#include "TypeInState.h"
+#include "WSRunObject.h"
+
 #include "mozilla/ComposerCommandsUpdater.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/DebugOnly.h"
@@ -16,54 +22,41 @@
 #include "mozilla/mozInlineSpellChecker.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_editor.h"
+#include "mozilla/StyleSheet.h"
+#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/TextEvents.h"
-
-#include "nsCRT.h"
-
-#include "nsUnicharUtils.h"
-
-#include "HTMLEditorEventListener.h"
-#include "HTMLEditUtils.h"
-#include "TypeInState.h"
-
-#include "nsHTMLDocument.h"
-#include "mozilla/dom/DocumentInlines.h"
-#include "nsISelectionController.h"
-#include "nsIPrincipal.h"
-
+#include "mozilla/TextServicesDocument.h"
 #include "mozilla/css/Loader.h"
-
-#include "nsIContent.h"
-#include "nsContentUtils.h"
-#include "nsGenericHTMLElement.h"
-#include "nsPresContext.h"
-#include "nsFocusManager.h"
-#include "nsPIDOMWindow.h"
-
-// netwerk
-#include "nsIURI.h"
-#include "nsNetUtil.h"
-
-// Misc
-#include "mozilla/EditorUtils.h"
-#include "WSRunObject.h"
-#include "nsGkAtoms.h"
-#include "nsIWidget.h"
-
-#include "nsIFrame.h"
 #include "mozilla/dom/AncestorIterator.h"
-#include "mozilla/dom/Selection.h"
 #include "mozilla/dom/DocumentFragment.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/HTMLAnchorElement.h"
 #include "mozilla/dom/HTMLBodyElement.h"
-#include "nsElementTable.h"
-#include "nsTextFragment.h"
+#include "mozilla/dom/Selection.h"
+
 #include "nsContentList.h"
-#include "mozilla/StyleSheet.h"
-#include "mozilla/StyleSheetInlines.h"
+#include "nsContentUtils.h"
+#include "nsCRT.h"
+#include "nsElementTable.h"
+#include "nsFocusManager.h"
+#include "nsGenericHTMLElement.h"
+#include "nsGkAtoms.h"
+#include "nsHTMLDocument.h"
+#include "nsIContent.h"
+#include "nsIEditActionListener.h"
+#include "nsIFrame.h"
+#include "nsIPrincipal.h"
+#include "nsISelectionController.h"
+#include "nsIURI.h"
+#include "nsIWidget.h"
+#include "nsNetUtil.h"
+#include "nsPresContext.h"
+#include "nsPIDOMWindow.h"
+#include "nsTextFragment.h"
+#include "nsUnicharUtils.h"
 
 namespace mozilla {
 
@@ -3823,7 +3816,7 @@ bool HTMLEditor::SetCaretInTableCell(Element* aElement) {
  * This method scans the selection for adjacent text nodes
  * and collapses them into a single text node.
  * "adjacent" means literally adjacent siblings of the same parent.
- * Uses EditorBase::JoinNodesWithTransaction() so action is undoable.
+ * Uses HTMLEditor::JoinNodesWithTransaction() so action is undoable.
  * Should be called within the context of a batch transaction.
  */
 nsresult HTMLEditor::CollapseAdjacentTextNodes(nsRange& aInRange) {
@@ -3861,7 +3854,7 @@ nsresult HTMLEditor::CollapseAdjacentTextNodes(nsRange& aInRange) {
       nsresult rv = JoinNodesWithTransaction(MOZ_KnownLive(*leftTextNode),
                                              MOZ_KnownLive(*rightTextNode));
       if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::JoinNodesWithTransaction() failed");
+        NS_WARNING("HTMLEditor::JoinNodesWithTransaction() failed");
         return rv;
       }
     }
@@ -4066,6 +4059,85 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
   }
 
   return SplitNodeResult(NS_ERROR_FAILURE);
+}
+
+nsresult HTMLEditor::JoinNodesWithTransaction(nsINode& aLeftNode,
+                                              nsINode& aRightNode) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aLeftNode.IsContent());
+  MOZ_ASSERT(aRightNode.IsContent());
+
+  nsCOMPtr<nsINode> parent = aLeftNode.GetParentNode();
+  MOZ_ASSERT(parent);
+
+  IgnoredErrorResult ignoredError;
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this, EditSubAction::eJoinNodes, nsIEditor::ePrevious, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return ignoredError.StealNSResult();
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "TextEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
+
+  // Remember some values; later used for saved selection updating.
+  // Find the offset between the nodes to be joined.
+  int32_t offset = parent->ComputeIndexOf(&aRightNode);
+  // Find the number of children of the lefthand node
+  uint32_t oldLeftNodeLen = aLeftNode.Length();
+
+  if (AsHTMLEditor()) {
+    TopLevelEditSubActionDataRef().WillJoinContents(
+        *this, *aLeftNode.AsContent(), *aRightNode.AsContent());
+  }
+
+  RefPtr<JoinNodeTransaction> transaction = JoinNodeTransaction::MaybeCreate(
+      *this, *aLeftNode.AsContent(), *aRightNode.AsContent());
+  NS_WARNING_ASSERTION(
+      transaction, "JoinNodeTransaction::MaybeCreate() failed, but ignored");
+
+  nsresult rv = NS_OK;
+  if (transaction) {
+    rv = DoTransactionInternal(transaction);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "EditorBase::DoTransactionInternal() failed");
+  }
+
+  // XXX Some other transactions manage range updater by themselves.
+  //     Why doesn't JoinNodeTransaction do it?
+  DebugOnly<nsresult> rvIgnored =
+      RangeUpdaterRef().SelAdjJoinNodes(aLeftNode, aRightNode, *parent, offset,
+                                        static_cast<int32_t>(oldLeftNodeLen));
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "RangeUpdater::SelAdjJoinNodes() failed, but ignored");
+
+  if (AsHTMLEditor()) {
+    TopLevelEditSubActionDataRef().DidJoinContents(
+        *this, *aLeftNode.AsContent(), *aRightNode.AsContent());
+  }
+
+  if (mInlineSpellChecker) {
+    RefPtr<mozInlineSpellChecker> spellChecker = mInlineSpellChecker;
+    spellChecker->DidJoinNodes(aLeftNode, aRightNode);
+  }
+
+  if (mTextServicesDocument && NS_SUCCEEDED(rv)) {
+    RefPtr<TextServicesDocument> textServicesDocument = mTextServicesDocument;
+    textServicesDocument->DidJoinNodes(aLeftNode, aRightNode);
+  }
+
+  if (!mActionListeners.IsEmpty()) {
+    AutoActionListenerArray listeners(mActionListeners);
+    for (auto& listener : listeners) {
+      DebugOnly<nsresult> rvIgnored =
+          listener->DidJoinNodes(&aLeftNode, &aRightNode, parent, rv);
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rvIgnored),
+          "nsIEditActionListener::DidJoinNodes() failed, but ignored");
+    }
+  }
+
+  return rv;
 }
 
 nsIContent* HTMLEditor::GetPriorHTMLSibling(nsINode* aNode,

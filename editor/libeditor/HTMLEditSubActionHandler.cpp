@@ -3655,7 +3655,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::JoinNodesDeepWithTransaction(
       return Err(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::JoinNodesWithTransaction() failed");
+      NS_WARNING("HTMLEditor::JoinNodesWithTransaction() failed");
       return Err(rv);
     }
 
@@ -9905,7 +9905,7 @@ nsresult HTMLEditor::JoinNearestEditableNodesWithTransaction(
       return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "EditorBase::JoinNodesWithTransaction failed");
+                         "HTMLEditor::JoinNodesWithTransaction failed");
     if (NS_SUCCEEDED(rv)) {
       // XXX `ret` may point invalid point if mutation event listener changed
       //     the previous siblings...
@@ -9931,7 +9931,7 @@ nsresult HTMLEditor::JoinNearestEditableNodesWithTransaction(
     return NS_ERROR_EDITOR_DESTROYED;
   }
   if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::JoinNodesWithTransaction() failed");
+    NS_WARNING("HTMLEditor::JoinNodesWithTransaction() failed");
     return rv;
   }
 

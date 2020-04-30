@@ -537,7 +537,7 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aContent,
     }
     rv = JoinNodesWithTransaction(*previousSibling, *nextSibling);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "EditorBase::JoinNodesWithTransaction() failed");
+                         "HTMLEditor::JoinNodesWithTransaction() failed");
     return rv;
   }
   if (IsSimpleModifiableNode(nextSibling, &aProperty, aAttribute, &aValue)) {
