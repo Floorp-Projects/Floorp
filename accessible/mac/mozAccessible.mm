@@ -248,7 +248,7 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
 
 static const uint64_t kCachedStates = states::CHECKED | states::PRESSED | states::MIXED |
                                       states::EXPANDED | states::CURRENT | states::SELECTED |
-                                      states::TRAVERSED | states::LINKED | states::HASPOPUP;
+                                      states::TRAVERSED | states::LINKED;
 static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 
 - (uint64_t)state {
@@ -344,11 +344,7 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
   if ([attribute isEqualToString:NSAccessibilityEnabledAttribute])
     return [NSNumber numberWithBool:[self isEnabled]];
   if ([attribute isEqualToString:NSAccessibilityHasPopupAttribute]) {
-    if ([self stateWithMask:states::HASPOPUP] != 0) {
-      return utils::GetAccAttr(self, "haspopup");
-    } else {
-      return nil;
-    }
+    return [NSNumber numberWithBool:[self stateWithMask:states::HASPOPUP] != 0];
   }
   if ([attribute isEqualToString:NSAccessibilityValueAttribute]) return [self value];
   if ([attribute isEqualToString:NSAccessibilityARIACurrentAttribute]) {
