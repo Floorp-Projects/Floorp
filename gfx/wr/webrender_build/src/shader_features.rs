@@ -113,8 +113,12 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
     }
     shaders.insert("brush_image", image_features);
 
+    let mut composite_features: Vec<String> = Vec::new();
+    for texture_type in &texture_types {
+        let base = concat_features("", texture_type);
+        composite_features.push(base.clone());
+    }
     // YUV image brush shaders
-    let mut composite_features: Vec<String> = vec!["".to_string()];
     let mut yuv_features: Vec<String> = Vec::new();
     for texture_type in &texture_types {
         let base = concat_features("YUV", texture_type);
