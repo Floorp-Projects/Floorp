@@ -167,6 +167,7 @@ class AddonsManagerAdapterTest {
         val userCountView: TextView = mock()
         val addButton = ImageView(testContext)
         val view = View(testContext)
+        val allowedInPrivateBrowsingLabel = ImageView(testContext)
         val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
             view = view,
@@ -177,7 +178,8 @@ class AddonsManagerAdapterTest {
             ratingView = mock(),
             ratingAccessibleView = ratingAccessibleView,
             userCountView = userCountView,
-            addButton = addButton
+            addButton = addButton,
+            allowedInPrivateBrowsingLabel = allowedInPrivateBrowsingLabel
         )
         val addon = Addon(
             id = "id",
@@ -248,6 +250,7 @@ class AddonsManagerAdapterTest {
         val titleView: TextView = mock()
         val summaryView: TextView = mock()
         val view = View(testContext)
+        val allowedInPrivateBrowsingLabel = ImageView(testContext)
         val addonsManagerAdapterDelegate: AddonsManagerAdapterDelegate = mock()
         val addonViewHolder = CustomViewHolder.AddonViewHolder(
             view = view,
@@ -258,7 +261,8 @@ class AddonsManagerAdapterTest {
             ratingView = mock(),
             ratingAccessibleView = mock(),
             userCountView = mock(),
-            addButton = mock()
+            addButton = mock(),
+            allowedInPrivateBrowsingLabel = allowedInPrivateBrowsingLabel
         )
         val addon = Addon(
             id = "id",
