@@ -114,22 +114,6 @@ struct IMEState;
 }  // namespace widget
 
 /**
- * SplitAtEdges is for EditorBase::SplitNodeDeepWithTransaction(),
- * HTMLEditor::InsertNodeAtPoint()
- */
-enum class SplitAtEdges {
-  // EditorBase::SplitNodeDeepWithTransaction() won't split container element
-  // nodes at their edges.  I.e., when split point is start or end of
-  // container, it won't be split.
-  eDoNotCreateEmptyContainer,
-  // EditorBase::SplitNodeDeepWithTransaction() always splits containers even
-  // if the split point is at edge of a container.  E.g., if split point is
-  // start of an inline element, empty inline element is created as a new left
-  // node.
-  eAllowToCreateEmptyContainer,
-};
-
-/**
  * Implementation of an editor object.  it will be the controller/focal point
  * for the main editor services. i.e. the GUIManager, publishing, transaction
  * manager, event interfaces. the idea for the event interfaces is to have them
@@ -1711,28 +1695,6 @@ class EditorBase : public nsIEditor,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   DoJoinNodes(nsIContent& aContentToKeep, nsIContent& aContentToJoin);
-
-  /**
-   * SplitNodeDeepWithTransaction() splits aMostAncestorToSplit deeply.
-   *
-   * @param aMostAncestorToSplit        The most ancestor node which should be
-   *                                    split.
-   * @param aStartOfDeepestRightNode    The start point of deepest right node.
-   *                                    This point must be descendant of
-   *                                    aMostAncestorToSplit.
-   * @param aSplitAtEdges               Whether the caller allows this to
-   *                                    create empty container element when
-   *                                    split point is start or end of an
-   *                                    element.
-   * @return                            SplitPoint() returns split point in
-   *                                    aMostAncestorToSplit.  The point must
-   *                                    be good to insert something if the
-   *                                    caller want to do it.
-   */
-  MOZ_CAN_RUN_SCRIPT SplitNodeResult
-  SplitNodeDeepWithTransaction(nsIContent& aMostAncestorToSplit,
-                               const EditorDOMPoint& aDeepestStartOfRightNode,
-                               SplitAtEdges aSplitAtEdges);
 
   /**
    * EnsureNoPaddingBRElementForEmptyEditor() removes padding <br> element
