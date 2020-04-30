@@ -150,6 +150,21 @@ let ACTORS = {
     matches: ["about:protections"],
   },
 
+  AboutTabCrashed: {
+    parent: {
+      moduleURI: "resource:///actors/AboutTabCrashedParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/AboutTabCrashedChild.jsm",
+
+      events: {
+        DOMWindowCreated: { capture: true },
+      },
+    },
+
+    matches: ["about:tabcrashed*"],
+  },
+
   AboutWelcome: {
     parent: {
       moduleURI: "resource:///actors/AboutWelcomeParent.jsm",
