@@ -16,8 +16,7 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-HANDLE
-nsUXThemeData::sThemes[eUXNumClasses];
+nsUXThemeData::ThemeHandle nsUXThemeData::sThemes[eUXNumClasses];
 
 const int NUM_COMMAND_BUTTONS = 3;
 SIZE nsUXThemeData::sCommandButtonMetrics[NUM_COMMAND_BUTTONS];
@@ -30,21 +29,39 @@ bool nsUXThemeData::sFlatMenus = false;
 bool nsUXThemeData::sTitlebarInfoPopulatedAero = false;
 bool nsUXThemeData::sTitlebarInfoPopulatedThemed = false;
 
+nsUXThemeData::ThemeHandle::~ThemeHandle() { Close(); }
+
+void nsUXThemeData::ThemeHandle::OpenOnce(HWND aWindow, LPCWSTR aClassList) {
+  if (mHandle.isSome()) {
+    return;
+  }
+
+  mHandle = Some(OpenThemeData(aWindow, aClassList));
+}
+
+void nsUXThemeData::ThemeHandle::Close() {
+  if (mHandle.isNothing() || !mHandle.value()) {
+    return;
+  }
+
+  CloseThemeData(mHandle.value());
+  mHandle = Nothing();
+}
+
+nsUXThemeData::ThemeHandle::operator HANDLE() {
+  return mHandle.isSome() ? mHandle.value() : nullptr;
+}
+
 void nsUXThemeData::Teardown() { Invalidate(); }
 
 void nsUXThemeData::Initialize() {
-  ::ZeroMemory(sThemes, sizeof(sThemes));
-
   CheckForCompositor(true);
   Invalidate();
 }
 
 void nsUXThemeData::Invalidate() {
-  for (int i = 0; i < eUXNumClasses; i++) {
-    if (sThemes[i]) {
-      CloseThemeData(sThemes[i]);
-      sThemes[i] = nullptr;
-    }
+  for (auto& theme : sThemes) {
+    theme.Close();
   }
   BOOL useFlat = FALSE;
   sFlatMenus =
@@ -54,9 +71,7 @@ void nsUXThemeData::Invalidate() {
 HANDLE
 nsUXThemeData::GetTheme(nsUXThemeClass cls) {
   NS_ASSERTION(cls < eUXNumClasses, "Invalid theme class!");
-  if (!sThemes[cls]) {
-    sThemes[cls] = OpenThemeData(nullptr, GetClassName(cls));
-  }
+  sThemes[cls].OpenOnce(nullptr, GetClassName(cls));
   return sThemes[cls];
 }
 
