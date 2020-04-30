@@ -180,6 +180,72 @@ class TopSiteStorageTest {
         }
     }
 
+    @Test
+    fun migrate2to3() {
+        val dbVersion2 = helper.createDatabase(MIGRATION_TEST_DB, 2).apply {
+            execSQL(
+                "INSERT INTO " +
+                    "top_sites " +
+                    "(title, url, is_default, created_at) " +
+                    "VALUES " +
+                    "('Mozilla','mozilla.org',0,1)," +
+                    "('Top Articles','https://getpocket.com/fenix-top-articles',0,2)," +
+                    "('Wikipedia','https://www.wikipedia.org/',0,3)," +
+                    "('YouTube','https://www.youtube.com/',0,4)"
+            )
+        }
+
+        dbVersion2.query("SELECT * FROM top_sites").use { cursor ->
+            assertEquals(5, cursor.columnCount)
+        }
+
+        val dbVersion3 = helper.runMigrationsAndValidate(
+            MIGRATION_TEST_DB, 3, true, Migrations.migration_2_3
+        )
+
+        dbVersion3.query("SELECT * FROM top_sites").use { cursor ->
+            assertEquals(5, cursor.columnCount)
+            assertEquals(4, cursor.count)
+
+            // Check isDefault for Mozilla
+            cursor.moveToFirst()
+            assertEquals("Mozilla", cursor.getString(cursor.getColumnIndexOrThrow("title")))
+            assertEquals("mozilla.org", cursor.getString(cursor.getColumnIndexOrThrow("url")))
+            assertEquals(0, cursor.getInt(cursor.getColumnIndexOrThrow("is_default")))
+            assertEquals(1, cursor.getInt(cursor.getColumnIndexOrThrow("created_at")))
+
+            // Check isDefault for Top Articles
+            cursor.moveToNext()
+            assertEquals("Top Articles", cursor.getString(cursor.getColumnIndexOrThrow("title")))
+            assertEquals(
+                "https://getpocket.com/fenix-top-articles",
+                cursor.getString(cursor.getColumnIndexOrThrow("url"))
+            )
+            assertEquals(1, cursor.getInt(cursor.getColumnIndexOrThrow("is_default")))
+            assertEquals(2, cursor.getInt(cursor.getColumnIndexOrThrow("created_at")))
+
+            // Check isDefault for Wikipedia
+            cursor.moveToNext()
+            assertEquals("Wikipedia", cursor.getString(cursor.getColumnIndexOrThrow("title")))
+            assertEquals(
+                "https://www.wikipedia.org/",
+                cursor.getString(cursor.getColumnIndexOrThrow("url"))
+            )
+            assertEquals(1, cursor.getInt(cursor.getColumnIndexOrThrow("is_default")))
+            assertEquals(3, cursor.getInt(cursor.getColumnIndexOrThrow("created_at")))
+
+            // Check isDefault for YouTube
+            cursor.moveToNext()
+            assertEquals("YouTube", cursor.getString(cursor.getColumnIndexOrThrow("title")))
+            assertEquals(
+                "https://www.youtube.com/",
+                cursor.getString(cursor.getColumnIndexOrThrow("url"))
+            )
+            assertEquals(1, cursor.getInt(cursor.getColumnIndexOrThrow("is_default")))
+            assertEquals(4, cursor.getInt(cursor.getColumnIndexOrThrow("created_at")))
+        }
+    }
+
     private fun getAllTopSites(): List<TopSite> {
         val dataSource = storage.getTopSitesPaged().create()
 
