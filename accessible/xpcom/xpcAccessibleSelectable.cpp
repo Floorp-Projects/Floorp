@@ -6,7 +6,10 @@
 
 #include "Accessible-inl.h"
 
+#include "nsIAccessible.h"
 #include "nsIMutableArray.h"
+#include "xpcAccessibleDocument.h"
+#include "xpcAccessibleSelectable.h"
 
 using namespace mozilla::a11y;
 

@@ -11,6 +11,7 @@
 
 #include "nsTableCellFrame.h"
 #include "nsTableWrapperFrame.h"
+#include "TableCellAccessible.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

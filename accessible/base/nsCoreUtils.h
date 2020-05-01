@@ -12,6 +12,7 @@
 #include "nsIContent.h"
 #include "mozilla/dom/Document.h"  // for GetPresShell()
 #include "mozilla/FlushType.h"
+#include "mozilla/PresShellForwards.h"
 
 #include "nsPoint.h"
 #include "nsTArray.h"

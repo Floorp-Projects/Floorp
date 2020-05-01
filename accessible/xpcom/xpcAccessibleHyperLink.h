@@ -9,6 +9,8 @@
 
 #include "nsIAccessibleHyperLink.h"
 
+#include "AccessibleOrProxy.h"
+
 class nsIAccessible;
 
 namespace mozilla {

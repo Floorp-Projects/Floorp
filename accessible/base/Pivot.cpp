@@ -9,6 +9,7 @@
 #include "Accessible.h"
 #include "DocAccessible.h"
 #include "nsAccessibilityService.h"
+#include "nsAccUtils.h"
 
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/Element.h"

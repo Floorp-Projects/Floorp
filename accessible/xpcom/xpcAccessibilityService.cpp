@@ -7,6 +7,8 @@
 #include "nsAccessiblePivot.h"
 #include "nsAccessibilityService.h"
 #include "Platform.h"
+#include "xpcAccessibleApplication.h"
+#include "xpcAccessibleDocument.h"
 
 #ifdef A11Y_LOG
 #  include "Logging.h"

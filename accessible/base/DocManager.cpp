@@ -33,6 +33,7 @@
 #include "nsCoreUtils.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/dom/BrowserChild.h"
+#include "xpcAccessibleDocument.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
