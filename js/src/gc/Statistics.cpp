@@ -156,6 +156,18 @@ using PhaseKindTable =
 
 #include "gc/StatsPhasesGenerated.inc"
 
+// Iterate the phases in a phase kind.
+class PhaseIter {
+  Phase phase;
+
+ public:
+  explicit PhaseIter(PhaseKind kind) : phase(phaseKinds[kind].firstPhase) {}
+  bool done() const { return phase == Phase::NONE; }
+  void next() { phase = phases[phase].nextWithPhaseKind; }
+  Phase get() const { return phase; }
+  operator Phase() const { return phase; }
+};
+
 static double t(TimeDuration duration) { return duration.ToMilliseconds(); }
 
 inline JSContext* Statistics::context() {
@@ -179,6 +191,16 @@ PhaseKind Statistics::currentPhaseKind() const {
   return phases[phase].phaseKind;
 }
 
+static Phase LookupPhaseWithParent(PhaseKind phaseKind, Phase parentPhase) {
+  for (PhaseIter phase(phaseKind); !phase.done(); phase.next()) {
+    if (phases[phase].parent == parentPhase) {
+      return phase;
+    }
+  }
+
+  return Phase::NONE;
+}
+
 Phase Statistics::lookupChildPhase(PhaseKind phaseKind) const {
   if (phaseKind == PhaseKind::IMPLICIT_SUSPENSION) {
     return Phase::IMPLICIT_SUSPENSION;
@@ -191,13 +213,7 @@ Phase Statistics::lookupChildPhase(PhaseKind phaseKind) const {
 
   // Search all expanded phases that correspond to the required
   // phase to find the one whose parent is the current expanded phase.
-  Phase phase;
-  for (phase = phaseKinds[phaseKind].firstPhase; phase != Phase::NONE;
-       phase = phases[phase].nextWithPhaseKind) {
-    if (phases[phase].parent == currentPhase()) {
-      break;
-    }
-  }
+  Phase phase = LookupPhaseWithParent(phaseKind, currentPhase());
 
   if (phase == Phase::NONE) {
     MOZ_CRASH_UNSAFE_PRINTF(
@@ -889,9 +905,8 @@ TimeDuration Statistics::getMaxGCPauseSinceClear() {
 // parents.
 static TimeDuration SumPhase(PhaseKind phaseKind,
                              const Statistics::PhaseTimeTable& times) {
-  TimeDuration sum = 0;
-  for (Phase phase = phaseKinds[phaseKind].firstPhase; phase != Phase::NONE;
-       phase = phases[phase].nextWithPhaseKind) {
+  TimeDuration sum;
+  for (PhaseIter phase(phaseKind); !phase.done(); phase.next()) {
     sum += times[phase];
   }
   return sum;
@@ -913,6 +928,22 @@ static bool CheckSelfTime(Phase parent, Phase child,
   }
 
   return true;
+}
+
+using PhaseKindTimes =
+    EnumeratedArray<PhaseKind, PhaseKind::LIMIT, TimeDuration>;
+
+static PhaseKind FindLongestPhaseKind(const PhaseKindTimes& times) {
+  TimeDuration longestTime;
+  PhaseKind phaseKind = PhaseKind::NONE;
+  for (auto i : MajorGCPhaseKinds()) {
+    if (times[i] > longestTime) {
+      longestTime = times[i];
+      phaseKind = i;
+    }
+  }
+
+  return phaseKind;
 }
 
 static PhaseKind LongestPhaseSelfTimeInMajorGC(
@@ -943,22 +974,33 @@ static PhaseKind LongestPhaseSelfTimeInMajorGC(
   }
 
   // Sum expanded phases corresponding to the same phase.
-  EnumeratedArray<PhaseKind, PhaseKind::LIMIT, TimeDuration> phaseTimes;
+  PhaseKindTimes phaseKindTimes;
   for (auto i : AllPhaseKinds()) {
-    phaseTimes[i] = SumPhase(i, selfTimes);
+    phaseKindTimes[i] = SumPhase(i, selfTimes);
   }
 
-  // Loop over this table to find the longest phase.
-  TimeDuration longestTime = 0;
-  PhaseKind longestPhase = PhaseKind::NONE;
-  for (auto i : MajorGCPhaseKinds()) {
-    if (phaseTimes[i] > longestTime) {
-      longestTime = phaseTimes[i];
-      longestPhase = i;
-    }
+  return FindLongestPhaseKind(phaseKindTimes);
+}
+
+static TimeDuration PhaseMax(PhaseKind phaseKind,
+                             const Statistics::PhaseTimeTable& times) {
+  TimeDuration max;
+  for (PhaseIter phase(phaseKind); !phase.done(); phase.next()) {
+    max = std::max(max, times[phase]);
   }
 
-  return longestPhase;
+  return max;
+}
+
+static PhaseKind LongestParallelPhaseKind(
+    const Statistics::PhaseTimeTable& times) {
+  // Find longest time for each phase kind.
+  PhaseKindTimes phaseKindTimes;
+  for (auto i : AllPhaseKinds()) {
+    phaseKindTimes[i] = PhaseMax(i, times);
+  }
+
+  return FindLongestPhaseKind(phaseKindTimes);
 }
 
 void Statistics::printStats() {
@@ -1275,11 +1317,11 @@ void Statistics::sendSliceTelemetry(const SliceData& slice) {
       PhaseKind longest = LongestPhaseSelfTimeInMajorGC(slice.phaseTimes);
       reportLongestPhaseInMajorGC(longest, JS_TELEMETRY_GC_SLOW_PHASE);
 
-      // If the longest phase was waiting for parallel tasks then
-      // record the longest task.
+      // If the longest phase was waiting for parallel tasks then record the
+      // longest task.
       if (longest == PhaseKind::JOIN_PARALLEL_TASKS) {
         PhaseKind longestParallel =
-            LongestPhaseSelfTimeInMajorGC(slice.parallelTimes);
+            LongestParallelPhaseKind(slice.maxParallelTimes);
         reportLongestPhaseInMajorGC(longestParallel, JS_TELEMETRY_GC_SLOW_TASK);
       }
     }
@@ -1476,18 +1518,15 @@ void Statistics::recordParallelPhase(PhaseKind phaseKind,
                                      TimeDuration duration) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(gc->rt));
 
-  Phase phase = lookupChildPhase(phaseKind);
-
-  // Record the duration for all phases in the tree up to the root. This is
-  // not strictly necessary but makes the invariant that parent phase times
-  // include their children apply to both phaseTimes and parallelTimes.
-  while (phase != Phase::NONE) {
-    if (!slices_.empty()) {
-      slices_.back().parallelTimes[phase] += duration;
-    }
-    parallelTimes[phase] += duration;
-    phase = phases[phase].parent;
+  if (aborted) {
+    return;
   }
+
+  // Record the maximum task time for each phase. Don't record times for parent
+  // phases.
+  Phase phase = lookupChildPhase(phaseKind);
+  TimeDuration& time = slices_.back().maxParallelTimes[phase];
+  time = std::max(time, duration);
 }
 
 TimeStamp Statistics::beginSCC() { return ReallyNow(); }
