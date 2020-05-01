@@ -500,8 +500,6 @@ class GtkVsyncSource final : public VsyncSource {
   virtual Display& GetGlobalDisplay() override { return *mGlobalDisplay; }
 
   class GLXDisplay final : public VsyncSource::Display {
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GLXDisplay)
-
    public:
     GLXDisplay()
         : mGLContext(nullptr),
