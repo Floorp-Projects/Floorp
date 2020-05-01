@@ -1,18 +1,9 @@
-import io
 import itertools
 import json
 import os
 from copy import deepcopy
 from multiprocessing import Pool, cpu_count
-from six import (
-    PY3,
-    binary_type,
-    ensure_text,
-    iteritems,
-    itervalues,
-    string_types,
-    text_type,
-)
+from six import PY3, iteritems, itervalues, string_types, binary_type, text_type
 
 from . import vcs
 from .item import (ConformanceCheckerTest, ManifestItem, ManualTest, RefTest, SupportFile,
@@ -327,7 +318,7 @@ def _load(logger,  # type: Logger
         else:
             logger.debug("Creating new manifest at %s" % manifest)
         try:
-            with io.open(manifest, "r", encoding="utf-8") as f:
+            with open(manifest, "rb") as f:
                 rv = Manifest.from_json(tests_root,
                                         fast_json.load(f),
                                         types=types,

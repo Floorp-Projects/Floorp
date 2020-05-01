@@ -56,7 +56,7 @@ endif
 # steps. See bug 1431342.
 libs:: $(srcdir)/profile/channel-prefs.js
 	$(NSINSTALL) -D $(DIST)/bin/defaults/pref
-	$(call py_action,preprocessor,-Fsubstitution $(PREF_PPFLAGS) $(ACDEFINES) $^ -o $(DIST)/bin/defaults/pref/channel-prefs.js)
+	$(call py3_action,preprocessor,-Fsubstitution $(PREF_PPFLAGS) $(ACDEFINES) $^ -o $(DIST)/bin/defaults/pref/channel-prefs.js)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 
@@ -78,7 +78,7 @@ LPROJ := Contents/Resources/$(LPROJ_ROOT).lproj
 clean clobber repackage::
 	$(RM) -r $(dist_dest)
 
-MAC_BUNDLE_VERSION = $(shell $(PYTHON3) $(srcdir)/macversion.py --version=$(MOZ_APP_VERSION) --buildid=$(DEPTH)/buildid.h)
+MAC_BUNDLE_VERSION = $(shell $(PYTHON) $(srcdir)/macversion.py --version=$(MOZ_APP_VERSION) --buildid=$(DEPTH)/buildid.h)
 
 .PHONY: repackage
 tools repackage:: $(DIST)/bin/$(MOZ_APP_NAME)

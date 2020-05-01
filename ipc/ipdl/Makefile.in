@@ -22,7 +22,7 @@ ipdl_py_deps := \
 # NB: the IPDL compiler manages .ipdl-->.h/.cpp dependencies itself,
 # which is why we don't have explicit .h/.cpp targets here
 ipdl.track: $(ALL_IPDLSRCS) $(srcdir)/sync-messages.ini $(srcdir)/message-metadata.ini $(ipdl_py_deps)
-	$(PYTHON3) $(topsrcdir)/config/pythonpath.py \
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) \
 	  $(srcdir)/ipdl.py \
 	  --sync-msg-list=$(srcdir)/sync-messages.ini \

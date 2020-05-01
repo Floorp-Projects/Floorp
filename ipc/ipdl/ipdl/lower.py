@@ -1450,7 +1450,7 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
 
             # Compute a permutation of the fields for in-memory storage such
             # that the memory layout of the structure will be well-packed.
-            permutation = list(range(len(newfields)))
+            permutation = range(len(newfields))
 
             # Note that the results of `pod_size` ensure that non-POD fields
             # sort before POD ones.

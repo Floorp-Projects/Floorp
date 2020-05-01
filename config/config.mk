@@ -112,7 +112,7 @@ MKDIR ?= mkdir
 SLEEP ?= sleep
 TOUCH ?= touch
 
-PYTHON_PATH = $(PYTHON3) $(topsrcdir)/config/pythonpath.py
+PYTHON_PATH = $(PYTHON) $(topsrcdir)/config/pythonpath.py
 
 #
 # Build using PIC by default

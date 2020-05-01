@@ -26,12 +26,12 @@ def smooth_scroll(marionette_session, start_element, axis, direction,
     scroll_back = scroll_back or False
     current = 0
     if axis == "x":
-        if direction == -1:
+        if direction is -1:
             offset = [-increments, 0]
         else:
             offset = [increments, 0]
     else:
-        if direction == -1:
+        if direction is -1:
             offset = [0, -increments]
         else:
             offset = [0, increments]

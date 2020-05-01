@@ -98,7 +98,7 @@ ifneq (,$(filter FasterMake+RecursiveMake,$(BUILD_BACKENDS)))
 	@# same directory, because that would blow up
 	$(if $(wildcard _build_manifests/install/$(subst /,_,$*)),$(if $(wildcard faster/install_$(subst /,_,$*)*),$(error FasterMake and RecursiveMake ends of the hybrid build system want to handle $*)))
 endif
-	$(addprefix $(call py_action,process_install_manifest,--track install_$(subst /,_,$*).track $*) ,$(wildcard _build_manifests/install/$(subst /,_,$*)))
+	$(addprefix $(call py3_action,process_install_manifest,--track install_$(subst /,_,$*).track $*) ,$(wildcard _build_manifests/install/$(subst /,_,$*)))
 
 # Dummy wrapper rule to allow the faster backend to piggy back
 $(addprefix install-,$(subst /,_,$(filter dist/%,$(install_manifests)))): install-dist_%: install-dist/% ;
@@ -108,7 +108,7 @@ install-tests: install-test-files
 
 .PHONY: install-test-files
 install-test-files:
-	$(call py_action,process_install_manifest,--track install__test_files.track _tests _build_manifests/install/_test_files)
+	$(call py3_action,process_install_manifest,--track install__test_files.track _tests _build_manifests/install/_test_files)
 
 include $(topsrcdir)/build/moz-automation.mk
 
@@ -140,7 +140,7 @@ endif
 
 ifdef MOZ_ANDROID_FAT_AAR_ARCHITECTURES
 recurse_android-fat-aar-artifact:
-	$(call py_action,fat_aar,\
+	$(call py3_action,fat_aar,\
     $(addprefix --armeabi-v7a $(MOZ_FETCHES_DIR)/,$(MOZ_ANDROID_FAT_AAR_ARMEABI_V7A)) \
     $(addprefix --arm64-v8a $(MOZ_FETCHES_DIR)/,$(MOZ_ANDROID_FAT_AAR_ARM64_V8A)) \
     $(addprefix --x86 $(MOZ_FETCHES_DIR)/,$(MOZ_ANDROID_FAT_AAR_X86)) \
@@ -196,14 +196,14 @@ endif
 .PHONY: symbolsfullarchive
 symbolsfullarchive: prepsymbolsarchive
 	$(RM) '$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip'
-	$(call py_action,symbols_archive,'$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip' \
+	$(call py3_action,symbols_archive,'$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip' \
                                      $(abspath $(DIST)/crashreporter-symbols) \
                                      --full-archive)
 
 .PHONY: symbolsarchive
 symbolsarchive: prepsymbolsarchive
 	$(RM) '$(DIST)/$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip'
-	$(call py_action,symbols_archive,'$(DIST)/$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip' \
+	$(call py3_action,symbols_archive,'$(DIST)/$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip' \
                                      $(abspath $(DIST)/crashreporter-symbols))
 
 ifdef MOZ_CRASHREPORTER
@@ -220,7 +220,7 @@ endif
 
 uploadsymbols:
 ifdef MOZ_CRASHREPORTER
-	$(PYTHON3) -u $(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.py '$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip'
+	$(PYTHON) -u $(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.py '$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip'
 endif
 
 .PHONY: update-packaging
@@ -229,7 +229,7 @@ update-packaging:
 
 .PHONY: package-generated-sources
 package-generated-sources:
-	$(call py_action,package_generated_sources,'$(DIST)/$(PKG_PATH)$(GENERATED_SOURCE_FILE_PACKAGE)')
+	$(call py3_action,package_generated_sources,'$(DIST)/$(PKG_PATH)$(GENERATED_SOURCE_FILE_PACKAGE)')
 
 ifdef JS_STANDALONE
 # Delegate js-specific rules to js
