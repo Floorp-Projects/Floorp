@@ -12,6 +12,12 @@ add_task(async function testDoorhanger() {
     return Preferences.get(prefs.DOH_SELF_ENABLED_PREF);
   });
   is(Preferences.get(prefs.DOH_SELF_ENABLED_PREF), true, "Breadcrumb saved.");
+  is(
+    Preferences.get(prefs.DOH_TRR_SELECT_DRY_RUN_RESULT_PREF),
+    "dummyTRR",
+    "TRR selection dry run complete."
+  );
+  await checkTRRSelectionTelemetry();
 
   await BrowserTestUtils.waitForCondition(() => {
     return Preferences.get(prefs.DOH_DOORHANGER_SHOWN_PREF);

@@ -12,6 +12,12 @@ add_task(async function testCleanFlow() {
     return Preferences.get(prefs.DOH_SELF_ENABLED_PREF);
   });
   is(Preferences.get(prefs.DOH_SELF_ENABLED_PREF), true, "Breadcrumb saved.");
+  is(
+    Preferences.get(prefs.DOH_TRR_SELECT_DRY_RUN_RESULT_PREF),
+    "dummyTRR",
+    "TRR selection dry run complete."
+  );
+  await checkTRRSelectionTelemetry();
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, EXAMPLE_URL);
   let panel = await promise;
@@ -64,6 +70,7 @@ add_task(async function testCleanFlow() {
 
   // Restart the add-on for good measure.
   await restartAddon();
+  ensureNoTRRSelectionTelemetry();
   await ensureNoTRRModeChange(0);
   await checkHeuristicsTelemetry("disable_doh", "startup");
 

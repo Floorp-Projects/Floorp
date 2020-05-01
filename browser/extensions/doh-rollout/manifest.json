@@ -42,6 +42,14 @@
         "paths": [["experiments", "heuristics"]]
       }
     },
+    "trrselect": {
+      "schema": "experiments/trrselect/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiments/trrselect/api.js",
+        "paths": [["experiments", "trrselect"]]
+      }
+    },
     "doorhanger": {
       "schema": "experiments/doorhanger/schema.json",
       "parent": {

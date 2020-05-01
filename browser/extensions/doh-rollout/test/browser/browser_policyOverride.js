@@ -37,6 +37,12 @@ add_task(async function testPolicyOverride() {
     undefined,
     "Breadcrumb not saved."
   );
+  is(
+    Preferences.get(prefs.DOH_TRR_SELECT_DRY_RUN_RESULT_PREF),
+    undefined,
+    "TRR selection dry run not performed."
+  );
+  ensureNoTRRSelectionTelemetry();
   await ensureNoTRRModeChange(0);
   await checkHeuristicsTelemetry("policy_without_doh", "first_run");
 
@@ -47,6 +53,7 @@ add_task(async function testPolicyOverride() {
 
   // Restart for good measure.
   await restartAddon();
+  ensureNoTRRSelectionTelemetry();
   await ensureNoTRRModeChange(0);
   ensureNoHeuristicsTelemetry();
 

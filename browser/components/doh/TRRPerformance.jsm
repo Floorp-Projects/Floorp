@@ -62,12 +62,12 @@ XPCOMUtils.defineLazyServiceGetter(
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "kTRRs",
-  "doh-rollout.trrRace.trrList",
+  "network.trr.resolvers",
   null,
   null,
   val =>
     val
-      ? val.split(",").map(t => t.trim())
+      ? JSON.parse(val).map(trr => trr.url)
       : [
           "https://mozilla.cloudflare-dns.com/dns-query",
           "https://trr.dns.nextdns.io/",
@@ -263,6 +263,7 @@ class TRRRacer {
   constructor(onCompleteCallback) {
     this._aggregator = null;
     this._retryCount = 0;
+    this._complete = false;
     this._onCompleteCallback = onCompleteCallback;
   }
 
@@ -287,9 +288,60 @@ class TRRRacer {
     Services.obs.removeObserver(this, "ipc:network:captive-portal-set-state");
     Services.obs.removeObserver(this, "network:link-status-changed");
 
+    this._complete = true;
+
     if (this._onCompleteCallback) {
       this._onCompleteCallback();
     }
+  }
+
+  getFastestTRR() {
+    if (!this._complete) {
+      throw new Error("getFastestTRR: Measurement still running.");
+    }
+
+    return this._getFastestTRRFromResults(this._aggregator.results);
+  }
+
+  /*
+   * Given an array of { trr, time }, returns the trr with smallest mean time.
+   * Separate from _getFastestTRR for easy unit-testing.
+   *
+   * @returns The TRR with the fastest average time, or undefined if no result
+   *          had a valid measured time (!= -1)
+   */
+  _getFastestTRRFromResults(results) {
+    // First, organize the results into a map of TRR -> array of times
+    // TODO: Consider uncached domains or not?
+    let TRRTimingMap = new Map();
+    for (let { trr, time } of results) {
+      if (!TRRTimingMap.has(trr)) {
+        TRRTimingMap.set(trr, []);
+      }
+      if (time != -1) {
+        TRRTimingMap.get(trr).push(time);
+      }
+    }
+
+    // Loop through each TRR's array of times, compute the means, and remember
+    // the fastest TRR
+    // TODO: Do we want geometric means here?
+    let fastestTRR;
+    let fastestAverageTime = -1;
+    for (let trr of TRRTimingMap.keys()) {
+      let times = TRRTimingMap.get(trr);
+      if (!times.length) {
+        continue;
+      }
+
+      let averageTime = times.reduce((a, b) => a + b) / times.length;
+      if (fastestAverageTime == -1 || averageTime < fastestAverageTime) {
+        fastestAverageTime = averageTime;
+        fastestTRR = trr;
+      }
+    }
+
+    return fastestTRR;
   }
 
   _runNewAggregator() {

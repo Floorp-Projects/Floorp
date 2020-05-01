@@ -163,3 +163,16 @@ add_task(async function test_TRRRacer_maxRetries() {
   await test_TRRRacer_maxRetries_helper(false);
   await test_TRRRacer_maxRetries_helper(true);
 });
+
+add_task(async function test_TRRRacer_getFastestTRRFromResults() {
+  let results = [
+    { trr: "trr1", time: 10 },
+    { trr: "trr2", time: 100 },
+    { trr: "trr1", time: 1000 },
+    { trr: "trr2", time: 110 },
+    { trr: "trr3", time: -1 },
+  ];
+  let racer = new TRRRacer();
+  let fastest = racer._getFastestTRRFromResults(results);
+  Assert.equal(fastest, "trr2");
+});
