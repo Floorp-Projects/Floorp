@@ -3150,6 +3150,15 @@ PKIX_PL_Cert_CheckNameConstraints(
                 if (arena == NULL) {
                         PKIX_ERROR(PKIX_OUTOFMEMORY);
                 }
+                /* only check common Name if the usage requires it */
+                if (treatCommonNameAsDNSName) {
+                    SECCertificateUsage certificateUsage;
+                    certificateUsage = ((PKIX_PL_NssContext*)plContext)->certificateUsage;
+                    if ((certificateUsage != certificateUsageSSLServer) &&
+                        (certificateUsage != certificateUsageIPsec)) {
+                        treatCommonNameAsDNSName = PKIX_FALSE;
+                    }
+                }
 
                 /* This NSS call returns Subject Alt Names. If
                  * treatCommonNameAsDNSName is true, it also returns the

@@ -813,7 +813,8 @@ extern CK_RV sftk_ike1_prf(CK_SESSION_HANDLE hSession,
                            unsigned int keySize);
 extern CK_RV sftk_ike1_appendix_b_prf(CK_SESSION_HANDLE hSession,
                                       const SFTKAttribute *inKey,
-                                      const CK_MECHANISM_TYPE *params, SFTKObject *outKey,
+                                      const CK_NSS_IKE1_APP_B_PRF_DERIVE_PARAMS *params,
+                                      SFTKObject *outKey,
                                       unsigned int keySize);
 extern CK_RV sftk_ike_prf_plus(CK_SESSION_HANDLE hSession,
                                const SFTKAttribute *inKey,

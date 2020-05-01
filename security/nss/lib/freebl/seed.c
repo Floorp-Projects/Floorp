@@ -416,12 +416,23 @@ SEED_decrypt(const unsigned char s[SEED_BLOCK_SIZE],
 void
 SEED_ecb_encrypt(const unsigned char *in,
                  unsigned char *out,
+                 size_t inLen,
                  const SEED_KEY_SCHEDULE *ks, int enc)
 {
     if (enc) {
-        SEED_encrypt(in, out, ks);
+        while (inLen > 0) {
+            SEED_encrypt(in, out, ks);
+            out += SEED_BLOCK_SIZE;
+            in += SEED_BLOCK_SIZE;
+            inLen -= SEED_BLOCK_SIZE;
+        }
     } else {
-        SEED_decrypt(in, out, ks);
+        while (inLen > 0) {
+            SEED_decrypt(in, out, ks);
+            out += SEED_BLOCK_SIZE;
+            in += SEED_BLOCK_SIZE;
+            inLen -= SEED_BLOCK_SIZE;
+        }
     }
 }
 
@@ -602,7 +613,7 @@ SEED_Encrypt(SEEDContext *cx, unsigned char *out, unsigned int *outLen,
 
     switch (cx->mode) {
         case NSS_SEED:
-            SEED_ecb_encrypt(in, out, &cx->ks, 1);
+            SEED_ecb_encrypt(in, out, inLen, &cx->ks, 1);
             *outLen = inLen;
             break;
 
@@ -642,7 +653,7 @@ SEED_Decrypt(SEEDContext *cx, unsigned char *out, unsigned int *outLen,
 
     switch (cx->mode) {
         case NSS_SEED:
-            SEED_ecb_encrypt(in, out, &cx->ks, 0);
+            SEED_ecb_encrypt(in, out, inLen, &cx->ks, 0);
             *outLen = inLen;
             break;
 
