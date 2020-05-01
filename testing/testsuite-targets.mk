@@ -154,7 +154,7 @@ package-tests-prepare-dest:
 	$(NSINSTALL) -D $(test_archive_dir)
 
 download-wpt-manifest:
-	$(call py_action,download_wpt_manifest)
+	$(call py3_action,download_wpt_manifest)
 
 define package_archive
 package-tests-$(1): stage-all package-tests-prepare-dest download-wpt-manifest

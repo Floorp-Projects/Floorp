@@ -5,7 +5,7 @@ import time
 import traceback
 import uuid
 
-from six import iteritems
+from six import iteritems, iterkeys
 from six.moves.urllib.parse import urljoin
 
 errors = None
@@ -602,7 +602,7 @@ class MarionetteProtocol(Protocol):
 
     def on_environment_change(self, old_environment, new_environment):
         #Unset all the old prefs
-        for name in old_environment.get("prefs", {}).iterkeys():
+        for name in iterkeys(old_environment.get("prefs", {})):
             value = self.executor.original_pref_values[name]
             if value is None:
                 self.prefs.clear(name)
