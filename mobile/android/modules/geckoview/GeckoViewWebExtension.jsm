@@ -403,6 +403,17 @@ class ExtensionInstallListener {
   async onInstallEnded(aInstall, aAddon) {
     const addonId = aAddon.id;
     const { sourceURI } = aInstall;
+
+    if (aAddon.userDisabled || aAddon.embedderDisabled) {
+      const extension = await exportExtension(
+        aAddon,
+        aAddon.userPermissions,
+        sourceURI
+      );
+      this.resolve({ extension });
+      return; // we don't want to wait until extension is enabled, so return early.
+    }
+
     const onReady = async (name, { id }) => {
       if (id != addonId) {
         return;
