@@ -27,11 +27,11 @@ CHECK_TEST_ERROR_RERUN = $(call check_test_error_internal,'To rerun your failure
 endif
 
 # Usage: |make [EXTRA_TEST_ARGS=...] *test|.
-RUN_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftest.py \
+RUN_REFTEST = rm -f ./$@.log && $(PYTHON3) _tests/reftest/runreftest.py \
   --extra-profile-file=$(DIST)/plugins \
   $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
 
-REMOTE_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/remotereftest.py \
+REMOTE_REFTEST = rm -f ./$@.log && $(PYTHON3) _tests/reftest/remotereftest.py \
   --ignore-window-size \
   --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
   --httpd-path=_tests/modules --suite reftest \
@@ -81,7 +81,7 @@ jstestbrowser:
 GARBAGE += $(addsuffix .log,$(MOCHITESTS) reftest crashtest jstestbrowser)
 
 REMOTE_CPPUNITTESTS = \
-	$(PYTHON) -u $(topsrcdir)/testing/remotecppunittests.py \
+	$(PYTHON3) -u $(topsrcdir)/testing/remotecppunittests.py \
 	  --xre-path=$(DEPTH)/dist/bin \
 	  --localLib=$(DEPTH)/dist/fennec \
 	  --deviceIP=${TEST_DEVICE} \
@@ -138,7 +138,7 @@ PKG_ARG = --$(1) '$(PKG_BASENAME).$(1).tests.$(2)'
 test-packages-manifest:
 	@rm -f $(MOZ_TEST_PACKAGES_FILE)
 	$(NSINSTALL) -D $(dir $(MOZ_TEST_PACKAGES_FILE))
-	$(PYTHON) $(topsrcdir)/build/gen_test_packages_manifest.py \
+	$(PYTHON3) $(topsrcdir)/build/gen_test_packages_manifest.py \
       --jsshell $(JSSHELL_NAME) \
       --dest-file '$(MOZ_TEST_PACKAGES_FILE)' \
       $(call PKG_ARG,common,zip) \
@@ -268,7 +268,7 @@ stage-extensions: make-stage-dir
 
 
 check::
-	$(eval cores=$(shell $(PYTHON) -c 'import multiprocessing; print(multiprocessing.cpu_count())'))
+	$(eval cores=$(shell $(PYTHON3) -c 'import multiprocessing; print(multiprocessing.cpu_count())'))
 	@echo "Starting 'mach python-test' with -j$(cores)"
 	@$(topsrcdir)/mach --log-no-times python-test -j$(cores) --subsuite default
 	@echo "Finished 'mach python-test' successfully"
