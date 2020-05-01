@@ -135,7 +135,10 @@ nsresult nsChromeRegistry::GetProviderAndPath(nsIURI* aChromeURL,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (path.Length() < 3) {
-    LogMessage("Invalid chrome URI: %s", path.get());
+#ifdef DEBUG
+    LogMessage("Invalid chrome URI (need path): %s",
+               aChromeURL->GetSpecOrDefault().get());
+#endif
     return NS_ERROR_FAILURE;
   }
 
@@ -144,7 +147,10 @@ nsresult nsChromeRegistry::GetProviderAndPath(nsIURI* aChromeURL,
 
   int32_t slash = path.FindChar('/', 1);
   if (slash == 1) {
-    LogMessage("Invalid chrome URI: %s", path.get());
+#ifdef DEBUG
+    LogMessage("Invalid chrome URI (path cannot start with another slash): %s",
+               aChromeURL->GetSpecOrDefault().get());
+#endif
     return NS_ERROR_FAILURE;
   }
 
