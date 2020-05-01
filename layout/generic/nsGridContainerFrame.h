@@ -360,8 +360,6 @@ class nsGridContainerFrame final : public nsContainerFrame {
       const mozilla::StyleOwnedSlice<mozilla::StyleCustomIdent>;
   void AddImplicitNamedAreas(mozilla::Span<LineNameList>);
 
-  void NormalizeChildLists();
-
   /**
    * Reflow and place our children.
    * @return the consumed size of all of this grid container's continuations
@@ -447,10 +445,6 @@ class nsGridContainerFrame final : public nsContainerFrame {
       const nsTArray<GridItemInfo>& aGridItems, LineRange GridArea::*aMajor,
       LineRange GridArea::*aMinor, uint32_t aFragmentStartTrack,
       uint32_t aFirstExcludedTrack);
-
-#ifdef DEBUG
-  void SanityCheckGridItemsBeforeReflow() const;
-#endif  // DEBUG
 
   /**
    * Update our NS_STATE_GRID_IS_COL/ROW_SUBGRID bits and related subgrid state
@@ -554,13 +548,6 @@ class nsGridContainerFrame final : public nsContainerFrame {
 
   // Our baselines, one per BaselineSharingGroup per axis.
   PerLogicalAxis<PerBaseline<nscoord>> mBaseline;
-
-#ifdef DEBUG
-  // If true, NS_STATE_GRID_DID_PUSH_ITEMS may be set even though all pushed
-  // frames may have been removed.  This is used to suppress an assertion
-  // in case RemoveFrame removed all associated child frames.
-  bool mDidPushItemsBitMayLie{false};
-#endif
 };
 
 #endif /* nsGridContainerFrame_h___ */

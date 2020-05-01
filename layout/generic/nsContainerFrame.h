@@ -649,6 +649,19 @@ class nsContainerFrame : public nsSplittableFrame {
                               const FrameHashtable& aOverflowIncompleteItems);
 
   /**
+   * Prepare our child lists so that they are ready to reflow by the following
+   * operations:
+   *
+   * - Merge overflow list from our prev-in-flow into our principal child list.
+   * - Merge our own overflow list into our principal child list,
+   * - Push any child's next-in-flows in our principal child list to our
+   *   overflow list.
+   * - Pull up any first-in-flow child we might have pushed from our
+   *   next-in-flows.
+   */
+  void NormalizeChildLists();
+
+  /**
    * Reparent floats whose placeholders are inline descendants of aFrame from
    * whatever block they're currently parented by to aOurBlock.
    * @param aReparentSiblings if this is true, we follow aFrame's
@@ -725,6 +738,22 @@ class nsContainerFrame : public nsSplittableFrame {
   bool ResolvedOrientationIsVertical();
 
   // ==========================================================================
+
+#ifdef DEBUG
+  // A helper for flex / grid container to sanity check child lists before
+  // reflow. Intended to be called after calling NormalizeChildLists().
+  void SanityCheckChildListsBeforeReflow() const;
+
+  // A helper to set mDidPushItemsBitMayLie if needed. Intended to be called
+  // only in flex / grid container's RemoveFrame.
+  void SetDidPushItemsBitIfNeeded(ChildListID aListID, nsIFrame* aOldFrame);
+
+  // A flag for flex / grid containers. If true, NS_STATE_GRID_DID_PUSH_ITEMS or
+  // NS_STATE_FLEX_DID_PUSH_ITEMS may be set even though all pushed frames may
+  // have been removed. This is used to suppress an assertion in case
+  // RemoveFrame removed all associated child frames.
+  bool mDidPushItemsBitMayLie{false};
+#endif
 
   nsFrameList mFrames;
 };
