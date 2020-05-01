@@ -458,11 +458,6 @@ def old_configure_assignments():
     return []
 
 
-@dependable
-def extra_old_configure_args():
-    return []
-
-
 @template
 def add_old_configure_assignment(var, value, when=None):
     var = dependable(var)
@@ -481,11 +476,3 @@ def add_old_configure_assignment(var, value, when=None):
             if isinstance(value, (list, tuple)):
                 value = quote(*value)
             assignments.append((var, str(value)))
-
-
-@template
-def add_old_configure_arg(arg):
-    @depends(extra_old_configure_args, arg)
-    def add_arg(args, arg):
-        if arg:
-            args.append(arg)
