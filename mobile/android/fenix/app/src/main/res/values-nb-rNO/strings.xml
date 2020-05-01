@@ -210,6 +210,12 @@
     <string name="preferences_add_private_browsing_shortcut">Legg til snarvei for privat nettlesing</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Tilgjengelighet</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Selvvalgt server for Firefox-konto</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Selvvalgt synkroniseringsserver</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Firefox-konto/synkroniseringsserver endret. Avslutter applikasjonen for å bruke endringer…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Konto</string>
     <!-- Preference shown on banner to sign into account -->
@@ -285,6 +291,11 @@
     <string name="sync_last_synced_summary">Sist synkronisert: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Sist synkronisert: aldri</string>
+
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name_2">%1$s på %2$s %3$s</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -571,8 +582,6 @@
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">Slettet %1$s</string>
 
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">Sletter valgte bokmerker</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ANGRE</string>
 
@@ -846,6 +855,29 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Sletter nettleserdata…</string>
 
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">Firefox Preview er nå Firefox Nightly</string>
+
+    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button">Få Mozilla Firefox nettleser</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly har flyttet</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">Denne appen vil ikke lenger motta sikkerhetsoppdateringer. Slutt å bruke denne appen og bytt til den nye Nightly.
+        \n\nFor å overføre bokmerkene, innloggingene og historikken til en annen app, oppretter du en Firefox-konto.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">Bytt til den nye Nightly</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly har flyttet</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">Denne appen vil ikke lenger motta sikkerhetsoppdateringer. Få den nye Nightly og slutt å bruke denne appen.
+        \n\nFor å overføre bokmerkene, innloggingene og historikken til en annen app, oppretter du en Firefox-konto.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Last ned den nye Nightly</string>
+
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -964,6 +996,8 @@
     <string name="sign_in_with_email">Bruk e-post i stedet</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">Firefox vil stoppe synkroniseringen med kontoen din, men vil ikke slette noen av dine nettleserdata på denne enheten.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s vil stoppe synkroniseringen med kontoen din, men vil ikke slette noen av dine nettleserdata på denne enheten.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Koble fra</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -1093,6 +1127,11 @@
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Bibliotek som vi bruker</string>
 
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Feilsøkingsmeny: %1$d klikk igjen for å aktivere</string>
+    <string name="about_debug_menu_toast_done">Feilsøkingsmeny aktivert</string>
+
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 fane</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
@@ -1114,6 +1153,8 @@
     <string name="add_to_homescreen_cancel">Avbryt</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Legg til</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Fortsett til nettstedet</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Navn på snarvei</string>
 

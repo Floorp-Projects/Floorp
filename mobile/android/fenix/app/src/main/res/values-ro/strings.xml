@@ -83,7 +83,7 @@
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Instalează</string>
     <!-- Browser menu button that opens the find in page menu -->
-    <string name="browser_menu_find_in_page">Găsește în pagină</string>
+    <string name="browser_menu_find_in_page">Caută în pagină</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Filă privată</string>
     <!-- Browser menu button that creates a new tab -->
@@ -468,6 +468,10 @@
     <string name="history_delete_all">Șterge istoricul</string>
     <!-- Text for the dialog to confirm clearing all history -->
     <string name="history_delete_all_dialog">Sigur vrei să ștergi istoricul?</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Istoric șters</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">%1$s șters</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Golește</string>
     <!-- History overflow menu copy button -->
@@ -522,6 +526,10 @@
     <string name="bookmark_edit">Editează marcajul</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Selectează dosarul</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">Sigur vrei să ștergi acest dosar?</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">%1$s șters</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Adaugă dosarul</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
@@ -575,7 +583,7 @@
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s șters</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">Se șterg marcaje selectate</string>
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Marcaje șterse</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ANULEAZĂ</string>
 
@@ -699,7 +707,7 @@
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Folosite recent</string>
     <!-- An option from the share dialog to sign into sync -->
-    <string name="sync_sign_in">Autentifică-te în Sync</string>
+    <string name="sync_sign_in">Autentificare în Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Trimite pe toate dispozitivele</string>
     <!-- An option from the share dialog to reconnect to sync -->
@@ -1235,9 +1243,9 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
     <string name="logins_biometric_prompt_message_pin">Deblochează dispozitivul</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom">Zoom pe toate site-urile web</string>
+    <string name="preference_accessibility_force_enable_zoom">Focalizare pe toate site-urile web</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom_summary">Activează permiterea gesturilor de pișcare și zoom, chiar și pe site-uri web care le împiedică.</string>
+    <string name="preference_accessibility_force_enable_zoom_summary">Activează permiterea gesturilor de pișcare și focalizare, chiar și pe site-uri web care le împiedică.</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Adaugă un motor de căutare</string>

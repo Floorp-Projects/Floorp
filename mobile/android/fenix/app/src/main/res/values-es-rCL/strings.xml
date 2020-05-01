@@ -473,6 +473,10 @@
     <string name="history_delete_all">Eliminar historial</string>
     <!-- Text for the dialog to confirm clearing all history -->
     <string name="history_delete_all_dialog">¿De verdad quieres eliminar tu historial?</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Historial eliminado</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">%1$s eliminado</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Limpiar</string>
     <!-- History overflow menu copy button -->
@@ -528,6 +532,10 @@
     <string name="bookmark_edit">Editar marcador</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Seleccionar carpeta</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">¿Estás seguro de querer borrar esta carpeta?</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">%1$s eliminado</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Añadir carpeta</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
@@ -581,7 +589,7 @@
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s eliminado</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">Eliminando marcadores seleccionados</string>
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Marcadores eliminados</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">DESHACER</string>
 
@@ -853,6 +861,9 @@
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header">Firefox Preview es ahora Firefox Nightly</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly se actualiza todas las noches y tiene funciones experimentales nuevas.
+        No obstante, puede ser menos estable. Baja nuestro navegador beta para una experiencia más estable.</string>
     <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_button">Obtén el navegador Mozilla Firefox</string>
 

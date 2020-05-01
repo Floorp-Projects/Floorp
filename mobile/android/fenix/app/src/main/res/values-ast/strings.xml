@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">%s en privao</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (en privao)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Más opciones</string>
@@ -15,10 +19,17 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Equi van amosase les llingüetes abiertes.</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s ta producíu por Mozilla.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Tas nuna sesión privada</string>
 
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">%1$s llimpia los historiales cuando coles de l\'aplicación o zarres toles llingüetes privaes. Magar qu\'esto nun t\'anonimiza n\'internet, fai que la to actividá en llinia seya fácil d\'anubrir
+        a otros usuarios qu\'usen el preséu.</string>
     <string name="private_browsing_common_myths">Mitos comunes tocante al restolar en privao</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Desaniciar la sesión</string>
@@ -109,6 +120,8 @@
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Llingua esbillada</string>
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">Guetar</string>
     <!-- Text for default locale item -->
     <string name="default_locale_text">Siguir la llingua del preséu</string>
 
@@ -137,8 +150,9 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">Deprender más</string>
 
-    <!-- Text preview for larger sized widgets -->
-    <string name="search_widget_text_long">Guetar na web</string>
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Guetar</string>
 
     <!-- Content description (not visible, for screen readers etc.): Voice search -->
     <string name="search_widget_voice">Gueta pela voz</string>
@@ -187,6 +201,8 @@
     <string name="preferences_private_browsing_options">Restolar en privao</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Abrir los enllaces nuna llingüeta privada</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Permitir la fechura de captures nel restolar en privao</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Amestar un atayu pa restolar en privao</string>
     <!-- Preference for accessibility -->

@@ -578,8 +578,6 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s हटविले</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">निवडलेल्या वाचनखुणा हटवत आहे</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">पूर्ववत् करा</string>
 
@@ -856,6 +854,12 @@
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string name="tip_firefox_preview_moved_header">Firefox Preview आता Firefox Nightly आहे</string>
+
+    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button">Mozilla Firefox वेब ब्राऊझर मिळवा</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly हलले आहे</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message

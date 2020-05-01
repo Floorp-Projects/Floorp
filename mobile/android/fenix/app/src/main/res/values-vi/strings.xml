@@ -472,6 +472,10 @@
     <string name="history_delete_all">Xóa lịch sử</string>
     <!-- Text for the dialog to confirm clearing all history -->
     <string name="history_delete_all_dialog">Bạn có chắc muốn xóa lịch sử của bạn không?</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Đã xóa lịch sử</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">Đã xóa %1$s</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Xóa</string>
     <!-- History overflow menu copy button -->
@@ -526,6 +530,10 @@
     <string name="bookmark_edit">Chỉnh sửa dấu trang</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Chọn thư mục</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">Bạn có chắc chắn muốn xóa thư mục này?</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">Đã xóa %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Thêm thư mục</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
@@ -579,7 +587,7 @@
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">Đã xóa %1$s</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">Đang xóa dấu trang đã chọn</string>
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Đã xóa dấu trang</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">HOÀN TÁC</string>
 
