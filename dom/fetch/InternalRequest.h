@@ -25,6 +25,7 @@ namespace mozilla {
 
 namespace ipc {
 class PrincipalInfo;
+class AutoIPCStream;
 }  // namespace ipc
 
 namespace dom {
@@ -88,6 +89,10 @@ class InternalRequest final {
                   const nsAString& aIntegrity);
 
   explicit InternalRequest(const IPCInternalRequest& aIPCRequest);
+
+  template <typename M>
+  void ToIPC(IPCInternalRequest* aIPCRequest, M* aManager,
+             UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream);
 
   already_AddRefed<InternalRequest> Clone();
 

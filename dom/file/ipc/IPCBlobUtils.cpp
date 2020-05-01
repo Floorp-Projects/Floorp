@@ -136,14 +136,6 @@ nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
 }
 
 nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
-                              PIPCBlobInputStreamParent*& aActorParent,
-                              PBackgroundParent* aManager) {
-  return SerializeInputStreamParent(aInputStream, aSize,
-                                    BackgroundParent::GetChildID(aManager),
-                                    aActorParent, aManager);
-}
-
-nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
                               IPCBlobStream& aIPCBlob,
                               ContentParent* aManager) {
   aIPCBlob = (PIPCBlobInputStreamParent*)nullptr;

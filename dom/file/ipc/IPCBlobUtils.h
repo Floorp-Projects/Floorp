@@ -255,10 +255,6 @@ nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
                               PIPCBlobInputStreamParent*& aActorParent,
                               ContentParent* aManager);
 
-nsresult SerializeInputStream(nsIInputStream* aInputStream, uint64_t aSize,
-                              PIPCBlobInputStreamParent*& aActorParent,
-                              mozilla::ipc::PBackgroundParent* aManager);
-
 // WARNING: If you pass any actor which does not have P{Content,Background} as
 // its toplevel protocol, this method will MOZ_CRASH.
 nsresult SerializeUntyped(BlobImpl* aBlobImpl, mozilla::ipc::IProtocol* aActor,
