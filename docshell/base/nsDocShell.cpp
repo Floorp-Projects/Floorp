@@ -12327,7 +12327,9 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
             aLoadState->GetPendingRedirectedChannel(), previousURI,
             previousFlags, aRedirects);
 
-        self->mTiming = new nsDOMNavigationTiming(self, aTiming);
+        if (aTiming) {
+          self->mTiming = new nsDOMNavigationTiming(self, aTiming);
+        }
 
         // If we're performing a history load, locate the correct history entry,
         // and set the relevant bits on our loadState.
