@@ -8,6 +8,11 @@
 #include <gtk/gtk.h>
 #include "WidgetStyleCache.h"
 #include "gtkdrawing.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/PodOperations.h"
+#include "nsDebug.h"
+#include "nsPrintfCString.h"
+#include "nsString.h"
 
 #define STATE_FLAG_DIR_LTR (1U << 7)
 #define STATE_FLAG_DIR_RTL (1U << 8)

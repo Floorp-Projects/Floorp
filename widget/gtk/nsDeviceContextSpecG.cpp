@@ -8,10 +8,13 @@
 #include "mozilla/gfx/PrintTargetPDF.h"
 #include "mozilla/gfx/PrintTargetPS.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Services.h"
 
 #include "plstr.h"
 #include "prenv.h" /* for PR_GetEnv */
 
+#include "nsComponentManagerUtils.h"
+#include "nsIObserverService.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsStringEnumerator.h"

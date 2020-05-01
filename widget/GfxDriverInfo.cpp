@@ -7,6 +7,7 @@
 
 #include "nsIGfxInfo.h"
 #include "nsTArray.h"
+#include "nsUnicharUtils.h"
 
 using namespace mozilla::widget;
 
