@@ -33,6 +33,10 @@ JSObject* XRViewerPose::WrapObject(JSContext* aCx,
   return XRViewerPose_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+RefPtr<XRView>& XRViewerPose::GetEye(int32_t aIndex) {
+  return mViews.ElementAt(aIndex);
+}
+
 void XRViewerPose::GetViews(nsTArray<RefPtr<XRView>>& aResult) {
   aResult = mViews;
 }

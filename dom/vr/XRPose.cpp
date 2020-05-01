@@ -29,6 +29,10 @@ JSObject* XRPose::WrapObject(JSContext* aCx,
   return XRPose_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+void XRPose::SetEmulatedPosition(bool aEmulated) {
+  mEmulatedPosition = aEmulated;
+}
+
 XRRigidTransform* XRPose::Transform() { return mTransform; }
 
 bool XRPose::EmulatedPosition() const { return mEmulatedPosition; }
