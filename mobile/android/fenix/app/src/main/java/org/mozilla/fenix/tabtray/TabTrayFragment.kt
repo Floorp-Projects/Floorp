@@ -21,6 +21,7 @@ import org.mozilla.fenix.ext.requireComponents
 import androidx.navigation.fragment.findNavController
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.tabstray.BrowserTabsTray
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.TabsTray
 import org.mozilla.fenix.BrowserDirection
@@ -50,6 +51,10 @@ class TabTrayFragment : Fragment(R.layout.fragment_tab_tray), TabsTray.Observer,
 
         showToolbar(getString(R.string.tab_tray_title))
         onTabsChanged()
+
+        (tabsTray as? BrowserTabsTray)?.also { tray ->
+            TabsTouchHelper(tray.tabsAdapter).attachToRecyclerView(tray)
+        }
 
         sessionManager.register(observer = object : SessionManager.Observer {
             override fun onSessionAdded(session: Session) {

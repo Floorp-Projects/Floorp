@@ -44,7 +44,6 @@
         android:textSize="16sp"
         android:paddingTop="22dp"
         android:paddingStart="16dp"
-        android:layout_marginEnd="20dp"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintEnd_toStartOf="@id/mozac_browser_tabstray_close"
         app:layout_constraintStart_toEndOf="@id/mozac_browser_tabstray_card"
@@ -59,7 +58,6 @@
         android:lines="1"
         android:textSize="14sp"
         android:paddingStart="16dp"
-        android:layout_marginEnd="20dp"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintEnd_toStartOf="@id/mozac_browser_tabstray_close"
         app:layout_constraintStart_toEndOf="@id/mozac_browser_tabstray_card"
@@ -67,10 +65,8 @@
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/mozac_browser_tabstray_close"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_marginTop="32dp"
-        android:layout_marginEnd="16dp"
+        android:layout_width="56dp"
+        android:layout_height="match_parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
