@@ -1252,9 +1252,6 @@ def js_option(*args, **kwargs):
         if build_project != 'js':
             arg = value.format(opt.option)
             js_configure_args.append(arg)
-            return arg
-
-    add_old_configure_arg(js_option)
 
 
 js_option(env='MOZILLA_OFFICIAL',
