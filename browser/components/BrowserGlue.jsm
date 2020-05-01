@@ -2374,39 +2374,27 @@ BrowserGlue.prototype = {
       // Run TRR performance measurements for DoH.
       {
         task: () => {
-          if (
-            Services.prefs.getBoolPref("doh-rollout.trrRace.enabled", false)
-          ) {
-            if (
-              !Services.prefs.getBoolPref("doh-rollout.trrRace.complete", false)
-            ) {
-              new TRRRacer().run();
+          let enabledPref = "doh-rollout.trrRace.enabled";
+          let completePref = "doh-rollout.trrRace.complete";
+
+          if (Services.prefs.getBoolPref(enabledPref, false)) {
+            if (!Services.prefs.getBoolPref(completePref, false)) {
+              new TRRRacer().run(() => {
+                Services.prefs.setBoolPref(completePref, true);
+              });
             }
           } else {
-            Services.prefs.addObserver(
-              "doh-rollout.trrRace.enabled",
-              function observer() {
-                if (
-                  Services.prefs.getBoolPref(
-                    "doh-rollout.trrRace.enabled",
-                    false
-                  )
-                ) {
-                  Services.prefs.removeObserver(
-                    "doh-rollout.trrRace.enabled",
-                    observer
-                  );
-                  if (
-                    !Services.prefs.getBoolPref(
-                      "doh-rollout.trrRace.complete",
-                      false
-                    )
-                  ) {
-                    new TRRRacer().run();
-                  }
+            Services.prefs.addObserver(enabledPref, function observer() {
+              if (Services.prefs.getBoolPref(enabledPref, false)) {
+                Services.prefs.removeObserver(enabledPref, observer);
+
+                if (!Services.prefs.getBoolPref(completePref, false)) {
+                  new TRRRacer().run(() => {
+                    Services.prefs.setBoolPref(completePref, true);
+                  });
                 }
               }
-            );
+            });
           }
         },
       },
