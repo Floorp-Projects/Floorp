@@ -263,7 +263,7 @@ function createContextMenu(event, message, webConsoleWrapper) {
     menu.append(
       new MenuItem({
         id: "console-menu-open-sidebar",
-        label: l10n.getStr("webconsole.menu.openInSidebar.label"),
+        label: l10n.getStr("webconsole.menu.openInSidebar.label1"),
         accesskey: l10n.getStr("webconsole.menu.openInSidebar.accesskey"),
         disabled: !rootActorId,
         click: () => dispatch(actions.openSidebar(messageId, rootActorId)),
