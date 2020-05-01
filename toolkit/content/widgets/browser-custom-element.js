@@ -96,8 +96,6 @@
       this._characterSet = null;
       this._documentContentType = null;
 
-      this._fullZoom = 1.0;
-
       /**
        * These are managed by the tabbrowser:
        */
@@ -350,6 +348,8 @@
       this._referrerInfo = null;
 
       this._contentRequestContextID = null;
+
+      this._fullZoom = 1.0;
 
       this._isSyntheticDocument = false;
 
