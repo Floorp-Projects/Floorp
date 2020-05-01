@@ -33,6 +33,8 @@ class XRRigidTransform final : public nsWrapperCache {
   XRRigidTransform& operator=(const XRRigidTransform& aOther);
   gfx::QuaternionDouble RawOrientation() const;
   gfx::PointDouble3D RawPosition() const;
+  void Update(const gfx::PointDouble3D& aPosition,
+              const gfx::QuaternionDouble& aOrientation);
   // WebIDL Boilerplate
   nsISupports* GetParentObject() const { return mParent; }
   JSObject* WrapObject(JSContext* aCx,
@@ -48,11 +50,14 @@ class XRRigidTransform final : public nsWrapperCache {
  protected:
   virtual ~XRRigidTransform();
 
-  RefPtr<DOMPoint> mPosition;
-  RefPtr<DOMPoint> mOrientation;
-
   nsCOMPtr<nsISupports> mParent;
   JS::Heap<JSObject*> mMatrixArray;
+  RefPtr<DOMPoint> mPosition;
+  RefPtr<DOMPoint> mOrientation;
+  RefPtr<XRRigidTransform> mInverse;
+  gfx::PointDouble3D mRawPosition;
+  gfx::QuaternionDouble mRawOrientation;
+  bool mNeedsUpdate;
 };
 
 }  // namespace dom

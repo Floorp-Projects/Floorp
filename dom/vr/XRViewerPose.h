@@ -27,6 +27,7 @@ class XRViewerPose final : public XRPose {
   explicit XRViewerPose(nsISupports* aParent, XRRigidTransform* aTransform,
                         bool aEmulatedPosition,
                         const nsTArray<RefPtr<XRView>>& aViews);
+  RefPtr<XRView>& GetEye(int32_t aIndex);
 
   // WebIDL Boilerplate
   JSObject* WrapObject(JSContext* aCx,

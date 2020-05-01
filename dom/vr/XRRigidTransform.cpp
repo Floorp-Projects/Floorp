@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/XRRigidTransform.h"
 #include "mozilla/dom/DOMPoint.h"
+#include "mozilla/dom/Pose.h"
 #include "mozilla/dom/DOMPointBinding.h"
 
 namespace mozilla {
@@ -14,13 +15,13 @@ namespace dom {
 NS_IMPL_CYCLE_COLLECTION_CLASS(XRRigidTransform)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XRRigidTransform)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent, mPosition, mOrientation)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent, mPosition, mOrientation, mInverse)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   tmp->mMatrixArray = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(XRRigidTransform)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent, mPosition, mOrientation)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent, mPosition, mOrientation, mInverse)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(XRRigidTransform)
@@ -34,27 +35,28 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(XRRigidTransform, Release)
 XRRigidTransform::XRRigidTransform(nsISupports* aParent,
                                    const gfx::PointDouble3D& aPosition,
                                    const gfx::QuaternionDouble& aOrientation)
-    : mParent(aParent), mMatrixArray(nullptr) {
+    : mParent(aParent),
+      mMatrixArray(nullptr),
+      mPosition(nullptr),
+      mOrientation(nullptr),
+      mInverse(nullptr),
+      mRawPosition(aPosition),
+      mRawOrientation(aOrientation),
+      mNeedsUpdate(true) {
   mozilla::HoldJSObjects(this);
-  mPosition =
-      new DOMPoint(aParent, aPosition.x, aPosition.y, aPosition.z, 1.0f);
-  mOrientation = new DOMPoint(aParent, aOrientation.x, aOrientation.y,
-                              aOrientation.z, aOrientation.w);
 }
 
 XRRigidTransform::XRRigidTransform(nsISupports* aParent,
                                    const gfx::Matrix4x4Double& aTransform)
-    : mParent(aParent), mMatrixArray(nullptr) {
+    : mParent(aParent),
+      mMatrixArray(nullptr),
+      mPosition(nullptr),
+      mOrientation(nullptr),
+      mInverse(nullptr),
+      mNeedsUpdate(true) {
   mozilla::HoldJSObjects(this);
-  gfx::PointDouble3D position;
   gfx::PointDouble3D scale;
-  gfx::QuaternionDouble orientation;
-
-  aTransform.Decompose(position, orientation, scale);
-
-  mPosition = new DOMPoint(aParent, position.x, position.y, position.z, 1.0f);
-  mOrientation = new DOMPoint(aParent, orientation.x, orientation.y,
-                              orientation.z, orientation.w);
+  aTransform.Decompose(mRawPosition, mRawOrientation, scale);
 }
 
 XRRigidTransform::~XRRigidTransform() { mozilla::DropJSObjects(this); }
@@ -76,43 +78,75 @@ JSObject* XRRigidTransform::WrapObject(JSContext* aCx,
   return XRRigidTransform_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-DOMPoint* XRRigidTransform::Position() { return mPosition; }
+DOMPoint* XRRigidTransform::Position() {
+  if (!mPosition) {
+    mPosition = new DOMPoint(mParent, mRawPosition.x, mRawPosition.y,
+                             mRawPosition.z, 1.0f);
+  }
 
-DOMPoint* XRRigidTransform::Orientation() { return mOrientation; }
+  return mPosition;
+}
+
+DOMPoint* XRRigidTransform::Orientation() {
+  if (!mOrientation) {
+    mOrientation = new DOMPoint(mParent, mRawOrientation.x, mRawOrientation.y,
+                                mRawOrientation.z, mRawOrientation.w);
+  }
+  return mOrientation;
+}
 
 XRRigidTransform& XRRigidTransform::operator=(const XRRigidTransform& aOther) {
-  mPosition->SetX(aOther.mPosition->X());
-  mPosition->SetY(aOther.mPosition->Y());
-  mPosition->SetZ(aOther.mPosition->Z());
-  mOrientation->SetX(aOther.mOrientation->X());
-  mOrientation->SetY(aOther.mOrientation->Y());
-  mOrientation->SetZ(aOther.mOrientation->Z());
-  mOrientation->SetW(aOther.mOrientation->W());
+  Update(aOther.mRawPosition, aOther.mRawOrientation);
   return *this;
 }
 
 gfx::QuaternionDouble XRRigidTransform::RawOrientation() const {
-  return gfx::QuaternionDouble(mOrientation->X(), mOrientation->Y(),
-                               mOrientation->Z(), mOrientation->W());
+  return mRawOrientation;
 }
 gfx::PointDouble3D XRRigidTransform::RawPosition() const {
-  return gfx::PointDouble3D(mPosition->X(), mPosition->Y(), mPosition->Z());
+  return mRawPosition;
+}
+
+void XRRigidTransform::Update(const gfx::PointDouble3D& aPosition,
+                              const gfx::QuaternionDouble& aOrientation) {
+  mNeedsUpdate = true;
+  mRawPosition = aPosition;
+  mRawOrientation = aOrientation;
+  if (mPosition) {
+    mPosition->SetX(aPosition.x);
+    mPosition->SetY(aPosition.y);
+    mPosition->SetZ(aPosition.z);
+  }
+  if (mOrientation) {
+    mOrientation->SetX(aOrientation.x);
+    mOrientation->SetY(aOrientation.y);
+    mOrientation->SetZ(aOrientation.z);
+    mOrientation->SetW(aOrientation.w);
+  }
+  if (mInverse) {
+    gfx::QuaternionDouble q(mRawOrientation);
+    gfx::PointDouble3D p = -mRawPosition;
+    p = q.RotatePoint(p);
+    q.Invert();
+    mInverse->Update(p, q);
+  }
 }
 
 void XRRigidTransform::GetMatrix(JSContext* aCx,
                                  JS::MutableHandle<JSObject*> aRetval,
                                  ErrorResult& aRv) {
-  if (!mMatrixArray) {
+  if (!mMatrixArray || mNeedsUpdate) {
+    mNeedsUpdate = false;
     gfx::Matrix4x4 mat;
     mat.SetRotationFromQuaternion(
-        gfx::Quaternion(mOrientation->X(), mOrientation->Y(), mOrientation->Z(),
-                        mOrientation->W()));
-    mat.PostTranslate((float)mPosition->X(), (float)mPosition->Y(),
-                      (float)mPosition->Z());
-    // Lazily create the Float32Array
-    mMatrixArray = dom::Float32Array::Create(aCx, this, 16, mat.components);
+        gfx::Quaternion((float)mRawOrientation.x, (float)mRawOrientation.y,
+                        (float)mRawOrientation.z, (float)mRawOrientation.w));
+    mat.PostTranslate((float)mRawPosition.x, (float)mRawPosition.y,
+                      (float)mRawPosition.z);
+
+    Pose::SetFloat32Array(aCx, this, aRetval, mMatrixArray, mat.components, 16,
+                          aRv);
     if (!mMatrixArray) {
-      aRv.NoteJSContextException(aCx);
       return;
     }
   }
@@ -123,14 +157,16 @@ void XRRigidTransform::GetMatrix(JSContext* aCx,
 }
 
 already_AddRefed<XRRigidTransform> XRRigidTransform::Inverse() {
-  gfx::QuaternionDouble q(mOrientation->X(), mOrientation->Y(),
-                          mOrientation->Z(), mOrientation->W());
-  gfx::PointDouble3D p(-mPosition->X(), -mPosition->Y(), -mPosition->Z());
-  p = q.RotatePoint(p);
-  q.Invert();
-  RefPtr<XRRigidTransform> inv = new XRRigidTransform(mParent, p, q);
+  if (!mInverse) {
+    gfx::QuaternionDouble q(mRawOrientation);
+    gfx::PointDouble3D p = -mRawPosition;
+    p = q.RotatePoint(p);
+    q.Invert();
+    mInverse = new XRRigidTransform(mParent, p, q);
+  }
 
-  return inv.forget();
+  RefPtr<XRRigidTransform> inverse = mInverse;
+  return inverse.forget();
 }
 
 }  // namespace dom
