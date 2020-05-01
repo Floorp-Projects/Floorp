@@ -7,6 +7,7 @@
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Blocklist Implementation')
 
+# The addons blocklist is also in mobile/android/installer/package-manifest.in
 FINAL_TARGET_FILES.defaults.settings.blocklists += ['addons-bloomfilters.json',
                                                     'addons.json',
                                                     'gfx.json',
