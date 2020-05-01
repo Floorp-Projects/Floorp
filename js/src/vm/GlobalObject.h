@@ -299,6 +299,12 @@ class GlobalObject : public NativeObject {
                                                       HandleObject proto);
 
   template <typename T>
+  static T* createBlankPrototypeInheriting(JSContext* cx, HandleObject proto) {
+    NativeObject* res = createBlankPrototypeInheriting(cx, &T::class_, proto);
+    return res ? &res->template as<T>() : nullptr;
+  }
+
+  template <typename T>
   static T* createBlankPrototype(JSContext* cx, Handle<GlobalObject*> global) {
     NativeObject* res = createBlankPrototype(cx, global, &T::class_);
     return res ? &res->template as<T>() : nullptr;
