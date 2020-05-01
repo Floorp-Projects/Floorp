@@ -200,6 +200,13 @@ bool WarpCacheIRTranspiler::emitLoadInt32Result(Int32OperandId valId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitLoadObjectResult(ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+  MOZ_ASSERT(obj->type() == MIRType::Object);
+  setResult(obj);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadEnclosingEnvironment(
     ObjOperandId objId, ObjOperandId resultId) {
   MDefinition* env = getOperand(objId);
