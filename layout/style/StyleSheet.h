@@ -553,6 +553,12 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
 
   StyleSheet* mParentSheet;  // weak ref
 
+  // A pointer to the sheets relevant global object.
+  // This is populated when the sheet gets an associated document.
+  // This is required for the sheet to be able to create a promise.
+  // https://html.spec.whatwg.org/#concept-relevant-everything
+  nsCOMPtr<nsIGlobalObject> mRelevantGlobal;
+
   RefPtr<dom::Document> mConstructorDocument;
 
   // Will be set in the Replace() function and resolved/rejected by the
