@@ -38,6 +38,7 @@ enum class DecoderType {
   ICO,
   ICON,
   WEBP,
+  AVIF,
   UNKNOWN
 };
 
