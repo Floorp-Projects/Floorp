@@ -271,9 +271,9 @@ add_task(async function test_ext_page_3rdparty_cookies() {
   const testRequests = ["xhr", "fetch", "worker fetch"];
   const tests = [
     { behavior: "BEHAVIOR_ACCEPT", cookiesCount: 1 },
-    { behavior: "BEHAVIOR_REJECT_FOREIGN", cookiesCount: 1 },
+    { behavior: "BEHAVIOR_REJECT_FOREIGN", cookiesCount: 0 },
     { behavior: "BEHAVIOR_REJECT", cookiesCount: 0 },
-    { behavior: "BEHAVIOR_LIMIT_FOREIGN", cookiesCount: 1 },
+    { behavior: "BEHAVIOR_LIMIT_FOREIGN", cookiesCount: 0 },
     { behavior: "BEHAVIOR_REJECT_TRACKER", cookiesCount: 1 },
   ];
 
