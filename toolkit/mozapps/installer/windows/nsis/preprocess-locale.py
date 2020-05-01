@@ -12,9 +12,7 @@
 # --convert-utf8-utf16le.
 
 from codecs import BOM_UTF16_LE
-import io
 from os.path import join, isfile
-import six
 import sys
 from optparse import OptionParser
 
@@ -22,7 +20,7 @@ def open_utf16le_file(path):
     """
     Returns an opened file object with a a UTF-16LE byte order mark.
     """
-    fp = io.open(path, "w+b")
+    fp = open(path, "w+b")
     fp.write(BOM_UTF16_LE)
     return fp
 
@@ -39,7 +37,7 @@ def get_locale_strings(path, prefix, middle, add_cr):
              linefeeds when there isn't one already
     """
     output = ""
-    fp = io.open(path, "r", encoding="utf-8")
+    fp = open(path, "r")
     for line in fp:
         line = line.strip()
         if line == "" or line[0] == "#":
@@ -86,7 +84,7 @@ def preprocess_locale_files(config_dir, l10ndirs):
                                         "LangString ^",
                                         " 0 ",
                                         False)
-    fp.write(locale_strings.encode("utf-16-le"))
+    fp.write(unicode(locale_strings, "utf-8").encode("utf-16-le"))
     fp.close()
 
     # Create the Modern User Interface language file
@@ -99,7 +97,7 @@ def preprocess_locale_files(config_dir, l10ndirs):
 """).encode("utf-16-le"))
     locale_strings = get_locale_strings(lookup("mui.properties", l10ndirs),
                                         "!define ", " ", True)
-    fp.write(locale_strings.encode("utf-16-le"))
+    fp.write(unicode(locale_strings, "utf-8").encode("utf-16-le"))
     fp.write(u"!insertmacro MOZ_MUI_LANGUAGEFILE_END\n".encode("utf-16-le"))
     fp.close()
 
@@ -110,7 +108,7 @@ def preprocess_locale_files(config_dir, l10ndirs):
                                         "LangString ",
                                         " 0 ",
                                         True)
-    fp.write(locale_strings.encode("utf-16-le"))
+    fp.write(unicode(locale_strings, "utf-8").encode("utf-16-le"))
     fp.close()
 
 def create_nlf_file(moz_dir, ab_cd, config_dir):
@@ -125,9 +123,9 @@ def create_nlf_file(moz_dir, ab_cd, config_dir):
     rtl = "-"
 
     # Check whether the locale is right to left from locales.nsi.
-    fp = io.open(join(moz_dir,
-                      "toolkit/mozapps/installer/windows/nsis/locales.nsi"),
-                 "r", encoding='utf-8')
+    fp = open(join(moz_dir,
+                   "toolkit/mozapps/installer/windows/nsis/locales.nsi"),
+              "r")
     for line in fp:
         line = line.strip()
         if line == "!define " + ab_cd + "_rtl":
@@ -177,7 +175,7 @@ def preprocess_locale_file(config_dir,
                                         "LangString ",
                                         " 0 ",
                                         True)
-    fp.write(locale_strings.encode("utf-16-le"))
+    fp.write(unicode(locale_strings, "utf-8").encode("utf-16-le"))
     fp.close()
 
 
@@ -189,9 +187,9 @@ def convert_utf8_utf16le(in_file_path, out_file_path):
     in_file_path  - the path to the UTF-8 source file to convert
     out_file_path - the path to the UTF-16LE destination file to create
     """
-    in_fp = open(in_file_path, "r", encoding='utf-8')
+    in_fp = open(in_file_path, "r")
     out_fp = open_utf16le_file(out_file_path)
-    out_fp.write(in_fp.read().encode("utf-16-le"))
+    out_fp.write(unicode(in_fp.read(), "utf-8").encode("utf-16-le"))
     in_fp.close()
     out_fp.close()
 

@@ -150,9 +150,12 @@ def paramlistAsNative(m, empty='void'):
         l.append('uint8_t _argc')
 
     if not m.notxpcom and m.realtype.name != 'void':
-        l.append(paramAsNative(xpidl.Param(
-            paramtype='out', type=None, name='_retval', attlist=[],
-            location=None, realtype=m.realtype)))
+        l.append(paramAsNative(xpidl.Param(paramtype='out',
+                                           type=None,
+                                           name='_retval',
+                                           attlist=[],
+                                           location=None,
+                                           realtype=m.realtype)))
 
     # Set any optional out params to default to nullptr. Skip if we just added
     # extra non-optional args to l.
@@ -474,7 +477,7 @@ def write_interface(iface, fd):
 
     names = uuid_decoder.match(iface.attributes.uuid).groupdict()
     m3str = names['m3'] + names['m4']
-    names['m3joined'] = ", ".join(["0x%s" % m3str[i:i+2] for i in range(0, 16, 2)])
+    names['m3joined'] = ", ".join(["0x%s" % m3str[i:i+2] for i in xrange(0, 16, 2)])
 
     if iface.name[2] == 'I':
         implclass = iface.name[:2] + iface.name[3:]

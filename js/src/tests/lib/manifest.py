@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 
-import io
 import os
 import posixpath
 import re
@@ -72,7 +71,7 @@ class XULInfo:
         # Read the values.
         val_re = re.compile(r'(TARGET_XPCOM_ABI|OS_TARGET|MOZ_DEBUG)\s*=\s*(.*)')
         kw = {'isdebug': False}
-        for line in io.open(path, encoding='utf-8'):
+        for line in open(path):
             m = val_re.match(line)
             if m:
                 key, val = m.groups()
@@ -339,7 +338,7 @@ def _emit_manifest_at(location, relative, test_gen, depth):
         manifest = ["url-prefix {}jsreftest.html?test={}/".format(
             '../' * depth, relative)] + manifest
 
-    fp = io.open(filename, 'w', encoding='utf-8', newline='\n')
+    fp = open(filename, 'w')
     try:
         fp.write('\n'.join(manifest) + '\n')
     finally:
@@ -379,7 +378,7 @@ def _parse_test_header(fullpath, testcase, xul_tester):
     This looks a bit weird.  The reason is that it needs to be efficient, since
     it has to be done on every test
     """
-    fp = io.open(fullpath, 'r', encoding='utf-8')
+    fp = open(fullpath, 'r')
     try:
         buf = fp.read(512)
     finally:
@@ -416,7 +415,7 @@ def _parse_external_manifest(filename, relpath):
 
     entries = []
 
-    with io.open(filename, 'r', encoding='utf-8') as fp:
+    with open(filename, 'r') as fp:
         manifest_re = re.compile(r'^\s*(?P<terms>.*)\s+(?P<type>include|script)\s+(?P<path>\S+)$')
         include_re = re.compile(r'^\s*include\s+(?P<path>\S+)$')
         for line in fp:

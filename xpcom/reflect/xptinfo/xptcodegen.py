@@ -501,7 +501,7 @@ namespace detail {
 
     # The strings array. We write out individual characters to avoid MSVC restrictions.
     fd.write("const char sStrings[] = {\n")
-    for s, off in strings.items():
+    for s, off in strings.iteritems():
         fd.write("  // %d = %s\n  '%s','\\0',\n" % (off, s, "','".join(s)))
     fd.write("};\n\n")
 
