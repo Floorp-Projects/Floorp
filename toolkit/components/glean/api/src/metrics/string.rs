@@ -34,7 +34,7 @@ use super::CommonMetricData;
 /// browser::search_engine.set("websearch");
 /// ```
 #[derive(Clone, Debug)]
-pub struct StringMetric(glean_core::metrics::StringMetric);
+pub struct StringMetric(pub(crate) glean_core::metrics::StringMetric);
 
 impl StringMetric {
     /// Create a new string metric.
