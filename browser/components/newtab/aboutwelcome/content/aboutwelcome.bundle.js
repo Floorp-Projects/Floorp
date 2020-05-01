@@ -124,6 +124,7 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
     };
     this.fetchFxAFlowUri = this.fetchFxAFlowUri.bind(this);
     this.handleStartBtnClick = this.handleStartBtnClick.bind(this);
+    this.messageId = "ABOUT_WELCOME";
   }
 
   async fetchFxAFlowUri() {
@@ -133,22 +134,29 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
   }
 
   componentDidMount() {
-    let messageId = this.props.experiment && this.props.branchId ? `SIMPLIFIED_ABOUT_WELCOME_${this.props.experiment}_${this.props.branchId}`.toUpperCase() : "SIMPLIFIED_ABOUT_WELCOME";
+    if (this.props.experiment && this.props.branchId) {
+      this.messageId = `ABOUT_WELCOME_${this.props.experiment}_${this.props.branchId}`.toUpperCase();
+    }
+
     this.fetchFxAFlowUri();
     window.AWSendEventTelemetry({
       event: "IMPRESSION",
-      message_id: messageId
+      message_id: this.messageId
     }); // Captures user has seen about:welcome by setting
-    // firstrun.didSeeAboutWelcome pref to true
+    // firstrun.didSeeAboutWelcome pref to true and capturing welcome UI unique messageId
 
-    window.AWSendToParent("SET_WELCOME_MESSAGE_SEEN");
+    window.AWSendToParent("SET_WELCOME_MESSAGE_SEEN", this.messageId);
   }
 
   handleStartBtnClick() {
     _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_5__["AboutWelcomeUtils"].handleUserAction(this.props.startButton.action);
     const ping = {
       event: "CLICK_BUTTON",
-      message_id: this.props.startButton.message_id,
+      event_context: {
+        source: this.props.startButton.message_id,
+        page: "about:welcome"
+      },
+      message_id: this.messageId,
       id: "ABOUT_WELCOME"
     };
     window.AWSendEventTelemetry(ping);
