@@ -282,12 +282,12 @@ class SimplePackager(object):
             self._file_queue.append(self.formatter.add, path, file)
             if mozpath.basename(path) == 'install.rdf':
                 addon = True
-                install_rdf = file.open('rt').read()
+                install_rdf = six.ensure_text(file.open('rt').read())
                 if self.UNPACK_ADDON_RE.search(install_rdf):
                     addon = 'unpacked'
                 self._add_addon(mozpath.dirname(path), addon)
             elif mozpath.basename(path) == 'manifest.json':
-                manifest = file.open('rt').read()
+                manifest = six.ensure_text(file.open('rt').read())
                 try:
                     parsed = json.loads(manifest)
                 except ValueError:
