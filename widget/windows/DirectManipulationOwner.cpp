@@ -30,6 +30,8 @@ class DManipEventHandler : public IDirectManipulationViewportEventHandler,
 
   STDMETHODIMP QueryInterface(REFIID, void**) override;
 
+  friend class DirectManipulationOwner;
+
   explicit DManipEventHandler(nsWindow* aWindow,
                               DirectManipulationOwner* aOwner)
       : mWindow(aWindow), mOwner(aOwner) {}
@@ -49,11 +51,31 @@ class DManipEventHandler : public IDirectManipulationViewportEventHandler,
   OnInteraction(IDirectManipulationViewport2* viewport,
                 DIRECTMANIPULATION_INTERACTION_TYPE interaction) override;
 
+  void Update();
+
+  class VObserver final : public mozilla::VsyncObserver {
+   public:
+    bool NotifyVsync(const mozilla::VsyncEvent& aVsync) override {
+      if (mOwner) {
+        mOwner->Update();
+      }
+      return true;
+    }
+    explicit VObserver(DManipEventHandler* aOwner) : mOwner(aOwner) {}
+
+    void ClearOwner() { mOwner = nullptr; }
+
+   private:
+    virtual ~VObserver() {}
+    DManipEventHandler* mOwner;
+  };
+
  private:
   virtual ~DManipEventHandler() = default;
 
   nsWindow* mWindow;
   DirectManipulationOwner* mOwner;
+  RefPtr<VObserver> mObserver;
 };
 
 STDMETHODIMP
@@ -100,7 +122,34 @@ HRESULT
 DManipEventHandler::OnInteraction(
     IDirectManipulationViewport2* viewport,
     DIRECTMANIPULATION_INTERACTION_TYPE interaction) {
+  if (interaction == DIRECTMANIPULATION_INTERACTION_BEGIN) {
+    if (!mObserver) {
+      mObserver = new VObserver(this);
+    }
+
+    gfxWindowsPlatform::GetPlatform()->GetHardwareVsync()->AddGenericObserver(
+        mObserver);
+  }
+
+  if (mObserver && interaction == DIRECTMANIPULATION_INTERACTION_END) {
+    gfxWindowsPlatform::GetPlatform()
+        ->GetHardwareVsync()
+        ->RemoveGenericObserver(mObserver);
+  }
+
   return S_OK;
+}
+
+void DManipEventHandler::Update() {
+  if (mOwner) {
+    mOwner->Update();
+  }
+}
+
+void DirectManipulationOwner::Update() {
+  if (mDmUpdateManager) {
+    mDmUpdateManager->Update(nullptr);
+  }
 }
 
 DirectManipulationOwner::DirectManipulationOwner(nsWindow* aWindow)
@@ -239,6 +288,13 @@ void DirectManipulationOwner::Destroy() {
   if (mDmHandler) {
     mDmHandler->mWindow = nullptr;
     mDmHandler->mOwner = nullptr;
+    if (mDmHandler->mObserver) {
+      gfxWindowsPlatform::GetPlatform()
+          ->GetHardwareVsync()
+          ->RemoveGenericObserver(mDmHandler->mObserver);
+      mDmHandler->mObserver->ClearOwner();
+      mDmHandler->mObserver = nullptr;
+    }
   }
 
   HRESULT hr;

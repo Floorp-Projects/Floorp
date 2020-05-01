@@ -31,6 +31,8 @@ class DirectManipulationOwner {
 
   void SetContact(UINT aContactId);
 
+  void Update();
+
  private:
   nsWindow* mWindow;
   DWORD mDmViewportHandlerCookie;
