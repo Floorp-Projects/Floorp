@@ -1370,7 +1370,16 @@ this.ExtensionBlocklistMLBF = {
     // (provided that the client has been built with it included).
     let hash = record?.attachment.hash;
     if (this._mlbfData && hash && this._mlbfData.cascadeHash === hash) {
-      // Not changed, let's re-use it.
+      // MLBF not changed, save the efforts of downloading the data again.
+
+      // Although the MLBF has not changed, the time in the record has. This
+      // means that the MLBF is known to provide accurate results for add-ons
+      // that were signed after the previously known date (but before the newly
+      // given date). To ensure that add-ons in this time range are also blocked
+      // as expected, update the cached generationTime.
+      if (record.generation_time > this._mlbfData.generationTime) {
+        this._mlbfData.generationTime = record.generation_time;
+      }
       return this._mlbfData;
     }
     const {
