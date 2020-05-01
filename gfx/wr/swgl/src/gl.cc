@@ -371,8 +371,6 @@ struct Program {
 
   ~Program() {
     delete impl;
-    delete vert_impl;
-    delete frag_impl;
   }
 };
 
@@ -605,7 +603,6 @@ struct Context {
   }
 };
 static Context* ctx = nullptr;
-static ProgramImpl* program_impl = nullptr;
 static VertexShaderImpl* vertex_shader = nullptr;
 static FragmentShaderImpl* fragment_shader = nullptr;
 static BlendKey blend_key = BLEND_KEY_NONE;
@@ -775,7 +772,6 @@ void load_flat_attrib(T& attrib, VertexAttrib& va, uint32_t start, int instance,
 
 void setup_program(GLuint program) {
   if (!program) {
-    program_impl = nullptr;
     vertex_shader = nullptr;
     fragment_shader = nullptr;
     return;
@@ -784,7 +780,6 @@ void setup_program(GLuint program) {
   assert(p.impl);
   assert(p.vert_impl);
   assert(p.frag_impl);
-  program_impl = p.impl;
   vertex_shader = p.vert_impl;
   fragment_shader = p.frag_impl;
 }
@@ -1677,22 +1672,17 @@ GLboolean UnmapBuffer(GLenum target) {
 
 void Uniform1i(GLint location, GLint V0) {
   // debugf("tex: %d\n", (int)ctx->textures.size);
-  if (!program_impl->set_sampler(location, V0)) {
-    vertex_shader->set_uniform_1i(location, V0);
-    fragment_shader->set_uniform_1i(location, V0);
-  }
+  vertex_shader->set_uniform_1i(location, V0);
 }
 void Uniform4fv(GLint location, GLsizei count, const GLfloat* v) {
   assert(count == 1);
   vertex_shader->set_uniform_4fv(location, v);
-  fragment_shader->set_uniform_4fv(location, v);
 }
 void UniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose,
                       const GLfloat* value) {
   assert(count == 1);
   assert(!transpose);
   vertex_shader->set_uniform_matrix4fv(location, value);
-  fragment_shader->set_uniform_matrix4fv(location, value);
 }
 
 void FramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget,
@@ -2591,15 +2581,14 @@ UNUSED static inline void commit_solid_span(uint8_t* buf, PackedR8 r, int len) {
   }
 }
 
-template <typename S, typename P>
-static ALWAYS_INLINE void dispatch_draw_span(S* shader, P* buf, int len) {
-  int drawn = shader->draw_span(buf, len);
-  if (drawn) shader->step_interp_inputs(drawn >> 2);
-  for (buf += drawn; drawn < len; drawn += 4, buf += 4) {
-    S::run(shader);
-    commit_span(buf, pack_span(buf));
-  }
-}
+#define DISPATCH_DRAW_SPAN(self, buf, len) do {           \
+  int drawn = self->draw_span(buf, len);                  \
+  if (drawn) self->step_interp_inputs(drawn >> 2);        \
+  for (buf += drawn; drawn < len; drawn += 4, buf += 4) { \
+    run(self);                                            \
+    commit_span(buf, pack_span(buf));                     \
+  }                                                       \
+} while (0)
 
 #include "texture.h"
 
@@ -2607,6 +2596,7 @@ static ALWAYS_INLINE void dispatch_draw_span(S* shader, P* buf, int len) {
 #pragma GCC diagnostic ignored "-Wuninitialized"
 #pragma GCC diagnostic ignored "-Wunused-function"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wunused-private-field"
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #ifndef __clang__
@@ -2614,9 +2604,6 @@ static ALWAYS_INLINE void dispatch_draw_span(S* shader, P* buf, int len) {
 #endif
 #include "load_shader.h"
 #pragma GCC diagnostic pop
-
-static const size_t MAX_FLATS = 64;
-typedef float Flats[MAX_FLATS];
 
 static const size_t MAX_INTERPOLANTS = 16;
 typedef VectorType<float, MAX_INTERPOLANTS> Interpolants;
@@ -3339,10 +3326,7 @@ static int clip_near_far(int nump, Point3D* p, Interpolants* interp) {
 // by W again to produce the final correct attribute value for each fragment.
 // This process is expensive and should be avoided if possible for primitive
 // batches that are known ahead of time to not need perspective-correction.
-// To trigger this path, the shader should use the PERSPECTIVE feature so that
-// the glsl-to-cxx compiler can generate the appropriate interpolation code
-// needed to participate with SWGL's perspective-correction.
-static void draw_perspective(int nump, Flats flat_outs,
+static void draw_perspective(int nump,
                              Interpolants interp_outs[6],
                              Texture& colortex, int layer,
                              Texture& depthtex) {
@@ -3391,9 +3375,6 @@ static void draw_perspective(int nump, Flats flat_outs,
     return;
   }
 
-  // Initialize any flat/non-varying inputs.
-  fragment_shader->init_primitive(flat_outs);
-
   // Finally draw perspective-correct spans for the polygon.
   if (colortex.internal_format == GL_RGBA8) {
     draw_perspective_spans<uint32_t>(nump, p, interp_outs, colortex, layer,
@@ -3409,16 +3390,14 @@ static void draw_perspective(int nump, Flats flat_outs,
 static void draw_quad(int nump, Texture& colortex, int layer,
                       Texture& depthtex) {
   // Run vertex shader once for the primitive's vertices.
-  Flats flat_outs;
   // Reserve space for 6 sets of interpolants, in case we need to clip against
   // near and far planes in the perspective case.
   Interpolants interp_outs[6] = {0};
-  vertex_shader->run((char*)flat_outs, (char*)interp_outs,
-                     sizeof(Interpolants));
+  vertex_shader->run_primitive((char*)interp_outs, sizeof(Interpolants));
   vec4 pos = vertex_shader->gl_Position;
   // Check if any vertex W is different from another. If so, use perspective.
   if (test_any(pos.w != pos.w.x)) {
-    draw_perspective(nump, flat_outs, interp_outs, colortex, layer, depthtex);
+    draw_perspective(nump, interp_outs, colortex, layer, depthtex);
     return;
   }
 
@@ -3452,9 +3431,6 @@ static void draw_quad(int nump, Texture& colortex, int layer,
   uint16_t z = uint16_t(0xFFFF * screenZ) - 0x8000;
   fragment_shader->gl_FragCoord.z = screenZ;
   fragment_shader->gl_FragCoord.w = w;
-
-  // Initialize any flat/non-varying inputs.
-  fragment_shader->init_primitive(flat_outs);
 
   // Finally draw 2D spans for the quad. Currently only supports drawing to
   // RGBA8 and R8 color buffers.
@@ -3503,11 +3479,10 @@ static inline void draw_elements(GLsizei count, GLsizei instancecount,
     // Fast path - since there is only a single quad, we only load per-vertex
     // attribs once for all instances, as they won't change across instances
     // or within an instance.
-    vertex_shader->load_attribs(program_impl, v.attribs, indices[0], 0, 4);
+    vertex_shader->load_attribs(v.attribs, indices[0], 0, 4);
     draw_quad(4, colortex, layer, depthtex);
     for (GLsizei instance = 1; instance < instancecount; instance++) {
-      vertex_shader->load_attribs(program_impl, v.attribs, indices[0],
-                                  instance, 0);
+      vertex_shader->load_attribs(v.attribs, indices[0], instance, 0);
       draw_quad(4, colortex, layer, depthtex);
     }
   } else {
@@ -3524,8 +3499,7 @@ static inline void draw_elements(GLsizei count, GLsizei instancecount,
           nump = 4;
           i += 3;
         }
-        vertex_shader->load_attribs(program_impl, v.attribs, indices[i],
-                                    instance, nump);
+        vertex_shader->load_attribs(v.attribs, indices[i], instance, nump);
         draw_quad(nump, colortex, layer, depthtex);
       }
     }
@@ -3577,8 +3551,7 @@ void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
   ctx->shaded_rows = 0;
   ctx->shaded_pixels = 0;
 
-  vertex_shader->init_batch(program_impl);
-  fragment_shader->init_batch(program_impl);
+  vertex_shader->init_batch();
 
   if (type == GL_UNSIGNED_SHORT) {
     draw_elements<uint16_t>(count, instancecount, indices_buf, offset, v,
