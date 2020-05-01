@@ -15,6 +15,7 @@ const {
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const {
+  enable,
   reset,
   updateCanBeEnabled,
   updateCanBeDisabled,
@@ -123,7 +124,15 @@ class MainFrame extends Component {
   }
 
   onCanBeEnabledChange(canBeEnabled) {
-    this.props.dispatch(updateCanBeEnabled(canBeEnabled));
+    const {
+      enableAccessibility,
+      dispatch,
+      supports: { autoInit },
+    } = this.props;
+    dispatch(updateCanBeEnabled(canBeEnabled));
+    if (canBeEnabled && autoInit) {
+      dispatch(enable(enableAccessibility));
+    }
   }
 
   onCanBeDisabledChange(canBeDisabled) {
