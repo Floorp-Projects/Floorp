@@ -23,16 +23,7 @@
 // #included wherever Base Profiler may be used.
 
 #ifdef MOZ_GECKO_PROFILER
-// Enable Base Profiler on Windows, Mac and Non-Android Linux, which are
-// supported. Mingw is not supported.
-#  if defined(XP_MACOSX) || defined(XP_LINUX) || \
-      (defined(XP_WIN) && !defined(__MINGW32__))
-#    define MOZ_BASE_PROFILER
-#  else
-// Other platforms are currently not supported. But you may uncomment the
-// following line to enable Base Profiler in your build.
-//#    define MOZ_BASE_PROFILER
-#  endif
+#  define MOZ_BASE_PROFILER
 #endif  // MOZ_GECKO_PROFILER
 
 // BaseProfilerCounts.h is also safe to include unconditionally, with empty
