@@ -32,7 +32,7 @@ add_task(async function testNoShowAccessibilityPropertiesContextMenu() {
   );
   ok(inspectA11YPropsItem.hidden, "Accessibility tools are not enabled.");
   contextMenu.hidePopup();
-  gBrowser.removeCurrentTab();
+  await removeTab(tab);
 });
 
 addA11YPanelTask(

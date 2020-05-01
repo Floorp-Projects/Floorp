@@ -16,7 +16,7 @@ add_task(async function tabNotHighlighted() {
       "should not be highlighted when toolbox opens"
   );
 
-  gBrowser.removeCurrentTab();
+  await closeTabAndToolbox();
 });
 
 add_task(async function tabHighlighted() {
@@ -27,5 +27,7 @@ add_task(async function tabHighlighted() {
   await checkHighlighted(toolbox, true);
 
   a11yService = null;
-  gBrowser.removeCurrentTab();
+  await closeToolbox();
+  await shutdownA11y();
+  await removeTab(gBrowser.selectedTab);
 });

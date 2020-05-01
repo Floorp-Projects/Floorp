@@ -6,8 +6,10 @@
 const TEST_URI = '<h1 id="h1">header</h1><p id="p">paragraph</p>';
 
 add_task(async function() {
-  const { toolbox: toolbox1 } = await addTestTab(buildURL(TEST_URI));
-  const { toolbox: toolbox2 } = await addTestTab(buildURL(TEST_URI));
+  Services.prefs.setBoolPref("devtools.accessibility.auto-init.enabled", false);
+
+  const { toolbox: toolbox1, tab: tab1 } = await addTestTab(buildURL(TEST_URI));
+  const { toolbox: toolbox2, tab: tab2 } = await addTestTab(buildURL(TEST_URI));
   const options = await openOptions(toolbox2);
 
   info("Check that initially both accessibility panels are highlighted.");
@@ -42,6 +44,14 @@ add_task(async function() {
 
   await checkHighlighted(toolbox1, false);
   await checkHighlighted(toolbox2, false);
+
+  await closeToolbox();
+  await shutdownA11y();
+  await removeTab(tab1);
+  await closeToolbox();
+  await shutdownA11y();
+  await removeTab(tab2);
+  Services.prefs.clearUserPref("devtools.accessibility.auto-init.enabled");
 });
 
 async function openOptions(toolbox) {
