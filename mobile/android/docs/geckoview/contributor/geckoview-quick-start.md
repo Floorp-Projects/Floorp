@@ -103,6 +103,10 @@ If your patch makes a GeckoView JavaScript module, you should run ESLint as well
 
 To see information on other options, simply run `./mach geckoview-junit --help`; of particular note for dealing with intermittent test failures are `--repeat N` and `--run-until-failure`, both of which do exactly what you’d expect.
 
+If you use Android Studio, and the emulator had been started by Android Studio, you will find the logcat output for the test in Android Studio (Logcat tab at the bottom), even if you start the test from your terminal.
+
+To see logcat output in terminal, run the test in one terminal window, and `adb logcat` in another terminal window. Make sure that output of `which adb` includes .mozbuild. If it doesn't, add path to mozbuild tools to your PATH: `export PATH=$HOME/.mozbuild/android-sdk-<your OS - e.g. macos or linux>/platform-tools:$PATH`. Make sure to start the emulator from the terminal (if it had not been started, ``./mach geckoview-junit` will ask you if you want to start the emulator - say YES. Alternatively, you can run `./mach android-emulator` before `./mach geckoview-junit`).
+
 ### Updating the changelog and API documentation
 
 If the patch that you want to submit changes the public API for GeckoView, you must ensure that the API documentation is kept up to date. To check whether your patch has altered the API, run the following command.
