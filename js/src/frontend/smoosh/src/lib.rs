@@ -149,6 +149,9 @@ impl From<ScopeData> for SmooshScopeData {
                 enclosing: data.enclosing.into(),
                 first_frame_slot: data.first_frame_slot.into(),
             },
+            _ => {
+                panic!("Not yet implemented");
+            }
         }
     }
 }

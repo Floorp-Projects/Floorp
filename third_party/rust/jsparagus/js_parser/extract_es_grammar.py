@@ -14,7 +14,8 @@ Then:
 
 You can also use this script on a random HTTPS URL, like:
 
-    python extract_esgrammar.py https://raw.githubusercontent.com/tc39/proposal-class-fields/master/spec.html
+    URL=https://raw.githubusercontent.com/tc39/proposal-class-fields/master/spec.html
+    python extract_esgrammar.py $URL
 
 """
 

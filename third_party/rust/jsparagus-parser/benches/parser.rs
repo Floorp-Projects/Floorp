@@ -7,8 +7,8 @@ use std::rc::Rc;
 
 use bumpalo::Bump;
 use jsparagus_ast::source_atom_set::SourceAtomSet;
-use jsparagus_parser::{parse_script, ParseOptions};
 use jsparagus_ast::source_slice_list::SourceSliceList;
+use jsparagus_parser::{parse_script, ParseOptions};
 
 fn parser_bench(c: &mut Criterion) {
     let tests = &["simple", "__finStreamer-proto"];

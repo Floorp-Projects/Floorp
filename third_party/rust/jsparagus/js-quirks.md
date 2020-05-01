@@ -7,6 +7,8 @@ from scratch.
 With apologies to the generous people who work on the standard. Thanks
 for doing that—better you than me.
 
+Thanks to @mathiasbynens for pointing out an additional quirk.
+
 Problems are rated in terms of difficulty, from `(*)` = easy to `(***)`
 = hard. We’ll start with the easiest problems.
 
@@ -115,7 +117,21 @@ in this section is easy to deal with, but #4 is special.
 For another ambiguity, see "Slashes" below.
 
 
-### Legacy octal literals (*)
+### Unicode quirks
+
+JavaScript source is Unicode and usually follows Unicode rules for thing
+like identifiers and whitespace, but it has a few special cases: `$`,
+`_`, `U+200C ZERO WIDTH NON-JOINER`, and `U+200D ZERO WIDTH JOINER` are
+legal in identifiers (the latter two only after the first character), and
+`U+FEFF ZERO WIDTH NO-BREAK SPACE` (also known as the byte-order mark) is
+treated as whitespace.
+
+It also allows any code point, including surrogate halves, even though the
+Unicode standard says that unpaired surrogate halves should be treated as
+encoding errors.
+
+
+### Legacy octal literals and escape sequences (*)
 
 This is more funny than difficult.
 
@@ -130,6 +146,17 @@ number. Otherwise, hilariously, it's octal.
 js> [067, 068, 069, 070]
 [55, 68, 69, 56]
 ```
+
+There are also legacy octal escape sequences in strings, and these have
+their own quirks. `'\07' === '\u{7}'`, but `'\08' !== '\u{8}'` since 8
+is not an octal digit. Instead `'\08' === '\0' + '8'`, because `\0`
+followed by `8` or `9` is a legacy octal escape sequence representing
+the null character. (Not to be confused with `\0` in strict code, not
+followed by a digit, which still represents the null character, but
+doesn't count as octal.)
+
+None of this is hard to implement, but figuring out what the spec says
+is hard.
 
 
 ### Strict mode (*)
@@ -177,6 +204,9 @@ include:
     either know that `foo` has two arguments both named `a`, or switch
     to strict mode, go back, and reparse the function from the
     beginning.
+
+    Fortunately an Early Error rule prohibits mixing `"use strict"` with
+    more complex parameter lists, like `function foo(x = eval('')) {`.
 
 *   The expression syntax “`delete` *Identifier*” and the abominable
     *WithStatement* are banned in strict mode.
@@ -365,6 +395,37 @@ var { if } = obj;       // SyntaxError: `if` is not an Identifier
 ```
 
 
+### Escape sequences in keywords
+
+*(entangled with: conditional keywords, ASI)*
+
+You can use escape sequences to write variable and property names, but
+not keywords (including contextual keywords in contexts where they act
+as keywords).
+
+So `if (foo) {}` and `{ i\f: 0 }` are legal but `i\u0066 (foo)` is not.
+
+And you don't necessarily know if you're lexing a contextual keyword
+until the next token: `({ g\u0065t: 0 })` is legal, but
+`({ g\u0065t x(){} })` is not.
+
+And for `let` it's even worse: `l\u0065t` by itself is a legal way to
+reference a variable named `let`, which means that
+
+```js
+let
+x
+```
+declares a variable named `x`, while, thanks to ASI,
+
+```js
+l\u0065t
+x
+```
+is a reference to a variable named `let` followed by a reference to a
+variable named `x`.
+
+
 ### Early errors (**)
 
 *(entangled with: lazy parsing, conditional keywords, ASI)*
@@ -444,6 +505,18 @@ that are covered adequately elsewhere:
         specify a very large refinement grammar when *ObjectLiteral*
         almost covers *ObjectAssignmentPattern*:
         [sorry, too complicated to explain](https://tc39.es/ecma262/#sec-object-initializer-static-semantics-early-errors).
+
+*   Early errors are sometimes used to prevent parsers from needing to
+    backtrack too much.
+
+    *   When parsing `async ( x = await/a/g )`, you don't know until the
+        next token if this is an async arrow or a call to a function named
+        `async`. This means you can't even tokenize properly, because in
+        the former case the thing following `x =` is two divisions and in
+        the latter case it's an *AwaitExpression* of a regular expression.
+        So an Early Error forbids having `await` in parameters at all,
+        allowing parsers to immediately throw an error if they find
+        themselves in this case.
 
 Many strict mode rules are enforced using Early Errors, but others
 affect runtime semantics.
@@ -625,6 +698,16 @@ For another example, this function contains two statements, not one:
 The indentation is misleading; actually ASI inserts a semicolon at the
 end of the first line: `return; g();`. (This function always returns
 undefined. The second statement is never reached.)
+
+These restrictions apply even to multiline comments, so the function
+
+```js
+function f(g) {
+  return /*
+    */ g();
+}
+```
+contains two statements, just as the previous example did.
 
 I’m not sure why these rules exist, but it’s probably because (back in
 the Netscape days) users complained about the bizarre behavior of
@@ -822,6 +905,45 @@ because it’s often not possible to know when you’re entering a scope
 until later. Consider parsing `(a`. This could be the beginning of an
 arrow function, or not; we might not know until after we reach the
 matching `)`, which could be a long way away.
+
+Annex B.3.3 adds extremely complex rules for scoping for function
+declarations which makes this especially difficult. In
+
+```js
+function f() {
+    let x = 1;
+    return function g() {
+        {
+            function x(){}
+        }
+        {
+            let x;
+        }
+        return x;
+    };
+}
+```
+
+the function `g` does not use the initial `let x`, but in
+
+```js
+function f() {
+    let x = 1;
+    return function g() {
+        {
+            {
+                function x(){}
+            }
+            let x;
+        }
+        return x;
+    };
+}
+```
+it does.
+
+[Here](https://dev.to/rkirsling/tales-from-ecma-s-crypt-annex-b-3-3-56go)
+is a good writeup of what's going on in these examples.
 
 
 ### Arrow functions, assignment, destructuring, and cover grammars (\*\*\*)

@@ -297,25 +297,3 @@ class Parser:
         except SyntaxError:
             return False
         return True
-
-    def simulate(self, t):
-        """Simulate receiving the terminal `t` without modifying parser state.
-
-        Walk the current stack to simulate the reduce actions that would occur
-        if the next token from the lexer was `t`. Return the state reached when
-        we're done reducing.
-        """
-        sim = self.simulator_clone()
-        stack = self.stack
-        sp = len(stack) - 1
-        state = stack[sp]
-        while True:
-            action = self.actions[state].get(t, ERROR)
-            if ACCEPT < action < 0:  # reduce
-                tag_name, n, _reducer = self.reductions[-action - 1]
-                sp -= 2 * n
-                state = stack[sp]
-                sp += 2
-                state = self.ctns[state][tag_name]
-            else:
-                return state
