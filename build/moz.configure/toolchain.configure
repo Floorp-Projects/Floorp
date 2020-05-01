@@ -370,8 +370,8 @@ add_old_configure_assignment('TOOLCHAIN_PREFIX', first_toolchain_prefix)
 include('compilers-util.configure')
 
 
-def try_preprocess(compiler, language, source):
-    return try_invoke_compiler(compiler, language, source, ['-E'])
+def try_preprocess(compiler, language, source, onerror=None):
+    return try_invoke_compiler(compiler, language, source, ['-E'], onerror)
 
 
 @imports(_from='mozbuild.configure.constants', _import='CompilerType')
