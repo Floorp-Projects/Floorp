@@ -1,0 +1,23 @@
+<!doctype html>
+<html class="reftest-wait">
+<title>Caret is correctly position for block whose only child is an empty pseudo</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+  div:focus {
+    outline: 3px solid blue;
+  }
+  div::before {
+    content: "";
+  }
+</style>
+<div contenteditable="true" spellcheck="false"></div>
+<script>
+SimpleTest.waitForFocus(function() {
+  document.querySelector('[contenteditable="true"]').focus();
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      document.documentElement.removeAttribute("class");
+    });
+  });
+});
+</script>

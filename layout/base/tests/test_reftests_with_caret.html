@@ -262,6 +262,13 @@ var tests = [
     [ 'bug1524266-1.html' , 'bug1524266-1-ref.html' ] ,
     // Checks that the caret isn't occluded by children background content.
     [ 'bug1591282-1.html' , 'bug1591282-1-ref.html' ] ,
+    // Caret on contenteditable with abspos and / or empty content.
+    [ 'bug1634543-1.html' , 'bug1634543-1-ref.html' ] ,
+    [ 'bug1634543-2.html' , 'bug1634543-1-ref.html' ] ,
+    // TODO(emilio): This fails because nsInlineFrame::GetCaretBaseline doesn't
+    // return one line-height for an empty inline, and it probably should..
+    // [ 'bug1634543-3.html' , 'bug1634543-1-ref.html' ] ,
+    [ 'bug1634543-4.html' , 'bug1634543-1-ref.html' ] ,
     function() {SpecialPowers.pushPrefEnv({'clear': [['layout.accessiblecaret.enabled_on_touch']]}, nextTest);} ,
     function() {SpecialPowers.pushPrefEnv({'set': [['accessibility.browsewithcaret', true]]}, nextTest);} ,
     [ 'bug1529492-1.html' , 'bug1529492-1-ref.html' ] ,
