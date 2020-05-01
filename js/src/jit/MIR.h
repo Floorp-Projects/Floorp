@@ -8727,6 +8727,36 @@ class MGuardShape : public MUnaryInstruction, public SingleObjectPolicy::Data {
   }
 };
 
+// Guard on a specific Value.
+class MGuardValue : public MUnaryInstruction, public BoxInputsPolicy::Data {
+  Value expected_;
+
+  MGuardValue(MDefinition* val, const Value& expected)
+      : MUnaryInstruction(classOpcode, val), expected_(expected) {
+    setGuard();
+    setMovable();
+    MOZ_ASSERT(expected.isNullOrUndefined() || expected.isMagic());
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardValue)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, value))
+
+  Value expected() const { return expected_; }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isGuardValue()) {
+      return false;
+    }
+    if (expected() != ins->toGuardValue()->expected()) {
+      return false;
+    }
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
 // Bail if the object's shape or unboxed group is not in the input list.
 class MGuardReceiverPolymorphic : public MUnaryInstruction,
                                   public SingleObjectPolicy::Data {

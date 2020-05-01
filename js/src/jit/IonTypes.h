@@ -168,6 +168,9 @@ enum BailoutKind {
   // by the baseline IC.)
   Bailout_ShapeGuard,
 
+  // Bailout triggered by MGuardValue.
+  Bailout_ValueGuard,
+
   // When we're trying to use an uninitialized lexical.
   Bailout_UninitializedLexical,
 
@@ -244,6 +247,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "Bailout_BoundsCheck";
     case Bailout_ShapeGuard:
       return "Bailout_ShapeGuard";
+    case Bailout_ValueGuard:
+      return "Bailout_ValueGuard";
     case Bailout_UninitializedLexical:
       return "Bailout_UninitializedLexical";
     case Bailout_IonExceptionDebugMode:
