@@ -46,6 +46,10 @@ internal class EngineObserver(
         session.searchTerms = ""
     }
 
+    override fun onFirstContentfulPaint() {
+        store?.dispatch(ContentAction.UpdateFirstContentfulPaintStateAction(session.id, true))
+    }
+
     override fun onLocationChange(url: String) {
         if (!isUrlSame(session.url, url)) {
             session.title = ""

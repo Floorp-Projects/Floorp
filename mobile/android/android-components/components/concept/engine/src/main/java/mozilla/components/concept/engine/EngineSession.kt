@@ -49,6 +49,10 @@ abstract class EngineSession(
          */
         fun onExcludedOnTrackingProtectionChange(excluded: Boolean) = Unit
 
+        /**
+         * Event to indicate that this session has had it's first engine contentful paint of page content.
+         */
+        fun onFirstContentfulPaint() = Unit
         fun onLongPress(hitResult: HitResult) = Unit
         fun onDesktopModeChange(enabled: Boolean) = Unit
         fun onFind(text: String) = Unit
