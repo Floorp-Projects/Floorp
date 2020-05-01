@@ -2861,14 +2861,22 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint16_t z,
   while (y < clipRect.y1) {
     // Check if Y advanced past the end of the left edge
     if (y > l1.y) {
-      // Set new start of left edge to be end of old left edge
-      l0i = l1i;
-      l0 = l1;
-      // Set new end of left edge to next point
-      l1i = NEXT_POINT(l1i);
-      l1 = p[l1i];
-      // If the new end is ascending, we're done.
-      if (l1.y <= l0.y) break;
+      // Helper to find the next non-duplicate vertex that doesn't loop back.
+#define STEP_EDGE(e0i, e0, e1i, e1, STEP_POINT, end)                   \
+      for (;;) {                                                       \
+        /* Set new start of edge to be end of old edge */              \
+        e0i = e1i;                                                     \
+        e0 = e1;                                                       \
+        /* Set new end of edge to next point */                        \
+        e1i = STEP_POINT(e1i);                                         \
+        e1 = p[e1i];                                                   \
+        /* If the edge is descending, use it. */                       \
+        if (e1.y > e0.y) break;                                        \
+        /* If the edge is ascending or crossed the end, we're done. */ \
+        if (e1.y < e0.y || e0i == end) return;                         \
+        /* Otherwise, it's a duplicate, so keep searching. */          \
+      }
+      STEP_EDGE(l0i, l0, l1i, l1, NEXT_POINT, r1i);
       // New scale for change in left edge Y
       lk = 1.0f / (l1.y - l0.y);
       // dX/dY slope
@@ -2884,14 +2892,7 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint16_t z,
     }
     // Check if Y advanced past the end of the right edge
     if (y > r1.y) {
-      // Set new start of right edge to be end of old right edge
-      r0i = r1i;
-      r0 = r1;
-      // Set new end of right edge to prev point
-      r1i = PREV_POINT(r1i);
-      r1 = p[r1i];
-      // If the new end is ascending, we're done.
-      if (r1.y <= r0.y) break;
+      STEP_EDGE(r0i, r0, r1i, r1, PREV_POINT, l1i);
       // New scale for change in right edge Y
       rk = 1.0f / (r1.y - r0.y);
       // dX/dY slope
@@ -3198,14 +3199,7 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
   while (y < clipRect.y1) {
     // Check if Y advanced past the end of the left edge
     if (y > l1.y) {
-      // Set new start of left edge to be end of old left edge
-      l0i = l1i;
-      l0 = l1;
-      // Set new end of left edge to next point
-      l1i = NEXT_POINT(l1i);
-      l1 = p[l1i];
-      // If the new end is ascending, we're done.
-      if (l1.y <= l0.y) break;
+      STEP_EDGE(l0i, l0, l1i, l1, NEXT_POINT, r1i);
       // New scale for change in left edge Y
       lk = 1.0f / (l1.y - l0.y);
       // Left coordinate slope
@@ -3221,14 +3215,7 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
     }
     // Check if Y advanced past the end of the right edge
     if (y > r1.y) {
-      // Set new start of right edge to be end of old right edge
-      r0i = r1i;
-      r0 = r1;
-      // Set new end of right edge to prev point
-      r1i = PREV_POINT(r1i);
-      r1 = p[r1i];
-      // If the new end is ascending, we're done.
-      if (r1.y <= r0.y) break;
+      STEP_EDGE(r0i, r0, r1i, r1, PREV_POINT, l1i);
       // New scale for change in right edge Y
       rk = 1.0f / (r1.y - r0.y);
       // Right coordinate slope
