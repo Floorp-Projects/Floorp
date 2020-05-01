@@ -6909,6 +6909,20 @@ class LAssertResultV : public LInstructionHelper<0, BOX_PIECES, 0> {
   }
 };
 
+class LGuardValue : public LInstructionHelper<0, BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(GuardValue)
+
+  explicit LGuardValue(const LBoxAllocation& input)
+      : LInstructionHelper(classOpcode) {
+    setBoxOperand(Input, input);
+  }
+
+  static const size_t Input = 0;
+
+  MGuardValue* mir() { return mir_->toGuardValue(); }
+};
+
 class LRecompileCheck : public LInstructionHelper<0, 0, 1> {
  public:
   LIR_HEADER(RecompileCheck)

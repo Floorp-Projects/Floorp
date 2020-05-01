@@ -1985,6 +1985,7 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     case Bailout_PrecisionLoss:
     case Bailout_TypeBarrierO:
     case Bailout_TypeBarrierV:
+    case Bailout_ValueGuard:
     case Bailout_MonitorTypes:
     case Bailout_Hole:
     case Bailout_NegativeIndex:
