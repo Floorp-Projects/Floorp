@@ -4,6 +4,7 @@
 
 package mozilla.components.support.utils
 
+import android.os.SystemClock
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -18,8 +19,8 @@ import mozilla.components.support.base.log.logger.Logger
 @SuppressWarnings("MagicNumber")
 inline fun <T> logElapsedTime(logger: Logger, op: String, block: () -> T): T {
     logger.info("$op...")
-    val start = System.nanoTime()
+    val start = SystemClock.elapsedRealtimeNanos()
     val res = block()
-    logger.info("'$op' took ${(System.nanoTime() - start) / 1_000_000} ms")
+    logger.info("'$op' took ${(SystemClock.elapsedRealtimeNanos() - start) / 1_000_000} ms")
     return res
 }
