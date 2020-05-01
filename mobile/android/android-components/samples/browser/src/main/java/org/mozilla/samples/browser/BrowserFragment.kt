@@ -9,10 +9,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_browser.view.*
+import mozilla.components.browser.thumbnails.BrowserThumbnails
 import mozilla.components.feature.awesomebar.AwesomeBarFeature
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.search.SearchFeature
-import mozilla.components.feature.session.ThumbnailsFeature
 import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.feature.tabs.toolbar.TabsToolbarFeature
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
@@ -26,7 +26,7 @@ import org.mozilla.samples.browser.integration.ReaderViewIntegration
  * Fragment used for browsing the web within the main app.
  */
 class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
-    private val thumbnailsFeature = ViewBoundFeatureWrapper<ThumbnailsFeature>()
+    private val thumbnailsFeature = ViewBoundFeatureWrapper<BrowserThumbnails>()
     private val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewIntegration>()
     private val webExtToolbarFeature = ViewBoundFeatureWrapper<WebExtensionToolbarFeature>()
     private val searchFeature = ViewBoundFeatureWrapper<SearchFeature>()
@@ -81,7 +81,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         )
 
         thumbnailsFeature.set(
-            feature = ThumbnailsFeature(requireContext(), layout.engineView, components.sessionManager),
+            feature = BrowserThumbnails(requireContext(), layout.engineView, components.sessionManager),
             owner = this,
             view = layout
         )

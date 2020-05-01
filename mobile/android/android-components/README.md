@@ -94,6 +94,8 @@ High-level components for building browser(-like) apps.
 
 * ⚪ [**Tabstray**](components/browser/tabstray/README.md) - A customizable tabs tray for browsers.
 
+* 🔴 [**Thumbnails**](components/browser/thumbnails/README.md) - A component for loading and storing website thumbnails (screenshot of the website).
+
 * 🔵 [**Toolbar**](components/browser/toolbar/README.md) - A customizable toolbar for browsers.
 
 ## Concept
