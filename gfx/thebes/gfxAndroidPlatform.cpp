@@ -275,6 +275,8 @@ bool gfxAndroidPlatform::RequiresLinearZoom() {
 
 class AndroidVsyncSource final : public VsyncSource {
  public:
+  AndroidVsyncSource() : mGlobalDisplay(new Display()) {}
+
   class JavaVsyncSupport final
       : public java::VsyncSource::Natives<JavaVsyncSupport> {
    public:
@@ -344,13 +346,11 @@ class AndroidVsyncSource final : public VsyncSource {
 
   Display& GetGlobalDisplay() final { return GetDisplayInstance(); }
 
- private:
   virtual ~AndroidVsyncSource() = default;
 
-  static Display& GetDisplayInstance() {
-    static Display globalDisplay;
-    return globalDisplay;
-  }
+ private:
+  RefPtr<Display> mGlobalDisplay;
+  static Display& GetDisplayInstance() { return *mGlobalDisplay; }
 };
 
 already_AddRefed<mozilla::gfx::VsyncSource>
