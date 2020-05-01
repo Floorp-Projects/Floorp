@@ -29,9 +29,13 @@ open class LocaleAwareAppCompatActivity : AppCompatActivity() {
      * https://github.com/mozilla-mobile/fenix/issues/9413
      * https://stackoverflow.com/questions/46296202/rtl-layout-bug-in-android-oreo#comment98890942_46298101
      */
+    @SuppressWarnings("VariableNaming")
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun setLayoutDirectionIfNeeded() {
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) {
+        val isAndroid8 = Build.VERSION.SDK_INT == Build.VERSION_CODES.O
+        val isAndroid8_1 = Build.VERSION.SDK_INT == Build.VERSION_CODES.O_MR1
+
+        if (isAndroid8 || isAndroid8_1) {
             window.decorView.layoutDirection = resources.configuration.layoutDirection
         }
     }
