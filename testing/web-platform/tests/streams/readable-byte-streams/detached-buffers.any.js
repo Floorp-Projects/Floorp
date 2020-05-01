@@ -1,4 +1,4 @@
-// META: global=window,worker,jsshell
+// META: global=worker,jsshell
 'use strict';
 
 promise_test(() => {

@@ -1,4 +1,4 @@
-// META: global=window,worker,jsshell
+// META: global=worker,jsshell
 // META: script=../resources/test-utils.js
 // META: script=../resources/recording-streams.js
 'use strict';

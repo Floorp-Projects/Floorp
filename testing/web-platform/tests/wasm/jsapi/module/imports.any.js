@@ -1,4 +1,4 @@
-// META: global=window,dedicatedworker,jsshell
+// META: global=jsshell
 // META: script=/wasm/jsapi/wasm-module-builder.js
 
 function assert_ModuleImportDescriptor(import_, expected) {

@@ -1,7 +1,6 @@
 // META: script=/resources/testdriver.js
 // META: script=/resources/testdriver-vendor.js
-// META: script=/bluetooth/resources/bluetooth-test.js
-// META: script=/bluetooth/resources/bluetooth-fake-devices.js
+// META: script=/bluetooth/resources/bluetooth-helpers.js
 'use strict';
 const test_desc = 'HeartRate device properties';
 

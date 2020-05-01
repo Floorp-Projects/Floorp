@@ -1,4 +1,4 @@
-// META: global=window,dedicatedworker,sharedworker
+// META: global=sharedworker
 // META: timeout=long
 
 // This is a regression test for https://crbug.com/844268, when a timeout of 10

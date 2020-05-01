@@ -25,6 +25,5 @@ promise_test(async testCase => {
   assert_equals(typeof screens[0].primary, 'boolean');
   assert_equals(typeof screens[0].internal, 'boolean');
   assert_equals(typeof screens[0].scaleFactor, 'number');
-  assert_equals(typeof screens[0].id, 'string');
-  assert_equals(typeof screens[0].touchSupport, 'boolean');
+  assert_equals(typeof screens[0].name, 'string');
 }, 'self.getScreens returns at least 1 Screen');
