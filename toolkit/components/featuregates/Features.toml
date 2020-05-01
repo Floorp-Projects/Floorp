@@ -1,3 +1,4 @@
+# there are currently no feature gates
 [demo-feature]
 title = "Demo Feature"
 description = "A no-op feature to demo the feature gate system."
@@ -7,12 +8,3 @@ type = "boolean"
 bug-numbers = [1479127]
 is-public = true
 default-value = false
-
-[accessibility-panel-auto-init]
-title = "Accessibility Panel Automatic Initialization"
-description = "Automatically enables accessibility panel when it is opened."
-restart-required = false
-preference = "devtools.accessibility.auto-init.enabled"
-bug-numbers = [1602075]
-type = "boolean"
-default-value = {default = false, nightly = true}

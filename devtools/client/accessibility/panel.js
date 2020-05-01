@@ -96,16 +96,6 @@ AccessibilityPanel.prototype = {
       this.onTargetAvailable
     );
 
-    // Bug 1602075: if auto init feature is enabled, enable accessibility
-    // service if necessary.
-    if (
-      this.accessibilityProxy.supports.autoInit &&
-      this.accessibilityProxy.canBeEnabled &&
-      !this.accessibilityProxy.enabled
-    ) {
-      await this.accessibilityProxy.enableAccessibility();
-    }
-
     this.picker = new Picker(this);
     this.fluentBundles = await this.createFluentBundles();
 
@@ -195,7 +185,7 @@ AccessibilityPanel.prototype = {
     // Alright reset the flag we are about to refresh the panel.
     this.shouldRefresh = false;
     this.postContentMessage("initialize", {
-      supports: this.accessibilityProxy.supports,
+      supports: this.supports,
       fluentBundles: this.fluentBundles,
       toolbox: this._toolbox,
       getAccessibilityTreeRoot: this.accessibilityProxy
