@@ -401,6 +401,8 @@ JS::Result<Ok> BinASTParserPerTokenizer<Tok>::finishLazyFunction(
                          options().forceStrictMode());
   immutableFlags.setFlag(ImmutableFlags::HasMappedArgsObj,
                          funbox->hasMappedArgsObj());
+  immutableFlags.setFlag(ImmutableFlags::IsLikelyConstructorWrapper,
+                         funbox->isLikelyConstructorWrapper());
 
   SourceExtent extent(start, end, start, end,
                       /* lineno = */ 0, start);

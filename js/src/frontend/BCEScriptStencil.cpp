@@ -44,6 +44,14 @@ void BCEScriptStencil::init(BytecodeEmitter& bce,
     // FunctionBox.
     immutableFlags.setFlag(ImmutableFlags::HasMappedArgsObj,
                            funbox->hasMappedArgsObj());
+
+    // While IsLikelyConstructorWrapper is required to be the same between
+    // syntax and normal parsing, BinAST cannot ensure this. Work around this by
+    // using the existing value if this is delazification.
+    if (bce.emitterMode != BytecodeEmitter::LazyFunction) {
+      immutableFlags.setFlag(ImmutableFlags::IsLikelyConstructorWrapper,
+                             funbox->isLikelyConstructorWrapper());
+    }
   } /* isFunctionBox */
 }
 

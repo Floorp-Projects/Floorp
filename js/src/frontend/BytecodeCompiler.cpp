@@ -1040,6 +1040,9 @@ static bool CompileLazyBinASTFunctionImpl(JSContext* cx,
   AutoAssertReportedException assertException(cx);
   Rooted<JSFunction*> fun(cx, lazy->function());
 
+  mozilla::DebugOnly<bool> lazyIsLikelyConstructorWrapper =
+      lazy->isLikelyConstructorWrapper();
+
   CompileOptions options(cx);
   options.setMutedErrors(lazy->mutedErrors())
       .setFileAndLine(lazy->filename(), lazy->lineno())
@@ -1074,6 +1077,10 @@ static bool CompileLazyBinASTFunctionImpl(JSContext* cx,
   if (!bce.emitFunctionScript(pn, BytecodeEmitter::TopLevelFunction::Yes)) {
     return false;
   }
+
+  // This value *must* not change after the lazy function is first created.
+  MOZ_ASSERT(lazyIsLikelyConstructorWrapper ==
+             bce.getResultScript()->isLikelyConstructorWrapper());
 
   assertException.reset();
   return bce.getResultScript();
