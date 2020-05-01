@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React from "react";
+import { Localized } from "../../../aboutwelcome/components/MSLocalized";
 
 export class OnboardingCard extends React.PureComponent {
   constructor(props) {
@@ -29,21 +30,20 @@ export class OnboardingCard extends React.PureComponent {
         <div className={`onboardingMessageImage ${content.icon}`} />
         <div className="onboardingContent">
           <span>
-            <h2
-              className="onboardingTitle"
-              data-l10n-id={content.title.string_id}
-            />
-            <p
-              className="onboardingText"
-              data-l10n-id={content.text.string_id}
-            />
+            <Localized text={content.title}>
+              <h2 className="onboardingTitle" />
+            </Localized>
+            <Localized text={content.text}>
+              <p className="onboardingText" />
+            </Localized>
           </span>
           <span className="onboardingButtonContainer">
-            <button
-              data-l10n-id={content.primary_button.label.string_id}
-              className="button onboardingButton"
-              onClick={this.onClick}
-            />
+            <Localized text={content.primary_button.label}>
+              <button
+                className="button onboardingButton"
+                onClick={this.onClick}
+              />
+            </Localized>
           </span>
         </div>
       </div>
