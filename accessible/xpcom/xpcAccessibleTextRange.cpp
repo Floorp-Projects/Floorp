@@ -11,6 +11,7 @@
 #include "nsIMutableArray.h"
 #include "nsComponentManagerUtils.h"
 #include "nsQueryObject.h"
+#include "xpcAccessibleDocument.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

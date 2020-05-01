@@ -15,6 +15,7 @@
 #include "mozilla/Maybe.h"
 
 using namespace mozilla::a11y;
+using mozilla::DebugOnly;
 using mozilla::Maybe;
 
 /**

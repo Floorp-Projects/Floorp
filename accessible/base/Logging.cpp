@@ -21,12 +21,15 @@
 #include "prenv.h"
 #include "nsIDocShellTreeItem.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/dom/BorrowedAttrInfo.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/Selection.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
+
+using mozilla::dom::BorrowedAttrInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Logging helpers

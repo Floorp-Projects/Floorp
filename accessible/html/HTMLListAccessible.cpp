@@ -7,6 +7,7 @@
 #include "HTMLListAccessible.h"
 
 #include "DocAccessible.h"
+#include "EventTree.h"
 #include "nsAccUtils.h"
 #include "Role.h"
 #include "States.h"
