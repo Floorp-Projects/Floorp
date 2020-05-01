@@ -522,7 +522,6 @@ where
         // ie) for(foo(); <test>; <update>) or for(var x = 0; <test>; <update)
         if let Some(init) = self.maybe_init {
             (self.init)(emitter, init)?;
-            emitter.emit.pop();
         }
 
         // Emit loop head
@@ -549,7 +548,6 @@ where
 
         if let Some(update) = self.maybe_update {
             (self.update)(emitter, &update)?;
-            emitter.emit.pop();
         }
 
         // Merge point after test fails (or there is a break statement)

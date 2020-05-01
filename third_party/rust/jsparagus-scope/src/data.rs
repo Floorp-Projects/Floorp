@@ -1,10 +1,21 @@
+//! Types for the output of scope analysis.
+//!
+//! The top-level output of this analysis is the `ScopeDataMap`, which holds
+//! the following:
+//!   * `LexicalScopeData` for each lexial scope in the AST
+//!   * `GlobalScopeData` for the global scope
+//!   * `VarScopeData` for extra body var scope in function
+//!   * `FunctionScopeData` for the function scope
+//!
+//! Each scope contains a list of bindings (`BindingName`).
+
 use crate::frame_slot::FrameSlot;
 use ast::associated_data::{AssociatedData, Key as AssociatedDataKey};
 use ast::source_atom_set::SourceAtomSetIndex;
 use ast::source_location_accessor::SourceLocationAccessor;
 use ast::type_id::NodeTypeIdAccessor;
 
-/// Corrsponds to js::BindingKind in m-c/js/src/vm/Scope.h,
+/// Corresponds to js::BindingKind in m-c/js/src/vm/Scope.h.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum BindingKind {
     Var,
@@ -12,7 +23,9 @@ pub enum BindingKind {
     Const,
 }
 
-/// Maps to js::BindingName in m-c/js/src/vm/Scope.h.
+/// Information about a single binding in a JS script.
+///
+/// Corresponds to `js::BindingName` in m-c/js/src/vm/Scope.h.
 #[derive(Debug)]
 pub struct BindingName {
     pub name: SourceAtomSetIndex,
@@ -38,8 +51,8 @@ impl BindingName {
     }
 }
 
-/// Corresponds to the accessor part of js::BindingIter
-/// in m-c/js/src/vm/Scope.h.
+/// Corresponds to the accessor part of `js::BindingIter` in
+/// m-c/js/src/vm/Scope.h.
 pub struct BindingIterItem<'a> {
     name: &'a BindingName,
     kind: BindingKind,
@@ -71,10 +84,16 @@ pub struct GlobalScopeData {
     pub let_start: usize,
     pub const_start: usize,
 
-    /// Corrsponds to GlobalScope::Data.{length, trailingNames}.
+    /// Corresponds to `GlobalScope::Data.{length, trailingNames}.`
+    ///
+    /// Bindings are sorted by kind:
+    ///
+    /// * `bindings[0..let_start]` - `var`s
+    /// * `bindings[let_start..const_start]` - `let`s
+    /// * `bindings[const_start..]` - `const`s
     pub bindings: Vec<BindingName>,
 
-    /// Functions in this scope.
+    /// The global functions in this script.
     pub functions: Vec<AssociatedDataKey>,
 }
 
@@ -100,7 +119,7 @@ impl GlobalScopeData {
     }
 }
 
-/// Corrsponds to the iteration part of js::BindingIter
+/// Corresponds to the iteration part of js::BindingIter
 /// in m-c/js/src/vm/Scope.h.
 pub struct GlobalBindingIter<'a> {
     data: &'a GlobalScopeData,
@@ -137,6 +156,44 @@ impl<'a> Iterator for GlobalBindingIter<'a> {
     }
 }
 
+/// Bindings created in var environment.
+///
+/// Maps to js::VarScope::Data in m-c/js/src/vm/Scope.h,
+/// and the parameter for js::frontend::ScopeCreationData::create
+/// in m-c/js/src/frontend/Stencil.h
+#[derive(Debug)]
+pub struct VarScopeData {
+    /// Corresponds to VarScope::Data.{length, trailingNames}.
+    pub bindings: Vec<BindingName>,
+
+    /// The first frame slot of this scope.
+    ///
+    /// Unlike VarScope::Data, this struct holds the first frame slot,
+    /// instead of the next frame slot.
+    ///
+    /// This is because ScopeCreationData::create receives the first frame slot
+    /// and VarScope::Data.nextFrameSlot is calculated there.
+    pub first_frame_slot: FrameSlot,
+
+    /// ScopeIndex of the enclosing scope.
+    ///
+    /// A parameter for ScopeCreationData::create.
+    pub enclosing: ScopeIndex,
+}
+
+impl VarScopeData {
+    pub fn new(var_count: usize, enclosing: ScopeIndex) -> Self {
+        let capacity = var_count;
+
+        Self {
+            bindings: Vec::with_capacity(capacity),
+            // Set to the correct value in EmitterScopeStack::enter_lexical.
+            first_frame_slot: FrameSlot::new(0),
+            enclosing,
+        }
+    }
+}
+
 /// Bindings created in lexical environment.
 ///
 /// Maps to js::LexicalScope::Data in m-c/js/src/vm/Scope.h,
@@ -146,7 +203,7 @@ impl<'a> Iterator for GlobalBindingIter<'a> {
 pub struct LexicalScopeData {
     pub const_start: usize,
 
-    /// Corrsponds to LexicalScope::Data.{length, trailingNames}.
+    /// Corresponds to LexicalScope::Data.{length, trailingNames}.
     pub bindings: Vec<BindingName>,
 
     /// The first frame slot of this scope.
@@ -168,7 +225,7 @@ pub struct LexicalScopeData {
 }
 
 impl LexicalScopeData {
-    pub fn new(
+    fn new(
         let_count: usize,
         const_count: usize,
         enclosing: ScopeIndex,
@@ -184,6 +241,27 @@ impl LexicalScopeData {
             enclosing,
             functions,
         }
+    }
+
+    pub fn new_block(
+        let_count: usize,
+        const_count: usize,
+        enclosing: ScopeIndex,
+        functions: Vec<AssociatedDataKey>,
+    ) -> Self {
+        Self::new(let_count, const_count, enclosing, functions)
+    }
+
+    pub fn new_named_lambda(enclosing: ScopeIndex) -> Self {
+        Self::new(0, 1, enclosing, Vec::new())
+    }
+
+    pub fn new_function_lexical(
+        let_count: usize,
+        const_count: usize,
+        enclosing: ScopeIndex,
+    ) -> Self {
+        Self::new(let_count, const_count, enclosing, Vec::new())
     }
 
     pub fn iter<'a>(&'a self) -> LexicalBindingIter<'a> {
@@ -226,20 +304,95 @@ impl<'a> Iterator for LexicalBindingIter<'a> {
     }
 }
 
+/// Bindings created in function environment.
+///
+/// Maps to js::FunctionScope::Data in m-c/js/src/vm/Scope.h,
+/// and the parameter for js::frontend::ScopeCreationData::create
+/// in m-c/js/src/frontend/Stencil.h
+#[derive(Debug)]
+pub struct FunctionScopeData {
+    has_parameter_exprs: bool,
+    non_positional_formal_start: usize,
+    var_start: usize,
+
+    /// Corresponds to FunctionScope::Data.{length, trailingNames}.
+    ///
+    /// Given positional parameters range can have null slot for destructuring,
+    /// this is Vec of Option<BindingName>, instead of BindingName like others.
+    pub bindings: Vec<Option<BindingName>>,
+
+    /// The first frame slot of this scope.
+    ///
+    /// Unlike FunctionScope::Data, this struct holds the first frame slot,
+    /// instead of the next frame slot.
+    ///
+    /// This is because ScopeCreationData::create receives the first frame slot
+    /// and FunctionScope::Data.nextFrameSlot is calculated there.
+    pub first_frame_slot: FrameSlot,
+
+    /// ScopeIndex of the enclosing scope.
+    ///
+    /// A parameter for ScopeCreationData::create.
+    pub enclosing: ScopeIndex,
+}
+
+impl FunctionScopeData {
+    pub fn new(
+        has_parameter_exprs: bool,
+        positional_parameter_count: usize,
+        non_positional_formal_start: usize,
+        var_count: usize,
+        enclosing: ScopeIndex,
+    ) -> Self {
+        let capacity = positional_parameter_count + non_positional_formal_start + var_count;
+
+        Self {
+            has_parameter_exprs,
+            non_positional_formal_start: positional_parameter_count,
+            var_start: positional_parameter_count + non_positional_formal_start,
+            bindings: Vec::with_capacity(capacity),
+            // Set to the correct value in EmitterScopeStack::enter_function.
+            first_frame_slot: FrameSlot::new(0),
+            enclosing,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum ScopeData {
+    /// No scope should be generated. This is used, for example, when we see a
+    /// function, and set aside a ScopeData for its lexical bindings, but upon
+    /// reaching the end of the function body, we find that there were no
+    /// lexical bindings and the spec actually says not to generate a Lexical
+    /// Environment when this function is called.
+    ///
+    /// In other places, the spec does say to create a Lexical Environment, but
+    /// it turns out it doesn't have any bindings in it and we can optimize it
+    /// away.
+    ///
+    /// FIXME: "previous" doesn't work in some case. embed scope index instead.
+    AliasPrevious,
+
     Global(GlobalScopeData),
+    Var(VarScopeData),
     Lexical(LexicalScopeData),
+    Function(FunctionScopeData),
 }
 
 /// Index into ScopeDataList.scopes.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ScopeIndex {
     index: usize,
 }
 impl ScopeIndex {
     fn new(index: usize) -> Self {
         Self { index }
+    }
+
+    pub fn next(&self) -> Self {
+        Self {
+            index: self.index + 1,
+        }
     }
 }
 
@@ -249,10 +402,12 @@ impl From<ScopeIndex> for usize {
     }
 }
 
-/// The list of all scope data.
+/// A vector of scopes, incrementally populated during analysis.
+/// The goal is to build a `Vec<ScopeData>`.
 #[derive(Debug)]
 pub struct ScopeDataList {
-    /// Uses Option to make this populated later.
+    /// Uses Option to allow `allocate()` and `populate()` to be called
+    /// separately.
     scopes: Vec<Option<ScopeData>>,
 }
 
@@ -299,11 +454,14 @@ impl From<ScopeDataList> for Vec<ScopeData> {
     }
 }
 
-/// Scope data associated with AST node.
+/// The collection of all scope data associated with bindings and scopes in the
+/// AST.
 #[derive(Debug)]
 pub struct ScopeDataMap {
     scopes: ScopeDataList,
     global: ScopeIndex,
+
+    /// Associates every AST node that's a scope with an index into `scopes`.
     non_global: AssociatedData<ScopeIndex>,
 }
 
@@ -345,6 +503,20 @@ impl ScopeDataMap {
         match self.scopes.get_mut(index) {
             ScopeData::Lexical(scope) => scope,
             _ => panic!("Unexpected scope data for lexical"),
+        }
+    }
+
+    pub fn get_function_at_mut(&mut self, index: ScopeIndex) -> &mut FunctionScopeData {
+        match self.scopes.get_mut(index) {
+            ScopeData::Function(scope) => scope,
+            _ => panic!("Unexpected scope data for function"),
+        }
+    }
+
+    pub fn is_alias(&mut self, index: ScopeIndex) -> bool {
+        match self.scopes.get(index) {
+            ScopeData::AliasPrevious => true,
+            _ => false,
         }
     }
 }

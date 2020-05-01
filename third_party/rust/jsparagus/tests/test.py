@@ -1153,7 +1153,7 @@ class GenTestCase(unittest.TestCase):
             def __init__(self, goal='Script', builder=None):
                 super().__init__(goal, builder)
                 self._goal = goal
-                #self.debug = True
+                # self.debug = True
 
             def clone(self):
                 return JSParser(self._goal, self.methods)
@@ -1198,6 +1198,7 @@ LazyArrowFunction :
 
         try_it(['Script', 'LazyArrowFunction'])
         try_it(['Script'])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,10 +1,13 @@
+use crate::context_stack::{
+    BindingInfo, BindingKind, BindingsIndex, BreakOrContinueIndex, ContextMetadata, ControlInfo,
+};
 use crate::declaration_kind::DeclarationKind;
 use crate::early_errors::*;
 use crate::error::{ParseError, Result};
 use crate::Token;
 use ast::{
     arena,
-    source_atom_set::{CommonSourceAtomSetIndices, SourceAtomSet, SourceAtomSetIndex},
+    source_atom_set::{CommonSourceAtomSetIndices, SourceAtomSet},
     source_location_accessor::SourceLocationAccessor,
     source_slice_list::SourceSliceList,
     types::*,
@@ -14,96 +17,10 @@ use bumpalo::{vec, Bump};
 use std::cell::RefCell;
 use std::rc::Rc;
 
-// The kind of BindingIdentifier found while parsing.
-//
-// Given we don't yet have the context stack, at the point of finding
-// a BindingIdentifier, we don't know what kind of binding it is.
-// So it's marked as `Unknown`.
-//
-// Once the parser reaches the end of a declaration, bindings found in the
-// range are marked as corresponding kind.
-//
-// This is a separate enum than `DeclarationKind` for the following reason:
-//   * `DeclarationKind` is determined only when the parser reaches the end of
-//     the entire context (also because we don't have context stack), not each
-//     declaration
-//   * As long as `BindingKind` is known for each binding, we can map it to
-//     `DeclarationKind`
-//   * `DeclarationKind::CatchParameter` and some others don't to be marked
-//     this way, because `AstBuilder` knows where they are in the `bindings`
-//     vector.
-#[derive(Debug, PartialEq, Clone, Copy)]
-enum BindingKind {
-    // The initial state.
-    // BindingIdentifier is found, and haven't yet marked as any kind.
-    Unknown,
-
-    // BindingIdentifier is inside VariableDeclaration.
-    Var,
-
-    // BindingIdentifier is the name of FunctionDeclaration.
-    Function,
-
-    // BindingIdentifier is the name of GeneratorDeclaration,
-    // AsyncFunctionDeclaration, or AsyncGeneratorDeclaration.
-    AsyncOrGenerator,
-
-    // BindingIdentifier is inside LexicalDeclaration with let.
-    Let,
-
-    // BindingIdentifier is inside LexicalDeclaration with const.
-    Const,
-
-    // BindingIdentifier is the name of ClassDeclaration.
-    Class,
-
-    // BindingIdentifier is the name of LabelIdentifier.
-    // Only used to track which labels have been seen for duplicate labels. See
-    // 'on_label_identifier' for more information
-    Label,
-}
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-struct BindingInfo {
-    name: SourceAtomSetIndex,
-    // The offset of the BindingIdentifier in the source.
-    offset: usize,
-    kind: BindingKind,
-}
-
 pub struct AstBuilder<'alloc> {
     pub allocator: &'alloc Bump,
 
-    // The stack of information about BindingIdentifier.
-    //
-    // When the parser found BindingIdentifier, the information (`name` and
-    // `offset`) are noted to this vector, and when the parser determined what
-    // kind of binding it is, `kind` is updated.
-    //
-    // The bindings are sorted by offset.
-    //
-    // When the parser reaches the end of a scope, all bindings declared within
-    // that scope (not including nested scopes) are fed to an
-    // EarlyErrorsContext to detect Early Errors.
-    //
-    // When leaving a context that is not one of script/module/function,
-    // lexical items (`kind != BindingKind::Var && kind != BindingKind::Label`)
-    // in the corresponding range are removed, while non-lexical items
-    // (`kind == BindingKind::Var || kind == BindingKind::Label`) are
-    // left there, so that VariableDeclarations and labels are propagated to the
-    // enclosing context.
-    //
-    // FIXME: Once the context stack gets implemented, this structure and
-    //        related methods should be removed and each declaration should be
-    //        fed directly to EarlyErrorsContext.
-    bindings: Vec<BindingInfo>,
-
-    // Track continues and breaks without the use of a context stack.
-    //
-    // FIXME: Once th context stack geets implmentd, this structure and
-    //        related metehods should be removed, and each break/continue should be
-    //        fed directly to EarlyErrorsContext.
-    breaks_and_continues: Vec<ControlInfo>,
+    context_metadata: ContextMetadata,
 
     atoms: Rc<RefCell<SourceAtomSet<'alloc>>>,
 
@@ -122,8 +39,7 @@ impl<'alloc> AstBuilder<'alloc> {
     ) -> Self {
         Self {
             allocator,
-            bindings: Vec::new(),
-            breaks_and_continues: Vec::new(),
+            context_metadata: ContextMetadata::new(),
             atoms,
             slices,
         }
@@ -2416,7 +2332,8 @@ impl<'alloc> AstBuilder<'alloc> {
             _ => panic!("unexpected VariableDeclarationKind"),
         };
 
-        self.mark_binding_kind(kind.get_loc().start, None, binding_kind);
+        self.context_metadata
+            .mark_binding_kind(kind.get_loc().start, None, binding_kind);
 
         // 13.3.1.1 Static Semantics: Early Errors
         if let VariableDeclarationKind::Const { .. } = *kind {
@@ -2454,7 +2371,8 @@ impl<'alloc> AstBuilder<'alloc> {
             VariableDeclarationKind::Const { .. } => BindingKind::Const,
             _ => panic!("unexpected VariableDeclarationKind"),
         };
-        self.mark_binding_kind(kind.get_loc().start, None, binding_kind);
+        self.context_metadata
+            .mark_binding_kind(kind.get_loc().start, None, binding_kind);
 
         // 13.3.1.1 Static Semantics: Early Errors
         if let VariableDeclarationKind::Const { .. } = *kind {
@@ -2509,7 +2427,8 @@ impl<'alloc> AstBuilder<'alloc> {
             .expect("There should be at least one declarator")
             .get_loc();
 
-        self.mark_binding_kind(var_loc.start, None, BindingKind::Var);
+        self.context_metadata
+            .mark_binding_kind(var_loc.start, None, BindingKind::Var);
 
         self.alloc_with(|| {
             Statement::VariableDeclarationStatement(VariableDeclaration {
@@ -2858,7 +2777,8 @@ impl<'alloc> AstBuilder<'alloc> {
     ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         self.check_single_statement(&stmt)?;
 
-        self.pop_unlabelled_breaks_and_continues_from(do_token.loc.start);
+        self.context_metadata
+            .pop_unlabelled_breaks_and_continues_from(do_token.loc.start);
         Ok(self.alloc_with(|| Statement::DoWhileStatement {
             block: stmt,
             test,
@@ -2876,7 +2796,8 @@ impl<'alloc> AstBuilder<'alloc> {
         self.check_single_statement(&stmt)?;
 
         let stmt_loc = stmt.get_loc();
-        self.pop_unlabelled_breaks_and_continues_from(stmt_loc.start);
+        self.context_metadata
+            .pop_unlabelled_breaks_and_continues_from(stmt_loc.start);
         Ok(self.alloc_with(|| Statement::WhileStatement {
             test,
             block: stmt,
@@ -2921,7 +2842,8 @@ impl<'alloc> AstBuilder<'alloc> {
         stmt: arena::Box<'alloc, Statement<'alloc>>,
     ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         let stmt_loc = stmt.get_loc();
-        self.pop_unlabelled_breaks_and_continues_from(stmt_loc.start);
+        self.context_metadata
+            .pop_unlabelled_breaks_and_continues_from(stmt_loc.start);
         Ok(self.alloc_with(|| Statement::ForStatement {
             init,
             test,
@@ -2949,7 +2871,11 @@ impl<'alloc> AstBuilder<'alloc> {
             .expect("There should be at least one declarator")
             .get_loc();
 
-        self.mark_binding_kind(var_loc.start, Some(declarator_loc.end), BindingKind::Var);
+        self.context_metadata.mark_binding_kind(
+            var_loc.start,
+            Some(declarator_loc.end),
+            BindingKind::Var,
+        );
 
         VariableDeclarationOrExpression::VariableDeclaration(VariableDeclaration {
             kind: VariableDeclarationKind::Var { loc: var_loc },
@@ -3004,7 +2930,8 @@ impl<'alloc> AstBuilder<'alloc> {
         stmt: arena::Box<'alloc, Statement<'alloc>>,
     ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         let stmt_loc = stmt.get_loc();
-        self.pop_unlabelled_breaks_and_continues_from(stmt_loc.start);
+        self.context_metadata
+            .pop_unlabelled_breaks_and_continues_from(stmt_loc.start);
         Ok(self.alloc_with(|| Statement::ForInStatement {
             left,
             right,
@@ -3026,7 +2953,11 @@ impl<'alloc> AstBuilder<'alloc> {
             None => binding_loc,
         };
 
-        self.mark_binding_kind(binding_loc.start, Some(binding_loc.end), BindingKind::Var);
+        self.context_metadata.mark_binding_kind(
+            binding_loc.start,
+            Some(binding_loc.end),
+            BindingKind::Var,
+        );
 
         VariableDeclarationOrAssignmentTarget::VariableDeclaration(VariableDeclaration {
             kind: VariableDeclarationKind::Var { loc: var_loc },
@@ -3089,7 +3020,8 @@ impl<'alloc> AstBuilder<'alloc> {
         stmt: arena::Box<'alloc, Statement<'alloc>>,
     ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
         let stmt_loc = stmt.get_loc();
-        self.pop_unlabelled_breaks_and_continues_from(stmt_loc.start);
+        self.context_metadata
+            .pop_unlabelled_breaks_and_continues_from(stmt_loc.start);
         Ok(self.alloc_with(|| Statement::ForOfStatement {
             left,
             right,
@@ -3148,7 +3080,8 @@ impl<'alloc> AstBuilder<'alloc> {
             _ => panic!("unexpected VariableDeclarationKind"),
         };
 
-        self.mark_binding_kind(kind.get_loc().start, None, binding_kind);
+        self.context_metadata
+            .mark_binding_kind(kind.get_loc().start, None, binding_kind);
 
         let kind_loc = kind.get_loc();
         let binding_loc = binding.get_loc();
@@ -3190,15 +3123,17 @@ impl<'alloc> AstBuilder<'alloc> {
                 // a label, as is the case for ContinueStatements. These bindings are
                 // not necessary, and are at the end of the bindings stack. To keep things
                 // clean, we will pop the last element (the label we just added) off the stack.
-                let index = self.find_first_binding(continue_token.loc.start);
-                self.pop_bindings_from(index);
+                let index = self
+                    .context_metadata
+                    .find_first_binding(continue_token.loc.start);
+                self.context_metadata.pop_bindings_from(index);
 
                 ControlInfo::new_continue(continue_token.loc.start, Some(label.value))
             }
             None => ControlInfo::new_continue(continue_token.loc.start, None),
         };
 
-        self.breaks_and_continues.push(info);
+        self.context_metadata.push_break_or_continue(info);
 
         let continue_loc = continue_token.loc;
         let loc = match label {
@@ -3225,15 +3160,15 @@ impl<'alloc> AstBuilder<'alloc> {
                 // a label, as is the case for BreakStatements. These bindings are
                 // not necessary, and are at the end of the bindings stack. To keep things
                 // clean, we will pop the last element (the label we just added) off the stack.
-                let index = self.find_first_binding(label.loc.start);
-                self.pop_bindings_from(index);
+                let index = self.context_metadata.find_first_binding(label.loc.start);
+                self.context_metadata.pop_bindings_from(index);
 
                 ControlInfo::new_break(break_token.loc.start, Some(label.value))
             }
             None => ControlInfo::new_break(break_token.loc.start, None),
         };
 
-        self.breaks_and_continues.push(info);
+        self.context_metadata.push_break_or_continue(info);
         let break_loc = break_token.loc;
         let loc = match label {
             Some(ref label) => SourceLocation::from_parts(break_loc, label.loc),
@@ -3551,7 +3486,8 @@ impl<'alloc> AstBuilder<'alloc> {
     }
 
     pub fn function_decl(&mut self, f: Function<'alloc>) -> arena::Box<'alloc, Statement<'alloc>> {
-        self.mark_binding_kind(f.loc.start, None, BindingKind::Function);
+        self.context_metadata
+            .mark_binding_kind(f.loc.start, None, BindingKind::Function);
 
         self.alloc_with(|| Statement::FunctionDeclaration(f))
     }
@@ -3560,14 +3496,15 @@ impl<'alloc> AstBuilder<'alloc> {
         &mut self,
         f: Function<'alloc>,
     ) -> arena::Box<'alloc, Statement<'alloc>> {
-        self.mark_binding_kind(f.loc.start, None, BindingKind::AsyncOrGenerator);
+        self.context_metadata
+            .mark_binding_kind(f.loc.start, None, BindingKind::AsyncOrGenerator);
 
         self.alloc_with(|| Statement::FunctionDeclaration(f))
     }
 
     pub fn function_expr(&mut self, f: Function<'alloc>) -> arena::Box<'alloc, Expression<'alloc>> {
-        let index = self.find_first_binding(f.loc.start);
-        self.pop_bindings_from(index);
+        let index = self.context_metadata.find_first_binding(f.loc.start);
+        self.context_metadata.pop_bindings_from(index);
 
         self.alloc_with(|| Expression::FunctionExpression(f))
     }
@@ -4048,7 +3985,8 @@ impl<'alloc> AstBuilder<'alloc> {
     ) -> arena::Box<'alloc, Statement<'alloc>> {
         let class_loc = class_token.loc;
 
-        self.mark_binding_kind(class_loc.start, None, BindingKind::Class);
+        self.context_metadata
+            .mark_binding_kind(class_loc.start, None, BindingKind::Class);
 
         let tail = tail.unbox();
         let tail_loc = tail.loc;
@@ -4081,8 +4019,10 @@ impl<'alloc> AstBuilder<'alloc> {
         name: Option<arena::Box<'alloc, BindingIdentifier>>,
         mut tail: arena::Box<'alloc, ClassExpression<'alloc>>,
     ) -> arena::Box<'alloc, Expression<'alloc>> {
-        let index = self.find_first_binding(class_token.loc.start);
-        self.pop_bindings_from(index);
+        let index = self
+            .context_metadata
+            .find_first_binding(class_token.loc.start);
+        self.context_metadata.pop_bindings_from(index);
 
         tail.name = name.map(|boxed| boxed.unbox());
         tail.loc.start = class_token.loc.start;
@@ -4594,11 +4534,11 @@ impl<'alloc> AstBuilder<'alloc> {
         let name = token.value.as_atom();
         let offset = token.loc.start;
 
-        if let Some(info) = self.bindings.last() {
+        if let Some(info) = self.context_metadata.last_binding() {
             debug_assert!(info.offset < offset);
         }
 
-        self.bindings.push(BindingInfo {
+        self.context_metadata.push_binding(BindingInfo {
             name,
             offset,
             kind: BindingKind::Unknown,
@@ -4621,7 +4561,7 @@ impl<'alloc> AstBuilder<'alloc> {
         let name = token.value.as_atom();
         let offset = token.loc.start;
 
-        if let Some(info) = self.bindings.last() {
+        if let Some(info) = self.context_metadata.last_binding() {
             debug_assert!(info.offset < offset);
         }
 
@@ -4632,7 +4572,7 @@ impl<'alloc> AstBuilder<'alloc> {
         // If the label is attached to a continue or break statement, its binding info
         // is popped from the stack. See `continue_statement` and `break_statement` for more
         // information.
-        self.bindings.push(BindingInfo {
+        self.context_metadata.push_binding(BindingInfo {
             name,
             offset,
             kind: BindingKind::Label,
@@ -4641,157 +4581,13 @@ impl<'alloc> AstBuilder<'alloc> {
         context.check_label_identifier(token, &self.atoms.borrow())
     }
 
-    // Update the binding kind of all names declared in a specific range of the
-    // source (and not in any nested scope). This is used e.g. when the parser
-    // reaches the end of a VariableStatement to mark all the variables as Var
-    // bindings.
-    //
-    // It's necessary because the current parser only calls AstBuilder methods
-    // at the end of each production, not at the beginning.
-    //
-    // Bindings inside `StatementList` must be marked using this method before
-    // we reach the end of its scope.
-    fn mark_binding_kind(&mut self, from: usize, to: Option<usize>, kind: BindingKind) {
-        for info in self.bindings.iter_mut().rev() {
-            if info.offset < from {
-                break;
-            }
-
-            if to.is_none() || info.offset < to.unwrap() {
-                info.kind = kind;
-            }
-        }
-    }
-
-    // Returns the index of the first binding at/after `offset` source position.
-    fn find_first_binding(&mut self, offset: usize) -> usize {
-        let mut i = self.bindings.len();
-        for info in self.bindings.iter_mut().rev() {
-            if info.offset < offset {
-                break;
-            }
-            i -= 1;
-        }
-        i
-    }
-
-    // Remove all bindings after `index`-th item.
-    //
-    // This should be called when leaving function/script/module.
-    fn pop_bindings_from(&mut self, index: usize) {
-        self.bindings.truncate(index)
-    }
-
-    // Remove lexical bindings after `index`-th item,
-    // while keeping var bindings.
-    //
-    // This should be called when leaving block.
-    fn pop_lexical_bindings_from(&mut self, index: usize) {
-        let len = self.bindings.len();
-        let mut i = index;
-
-        while i < len && self.bindings[i].kind == BindingKind::Var {
-            i += 1;
-        }
-
-        let mut j = i;
-        while j < len {
-            if self.bindings[j].kind == BindingKind::Var
-                || self.bindings[j].kind == BindingKind::Label
-            {
-                self.bindings[i] = self.bindings[j];
-                i += 1;
-            }
-            j += 1;
-        }
-
-        self.bindings.truncate(i)
-    }
-
-    // Returns the index of the first break or continue at/after `offset` source position.
-    fn find_first_break_or_continue(&mut self, offset: usize) -> BreakOrContinueIndex {
-        let mut i = self.breaks_and_continues.len();
-        for info in self.breaks_and_continues.iter_mut().rev() {
-            if info.offset < offset {
-                break;
-            }
-            i -= 1;
-        }
-        BreakOrContinueIndex::new(i)
-    }
-
-    fn pop_labelled_breaks_and_continues_from_index(
-        &mut self,
-        index: BreakOrContinueIndex,
-        name: SourceAtomSetIndex,
-    ) {
-        let len = self.breaks_and_continues.len();
-        let mut i = index.index;
-
-        let mut j = i;
-        while j < len {
-            let label = self.breaks_and_continues[j].label;
-            if label.is_none() || label.unwrap() != name {
-                self.breaks_and_continues[i] = self.breaks_and_continues[j];
-                i += 1;
-            }
-            j += 1;
-        }
-
-        self.breaks_and_continues.truncate(i)
-    }
-
-    fn pop_unlabelled_breaks_and_continues_from(&mut self, offset: usize) {
-        let len = self.breaks_and_continues.len();
-        let index = self.find_first_break_or_continue(offset);
-        let mut i = index.index;
-
-        while i < len && self.breaks_and_continues[i].label.is_some() {
-            i += 1;
-        }
-
-        let mut j = i;
-        while j < len {
-            if self.breaks_and_continues[j].label.is_some() {
-                self.breaks_and_continues[i] = self.breaks_and_continues[j];
-                i += 1;
-            }
-            j += 1;
-        }
-
-        self.breaks_and_continues.truncate(i)
-    }
-
-    fn pop_unlabelled_breaks_from(&mut self, offset: usize) {
-        let len = self.breaks_and_continues.len();
-        let index = self.find_first_break_or_continue(offset);
-        let mut i = index.index;
-
-        while i < len && self.breaks_and_continues[i].label.is_some() {
-            i += 1;
-        }
-
-        let mut j = i;
-        while j < len {
-            if self.breaks_and_continues[j].label.is_some()
-                || self.breaks_and_continues[j].kind == ControlKind::Continue
-            {
-                self.breaks_and_continues[i] = self.breaks_and_continues[j];
-                i += 1;
-            }
-            j += 1;
-        }
-
-        self.breaks_and_continues.truncate(i)
-    }
-
     // Declare bindings to Block-like context, where function declarations
     // are lexical.
-    fn declare_block<T>(&self, context: &mut T, index: usize) -> Result<'alloc, ()>
+    fn declare_block<T>(&self, context: &mut T, index: BindingsIndex) -> Result<'alloc, ()>
     where
         T: LexicalEarlyErrorsContext + VarEarlyErrorsContext,
     {
-        for info in self.bindings.iter().skip(index) {
+        for info in self.context_metadata.bindings_from(index) {
             match info.kind {
                 BindingKind::Var => {
                     context.declare_var(
@@ -4863,9 +4659,11 @@ impl<'alloc> AstBuilder<'alloc> {
     // Check bindings in Block.
     fn check_block_bindings(&mut self, start_of_block_offset: usize) -> Result<'alloc, ()> {
         let mut context = BlockEarlyErrorsContext::new();
-        let index = self.find_first_binding(start_of_block_offset);
+        let index = self
+            .context_metadata
+            .find_first_binding(start_of_block_offset);
         self.declare_block(&mut context, index)?;
-        self.pop_lexical_bindings_from(index);
+        self.context_metadata.pop_lexical_bindings_from(index);
 
         Ok(())
     }
@@ -4874,10 +4672,10 @@ impl<'alloc> AstBuilder<'alloc> {
     fn declare_lexical_for_head(
         &self,
         context: &mut LexicalForHeadEarlyErrorsContext,
-        from: usize,
-        to: usize,
+        from: BindingsIndex,
+        to: BindingsIndex,
     ) -> Result<'alloc, ()> {
-        for info in self.bindings.iter().skip(from).take(to - from) {
+        for info in self.context_metadata.bindings_from_to(from, to) {
             match info.kind {
                 BindingKind::Let => {
                     context.declare_lex(
@@ -4908,9 +4706,9 @@ impl<'alloc> AstBuilder<'alloc> {
     fn declare_lexical_for_body(
         &self,
         context: &mut LexicalForBodyEarlyErrorsContext,
-        index: usize,
+        index: BindingsIndex,
     ) -> Result<'alloc, ()> {
-        for info in self.bindings.iter().skip(index) {
+        for info in self.context_metadata.bindings_from(index) {
             match info.kind {
                 BindingKind::Var => {
                     context.declare_var(
@@ -4943,13 +4741,13 @@ impl<'alloc> AstBuilder<'alloc> {
     fn check_lexical_for_bindings(&mut self, bindings_loc: &SourceLocation) -> Result<'alloc, ()> {
         let mut head_context = LexicalForHeadEarlyErrorsContext::new();
 
-        let head_index = self.find_first_binding(bindings_loc.start);
-        let body_index = self.find_first_binding(bindings_loc.end);
+        let head_index = self.context_metadata.find_first_binding(bindings_loc.start);
+        let body_index = self.context_metadata.find_first_binding(bindings_loc.end);
         self.declare_lexical_for_head(&mut head_context, head_index, body_index)?;
 
         let mut body_context = LexicalForBodyEarlyErrorsContext::new(head_context);
         self.declare_lexical_for_body(&mut body_context, body_index)?;
-        self.pop_lexical_bindings_from(head_index);
+        self.context_metadata.pop_lexical_bindings_from(head_index);
 
         Ok(())
     }
@@ -4958,23 +4756,30 @@ impl<'alloc> AstBuilder<'alloc> {
     fn check_case_block_binding(&mut self, start_of_block_offset: usize) -> Result<'alloc, ()> {
         let mut context = CaseBlockEarlyErrorsContext::new();
 
-        let index = self.find_first_binding(start_of_block_offset);
+        let index = self
+            .context_metadata
+            .find_first_binding(start_of_block_offset);
         // Check bindings in CaseBlock of switch-statement.
         self.declare_block(&mut context, index)?;
+        self.context_metadata.pop_lexical_bindings_from(index);
 
-        self.pop_unlabelled_breaks_from(index);
-
-        self.pop_lexical_bindings_from(index);
+        self.context_metadata
+            .pop_unlabelled_breaks_from(start_of_block_offset);
 
         Ok(())
     }
 
     // Declare bindings to the parameter of function or catch.
-    fn declare_param<T>(&self, context: &mut T, from: usize, to: usize) -> Result<'alloc, ()>
+    fn declare_param<T>(
+        &self,
+        context: &mut T,
+        from: BindingsIndex,
+        to: BindingsIndex,
+    ) -> Result<'alloc, ()>
     where
         T: ParameterEarlyErrorsContext,
     {
-        for info in self.bindings.iter().skip(from).take(to - from) {
+        for info in self.context_metadata.bindings_from_to(from, to) {
             context.declare(info.name, info.offset, &self.atoms.borrow())?;
         }
 
@@ -4993,25 +4798,25 @@ impl<'alloc> AstBuilder<'alloc> {
             CatchParameterEarlyErrorsContext::new_with_binding_pattern()
         };
 
-        let param_index = self.find_first_binding(bindings_loc.start);
-        let body_index = self.find_first_binding(bindings_loc.end);
+        let param_index = self.context_metadata.find_first_binding(bindings_loc.start);
+        let body_index = self.context_metadata.find_first_binding(bindings_loc.end);
         self.declare_param(&mut param_context, param_index, body_index)?;
 
         let mut block_context = CatchBlockEarlyErrorsContext::new(param_context);
         self.declare_block(&mut block_context, body_index)?;
-        self.pop_lexical_bindings_from(param_index);
+        self.context_metadata.pop_lexical_bindings_from(param_index);
 
         Ok(())
     }
 
     // Check bindings in Catch with no parameter and Block.
     fn check_catch_no_param_bindings(&mut self, catch_offset: usize) -> Result<'alloc, ()> {
-        let body_index = self.find_first_binding(catch_offset);
+        let body_index = self.context_metadata.find_first_binding(catch_offset);
 
         let param_context = CatchParameterEarlyErrorsContext::new_with_binding_identifier();
         let mut block_context = CatchBlockEarlyErrorsContext::new(param_context);
         self.declare_block(&mut block_context, body_index)?;
-        self.pop_lexical_bindings_from(body_index);
+        self.context_metadata.pop_lexical_bindings_from(body_index);
 
         Ok(())
     }
@@ -5024,8 +4829,8 @@ impl<'alloc> AstBuilder<'alloc> {
     where
         T: ControlEarlyErrorsContext,
     {
-        let index = self.find_first_break_or_continue(offset);
-        if let Some(info) = self.find_break_or_continue_at(index) {
+        let index = self.context_metadata.find_first_break_or_continue(offset);
+        if let Some(info) = self.context_metadata.find_break_or_continue_at(index) {
             context.on_unhandled_break_or_continue(info)?;
         }
 
@@ -5035,26 +4840,26 @@ impl<'alloc> AstBuilder<'alloc> {
     fn check_unhandled_continue(
         &mut self,
         context: LabelledStatementEarlyErrorsContext,
-        index: &BreakOrContinueIndex,
+        index: BreakOrContinueIndex,
     ) -> Result<'alloc, ()> {
-        for info in self.breaks_and_continues.iter().skip(index.index) {
+        for info in self.context_metadata.breaks_and_continues_from(index) {
             context.check_labelled_continue_to_non_loop(info)?;
         }
 
         Ok(())
     }
 
-    fn find_break_or_continue_at(&self, index: BreakOrContinueIndex) -> Option<&ControlInfo> {
-        self.breaks_and_continues.get(index.index)
-    }
-
     // Declare bindings to script-or-function-like context, where function
     // declarations are body-level.
-    fn declare_script_or_function<T>(&self, context: &mut T, index: usize) -> Result<'alloc, ()>
+    fn declare_script_or_function<T>(
+        &self,
+        context: &mut T,
+        index: BindingsIndex,
+    ) -> Result<'alloc, ()>
     where
         T: LexicalEarlyErrorsContext + VarEarlyErrorsContext,
     {
-        for info in self.bindings.iter().skip(index) {
+        for info in self.context_metadata.bindings_from(index) {
             match info.kind {
                 BindingKind::Var => {
                     context.declare_var(
@@ -5128,8 +4933,12 @@ impl<'alloc> AstBuilder<'alloc> {
             FormalParametersEarlyErrorsContext::new_non_simple()
         };
 
-        let param_index = self.find_first_binding(start_of_param_offset);
-        let body_index = self.find_first_binding(end_of_param_offset);
+        let param_index = self
+            .context_metadata
+            .find_first_binding(start_of_param_offset);
+        let body_index = self
+            .context_metadata
+            .find_first_binding(end_of_param_offset);
         self.declare_param(&mut param_context, param_index, body_index)?;
 
         let mut body_context = FunctionBodyEarlyErrorsContext::new(param_context);
@@ -5137,7 +4946,7 @@ impl<'alloc> AstBuilder<'alloc> {
 
         self.check_unhandled_break_or_continue(body_context, end_of_param_offset)?;
 
-        self.pop_bindings_from(param_index);
+        self.context_metadata.pop_bindings_from(param_index);
 
         Ok(())
     }
@@ -5150,13 +4959,17 @@ impl<'alloc> AstBuilder<'alloc> {
     ) -> Result<'alloc, ()> {
         let mut param_context = UniqueFormalParametersEarlyErrorsContext::new();
 
-        let param_index = self.find_first_binding(start_of_param_offset);
-        let body_index = self.find_first_binding(end_of_param_offset);
+        let param_index = self
+            .context_metadata
+            .find_first_binding(start_of_param_offset);
+        let body_index = self
+            .context_metadata
+            .find_first_binding(end_of_param_offset);
         self.declare_param(&mut param_context, param_index, body_index)?;
 
         let mut body_context = UniqueFunctionBodyEarlyErrorsContext::new(param_context);
         self.declare_script_or_function(&mut body_context, body_index)?;
-        self.pop_bindings_from(param_index);
+        self.context_metadata.pop_bindings_from(param_index);
 
         self.check_unhandled_break_or_continue(body_context, end_of_param_offset)?;
 
@@ -5166,8 +4979,9 @@ impl<'alloc> AstBuilder<'alloc> {
     // Check bindings in Script.
     fn check_script_bindings(&mut self) -> Result<'alloc, ()> {
         let mut context = ScriptEarlyErrorsContext::new();
-        self.declare_script_or_function(&mut context, 0)?;
-        self.pop_bindings_from(0);
+        let index = BindingsIndex { index: 0 };
+        self.declare_script_or_function(&mut context, index)?;
+        self.context_metadata.pop_bindings_from(index);
 
         self.check_unhandled_break_or_continue(context, 0)?;
 
@@ -5177,8 +4991,9 @@ impl<'alloc> AstBuilder<'alloc> {
     // Check bindings in Module.
     fn check_module_bindings(&mut self) -> Result<'alloc, ()> {
         let mut context = ModuleEarlyErrorsContext::new();
-        self.declare_script_or_function(&mut context, 0)?;
-        self.pop_bindings_from(0);
+        let index = BindingsIndex { index: 0 };
+        self.declare_script_or_function(&mut context, index)?;
+        self.context_metadata.pop_bindings_from(index);
 
         self.check_unhandled_break_or_continue(context, 0)?;
 
@@ -5267,15 +5082,20 @@ impl<'alloc> AstBuilder<'alloc> {
 
         let context = LabelledStatementEarlyErrorsContext::new(name, is_loop);
 
-        let binding_index = self.find_first_binding(end_label_offset);
-        for info in self.bindings.iter().skip(binding_index) {
-            context.check_duplicate_label(info.name)?;
+        let binding_index = self.context_metadata.find_first_binding(end_label_offset);
+        for info in self.context_metadata.bindings_from(binding_index) {
+            if info.kind == BindingKind::Label {
+                context.check_duplicate_label(info.name)?;
+            }
         }
 
-        let label_index = self.find_first_break_or_continue(start_label_offset);
-        self.check_unhandled_continue(context, &label_index)?;
+        let label_index = self
+            .context_metadata
+            .find_first_break_or_continue(start_label_offset);
+        self.check_unhandled_continue(context, label_index)?;
 
-        self.pop_labelled_breaks_and_continues_from_index(label_index, name);
+        self.context_metadata
+            .pop_labelled_breaks_and_continues_from_index(label_index, name);
         Ok(())
     }
 }

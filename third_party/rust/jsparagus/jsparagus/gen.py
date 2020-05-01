@@ -63,7 +63,6 @@ def generate_parser(
     assert target in ('python', 'rust')
 
     if isinstance(source, Grammar):
-        grammar = CanonicalGrammar(source)
         parser_data = generate_parser_states(
             source, verbose=verbose, progress=progress, debug=debug)
     elif isinstance(source, ParseTable):
