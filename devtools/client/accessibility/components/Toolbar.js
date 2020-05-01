@@ -30,7 +30,10 @@ loader.lazyGetter(this, "SimulationMenuButton", function() {
 });
 
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { disable } = require("devtools/client/accessibility/actions/ui");
+const {
+  disable,
+  updateCanBeDisabled,
+} = require("devtools/client/accessibility/actions/ui");
 
 class Toolbar extends Component {
   static get propTypes() {
@@ -41,7 +44,8 @@ class Toolbar extends Component {
       toolboxDoc: PropTypes.object.isRequired,
       audit: PropTypes.func.isRequired,
       simulate: PropTypes.func,
-      autoInit: PropTypes.bool.isRequired,
+      startListeningForLifecycleEvents: PropTypes.func.isRequired,
+      stopListeningForLifecycleEvents: PropTypes.func.isRequired,
     };
   }
 
@@ -53,6 +57,23 @@ class Toolbar extends Component {
     };
 
     this.onDisable = this.onDisable.bind(this);
+    this.onCanBeDisabledChange = this.onCanBeDisabledChange.bind(this);
+  }
+
+  componentWillMount() {
+    this.props.startListeningForLifecycleEvents({
+      "can-be-disabled-change": this.onCanBeDisabledChange,
+    });
+  }
+
+  componentWillUnmount() {
+    this.props.stopListeningForLifecycleEvents({
+      "can-be-disabled-change": this.onCanBeDisabledChange,
+    });
+  }
+
+  onCanBeDisabledChange(canBeDisabled) {
+    this.props.dispatch(updateCanBeDisabled(canBeDisabled));
   }
 
   onDisable() {
@@ -65,7 +86,7 @@ class Toolbar extends Component {
   }
 
   render() {
-    const { canBeDisabled, simulate, toolboxDoc, audit, autoInit } = this.props;
+    const { canBeDisabled, simulate, toolboxDoc, audit } = this.props;
     const { disabling } = this.state;
     const disableButtonStr = disabling
       ? "accessibility.disabling"
@@ -96,23 +117,21 @@ class Toolbar extends Component {
         className: "devtools-toolbar",
         role: "toolbar",
       },
-      !autoInit &&
-        Button(
-          {
-            className: "disable",
-            id: "accessibility-disable-button",
-            onClick: this.onDisable,
-            disabled: disabling || isDisabled,
-            busy: disabling,
-            title,
-          },
-          L10N.getStr(disableButtonStr)
-        ),
-      !autoInit &&
-        div({
-          role: "separator",
-          className: "devtools-separator",
-        }),
+      Button(
+        {
+          className: "disable",
+          id: "accessibility-disable-button",
+          onClick: this.onDisable,
+          disabled: disabling || isDisabled,
+          busy: disabling,
+          title,
+        },
+        L10N.getStr(disableButtonStr)
+      ),
+      div({
+        role: "separator",
+        className: "devtools-separator",
+      }),
       // @remove after release 68 (See Bug 1551574)
       span(
         {
@@ -134,14 +153,8 @@ class Toolbar extends Component {
   }
 }
 
-const mapStateToProps = ({
-  ui: {
-    canBeDisabled,
-    supports: { autoInit },
-  },
-}) => ({
-  canBeDisabled,
-  autoInit,
+const mapStateToProps = ({ ui }) => ({
+  canBeDisabled: ui.canBeDisabled,
 });
 
 // Exports from this module
