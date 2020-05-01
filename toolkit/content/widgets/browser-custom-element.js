@@ -111,12 +111,6 @@
         return new LazyModules.PopupBlocker(this);
       });
 
-      this.addEventListener("FullZoomChange", function() {
-        if (!this.browsingContext.inRDMPane) {
-          this._fullZoom = this.browsingContext.fullZoom;
-        }
-      });
-
       this.addEventListener(
         "keypress",
         event => {
@@ -349,7 +343,7 @@
 
       this._contentRequestContextID = null;
 
-      this._fullZoom = 1.0;
+      this._rdmFullZoom = 1.0;
 
       this._isSyntheticDocument = false;
 
@@ -822,8 +816,8 @@
       if (val.toFixed(2) == this.fullZoom.toFixed(2)) {
         return;
       }
-      this._fullZoom = val;
       if (this.browsingContext.inRDMPane) {
+        this._rdmFullZoom = val;
         let event = document.createEvent("Events");
         event.initEvent("FullZoomChange", true, false);
         this.dispatchEvent(event);
@@ -833,7 +827,10 @@
     }
 
     get fullZoom() {
-      return this._fullZoom;
+      if (this.browsingContext.inRDMPane) {
+        return this._rdmFullZoom;
+      }
+      return this.browsingContext.fullZoom;
     }
 
     set textZoom(val) {
@@ -849,12 +846,13 @@
 
     enterResponsiveMode() {
       this.browsingContext.inRDMPane = true;
+      this._rdmFullZoom = this.browsingContext.fullZoom;
       this.browsingContext.fullZoom = 1.0;
     }
 
     leaveResponsiveMode() {
       this.browsingContext.inRDMPane = false;
-      this.browsingContext.fullZoom = this._fullZoom;
+      this.browsingContext.fullZoom = this._rdmFullZoom;
     }
 
     get isSyntheticDocument() {
@@ -1811,7 +1809,7 @@
       // DOMLinkAdded/Removed, onStateChange) should not be swapped here,
       // because these notifications are dispatched again once the docshells
       // are swapped.
-      var fieldsToSwap = ["_webBrowserFind", "_fullZoom"];
+      var fieldsToSwap = ["_webBrowserFind", "_rdmFullZoom"];
 
       if (this.isRemoteBrowser) {
         fieldsToSwap.push(
