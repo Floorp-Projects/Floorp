@@ -19,6 +19,35 @@ const CARDS = [
       },
     },
   },
+  {
+    id: "CARD_2",
+    content: {
+      title: "Test title",
+      text: "Test body text",
+      icon: "icon",
+      primary_button: {
+        label: "Test button label",
+        action: {
+          type: "OPEN_URL",
+          data: { args: "https://example.com/" },
+        },
+      },
+    },
+  },
+  {
+    id: "CARD_3",
+    content: {
+      title: "Test title with no body text",
+      icon: "icon",
+      primary_button: {
+        label: "Test button label with no body text",
+        action: {
+          type: "OPEN_URL",
+          data: { args: "https://example.com/" },
+        },
+      },
+    },
+  },
 ];
 
 describe("<Triplets>", () => {
@@ -74,7 +103,7 @@ describe("<Triplets>", () => {
     assert.calledOnce(onHide);
     assert.calledWith(sendTelemetryStub, {
       event: "DISMISS",
-      message_id: CARDS[0].id,
+      message_id: `${CARDS[0].id},${CARDS[1].id},${CARDS[2].id}`,
       id: "onboarding-cards",
       action: "onboarding_user_event",
     });
@@ -82,6 +111,7 @@ describe("<Triplets>", () => {
   it("should add utm_* query params to card actions and send the right ping when a card button is clicked", () => {
     wrapper
       .find(OnboardingCard)
+      .first()
       .find("button.onboardingButton")
       .simulate("click");
     assert.calledOnce(onAction);
@@ -99,6 +129,7 @@ describe("<Triplets>", () => {
   it("should not call blockById by default when a card button is clicked", () => {
     wrapper
       .find(OnboardingCard)
+      .first()
       .find("button.onboardingButton")
       .simulate("click");
     assert.notCalled(onBlockById);
@@ -107,9 +138,19 @@ describe("<Triplets>", () => {
     CARDS[0].blockOnClick = true;
     wrapper
       .find(OnboardingCard)
+      .first()
       .find("button.onboardingButton")
       .simulate("click");
     assert.calledOnce(onBlockById);
     assert.calledWith(onBlockById, CARDS[0].id);
+  });
+  it("Onboarding card without text content should hide onboardingText paragraph", () => {
+    assert.lengthOf(
+      wrapper
+        .find(OnboardingCard)
+        .last()
+        .find("p.onboardingText"),
+      0
+    );
   });
 });
