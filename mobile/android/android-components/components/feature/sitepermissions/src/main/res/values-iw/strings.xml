@@ -10,6 +10,9 @@
     <string name="mozac_feature_sitepermissions_location_title">האם לאפשר ל־%1$s להשתמש במיקום שלך?</string>
     <!-- Title of a dialog for a camera and microphone permission request. -->
     <string name="mozac_feature_sitepermissions_camera_and_microphone">האם לאפשר ל־%1$s להשתמש במצלמה ובמיקרופון שלך?</string>
+    <!-- Option in a dialog for requesting a microphone permission, this option will give access to
+         the first microphone-->
+    <string name="mozac_feature_sitepermissions_option_microphone_one">מיקרופון 1</string>
     <!-- Option in a dialog for requesting a camera permission, this option will give access to
          back facing camera-->
     <string name="mozac_feature_sitepermissions_back_facing_camera2">מצלמה אחורית</string>

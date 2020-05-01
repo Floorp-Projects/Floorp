@@ -66,6 +66,10 @@
     <string name="mozac_feature_addons_settings_on">Be</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Ki</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Engedélyezés privát böngészésben</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Futtatás privát böngészésben</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Engedélyezve</string>
     <!-- Indicates the add-on is disabled. -->
