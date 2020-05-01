@@ -9,7 +9,7 @@ __all__ = ['gencxx', 'genipdl', 'parse', 'typecheck', 'writeifmodified',
 
 import os
 import sys
-from cStringIO import StringIO
+from io import StringIO
 
 from ipdl.cgen import IPDLCodeGen
 from ipdl.lower import LowerToCxx, msgenums
@@ -75,6 +75,7 @@ def genmsgenum(ast):
 
 
 def writeifmodified(contents, file):
+    contents = contents.encode('utf-8')
     dir = os.path.dirname(file)
     os.path.exists(dir) or os.makedirs(dir)
 

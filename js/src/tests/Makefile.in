@@ -24,4 +24,4 @@ PKG_STAGE = $(DIST)/test-stage
 stage-package:
 	$(NSINSTALL) -D $(PKG_STAGE)/jsreftest/tests/js/src/tests
 	(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - $(TEST_FILES)) | (cd $(PKG_STAGE)/jsreftest/tests/js/src/tests && tar -xf -)
-	$(PYTHON) $(srcdir)/jstests.py --make-manifests $(PKG_STAGE)/jsreftest/tests/js/src/tests
+	$(PYTHON3) $(srcdir)/jstests.py --make-manifests $(PKG_STAGE)/jsreftest/tests/js/src/tests
