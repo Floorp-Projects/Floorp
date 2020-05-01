@@ -3388,7 +3388,7 @@ bool nsBlockFrame::CachedIsEmpty() {
   if (!IsSelfEmpty()) {
     return false;
   }
-  for (const auto& line : mLines) {
+  for (auto& line : mLines) {
     if (!line.CachedIsEmpty()) {
       return false;
     }
