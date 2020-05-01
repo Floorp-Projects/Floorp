@@ -7,8 +7,9 @@
 
     <action
         android:id="@+id/action_global_home"
+        app:destination="@+id/homeFragment"
         app:popUpTo="@id/homeFragment"
-        app:popUpToInclusive="false" />
+        app:popUpToInclusive="true" />
 
     <action
         android:id="@+id/action_global_browser"

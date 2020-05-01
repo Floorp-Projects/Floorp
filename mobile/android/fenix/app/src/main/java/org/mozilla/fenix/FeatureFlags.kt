@@ -47,5 +47,5 @@ object FeatureFlags {
     /**
      * Enables new tab tray pref
      */
-    val tabTray = Config.channel.isDebug
+    val tabTray = Config.channel.isNightlyOrDebug
 }
