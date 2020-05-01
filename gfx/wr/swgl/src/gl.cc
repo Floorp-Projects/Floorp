@@ -2822,37 +2822,42 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint16_t z,
     //    r1.x, r1.y);
   }
 
-  // Current X of left edge.
-  float lx = l0.x;
-  // Scale for change in Y of left edge.
-  float lk = 1.0f / (l1.y - l0.y);
-  // dX/dY slope for left edge.
-  float lm = (l1.x - l0.x) * lk;
-  // Current X of right edge.
-  float rx = r0.x;
-  // Scale for change in Y of right edge.
-  float rk = 1.0f / (r1.y - r0.y);
-  // dX/dY slope for right edge.
-  float rm = (r1.x - r0.x) * rk;
+  struct Edge
+  {
+    float yScale;
+    float xSlope;
+    float x;
+    Interpolants interpSlope;
+    Interpolants interp;
+
+    Edge(float y, const Point2D& p0, const Point2D& p1,
+         const Interpolants& i0, const Interpolants& i1) :
+      // inverse Y scale for slope calculations
+      yScale(1.0f / (p1.y - p0.y)),
+      // Calculate dX/dY slope
+      xSlope((p1.x - p0.x) * yScale),
+      // Initialize current X based on Y and slope
+      x(p0.x + (y - p0.y) * xSlope),
+      // Calculate change in interpolants per change in Y
+      interpSlope((i1 - i0) * yScale),
+      // Initialize current interpolants based on Y and slope
+      interp(i0 + (y - p0.y) * interpSlope)
+    {}
+
+    void nextRow() {
+      // step current X and interpolants to next row from slope
+      x += xSlope;
+      interp += interpSlope;
+    }
+  };
+
   // Vertex selection above should result in equal left and right start rows
   assert(l0.y == r0.y);
   // Find the start y, clip to within the clip rect, and round to row center.
   float y = floor(max(l0.y, clipRect.y0) + 0.5f) + 0.5f;
-  // Advance left and right X based on difference of Y from edge starts
-  lx += (y - l0.y) * lm;
-  rx += (y - r0.y) * rm;
-  // Interpolants at start of left edge
-  Interpolants lo = interp_outs[l0i];
-  // Calculate change in left edge interpolants per change in Y
-  Interpolants lom = (interp_outs[l1i] - lo) * lk;
-  // Advance current left interpolants to current Y
-  lo = lo + lom * (y - l0.y);
-  // Interpolants at start of right edge
-  Interpolants ro = interp_outs[r0i];
-  // Calculate change in right edge interpolants per change in Y
-  Interpolants rom = (interp_outs[r1i] - ro) * rk;
-  // Advance current right edge interpolants to current Y
-  ro = ro + rom * (y - r0.y);
+  // Initialize left and right edges from end points and start Y
+  Edge left(y, l0, l1, interp_outs[l0i], interp_outs[l1i]);
+  Edge right(y, r0, r1, interp_outs[r0i], interp_outs[r1i]);
   // Get pointer to color buffer and depth buffer at current Y
   P* fbuf = (P*)colortex.sample_ptr(0, int(y), layer, sizeof(P));
   uint16_t* fdepth =
@@ -2876,42 +2881,22 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint16_t z,
         if (e1.y < e0.y || e0i == end) return;                         \
         /* Otherwise, it's a duplicate, so keep searching. */          \
       }
+      // Step to next left edge and reset edge interpolants.
       STEP_EDGE(l0i, l0, l1i, l1, NEXT_POINT, r1i);
-      // New scale for change in left edge Y
-      lk = 1.0f / (l1.y - l0.y);
-      // dX/dY slope
-      lm = (l1.x - l0.x) * lk;
-      // Advance current left X to current Y
-      lx = l0.x + (y - l0.y) * lm;
-      // Left edge start interpolants
-      lo = interp_outs[l0i];
-      // New slope of change in left edge interpolants per change in Y
-      lom = (interp_outs[l1i] - lo) * lk;
-      // Advance current left edge interpolants to current Y
-      lo += lom * (y - l0.y);
+      left = Edge(y, l0, l1, interp_outs[l0i], interp_outs[l1i]);
     }
     // Check if Y advanced past the end of the right edge
     if (y > r1.y) {
+      // Step to next right edge and reset edge interpolants.
       STEP_EDGE(r0i, r0, r1i, r1, PREV_POINT, l1i);
-      // New scale for change in right edge Y
-      rk = 1.0f / (r1.y - r0.y);
-      // dX/dY slope
-      rm = (r1.x - r0.x) * rk;
-      // Advance current right X to current Y
-      rx = r0.x + (y - r0.y) * rm;
-      // Right edge start interpolants
-      ro = interp_outs[r0i];
-      // New slope of change in right edge interpolants per change in Y
-      rom = (interp_outs[r1i] - ro) * rk;
-      // Advance current right edge interpolants to current Y
-      ro += rom * (y - r0.y);
+      right = Edge(y, r0, r1, interp_outs[r0i], interp_outs[r1i]);
     }
     // lx..rx form the bounds of the span. WR does not use backface culling,
     // so we need to use min/max to support the span in either orientation.
     // Clip the span to fall within the clip rect and then round to nearest
     // column.
-    int startx = int(max(min(lx, rx), clipRect.x0) + 0.5f);
-    int endx = int(min(max(lx, rx), clipRect.x1) + 0.5f);
+    int startx = int(max(min(left.x, right.x), clipRect.x0) + 0.5f);
+    int endx = int(min(max(left.x, right.x), clipRect.x1) + 0.5f);
     // Check if span is non-empty.
     int span = endx - startx;
     if (span > 0) {
@@ -2932,7 +2917,7 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint16_t z,
           // The depth buffer is unitialized on this row, but we know it will
           // thus be cleared entirely to the clear value. This lets us quickly
           // check the constant Z value of the quad against the clear Z to know
-          // if the entire span passes of fails the depth all at once.
+          // if the entire span passes or fails the depth test all at once.
           switch (ctx->depthfunc) {
             case GL_LESS:
               if (int16_t(z) < int16_t(depthtex.clear_val))
@@ -2997,15 +2982,16 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint16_t z,
       {
         // Change in interpolants is difference between current right and left
         // edges per the change in right and left X.
-        Interpolants step = (ro - lo) * (1.0f / (rx - lx));
+        Interpolants step =
+            (right.interp - left.interp) * (1.0f / (right.x - left.x));
         // Advance current interpolants to X at start of span.
-        Interpolants o = lo + step * (startx + 0.5f - lx);
+        Interpolants o = left.interp + step * (startx + 0.5f - left.x);
         fragment_shader->init_span(&o, &step, 4.0f);
       }
       if (!use_discard) {
         // Fast paths for the case where fragment discard is not used.
         if (use_depth) {
-          // If depth is used, we want to process span in 8-pixel chunks to
+          // If depth is used, we want to process spans in 8-pixel chunks to
           // maximize sampling and testing 16-bit depth values within the 128-
           // bit width of a SIMD register.
           if (span >= 8) {
@@ -3083,14 +3069,10 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint16_t z,
       }
     }
   next_span:
-    // Advance left and right X positions to next row based on slope.
-    lx += lm;
-    rx += rm;
-    // Advance Y to next row.
+    // Advance Y and edge interpolants to next row.
     y++;
-    // Advance left and right edge interpolants to next row based on slope.
-    lo += lom;
-    ro += rom;
+    left.nextRow();
+    right.nextRow();
     // Advance buffers to next row.
     fbuf += colortex.stride(sizeof(P)) / sizeof(P);
     fdepth += depthtex.stride(sizeof(uint16_t)) / sizeof(uint16_t);
@@ -3153,44 +3135,52 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
     r1 = p[r1i]; // End of right edge
   }
 
-  // Current coordinates for left edge. Where in the 2D case of draw_quad_spans
-  // it is enough to just track the X coordinate as we advance along the rows,
-  // for the perspective case we also need to keep track of Z and W. For
-  // simplicity, we just use the full 3D point to track all these coordinates.
-  Point3D lc = l0;
-  // Scale for change in Y of left edge
-  float lk = 1.0f / (l1.y - l0.y);
-  // Left slope of coordinates per change in Y
-  Point3D lm = (l1 - l0) * lk;
-  // Current coordinates for right edge
-  Point3D rc = r0;
-  // Scale for change in Y of right edge
-  float rk = 1.0f / (r1.y - r0.y);
-  // Right slope of coordinates per change in Y
-  Point3D rm = (r1 - r0) * rk;
+  struct Edge
+  {
+    float yScale;
+    // Current coordinates for edge. Where in the 2D case of draw_quad_spans,
+    // it is enough to just track the X coordinate as we advance along the rows,
+    // for the perspective case we also need to keep track of Z and W. For
+    // simplicity, we just use the full 3D point to track all these coordinates.
+    Point3D pSlope;
+    Point3D p;
+    Interpolants interpSlope;
+    Interpolants interp;
+
+    Edge(float y, const Point3D& p0, const Point3D& p1,
+         const Interpolants& i0, const Interpolants& i1) :
+      // inverse Y scale for slope calculations
+      yScale(1.0f / (p1.y - p0.y)),
+      // Calculate dX/dY slope
+      pSlope((p1 - p0) * yScale),
+      // Initialize current coords based on Y and slope
+      p(p0 + (y - p0.y) * pSlope),
+      // Crucially, these interpolants must be scaled by the point's 1/w value,
+      // which allows linear interpolation in a perspective-correct manner.
+      // This will be canceled out inside the fragment shader later.
+      // Calculate change in interpolants per change in Y
+      interpSlope((i1 * p1.w - i0 * p0.w) * yScale),
+      // Initialize current interpolants based on Y and slope
+      interp(i0 * p0.w + (y - p0.y) * interpSlope)
+    {}
+
+    float x() const { return p.x; }
+    vec2_scalar zw() const { return {p.z, p.w}; }
+
+    void nextRow() {
+      // step current coords and interpolants to next row from slope
+      p += pSlope;
+      interp += interpSlope;
+    }
+  };
+
   // Vertex selection above should result in equal left and right start rows
   assert(l0.y == r0.y);
   // Find the start y, clip to within the clip rect, and round to row center.
   float y = floor(max(l0.y, clipRect.y0) + 0.5f) + 0.5f;
-  // Advance left and right coordinates to current Y.
-  lc += (y - l0.y) * lm;
-  rc += (y - r0.y) * rm;
-  // Interpolants at start of left edge. Crucially, these interpolants must be
-  // scaled by the point's 1/w value, allows linearly interpolation in a
-  // perspective-correct manner. This will be canceled out inside the fragment
-  // shader later.
-  Interpolants lo = interp_outs[l0i] * l0.w;
-  // Calculate change in left edge interpolants per change in Y, also taking
-  // into account scaling by 1/w
-  Interpolants lom = (interp_outs[l1i] * l1.w - lo) * lk;
-  // Advance current left interpolants to current Y
-  lo = lo + lom * (y - l0.y);
-  // Interpolants at start of right edge, scaled by 1/w
-  Interpolants ro = interp_outs[r0i] * r0.w;
-  // Calculate change in right edge interpolants per change in Y
-  Interpolants rom = (interp_outs[r1i] * r1.w - ro) * rk;
-  // Advance current right edge interpolants to current Y
-  ro = ro + rom * (y - r0.y);
+  // Initialize left and right edges from end points and start Y
+  Edge left(y, l0, l1, interp_outs[l0i], interp_outs[l1i]);
+  Edge right(y, r0, r1, interp_outs[r0i], interp_outs[r1i]);
   // Get pointer to color buffer and depth buffer at current Y
   P* fbuf = (P*)colortex.sample_ptr(0, int(y), layer, sizeof(P));
   uint16_t* fdepth =
@@ -3199,42 +3189,22 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
   while (y < clipRect.y1) {
     // Check if Y advanced past the end of the left edge
     if (y > l1.y) {
+      // Step to next left edge and reset edge interpolants.
       STEP_EDGE(l0i, l0, l1i, l1, NEXT_POINT, r1i);
-      // New scale for change in left edge Y
-      lk = 1.0f / (l1.y - l0.y);
-      // Left coordinate slope
-      lm = (l1 - l0) * lk;
-      // Advance current left coords to current Y
-      lc = l0 + (y - l0.y) * lm;
-      // Left edge start interpolants, scaled by 1/w
-      lo = interp_outs[l0i] * l0.w;
-      // New slope of left edge interpolants per change in Y, scaled by 1/w
-      lom = (interp_outs[l1i] * l1.w - lo) * lk;
-      // Advance current left edge interpolants to current Y
-      lo += lom * (y - l0.y);
+      left = Edge(y, l0, l1, interp_outs[l0i], interp_outs[l1i]);
     }
     // Check if Y advanced past the end of the right edge
     if (y > r1.y) {
+      // Step to next right edge and reset edge interpolants.
       STEP_EDGE(r0i, r0, r1i, r1, PREV_POINT, l1i);
-      // New scale for change in right edge Y
-      rk = 1.0f / (r1.y - r0.y);
-      // Right coordinate slope
-      rm = (r1 - r0) * rk;
-      // Advance current right coords to current Y
-      rc = r0 + (y - r0.y) * rm;
-      // Right edge start interpolants, scaled by 1/w
-      ro = interp_outs[r0i] * r0.w;
-      // New slope of right edge interpolants per change in Y, scaled by 1/w
-      rom = (interp_outs[r1i] * r1.w - ro) * rk;
-      // Advance current right edge interpolants to current Y
-      ro += rom * (y - r0.y);
+      right = Edge(y, r0, r1, interp_outs[r0i], interp_outs[r1i]);
     }
     // lx..rx form the bounds of the span. WR does not use backface culling,
     // so we need to use min/max to support the span in either orientation.
     // Clip the span to fall within the clip rect and then round to nearest
     // column.
-    int startx = int(max(min(lc.x, rc.x), clipRect.x0) + 0.5f);
-    int endx = int(min(max(lc.x, rc.x), clipRect.x1) + 0.5f);
+    int startx = int(max(min(left.x(), right.x()), clipRect.x0) + 0.5f);
+    int endx = int(min(max(left.x(), right.x()), clipRect.x1) + 0.5f);
     // Check if span is non-empty.
     int span = endx - startx;
     if (span > 0) {
@@ -3285,9 +3255,9 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
       {
         // Calculate the fragment Z and W change per change in fragment X step.
         vec2_scalar stepZW =
-            (rc.sel(Z, W) - lc.sel(Z, W)) * (1.0f / (rc.x - lc.x));
+            (right.zw() - left.zw()) * (1.0f / (right.x() - left.x()));
         // Calculate initial Z and W values for span start.
-        vec2_scalar zw = lc.sel(Z, W) + stepZW * (startx + 0.5f - lc.x);
+        vec2_scalar zw = left.zw() + stepZW * (startx + 0.5f - left.x());
         // Set fragment shader's Z and W values so that it can use them to
         // cancel out the 1/w baked into the interpolants.
         fragment_shader->gl_FragCoord.z = init_interp(zw.x, stepZW.x);
@@ -3297,9 +3267,10 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
         // edges per the change in right and left X. The left and right
         // interpolant values were previously multipled by 1/w, so the step and
         // initial span values take this into account.
-        Interpolants step = (ro - lo) * (1.0f / (rc.x - lc.x));
+        Interpolants step =
+            (right.interp - left.interp) * (1.0f / (right.x() - left.x()));
         // Advance current interpolants to X at start of span.
-        Interpolants o = lo + step * (startx + 0.5f - lc.x);
+        Interpolants o = left.interp + step * (startx + 0.5f - left.x());
         fragment_shader->init_span(&o, &step, 4.0f);
       }
       if (!use_discard) {
@@ -3345,14 +3316,10 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
         }
       }
     }
-    // Advance left and right coordinates to next row based on slope.
-    lc += lm;
-    rc += rm;
-    // Advance Y to next row.
+    // Advance Y and edge interpolants to next row.
     y++;
-    // Advance left and right edge interpolants to next row based on slope.
-    lo += lom;
-    ro += rom;
+    left.nextRow();
+    right.nextRow();
     // Advance buffers to next row.
     fbuf += colortex.stride(sizeof(P)) / sizeof(P);
     fdepth += depthtex.stride(sizeof(uint16_t)) / sizeof(uint16_t);
