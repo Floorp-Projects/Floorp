@@ -1,0 +1,36 @@
+<script>
+var limit = 0
+function go() {
+  part1()
+  part1()
+  window.find("foo",true,true,true,true,false)
+}
+function part2() {
+  if(++limit > 2) { return; }
+  g.appendChild(a)
+  d.insertAdjacentText("afterEnd", "foo")
+  f.addEventListener("DOMAttrModified", () => {
+    window.getSelection().deleteFromDocument()
+    b.select()
+  })
+}
+function part1() {
+  var x = window.getSelection()
+  g.appendChild(c)
+  g.addEventListener("DOMSubtreeModified", part2)
+  c.border = "1"
+  document.createElement("rp").prepend(x.focusNode)
+  window.find("foo")
+  a.value = ""
+  x.collapseToEnd()
+}
+</script>
+<body onload=go()>
+<button id="a"></button>
+<li>
+<textarea id="b"></textarea>
+</li>
+<image id="c"></image>
+<br id="d">
+<font id="f">
+<font id="g">
