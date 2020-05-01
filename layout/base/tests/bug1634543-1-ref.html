@@ -1,0 +1,20 @@
+<!doctype html>
+<html class="reftest-wait">
+<title>Reference</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+  div {
+    outline: 3px solid blue;
+  }
+</style>
+<div contenteditable="true" spellcheck="false"><br></div>
+<script>
+SimpleTest.waitForFocus(function() {
+  document.querySelector('[contenteditable="true"]').focus();
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      document.documentElement.removeAttribute("class");
+    });
+  });
+});
+</script>
