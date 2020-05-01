@@ -64,7 +64,6 @@ Tool Architectures
 .. toctree::
    :maxdepth: 1
 
-   Tool Architectures <tools/tools.md>
    Inspector Panel Architecture <tools/inspector-panel.md>
    Inspector Highlighters <tools/highlighters.md>
    Memory <tools/memory-panel.md>
@@ -79,7 +78,6 @@ Frontend
 .. toctree::
    :maxdepth: 1
 
-  Frontend <frontend/frontend.md>
   Panel SVGs <frontend/svgs.md>
   React <frontend/react.md>
   React Guidelines <frontend/react-guidelines.md>
@@ -94,7 +92,6 @@ Backend
 .. toctree::
    :maxdepth: 1
 
-   Backend <backend/backend.md>
    Remote Debugging Protocol <backend/protocol.md>
    Client API <backend/client-api.md>
    Debugger API <backend/debugger-api.md>
