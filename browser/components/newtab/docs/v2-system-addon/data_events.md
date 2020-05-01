@@ -1182,7 +1182,7 @@ CFR impression ping has two forms, in which the message_id could be of different
   "experiments": {},
   "release_channel": "default",
   "addon_version": "20200330194034"
-  "message_id": "SIMPLIFIED_ABOUT_WELCOME",
+  "message_id": "ABOUT_WELCOME",
   "event": "IMPRESSION",
   "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
   "event_context": { "page": "about:welcome" }
@@ -1197,7 +1197,7 @@ CFR impression ping has two forms, in which the message_id could be of different
   "experiments": {},
   "release_channel": "default",
   "addon_version": "20200330194034"
-  "message_id": "ABOUT_WELCOME_SESSION_END",
+  "message_id": "ABOUT_WELCOME",
   "id": "ABOUT_WELCOME",
   "event": "SESSION_END",
   "browser_session_id": "e7e52665-7db3-f348-9918-e93160eb2ef3",
