@@ -312,7 +312,6 @@ class TRRRacer {
    */
   _getFastestTRRFromResults(results) {
     // First, organize the results into a map of TRR -> array of times
-    // TODO: Consider uncached domains or not?
     let TRRTimingMap = new Map();
     for (let { trr, time } of results) {
       if (!TRRTimingMap.has(trr)) {
@@ -323,18 +322,24 @@ class TRRRacer {
       }
     }
 
-    // Loop through each TRR's array of times, compute the means, and remember
-    // the fastest TRR
-    // TODO: Do we want geometric means here?
+    // Loop through each TRR's array of times, compute the geometric means,
+    // and remember the fastest TRR. Geometric mean is a bit more forgiving
+    // in the presence of noise (anomalously high values).
+    // We don't need the full geometric mean, we simply calculate the arithmetic
+    // means in log-space and then compare those values.
     let fastestTRR;
     let fastestAverageTime = -1;
-    for (let trr of TRRTimingMap.keys()) {
+    let trrs = [...TRRTimingMap.keys()];
+    for (let trr of trrs) {
       let times = TRRTimingMap.get(trr);
       if (!times.length) {
         continue;
       }
 
-      let averageTime = times.reduce((a, b) => a + b) / times.length;
+      // Arithmetic mean in log space. Take log of (a + 1) to ensure we never
+      // take log(0) which would be -Infinity.
+      let averageTime =
+        times.map(a => Math.log(a + 1)).reduce((a, b) => a + b) / times.length;
       if (fastestAverageTime == -1 || averageTime < fastestAverageTime) {
         fastestAverageTime = averageTime;
         fastestTRR = trr;
