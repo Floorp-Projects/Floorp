@@ -3931,7 +3931,7 @@ void Document::OnParsingCompleted() {
 }
 
 void Document::InitialTranslationCompleted() {
-  if (mDocumentL10n->mBlockingLayout) {
+  if (mDocumentL10n && mDocumentL10n->mBlockingLayout) {
     // This means we blocked the load event in LocalizationLinkAdded.  It's
     // important that the load blocker removal here be async, because our caller
     // will notify the content sink after us, and we want the content sync's
