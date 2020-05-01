@@ -1032,9 +1032,6 @@ def host_for_sub_configure(host):
     return '--host=%s' % host.alias
 
 
-add_old_configure_arg(host_for_sub_configure)
-
-
 @depends(target)
 def target_for_sub_configure(target):
     target_alias = target.alias
@@ -1043,9 +1040,6 @@ def target_for_sub_configure(target):
     if target.os == 'iOS':
         target_alias = target_alias.replace('-ios', '-darwin')
     return '--target=%s' % target_alias
-
-
-add_old_configure_arg(target_for_sub_configure)
 
 
 # These variables are for compatibility with the current moz.builds and
