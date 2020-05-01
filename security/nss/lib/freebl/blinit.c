@@ -21,6 +21,10 @@
 #include <windows.h>
 #endif
 
+#if defined(DARWIN)
+#include <TargetConditionals.h>
+#endif
+
 static PRCallOnceType coFreeblInit;
 
 /* State variables. */
@@ -123,7 +127,7 @@ CheckX86CPUSupport()
 #endif /* NSS_X86_OR_X64 */
 
 /* clang-format off */
-#if defined(__aarch64__) || defined(__arm__)
+#if (defined(__aarch64__) || defined(__arm__)) && !defined(TARGET_OS_IPHONE)
 #ifndef __has_include
 #define __has_include(x) 0
 #endif

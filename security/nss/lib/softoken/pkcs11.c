@@ -383,7 +383,7 @@ static const struct mechanismList mechanisms[] = {
     { CKM_AES_CTS, { 16, 32, CKF_EN_DE }, PR_TRUE },
     { CKM_AES_CTR, { 16, 32, CKF_EN_DE }, PR_TRUE },
     { CKM_AES_GCM, { 16, 32, CKF_EN_DE_MSG }, PR_TRUE },
-    { CKM_AES_XCBC_MAC_96, { 16, 16, CKF_SN_VR }, PR_TRUE },
+    { CKM_AES_XCBC_MAC_96, { 12, 12, CKF_SN_VR }, PR_TRUE },
     { CKM_AES_XCBC_MAC, { 16, 16, CKF_SN_VR }, PR_TRUE },
     /* ------------------------- Camellia Operations --------------------- */
     { CKM_CAMELLIA_KEY_GEN, { 16, 32, CKF_GENERATE }, PR_TRUE },
@@ -586,7 +586,8 @@ static const struct mechanismList mechanisms[] = {
     /* --------------------IPSEC ----------------------- */
     { CKM_NSS_IKE_PRF_PLUS_DERIVE, { 8, 255 * 64, CKF_DERIVE }, PR_TRUE },
     { CKM_NSS_IKE_PRF_DERIVE, { 8, 64, CKF_DERIVE }, PR_TRUE },
-    { CKM_NSS_IKE1_PRF_DERIVE, { 8, 64, CKF_DERIVE }, PR_TRUE }
+    { CKM_NSS_IKE1_PRF_DERIVE, { 8, 64, CKF_DERIVE }, PR_TRUE },
+    { CKM_NSS_IKE1_APP_B_PRF_DERIVE, { 8, 255 * 64, CKF_DERIVE }, PR_TRUE }
 };
 static const CK_ULONG mechanismCount = sizeof(mechanisms) / sizeof(mechanisms[0]);
 

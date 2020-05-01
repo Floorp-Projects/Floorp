@@ -427,6 +427,28 @@ typedef struct CK_NSS_IKE1_PRF_DERIVE_PARAMS {
     CK_BYTE keyNumber;
 } CK_NSS_IKE1_PRF_DERIVE_PARAMS;
 
+/* CK_NSS_IKE1_APP_B_PRF_DERIVE_PARAMS is a structure that provides the
+ * parameters to the CKM_NSS_IKE_APP_B_PRF_DERIVE mechanism.
+ *
+ * The fields of the structure have the following meanings:
+ *     prfMechanism  underlying MAC mechanism used to generate the prf.
+ *     bHasKeygxy    hKeygxy exists
+ *     hKeygxy       optional key to hash in the prf
+ *     pExtraData    optional extra data to hash in the prf
+ *     ulExtraData   length of the optional extra data.
+ *
+ * CK_NSS_IKE_APP_B_PRF_DERIVE can take wither CK_NSS_IKE1_APP_B_PRF_DRIVE_PARAMS
+ * or a single CK_MECHANISM_TYPE. In the latter cases bHashKeygx is assumed to
+ * be false and ulExtraDataLen is assumed to be '0'.
+ */
+typedef struct CK_NSS_IKE1_APP_B_PRF_DERIVE_PARAMS {
+    CK_MECHANISM_TYPE prfMechanism;
+    CK_BBOOL bHasKeygxy;
+    CK_OBJECT_HANDLE hKeygxy;
+    CK_BYTE_PTR pExtraData;
+    CK_ULONG ulExtraDataLen;
+} CK_NSS_IKE1_APP_B_PRF_DERIVE_PARAMS;
+
 /*
  * Parameter for the TLS extended master secret key derivation mechanisms:
  *
