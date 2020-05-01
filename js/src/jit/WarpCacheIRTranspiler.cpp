@@ -59,7 +59,11 @@ class MOZ_RAII WarpCacheIRTranspiler {
     return static_cast<int32_t>(readStubWord(offset));
   }
 
-  bool emitGuardTo(ValOperandId inputId, MIRType type);
+  MOZ_MUST_USE bool emitGuardTo(ValOperandId inputId, MIRType type);
+
+  template <typename T>
+  MOZ_MUST_USE bool emitInt32BinaryArithResult(Int32OperandId lhsId,
+                                               Int32OperandId rhsId);
 
   MInstruction* addBoundsCheck(MDefinition* index, MDefinition* length);
 
@@ -422,6 +426,54 @@ bool WarpCacheIRTranspiler::emitInt32DecResult(Int32OperandId inputId) {
 
   setResult(ins);
   return true;
+}
+
+template <typename T>
+bool WarpCacheIRTranspiler::emitInt32BinaryArithResult(Int32OperandId lhsId,
+                                                       Int32OperandId rhsId) {
+  MDefinition* lhs = getOperand(lhsId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* ins = T::New(alloc(), lhs, rhs, MIRType::Int32);
+  current->add(ins);
+
+  setResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitInt32AddResult(Int32OperandId lhsId,
+                                               Int32OperandId rhsId) {
+  return emitInt32BinaryArithResult<MAdd>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitInt32SubResult(Int32OperandId lhsId,
+                                               Int32OperandId rhsId) {
+  return emitInt32BinaryArithResult<MSub>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitInt32BitOrResult(Int32OperandId lhsId,
+                                                 Int32OperandId rhsId) {
+  return emitInt32BinaryArithResult<MBitOr>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitInt32BitXorResult(Int32OperandId lhsId,
+                                                  Int32OperandId rhsId) {
+  return emitInt32BinaryArithResult<MBitXor>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitInt32BitAndResult(Int32OperandId lhsId,
+                                                  Int32OperandId rhsId) {
+  return emitInt32BinaryArithResult<MBitAnd>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitInt32LeftShiftResult(Int32OperandId lhsId,
+                                                     Int32OperandId rhsId) {
+  return emitInt32BinaryArithResult<MLsh>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitInt32RightShiftResult(Int32OperandId lhsId,
+                                                      Int32OperandId rhsId) {
+  return emitInt32BinaryArithResult<MRsh>(lhsId, rhsId);
 }
 
 bool WarpCacheIRTranspiler::emitCompareInt32Result(JSOp op,

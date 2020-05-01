@@ -863,6 +863,11 @@ bool WarpBuilder::build_BitNot(BytecodeLocation loc) {
 bool WarpBuilder::buildBinaryOp(BytecodeLocation loc) {
   MDefinition* right = current->pop();
   MDefinition* left = current->pop();
+
+  if (auto* snapshot = getOpSnapshot<WarpCacheIR>(loc)) {
+    return buildCacheIR(loc, snapshot, {left, right});
+  }
+
   MInstruction* ins = MBinaryCache::New(alloc(), left, right, MIRType::Value);
   current->add(ins);
   current->push(ins);
