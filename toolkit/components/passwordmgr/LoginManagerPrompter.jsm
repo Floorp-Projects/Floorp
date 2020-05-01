@@ -536,19 +536,20 @@ class LoginManagerPrompter {
                 break;
               }
               case "dismissed":
-                // Note that this can run after `showing` but before `shown`.
-                log.debug("dismissed");
+                // Note that this can run after `showing` but before `shown` upon tab switch.
                 this.wasDismissed = true;
               // Fall through.
               case "removed": {
+                // Note that this can run after `showing` and `shown` for the
+                // notification it's replacing.
+                log.debug(topic);
                 currentNotification = null;
+
                 let usernameField = chromeDoc.getElementById(
                   "password-notification-username"
                 );
                 usernameField.removeEventListener("input", onInput);
                 usernameField.removeEventListener("keyup", onKeyUp);
-                // Clear the field to ensure we never show stale values.
-                usernameField.value = "";
                 let passwordField = chromeDoc.getElementById(
                   "password-notification-password"
                 );
@@ -558,9 +559,6 @@ class LoginManagerPrompter {
                   "command",
                   onVisibilityToggle
                 );
-                // Don't leave traces of the password in memory unnecessarily.
-                // Clearing this also prevents false positives in tests.
-                passwordField.value = "";
                 break;
               }
             }
