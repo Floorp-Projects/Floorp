@@ -697,18 +697,22 @@ fail:
  * This function returns (from rfc2409 appendix b):
  * Ka = K1 | K2 | K3 | K4 |... Kn
  * where:
- *       K1 = prf(K, 0x00)
- *       K2 = prf(K, K1)
- *       K3 = prf(K, K2)
- *       K4 = prf(K, K3)
+ *       K1 = prf(K, [gxyKey]|[extraData]) or prf(K, 0) if gxyKey and extraData
+ *                                                      ar not present.
+ *       K2 = prf(K, K1|[gxyKey]|[extraData])
+ *       K3 = prf(K, K2|[gxyKey]|[extraData])
+ *       K4 = prf(K, K3|[gxyKey]|[extraData])
  *            .
- *       Kn = prf(K, K(n-1))
+ *       Kn = prf(K, K(n-1)|[gxyKey]|[extraData])
  * K = inKey
  */
 CK_RV
 sftk_ike1_appendix_b_prf(CK_SESSION_HANDLE hSession, const SFTKAttribute *inKey,
-                         const CK_MECHANISM_TYPE *mech, SFTKObject *outKey, unsigned int keySize)
+                         const CK_NSS_IKE1_APP_B_PRF_DERIVE_PARAMS *params,
+                         SFTKObject *outKey, unsigned int keySize)
 {
+    SFTKAttribute *gxyKeyValue = NULL;
+    SFTKObject *gxyKeyObj = NULL;
     unsigned char *outKeyData = NULL;
     unsigned char *thisKey = NULL;
     unsigned char *lastKey = NULL;
@@ -718,9 +722,31 @@ sftk_ike1_appendix_b_prf(CK_SESSION_HANDLE hSession, const SFTKAttribute *inKey,
     CK_RV crv;
     prfContext context;
 
-    crv = prf_setup(&context, *mech);
+    if ((params->ulExtraDataLen != 0) && (params->pExtraData == NULL)) {
+        return CKR_ARGUMENTS_BAD;
+    }
+    crv = prf_setup(&context, params->prfMechanism);
     if (crv != CKR_OK) {
         return crv;
+    }
+
+    if (params->bHasKeygxy) {
+        SFTKSession *session;
+        session = sftk_SessionFromHandle(hSession);
+        if (session == NULL) {
+            return CKR_SESSION_HANDLE_INVALID;
+        }
+        gxyKeyObj = sftk_ObjectFromHandle(params->hKeygxy, session);
+        sftk_FreeSession(session);
+        if (gxyKeyObj == NULL) {
+            crv = CKR_KEY_HANDLE_INVALID;
+            goto fail;
+        }
+        gxyKeyValue = sftk_FindAttribute(gxyKeyObj, CKA_VALUE);
+        if (gxyKeyValue == NULL) {
+            crv = CKR_KEY_HANDLE_INVALID;
+            goto fail;
+        }
     }
 
     macSize = prf_length(&context);
@@ -741,25 +767,47 @@ sftk_ike1_appendix_b_prf(CK_SESSION_HANDLE hSession, const SFTKAttribute *inKey,
     }
 
     /*
-      * this loop generates on block of the prf, basically
-      *   kn = prf(key, Kn-1)
-      *   Kn is thisKey, Kn-1 is lastKey
-      *   key is inKey
-      */
+     * this loop generates on block of the prf, basically
+     *   kn = prf(key, Kn-1 | [Keygxy] | [ExtraData])
+     *   Kn is thisKey, Kn-1 is lastKey
+     *   key is inKey
+     */
     thisKey = outKeyData;
     for (genKeySize = 0; genKeySize <= keySize; genKeySize += macSize) {
+        PRBool hashedData = PR_FALSE;
         crv = prf_init(&context, inKey->attrib.pValue, inKey->attrib.ulValueLen);
         if (crv != CKR_OK) {
             goto fail;
         }
-        if (lastKey == NULL) {
+        if (lastKey != NULL) {
+            crv = prf_update(&context, lastKey, macSize);
+            if (crv != CKR_OK) {
+                goto fail;
+            }
+            hashedData = PR_TRUE;
+        }
+        if (gxyKeyValue != NULL) {
+            crv = prf_update(&context, gxyKeyValue->attrib.pValue,
+                             gxyKeyValue->attrib.ulValueLen);
+            if (crv != CKR_OK) {
+                goto fail;
+            }
+            hashedData = PR_TRUE;
+        }
+        if (params->ulExtraDataLen != 0) {
+            crv = prf_update(&context, params->pExtraData, params->ulExtraDataLen);
+            if (crv != CKR_OK) {
+                goto fail;
+            }
+            hashedData = PR_TRUE;
+        }
+        /* if we haven't hashed anything yet, hash a zero */
+        if (hashedData == PR_FALSE) {
             const unsigned char zero = 0;
             crv = prf_update(&context, &zero, 1);
-        } else {
-            crv = prf_update(&context, lastKey, macSize);
-        }
-        if (crv != CKR_OK) {
-            goto fail;
+            if (crv != CKR_OK) {
+                goto fail;
+            }
         }
         crv = prf_final(&context, thisKey, macSize);
         if (crv != CKR_OK) {
@@ -770,6 +818,12 @@ sftk_ike1_appendix_b_prf(CK_SESSION_HANDLE hSession, const SFTKAttribute *inKey,
     }
     crv = sftk_forceAttribute(outKey, CKA_VALUE, outKeyData, keySize);
 fail:
+    if (gxyKeyValue) {
+        sftk_FreeAttribute(gxyKeyValue);
+    }
+    if (gxyKeyObj) {
+        sftk_FreeObject(gxyKeyObj);
+    }
     if (outKeyData) {
         PORT_ZFree(outKeyData, outKeySize);
     }

@@ -6968,6 +6968,8 @@ NSC_DeriveKey(CK_SESSION_HANDLE hSession,
     HASH_HashType hashType;
     CK_MECHANISM_TYPE hashMech;
     PRBool extractValue = PR_TRUE;
+    CK_NSS_IKE1_APP_B_PRF_DERIVE_PARAMS ikeAppB;
+    CK_NSS_IKE1_APP_B_PRF_DERIVE_PARAMS *pIkeAppB;
 
     CHECK_FORK();
 
@@ -7122,14 +7124,22 @@ NSC_DeriveKey(CK_SESSION_HANDLE hSession,
                                 key, keySize);
             break;
         case CKM_NSS_IKE1_APP_B_PRF_DERIVE:
-            if (pMechanism->ulParameterLen !=
+            pIkeAppB = (CK_NSS_IKE1_APP_B_PRF_DERIVE_PARAMS *)pMechanism->pParameter;
+            if (pMechanism->ulParameterLen ==
                 sizeof(CK_MECHANISM_TYPE)) {
+                ikeAppB.prfMechanism = *(CK_MECHANISM_TYPE *)pMechanism->pParameter;
+                ikeAppB.bHasKeygxy = PR_FALSE;
+                ikeAppB.hKeygxy = CK_INVALID_HANDLE;
+                ikeAppB.pExtraData = NULL;
+                ikeAppB.ulExtraDataLen = 0;
+                pIkeAppB = &ikeAppB;
+            } else if (pMechanism->ulParameterLen !=
+                       sizeof(CK_NSS_IKE1_APP_B_PRF_DERIVE_PARAMS)) {
                 crv = CKR_MECHANISM_PARAM_INVALID;
                 break;
             }
-            crv = sftk_ike1_appendix_b_prf(hSession, att,
-                                           (CK_MECHANISM_TYPE *)pMechanism->pParameter,
-                                           key, keySize);
+            crv = sftk_ike1_appendix_b_prf(hSession, att, pIkeAppB, key,
+                                           keySize);
             break;
         case CKM_NSS_IKE_PRF_PLUS_DERIVE:
             if (pMechanism->ulParameterLen !=
