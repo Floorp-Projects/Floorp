@@ -2444,6 +2444,15 @@ static void DumpLine(const BlockReflowInput& aState, nsLineBox* aLine,
 #endif
 }
 
+static bool LinesAreEmpty(const nsLineList& aList) {
+  for (const auto& line : aList) {
+    if (!line.IsEmpty()) {
+      return false;
+    }
+  }
+  return true;
+}
+
 void nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState) {
   bool keepGoing = true;
   bool repositionViews = false;  // should we really need this?
@@ -2993,53 +3002,53 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState) {
   }
 
   // Handle an odd-ball case: a list-item with no lines
-  if (mLines.empty()) {
-    if (HasOutsideMarker()) {
-      ReflowOutput metrics(aState.mReflowInput);
-      nsIFrame* marker = GetOutsideMarker();
-      WritingMode wm = aState.mReflowInput.GetWritingMode();
-      ReflowOutsideMarker(
-          marker, aState, metrics,
-          aState.mReflowInput.ComputedPhysicalBorderPadding().top);
-      NS_ASSERTION(!MarkerIsEmpty() || metrics.BSize(wm) == 0,
-                   "empty ::marker frame took up space");
+  if (mLines.empty() && HasOutsideMarker()) {
+    ReflowOutput metrics(aState.mReflowInput);
+    nsIFrame* marker = GetOutsideMarker();
+    WritingMode wm = aState.mReflowInput.GetWritingMode();
+    ReflowOutsideMarker(
+        marker, aState, metrics,
+        aState.mReflowInput.ComputedPhysicalBorderPadding().top);
+    NS_ASSERTION(!MarkerIsEmpty() || metrics.BSize(wm) == 0,
+                 "empty ::marker frame took up space");
 
-      if (!MarkerIsEmpty()) {
-        // There are no lines so we have to fake up some y motion so that
-        // we end up with *some* height.
-        // (Note: if we're layout-contained, we have to be sure to leave our
-        // ReflowOutput's BlockStartAscent() (i.e. the baseline) untouched,
-        // because layout-contained frames have no baseline.)
-        if (!aState.mReflowInput.mStyleDisplay->IsContainLayout() &&
-            metrics.BlockStartAscent() == ReflowOutput::ASK_FOR_BASELINE) {
-          nscoord ascent;
-          WritingMode wm = aState.mReflowInput.GetWritingMode();
-          if (nsLayoutUtils::GetFirstLineBaseline(wm, marker, &ascent)) {
-            metrics.SetBlockStartAscent(ascent);
-          } else {
-            metrics.SetBlockStartAscent(metrics.BSize(wm));
-          }
-        }
-
-        RefPtr<nsFontMetrics> fm =
-            nsLayoutUtils::GetInflatedFontMetricsForFrame(this);
-
-        nscoord minAscent = nsLayoutUtils::GetCenteredFontBaseline(
-            fm, aState.mMinLineHeight, wm.IsLineInverted());
-        nscoord minDescent = aState.mMinLineHeight - minAscent;
-
-        aState.mBCoord += std::max(minAscent, metrics.BlockStartAscent()) +
-                          std::max(minDescent, metrics.BSize(wm) -
-                                                   metrics.BlockStartAscent());
-
-        nscoord offset = minAscent - metrics.BlockStartAscent();
-        if (offset > 0) {
-          marker->SetRect(marker->GetRect() + nsPoint(0, offset));
+    if (!MarkerIsEmpty()) {
+      // There are no lines so we have to fake up some y motion so that
+      // we end up with *some* height.
+      // (Note: if we're layout-contained, we have to be sure to leave our
+      // ReflowOutput's BlockStartAscent() (i.e. the baseline) untouched,
+      // because layout-contained frames have no baseline.)
+      if (!aState.mReflowInput.mStyleDisplay->IsContainLayout() &&
+          metrics.BlockStartAscent() == ReflowOutput::ASK_FOR_BASELINE) {
+        nscoord ascent;
+        WritingMode wm = aState.mReflowInput.GetWritingMode();
+        if (nsLayoutUtils::GetFirstLineBaseline(wm, marker, &ascent)) {
+          metrics.SetBlockStartAscent(ascent);
+        } else {
+          metrics.SetBlockStartAscent(metrics.BSize(wm));
         }
       }
-    } else if (ShouldHaveLineIfEmpty()) {
-      aState.mBCoord += aState.mMinLineHeight;
+
+      RefPtr<nsFontMetrics> fm =
+          nsLayoutUtils::GetInflatedFontMetricsForFrame(this);
+
+      nscoord minAscent = nsLayoutUtils::GetCenteredFontBaseline(
+          fm, aState.mMinLineHeight, wm.IsLineInverted());
+      nscoord minDescent = aState.mMinLineHeight - minAscent;
+
+      aState.mBCoord += std::max(minAscent, metrics.BlockStartAscent()) +
+                        std::max(minDescent, metrics.BSize(wm) -
+                                                 metrics.BlockStartAscent());
+
+      nscoord offset = minAscent - metrics.BlockStartAscent();
+      if (offset > 0) {
+        marker->SetRect(marker->GetRect() + nsPoint(0, offset));
+      }
     }
+  }
+
+  if (LinesAreEmpty(mLines) && ShouldHaveLineIfEmpty()) {
+    aState.mBCoord += aState.mMinLineHeight;
   }
 
   if (foundAnyClears) {
@@ -3376,12 +3385,11 @@ bool nsBlockFrame::CachedIsEmpty() {
   if (!IsSelfEmpty()) {
     return false;
   }
-
-  for (LineIterator line = LinesBegin(), line_end = LinesEnd();
-       line != line_end; ++line) {
-    if (!line->CachedIsEmpty()) return false;
+  for (const auto& line : mLines) {
+    if (!line.CachedIsEmpty()) {
+      return false;
+    }
   }
-
   return true;
 }
 
@@ -3390,12 +3398,7 @@ bool nsBlockFrame::IsEmpty() {
     return false;
   }
 
-  for (LineIterator line = LinesBegin(), line_end = LinesEnd();
-       line != line_end; ++line) {
-    if (!line->IsEmpty()) return false;
-  }
-
-  return true;
+  return LinesAreEmpty(mLines);
 }
 
 bool nsBlockFrame::ShouldApplyBStartMargin(BlockReflowInput& aState,
