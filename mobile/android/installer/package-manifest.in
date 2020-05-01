@@ -92,6 +92,9 @@
 @BINPATH@/application.ini
 @BINPATH@/platform.ini
 @BINPATH@/defaults/settings/blocklists/addons.json
+@BINPATH@/defaults/settings/blocklists/addons-bloomfilters.json
+@BINPATH@/defaults/settings/blocklists/addons-bloomfilters/addons-mlbf.bin
+@BINPATH@/defaults/settings/blocklists/addons-bloomfilters/addons-mlbf.bin.meta.json
 @BINPATH@/defaults/settings/security-state/onecrl.json
 
 ; [Components]
