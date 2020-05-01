@@ -2858,8 +2858,13 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint16_t z,
 
     Edge(float y, const Point2D& p0, const Point2D& p1,
          const Interpolants& i0, const Interpolants& i1) :
-      // inverse Y scale for slope calculations
-      yScale(1.0f / (p1.y - p0.y)),
+      // Inverse Y scale for slope calculations. Avoid divide on 0-length edge.
+      // Later checks below ensure that Y <= p1.y, or otherwise we don't use
+      // this edge. We just need to guard against Y == p1.y == p0.y. In that
+      // case, Y - p0.y == 0 and will cancel out the slopes below, except if
+      // yScale is Inf for some reason (or worse, NaN), which 1/(p1.y-p0.y)
+      // might produce if we don't bound it.
+      yScale(1.0f / max(p1.y - p0.y, 1.0f / 256)),
       // Calculate dX/dY slope
       xSlope((p1.x - p0.x) * yScale),
       // Initialize current X based on Y and slope
@@ -2888,10 +2893,13 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint16_t z,
   P* fbuf = (P*)colortex.sample_ptr(0, int(y), layer, sizeof(P));
   uint16_t* fdepth =
     (uint16_t*)depthtex.sample_ptr(0, int(y), 0, sizeof(uint16_t));
-  // Loop along advancing Ys, bailing out if we go outside the clip rect
-  while (y < clipRect.y1) {
-    // Check if Y advanced past the end of the left edge
-    if (y > l1.y) {
+  // Loop along advancing Ys, rasterizing spans at each row
+  float checkY = min(min(l1.y, r1.y), clipRect.y1);
+  for (;;) {
+    // Check if we maybe passed edge ends or outside clip rect...
+    if (y > checkY) {
+      // If we're outside the clip rect, we're done.
+      if (y > clipRect.y1) break;
       // Helper to find the next non-duplicate vertex that doesn't loop back.
 #define STEP_EDGE(e0i, e0, e1i, e1, STEP_POINT, end)                   \
       for (;;) {                                                       \
@@ -2907,15 +2915,20 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint16_t z,
         if (e1.y < e0.y || e0i == end) return;                         \
         /* Otherwise, it's a duplicate, so keep searching. */          \
       }
-      // Step to next left edge and reset edge interpolants.
-      STEP_EDGE(l0i, l0, l1i, l1, NEXT_POINT, r1i);
-      left = Edge(y, l0, l1, interp_outs[l0i], interp_outs[l1i]);
-    }
-    // Check if Y advanced past the end of the right edge
-    if (y > r1.y) {
-      // Step to next right edge and reset edge interpolants.
-      STEP_EDGE(r0i, r0, r1i, r1, PREV_POINT, l1i);
-      right = Edge(y, r0, r1, interp_outs[r0i], interp_outs[r1i]);
+      // Check if Y advanced past the end of the left edge
+      if (y > l1.y) {
+        // Step to next left edge past Y and reset edge interpolants.
+        do { STEP_EDGE(l0i, l0, l1i, l1, NEXT_POINT, r1i); } while (y > l1.y);
+        left = Edge(y, l0, l1, interp_outs[l0i], interp_outs[l1i]);
+      }
+      // Check if Y advanced past the end of the right edge
+      if (y > r1.y) {
+        // Step to next right edge past Y and reset edge interpolants.
+        do { STEP_EDGE(r0i, r0, r1i, r1, PREV_POINT, l1i); } while (y > r1.y);
+        right = Edge(y, r0, r1, interp_outs[r0i], interp_outs[r1i]);
+      }
+      // Reset check condition for next time around.
+      checkY = min(min(l1.y, r1.y), clipRect.y1);
     }
     // lx..rx form the bounds of the span. WR does not use backface culling,
     // so we need to use min/max to support the span in either orientation.
@@ -3136,8 +3149,8 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
 
     Edge(float y, const Point3D& p0, const Point3D& p1,
          const Interpolants& i0, const Interpolants& i1) :
-      // inverse Y scale for slope calculations
-      yScale(1.0f / (p1.y - p0.y)),
+      // Inverse Y scale for slope calculations. Avoid divide on 0-length edge.
+      yScale(1.0f / max(p1.y - p0.y, 1.0f / 256)),
       // Calculate dX/dY slope
       pSlope((p1 - p0) * yScale),
       // Initialize current coords based on Y and slope
@@ -3172,19 +3185,27 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
   P* fbuf = (P*)colortex.sample_ptr(0, int(y), layer, sizeof(P));
   uint16_t* fdepth =
     (uint16_t*)depthtex.sample_ptr(0, int(y), 0, sizeof(uint16_t));
-  // Loop along advancing Ys, bailing out if we go outside the clip rect
-  while (y < clipRect.y1) {
-    // Check if Y advanced past the end of the left edge
-    if (y > l1.y) {
-      // Step to next left edge and reset edge interpolants.
-      STEP_EDGE(l0i, l0, l1i, l1, NEXT_POINT, r1i);
-      left = Edge(y, l0, l1, interp_outs[l0i], interp_outs[l1i]);
-    }
-    // Check if Y advanced past the end of the right edge
-    if (y > r1.y) {
-      // Step to next right edge and reset edge interpolants.
-      STEP_EDGE(r0i, r0, r1i, r1, PREV_POINT, l1i);
-      right = Edge(y, r0, r1, interp_outs[r0i], interp_outs[r1i]);
+  // Loop along advancing Ys, rasterizing spans at each row
+  float checkY = min(min(l1.y, r1.y), clipRect.y1);
+  for (;;) {
+    // Check if we maybe passed edge ends or outside clip rect...
+    if (y > checkY) {
+      // If we're outside the clip rect, we're done.
+      if (y > clipRect.y1) break;
+      // Check if Y advanced past the end of the left edge
+      if (y > l1.y) {
+        // Step to next left edge past Y and reset edge interpolants.
+        do { STEP_EDGE(l0i, l0, l1i, l1, NEXT_POINT, r1i); } while (y > l1.y);
+        left = Edge(y, l0, l1, interp_outs[l0i], interp_outs[l1i]);
+      }
+      // Check if Y advanced past the end of the right edge
+      if (y > r1.y) {
+        // Step to next right edge past Y and reset edge interpolants.
+        do { STEP_EDGE(r0i, r0, r1i, r1, PREV_POINT, l1i); } while (y > r1.y);
+        right = Edge(y, r0, r1, interp_outs[r0i], interp_outs[r1i]);
+      }
+      // Reset check condition for next time around.
+      checkY = min(min(l1.y, r1.y), clipRect.y1);
     }
     // lx..rx form the bounds of the span. WR does not use backface culling,
     // so we need to use min/max to support the span in either orientation.
