@@ -25,6 +25,11 @@
       // This is a second inline script element whose breakpoints won't be
       // known until after the script element has been added.
       var x = 3;
+      // XXX: This second inline script is only here to avoid intermittent
+      // failures on browser_dbg-breakpoints-reloading.js which occur when we
+      // try to set a breakpoint on the line `var x = 3;` above.
+      // See Bug 1592839.
+      inline_script2 = function () { var x = 5; };
     </script>
   </body>
 </html>
