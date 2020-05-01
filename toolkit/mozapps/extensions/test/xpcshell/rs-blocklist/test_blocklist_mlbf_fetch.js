@@ -128,6 +128,40 @@ add_task(async function public_api_uses_mlbf() {
   // Note: Blocklist collection and attachment carries over to the next test.
 });
 
+// Verifies that the metadata (time of validity) of an updated MLBF record is
+// correctly used, even if the MLBF itself has not changed.
+add_task(async function fetch_updated_mlbf_same_hash() {
+  const recordUpdate = {
+    ...MLBF_RECORD,
+    generation_time: MLBF_RECORD.generation_time + 1,
+  };
+  const blockedAddonUpdate = {
+    id: "@blocked",
+    version: "1",
+    signedDate: new Date(recordUpdate.generation_time),
+  };
+
+  // The blocklist already includes "@blocked:1", but the last specified
+  // generation time is MLBF_RECORD.generation_time. So the addon cannot be
+  // blocked, because the block decision could be a false positive.
+  Assert.equal(
+    await Blocklist.getAddonBlocklistState(blockedAddonUpdate),
+    Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
+    "Add-on not blocked before blocklist update"
+  );
+
+  await AddonTestUtils.loadBlocklistRawData({ extensionsMLBF: [recordUpdate] });
+  // The MLBF is now known to apply to |blockedAddonUpdate|.
+
+  Assert.equal(
+    await Blocklist.getAddonBlocklistState(blockedAddonUpdate),
+    Ci.nsIBlocklistService.STATE_BLOCKED,
+    "Add-on blocked after update"
+  );
+
+  // Note: Blocklist collection and attachment carries over to the next test.
+});
+
 // Checks the remaining cases of database corruption that haven't been handled
 // before.
 add_task(async function handle_database_corruption() {
