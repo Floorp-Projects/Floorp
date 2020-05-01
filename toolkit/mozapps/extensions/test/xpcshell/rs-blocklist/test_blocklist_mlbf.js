@@ -142,6 +142,7 @@ add_task(async function unsigned_not_blocked() {
     promiseWebExtensionStartup(UNSIGNED_ADDON_ID),
   ]);
   Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
+  Assert.equal(addon.signedDate, null);
   Assert.equal(addon.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   Assert.equal(
     await Blocklist.getAddonBlocklistState(addon),

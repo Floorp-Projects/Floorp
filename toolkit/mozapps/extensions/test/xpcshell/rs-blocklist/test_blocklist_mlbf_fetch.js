@@ -87,14 +87,12 @@ add_task(async function public_api_uses_mlbf() {
   const blockedAddon = {
     id: "@blocked",
     version: "1",
-    signedState: 2, // = AddonManager.SIGNEDSTATE_SIGNED.
-    signedDate: 0, // a date in the past, before MLBF's generationTime.
+    signedDate: new Date(0), // a date in the past, before MLBF's generationTime.
   };
   const nonBlockedAddon = {
     id: "@unblocked",
     version: "2",
-    signedState: 2, // = AddonManager.SIGNEDSTATE_SIGNED.
-    signedDate: 0, // a date in the past, before MLBF's generationTime.
+    signedDate: new Date(0), // a date in the past, before MLBF's generationTime.
   };
 
   await AddonTestUtils.loadBlocklistRawData({ extensionsMLBF: [MLBF_RECORD] });
@@ -136,8 +134,7 @@ add_task(async function handle_database_corruption() {
   const blockedAddon = {
     id: "@blocked",
     version: "1",
-    signedState: 2, // = AddonManager.SIGNEDSTATE_SIGNED.
-    signedDate: 0, // a date in the past, before MLBF's generationTime.
+    signedDate: new Date(0), // a date in the past, before MLBF's generationTime.
   };
   async function checkBlocklistWorks() {
     Assert.equal(
