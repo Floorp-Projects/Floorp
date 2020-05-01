@@ -69,7 +69,7 @@ class nsXULPrototypeCache : public nsIObserver {
    * Store a style sheet in the cache. The key, style sheet's URI is obtained
    * from the style sheet itself.
    */
-  nsresult PutStyleSheet(mozilla::StyleSheet* aStyleSheet);
+  nsresult PutStyleSheet(RefPtr<mozilla::StyleSheet>&& aStyleSheet);
 
   /**
    * Write the XUL prototype document to a cache file. The proto must be

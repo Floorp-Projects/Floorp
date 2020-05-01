@@ -166,9 +166,9 @@ mozilla::StyleSheet* nsXULPrototypeCache::GetStyleSheet(nsIURI* aURI) {
   return mStyleSheetTable.GetWeak(aURI);
 }
 
-nsresult nsXULPrototypeCache::PutStyleSheet(StyleSheet* aStyleSheet) {
+nsresult nsXULPrototypeCache::PutStyleSheet(RefPtr<StyleSheet>&& aStyleSheet) {
   nsIURI* uri = aStyleSheet->GetSheetURI();
-  mStyleSheetTable.Put(uri, RefPtr{aStyleSheet});
+  mStyleSheetTable.Put(uri, std::move(aStyleSheet));
   return NS_OK;
 }
 

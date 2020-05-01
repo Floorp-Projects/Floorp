@@ -24,6 +24,9 @@ void StyleSheet::SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI,
 }
 
 dom::ParentObject StyleSheet::GetParentObject() const {
+  if (mRelevantGlobal) {
+    return dom::ParentObject(mRelevantGlobal);
+  }
   if (IsConstructed()) {
     return dom::ParentObject(mConstructorDocument.get());
   }
