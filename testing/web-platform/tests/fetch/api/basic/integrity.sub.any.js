@@ -1,4 +1,4 @@
-// META: global=window,dedicatedworker,sharedworker
+// META: global=sharedworker
 // META: script=../resources/utils.js
 
 function integrity(desc, url, integrity, initRequestMode, shouldPass) {

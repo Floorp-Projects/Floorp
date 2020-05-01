@@ -28,17 +28,17 @@ enum RTCStatsType {
 };
 
 dictionary RTCRtpStreamStats : RTCStats {
-             required unsigned long       ssrc;
-             required DOMString           kind;
+             unsigned long       ssrc;
+             DOMString           kind;
              DOMString           transportId;
              DOMString           codecId;
 };
 
 dictionary RTCCodecStats : RTCStats {
-             required unsigned long payloadType;
+             unsigned long payloadType;
              RTCCodecType  codecType;
-             required DOMString     transportId;
-             required DOMString     mimeType;
+             DOMString     transportId;
+             DOMString     mimeType;
              unsigned long clockRate;
              unsigned long channels;
              DOMString     sdpFmtpLine;
@@ -70,7 +70,8 @@ dictionary RTCReceivedRtpStreamStats : RTCRtpStreamStats {
 };
 
 dictionary RTCInboundRtpStreamStats : RTCReceivedRtpStreamStats {
- required DOMString   receiverId;
+ DOMString            trackId;
+ DOMString            receiverId;
  DOMString            remoteId;
  unsigned long        framesDecoded;
  unsigned long        keyFramesDecoded;
@@ -130,6 +131,7 @@ dictionary RTCSentRtpStreamStats : RTCRtpStreamStats {
 
 dictionary RTCOutboundRtpStreamStats : RTCSentRtpStreamStats {
              unsigned long        rtxSsrc;
+             DOMString            trackId;
              DOMString            mediaSourceId;
              DOMString            senderId;
              DOMString            remoteId;
@@ -185,9 +187,8 @@ dictionary RTCRemoteOutboundRtpStreamStats : RTCSentRtpStreamStats {
 };
 
 dictionary RTCMediaSourceStats : RTCStats {
-             required DOMString       trackIdentifier;
-             required DOMString       kind;
-             boolean         relayedSource;
+             DOMString       trackIdentifier;
+             DOMString       kind;
 };
 
 dictionary RTCAudioSourceStats : RTCMediaSourceStats {
@@ -207,8 +208,8 @@ dictionary RTCVideoSourceStats : RTCMediaSourceStats {
 };
 
 dictionary RTCRtpContributingSourceStats : RTCStats {
-             required unsigned long contributorSsrc;
-             required DOMString     inboundRtpStreamId;
+             unsigned long contributorSsrc;
+             DOMString     inboundRtpStreamId;
              unsigned long packetsContributedTo;
              double        audioLevel;
 };
@@ -221,15 +222,17 @@ dictionary RTCPeerConnectionStats : RTCStats {
 };
 
 dictionary RTCRtpTransceiverStats : RTCStats {
-    required DOMString senderId;
-    required DOMString receiverId;
+    DOMString senderId;
+    DOMString receiverId;
     DOMString mid;
 };
 
 dictionary RTCMediaHandlerStats : RTCStats {
              DOMString           trackIdentifier;
+             boolean             remoteSource;
              boolean             ended;
-             required DOMString  kind;
+             DOMString           kind;
+             RTCPriorityType     priority;
 };
 
 dictionary RTCVideoHandlerStats : RTCMediaHandlerStats {
@@ -256,8 +259,8 @@ dictionary RTCDataChannelStats : RTCStats {
              DOMString           label;
              DOMString           protocol;
              unsigned short      dataChannelIdentifier;
-             required DOMString  transportId;
-             required RTCDataChannelState state;
+             DOMString           transportId;
+             RTCDataChannelState state;
              unsigned long       messagesSent;
              unsigned long long  bytesSent;
              unsigned long       messagesReceived;
@@ -271,9 +274,7 @@ dictionary RTCTransportStats : RTCStats {
              unsigned long long    bytesReceived;
              DOMString             rtcpTransportStatsId;
              RTCIceRole            iceRole;
-             DOMString             iceLocalUsernameFragment;
-             required RTCDtlsTransportState dtlsState;
-             RTCIceTransportState  iceState;
+             RTCDtlsTransportState dtlsState;
              DOMString             selectedCandidatePairId;
              DOMString             localCertificateId;
              DOMString             remoteCertificateId;
@@ -293,21 +294,21 @@ dictionary RTCSctpTransportStats : RTCStats {
 };
 
 dictionary RTCIceCandidateStats : RTCStats {
-             required DOMString       transportId;
+             DOMString                transportId;
              DOMString?               address;
              long                     port;
              DOMString                protocol;
-             required RTCIceCandidateType candidateType;
+             RTCIceCandidateType      candidateType;
              long                     priority;
              DOMString                url;
              DOMString                relayProtocol;
 };
 
 dictionary RTCIceCandidatePairStats : RTCStats {
-             required DOMString            transportId;
-             required DOMString            localCandidateId;
-             required DOMString            remoteCandidateId;
-             required RTCStatsIceCandidatePairState state;
+             DOMString                     transportId;
+             DOMString                     localCandidateId;
+             DOMString                     remoteCandidateId;
+             RTCStatsIceCandidatePairState state;
              boolean                       nominated;
              unsigned long long            packetsSent;
              unsigned long long            packetsReceived;
@@ -347,14 +348,14 @@ enum RTCStatsIceCandidatePairState {
 };
 
 dictionary RTCCertificateStats : RTCStats {
-             required DOMString fingerprint;
-             required DOMString fingerprintAlgorithm;
-             required DOMString base64Certificate;
+             DOMString fingerprint;
+             DOMString fingerprintAlgorithm;
+             DOMString base64Certificate;
              DOMString issuerCertificateId;
 };
 
 dictionary RTCIceServerStats : RTCStats {
-           required DOMString url;
+           DOMString url;
            long port;
            DOMString protocol;
            unsigned long totalRequestsSent;

@@ -9732,38 +9732,6 @@
   expected: green
 
 
-- name: 2d.imageData.get.large.crash
-  desc: Test that canvas crash when image data cannot be allocated.
-  testing:
-    - 2d.getImageData
-  code: |
-    @assert throws TypeError ctx.getImageData(10, 0xffffffff, 2147483647, 10);
-
-- name: 2d.imageData.get.rounding
-  desc: Test the handling of non-integer source coordinates in getImageData().
-  testing:
-    - 2d.getImageData
-  code: |
-    function testDimensions(sx, sy, sw, sh, width, height)
-    {
-        imageData = ctx.getImageData(sx, sy, sw, sh);
-        @assert imageData.width == width;
-        @assert imageData.height == height;
-    }
-
-    testDimensions(0, 0, 20, 10, 20, 10);
-
-    testDimensions(.1, .2, 20, 10, 20, 10);
-    testDimensions(.9, .8, 20, 10, 20, 10);
-
-    testDimensions(0, 0, 20.9, 10.9, 20, 10);
-    testDimensions(0, 0, 20.1, 10.1, 20, 10);
-
-    testDimensions(-1, -1, 20, 10, 20, 10);
-
-    testDimensions(-1.1, 0, 20, 10, 20, 10);
-    testDimensions(-1.9,  0, 20, 10, 20, 10);
-
 - name: 2d.imageData.object.properties
   desc: ImageData objects have the right properties
   testing:
@@ -10360,39 +10328,3 @@
     var rect = canvas.getBoundingClientRect();
     @assert Math.round(rect.top) === -8;
     @assert Math.round(rect.left) === 200;
-
-- name: 2d.shadow.filter.value
-  desc: test if ctx.filter works correctly
-  testing:
-    - 2d.filter.value
-  code: |
-    @assert ctx.filter == 'none';
-    ctx.filter = 'blur(5px)';
-    @assert ctx.filter == 'blur(5px)';
-    ctx.save();
-    ctx.filter = 'none';
-    @assert ctx.filter == 'none';
-    ctx.restore();
-    @assert ctx.filter == 'blur(5px)';
-
-    ctx.filter = 'blur(10)';
-    @assert ctx.filter == 'blur(5px)';
-    ctx.filter = 'blur 10px';
-    @assert ctx.filter == 'blur(5px)';
-
-    ctx.filter = 'inherit';
-    @assert ctx.filter == 'blur(5px)';
-    ctx.filter = 'initial';
-    @assert ctx.filter == 'blur(5px)';
-    ctx.filter = 'unset';
-    @assert ctx.filter == 'blur(5px)';
-
-    ctx.filter = '';
-    @assert ctx.filter == 'blur(5px)';
-    ctx.filter = null;
-    @assert ctx.filter == 'blur(5px)';
-    ctx.filter = undefined;
-    @assert ctx.filter == 'blur(5px)';
-
-    ctx.filter = 'blur(  5px)';
-    assert_equals(ctx.filter, 'blur(  5px)');

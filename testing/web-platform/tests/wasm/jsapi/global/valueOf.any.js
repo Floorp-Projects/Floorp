@@ -1,4 +1,4 @@
-// META: global=window,dedicatedworker,jsshell
+// META: global=jsshell
 
 test(() => {
   const argument = { "value": "i32" };

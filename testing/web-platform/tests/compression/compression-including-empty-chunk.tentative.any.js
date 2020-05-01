@@ -1,4 +1,4 @@
-// META: global=window,worker
+// META: global=worker
 // META: script=pako/pako_inflate.min.js
 // META: timeout=long
 
