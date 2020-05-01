@@ -5,6 +5,8 @@
 
 #include "DirectManipulationOwner.h"
 #include "nsWindow.h"
+#include "InputData.h"
+#include "mozilla/TimeStamp.h"
 
 // Direct Manipulation is only defined for Win8 and newer.
 #if defined(_WIN32_WINNT)
@@ -24,6 +26,8 @@ namespace widget {
 class DManipEventHandler : public IDirectManipulationViewportEventHandler,
                            public IDirectManipulationInteractionEventHandler {
  public:
+  typedef mozilla::LayoutDeviceIntRect LayoutDeviceIntRect;
+
   friend class DirectManipulationOwner;
 
   NS_INLINE_DECL_REFCOUNTING(DManipEventHandler)
@@ -33,8 +37,8 @@ class DManipEventHandler : public IDirectManipulationViewportEventHandler,
   friend class DirectManipulationOwner;
 
   explicit DManipEventHandler(nsWindow* aWindow,
-                              DirectManipulationOwner* aOwner)
-      : mWindow(aWindow), mOwner(aOwner) {}
+                              DirectManipulationOwner* aOwner,
+                              const LayoutDeviceIntRect& aBounds);
 
   HRESULT STDMETHODCALLTYPE OnViewportStatusChanged(
       IDirectManipulationViewport* viewport, DIRECTMANIPULATION_STATUS current,
@@ -70,13 +74,37 @@ class DManipEventHandler : public IDirectManipulationViewportEventHandler,
     DManipEventHandler* mOwner;
   };
 
+  enum class State { eNone, ePanning, eInertia, ePinching };
+  void TransitionToState(State aNewState);
+
+  enum class Phase { eStart, eMiddle, eEnd };
+  void SendPinch(Phase aPhase, float aScale);
+  void SendPan(Phase aPhase, float x, float y, bool aIsInertia);
+
  private:
   virtual ~DManipEventHandler() = default;
 
   nsWindow* mWindow;
   DirectManipulationOwner* mOwner;
   RefPtr<VObserver> mObserver;
+  float mLastScale;
+  float mLastXOffset;
+  float mLastYOffset;
+  LayoutDeviceIntRect mBounds;
+  bool mShouldSendPanStart;
+  State mState = State::eNone;
 };
+
+DManipEventHandler::DManipEventHandler(nsWindow* aWindow,
+                                       DirectManipulationOwner* aOwner,
+                                       const LayoutDeviceIntRect& aBounds)
+    : mWindow(aWindow),
+      mOwner(aOwner),
+      mLastScale(1.f),
+      mLastXOffset(0.f),
+      mLastYOffset(0.f),
+      mBounds(aBounds),
+      mShouldSendPanStart(false) {}
 
 STDMETHODIMP
 DManipEventHandler::QueryInterface(REFIID iid, void** ppv) {
@@ -104,6 +132,45 @@ HRESULT
 DManipEventHandler::OnViewportStatusChanged(
     IDirectManipulationViewport* viewport, DIRECTMANIPULATION_STATUS current,
     DIRECTMANIPULATION_STATUS previous) {
+  if (current == previous) {
+    return S_OK;
+  }
+
+  if (current == DIRECTMANIPULATION_INERTIA) {
+    if (previous != DIRECTMANIPULATION_RUNNING || mState != State::ePanning) {
+      // xxx transition to none?
+      return S_OK;
+    }
+
+    TransitionToState(State::eInertia);
+  }
+
+  if (current == DIRECTMANIPULATION_RUNNING) {
+    // INERTIA -> RUNNING, should start a new sequence.
+    if (previous == DIRECTMANIPULATION_INERTIA) {
+      TransitionToState(State::eNone);
+    }
+  }
+
+  if (current != DIRECTMANIPULATION_ENABLED &&
+      current != DIRECTMANIPULATION_READY) {
+    return S_OK;
+  }
+
+  // A session has ended, reset the transform.
+  if (mLastScale != 1.f || mLastXOffset != 0.f || mLastYOffset != 0.f) {
+    HRESULT hr =
+        viewport->ZoomToRect(0, 0, mBounds.width, mBounds.height, false);
+    if (!SUCCEEDED(hr)) {
+      NS_WARNING("ZoomToRect failed");
+    }
+  }
+  mLastScale = 1.f;
+  mLastXOffset = 0.f;
+  mLastYOffset = 0.f;
+
+  TransitionToState(State::eNone);
+
   return S_OK;
 }
 
@@ -112,9 +179,127 @@ DManipEventHandler::OnViewportUpdated(IDirectManipulationViewport* viewport) {
   return S_OK;
 }
 
+void DManipEventHandler::TransitionToState(State aNewState) {
+  if (mState == aNewState) {
+    return;
+  }
+
+  State prevState = mState;
+  mState = aNewState;
+
+  // End the previous sequence.
+  switch (prevState) {
+    case State::ePanning: {
+      // ePanning -> eNone, ePinching: PanEnd
+      // ePanning -> eInertia: we don't want to end the current scroll sequence.
+      if (aNewState != State::eInertia) {
+        SendPan(Phase::eEnd, 0.f, 0.f, false);
+      }
+      break;
+    }
+    case State::eInertia: {
+      // eInertia -> *: MomentumEnd
+      SendPan(Phase::eEnd, 0.f, 0.f, true);
+      break;
+    }
+    case State::ePinching: {
+      MOZ_ASSERT(aNewState == State::eNone);
+      // ePinching -> eNone: PinchEnd. ePinching should only transition to
+      // eNone.
+      SendPinch(Phase::eEnd, 0.f);
+      break;
+    }
+    case State::eNone: {
+      // eNone -> *: no cleanup is needed.
+      break;
+    }
+    default:
+      MOZ_ASSERT(false);
+  }
+
+  // Start the new sequence.
+  switch (aNewState) {
+    case State::ePanning: {
+      // eInertia, eNone -> ePanning: PanStart.
+      // We're being called from OnContentUpdated, it has the coords we need to
+      // pass to SendPan(Phase::eStart), so set mShouldSendPanStart and when we
+      // return OnContentUpdated will check it and call SendPan(Phase::eStart).
+      mShouldSendPanStart = true;
+      break;
+    }
+    case State::eInertia: {
+      // Only ePanning can transition to eInertia.
+      MOZ_ASSERT(prevState == State::ePanning);
+      SendPan(Phase::eStart, 0.f, 0.f, true);
+      break;
+    }
+    case State::ePinching: {
+      // * -> ePinching: PinchStart.
+      // Pinch gesture may begin with some scroll events.
+      SendPinch(Phase::eStart, 0.f);
+      break;
+    }
+    case State::eNone: {
+      // * -> eNone: only cleanup is needed.
+      break;
+    }
+    default:
+      MOZ_ASSERT(false);
+  }
+}
+
 HRESULT
 DManipEventHandler::OnContentUpdated(IDirectManipulationViewport* viewport,
                                      IDirectManipulationContent* content) {
+  float transform[6];
+  HRESULT hr = content->GetContentTransform(transform, ARRAYSIZE(transform));
+  if (!SUCCEEDED(hr)) {
+    NS_WARNING("GetContentTransform failed");
+    return S_OK;
+  }
+
+  float windowScale = mWindow ? mWindow->GetDefaultScale().scale : 1.f;
+
+  float scale = transform[0];
+  float xoffset = transform[4] * windowScale;
+  float yoffset = transform[5] * windowScale;
+
+  // Not different from last time.
+  if (FuzzyEqualsMultiplicative(scale, mLastScale) && xoffset == mLastXOffset &&
+      yoffset == mLastYOffset) {
+    return S_OK;
+  }
+
+  // Consider this is a Scroll when scale factor equals 1.0.
+  if (FuzzyEqualsMultiplicative(scale, 1.f)) {
+    if (mState == State::eNone || mState == State::eInertia) {
+      TransitionToState(State::ePanning);
+    }
+  } else {
+    // Pinch gesture may begin with some scroll events.
+    TransitionToState(State::ePinching);
+  }
+
+  if (mState == State::ePanning) {
+    if (mShouldSendPanStart) {
+      SendPan(Phase::eStart, mLastXOffset - xoffset, mLastYOffset - yoffset,
+              false);
+      mShouldSendPanStart = false;
+    } else {
+      SendPan(Phase::eMiddle, mLastXOffset - xoffset, mLastYOffset - yoffset,
+              false);
+    }
+  } else if (mState == State::eInertia) {
+    SendPan(Phase::eMiddle, mLastXOffset - xoffset, mLastYOffset - yoffset,
+            true);
+  } else if (mState == State::ePinching) {
+    SendPinch(Phase::eMiddle, scale);
+  }
+
+  mLastScale = scale;
+  mLastXOffset = xoffset;
+  mLastYOffset = yoffset;
+
   return S_OK;
 }
 
@@ -156,6 +341,107 @@ DirectManipulationOwner::DirectManipulationOwner(nsWindow* aWindow)
     : mWindow(aWindow) {}
 
 DirectManipulationOwner::~DirectManipulationOwner() { Destroy(); }
+
+void DManipEventHandler::SendPinch(Phase aPhase, float aScale) {
+  PinchGestureInput::PinchGestureType pinchGestureType =
+      PinchGestureInput::PINCHGESTURE_SCALE;
+  switch (aPhase) {
+    case Phase::eStart:
+      pinchGestureType = PinchGestureInput::PINCHGESTURE_START;
+      break;
+    case Phase::eMiddle:
+      pinchGestureType = PinchGestureInput::PINCHGESTURE_SCALE;
+      break;
+    case Phase::eEnd:
+      pinchGestureType = PinchGestureInput::PINCHGESTURE_END;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("handle all enum values");
+  }
+
+  PRIntervalTime eventIntervalTime = PR_IntervalNow();
+  TimeStamp eventTimeStamp = TimeStamp::Now();
+
+  Modifiers mods =
+      MODIFIER_NONE;  // xxx should we get getting key state for this?
+
+  ExternalPoint screenOffset = ViewAs<ExternalPixel>(
+      mWindow->WidgetToScreenOffset(),
+      PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
+
+  POINT cursor_pos;
+  ::GetCursorPos(&cursor_pos);
+  ScreenPoint position = {(float)cursor_pos.x, (float)cursor_pos.y};
+
+  PinchGestureInput event{
+      pinchGestureType,
+      eventIntervalTime,
+      eventTimeStamp,
+      screenOffset,
+      position,
+      100.0 * ((aPhase != Phase::eMiddle) ? 1.f : aScale),
+      100.0 * ((aPhase != Phase::eMiddle) ? 1.f : mLastScale),
+      mods};
+
+  if (pinchGestureType == PinchGestureInput::PINCHGESTURE_END) {
+    event.mFocusPoint = PinchGestureInput::BothFingersLifted<ScreenPixel>();
+  }
+
+  if (mWindow) {
+    mWindow->SendAnAPZEvent(event);
+  }
+}
+
+void DManipEventHandler::SendPan(Phase aPhase, float x, float y,
+                                 bool aIsInertia) {
+  PanGestureInput::PanGestureType panGestureType =
+      PanGestureInput::PANGESTURE_PAN;
+  if (aIsInertia) {
+    switch (aPhase) {
+      case Phase::eStart:
+        panGestureType = PanGestureInput::PANGESTURE_MOMENTUMSTART;
+        break;
+      case Phase::eMiddle:
+        panGestureType = PanGestureInput::PANGESTURE_MOMENTUMPAN;
+        break;
+      case Phase::eEnd:
+        panGestureType = PanGestureInput::PANGESTURE_MOMENTUMEND;
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("handle all enum values");
+    }
+  } else {
+    switch (aPhase) {
+      case Phase::eStart:
+        panGestureType = PanGestureInput::PANGESTURE_START;
+        break;
+      case Phase::eMiddle:
+        panGestureType = PanGestureInput::PANGESTURE_PAN;
+        break;
+      case Phase::eEnd:
+        panGestureType = PanGestureInput::PANGESTURE_END;
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("handle all enum values");
+    }
+  }
+
+  PRIntervalTime eventIntervalTime = PR_IntervalNow();
+  TimeStamp eventTimeStamp = TimeStamp::Now();
+
+  Modifiers mods = MODIFIER_NONE;
+
+  POINT cursor_pos;
+  ::GetCursorPos(&cursor_pos);
+  ScreenPoint position = {(float)cursor_pos.x, (float)cursor_pos.y};
+
+  PanGestureInput event{panGestureType, eventIntervalTime, eventTimeStamp,
+                        position,       ScreenPoint(x, y), mods};
+
+  if (mWindow) {
+    mWindow->SendAnAPZEvent(event);
+  }
+}
 
 void DirectManipulationOwner::Init(const LayoutDeviceIntRect& aBounds) {
   HRESULT hr = CoCreateInstance(
@@ -218,7 +504,7 @@ void DirectManipulationOwner::Init(const LayoutDeviceIntRect& aBounds) {
     return;
   }
 
-  mDmHandler = new DManipEventHandler(mWindow, this);
+  mDmHandler = new DManipEventHandler(mWindow, this, aBounds);
 
   hr = mDmViewport->AddEventHandler(wnd, mDmHandler.get(),
                                     &mDmViewportHandlerCookie);
@@ -275,6 +561,10 @@ void DirectManipulationOwner::Init(const LayoutDeviceIntRect& aBounds) {
 
 void DirectManipulationOwner::ResizeViewport(
     const LayoutDeviceIntRect& aBounds) {
+  if (mDmHandler) {
+    mDmHandler->mBounds = aBounds;
+  }
+
   if (mDmViewport) {
     RECT rect = {0, 0, aBounds.Width(), aBounds.Height()};
     HRESULT hr = mDmViewport->SetViewportRect(&rect);

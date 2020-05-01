@@ -716,6 +716,16 @@ static bool ShouldCacheTitleBarInfo(nsWindowType aWindowType,
           !nsUXThemeData::sTitlebarInfoPopulatedAero);
 }
 
+void nsWindow::SendAnAPZEvent(InputData& aEvent) {
+  if (mAPZC) {
+    APZEventResult es = mAPZC->InputBridge()->ReceiveInputEvent(aEvent);
+    // xxx look at es
+  }
+  // xxx dispatch regularly if we don't have an apzc or if apzc doesn't consume
+  // it, or don't create direct manip objects in the first place if we don't
+  // have an apzc?
+}
+
 void nsWindow::RecreateDirectManipulationIfNeeded() {
   DestroyDirectManipulation();
 
