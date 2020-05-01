@@ -49,8 +49,8 @@ add_task(async function() { await test_permission([], true); });
 add_task(async function() { await test_permission(["http://*/"], true); });
 add_task(async function() { await test_permission(["http://*.example.com/"], true); });
 add_task(async function() { await test_permission(["http://localhost/*"], true); });
-add_task(async function() { await test_permission(["<all_urls>"], true); });
-// Fetch will not be blocked with explicit permissions
+// Fetch will not be blocked if the extension has host permissions.
+add_task(async function() { await test_permission(["<all_urls>"], false); });
 add_task(async function() { await test_permission(["*://tracking.example.com/*"], false); });
 
 add_task(async function test_contentscript() {
