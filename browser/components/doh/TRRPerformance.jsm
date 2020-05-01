@@ -318,12 +318,15 @@ class TRRRacer {
   _getFastestTRRFromResults(results, returnRandomDefault = false) {
     // First, organize the results into a map of TRR -> array of times
     let TRRTimingMap = new Map();
+    let TRRErrorCount = new Map();
     for (let { trr, time } of results) {
       if (!TRRTimingMap.has(trr)) {
         TRRTimingMap.set(trr, []);
       }
       if (time != -1) {
         TRRTimingMap.get(trr).push(time);
+      } else {
+        TRRErrorCount.set(trr, 1 + (TRRErrorCount.get(trr) || 0));
       }
     }
 
@@ -338,6 +341,13 @@ class TRRRacer {
     for (let trr of trrs) {
       let times = TRRTimingMap.get(trr);
       if (!times.length) {
+        continue;
+      }
+
+      // Skip TRRs that had an error rate of more than 30%.
+      let errorCount = TRRErrorCount.get(trr) || 0;
+      let totalResults = times.length + errorCount;
+      if (errorCount / totalResults > 0.3) {
         continue;
       }
 

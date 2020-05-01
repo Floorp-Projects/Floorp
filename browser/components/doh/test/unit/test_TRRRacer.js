@@ -171,10 +171,22 @@ add_task(async function test_TRRRacer_getFastestTRRFromResults() {
     { trr: "trr1", time: 1000 },
     { trr: "trr2", time: 110 },
     { trr: "trr3", time: -1 },
+    { trr: "trr4", time: -1 },
+    { trr: "trr4", time: -1 },
+    { trr: "trr4", time: 1 },
+    { trr: "trr4", time: 1 },
+    { trr: "trr5", time: 10 },
+    { trr: "trr5", time: 20 },
+    { trr: "trr5", time: 1000 },
   ];
   let racer = new TRRRacer();
   let fastest = racer._getFastestTRRFromResults(results);
-  Assert.equal(fastest, "trr2");
+  // trr1's geometric mean is 100
+  // trr2's geometric mean is 110
+  // trr3 has no valid times, excluded
+  // trr4 has 50% invalid times, excluded
+  // trr5's geometric mean is ~58.5, it's the winner.
+  Assert.equal(fastest, "trr5");
 
   // When no valid entries are available, undefined is the default output.
   results = [
