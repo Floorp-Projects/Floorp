@@ -44,7 +44,7 @@ this.trrselect = class trrselect extends ExtensionAPI {
 
             await new Promise(resolve => {
               let racer = new TRRRacer(() => {
-                setDryRunResultAndRecordTelemetry(racer.getFastestTRR());
+                setDryRunResultAndRecordTelemetry(racer.getFastestTRR(true));
                 resolve();
               });
               racer.run();
