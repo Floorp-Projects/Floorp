@@ -225,7 +225,8 @@ def target_tasks_try_auto(full_task_graph, parameters, graph_config):
     parameters = Parameters(**params)
     return [l for l, t in full_task_graph.tasks.iteritems()
             if standard_filter(t, parameters)
-            and filter_out_nightly(t, parameters)]
+            and filter_out_nightly(t, parameters)
+            and filter_tasks_by_blacklist(t.label)]
 
 
 @_target_task('default')
