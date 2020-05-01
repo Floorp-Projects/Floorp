@@ -39,6 +39,7 @@ class QueuedInput {
   QueuedInput(const ScrollWheelInput& aInput, WheelBlockState& aBlock);
   QueuedInput(const MouseInput& aInput, DragBlockState& aBlock);
   QueuedInput(const PanGestureInput& aInput, PanGestureBlockState& aBlock);
+  QueuedInput(const PinchGestureInput& aInput, PinchGestureBlockState& aBlock);
   QueuedInput(const KeyboardInput& aInput, KeyboardBlockState& aBlock);
 
   InputData* Input();
