@@ -405,6 +405,8 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::Ge:
       case JSOp::StrictEq:
       case JSOp::StrictNe:
+      case JSOp::BindName:
+      case JSOp::BindGName:
       case JSOp::Add:
       case JSOp::Sub:
       case JSOp::Mul:
@@ -504,8 +506,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::FunApply:
       case JSOp::New:
       case JSOp::SuperCall:
-      case JSOp::BindName:
-      case JSOp::BindGName:
       case JSOp::SetProp:
       case JSOp::StrictSetProp:
       case JSOp::SetName:

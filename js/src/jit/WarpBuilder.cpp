@@ -1804,6 +1804,10 @@ bool WarpBuilder::build_GetGName(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::buildBindNameOp(BytecodeLocation loc, MDefinition* env) {
+  if (auto* snapshot = getOpSnapshot<WarpCacheIR>(loc)) {
+    return buildCacheIR(loc, snapshot, {env});
+  }
+
   MBindNameCache* ins = MBindNameCache::New(alloc(), env);
   current->add(ins);
   current->push(ins);
