@@ -271,10 +271,6 @@ struct nsFind::State final {
     return GetCurrentNode();
   }
 
-  // Gets the next non-empty text fragment in the same block, starting by the
-  // _next_ node.
-  const nsTextFragment* GetNextNonEmptyTextFragmentInSameBlock();
-
  private:
   enum class Initializing { No, Yes };
 
@@ -514,26 +510,30 @@ char32_t nsFind::PeekNextChar(State& aState) const {
   // We need to restore the necessary state before this function returns.
   StateRestorer restorer(aState);
 
-  const Text* text = aState.GetNextNode();
-  if (!text || aState.ForcedBreak()) {
-    return L'\0';
+  while (true) {
+    const Text* text = aState.GetNextNode();
+    if (!text || aState.ForcedBreak()) {
+      return L'\0';
+    }
+
+    const nsTextFragment& frag = text->TextFragment();
+    uint32_t len = frag.GetLength();
+    if (!len) {
+      continue;
+    }
+
+    const char16_t* t2b = nullptr;
+    const char* t1b = nullptr;
+
+    if (frag.Is2b()) {
+      t2b = frag.Get2b();
+    } else {
+      t1b = frag.Get1b();
+    }
+
+    int32_t index = mFindBackward ? len - 1 : 0;
+    return t1b ? CHAR_TO_UNICHAR(t1b[index]) : DecodeChar(t2b, &index);
   }
-
-  const char16_t* t2b = nullptr;
-  const char* t1b = nullptr;
-
-  const nsTextFragment& frag = text->TextFragment();
-  if (frag.Is2b()) {
-    t2b = frag.Get2b();
-  } else {
-    t1b = frag.Get1b();
-  }
-
-  uint32_t len = frag.GetLength();
-  MOZ_ASSERT(len);
-
-  int32_t index = mFindBackward ? len - 1 : 0;
-  return t1b ? CHAR_TO_UNICHAR(t1b[index]) : DecodeChar(t2b, &index);
 }
 
 #define NBSP_CHARCODE (CHAR_TO_UNICHAR(160))
