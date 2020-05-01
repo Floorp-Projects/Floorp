@@ -15,6 +15,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Sprintf.h"
 #include "nsIXULAppInfo.h"
+#include "nsServiceManagerUtils.h"
 
 // avoid redefined macro in unified build
 #undef LOG

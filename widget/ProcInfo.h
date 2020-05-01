@@ -9,6 +9,7 @@
 #include <base/process.h>
 #include <stdint.h>
 #include "mozilla/dom/ipc/IdType.h"
+#include "mozilla/MozPromise.h"
 
 namespace mozilla {
 
