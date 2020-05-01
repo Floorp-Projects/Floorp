@@ -14,6 +14,7 @@
 #include "XULFormControlAccessible.h"
 
 #include "nsIDOMXULContainerElement.h"
+#include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIContent.h"
 #include "nsMenuBarFrame.h"

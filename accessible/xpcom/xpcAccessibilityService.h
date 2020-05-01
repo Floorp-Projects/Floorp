@@ -6,6 +6,7 @@
 #define mozilla_a11y_xpcAccessibilityService_h_
 
 #include "nsIAccessibilityService.h"
+#include "nsITimer.h"
 
 class xpcAccessibilityService : public nsIAccessibilityService {
  public:
