@@ -506,12 +506,15 @@ class MediaPipelineTest : public ::testing::Test {
 
 class MediaPipelineFilterTest : public ::testing::Test {
  public:
-  bool Filter(MediaPipelineFilter& filter, int32_t correlator, uint32_t ssrc,
-              uint8_t payload_type) {
+  bool Filter(MediaPipelineFilter& filter, uint32_t ssrc, uint8_t payload_type,
+              const mozilla::Maybe<std::string>& mid = mozilla::Nothing()) {
     webrtc::RTPHeader header;
     header.ssrc = ssrc;
     header.payloadType = payload_type;
-    return filter.Filter(header, correlator);
+    mid.apply([&](const auto& mid) {
+      header.extension.mid.Set(mid.c_str(), mid.length());
+    });
+    return filter.Filter(header);
   }
 };
 
@@ -519,49 +522,52 @@ TEST_F(MediaPipelineFilterTest, TestConstruct) { MediaPipelineFilter filter; }
 
 TEST_F(MediaPipelineFilterTest, TestDefault) {
   MediaPipelineFilter filter;
-  ASSERT_FALSE(Filter(filter, 0, 233, 110));
+  EXPECT_FALSE(Filter(filter, 233, 110));
 }
 
 TEST_F(MediaPipelineFilterTest, TestSSRCFilter) {
   MediaPipelineFilter filter;
   filter.AddRemoteSSRC(555);
-  ASSERT_TRUE(Filter(filter, 0, 555, 110));
-  ASSERT_FALSE(Filter(filter, 0, 556, 110));
+  EXPECT_TRUE(Filter(filter, 555, 110));
+  EXPECT_FALSE(Filter(filter, 556, 110));
 }
 
 #define SSRC(ssrc)                                                    \
   ((ssrc >> 24) & 0xFF), ((ssrc >> 16) & 0xFF), ((ssrc >> 8) & 0xFF), \
       (ssrc & 0xFF)
-
 #define REPORT_FRAGMENT(ssrc) \
   SSRC(ssrc), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 #define RTCP_TYPEINFO(num_rrs, type, size) 0x80 + num_rrs, type, 0, size
 
-TEST_F(MediaPipelineFilterTest, TestCorrelatorFilter) {
+TEST_F(MediaPipelineFilterTest, TestMidFilter) {
   MediaPipelineFilter filter;
-  filter.SetCorrelator(7777);
-  ASSERT_TRUE(Filter(filter, 7777, 16, 110));
-  ASSERT_FALSE(Filter(filter, 7778, 17, 110));
-  // This should also have resulted in the SSRC 16 being added to the filter
-  ASSERT_TRUE(Filter(filter, 0, 16, 110));
-  ASSERT_FALSE(Filter(filter, 0, 17, 110));
+  const auto mid = Some(std::string("mid0"));
+  filter.SetRemoteMediaStreamId(mid);
+
+  EXPECT_FALSE(Filter(filter, 16, 110));
+  EXPECT_TRUE(Filter(filter, 16, 110, mid));
+  EXPECT_TRUE(Filter(filter, 16, 110));
+  EXPECT_FALSE(Filter(filter, 17, 110));
 }
 
 TEST_F(MediaPipelineFilterTest, TestPayloadTypeFilter) {
   MediaPipelineFilter filter;
   filter.AddUniquePT(110);
-  ASSERT_TRUE(Filter(filter, 0, 555, 110));
-  ASSERT_FALSE(Filter(filter, 0, 556, 111));
+  EXPECT_TRUE(Filter(filter, 555, 110));
+  EXPECT_FALSE(Filter(filter, 556, 111));
 }
 
-TEST_F(MediaPipelineFilterTest, TestSSRCMovedWithCorrelator) {
+TEST_F(MediaPipelineFilterTest, TestSSRCMovedWithMid) {
   MediaPipelineFilter filter;
-  filter.SetCorrelator(7777);
-  ASSERT_TRUE(Filter(filter, 7777, 555, 110));
-  ASSERT_TRUE(Filter(filter, 0, 555, 110));
-  ASSERT_FALSE(Filter(filter, 7778, 555, 110));
-  ASSERT_FALSE(Filter(filter, 0, 555, 110));
+  const auto mid0 = Some(std::string("mid0"));
+  const auto mid1 = Some(std::string("mid1"));
+  filter.SetRemoteMediaStreamId(mid0);
+  ASSERT_TRUE(Filter(filter, 555, 110, mid0));
+  ASSERT_TRUE(Filter(filter, 555, 110));
+  // Present a new MID binding
+  ASSERT_FALSE(Filter(filter, 555, 110, mid1));
+  ASSERT_FALSE(Filter(filter, 555, 110));
 }
 
 TEST_F(MediaPipelineFilterTest, TestRemoteSDPNoSSRCs) {
@@ -569,16 +575,26 @@ TEST_F(MediaPipelineFilterTest, TestRemoteSDPNoSSRCs) {
   // there is no point of even incorporating a filter, but we make the
   // behavior consistent to avoid confusion.
   MediaPipelineFilter filter;
-  filter.SetCorrelator(7777);
+  const auto mid = Some(std::string("mid0"));
+  filter.SetRemoteMediaStreamId(mid);
   filter.AddUniquePT(111);
-  ASSERT_TRUE(Filter(filter, 7777, 555, 110));
+  EXPECT_TRUE(Filter(filter, 555, 110, mid));
+  EXPECT_TRUE(Filter(filter, 555, 110));
 
+  // Update but remember binding./
   MediaPipelineFilter filter2;
 
   filter.Update(filter2);
 
   // Ensure that the old SSRC still works.
-  ASSERT_TRUE(Filter(filter, 0, 555, 110));
+  EXPECT_TRUE(Filter(filter, 555, 110));
+
+  // Forget the previous binding
+  MediaPipelineFilter filter3;
+  filter3.SetRemoteMediaStreamId(Some(std::string("mid1")));
+  filter.Update(filter3);
+
+  ASSERT_FALSE(Filter(filter, 555, 110));
 }
 
 TEST_F(MediaPipelineTest, TestAudioSendNoMux) { TestAudioSend(false); }
