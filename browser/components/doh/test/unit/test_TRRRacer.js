@@ -175,4 +175,23 @@ add_task(async function test_TRRRacer_getFastestTRRFromResults() {
   let racer = new TRRRacer();
   let fastest = racer._getFastestTRRFromResults(results);
   Assert.equal(fastest, "trr2");
+
+  // When no valid entries are available, undefined is the default output.
+  results = [
+    { trr: "trr1", time: -1 },
+    { trr: "trr2", time: -1 },
+  ];
+
+  fastest = racer._getFastestTRRFromResults(results);
+  Assert.equal(fastest, undefined);
+
+  // When passing `returnRandomDefault = true`, verify that both TRRs are
+  // possible outputs. The probability that the randomization is working
+  // correctly and we consistently get the same output after 50 iterations is
+  // 0.5^50 ~= 8.9*10^-16.
+  let firstResult = racer._getFastestTRRFromResults(results, true);
+  while (racer._getFastestTRRFromResults(results, true) == firstResult) {
+    continue;
+  }
+  Assert.ok(true, "Both TRRs were possible outputs when all results invalid.");
 });
