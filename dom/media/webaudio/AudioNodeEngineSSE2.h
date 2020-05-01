@@ -30,4 +30,6 @@ float AudioBufferSumOfSquares_SSE(const float* aInput, uint32_t aLength);
 
 void BufferComplexMultiply_SSE(const float* aInput, const float* aScale,
                                float* aOutput, uint32_t aSize);
+
+void NaNToZeroInPlace_SSE(float* aSamples, size_t aCount);
 }  // namespace mozilla

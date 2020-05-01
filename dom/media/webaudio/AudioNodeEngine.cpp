@@ -364,6 +364,20 @@ float AudioBufferSumOfSquares(const float* aInput, uint32_t aLength) {
   return sum;
 }
 
+void NaNToZeroInPlace(float* aSamples, size_t aCount) {
+#ifdef USE_SSE2
+  if (mozilla::supports_sse2()) {
+    NaNToZeroInPlace_SSE(aSamples, aCount);
+    return;
+  }
+#endif
+  for (size_t i = 0; i < aCount; i++) {
+    if (aSamples[i] != aSamples[i]) {
+      aSamples[i] = 0.0;
+    }
+  }
+}
+
 AudioNodeEngine::AudioNodeEngine(dom::AudioNode* aNode)
     : mNode(aNode),
       mNodeType(aNode ? aNode->NodeType() : nullptr),
