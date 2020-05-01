@@ -322,6 +322,10 @@ ContentBlocking::AllowAccessFor(
       bool isThirdParty;
       nsCOMPtr<nsIPrincipal> principal =
           AntiTrackingUtils::GetPrincipal(aParentContext);
+      if (!principal) {
+        LOG(("Can't get the principal from the browsing context"));
+        return StorageAccessGrantPromise::CreateAndReject(false, __func__);
+      }
       Unused << trackingPrincipal->IsThirdPartyPrincipal(principal,
                                                          &isThirdParty);
       runInSameProcess = !isThirdParty;
