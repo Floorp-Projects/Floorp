@@ -2225,7 +2225,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
       // (because COOP/COEP support isn't enabled, or because COOP/COEP don't
       // act to isolate this page to a separate process).
 
-      // XXX worker and worklet will be updated in the follow up patches.
+      // XXX worklet will be updated in the follow up patches.
 
       // Every script context we are initialized with must create a
       // new global.
