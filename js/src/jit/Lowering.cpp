@@ -3831,6 +3831,13 @@ void LIRGenerator::visitGuardReceiverPolymorphic(
   }
 }
 
+void LIRGenerator::visitGuardValue(MGuardValue* ins) {
+  MOZ_ASSERT(ins->value()->type() == MIRType::Value);
+  auto* lir = new (alloc()) LGuardValue(useBox(ins->value()));
+  assignSnapshot(lir, Bailout_ValueGuard);
+  add(lir, ins);
+}
+
 void LIRGenerator::visitAssertRange(MAssertRange* ins) {
   MDefinition* input = ins->input();
   LInstruction* lir = nullptr;
