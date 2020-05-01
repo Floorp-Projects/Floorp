@@ -25,7 +25,8 @@ namespace mozilla {
 namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(XRWebGLLayer, mParent, mSession, mWebGL,
-                                      mFramebuffer)
+                                      mFramebuffer, mLeftViewport,
+                                      mRightViewport)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(XRWebGLLayer, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(XRWebGLLayer, Release)
 
@@ -217,12 +218,19 @@ uint32_t XRWebGLLayer::FramebufferHeight() {
 already_AddRefed<XRViewport> XRWebGLLayer::GetViewport(const XRView& aView) {
   const int32_t width = (aView.Eye() == XREye::None) ? FramebufferWidth()
                                                      : (FramebufferWidth() / 2);
-  gfx::IntRect viewportRect(0, 0, width, FramebufferHeight());
+  gfx::IntRect rect(0, 0, width, FramebufferHeight());
   if (aView.Eye() == XREye::Right) {
-    viewportRect.x = width;
+    rect.x = width;
   }
-  RefPtr<XRViewport> viewport = new XRViewport(mParent, viewportRect);
-  return viewport.forget();
+  RefPtr<XRViewport>& viewport =
+      aView.Eye() == XREye::Right ? mRightViewport : mLeftViewport;
+  if (!viewport) {
+    viewport = new XRViewport(mParent, rect);
+  } else {
+    viewport->mRect = rect;
+  }
+  RefPtr<XRViewport> result = viewport;
+  return result.forget();
 }
 
 /* static */ double XRWebGLLayer::GetNativeFramebufferScaleFactor(

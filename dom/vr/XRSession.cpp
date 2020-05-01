@@ -19,6 +19,8 @@
 #include "XRNativeOriginViewer.h"
 #include "XRNativeOriginLocal.h"
 #include "XRNativeOriginLocalFloor.h"
+#include "XRView.h"
+#include "XRViewerPose.h"
 #include "VRLayerChild.h"
 #include "XRInputSourceArray.h"
 #include "nsGlobalWindow.h"
@@ -26,6 +28,12 @@
 #include "nsISupportsPrimitives.h"
 #include "VRDisplayClient.h"
 #include "VRDisplayPresentation.h"
+
+/**
+ * Maximum instances of XRFrame and XRViewerPose objects
+ * created in the pool.
+ */
+const uint32_t kMaxPoolSize = 16;
 
 namespace mozilla {
 namespace dom {
@@ -38,6 +46,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XRSession,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mActiveRenderState)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingRenderState)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInputSources)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mViewerPosePool)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFramePool)
 
   for (uint32_t i = 0; i < tmp->mFrameRequestCallbacks.Length(); ++i) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mFrameRequestCallbacks[i]");
@@ -51,6 +61,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XRSession, DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mActiveRenderState)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingRenderState)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mInputSources)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mViewerPosePool)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFramePool)
 
   tmp->mFrameRequestCallbacks.Clear();
 
@@ -109,7 +121,9 @@ XRSession::XRSession(
       mRefreshDriver(aRefreshDriver),
       mDisplayClient(aClient),
       mFrameRequestCallbackCounter(0),
-      mEnabledReferenceSpaceTypes(aEnabledReferenceSpaceTypes) {
+      mEnabledReferenceSpaceTypes(aEnabledReferenceSpaceTypes),
+      mViewerPosePoolIndex(0),
+      mFramePoolIndex(0) {
   if (aClient) {
     aClient->SessionStarted(this);
   }
@@ -294,8 +308,7 @@ void XRSession::StartFrame() {
   DOMHighResTimeStamp timeStamp = duration.ToMilliseconds();
 
   // Create an XRFrame for the callbacks
-  RefPtr<XRFrame> frame = new XRFrame(GetParentObject(), this);
-
+  RefPtr<XRFrame> frame = PooledFrame();
   frame->StartAnimationFrame();
 
   mActiveRenderState->GetBaseLayer()->StartAnimationFrame();
@@ -393,6 +406,10 @@ void XRSession::CancelAnimationFrame(int32_t aHandle, ErrorResult& aError) {
 void XRSession::Shutdown() {
   mShutdown = true;
   ExitPresentInternal();
+  mViewerPosePool.Clear();
+  mViewerPosePoolIndex = 0;
+  mFramePool.Clear();
+  mFramePoolIndex = 0;
 
   // Unregister from nsRefreshObserver
   if (mRefreshDriver) {
@@ -447,6 +464,48 @@ void XRSession::LastRelease() {
   // We don't want to wait for the GC to free up the presentation
   // for use in other documents, so we do this in LastRelease().
   Shutdown();
+}
+
+RefPtr<XRViewerPose> XRSession::PooledViewerPose(
+    const gfx::PointDouble3D& aPosition,
+    const gfx::QuaternionDouble& aOrientation, bool aEmulatedPosition) {
+  RefPtr<XRViewerPose> pose;
+  if (mViewerPosePool.Length() > mViewerPosePoolIndex) {
+    pose = mViewerPosePool.ElementAt(mViewerPosePoolIndex);
+    pose->Transform()->Update(aPosition, aOrientation);
+    pose->SetEmulatedPosition(aEmulatedPosition);
+  } else {
+    RefPtr<XRRigidTransform> transform =
+        new XRRigidTransform(this, aPosition, aOrientation);
+    nsTArray<RefPtr<XRView>> views;
+    if (IsImmersive()) {
+      views.AppendElement(new XRView(GetParentObject(), XREye::Left));
+      views.AppendElement(new XRView(GetParentObject(), XREye::Right));
+    } else {
+      views.AppendElement(new XRView(GetParentObject(), XREye::None));
+    }
+    pose = new XRViewerPose(this, transform, aEmulatedPosition, views);
+    mViewerPosePool.AppendElement(pose);
+  }
+
+  mViewerPosePoolIndex++;
+  if (mViewerPosePoolIndex >= kMaxPoolSize) {
+    mViewerPosePoolIndex = 0;
+  }
+
+  return pose;
+}
+
+RefPtr<XRFrame> XRSession::PooledFrame() {
+  RefPtr<XRFrame> frame;
+  if (mFramePool.Length() > mFramePoolIndex) {
+    frame = mFramePool.ElementAt(mFramePoolIndex);
+  } else {
+    frame = new XRFrame(GetParentObject(), this);
+    mFramePool.AppendElement(frame);
+  }
+
+  return frame;
 }
 
 }  // namespace dom

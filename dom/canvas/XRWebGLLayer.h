@@ -78,6 +78,8 @@ class XRWebGLLayer final : public nsWrapperCache {
  private:
   bool mIgnoreDepthValues;
   RefPtr<WebGLFramebufferJS> mFramebuffer;
+  RefPtr<XRViewport> mLeftViewport;
+  RefPtr<XRViewport> mRightViewport;
   Maybe<const webgl::OpaqueFramebufferOptions> mFramebufferOptions;
 };
 

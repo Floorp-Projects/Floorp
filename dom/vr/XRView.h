@@ -23,11 +23,11 @@ class XRView final : public nsWrapperCache {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(XRView)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(XRView)
 
-  explicit XRView(nsISupports* aParent, const XREye& aEye,
-                  const gfx::PointDouble3D& aPosition,
-                  const gfx::QuaternionDouble& aOrientation,
-                  const gfx::Matrix4x4& aProjectionMatrix);
+  explicit XRView(nsISupports* aParent, const XREye& aEye);
 
+  void Update(const gfx::PointDouble3D& aPosition,
+              const gfx::QuaternionDouble& aOrientation,
+              const gfx::Matrix4x4& aProjectionMatrix);
   // WebIDL Boilerplate
   nsISupports* GetParentObject() const { return mParent; }
   JSObject* WrapObject(JSContext* aCx,
@@ -41,9 +41,6 @@ class XRView final : public nsWrapperCache {
 
  protected:
   virtual ~XRView();
-  void LazyCreateMatrix(JS::Heap<JSObject*>& aArray, gfx::Matrix4x4& aMat,
-                        JSContext* aCx, JS::MutableHandle<JSObject*> aRetval,
-                        ErrorResult& aRv);
 
   nsCOMPtr<nsISupports> mParent;
   XREye mEye;
@@ -51,6 +48,8 @@ class XRView final : public nsWrapperCache {
   gfx::QuaternionDouble mOrientation;
   gfx::Matrix4x4 mProjectionMatrix;
   JS::Heap<JSObject*> mJSProjectionMatrix;
+  bool mProjectionNeedsUpdate = true;
+  RefPtr<XRRigidTransform> mTransform;
 };
 
 }  // namespace dom

@@ -25,6 +25,7 @@ class XRPose : public nsISupports, public nsWrapperCache {
 
   explicit XRPose(nsISupports* aParent, XRRigidTransform* aTransform,
                   bool aEmulatedPosition);
+  void SetEmulatedPosition(bool aEmulated);
 
   // WebIDL Boilerplate
   nsISupports* GetParentObject() const { return mParent; }

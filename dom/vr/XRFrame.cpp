@@ -54,11 +54,12 @@ already_AddRefed<XRViewerPose> XRFrame::GetViewerPose(
   gfx::PointDouble3D viewerPosition;
   gfx::QuaternionDouble viewerOrientation;
   bool emulatedPosition = aReferenceSpace.IsPositionEmulated();
-  nsTArray<RefPtr<XRView>> views;
 
   XRRenderState* renderState = mSession->GetActiveRenderState();
   float depthNear = (float)renderState->DepthNear();
   float depthFar = (float)renderState->DepthFar();
+
+  RefPtr<XRViewerPose> viewerPose;
 
   gfx::VRDisplayClient* display = mSession->GetDisplayClient();
   if (display) {
@@ -78,6 +79,9 @@ already_AddRefed<XRViewerPose> XRFrame::GetViewerPose(
     // TODO: Remove those extra inverts when WebVR support is disabled.
     viewerOrientation.Invert();
 
+    viewerPose = mSession->PooledViewerPose(viewerPosition, viewerOrientation,
+                                            emulatedPosition);
+
     gfx::Matrix4x4Double headTransform;
     headTransform.SetRotationFromQuaternion(viewerOrientation);
     headTransform.PostTranslate(viewerPosition);
@@ -89,7 +93,7 @@ already_AddRefed<XRViewerPose> XRFrame::GetViewerPose(
 
     headTransform *= originTransform;
 
-    auto addEye = [&](XREye xrEye, VRDisplayState::Eye eye) {
+    auto updateEye = [&](int32_t viewIndex, VRDisplayState::Eye eye) {
       auto offset = displayInfo.GetEyeTranslation(eye);
       auto eyeFromHead = gfx::Matrix4x4Double::Translation(
           gfx::PointDouble3D(offset.x, offset.y, offset.z));
@@ -102,13 +106,12 @@ already_AddRefed<XRViewerPose> XRFrame::GetViewerPose(
       const gfx::VRFieldOfView fov = displayInfo.mDisplayState.eyeFOV[eye];
       Matrix4x4 projection =
           fov.ConstructProjectionMatrix(depthNear, depthFar, true);
-      RefPtr<XRView> view =
-          new XRView(mParent, xrEye, eyePosition, eyeRotation, projection);
-      views.AppendElement(view);
+      viewerPose->GetEye(viewIndex)->Update(eyePosition, eyeRotation,
+                                            projection);
     };
 
-    addEye(XREye::Left, gfx::VRDisplayState::Eye_Left);
-    addEye(XREye::Right, gfx::VRDisplayState::Eye_Right);
+    updateEye(0, gfx::VRDisplayState::Eye_Left);
+    updateEye(1, gfx::VRDisplayState::Eye_Right);
   } else {
     auto inlineVerticalFov = renderState->GetInlineVerticalFieldOfView();
     const double fov =
@@ -120,18 +123,14 @@ already_AddRefed<XRViewerPose> XRFrame::GetViewerPose(
     }
     Matrix4x4 projection =
         ConstructInlineProjection((float)fov, aspect, depthNear, depthFar);
-    RefPtr<XRView> view = new XRView(mParent, XREye::None, gfx::PointDouble3D(),
-                                     gfx::QuaternionDouble(), projection);
-    views.AppendElement(view);
+
+    viewerPose = mSession->PooledViewerPose(viewerPosition, viewerOrientation,
+                                            emulatedPosition);
+    viewerPose->GetEye(0)->Update(gfx::PointDouble3D(), gfx::QuaternionDouble(),
+                                  projection);
   }
 
-  RefPtr<XRRigidTransform> transform =
-      new XRRigidTransform(mParent, viewerPosition, viewerOrientation);
-
-  RefPtr<XRViewerPose> pose =
-      new XRViewerPose(mParent, transform, emulatedPosition, views);
-
-  return pose.forget();
+  return viewerPose.forget();
 }
 
 XRPose* XRFrame::GetPose(const XRSpace& aSpace, const XRSpace& aBaseSpace,

@@ -38,6 +38,8 @@ class XRViewport final : public nsWrapperCache {
   virtual ~XRViewport() = default;
 
   nsCOMPtr<nsISupports> mParent;
+
+ public:
   gfx::IntRect mRect;
 };
 
