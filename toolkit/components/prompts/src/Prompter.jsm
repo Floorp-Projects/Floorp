@@ -1011,13 +1011,12 @@ class ModalPrompter {
     if (browsingContext && domWin) {
       throw new Error("Pass either browsingContext or domWin");
     }
-    // Prompts can be called for subframes, always use the top browsing context.
-    this.browsingContext = browsingContext?.top;
+    this.browsingContext = browsingContext;
     this._domWin = domWin;
 
     if (this._domWin) {
       // We have a domWin, get the associated browsing context
-      this.browsingContext = BrowsingContext.getFromWindow(this._domWin)?.top;
+      this.browsingContext = BrowsingContext.getFromWindow(this._domWin);
     } else if (this.browsingContext) {
       // We have a browsingContext, get the associated dom window
       if (this.browsingContext.window) {
@@ -1056,7 +1055,8 @@ class ModalPrompter {
     if (
       !this.browsingContext ||
       !this._domWin ||
-      (this._domWin.isChromeWindow && !this.browsingContext.embedderElement) ||
+      (this._domWin.isChromeWindow &&
+        !this.browsingContext.top.embedderElement) ||
       !ModalPrompter.tabModalEnabled
     ) {
       modalType = Ci.nsIPrompt.MODAL_TYPE_WINDOW;
