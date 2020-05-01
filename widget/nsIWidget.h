@@ -2155,13 +2155,13 @@ class nsIWidget : public nsISupports {
 
   static already_AddRefed<nsIBidiKeyboard> CreateBidiKeyboard();
 
- protected:
   /**
    * Like GetDefaultScale, but taking into account only the system settings
    * and ignoring Gecko preferences.
    */
   virtual double GetDefaultScaleInternal() { return 1.0; }
 
+ protected:
   // keep the list of children.  We also keep track of our siblings.
   // The ownership model is as follows: parent holds a strong ref to
   // the first element of the list, and each element holds a strong

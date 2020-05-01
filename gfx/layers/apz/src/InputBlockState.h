@@ -29,6 +29,7 @@ class TouchBlockState;
 class WheelBlockState;
 class DragBlockState;
 class PanGestureBlockState;
+class PinchGestureBlockState;
 class KeyboardBlockState;
 
 /**
@@ -59,6 +60,7 @@ class InputBlockState : public RefCounted<InputBlockState> {
   virtual WheelBlockState* AsWheelBlock() { return nullptr; }
   virtual DragBlockState* AsDragBlock() { return nullptr; }
   virtual PanGestureBlockState* AsPanGestureBlock() { return nullptr; }
+  virtual PinchGestureBlockState* AsPinchGestureBlock() { return nullptr; }
   virtual KeyboardBlockState* AsKeyboardBlock() { return nullptr; }
 
   virtual bool SetConfirmedTargetApzc(
@@ -355,6 +357,31 @@ class PanGestureBlockState : public CancelableBlockState {
   bool mInterrupted;
   bool mWaitingForContentResponse;
   ScrollDirections mAllowedScrollDirections;
+};
+
+/**
+ * A single block of pinch gesture events.
+ */
+class PinchGestureBlockState : public CancelableBlockState {
+ public:
+  PinchGestureBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
+                         TargetConfirmationFlags aFlags);
+
+  bool SetContentResponse(bool aPreventDefault) override;
+  bool HasReceivedAllContentNotifications() const override;
+  bool IsReadyForHandling() const override;
+  bool MustStayActive() override;
+  const char* Type() override;
+
+  PinchGestureBlockState* AsPinchGestureBlock() override { return this; }
+
+  bool WasInterrupted() const { return mInterrupted; }
+
+  void SetNeedsToWaitForContentResponse(bool aWaitForContentResponse);
+
+ private:
+  bool mInterrupted;
+  bool mWaitingForContentResponse;
 };
 
 /**

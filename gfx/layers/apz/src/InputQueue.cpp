@@ -52,6 +52,11 @@ nsEventStatus InputQueue::ReceiveInputEvent(
       return ReceivePanGestureInput(aTarget, aFlags, event, aOutInputBlockId);
     }
 
+    case PINCHGESTURE_INPUT: {
+      const PinchGestureInput& event = aEvent.AsPinchGestureInput();
+      return ReceivePinchGestureInput(aTarget, aFlags, event, aOutInputBlockId);
+    }
+
     case MOUSE_INPUT: {
       const MouseInput& event = aEvent.AsMouseInput();
       return ReceiveMouseInput(aTarget, aFlags, event, aOutInputBlockId);
@@ -410,6 +415,54 @@ nsEventStatus InputQueue::ReceivePanGestureInput(
   return result;
 }
 
+nsEventStatus InputQueue::ReceivePinchGestureInput(
+    const RefPtr<AsyncPanZoomController>& aTarget,
+    TargetConfirmationFlags aFlags, const PinchGestureInput& aEvent,
+    uint64_t* aOutInputBlockId) {
+  PinchGestureBlockState* block = nullptr;
+  if (aEvent.mType != PinchGestureInput::PINCHGESTURE_START) {
+    block = mActivePinchGestureBlock.get();
+  }
+
+  nsEventStatus result = nsEventStatus_eConsumeDoDefault;
+
+  if (!block || block->WasInterrupted()) {
+    if (aEvent.mType != PinchGestureInput::PINCHGESTURE_START) {
+      // Only PINCHGESTURE_START events are allowed to start a new pinch gesture
+      // block.
+      INPQ_LOG("pinchgesture block %p was interrupted %d\n", block,
+               block ? block->WasInterrupted() : 0);
+      return nsEventStatus_eConsumeDoDefault;
+    }
+    block = new PinchGestureBlockState(aTarget, aFlags);
+    INPQ_LOG("started new pinch gesture block %p id %" PRIu64
+             " for target %p\n",
+             block, block->GetBlockId(), aTarget.get());
+
+    mActivePinchGestureBlock = block;
+    block->SetNeedsToWaitForContentResponse(true);
+
+    CancelAnimationsForNewBlock(block);
+    MaybeRequestContentResponse(aTarget, block);
+  } else {
+    INPQ_LOG("received new event in block %p\n", block);
+  }
+
+  if (aOutInputBlockId) {
+    *aOutInputBlockId = block->GetBlockId();
+  }
+
+  // Note that the |aTarget| the APZCTM sent us may contradict the confirmed
+  // target set on the block. In this case the confirmed target (which may be
+  // null) should take priority. This is equivalent to just always using the
+  // target (confirmed or not) from the block, which is what
+  // ProcessQueue() does.
+  mQueuedInputs.AppendElement(MakeUnique<QueuedInput>(aEvent, *block));
+  ProcessQueue();
+
+  return result;
+}
+
 void InputQueue::CancelAnimationsForNewBlock(InputBlockState* aBlock,
                                              CancelAnimationFlags aExtraFlags) {
   // We want to cancel animations here as soon as possible (i.e. without waiting
@@ -504,6 +557,11 @@ PanGestureBlockState* InputQueue::GetCurrentPanGestureBlock() const {
   return block ? block->AsPanGestureBlock() : mActivePanGestureBlock.get();
 }
 
+PinchGestureBlockState* InputQueue::GetCurrentPinchGestureBlock() const {
+  InputBlockState* block = GetCurrentBlock();
+  return block ? block->AsPinchGestureBlock() : mActivePinchGestureBlock.get();
+}
+
 KeyboardBlockState* InputQueue::GetCurrentKeyboardBlock() const {
   InputBlockState* block = GetCurrentBlock();
   return block ? block->AsKeyboardBlock() : mActiveKeyboardBlock.get();
@@ -596,6 +654,9 @@ InputBlockState* InputQueue::FindBlockForId(uint64_t aInputBlockId,
   } else if (mActivePanGestureBlock &&
              mActivePanGestureBlock->GetBlockId() == aInputBlockId) {
     block = mActivePanGestureBlock.get();
+  } else if (mActivePinchGestureBlock &&
+             mActivePinchGestureBlock->GetBlockId() == aInputBlockId) {
+    block = mActivePinchGestureBlock.get();
   } else if (mActiveKeyboardBlock &&
              mActiveKeyboardBlock->GetBlockId() == aInputBlockId) {
     block = mActiveKeyboardBlock.get();
@@ -780,6 +841,9 @@ void InputQueue::ProcessQueue() {
   if (CanDiscardBlock(mActivePanGestureBlock)) {
     mActivePanGestureBlock = nullptr;
   }
+  if (CanDiscardBlock(mActivePinchGestureBlock)) {
+    mActivePinchGestureBlock = nullptr;
+  }
   if (CanDiscardBlock(mActiveKeyboardBlock)) {
     mActiveKeyboardBlock = nullptr;
   }
@@ -815,6 +879,7 @@ void InputQueue::Clear() {
   mActiveWheelBlock = nullptr;
   mActiveDragBlock = nullptr;
   mActivePanGestureBlock = nullptr;
+  mActivePinchGestureBlock = nullptr;
   mActiveKeyboardBlock = nullptr;
   mLastActiveApzc = nullptr;
 }
