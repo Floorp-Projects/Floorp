@@ -5,8 +5,6 @@
 <link rel="author" title="Philip Rogers" href="mailto:pdr@chromium.org" />
 <meta name="assert" content="This test checks that a multicolumn element is positioned relative to a sticky position" />
 
-<script src="resources/ref-rectangle.js"></script>
-
 <style>
   body {
     margin: 0;
@@ -48,11 +46,10 @@
   <div id="spacer"></div>
 </div>
 
-<div>You should see a light green box above with a dark green border, no blue should be visible.</div>
+<div>You should see a light green box above with a dark green border.</div>
 
 <script>
   window.addEventListener('load', function() {
     scroller.scrollTop = 100;
-    createIndicatorForStickyElements(document.querySelectorAll('.sticky'));
   });
 </script>

@@ -10,23 +10,16 @@
 // Debugging message helper, by default does nothing. Implementations can
 // override this.
 var xr_debug = function(name, msg) {}
-var isChromiumBased = 'MojoInterfaceInterceptor' in self;
-var isWebKitBased = 'internals' in self && 'xrTest' in internals;
 
 function xr_promise_test(name, func, properties) {
   promise_test(async (t) => {
     // Perform any required test setup:
     xr_debug(name, 'setup');
 
-    if (isChromiumBased) {
+    if (window.XRTest === undefined) {
       // Chrome setup
       await loadChromiumResources;
       xr_debug = navigator.xr.test.Debug;
-    }
-
-    if (isWebKitBased) {
-      // WebKit setup
-      await setupWebKitWebXRTestAPI;
     }
 
     // Ensure that any devices are disconnected when done. If this were done in
@@ -163,7 +156,7 @@ function forEachWebxrObject(callback) {
 
 // Code for loading test API in Chromium.
 let loadChromiumResources = Promise.resolve().then(() => {
-  if (!isChromiumBased) {
+  if (!('MojoInterfaceInterceptor' in self)) {
     // Do nothing on non-Chromium-based browsers or when the Mojo bindings are
     // not present in the global namespace.
     return;
@@ -205,17 +198,4 @@ let loadChromiumResources = Promise.resolve().then(() => {
   });
 
   return chain;
-});
-
-let setupWebKitWebXRTestAPI = Promise.resolve().then(() => {
-  if (!isWebKitBased) {
-    // Do nothing on non-WebKit-based browsers.
-    return;
-  }
-
-  // WebKit setup. The internals object is used by the WebKit test runner
-  // to provide JS access to internal APIs. In this case it's used to
-  // ensure that XRTest is only exposed to wpt tests.
-  navigator.xr.test = internals.xrTest;
-  return Promise.resolve();
 });

@@ -25,8 +25,6 @@ RUN apt-get -qqy update \
     pulseaudio \
     python \
     python-pip \
-    python3 \
-    python3-pip \
     qemu-kvm \
     tzdata \
     sudo \

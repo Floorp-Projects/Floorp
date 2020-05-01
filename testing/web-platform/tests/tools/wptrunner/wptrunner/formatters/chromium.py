@@ -64,9 +64,7 @@ class ChromiumFormatter(base.BaseFormatter):
         """
         if "artifacts" not in cur_dict.keys():
             cur_dict["artifacts"] = {}
-        # Artifacts are all expected to be lists, so even though we only have a
-        # single |artifact_value| we still put it in a list.
-        cur_dict["artifacts"][artifact_name] = [artifact_value]
+        cur_dict["artifacts"][artifact_name] = artifact_value
 
     def _store_test_result(self, name, actual, expected, message, wpt_actual, subtest_failure):
         """
@@ -153,15 +151,13 @@ class ChromiumFormatter(base.BaseFormatter):
         :return str: the expected statuses as a string
         """
         expected_statuses = self._map_status_name(data["expected"]) if "expected" in data else actual_status
-        if data.get("known_intermittent"):
+        if "known_intermittent" in data:
             expected_statuses += " " + " ".join(
                 [self._map_status_name(other_status) for other_status in data["known_intermittent"]])
         return expected_statuses
 
     def suite_start(self, data):
-        # |data| contains a timestamp in microseconds, while time.time() gives
-        # it in seconds.
-        self.start_timestamp_seconds = (float(data["time"]) / 1000 if "time" in data
+        self.start_timestamp_seconds = (data["time"] if "time" in data
                                         else time.time())
 
     def test_status(self, data):

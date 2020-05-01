@@ -4,7 +4,7 @@ components:
     workerType: ci
     schedulerId: taskcluster-github
     deadline: "24 hours"
-    image: webplatformtests/wpt:0.36
+    image: harjgam/web-platform-tests:0.34
     maxRunTime: 7200
     artifacts:
       public/results:
@@ -103,6 +103,8 @@ components:
     env:
       TOXENV: py36
       PY_COLORS: 0
+    install:
+      - python3-pip
 
   tox-python38:
     env:

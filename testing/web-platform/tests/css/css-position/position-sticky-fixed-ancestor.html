@@ -7,8 +7,6 @@
 <meta name="assert" content="This test checks that a sticky element inside a fixed subtree doesn't scroll with the viewport "/>
 
 <script src="/common/reftest-wait.js"></script>
-<script src="resources/ref-rectangle.js"></script>
-
 
 <style>
   body,html {
@@ -61,7 +59,6 @@
   }
 </style>
 
-<div>You should see a green box below. No blue should be visible.</div>
 <div class="position-parent">
   <div class="container">
     <div class="spacer"></div>
@@ -70,6 +67,7 @@
 </div>
 <div class="long"></div>
 <button id="button">Toggle Fixed</button>
+
 <script>
   function toggleFixed() {
     document.querySelector('.position-parent').classList.toggle('fixed');
@@ -79,7 +77,6 @@
 
   requestAnimationFrame(() => {
     window.scrollTo(0, document.querySelector('.long').clientHeight);
-    createIndicatorForStickyElements(document.querySelectorAll('.sticky'));
     requestAnimationFrame(() => {
       toggleFixed();
       takeScreenshot();

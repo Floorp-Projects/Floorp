@@ -235,8 +235,8 @@ class ServoWebDriverRefTestExecutor(RefTestExecutor):
                                                capabilities=capabilities)
         self.implementation = RefTestImplementation(self)
         self.timeout = None
-        with open(os.path.join(here, "test-wait.js")) as f:
-            self.wait_script = f.read() % {"classname": "reftest-wait"}
+        with open(os.path.join(here, "reftest-wait_webdriver.js")) as f:
+            self.wait_script = f.read()
 
     def reset(self):
         self.implementation.reset()
@@ -277,7 +277,7 @@ class ServoWebDriverRefTestExecutor(RefTestExecutor):
 
         return ServoWebDriverRun(self.logger,
                                  self._screenshot,
-                                 self.protocol,
+                                 self.protocol.session,
                                  self.test_url(test),
                                  timeout,
                                  self.extra_timeout).run()

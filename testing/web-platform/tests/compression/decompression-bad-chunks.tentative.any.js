@@ -1,4 +1,4 @@
-// META: global=window,worker
+// META: global=worker
 
 'use strict';
 
