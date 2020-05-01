@@ -31,6 +31,10 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(IPCBlobInputStreamStorage)
 NS_IMPL_RELEASE(IPCBlobInputStreamStorage)
 
+IPCBlobInputStreamStorage::IPCBlobInputStreamStorage() = default;
+
+IPCBlobInputStreamStorage::~IPCBlobInputStreamStorage() = default;
+
 /* static */
 IPCBlobInputStreamStorage* IPCBlobInputStreamStorage::Get() { return gStorage; }
 

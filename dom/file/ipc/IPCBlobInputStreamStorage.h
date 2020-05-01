@@ -46,8 +46,8 @@ class IPCBlobInputStreamStorage final : public nsIObserver {
       const nsID& aID);
 
  private:
-  IPCBlobInputStreamStorage() = default;
-  ~IPCBlobInputStreamStorage() = default;
+  IPCBlobInputStreamStorage();
+  ~IPCBlobInputStreamStorage();
 
   struct StreamData {
     nsCOMPtr<nsIInputStream> mInputStream;

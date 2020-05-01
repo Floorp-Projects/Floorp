@@ -20,9 +20,8 @@
 
 namespace mozilla {
 namespace ipc {
-class AutoIPCStream;
-class PBackgroundChild;
 class PrincipalInfo;
+class AutoIPCStream;
 }  // namespace ipc
 
 namespace dom {
@@ -43,10 +42,9 @@ class InternalResponse final {
   static RefPtr<InternalResponse> FromIPC(
       const IPCInternalResponse& aIPCResponse);
 
-  // Note: the AutoIPCStreams must outlive the IPCInternalResponse.
+  template <typename M>
   void ToIPC(
-      IPCInternalResponse* aIPCResponse,
-      mozilla::ipc::PBackgroundChild* aManager,
+      IPCInternalResponse* aIPCResponse, M* aManager,
       UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoBodyStream,
       UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoAlternativeBodyStream);
 
@@ -111,12 +109,6 @@ class InternalResponse final {
     }
 
     return GetURLList(aURLList);
-  }
-
-  nsTArray<nsCString> GetUnfilteredURLList() const {
-    nsTArray<nsCString> list;
-    GetUnfilteredURLList(list);
-    return list;
   }
 
   void SetURLList(const nsTArray<nsCString>& aURLList) {

@@ -9,7 +9,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/FetchTypes.h"
-#include "mozilla/dom/IPCBlobInputStreamStorage.h"
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
@@ -26,22 +25,6 @@ namespace {
 // Const variable for generate padding size
 // XXX This will be tweaked to something more meaningful in Bug 1383656.
 const uint32_t kMaxRandomNumber = 102400;
-
-nsCOMPtr<nsIInputStream> TakeStreamFromStorage(
-    const BodyStreamVariant& aVariant, int64_t aBodySize) {
-  MOZ_ASSERT(aVariant.type() == BodyStreamVariant::TParentToParentStream);
-  const auto& uuid = aVariant.get_ParentToParentStream().uuid();
-
-  IPCBlobInputStreamStorage* storage = IPCBlobInputStreamStorage::Get();
-
-  nsCOMPtr<nsIInputStream> body;
-  storage->GetStream(uuid, 0, aBodySize, getter_AddRefs(body));
-  MOZ_DIAGNOSTIC_ASSERT(body);
-
-  storage->ForgetStream(uuid);
-
-  return body;
-}
 
 }  // namespace
 
@@ -70,20 +53,15 @@ InternalResponse::InternalResponse(uint16_t aStatus,
   response->mHeaders =
       new InternalHeaders(aIPCResponse.headers(), aIPCResponse.headersGuard());
 
-  if (aIPCResponse.body()) {
-    auto bodySize = aIPCResponse.bodySize();
-    nsCOMPtr<nsIInputStream> body =
-        TakeStreamFromStorage(*aIPCResponse.body(), bodySize);
-    response->SetBody(body, bodySize);
-  }
+  nsCOMPtr<nsIInputStream> body =
+      mozilla::ipc::DeserializeIPCStream(aIPCResponse.body());
+  response->SetBody(body, aIPCResponse.bodySize());
 
   response->SetAlternativeDataType(aIPCResponse.alternativeDataType());
 
-  if (aIPCResponse.alternativeBody()) {
-    nsCOMPtr<nsIInputStream> alternativeBody = TakeStreamFromStorage(
-        *aIPCResponse.alternativeBody(), UNKNOWN_BODY_SIZE);
-    response->SetAlternativeBody(alternativeBody);
-  }
+  nsCOMPtr<nsIInputStream> alternativeBody =
+      mozilla::ipc::DeserializeIPCStream(aIPCResponse.alternativeBody());
+  response->SetAlternativeBody(alternativeBody);
 
   response->InitChannelInfo(aIPCResponse.channelInfo());
 
@@ -118,49 +96,53 @@ InternalResponse::InternalResponse(uint16_t aStatus,
 
 InternalResponse::~InternalResponse() = default;
 
-void InternalResponse::ToIPC(
+template void InternalResponse::ToIPC<mozilla::ipc::PBackgroundChild>(
     IPCInternalResponse* aIPCResponse, mozilla::ipc::PBackgroundChild* aManager,
     UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoBodyStream,
+    UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoAlternativeBodyStream);
+
+template <typename M>
+void InternalResponse::ToIPC(
+    IPCInternalResponse* aIPCResponse, M* aManager,
+    UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoBodyStream,
     UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoAlternativeBodyStream) {
-  nsTArray<HeadersEntry> headers;
-  HeadersGuardEnum headersGuard;
-  UnfilteredHeaders()->ToIPC(headers, headersGuard);
+  MOZ_ASSERT(aIPCResponse);
 
-  Maybe<mozilla::ipc::PrincipalInfo> principalInfo =
-      mPrincipalInfo ? Some(*mPrincipalInfo) : Nothing();
-
-  // Note: all the arguments are copied rather than moved, which would be more
-  // efficient, because there's no move-friendly constructor generated.
-  *aIPCResponse =
-      IPCInternalResponse(mType, GetUnfilteredURLList(), GetUnfilteredStatus(),
-                          GetUnfilteredStatusText(), headersGuard, headers,
-                          Nothing(), static_cast<uint64_t>(UNKNOWN_BODY_SIZE),
-                          mErrorCode, GetAlternativeDataType(), Nothing(),
-                          mChannelInfo.AsIPCChannelInfo(), principalInfo);
+  aIPCResponse->type() = mType;
+  GetUnfilteredURLList(aIPCResponse->urlList());
+  aIPCResponse->status() = GetUnfilteredStatus();
+  aIPCResponse->statusText() = GetUnfilteredStatusText();
+  UnfilteredHeaders()->ToIPC(aIPCResponse->headers(),
+                             aIPCResponse->headersGuard());
 
   nsCOMPtr<nsIInputStream> body;
   int64_t bodySize;
   GetUnfilteredBody(getter_AddRefs(body), &bodySize);
 
   if (body) {
-    aIPCResponse->body().emplace(ChildToParentStream());
-    aIPCResponse->bodySize() = bodySize;
-
-    aAutoBodyStream.reset(new mozilla::ipc::AutoIPCStream(
-        aIPCResponse->body()->get_ChildToParentStream().stream()));
+    aAutoBodyStream.reset(
+        new mozilla::ipc::AutoIPCStream(aIPCResponse->body()));
     DebugOnly<bool> ok = aAutoBodyStream->Serialize(body, aManager);
     MOZ_ASSERT(ok);
   }
 
+  aIPCResponse->bodySize() = bodySize;
+  aIPCResponse->errorCode() = mErrorCode;
+  aIPCResponse->alternativeDataType() = GetAlternativeDataType();
+
   nsCOMPtr<nsIInputStream> alternativeBody = TakeAlternativeBody();
   if (alternativeBody) {
-    aIPCResponse->alternativeBody().emplace(ChildToParentStream());
-
-    aAutoAlternativeBodyStream.reset(new mozilla::ipc::AutoIPCStream(
-        aIPCResponse->alternativeBody()->get_ChildToParentStream().stream()));
+    aAutoAlternativeBodyStream.reset(
+        new mozilla::ipc::AutoIPCStream(aIPCResponse->alternativeBody()));
     DebugOnly<bool> ok =
         aAutoAlternativeBodyStream->Serialize(alternativeBody, aManager);
     MOZ_ASSERT(ok);
+  }
+
+  aIPCResponse->channelInfo() = mChannelInfo.AsIPCChannelInfo();
+
+  if (mPrincipalInfo) {
+    aIPCResponse->principalInfo().emplace(*mPrincipalInfo);
   }
 }
 
