@@ -1,0 +1,15 @@
+[
+  {
+    "namespace": "experiments.trrselect",
+    "description": "API for running TRR performance measurement",
+    "functions": [
+      {
+        "name": "dryRun",
+        "type": "function",
+        "description": "Runs TRR performance measurement and stores fastest TRR in a pref",
+        "parameters": [],
+        "async": true
+      }
+    ]
+  }
+]

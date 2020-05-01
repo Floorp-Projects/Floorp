@@ -12,6 +12,12 @@ add_task(async function testUserInterference() {
     return Preferences.get(prefs.DOH_SELF_ENABLED_PREF);
   });
   is(Preferences.get(prefs.DOH_SELF_ENABLED_PREF), true, "Breadcrumb saved.");
+  is(
+    Preferences.get(prefs.DOH_TRR_SELECT_DRY_RUN_RESULT_PREF),
+    "dummyTRR",
+    "TRR selection dry run complete."
+  );
+  await checkTRRSelectionTelemetry();
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, EXAMPLE_URL);
   let panel = await promise;
@@ -74,6 +80,7 @@ add_task(async function testUserInterference() {
   // Restart the add-on for good measure.
   await restartAddon();
   await ensureNoTRRModeChange(0);
+  ensureNoTRRSelectionTelemetry();
   ensureNoHeuristicsTelemetry();
 
   // Simulate another network change.
