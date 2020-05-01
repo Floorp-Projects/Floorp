@@ -7,7 +7,9 @@ use common::*;
 
 use once_cell::sync::Lazy;
 
-use glean::metrics::{BooleanMetric, CommonMetricData, ErrorType, LabeledMetric, Lifetime};
+use glean::metrics::{
+    BooleanMetric, CommonMetricData, ErrorType, LabeledMetric, Lifetime, StringMetric,
+};
 
 // Smoke test for what should be the generated code.
 static GLOBAL_METRIC: Lazy<LabeledMetric<BooleanMetric>> = Lazy::new(|| {
@@ -57,6 +59,33 @@ fn sets_labeled_bool_metrics() {
     metric.get("upload").set(true);
 
     assert!(metric.get("upload").test_get_value("store1").unwrap());
+    assert_eq!(None, metric.get("download").test_get_value("store1"));
+}
+
+#[test]
+fn sets_labeled_string_metrics() {
+    let _lock = lock_test();
+    let _t = setup_glean(None);
+    let store_names: Vec<String> = vec!["store1".into()];
+
+    let metric: LabeledMetric<StringMetric> = LabeledMetric::new(
+        CommonMetricData {
+            name: "string".into(),
+            category: "labeled".into(),
+            send_in_pings: store_names,
+            disabled: false,
+            lifetime: Lifetime::Ping,
+            ..Default::default()
+        },
+        None,
+    );
+
+    metric.get("upload").set("Glean");
+
+    assert_eq!(
+        "Glean",
+        metric.get("upload").test_get_value("store1").unwrap()
+    );
     assert_eq!(None, metric.get("download").test_get_value("store1"));
 }
 
