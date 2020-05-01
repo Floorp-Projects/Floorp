@@ -2110,8 +2110,10 @@ bool NS_IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI) {
   // Do not treat loads triggered by web extensions as foreign
   nsCOMPtr<nsIURI> channelURI;
   NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
-  if (BasePrincipal::Cast(loadInfo->TriggeringPrincipal())
-          ->AddonAllowsLoad(channelURI)) {
+  RefPtr<BasePrincipal> triggeringPrincipal =
+      BasePrincipal::Cast(loadInfo->TriggeringPrincipal());
+  if (triggeringPrincipal->AddonPolicy() &&
+      triggeringPrincipal->AddonAllowsLoad(channelURI)) {
     return false;
   }
 
@@ -2122,8 +2124,7 @@ bool NS_IsSameSiteForeign(nsIChannel* aChannel, nsIURI* aHostURI) {
     // for loads of TYPE_DOCUMENT we query the hostURI from the
     // triggeringPrincipal which returns the URI of the document that caused the
     // navigation.
-    rv = loadInfo->TriggeringPrincipal()->IsThirdPartyChannel(aChannel,
-                                                              &isForeign);
+    rv = triggeringPrincipal->IsThirdPartyChannel(aChannel, &isForeign);
   } else {
     nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
         do_GetService(THIRDPARTYUTIL_CONTRACTID);
