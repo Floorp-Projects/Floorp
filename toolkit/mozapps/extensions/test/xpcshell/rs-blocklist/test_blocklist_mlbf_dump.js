@@ -16,10 +16,9 @@ const { ExtensionBlocklist: ExtensionBlocklistMLBF } = Blocklist;
 const blockedAddon = {
   id: "{6f62927a-e380-401a-8c9e-c485b7d87f0d}",
   version: "9.2.0",
-  signedState: 2, // = AddonManager.SIGNEDSTATE_SIGNED.
   // The following date is the date of the first checked in MLBF. Any MLBF
   // generated in the future should be generated after this date, to be useful.
-  signedDate: 1588098908496, // 2020-04-28 (dummy date)
+  signedDate: new Date(1588098908496), // 2020-04-28 (dummy date)
 };
 
 // A known add-on that is not blocked, as of writing. It is likely not going
@@ -27,8 +26,7 @@ const blockedAddon = {
 const nonBlockedAddon = {
   id: "disable-ctrl-q-and-cmd-q@robwu.nl",
   version: "1",
-  signedState: 2, // = AddonManager.SIGNEDSTATE_SIGNED.
-  signedDate: 1482430349000, // 2016-12-22 (actual signing time).
+  signedDate: new Date(1482430349000), // 2016-12-22 (actual signing time).
 };
 
 async function sha256(arrayBuffer) {

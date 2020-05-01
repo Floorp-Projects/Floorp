@@ -37,7 +37,7 @@ async function checkBlockState(addonId, version, expectBlocked) {
   let addon = {
     id: addonId,
     version,
-    // Note: signedState and signedDate are missing, so the MLBF does not apply
+    // Note: signedDate is missing, so the MLBF does not apply
     // and we will effectively only test stashing.
   };
   let state = await Blocklist.getAddonBlocklistState(addon);
@@ -74,8 +74,7 @@ add_task(async function basic_stash() {
     await Blocklist.getAddonBlocklistState({
       id: "@onlyblockedbymlbf",
       version: "1",
-      signedState: 2, // = AddonManager.SIGNEDSTATE_SIGNED.
-      signedDate: 0, // = the MLBF's generationTime.
+      signedDate: new Date(0), // = the MLBF's generationTime.
     }),
     Ci.nsIBlocklistService.STATE_BLOCKED,
     "falls through to MLBF if entry is not found in stash"
