@@ -55,6 +55,9 @@ class MOZ_RAII WarpCacheIRTranspiler {
   Shape* shapeStubField(uint32_t offset) {
     return reinterpret_cast<Shape*>(readStubWord(offset));
   }
+  JSObject* objectStubField(uint32_t offset) {
+    return reinterpret_cast<JSObject*>(readStubWord(offset));
+  }
   int32_t int32StubField(uint32_t offset) {
     return static_cast<int32_t>(readStubWord(offset));
   }
@@ -211,6 +214,16 @@ bool WarpCacheIRTranspiler::emitLoadEnclosingEnvironment(
     ObjOperandId objId, ObjOperandId resultId) {
   MDefinition* env = getOperand(objId);
   auto* ins = MEnclosingEnvironment::New(alloc(), env);
+  current->add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
+bool WarpCacheIRTranspiler::emitLoadObject(ObjOperandId resultId,
+                                           uint32_t objOffset) {
+  JSObject* obj = objectStubField(objOffset);
+
+  auto* ins = MConstant::NewConstraintlessObject(alloc(), obj);
   current->add(ins);
 
   return defineOperand(resultId, ins);
