@@ -1840,6 +1840,8 @@ bool LazyScriptCreationData::create(JSContext* cx,
   // Compute the flags that frontend doesn't directly compute.
   immutableFlags.setFlag(ImmutableFlags::HasMappedArgsObj,
                          funbox->hasMappedArgsObj());
+  immutableFlags.setFlag(ImmutableFlags::IsLikelyConstructorWrapper,
+                         funbox->isLikelyConstructorWrapper());
 
   BaseScript* lazy = BaseScript::CreateLazy(
       cx, compilationInfo, function, sourceObject, closedOverBindings,
