@@ -17,7 +17,6 @@ import time
 from distutils.spawn import find_executable
 from enum import Enum
 
-import psutil
 from mozdevice import ADBHost, ADBDevice
 from six.moves import input, urllib
 
@@ -369,7 +368,8 @@ class AndroidEmulator(object):
         """
            Returns True if the Android emulator is running.
         """
-        for proc in psutil.process_iter():
+        from psutil import process_iter
+        for proc in process_iter():
             try:
                 name = proc.name()
                 # On some platforms, "emulator" may start an emulator with
