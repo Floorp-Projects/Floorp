@@ -28,8 +28,6 @@ static const size_t SMALL_MARK_STACK_BASE_CAPACITY = 256;
 
 namespace gc {
 
-enum IncrementalProgress { NotFinished = 0, Finished };
-
 struct Cell;
 
 struct WeakKeyTableHashPolicy {
@@ -49,10 +47,6 @@ struct WeakMarkable {
 
   WeakMarkable(WeakMapBase* weakmapArg, Cell* keyArg)
       : weakmap(weakmapArg), key(keyArg) {}
-
-  bool operator==(const WeakMarkable& other) const {
-    return weakmap == other.weakmap && key == other.key;
-  }
 };
 
 using WeakEntryVector = Vector<WeakMarkable, 2, js::SystemAllocPolicy>;
@@ -327,16 +321,6 @@ class GCMarker : public JSTracer {
 
   void delayMarkingChildren(gc::Cell* cell);
 
-  // Remove <map,toRemove> from the weak keys table indexed by 'key'.
-  void forgetWeakKey(js::gc::WeakKeyTable& weakKeys, WeakMapBase* map,
-                     gc::Cell* keyOrDelegate, gc::Cell* keyToRemove);
-
-  // Purge all mention of 'map' from the weak keys table.
-  void forgetWeakMap(WeakMapBase* map, Zone* zone);
-
-  // 'delegate' is no longer the delegate of 'key'.
-  void severWeakDelegate(JSObject* key, JSObject* delegate);
-
   bool isDrained() { return isMarkStackEmpty() && !delayedMarkingList; }
 
   // The mark queue is a testing-only feature for controlling mark ordering and
@@ -487,17 +471,7 @@ class GCMarker : public JSTracer {
   /* Track the state of marking. */
   MainThreadOrGCTaskData<MarkingState> state;
 
- public:
-  /*
-   * Whether weakmaps can be marked incrementally.
-   *
-   * JSGC_INCREMENTAL_WEAKMAP_ENABLED
-   * pref: javascript.options.mem.incremental_weakmap
-   */
-  MainThreadOrGCTaskData<bool> incrementalWeakMapMarkingEnabled;
-
 #ifdef DEBUG
- private:
   /* Count of arenas that are currently in the stack. */
   MainThreadOrGCTaskData<size_t> markLaterArenas;
 
