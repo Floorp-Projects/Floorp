@@ -121,8 +121,8 @@ def valid_windows_sdk_dir(compiler, windows_sdk_dir, target_version,
             shared_dir = os.path.join(sdk.include, 'shared')
             result = try_preprocess(compiler.wrapper + [compiler.compiler] +
                                     compiler.flags +
-                                    ['-I', um_dir, '-I', shared_dir], 'C',
-                                    check)
+                                    ['-X', '-I', um_dir, '-I', shared_dir], 'C',
+                                    check, onerror=lambda: '')
             if result:
                 maxver = result.splitlines()[-1]
                 try:
