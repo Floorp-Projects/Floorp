@@ -2003,6 +2003,22 @@ security.doh.trrPerformance:
       retryCount: The number of lookup attempts before success.
       networkUnstable: Whether there was network fluctuation while gathering the results.
       captivePortal: Whether there a captive portal was detected during the run.
+  trrselect:
+    objects: ["dryrunresult"]
+    bug_numbers:
+      - 1631822
+    description: >
+      The URL of the DoH provider chosen by the TRR selection dry-run
+    expiry_version: "80"
+    record_in_processes:
+      - main
+    release_channel_collection: opt-out
+    notification_emails:
+      - nhnt11@mozilla.com
+      - ddamjanovic@mozilla.com
+      - seceng-telemetry@mozilla.com
+    products:
+      - firefox
 
 security.ui.certerror:
   load:

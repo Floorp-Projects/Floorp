@@ -76,8 +76,8 @@ function setup() {
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
 
   Services.prefs.setCharPref(
-    "doh-rollout.trrRace.trrList",
-    `${trrServer1}, ${trrServer2}`
+    "network.trr.resolvers",
+    `[{"url": "${trrServer1}"}, {"url": "${trrServer2}"}]`
   );
 
   Services.prefs.setIntPref("doh-rollout.trrRace.randomSubdomainCount", 2);
@@ -99,6 +99,7 @@ function setup() {
     Services.prefs.clearUserPref("network.http.spdy.enabled");
     Services.prefs.clearUserPref("network.http.spdy.enabled.http2");
     Services.prefs.clearUserPref("network.dns.native-is-localhost");
+    Services.prefs.clearUserPref("network.trr.resolvers");
 
     Services.telemetry.canRecordExtended = oldCanRecord;
   });

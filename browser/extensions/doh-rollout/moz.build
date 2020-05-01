@@ -29,6 +29,11 @@ FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["experiments"]["preferenc
   'experiments/preferences/schema.json'
 ]
 
+FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["experiments"]["trrselect"] += [
+  'experiments/trrselect/api.js',
+  'experiments/trrselect/schema.json'
+]
+
 FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["de"] += [
   '_locales/de/messages.json'
 ]

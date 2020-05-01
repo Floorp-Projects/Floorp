@@ -32,6 +32,8 @@ const prefs = {
   DOH_DONE_FIRST_RUN_PREF: "doh-rollout.doneFirstRun",
   DOH_BALROG_MIGRATION_PREF: "doh-rollout.balrog-migration-done",
   DOH_DEBUG_PREF: "doh-rollout.debug",
+  DOH_TRR_SELECT_DRY_RUN_RESULT_PREF:
+    "doh-rollout.trr-selection.dry-run-result",
   MOCK_HEURISTICS_PREF: "doh-rollout.heuristics.mockValues",
   PROFILE_CREATION_THRESHOLD_PREF: "doh-rollout.profileCreationThreshold",
 };
@@ -76,6 +78,41 @@ async function setup() {
     Services.telemetry.clearEvents();
     await resetPrefsAndRestartAddon();
   });
+}
+
+async function checkTRRSelectionTelemetry() {
+  let events;
+  await BrowserTestUtils.waitForCondition(() => {
+    events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
+    ).parent;
+    return events;
+  });
+  events = events.filter(
+    e =>
+      e[1] == "security.doh.trrPerformance" &&
+      e[2] == "trrselect" &&
+      e[3] == "dryrunresult"
+  );
+  is(events.length, 1, "Found the expected trrselect event.");
+  is(events[0][4], "dummyTRR", "The event records the expected decision");
+}
+
+function ensureNoTRRSelectionTelemetry() {
+  let events = Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
+  ).parent;
+  if (!events) {
+    ok(true, "Found no trrselect events.");
+    return;
+  }
+  events = events.filter(
+    e =>
+      e[1] == "security.doh.trrPerformance" &&
+      e[2] == "trrselect" &&
+      e[3] == "dryrunresult"
+  );
+  is(events.length, 0, "Found no trrselect events.");
 }
 
 async function checkHeuristicsTelemetry(decision, evaluateReason) {

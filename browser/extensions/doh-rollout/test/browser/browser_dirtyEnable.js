@@ -21,6 +21,12 @@ add_task(async function testDirtyEnable() {
     undefined,
     "Breadcrumb not saved."
   );
+  is(
+    Preferences.get(prefs.DOH_TRR_SELECT_DRY_RUN_RESULT_PREF),
+    undefined,
+    "TRR selection dry run not performed."
+  );
+  ensureNoTRRSelectionTelemetry();
   await ensureNoTRRModeChange(2);
   checkHeuristicsTelemetry("prefHasUserValue", "first_run");
 
@@ -31,6 +37,7 @@ add_task(async function testDirtyEnable() {
 
   // Restart for good measure.
   await restartAddon();
+  ensureNoTRRSelectionTelemetry();
   await ensureNoTRRModeChange(2);
   ensureNoHeuristicsTelemetry();
 
