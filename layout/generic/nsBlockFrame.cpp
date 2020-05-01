@@ -625,10 +625,13 @@ nscoord nsBlockFrame::GetCaretBaseline() const {
   if (!mLines.empty()) {
     ConstLineIterator line = LinesBegin();
     const nsLineBox* firstLine = line;
-    if (firstLine->GetChildCount()) {
-      return bp.top + firstLine->mFirstChild->GetCaretBaseline();
+    for (nsIFrame* f = firstLine->mFirstChild; f; f = f->GetNextInFlow()) {
+      if (!f->IsEmpty()) {
+        return bp.top + f->GetCaretBaseline();
+      }
     }
   }
+
   float inflation = nsLayoutUtils::FontSizeInflationFor(this);
   RefPtr<nsFontMetrics> fm =
       nsLayoutUtils::GetFontMetricsForFrame(this, inflation);
