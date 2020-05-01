@@ -6,7 +6,7 @@
 # to a given compilation unit. This is used as a helper to find a bug in some
 # versions of GNU ld.
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 
 import subprocess
 import sys
@@ -46,8 +46,7 @@ def get_range_length(range, debug_ranges):
 
 
 def main(bin, compilation_unit):
-    p = subprocess.Popen(['objdump', '-W', bin], stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE, universal_newlines=True)
+    p = subprocess.Popen(['objdump', '-W', bin], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (out, err) = p.communicate()
     sections = re.split('\n(Contents of the|The section) ', out)
     debug_info = [s for s in sections if s.startswith('.debug_info')]

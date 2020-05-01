@@ -4,10 +4,11 @@
 from __future__ import print_function, unicode_literals, division
 
 import subprocess
+import sys
 
 from datetime import datetime, timedelta
 from threading import Thread
-from six.moves.queue import Queue, Empty
+from Queue import Queue, Empty
 
 from .progressbar import ProgressBar
 from .results import NullTestOutput, TestOutput, escape_cmdline
@@ -23,7 +24,7 @@ class TaskFinishedMarker:
 
 def _do_work(qTasks, qResults, qWatch, prefix, run_skipped, timeout, show_cmd):
     while True:
-        test = qTasks.get()
+        test = qTasks.get(block=True, timeout=sys.maxint)
         if test is EndMarker:
             qWatch.put(EndMarker)
             qResults.put(EndMarker)
@@ -38,9 +39,9 @@ def _do_work(qTasks, qResults, qWatch, prefix, run_skipped, timeout, show_cmd):
         if show_cmd:
             print(escape_cmdline(cmd))
         tStart = datetime.now()
-        proc = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            universal_newlines=True)
+        proc = subprocess.Popen(cmd,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
 
         # Push the task to the watchdog -- it will kill the task
         # if it goes over the timeout while we keep its stdout
@@ -74,7 +75,7 @@ def _do_watch(qWatch, timeout):
                 # ignore this.
                 if ex.winerror != 5:
                     raise
-            fin = qWatch.get()
+            fin = qWatch.get(block=True, timeout=sys.maxint)
             assert fin is TaskFinishedMarker, "invalid finish marker"
 
 

@@ -35,7 +35,7 @@ def process(input_dirs, inc_paths, bindings_conf, cache_dir, header_dir,
     rule = mk.create_rule()
 
     glbl = {}
-    exec(open(bindings_conf, encoding='utf-8').read(), glbl)
+    execfile(bindings_conf, glbl)
     webidlconfig = glbl['DOMInterfaces']
 
     # Write out dependencies for Python modules we import. If this list isn't
@@ -46,7 +46,7 @@ def process(input_dirs, inc_paths, bindings_conf, cache_dir, header_dir,
     for path in idl_files:
         basename = os.path.basename(path)
         stem, _ = os.path.splitext(basename)
-        idl_data = open(path, encoding='utf-8').read()
+        idl_data = open(path).read()
 
         idl = p.parse(idl_data, filename=path)
         idl.resolve(inc_paths, p, webidlconfig)
@@ -74,7 +74,7 @@ def process(input_dirs, inc_paths, bindings_conf, cache_dir, header_dir,
     # time a build is run whether or not anything changed. To fix this we
     # unconditionally write out the file.
     xpt_path = os.path.join(xpt_dir, '%s.xpt' % module)
-    with open(xpt_path, 'w', encoding='utf-8', newline='\n') as fh:
+    with open(xpt_path, 'w') as fh:
         jsonxpt.write(jsonxpt.link(xpts), fh)
 
     rule.add_targets([six.ensure_text(xpt_path)])
