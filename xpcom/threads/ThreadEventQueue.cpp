@@ -204,7 +204,6 @@ already_AddRefed<nsIRunnable> ThreadEventQueue<InnerQueueT>::GetEvent(
       }
 
       AUTO_PROFILER_LABEL("ThreadEventQueue::GetEvent::Wait", IDLE);
-      AUTO_PROFILER_THREAD_SLEEP;
       mEventsAvailable.Wait();
     }
   }
