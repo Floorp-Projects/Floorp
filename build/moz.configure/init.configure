@@ -1028,15 +1028,15 @@ set_config('HOST_MAJOR_VERSION', host_os_kernel_major_version)
 
 
 @depends(host)
-def host_for_old_configure(host):
+def host_for_sub_configure(host):
     return '--host=%s' % host.alias
 
 
-add_old_configure_arg(host_for_old_configure)
+add_old_configure_arg(host_for_sub_configure)
 
 
 @depends(target)
-def target_for_old_configure(target):
+def target_for_sub_configure(target):
     target_alias = target.alias
     # old-configure does plenty of tests against $target and $target_os
     # and expects darwin for iOS, so make it happy.
@@ -1045,7 +1045,7 @@ def target_for_old_configure(target):
     return '--target=%s' % target_alias
 
 
-add_old_configure_arg(target_for_old_configure)
+add_old_configure_arg(target_for_sub_configure)
 
 
 # These variables are for compatibility with the current moz.builds and
@@ -1239,14 +1239,20 @@ add_old_configure_assignment('MOZ_BUILD_APP', build_project)
 # This is temporary until js/src/configure and configure are merged.
 # Use instead of option() in js/moz.configure and more generally, for
 # options that are shared between configure and js/src/configure.
+@dependable
+def js_configure_args():
+    return []
+
 @template
 def js_option(*args, **kwargs):
     opt = option(*args, **kwargs)
 
-    @depends(opt.option, build_project, when=kwargs.get('when'))
-    def js_option(value, build_project):
+    @depends(js_configure_args, opt.option, build_project, when=kwargs.get('when'))
+    def js_option(js_configure_args, value, build_project):
         if build_project != 'js':
-            return value.format(opt.option)
+            arg = value.format(opt.option)
+            js_configure_args.append(arg)
+            return arg
 
     add_old_configure_arg(js_option)
 
