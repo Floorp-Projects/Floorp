@@ -260,9 +260,10 @@ class LookupAggregator {
 // spawned next time we get a link, up to 5 times. On the fifth time, we just
 // let the aggegator complete and mark it as tainted.
 class TRRRacer {
-  constructor() {
+  constructor(onCompleteCallback) {
     this._aggregator = null;
     this._retryCount = 0;
+    this._onCompleteCallback = onCompleteCallback;
   }
 
   run() {
@@ -285,7 +286,10 @@ class TRRRacer {
   onComplete() {
     Services.obs.removeObserver(this, "ipc:network:captive-portal-set-state");
     Services.obs.removeObserver(this, "network:link-status-changed");
-    Services.prefs.setBoolPref("doh-rollout.trrRace.complete", true);
+
+    if (this._onCompleteCallback) {
+      this._onCompleteCallback();
+    }
   }
 
   _runNewAggregator() {
