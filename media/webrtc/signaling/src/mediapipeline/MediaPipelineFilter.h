@@ -16,11 +16,15 @@
 
 #include <set>
 
+#include "mozilla/Maybe.h"
+
 namespace webrtc {
 struct RTPHeader;
 }
 
 namespace mozilla {
+
+// TODO @@NG update documentation after initial review
 
 // A class that handles the work of filtering RTP packets that arrive at a
 // MediaPipeline. This is primarily important for the use of BUNDLE (ie;
@@ -46,34 +50,42 @@ namespace mozilla {
 //    sender reports later).
 class MediaPipelineFilter {
  public:
-  MediaPipelineFilter();
+  MediaPipelineFilter() = default;
+  explicit MediaPipelineFilter(
+      const std::vector<webrtc::RtpExtension>& aExtMap);
 
   // Checks whether this packet passes the filter, possibly updating the filter
-  // in the process (if the correlator or payload types are used, they can teach
+  // in the process (if the MID or payload types are used, they can teach
   // the filter about ssrcs)
-  bool Filter(const webrtc::RTPHeader& header, uint32_t correlator = 0);
+  bool Filter(const webrtc::RTPHeader& header);
 
   void AddRemoteSSRC(uint32_t ssrc);
   void AddRemoteRtpStreamId(const std::string& rtp_strm_id);
+  // Used to set Extention Mappings for tests
+  void AddRtpExtensionMapping(const webrtc::RtpExtension& aExt);
+
+  void SetRemoteMediaStreamId(const Maybe<std::string>& aMid);
 
   // When a payload type id is unique to our media section, add it here.
   void AddUniquePT(uint8_t payload_type);
-  void SetCorrelator(uint32_t correlator);
 
   void Update(const MediaPipelineFilter& filter_update);
 
- private:
-  // Payload type is always in the second byte
-  static const size_t PT_OFFSET = 1;
-  // First SSRC always starts at the fifth byte.
-  static const size_t FIRST_SSRC_OFFSET = 4;
+  std::vector<webrtc::RtpExtension> GetExtmap() const { return mExtMap; }
 
-  uint32_t correlator_;
+ private:
+  Maybe<webrtc::RtpExtension> GetRtpExtension(const std::string& aUri) const;
   // The number of filters we manage here is quite small, so I am optimizing
   // for readability.
   std::set<uint32_t> remote_ssrc_set_;
   std::set<uint8_t> payload_type_set_;
+  // Set by tests, sticky
   std::set<std::string> remote_rid_set_;
+  Maybe<std::string> mRemoteMid;
+  Maybe<uint32_t> mRemoteMidBinding;
+  // RID extension can be set by tests and is sticky, the rest of
+  // the mapping is not.
+  std::vector<webrtc::RtpExtension> mExtMap;
 };
 
 }  // end namespace mozilla

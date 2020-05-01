@@ -20,6 +20,7 @@
 #include "mediapacket.h"
 #include "mtransport/runnable_utils.h"
 #include "AudioPacketizer.h"
+#include "MediaPipelineFilter.h"
 #include "MediaSegment.h"
 #include "signaling/src/peerconnection/PacketDumper.h"
 

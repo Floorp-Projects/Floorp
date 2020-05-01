@@ -796,7 +796,6 @@ void TransceiverImpl::UpdateConduitRtpExtmap(
       [&extmaps](const SdpExtmapAttributeList::Extmap& extmap) {
         extmaps.emplace_back(extmap.extensionname, extmap.entry);
       });
-
   if (!extmaps.empty()) {
     aConduit.SetLocalRTPExtensions(aDirection, extmaps);
   }

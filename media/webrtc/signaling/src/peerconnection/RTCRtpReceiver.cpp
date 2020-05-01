@@ -326,17 +326,25 @@ void RTCRtpReceiver::UpdateTransport() {
 
   UniquePtr<MediaPipelineFilter> filter;
 
-  if (mJsepTransceiver->HasBundleLevel() &&
-      mJsepTransceiver->mRecvTrack.GetNegotiatedDetails()) {
-    filter = MakeUnique<MediaPipelineFilter>();
+  auto const& details = mJsepTransceiver->mRecvTrack.GetNegotiatedDetails();
+  if (mJsepTransceiver->HasBundleLevel() && details) {
+    std::vector<webrtc::RtpExtension> extmaps;
+    details->ForEachRTPHeaderExtension(
+        [&extmaps](const SdpExtmapAttributeList::Extmap& extmap) {
+          extmaps.emplace_back(extmap.extensionname, extmap.entry);
+        });
+    filter = MakeUnique<MediaPipelineFilter>(extmaps);
 
     // Add remote SSRCs so we can distinguish which RTP packets actually
     // belong to this pipeline (also RTCP sender reports).
     for (unsigned int ssrc : mJsepTransceiver->mRecvTrack.GetSsrcs()) {
       filter->AddRemoteSSRC(ssrc);
     }
-
-    // TODO(bug 1105005): Tell the filter about the mid for this track
+    auto mid = Maybe<std::string>();
+    if (GetMid() != "") {
+      mid = Some(GetMid());
+    }
+    filter->SetRemoteMediaStreamId(mid);
 
     // Add unique payload types as a last-ditch fallback
     auto uniquePts = mJsepTransceiver->mRecvTrack.GetNegotiatedDetails()
