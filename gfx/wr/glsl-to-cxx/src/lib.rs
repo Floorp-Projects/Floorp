@@ -183,7 +183,6 @@ fn translate_shader(
         deps: RefCell::new(Vec::new()),
         vector_mask: 0,
         uses_discard: false,
-        uses_perspective: name.contains("PERSPECTIVE"),
         has_draw_span_rgba8: false,
         has_draw_span_r8: false,
         used_globals: RefCell::new(Vec::new()),
@@ -706,55 +705,41 @@ fn write_read_inputs(state: &mut OutputState, inputs: &[hir::SymRef]) {
     write!(state, "InterpInputs interp_step;\n");
 
     let mut has_perspective: bool = false;
-    if state.uses_perspective {
-        for i in inputs {
-            let sym = state.hir.sym(*i);
-            match &sym.decl {
-                hir::SymDecl::Global(_, _, ty, run_class) => {
-                    if *run_class != hir::RunClass::Scalar {
-                        if !has_perspective {
-                            has_perspective = true;
-                            write!(state, "struct InterpPerspective {{\n");
-                        }
-                        show_type(state, ty);
-                        write!(state, " {};\n", sym.name.as_str());
+    for i in inputs {
+        let sym = state.hir.sym(*i);
+        match &sym.decl {
+            hir::SymDecl::Global(_, _, ty, run_class) => {
+                if *run_class != hir::RunClass::Scalar {
+                    if !has_perspective {
+                        has_perspective = true;
+                        write!(state, "struct InterpPerspective {{\n");
                     }
+                    show_type(state, ty);
+                    write!(state, " {};\n", sym.name.as_str());
                 }
-                _ => panic!(),
             }
+            _ => panic!(),
         }
-        if has_perspective {
-            write!(state, "}};\n");
-            write!(state, "InterpPerspective interp_perspective;\n");
-        }
+    }
+    if has_perspective {
+        write!(state, "}};\n");
+        write!(state, "InterpPerspective interp_perspective;\n");
     }
 
     write!(state,
         "static void read_interp_inputs(\
             Self *self, const InterpInputs *init, const InterpInputs *step, float step_width) {{\n");
-    if has_perspective {
-        write!(state, "  Float w = 1.0f / self->gl_FragCoord.w;\n");
-    }
     for i in inputs {
         let sym = state.hir.sym(*i);
         match &sym.decl {
             hir::SymDecl::Global(_, _, _, run_class) => {
                 if *run_class != hir::RunClass::Scalar {
                     let name = sym.name.as_str();
-                    if has_perspective {
-                        write!(
-                            state,
-                            "  self->interp_perspective.{0} = init_interp(init->{0}, step->{0});\n",
-                            name
-                        );
-                        write!(state, "  self->{0} = self->interp_perspective.{0} * w;\n", name);
-                    } else {
-                        write!(
-                            state,
-                            "  self->{0} = init_interp(init->{0}, step->{0});\n",
-                            name
-                        );
-                    }
+                    write!(
+                        state,
+                        "  self->{0} = init_interp(init->{0}, step->{0});\n",
+                        name
+                    );
                     write!(
                         state,
                         "  self->interp_step.{0} = step->{0} * step_width;\n",
@@ -767,15 +752,39 @@ fn write_read_inputs(state: &mut OutputState, inputs: &[hir::SymRef]) {
     }
     write!(state, "}}\n");
 
+    write!(state,
+        "static void read_perspective_inputs(\
+            Self *self, const InterpInputs *init, const InterpInputs *step, float step_width) {{\n");
+    if has_perspective {
+        write!(state, "  Float w = 1.0f / self->gl_FragCoord.w;\n");
+        for i in inputs {
+            let sym = state.hir.sym(*i);
+            match &sym.decl {
+                hir::SymDecl::Global(_, _, _, run_class) => {
+                    if *run_class != hir::RunClass::Scalar {
+                        let name = sym.name.as_str();
+                        write!(
+                            state,
+                            "  self->interp_perspective.{0} = init_interp(init->{0}, step->{0});\n",
+                            name
+                        );
+                        write!(state, "  self->{0} = self->interp_perspective.{0} * w;\n", name);
+                        write!(
+                            state,
+                            "  self->interp_step.{0} = step->{0} * step_width;\n",
+                            name
+                        );
+                    }
+                }
+                _ => panic!(),
+            }
+        }
+    }
+    write!(state, "}}\n");
+
     write!(state, "ALWAYS_INLINE void step_interp_inputs() {{\n");
     if (state.hir.used_fragcoord & 1) != 0 {
         write!(state, "  step_fragcoord();\n");
-    }
-    if state.uses_perspective {
-        write!(state, "  step_perspective();\n");
-    }
-    if has_perspective {
-        write!(state, "  Float w = 1.0f / gl_FragCoord.w;\n");
     }
     for i in inputs {
         let sym = state.hir.sym(*i);
@@ -783,15 +792,33 @@ fn write_read_inputs(state: &mut OutputState, inputs: &[hir::SymRef]) {
             hir::SymDecl::Global(_, _, _, run_class) => {
                 if *run_class != hir::RunClass::Scalar {
                     let name = sym.name.as_str();
-                    if has_perspective {
-                        write!(state, "  interp_perspective.{0} += interp_step.{0};\n", name);
-                        write!(state, "  {0} = w * interp_perspective.{0};\n", name);
-                    } else {
-                        write!(state, "  {0} += interp_step.{0};\n", name);
-                    }
+                    write!(state, "  {0} += interp_step.{0};\n", name);
                 }
             }
             _ => panic!(),
+        }
+    }
+    write!(state, "}}\n");
+
+    write!(state, "ALWAYS_INLINE void step_perspective_inputs() {{\n");
+    if (state.hir.used_fragcoord & 1) != 0 {
+        write!(state, "  step_fragcoord();\n");
+    }
+    write!(state, "  step_perspective();\n");
+    if has_perspective {
+        write!(state, "  Float w = 1.0f / gl_FragCoord.w;\n");
+        for i in inputs {
+            let sym = state.hir.sym(*i);
+            match &sym.decl {
+                hir::SymDecl::Global(_, _, _, run_class) => {
+                    if *run_class != hir::RunClass::Scalar {
+                        let name = sym.name.as_str();
+                        write!(state, "  interp_perspective.{0} += interp_step.{0};\n", name);
+                        write!(state, "  {0} = w * interp_perspective.{0};\n", name);
+                    }
+                }
+                _ => panic!(),
+            }
         }
     }
     write!(state, "}}\n");
@@ -804,24 +831,13 @@ fn write_read_inputs(state: &mut OutputState, inputs: &[hir::SymRef]) {
         if (state.hir.used_fragcoord & 1) != 0 {
             write!(state, "  step_fragcoord(chunks);\n");
         }
-        if state.uses_perspective {
-            write!(state, "  step_perspective(chunks);\n");
-        }
-        if has_perspective {
-            write!(state, "  Float w = 1.0f / gl_FragCoord.w;\n");
-        }
         for i in inputs {
             let sym = state.hir.sym(*i);
             match &sym.decl {
                 hir::SymDecl::Global(_, _, _, run_class) => {
                     if *run_class != hir::RunClass::Scalar {
                         let name = sym.name.as_str();
-                        if has_perspective {
-                            write!(state, "  interp_perspective.{0} += interp_step.{0} * chunks;\n", name);
-                            write!(state, "  {0} = interp_perspective.{0} * w;\n", name);
-                        } else {
-                            write!(state, "  {0} += interp_step.{0} * chunks;\n", name);
-                        }
+                        write!(state, "  {0} += interp_step.{0} * chunks;\n", name);
                     }
                 }
                 _ => panic!(),
@@ -880,7 +896,6 @@ pub struct OutputState {
     deps: RefCell<Vec<(hir::SymRef, u32)>>,
     vector_mask: u32,
     uses_discard: bool,
-    uses_perspective: bool,
     has_draw_span_rgba8: bool,
     has_draw_span_r8: bool,
     used_globals: RefCell<Vec<hir::SymRef>>,
@@ -3668,6 +3683,17 @@ fn write_abi(state: &mut OutputState) {
             state.write(" self->step_interp_inputs();\n");
             state.write(" while (--chunks > 0) self->step_interp_inputs();\n");
             state.write("}\n");
+            state.write("static void run_perspective(Self *self) {\n");
+            if state.uses_discard {
+                state.write(" self->isPixelDiscarded = false;\n");
+            }
+            state.write(" self->main();\n");
+            state.write(" self->step_perspective_inputs();\n");
+            state.write("}\n");
+            state.write("static void skip_perspective(Self* self, int chunks) {\n");
+            state.write(" self->step_perspective_inputs();\n");
+            state.write(" while (--chunks > 0) self->step_perspective_inputs();\n");
+            state.write("}\n");
             if state.has_draw_span_rgba8 {
                 state.write(
                     "static void draw_span_RGBA8(Self* self, uint32_t* buf, int len) { \
@@ -3712,9 +3738,10 @@ fn write_abi(state: &mut OutputState) {
             if state.uses_discard {
                 state.write(" enable_discard();\n");
             }
-            if state.uses_perspective {
-                state.write(" enable_perspective();\n");
-            }
+            state.write(" enable_perspective();\n");
+            state.write(" init_span_w_func = (InitSpanWFunc)&read_perspective_inputs;\n");
+            state.write(" run_w_func = (RunWFunc)&run_perspective;\n");
+            state.write(" skip_w_func = (SkipWFunc)&skip_perspective;\n");
         }
         ShaderKind::Vertex => {
             state.write(" init_batch_func = (InitBatchFunc)&bind_textures;\n");

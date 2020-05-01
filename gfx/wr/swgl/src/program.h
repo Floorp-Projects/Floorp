@@ -77,6 +77,10 @@ struct FragmentShaderImpl : ShaderImpl {
                                const void* step, float step_width);
   typedef void (*RunFunc)(FragmentShaderImpl*);
   typedef void (*SkipFunc)(FragmentShaderImpl*, int chunks);
+  typedef void (*InitSpanWFunc)(FragmentShaderImpl*, const void* interps,
+                                const void* step, float step_width);
+  typedef void (*RunWFunc)(FragmentShaderImpl*);
+  typedef void (*SkipWFunc)(FragmentShaderImpl*, int chunks);
   typedef void (*DrawSpanRGBA8Func)(FragmentShaderImpl*, uint32_t* buf,
                                     int len);
   typedef void (*DrawSpanR8Func)(FragmentShaderImpl*, uint8_t* buf, int len);
@@ -86,6 +90,9 @@ struct FragmentShaderImpl : ShaderImpl {
   InitSpanFunc init_span_func = nullptr;
   RunFunc run_func = nullptr;
   SkipFunc skip_func = nullptr;
+  InitSpanWFunc init_span_w_func = nullptr;
+  RunWFunc run_w_func = nullptr;
+  SkipWFunc skip_w_func = nullptr;
   DrawSpanRGBA8Func draw_span_RGBA8_func = nullptr;
   DrawSpanR8Func draw_span_R8_func = nullptr;
 
@@ -103,7 +110,7 @@ struct FragmentShaderImpl : ShaderImpl {
 
   vec4 gl_FragCoord;
   vec2_scalar stepZW;
-  Bool isPixelDiscarded;
+  Bool isPixelDiscarded = false;
   vec4 gl_FragColor;
   vec4 gl_SecondaryFragColor;
 
@@ -129,14 +136,21 @@ struct FragmentShaderImpl : ShaderImpl {
     (*init_primitive_func)(this, flats);
   }
 
+  template <bool W = false>
   ALWAYS_INLINE void init_span(const void* interps, const void* step,
                                float step_width) {
-    (*init_span_func)(this, interps, step, step_width);
+    (*(W ? init_span_w_func : init_span_func))(this, interps, step, step_width);
   }
 
-  ALWAYS_INLINE void run() { (*run_func)(this); }
+  template <bool W = false>
+  ALWAYS_INLINE void run() {
+    (*(W ? run_w_func : run_func))(this);
+  }
 
-  ALWAYS_INLINE void skip(int chunks = 1) { (*skip_func)(this, chunks); }
+  template <bool W = false>
+  ALWAYS_INLINE void skip(int chunks = 1) {
+    (*(W ? skip_w_func : skip_func))(this, chunks);
+  }
 
   ALWAYS_INLINE void draw_span(uint32_t* buf, int len) {
     (*draw_span_RGBA8_func)(this, buf, len);
