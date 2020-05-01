@@ -94,14 +94,23 @@ sample-suites:
         - ^test- !1$ !2$ !3$ !4$ !5$ !6$ !7$ !8$ !9$ !0$ !raptor !talos
         - ^test- 'raptor-speedometer | 'talos-g1
 
+sm-shell-all:
+    selector: fuzzy
+    description: <-
+        Runs a set of tests aimed to give a reasonable level of confidence for
+        basic SpiderMonkey changes (shell only), all platforms
+    query:
+        - "'spidermonkey | 'shell-haz"
+        - "!shippable !android 'jittest"  # macosx64 jittests
+
 sm-shell:
     selector: fuzzy
     description: <-
         Runs a set of tests aimed to give a reasonable level of confidence for
-        basic SpiderMonkey changes (shell only)
+        basic SpiderMonkey changes (shell only) (linux only)
     query:
-        - "'spidermonkey | 'shell-haz"
-        - "!shippable !android 'jittest"  # macosx64 jittests
+        - "!win !osx 'spidermonkey | 'shell-haz"
+
 
 sm-all:
     selector: fuzzy
