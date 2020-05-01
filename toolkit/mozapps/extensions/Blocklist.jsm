@@ -1567,7 +1567,8 @@ this.ExtensionBlocklistMLBF = {
       }
     }
 
-    if (!addon.signedState) {
+    let { signedDate } = addon;
+    if (!signedDate) {
       // The MLBF does not apply to unsigned add-ons.
       return null;
     }
@@ -1589,7 +1590,7 @@ this.ExtensionBlocklistMLBF = {
     }
     // Add-on blocked, or unknown add-on inadvertently labeled as blocked.
 
-    if (addon.signedDate > generationTime) {
+    if (signedDate.getTime() > generationTime) {
       // The bloom filter only reports 100% accurate results for known add-ons.
       // Since the add-on was unknown when the bloom filter was generated, the
       // block decision is incorrect and should be treated as unblocked.
