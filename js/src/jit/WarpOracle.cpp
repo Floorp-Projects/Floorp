@@ -632,7 +632,6 @@ AbortReasonOr<Ok> WarpOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
   }
 
   // TODO: check stub's hit count if we're not doing eager compilation.
-  // TODO: check stub data for nursery pointers.
   // TODO: don't inline if the IC had unhandled cases => CacheIR is incomplete.
   // TOOD: have a consistent bailout => invalidate story. Set a flag on the IC?
 
@@ -653,6 +652,12 @@ AbortReasonOr<Ok> WarpOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
       break;
     default:
       MOZ_CRASH("Unexpected stub");
+  }
+
+  // TODO: we don't support stubs with nursery pointers for now. Handling this
+  // well requires special machinery. See bug 1631267.
+  if (stub->stubDataHasNurseryPointers(stubInfo)) {
+    return Ok();
   }
 
   // Only create a snapshots if all opcodes are supported by the transpiler.
