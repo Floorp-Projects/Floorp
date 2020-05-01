@@ -1561,10 +1561,7 @@ void nsGlobalWindowInner::InitDocumentDependentState(JSContext* aCx) {
   // out of sync.
   ClearDocumentDependentSlots(aCx);
 
-  // FIXME: Currently, devtools can crete a fallback webextension window global
-  // in the content process which does not have a corresponding BrowserChild
-  // actor. This means we have no actor to be our parent. (Bug 1498293)
-  if (!mWindowGlobalChild && (XRE_IsParentProcess() || mBrowserChild)) {
+  if (!mWindowGlobalChild) {
     mWindowGlobalChild = WindowGlobalChild::Create(this);
   }
 
