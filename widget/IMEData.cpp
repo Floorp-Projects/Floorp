@@ -6,6 +6,8 @@
 #include "IMEData.h"
 #include <sstream>
 
+#include "mozilla/WritingModes.h"
+
 namespace mozilla {
 
 namespace widget {

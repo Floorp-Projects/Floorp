@@ -6,6 +6,8 @@
 #ifndef mozilla_widget_IMEData_h_
 #define mozilla_widget_IMEData_h_
 
+#include "mozilla/EventForwards.h"
+
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "nsString.h"

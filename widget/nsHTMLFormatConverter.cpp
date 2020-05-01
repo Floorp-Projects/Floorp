@@ -8,6 +8,8 @@
 #include "nsArray.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
+#include "nsITransferable.h"
+#include "nsLiteralString.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 

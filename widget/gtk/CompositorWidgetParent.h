@@ -7,6 +7,7 @@
 #define widget_gtk_CompositorWidgetParent_h
 
 #include "GtkCompositorWidget.h"
+#include "mozilla/VsyncDispatcher.h"
 #include "mozilla/widget/PCompositorWidgetParent.h"
 
 namespace mozilla {

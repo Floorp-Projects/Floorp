@@ -13,7 +13,10 @@
 #  include <dbus/dbus-glib-lowlevel.h>
 
 #  if defined(MOZ_X11)
+#    include "gfxPlatformGtk.h"
 #    include "prlink.h"
+#    include <gdk/gdk.h>
+#    include <gdk/gdkx.h>
 #  endif
 
 #  if defined(MOZ_WAYLAND)

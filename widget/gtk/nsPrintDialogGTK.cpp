@@ -8,6 +8,7 @@
 #include <stdlib.h>
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Services.h"
 
 #include "mozcontainer.h"
 #include "nsIPrintSettings.h"
