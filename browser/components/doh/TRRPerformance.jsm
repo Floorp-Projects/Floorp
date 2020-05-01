@@ -295,22 +295,27 @@ class TRRRacer {
     }
   }
 
-  getFastestTRR() {
+  getFastestTRR(returnRandomDefault = false) {
     if (!this._complete) {
       throw new Error("getFastestTRR: Measurement still running.");
     }
 
-    return this._getFastestTRRFromResults(this._aggregator.results);
+    return this._getFastestTRRFromResults(
+      this._aggregator.results,
+      returnRandomDefault
+    );
   }
 
   /*
    * Given an array of { trr, time }, returns the trr with smallest mean time.
    * Separate from _getFastestTRR for easy unit-testing.
    *
-   * @returns The TRR with the fastest average time, or undefined if no result
-   *          had a valid measured time (!= -1)
+   * @returns The TRR with the fastest average time.
+   *          If returnRandomDefault is false-y, returns undefined if no valid
+   *          times were present in the results. Otherwise, returns one of the
+   *          present TRRs at random.
    */
-  _getFastestTRRFromResults(results) {
+  _getFastestTRRFromResults(results, returnRandomDefault = false) {
     // First, organize the results into a map of TRR -> array of times
     let TRRTimingMap = new Map();
     for (let { trr, time } of results) {
@@ -344,6 +349,10 @@ class TRRRacer {
         fastestAverageTime = averageTime;
         fastestTRR = trr;
       }
+    }
+
+    if (returnRandomDefault && !fastestTRR) {
+      fastestTRR = trrs[Math.floor(Math.random() * trrs.length)];
     }
 
     return fastestTRR;
