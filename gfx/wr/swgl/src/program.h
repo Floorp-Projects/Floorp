@@ -12,7 +12,6 @@ struct FragmentShaderImpl;
 struct ProgramImpl {
   virtual ~ProgramImpl() {}
   virtual int get_uniform(const char* name) const = 0;
-  virtual bool set_sampler(int index, int value) = 0;
   virtual void bind_attrib(const char* name, int index) = 0;
   virtual int get_attrib(const char* name) const = 0;
   virtual VertexShaderImpl* get_vertex_shader() = 0;
@@ -21,15 +20,26 @@ struct ProgramImpl {
 
 typedef ProgramImpl* (*ProgramLoader)();
 
-struct ShaderImpl {
-  typedef void (*SetUniform1iFunc)(ShaderImpl*, int index, int value);
-  typedef void (*SetUniform4fvFunc)(ShaderImpl*, int index, const float* value);
-  typedef void (*SetUniformMatrix4fvFunc)(ShaderImpl*, int index,
+struct VertexShaderImpl {
+  typedef void (*SetUniform1iFunc)(VertexShaderImpl*, int index, int value);
+  typedef void (*SetUniform4fvFunc)(VertexShaderImpl*, int index,
+                                    const float* value);
+  typedef void (*SetUniformMatrix4fvFunc)(VertexShaderImpl*, int index,
                                           const float* value);
+  typedef void (*InitBatchFunc)(VertexShaderImpl*);
+  typedef void (*LoadAttribsFunc)(VertexShaderImpl*, VertexAttrib* attribs,
+                                  uint32_t start, int instance, int count);
+  typedef void (*RunPrimitiveFunc)(VertexShaderImpl*, char* interps,
+                                   size_t interp_stride);
 
   SetUniform1iFunc set_uniform_1i_func = nullptr;
   SetUniform4fvFunc set_uniform_4fv_func = nullptr;
   SetUniformMatrix4fvFunc set_uniform_matrix4fv_func = nullptr;
+  InitBatchFunc init_batch_func = nullptr;
+  LoadAttribsFunc load_attribs_func = nullptr;
+  RunPrimitiveFunc run_primitive_func = nullptr;
+
+  vec4 gl_Position;
 
   void set_uniform_1i(int index, int value) {
     (*set_uniform_1i_func)(this, index, value);
@@ -42,37 +52,20 @@ struct ShaderImpl {
   void set_uniform_matrix4fv(int index, const float* value) {
     (*set_uniform_matrix4fv_func)(this, index, value);
   }
-};
 
-struct VertexShaderImpl : ShaderImpl {
-  typedef void (*InitBatchFunc)(VertexShaderImpl*, ProgramImpl* prog);
-  typedef void (*LoadAttribsFunc)(VertexShaderImpl*, ProgramImpl* prog,
-                                  VertexAttrib* attribs, uint32_t start,
-                                  int instance, int count);
-  typedef void (*RunFunc)(VertexShaderImpl*, char* flats, char* interps,
-                          size_t interp_stride);
+  void init_batch() { (*init_batch_func)(this); }
 
-  InitBatchFunc init_batch_func = nullptr;
-  LoadAttribsFunc load_attribs_func = nullptr;
-  RunFunc run_func = nullptr;
-
-  vec4 gl_Position;
-
-  void init_batch(ProgramImpl* prog) { (*init_batch_func)(this, prog); }
-
-  ALWAYS_INLINE void load_attribs(ProgramImpl* prog, VertexAttrib* attribs,
-                                  uint32_t start, int instance, int count) {
-    (*load_attribs_func)(this, prog, attribs, start, instance, count);
+  ALWAYS_INLINE void load_attribs(VertexAttrib* attribs, uint32_t start,
+                                  int instance, int count) {
+    (*load_attribs_func)(this, attribs, start, instance, count);
   }
 
-  ALWAYS_INLINE void run(char* flats, char* interps, size_t interp_stride) {
-    (*run_func)(this, flats, interps, interp_stride);
+  ALWAYS_INLINE void run_primitive(char* interps, size_t interp_stride) {
+    (*run_primitive_func)(this, interps, interp_stride);
   }
 };
 
-struct FragmentShaderImpl : ShaderImpl {
-  typedef void (*InitBatchFunc)(FragmentShaderImpl*, ProgramImpl* prog);
-  typedef void (*InitPrimitiveFunc)(FragmentShaderImpl*, const void* flats);
+struct FragmentShaderImpl {
   typedef void (*InitSpanFunc)(FragmentShaderImpl*, const void* interps,
                                const void* step, float step_width);
   typedef void (*RunFunc)(FragmentShaderImpl*);
@@ -85,8 +78,6 @@ struct FragmentShaderImpl : ShaderImpl {
                                     int len);
   typedef void (*DrawSpanR8Func)(FragmentShaderImpl*, uint8_t* buf, int len);
 
-  InitBatchFunc init_batch_func = nullptr;
-  InitPrimitiveFunc init_primitive_func = nullptr;
   InitSpanFunc init_span_func = nullptr;
   RunFunc run_func = nullptr;
   SkipFunc skip_func = nullptr;
@@ -128,12 +119,6 @@ struct FragmentShaderImpl : ShaderImpl {
   ALWAYS_INLINE void step_perspective(int chunks) {
     gl_FragCoord.z += stepZW.x * chunks;
     gl_FragCoord.w += stepZW.y * chunks;
-  }
-
-  void init_batch(ProgramImpl* prog) { (*init_batch_func)(this, prog); }
-
-  void init_primitive(const void* flats) {
-    (*init_primitive_func)(this, flats);
   }
 
   template <bool W = false>
