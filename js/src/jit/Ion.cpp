@@ -887,6 +887,8 @@ bool OptimizeMIR(MIRGenerator* mir) {
   gs.spewPass("BuildSSA");
   AssertBasicGraphCoherency(graph);
 
+  DumpMIRExpressions(graph, mir->outerInfo(), "BuildSSA");
+
   if (!JitOptions.disablePgo && !mir->compilingWasm()) {
     AutoTraceLog log(logger, TraceLogger_PruneUnusedBranches);
     if (!PruneUnusedBranches(mir, graph)) {
@@ -1323,7 +1325,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
 
   AssertGraphCoherency(graph, /* force = */ true);
 
-  DumpMIRExpressions(graph);
+  DumpMIRExpressions(graph, mir->outerInfo(), "BeforeLIR");
 
   return true;
 }
