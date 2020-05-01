@@ -4996,7 +4996,12 @@ void MRootList::trace(JSTracer* trc) {
 #ifdef JS_JITSPEW
 static void DumpDefinition(GenericPrinter& out, MDefinition* def,
                            size_t depth) {
-  MDefinition::PrintOpcodeName(out, def->op());
+  out.printf("%u:", def->id());
+  if (def->isConstant()) {
+    def->printOpcode(out);
+  } else {
+    MDefinition::PrintOpcodeName(out, def->op());
+  }
 
   if (depth == 0) {
     return;
@@ -5010,15 +5015,17 @@ static void DumpDefinition(GenericPrinter& out, MDefinition* def,
 }
 #endif
 
-void jit::DumpMIRExpressions(MIRGraph& graph) {
+void jit::DumpMIRExpressions(MIRGraph& graph, const CompileInfo& info,
+                             const char* phase) {
 #ifdef JS_JITSPEW
   if (!JitSpewEnabled(JitSpew_MIRExpressions)) {
     return;
   }
 
-  size_t depth = 2;
-
   Fprinter& out = JitSpewPrinter();
+  out.printf("===== %s =====\n", phase);
+
+  size_t depth = 2;
   for (ReversePostorderIterator block(graph.rpoBegin());
        block != graph.rpoEnd(); block++) {
     for (MInstructionIterator iter(block->begin()), end(block->end());
@@ -5027,5 +5034,7 @@ void jit::DumpMIRExpressions(MIRGraph& graph) {
       out.printf("\n");
     }
   }
+
+  out.printf("===== %s:%u =====\n", info.filename(), info.lineno());
 #endif
 }

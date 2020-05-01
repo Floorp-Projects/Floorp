@@ -172,7 +172,9 @@ bool DeadIfUnused(const MDefinition* def);
 
 bool IsDiscardable(const MDefinition* def);
 
-void DumpMIRExpressions(MIRGraph& graph);
+class CompileInfo;
+void DumpMIRExpressions(MIRGraph& graph, const CompileInfo& info,
+                        const char* phase);
 
 }  // namespace jit
 }  // namespace js
