@@ -405,6 +405,18 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::Ge:
       case JSOp::StrictEq:
       case JSOp::StrictNe:
+      case JSOp::Add:
+      case JSOp::Sub:
+      case JSOp::Mul:
+      case JSOp::Div:
+      case JSOp::Mod:
+      case JSOp::Pow:
+      case JSOp::BitAnd:
+      case JSOp::BitOr:
+      case JSOp::BitXor:
+      case JSOp::Lsh:
+      case JSOp::Rsh:
+      case JSOp::Ursh:
         MOZ_TRY(maybeInlineIC(opSnapshots, script, loc));
         break;
 
@@ -447,18 +459,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::SetArg:
       case JSOp::Neg:
       case JSOp::BitNot:
-      case JSOp::Add:
-      case JSOp::Sub:
-      case JSOp::Mul:
-      case JSOp::Div:
-      case JSOp::Mod:
-      case JSOp::Pow:
-      case JSOp::BitAnd:
-      case JSOp::BitOr:
-      case JSOp::BitXor:
-      case JSOp::Lsh:
-      case JSOp::Rsh:
-      case JSOp::Ursh:
       case JSOp::JumpTarget:
       case JSOp::LoopHead:
       case JSOp::IfEq:

@@ -1111,14 +1111,14 @@
 
 - name: Int32AddResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32SubResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: Int32Id
     rhs: Int32Id
@@ -1195,35 +1195,35 @@
 
 - name: Int32BitOrResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32BitXorResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32BitAndResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32LeftShiftResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32RightShiftResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: Int32Id
     rhs: Int32Id
