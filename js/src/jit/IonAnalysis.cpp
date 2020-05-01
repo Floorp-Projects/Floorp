@@ -1294,10 +1294,19 @@ bool js::jit::DeadIfUnused(const MDefinition* def) {
 
   // Guard instructions by definition are live if they have no uses, however,
   // in the OSR block we are able to eliminate these guards, as some are
-  // artificially created and superceeded by failible unboxes.
-  if (def->isGuard() && (def->block() != def->block()->graph().osrBlock() ||
-                         def->isImplicitlyUsed())) {
-    return false;
+  // artificially created and superceeded by failible unboxes. If WarpBuilder
+  // is enabled we never eliminate guard instructions (we don't want to
+  // eliminate MGuardValue).
+  if (def->isGuard()) {
+    if (JitOptions.warpBuilder) {
+      return false;
+    }
+    if (def->isImplicitlyUsed()) {
+      return false;
+    }
+    if (def->block() != def->block()->graph().osrBlock()) {
+      return false;
+    }
   }
 
   // Required to be preserved, as the type guard related to this instruction
@@ -1588,6 +1597,64 @@ class TypeAnalyzer {
 
 } /* anonymous namespace */
 
+static bool ShouldSpecializeOsrPhis() {
+  // [SMDOC] WarpBuilder OSR Phi Type Specialization
+  //
+  // IonBuilder does type specialization while building MIR. This includes
+  // adding type guards and unboxing for Values flowing in from the OSR block.
+  //
+  // WarpBuilder doesn't do this. This means that without special handling for
+  // these OSR phis, we end up with unspecialized phis (MIRType::Value) in the
+  // loop (pre)header and other blocks, resulting in unnecessary boxing and
+  // unboxing in the loop body.
+  //
+  // To fix this, phi type specialization needs special code to deal with the
+  // OSR entry block. Recall that OSR results in the following basic block
+  // structure:
+  //
+  //  +------------------+                 +-----------------+
+  //  | Code before loop |                 | OSR entry block |
+  //  +------------------+                 +-----------------+
+  //          |                                       |
+  //          |                                       |
+  //          |           +---------------+           |
+  //          +---------> | OSR preheader | <---------+
+  //                      +---------------+
+  //                              |
+  //                              V
+  //                      +---------------+
+  //                      | Loop header   |<-----+
+  //                      +---------------+      |
+  //                              |              |
+  //                             ...             |
+  //                              |              |
+  //                      +---------------+      |
+  //                      | Loop backedge |------+
+  //                      +---------------+
+  //
+  // OSR phi specialization happens in three steps:
+  //
+  // (1) Specialize phis but ignore MOsrValue phi inputs. In other words,
+  //     pretend the OSR entry block doesn't exist. See GuessPhiType.
+  //
+  // (2) Once phi specialization is done, look at the types of loop header phis
+  //     and add these types to the corresponding preheader phis. This way, the
+  //     types of the preheader phis are based on the code before the loop and
+  //     the code in the loop body. These are exactly the types we expect for
+  //     the OSR Values. See the last part of TypeAnalyzer::specializePhis.
+  //
+  // (3) For type-specialized preheader phis, add guard/unbox instructions to
+  //     the OSR entry block to guard the incoming Value indeed has this type.
+  //     This happens in:
+  //
+  //     * TypeAnalyzer::adjustPhiInputs: adds a fallible unbox for values that
+  //       can be unboxed.
+  //
+  //     * TypeAnalyzer::replaceRedundantPhi: adds a type guard for values that
+  //       can't be unboxed (null/undefined/magic Values).
+  return JitOptions.warpBuilder;
+}
+
 // Try to specialize this phi based on its non-cyclic inputs.
 static MIRType GuessPhiType(MPhi* phi, bool* hasInputsWithEmptyTypes) {
 #ifdef DEBUG
@@ -1631,6 +1698,12 @@ static MIRType GuessPhiType(MPhi* phi, bool* hasInputsWithEmptyTypes) {
     // Ignore operands which we've never observed.
     if (in->resultTypeSet() && in->resultTypeSet()->empty()) {
       *hasInputsWithEmptyTypes = true;
+      continue;
+    }
+
+    // See ShouldSpecializeOsrPhis comment. This is the first step mentioned
+    // there.
+    if (ShouldSpecializeOsrPhis() && in->isOsrValue()) {
       continue;
     }
 
@@ -1807,6 +1880,34 @@ bool TypeAnalyzer::specializePhis() {
     }
   } while (!phiWorklist_.empty());
 
+  if (ShouldSpecializeOsrPhis() && graph.osrBlock()) {
+    // See ShouldSpecializeOsrPhis comment. This is the second step, propagating
+    // loop header phi types to preheader phis.
+    MBasicBlock* preHeader = graph.osrPreHeaderBlock();
+    MBasicBlock* header = preHeader->getSingleSuccessor();
+    MOZ_ASSERT(header->isLoopHeader());
+
+    for (MPhiIterator phi(header->phisBegin()); phi != header->phisEnd();
+         phi++) {
+      MPhi* preHeaderPhi = phi->getOperand(0)->toPhi();
+      MOZ_ASSERT(preHeaderPhi->block() == preHeader);
+
+      if (preHeaderPhi->type() == MIRType::Value) {
+        // Already includes everything.
+        continue;
+      }
+
+      MIRType loopType = phi->type();
+      if (!respecialize(preHeaderPhi, loopType)) {
+        return false;
+      }
+    }
+
+    if (!propagateAllPhiSpecializations()) {
+      return false;
+    }
+  }
+
   MOZ_ASSERT(phiWorklist_.empty());
   return true;
 }
@@ -1953,6 +2054,21 @@ void TypeAnalyzer::replaceRedundantPhi(MPhi* phi) {
   // The instruction pass will insert the box
   block->insertBefore(*(block->begin()), c);
   phi->justReplaceAllUsesWith(c);
+
+  if (ShouldSpecializeOsrPhis() && block == graph.osrPreHeaderBlock()) {
+    // See ShouldSpecializeOsrPhis comment. This is part of the third step,
+    // guard the incoming MOsrValue is of this type.
+    MBasicBlock* osrBlock = graph.osrBlock();
+    MOZ_ASSERT(block->getPredecessor(1) == osrBlock);
+    MDefinition* def = phi->getOperand(1);
+    if (def->isOsrValue()) {
+      MGuardValue* guard = MGuardValue::New(alloc(), def, v);
+      osrBlock->insertBefore(osrBlock->lastIns(), guard);
+    } else {
+      MOZ_ASSERT(def->isConstant());
+      MOZ_ASSERT(def->type() == phi->type());
+    }
+  }
 }
 
 bool TypeAnalyzer::insertConversions() {

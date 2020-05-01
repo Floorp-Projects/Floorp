@@ -563,6 +563,10 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
     MOZ_ASSERT(lastIns());
     return lastIns()->getSuccessor(index);
   }
+  MBasicBlock* getSingleSuccessor() const {
+    MOZ_ASSERT(numSuccessors() == 1);
+    return getSuccessor(0);
+  }
   size_t getSuccessorIndex(MBasicBlock*) const;
   size_t getPredecessorIndex(MBasicBlock*) const;
 
@@ -799,7 +803,11 @@ class MIRGraph {
     MOZ_ASSERT(!osrBlock_);
     osrBlock_ = osrBlock;
   }
-  MBasicBlock* osrBlock() { return osrBlock_; }
+  MBasicBlock* osrBlock() const { return osrBlock_; }
+
+  MBasicBlock* osrPreHeaderBlock() const {
+    return osrBlock() ? osrBlock()->getSingleSuccessor() : nullptr;
+  }
 
   bool hasTryBlock() const { return hasTryBlock_; }
   void setHasTryBlock() { hasTryBlock_ = true; }

@@ -238,12 +238,11 @@ bool WarpBuilder::startNewOsrPreHeaderBlock(BytecodeLocation loopHead) {
     current->initSlot(slot, osrv);
   }
 
-  current->add(MStart::New(alloc()));
+  MStart* start = MStart::New(alloc());
+  current->add(start);
 
-  // TODO: IonBuilder has code to add type barriers to the OSR block and
-  // therefore needs some complicated resume point logic (see linkOsrValues,
-  // maybeAddOsrTypeBarriers). Our OSR block is infallible and values are boxed.
-  // If this becomes a performance issue we should consider changing it somehow.
+  // Note: phi specialization can add type guard instructions to the OSR entry
+  // block if needed. See ShouldSpecializeOsrPhis.
 
   // Create the preheader block, with the predecessor block and OSR block as
   // predecessors.
