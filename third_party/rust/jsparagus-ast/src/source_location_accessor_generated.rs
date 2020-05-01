@@ -9,7 +9,6 @@ pub trait SourceLocationAccessor {
     fn set_loc(&mut self, start: SourceLocation, end: SourceLocation);
     fn get_loc(&self) -> SourceLocation;
 }
-
 impl<'alloc> SourceLocationAccessor for Argument<'alloc> {
     fn set_loc(&mut self, start: SourceLocation, end: SourceLocation) {
         match self {

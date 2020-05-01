@@ -1,3 +1,4 @@
+use crate::context_stack::{ControlInfo, ControlKind};
 use crate::parser_tables_generated::TerminalId;
 use crate::DeclarationKind;
 use crate::ParseError;
@@ -5,49 +6,6 @@ use crate::Token;
 use ast::arena;
 use ast::source_atom_set::{CommonSourceAtomSetIndices, SourceAtomSet, SourceAtomSetIndex};
 use std::collections::HashMap;
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum ControlKind {
-    Continue,
-
-    Break,
-}
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub struct ControlInfo {
-    pub label: Option<SourceAtomSetIndex>,
-    // The offset of the nested control in the source.
-    pub offset: usize,
-    pub kind: ControlKind,
-}
-
-impl ControlInfo {
-    pub fn new_continue(offset: usize, label: Option<SourceAtomSetIndex>) -> Self {
-        Self {
-            label,
-            kind: ControlKind::Continue,
-            offset,
-        }
-    }
-
-    pub fn new_break(offset: usize, label: Option<SourceAtomSetIndex>) -> Self {
-        Self {
-            label,
-            kind: ControlKind::Break,
-            offset,
-        }
-    }
-}
-
-pub struct BreakOrContinueIndex {
-    pub index: usize,
-}
-
-impl BreakOrContinueIndex {
-    pub fn new(index: usize) -> Self {
-        Self { index }
-    }
-}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct DeclarationInfo {

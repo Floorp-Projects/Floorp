@@ -5,7 +5,6 @@
 See README.md for instructions.
 """
 
-import jsparagus
 from . import parser_tables
 from .lexer import JSLexer
 

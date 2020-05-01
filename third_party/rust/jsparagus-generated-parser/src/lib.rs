@@ -1,6 +1,7 @@
 //! Generated parts of a JS parser.
 
 mod ast_builder;
+mod context_stack;
 mod declaration_kind;
 mod early_errors;
 mod error;

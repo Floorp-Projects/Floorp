@@ -135,7 +135,6 @@ pub trait TryIntoStack<'alloc> {
     type Error;
     fn try_into_stack(self) -> Result<StackValue<'alloc>, Self::Error>;
 }
-
 impl<'alloc> StackValueItem<'alloc> for Argument<'alloc> {
     fn to_ast(sv: StackValue<'alloc>) -> AstResult<'alloc, Self> {
         match sv {

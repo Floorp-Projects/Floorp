@@ -91,7 +91,6 @@ def write_python_parse_table(out: io.TextIOBase, parse_table: ParseTable) -> Non
                 ))
             return indent, True
         if isinstance(act, Seq):
-            res = True
             for a in act.actions:
                 indent, fallthrough = write_action(a, indent)
             return indent, fallthrough

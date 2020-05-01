@@ -132,6 +132,9 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
                     label: label.as_ref().map(|x| x.value),
                 }
                 .emit(self);
+                return Err(EmitError::NotImplemented(
+                    "TODO: scope handling for BreakStatement",
+                ));
             }
             Statement::ContinueStatement { label, .. } => {
                 ContinueEmitter {
@@ -139,6 +142,9 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
                     label: label.as_ref().map(|x| x.value),
                 }
                 .emit(self);
+                return Err(EmitError::NotImplemented(
+                    "TODO: scope handling for ContinueStatement",
+                ));
             }
             Statement::DebuggerStatement { .. } => {
                 return Err(EmitError::NotImplemented("TODO: DebuggerStatement"));
@@ -179,11 +185,17 @@ impl<'alloc, 'opt> AstEmitter<'alloc, 'opt> {
                             emitter.emit_variable_declaration_statement(ast)
                         }
                         VariableDeclarationOrExpression::Expression(expr) => {
-                            emitter.emit_expression(expr)
+                            emitter.emit_expression(expr)?;
+                            emitter.emit.pop();
+                            Ok(())
                         }
                     },
                     test: |emitter, expr| emitter.emit_expression(expr),
-                    update: |emitter, expr| emitter.emit_expression(expr),
+                    update: |emitter, expr| {
+                        emitter.emit_expression(expr)?;
+                        emitter.emit.pop();
+                        Ok(())
+                    },
                     block: |emitter| emitter.emit_statement(block),
                 }
                 .emit(self)?;
