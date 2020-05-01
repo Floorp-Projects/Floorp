@@ -57,4 +57,7 @@ add_task(async () => {
   await runA11yPanelTests(CONTENT_PROCESS_EXPECTED, env);
 
   await disableAccessibilityInspector(env);
+  await closeToolbox();
+  await shutdownA11y();
+  await removeTab(gBrowser.selectedTab);
 });
