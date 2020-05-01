@@ -925,7 +925,6 @@ pub struct State {
     branch_run_class: RunClass,
     branch_declaration: SymRef,
     modified_globals: RefCell<Vec<SymRef>>,
-    pub used_fragcoord: i32,
     pub used_globals: RefCell<Vec<SymRef>>,
     pub texel_fetches: HashMap<(SymRef, SymRef), TexelFetchOffsets>,
 }
@@ -941,7 +940,6 @@ impl State {
             branch_run_class: RunClass::Unknown,
             branch_declaration: SymRef(0),
             modified_globals: RefCell::new(Vec::new()),
-            used_fragcoord: 0,
             used_globals: RefCell::new(Vec::new()),
             texel_fetches: HashMap::new(),
         }
@@ -2368,7 +2366,7 @@ fn translate_expression(state: &mut State, e: &syntax::Expr) -> Expr {
             }
         }
         syntax::Expr::Dot(e, i) => {
-            let mut e = Box::new(translate_expression(state, e));
+            let e = Box::new(translate_expression(state, e));
             let ty = e.ty.clone();
             let ivec = is_ivec(&ty);
             if is_vector(&ty) {
@@ -2405,14 +2403,6 @@ fn translate_expression(state: &mut State, e: &syntax::Expr) -> Expr {
                 });
 
                 let sel = SwizzleSelector::parse(i.as_str());
-
-                if let ExprKind::Variable(ref sym) = &mut e.kind {
-                    if state.sym(*sym).name == "gl_FragCoord" {
-                        for c in &sel.components {
-                            state.used_fragcoord |= 1 << c;
-                        }
-                    }
-                }
 
                 Expr {
                     kind: ExprKind::SwizzleSelector(e, sel),
