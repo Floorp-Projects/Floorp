@@ -12,6 +12,8 @@
 
 const EXPORTED_SYMBOLS = ["ExperimentManager", "_ExperimentManager"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -24,6 +26,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Sampling: "resource://gre/modules/components-utils/Sampling.jsm",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
+  RemoteSettings: "resource://services-settings/remote-settings.js",
+  requestIdleCallback: "resource://gre/modules/Timer.jsm",
+  ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -40,6 +45,20 @@ const EVENT_TELEMETRY_STUDY_TYPE = "preference_study";
 const TELEMETRY_EXPERIMENT_TYPE_PREFIX = "normandy-";
 // Also included in telemetry
 const DEFAULT_EXPERIMENT_TYPE = "messaging_experiment";
+
+// Experiment groups that are currently collecting the Reach events.
+//
+// If you're adding new groups to it, make sure they're also added in the
+// `messaging_experiments.reach.objects` defined in "toolkit/components/telemetry/Events.yaml"
+//
+// Note: although Events telemetry only takes "_", you can still have "-"(s) in
+// the group names here. They will be automatically swapped whenever needed.
+const REACH_EVENT_GROUPS = ["cfr"];
+const REACH_EVENT_CATEGORY = "messaging_experiments";
+const REACH_EVENT_METHOD = "reach";
+
+// Experiment recipe collection ID on RemoteSettings
+const COLLECTION_ID = "messaging-experiments";
 
 /**
  * A module for processes Experiment recipes, choosing and storing enrollment state,
@@ -121,6 +140,10 @@ class _ExperimentManager {
           Cu.reportError(err);
         }
       }
+    }
+
+    if (activeExperiments.length) {
+      requestIdleCallback(() => this.sendReachEvents());
     }
 
     this.sessions.delete(sourceToCheck);
@@ -298,6 +321,88 @@ class _ExperimentManager {
 
     const index = await Sampling.ratioSample(input, ratios);
     return branches[index];
+  }
+
+  /**
+   * Sends Reach events for active experiments
+   *
+   * Note:
+   *
+   * * To avoid interrupting the enrollment process, this is done in a browser
+   *   idle callback other than in `this.onRecipe()` or `this.enroll()`
+   *
+   * @param {RemoteSettings} remoteSettingsClient for test only
+   *
+   */
+  async sendReachEvents(remoteSettingsClient) {
+    let recipes;
+
+    for (const group of REACH_EVENT_GROUPS) {
+      const experiment = this.store.getExperimentForGroup(group);
+      if (!experiment) {
+        log.debug("Skipping sending Reach events for no active experiment");
+        continue;
+      }
+
+      // Need recipes for the branches information. Note that it defers the
+      // RemoteSettings call until seeing the first active experiment that
+      // might record a reach event.
+      if (!recipes) {
+        try {
+          const client = remoteSettingsClient || RemoteSettings(COLLECTION_ID);
+          // Do not sync if it's empty, let RemoteSettingsExperimentLoader do that
+          recipes = await client.get({ syncIfEmpty: false });
+        } catch (e) {
+          log.debug(
+            "Reach events not recorded, error getting recipes from remote settings"
+          );
+          return;
+        }
+      }
+
+      const recipe = recipes.find(
+        recipe => recipe.arguments.slug === experiment.slug
+      );
+      if (!recipe) {
+        log.debug(
+          "Can't find experiment recipe, skipping sending Reach events"
+        );
+        continue;
+      }
+
+      // Check targeting for every branch, and only record those qualified ones
+      let qualifiedBranches = [];
+      for (const branch of recipe.arguments.branches) {
+        if (
+          branch.value?.content?.targeting &&
+          Boolean(
+            await ASRouterTargeting.isMatch(
+              branch.value.content.targeting,
+              this.filterContext,
+              err => {
+                log.debug("Targeting failed because of an error");
+                Cu.reportError(err);
+              }
+            )
+          )
+        ) {
+          qualifiedBranches.push(branch.slug);
+        }
+      }
+
+      if (qualifiedBranches.length) {
+        // Events telemetry only takes underscore
+        const underscored = group.split("-").join("_");
+        const extra = { branches: qualifiedBranches.join(";") };
+        Services.telemetry.recordEvent(
+          REACH_EVENT_CATEGORY,
+          REACH_EVENT_METHOD,
+          underscored,
+          experiment.slug,
+          extra
+        );
+      }
+    }
   }
 }
 

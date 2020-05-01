@@ -786,6 +786,32 @@ fxa_app_menu:
         "signedin" and "login_failed".
       fxa_avatar: Boolean for whether or not account has set an avatar
 
+messaging_experiments:
+  reach:
+    objects: [
+      "cfr",
+      "whats_new_panel",
+      "moments_page",
+      "snippets",
+      "cfr_fxa"
+    ]
+    methods: ["reach"]
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    description: >
+      This records whether a branch's targeting is satisfied for Messaging System
+      experiments. All qualified branch ID(s) will be recorded in the 'extra_keys'
+      for each active experiment, and the event 'value' will be the experiment ID
+    bug_numbers: [1471318]
+    notification_emails: ["ujet@mozilla.com"]
+    expiry_version: "never"
+    extra_keys:
+      branches: >
+        A semicolon separated string for all the qualified branch ID(s).
+        e.g. "control;variant_01;treatment_02".
+
 # This category contains event entries used for Telemetry tests.
 # They will not be sent out with any pings.
 telemetry.test:
