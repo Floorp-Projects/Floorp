@@ -28,7 +28,6 @@
 
 #include "gc/GC-inl.h"
 #include "gc/Marking-inl.h"
-#include "gc/WeakMap-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/JSFunction-inl.h"
 #include "vm/JSObject-inl.h"
@@ -84,16 +83,6 @@ bool Compartment::putWrapper(JSContext* cx, JSString* wrapped,
   }
 
   return true;
-}
-
-void Compartment::removeWrapper(js::ObjectWrapperMap::Ptr p) {
-  JSObject* key = p->key();
-  JSObject* value = p->value().unbarrieredGet();
-  if (js::gc::detail::GetDelegate(value) == key) {
-    key->zone()->delegatePreWriteBarrier(value, key);
-  }
-
-  crossCompartmentObjectWrappers.remove(p);
 }
 
 static JSString* CopyStringPure(JSContext* cx, JSString* str) {
