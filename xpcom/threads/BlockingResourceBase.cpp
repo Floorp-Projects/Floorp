@@ -521,7 +521,13 @@ CVStatus OffTheBooksCondVar::Wait(TimeDuration aDuration) {
   mLock->mOwningThread = nullptr;
 
   // give up mutex until we're back from Wait()
-  CVStatus status = mImpl.wait_for(*mLock, aDuration);
+  CVStatus status;
+  {
+#  if defined(MOZILLA_INTERNAL_API)
+    AUTO_PROFILER_THREAD_SLEEP;
+#  endif
+    status = mImpl.wait_for(*mLock, aDuration);
+  }
 
   // restore saved state
   mLock->SetAcquisitionState(savedAcquisitionState);
