@@ -275,14 +275,47 @@ void VRDisplayClient::GamepadMappingForWebVR(
       aControllerState.pose.orientation[3] = quat.w;
       break;
     }
-    case VRControllerType::OculusGo:
+    case VRControllerType::OculusGo: {
       aControllerState.buttonPressed =
           ShiftButtonBitForNewSlot(0, 2) | ShiftButtonBitForNewSlot(1, 0);
       aControllerState.buttonTouched = ShiftButtonBitForNewSlot(0, 2, true) |
                                        ShiftButtonBitForNewSlot(1, 0, true);
       aControllerState.numButtons = 2;
       aControllerState.numAxes = 2;
+
+      static Matrix4x4 goTransform;
+      Matrix4x4 originalMtx;
+
+      if (goTransform.IsIdentity()) {
+        goTransform.RotateX(-0.60f);
+        goTransform.Inverse();
+      }
+      gfx::Quaternion quat(aControllerState.pose.orientation[0],
+                           aControllerState.pose.orientation[1],
+                           aControllerState.pose.orientation[2],
+                           aControllerState.pose.orientation[3]);
+      // We need to invert its quaternion here because we did an invertion
+      // in FxR OculusVR delegate.
+      originalMtx.SetRotationFromQuaternion(quat.Invert());
+      originalMtx._41 = aControllerState.pose.position[0];
+      originalMtx._42 = aControllerState.pose.position[1];
+      originalMtx._43 = aControllerState.pose.position[2];
+      originalMtx = goTransform * originalMtx;
+
+      gfx::Point3D pos, scale;
+      originalMtx.Decompose(pos, quat, scale);
+
+      quat.Invert();
+      aControllerState.pose.position[0] = pos.x;
+      aControllerState.pose.position[1] = pos.y;
+      aControllerState.pose.position[2] = pos.z;
+
+      aControllerState.pose.orientation[0] = quat.x;
+      aControllerState.pose.orientation[1] = quat.y;
+      aControllerState.pose.orientation[2] = quat.z;
+      aControllerState.pose.orientation[3] = quat.w;
       break;
+    }
     case VRControllerType::OculusTouch:
       aControllerState.buttonPressed =
           ShiftButtonBitForNewSlot(0, 3) | ShiftButtonBitForNewSlot(1, 0) |
