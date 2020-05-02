@@ -3599,6 +3599,9 @@ SearchService.prototype = {
       case "idle": {
         this.idleService.removeIdleObserver(this, REINIT_IDLE_TIME_SEC);
         this._queuedIdle = false;
+        SearchUtils.log(
+          "Reloading engines after idle due to configuration change"
+        );
         this._maybeReloadEngines().catch(Cu.reportError);
         break;
       }

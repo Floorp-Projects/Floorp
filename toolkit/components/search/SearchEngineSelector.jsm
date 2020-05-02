@@ -20,9 +20,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const USER_LOCALE = "$USER_LOCALE";
 
-function log(str) {
-  SearchUtils.log("SearchEngineSelector " + str + "\n");
-}
+XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
+  return console.createInstance({
+    prefix: "SearchEngineSelector",
+    maxLogLevel: SearchUtils.loggingEnabled ? "Debug" : "Warn",
+  });
+});
 
 function getAppInfo(key) {
   let value = null;
@@ -154,7 +157,7 @@ class SearchEngineSelector {
    */
   _onConfigurationUpdated({ data: { current } }) {
     this._configuration = current;
-
+    logConsole.debug("Search configuration updated remotely");
     if (this._changeListener) {
       this._changeListener();
     }
@@ -177,8 +180,8 @@ class SearchEngineSelector {
     let cohort = Services.prefs.getCharPref("browser.search.cohort", null);
     let name = getAppInfo("name");
     let version = getAppInfo("version");
-    log(
-      `fetchEngineConfiguration ${region}:${locale}:${channel}:${distroID}:${cohort}:${name}:${version}`
+    logConsole.debug(
+      `fetchEngineConfiguration ${locale}:${region}:${channel}:${distroID}:${cohort}:${name}:${version}`
     );
     let engines = [];
     const lcLocale = locale.toLowerCase();
@@ -295,7 +298,7 @@ class SearchEngineSelector {
     }
 
     if (SearchUtils.loggingEnabled) {
-      log(
+      logConsole.debug(
         "fetchEngineConfiguration: " +
           result.engines.map(e => e.webExtension.id)
       );
