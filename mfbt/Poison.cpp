@@ -123,8 +123,8 @@ static uintptr_t GetDesiredRegionSize() { return sysconf(_SC_PAGESIZE); }
 
 #endif  // system dependencies
 
-static_assert(sizeof(uintptr_t) == 4 || sizeof(uintptr_t) == 8, "");
-static_assert(sizeof(uintptr_t) == sizeof(void*), "");
+static_assert((sizeof(uintptr_t) == 4 || sizeof(uintptr_t) == 8) &&
+              (sizeof(uintptr_t) == sizeof(void*)));
 
 static uintptr_t ReservePoisonArea(uintptr_t rgnsize) {
   if (sizeof(uintptr_t) == 8) {
