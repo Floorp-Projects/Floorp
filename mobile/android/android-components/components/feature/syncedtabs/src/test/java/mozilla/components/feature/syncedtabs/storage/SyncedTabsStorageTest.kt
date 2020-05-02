@@ -1,11 +1,16 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ *  License, v. 2.0. If a copy of the MPL was not distributed with this
+ *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.syncedtabs
+package mozilla.components.feature.syncedtabs.storage
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
@@ -55,7 +60,11 @@ class SyncedTabsStorageTest {
 
     @Test
     fun `listens to browser store changes and stores its state`() = runBlocking {
-        val feature = SyncedTabsStorage(accountManager, store, tabsStorage)
+        val feature = SyncedTabsStorage(
+            accountManager,
+            store,
+            tabsStorage
+        )
         feature.start()
         // This action won't change the state, but will run the flow.
         store.dispatch(TabListAction.RemoveAllPrivateTabsAction)
@@ -68,7 +77,11 @@ class SyncedTabsStorageTest {
 
     @Test
     fun `stops listening to browser store changes on stop()`() = runBlocking {
-        val feature = SyncedTabsStorage(accountManager, store, tabsStorage)
+        val feature = SyncedTabsStorage(
+            accountManager,
+            store,
+            tabsStorage
+        )
         feature.start()
         // Run the flow.
         store.dispatch(TabListAction.RemoveAllPrivateTabsAction)
@@ -85,7 +98,13 @@ class SyncedTabsStorageTest {
 
     @Test
     fun `getSyncedTabs matches tabs with FxA devices`() = runBlocking {
-        val feature = spy(SyncedTabsStorage(accountManager, store, tabsStorage))
+        val feature = spy(
+            SyncedTabsStorage(
+                accountManager,
+                store,
+                tabsStorage
+            )
+        )
         val device1 = Device(
             id = "client1",
             displayName = "Foo Client",
@@ -124,14 +143,26 @@ class SyncedTabsStorageTest {
 
     @Test
     fun `getSyncedTabs returns empty list if syncClients() is null`() = runBlocking {
-        val feature = spy(SyncedTabsStorage(accountManager, store, tabsStorage))
+        val feature = spy(
+            SyncedTabsStorage(
+                accountManager,
+                store,
+                tabsStorage
+            )
+        )
         doReturn(null).`when`(feature).syncClients()
         assertEquals(emptyList<SyncedDeviceTabs>(), feature.getSyncedTabs())
     }
 
     @Test
     fun `syncClients returns clients if the account is set and constellation state is set too`() {
-        val feature = spy(SyncedTabsStorage(accountManager, store, tabsStorage))
+        val feature = spy(
+            SyncedTabsStorage(
+                accountManager,
+                store,
+                tabsStorage
+            )
+        )
         val account: OAuthAccount = mock()
         val constellation: DeviceConstellation = mock()
         val state: ConstellationState = mock()
@@ -154,7 +185,13 @@ class SyncedTabsStorageTest {
 
     @Test
     fun `syncClients returns null if the account is set but constellation state is null`() {
-        val feature = spy(SyncedTabsStorage(accountManager, store, tabsStorage))
+        val feature = spy(
+            SyncedTabsStorage(
+                accountManager,
+                store,
+                tabsStorage
+            )
+        )
         val account: OAuthAccount = mock()
         val constellation: DeviceConstellation = mock()
         whenever(accountManager.authenticatedAccount()).thenReturn(account)
@@ -165,7 +202,13 @@ class SyncedTabsStorageTest {
 
     @Test
     fun `syncClients returns null if the account is null`() {
-        val feature = spy(SyncedTabsStorage(accountManager, store, tabsStorage))
+        val feature = spy(
+            SyncedTabsStorage(
+                accountManager,
+                store,
+                tabsStorage
+            )
+        )
         whenever(accountManager.authenticatedAccount()).thenReturn(null)
         assertEquals(null, feature.syncClients())
     }

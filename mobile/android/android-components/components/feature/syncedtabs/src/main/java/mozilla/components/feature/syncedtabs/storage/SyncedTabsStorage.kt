@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.syncedtabs
+package mozilla.components.feature.syncedtabs.storage
 
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
@@ -28,7 +28,7 @@ class SyncedTabsStorage(
     private val accountManager: FxaAccountManager,
     private val store: BrowserStore,
     private val tabsStorage: RemoteTabsStorage = RemoteTabsStorage()
-) {
+) : SyncedTabsProvider {
     private var scope: CoroutineScope? = null
 
     /**
@@ -62,7 +62,7 @@ class SyncedTabsStorage(
     /**
      * Get the list of synced tabs.
      */
-    suspend fun getSyncedTabs(): List<SyncedDeviceTabs> {
+    override suspend fun getSyncedTabs(): List<SyncedDeviceTabs> {
         val otherDevices = syncClients() ?: return emptyList()
         return tabsStorage.getAll()
             .mapNotNull { (client, tabs) ->
