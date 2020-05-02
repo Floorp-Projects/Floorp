@@ -887,7 +887,7 @@ void APZCTesterBase::PinchWithPinchInputAndCheckStatus(
   PinchWithPinchInput(aTarget, aFocus, aFocus, aScale, &statuses);
 
   nsEventStatus expectedStatus = aShouldTriggerPinch
-                                     ? nsEventStatus_eConsumeNoDefault
+                                     ? nsEventStatus_eConsumeDoDefault
                                      : nsEventStatus_eIgnore;
   EXPECT_EQ(expectedStatus, statuses[0]);
   EXPECT_EQ(expectedStatus, statuses[1]);
