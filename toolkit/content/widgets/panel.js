@@ -10,7 +10,12 @@
   class MozPanel extends MozElements.MozElementMixin(XULPopupElement) {
     static get markup() {
       return `
-      <html:link rel="stylesheet" href="chrome://global/skin/arrowpanel.css"/>
+      <html:link rel="stylesheet" href="chrome://global/skin/global.css"/>
+      <html:style>
+        :host([orient=vertical]) .panel-arrowcontent {
+          -moz-box-orient: vertical;
+        }
+      </html:style>
       <vbox class="panel-arrowcontainer" flex="1">
         <box class="panel-arrowbox" part="arrowbox">
           <image class="panel-arrow" part="arrow"/>
@@ -68,12 +73,7 @@
       }
 
       if (!this.isArrowPanel) {
-        const stylesheet = document.createElement("link");
-        stylesheet.rel = "stylesheet";
-        stylesheet.href = "chrome://global/skin/popup.css";
-
-        const slot = document.createElement("slot");
-        this.shadowRoot.append(stylesheet, slot);
+        this.shadowRoot.appendChild(document.createElement("slot"));
       } else {
         this.shadowRoot.appendChild(this.constructor.fragment);
       }

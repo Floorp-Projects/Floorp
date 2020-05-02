@@ -5,7 +5,6 @@
 #include ../../shared/non-mac.jar.inc.mn
 
 toolkit.jar:
-* skin/classic/global/arrowpanel.css
   skin/classic/global/autocomplete.css
   skin/classic/global/button.css
   skin/classic/global/checkbox.css
@@ -19,7 +18,7 @@ toolkit.jar:
 * skin/classic/global/findBar.css
 * skin/classic/global/global.css
   skin/classic/global/netError.css
-  skin/classic/global/popup.css
+* skin/classic/global/popup.css
 * skin/classic/global/popupnotification.css
   skin/classic/global/printPageSetup.css
   skin/classic/global/richlistbox.css

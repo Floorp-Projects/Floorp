@@ -3,74 +3,110 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
-:host {
+menupopup,
+panel {
   -moz-appearance: menupopup;
   -moz-font-smoothing-background-color: -moz-mac-menupopup;
   background-color: Menu;
   color: MenuText;
 }
 
-:host(panel[titlebar]) {
-  -moz-appearance: none; /* to disable rounded corners */
+menupopup > menu > menupopup {
+  margin-top: -4px;
 }
 
-/* Scroll box */
-
-:host(:not(.in-menulist)) arrowscrollbox {
+.menupopup-arrowscrollbox {
   padding: 4px 0;
 }
 
-arrowscrollbox:not(:-moz-lwtheme)::part(scrollbutton-up),
-arrowscrollbox:not(:-moz-lwtheme)::part(scrollbutton-down) {
-  position: relative;
-  /* Here we're using a little magic.
-   * The arrow button is supposed to overlay the scrollbox, blocking
-   * everything under it from reaching the screen. However, the menu background
-   * is slightly transparent, so how can we block something completely without
-   * messing up the transparency? It's easy: The native theming of the
-   * "menuitem" appearance uses CGContextClearRect before drawing, which
-   * clears everything under it.
-   * Without help from native theming this effect wouldn't be achievable.
-   */
-  -moz-appearance: menuitem;
+panel[titlebar] {
+  -moz-appearance: none; /* to disable rounded corners */
 }
 
-arrowscrollbox:not(:-moz-lwtheme)::part(scrollbutton-up) {
-  margin-bottom: -16px;
+panel[type="arrow"] {
+  -moz-appearance: none;
+  background: transparent;
 }
 
-arrowscrollbox:not(:-moz-lwtheme)::part(scrollbutton-down) {
-  margin-top: -16px;
+panel[type="arrow"][side="top"],
+panel[type="arrow"][side="bottom"] {
+  margin-inline: -25px;
 }
 
-arrowscrollbox:not(:-moz-lwtheme)[scrolledtostart="true"]::part(scrollbutton-up),
-arrowscrollbox:not(:-moz-lwtheme)[scrolledtoend="true"]::part(scrollbutton-down) {
-  visibility: collapse;
+panel[type="arrow"][side="left"],
+panel[type="arrow"][side="right"] {
+  margin-block: -25px;
+}
+
+.panel-arrowcontent {
+  -moz-appearance: none;
+  -moz-font-smoothing-background-color: var(--arrowpanel-background);
+  background: var(--arrowpanel-background);
+  border-radius: var(--arrowpanel-border-radius);
+  box-shadow: 0 0 0 1px var(--arrowpanel-border-color);
+  color: var(--arrowpanel-color);
+  border: none;
+  padding: var(--arrowpanel-padding);
+  margin: 1px;
+}
+
+.panel-arrowcontent > html|slot {
+  /* propagate border-radius from arrowcontent to slotted children */
+  border-radius: inherit;
+}
+
+panel[type="arrow"].panel-no-padding::part(arrowcontent) {
+  padding: 0;
+  overflow: hidden; /* Don't let panel content overflow the border-radius */
+}
+
+:-moz-any(panel, menupopup)::part(arrow) {
+  -moz-context-properties: fill, stroke;
+  fill: var(--arrowpanel-background);
+  stroke: var(--arrowpanel-border-color);
+}
+
+:-moz-any(panel, menupopup)[side="top"]::part(arrow) {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
+  margin-inline: 16px;
+  margin-bottom: -1px;
+}
+
+:-moz-any(panel, menupopup)[side="bottom"]::part(arrow) {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
+  -moz-transform: scaleY(-1);
+  margin-inline: 16px;
+  margin-top: -1px;
+}
+
+:-moz-any(panel, menupopup)[side="left"]::part(arrow) {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.svg");
+  margin-block: 16px;
+  margin-right: -1px;
+}
+
+:-moz-any(panel, menupopup)[side="right"]::part(arrow) {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.svg");
+  transform: scaleX(-1);
+  margin-block: 16px;
+  margin-left: -1px;
 }
 
 /* rules for popups associated with menulists */
 
-:host(.in-menulist) {
+menulist > menupopup {
   min-width: 0;
   padding: 4px 0;
 }
 
-:host(.in-menulist:not([position])) {
+menulist > menupopup:not([position]) {
   margin-inline-start: -13px;
   margin-top: -2px;
 }
 
-:host([customoptionstyling="true"]) {
+menupopup[customoptionstyling="true"] {
   -moz-appearance: none;
   padding-block: 0;
-}
-
-:host(.in-menulist) arrowscrollbox::part(scrollbutton-up),
-:host(.in-menulist) arrowscrollbox::part(scrollbutton-down) {
-  display: none;
-}
-
-:host(.in-menulist) arrowscrollbox::part(scrollbox) {
-  overflow: auto;
 }
