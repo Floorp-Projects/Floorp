@@ -27,7 +27,8 @@ class RangeUpdater;
  */
 class DeleteRangeTransaction final : public EditAggregateTransaction {
  protected:
-  DeleteRangeTransaction(EditorBase& aEditorBase, nsRange& aRangeToDelete);
+  DeleteRangeTransaction(EditorBase& aEditorBase,
+                         const nsRange& aRangeToDelete);
 
  public:
   /**
@@ -37,7 +38,7 @@ class DeleteRangeTransaction final : public EditAggregateTransaction {
    * @param aRangeToDelete      The range to delete.
    */
   static already_AddRefed<DeleteRangeTransaction> Create(
-      EditorBase& aEditorBase, nsRange& aRangeToDelete) {
+      EditorBase& aEditorBase, const nsRange& aRangeToDelete) {
     RefPtr<DeleteRangeTransaction> transaction =
         new DeleteRangeTransaction(aEditorBase, aRangeToDelete);
     return transaction.forget();
