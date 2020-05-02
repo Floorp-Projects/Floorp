@@ -537,9 +537,7 @@ ParentLayerPoint PanGestureInput::UserMultipliedLocalPanDisplacement() const {
 }
 
 PinchGestureInput::PinchGestureInput()
-    : InputData(PINCHGESTURE_INPUT),
-      mType(PINCHGESTURE_START),
-      mHandledByAPZ(false) {}
+    : InputData(PINCHGESTURE_INPUT), mType(PINCHGESTURE_START) {}
 
 PinchGestureInput::PinchGestureInput(
     PinchGestureType aType, uint32_t aTime, TimeStamp aTimeStamp,
@@ -550,8 +548,7 @@ PinchGestureInput::PinchGestureInput(
       mFocusPoint(aFocusPoint),
       mScreenOffset(aScreenOffset),
       mCurrentSpan(aCurrentSpan),
-      mPreviousSpan(aPreviousSpan),
-      mHandledByAPZ(false) {}
+      mPreviousSpan(aPreviousSpan) {}
 
 bool PinchGestureInput::TransformToLocal(
     const ScreenToParentLayerMatrix4x4& aTransform) {
@@ -566,74 +563,6 @@ bool PinchGestureInput::TransformToLocal(
   }
   mLocalFocusPoint = *point;
   return true;
-}
-
-WidgetWheelEvent PinchGestureInput::ToWidgetWheelEvent(
-    nsIWidget* aWidget) const {
-  WidgetWheelEvent wheelEvent(true, eWheel, aWidget);
-  wheelEvent.mModifiers = this->modifiers | MODIFIER_CONTROL;
-  wheelEvent.mTime = mTime;
-  wheelEvent.mTimeStamp = mTimeStamp;
-  wheelEvent.mRefPoint = RoundedToInt(ViewAs<LayoutDevicePixel>(
-      mFocusPoint,
-      PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
-  wheelEvent.mButtons = 0;
-  wheelEvent.mFlags.mHandledByAPZ = mHandledByAPZ;
-  wheelEvent.mDeltaMode = WheelEvent_Binding::DOM_DELTA_PIXEL;
-
-#if defined(OS_MACOSX)
-  // This converts the pinch gesture value to a fake wheel event that has the
-  // control key pressed so that pages can implement custom pinch gesture
-  // handling. It may seem strange that this doesn't use a wheel event with
-  // the deltaZ property set, but this matches Chrome's behavior as described
-  // at https://code.google.com/p/chromium/issues/detail?id=289887
-  //
-  // The intent of the formula below is to produce numbers similar to Chrome's
-  // implementation of this feature. Chrome implements deltaY using the formula
-  // "-100 * log(1 + [event magnification])" which is unfortunately incorrect.
-  // All deltas for a single pinch gesture should sum to 0 if the start and end
-  // of a pinch gesture end up in the same place. This doesn't happen in Chrome
-  // because they followed Apple's misleading documentation, which implies that
-  // "1 + [event magnification]" is the scale factor. The scale factor is
-  // instead "pow(ratio, [event magnification])" so "[event magnification]" is
-  // already in log space.
-  //
-  // The multiplication by the backing scale factor below counteracts the
-  // division by the backing scale factor in WheelEvent.
-
-  // We want to set deltaY to |-100.0 * M * GetDefaultScaleInternal()| where M
-  // is [event magnification] but [event magnification] is only available in the
-  // macOS widget code so we have to reverse engineer from mCurrentSpan and
-  // mPreviousSpan (which are derived from [event magnification]) to get it.
-  // Specifically, we know |mCurrentSpan == 100.0| and |mPreviousSpan == 100.0 *
-  // (1.0 - M)|. We can calculate deltaY by solving the mPreviousSpan equation
-  // for M in terms of mPreviousSpan and plugging that into to the formula for
-  // deltaY.
-  wheelEvent.mDeltaY = (mPreviousSpan - 100.0) *
-                       (aWidget ? aWidget->GetDefaultScaleInternal() : 1.f);
-#else
-  // This calculation is based on what the Windows widget code does.
-  // Specifically, it creates a PinchGestureInput with |mCurrentSpan == 100.0 *
-  // currentScale| and |mPreviousSpan == 100.0 * lastScale| where currentScale
-  // is the scale from the current OS event and lastScale is the scale when the
-  // previous OS event happened. It then seems reasonable to calculate |M =
-  // currentScale / lastScale| and use the same formula as the macOS code
-  // (|-100.0 * M * GetDefaultScaleInternal()|).
-
-  // XXX When we write the code for other platforms to do the same we'll need to
-  // make sure this calculation is reasonable.
-
-  if (mPreviousSpan != 0.f) {
-    wheelEvent.mDeltaY = -100.0 * (mCurrentSpan / mPreviousSpan) *
-                         (aWidget ? aWidget->GetDefaultScaleInternal() : 1.f);
-  } else {
-    // Not sure what makes sense here, this seems reasonable.
-    wheelEvent.mDeltaY = -100.0 * mCurrentSpan *
-                         (aWidget ? aWidget->GetDefaultScaleInternal() : 1.f);
-  }
-#endif
-
-  return wheelEvent;
 }
 
 TapGestureInput::TapGestureInput()
