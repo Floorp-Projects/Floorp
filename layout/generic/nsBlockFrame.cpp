@@ -624,11 +624,11 @@ nscoord nsBlockFrame::GetCaretBaseline() const {
 
   if (!mLines.empty()) {
     ConstLineIterator line = LinesBegin();
-    const nsLineBox* firstLine = line;
-    for (nsIFrame* f = firstLine->mFirstChild; f; f = f->GetNextInFlow()) {
-      if (!f->IsEmpty()) {
-        return bp.top + f->GetCaretBaseline();
+    if (!line->IsEmpty()) {
+      if (line->IsBlock()) {
+        return bp.top + line->mFirstChild->GetCaretBaseline();
       }
+      return line->BStart() + line->GetLogicalAscent();
     }
   }
 
