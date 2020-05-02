@@ -226,16 +226,6 @@ panel {
 }
 
 menupopup,
-panel:not([type="arrow"]) {
-  /* This should be in popup.css, but the stylesheet loads after the custom
-     element initializes which is too late for widget code. */
-%ifdef XP_WIN
-  background: Menu;
-  border: 1px solid ThreeDShadow;
-%endif
-}
-
-menupopup,
 panel,
 tooltip {
   display: -moz-popup;
@@ -313,6 +303,10 @@ tooltip {
     transform: none;
   }
 %endif
+}
+
+panel[type="arrow"][animating] {
+  pointer-events: none;
 }
 
 /******** grid **********/
