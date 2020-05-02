@@ -521,8 +521,8 @@ interface GPUColorWrite {
 dictionary GPUColorStateDescriptor {
     required GPUTextureFormat format;
 
-    GPUBlendDescriptor alpha;
-    GPUBlendDescriptor color;
+    GPUBlendDescriptor alphaBlend = {};
+    GPUBlendDescriptor colorBlend = {};
     GPUColorWriteFlags writeMask = 0xF;
 };
 
