@@ -186,8 +186,6 @@ def fill_template(config, tasks):
                 'docker-in-docker': True,
                 'taskcluster-proxy': True,
                 'max-run-time': 7200,
-                # Retry on apt-get errors.
-                'retry-exit-status': [100],
             },
         }
         # Retry for 'funsize-update-generator' if exit status code is -1
