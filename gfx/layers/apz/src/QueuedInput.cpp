@@ -28,6 +28,10 @@ QueuedInput::QueuedInput(const PanGestureInput& aInput,
                          PanGestureBlockState& aBlock)
     : mInput(MakeUnique<PanGestureInput>(aInput)), mBlock(&aBlock) {}
 
+QueuedInput::QueuedInput(const PinchGestureInput& aInput,
+                         PinchGestureBlockState& aBlock)
+    : mInput(MakeUnique<PinchGestureInput>(aInput)), mBlock(&aBlock) {}
+
 QueuedInput::QueuedInput(const KeyboardInput& aInput,
                          KeyboardBlockState& aBlock)
     : mInput(MakeUnique<KeyboardInput>(aInput)), mBlock(&aBlock) {}
