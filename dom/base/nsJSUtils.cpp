@@ -501,6 +501,27 @@ nsresult nsJSUtils::CompileModule(JSContext* aCx,
                          aModule);
 }
 
+nsresult nsJSUtils::InitModuleSourceElement(JSContext* aCx,
+                                            JS::Handle<JSObject*> aModule,
+                                            nsIScriptElement* aElement) {
+  JS::Rooted<JS::Value> value(aCx);
+  nsresult rv = nsContentUtils::WrapNative(aCx, aElement, &value,
+                                           /* aAllowWrapping = */ true);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  MOZ_ASSERT(value.isObject());
+  JS::Rooted<JSObject*> object(aCx, &value.toObject());
+
+  JS::Rooted<JSScript*> script(aCx, JS::GetModuleScript(aModule));
+  if (!JS::InitScriptSourceElement(aCx, script, object, nullptr)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
 nsresult nsJSUtils::ModuleInstantiate(JSContext* aCx,
                                       JS::Handle<JSObject*> aModule) {
   AUTO_PROFILER_LABEL("nsJSUtils::ModuleInstantiate", JS);

@@ -1607,6 +1607,7 @@ ScriptSourceObject* ScriptSourceObject::createInternal(JSContext* cx,
   // The slots below should either be populated by a call to initFromOptions or,
   // if this is a non-canonical ScriptSourceObject, they are unused. Poison
   // them.
+  obj->initReservedSlot(ELEMENT_SLOT, MagicValue(JS_GENERIC_MAGIC));
   obj->initReservedSlot(ELEMENT_PROPERTY_SLOT, MagicValue(JS_GENERIC_MAGIC));
   obj->initReservedSlot(INTRODUCTION_SCRIPT_SLOT, MagicValue(JS_GENERIC_MAGIC));
 
@@ -1675,6 +1676,7 @@ bool ScriptSourceObject::initFromOptions(
     const ReadOnlyCompileOptions& options) {
   cx->releaseCheck(source);
   MOZ_ASSERT(source->isCanonical());
+  MOZ_ASSERT(source->getReservedSlot(ELEMENT_SLOT).isMagic(JS_GENERIC_MAGIC));
   MOZ_ASSERT(
       source->getReservedSlot(ELEMENT_PROPERTY_SLOT).isMagic(JS_GENERIC_MAGIC));
   MOZ_ASSERT(source->getReservedSlot(INTRODUCTION_SCRIPT_SLOT)
@@ -1684,8 +1686,9 @@ bool ScriptSourceObject::initFromOptions(
     return false;
   }
 
+  RootedObject element(cx, options.element());
   RootedString elementAttributeName(cx, options.elementAttributeName());
-  if (!initElementProperties(cx, source, elementAttributeName)) {
+  if (!initElementProperties(cx, source, element, elementAttributeName)) {
     return false;
   }
 
@@ -1701,18 +1704,11 @@ bool ScriptSourceObject::initFromOptions(
   }
   source->setReservedSlot(INTRODUCTION_SCRIPT_SLOT, introductionScript);
 
-  RootedValue privateValue(cx, UndefinedValue());
-  if (options.privateValue().isUndefined()) {
-    // Set the private value to that of the script or module that this source is
-    // part of, if any.
-    if (JSScript* script = options.scriptOrModule()) {
-      privateValue = script->sourceObject()->canonicalPrivate();
-    }
-  } else {
-    privateValue = options.privateValue();
-  }
-
-  if (!privateValue.isUndefined()) {
+  // Set the private value to that of the script or module that this source is
+  // part of, if any.
+  RootedValue privateValue(cx);
+  if (JSScript* script = options.scriptOrModule()) {
+    privateValue = script->sourceObject()->canonicalPrivate();
     if (!JS_WrapValue(cx, &privateValue)) {
       return false;
     }
@@ -1725,8 +1721,14 @@ bool ScriptSourceObject::initFromOptions(
 /* static */
 bool ScriptSourceObject::initElementProperties(JSContext* cx,
                                                HandleScriptSourceObject source,
+                                               HandleObject element,
                                                HandleString elementAttrName) {
   MOZ_ASSERT(source->isCanonical());
+
+  RootedValue elementValue(cx, ObjectOrNullValue(element));
+  if (!cx->compartment()->wrap(cx, &elementValue)) {
+    return false;
+  }
 
   RootedValue nameValue(cx);
   if (elementAttrName) {
@@ -1736,6 +1738,7 @@ bool ScriptSourceObject::initElementProperties(JSContext* cx,
     return false;
   }
 
+  source->setReservedSlot(ELEMENT_SLOT, elementValue);
   source->setReservedSlot(ELEMENT_PROPERTY_SLOT, nameValue);
 
   return true;
@@ -1750,16 +1753,6 @@ void ScriptSourceObject::setPrivate(JSRuntime* rt, const Value& value) {
   rt->releaseScriptPrivate(prevValue);
   setReservedSlot(PRIVATE_SLOT, value);
   rt->addRefScriptPrivate(value);
-}
-
-JSObject* ScriptSourceObject::unwrappedElement(JSContext* cx) const {
-  JS::RootedValue privateValue(cx, unwrappedCanonical()->canonicalPrivate());
-  if (privateValue.isUndefined()) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(cx->runtime()->getElementCallback);
-  return (*cx->runtime()->getElementCallback)(cx, privateValue);
 }
 
 class ScriptSource::LoadSourceMatcher {

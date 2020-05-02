@@ -378,17 +378,15 @@ bool DebuggerSource::CallData::getDisplayURL() {
 }
 
 struct DebuggerSourceGetElementMatcher {
-  JSContext* mCx = nullptr;
-  explicit DebuggerSourceGetElementMatcher(JSContext* cx_) : mCx(cx_) {}
   using ReturnType = JSObject*;
   ReturnType match(HandleScriptSourceObject sourceObject) {
-    return sourceObject->unwrappedElement(mCx);
+    return sourceObject->unwrappedElement();
   }
   ReturnType match(Handle<WasmInstanceObject*> wasmInstance) { return nullptr; }
 };
 
 bool DebuggerSource::CallData::getElement() {
-  DebuggerSourceGetElementMatcher matcher(cx);
+  DebuggerSourceGetElementMatcher matcher;
   if (JSObject* element = referent.match(matcher)) {
     args.rval().setObjectOrNull(element);
     if (!Debugger::fromChildJSObject(obj)->wrapDebuggeeValue(cx, args.rval())) {
