@@ -2049,23 +2049,10 @@ void nsChildView::ReportSwipeStarted(uint64_t aInputBlockId, bool aStartSwipe) {
 }
 
 nsEventStatus nsChildView::DispatchAPZInputEvent(InputData& aEvent) {
-  APZEventResult result;
-
   if (mAPZC) {
-    result = mAPZC->InputBridge()->ReceiveInputEvent(aEvent);
+    return mAPZC->InputBridge()->ReceiveInputEvent(aEvent).mStatus;
   }
-
-  if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
-    return result.mStatus;
-  }
-
-  if (aEvent.mInputType == PINCHGESTURE_INPUT) {
-    PinchGestureInput& pinchEvent = aEvent.AsPinchGestureInput();
-    WidgetWheelEvent wheelEvent = pinchEvent.ToWidgetWheelEvent(this);
-    ProcessUntransformedAPZEvent(&wheelEvent, result);
-  }
-
-  return result.mStatus;
+  return nsEventStatus_eIgnore;
 }
 
 void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTriggerSwipe) {
@@ -2804,53 +2791,53 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
     return;
   }
 
-  NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(anEvent, [self window]);
-  ScreenPoint position =
-      ViewAs<ScreenPixel>([self convertWindowCoordinatesRoundDown:locationInWindow],
-                          PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
-  ExternalPoint screenOffset =
-      ViewAs<ExternalPixel>(mGeckoChild->WidgetToScreenOffset(),
-                            PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
-
-  PRIntervalTime eventIntervalTime = PR_IntervalNow();
-  TimeStamp eventTimeStamp = nsCocoaUtils::GetEventTimeStamp([anEvent timestamp]);
-  NSEventPhase eventPhase = [anEvent phase];
-  PinchGestureInput::PinchGestureType pinchGestureType;
-
-  switch (eventPhase) {
-    case NSEventPhaseBegan: {
-      pinchGestureType = PinchGestureInput::PINCHGESTURE_START;
-      break;
-    }
-    case NSEventPhaseChanged: {
-      pinchGestureType = PinchGestureInput::PINCHGESTURE_SCALE;
-      break;
-    }
-    case NSEventPhaseEnded: {
-      pinchGestureType = PinchGestureInput::PINCHGESTURE_END;
-      break;
-    }
-    default: {
-      NS_WARNING("Unexpected phase for pinch gesture event.");
-      return;
-    }
-  }
-
-  PinchGestureInput event{pinchGestureType,
-                          eventIntervalTime,
-                          eventTimeStamp,
-                          screenOffset,
-                          position,
-                          100.0,
-                          100.0 * (1.0 - [anEvent magnification]),
-                          nsCocoaUtils::ModifiersForEvent(anEvent)};
-
-  if (pinchGestureType == PinchGestureInput::PINCHGESTURE_END) {
-    event.mFocusPoint = PinchGestureInput::BothFingersLifted<ScreenPixel>();
-  }
-
   // FIXME: bug 1525793 -- this may need to handle zooming or not on a per-document basis.
   if (StaticPrefs::apz_allow_zooming()) {
+    NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(anEvent, [self window]);
+    ScreenPoint position =
+        ViewAs<ScreenPixel>([self convertWindowCoordinatesRoundDown:locationInWindow],
+                            PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
+    ExternalPoint screenOffset =
+        ViewAs<ExternalPixel>(mGeckoChild->WidgetToScreenOffset(),
+                              PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
+
+    PRIntervalTime eventIntervalTime = PR_IntervalNow();
+    TimeStamp eventTimeStamp = nsCocoaUtils::GetEventTimeStamp([anEvent timestamp]);
+    NSEventPhase eventPhase = [anEvent phase];
+    PinchGestureInput::PinchGestureType pinchGestureType;
+
+    switch (eventPhase) {
+      case NSEventPhaseBegan: {
+        pinchGestureType = PinchGestureInput::PINCHGESTURE_START;
+        break;
+      }
+      case NSEventPhaseChanged: {
+        pinchGestureType = PinchGestureInput::PINCHGESTURE_SCALE;
+        break;
+      }
+      case NSEventPhaseEnded: {
+        pinchGestureType = PinchGestureInput::PINCHGESTURE_END;
+        break;
+      }
+      default: {
+        NS_WARNING("Unexpected phase for pinch gesture event.");
+        return;
+      }
+    }
+
+    PinchGestureInput event{pinchGestureType,
+                            eventIntervalTime,
+                            eventTimeStamp,
+                            screenOffset,
+                            position,
+                            100.0,
+                            100.0 * (1.0 - [anEvent magnification]),
+                            nsCocoaUtils::ModifiersForEvent(anEvent)};
+
+    if (pinchGestureType == PinchGestureInput::PINCHGESTURE_END) {
+      event.mFocusPoint = PinchGestureInput::BothFingersLifted<ScreenPixel>();
+    }
+
     mGeckoChild->DispatchAPZInputEvent(event);
   } else {
     if (!anEvent || [self beginOrEndGestureForEventPhase:anEvent]) {
@@ -2878,10 +2865,29 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
         return;
     }
 
-    // See PinchGestureInput::ToWidgetWheelEvent for a lengthy explanation of the values we put into
-    // the WidgetWheelEvent that used to be here.
-
-    WidgetWheelEvent geckoWheelEvent(event.ToWidgetWheelEvent(mGeckoChild));
+    // This sends the pinch gesture value as a fake wheel event that has the
+    // control key pressed so that pages can implement custom pinch gesture
+    // handling. It may seem strange that this doesn't use a wheel event with
+    // the deltaZ property set, but this matches Chrome's behavior as described
+    // at https://code.google.com/p/chromium/issues/detail?id=289887
+    //
+    // The intent of the formula below is to produce numbers similar to Chrome's
+    // implementation of this feature. Chrome implements deltaY using the formula
+    // "-100 * log(1 + [event magnification])" which is unfortunately incorrect.
+    // All deltas for a single pinch gesture should sum to 0 if the start and end
+    // of a pinch gesture end up in the same place. This doesn't happen in Chrome
+    // because they followed Apple's misleading documentation, which implies that
+    // "1 + [event magnification]" is the scale factor. The scale factor is
+    // instead "pow(ratio, [event magnification])" so "[event magnification]" is
+    // already in log space.
+    //
+    // The multiplication by the backing scale factor below counteracts the
+    // division by the backing scale factor in WheelEvent.
+    WidgetWheelEvent geckoWheelEvent(true, EventMessage::eWheel, mGeckoChild);
+    [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoWheelEvent];
+    double backingScale = mGeckoChild->BackingScaleFactor();
+    geckoWheelEvent.mDeltaY = -100.0 * [anEvent magnification] * backingScale;
+    geckoWheelEvent.mModifiers |= MODIFIER_CONTROL;
     mGeckoChild->DispatchWindowEvent(geckoWheelEvent);
 
     // If the fake wheel event wasn't stopped, then send a normal magnify event.

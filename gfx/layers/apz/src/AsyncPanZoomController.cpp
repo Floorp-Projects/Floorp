@@ -5026,11 +5026,6 @@ PanGestureBlockState* AsyncPanZoomController::GetCurrentPanGestureBlock()
   return GetInputQueue()->GetCurrentPanGestureBlock();
 }
 
-PinchGestureBlockState* AsyncPanZoomController::GetCurrentPinchGestureBlock()
-    const {
-  return GetInputQueue()->GetCurrentPinchGestureBlock();
-}
-
 void AsyncPanZoomController::ResetTouchInputState() {
   MultiTouchInput cancel(MultiTouchInput::MULTITOUCH_CANCEL, 0,
                          TimeStamp::Now(), 0);

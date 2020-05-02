@@ -1335,7 +1335,6 @@ class AsyncPanZoomController {
   bool HasReadyTouchBlock() const;
 
   PanGestureBlockState* GetCurrentPanGestureBlock() const;
-  PinchGestureBlockState* GetCurrentPinchGestureBlock() const;
 
  private:
   /* ===================================================================
