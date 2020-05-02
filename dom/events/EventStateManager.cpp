@@ -5187,7 +5187,7 @@ nsresult EventStateManager::HandleMiddleClickPaste(
 
   // The selection may have been modified during reflow.  Therefore, we
   // should adjust event target to pass IsAcceptableInputEvent().
-  nsRange* range = selection->GetRangeAt(0);
+  const nsRange* range = selection->GetRangeAt(0);
   if (!range) {
     return NS_OK;
   }
