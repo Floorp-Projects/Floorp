@@ -582,8 +582,6 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">Izbrisan %1$s</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">Brisanje izbranih zaznamkov</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">RAZVELJAVI</string>
 
@@ -861,6 +859,8 @@
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_installed">Preklopite na novi Nightly</string>
 
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly se je preselil</string>
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_not_installed">Prenesite novi Nigthly</string>
 
