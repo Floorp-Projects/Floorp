@@ -2101,7 +2101,7 @@ nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
     if (NS_WARN_IF(!SelectionRefPtr()->RangeCount())) {
       return NS_OK;
     }
-    RefPtr<nsRange> firstRange = SelectionRefPtr()->GetRangeAt(0);
+    RefPtr<const nsRange> firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange) ||
         NS_WARN_IF(!firstRange->GetStartContainer())) {
       return NS_OK;

@@ -35,7 +35,7 @@ struct RangeItem final {
   ~RangeItem() = default;
 
  public:
-  void StoreRange(nsRange& aRange);
+  void StoreRange(const nsRange& aRange);
   void StoreRange(const EditorRawDOMPoint& aStartPoint,
                   const EditorRawDOMPoint& aEndPoint) {
     MOZ_ASSERT(aStartPoint.IsSet());
