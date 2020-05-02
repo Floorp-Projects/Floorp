@@ -485,4 +485,4 @@ winchecksec:
     fetch:
         type: git
         repo: https://github.com/trailofbits/winchecksec/
-        revision: 8143f621359616f16eaa265e22d10a7962536634
+        revision: 93ffe67dbfc757bf6f440d80b8acf88e652ed60a
