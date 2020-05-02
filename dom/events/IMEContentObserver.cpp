@@ -267,7 +267,7 @@ bool IMEContentObserver::InitWithEditor(nsPresContext* aPresContext,
     return false;
   }
 
-  if (nsRange* selRange = mSelection->GetRangeAt(0)) {
+  if (const nsRange* selRange = mSelection->GetRangeAt(0)) {
     if (NS_WARN_IF(!selRange->GetStartContainer())) {
       return false;
     }
