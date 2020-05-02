@@ -36,7 +36,6 @@
 #endif
 #include "js/AllocationRecording.h"
 #include "js/BuildId.h"  // JS::BuildIdOp
-#include "js/CompilationAndEvaluation.h"
 #include "js/Debug.h"
 #include "js/experimental/SourceHook.h"  // js::SourceHook
 #include "js/GCVector.h"
@@ -329,8 +328,6 @@ struct JSRuntime {
   /* Call this to accumulate use counter data. */
   js::MainThreadData<JSSetUseCounterCallback> useCounterCallback;
 
-  js::MainThreadData<JSGetElementCallback> getElementCallback;
-
  public:
   // Accumulates data for Firefox telemetry. |id| is the ID of a JS_TELEMETRY_*
   // histogram. |key| provides an additional key to identify the histogram.
@@ -339,8 +336,6 @@ struct JSRuntime {
 
   void setTelemetryCallback(JSRuntime* rt,
                             JSAccumulateTelemetryDataCallback callback);
-
-  void setElementCallback(JSRuntime* rt, JSGetElementCallback callback);
 
   // Sets the use counter for a specific feature, measuring the presence or
   // absence of usage of a feature on a specific web page and document which

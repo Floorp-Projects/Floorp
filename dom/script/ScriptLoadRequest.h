@@ -9,7 +9,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/CORSMode.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
@@ -28,7 +27,7 @@ namespace dom {
 class ModuleLoadRequest;
 class ScriptLoadRequestList;
 
-enum class ScriptKind { eClassic, eModule, eEvent };
+enum class ScriptKind { eClassic, eModule };
 
 /*
  * Some options used when fetching script resources. This only loosely
@@ -46,13 +45,14 @@ class ScriptFetchOptions {
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(ScriptFetchOptions)
 
   ScriptFetchOptions(mozilla::CORSMode aCORSMode,
-                     enum ReferrerPolicy aReferrerPolicy, Element* aElement,
+                     enum ReferrerPolicy aReferrerPolicy,
+                     nsIScriptElement* aElement,
                      nsIPrincipal* aTriggeringPrincipal);
 
   const mozilla::CORSMode mCORSMode;
   const enum ReferrerPolicy mReferrerPolicy;
   bool mIsPreload;
-  nsCOMPtr<Element> mElement;
+  nsCOMPtr<nsIScriptElement> mElement;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
 };
 
@@ -86,15 +86,15 @@ class ScriptLoadRequest
 
   void FireScriptAvailable(nsresult aResult) {
     bool isInlineClassicScript = mIsInline && !IsModuleRequest();
-    GetScriptElement()->ScriptAvailable(aResult, GetScriptElement(),
-                                        isInlineClassicScript, mURI, mLineNo);
+    Element()->ScriptAvailable(aResult, Element(), isInlineClassicScript, mURI,
+                               mLineNo);
   }
   void FireScriptEvaluated(nsresult aResult) {
-    GetScriptElement()->ScriptEvaluated(aResult, GetScriptElement(), mIsInline);
+    Element()->ScriptEvaluated(aResult, Element(), mIsInline);
   }
 
   bool IsPreload() const {
-    MOZ_ASSERT_IF(mFetchOptions->mIsPreload, !GetScriptElement());
+    MOZ_ASSERT_IF(mFetchOptions->mIsPreload, !Element());
     return mFetchOptions->mIsPreload;
   }
 
@@ -238,18 +238,14 @@ class ScriptLoadRequest
   enum ReferrerPolicy ReferrerPolicy() const {
     return mFetchOptions->mReferrerPolicy;
   }
-  nsIScriptElement* GetScriptElement() const {
-    nsCOMPtr<nsIScriptElement> scriptElement =
-        do_QueryInterface(mFetchOptions->mElement);
-    return scriptElement;
-  }
+  nsIScriptElement* Element() const { return mFetchOptions->mElement; }
   nsIPrincipal* TriggeringPrincipal() const {
     return mFetchOptions->mTriggeringPrincipal;
   }
 
   // Make this request a preload (speculative) request.
   void SetIsPreloadRequest() {
-    MOZ_ASSERT(!GetScriptElement());
+    MOZ_ASSERT(!Element());
     MOZ_ASSERT(!IsPreload());
     mFetchOptions->mIsPreload = true;
   }
@@ -257,14 +253,14 @@ class ScriptLoadRequest
   // Make a preload request into an actual load request for the given element.
   void SetIsLoadRequest(nsIScriptElement* aElement) {
     MOZ_ASSERT(aElement);
-    MOZ_ASSERT(!GetScriptElement());
+    MOZ_ASSERT(!Element());
     MOZ_ASSERT(IsPreload());
-    mFetchOptions->mElement = do_QueryInterface(aElement);
+    mFetchOptions->mElement = aElement;
     mFetchOptions->mIsPreload = false;
   }
 
   FromParser GetParserCreated() const {
-    nsIScriptElement* element = GetScriptElement();
+    nsIScriptElement* element = Element();
     if (!element) {
       return NOT_FROM_PARSER;
     }

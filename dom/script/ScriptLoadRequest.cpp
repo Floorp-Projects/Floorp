@@ -29,7 +29,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ScriptFetchOptions, Release)
 
 ScriptFetchOptions::ScriptFetchOptions(mozilla::CORSMode aCORSMode,
                                        ReferrerPolicy aReferrerPolicy,
-                                       Element* aElement,
+                                       nsIScriptElement* aElement,
                                        nsIPrincipal* aTriggeringPrincipal)
     : mCORSMode(aCORSMode),
       mReferrerPolicy(aReferrerPolicy),

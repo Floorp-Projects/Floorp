@@ -303,7 +303,6 @@ void AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
   mOldWarningReporter.emplace(JS::GetWarningReporter(aCx));
 
   JS::SetWarningReporter(aCx, WarningOnlyErrorReporter);
-  JS::SetGetElementCallback(aCx, &GetElementCallback);
 
 #ifdef DEBUG
   if (haveException) {
