@@ -1297,7 +1297,6 @@ struct ParamTraits<mozilla::PinchGestureInput> {
     WriteParam(aMsg, aParam.mLocalFocusPoint);
     WriteParam(aMsg, aParam.mCurrentSpan);
     WriteParam(aMsg, aParam.mPreviousSpan);
-    WriteParam(aMsg, aParam.mHandledByAPZ);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
@@ -1308,8 +1307,7 @@ struct ParamTraits<mozilla::PinchGestureInput> {
            ReadParam(aMsg, aIter, &aResult->mFocusPoint) &&
            ReadParam(aMsg, aIter, &aResult->mLocalFocusPoint) &&
            ReadParam(aMsg, aIter, &aResult->mCurrentSpan) &&
-           ReadParam(aMsg, aIter, &aResult->mPreviousSpan) &&
-           ReadParam(aMsg, aIter, &aResult->mHandledByAPZ);
+           ReadParam(aMsg, aIter, &aResult->mPreviousSpan);
   }
 };
 
