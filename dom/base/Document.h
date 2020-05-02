@@ -1894,6 +1894,13 @@ class Document : public nsINode,
   void RequestFullscreen(UniquePtr<FullscreenRequest> aRequest,
                          bool applyFullScreenDirectly = false);
 
+ private:
+  void RequestFullscreenInContentProcess(UniquePtr<FullscreenRequest> aRequest,
+                                         bool applyFullScreenDirectly);
+  void RequestFullscreenInParentProcess(UniquePtr<FullscreenRequest> aRequest,
+                                        bool applyFullScreenDirectly);
+
+ public:
   // Removes all the elements with fullscreen flag set from the top layer, and
   // clears their fullscreen flag.
   void CleanupFullscreenState();
