@@ -13647,12 +13647,6 @@ void Document::RequestFullscreenInContentProcess(
     UniquePtr<FullscreenRequest> aRequest, bool applyFullScreenDirectly) {
   MOZ_ASSERT(XRE_IsContentProcess());
 
-  nsCOMPtr<nsPIDOMWindowOuter> rootWin = GetRootWindow(this);
-  if (!rootWin) {
-    aRequest->MayRejectPromise("No active window");
-    return;
-  }
-
   // If we are in the content process, we can apply the fullscreen
   // state directly only if we have been in DOM fullscreen, because
   // otherwise we always need to notify the chrome.
