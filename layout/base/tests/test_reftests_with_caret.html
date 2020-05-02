@@ -269,6 +269,8 @@ var tests = [
     // return one line-height for an empty inline, and it probably should..
     // [ 'bug1634543-3.html' , 'bug1634543-1-ref.html' ] ,
     [ 'bug1634543-4.html' , 'bug1634543-1-ref.html' ] ,
+    // Caret + line-height + pseudo-element only.
+    [ 'bug1634743-1.html' , 'bug1634743-1-ref.html' ] ,
     function() {SpecialPowers.pushPrefEnv({'clear': [['layout.accessiblecaret.enabled_on_touch']]}, nextTest);} ,
     function() {SpecialPowers.pushPrefEnv({'set': [['accessibility.browsewithcaret', true]]}, nextTest);} ,
     [ 'bug1529492-1.html' , 'bug1529492-1-ref.html' ] ,
