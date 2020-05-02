@@ -76,8 +76,8 @@ class SyncedTabsFeature(
      */
     @VisibleForTesting
     internal fun syncClients(): List<Device>? {
-        accountManager.withConstellation { constellation ->
-            return constellation.state()?.otherDevices
+        accountManager.withConstellation {
+            return state()?.otherDevices
         }
         return null
     }
