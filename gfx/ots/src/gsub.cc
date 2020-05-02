@@ -147,7 +147,7 @@ bool ParseSequenceTable(const ots::Font *font,
   for (unsigned i = 0; i < glyph_count; ++i) {
     uint16_t substitute = 0;
     if (!subtable.ReadU16(&substitute)) {
-      return OTS_FAILURE_MSG("Failedt o read substitution %d in sequence table", i);
+      return OTS_FAILURE_MSG("Failed to read substitution %d in sequence table", i);
     }
     if (substitute >= num_glyphs) {
       return OTS_FAILURE_MSG("Bad subsitution (%d) %d > %d", i, substitute, num_glyphs);
@@ -186,7 +186,7 @@ bool ParseMutipleSubstitution(const ots::Font *font,
   const unsigned sequence_end = static_cast<unsigned>(6) +
       sequence_count * 2;
   if (sequence_end > std::numeric_limits<uint16_t>::max()) {
-    return OTS_FAILURE_MSG("Bad segence end %d, in multiple subst", sequence_end);
+    return OTS_FAILURE_MSG("Bad sequence end %d, in multiple subst", sequence_end);
   }
   for (unsigned i = 0; i < sequence_count; ++i) {
     uint16_t offset_sequence = 0;
@@ -305,14 +305,14 @@ bool ParseLigatureTable(const ots::Font *font,
 
   if (!subtable.ReadU16(&lig_glyph) ||
       !subtable.ReadU16(&comp_count)) {
-    return OTS_FAILURE_MSG("Failed to read ligatuer table header");
+    return OTS_FAILURE_MSG("Failed to read ligature table header");
   }
 
   if (lig_glyph >= num_glyphs) {
     return OTS_FAILURE_MSG("too large lig_glyph: %u", lig_glyph);
   }
-  if (comp_count == 0 || comp_count > num_glyphs) {
-    return OTS_FAILURE_MSG("Bad component count of %d", comp_count);
+  if (comp_count == 0) {
+    return OTS_FAILURE_MSG("Component count cannot be 0");
   }
   for (unsigned i = 0; i < comp_count - static_cast<unsigned>(1); ++i) {
     uint16_t component = 0;
@@ -487,9 +487,6 @@ bool ParseReverseChainingContextSingleSubstitution(
   if (!subtable.ReadU16(&backtrack_glyph_count)) {
     return OTS_FAILURE_MSG("Failed to read backtrack glyph count in reverse chaining table");
   }
-  if (backtrack_glyph_count > num_glyphs) {
-    return OTS_FAILURE_MSG("Bad backtrack glyph count of %d", backtrack_glyph_count);
-  }
   std::vector<uint16_t> offsets_backtrack;
   offsets_backtrack.reserve(backtrack_glyph_count);
   for (unsigned i = 0; i < backtrack_glyph_count; ++i) {
@@ -504,9 +501,6 @@ bool ParseReverseChainingContextSingleSubstitution(
   if (!subtable.ReadU16(&lookahead_glyph_count)) {
     return OTS_FAILURE_MSG("Failed to read look ahead glyph count");
   }
-  if (lookahead_glyph_count > num_glyphs) {
-    return OTS_FAILURE_MSG("Bad look ahead glyph count %d", lookahead_glyph_count);
-  }
   std::vector<uint16_t> offsets_lookahead;
   offsets_lookahead.reserve(lookahead_glyph_count);
   for (unsigned i = 0; i < lookahead_glyph_count; ++i) {
@@ -520,9 +514,6 @@ bool ParseReverseChainingContextSingleSubstitution(
   uint16_t glyph_count = 0;
   if (!subtable.ReadU16(&glyph_count)) {
     return OTS_FAILURE_MSG("Can't read glyph count in reverse chaining table");
-  }
-  if (glyph_count > num_glyphs) {
-    return OTS_FAILURE_MSG("Bad glyph count of %d", glyph_count);
   }
   for (unsigned i = 0; i < glyph_count; ++i) {
     uint16_t substitute = 0;
