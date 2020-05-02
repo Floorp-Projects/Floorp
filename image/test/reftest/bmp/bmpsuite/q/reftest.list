@@ -158,7 +158,7 @@ fuzzy(1-1,28-73) == rgb24prof.bmp rgb24.png
 # to swap them back. Support for this is uncommon."
 # [The image is significantly closer to the desired output than without color
 # management, but we seem to handle the profile wrong in QCMS. See bug 1619332.]
-fuzzy(10-10,6597-6597) == rgb24prof2.bmp rgb24.png
+fuzzy(10-10,6590-6597) == rgb24prof2.bmp rgb24.png
 
 # BMP: bihsize=124, 127 x 64, bpp=24, compression=0, colors=0
 # "My attempt to make a BMP file with a linked color profile."
