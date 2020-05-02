@@ -13,6 +13,7 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.RemoteTabsStorage
 import mozilla.components.browser.storage.sync.SyncClient
+import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.concept.sync.ConstellationState
@@ -32,9 +33,8 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
-@ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
-class SyncedTabsFeatureTest {
+class SyncedTabsStorageTest {
     private lateinit var store: BrowserStore
     private lateinit var tabsStorage: RemoteTabsStorage
     private lateinit var accountManager: FxaAccountManager
@@ -55,7 +55,7 @@ class SyncedTabsFeatureTest {
 
     @Test
     fun `listens to browser store changes and stores its state`() = runBlocking {
-        val feature = SyncedTabsFeature(accountManager, store, tabsStorage)
+        val feature = SyncedTabsStorage(accountManager, store, tabsStorage)
         feature.start()
         // This action won't change the state, but will run the flow.
         store.dispatch(TabListAction.RemoveAllPrivateTabsAction)
@@ -68,7 +68,7 @@ class SyncedTabsFeatureTest {
 
     @Test
     fun `stops listening to browser store changes on stop()`() = runBlocking {
-        val feature = SyncedTabsFeature(accountManager, store, tabsStorage)
+        val feature = SyncedTabsStorage(accountManager, store, tabsStorage)
         feature.start()
         // Run the flow.
         store.dispatch(TabListAction.RemoveAllPrivateTabsAction)
@@ -85,7 +85,7 @@ class SyncedTabsFeatureTest {
 
     @Test
     fun `getSyncedTabs matches tabs with FxA devices`() = runBlocking {
-        val feature = spy(SyncedTabsFeature(accountManager, store, tabsStorage))
+        val feature = spy(SyncedTabsStorage(accountManager, store, tabsStorage))
         val device1 = Device(
             id = "client1",
             displayName = "Foo Client",
@@ -114,22 +114,24 @@ class SyncedTabsFeatureTest {
             SyncClient("client2") to tabsClient2,
             SyncClient("client-unknown") to listOf(Tab(listOf(TabEntry("Foo", "https://foo.bar", null)), 0, 0))
         ))
-        assertEquals(mapOf(
-            device1 to tabsClient1,
-            device2 to tabsClient2
-        ), feature.getSyncedTabs())
+
+        val result = feature.getSyncedTabs()
+        assertEquals(device1, result[0].device)
+        assertEquals(device2, result[1].device)
+        assertEquals(tabsClient1, result[0].tabs)
+        assertEquals(tabsClient2, result[1].tabs)
     }
 
     @Test
     fun `getSyncedTabs returns empty list if syncClients() is null`() = runBlocking {
-        val feature = spy(SyncedTabsFeature(accountManager, store, tabsStorage))
+        val feature = spy(SyncedTabsStorage(accountManager, store, tabsStorage))
         doReturn(null).`when`(feature).syncClients()
-        assertEquals(emptyMap<Device, List<Tab>>(), feature.getSyncedTabs())
+        assertEquals(emptyList<SyncedDeviceTabs>(), feature.getSyncedTabs())
     }
 
     @Test
     fun `syncClients returns clients if the account is set and constellation state is set too`() {
-        val feature = spy(SyncedTabsFeature(accountManager, store, tabsStorage))
+        val feature = spy(SyncedTabsStorage(accountManager, store, tabsStorage))
         val account: OAuthAccount = mock()
         val constellation: DeviceConstellation = mock()
         val state: ConstellationState = mock()
@@ -152,7 +154,7 @@ class SyncedTabsFeatureTest {
 
     @Test
     fun `syncClients returns null if the account is set but constellation state is null`() {
-        val feature = spy(SyncedTabsFeature(accountManager, store, tabsStorage))
+        val feature = spy(SyncedTabsStorage(accountManager, store, tabsStorage))
         val account: OAuthAccount = mock()
         val constellation: DeviceConstellation = mock()
         whenever(accountManager.authenticatedAccount()).thenReturn(account)
@@ -163,7 +165,7 @@ class SyncedTabsFeatureTest {
 
     @Test
     fun `syncClients returns null if the account is null`() {
-        val feature = spy(SyncedTabsFeature(accountManager, store, tabsStorage))
+        val feature = spy(SyncedTabsStorage(accountManager, store, tabsStorage))
         whenever(accountManager.authenticatedAccount()).thenReturn(null)
         assertEquals(null, feature.syncClients())
     }

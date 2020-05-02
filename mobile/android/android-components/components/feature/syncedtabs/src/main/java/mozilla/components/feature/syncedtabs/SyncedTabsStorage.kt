@@ -6,12 +6,12 @@ package mozilla.components.feature.syncedtabs
 
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.RemoteTabsStorage
+import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.concept.sync.Device
@@ -21,11 +21,10 @@ import mozilla.components.service.fxa.manager.ext.withConstellation
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
- * A feature that listens to the [BrowserStore] changes to update the local remote tabs state
- * in [RemoteTabsStorage].
+ * A storage that listens to the [BrowserStore] changes to synchronize the local tabs state
+ * with [RemoteTabsStorage].
  */
-@ExperimentalCoroutinesApi
-class SyncedTabsFeature(
+class SyncedTabsStorage(
     private val accountManager: FxaAccountManager,
     private val store: BrowserStore,
     private val tabsStorage: RemoteTabsStorage = RemoteTabsStorage()
@@ -61,14 +60,16 @@ class SyncedTabsFeature(
     }
 
     /**
-     * Get the list of remote tabs.
+     * Get the list of synced tabs.
      */
-    suspend fun getSyncedTabs(): Map<Device, List<Tab>> {
-        val otherDevices = syncClients() ?: return emptyMap()
-        return tabsStorage.getAll().mapNotNull { (client, tabs) ->
-            val fxaDevice = otherDevices.find { it.id == client.id }
-            fxaDevice?.let { fxaDevice to tabs }
-        }.toMap()
+    suspend fun getSyncedTabs(): List<SyncedDeviceTabs> {
+        val otherDevices = syncClients() ?: return emptyList()
+        return tabsStorage.getAll()
+            .mapNotNull { (client, tabs) ->
+                val fxaDevice = otherDevices.find { it.id == client.id }
+
+                fxaDevice?.let { SyncedDeviceTabs(fxaDevice, tabs) }
+            }
     }
 
     /**
