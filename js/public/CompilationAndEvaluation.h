@@ -13,7 +13,6 @@
 #include <stddef.h>  // size_t
 #include <stdio.h>   // FILE
 
-#include "jsapi.h"    // JSGetElementCallback
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/CompileOptions.h"  // JS::CompileOptions, JS::ReadOnlyCompileOptions
@@ -242,9 +241,6 @@ extern JS_PUBLIC_API bool InitScriptSourceElement(
  */
 extern JS_PUBLIC_API void ExposeScriptToDebugger(JSContext* cx,
                                                  Handle<JSScript*> script);
-
-extern JS_PUBLIC_API void SetGetElementCallback(JSContext* cx,
-                                                JSGetElementCallback callback);
 
 } /* namespace JS */
 

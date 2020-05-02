@@ -1222,6 +1222,7 @@ class ScriptSourceObject : public NativeObject {
 
   static bool initElementProperties(JSContext* cx,
                                     HandleScriptSourceObject source,
+                                    HandleObject element,
                                     HandleString elementAttrName);
 
   bool hasSource() const { return !getReservedSlot(SOURCE_SLOT).isUndefined(); }
@@ -1229,8 +1230,9 @@ class ScriptSourceObject : public NativeObject {
     return static_cast<ScriptSource*>(getReservedSlot(SOURCE_SLOT).toPrivate());
   }
 
-  JSObject* unwrappedElement(JSContext* cx) const;
-
+  JSObject* unwrappedElement() const {
+    return unwrappedCanonical()->getReservedSlot(ELEMENT_SLOT).toObjectOrNull();
+  }
   const Value& unwrappedElementAttributeName() const {
     const Value& v =
         unwrappedCanonical()->getReservedSlot(ELEMENT_PROPERTY_SLOT);
@@ -1258,6 +1260,7 @@ class ScriptSourceObject : public NativeObject {
   enum {
     SOURCE_SLOT = 0,
     CANONICAL_SLOT,
+    ELEMENT_SLOT,
     ELEMENT_PROPERTY_SLOT,
     INTRODUCTION_SCRIPT_SLOT,
     PRIVATE_SLOT,
