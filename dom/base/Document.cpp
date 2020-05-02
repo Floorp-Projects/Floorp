@@ -13601,55 +13601,68 @@ static nsCOMPtr<nsPIDOMWindowOuter> GetRootWindow(Document* aDoc) {
 
 static bool ShouldApplyFullscreenDirectly(Document* aDoc,
                                           nsPIDOMWindowOuter* aRootWin) {
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    // If we are in the content process, we can apply the fullscreen
-    // state directly only if we have been in DOM fullscreen, because
-    // otherwise we always need to notify the chrome.
-    return !!nsContentUtils::GetRootDocument(aDoc)
-                 ->GetUnretargetedFullScreenElement();
-  } else {
-    // If we are in the chrome process, and the window has not been in
-    // fullscreen, we certainly need to make that fullscreen first.
-    if (!aRootWin->GetFullScreen()) {
-      return false;
-    }
-    // The iterator not being at end indicates there is still some
-    // pending fullscreen request relates to this document. We have to
-    // push the request to the pending queue so requests are handled
-    // in the correct order.
-    PendingFullscreenChangeList::Iterator<FullscreenRequest> iter(
-        aDoc, PendingFullscreenChangeList::eDocumentsWithSameRoot);
-    if (!iter.AtEnd()) {
-      return false;
-    }
-    // We have to apply the fullscreen state directly in this case,
-    // because nsGlobalWindow::SetFullscreenInternal() will do nothing
-    // if it is already in fullscreen. If we do not apply the state but
-    // instead add it to the queue and wait for the window as normal,
-    // we would get stuck.
-    return true;
+  MOZ_ASSERT(XRE_IsParentProcess());
+  // If we are in the chrome process, and the window has not been in
+  // fullscreen, we certainly need to make that fullscreen first.
+  if (!aRootWin->GetFullScreen()) {
+    return false;
   }
+  // The iterator not being at end indicates there is still some
+  // pending fullscreen request relates to this document. We have to
+  // push the request to the pending queue so requests are handled
+  // in the correct order.
+  PendingFullscreenChangeList::Iterator<FullscreenRequest> iter(
+      aDoc, PendingFullscreenChangeList::eDocumentsWithSameRoot);
+  if (!iter.AtEnd()) {
+    return false;
+  }
+  // We have to apply the fullscreen state directly in this case,
+  // because nsGlobalWindow::SetFullscreenInternal() will do nothing
+  // if it is already in fullscreen. If we do not apply the state but
+  // instead add it to the queue and wait for the window as normal,
+  // we would get stuck.
+  return true;
+}
+
+static bool CheckFullscreenAllowedElementType(const Element* elem) {
+  // Per spec only HTML, <svg>, and <math> should be allowed, but
+  // we also need to allow XUL elements right now.
+  return elem->IsHTMLElement() || elem->IsXULElement() ||
+         elem->IsSVGElement(nsGkAtoms::svg) ||
+         elem->IsMathMLElement(nsGkAtoms::math);
 }
 
 void Document::RequestFullscreen(UniquePtr<FullscreenRequest> aRequest,
                                  bool applyFullScreenDirectly) {
+  if (XRE_IsContentProcess()) {
+    RequestFullscreenInContentProcess(std::move(aRequest),
+                                      applyFullScreenDirectly);
+  } else {
+    RequestFullscreenInParentProcess(std::move(aRequest),
+                                     applyFullScreenDirectly);
+  }
+}
+
+void Document::RequestFullscreenInContentProcess(
+    UniquePtr<FullscreenRequest> aRequest, bool applyFullScreenDirectly) {
+  MOZ_ASSERT(XRE_IsContentProcess());
+
   nsCOMPtr<nsPIDOMWindowOuter> rootWin = GetRootWindow(this);
   if (!rootWin) {
     aRequest->MayRejectPromise("No active window");
     return;
   }
 
-  if (applyFullScreenDirectly || ShouldApplyFullscreenDirectly(this, rootWin)) {
+  // If we are in the content process, we can apply the fullscreen
+  // state directly only if we have been in DOM fullscreen, because
+  // otherwise we always need to notify the chrome.
+  if (applyFullScreenDirectly || !!nsContentUtils::GetRootDocument(this)
+                                       ->GetUnretargetedFullScreenElement()) {
     ApplyFullscreen(std::move(aRequest));
     return;
   }
 
-  // Per spec only HTML, <svg>, and <math> should be allowed, but
-  // we also need to allow XUL elements right now.
-  Element* elem = aRequest->Element();
-  if (!elem->IsHTMLElement() && !elem->IsXULElement() &&
-      !elem->IsSVGElement(nsGkAtoms::svg) &&
-      !elem->IsMathMLElement(nsGkAtoms::math)) {
+  if (!CheckFullscreenAllowedElementType(aRequest->Element())) {
     aRequest->Reject("FullscreenDeniedNotHTMLSVGOrMathML");
     return;
   }
@@ -13661,16 +13674,41 @@ void Document::RequestFullscreen(UniquePtr<FullscreenRequest> aRequest,
   }
 
   PendingFullscreenChangeList::Add(std::move(aRequest));
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    // If we are not the top level process, dispatch an event to make
-    // our parent process go fullscreen first.
-    nsContentUtils::DispatchEventOnlyToChrome(
-        this, ToSupports(this), NS_LITERAL_STRING("MozDOMFullscreen:Request"),
-        CanBubble::eYes, Cancelable::eNo, /* DefaultAction */ nullptr);
-  } else {
-    // Make the window fullscreen.
-    rootWin->SetFullscreenInternal(FullscreenReason::ForFullscreenAPI, true);
+  // If we are not the top level process, dispatch an event to make
+  // our parent process go fullscreen first.
+  nsContentUtils::DispatchEventOnlyToChrome(
+      this, ToSupports(this), NS_LITERAL_STRING("MozDOMFullscreen:Request"),
+      CanBubble::eYes, Cancelable::eNo, /* DefaultAction */ nullptr);
+}
+
+void Document::RequestFullscreenInParentProcess(
+    UniquePtr<FullscreenRequest> aRequest, bool applyFullScreenDirectly) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  nsCOMPtr<nsPIDOMWindowOuter> rootWin = GetRootWindow(this);
+  if (!rootWin) {
+    aRequest->MayRejectPromise("No active window");
+    return;
   }
+
+  if (applyFullScreenDirectly || ShouldApplyFullscreenDirectly(this, rootWin)) {
+    ApplyFullscreen(std::move(aRequest));
+    return;
+  }
+
+  if (!CheckFullscreenAllowedElementType(aRequest->Element())) {
+    aRequest->Reject("FullscreenDeniedNotHTMLSVGOrMathML");
+    return;
+  }
+
+  // We don't need to check element ready before this point, because
+  // if we called ApplyFullscreen, it would check that for us.
+  if (!FullscreenElementReadyCheck(*aRequest)) {
+    return;
+  }
+
+  PendingFullscreenChangeList::Add(std::move(aRequest));
+  // Make the window fullscreen.
+  rootWin->SetFullscreenInternal(FullscreenReason::ForFullscreenAPI, true);
 }
 
 /* static */
