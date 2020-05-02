@@ -347,17 +347,8 @@ static ffi::WGPUColorStateDescriptor ConvertColorDescriptor(
     const dom::GPUColorStateDescriptor& aDesc) {
   ffi::WGPUColorStateDescriptor desc = {};
   desc.format = ffi::WGPUTextureFormat(aDesc.mFormat);
-  const ffi::WGPUBlendDescriptor no_blend = {
-      ffi::WGPUBlendFactor_One,
-      ffi::WGPUBlendFactor_Zero,
-      ffi::WGPUBlendOperation_Add,
-  };
-  desc.alpha_blend = aDesc.mAlpha.WasPassed()
-                         ? ConvertBlendDescriptor(aDesc.mAlpha.Value())
-                         : no_blend;
-  desc.color_blend = aDesc.mColor.WasPassed()
-                         ? ConvertBlendDescriptor(aDesc.mColor.Value())
-                         : no_blend;
+  desc.alpha_blend = ConvertBlendDescriptor(aDesc.mAlphaBlend);
+  desc.color_blend = ConvertBlendDescriptor(aDesc.mColorBlend);
   desc.write_mask = aDesc.mWriteMask;
   return desc;
 }
