@@ -181,7 +181,7 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Protocol necunoscut</string>
 
-    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Adresa specifică un protocol (de ex. <q>wxyz://</q>) pe care browserul nu îl recunoaște și, prin urmare, browserul nu se poate conecta corect la site.</p>
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Adresa specifică un protocol (de ex. <q>wxyz://</q>) pe care browserul nu îl recunoaște și, prin urmare, nu se poate conecta corect la site.</p>
       <ul>
         <li>Încerci să accesezi conținut multimedia sau alte servicii non-text? Verifică site-ul pentru cerințe suplimentare.</li>
         <li>Este posibil ca unele protocoale să necesite softuri de la terți sau pluginuri înainte ca browserul să le poată recunoaște.</li>

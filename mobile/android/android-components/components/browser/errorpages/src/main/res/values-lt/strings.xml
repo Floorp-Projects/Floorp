@@ -94,11 +94,28 @@
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">Dirbama neprisijungus prie tinklo</string>
 
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Naršyklė yra atjungta nuo tinklo ir negali užmegzti ryšio su užklaustu objektu.</p>
+      <ul>
+        <li>Ar jūsų įrenginys prijungtas prie veikiančio tinklo?</li>
+        <li>Spustelėkite „Bandyti dar kartą“, kad būtų prisijungta prie tinklo ir pabandyta įkelti tinklalapį iš naujo.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">Saugumo tikslais apribota prieiga prie šio prievado</string>
 
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>Adreso, prie kurio bandoma prisijungti, nurodytas numeris prievado (pvz., <q>mozilla.org:80</q> – mozilla.org su prievadu 80), paprastai naudojamo ne naršymui saityne, o <em>kitiems</em> tikslams. Kad užtikrintų jūsų saugumą, naršyklė atmetė šią užklausą.</p>]]></string>
+
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">Ryšys nutrūko</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>Prisijungimas buvo nutrauktas bandant užmegzti ryšį. Bandykite dar kartą.</p>
+      <ul>
+        <li>Svetainė gali būti laikinai nepasiekiama, arba turi daug lankytojų. Pabandykite dar kartą šiek tiek vėliau.</li>
+        <li>Jeigu negalite įkelti jokio tinklalapio, patikrinkite savo įrenginio mobilųjį arba belaidį ryšį.</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">Nesaugus failo tipas</string>
@@ -117,6 +134,8 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">Nėra ryšio su internetu</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Patikrinkite savo tinklo ryšį, arba pabandykite įkelti tinklalapį iš naujo.</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">Įkelti iš naujo</string>
 
