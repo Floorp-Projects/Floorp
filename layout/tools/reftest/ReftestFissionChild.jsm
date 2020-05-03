@@ -52,6 +52,15 @@ class ReftestFissionChild extends JSWindowActorChild {
     switch (msg.name) {
       case "ForwardAfterPaintEventToSelfAndParent":
       {
+        // The embedderElement can be null if the child we got this from was removed.
+        // Not much we can do to transform the rects, but it doesn't matter, the rects
+        // won't reach reftest-content.js.
+        if (msg.data.fromBrowsingContext.embedderElement == null) {
+          this.forwardAfterPaintEventToParent(msg.data.rects, msg.data.originalTargetUri,
+            /* dispatchToSelfAsWell */ true);
+          return;
+        }
+
         // Transform the rects from fromBrowsingContext to us.
         // We first translate from the content rect to the border rect of the iframe.
         let style = this.contentWindow.getComputedStyle(msg.data.fromBrowsingContext.embedderElement);
