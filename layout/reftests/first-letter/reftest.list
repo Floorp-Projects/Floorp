@@ -32,7 +32,7 @@ random-if(d2d) == dynamic-2.html dynamic-2-ref.html
 == 23605-2.html 23605-2-ref.html
 == 23605-3.html 23605-3-ref.html
 == 23605-4.html 23605-4-ref.html
-fuzzy-if(winWidget,0-139,0-1) == 23605-5.html 23605-5-ref.html # Antialiased pixel between the underline and the left square bracket
+fuzzy-if(winWidget,0-177,0-1) == 23605-5.html 23605-5-ref.html # Antialiased pixel between the underline and the left square bracket
 == 23605-6.html 23605-6-ref.html
 != 229764-1.html 229764-ref.html
 == 229764-2.html 229764-ref.html
