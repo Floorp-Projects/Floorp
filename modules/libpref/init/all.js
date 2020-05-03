@@ -421,11 +421,7 @@ pref("media.videocontrols.picture-in-picture.video-toggle.min-video-secs", 45);
   pref("media.navigator.video.enabled", true);
   pref("media.navigator.video.default_fps",30);
   pref("media.navigator.video.use_remb", true);
-  #ifdef EARLY_BETA_OR_EARLIER
-    pref("media.navigator.video.use_transport_cc", true);
-  #else
-    pref("media.navigator.video.use_transport_cc", false);
-  #endif
+  pref("media.navigator.video.use_transport_cc", false);
   pref("media.navigator.video.use_tmmbr", false);
   pref("media.navigator.audio.use_fec", true);
   pref("media.navigator.video.red_ulpfec_enabled", false);
