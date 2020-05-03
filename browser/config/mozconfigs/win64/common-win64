@@ -30,7 +30,7 @@ unset VC_PATH
 
 fi
 
-export WINCHECKSEC="${MOZ_FETCHES_DIR}/winchecksec/winchecksec"
+export WINCHECKSEC="${MOZ_FETCHES_DIR}/winchecksec/winchecksec.exe"
 if [ ! -f "${WINCHECKSEC}" ]; then
     unset WINCHECKSEC
 fi

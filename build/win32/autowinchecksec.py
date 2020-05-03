@@ -29,7 +29,7 @@ except KeyError:
     sys.exit(1)
 
 wine = buildconfig.substs.get('WINE')
-if wine and winchecksec_path.lower().endswith('.exe'):
+if wine:
     cmd = [wine, winchecksec_path]
 else:
     cmd = [winchecksec_path]
