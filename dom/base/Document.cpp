@@ -3896,6 +3896,10 @@ void Document::LocalizationLinkRemoved(Element* aLinkElement) {
     aLinkElement->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
     uint32_t remaining = mDocumentL10n->RemoveResourceId(href);
     if (remaining == 0) {
+      if (mDocumentL10n->mBlockingLayout) {
+        mDocumentL10n->mBlockingLayout = false;
+        UnblockOnload(/* aFireSync = */ false);
+      }
       mDocumentL10n = nullptr;
     }
   }
@@ -3936,8 +3940,8 @@ void Document::InitialTranslationCompleted() {
     // important that the load blocker removal here be async, because our caller
     // will notify the content sink after us, and we want the content sync's
     // work to happen before the load event fires.
-    UnblockOnload(/* aFireSync = */ false);
     mDocumentL10n->mBlockingLayout = false;
+    UnblockOnload(/* aFireSync = */ false);
   }
 
   mL10nProtoElements.Clear();
