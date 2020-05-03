@@ -634,11 +634,20 @@ class GeckoEngine(
         }
     }
 
+    @Suppress("ComplexMethod")
     internal fun ContentBlockingController.LogEntry.BlockingData.getLoadedCategory(): TrackingCategory {
+        val socialTrackingProtectionEnabled = settings.trackingProtectionPolicy?.strictSocialTrackingProtection
+                ?: false
+
         return when (category) {
             Event.LOADED_FINGERPRINTING_CONTENT -> TrackingCategory.FINGERPRINTING
             Event.LOADED_CRYPTOMINING_CONTENT -> TrackingCategory.CRYPTOMINING
-            Event.LOADED_SOCIALTRACKING_CONTENT -> TrackingCategory.MOZILLA_SOCIAL
+            Event.LOADED_SOCIALTRACKING_CONTENT -> {
+                if (socialTrackingProtectionEnabled) TrackingCategory.MOZILLA_SOCIAL else TrackingCategory.NONE
+            }
+            Event.COOKIES_LOADED_SOCIALTRACKER -> {
+                if (!socialTrackingProtectionEnabled) TrackingCategory.MOZILLA_SOCIAL else TrackingCategory.NONE
+            }
             Event.LOADED_LEVEL_1_TRACKING_CONTENT -> TrackingCategory.SCRIPTS_AND_SUB_RESOURCES
             Event.LOADED_LEVEL_2_TRACKING_CONTENT -> {
 
@@ -662,6 +671,11 @@ class GeckoEngine(
         }
     }
 
+    /**
+     * Mimics the behavior for categorizing trackers from desktop, they should be kept in sync,
+     * as differences will result in improper categorization for trackers.
+     * https://dxr.mozilla.org/mozilla-central/source/browser/base/content/browser-siteProtections.js
+     */
     internal fun ContentBlockingController.LogEntry.toTrackerLog(): TrackerLog {
         val cookiesHasBeenBlocked = this.blockingData.any { it.hasBlockedCookies() }
         return TrackerLog(
@@ -689,14 +703,15 @@ internal fun ContentBlockingController.LogEntry.BlockingData.hasBlockedCookies()
         category == Event.COOKIES_BLOCKED_TRACKER ||
         category == Event.COOKIES_BLOCKED_ALL ||
         category == Event.COOKIES_PARTITIONED_FOREIGN ||
-        category == Event.COOKIES_BLOCKED_FOREIGN
+        category == Event.COOKIES_BLOCKED_FOREIGN ||
+        category == Event.COOKIES_BLOCKED_SOCIALTRACKER
 }
 
 internal fun ContentBlockingController.LogEntry.BlockingData.getBlockedCategory(): TrackingCategory {
     return when (category) {
         Event.BLOCKED_FINGERPRINTING_CONTENT -> TrackingCategory.FINGERPRINTING
         Event.BLOCKED_CRYPTOMINING_CONTENT -> TrackingCategory.CRYPTOMINING
-        Event.BLOCKED_SOCIALTRACKING_CONTENT -> TrackingCategory.MOZILLA_SOCIAL
+        Event.BLOCKED_SOCIALTRACKING_CONTENT, Event.COOKIES_BLOCKED_SOCIALTRACKER -> TrackingCategory.MOZILLA_SOCIAL
         Event.BLOCKED_TRACKING_CONTENT -> TrackingCategory.SCRIPTS_AND_SUB_RESOURCES
         else -> TrackingCategory.NONE
     }
