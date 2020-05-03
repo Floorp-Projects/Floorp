@@ -77,7 +77,7 @@ const ICON_URL_APP =
     ? "moz-icon://dummy.exe?size=16"
     : "chrome://browser/skin/preferences/application.png";
 
-// For CSS. Can be one of "ask", "save", "handleInternally" or "plugin". If absent, the icon URL
+// For CSS. Can be one of "ask", "save" or "plugin". If absent, the icon URL
 // was set by us to a custom handler icon and CSS should not try to override it.
 const APP_ICON_ATTR_NAME = "appHandlerIcon";
 
@@ -2234,15 +2234,18 @@ var gMainPane = {
     }
 
     let internalMenuItem;
-    // Add the "Open in Firefox" option for optional internal handlers.
+    // Add the "Preview in Firefox" option for optional internal handlers.
     if (handlerInfo instanceof InternalHandlerInfoWrapper) {
       internalMenuItem = document.createXULElement("menuitem");
       internalMenuItem.setAttribute(
         "action",
         Ci.nsIHandlerInfo.handleInternally
       );
-      document.l10n.setAttributes(internalMenuItem, "applications-open-inapp");
-      internalMenuItem.setAttribute(APP_ICON_ATTR_NAME, "handleInternally");
+      document.l10n.setAttributes(
+        internalMenuItem,
+        "applications-preview-inapp"
+      );
+      internalMenuItem.setAttribute(APP_ICON_ATTR_NAME, "ask");
       menuPopup.appendChild(internalMenuItem);
     }
 
@@ -2275,28 +2278,17 @@ var gMainPane = {
         "action",
         Ci.nsIHandlerInfo.useSystemDefault
       );
-      // If an internal option is available, don't show the application
-      // name for the OS default to prevent two options from appearing
-      // that may both say "Firefox".
-      if (internalMenuItem) {
-        document.l10n.setAttributes(
-          defaultMenuItem,
-          "applications-use-os-default"
-        );
-        defaultMenuItem.setAttribute("image", ICON_URL_APP);
-      } else {
-        document.l10n.setAttributes(
-          defaultMenuItem,
-          "applications-use-app-default",
-          {
-            "app-name": handlerInfo.defaultDescription,
-          }
-        );
-        defaultMenuItem.setAttribute(
-          "image",
-          handlerInfo.iconURLForSystemDefault
-        );
-      }
+      document.l10n.setAttributes(
+        defaultMenuItem,
+        "applications-use-app-default",
+        {
+          "app-name": handlerInfo.defaultDescription,
+        }
+      );
+      defaultMenuItem.setAttribute(
+        "image",
+        handlerInfo.iconURLForSystemDefault
+      );
 
       menuPopup.appendChild(defaultMenuItem);
     }
@@ -3347,7 +3339,7 @@ class HandlerInfoWrapper {
 
       case Ci.nsIHandlerInfo.handleInternally:
         if (this instanceof InternalHandlerInfoWrapper) {
-          return "handleInternally";
+          return "ask";
         }
         break;
 
