@@ -18,7 +18,7 @@ function evalErrorStr(global, evalString) {
 
 assertEq(evalErrorStr(g, "let y = IDONTEXIST;"), "ReferenceError: IDONTEXIST is not defined");
 assertEq(evalErrorStr(g, "y = 1;"),
-         "ReferenceError: can't access lexical declaration `y' before initialization");
+         "ReferenceError: can't access lexical declaration 'y' before initialization");
 
 // Here we flip the uninitialized binding to undfined.
 assertEq(gw.forceLexicalInitializationByName("y"), true);

@@ -12,7 +12,7 @@ withJitOptions(Opts_IonEagerNoOffthreadCompilation, function() {
 
   function f() {
     assertEq(dbg.getNewestFrame().older.eval("print(a)").throw.unsafeDereference().toString(),
-             "Error: variable `a' has been optimized out");
+             "Error: variable 'a' has been optimized out");
   }
 
   // Test optimized out binding in function scope.

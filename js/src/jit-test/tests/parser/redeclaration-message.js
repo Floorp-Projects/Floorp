@@ -6,5 +6,5 @@ try {
     // We use assertEq here to catch non-throwing case.
     assertEq(true, false);
 } catch (e) {
-    assertEq(e.message, "can't access lexical declaration `aLet' before initialization");
+    assertEq(e.message, "can't access lexical declaration 'aLet' before initialization");
 }
