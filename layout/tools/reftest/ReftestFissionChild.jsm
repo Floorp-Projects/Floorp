@@ -11,9 +11,16 @@ class ReftestFissionChild extends JSWindowActorChild {
 
     let parentContext = this.browsingContext.parent;
     if (parentContext) {
-      this.sendAsyncMessage("ForwardAfterPaintEvent",
-        {toBrowsingContext: parentContext, fromBrowsingContext: this.browsingContext,
-         rects, originalTargetUri});
+      try {
+        this.sendAsyncMessage("ForwardAfterPaintEvent",
+          {toBrowsingContext: parentContext, fromBrowsingContext: this.browsingContext,
+           rects, originalTargetUri});
+      } catch (e) {
+        // |this| can be destroyed here and unable to send messages, which is
+        // not a problem, the reftest harness probably torn down the page and
+        // moved on to the next test.
+        Cu.reportError(e);
+      }
     }
   }
 
