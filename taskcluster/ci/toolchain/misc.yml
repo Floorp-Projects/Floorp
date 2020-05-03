@@ -289,6 +289,8 @@ win64-winchecksec:
         symbol: TW64(winchecksec)
     worker:
         docker-image: {in-tree: deb10-toolchain-build}
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
     run:
         script: build-winchecksec.sh
         toolchain-artifact: public/build/winchecksec.tar.bz2
@@ -296,3 +298,6 @@ win64-winchecksec:
     fetches:
         fetch:
             - winchecksec
+        toolchain:
+            - linux64-clang-win-cross
+            - linux64-liblowercase
