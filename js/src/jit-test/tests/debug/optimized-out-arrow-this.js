@@ -35,4 +35,4 @@ g.f();
 
 assertEq(errors.length, 1);
 assertEq(errors[0].unsafeDereference().toString(),
-         "Error: variable `this' has been optimized out");
+         "Error: variable 'this' has been optimized out");
