@@ -66,6 +66,10 @@
     <string name="mozac_feature_addons_settings_on">Attivatu</string>
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off">Disattivatu</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Permette in navigazione privata</string>
+    <!-- Indicates the add-on is allowed in private browsing mode. -->
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Lancià in navigazione privata</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Attivatu</string>
     <!-- Indicates the add-on is disabled. -->
