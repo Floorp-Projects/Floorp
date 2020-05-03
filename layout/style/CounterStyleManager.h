@@ -20,6 +20,14 @@ class nsPresContext;
 
 namespace mozilla {
 
+enum class SpeakAs : uint8_t {
+  Bullets = 0,
+  Numbers = 1,
+  Words = 2,
+  Spellout = 3,
+  Other = 255
+};
+
 class WritingMode;
 
 typedef int32_t CounterValue;
@@ -74,7 +82,7 @@ class CounterStyle {
   virtual bool IsOrdinalInAutoRange(CounterValue aOrdinal) = 0;
   virtual void GetPad(PadType& aResult) = 0;
   virtual CounterStyle* GetFallback() = 0;
-  virtual uint8_t GetSpeakAs() = 0;
+  virtual SpeakAs GetSpeakAs() = 0;
   virtual bool UseNegativeSign() = 0;
 
   virtual void CallFallbackStyle(CounterValue aOrdinal,
@@ -104,7 +112,7 @@ class AnonymousCounterStyle final : public CounterStyle {
   virtual bool IsOrdinalInAutoRange(CounterValue aOrdinal) override;
   virtual void GetPad(PadType& aResult) override;
   virtual CounterStyle* GetFallback() override;
-  virtual uint8_t GetSpeakAs() override;
+  virtual SpeakAs GetSpeakAs() override;
   virtual bool UseNegativeSign() override;
 
   virtual bool GetInitialCounterText(CounterValue aOrdinal,
@@ -116,7 +124,7 @@ class AnonymousCounterStyle final : public CounterStyle {
   bool IsSingleString() const { return mSingleString; }
   Span<const nsString> GetSymbols() const { return MakeSpan(mSymbols); }
 
-  uint8_t GetSystem() const;
+  StyleCounterSystem GetSystem() const;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AnonymousCounterStyle)
 

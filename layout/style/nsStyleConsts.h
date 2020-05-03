@@ -795,25 +795,9 @@ enum class StyleMaskComposite : uint8_t {
   Intersect,
   Exclude
 };
+
 // See nsStyleText::mControlCharacterVisibility
 enum class StyleControlCharacterVisibility : uint8_t { Hidden = 0, Visible };
-
-// counter system
-#define NS_STYLE_COUNTER_SYSTEM_CYCLIC 0
-#define NS_STYLE_COUNTER_SYSTEM_NUMERIC 1
-#define NS_STYLE_COUNTER_SYSTEM_ALPHABETIC 2
-#define NS_STYLE_COUNTER_SYSTEM_SYMBOLIC 3
-#define NS_STYLE_COUNTER_SYSTEM_ADDITIVE 4
-#define NS_STYLE_COUNTER_SYSTEM_FIXED 5
-#define NS_STYLE_COUNTER_SYSTEM_EXTENDS 6
-
-#define NS_STYLE_COUNTER_RANGE_INFINITE 0
-
-#define NS_STYLE_COUNTER_SPEAKAS_BULLETS 0
-#define NS_STYLE_COUNTER_SPEAKAS_NUMBERS 1
-#define NS_STYLE_COUNTER_SPEAKAS_WORDS 2
-#define NS_STYLE_COUNTER_SPEAKAS_SPELL_OUT 3
-#define NS_STYLE_COUNTER_SPEAKAS_OTHER 255  // refer to another style
 
 // scroll-behavior
 enum class StyleScrollBehavior : uint8_t {

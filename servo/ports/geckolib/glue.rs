@@ -3385,20 +3385,33 @@ pub unsafe extern "C" fn Servo_CounterStyleRule_GetSpeakAs(
     });
 }
 
+#[repr(u8)]
+pub enum CounterSystem {
+  Cyclic = 0,
+  Numeric,
+  Alphabetic,
+  Symbolic,
+  Additive,
+  Fixed,
+  Extends
+}
+
 #[no_mangle]
-pub unsafe extern "C" fn Servo_CounterStyleRule_GetSystem(rule: &RawServoCounterStyleRule) -> u8 {
+pub unsafe extern "C" fn Servo_CounterStyleRule_GetSystem(
+    rule: &RawServoCounterStyleRule
+) -> CounterSystem {
     use style::counter_style::System;
     read_locked_arc(rule, |rule: &CounterStyleRule| {
         match *rule.resolved_system() {
-            System::Cyclic => structs::NS_STYLE_COUNTER_SYSTEM_CYCLIC,
-            System::Numeric => structs::NS_STYLE_COUNTER_SYSTEM_NUMERIC,
-            System::Alphabetic => structs::NS_STYLE_COUNTER_SYSTEM_ALPHABETIC,
-            System::Symbolic => structs::NS_STYLE_COUNTER_SYSTEM_SYMBOLIC,
-            System::Additive => structs::NS_STYLE_COUNTER_SYSTEM_ADDITIVE,
-            System::Fixed { .. } => structs::NS_STYLE_COUNTER_SYSTEM_FIXED,
-            System::Extends(_) => structs::NS_STYLE_COUNTER_SYSTEM_EXTENDS,
+            System::Cyclic => CounterSystem::Cyclic,
+            System::Numeric => CounterSystem::Numeric,
+            System::Alphabetic => CounterSystem::Alphabetic,
+            System::Symbolic => CounterSystem::Symbolic,
+            System::Additive => CounterSystem::Additive,
+            System::Fixed { .. } => CounterSystem::Fixed,
+            System::Extends(_) => CounterSystem::Extends,
         }
-    }) as u8
+    })
 }
 
 #[no_mangle]
