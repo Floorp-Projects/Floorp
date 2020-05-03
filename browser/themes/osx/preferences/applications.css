@@ -46,6 +46,11 @@
   min-width: 0;
 }
 
+richlistitem[appHandlerIcon="handleInternally"],
+menuitem[appHandlerIcon="handleInternally"] {
+  list-style-image: url("chrome://branding/content/icon32.png");
+}
+
 richlistitem[appHandlerIcon="ask"],
 menuitem[appHandlerIcon="ask"] {
   list-style-image: url("chrome://browser/skin/preferences/alwaysAsk.png");
