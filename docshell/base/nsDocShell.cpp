@@ -9750,26 +9750,6 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     mContentTypeHint.Truncate();
   }
 
-  if (mLoadType == LOAD_NORMAL_ALLOW_MIXED_CONTENT ||
-      mLoadType == LOAD_RELOAD_ALLOW_MIXED_CONTENT) {
-    rv = SetMixedContentChannel(channel);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else if (mMixedContentChannel) {
-    /*
-     * If the user "Disables Protection on This Page", we call
-     * SetMixedContentChannel for the first time, otherwise
-     * mMixedContentChannel is still null.
-     * Later, if the new channel passes a same orign check, we remember the
-     * users decision by calling SetMixedContentChannel using the new channel.
-     * This way, the user does not have to click the disable protection button
-     * over and over for browsing the same site.
-     */
-    rv = nsContentUtils::CheckSameOrigin(mMixedContentChannel, channel);
-    if (NS_FAILED(rv) || NS_FAILED(SetMixedContentChannel(channel))) {
-      SetMixedContentChannel(nullptr);
-    }
-  }
-
   // Load attributes depend on load type...
   if (mLoadType == LOAD_RELOAD_CHARSET_CHANGE) {
     // Use SetAllowStaleCacheContent (not LOAD_FROM_CACHE flag) since we
