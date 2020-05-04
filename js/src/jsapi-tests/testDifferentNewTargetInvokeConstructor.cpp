@@ -18,7 +18,7 @@ BEGIN_TEST(testDifferentNewTargetInvokeConstructor) {
       "Error('whoops'); })",
       &func);
 
-  JS::AutoValueArray<1> args(cx);
+  JS::RootedValueArray<1> args(cx);
   args[0].set(otherFunc);
 
   JS::RootedObject obj(cx);

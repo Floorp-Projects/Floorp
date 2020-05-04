@@ -892,7 +892,7 @@ class FixedArgsBase
   static_assert(N <= ARGS_LENGTH_MAX, "o/~ too many args o/~");
 
  protected:
-  JS::AutoValueArray<2 + N + uint32_t(Construct)> v_;
+  JS::RootedValueArray<2 + N + uint32_t(Construct)> v_;
 
   explicit FixedArgsBase(JSContext* cx) : v_(cx) {
     *static_cast<JS::CallArgs*>(this) = CallArgsFromVp(N, v_.begin());

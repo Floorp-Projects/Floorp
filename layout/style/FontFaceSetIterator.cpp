@@ -58,7 +58,7 @@ void FontFaceSetIterator::Next(JSContext* aCx,
   }
 
   if (mIsKeyAndValue) {
-    JS::AutoValueArray<2> values(aCx);
+    JS::RootedValueArray<2> values(aCx);
     values[0].set(value);
     values[1].set(value);
 

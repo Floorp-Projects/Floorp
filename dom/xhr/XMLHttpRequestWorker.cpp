@@ -8,7 +8,7 @@
 
 #include "nsIDOMEventListener.h"
 
-#include "jsapi.h"  // JS::AutoValueArray
+#include "jsapi.h"  // JS::RootedValueArray
 #include "jsfriendapi.h"
 #include "js/ArrayBuffer.h"  // JS::Is{,Detached}ArrayBufferObject
 #include "js/GCPolicyAPI.h"

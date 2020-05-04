@@ -1059,7 +1059,7 @@ static MOZ_MUST_USE bool RunModule(JSContext* cx, const char* filename,
     return false;
   }
 
-  JS::AutoValueArray<1> args(cx);
+  JS::RootedValueArray<1> args(cx);
   args[0].setString(path);
 
   RootedValue value(cx);
@@ -5139,7 +5139,7 @@ static JSObject* ShellModuleResolveHook(JSContext* cx,
   }
   MOZ_ASSERT(hookValue.toObject().is<JSFunction>());
 
-  JS::AutoValueArray<2> args(cx);
+  JS::RootedValueArray<2> args(cx);
   args[0].set(referencingPrivate);
   args[1].setString(specifier);
 
@@ -5186,7 +5186,7 @@ static bool CallModuleMetadataHook(JSContext* cx, HandleValue modulePrivate,
   }
   MOZ_ASSERT(hookValue.toObject().is<JSFunction>());
 
-  JS::AutoValueArray<2> args(cx);
+  JS::RootedValueArray<2> args(cx);
   args[0].set(modulePrivate);
   args[1].setObject(*metaObject);
 
@@ -5306,7 +5306,7 @@ static bool ShellModuleDynamicImportHook(JSContext* cx,
   }
   MOZ_ASSERT(hookValue.toObject().is<JSFunction>());
 
-  JS::AutoValueArray<3> args(cx);
+  JS::RootedValueArray<3> args(cx);
   args[0].set(referencingPrivate);
   args[1].setString(specifier);
   args[2].setObject(*promise);
