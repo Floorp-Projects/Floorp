@@ -1911,62 +1911,57 @@ class BaseScript : public gc::TenuredCell {
  public:                                            \
   bool lowerName() const { return hasFlag(enumName::enumEntry); }
 
-#define FLAG_GETTER_SETTER(enumName, enumEntry, setterLevel, lowerName, name) \
-setterLevel:                                                                  \
-  void set##name() { setFlag(enumName::enumEntry); }                          \
-  void set##name(bool b) { setFlag(enumName::enumEntry, b); }                 \
-  void clear##name() { clearFlag(enumName::enumEntry); }                      \
-                                                                              \
- public:                                                                      \
-  bool lowerName() const { return hasFlag(enumName::enumEntry); }
+#define FLAG_GETTER_SETTER(enumName, enumEntry, lowerName, name)  \
+ public:                                                          \
+  bool lowerName() const { return hasFlag(enumName::enumEntry); } \
+  void set##name() { setFlag(enumName::enumEntry); }              \
+  void set##name(bool b) { setFlag(enumName::enumEntry, b); }     \
+  void clear##name() { clearFlag(enumName::enumEntry); }
 
 #define IMMUTABLE_FLAG_GETTER(lowerName, name) \
   FLAG_GETTER(ImmutableFlags, name, lowerName)
-#define IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(lowerName, name) \
-  FLAG_GETTER_SETTER(ImmutableFlags, name, public, lowerName, name)
-#define MUTABLE_FLAG_GETTER(lowerName, name) \
-  FLAG_GETTER(MutableFlags, name, lowerName)
 #define MUTABLE_FLAG_GETTER_SETTER(lowerName, name) \
-  FLAG_GETTER_SETTER(MutableFlags, name, public, lowerName, name)
+  FLAG_GETTER_SETTER(MutableFlags, name, lowerName, name)
 
-  IMMUTABLE_FLAG_GETTER(noScriptRval, NoScriptRval)
-  IMMUTABLE_FLAG_GETTER(selfHosted, SelfHosted)
-  // TreatAsRunOnce: custom logic below.
-  IMMUTABLE_FLAG_GETTER(forceStrict, ForceStrict)
-  IMMUTABLE_FLAG_GETTER(strict, Strict)
-  IMMUTABLE_FLAG_GETTER(bindingsAccessedDynamically,
-                        BindingsAccessedDynamically)
-  IMMUTABLE_FLAG_GETTER(funHasExtensibleScope, FunHasExtensibleScope)
-  IMMUTABLE_FLAG_GETTER(hasCallSiteObj, HasCallSiteObj)
-  IMMUTABLE_FLAG_GETTER(hasModuleGoal, HasModuleGoal)
-  IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(functionHasThisBinding,
-                                      FunctionHasThisBinding)
-  IMMUTABLE_FLAG_GETTER(hasMappedArgsObj, HasMappedArgsObj)
-  IMMUTABLE_FLAG_GETTER(hasInnerFunctions, HasInnerFunctions)
-  IMMUTABLE_FLAG_GETTER(needsHomeObject, NeedsHomeObject)
-  IMMUTABLE_FLAG_GETTER(isDerivedClassConstructor, IsDerivedClassConstructor)
-  IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(isLikelyConstructorWrapper,
-                                      IsLikelyConstructorWrapper)
-  IMMUTABLE_FLAG_GETTER(isGenerator, IsGenerator)
-  IMMUTABLE_FLAG_GETTER(isAsync, IsAsync)
-  IMMUTABLE_FLAG_GETTER(hasRest, HasRest)
-  IMMUTABLE_FLAG_GETTER(argumentsHasVarBinding, ArgumentsHasVarBinding)
-  IMMUTABLE_FLAG_GETTER(alwaysNeedsArgsObj, AlwaysNeedsArgsObj)
-  IMMUTABLE_FLAG_GETTER(shouldDeclareArguments, ShouldDeclareArguments)
   IMMUTABLE_FLAG_GETTER(isForEval, IsForEval)
   IMMUTABLE_FLAG_GETTER(isModule, IsModule)
   IMMUTABLE_FLAG_GETTER(isFunction, IsFunction)
-  IMMUTABLE_FLAG_GETTER(hasDirectEval, HasDirectEval)
+  IMMUTABLE_FLAG_GETTER(selfHosted, SelfHosted)
+  IMMUTABLE_FLAG_GETTER(forceStrict, ForceStrict)
   IMMUTABLE_FLAG_GETTER(hasNonSyntacticScope, HasNonSyntacticScope)
-  // FunctionHasExtraBodyVarScope: custom logic below.
+  IMMUTABLE_FLAG_GETTER(noScriptRval, NoScriptRval)
+  // TreatAsRunOnce: custom logic below.
+  IMMUTABLE_FLAG_GETTER(strict, Strict)
+  IMMUTABLE_FLAG_GETTER(hasModuleGoal, HasModuleGoal)
+  IMMUTABLE_FLAG_GETTER(hasInnerFunctions, HasInnerFunctions)
+  IMMUTABLE_FLAG_GETTER(hasDirectEval, HasDirectEval)
+  IMMUTABLE_FLAG_GETTER(bindingsAccessedDynamically,
+                        BindingsAccessedDynamically)
+  IMMUTABLE_FLAG_GETTER(hasCallSiteObj, HasCallSiteObj)
+  IMMUTABLE_FLAG_GETTER(isAsync, IsAsync)
+  IMMUTABLE_FLAG_GETTER(isGenerator, IsGenerator)
+  IMMUTABLE_FLAG_GETTER(funHasExtensibleScope, FunHasExtensibleScope)
+  IMMUTABLE_FLAG_GETTER(functionHasThisBinding, FunctionHasThisBinding)
+  IMMUTABLE_FLAG_GETTER(needsHomeObject, NeedsHomeObject)
+  IMMUTABLE_FLAG_GETTER(isDerivedClassConstructor, IsDerivedClassConstructor)
+  IMMUTABLE_FLAG_GETTER(hasRest, HasRest)
   IMMUTABLE_FLAG_GETTER(needsFunctionEnvironmentObjects,
                         NeedsFunctionEnvironmentObjects)
+  // FunctionHasExtraBodyVarScope: custom logic below.
+  IMMUTABLE_FLAG_GETTER(shouldDeclareArguments, ShouldDeclareArguments)
+  IMMUTABLE_FLAG_GETTER(argumentsHasVarBinding, ArgumentsHasVarBinding)
+  IMMUTABLE_FLAG_GETTER(alwaysNeedsArgsObj, AlwaysNeedsArgsObj)
+  IMMUTABLE_FLAG_GETTER(hasMappedArgsObj, HasMappedArgsObj)
+  IMMUTABLE_FLAG_GETTER(isLikelyConstructorWrapper, IsLikelyConstructorWrapper)
 
   MUTABLE_FLAG_GETTER_SETTER(hasRunOnce, HasRunOnce)
   MUTABLE_FLAG_GETTER_SETTER(hasBeenCloned, HasBeenCloned)
   MUTABLE_FLAG_GETTER_SETTER(hasScriptCounts, HasScriptCounts)
   MUTABLE_FLAG_GETTER_SETTER(hasDebugScript, HasDebugScript)
+  MUTABLE_FLAG_GETTER_SETTER(needsArgsAnalysis, NeedsArgsAnalysis)
+  // NeedsArgsObj: custom logic below.
   MUTABLE_FLAG_GETTER_SETTER(allowRelazify, AllowRelazify)
+  MUTABLE_FLAG_GETTER_SETTER(spewEnabled, SpewEnabled)
   MUTABLE_FLAG_GETTER_SETTER(failedBoundsCheck, FailedBoundsCheck)
   MUTABLE_FLAG_GETTER_SETTER(failedShapeGuard, FailedShapeGuard)
   MUTABLE_FLAG_GETTER_SETTER(hadFrequentBailouts, HadFrequentBailouts)
@@ -1975,13 +1970,8 @@ setterLevel:                                                                  \
   MUTABLE_FLAG_GETTER_SETTER(invalidatedIdempotentCache,
                              InvalidatedIdempotentCache)
   MUTABLE_FLAG_GETTER_SETTER(failedLexicalCheck, FailedLexicalCheck)
-  MUTABLE_FLAG_GETTER_SETTER(needsArgsAnalysis, NeedsArgsAnalysis)
-  // NeedsArgsObj: custom logic below.
-  MUTABLE_FLAG_GETTER_SETTER(spewEnabled, SpewEnabled)
 
 #undef IMMUTABLE_FLAG_GETTER
-#undef IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC
-#undef MUTABLE_FLAG_GETTER
 #undef MUTABLE_FLAG_GETTER_SETTER
 #undef FLAG_GETTER
 #undef FLAG_GETTER_SETTER
