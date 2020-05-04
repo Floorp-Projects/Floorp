@@ -31,9 +31,9 @@ typedef uint32_t HashNumber;
 
 // Replacements for types that are too difficult for rust-bindgen.
 
-/// <div rustbindgen replaces="JS::detail::MaybeWrapped" />
+/// <div rustbindgen replaces="JS::detail::RootedPtr" />
 template <typename T>
-using replaces_MaybeWrapped = T;
+using replaces_RootedPtr = T;
 
 /// <div rustbindgen replaces="JS::MutableHandleIdVector" />
 struct MutableHandleIdVector_Simple {
