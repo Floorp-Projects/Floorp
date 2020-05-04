@@ -96,6 +96,7 @@ web-platform-tests-backlog:
     max-run-time:
         by-test-platform:
             .*/debug: 7200
+            android.*/opt: 7200
             default: 3600
     variants: []
     e10s: true
