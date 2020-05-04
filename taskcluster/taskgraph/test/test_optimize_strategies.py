@@ -160,6 +160,13 @@ def test_optimization_strategy(responses, params, opt, tasks, arg, expected):
         ['task-2'],
     ),
 
+    # tasks which are unknown to bugbug are selected
+    pytest.param(
+        (0.1,),
+        {'tasks': {'task-1': 0.9, 'task-3': 0.5}, 'known_tasks': ['task-1', 'task-3', 'task-4']},
+        ['task-2'],
+    ),
+
     # tasks containing groups selected
     pytest.param(
         (0.1,),
