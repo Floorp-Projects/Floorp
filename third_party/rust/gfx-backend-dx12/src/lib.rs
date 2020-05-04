@@ -179,9 +179,9 @@ static QUEUE_FAMILIES: [QueueFamily; 4] = [
     QueueFamily::Normal(q::QueueType::Transfer),
 ];
 
+//Note: fields are dropped in the order of declaration, so we put the
+// most owning fields last.
 pub struct PhysicalDevice {
-    library: Arc<native::D3D12Lib>,
-    adapter: native::WeakPtr<dxgi1_2::IDXGIAdapter2>,
     features: Features,
     hints: Hints,
     limits: Limits,
@@ -192,6 +192,8 @@ pub struct PhysicalDevice {
     // Indicates that there is currently an active logical device.
     // Opening the same adapter multiple times will return the same D3D12Device again.
     is_open: Arc<Mutex<bool>>,
+    adapter: native::WeakPtr<dxgi1_2::IDXGIAdapter2>,
+    library: Arc<native::D3D12Lib>,
 }
 
 impl fmt::Debug for PhysicalDevice {
@@ -566,7 +568,6 @@ impl Shared {
 
 pub struct Device {
     raw: native::Device,
-    library: Arc<native::D3D12Lib>,
     private_caps: Capabilities,
     features: Features,
     format_properties: Arc<FormatProperties>,
@@ -590,6 +591,7 @@ pub struct Device {
     queues: Vec<CommandQueue>,
     // Indicates that there is currently an active device.
     open: Arc<Mutex<bool>>,
+    library: Arc<native::D3D12Lib>,
 }
 
 impl fmt::Debug for Device {
@@ -663,7 +665,7 @@ impl Device {
             shared: Arc::new(shared),
             present_queue,
             queues: Vec::new(),
-            open: physical_device.is_open.clone(),
+            open: Arc::clone(&physical_device.is_open),
         }
     }
 
@@ -1231,12 +1233,15 @@ struct FormatInfo {
 }
 
 #[derive(Debug)]
-pub struct FormatProperties(Box<[Mutex<Option<FormatInfo>>]>, native::Device);
+pub struct FormatProperties {
+    info: Box<[Mutex<Option<FormatInfo>>]>,
+    device: native::Device,
+}
 
 impl Drop for FormatProperties {
     fn drop(&mut self) {
         unsafe {
-            self.1.destroy();
+            self.device.destroy();
         }
     }
 }
@@ -1248,11 +1253,14 @@ impl FormatProperties {
         for _ in 1 .. f::NUM_FORMATS {
             buf.push(Mutex::new(None))
         }
-        FormatProperties(buf.into_boxed_slice(), device)
+        FormatProperties {
+            info: buf.into_boxed_slice(),
+            device,
+        }
     }
 
     fn get(&self, idx: usize) -> FormatInfo {
-        let mut guard = self.0[idx].lock().unwrap();
+        let mut guard = self.info[idx].lock().unwrap();
         if let Some(info) = *guard {
             return info;
         }
@@ -1274,7 +1282,7 @@ impl FormatProperties {
                 Support2: unsafe { mem::zeroed() },
             };
             assert_eq!(winerror::S_OK, unsafe {
-                self.1.CheckFeatureSupport(
+                self.device.CheckFeatureSupport(
                     d3d12::D3D12_FEATURE_FORMAT_SUPPORT,
                     &mut data as *mut _ as *mut _,
                     mem::size_of::<d3d12::D3D12_FEATURE_DATA_FORMAT_SUPPORT>() as _,
@@ -1350,7 +1358,7 @@ impl FormatProperties {
                 NumQualityLevels: 0,
             };
             assert_eq!(winerror::S_OK, unsafe {
-                self.1.CheckFeatureSupport(
+                self.device.CheckFeatureSupport(
                     d3d12::D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
                     &mut data as *mut _ as *mut _,
                     mem::size_of::<d3d12::D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS>() as _,
