@@ -11,6 +11,32 @@ See `Mercurial Page <https://www.mercurial-scm.org/downloads>`__ for installatio
 
 `More information <https://developer.mozilla.org/docs/Mozilla/Mercurial/Installing_Mercurial>`__
 
+
+Using `hg clone`
+----------------
+
+If you are not worried about network interruptions, then you can simply
+use Mercurial to directly clone the repository you're interested in
+using its URL, as given above. For example, to use the command line to
+clone ``mozilla-central`` into a directory called ``firefox-source``,
+you would use the following:
+
+.. code-block:: shell
+
+   hg clone https://hg.mozilla.org/mozilla-central/ firefox-source
+   cd firefox-source
+
+Using Mercurial bundles
+-----------------------
+
+If you are worried that your Internet connection is not fast or robust
+enough to download such a large amount of data all in one go without
+being interrupted, then you are recommended to download one of the
+If you have any network connection issues and cannot clone with command, try :ref:`Mercurial bundles <Mercurial bundles>`. If interrupted, they can be resumed (continued without downloading 
+from the beginning) if the app you're using to download supports it. For
+example, in Firefox you would right click on the download and select
+`Resume` once your connection to the Internet was reestablished.
+
 Basic configuration
 -------------------
 
@@ -107,42 +133,6 @@ copies of repositories is annoying you, then see
 https://mozilla-version-control-tools.readthedocs.org/en/latest/hgmozilla/unifiedrepo.html
 for instructions on doing this efficiently.
 
-
-Cloning a repository
---------------------
-
-Getting a copy of one of the repositories listed above nowadays requires
-downloading in excess of 1 GB of data.
-
-
-Using Mercurial bundles
------------------------
-
-If you are worried that your Internet connection is not fast or robust
-enough to download such a large amount of data all in one go without
-being interrupted, then you are recommended to download one of the
-`Mercurial
-bundles. <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Source_Code/Mercurial/Bundles>`__
-If interrupted, they can be resumed (continued without downloading from
-the beginning) if the app you're using to download supports it. For
-example, in Firefox you would right click on the download and select
-`Resume` once your connection to the Internet was reestablished.
-
-
-Using `hg clone`
-----------------
-
-If you are not worried about network interuptions, then you can simply
-use Mercurial to directly clone the repository you're interested in
-using its URL, as given above. For example, to use the command line to
-clone ``mozilla-central`` into a directory called ``firefox-source``,
-you would use the following:
-
-.. code-block:: shell
-
-   hg clone https://hg.mozilla.org/mozilla-central/ firefox-source
-   cd firefox-source
-
 Selecting a revision to build
 -----------------------------
 
@@ -150,7 +140,6 @@ Most of the time the `tip` revision of most repositories will build
 without issue. If you are worried about it not, then you may want to
 `get the latest revision that has passed the automatic
 tests <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Source_Code/LatestPassingSource>`__.
-
 
 Building
 --------
