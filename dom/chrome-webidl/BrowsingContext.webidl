@@ -13,8 +13,8 @@ interface mixin LoadContextMixin {
   readonly attribute Element? topFrameElement;
 
   readonly attribute boolean isContent;
- 
-  [SetterThrows] 
+
+  [SetterThrows]
   attribute boolean usePrivateBrowsing;
 
   readonly attribute boolean useRemoteTabs;
@@ -59,6 +59,10 @@ interface BrowsingContext {
   readonly attribute WindowProxy? window;
 
   readonly attribute WindowContext? currentWindowContext;
+
+  readonly attribute WindowContext? parentWindowContext;
+
+  readonly attribute WindowContext? topWindowContext;
 
   attribute [TreatNullAs=EmptyString] DOMString customUserAgent;
 

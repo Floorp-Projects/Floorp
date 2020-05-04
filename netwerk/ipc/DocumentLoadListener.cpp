@@ -323,12 +323,12 @@ already_AddRefed<LoadInfo> DocumentLoadListener::CreateLoadInfo(
 
 // parent-process implementation of
 // nsGlobalWindowOuter::GetTopExcludingExtensionAccessibleContentFrames
-already_AddRefed<WindowGlobalParent>
+static already_AddRefed<WindowGlobalParent>
 GetTopWindowExcludingExtensionAccessibleContentFrames(
     CanonicalBrowsingContext* aBrowsingContext, nsIURI* aURIBeingLoaded) {
   CanonicalBrowsingContext* bc = aBrowsingContext;
   RefPtr<WindowGlobalParent> prev;
-  while (RefPtr<WindowGlobalParent> parent = bc->GetParentWindowGlobal()) {
+  while (RefPtr<WindowGlobalParent> parent = bc->GetParentWindowContext()) {
     CanonicalBrowsingContext* parentBC = parent->BrowsingContext();
 
     nsIPrincipal* parentPrincipal = parent->DocumentPrincipal();
@@ -373,15 +373,8 @@ bool DocumentLoadListener::Open(
   OriginAttributes attrs;
   browsingContext->GetOriginAttributes(attrs);
 
-  RefPtr<WindowGlobalParent> embedderWGP =
-      browsingContext->GetParentWindowGlobal();
-  if (browsingContext->GetParent() && !embedderWGP) {
-    // this is a race, bug 1331295
-    NS_WARNING(
-        "We don't have an embedder WindowGlobalParent, probably because of a "
-        "race");
-    return false;
-  }
+  MOZ_DIAGNOSTIC_ASSERT_IF(browsingContext->GetParent(),
+                           browsingContext->GetParentWindowContext());
 
   // If this is a top-level load, then rebuild the LoadInfo from scratch,
   // since the goal is to be able to initiate loads in the parent, where the

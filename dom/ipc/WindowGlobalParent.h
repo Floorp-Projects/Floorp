@@ -62,6 +62,20 @@ class WindowGlobalParent final : public WindowContext,
     return GetByInnerWindowId(aInnerWindowId);
   }
 
+  // The same as the corresponding methods on `WindowContext`, except that the
+  // return types are already cast to their parent-process type variants, such
+  // as `WindowGlobalParent` or `CanonicalBrowsingContext`.
+  WindowGlobalParent* GetParentWindowContext() {
+    return static_cast<WindowGlobalParent*>(
+        WindowContext::GetParentWindowContext());
+  }
+  WindowGlobalParent* TopWindowContext() {
+    return static_cast<WindowGlobalParent*>(WindowContext::TopWindowContext());
+  }
+  CanonicalBrowsingContext* GetBrowsingContext() {
+    return CanonicalBrowsingContext::Cast(WindowContext::GetBrowsingContext());
+  }
+
   // Has this actor been shut down
   bool IsClosed() { return !CanSend(); }
 
@@ -98,7 +112,7 @@ class WindowGlobalParent final : public WindowContext,
   // FIXME: It's quite awkward that this method has a slightly different name
   // than the one on WindowContext.
   CanonicalBrowsingContext* BrowsingContext() override {
-    return CanonicalBrowsingContext::Cast(WindowContext::GetBrowsingContext());
+    return GetBrowsingContext();
   }
 
   // Get the root nsFrameLoader object for the tree of BrowsingContext nodes

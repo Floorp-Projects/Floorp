@@ -129,6 +129,16 @@ WindowGlobalParent* CanonicalBrowsingContext::GetCurrentWindowGlobal() const {
   return static_cast<WindowGlobalParent*>(GetCurrentWindowContext());
 }
 
+WindowGlobalParent* CanonicalBrowsingContext::GetParentWindowContext() {
+  return static_cast<WindowGlobalParent*>(
+      BrowsingContext::GetParentWindowContext());
+}
+
+WindowGlobalParent* CanonicalBrowsingContext::GetTopWindowContext() {
+  return static_cast<WindowGlobalParent*>(
+      BrowsingContext::GetTopWindowContext());
+}
+
 already_AddRefed<nsIWidget>
 CanonicalBrowsingContext::GetParentProcessWidgetContaining() {
   // If our document is loaded in-process, such as chrome documents, get the
@@ -159,14 +169,6 @@ CanonicalBrowsingContext::GetEmbedderWindowGlobal() const {
   }
 
   return WindowGlobalParent::GetByInnerWindowId(windowId);
-}
-
-already_AddRefed<WindowGlobalParent>
-CanonicalBrowsingContext::GetParentWindowGlobal() const {
-  if (GetParent()) {
-    return GetEmbedderWindowGlobal();
-  }
-  return nullptr;
 }
 
 already_AddRefed<CanonicalBrowsingContext>
