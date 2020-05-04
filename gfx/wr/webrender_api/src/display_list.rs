@@ -1557,8 +1557,7 @@ impl DisplayListBuilder {
         filter_datas: &[di::FilterData],
         filter_primitives: &[di::FilterPrimitive],
         raster_space: di::RasterSpace,
-        cache_tiles: bool,
-        is_backdrop_root: bool,
+        flags: di::StackingContextFlags,
     ) {
         self.push_filters(filters, filter_datas, filter_primitives);
 
@@ -1571,8 +1570,7 @@ impl DisplayListBuilder {
                 mix_blend_mode,
                 clip_id,
                 raster_space,
-                cache_tiles,
-                is_backdrop_root,
+                flags,
             },
         });
 
@@ -1617,8 +1615,7 @@ impl DisplayListBuilder {
             filter_datas,
             filter_primitives,
             di::RasterSpace::Screen,
-            /* cache_tiles = */ false,
-            /* is_backdrop_root = */ false,
+            di::StackingContextFlags::empty(),
         );
     }
 

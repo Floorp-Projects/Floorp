@@ -6,6 +6,7 @@ root:
       - type: "stacking-context"
         perspective: 100
         perspective-origin: 100 50
+        blend-container: true
         items:
           - image: checkerboard(0, 128, 16);
             bounds: [400, 400, 2048, 2048]
@@ -56,7 +57,6 @@ root:
                     orientation: horizontal
                     color: red
                     style: wavy
-              
                   - type: line
                     baseline: 48
                     start: 16
