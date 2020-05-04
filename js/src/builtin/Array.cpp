@@ -3649,7 +3649,7 @@ JSObject* js::ArraySliceDense(JSContext* cx, HandleObject obj, int32_t begin,
   }
 
   // Slower path if the JIT wasn't able to allocate an object inline.
-  JS::AutoValueArray<4> argv(cx);
+  JS::RootedValueArray<4> argv(cx);
   argv[0].setUndefined();
   argv[1].setObject(*obj);
   argv[2].setInt32(begin);

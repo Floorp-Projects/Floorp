@@ -265,7 +265,7 @@ BEGIN_TEST(testArrayBuffer_serializeExternal) {
                                JS::NewArrayObject(cx, JS::HandleValueArray(v)));
   CHECK(transferMap);
 
-  JS::AutoValueArray<2> args(cx);
+  JS::RootedValueArray<2> args(cx);
   args[0].setObject(*externalBuffer);
   args[1].setObject(*transferMap);
 

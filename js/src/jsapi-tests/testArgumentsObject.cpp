@@ -62,7 +62,7 @@ bool ExhaustiveTest(const char funcode[]) {
   Rooted<ArgumentsObject*> argsobj(cx,
                                    &v.toObjectOrNull()->as<ArgumentsObject>());
 
-  JS::AutoValueArray<MAX_ELEMS> elems(cx);
+  JS::RootedValueArray<MAX_ELEMS> elems(cx);
 
   for (size_t i = 0; i <= ArgCount; i++) {
     for (size_t j = 0; j <= ArgCount - i; j++) {
@@ -82,7 +82,7 @@ bool ExhaustiveTest(const char funcode[]) {
 }
 
 template <size_t N>
-static void ClearElements(JS::AutoValueArray<N>& elems) {
+static void ClearElements(JS::RootedValueArray<N>& elems) {
   for (size_t i = 0; i < elems.length() - 1; i++) {
     elems[i].setNull();
   }

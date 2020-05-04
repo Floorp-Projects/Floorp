@@ -158,7 +158,7 @@ void JSRuntime::finishPersistentRoots() {
 
 JS_PUBLIC_API void js::TraceValueArray(JSTracer* trc, size_t length,
                                        Value* elements) {
-  TraceRootRange(trc, length, elements, "JS::AutoValueArray");
+  TraceRootRange(trc, length, elements, "JS::RootedValueArray");
 }
 
 void AutoGCRooter::trace(JSTracer* trc) {
