@@ -253,6 +253,7 @@ release-promotion:
 merge-automation:
     behaviors:
         central-to-beta:
+            fetch-version-from: "browser/config/version.txt"
             version-files:
                 - filename: "config/milestone.txt"
                   new-suffix: ''
@@ -293,6 +294,7 @@ merge-automation:
             to-repo: 'https://hg.mozilla.org/releases/mozilla-beta'
             to-branch: 'beta'
         beta-to-release:
+            fetch-version-from: "browser/config/version.txt"
             version-files:
                 - filename: "browser/config/version_display.txt"
                   new-suffix: ''
@@ -305,6 +307,7 @@ merge-automation:
             to-repo: 'https://hg.mozilla.org/releases/mozilla-release'
             to-branch: 'release'
         release-to-esr:
+            fetch-version-from: "browser/config/version.txt"
             version-files: []
             replacements:
                 - - "build/mozconfig.common"
@@ -317,6 +320,7 @@ merge-automation:
             to-repo: 'https://hg.mozilla.org/releases/mozilla-esr68'
             to-branch: 'esr68'
         bump-central:
+            fetch-version-from: "browser/config/version.txt"
             version-files:
                 - filename: "config/milestone.txt"
                   version-bump: "major"
@@ -339,6 +343,7 @@ merge-automation:
             to-repo: 'https://hg.mozilla.org/mozilla-central'
             to-branch: 'central'
         bump-esr:
+            fetch-version-from: "browser/config/version.txt"
             version-files:
                 - filename: "config/milestone.txt"
                   version-bump: "minor"
