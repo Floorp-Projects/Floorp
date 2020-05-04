@@ -1360,7 +1360,6 @@ nsSHistory::RemoveFromExpirationTracker(nsIBFCacheEntry* aBFEntry) {
   }
 
   mHistoryTracker->RemoveObject(entry);
-  return;
 }
 
 // Evicts all content viewers in all history objects.  This is very
