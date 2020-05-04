@@ -151,15 +151,7 @@ bool GeneralParser<ParseHandler, Unit>::mustMatchTokenInternal(
 ParserSharedBase::ParserSharedBase(JSContext* cx,
                                    CompilationInfo& compilationInfo,
                                    ScriptSourceObject* sourceObject, Kind kind)
-    : JS::AutoGCRooter(
-          cx,
-#ifdef JS_BUILD_BINAST
-          kind == Kind::Parser ? JS::AutoGCRooter::Kind::Parser
-                               : JS::AutoGCRooter::Kind::BinASTParser
-#else
-          JS::AutoGCRooter::Kind::Parser
-#endif
-          ),
+    : JS::CustomAutoRooter(cx),
       cx_(cx),
       alloc_(compilationInfo.allocScope.alloc()),
       compilationInfo_(compilationInfo),

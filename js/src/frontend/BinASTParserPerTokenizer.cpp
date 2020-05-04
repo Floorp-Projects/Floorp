@@ -811,7 +811,8 @@ bool BinASTParserPerTokenizer<Tok>::computeErrorMetadata(
 }
 
 template <typename Tok>
-void BinASTParserPerTokenizer<Tok>::doTrace(JSTracer* trc) {
+void BinASTParserPerTokenizer<Tok>::trace(JSTracer* trc) {
+  BinASTParserBase::trace(trc);
   if (tokenizer_) {
     tokenizer_->traceMetadata(trc);
   }
