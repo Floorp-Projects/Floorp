@@ -5,6 +5,17 @@ from mozperftest.metrics.common import filtered_metrics
 from mozperftest.layers import Layer
 
 
+RESULTS_TEMPLATE = """\
+
+==========================================================
+                    Results ({})
+==========================================================
+
+{}
+
+"""
+
+
 class ConsoleOutput(Layer):
     """Output metrics in the console.
     """
@@ -32,24 +43,25 @@ class ConsoleOutput(Layer):
             metadata,
             self.get_arg("output"),
             self.get_arg("prefix"),
-            self.get_arg("metrics"),
+            metrics=self.get_arg("metrics"),
         )
 
         if not results:
             self.warning("No results left after filtering")
             return metadata
 
-        # Make a nicer view of the data
-        subtests = [
-            "{}: {}".format(res["subtest"], [r["value"] for r in res["data"]])
-            for res in results
-        ]
+        for name, res in results.items():
+            # Make a nicer view of the data
+            subtests = [
+                "{}: {}".format(r["subtest"], [v["value"] for v in r["data"]])
+                for r in res
+            ]
 
-        # Output the data to console
-        self.info(
-            "\n==========================================================\n"
-            "=                          Results                       =\n"
-            "=========================================================="
-            "\n" + "\n".join(subtests) + "\n"
-        )
+            # Output the data to console
+            self.info(
+                "\n==========================================================\n"
+                "=                          Results                       =\n"
+                "=========================================================="
+                "\n" + "\n".join(subtests) + "\n"
+            )
         return metadata

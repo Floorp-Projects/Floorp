@@ -10,7 +10,7 @@ class Metadata(MachLogger):
         self._mach_cmd = mach_cmd
         self.flavor = flavor
         self.browser = {"prefs": {}}
-        self._result = None
+        self._results = []
         self._output = None
         self._env = env
 
@@ -25,11 +25,14 @@ class Metadata(MachLogger):
     def get_output(self):
         return self._output
 
-    def set_result(self, result):
-        self._result = result
+    def add_result(self, result):
+        self._results.append(result)
 
-    def get_result(self):
-        return self._result
+    def get_results(self):
+        return self._results
+
+    def clear_results(self):
+        self._results = []
 
     def update_browser_prefs(self, prefs):
         self.browser["prefs"].update(prefs)

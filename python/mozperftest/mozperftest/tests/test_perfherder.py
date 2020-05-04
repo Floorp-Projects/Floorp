@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-import os
-import mozunit
 import json
+import os
+import pathlib
+import mozunit
 
 from mozperftest.tests.support import get_running_env, temp_file, EXAMPLE_TEST
 from mozperftest.environment import METRICS
@@ -23,7 +24,10 @@ def test_metrics():
     mach_cmd.run_process = _run_process
     metrics = env.layers[METRICS]
     env.set_arg("tests", [EXAMPLE_TEST])
-    metadata.set_result(os.path.join(HERE, "browsertime-results"))
+    metadata.add_result({
+        "results": str(pathlib.Path(HERE, "browsertime-results")),
+        "name": "browsertime"}
+    )
 
     with temp_file() as output:
         env.set_arg("output", output)

@@ -50,13 +50,12 @@ def flat(data, parent_dir):
             for k, v in data.items():
                 current_dir = parent_dir + (k,)
                 subtest = ".".join(current_dir)
-                if isinstance(v, Iterable):
+                if isinstance(v, Iterable) and not isinstance(v, str):
                     _helper(v, current_dir)
                 elif v or v == 0:
                     ret.setdefault(subtest, []).append(v)
 
     _helper(data, parent_dir)
-
     return ret
 
 
