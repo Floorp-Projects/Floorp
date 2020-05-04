@@ -1097,13 +1097,13 @@ static void ReadAllEntriesFromStorage(nsPIDOMWindowOuter* aWindow,
     return;
   }
 
-  nsCOMPtr<nsIPrincipal> storagePrincipal = doc->EffectiveStoragePrincipal();
+  nsCOMPtr<nsIPrincipal> storagePrincipal = doc->IntrinsicStoragePrincipal();
   if (!storagePrincipal) {
     return;
   }
 
   nsAutoCString origin;
-  nsresult rv = principal->GetOrigin(origin);
+  nsresult rv = storagePrincipal->GetOrigin(origin);
   if (NS_FAILED(rv) || aOrigins.Contains(origin)) {
     // Don't read a host twice.
     return;
@@ -1217,6 +1217,11 @@ void SessionStoreUtils::RestoreSessionStorage(
     if (!browsingContext) {
       return;
     }
+
+    nsCOMPtr<nsIPrincipal> storagePrincipal =
+        BasePrincipal::CreateContentPrincipal(
+            NS_ConvertUTF16toUTF8(entry.mKey));
+
     const RefPtr<SessionStorageManager> storageManager =
         browsingContext->GetSessionStorageManager();
     if (!storageManager) {
@@ -1229,8 +1234,9 @@ void SessionStoreUtils::RestoreSessionStorage(
     // followup bug to bug 600307.
     // Null window because the current window doesn't match the principal yet
     // and loads about:blank.
-    storageManager->CreateStorage(nullptr, principal, principal, EmptyString(),
-                                  false, getter_AddRefs(storage));
+    storageManager->CreateStorage(nullptr, principal, storagePrincipal,
+                                  EmptyString(), false,
+                                  getter_AddRefs(storage));
     if (!storage) {
       continue;
     }
