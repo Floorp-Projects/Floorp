@@ -49,10 +49,9 @@ inline LauncherResult<nt::DataDirectoryEntry> GetImageDirectoryViaFileIo(
  *                        determine the base address of the binary within the
  *                        target process.
  */
-inline LauncherVoidResult RestoreImportDirectory(const wchar_t* aFullImagePath,
-                                                 nt::PEHeaders& aLocalExeImage,
-                                                 HANDLE aTargetProcess,
-                                                 HMODULE aRemoteExeImage) {
+inline LauncherVoidResult RestoreImportDirectory(
+    const wchar_t* aFullImagePath, const nt::PEHeaders& aLocalExeImage,
+    HANDLE aTargetProcess, HMODULE aRemoteExeImage) {
   uint32_t importDirEntryRva;
   PIMAGE_DATA_DIRECTORY importDirEntry =
       aLocalExeImage.GetImageDirectoryEntryPtr(IMAGE_DIRECTORY_ENTRY_IMPORT,
@@ -81,10 +80,6 @@ inline LauncherVoidResult RestoreImportDirectory(const wchar_t* aFullImagePath,
   }
 
   nt::DataDirectoryEntry toWrite = realImportDirectory.unwrap();
-
-  if (toWrite != *importDirEntry) {
-    aLocalExeImage.SetImportDirectoryTampered();
-  }
 
   void* remoteAddress =
       nt::PEHeaders::HModuleToBaseAddr<char*>(aRemoteExeImage) +
