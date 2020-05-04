@@ -628,7 +628,6 @@ ra.decode = function (buf, offset) {
   ra.decode.bytes = 6
   return host
 }
-
 ra.decode.bytes = 0
 
 ra.encodingLength = function () {
@@ -1273,6 +1272,213 @@ rds.encodingLength = function (digest) {
   return 6 + Buffer.byteLength(digest.digest)
 }
 
+const svcparam = exports.svcparam = {}
+
+svcparam.keyToNumber = function(keyName) {
+  switch (keyName.toLowerCase()) {
+    case 'alpn' : return 1
+    case 'no-default-alpn' : return 2
+    case 'port' : return 3
+    case 'ipv4hint' : return 4
+    case 'esniconfig' : return 5
+    case 'ipv6hint' : return 6
+    case 'key65535' : return 65535
+  }
+  if (!keyName.startsWith('key')) {
+    throw new Error(`Name must start with key: ${keyName}`);
+  }
+
+  return Number.parseInt(keyName.substring(3));
+}
+
+svcparam.numberToKeyName = function(number) {
+  switch (number) {
+    case 0 : return ''
+    case 1 : return 'alpn'
+    case 2 : return 'no-default-alpn'
+    case 3 : return 'port'
+    case 4 : return 'ipv4hint'
+    case 5 : return 'esniconfig'
+    case 6 : return 'ipv6hint'
+  }
+
+  return `key${number}`;
+}
+
+svcparam.encode = function(param, buf, offset) {
+  if (!buf) buf = Buffer.allocUnsafe(svcparam.encodingLength(param))
+  if (!offset) offset = 0
+
+  let key = param.key;
+  if (typeof param.key !== 'number') {
+    key = svcparam.keyToNumber(param.key);
+  }
+
+  buf.writeUInt16BE(key || 0, offset)
+  offset += 2;
+  svcparam.encode.bytes = 2;
+
+  if (key == 1) { // alpn
+    let len = param.value.length
+    buf.writeUInt16BE(len || 0, offset);
+    offset += 2;
+    svcparam.encode.bytes += 2;
+    buf.write(param.value, offset)
+    offset += len;
+    svcparam.encode.bytes += len;
+  } else if (key == 2) { // no-default-alpn
+    buf.writeUInt16BE(0, offset);
+    offset += 2;
+    svcparam.encode.bytes += 2;
+  } else if (key == 3) { // port
+    buf.writeUInt16BE(2, offset);
+    offset += 2;
+    svcparam.encode.bytes += 2;
+    buf.writeUInt16BE(param.value || 0, offset);
+    offset += 2;
+    svcparam.encode.bytes += 2;
+  } else if (key == 4) { //ipv4hint
+    let val = param.value;
+    if (!Array.isArray(val)) val = [val];
+    buf.writeUInt16BE(val.length*4, offset);
+    offset += 2;
+    svcparam.encode.bytes += 2;
+
+    for (let host of val) {
+      ip.toBuffer(host, buf, offset)
+      offset += 4;
+      svcparam.encode.bytes += 4;
+    }
+  } else if (key == 5) { //esniconfig
+    // TODO: base64 presentation format
+    buf.writeUInt16BE(param.value.length, offset);
+    offset += 2;
+    svcparam.encode.bytes += 2;
+    buf.write(param.value, offset);
+    offset += param.value.length;
+    svcparam.encode.bytes += param.value.length;
+  } else if (key == 6) { //ipv6hint
+    let val = param.value;
+    if (!Array.isArray(val)) val = [val];
+    buf.writeUInt16BE(val.length*16, offset);
+    offset += 2;
+    svcparam.encode.bytes += 2;
+
+    for (let host of val) {
+      ip.toBuffer(host, buf, offset)
+      offset += 16;
+      svcparam.encode.bytes += 16;
+    }
+  } else {
+    // Unknown option
+    buf.writeUInt16BE(param.value || 0, offset);
+    offset += 2;
+    svcparam.encode.bytes += 2;
+  }
+
+}
+
+svcparam.encode.bytes = 0;
+
+svcparam.decode = function (buf, offset) {
+  let param = {};
+  let id = buf.readUInt16BE(offset);
+  param.key = svcparam.numberToKeyName(id);
+  offset += 2;
+  svcparam.decode.bytes = 2;
+
+  let len = buf.readUInt16BE(offset);
+  offset += 2;
+  svcparam.decode.bytes += 2;
+
+  param.value = buf.toString('utf-8', offset, offset + len);
+  offset += len;
+  svcparam.decode.bytes += len;
+
+  return param;
+}
+
+svcparam.decode.bytes = 0;
+
+svcparam.encodingLength = function (param) {
+  // 2 bytes for type, 2 bytes for length, what's left for the value
+
+  switch (param.key) {
+    case 'alpn' : return 4 + param.value.length
+    case 'no-default-alpn' : return 4
+    case 'port' : return 4 + 2
+    case 'ipv4hint' : return 4+4 * (Array.isArray(param.value) ? param.value.length : 1)
+    case 'esniconfig' : return 4 + param.value.length
+    case 'ipv6hint' : return 4 + 16 * (Array.isArray(param.value) ? param.value.length : 1)
+    case 'key65535' : return 4
+    default: return 4 // unknown option
+  }
+}
+
+const rhttpssvc = exports.httpssvc = {}
+
+rhttpssvc.encode = function(data, buf, offset) {
+  if (!buf) buf = Buffer.allocUnsafe(rhttpssvc.encodingLength(data))
+  if (!offset) offset = 0
+
+  buf.writeUInt16BE(rhttpssvc.encodingLength(data) - 2 , offset);
+  offset += 2;
+
+  buf.writeUInt16BE(data.priority || 0, offset);
+  rhttpssvc.encode.bytes = 4;
+  offset += 2;
+  name.encode(data.name, buf, offset);
+  rhttpssvc.encode.bytes += name.encode.bytes;
+  offset += name.encode.bytes;
+
+  if (data.priority == 0) {
+    return;
+  }
+
+  for (let val of data.values) {
+    svcparam.encode(val, buf, offset);
+    offset += svcparam.encode.bytes;
+    rhttpssvc.encode.bytes += svcparam.encode.bytes;
+  }
+
+  return buf;
+}
+
+rhttpssvc.encode.bytes = 0;
+
+rhttpssvc.decode = function (buf, offset) {
+  let rdlen = buf.readUInt16BE(offset);
+  let oldOffset = offset;
+  offset += 2;
+  let record = {}
+  record.priority = buf.readUInt16BE(offset);
+  offset += 2;
+  rhttpssvc.decode.bytes = 4;
+  record.name = name.decode(buf, offset);
+  offset += name.decode.bytes;
+  rhttpssvc.decode.bytes += name.decode.bytes;
+
+  while (rdlen > rhttpssvc.decode.bytes - 2) {
+    let rec1 = svcparam.decode(buf, offset);
+    offset += svcparam.decode.bytes;
+    rhttpssvc.decode.bytes += svcparam.decode.bytes;
+    record.values.push(rec1);
+  }
+
+  return record;
+}
+
+rhttpssvc.decode.bytes = 0;
+
+rhttpssvc.encodingLength = function (data) {
+  let len =
+    2 + // rdlen
+    2 + // priority
+    name.encodingLength(data.name);
+  len += data.values.map(svcparam.encodingLength).reduce((acc, len) => acc + len, 0);
+  return len;
+}
+
 const renc = exports.record = function (type) {
   switch (type.toUpperCase()) {
     case 'A': return ra
@@ -1295,6 +1501,7 @@ const renc = exports.record = function (type) {
     case 'NSEC': return rnsec
     case 'NSEC3': return rnsec3
     case 'DS': return rds
+    case 'HTTPSSVC': return rhttpssvc
   }
   return runknown
 }
@@ -1362,7 +1569,6 @@ answer.decode = function (buf, offset) {
   } else {
     const klass = buf.readUInt16BE(offset + 2)
     a.ttl = buf.readUInt32BE(offset + 4)
-
     a.class = classes.toString(klass & NOT_FLUSH_MASK)
     a.flush = !!(klass & FLUSH_MASK)
 
