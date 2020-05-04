@@ -60,12 +60,12 @@ class StackTracePanel extends Component {
   render() {
     const { connector, openLink, request, sourceMapService } = this.props;
 
-    const { stacktrace = [] } = request;
+    const { stacktrace } = request;
 
     return div(
       { className: "panel-container" },
       StackTrace({
-        stacktrace,
+        stacktrace: stacktrace || [],
         onViewSourceInDebugger: ({ url, line, column }) => {
           return connector.viewSourceInDebugger(url, line, column);
         },
