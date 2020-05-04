@@ -3,6 +3,7 @@ root:
   items:
     - type: stacking-context
       bounds: [0, 0, 500, 200]
+      blend-container: true
       items:
         - text: "This should not be subpixel text"
           origin: 20 120

@@ -1548,15 +1548,9 @@ void WebRenderCommandBuilder::BuildWebRenderCommands(
   MOZ_ASSERT(mDumpIndent == 0);
 
   {
-    nsPresContext* presContext =
-        aDisplayListBuilder->RootReferenceFrame()->PresContext();
-    bool isTopLevelContent =
-        presContext->Document()->IsTopLevelContentDocument();
-
     wr::StackingContextParams params;
     params.mFilters = std::move(aFilters.filters);
     params.mFilterDatas = std::move(aFilters.filter_datas);
-    params.cache_tiles = isTopLevelContent;
     params.clip =
         wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
 
