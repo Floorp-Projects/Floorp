@@ -1028,6 +1028,7 @@ class SystemEngineViewTest {
             UrlMatcher.ADVERTISING,
             UrlMatcher.ANALYTICS,
             UrlMatcher.SOCIAL,
+            UrlMatcher.FINGERPRINTING,
             UrlMatcher.CRYPTOMINING
         )
         val strictCategories = setOf(
