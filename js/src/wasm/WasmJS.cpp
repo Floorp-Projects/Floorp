@@ -36,6 +36,7 @@
 #include "util/Text.h"
 #include "vm/ErrorObject.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
+#include "vm/GlobalObject.h"   // js::GlobalObject
 #include "vm/Interpreter.h"
 #include "vm/PlainObject.h"    // js::PlainObject
 #include "vm/PromiseObject.h"  // js::PromiseObject
@@ -1415,8 +1416,15 @@ bool WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedObject proto(
-      cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
+  RootedObject proto(cx);
+  if (!GetPrototypeFromBuiltinConstructor(cx, callArgs, JSProto_WasmModule,
+                                          &proto)) {
+    return false;
+  }
+  if (!proto) {
+    proto = GlobalObject::getOrCreatePrototype(cx, JSProto_WasmModule);
+  }
+
   RootedObject moduleObj(cx, WasmModuleObject::create(cx, *module, proto));
   if (!moduleObj) {
     return false;
@@ -1671,8 +1679,15 @@ bool WasmInstanceObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedObject instanceProto(
-      cx, &cx->global()->getPrototype(JSProto_WasmInstance).toObject());
+  RootedObject instanceProto(cx);
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_WasmInstance,
+                                          &instanceProto)) {
+    return false;
+  }
+  if (!instanceProto) {
+    instanceProto =
+        GlobalObject::getOrCreatePrototype(cx, JSProto_WasmInstance);
+  }
 
   Rooted<ImportValues> imports(cx);
   if (!GetImports(cx, *module, importObj, imports.address())) {
@@ -1981,8 +1996,15 @@ bool WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedObject proto(
-      cx, &cx->global()->getPrototype(JSProto_WasmMemory).toObject());
+  RootedObject proto(cx);
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_WasmMemory,
+                                          &proto)) {
+    return false;
+  }
+  if (!proto) {
+    proto = GlobalObject::getOrCreatePrototype(cx, JSProto_WasmMemory);
+  }
+
   RootedWasmMemoryObject memoryObj(cx,
                                    WasmMemoryObject::create(cx, buffer, proto));
   if (!memoryObj) {
@@ -2319,10 +2341,8 @@ void WasmTableObject::trace(JSTracer* trc, JSObject* obj) {
 
 /* static */
 WasmTableObject* WasmTableObject::create(JSContext* cx, const Limits& limits,
-                                         TableKind tableKind) {
-  RootedObject proto(cx,
-                     &cx->global()->getPrototype(JSProto_WasmTable).toObject());
-
+                                         TableKind tableKind,
+                                         HandleObject proto) {
   AutoSetNewObjectMetadata metadata(cx);
   RootedWasmTableObject obj(
       cx, NewObjectWithGivenProto<WasmTableObject>(cx, proto));
@@ -2423,8 +2443,17 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedWasmTableObject table(cx,
-                              WasmTableObject::create(cx, limits, tableKind));
+  RootedObject proto(cx);
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_WasmTable,
+                                          &proto)) {
+    return false;
+  }
+  if (!proto) {
+    proto = GlobalObject::getOrCreatePrototype(cx, JSProto_WasmTable);
+  }
+
+  RootedWasmTableObject table(
+      cx, WasmTableObject::create(cx, limits, tableKind, proto));
   if (!table) {
     return false;
   }
@@ -2730,10 +2759,7 @@ void WasmGlobalObject::finalize(JSFreeOp* fop, JSObject* obj) {
 
 /* static */
 WasmGlobalObject* WasmGlobalObject::create(JSContext* cx, HandleVal hval,
-                                           bool isMutable) {
-  RootedObject proto(
-      cx, &cx->global()->getPrototype(JSProto_WasmGlobal).toObject());
-
+                                           bool isMutable, HandleObject proto) {
   AutoSetNewObjectMetadata metadata(cx);
   RootedWasmGlobalObject obj(
       cx, NewObjectWithGivenProto<WasmGlobalObject>(cx, proto));
@@ -2916,7 +2942,17 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  WasmGlobalObject* global = WasmGlobalObject::create(cx, globalVal, isMutable);
+  RootedObject proto(cx);
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_WasmGlobal,
+                                          &proto)) {
+    return false;
+  }
+  if (!proto) {
+    proto = GlobalObject::getOrCreatePrototype(cx, JSProto_WasmGlobal);
+  }
+
+  WasmGlobalObject* global =
+      WasmGlobalObject::create(cx, globalVal, isMutable, proto);
   if (!global) {
     return false;
   }

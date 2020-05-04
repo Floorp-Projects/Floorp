@@ -811,7 +811,9 @@ bool Module::instantiateLocalTable(JSContext* cx, const TableDesc& td,
   SharedTable table;
   Rooted<WasmTableObject*> tableObj(cx);
   if (td.importedOrExported) {
-    tableObj.set(WasmTableObject::create(cx, td.limits, td.kind));
+    RootedObject proto(
+        cx, &cx->global()->getPrototype(JSProto_WasmTable).toObject());
+    tableObj.set(WasmTableObject::create(cx, td.limits, td.kind, proto));
     if (!tableObj) {
       return false;
     }
@@ -882,8 +884,10 @@ static bool EnsureExportedGlobalObject(JSContext* cx,
     val.set(Val(global.type()));
   }
 
+  RootedObject proto(
+      cx, &cx->global()->getPrototype(JSProto_WasmGlobal).toObject());
   RootedWasmGlobalObject go(
-      cx, WasmGlobalObject::create(cx, val, global.isMutable()));
+      cx, WasmGlobalObject::create(cx, val, global.isMutable(), proto));
   if (!go) {
     return false;
   }
