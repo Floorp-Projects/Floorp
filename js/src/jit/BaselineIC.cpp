@@ -2913,7 +2913,7 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
 
   // Ensure vp array is rooted - we may GC in here.
   size_t numValues = argc + 2 + constructing;
-  AutoArrayRooter vpRoot(cx, numValues, vp);
+  RootedExternalValueArray vpRoot(cx, numValues, vp);
 
   CallArgs callArgs = CallArgsFromSp(argc + constructing, vp + numValues,
                                      constructing, ignoresReturnValue);
@@ -3050,7 +3050,7 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
   FallbackICSpew(cx, stub, "SpreadCall(%s)", CodeName(op));
 
   // Ensure vp array is rooted - we may GC in here.
-  AutoArrayRooter vpRoot(cx, 3 + constructing, vp);
+  RootedExternalValueArray vpRoot(cx, 3 + constructing, vp);
 
   RootedValue callee(cx, vp[0]);
   RootedValue thisv(cx, vp[1]);
