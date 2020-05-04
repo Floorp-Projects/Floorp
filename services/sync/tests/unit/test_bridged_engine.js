@@ -105,7 +105,6 @@ add_task(async function test_interface() {
         },
       ].map(r => JSON.stringify(r));
       CommonUtils.nextTick(() => callback.handleSuccess(outgoingRecords));
-      return { cancel() {} };
     }
 
     setUploaded(millis, ids, callback) {
@@ -115,7 +114,6 @@ add_task(async function test_interface() {
       );
       this.uploadedIDs.push(...ids);
       CommonUtils.nextTick(() => callback.handleSuccess());
-      return { cancel() {} };
     }
 
     syncFinished(callback) {
@@ -125,7 +123,6 @@ add_task(async function test_interface() {
       );
       this.wasSynced = true;
       CommonUtils.nextTick(() => callback.handleSuccess());
-      return { cancel() {} };
     }
 
     reset(callback) {

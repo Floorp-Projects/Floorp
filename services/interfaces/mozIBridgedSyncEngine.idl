@@ -5,7 +5,6 @@
 #include "mozIServicesLogger.idl"
 #include "nsISupports.idl"
 
-interface nsICancelable;
 interface nsIVariant;
 
 // A generic callback called with a result. Variants are automatically unboxed
@@ -112,28 +111,28 @@ interface mozIBridgedSyncEngine : nsISupports {
     // method that can be used to interrupt staging. Typically, engines will
     // stage incoming records in an SQLite temp table, and merge them with the
     // local database when `apply` is called.
-    nsICancelable storeIncoming(in Array<AUTF8String> incomingRecordsAsJSON,
-                                in mozIBridgedSyncEngineCallback callback);
+    void storeIncoming(in Array<AUTF8String> incomingRecordsAsJSON,
+                       in mozIBridgedSyncEngineCallback callback);
 
     // Applies all the staged records, and calls the `callback` with
     // outgoing records to upload. This will always be called after
     // `storeIncoming`, and only once per sync. Application should be atomic:
     // either all incoming records apply successfully, or none.
-    nsICancelable apply(in mozIBridgedSyncEngineApplyCallback callback);
+    void apply(in mozIBridgedSyncEngineApplyCallback callback);
 
     // Notifies the engine that Sync successfully uploaded the records with the
     // given IDs. This method may be called multiple times per sync, once per
     // batch upload. This will always be called after `apply`.
-    nsICancelable setUploaded(in long long newTimestampMillis,
-                              in Array<AUTF8String> uploadedIds,
-                              in mozIBridgedSyncEngineCallback callback);
+    void setUploaded(in long long newTimestampMillis,
+                     in Array<AUTF8String> uploadedIds,
+                     in mozIBridgedSyncEngineCallback callback);
 
     // Notifies the engine that syncing has finished, and the engine shouldn't
     // expect any more `setUploaded` calls. At this point, any outgoing records
     // that weren't passed to `setUploaded` should be assumed failed. This is
     // guaranteed to be called even if the sync fails. This will only be called
     // once per sync.
-    nsICancelable syncFinished(in mozIBridgedSyncEngineCallback callback);
+    void syncFinished(in mozIBridgedSyncEngineCallback callback);
 
     // Resets all local Sync metadata, including the sync ID, last sync time,
     // and any change flags, but preserves all data. After a reset, the engine will

@@ -1,0 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+// Interrupts all pending operations on a data store, if possible. This is
+// provided as a separate interface because the store may want to hide this
+// implementation from callers, as interrupting a write can cause data loss.
+[scriptable, uuid(1c06bfd3-76b1-46fa-a64a-db682d478374)]
+interface mozIInterruptible : nsISupports {
+    void interrupt();
+};
