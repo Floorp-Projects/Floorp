@@ -12,7 +12,7 @@ var EXPORTED_SYMBOLS = [
 ];
 
 const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
-const { CryptoWrapper } = ChromeUtils.import(
+const { RawCryptoWrapper } = ChromeUtils.import(
   "resource://services-sync/record.js"
 );
 const { Utils } = ChromeUtils.import("resource://services-sync/util.js");
@@ -90,7 +90,9 @@ function FakeCryptoService() {
   delete Weave.Crypto; // get rid of the getter first
   Weave.Crypto = this;
 
-  CryptoWrapper.prototype.ciphertextHMAC = function ciphertextHMAC(keyBundle) {
+  RawCryptoWrapper.prototype.ciphertextHMAC = function ciphertextHMAC(
+    keyBundle
+  ) {
     return fakeSHA256HMAC(this.ciphertext);
   };
 }

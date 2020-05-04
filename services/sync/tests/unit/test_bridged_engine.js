@@ -28,7 +28,7 @@ add_task(async function test_interface() {
 
     clear() {
       this.lastSyncMillis = 0;
-      this.incomingRecords = [];
+      this.incomingEnvelopes = [];
       this.uploadedIDs = [];
       this.wasSynced = false;
       this.wasReset = false;
@@ -77,18 +77,18 @@ add_task(async function test_interface() {
       CommonUtils.nextTick(() => callback.handleSuccess(this.syncID));
     }
 
-    storeIncoming(records, callback) {
+    storeIncoming(envelopes, callback) {
       ok(
         this.wasInitialized,
         "Should initialize before storing incoming records"
       );
-      this.incomingRecords.push(...records.map(r => JSON.parse(r)));
+      this.incomingEnvelopes.push(...envelopes.map(r => JSON.parse(r)));
       CommonUtils.nextTick(() => callback.handleSuccess());
     }
 
     apply(callback) {
       ok(this.wasInitialized, "Should initialize before applying records");
-      let outgoingRecords = [
+      let outgoingEnvelopes = [
         {
           id: "hanson",
           data: {
@@ -103,8 +103,13 @@ add_task(async function test_interface() {
             tomorrow: "winding 🛣",
           },
         },
-      ].map(r => JSON.stringify(r));
-      CommonUtils.nextTick(() => callback.handleSuccess(outgoingRecords));
+      ].map(cleartext =>
+        JSON.stringify({
+          id: cleartext.id,
+          cleartext: JSON.stringify(cleartext),
+        })
+      );
+      CommonUtils.nextTick(() => callback.handleSuccess(outgoingEnvelopes));
     }
 
     setUploaded(millis, ids, callback) {
@@ -195,13 +200,22 @@ add_task(async function test_interface() {
 
     greater(bridge.lastSyncMillis, 0, "Should update last sync time");
     deepEqual(
-      bridge.incomingRecords.sort((a, b) => a.id.localeCompare(b.id)),
+      bridge.incomingEnvelopes
+        .sort((a, b) => a.id.localeCompare(b.id))
+        .map(({ cleartext, ...envelope }) => ({
+          cleartextAsObject: JSON.parse(cleartext),
+          ...envelope,
+        })),
       [
         {
           id: "tlc",
-          data: {
-            forbidden: ["scrubs 🚫"],
-            numberAvailable: false,
+          modified: now + 5,
+          cleartextAsObject: {
+            id: "tlc",
+            data: {
+              forbidden: ["scrubs 🚫"],
+              numberAvailable: false,
+            },
           },
         },
       ],

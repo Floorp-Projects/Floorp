@@ -16,5 +16,5 @@ xpcom = { path = "../../../../../xpcom/rust/xpcom" }
 serde = "1"
 serde_json = "1"
 storage_variant = { path = "../../../../../storage/variant" }
-sql-support = { git = "https://github.com/mozilla/application-services", rev = "43d69b250d8185ebc53e887b747d85a2a53c7298" }
-webext-storage = { git = "https://github.com/mozilla/application-services", rev = "43d69b250d8185ebc53e887b747d85a2a53c7298" }
+sql-support = { git = "https://github.com/mozilla/application-services", rev = "789a936d1a49917fe550360b8f3349fe4eba9169" }
+webext-storage = { git = "https://github.com/mozilla/application-services", rev = "789a936d1a49917fe550360b8f3349fe4eba9169" }

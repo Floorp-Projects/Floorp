@@ -12,7 +12,7 @@ mod server_timestamp;
 mod store;
 pub mod telemetry;
 
-pub use bridged_engine::{ApplyResults, BridgedEngine};
+pub use bridged_engine::{ApplyResults, BridgedEngine, IncomingEnvelope, OutgoingEnvelope};
 pub use changeset::{IncomingChangeset, OutgoingChangeset, RecordChangeset};
 pub use payload::Payload;
 pub use request::{CollectionRequest, RequestOrder};

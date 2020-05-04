@@ -111,20 +111,17 @@ where
     /// Creates a task to store incoming records.
     pub fn for_store_incoming(
         engine: &Arc<N>,
-        incoming_cleartexts: &[nsCString],
+        incoming_envelopes_json: &[nsCString],
         callback: &mozIBridgedSyncEngineCallback,
     ) -> error::Result<FerryTask<N>> {
-        let incoming_cleartexts = incoming_cleartexts.iter().try_fold(
-            Vec::with_capacity(incoming_cleartexts.len()),
-            |mut cleartexts, cleartext| -> error::Result<_> {
-                // We need to clone the string for the task to take ownership
-                // of it, anyway; might as well convert to a Rust string while
-                // we're here.
-                cleartexts.push(std::str::from_utf8(&*cleartext)?.into());
-                Ok(cleartexts)
+        let incoming_envelopes = incoming_envelopes_json.iter().try_fold(
+            Vec::with_capacity(incoming_envelopes_json.len()),
+            |mut envelopes, envelope| -> error::Result<_> {
+                envelopes.push(serde_json::from_slice(&*envelope)?);
+                Ok(envelopes)
             },
         )?;
-        Self::with_ferry(engine, Ferry::StoreIncoming(incoming_cleartexts), callback)
+        Self::with_ferry(engine, Ferry::StoreIncoming(incoming_envelopes), callback)
     }
 
     /// Creates a task to mark a subset of outgoing records as uploaded. This
@@ -246,8 +243,8 @@ where
             Ferry::EnsureCurrentSyncId(new_sync_id) => {
                 FerryResult::AssignedSyncId(engine.ensure_current_sync_id(&*new_sync_id)?)
             }
-            Ferry::StoreIncoming(incoming_cleartexts) => {
-                engine.store_incoming(incoming_cleartexts.as_slice())?;
+            Ferry::StoreIncoming(incoming_envelopes) => {
+                engine.store_incoming(incoming_envelopes.as_slice())?;
                 FerryResult::default()
             }
             Ferry::SetUploaded(server_modified_millis, uploaded_ids) => {
@@ -306,7 +303,7 @@ where
 pub struct ApplyTask<N: ?Sized + BridgedEngine> {
     engine: Weak<N>,
     callback: ThreadPtrHandle<mozIBridgedSyncEngineApplyCallback>,
-    result: AtomicRefCell<Result<ApplyResults, N::Error>>,
+    result: AtomicRefCell<Result<Vec<String>, N::Error>>,
 }
 
 impl<N> ApplyTask<N>
@@ -320,12 +317,23 @@ where
     }
 
     /// Runs the task on the background thread.
-    fn inner_run(&self) -> Result<ApplyResults, N::Error> {
+    fn inner_run(&self) -> Result<Vec<String>, N::Error> {
         let engine = match self.engine.upgrade() {
             Some(outer) => outer,
             None => return Err(Error::DidNotRun(Self::name()).into()),
         };
-        Ok(engine.apply()?)
+        let ApplyResults {
+            envelopes: outgoing_envelopes,
+            ..
+        } = engine.apply()?;
+        let outgoing_envelopes_json = outgoing_envelopes.iter().try_fold(
+            Vec::with_capacity(outgoing_envelopes.len()),
+            |mut envelopes, envelope| {
+                envelopes.push(serde_json::to_string(envelope)?);
+                Ok(envelopes)
+            },
+        )?;
+        Ok(outgoing_envelopes_json)
     }
 }
 
@@ -373,11 +381,8 @@ where
             &mut *self.result.borrow_mut(),
             Err(Error::DidNotRun(Self::name()).into()),
         ) {
-            Ok(ApplyResults {
-                records,
-                num_reconciled: _,
-            }) => {
-                let result = records
+            Ok(envelopes) => {
+                let result = envelopes
                     .into_iter()
                     .map(nsCString::from)
                     .collect::<ThinVec<_>>();

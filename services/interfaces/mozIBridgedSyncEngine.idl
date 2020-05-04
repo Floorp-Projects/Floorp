@@ -28,7 +28,7 @@ interface mozIBridgedSyncEngineApplyCallback : nsISupports {
     // records, and has outgoing records. Sync encrypts and uploads these
     // records, and notifies the engine that the upload succeeded by
     // calling `engine.setUploaded(uploadedOutgoingRecordIds, ...)`.
-    void handleSuccess(in Array<AUTF8String> outgoingRecordsAsJSON);
+    void handleSuccess(in Array<AUTF8String> outgoingEnvelopesAsJSON);
 
     // Notifies Sync that the bridged engine failed to apply the staged records.
     void handleError(in nsresult code, in AUTF8String message);
@@ -111,7 +111,7 @@ interface mozIBridgedSyncEngine : nsISupports {
     // method that can be used to interrupt staging. Typically, engines will
     // stage incoming records in an SQLite temp table, and merge them with the
     // local database when `apply` is called.
-    void storeIncoming(in Array<AUTF8String> incomingRecordsAsJSON,
+    void storeIncoming(in Array<AUTF8String> incomingEnvelopesAsJSON,
                        in mozIBridgedSyncEngineCallback callback);
 
     // Applies all the staged records, and calls the `callback` with
