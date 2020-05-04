@@ -283,7 +283,7 @@ class Selection final : public nsSupportsWeakReference,
    * IsCollapsed -- is the whole selection just one point, or unset?
    */
   bool IsCollapsed() const {
-    uint32_t cnt = mStyledRanges.mRanges.Length();
+    uint32_t cnt = mStyledRanges.Length();
     if (cnt == 0) {
       return true;
     }
@@ -316,7 +316,7 @@ class Selection final : public nsSupportsWeakReference,
    */
   void DeleteFromDocument(mozilla::ErrorResult& aRv);
 
-  uint32_t RangeCount() const { return mStyledRanges.mRanges.Length(); }
+  uint32_t RangeCount() const { return mStyledRanges.Length(); }
 
   void GetType(nsAString& aOutType) const;
 
@@ -745,7 +745,7 @@ class Selection final : public nsSupportsWeakReference,
 
   /**
    * @param aOutIndex points to the index of the range in mStyledRanges.mRanges.
-   * If aDidAddRange is true, it is in [0, mStyledRanges.mRanges.Length()).
+   * If aDidAddRange is true, it is in [0, mStyledRanges.Length()).
    */
   MOZ_CAN_RUN_SCRIPT nsresult MaybeAddTableCellRange(nsRange& aRange,
                                                      bool* aDidAddRange,
@@ -757,6 +757,10 @@ class Selection final : public nsSupportsWeakReference,
 
   struct StyledRanges {
     StyledRange* FindRangeData(nsRange* aRange);
+
+    using Elements = AutoTArray<StyledRange, 1>;
+
+    Elements::size_type Length() const;
 
     nsresult RemoveCollapsedRanges();
 
@@ -858,7 +862,7 @@ class Selection final : public nsSupportsWeakReference,
     // If this proves to be a performance concern, then an interval tree may be
     // a possible solution, allowing the calculation of the overlap interval in
     // O(log n) time, though this would require rebalancing and other overhead.
-    AutoTArray<StyledRange, 1> mRanges;
+    Elements mRanges;
   };
 
   StyledRanges mStyledRanges;
