@@ -31,7 +31,7 @@ ChromeUtils.defineModuleGetter(
   "resource://talos-powers/TalosParentProfiler.jsm"
 );
 
-const ANIMATION_PREF = "toolkit.cosmeticAnimations.enabled";
+const REDUCE_MOTION_PREF = "ui.prefersReducedMotion";
 const MULTI_OPT_OUT_PREF = "dom.ipc.multiOptOut";
 
 const MESSAGES = ["TabPaint:Go", "TabPaint:Painted"];
@@ -51,8 +51,7 @@ this.tabpaint = class extends ExtensionAPI {
     this.framescriptURL = this.extension.baseURI.resolve("/framescript.js");
     Services.mm.loadFrameScript(this.framescriptURL, true);
 
-    this.originalAnimate = Services.prefs.getBoolPref(ANIMATION_PREF);
-    Services.prefs.setBoolPref(ANIMATION_PREF, false);
+    Services.prefs.setIntPref(REDUCE_MOTION_PREF, 1);
     Services.prefs.setIntPref(
       MULTI_OPT_OUT_PREF,
       Services.appinfo.E10S_MULTI_EXPERIMENT
@@ -72,7 +71,7 @@ this.tabpaint = class extends ExtensionAPI {
 
     Services.mm.removeDelayedFrameScript(this.framescriptURL);
 
-    Services.prefs.setBoolPref(ANIMATION_PREF, this.originalAnimate);
+    Services.prefs.clearUserPref(REDUCE_MOTION_PREF);
     Services.prefs.clearUserPref(MULTI_OPT_OUT_PREF);
   }
 
