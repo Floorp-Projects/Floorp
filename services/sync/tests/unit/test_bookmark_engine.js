@@ -703,6 +703,7 @@ function doCheckWBOs(WBOs, expected) {
 }
 
 function FakeRecord(constructor, r) {
+  this.defaultCleartext = constructor.prototype.defaultCleartext;
   constructor.call(this, "bookmarks", r.id);
   for (let x in r) {
     this[x] = r[x];

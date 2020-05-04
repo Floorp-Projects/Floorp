@@ -5,6 +5,7 @@
 var EXPORTED_SYMBOLS = [
   "WBORecord",
   "RecordManager",
+  "RawCryptoWrapper",
   "CryptoWrapper",
   "CollectionKeyManager",
   "Collection",
@@ -29,6 +30,16 @@ const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
 
+/**
+ * The base class for all Sync basic storage objects (BSOs). This is the format
+ * used to store all records on the Sync server. In an earlier version of the
+ * Sync protocol, BSOs used to be called WBOs, or Weave Basic Objects. This
+ * class retains the old name.
+ *
+ * @class
+ * @param {String} collection The collection name for this BSO.
+ * @param {String} id         The ID of this BSO.
+ */
 function WBORecord(collection, id) {
   this.data = {};
   this.payload = {};
@@ -131,15 +142,70 @@ Utils.deferGetSet(WBORecord, "data", [
   "payload",
 ]);
 
-function CryptoWrapper(collection, id) {
-  this.cleartext = {};
+/**
+ * An encrypted BSO record. This subclass handles encrypting and decrypting the
+ * BSO payload, but doesn't parse or interpret the cleartext string. Subclasses
+ * must override `transformBeforeEncrypt` and `transformAfterDecrypt` to process
+ * the cleartext.
+ *
+ * This class is only exposed for bridged engines, which handle serialization
+ * and deserialization in Rust. Sync engines implemented in JS should subclass
+ * `CryptoWrapper` instead, which takes care of transforming the cleartext into
+ * an object, and ensuring its contents are valid.
+ *
+ * @class
+ * @template Cleartext
+ * @param    {String} collection The collection name for this BSO.
+ * @param    {String} id         The ID of this BSO.
+ */
+function RawCryptoWrapper(collection, id) {
+  // Setting properties before calling the superclass constructor isn't allowed
+  // in new-style classes (`class MyRecord extends RawCryptoWrapper`), but
+  // allowed with plain functions. This is also why `defaultCleartext` is a
+  // method, and not simply set in the subclass constructor.
+  this.cleartext = this.defaultCleartext();
   WBORecord.call(this, collection, id);
   this.ciphertext = null;
-  this.id = id;
 }
-CryptoWrapper.prototype = {
+RawCryptoWrapper.prototype = {
   __proto__: WBORecord.prototype,
-  _logName: "Sync.Record.CryptoWrapper",
+  _logName: "Sync.Record.RawCryptoWrapper",
+
+  /**
+   * Returns the default empty cleartext for this record type. This is exposed
+   * as a method so that subclasses can override it, and access the default
+   * cleartext in their constructors. `CryptoWrapper`, for example, overrides
+   * this to return an empty object, so that initializing the `id` in its
+   * constructor calls its overridden `id` setter.
+   *
+   * @returns {Cleartext} An empty cleartext.
+   */
+  defaultCleartext() {
+    return null;
+  },
+
+  /**
+   * Transforms the cleartext into a string that can be encrypted and wrapped
+   * in a BSO payload. This is called before uploading the record to the server.
+   *
+   * @param   {Cleartext} outgoingCleartext The cleartext to upload.
+   * @returns {String}                      The serialized cleartext.
+   */
+  transformBeforeEncrypt(outgoingCleartext) {
+    throw new TypeError("Override to stringify outgoing records");
+  },
+
+  /**
+   * Transforms an incoming cleartext string into an instance of the
+   * `Cleartext` type. This is called when fetching the record from the
+   * server.
+   *
+   * @param   {String} incomingCleartext The decrypted cleartext string.
+   * @returns {Cleartext}                The parsed cleartext.
+   */
+  transformAfterDecrypt(incomingCleartext) {
+    throw new TypeError("Override to parse incoming records");
+  },
 
   ciphertextHMAC: function ciphertextHMAC(keyBundle) {
     let hasher = keyBundle.sha256HMACHasher;
@@ -166,7 +232,7 @@ CryptoWrapper.prototype = {
 
     this.IV = Weave.Crypto.generateRandomIV();
     this.ciphertext = await Weave.Crypto.encrypt(
-      JSON.stringify(this.cleartext),
+      this.transformBeforeEncrypt(this.cleartext),
       keyBundle.encryptionKeyB64,
       this.IV
     );
@@ -191,29 +257,59 @@ CryptoWrapper.prototype = {
       Utils.throwHMACMismatch(this.hmac, computedHMAC);
     }
 
-    // Handle invalid data here. Elsewhere we assume that cleartext is an object.
     let cleartext = await Weave.Crypto.decrypt(
       this.ciphertext,
       keyBundle.encryptionKeyB64,
       this.IV
     );
+    this.cleartext = this.transformAfterDecrypt(cleartext);
+    this.ciphertext = null;
+
+    return this.cleartext;
+  },
+};
+
+Utils.deferGetSet(RawCryptoWrapper, "payload", ["ciphertext", "IV", "hmac"]);
+
+/**
+ * An encrypted BSO record with a JSON payload. All engines implemented in JS
+ * should subclass this class to describe their own record types.
+ *
+ * @class
+ * @param {String} collection The collection name for this BSO.
+ * @param {String} id         The ID of this BSO.
+ */
+function CryptoWrapper(collection, id) {
+  RawCryptoWrapper.call(this, collection, id);
+}
+CryptoWrapper.prototype = {
+  __proto__: RawCryptoWrapper.prototype,
+  _logName: "Sync.Record.CryptoWrapper",
+
+  defaultCleartext() {
+    return {};
+  },
+
+  transformBeforeEncrypt(cleartext) {
+    return JSON.stringify(cleartext);
+  },
+
+  transformAfterDecrypt(cleartext) {
+    // Handle invalid data here. Elsewhere we assume that cleartext is an object.
     let json_result = JSON.parse(cleartext);
 
-    if (json_result && json_result instanceof Object) {
-      this.cleartext = json_result;
-      this.ciphertext = null;
-    } else {
+    if (!(json_result && json_result instanceof Object)) {
       throw new Error(
         `Decryption failed: result is <${json_result}>, not an object.`
       );
     }
 
     // Verify that the encrypted id matches the requested record's id.
-    if (this.cleartext.id != this.id) {
-      throw new Error(`Record id mismatch: ${this.cleartext.id} != ${this.id}`);
+    if (json_result.id != this.id) {
+      throw new Error(`Record id mismatch: ${json_result.id} != ${this.id}`);
     }
 
-    return this.cleartext;
+    return json_result;
   },
 
   cleartextToString() {
@@ -248,17 +344,16 @@ CryptoWrapper.prototype = {
 
   // The custom setter below masks the parent's getter, so explicitly call it :(
   get id() {
-    return WBORecord.prototype.__lookupGetter__("id").call(this);
+    return super.id;
   },
 
   // Keep both plaintext and encrypted versions of the id to verify integrity
   set id(val) {
-    WBORecord.prototype.__lookupSetter__("id").call(this, val);
+    super.id = val;
     return (this.cleartext.id = val);
   },
 };
 
-Utils.deferGetSet(CryptoWrapper, "payload", ["ciphertext", "IV", "hmac"]);
 Utils.deferGetSet(CryptoWrapper, "cleartext", "deleted");
 
 /**

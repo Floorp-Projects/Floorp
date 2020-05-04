@@ -5,6 +5,7 @@
 use std::{error, fmt, result, str::Utf8Error};
 
 use nserror::{nsresult, NS_ERROR_INVALID_ARG, NS_ERROR_UNEXPECTED};
+use serde_json::Error as JsonError;
 
 /// A specialized `Result` type for Golden Gate.
 pub type Result<T> = result::Result<T, Error>;
@@ -18,7 +19,7 @@ pub enum Error {
     /// A ferry didn't run on the background task queue.
     DidNotRun(&'static str),
 
-    /// A Gecko string couldn't be converted to UTF-8.
+    /// A string contains invalid UTF-8 or JSON.
     MalformedString(Box<dyn error::Error + Send + Sync + 'static>),
 }
 
@@ -49,6 +50,12 @@ impl From<nsresult> for Error {
 
 impl From<Utf8Error> for Error {
     fn from(error: Utf8Error) -> Error {
+        Error::MalformedString(error.into())
+    }
+}
+
+impl From<JsonError> for Error {
+    fn from(error: JsonError) -> Error {
         Error::MalformedString(error.into())
     }
 }

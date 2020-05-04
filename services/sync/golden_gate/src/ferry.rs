@@ -4,6 +4,7 @@
 
 use nsstring::nsCString;
 use storage_variant::VariantType;
+use sync15_traits::IncomingEnvelope;
 use xpcom::{interfaces::nsIVariant, RefPtr};
 
 /// An operation that runs on the background thread, and optionally passes a
@@ -15,7 +16,7 @@ pub enum Ferry {
     SyncId,
     ResetSyncId,
     EnsureCurrentSyncId(String),
-    StoreIncoming(Vec<String>),
+    StoreIncoming(Vec<IncomingEnvelope>),
     SetUploaded(i64, Vec<String>),
     SyncFinished,
     Reset,

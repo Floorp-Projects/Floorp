@@ -2,6 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use std::{error::Error, fmt};
+
+use serde::{Deserialize, Serialize};
+
+use super::{Guid, Payload, ServerTimestamp};
+
 /// A bridged Sync engine implements all the methods needed to support
 /// Desktop Sync.
 pub trait BridgedEngine {
@@ -47,7 +53,7 @@ pub trait BridgedEngine {
     /// times per sync, once for each batch. Implementations can use the
     /// signal to check if the operation was aborted, and cancel any
     /// pending work.
-    fn store_incoming(&self, incoming_cleartexts: &[String]) -> Result<(), Self::Error>;
+    fn store_incoming(&self, incoming_cleartexts: &[IncomingEnvelope]) -> Result<(), Self::Error>;
 
     /// Applies all staged records, reconciling changes on both sides and
     /// resolving conflicts. Returns a list of records to upload.
@@ -84,7 +90,7 @@ pub trait BridgedEngine {
 #[derive(Clone, Debug, Default)]
 pub struct ApplyResults {
     /// List of records
-    pub records: Vec<String>,
+    pub envelopes: Vec<OutgoingEnvelope>,
     /// The number of incoming records whose contents were merged because they
     /// changed on both sides. None indicates we aren't reporting this
     /// information.
@@ -92,20 +98,102 @@ pub struct ApplyResults {
 }
 
 impl ApplyResults {
-    pub fn new(records: Vec<String>, num_reconciled: impl Into<Option<usize>>) -> Self {
+    pub fn new(envelopes: Vec<OutgoingEnvelope>, num_reconciled: impl Into<Option<usize>>) -> Self {
         Self {
-            records,
+            envelopes,
             num_reconciled: num_reconciled.into(),
         }
     }
 }
 
 // Shorthand for engines that don't care.
-impl From<Vec<String>> for ApplyResults {
-    fn from(records: Vec<String>) -> Self {
+impl From<Vec<OutgoingEnvelope>> for ApplyResults {
+    fn from(envelopes: Vec<OutgoingEnvelope>) -> Self {
         Self {
-            records,
+            envelopes,
             num_reconciled: None,
         }
+    }
+}
+
+/// An envelope for an incoming item, passed to `BridgedEngine::store_incoming`.
+/// Envelopes are a halfway point between BSOs, the format used for all items on
+/// the Sync server, and records, which are specific to each engine.
+///
+/// A BSO is a JSON object with metadata fields (`id`, `modifed`, `sortindex`),
+/// and a BSO payload that is itself a JSON string. For encrypted records, the
+/// BSO payload has a ciphertext, which must be decrypted to yield a cleartext.
+/// The cleartext is a JSON string (that's three levels of JSON wrapping, if
+/// you're keeping score: the BSO itself, BSO payload, and cleartext) with the
+/// actual record payload.
+///
+/// An envelope combines the metadata fields from the BSO, and the cleartext
+/// from the encrypted BSO payload.
+#[derive(Clone, Debug, Deserialize)]
+pub struct IncomingEnvelope {
+    pub id: Guid,
+    pub modified: ServerTimestamp,
+    #[serde(default)]
+    pub sortindex: Option<i32>,
+    // Don't provide access to the cleartext directly. We want all callers to
+    // use `IncomingEnvelope::payload`, so that we can validate the cleartext.
+    cleartext: String,
+}
+
+impl IncomingEnvelope {
+    /// Parses and returns the record payload from this envelope. Returns an
+    /// error if the envelope's cleartext isn't valid JSON, or the payload is
+    /// invalid.
+    pub fn payload(&self) -> Result<Payload, Box<dyn Error>> {
+        let payload: Payload = serde_json::from_str(&self.cleartext)?;
+        if payload.id != self.id {
+            return Err(MismatchedIdError {
+                envelope: self.id.clone(),
+                payload: payload.id,
+            }
+            .into());
+        }
+        Ok(payload)
+    }
+}
+
+/// An envelope for an outgoing item, returned from `BridgedEngine::apply`. This
+/// is similar to `IncomingEnvelope`, but omits fields that are only set by the
+/// server, like `modified`.
+#[derive(Clone, Debug, Serialize)]
+pub struct OutgoingEnvelope {
+    id: Guid,
+    cleartext: String,
+}
+
+impl OutgoingEnvelope {
+    /// Creates an envelope for an outgoing item. Returns an error if the
+    /// payload can't be serialized to JSON.
+    pub fn new(payload: Payload) -> Result<OutgoingEnvelope, Box<dyn Error>> {
+        let cleartext = serde_json::to_string(&payload)?;
+        Ok(OutgoingEnvelope {
+            id: payload.id,
+            cleartext,
+        })
+    }
+}
+
+/// An error returned when the ID of an incoming BSO doesn't match the ID in
+/// its payload.
+#[derive(Debug)]
+pub struct MismatchedIdError {
+    pub envelope: Guid,
+    pub payload: Guid,
+}
+
+impl Error for MismatchedIdError {}
+
+impl fmt::Display for MismatchedIdError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "ID `{}` in envelope doesn't match `{}` in payload",
+            self.envelope, self.payload
+        )
     }
 }
