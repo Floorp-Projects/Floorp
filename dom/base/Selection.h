@@ -756,6 +756,8 @@ class Selection final : public nsSupportsWeakReference,
   void Disconnect();
 
   struct StyledRanges {
+    void Clear();
+
     StyledRange* FindRangeData(nsRange* aRange);
 
     using Elements = AutoTArray<StyledRange, 1>;
