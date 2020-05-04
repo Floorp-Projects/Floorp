@@ -735,7 +735,9 @@ class NativeObject : public JSObject {
     if (inDictionaryMode()) {
       return lastProperty()->base()->slotSpan();
     }
-    return lastProperty()->slotSpan();
+    // Get the class from the object group rather than the base shape to avoid a
+    // race between Shape::ensureOwnBaseShape and background sweeping.
+    return lastProperty()->slotSpan(getClass());
   }
 
   /* Whether a slot is at a fixed offset from this object. */
