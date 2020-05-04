@@ -17,20 +17,14 @@
   <script type="application/javascript"><![CDATA[
 
   SimpleTest.waitForExplicitFinish();
-  let socketProcessRunning = 0;
-  if (SpecialPowers.getBoolPref("network.process.enabled")) {
-    socketProcessRunning = 1;
-  }
-
-  let numToOpen = 3;
-  const expectedNumRemotes = numToOpen + socketProcessRunning;
+  let numRemotes = 3;
   let numReady = 0;
 
   // Create some remote processes, and set up message-passing so that
   // we know when each child is fully initialized.
   let remotes = [];
   SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processCount", 3]]}, function() {
-    for (let i = 0; i < numToOpen; i++) {
+    for (let i = 0; i < numRemotes; i++) {
       let w = remotes[i] = docShell.rootTreeItem.domWindow.open("remote.xhtml", "", "chrome");
 
       w.addEventListener("load", function loadHandler() {
@@ -40,7 +34,7 @@
         mm.addMessageListener("test:ready", function readyHandler() {
           mm.removeMessageListener("test:ready", readyHandler);
           numReady++;
-          if (numReady == numToOpen) {
+          if (numReady == numRemotes) {
             // All the remote processes are ready.  Do memory reporting.
             doReports();
           }
@@ -75,28 +69,27 @@
       );
 
       // Close the remote processes.
-      for (let i = 0; i < numToOpen; i++) {
+      for (let i = 0; i < numRemotes; i++) {
         remotes[i].close();
       }
 
       // Check the results.
 
       let processes = Object.keys(residents);
-      ok(processes.length == expectedNumRemotes + 1, "correct resident count");
+      ok(processes.length == numRemotes + 1, "correct resident count");
 
       let numEmptyProcesses = 0, numNonEmptyProcesses = 0;
       for (let i = 0; i < processes.length; i++) {
         if (processes[i] == "") {
           numEmptyProcesses++;
         } else {
-          ok(processes[i].startsWith("Browser (") || processes[i].startsWith("Web Content (") ||
-             (processes[i].startsWith("Socket (") && socketProcessRunning),
+          ok(processes[i].startsWith("Browser (") || processes[i].startsWith("Web Content ("),
              "correct non-empty process name prefix: " + processes[i]);
           numNonEmptyProcesses++;
         }
       }
       ok(numEmptyProcesses == 1, "correct empty process name count");
-      ok(numNonEmptyProcesses == expectedNumRemotes,
+      ok(numNonEmptyProcesses == numRemotes,
                                  "correct non-empty process name count");
 
       SimpleTest.finish();

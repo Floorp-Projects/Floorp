@@ -139,11 +139,6 @@
 
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
-  let socketProcessRunning = 0;
-  if (SpecialPowers.getBoolPref("network.process.enabled")) {
-    socketProcessRunning = 1;
-  }
-
 
   let amounts = [
     "vsize",
@@ -231,8 +226,7 @@
 
   function checkSpecialReport(aName, aAmounts, aCanBeUnreasonable)
   {
-    ok(aAmounts.length == (1 + socketProcessRunning),
-       aName + " has " + aAmounts.length + " report");
+    ok(aAmounts.length == 1, aName + " has " + aAmounts.length + " report");
     let n = aAmounts[0];
     if (!aCanBeUnreasonable) {
       checkSizeReasonable(aName, n);
