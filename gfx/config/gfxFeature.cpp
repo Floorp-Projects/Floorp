@@ -49,15 +49,15 @@ bool FeatureState::SetDefault(bool aEnable, FeatureStatus aDisableStatus,
 }
 
 void FeatureState::SetDefaultFromPref(const char* aPrefName, bool aIsEnablePref,
-                                      bool aDefaultValue) {
+                                      bool aDefaultValue,
+                                      Maybe<bool> aUserValue) {
   bool baseValue =
       Preferences::GetBool(aPrefName, aDefaultValue, PrefValueKind::Default);
   SetDefault(baseValue == aIsEnablePref, FeatureStatus::Disabled,
              "Disabled by default");
 
-  if (Preferences::HasUserValue(aPrefName)) {
-    bool userValue = Preferences::GetBool(aPrefName, aDefaultValue);
-    if (userValue == aIsEnablePref) {
+  if (aUserValue) {
+    if (*aUserValue == aIsEnablePref) {
       nsCString message("Enabled via ");
       message.AppendASCII(aPrefName);
       UserEnable(message.get());
@@ -68,6 +68,16 @@ void FeatureState::SetDefaultFromPref(const char* aPrefName, bool aIsEnablePref,
                   NS_LITERAL_CSTRING("FEATURE_FAILURE_PREF_OFF"));
     }
   }
+}
+
+void FeatureState::SetDefaultFromPref(const char* aPrefName, bool aIsEnablePref,
+                                      bool aDefaultValue) {
+  Maybe<bool> userValue;
+  if (Preferences::HasUserValue(aPrefName)) {
+    userValue.emplace(Preferences::GetBool(aPrefName, aDefaultValue));
+  }
+
+  SetDefaultFromPref(aPrefName, aIsEnablePref, aDefaultValue, userValue);
 }
 
 bool FeatureState::InitOrUpdate(bool aEnable, FeatureStatus aDisableStatus,

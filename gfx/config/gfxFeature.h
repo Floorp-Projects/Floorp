@@ -10,27 +10,30 @@
 #include <stdint.h>
 #include "gfxTelemetry.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Maybe.h"
 #include "nsString.h"
 
 namespace mozilla {
 namespace gfx {
 
-#define GFX_FEATURE_MAP(_)                                        \
-  /* Name,                        Type,         Description */    \
-  _(HW_COMPOSITING, Feature, "Compositing")                       \
-  _(D3D11_COMPOSITING, Feature, "Direct3D11 Compositing")         \
-  _(OPENGL_COMPOSITING, Feature, "OpenGL Compositing")            \
-  _(DIRECT2D, Feature, "Direct2D")                                \
-  _(D3D11_HW_ANGLE, Feature, "Direct3D11 hardware ANGLE")         \
-  _(DIRECT_DRAW, Feature, "DirectDraw")                           \
-  _(GPU_PROCESS, Feature, "GPU Process")                          \
-  _(WEBRENDER, Feature, "WebRender")                              \
-  _(WEBRENDER_QUALIFIED, Feature, "WebRender qualified")          \
-  _(WEBRENDER_COMPOSITOR, Feature, "WebRender native compositor") \
-  _(WEBRENDER_PARTIAL, Feature, "WebRender partial present")      \
-  _(OMTP, Feature, "Off Main Thread Painting")                    \
-  _(ADVANCED_LAYERS, Feature, "Advanced Layers")                  \
-  _(WEBGPU, Feature, "WebGPU")                                    \
+#define GFX_FEATURE_MAP(_)                                           \
+  /* Name,                        Type,         Description */       \
+  _(HW_COMPOSITING, Feature, "Compositing")                          \
+  _(D3D11_COMPOSITING, Feature, "Direct3D11 Compositing")            \
+  _(OPENGL_COMPOSITING, Feature, "OpenGL Compositing")               \
+  _(DIRECT2D, Feature, "Direct2D")                                   \
+  _(D3D11_HW_ANGLE, Feature, "Direct3D11 hardware ANGLE")            \
+  _(DIRECT_DRAW, Feature, "DirectDraw")                              \
+  _(GPU_PROCESS, Feature, "GPU Process")                             \
+  _(WEBRENDER, Feature, "WebRender")                                 \
+  _(WEBRENDER_QUALIFIED, Feature, "WebRender qualified")             \
+  _(WEBRENDER_COMPOSITOR, Feature, "WebRender native compositor")    \
+  _(WEBRENDER_PARTIAL, Feature, "WebRender partial present")         \
+  _(WEBRENDER_ANGLE, Feature, "WebRender ANGLE")                     \
+  _(WEBRENDER_DCOMP_PRESENT, Feature, "WebRender DirectComposition") \
+  _(OMTP, Feature, "Off Main Thread Painting")                       \
+  _(ADVANCED_LAYERS, Feature, "Advanced Layers")                     \
+  _(WEBGPU, Feature, "WebGPU")                                       \
   /* Add new entries above this comment */
 
 enum class Feature : uint32_t {
@@ -42,8 +45,11 @@ enum class Feature : uint32_t {
 
 class FeatureState {
   friend class gfxConfig;
+  friend class GfxConfigManager;  // for testing
 
  public:
+  FeatureState() { Reset(); }
+
   bool IsEnabled() const;
   FeatureStatus GetValue() const;
 
@@ -54,6 +60,8 @@ class FeatureState {
                   const char* aDisableMessage);
   bool InitOrUpdate(bool aEnable, FeatureStatus aDisableStatus,
                     const char* aMessage);
+  void SetDefaultFromPref(const char* aPrefName, bool aIsEnablePref,
+                          bool aDefaultValue, Maybe<bool> aUserValue);
   void SetDefaultFromPref(const char* aPrefName, bool aIsEnablePref,
                           bool aDefaultValue);
   void UserEnable(const char* aMessage);
