@@ -1,0 +1,105 @@
+{
+    "definitions": {
+        "perfherder-options-schema": {
+            "title": "Perfherder-specific Options",
+            "description": "Set these to have more control over the perfherder blob that will be created",
+            "properties": {
+                "name": {
+                    "title": "Name of the metric or suite",
+                    "type": "string"
+                },
+                "value": {
+                    "title": "Summary value",
+                    "type": "number",
+                    "minimum": -1000000000000.0,
+                    "maximum": 1000000000000.0
+                },
+                "unit": {
+                    "title": "Measurement unit",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20
+                },
+                "lowerIsBetter": {
+                    "description": "Whether lower values are better",
+                    "title": "Lower is better",
+                    "type": "boolean"
+                },
+                "shouldAlert": {
+                    "description": "Whether we should alert",
+                    "title": "Should alert",
+                    "type": "boolean"
+                },
+                "alertThreshold": {
+                    "description": "% change threshold before alerting",
+                    "title": "Alert threshold",
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 1000.0
+                }
+            }
+        },
+        "single-metric-schema": {
+            "allOf": [
+                {"$ref": "#/definitions/perfherder-options-schema"},
+                {
+                    "properties": {
+                        "values": {
+                            "description": "Contains all the measurements taken",
+                            "title": "Measured values",
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            }
+                        }
+                    }
+                }
+            ],
+            "required": [
+                "name",
+                "values"
+            ],
+            "type": "object"
+        },
+        "results-schema": {
+            "anyOf": [
+                {"type": "string"},
+                {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/single-metric-schema"
+                    }
+                }
+            ],
+            "title": "Holds the data to be processed by the metrics modules",
+            "description": "The data can be defined within an object, or through a path to where the data can be found"
+        }
+    },
+    "id": "https://dxr.mozilla.org/mozilla-central/source/python/mozperftest/mozperftest/schemas/results-schema.json",
+    "allOf": [
+        {"$ref": "#/definitions/perfherder-options-schema"},
+        {
+            "properties": {
+                "results": {"$ref": "#/definitions/results-schema"},
+                "transformer": {
+                    "title": "Transformer to use on the data",
+                    "type": "string"
+                },
+                "extraOptions": {
+                    "type": "array",
+                    "title": "Extra options used in the running suite",
+                    "items": {
+                        "type": "string",
+                        "maxLength": 100
+                    },
+                    "uniqueItems": true,
+                    "maxItems": 8
+                }
+            }
+        }
+    ],
+    "required": ["results", "name"],
+    "description": "Intermediate results for a single type of metric or suite (i.e. browsertime, and adb results shouldn't be mixed in the same entry)",
+    "title": "MozPerftest Intermediate Results Schema",
+    "type": "object"
+}

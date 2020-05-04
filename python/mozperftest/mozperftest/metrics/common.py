@@ -1,7 +1,14 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from collections import defaultdict
 from pathlib import Path
+
+from mozperftest.metrics.exceptions import (
+    MetricsMultipleTransformsError,
+    MetricsMissingResultsError
+)
+from mozperftest.metrics.utils import validate_intermediate_results
 from mozperftest.metrics.notebook import PerftestNotebook
 
 
@@ -15,7 +22,7 @@ class MetricsStorage(object):
     def __init__(self, output_path, prefix, logger):
         self.prefix = prefix
         self.output_path = output_path
-        self.stddata = None
+        self.stddata = {}
         p = Path(output_path)
         p.mkdir(parents=True, exist_ok=True)
         self.results = []
@@ -53,10 +60,44 @@ class MetricsStorage(object):
         :param results list/dict/str: Path, or list of paths to the data (
             or the data itself in a dict) of the data to be processed.
         """
-        self.results = self._parse_results(results)
+        # Parse the results into files (for now) and the settings
+        self.results = defaultdict(lambda: defaultdict(list))
+        self.settings = defaultdict(dict)
+        for res in results:
+            # Ensure that the results are valid before continuing
+            validate_intermediate_results(res)
+
+            name = res["name"]
+            if isinstance(res["results"], dict):
+                # XXX Implement subtest based parsing
+                raise NotImplementedError("Subtest-based processing is not implemented yet")
+
+            # Merge all entries with the same name into one
+            # result, if separation is needed use unique names
+            self.results[name]["files"].extend(self._parse_results(res["results"]))
+
+            suite_settings = self.settings[name]
+            for key, val in res.items():
+                if key == "results":
+                    continue
+                suite_settings[key] = val
+
+            # Check the transform definitions
+            currtrfm = self.results[name]["transformer"]
+            if not currtrfm:
+                self.results[name]["transformer"] = res.get("transformer", "SingleJsonRetriever")
+            elif currtrfm != res.get("transformer", "SingleJsonRetriever"):
+                raise MetricsMultipleTransformsError(
+                    f"Only one transformer allowed per data name! Found multiple for {name}: "
+                    f"{[currtrfm, res['transformer']]}"
+                )
+
+        if not self.results:
+            self.return_code = 1
+            raise MetricsMissingResultsError("Could not find any results to process.")
 
     def get_standardized_data(
-        self, group_name="firefox", transformer="SingleJsonRetriever", overwrite=False
+        self, group_name="firefox", transformer="SingleJsonRetriever"
     ):
         """Returns a parsed, standardized results data set.
 
@@ -73,25 +114,31 @@ class MetricsStorage(object):
         :return dict: Standardized notebook data with containing the
             requested metrics.
         """
-        if not overwrite and self.stddata:
+        if self.stddata:
             return self.stddata
 
-        # XXX Change config based on settings
-        config = {
-            "output": self.output_path,
-            "prefix": self.prefix,
-            "customtransformer": transformer,
-            "file_groups": {group_name: self.results},
-        }
-        ptnb = PerftestNotebook(config["file_groups"], config, transformer)
-        self.stddata = ptnb.process()
+        for data_type, data_info in self.results.items():
+            prefix = data_type
+            if self.prefix:
+                prefix = "{}-{}".format(self.prefix, data_type)
+
+            config = {
+                "output": self.output_path,
+                "prefix": prefix,
+                "customtransformer": data_info["transformer"],
+                "file_groups": {data_type: data_info["files"]},
+            }
+
+            ptnb = PerftestNotebook(config["file_groups"], config, transformer)
+            r = ptnb.process()
+            self.stddata[data_type] = r["data"]
+
         return self.stddata
 
     def filtered_metrics(
         self,
         group_name="firefox",
         transformer="SingleJsonRetriever",
-        overwrite=False,
         metrics=None,
     ):
 
@@ -101,25 +148,27 @@ class MetricsStorage(object):
         will be filtered. The entries in metrics are pattern matched with
         the subtests in the standardized data (not a regular expression).
         For example, if "firstPaint" is in metrics, then all subtests which
-        contain this string in their name, then they will be kept.
+        contain this string in their name will be kept.
 
         :param metrics list: List of metrics to keep.
-        :return dict: Standardized notebook data with containing the
+        :return dict: Standardized notebook data containing the
             requested metrics.
         """
         results = self.get_standardized_data(
             group_name=group_name, transformer=transformer
-        )["data"]
-
+        )
         if not metrics:
             return results
 
-        newresults = []
-        for res in results:
-            if any([met in res["subtest"] for met in metrics]):
-                newresults.append(res)
+        filtered = {}
+        for data_type, data_info in results.items():
+            newresults = []
+            for res in data_info:
+                if any([met in res["subtest"] for met in metrics]):
+                    newresults.append(res)
+            filtered[data_type] = newresults
 
-        return newresults
+        return filtered
 
 
 _metrics = {}
@@ -132,6 +181,7 @@ def filtered_metrics(
     group_name="firefox",
     transformer="SingleJsonRetriever",
     metrics=None,
+    settings=False,
 ):
     """Returns standardized data extracted from the metadata instance.
 
@@ -141,8 +191,14 @@ def filtered_metrics(
     key = path, prefix
     if key not in _metrics:
         storage = _metrics[key] = MetricsStorage(path, prefix, metadata)
-        storage.set_results(metadata.get_result())
+        storage.set_results(metadata.get_results())
+    else:
+        storage = _metrics[key]
 
-    return storage.filtered_metrics(
+    results = storage.filtered_metrics(
         group_name=group_name, transformer=transformer, metrics=metrics
     )
+
+    if settings:
+        return results, storage.settings
+    return results
