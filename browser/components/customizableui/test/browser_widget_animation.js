@@ -3,6 +3,8 @@
 
 "use strict";
 
+gReduceMotionOverride = false;
+
 function promiseWidgetAnimationOut(aNode) {
   let animationNode = aNode;
   if (
