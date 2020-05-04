@@ -451,8 +451,21 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
   // function
   nsAutoCString fileName;
   uint32_t lineNumber = 0, columnNumber = 0;
-  nsJSUtils::GetCallingLocation(cx, fileName, &lineNumber, &columnNumber);
-  if (fileName.IsEmpty()) {
+  JS::AutoFilename rawScriptFilename;
+  if (JS::DescribeScriptedCaller(cx, &rawScriptFilename, &lineNumber,
+                                 &columnNumber)) {
+    nsDependentCSubstring fileName_(rawScriptFilename.get(),
+                                    strlen(rawScriptFilename.get()));
+    ToLowerCase(fileName_);
+    // Extract file name alone if scriptFilename contains line number
+    // separated by multiple space delimiters in few cases.
+    int32_t fileNameIndex = fileName_.FindChar(' ');
+    if (fileNameIndex != -1) {
+      fileName_.SetLength(fileNameIndex);
+    }
+
+    fileName = std::move(fileName_);
+  } else {
     fileName = NS_LITERAL_CSTRING("unknown-file");
   }
 
@@ -495,13 +508,7 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
       fileName.get(), NS_ConvertUTF16toUTF8(aScript).get());
 #endif
 
-#ifdef EARLY_BETA_OR_EARLIER
-  // Until we understand the events coming from release, we don't want to
-  // enforce eval restrictions on release. Limiting to Nightly and early beta.
-  return false;
-#else
   return true;
-#endif
 }
 
 /* static */
