@@ -98,7 +98,7 @@ int64_t nsHttpResponseHead::ContentLength() {
   return mContentLength;
 }
 
-void nsHttpResponseHead::ContentType(nsACString& aContentType) {
+void nsHttpResponseHead::ContentType(nsACString& aContentType) const {
   RecursiveMutexAutoLock monitor(mRecursiveMutex);
   aContentType = mContentType;
 }
