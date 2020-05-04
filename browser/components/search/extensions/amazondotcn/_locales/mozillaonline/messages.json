@@ -3,6 +3,6 @@
     "message": "https://www.amazon.cn/gp/associates/link-types/searchbox.html"
   },
   "searchUrlGetParams": {
-    "message": "engine=amazon_shopping&tag=mozilla&create=2028&adid=1NZNRHJZ2Q87NTS7YW6N&campaign=408&mode=blended&keywords={searchTerms}"
+    "message": "engine=amazon_shopping&tag=mozilla&create=2028&adid=1NZNRHJZ2Q87NTS7YW6N&campaign=408&mode=blended&keyword={searchTerms}"
   }
 }
