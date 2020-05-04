@@ -9,6 +9,7 @@
 #include "MediaInfo.h"
 #include "MediaResult.h"
 #include "PlatformEncoderModule.h"
+#include "WebrtcGmpVideoCodec.h"
 #include "common_video/include/bitrate_adjuster.h"
 #include "webrtc/modules/video_coding/include/video_codec_interface.h"
 
