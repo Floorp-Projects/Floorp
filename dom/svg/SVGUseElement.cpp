@@ -358,7 +358,9 @@ void SVGUseElement::UpdateShadowTree() {
 
   // Bug 1415044 the specs do not say which referrer information we should use.
   // This may change if there's any spec comes out.
-  auto referrerInfo = MakeRefPtr<ReferrerInfo>(*this);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = new mozilla::dom::ReferrerInfo();
+  referrerInfo->InitWithNode(this);
+
   mContentURLData = new URLExtraData(baseURI.forget(), referrerInfo.forget(),
                                      do_AddRef(NodePrincipal()));
 

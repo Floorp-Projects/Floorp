@@ -6668,11 +6668,9 @@ void HTMLMediaElement::SetRequestHeaders(nsIHttpChannel* aChannel) {
       NS_LITERAL_CSTRING("Accept-Encoding"), EmptyCString(), false);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-  // Set the Referrer header
-  //
-  // FIXME: Shouldn't this use the Element constructor? Though I guess it
-  // doesn't matter as no HTMLMediaElement supports the referrerinfo attribute.
-  auto referrerInfo = MakeRefPtr<ReferrerInfo>(*OwnerDoc());
+  // Set the Referer header
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+  referrerInfo->InitWithDocument(OwnerDoc());
   rv = aChannel->SetReferrerInfoWithoutClone(referrerInfo);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }

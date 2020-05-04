@@ -1171,7 +1171,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
         doc = parentWindow->GetExtantDoc();
       }
       if (doc) {
-        auto referrerInfo = MakeRefPtr<ReferrerInfo>(*doc);
+        nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+        referrerInfo->InitWithDocument(doc);
         loadState->SetReferrerInfo(referrerInfo);
       }
     }

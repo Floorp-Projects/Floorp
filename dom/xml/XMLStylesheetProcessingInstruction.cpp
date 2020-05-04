@@ -125,13 +125,15 @@ XMLStylesheetProcessingInstruction::GetStyleSheetInfo() {
   auto encoding = doc->GetDocumentCharacterSet();
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), href, encoding, baseURL);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+  referrerInfo->InitWithDocument(doc);
 
   return Some(SheetInfo{
       *doc,
       this,
       uri.forget(),
       nullptr,
-      MakeAndAddRef<ReferrerInfo>(*doc),
+      referrerInfo.forget(),
       CORS_NONE,
       title,
       media,

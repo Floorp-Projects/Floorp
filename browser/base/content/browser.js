@@ -6854,7 +6854,7 @@ function handleLinkClick(event, href, linkNode) {
     Ci.nsIReferrerInfo
   );
   if (linkNode) {
-    referrerInfo.initWithElement(linkNode);
+    referrerInfo.initWithNode(linkNode);
   } else {
     referrerInfo.initWithDocument(doc);
   }

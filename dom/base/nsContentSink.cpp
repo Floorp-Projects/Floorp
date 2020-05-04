@@ -786,8 +786,10 @@ void nsContentSink::PrefetchPreloadHref(const nsAString& aHref,
         }
       }
 
-      auto referrerInfo = MakeRefPtr<ReferrerInfo>(*mDocument);
-      referrerInfo = referrerInfo->CloneWithNewOriginalReferrer(mDocumentURI);
+      nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+      referrerInfo->InitWithDocument(mDocument);
+      referrerInfo = static_cast<ReferrerInfo*>(referrerInfo.get())
+                         ->CloneWithNewOriginalReferrer(mDocumentURI);
 
       if (preload) {
         prefetchService->PreloadURI(uri, referrerInfo, mDocument, policyType);
