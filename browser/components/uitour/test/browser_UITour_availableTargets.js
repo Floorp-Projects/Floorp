@@ -112,7 +112,7 @@ add_UITour_task(async function test_availableTargets_addUrlbarPageActionsAll() {
   let expecteds = getExpectedTargets();
   ok_targets(data, expecteds);
   let expectedActions = [
-    ["pocket", "pocket-button-box"],
+    ["pocket", "pocket-button"],
     ["screenshots", "pageAction-panel-screenshots_mozilla_org"],
     ["pageAction-bookmark", "star-button-box"],
     ["pageAction-copyURL", "pageAction-urlbar-copyURL"],
