@@ -2219,7 +2219,7 @@ void Selection::CollapseToStart(ErrorResult& aRv) {
   }
 
   // Get the first range
-  nsRange* firstRange = mStyledRanges.mRanges[0].mRange;
+  const nsRange* firstRange = mStyledRanges.mRanges[0].mRange;
   if (!firstRange) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -2255,7 +2255,7 @@ void Selection::CollapseToEnd(ErrorResult& aRv) {
   }
 
   // Get the last range
-  nsRange* lastRange = mStyledRanges.mRanges[cnt - 1].mRange;
+  const nsRange* lastRange = mStyledRanges.mRanges[cnt - 1].mRange;
   if (!lastRange) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
