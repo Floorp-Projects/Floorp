@@ -39,9 +39,11 @@ def _generate_task_output_files(job, filenames, locale=None):
 
 
 def identify_desired_signing_keys(project):
-    if project in ["mozilla-beta", "mozilla-release", "mozilla-esr68", "mozilla-esr78"]:
+    if project in ["mozilla-beta", "mozilla-release"] or project.startswith("mozilla-esr"):
         return "release"
-    return "nightly"
+    elif project == "mozilla-central":
+        return "nightly"
+    return "dep1"
 
 
 @transforms.add
