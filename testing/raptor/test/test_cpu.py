@@ -23,7 +23,7 @@ def test_no_device():
         "geckoview",
         "org.mozilla.org.mozilla.geckoview_example",
         cpu_test=True,
-        no_conditioned_profile=False,
+        no_conditioned_profile=True,
     )
     raptor.device = None
     resp = cpu.start_android_cpu_profiler(raptor)
