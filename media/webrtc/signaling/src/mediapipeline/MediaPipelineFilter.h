@@ -15,12 +15,14 @@
 #include <string>
 
 #include <set>
+#include <vector>
 
 #include "mozilla/Maybe.h"
 
 namespace webrtc {
 struct RTPHeader;
-}
+struct RtpExtension;
+}  // namespace webrtc
 
 namespace mozilla {
 

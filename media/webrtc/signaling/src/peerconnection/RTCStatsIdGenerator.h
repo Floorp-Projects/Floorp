@@ -8,6 +8,10 @@
 #define _RTCSTATSIDGENERATOR_H_
 
 #include "mozilla/Atomics.h"
+#include "nsISupportsImpl.h"
+#include "nsString.h"
+
+#include <map>
 
 namespace mozilla {
 

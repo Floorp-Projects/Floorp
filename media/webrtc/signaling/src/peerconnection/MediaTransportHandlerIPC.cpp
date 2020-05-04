@@ -9,6 +9,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "CSFLog.h"
 
 namespace mozilla {
 

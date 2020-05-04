@@ -673,8 +673,8 @@ void MediaTransportHandlerSTS::StartIceChecks(
       [](const std::string& aError) {});
 }
 
-static void TokenizeCandidate(const std::string& aCandidate,
-                              std::vector<std::string>& aTokens) {
+void TokenizeCandidate(const std::string& aCandidate,
+                       std::vector<std::string>& aTokens) {
   aTokens.clear();
 
   std::istringstream iss(aCandidate);
