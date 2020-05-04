@@ -164,8 +164,14 @@ fn handle_queries(
                     }
                     Err(err) => {
                         warn!("Sending mDNS query failed: {}", err);
-                        for query in queries {
-                            unsent_queries.push_back(query);
+                        if err.kind() != io::ErrorKind::PermissionDenied {
+                            for query in queries {
+                                unsent_queries.push_back(query);
+                            }
+                        } else {
+                            for query in queries {
+                                hostname_timedout(&query.callback, &query.hostname);
+                            }
                         }
                     }
                 }
