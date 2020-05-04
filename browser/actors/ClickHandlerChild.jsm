@@ -75,7 +75,7 @@ class ClickHandlerChild extends JSWindowActorChild {
       Ci.nsIReferrerInfo
     );
     if (node) {
-      referrerInfo.initWithElement(node);
+      referrerInfo.initWithNode(node);
     } else {
       referrerInfo.initWithDocument(ownerDoc);
     }

@@ -3698,15 +3698,15 @@ void Element::GetImplementedPseudoElement(nsAString& aPseudo) const {
   aPseudo.Append(pseudo);
 }
 
-ReferrerPolicy Element::GetReferrerPolicyAsEnum() const {
+ReferrerPolicy Element::GetReferrerPolicyAsEnum() {
   if (IsHTMLElement()) {
-    return ReferrerPolicyFromAttr(GetParsedAttr(nsGkAtoms::referrerpolicy));
+    const nsAttrValue* referrerValue = GetParsedAttr(nsGkAtoms::referrerpolicy);
+    return ReferrerPolicyFromAttr(referrerValue);
   }
   return ReferrerPolicy::_empty;
 }
 
-ReferrerPolicy Element::ReferrerPolicyFromAttr(
-    const nsAttrValue* aValue) const {
+ReferrerPolicy Element::ReferrerPolicyFromAttr(const nsAttrValue* aValue) {
   if (aValue && aValue->Type() == nsAttrValue::eEnum) {
     return ReferrerPolicy(aValue->GetEnumValue());
   }

@@ -172,12 +172,15 @@ Maybe<nsStyleLinkElement::SheetInfo> HTMLStyleElement::GetStyleSheetInfo() {
   nsAutoString media;
   GetTitleAndMediaForElement(*this, title, media);
 
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+  referrerInfo->InitWithNode(this);
+
   return Some(SheetInfo{
       *OwnerDoc(),
       this,
       nullptr,
       do_AddRef(mTriggeringPrincipal),
-      MakeAndAddRef<ReferrerInfo>(*this),
+      referrerInfo.forget(),
       CORS_NONE,
       title,
       media,

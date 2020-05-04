@@ -658,7 +658,8 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
     loadState->SetBaseURI(mOwnerContent->GetBaseURI());
   }
 
-  auto referrerInfo = MakeRefPtr<ReferrerInfo>(*mOwnerContent);
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+  referrerInfo->InitWithNode(mOwnerContent);
   loadState->SetReferrerInfo(referrerInfo);
 
   // Default flags:

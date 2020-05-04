@@ -2321,7 +2321,8 @@ nsresult nsObjectLoadingContent::OpenChannel() {
   // Referrer
   nsCOMPtr<nsIHttpChannel> httpChan(do_QueryInterface(chan));
   if (httpChan) {
-    auto referrerInfo = MakeRefPtr<ReferrerInfo>(*doc);
+    nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+    referrerInfo->InitWithDocument(doc);
 
     rv = httpChan->SetReferrerInfoWithoutClone(referrerInfo);
     MOZ_ASSERT(NS_SUCCEEDED(rv));

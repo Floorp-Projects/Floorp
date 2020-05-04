@@ -967,9 +967,10 @@ void EventSourceImpl::SetupHttpChannel() {
 nsresult EventSourceImpl::SetupReferrerInfo() {
   AssertIsOnMainThread();
   MOZ_ASSERT(!IsShutDown());
-
-  if (nsCOMPtr<Document> doc = mEventSource->GetDocumentIfCurrent()) {
-    auto referrerInfo = MakeRefPtr<ReferrerInfo>(*doc);
+  nsCOMPtr<Document> doc = mEventSource->GetDocumentIfCurrent();
+  if (doc) {
+    nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+    referrerInfo->InitWithDocument(doc);
     nsresult rv = mHttpChannel->SetReferrerInfoWithoutClone(referrerInfo);
     NS_ENSURE_SUCCESS(rv, rv);
   }
