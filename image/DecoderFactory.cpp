@@ -20,7 +20,9 @@
 #include "nsICODecoder.h"
 #include "nsIconDecoder.h"
 #include "nsWebPDecoder.h"
+#ifdef MOZ_AV1
 #include "nsAVIFDecoder.h"
+#endif
 
 namespace mozilla {
 
@@ -79,10 +81,13 @@ DecoderType DecoderFactory::GetDecoderType(const char* aMimeType) {
     type = DecoderType::WEBP;
 
     // AVIF
-  } else if (!strcmp(aMimeType, IMAGE_AVIF) &&
+  }
+#ifdef MOZ_AV1
+  else if (!strcmp(aMimeType, IMAGE_AVIF) &&
              StaticPrefs::image_avif_enabled()) {
     type = DecoderType::AVIF;
   }
+#endif
 
   return type;
 }
@@ -121,9 +126,11 @@ already_AddRefed<Decoder> DecoderFactory::GetDecoder(DecoderType aType,
     case DecoderType::WEBP:
       decoder = new nsWebPDecoder(aImage);
       break;
+#ifdef MOZ_AV1
     case DecoderType::AVIF:
       decoder = new nsAVIFDecoder(aImage);
       break;
+#endif
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown decoder type");
   }
