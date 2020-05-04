@@ -19,6 +19,7 @@ job-defaults:
     fetches:
         toolchain:
             - android-sdk-linux
+            - android-gradle-dependencies
     run:
         use-caches: false
     run-on-tasks-for: [github-pull-request, github-push]

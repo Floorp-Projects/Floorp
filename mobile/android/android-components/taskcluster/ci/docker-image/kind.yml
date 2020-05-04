@@ -11,6 +11,9 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 jobs:
+    android-build:
+        symbol: I(agb)
+        parent: base
     base:
         symbol: I(base)
     ui-tests:

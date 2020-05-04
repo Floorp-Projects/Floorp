@@ -10,9 +10,6 @@ job-defaults:
         platform: toolchains/opt
         tier: 1
     worker-type: b-android
-    worker:
-        docker-image: {in-tree: base}
-        max-run-time: 1800
 
 
 linux64-android-sdk-linux-repack:
@@ -30,3 +27,34 @@ linux64-android-sdk-linux-repack:
         toolchain-alias: android-sdk-linux
     treeherder:
         symbol: TL(android-sdk-linux)
+    worker:
+        docker-image: {in-tree: base}
+        max-run-time: 1800
+
+
+linux64-android-gradle-dependencies:
+    description: "Android Gradle dependencies toolchain task"
+    fetches:
+        toolchain:
+            # Aliases aren't allowed for toolchains depending on toolchains.
+            - linux64-android-sdk-linux-repack
+    run:
+        script: android-gradle-dependencies.sh
+        sparse-profile: null
+        resources:
+            - taskcluster/scripts/toolchain/android-gradle-dependencies.sh
+            - taskcluster/scripts/toolchain/android-gradle-dependencies/**
+            - buildSrc/src/main/java/Dependencies.kt
+            - '*.gradle'
+            - components/**/build.gradle
+            - samples/**/build.gradle
+        toolchain-artifact: public/build/android-gradle-dependencies.tar.xz
+        toolchain-alias: android-gradle-dependencies
+    treeherder:
+        symbol: TL(gradle-dependencies)
+    worker:
+        docker-image: {in-tree: android-build}
+        env:
+            # TODO do no hardcode
+            ANDROID_SDK_ROOT: /builds/worker/fetches/android-sdk-linux
+        max-run-time: 14400

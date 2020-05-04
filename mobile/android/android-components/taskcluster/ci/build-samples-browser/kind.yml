@@ -23,6 +23,7 @@ job-defaults:
     fetches:
         toolchain:
             - android-sdk-linux
+            - android-gradle-dependencies
     include-coverage: true
     run:
         using: gradlew

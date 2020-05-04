@@ -19,6 +19,7 @@ job-defaults:
     fetches:
         toolchain:
             - android-sdk-linux
+            - android-gradle-dependencies
     run:
         # TODO Generate APKs in a build task instead
         gradlew: ['clean', 'assembleGeckoNightly', 'assembleAndroidTest', 'assembleDebug']
