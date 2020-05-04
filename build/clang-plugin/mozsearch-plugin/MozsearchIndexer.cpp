@@ -39,6 +39,18 @@
 #define getBeginLoc getLocStart
 #define getEndLoc getLocEnd
 #endif
+// We want std::make_unique, but that's only available in c++14.  In versions
+// prior to that, we need to fall back to llvm's make_unique.  It's also the
+// case that we expect clang 10 to build with c++14 and clang 9 and earlier to
+// build with c++11, at least as suggested by the llvm-config --cxxflags on
+// non-windows platforms.  mozilla-central seems to build with -std=c++17 on
+// windows so we need to make this decision based on __cplusplus instead of
+// the CLANG_VERSION_MAJOR.
+#if __cplusplus < 201402L
+using llvm::make_unique;
+#else
+using std::make_unique;
+#endif
 
 using namespace clang;
 
@@ -198,7 +210,7 @@ private:
           Absolute = Filename;
         }
       }
-      std::unique_ptr<FileInfo> Info = llvm::make_unique<FileInfo>(Absolute);
+      std::unique_ptr<FileInfo> Info = make_unique<FileInfo>(Absolute);
       It = FileMap.insert(std::make_pair(Id, std::move(Info))).first;
     }
     return It->second.get();
@@ -452,7 +464,7 @@ public:
       : CI(CI), SM(CI.getSourceManager()), LO(CI.getLangOpts()), CurMangleContext(nullptr),
         AstContext(nullptr), CurDeclContext(nullptr), TemplateStack(nullptr) {
     CI.getPreprocessor().addPPCallbacks(
-        llvm::make_unique<PreprocessorHook>(this));
+        make_unique<PreprocessorHook>(this));
   }
 
   virtual DiagnosticConsumer *clone(DiagnosticsEngine &Diags) const {
@@ -1630,7 +1642,7 @@ class IndexAction : public PluginASTAction {
 protected:
   std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI,
                                                  llvm::StringRef F) {
-    return llvm::make_unique<IndexConsumer>(CI);
+    return make_unique<IndexConsumer>(CI);
   }
 
   bool ParseArgs(const CompilerInstance &CI,
