@@ -67,11 +67,13 @@ jobs:
                     firefox-beta-latest: installer
                     firefox-beta-stub: stub-installer
                     firefox-beta-msi-latest-ssl: msi
+                    firefox-beta-pkg-latest-ssl: pkg
                 mozilla-release:
                     firefox-latest-ssl: installer-ssl
                     firefox-latest: installer
                     firefox-stub: stub-installer
                     firefox-msi-latest-ssl: msi
+                    firefox-pkg-latest-ssl: pkg
                 mozilla-esr68:
                     # when there is one ESR branch both sets of aliases work
                     # when there are two ESR branches ...
@@ -79,10 +81,12 @@ jobs:
                     firefox-esr-latest-ssl: installer-ssl
                     firefox-esr-latest: installer
                     firefox-esr-msi-latest-ssl: msi
+                    firefox-esr-pkg-latest-ssl: pkg
                     # ... these point to the newer branch
                     firefox-esr-next-latest-ssl: installer-ssl
                     firefox-esr-next-latest: installer
                     firefox-esr-next-msi-latest-ssl: msi
+                    firefox-esr-next-pkg-latest-ssl: pkg
                 birch:
                     firefox-latest-ssl: installer-ssl
                     firefox-latest: installer

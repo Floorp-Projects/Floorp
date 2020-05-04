@@ -103,7 +103,15 @@ CONFIG_PER_BOUNCER_PRODUCT = {
             'win': '{pretty_product}%20Setup%20{version}.msi',
             'win64': '{pretty_product}%20Setup%20{version}.msi',
         }
+    },
+    'pkg': {
+        'name_postfix': '-pkg-SSL',
+        'path_template': RELEASES_PATH_TEMPLATE,
+        'file_names': {
+            'osx': '{pretty_product}%20{version}.pkg',
+        }
     }
+
 }
 CONFIG_PER_BOUNCER_PRODUCT['installer-ssl'] = copy.deepcopy(
     CONFIG_PER_BOUNCER_PRODUCT['installer'])

@@ -28,7 +28,7 @@ job-defaults:
     treeherder:
         symbol: Rel(BncSubNazgul)
         kind: test
-        tier: 3
+        tier: 1
 
 jobs:
     devedition:
@@ -50,8 +50,8 @@ jobs:
         bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64', 'win64-aarch64']
         bouncer-products:
             by-release-type:
-                default: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer', 'msi']
-                esr68: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'msi']
+                default: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer', 'msi', 'pkg']
+                esr68: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'msi', 'pkg']
         shipping-product: firefox
         treeherder:
             platform: firefox-release/opt
