@@ -105,11 +105,11 @@ DNSRequestHandler::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
   if (NS_SUCCEEDED(status)) {
     MOZ_ASSERT(rec);
 
-    nsCOMPtr<nsIDNSByTypeRecord> txtRec = do_QueryInterface(rec);
-    if (txtRec) {
-      nsTArray<nsCString> rec;
-      txtRec->GetRecords(rec);
-      SendLookupCompletedHelper(mIPCActor, DNSRequestResponse(rec));
+    nsCOMPtr<nsIDNSByTypeRecord> byTypeRec = do_QueryInterface(rec);
+    if (byTypeRec) {
+      IPCTypeRecord result;
+      byTypeRec->GetResults(&result.mData);
+      SendLookupCompletedHelper(mIPCActor, DNSRequestResponse(result));
       return NS_OK;
     }
 
@@ -119,7 +119,7 @@ DNSRequestHandler::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
     }
 
     // Get IP addresses for hostname (use port 80 as dummy value for NetAddr)
-    NetAddrArray array;
+    nsTArray<NetAddr> array;
     NetAddr addr;
     while (NS_SUCCEEDED(rec->GetNextAddr(80, &addr))) {
       array.AppendElement(addr);
