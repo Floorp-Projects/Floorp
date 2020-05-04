@@ -1,3 +1,6 @@
+use serde::Deserialize;
+use serde_bytes;
+
 use super::*;
 
 #[derive(Debug, PartialEq, Deserialize)]
@@ -7,14 +10,24 @@ struct EmptyStruct1;
 struct EmptyStruct2 {}
 
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
-struct MyStruct { x: f32, y: f32 }
+struct MyStruct {
+    x: f32,
+    y: f32,
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
 enum MyEnum {
     A,
     B(bool),
     C(bool, f32),
-    D { a: i32, b: i32 }
+    D { a: i32, b: i32 },
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+struct BytesStruct {
+    small: Vec<u8>,
+    #[serde(with = "serde_bytes")]
+    large: Vec<u8>,
 }
 
 #[test]
@@ -22,7 +35,6 @@ fn test_empty_struct() {
     assert_eq!(Ok(EmptyStruct1), from_str("EmptyStruct1"));
     assert_eq!(Ok(EmptyStruct2 {}), from_str("EmptyStruct2()"));
 }
-
 
 #[test]
 fn test_struct() {
@@ -43,7 +55,6 @@ fn test_struct() {
     assert_eq!(Ok(TupleStruct(2.0, 5.0)), from_str("TupleStruct(2,5,)"));
     assert_eq!(Ok(TupleStruct(3.0, 4.0)), from_str("(3,4)"));
 }
-
 
 #[test]
 fn test_option() {
@@ -67,7 +78,7 @@ fn test_array() {
     assert_eq!(Ok(empty_array), from_str("[]"));
 
     assert_eq!(Ok([2, 3, 4i32]), from_str("(2,3,4,)"));
-    assert_eq!(Ok(([2, 3, 4i32].to_vec())), from_str("[2,3,4,]"));
+    assert_eq!(Ok([2, 3, 4i32].to_vec()), from_str("[2,3,4,]"));
 }
 
 #[test]
@@ -78,17 +89,33 @@ fn test_map() {
     map.insert((true, false), 4);
     map.insert((false, false), 123);
 
-    assert_eq!(Ok(map), from_str("{
+    assert_eq!(
+        Ok(map),
+        from_str(
+            "{
         (true,false,):4,
         (false,false,):123,
-    }"));
+    }"
+        )
+    );
 }
 
 #[test]
 fn test_string() {
     let s: String = from_str("\"String\"").unwrap();
-
     assert_eq!("String", s);
+
+    let raw: String = from_str("r\"String\"").unwrap();
+    assert_eq!("String", raw);
+
+    let raw_hashes: String = from_str("r#\"String\"#").unwrap();
+    assert_eq!("String", raw_hashes);
+
+    let raw_hashes_multiline: String = from_str("r#\"String with\nmultiple\nlines\n\"#").unwrap();
+    assert_eq!("String with\nmultiple\nlines\n", raw_hashes_multiline);
+
+    let raw_hashes_quote: String = from_str("r##\"String with \"#\"##").unwrap();
+    assert_eq!("String with \"#", raw_hashes_quote);
 }
 
 #[test]
@@ -108,16 +135,22 @@ fn test_escape() {
 
 #[test]
 fn test_comment() {
-    assert_eq!(MyStruct { x: 1.0, y: 2.0 }, from_str("(
+    assert_eq!(
+        MyStruct { x: 1.0, y: 2.0 },
+        from_str(
+            "(
 x: 1.0, // x is just 1
 // There is another comment in the very next line..
 // And y is indeed
 y: 2.0 // 2!
-    )").unwrap());
+    )"
+        )
+        .unwrap()
+    );
 }
 
 fn err<T>(kind: ParseError, line: usize, col: usize) -> Result<T> {
-    use parse::Position;
+    use crate::parse::Position;
 
     Err(Error::Parser(kind, Position { line, col }))
 }
@@ -137,15 +170,22 @@ fn test_err_wrong_value() {
     assert_eq!(from_str::<(u8, bool)>("'c'"), err(ExpectedArray, 1, 1));
     assert_eq!(from_str::<bool>("notabool"), err(ExpectedBoolean, 1, 1));
 
-    assert_eq!(from_str::<MyStruct>("MyStruct(\n    x: true)"), err(ExpectedFloat, 2, 8));
-    assert_eq!(from_str::<MyStruct>("MyStruct(\n    x: 3.5, \n    y:)"),
-               err(ExpectedFloat, 3, 7));
+    assert_eq!(
+        from_str::<MyStruct>("MyStruct(\n    x: true)"),
+        err(ExpectedFloat, 2, 8)
+    );
+    assert_eq!(
+        from_str::<MyStruct>("MyStruct(\n    x: 3.5, \n    y:)"),
+        err(ExpectedFloat, 3, 7)
+    );
 }
 
 #[test]
 fn test_perm_ws() {
-    assert_eq!(from_str::<MyStruct>("\nMyStruct  \t ( \n x   : 3.5 , \t y\n: 4.5 \n ) \t\n"),
-                Ok(MyStruct { x: 3.5, y: 4.5 }));
+    assert_eq!(
+        from_str::<MyStruct>("\nMyStruct  \t ( \n x   : 3.5 , \t y\n: 4.5 \n ) \t\n"),
+        Ok(MyStruct { x: 3.5, y: 4.5 })
+    );
 }
 
 #[test]
@@ -158,6 +198,7 @@ fn untagged() {
     }
 
     assert_eq!(from_str::<Untagged>("true").unwrap(), Untagged::Bool(true));
+    assert_eq!(from_str::<Untagged>("8").unwrap(), Untagged::U8(8));
 }
 
 #[test]
@@ -168,4 +209,99 @@ fn forgot_apostrophes() {
         Err(Error::Parser(ParseError::ExpectedStringEnd, _)) => true,
         _ => false,
     });
+}
+
+#[test]
+fn expected_attribute() {
+    let de: Result<String> = from_str("#\"Hello\"");
+
+    assert_eq!(de, err(ParseError::ExpectedAttribute, 1, 2));
+}
+
+#[test]
+fn expected_attribute_end() {
+    let de: Result<String> = from_str("#![enable(unwrap_newtypes) \"Hello\"");
+
+    assert_eq!(de, err(ParseError::ExpectedAttributeEnd, 1, 28));
+}
+
+#[test]
+fn invalid_attribute() {
+    let de: Result<String> = from_str("#![enable(invalid)] \"Hello\"");
+
+    assert_eq!(
+        de,
+        err(ParseError::NoSuchExtension("invalid".to_string()), 1, 18)
+    );
+}
+
+#[test]
+fn multiple_attributes() {
+    #[derive(Debug, Deserialize, PartialEq)]
+    struct New(String);
+    let de: Result<New> =
+        from_str("#![enable(unwrap_newtypes)] #![enable(unwrap_newtypes)] \"Hello\"");
+
+    assert_eq!(de, Ok(New("Hello".to_owned())));
+}
+
+#[test]
+fn uglified_attribute() {
+    let de: Result<()> = from_str(
+        "#   !\
+    // We definitely want to add a comment here
+    [\t\tenable( // best style ever
+            unwrap_newtypes  ) ] ()",
+    );
+
+    assert_eq!(de, Ok(()));
+}
+
+#[test]
+fn implicit_some() {
+    use serde::de::DeserializeOwned;
+
+    fn de<T: DeserializeOwned>(s: &str) -> Option<T> {
+        let enable = "#![enable(implicit_some)]\n".to_string();
+
+        from_str::<Option<T>>(&(enable + s)).unwrap()
+    }
+
+    assert_eq!(de("'c'"), Some('c'));
+    assert_eq!(de("5"), Some(5));
+    assert_eq!(de("\"Hello\""), Some("Hello".to_owned()));
+    assert_eq!(de("false"), Some(false));
+    assert_eq!(
+        de("MyStruct(x: .4, y: .5)"),
+        Some(MyStruct { x: 0.4, y: 0.5 })
+    );
+
+    assert_eq!(de::<char>("None"), None);
+
+    // Not concise
+    assert_eq!(de::<Option<Option<char>>>("None"), None);
+}
+
+#[test]
+fn ws_tuple_newtype_variant() {
+    assert_eq!(Ok(MyEnum::B(true)), from_str("B  ( \n true \n ) "));
+}
+
+#[test]
+fn test_byte_stream() {
+    assert_eq!(
+        Ok(BytesStruct {
+            small: vec![1, 2],
+            large: vec![1, 2, 3, 4]
+        }),
+        from_str("BytesStruct( small:[1, 2], large:\"AQIDBA==\" )"),
+    );
+}
+
+#[test]
+fn test_numbers() {
+    assert_eq!(
+        Ok(vec![1234, 12345, 123456, 1234567, 555_555]),
+        from_str("[1_234, 12_345, 1_2_3_4_5_6, 1_234_567, 5_55_55_5]"),
+    );
 }

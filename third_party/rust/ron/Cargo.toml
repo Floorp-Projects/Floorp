@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -11,13 +11,15 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "ron"
-version = "0.1.7"
+version = "0.5.1"
 authors = ["Dzmitry Malyshau <kvarkus@gmail.com>", "Thomas Schaller <torkleyy@gmail.com>"]
 exclude = ["bors.toml", ".travis.yml"]
 description = "Rusty Object Notation"
 homepage = "https://github.com/ron-rs/ron"
 documentation = "https://docs.rs/ron/"
+readme = "README.md"
 keywords = ["parser", "serde", "serialization"]
 categories = ["encoding"]
 license = "MIT/Apache-2.0"
@@ -25,8 +27,17 @@ repository = "https://github.com/ron-rs/ron"
 
 [lib]
 name = "ron"
+[dependencies.base64]
+version = "0.10"
+
+[dependencies.bitflags]
+version = "1"
+
 [dependencies.serde]
 version = "1"
 features = ["serde_derive"]
+[dev-dependencies.serde_bytes]
+version = "0.10"
+
 [dev-dependencies.serde_json]
 version = "1"

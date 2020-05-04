@@ -1,12 +1,18 @@
 //! Value module.
 
-use std::cmp::{Eq, Ordering};
-use std::collections::BTreeMap;
-use std::hash::{Hash, Hasher};
+use serde::{
+    de::{
+        DeserializeOwned, DeserializeSeed, Deserializer, Error as SerdeError, MapAccess, SeqAccess, Visitor,
+    },
+    forward_to_deserialize_any,
+};
+use std::{
+    cmp::{Eq, Ordering},
+    collections::BTreeMap,
+    hash::{Hash, Hasher},
+};
 
-use serde::de::{DeserializeSeed, Deserializer, Error as SerdeErr, MapAccess, SeqAccess, Visitor};
-
-use de::{Error as RonError, Result};
+use crate::de::{Error as RonError, Result};
 
 /// A wrapper for `f64` which guarantees that the inner value
 /// is finite and thus implements `Eq`, `Hash` and `Ord`.
@@ -25,7 +31,7 @@ impl Number {
     }
 
     /// Returns the wrapped float.
-    pub fn get(&self) -> f64 {
+    pub fn get(self) -> f64 {
         self.0
     }
 }
@@ -56,10 +62,26 @@ pub enum Value {
     Unit,
 }
 
+impl Value {
+    /// Tries to deserialize this `Value` into `T`.
+    pub fn into_rust<T>(self) -> Result<T>
+    where
+        T: DeserializeOwned,
+    {
+        T::deserialize(self)
+    }
+}
+
 /// Deserializer implementation for RON `Value`.
 /// This does not support enums (because `Value` doesn't store them).
 impl<'de> Deserializer<'de> for Value {
     type Error = RonError;
+
+    forward_to_deserialize_any! {
+        bool f32 f64 char str string bytes
+        byte_buf option unit unit_struct newtype_struct seq tuple
+        tuple_struct map struct enum identifier ignored_any
+    }
 
     fn deserialize_any<V>(self, visitor: V) -> Result<V::Value>
     where
@@ -78,7 +100,6 @@ impl<'de> Deserializer<'de> for Value {
             Value::String(s) => visitor.visit_string(s),
             Value::Seq(mut seq) => {
                 seq.reverse();
-
                 visitor.visit_seq(Seq { seq })
             }
             Value::Unit => visitor.visit_unit(),
@@ -146,12 +167,6 @@ impl<'de> Deserializer<'de> for Value {
             v => Err(RonError::custom(format!("Expected a number, got {:?}", v))),
         }
     }
-
-    forward_to_deserialize_any! {
-        bool f32 f64 char str string bytes
-        byte_buf option unit unit_struct newtype_struct seq tuple
-        tuple_struct map struct enum identifier ignored_any
-    }
 }
 
 struct Map {
@@ -204,15 +219,15 @@ impl<'de> SeqAccess<'de> for Seq {
 
 #[cfg(test)]
 mod tests {
-    use std::fmt::Debug;
-    use serde::Deserialize;
     use super::*;
+    use serde::Deserialize;
+    use std::fmt::Debug;
 
     fn assert_same<'de, T>(s: &'de str)
     where
         T: Debug + Deserialize<'de> + PartialEq,
     {
-        use de::from_str;
+        use crate::de::from_str;
 
         let direct: T = from_str(s).unwrap();
         let value: Value = from_str(s).unwrap();
