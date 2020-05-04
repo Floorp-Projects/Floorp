@@ -214,7 +214,7 @@ const WHITELIST_TYPES: &'static [&'static str] = &[
     "jsid",
     "JS::Compartment",
     "JS::Latin1Char",
-    "JS::detail::MaybeWrapped",
+    "JS::detail::RootedPtr",
     "JS::MutableHandle",
     "JS::MutableHandleObject",
     "JS::MutableHandleValue",

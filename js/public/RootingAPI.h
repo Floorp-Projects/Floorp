@@ -874,41 +874,41 @@ struct FallibleHashMethods<js::MovableCellHasher<T>> {
 
 namespace js {
 
-// The alignment must be set because the Rooted and PersistentRooted ptr fields
-// may be accessed through reinterpret_cast<Rooted<ConcreteTraceable>*>, and
-// the compiler may choose a different alignment for the ptr field when it
-// knows the actual type stored in DispatchWrapper<T>.
-//
-// It would make more sense to align only those specific fields of type
-// DispatchWrapper, rather than DispatchWrapper itself, but that causes MSVC to
-// fail when Rooted is used in an IsConvertible test.
+struct VirtualTraceable {
+  virtual ~VirtualTraceable() = default;
+  virtual void trace(JSTracer* trc, const char* name) = 0;
+};
+
 template <typename T>
-class alignas(8) DispatchWrapper {
+struct RootedTraceable final : public VirtualTraceable {
   static_assert(JS::MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
-                "DispatchWrapper is intended only for usage with a Traceable");
+                "RootedTraceable is intended only for usage with a Traceable");
 
-  using TraceFn = void (*)(JSTracer*, T*, const char*);
-  TraceFn tracer;
-  alignas(gc::CellAlignBytes) T storage;
+  T ptr;
 
- public:
   template <typename U>
-  MOZ_IMPLICIT DispatchWrapper(U&& initial)
-      : tracer(&JS::GCPolicy<T>::trace), storage(std::forward<U>(initial)) {}
+  MOZ_IMPLICIT RootedTraceable(U&& initial) : ptr(std::forward<U>(initial)) {}
 
-  // Mimic a pointer type, so that we can drop into Rooted.
-  T* operator&() { return &storage; }
-  const T* operator&() const { return &storage; }
-  operator T&() { return storage; }
-  operator const T&() const { return storage; }
+  operator T&() { return ptr; }
+  operator const T&() const { return ptr; }
 
-  // Trace the contained storage (of unknown type) using the trace function
-  // we set aside when we did know the type.
-  static void TraceWrapped(JSTracer* trc, T* thingp, const char* name) {
-    auto wrapper = reinterpret_cast<DispatchWrapper*>(
-        uintptr_t(thingp) - offsetof(DispatchWrapper, storage));
-    wrapper->tracer(trc, &wrapper->storage, name);
+  void trace(JSTracer* trc, const char* name) override {
+    JS::GCPolicy<T>::trace(trc, &ptr, name);
   }
+};
+
+template <typename T>
+struct RootedTraceableTraits {
+  static T* address(RootedTraceable<T>& self) { return &self.ptr; }
+  static const T* address(const RootedTraceable<T>& self) { return &self.ptr; }
+  static void trace(JSTracer* trc, VirtualTraceable* thingp, const char* name);
+};
+
+template <typename T>
+struct RootedGCThingTraits {
+  static T* address(T& self) { return &self; }
+  static const T* address(const T& self) { return &self; }
+  static void trace(JSTracer* trc, T* thingp, const char* name);
 };
 
 } /* namespace js */
@@ -1038,18 +1038,16 @@ class JS_PUBLIC_API AutoGCRooter {
 
 namespace detail {
 
-/*
- * For pointer types, the TraceKind for tracing is based on the list it is
- * in (selected via MapTypeToRootKind), so no additional storage is
- * required here. Non-pointer types, however, share the same list, so the
- * function to call for tracing is stored adjacent to the struct. Since C++
- * cannot templatize on storage class, this is implemented via the wrapper
- * class DispatchWrapper.
- */
 template <typename T>
-using MaybeWrapped =
+using RootedPtr =
     std::conditional_t<MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
-                       js::DispatchWrapper<T>, T>;
+                       js::RootedTraceable<T>, T>;
+
+template <typename T>
+using RootedPtrTraits =
+    std::conditional_t<MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
+                       js::RootedTraceableTraits<T>,
+                       js::RootedGCThingTraits<T>>;
 
 // Dummy types to make it easier to understand template overload preference
 // ordering.
@@ -1069,6 +1067,9 @@ using OverloadSelector = PreferredOverload;
  */
 template <typename T>
 class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>> {
+  using Ptr = detail::RootedPtr<T>;
+  using PtrTraits = detail::RootedPtrTraits<T>;
+
   inline void registerWithRootLists(RootedListHeads& roots) {
     this->stack = &roots[JS::MapTypeToRootKind<T>::kind];
     this->prev = *stack;
@@ -1143,8 +1144,14 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>> {
 
   DECLARE_POINTER_CONSTREF_OPS(T);
   DECLARE_POINTER_ASSIGN_OPS(Rooted, T);
-  DECLARE_NONPOINTER_ACCESSOR_METHODS(ptr);
-  DECLARE_NONPOINTER_MUTABLE_ACCESSOR_METHODS(ptr);
+
+  T& get() { return ptr; }
+  const T& get() const { return ptr; }
+
+  T* address() { return PtrTraits::address(ptr); }
+  const T* address() const { return PtrTraits::address(ptr); }
+
+  void trace(JSTracer* trc, const char* name);
 
  private:
   /*
@@ -1155,7 +1162,7 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>> {
   Rooted<void*>** stack;
   Rooted<void*>* prev;
 
-  detail::MaybeWrapped<T> ptr;
+  Ptr ptr;
 
   Rooted(const Rooted&) = delete;
 } JS_HAZ_ROOTED;
@@ -1326,6 +1333,8 @@ class PersistentRooted
     : public js::RootedBase<T, PersistentRooted<T>>,
       private mozilla::LinkedListElement<PersistentRooted<T>> {
   using ListBase = mozilla::LinkedListElement<PersistentRooted<T>>;
+  using Ptr = detail::RootedPtr<T>;
+  using PtrTraits = detail::RootedPtrTraits<T>;
 
   friend class mozilla::LinkedList<PersistentRooted>;
   friend class mozilla::LinkedListElement<PersistentRooted>;
@@ -1390,7 +1399,7 @@ class PersistentRooted
     const_cast<PersistentRooted&>(rhs).setNext(this);
   }
 
-  bool initialized() { return ListBase::isInList(); }
+  bool initialized() const { return ListBase::isInList(); }
 
   void init(RootingContext* cx) { init(cx, SafelyInitialized<T>()); }
   void init(JSContext* cx) { init(RootingContext::get(cx)); }
@@ -1415,19 +1424,15 @@ class PersistentRooted
 
   DECLARE_POINTER_CONSTREF_OPS(T);
   DECLARE_POINTER_ASSIGN_OPS(PersistentRooted, T);
-  DECLARE_NONPOINTER_ACCESSOR_METHODS(ptr);
 
-  // These are the same as DECLARE_NONPOINTER_MUTABLE_ACCESSOR_METHODS, except
-  // they check that |this| is initialized in case the caller later stores
-  // something in |ptr|.
+  T& get() { return ptr; }
+  const T& get() const { return ptr; }
+
   T* address() {
     MOZ_ASSERT(initialized());
-    return &ptr;
+    return PtrTraits::address(ptr);
   }
-  T& get() {
-    MOZ_ASSERT(initialized());
-    return ptr;
-  }
+  const T* address() const { return PtrTraits::address(ptr); }
 
   template <typename U>
   void set(U&& value) {
@@ -1435,8 +1440,10 @@ class PersistentRooted
     ptr = std::forward<U>(value);
   }
 
+  void trace(JSTracer* trc, const char* name);
+
  private:
-  detail::MaybeWrapped<T> ptr;
+  Ptr ptr;
 } JS_HAZ_ROOTED;
 
 namespace detail {
