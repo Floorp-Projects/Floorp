@@ -12,6 +12,7 @@
 #include "LayerTimelineMarker.h"
 #include "MainThreadUtils.h"
 #include "mozilla/AutoRestore.h"
+#include "nsIDocShell.h"
 
 namespace mozilla {
 

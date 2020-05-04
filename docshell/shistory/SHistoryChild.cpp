@@ -5,8 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SHistoryChild.h"
-#include "SHEntryChild.h"
+
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/PSHistoryChild.h"
+#include "nsDocShell.h"
 #include "nsISHistoryListener.h"
+#include "SHEntryChild.h"
 
 namespace mozilla {
 namespace dom {

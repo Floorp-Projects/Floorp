@@ -12,6 +12,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/StaticMutex.h"
+#include "nsTArray.h"
 #include "TimelineMarkerEnums.h"  // for MarkerTracingType
 
 class nsDocShell;

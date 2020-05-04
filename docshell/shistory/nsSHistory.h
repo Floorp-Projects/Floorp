@@ -8,6 +8,7 @@
 #define nsSHistory_h
 
 #include "nsCOMPtr.h"
+#include "nsDocShellLoadState.h"
 #include "nsExpirationTracker.h"
 #include "nsISHistory.h"
 #include "nsSHEntryShared.h"
@@ -135,7 +136,8 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
       bool aCloneChildren, nsISHEntry* aOSHE,
       mozilla::dom::BrowsingContext* aBC, nsISHEntry* aEntry,
       uint32_t aLoadType, bool aShouldPersist, uint64_t aOtherPid,
-      Maybe<int32_t>* aPreviousEntryIndex, Maybe<int32_t>* aLoadedEntryIndex,
+      mozilla::Maybe<int32_t>* aPreviousEntryIndex,
+      mozilla::Maybe<int32_t>* aLoadedEntryIndex,
       nsTArray<EntriesAndBrowsingContextData>* aEntriesToUpdate,
       int32_t* aEntriesPurged);
 

@@ -18,7 +18,7 @@ struct EntriesAndBrowsingContextData;
 %}
 
 [ref] native nsDocshellIDArray(nsTArray<nsID>);
-native MaybeInt32(Maybe<int32_t>);
+native MaybeInt32(mozilla::Maybe<int32_t>);
 /**
  * An interface to the primary properties of the Session History
  * component. In an embedded browser environment, the nsIWebBrowser
