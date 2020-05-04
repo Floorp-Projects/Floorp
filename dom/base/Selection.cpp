@@ -1115,7 +1115,7 @@ nsresult Selection::Clear(nsPresContext* aPresContext) {
   for (uint32_t i = 0; i < mStyledRanges.Length(); ++i) {
     SelectFrames(aPresContext, mStyledRanges.mRanges[i].mRange, false);
   }
-  mStyledRanges.mRanges.Clear();
+  mStyledRanges.Clear();
 
   // Reset direction so for more dependable table selection range handling
   SetDirection(eDirNext);
@@ -1757,6 +1757,8 @@ void Selection::StyledRanges::UnregisterSelection() {
     mRanges[i].mRange->UnregisterSelection();
   }
 }
+
+void Selection::StyledRanges::Clear() { mRanges.Clear(); }
 
 StyledRange* Selection::StyledRanges::FindRangeData(nsRange* aRange) {
   NS_ENSURE_TRUE(aRange, nullptr);
