@@ -1655,14 +1655,7 @@ void RasterImage::NotifyProgress(
   // Ensure that we stay alive long enough to finish notifying.
   RefPtr<RasterImage> image = this;
 
-  const bool wasDefaultFlags = aSurfaceFlags == DefaultSurfaceFlags();
-
-  auto invalidRect = ToOriented(aInvalidRect);
-
-  if (!invalidRect.IsEmpty() && wasDefaultFlags) {
-    // Update our image container since we're invalidating.
-    UpdateImageContainer(Some(invalidRect.ToUnknownRect()));
-  }
+  UnorientedIntRect invalidRect = aInvalidRect;
 
   if (!(aDecoderFlags & DecoderFlags::FIRST_FRAME_ONLY)) {
     // We may have decoded new animation frames; update our animation state.
@@ -1676,11 +1669,28 @@ void RasterImage::NotifyProgress(
         ShouldAnimate()) {
       StartAnimation();
     }
+
+    if (mAnimationState) {
+      auto size = ToUnoriented(mSize);
+      IntRect rect = mAnimationState->UpdateState(this, size.ToUnknownSize());
+
+      invalidRect.UnionRect(invalidRect,
+                            UnorientedIntRect::FromUnknownRect(rect));
+    }
+  }
+
+  const bool wasDefaultFlags = aSurfaceFlags == DefaultSurfaceFlags();
+
+  auto orientedInvalidRect = ToOriented(invalidRect);
+
+  if (!orientedInvalidRect.IsEmpty() && wasDefaultFlags) {
+    // Update our image container since we're invalidating.
+    UpdateImageContainer(Some(orientedInvalidRect.ToUnknownRect()));
   }
 
   // Tell the observers what happened.
-  image->mProgressTracker->SyncNotifyProgress(aProgress,
-                                              invalidRect.ToUnknownRect());
+  image->mProgressTracker->SyncNotifyProgress(
+      aProgress, orientedInvalidRect.ToUnknownRect());
 }
 
 void RasterImage::NotifyDecodeComplete(
