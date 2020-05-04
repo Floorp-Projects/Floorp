@@ -7,10 +7,6 @@ const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
 
-const { SearchTestUtils } = ChromeUtils.import(
-  "resource://testing-common/SearchTestUtils.jsm"
-);
-
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 AddonTestUtils.createAppInfo(
@@ -25,45 +21,8 @@ Services.prefs.clearUserPref("services.settings.default_bucket");
 
 let { promiseShutdownManager, promiseStartupManager } = AddonTestUtils;
 
-// Note: these lists should be kept in sync with the lists in
-// browser/components/extensions/test/xpcshell/data/test/manifest.json
-// These params are conditional based on how search is initiated.
-const mozParams = [
-  {
-    name: "test-0",
-    condition: "purpose",
-    purpose: "contextmenu",
-    value: "0",
-  },
-  { name: "test-1", condition: "purpose", purpose: "searchbar", value: "1" },
-  { name: "test-2", condition: "purpose", purpose: "homepage", value: "2" },
-  { name: "test-3", condition: "purpose", purpose: "keyword", value: "3" },
-  { name: "test-4", condition: "purpose", purpose: "newtab", value: "4" },
-];
-// These params are always included.
-const params = [
-  { name: "simple", value: "5" },
-  { name: "term", value: "{searchTerms}" },
-  { name: "lang", value: "{language}" },
-  { name: "locale", value: "{moz:locale}" },
-  { name: "prefval", condition: "pref", pref: "code" },
-];
-
 add_task(async function setup() {
   await promiseStartupManager();
-  await SearchTestUtils.useTestEngines("data", null, [
-    {
-      webExtension: {
-        id: "test@search.mozilla.org",
-      },
-      appliesTo: [
-        {
-          included: { everywhere: true },
-          default: "yes",
-        },
-      ],
-    },
-  ]);
   await Services.search.init();
   registerCleanupFunction(async () => {
     await promiseShutdownManager();
@@ -74,6 +33,50 @@ add_task(async function setup() {
 add_task(async function test_extension_setting_moz_params() {
   let defaultBranch = Services.prefs.getDefaultBranch("browser.search.");
   defaultBranch.setCharPref("param.code", "good");
+  Services.prefs.setCharPref(
+    "extensions.installedDistroAddon.test@mochitest",
+    "foo"
+  );
+  // These params are conditional based on how search is initiated.
+  let mozParams = [
+    {
+      name: "test-0",
+      condition: "purpose",
+      purpose: "contextmenu",
+      value: "0",
+    },
+    { name: "test-1", condition: "purpose", purpose: "searchbar", value: "1" },
+    { name: "test-2", condition: "purpose", purpose: "homepage", value: "2" },
+    { name: "test-3", condition: "purpose", purpose: "keyword", value: "3" },
+    { name: "test-4", condition: "purpose", purpose: "newtab", value: "4" },
+  ];
+  // These params are always included.
+  let params = [
+    { name: "simple", value: "5" },
+    { name: "term", value: "{searchTerms}" },
+    { name: "lang", value: "{language}" },
+    { name: "locale", value: "{moz:locale}" },
+    { name: "prefval", condition: "pref", pref: "code" },
+  ];
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: { id: "test@mochitest" },
+      },
+      chrome_settings_overrides: {
+        search_provider: {
+          name: "MozParamsTest",
+          search_url: "https://example.com/?q={searchTerms}",
+          params: [...mozParams, ...params],
+        },
+      },
+    },
+    useAddonManager: "permanent",
+  });
+  await extension.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(extension);
+  equal(extension.extension.isPrivileged, true, "extension is priviledged");
 
   let engine = Services.search.getEngineByName("MozParamsTest");
 
@@ -105,6 +108,8 @@ add_task(async function test_extension_setting_moz_params() {
       "search url is expected"
     );
   }
+
+  await extension.unload();
 });
 
 add_task(async function test_extension_setting_moz_params_fail() {
@@ -119,11 +124,11 @@ add_task(async function test_extension_setting_moz_params_fail() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       applications: {
-        gecko: { id: "test1@mochitest" },
+        gecko: { id: "test@mochitest" },
       },
       chrome_settings_overrides: {
         search_provider: {
-          name: "MozParamsTest1",
+          name: "MozParamsTest",
           search_url: "https://example.com/",
           params: [
             {
@@ -147,7 +152,7 @@ add_task(async function test_extension_setting_moz_params_fail() {
     false,
     "extension is not priviledged"
   );
-  let engine = Services.search.getEngineByName("MozParamsTest1");
+  let engine = Services.search.getEngineByName("MozParamsTest");
   let expectedURL = engine.getSubmission("test", null, "contextmenu").uri.spec;
   equal(
     expectedURL,
