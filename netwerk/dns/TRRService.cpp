@@ -297,7 +297,6 @@ nsresult TRRService::ReadPrefs(const char* name) {
   }
   if (!name || !strcmp(name, TRR_PREF("uri")) ||
       !strcmp(name, kRolloutURIPref)) {
-
     mURIPrefHasUserValue = Preferences::HasUserValue(TRR_PREF("uri"));
     Preferences::GetCString(TRR_PREF("uri"), mURIPref);
     Preferences::GetCString(kRolloutURIPref, mRolloutURIPref);
@@ -1027,8 +1026,8 @@ AHostResolver::LookupStatus TRRService::CompleteLookup(
 }
 
 AHostResolver::LookupStatus TRRService::CompleteLookupByType(
-    nsHostRecord*, nsresult, const nsTArray<nsCString>* aResult, uint32_t aTtl,
-    bool aPb) {
+    nsHostRecord*, nsresult, mozilla::net::TypeRecordResultType& aResult,
+    uint32_t aTtl, bool aPb) {
   return LOOKUP_OK;
 }
 

@@ -2971,7 +2971,7 @@ nsSocketTransport::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
 
   if (request == mDNSTxtRequest) {
     if (NS_SUCCEEDED(status)) {
-      nsCOMPtr<nsIDNSByTypeRecord> txtResponse = do_QueryInterface(rec);
+      nsCOMPtr<nsIDNSTXTRecord> txtResponse = do_QueryInterface(rec);
       txtResponse->GetRecordsAsOneString(mDNSRecordTxt);
       mDNSRecordTxt.Trim(" ");
     }
