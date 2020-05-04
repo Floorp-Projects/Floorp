@@ -259,13 +259,12 @@ abstract class EngineSession(
             SCRIPTS_AND_SUB_RESOURCES(1 shl 9999),
 
             RECOMMENDED(AD.id + ANALYTICS.id + SOCIAL.id + TEST.id + MOZILLA_SOCIAL.id +
-                CRYPTOMINING.id),
+                CRYPTOMINING.id + FINGERPRINTING.id),
 
             /**
-             * Combining the [RECOMMENDED] categories plus [SCRIPTS_AND_SUB_RESOURCES]
-             * and [FINGERPRINTING].
+             * Combining the [RECOMMENDED] categories plus [SCRIPTS_AND_SUB_RESOURCES].
              */
-            STRICT(RECOMMENDED.id + SCRIPTS_AND_SUB_RESOURCES.id + FINGERPRINTING.id)
+            STRICT(RECOMMENDED.id + SCRIPTS_AND_SUB_RESOURCES.id)
         }
 
         companion object {
