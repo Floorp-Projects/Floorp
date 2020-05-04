@@ -18,7 +18,7 @@ class nsNetAddr final : public nsINetAddr {
   NS_DECL_ISUPPORTS
   NS_DECL_NSINETADDR
 
-  explicit nsNetAddr(const mozilla::net::NetAddr* addr) : mAddr(*addr) {}
+  explicit nsNetAddr(mozilla::net::NetAddr* addr);
 
  private:
   mozilla::net::NetAddr mAddr;

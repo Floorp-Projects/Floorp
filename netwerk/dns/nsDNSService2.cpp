@@ -320,15 +320,11 @@ nsDNSRecord::ReportUnusable(uint16_t aPort) {
   return NS_OK;
 }
 
-class nsDNSByTypeRecord : public nsIDNSByTypeRecord,
-                          public nsIDNSTXTRecord,
-                          public nsIDNSHTTPSSVCRecord {
+class nsDNSByTypeRecord : public nsIDNSByTypeRecord {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_FORWARD_SAFE_NSIDNSRECORD(((nsIDNSRecord*)nullptr))
   NS_DECL_NSIDNSBYTYPERECORD
-  NS_DECL_NSIDNSTXTRECORD
-  NS_DECL_NSIDNSHTTPSSVCRECORD
 
   explicit nsDNSByTypeRecord(nsHostRecord* hostRecord) {
     mHostRecord = do_QueryObject(hostRecord);
@@ -339,35 +335,19 @@ class nsDNSByTypeRecord : public nsIDNSByTypeRecord,
   RefPtr<TypeHostRecord> mHostRecord;
 };
 
-NS_IMPL_ISUPPORTS(nsDNSByTypeRecord, nsIDNSRecord, nsIDNSByTypeRecord,
-                  nsIDNSTXTRecord, nsIDNSHTTPSSVCRecord)
-
-NS_IMETHODIMP
-nsDNSByTypeRecord::GetType(uint32_t* aType) {
-  *aType = mHostRecord->GetType();
-  return NS_OK;
-}
+NS_IMPL_ISUPPORTS(nsDNSByTypeRecord, nsIDNSRecord, nsIDNSByTypeRecord)
 
 NS_IMETHODIMP
 nsDNSByTypeRecord::GetRecords(nsTArray<nsCString>& aRecords) {
   // deep copy
-  return mHostRecord->GetRecords(aRecords);
+  mHostRecord->GetRecords(aRecords);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDNSByTypeRecord::GetRecordsAsOneString(nsACString& aRecords) {
   // deep copy
-  return mHostRecord->GetRecordsAsOneString(aRecords);
-}
-
-NS_IMETHODIMP
-nsDNSByTypeRecord::GetRecords(nsTArray<RefPtr<nsISVCBRecord>>& aRecords) {
-  return mHostRecord->GetRecords(aRecords);
-}
-
-NS_IMETHODIMP
-nsDNSByTypeRecord::GetResults(mozilla::net::TypeRecordResultType* aResults) {
-  *aResults = mHostRecord->GetResults();
+  mHostRecord->GetRecordsAsOneString(aRecords);
   return NS_OK;
 }
 
@@ -888,8 +868,7 @@ nsresult nsDNSService::AsyncResolveInternal(
 
   if (!res) return NS_ERROR_OFFLINE;
 
-  if ((type != RESOLVE_TYPE_DEFAULT) && (type != RESOLVE_TYPE_TXT) &&
-      (type != RESOLVE_TYPE_HTTPSSVC)) {
+  if ((type != RESOLVE_TYPE_DEFAULT) && (type != RESOLVE_TYPE_TXT)) {
     return NS_ERROR_INVALID_ARG;
   }
 
