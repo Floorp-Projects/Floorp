@@ -1,10 +1,6 @@
-extern crate ron;
-#[macro_use]
-extern crate serde;
-
-use std::collections::HashMap;
-
 use ron::de::from_str;
+use serde::Deserialize;
+use std::collections::HashMap;
 
 #[derive(Debug, Deserialize)]
 struct Config {
@@ -12,6 +8,7 @@ struct Config {
     float: f32,
     map: HashMap<u8, char>,
     nested: Nested,
+    option: Option<String>,
     tuple: (u32, u32),
 }
 
@@ -21,7 +18,21 @@ struct Nested {
     b: char,
 }
 
-const CONFIG: &str = "(
+const CONFIG: &str = "
+/*
+ * RON now has multi-line (C-style) block comments!
+ * They can be freely nested:
+ * /* This is a nested comment */
+ * If you just want a single-line comment,
+ * do it like here:
+// Just put two slashes before the comment and the rest of the line
+// can be used freely!
+*/
+
+// Note that block comments can not be started in a line comment
+// (Putting a /* here will have no effect)
+
+(
     boolean: true,
     float: 8.2,
     map: {
@@ -36,7 +47,8 @@ const CONFIG: &str = "(
         a: \"Decode me!\",
         b: 'z',
     ),
-    tuple: (3, 7),
+    option: Some(\t  \"Weird formatting!\" \n\n ),
+    tuple: (3 /*(2 + 1)*/, 7 /*(2 * 5 - 3)*/),
 )";
 
 fn main() {
@@ -45,8 +57,8 @@ fn main() {
         Err(e) => {
             println!("Failed to load config: {}", e);
 
-            ::std::process::exit(1);
-        },
+            std::process::exit(1);
+        }
     };
 
     println!("Config: {:?}", &config);

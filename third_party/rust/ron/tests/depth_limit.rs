@@ -1,6 +1,5 @@
-use ron::ser::{to_string_pretty, PrettyConfig};
 use serde::Serialize;
-use std::{collections::HashMap, iter::FromIterator};
+use std::collections::HashMap;
 
 #[derive(Serialize)]
 struct Config {
@@ -26,26 +25,36 @@ struct Nested {
     b: char,
 }
 
-fn main() {
+const EXPECTED: &str = "(
+    float: (2.18,-1.1,),
+    tuple: ((),false,),
+    map: {8:'1',},
+    nested: (a:\"a\",b:'b',),
+    var: A(255,\"\",),
+    array: [(),(),(),],
+)";
+
+#[test]
+fn depth_limit() {
     let data = Config {
         float: (2.18, -1.1),
         tuple: TupleStruct((), false),
-        map: HashMap::from_iter(vec![(0, '1'), (1, '2'), (3, '5'), (8, '1')]),
+        map: vec![(8, '1')].into_iter().collect(),
         nested: Nested {
-            a: "Hello from \"RON\"".to_string(),
+            a: "a".to_owned(),
             b: 'b',
         },
         var: Variant::A(!0, ""),
         array: vec![(); 3],
     };
 
-    let pretty = PrettyConfig {
+    let pretty = ron::ser::PrettyConfig {
         depth_limit: 2,
         separate_tuple_members: true,
         enumerate_arrays: true,
-        ..PrettyConfig::default()
+        ..Default::default()
     };
-    let s = to_string_pretty(&data, pretty).expect("Serialization failed");
+    let s = ron::ser::to_string_pretty(&data, pretty);
 
-    println!("{}", s);
+    assert_eq!(s, Ok(EXPECTED.to_string()));
 }

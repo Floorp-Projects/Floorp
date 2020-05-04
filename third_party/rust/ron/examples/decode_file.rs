@@ -1,11 +1,6 @@
-extern crate ron;
-#[macro_use]
-extern crate serde;
-
-use std::collections::HashMap;
-use std::fs::File;
-
 use ron::de::from_reader;
+use serde::Deserialize;
+use std::{collections::HashMap, fs::File};
 
 #[derive(Debug, Deserialize)]
 struct Config {
@@ -23,16 +18,15 @@ struct Nested {
 }
 
 fn main() {
-    let input_path = format!("{}/examples/example.ron",
-                             env!("CARGO_MANIFEST_DIR"));
+    let input_path = format!("{}/examples/example.ron", env!("CARGO_MANIFEST_DIR"));
     let f = File::open(&input_path).expect("Failed opening file");
     let config: Config = match from_reader(f) {
         Ok(x) => x,
         Err(e) => {
             println!("Failed to load config: {}", e);
 
-            ::std::process::exit(1);
-        },
+            std::process::exit(1);
+        }
     };
 
     println!("Config: {:?}", &config);
