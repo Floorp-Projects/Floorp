@@ -620,8 +620,8 @@ void nsPluginTag::TryUnloadPlugin(bool inShutdown) {
   if (PR_GetEnv("MOZ_DISABLE_NPAPI_SANDBOX")) {
     // Flash sandbox disabled
     sFlashSandboxLevel = 0;
-  } else if (nsCocoaFeatures::OSXVersionMajor() == 10 &&
-             nsCocoaFeatures::OSXVersionMinor() <= legacyOSMinorMax) {
+  } else if (nsCocoaFeatures::macOSVersionMajor() == 10 &&
+             nsCocoaFeatures::macOSVersionMinor() <= legacyOSMinorMax) {
     const char* legacyLevelPref = "dom.ipc.plugins.sandbox-level.flash.legacy";
     int32_t compatLevel = Preferences::GetInt(legacyLevelPref, 0);
     int32_t level = Preferences::GetInt(levelPref, 0);

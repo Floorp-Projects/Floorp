@@ -10,14 +10,14 @@
 
 /// Note that this class assumes we support the platform we are running on.
 /// For better or worse, if the version is unknown or less than what we
-/// support, we set it to the minimum supported version.  GetSystemVersion
+/// support, we set it to the minimum supported version. GetSystemVersion
 /// is the only call that returns the unadjusted values.
 class nsCocoaFeatures {
  public:
-  static int32_t OSXVersion();
-  static int32_t OSXVersionMajor();
-  static int32_t OSXVersionMinor();
-  static int32_t OSXVersionBugFix();
+  static int32_t macOSVersion();
+  static int32_t macOSVersionMajor();
+  static int32_t macOSVersionMinor();
+  static int32_t macOSVersionBugFix();
   static bool OnYosemiteOrLater();
   static bool OnElCapitanOrLater();
   static bool OnSierraExactly();
@@ -30,9 +30,9 @@ class nsCocoaFeatures {
                                int32_t aBugFix = 0);
 
   // These are utilities that do not change or depend on the value of
-  // mOSXVersion and instead just encapsulate the encoding algorithm.  Note that
+  // mOSVersion and instead just encapsulate the encoding algorithm. Note that
   // GetVersion actually adjusts to the lowest supported OS, so it will always
-  // return a "supported" version.  GetSystemVersion does not make any
+  // return a "supported" version. GetSystemVersion does not make any
   // modifications.
   static void GetSystemVersion(int& aMajor, int& aMinor, int& aBugFix);
   static int32_t GetVersion(int32_t aMajor, int32_t aMinor, int32_t aBugFix);
@@ -41,9 +41,10 @@ class nsCocoaFeatures {
   static int32_t ExtractBugFixVersion(int32_t aVersion);
 
  private:
+  nsCocoaFeatures() = delete;  // Prevent instantiation.
   static void InitializeVersionNumbers();
 
-  static int32_t mOSXVersion;
+  static int32_t mOSVersion;
 };
 
 // C-callable helper for cairo-quartz-font.c and SkFontHost_mac.cpp
