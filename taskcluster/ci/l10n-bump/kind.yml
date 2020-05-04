@@ -73,7 +73,6 @@ job-defaults:
                             "win64-aarch64-devedition",
                         ],
                         "path": "browser/locales/shipped-locales",
-                        "format": "shipped-locales",
                     }]
                 default:
                     name: Firefox l10n changesets
