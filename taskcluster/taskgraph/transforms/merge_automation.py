@@ -61,7 +61,7 @@ def add_payload_config(config, tasks):
         ]
 
         # Override defaults, useful for testing.
-        for field in ["from-repo", "from-branch", "to-repo", "to-branch"]:
+        for field in ["from-repo", "from-branch", "to-repo", "to-branch", "fetch-version-from"]:
             if merge_config.get(field):
                 worker["merge-info"][field] = merge_config[field]
 
