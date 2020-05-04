@@ -20,15 +20,7 @@ class DNSListener {
     });
   }
   onLookupComplete(inRequest, inRecord, inStatus) {
-    let txtRec;
-    try {
-      txtRec = inRecord.QueryInterface(Ci.nsIDNSByTypeRecord);
-    } catch (e) {}
-    if (txtRec) {
-      this.resolve([inRequest, txtRec, inStatus, "onLookupByTypeComplete"]);
-    } else {
-      this.resolve([inRequest, inRecord, inStatus, "onLookupComplete"]);
-    }
+    this.resolve([inRequest, inRecord, inStatus]);
   }
   // So we can await this as a promise.
   then() {
@@ -52,10 +44,31 @@ add_task(async function testEsniRequest() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus, inType] = await listenerEsni;
+  let [inRequest, inRecord, inStatus] = await listenerEsni;
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
   Assert.equal(inRequest, request, "correct request was used");
-  Assert.equal(inType, "onLookupByTypeComplete", "check correct type");
-  let answer = inRecord.getRecordsAsOneString();
+  let answer = inRecord
+    .QueryInterface(Ci.nsIDNSTXTRecord)
+    .getRecordsAsOneString();
   Assert.equal(answer, test_answer, "got correct answer");
+});
+
+add_task(async function testEsniHTTPSSVC() {
+  // use the h2 server as DOH provider
+  let listenerEsni = new DNSListener();
+  let request = dns.asyncResolveByType(
+    "httpssvc_esni.example.com",
+    dns.RESOLVE_TYPE_HTTPSSVC,
+    0,
+    listenerEsni,
+    mainThread,
+    defaultOriginAttributes
+  );
+
+  let [inRequest, inRecord, inStatus] = await listenerEsni;
+  Assert.equal(inRequest, request, "correct request was used");
+  Assert.equal(inStatus, Cr.NS_OK, "status OK");
+  let answer = inRecord.QueryInterface(Ci.nsIDNSHTTPSSVCRecord).records;
+  let esni = answer[0].values[0].QueryInterface(Ci.nsISVCParamEsniConfig);
+  Assert.equal(esni.esniConfig, "testytestystringstring", "got correct answer");
 });
