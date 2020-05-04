@@ -529,9 +529,15 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
     def filter(task):
         platform = task.attributes.get('build_platform')
         attributes = task.attributes
-        if attributes.get('unittest_suite') != 'raptor':
+        vismet = attributes.get('kind') == 'visual-metrics-dep'
+        if attributes.get('unittest_suite') != 'raptor' and not vismet:
             return False
+
         try_name = attributes.get('raptor_try_name')
+        if vismet:
+            # Visual metric tasks are configured a bit differently
+            platform = task.task.get('extra').get('treeherder-platform')
+            try_name = task.label
 
         # Run chrome and chromium on all platforms available
         if '-chrome' in try_name:
