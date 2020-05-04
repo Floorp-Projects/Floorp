@@ -46,6 +46,7 @@ exports.toString = function (type) {
     case 251: return 'IXFR'
     case 41: return 'OPT'
     case 255: return 'ANY'
+    case 65345: return 'HTTPSSVC' // TODO
   }
   return 'UNKNOWN_' + type
 }
@@ -96,6 +97,7 @@ exports.toType = function (name) {
     case 'IXFR': return 251
     case 'OPT': return 41
     case 'ANY': return 255
+    case 'HTTPSSVC': return 65345 // TODO
     case '*': return 255
   }
   if (name.toUpperCase().startsWith('UNKNOWN_')) return parseInt(name.slice(8))
