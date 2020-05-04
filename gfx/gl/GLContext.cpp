@@ -711,6 +711,17 @@ bool GLContext::InitImpl() {
       MarkUnsupported(GLFeature::framebuffer_multisample);
     }
 
+#ifdef XP_MACOSX
+    // The Mac Nvidia driver, for versions up to and including 10.8,
+    // don't seem to properly support this.  See 814839
+    // this has been fixed in Mac OS X 10.9. See 907946
+    // and it also works in 10.8.3 and higher.  See 1094338.
+    if (Vendor() == gl::GLVendor::NVIDIA &&
+        !nsCocoaFeatures::IsAtLeastVersion(10, 8, 3)) {
+      MarkUnsupported(GLFeature::depth_texture);
+    }
+#endif
+
     const auto versionStr = (const char*)fGetString(LOCAL_GL_VERSION);
     if (strstr(versionStr, "Mesa")) {
       // DrawElementsInstanced hangs the driver.
