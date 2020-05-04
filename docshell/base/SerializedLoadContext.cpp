@@ -7,6 +7,7 @@
 #include "SerializedLoadContext.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
+#include "nsILoadContext.h"
 #include "nsIPrivateBrowsingChannel.h"
 #include "nsIWebSocketChannel.h"
 

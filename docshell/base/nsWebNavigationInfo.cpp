@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsWebNavigationInfo.h"
+
+#include "mozilla/dom/BrowsingContext.h"
 #include "nsIWebNavigation.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIDocumentLoaderFactory.h"

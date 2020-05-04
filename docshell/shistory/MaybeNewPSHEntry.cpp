@@ -5,9 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/MaybeNewPSHEntry.h"
+
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/PContentParent.h"
+#include "mozilla/dom/PSHistoryParent.h"
 #include "mozilla/dom/SHEntryChild.h"
 #include "mozilla/dom/SHEntryParent.h"
+#include "mozilla/dom/SHistoryChild.h"
 
 namespace mozilla {
 namespace ipc {

@@ -8,6 +8,7 @@
 #include "SHistoryParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/MaybeNewPSHEntry.h"
+#include "nsILayoutHistoryState.h"
 #include "nsStructuredCloneContainer.h"
 
 namespace mozilla {

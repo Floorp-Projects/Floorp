@@ -21,6 +21,7 @@
 
 class nsSHEntry;
 class nsISHEntry;
+class nsISHistory;
 class nsIContentViewer;
 class nsIDocShellTreeItem;
 class nsILayoutHistoryState;

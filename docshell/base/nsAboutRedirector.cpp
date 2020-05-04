@@ -10,6 +10,7 @@
 #include "nsBaseChannel.h"
 #include "mozilla/ArrayUtils.h"
 #include "nsIProtocolHandler.h"
+#include "nsXULAppAPI.h"
 #include "mozilla/Preferences.h"
 
 #define ABOUT_CONFIG_ENABLED_PREF "general.aboutConfig.enable"

@@ -8,17 +8,20 @@
 
 #include <algorithm>
 
-#include "nsIContentSecurityPolicy.h"
+#include "nsDocShell.h"
 #include "nsDocShellEditorData.h"
 #include "nsDocShellLoadTypes.h"
+#include "nsIContentSecurityPolicy.h"
 #include "nsIContentViewer.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIInputStream.h"
 #include "nsILayoutHistoryState.h"
+#include "nsIMutableArray.h"
 #include "nsIStructuredCloneContainer.h"
 #include "nsIURI.h"
 #include "nsSHEntryShared.h"
 #include "nsSHistory.h"
+#include "SHEntryChild.h"
 
 #include "mozilla/Logging.h"
 #include "nsIReferrerInfo.h"

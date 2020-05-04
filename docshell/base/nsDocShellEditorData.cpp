@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDocShellEditorData.h"
+
+#include "mozilla/dom/Document.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsPIDOMWindow.h"
@@ -12,6 +14,7 @@
 #include "nsIDocShell.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 nsDocShellEditorData::nsDocShellEditorData(nsIDocShell* aOwningDocShell)
     : mDocShell(aOwningDocShell),

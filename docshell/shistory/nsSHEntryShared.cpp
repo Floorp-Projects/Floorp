@@ -9,6 +9,7 @@
 #include "nsArray.h"
 #include "nsDocShellEditorData.h"
 #include "nsIContentViewer.h"
+#include "nsISHistory.h"
 #include "mozilla/dom/Document.h"
 #include "nsILayoutHistoryState.h"
 #include "nsIWebNavigation.h"
