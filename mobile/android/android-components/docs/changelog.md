@@ -34,6 +34,9 @@ permalink: /changelog/
 * **browser-menu**
   * Added `SimpleBrowserMenuHighlightableItem` which is a simple menu highlightable item (no images/icons).
 
+* **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
+  * Improve social trackers categorization see [ac#6851](https://github.com/mozilla-mobile/android-components/issues/6851) and [fenix#5921](https://github.com/mozilla-mobile/fenix/issues/5921)
+
 # 39.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v38.0.0...v39.0.0)
