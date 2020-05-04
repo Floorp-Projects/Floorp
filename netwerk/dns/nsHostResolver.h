@@ -25,6 +25,9 @@
 #include "nsRefPtrHashtable.h"
 #include "nsIThreadPool.h"
 #include "mozilla/net/NetworkConnectivityService.h"
+#include "nsIDNSByTypeRecord.h"
+#include "mozilla/net/DNSByTypeRecord.h"
+#include "mozilla/Maybe.h"
 
 class nsHostResolver;
 class nsResolveHostCallback;
@@ -282,15 +285,18 @@ NS_DEFINE_STATIC_IID_ACCESSOR(AddrHostRecord, ADDRHOSTRECORD_IID)
     }                                                \
   }
 
-class TypeHostRecord final : public nsHostRecord {
+class TypeHostRecord final : public nsHostRecord,
+                             public nsIDNSTXTRecord,
+                             public nsIDNSHTTPSSVCRecord {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(TYPEHOSTRECORD_IID)
   NS_DECL_ISUPPORTS_INHERITED
-
-  void GetRecords(nsTArray<nsCString>& aRecords);
-  void GetRecordsAsOneString(nsACString& aRecords);
+  NS_DECL_NSIDNSTXTRECORD
+  NS_DECL_NSIDNSHTTPSSVCRECORD
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const override;
+  uint32_t GetType();
+  mozilla::net::TypeRecordResultType GetResults();
 
  private:
   friend class nsHostResolver;
@@ -308,7 +314,7 @@ class TypeHostRecord final : public nsHostRecord {
   mozilla::Mutex mTrrLock;  // lock when accessing the mTrr pointer
   RefPtr<mozilla::net::TRR> mTrr;
 
-  nsTArray<nsCString> mResults;
+  mozilla::net::TypeRecordResultType mResults = AsVariant(mozilla::Nothing());
   mozilla::Mutex mResultsLock;
 
   // When the lookups of this record started (for telemetry).
@@ -380,9 +386,9 @@ class AHostResolver {
   virtual LookupStatus CompleteLookup(nsHostRecord*, nsresult,
                                       mozilla::net::AddrInfo*, bool pb,
                                       const nsACString& aOriginsuffix) = 0;
-  virtual LookupStatus CompleteLookupByType(nsHostRecord*, nsresult,
-                                            const nsTArray<nsCString>* aResult,
-                                            uint32_t aTtl, bool pb) = 0;
+  virtual LookupStatus CompleteLookupByType(
+      nsHostRecord*, nsresult, mozilla::net::TypeRecordResultType& aResult,
+      uint32_t aTtl, bool pb) = 0;
   virtual nsresult GetHostRecord(const nsACString& host,
                                  const nsACString& aTrrServer, uint16_t type,
                                  uint16_t flags, uint16_t af, bool pb,
@@ -497,7 +503,7 @@ class nsHostResolver : public nsISupports, public AHostResolver {
                               bool pb,
                               const nsACString& aOriginsuffix) override;
   LookupStatus CompleteLookupByType(nsHostRecord*, nsresult,
-                                    const nsTArray<nsCString>* aResult,
+                                    mozilla::net::TypeRecordResultType& aResult,
                                     uint32_t aTtl, bool pb) override;
   nsresult GetHostRecord(const nsACString& host, const nsACString& trrServer,
                          uint16_t type, uint16_t flags, uint16_t af, bool pb,

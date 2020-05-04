@@ -12,12 +12,6 @@ using namespace mozilla::net;
 
 NS_IMPL_ISUPPORTS(nsNetAddr, nsINetAddr)
 
-/* Makes a copy of |addr| */
-nsNetAddr::nsNetAddr(NetAddr* addr) {
-  NS_ASSERTION(addr, "null addr");
-  mAddr = *addr;
-}
-
 NS_IMETHODIMP nsNetAddr::GetFamily(uint16_t* aFamily) {
   switch (mAddr.raw.family) {
     case AF_INET:
