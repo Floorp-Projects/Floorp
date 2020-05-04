@@ -5220,8 +5220,9 @@
     observe(aSubject, aTopic, aData) {
       switch (aTopic) {
         case "contextual-identity-updated": {
+          let identity = aSubject.wrappedJSObject;
           for (let tab of this.tabs) {
-            if (tab.getAttribute("usercontextid") == aData) {
+            if (tab.getAttribute("usercontextid") == identity.userContextId) {
               ContextualIdentityService.setTabStyle(tab);
             }
           }
