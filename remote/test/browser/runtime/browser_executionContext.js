@@ -258,13 +258,21 @@ function recordContextEvents(Runtime, total) {
 async function assertEventOrder(options = {}) {
   const {
     history,
-    expectedevents = [DESTROYED, CLEARED, CREATED],
+    expectedEvents = [DESTROYED, CLEARED, CREATED],
     timeout = 2000,
   } = options;
   const events = await history.record(timeout);
+  const eventNames = events.map(item => item.eventName);
+  info(`Expected events: ${expectedEvents}`);
+  info(`Received events: ${eventNames}`);
+  is(
+    expectedEvents.length,
+    events.length,
+    "Received expected number of Runtime context events"
+  );
   Assert.deepEqual(
     events.map(item => item.eventName),
-    expectedevents,
+    expectedEvents,
     "Received Runtime context events in expected order"
   );
 }

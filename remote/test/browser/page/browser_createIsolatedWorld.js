@@ -44,10 +44,11 @@ add_task(async function contextCreatedAfterNavigation({ client }) {
   await Runtime.enable();
   info("Runtime notifications are enabled");
   await Page.enable();
+  const loadEvent = Page.loadEventFired();
   info("Page notifications are enabled");
   info("Navigating...");
   const { frameId } = await Page.navigate({ url: DOC });
-  await Page.loadEventFired();
+  await loadEvent;
 
   const { executionContextId: isolatedId } = await Page.createIsolatedWorld({
     frameId,
@@ -82,8 +83,12 @@ add_task(async function contextDestroyedAfterNavigation({ client }) {
   const { isolatedId, defaultContext } = await setupContexts(Page, Runtime);
   is(defaultContext.auxData.isDefault, true, "Default context is default");
   const history = recordEvents(Runtime, 4, true);
+  await Page.enable();
+  const frameNavigated = Page.frameNavigated();
+  info("Page notifications are enabled");
   info("Navigating...");
   await Page.navigate({ url: DOC });
+  await frameNavigated;
 
   await assertEventOrder({
     history,
@@ -263,8 +268,16 @@ function recordEvents(Runtime, total, cleared = false) {
 async function assertEventOrder(options = {}) {
   const { history, expectedEvents, timeout = 1000 } = options;
   const events = await history.record(timeout);
+  const eventNames = events.map(item => item.eventName);
+  info(`Expected events: ${expectedEvents}`);
+  info(`Received events: ${eventNames}`);
+  is(
+    expectedEvents.length,
+    events.length,
+    "Received expected number of Runtime context events"
+  );
   Assert.deepEqual(
-    events.map(item => item.eventName),
+    eventNames,
     expectedEvents,
     "Received Runtime context events in expected order"
   );
