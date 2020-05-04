@@ -42,6 +42,15 @@ you might find that this isn't working on large source code files, but triggerin
 
    "editor.formatOnSaveTimeout": 5000
 
+
+Recommended extensions
+~~~~~~~~~~~~~~~~~~~~~~
+
+By default, Firefox source tree comes with its own set of recommendations of Visual Studio Code extensions. They are listed in `.vscode/extensions.json <https://searchfox.org/mozilla-central/source/.vscode/extensions.json>`__.
+
+For Rust development, the `rust-analyzer <https://marketplace.visualstudio.com/items?itemName=matklad.rust-analyzer>`__ extension is recommended.
+`See the manual <https://rust-analyzer.github.io/manual.html>`__ for more information.
+
 VIM
 ---
 
