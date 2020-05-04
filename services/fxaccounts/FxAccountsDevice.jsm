@@ -45,14 +45,7 @@ class FxAccountsDevice {
   constructor(fxai) {
     this._fxai = fxai;
     this._deviceListCache = null;
-
-    // The generation avoids a race where we'll cache a stale device list if the
-    // user signs out during a background refresh. It works like this: during a
-    // refresh, we store the current generation, fetch the new list from the
-    // server, and compare the stored generation to the current one. Since we
-    // increment the generation on reset, we know that the fetched list isn't
-    // valid if the generations are different.
-    this._generation = 0;
+    this._fetchAndCacheDeviceListPromise = null;
 
     // The current version of the device registration, we use this to re-register
     // devices after we update what we send on device registration.
@@ -71,9 +64,11 @@ class FxAccountsDevice {
   }
 
   async getLocalId() {
-    // It turns out _updateDeviceRegistrationIfNecessary() does exactly what we
-    // need.
-    return this._updateDeviceRegistrationIfNecessary();
+    return this._withCurrentAccountState(currentState => {
+      // It turns out _updateDeviceRegistrationIfNecessary() does exactly what we
+      // need.
+      return this._updateDeviceRegistrationIfNecessary(currentState);
+    });
   }
 
   // Generate a client name if we don't have a useful one yet
@@ -169,25 +164,6 @@ class FxAccountsDevice {
     return DEVICE_TYPE_DESKTOP;
   }
 
-  async _checkDeviceUpdateNeeded(device) {
-    // There is no device registered or the device registration is outdated.
-    // Either way, we should register the device with FxA
-    // before returning the id to the caller.
-    const availableCommandsKeys = Object.keys(
-      await this._fxai.commands.availableCommands()
-    ).sort();
-    return (
-      !device ||
-      !device.registrationVersion ||
-      device.registrationVersion < this.DEVICE_REGISTRATION_VERSION ||
-      !device.registeredCommandsKeys ||
-      !CommonUtils.arrayEqual(
-        device.registeredCommandsKeys,
-        availableCommandsKeys
-      )
-    );
-  }
-
   /**
    * Returns the most recently fetched device list, or `null` if the list
    * hasn't been fetched yet. This is synchronous, so that consumers like
@@ -215,91 +191,148 @@ class FxAccountsDevice {
    *         push registration.
    */
   async refreshDeviceList({ ignoreCached = false } = {}) {
+    // If we're already refreshing the list in the background, let that finish.
     if (this._fetchAndCacheDeviceListPromise) {
-      // If we're already refreshing the list in the background, let that
-      // finish.
+      log.info("Already fetching device list, return existing promise");
       return this._fetchAndCacheDeviceListPromise;
     }
-    if (ignoreCached || !this._deviceListCache) {
-      return this._fetchAndCacheDeviceList();
-    }
-    if (
-      this._fxai.now() - this._deviceListCache.lastFetch <
-      this.TIME_BETWEEN_FXA_DEVICES_FETCH_MS
-    ) {
-      // If our recent device list is still fresh, skip the request to
-      // refresh it.
-      return false;
-    }
-    return this._fetchAndCacheDeviceList();
-  }
 
-  async _fetchAndCacheDeviceList() {
-    if (this._fetchAndCacheDeviceListPromise) {
-      return this._fetchAndCacheDeviceListPromise;
+    // If the cache is fresh enough, don't refresh it again.
+    if (!ignoreCached && this._deviceListCache) {
+      const ageOfCache = this._fxai.now() - this._deviceListCache.lastFetch;
+      if (ageOfCache < this.TIME_BETWEEN_FXA_DEVICES_FETCH_MS) {
+        log.info("Device list cache is fresh, re-using it");
+        return false;
+      }
     }
-    let generation = this._generation;
-    return (this._fetchAndCacheDeviceListPromise = this._fxai
-      .withVerifiedAccountState(async state => {
-        let accountData = await state.getUserAccountData([
-          "sessionToken",
-          "device",
-        ]);
 
-        let devices;
-        try {
-          devices = await this._fxai.fxAccountsClient.getDeviceList(
-            accountData.sessionToken
-          );
-        } catch (err) {
-          await this._fxai._handleTokenError(err);
-          // _handleTokenError always re-throws.
-          throw new Error("not reached!");
-        }
-        if (generation != this._generation) {
-          throw new Error("Another user has signed in");
-        }
+    log.info("fetching updated device list");
+    this._fetchAndCacheDeviceListPromise = (async () => {
+      try {
+        const devices = await this._withVerifiedAccountState(
+          async currentState => {
+            const accountData = await currentState.getUserAccountData([
+              "sessionToken",
+              "device",
+            ]);
+            const devices = await this._fxai.fxAccountsClient.getDeviceList(
+              accountData.sessionToken
+            );
+            log.info("got new device list", devices);
+            // Check if our push registration is still good (although background
+            // device registration means it's possible we'll be fetching the device
+            // list before we've actually registered ourself!)
+            const ourDevice = devices.find(device => device.isCurrentDevice);
+            if (ourDevice && ourDevice.pushEndpointExpired) {
+              await this._fxai.fxaPushService.unsubscribe();
+              await this._registerOrUpdateDevice(currentState, accountData);
+            }
+            return devices;
+          }
+        );
+        log.info("updating the cache");
+        // Be careful to only update the cache once the above has resolved, so
+        // we know that the current account state didn't change underneath us.
         this._deviceListCache = {
           lastFetch: this._fxai.now(),
           devices,
         };
-
-        // Check if our push registration is still good (although background
-        // device registration means it's possible we'll be fetching the device
-        // list before we've actually registered ourself!)
-        const ourDevice = devices.find(device => device.isCurrentDevice);
-        if (ourDevice && ourDevice.pushEndpointExpired) {
-          await this._fxai.fxaPushService.unsubscribe();
-          await this._registerOrUpdateDevice(accountData);
-        }
-
         return true;
-      })
-      .finally(_ => {
+      } finally {
         this._fetchAndCacheDeviceListPromise = null;
-      }));
+      }
+    })();
+    return this._fetchAndCacheDeviceListPromise;
   }
 
   async updateDeviceRegistration() {
-    try {
-      const signedInUser = await this._fxai.currentAccountState.getUserAccountData();
+    return this._withCurrentAccountState(async currentState => {
+      const signedInUser = await currentState.getUserAccountData([
+        "sessionToken",
+        "device",
+      ]);
       if (signedInUser) {
-        await this._registerOrUpdateDevice(signedInUser);
+        await this._registerOrUpdateDevice(currentState, signedInUser);
       }
-    } catch (error) {
-      await this._logErrorAndResetDeviceRegistrationVersion(error);
-    }
+    });
   }
 
-  async _updateDeviceRegistrationIfNecessary() {
-    let data = await this._fxai.currentAccountState.getUserAccountData();
+  async updateDeviceRegistrationIfNecessary() {
+    return this._withCurrentAccountState(currentState => {
+      return this._updateDeviceRegistrationIfNecessary(currentState);
+    });
+  }
+
+  reset() {
+    this._deviceListCache = null;
+    this._fetchAndCacheDeviceListPromise = null;
+  }
+
+  /**
+   * Here begin our internal helper methods.
+   *
+   * Many of these methods take the current account state as first argument,
+   * in order to avoid racing our state updates with e.g. the uer signing
+   * out while we're in the middle of an update. If this does happen, the
+   * resulting promise will be rejected rather than persisting stale state.
+   *
+   */
+
+  _withCurrentAccountState(func) {
+    return this._fxai.withCurrentAccountState(async currentState => {
+      try {
+        return await func(currentState);
+      } catch (err) {
+        // `_handleTokenError` always throws, this syntax keeps the linter happy.
+        // TODO: probably `_handleTokenError` could be done by `_fxai.withCurrentAccountState`
+        // internally rather than us having to remember to do it here.
+        throw await this._fxai._handleTokenError(err);
+      }
+    });
+  }
+
+  _withVerifiedAccountState(func) {
+    return this._fxai.withVerifiedAccountState(async currentState => {
+      try {
+        return await func(currentState);
+      } catch (err) {
+        // `_handleTokenError` always throws, this syntax keeps the linter happy.
+        throw await this._fxai._handleTokenError(err);
+      }
+    });
+  }
+
+  async _checkDeviceUpdateNeeded(device) {
+    // There is no device registered or the device registration is outdated.
+    // Either way, we should register the device with FxA
+    // before returning the id to the caller.
+    const availableCommandsKeys = Object.keys(
+      await this._fxai.commands.availableCommands()
+    ).sort();
+    return (
+      !device ||
+      !device.registrationVersion ||
+      device.registrationVersion < this.DEVICE_REGISTRATION_VERSION ||
+      !device.registeredCommandsKeys ||
+      !CommonUtils.arrayEqual(
+        device.registeredCommandsKeys,
+        availableCommandsKeys
+      )
+    );
+  }
+
+  async _updateDeviceRegistrationIfNecessary(currentState) {
+    let data = await currentState.getUserAccountData([
+      "sessionToken",
+      "device",
+    ]);
     if (!data) {
       // Can't register a device without a signed-in user.
       return null;
     }
     const { device } = data;
     if (await this._checkDeviceUpdateNeeded(device)) {
-      return this._registerOrUpdateDevice(data);
+      return this._registerOrUpdateDevice(currentState, data);
     }
     // Return the device ID we already had.
     return device.id;
@@ -307,8 +340,8 @@ class FxAccountsDevice {
 
   // If you change what we send to the FxA servers during device registration,
   // you'll have to bump the DEVICE_REGISTRATION_VERSION number to force older
-  // devices to re-register when Firefox updates
-  async _registerOrUpdateDevice(signedInUser) {
+  // devices to re-register when Firefox updates.
+  async _registerOrUpdateDevice(currentState, signedInUser) {
     const { sessionToken, device: currentDevice } = signedInUser;
     if (!sessionToken) {
       throw new Error("_registerOrUpdateDevice called without a session token");
@@ -356,10 +389,10 @@ class FxAccountsDevice {
       }
 
       // Get the freshest device props before updating them.
-      let {
-        device: deviceProps,
-      } = await this._fxai.currentAccountState.getUserAccountData();
-      await this._fxai.currentAccountState.updateUserAccountData({
+      let { device: deviceProps } = await currentState.getUserAccountData([
+        "device",
+      ]);
+      await currentState.updateUserAccountData({
         device: {
           ...deviceProps, // Copy the other properties (e.g. handledCommands).
           id: device.id,
@@ -369,45 +402,59 @@ class FxAccountsDevice {
       });
       return device.id;
     } catch (error) {
-      return this._handleDeviceError(error, sessionToken);
+      return this._handleDeviceError(currentState, error, sessionToken);
     }
   }
 
-  _handleDeviceError(error, sessionToken) {
-    return Promise.resolve()
-      .then(() => {
-        if (error.code === 400) {
-          if (error.errno === ERRNO_UNKNOWN_DEVICE) {
-            return this._recoverFromUnknownDevice();
-          }
-
-          if (error.errno === ERRNO_DEVICE_SESSION_CONFLICT) {
-            return this._recoverFromDeviceSessionConflict(error, sessionToken);
-          }
+  async _handleDeviceError(currentState, error, sessionToken) {
+    try {
+      if (error.code === 400) {
+        if (error.errno === ERRNO_UNKNOWN_DEVICE) {
+          return this._recoverFromUnknownDevice(currentState);
         }
 
-        // `_handleTokenError` re-throws the error.
-        return this._fxai._handleTokenError(error);
-      })
-      .catch(error => this._logErrorAndResetDeviceRegistrationVersion(error))
-      .catch(() => {});
+        if (error.errno === ERRNO_DEVICE_SESSION_CONFLICT) {
+          return this._recoverFromDeviceSessionConflict(
+            currentState,
+            error,
+            sessionToken
+          );
+        }
+      }
+
+      // `_handleTokenError` always throws, this syntax keeps the linter happy.
+      // Note that the re-thrown error is immediately caught, logged and ignored
+      // by the containing scope here, which is why we have to `_handleTokenError`
+      // ourselves rather than letting it bubble up for handling by the caller.
+      throw await this._fxai._handleTokenError(error);
+    } catch (error) {
+      await this._logErrorAndResetDeviceRegistrationVersion(
+        currentState,
+        error
+      );
+      return null;
+    }
   }
 
-  async _recoverFromUnknownDevice() {
+  async _recoverFromUnknownDevice(currentState) {
     // FxA did not recognise the device id. Handle it by clearing the device
     // id on the account data. At next sync or next sign-in, registration is
     // retried and should succeed.
     log.warn("unknown device id, clearing the local device data");
     try {
-      await this._fxai.currentAccountState.updateUserAccountData({
+      await currentState.updateUserAccountData({
         device: null,
       });
     } catch (error) {
-      await this._logErrorAndResetDeviceRegistrationVersion(error);
+      await this._logErrorAndResetDeviceRegistrationVersion(
+        currentState,
+        error
+      );
     }
+    return null;
   }
 
-  async _recoverFromDeviceSessionConflict(error, sessionToken) {
+  async _recoverFromDeviceSessionConflict(currentState, error, sessionToken) {
     // FxA has already associated this session with a different device id.
     // Perhaps we were beaten in a race to register. Handle the conflict:
     //   1. Fetch the list of devices for the current user from FxA.
@@ -427,7 +474,7 @@ class FxAccountsDevice {
       const length = matchingDevices.length;
       if (length === 1) {
         const deviceId = matchingDevices[0].id;
-        await this._fxai.currentAccountState.updateUserAccountData({
+        await currentState.updateUserAccountData({
           device: {
             id: deviceId,
             registrationVersion: null,
@@ -440,22 +487,28 @@ class FxAccountsDevice {
           "insane server state, " + length + " devices for this session"
         );
       }
-      await this._logErrorAndResetDeviceRegistrationVersion(error);
+      await this._logErrorAndResetDeviceRegistrationVersion(
+        currentState,
+        error
+      );
     } catch (secondError) {
       log.error("failed to recover from device-session conflict", secondError);
-      await this._logErrorAndResetDeviceRegistrationVersion(error);
+      await this._logErrorAndResetDeviceRegistrationVersion(
+        currentState,
+        error
+      );
     }
     return null;
   }
 
-  async _logErrorAndResetDeviceRegistrationVersion(error) {
+  async _logErrorAndResetDeviceRegistrationVersion(currentState, error) {
     // Device registration should never cause other operations to fail.
     // If we've reached this point, just log the error and reset the device
     // on the account data. At next sync or next sign-in,
     // registration will be retried.
     log.error("device registration failed", error);
     try {
-      this._fxai.currentAccountState.updateUserAccountData({
+      currentState.updateUserAccountData({
         device: null,
       });
     } catch (secondError) {
@@ -466,17 +519,11 @@ class FxAccountsDevice {
     }
   }
 
-  reset() {
-    this._deviceListCache = null;
-    this._generation++;
-    this._fetchAndCacheDeviceListPromise = null;
-  }
-
   // Kick off a background refresh when a device is connected or disconnected.
   observe(subject, topic, data) {
     switch (topic) {
       case ON_DEVICE_CONNECTED_NOTIFICATION:
-        this._fetchAndCacheDeviceList().catch(error => {
+        this.refreshDeviceList({ ignoreCached: true }).catch(error => {
           log.warn(
             "failed to refresh devices after connecting a new device",
             error
@@ -488,7 +535,7 @@ class FxAccountsDevice {
         if (!json.isLocalDevice) {
           // If we're the device being disconnected, don't bother fetching a new
           // list, since our session token is now invalid.
-          this._fetchAndCacheDeviceList().catch(error => {
+          this.refreshDeviceList({ ignoreCached: true }).catch(error => {
             log.warn(
               "failed to refresh devices after disconnecting a device",
               error
@@ -497,9 +544,9 @@ class FxAccountsDevice {
         }
         break;
       case ONVERIFIED_NOTIFICATION:
-        this._updateDeviceRegistrationIfNecessary().catch(error => {
+        this.updateDeviceRegistrationIfNecessary().catch(error => {
           log.warn(
-            "_updateDeviceRegistrationIfNecessary failed after verification",
+            "updateDeviceRegistrationIfNecessary failed after verification",
             error
           );
         });
