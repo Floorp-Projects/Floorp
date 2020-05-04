@@ -173,6 +173,15 @@ class EditToolbarTest {
     }
 
     @Test
+    fun `clearView visible on updateUrl`() {
+        val (_, editToolbar) = createEditToolbar()
+        val clearView = editToolbar.views.clear
+
+        editToolbar.updateUrl("TestUrl", false)
+        assertTrue(clearView.visibility == View.VISIBLE)
+    }
+
+    @Test
     fun `clearView clears text in urlView`() {
         val (_, editToolbar) = createEditToolbar()
         val clearView = editToolbar.views.clear
