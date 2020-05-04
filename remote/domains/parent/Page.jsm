@@ -113,7 +113,7 @@ class Page extends Domain {
     }
 
     const requestDone = new Promise(resolve => {
-      if (validURL.scheme == "data" || validURL.scheme == "about") {
+      if (!["https", "http"].includes(validURL.scheme)) {
         resolve({});
         return;
       }
