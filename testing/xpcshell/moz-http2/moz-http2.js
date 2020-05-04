@@ -821,6 +821,78 @@ function handleRequest(req, res) {
       }
     });
     return;
+  } else if (u.pathname === "/httpssvc") {
+    let payload = Buffer.from("");
+    req.on("data", function receiveData(chunk) {
+      payload = Buffer.concat([payload, chunk]);
+    });
+    req.on("end", function finishedData() {
+      let packet = dnsPacket.decode(payload);
+      let answers = [];
+      answers.push({
+        name: packet.questions[0].name,
+        type: packet.questions[0].type,
+        ttl: 55,
+        class: "IN",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "h3pool",
+          values: [
+            { key: "alpn", value: "h2,h3" },
+            { key: "no-default-alpn" },
+            { key: "port", value: 8888 },
+            { key: "ipv4hint", value: "1.2.3.4" },
+            { key: "esniconfig", value: "123..." },
+            { key: "ipv6hint", value: "::1" },
+            { key: 30, value: "somelargestring" },
+          ],
+        },
+      });
+      answers.push({
+        name: packet.questions[0].name,
+        type: packet.questions[0].type,
+        ttl: 55,
+        class: "IN",
+        flush: false,
+        data: {
+          priority: 2,
+          name: ".",
+          values: [
+            { key: "alpn", value: "h2" },
+            { key: "ipv4hint", value: ["1.2.3.4", "5.6.7.8"] },
+            { key: "esniconfig", value: "abc..." },
+            { key: "ipv6hint", value: ["::1", "fe80::794f:6d2c:3d5e:7836"] },
+          ],
+        },
+      });
+      answers.push({
+        name: packet.questions[0].name,
+        type: packet.questions[0].type,
+        ttl: 55,
+        class: "IN",
+        flush: false,
+        data: {
+          priority: 3,
+          name: "hello",
+          values: [],
+        },
+      });
+      let buf = dnsPacket.encode({
+        type: "response",
+        id: packet.id,
+        flags: dnsPacket.RECURSION_DESIRED,
+        questions: packet.questions,
+        answers,
+      });
+
+      res.setHeader("Content-Type", "application/dns-message");
+      res.setHeader("Content-Length", buf.length);
+      res.writeHead(200);
+      res.write(buf);
+      res.end("");
+    });
+    return;
   } else if (u.pathname === "/dns-cname-a") {
     // test23 asks for cname-a.example.com
     // this responds with a CNAME to here.example.com *and* an A record
