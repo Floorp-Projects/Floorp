@@ -254,7 +254,6 @@ class MOZ_RAII ExecuteState : public RunState {
         result_(result) {}
 
   Value newTarget() const { return newTargetValue_; }
-  void setNewTarget(const Value& v) { newTargetValue_ = v; }
   Value* addressOfNewTarget() { return newTargetValue_.address(); }
 
   JSObject* environmentChain() const { return envChain_; }
