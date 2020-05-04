@@ -38,11 +38,16 @@ def _generate_task_output_files(job, filenames, locale=None):
     return data
 
 
-def identify_desired_signing_keys(project):
-    if project in ["mozilla-beta", "mozilla-release"] or project.startswith("mozilla-esr"):
-        return "release"
-    elif project == "mozilla-central":
+def identify_desired_signing_keys(project, product):
+    if project in ["mozilla-central", "comm-central"]:
         return "nightly"
+    elif project == "mozilla-beta":
+        if product == "devedition":
+            return "nightly"
+        return "release"
+    elif (project in ["mozilla-release", "comm-beta"] or
+          project.startswith("mozilla-esr") or project.startswith("comm-esr")):
+        return "release"
     return "dep1"
 
 
@@ -117,7 +122,8 @@ def make_task_description(config, jobs):
             'chain-of-trust': True,
             'taskcluster-proxy': True,
             'env': {
-                'SIGNING_CERT': identify_desired_signing_keys(config.params["project"]),
+                'SIGNING_CERT': identify_desired_signing_keys(config.params["project"],
+                                                              config.params['release_product']),
                 'EXTRA_PARAMS': '--arch={}'.format(architecture(build_platform)),
                 'MAR_CHANNEL_ID': attributes['mar-channel-id']
             }
