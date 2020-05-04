@@ -681,32 +681,39 @@
           </hbox>
         </vbox>
         <vbox id="PanelUI-profiler-content">
-          <label class="PanelUI-profiler-content-label"
-                 value="Settings" />
-          <menulist id="PanelUI-profiler-presets"
-            flex="1"
-            value="custom">
-            <menupopup id="PanelUI-profiler-presets-menupopup" presetsbuilt="false">
-              <!-- The rest of the values get dynamically inserted. The "presetsbuilt"
-                   attribute will get updated to "true" once the presets have been
-                   built. -->
-              <menuitem label="Custom" value="custom"/>
-            </menupopup>
-          </menulist>
-          <!-- The following description gets inserted dynamically. -->
-          <description id="PanelUI-profiler-content-description" />
-          <hbox id="PanelUI-profiler-content-custom">
-            <button id="PanelUI-profiler-content-custom-button">
-              Edit Settings…
-            </button>
+          <vbox id="PanelUI-profiler-content-settings">
+            <label class="PanelUI-profiler-content-label"
+                   value="Settings" />
+            <menulist id="PanelUI-profiler-presets"
+                      flex="1"
+                      value="custom">
+              <menupopup id="PanelUI-profiler-presets-menupopup" presetsbuilt="false">
+                <!-- The rest of the values get dynamically inserted. The "presetsbuilt"
+                    attribute will get updated to "true" once the presets have been
+                    built. -->
+                <menuitem label="Custom" value="custom"/>
+              </menupopup>
+            </menulist>
+            <!-- The following description gets inserted dynamically. -->
+            <description id="PanelUI-profiler-content-description" />
+            <hbox id="PanelUI-profiler-content-custom">
+              <button id="PanelUI-profiler-content-custom-button">
+                Edit Settings…
+              </button>
+            </hbox>
+          </vbox>
+          <hbox id="PanelUI-profiler-content-recording">
+            <spacer flex="1" />
+            <image class="PanelUI-profiler-recording-icon" />
+            <label class="PanelUI-profiler-recording-label">Recording…</label>
+            <spacer flex="1" />
           </hbox>
           <hbox id="PanelUI-profiler-inactive" class="PanelUI-profiler-buttons">
             <spacer flex="1" />
             <vbox>
               <button label="Start Recording"
                       id="PanelUI-profiler-startRecording"
-                      class="PanelUI-profiler-button PanelUI-profiler-button-primary"
-                      />
+                      class="PanelUI-profiler-button PanelUI-profiler-button-primary" />
               <label class="PanelUI-profiler-shortcut">^⇧1</label>
             </vbox>
             <spacer flex="1" />

@@ -78,6 +78,8 @@ function selectElementsInPanelview(panelview) {
     startRecording: getElementById("PanelUI-profiler-startRecording"),
     stopAndDiscard: getElementById("PanelUI-profiler-stopAndDiscard"),
     stopAndCapture: getElementById("PanelUI-profiler-stopAndCapture"),
+    settingsSection: getElementById("PanelUI-profiler-content-settings"),
+    contentRecording: getElementById("PanelUI-profiler-content-recording"),
   };
 }
 
@@ -118,6 +120,9 @@ function createViewControllers(state, elements) {
         elements.presetCustom.style.display = "none";
         elements.presetDescription.textContent = preset.description;
         elements.presetsMenuList.value = presetName;
+        // This works around XULElement height issues.
+        const { height } = elements.presetDescription.getBoundingClientRect();
+        elements.presetDescription.style.height = `${height}px`;
       } else {
         elements.presetDescription.style.display = "none";
         elements.presetCustom.style.display = "block";
@@ -139,7 +144,14 @@ function createViewControllers(state, elements) {
         "hidden",
         isProfilerActive ? "false" : "true"
       );
-      elements.presetsMenuList.disabled = isProfilerActive;
+      elements.settingsSection.setAttribute(
+        "hidden",
+        isProfilerActive ? "true" : "false"
+      );
+      elements.contentRecording.setAttribute(
+        "hidden",
+        isProfilerActive ? "false" : "true"
+      );
     },
 
     createPresetsList() {
