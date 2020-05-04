@@ -10,6 +10,7 @@ from abc import ABCMeta, abstractmethod
 
 import os
 import json
+import re
 import six
 
 import mozprocess
@@ -36,6 +37,7 @@ class Browsertime(Perftest):
         pass
 
     def __init__(self, app, binary, process_handler=None, **kwargs):
+        self.browsertime_failure = ""
         self.process_handler = process_handler or mozprocess.ProcessHandler
         for key in list(kwargs):
             if key.startswith("browsertime_"):
@@ -320,7 +322,36 @@ class Browsertime(Perftest):
         LOG.info("PATH: {}".format(env["PATH"]))
 
         try:
-            proc = self.process_handler(cmd, env=env)
+            line_matcher = re.compile(r".*(\[.*\])\s+([a-zA-Z]+):\s+(.*)")
+
+            def _line_handler(line):
+                """This function acts as a bridge between browsertime
+                and raptor. It reforms the lines to get rid of information
+                that is not needed, and outputs them appropriately based
+                on the level that is found. (Debug and info all go to info).
+
+                For errors, we set an attribute (self.browsertime_failure) to
+                it, then raise a generic exception. When we return, we check
+                if self.browsertime_failure, and raise an Exception if necessary
+                to stop Raptor execution (preventing the results processing).
+                """
+                match = line_matcher.match(line)
+                if not match:
+                    LOG.info(line)
+                    return
+
+                date, level, msg = match.groups()
+                level = level.lower()
+                if "error" in level:
+                    self.browsertime_failure = msg
+                    # Raising this kills mozprocess
+                    raise Exception("Browsertime failed to run")
+                elif "warning" in level:
+                    LOG.warning(msg)
+                else:
+                    LOG.info(msg)
+
+            proc = self.process_handler(cmd, processOutputLine=_line_handler, env=env)
             proc.run(
                 timeout=self._compute_process_timeout(test, timeout),
                 outputTimeout=BROWSERTIME_BENCHMARK_OUTPUT_TIMEOUT
@@ -329,6 +360,9 @@ class Browsertime(Perftest):
             )
             proc.wait()
 
+            if self.browsertime_failure:
+                raise Exception(self.browsertime_failure)
+
         except Exception as e:
-            LOG.critical("Error while attempting to run browsertime: %s" % str(e))
+            LOG.critical(str(e))
             raise
