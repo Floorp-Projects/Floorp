@@ -504,6 +504,13 @@ struct LiveProfiledThreadData {
   UniquePtr<ProfiledThreadData> mProfiledThreadData;
 };
 
+// The buffer size is provided as a number of "entries", this is their size in
+// bytes.
+constexpr static uint32_t scBytesPerEntry = 8;
+
+// Expected maximum size needed to store one stack sample.
+constexpr static uint32_t scExpectedMaximumStackSize = 64 * 1024;
+
 // This class contains the profiler's global state that is valid only when the
 // profiler is active. When not instantiated, the profiler is inactive.
 //
@@ -512,6 +519,57 @@ struct LiveProfiledThreadData {
 //
 class ActivePS {
  private:
+  // We need to decide how many chunks of what size we want to fit in the given
+  // total maximum capacity for this process, in the (likely) context of
+  // multiple processes doing the same choice and having an inter-process
+  // mechanism to control the overal memory limit.
+
+  // Minimum chunk size allowed, enough for at least one stack.
+  constexpr static uint32_t scMinimumChunkSize = 2 * scExpectedMaximumStackSize;
+
+  // Ideally we want at least 2 unreleased chunks to work with (1 current and 1
+  // next), and 2 released chunks (so that one can be recycled when old, leaving
+  // one with some data).
+  constexpr static uint32_t scMinimumNumberOfChunks = 4;
+
+  // And we want to limit chunks to a maximum size, which is a compromise
+  // between:
+  // - A big size, which helps with reducing the rate of allocations and IPCs.
+  // - A small size, which helps with equalizing the duration of recorded data
+  //   (as the inter-process controller will discard the oldest chunks in all
+  //   Firefox processes).
+  constexpr static uint32_t scMaximumChunkSize = 1024 * 1024;
+
+ public:
+  // We should be able to store at least the minimum number of the smallest-
+  // possible chunks.
+  constexpr static uint32_t scMinimumBufferSize =
+      scMinimumNumberOfChunks * scMinimumChunkSize;
+  constexpr static uint32_t scMinimumBufferEntries =
+      scMinimumBufferSize / scBytesPerEntry;
+
+  // Limit to 2GiB.
+  constexpr static uint32_t scMaximumBufferSize = 2u * 1024u * 1024u * 1024u;
+  constexpr static uint32_t scMaximumBufferEntries =
+      scMaximumBufferSize / scBytesPerEntry;
+
+  constexpr static uint32_t ClampToAllowedEntries(uint32_t aEntries) {
+    if (aEntries <= scMinimumBufferEntries) {
+      return scMinimumBufferEntries;
+    }
+    if (aEntries >= scMaximumBufferEntries) {
+      return scMaximumBufferEntries;
+    }
+    return aEntries;
+  }
+
+ private:
+  constexpr static uint32_t ChunkSizeForEntries(uint32_t aEntries) {
+    return uint32_t(std::min(size_t(ClampToAllowedEntries(aEntries)) *
+                                 scBytesPerEntry / scMinimumNumberOfChunks,
+                             size_t(scMaximumChunkSize)));
+  }
+
   static uint32_t AdjustFeatures(uint32_t aFeatures, uint32_t aFilterCount) {
     // Filter out any features unavailable in this platform/configuration.
     aFeatures &= AvailableFeatures();
@@ -526,26 +584,6 @@ class ActivePS {
     return aFeatures;
   }
 
-  constexpr static uint32_t bytesPerEntry = 8;
-
-  // We need to decide how many chunks of what size we want to fit in the given
-  // total maximum capacity for this process, in the (likely) context of
-  // multiple processes doing the same choice and having an inter-process
-  // mechanism to control the overal memory limit.
-
-  // Ideally we want at least 2 unreleased chunks to work with (1 current and 1
-  // next), and 2 released chunks (so that one can be recycled when old, leaving
-  // one with some data).
-  constexpr static uint32_t minimumNumberOfChunks = 4;
-
-  // And we want to limit chunks to a maximum size, which is a compromise
-  // between:
-  // - A big size, which helps with reducing the rate of allocations and IPCs.
-  // - A small size, which helps with equalizing the duration of recorded data
-  //   (as the inter-process controller will discard the oldest chunks in all
-  //   Firefox processes).
-  constexpr static uint32_t maximumChunkSize = 1024 * 1024;
-
   ActivePS(PSLockRef aLock, PowerOfTwo32 aCapacity, double aInterval,
            uint32_t aFeatures, const char** aFilters, uint32_t aFilterCount,
            const Maybe<double>& aDuration)
@@ -555,9 +593,8 @@ class ActivePS {
         mInterval(aInterval),
         mFeatures(AdjustFeatures(aFeatures, aFilterCount)),
         mProfileBufferChunkManager(
-            aCapacity.Value() * bytesPerEntry,
-            std::min(aCapacity.Value() * bytesPerEntry / minimumNumberOfChunks,
-                     maximumChunkSize)),
+            size_t(ClampToAllowedEntries(aCapacity.Value())) * scBytesPerEntry,
+            ChunkSizeForEntries(aCapacity.Value())),
         mProfileBuffer([this]() -> ProfileChunkedBuffer& {
           CorePS::CoreBuffer().SetChunkManager(mProfileBufferChunkManager);
           return CorePS::CoreBuffer();
@@ -1865,13 +1902,13 @@ static void PrintUsageThenExit(int aExitCode) {
       "  profiler immediately on start-up.\n"
       "  Useful if you want profile code that runs very early.\n"
       "\n"
-      "  MOZ_BASE_PROFILER_STARTUP_ENTRIES=<1..>\n"
+      "  MOZ_BASE_PROFILER_STARTUP_ENTRIES=<%u..%u>\n"
       "  If MOZ_BASE_PROFILER_STARTUP is set, specifies the number of entries\n"
       "  per process in the profiler's circular buffer when the profiler is\n"
       "  first started.\n"
       "  If unset, the platform default is used:\n"
       "  %u entries per process, or %u when MOZ_BASE_PROFILER_STARTUP is set.\n"
-      "  (8 bytes per entry -> %u or %u total bytes per process)\n"
+      "  (%u bytes per entry -> %u or %u total bytes per process)\n"
       "\n"
       "  MOZ_BASE_PROFILER_STARTUP_DURATION=<1..>\n"
       "  If MOZ_BASE_PROFILER_STARTUP is set, specifies the maximum life time\n"
@@ -1900,10 +1937,14 @@ static void PrintUsageThenExit(int aExitCode) {
       "    Features: (x=unavailable, D/d=default/unavailable,\n"
       "               S/s=MOZ_BASE_PROFILER_STARTUP extra "
       "default/unavailable)\n",
+      unsigned(ActivePS::scMinimumBufferEntries),
+      unsigned(ActivePS::scMaximumBufferEntries),
       unsigned(BASE_PROFILER_DEFAULT_ENTRIES.Value()),
       unsigned(BASE_PROFILER_DEFAULT_STARTUP_ENTRIES.Value()),
-      unsigned(BASE_PROFILER_DEFAULT_ENTRIES.Value() * 8),
-      unsigned(BASE_PROFILER_DEFAULT_STARTUP_ENTRIES.Value() * 8));
+      unsigned(scBytesPerEntry),
+      unsigned(BASE_PROFILER_DEFAULT_ENTRIES.Value() * scBytesPerEntry),
+      unsigned(BASE_PROFILER_DEFAULT_STARTUP_ENTRIES.Value() *
+               scBytesPerEntry));
 
 #  define PRINT_FEATURE(n_, str_, Name_, desc_)             \
     PrintToConsole("    %c %5u: \"%s\" (%s)\n",             \
@@ -2085,7 +2126,7 @@ void SamplerThread::Run() {
   // (This is to avoid touching the CorePS::CoreBuffer lock while
   // a thread is suspended, because that thread could be working with
   // the CorePS::CoreBuffer as well.)
-  ProfileBufferChunkManagerSingle localChunkManager(65536);
+  ProfileBufferChunkManagerSingle localChunkManager(scExpectedMaximumStackSize);
   ProfileChunkedBuffer localBuffer(
       ProfileChunkedBuffer::ThreadSafety::WithoutMutex, localChunkManager);
   ProfileBuffer localProfileBuffer(localBuffer);
@@ -2454,7 +2495,8 @@ void profiler_init(void* aStackTop) {
       if (errno == 0 && capacityLong > 0 &&
           static_cast<uint64_t>(capacityLong) <=
               static_cast<uint64_t>(INT32_MAX)) {
-        capacity = PowerOfTwo32(static_cast<uint32_t>(capacityLong));
+        capacity = PowerOfTwo32(ActivePS::ClampToAllowedEntries(
+            static_cast<uint32_t>(capacityLong)));
         LOG("- MOZ_BASE_PROFILER_STARTUP_ENTRIES = %u",
             unsigned(capacity.Value()));
       } else {
@@ -3307,10 +3349,9 @@ UniqueProfilerBacktrace profiler_get_backtrace() {
   regs.Clear();
 #  endif
 
-  // 65536 bytes should be plenty for a single backtrace.
   auto bufferManager = MakeUnique<ProfileChunkedBuffer>(
       ProfileChunkedBuffer::ThreadSafety::WithoutMutex,
-      MakeUnique<ProfileBufferChunkManagerSingle>(65536));
+      MakeUnique<ProfileBufferChunkManagerSingle>(scExpectedMaximumStackSize));
   auto buffer = MakeUnique<ProfileBuffer>(*bufferManager);
 
   DoSyncSample(lock, *registeredThread, now, regs, *buffer.get());
