@@ -52,6 +52,22 @@ const EXPECT_INVALID = false;
 
 /* DATA **********************************************************************/
 
+let hostrefs = {};
+let hostsym = Symbol("hostref");
+function hostref(s) {
+  if (! (s in hostrefs)) hostrefs[s] = {[hostsym]: s};
+  return hostrefs[s];
+}
+function is_hostref(x) {
+  return (x !== null && hostsym in x) ? 1 : 0;
+}
+function is_funcref(x) {
+  return typeof x === "function" ? 1 : 0;
+}
+function eq_ref(x, y) {
+  return x === y ? 1 : 0;
+}
+
 // Default imports.
 var registry = {};
 
@@ -67,6 +83,10 @@ function reinitializeRegistry() {
 
   chain = chain.then(_ => {
     let spectest = {
+      hostref: hostref,
+      is_hostref: is_hostref,
+      is_funcref: is_funcref,
+      eq_ref: eq_ref,
       print: console.log.bind(console),
       print_i32: console.log.bind(console),
       print_i32_f32: console.log.bind(console),
@@ -180,9 +200,9 @@ function instance(bytes, imports, valid = true) {
   return chain;
 }
 
-function exports(name, instance) {
+function exports(instance) {
   return instance.then(inst => {
-    return { [name]: inst.exports };
+    return { module: inst.exports, spectest: registry.spectest };
   });
 }
 
@@ -243,7 +263,23 @@ function assert_return(action, expected) {
     .then(
       values => {
         uniqueTest(_ => {
-          assert_equals(values[0], expected, loc);
+          let actual = values[0];
+          switch (expected) {
+          case "nan:canonical":
+          case "nan:arithmetic":
+              // Note that JS can't reliably distinguish different NaN values,
+              // so there's no good way to test that it's a canonical NaN.
+              assert_true(Number.isNaN(actual), `expected NaN, observed ${actual}.`);
+              return;
+          case "ref.func":
+              assert_true(typeof actual === "function", `expected Wasm function, got ${actual}`);
+              return;
+          case "ref.any":
+              assert_true(actual !== null, `expected Wasm reference, got ${actual}`);
+              return;
+          default:
+              assert_equals(actual, expected);
+          }
         }, test);
       },
       error => {
@@ -362,7 +398,8 @@ function get(instance, name) {
   const loc = new Error().stack.toString().replace("Error", "");
   chain = Promise.all([instance, chain]).then(
     values => {
-      return values[0].exports[name];
+      let v = values[0].exports[name];
+      return (v instanceof WebAssembly.Global) ? v.value : v;
     },
     _ => {
       uniqueTest(_ => {

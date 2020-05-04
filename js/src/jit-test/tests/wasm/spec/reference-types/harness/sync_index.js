@@ -66,6 +66,22 @@ const EXPECT_INVALID = false;
 
 /* DATA **********************************************************************/
 
+let hostrefs = {};
+let hostsym = Symbol("hostref");
+function hostref(s) {
+  if (! (s in hostrefs)) hostrefs[s] = {[hostsym]: s};
+  return hostrefs[s];
+}
+function is_hostref(x) {
+  return (x !== null && hostsym in x) ? 1 : 0;
+}
+function is_funcref(x) {
+  return typeof x === "function" ? 1 : 0;
+}
+function eq_ref(x, y) {
+  return x === y ? 1 : 0;
+}
+
 let $$;
 
 // Default imports.
@@ -77,6 +93,10 @@ function reinitializeRegistry() {
         return;
 
     let spectest = {
+        hostref: hostref,
+        is_hostref: is_hostref,
+        is_funcref: is_funcref,
+        eq_ref: eq_ref,
         print: console.log.bind(console),
         print_i32: console.log.bind(console),
         print_i32_f32: console.log.bind(console),
@@ -224,16 +244,17 @@ function get(instance, name) {
     if (instance.isError())
         return instance;
 
-    return ValueResult(instance.value.exports[name]);
+    let v = instance.value.exports[name];
+    return ValueResult((v instanceof WebAssembly.Global) ? v.value : v);
 }
 
-function exports(name, instance) {
+function exports(instance) {
     _assert(instance instanceof Result);
 
     if (instance.isError())
         return instance;
 
-    return ValueResult({ [name]: instance.value.exports });
+    return ValueResult({ module: instance.value.exports, spectest: registry.spectest });
 }
 
 function run(action) {
@@ -319,11 +340,26 @@ function assert_return(action, expected) {
 
     uniqueTest(() => {
         assert_true(!result.isError(), `expected success result, got: ${result.value}.`);
-        if (!result.isError()) {
-            assert_equals(result.value, expected);
-        };
+        let actual = result.value;
+        switch (expected) {
+        case "nan:canonical":
+        case "nan:arithmetic":
+            // Note that JS can't reliably distinguish different NaN values,
+            // so there's no good way to test that it's a canonical NaN.
+            assert_true(Number.isNaN(actual), `expected NaN, observed ${actual}.`);
+            return;
+        case "ref.func":
+            assert_true(typeof actual === "function", `expected Wasm function, got ${actual}`);
+            return;
+        case "ref.any":
+            assert_true(actual !== null, `expected Wasm reference, got ${actual}`);
+            return;
+        default:
+            assert_equals(actual, expected);
+        }
+
     }, "A wast module that must return a particular value.");
-};
+}
 
 function assert_return_nan(action) {
     let result = action();
