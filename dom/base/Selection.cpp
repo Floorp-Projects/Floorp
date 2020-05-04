@@ -541,10 +541,7 @@ Selection::~Selection() { Disconnect(); }
 void Selection::Disconnect() {
   SetAnchorFocusRange(-1);
 
-  uint32_t count = mStyledRanges.mRanges.Length();
-  for (uint32_t i = 0; i < count; ++i) {
-    mStyledRanges.mRanges[i].mRange->UnregisterSelection();
-  }
+  mStyledRanges.UnregisterSelection();
 
   if (mAutoScrollTimer) {
     mAutoScrollTimer->Stop();
@@ -1109,8 +1106,8 @@ nsresult Selection::RemoveCollapsedRanges() {
 nsresult Selection::Clear(nsPresContext* aPresContext) {
   SetAnchorFocusRange(-1);
 
+  mStyledRanges.UnregisterSelection();
   for (uint32_t i = 0; i < mStyledRanges.mRanges.Length(); ++i) {
-    mStyledRanges.mRanges[i].mRange->UnregisterSelection();
     SelectFrames(aPresContext, mStyledRanges.mRanges[i].mRange, false);
   }
   mStyledRanges.mRanges.Clear();
@@ -1746,6 +1743,13 @@ void Selection::SetAncestorLimiter(nsIContent* aLimiter) {
   if (mFrameSelection) {
     RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
     frameSelection->SetAncestorLimiter(aLimiter);
+  }
+}
+
+void Selection::StyledRanges::UnregisterSelection() {
+  uint32_t count = mRanges.Length();
+  for (uint32_t i = 0; i < count; ++i) {
+    mRanges[i].mRange->UnregisterSelection();
   }
 }
 
