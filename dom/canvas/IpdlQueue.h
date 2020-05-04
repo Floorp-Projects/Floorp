@@ -57,6 +57,8 @@ struct IpdlQueueBuffer {
   IpdlQueueBuffer() = default;
   IpdlQueueBuffer(const IpdlQueueBuffer&) = delete;
   IpdlQueueBuffer(IpdlQueueBuffer&&) = default;
+  IpdlQueueBuffer(uint64_t aId, nsTArray<uint8_t>&& aData)
+      : id(aId), data(std::move(aData)) {}
 };
 
 using IpdlQueueBuffers = nsTArray<IpdlQueueBuffer>;
@@ -237,7 +239,7 @@ class IpdlProducer final : public SupportsWeakPtr<IpdlProducer<_Actor>> {
       return status;
     }
     return mActor->TransmitIpdlQueueData(
-               toSendSync, IpdlQueueBuffer{mId, std::move(mSerializedData)})
+               toSendSync, IpdlQueueBuffer(mId, std::move(mSerializedData)))
                ? QueueStatus::kSuccess
                : QueueStatus::kFatalError;
   }
