@@ -65,7 +65,7 @@ registerCleanupFunction(() => {
 function run_test() {
   prefs.setCharPref(
     "network.trr.uri",
-    "https://foo.example.com:" + h2Port + "/esni-dns"
+    "https://foo.example.com:" + h2Port + "/doh"
   );
   run_test_in_child("child_esni_dns_fetch1.js");
 }
