@@ -293,6 +293,13 @@ static bool SerializeEvent(JSContext* aCx, JS::MutableHandleValue aElement,
     return false;
   }
 
+  JS::RootedValue jsIsDependent(aCx);
+  jsIsDependent.setBoolean(aEvent.mIsDependent);
+  if (!JS_DefineProperty(aCx, obj, "isDependent", jsIsDependent,
+                         JSPROP_ENUMERATE)) {
+    return false;
+  }
+
   aElement.setObject(*obj);
 
   return true;

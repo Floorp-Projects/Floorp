@@ -57,7 +57,9 @@ were loaded into Firefox processes.
                 // The base address to which the loader mapped the module.
                 "baseAddress": <string formatted as "0x%x">,
                 // Index of the element in the modules array that contains details about the module that was loaded during this event.
-                "moduleIndex": <int>
+                "moduleIndex": <int>,
+                // True if the module is included in the executable's Import Directory Table.
+                "isDependent": <bool>
               },
               ... Additional events (maximum 50)
             ],
@@ -117,10 +119,9 @@ Notes
 
 Version History
 ~~~~~~~~~~~~~~~
-- Firefox 71:
-  - Renamed from untrustedModules to third-party-modules with a revised schema (`bug 1542830 <https://bugzilla.mozilla.org/show_bug.cgi?id=1542830>`_).
-- Firefox 70:
-  - Added ``%SystemRoot%`` as an exemption to path sanitization (`bug 1573275 <https://bugzilla.mozilla.org/show_bug.cgi?id=1573275>`_).
+- Firefox 77: Added ``isDependent`` (`bug 1620118 <https://bugzilla.mozilla.org/show_bug.cgi?id=1620118>`_).
+- Firefox 71: Renamed from untrustedModules to third-party-modules with a revised schema (`bug 1542830 <https://bugzilla.mozilla.org/show_bug.cgi?id=1542830>`_).
+- Firefox 70: Added ``%SystemRoot%`` as an exemption to path sanitization (`bug 1573275 <https://bugzilla.mozilla.org/show_bug.cgi?id=1573275>`_).
 - Firefox 66:
    - Added Windows Side-by-side directory trust flag (`bug 1514694 <https://bugzilla.mozilla.org/show_bug.cgi?id=1514694>`_).
    - Added module load times (``xulLoadDurationMS``, ``loadDurationMS``) and xul.dll trust flag (`bug 1518490 <https://bugzilla.mozilla.org/show_bug.cgi?id=1518490>`_).

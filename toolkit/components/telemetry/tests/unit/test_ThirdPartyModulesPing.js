@@ -121,6 +121,9 @@ add_task(async function test_send_ping() {
     Assert.ok(typeof event.moduleIndex == "number", "'moduleIndex' exists");
     Assert.ok(event.moduleIndex >= 0, "'moduleIndex' is non-negative");
 
+    Assert.ok(typeof event.isDependent == "boolean", "'isDependent' exists");
+    Assert.ok(!event.isDependent, "'isDependent' is false");
+
     let modRecord = found.payload.modules[event.moduleIndex];
     Assert.ok(modRecord, "module record for this event exists");
     Assert.ok(
