@@ -24,10 +24,6 @@
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
 
-  let socketProcessRunning = 0;
-  if (SpecialPowers.getBoolPref("network.process.enabled")) {
-    socketProcessRunning = 1;
-  }
   let numRemotes = 3;
   let numReady = 0;
 
@@ -132,8 +128,7 @@
           if (endOfBrowsers == null) {
             endOfBrowsers = actual.match(/End of Web Content/g);
           }
-          let m2 = (vsizes.length == (4 + socketProcessRunning) &&
-                    endOfBrowsers.length == 3);
+          let m2 = (vsizes.length == 4 && endOfBrowsers.length == 3);
           ok(m2, "three child processes present in loaded data");
           good = good && !!m2;
 
