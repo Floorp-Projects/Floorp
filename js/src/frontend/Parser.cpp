@@ -2609,7 +2609,6 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
   // lazy functions. Instead that info will be updated when we finish our
   // compilation.
   MOZ_ASSERT(fun->baseScript()->hasEnclosingScript());
-  MOZ_ASSERT(fun->baseScript()->treatAsRunOnce() == false);
   MOZ_ASSERT_IF(fun->isClassConstructor(),
                 !fun->baseScript()->getFieldInitializers().valid);
 

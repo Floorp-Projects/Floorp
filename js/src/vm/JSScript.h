@@ -1931,7 +1931,7 @@ setterLevel:                                                                  \
 
   IMMUTABLE_FLAG_GETTER(noScriptRval, NoScriptRval)
   IMMUTABLE_FLAG_GETTER(selfHosted, SelfHosted)
-  IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(treatAsRunOnce, TreatAsRunOnce)
+  // TreatAsRunOnce: custom logic below.
   IMMUTABLE_FLAG_GETTER(forceStrict, ForceStrict)
   IMMUTABLE_FLAG_GETTER(strict, Strict)
   IMMUTABLE_FLAG_GETTER(bindingsAccessedDynamically,
@@ -1985,6 +1985,19 @@ setterLevel:                                                                  \
 #undef MUTABLE_FLAG_GETTER_SETTER
 #undef FLAG_GETTER
 #undef FLAG_GETTER_SETTER
+
+  // See ImmutableScriptFlagsEnum::TreatAsRunOnce.
+  bool treatAsRunOnce() const {
+    MOZ_ASSERT(!hasEnclosingScript(),
+               "TreatAsRunOnce is undefined if enclosing script is lazy");
+    return hasFlag(ImmutableFlags::TreatAsRunOnce);
+  }
+  void initTreatAsRunOnce(bool flag) {
+    MOZ_ASSERT(!hasBytecode(),
+               "TreatAsRunOnce can only be updated on lazy scripts");
+    MOZ_ASSERT(!hasFlag(ImmutableFlags::TreatAsRunOnce));
+    setFlag(ImmutableFlags::TreatAsRunOnce, flag);
+  }
 
   GeneratorKind generatorKind() const {
     return isGenerator() ? GeneratorKind::Generator
