@@ -46,25 +46,8 @@ void InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script,
   flags_ = 0;
   script_ = script;
 
-  // newTarget = NullValue is an initial sentinel for "please fill me in from
-  // the stack". It should never be passed from Ion code.
-  RootedValue newTarget(cx, newTargetValue);
-  if (script->isDirectEvalInFunction()) {
-    FrameIter iter(cx);
-    if (newTarget.isNull() && iter.hasScript() &&
-        iter.script()->bodyScope()->hasOnChain(ScopeKind::Function)) {
-      newTarget = iter.newTarget();
-    }
-  } else if (evalInFramePrev) {
-    if (newTarget.isNull() && evalInFramePrev.hasScript() &&
-        evalInFramePrev.script()->bodyScope()->hasOnChain(
-            ScopeKind::Function)) {
-      newTarget = evalInFramePrev.newTarget();
-    }
-  }
-
   Value* dstvp = (Value*)this - 1;
-  dstvp[0] = newTarget;
+  dstvp[0] = newTargetValue;
 
   envChain_ = envChain.get();
   prev_ = nullptr;

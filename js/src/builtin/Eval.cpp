@@ -347,8 +347,12 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
     esg.setNewScript(compiled);
   }
 
-  // Look up the newTarget from the frame iterator.
-  HandleValue newTargetVal = NullHandleValue;
+  // If this is a direct eval we need to use the caller's newTarget.
+  RootedValue newTargetVal(cx);
+  if (esg.script()->isDirectEvalInFunction()) {
+    newTargetVal = caller.newTarget();
+  }
+
   return ExecuteKernel(cx, esg.script(), env, newTargetVal,
                        NullFramePtr() /* evalInFrame */, vp);
 }
