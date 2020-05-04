@@ -53,6 +53,5 @@ fi
 python3.8 /home/worker/bin/funsize.py \
     --artifacts-dir "$ARTIFACTS_DIR" \
     --task-definition /home/worker/task.json \
-    --sha1-signing-cert "/home/worker/keys/${SIGNING_CERT}_sha1.pubkey" \
-    --sha384-signing-cert "/home/worker/keys/${SIGNING_CERT}_sha384.pubkey" \
+    --signing-cert "/home/worker/keys/${SIGNING_CERT}.pubkey" \
     $EXTRA_PARAMS
