@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+<head>
+  <script>
+    window.addEventListener('load', async () => {
+      const element = document.getElementById('target');
+      element.animate({
+        'all': ['initial']
+      }, {
+        'duration': 500,
+        'pseudoElement': '::marker',
+      })
+      element.hidden = false;
+    })
+  </script>
+</head>
+<ul>
+  <li id='target' hidden></li>
+</ul>
+</html>
