@@ -55,7 +55,9 @@ this.add_task = function(taskFn, opts = {}) {
         const browsingContextId = tab.linkedBrowser.browsingContext.id;
 
         const targets = await CDP.List();
-        target = targets.find(target => target.id === browsingContextId);
+        target = targets.find(
+          target => target.browsingContextId === browsingContextId
+        );
       }
 
       client = await CDP({ target });

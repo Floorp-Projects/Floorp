@@ -16,10 +16,6 @@ const { RemoteAgent } = ChromeUtils.import(
   "chrome://remote/content/RemoteAgent.jsm"
 );
 
-const UUIDGen = Cc["@mozilla.org/uuid-generator;1"].getService(
-  Ci.nsIUUIDGenerator
-);
-
 /**
  * The main process Target.
  *
@@ -34,9 +30,6 @@ class MainProcessTarget extends Target {
     super(targets, MainProcessSession);
 
     this.type = "browser";
-    this.id = UUIDGen.generateUUID()
-      .toString()
-      .slice(1, -1);
 
     // Define the HTTP path to query this target
     this.path = `/devtools/browser/${this.id}`;

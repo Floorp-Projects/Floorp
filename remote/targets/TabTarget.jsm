@@ -51,10 +51,6 @@ class TabTarget extends Target {
     super.destructor();
   }
 
-  get id() {
-    return this.browsingContext.id;
-  }
-
   get browserContextId() {
     return parseInt(this.browser.getAttribute("usercontextid"));
   }
@@ -138,6 +134,7 @@ class TabTarget extends Target {
       title: this.title,
       type: this.type,
       url: this.url,
+      browsingContextId: this.browsingContext.id,
       webSocketDebuggerUrl: this.wsDebuggerURL,
     };
   }
