@@ -61,6 +61,7 @@
 #include "nsGlobalWindow.h"
 #include "nsDOMDataChannel.h"
 #include "mozilla/dom/Location.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"

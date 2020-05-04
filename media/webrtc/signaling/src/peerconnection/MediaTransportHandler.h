@@ -154,6 +154,9 @@ class MediaTransportHandler {
   RefPtr<nsISerialEventTarget> mCallbackThread;
 };
 
+void TokenizeCandidate(const std::string& aCandidate,
+                       std::vector<std::string>& aTokens);
+
 }  // namespace mozilla
 
 #endif  //_MTRANSPORTHANDLER_H__
