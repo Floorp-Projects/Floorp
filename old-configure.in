@@ -1206,6 +1206,7 @@ dnl availability attribute strict, so that compilation fails when the target is 
                                    clock_gettime(CLOCK_MONOTONIC, &ts); ],
                                  ac_cv_clock_monotonic=$libs
                                  LIBS="$_SAVE_LIBS"
+                                 CFLAGS="$_SAVE_CFLAGS"
                                  break,
                                  ac_cv_clock_monotonic=no)
                     LIBS="$_SAVE_LIBS"
