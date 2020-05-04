@@ -59,7 +59,11 @@ var ecmaGlobals = [
   "Reflect",
   "RegExp",
   "Set",
-  { name: "SharedArrayBuffer", earlyBetaOrEarlier: true },
+  {
+    name: "SharedArrayBuffer",
+    earlyBetaOrEarlier: true,
+    crossOriginIsolated: true,
+  },
   "String",
   "Symbol",
   "SyntaxError",
@@ -269,6 +273,7 @@ function createInterfaceMap({
   isAndroid,
   isInsecureContext,
   isFennec,
+  isCrossOriginIsolated,
 }) {
   var interfaceMap = {};
 
@@ -291,6 +296,7 @@ function createInterfaceMap({
           entry.fennec === !isFennec ||
           entry.release === !isRelease ||
           entry.earlyBetaOrEarlier === !isEarlyBetaOrEarlier ||
+          entry.crossOriginIsolated === !isCrossOriginIsolated ||
           entry.disabled
         ) {
           interfaceMap[entry.name] = false;

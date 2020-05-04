@@ -71,6 +71,7 @@ var ecmaGlobals = [
     name: "SharedArrayBuffer",
     insecureContext: true,
     earlyBetaOrEarlier: true,
+    crossOringinIsolated: true,
   },
   { name: "String", insecureContext: true },
   { name: "Symbol", insecureContext: true },
@@ -300,6 +301,7 @@ function createInterfaceMap({
   isAndroid,
   isInsecureContext,
   isFennec,
+  isCrossOringinIsolated,
 }) {
   var interfaceMap = {};
 
@@ -324,6 +326,7 @@ function createInterfaceMap({
           // only in secure contexts.
           (isInsecureContext && !entry.insecureContext) ||
           entry.earlyBetaOrEarlier === !isEarlyBetaOrEarlier ||
+          entry.crossOringinIsolated === !isCrossOringinIsolated ||
           entry.disabled
         ) {
           interfaceMap[entry.name] = false;
