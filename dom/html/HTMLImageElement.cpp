@@ -5,8 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLImageElement.h"
+#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/HTMLImageElementBinding.h"
 #include "mozilla/dom/BindContext.h"
+#include "mozilla/dom/NameSpaceConstants.h"
+#include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
@@ -316,9 +319,31 @@ nsresult HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                         const nsAttrValue* aOldValue,
                                         nsIPrincipal* aMaybeScriptedPrincipal,
                                         bool aNotify) {
+  if (aNameSpaceID != kNameSpaceID_None) {
+    return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
+                                              aOldValue,
+                                              aMaybeScriptedPrincipal, aNotify);
+  }
+
   nsAttrValueOrString attrVal(aValue);
 
-  if (aName == nsGkAtoms::loading && aNameSpaceID == kNameSpaceID_None) {
+  if (aValue) {
+    AfterMaybeChangeAttr(aNameSpaceID, aName, attrVal, aOldValue,
+                         aMaybeScriptedPrincipal, aNotify);
+  }
+
+  if (mForm && (aName == nsGkAtoms::name || aName == nsGkAtoms::id) && aValue &&
+      !aValue->IsEmptyString()) {
+    // add the image to the hashtable as needed
+    MOZ_ASSERT(aValue->Type() == nsAttrValue::eAtom,
+               "Expected atom value for name/id");
+    mForm->AddImageElementToTable(
+        this, nsDependentAtomString(aValue->GetAtomValue()));
+  }
+
+  bool forceReload = false;
+
+  if (aName == nsGkAtoms::loading) {
     if (aValue &&
         static_cast<HTMLImageElement::Loading>(aValue->GetEnumValue()) ==
             Loading::Lazy &&
@@ -330,34 +355,15 @@ nsresult HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                !ImageState().HasState(NS_EVENT_STATE_LOADING)) {
       StopLazyLoadingAndStartLoadIfNeeded();
     }
-  }
-
-  if (aValue) {
-    AfterMaybeChangeAttr(aNameSpaceID, aName, attrVal, aOldValue,
-                         aMaybeScriptedPrincipal, true, aNotify);
-  }
-
-  if (aNameSpaceID == kNameSpaceID_None && mForm &&
-      (aName == nsGkAtoms::name || aName == nsGkAtoms::id) && aValue &&
-      !aValue->IsEmptyString()) {
-    // add the image to the hashtable as needed
-    MOZ_ASSERT(aValue->Type() == nsAttrValue::eAtom,
-               "Expected atom value for name/id");
-    mForm->AddImageElementToTable(
-        this, nsDependentAtomString(aValue->GetAtomValue()));
-  }
-
-  // Handle src/srcset updates. If aNotify is false, we are coming from the
-  // parser or some such place; we'll get bound after all the attributes have
-  // been set, so we'll do the image load from BindToTree.
-
-  if (aName == nsGkAtoms::src && aNameSpaceID == kNameSpaceID_None && !aValue) {
+  } else if (aName == nsGkAtoms::src && !aValue) {
+    // NOTE: regular src value changes are handled in AfterMaybeChangeAttr, so
+    // this only needs to handle unsetting the src attribute.
     // Mark channel as urgent-start before load image if the image load is
     // initaiated by a user interaction.
     mUseUrgentStartForChannel = UserActivation::IsHandlingUserInput();
 
-    // SetAttr handles setting src since it needs to catch img.src =
-    // img.src, so we only need to handle the unset case
+    // AfterMaybeChangeAttr handles setting src since it needs to catch
+    // img.src = img.src, so we only need to handle the unset case
     if (InResponsiveMode()) {
       if (mResponsiveSelector && mResponsiveSelector->Content() == this) {
         mResponsiveSelector->SetDefaultSource(VoidString());
@@ -367,7 +373,7 @@ nsresult HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       // Bug 1076583 - We still behave synchronously in the non-responsive case
       CancelImageRequests(aNotify);
     }
-  } else if (aName == nsGkAtoms::srcset && aNameSpaceID == kNameSpaceID_None) {
+  } else if (aName == nsGkAtoms::srcset) {
     // Mark channel as urgent-start before load image if the image load is
     // initaiated by a user interaction.
     mUseUrgentStartForChannel = UserActivation::IsHandlingUserInput();
@@ -375,18 +381,50 @@ nsresult HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     mSrcsetTriggeringPrincipal = aMaybeScriptedPrincipal;
 
     PictureSourceSrcsetChanged(this, attrVal.String(), aNotify);
-  } else if (aName == nsGkAtoms::sizes && aNameSpaceID == kNameSpaceID_None) {
+  } else if (aName == nsGkAtoms::sizes) {
     // Mark channel as urgent-start before load image if the image load is
-    // initaiated by a user interaction.
+    // initiated by a user interaction.
     mUseUrgentStartForChannel = UserActivation::IsHandlingUserInput();
 
     PictureSourceSizesChanged(this, attrVal.String(), aNotify);
-  } else if (aName == nsGkAtoms::decoding &&
-             aNameSpaceID == kNameSpaceID_None) {
+  } else if (aName == nsGkAtoms::decoding) {
     // Request sync or async image decoding.
     SetSyncDecodingHint(
         aValue && static_cast<ImageDecodingType>(aValue->GetEnumValue()) ==
                       ImageDecodingType::Sync);
+  } else if (aName == nsGkAtoms::referrerpolicy) {
+    ReferrerPolicy referrerPolicy = GetImageReferrerPolicy();
+    // FIXME(emilio): Why only  when not in responsive mode? Also see below for
+    // aNotify.
+    forceReload = aNotify && !InResponsiveMode() &&
+                  referrerPolicy != ReferrerPolicy::_empty &&
+                  referrerPolicy != ReferrerPolicyFromAttr(aOldValue);
+  } else if (aName == nsGkAtoms::crossorigin) {
+    // FIXME(emilio): The aNotify bit seems a bit suspicious, but it is useful
+    // to avoid extra sync loads, specially in non-responsive mode. Ideally we
+    // can unify the responsive and non-responsive code paths (bug 1076583), and
+    // simplify this a bit.
+    forceReload = aNotify && GetCORSMode() != AttrValueToCORSMode(aOldValue);
+  }
+
+  if (forceReload) {
+    // Because we load image synchronously in non-responsive-mode, we need to do
+    // reload after the attribute has been set if the reload is triggered by
+    // cross origin / referrer policy changing.
+    //
+    // Mark channel as urgent-start before load image if the image load is
+    // initiated by a user interaction.
+    mUseUrgentStartForChannel = UserActivation::IsHandlingUserInput();
+    if (InResponsiveMode()) {
+      // Per spec, full selection runs when this changes, even though
+      // it doesn't directly affect the source selection
+      QueueImageLoadTask(true);
+    } else if (ShouldLoadImage()) {
+      // Bug 1076583 - We still use the older synchronous algorithm in
+      // non-responsive mode. Force a new load of the image with the
+      // new cross origin policy
+      ForceReload(aNotify, IgnoreErrors());
+    }
   }
 
   return nsGenericHTMLElement::AfterSetAttr(
@@ -396,9 +434,7 @@ nsresult HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
 nsresult HTMLImageElement::OnAttrSetButNotChanged(
     int32_t aNamespaceID, nsAtom* aName, const nsAttrValueOrString& aValue,
     bool aNotify) {
-  AfterMaybeChangeAttr(aNamespaceID, aName, aValue, nullptr, nullptr, false,
-                       aNotify);
-
+  AfterMaybeChangeAttr(aNamespaceID, aName, aValue, nullptr, nullptr, aNotify);
   return nsGenericHTMLElement::OnAttrSetButNotChanged(aNamespaceID, aName,
                                                       aValue, aNotify);
 }
@@ -406,8 +442,11 @@ nsresult HTMLImageElement::OnAttrSetButNotChanged(
 void HTMLImageElement::AfterMaybeChangeAttr(
     int32_t aNamespaceID, nsAtom* aName, const nsAttrValueOrString& aValue,
     const nsAttrValue* aOldValue, nsIPrincipal* aMaybeScriptedPrincipal,
-    bool aValueMaybeChanged, bool aNotify) {
-  bool forceReload = false;
+    bool aNotify) {
+  if (aNamespaceID != kNameSpaceID_None || aName != nsGkAtoms::src) {
+    return;
+  }
+
   // We need to force our image to reload.  This must be done here, not in
   // AfterSetAttr or BeforeSetAttr, because we want to do it even if the attr is
   // being set to its existing value, which is normally optimized away as a
@@ -418,84 +457,43 @@ void HTMLImageElement::AfterMaybeChangeAttr(
   // spec.
   //
   // Both cases handle unsetting src in AfterSetAttr
-  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::src) {
-    // Mark channel as urgent-start before load image if the image load is
-    // initaiated by a user interaction.
-    mUseUrgentStartForChannel = UserActivation::IsHandlingUserInput();
+  // Mark channel as urgent-start before load image if the image load is
+  // initaiated by a user interaction.
+  mUseUrgentStartForChannel = UserActivation::IsHandlingUserInput();
 
-    mSrcTriggeringPrincipal = nsContentUtils::GetAttrTriggeringPrincipal(
-        this, aValue.String(), aMaybeScriptedPrincipal);
+  mSrcTriggeringPrincipal = nsContentUtils::GetAttrTriggeringPrincipal(
+      this, aValue.String(), aMaybeScriptedPrincipal);
 
-    if (InResponsiveMode()) {
-      if (mResponsiveSelector && mResponsiveSelector->Content() == this) {
-        mResponsiveSelector->SetDefaultSource(aValue.String(),
-                                              mSrcTriggeringPrincipal);
-      }
-      QueueImageLoadTask(true);
-    } else if (aNotify && ShouldLoadImage()) {
-      // If aNotify is false, we are coming from the parser or some such place;
-      // we'll get bound after all the attributes have been set, so we'll do the
-      // sync image load from BindToTree. Skip the LoadImage call in that case.
-
-      // Note that this sync behavior is partially removed from the spec, bug
-      // 1076583
-
-      // A hack to get animations to reset. See bug 594771.
-      mNewRequestsWillNeedAnimationReset = true;
-
-      // Force image loading here, so that we'll try to load the image from
-      // network if it's set to be not cacheable.
-      // Potentially, false could be passed here rather than aNotify since
-      // UpdateState will be called by SetAttrAndNotify, but there are two
-      // obstacles to this: 1) LoadImage will end up calling
-      // UpdateState(aNotify), and we do not want it to call UpdateState(false)
-      // when aNotify is true, and 2) When this function is called by
-      // OnAttrSetButNotChanged, SetAttrAndNotify will not subsequently call
-      // UpdateState.
-      LoadImage(aValue.String(), true, aNotify, eImageLoadType_Normal,
-                mSrcTriggeringPrincipal);
-
-      mNewRequestsWillNeedAnimationReset = false;
+  if (InResponsiveMode()) {
+    if (mResponsiveSelector && mResponsiveSelector->Content() == this) {
+      mResponsiveSelector->SetDefaultSource(aValue.String(),
+                                            mSrcTriggeringPrincipal);
     }
-  } else if (aNamespaceID == kNameSpaceID_None &&
-             aName == nsGkAtoms::crossorigin && aNotify) {
-    if (aValueMaybeChanged && GetCORSMode() != AttrValueToCORSMode(aOldValue)) {
-      // Force a new load of the image with the new cross origin policy.
-      forceReload = true;
-    }
-  } else if (aName == nsGkAtoms::referrerpolicy &&
-             aNamespaceID == kNameSpaceID_None && aNotify) {
-    ReferrerPolicy referrerPolicy = GetImageReferrerPolicy();
-    if (!InResponsiveMode() && referrerPolicy != ReferrerPolicy::_empty &&
-        aValueMaybeChanged &&
-        referrerPolicy != ReferrerPolicyFromAttr(aOldValue)) {
-      // XXX: Bug 1076583 - We still use the older synchronous algorithm
-      // Because referrerPolicy is not treated as relevant mutations, setting
-      // the attribute will neither trigger a reload nor update the referrer
-      // policy of the loading channel (whether it has previously completed or
-      // not). Force a new load of the image with the new referrerpolicy.
-      forceReload = true;
-    }
-  }
+    QueueImageLoadTask(true);
+  } else if (aNotify && ShouldLoadImage()) {
+    // If aNotify is false, we are coming from the parser or some such place;
+    // we'll get bound after all the attributes have been set, so we'll do the
+    // sync image load from BindToTree. Skip the LoadImage call in that case.
 
-  // Because we load image synchronously in non-responsive-mode, we need to do
-  // reload after the attribute has been set if the reload is triggerred by
-  // cross origin changing.
-  if (forceReload) {
-    // Mark channel as urgent-start before load image if the image load is
-    // initaiated by a user interaction.
-    mUseUrgentStartForChannel = UserActivation::IsHandlingUserInput();
+    // Note that this sync behavior is partially removed from the spec, bug
+    // 1076583
 
-    if (InResponsiveMode()) {
-      // per spec, full selection runs when this changes, even though
-      // it doesn't directly affect the source selection
-      QueueImageLoadTask(true);
-    } else if (ShouldLoadImage()) {
-      // Bug 1076583 - We still use the older synchronous algorithm in
-      // non-responsive mode. Force a new load of the image with the
-      // new cross origin policy
-      ForceReload(aNotify, IgnoreErrors());
-    }
+    // A hack to get animations to reset. See bug 594771.
+    mNewRequestsWillNeedAnimationReset = true;
+
+    // Force image loading here, so that we'll try to load the image from
+    // network if it's set to be not cacheable.
+    // Potentially, false could be passed here rather than aNotify since
+    // UpdateState will be called by SetAttrAndNotify, but there are two
+    // obstacles to this: 1) LoadImage will end up calling
+    // UpdateState(aNotify), and we do not want it to call UpdateState(false)
+    // when aNotify is true, and 2) When this function is called by
+    // OnAttrSetButNotChanged, SetAttrAndNotify will not subsequently call
+    // UpdateState.
+    LoadImage(aValue.String(), true, aNotify, eImageLoadType_Normal,
+              mSrcTriggeringPrincipal);
+
+    mNewRequestsWillNeedAnimationReset = false;
   }
 }
 
