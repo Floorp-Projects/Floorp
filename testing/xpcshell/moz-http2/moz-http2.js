@@ -712,6 +712,21 @@ function handleRequest(req, res) {
         });
       }
 
+      // for use with test_esni_dns_fetch.js
+      if (packet.questions[0].type == "TXT") {
+        answers.push({
+          name: packet.questions[0].name,
+          type: packet.questions[0].type,
+          ttl: 55,
+          class: "IN",
+          flush: false,
+          data: Buffer.from(
+            "62586B67646D39705932556761584D6762586B676347467A63336476636D513D",
+            "hex"
+          ),
+        });
+      }
+
       if (u.query.cnameloop) {
         answers.push({
           name: "cname.example.com",
@@ -836,33 +851,6 @@ function handleRequest(req, res) {
     // it's just meant to be this slow - the test doesn't care about the actual response
     return;
   }
-  // for use with test_esni_dns_fetch.js
-  else if (u.pathname === "/esni-dns") {
-    content = Buffer.from(
-      "0000" +
-      "8180" +
-      "0001" + // QDCOUNT
-      "0001" + // ANCOUNT
-      "00000000" + // NSCOUNT + ARCOUNT
-      "055F65736E69076578616D706C6503636F6D00" + // _esni.example.com
-      "00100001" + // question type (TXT) + question class (IN)
-      "C00C" + // name pointer to .example.com
-      "0010" + // type (TXT)
-      "0001" + // class
-      "00000037" + // TTL
-      "0021" + // RDLENGTH
-        "2062586B67646D39705932556761584D6762586B676347467A63336476636D513D", // esni keys.
-      "hex"
-    );
-
-    res.setHeader("Content-Type", "application/dns-message");
-    res.setHeader("Content-Length", content.length);
-    res.writeHead(200);
-    res.write(content);
-    res.end("");
-    return;
-  }
-
   // for use with test_esni_dns_fetch.js
   else if (u.pathname === "/esni-dns-push") {
     // _esni_push.example.com has A entry 127.0.0.1
