@@ -6792,6 +6792,7 @@ bool nsDisplayBlendContainer::CreateWebRenderCommands(
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   wr::StackingContextParams params;
+  params.flags |= wr::StackingContextFlags::IS_BLEND_CONTAINER;
   params.clip =
       wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
@@ -10231,7 +10232,7 @@ bool nsDisplayBackdropRootContainer::CreateWebRenderCommands(
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   wr::StackingContextParams params;
-  params.is_backdrop_root = true;
+  params.flags |= wr::StackingContextFlags::IS_BACKDROP_ROOT;
   params.clip =
       wr::WrStackingContextClip::ClipChain(aBuilder.CurrentClipChainId());
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,

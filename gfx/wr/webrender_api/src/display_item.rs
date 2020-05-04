@@ -741,10 +741,7 @@ pub struct StackingContext {
     pub mix_blend_mode: MixBlendMode,
     pub clip_id: Option<ClipId>,
     pub raster_space: RasterSpace,
-    /// True if picture caching should be used on this stacking context.
-    pub cache_tiles: bool,
-    /// True if this stacking context is a backdrop root.
-    pub is_backdrop_root: bool,
+    pub flags: StackingContextFlags,
 }
 // IMPLICIT: filters: Vec<FilterOp>, filter_datas: Vec<FilterData>, filter_primitives: Vec<FilterPrimitive>
 
@@ -781,6 +778,25 @@ impl RasterSpace {
             RasterSpace::Local(scale) => Some(scale),
             RasterSpace::Screen => None,
         }
+    }
+}
+
+bitflags! {
+    #[repr(C)]
+    #[derive(Deserialize, MallocSizeOf, Serialize, PeekPoke)]
+    pub struct StackingContextFlags: u8 {
+        /// If true, this stacking context represents a backdrop root, per the CSS
+        /// filter-effects specification (see https://drafts.fxtf.org/filter-effects-2/#BackdropRoot).
+        const IS_BACKDROP_ROOT = 1 << 0;
+        /// If true, this stacking context is a blend container than contains
+        /// mix-blend-mode children (and should thus be isolated).
+        const IS_BLEND_CONTAINER = 1 << 1;
+    }
+}
+
+impl Default for StackingContextFlags {
+    fn default() -> Self {
+        StackingContextFlags::empty()
     }
 }
 

@@ -10,6 +10,7 @@ root:
       # where they intersect should be a black rect
       # the rects should not blend with the yellow backdrop
     - type: stacking-context
+      blend-container: true
       bounds: [10, 10, 130, 130]
       items:
         - type: rect
