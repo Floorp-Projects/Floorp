@@ -68,6 +68,7 @@ const NormandyMigrations = {
     PreferenceExperiments.migrations.migration04RenameNameToSlug,
     RecipeRunner.migrations.migration01RemoveOldRecipesCollection,
     AddonStudies.migrations.migration02RemoveOldAddonStudyAction,
+    migrateRemoveLastBuildIdPref,
   ],
 };
 
@@ -142,4 +143,12 @@ function migrateStudiesEnabledWithoutHealthReporting() {
     PREF_OPTOUTSTUDIES_ENABLED,
     optOutStudiesEnabled && healthReportUploadEnabled
   );
+}
+
+/**
+ * Tracking last build ID is now done by comparing Services.appinfo.appBuildID
+ * and Services.appinfo.lastAppBuildID. Remove the manual tracking.
+ */
+function migrateRemoveLastBuildIdPref() {
+  Services.prefs.clearUserPref("app.normandy.last_seen_buildid");
 }

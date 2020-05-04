@@ -441,7 +441,7 @@ decorate_task(
     await RecipeRunner.init();
     ok(
       !runStub.called,
-      "RecipeRunner.run is called immediately when not in dev mode or first run"
+      "RecipeRunner.run should not be called immediately when not in dev mode or first run"
     );
     ok(registerTimerStub.called, "RecipeRunner.init registers a timer");
   }
@@ -506,31 +506,6 @@ decorate_task(
     // tries to change them. Settings this back to true here allows
     // that to happen. Not doing this causes popPrefEnv to hang forever.
     Services.prefs.setBoolPref("app.normandy.first_run", true);
-  }
-);
-
-// Test that new build IDs trigger immediate recipe runs
-decorate_task(
-  withPrefEnv({
-    set: [
-      ["datareporting.healthreport.uploadEnabled", true], // telemetry enabled
-      ["app.normandy.last_seen_buildid", "not-the-current-buildid"],
-    ],
-  }),
-  withStub(RecipeRunner, "run"),
-  withStub(RecipeRunner, "registerTimer"),
-  withStub(RecipeRunner, "watchPrefs"),
-  async function testInitFirstRun(runStub, registerTimerStub, watchPrefsStub) {
-    await RecipeRunner.init();
-    Assert.deepEqual(
-      runStub.args,
-      [[{ trigger: "newBuildID" }]],
-      "RecipeRunner.run is called immediately on a new build ID"
-    );
-    ok(
-      registerTimerStub.called,
-      "RecipeRunner.registerTimer registers a timer"
-    );
   }
 );
 
