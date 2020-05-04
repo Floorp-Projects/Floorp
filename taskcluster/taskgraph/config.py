@@ -72,6 +72,7 @@ graph_config_schema = Schema({
             Required('merge-old-head'): bool,
             Optional('base-tag'): text_type,
             Optional('end-tag'): text_type,
+            Optional('fetch-version-from'): text_type,
         }},
     },
     Required('scriptworker'): {
