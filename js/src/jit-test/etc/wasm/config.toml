@@ -3,12 +3,39 @@ harness_directive = "|jit-test| skip-if: true"
 directive = "|jit-test| test-also=--wasm-compiler=ion; test-also=--wasm-compiler=baseline; test-also=--test-wasm-await-tier2; test-also=--disable-wasm-huge-memory; skip-variant-if: --disable-wasm-huge-memory, !wasmHugeMemoryIsSupported(); include:wasm-testharness.js; local-include:harness/sync_index.js"
 
 # Failing tests across all testsuites
-excluded_tests = ["align.wast", "memory_trap.wast", "imports.wast", "exports.wast", "linking.wast", "data.wast", "names.wast", "utf8-custom-section-id.wast"]
+excluded_tests = [
+  # false-positive windows-specific failures
+  "align.wast",
+  # bulk-memory-operations/issues/133 (data.wast:161)
+  "data.wast",
+  # testing that multiple tables fail (imports.wast:309)
+  "imports.wast",
+  # bulk-memory-operations/issues/133 (linking.wast:206)
+  "linking.wast",
+  # bulk-memory-operations/issues/133 (elem.wast:142)
+  "elem.wast",
+  # test harness doesn't acquire global values correctly
+  "exports.wast",
+  # false-positive windows-specific failure
+  "memory_trap.wast",
+  # false-positive error on duplicate export name (names.wast:19)
+  "names.wast",
+  # false-positive error on invalid UTF-8 custom section name (utf8-custom-section-id.wast:6)
+  "utf8-custom-section-id.wast",
+  # testing that multi-value isn't implemented (func.wast:492)
+  "func.wast",
+  # testing that multi-value isn't implemented (type.wast:52)
+  "type.wast",
+  # invalid without bottom-type added in reference-types (unreached-invalid.wast:538)
+  "unreached-invalid.wast",
+  # invalid table maximum length for web embeddings
+  "table.wast"
+]
 
 [[repos]]
 name = "spec"
 url = "https://github.com/WebAssembly/spec"
-excluded_tests = ["elem.wast", "func.wast", "type.wast", "unreached-invalid.wast"]
+excluded_tests = []
 
 [[repos]]
 name = "sign-extension-ops"
@@ -53,7 +80,7 @@ directive = "; skip-if: !wasmBulkMemSupported()"
 name = "reference-types"
 url = "https://github.com/WebAssembly/reference-types"
 parent = "spec"
-excluded_tests = ["br_table.wast", "elem.wast", "func.wast", "globals.wast", "memory.wast", "table_get.wast", "table_set.wast", "table_grow.wast", "table_fill.wast", "ref_func.wast", "ref_is_null.wast", "select.wast", "float_memory.wast", "call_indirect.wast"]
+excluded_tests = []
 # Skip in WPT where we can't guard on features being enabled
 skip_wpt = true
 # Skip in jit-test when it's not enabled
