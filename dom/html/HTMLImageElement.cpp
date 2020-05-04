@@ -393,7 +393,7 @@ nsresult HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         aValue && static_cast<ImageDecodingType>(aValue->GetEnumValue()) ==
                       ImageDecodingType::Sync);
   } else if (aName == nsGkAtoms::referrerpolicy) {
-    ReferrerPolicy referrerPolicy = GetImageReferrerPolicy();
+    ReferrerPolicy referrerPolicy = GetReferrerPolicyAsEnum();
     // FIXME(emilio): Why only  when not in responsive mode? Also see below for
     // aNotify.
     forceReload = aNotify && !InResponsiveMode() &&
