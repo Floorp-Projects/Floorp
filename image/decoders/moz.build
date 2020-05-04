@@ -22,7 +22,6 @@ elif toolkit == 'android':
 UNIFIED_SOURCES += [
     'EXIF.cpp',
     'iccjpeg.c',
-    'nsAVIFDecoder.cpp',
     'nsBMPDecoder.cpp',
     'nsGIFDecoder2.cpp',
     'nsICODecoder.cpp',
@@ -31,6 +30,11 @@ UNIFIED_SOURCES += [
     'nsPNGDecoder.cpp',
     'nsWebPDecoder.cpp',
 ]
+
+if CONFIG['MOZ_AV1']:
+    UNIFIED_SOURCES += [
+        'nsAVIFDecoder.cpp',
+    ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
