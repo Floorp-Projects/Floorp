@@ -5,6 +5,7 @@
 package mozilla.components.browser.menu.item
 
 import android.content.Context
+import android.os.Build
 import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -89,7 +90,7 @@ class BrowserMenuItemToolbar(
         internal open fun bind(view: ImageView) {
             view.setImageResource(imageResource)
             view.contentDescription = contentDescription
-            TooltipCompat.setTooltipText(view, contentDescription)
+            setTooltipTextCompatible(view, contentDescription)
             view.setTintResource(iconTintColorResource)
             view.isEnabled = isEnabled()
         }
@@ -108,6 +109,14 @@ class BrowserMenuItemToolbar(
             containerStyle = ContainerStyle(isEnabled = isEnabled()),
             onClick = listener
         )
+
+        internal fun setTooltipTextCompatible(view: ImageView, contentDescription: String) {
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) {
+                CustomTooltip.setTooltipText(view, contentDescription)
+            } else {
+                TooltipCompat.setTooltipText(view, contentDescription)
+            }
+        }
     }
 
     /**
@@ -150,7 +159,7 @@ class BrowserMenuItemToolbar(
             } else {
                 view.setImageResource(secondaryImageResource)
                 view.contentDescription = secondaryContentDescription
-                TooltipCompat.setTooltipText(view, secondaryContentDescription)
+                setTooltipTextCompatible(view, secondaryContentDescription)
                 view.setTintResource(secondaryImageTintResource)
                 view.isEnabled = !disableInSecondaryState
             }
