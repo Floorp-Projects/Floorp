@@ -47,11 +47,7 @@ class BridgedStore {
       // pass attributes like `modified` and `sortindex`, which are not part
       // of the cleartext.
       let incomingCleartexts = chunk.map(record => record.cleartextToString());
-      await promisifyWithSignal(
-        null,
-        this.engine._bridge.storeIncoming,
-        incomingCleartexts
-      );
+      await promisify(this.engine._bridge.storeIncoming, incomingCleartexts);
     }
     // Array of failed records.
     return [];
@@ -194,10 +190,6 @@ function BridgedEngine(bridge, name, service) {
 
   this._bridge = bridge;
   this._bridge.logger = new LogAdapter(this._log);
-
-  // The maximum amount of time that we should wait for the bridged engine
-  // to apply incoming records before aborting.
-  this._applyTimeoutMillis = 5 * 60 * 60 * 1000; // 5 minutes
 }
 
 BridgedEngine.prototype = {
@@ -308,7 +300,7 @@ BridgedEngine.prototype = {
     // keep the records around (for example, in a temp table), and automatically
     // write them back on `syncFinished`?
     await this.initialize();
-    await promisifyWithSignal(null, this._bridge.syncFinished);
+    await promisify(this._bridge.syncFinished);
   },
 
   /**
@@ -332,34 +324,18 @@ BridgedEngine.prototype = {
     await super._processIncoming(newitems);
     await this.initialize();
 
-    // TODO: We could consider having a per-sync watchdog instead; for
-    // example, time out after 5 minutes total, including any network
-    // latency. `promisifyWithSignal` makes this flexible.
-    let watchdog = this._newWatchdog();
-    watchdog.start(this._applyTimeoutMillis);
-
-    try {
-      let outgoingRecords = await promisifyWithSignal(
-        watchdog.signal,
-        this._bridge.apply
-      );
-      let changeset = {};
-      for (let record of outgoingRecords) {
-        // TODO: It would be nice if we could pass the cleartext through as-is
-        // here, too, instead of parsing and re-wrapping for `BridgedRecord`.
-        let cleartext = JSON.parse(record);
-        changeset[cleartext.id] = {
-          synced: false,
-          cleartext,
-        };
-      }
-      this._modified.replace(changeset);
-    } finally {
-      watchdog.stop();
-      if (watchdog.abortReason) {
-        this._log.warn(`Aborting bookmark merge: ${watchdog.abortReason}`);
-      }
+    let outgoingRecords = await promisify(this._bridge.apply);
+    let changeset = {};
+    for (let record of outgoingRecords) {
+      // TODO: It would be nice if we could pass the cleartext through as-is
+      // here, too, instead of parsing and re-wrapping for `BridgedRecord`.
+      let cleartext = JSON.parse(record);
+      changeset[cleartext.id] = {
+        synced: false,
+        cleartext,
+      };
     }
+    this._modified.replace(changeset);
   },
 
   /**
@@ -370,12 +346,7 @@ BridgedEngine.prototype = {
    */
   async _onRecordsWritten(succeeded, failed, serverModifiedTime) {
     await this.initialize();
-    await promisifyWithSignal(
-      null,
-      this._bridge.setUploaded,
-      serverModifiedTime,
-      succeeded
-    );
+    await promisify(this._bridge.setUploaded, serverModifiedTime, succeeded);
   },
 
   async _createTombstone() {
@@ -423,35 +394,6 @@ function promisify(func, ...params) {
         reject(transformError(code, message));
       },
     });
-  });
-}
-
-// Like `promisify`, but takes an `AbortSignal` for cancelable
-// operations.
-function promisifyWithSignal(signal, func, ...params) {
-  if (!signal) {
-    return promisify(func, ...params);
-  }
-  return new Promise((resolve, reject) => {
-    if (signal.aborted) {
-      // TODO: Record more specific operation names, so we can see which
-      // ones get interrupted most in telemetry.
-      throw new InterruptedError("Interrupted before starting operation");
-    }
-    function onAbort() {
-      signal.removeEventListener("abort", onAbort);
-      op.cancel(Cr.NS_ERROR_ABORT);
-    }
-    let op = func(...params, {
-      handleSuccess(result) {
-        signal.removeEventListener("abort", onAbort);
-        resolve(result);
-      },
-      handleError(code, message) {
-        reject(transformError(code, message));
-      },
-    });
-    signal.addEventListener("abort", onAbort);
   });
 }
 

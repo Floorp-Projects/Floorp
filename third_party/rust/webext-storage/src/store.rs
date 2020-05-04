@@ -9,6 +9,7 @@ use std::path::Path;
 use std::result;
 
 use serde_json::Value as JsonValue;
+use sql_support::SqlInterruptHandle;
 
 /// A store is used to access `storage.sync` data. It manages an underlying
 /// database connection, and exposes methods for reading and writing storage
@@ -40,6 +41,11 @@ impl Store {
         Ok(Self {
             db: StorageDb::new_memory(db_path)?,
         })
+    }
+
+    /// Returns an interrupt handle for this store.
+    pub fn interrupt_handle(&self) -> SqlInterruptHandle {
+        self.db.interrupt_handle()
     }
 
     /// Sets one or more JSON key-value pairs for an extension ID. Returns a
