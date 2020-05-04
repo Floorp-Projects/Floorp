@@ -36,6 +36,7 @@ class BrowsertimeRunner(NodeRunner):
     arguments = {
         "cycles": {"type": int, "default": 1, "help": "Number of full cycles"},
         "iterations": {"type": int, "default": 1, "help": "Number of iterations"},
+        "geckodriver": {"type": str, "default": None, "help": "Path to geckodriver"},
         "binary": {
             "type": str,
             "default": None,
@@ -249,6 +250,10 @@ class BrowsertimeRunner(NodeRunner):
                     )
                     return 1
 
+        geckodriver = self.get_arg("geckodriver")
+        if geckodriver is not None:
+            extra_args.extend(("--firefox.geckodriverPath", geckodriver))
+
         if extra_args:
             self.debug(
                 "Running browsertime with extra default arguments: {extra_args}",
@@ -266,7 +271,8 @@ class BrowsertimeRunner(NodeRunner):
             # Work around a `selenium-webdriver` issue where Browsertime
             # fails to find a Firefox binary even though we're going to
             # actually do things on an Android device.
-            # "--firefox.binaryPath", self.mach_cmd.get_binary_path(),
+            "--firefox.binaryPath",
+            self.node_path,
             "--firefox.android.package",
             app_name,
         ]
