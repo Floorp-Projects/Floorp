@@ -35,7 +35,7 @@ async function run_test() {
     case "Darwin":
       gfxInfo.spoofVendorID("0xdcba");
       gfxInfo.spoofDeviceID("0x1234");
-      gfxInfo.spoofOSVersion(0x1090);
+      gfxInfo.spoofOSVersion(0xa0900);
       break;
     case "Android":
       gfxInfo.spoofVendorID("dcba");
