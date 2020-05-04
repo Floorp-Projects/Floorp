@@ -13,6 +13,7 @@
 #include "mozilla/dom/DateTimeInputTypes.h"
 #include "mozilla/dom/FileInputType.h"
 #include "mozilla/dom/HiddenInputType.h"
+#include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/NumericInputTypes.h"
 #include "mozilla/dom/SingleLineTextInputTypes.h"
 

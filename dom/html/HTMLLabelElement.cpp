@@ -13,6 +13,7 @@
 #include "mozilla/dom/HTMLLabelElementBinding.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "nsFocusManager.h"
+#include "nsIFrame.h"
 #include "nsContentUtils.h"
 #include "nsQueryObject.h"
 #include "mozilla/dom/ShadowRoot.h"

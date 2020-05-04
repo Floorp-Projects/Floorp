@@ -4,12 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsHTMLDNSPrefetch.h"
+
 #include "base/basictypes.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoChild.h"
 #include "nsURLHelper.h"
 
-#include "nsHTMLDNSPrefetch.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 

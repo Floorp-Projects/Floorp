@@ -18,6 +18,7 @@
 #include "nsUnicharUtils.h"
 #include "nsGlobalWindowInner.h"
 #include "nsIHTMLContentSink.h"
+#include "nsIProtocolHandler.h"
 #include "nsIXMLContentSink.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLStyleSheet.h"
