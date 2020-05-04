@@ -62,6 +62,15 @@ static nsStaticCaseInsensitiveNameTable* CreateStaticTable(
   return table;
 }
 
+void nsCSSProps::RecomputeEnabledState(const char* aPref, void*) {
+  for (const PropertyPref* pref = kPropertyPrefTable;
+       pref->mPropID != eCSSProperty_UNKNOWN; pref++) {
+    if (!aPref || !strcmp(aPref, pref->mPref)) {
+      gPropertyEnabled[pref->mPropID] = Preferences::GetBool(pref->mPref);
+    }
+  }
+}
+
 void nsCSSProps::AddRefTable(void) {
   if (0 == gPropertyTableRefCount++) {
     MOZ_ASSERT(!gFontDescTable, "pre existing array!");
@@ -86,11 +95,16 @@ void nsCSSProps::AddRefTable(void) {
       prefObserversInited = true;
       for (const PropertyPref* pref = kPropertyPrefTable;
            pref->mPropID != eCSSProperty_UNKNOWN; pref++) {
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1472523
+        // We need to use nsCString instead of substring because the preference
+        // callback code stores them. Using AssignLiteral prevents any
+        // unnecessary allocations.
         nsCString prefName;
         prefName.AssignLiteral(pref->mPref, strlen(pref->mPref));
-        bool* enabled = &gPropertyEnabled[pref->mPropID];
-        Preferences::AddBoolVarCache(enabled, prefName);
+        Preferences::RegisterCallback(nsCSSProps::RecomputeEnabledState,
+                                      prefName);
       }
+      RecomputeEnabledState(/* aPrefName = */ nullptr);
     }
   }
 }
