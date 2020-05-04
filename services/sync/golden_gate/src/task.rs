@@ -28,6 +28,12 @@ use crate::ferry::{Ferry, FerryResult};
 /// background thread or task queue, and ferries back an optional result to
 /// a callback.
 pub struct FerryTask<N: ?Sized + BridgedEngine> {
+    /// A ferry task holds a weak reference to the bridged engine, and upgrades
+    /// it to a strong reference when run on a background thread. This avoids
+    /// scheduled ferries blocking finalization: if the main thread holds the
+    /// only strong reference to the engine, it can be unwrapped (using
+    /// `Arc::try_unwrap`) and dropped, either on the main thread, or as part of
+    /// a teardown task.
     engine: Weak<N>,
     ferry: Ferry,
     callback: ThreadPtrHandle<mozIBridgedSyncEngineCallback>,

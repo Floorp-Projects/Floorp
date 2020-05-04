@@ -5223,6 +5223,7 @@ dependencies = [
  "once_cell",
  "serde",
  "serde_json",
+ "sql-support",
  "storage_variant",
  "webext-storage",
  "xpcom",
