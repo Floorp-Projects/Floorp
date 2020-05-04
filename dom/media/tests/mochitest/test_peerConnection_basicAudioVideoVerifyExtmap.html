@@ -12,7 +12,9 @@
   });
 
   var test;
-  runNetworkTest(function (options) {
+  runNetworkTest(async function (options) {
+    await pushPrefs(["media.navigator.video.use_transport_cc", true]);
+
     test = new PeerConnectionTest(options);
     test.setMediaConstraints([{audio: true}, {video: true}],
                              [{audio: true}, {video: true}]);
@@ -44,6 +46,7 @@
           ["4", "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time", ""],
           ["5", "urn:ietf:params:rtp-hdrext:toffset", ""],
           ["6", "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay", "recvonly"],
+          ["7", "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01", ""],
         ];
         // *Ugh* ...
         ok(JSON.stringify(video) ===
@@ -78,6 +81,7 @@
           ["3", "urn:ietf:params:rtp-hdrext:sdes:mid",""],
           ["4", "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time",""],
           ["5", "urn:ietf:params:rtp-hdrext:toffset",""],
+          ["7", "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01", ""],
         ];
         ok(JSON.stringify(video) ===
            JSON.stringify(expected_video),
