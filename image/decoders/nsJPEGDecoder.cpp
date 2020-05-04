@@ -326,8 +326,6 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
                                                GetCMSOutputProfile(),
                                                outputType, (qcms_intent)intent);
           }
-        } else if (mCMSMode == eCMSMode_All) {
-          mTransform = GetCMSsRGBTransform(SurfaceFormat::OS_RGBX);
         }
       }
 
