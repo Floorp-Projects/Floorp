@@ -213,8 +213,6 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
    */
   virtual mozilla::CORSMode GetCORSMode();
 
-  virtual mozilla::dom::ReferrerPolicy GetImageReferrerPolicy();
-
   // Subclasses are *required* to call BindToTree/UnbindFromTree.
   void BindToTree(mozilla::dom::BindContext&, nsINode& aParent);
   void UnbindFromTree(bool aNullParent);
