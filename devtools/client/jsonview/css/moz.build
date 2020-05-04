@@ -10,7 +10,6 @@ DevToolsModules(
     'json-panel.css',
     'main.css',
     'search-box.css',
-    'search.svg',
     'text-panel.css',
     'toolbar.css'
 )
