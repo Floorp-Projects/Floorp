@@ -490,8 +490,8 @@ class JSTerm extends Component {
           },
 
           Esc: false,
-          "Cmd-F": false,
-          "Ctrl-F": false,
+          // Don't handle Ctrl/Cmd + F so it can be listened by a parent node
+          [Editor.accel("F")]: false,
         },
       });
 
