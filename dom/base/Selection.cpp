@@ -590,7 +590,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Selection)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Selection)
   {
-    uint32_t i, count = tmp->mStyledRanges.mRanges.Length();
+    uint32_t i, count = tmp->mStyledRanges.Length();
     for (i = 0; i < count; ++i) {
       NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyledRanges.mRanges[i].mRange)
     }
@@ -640,7 +640,10 @@ const RangeBoundary& Selection::FocusRef() const {
 }
 
 void Selection::SetAnchorFocusRange(int32_t indx) {
-  if (indx >= (int32_t)mStyledRanges.mRanges.Length()) return;
+  if (indx >= (int32_t)mStyledRanges.Length()) {
+    return;
+  }
+
   if (indx < 0)  // release all
   {
     mAnchorFocusRange = nullptr;
@@ -871,7 +874,7 @@ nsresult Selection::AddRangesForUserSelectableNodes(
   }
 
   AutoTArray<RefPtr<nsRange>, 4> rangesToAdd;
-  *aOutIndex = int32_t(mStyledRanges.mRanges.Length()) - 1;
+  *aOutIndex = int32_t(mStyledRanges.Length()) - 1;
 
   Document* doc = GetDocument();
   bool selectEventsEnabled = StaticPrefs::dom_select_events_enabled() ||
@@ -1109,7 +1112,7 @@ nsresult Selection::Clear(nsPresContext* aPresContext) {
   SetAnchorFocusRange(-1);
 
   mStyledRanges.UnregisterSelection();
-  for (uint32_t i = 0; i < mStyledRanges.mRanges.Length(); ++i) {
+  for (uint32_t i = 0; i < mStyledRanges.Length(); ++i) {
     SelectFrames(aPresContext, mStyledRanges.mRanges[i].mRange, false);
   }
   mStyledRanges.mRanges.Clear();
@@ -1435,7 +1438,7 @@ nsresult Selection::SelectFramesOfInclusiveDescendantsOfContent(
 }
 
 void Selection::SelectFramesInAllRanges(nsPresContext* aPresContext) {
-  for (size_t i = 0; i < mStyledRanges.mRanges.Length(); ++i) {
+  for (size_t i = 0; i < mStyledRanges.Length(); ++i) {
     nsRange* range = mStyledRanges.mRanges[i].mRange;
     MOZ_ASSERT(range->IsInSelection());
     SelectFrames(aPresContext, range, range->IsInSelection());
@@ -1595,7 +1598,7 @@ UniquePtr<SelectionDetails> Selection::LookUpSelection(
   }
 
   // it is common to have no ranges, to optimize that
-  if (mStyledRanges.mRanges.Length() == 0) {
+  if (mStyledRanges.Length() == 0) {
     return aDetailsHead;
   }
 
@@ -1671,7 +1674,7 @@ UniquePtr<SelectionDetails> Selection::LookUpSelection(
 
 NS_IMETHODIMP
 Selection::Repaint(nsPresContext* aPresContext) {
-  int32_t arrCount = (int32_t)mStyledRanges.mRanges.Length();
+  int32_t arrCount = (int32_t)mStyledRanges.Length();
 
   if (arrCount < 1) return NS_OK;
 
@@ -1763,6 +1766,11 @@ StyledRange* Selection::StyledRanges::FindRangeData(nsRange* aRange) {
     }
   }
   return nullptr;
+}
+
+Selection::StyledRanges::Elements::size_type Selection::StyledRanges::Length()
+    const {
+  return mRanges.Length();
 }
 
 nsresult Selection::SetTextRangeStyle(nsRange* aRange,
@@ -1963,7 +1971,7 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
     return;
   }
 
-  MOZ_ASSERT(rangeIndex < static_cast<int32_t>(mStyledRanges.mRanges.Length()));
+  MOZ_ASSERT(rangeIndex < static_cast<int32_t>(mStyledRanges.Length()));
 
   SetAnchorFocusRange(rangeIndex);
 
@@ -2044,7 +2052,7 @@ void Selection::RemoveRangeAndUnselectFramesAndNotifyListeners(
     SelectFrames(presContext, affectedRanges[i], true);
   }
 
-  int32_t cnt = mStyledRanges.mRanges.Length();
+  int32_t cnt = mStyledRanges.Length();
   if (&aRange == mAnchorFocusRange) {
     // Reset anchor to LAST range or clear it if there are no ranges.
     SetAnchorFocusRange(cnt - 1);
@@ -2640,7 +2648,7 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
     }
   }
 
-  if (mStyledRanges.mRanges.Length() > 1) {
+  if (mStyledRanges.Length() > 1) {
     SelectFramesInAllRanges(presContext);
   }
 
@@ -2694,7 +2702,7 @@ void Selection::SelectAllChildren(nsINode& aNode, ErrorResult& aRv) {
 bool Selection::ContainsNode(nsINode& aNode, bool aAllowPartial,
                              ErrorResult& aRv) {
   nsresult rv;
-  if (mStyledRanges.mRanges.Length() == 0) {
+  if (mStyledRanges.Length() == 0) {
     return false;
   }
 
@@ -3457,7 +3465,7 @@ void Selection::SetStartAndEndInternal(InLimiter aInLimiter,
   // we need to select frames with the result in such case.
   if (mUserInitiated) {
     RefPtr<nsPresContext> presContext = GetPresContext();
-    if (mStyledRanges.mRanges.Length() > 1 && presContext) {
+    if (mStyledRanges.Length() > 1 && presContext) {
       SelectFramesInAllRanges(presContext);
     }
   }
