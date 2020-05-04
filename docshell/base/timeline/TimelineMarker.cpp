@@ -6,6 +6,10 @@
 
 #include "TimelineMarker.h"
 
+#include "jsapi.h"
+#include "mozilla/dom/ProfileTimelineMarkerBinding.h"
+#include "nsContentUtils.h"
+
 namespace mozilla {
 
 TimelineMarker::TimelineMarker(const char* aName,

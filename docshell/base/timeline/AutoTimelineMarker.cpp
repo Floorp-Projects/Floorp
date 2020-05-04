@@ -6,6 +6,7 @@
 
 #include "AutoTimelineMarker.h"
 
+#include "nsIDocShell.h"
 #include "TimelineConsumers.h"
 #include "MainThreadUtils.h"
 

@@ -14,6 +14,12 @@
 #include "mozilla/Tuple.h"
 #include <utility>
 
+class PickleIterator;
+
+namespace IPC {
+class Message;
+}  // namespace IPC
+
 namespace mozilla {
 namespace ipc {
 class IProtocol;

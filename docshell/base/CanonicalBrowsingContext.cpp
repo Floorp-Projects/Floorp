@@ -9,7 +9,9 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/BrowsingContextBinding.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/ContentProcessManager.h"
@@ -17,11 +19,11 @@
 #include "mozilla/dom/MediaControlService.h"
 #include "mozilla/dom/PlaybackController.h"
 #include "mozilla/ipc/ProtocolUtils.h"
-#include "mozilla/NullPrincipal.h"
 #include "mozilla/net/DocumentLoadListener.h"
-#include "nsNetUtil.h"
-
+#include "mozilla/NullPrincipal.h"
 #include "nsGlobalWindowOuter.h"
+#include "nsIWebBrowserChrome.h"
+#include "nsNetUtil.h"
 
 using namespace mozilla::ipc;
 

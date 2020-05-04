@@ -8,13 +8,19 @@
 #include "nsIDocShell.h"
 #include "SHEntryParent.h"
 #include "SHEntryChild.h"
+#include "nsDocShell.h"
 #include "nsISHEntry.h"
+#include "nsIURIFixup.h"
 #include "nsIWebNavigation.h"
 #include "nsIChannel.h"
+#include "nsNetUtil.h"
+#include "nsQueryObject.h"
 #include "ReferrerInfo.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Components.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/StaticPrefs_fission.h"
 
@@ -23,6 +29,9 @@
 #include "mozilla/StaticPtr.h"
 
 #include "mozilla/dom/PContent.h"
+
+using namespace mozilla;
+using namespace mozilla::dom;
 
 // Global reference to the URI fixup service.
 static mozilla::StaticRefPtr<nsIURIFixup> sURIFixup;

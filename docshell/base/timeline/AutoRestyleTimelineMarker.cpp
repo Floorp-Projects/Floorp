@@ -8,6 +8,7 @@
 
 #include "TimelineConsumers.h"
 #include "MainThreadUtils.h"
+#include "nsIDocShell.h"
 #include "RestyleTimelineMarker.h"
 
 namespace mozilla {
