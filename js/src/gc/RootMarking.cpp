@@ -156,6 +156,11 @@ void JSRuntime::finishPersistentRoots() {
   // See the comment on RootLists::~RootLists for details.
 }
 
+JS_PUBLIC_API void js::TraceValueArray(JSTracer* trc, size_t length,
+                                       Value* elements) {
+  TraceRootRange(trc, length, elements, "JS::AutoValueArray");
+}
+
 void AutoGCRooter::trace(JSTracer* trc) {
   switch (kind_) {
     case Kind::Parser:
@@ -167,15 +172,6 @@ void AutoGCRooter::trace(JSTracer* trc) {
       static_cast<frontend::BinASTParserBase*>(this)->trace(trc);
       break;
 #endif  // defined(JS_BUILD_BINAST)
-
-    case Kind::ValueArray: {
-      /*
-       * We don't know the template size parameter, but we can safely treat it
-       * as an AutoValueArray<1> because the length is stored separately.
-       */
-      static_cast<AutoValueArray<1>*>(this)->trace(trc);
-      break;
-    }
 
     case Kind::Wrapper:
       static_cast<AutoWrapperRooter*>(this)->trace(trc);
@@ -189,20 +185,10 @@ void AutoGCRooter::trace(JSTracer* trc) {
       static_cast<JS::CustomAutoRooter*>(this)->trace(trc);
       break;
 
-    case Kind::Array: {
-      static_cast<AutoArrayRooter*>(this)->trace(trc);
-      break;
-    }
-
     default:
       MOZ_CRASH("Bad AutoGCRooter::Kind");
       break;
   }
-}
-
-template <size_t N>
-void JS::AutoValueArray<N>::trace(JSTracer* trc) {
-  TraceRootRange(trc, length(), begin(), "js::AutoValueArray");
 }
 
 void AutoWrapperRooter::trace(JSTracer* trc) {
@@ -223,12 +209,6 @@ void AutoWrapperVector::trace(JSTracer* trc) {
   for (WrapperValue& value : *this) {
     TraceManuallyBarrieredEdge(trc, &value.get(),
                                "js::AutoWrapperVector.vector");
-  }
-}
-
-void AutoArrayRooter::trace(JSTracer* trc) {
-  if (Value* vp = begin()) {
-    TraceRootRange(trc, length(), vp, "js::AutoArrayRooter");
   }
 }
 

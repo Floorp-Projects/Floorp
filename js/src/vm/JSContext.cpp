@@ -1183,6 +1183,12 @@ AutoKeepAtoms::AutoKeepAtoms(
 
 AutoKeepAtoms::~AutoKeepAtoms() { cx->zone()->releaseAtoms(); };
 
+void ExternalValueArray::trace(JSTracer* trc) {
+  if (Value* vp = begin()) {
+    TraceRootRange(trc, length(), vp, "js::ExternalValueArray");
+  }
+}
+
 #ifdef DEBUG
 AutoUnsafeCallWithABI::AutoUnsafeCallWithABI(UnsafeABIStrictness strictness)
     : cx_(TlsContext.get()),
