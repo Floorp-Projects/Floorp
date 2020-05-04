@@ -7,7 +7,7 @@
 
 <style>
   div {
-    border :1px solid red;
+    border: 1px solid red;
     width: 100px; height: 100px;
   }
 </style>
@@ -18,10 +18,6 @@
   "use strict";
   const div = document.querySelector("div");
   let initX, initY;
-  let previousEvent = "", touchendTime = 0;
-  const updatePreviousEvent = function (e) {
-    previousEvent = e.type;
-  };
 
   div.style.transform = "none";
   div.style.backgroundColor = "";
@@ -30,7 +26,6 @@
     const touch = evt.changedTouches[0];
     initX = touch.pageX;
     initY = touch.pageY;
-    updatePreviousEvent(evt);
   }, true);
 
   div.addEventListener("touchmove", function (evt) {
@@ -38,52 +33,34 @@
     const deltaX = touch.pageX - initX;
     const deltaY = touch.pageY - initY;
     div.style.transform = "translate(" + deltaX + "px, " + deltaY + "px)";
-    updatePreviousEvent(evt);
   }, true);
 
   div.addEventListener("touchend", function (evt) {
     if (!evt.touches.length) {
       div.style.transform = "none";
     }
-    touchendTime = performance.now();
-    updatePreviousEvent(evt);
   }, true);
 
   div.addEventListener("mouseenter", function (evt) {
     div.style.backgroundColor = "red";
-    updatePreviousEvent(evt);
   }, true);
   div.addEventListener("mouseover", function(evt) {
     div.style.backgroundColor = "red";
-    updatePreviousEvent(evt);
   }, true);
 
   div.addEventListener("mouseout", function (evt) {
     div.style.backgroundColor = "blue";
-    updatePreviousEvent(evt);
   }, true);
 
   div.addEventListener("mouseleave", function (evt) {
     div.style.backgroundColor = "blue";
-    updatePreviousEvent(evt);
   }, true);
 
-  div.addEventListener("mousedown", function (evt) {
-    if (previousEvent === "touchend" && touchendTime !== 0) {
-      const now = performance.now();
-      // Do to time spent processing events our measurement might
-      // be fractionally short of the actual delay.  Round up any
-      // microsecond changes in case we get something like 299.9.
-      div.dataset.isDelay = ((now - touchendTime) >= 299.5);
-    } else {
-      div.dataset.isDelay = false;
-    }
-    updatePreviousEvent(evt);
-  }, true);
+  div.addEventListener("mousedown", null, true);
 
-  div.addEventListener("mousemove", updatePreviousEvent, true);
+  div.addEventListener("mousemove", null, true);
 
-  div.addEventListener("mouseup", updatePreviousEvent, true);
+  div.addEventListener("mouseup", null, true);
 
-  div.addEventListener("click", updatePreviousEvent, true);
+  div.addEventListener("click", null, true);
 </script>
