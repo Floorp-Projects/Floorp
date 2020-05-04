@@ -758,6 +758,8 @@ class Selection final : public nsSupportsWeakReference,
   struct StyledRanges {
     StyledRange* FindRangeData(nsRange* aRange);
 
+    nsresult RemoveCollapsedRanges();
+
     nsresult RemoveRangeAndUnregisterSelection(nsRange& aRange);
 
     /**

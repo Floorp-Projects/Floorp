@@ -1088,13 +1088,15 @@ nsresult Selection::StyledRanges::RemoveRangeAndUnregisterSelection(
   aRange.UnregisterSelection();
   return NS_OK;
 }
-
 nsresult Selection::RemoveCollapsedRanges() {
+  return mStyledRanges.RemoveCollapsedRanges();
+}
+
+nsresult Selection::StyledRanges::RemoveCollapsedRanges() {
   uint32_t i = 0;
-  while (i < mStyledRanges.mRanges.Length()) {
-    if (mStyledRanges.mRanges[i].mRange->Collapsed()) {
-      nsresult rv = mStyledRanges.RemoveRangeAndUnregisterSelection(
-          *mStyledRanges.mRanges[i].mRange);
+  while (i < mRanges.Length()) {
+    if (mRanges[i].mRange->Collapsed()) {
+      nsresult rv = RemoveRangeAndUnregisterSelection(*mRanges[i].mRange);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       ++i;
