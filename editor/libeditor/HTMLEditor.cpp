@@ -486,7 +486,7 @@ void HTMLEditor::InitializeSelectionAncestorLimit(nsIContent& aAncestorLimit) {
   if (SelectionRefPtr()->RangeCount() == 1 &&
       SelectionRefPtr()->IsCollapsed()) {
     Element* editingHost = GetActiveEditingHost();
-    nsRange* range = SelectionRefPtr()->GetRangeAt(0);
+    const nsRange* range = SelectionRefPtr()->GetRangeAt(0);
     if (range->GetStartContainer() == editingHost && !range->StartOffset()) {
       // JS or user operation has already collapsed selection at start of
       // the editing host.  So, we don't need to try to change selection
@@ -526,7 +526,7 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
   // start of the editing host, we shouldn't reset selection.  E.g., window
   // is activated when the editor had focus before inactivated.
   if (aIgnoreIfSelectionInEditingHost && SelectionRefPtr()->RangeCount() == 1) {
-    nsRange* range = SelectionRefPtr()->GetRangeAt(0);
+    const nsRange* range = SelectionRefPtr()->GetRangeAt(0);
     if (!range->Collapsed() ||
         range->GetStartContainer() != editingHost.get() ||
         range->StartOffset()) {
@@ -1225,7 +1225,7 @@ nsresult HTMLEditor::ReplaceHeadContentsWithSourceWithTransaction(
   AutoPlaceholderBatch treatAsOneTransaction(*this);
 
   // Get the first range in the selection, for context:
-  RefPtr<nsRange> range = SelectionRefPtr()->GetRangeAt(0);
+  RefPtr<const nsRange> range = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!range)) {
     return NS_ERROR_FAILURE;
   }
@@ -1472,7 +1472,7 @@ NS_IMETHODIMP HTMLEditor::RebuildDocumentFromSource(
   bodyTag.AssignLiteral("<div ");
   bodyTag.Append(Substring(endbody, endclosebody));
 
-  RefPtr<nsRange> range = SelectionRefPtr()->GetRangeAt(0);
+  RefPtr<const nsRange> range = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!range)) {
     return NS_ERROR_FAILURE;
   }
@@ -2014,7 +2014,7 @@ nsresult HTMLEditor::GetCSSBackgroundColorState(bool* aMixed,
   // the default background color is transparent
   aOutColor.AssignLiteral("transparent");
 
-  RefPtr<nsRange> firstRange = SelectionRefPtr()->GetRangeAt(0);
+  RefPtr<const nsRange> firstRange = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
     return NS_ERROR_FAILURE;
   }
@@ -4214,7 +4214,7 @@ void HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
     }
 
     for (uint32_t j = 0; j < range.mSelection->RangeCount(); ++j) {
-      RefPtr<nsRange> r = range.mSelection->GetRangeAt(j);
+      RefPtr<const nsRange> r = range.mSelection->GetRangeAt(j);
       MOZ_ASSERT(r->IsPositioned());
       // XXX Looks like that SavedRange should have mStart and mEnd which
       //     are RangeBoundary.  Then, we can avoid to compute offset here.
@@ -4501,7 +4501,7 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
     }
 
     for (uint32_t j = 0; j < range.mSelection->RangeCount(); ++j) {
-      RefPtr<nsRange> r = range.mSelection->GetRangeAt(j);
+      const RefPtr<nsRange> r = range.mSelection->GetRangeAt(j);
       MOZ_ASSERT(r->IsPositioned());
       range.mStartContainer = r->GetStartContainer();
       range.mStartOffset = r->StartOffset();
@@ -5660,7 +5660,7 @@ Element* HTMLEditor::GetSelectionContainerElement() const {
     MOZ_ASSERT(rangeCount, "If 0, Selection::IsCollapsed() should return true");
 
     if (rangeCount == 1) {
-      nsRange* range = SelectionRefPtr()->GetRangeAt(0);
+      const nsRange* range = SelectionRefPtr()->GetRangeAt(0);
 
       const RangeBoundary& startRef = range->StartRef();
       const RangeBoundary& endRef = range->EndRef();
@@ -5687,7 +5687,7 @@ Element* HTMLEditor::GetSelectionContainerElement() const {
       }
     } else {
       for (uint32_t i = 0; i < rangeCount; i++) {
-        nsRange* range = SelectionRefPtr()->GetRangeAt(i);
+        const nsRange* range = SelectionRefPtr()->GetRangeAt(i);
         nsINode* startContainer = range->GetStartContainer();
         if (!focusNode) {
           focusNode = startContainer;

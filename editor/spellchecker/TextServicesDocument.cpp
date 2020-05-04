@@ -401,7 +401,7 @@ nsresult TextServicesDocument::LastSelectedBlock(
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<nsRange> range;
+  RefPtr<const nsRange> range;
   nsCOMPtr<nsINode> parent;
 
   if (selection->IsCollapsed()) {
@@ -1876,7 +1876,7 @@ nsresult TextServicesDocument::GetCollapsedSelection(
   int32_t eStartOffset = eStart->mNodeOffset;
   int32_t eEndOffset = eEnd->mNodeOffset + eEnd->mLength;
 
-  RefPtr<nsRange> range = selection->GetRangeAt(0);
+  RefPtr<const nsRange> range = selection->GetRangeAt(0);
   NS_ENSURE_STATE(range);
 
   nsCOMPtr<nsINode> parent = range->GetStartContainer();
@@ -2044,7 +2044,7 @@ nsresult TextServicesDocument::GetCollapsedSelection(
 nsresult TextServicesDocument::GetUncollapsedSelection(
     BlockSelectionStatus* aSelStatus, int32_t* aSelOffset,
     int32_t* aSelLength) {
-  RefPtr<nsRange> range;
+  RefPtr<const nsRange> range;
   OffsetEntry* entry;
 
   RefPtr<Selection> selection =

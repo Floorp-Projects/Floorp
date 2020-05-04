@@ -2234,12 +2234,7 @@ WorkerPrivate::WorkerPrivate(
       // in a fresh global object when shared memory objects aren't allowed
       // (because COOP/COEP support isn't enabled, or because COOP/COEP don't
       // act to isolate this worker to a separate process).
-      //
-      // Normal pages haven't yet been made to respect COOP/COEP in this regard
-      // yet -- they just always add the property.  This should be changed to
-      // |IsSharedMemoryAllowed()| when bug 1624266 fixes this for normal pages.
-      bool defineSharedArrayBufferConstructor = true;
-
+      const bool defineSharedArrayBufferConstructor = IsSharedMemoryAllowed();
       chromeCreationOptions.setDefineSharedArrayBufferConstructor(
           defineSharedArrayBufferConstructor);
       contentCreationOptions.setDefineSharedArrayBufferConstructor(

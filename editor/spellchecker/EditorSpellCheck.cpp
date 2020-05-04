@@ -363,7 +363,7 @@ EditorSpellCheck::InitSpellChecker(nsIEditor* aEditor,
     }
 
     if (selection->RangeCount()) {
-      RefPtr<nsRange> range = selection->GetRangeAt(0);
+      RefPtr<const nsRange> range = selection->GetRangeAt(0);
       NS_ENSURE_STATE(range);
 
       if (!range->Collapsed()) {

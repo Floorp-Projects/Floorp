@@ -13,6 +13,8 @@ if (CONFIG['OS_TARGET'] in ('Android', 'Linux') and
     ]
 
 LOCAL_INCLUDES += [
+    '/netwerk/base',
+    '/netwerk/protocol/http',
     '/toolkit/components/jsoncpp/include',
     '/tools/profiler/core',
     '/tools/profiler/gecko',

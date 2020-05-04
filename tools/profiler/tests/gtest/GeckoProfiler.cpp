@@ -23,6 +23,7 @@
 #include "mozilla/BlocksRingBuffer.h"
 #include "mozilla/ProfileBufferEntrySerializationGeckoExtensions.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "mozilla/net/HttpBaseChannel.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
 
@@ -721,6 +722,22 @@ TEST(GeckoProfiler, Markers)
                                    (ts1, 9876543210, 1234, 5678, nullptr));
 
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
+      "NetworkMarkerPayload start marker", OTHER, NetworkMarkerPayload,
+      (1, "http://mozilla.org/", NetworkLoadType::LOAD_START, ts1, ts2, 34, 56,
+       net::kCacheHit, 78));
+
+  PROFILER_ADD_MARKER_WITH_PAYLOAD(
+      "NetworkMarkerPayload stop marker", OTHER, NetworkMarkerPayload,
+      (12, "http://mozilla.org/", NetworkLoadType::LOAD_STOP, ts1, ts2, 34, 56,
+       net::kCacheUnresolved, 78, nullptr, nullptr, nullptr,
+       Some(nsDependentCString(NS_LITERAL_CSTRING("text/html").get()))));
+
+  PROFILER_ADD_MARKER_WITH_PAYLOAD(
+      "NetworkMarkerPayload redirect marker", OTHER, NetworkMarkerPayload,
+      (123, "http://mozilla.org/", NetworkLoadType::LOAD_REDIRECT, ts1, ts2, 34,
+       56, net::kCacheUnresolved, 78, nullptr, "http://example.com/"));
+
+  PROFILER_ADD_MARKER_WITH_PAYLOAD(
       "PrefMarkerPayload marker", OTHER, PrefMarkerPayload,
       ("preference name", mozilla::Nothing(), mozilla::Nothing(),
        NS_LITERAL_CSTRING("preference value"), ts1));
@@ -803,6 +820,9 @@ TEST(GeckoProfiler, Markers)
     S_LogMarkerPayload,
     S_LongTaskMarkerPayload,
     S_NativeAllocationMarkerPayload,
+    S_NetworkMarkerPayload_start,
+    S_NetworkMarkerPayload_stop,
+    S_NetworkMarkerPayload_redirect,
     S_PrefMarkerPayload,
     S_ScreenshotPayload,
     S_TextMarkerPayload1,
@@ -1149,6 +1169,43 @@ TEST(GeckoProfiler, Markers)
                 EXPECT_EQ_JSON(payload["size"], Int64, 9876543210);
                 EXPECT_EQ_JSON(payload["memoryAddress"], Int64, 1234);
                 EXPECT_EQ_JSON(payload["threadId"], Int64, 5678);
+
+              } else if (nameString == "NetworkMarkerPayload start marker") {
+                EXPECT_EQ(state, S_NetworkMarkerPayload_start);
+                state = State(S_NetworkMarkerPayload_start + 1);
+                EXPECT_EQ(typeString, "Network");
+                EXPECT_EQ_JSON(payload["id"], Int64, 1);
+                EXPECT_EQ_JSON(payload["URI"], String, "http://mozilla.org/");
+                EXPECT_EQ_JSON(payload["pri"], Int64, 34);
+                EXPECT_EQ_JSON(payload["count"], Int64, 56);
+                EXPECT_EQ_JSON(payload["cache"], String, "Hit");
+                EXPECT_EQ_JSON(payload["RedirectURI"], String, "");
+                EXPECT_TRUE(payload["contentType"].isNull());
+
+              } else if (nameString == "NetworkMarkerPayload stop marker") {
+                EXPECT_EQ(state, S_NetworkMarkerPayload_stop);
+                state = State(S_NetworkMarkerPayload_stop + 1);
+                EXPECT_EQ(typeString, "Network");
+                EXPECT_EQ_JSON(payload["id"], Int64, 12);
+                EXPECT_EQ_JSON(payload["URI"], String, "http://mozilla.org/");
+                EXPECT_EQ_JSON(payload["pri"], Int64, 34);
+                EXPECT_EQ_JSON(payload["count"], Int64, 56);
+                EXPECT_EQ_JSON(payload["cache"], String, "Unresolved");
+                EXPECT_EQ_JSON(payload["RedirectURI"], String, "");
+                EXPECT_EQ_JSON(payload["contentType"], String, "text/html");
+
+              } else if (nameString == "NetworkMarkerPayload redirect marker") {
+                EXPECT_EQ(state, S_NetworkMarkerPayload_redirect);
+                state = State(S_NetworkMarkerPayload_redirect + 1);
+                EXPECT_EQ(typeString, "Network");
+                EXPECT_EQ_JSON(payload["id"], Int64, 123);
+                EXPECT_EQ_JSON(payload["URI"], String, "http://mozilla.org/");
+                EXPECT_EQ_JSON(payload["pri"], Int64, 34);
+                EXPECT_EQ_JSON(payload["count"], Int64, 56);
+                EXPECT_EQ_JSON(payload["cache"], String, "Unresolved");
+                EXPECT_EQ_JSON(payload["RedirectURI"], String,
+                               "http://example.com/");
+                EXPECT_TRUE(payload["contentType"].isNull());
 
               } else if (nameString == "PrefMarkerPayload marker") {
                 EXPECT_EQ(state, S_PrefMarkerPayload);

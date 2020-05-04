@@ -25,7 +25,7 @@ namespace mozilla {
 using namespace dom;
 
 DeleteRangeTransaction::DeleteRangeTransaction(EditorBase& aEditorBase,
-                                               nsRange& aRangeToDelete)
+                                               const nsRange& aRangeToDelete)
     : mEditorBase(&aEditorBase), mRangeToDelete(aRangeToDelete.CloneRange()) {}
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteRangeTransaction,

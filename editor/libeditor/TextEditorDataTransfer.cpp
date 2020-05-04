@@ -257,7 +257,7 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
       sourceNode->IsEditable() && srcdoc == document) {
     uint32_t rangeCount = SelectionRefPtr()->RangeCount();
     for (uint32_t j = 0; j < rangeCount; j++) {
-      nsRange* range = SelectionRefPtr()->GetRangeAt(j);
+      const nsRange* range = SelectionRefPtr()->GetRangeAt(j);
       if (NS_WARN_IF(!range)) {
         // don't bail yet, iterate through them all
         continue;

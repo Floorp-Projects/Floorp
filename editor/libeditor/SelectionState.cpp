@@ -57,7 +57,7 @@ void SelectionState::SaveSelection(Selection& aSelection) {
 
   // now store the selection ranges
   for (int32_t i = 0; i < rangeCount; i++) {
-    nsRange* range = aSelection.GetRangeAt(i);
+    const nsRange* range = aSelection.GetRangeAt(i);
     if (NS_WARN_IF(!range)) {
       continue;
     }
@@ -559,7 +559,7 @@ NS_IMPL_CYCLE_COLLECTION(RangeItem, mStartContainer, mEndContainer)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(RangeItem, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(RangeItem, Release)
 
-void RangeItem::StoreRange(nsRange& aRange) {
+void RangeItem::StoreRange(const nsRange& aRange) {
   mStartContainer = aRange.GetStartContainer();
   mStartOffset = aRange.StartOffset();
   mEndContainer = aRange.GetEndContainer();

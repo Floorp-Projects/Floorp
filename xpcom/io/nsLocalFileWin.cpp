@@ -6,6 +6,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/TextUtils.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Utf8.h"
 
@@ -88,7 +89,8 @@ bool StartsWithDiskDesignatorAndBackslash(const nsAString& aAbsolutePath) {
   // UNC path: ^\\\\.*
   // A single backslash: ^\\.*
   // A disk designator with a backslash: ^[A-Za-z]:\\.*
-  return aAbsolutePath.Length() >= 3 && aAbsolutePath.CharAt(1) == L':' &&
+  return aAbsolutePath.Length() >= 3 && IsAsciiAlpha(aAbsolutePath.CharAt(0)) &&
+         aAbsolutePath.CharAt(1) == L':' &&
          aAbsolutePath.CharAt(2) == kPathSeparator;
 }
 
