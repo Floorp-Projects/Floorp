@@ -1,0 +1,71 @@
+{
+  "name": "MozParamsTest",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "test@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "description": "A test search engine (based on Google search)",
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "MozParamsTest",
+      "search_url": "https://example.com/?q={searchTerms}",
+      "params": [
+        {
+          "name": "test-0",
+          "condition": "purpose",
+          "purpose": "contextmenu",
+          "value": "0"
+        },
+        {
+          "name": "test-1",
+          "condition": "purpose",
+          "purpose": "searchbar",
+          "value": "1"
+        },
+        {
+          "name": "test-2",
+          "condition": "purpose",
+          "purpose": "homepage",
+          "value": "2"
+        },
+        {
+          "name": "test-3",
+          "condition": "purpose",
+          "purpose": "keyword",
+          "value": "3"
+        },
+        {
+          "name": "test-4",
+          "condition": "purpose",
+          "purpose": "newtab",
+          "value": "4"
+        },
+        {
+          "name": "simple",
+          "value": "5"
+        },
+        {
+          "name": "term",
+          "value": "{searchTerms}"
+        },
+        {
+          "name": "lang",
+          "value": "{language}"
+        },
+        {
+          "name": "locale",
+          "value": "{moz:locale}"
+        },
+        {
+          "name": "prefval",
+          "condition": "pref",
+          "pref": "code"
+        }
+      ]
+    }
+  }
+}
