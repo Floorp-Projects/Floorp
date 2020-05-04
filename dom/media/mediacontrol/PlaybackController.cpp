@@ -23,7 +23,7 @@ PlaybackController::PlaybackController(BrowsingContext* aContext) {
   mBC = aContext;
 }
 
-MediaSession* PlaybackController::GetMediaSession() {
+MediaSession* PlaybackController::GetMediaSession() const {
   RefPtr<nsPIDOMWindowOuter> window = mBC->GetDOMWindow();
   if (!window) {
     return nullptr;
@@ -32,6 +32,36 @@ MediaSession* PlaybackController::GetMediaSession() {
   RefPtr<Navigator> navigator = window->GetNavigator();
   return navigator->HasCreatedMediaSession() ? navigator->MediaSession()
                                              : nullptr;
+}
+
+void PlaybackController::NotifyContentControlKeyEventReceiver(
+    MediaControlKeysEvent aEvent) {
+  if (RefPtr<ContentControlKeyEventReceiver> receiver =
+          ContentControlKeyEventReceiver::Get(mBC)) {
+    LOG("Handle '%s' in default behavior", ToMediaControlKeysEventStr(aEvent));
+    receiver->HandleEvent(aEvent);
+  }
+}
+
+void PlaybackController::NotifyMediaSession(MediaSessionAction aAction) {
+  if (RefPtr<MediaSession> session = GetMediaSession()) {
+    LOG("Handle '%s' in media session behavior",
+        ToMediaSessionActionStr(aAction));
+    session->NotifyHandler(aAction);
+  }
+}
+
+void PlaybackController::NotifyMediaSessionWhenActionIsSupported(
+    MediaSessionAction aAction) {
+  if (IsMediaSessionActionSupported(aAction)) {
+    NotifyMediaSession(aAction);
+  }
+}
+
+bool PlaybackController::IsMediaSessionActionSupported(
+    MediaSessionAction aAction) const {
+  RefPtr<MediaSession> session = GetMediaSession();
+  return session ? session->IsSupportedAction(aAction) : false;
 }
 
 void PlaybackController::Focus() {
@@ -44,62 +74,36 @@ void PlaybackController::Focus() {
 
 void PlaybackController::Play() {
   const MediaSessionAction action = MediaSessionAction::Play;
-  RefPtr<MediaSession> session = GetMediaSession();
-  if (!session || !session->IsSupportedAction(action)) {
-    // Our default behavior is to play all media elements within same browsing
-    // context tree.
-    LOG("Handle 'play' in default behavior");
-    if (RefPtr<ContentControlKeyEventReceiver> receiver =
-            ContentControlKeyEventReceiver::Get(mBC)) {
-      receiver->HandleEvent(MediaControlKeysEvent::ePlay);
-    }
+  if (IsMediaSessionActionSupported(action)) {
+    NotifyMediaSession(action);
   } else {
-    session->NotifyHandler(action);
+    NotifyContentControlKeyEventReceiver(MediaControlKeysEvent::ePlay);
   }
-};
+}
 
 void PlaybackController::Pause() {
   const MediaSessionAction action = MediaSessionAction::Pause;
-  RefPtr<MediaSession> session = GetMediaSession();
-  if (!session || !session->IsSupportedAction(action)) {
-    // Our default behavior is to pause all media elements within same browsing
-    // context tree.
-    LOG("Handle 'pause' in default behavior");
-    if (RefPtr<ContentControlKeyEventReceiver> receiver =
-            ContentControlKeyEventReceiver::Get(mBC)) {
-      receiver->HandleEvent(MediaControlKeysEvent::ePause);
-    }
+  if (IsMediaSessionActionSupported(action)) {
+    NotifyMediaSession(action);
   } else {
-    session->NotifyHandler(action);
+    NotifyContentControlKeyEventReceiver(MediaControlKeysEvent::ePause);
   }
 }
 
 void PlaybackController::SeekBackward() {
-  const MediaSessionAction action = MediaSessionAction::Seekbackward;
-  if (RefPtr<MediaSession> session = GetMediaSession();
-      session && session->IsSupportedAction(action)) {
-    session->NotifyHandler(action);
-  }
+  NotifyMediaSessionWhenActionIsSupported(MediaSessionAction::Seekbackward);
 }
 
 void PlaybackController::SeekForward() {
-  const MediaSessionAction action = MediaSessionAction::Seekforward;
-  if (RefPtr<MediaSession> session = GetMediaSession();
-      session && session->IsSupportedAction(action)) {
-    session->NotifyHandler(action);
-  }
+  NotifyMediaSessionWhenActionIsSupported(MediaSessionAction::Seekforward);
 }
 
 void PlaybackController::PreviousTrack() {
-  if (RefPtr<MediaSession> session = GetMediaSession()) {
-    session->NotifyHandler(MediaSessionAction::Previoustrack);
-  }
+  NotifyMediaSessionWhenActionIsSupported(MediaSessionAction::Previoustrack);
 }
 
 void PlaybackController::NextTrack() {
-  if (RefPtr<MediaSession> session = GetMediaSession()) {
-    session->NotifyHandler(MediaSessionAction::Nexttrack);
-  }
+  NotifyMediaSessionWhenActionIsSupported(MediaSessionAction::Nexttrack);
 }
 
 void PlaybackController::SkipAd() {
@@ -110,18 +114,10 @@ void PlaybackController::SkipAd() {
 
 void PlaybackController::Stop() {
   const MediaSessionAction action = MediaSessionAction::Stop;
-  RefPtr<MediaSession> session = GetMediaSession();
-  if (!session || !session->IsSupportedAction(action)) {
-    // Our default behavior is to stop all media elements within same browsing
-    // context tree.
-    LOG("Handle 'stop' in default behavior");
-    RefPtr<ContentControlKeyEventReceiver> receiver =
-        ContentControlKeyEventReceiver::Get(mBC);
-    if (receiver) {
-      receiver->HandleEvent(MediaControlKeysEvent::eStop);
-    }
+  if (IsMediaSessionActionSupported(action)) {
+    NotifyMediaSession(action);
   } else {
-    session->NotifyHandler(action);
+    NotifyContentControlKeyEventReceiver(MediaControlKeysEvent::eStop);
   }
 }
 
