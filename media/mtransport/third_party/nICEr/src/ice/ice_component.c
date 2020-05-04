@@ -235,6 +235,11 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
       if(r=nr_ice_socket_create(ctx,component,sock,NR_ICE_SOCKET_TYPE_DGRAM,&isock))
         ABORT(r);
 
+      /* Make sure we don't leak this. Failures might result in it being
+       * unused, but we hand off references to this in enough places below
+       * that unwinding it all becomes impractical. */
+      STAILQ_INSERT_TAIL(&component->sockets,isock,entry);
+
       if (!(ctx->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY)) {
         /* Create one host candidate */
         if(r=nr_ice_candidate_create(ctx,component,isock,sock,HOST,0,0,
@@ -338,8 +343,6 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
       /* Create a STUN server context for this socket */
       if ((r=nr_ice_component_create_stun_server_ctx(component,isock,sock,&addrs[i].addr,lufrag,pwd)))
         ABORT(r);
-
-      STAILQ_INSERT_TAIL(&component->sockets,isock,entry);
     }
 
     _status = 0;
@@ -600,6 +603,11 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         if((r=nr_ice_socket_create(ctx, component, buffered_sock, NR_ICE_SOCKET_TYPE_STREAM_TURN, &turn_isock)))
           ABORT(r);
 
+      /* Make sure we don't leak this. Failures might result in it being
+       * unused, but we hand off references to this in enough places below
+       * that unwinding it all becomes impractical. */
+        STAILQ_INSERT_TAIL(&component->sockets,turn_isock,entry);
+
         /* Attach ourselves to it */
         if(r=nr_ice_candidate_create(ctx,component,
           turn_isock,turn_sock,RELAYED,TCP_TYPE_NONE,
@@ -615,7 +623,6 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         if ((r=nr_ice_component_create_stun_server_ctx(component,turn_isock,local_sock,&addr,lufrag,pwd)))
           ABORT(r);
 
-        STAILQ_INSERT_TAIL(&component->sockets,turn_isock,entry);
       }
 #endif /* USE_TURN */
     }
