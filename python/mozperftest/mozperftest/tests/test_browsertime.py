@@ -27,7 +27,7 @@ def fetch(self, url):
     new=lambda x, y: None,
 )
 def test_browser(*mocked):
-    mach_cmd, metadata, env = get_running_env()
+    mach_cmd, metadata, env = get_running_env(browsertime_geckodriver="GECKODRIVER")
     browser = env.layers[BROWSER]
     env.set_arg("tests", [EXAMPLE_TEST])
 
@@ -40,6 +40,8 @@ def test_browser(*mocked):
     assert mach_cmd.run_process.call_count == 1
     # XXX more checks
     assert mach_cmd.run_process.call_args[0][-1][-1] == EXAMPLE_TEST
+    cmd = " ".join(mach_cmd.run_process.call_args[0][0])
+    assert "--firefox.geckodriverPath GECKODRIVER" in cmd
 
 
 def test_add_options():
