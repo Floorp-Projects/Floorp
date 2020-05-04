@@ -393,7 +393,8 @@ void CheckTransformedWritePixels(
 ///////////////////////////////////////////////////////////////////////////////
 
 ImageTestCase GreenPNGTestCase() {
-  return ImageTestCase("green.png", "image/png", IntSize(100, 100));
+  return ImageTestCase("green.png", "image/png", IntSize(100, 100),
+                       TEST_CASE_ASSUME_SRGB_OUTPUT);
 }
 
 ImageTestCase GreenGIFTestCase() {
@@ -402,7 +403,7 @@ ImageTestCase GreenGIFTestCase() {
 
 ImageTestCase GreenJPGTestCase() {
   return ImageTestCase("green.jpg", "image/jpeg", IntSize(100, 100),
-                       TEST_CASE_IS_FUZZY);
+                       TEST_CASE_IS_FUZZY | TEST_CASE_ASSUME_SRGB_OUTPUT);
 }
 
 ImageTestCase GreenBMPTestCase() {
@@ -422,7 +423,8 @@ ImageTestCase GreenIconTestCase() {
 }
 
 ImageTestCase GreenWebPTestCase() {
-  return ImageTestCase("green.webp", "image/webp", IntSize(100, 100));
+  return ImageTestCase("green.webp", "image/webp", IntSize(100, 100),
+                       TEST_CASE_ASSUME_SRGB_OUTPUT);
 }
 
 // Forcing sRGB is required until nsAVIFDecoder supports ICC profiles
@@ -453,12 +455,14 @@ ImageTestCase GreenFirstFrameAnimatedGIFTestCase() {
 
 ImageTestCase GreenFirstFrameAnimatedPNGTestCase() {
   return ImageTestCase("first-frame-green.png", "image/png", IntSize(100, 100),
-                       TEST_CASE_IS_TRANSPARENT | TEST_CASE_IS_ANIMATED);
+                       TEST_CASE_IS_TRANSPARENT | TEST_CASE_IS_ANIMATED |
+                           TEST_CASE_ASSUME_SRGB_OUTPUT);
 }
 
 ImageTestCase GreenFirstFrameAnimatedWebPTestCase() {
   return ImageTestCase("first-frame-green.webp", "image/webp",
-                       IntSize(100, 100), TEST_CASE_IS_ANIMATED);
+                       IntSize(100, 100),
+                       TEST_CASE_IS_ANIMATED | TEST_CASE_ASSUME_SRGB_OUTPUT);
 }
 
 ImageTestCase BlendAnimatedGIFTestCase() {
@@ -468,12 +472,14 @@ ImageTestCase BlendAnimatedGIFTestCase() {
 
 ImageTestCase BlendAnimatedPNGTestCase() {
   return ImageTestCase("blend.png", "image/png", IntSize(100, 100),
-                       TEST_CASE_IS_TRANSPARENT | TEST_CASE_IS_ANIMATED);
+                       TEST_CASE_IS_TRANSPARENT | TEST_CASE_IS_ANIMATED |
+                           TEST_CASE_ASSUME_SRGB_OUTPUT);
 }
 
 ImageTestCase BlendAnimatedWebPTestCase() {
   return ImageTestCase("blend.webp", "image/webp", IntSize(100, 100),
-                       TEST_CASE_IS_TRANSPARENT | TEST_CASE_IS_ANIMATED);
+                       TEST_CASE_IS_TRANSPARENT | TEST_CASE_IS_ANIMATED |
+                           TEST_CASE_ASSUME_SRGB_OUTPUT);
 }
 
 ImageTestCase CorruptTestCase() {
@@ -642,7 +648,8 @@ ImageTestCase LargeICOWithPNGTestCase() {
 
 ImageTestCase GreenMultipleSizesICOTestCase() {
   return ImageTestCase("green-multiple-sizes.ico", "image/x-icon",
-                       IntSize(256, 256));
+                       IntSize(256, 256))
+      .WithSurfaceFlags(SurfaceFlags::TO_SRGB_COLORSPACE);
 }
 
 ImageTestCase PerfGrayJPGTestCase() {

@@ -289,8 +289,7 @@ void nsWebPDecoder::ApplyColorProfile(const char* aProfile, size_t aLength) {
   MOZ_ASSERT(!mGotColorProfile);
   mGotColorProfile = true;
 
-  if (mCMSMode == eCMSMode_Off || !GetCMSOutputProfile() ||
-      (mCMSMode == eCMSMode_TaggedOnly && !aProfile)) {
+  if (mCMSMode == eCMSMode_Off || !GetCMSOutputProfile() || !aProfile) {
     return;
   }
 
