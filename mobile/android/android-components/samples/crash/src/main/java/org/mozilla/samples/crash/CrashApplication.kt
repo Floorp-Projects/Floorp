@@ -14,6 +14,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
+import mozilla.components.lib.crash.Breadcrumb
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
@@ -70,7 +71,7 @@ private fun createDummyCrashService(context: Context): CrashReporterService {
             return null
         }
 
-        override fun report(throwable: Throwable): String? {
+        override fun report(throwable: Throwable, breadcrumbs: ArrayList<Breadcrumb>): String? {
             GlobalScope.launch(Dispatchers.Main) {
                 Toast.makeText(context, "Uploading caught exception...", Toast.LENGTH_SHORT).show()
             }

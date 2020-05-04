@@ -311,7 +311,7 @@ class CrashReporterTest {
 
             override fun report(crash: Crash.NativeCodeCrash): String? = null
 
-            override fun report(throwable: Throwable): String? = null
+            override fun report(throwable: Throwable, breadcrumbs: ArrayList<Breadcrumb>): String? = null
         }
 
         val reporter = spy(CrashReporter(
@@ -337,7 +337,7 @@ class CrashReporterTest {
                 return null
             }
 
-            override fun report(throwable: Throwable): String? = null
+            override fun report(throwable: Throwable, breadcrumbs: ArrayList<Breadcrumb>): String? = null
         }
 
         val reporter = spy(CrashReporter(
@@ -353,15 +353,23 @@ class CrashReporterTest {
 
     @Test
     fun `CrashReporter forwards caught exception crashes to service`() {
+        val testMessage = "test_Message"
+        val testData = hashMapOf("1" to "one", "2" to "two")
+        val testCategory = "testing_category"
+        val testLevel = Breadcrumb.Level.CRITICAL
+        val testType = Breadcrumb.Type.USER
         var exceptionCrash = false
-
+        var exceptionThrowable: Throwable? = null
+        var exceptionBreadcrumb: ArrayList<Breadcrumb>? = null
         val service = object : CrashReporterService {
             override fun report(crash: Crash.UncaughtExceptionCrash): String? = null
 
             override fun report(crash: Crash.NativeCodeCrash): String? = null
 
-            override fun report(throwable: Throwable): String? {
+            override fun report(throwable: Throwable, breadcrumbs: ArrayList<Breadcrumb>): String? {
                 exceptionCrash = true
+                exceptionThrowable = throwable
+                exceptionBreadcrumb = breadcrumbs
                 return null
             }
         }
@@ -371,11 +379,15 @@ class CrashReporterTest {
             shouldPrompt = CrashReporter.Prompt.NEVER
         ).install(testContext))
 
-        reporter.submitCaughtException(
-            RuntimeException()
-        ).joinBlocking()
+        val throwable = RuntimeException()
+        val breadcrumb = Breadcrumb(testMessage, testData, testCategory, testLevel, testType)
+        reporter.recordCrashBreadcrumb(breadcrumb)
+
+        reporter.submitCaughtException(throwable).joinBlocking()
 
         assertTrue(exceptionCrash)
+        assert(exceptionThrowable == throwable)
+        assert(exceptionBreadcrumb?.get(0) == breadcrumb)
     }
 
     @Test

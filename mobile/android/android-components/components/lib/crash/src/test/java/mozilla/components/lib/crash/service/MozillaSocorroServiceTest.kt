@@ -7,6 +7,7 @@ package mozilla.components.lib.crash.service
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.io.Resources.getResource
 import mozilla.components.Build
+import mozilla.components.lib.crash.Breadcrumb
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.test.any
 import mozilla.components.support.test.robolectric.testContext
@@ -66,11 +67,11 @@ class MozillaSocorroServiceTest {
                 "Test App"
         ))
         doReturn("").`when`(service).sendReport(any(), any(), any(), anyBoolean(), anyBoolean())
-
         val throwable = RuntimeException("Test")
-        service.report(throwable)
+        val breadcrumbs: ArrayList<Breadcrumb> = arrayListOf()
+        service.report(throwable, breadcrumbs)
 
-        verify(service).report(throwable)
+        verify(service).report(throwable, breadcrumbs)
         verify(service).sendReport(throwable, null, null, false, false)
     }
 
@@ -242,7 +243,8 @@ class MozillaSocorroServiceTest {
             )
 
             val throwable = RuntimeException("Test")
-            service.report(throwable)
+            val breadcrumbs: ArrayList<Breadcrumb> = arrayListOf()
+            service.report(throwable, breadcrumbs)
 
             val fileInputStream =
                 ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
@@ -260,7 +262,6 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
             assert(request.contains("name=CrashType\r\n\r\n$CAUGHT_EXCEPTION_TYPE"))
 
-            verify(service).report(throwable)
             verify(service).sendReport(throwable, null, null, false, false)
         } finally {
             mockWebServer.shutdown()
@@ -292,7 +293,8 @@ class MozillaSocorroServiceTest {
             )
 
             val throwable = RuntimeException("Test")
-            service.report(throwable)
+            val breadcrumbs: ArrayList<Breadcrumb> = arrayListOf()
+            service.report(throwable, breadcrumbs)
 
             val fileInputStream =
                 ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
@@ -316,7 +318,7 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
             assert(request.contains("name=CrashType\r\n\r\n$CAUGHT_EXCEPTION_TYPE"))
 
-            verify(service).report(throwable)
+            verify(service).report(throwable, breadcrumbs)
             verify(service).sendReport(throwable, null, null, false, false)
         } finally {
             mockWebServer.shutdown()
@@ -347,7 +349,8 @@ class MozillaSocorroServiceTest {
             )
 
             val throwable = RuntimeException("Test")
-            service.report(throwable)
+            val breadcrumbs: ArrayList<Breadcrumb> = arrayListOf()
+            service.report(throwable, breadcrumbs)
 
             val fileInputStream =
                 ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
@@ -361,7 +364,7 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=ProductID\r\n\r\n{1234-1234-1234}"))
             assert(request.contains("name=Version\r\n\r\nN/A"))
 
-            verify(service).report(throwable)
+            verify(service).report(throwable, breadcrumbs)
             verify(service).sendReport(throwable, null, null, false, false)
         } finally {
             mockWebServer.shutdown()
@@ -393,8 +396,9 @@ class MozillaSocorroServiceTest {
             )
 
             val throwable = RuntimeException("Test")
+            val breadcrumbs: ArrayList<Breadcrumb> = arrayListOf()
             throwable.stackTrace = emptyArray()
-            service.report(throwable)
+            service.report(throwable, breadcrumbs)
 
             val fileInputStream =
                 ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
@@ -418,7 +422,7 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
             assert(request.contains("name=CrashType\r\n\r\n$CAUGHT_EXCEPTION_TYPE"))
 
-            verify(service).report(throwable)
+            verify(service).report(throwable, breadcrumbs)
             verify(service).sendReport(throwable, null, null, false, false)
         } finally {
             mockWebServer.shutdown()
@@ -619,8 +623,9 @@ class MozillaSocorroServiceTest {
             )
 
             val throwable = RuntimeException("Test")
+            val breadcrumbs: ArrayList<Breadcrumb> = arrayListOf()
             throwable.stackTrace = emptyArray()
-            service.report(throwable)
+            service.report(throwable, breadcrumbs)
 
             val fileInputStream =
                 ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
@@ -637,7 +642,7 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=Version\r\n\r\n0.0.1"))
             assert(request.contains("name=ReleaseChannel\r\n\r\ntest channel"))
 
-            verify(service).report(throwable)
+            verify(service).report(throwable, breadcrumbs)
             verify(service).sendReport(throwable, null, null, false, false)
         } finally {
             mockWebServer.shutdown()
@@ -671,7 +676,8 @@ class MozillaSocorroServiceTest {
 
             val throwable = RuntimeException("Test")
             throwable.stackTrace = emptyArray()
-            service.report(throwable)
+            val breadcrumbs: ArrayList<Breadcrumb> = arrayListOf()
+            service.report(throwable, breadcrumbs)
 
             val fileInputStream =
                 ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
@@ -688,7 +694,7 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=Version\r\n\r\n0.0.1"))
             assert(request.contains("name=ReleaseChannel\r\n\r\ntest channel"))
 
-            verify(service).report(throwable)
+            verify(service).report(throwable, breadcrumbs)
             verify(service).sendReport(throwable, null, null, false, false)
         } finally {
             mockWebServer.shutdown()
@@ -719,7 +725,8 @@ class MozillaSocorroServiceTest {
             )
 
             val throwable = RuntimeException("Test")
-            val id = service.report(throwable)
+            val breadcrumbs: ArrayList<Breadcrumb> = arrayListOf()
+            val id = service.report(throwable, breadcrumbs)
 
             assertEquals("bp-924121d3-4de3-4b32-ab12-026fc0190928", id)
         } finally {

@@ -10,6 +10,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
+import mozilla.components.lib.crash.Breadcrumb
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.test.any
@@ -67,7 +68,7 @@ class SendCrashReportServiceTest {
                         return null
                     }
 
-                    override fun report(throwable: Throwable): String? {
+                    override fun report(throwable: Throwable, breadcrumbs: ArrayList<Breadcrumb>): String? {
                         fail("Didn't expect caught exception")
                         return null
                     }

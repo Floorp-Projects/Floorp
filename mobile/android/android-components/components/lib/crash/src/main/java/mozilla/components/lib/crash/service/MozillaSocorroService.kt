@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.VisibleForTesting
+import mozilla.components.lib.crash.Breadcrumb
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONException
@@ -113,7 +114,7 @@ class MozillaSocorroService(
         )
     }
 
-    override fun report(throwable: Throwable): String? {
+    override fun report(throwable: Throwable, breadcrumbs: ArrayList<Breadcrumb>): String? {
         return sendReport(
             throwable,
             miniDumpFilePath = null,
