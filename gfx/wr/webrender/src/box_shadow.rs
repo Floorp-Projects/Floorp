@@ -5,11 +5,11 @@
 use api::{BorderRadius, BoxShadowClipMode, ClipMode, ColorF, PrimitiveKeyKind};
 use api::PropertyBinding;
 use api::units::*;
-use crate::clip::{ClipItemKey, ClipItemKeyKind};
+use crate::clip::{ClipItemKey, ClipItemKeyKind, ClipChainId};
 use crate::scene_building::SceneBuilder;
+use crate::spatial_tree::SpatialNodeIndex;
 use crate::gpu_cache::GpuCacheHandle;
 use crate::gpu_types::BoxShadowStretchMode;
-use crate::prim_store::ScrollNodeAndClipChain;
 use crate::render_task_cache::RenderTaskCacheEntryHandle;
 use crate::util::RectHelpers;
 use crate::internal_types::LayoutPrimitiveInfo;
@@ -75,7 +75,8 @@ pub struct BoxShadowCacheKey {
 impl<'a> SceneBuilder<'a> {
     pub fn add_box_shadow(
         &mut self,
-        clip_and_scroll: ScrollNodeAndClipChain,
+        spatial_node_index: SpatialNodeIndex,
+        clip_chain_id: ClipChainId,
         prim_info: &LayoutPrimitiveInfo,
         box_offset: &LayoutVector2D,
         color: ColorF,
@@ -107,7 +108,7 @@ impl<'a> SceneBuilder<'a> {
                 .rect
                 .translate(*box_offset)
                 .inflate(spread_amount, spread_amount),
-            clip_and_scroll.spatial_node_index,
+            spatial_node_index,
         );
 
         // If blur radius is zero, we can use a fast path with
@@ -132,7 +133,7 @@ impl<'a> SceneBuilder<'a> {
                             border_radius,
                             ClipMode::ClipOut,
                         ),
-                        spatial_node_index: clip_and_scroll.spatial_node_index,
+                        spatial_node_index,
                     });
 
                     (shadow_rect, shadow_radius)
@@ -145,7 +146,7 @@ impl<'a> SceneBuilder<'a> {
                                 shadow_radius,
                                 ClipMode::ClipOut,
                             ),
-                            spatial_node_index: clip_and_scroll.spatial_node_index,
+                            spatial_node_index,
                         });
                     }
 
@@ -159,11 +160,12 @@ impl<'a> SceneBuilder<'a> {
                     clip_radius,
                     ClipMode::Clip,
                 ),
-                spatial_node_index: clip_and_scroll.spatial_node_index,
+                spatial_node_index,
             });
 
             self.add_primitive(
-                clip_and_scroll,
+                spatial_node_index,
+                clip_chain_id,
                 &LayoutPrimitiveInfo::with_clip_rect(final_prim_rect, prim_info.clip_rect),
                 clips,
                 PrimitiveKeyKind::Rectangle {
@@ -183,7 +185,7 @@ impl<'a> SceneBuilder<'a> {
                     border_radius,
                     prim_clip_mode,
                 ),
-                spatial_node_index: clip_and_scroll.spatial_node_index,
+                spatial_node_index,
             });
 
             // Get the local rect of where the shadow will be drawn,
@@ -205,7 +207,7 @@ impl<'a> SceneBuilder<'a> {
                     blur_radius,
                     clip_mode,
                 ),
-                spatial_node_index: clip_and_scroll.spatial_node_index,
+                spatial_node_index,
             };
 
             let prim_info = match clip_mode {
@@ -245,7 +247,8 @@ impl<'a> SceneBuilder<'a> {
             };
 
             self.add_primitive(
-                clip_and_scroll,
+                spatial_node_index,
+                clip_chain_id,
                 &prim_info,
                 extra_clips,
                 prim,

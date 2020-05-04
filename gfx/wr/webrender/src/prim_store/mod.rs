@@ -85,24 +85,6 @@ pub fn register_prim_chase_id(_: PrimitiveDebugId) {
 const MIN_BRUSH_SPLIT_AREA: f32 = 128.0 * 128.0;
 pub const VECS_PER_SEGMENT: usize = 2;
 
-#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq)]
-pub struct ScrollNodeAndClipChain {
-    pub spatial_node_index: SpatialNodeIndex,
-    pub clip_chain_id: ClipChainId,
-}
-
-impl ScrollNodeAndClipChain {
-    pub fn new(
-        spatial_node_index: SpatialNodeIndex,
-        clip_chain_id: ClipChainId
-    ) -> Self {
-        ScrollNodeAndClipChain {
-            spatial_node_index,
-            clip_chain_id,
-        }
-    }
-}
-
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, Copy, Clone, MallocSizeOf)]
