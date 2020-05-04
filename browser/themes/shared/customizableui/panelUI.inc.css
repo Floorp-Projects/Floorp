@@ -2195,6 +2195,25 @@ panelview[mainview] #PanelUI-whatsNew-content {
   opacity: 0.75;
 }
 
+#PanelUI-profiler-content-recording {
+  padding-block: 28px;
+  padding-inline: 16px;
+  font-size: 16px;
+}
+
+.PanelUI-profiler-recording-icon {
+  width: 42px;
+  list-style-image: url(chrome://devtools/skin/images/tool-profiler.svg);
+  -moz-context-properties: fill;
+  fill: var(--toolbar-color);
+  opacity: 0.3;
+}
+
+.PanelUI-profiler-recording-label {
+  margin-block: 9px;
+  margin-inline: 13px;
+}
+
 .PanelUI-profiler-button {
   -moz-appearance: none;
   background-color: #e0e0e1;
