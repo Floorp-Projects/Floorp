@@ -1553,7 +1553,7 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
   int32_t p2a = AppUnitsPerCSSPixel() / gfxPlatformGtk::GetFontScaleFactor();
   if (popupFrame) {
 #ifdef MOZ_WAYLAND
-    anchorRect = LayoutDeviceIntRect::FromAppUnitsToNearest(
+    anchorRect = LayoutDeviceIntRect::FromAppUnitsToOutside(
         popupFrame->GetAnchorRect(), p2a);
 #endif
   }
