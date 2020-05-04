@@ -69,7 +69,7 @@ class TargetList {
       if (!browser.browsingContext) {
         return;
       }
-      const target = this.getById(browser.browsingContext.id);
+      const target = this.getByBrowsingContext(browser.browsingContext.id);
       if (target) {
         this.destroyTarget(target);
       }
@@ -128,10 +128,32 @@ class TargetList {
   /**
    * Get Target instance by target id
    *
-   * @param int id Target id
+   * @param {string} id
+   *     Target id
+   *
+   * @return {Target}
    */
   getById(id) {
     return this._targets.get(id);
+  }
+
+  /**
+   * Get Target instance by browsing context id
+   *
+   * @param {number} id
+   *     browsing context id
+   *
+   * @return {Target}
+   */
+  getByBrowsingContext(id) {
+    let rv;
+    for (const target of this._targets.values()) {
+      if (target.browsingContext && target.browsingContext.id === id) {
+        rv = target;
+        break;
+      }
+    }
+    return rv;
   }
 
   /**

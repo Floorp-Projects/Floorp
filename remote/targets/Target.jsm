@@ -16,6 +16,10 @@ const { WebSocketHandshake } = ChromeUtils.import(
   "chrome://remote/content/server/WebSocketHandshake.jsm"
 );
 
+const UUIDGen = Cc["@mozilla.org/uuid-generator;1"].getService(
+  Ci.nsIUUIDGenerator
+);
+
 /**
  * Base class for all the Targets.
  */
@@ -37,6 +41,9 @@ class Target {
 
     // There can be more than one connection if multiple clients connect to the remote agent.
     this.connections = new Set();
+    this.id = UUIDGen.generateUUID()
+      .toString()
+      .slice(1, -1);
   }
 
   /**

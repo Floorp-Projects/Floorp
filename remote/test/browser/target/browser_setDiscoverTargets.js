@@ -27,7 +27,13 @@ add_task(
 );
 
 add_task(async function pageTargets({ client, tab }) {
-  const { Target } = client;
+  const { Target, target } = client;
+  is(
+    target.browsingContextId,
+    tab.linkedBrowser.browsingContext.id,
+    "Current target has expected browsing context id"
+  );
+  const currentTargetId = target.id;
   const url = toDataURL("pageTargets");
   await loadURL(url);
 
@@ -53,7 +59,7 @@ add_task(async function pageTargets({ client, tab }) {
 
   // Get the current target
   const filtered_targets = targets.filter(target => {
-    return target.targetInfo.targetId == tab.linkedBrowser.browsingContext.id;
+    return target.targetInfo.targetId == currentTargetId;
   });
   is(filtered_targets.length, 1, "The current target has been found");
   const { targetInfo } = filtered_targets[0];
