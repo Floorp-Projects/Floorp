@@ -204,7 +204,6 @@
   skin/classic/browser/pin-12.svg                     (../shared/icons/pin-12.svg)
   skin/classic/browser/pin-tab.svg                    (../shared/icons/pin-tab.svg)
   skin/classic/browser/pocket.svg                     (../shared/icons/pocket.svg)
-  skin/classic/browser/pocket-animation.svg           (../shared/icons/pocket-animation.svg)
   skin/classic/browser/pocket-outline.svg             (../shared/icons/pocket-outline.svg)
   skin/classic/browser/print.svg                      (../shared/icons/print.svg)
   skin/classic/browser/private-browsing.svg           (../shared/icons/private-browsing.svg)
@@ -292,4 +291,4 @@
   skin/classic/browser/privatebrowsing/private-browsing.svg    (../shared/privatebrowsing/private-browsing.svg)
   skin/classic/browser/install-ssb.svg                         (../shared/install-ssb.svg)
   skin/classic/browser/critical.svg                            (../shared/icons/critical.svg)
-  
+

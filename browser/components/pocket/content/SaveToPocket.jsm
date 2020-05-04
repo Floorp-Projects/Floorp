@@ -46,7 +46,7 @@ var PocketPageAction = {
           title: "pocket-title",
           pinnedToUrlbar: true,
           wantsIframe: true,
-          urlbarIDOverride: "pocket-button-box",
+          urlbarIDOverride: "pocket-button",
           anchorIDOverride: "pocket-button",
           _insertBeforeActionID: PageActions.ACTION_ID_PIN_TAB,
           _urlbarNodeInMarkup: true,
@@ -58,7 +58,7 @@ var PocketPageAction = {
             Pocket.onShownInPhotonPageActionPanel(panel, iframe);
 
             let doc = panel.ownerDocument;
-            let urlbarNode = doc.getElementById("pocket-button-box");
+            let urlbarNode = doc.getElementById("pocket-button");
             if (!urlbarNode) {
               return;
             }
@@ -67,11 +67,6 @@ var PocketPageAction = {
 
             PocketPageAction.urlbarNode = urlbarNode;
             PocketPageAction.urlbarNode.setAttribute("open", "true");
-            if (
-              Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")
-            ) {
-              PocketPageAction.urlbarNode.setAttribute("animate", "true");
-            }
 
             let browser = panel.ownerGlobal.gBrowser.selectedBrowser;
             PocketPageAction.pocketedBrowser = browser;
@@ -156,8 +151,8 @@ var PocketPageAction = {
 
     for (let win of browserWindows()) {
       let doc = win.document;
-      let pocketButtonBox = doc.getElementById("pocket-button-box");
-      pocketButtonBox.setAttribute("hidden", "true");
+      let pocketButton = doc.getElementById("pocket-button");
+      pocketButton.setAttribute("hidden", "true");
     }
 
     this.pageAction.remove();
