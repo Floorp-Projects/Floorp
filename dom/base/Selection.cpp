@@ -844,19 +844,19 @@ static bool MaybeDispatchSelectstartEvent(
 }
 
 // static
-bool Selection::IsUserSelectionNotCollapsed(
+bool Selection::IsUserSelectionCollapsed(
     const nsRange& aRange, nsTArray<RefPtr<nsRange>>& aTempRangesToAdd) {
   MOZ_ASSERT(aTempRangesToAdd.IsEmpty());
 
   RefPtr<nsRange> scratchRange = aRange.CloneRange();
   UserSelectRangesToAdd(scratchRange, aTempRangesToAdd);
-  const bool userSelectionNotCollapsed =
-      aTempRangesToAdd.Length() > 1 ||
-      (aTempRangesToAdd.Length() == 1 && !aTempRangesToAdd[0]->Collapsed());
+  const bool userSelectionCollapsed =
+      (aTempRangesToAdd.Length() == 0) ||
+      ((aTempRangesToAdd.Length() == 1) && aTempRangesToAdd[0]->Collapsed());
 
   aTempRangesToAdd.ClearAndRetainStorage();
 
-  return userSelectionNotCollapsed;
+  return userSelectionCollapsed;
 }
 
 nsresult Selection::AddRangesForUserSelectableNodes(
@@ -892,11 +892,10 @@ nsresult Selection::AddRangesForUserSelectableNodes(
     // the selectstart event could have caused the world to change, and
     // required ranges to be re-generated
 
-    const bool userSelectionNotCollapsed =
-        IsUserSelectionNotCollapsed(*aRange, rangesToAdd);
-    MOZ_ASSERT(!userSelectionNotCollapsed ||
-               nsContentUtils::IsSafeToRunScript());
-    if (userSelectionNotCollapsed && nsContentUtils::IsSafeToRunScript()) {
+    const bool userSelectionCollapsed =
+        IsUserSelectionCollapsed(*aRange, rangesToAdd);
+    MOZ_ASSERT(userSelectionCollapsed || nsContentUtils::IsSafeToRunScript());
+    if (!userSelectionCollapsed && nsContentUtils::IsSafeToRunScript()) {
       // The spec currently doesn't say that we should dispatch this event
       // on text controls, so for now we only support doing that under a
       // pref, disabled by default.

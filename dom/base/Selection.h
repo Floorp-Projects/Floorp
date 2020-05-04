@@ -154,7 +154,7 @@ class Selection final : public nsSupportsWeakReference,
                  ScrollAxis aHorizontal = ScrollAxis(), int32_t aFlags = 0);
 
  private:
-  static bool IsUserSelectionNotCollapsed(
+  static bool IsUserSelectionCollapsed(
       const nsRange& aRange, nsTArray<RefPtr<nsRange>>& aTempRangesToAdd);
   /**
    * https://w3c.github.io/selection-api/#selectstart-event.
