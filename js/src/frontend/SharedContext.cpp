@@ -324,7 +324,7 @@ void FunctionBox::finish() {
   if (!emitBytecode) {
     // Apply updates from FunctionEmitter::emitLazy().
     function()->setEnclosingScope(enclosingScope_.getExistingScope());
-    function()->baseScript()->setTreatAsRunOnce(treatAsRunOnce());
+    function()->baseScript()->initTreatAsRunOnce(treatAsRunOnce());
 
     if (fieldInitializers) {
       function()->baseScript()->setFieldInitializers(*fieldInitializers);
