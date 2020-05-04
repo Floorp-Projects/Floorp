@@ -15,4 +15,9 @@ interface CrashReporting {
      * Submit a caught exception report to all registered services.
      */
     fun submitCaughtException(throwable: Throwable): Job
+
+    /**
+     * Add a crash breadcrumb to all registered services with breadcrumb support.
+     */
+    fun recordCrashBreadcrumb(breadcrumb: Breadcrumb)
 }

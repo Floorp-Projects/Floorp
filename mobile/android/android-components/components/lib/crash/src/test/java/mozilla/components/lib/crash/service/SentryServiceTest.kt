@@ -11,8 +11,8 @@ import io.sentry.context.Context
 import io.sentry.dsn.Dsn
 import io.sentry.event.EventBuilder
 import mozilla.components.lib.crash.Crash
-import mozilla.components.lib.crash.Breadcrumb
 import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.support.base.crash.Breadcrumb
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.ext.isLazyInitialized

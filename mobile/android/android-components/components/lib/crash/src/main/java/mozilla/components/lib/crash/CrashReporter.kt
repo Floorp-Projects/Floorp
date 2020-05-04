@@ -22,6 +22,7 @@ import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.lib.crash.service.CrashTelemetryService
 import mozilla.components.lib.crash.service.SendCrashReportService
 import mozilla.components.lib.crash.service.SendCrashTelemetryService
+import mozilla.components.support.base.crash.Breadcrumb
 import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.base.log.logger.Logger
 
@@ -144,7 +145,7 @@ class CrashReporter(
      *   )
      * ```
      */
-    fun recordCrashBreadcrumb(breadcrumb: Breadcrumb) {
+    override fun recordCrashBreadcrumb(breadcrumb: Breadcrumb) {
         crashBreadcrumbs.add(breadcrumb)
     }
 
