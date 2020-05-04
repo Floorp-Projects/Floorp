@@ -11,6 +11,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/UniquePtr.h"
 #include "webrtc/media/base/videoadapter.h"
+#include "call/video_config.h"
 
 namespace mozilla {
 
