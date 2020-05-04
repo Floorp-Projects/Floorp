@@ -4908,7 +4908,8 @@ void profiler_add_network_marker(
     mozilla::TimeStamp aStart, mozilla::TimeStamp aEnd, int64_t aCount,
     mozilla::net::CacheDisposition aCacheDisposition, uint64_t aInnerWindowID,
     const mozilla::net::TimingStruct* aTimings, nsIURI* aRedirectURI,
-    UniqueProfilerBacktrace aSource) {
+    UniqueProfilerBacktrace aSource,
+    const Maybe<nsDependentCString>& aContentType) {
   if (!profiler_can_accept_markers()) {
     return;
   }
@@ -4932,7 +4933,7 @@ void profiler_add_network_marker(
                            PromiseFlatCString(spec).get(), aType, aStart, aEnd,
                            aPriority, aCount, aCacheDisposition, aInnerWindowID,
                            aTimings, PromiseFlatCString(redirect_spec).get(),
-                           std::move(aSource)));
+                           std::move(aSource), aContentType));
 }
 
 void profiler_add_marker_for_thread(int aThreadId,

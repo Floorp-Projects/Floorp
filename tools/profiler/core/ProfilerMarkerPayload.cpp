@@ -568,7 +568,7 @@ NetworkMarkerPayload::TagAndSerializationBytes() const {
   return CommonPropsTagAndSerializationBytes() +
          ProfileBufferEntryWriter::SumBytes(mID, mURI, mRedirectURI, mType,
                                             mPri, mCount, mTimings,
-                                            mCacheDisposition);
+                                            mCacheDisposition, mContentType);
 }
 
 void NetworkMarkerPayload::SerializeTagAndPayload(
@@ -583,6 +583,7 @@ void NetworkMarkerPayload::SerializeTagAndPayload(
   aEntryWriter.WriteObject(mCount);
   aEntryWriter.WriteObject(mTimings);
   aEntryWriter.WriteObject(mCacheDisposition);
+  aEntryWriter.WriteObject(mContentType);
 }
 
 // static
@@ -598,9 +599,10 @@ UniquePtr<ProfilerMarkerPayload> NetworkMarkerPayload::Deserialize(
   auto count = aEntryReader.ReadObject<int64_t>();
   auto timings = aEntryReader.ReadObject<net::TimingStruct>();
   auto cacheDisposition = aEntryReader.ReadObject<net::CacheDisposition>();
+  auto contentType = aEntryReader.ReadObject<Maybe<nsAutoCString>>();
   return UniquePtr<ProfilerMarkerPayload>(new NetworkMarkerPayload(
       std::move(props), id, std::move(uri), std::move(redirectURI), type, pri,
-      count, timings, cacheDisposition));
+      count, timings, cacheDisposition, std::move(contentType)));
 }
 
 static const char* GetNetworkState(NetworkLoadType aType) {
@@ -656,6 +658,13 @@ void NetworkMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   if (mRedirectURI) {
     aWriter.StringProperty("RedirectURI", mRedirectURI.get());
   }
+
+  if (mContentType.isSome()) {
+    aWriter.StringProperty("contentType", mContentType.value().get());
+  } else {
+    aWriter.NullProperty("contentType");
+  }
+
   if (mType != NetworkLoadType::LOAD_START) {
     WriteTime(aWriter, aProcessStartTime, mTimings.domainLookupStart,
               "domainLookupStart");

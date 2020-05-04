@@ -65,7 +65,7 @@ class nsHttpResponseHead {
   uint16_t Status() const;
   void StatusText(nsACString& aStatusText);
   int64_t ContentLength();
-  void ContentType(nsACString& aContentType);
+  void ContentType(nsACString& aContentType) const;
   void ContentCharset(nsACString& aContentCharset);
   bool Public();
   bool Private();
