@@ -2823,14 +2823,5 @@ bool WarpBuilder::buildCacheIR(BytecodeLocation loc,
     return false;
   }
 
-  TranspilerOutput output;
-  if (!TranspileCacheIRToMIR(mirGen_, current, snapshot, inputs_, output)) {
-    return false;
-  }
-
-  if (output.result) {
-    current->push(output.result);
-  }
-
-  return true;
+  return TranspileCacheIRToMIR(mirGen_, current, snapshot, inputs_);
 }
