@@ -50,7 +50,12 @@ class MOZ_STACK_CLASS PlaybackController {
   void SeekTo();
 
  private:
-  MediaSession* GetMediaSession();
+  void NotifyContentControlKeyEventReceiver(MediaControlKeysEvent aEvent);
+  void NotifyMediaSession(MediaSessionAction aAction);
+  void NotifyMediaSessionWhenActionIsSupported(MediaSessionAction aAction);
+  bool IsMediaSessionActionSupported(MediaSessionAction aAction) const;
+  MediaSession* GetMediaSession() const;
+
   RefPtr<BrowsingContext> mBC;
 };
 
