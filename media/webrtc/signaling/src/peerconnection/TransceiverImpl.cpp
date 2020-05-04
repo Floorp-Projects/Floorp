@@ -26,8 +26,11 @@
 #include "mozilla/dom/TransceiverImplBinding.h"
 #include "RTCRtpReceiver.h"
 #include "RTCDTMFSender.h"
+#include "WebrtcGmpVideoCodec.h"
 
 namespace mozilla {
+
+using namespace dom;
 
 MOZ_MTLOG_MODULE("transceiverimpl")
 

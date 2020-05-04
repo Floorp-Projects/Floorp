@@ -5,6 +5,7 @@
 #include "RTCRtpReceiver.h"
 #include "logging.h"
 #include "mozilla/dom/MediaStreamTrack.h"
+#include "mozilla/dom/Promise.h"
 #include "MediaPipeline.h"
 #include "nsPIDOMWindow.h"
 #include "PrincipalHandle.h"
@@ -18,10 +19,12 @@
 #include "mozilla/dom/VideoStreamTrack.h"
 #include "MediaTransportHandler.h"
 #include "signaling/src/jsep/JsepTransceiver.h"
+#include "mozilla/dom/RTCRtpReceiverBinding.h"
 #include "mozilla/dom/RTCRtpSourcesBinding.h"
 #include "RTCStatsReport.h"
 #include "mozilla/Preferences.h"
 #include "TransceiverImpl.h"
+#include "AudioConduit.h"
 
 namespace mozilla {
 
