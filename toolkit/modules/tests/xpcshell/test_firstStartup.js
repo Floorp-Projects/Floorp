@@ -6,11 +6,15 @@ const { AppConstants } = ChromeUtils.import(
 const { FirstStartup } = ChromeUtils.import(
   "resource://gre/modules/FirstStartup.jsm"
 );
+const { updateAppInfo } = ChromeUtils.import(
+  "resource://testing-common/AppInfo.jsm"
+);
 
 const PREF_TIMEOUT = "first-startup.timeout";
 const PROBE_NAME = "firstStartup.statusCode";
 
 add_task(async function test_success() {
+  updateAppInfo();
   FirstStartup.init();
   if (AppConstants.MOZ_NORMANDY) {
     equal(FirstStartup.state, FirstStartup.SUCCESS);
@@ -30,6 +34,7 @@ add_task(async function test_success() {
 });
 
 add_task(async function test_timeout() {
+  updateAppInfo();
   Services.prefs.setIntPref(PREF_TIMEOUT, 0);
   FirstStartup.init();
 
