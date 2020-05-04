@@ -413,6 +413,13 @@
   margin-inline-end: 1ex;
 }
 
+/* Hide the headers panel toolbar buttons in the console */
+.message.network .headers-panel-container #block-button,
+.message.network .headers-panel-container #edit-resend-button,
+.message.network .headers-panel-container .devtools-separator {
+  display: none;
+}
+
 /* JSTerm Styles */
 html #webconsole-notificationbox {
   flex: 0;
