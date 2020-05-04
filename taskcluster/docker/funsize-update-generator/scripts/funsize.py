@@ -51,13 +51,13 @@ BCJ_OPTIONS = {
 }
 
 
-def verify_signature(mar, certs):
+def verify_signature(mar, cert):
     log.info("Checking %s signature", mar)
     with open(mar, "rb") as mar_fh:
         m = MarReader(mar_fh)
-        if not m.verify(verify_key=certs.get(m.signature_type)):
+        if not m.verify(verify_key=cert):
             raise ValueError(
-                "MAR Signature invalid: %s against %s", mar, certs.get(m.signature_type)
+                "MAR Signature invalid: %s (%s) against %s", mar, m.signature_type, cert
             )
 
 
@@ -65,10 +65,7 @@ def process_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--artifacts-dir", required=True)
     parser.add_argument(
-        "--sha1-signing-cert", type=argparse.FileType("rb"), required=True
-    )
-    parser.add_argument(
-        "--sha384-signing-cert", type=argparse.FileType("rb"), required=True
+        "--signing-cert", type=argparse.FileType("rb"), required=True
     )
     parser.add_argument("--task-definition", required=True, type=argparse.FileType("r"))
     parser.add_argument(
@@ -234,7 +231,7 @@ def extract_download_urls(partials_config, mar_type):
 
 
 async def download_and_verify_mars(
-    partials_config, allowed_url_prefixes, signing_certs
+    partials_config, allowed_url_prefixes, signing_cert
 ):
     """Download, check signature, channel ID and unpack MAR files."""
     # Separate these categories so we can opt to perform checks on only 'to' downloads.
@@ -257,7 +254,7 @@ async def download_and_verify_mars(
         if not os.getenv("MOZ_DISABLE_MAR_CERT_VERIFICATION") and not url.startswith(
             QUEUE_PREFIX
         ):
-            verify_signature(downloads[url]["download_path"], signing_certs)
+            verify_signature(downloads[url]["download_path"], signing_cert)
 
         # Only validate the target channel ID, as we update from beta->release
         if url in to_urls:
@@ -393,7 +390,7 @@ async def manage_partial(
     return mar_data
 
 
-async def async_main(args, signing_certs):
+async def async_main(args, signing_cert):
     tasks = []
 
     allowed_url_prefixes = list(ALLOWED_URL_PREFIXES)
@@ -403,7 +400,7 @@ async def async_main(args, signing_certs):
     task = json.load(args.task_definition)
 
     downloads = await download_and_verify_mars(
-        task["extra"]["funsize"]["partials"], allowed_url_prefixes, signing_certs
+        task["extra"]["funsize"]["partials"], allowed_url_prefixes, signing_cert
     )
 
     tools_dir = Path(tempfile.mkdtemp())
@@ -449,20 +446,15 @@ def main():
     logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s")
     log.setLevel(args.log_level)
 
-    signing_certs = {
-        "sha1": args.sha1_signing_cert.read(),
-        "sha384": args.sha384_signing_cert.read(),
-    }
-
-    assert get_keysize(signing_certs["sha1"]) == 2048
-    assert get_keysize(signing_certs["sha384"]) == 4096
+    signing_cert = args.signing_cert.read()
+    assert get_keysize(signing_cert) == 4096
 
     artifacts_dir = Path(args.artifacts_dir)
     if not artifacts_dir.exists():
         artifacts_dir.mkdir()
 
     loop = asyncio.get_event_loop()
-    manifest = loop.run_until_complete(async_main(args, signing_certs))
+    manifest = loop.run_until_complete(async_main(args, signing_cert))
     loop.close()
 
     manifest_file = artifacts_dir / "manifest.json"
