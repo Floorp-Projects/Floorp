@@ -9,8 +9,7 @@ in the `#introduction <https://chat.mozilla.org/#/room/#introduction:mozilla.org
 Clone the sources
 -----------------
 
-You can use either mercurial or git. Mercurial is the canonical version control
-system.
+You can use either mercurial or git. `Mercurial <https://www.mercurial-scm.org/downloads>`__ is the canonical version control system.
 
 .. code-block:: shell
 
