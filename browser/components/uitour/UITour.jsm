@@ -169,7 +169,7 @@ var UITour = {
         query: aDocument => {
           // The pocket's urlbar page action button is pre-defined in the DOM.
           // It would be hidden if toggled off from the urlbar.
-          let node = aDocument.getElementById("pocket-button-box");
+          let node = aDocument.getElementById("pocket-button");
           if (node && !node.hidden) {
             return node;
           }

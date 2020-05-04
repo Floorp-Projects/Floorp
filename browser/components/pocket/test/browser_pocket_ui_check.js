@@ -18,8 +18,8 @@ add_task(async function() {
   await promisePocketEnabled();
 
   checkElements(true, ["pocket-button", "appMenu-library-pocket-button"]);
-  let buttonBox = document.getElementById("pocket-button-box");
-  is(buttonBox.hidden, false, "Button should not have been hidden");
+  let button = document.getElementById("pocket-button");
+  is(button.hidden, false, "Button should not have been hidden");
 
   // check context menu exists
   info("checking content context menu");
@@ -70,8 +70,8 @@ add_task(async function() {
     "context-pocket",
     "context-savelinktopocket",
   ]);
-  buttonBox = document.getElementById("pocket-button-box");
-  is(buttonBox.hidden, true, "Button should have been hidden");
+  button = document.getElementById("pocket-button");
+  is(button.hidden, true, "Button should have been hidden");
 
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
   checkElements(
@@ -83,8 +83,8 @@ add_task(async function() {
     ],
     newWin
   );
-  buttonBox = newWin.document.getElementById("pocket-button-box");
-  is(buttonBox.hidden, true, "Button should have been hidden");
+  button = newWin.document.getElementById("pocket-button");
+  is(button.hidden, true, "Button should have been hidden");
 
   await BrowserTestUtils.closeWindow(newWin);
 
