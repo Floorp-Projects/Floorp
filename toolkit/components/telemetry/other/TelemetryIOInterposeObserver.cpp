@@ -103,7 +103,7 @@ void TelemetryIOInterposeObserver::Observe(Observation& aOb) {
 bool TelemetryIOInterposeObserver::ReflectFileStats(FileIOEntryType* entry,
                                                     JSContext* cx,
                                                     JS::Handle<JSObject*> obj) {
-  JS::AutoValueArray<NUM_STAGES> stages(cx);
+  JS::RootedValueArray<NUM_STAGES> stages(cx);
 
   FileStatsByStage& statsByStage = *entry->GetModifiableData();
   for (int s = STAGE_STARTUP; s < NUM_STAGES; ++s) {
@@ -118,7 +118,7 @@ bool TelemetryIOInterposeObserver::ReflectFileStats(FileIOEntryType* entry,
     }
 
     // Array we want to report
-    JS::AutoValueArray<6> stats(cx);
+    JS::RootedValueArray<6> stats(cx);
     stats[0].setNumber(fileStats.totalTime);
     stats[1].setNumber(fileStats.creates);
     stats[2].setNumber(fileStats.reads);

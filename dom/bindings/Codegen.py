@@ -18428,7 +18428,7 @@ class CGIterableMethodGenerator(CGGeneric):
                   cx.ThrowErrorMessage<MSG_NOT_CALLABLE>("Argument 1");
                   return false;
                 }
-                JS::AutoValueArray<3> callArgs(cx);
+                JS::RootedValueArray<3> callArgs(cx);
                 callArgs[2].setObject(*obj);
                 JS::Rooted<JS::Value> ignoredReturnVal(cx);
                 auto GetKeyAtIndex = &${selfType}::GetKeyAtIndex;
