@@ -37,6 +37,7 @@ $dokka.location:mozilla.components.support.android.test.espresso$assertIsDisplay
 $dokka.location:mozilla.components.support.android.test.espresso$assertIsEnabled(androidx.test.espresso.ViewInteraction, kotlin.Boolean)mozilla.components.support.android.test.espresso/androidx.test.espresso.-view-interaction/assert-is-enabled.md
 $dokka.location:mozilla.components.support.android.test.espresso$assertIsSelected(androidx.test.espresso.ViewInteraction, kotlin.Boolean)mozilla.components.support.android.test.espresso/androidx.test.espresso.-view-interaction/assert-is-selected.md
 $dokka.location:mozilla.components.support.android.test.espresso$click(androidx.test.espresso.ViewInteraction)mozilla.components.support.android.test.espresso/androidx.test.espresso.-view-interaction/click.md
+$dokka.location:mozilla.components.support.base.ext$getStacktraceAsString(kotlin.Throwable)mozilla.components.support.base.ext/kotlin.-throwable/get-stacktrace-as-string.md
 $dokka.location:mozilla.components.support.base.ids$cancel(androidx.core.app.NotificationManagerCompat, , kotlin.String)mozilla.components.support.base.ids/androidx.core.app.-notification-manager-compat/cancel.md
 $dokka.location:mozilla.components.support.base.ids$notify(androidx.core.app.NotificationManagerCompat, , kotlin.String, )mozilla.components.support.base.ids/androidx.core.app.-notification-manager-compat/notify.md
 $dokka.location:mozilla.components.support.ktx.android.arch.lifecycle$addObservers(androidx.lifecycle.Lifecycle, kotlin.Array((androidx.lifecycle.LifecycleObserver)))mozilla.components.support.ktx.android.arch.lifecycle/androidx.lifecycle.-lifecycle/add-observers.md
@@ -279,6 +280,7 @@ mozilla.components.support.android.test.rules
 mozilla.components.support.base.android
 mozilla.components.support.base.coroutines
 mozilla.components.support.base.crash
+mozilla.components.support.base.ext
 mozilla.components.support.base.facts
 mozilla.components.support.base.facts.processor
 mozilla.components.support.base.feature

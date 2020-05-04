@@ -2,7 +2,7 @@
 
 # AndroidLogSink
 
-`class AndroidLogSink : `[`LogSink`](../-log-sink/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/log/sink/AndroidLogSink.kt#L20)
+`class AndroidLogSink : `[`LogSink`](../-log-sink/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/log/sink/AndroidLogSink.kt#L18)
 
 LogSink implementation that writes to Android's log.
 
