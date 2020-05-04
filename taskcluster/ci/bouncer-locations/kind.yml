@@ -46,5 +46,7 @@ jobs:
             - firefox-nightly-latest-l10n-ssl
             - firefox-nightly-msi-latest-ssl
             - firefox-nightly-msi-latest-l10n-ssl
+            - firefox-nightly-pkg-latest-ssl
+            - firefox-nightly-pkg-latest-l10n-ssl
         treeherder:
             platform: firefox-release/opt
