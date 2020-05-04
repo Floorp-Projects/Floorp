@@ -12,14 +12,14 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsDOMTokenList.h"
 
+namespace mozilla {
+namespace dom {
+
 const double DateTimeInputTypeBase::kMinimumYear = 1;
 const double DateTimeInputTypeBase::kMaximumYear = 275760;
 const double DateTimeInputTypeBase::kMaximumMonthInMaximumYear = 9;
 const double DateTimeInputTypeBase::kMaximumWeekInMaximumYear = 37;
 const double DateTimeInputTypeBase::kMsPerDay = 24 * 60 * 60 * 1000;
-
-using namespace mozilla;
-using namespace mozilla::dom;
 
 bool DateTimeInputTypeBase::IsMutable() const {
   return !mInputElement->IsDisabled() &&
@@ -501,3 +501,6 @@ bool DateTimeLocalInputType::ConvertNumberToString(
 
   return true;
 }
+
+}  // namespace dom
+}  // namespace mozilla
