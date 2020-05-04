@@ -35,7 +35,11 @@ function test_window() {
 }
 
 SimpleTest.waitForExplicitFinish();
-test_frameset();
+// Use nsICookieService.BEHAVIOR_REJECT_TRACKER to not partition BroadcastChannel
+// by extra first-party domain information.
+SpecialPowers.pushPrefEnv({
+  set: [["network.cookie.cookieBehavior", 4]],
+}, test_frameset);
 
   </script>
 </head>
