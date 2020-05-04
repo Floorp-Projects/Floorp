@@ -45,6 +45,7 @@ const isFennec =
   SpecialPowers.Cc["@mozilla.org/android/bridge;1"].getService(
     SpecialPowers.Ci.nsIAndroidBridge
   ).isFennec;
+const isCrossOriginIsolated = window.crossOriginIsolated;
 
 // IMPORTANT: Do not change this list without review from
 //            a JavaScript Engine peer!
@@ -90,6 +91,7 @@ var ecmaGlobals = [
     name: "SharedArrayBuffer",
     insecureContext: true,
     earlyBetaOrEarlier: true,
+    crossOriginIsolated: true,
   },
   { name: "String", insecureContext: true },
   { name: "Symbol", insecureContext: true },
@@ -1447,6 +1449,7 @@ function createInterfaceMap() {
           // only in secure contexts.
           (isInsecureContext && !entry.insecureContext) ||
           entry.earlyBetaOrEarlier === !isEarlyBetaOrEarlier ||
+          entry.crossOriginIsolated === !isCrossOriginIsolated ||
           entry.disabled
         ) {
           interfaceMap[entry.name] = false;
