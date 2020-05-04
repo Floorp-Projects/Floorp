@@ -11246,23 +11246,12 @@ bool nsIFrame::IsStackingContext() {
 static bool IsFrameScrolledOutOfView(const nsIFrame* aTarget,
                                      const nsRect& aTargetRect,
                                      const nsIFrame* aParent) {
-  // The ancestor frame we are checking if it clips out aTargetRect relative to
-  // aTarget.
-  nsIFrame* clipParent = nullptr;
-
-  if (aParent->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
-      nsLayoutUtils::IsReallyFixedPos(aParent)) {
-    // This will be the viewport frame containing the fixed frame.
-    clipParent = aParent->GetParent();
-  } else {
-    nsIScrollableFrame* scrollableFrame =
-        nsLayoutUtils::GetNearestScrollableFrame(
-            const_cast<nsIFrame*>(aParent),
-            nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
-    clipParent = do_QueryFrame(scrollableFrame);
-  }
-
-  if (!clipParent) {
+  nsIScrollableFrame* scrollableFrame =
+      nsLayoutUtils::GetNearestScrollableFrame(
+          const_cast<nsIFrame*>(aParent),
+          nsLayoutUtils::SCROLLABLE_FIXEDPOS_FINDS_ROOT |
+              nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
+  if (!scrollableFrame) {
     // Even if we couldn't find the nearest scrollable frame, it might mean we
     // are in an out-of-process iframe, try to see if |aTarget| frame is
     // scrolled out of view in an scrollable frame in a cross-process ancestor
@@ -11270,30 +11259,32 @@ static bool IsFrameScrolledOutOfView(const nsIFrame* aTarget,
     return nsLayoutUtils::FrameIsScrolledOutOfViewInCrossProcess(aTarget);
   }
 
-  nsRect clipRect = clipParent->GetVisualOverflowRectRelativeToSelf();
-  // We consider that the target is scrolled out if the scrollable (or root)
-  // frame is empty.
-  if (clipRect.IsEmpty()) {
+  nsIFrame* scrollableParent = do_QueryFrame(scrollableFrame);
+  nsRect scrollableRect =
+      scrollableParent->GetVisualOverflowRectRelativeToSelf();
+  // We consider that the target is scrolled out if the scrollable frame is
+  // empty.
+  if (scrollableRect.IsEmpty()) {
     return true;
   }
 
   nsRect transformedRect = nsLayoutUtils::TransformFrameRectToAncestor(
-      aTarget, aTargetRect, clipParent);
+      aTarget, aTargetRect, scrollableParent);
 
   if (transformedRect.IsEmpty()) {
     // If the transformed rect is empty it represents a line or a point that we
     // should check is outside the the scrollable rect.
-    if (transformedRect.x > clipRect.XMost() ||
-        transformedRect.y > clipRect.YMost() ||
-        clipRect.x > transformedRect.XMost() ||
-        clipRect.y > transformedRect.YMost()) {
+    if (transformedRect.x > scrollableRect.XMost() ||
+        transformedRect.y > scrollableRect.YMost() ||
+        scrollableRect.x > transformedRect.XMost() ||
+        scrollableRect.y > transformedRect.YMost()) {
       return true;
     }
-  } else if (!transformedRect.Intersects(clipRect)) {
+  } else if (!transformedRect.Intersects(scrollableRect)) {
     return true;
   }
 
-  nsIFrame* parent = clipParent->GetParent();
+  nsIFrame* parent = scrollableParent->GetParent();
   if (!parent) {
     return false;
   }
