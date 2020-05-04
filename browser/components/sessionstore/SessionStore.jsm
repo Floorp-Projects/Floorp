@@ -316,13 +316,15 @@ var SessionStore = {
     aWindow,
     aTab,
     aDelta = 0,
-    aRestoreImmediately = true
+    aRestoreImmediately = true,
+    aOptions = {}
   ) {
     return SessionStoreInternal.duplicateTab(
       aWindow,
       aTab,
       aDelta,
-      aRestoreImmediately
+      aRestoreImmediately,
+      aOptions
     );
   },
 
@@ -3089,7 +3091,8 @@ var SessionStoreInternal = {
     aWindow,
     aTab,
     aDelta = 0,
-    aRestoreImmediately = true
+    aRestoreImmediately = true,
+    { index } = {}
   ) {
     if (!aTab || !aTab.ownerGlobal) {
       throw Components.Exception("Need a valid tab", Cr.NS_ERROR_INVALID_ARG);
@@ -3112,6 +3115,7 @@ var SessionStoreInternal = {
 
     let tabOptions = {
       userContextId,
+      index,
       ...(aTab == aWindow.gBrowser.selectedTab
         ? { relatedToCurrent: true, ownerTab: aTab }
         : {}),

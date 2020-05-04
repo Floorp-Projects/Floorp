@@ -1088,12 +1088,13 @@ this.tabs = class extends ExtensionAPI {
           return tabsMoved.map(nativeTab => tabManager.convert(nativeTab));
         },
 
-        duplicate(tabId) {
+        duplicate(tabId, duplicateProperties) {
+          const { active, index } = duplicateProperties || {};
           // Schema requires tab id.
           let nativeTab = getTabOrActive(tabId);
 
           let gBrowser = nativeTab.ownerGlobal.gBrowser;
-          let newTab = gBrowser.duplicateTab(nativeTab);
+          let newTab = gBrowser.duplicateTab(nativeTab, true, { index });
 
           tabListener.blockTabUntilRestored(newTab);
 
@@ -1103,7 +1104,9 @@ this.tabs = class extends ExtensionAPI {
             newTab.addEventListener(
               "SSTabRestoring",
               function() {
-                gBrowser.selectedTab = newTab;
+                if (active !== false) {
+                  gBrowser.selectedTab = newTab;
+                }
                 resolve(tabManager.convert(newTab));
               },
               { once: true }
