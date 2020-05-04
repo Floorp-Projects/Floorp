@@ -280,31 +280,32 @@ class BrowsertimeRunner(NodeRunner):
         self.setup()
         cycles = self.get_arg("cycles", 1)
         for cycle in range(1, cycles + 1):
+            # Build an output directory
+            output = self.get_arg("output")
+            if output is not None:
+                result_dir = pathlib.Path(output, f"browsertime-results-{cycle}")
+            else:
+                result_dir = pathlib.Path(
+                    self.topsrcdir, "artifacts", f"browsertime-results-{cycle}"
+                )
+            result_dir.mkdir(parents=True, exist_ok=True)
+            result_dir = result_dir.resolve()
+
+            # Run the test cycle
             metadata.run_hook("before_cycle", cycle=cycle)
             try:
-                metadata = self._one_cycle(metadata)
+                metadata = self._one_cycle(metadata, result_dir)
             finally:
                 metadata.run_hook("after_cycle", cycle=cycle)
         return metadata
 
-    def _one_cycle(self, metadata):
+    def _one_cycle(self, metadata, result_dir):
         profile = self.get_arg("profile-directory")
         test_script = self.get_arg("tests")[0]
-        output = self.get_arg("output")
-        if output is not None:
-            p = pathlib.Path(output)
-            p = p / "browsertime-results"
-            result_dir = str(p.resolve())
-        else:
-            result_dir = os.path.join(
-                self.topsrcdir, "artifacts", "browsertime-results"
-            )
-        if not os.path.exists(result_dir):
-            os.makedirs(result_dir, exist_ok=True)
 
         args = [
             "--resultDir",
-            result_dir,
+            str(result_dir),
             "--firefox.profileTemplate",
             profile,
             "--iterations",
@@ -335,5 +336,5 @@ class BrowsertimeRunner(NodeRunner):
         command = [self.browsertime_js] + extra + args
         self.info("Running browsertime with this command %s" % " ".join(command))
         self.node(command)
-        metadata.set_result(result_dir)
+        metadata.add_result({"results": str(result_dir), "name": "browsertime"})
         return metadata

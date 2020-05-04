@@ -6,6 +6,7 @@ import os
 import statistics
 
 from mozperftest.layers import Layer
+from mozperftest.metrics.exceptions import PerfherderValidDataError
 from mozperftest.metrics.common import filtered_metrics
 from mozperftest.metrics.utils import write_json
 
@@ -49,21 +50,49 @@ class Perfherder(Layer):
         output = self.get_arg("output")
 
         # Get filtered metrics
-        results = filtered_metrics(metadata, output, prefix, self.get_arg("metrics"))
+        results, fullsettings = filtered_metrics(
+            metadata,
+            output,
+            prefix,
+            metrics=self.get_arg("metrics"),
+            settings=True
+        )
+
         if not results:
             self.warning("No results left after filtering")
             return metadata
 
-        # XXX Instead of just passing replicates here, we should build
-        # up a partial perfherder data blob (with options) and subtest
-        # overall values.
-        subtests = {
-            res["subtest"]: [v["value"] for v in res["data"]] for res in results
-        }
+        all_perfherder_data = None
+        for name, res in results.items():
+            settings = fullsettings[name]
 
-        # XXX Pass options into this function and use those instead
-        # of the defaults provided below.
-        perfherder_data = self._build_blob(subtests)
+            # XXX Instead of just passing replicates here, we should build
+            # up a partial perfherder data blob (with options) and subtest
+            # overall values.
+            subtests = {}
+            for r in res:
+                vals = [v["value"] for v in r["data"] if isinstance(v["value"], (int, float))]
+                if vals:
+                    subtests[r["subtest"]] = vals
+
+            perfherder_data = self._build_blob(
+                subtests,
+                name=name,
+                extra_options=settings.get("extraOptions"),
+                should_alert=settings.get("shouldAlert", False),
+                application=None,  # XXX No way to get application name and version
+                alert_threshold=settings.get("alertThreshold", 2.0),
+                lower_is_better=settings.get("lowerIsBetter", True),
+                unit=settings.get("unit", "ms"),
+                summary=settings.get("value")
+            )
+
+            # XXX Validate perfherder data
+
+            if all_perfherder_data is None:
+                all_perfherder_data = perfherder_data
+            else:
+                all_perfherder_data["suites"].extend(perfherder_data["suites"])
 
         file = "perfherder-data.json"
         if prefix:
@@ -72,13 +101,14 @@ class Perfherder(Layer):
 
         # XXX "suites" key error occurs when using self.info so a print
         # is being done for now.
-        print("PERFHERDER_DATA: " + json.dumps(perfherder_data))
-        metadata.set_output(write_json(perfherder_data, output, file))
+        print("PERFHERDER_DATA: " + json.dumps(all_perfherder_data))
+        metadata.set_output(write_json(all_perfherder_data, output, file))
         return metadata
 
     def _build_blob(
         self,
         subtests,
+        name="browsertime",
         test_type="pageload",
         extra_options=None,
         should_alert=False,
@@ -114,6 +144,7 @@ class Perfherder(Layer):
                 (2) The geomean of the replicates will be taken for now,
                     but it should be made more flexible in some way.
                 (3) We need some way to handle making multiple suites.
+        :param name str: Name to give to the suite.
         :param test_type str: The type of test that was run.
         :param extra_options list: A list of extra options to store.
         :param should_alert bool: Whether all values in the suite should
@@ -149,7 +180,7 @@ class Perfherder(Layer):
 
         perf_subtests = []
         suite = {
-            "name": "btime-testing",
+            "name": name,
             "type": test_type,
             "value": None,
             "unit": unit,
@@ -188,8 +219,9 @@ class Perfherder(Layer):
             )
 
         if len(allvals) == 0:
-            raise Exception(
-                "Could not build perfherder data blob because no data was provided"
+            raise PerfherderValidDataError(
+                "Could not build perfherder data blob because no valid data was provided, " +
+                "only int/float data is accepted."
             )
 
         suite["value"] = statistics.mean(allvals)
