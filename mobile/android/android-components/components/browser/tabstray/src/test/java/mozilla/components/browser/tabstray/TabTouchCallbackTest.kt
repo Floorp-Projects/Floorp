@@ -48,7 +48,7 @@ class TabTouchCallbackTest {
     @Test
     fun `onChildDraw alters alpha of ViewHolder on swipe gesture`() {
         val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
-        val holder = TabViewHolder(view, TabViewHolderTest.mockTabsTrayWithStyles())
+        val holder = DefaultTabViewHolder(view, TabViewHolderTest.mockTabsTrayWithStyles())
         val callback = TabTouchCallback(mock())
 
         holder.itemView.alpha = 0f
