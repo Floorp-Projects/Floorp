@@ -342,7 +342,7 @@ let ContentSearch = {
         name: engine.name,
         iconData,
         hidden: hiddenList.includes(engine.name),
-        identifier: engine.identifier,
+        isAppProvided: engine.isAppProvided,
       });
     }
 
@@ -528,6 +528,7 @@ let ContentSearch = {
       name: engine.name,
       placeholder,
       iconData: await this._maybeConvertURIToArrayBuffer(favicon),
+      isAppProvided: engine.isAppProvided,
     };
     return obj;
   },

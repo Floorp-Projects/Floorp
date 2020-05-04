@@ -479,7 +479,7 @@ var currentStateObj = async function(isPrivateWindowValue, hiddenEngine = "") {
       name: engine.name,
       iconData: await iconDataFromURI(uri),
       hidden: engine.name == hiddenEngine,
-      identifier: engine.identifier,
+      isAppProvided: engine.isAppProvided,
     });
   }
   if (typeof isPrivateWindowValue == "boolean") {
@@ -497,6 +497,7 @@ async function constructEngineObj(engine) {
     name: engine.name,
     placeholder: bundle.formatStringFromName("searchWithEngine", [engine.name]),
     iconData: await iconDataFromURI(uriFavicon),
+    isAppProvided: engine.isAppProvided,
   };
 }
 
