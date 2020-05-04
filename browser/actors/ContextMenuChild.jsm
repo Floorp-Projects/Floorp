@@ -629,7 +629,7 @@ class ContextMenuChild extends JSWindowActorChild {
     let referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(
       Ci.nsIReferrerInfo
     );
-    referrerInfo.initWithNode(aEvent.composedTarget);
+    referrerInfo.initWithElement(aEvent.composedTarget);
     referrerInfo = E10SUtils.serializeReferrerInfo(referrerInfo);
 
     // In the case "onLink" we may have to send link referrerInfo to use in
@@ -639,7 +639,7 @@ class ContextMenuChild extends JSWindowActorChild {
       linkReferrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(
         Ci.nsIReferrerInfo
       );
-      linkReferrerInfo.initWithNode(context.link);
+      linkReferrerInfo.initWithElement(context.link);
     }
 
     let target = context.target;

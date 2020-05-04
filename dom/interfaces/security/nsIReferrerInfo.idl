@@ -11,7 +11,7 @@
 
 interface nsIURI;
 webidl Document;
-webidl Node;
+webidl Element;
 
 native ReferrerPolicy(mozilla::dom::ReferrerPolicy);
 native URIRef(already_AddRefed<nsIURI>);
@@ -132,7 +132,7 @@ interface nsIReferrerInfo : nsISerializable
    * Initialize with a given document.
    * @param aDocument the document to init referrerInfo object
    */
-  void initWithDocument(in Document aDocument);
+  void initWithDocument([const] in Document aDocument);
 
   /**
    * Initialize with a given node. It you are working with node which supports
@@ -141,6 +141,5 @@ interface nsIReferrerInfo : nsISerializable
    * from rel and attribute has a higher priority.
    * @param aNode the element to init referrerInfo object
    */
-  void initWithNode(in Node aNode);
-
+  void initWithElement([const] in Element aNode);
 };

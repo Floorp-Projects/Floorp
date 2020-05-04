@@ -1145,22 +1145,17 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
   //
   // We use the principal of aDocument to avoid having to QI |this| an extra
   // time. It should always be the same as the principal of this node.
-#ifdef DEBUG
-  nsIContent* thisContent = AsContent();
-  MOZ_ASSERT(thisContent->NodePrincipal() == aDocument->NodePrincipal(),
+  Element* element = AsContent()->AsElement();
+  MOZ_ASSERT(element->NodePrincipal() == aDocument->NodePrincipal(),
              "Principal mismatch?");
-#endif
 
   nsLoadFlags loadFlags =
       aLoadFlags | nsContentUtils::CORSModeToLoadImageFlags(GetCORSMode());
 
   RefPtr<imgRequestProxy>& req = PrepareNextRequest(aImageLoadType);
-  nsCOMPtr<nsIContent> content =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-
   nsCOMPtr<nsIPrincipal> triggeringPrincipal;
   bool result = nsContentUtils::QueryTriggeringPrincipal(
-      content, aTriggeringPrincipal, getter_AddRefs(triggeringPrincipal));
+      element, aTriggeringPrincipal, getter_AddRefs(triggeringPrincipal));
 
   // If result is true, which means this node has specified
   // 'triggeringprincipal' attribute on it, so we use favicon as the policy
@@ -1169,14 +1164,10 @@ nsresult nsImageLoadingContent::LoadImage(nsIURI* aNewURI, bool aForce,
       result ? nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON
              : PolicyTypeForLoad(aImageLoadType);
 
-  nsCOMPtr<nsINode> thisNode =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
-  referrerInfo->InitWithNode(thisNode);
-
+  auto referrerInfo = MakeRefPtr<ReferrerInfo>(*element);
   nsresult rv = nsContentUtils::LoadImage(
-      aNewURI, thisNode, aDocument, triggeringPrincipal, 0, referrerInfo, this,
-      loadFlags, content->LocalName(), getter_AddRefs(req), policyType,
+      aNewURI, element, aDocument, triggeringPrincipal, 0, referrerInfo, this,
+      loadFlags, element->LocalName(), getter_AddRefs(req), policyType,
       mUseUrgentStartForChannel);
 
   // Reset the flag to avoid loading from XPCOM or somewhere again else without
@@ -1332,7 +1323,6 @@ void nsImageLoadingContent::UpdateImageState(bool aNotify) {
     }
   }
 
-  NS_ASSERTION(thisContent->IsElement(), "Not an element?");
   thisContent->AsElement()->UpdateState(aNotify);
 }
 
