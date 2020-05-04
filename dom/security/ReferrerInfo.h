@@ -70,23 +70,19 @@ class ReferrerInfo : public nsIReferrerInfo {
       bool aSendReferrer = true,
       const Maybe<nsCString>& aComputedReferrer = Maybe<nsCString>());
 
-  // Creates already initialized ReferrerInfo from an element or a document.
-  explicit ReferrerInfo(const Element&);
-  explicit ReferrerInfo(const Document&);
-
   // create an exact copy of the ReferrerInfo
-  already_AddRefed<ReferrerInfo> Clone() const;
+  already_AddRefed<nsIReferrerInfo> Clone() const;
 
   // create an copy of the ReferrerInfo with new referrer policy
-  already_AddRefed<ReferrerInfo> CloneWithNewPolicy(
+  already_AddRefed<nsIReferrerInfo> CloneWithNewPolicy(
       ReferrerPolicyEnum aPolicy) const;
 
   // create an copy of the ReferrerInfo with new send referrer
-  already_AddRefed<ReferrerInfo> CloneWithNewSendReferrer(
+  already_AddRefed<nsIReferrerInfo> CloneWithNewSendReferrer(
       bool aSendReferrer) const;
 
   // create an copy of the ReferrerInfo with new original referrer
-  already_AddRefed<ReferrerInfo> CloneWithNewOriginalReferrer(
+  already_AddRefed<nsIReferrerInfo> CloneWithNewOriginalReferrer(
       nsIURI* aOriginalReferrer) const;
 
   /*
@@ -316,6 +312,20 @@ class ReferrerInfo : public nsIReferrerInfo {
     ePolicySendWhenSameDomain = 1,
     ePolicySendWhenSameHost = 2,
   };
+
+  /**
+   * Check whether the given node has referrerpolicy attribute and parse
+   * referrer policy from the attribute.
+   * Currently, referrerpolicy attribute is supported in a, area, img, iframe,
+   * script, or link element.
+   */
+  void GetReferrerPolicyFromAtribute(nsINode* aNode,
+                                     ReferrerPolicyEnum& aPolicy) const;
+
+  /**
+   * Return true if node has a rel="noreferrer" attribute.
+   */
+  bool HasRelNoReferrer(nsINode* aNode) const;
 
   /*
    * Handle user controlled pref network.http.referer.XOriginPolicy

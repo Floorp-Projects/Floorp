@@ -250,7 +250,9 @@ void nsImageBoxFrame::UpdateImage() {
     nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri), src, doc,
                                               mContent->GetBaseURI());
     if (uri) {
-      auto referrerInfo = MakeRefPtr<ReferrerInfo>(*mContent->AsElement());
+      nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+      referrerInfo->InitWithNode(mContent);
+
       nsresult rv = nsContentUtils::LoadImage(
           uri, mContent, doc, triggeringPrincipal, requestContextID,
           referrerInfo, mListener, mLoadFlags, EmptyString(),

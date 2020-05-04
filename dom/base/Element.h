@@ -1616,8 +1616,8 @@ class Element : public FragmentOrElement {
 
   void GetImplementedPseudoElement(nsAString&) const;
 
-  ReferrerPolicy GetReferrerPolicyAsEnum() const;
-  ReferrerPolicy ReferrerPolicyFromAttr(const nsAttrValue* aValue) const;
+  ReferrerPolicy GetReferrerPolicyAsEnum();
+  ReferrerPolicy ReferrerPolicyFromAttr(const nsAttrValue* aValue);
 
   /*
    * Helpers for .dataset.  This is implemented on Element, though only some
