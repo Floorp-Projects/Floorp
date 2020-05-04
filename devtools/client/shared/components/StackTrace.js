@@ -47,7 +47,7 @@ class StackTrace extends Component {
   render() {
     const { stacktrace, onViewSourceInDebugger, sourceMapService } = this.props;
 
-    if (!stacktrace) {
+    if (!stacktrace || !stacktrace.length) {
       return null;
     }
 
