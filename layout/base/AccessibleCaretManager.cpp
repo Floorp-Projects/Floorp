@@ -1043,7 +1043,7 @@ nsIFrame* AccessibleCaretManager::GetFrameForFirstRangeStartOrLastRangeEnd(
   MOZ_ASSERT(GetCaretMode() == CaretMode::Selection);
   MOZ_ASSERT(aOutOffset, "aOutOffset shouldn't be nullptr!");
 
-  nsRange* range = nullptr;
+  const nsRange* range = nullptr;
   RefPtr<nsINode> startNode;
   RefPtr<nsINode> endNode;
   int32_t nodeOffset = 0;

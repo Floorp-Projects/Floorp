@@ -401,7 +401,9 @@ class NetworkMarkerPayload : public ProfilerMarkerPayload {
                        uint64_t aInnerWindowID,
                        const mozilla::net::TimingStruct* aTimings = nullptr,
                        const char* aRedirectURI = nullptr,
-                       UniqueProfilerBacktrace aSource = nullptr)
+                       UniqueProfilerBacktrace aSource = nullptr,
+                       const mozilla::Maybe<nsDependentCString>& aContentType =
+                           mozilla::Nothing())
       : ProfilerMarkerPayload(aStartTime, aEndTime,
                               mozilla::Some(aInnerWindowID),
                               std::move(aSource)),
@@ -413,7 +415,8 @@ class NetworkMarkerPayload : public ProfilerMarkerPayload {
         mType(aType),
         mPri(aPri),
         mCount(aCount),
-        mCacheDisposition(aCacheDisposition) {
+        mCacheDisposition(aCacheDisposition),
+        mContentType(aContentType) {
     if (aTimings) {
       mTimings = *aTimings;
     }
@@ -427,7 +430,8 @@ class NetworkMarkerPayload : public ProfilerMarkerPayload {
                        mozilla::UniqueFreePtr<char>&& aRedirectURI,
                        NetworkLoadType aType, int32_t aPri, int64_t aCount,
                        mozilla::net::TimingStruct aTimings,
-                       mozilla::net::CacheDisposition aCacheDisposition)
+                       mozilla::net::CacheDisposition aCacheDisposition,
+                       mozilla::Maybe<nsAutoCString>&& aContentType)
       : ProfilerMarkerPayload(std::move(aCommonProps)),
         mID(aID),
         mURI(std::move(aURI)),
@@ -436,7 +440,8 @@ class NetworkMarkerPayload : public ProfilerMarkerPayload {
         mPri(aPri),
         mCount(aCount),
         mTimings(aTimings),
-        mCacheDisposition(aCacheDisposition) {}
+        mCacheDisposition(aCacheDisposition),
+        mContentType(std::move(aContentType)) {}
 
   int64_t mID;
   mozilla::UniqueFreePtr<char> mURI;
@@ -446,6 +451,10 @@ class NetworkMarkerPayload : public ProfilerMarkerPayload {
   int64_t mCount;
   mozilla::net::TimingStruct mTimings;
   mozilla::net::CacheDisposition mCacheDisposition;
+  // Content type is usually short, so we use nsAutoCString to reduce
+  // heap usage; the bigger object size is acceptable here because
+  // markers are short-lived on-stack objects.
+  mozilla::Maybe<nsAutoCString> mContentType;
 };
 
 class ScreenshotPayload : public ProfilerMarkerPayload {

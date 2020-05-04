@@ -206,7 +206,7 @@ class nsRange final : public mozilla::dom::AbstractRange,
       const mozilla::dom::GlobalObject& global, mozilla::ErrorResult& aRv);
 
   already_AddRefed<mozilla::dom::DocumentFragment> CreateContextualFragment(
-      const nsAString& aString, ErrorResult& aError);
+      const nsAString& aString, ErrorResult& aError) const;
   already_AddRefed<mozilla::dom::DocumentFragment> CloneContents(
       ErrorResult& aErr);
   int16_t CompareBoundaryPoints(uint16_t aHow, nsRange& aOther,

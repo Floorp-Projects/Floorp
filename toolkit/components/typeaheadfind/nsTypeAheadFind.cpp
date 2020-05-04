@@ -776,7 +776,7 @@ nsresult nsTypeAheadFind::GetSearchContainers(
 
   // Consider current selection as null if
   // it's not in the currently focused document
-  RefPtr<nsRange> currentSelectionRange;
+  RefPtr<const nsRange> currentSelectionRange;
   RefPtr<PresShell> selectionPresShell = GetPresShell();
   if (aSelectionController && selectionPresShell &&
       selectionPresShell == presShell) {
@@ -1058,7 +1058,7 @@ nsresult nsTypeAheadFind::FindInternal(uint32_t aMode,
 
       mStartFindRange = nullptr;
       if (selection) {
-        RefPtr<nsRange> startFindRange = selection->GetRangeAt(0);
+        RefPtr<const nsRange> startFindRange = selection->GetRangeAt(0);
         if (startFindRange) {
           mStartFindRange = startFindRange->CloneRange();
         }

@@ -709,7 +709,7 @@ static bool IsInsideRuby(nsINode* aNode) {
 static bool IsSelectionInsideRuby(Selection* aSelection) {
   uint32_t rangeCount = aSelection->RangeCount();
   for (auto i : IntegerRange(rangeCount)) {
-    nsRange* range = aSelection->GetRangeAt(i);
+    const nsRange* range = aSelection->GetRangeAt(i);
     if (!IsInsideRuby(range->GetClosestCommonInclusiveAncestor())) {
       return false;
     }
@@ -771,7 +771,7 @@ bool nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
 
   // Retrieve the event target node from the start of the selection.
   if (sel) {
-    nsRange* range = sel->GetRangeAt(0);
+    const nsRange* range = sel->GetRangeAt(0);
     if (range) {
       targetElement = GetElementOrNearestFlattenedTreeParentElement(
           range->GetStartContainer());

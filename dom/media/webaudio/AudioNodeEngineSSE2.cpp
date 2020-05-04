@@ -310,4 +310,54 @@ float AudioBufferSumOfSquares_SSE(const float* aInput, uint32_t aLength) {
   return out[0] + out[1] + out[2] + out[3];
 }
 
+void NaNToZeroInPlace_SSE(float* aSamples, size_t aCount) {
+  __m128 vin0, vin1, vin2, vin3;
+  __m128 vmask0, vmask1, vmask2, vmask3;
+  __m128 vout0, vout1, vout2, vout3;
+
+  float* samplesAligned16 = ALIGNED16(aSamples);
+  size_t leadingElementsScalar =
+      std::min(static_cast<size_t>(samplesAligned16 - aSamples), aCount);
+  size_t remainingElements = aCount - leadingElementsScalar;
+  size_t vectoredEnd = aCount - remainingElements % 16;
+
+  MOZ_ASSERT(!((vectoredEnd - leadingElementsScalar) % 16));
+
+  size_t i = 0;
+  for (; i < leadingElementsScalar; i++) {
+    if (aSamples[i] != aSamples[i]) {
+      aSamples[i] = 0.0;
+    }
+  }
+
+  ASSERT_ALIGNED16(&aSamples[i]);
+
+  for (; i < vectoredEnd; i += 16) {
+    vin0 = _mm_load_ps(&aSamples[i + 0]);
+    vin1 = _mm_load_ps(&aSamples[i + 4]);
+    vin2 = _mm_load_ps(&aSamples[i + 8]);
+    vin3 = _mm_load_ps(&aSamples[i + 12]);
+
+    vmask0 = _mm_cmpord_ps(vin0, vin0);
+    vmask1 = _mm_cmpord_ps(vin1, vin1);
+    vmask2 = _mm_cmpord_ps(vin2, vin2);
+    vmask3 = _mm_cmpord_ps(vin3, vin3);
+
+    vout0 = _mm_and_ps(vin0, vmask0);
+    vout1 = _mm_and_ps(vin1, vmask1);
+    vout2 = _mm_and_ps(vin2, vmask2);
+    vout3 = _mm_and_ps(vin3, vmask3);
+
+    _mm_store_ps(&aSamples[i + 0], vout0);
+    _mm_store_ps(&aSamples[i + 4], vout1);
+    _mm_store_ps(&aSamples[i + 8], vout2);
+    _mm_store_ps(&aSamples[i + 12], vout3);
+  }
+  for (; i < aCount; i++) {
+    if (aSamples[i] != aSamples[i]) {
+      aSamples[i] = 0.0;
+    }
+  }
+}
+
 }  // namespace mozilla

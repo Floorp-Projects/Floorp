@@ -2488,7 +2488,7 @@ void nsRange::ToString(nsAString& aReturn, ErrorResult& aErr) {
 void nsRange::Detach() {}
 
 already_AddRefed<DocumentFragment> nsRange::CreateContextualFragment(
-    const nsAString& aFragment, ErrorResult& aRv) {
+    const nsAString& aFragment, ErrorResult& aRv) const {
   if (!mIsPositioned) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;

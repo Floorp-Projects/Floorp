@@ -2224,15 +2224,6 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
       // in a fresh global object when shared memory objects aren't allowed
       // (because COOP/COEP support isn't enabled, or because COOP/COEP don't
       // act to isolate this page to a separate process).
-      //
-      // We set this value to |true| to replicate pre-existing behavior.  In the
-      // future, bug 1624266 will assign the correct COOP/COEP-respecting value
-      // here.  When that change is made, corresponding code for workers in
-      // WorkerPrivate.cpp must also be updated.  (Ideally both paint and audio
-      // worklets -- bug 1630876 and bug 1630877 -- would be fixed at the same
-      // time, but fixing them has lower priorit because they're not shipping
-      // yet.)
-      bool aDefineSharedArrayBufferConstructor = true;
 
       // Every script context we are initialized with must create a
       // new global.
@@ -2240,7 +2231,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
           cx, newInnerWindow, aDocument->GetDocumentURI(),
           aDocument->NodePrincipal(), &newInnerGlobal,
           ComputeIsSecureContext(aDocument),
-          aDefineSharedArrayBufferConstructor);
+          newInnerWindow->IsSharedMemoryAllowed());
       NS_ASSERTION(
           NS_SUCCEEDED(rv) && newInnerGlobal &&
               newInnerWindow->GetWrapperPreserveColor() == newInnerGlobal,

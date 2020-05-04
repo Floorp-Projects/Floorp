@@ -10,6 +10,17 @@ const URL =
   "?" +
   RAND;
 
+const HAS_FIRST_PARTY_DOMAIN = [
+  Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+].includes(Services.prefs.getIntPref("network.cookie.cookieBehavior"));
+const OUTER_ORIGIN = "http://mochi.test:8888";
+const INNER_ORIGIN = HAS_FIRST_PARTY_DOMAIN
+  ? "http://example.com^firstPartyDomain=mochi.test"
+  : "http://example.com";
+const SECURE_INNER_ORIGIN = HAS_FIRST_PARTY_DOMAIN
+  ? "https://example.com^firstPartyDomain=mochi.test"
+  : "https://example.com";
+
 const OUTER_VALUE = "outer-value-" + RAND;
 const INNER_VALUE = "inner-value-" + RAND;
 
@@ -27,12 +38,12 @@ add_task(async function session_storage() {
 
   let { storage } = JSON.parse(ss.getTabState(tab));
   is(
-    storage["http://example.com"].test,
+    storage[INNER_ORIGIN].test,
     INNER_VALUE,
     "sessionStorage data for example.com has been serialized correctly"
   );
   is(
-    storage["http://mochi.test:8888"].test,
+    storage[OUTER_ORIGIN].test,
     OUTER_VALUE,
     "sessionStorage data for mochi.test has been serialized correctly"
   );
@@ -43,12 +54,12 @@ add_task(async function session_storage() {
 
   ({ storage } = JSON.parse(ss.getTabState(tab)));
   is(
-    storage["http://example.com"].test,
+    storage[INNER_ORIGIN].test,
     "modified1",
     "sessionStorage data for example.com has been serialized correctly"
   );
   is(
-    storage["http://mochi.test:8888"].test,
+    storage[OUTER_ORIGIN].test,
     OUTER_VALUE,
     "sessionStorage data for mochi.test has been serialized correctly"
   );
@@ -60,12 +71,12 @@ add_task(async function session_storage() {
 
   ({ storage } = JSON.parse(ss.getTabState(tab)));
   is(
-    storage["http://example.com"].test,
+    storage[INNER_ORIGIN].test,
     "modified2",
     "sessionStorage data for example.com has been serialized correctly"
   );
   is(
-    storage["http://mochi.test:8888"].test,
+    storage[OUTER_ORIGIN].test,
     "modified",
     "sessionStorage data for mochi.test has been serialized correctly"
   );
@@ -79,13 +90,14 @@ add_task(async function session_storage() {
   await TabStateFlusher.flush(browser2);
 
   ({ storage } = JSON.parse(ss.getTabState(tab2)));
-  is(
-    storage["http://example.com"].test,
+  // TODO: bug 1634734
+  todo_is(
+    storage[INNER_ORIGIN].test,
     "modified2",
     "sessionStorage data for example.com has been duplicated correctly"
   );
   is(
-    storage["http://mochi.test:8888"].test,
+    storage[OUTER_ORIGIN].test,
     "modified",
     "sessionStorage data for mochi.test has been duplicated correctly"
   );
@@ -96,13 +108,14 @@ add_task(async function session_storage() {
   await TabStateFlusher.flush(browser2);
 
   ({ storage } = JSON.parse(ss.getTabState(tab2)));
-  is(
-    storage["http://example.com"].test,
+  // TODO: bug 1634734
+  todo_is(
+    storage[INNER_ORIGIN].test,
     "modified2",
     "sessionStorage data for example.com has been duplicated correctly"
   );
   is(
-    storage["http://mochi.test:8888"].test,
+    storage[OUTER_ORIGIN].test,
     "modified3",
     "sessionStorage data for mochi.test has been duplicated correctly"
   );
@@ -114,11 +127,11 @@ add_task(async function session_storage() {
 
   ({ storage } = JSON.parse(ss.getTabState(tab2)));
   is(
-    storage["http://mochi.test:8888"].test,
+    storage[OUTER_ORIGIN].test,
     "modified3",
     "navigating retains correct storage data"
   );
-  ok(!storage["http://example.com"], "storage data was discarded");
+  ok(!storage[INNER_ORIGIN], "storage data was discarded");
 
   // Check that loading a new URL discards data.
   BrowserTestUtils.loadURI(browser2, "about:mozilla");
@@ -134,7 +147,7 @@ add_task(async function session_storage() {
   await TabStateFlusher.flush(browser);
   ({ storage } = JSON.parse(ss.getTabState(tab)));
   is(
-    storage["http://example.com"],
+    storage[INNER_ORIGIN],
     undefined,
     "sessionStorage data for example.com has been cleared correctly"
   );
@@ -172,11 +185,11 @@ add_task(async function purge_domain() {
 
   let { storage } = JSON.parse(ss.getTabState(tab));
   ok(
-    !storage["http://mochi.test:8888"],
+    !storage[OUTER_ORIGIN],
     "sessionStorage data for mochi.test has been purged"
   );
   is(
-    storage["http://example.com"].test,
+    storage[INNER_ORIGIN].test,
     INNER_VALUE,
     "sessionStorage data for example.com has been preserved"
   );
@@ -199,12 +212,12 @@ add_task(async function respect_privacy_level() {
     },
   ] = JSON.parse(ss.getClosedTabData(window));
   is(
-    storage["http://mochi.test:8888"].test,
+    storage[OUTER_ORIGIN].test,
     OUTER_VALUE,
     "http sessionStorage data has been saved"
   );
   is(
-    storage["https://example.com"].test,
+    storage[SECURE_INNER_ORIGIN].test,
     INNER_VALUE,
     "https sessionStorage data has been saved"
   );
@@ -222,12 +235,12 @@ add_task(async function respect_privacy_level() {
     },
   ] = JSON.parse(ss.getClosedTabData(window));
   is(
-    storage["http://mochi.test:8888"].test,
+    storage[OUTER_ORIGIN].test,
     OUTER_VALUE,
     "http sessionStorage data has been saved"
   );
   ok(
-    !storage["https://example.com"],
+    !storage[SECURE_INNER_ORIGIN],
     "https sessionStorage data has *not* been saved"
   );
 
@@ -267,12 +280,12 @@ add_task(async function respect_privacy_level() {
     },
   ] = JSON.parse(ss.getClosedTabData(window));
   is(
-    storage["http://mochi.test:8888"].test,
+    storage[OUTER_ORIGIN].test,
     OUTER_VALUE,
     "http sessionStorage data has been saved"
   );
   is(
-    storage["https://example.com"].test,
+    storage[SECURE_INNER_ORIGIN].test,
     INNER_VALUE,
     "https sessionStorage data has been saved"
   );
