@@ -89,6 +89,12 @@ nsresult ThirdPartyUtil::IsThirdPartyInternal(const nsCString& aFirstDomain,
     return NS_ERROR_INVALID_ARG;
   }
 
+  // BlobURLs are always first-party.
+  if (aSecondURI->SchemeIs("blob")) {
+    *aResult = false;
+    return NS_OK;
+  }
+
   // Get the base domain for aSecondURI.
   nsAutoCString secondDomain;
   nsresult rv = GetBaseDomain(aSecondURI, secondDomain);
