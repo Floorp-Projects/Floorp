@@ -42,6 +42,8 @@ fuzzy-if(Android&&webrender,0-128,0-10) == flexbox-empty-2d.html flexbox-empty-2
 
 # Tests for how we fragment flex items in a single-line column flex container.
 == flexbox-single-column-1a.html flexbox-single-column-1-ref.html
+== flexbox-single-column-1b.html flexbox-single-column-1-ref.html
 
 # Tests for how we fragment flex items in a single-line row flex container.
 == flexbox-single-row-1a.html flexbox-single-row-1-ref.html
+== flexbox-single-row-1b.html flexbox-single-row-1-ref.html
