@@ -107,7 +107,7 @@
   position: relative;
   height: 100%;
   width: 100%;
-  overflow: auto;
+  overflow: hidden;
   flex: 1;
 }
 
@@ -270,6 +270,32 @@
 
 /* Headers tabpanel */
 
+.network-monitor .headers-panel-container {
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.network-monitor .headers-panel-container .panel-container {
+  position: absolute;
+  top: calc(var(--theme-toolbar-height) + 1px);
+  bottom: 0;
+  right: 0;
+  left: 0;
+  height: auto;
+}
+
+.network-monitor .headers-panel-container .devtools-button {
+  padding: 2px;
+}
+.network-monitor .headers-panel-container .devtools-dropdown-button {
+  padding: 0;
+}
+
+.network-monitor .headers-panel-container .devtools-button:not(:hover) {
+  background-color: transparent;
+}
+
 .network-monitor .headers-overview {
   background: var(--theme-toolbar-background);
   border-bottom: 1px solid var(--theme-splitter-color);
@@ -279,18 +305,6 @@
 .network-monitor .response-summary {
   display: flex;
   align-items: center;
-}
-
-.theme-light .network-monitor .edit-and-resend-button {
-  background-color: var(--grey-20);
-}
-
-.network-monitor .edit-and-resend-button {
-  align-self: flex-end;
-  height: 24px;
-  padding-inline: 8px;
-  width: auto;
-  border: 1px solid var(--theme-splitter-color);
 }
 
 .network-monitor .raw-headers-toggle {
