@@ -11,14 +11,17 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.gfx += [
+  'gfxConfigManager.h',
   'gfxVarReceiver.h',
   'gfxVars.h',
 ]
 
 UNIFIED_SOURCES += [
   'gfxConfig.cpp',
+  'gfxConfigManager.cpp',
   'gfxFeature.cpp',
   'gfxVars.cpp',
+  'WebRenderRollout.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
