@@ -229,7 +229,6 @@ TouchSimulator.prototype = {
           this.contextMenuTimeout = this.sendContextMenu(evt);
         }
 
-        this.cancelClick = false;
         this.startX = evt.pageX;
         this.startY = evt.pageY;
 
@@ -245,16 +244,6 @@ TouchSimulator.prototype = {
           // Don't propagate mousemove event when touchstart event isn't fired
           evt.stopPropagation();
           return;
-        }
-
-        if (!this.cancelClick) {
-          if (
-            Math.abs(this.startX - evt.pageX) > threshold ||
-            Math.abs(this.startY - evt.pageY) > threshold
-          ) {
-            this.cancelClick = true;
-            content.clearTimeout(this.contextMenuTimeout);
-          }
         }
 
         type = "touchmove";
@@ -273,36 +262,12 @@ TouchSimulator.prototype = {
         // catching only real user click. (Especially ignore click
         // being dispatched on form submit)
         if (evt.detail == 1) {
-          this.simulatorTarget.addEventListener("click", this, true, false);
+          this.simulatorTarget.addEventListener("click", this, {
+            capture: true,
+            once: true,
+          });
         }
         break;
-
-      case "click":
-        // Mouse events has been cancelled so dispatch a sequence
-        // of events to where touchend has been fired
-        evt.preventDefault();
-        evt.stopImmediatePropagation();
-
-        this.simulatorTarget.removeEventListener("click", this, true, false);
-
-        if (this.cancelClick) {
-          return;
-        }
-
-        content.setTimeout(
-          function dispatchMouseEvents(self) {
-            try {
-              self.fireMouseEvent("mousedown", evt);
-              self.fireMouseEvent("mousemove", evt);
-              self.fireMouseEvent("mouseup", evt);
-            } catch (e) {
-              console.error("Exception in touch event helper: " + e);
-            }
-          },
-          this.getDelayBeforeMouseEvent(evt),
-          this
-        );
-        return;
     }
 
     const target = eventTarget || this.target;
@@ -321,22 +286,6 @@ TouchSimulator.prototype = {
     }
   },
 
-  fireMouseEvent(type, evt) {
-    const content = this.getContent(evt.target);
-    const utils = content.windowUtils;
-    utils.sendMouseEvent(
-      type,
-      evt.clientX,
-      evt.clientY,
-      0,
-      1,
-      0,
-      true,
-      0,
-      evt.MOZ_SOURCE_TOUCH
-    );
-  },
-
   sendContextMenu({ target, clientX, clientY, screenX, screenY }) {
     const view = target.ownerGlobal;
     const { MouseEvent } = view;
@@ -352,7 +301,6 @@ TouchSimulator.prototype = {
     const content = this.getContent(target);
     const timeout = content.setTimeout(() => {
       target.dispatchEvent(evt);
-      this.cancelClick = true;
     }, clickHoldDelay);
 
     return timeout;
