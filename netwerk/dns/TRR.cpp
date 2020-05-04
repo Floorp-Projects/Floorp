@@ -117,7 +117,7 @@ nsresult TRR::DohEncode(nsCString& aBody, bool aDisableECS) {
     offset += labelLength + 1;  // move over label and dot
   } while (true);
 
-  aBody += '\0';  // upper 8 bit TYPE
+  aBody += static_cast<uint8_t>(mType >> 8);  // upper 8 bit TYPE
   aBody += static_cast<uint8_t>(mType);
   aBody += '\0';           // upper 8 bit CLASS
   aBody += kDNS_CLASS_IN;  // IN - "the Internet"
@@ -235,7 +235,8 @@ nsresult TRR::SendHTTPRequest() {
   // This is essentially the "run" method - created from nsHostResolver
 
   if ((mType != TRRTYPE_A) && (mType != TRRTYPE_AAAA) &&
-      (mType != TRRTYPE_NS) && (mType != TRRTYPE_TXT)) {
+      (mType != TRRTYPE_NS) && (mType != TRRTYPE_TXT) &&
+      (mType != TRRTYPE_HTTPSSVC)) {
     // limit the calling interface because nsHostResolver has explicit slots for
     // these types
     return NS_ERROR_FAILURE;
@@ -255,10 +256,10 @@ nsresult TRR::SendHTTPRequest() {
       }
       // not really an error but no TRR is issued
       return NS_ERROR_UNKNOWN_HOST;
-    } else {
-      if (UseDefaultServer() && (mType == TRRTYPE_A)) {
-        Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED, false);
-      }
+    }
+
+    if (UseDefaultServer() && (mType == TRRTYPE_A)) {
+      Telemetry::Accumulate(Telemetry::DNS_TRR_BLACKLISTED, false);
     }
   }
 
@@ -576,7 +577,7 @@ nsresult TRR::ReceivePush(nsIHttpChannel* pushed, nsHostRecord* pushedRec) {
   }
 
   if ((mType != TRRTYPE_A) && (mType != TRRTYPE_AAAA) &&
-      (mType != TRRTYPE_TXT)) {
+      (mType != TRRTYPE_TXT) && (mType != TRRTYPE_HTTPSSVC)) {
     LOG(("TRR::ReceivePush unknown type %d\n", mType));
     return NS_ERROR_UNEXPECTED;
   }
@@ -585,13 +586,18 @@ nsresult TRR::ReceivePush(nsIHttpChannel* pushed, nsHostRecord* pushedRec) {
     return NS_ERROR_FAILURE;
   }
 
+  uint32_t type = nsIDNSService::RESOLVE_TYPE_DEFAULT;
+  if (mType == TRRTYPE_TXT) {
+    type = nsIDNSService::RESOLVE_TYPE_TXT;
+  } else if (mType == TRRTYPE_HTTPSSVC) {
+    type = nsIDNSService::RESOLVE_TYPE_HTTPSSVC;
+  }
+
   RefPtr<nsHostRecord> hostRecord;
   nsresult rv;
   rv = mHostResolver->GetHostRecord(
-      mHost, EmptyCString(),
-      (mType != TRRTYPE_TXT) ? 0 : nsIDNSService::RESOLVE_TYPE_TXT,
-      pushedRec->flags, pushedRec->af, pushedRec->pb, pushedRec->originSuffix,
-      getter_AddRefs(hostRecord));
+      mHost, EmptyCString(), type, pushedRec->flags, pushedRec->af,
+      pushedRec->pb, pushedRec->originSuffix, getter_AddRefs(hostRecord));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -641,11 +647,11 @@ TRR::OnStartRequest(nsIRequest* aRequest) {
   return NS_OK;
 }
 
-static uint16_t get16bit(unsigned char* aData, int index) {
+static uint16_t get16bit(const unsigned char* aData, unsigned int index) {
   return ((aData[index] << 8) | aData[index + 1]);
 }
 
-static uint32_t get32bit(unsigned char* aData, int index) {
+static uint32_t get32bit(const unsigned char* aData, unsigned int index) {
   return (aData[index] << 24) | (aData[index + 1] << 16) |
          (aData[index + 2] << 8) | aData[index + 3];
 }
@@ -683,14 +689,14 @@ nsresult TRR::PassQName(unsigned int& index) {
 // GetQname: retrieves the qname (stores in 'aQname') and stores the index
 // after qname was parsed into the 'aIndex'.
 
-nsresult TRR::GetQname(nsAutoCString& aQname, unsigned int& aIndex) {
+nsresult TRR::GetQname(nsACString& aQname, unsigned int& aIndex) {
   uint8_t clength = 0;
   unsigned int cindex = aIndex;
   unsigned int loop = 128;    // a valid DNS name can never loop this much
   unsigned int endindex = 0;  // index position after this data
   do {
     if (cindex >= mBodySize) {
-      LOG(("TRR: bad cname packet\n"));
+      LOG(("TRR: bad Qname packet\n"));
       return NS_ERROR_ILLEGAL_VALUE;
     }
     clength = static_cast<uint8_t>(mResponse[cindex]);
@@ -707,13 +713,15 @@ nsresult TRR::GetQname(nsAutoCString& aQname, unsigned int& aIndex) {
       }
       cindex = newpos;
       continue;
-    } else if (clength & 0xc0) {
-      // any of those bits set individually is an error
-      LOG(("TRR: bad cname packet\n"));
-      return NS_ERROR_ILLEGAL_VALUE;
-    } else {
-      cindex++;
     }
+    if (clength & 0xc0) {
+      // any of those bits set individually is an error
+      LOG(("TRR: bad Qname packet\n"));
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+
+    cindex++;
+
     if (clength) {
       if (!aQname.IsEmpty()) {
         aQname.Append(".");
@@ -779,6 +787,7 @@ nsresult TRR::DohDecode(nsCString& aHost) {
   while (questionRecords) {
     do {
       if (mBodySize < (index + 1)) {
+        LOG(("TRR Decode 1 index: %u size: %u", index, mBodySize));
         return NS_ERROR_ILLEGAL_VALUE;
       }
       length = static_cast<uint8_t>(mResponse[index]);
@@ -787,6 +796,8 @@ nsresult TRR::DohDecode(nsCString& aHost) {
           host.Append(".");
         }
         if (mBodySize < (index + 1 + length)) {
+          LOG(("TRR Decode 2 index: %u size: %u len: %u", index, mBodySize,
+               length));
           return NS_ERROR_ILLEGAL_VALUE;
         }
         host.Append(((char*)mResponse) + index + 1, length);
@@ -794,6 +805,7 @@ nsresult TRR::DohDecode(nsCString& aHost) {
       index += 1 + length;  // skip length byte + label
     } while (length);
     if (mBodySize < (index + 4)) {
+      LOG(("TRR Decode 3 index: %u size: %u", index, mBodySize));
       return NS_ERROR_ILLEGAL_VALUE;
     }
     index += 4;  // skip question's type, class
@@ -937,11 +949,82 @@ nsresult TRR::DohDecode(nsCString& aHost) {
             available -= characterStringLen;
           }
 
-          mTxt.AppendElement(txt);
-          if (mTxtTtl > TTL) {
-            mTxtTtl = TTL;
+          if (!mResult.is<TypeRecordTxt>()) {
+            mResult = AsVariant(nsTArray<nsCString>());
+          }
+
+          {
+            auto& results = mResult.as<TypeRecordTxt>();
+            results.AppendElement(txt);
+          }
+          if (mTTL > TTL) {
+            mTTL = TTL;
           }
           LOG(("TRR::DohDecode TXT host %s => %s\n", host.get(), txt.get()));
+
+          break;
+        }
+        case TRRTYPE_HTTPSSVC: {
+          struct SVCB parsed;
+
+          unsigned int svcbIndex = index;
+          CheckedInt<uint16_t> available = RDLENGTH;
+
+          // Should have at least 2 bytes for the priority and one for the
+          // qname length.
+          if (available.value() < 3) {
+            return NS_ERROR_UNEXPECTED;
+          }
+
+          parsed.mSvcFieldPriority = get16bit(mResponse, svcbIndex);
+          svcbIndex += 2;
+
+          rv = GetQname(parsed.mSvcDomainName, svcbIndex);
+          if (NS_FAILED(rv)) {
+            return rv;
+          }
+
+          available -= (svcbIndex - index);
+          if (!available.isValid()) {
+            return NS_ERROR_UNEXPECTED;
+          }
+          while (available.value() >= 4) {
+            // Every SvcFieldValues must have at least 4 bytes for the
+            // SvcParamKey (2 bytes) and length of SvcParamValue (2 bytes)
+            // If the length ever goes above the available data, meaning if
+            // available ever underflows, then that is an error.
+            struct SvcFieldValue value;
+            uint16_t key = get16bit(mResponse, svcbIndex);
+            svcbIndex += 2;
+
+            uint16_t len = get16bit(mResponse, svcbIndex);
+            svcbIndex += 2;
+
+            available -= 4 + len;
+            if (!available.isValid()) {
+              return NS_ERROR_UNEXPECTED;
+            }
+
+            rv = ParseSvcParam(svcbIndex, key, value, len);
+            if (NS_FAILED(rv)) {
+              return rv;
+            }
+            svcbIndex += len;
+
+            // If this is an unknown key, we will simply ignore it.
+            if (key == SvcParamKeyNone || key > SvcParamKeyLast) {
+              continue;
+            }
+            parsed.mSvcFieldValue.AppendElement(value);
+          }
+
+          if (!mResult.is<TypeRecordHTTPSSVC>()) {
+            mResult = mozilla::AsVariant(nsTArray<SVCB>());
+          }
+          {
+            auto& results = mResult.as<TypeRecordHTTPSSVC>();
+            results.AppendElement(parsed);
+          }
           break;
         }
         default:
@@ -1028,7 +1111,7 @@ nsresult TRR::DohDecode(nsCString& aHost) {
   }
 
   if ((mType != TRRTYPE_NS) && mCname.IsEmpty() &&
-      !mDNS.mAddresses.getFirst() && mTxt.IsEmpty()) {
+      !mDNS.mAddresses.getFirst() && mResult.is<TypeRecordEmpty>()) {
     // no entries were stored!
     LOG(("TRR: No entries were stored!\n"));
     return NS_ERROR_FAILURE;
@@ -1036,8 +1119,88 @@ nsresult TRR::DohDecode(nsCString& aHost) {
   return NS_OK;
 }
 
+nsresult TRR::ParseSvcParam(unsigned int svcbIndex, uint16_t key,
+                            SvcFieldValue& field, uint16_t length) {
+  switch (key) {
+    case SvcParamKeyAlpn: {
+      field.mValue = AsVariant(SvcParamAlpn{
+          .mValue = nsCString((const char*)(&mResponse[svcbIndex]), length)});
+      break;
+    }
+    case SvcParamKeyNoDefaultAlpn: {
+      if (length != 0) {
+        // This key should not contain a value
+        return NS_ERROR_UNEXPECTED;
+      }
+      field.mValue = AsVariant(SvcParamNoDefaultAlpn{});
+      break;
+    }
+    case SvcParamKeyPort: {
+      if (length != 2) {
+        // This key should only encode a uint16_t
+        return NS_ERROR_UNEXPECTED;
+      }
+      field.mValue =
+          AsVariant(SvcParamPort{.mValue = get16bit(mResponse, svcbIndex)});
+      break;
+    }
+    case SvcParamKeyIpv4Hint: {
+      if (length % 4 != 0) {
+        // This key should only encode IPv4 addresses
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      field.mValue = AsVariant(SvcParamIpv4Hint());
+      auto& ipv4array = field.mValue.as<SvcParamIpv4Hint>().mValue;
+      while (length > 0) {
+        NetAddr addr = {.inet = {.family = AF_INET,
+                                 .port = 0,
+                                 .ip = ntohl(get32bit(mResponse, svcbIndex))}};
+        ipv4array.AppendElement(addr);
+        length -= 4;
+        svcbIndex += 4;
+      }
+      break;
+    }
+    case SvcParamKeyEsniConfig: {
+      field.mValue = AsVariant(SvcParamEsniConfig{
+          .mValue = nsCString((const char*)(&mResponse[svcbIndex]), length)});
+      break;
+    }
+    case SvcParamKeyIpv6Hint: {
+      if (length % 16 != 0) {
+        // This key should only encode IPv6 addresses
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      field.mValue = AsVariant(SvcParamIpv6Hint());
+      auto& ipv6array = field.mValue.as<SvcParamIpv6Hint>().mValue;
+      while (length > 0) {
+        NetAddr addr = {{.family = 0, .data = {0}}};
+        addr.inet6.family = AF_INET6;
+        addr.inet6.port = 0;      // unknown
+        addr.inet6.flowinfo = 0;  // unknown
+        addr.inet6.scope_id = 0;  // unknown
+        for (int i = 0; i < 16; i++, svcbIndex++) {
+          addr.inet6.ip.u8[i] = mResponse[svcbIndex];
+        }
+        ipv6array.AppendElement(addr);
+        length -= 16;
+        // no need to increase svcbIndex - we did it in the for above.
+      }
+      break;
+    }
+    default: {
+      // Unespected type. We'll just ignore it.
+      return NS_OK;
+      break;
+    }
+  }
+  return NS_OK;
+}
+
 nsresult TRR::ReturnData(nsIChannel* aChannel) {
-  if (mType != TRRTYPE_TXT) {
+  if (mType != TRRTYPE_TXT && mType != TRRTYPE_HTTPSSVC) {
     // create and populate an AddrInfo instance to pass on
     RefPtr<AddrInfo> ai(new AddrInfo(mHost, mType));
     DOHaddr* item;
@@ -1079,7 +1242,7 @@ nsresult TRR::ReturnData(nsIChannel* aChannel) {
     mHostResolver = nullptr;
     mRec = nullptr;
   } else {
-    (void)mHostResolver->CompleteLookupByType(mRec, NS_OK, &mTxt, mTxtTtl, mPB);
+    (void)mHostResolver->CompleteLookupByType(mRec, NS_OK, mResult, mTTL, mPB);
   }
   return NS_OK;
 }
@@ -1089,8 +1252,9 @@ nsresult TRR::FailData(nsresult error) {
     return NS_ERROR_FAILURE;
   }
 
-  if (mType == TRRTYPE_TXT) {
-    (void)mHostResolver->CompleteLookupByType(mRec, error, nullptr, 0, mPB);
+  if (mType == TRRTYPE_TXT || mType == TRRTYPE_HTTPSSVC) {
+    TypeRecordResultType empty(Nothing{});
+    (void)mHostResolver->CompleteLookupByType(mRec, error, empty, 0, mPB);
   } else {
     // create and populate an TRR AddrInfo instance to pass on to signal that
     // this comes from TRR
@@ -1110,7 +1274,7 @@ nsresult TRR::On200Response(nsIChannel* aChannel) {
 
   if (NS_SUCCEEDED(rv)) {
     if (!mDNS.mAddresses.getFirst() && !mCname.IsEmpty() &&
-        mType != TRRTYPE_TXT) {
+        mType != TRRTYPE_TXT && mType != TRRTYPE_HTTPSSVC) {
       nsCString cname = mCname;
       LOG(("TRR: check for CNAME record for %s within previous response\n",
            cname.get()));
@@ -1250,8 +1414,8 @@ TRR::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInputStream,
   return NS_OK;
 }
 
-nsresult DOHresp::Add(uint32_t TTL, unsigned char* dns, int index, uint16_t len,
-                      bool aLocalAllowed) {
+nsresult DOHresp::Add(uint32_t TTL, unsigned char* dns, unsigned int index,
+                      uint16_t len, bool aLocalAllowed) {
   auto doh = MakeUnique<DOHaddr>();
   NetAddr* addr = &doh->mNet;
   if (4 == len) {
