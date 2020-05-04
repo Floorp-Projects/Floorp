@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/SVGStyleElement.h"
 
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/SVGStyleElementBinding.h"
 #include "nsCOMPtr.h"
@@ -179,8 +180,6 @@ Maybe<nsStyleLinkElement::SheetInfo> SVGStyleElement::GetStyleSheetInfo() {
   nsAutoString title;
   nsAutoString media;
   GetTitleAndMediaForElement(*this, title, media);
-  nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
-  referrerInfo->InitWithNode(this);
 
   return Some(SheetInfo{
       *OwnerDoc(),
@@ -191,7 +190,7 @@ Maybe<nsStyleLinkElement::SheetInfo> SVGStyleElement::GetStyleSheetInfo() {
       nullptr,
       // FIXME(bug 1459822): Why does this need a crossorigin attribute, but
       // HTMLStyleElement doesn't?
-      referrerInfo.forget(),
+      MakeAndAddRef<ReferrerInfo>(*this),
       AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin)),
       title,
       media,
