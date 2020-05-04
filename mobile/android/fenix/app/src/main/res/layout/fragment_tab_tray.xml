@@ -59,7 +59,7 @@
     <View
         android:id="@+id/tab_tray_controls"
         android:layout_width="0dp"
-        android:layout_height="48dp"
+        android:layout_height="@dimen/browser_toolbar_height"
         android:background="?bottomBarBackground"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -67,23 +67,27 @@
 
     <ImageButton
         android:id="@+id/private_browsing_button"
-        android:layout_width="@dimen/glyph_button_height"
-        android:layout_height="@dimen/glyph_button_height"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="32dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/content_description_private_browsing_button"
         app:srcCompat="@drawable/private_browsing_button"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
         app:layout_constraintTop_toTopOf="@id/tab_tray_controls"
+        app:layout_constraintDimensionRatio="1.0"
         app:layout_constraintBottom_toBottomOf="@+id/tab_tray_controls"
         app:layout_constraintEnd_toStartOf="@+id/tab_tray_go_home"
         app:layout_constraintStart_toStartOf="@id/tab_tray_controls" />
 
     <ImageButton
         android:id="@+id/tab_tray_go_home"
-        android:layout_width="@dimen/glyph_button_height"
-        android:layout_height="@dimen/glyph_button_height"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/tab_tray_menu_home"
         app:srcCompat="@drawable/ic_home"
+        app:layout_constraintDimensionRatio="1.0"
         app:layout_constraintTop_toTopOf="@id/tab_tray_controls"
         app:layout_constraintBottom_toBottomOf="@+id/tab_tray_controls"
         app:layout_constraintEnd_toStartOf="@+id/tab_tray_open_new_tab"
@@ -91,11 +95,13 @@
 
     <ImageButton
         android:id="@+id/tab_tray_open_new_tab"
-        android:layout_width="@dimen/glyph_button_height"
-        android:layout_height="@dimen/glyph_button_height"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginEnd="32dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/tab_tray_menu_open_new_tab"
         app:srcCompat="@drawable/ic_new"
+        app:layout_constraintDimensionRatio="1.0"
         app:layout_constraintTop_toTopOf="@id/tab_tray_controls"
         app:layout_constraintBottom_toBottomOf="@+id/tab_tray_controls"
         app:layout_constraintEnd_toEndOf="@+id/tab_tray_controls"
