@@ -35,8 +35,6 @@ class KeyboardEvent;
 class Element;
 }  // namespace dom
 
-using namespace dom;
-
 // Values of the reserved attribute. When unset, the default value depends on
 // the permissions.default.shortcuts preference.
 enum ReservedKey : uint8_t {
@@ -48,7 +46,8 @@ enum ReservedKey : uint8_t {
 class KeyEventHandler final {
  public:
   // This constructor is used only by XUL key handlers (e.g., <key>)
-  explicit KeyEventHandler(Element* aHandlerElement, ReservedKey aReserved);
+  explicit KeyEventHandler(dom::Element* aHandlerElement,
+                           ReservedKey aReserved);
 
   // This constructor is used for keyboard handlers for browser, editor, input
   // and textarea elements.
@@ -72,10 +71,11 @@ class KeyEventHandler final {
 
   // if aCharCode is not zero, it is used instead of the charCode of
   // aKeyEventHandler.
-  bool KeyEventMatched(KeyboardEvent* aDomKeyboardEvent, uint32_t aCharCode,
+  bool KeyEventMatched(dom::KeyboardEvent* aDomKeyboardEvent,
+                       uint32_t aCharCode,
                        const IgnoreModifierState& aIgnoreModifierState);
 
-  already_AddRefed<Element> GetHandlerElement();
+  already_AddRefed<dom::Element> GetHandlerElement();
 
   ReservedKey GetIsReserved() { return mReserved; }
 
@@ -83,7 +83,7 @@ class KeyEventHandler final {
   void SetNextHandler(KeyEventHandler* aHandler) { mNextHandler = aHandler; }
 
   MOZ_CAN_RUN_SCRIPT
-  nsresult ExecuteHandler(EventTarget* aTarget, Event* aEvent);
+  nsresult ExecuteHandler(dom::EventTarget* aTarget, dom::Event* aEvent);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -99,10 +99,10 @@ class KeyEventHandler final {
     }
   }
 
-  already_AddRefed<nsIController> GetController(EventTarget* aTarget);
+  already_AddRefed<nsIController> GetController(dom::EventTarget* aTarget);
 
   inline int32_t GetMatchingKeyCode(const nsAString& aKeyName);
-  void ConstructPrototype(Element* aKeyElement,
+  void ConstructPrototype(dom::Element* aKeyElement,
                           const char16_t* aEvent = nullptr,
                           const char16_t* aCommand = nullptr,
                           const char16_t* aKeyCode = nullptr,
@@ -111,14 +111,14 @@ class KeyEventHandler final {
   void BuildModifiers(nsAString& aModifiers);
 
   void ReportKeyConflict(const char16_t* aKey, const char16_t* aModifiers,
-                         Element* aKeyElement, const char* aMessageName);
+                         dom::Element* aKeyElement, const char* aMessageName);
   void GetEventType(nsAString& aEvent);
-  bool ModifiersMatchMask(UIEvent* aEvent,
+  bool ModifiersMatchMask(dom::UIEvent* aEvent,
                           const IgnoreModifierState& aIgnoreModifierState);
   MOZ_CAN_RUN_SCRIPT
-  nsresult DispatchXBLCommand(EventTarget* aTarget, Event* aEvent);
+  nsresult DispatchXBLCommand(dom::EventTarget* aTarget, dom::Event* aEvent);
   MOZ_CAN_RUN_SCRIPT
-  nsresult DispatchXULKeyCommand(Event* aEvent);
+  nsresult DispatchXULKeyCommand(dom::Event* aEvent);
 
   Modifiers GetModifiers() const;
   Modifiers GetModifiersMask() const;

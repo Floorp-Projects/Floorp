@@ -12,6 +12,7 @@
 #include "mozilla/dom/ImageDocumentBinding.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/MouseEvent.h"
+#include "mozilla/LoadInfo.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "nsRect.h"
@@ -137,9 +138,7 @@ ImageDocument::ImageDocument()
       mTitleUpdateInProgress(false),
       mHasCustomTitle(false),
       mOriginalZoomLevel(1.0),
-      mOriginalResolution(1.0)
-{
-}
+      mOriginalResolution(1.0) {}
 
 ImageDocument::~ImageDocument() = default;
 

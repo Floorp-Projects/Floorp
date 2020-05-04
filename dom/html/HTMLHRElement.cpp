@@ -7,6 +7,7 @@
 #include "mozilla/dom/HTMLHRElement.h"
 #include "mozilla/dom/HTMLHRElementBinding.h"
 
+#include "nsCSSProps.h"
 #include "nsStyleConsts.h"
 #include "mozilla/MappedDeclarations.h"
 

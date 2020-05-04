@@ -6,6 +6,7 @@
 
 #include "HTMLFormSubmission.h"
 
+#include "HTMLFormElement.h"
 #include "nsCOMPtr.h"
 #include "nsIForm.h"
 #include "mozilla/dom/Document.h"
