@@ -36,7 +36,7 @@ async function run_test() {
       return;
     case "Darwin":
       // Lion
-      gfxInfo.spoofOSVersion(0x1080);
+      gfxInfo.spoofOSVersion(0xa0800);
       break;
     case "Android":
       // On Android, the driver version is used as the OS version (because

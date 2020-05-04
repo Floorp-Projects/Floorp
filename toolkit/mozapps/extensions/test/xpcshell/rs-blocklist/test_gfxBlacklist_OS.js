@@ -34,7 +34,7 @@ async function run_test() {
     case "Darwin":
       gfxInfo.spoofVendorID("0xabcd");
       gfxInfo.spoofDeviceID("0x1234");
-      gfxInfo.spoofOSVersion(0x1080);
+      gfxInfo.spoofOSVersion(0xa0800);
       break;
     case "Android":
       // On Android, the driver version is used as the OS version (because
