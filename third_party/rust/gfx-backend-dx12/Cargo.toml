@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "gfx-backend-dx12"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["The Gfx-rs Developers"]
 description = "DirectX-12 API backend for gfx-rs"
 homepage = "https://github.com/gfx-rs/gfx"
@@ -54,7 +54,7 @@ version = "0.1"
 version = "0.3"
 
 [dependencies.smallvec]
-version = "1.0"
+version = "1"
 
 [dependencies.spirv_cross]
 version = "0.18"
