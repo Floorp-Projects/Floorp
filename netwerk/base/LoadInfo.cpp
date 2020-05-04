@@ -577,24 +577,23 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
       mParserCreatedScript(false),
       mHasStoragePermission(false),
       mIsFromProcessingFrameAttributes(false) {
-  RefPtr<WindowGlobalParent> embedderWGP =
-      aBrowsingContext->GetParentWindowGlobal();
-  BrowsingContext* embedderBC = embedderWGP->BrowsingContext();
-  MOZ_ASSERT(embedderBC);
+  RefPtr<WindowGlobalParent> parentWGP =
+      aBrowsingContext->GetParentWindowContext();
+  CanonicalBrowsingContext* parentBC = parentWGP->BrowsingContext();
+  MOZ_ASSERT(parentBC);
   nsTArray<nsCOMPtr<nsIPrincipal>> ancestorPrincipals;
   nsTArray<uint64_t> ancestorOuterWindowIDs;
-  CanonicalBrowsingContext* ancestorBC = embedderBC->Canonical();
-  RefPtr<WindowGlobalParent> topLevelWGP = embedderWGP;
+  CanonicalBrowsingContext* ancestorBC = parentBC;
+  RefPtr<WindowGlobalParent> topLevelWGP = parentWGP->TopWindowContext();
 
-  // Iterate over ancestor WindowGlobalParent's - collect principals and
-  // outer window IDs. Also note the top level WindowGlobalParent.
-  while (RefPtr<WindowGlobalParent> ancestorWGP =
-             ancestorBC->GetParentWindowGlobal()) {
+  // Iterate over ancestor WindowGlobalParents, collecting principals and outer
+  // window IDs.
+  while (WindowGlobalParent* ancestorWGP =
+             ancestorBC->GetParentWindowContext()) {
     nsCOMPtr<nsIPrincipal> parentPrincipal = ancestorWGP->DocumentPrincipal();
     MOZ_ASSERT(parentPrincipal, "Ancestor principal is null");
     ancestorPrincipals.AppendElement(parentPrincipal.forget());
     ancestorOuterWindowIDs.AppendElement(ancestorWGP->OuterWindowId());
-    topLevelWGP = ancestorWGP;
     ancestorBC = ancestorWGP->BrowsingContext();
   }
   mAncestorPrincipals = ancestorPrincipals;
@@ -602,11 +601,10 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
   MOZ_DIAGNOSTIC_ASSERT(mAncestorPrincipals.Length() ==
                         mAncestorOuterWindowIDs.Length());
 
-  if (RefPtr<WindowGlobalParent> ancestorWGP =
-          embedderWGP->BrowsingContext()->GetParentWindowGlobal()) {
+  if (WindowGlobalParent* ancestorWGP = parentWGP->GetParentWindowContext()) {
     mParentOuterWindowID = ancestorWGP->OuterWindowId();
   } else {
-    mParentOuterWindowID = embedderWGP->OuterWindowId();
+    mParentOuterWindowID = parentWGP->OuterWindowId();
   }
 
   // if the load is sandboxed, we can not also inherit the principal
@@ -630,36 +628,36 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
 
   // Ensure that all network requests for a window client have the ClientInfo
   // properly set.
-  mClientInfo = embedderWGP->GetClientInfo();
-  mLoadingPrincipal = embedderWGP->DocumentPrincipal();
-  ComputeIsThirdPartyContext(embedderWGP);
+  mClientInfo = parentWGP->GetClientInfo();
+  mLoadingPrincipal = parentWGP->DocumentPrincipal();
+  ComputeIsThirdPartyContext(parentWGP);
 
   // When the element being loaded is a frame, we choose the frame's window
   // for the window ID (see mInnerWindowID being set below) and the frame
   // element's window as the parent window. This is the behavior that Chrome
   // exposes to add-ons.
-  mOuterWindowID = embedderWGP->OuterWindowId();
+  mOuterWindowID = parentWGP->OuterWindowId();
   mTopOuterWindowID = topLevelWGP->OuterWindowId();
-  mBrowsingContextID = embedderBC->Id();
+  mBrowsingContextID = parentBC->Id();
 
   // Let's inherit the cookie behavior and permission from the embedder
   // document.
-  mCookieJarSettings = embedderWGP->CookieJarSettings();
-  if (embedderBC->IsContentSubframe()) {
+  mCookieJarSettings = parentWGP->CookieJarSettings();
+  if (parentBC->IsContentSubframe()) {
     mDocumentHasLoaded = false;
   } else {
-    mDocumentHasLoaded = embedderWGP->DocumentHasLoaded();
+    mDocumentHasLoaded = parentWGP->DocumentHasLoaded();
   }
   if (topLevelWGP->BrowsingContext()->IsTop()) {
     if (mCookieJarSettings) {
       bool stopAtOurLevel = mCookieJarSettings->GetCookieBehavior() ==
                             nsICookieService::BEHAVIOR_REJECT_TRACKER;
       if (!stopAtOurLevel ||
-          topLevelWGP->OuterWindowId() != embedderWGP->OuterWindowId()) {
+          topLevelWGP->OuterWindowId() != parentWGP->OuterWindowId()) {
         mTopLevelPrincipal = topLevelWGP->DocumentPrincipal();
       }
     }
-    if (embedderBC->IsContentSubframe()) {
+    if (parentBC->IsContentSubframe()) {
       // For resources within iframes, we actually want the
       // top-level document's flag, not the iframe document's.
       mDocumentHasLoaded = topLevelWGP->DocumentHasLoaded();
@@ -671,44 +669,44 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
   // sub-iframes). If we are loading a sub-document resource, we must
   // calculate what the top-level-storage-area-principal will be for the
   // new context.
-  if (embedderBC->IsTop()) {
-    if (!Document::StorageAccessSandboxed(embedderWGP->SandboxFlags())) {
-      mTopLevelStorageAreaPrincipal = embedderWGP->DocumentPrincipal();
+  if (parentBC->IsTop()) {
+    if (!Document::StorageAccessSandboxed(parentWGP->SandboxFlags())) {
+      mTopLevelStorageAreaPrincipal = parentWGP->DocumentPrincipal();
     }
 
     // If this is the first level iframe, embedder WindowGlobalParent's document
     // principal is our top-level principal.
     if (!mTopLevelPrincipal) {
-      mTopLevelPrincipal = embedderWGP->DocumentPrincipal();
+      mTopLevelPrincipal = parentWGP->DocumentPrincipal();
     }
   }
 
-  mInnerWindowID = embedderWGP->InnerWindowId();
+  mInnerWindowID = parentWGP->InnerWindowId();
   mFrameBrowsingContextID = aBrowsingContext->Id();
-  mDocumentHasUserInteracted = embedderWGP->DocumentHasUserInteracted();
+  mDocumentHasUserInteracted = parentWGP->DocumentHasUserInteracted();
 
   // if the document forces all mixed content to be blocked, then we
   // store that bit for all requests on the loadinfo.
-  mBlockAllMixedContent = embedderWGP->GetDocumentBlockAllMixedContent();
+  mBlockAllMixedContent = parentWGP->GetDocumentBlockAllMixedContent();
 
   // if the document forces all requests to be upgraded from http to https,
   // then we should do that for all requests. If it only forces preloads to be
   // upgraded then we should enforce upgrade insecure requests only for
   // preloads.
-  mUpgradeInsecureRequests = embedderWGP->GetDocumentUpgradeInsecureRequests();
+  mUpgradeInsecureRequests = parentWGP->GetDocumentUpgradeInsecureRequests();
   mOriginAttributes = mLoadingPrincipal->OriginAttributesRef();
 
   // We need to do this after inheriting the document's origin attributes
   // above, in case the loading principal ends up being the system principal.
-  if (embedderBC->IsContent()) {
+  if (parentBC->IsContent()) {
     mOriginAttributes.SyncAttributesWithPrivateBrowsing(
-        embedderBC->UsePrivateBrowsing());
+        parentBC->UsePrivateBrowsing());
   }
 
   // For chrome BC, the mPrivateBrowsingId remains 0 even its
   // UsePrivateBrowsing() is true, so we only update the mPrivateBrowsingId in
   // origin attributes if the type of the BC is content.
-  if (embedderBC->IsChrome()) {
+  if (parentBC->IsChrome()) {
     MOZ_ASSERT(mOriginAttributes.mPrivateBrowsingId == 0,
                "chrome docshell shouldn't have mPrivateBrowsingId set.");
   }

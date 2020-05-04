@@ -46,6 +46,11 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   bool IsCached() const;
 
+  // Get the parent WindowContext of this WindowContext, taking the BFCache into
+  // account. This will not cross chrome/content <browser> boundaries.
+  WindowContext* GetParentWindowContext();
+  WindowContext* TopWindowContext();
+
   Span<RefPtr<BrowsingContext>> Children() { return mChildren; }
 
   // Cast this object to it's parent-process canonical form.
