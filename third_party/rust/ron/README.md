@@ -1,6 +1,6 @@
-## Rusty Object Notation
+# Rusty Object Notation
 
-[![Build Status](https://travis-ci.org/ron-rs/ron.png?branch=master)](https://travis-ci.org/ron-rs/ron)
+[![Build Status](https://travis-ci.org/ron-rs/ron.svg?branch=master)](https://travis-ci.org/ron-rs/ron)
 [![Crates.io](https://img.shields.io/crates/v/ron.svg)](https://crates.io/crates/ron)
 [![Docs](https://docs.rs/ron/badge.svg)](https://docs.rs/ron)
 [![Gitter](https://badges.gitter.im/ron-rs/ron.svg)](https://gitter.im/ron-rs/ron)
@@ -8,6 +8,39 @@
 RON is a simple readable data serialization format that looks similar to Rust syntax.
 It's designed to support all of [Serde's data model](https://serde.rs/data-model.html), so
 structs, enums, tuples, arrays, generic maps, and primitive values.
+
+## Example
+
+```
+GameConfig( // optional struct name
+    window_size: (800, 600),
+    window_title: "PAC-MAN",
+    fullscreen: false,
+    
+    mouse_sensitivity: 1.4,
+    key_bindings: {
+        "up": Up,
+        "down": Down,
+        "left": Left,
+        "right": Right,
+        
+        // Uncomment to enable WASD controls
+        /*
+        "W": Up,
+        "A": Down,
+        "S": Left,
+        "D": Right,
+        */
+    },
+    
+    difficulty_options: (
+        start_difficulty: Easy,
+        adaptive: false,
+    ),
+)
+```
+
+## Why RON?
 
 ### Example in JSON
 
@@ -27,7 +60,7 @@ structs, enums, tuples, arrays, generic maps, and primitive values.
             "material": "metal"
         },
         {
-            "name": "moster",
+            "name": "monster",
             "material": "plastic"
         }
    ]
@@ -86,7 +119,8 @@ Here are the general rules to parse the heterogeneous structures:
 ### Specification
 
 There is a very basic, work in progress specification available on
-[the wiki page](https://github.com/kvark/ron/wiki/Specification).
+[the wiki page](https://github.com/ron-rs/ron/wiki/Specification).
+A more formal and complete grammar is available [here](docs/grammar.md).
 
 ### Appendix
 
@@ -95,7 +129,7 @@ Why not XML?
   - unclear how to treat attributes vs contents
 
 Why not YAML?
-  - significant white-space 
+  - significant white-space
   - specification is too big
 
 Why not TOML?
@@ -104,6 +138,12 @@ Why not TOML?
 
 Why not XXX?
   - if you know a better format, tell me!
+
+## Tooling
+
+Sublime Text: https://packagecontrol.io/packages/RON
+
+Vim: https://github.com/ron-rs/ron.vim
 
 ## License
 

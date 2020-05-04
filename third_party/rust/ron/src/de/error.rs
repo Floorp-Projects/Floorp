@@ -1,15 +1,10 @@
-use std::error::Error as StdError;
-use std::fmt;
-use std::str::Utf8Error;
-use std::io;
-use std::string::FromUtf8Error;
-
 use serde::de;
+use std::{error::Error as StdError, fmt, io, str::Utf8Error, string::FromUtf8Error};
 
-use parse::Position;
+use crate::parse::Position;
 
 /// Deserialization result.
-pub type Result<T> = ::std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Error {
@@ -20,9 +15,12 @@ pub enum Error {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum ParseError {
+    Base64Error(base64::DecodeError),
     Eof,
     ExpectedArray,
     ExpectedArrayEnd,
+    ExpectedAttribute,
+    ExpectedAttributeEnd,
     ExpectedBoolean,
     ExpectedComma,
     ExpectedEnum,
@@ -42,8 +40,12 @@ pub enum ParseError {
     ExpectedStringEnd,
     ExpectedIdentifier,
 
-    InvalidEscape,
+    InvalidEscape(&'static str),
 
+    NoSuchExtension(String),
+
+    UnclosedBlockComment,
+    UnderscoreAtBeginning,
     UnexpectedByte(char),
 
     Utf8Error(Utf8Error),
@@ -54,7 +56,7 @@ pub enum ParseError {
 }
 
 impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             Error::IoError(ref s) => write!(f, "{}", s),
             Error::Message(ref s) => write!(f, "{}", s),
@@ -75,9 +77,14 @@ impl StdError for Error {
             Error::IoError(ref s) => s,
             Error::Message(ref e) => e,
             Error::Parser(ref kind, _) => match *kind {
+                ParseError::Base64Error(ref e) => e.description(),
                 ParseError::Eof => "Unexpected end of file",
                 ParseError::ExpectedArray => "Expected array",
                 ParseError::ExpectedArrayEnd => "Expected end of array",
+                ParseError::ExpectedAttribute => "Expected an enable attribute",
+                ParseError::ExpectedAttributeEnd => {
+                    "Expected closing `)` and `]` after the attribute"
+                }
                 ParseError::ExpectedBoolean => "Expected boolean",
                 ParseError::ExpectedComma => "Expected comma",
                 ParseError::ExpectedEnum => "Expected enum",
@@ -94,15 +101,21 @@ impl StdError for Error {
                 ParseError::ExpectedUnit => "Expected unit",
                 ParseError::ExpectedStructName => "Expected struct name",
                 ParseError::ExpectedString => "Expected string",
+                ParseError::ExpectedStringEnd => "Expected string end",
                 ParseError::ExpectedIdentifier => "Expected identifier",
 
-                ParseError::InvalidEscape => "Invalid escape sequence",
+                ParseError::InvalidEscape(_) => "Invalid escape sequence",
+
+                ParseError::NoSuchExtension(_) => "No such RON extension",
 
                 ParseError::Utf8Error(ref e) => e.description(),
+                ParseError::UnclosedBlockComment => "Unclosed block comment",
+                ParseError::UnderscoreAtBeginning => "Found underscore at the beginning",
+                ParseError::UnexpectedByte(_) => "Unexpected byte",
                 ParseError::TrailingCharacters => "Non-whitespace trailing characters",
 
-                _ => unimplemented!(),
-            }
+                ParseError::__NonExhaustive => unimplemented!(),
+            },
         }
     }
 }
@@ -121,7 +134,7 @@ impl From<FromUtf8Error> for ParseError {
 
 impl From<Utf8Error> for Error {
     fn from(e: Utf8Error) -> Self {
-        Error::Parser(ParseError::Utf8Error(e), Position { line : 0, col : 0})
+        Error::Parser(ParseError::Utf8Error(e), Position { line: 0, col: 0 })
     }
 }
 
