@@ -4,6 +4,7 @@
 
 SOURCES += [
     'TestDLLBlocklist.cpp',
+    'TestNativeNtGTest.cpp',
 ]
 
 FINAL_LIBRARY = 'xul-gtest'

@@ -141,6 +141,15 @@ class UntrustedModulesProcessor final : public nsIObserver {
 
   // This member may be touched by any thread
   Atomic<bool> mAllowProcessing;
+
+  // This member must only be touched on mThread, making sure a hash table of
+  // dependent modules is initialized once in a process when the first batch
+  // of queued events is processed.  We don't need the hash table to process
+  // subsequent queues because we're interested in modules imported via the
+  // executable's Import Table which are all expected to be in the first queue.
+  // A boolean flag is enough to control initialization because tasks of
+  // processing queues are serialized.
+  bool mIsFirstBatchProcessed;
 };
 
 }  // namespace mozilla

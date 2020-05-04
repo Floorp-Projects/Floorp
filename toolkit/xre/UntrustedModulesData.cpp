@@ -197,11 +197,14 @@ bool ModuleRecord::IsTrusted() const {
 }
 
 ProcessedModuleLoadEvent::ProcessedModuleLoadEvent()
-    : mProcessUptimeMS(0ULL), mThreadId(0UL), mBaseAddress(0U) {}
+    : mProcessUptimeMS(0ULL),
+      mThreadId(0UL),
+      mBaseAddress(0U),
+      mIsDependent(false) {}
 
 ProcessedModuleLoadEvent::ProcessedModuleLoadEvent(
     glue::EnhancedModuleLoadInfo&& aModLoadInfo,
-    RefPtr<ModuleRecord>&& aModuleRecord)
+    RefPtr<ModuleRecord>&& aModuleRecord, bool aIsDependent)
     : mProcessUptimeMS(QPCTimeStampToProcessUptimeMilliseconds(
           aModLoadInfo.mNtLoadInfo.mBeginTimestamp)),
       mLoadDurationMS(QPCLoadDurationToMilliseconds(aModLoadInfo.mNtLoadInfo)),
@@ -209,7 +212,8 @@ ProcessedModuleLoadEvent::ProcessedModuleLoadEvent(
       mThreadName(std::move(aModLoadInfo.mThreadName)),
       mBaseAddress(
           reinterpret_cast<uintptr_t>(aModLoadInfo.mNtLoadInfo.mBaseAddr)),
-      mModule(std::move(aModuleRecord)) {
+      mModule(std::move(aModuleRecord)),
+      mIsDependent(aIsDependent) {
   if (!mModule || !(*mModule)) {
     return;
   }

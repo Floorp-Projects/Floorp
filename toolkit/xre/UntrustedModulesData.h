@@ -127,7 +127,8 @@ class ProcessedModuleLoadEvent final {
  public:
   ProcessedModuleLoadEvent();
   ProcessedModuleLoadEvent(glue::EnhancedModuleLoadInfo&& aModLoadInfo,
-                           RefPtr<ModuleRecord>&& aModuleRecord);
+                           RefPtr<ModuleRecord>&& aModuleRecord,
+                           bool aIsDependent);
 
   explicit operator bool() const { return mModule && *mModule; }
   bool IsXULLoad() const;
@@ -143,6 +144,7 @@ class ProcessedModuleLoadEvent final {
   // to know about it.
   uintptr_t mBaseAddress;
   RefPtr<ModuleRecord> mModule;
+  bool mIsDependent;
 
   ProcessedModuleLoadEvent(const ProcessedModuleLoadEvent&) = delete;
   ProcessedModuleLoadEvent& operator=(const ProcessedModuleLoadEvent&) = delete;
@@ -511,6 +513,7 @@ struct ParamTraits<mozilla::UntrustedModulesData> {
     WriteParam(aMsg, aParam.mThreadName);
     WriteParam(aMsg, aParam.mRequestedDllName);
     WriteParam(aMsg, aParam.mBaseAddress);
+    WriteParam(aMsg, aParam.mIsDependent);
 
     // We don't write the ModuleRecord directly; we write its key into the
     // UntrustedModulesData::mModules hash table.
@@ -545,6 +548,10 @@ struct ParamTraits<mozilla::UntrustedModulesData> {
     }
 
     if (!ReadParam(aMsg, aIter, &aResult->mBaseAddress)) {
+      return false;
+    }
+
+    if (!ReadParam(aMsg, aIter, &aResult->mIsDependent)) {
       return false;
     }
 

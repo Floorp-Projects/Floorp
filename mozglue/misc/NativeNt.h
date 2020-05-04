@@ -26,7 +26,9 @@
 #include "mozilla/interceptor/TargetFunction.h"
 
 #if defined(MOZILLA_INTERNAL_API)
+#  include "nsHashKeys.h"
 #  include "nsString.h"
+#  include "nsTHashtable.h"
 #endif  // defined(MOZILLA_INTERNAL_API)
 
 // The declarations within this #if block are intended to be used for initial
@@ -396,6 +398,17 @@ inline void GetLeafName(PUNICODE_STRING aDestString,
 
 #endif  // !defined(MOZILLA_INTERNAL_API)
 
+#if defined(MOZILLA_INTERNAL_API)
+
+inline const nsDependentSubstring GetLeafName(const nsString& aString) {
+  int32_t lastBackslashPos = aString.RFindChar(L'\\');
+  int32_t leafStartPos =
+      (lastBackslashPos == kNotFound) ? 0 : (lastBackslashPos + 1);
+  return Substring(aString, leafStartPos);
+}
+
+#endif  // defined(MOZILLA_INTERNAL_API)
+
 inline char EnsureLowerCaseASCII(char aChar) {
   if (aChar >= 'A' && aChar <= 'Z') {
     aChar -= 'A' - 'a';
@@ -494,6 +507,14 @@ class MOZ_RAII PEHeaders final {
     }
 
     mImageLimit = RVAToPtrUnchecked<void*>(imageSize - 1UL);
+
+    PIMAGE_DATA_DIRECTORY importDirEntry =
+        GetImageDirectoryEntryPtr(IMAGE_DIRECTORY_ENTRY_IMPORT);
+    if (!importDirEntry) {
+      return;
+    }
+
+    mIsImportDirectoryTampered = (importDirEntry->VirtualAddress >= imageSize);
   }
 
   explicit operator bool() const { return !!mImageLimit; }
@@ -626,6 +647,26 @@ class MOZ_RAII PEHeaders final {
 
     return nullptr;
   }
+
+#if defined(MOZILLA_INTERNAL_API)
+  nsTHashtable<nsStringCaseInsensitiveHashKey> GenerateDependentModuleSet() {
+    nsTHashtable<nsStringCaseInsensitiveHashKey> dependentModuleSet;
+
+    for (PIMAGE_IMPORT_DESCRIPTOR curImpDesc = GetImportDirectory();
+         IsValid(curImpDesc); ++curImpDesc) {
+      auto curName = mIsImportDirectoryTampered
+                         ? RVAToPtrUnchecked<const char*>(curImpDesc->Name)
+                         : RVAToPtr<const char*>(curImpDesc->Name);
+      if (!curName) {
+        continue;
+      }
+
+      dependentModuleSet.PutEntry(GetLeafName(NS_ConvertASCIItoUTF16(curName)));
+    }
+
+    return dependentModuleSet;
+  }
+#endif  // defined(MOZILLA_INTERNAL_API)
 
   /**
    * If |aBoundaries| is given, this method checks whether each IAT entry is
@@ -762,7 +803,7 @@ class MOZ_RAII PEHeaders final {
     return aImgThunk && aImgThunk->u1.Ordinal != 0;
   }
 
-  void SetImportDirectoryTampered() { mIsImportDirectoryTampered = true; }
+  bool IsImportDirectoryTampered() const { return mIsImportDirectoryTampered; }
 
   FARPROC GetEntryPoint() const {
     // Use the unchecked version because the entrypoint may be tampered.
