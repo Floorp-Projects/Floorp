@@ -54,6 +54,9 @@ class BugBugPushSchedules(OptimizationStrategy):
 
         test_manifests = task.attributes.get('test_manifests')
         if test_manifests is None or self.use_reduced_tasks:
+            if "known_tasks" in data and task.label not in data["known_tasks"]:
+                return False
+
             if task.label not in tasks:
                 return True
 
