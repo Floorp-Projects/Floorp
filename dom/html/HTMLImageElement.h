@@ -203,10 +203,6 @@ class HTMLImageElement final : public nsGenericHTMLElement,
 
   already_AddRefed<Promise> Decode(ErrorResult& aRv);
 
-  ReferrerPolicy GetImageReferrerPolicy() override {
-    return GetReferrerPolicyAsEnum();
-  }
-
   MOZ_CAN_RUN_SCRIPT int32_t X();
   MOZ_CAN_RUN_SCRIPT int32_t Y();
   void GetLowsrc(nsAString& aLowsrc) {
