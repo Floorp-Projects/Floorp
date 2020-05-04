@@ -38,6 +38,8 @@ def skip_taskgraph_generation(monkeypatch, tg):
     monkeypatch.setattr(tasks, 'generate_tasks', fake_generate_tasks)
 
 
+@pytest.mark.xfail(strict=False, reason="Bug 1635204: "
+                                        "test_shared_presets[sample-suites] is flaky")
 def test_shared_presets(run_mach, shared_name, shared_preset):
     """This test makes sure that we don't break any of the in-tree presets when
     renaming/removing variables in any of the selectors.
