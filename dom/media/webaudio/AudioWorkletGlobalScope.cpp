@@ -45,12 +45,9 @@ bool AudioWorkletGlobalScope::WrapGlobalObject(
   // The SharedArrayBuffer global constructor property should not be present in
   // a fresh global object when shared memory objects aren't allowed (because
   // COOP/COEP support isn't enabled, or because COOP/COEP don't act to isolate
-  // this worklet to a separate process).  However, it's not presently clear how
-  // to do this, so for now assign a backwards-compatible value.  Bug 1630877
-  // will fix this.
-  bool defineSharedArrayBufferConstructor = true;
+  // this worklet to a separate process).
   options.creationOptions().setDefineSharedArrayBufferConstructor(
-      defineSharedArrayBufferConstructor);
+      IsSharedMemoryAllowed());
 
   JS::AutoHoldPrincipals principals(aCx, new WorkletPrincipals(mImpl));
   return AudioWorkletGlobalScope_Binding::Wrap(

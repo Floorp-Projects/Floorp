@@ -131,8 +131,8 @@ static void CachePrintSelectionRanges(const Document& aSourceDoc,
   auto* printRanges = new nsTArray<RefPtr<nsRange>>(rangeCount);
 
   for (size_t i = 0; i < rangeCount; ++i) {
-    nsRange* range = sourceDocIsStatic ? origRanges->ElementAt(i).get()
-                                       : origSelection->GetRangeAt(i);
+    const nsRange* range = sourceDocIsStatic ? origRanges->ElementAt(i).get()
+                                             : origSelection->GetRangeAt(i);
     nsINode* startContainer = range->GetStartContainer();
     nsINode* endContainer = range->GetEndContainer();
 

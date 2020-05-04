@@ -1031,7 +1031,7 @@ bool EditorEventListener::CanInsertAtDropPosition(DragEvent* aDragEvent) {
   uint32_t rangeCount = selection->RangeCount();
   IgnoredErrorResult ignoredError;
   for (uint32_t i = 0; i < rangeCount; i++) {
-    RefPtr<nsRange> range = selection->GetRangeAt(i);
+    RefPtr<const nsRange> range = selection->GetRangeAt(i);
     if (!range) {
       // Don't bail yet, iterate through them all
       continue;

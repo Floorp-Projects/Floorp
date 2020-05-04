@@ -3474,7 +3474,7 @@ EditorBase::CreateTransactionForDeleteSelection(
       EditAggregateTransaction::Create();
   for (uint32_t rangeIdx = 0; rangeIdx < SelectionRefPtr()->RangeCount();
        ++rangeIdx) {
-    nsRange* range = SelectionRefPtr()->GetRangeAt(rangeIdx);
+    const nsRange* range = SelectionRefPtr()->GetRangeAt(rangeIdx);
     if (NS_WARN_IF(!range)) {
       return nullptr;
     }
@@ -3521,7 +3521,7 @@ EditorBase::CreateTransactionForDeleteSelection(
 // are not implemented
 already_AddRefed<EditTransactionBase>
 EditorBase::CreateTransactionForCollapsedRange(
-    nsRange& aCollapsedRange,
+    const nsRange& aCollapsedRange,
     HowToHandleCollapsedRange aHowToHandleCollapsedRange) {
   MOZ_ASSERT(aCollapsedRange.Collapsed());
   MOZ_ASSERT(
@@ -4525,7 +4525,7 @@ nsresult EditorBase::InitializeSelection(nsINode& aFocusEventTargetNode) {
   if (mComposition && mComposition->IsMovingToNewTextNode()) {
     // We need to look for the new text node from current selection.
     // XXX If selection is changed during reframe, this doesn't work well!
-    nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+    const nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
     }
@@ -5195,7 +5195,7 @@ bool EditorBase::IsSelectionRangeContainerNotContent() const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   for (uint32_t i = 0; i < SelectionRefPtr()->RangeCount(); i++) {
-    nsRange* range = SelectionRefPtr()->GetRangeAt(i);
+    const nsRange* range = SelectionRefPtr()->GetRangeAt(i);
     MOZ_ASSERT(range);
     if (!range || !range->GetStartContainer() ||
         !range->GetStartContainer()->IsContent() || !range->GetEndContainer() ||
@@ -5580,7 +5580,7 @@ nsresult EditorBase::AutoEditActionDataSetter::MaybeDispatchBeforeInputEvent() {
     if (uint32_t rangeCount = textEditor->SelectionRefPtr()->RangeCount()) {
       mTargetRanges.SetCapacity(rangeCount);
       for (uint32_t i = 0; i < rangeCount; i++) {
-        nsRange* range = textEditor->SelectionRefPtr()->GetRangeAt(i);
+        const nsRange* range = textEditor->SelectionRefPtr()->GetRangeAt(i);
         if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
           continue;
         }

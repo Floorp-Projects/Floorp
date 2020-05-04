@@ -225,3 +225,34 @@ TEST(PlainTextSerializer, Simple)
   ASSERT_TRUE(test.EqualsLiteral("basespanbody"))
   << "Wrong html to text serialization";
 }
+
+TEST(PlainTextSerializer, OneHundredAndOneOL)
+{
+  nsAutoString test;
+  test.AppendLiteral(
+      "<html>"
+      "<body>"
+      "<ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><"
+      "ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><"
+      "ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><"
+      "ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><"
+      "ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><"
+      "ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol><ol></ol></ol></ol></"
+      "ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></"
+      "ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></"
+      "ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></"
+      "ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></"
+      "ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></"
+      "ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></"
+      "ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></ol></"
+      "ol></ol><li>X</li></ol>"
+      "</body>"
+      "</html>");
+
+  ConvertBufToPlainText(test, nsIDocumentEncoder::OutputFormatted,
+                        kDefaultWrapColumn);
+
+  nsAutoString expected;
+  expected.AppendLiteral(" 1. X" NS_LINEBREAK);
+  ASSERT_EQ(test, expected);
+}

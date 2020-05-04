@@ -268,7 +268,7 @@ void HTMLEditor::OnStartToHandleTopLevelEditSubAction(
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return;
     }
-    if (nsRange* range = SelectionRefPtr()->GetRangeAt(0)) {
+    if (const nsRange* range = SelectionRefPtr()->GetRangeAt(0)) {
       TopLevelEditSubActionDataRef().mSelectedRange->StoreRange(*range);
     }
   }
@@ -692,7 +692,7 @@ EditActionResult HTMLEditor::CanHandleHTMLEditSubAction() const {
     return EditActionCanceled();
   }
 
-  nsRange* range = SelectionRefPtr()->GetRangeAt(0);
+  const nsRange* range = SelectionRefPtr()->GetRangeAt(0);
   nsINode* selStartNode = range->GetStartContainer();
   if (NS_WARN_IF(!selStartNode)) {
     return EditActionResult(NS_ERROR_FAILURE);
@@ -892,7 +892,7 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
   OwningNonNull<Element> bodyOrDocumentElement = *aHTMLEditor.GetRoot();
   EditorRawDOMPoint atBodyOrDocumentElement(bodyOrDocumentElement);
 
-  nsRange* firstRange = aHTMLEditor.SelectionRefPtr()->GetRangeAt(0);
+  const nsRange* firstRange = aHTMLEditor.SelectionRefPtr()->GetRangeAt(0);
   mFoundSelectionRanges = !!firstRange;
   if (!mFoundSelectionRanges) {
     NS_WARNING("There was no selection range");
@@ -1292,7 +1292,7 @@ nsresult HTMLEditor::EnsureCaretNotAfterPaddingBRElement() {
 
   // If we are after a padding `<br>` element for empty last line in the same
   // block, then move selection to be before it
-  nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+  const nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
     return NS_ERROR_FAILURE;
   }
@@ -1429,7 +1429,7 @@ EditActionResult HTMLEditor::HandleInsertText(
     return EditActionHandled(NS_ERROR_FAILURE);
   }
 
-  RefPtr<nsRange> firstRange = SelectionRefPtr()->GetRangeAt(0);
+  RefPtr<const nsRange> firstRange = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
     return EditActionHandled(NS_ERROR_FAILURE);
   }
@@ -1807,7 +1807,7 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
   }
 
   // Smart splitting rules
-  nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+  const nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
     return EditActionIgnored(NS_ERROR_FAILURE);
   }
@@ -2663,7 +2663,7 @@ EditActionResult HTMLEditor::HandleDeleteCollapsedSelectionAtTextNode(
       }
     }
   } else {
-    RefPtr<nsRange> range = SelectionRefPtr()->GetRangeAt(0);
+    RefPtr<const nsRange> range = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!range) ||
         NS_WARN_IF(range->GetStartContainer() !=
                    aPointToDelete.GetContainer()) ||
@@ -3147,7 +3147,7 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
   // Else we have a non-collapsed selection.  First adjust the selection.
   // XXX Why do we extend selection only when there is only one range?
   if (SelectionRefPtr()->RangeCount() == 1) {
-    if (nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0)) {
+    if (const nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0)) {
       RefPtr<StaticRange> extendedRange =
           GetRangeExtendedToIncludeInvisibleNodes(*firstRange);
       if (!extendedRange) {
@@ -3173,7 +3173,7 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
   // Remember that we did a ranged delete for the benefit of AfterEditInner().
   TopLevelEditSubActionDataRef().mDidDeleteNonCollapsedRange = true;
 
-  nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+  const nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
     return EditActionResult(NS_ERROR_FAILURE);
   }
@@ -4677,7 +4677,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
       }
     }
 
-    nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+    const nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return EditActionResult(NS_ERROR_FAILURE);
     }
@@ -5220,7 +5220,7 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
   // empty block.
   // XXX Isn't this odd if there are only non-editable visible nodes?
   if (IsEmptyOneHardLine(arrayOfContents)) {
-    nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+    const nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
     }
@@ -5383,7 +5383,7 @@ nsresult HTMLEditor::MaybeInsertPaddingBRElementForEmptyLastLineAtSelection() {
     return NS_OK;
   }
 
-  nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+  const nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
     return NS_ERROR_FAILURE;
   }
@@ -5658,7 +5658,7 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
   // XXX Isn't this odd if there are only non-editable visible nodes?
   if (IsEmptyOneHardLine(arrayOfContents)) {
     // get selection location
-    nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+    const nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
     }
@@ -5875,7 +5875,7 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
   // empty block.
   // XXX Isn't this odd if there are only non-editable visible nodes?
   if (IsEmptyOneHardLine(arrayOfContents)) {
-    nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+    const nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
     }
@@ -6161,7 +6161,7 @@ EditActionResult HTMLEditor::HandleOutdentAtSelection() {
 
   // Push selection past end of left element of last split indented element.
   if (outdentResult.GetLeftContent()) {
-    nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+    const nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return EditActionHandled();
     }
@@ -6190,7 +6190,7 @@ EditActionResult HTMLEditor::HandleOutdentAtSelection() {
   // And pull selection before beginning of right element of last split
   // indented element.
   if (outdentResult.GetRightContent()) {
-    nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+    const nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return EditActionHandled();
     }
@@ -6727,7 +6727,8 @@ CreateElementResult HTMLEditor::ChangeListElementType(Element& aListElement,
   return CreateElementResult(std::move(listElement));
 }
 
-nsresult HTMLEditor::CreateStyleForInsertText(AbstractRange& aAbstractRange) {
+nsresult HTMLEditor::CreateStyleForInsertText(
+    const AbstractRange& aAbstractRange) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aAbstractRange.IsPositioned());
   MOZ_ASSERT(mTypeInState);
@@ -7004,7 +7005,7 @@ nsresult HTMLEditor::AlignContentsAtSelection(const nsAString& aAlignType) {
       //      node because of the fact that arrayOfContents can be empty?  We
       //      should probably revisit this issue. - kin
 
-      nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+      const nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
       if (NS_WARN_IF(!firstRange)) {
         return NS_ERROR_FAILURE;
       }
@@ -7045,7 +7046,7 @@ EditActionResult HTMLEditor::AlignContentsAtSelectionWithEmptyDivElement(
   MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
   MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
 
-  nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+  const nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
     return EditActionResult(NS_ERROR_FAILURE);
   }
@@ -7753,7 +7754,7 @@ nsresult HTMLEditor::MaybeExtendSelectionToHardLineEdgesForBlockEditAction() {
     return NS_OK;
   }
 
-  RefPtr<nsRange> range = SelectionRefPtr()->GetRangeAt(0);
+  const RefPtr<nsRange> range = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!range)) {
     return NS_ERROR_FAILURE;
   }
@@ -8082,7 +8083,7 @@ void HTMLEditor::GetSelectionRangesExtendedToIncludeAdjuscentWhiteSpaces(
 
   aOutArrayOfRanges.SetCapacity(SelectionRefPtr()->RangeCount());
   for (uint32_t i = 0; i < SelectionRefPtr()->RangeCount(); i++) {
-    nsRange* selectionRange = SelectionRefPtr()->GetRangeAt(i);
+    const nsRange* selectionRange = SelectionRefPtr()->GetRangeAt(i);
     MOZ_ASSERT(selectionRange);
 
     RefPtr<nsRange> extendedRange =
@@ -10354,7 +10355,7 @@ void HTMLEditor::SetSelectionInterlinePosition() {
   MOZ_ASSERT(SelectionRefPtr()->IsCollapsed());
 
   // Get the (collapsed) selection location
-  nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+  const nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
     return;
   }
@@ -10807,7 +10808,7 @@ bool HTMLEditor::StartOrEndOfSelectionRangesIsIn(nsIContent& aContent) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   for (uint32_t i = 0; i < SelectionRefPtr()->RangeCount(); ++i) {
-    nsRange* range = SelectionRefPtr()->GetRangeAt(i);
+    const nsRange* range = SelectionRefPtr()->GetRangeAt(i);
     nsINode* startContainer = range->GetStartContainer();
     if (startContainer) {
       if (&aContent == startContainer) {
@@ -11568,7 +11569,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
   // empty block.
   // XXX Isn't this odd if there are only non-editable visible nodes?
   if (IsEmptyOneHardLine(arrayOfContents)) {
-    nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+    const nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_ERROR_FAILURE;
     }

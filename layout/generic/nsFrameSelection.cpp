@@ -2048,7 +2048,7 @@ nsFrameSelection::CreateRangeExtendedToSomewhere(
   if (!selection || selection->RangeCount() != 1) {
     return Err(NS_ERROR_FAILURE);
   }
-  RefPtr<nsRange> firstRange = selection->GetRangeAt(0);
+  RefPtr<const nsRange> firstRange = selection->GetRangeAt(0);
   if (!firstRange || !firstRange->IsPositioned()) {
     return Err(NS_ERROR_FAILURE);
   }
@@ -2144,7 +2144,7 @@ nsresult nsFrameSelection::ClearNormalSelection() {
   return err.StealNSResult();
 }
 
-static nsIContent* GetFirstSelectedContent(nsRange* aRange) {
+static nsIContent* GetFirstSelectedContent(const nsRange* aRange) {
   if (!aRange) {
     return nullptr;
   }

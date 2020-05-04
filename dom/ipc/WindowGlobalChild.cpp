@@ -75,9 +75,10 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
   // Initalize our WindowGlobalChild object.
   RefPtr<dom::BrowsingContext> bc = docshell->GetBrowsingContext();
 
-  // When creating a new window global child we also need to look at the
-  // channel's Cross-Origin-Opener-Policy and set it on the browsing context
-  // so it's available in the parent process.
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  // Opener policy is set when we start to load a document. Here, we ensure we
+  // have set the correct Opener policy so that it will be available in the
+  // parent process through window global child.
   nsCOMPtr<nsIChannel> chan = aWindow->GetDocument()->GetChannel();
   nsCOMPtr<nsILoadInfo> loadInfo = chan ? chan->LoadInfo() : nullptr;
   nsCOMPtr<nsIHttpChannelInternal> httpChan = do_QueryInterface(chan);
@@ -86,8 +87,9 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
       loadInfo->GetExternalContentPolicyType() ==
           nsIContentPolicy::TYPE_DOCUMENT &&
       NS_SUCCEEDED(httpChan->GetCrossOriginOpenerPolicy(&policy))) {
-    bc->SetOpenerPolicy(policy);
+    MOZ_DIAGNOSTIC_ASSERT(policy == bc->GetOpenerPolicy());
   }
+#endif
 
   WindowGlobalInit init(principal,
                         aWindow->GetDocumentContentBlockingAllowListPrincipal(),

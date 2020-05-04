@@ -3922,7 +3922,7 @@ already_AddRefed<Element> HTMLEditor::GetFirstSelectedTableCellElement(
 
   MOZ_ASSERT(!aRv.Failed());
 
-  nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
+  const nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
     // XXX Why don't we treat "not found" in this case?
     aRv.Throw(NS_ERROR_FAILURE);
@@ -4001,7 +4001,7 @@ already_AddRefed<Element> HTMLEditor::GetNextSelectedTableCellElement(
   MOZ_ASSERT(mSelectedCellIndex > 0);
   for (; mSelectedCellIndex < SelectionRefPtr()->RangeCount();
        mSelectedCellIndex++) {
-    nsRange* range = SelectionRefPtr()->GetRangeAt(mSelectedCellIndex);
+    const nsRange* range = SelectionRefPtr()->GetRangeAt(mSelectedCellIndex);
     if (NS_WARN_IF(!range)) {
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;

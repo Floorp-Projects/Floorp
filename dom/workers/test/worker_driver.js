@@ -53,6 +53,7 @@ function workerTestExec(script) {
         SpecialPowers.Cc["@mozilla.org/android/bridge;1"].getService(
           SpecialPowers.Ci.nsIAndroidBridge
         ).isFennec;
+      const isCrossOriginIsolated = window.crossOriginIsolated;
 
       const result = {
         isNightly,
@@ -65,6 +66,7 @@ function workerTestExec(script) {
         isLinux,
         isInsecureContext,
         isFennec,
+        isCrossOriginIsolated,
       };
 
       worker.postMessage({

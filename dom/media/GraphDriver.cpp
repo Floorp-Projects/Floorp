@@ -957,6 +957,12 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
 
   mBuffer.BufferFilled();
 
+#ifdef MOZ_SAMPLE_TYPE_FLOAT32
+  // Prevent returning NaN to the OS mixer, and propagating NaN into the reverse
+  // stream of the AEC.
+  NaNToZeroInPlace(aOutputBuffer, aFrames * mOutputChannelCount);
+#endif
+
   // Callback any observers for the AEC speaker data.  Note that one
   // (maybe) of these will be full-duplex, the others will get their input
   // data off separate cubeb callbacks.  Take care with how stuff is
