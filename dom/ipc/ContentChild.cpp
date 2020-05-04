@@ -849,8 +849,7 @@ static nsresult GetCreateWindowParams(nsIOpenWindowInfo* aOpenWindowInfo,
   }
 
   if (!referrerInfo) {
-    referrerInfo = new ReferrerInfo();
-    referrerInfo->InitWithDocument(doc);
+    referrerInfo = new ReferrerInfo(*doc);
   }
 
   referrerInfo.swap(*aReferrerInfo);
