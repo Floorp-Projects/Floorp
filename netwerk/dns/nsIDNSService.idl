@@ -406,6 +406,7 @@ interface nsIDNSService : nsISupports
      */
     const unsigned long RESOLVE_TYPE_DEFAULT = 0;
     const unsigned long RESOLVE_TYPE_TXT = 16;
+    const unsigned long RESOLVE_TYPE_HTTPSSVC = 65345;
 };
 
 %{C++
