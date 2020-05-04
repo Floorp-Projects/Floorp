@@ -28,7 +28,7 @@ job-defaults:
     treeherder:
         symbol: Rel(BncSubNazgul-P)
         kind: test
-        tier: 3
+        tier: 1
 
 jobs:
     firefox:
