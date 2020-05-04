@@ -1769,14 +1769,21 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   FunctionBox* funbox = pc_->functionBox();
   funbox->synchronizeArgCount();
 
-  LazyScriptCreationData data(cx_);
-  if (!data.init(cx_, pc_->closedOverBindingsForLazy(),
-                 std::move(pc_->innerFunctionIndexesForLazy))) {
+  // Check if we will overflow the `ngcthings` field later.
+  mozilla::CheckedUint32 ngcthings =
+      mozilla::CheckedUint32(pc_->innerFunctionIndexesForLazy.length()) +
+      mozilla::CheckedUint32(pc_->closedOverBindingsForLazy().length());
+  if (!ngcthings.isValid()) {
+    ReportAllocationOverflow(cx_);
     return false;
   }
 
-  funbox->functionCreationData().get().lazyScriptData =
-      mozilla::Some(std::move(data));
+  FunctionCreationData& fcd = funbox->functionCreationData().get();
+
+  // Initialize the data used for lazy scripts.
+  fcd.innerFunctionIndexes.emplace(std::move(pc_->innerFunctionIndexesForLazy));
+  fcd.closedOverBindings.emplace(std::move(pc_->closedOverBindingsForLazy()));
+
   return true;
 }
 
@@ -1805,25 +1812,21 @@ bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
 
       funbox->initializeFunction(fun);
 
-      mozilla::Maybe<LazyScriptCreationData> data =
-          std::move(fcd.get().lazyScriptData);
-      if (!data) {
+      if (!fcd.get().hasLazyScriptData()) {
         return true;
       }
 
-      return data->create(parser->cx_, parser->compilationInfo_, fun, funbox,
-                          parser->sourceObject_);
+      return fcd.get().createLazyScript(parser->cx_, parser->compilationInfo_,
+                                        fun, funbox, parser->sourceObject_);
     };
     return root->visitRecursively(this->cx_, this, visitor);
   }
   return true;
 }
 
-bool LazyScriptCreationData::create(JSContext* cx,
-                                    CompilationInfo& compilationInfo,
-                                    HandleFunction function,
-                                    FunctionBox* funbox,
-                                    HandleScriptSourceObject sourceObject) {
+bool FunctionCreationData::createLazyScript(
+    JSContext* cx, CompilationInfo& compilationInfo, HandleFunction function,
+    FunctionBox* funbox, HandleScriptSourceObject sourceObject) {
   MOZ_ASSERT(function);
 
   using ImmutableFlags = ImmutableScriptFlagsEnum;
@@ -1836,8 +1839,8 @@ bool LazyScriptCreationData::create(JSContext* cx,
                          funbox->isLikelyConstructorWrapper());
 
   BaseScript* lazy = BaseScript::CreateLazy(
-      cx, compilationInfo, function, sourceObject, closedOverBindings,
-      innerFunctionIndexes, funbox->extent, immutableFlags);
+      cx, compilationInfo, function, sourceObject, *closedOverBindings,
+      *innerFunctionIndexes, funbox->extent, immutableFlags);
   if (!lazy) {
     return false;
   }
