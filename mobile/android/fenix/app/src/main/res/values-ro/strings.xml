@@ -451,7 +451,7 @@
     <!-- Button in the current session menu. Opens the share menu when pressed -->
     <string name="current_session_share">Partajează</string>
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
-    <string name="current_session_image">Imaginea sesiunii curente</string>
+    <string name="current_session_image">Imaginea sesiunii actuale</string>
     <!-- Button to save the current set of tabs into a collection -->
     <string name="save_to_collection">Salvează în colecție</string>
     <!-- Text for the menu button to delete a collection -->

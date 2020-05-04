@@ -80,7 +80,7 @@
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Site do desktop</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
-    <string name="browser_menu_add_to_homescreen">Adicionar à tela inicial</string>
+    <string name="browser_menu_add_to_homescreen">Adicionar à tela</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Instalar</string>
     <!-- Browser menu button that opens the find in page menu -->
