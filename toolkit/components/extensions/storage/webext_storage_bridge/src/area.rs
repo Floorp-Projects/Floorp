@@ -23,8 +23,11 @@ use crate::store::{LazyStore, LazyStoreConfig};
 
 /// An XPCOM component class for the Rust extension storage API. This class
 /// implements the interfaces needed for syncing and storage.
+///
+/// This class can be created on any thread, but must not be shared between
+/// threads. In Rust terms, it's `Send`, but not `Sync`.
 #[derive(xpcom)]
-#[xpimplements(mozIConfigurableExtensionStorageArea)]
+#[xpimplements(mozIConfigurableExtensionStorageArea, mozIInterruptible)]
 #[refcnt = "nonatomic"]
 pub struct InitStorageSyncArea {
     /// A background task queue, used to run all our storage operations on a
@@ -211,6 +214,8 @@ impl StorageSyncArea {
         let mut maybe_store = self.store.borrow_mut();
         match mem::take(&mut *maybe_store) {
             Some(store) => {
+                // Interrupt any currently-running statements.
+                store.interrupt();
                 // If dispatching the runnable fails, we'll drop the store and
                 // close its database connection on the main thread. This is a
                 // last resort, and can also happen if the last `RefPtr` to this
@@ -237,4 +242,17 @@ fn teardown(
     let runnable = TaskRunnable::new(TeardownTask::name(), Box::new(task))?;
     runnable.dispatch_with_options(queue.coerce(), DispatchOptions::new().may_block(true))?;
     Ok(())
+}
+
+/// `mozIInterruptible` implementation.
+impl StorageSyncArea {
+    xpcom_method!(
+        interrupt => Interrupt()
+    );
+    /// Interrupts any operations currently running on the background task
+    /// queue.
+    fn interrupt(&self) -> Result<()> {
+        self.store()?.interrupt();
+        Ok(())
+    }
 }
