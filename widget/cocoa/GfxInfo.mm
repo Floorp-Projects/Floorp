@@ -102,7 +102,7 @@ nsresult GfxInfo::Init() {
 
   AddCrashReportAnnotations();
 
-  mOSXVersion = nsCocoaFeatures::macOSVersion();
+  mOSXVersion = nsCocoaFeatures::OSXVersion();
 
   return rv;
 }
