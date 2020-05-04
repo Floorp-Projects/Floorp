@@ -642,6 +642,23 @@
             "description": "The ID of the tab which is to be duplicated."
           },
           {
+            "type": "object",
+            "name": "duplicateProperties",
+            "optional": true,
+            "properties": {
+              "index": {
+                "type": "integer",
+                "optional": true,
+                "description": "The position the new tab should take in the window. The provided value will be clamped to between zero and the number of tabs in the window."
+              },
+              "active": {
+                "type": "boolean",
+                "optional": true,
+                "description": "Whether the tab should become the active tab in the window. Does not affect whether the window is focused (see $(ref:windows.update)). Defaults to <var>true</var>."
+              }
+            }
+          },
+          {
             "type": "function",
             "name": "callback",
             "optional": true,

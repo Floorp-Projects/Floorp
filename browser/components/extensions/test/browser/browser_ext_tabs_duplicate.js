@@ -173,6 +173,93 @@ add_task(async function testDuplicatePinnedTab() {
   await extension.unload();
 });
 
+add_task(async function testDuplicateTabInBackground() {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.net/");
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["tabs"],
+    },
+
+    background: async function() {
+      let tabs = await browser.tabs.query({
+        lastFocusedWindow: true,
+        active: true,
+      });
+      let tab = await browser.tabs.duplicate(tabs[0].id, { active: false });
+      // Should not be the active tab
+      browser.test.assertFalse(tab.active);
+
+      await browser.tabs.remove([tabs[0].id, tab.id]);
+      browser.test.notifyPass("tabs.duplicate.background");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("tabs.duplicate.background");
+  await extension.unload();
+});
+
+add_task(async function testDuplicateTabAtIndex() {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.net/");
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["tabs"],
+    },
+
+    background: async function() {
+      let tabs = await browser.tabs.query({
+        lastFocusedWindow: true,
+        active: true,
+      });
+      let tab = await browser.tabs.duplicate(tabs[0].id, { index: 0 });
+      browser.test.assertEq(0, tab.index);
+
+      await browser.tabs.remove([tabs[0].id, tab.id]);
+      browser.test.notifyPass("tabs.duplicate.index");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("tabs.duplicate.index");
+  await extension.unload();
+});
+
+add_task(async function testDuplicatePinnedTabAtIncorrectIndex() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example.net/"
+  );
+  gBrowser.pinTab(tab);
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["tabs"],
+    },
+
+    background: async function() {
+      let tabs = await browser.tabs.query({
+        lastFocusedWindow: true,
+        active: true,
+      });
+      let tab = await browser.tabs.duplicate(tabs[0].id, { index: 0 });
+      browser.test.assertEq(1, tab.index);
+      browser.test.assertFalse(
+        tab.pinned,
+        "Duplicated tab should not be pinned"
+      );
+
+      await browser.tabs.remove([tabs[0].id, tab.id]);
+      browser.test.notifyPass("tabs.duplicate.incorrect_index");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("tabs.duplicate.incorrect_index");
+  await extension.unload();
+});
+
 add_task(async function testDuplicateResolvePromiseRightAway() {
   const BASE =
     "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
