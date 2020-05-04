@@ -89,7 +89,15 @@ class DNSListener {
     });
   }
   onLookupComplete(inRequest, inRecord, inStatus) {
-    this.resolve([inRequest, inRecord, inStatus]);
+    let txtRec;
+    try {
+      txtRec = inRecord.QueryInterface(Ci.nsIDNSByTypeRecord);
+    } catch (e) {}
+    if (txtRec) {
+      this.resolve([inRequest, txtRec, inStatus, "onLookupByTypeComplete"]);
+    } else {
+      this.resolve([inRequest, inRecord, inStatus, "onLookupComplete"]);
+    }
   }
   // So we can await this as a promise.
   then() {
@@ -105,7 +113,7 @@ add_task(async function testEsniRequest() {
   // use the h2 server as DOH provider
   prefs.setCharPref(
     "network.trr.uri",
-    "https://foo.example.com:" + h2Port + "/doh"
+    "https://foo.example.com:" + h2Port + "/esni-dns"
   );
 
   let listenerEsni = new DNSListener();
@@ -118,12 +126,11 @@ add_task(async function testEsniRequest() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus] = await listenerEsni;
+  let [inRequest, inRecord, inStatus, inType] = await listenerEsni;
+  Assert.equal(inType, "onLookupByTypeComplete", "check correct type");
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
-  let answer = inRecord
-    .QueryInterface(Ci.nsIDNSTXTRecord)
-    .getRecordsAsOneString();
+  let answer = inRecord.getRecordsAsOneString();
   Assert.equal(answer, test_answer, "got correct answer");
 });
 
@@ -142,7 +149,8 @@ add_task(async function testEsniPushPart1() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus] = await listenerAddr;
+  let [inRequest, inRecord, inStatus, inType] = await listenerAddr;
+  Assert.equal(inType, "onLookupComplete", "check correct type");
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
   let answer = inRecord.getNextAddrAsString();
@@ -167,34 +175,10 @@ add_task(async function testEsniPushPart2() {
     defaultOriginAttributes
   );
 
-  let [inRequest, inRecord, inStatus] = await listenerEsni;
+  let [inRequest, inRecord, inStatus, inType] = await listenerEsni;
+  Assert.equal(inType, "onLookupByTypeComplete", "check correct type");
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
-  let answer = inRecord
-    .QueryInterface(Ci.nsIDNSTXTRecord)
-    .getRecordsAsOneString();
+  let answer = inRecord.getRecordsAsOneString();
   Assert.equal(answer, test_answer, "got correct answer");
-});
-
-add_task(async function testEsniHTTPSSVC() {
-  prefs.setCharPref(
-    "network.trr.uri",
-    "https://foo.example.com:" + h2Port + "/doh"
-  );
-  let listenerEsni = new DNSListener();
-  let request = dns.asyncResolveByType(
-    "httpssvc_esni.example.com",
-    dns.RESOLVE_TYPE_HTTPSSVC,
-    0,
-    listenerEsni,
-    mainThread,
-    defaultOriginAttributes
-  );
-
-  let [inRequest, inRecord, inStatus] = await listenerEsni;
-  Assert.equal(inRequest, request, "correct request was used");
-  Assert.equal(inStatus, Cr.NS_OK, "status OK");
-  let answer = inRecord.QueryInterface(Ci.nsIDNSHTTPSSVCRecord).records;
-  let esni = answer[0].values[0].QueryInterface(Ci.nsISVCParamEsniConfig);
-  Assert.equal(esni.esniConfig, "testytestystringstring", "got correct answer");
 });
