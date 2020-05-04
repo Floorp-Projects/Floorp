@@ -8,7 +8,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { Changeset, SyncEngine } = ChromeUtils.import(
   "resource://services-sync/engines.js"
 );
-const { CryptoWrapper } = ChromeUtils.import(
+const { RawCryptoWrapper } = ChromeUtils.import(
   "resource://services-sync/record.js"
 );
 
@@ -43,11 +43,13 @@ class BridgedStore {
   async applyIncomingBatch(records) {
     await this.engine.initialize();
     for (let chunk of PlacesUtils.chunkArray(records, this._batchChunkSize)) {
-      // TODO: We can avoid parsing and re-serializing here... We also need to
-      // pass attributes like `modified` and `sortindex`, which are not part
-      // of the cleartext.
-      let incomingCleartexts = chunk.map(record => record.cleartextToString());
-      await promisify(this.engine._bridge.storeIncoming, incomingCleartexts);
+      let incomingEnvelopesAsJSON = chunk.map(record =>
+        JSON.stringify(record.toIncomingEnvelope())
+      );
+      await promisify(
+        this.engine._bridge.storeIncoming,
+        incomingEnvelopesAsJSON
+      );
     }
     // Array of failed records.
     return [];
@@ -104,9 +106,60 @@ class BridgedTracker {
   }
 }
 
-class BridgedRecord extends CryptoWrapper {
-  constructor(collection, id, type) {
-    super(collection, id, type);
+/**
+ * A wrapper class to convert between BSOs on the JS side, and envelopes on the
+ * Rust side. This class intentionally subclasses `RawCryptoWrapper`, because we
+ * don't want the stringification and parsing machinery in `CryptoWrapper`.
+ */
+class BridgedRecord extends RawCryptoWrapper {
+  /**
+   * Creates an outgoing record from an envelope returned by a bridged engine.
+   * This must be kept in sync with `sync15_traits::OutgoingEnvelope`.
+   *
+   * @param  {String} collection The collection name.
+   * @param  {Object} envelope   The outgoing envelope, returned from
+   *                             `mozIBridgedSyncEngine::apply`.
+   * @return {BridgedRecord}     A Sync record ready to encrypt and upload.
+   */
+  static fromOutgoingEnvelope(collection, envelope) {
+    if (typeof envelope.id != "string") {
+      throw new TypeError("Outgoing envelope missing ID");
+    }
+    if (typeof envelope.cleartext != "string") {
+      throw new TypeError("Outgoing envelope missing cleartext");
+    }
+    let record = new BridgedRecord(collection, envelope.id);
+    record.cleartext = envelope.cleartext;
+    return record;
+  }
+
+  transformBeforeEncrypt(cleartext) {
+    if (typeof cleartext != "string") {
+      throw new TypeError("Outgoing bridged engine records must be strings");
+    }
+    return cleartext;
+  }
+
+  transformAfterDecrypt(cleartext) {
+    if (typeof cleartext != "string") {
+      throw new TypeError("Incoming bridged engine records must be strings");
+    }
+    return cleartext;
+  }
+
+  /*
+   * Converts this incoming record into an envelope to pass to a bridged engine.
+   * This object must be kept in sync with `sync15_traits::IncomingEnvelope`.
+   *
+   * @return {Object} The incoming envelope, to pass to
+   *                  `mozIBridgedSyncEngine::storeIncoming`.
+   */
+  toIncomingEnvelope() {
+    return {
+      id: this.data.id,
+      modified: this.data.modified,
+      cleartext: this.cleartext,
+    };
   }
 }
 
@@ -324,15 +377,16 @@ BridgedEngine.prototype = {
     await super._processIncoming(newitems);
     await this.initialize();
 
-    let outgoingRecords = await promisify(this._bridge.apply);
+    let outgoingEnvelopesAsJSON = await promisify(this._bridge.apply);
     let changeset = {};
-    for (let record of outgoingRecords) {
-      // TODO: It would be nice if we could pass the cleartext through as-is
-      // here, too, instead of parsing and re-wrapping for `BridgedRecord`.
-      let cleartext = JSON.parse(record);
-      changeset[cleartext.id] = {
+    for (let envelopeAsJSON of outgoingEnvelopesAsJSON) {
+      let record = BridgedRecord.fromOutgoingEnvelope(
+        this.name,
+        JSON.parse(envelopeAsJSON)
+      );
+      changeset[record.id] = {
         synced: false,
-        cleartext,
+        record,
       };
     }
     this._modified.replace(changeset);
@@ -358,9 +412,7 @@ BridgedEngine.prototype = {
     if (!change) {
       throw new TypeError("Can't create record for unchanged item");
     }
-    let record = new this._recordObj(this.name, id);
-    record.cleartext = change.cleartext;
-    return record;
+    return change.record;
   },
 
   async _resetClient() {
