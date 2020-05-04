@@ -54,6 +54,7 @@ UNIFIED_SOURCES += [
     'ContentBlockingNotifier.cpp',
     'ContentBlockingUserInteraction.cpp',
     'DynamicFpiRedirectHeuristic.cpp',
+    'RejectForeignAllowList.cpp',
     'SettingsChangeObserver.cpp',
     'StorageAccess.cpp',
     'StoragePrincipalHelper.cpp',
