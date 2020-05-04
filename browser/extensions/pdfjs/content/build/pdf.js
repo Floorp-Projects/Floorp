@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.5.95';
-var pdfjsBuild = 'c218e94f6';
+var pdfjsVersion = '2.5.145';
+var pdfjsBuild = '2711f4bc8';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1219,7 +1219,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.5.95',
+    apiVersion: '2.5.145',
     source: {
       data: source.data,
       url: source.url,
@@ -2599,14 +2599,16 @@ class WorkerTransport {
             onUnsupportedFeature: this._onUnsupportedFeature.bind(this),
             fontRegistry
           });
-          this.fontLoader.bind(font).then(() => {
-            this.commonObjs.resolve(id, font);
-          }, reason => {
-            messageHandler.sendWithPromise("FontFallback", {
+          this.fontLoader.bind(font).catch(reason => {
+            return messageHandler.sendWithPromise("FontFallback", {
               id
-            }).finally(() => {
-              this.commonObjs.resolve(id, font);
             });
+          }).finally(() => {
+            if (!params.fontExtraProperties && font.data) {
+              font.data = null;
+            }
+
+            this.commonObjs.resolve(id, font);
           });
           break;
 
@@ -3162,9 +3164,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.5.95';
+const version = '2.5.145';
 exports.version = version;
-const build = 'c218e94f6';
+const build = '2711f4bc8';
 exports.build = build;
 
 /***/ }),
@@ -3347,12 +3349,15 @@ class PageViewport {
         rotateD = 0;
         break;
 
-      default:
+      case 0:
         rotateA = 1;
         rotateB = 0;
         rotateC = 0;
         rotateD = -1;
         break;
+
+      default:
+        throw new Error("PageViewport: Invalid rotation, must be a multiple of 90 degrees.");
     }
 
     if (dontFlip) {
@@ -5168,7 +5173,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       var fontSize = current.fontSize / current.fontSizeScale;
       var fillStrokeMode = textRenderingMode & _util.TextRenderingMode.FILL_STROKE_MASK;
       var isAddToPathSet = !!(textRenderingMode & _util.TextRenderingMode.ADD_TO_PATH_FLAG);
-      const patternFill = current.patternFill && font.data;
+      const patternFill = current.patternFill && !font.missingFile;
       var addToPath;
 
       if (font.disableFontFace || isAddToPathSet || patternFill) {
@@ -6476,7 +6481,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.isNodeJS = void 0;
-const isNodeJS = typeof process === "object" && process + "" === "[object process]" && !process.versions["nw"] && !process.versions["electron"];
+const isNodeJS = typeof process === "object" && process + "" === "[object process]" && !process.versions.nw && !process.versions.electron;
 exports.isNodeJS = isNodeJS;
 
 /***/ }),
@@ -9381,6 +9386,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
       }
 
       element.disabled = this.data.readOnly;
+      element.name = this.data.fieldName;
 
       if (this.data.maxLen !== null) {
         element.maxLength = this.data.maxLen;
@@ -9450,6 +9456,7 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
     const element = document.createElement("input");
     element.disabled = this.data.readOnly;
     element.type = "checkbox";
+    element.name = this.data.fieldName;
 
     if (this.data.fieldValue && this.data.fieldValue !== "Off") {
       element.setAttribute("checked", true);
@@ -9501,6 +9508,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
     this.container.className = "choiceWidgetAnnotation";
     const selectElement = document.createElement("select");
     selectElement.disabled = this.data.readOnly;
+    selectElement.name = this.data.fieldName;
 
     if (!this.data.combo) {
       selectElement.size = this.data.options.length;
