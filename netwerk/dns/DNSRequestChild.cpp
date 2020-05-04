@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/net/ChildDNSService.h"
+#include "mozilla/net/DNSByTypeRecord.h"
 #include "mozilla/net/DNSRequestChild.h"
 #include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/net/NeckoChild.h"
@@ -164,38 +165,83 @@ ChildDNSRecord::ReportUnusable(uint16_t aPort) {
   return NS_OK;
 }
 
-class ChildDNSByTypeRecord : public nsIDNSByTypeRecord {
+class ChildDNSByTypeRecord : public nsIDNSByTypeRecord,
+                             public nsIDNSTXTRecord,
+                             public nsIDNSHTTPSSVCRecord {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_FORWARD_SAFE_NSIDNSRECORD(((nsIDNSRecord*)nullptr))
   NS_DECL_NSIDNSBYTYPERECORD
+  NS_DECL_NSIDNSTXTRECORD
+  NS_DECL_NSIDNSHTTPSSVCRECORD
 
-  explicit ChildDNSByTypeRecord(const nsTArray<nsCString>& reply);
+  explicit ChildDNSByTypeRecord(const TypeRecordResultType& reply);
 
  private:
   virtual ~ChildDNSByTypeRecord() = default;
 
-  nsTArray<nsCString> mRecords;
+  TypeRecordResultType mResults = AsVariant(mozilla::Nothing());
 };
 
-NS_IMPL_ISUPPORTS(ChildDNSByTypeRecord, nsIDNSByTypeRecord, nsIDNSRecord)
+NS_IMPL_ISUPPORTS(ChildDNSByTypeRecord, nsIDNSByTypeRecord, nsIDNSRecord,
+                  nsIDNSTXTRecord, nsIDNSHTTPSSVCRecord)
 
-ChildDNSByTypeRecord::ChildDNSByTypeRecord(const nsTArray<nsCString>& reply) {
-  mRecords = reply;
+ChildDNSByTypeRecord::ChildDNSByTypeRecord(const TypeRecordResultType& reply) {
+  mResults = reply;
+}
+
+NS_IMETHODIMP
+ChildDNSByTypeRecord::GetType(uint32_t* aType) {
+  *aType = mResults.match(
+      [](TypeRecordEmpty&) {
+        MOZ_ASSERT(false, "This should never be the case");
+        return nsIDNSService::RESOLVE_TYPE_DEFAULT;
+      },
+      [](TypeRecordTxt&) { return nsIDNSService::RESOLVE_TYPE_TXT; },
+      [](TypeRecordHTTPSSVC&) { return nsIDNSService::RESOLVE_TYPE_HTTPSSVC; });
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 ChildDNSByTypeRecord::GetRecords(nsTArray<nsCString>& aRecords) {
-  aRecords = mRecords;
+  if (!mResults.is<TypeRecordTxt>()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  aRecords = mResults.as<nsTArray<nsCString>>();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 ChildDNSByTypeRecord::GetRecordsAsOneString(nsACString& aRecords) {
   // deep copy
-  for (uint32_t i = 0; i < mRecords.Length(); i++) {
-    aRecords.Append(mRecords[i]);
+  if (!mResults.is<TypeRecordTxt>()) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
+  auto& results = mResults.as<nsTArray<nsCString>>();
+  for (uint32_t i = 0; i < results.Length(); i++) {
+    aRecords.Append(results[i]);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ChildDNSByTypeRecord::GetRecords(nsTArray<RefPtr<nsISVCBRecord>>& aRecords) {
+  if (!mResults.is<TypeRecordHTTPSSVC>()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  auto& results = mResults.as<TypeRecordHTTPSSVC>();
+
+  for (const SVCB& r : results) {
+    RefPtr<nsISVCBRecord> rec = new SVCBRecord(r);
+    aRecords.AppendElement(rec);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ChildDNSByTypeRecord::GetResults(mozilla::net::TypeRecordResultType* aResults) {
+  *aResults = mResults;
   return NS_OK;
 }
 
@@ -328,9 +374,9 @@ bool DNSRequestSender::OnRecvLookupCompleted(const DNSRequestResponse& reply) {
       mResultStatus = reply.get_nsresult();
       break;
     }
-    case DNSRequestResponse::TArrayOfnsCString: {
+    case DNSRequestResponse::TIPCTypeRecord: {
       MOZ_ASSERT(mType != nsIDNSService::RESOLVE_TYPE_DEFAULT);
-      mResultRecord = new ChildDNSByTypeRecord(reply.get_ArrayOfnsCString());
+      mResultRecord = new ChildDNSByTypeRecord(reply.get_IPCTypeRecord().mData);
       break;
     }
     default:

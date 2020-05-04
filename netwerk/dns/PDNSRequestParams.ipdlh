@@ -5,7 +5,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-using NetAddrArray from "mozilla/net/PDNSParams.h";
+using NetAddr from "mozilla/net/DNS.h";
+using mozilla::net::IPCTypeRecord from "mozilla/net/DNSByTypeRecord.h";
+
 
 namespace mozilla {
 namespace net {
@@ -17,13 +19,13 @@ namespace net {
 struct DNSRecord
 {
   nsCString canonicalName;
-  NetAddrArray addrs;
+  NetAddr[] addrs;
 };
 
 union DNSRequestResponse
 {
   DNSRecord;
-  nsCString[];   // The result of a by-type query
+  IPCTypeRecord; // The result of a by-type query
   nsresult;   // if error
 };
 
