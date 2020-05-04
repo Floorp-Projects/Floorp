@@ -575,7 +575,7 @@ function testParseVariable(doc, parser) {
     };
 
     const frag = parser.parseCssProperty("color", test.text, {
-      isVariableInUse: getValue,
+      getVariableValue: getValue,
       unmatchedVariableClass: "unmatched-class",
     });
 
