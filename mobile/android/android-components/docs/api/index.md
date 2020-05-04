@@ -207,6 +207,7 @@
 | [mozilla.components.support.base.android](mozilla.components.support.base.android/index.md) |  |
 | [mozilla.components.support.base.coroutines](mozilla.components.support.base.coroutines/index.md) |  |
 | [mozilla.components.support.base.crash](mozilla.components.support.base.crash/index.md) |  |
+| [mozilla.components.support.base.ext](mozilla.components.support.base.ext/index.md) |  |
 | [mozilla.components.support.base.facts](mozilla.components.support.base.facts/index.md) |  |
 | [mozilla.components.support.base.facts.processor](mozilla.components.support.base.facts.processor/index.md) |  |
 | [mozilla.components.support.base.feature](mozilla.components.support.base.feature/index.md) |  |
