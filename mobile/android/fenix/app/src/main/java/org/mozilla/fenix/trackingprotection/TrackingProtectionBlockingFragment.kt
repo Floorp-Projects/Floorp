@@ -32,7 +32,6 @@ class TrackingProtectionBlockingFragment :
         when (args.protectionMode) {
 
             getString(R.string.preference_enhanced_tracking_protection_standard_option) -> {
-                category_fingerprinters.isVisible = false
                 category_tracking_content.isVisible = false
             }
 
