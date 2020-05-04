@@ -68,6 +68,13 @@ function createTemporarySaveDirectory() {
 }
 
 add_task(async function() {
+  // Use nsICookieService.BEHAVIOR_REJECT_TRACKER to avoid cookie partitioning.
+  // In this test case, if the cookie is partitioned, there will be no cookie
+  // nsICookieServicebeing sent to compare.
+  await SpecialPowers.pushPrefEnv({
+    set: [["network.cookie.cookieBehavior", 4]],
+  });
+
   await BrowserTestUtils.withNewTab("about:blank", async function(browser) {
     Services.obs.addObserver(checkRequest, "http-on-modify-request");
     BrowserTestUtils.loadURI(
