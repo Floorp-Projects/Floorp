@@ -31,6 +31,11 @@ private val re = object {
 fun String.isUrl() = URLStringUtils.isURLLike(this)
 
 /**
+ * Checks if this String is a URL of an extension page.
+ */
+fun String.isExtensionUrl() = this.startsWith("moz-extension://")
+
+/**
  * Checks if this string is a URL.
  *
  * This method performs a strict check to determine whether the string is a URL. It takes longer
