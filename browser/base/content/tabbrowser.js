@@ -4574,9 +4574,17 @@
      *          Can be from a different window as well
      * @param   aRestoreTabImmediately
      *          Can defer loading of the tab contents
+     * @param   aOptions
+     *          The new index of the tab
      */
-    duplicateTab(aTab, aRestoreTabImmediately) {
-      return SessionStore.duplicateTab(window, aTab, 0, aRestoreTabImmediately);
+    duplicateTab(aTab, aRestoreTabImmediately, aOptions) {
+      return SessionStore.duplicateTab(
+        window,
+        aTab,
+        0,
+        aRestoreTabImmediately,
+        aOptions
+      );
     },
 
     addToMultiSelectedTabs(aTab, { isLastMultiSelectChange = false } = {}) {
