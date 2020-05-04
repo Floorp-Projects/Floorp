@@ -117,6 +117,14 @@ class nsCSSProps {
   }
 
  private:
+  /**
+   * Recoumputes the enabled state of a pref. If aPrefName is nullptr,
+   * recomputes the state of all prefs in gPropertyEnabled.
+   * aClosure is the pref callback closure data, which is not used.
+   */
+  static void RecomputeEnabledState(const char* aPrefName,
+                                    void* aClosure = nullptr);
+
   // A table for shorthand properties.  The appropriate index is the
   // property ID minus eCSSProperty_COUNT_no_shorthands.
   static const nsCSSPropertyID* const
