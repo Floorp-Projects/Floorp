@@ -244,7 +244,7 @@ class AutoAwaitIsKeyword;
 template <class ParseHandler, typename Unit>
 class AutoInParametersOfAsyncFunction;
 
-class MOZ_STACK_CLASS ParserSharedBase : public JS::AutoGCRooter {
+class MOZ_STACK_CLASS ParserSharedBase : public JS::CustomAutoRooter {
  public:
   enum class Kind { Parser, BinASTParser };
 
@@ -333,7 +333,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
 
   bool checkOptions();
 
-  void trace(JSTracer* trc);
+  void trace(JSTracer* trc) final;
 
   const char* getFilename() const { return anyChars.getFilename(); }
   TokenPos pos() const { return anyChars.currentToken().pos; }

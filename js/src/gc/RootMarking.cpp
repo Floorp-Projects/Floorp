@@ -163,16 +163,6 @@ JS_PUBLIC_API void js::TraceValueArray(JSTracer* trc, size_t length,
 
 void AutoGCRooter::trace(JSTracer* trc) {
   switch (kind_) {
-    case Kind::Parser:
-      static_cast<frontend::ParserBase*>(this)->trace(trc);
-      break;
-
-#if defined(JS_BUILD_BINAST)
-    case Kind::BinASTParser:
-      static_cast<frontend::BinASTParserBase*>(this)->trace(trc);
-      break;
-#endif  // defined(JS_BUILD_BINAST)
-
     case Kind::Wrapper:
       static_cast<AutoWrapperRooter*>(this)->trace(trc);
       break;

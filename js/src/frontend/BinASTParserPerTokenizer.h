@@ -226,7 +226,7 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
                                          const ErrorOffset& offset) override;
 
  private:
-  void doTrace(JSTracer* trc) final;
+  void trace(JSTracer* trc) final;
 
  public:
   virtual ErrorReporter& errorReporter() override { return *this; }
