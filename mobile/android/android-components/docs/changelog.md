@@ -18,7 +18,7 @@ permalink: /changelog/
 * **feature-top-sites**
   * ⚠️ **This is a breaking change**: Added `isDefault` to the top site entity, which allows application to specify a default top site that is added by the application. This is called through `TopSiteStorage.addTopSite`.
     * If your application is using Nightly Snapshots of v40.0.0, please test that the Top Sites feature still works and update to the latest v40.0.0 if any schema errors are encountered.
-  
+
 * **feature-push**
   * Simplified error handling and reduced non-fatal exception reporting.
 
@@ -27,6 +27,9 @@ permalink: /changelog/
 
 * **support-ktx**
   * `String.isUrlStrict` is now deprecated due to performance issues. Consider using the less strict `isURL` instead or creating a new method using `:lib-publicsuffixlist`.
+
+* **browser-menu**
+  * Added `SimpleBrowserMenuHighlightableItem` which is a simple menu highlightable item (no images/icons).
 
 # 39.0.0
 
