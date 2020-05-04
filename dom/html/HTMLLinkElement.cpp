@@ -469,8 +469,6 @@ Maybe<nsStyleLinkElement::SheetInfo> HTMLLinkElement::GetStyleSheetInfo() {
 
   nsCOMPtr<nsIURI> uri = Link::GetURI();
   nsCOMPtr<nsIPrincipal> prin = mTriggeringPrincipal;
-  nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
-  referrerInfo->InitWithNode(this);
 
   nsAutoString nonce;
   nsString* cspNonce = static_cast<nsString*>(GetProperty(nsGkAtoms::nonce));
@@ -483,7 +481,7 @@ Maybe<nsStyleLinkElement::SheetInfo> HTMLLinkElement::GetStyleSheetInfo() {
       this,
       uri.forget(),
       prin.forget(),
-      referrerInfo.forget(),
+      MakeAndAddRef<ReferrerInfo>(*this),
       GetCORSMode(),
       title,
       media,
@@ -619,8 +617,7 @@ void HTMLLinkElement::
           }
         }
 
-        nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
-        referrerInfo->InitWithNode(this);
+        auto referrerInfo = MakeRefPtr<ReferrerInfo>(*this);
         if (preload) {
           prefetchService->PreloadURI(uri, referrerInfo, this, policyType);
         } else {
@@ -704,8 +701,7 @@ void HTMLLinkElement::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
     if (corsMode != oldCorsMode) {
       prefetchService->CancelPrefetchPreloadURI(uri, this);
 
-      nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
-      referrerInfo->InitWithNode(this);
+      auto referrerInfo = MakeRefPtr<ReferrerInfo>(*this);
       prefetchService->PreloadURI(uri, referrerInfo, this, policyType);
     }
     return;
@@ -762,8 +758,7 @@ void HTMLLinkElement::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
   // trigger an error event.
   if ((policyType != oldPolicyType) ||
       (policyType == nsIContentPolicy::TYPE_INVALID)) {
-    nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
-    referrerInfo->InitWithNode(this);
+    auto referrerInfo = MakeRefPtr<ReferrerInfo>(*this);
     prefetchService->PreloadURI(uri, referrerInfo, this, policyType);
   }
 }
