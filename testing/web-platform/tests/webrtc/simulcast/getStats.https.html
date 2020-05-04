@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset=utf-8>
-<title>RTCPeerConnection Simulcast Tests</title>
+<title>RTCPeerConnection Simulcast Tests - getStats</title>
 <script src="../third_party/sdp/sdp.js"></script>
 <script src="simulcast.js"></script>
 <script src="../RTCPeerConnection-helper.js"></script>
@@ -51,6 +51,15 @@ promise_test(async t => {
     sdp: swapRidAndMidExtensionsInSimulcastAnswer(answer, pc1.localDescription, rids),
   });
   assert_equals(metadataToBeLoaded.length, 3);
-  return Promise.all(metadataToBeLoaded);
-}, 'Basic simulcast setup with three spatial layers');
+  await Promise.all(metadataToBeLoaded);
+
+  const outboundStats = [];
+  const senderStats = await pc1.getSenders()[0].getStats();
+  senderStats.forEach(stat => {
+    if (stat.type === 'outbound-rtp') {
+      outboundStats.push(stat);
+    }
+  });
+  assert_equals(outboundStats.length, 3);
+}, 'Simulcast getStats contains as many outbound-rtp reports as spatial layers');
 </script>
