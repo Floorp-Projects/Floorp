@@ -78,10 +78,6 @@ static EnterJitStatus JS_HAZ_JSNATIVE_CALLER EnterJit(JSContext* cx,
     numActualArgs = 0;
     constructing = false;
     if (script->isDirectEvalInFunction()) {
-      if (state.asExecute()->newTarget().isNull()) {
-        ScriptFrameIter iter(cx);
-        state.asExecute()->setNewTarget(iter.newTarget());
-      }
       maxArgc = 1;
       maxArgv = state.asExecute()->addressOfNewTarget();
     } else {
