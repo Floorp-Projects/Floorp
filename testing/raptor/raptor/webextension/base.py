@@ -151,7 +151,9 @@ class WebExtension(Perftest):
             confidence_values = self.playback.confidence()
             if confidence_values:
                 mozproxy_replay = {
-                    u'type': u'mozproxy-replay',
+                    u'summarize-values': False,
+                    u'suite-suffix-type': False,
+                    u'type': u'mozproxy',
                     u'test': test["name"],
                     u'unit': u'a.u.',
                     u'values': confidence_values
