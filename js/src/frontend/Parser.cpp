@@ -7198,7 +7198,7 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
 
     if (numFields > 0) {
       // Field initialization need access to `this`.
-      ctorbox->setHasThisBinding();
+      ctorbox->setFunctionHasThisBinding();
     }
   }
 
@@ -9532,7 +9532,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberCall(
       // In non-strict mode code, direct calls to eval can
       // add variables to the call object.
       if (pc_->isFunctionBox() && !pc_->sc()->strict()) {
-        pc_->functionBox()->setHasExtensibleScope();
+        pc_->functionBox()->setFunHasExtensibleScope();
       }
 
       // If we're in a method, mark the method as requiring
