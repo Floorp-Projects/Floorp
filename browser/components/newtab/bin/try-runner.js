@@ -23,6 +23,7 @@ function logErrors(tool, errors) {
 }
 
 function execOut(...args) {
+  let exitCode = 0;
   let out;
   let err;
 
@@ -39,8 +40,9 @@ function execOut(...args) {
 
     out = e && e.stdout;
     err = e && e.stderr;
+    exitCode = e && e.status;
   }
-  return { out: out && out.toString(), err: err && err.toString() };
+  return { exitCode, out: out && out.toString(), err: err && err.toString() };
 }
 
 function logStart(name) {
@@ -51,7 +53,7 @@ function karma() {
   logStart("karma");
 
   const errors = [];
-  const { out } = execOut("npm", [
+  const { exitCode, out } = execOut("npm", [
     "run",
     "testmc:unit",
     // , "--", "--log-level", "--verbose",
@@ -95,12 +97,14 @@ function karma() {
   }
 
   logErrors("karma", errors);
-  return errors.length === 0;
+
+  // Pass if there's no detected errors and nothing unexpected.
+  return errors.length === 0 && !exitCode;
 }
 
 function sasslint() {
   logStart("sasslint");
-  const { out } = execOut("npm", [
+  const { exitCode, out } = execOut("npm", [
     "run",
     "--silent",
     "lint:sasslint",
@@ -109,7 +113,8 @@ function sasslint() {
     "json",
   ]);
 
-  if (!out.length) {
+  // Successful exit and no output means sasslint passed.
+  if (!exitCode && !out.length) {
     return true;
   }
 
@@ -128,7 +133,9 @@ function sasslint() {
   });
 
   const errors = logErrors("sasslint", errs);
-  return errors.length === 0;
+
+  // Pass if there's no detected errors and nothing unexpected.
+  return errors.length === 0 && !exitCode;
 }
 
 const karmaPassed = karma();
