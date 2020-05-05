@@ -798,9 +798,15 @@ var GeckoViewWebExtension = {
         break;
       }
       case "GeckoView:RegisterWebExtension": {
-        const uri = Services.io.newURI(aData.locationUri);
+        let uri;
+        try {
+          uri = Services.io.newURI(aData.locationUri);
+        } catch (ex) {
+          aCallback.onError(`Could not parse URI: ${aData.locationUri}`);
+          return;
+        }
         if (
-          uri == null ||
+          !uri ||
           (!(uri instanceof Ci.nsIFileURL) && !(uri instanceof Ci.nsIJARURI))
         ) {
           aCallback.onError(
@@ -887,8 +893,10 @@ var GeckoViewWebExtension = {
 
       case "GeckoView:WebExtension:Install": {
         const { locationUri, installId } = aData;
-        const uri = Services.io.newURI(locationUri);
-        if (uri == null) {
+        let uri;
+        try {
+          uri = Services.io.newURI(locationUri);
+        } catch (ex) {
           aCallback.onError(`Could not parse uri: ${locationUri}`);
           return;
         }
