@@ -17,13 +17,13 @@ struct Nothing;
 namespace net {
   struct SVCB;
   using TypeRecordResultType =
-    Variant<Nothing, nsTArray<nsCString>, nsTArray<SVCB>>;
+    Variant<Nothing, CopyableTArray<nsCString>, CopyableTArray<SVCB>>;
 }
 }
 
 %}
 
-[ref] native CStringArrayRef(nsTArray<nsCString>);
+[ref] native CStringArrayRef(CopyableTArray<nsCString>);
 native TypeResult(mozilla::net::TypeRecordResultType);
 
 [scriptable, uuid(5d13241b-9d46-448a-90d8-77c418491026)]

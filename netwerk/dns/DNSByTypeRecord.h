@@ -15,8 +15,8 @@ namespace net {
 
 // The types of nsIDNSByTypeRecord: Nothing, TXT, HTTPSSVC
 using TypeRecordEmpty = Nothing;
-using TypeRecordTxt = nsTArray<nsCString>;
-using TypeRecordHTTPSSVC = nsTArray<SVCB>;
+using TypeRecordTxt = CopyableTArray<nsCString>;
+using TypeRecordHTTPSSVC = CopyableTArray<SVCB>;
 
 // This variant reflects the multiple types of data a nsIDNSByTypeRecord
 // can hold.
