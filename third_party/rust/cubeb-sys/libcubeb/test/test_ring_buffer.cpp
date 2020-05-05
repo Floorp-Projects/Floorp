@@ -102,7 +102,7 @@ void test_ring_multi(lock_free_audio_ring_buffer<T>& buf, int channels, int capa
     sequence_generator<T> gen(channels);
 
     while(iterations--) {
-      std::this_thread::sleep_for(std::chrono::microseconds(10));
+      std::this_thread::yield();
       gen.get(in_buffer.get(), block_size);
       int rv = buf.enqueue(in_buffer.get(), block_size);
       ASSERT_TRUE(rv <= block_size);
@@ -115,7 +115,7 @@ void test_ring_multi(lock_free_audio_ring_buffer<T>& buf, int channels, int capa
   int remaining = 1002;
 
   while(remaining--) {
-    std::this_thread::sleep_for(std::chrono::microseconds(10));
+    std::this_thread::yield();
     int rv = buf.dequeue(out_buffer.get(), block_size);
     ASSERT_TRUE(rv <= block_size);
     checker.check(out_buffer.get(), rv);

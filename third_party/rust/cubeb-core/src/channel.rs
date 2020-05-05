@@ -88,7 +88,7 @@ mod test {
     fn channel_layout_from_raw() {
         macro_rules! check(
             ($($raw:ident => $real:ident),*) => (
-                $(let x = super::ChannelLayout::from(ffi::$raw);;
+                $(let x = super::ChannelLayout::from(ffi::$raw);
                   assert_eq!(x, super::ChannelLayout::$real);
                 )*
             ) );

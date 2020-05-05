@@ -48,6 +48,7 @@ pub trait StreamOps {
     fn reset_default_device(&mut self) -> Result<()>;
     fn position(&mut self) -> Result<u64>;
     fn latency(&mut self) -> Result<u32>;
+    fn input_latency(&mut self) -> Result<u32>;
     fn set_volume(&mut self, volume: f32) -> Result<()>;
     fn current_device(&mut self) -> Result<&DeviceRef>;
     fn device_destroy(&mut self, device: &DeviceRef) -> Result<()>;

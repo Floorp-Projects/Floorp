@@ -45,7 +45,7 @@ rev = "3541e3818fdc7c2a24f87e3459151a4ce955a67a"
 [source."https://github.com/djg/cubeb-pulse-rs"]
 git = "https://github.com/djg/cubeb-pulse-rs"
 replace-with = "vendored-sources"
-rev = "5eb38163103b0dae86de81cdaf46070bdeedc0d1"
+rev = "70431f444cf164177cb3c0f060698fc35f811be5"
 
 [source."https://github.com/bytecodealliance/wasmtime"]
 git = "https://github.com/bytecodealliance/wasmtime"
@@ -70,7 +70,7 @@ rev = "5e870faf6f95d79d11efc813e56370ad124bbed5"
 [source."https://github.com/ChunMinChang/cubeb-coreaudio-rs"]
 git = "https://github.com/ChunMinChang/cubeb-coreaudio-rs"
 replace-with = "vendored-sources"
-rev = "6156e941e5f46a641d2da10ca53a9ad318c10722"
+rev = "c5aacdc75618025e72f62f727a7a0d91606e6276"
 
 [source.crates-io]
 replace-with = "vendored-sources"

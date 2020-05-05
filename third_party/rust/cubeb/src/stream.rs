@@ -68,9 +68,9 @@ use std::mem::ManuallyDrop;
 use std::os::raw::{c_long, c_void};
 use std::slice::{from_raw_parts, from_raw_parts_mut};
 
-pub type DataCallback<F> = FnMut(&[F], &mut [F]) -> isize + Send + Sync + 'static;
-pub type StateCallback = FnMut(State) + Send + Sync + 'static;
-pub type DeviceChangedCallback = FnMut() + Send + Sync + 'static;
+pub type DataCallback<F> = dyn FnMut(&[F], &mut [F]) -> isize + Send + Sync + 'static;
+pub type StateCallback = dyn FnMut(State) + Send + Sync + 'static;
+pub type DeviceChangedCallback = dyn FnMut() + Send + Sync + 'static;
 
 pub struct StreamCallbacks<F> {
     pub(crate) data: Box<DataCallback<F>>,
@@ -201,7 +201,7 @@ impl<'a, F> StreamBuilder<'a, F> {
         let state_callback: ffi::cubeb_state_callback = Some(state_cb_c::<F>);
 
         let stream = unsafe {
-            try!(ctx.stream_init(
+            ctx.stream_init(
                 stream_name,
                 input_device,
                 input_stream_params,
@@ -211,12 +211,12 @@ impl<'a, F> StreamBuilder<'a, F> {
                 data_callback,
                 state_callback,
                 cbs as *mut _
-            ))
+            )?
         };
         if has_device_changed {
             let device_changed_callback: ffi::cubeb_device_changed_callback =
                 Some(device_changed_cb_c::<F>);
-            try!(stream.register_device_changed_callback(device_changed_callback));
+            stream.register_device_changed_callback(device_changed_callback)?;
         }
         Ok(Stream::new(stream))
     }

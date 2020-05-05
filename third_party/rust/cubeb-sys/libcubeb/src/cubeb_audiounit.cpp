@@ -501,6 +501,17 @@ audiounit_input_callback(void * user_ptr,
     return noErr;
   }
 
+  if (stm->draining) {
+    OSStatus r = AudioOutputUnitStop(stm->input_unit);
+    assert(r == 0);
+    // Only fire state callback in input-only stream. For duplex stream,
+    // the state callback will be fired in output callback.
+    if (stm->output_unit == NULL) {
+      stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_DRAINED);
+    }
+    return noErr;
+  }
+
   OSStatus r = audiounit_render_input(stm, flags, tstamp, bus, input_frames);
   if (r != noErr) {
     return r;
@@ -520,12 +531,7 @@ audiounit_input_callback(void * user_ptr,
                                         &total_input_frames,
                                         NULL,
                                         0);
-  if (outframes < total_input_frames) {
-    OSStatus r = AudioOutputUnitStop(stm->input_unit);
-    assert(r == 0);
-    stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_DRAINED);
-    return noErr;
-  }
+  stm->draining = outframes < total_input_frames;
 
   // Reset input buffer
   stm->input_linear_buffer->clear();
@@ -612,10 +618,6 @@ audiounit_output_callback(void * user_ptr,
   if (stm->draining) {
     OSStatus r = AudioOutputUnitStop(stm->output_unit);
     assert(r == 0);
-    if (stm->input_unit) {
-      r = AudioOutputUnitStop(stm->input_unit);
-      assert(r == 0);
-    }
     stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_DRAINED);
     audiounit_make_silent(&outBufferList->mBuffers[0]);
     return noErr;
@@ -692,9 +694,14 @@ audiounit_output_callback(void * user_ptr,
 
   /* Post process output samples. */
   if (stm->draining) {
-    size_t outbpf = cubeb_sample_size(stm->output_stream_params.format);
     /* Clear missing frames (silence) */
-    memset((uint8_t*)output_buffer + outframes * outbpf, 0, (output_frames - outframes) * outbpf);
+    size_t channels = stm->output_stream_params.channels;
+    size_t missing_samples = (output_frames - outframes) * channels;
+    size_t size_sample = cubeb_sample_size(stm->output_stream_params.format);
+    /* number of bytes that have been filled with valid audio by the callback. */
+    size_t audio_byte_count = outframes * channels * size_sample;
+    PodZero((uint8_t*)output_buffer + audio_byte_count,
+            missing_samples * size_sample);
   }
 
   /* Mixing */
@@ -2864,6 +2871,15 @@ audiounit_stream_destroy_internal(cubeb_stream *stm)
 static void
 audiounit_stream_destroy(cubeb_stream * stm)
 {
+  int r = audiounit_uninstall_system_changed_callback(stm);
+  if (r != CUBEB_OK) {
+    LOG("(%p) Could not uninstall the device changed callback", stm);
+  }
+  r = audiounit_uninstall_device_changed_callback(stm);
+  if (r != CUBEB_OK) {
+    LOG("(%p) Could not uninstall all device change listeners", stm);
+  }
+
   if (!stm->shutdown.load()){
     auto_lock context_lock(stm->context->mutex);
     audiounit_stream_stop_internal(stm);
@@ -3605,6 +3621,7 @@ cubeb_ops const audiounit_ops = {
   /*.stream_reset_default_device =*/ nullptr,
   /*.stream_get_position =*/ audiounit_stream_get_position,
   /*.stream_get_latency =*/ audiounit_stream_get_latency,
+  /*.stream_get_input_latency =*/ NULL,
   /*.stream_set_volume =*/ audiounit_stream_set_volume,
   /*.stream_get_current_device =*/ audiounit_stream_get_current_device,
   /*.stream_device_destroy =*/ audiounit_stream_device_destroy,

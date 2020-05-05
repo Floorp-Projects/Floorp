@@ -752,7 +752,7 @@ opensl_init(cubeb ** context, char const * context_name)
   }
 
   ctx->p_output_latency_function = cubeb_output_latency_load_method(android_version);
-  if (!ctx->p_output_latency_function) {
+  if (!cubeb_output_latency_method_is_loaded(ctx->p_output_latency_function)) {
     LOG("Warning: output latency is not available, cubeb_stream_get_position() is not supported");
   }
 
@@ -793,6 +793,53 @@ opensl_destroy(cubeb * ctx)
 }
 
 static void opensl_stream_destroy(cubeb_stream * stm);
+
+#if defined(__ANDROID__) && (__ANDROID_API__ >= ANDROID_VERSION_LOLLIPOP)
+static int
+opensl_set_format_ext(SLAndroidDataFormat_PCM_EX * format, cubeb_stream_params * params)
+{
+  assert(format);
+  assert(params);
+
+  format->formatType = SL_ANDROID_DATAFORMAT_PCM_EX;
+  format->numChannels = params->channels;
+  // sampleRate is in milliHertz
+  format->sampleRate = params->rate * 1000;
+  format->channelMask = params->channels == 1 ?
+                       SL_SPEAKER_FRONT_CENTER :
+                       SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT;
+
+  switch (params->format) {
+    case CUBEB_SAMPLE_S16LE:
+      format->bitsPerSample = SL_PCMSAMPLEFORMAT_FIXED_16;
+      format->containerSize = SL_PCMSAMPLEFORMAT_FIXED_16;
+      format->representation = SL_ANDROID_PCM_REPRESENTATION_SIGNED_INT;
+      format->endianness = SL_BYTEORDER_LITTLEENDIAN;
+      break;
+    case CUBEB_SAMPLE_S16BE:
+      format->bitsPerSample = SL_PCMSAMPLEFORMAT_FIXED_16;
+      format->containerSize = SL_PCMSAMPLEFORMAT_FIXED_16;
+      format->representation = SL_ANDROID_PCM_REPRESENTATION_SIGNED_INT;
+      format->endianness = SL_BYTEORDER_BIGENDIAN;
+      break;
+    case CUBEB_SAMPLE_FLOAT32LE:
+      format->bitsPerSample = SL_PCMSAMPLEFORMAT_FIXED_32;
+      format->containerSize = SL_PCMSAMPLEFORMAT_FIXED_32;
+      format->representation = SL_ANDROID_PCM_REPRESENTATION_FLOAT;
+      format->endianness = SL_BYTEORDER_LITTLEENDIAN;
+      break;
+    case CUBEB_SAMPLE_FLOAT32BE:
+      format->bitsPerSample = SL_PCMSAMPLEFORMAT_FIXED_32;
+      format->containerSize = SL_PCMSAMPLEFORMAT_FIXED_32;
+      format->representation = SL_ANDROID_PCM_REPRESENTATION_FLOAT;
+      format->endianness = SL_BYTEORDER_BIGENDIAN;
+      break;
+    default:
+      return CUBEB_ERROR_INVALID_FORMAT;
+  }
+  return CUBEB_OK;
+}
+#endif
 
 static int
 opensl_set_format(SLDataFormat_PCM * format, cubeb_stream_params * params)
@@ -1020,15 +1067,36 @@ opensl_configure_playback(cubeb_stream * stm, cubeb_stream_params * params) {
   assert(params);
 
   stm->user_output_rate = params->rate;
-  stm->framesize = params->channels * sizeof(int16_t);
+  if(params->format == CUBEB_SAMPLE_S16NE || params->format == CUBEB_SAMPLE_S16BE) {
+    stm->framesize = params->channels * sizeof(int16_t);
+  } else if(params->format == CUBEB_SAMPLE_FLOAT32NE || params->format == CUBEB_SAMPLE_FLOAT32BE) {
+    stm->framesize = params->channels * sizeof(float);
+  }
   stm->lastPosition = -1;
   stm->lastPositionTimeStamp = 0;
   stm->lastCompensativePosition = -1;
 
-  SLDataFormat_PCM format;
-  int r = opensl_set_format(&format, params);
-  if (r != CUBEB_OK) {
-    return CUBEB_ERROR_INVALID_FORMAT;
+  void* format = NULL;
+  SLuint32* format_sample_rate = NULL;
+
+#if defined(__ANDROID__) && (__ANDROID_API__ >= ANDROID_VERSION_LOLLIPOP)
+  SLAndroidDataFormat_PCM_EX pcm_ext_format;
+  if (get_android_version() >= ANDROID_VERSION_LOLLIPOP) {
+    if (opensl_set_format_ext(&pcm_ext_format, params) != CUBEB_OK) {
+      return CUBEB_ERROR_INVALID_FORMAT;
+    }
+    format = &pcm_ext_format;
+    format_sample_rate = &pcm_ext_format.sampleRate;
+  }
+#endif
+
+  SLDataFormat_PCM pcm_format;
+  if(!format) {
+    if(opensl_set_format(&pcm_format, params) != CUBEB_OK) {
+      return CUBEB_ERROR_INVALID_FORMAT;
+    }
+    format = &pcm_format;
+    format_sample_rate = &pcm_format.samplesPerSec;
   }
 
   SLDataLocator_BufferQueue loc_bufq;
@@ -1036,7 +1104,7 @@ opensl_configure_playback(cubeb_stream * stm, cubeb_stream_params * params) {
   loc_bufq.numBuffers = NBUFS;
   SLDataSource source;
   source.pLocator = &loc_bufq;
-  source.pFormat = &format;
+  source.pFormat = format;
 
   SLDataLocator_OutputMix loc_outmix;
   loc_outmix.locatorType = SL_DATALOCATOR_OUTPUTMIX;
@@ -1072,7 +1140,7 @@ opensl_configure_playback(cubeb_stream * stm, cubeb_stream_params * params) {
   if (res == SL_RESULT_CONTENT_UNSUPPORTED &&
       preferred_sampling_rate != DEFAULT_SAMPLE_RATE) {
     preferred_sampling_rate = DEFAULT_SAMPLE_RATE;
-    format.samplesPerSec = preferred_sampling_rate * 1000;
+    *format_sample_rate = preferred_sampling_rate * 1000;
     res = (*stm->context->eng)->CreateAudioPlayer(stm->context->eng,
                                                   &stm->playerObj,
                                                   &source,
@@ -1625,6 +1693,18 @@ opensl_stream_get_position(cubeb_stream * stm, uint64_t * position)
   return CUBEB_OK;
 }
 
+static int
+opensl_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
+{
+  assert(stm);
+  assert(latency);
+
+  uint32_t stream_latency_frames =
+    stm->user_output_rate * (stm->output_latency_ms / 1000);
+
+  return stream_latency_frames + cubeb_resampler_latency(stm->resampler);
+}
+
 int
 opensl_stream_set_volume(cubeb_stream * stm, float volume)
 {
@@ -1671,7 +1751,8 @@ static struct cubeb_ops const opensl_ops = {
   .stream_stop = opensl_stream_stop,
   .stream_reset_default_device = NULL,
   .stream_get_position = opensl_stream_get_position,
-  .stream_get_latency = NULL,
+  .stream_get_latency = opensl_stream_get_latency,
+  .stream_get_input_latency = NULL,
   .stream_set_volume = opensl_stream_set_volume,
   .stream_get_current_device = NULL,
   .stream_device_destroy = NULL,
