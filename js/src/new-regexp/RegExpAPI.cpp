@@ -329,59 +329,6 @@ static void SampleCharacters(HandleLinearString input,
   }
 }
 
-static RegExpNode* WrapBody(MutableHandleRegExpShared re,
-                            RegExpCompiler& compiler, RegExpCompileData& data,
-                            Zone* zone, bool isLatin1) {
-  using v8::internal::ChoiceNode;
-  using v8::internal::EndNode;
-  using v8::internal::GuardedAlternative;
-  using v8::internal::RegExpCapture;
-  using v8::internal::RegExpCharacterClass;
-  using v8::internal::RegExpQuantifier;
-  using v8::internal::RegExpTree;
-  using v8::internal::TextNode;
-
-  RegExpNode* captured_body =
-      RegExpCapture::ToNode(data.tree, 0, &compiler, compiler.accept());
-  RegExpNode* node = captured_body;
-
-  if (!data.tree->IsAnchoredAtStart() && !re->sticky()) {
-    // Add a .*? at the beginning, outside the body capture, unless
-    // this expression is anchored at the beginning or sticky.
-    JS::RegExpFlags default_flags;
-    RegExpNode* loop_node = RegExpQuantifier::ToNode(
-        0, RegExpTree::kInfinity, false,
-        new (zone) RegExpCharacterClass('*', default_flags), &compiler,
-        captured_body, data.contains_anchor);
-
-    if (data.contains_anchor) {
-      // Unroll loop once, to take care of the case that might start
-      // at the start of input.
-      ChoiceNode* first_step_node = new (zone) ChoiceNode(2, zone);
-      first_step_node->AddAlternative(GuardedAlternative(captured_body));
-      first_step_node->AddAlternative(GuardedAlternative(new (zone) TextNode(
-          new (zone) RegExpCharacterClass('*', default_flags), false,
-          loop_node)));
-      node = first_step_node;
-    } else {
-      node = loop_node;
-    }
-  }
-  if (isLatin1) {
-    node = node->FilterOneByte(RegExpCompiler::kMaxRecursion);
-    // Do it again to propagate the new nodes to places where they were not
-    // put because they had not been calculated yet.
-    if (node != nullptr) {
-      node = node->FilterOneByte(RegExpCompiler::kMaxRecursion);
-    }
-  } else if (re->unicode() && (re->global() || re->sticky())) {
-    node = RegExpCompiler::OptionallyStepBackToLeadSurrogate(&compiler, node,
-                                                             re->getFlags());
-  }
-  if (node == nullptr) node = new (zone) EndNode(EndNode::BACKTRACK, zone);
-  return node;
-}
-
 bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
                     HandleLinearString input, RegExpShared::CodeKind codeKind) {
   RootedAtom pattern(cx, re->getSource());
@@ -439,7 +386,7 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
   bool isLatin1 = input->hasLatin1Chars();
 
   SampleCharacters(input, compiler);
-  data.node = WrapBody(re, compiler, data, &zone, isLatin1);
+  data.node = compiler.PreprocessRegExp(&data, flags, isLatin1);
   data.error = AnalyzeRegExp(cx->isolate, isLatin1, data.node);
   if (data.error != RegExpError::kNone) {
     MOZ_ASSERT(data.error == RegExpError::kAnalysisStackOverflow);
@@ -517,7 +464,7 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
   V8HandleString wrappedPattern(v8::internal::String(pattern), cx->isolate);
   RegExpCompiler::CompilationResult result = compiler.Assemble(
       cx->isolate, masm_ptr, data.node, data.capture_count, wrappedPattern);
-  if (result.code.value().isUndefined()) {
+  if (result.code->value().isUndefined()) {
     // SMRegExpMacroAssembler::GetCode returns undefined on OOM.
     MOZ_ASSERT(useNativeCode);
     ReportOutOfMemory(cx);
@@ -541,12 +488,12 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
         return false;
       }
     }
-    re->setJitCode(v8::internal::Code::cast(result.code).inner(), isLatin1);
+    re->setJitCode(v8::internal::Code::cast(*result.code).inner(), isLatin1);
   } else {
     // Transfer ownership of the bytecode from the HandleScope to the
     // RegExpShared.
     ByteArray bytecode =
-        v8::internal::ByteArray::cast(result.code).takeOwnership(cx->isolate);
+        v8::internal::ByteArray::cast(*result.code).takeOwnership(cx->isolate);
     uint32_t length = bytecode->length;
     re->setByteCode(bytecode.release(), isLatin1);
     js::AddCellMemory(re, length, MemoryUse::RegExpSharedBytecode);
@@ -583,16 +530,6 @@ RegExpRunStatus Interpret(JSContext* cx, MutableHandleRegExpShared re,
   V8HandleRegExp wrappedRegExp(v8::internal::JSRegExp(re), cx->isolate);
   V8HandleString wrappedInput(v8::internal::String(input), cx->isolate);
 
-  uint32_t numRegisters = re->getMaxRegisters();
-
-  // Allocate memory for registers. They will be initialized by the
-  // interpreter. (See IrregexpInterpreter::MatchInternal.)
-  Vector<int32_t, 8, SystemAllocPolicy> registers;
-  if (!registers.growByUninitialized(numRegisters)) {
-    ReportOutOfMemory(cx);
-    return RegExpRunStatus_Error;
-  }
-
   static_assert(RegExpRunStatus_Error ==
                 v8::internal::RegExp::kInternalRegExpException);
   static_assert(RegExpRunStatus_Success ==
@@ -602,21 +539,12 @@ RegExpRunStatus Interpret(JSContext* cx, MutableHandleRegExpShared re,
 
   RegExpRunStatus status =
       (RegExpRunStatus)IrregexpInterpreter::MatchForCallFromRuntime(
-          cx->isolate, wrappedRegExp, wrappedInput, registers.begin(),
-          numRegisters, startIndex);
+           cx->isolate, wrappedRegExp, wrappedInput, matches->pairsRaw(),
+           matches->pairCount() * 2, startIndex);
 
   MOZ_ASSERT(status == RegExpRunStatus_Error ||
              status == RegExpRunStatus_Success ||
              status == RegExpRunStatus_Success_NotFound);
-
-  // Copy results out of registers
-  if (status == RegExpRunStatus_Success) {
-    uint32_t length = re->pairCount() * 2;
-    MOZ_ASSERT(length <= registers.length());
-    for (uint32_t i = 0; i < length; i++) {
-      matches->pairsRaw()[i] = registers[i];
-    }
-  }
 
   return status;
 }
