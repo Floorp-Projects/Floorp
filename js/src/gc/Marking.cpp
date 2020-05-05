@@ -1368,7 +1368,9 @@ inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
     switch (scope->kind()) {
       case ScopeKind::Function: {
         FunctionScope::Data& data = scope->as<FunctionScope>().data();
-        traverseObjectEdge(scope, data.canonicalFunction);
+        if (data.canonicalFunction) {
+          traverseObjectEdge(scope, data.canonicalFunction);
+        }
         names = &data.trailingNames;
         length = data.length;
         break;
