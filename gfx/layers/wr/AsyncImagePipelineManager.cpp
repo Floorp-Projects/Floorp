@@ -307,8 +307,8 @@ AsyncImagePipelineManager::UpdateWithoutExternalImage(
 }
 
 void AsyncImagePipelineManager::ApplyAsyncImagesOfImageBridge(
-    wr::RenderRootArray<Maybe<wr::TransactionBuilder>>& aSceneBuilderTxns,
-    wr::RenderRootArray<Maybe<wr::TransactionBuilder>>& aFastTxns) {
+    wr::TransactionBuilder& aSceneBuilderTxn,
+    wr::TransactionBuilder& aFastTxn) {
   if (mDestroyed || mAsyncImagePipelines.Count() == 0) {
     return;
   }
@@ -324,9 +324,8 @@ void AsyncImagePipelineManager::ApplyAsyncImagesOfImageBridge(
     if (!pipeline->mImageHost->GetAsyncRef()) {
       continue;
     }
-    ApplyAsyncImageForPipeline(epoch, pipelineId, pipeline,
-                               *aSceneBuilderTxns[pipeline->mRenderRoot],
-                               *aFastTxns[pipeline->mRenderRoot]);
+    ApplyAsyncImageForPipeline(epoch, pipelineId, pipeline, aSceneBuilderTxn,
+                               aFastTxn);
   }
 }
 

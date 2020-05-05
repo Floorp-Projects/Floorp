@@ -2388,27 +2388,19 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
   TimeStamp start = TimeStamp::Now();
   mAsyncImageManager->SetCompositionTime(start);
 
-  wr::RenderRootArray<Maybe<wr::TransactionBuilder>> fastTxns;
+  // Ensure GenerateFrame is handled on the render backend thread rather
+  // than going through the scene builder thread. That way we continue
+  // generating frames with the old scene even during slow scene builds.
+  wr::TransactionBuilder fastTxn(false /* useSceneBuilderThread */);
   // Handle transaction that is related to DisplayList.
-  wr::RenderRootArray<Maybe<wr::TransactionBuilder>> sceneBuilderTxns;
-  wr::RenderRootArray<Maybe<wr::AutoTransactionSender>> senders;
-  for (auto& api : mApis) {
-    if (!api) {
-      continue;
-    }
-    auto renderRoot = api->GetRenderRoot();
-    // Ensure GenerateFrame is handled on the render backend thread rather
-    // than going through the scene builder thread. That way we continue
-    // generating frames with the old scene even during slow scene builds.
-    fastTxns[renderRoot].emplace(false /* useSceneBuilderThread */);
-    sceneBuilderTxns[renderRoot].emplace();
-    senders[renderRoot].emplace(api, sceneBuilderTxns[renderRoot].ptr());
-  }
+  wr::TransactionBuilder sceneBuilderTxn;
+  wr::AutoTransactionSender senders(mApis[wr::RenderRoot::Default],
+                                    &sceneBuilderTxn);
 
   // Adding and updating wr::ImageKeys of ImageHosts that uses ImageBridge are
   // done without using transaction of scene builder thread. With it, updating
   // of video frame becomes faster.
-  mAsyncImageManager->ApplyAsyncImagesOfImageBridge(sceneBuilderTxns, fastTxns);
+  mAsyncImageManager->ApplyAsyncImagesOfImageBridge(sceneBuilderTxn, fastTxn);
 
   if (!mAsyncImageManager->GetCompositeUntilTime().IsNull()) {
     // Trigger another CompositeToTarget() call because there might be another
@@ -2417,22 +2409,11 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
     mCompositorScheduler->ScheduleComposition();
   }
 
-  uint8_t framesGenerated = 0;
-  wr::RenderRootArray<bool> generateFrame;
-  for (auto& api : mApis) {
-    if (!api) {
-      continue;
-    }
-    auto renderRoot = api->GetRenderRoot();
-    generateFrame[renderRoot] =
-        mAsyncImageManager->GetAndResetWillGenerateFrame(renderRoot) ||
-        !fastTxns[renderRoot]->IsEmpty() || aForceGenerateFrame;
-    if (generateFrame[renderRoot]) {
-      framesGenerated++;
-    }
-  }
+  bool generateFrame = mAsyncImageManager->GetAndResetWillGenerateFrame(
+                           wr::RenderRoot::Default) ||
+                       !fastTxn.IsEmpty() || aForceGenerateFrame;
 
-  if (framesGenerated == 0) {
+  if (!generateFrame) {
     // Could skip generating frame now.
     mPreviousFrameTimeStamp = TimeStamp();
     return;
@@ -2446,32 +2427,25 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
   }
   // We do this even if the arrays are empty, because it will clear out any
   // previous properties store on the WR side, which is desirable.
-  fastTxns[wr::RenderRoot::Default]->UpdateDynamicProperties(
-      animations.mOpacityArrays, animations.mTransformArrays,
-      animations.mColorArrays);
+  fastTxn.UpdateDynamicProperties(animations.mOpacityArrays,
+                                  animations.mTransformArrays,
+                                  animations.mColorArrays);
 
   SetAPZSampleTime();
 
   wr::RenderThread::Get()->IncPendingFrameCount(
-      mApis[wr::RenderRoot::Default]->GetId(), aId, start, framesGenerated);
+      mApis[wr::RenderRoot::Default]->GetId(), aId, start, 1);
 
 #if defined(ENABLE_FRAME_LATENCY_LOG)
   auto startTime = TimeStamp::Now();
   mApis[wr::RenderRoot::Default]->SetFrameStartTime(startTime);
 #endif
 
-  MOZ_ASSERT(framesGenerated > 0);
+  MOZ_ASSERT(generateFrame);
+  fastTxn.GenerateFrame();
+
   wr::RenderRootArray<wr::TransactionBuilder*> generateFrameTxns;
-  for (auto& api : mApis) {
-    if (!api) {
-      continue;
-    }
-    auto renderRoot = api->GetRenderRoot();
-    if (generateFrame[renderRoot]) {
-      fastTxns[renderRoot]->GenerateFrame();
-      generateFrameTxns[renderRoot] = fastTxns[renderRoot].ptr();
-    }
-  }
+  generateFrameTxns[wr::RenderRoot::Default] = &fastTxn;
   wr::WebRenderAPI::SendTransactions(mApis, generateFrameTxns);
 
 #if defined(MOZ_WIDGET_ANDROID)
