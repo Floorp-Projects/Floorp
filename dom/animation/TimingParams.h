@@ -8,6 +8,7 @@
 #define mozilla_TimingParams_h
 
 #include "nsStringFwd.h"
+#include "nsPrintfCString.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/UnionTypes.h"  // For OwningUnrestrictedDoubleOrString
 #include "mozilla/ComputedTimingFunction.h"
