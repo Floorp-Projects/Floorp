@@ -7,9 +7,16 @@
 | Name | Summary |
 |---|---|
 | [BrowserTabsTray](-browser-tabs-tray/index.md) | `class BrowserTabsTray : RecyclerView, `[`TabsTray`](../mozilla.components.concept.tabstray/-tabs-tray/index.md)<br>A customizable tabs tray for browsers. |
+| [DefaultTabViewHolder](-default-tab-view-holder/index.md) | `class DefaultTabViewHolder : `[`TabViewHolder`](-tab-view-holder/index.md)<br>The default implementation of `TabViewHolder` |
 | [TabTouchCallback](-tab-touch-callback/index.md) | `open class TabTouchCallback : SimpleCallback`<br>An [ItemTouchHelper.Callback](#) for support gestures on tabs in the tray. |
-| [TabViewHolder](-tab-view-holder/index.md) | `class TabViewHolder : ViewHolder`<br>A RecyclerView ViewHolder implementation for "tab" items. |
+| [TabViewHolder](-tab-view-holder/index.md) | `abstract class TabViewHolder : ViewHolder`<br>An abstract ViewHolder implementation for "tab" items. |
 | [TabsAdapter](-tabs-adapter/index.md) | `class TabsAdapter : Adapter<`[`TabViewHolder`](-tab-view-holder/index.md)`>, `[`TabsTray`](../mozilla.components.concept.tabstray/-tabs-tray/index.md)`, `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../mozilla.components.concept.tabstray/-tabs-tray/-observer/index.md)`>`<br>RecyclerView adapter implementation to display a list/grid of tabs. |
+
+### Type Aliases
+
+| Name | Summary |
+|---|---|
+| [ViewHolderProvider](-view-holder-provider.md) | `typealias ViewHolderProvider = (<ERROR CLASS>, `[`BrowserTabsTray`](-browser-tabs-tray/index.md)`) -> `[`TabViewHolder`](-tab-view-holder/index.md)<br>Function responsible for creating a `TabViewHolder` in the `TabsAdapter`. |
 
 ### Properties
 

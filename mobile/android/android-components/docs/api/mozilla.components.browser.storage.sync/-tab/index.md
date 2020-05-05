@@ -2,7 +2,7 @@
 
 # Tab
 
-`data class Tab` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/RemoteTabsStorage.kt#L118)
+`data class Tab` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/RemoteTabsStorage.kt#L119)
 
 A tab, which is defined by an history (think the previous/next button in your web browser) and
 a currently active history entry.

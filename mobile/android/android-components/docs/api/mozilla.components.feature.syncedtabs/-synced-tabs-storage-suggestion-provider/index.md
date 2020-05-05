@@ -2,16 +2,16 @@
 
 # SyncedTabsStorageSuggestionProvider
 
-`@ExperimentalCoroutinesApi class SyncedTabsStorageSuggestionProvider : `[`SuggestionProvider`](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/syncedtabs/src/main/java/mozilla/components/feature/syncedtabs/SyncedTabsStorageSuggestionProvider.kt#L20)
+`class SyncedTabsStorageSuggestionProvider : `[`SuggestionProvider`](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/syncedtabs/src/main/java/mozilla/components/feature/syncedtabs/SyncedTabsStorageSuggestionProvider.kt#L19)
 
 A [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that provides suggestions for remote tabs
-based on [SyncedTabsFeature](../-synced-tabs-feature/index.md).
+based on [SyncedTabsStorage](../../mozilla.components.feature.syncedtabs.storage/-synced-tabs-storage/index.md).
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SyncedTabsStorageSuggestionProvider(syncedTabs: `[`SyncedTabsFeature`](../-synced-tabs-feature/index.md)`, loadUrlUseCase: `[`LoadUrlUseCase`](../../mozilla.components.feature.session/-session-use-cases/-load-url-use-case/index.md)`, icons: `[`BrowserIcons`](../../mozilla.components.browser.icons/-browser-icons/index.md)`? = null)`<br>A [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that provides suggestions for remote tabs based on [SyncedTabsFeature](../-synced-tabs-feature/index.md). |
+| [&lt;init&gt;](-init-.md) | `SyncedTabsStorageSuggestionProvider(syncedTabs: `[`SyncedTabsStorage`](../../mozilla.components.feature.syncedtabs.storage/-synced-tabs-storage/index.md)`, loadUrlUseCase: `[`LoadUrlUseCase`](../../mozilla.components.feature.session/-session-use-cases/-load-url-use-case/index.md)`, icons: `[`BrowserIcons`](../../mozilla.components.browser.icons/-browser-icons/index.md)`? = null)`<br>A [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that provides suggestions for remote tabs based on [SyncedTabsStorage](../../mozilla.components.feature.syncedtabs.storage/-synced-tabs-storage/index.md). |
 
 ### Properties
 

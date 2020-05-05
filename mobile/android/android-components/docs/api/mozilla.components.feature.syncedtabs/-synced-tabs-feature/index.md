@@ -2,24 +2,58 @@
 
 # SyncedTabsFeature
 
-`@ExperimentalCoroutinesApi class SyncedTabsFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/syncedtabs/src/main/java/mozilla/components/feature/syncedtabs/SyncedTabsFeature.kt#L28)
+`class SyncedTabsFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/syncedtabs/src/main/java/mozilla/components/feature/syncedtabs/SyncedTabsFeature.kt#L36)
 
-A feature that listens to the [BrowserStore](../../mozilla.components.browser.state.store/-browser-store/index.md) changes to update the local remote tabs state
-in [RemoteTabsStorage](../../mozilla.components.browser.storage.sync/-remote-tabs-storage/index.md).
+Feature implementation that will keep a [SyncedTabsView](../../mozilla.components.feature.syncedtabs.view/-synced-tabs-view/index.md) notified with other synced device tabs for
+the Firefox Sync account.
+
+### Parameters
+
+`storage` - The synced tabs storage that stores the current device's and remote device tabs.
+
+`accountManager` - Firefox Account Manager that holds a Firefox Sync account.
+
+`view` - An implementor of [SyncedTabsView](../../mozilla.components.feature.syncedtabs.view/-synced-tabs-view/index.md) that will be notified of changes.
+
+`lifecycleOwner` - Android Lifecycle Owner to bind observers onto.
+
+`coroutineContext` - A coroutine context that can be used to perform work off the main thread.
+
+`onTabClicked` - Invoked when a tab is selected by the user on the [SyncedTabsView](../../mozilla.components.feature.syncedtabs.view/-synced-tabs-view/index.md).
+
+`controller` - See [SyncedTabsController](../../mozilla.components.feature.syncedtabs.controller/-synced-tabs-controller/index.md).
+
+`presenter` - See [SyncedTabsPresenter](../../mozilla.components.feature.syncedtabs.presenter/-synced-tabs-presenter/index.md).
+
+`interactor` - See [SyncedTabsInteractor](../../mozilla.components.feature.syncedtabs.interactor/-synced-tabs-interactor/index.md).
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SyncedTabsFeature(accountManager: `[`FxaAccountManager`](../../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md)`, store: `[`BrowserStore`](../../mozilla.components.browser.state.store/-browser-store/index.md)`, tabsStorage: `[`RemoteTabsStorage`](../../mozilla.components.browser.storage.sync/-remote-tabs-storage/index.md)` = RemoteTabsStorage())`<br>A feature that listens to the [BrowserStore](../../mozilla.components.browser.state.store/-browser-store/index.md) changes to update the local remote tabs state in [RemoteTabsStorage](../../mozilla.components.browser.storage.sync/-remote-tabs-storage/index.md). |
+| [&lt;init&gt;](-init-.md) | `SyncedTabsFeature(storage: `[`SyncedTabsStorage`](../../mozilla.components.feature.syncedtabs.storage/-synced-tabs-storage/index.md)`, accountManager: `[`FxaAccountManager`](../../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md)`, view: `[`SyncedTabsView`](../../mozilla.components.feature.syncedtabs.view/-synced-tabs-view/index.md)`, lifecycleOwner: LifecycleOwner, coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Dispatchers.IO, onTabClicked: (`[`Tab`](../../mozilla.components.browser.storage.sync/-tab/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`, controller: `[`SyncedTabsController`](../../mozilla.components.feature.syncedtabs.controller/-synced-tabs-controller/index.md)` = DefaultController(
+        storage,
+        accountManager,
+        view,
+        coroutineContext
+    ), presenter: `[`SyncedTabsPresenter`](../../mozilla.components.feature.syncedtabs.presenter/-synced-tabs-presenter/index.md)` = DefaultPresenter(
+        controller,
+        accountManager,
+        view,
+        lifecycleOwner
+    ), interactor: `[`SyncedTabsInteractor`](../../mozilla.components.feature.syncedtabs.interactor/-synced-tabs-interactor/index.md)` = DefaultInteractor(
+        accountManager,
+        view,
+        coroutineContext,
+        onTabClicked
+    ))`<br>Feature implementation that will keep a [SyncedTabsView](../../mozilla.components.feature.syncedtabs.view/-synced-tabs-view/index.md) notified with other synced device tabs for the Firefox Sync account. |
 
 ### Functions
 
 | Name | Summary |
 |---|---|
-| [getSyncedTabs](get-synced-tabs.md) | `suspend fun getSyncedTabs(): `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`Device`](../../mozilla.components.concept.sync/-device/index.md)`, `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Tab`](../../mozilla.components.browser.storage.sync/-tab/index.md)`>>`<br>Get the list of remote tabs. |
-| [start](start.md) | `fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Start listening to browser store changes. |
-| [stop](stop.md) | `fun stop(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Stop listening to browser store changes. |
+| [start](start.md) | `fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [stop](stop.md) | `fun stop(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 
 ### Extension Functions
 
