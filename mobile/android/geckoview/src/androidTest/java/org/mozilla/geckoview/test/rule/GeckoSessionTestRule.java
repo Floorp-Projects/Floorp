@@ -1877,6 +1877,11 @@ public class GeckoSessionTestRule implements TestRule {
         return waitForMessage(id);
     }
 
+    public int getSessionPid(final @NonNull GeckoSession session) {
+        final Double dblPid = (Double) webExtensionApiCall(session, "GetPidForTab", null);
+        return dblPid.intValue();
+    }
+
     private Object waitForMessage(String id) {
         UiThreadUtils.waitForCondition(() -> mPendingMessages.containsKey(id),
                 mTimeoutMillis);
@@ -2107,10 +2112,21 @@ public class GeckoSessionTestRule implements TestRule {
         });
     }
 
-    private Object webExtensionApiCall(final String apiName, SetArgs argsSetter) {
+    private Object webExtensionApiCall(final @NonNull String apiName, final @NonNull SetArgs argsSetter) {
+        return webExtensionApiCall(null, apiName, argsSetter);
+    }
+
+    private Object webExtensionApiCall(final GeckoSession session, final @NonNull String apiName,
+                                       final @NonNull SetArgs argsSetter) {
         // Ensure background script is connected
         UiThreadUtils.waitForCondition(() -> RuntimeCreator.backgroundPort() != null,
                 mTimeoutMillis);
+
+        if (session != null) {
+            // Ensure content script is connected
+            UiThreadUtils.waitForCondition(() -> mPorts.get(session) != null,
+                    mTimeoutMillis);
+        }
 
         final String id = UUID.randomUUID().toString();
 
@@ -2129,7 +2145,15 @@ public class GeckoSessionTestRule implements TestRule {
             throw new RuntimeException(ex);
         }
 
-        RuntimeCreator.backgroundPort().postMessage(message);
+        if (session == null) {
+            RuntimeCreator.backgroundPort().postMessage(message);
+        } else {
+            // We post the message using session's port instead of the background port. By routing
+            // the message through the extension's content script, we are able to obtain and attach
+            // the session's WebExtension tab as a `tab` argument to the API.
+            mPorts.get(session).postMessage(message);
+        }
+
         return waitForMessage(id);
     }
 
