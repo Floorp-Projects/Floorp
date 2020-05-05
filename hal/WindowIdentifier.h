@@ -47,11 +47,6 @@ class WindowIdentifier {
   WindowIdentifier();
 
   /**
-   * Copy constructor.
-   */
-  WindowIdentifier(const WindowIdentifier& other);
-
-  /**
    * Wrap the given window in a WindowIdentifier.  These two
    * constructors automatically grab the window's ID and append it to
    * the array of IDs.
@@ -66,7 +61,7 @@ class WindowIdentifier {
    * This automatically grabs the window's ID and appends it to the
    * array.
    */
-  WindowIdentifier(const nsTArray<uint64_t>& id, nsPIDOMWindowInner* window);
+  WindowIdentifier(nsTArray<uint64_t>&& id, nsPIDOMWindowInner* window);
 
   /**
    * Get the list of window and process IDs we contain.
@@ -100,7 +95,9 @@ class WindowIdentifier {
 
   AutoTArray<uint64_t, 3> mID;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
-  bool mIsEmpty;
+#ifdef DEBUG
+  bool mIsEmpty = false;
+#endif
 };
 
 }  // namespace hal

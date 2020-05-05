@@ -23,7 +23,7 @@ struct LockCount {
   LockCount() : numLocks(0), numHidden(0) {}
   uint32_t numLocks;
   uint32_t numHidden;
-  nsTArray<uint64_t> processes;
+  CopyableTArray<uint64_t> processes;
 };
 
 typedef nsDataHashtable<nsUint64HashKey, LockCount> ProcessLockTable;

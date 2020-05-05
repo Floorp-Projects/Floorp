@@ -11,9 +11,9 @@ using mozilla::hal::WindowIdentifier;
 namespace mozilla {
 namespace hal_impl {
 
-void Vibrate(const nsTArray<uint32_t>& pattern, const hal::WindowIdentifier&) {}
+void Vibrate(const nsTArray<uint32_t>& pattern, hal::WindowIdentifier&&) {}
 
-void CancelVibrate(const hal::WindowIdentifier&) {}
+void CancelVibrate(hal::WindowIdentifier&&) {}
 
 }  // namespace hal_impl
 }  // namespace mozilla

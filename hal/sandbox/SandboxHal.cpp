@@ -36,21 +36,19 @@ static PHalChild* Hal() {
   return sHal;
 }
 
-void Vibrate(const nsTArray<uint32_t>& pattern, const WindowIdentifier& id) {
+void Vibrate(const nsTArray<uint32_t>& pattern, WindowIdentifier&& id) {
   HAL_LOG("Vibrate: Sending to parent process.");
 
-  AutoTArray<uint32_t, 8> p(pattern);
-
-  WindowIdentifier newID(id);
+  WindowIdentifier newID(std::move(id));
   newID.AppendProcessID();
-  Hal()->SendVibrate(p, newID.AsArray(),
+  Hal()->SendVibrate(pattern, newID.AsArray(),
                      BrowserChild::GetFrom(newID.GetWindow()));
 }
 
-void CancelVibrate(const WindowIdentifier& id) {
+void CancelVibrate(WindowIdentifier&& id) {
   HAL_LOG("CancelVibrate: Sending to parent process.");
 
-  WindowIdentifier newID(id);
+  WindowIdentifier newID(std::move(id));
   newID.AppendProcessID();
   Hal()->SendCancelVibrate(newID.AsArray(),
                            BrowserChild::GetFrom(newID.GetWindow()));
@@ -166,8 +164,7 @@ class HalParent : public PHalParent,
     nsCOMPtr<nsIDOMWindow> window =
       do_QueryInterface(browserParent->GetBrowserDOMWindow());
     */
-    WindowIdentifier newID(id, nullptr);
-    hal::Vibrate(pattern, newID);
+    hal::Vibrate(pattern, WindowIdentifier(std::move(id), nullptr));
     return IPC_OK();
   }
 
@@ -178,8 +175,7 @@ class HalParent : public PHalParent,
     nsCOMPtr<nsIDOMWindow> window =
       browserParent->GetBrowserDOMWindow();
     */
-    WindowIdentifier newID(id, nullptr);
-    hal::CancelVibrate(newID);
+    hal::CancelVibrate(WindowIdentifier(std::move(id), nullptr));
     return IPC_OK();
   }
 
