@@ -882,33 +882,29 @@ class nsLayoutUtils {
      * When set, return only content that is actually visible.
      */
     OnlyVisible,
-    /**
-     * When set, coordinates are interpreted as being relative to the layout
-     * viewport. When not set, coordinates are interpreted as being relative
-     * to the visual viewport.
-     */
-    IsRelativeToLayoutViewport,
   };
 
   /**
    * Given aFrame, the root frame of a stacking context, find its descendant
    * frame under the point aPt that receives a mouse event at that location,
    * or nullptr if there is no such frame.
-   * @param aPt the point, relative to the frame origin
+   * @param aPt the point, relative to the frame origin, in either visual
+   *            or layout coordinates depending on aRelativeTo.mViewportType
    * @param aFlags some combination of FrameForPointOption.
    */
-  static nsIFrame* GetFrameForPoint(const nsIFrame* aFrame, nsPoint aPt,
+  static nsIFrame* GetFrameForPoint(RelativeTo aRelativeTo, nsPoint aPt,
                                     mozilla::EnumSet<FrameForPointOption> = {});
 
   /**
    * Given aFrame, the root frame of a stacking context, find all descendant
    * frames under the area of a rectangle that receives a mouse event,
    * or nullptr if there is no such frame.
-   * @param aRect the rect, relative to the frame origin
+   * @param aRect the rect, relative to the frame origin, in either visual
+   *              or layout coordinates depending on aRelativeTo.mViewportType
    * @param aOutFrames an array to add all the frames found
    * @param aFlags some combination of FrameForPointOption.
    */
-  static nsresult GetFramesForArea(const nsIFrame* aFrame, const nsRect& aRect,
+  static nsresult GetFramesForArea(RelativeTo aRelativeTo, const nsRect& aRect,
                                    nsTArray<nsIFrame*>& aOutFrames,
                                    mozilla::EnumSet<FrameForPointOption> = {});
 

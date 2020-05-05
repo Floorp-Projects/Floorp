@@ -565,9 +565,10 @@ static bool PrepareForSetTargetAPZCNotification(
     const LayoutDeviceIntPoint& aRefPoint,
     nsTArray<ScrollableLayerGuid>* aTargets) {
   ScrollableLayerGuid guid(aLayersId, 0, ScrollableLayerGuid::NULL_SCROLL_ID);
+  RelativeTo relativeTo{aRootFrame, ViewportType::Visual};
   nsPoint point = nsLayoutUtils::GetEventCoordinatesRelativeTo(
-      aWidget, aRefPoint, RelativeTo{aRootFrame, ViewportType::Visual});
-  nsIFrame* target = nsLayoutUtils::GetFrameForPoint(aRootFrame, point);
+      aWidget, aRefPoint, relativeTo);
+  nsIFrame* target = nsLayoutUtils::GetFrameForPoint(relativeTo, point);
   nsIScrollableFrame* scrollAncestor =
       target ? nsLayoutUtils::GetAsyncScrollableAncestorFrame(target)
              : aRootFrame->PresShell()->GetRootScrollFrameAsScrollable();

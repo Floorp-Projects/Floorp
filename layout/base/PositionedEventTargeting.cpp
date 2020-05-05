@@ -430,11 +430,8 @@ nsIFrame* FindFrameTargetedByInputEvent(
   if (aFlags & INPUT_IGNORE_ROOT_SCROLL_FRAME) {
     options += FrameForPointOption::IgnoreRootScrollFrame;
   }
-  if (aRootFrame.mViewportType == ViewportType::Layout) {
-    options += FrameForPointOption::IsRelativeToLayoutViewport;
-  }
   nsIFrame* target = nsLayoutUtils::GetFrameForPoint(
-      aRootFrame.mFrame, aPointRelativeToRootFrame, options);
+      aRootFrame, aPointRelativeToRootFrame, options);
   PET_LOG(
       "Found initial target %p for event class %s message %s point %s "
       "relative to root frame %p\n",
@@ -482,7 +479,7 @@ nsIFrame* FindFrameTargetedByInputEvent(
   PET_LOG("Expanded point to target rect %s\n",
           mozilla::layers::Stringify(targetRect).c_str());
   AutoTArray<nsIFrame*, 8> candidates;
-  nsresult rv = nsLayoutUtils::GetFramesForArea(aRootFrame.mFrame, targetRect,
+  nsresult rv = nsLayoutUtils::GetFramesForArea(aRootFrame, targetRect,
                                                 candidates, options);
   if (NS_FAILED(rv)) {
     return target;
