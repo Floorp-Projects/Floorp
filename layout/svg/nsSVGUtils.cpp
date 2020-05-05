@@ -310,7 +310,8 @@ nsIFrame* nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame,
         nsSVGUtils::eForGetClientRects | nsSVGUtils::eBBoxIncludeFill |
         nsSVGUtils::eBBoxIncludeStroke | nsSVGUtils::eBBoxIncludeMarkers;
 
-    auto ctm = nsLayoutUtils::GetTransformToAncestor(aFrame, outer);
+    auto ctm = nsLayoutUtils::GetTransformToAncestor(RelativeTo{aFrame},
+                                                     RelativeTo{outer});
 
     float initPositionX = NSAppUnitsToFloatPixels(aFrame->GetPosition().x,
                                                   AppUnitsPerCSSPixel()),

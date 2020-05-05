@@ -2246,8 +2246,8 @@ void nsDisplayListBuilder::AdjustWindowDraggingRegion(nsIFrame* aFrame) {
     // RTL mode - it should be able to exclude itself from the draggable region.
     referenceFrameToRootReferenceFrame =
         ViewAs<LayoutDeviceToLayoutDeviceMatrix4x4>(
-            nsLayoutUtils::GetTransformToAncestor(referenceFrame,
-                                                  mReferenceFrame)
+            nsLayoutUtils::GetTransformToAncestor(RelativeTo{referenceFrame},
+                                                  RelativeTo{mReferenceFrame})
                 .GetMatrix());
     Matrix referenceFrameToRootReferenceFrame2d;
     if (!referenceFrameToRootReferenceFrame.Is2D(
@@ -8438,7 +8438,8 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
   nsSize maxSize = Min(relativeLimit, absoluteLimit);
 
   const auto transform = nsLayoutUtils::GetTransformToAncestor(
-      aFrame, nsLayoutUtils::GetDisplayRootFrame(aFrame));
+      RelativeTo{aFrame},
+      RelativeTo{nsLayoutUtils::GetDisplayRootFrame(aFrame)});
   const gfxRect transformedBounds = transform.TransformAndClipBounds(
       gfxRect(overflow.x, overflow.y, overflow.width, overflow.height),
       gfxRect::MaxIntRect());

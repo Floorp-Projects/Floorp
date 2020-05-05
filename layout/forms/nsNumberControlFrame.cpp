@@ -196,7 +196,7 @@ int32_t nsNumberControlFrame::GetSpinButtonForPointerEvent(
     // default UA style sheet. See the comment in forms.css for why.
     LayoutDeviceIntPoint absPoint = aEvent->mRefPoint;
     nsPoint point = nsLayoutUtils::GetEventCoordinatesRelativeTo(
-        aEvent, absPoint, mSpinBox->GetPrimaryFrame());
+        aEvent, absPoint, RelativeTo{mSpinBox->GetPrimaryFrame()});
     if (point != nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)) {
       if (point.y < mSpinBox->GetPrimaryFrame()->GetSize().height / 2) {
         return eSpinButtonUp;

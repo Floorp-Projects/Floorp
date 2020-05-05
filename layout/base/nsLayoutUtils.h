@@ -808,7 +808,7 @@ class nsLayoutUtils {
    * the event is not a GUI event).
    */
   static nsPoint GetEventCoordinatesRelativeTo(
-      const mozilla::WidgetEvent* aEvent, nsIFrame* aFrame);
+      const mozilla::WidgetEvent* aEvent, RelativeTo aFrame);
 
   /**
    * Get the coordinates of a given point relative to an event and a
@@ -822,7 +822,7 @@ class nsLayoutUtils {
    */
   static nsPoint GetEventCoordinatesRelativeTo(
       const mozilla::WidgetEvent* aEvent,
-      const mozilla::LayoutDeviceIntPoint& aPoint, nsIFrame* aFrame);
+      const mozilla::LayoutDeviceIntPoint& aPoint, RelativeTo aFrame);
 
   /**
    * Get the coordinates of a given point relative to a widget and a
@@ -836,7 +836,7 @@ class nsLayoutUtils {
    */
   static nsPoint GetEventCoordinatesRelativeTo(
       nsIWidget* aWidget, const mozilla::LayoutDeviceIntPoint& aPoint,
-      nsIFrame* aFrame);
+      RelativeTo aFrame);
 
   /**
    * Get the popup frame of a given native mouse event.
@@ -966,6 +966,17 @@ class nsLayoutUtils {
       bool* aPreservesAxisAlignedRectangles = nullptr,
       mozilla::Maybe<Matrix4x4Flagged>* aMatrixCache = nullptr,
       bool aStopAtStackingContextAndDisplayPortAndOOFFrame = false,
+      nsIFrame** aOutAncestor = nullptr) {
+    return TransformFrameRectToAncestor(
+        aFrame, aRect, RelativeTo{aAncestor}, aPreservesAxisAlignedRectangles,
+        aMatrixCache, aStopAtStackingContextAndDisplayPortAndOOFFrame,
+        aOutAncestor);
+  }
+  static nsRect TransformFrameRectToAncestor(
+      const nsIFrame* aFrame, const nsRect& aRect, RelativeTo aAncestor,
+      bool* aPreservesAxisAlignedRectangles = nullptr,
+      mozilla::Maybe<Matrix4x4Flagged>* aMatrixCache = nullptr,
+      bool aStopAtStackingContextAndDisplayPortAndOOFFrame = false,
       nsIFrame** aOutAncestor = nullptr);
 
   /**
@@ -976,7 +987,7 @@ class nsLayoutUtils {
    * More info can be found in nsIFrame::GetTransformMatrix.
    */
   static Matrix4x4Flagged GetTransformToAncestor(
-      const nsIFrame* aFrame, const nsIFrame* aAncestor, uint32_t aFlags = 0,
+      RelativeTo aFrame, RelativeTo aAncestor, uint32_t aFlags = 0,
       nsIFrame** aOutAncestor = nullptr);
 
   /**
@@ -1024,9 +1035,8 @@ class nsLayoutUtils {
    * Same as above function, but transform points in app units and
    * handle 1 point per call.
    */
-  static TransformResult TransformPoint(const nsIFrame* aFromFrame,
-                                        const nsIFrame* aToFrame,
-                                        nsPoint& aPoint);
+  static TransformResult TransformPoint(RelativeTo aFromFrame,
+                                        RelativeTo aToFrame, nsPoint& aPoint);
 
   /**
    * Transforms a rect from aFromFrame to aToFrame. In app units.
@@ -1077,23 +1087,27 @@ class nsLayoutUtils {
    * in the coordinate system of aFrame.  This effectively inverts all
    * transforms between this point and the root frame.
    *
+   * @param aFromType Specifies whether |aPoint| is in layout or visual
+   * coordinates.
    * @param aFrame The frame that acts as the coordinate space container.
-   * @param aPoint The point, in the global space, to get in the frame-local
-   * space.
+   * @param aPoint The point, in global layout or visual coordinates (as per
+   * |aFromType|, to get in the frame-local space.
    * @return aPoint, expressed in aFrame's canonical coordinate space.
    */
-  static nsPoint TransformRootPointToFrame(nsIFrame* aFrame,
+  static nsPoint TransformRootPointToFrame(ViewportType aFromType,
+                                           RelativeTo aFrame,
                                            const nsPoint& aPoint) {
-    return TransformAncestorPointToFrame(aFrame, aPoint, nullptr);
+    return TransformAncestorPointToFrame(aFrame, aPoint,
+                                         RelativeTo{nullptr, aFromType});
   }
 
   /**
    * Transform aPoint relative to aAncestor down to the coordinate system of
    * aFrame.
    */
-  static nsPoint TransformAncestorPointToFrame(nsIFrame* aFrame,
+  static nsPoint TransformAncestorPointToFrame(RelativeTo aFrame,
                                                const nsPoint& aPoint,
-                                               nsIFrame* aAncestor);
+                                               RelativeTo aAncestor);
 
   /**
    * Helper function that, given a rectangle and a matrix, returns the smallest
