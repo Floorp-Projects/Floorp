@@ -32,6 +32,11 @@ branch = "wgpu2"
 git = "https://github.com/kvark/spirv_cross"
 replace-with = "vendored-sources"
 
+[source."https://github.com/kinetiknz/mio-named-pipes"]
+git = "https://github.com/kinetiknz/mio-named-pipes"
+replace-with = "vendored-sources"
+rev = "21c26326f5f45f415c49eac4ba5bc41a2f961321"
+
 [source."https://github.com/jfkthame/mapped_hyph.git"]
 git = "https://github.com/jfkthame/mapped_hyph.git"
 replace-with = "vendored-sources"
