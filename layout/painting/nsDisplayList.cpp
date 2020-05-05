@@ -767,10 +767,11 @@ static void AddNonAnimatingTransformLikePropertiesStyles(
 static void AddAnimationsForDisplayItem(nsIFrame* aFrame,
                                         nsDisplayListBuilder* aBuilder,
                                         nsDisplayItem* aItem,
-                                        DisplayItemType aType, Send aSendFlag,
+                                        DisplayItemType aType,
                                         layers::LayersBackend aLayersBackend,
                                         AnimationInfo& aAnimationInfo) {
-  if (aSendFlag == Send::NextTransaction) {
+  Send sendFlag = !aBuilder ? Send::NextTransaction : Send::Immediate;
+  if (sendFlag == Send::NextTransaction) {
     aAnimationInfo.ClearAnimationsForNextTransaction();
   } else {
     aAnimationInfo.ClearAnimations();
@@ -835,7 +836,7 @@ static void AddAnimationsForDisplayItem(nsIFrame* aFrame,
     // we avoid running these animations on the main thread.
     bool added = AddAnimationsForProperty(aFrame, effects, iter.get().value(),
                                           transformData, iter.get().key(),
-                                          aSendFlag, aAnimationInfo);
+                                          sendFlag, aAnimationInfo);
     if (added && transformData) {
       // Only copy TransformLikeMetaData in the first animation property.
       transformData.reset();
@@ -862,7 +863,7 @@ static void AddAnimationsForDisplayItem(nsIFrame* aFrame,
           nsCSSPropertyIDSet::TransformLikeProperties()) &&
       !nonAnimatingProperties.IsEmpty()) {
     AddNonAnimatingTransformLikePropertiesStyles(nonAnimatingProperties, aFrame,
-                                                 aSendFlag, aAnimationInfo);
+                                                 sendFlag, aAnimationInfo);
   }
 }
 
@@ -890,7 +891,7 @@ static uint64_t AddAnimationsForWebRender(
               aItem, aRenderRoot);
   AnimationInfo& animationInfo = animationData->GetAnimationInfo();
   AddAnimationsForDisplayItem(aItem->Frame(), aDisplayListBuilder, aItem,
-                              aItem->GetType(), Send::Immediate,
+                              aItem->GetType(),
                               layers::LayersBackend::LAYERS_WR, animationInfo);
   animationInfo.StartPendingAnimations(
       aManager->LayerManager()->GetAnimationReadyTime());
@@ -982,9 +983,8 @@ void nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(
     return;
   }
 
-  Send sendFlag = !aBuilder ? Send::NextTransaction : Send::Immediate;
   AnimationInfo& animationInfo = aLayer->GetAnimationInfo();
-  AddAnimationsForDisplayItem(aFrame, aBuilder, aItem, aType, sendFlag,
+  AddAnimationsForDisplayItem(aFrame, aBuilder, aItem, aType,
                               layers::LayersBackend::LAYERS_CLIENT,
                               animationInfo);
   animationInfo.TransferMutatedFlagToLayer(aLayer);
