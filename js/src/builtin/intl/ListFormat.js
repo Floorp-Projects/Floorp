@@ -206,11 +206,16 @@ function Intl_ListFormat_format(list) {
                             "Intl_ListFormat_format");
     }
 
-    // Ensure the ListFormat internals are resolved.
-    getListFormatInternals(listFormat);
-
     // Step 4.
     var stringList = StringListFromIterable(list, "format");
+
+    // We can directly return if |stringList| contains less than two elements.
+    if (stringList.length < 2) {
+        return stringList.length === 0 ? "" : stringList[0];
+    }
+
+    // Ensure the ListFormat internals are resolved.
+    getListFormatInternals(listFormat);
 
     // Step 5.
     return intl_FormatList(listFormat, stringList, /* formatToParts = */ false);
@@ -229,11 +234,16 @@ function Intl_ListFormat_formatToParts(list) {
                             "Intl_ListFormat_formatToParts");
     }
 
-    // Ensure the ListFormat internals are resolved.
-    getListFormatInternals(listFormat);
-
     // Step 4.
     var stringList = StringListFromIterable(list, "formatToParts");
+
+    // We can directly return if |stringList| contains less than two elements.
+    if (stringList.length < 2) {
+        return stringList.length === 0 ? [] : [{type: "element", value: stringList[0]}];
+    }
+
+    // Ensure the ListFormat internals are resolved.
+    getListFormatInternals(listFormat);
 
     // Step 5.
     return intl_FormatList(listFormat, stringList, /* formatToParts = */ true);
