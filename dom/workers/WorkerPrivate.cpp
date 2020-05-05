@@ -42,6 +42,7 @@
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/dom/JSExecutionManager.h"
 #include "mozilla/StorageAccess.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/ThrottledEventQueue.h"
 #include "mozilla/TimelineConsumers.h"
@@ -2666,8 +2667,8 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
       loadInfo.mWindowID = globalWindow->WindowID();
       loadInfo.mStorageAccess = StorageAllowedForWindow(globalWindow);
       loadInfo.mCookieJarSettings = document->CookieJarSettings();
-      loadInfo.mOriginAttributes =
-          nsContentUtils::GetOriginAttributes(document);
+      StoragePrincipalHelper::GetRegularPrincipalOriginAttributes(
+          document, loadInfo.mOriginAttributes);
       loadInfo.mParentController = globalWindow->GetController();
       loadInfo.mSecureContext = loadInfo.mWindow->IsSecureContext()
                                     ? WorkerLoadInfo::eSecureContext

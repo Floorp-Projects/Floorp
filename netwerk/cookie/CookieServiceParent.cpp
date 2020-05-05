@@ -83,7 +83,8 @@ void CookieServiceParent::TrackCookieLoad(nsIChannel* aChannel) {
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
   bool aIsSameSiteForeign = NS_IsSameSiteForeign(aChannel, uri);
 
-  StoragePrincipalHelper::PrepareOriginAttributes(aChannel, attrs);
+  StoragePrincipalHelper::PrepareEffectiveStoragePrincipalOriginAttributes(
+      aChannel, attrs);
 
   // Send matching cookies to Child.
   nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil;
