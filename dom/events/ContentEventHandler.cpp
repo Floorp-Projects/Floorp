@@ -2552,7 +2552,9 @@ nsresult ContentEventHandler::OnQueryCharacterAtPoint(
   nsPoint ptInRoot = nsLayoutUtils::GetEventCoordinatesRelativeTo(
       &eventOnRoot, RelativeTo{rootFrame});
 
-  nsIFrame* targetFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, ptInRoot);
+  nsIFrame* targetFrame = nsLayoutUtils::GetFrameForPoint(
+      rootFrame, ptInRoot,
+      {nsLayoutUtils::FrameForPointOption::IsRelativeToLayoutViewport});
   if (!targetFrame || !targetFrame->GetContent() ||
       !targetFrame->GetContent()->IsInclusiveDescendantOf(mRootContent)) {
     // There is no character at the point.
