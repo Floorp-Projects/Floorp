@@ -535,6 +535,8 @@ function _execute_test() {
     coverageCollector = new _CoverageCollector(_JSCOV_DIR);
   }
 
+  let startTime = Cu.now();
+
   // _HEAD_FILES is dynamically defined by <runxpcshelltests.py>.
   _load_files(_HEAD_FILES);
   // _TEST_FILE is dynamically defined by <runxpcshelltests.py>.
@@ -626,6 +628,7 @@ function _execute_test() {
   };
 
   let complete = _cleanupFunctions.length == 0;
+  let cleanupStartTime = complete ? 0 : Cu.now();
   (async () => {
     for (let func of _cleanupFunctions.reverse()) {
       try {
@@ -642,7 +645,15 @@ function _execute_test() {
     .catch(reportCleanupError)
     .then(() => (complete = true));
   _Services.tm.spinEventLoopUntil(() => complete);
+  if (cleanupStartTime) {
+    ChromeUtils.addProfilerMarker(
+      "xpcshell-test",
+      cleanupStartTime,
+      "Cleanup functions"
+    );
+  }
 
+  ChromeUtils.addProfilerMarker("xpcshell-test", startTime, _TEST_NAME);
   _Services.obs.notifyObservers(null, "test-complete");
 
   // Restore idle service to avoid leaks.
@@ -677,7 +688,13 @@ function _execute_test() {
 function _load_files(aFiles) {
   function load_file(element, index, array) {
     try {
+      let startTime = Cu.now();
       load(element);
+      ChromeUtils.addProfilerMarker(
+        "xpcshell-test",
+        startTime,
+        "load " + element.replace(/.*\/_?tests\/xpcshell\//, "")
+      );
     } catch (e) {
       let extra = {
         source_file: element,
@@ -702,6 +719,7 @@ function _wrap_with_quotes_if_necessary(val) {
  * Prints a message to the output log.
  */
 function info(msg, data) {
+  ChromeUtils.addProfilerMarker("xpcshell-test", undefined, "INFO " + msg);
   msg = _wrap_with_quotes_if_necessary(msg);
   data = data ? data : null;
   _testLogger.info(msg, data);
@@ -1560,9 +1578,15 @@ function run_next_test() {
 
       if (_properties.isTask) {
         _gTaskRunning = true;
+        let startTime = Cu.now();
         (async () => _gRunningTest())().then(
           result => {
             _gTaskRunning = false;
+            ChromeUtils.addProfilerMarker(
+              "xpcshell-test",
+              startTime,
+              _gRunningTest.name || "task"
+            );
             if (_isGenerator(result)) {
               Assert.ok(false, "Task returned a generator");
             }
@@ -1570,6 +1594,11 @@ function run_next_test() {
           },
           ex => {
             _gTaskRunning = false;
+            ChromeUtils.addProfilerMarker(
+              "xpcshell-test",
+              startTime,
+              _gRunningTest.name || "task"
+            );
             try {
               do_report_unexpected_exception(ex);
             } catch (error) {
@@ -1580,10 +1609,17 @@ function run_next_test() {
         );
       } else {
         // Exceptions do not kill asynchronous tests, so they'll time out.
+        let startTime = Cu.now();
         try {
           _gRunningTest();
         } catch (e) {
           do_throw(e);
+        } finally {
+          ChromeUtils.addProfilerMarker(
+            "xpcshell-test",
+            startTime,
+            _gRunningTest.name || undefined
+          );
         }
       }
     }
@@ -1628,14 +1664,21 @@ try {
   // We only need to run this in the parent process.
   // We only want to run this for local developer builds (which should have a "default" update channel).
   if (runningInParent && _AppConstants.MOZ_UPDATE_CHANNEL == "default") {
+    let startTime = Cu.now();
     let _TelemetryController = ChromeUtils.import(
       "resource://gre/modules/TelemetryController.jsm",
       null
     ).TelemetryController;
 
     let complete = false;
-    let doComplete = () => (complete = true);
-    _TelemetryController.testRegisterJsProbes().then(doComplete, doComplete);
+    _TelemetryController.testRegisterJsProbes().finally(() => {
+      ChromeUtils.addProfilerMarker(
+        "xpcshell-test",
+        startTime,
+        "TelemetryController.testRegisterJsProbes"
+      );
+      complete = true;
+    });
     _Services.tm.spinEventLoopUntil(() => complete);
   }
 } catch (e) {
