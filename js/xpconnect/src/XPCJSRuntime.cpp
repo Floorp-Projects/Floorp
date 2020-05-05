@@ -773,7 +773,7 @@ void XPCJSRuntime::DoCycleCollectionCallback(JSContext* cx) {
 }
 
 void XPCJSRuntime::CustomGCCallback(JSGCStatus status) {
-  nsTArray<xpcGCCallback> callbacks(extraGCCallbacks);
+  nsTArray<xpcGCCallback> callbacks(extraGCCallbacks.Clone());
   for (uint32_t i = 0; i < callbacks.Length(); ++i) {
     callbacks[i](status);
   }
