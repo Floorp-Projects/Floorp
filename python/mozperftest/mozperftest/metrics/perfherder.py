@@ -51,11 +51,7 @@ class Perfherder(Layer):
 
         # Get filtered metrics
         results, fullsettings = filtered_metrics(
-            metadata,
-            output,
-            prefix,
-            metrics=self.get_arg("metrics"),
-            settings=True
+            metadata, output, prefix, metrics=self.get_arg("metrics"), settings=True
         )
 
         if not results:
@@ -71,7 +67,11 @@ class Perfherder(Layer):
             # overall values.
             subtests = {}
             for r in res:
-                vals = [v["value"] for v in r["data"] if isinstance(v["value"], (int, float))]
+                vals = [
+                    v["value"]
+                    for v in r["data"]
+                    if isinstance(v["value"], (int, float))
+                ]
                 if vals:
                     subtests[r["subtest"]] = vals
 
@@ -84,7 +84,7 @@ class Perfherder(Layer):
                 alert_threshold=settings.get("alertThreshold", 2.0),
                 lower_is_better=settings.get("lowerIsBetter", True),
                 unit=settings.get("unit", "ms"),
-                summary=settings.get("value")
+                summary=settings.get("value"),
             )
 
             # XXX Validate perfherder data
@@ -220,8 +220,8 @@ class Perfherder(Layer):
 
         if len(allvals) == 0:
             raise PerfherderValidDataError(
-                "Could not build perfherder data blob because no valid data was provided, " +
-                "only int/float data is accepted."
+                "Could not build perfherder data blob because no valid data was provided, "
+                + "only int/float data is accepted."
             )
 
         suite["value"] = statistics.mean(allvals)

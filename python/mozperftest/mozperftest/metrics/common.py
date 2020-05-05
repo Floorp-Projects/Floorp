@@ -6,7 +6,7 @@ from pathlib import Path
 
 from mozperftest.metrics.exceptions import (
     MetricsMultipleTransformsError,
-    MetricsMissingResultsError
+    MetricsMissingResultsError,
 )
 from mozperftest.metrics.utils import validate_intermediate_results
 from mozperftest.metrics.notebook import PerftestNotebook
@@ -70,7 +70,9 @@ class MetricsStorage(object):
             name = res["name"]
             if isinstance(res["results"], dict):
                 # XXX Implement subtest based parsing
-                raise NotImplementedError("Subtest-based processing is not implemented yet")
+                raise NotImplementedError(
+                    "Subtest-based processing is not implemented yet"
+                )
 
             # Merge all entries with the same name into one
             # result, if separation is needed use unique names
@@ -85,7 +87,9 @@ class MetricsStorage(object):
             # Check the transform definitions
             currtrfm = self.results[name]["transformer"]
             if not currtrfm:
-                self.results[name]["transformer"] = res.get("transformer", "SingleJsonRetriever")
+                self.results[name]["transformer"] = res.get(
+                    "transformer", "SingleJsonRetriever"
+                )
             elif currtrfm != res.get("transformer", "SingleJsonRetriever"):
                 raise MetricsMultipleTransformsError(
                     f"Only one transformer allowed per data name! Found multiple for {name}: "
@@ -136,10 +140,7 @@ class MetricsStorage(object):
         return self.stddata
 
     def filtered_metrics(
-        self,
-        group_name="firefox",
-        transformer="SingleJsonRetriever",
-        metrics=None,
+        self, group_name="firefox", transformer="SingleJsonRetriever", metrics=None
     ):
 
         """Filters the metrics to only those that were requested by `metrics`.

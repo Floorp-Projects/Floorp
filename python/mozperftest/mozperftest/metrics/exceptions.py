@@ -9,14 +9,17 @@ class MetricsMultipleTransformsError(Exception):
     This is because intermediate results with the same data
     name are merged when being processed.
     """
+
     pass
 
 
 class MetricsMissingResultsError(Exception):
     """Raised when no results could be found after parsing the intermediate results."""
+
     pass
 
 
 class PerfherderValidDataError(Exception):
     """Raised when no valid data (int/float) can be found to build perfherder blob."""
+
     pass
