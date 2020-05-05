@@ -408,7 +408,7 @@ static bool ConvertKeyframeSequence(JSContext* aCx, dom::Document* aDocument,
 
     // Convert the JS value into a BaseKeyframe dictionary value.
     dom::binding_detail::FastBaseKeyframe keyframeDict;
-    BindingCallContext callCx(aCx, aContext);
+    dom::BindingCallContext callCx(aCx, aContext);
     if (!keyframeDict.Init(callCx, value,
                            "Element of sequence<Keyframe> argument")) {
       // This may happen if the value type of the member of BaseKeyframe is
