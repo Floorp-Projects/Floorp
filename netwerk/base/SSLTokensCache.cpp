@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SSLTokensCache.h"
+#include "mozilla/ArrayAlgorithm.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Logging.h"
 #include "nsIOService.h"
@@ -35,6 +36,20 @@ class ExpirationComparator {
     return a->mExpirationTime < b->mExpirationTime;
   }
 };
+
+SessionCacheInfo SessionCacheInfo::Clone() const {
+  SessionCacheInfo result;
+  result.mEVStatus = mEVStatus;
+  result.mCertificateTransparencyStatus = mCertificateTransparencyStatus;
+  result.mServerCertBytes = mServerCertBytes.Clone();
+  result.mSucceededCertChainBytes =
+      mSucceededCertChainBytes
+          ? Some(TransformIntoNewArray(
+                *mSucceededCertChainBytes,
+                [](const auto& element) { return element.Clone(); }))
+          : Nothing();
+  return result;
+}
 
 StaticRefPtr<SSLTokensCache> SSLTokensCache::gInstance;
 StaticMutex SSLTokensCache::sLock;
@@ -206,7 +221,11 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
   rec->mSessionCacheInfo.mServerCertBytes = std::move(certBytes);
 
   rec->mSessionCacheInfo.mSucceededCertChainBytes =
-      std::move(succeededCertChainBytes);
+      succeededCertChainBytes
+          ? Some(TransformIntoNewArray(
+                *succeededCertChainBytes,
+                [](auto& element) { return nsTArray(std::move(element)); }))
+          : Nothing();
 
   if (isEV) {
     rec->mSessionCacheInfo.mEVStatus = psm::EVStatus::EV;
@@ -243,7 +262,7 @@ nsresult SSLTokensCache::Get(const nsACString& aKey,
 
   if (gInstance->mTokenCacheRecords.Get(aKey, &rec)) {
     if (rec->mToken.Length()) {
-      aToken = rec->mToken;
+      aToken = rec->mToken.Clone();
       return NS_OK;
     }
   }
@@ -268,7 +287,7 @@ bool SSLTokensCache::GetSessionCacheInfo(const nsACString& aKey,
   TokenCacheRecord* rec = nullptr;
 
   if (gInstance->mTokenCacheRecords.Get(aKey, &rec)) {
-    aResult = rec->mSessionCacheInfo;
+    aResult = rec->mSessionCacheInfo.Clone();
     return true;
   }
 
