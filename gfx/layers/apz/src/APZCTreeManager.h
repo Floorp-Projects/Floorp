@@ -506,20 +506,9 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   // Assert that the current thread is the updater thread for this APZCTM.
   void AssertOnUpdaterThread();
 
-  // Returns a pointer to the WebRenderAPI this APZCTreeManager is for, for
-  // the provided RenderRoot (since an APZCTreeManager can cover multiple
-  // RenderRoots). This might be null (for example, if WebRender is not
-  // enabled).
-  already_AddRefed<wr::WebRenderAPI> GetWebRenderAPI(
-      wr::RenderRoot aRenderRoot) const;
-
-  // Returns a pointer to the root WebRenderAPI for the RenderRoot that owns
-  // the given point. For example, if aPoint is in the content area and
-  // RenderRoot splitting is enabled, this will return the WebRenderAPI for
-  // the Content RenderRoot.
+  // Returns a pointer to the WebRenderAPI this APZCTreeManager is for.
   // This might be null (for example, if WebRender is not enabled).
-  already_AddRefed<wr::WebRenderAPI> GetWebRenderAPIAtPoint(
-      const ScreenPoint& aPoint) const;
+  already_AddRefed<wr::WebRenderAPI> GetWebRenderAPI() const;
 
  protected:
   // Protected destructor, to discourage deletion outside of Release():

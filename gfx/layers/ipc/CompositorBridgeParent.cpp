@@ -496,8 +496,7 @@ void CompositorBridgeParent::StopAndClearResources() {
     }
     indirectBridgeParents.clear();
 
-    RefPtr<wr::WebRenderAPI> api =
-        mWrBridge->GetWebRenderAPI(wr::RenderRoot::Default);
+    RefPtr<wr::WebRenderAPI> api = mWrBridge->GetWebRenderAPI();
     // Ensure we are not holding the sIndirectLayerTreesLock here because we
     // are going to block on WR threads in order to shut it down properly.
     mWrBridge->Destroy();
@@ -1209,8 +1208,7 @@ CompositorBridgeParent::GetCompositorBridgeParentFromWindowId(
     // state->mWrBridge might be a root WebRenderBridgeParent or one of a
     // content process, but in either case the state->mParent will be the same.
     // So we don't need to distinguish between the two.
-    if (RefPtr<wr::WebRenderAPI> api =
-            state->mWrBridge->GetWebRenderAPI(wr::RenderRoot::Default)) {
+    if (RefPtr<wr::WebRenderAPI> api = state->mWrBridge->GetWebRenderAPI()) {
       if (api->GetId() == aWindowId) {
         return state->mParent;
       }
@@ -1827,11 +1825,10 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvAdoptChild(
 
   if (childWrBridge) {
     MOZ_ASSERT(mWrBridge);
-    nsTArray<RefPtr<wr::WebRenderAPI>> apis;
-    DebugOnly<bool> cloneSuccess = mWrBridge->CloneWebRenderAPIs(apis);
-    MOZ_ASSERT(cloneSuccess);
+    RefPtr<wr::WebRenderAPI> api = mWrBridge->GetWebRenderAPI();
+    api = api->Clone();
     wr::Epoch newEpoch = childWrBridge->UpdateWebRender(
-        mWrBridge->CompositorScheduler(), std::move(apis),
+        mWrBridge->CompositorScheduler(), std::move(api),
         mWrBridge->AsyncImageManager(), GetAnimationStorage(),
         mWrBridge->GetTextureFactoryIdentifier());
     // Pretend we composited, since parent CompositorBridgeParent was replaced.
@@ -1898,33 +1895,28 @@ PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
     // Same as for mApzUpdater, but for the sampler thread.
     mApzSampler->SetWebRenderWindowId(windowId);
   }
-  nsTArray<RefPtr<wr::WebRenderAPI>> apis;
-  apis.AppendElement(
-      wr::WebRenderAPI::Create(this, std::move(widget), windowId, aSize));
-  if (!apis[0]) {
+  RefPtr<wr::WebRenderAPI> api =
+      wr::WebRenderAPI::Create(this, std::move(widget), windowId, aSize);
+  if (!api) {
     mWrBridge = WebRenderBridgeParent::CreateDestroyed(aPipelineId);
     mWrBridge.get()->AddRef();  // IPDL reference
     return mWrBridge;
   }
 
-  nsTArray<RefPtr<wr::WebRenderAPI>> clonedApis;
-  for (auto& api : apis) {
-    wr::TransactionBuilder txn;
-    txn.SetRootPipeline(aPipelineId);
-    api->SendTransaction(txn);
-    clonedApis.AppendElement(api->Clone());
-  }
+  wr::TransactionBuilder txn;
+  txn.SetRootPipeline(aPipelineId);
+  api->SendTransaction(txn);
 
   bool useCompositorWnd = false;
 #ifdef XP_WIN
   useCompositorWnd = !!mWidget->AsWindows()->GetCompositorHwnd();
 #endif
   mAsyncImageManager =
-      new AsyncImagePipelineManager(std::move(clonedApis), useCompositorWnd);
+      new AsyncImagePipelineManager(api->Clone(), useCompositorWnd);
   RefPtr<AsyncImagePipelineManager> asyncMgr = mAsyncImageManager;
   RefPtr<CompositorAnimationStorage> animStorage = GetAnimationStorage();
   mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, nullptr,
-                                        std::move(apis), std::move(asyncMgr),
+                                        std::move(api), std::move(asyncMgr),
                                         std::move(animStorage), mVsyncRate);
   mWrBridge.get()->AddRef();  // IPDL reference
 
@@ -1970,8 +1962,7 @@ bool CompositorBridgeParent::DeallocPWebGPUParent(
 
 void CompositorBridgeParent::NotifyMemoryPressure() {
   if (mWrBridge) {
-    RefPtr<wr::WebRenderAPI> api =
-        mWrBridge->GetWebRenderAPI(wr::RenderRoot::Default);
+    RefPtr<wr::WebRenderAPI> api = mWrBridge->GetWebRenderAPI();
     if (api) {
       api->NotifyMemoryPressure();
     }
@@ -1980,8 +1971,7 @@ void CompositorBridgeParent::NotifyMemoryPressure() {
 
 void CompositorBridgeParent::AccumulateMemoryReport(wr::MemoryReport* aReport) {
   if (mWrBridge) {
-    RefPtr<wr::WebRenderAPI> api =
-        mWrBridge->GetWebRenderAPI(wr::RenderRoot::Default);
+    RefPtr<wr::WebRenderAPI> api = mWrBridge->GetWebRenderAPI();
     if (api) {
       api->AccumulateMemoryReport(aReport);
     }
@@ -2528,8 +2518,7 @@ bool CompositorBridgeParent::IsSameProcess() const {
 
 void CompositorBridgeParent::NotifyWebRenderContextPurge() {
   MOZ_ASSERT(CompositorLoop() == MessageLoop::current());
-  RefPtr<wr::WebRenderAPI> api =
-      mWrBridge->GetWebRenderAPI(wr::RenderRoot::Default);
+  RefPtr<wr::WebRenderAPI> api = mWrBridge->GetWebRenderAPI();
   api->ClearAllCaches();
 }
 

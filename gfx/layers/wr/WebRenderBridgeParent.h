@@ -100,7 +100,7 @@ class WebRenderBridgeParent final
                         const wr::PipelineId& aPipelineId,
                         widget::CompositorWidget* aWidget,
                         CompositorVsyncScheduler* aScheduler,
-                        nsTArray<RefPtr<wr::WebRenderAPI>>&& aApis,
+                        RefPtr<wr::WebRenderAPI>&& aApi,
                         RefPtr<AsyncImagePipelineManager>&& aImageMgr,
                         RefPtr<CompositorAnimationStorage>&& aAnimStorage,
                         TimeDuration aVsyncRate);
@@ -109,27 +109,8 @@ class WebRenderBridgeParent final
       const wr::PipelineId& aPipelineId);
 
   wr::PipelineId PipelineId() { return mPipelineId; }
-
-  bool CloneWebRenderAPIs(nsTArray<RefPtr<wr::WebRenderAPI>>& aOutAPIs) {
-    for (auto& api : mApis) {
-      if (api) {
-        RefPtr<wr::WebRenderAPI> clone = api->Clone();
-        if (!clone) {
-          return false;
-        }
-        aOutAPIs.AppendElement(clone);
-      }
-    }
-    return true;
-  }
-  already_AddRefed<wr::WebRenderAPI> GetWebRenderAPIAtPoint(
-      const ScreenPoint& aPoint);
-  already_AddRefed<wr::WebRenderAPI> GetWebRenderAPI(
-      wr::RenderRoot aRenderRoot) {
-    if (aRenderRoot > wr::kHighestRenderRoot) {
-      return nullptr;
-    }
-    return do_AddRef(mApis[aRenderRoot]);
+  already_AddRefed<wr::WebRenderAPI> GetWebRenderAPI() {
+    return do_AddRef(mApi);
   }
   AsyncImagePipelineManager* AsyncImageManager() { return mAsyncImageManager; }
   CompositorVsyncScheduler* CompositorScheduler() {
@@ -304,8 +285,7 @@ class WebRenderBridgeParent final
                            RefPtr<const wr::WebRenderPipelineInfo> aInfo);
 
   wr::Epoch UpdateWebRender(
-      CompositorVsyncScheduler* aScheduler,
-      nsTArray<RefPtr<wr::WebRenderAPI>>&& aApis,
+      CompositorVsyncScheduler* aScheduler, RefPtr<wr::WebRenderAPI>&& aApi,
       AsyncImagePipelineManager* aImageMgr,
       CompositorAnimationStorage* aAnimStorage,
       const TextureFactoryIdentifier& aTextureFactoryIdentifier);
@@ -380,15 +360,6 @@ class WebRenderBridgeParent final
 
   explicit WebRenderBridgeParent(const wr::PipelineId& aPipelineId);
   virtual ~WebRenderBridgeParent();
-
-  wr::WebRenderAPI* Api(wr::RenderRoot aRenderRoot) {
-    if (IsRootWebRenderBridgeParent()) {
-      return mApis[aRenderRoot];
-    } else {
-      MOZ_ASSERT(aRenderRoot == wr::RenderRoot::Default);
-      return mApis[*mRenderRoot];
-    }
-  }
 
   // Within WebRenderBridgeParent, we can use wr::RenderRoot::Default to
   // refer to DefaultApi(), which can be the content API if this
@@ -573,14 +544,7 @@ class WebRenderBridgeParent final
   CompositorBridgeParentBase* MOZ_NON_OWNING_REF mCompositorBridge;
   wr::PipelineId mPipelineId;
   RefPtr<widget::CompositorWidget> mWidget;
-  // The RenderRootArray means there will always be a fixed number of apis,
-  // one for each RenderRoot, even if renderroot splitting isn't enabled.
-  // In this case, the unused apis will be nullptrs. Also, if this is not
-  // the root WebRenderBridgeParent, there should only be one api in this
-  // list. We avoid using a dynamically sized array for this because we
-  // need to be able to null these out in a thread-safe way from
-  // ClearResources, and there's no way to do that with an nsTArray.
-  wr::RenderRootArray<RefPtr<wr::WebRenderAPI>> mApis;
+  RefPtr<wr::WebRenderAPI> mApi;
   // This is a map from pipeline id to render root, that tracks the render
   // roots of all subpipelines (including nested subpipelines, e.g. in the
   // Fission case) attached to this WebRenderBridgeParent. This is only
