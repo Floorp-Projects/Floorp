@@ -118,7 +118,7 @@ void SMILInterval::RemoveDependentTime(const SMILInstanceTime& aTime) {
 }
 
 void SMILInterval::GetDependentTimes(InstanceTimeList& aTimes) {
-  aTimes = mDependentTimes;
+  aTimes = mDependentTimes.Clone();
 }
 
 bool SMILInterval::IsDependencyChainLink() const {
