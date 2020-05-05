@@ -53,7 +53,7 @@ void ChromeProcessController::InitializeRoot() {
 void ChromeProcessController::NotifyLayerTransforms(
     const nsTArray<MatrixMessage>& aTransforms) {
   if (MessageLoop::current() != mUILoop) {
-    mUILoop->PostTask(NewRunnableMethod<nsTArray<MatrixMessage>>(
+    mUILoop->PostTask(NewRunnableMethod<CopyableTArray<MatrixMessage>>(
         "layers::ChromeProcessController::NotifyLayerTransforms", this,
         &ChromeProcessController::NotifyLayerTransforms, aTransforms));
     return;

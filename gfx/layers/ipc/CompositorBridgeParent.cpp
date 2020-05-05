@@ -1429,7 +1429,7 @@ void CompositorBridgeParent::SetConfirmedTargetAPZC(
       uint64_t, const nsTArray<ScrollableLayerGuid>&) =
       &APZCTreeManager::SetTargetAPZC;
   RefPtr<Runnable> task = NewRunnableMethod<
-      uint64_t, StoreCopyPassByConstLRef<nsTArray<ScrollableLayerGuid>>>(
+      uint64_t, StoreCopyPassByConstLRef<CopyableTArray<ScrollableLayerGuid>>>(
       "layers::CompositorBridgeParent::SetConfirmedTargetAPZC",
       mApzcTreeManager.get(), setTargetApzcFunc, aInputBlockId, aTargets);
   mApzUpdater->RunOnControllerThread(aLayersId, task.forget());
@@ -2661,7 +2661,7 @@ bool CompositorBridgeParent::UpdatePluginWindowState(LayersId aId) {
   }
 
   mLastPluginUpdateLayerTreeId = aId;
-  mCachedPluginData = lts.mPluginData;
+  mCachedPluginData = lts.mPluginData.Clone();
   return true;
 }
 

@@ -534,7 +534,7 @@ class RemoteBufferReadbackProcessor : public TextureReadbackSink {
   RemoteBufferReadbackProcessor(
       nsTArray<ReadbackProcessor::Update>* aReadbackUpdates,
       const IntRect& aBufferRect, const nsIntPoint& aBufferRotation)
-      : mReadbackUpdates(*aReadbackUpdates),
+      : mReadbackUpdates(aReadbackUpdates->Clone()),
         mBufferRect(aBufferRect),
         mBufferRotation(aBufferRotation) {
     for (uint32_t i = 0; i < mReadbackUpdates.Length(); ++i) {

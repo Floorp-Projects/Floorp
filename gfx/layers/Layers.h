@@ -984,7 +984,7 @@ class Layer {
     if (mScrollMetadata != aMetadataArray) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this,
                                    ("Layer::Mutated(%p) FrameMetrics", this));
-      mScrollMetadata = aMetadataArray;
+      mScrollMetadata = aMetadataArray.Clone();
       ScrollMetadataChanged();
       Mutated();
     }
@@ -1160,7 +1160,7 @@ class Layer {
     if (aLayers != mAncestorMaskLayers) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(
           this, ("Layer::Mutated(%p) AncestorMaskLayers", this));
-      mAncestorMaskLayers = aLayers;
+      mAncestorMaskLayers = aLayers.Clone();
       Mutated();
     }
   }

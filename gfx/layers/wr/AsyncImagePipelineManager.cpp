@@ -38,7 +38,7 @@ AsyncImagePipelineManager::AsyncImagePipeline::AsyncImagePipeline()
 
 AsyncImagePipelineManager::AsyncImagePipelineManager(
     nsTArray<RefPtr<wr::WebRenderAPI>>&& aApis, bool aUseCompositorWnd)
-    : mApis(aApis),
+    : mApis(std::move(aApis)),
       mUseCompositorWnd(aUseCompositorWnd),
       mIdNamespace(mApis[0]->GetNamespace()),
       mUseTripleBuffering(mApis[0]->GetUseTripleBuffering()),
@@ -208,14 +208,14 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
 
   if (texture == previousTexture) {
     // The texture has not changed, just reuse previous ImageKeys.
-    aKeys = aPipeline->mKeys;
+    aKeys = aPipeline->mKeys.Clone();
     return Nothing();
   }
 
   if (!texture || texture->NumSubTextures() == 0) {
     // We don't have a new texture or texture does not have SubTextures, there
     // isn't much we can do.
-    aKeys = aPipeline->mKeys;
+    aKeys = aPipeline->mKeys.Clone();
     return Nothing();
   }
 
@@ -256,7 +256,7 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
     }
   }
 
-  aKeys = aPipeline->mKeys;
+  aKeys = aPipeline->mKeys.Clone();
 
   auto op = canUpdate ? TextureHost::UPDATE_IMAGE : TextureHost::ADD_IMAGE;
 

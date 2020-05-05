@@ -177,7 +177,7 @@ class WebRenderLayerScrollData final {
   // mScrollMetadatas array. This indirection is used to deduplicate the
   // ScrollMetadata objects, since there is usually heavy duplication of them
   // within a layer tree.
-  nsTArray<size_t> mScrollIds;
+  CopyableTArray<size_t> mScrollIds;
 
   // Various data that we collect from the Layer in Initialize(), serialize
   // over IPC, and use on the parent side in APZ.
