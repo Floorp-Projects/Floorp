@@ -32,14 +32,13 @@ RUN dpkg --add-architecture $ARCH
 RUN apt-get update && \
     apt-get dist-upgrade && \
     echo path-exclude=/usr/share/doc/*/changelog.Debian* > /etc/dpkg/dpkg.cfg.d/excludes && \
-    if grep -q ^7\\. /etc/debian_version; then \
-      BACKPORT=/wheezy-backports; \
+    if grep -q ^8\\. /etc/debian_version; then \
       PKG_CONFIG=pkg-config:$ARCH; \
     else \
       PKG_CONFIG="pkg-config dpkg-dev"; \
     fi && \
-    if grep -q ^7\\. /etc/debian_version; then \
-      LIBSTDCXX=libstdc++6-4.4-dev; \
+    if grep -q ^8\\. /etc/debian_version; then \
+      LIBSTDCXX=libstdc++-4.9-dev; \
     elif grep -q ^9\\. /etc/debian_version; then \
       LIBSTDCXX=libstdc++-6-dev; \
     elif grep -q ^10\\. /etc/debian_version; then \
@@ -72,10 +71,10 @@ RUN apt-get update && \
       wget \
       x11-utils \
       xvfb \
-      yasm$BACKPORT \
+      yasm \
       zip \
-      linux-libc-dev$BACKPORT \
-      linux-libc-dev:$ARCH$BACKPORT \
+      linux-libc-dev \
+      linux-libc-dev:$ARCH \
       $PKG_CONFIG \
       $LIBSTDCXX \
       libdbus-glib-1-dev:$ARCH \
