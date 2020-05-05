@@ -36,7 +36,10 @@ class WebExtensionControllerTest {
     fun `install webextension`() {
         val engine: Engine = mock()
         val controller = WebExtensionController(extensionId, extensionUrl)
-        controller.install(engine)
+
+        var onSuccessInvoked = false
+        var onErrorInvoked = false
+        controller.install(engine, onSuccess = { onSuccessInvoked = true }, onError = { onErrorInvoked = true })
 
         val onSuccess = argumentCaptor<((WebExtension) -> Unit)>()
         val onError = argumentCaptor<((String, Throwable) -> Unit)>()
@@ -51,6 +54,8 @@ class WebExtensionControllerTest {
         assertFalse(WebExtensionController.installedExtensions.containsKey(extensionId))
 
         onSuccess.value.invoke(mock())
+        assertTrue(onSuccessInvoked)
+        assertFalse(onErrorInvoked)
         assertTrue(WebExtensionController.installedExtensions.containsKey(extensionId))
 
         controller.install(engine)
@@ -62,6 +67,9 @@ class WebExtensionControllerTest {
             onSuccess.capture(),
             onError.capture()
         )
+
+        onError.value.invoke("", mock())
+        assertTrue(onErrorInvoked)
     }
 
     @Test

@@ -107,7 +107,7 @@ class ReaderViewFeature(
     }
 
     override fun start() {
-        extensionController.install(engine)
+        ensureExtensionInstalled()
         connectReaderViewContentScript()
 
         scope = store.flowScoped { flow ->
@@ -156,8 +156,10 @@ class ReaderViewFeature(
      */
     fun showReaderView(session: TabSessionState? = store.state.selectedTab) {
         session?.let { it ->
-            extensionController.sendContentMessage(createShowReaderMessage(config), it.engineState.engineSession)
-            store.dispatch(ReaderAction.UpdateReaderActiveAction(it.id, true))
+            if (!it.readerState.active) {
+                extensionController.sendContentMessage(createShowReaderMessage(config), it.engineState.engineSession)
+                store.dispatch(ReaderAction.UpdateReaderActiveAction(it.id, true))
+            }
         }
     }
 
@@ -166,9 +168,16 @@ class ReaderViewFeature(
      */
     fun hideReaderView(session: TabSessionState? = store.state.selectedTab) {
         session?.let { it ->
-            store.dispatch(ReaderAction.UpdateReaderActiveAction(it.id, false))
-            store.dispatch(ReaderAction.UpdateReaderableAction(it.id, false))
-            extensionController.sendContentMessage(createHideReaderMessage(), it.engineState.engineSession)
+            if (it.readerState.active) {
+                store.dispatch(ReaderAction.UpdateReaderActiveAction(it.id, false))
+                store.dispatch(ReaderAction.UpdateReaderableAction(it.id, false))
+                store.dispatch(ReaderAction.ClearReaderActiveUrlAction(it.id))
+                if (it.content.canGoBack) {
+                    it.engineState.engineSession?.goBack()
+                } else {
+                    extensionController.sendContentMessage(createHideReaderMessage(), it.engineState.engineSession)
+                }
+            }
         }
     }
 
@@ -216,6 +225,21 @@ class ReaderViewFeature(
         }
     }
 
+    private fun ensureExtensionInstalled() {
+        extensionController.install(engine, onSuccess = {
+            // In case the extension was installed while an extension page was
+            // displayed (if on startup we opened directly into a
+            // restored reader view page), we have to reload the extension page,
+            // as we may have missed to connect the port. This will be fixed by:
+            // https://github.com/mozilla-mobile/android-components/issues/6356
+            // (Then we don't have to install our built-in extension on startup)
+            val selectedTab = store.state.selectedTab
+            if (selectedTab?.readerState?.active == true) {
+                selectedTab.engineState.engineSession?.reload()
+            }
+        })
+    }
+
     private class ReaderViewContentMessageHandler(
         private val store: BrowserStore,
         private val sessionId: String,
@@ -236,8 +260,16 @@ class ReaderViewFeature(
 
         override fun onPortMessage(message: Any, port: Port) {
             if (message is JSONObject) {
+                val baseUrl = message.getString(BASE_URL_RESPONSE_MESSAGE_KEY)
+                store.dispatch(ReaderAction.UpdateReaderBaseUrlAction(sessionId, baseUrl))
+
                 val readerable = message.optBoolean(READERABLE_RESPONSE_MESSAGE_KEY, false)
                 store.dispatch(ReaderAction.UpdateReaderableAction(sessionId, readerable))
+
+                if (message.has(ACTIVE_URL_RESPONSE_MESSAGE_KEY)) {
+                    val activeUrl = message.getString(ACTIVE_URL_RESPONSE_MESSAGE_KEY)
+                    store.dispatch(ReaderAction.UpdateReaderActiveUrlAction(sessionId, activeUrl))
+                }
             }
         }
     }
@@ -253,7 +285,7 @@ class ReaderViewFeature(
         internal const val ACTION_MESSAGE_KEY = "action"
         internal const val ACTION_SHOW = "show"
         internal const val ACTION_HIDE = "hide"
-        internal const val ACTION_CHECK_READERABLE = "checkReaderable"
+        internal const val ACTION_CHECK_READER_STATE = "checkReaderState"
         internal const val ACTION_SET_COLOR_SCHEME = "setColorScheme"
         internal const val ACTION_CHANGE_FONT_SIZE = "changeFontSize"
         internal const val ACTION_SET_FONT_TYPE = "setFontType"
@@ -262,6 +294,8 @@ class ReaderViewFeature(
         internal const val ACTION_VALUE_SHOW_FONT_TYPE = "fontType"
         internal const val ACTION_VALUE_SHOW_COLOR_SCHEME = "colorScheme"
         internal const val READERABLE_RESPONSE_MESSAGE_KEY = "readerable"
+        internal const val BASE_URL_RESPONSE_MESSAGE_KEY = "baseUrl"
+        internal const val ACTIVE_URL_RESPONSE_MESSAGE_KEY = "activeUrl"
 
         // Constants for storing the reader mode config in shared preferences
         internal const val SHARED_PREF_NAME = "mozac_feature_reader_view"
@@ -271,7 +305,7 @@ class ReaderViewFeature(
         internal const val FONT_SIZE_DEFAULT = 3
 
         private fun createCheckReaderableMessage(): JSONObject {
-            return JSONObject().put(ACTION_MESSAGE_KEY, ACTION_CHECK_READERABLE)
+            return JSONObject().put(ACTION_MESSAGE_KEY, ACTION_CHECK_READER_STATE)
         }
 
         private fun createShowReaderMessage(config: Config): JSONObject {

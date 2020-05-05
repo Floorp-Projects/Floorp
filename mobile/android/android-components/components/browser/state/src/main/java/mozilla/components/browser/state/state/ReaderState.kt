@@ -14,10 +14,14 @@ package mozilla.components.browser.state.state
  * current page.
  * @property connectRequired whether or not a new connection to the reader view
  * content script is required.
+ * @property baseUrl the base URL of the reader view extension page.
+ * @property activeUrl the URL of the page currently displayed in reader view.
  */
 data class ReaderState(
     val readerable: Boolean = false,
     val active: Boolean = false,
     val checkRequired: Boolean = false,
-    val connectRequired: Boolean = false
+    val connectRequired: Boolean = false,
+    val baseUrl: String? = null,
+    val activeUrl: String? = null
 )

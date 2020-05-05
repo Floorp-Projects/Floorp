@@ -410,7 +410,10 @@ class SessionManagerMigrationTest {
         }
 
         store.dispatch(ReaderAction.UpdateReaderActiveAction(session2.id, true)).joinBlocking()
-        assertEquals(ReaderState(active = true), store.state.findTab(session2.id)?.readerState)
+        store.dispatch(ReaderAction.UpdateReaderActiveUrlAction(session2.id, "blog.mozilla.org/1")).joinBlocking()
+        assertEquals(ReaderState(active = true, activeUrl = "blog.mozilla.org/1"),
+            store.state.findTab(session2.id)?.readerState
+        )
 
         val snapshot = manager.createSnapshot()
         manager.removeAll()
@@ -419,7 +422,9 @@ class SessionManagerMigrationTest {
 
         manager.restore(snapshot)
         assertEquals(ReaderState(active = false), store.state.findTab(session1.id)?.readerState)
-        assertEquals(ReaderState(active = true), store.state.findTab(session2.id)?.readerState)
+        assertEquals(ReaderState(active = true, activeUrl = "blog.mozilla.org/1"),
+            store.state.findTab(session2.id)?.readerState
+        )
     }
 
     @Test

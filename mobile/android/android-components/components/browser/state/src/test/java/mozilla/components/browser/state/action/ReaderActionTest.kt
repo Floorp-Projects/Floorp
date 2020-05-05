@@ -10,7 +10,9 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -91,5 +93,37 @@ class ReaderActionTest {
             .joinBlocking()
 
         assertFalse(readerState().connectRequired)
+    }
+
+    @Test
+    fun `UpdateReaderBaseUrlAction - Updates base url of ReaderState`() {
+        assertNull(readerState().baseUrl)
+
+        store.dispatch(ReaderAction.UpdateReaderBaseUrlAction(tabId = tab.id, baseUrl = "moz-extension://test"))
+            .joinBlocking()
+
+        assertEquals("moz-extension://test", readerState().baseUrl)
+    }
+
+    @Test
+    fun `UpdateReaderActiveUrlAction - Updates active url of ReaderState`() {
+        assertNull(readerState().activeUrl)
+
+        store.dispatch(ReaderAction.UpdateReaderActiveUrlAction(tabId = tab.id, activeUrl = "https://mozilla.org"))
+            .joinBlocking()
+
+        assertEquals("https://mozilla.org", readerState().activeUrl)
+    }
+
+    @Test
+    fun `ClearReaderActiveUrlAction - Clears active url of ReaderState`() {
+        assertNull(readerState().activeUrl)
+
+        store.dispatch(ReaderAction.UpdateReaderActiveUrlAction(tabId = tab.id, activeUrl = "https://mozilla.org"))
+                .joinBlocking()
+        assertEquals("https://mozilla.org", readerState().activeUrl)
+
+        store.dispatch(ReaderAction.ClearReaderActiveUrlAction(tabId = tab.id)).joinBlocking()
+        assertNull(readerState().activeUrl)
     }
 }

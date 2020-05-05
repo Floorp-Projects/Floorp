@@ -4,14 +4,18 @@
   "version": "1.0",
   "content_scripts": [
     {
-      "matches": ["*://*/*"],
-      "js": ["readability/readability-0.2.0.js", "readability/readability-readerable-0.2.0.js", "readerview.js"],
-      "css": ["readerview.css"],
+      "matches": ["<all_urls>"],
+      "js": ["readability/readability-readerable-0.2.0.js", "readerview-content.js"],
       "run_at": "document_idle"
     }
   ],
+  "background": {
+    "scripts": ["readerview-background.js"]
+  },
   "permissions": [
     "geckoViewAddons",
-    "nativeMessaging"
+    "nativeMessaging",
+    "tabs",
+    "<all_urls>"
   ]
 }

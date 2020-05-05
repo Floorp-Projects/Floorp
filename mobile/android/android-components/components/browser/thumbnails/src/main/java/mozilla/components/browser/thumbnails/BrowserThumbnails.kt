@@ -53,6 +53,10 @@ class BrowserThumbnails(
                 requestScreenshot(session)
             }
         }
+
+        override fun onTitleChanged(session: Session, title: String) {
+            requestScreenshot(session)
+        }
     }
 
     private fun requestScreenshot(session: Session) {

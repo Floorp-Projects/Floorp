@@ -708,6 +708,31 @@ class SessionManagerTest {
     }
 
     @Test
+    fun `parent is not provided when linking engine session for extension page`() {
+        val engine: Engine = mock()
+
+        val parent = Session(id = "parent", initialUrl = "")
+        val parentEngineSession: EngineSession = mock()
+        val session = Session("moz-extension://test-1234")
+        session.parentId = parent.id
+        val engineSession: EngineSession = mock()
+
+        val sessionManager = SessionManager(engine)
+        sessionManager.add(parent)
+        sessionManager.add(session)
+
+        doReturn(parentEngineSession, engineSession).`when`(engine).createSession(false)
+
+        assertEquals(parentEngineSession, sessionManager.getOrCreateEngineSession(parent))
+        assertEquals(parentEngineSession, parent.engineSessionHolder.engineSession)
+
+        assertEquals(engineSession, sessionManager.getOrCreateEngineSession(session))
+        assertEquals(engineSession, session.engineSessionHolder.engineSession)
+
+        verify(engineSession).loadUrl(session.url, null, EngineSession.LoadUrlFlags.none())
+    }
+
+    @Test
     fun `removing a session unlinks the engine session`() {
         val engine: Engine = mock()
 
