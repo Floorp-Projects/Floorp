@@ -8,11 +8,13 @@ import six
 import re
 import subprocess
 from collections import namedtuple
+from distutils.version import StrictVersion
 
 from mozfile import which
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
 from mozprocess import ProcessHandler
+
 
 RUSTFMT_NOT_FOUND = """
 Could not find rustfmt! Install rustfmt and try again.
@@ -30,9 +32,11 @@ Try to install it manually with:
 """.strip()
 
 
-RUSTFMT_DEPRECATED_VERSION = """
-You are probably using the old 'rustfmt' program.
-Please use rustfmt-nightly (https://crates.io/crates/rustfmt-nightly)
+RUSTFMT_WRONG_VERSION = """
+You are probably using an old version of rustfmt.
+Expected version is {version}.
+Try to update it:
+    $ rustup update stable
 """.strip()
 
 
@@ -107,23 +111,22 @@ def get_rustfmt_binary():
     return which("rustfmt")
 
 
-def is_old_rustfmt(binary):
+def get_rustfmt_version(binary):
     """
-    Check if we are running the deprecated rustfmt
+    Returns found binary's version
     """
     try:
         output = subprocess.check_output(
-            [binary, " --version"],
+            [binary, "--version"],
             stderr=subprocess.STDOUT,
             universal_newlines=True,
         )
     except subprocess.CalledProcessError as e:
         output = e.output
 
-    if "This version of rustfmt is deprecated" in output:
-        return True
-
-    return False
+    version = re.findall(r'\d.\d+.\d+', output)[0]
+    version = StrictVersion(version)
+    return version
 
 
 def lint(paths, config, fix=None, **lintargs):
@@ -136,9 +139,17 @@ def lint(paths, config, fix=None, **lintargs):
         return []
 
     binary = get_rustfmt_binary()
+    min_version_str = config.get('min_rustfmt_version')
+    min_version = StrictVersion(min_version_str)
+    actual_version = get_rustfmt_version(binary)
+    log.debug(
+        "Found version: {}. Minimal expected version: {}".format(
+            actual_version, min_version
+        )
+    )
 
-    if is_old_rustfmt(binary):
-        print(RUSTFMT_DEPRECATED_VERSION)
+    if actual_version < min_version:
+        print(RUSTFMT_WRONG_VERSION.format(version=min_version_str))
         return 1
 
     if not binary:

@@ -1,6 +1,7 @@
 ---
 rust:
     description: Reformat rust
+    min_rustfmt_version: 1.4.12
     include:
         - '.'
     exclude:
