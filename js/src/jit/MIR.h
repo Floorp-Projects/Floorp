@@ -8877,6 +8877,40 @@ class MGuardObjectIdentity : public MBinaryInstruction,
   }
 };
 
+class MGuardSpecificAtom : public MUnaryInstruction,
+                           public StringPolicy<0>::Data {
+  CompilerGCPointer<JSAtom*> atom_;
+
+  MGuardSpecificAtom(MDefinition* str, JSAtom* atom)
+      : MUnaryInstruction(classOpcode, str), atom_(atom) {
+    setGuard();
+    setMovable();
+    setResultType(MIRType::None);
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardSpecificAtom)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, str))
+
+  JSAtom* atom() const { return atom_; }
+
+  bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isGuardSpecificAtom()) {
+      return false;
+    }
+    if (atom() != ins->toGuardSpecificAtom()->atom()) {
+      return false;
+    }
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+  bool appendRoots(MRootList& roots) const override {
+    return roots.append(atom_);
+  }
+};
+
 // Load from vp[slot] (slots that are not inline in an object).
 class MLoadSlot : public MUnaryInstruction, public SingleObjectPolicy::Data {
   uint32_t slot_;
