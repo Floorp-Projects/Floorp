@@ -410,6 +410,8 @@ class QuotaManager final : public BackgroundThreadObject {
 
   const nsString& GetBasePath() const { return mBasePath; }
 
+  const nsString& GetStorageName() const { return mStorageName; }
+
   const nsString& GetStoragePath() const { return mStoragePath; }
 
   const nsString& GetStoragePath(PersistenceType aPersistenceType) const {
@@ -467,11 +469,11 @@ class QuotaManager final : public BackgroundThreadObject {
   static void InvalidateQuotaCache();
 
  private:
-  QuotaManager();
+  QuotaManager(const nsAString& aBasePath, const nsAString& aStorageName);
 
   virtual ~QuotaManager();
 
-  nsresult Init(const nsAString& aBaseDirPath);
+  nsresult Init();
 
   void Shutdown();
 
@@ -637,6 +639,7 @@ class QuotaManager final : public BackgroundThreadObject {
   InitializationInfo mInitializationInfo;
 
   nsString mBasePath;
+  nsString mStorageName;
   nsString mIndexedDBPath;
   nsString mStoragePath;
   nsString mPermanentStoragePath;
