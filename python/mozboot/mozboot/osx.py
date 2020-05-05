@@ -305,9 +305,9 @@ class OSXBootstrapper(BaseBootstrapper):
                                           universal_newlines=True).split())
         to_install = [package for package in packages if package not in installed]
 
-        # The "-q" tells "brew" to only list the package names, and not the
+        # The "--quiet" tells "brew" to only list the package names, and not the
         # comparison between current and new version.
-        outdated = set(self.check_output(cmd + ['outdated', '-q'],
+        outdated = set(self.check_output(cmd + ['outdated', '--quiet'],
                                          universal_newlines=True).split())
         to_upgrade = [package for package in packages if package in outdated]
 
