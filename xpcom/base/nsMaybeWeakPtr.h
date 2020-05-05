@@ -54,7 +54,7 @@ class nsMaybeWeakPtr {
 // given object to appear in the array once.
 
 template <class T>
-class nsMaybeWeakPtrArray : public nsTArray<nsMaybeWeakPtr<T>> {
+class nsMaybeWeakPtrArray : public CopyableTArray<nsMaybeWeakPtr<T>> {
   typedef nsTArray<nsMaybeWeakPtr<T>> MaybeWeakArray;
 
   nsresult SetMaybeWeakPtr(nsMaybeWeakPtr<T>& aRef, T* aElement,

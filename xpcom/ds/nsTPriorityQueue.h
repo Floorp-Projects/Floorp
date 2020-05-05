@@ -146,7 +146,7 @@ class nsTPriorityQueue {
     mElements[aIndexB] = temp;
   }
 
-  nsTArray<T> mElements;
+  CopyableTArray<T> mElements;
   Compare mCompare;  // Comparator object
 };
 
