@@ -87,6 +87,7 @@ EXPORTS.mozilla += [
     'ScrollTypes.h',
     'ShapeUtils.h',
     'StaticPresData.h',
+    'ViewportUtils.h',
 ]
 
 EXPORTS.mozilla.layout += [
@@ -129,6 +130,7 @@ UNIFIED_SOURCES += [
     'StackArena.cpp',
     'StaticPresData.cpp',
     'TouchManager.cpp',
+    'ViewportUtils.cpp',
     'ZoomConstraintsClient.cpp',
 ]
 
