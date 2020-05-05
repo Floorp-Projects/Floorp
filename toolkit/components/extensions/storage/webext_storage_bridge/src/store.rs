@@ -8,6 +8,7 @@ use std::{
     sync::{Mutex, MutexGuard},
 };
 
+use golden_gate::{ApplyResults, BridgedEngine, Guid, IncomingEnvelope};
 use once_cell::sync::OnceCell;
 use sql_support::SqlInterruptHandle;
 use webext_storage::store::Store;
@@ -101,5 +102,90 @@ impl LazyStore {
             }
         }
         Ok(())
+    }
+}
+
+// `Store::bridged_engine()` returns a `BridgedEngine` implementation, but we
+// provide our own for `LazyStore` that forwards to it. This is for three
+// reasons.
+//
+//   1. We need to override the associated `Error` type, since Golden Gate has
+//      an `Into<nsresult>` bound for errors. We can't satisfy this bound in
+//      `webext_storage` because `nsresult` is a Gecko-only type. We could try
+//      to reduce the boilerplate by declaring an `AsBridgedEngine` trait, with
+//      associated types for `Error` and `Engine`, but then we run into...
+//   2. `Store::bridged_engine()` returns a type with a lifetime parameter,
+//      because the engine can't outlive the store. But we can't represent that
+//      in our `AsBridgedEngine` trait without an associated type constructor,
+//      which Rust doesn't support yet (rust-lang/rfcs#1598).
+//   3. Related to (2), our store is lazily initialized behind a mutex, so
+//      `LazyStore::get()` returns a guard. But now, `Store::bridged_engine()`
+//      must return a type that lives only as long as the guard...which it
+//      can't, because it doesn't know that! This is another case where
+//      higher-kinded types would be helpful, so that our hypothetical
+//      `AsBridgedEngine::bridged_engine()` could return either a `T<'a>` or
+//      `MutexGuard<'_, T<'a>>`, but that's not possible now.
+//
+// There are workarounds for Rust's lack of HKTs, but they all introduce
+// indirection and cognitive overhead. So we do the simple thing and implement
+// `BridgedEngine`, with a bit more boilerplate.
+impl BridgedEngine for LazyStore {
+    type Error = Error;
+
+    fn last_sync(&self) -> Result<i64> {
+        Ok(self.get()?.bridged_engine().last_sync()?)
+    }
+
+    fn set_last_sync(&self, last_sync_millis: i64) -> Result<()> {
+        Ok(self
+            .get()?
+            .bridged_engine()
+            .set_last_sync(last_sync_millis)?)
+    }
+
+    fn sync_id(&self) -> Result<Option<String>> {
+        Ok(self.get()?.bridged_engine().sync_id()?)
+    }
+
+    fn reset_sync_id(&self) -> Result<String> {
+        Ok(self.get()?.bridged_engine().reset_sync_id()?)
+    }
+
+    fn ensure_current_sync_id(&self, new_sync_id: &str) -> Result<String> {
+        Ok(self
+            .get()?
+            .bridged_engine()
+            .ensure_current_sync_id(new_sync_id)?)
+    }
+
+    fn sync_started(&self) -> Result<()> {
+        Ok(self.get()?.bridged_engine().sync_started()?)
+    }
+
+    fn store_incoming(&self, envelopes: &[IncomingEnvelope]) -> Result<()> {
+        Ok(self.get()?.bridged_engine().store_incoming(envelopes)?)
+    }
+
+    fn apply(&self) -> Result<ApplyResults> {
+        Ok(self.get()?.bridged_engine().apply()?)
+    }
+
+    fn set_uploaded(&self, server_modified_millis: i64, ids: &[Guid]) -> Result<()> {
+        Ok(self
+            .get()?
+            .bridged_engine()
+            .set_uploaded(server_modified_millis, ids)?)
+    }
+
+    fn sync_finished(&self) -> Result<()> {
+        Ok(self.get()?.bridged_engine().sync_finished()?)
+    }
+
+    fn reset(&self) -> Result<()> {
+        Ok(self.get()?.bridged_engine().reset()?)
+    }
+
+    fn wipe(&self) -> Result<()> {
+        Ok(self.get()?.bridged_engine().wipe()?)
     }
 }

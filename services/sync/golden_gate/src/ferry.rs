@@ -4,24 +4,23 @@
 
 use nsstring::nsCString;
 use storage_variant::VariantType;
-use sync15_traits::IncomingEnvelope;
+use sync15_traits::{Guid, IncomingEnvelope};
 use xpcom::{interfaces::nsIVariant, RefPtr};
 
 /// An operation that runs on the background thread, and optionally passes a
 /// result to its callback.
 pub enum Ferry {
-    Initialize,
     LastSync,
     SetLastSync(i64),
     SyncId,
     ResetSyncId,
     EnsureCurrentSyncId(String),
+    SyncStarted,
     StoreIncoming(Vec<IncomingEnvelope>),
-    SetUploaded(i64, Vec<String>),
+    SetUploaded(i64, Vec<Guid>),
     SyncFinished,
     Reset,
     Wipe,
-    Finalize,
 }
 
 impl Ferry {
@@ -29,18 +28,17 @@ impl Ferry {
     /// runnable.
     pub fn name(&self) -> &'static str {
         match self {
-            Ferry::Initialize => concat!(module_path!(), "initialize"),
             Ferry::LastSync => concat!(module_path!(), "getLastSync"),
             Ferry::SetLastSync(_) => concat!(module_path!(), "setLastSync"),
             Ferry::SyncId => concat!(module_path!(), "getSyncId"),
             Ferry::ResetSyncId => concat!(module_path!(), "resetSyncId"),
             Ferry::EnsureCurrentSyncId(_) => concat!(module_path!(), "ensureCurrentSyncId"),
+            Ferry::SyncStarted => concat!(module_path!(), "syncStarted"),
             Ferry::StoreIncoming { .. } => concat!(module_path!(), "storeIncoming"),
             Ferry::SetUploaded { .. } => concat!(module_path!(), "setUploaded"),
             Ferry::SyncFinished => concat!(module_path!(), "syncFinished"),
             Ferry::Reset => concat!(module_path!(), "reset"),
             Ferry::Wipe => concat!(module_path!(), "wipe"),
-            Ferry::Finalize => concat!(module_path!(), "finalize"),
         }
     }
 }

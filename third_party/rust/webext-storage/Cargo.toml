@@ -19,15 +19,17 @@ serde = "1"
 serde_json = "1"
 serde_derive = "1"
 sql-support = { path = "../support/sql" }
+sync15-traits = {path = "../support/sync15-traits"}
 sync-guid = { path = "../support/guid", features = ["rusqlite_support", "random"] }
 url = { version = "2.1", features = ["serde"] }
 
 [dependencies.rusqlite]
 version = "0.23.1"
-features = ["functions", "bundled"]
+features = ["functions", "bundled", "serde_json"]
 
 [dev-dependencies]
 env_logger = "0.7.0"
+prettytable-rs = "0.8"
 
 # A *direct* dep on the -sys crate is required for our build.rs
 # to see the DEP_SQLITE3_LINK_TARGET env var that cargo sets

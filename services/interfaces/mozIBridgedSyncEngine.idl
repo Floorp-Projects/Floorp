@@ -49,10 +49,6 @@ interface mozIBridgedSyncEngine : nsISupports {
     // `null`, in which case any logs from the engine will be discarded.
     attribute mozIServicesLogger logger;
 
-    // Initializes the engine. Sync is guaranteed to call this method before
-    // any of the engine's methods.
-    void initialize(in mozIBridgedSyncEngineCallback callback);
-
     // Returns the last sync time, in milliseconds, for this engine's
     // collection. This is used to build the collection URL for fetching
     // incoming records, and as the initial value of the `X-I-U-S` header on
@@ -103,14 +99,18 @@ interface mozIBridgedSyncEngine : nsISupports {
     void ensureCurrentSyncId(in AUTF8String newSyncId,
                              in mozIBridgedSyncEngineCallback callback);
 
+    // Notifies the engine that sync is starting. The engine can use this method
+    // to set up temp tables for merging, for example. This will only be called
+    // once per sync, and before any `storeIncoming` calls.
+    void syncStarted(in mozIBridgedSyncEngineCallback callback);
+
     // Stages a batch of incoming records, and calls the `callback` when
     // done. This method may be called multiple times per sync, once per
-    // incoming batch. Flushing incoming records more often incurs more writes
-    // to disk, but avoids redownloading and reapplying more records if syncing
-    // is interrupted. Returns a "pending operation" object with a `cancel`
-    // method that can be used to interrupt staging. Typically, engines will
-    // stage incoming records in an SQLite temp table, and merge them with the
-    // local database when `apply` is called.
+    // incoming batch, and always after `syncStarted`. Flushing incoming records
+    // more often incurs more writes to disk, but avoids redownloading and
+    // reapplying more records if syncing is interrupted. Typically, engines
+    // will stage incoming records in an SQLite temp table, and merge them with
+    // the local database when `apply` is called.
     void storeIncoming(in Array<AUTF8String> incomingEnvelopesAsJSON,
                        in mozIBridgedSyncEngineCallback callback);
 
@@ -141,8 +141,4 @@ interface mozIBridgedSyncEngine : nsISupports {
 
     // Erases all locally stored data and metadata for this engine.
     void wipe(in mozIBridgedSyncEngineCallback callback);
-
-    // Tears down the engine, including closing any connections. Sync calls this
-    // method when an engine is disabled.
-    void finalize(in mozIBridgedSyncEngineCallback callback);
 };

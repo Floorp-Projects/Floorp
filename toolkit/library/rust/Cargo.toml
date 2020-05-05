@@ -34,7 +34,6 @@ webgpu = ["gkrust-shared/webgpu"]
 remote_agent = ["gkrust-shared/remote"]
 glean = ["gkrust-shared/glean"]
 new_webext_storage = ["gkrust-shared/new_webext_storage"]
-services_sync = ["gkrust-shared/services_sync"]
 
 [dependencies]
 gkrust-shared = { path = "shared" }

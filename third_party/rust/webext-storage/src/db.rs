@@ -150,8 +150,25 @@ fn init_sql_connection(conn: &Connection, is_writable: bool) -> Result<()> {
     Ok(())
 }
 
-fn define_functions(_c: &Connection) -> Result<()> {
+fn define_functions(c: &Connection) -> Result<()> {
+    use rusqlite::functions::FunctionFlags;
+    c.create_scalar_function(
+        "generate_guid",
+        0,
+        FunctionFlags::SQLITE_UTF8,
+        sql_fns::generate_guid,
+    )?;
     Ok(())
+}
+
+pub(crate) mod sql_fns {
+    use rusqlite::{functions::Context, Result};
+    use sync_guid::Guid as SyncGuid;
+
+    #[inline(never)]
+    pub fn generate_guid(_ctx: &Context<'_>) -> Result<SyncGuid> {
+        Ok(SyncGuid::random())
+    }
 }
 
 // These should be somewhere else...

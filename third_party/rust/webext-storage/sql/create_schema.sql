@@ -30,11 +30,11 @@ CREATE TABLE IF NOT EXISTS storage_sync_data (
 
 CREATE TABLE IF NOT EXISTS storage_sync_mirror (
     guid TEXT NOT NULL PRIMARY KEY,
+
     /* The extension_id is explicitly not the GUID used on the server.
-       We may end up making this a regular foreign-key relationship back to
-       storage_sync_data, although maybe not - the ext_id may not exist in
-       storage_sync_data at the time we populate this table.
-       We can iterate here as we ramp up sync support.
+       It can't be  a regular foreign-key relationship back to storage_sync_data
+       as items with no data on the server (ie, deleted items) will not appear
+       in storage_sync_data.
     */
     ext_id TEXT NOT NULL UNIQUE,
 

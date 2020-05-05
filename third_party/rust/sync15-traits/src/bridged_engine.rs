@@ -14,13 +14,6 @@ pub trait BridgedEngine {
     /// The type returned for errors.
     type Error;
 
-    /// Initializes the engine. This is called once, when the engine is first
-    /// created, and guaranteed to be called before any of the other methods.
-    /// The default implementation does nothing.
-    fn initialize(&self) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
     /// Returns the last sync time, in milliseconds, for this engine's
     /// collection. This is called before each sync, to determine the lower
     /// bound for new records to fetch from the server.
@@ -49,6 +42,10 @@ pub trait BridgedEngine {
     /// sync.
     fn ensure_current_sync_id(&self, new_sync_id: &str) -> Result<String, Self::Error>;
 
+    /// Indicates that the engine is about to start syncing. This is called
+    /// once per sync, and always before `store_incoming`.
+    fn sync_started(&self) -> Result<(), Self::Error>;
+
     /// Stages a batch of incoming Sync records. This is called multiple
     /// times per sync, once for each batch. Implementations can use the
     /// signal to check if the operation was aborted, and cancel any
@@ -62,7 +59,7 @@ pub trait BridgedEngine {
     /// Indicates that the given record IDs were uploaded successfully to the
     /// server. This is called multiple times per sync, once for each batch
     /// upload.
-    fn set_uploaded(&self, server_modified_millis: i64, ids: &[String]) -> Result<(), Self::Error>;
+    fn set_uploaded(&self, server_modified_millis: i64, ids: &[Guid]) -> Result<(), Self::Error>;
 
     /// Indicates that all records have been uploaded. At this point, any record
     /// IDs marked for upload that haven't been passed to `set_uploaded`, can be
@@ -78,13 +75,6 @@ pub trait BridgedEngine {
     /// Erases all local user data for this collection, and any Sync metadata.
     /// This method is destructive, and unused for most collections.
     fn wipe(&self) -> Result<(), Self::Error>;
-
-    /// Tears down the engine. The opposite of `initialize`, `finalize` is
-    /// called when an engine is disabled, or otherwise no longer needed. The
-    /// default implementation does nothing.
-    fn finalize(&self) -> Result<(), Self::Error> {
-        Ok(())
-    }
 }
 
 #[derive(Clone, Debug, Default)]
@@ -144,14 +134,13 @@ impl IncomingEnvelope {
     /// Parses and returns the record payload from this envelope. Returns an
     /// error if the envelope's cleartext isn't valid JSON, or the payload is
     /// invalid.
-    pub fn payload(&self) -> Result<Payload, Box<dyn Error>> {
+    pub fn payload(&self) -> Result<Payload, PayloadError> {
         let payload: Payload = serde_json::from_str(&self.cleartext)?;
         if payload.id != self.id {
-            return Err(MismatchedIdError {
+            return Err(PayloadError::MismatchedId {
                 envelope: self.id.clone(),
                 payload: payload.id,
-            }
-            .into());
+            });
         }
         Ok(payload)
     }
@@ -166,34 +155,42 @@ pub struct OutgoingEnvelope {
     cleartext: String,
 }
 
-impl OutgoingEnvelope {
-    /// Creates an envelope for an outgoing item. Returns an error if the
-    /// payload can't be serialized to JSON.
-    pub fn new(payload: Payload) -> Result<OutgoingEnvelope, Box<dyn Error>> {
-        let cleartext = serde_json::to_string(&payload)?;
-        Ok(OutgoingEnvelope {
-            id: payload.id,
-            cleartext,
-        })
+impl From<Payload> for OutgoingEnvelope {
+    fn from(payload: Payload) -> Self {
+        let id = payload.id.clone();
+        OutgoingEnvelope {
+            id,
+            cleartext: payload.into_json_string(),
+        }
     }
 }
 
-/// An error returned when the ID of an incoming BSO doesn't match the ID in
-/// its payload.
+/// An error that indicates a payload is invalid.
 #[derive(Debug)]
-pub struct MismatchedIdError {
-    pub envelope: Guid,
-    pub payload: Guid,
+pub enum PayloadError {
+    /// The payload contains invalid JSON.
+    Invalid(serde_json::Error),
+    /// The ID of the BSO in the envelope doesn't match the ID in the payload.
+    MismatchedId { envelope: Guid, payload: Guid },
 }
 
-impl Error for MismatchedIdError {}
+impl Error for PayloadError {}
 
-impl fmt::Display for MismatchedIdError {
+impl From<serde_json::Error> for PayloadError {
+    fn from(err: serde_json::Error) -> PayloadError {
+        PayloadError::Invalid(err)
+    }
+}
+
+impl fmt::Display for PayloadError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "ID `{}` in envelope doesn't match `{}` in payload",
-            self.envelope, self.payload
-        )
+        match self {
+            PayloadError::Invalid(err) => err.fmt(f),
+            PayloadError::MismatchedId { envelope, payload } => write!(
+                f,
+                "ID `{}` in envelope doesn't match `{}` in payload",
+                envelope, payload
+            ),
+        }
     }
 }

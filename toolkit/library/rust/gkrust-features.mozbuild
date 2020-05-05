@@ -82,6 +82,3 @@ if CONFIG['MOZ_USING_WASM_SANDBOXING']:
 
 if CONFIG['MOZ_NEW_WEBEXT_STORAGE']:
     gkrust_features += ['new_webext_storage']
-
-if CONFIG['MOZ_SERVICES_SYNC']:
-    gkrust_features += ['services_sync']
