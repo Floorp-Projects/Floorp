@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`TabViewHolder(itemView: <ERROR CLASS>, tabsTray: `[`BrowserTabsTray`](../-browser-tabs-tray/index.md)`)`
+`TabViewHolder(view: <ERROR CLASS>)`
 
-A RecyclerView ViewHolder implementation for "tab" items.
+An abstract ViewHolder implementation for "tab" items.
 

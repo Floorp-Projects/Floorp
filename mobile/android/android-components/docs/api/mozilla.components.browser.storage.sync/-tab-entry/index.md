@@ -2,7 +2,7 @@
 
 # TabEntry
 
-`data class TabEntry` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/RemoteTabsStorage.kt#L151)
+`data class TabEntry` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/RemoteTabsStorage.kt#L160)
 
 A Tab history entry.
 

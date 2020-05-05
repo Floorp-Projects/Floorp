@@ -2,15 +2,29 @@
 
 # TabsAdapter
 
-`class TabsAdapter : Adapter<`[`TabViewHolder`](../-tab-view-holder/index.md)`>, `[`TabsTray`](../../mozilla.components.concept.tabstray/-tabs-tray/index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../../mozilla.components.concept.tabstray/-tabs-tray/-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/TabsAdapter.kt#L20)
+`class TabsAdapter : Adapter<`[`TabViewHolder`](../-tab-view-holder/index.md)`>, `[`TabsTray`](../../mozilla.components.concept.tabstray/-tabs-tray/index.md)`, `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../../mozilla.components.concept.tabstray/-tabs-tray/-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/TabsAdapter.kt#L26)
 
 RecyclerView adapter implementation to display a list/grid of tabs.
+
+### Parameters
+
+`delegate` - TabsTray.Observer registry to allow `TabsAdapter` to conform to `Observable<TabsTray.Observer>`.
+
+`viewHolderProvider` - a function that creates a `TabViewHolder`.
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `TabsAdapter(delegate: `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../../mozilla.components.concept.tabstray/-tabs-tray/-observer/index.md)`> = ObserverRegistry(), layoutId: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = R.layout.mozac_browser_tabstray_item)`<br>RecyclerView adapter implementation to display a list/grid of tabs. |
+| [&lt;init&gt;](-init-.md) | `TabsAdapter(delegate: `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](../../mozilla.components.concept.tabstray/-tabs-tray/-observer/index.md)`> = ObserverRegistry(), viewHolderProvider: `[`ViewHolderProvider`](../-view-holder-provider.md)` = { parent, tabsTray ->
+        DefaultTabViewHolder(
+                LayoutInflater.from(parent.context).inflate(
+                        R.layout.mozac_browser_tabstray_item,
+                        parent,
+                        false),
+                tabsTray
+        )
+    })`<br>RecyclerView adapter implementation to display a list/grid of tabs. |
 
 ### Functions
 

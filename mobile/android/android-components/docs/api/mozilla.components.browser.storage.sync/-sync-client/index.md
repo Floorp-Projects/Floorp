@@ -2,7 +2,7 @@
 
 # SyncClient
 
-`data class SyncClient` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/RemoteTabsStorage.kt#L112)
+`data class SyncClient` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/RemoteTabsStorage.kt#L113)
 
 Represents a Sync client that can be associated with a list of opened tabs.
 

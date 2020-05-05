@@ -217,6 +217,11 @@ mozilla.components.feature.session.behavior
 mozilla.components.feature.share
 mozilla.components.feature.sitepermissions
 mozilla.components.feature.syncedtabs
+mozilla.components.feature.syncedtabs.controller
+mozilla.components.feature.syncedtabs.interactor
+mozilla.components.feature.syncedtabs.presenter
+mozilla.components.feature.syncedtabs.storage
+mozilla.components.feature.syncedtabs.view
 mozilla.components.feature.tab.collections
 mozilla.components.feature.tab.collections.ext
 mozilla.components.feature.tabs

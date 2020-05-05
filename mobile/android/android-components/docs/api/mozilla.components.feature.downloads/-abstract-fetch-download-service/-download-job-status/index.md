@@ -2,7 +2,7 @@
 
 # DownloadJobStatus
 
-`enum class DownloadJobStatus` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/AbstractFetchDownloadService.kt#L129)
+`enum class DownloadJobStatus` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/AbstractFetchDownloadService.kt#L130)
 
 Status of an ongoing download
 
