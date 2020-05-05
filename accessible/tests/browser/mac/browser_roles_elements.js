@@ -92,9 +92,7 @@ addAccessibleTask(
     testRoleAndSubRole(accDoc, "main", null, "AXLandmarkMain");
     testRoleAndSubRole(accDoc, "navigation", null, "AXLandmarkNavigation");
     testRoleAndSubRole(accDoc, "search", null, "AXLandmarkSearch");
-    // XXX Bug 1635184 remove this todo and uncomment the below test call.
-    todo(false, "Bug 1635184 - Exposure of SearchField subrole not working.");
-    //    testRoleAndSubRole(accDoc, "searchbox", null, "AXSearchField");
+    testRoleAndSubRole(accDoc, "searchbox", null, "AXSearchField");
 
     // DPub roles map into two categories, sample one of each
     testRoleAndSubRole(
@@ -123,9 +121,7 @@ addAccessibleTask(
     testRoleAndSubRole(accDoc, "tooltip", null, "AXUserInterfaceTooltip");
 
     // True HTML5 search field
-    // XXX Bug 1635184 remove this todo and uncomment the below test call.
-    todo(false, "Bug 1635184 - Exposure of SearchField subrole not working.");
-    //    testRoleAndSubRole(accDoc, "htmlSearch", "AXTextField", "AXSearchField");
+    testRoleAndSubRole(accDoc, "htmlSearch", "AXTextField", "AXSearchField");
 
     // A button morphed into a toggle by ARIA
     testRoleAndSubRole(accDoc, "toggle", "AXCheckBox", "AXToggle");
