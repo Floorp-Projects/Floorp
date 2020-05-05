@@ -182,7 +182,7 @@ class DisplayItemClip {
 
  private:
   nsRect mClipRect;
-  nsTArray<RoundedRect> mRoundedClipRects;
+  CopyableTArray<RoundedRect> mRoundedClipRects;
   // If mHaveClipRect is false then this object represents no clipping at all
   // and mRoundedClipRects must be empty.
   bool mHaveClipRect;
