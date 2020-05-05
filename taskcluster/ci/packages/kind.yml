@@ -21,7 +21,7 @@ job-defaults:
     run-on-projects: []
     run:
         dist: wheezy
-        snapshot: 20171210T214726Z
+        snapshot: 20200422T205110Z
 
 jobs:
     deb7-apt:

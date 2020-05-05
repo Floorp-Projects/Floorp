@@ -32,9 +32,9 @@ jobs:
         symbol: I(deb7-raw)
         definition: debian-raw
         args:
-            BASE_IMAGE: debian:wheezy-20171210
+            BASE_IMAGE: debian:wheezy-20190228
             DIST: wheezy
-            SNAPSHOT: '20171210T214726Z'
+            SNAPSHOT: '20190228T155929Z'
     debian7-packages:
         symbol: I(deb7-pkg)
         definition: debian-packages
@@ -43,9 +43,9 @@ jobs:
         symbol: I(deb7-32-raw)
         definition: debian-raw
         args:
-            BASE_IMAGE: i386/debian:wheezy-20171210
+            BASE_IMAGE: i386/debian:wheezy-20190228
             DIST: wheezy
-            SNAPSHOT: '20171210T214726Z'
+            SNAPSHOT: '20190228T155929Z'
     debian7-i386-packages:
         symbol: I(deb7-32-pkg)
         definition: debian-packages
@@ -148,9 +148,9 @@ jobs:
         symbol: I(deb9-raw)
         definition: debian-raw
         args:
-            BASE_IMAGE: debian:stretch-20190228
+            BASE_IMAGE: debian:stretch-20200422
             DIST: stretch
-            SNAPSHOT: '20190306T040711Z'
+            SNAPSHOT: '20200422T205110Z'
     debian9-packages:
         symbol: I(deb9-pkg)
         definition: debian-packages
@@ -174,9 +174,9 @@ jobs:
         symbol: I(deb10-raw)
         definition: debian-raw
         args:
-            BASE_IMAGE: debian:buster-20191014
+            BASE_IMAGE: debian:buster-20200422
             DIST: buster
-            SNAPSHOT: '20191014T205056Z'
+            SNAPSHOT: '20200422T205110Z'
     debian10-packages:
         symbol: I(deb10-pkg)
         definition: debian-packages
