@@ -3,7 +3,7 @@ use crate::context_stack::{
 };
 use crate::declaration_kind::DeclarationKind;
 use crate::early_errors::*;
-use crate::error::{ParseError, Result};
+use crate::error::{BoxedParseError, ParseError, Result};
 use crate::Token;
 use ast::{
     arena,
@@ -252,7 +252,8 @@ impl<'alloc> AstBuilder<'alloc> {
             }
             CoverParenthesized::Parameters(_parameters) => Err(ParseError::NotImplemented(
                 "parenthesized expression with `...` should be a syntax error",
-            )),
+            )
+            .into()),
         }
     }
 
@@ -337,7 +338,7 @@ impl<'alloc> AstBuilder<'alloc> {
             ) => Ok(self.alloc_with(|| BindingIdentifier { name, loc })),
 
             // ({...x.y} = dv) => {}
-            _ => Err(ParseError::ObjectBindingPatternWithInvalidRest),
+            _ => Err(ParseError::ObjectBindingPatternWithInvalidRest.into()),
         }
     }
 
@@ -374,7 +375,7 @@ impl<'alloc> AstBuilder<'alloc> {
             // (a[i] = dv) => {}
             AssignmentTarget::SimpleAssignmentTarget(
                 SimpleAssignmentTarget::MemberAssignmentTarget(_),
-            ) => Err(ParseError::InvalidParameter),
+            ) => Err(ParseError::InvalidParameter.into()),
 
             // ([a, b] = dv) => {}
             AssignmentTarget::AssignmentTargetPattern(
@@ -456,7 +457,7 @@ impl<'alloc> AstBuilder<'alloc> {
             )),
 
             ObjectProperty::NamedObjectProperty(NamedObjectProperty::MethodDefinition(_)) => {
-                Err(ParseError::ObjectPatternWithMethod)
+                Err(ParseError::ObjectPatternWithMethod.into())
             }
 
             ObjectProperty::ShorthandProperty(ShorthandProperty {
@@ -475,7 +476,7 @@ impl<'alloc> AstBuilder<'alloc> {
             }
 
             ObjectProperty::SpreadProperty(_expression) => {
-                Err(ParseError::ObjectPatternWithNonFinalRest)
+                Err(ParseError::ObjectPatternWithNonFinalRest.into())
             }
         }
     }
@@ -491,7 +492,7 @@ impl<'alloc> AstBuilder<'alloc> {
                 self.alloc_with(|| BindingIdentifier { name, loc })
             }
             _ => {
-                return Err(ParseError::ObjectBindingPatternWithInvalidRest);
+                return Err(ParseError::ObjectBindingPatternWithInvalidRest.into());
             }
         })
     }
@@ -543,7 +544,7 @@ impl<'alloc> AstBuilder<'alloc> {
                     Ok(Some(self.expression_to_parameter(expr.unbox())?)),
                 ArrayExpressionElement::SpreadElement(_expr) =>
                     // ([...a, b]) => {}
-                    Err(ParseError::ArrayPatternWithNonFinalRest),
+                    Err(ParseError::ArrayPatternWithNonFinalRest.into()),
                 ArrayExpressionElement::Elision { .. } => Ok(None),
             }))
     }
@@ -581,7 +582,9 @@ impl<'alloc> AstBuilder<'alloc> {
                     .map(|expr| match self.expression_to_parameter(expr.unbox())? {
                         Parameter::Binding(b) => Ok(self.alloc_with(|| b)),
                         Parameter::BindingWithDefault(_) => {
-                            Err(ParseError::ArrayBindingPatternWithInvalidRest)
+                            let err: BoxedParseError =
+                                ParseError::ArrayBindingPatternWithInvalidRest.into();
+                            Err(err)
                         }
                     })
                     .transpose()?;
@@ -598,7 +601,7 @@ impl<'alloc> AstBuilder<'alloc> {
                 BindingPattern::ObjectBinding(self.object_expression_to_object_binding(object)?),
             )),
 
-            _ => Err(ParseError::InvalidParameter),
+            _ => Err(ParseError::InvalidParameter.into()),
         }
     }
 
@@ -667,7 +670,7 @@ impl<'alloc> AstBuilder<'alloc> {
         let mut rest: Option<Binding<'alloc>> = None;
         for arg in arguments.args {
             if rest.is_some() {
-                return Err(ParseError::ArrowParametersWithNonFinalRest);
+                return Err(ParseError::ArrowParametersWithNonFinalRest.into());
             }
             match arg {
                 Argument::Expression(expr) => {
@@ -755,7 +758,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _token: arena::Box<'alloc, Token>,
     ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
-        Err(ParseError::NotImplemented("BigInt"))
+        Err(ParseError::NotImplemented("BigInt").into())
     }
 
     // Literal : StringLiteral
@@ -768,7 +771,7 @@ impl<'alloc> AstBuilder<'alloc> {
         // directive.
         let value = token.value.as_atom();
         if value == CommonSourceAtomSetIndices::use_strict() {
-            return Err(ParseError::NotImplemented("use strict directive"));
+            return Err(ParseError::NotImplemented("use strict directive").into());
         }
 
         Ok(self.alloc_with(|| Expression::LiteralStringExpression { value, loc }))
@@ -1038,7 +1041,7 @@ impl<'alloc> AstBuilder<'alloc> {
     ) -> Result<'alloc, arena::Box<'alloc, PropertyName<'alloc>>> {
         let value = token.value.as_atom();
         if value == CommonSourceAtomSetIndices::__proto__() {
-            return Err(ParseError::NotImplemented("__proto__ as property name"));
+            return Err(ParseError::NotImplemented("__proto__ as property name").into());
         }
 
         let loc = token.loc;
@@ -1052,7 +1055,7 @@ impl<'alloc> AstBuilder<'alloc> {
     ) -> Result<'alloc, arena::Box<'alloc, PropertyName<'alloc>>> {
         let value = token.value.as_atom();
         if value == CommonSourceAtomSetIndices::__proto__() {
-            return Err(ParseError::NotImplemented("__proto__ as property name"));
+            return Err(ParseError::NotImplemented("__proto__ as property name").into());
         }
 
         let loc = token.loc;
@@ -1079,7 +1082,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _token: arena::Box<'alloc, Token>,
     ) -> Result<'alloc, arena::Box<'alloc, PropertyName<'alloc>>> {
-        Err(ParseError::NotImplemented("BigInt"))
+        Err(ParseError::NotImplemented("BigInt").into())
     }
 
     // ComputedPropertyName : `[` AssignmentExpression `]`
@@ -1106,9 +1109,7 @@ impl<'alloc> AstBuilder<'alloc> {
         // Awkward. This needs to be stored somehow until we reach an enclosing
         // context where it can be reinterpreted as a default value in an
         // object destructuring assignment pattern.
-        Err(ParseError::NotImplemented(
-            "default initializers in object patterns",
-        ))
+        Err(ParseError::NotImplemented("default initializers in object patterns").into())
     }
 
     // TemplateLiteral : NoSubstitutionTemplate
@@ -1136,7 +1137,7 @@ impl<'alloc> AstBuilder<'alloc> {
         _expression: arena::Box<'alloc, Expression<'alloc>>,
         _spans: arena::Box<'alloc, Void>,
     ) -> Result<'alloc, arena::Box<'alloc, TemplateExpression<'alloc>>> {
-        Err(ParseError::NotImplemented("template strings"))
+        Err(ParseError::NotImplemented("template strings").into())
     }
 
     // TemplateSpans : TemplateTail
@@ -1146,7 +1147,7 @@ impl<'alloc> AstBuilder<'alloc> {
         _middle_list: Option<arena::Box<'alloc, Void>>,
         _tail: arena::Box<'alloc, Token>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("template strings"))
+        Err(ParseError::NotImplemented("template strings").into())
     }
 
     // TemplateMiddleList : TemplateMiddle Expression
@@ -1155,7 +1156,7 @@ impl<'alloc> AstBuilder<'alloc> {
         _middle: arena::Box<'alloc, Token>,
         _expression: arena::Box<'alloc, Expression<'alloc>>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("template strings"))
+        Err(ParseError::NotImplemented("template strings").into())
     }
 
     // TemplateMiddleList : TemplateMiddleList TemplateMiddle Expression
@@ -1165,7 +1166,7 @@ impl<'alloc> AstBuilder<'alloc> {
         _middle: arena::Box<'alloc, Token>,
         _expression: arena::Box<'alloc, Expression<'alloc>>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("template strings"))
+        Err(ParseError::NotImplemented("template strings").into())
     }
 
     // MemberExpression : MemberExpression `[` Expression `]`
@@ -1254,7 +1255,7 @@ impl<'alloc> AstBuilder<'alloc> {
     pub fn error_optional_chain_with_template(
         &self,
     ) -> Result<'alloc, arena::Box<'alloc, Expression<'alloc>>> {
-        Err(ParseError::IllegalCharacter('`'))
+        Err(ParseError::IllegalCharacter('`').into())
     }
 
     // OptionalChain : OptionalChain `[` Expression `]`
@@ -1924,9 +1925,9 @@ impl<'alloc> AstBuilder<'alloc> {
         let spread = self.pop_trailing_spread_element(&mut elements);
         let elements =
             self.collect_vec_from_results(elements.into_iter().map(|element| match element {
-                ArrayExpressionElement::SpreadElement(_) => Err(ParseError::NotImplemented(
-                    "rest destructuring in array pattern",
-                )),
+                ArrayExpressionElement::SpreadElement(_) => {
+                    Err(ParseError::NotImplemented("rest destructuring in array pattern").into())
+                }
                 ArrayExpressionElement::Expression(expression) => Ok(Some(
                     self.expression_to_assignment_target_maybe_default(expression)?,
                 )),
@@ -1948,7 +1949,7 @@ impl<'alloc> AstBuilder<'alloc> {
     ) -> Result<'alloc, AssignmentTargetProperty<'alloc>> {
         Ok(match property.unbox() {
             ObjectProperty::NamedObjectProperty(NamedObjectProperty::MethodDefinition(_)) => {
-                return Err(ParseError::ObjectPatternWithMethod)
+                return Err(ParseError::ObjectPatternWithMethod.into())
             }
 
             ObjectProperty::NamedObjectProperty(NamedObjectProperty::DataProperty(
@@ -1980,7 +1981,7 @@ impl<'alloc> AstBuilder<'alloc> {
             }
 
             ObjectProperty::SpreadProperty(_expression) => {
-                return Err(ParseError::ObjectPatternWithNonFinalRest)
+                return Err(ParseError::ObjectPatternWithNonFinalRest.into())
             }
         })
     }
@@ -2074,7 +2075,7 @@ impl<'alloc> AstBuilder<'alloc> {
                     || name.value == CommonSourceAtomSetIndices::eval()
                 {
                     if self.is_strict()? {
-                        return Err(ParseError::InvalidAssignmentTarget);
+                        return Err(ParseError::InvalidAssignmentTarget.into());
                     }
                 }
 
@@ -2144,11 +2145,12 @@ impl<'alloc> AstBuilder<'alloc> {
             Expression::CallExpression(CallExpression { .. }) => {
                 return Err(ParseError::NotImplemented(
                     "Assignment to CallExpression is allowed for non-strict mode.",
-                ));
+                )
+                .into());
             }
 
             _ => {
-                return Err(ParseError::InvalidAssignmentTarget);
+                return Err(ParseError::InvalidAssignmentTarget.into());
             }
         })
     }
@@ -2341,7 +2343,8 @@ impl<'alloc> AstBuilder<'alloc> {
                 if v.init == None {
                     return Err(ParseError::NotImplemented(
                         "Missing initializer in a lexical binding.",
-                    ));
+                    )
+                    .into());
                 }
             }
         }
@@ -2380,7 +2383,8 @@ impl<'alloc> AstBuilder<'alloc> {
                 if v.init == None {
                     return Err(ParseError::NotImplemented(
                         "Missing initializer in a lexical binding.",
-                    ));
+                    )
+                    .into());
                 }
             }
         }
@@ -2741,7 +2745,7 @@ impl<'alloc> AstBuilder<'alloc> {
         //
         // This production only applies when parsing non-strict code.
         if self.is_strict()? {
-            return Err(ParseError::FunctionDeclInSingleStatement);
+            return Err(ParseError::FunctionDeclInSingleStatement.into());
         }
 
         // Code matching this production is processed as if each matching
@@ -2762,9 +2766,7 @@ impl<'alloc> AstBuilder<'alloc> {
     }
 
     fn is_strict(&self) -> Result<'alloc, bool> {
-        Err(ParseError::NotImplemented(
-            "strict-mode-only early error is not yet supported",
-        ))
+        Err(ParseError::NotImplemented("strict-mode-only early error is not yet supported").into())
     }
 
     // IterationStatement : `do` Statement `while` `(` Expression `)` `;`
@@ -3063,9 +3065,7 @@ impl<'alloc> AstBuilder<'alloc> {
         _right: arena::Box<'alloc, Expression<'alloc>>,
         _stmt: arena::Box<'alloc, Statement<'alloc>>,
     ) -> Result<'alloc, arena::Box<'alloc, Statement<'alloc>>> {
-        Err(ParseError::NotImplemented(
-            "for await statement (missing from AST)",
-        ))
+        Err(ParseError::NotImplemented("for await statement (missing from AST)").into())
     }
 
     // ForDeclaration : LetOrConst ForBinding => ForDeclaration($0, $1)
@@ -4149,7 +4149,7 @@ impl<'alloc> AstBuilder<'alloc> {
         _static_token: arena::Box<'alloc, Token>,
         _field: arena::Box<'alloc, ClassElement<'alloc>>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("class static field"))
+        Err(ParseError::NotImplemented("class static field").into())
     }
 
     // ClassElement : `;`
@@ -4263,19 +4263,19 @@ impl<'alloc> AstBuilder<'alloc> {
                         Expression::IdentifierExpression(IdentifierExpression { name, .. }) => {
                             if name.value != CommonSourceAtomSetIndices::async_() {
                                 // `foo(a, b) => {}`
-                                return Err(ParseError::ArrowHeadInvalid);
+                                return Err(ParseError::ArrowHeadInvalid.into());
                             }
                         }
                         _ => {
                             // `obj.async() => {}`
-                            return Err(ParseError::ArrowHeadInvalid);
+                            return Err(ParseError::ArrowHeadInvalid.into());
                         }
                     },
 
                     ExpressionOrSuper::Super { .. } => {
                         // Can't happen: `super()` doesn't match
                         // CoverCallExpressionAndAsyncArrowHead.
-                        return Err(ParseError::ArrowHeadInvalid);
+                        return Err(ParseError::ArrowHeadInvalid.into());
                     }
                 }
 
@@ -4363,7 +4363,7 @@ impl<'alloc> AstBuilder<'alloc> {
         _import_clause: Option<arena::Box<'alloc, Void>>,
         _module_specifier: arena::Box<'alloc, Token>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("import"))
+        Err(ParseError::NotImplemented("import").into())
     }
 
     // ImportClause : ImportedDefaultBinding
@@ -4377,7 +4377,7 @@ impl<'alloc> AstBuilder<'alloc> {
         _name_space_import: Option<arena::Box<'alloc, Void>>,
         _named_imports: Option<arena::Box<'alloc, Void>>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("import"))
+        Err(ParseError::NotImplemented("import").into())
     }
 
     // NameSpaceImport : `*` `as` ImportedBinding
@@ -4385,12 +4385,12 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _name: arena::Box<'alloc, BindingIdentifier>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("import"))
+        Err(ParseError::NotImplemented("import").into())
     }
 
     // NamedImports : `{` `}`
     pub fn imports_list_empty(&self) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("import"))
+        Err(ParseError::NotImplemented("import").into())
     }
 
     // ImportsList : ImportSpecifier
@@ -4400,7 +4400,7 @@ impl<'alloc> AstBuilder<'alloc> {
         _list: arena::Box<'alloc, Void>,
         _item: arena::Box<'alloc, Void>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("import"))
+        Err(ParseError::NotImplemented("import").into())
     }
 
     // ImportSpecifier : ImportedBinding
@@ -4408,7 +4408,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _name: arena::Box<'alloc, BindingIdentifier>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("import"))
+        Err(ParseError::NotImplemented("import").into())
     }
 
     // ImportSpecifier : IdentifierName `as` ImportedBinding
@@ -4417,7 +4417,7 @@ impl<'alloc> AstBuilder<'alloc> {
         _original_name: arena::Box<'alloc, Token>,
         _local_name: arena::Box<'alloc, BindingIdentifier>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("import"))
+        Err(ParseError::NotImplemented("import").into())
     }
 
     // ModuleSpecifier : StringLiteral
@@ -4425,7 +4425,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _token: arena::Box<'alloc, Token>,
     ) -> Result<'alloc, arena::Box<'alloc, Token>> {
-        Err(ParseError::NotImplemented("import"))
+        Err(ParseError::NotImplemented("import").into())
     }
 
     // ExportDeclaration : `export` `*` FromClause `;`
@@ -4433,7 +4433,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _module_specifier: arena::Box<'alloc, Token>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("export"))
+        Err(ParseError::NotImplemented("export").into())
     }
 
     // ExportDeclaration : `export` ExportClause FromClause `;`
@@ -4442,7 +4442,7 @@ impl<'alloc> AstBuilder<'alloc> {
         _export_clause: arena::Box<'alloc, Void>,
         _module_specifier: arena::Box<'alloc, Token>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("export"))
+        Err(ParseError::NotImplemented("export").into())
     }
 
     // ExportDeclaration : `export` ExportClause `;`
@@ -4450,7 +4450,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _export_clause: arena::Box<'alloc, Void>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("export"))
+        Err(ParseError::NotImplemented("export").into())
     }
 
     // ExportDeclaration : `export` VariableStatement
@@ -4458,7 +4458,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _statement: arena::Box<'alloc, Statement<'alloc>>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("export"))
+        Err(ParseError::NotImplemented("export").into())
     }
 
     // ExportDeclaration : `export` Declaration
@@ -4466,7 +4466,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _declaration: arena::Box<'alloc, Statement<'alloc>>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("export"))
+        Err(ParseError::NotImplemented("export").into())
     }
 
     // ExportDeclaration : `export` `default` HoistableDeclaration
@@ -4474,7 +4474,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _declaration: arena::Box<'alloc, Statement<'alloc>>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("export"))
+        Err(ParseError::NotImplemented("export").into())
     }
 
     // ExportDeclaration : `export` `default` ClassDeclaration
@@ -4482,7 +4482,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _class_declaration: arena::Box<'alloc, Statement<'alloc>>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("export"))
+        Err(ParseError::NotImplemented("export").into())
     }
 
     // ExportDeclaration : `export` `default` [lookahead <! {`function`, `async`, `class`}] AssignmentExpression `;`
@@ -4490,12 +4490,12 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _expression: arena::Box<'alloc, Expression<'alloc>>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("export"))
+        Err(ParseError::NotImplemented("export").into())
     }
 
     // ExportClause : `{` `}`
     pub fn exports_list_empty(&self) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("export"))
+        Err(ParseError::NotImplemented("export").into())
     }
 
     // ExportsList : ExportSpecifier
@@ -4505,7 +4505,7 @@ impl<'alloc> AstBuilder<'alloc> {
         _list: arena::Box<'alloc, Void>,
         _export_specifier: arena::Box<'alloc, Void>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("export"))
+        Err(ParseError::NotImplemented("export").into())
     }
 
     // ExportSpecifier : IdentifierName
@@ -4513,7 +4513,7 @@ impl<'alloc> AstBuilder<'alloc> {
         &self,
         _identifier: arena::Box<'alloc, Token>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("export"))
+        Err(ParseError::NotImplemented("export").into())
     }
 
     // ExportSpecifier : IdentifierName `as` IdentifierName
@@ -4522,7 +4522,7 @@ impl<'alloc> AstBuilder<'alloc> {
         _local_name: arena::Box<'alloc, Token>,
         _exported_name: arena::Box<'alloc, Token>,
     ) -> Result<'alloc, arena::Box<'alloc, Void>> {
-        Err(ParseError::NotImplemented("export"))
+        Err(ParseError::NotImplemented("export").into())
     }
 
     // Check Early Error for BindingIdentifier and note binding info to the
@@ -5031,7 +5031,7 @@ impl<'alloc> AstBuilder<'alloc> {
     ) -> Result<'alloc, ()> {
         // * It is a Syntax Error if IsLabelledFunction(Statement) is true.
         if self.is_labelled_function(stmt) {
-            return Err(ParseError::LabelledFunctionDeclInSingleStatement);
+            return Err(ParseError::LabelledFunctionDeclInSingleStatement.into());
         }
         Ok(())
     }
