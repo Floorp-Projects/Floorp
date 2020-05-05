@@ -47,7 +47,7 @@
 
 #include "BaseProfiler.h"
 
-#ifdef MOZ_BASE_PROFILER
+#ifdef MOZ_GECKO_PROFILER
 
 #  include <errno.h>
 #  include <fcntl.h>
@@ -875,4 +875,4 @@ void FileID::ConvertIdentifierToString(const uint8_t identifier[kMDGUIDSize],
 
 }  // namespace lul
 
-#endif  // MOZ_BASE_PROFILER
+#endif  // MOZ_GECKO_PROFILER

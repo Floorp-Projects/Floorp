@@ -6,7 +6,7 @@
 
 #include "BaseProfiler.h"
 
-#ifdef MOZ_BASE_PROFILER
+#ifdef MOZ_GECKO_PROFILER
 
 #  include "ProfilerBacktrace.h"
 
@@ -80,4 +80,4 @@ ProfileBufferEntryReader::
 
 }  // namespace mozilla
 
-#endif  // MOZ_BASE_PROFILER
+#endif  // MOZ_GECKO_PROFILER

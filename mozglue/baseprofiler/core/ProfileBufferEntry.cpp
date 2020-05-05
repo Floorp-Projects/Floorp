@@ -6,7 +6,7 @@
 
 #include "BaseProfiler.h"
 
-#ifdef MOZ_BASE_PROFILER
+#ifdef MOZ_GECKO_PROFILER
 
 #  include "ProfileBufferEntry.h"
 
@@ -1377,4 +1377,4 @@ void ProfileBuffer::DiscardSamplesBeforeTime(double aTime) {
 }  // namespace baseprofiler
 }  // namespace mozilla
 
-#endif  // MOZ_BASE_PROFILER
+#endif  // MOZ_GECKO_PROFILER

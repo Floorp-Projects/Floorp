@@ -16,10 +16,10 @@
 #include "mozilla/ProfileChunkedBuffer.h"
 #include "mozilla/Vector.h"
 
-#ifdef MOZ_BASE_PROFILER
+#ifdef MOZ_GECKO_PROFILER
 #  include "BaseProfileJSONWriter.h"
 #  include "BaseProfilerMarkerPayload.h"
-#endif  // MOZ_BASE_PROFILER
+#endif  // MOZ_GECKO_PROFILER
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #  include <windows.h>
@@ -2530,7 +2530,7 @@ void TestProfilerDependencies() {
   TestBlocksRingBufferSerialization();
 }
 
-#ifdef MOZ_BASE_PROFILER
+#ifdef MOZ_GECKO_PROFILER
 
 class BaseTestMarkerPayload : public baseprofiler::ProfilerMarkerPayload {
  public:
@@ -2855,10 +2855,10 @@ void TestProfiler() {
   printf("TestProfiler done\n");
 }
 
-#else  // MOZ_BASE_PROFILER
+#else  // MOZ_GECKO_PROFILER
 
 // Testing that macros are still #defined (but do nothing) when
-// MOZ_BASE_PROFILER is disabled.
+// MOZ_GECKO_PROFILER is disabled.
 void TestProfiler() {
   // These don't need to make sense, we just want to know that they're defined
   // and don't do anything.
@@ -2872,7 +2872,7 @@ void TestProfiler() {
   AUTO_BASE_PROFILER_THREAD_SLEEP;
 }
 
-#endif  // MOZ_BASE_PROFILER else
+#endif  // MOZ_GECKO_PROFILER else
 
 #if defined(XP_WIN)
 int wmain()
@@ -2880,18 +2880,18 @@ int wmain()
 int main()
 #endif  // defined(XP_WIN)
 {
-#ifdef MOZ_BASE_PROFILER
+#ifdef MOZ_GECKO_PROFILER
   printf("BaseTestProfiler -- pid: %d, tid: %d\n",
          baseprofiler::profiler_current_process_id(),
          baseprofiler::profiler_current_thread_id());
   // ::SleepMilli(10000);
-#endif  // MOZ_BASE_PROFILER
+#endif  // MOZ_GECKO_PROFILER
 
   // Always run tests that don't involve the profiler directly.
   TestProfilerDependencies();
 
   // Note that there are two `TestProfiler` functions above, depending on
-  // whether MOZ_BASE_PROFILER is #defined.
+  // whether MOZ_GECKO_PROFILER is #defined.
   TestProfiler();
 
   return 0;

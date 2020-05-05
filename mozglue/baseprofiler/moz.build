@@ -74,8 +74,9 @@ if CONFIG['MOZ_GECKO_PROFILER']:
 
     FINAL_LIBRARY = 'mozglue'
 
-# BaseProfiler.h and BaseProfilerCounts.h are the only headers that are usable
-# in non-MOZ_GECKO_PROFILER builds, and they only contains no-op macros in that
+# Many of the headers in this directory are usable in non-MOZ_GECKO_PROFILER
+# builds.
+# BaseProfiler.h and BaseProfilerCounts.h only contain no-op macros in that
 # case.
 EXPORTS += [
     'public/BaseProfiler.h',

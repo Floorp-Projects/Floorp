@@ -1793,7 +1793,6 @@ TEST(GeckoProfiler, PostSamplingCallback)
       [&](SamplingState) { ASSERT_TRUE(false); }));
 }
 
-#ifdef MOZ_BASE_PROFILER
 TEST(GeckoProfiler, BaseProfilerHandOff)
 {
   const char* filters[] = {"GeckoMain"};
@@ -1840,4 +1839,3 @@ TEST(GeckoProfiler, BaseProfilerHandOff)
   profiler_stop();
   ASSERT_TRUE(!profiler_is_active());
 }
-#endif  // MOZ_BASE_PROFILER

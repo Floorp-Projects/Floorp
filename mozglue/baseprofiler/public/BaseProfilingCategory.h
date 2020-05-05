@@ -9,8 +9,8 @@
 
 #include "BaseProfiler.h"
 
-#ifndef MOZ_BASE_PROFILER
-#  error Do not #include this header when MOZ_BASE_PROFILER is not #defined.
+#ifndef MOZ_GECKO_PROFILER
+#  error Do not #include this header when MOZ_GECKO_PROFILER is not #defined.
 #endif
 
 #include "mozilla/Types.h"

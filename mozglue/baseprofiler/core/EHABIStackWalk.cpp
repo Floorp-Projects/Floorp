@@ -24,7 +24,7 @@
 
 #include "BaseProfiler.h"
 
-#ifdef MOZ_BASE_PROFILER
+#ifdef MOZ_GECKO_PROFILER
 
 #  include "EHABIStackWalk.h"
 
@@ -645,4 +645,4 @@ EHState::EHState(const mcontext_t& context) {
 }  // namespace baseprofiler
 }  // namespace mozilla
 
-#endif  // MOZ_BASE_PROFILER
+#endif  // MOZ_GECKO_PROFILER
