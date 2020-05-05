@@ -361,10 +361,25 @@ class Mitmproxy(Playback):
                 LOG.info("Reading confidence values from: %s" % path)
                 with open(path, "r") as f:
                     data = json.load(f)
-                    return {"confidence": data["confidence"],
-                            "not-replayed": data["not-replayed"],
-                            "replayed": data["replayed"]
-                            }
+                    return {
+                        "confidence": {
+                            "values": data["confidence"],
+                            "subtest-prefix-type": False,
+                            "unit": "%",
+                            "lowerIsBetter": False
+                        },
+                        "not-replayed": {
+                            "values": data["not-replayed"],
+                            "subtest-prefix-type": False,
+                            "unit": "a.u."
+                        },
+                        "replayed": {
+                            "values": data["replayed"],
+                            "subtest-prefix-type": False,
+                            "unit": "a.u.",
+                            "lowerIsBetter": False
+                        }
+                    }
             except Exception:
                 LOG.info("Can't read netlocs file!", exc_info=True)
                 return None
