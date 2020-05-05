@@ -11,6 +11,7 @@ mod token;
 pub mod traits;
 
 extern crate jsparagus_ast as ast;
+extern crate static_assertions;
 
 pub use ast_builder::{AstBuilder, AstBuilderDelegate};
 pub use declaration_kind::DeclarationKind;

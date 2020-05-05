@@ -167,7 +167,7 @@ impl<'alloc, 'parser> Simulator<'alloc, 'parser> {
             // might not be in the shifted terms coming after the reduced
             // nonterminal.
             if t.term == Term::Terminal(TerminalId::ErrorToken) {
-                return Err(Parser::parse_error(token));
+                return Err(Parser::parse_error(token).into());
             }
 
             // Otherwise, check if the current rule accept an Automatic
@@ -184,9 +184,9 @@ impl<'alloc, 'parser> Simulator<'alloc, 'parser> {
                 });
                 return Ok(false);
             }
-            return Err(Parser::parse_error(token));
+            return Err(Parser::parse_error(token).into());
         }
         // On error, don't attempt error handling again.
-        Err(ParseError::ParserCannotUnpackToken)
+        Err(ParseError::ParserCannotUnpackToken.into())
     }
 }

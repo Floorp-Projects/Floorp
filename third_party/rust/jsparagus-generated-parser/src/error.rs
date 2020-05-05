@@ -1,6 +1,7 @@
 use crate::stack_value_generated::AstError;
 use crate::DeclarationKind;
 use crate::Token;
+use static_assertions::assert_eq_size;
 use std::{convert::Infallible, error::Error, fmt};
 
 #[derive(Debug)]
@@ -152,6 +153,25 @@ impl<'alloc> From<AstError> for ParseError<'alloc> {
     }
 }
 
-impl<'alloc> Error for ParseError<'alloc> {}
+impl<'alloc> From<Infallible> for std::boxed::Box<ParseError<'alloc>> {
+    fn from(err: Infallible) -> std::boxed::Box<ParseError<'alloc>> {
+        match err {}
+    }
+}
 
-pub type Result<'alloc, T> = std::result::Result<T, ParseError<'alloc>>;
+impl<'alloc> From<AstError> for std::boxed::Box<ParseError<'alloc>> {
+    fn from(err: AstError) -> std::boxed::Box<ParseError<'alloc>> {
+        ParseError::AstError(err).into()
+    }
+}
+
+impl<'a, 'alloc: 'a> Error for &'a ParseError<'alloc> {}
+
+// NOTE: This is not the Bump allocator, as error are allocated infrequently and
+// this avoid propagating the bump allocator to all places, while keeping these
+// implementation possible.
+pub type BoxedParseError<'alloc> = std::boxed::Box<ParseError<'alloc>>;
+pub type Result<'alloc, T> = std::result::Result<T, BoxedParseError<'alloc>>;
+
+assert_eq_size!(BoxedParseError<'static>, usize);
+assert_eq_size!(Result<'static, ()>, usize);
