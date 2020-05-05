@@ -10,11 +10,11 @@
 #include "mozilla/AnimationCollection.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/dom/Animation.h"
-#include "mozilla/Attributes.h"  // For MOZ_NON_OWNING_REF
 #include "mozilla/Assertions.h"
 #include "mozilla/TimingParams.h"
 #include "mozilla/dom/Nullable.h"
 #include "nsContentUtils.h"
+#include "nsDOMMutationObserver.h"  // For nsAutoAnimationMutationBatch
 
 class nsPresContext;
 
