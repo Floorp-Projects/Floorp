@@ -1506,7 +1506,7 @@ already_AddRefed<dom::Promise> PeerConnectionImpl::GetStats(
 
 void PeerConnectionImpl::GetRemoteStreams(
     nsTArray<RefPtr<DOMMediaStream>>& aStreamsOut) const {
-  aStreamsOut = mReceiveStreams;
+  aStreamsOut = mReceiveStreams.Clone();
 }
 
 NS_IMETHODIMP
@@ -2583,11 +2583,12 @@ void PeerConnectionImpl::RecordConduitTelemetry() {
     }
   }
 
-  mSTSThread->Dispatch(NS_NewRunnableFunction(__func__, [conduits]() {
-    for (const auto& conduit : conduits) {
-      conduit->RecordTelemetry();
-    }
-  }));
+  mSTSThread->Dispatch(
+      NS_NewRunnableFunction(__func__, [conduits = std::move(conduits)]() {
+        for (const auto& conduit : conduits) {
+          conduit->RecordTelemetry();
+        }
+      }));
 }
 
 template <class T>
