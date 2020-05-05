@@ -428,6 +428,9 @@ nsIFrame* FindFrameTargetedByInputEvent(
   if (aFlags & INPUT_IGNORE_ROOT_SCROLL_FRAME) {
     options += FrameForPointOption::IgnoreRootScrollFrame;
   }
+  if (aRootFrame.mViewportType == ViewportType::Layout) {
+    options += FrameForPointOption::IsRelativeToLayoutViewport;
+  }
   nsIFrame* target = nsLayoutUtils::GetFrameForPoint(
       aRootFrame.mFrame, aPointRelativeToRootFrame, options);
   PET_LOG(
