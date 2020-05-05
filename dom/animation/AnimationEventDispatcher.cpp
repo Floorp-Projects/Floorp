@@ -7,6 +7,7 @@
 #include "mozilla/AnimationEventDispatcher.h"
 
 #include "mozilla/EventDispatcher.h"
+#include "nsPresContext.h"
 #include "nsRefreshDriver.h"
 
 namespace mozilla {
