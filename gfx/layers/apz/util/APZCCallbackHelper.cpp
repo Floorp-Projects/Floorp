@@ -483,33 +483,6 @@ mozilla::CSSToCSSMatrix4x4 APZCCallbackHelper::GetCallbackTransform(
       .PostTranslate(transform.x, transform.y, 0);
 }
 
-CSSPoint APZCCallbackHelper::ApplyCallbackTransform(
-    const CSSPoint& aInput, const ScrollableLayerGuid& aGuid) {
-  return GetCallbackTransform(aGuid).TransformPoint(aInput);
-}
-
-LayoutDeviceIntPoint APZCCallbackHelper::ApplyCallbackTransform(
-    const LayoutDeviceIntPoint& aPoint, const ScrollableLayerGuid& aGuid,
-    const CSSToLayoutDeviceScale& aScale) {
-  LayoutDevicePoint point = LayoutDevicePoint(aPoint.x, aPoint.y);
-  point = ApplyCallbackTransform(point / aScale, aGuid) * aScale;
-  return LayoutDeviceIntPoint::Round(point);
-}
-
-void APZCCallbackHelper::ApplyCallbackTransform(
-    WidgetEvent& aEvent, const ScrollableLayerGuid& aGuid,
-    const CSSToLayoutDeviceScale& aScale) {
-  if (aEvent.AsTouchEvent()) {
-    WidgetTouchEvent& event = *(aEvent.AsTouchEvent());
-    for (size_t i = 0; i < event.mTouches.Length(); i++) {
-      event.mTouches[i]->mRefPoint =
-          ApplyCallbackTransform(event.mTouches[i]->mRefPoint, aGuid, aScale);
-    }
-  } else {
-    aEvent.mRefPoint = ApplyCallbackTransform(aEvent.mRefPoint, aGuid, aScale);
-  }
-}
-
 nsEventStatus APZCCallbackHelper::DispatchWidgetEvent(WidgetGUIEvent& aEvent) {
   nsEventStatus status = nsEventStatus_eConsumeNoDefault;
   if (aEvent.mWidget) {

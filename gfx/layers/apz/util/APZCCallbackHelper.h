@@ -115,23 +115,6 @@ class APZCCallbackHelper {
   static CSSToCSSMatrix4x4 GetCallbackTransform(
       const ScrollableLayerGuid& aGuid);
 
-  /* Apply |GetCallbackTransform()| to |aInput| and return the result. */
-  static CSSPoint ApplyCallbackTransform(const CSSPoint& aInput,
-                                         const ScrollableLayerGuid& aGuid);
-
-  /* Same as above, but operates on LayoutDeviceIntPoint.
-     Requires an additonal |aScale| parameter to convert between CSS and
-     LayoutDevice space. */
-  static mozilla::LayoutDeviceIntPoint ApplyCallbackTransform(
-      const LayoutDeviceIntPoint& aPoint, const ScrollableLayerGuid& aGuid,
-      const CSSToLayoutDeviceScale& aScale);
-
-  /* Convenience function for applying a callback transform to all refpoints
-   * in the input event. */
-  static void ApplyCallbackTransform(WidgetEvent& aEvent,
-                                     const ScrollableLayerGuid& aGuid,
-                                     const CSSToLayoutDeviceScale& aScale);
-
   /* Dispatch a widget event via the widget stored in the event, if any.
    * In a child process, allows the BrowserParent event-capture mechanism to
    * intercept the event. */
