@@ -1,5 +1,3 @@
-// |jit-test| test-also=--wasm-simd; skip-if: !wasmSimdSupported(); include:wasm.js
-
 function testValid(code) {
     assertEq(WebAssembly.validate(wasmTextToBinary(code)), true);
 }
