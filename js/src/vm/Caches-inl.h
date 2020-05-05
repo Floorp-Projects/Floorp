@@ -10,7 +10,7 @@
 #include "vm/Caches.h"
 
 #include "gc/Allocator.h"
-#include "gc/GCTrace.h"
+#include "gc/GCProbes.h"
 #include "vm/Probes.h"
 #include "vm/Realm.h"
 
@@ -87,7 +87,7 @@ inline NativeObject* NewObjectCache::newObjectFromHit(JSContext* cx,
   }
 
   probes::CreateObject(cx, obj);
-  gc::gcTracer.traceCreateObject(obj);
+  gc::gcprobes::CreateObject(obj);
   return obj;
 }
 

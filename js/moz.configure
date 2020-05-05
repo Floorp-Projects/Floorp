@@ -263,15 +263,15 @@ set_config('MOZ_VTUNE', vtune)
 set_define('MOZ_VTUNE', vtune)
 
 
-js_option('--enable-gc-trace', env='JS_GC_TRACE',
-          help='Enable tracing of allocation and finalization')
+js_option('--enable-gc-probes', env='JS_GC_PROBES',
+          help='Turn on probes for allocation and finalization')
 
-@depends('--enable-gc-trace')
-def gc_trace(value):
+@depends('--enable-gc-probes')
+def gc_probes(value):
     if value:
         return True
 
-set_define('JS_GC_TRACE', gc_trace)
+set_define('JS_GC_PROBES', gc_probes)
 
 
 js_option('--enable-gczeal',

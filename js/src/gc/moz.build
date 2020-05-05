@@ -29,7 +29,6 @@ UNIFIED_SOURCES += [
     'FinalizationRegistry.cpp',
     'GC.cpp',
     'GCParallelTask.cpp',
-    'GCTrace.cpp',
     'Marking.cpp',
     'Memory.cpp',
     'Nursery.cpp',
