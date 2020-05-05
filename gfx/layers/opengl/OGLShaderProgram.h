@@ -49,10 +49,10 @@ struct ProgramProfileOGL {
   std::string mFragmentShaderString;
 
   // the vertex attributes
-  nsTArray<std::pair<nsCString, GLuint>> mAttributes;
+  CopyableTArray<std::pair<nsCString, GLuint>> mAttributes;
 
   KnownUniform mUniforms[KnownUniform::KnownUniformCount];
-  nsTArray<const char*> mDefines;
+  CopyableTArray<const char*> mDefines;
   size_t mTextureCount;
 
   ProgramProfileOGL() : mTextureCount(0) {}

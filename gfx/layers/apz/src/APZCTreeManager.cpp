@@ -2063,7 +2063,8 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
       result.mStatus = mInputQueue->ReceiveInputEvent(
           mApzcForInputBlock, TargetConfirmationFlags{mHitResultForInputBlock},
           aInput, &result.mInputBlockId,
-          touchBehaviors.IsEmpty() ? Nothing() : Some(touchBehaviors));
+          touchBehaviors.IsEmpty() ? Nothing()
+                                   : Some(std::move(touchBehaviors)));
       result.mHitRegionWithApzAwareListeners =
           MayHaveApzAwareListeners(mHitResultForInputBlock);
 

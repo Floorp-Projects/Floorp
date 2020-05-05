@@ -772,7 +772,7 @@ DisplayportSetListener::DisplayportSetListener(
     : mWidget(aWidget),
       mPresShell(aPresShell),
       mInputBlockId(aInputBlockId),
-      mTargets(aTargets) {}
+      mTargets(aTargets.Clone()) {}
 
 DisplayportSetListener::~DisplayportSetListener() = default;
 

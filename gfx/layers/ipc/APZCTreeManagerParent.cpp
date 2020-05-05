@@ -78,7 +78,8 @@ mozilla::ipc::IPCResult APZCTreeManagerParent::RecvSetTargetAPZC(
       NewRunnableMethod<uint64_t,
                         StoreCopyPassByRRef<nsTArray<ScrollableLayerGuid>>>(
           "layers::IAPZCTreeManager::SetTargetAPZC", mTreeManager,
-          &IAPZCTreeManager::SetTargetAPZC, aInputBlockId, aTargets));
+          &IAPZCTreeManager::SetTargetAPZC, aInputBlockId,
+          std::move(aTargets)));
 
   return IPC_OK();
 }
