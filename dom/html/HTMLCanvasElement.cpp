@@ -563,7 +563,7 @@ void HTMLCanvasElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
         return;
       }
       nsPoint ptInRoot =
-          nsLayoutUtils::GetEventCoordinatesRelativeTo(evt, frame);
+          nsLayoutUtils::GetEventCoordinatesRelativeTo(evt, RelativeTo{frame});
       nsRect paddingRect = frame->GetContentRectRelativeToSelf();
       Point hitpoint;
       hitpoint.x = (ptInRoot.x - paddingRect.x) / AppUnitsPerCSSPixel();

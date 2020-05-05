@@ -566,7 +566,7 @@ static bool PrepareForSetTargetAPZCNotification(
     nsTArray<ScrollableLayerGuid>* aTargets) {
   ScrollableLayerGuid guid(aLayersId, 0, ScrollableLayerGuid::NULL_SCROLL_ID);
   nsPoint point = nsLayoutUtils::GetEventCoordinatesRelativeTo(
-      aWidget, aRefPoint, aRootFrame);
+      aWidget, aRefPoint, RelativeTo{aRootFrame, ViewportType::Visual});
   nsIFrame* target = nsLayoutUtils::GetFrameForPoint(aRootFrame, point);
   nsIScrollableFrame* scrollAncestor =
       target ? nsLayoutUtils::GetAsyncScrollableAncestorFrame(target)
@@ -772,7 +772,8 @@ void APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
       nsTArray<TouchBehaviorFlags> flags;
       for (uint32_t i = 0; i < aEvent.mTouches.Length(); i++) {
         flags.AppendElement(TouchActionHelper::GetAllowedTouchBehavior(
-            aWidget, rootFrame, aEvent.mTouches[i]->mRefPoint));
+            aWidget, RelativeTo{rootFrame, ViewportType::Visual},
+            aEvent.mTouches[i]->mRefPoint));
       }
       aCallback(aInputBlockId, std::move(flags));
     }

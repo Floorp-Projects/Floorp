@@ -118,9 +118,10 @@ nsIFrame* TouchManager::SetupTarget(WidgetTouchEvent* aEvent,
     int32_t id = touch->Identifier();
     if (!TouchManager::HasCapturedTouch(id)) {
       // find the target for this touch
+      RelativeTo relativeTo{aFrame};
       nsPoint eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(
-          aEvent, touch->mRefPoint, aFrame);
-      target = FindFrameTargetedByInputEvent(aEvent, aFrame, eventPoint);
+          aEvent, touch->mRefPoint, relativeTo);
+      target = FindFrameTargetedByInputEvent(aEvent, relativeTo, eventPoint);
       if (target) {
         nsCOMPtr<nsIContent> targetContent;
         target->GetContentForEvent(aEvent, getter_AddRefs(targetContent));

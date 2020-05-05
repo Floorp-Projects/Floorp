@@ -181,7 +181,8 @@ nsIntPoint UIEvent::GetLayerPoint() const {
   nsIFrame* targetFrame = mPresContext->EventStateManager()->GetEventTarget();
   if (!targetFrame) return mLayerPoint;
   nsIFrame* layer = nsLayoutUtils::GetClosestLayer(targetFrame);
-  nsPoint pt(nsLayoutUtils::GetEventCoordinatesRelativeTo(mEvent, layer));
+  nsPoint pt(
+      nsLayoutUtils::GetEventCoordinatesRelativeTo(mEvent, RelativeTo{layer}));
   return nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(pt.x),
                     nsPresContext::AppUnitsToIntCSSPixels(pt.y));
 }

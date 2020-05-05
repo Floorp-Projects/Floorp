@@ -612,8 +612,8 @@ CSSIntPoint Event::GetClientCoords(nsPresContext* aPresContext,
   if (!rootFrame) {
     return CSSIntPoint(0, 0);
   }
-  nsPoint pt =
-      nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, aPoint, rootFrame);
+  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(
+      aEvent, aPoint, RelativeTo{rootFrame});
 
   return CSSIntPoint::FromAppUnitsRounded(pt);
 }
@@ -646,8 +646,8 @@ CSSIntPoint Event::GetOffsetCoords(nsPresContext* aPresContext,
   CSSIntPoint clientCoords =
       GetClientCoords(aPresContext, aEvent, aPoint, aDefaultPoint);
   nsPoint pt = CSSPixel::ToAppUnits(clientCoords);
-  if (nsLayoutUtils::TransformPoint(rootFrame, frame, pt) ==
-      nsLayoutUtils::TRANSFORM_SUCCEEDED) {
+  if (nsLayoutUtils::TransformPoint(RelativeTo{rootFrame}, RelativeTo{frame},
+                                    pt) == nsLayoutUtils::TRANSFORM_SUCCEEDED) {
     pt -= frame->GetPaddingRectRelativeToSelf().TopLeft();
     return CSSPixel::FromAppUnitsRounded(pt);
   }

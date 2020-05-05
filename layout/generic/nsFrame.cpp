@@ -27,6 +27,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/ToString.h"
+#include "mozilla/ViewportUtils.h"
 
 #include "nsCOMPtr.h"
 #include "nsFlexContainerFrame.h"
@@ -4734,7 +4735,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
         // coordinate stuff is the fix for bug #55921
         if ((mRect - GetPosition())
                 .Contains(nsLayoutUtils::GetEventCoordinatesRelativeTo(
-                    mouseEvent, this))) {
+                    mouseEvent, RelativeTo{this}))) {
           return NS_OK;
         }
       }
@@ -4795,7 +4796,8 @@ nsFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
     return HandleMultiplePress(aPresContext, mouseEvent, aEventStatus, control);
   }
 
-  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mouseEvent, this);
+  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mouseEvent,
+                                                            RelativeTo{this});
   ContentOffsets offsets = GetContentOffsetsFromPoint(pt, SKIP_HIDDEN);
 
   if (!offsets.content) return NS_ERROR_FAILURE;
@@ -4976,8 +4978,8 @@ nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  nsPoint relPoint =
-      nsLayoutUtils::GetEventCoordinatesRelativeTo(mouseEvent, this);
+  nsPoint relPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(
+      mouseEvent, RelativeTo{this});
   return SelectByTypeAtPoint(aPresContext, relPoint, beginAmount, endAmount,
                              (aControlHeld ? SELECT_ACCUMULATE : 0));
 }
@@ -5090,7 +5092,8 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
       return result;
     }
   } else {
-    nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mouseEvent, this);
+    nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mouseEvent,
+                                                              RelativeTo{this});
     frameselection->HandleDrag(this, pt);
   }
 
@@ -5108,8 +5111,8 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   if (scrollFrame) {
     nsIFrame* capturingFrame = scrollFrame->GetScrolledFrame();
     if (capturingFrame) {
-      nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mouseEvent,
-                                                                capturingFrame);
+      nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(
+          mouseEvent, RelativeTo{capturingFrame});
       frameselection->StartAutoScrollTimer(capturingFrame, pt, 30);
     }
   }
@@ -5213,7 +5216,8 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
       // Place the caret before continuing!
 
       if (frameselection->MouseDownRecorded()) {
-        nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
+        nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(
+            aEvent, RelativeTo{this});
         offsets = GetContentOffsetsFromPoint(pt, SKIP_HIDDEN);
         handleTableSelection = false;
       } else {
@@ -5687,8 +5691,8 @@ nsIFrame::ContentOffsets nsIFrame::GetContentOffsetsFromPoint(
   nsPoint pt;
   if (closest.frame != this) {
     if (nsSVGUtils::IsInSVGTextSubtree(closest.frame)) {
-      pt = nsLayoutUtils::TransformAncestorPointToFrame(closest.frame, aPoint,
-                                                        this);
+      pt = nsLayoutUtils::TransformAncestorPointToFrame(
+          RelativeTo{closest.frame}, aPoint, RelativeTo{this});
     } else {
       pt = aPoint - closest.frame->GetOffsetTo(this);
     }
@@ -7303,7 +7307,8 @@ Matrix4x4Flagged nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
 
         *aOutAncestor = docRootFrame;
         Matrix4x4 docRootTransformToTop =
-            nsLayoutUtils::GetTransformToAncestor(docRootFrame, nullptr)
+            nsLayoutUtils::GetTransformToAncestor(RelativeTo{docRootFrame},
+                                                  RelativeTo{nullptr})
                 .GetMatrix();
         if (docRootTransformToTop.IsSingular()) {
           NS_WARNING(
