@@ -1,0 +1,10 @@
+[run]
+omit =
+    python/mozperftest/mozperftest/tests/*
+include =
+    python/mozperftest/*
+
+[report]
+sort = Cover
+show_missing = True
+fail_under = 75
