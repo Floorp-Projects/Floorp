@@ -72,7 +72,7 @@ class EnumerateFontsResult final : public Runnable {
       : Runnable("EnumerateFontsResult"),
         mRv(aRv),
         mEnumerateFontsPromise(std::move(aEnumerateFontsPromise)),
-        mFontList(aFontList),
+        mFontList(std::move(aFontList)),
         mWorkerThread(do_GetCurrentThread()) {
     MOZ_ASSERT(!NS_IsMainThread());
   }
