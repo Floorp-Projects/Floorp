@@ -36,13 +36,16 @@ add_task(async function test_profile_feature_ipcmessges() {
 
   info("Open a tab while profiling IPC messages.");
   startProfiler({ features: ["threads", "leaf", "ipcmessages"] });
+  info("Started the profiler sucessfully! Now, let's open a tab.");
 
   await BrowserTestUtils.withNewTab(url, async contentBrowser => {
+    info("We opened a tab!");
     const contentPid = await SpecialPowers.spawn(
       contentBrowser,
       [],
       () => Services.appinfo.processID
     );
+    info("Now let's wait until it's fully loaded.");
     await waitForLoad();
 
     info(
