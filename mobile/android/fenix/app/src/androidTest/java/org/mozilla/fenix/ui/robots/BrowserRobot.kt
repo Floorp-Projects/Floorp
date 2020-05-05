@@ -40,12 +40,6 @@ import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
 class BrowserRobot {
-
-    fun verifyBrowserScreen() {
-        onView(ViewMatchers.withResourceName("browserLayout"))
-            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    }
-
     fun verifyCurrentPrivateSession(context: Context) {
         val session = context.components.core.sessionManager.selectedSession
         assertTrue("Current session is private", session?.private!!)
@@ -79,6 +73,7 @@ class BrowserRobot {
     */
     fun verifyPageContent(expectedText: String) {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        mDevice.waitNotNull(Until.findObject(By.res("org.mozilla.fenix.debug:id/engineView")), waitingTime)
         mDevice.waitNotNull(Until.findObject(text(expectedText)), waitingTime)
     }
 
