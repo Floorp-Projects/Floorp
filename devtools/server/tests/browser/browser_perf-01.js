@@ -3,6 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+// This test is at the edge of timing out, probably because of LUL
+// initialization on Linux. This is also happening only once, which is why only
+// this test needs it: for other tests LUL is already initialized because
+// they're running in the same Firefox instance.
+// See also bug 1635442.
+requestLongerTimeout(2);
+
 /**
  * Run through a series of basic recording actions for the perf actor.
  */
