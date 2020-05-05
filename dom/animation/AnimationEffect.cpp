@@ -12,7 +12,6 @@
 #include "mozilla/dom/MutationObservers.h"
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/FloatingPoint.h"
-#include "nsDOMMutationObserver.h"
 
 namespace mozilla {
 namespace dom {
