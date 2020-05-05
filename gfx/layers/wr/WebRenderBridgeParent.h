@@ -469,8 +469,7 @@ class WebRenderBridgeParent final
                                     wr::TransactionBuilder& aTxnForImageBridge,
                                     const wr::RenderRoot& aRenderRoot);
   void RemovePipelineIdForCompositable(const wr::PipelineId& aPipelineId,
-                                       wr::TransactionBuilder& aTxn,
-                                       wr::RenderRoot aRenderRoot);
+                                       wr::TransactionBuilder& aTxn);
 
   void DeleteImage(const wr::ImageKey& aKey, wr::TransactionBuilder& aUpdates);
   void ReleaseTextureOfImage(const wr::ImageKey& aKey);
@@ -608,8 +607,7 @@ class WebRenderBridgeParent final
   // WebRenderBridgeParent is destroyed abnormally and Tab move between
   // different windows.
   std::unordered_map<uint64_t, wr::Epoch> mActiveAnimations;
-  wr::RenderRootArray<std::unordered_map<uint64_t, RefPtr<WebRenderImageHost>>>
-      mAsyncCompositables;
+  std::unordered_map<uint64_t, RefPtr<WebRenderImageHost>> mAsyncCompositables;
   std::unordered_map<uint64_t, CompositableTextureHostRef> mTextureHosts;
   std::unordered_map<uint64_t, wr::ExternalImageId> mSharedSurfaceIds;
 
