@@ -24,8 +24,8 @@ class CodeGeneratorNone : public CodeGeneratorShared {
   void bailoutCmp32(Assembler::Condition, T1, T2, LSnapshot*) {
     MOZ_CRASH();
   }
-  template <typename T>
-  void bailoutTest32(Assembler::Condition, Register, T, LSnapshot*) {
+  template <typename T1, typename T2>
+  void bailoutTest32(Assembler::Condition, T1, T2, LSnapshot*) {
     MOZ_CRASH();
   }
   template <typename T1, typename T2>
