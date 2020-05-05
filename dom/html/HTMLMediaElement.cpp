@@ -3486,13 +3486,17 @@ void HTMLMediaElement::UpdateOutputTrackSources() {
   }
 
   // Then work out the differences.
-  for (const auto& track :
-       AutoTArray<RefPtr<MediaTrack>, 4>(mediaTracksToAdd)) {
-    if (mOutputTrackSources.GetWeak(track->GetId())) {
-      mediaTracksToAdd.RemoveElement(track);
-      trackSourcesToRemove.RemoveElement(track->GetId());
-    }
-  }
+  mediaTracksToAdd.RemoveElementsAt(
+      std::remove_if(mediaTracksToAdd.begin(), mediaTracksToAdd.end(),
+                     [this, &trackSourcesToRemove](const auto& track) {
+                       const bool remove =
+                           mOutputTrackSources.GetWeak(track->GetId());
+                       if (remove) {
+                         trackSourcesToRemove.RemoveElement(track->GetId());
+                       }
+                       return remove;
+                     }),
+      mediaTracksToAdd.end());
 
   // First remove stale track sources.
   for (const auto& id : trackSourcesToRemove) {
