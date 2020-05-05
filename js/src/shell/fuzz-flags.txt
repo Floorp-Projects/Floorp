@@ -75,7 +75,9 @@
 --enable-avx
 --no-avx
 --no-sse3
---no-sse4
+--no-ssse3
+--no-sse41
+--no-sse42
 
 # arm specific, no-ops on other platforms.
 --arm-sim-icache-checks
