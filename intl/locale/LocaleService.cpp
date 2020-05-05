@@ -169,7 +169,7 @@ void LocaleService::AssignAppLocales(const nsTArray<nsCString>& aAppLocales) {
   MOZ_ASSERT(!mIsServer,
              "This should only be called for LocaleService in client mode.");
 
-  mAppLocales = aAppLocales;
+  mAppLocales = aAppLocales.Clone();
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->NotifyObservers(nullptr, "intl:app-locales-changed", nullptr);
@@ -181,7 +181,7 @@ void LocaleService::AssignRequestedLocales(
   MOZ_ASSERT(!mIsServer,
              "This should only be called for LocaleService in client mode.");
 
-  mRequestedLocales = aRequestedLocales;
+  mRequestedLocales = aRequestedLocales.Clone();
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->NotifyObservers(nullptr, "intl:requested-locales-changed", nullptr);
@@ -416,7 +416,7 @@ LocaleService::GetAppLocalesAsBCP47(nsTArray<nsCString>& aRetVal) {
   if (mAppLocales.IsEmpty()) {
     NegotiateAppLocales(mAppLocales);
   }
-  aRetVal = mAppLocales;
+  aRetVal = mAppLocales.Clone();
 
   return NS_OK;
 }
@@ -474,7 +474,7 @@ LocaleService::GetRegionalPrefsLocales(nsTArray<nsCString>& aRetVal) {
   }
 
   if (LocaleService::LanguagesMatch(appLocale, regionalPrefsLocales[0])) {
-    aRetVal = regionalPrefsLocales;
+    aRetVal = regionalPrefsLocales.Clone();
     return NS_OK;
   }
 
@@ -491,7 +491,7 @@ LocaleService::GetWebExposedLocales(nsTArray<nsCString>& aRetVal) {
   }
 
   if (!mWebExposedLocales.IsEmpty()) {
-    aRetVal = mWebExposedLocales;
+    aRetVal = mWebExposedLocales.Clone();
     return NS_OK;
   }
 
@@ -542,7 +542,7 @@ LocaleService::GetRequestedLocales(nsTArray<nsCString>& aRetVal) {
     ReadRequestedLocales(mRequestedLocales);
   }
 
-  aRetVal = mRequestedLocales;
+  aRetVal = mRequestedLocales.Clone();
   return NS_OK;
 }
 
@@ -599,7 +599,7 @@ LocaleService::GetAvailableLocales(nsTArray<nsCString>& aRetVal) {
     GetPackagedLocales(mAvailableLocales);
   }
 
-  aRetVal = mAvailableLocales;
+  aRetVal = mAvailableLocales.Clone();
   return NS_OK;
 }
 
@@ -640,6 +640,6 @@ LocaleService::GetPackagedLocales(nsTArray<nsCString>& aRetVal) {
   if (mPackagedLocales.IsEmpty()) {
     InitPackagedLocales();
   }
-  aRetVal = mPackagedLocales;
+  aRetVal = mPackagedLocales.Clone();
   return NS_OK;
 }
