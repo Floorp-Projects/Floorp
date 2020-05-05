@@ -559,6 +559,16 @@ CUBEB_EXPORT int cubeb_stream_get_position(cubeb_stream * stream, uint64_t * pos
     @retval CUBEB_ERROR */
 CUBEB_EXPORT int cubeb_stream_get_latency(cubeb_stream * stream, uint32_t * latency);
 
+/** Get the input latency for this stream, in frames. This is the number of
+    frames between the time the audio input devices records the data, and they
+    are available in the data callback.
+    This returns CUBEB_ERROR when the stream is output-only.
+    @param stream
+    @param latency Current approximate stream latency in frames.
+    @retval CUBEB_OK
+    @retval CUBEB_ERROR_NOT_SUPPORTED
+    @retval CUBEB_ERROR */
+CUBEB_EXPORT int cubeb_stream_get_input_latency(cubeb_stream * stream, uint32_t * latency);
 /** Set the volume for a stream.
     @param stream the stream for which to adjust the volume.
     @param volume a float between 0.0 (muted) and 1.0 (maximum volume)

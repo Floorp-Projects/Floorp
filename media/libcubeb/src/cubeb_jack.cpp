@@ -132,6 +132,7 @@ static struct cubeb_ops const cbjack_ops = {
   .stream_reset_default_device = NULL,
   .stream_get_position = cbjack_stream_get_position,
   .stream_get_latency = cbjack_get_latency,
+  .stream_get_input_latency = NULL,
   .stream_set_volume = cbjack_stream_set_volume,
   .stream_get_current_device = cbjack_stream_get_current_device,
   .stream_device_destroy = cbjack_stream_device_destroy,
