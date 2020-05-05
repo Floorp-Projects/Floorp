@@ -448,21 +448,6 @@ def possible_makes(make, host):
 
 check_prog('GMAKE', possible_makes)
 
-@depends(build_backends, build_project)
-def tup_include(build_backends, build_project):
-    # We need to check the rustc version when building with tup, but
-    # rustc_info isn't available when configuring js (and build_backends isn't
-    # available from project-specific configure), so as a workaround we only
-    # include the file when we know we'll need it. This can be removed when
-    # we globally require a rustc recent enough to build with tup.
-    if build_project not in ('browser', 'mobile/android'):
-        return None
-    for backend in build_backends:
-        if 'Tup' in backend:
-            return 'build/moz.configure/tup.configure'
-
-include(tup_include)
-
 # watchman detection
 # ==============================================================
 

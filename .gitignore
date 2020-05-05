@@ -158,9 +158,6 @@ tps_result.json
 # Ignore files created when running a reftest.
 lextab.py
 
-# tup database
-/.tup
-
 # Ignore Visual Studio Code workspace files.
 .vscode/
 !.vscode/extensions.json

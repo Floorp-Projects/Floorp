@@ -133,16 +133,14 @@ no-op build is spent in make traversal.
 make is inefficient
 ===================
 
-Compared to modern build backends like Tup or Ninja, make is slow and
-inefficient. We can only make make so fast. At some point, we'll hit a
+Compared to modern build backends like Tup or Ninja, `make` is slow and
+inefficient. We can only make `make` so fast. At some point, we'll hit a
 performance plateau and will need to use a different tool to make builds
 faster.
 
-Please note that clobber and incremental builds are different. A clobber
-build with make will likely be as fast as a clobber build with e.g. Tup.
-However, Tup should vastly outperform make when it comes to incremental
-builds. Therefore, this issue is mostly seen when performing incremental
-builds. For more information, see :ref:`tup`.
+Please note that clobber and incremental builds are different. A clobber build
+with `make` will likely be as fast as a clobber build with a modern build
+system.
 
 C++ header dependency hell
 ==========================
