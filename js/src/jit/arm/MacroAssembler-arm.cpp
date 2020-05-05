@@ -4053,6 +4053,13 @@ void MacroAssembler::PushRegsInMask(LiveRegisterSet set) {
   }
   MOZ_ASSERT(diffG == 0);
 
+  // It's possible that the logic is just fine as it is if the reduced set
+  // maps SIMD pairs to plain doubles and transferMultipleByRuns() stores
+  // and loads doubles.
+#ifdef ENABLE_WASM_SIMD
+#  error "Needs more careful logic if SIMD is enabled"
+#endif
+
   adjustFrame(diffF);
   diffF += transferMultipleByRuns(set.fpus(), IsStore, StackPointer, DB);
   MOZ_ASSERT(diffF == 0);
@@ -4086,6 +4093,11 @@ void MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest,
   }
   MOZ_ASSERT(diffG == 0);
 
+  // See above.
+#ifdef ENABLE_WASM_SIMD
+#  error "Needs more careful logic if SIMD is enabled"
+#endif
+
   if (diffF > 0) {
     computeEffectiveAddress(dest, scratch);
     diffF += transferMultipleByRuns(set.fpus(), IsStore, scratch, DB);
@@ -4100,6 +4112,11 @@ void MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set,
   int32_t diffF = set.fpus().getPushSizeInBytes();
   const int32_t reservedG = diffG;
   const int32_t reservedF = diffF;
+
+  // See above.
+#ifdef ENABLE_WASM_SIMD
+#  error "Needs more careful logic if SIMD is enabled"
+#endif
 
   // ARM can load multiple registers at once, but only if we want back all
   // the registers we previously saved to the stack.

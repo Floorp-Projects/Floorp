@@ -52,6 +52,10 @@ FloatRegister FloatRegister::doubleOverlay() const {
 }
 
 FloatRegisterSet FloatRegister::ReduceSetForPush(const FloatRegisterSet& s) {
+#ifdef ENABLE_WASM_SIMD
+#  error "Needs more careful logic if SIMD is enabled"
+#endif
+
   LiveFloatRegisterSet mod;
   for (FloatRegisterIterator iter(s); iter.more(); ++iter) {
     if ((*iter).isSingle()) {
@@ -65,6 +69,10 @@ FloatRegisterSet FloatRegister::ReduceSetForPush(const FloatRegisterSet& s) {
 }
 
 uint32_t FloatRegister::GetPushSizeInBytes(const FloatRegisterSet& s) {
+#ifdef ENABLE_WASM_SIMD
+#  error "Needs more careful logic if SIMD is enabled"
+#endif
+
   FloatRegisterSet ss = s.reduceSetForPush();
   uint64_t bits = ss.bits();
   // We are only pushing double registers.

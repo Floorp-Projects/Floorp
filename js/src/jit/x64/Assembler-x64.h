@@ -249,11 +249,6 @@ static_assert(JitStackAlignment % sizeof(Value) == 0 &&
                   JitStackValueAlignment >= 1,
               "Stack alignment should be a non-zero multiple of sizeof(Value)");
 
-// This boolean indicates whether we support SIMD instructions flavoured for
-// this architecture or not. Rather than a method in the LIRGenerator, it is
-// here such that it is accessible from the entire codebase. Once full support
-// for SIMD is reached on all tier-1 platforms, this constant can be deleted.
-static constexpr bool SupportsSimd = false;
 static constexpr uint32_t SimdMemoryAlignment = 16;
 
 static_assert(CodeAlignment % SimdMemoryAlignment == 0,

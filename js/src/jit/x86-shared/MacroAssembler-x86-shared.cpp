@@ -386,7 +386,7 @@ void MacroAssembler::PushRegsInMask(LiveRegisterSet set) {
   }
   MOZ_ASSERT(numFpu == 0);
   // x64 padding to keep the stack aligned on uintptr_t. Keep in sync with
-  // GetPushBytesInSize.
+  // GetPushSizeInBytes.
   diffF -= diffF % sizeof(uintptr_t);
   MOZ_ASSERT(diffF == 0);
 }

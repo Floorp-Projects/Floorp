@@ -398,6 +398,10 @@ FloatRegisters::Code FloatRegisters::FromName(const char* name) {
 }
 
 FloatRegisterSet VFPRegister::ReduceSetForPush(const FloatRegisterSet& s) {
+#ifdef ENABLE_WASM_SIMD
+#  error "Needs more careful logic if SIMD is enabled"
+#endif
+
   LiveFloatRegisterSet mod;
   for (FloatRegisterIterator iter(s); iter.more(); ++iter) {
     if ((*iter).isSingle()) {
@@ -416,6 +420,10 @@ FloatRegisterSet VFPRegister::ReduceSetForPush(const FloatRegisterSet& s) {
 }
 
 uint32_t VFPRegister::GetPushSizeInBytes(const FloatRegisterSet& s) {
+#ifdef ENABLE_WASM_SIMD
+#  error "Needs more careful logic if SIMD is enabled"
+#endif
+
   FloatRegisterSet ss = s.reduceSetForPush();
   uint64_t bits = ss.bits();
   uint32_t ret = mozilla::CountPopulation32(bits & 0xffffffff) * sizeof(float);
@@ -423,6 +431,10 @@ uint32_t VFPRegister::GetPushSizeInBytes(const FloatRegisterSet& s) {
   return ret;
 }
 uint32_t VFPRegister::getRegisterDumpOffsetInBytes() {
+#ifdef ENABLE_WASM_SIMD
+#  error "Needs more careful logic if SIMD is enabled"
+#endif
+
   if (isSingle()) {
     return id() * sizeof(float);
   }

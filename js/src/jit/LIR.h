@@ -500,7 +500,9 @@ class LDefinition {
     static_assert(MAX_VIRTUAL_REGISTERS <= VREG_MASK);
     bits_ =
         (index << VREG_SHIFT) | (policy << POLICY_SHIFT) | (type << TYPE_SHIFT);
-    MOZ_ASSERT_IF(!SupportsSimd, !isSimdType());
+#ifndef ENABLE_WASM_SIMD
+    MOZ_ASSERT(!isSimdType());
+#endif
   }
 
  public:

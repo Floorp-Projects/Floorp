@@ -2174,6 +2174,9 @@ MachineState MachineState::FromBailout(RegisterDump::GPRArray& regs,
   for (unsigned i = 0; i < FloatRegisters::TotalSingle; i++) {
     machine.setRegisterLocation(FloatRegister(i, FloatRegister::Single),
                                 (double*)&fbase[i]);
+#  ifdef ENABLE_WASM_SIMD
+#    error "More care needed here"
+#  endif
   }
 #elif defined(JS_CODEGEN_MIPS32)
   for (unsigned i = 0; i < FloatRegisters::TotalPhys; i++) {
@@ -2181,6 +2184,9 @@ MachineState MachineState::FromBailout(RegisterDump::GPRArray& regs,
         FloatRegister::FromIndex(i, FloatRegister::Double), &fpregs[i]);
     machine.setRegisterLocation(
         FloatRegister::FromIndex(i, FloatRegister::Single), &fpregs[i]);
+#  ifdef ENABLE_WASM_SIMD
+#    error "More care needed here"
+#  endif
   }
 #elif defined(JS_CODEGEN_MIPS64)
   for (unsigned i = 0; i < FloatRegisters::TotalPhys; i++) {
@@ -2188,6 +2194,9 @@ MachineState MachineState::FromBailout(RegisterDump::GPRArray& regs,
                                 &fpregs[i]);
     machine.setRegisterLocation(FloatRegister(i, FloatRegisters::Single),
                                 &fpregs[i]);
+#  ifdef ENABLE_WASM_SIMD
+#    error "More care needed here"
+#  endif
   }
 #elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
   for (unsigned i = 0; i < FloatRegisters::TotalPhys; i++) {
@@ -2206,6 +2215,9 @@ MachineState MachineState::FromBailout(RegisterDump::GPRArray& regs,
     machine.setRegisterLocation(
         FloatRegister(FloatRegisters::Encoding(i), FloatRegisters::Double),
         &fpregs[i]);
+#  ifdef ENABLE_WASM_SIMD
+#    error "More care needed here"
+#  endif
   }
 
 #elif defined(JS_CODEGEN_NONE)

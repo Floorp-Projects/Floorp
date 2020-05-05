@@ -120,12 +120,6 @@ static constexpr Register RegExpTesterLastIndexReg = CallTempReg2;
 
 static constexpr uint32_t CodeAlignment = 8;
 
-// This boolean indicates whether we support SIMD instructions flavoured for
-// this architecture or not. Rather than a method in the LIRGenerator, it is
-// here such that it is accessible from the entire codebase. Once full support
-// for SIMD is reached on all tier-1 platforms, this constant can be deleted.
-static constexpr bool SupportsSimd = false;
-
 /* clang-format off */
 // MIPS instruction types
 //                +---------------------------------------------------------------+
@@ -1237,7 +1231,6 @@ class AssemblerMIPSShared : public AssemblerShared {
   }
   static bool SupportsUnalignedAccesses() { return true; }
   static bool SupportsFastUnalignedAccesses() { return false; }
-  static bool SupportsSimd() { return js::jit::SupportsSimd; }
 
   static bool HasRoundInstruction(RoundingMode mode) { return false; }
 

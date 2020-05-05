@@ -298,6 +298,9 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
       .setWasmMultiValue(
           GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_multi_value")))
 #endif
+#ifdef ENABLE_WASM_SIMD
+      .setWasmSimd(GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_simd")))
+#endif
 #ifdef ENABLE_WASM_REFTYPES
       .setWasmGc(GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_gc")))
 #endif

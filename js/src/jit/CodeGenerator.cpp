@@ -139,10 +139,8 @@ class StoreOp {
       masm.storeDouble(reg, dump);
     } else if (reg.isSingle()) {
       masm.storeFloat32(reg, dump);
-#  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     } else if (reg.isSimd128()) {
-      masm.storeUnalignedSimd128Float(reg, dump);
-#  endif
+      MOZ_CRASH("Unexpected case for SIMD");
     } else {
       MOZ_CRASH("Unexpected register type.");
     }
@@ -169,9 +167,11 @@ class VerifyOp {
       ScratchFloat32Scope scratch(masm);
       masm.loadFloat32(dump, scratch);
       masm.branchFloat(Assembler::DoubleNotEqual, scratch, reg, failure_);
+    } else if (reg.isSimd128()) {
+      MOZ_CRASH("Unexpected case for SIMD");
+    } else {
+      MOZ_CRASH("Unexpected register type.");
     }
-
-    // :TODO: (Bug 1133745) Add support to verify SIMD registers.
   }
 };
 

@@ -188,15 +188,6 @@ static constexpr uint32_t SimdMemoryAlignment = 16;
 static constexpr uint32_t WasmStackAlignment = SimdMemoryAlignment;
 static const uint32_t WasmTrapInstructionLength = 4;
 
-// Does this architecture support SIMD conversions between Uint32x4 and
-// Float32x4?
-static constexpr bool SupportsUint32x4FloatConversions = false;
-
-// Does this architecture support comparisons of unsigned integer vectors?
-static constexpr bool SupportsUint8x16Compares = false;
-static constexpr bool SupportsUint16x8Compares = false;
-static constexpr bool SupportsUint32x4Compares = false;
-
 static constexpr Scale ScalePointer = TimesEight;
 
 class Assembler : public AssemblerMIPSShared {
