@@ -356,10 +356,27 @@ void TestMakeNotNull() {
   mozilla::Unused << nnr;
 }
 
+mozilla::MovingNotNull<UniquePtr<int>> CreateNotNullUniquePtr() {
+  return mozilla::WrapMovingNotNull(mozilla::MakeUnique<int>(42));
+}
+
+void TestMovingNotNull() {
+  UniquePtr<int> x1 = CreateNotNullUniquePtr();
+  CHECK(x1);
+  CHECK(42 == *x1);
+
+  NotNull<UniquePtr<int>> x2 = CreateNotNullUniquePtr();
+  CHECK(42 == *x2);
+
+  // Must not compile:
+  // auto y = CreateNotNullUniquePtr();
+}
+
 int main() {
   TestNotNullWithMyPtr();
   TestNotNullWithRefPtr();
   TestMakeNotNull();
+  TestMovingNotNull();
 
   return 0;
 }
