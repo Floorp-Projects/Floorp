@@ -2701,6 +2701,9 @@ class AttrDefiner(PropertyDefiner):
         self.regular = [m for m in attributes if not isChromeOnly(m["attr"])]
         self.static = static
 
+        if not static and not unforgeable and descriptor.interface.hasInterfacePrototypeObject():
+            self.regular.append({"name": "@@toStringTag", "attr": None, "flags": "JSPROP_READONLY"})
+
         if static:
             if not descriptor.interface.hasInterfaceObject():
                 # static attributes go on the interface object
@@ -2721,10 +2724,15 @@ class AttrDefiner(PropertyDefiner):
 
     @staticmethod
     def condition(m, d):
+        if m["name"] == "@@toStringTag":
+            return MemberCondition()
         return PropertyDefiner.getControllingCondition(m["attr"], d)
 
     @staticmethod
     def specData(entry, descriptor, static=False, crossOriginOnly=False):
+        if entry["name"] == "@@toStringTag":
+            return (entry["name"], entry["flags"], descriptor.interface.getClassName())
+
         def getter(attr):
             if crossOriginOnly and not attr.getExtendedAttribute("CrossOriginReadable"):
                 return "nullptr, nullptr"
@@ -2811,6 +2819,9 @@ class AttrDefiner(PropertyDefiner):
 
     @staticmethod
     def formatSpec(fields):
+        if fields[0] == "@@toStringTag":
+            return '  JS_STRING_SYM_PS(%s, "%s", %s)' % (fields[0][2:], fields[2], fields[1])
+
         return '  JSPropertySpec::nativeAccessors("%s", %s, %s, %s)' % fields
 
     def generateArray(self, array, name):
@@ -3224,19 +3235,12 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         else:
             chromeProperties = "nullptr"
 
-        toStringTag = self.descriptor.interface.toStringTag
-        if toStringTag:
-            toStringTag = '"%s"' % toStringTag
-        else:
-            toStringTag = "nullptr"
-
         call = fill(
             """
             JS::Heap<JSObject*>* protoCache = ${protoCache};
             JS::Heap<JSObject*>* interfaceCache = ${interfaceCache};
             dom::CreateInterfaceObjects(aCx, aGlobal, ${parentProto},
                                         ${protoClass}, protoCache,
-                                        ${toStringTag},
                                         ${constructorProto}, ${interfaceClass}, ${constructArgs}, ${namedConstructors},
                                         interfaceCache,
                                         ${properties},
@@ -3249,7 +3253,6 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             protoClass=protoClass,
             parentProto=parentProto,
             protoCache=protoCache,
-            toStringTag=toStringTag,
             constructorProto=constructorProto,
             interfaceClass=interfaceClass,
             constructArgs=constructArgs,

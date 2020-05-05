@@ -29,14 +29,14 @@ function getNewWindow() {
 var win = getNewWindow();
 is(Object.getPrototypeOf(win.screen), win.Screen.prototype,
    "protos must match (1)");
-is(win.Screen.prototype.toString(), "[object ScreenPrototype]",
+is(win.Screen.prototype.toString(), "[object Screen]",
    "proto must be WebIDL (1)");
 
 // Test getting Screen before .screen
 var win = getNewWindow();
 is(win.Screen.prototype, Object.getPrototypeOf(win.screen),
    "protos must match (2)");
-is(win.Screen.prototype.toString(), "[object ScreenPrototype]",
+is(win.Screen.prototype.toString(), "[object Screen]",
    "proto must be WebIDL (2)");
 
 </script>
