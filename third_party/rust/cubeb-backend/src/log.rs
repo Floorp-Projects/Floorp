@@ -37,7 +37,7 @@ macro_rules! cubeb_log_internal {
             let _ = write!(&mut buf[..], "{}:{}: {}\n", filename, line!(), $msg);
             let last = std::cmp::min(len, buf.len() - 1);
             buf[last] = 0;
-            let cstr = unsafe { std::ffi::CStr::from_bytes_with_nul_unchecked(&buf[..last + 1]) };
+            let cstr = unsafe { std::ffi::CStr::from_bytes_with_nul_unchecked(&buf[..=last]) };
             log_callback(cstr.as_ptr());
         }
     }

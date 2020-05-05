@@ -344,6 +344,10 @@ extern "C" fn audiounit_input_callback(
     assert!(!user_ptr.is_null());
     let stm = unsafe { &mut *(user_ptr as *mut AudioUnitStream) };
 
+    let input_latency_frames = compute_input_latency(&stm, unsafe { (*tstamp).mHostTime });
+    stm.total_input_latency_frames
+        .store(input_latency_frames, Ordering::SeqCst);
+
     if stm.shutdown.load(Ordering::SeqCst) {
         cubeb_log!("({:p}) input shutdown", stm as *const AudioUnitStream);
         return NO_ERR;
@@ -501,7 +505,24 @@ fn compute_output_latency(stm: &AudioUnitStream, host_time: u64) -> u32 {
     // the hardware latency.
     let out_hw_rate = stm.core_stream_data.output_hw_rate as u64;
     (output_latency_ns * out_hw_rate / NS2S
-        + stm.current_latency_frames.load(Ordering::SeqCst) as u64) as u32
+        + stm.current_output_latency_frames.load(Ordering::SeqCst) as u64) as u32
+}
+
+fn compute_input_latency(stm: &AudioUnitStream, host_time: u64) -> u32 {
+    let now = host_time_to_ns(unsafe { mach_absolute_time() });
+    let audio_input_time = host_time_to_ns(host_time);
+    let input_latency_ns = if audio_input_time > now {
+        0
+    } else {
+        now - audio_input_time
+    };
+
+    const NS2S: u64 = 1_000_000_000;
+    // The total input latency is the timestamp difference + the stream latency +
+    // the hardware latency.
+    let input_hw_rate = stm.core_stream_data.input_hw_rate as u64;
+    (input_latency_ns * input_hw_rate / NS2S
+        + stm.current_input_latency_frames.load(Ordering::SeqCst) as u64) as u32
 }
 
 extern "C" fn audiounit_output_callback(
@@ -1337,7 +1358,7 @@ fn get_range_of_sample_rates(
     Ok((min, max))
 }
 
-fn get_presentation_latency(devid: AudioObjectID, devtype: DeviceType) -> u32 {
+fn get_fixed_latency(devid: AudioObjectID, devtype: DeviceType) -> u32 {
     let device_latency = match get_device_latency(devid, devtype) {
         Ok(latency) => latency,
         Err(e) => {
@@ -1587,7 +1608,7 @@ fn create_cubeb_device_info(
         }
     }
 
-    let latency = get_presentation_latency(devid, devtype);
+    let latency = get_fixed_latency(devid, devtype);
 
     let (latency_low, latency_high) = match get_device_buffer_frame_size_range(devid, devtype) {
         Ok(range) => (
@@ -2813,6 +2834,11 @@ impl<'ctx> CoreStreamData<'ctx> {
                 cubeb_log!("AudioUnitInitialize/input rv={}", r);
                 return Err(Error::error());
             }
+
+            stream.current_input_latency_frames.store(
+                get_fixed_latency(self.input_device.id, DeviceType::INPUT),
+                Ordering::SeqCst,
+            );
         }
 
         if !self.output_unit.is_null() {
@@ -2822,8 +2848,8 @@ impl<'ctx> CoreStreamData<'ctx> {
                 return Err(Error::error());
             }
 
-            stream.current_latency_frames.store(
-                get_presentation_latency(self.output_device.id, DeviceType::OUTPUT),
+            stream.current_output_latency_frames.store(
+                get_fixed_latency(self.output_device.id, DeviceType::OUTPUT),
                 Ordering::SeqCst,
             );
 
@@ -2838,7 +2864,7 @@ impl<'ctx> CoreStreamData<'ctx> {
                 &mut size,
             ) == NO_ERR
             {
-                stream.current_latency_frames.fetch_add(
+                stream.current_output_latency_frames.fetch_add(
                     (unit_s * self.output_desc.mSampleRate) as u32,
                     Ordering::SeqCst,
                 );
@@ -3115,8 +3141,10 @@ struct AudioUnitStream<'ctx> {
     destroy_pending: AtomicBool,
     // Latency requested by the user.
     latency_frames: u32,
-    current_latency_frames: AtomicU32,
+    current_output_latency_frames: AtomicU32,
+    current_input_latency_frames: AtomicU32,
     total_output_latency_frames: AtomicU32,
+    total_input_latency_frames: AtomicU32,
     // This is true if a device change callback is currently running.
     switching_device: AtomicBool,
     core_stream_data: CoreStreamData<'ctx>,
@@ -3146,8 +3174,10 @@ impl<'ctx> AudioUnitStream<'ctx> {
             reinit_pending: AtomicBool::new(false),
             destroy_pending: AtomicBool::new(false),
             latency_frames,
-            current_latency_frames: AtomicU32::new(0),
+            current_output_latency_frames: AtomicU32::new(0),
+            current_input_latency_frames: AtomicU32::new(0),
             total_output_latency_frames: AtomicU32::new(0),
+            total_input_latency_frames: AtomicU32::new(0),
             switching_device: AtomicBool::new(false),
             core_stream_data: CoreStreamData::default(),
         }
@@ -3428,12 +3458,13 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
         Err(Error::not_supported())
     }
     fn position(&mut self) -> Result<u64> {
-        let current_latency_frames = u64::from(self.current_latency_frames.load(Ordering::SeqCst));
+        let current_output_latency_frames =
+            u64::from(self.current_output_latency_frames.load(Ordering::SeqCst));
         let frames_played = self.frames_played.load(Ordering::SeqCst);
-        let position = if current_latency_frames > frames_played {
+        let position = if current_output_latency_frames > frames_played {
             0
         } else {
-            frames_played - current_latency_frames
+            frames_played - current_output_latency_frames
         };
         Ok(position)
     }
@@ -3444,6 +3475,21 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
     #[cfg(not(target_os = "ios"))]
     fn latency(&mut self) -> Result<u32> {
         Ok(self.total_output_latency_frames.load(Ordering::SeqCst))
+    }
+    #[cfg(target_os = "ios")]
+    fn input_latency(&mut self) -> Result<u32> {
+        Err(not_supported())
+    }
+    #[cfg(not(target_os = "ios"))]
+    fn input_latency(&mut self) -> Result<u32> {
+        let user_rate = self.core_stream_data.input_stream_params.rate();
+        let hw_rate = self.core_stream_data.input_hw_rate as u32;
+        let frames = self.total_input_latency_frames.load(Ordering::SeqCst);
+        if hw_rate == user_rate {
+            Ok(frames)
+        } else {
+            Ok(frames * (user_rate / hw_rate))
+        }
     }
     fn set_volume(&mut self, volume: f32) -> Result<()> {
         set_volume(self.core_stream_data.output_unit, volume)

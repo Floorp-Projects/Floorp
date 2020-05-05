@@ -45,8 +45,8 @@ impl Into<ffi::cubeb_state> for State {
     }
 }
 
-/// Miscellaneous stream preferences.
 bitflags! {
+    /// Miscellaneous stream preferences.
     pub struct StreamPrefs: ffi::cubeb_stream_prefs {
         const NONE = ffi::CUBEB_STREAM_PREF_NONE;
         const LOOPBACK = ffi::CUBEB_STREAM_PREF_LOOPBACK;
@@ -55,8 +55,8 @@ bitflags! {
     }
 }
 
-/// Stream format initialization parameters.
 ffi_type_stack!{
+    /// Stream format initialization parameters.
     type CType = ffi::cubeb_stream_params;
     #[derive(Debug)]
     pub struct StreamParams;
@@ -139,6 +139,17 @@ impl StreamRef {
         let mut latency = 0u32;
         unsafe {
             let _ = try_call!(ffi::cubeb_stream_get_latency(self.as_ptr(), &mut latency));
+        }
+        Ok(latency)
+    }
+
+    /// Get the input latency for this stream, in frames. This is the number of frames between the
+    /// time the audio input device records the audio, and the cubeb callback delivers it.
+    /// This returns an error if the stream is output-only.
+    pub fn input_latency(&self) -> Result<u32> {
+        let mut latency = 0u32;
+        unsafe {
+            let _ = try_call!(ffi::cubeb_stream_get_input_latency(self.as_ptr(), &mut latency));
         }
         Ok(latency)
     }

@@ -89,6 +89,9 @@ DEFINE_PROPERTYKEY(PKEY_Device_InstanceId,      0x78c34fc8, 0x104a, 0x4aca, 0x9e
 #endif
 
 namespace {
+
+const int64_t LATENCY_NOT_AVAILABLE_YET = -1;
+
 struct com_heap_ptr_deleter {
   void operator()(void * ptr) const noexcept {
     CoTaskMemFree(ptr);
@@ -211,6 +214,7 @@ struct cubeb {
   /* Collection changed for output (render) devices. */
   cubeb_device_collection_changed_callback output_collection_changed_callback = nullptr;
   void * output_collection_changed_user_ptr = nullptr;
+  UINT64 performance_counter_frequency;
 };
 
 class wasapi_endpoint_notification_client;
@@ -331,7 +335,12 @@ struct cubeb_stream {
   bool draining = false;
   /* True when we've destroyed the stream. This pointer is leaked on stream
    * destruction if we could not join the thread. */
-  std::atomic<std::atomic<bool>*> emergency_bailout;
+  std::atomic<std::atomic<bool>*> emergency_bailout { nullptr };
+  /* Synchronizes render thread start to ensure safe access to emergency_bailout. */
+  HANDLE thread_ready_event = 0;
+  /* This needs an active audio input stream to be known, and is updated in the
+   * first audio input callback. */
+  std::atomic<int64_t> input_latency_hns { LATENCY_NOT_AVAILABLE_YET };
 };
 
 class monitor_device_notifications {
@@ -344,13 +353,14 @@ public:
 
   ~monitor_device_notifications()
   {
-    SetEvent(shutdown);
-    WaitForSingleObject(thread, 5000);
+    SetEvent(begin_shutdown);
+    WaitForSingleObject(shutdown_complete, INFINITE);
     CloseHandle(thread);
 
     CloseHandle(input_changed);
     CloseHandle(output_changed);
-    CloseHandle(shutdown);
+    CloseHandle(begin_shutdown);
+    CloseHandle(shutdown_complete);
   }
 
   void notify(EDataFlow flow)
@@ -375,8 +385,9 @@ private:
   thread_proc(LPVOID args)
   {
     XASSERT(args);
-    static_cast<monitor_device_notifications*>(args)
-      ->notification_thread_loop();
+    auto mdn = static_cast<monitor_device_notifications*>(args);
+    mdn->notification_thread_loop();
+    SetEvent(mdn->shutdown_complete);
     return 0;
   }
 
@@ -395,7 +406,7 @@ private:
     HANDLE wait_array[3] = {
       input_changed,
       output_changed,
-      shutdown,
+      begin_shutdown,
     };
 
     while (true) {
@@ -433,9 +444,15 @@ private:
       return;
     }
 
-    shutdown = CreateEvent(nullptr, 0, 0, nullptr);
-    if (!shutdown) {
-      LOG("Failed to create shutdown event.");
+    begin_shutdown = CreateEvent(nullptr, 0, 0, nullptr);
+    if (!begin_shutdown) {
+      LOG("Failed to create begin_shutdown event.");
+      return;
+    }
+
+    shutdown_complete = CreateEvent(nullptr, 0, 0, nullptr);
+    if (!shutdown_complete) {
+      LOG("Failed to create shutdown_complete event.");
       return;
     }
 
@@ -454,7 +471,8 @@ private:
   HANDLE thread = INVALID_HANDLE_VALUE;
   HANDLE output_changed = INVALID_HANDLE_VALUE;
   HANDLE input_changed = INVALID_HANDLE_VALUE;
-  HANDLE shutdown = INVALID_HANDLE_VALUE;
+  HANDLE begin_shutdown = INVALID_HANDLE_VALUE;
+  HANDLE shutdown_complete = INVALID_HANDLE_VALUE;
 
   cubeb * cubeb_context = nullptr;
 };
@@ -845,6 +863,7 @@ bool get_input_buffer(cubeb_stream * stm)
   BYTE * input_packet = NULL;
   DWORD flags;
   UINT64 dev_pos;
+  UINT64 pc_position;
   UINT32 next;
   /* Get input packets until we have captured enough frames, and put them in a
    * contiguous buffer. */
@@ -874,12 +893,24 @@ bool get_input_buffer(cubeb_stream * stm)
                                         &frames,
                                         &flags,
                                         &dev_pos,
-                                        NULL);
+                                        &pc_position);
+
     if (FAILED(hr)) {
       LOG("GetBuffer failed for capture: %lx", hr);
       return false;
     }
     XASSERT(frames == next);
+
+    if (stm->context->performance_counter_frequency) {
+      LARGE_INTEGER now;
+      UINT64 now_hns;
+      // See https://docs.microsoft.com/en-us/windows/win32/api/audioclient/nf-audioclient-iaudiocaptureclient-getbuffer, section "Remarks".
+      QueryPerformanceCounter(&now);
+      now_hns = 10000000 * now.QuadPart / stm->context->performance_counter_frequency;
+      if (now_hns >= pc_position) {
+        stm->input_latency_hns = now_hns - pc_position;
+      }
+    }
 
     UINT32 input_stream_samples = frames * stm->input_stream_params.channels;
     // We do not explicitly handle the AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY
@@ -1143,6 +1174,13 @@ wasapi_stream_render_loop(LPVOID stream)
   cubeb_stream * stm = static_cast<cubeb_stream *>(stream);
   std::atomic<bool> * emergency_bailout = stm->emergency_bailout;
 
+  // Signal wasapi_stream_start that we've copied emergency_bailout.
+  BOOL ok = SetEvent(stm->thread_ready_event);
+  if (!ok) {
+    LOG("thread_ready SetEvent failed: %lx", GetLastError());
+    return 0;
+  }
+
   bool is_playing = true;
   HANDLE wait_array[4] = {
     stm->shutdown_event,
@@ -1169,11 +1207,6 @@ wasapi_stream_render_loop(LPVOID stream)
   if (!mmcss_handle) {
     /* This is not fatal, but we might glitch under heavy load. */
     LOG("Unable to use mmcss to bump the render thread priority: %lx", GetLastError());
-  }
-
-  // This has already been nulled out, simply exit.
-  if (!emergency_bailout) {
-    is_playing = false;
   }
 
   /* WaitForMultipleObjects timeout can trigger in cases where we don't want to
@@ -1514,6 +1547,14 @@ int wasapi_init(cubeb ** context, char const * context_name)
     return CUBEB_ERROR;
   }
 
+  LARGE_INTEGER frequency;
+  if (QueryPerformanceFrequency(&frequency)) {
+    LOG("Failed getting performance counter frequency, latency reporting will be inacurate");
+    ctx->performance_counter_frequency = 0;
+  } else {
+    ctx->performance_counter_frequency = frequency.QuadPart;
+  }
+
   *context = ctx;
 
   return CUBEB_OK;
@@ -1544,24 +1585,15 @@ bool stop_and_join_render_thread(cubeb_stream * stm)
   /* Wait five seconds for the rendering thread to return. It's supposed to
    * check its event loop very often, five seconds is rather conservative. */
   DWORD r = WaitForSingleObject(stm->thread, 5000);
-  if (r == WAIT_TIMEOUT) {
+  if (r != WAIT_OBJECT_0) {
     /* Something weird happened, leak the thread and continue the shutdown
      * process. */
     *(stm->emergency_bailout) = true;
     // We give the ownership to the rendering thread.
     stm->emergency_bailout = nullptr;
-    LOG("Destroy WaitForSingleObject on thread timed out,"
-        " leaking the thread: %lx", GetLastError());
+    LOG("Destroy WaitForSingleObject on thread failed: %lx, %lx", r, GetLastError());
     rv = false;
   }
-  if (r == WAIT_FAILED) {
-    *(stm->emergency_bailout) = true;
-    // We give the ownership to the rendering thread.
-    stm->emergency_bailout = nullptr;
-    LOG("Destroy WaitForSingleObject on thread failed: %lx", GetLastError());
-    rv = false;
-  }
-
 
   // Only attempts to close and null out the thread and event if the
   // WaitForSingleObject above succeeded, so that calling this function again
@@ -1926,14 +1958,18 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
 
     /* Get a client. We will get all other interfaces we need from
      * this pointer. */
+#if 0 // See https://bugzilla.mozilla.org/show_bug.cgi?id=1590902
     hr = device->Activate(__uuidof(IAudioClient3),
                           CLSCTX_INPROC_SERVER,
                           NULL, audio_client.receive_vpp());
     if (hr == E_NOINTERFACE) {
+#endif
       hr = device->Activate(__uuidof(IAudioClient),
                             CLSCTX_INPROC_SERVER,
                             NULL, audio_client.receive_vpp());
+#if 0
     }
+#endif
 
     if (FAILED(hr)) {
       LOG("Could not activate the device to get an audio"
@@ -1999,16 +2035,20 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
     flags |= AUDCLNT_STREAMFLAGS_EVENTCALLBACK;
   }
 
+#if 0 // See https://bugzilla.mozilla.org/show_bug.cgi?id=1590902
   if (initialize_iaudioclient3(audio_client, stm, mix_format, flags, direction)) {
     LOG("Initialized with IAudioClient3");
   } else {
+#endif
     hr = audio_client->Initialize(AUDCLNT_SHAREMODE_SHARED,
                                   flags,
                                   frames_to_hns(stm, stm->latency),
                                   0,
                                   mix_format.get(),
                                   NULL);
+#if 0
   }
+#endif
   if (FAILED(hr)) {
     LOG("Unable to initialize audio client for %s: %lx.", DIRECTION_NAME, hr);
     return CUBEB_ERROR;
@@ -2471,12 +2511,26 @@ int wasapi_stream_start(cubeb_stream * stm)
     return CUBEB_ERROR;
   }
 
+  stm->thread_ready_event = CreateEvent(NULL, 0, 0, NULL);
+  if (!stm->thread_ready_event) {
+    LOG("Can't create the thread_ready event, error: %lx", GetLastError());
+    return CUBEB_ERROR;
+  }
+
   cubeb_async_log_reset_threads();
   stm->thread = (HANDLE) _beginthreadex(NULL, 512 * 1024, wasapi_stream_render_loop, stm, STACK_SIZE_PARAM_IS_A_RESERVATION, NULL);
   if (stm->thread == NULL) {
     LOG("could not create WASAPI render thread.");
     return CUBEB_ERROR;
   }
+
+  // Wait for wasapi_stream_render_loop to signal that emergency_bailout has
+  // been read, avoiding a bailout situation where we could free `stm`
+  // before wasapi_stream_render_loop had a chance to run.
+  HRESULT hr = WaitForSingleObject(stm->thread_ready_event, INFINITE);
+  XASSERT(hr == WAIT_OBJECT_0);
+  CloseHandle(stm->thread_ready_event);
+  stm->thread_ready_event = 0;
 
   stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STARTED);
 
@@ -2511,11 +2565,8 @@ int wasapi_stream_stop(cubeb_stream * stm)
   }
 
   if (stop_and_join_render_thread(stm)) {
-    // This is null if we've given the pointer to the other thread
-    if (stm->emergency_bailout.load()) {
-      delete stm->emergency_bailout.load();
-      stm->emergency_bailout = nullptr;
-    }
+    delete stm->emergency_bailout.load();
+    stm->emergency_bailout = nullptr;
   } else {
     // If we could not join the thread, put the stream in error.
     stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_ERROR);
@@ -2587,6 +2638,26 @@ int wasapi_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
     return CUBEB_ERROR;
   }
   *latency = hns_to_frames(stm, latency_hns);
+
+  return CUBEB_OK;
+}
+
+
+int wasapi_stream_get_input_latency(cubeb_stream * stm, uint32_t * latency)
+{
+  XASSERT(stm && latency);
+
+  if (!has_input(stm)) {
+    return CUBEB_ERROR;
+  }
+
+  auto_lock lock(stm->stream_reset_lock);
+
+  if (stm->input_latency_hns == LATENCY_NOT_AVAILABLE_YET) {
+    return CUBEB_ERROR;
+  }
+
+  *latency = hns_to_frames(stm, stm->input_latency_hns);
 
   return CUBEB_OK;
 }
@@ -2950,6 +3021,7 @@ cubeb_ops const wasapi_ops = {
   /*.stream_reset_default_device =*/ wasapi_stream_reset_default_device,
   /*.stream_get_position =*/ wasapi_stream_get_position,
   /*.stream_get_latency =*/ wasapi_stream_get_latency,
+  /*.stream_get_input_latency =*/ wasapi_stream_get_input_latency,
   /*.stream_set_volume =*/ wasapi_stream_set_volume,
   /*.stream_get_current_device =*/ NULL,
   /*.stream_device_destroy =*/ NULL,

@@ -100,6 +100,9 @@ impl StreamOps for TestStream {
     fn latency(&mut self) -> Result<u32> {
         Ok(0u32)
     }
+    fn input_latency(&mut self) -> Result<u32> {
+        Ok(0u32)
+    }
     fn set_volume(&mut self, volume: f32) -> Result<()> {
         assert_eq!(volume, 0.5);
         Ok(())

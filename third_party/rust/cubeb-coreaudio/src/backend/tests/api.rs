@@ -1200,7 +1200,7 @@ fn test_get_device_presentation_latency() {
     fn test_get_device_presentation_latencies_in_scope(scope: Scope) {
         if let Some(device) = test_get_default_device(scope.clone()) {
             // TODO: The latencies very from devices to devices. Check nothing here.
-            let latency = get_presentation_latency(device, scope.clone().into());
+            let latency = get_fixed_latency(device, scope.clone().into());
             println!(
                 "present latency on the device {} in scope {:?}: {}",
                 device, scope, latency

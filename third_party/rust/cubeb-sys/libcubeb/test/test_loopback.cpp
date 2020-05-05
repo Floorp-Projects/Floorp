@@ -26,7 +26,7 @@
 const uint32_t SAMPLE_FREQUENCY = 48000;
 const uint32_t TONE_FREQUENCY = 440;
 const double OUTPUT_AMPLITUDE = 0.25;
-const uint32_t NUM_FRAMES_TO_OUTPUT = SAMPLE_FREQUENCY / 20; /* play ~50ms of samples */
+const int32_t NUM_FRAMES_TO_OUTPUT = SAMPLE_FREQUENCY / 20; /* play ~50ms of samples */
 
 template<typename T> T ConvertSampleToOutput(double input);
 template<> float ConvertSampleToOutput(double input) { return float(input); }

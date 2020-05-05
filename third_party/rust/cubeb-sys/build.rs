@@ -40,6 +40,7 @@ fn main() {
     //    let host = env::var("HOST").unwrap();
     let windows = target.contains("windows");
     let darwin = target.contains("darwin");
+    let freebsd = target.contains("freebsd");
     let mut cfg = cmake::Config::new("libcubeb");
 
     let _ = fs::remove_dir_all(env::var("OUT_DIR").unwrap());
@@ -48,25 +49,28 @@ fn main() {
     env::remove_var("DESTDIR");
     let dst = cfg.define("BUILD_SHARED_LIBS", "OFF")
         .define("BUILD_TESTS", "OFF")
+        .define("BUILD_TOOLS", "OFF")
         .build();
 
+    println!("cargo:rustc-link-lib=static=cubeb");
     if windows {
-        println!("cargo:rustc-link-lib=static=cubeb");
         println!("cargo:rustc-link-lib=dylib=avrt");
         println!("cargo:rustc-link-lib=dylib=ole32");
         println!("cargo:rustc-link-lib=dylib=user32");
         println!("cargo:rustc-link-lib=dylib=winmm");
         println!("cargo:rustc-link-search=native={}/lib", dst.display());
     } else if darwin {
-        println!("cargo:rustc-link-lib=static=cubeb");
         println!("cargo:rustc-link-lib=framework=AudioUnit");
         println!("cargo:rustc-link-lib=framework=CoreAudio");
         println!("cargo:rustc-link-lib=framework=CoreServices");
         println!("cargo:rustc-link-lib=dylib=c++");
         println!("cargo:rustc-link-search=native={}/lib", dst.display());
     } else {
-        println!("cargo:rustc-link-lib=static=cubeb");
-        println!("cargo:rustc-link-lib=dylib=stdc++");
+        if freebsd {
+            println!("cargo:rustc-link-lib=dylib=c++");
+        } else {
+            println!("cargo:rustc-link-lib=dylib=stdc++");
+        }
         println!("cargo:rustc-link-search=native={}/lib", dst.display());
         println!("cargo:rustc-link-search=native={}/lib64", dst.display());
 

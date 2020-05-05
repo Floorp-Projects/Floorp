@@ -11,7 +11,6 @@ extern crate cubeb;
 mod common;
 
 use cubeb::{DeviceFormat, DeviceType};
-use std::error::Error;
 
 fn print_device_info(info: &cubeb::DeviceInfo) {
     let devtype = if info.device_type().contains(DeviceType::INPUT) {
@@ -101,7 +100,7 @@ fn main() {
             return;
         }
         Err(e) => {
-            println!("Error enumerating devices: {}", e.description());
+            println!("Error enumerating devices: {}", e);
             return;
         }
     };
@@ -119,7 +118,7 @@ fn main() {
     let devices = match ctx.enumerate_devices(DeviceType::OUTPUT) {
         Ok(devices) => devices,
         Err(e) => {
-            println!("Error enumerating devices: {}", e.description());
+            println!("Error enumerating devices: {}", e);
             return;
         }
     };

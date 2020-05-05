@@ -22,6 +22,6 @@ macro_rules! call {
 
 macro_rules! try_call {
     (ffi::$p:ident ($($e:expr),*)) => ({
-        try!(::try_call::cvt_r(ffi::$p($($e),*)))
+        ::try_call::cvt_r(ffi::$p($($e),*))?
     })
 }

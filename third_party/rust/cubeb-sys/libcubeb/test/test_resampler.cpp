@@ -889,3 +889,175 @@ TEST(cubeb, resampler_drift_drop_data)
   }
 }
 
+static long
+passthrough_resampler_fill_eq_input(cubeb_stream * stream,
+                                    void * user_ptr,
+                                    void const * input_buffer,
+                                    void * output_buffer,
+                                    long nframes) {
+  // gtest does not support using ASSERT_EQ and friends in a
+  // function that returns a value.
+  [nframes, input_buffer]() {
+    ASSERT_EQ(nframes, 32);
+    const float* input = static_cast<const float*>(input_buffer);
+    for (int i = 0; i < 64; ++i) {
+      ASSERT_FLOAT_EQ(input[i], 0.01 * i);
+    }
+  }();
+  return nframes;
+}
+
+TEST(cubeb, passthrough_resampler_fill_eq_input) {
+  uint32_t channels = 2;
+  uint32_t sample_rate = 44100;
+  passthrough_resampler<float> resampler =
+    passthrough_resampler<float>(nullptr, passthrough_resampler_fill_eq_input,
+                                 nullptr, channels, sample_rate);
+
+  long input_frame_count = 32;
+  long output_frame_count = 32;
+  float input[64] = {};
+  float output[64] = {};
+  for (uint32_t i = 0; i < input_frame_count * channels; ++i) {
+    input[i] = 0.01 * i;
+  }
+  long got = resampler.fill(input, &input_frame_count, output, output_frame_count);
+  ASSERT_EQ(got, output_frame_count);
+  // Input frames used must be equal to output frames.
+  ASSERT_EQ(input_frame_count, output_frame_count);
+}
+
+static long
+passthrough_resampler_fill_short_input(cubeb_stream * stream,
+                                       void * user_ptr,
+                                       void const * input_buffer,
+                                       void * output_buffer,
+                                       long nframes) {
+  // gtest does not support using ASSERT_EQ and friends in a
+  // function that returns a value.
+  [nframes, input_buffer]() {
+    ASSERT_EQ(nframes, 32);
+    const float* input = static_cast<const float*>(input_buffer);
+    // First part contains the input
+    for (int i = 0; i < 32; ++i) {
+      ASSERT_FLOAT_EQ(input[i], 0.01 * i);
+    }
+    // missing part contains silence
+    for (int i = 32; i < 64; ++i) {
+      ASSERT_FLOAT_EQ(input[i], 0.0);
+    }
+  }();
+  return nframes;
+}
+
+TEST(cubeb, passthrough_resampler_fill_short_input) {
+  uint32_t channels = 2;
+  uint32_t sample_rate = 44100;
+  passthrough_resampler<float> resampler =
+    passthrough_resampler<float>(nullptr, passthrough_resampler_fill_short_input,
+                                 nullptr, channels, sample_rate);
+
+  long input_frame_count = 16;
+  long output_frame_count = 32;
+  float input[64] = {};
+  float output[64] = {};
+  for (uint32_t i = 0; i < input_frame_count * channels; ++i) {
+    input[i] = 0.01 * i;
+  }
+  long got = resampler.fill(input, &input_frame_count, output, output_frame_count);
+  ASSERT_EQ(got, output_frame_count);
+  // Input frames used are less than the output frames due to glitch.
+  ASSERT_EQ(input_frame_count, output_frame_count - 16);
+}
+
+static long
+passthrough_resampler_fill_input_left(cubeb_stream * stream,
+                                     void * user_ptr,
+                                     void const * input_buffer,
+                                     void * output_buffer,
+                                     long nframes) {
+  // gtest does not support using ASSERT_EQ and friends in a
+  // function that returns a value.
+  int iteration = *static_cast<int*>(user_ptr);
+  if (iteration == 1) {
+    [nframes, input_buffer]() {
+      ASSERT_EQ(nframes, 32);
+      const float* input = static_cast<const float*>(input_buffer);
+      for (int i = 0; i < 64; ++i) {
+        ASSERT_FLOAT_EQ(input[i], 0.01 * i);
+      }
+    }();
+  } else if (iteration == 2) {
+    [nframes, input_buffer]() {
+      ASSERT_EQ(nframes, 32);
+      const float* input = static_cast<const float*>(input_buffer);
+      for (int i = 0; i < 32; ++i) {
+        // First part contains the reamaining input samples from previous
+        // iteration (since they were more).
+        ASSERT_FLOAT_EQ(input[i], 0.01 * (i + 64));
+        // next part contains the new buffer
+        ASSERT_FLOAT_EQ(input[i + 32], 0.01 * i);
+      }
+    }();
+  } else if (iteration == 3) {
+    [nframes, input_buffer]() {
+      ASSERT_EQ(nframes, 32);
+      const float* input = static_cast<const float*>(input_buffer);
+      for (int i = 0; i < 32; ++i) {
+        // First part (16 frames) contains the reamaining input samples
+        // from previous iteration (since they were more).
+        ASSERT_FLOAT_EQ(input[i], 0.01 * (i + 32));
+      }
+      for (int i = 0; i < 16; ++i) {
+        // next part (8 frames) contains the new input buffer.
+        ASSERT_FLOAT_EQ(input[i + 32], 0.01 * i);
+        // last part (8 frames) contains silence.
+        ASSERT_FLOAT_EQ(input[i + 32 + 16], 0.0);
+      }
+    }();
+  }
+  return nframes;
+}
+
+TEST(cubeb, passthrough_resampler_fill_input_left) {
+  const uint32_t channels = 2;
+  const uint32_t sample_rate = 44100;
+  int iteration = 0;
+  passthrough_resampler<float> resampler =
+    passthrough_resampler<float>(nullptr, passthrough_resampler_fill_input_left,
+                                 &iteration, channels, sample_rate);
+
+  long input_frame_count = 48; // 32 + 16
+  const long output_frame_count = 32;
+  float input[96] = {};
+  float output[64] = {};
+  for (uint32_t i = 0; i < input_frame_count * channels; ++i) {
+    input[i] = 0.01 * i;
+  }
+
+  // 1st iteration, add the extra input.
+  iteration = 1;
+  long got = resampler.fill(input, &input_frame_count, output, output_frame_count);
+  ASSERT_EQ(got, output_frame_count);
+  // Input frames used must be equal to output frames.
+  ASSERT_EQ(input_frame_count, output_frame_count);
+
+  // 2st iteration, use the extra input from previous iteration,
+  // 16 frames are remaining in the input buffer.
+  input_frame_count = 32; // we need 16 input frames but we get more;
+  iteration = 2;
+  got = resampler.fill(input, &input_frame_count, output, output_frame_count);
+  ASSERT_EQ(got, output_frame_count);
+  // Input frames used must be equal to output frames.
+  ASSERT_EQ(input_frame_count, output_frame_count);
+
+  // 3rd iteration, use the extra input from previous iteration.
+  // 16 frames are remaining in the input buffer.
+  input_frame_count = 16 - 8; // We need 16 more input frames but we only get 8.
+  iteration = 3;
+  got = resampler.fill(input, &input_frame_count, output, output_frame_count);
+  ASSERT_EQ(got, output_frame_count);
+  // Input frames used are less than the output frames due to glitch.
+  ASSERT_EQ(input_frame_count, output_frame_count - 8);
+}
+
