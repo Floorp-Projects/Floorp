@@ -903,7 +903,6 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
     if (landmark == nsGkAtoms::main) return @"AXLandmarkMain";
     if (landmark == nsGkAtoms::navigation) return @"AXLandmarkNavigation";
     if (landmark == nsGkAtoms::search) return @"AXLandmarkSearch";
-    if (landmark == nsGkAtoms::searchbox) return @"AXSearchField";
   }
 
   // macOS groups the specific landmark types of DPub ARIA into two broad
@@ -939,11 +938,6 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
   switch (mRole) {
     case roles::LIST:
       return @"AXContentList";  // 10.6+ NSAccessibilityContentListSubrole;
-
-    case roles::ENTRY:
-      if ((accWrap && accWrap->IsSearchbox()) || (proxy && proxy->IsSearchbox()))
-        return @"AXSearchField";
-      break;
 
     case roles::DEFINITION_LIST:
       return @"AXDefinitionList";  // 10.6+ NSAccessibilityDefinitionListSubrole;

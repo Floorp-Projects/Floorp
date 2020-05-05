@@ -345,6 +345,14 @@ inline NSString* ToNSString(id aValue) {
 - (NSString*)subrole {
   if (mRole == roles::PASSWORD_TEXT) return NSAccessibilitySecureTextFieldSubrole;
 
+  if (mRole == roles::ENTRY) {
+    AccessibleWrap* accWrap = [self getGeckoAccessible];
+    ProxyAccessible* proxy = [self getProxyAccessible];
+    if ((accWrap && accWrap->IsSearchbox()) || (proxy && proxy->IsSearchbox())) {
+      return @"AXSearchField";
+    }
+  }
+
   return nil;
 }
 
