@@ -32,10 +32,10 @@ struct nsFont final {
   mozilla::FontFamilyList fontlist;
 
   // Font features from CSS font-feature-settings
-  nsTArray<gfxFontFeature> fontFeatureSettings;
+  CopyableTArray<gfxFontFeature> fontFeatureSettings;
 
   // Font variations from CSS font-variation-settings
-  nsTArray<gfxFontVariation> fontVariationSettings;
+  CopyableTArray<gfxFontVariation> fontVariationSettings;
 
   // The logical size of the font, in nscoord units
   nscoord size = 0;

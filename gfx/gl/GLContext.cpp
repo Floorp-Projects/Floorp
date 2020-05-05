@@ -2077,7 +2077,7 @@ static void ReportArrayContents(
 
   printf_stderr("%s:\n", title);
 
-  nsTArray<GLContext::NamedResource> copy(aArray);
+  nsTArray<GLContext::NamedResource> copy(aArray.Clone());
   copy.Sort();
 
   GLContext* lastContext = nullptr;

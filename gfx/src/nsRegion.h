@@ -67,6 +67,9 @@ class UncheckedArray : public T {
   using T::Elements;
   using T::Length;
 
+  UncheckedArray() = default;
+  MOZ_IMPLICIT UncheckedArray(T&& aSrc) : T(std::move(aSrc)) {}
+
   E& operator[](size_t aIndex) { return Elements()[aIndex]; }
   const E& operator[](size_t aIndex) const { return Elements()[aIndex]; }
   E& LastElement() { return Elements()[Length() - 1]; }
@@ -102,9 +105,10 @@ struct Strip {
 struct Band {
   using Strip = regiondetails::Strip;
 #ifndef DEBUG
-  using StripArray = regiondetails::UncheckedArray<AutoTArray<Strip, 2>, Strip>;
+  using StripArray =
+      regiondetails::UncheckedArray<CopyableAutoTArray<Strip, 2>, Strip>;
 #else
-  using StripArray = AutoTArray<Strip, 2>;
+  using StripArray = CopyableAutoTArray<Strip, 2>;
 #endif
 
   MOZ_IMPLICIT Band(const nsRectAbsolute& aRect)
@@ -348,7 +352,7 @@ struct Band {
       }
     }
 
-    mStrips = newStrips;
+    mStrips = std::move(newStrips);
   }
 
   bool Intersects(const Band& aOther) const {
@@ -1900,7 +1904,7 @@ class nsRegion {
 
   nsRegion& Copy(const nsRegion& aRegion) {
     mBounds = aRegion.mBounds;
-    mBands = aRegion.mBands;
+    mBands = aRegion.mBands.Clone();
     return *this;
   }
 
