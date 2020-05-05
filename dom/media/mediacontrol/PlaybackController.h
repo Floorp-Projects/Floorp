@@ -59,7 +59,7 @@ class MOZ_STACK_CLASS PlaybackController {
   RefPtr<BrowsingContext> mBC;
 };
 
-class MediaActionHandler {
+class ContentMediaActionHandler {
  public:
   static void HandleMediaControlKeysEvent(BrowsingContext* aContext,
                                           MediaControlKeysEvent aEvent);
