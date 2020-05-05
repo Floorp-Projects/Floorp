@@ -162,7 +162,7 @@ ifeq ($(MOZ_PKG_FORMAT),RPM)
 
   RPM_CMD = \
     echo Creating RPM && \
-    $(PYTHON) -m mozbuild.action.preprocessor \
+    $(PYTHON3) -m mozbuild.action.preprocessor \
       -DMOZ_APP_NAME=$(MOZ_APP_NAME) \
       -DMOZ_APP_DISPLAYNAME='$(MOZ_APP_DISPLAYNAME)' \
       -DMOZ_APP_REMOTINGNAME='$(MOZ_APP_REMOTINGNAME)' \
