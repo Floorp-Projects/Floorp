@@ -235,6 +235,11 @@ bool WarpCacheIRTranspiler::emitGuardToInt32(ValOperandId inputId,
   return defineOperand(resultId, ins);
 }
 
+bool WarpCacheIRTranspiler::emitGuardIsNumber(ValOperandId inputId) {
+  // MIRType::Double also implies int32 in Ion.
+  return emitGuardTo(inputId, MIRType::Double);
+}
+
 bool WarpCacheIRTranspiler::emitGuardToInt32Index(ValOperandId inputId,
                                                   Int32OperandId resultId) {
   MDefinition* input = getOperand(inputId);
@@ -609,6 +614,12 @@ bool WarpCacheIRTranspiler::emitCompareInt32Result(JSOp op,
                                                    Int32OperandId lhsId,
                                                    Int32OperandId rhsId) {
   return emitCompareResult(op, lhsId, rhsId, MCompare::Compare_Int32);
+}
+
+bool WarpCacheIRTranspiler::emitCompareDoubleResult(JSOp op,
+                                                    NumberOperandId lhsId,
+                                                    NumberOperandId rhsId) {
+  return emitCompareResult(op, lhsId, rhsId, MCompare::Compare_Double);
 }
 
 bool WarpCacheIRTranspiler::emitCompareObjectResult(JSOp op, ObjOperandId lhsId,
