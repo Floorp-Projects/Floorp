@@ -9,6 +9,7 @@ base: core18
 apps:
   firefox:
     command: firefox
+    command-chain: [tmpdir]
     desktop: distribution/firefox.desktop
     extensions: [gnome-3-34]
     environment:
@@ -60,46 +61,10 @@ parts:
       - -usr/lib/*/libharfbuzz*
       - -usr/lib/*/*pango*
 
-  xdg-open:
+  # Find files provided by the base and platform snap and ensure they aren't
+  # duplicated in this snap
+  cleanup:
     after: [firefox]
-    plugin: nil
-    source: .
-    override-build: |
-      snapcraftctl build
-      set -eux
-      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/applications
-      install -m 644 mimeapps.list $SNAPCRAFT_PART_INSTALL/usr/share/applications
-      update-desktop-database -v $SNAPCRAFT_PART_INSTALL/usr/share/applications
-    build-packages:
-      - desktop-file-utils
-
-  shared-mime-info:
-    after: [xdg-open]
-    plugin: nil
-    stage-packages:
-      - shared-mime-info
-    override-build: |
-      snapcraftctl build
-      set -eux
-      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/mime
-      update-mime-database $SNAPCRAFT_PART_INSTALL/usr/share/mime
-
-  # Find files provided by the base and platform snap and ensure they aren't
-  # duplicated in this snap
-  cleanup:
-    after: [shared-mime-info]
-    plugin: nil
-    build-snaps: [core18, gnome-3-28-1804]
-    override-prime: |
-      set -eux
-      for snap in "core18" "gnome-3-28-1804"; do
-        cd "/snap/$snap/current" && find . -type f,l -exec rm -f "$SNAPCRAFT_PRIME/{}" \;
-      done
-
-  # Find files provided by the base and platform snap and ensure they aren't
-  # duplicated in this snap
-  cleanup:
-    after: [shared-mime-info]
     plugin: nil
     build-snaps: [core18, gnome-3-34-1804]
     override-prime: |
