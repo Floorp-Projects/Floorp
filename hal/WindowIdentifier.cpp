@@ -12,21 +12,25 @@
 namespace mozilla {
 namespace hal {
 
-WindowIdentifier::WindowIdentifier() : mWindow(nullptr), mIsEmpty(true) {}
+WindowIdentifier::WindowIdentifier()
+    : mWindow(nullptr)
+#ifdef DEBUG
+      ,
+      mIsEmpty(true)
+#endif
+{
+}
 
 WindowIdentifier::WindowIdentifier(nsPIDOMWindowInner* window)
-    : mWindow(window), mIsEmpty(false) {
+    : mWindow(window) {
   mID.AppendElement(GetWindowID());
 }
 
-WindowIdentifier::WindowIdentifier(const nsTArray<uint64_t>& id,
+WindowIdentifier::WindowIdentifier(nsTArray<uint64_t>&& id,
                                    nsPIDOMWindowInner* window)
-    : mID(id), mWindow(window), mIsEmpty(false) {
+    : mID(std::move(id)), mWindow(window) {
   mID.AppendElement(GetWindowID());
 }
-
-WindowIdentifier::WindowIdentifier(const WindowIdentifier& other)
-    : mID(other.mID), mWindow(other.mWindow), mIsEmpty(other.mIsEmpty) {}
 
 const nsTArray<uint64_t>& WindowIdentifier::AsArray() const {
   MOZ_ASSERT(!mIsEmpty);
