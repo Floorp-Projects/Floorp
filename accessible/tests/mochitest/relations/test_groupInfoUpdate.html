@@ -1,0 +1,57 @@
+<html>
+<head>
+  <title>Test accessible relations when AccGroupInfo updated</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../relations.js"></script>
+  <script type="application/javascript"
+          src="../promisified-events.js"></script>
+
+  <script type="application/javascript">
+    async function doTests() {
+      info("Testing NODE_CHILD_OF update after DOM removal");
+      testRelation("l1i2", RELATION_NODE_CHILD_OF, "l1i1");
+      let reorder = waitForEvent(EVENT_REORDER, "l1");
+      getNode("l1i1").remove();
+      await reorder;
+      testRelation("l1i2", RELATION_NODE_CHILD_OF, "l1");
+
+      info("Testing NODE_CHILD_OF update after aria-owns removal");
+      testRelation("l2i2", RELATION_NODE_CHILD_OF, "l2i1");
+      reorder = waitForEvent(EVENT_REORDER, "l2");
+      // Move l2i1 out of l2 using aria-owns.
+      getNode("l2trash").setAttribute("aria-owns", "l2i1");
+      await reorder;
+      testRelation("l2i2", RELATION_NODE_CHILD_OF, "l2");
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body id="body">
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="l1" role="list">
+    <div id="l1i1" role="listitem" aria-level="1">a</div>
+    <div id="l1i2" role="listitem" aria-level="2">b</div>
+  </div>
+
+  <div id="l2" role="list">
+    <div id="l2i1" role="listitem" aria-level="1">a</div>
+    <div id="l2i2" role="listitem" aria-level="2">b</div>
+  </div>
+  <div id="l2trash"></div>
+</body>
+</html>
