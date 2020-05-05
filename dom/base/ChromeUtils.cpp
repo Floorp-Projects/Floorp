@@ -741,12 +741,9 @@ static WebIDLProcType ProcTypeToWebIDL(mozilla::ProcType aType) {
 
   switch (aType) {
     PROCTYPE_TO_WEBIDL_CASE(Web, Web);
-    PROCTYPE_TO_WEBIDL_CASE(WebIsolated, WebIsolated);
     PROCTYPE_TO_WEBIDL_CASE(File, File);
     PROCTYPE_TO_WEBIDL_CASE(Extension, Extension);
     PROCTYPE_TO_WEBIDL_CASE(PrivilegedAbout, Privilegedabout);
-    PROCTYPE_TO_WEBIDL_CASE(PrivilegedMozilla, Privilegedmozilla);
-    PROCTYPE_TO_WEBIDL_CASE(WebCOOPCOEP, WithCoopCoep);
     PROCTYPE_TO_WEBIDL_CASE(WebLargeAllocation, WebLargeAllocation);
     PROCTYPE_TO_WEBIDL_CASE(Browser, Browser);
     PROCTYPE_TO_WEBIDL_CASE(Plugin, Plugin);
@@ -792,8 +789,7 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
       global->EventTargetFor(TaskCategory::Performance);
 
   // Getting the parent proc info
-  mozilla::GetProcInfo(parentPid, 0, mozilla::ProcType::Browser,
-                       NS_LITERAL_STRING(""))
+  mozilla::GetProcInfo(parentPid, 0, mozilla::ProcType::Browser)
       ->Then(
           target, __func__,
           [target, domPromise, parentPid](ProcInfo aParentInfo) {
@@ -807,7 +803,7 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                   if (!aGeckoProcess->GetChildProcessHandle()) {
                     return;
                   }
-                  nsAutoString origin;
+
                   base::ProcessId childPid =
                       base::GetProcId(aGeckoProcess->GetChildProcessHandle());
                   int32_t childId = 0;
@@ -827,51 +823,22 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                       if (!contentParent) {
                         return;
                       }
-                      // Converting the remoteType into a ProcType.
-                      // Ideally, the remoteType should be strongly typed
-                      // upstream, this would make the conversion less brittle.
-                      nsAutoString remoteType(contentParent->GetRemoteType());
-                      if (StringBeginsWith(
-                              remoteType,
-                              NS_LITERAL_STRING(FISSION_WEB_REMOTE_TYPE))) {
-                        // WARNING: Do not change the order, as
-                        // `DEFAULT_REMOTE_TYPE` is a prefix of
-                        // `FISSION_WEB_REMOTE_TYPE`.
-                        type = mozilla::ProcType::WebIsolated;
-                      } else if (StringBeginsWith(
-                                     remoteType,
-                                     NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE))) {
+                      // Converting the Content Type into a ProcType
+                      nsAutoString processType;
+                      processType.Assign(contentParent->GetRemoteType());
+                      if (IsWebRemoteType(processType)) {
                         type = mozilla::ProcType::Web;
-                      } else if (remoteType.EqualsLiteral(FILE_REMOTE_TYPE)) {
+                      } else if (processType.EqualsLiteral(FILE_REMOTE_TYPE)) {
                         type = mozilla::ProcType::File;
-                      } else if (remoteType.EqualsLiteral(
+                      } else if (processType.EqualsLiteral(
                                      EXTENSION_REMOTE_TYPE)) {
                         type = mozilla::ProcType::Extension;
-                      } else if (remoteType.EqualsLiteral(
+                      } else if (processType.EqualsLiteral(
                                      PRIVILEGEDABOUT_REMOTE_TYPE)) {
                         type = mozilla::ProcType::PrivilegedAbout;
-                      } else if (remoteType.EqualsLiteral(
-                                     PRIVILEGEDMOZILLA_REMOTE_TYPE)) {
-                        type = mozilla::ProcType::PrivilegedMozilla;
-                      } else if (StringBeginsWith(
-                                     remoteType,
-                                     NS_LITERAL_STRING(
-                                         WITH_COOP_COEP_REMOTE_TYPE_PREFIX))) {
-                        type = mozilla::ProcType::WebCOOPCOEP;
-                      } else if (remoteType.EqualsLiteral(
+                      } else if (processType.EqualsLiteral(
                                      LARGE_ALLOCATION_REMOTE_TYPE)) {
                         type = mozilla::ProcType::WebLargeAllocation;
-                      } else {
-                        MOZ_CRASH("Unknown remoteType");
-                      }
-
-                      // By convention, everything after '=' is the origin.
-                      nsAString::const_iterator cursor;
-                      nsAString::const_iterator end;
-                      remoteType.BeginReading(cursor);
-                      remoteType.EndReading(end);
-                      if (FindCharInReadable(u'=', cursor, end)) {
-                        origin = Substring(++cursor, end);
                       }
                       childId = contentParent->ChildID();
                       break;
@@ -912,10 +879,10 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
 
                   promises.AppendElement(
 #ifdef XP_MACOSX
-                      mozilla::GetProcInfo(childPid, childId, type, origin,
+                      mozilla::GetProcInfo(childPid, childId, type,
                                            aGeckoProcess->GetChildTask())
 #else
-                      mozilla::GetProcInfo(childPid, childId, type, origin)
+                      mozilla::GetProcInfo(childPid, childId, type)
 #endif
                   );
                 });
@@ -961,7 +928,6 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                     // Basic info.
                     childProcInfo->mChildID = info.childId;
                     childProcInfo->mType = ProcTypeToWebIDL(info.type);
-                    childProcInfo->mOrigin = info.origin;
                     childProcInfo->mPid = info.pid;
                     childProcInfo->mFilename.Assign(info.filename);
                     childProcInfo->mVirtualMemorySize = info.virtualMemorySize;

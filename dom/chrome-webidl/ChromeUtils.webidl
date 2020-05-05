@@ -498,13 +498,10 @@ partial namespace ChromeUtils {
  */
 enum WebIDLProcType {
  "web",
- "webIsolated",
  "file",
  "extension",
  "privilegedabout",
- "privilegedmozilla",
  "webLargeAllocation",
- "withCoopCoep",
  "browser",
  "plugin",
  "ipdlUnitTest",
@@ -544,7 +541,6 @@ dictionary ChildProcInfoDictionary {
   sequence<ThreadInfoDictionary> threads = [];
   // Firefox info
   unsigned long long ChildID = 0;
-  DOMString origin = "";
   WebIDLProcType type = "web";
 };
 
