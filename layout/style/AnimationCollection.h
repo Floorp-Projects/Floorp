@@ -7,14 +7,12 @@
 #ifndef mozilla_AnimationCollection_h
 #define mozilla_AnimationCollection_h
 
-#include "mozilla/dom/Animation.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/RefPtr.h"
 #include "nsCSSPseudoElements.h"
-#include "nsDOMMutationObserver.h"
-#include "nsTArray.h"
+#include "nsTArrayForwardDeclare.h"
 
 class nsAtom;
 class nsIFrame;
