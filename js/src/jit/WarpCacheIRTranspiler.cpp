@@ -80,6 +80,9 @@ class MOZ_RAII WarpCacheIRTranspiler {
   Shape* shapeStubField(uint32_t offset) {
     return reinterpret_cast<Shape*>(readStubWord(offset));
   }
+  JSString* stringStubField(uint32_t offset) {
+    return reinterpret_cast<JSString*>(readStubWord(offset));
+  }
   JSObject* objectStubField(uint32_t offset) {
     return reinterpret_cast<JSObject*>(readStubWord(offset));
   }
@@ -181,6 +184,17 @@ bool WarpCacheIRTranspiler::emitGuardShape(ObjOperandId objId,
   add(ins);
 
   setOperand(objId, ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitGuardSpecificAtom(StringOperandId strId,
+                                                  uint32_t expectedOffset) {
+  MDefinition* str = getOperand(strId);
+  JSString* expected = stringStubField(expectedOffset);
+
+  // TODO: Improved code-gen and folding.
+  auto* ins = MGuardSpecificAtom::New(alloc(), str, &expected->asAtom());
+  add(ins);
   return true;
 }
 
