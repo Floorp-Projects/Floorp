@@ -854,6 +854,8 @@ static nsRect GetDisplayPortFromMarginsData(
 
   if (presShell->IsDisplayportSuppressed()) {
     alignment = ScreenSize(1, 1);
+  } else if (gfxVars::UseWebRender()) {
+    alignment = ScreenSize(512, 512);
   } else if (StaticPrefs::layers_enable_tiles_AtStartup()) {
     // Don't align to tiles if they are too large, because we could expand
     // the displayport by a lot which can take more paint time. It's a tradeoff
