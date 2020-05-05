@@ -485,7 +485,11 @@ public final class GeckoRuntime implements Parcelable {
      *
      * @return A {@link GeckoResult} that will complete when the WebExtension
      * has been installed.
+     *
+     * @deprecated Use {@link WebExtensionController#installBuiltIn} instead. This method will
+     * be removed in GeckoView 81.
      */
+    @Deprecated // Bug 1634504
     @UiThread
     public @NonNull GeckoResult<Void> registerWebExtension(
             final @NonNull WebExtension webExtension) {
@@ -518,7 +522,11 @@ public final class GeckoRuntime implements Parcelable {
      *
      * @return A {@link GeckoResult} that will complete when the WebExtension
      * has been unregistered.
+     *
+     * @deprecated Use {@link WebExtensionController#uninstall} instead. This method will
+     * be removed in GeckoView 81.
      */
+    @Deprecated // Bug 1634504
     @UiThread
     public @NonNull GeckoResult<Void> unregisterWebExtension(
             final @NonNull WebExtension webExtension) {
