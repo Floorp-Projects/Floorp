@@ -1122,31 +1122,28 @@ bool BaselineCacheIRCompiler::emitStoreDenseElement(ObjOperandId objId,
   BaseObjectElementIndex element(scratch, index);
   masm.branchTestMagic(Assembler::Equal, element, failure->label());
 
-  // Perform a single test to see if we either need to convert double
-  // elements, clone the copy on write elements in the object or fail
-  // due to a frozen element.
-  Label noSpecialHandling;
-  Address elementsFlags(scratch, ObjectElements::offsetOfFlags());
-  masm.branchTest32(
-      Assembler::Zero, elementsFlags,
-      Imm32(ObjectElements::CONVERT_DOUBLE_ELEMENTS |
-            ObjectElements::COPY_ON_WRITE | ObjectElements::FROZEN),
-      &noSpecialHandling);
+  if (IsTypeInferenceEnabled()) {
+    // Perform a single test to see if we either need to convert double
+    // elements or clone the copy on write elements in the object.
+    Label noSpecialHandling;
+    Address elementsFlags(scratch, ObjectElements::offsetOfFlags());
+    masm.branchTest32(Assembler::Zero, elementsFlags,
+                      Imm32(ObjectElements::CONVERT_DOUBLE_ELEMENTS |
+                            ObjectElements::COPY_ON_WRITE),
+                      &noSpecialHandling);
 
-  // Fail if we need to clone copy on write elements or to throw due
-  // to a frozen element.
-  masm.branchTest32(
-      Assembler::NonZero, elementsFlags,
-      Imm32(ObjectElements::COPY_ON_WRITE | ObjectElements::FROZEN),
-      failure->label());
+    // Fail if we need to clone copy on write elements.
+    masm.branchTest32(Assembler::NonZero, elementsFlags,
+                      Imm32(ObjectElements::COPY_ON_WRITE), failure->label());
 
-  // We need to convert int32 values being stored into doubles. Note
-  // that double arrays are only created by IonMonkey. It's fine to
-  // convert the value in place in Baseline. We can't do this in
-  // Ion.
-  masm.convertInt32ValueToDouble(val);
+    // We need to convert int32 values being stored into doubles. Note
+    // that double arrays are only created by IonMonkey. It's fine to
+    // convert the value in place in Baseline. We can't do this in
+    // Ion.
+    masm.convertInt32ValueToDouble(val);
 
-  masm.bind(&noSpecialHandling);
+    masm.bind(&noSpecialHandling);
+  }
 
   // Call the type update IC. After this everything must be infallible as we
   // don't save all registers here.
@@ -1194,11 +1191,13 @@ bool BaselineCacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
   Address initLength(scratch, ObjectElements::offsetOfInitializedLength());
   Address elementsFlags(scratch, ObjectElements::offsetOfFlags());
 
-  // Check for copy-on-write elements. Note that this stub is not attached for
-  // non-extensible objects, so the shape guard ensures there are no sealed or
-  // frozen elements.
-  masm.branchTest32(Assembler::NonZero, elementsFlags,
-                    Imm32(ObjectElements::COPY_ON_WRITE), failure->label());
+  if (IsTypeInferenceEnabled()) {
+    // Check for copy-on-write elements. Note that this stub is not attached for
+    // non-extensible objects, so the shape guard ensures there are no sealed or
+    // frozen elements.
+    masm.branchTest32(Assembler::NonZero, elementsFlags,
+                      Imm32(ObjectElements::COPY_ON_WRITE), failure->label());
+  }
 
   // We don't have enough registers on x86 so use InvalidReg. This will emit
   // slightly less efficient code on x86.
@@ -1256,19 +1255,21 @@ bool BaselineCacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
     masm.spectreBoundsCheck32(index, initLength, spectreTemp, failure->label());
   }
 
-  // Check if we have to convert a double element.
-  Label noConversion;
-  masm.branchTest32(Assembler::Zero, elementsFlags,
-                    Imm32(ObjectElements::CONVERT_DOUBLE_ELEMENTS),
-                    &noConversion);
+  if (IsTypeInferenceEnabled()) {
+    // Check if we have to convert a double element.
+    Label noConversion;
+    masm.branchTest32(Assembler::Zero, elementsFlags,
+                      Imm32(ObjectElements::CONVERT_DOUBLE_ELEMENTS),
+                      &noConversion);
 
-  // We need to convert int32 values being stored into doubles. Note
-  // that double arrays are only created by IonMonkey. It's fine to
-  // convert the value in place in Baseline. We can't do this in
-  // Ion.
-  masm.convertInt32ValueToDouble(val);
+    // We need to convert int32 values being stored into doubles. Note
+    // that double arrays are only created by IonMonkey. It's fine to
+    // convert the value in place in Baseline. We can't do this in
+    // Ion.
+    masm.convertInt32ValueToDouble(val);
 
-  masm.bind(&noConversion);
+    masm.bind(&noConversion);
+  }
 
   // Call the type update IC. After this everything must be infallible as we
   // don't save all registers here.
@@ -1339,11 +1340,13 @@ bool BaselineCacheIRCompiler::emitArrayPush(ObjOperandId objId,
   Address elementsLength(scratch, ObjectElements::offsetOfLength());
   Address elementsFlags(scratch, ObjectElements::offsetOfFlags());
 
-  // Check for copy-on-write elements. Note that this stub is not attached for
-  // non-extensible objects, so the shape guard ensures there are no sealed or
-  // frozen elements.
-  masm.branchTest32(Assembler::NonZero, elementsFlags,
-                    Imm32(ObjectElements::COPY_ON_WRITE), failure->label());
+  if (IsTypeInferenceEnabled()) {
+    // Check for copy-on-write elements. Note that this stub is not attached for
+    // non-extensible objects, so the shape guard ensures there are no sealed or
+    // frozen elements.
+    masm.branchTest32(Assembler::NonZero, elementsFlags,
+                      Imm32(ObjectElements::COPY_ON_WRITE), failure->label());
+  }
 
   // Fail if length != initLength.
   masm.load32(elementsInitLength, scratchLength);
@@ -1384,19 +1387,21 @@ bool BaselineCacheIRCompiler::emitArrayPush(ObjOperandId objId,
 
   masm.bind(&capacityOk);
 
-  // Check if we have to convert a double element.
-  Label noConversion;
-  masm.branchTest32(Assembler::Zero, elementsFlags,
-                    Imm32(ObjectElements::CONVERT_DOUBLE_ELEMENTS),
-                    &noConversion);
+  if (IsTypeInferenceEnabled()) {
+    // Check if we have to convert a double element.
+    Label noConversion;
+    masm.branchTest32(Assembler::Zero, elementsFlags,
+                      Imm32(ObjectElements::CONVERT_DOUBLE_ELEMENTS),
+                      &noConversion);
 
-  // We need to convert int32 values being stored into doubles. Note
-  // that double arrays are only created by IonMonkey. It's fine to
-  // convert the value in place in Baseline. We can't do this in
-  // Ion.
-  masm.convertInt32ValueToDouble(val);
+    // We need to convert int32 values being stored into doubles. Note
+    // that double arrays are only created by IonMonkey. It's fine to
+    // convert the value in place in Baseline. We can't do this in
+    // Ion.
+    masm.convertInt32ValueToDouble(val);
 
-  masm.bind(&noConversion);
+    masm.bind(&noConversion);
+  }
 
   // Call the type update IC. After this everything must be infallible as we
   // don't save all registers here.

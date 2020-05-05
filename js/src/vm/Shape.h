@@ -692,7 +692,7 @@ class BaseShape : public gc::TenuredCell {
     INDEXED = 0x20,
     HAS_INTERESTING_SYMBOL = 0x40,
     HAD_ELEMENTS_ACCESS = 0x80,
-    // 0x100 is unused.
+    FROZEN_ELEMENTS = 0x100,  // See ObjectElements::FROZEN comment.
     ITERATED_SINGLETON = 0x200,
     NEW_GROUP_UNKNOWN = 0x400,
     UNCACHEABLE_PROTO = 0x800,

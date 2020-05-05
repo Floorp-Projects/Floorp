@@ -617,7 +617,9 @@ bool js::SetIntegrityLevel(JSContext* cx, HandleObject obj,
 
   // Finally, freeze or seal the dense elements.
   if (obj->isNative()) {
-    ObjectElements::FreezeOrSeal(cx, &obj->as<NativeObject>(), level);
+    if (!ObjectElements::FreezeOrSeal(cx, obj.as<NativeObject>(), level)) {
+      return false;
+    }
   }
 
   return true;
@@ -3500,6 +3502,9 @@ void JSObject::dump(js::GenericPrinter& out) const {
     }
     if (nobj->isIndexed()) {
       out.put(" indexed");
+    }
+    if (nobj->denseElementsAreFrozen()) {
+      out.put(" frozen_elements");
     }
   } else {
     out.put(" not_native\n");
