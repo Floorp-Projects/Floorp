@@ -66,7 +66,7 @@ function do_get_profile_startup() {
       if (prop == "ProfDS") {
         return file.clone();
       }
-      throw Cr.NS_ERROR_FAILURE;
+      throw Components.Exception("", Cr.NS_ERROR_FAILURE);
     },
     QueryInterface: ChromeUtils.generateQI(["nsIDirectoryServiceProvider"]),
   };

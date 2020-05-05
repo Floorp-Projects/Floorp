@@ -1675,7 +1675,7 @@ class ModalPrompter {
     // promptAuth, never asyncPromptAuth.
     //
     // Bug 565582 will change this.
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
   /* ----------  nsIWritablePropertyBag2 ---------- */
@@ -1685,7 +1685,7 @@ class ModalPrompter {
     if (name == "modalType") {
       this.modalType = value;
     } else {
-      throw Cr.NS_ERROR_ILLEGAL_VALUE;
+      throw Components.Exception("", Cr.NS_ERROR_ILLEGAL_VALUE);
     }
   }
 }
@@ -1771,7 +1771,7 @@ AuthPromptAdapter.prototype = {
     checkLabel,
     checkValue
   ) {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 };
 

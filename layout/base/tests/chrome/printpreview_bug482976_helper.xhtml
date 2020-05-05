@@ -35,7 +35,7 @@ function printpreview() {
       if (iid.equals(Ci.nsIWebProgessListener) ||
           iid.equals(Ci.nsISupportsWeakReference))
             return this;
-      throw Cr.NS_NOINTERFACE;
+      throw Components.Exception("", Cr.NS_NOINTERFACE);
     }
   }
   var prefs = Cc["@mozilla.org/preferences-service;1"]

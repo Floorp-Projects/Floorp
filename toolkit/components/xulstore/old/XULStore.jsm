@@ -332,7 +332,7 @@ nsStringEnumerator.prototype = {
   },
   getNext() {
     if (!this.hasMore()) {
-      throw Cr.NS_ERROR_NOT_AVAILABLE;
+      throw Components.Exception("", Cr.NS_ERROR_NOT_AVAILABLE);
     }
     return this._items[this._nextIndex++];
   },

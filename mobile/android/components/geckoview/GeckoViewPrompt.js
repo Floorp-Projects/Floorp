@@ -1022,7 +1022,7 @@ FilePickerDelegate.prototype = {
       aMode === Ci.nsIFilePicker.modeGetFolder ||
       aMode === Ci.nsIFilePicker.modeSave
     ) {
-      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+      throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
     }
     this._prompt = new PromptDelegate(aParent);
     this._msg = {
@@ -1044,7 +1044,7 @@ FilePickerDelegate.prototype = {
   },
 
   show() {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
   open(aFilePickerShownCallback) {
@@ -1084,7 +1084,7 @@ FilePickerDelegate.prototype = {
 
   get file() {
     if (!this._fileData) {
-      throw Cr.NS_ERROR_NOT_AVAILABLE;
+      throw Components.Exception("", Cr.NS_ERROR_NOT_AVAILABLE);
     }
     const fileData = this._fileData[0];
     if (!fileData) {
@@ -1099,7 +1099,7 @@ FilePickerDelegate.prototype = {
 
   *_getEnumerator(aDOMFile) {
     if (!this._fileData) {
-      throw Cr.NS_ERROR_NOT_AVAILABLE;
+      throw Components.Exception("", Cr.NS_ERROR_NOT_AVAILABLE);
     }
 
     for (const fileData of this._fileData) {
@@ -1123,7 +1123,7 @@ FilePickerDelegate.prototype = {
 
   get domFileOrDirectory() {
     if (!this._fileData) {
-      throw Cr.NS_ERROR_NOT_AVAILABLE;
+      throw Components.Exception("", Cr.NS_ERROR_NOT_AVAILABLE);
     }
     return this._fileData[0] ? this._fileData[0].domFile : null;
   },

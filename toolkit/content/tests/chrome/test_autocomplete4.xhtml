@@ -63,7 +63,7 @@ var autoCompleteSimple = {
         iid.equals(Ci.nsIAutoCompleteSearch))
       return this;
 
-    throw Cr.NS_ERROR_NO_INTERFACE;
+    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   },
 
   createInstance: function(outer, iid) {

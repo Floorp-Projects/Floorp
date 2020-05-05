@@ -128,7 +128,7 @@ function makeListener(headerIdx, bodyIdx) {
         do_throw("Unexpected exception: " + e);
       }
 
-      throw Cr.NS_ERROR_ABORT;
+      throw Components.Exception("", Cr.NS_ERROR_ABORT);
     },
 
     onDataAvailable: function test_ODA() {

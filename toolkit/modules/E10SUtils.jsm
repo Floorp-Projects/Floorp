@@ -553,7 +553,7 @@ var E10SUtils = {
     // We can't pick a process based on a system principal or expanded
     // principal. In fact, we should never end up with one here!
     if (aPrincipal.isSystemPrincipal || aPrincipal.isExpandedPrincipal) {
-      throw Cr.NS_ERROR_UNEXPECTED;
+      throw Components.Exception("", Cr.NS_ERROR_UNEXPECTED);
     }
 
     // Null principals can be loaded in any remote process, but when

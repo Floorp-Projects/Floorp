@@ -165,7 +165,7 @@ const mockDevice = {
   type: "type",
   establishControlChannel(url, presentationId) {
     if (triggerControlChannelError) {
-      throw Cr.NS_ERROR_FAILURE;
+      throw Components.Exception("", Cr.NS_ERROR_FAILURE);
     }
     sendAsyncMessage("control-channel-established");
     return mockControlChannelOfSender;
@@ -185,7 +185,7 @@ const mockDevicePrompt = {
   ]),
   createInstance(aOuter, aIID) {
     if (aOuter) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
+      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
     }
     return this.QueryInterface(aIID);
   },
@@ -220,7 +220,7 @@ const mockRequestUIGlue = {
   },
   createInstance(aOuter, aIID) {
     if (aOuter) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
+      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
     }
     return this.QueryInterface(aIID);
   },

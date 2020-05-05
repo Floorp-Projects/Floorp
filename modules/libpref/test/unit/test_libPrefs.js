@@ -403,7 +403,7 @@ function run_test() {
       if (aIID.equals(Ci.nsIObserver) || aIID.equals(Ci.nsISupports)) {
         return this;
       }
-      throw Cr.NS_NOINTERFACE;
+      throw Components.Exception("", Cr.NS_NOINTERFACE);
     }
 
     observe(aSubject, aTopic, aState) {

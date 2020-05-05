@@ -767,7 +767,7 @@ PlacesTreeView.prototype = {
 
     // XXX bug 517701: We don't know what to do when the root node is removed.
     if (aNode == this._rootNode) {
-      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+      throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
     }
 
     // Bail out for hidden separators.
@@ -781,7 +781,7 @@ PlacesTreeView.prototype = {
         : this._getRowForNode(aParentNode, true);
     let oldRow = this._getRowForNode(aNode, true, parentRow, aOldIndex);
     if (oldRow < 0) {
-      throw Cr.NS_ERROR_UNEXPECTED;
+      throw Components.Exception("", Cr.NS_ERROR_UNEXPECTED);
     }
 
     // If the node was exclusively selected, the node next to it will be
@@ -847,7 +847,7 @@ PlacesTreeView.prototype = {
         : this._getRowForNode(aOldParent, true);
     let oldRow = this._getRowForNode(aNode, true, oldParentRow, aOldIndex);
     if (oldRow < 0) {
-      throw Cr.NS_ERROR_UNEXPECTED;
+      throw Components.Exception("", Cr.NS_ERROR_UNEXPECTED);
     }
 
     // If this node is a container it could take up more than one row.
@@ -1225,7 +1225,7 @@ PlacesTreeView.prototype = {
    */
   nodeForTreeIndex(aIndex) {
     if (aIndex > this._rows.length) {
-      throw Cr.NS_ERROR_INVALID_ARG;
+      throw Components.Exception("", Cr.NS_ERROR_INVALID_ARG);
     }
 
     return this._getNodeForRow(aIndex);
@@ -1394,7 +1394,7 @@ PlacesTreeView.prototype = {
 
   canDrop: function PTV_canDrop(aRow, aOrientation, aDataTransfer) {
     if (!this._result) {
-      throw Cr.NS_ERROR_UNEXPECTED;
+      throw Components.Exception("", Cr.NS_ERROR_UNEXPECTED);
     }
 
     if (this._controller.disableUserActions) {
@@ -1634,7 +1634,7 @@ PlacesTreeView.prototype = {
 
   toggleOpenState: function PTV_toggleOpenState(aRow) {
     if (!this._result) {
-      throw Cr.NS_ERROR_UNEXPECTED;
+      throw Components.Exception("", Cr.NS_ERROR_UNEXPECTED);
     }
 
     let node = this._rows[aRow];
@@ -1661,7 +1661,7 @@ PlacesTreeView.prototype = {
 
   cycleHeader: function PTV_cycleHeader(aColumn) {
     if (!this._result) {
-      throw Cr.NS_ERROR_UNEXPECTED;
+      throw Components.Exception("", Cr.NS_ERROR_UNEXPECTED);
     }
 
     // Sometimes you want a tri-state sorting, and sometimes you don't. This
@@ -1764,7 +1764,7 @@ PlacesTreeView.prototype = {
 
         break;
       default:
-        throw Cr.NS_ERROR_INVALID_ARG;
+        throw Components.Exception("", Cr.NS_ERROR_INVALID_ARG);
     }
     this._result.sortingMode = newSort;
   },

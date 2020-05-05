@@ -16,7 +16,7 @@ function test_not_initialized() {
   try {
     var dummy = p.outputStream;
     dump("dummy: " + dummy + "\n");
-    throw Cr.NS_ERROR_FAILURE;
+    throw Components.Exception("", Cr.NS_ERROR_FAILURE);
   } catch (e) {
     if (e.result != Cr.NS_ERROR_NOT_INITIALIZED) {
       do_throw(

@@ -36,7 +36,7 @@ NotificationCallbacks.prototype = {
     Assert.equal(newChan.originalURI.spec, this._newURI.spec);
     Assert.equal(newChan.originalURI, newChan.URI);
     Assert.equal(newChan.URI.spec, this._newURI.spec);
-    throw Cr.NS_ERROR_ABORT;
+    throw Components.Exception("", Cr.NS_ERROR_ABORT);
   },
 };
 

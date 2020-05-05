@@ -189,7 +189,7 @@ var PACSystemSettings = {
   mainThreadOnly: true,
   PACURI: null,
   getProxyForURI: function getProxyForURI(aURI) {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 };
 

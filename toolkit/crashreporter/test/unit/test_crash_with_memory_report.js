@@ -34,7 +34,7 @@ add_task(async function run_test() {
           ) {
             return file.clone();
           }
-          throw Cr.NS_ERROR_FAILURE;
+          throw Components.Exception("", Cr.NS_ERROR_FAILURE);
         },
         QueryInterface: ChromeUtils.generateQI(["nsIDirectoryServiceProvider"]),
       };

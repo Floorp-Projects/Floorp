@@ -119,7 +119,7 @@ class BrowserDOMWindow {
     console.error(
       "createContentWindow should never be called from a remote browser"
     );
-    throw Cr.NS_ERROR_FAILURE;
+    throw Components.Exception("", Cr.NS_ERROR_FAILURE);
   }
 
   /**
@@ -135,7 +135,7 @@ class BrowserDOMWindow {
    */
   openURI(uri, openWindowInfo, where, flags, triggeringPrincipal, csp) {
     console.error("openURI should never be called from a remote browser");
-    throw Cr.NS_ERROR_FAILURE;
+    throw Components.Exception("", Cr.NS_ERROR_FAILURE);
   }
 
   /**

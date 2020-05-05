@@ -1515,7 +1515,7 @@ class nsContextMenu {
           timer.cancel();
           channel.cancel(NS_ERROR_SAVE_LINK_AS_TIMEOUT);
         }
-        throw Cr.NS_ERROR_NO_INTERFACE;
+        throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
       },
     };
 

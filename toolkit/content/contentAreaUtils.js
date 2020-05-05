@@ -182,7 +182,7 @@ DownloadListener.prototype = {
       return ww.getPrompt(this.window, aIID);
     }
 
-    throw Cr.NS_ERROR_NO_INTERFACE;
+    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   },
 };
 
@@ -1276,7 +1276,7 @@ function openURL(aURL) {
         if (iid.equals(Ci.nsILoadGroup)) {
           return loadgroup;
         }
-        throw Cr.NS_ERROR_NO_INTERFACE;
+        throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
       },
     };
 

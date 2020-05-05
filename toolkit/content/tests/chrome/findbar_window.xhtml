@@ -43,7 +43,7 @@
             aIID.Equals(Ci.nsISupports))
          return this;
 
-        throw Cr.NS_NOINTERFACE;
+        throw Components.Exception("", Cr.NS_NOINTERFACE);
       },
 
       setOverLink: function(aStatusText) {

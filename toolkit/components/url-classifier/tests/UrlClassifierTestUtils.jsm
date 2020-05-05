@@ -210,7 +210,7 @@ var UrlClassifierTestUtils = {
             return listener;
           }
 
-          throw Cr.NS_ERROR_NO_INTERFACE;
+          throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
         },
         updateUrlRequested: url => {},
         streamFinished: status => {},

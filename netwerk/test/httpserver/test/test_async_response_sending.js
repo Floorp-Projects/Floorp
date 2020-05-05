@@ -575,7 +575,7 @@ function CustomPipe(name) {
       );
 
       if (this._readable < count || self._data.length < count) {
-        throw Cr.NS_BASE_STREAM_WOULD_BLOCK;
+        throw Components.Exception("", Cr.NS_BASE_STREAM_WOULD_BLOCK);
       }
       this._readable -= count;
       return self._data.splice(0, count);
@@ -881,7 +881,7 @@ function CustomPipe(name) {
       );
 
       if (this._writable < bytes.length) {
-        throw Cr.NS_BASE_STREAM_WOULD_BLOCK;
+        throw Components.Exception("", Cr.NS_BASE_STREAM_WOULD_BLOCK);
       }
 
       self._data.push.apply(self._data, bytes);
@@ -907,7 +907,7 @@ function CustomPipe(name) {
         throw self._status;
       }
       if (this._writable === 0) {
-        throw Cr.NS_BASE_STREAM_WOULD_BLOCK;
+        throw Components.Exception("", Cr.NS_BASE_STREAM_WOULD_BLOCK);
       }
 
       var actualWritten;

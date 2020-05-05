@@ -77,7 +77,7 @@ class UnxpectedAuthPrompt2 {
   }
   asyncPromptAuth() {
     this.signal.triggered = true;
-    throw Cr.ERROR_UNEXPECTED;
+    throw Components.Exception("", Cr.ERROR_UNEXPECTED);
   }
 }
 
@@ -105,7 +105,7 @@ class AuthRequestor {
     if (iid.equals(Ci.nsIAuthPrompt2)) {
       return this.prompt();
     }
-    throw Cr.NS_ERROR_NO_INTERFACE;
+    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   }
 }
 

@@ -41,7 +41,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=800386
           forwardFailed = true;
         }
       }
-      throw Cr.NS_ERROR_NO_INTERFACE;
+      throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
     },
 
     QueryInterface: ChromeUtils.generateQI([Ci.nsIInterfaceRequestor])

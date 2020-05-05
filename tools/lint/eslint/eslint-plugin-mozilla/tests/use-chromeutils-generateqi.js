@@ -40,7 +40,7 @@ function QueryInterface(iid) {
   ) {
     return this;
   }
-  throw Cr.NS_ERROR_NO_INTERFACE;
+  throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
 }
 
 ruleTester.run("use-chromeutils-generateqi", rule, {

@@ -83,7 +83,7 @@ NetworkResponseListener.prototype = {
     if (this._wrappedNotificationCallbacks) {
       return this._wrappedNotificationCallbacks.getInterface(iid);
     }
-    throw Cr.NS_ERROR_NO_INTERFACE;
+    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   },
 
   /**

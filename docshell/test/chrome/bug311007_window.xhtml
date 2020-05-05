@@ -50,7 +50,7 @@ WebProgressListener.prototype = {
         aIID.equals(Ci.nsISupportsWeakReference) ||
         aIID.equals(Ci.nsISupports))
       return this;
-    throw Cr.NS_NOINTERFACE;
+    throw Components.Exception("", Cr.NS_NOINTERFACE);
   },
 
   onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {

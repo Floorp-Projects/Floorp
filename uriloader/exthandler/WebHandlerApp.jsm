@@ -46,7 +46,7 @@ nsWebHandlerApp.prototype = {
 
   equals(aHandlerApp) {
     if (!aHandlerApp) {
-      throw Cr.NS_ERROR_NULL_POINTER;
+      throw Components.Exception("", Cr.NS_ERROR_NULL_POINTER);
     }
 
     if (
