@@ -30,10 +30,7 @@ loader.lazyGetter(this, "SimulationMenuButton", function() {
 });
 
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const {
-  disable,
-  updateCanBeDisabled,
-} = require("devtools/client/accessibility/actions/ui");
+const { disable } = require("devtools/client/accessibility/actions/ui");
 
 class Toolbar extends Component {
   static get propTypes() {
@@ -44,8 +41,6 @@ class Toolbar extends Component {
       toolboxDoc: PropTypes.object.isRequired,
       audit: PropTypes.func.isRequired,
       simulate: PropTypes.func,
-      startListeningForLifecycleEvents: PropTypes.func.isRequired,
-      stopListeningForLifecycleEvents: PropTypes.func.isRequired,
     };
   }
 
@@ -57,23 +52,6 @@ class Toolbar extends Component {
     };
 
     this.onDisable = this.onDisable.bind(this);
-    this.onCanBeDisabledChange = this.onCanBeDisabledChange.bind(this);
-  }
-
-  componentWillMount() {
-    this.props.startListeningForLifecycleEvents({
-      "can-be-disabled-change": this.onCanBeDisabledChange,
-    });
-  }
-
-  componentWillUnmount() {
-    this.props.stopListeningForLifecycleEvents({
-      "can-be-disabled-change": this.onCanBeDisabledChange,
-    });
-  }
-
-  onCanBeDisabledChange(canBeDisabled) {
-    this.props.dispatch(updateCanBeDisabled(canBeDisabled));
   }
 
   onDisable() {
