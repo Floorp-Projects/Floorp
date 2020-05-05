@@ -129,6 +129,8 @@ class QuotaRequestChild final : public PQuotaRequestChild {
 
   void HandleResponse(bool aResponse);
 
+  void HandleResponse(const nsAString& aResponse);
+
   void HandleResponse(const EstimateResponse& aResponse);
 
   void HandleResponse(const nsTArray<nsCString>& aResponse);
