@@ -9639,12 +9639,6 @@ AbortReasonOr<Ok> IonBuilder::jsop_arguments() {
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_newtarget() {
-  if (!info().funMaybeLazy()) {
-    MOZ_ASSERT(!info().script()->isForEval());
-    pushConstant(NullValue());
-    return Ok();
-  }
-
   MOZ_ASSERT(info().funMaybeLazy());
 
   if (info().funMaybeLazy()->isArrow()) {
