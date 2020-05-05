@@ -288,52 +288,7 @@ void Registers::SyncPopulate() {
 
 #if defined(GP_PLAT_amd64_windows)
 
-#  ifndef MOZ_BASE_PROFILER
-// If MOZ_BASE_PROFILER is *not* #defined, we need to implement this here, as
-// the one in mozglue/baseprofiler will not even be built.
-static WindowsDllInterceptor NtDllIntercept;
-
-typedef NTSTATUS(NTAPI* LdrUnloadDll_func)(HMODULE module);
-static WindowsDllInterceptor::FuncHookType<LdrUnloadDll_func> stub_LdrUnloadDll;
-
-static NTSTATUS NTAPI patched_LdrUnloadDll(HMODULE module) {
-  // Prevent the stack walker from suspending this thread when LdrUnloadDll
-  // holds the RtlLookupFunctionEntry lock.
-  AutoSuppressStackWalking suppress;
-  return stub_LdrUnloadDll(module);
-}
-
-// These pointers are disguised as PVOID to avoid pulling in obscure headers
-typedef PVOID(WINAPI* LdrResolveDelayLoadedAPI_func)(
-    PVOID ParentModuleBase, PVOID DelayloadDescriptor, PVOID FailureDllHook,
-    PVOID FailureSystemHook, PVOID ThunkAddress, ULONG Flags);
-static WindowsDllInterceptor::FuncHookType<LdrResolveDelayLoadedAPI_func>
-    stub_LdrResolveDelayLoadedAPI;
-
-static PVOID WINAPI patched_LdrResolveDelayLoadedAPI(
-    PVOID ParentModuleBase, PVOID DelayloadDescriptor, PVOID FailureDllHook,
-    PVOID FailureSystemHook, PVOID ThunkAddress, ULONG Flags) {
-  // Prevent the stack walker from suspending this thread when
-  // LdrResolveDelayLoadAPI holds the RtlLookupFunctionEntry lock.
-  AutoSuppressStackWalking suppress;
-  return stub_LdrResolveDelayLoadedAPI(ParentModuleBase, DelayloadDescriptor,
-                                       FailureDllHook, FailureSystemHook,
-                                       ThunkAddress, Flags);
-}
-
-void InitializeWin64ProfilerHooks() {
-  NtDllIntercept.Init("ntdll.dll");
-  stub_LdrUnloadDll.Set(NtDllIntercept, "LdrUnloadDll", &patched_LdrUnloadDll);
-  if (IsWin8OrLater()) {  // LdrResolveDelayLoadedAPI was introduced in Win8
-    stub_LdrResolveDelayLoadedAPI.Set(NtDllIntercept,
-                                      "LdrResolveDelayLoadedAPI",
-                                      &patched_LdrResolveDelayLoadedAPI);
-  }
-}
-
-#  else  // ndef MOZ_BASE_PROFILER
-// If MOZ_BASE_PROFILER is #defined, we just use InitializeWin64ProfilerHooks
-// that it implements.
+// Use InitializeWin64ProfilerHooks from the base profiler.
 
 namespace mozilla {
 namespace baseprofiler {
@@ -343,5 +298,4 @@ MFBT_API void InitializeWin64ProfilerHooks();
 
 using mozilla::baseprofiler::InitializeWin64ProfilerHooks;
 
-#  endif  // ndef MOZ_BASE_PROFILER else
 #endif    // defined(GP_PLAT_amd64_windows)

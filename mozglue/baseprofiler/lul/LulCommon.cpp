@@ -39,7 +39,7 @@
 
 #include "BaseProfiler.h"
 
-#ifdef MOZ_BASE_PROFILER
+#ifdef MOZ_GECKO_PROFILER
 
 // There's no internal-only interface for LulCommon.  Hence include
 // the external interface directly.
@@ -103,4 +103,4 @@ const UniqueString* UniqueStringUniverse::ToUniqueString(string str) {
 
 }  // namespace lul
 
-#endif  // MOZ_BASE_PROFILER
+#endif  // MOZ_GECKO_PROFILER

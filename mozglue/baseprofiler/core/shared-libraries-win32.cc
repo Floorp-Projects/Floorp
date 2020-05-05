@@ -5,7 +5,7 @@
 
 #include "BaseProfiler.h"
 
-#ifdef MOZ_BASE_PROFILER
+#ifdef MOZ_GECKO_PROFILER
 
 #  include <windows.h>
 #  include <dbghelp.h>
@@ -238,4 +238,4 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
 void SharedLibraryInfo::Initialize() { /* do nothing */
 }
 
-#endif  // MOZ_BASE_PROFILER
+#endif  // MOZ_GECKO_PROFILER

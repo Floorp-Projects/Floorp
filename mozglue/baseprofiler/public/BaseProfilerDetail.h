@@ -14,12 +14,12 @@
 
 #ifdef DEBUG
 #  include "BaseProfiler.h"
-#  ifdef MOZ_BASE_PROFILER
+#  ifdef MOZ_GECKO_PROFILER
 #    include "mozilla/Atomics.h"
 // When #defined, safety-checking code is added. By default: DEBUG builds,
-// and we need `MOZ_BASE_PROFILER` to use `profiler_current_thread_id()`.
+// and we need `MOZ_GECKO_PROFILER` to use `profiler_current_thread_id()`.
 #    define MOZ_BASE_PROFILER_DEBUG
-#  endif  // MOZ_BASE_PROFILER
+#  endif  // MOZ_GECKO_PROFILER
 #endif    // DEBUG
 
 namespace mozilla {

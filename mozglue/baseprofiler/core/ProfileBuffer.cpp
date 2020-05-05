@@ -6,7 +6,7 @@
 
 #include "BaseProfiler.h"
 
-#ifdef MOZ_BASE_PROFILER
+#ifdef MOZ_GECKO_PROFILER
 
 #  include "ProfileBuffer.h"
 
@@ -208,4 +208,4 @@ void ProfileBufferCollector::CollectProfilingStackFrame(
 }  // namespace baseprofiler
 }  // namespace mozilla
 
-#endif  // MOZ_BASE_PROFILER
+#endif  // MOZ_GECKO_PROFILER

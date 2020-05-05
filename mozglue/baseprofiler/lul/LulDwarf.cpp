@@ -43,7 +43,7 @@
 
 #include "BaseProfiler.h"
 
-#ifdef MOZ_BASE_PROFILER
+#ifdef MOZ_GECKO_PROFILER
 
 #  include <stdint.h>
 #  include <stdio.h>
@@ -2255,4 +2255,4 @@ void DwarfCFIToModule::Reporter::ExpressionCouldNotBeSummarised(
 
 }  // namespace lul
 
-#endif  // MOZ_BASE_PROFILER
+#endif  // MOZ_GECKO_PROFILER

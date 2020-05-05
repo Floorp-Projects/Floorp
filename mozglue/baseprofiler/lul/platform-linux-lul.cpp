@@ -5,7 +5,7 @@
 
 #include "BaseProfiler.h"
 
-#ifdef MOZ_BASE_PROFILER
+#ifdef MOZ_GECKO_PROFILER
 
 #  include <stdio.h>
 #  include <signal.h>
@@ -83,4 +83,4 @@ void logging_sink_for_LUL(const char* str) {
   // VERBOSE_LOG("[%d] %s", profiler_current_process_id(), str);
 }
 
-#endif  // MOZ_BASE_PROFILER
+#endif  // MOZ_GECKO_PROFILER

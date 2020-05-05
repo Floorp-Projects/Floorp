@@ -5,7 +5,7 @@
 
 #include "BaseProfiler.h"
 
-#ifdef MOZ_BASE_PROFILER
+#ifdef MOZ_GECKO_PROFILER
 
 #  include "BaseProfilerSharedLibraries.h"
 
@@ -185,4 +185,4 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
   return sharedLibraryInfo;
 }
 
-#endif  // MOZ_BASE_PROFILER
+#endif  // MOZ_GECKO_PROFILER

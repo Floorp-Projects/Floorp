@@ -6,7 +6,7 @@
 
 #include "BaseProfiler.h"
 
-#ifdef MOZ_BASE_PROFILER
+#ifdef MOZ_GECKO_PROFILER
 
 #  include "RegisteredThread.h"
 
@@ -44,4 +44,4 @@ size_t RegisteredThread::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
 }  // namespace baseprofiler
 }  // namespace mozilla
 
-#endif  // MOZ_BASE_PROFILER
+#endif  // MOZ_GECKO_PROFILER
