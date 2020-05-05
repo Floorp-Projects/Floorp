@@ -64,9 +64,11 @@ for i in *.deb; do
     dpkg-deb --fsys-tarfile $i | tar xv -C "$SOURCE_DEST" --wildcards "./usr/share/locale-langpack/*/LC_MESSAGES/gtk30.mo" || true
 done
 
+# Add wrapper script to set TMPDIR appropriate for the snap
+cp -v "$SCRIPT_DIRECTORY/tmpdir" "$SOURCE_DEST"
+
 # Generate snapcraft manifest
 sed -e "s/@VERSION@/${VERSION}/g" -e "s/@BUILD_NUMBER@/${BUILD_NUMBER}/g" ${PRODUCT}.snapcraft.yaml.in > "${WORKSPACE}/snapcraft.yaml"
-cp -v "$SCRIPT_DIRECTORY/mimeapps.list" "$WORKSPACE"
 cd "${WORKSPACE}"
 
 # Make sure snapcraft knows we're building amd64, even though we may not be on this arch.
