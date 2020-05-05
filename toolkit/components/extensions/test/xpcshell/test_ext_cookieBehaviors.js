@@ -138,7 +138,13 @@ add_task(async function test_ext_page_allowed_storage() {
     "BEHAVIOR_REJECT_FOREIGN",
     "BEHAVIOR_REJECT",
     "BEHAVIOR_REJECT_TRACKER",
+    "BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN",
   ];
+  equal(
+    cookieBehaviors.length,
+    Ci.nsICookieService.BEHAVIOR_LAST,
+    "all behaviors should be covered"
+  );
 
   for (const behavior of cookieBehaviors) {
     info(
