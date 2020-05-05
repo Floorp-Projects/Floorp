@@ -3,6 +3,11 @@
   "name": "actions",
   "version": "1.0",
   "description": "Defines Page and Browser actions",
+  "applications": {
+    "gecko": {
+      "id": "actions@tests.mozilla.org"
+    }
+  },
   "browser_action": {
     "default_title": "Test action default",
     "theme_icons": [{
@@ -30,6 +35,7 @@
   "permissions": [
     "tabs",
     "geckoViewAddons",
-    "nativeMessaging"
+    "nativeMessaging",
+    "nativeMessagingFromContent"
   ]
 }

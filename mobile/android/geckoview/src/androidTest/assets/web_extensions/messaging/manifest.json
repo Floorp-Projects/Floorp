@@ -6,6 +6,11 @@
   "icons": {
     "48": "icons/border-48.png"
   },
+  "applications": {
+    "gecko": {
+      "id": "messaging@tests.mozilla.org"
+    }
+  },
   "background": {
     "scripts": ["background.js"]
   },
