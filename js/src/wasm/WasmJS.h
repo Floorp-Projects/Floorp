@@ -238,8 +238,9 @@ class WasmGlobalObject : public NativeObject {
     int64_t i64;
     float f32;
     double f64;
+    wasm::V128 v128;
     wasm::AnyRef ref;
-    Cell() : i64(0) {}
+    Cell() : v128() {}
     ~Cell() = default;
   };
 

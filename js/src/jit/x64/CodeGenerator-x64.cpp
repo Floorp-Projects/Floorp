@@ -380,6 +380,7 @@ void CodeGeneratorX64::wasmStore(const wasm::MemoryAccessDesc& access,
         masm.movl(cst, dstAddr);
         break;
       case Scalar::Int64:
+      case Scalar::V128:
       case Scalar::Float32:
       case Scalar::Float64:
       case Scalar::Uint8Clamped:

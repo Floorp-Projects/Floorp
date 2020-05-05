@@ -59,6 +59,9 @@ class ABIResult {
       case ValType::Ref:
         MOZ_ASSERT(loc_ == Location::Gpr);
         break;
+      case ValType::V128:
+        MOZ_ASSERT(loc_ == Location::Fpr);
+        break;
     }
 #endif
   }
@@ -84,6 +87,9 @@ class ABIResult {
   static constexpr size_t StackSizeOfFloat = sizeof(double);
 #endif
   static constexpr size_t StackSizeOfDouble = sizeof(double);
+#ifdef ENABLE_WASM_SIMD
+  static constexpr size_t StackSizeOfV128 = sizeof(V128);
+#endif
 
   ABIResult(ValType type, Register gpr)
       : type_(type), loc_(Location::Gpr), gpr_(gpr) {

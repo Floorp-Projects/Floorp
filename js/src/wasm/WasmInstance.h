@@ -187,6 +187,7 @@ class Instance {
   static int32_t callImport_void(Instance*, int32_t, int32_t, uint64_t*);
   static int32_t callImport_i32(Instance*, int32_t, int32_t, uint64_t*);
   static int32_t callImport_i64(Instance*, int32_t, int32_t, uint64_t*);
+  static int32_t callImport_v128(Instance*, int32_t, int32_t, uint64_t*);
   static int32_t callImport_f64(Instance*, int32_t, int32_t, uint64_t*);
   static int32_t callImport_anyref(Instance*, int32_t, int32_t, uint64_t*);
   static int32_t callImport_nullref(Instance*, int32_t, int32_t, uint64_t*);

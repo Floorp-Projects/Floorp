@@ -209,6 +209,8 @@ static bool ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
       return ToWebAssemblyValue_f32<Debug>(cx, val, (float*)loc);
     case ValType::F64:
       return ToWebAssemblyValue_f64<Debug>(cx, val, (double*)loc);
+    case ValType::V128:
+      MOZ_CRASH("unexpected v128 in ToWebAssemblyValue");
     case ValType::Ref:
       switch (type.refTypeKind()) {
         case RefType::Func:
@@ -297,6 +299,8 @@ static bool ToJSValue(JSContext* cx, const void* src, ValType type,
     case ValType::F64:
       return ToJSValue_f64<Debug>(cx, *reinterpret_cast<const double*>(src),
                                   dst);
+    case ValType::V128:
+      MOZ_CRASH("unhandled type in ToJSValue");
     case ValType::Ref:
       switch (type.refTypeKind()) {
         case RefType::Func:
@@ -418,9 +422,13 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
     return false;
   }
 
-  if (fi.funcType().hasI64ArgOrRet() && !I64BigIntConversionAvailable(cx)) {
+  if ((fi.funcType().hasI64ArgOrRet() && !I64BigIntConversionAvailable(cx))
+#ifdef ENABLE_WASM_SIMD
+      || fi.funcType().hasV128ArgOrRet()
+#endif
+  ) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_BAD_I64_TYPE);
+                             JSMSG_WASM_BAD_VAL_TYPE, "i64 or v128");
     return false;
   }
 
@@ -478,6 +486,11 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
     return true;
   }
 
+#ifdef ENABLE_WASM_SIMD
+  // Should have been guarded earlier
+  MOZ_ASSERT(!fi.funcType().hasV128ArgOrRet());
+#endif
+
   // Functions with unsupported reference types in signature don't have a jit
   // exit at the moment.
   if (fi.funcType().temporarilyUnsupportedReftypeForExit()) {
@@ -523,6 +536,8 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
 #else
           MOZ_CRASH("NYI");
 #endif
+        case ValType::V128:
+          MOZ_CRASH("Not needed per spec");
         case ValType::F32:
           if (!argTypes->hasType(TypeSet::DoubleType())) {
             return true;
@@ -612,9 +627,18 @@ Instance::callImport_i64(Instance* instance, int32_t funcImportIndex,
   return ToWebAssemblyValue_i64(cx, rval, (int64_t*)argv);
 #else
   JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                           JSMSG_WASM_BAD_I64_TYPE);
+                           JSMSG_WASM_BAD_VAL_TYPE, "i64");
   return false;
 #endif
+}
+
+/* static */ int32_t /* 0 to signal trap; 1 to signal OK */
+Instance::callImport_v128(Instance* instance, int32_t funcImportIndex,
+                          int32_t argc, uint64_t* argv) {
+  JSContext* cx = TlsContext.get();
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           JSMSG_WASM_BAD_VAL_TYPE, "v128");
+  return false;
 }
 
 /* static */ int32_t /* 0 to signal trap; 1 to signal OK */
@@ -1412,6 +1436,11 @@ void CopyValPostBarriered(uint8_t* dst, const Val& src) {
       memcpy(dst, &x, sizeof(x));
       break;
     }
+    case ValType::V128: {
+      V128 x = src.v128();
+      memcpy(dst, &x, sizeof(x));
+      break;
+    }
     case ValType::Ref: {
       // TODO/AnyRef-boxing: With boxed immediates and strings, the write
       // barrier is going to have to be more complicated.
@@ -2100,9 +2129,13 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
     return false;
   }
 
-  if (funcType->hasI64ArgOrRet() && !I64BigIntConversionAvailable(cx)) {
+  if ((funcType->hasI64ArgOrRet() && !I64BigIntConversionAvailable(cx))
+#ifdef ENABLE_WASM_SIMD
+      || funcType->hasV128ArgOrRet()
+#endif
+  ) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_BAD_I64_TYPE);
+                             JSMSG_WASM_BAD_VAL_TYPE, "i64 or v128");
     return false;
   }
 

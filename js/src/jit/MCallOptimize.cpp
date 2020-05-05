@@ -4073,6 +4073,8 @@ IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
       case wasm::ValType::F64:
         conversion = MToDouble::New(alloc(), arg);
         break;
+      case wasm::ValType::V128:
+        MOZ_CRASH("impossible per above check");
       case wasm::ValType::Ref:
         switch (sig.args()[i].refTypeKind()) {
           case wasm::RefType::Any:

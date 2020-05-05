@@ -1260,6 +1260,7 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
     case SymbolicAddress::CallImport_Void:
     case SymbolicAddress::CallImport_I32:
     case SymbolicAddress::CallImport_I64:
+    case SymbolicAddress::CallImport_V128:
     case SymbolicAddress::CallImport_F64:
     case SymbolicAddress::CallImport_FuncRef:
     case SymbolicAddress::CallImport_AnyRef:
@@ -1359,8 +1360,8 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native wake (in wasm)";
     case SymbolicAddress::CoerceInPlace_JitEntry:
       return "out-of-line coercion for jit entry arguments (in wasm)";
-    case SymbolicAddress::ReportInt64JSCall:
-      return "jit call to int64 wasm function";
+    case SymbolicAddress::ReportInt64OrV128JSCall:
+      return "jit call to int64 or v128 wasm function";
     case SymbolicAddress::MemCopy:
     case SymbolicAddress::MemCopyShared:
       return "call to native memory.copy function";

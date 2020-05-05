@@ -1405,6 +1405,9 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
       case ValType::F64:
         offset = layout.addScalar(Scalar::Float64);
         break;
+      case ValType::V128:
+        offset = layout.addScalar(Scalar::V128);
+        break;
       case ValType::Ref:
         switch (fields[i].type.refTypeKind()) {
           case RefType::TypeIndex:
@@ -1659,6 +1662,7 @@ static bool GlobalIsJSCompatible(Decoder& d, ValType type) {
     case ValType::F32:
     case ValType::F64:
     case ValType::I64:
+    case ValType::V128:
       break;
     case ValType::Ref:
       switch (type.refTypeKind()) {
@@ -2943,11 +2947,12 @@ bool wasm::Validate(JSContext* cx, const ShareableBytes& bytecode,
   bool multiValueConfigured = MultiValuesAvailable(cx);
   bool hugeMemory = false;
   bool bigIntConfigured = I64BigIntConversionAvailable(cx);
+  bool v128Configured = SimdAvailable(cx);
 
   CompilerEnvironment compilerEnv(
       CompileMode::Once, Tier::Optimized, OptimizedBackend::Ion,
       DebugEnabled::False, multiValueConfigured, refTypesConfigured,
-      gcTypesConfigured, hugeMemory, bigIntConfigured);
+      gcTypesConfigured, hugeMemory, bigIntConfigured, v128Configured);
   ModuleEnvironment env(
       &compilerEnv,
       cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()

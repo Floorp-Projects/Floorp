@@ -79,6 +79,9 @@ Val::Val(const LitVal& val) {
     case ValType::F64:
       u.f64_ = val.f64();
       return;
+    case ValType::V128:
+      u.v128_ = val.v128();
+      return;
     case ValType::Ref:
       u.ref_ = val.ref();
       return;
@@ -254,6 +257,7 @@ static bool IsImmediateType(ValType vt) {
     case ValType::I64:
     case ValType::F32:
     case ValType::F64:
+    case ValType::V128:
       return true;
     case ValType::Ref:
       switch (vt.refTypeKind()) {
@@ -280,14 +284,16 @@ static unsigned EncodeImmediateType(ValType vt) {
       return 2;
     case ValType::F64:
       return 3;
+    case ValType::V128:
+      return 4;
     case ValType::Ref:
       switch (vt.refTypeKind()) {
         case RefType::Func:
-          return 4;
-        case RefType::Any:
           return 5;
-        case RefType::Null:
+        case RefType::Any:
           return 6;
+        case RefType::Null:
+          return 7;
         case RefType::TypeIndex:
           break;
       }
@@ -708,6 +714,11 @@ bool DebugFrame::getLocal(uint32_t localIndex, MutableHandleValue vp) {
     case jit::MIRType::RefOrNull:
       vp.set(ObjectOrNullValue(*(JSObject**)dataPtr));
       break;
+#ifdef ENABLE_WASM_SIMD
+    case jit::MIRType::Int8x16:
+      vp.set(NumberValue(0));
+      break;
+#endif
     default:
       MOZ_CRASH("local type");
   }

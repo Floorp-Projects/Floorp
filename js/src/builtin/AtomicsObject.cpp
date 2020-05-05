@@ -267,6 +267,7 @@ bool perform(JSContext* cx, HandleValue objv, HandleValue idxv, Args... args) {
     case Scalar::Uint8Clamped:
     case Scalar::MaxTypedArrayViewType:
     case Scalar::Int64:
+    case Scalar::V128:
       break;
   }
   MOZ_CRASH("Unsupported TypedArray type");
