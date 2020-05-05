@@ -3459,6 +3459,7 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   mutedErrors_ = rhs.mutedErrors_;
   forceFullParse_ = rhs.forceFullParse_;
   forceStrictMode_ = rhs.forceStrictMode_;
+  skipFilenameValidation_ = rhs.skipFilenameValidation_;
   selfHostingMode = rhs.selfHostingMode;
   asmJSOption = rhs.asmJSOption;
   throwOnAsmJSValidationFailureOption = rhs.throwOnAsmJSValidationFailureOption;
@@ -3470,6 +3471,7 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   introductionOffset = rhs.introductionOffset;
   hasIntroductionInfo = rhs.hasIntroductionInfo;
   hideScriptFromDebugger = rhs.hideScriptFromDebugger;
+  nonSyntacticScope = rhs.nonSyntacticScope;
 };
 
 void JS::ReadOnlyCompileOptions::copyPODNonTransitiveOptions(
@@ -3479,8 +3481,6 @@ void JS::ReadOnlyCompileOptions::copyPODNonTransitiveOptions(
   scriptSourceOffset = rhs.scriptSourceOffset;
   isRunOnce = rhs.isRunOnce;
   noScriptRval = rhs.noScriptRval;
-  nonSyntacticScope = rhs.nonSyntacticScope;
-  skipFilenameValidation_ = rhs.skipFilenameValidation_;
 }
 
 JS::OwningCompileOptions::OwningCompileOptions(JSContext* cx)
