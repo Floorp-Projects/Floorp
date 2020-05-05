@@ -49,6 +49,7 @@
     <attr name="tabTrayItemUrl" format="reference" />
     <attr name="tabTrayItemBackground" format="reference" />
     <attr name="tabTrayItemSelectedBackground" format="reference" />
+    <attr name="tabTrayToolbarBackground" format="reference" />
 
     <declare-styleable name="LibraryListItem">
         <attr name="listItemTitle" format="reference" />
