@@ -59,12 +59,11 @@ GeckoMediaPluginServiceChild::GetContentParent(
 
   nsCString nodeIdString(aNodeIdString);
   nsCString api(aAPI);
-  nsTArray<nsCString> tags(aTags);
   RefPtr<GMPCrashHelper> helper(aHelper);
   RefPtr<GeckoMediaPluginServiceChild> self(this);
   GetServiceChild()->Then(
       thread, __func__,
-      [self, nodeIdString, api, tags, helper,
+      [self, nodeIdString, api, tags = aTags.Clone(), helper,
        rawHolder](GMPServiceChild* child) {
         UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>> holder(
             rawHolder);
@@ -136,12 +135,12 @@ GeckoMediaPluginServiceChild::GetContentParent(
 
   NodeIdData nodeId(aNodeId.mOrigin, aNodeId.mTopLevelOrigin, aNodeId.mGMPName);
   nsCString api(aAPI);
-  nsTArray<nsCString> tags(aTags);
   RefPtr<GMPCrashHelper> helper(aHelper);
   RefPtr<GeckoMediaPluginServiceChild> self(this);
   GetServiceChild()->Then(
       thread, __func__,
-      [self, nodeId, api, tags, helper, rawHolder](GMPServiceChild* child) {
+      [self, nodeId, api, tags = aTags.Clone(), helper,
+       rawHolder](GMPServiceChild* child) {
         UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>> holder(
             rawHolder);
         nsresult rv;

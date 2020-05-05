@@ -265,7 +265,7 @@ void ChromiumCDMChild::OnSessionMessage(const char* aSessionId,
   GMP_LOG_DEBUG("ChromiumCDMChild::OnSessionMessage(sid=%s, type=%" PRIu32
                 " size=%" PRIu32 ")",
                 aSessionId, aMessageType, aMessageSize);
-  nsTArray<uint8_t> message;
+  CopyableTArray<uint8_t> message;
   message.AppendElements(aMessage, aMessageSize);
   CallOnMessageLoopThread("gmp::ChromiumCDMChild::OnSessionMessage",
                           &ChromiumCDMChild::SendOnSessionMessage,
@@ -296,7 +296,7 @@ void ChromiumCDMChild::OnSessionKeysChange(const char* aSessionId,
   GMP_LOG_DEBUG("ChromiumCDMChild::OnSessionKeysChange(sid=%s) keys={%s}",
                 aSessionId, ToString(aKeysInfo, aKeysInfoCount).get());
 
-  nsTArray<CDMKeyInformation> keys;
+  CopyableTArray<CDMKeyInformation> keys;
   keys.SetCapacity(aKeysInfoCount);
   for (uint32_t i = 0; i < aKeysInfoCount; i++) {
     const cdm::KeyInformation& key = aKeysInfo[i];
@@ -663,7 +663,7 @@ mozilla::ipc::IPCResult ChromiumCDMChild::RecvInitializeVideoDecoder(
   config.format = static_cast<cdm::VideoFormat>(aConfig.mFormat());
   config.coded_size =
       mCodedSize = {aConfig.mImageWidth(), aConfig.mImageHeight()};
-  nsTArray<uint8_t> extraData(aConfig.mExtraData());
+  nsTArray<uint8_t> extraData(aConfig.mExtraData().Clone());
   config.extra_data = extraData.Elements();
   config.extra_data_size = extraData.Length();
   config.encryption_scheme =

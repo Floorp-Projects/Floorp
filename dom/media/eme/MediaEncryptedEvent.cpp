@@ -63,7 +63,7 @@ already_AddRefed<MediaEncryptedEvent> MediaEncryptedEvent::Constructor(
   RefPtr<MediaEncryptedEvent> e = new MediaEncryptedEvent(aOwner);
   e->InitEvent(NS_LITERAL_STRING("encrypted"), CanBubble::eNo, Cancelable::eNo);
   e->mInitDataType = aInitDataType;
-  e->mRawInitData = aInitData;
+  e->mRawInitData = aInitData.Clone();
   e->SetTrusted(true);
   return e.forget();
 }

@@ -54,7 +54,7 @@ void VideoStreamTrack::AddVideoOutput(VideoOutput* aOutput) {
 }
 
 void VideoStreamTrack::RemoveVideoOutput(VideoFrameContainer* aSink) {
-  for (const auto& output : nsTArray<RefPtr<VideoOutput>>(mVideoOutputs)) {
+  for (const auto& output : mVideoOutputs.Clone()) {
     if (output->mVideoFrameContainer == aSink) {
       mVideoOutputs.RemoveElement(output);
       RemoveDirectListener(output);
@@ -64,7 +64,7 @@ void VideoStreamTrack::RemoveVideoOutput(VideoFrameContainer* aSink) {
 }
 
 void VideoStreamTrack::RemoveVideoOutput(VideoOutput* aOutput) {
-  for (const auto& output : nsTArray<RefPtr<VideoOutput>>(mVideoOutputs)) {
+  for (const auto& output : mVideoOutputs.Clone()) {
     if (output == aOutput) {
       mVideoOutputs.RemoveElement(aOutput);
       RemoveDirectListener(aOutput);

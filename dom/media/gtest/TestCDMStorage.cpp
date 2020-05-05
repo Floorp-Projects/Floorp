@@ -400,7 +400,8 @@ class CDMStorageTest {
     auto thread = GetAbstractGMPThread();
     promise->Then(
         thread, __func__,
-        [self, aUpdates, thread](RefPtr<gmp::ChromiumCDMParent> cdm) {
+        [self, updates = std::move(aUpdates),
+         thread](RefPtr<gmp::ChromiumCDMParent> cdm) mutable {
           self->mCDM = cdm;
           EXPECT_TRUE(!!self->mCDM);
           self->mCallback.reset(new CallbackProxy(self));
@@ -410,8 +411,8 @@ class CDMStorageTest {
                      GetMainThreadEventTarget())
               ->Then(
                   thread, __func__,
-                  [self, aUpdates] {
-                    for (auto& update : aUpdates) {
+                  [self, updates = std::move(updates)] {
+                    for (const auto& update : updates) {
                       self->Update(update);
                     }
                   },
@@ -538,7 +539,7 @@ class CDMStorageTest {
    public:
     explicit NodeIdVerifier(const NodeInfo* aInfo)
         : mNodeInfo(aInfo),
-          mExpectedRemainingNodeIds(aInfo->expectedRemainingNodeIds) {}
+          mExpectedRemainingNodeIds(aInfo->expectedRemainingNodeIds.Clone()) {}
     void operator()(nsIFile* aFile) {
       nsCString salt;
       nsresult rv = ReadSalt(aFile, salt);
@@ -559,7 +560,7 @@ class CDMStorageTest {
   class StorageVerifier {
    public:
     explicit StorageVerifier(const NodeInfo* aInfo)
-        : mExpectedRemainingNodeIds(aInfo->expectedRemainingNodeIds) {}
+        : mExpectedRemainingNodeIds(aInfo->expectedRemainingNodeIds.Clone()) {}
     void operator()(nsIFile* aFile) {
       nsCString salt;
       nsresult rv = aFile->GetNativeLeafName(salt);

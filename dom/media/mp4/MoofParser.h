@@ -208,10 +208,10 @@ struct CencSampleEncryptionInfoEntry final {
 
   bool mIsEncrypted = false;
   uint8_t mIVSize = 0;
-  nsTArray<uint8_t> mKeyId;
+  CopyableTArray<uint8_t> mKeyId;
   uint8_t mCryptByteBlock = 0;
   uint8_t mSkipByteBlock = 0;
-  nsTArray<uint8_t> mConsantIV;
+  CopyableTArray<uint8_t> mConsantIV;
 };
 
 class Sgpd final : public Atom  // SampleGroupDescription box.

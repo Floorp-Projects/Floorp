@@ -1442,11 +1442,10 @@ void MediaRecorder::Start(const Optional<uint32_t>& aTimeslice,
   if (mStream) {
     mStream->GetTracks(tracks);
   }
-  for (const auto& t : nsTArray<RefPtr<MediaStreamTrack>>(tracks)) {
-    if (t->Ended()) {
-      tracks.RemoveElement(t);
-    }
-  }
+  tracks.RemoveElementsAt(
+      std::remove_if(tracks.begin(), tracks.end(),
+                     [](const auto& t) { return t->Ended(); }),
+      tracks.end());
 
   // 5. If the value of recorder’s state attribute is not inactive, throw an
   //    InvalidStateError DOMException and abort these steps.

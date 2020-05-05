@@ -64,8 +64,7 @@ struct MP4Interval {
     }
     MOZ_ASSERT(aNormalized->IsEmpty());
 
-    nsTArray<MP4Interval<T>> sorted;
-    sorted = aIntervals;
+    nsTArray<MP4Interval<T>> sorted = aIntervals.Clone();
     sorted.Sort(Compare());
 
     MP4Interval<T> current = sorted[0];

@@ -1836,7 +1836,7 @@ void MediaFormatReader::HandleDemuxedSamples(
 
       // If flushing is required, it will clear our array of queued samples.
       // So we may need to make a copy.
-      samples = decoder.mQueuedSamples;
+      samples = decoder.mQueuedSamples.Clone();
       if (!recyclable) {
         LOG("Decoder does not support recycling, recreate decoder.");
         ShutdownDecoder(aTrack);

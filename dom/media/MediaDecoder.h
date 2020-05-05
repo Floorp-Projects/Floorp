@@ -641,7 +641,7 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   Canonical<bool> mOutputCaptured;
 
   // Tracks that, if set, will get data routed through them.
-  Canonical<nsTArray<RefPtr<ProcessedMediaTrack>>> mOutputTracks;
+  Canonical<CopyableTArray<RefPtr<ProcessedMediaTrack>>> mOutputTracks;
 
   // PrincipalHandle to be used when feeding data into mOutputTracks.
   Canonical<PrincipalHandle> mOutputPrincipal;
@@ -693,7 +693,7 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   AbstractCanonical<bool>* CanonicalOutputCaptured() {
     return &mOutputCaptured;
   }
-  AbstractCanonical<nsTArray<RefPtr<ProcessedMediaTrack>>>*
+  AbstractCanonical<CopyableTArray<RefPtr<ProcessedMediaTrack>>>*
   CanonicalOutputTracks() {
     return &mOutputTracks;
   }

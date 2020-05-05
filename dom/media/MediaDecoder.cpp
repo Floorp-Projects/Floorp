@@ -237,7 +237,7 @@ void MediaDecoder::SetOutputCaptured(bool aCaptured) {
 void MediaDecoder::AddOutputTrack(RefPtr<ProcessedMediaTrack> aTrack) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
-  nsTArray<RefPtr<ProcessedMediaTrack>> tracks = mOutputTracks;
+  CopyableTArray<RefPtr<ProcessedMediaTrack>> tracks = mOutputTracks;
   tracks.AppendElement(std::move(aTrack));
   mOutputTracks = tracks;
 }
@@ -246,7 +246,7 @@ void MediaDecoder::RemoveOutputTrack(
     const RefPtr<ProcessedMediaTrack>& aTrack) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
-  nsTArray<RefPtr<ProcessedMediaTrack>> tracks = mOutputTracks;
+  CopyableTArray<RefPtr<ProcessedMediaTrack>> tracks = mOutputTracks;
   if (tracks.RemoveElement(aTrack)) {
     mOutputTracks = tracks;
   }

@@ -172,7 +172,7 @@ class AudioConfig {
    private:
     void UpdateChannelMap();
     const Channel* DefaultLayoutForChannels(uint32_t aChannels) const;
-    AutoTArray<Channel, MAX_CHANNELS> mChannels;
+    CopyableAutoTArray<Channel, MAX_CHANNELS> mChannels;
     ChannelMap mChannelMap;
     bool mValid;
   };
