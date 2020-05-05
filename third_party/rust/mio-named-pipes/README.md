@@ -12,7 +12,7 @@ A library for integrating Windows [Named Pipes] with [mio].
 ```toml
 # Cargo.toml
 [dependencies]
-mio-named-pipes = "0.6"
+mio-named-pipes = "0.1"
 mio = "0.6"
 ```
 
