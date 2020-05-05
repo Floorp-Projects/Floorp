@@ -117,11 +117,11 @@ class nsMathMLmtableFrame final : public nsTableFrame {
   nscoord GetRowSpacing(int32_t aStartRowIndex, int32_t aEndRowIndex) override;
 
   void SetColSpacingArray(const nsTArray<nscoord>& aColSpacing) {
-    mColSpacing = aColSpacing;
+    mColSpacing = aColSpacing.Clone();
   }
 
   void SetRowSpacingArray(const nsTArray<nscoord>& aRowSpacing) {
-    mRowSpacing = aRowSpacing;
+    mRowSpacing = aRowSpacing.Clone();
   }
 
   void SetFrameSpacing(nscoord aSpacingX, nscoord aSpacingY) {
