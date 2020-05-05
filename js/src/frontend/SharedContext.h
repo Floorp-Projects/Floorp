@@ -117,21 +117,25 @@ class SharedContext {
   JSContext* const cx_;
 
  protected:
-  enum class Kind : uint8_t { FunctionBox, Global, Eval, Module };
-
   CompilationInfo& compilationInfo_;
 
-  ThisBinding thisBinding_;
+  // See: BaseScript::immutableFlags_
+  ImmutableScriptFlags immutableFlags_ = {};
 
  public:
-  SourceExtent extent;
+  // See: BaseScript::extent_
+  SourceExtent extent = {};
 
-  // If defined, this is used to allocate a JSScript instead of the
-  // parser determined extent (above). This is used for certain top
-  // level contexts.
-  mozilla::Maybe<SourceExtent> scriptExtent;
+  // If defined, this is used to allocate a JSScript instead of the parser
+  // determined extent (above). This is used for certain top level contexts.
+  mozilla::Maybe<SourceExtent> scriptExtent = {};
 
  protected:
+  // See: ThisBinding
+  ThisBinding thisBinding_ = ThisBinding::Global;
+
+  // These flags do not have corresponding script flags and may be inherited
+  // from the scope chain in the case of eval and arrows.
   bool allowNewTarget_ : 1;
   bool allowSuperProperty_ : 1;
   bool allowSuperCall_ : 1;
@@ -145,10 +149,12 @@ class SharedContext {
   // True if "use strict"; appears in the body instead of being inherited.
   bool hasExplicitUseStrict_ : 1;
 
+  // End of fields.
+
+  enum class Kind : uint8_t { FunctionBox, Global, Eval, Module };
+
   // Alias enum into SharedContext
   using ImmutableFlags = ImmutableScriptFlagsEnum;
-
-  ImmutableScriptFlags immutableFlags_ = {};
 
   void computeAllowSyntax(Scope* scope);
   void computeInWith(Scope* scope);
@@ -284,8 +290,8 @@ class FunctionBox : public SharedContext {
 
   // The parser handles tracing the fields below via the FunctionBox linked
   // list represented by |traceLink_|.
-  FunctionBox* traceLink_;
-  FunctionBox* emitLink_;
+  FunctionBox* traceLink_ = nullptr;
+  FunctionBox* emitLink_ = nullptr;
 
   // This field is used for two purposes:
   //   * If this FunctionBox refers to the function being compiled, this field
@@ -297,61 +303,67 @@ class FunctionBox : public SharedContext {
   //     partially initialized enclosing scopes, so we must avoid storing the
   //     scope in the BaseScript until compilation has completed
   //     successfully.)
-  AbstractScopePtr enclosingScope_;
+  AbstractScopePtr enclosingScope_ = {};
 
   // Names from the named lambda scope, if a named lambda.
-  LexicalScope::Data* namedLambdaBindings_;
+  LexicalScope::Data* namedLambdaBindings_ = nullptr;
 
   // Names from the function scope.
-  FunctionScope::Data* functionScopeBindings_;
+  FunctionScope::Data* functionScopeBindings_ = nullptr;
 
   // Names from the extra 'var' scope of the function, if the parameter list
   // has expressions.
-  VarScope::Data* extraVarScopeBindings_;
+  VarScope::Data* extraVarScopeBindings_ = nullptr;
+
+  // The explicit name of the function.
+  JSAtom* explicitName_ = nullptr;
 
   // Index into CompilationInfo::funcData, which contains the function
   // information, either a JSFunction* (for a FunctionBox representing a real
   // function) or a FunctionCreationData.
-  size_t funcDataIndex_;
-
-  void initWithEnclosingParseContext(ParseContext* enclosing,
-                                     FunctionSyntaxKind kind, bool isArrow,
-                                     bool allowSuperProperty);
+  size_t funcDataIndex_ = (size_t)(-1);
 
  public:
+  // Back pointer used by asm.js for error messages.
+  FunctionNode* functionNode = nullptr;
+
+  // See: PrivateScriptData::fieldInitializers_
+  mozilla::Maybe<FieldInitializers> fieldInitializers = {};
+
+  FunctionFlags flags_ = {};  // See: FunctionFlags
+  uint16_t length = 0;        // See: ImmutableScriptData::funLength
+  uint16_t nargs_ = 0;        // JSFunction::nargs_
+
+  // Track if bytecode should be generated and if we have done so.
+  bool emitBytecode : 1;
+  bool wasEmitted : 1;
+
+  // Need to emit a synthesized Annex B assignment
+  bool isAnnexB : 1;
+
+  // Track if we saw "use asm" and if we successfully validated.
+  bool useAsm : 1;
+  bool isAsmJSModule_ : 1;
+
+  // Analysis of parameter list
+  bool hasParameterExprs : 1;
+  bool hasDestructuringArgs : 1;
+  bool hasDuplicateParameters : 1;
+
+  // Arrow function with expression body like: `() => 1`.
+  bool hasExprBody_ : 1;
+
+  // Analysis for use in heuristics.
+  bool usesApply : 1;   // Contains an f.apply() call
+  bool usesThis : 1;    // Contains 'this'
+  bool usesReturn : 1;  // Contains a 'return' statement
+
+  // End of fields.
+
   FunctionBox(JSContext* cx, FunctionBox* traceListHead, SourceExtent extent,
               CompilationInfo& compilationInfo, Directives directives,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
               JSAtom* explicitName, FunctionFlags flags, size_t index);
-
-  // Back pointer used by asm.js for error messages.
-  FunctionNode* functionNode;
-
-  mozilla::Maybe<FieldInitializers> fieldInitializers;
-
-  uint16_t length;
-
-  bool hasDestructuringArgs : 1;   /* parameter list contains destructuring
-                                      expression */
-  bool hasParameterExprs : 1;      /* parameter list contains expressions */
-  bool hasDuplicateParameters : 1; /* parameter list contains duplicate names */
-  bool useAsm : 1;                 /* see useAsmOrInsideUseAsm */
-  bool isAnnexB : 1;     /* need to emit a synthesized Annex B assignment */
-  bool wasEmitted : 1;   /* Bytecode has been emitted for this function. */
-  bool emitBytecode : 1; /* need to generate bytecode for this function. */
-
-  // Fields for use in heuristics.
-  bool usesApply : 1;      /* contains an f.apply() call */
-  bool usesThis : 1;       /* contains 'this' */
-  bool usesReturn : 1;     /* contains a 'return' statement */
-  bool hasExprBody_ : 1;   /* arrow function with expression
-                            * body like: () => 1
-                            * Only used by Reflect.parse */
-  bool isAsmJSModule_ : 1; /* Represents an AsmJS module */
-  uint16_t nargs_;
-
-  JSAtom* explicitName_;
-  FunctionFlags flags_;
 
   MutableHandle<FunctionCreationData> functionCreationData() const;
 
@@ -385,6 +397,12 @@ class FunctionBox : public SharedContext {
 
   void initWithEnclosingScope(JSFunction* fun);
 
+ private:
+  void initWithEnclosingParseContext(ParseContext* enclosing,
+                                     FunctionSyntaxKind kind, bool isArrow,
+                                     bool allowSuperProperty);
+
+ public:
   void initWithEnclosingParseContext(ParseContext* enclosing,
                                      Handle<FunctionCreationData> fun,
                                      FunctionSyntaxKind kind) {
