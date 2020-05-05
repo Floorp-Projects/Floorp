@@ -114,6 +114,9 @@ extern bool enableWasmGc;
 #ifdef ENABLE_WASM_MULTI_VALUE
 extern bool enableWasmMultiValue;
 #endif
+#ifdef ENABLE_WASM_SIMD
+extern bool enableWasmSimd;
+#endif
 extern bool enableWasmVerbose;
 extern bool enableTestWasmAwaitTier2;
 #ifdef ENABLE_WASM_BIGINT

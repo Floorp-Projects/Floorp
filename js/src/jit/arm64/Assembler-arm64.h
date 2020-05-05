@@ -163,11 +163,6 @@ static_assert(JitStackAlignment % sizeof(Value) == 0 &&
                   JitStackValueAlignment >= 1,
               "Stack alignment should be a non-zero multiple of sizeof(Value)");
 
-// This boolean indicates whether we support SIMD instructions flavoured for
-// this architecture or not. Rather than a method in the LIRGenerator, it is
-// here such that it is accessible from the entire codebase. Once full support
-// for SIMD is reached on all tier-1 platforms, this constant can be deleted.
-static constexpr bool SupportsSimd = false;
 static constexpr uint32_t SimdMemoryAlignment = 16;
 
 static_assert(CodeAlignment % SimdMemoryAlignment == 0,
@@ -179,15 +174,6 @@ static_assert(CodeAlignment % SimdMemoryAlignment == 0,
 
 static const uint32_t WasmStackAlignment = SimdMemoryAlignment;
 static const uint32_t WasmTrapInstructionLength = 4;
-
-// Does this architecture support SIMD conversions between Uint32x4 and
-// Float32x4?
-static constexpr bool SupportsUint32x4FloatConversions = false;
-
-// Does this architecture support comparisons of unsigned integer vectors?
-static constexpr bool SupportsUint8x16Compares = false;
-static constexpr bool SupportsUint16x8Compares = false;
-static constexpr bool SupportsUint32x4Compares = false;
 
 class Assembler : public vixl::Assembler {
  public:
@@ -289,7 +275,6 @@ class Assembler : public vixl::Assembler {
   static bool SupportsFloatingPoint() { return true; }
   static bool SupportsUnalignedAccesses() { return true; }
   static bool SupportsFastUnalignedAccesses() { return true; }
-  static bool SupportsSimd() { return js::jit::SupportsSimd; }
 
   static bool HasRoundInstruction(RoundingMode mode) { return false; }
 

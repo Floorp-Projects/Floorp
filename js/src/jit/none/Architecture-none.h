@@ -16,20 +16,10 @@
 namespace js {
 namespace jit {
 
-static const bool SupportsSimd = false;
 static const uint32_t SimdMemoryAlignment =
     4;  // Make it 4 to avoid a bunch of div-by-zero warnings
 static const uint32_t WasmStackAlignment = 8;
 static const uint32_t WasmTrapInstructionLength = 0;
-
-// Does this architecture support SIMD conversions between Uint32x4 and
-// Float32x4?
-static constexpr bool SupportsUint32x4FloatConversions = false;
-
-// Does this architecture support comparisons of unsigned integer vectors?
-static constexpr bool SupportsUint8x16Compares = false;
-static constexpr bool SupportsUint16x8Compares = false;
-static constexpr bool SupportsUint32x4Compares = false;
 
 class Registers {
  public:

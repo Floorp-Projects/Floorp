@@ -796,6 +796,12 @@ static bool WasmBigIntEnabled(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool WasmSimdSupported(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setBoolean(wasm::SimdAvailable(cx));
+  return true;
+}
+
 static bool WasmCompilersPresent(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -6605,6 +6611,11 @@ gc::ZealModeHelpText),
 "wasmBulkMemSupported()",
 "  Returns a boolean indicating whether the WebAssembly bulk memory proposal is\n"
 "  supported on the current device."),
+
+    JS_FN_HELP("wasmSimdSupported", WasmSimdSupported, 0, 0,
+"wasmSimdSupported()",
+"  Returns a boolean indicating whether WebAssembly SIMD is supported by the\n"
+"  compilers and runtime."),
 
     JS_FN_HELP("wasmCompilersPresent", WasmCompilersPresent, 0, 0,
 "wasmCompilersPresent()",

@@ -437,6 +437,13 @@ JS::ContextOptions& JS::ContextOptions::setWasmMultiValue(bool flag) {
   return *this;
 }
 
+JS::ContextOptions& JS::ContextOptions::setWasmSimd(bool flag) {
+#ifdef ENABLE_WASM_SIMD
+  wasmSimd_ = flag;
+#endif
+  return *this;
+}
+
 JS::ContextOptions& JS::ContextOptions::setFuzzing(bool flag) {
 #ifdef FUZZING
   fuzzing_ = flag;

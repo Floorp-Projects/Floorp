@@ -642,3 +642,24 @@ def enable_new_regexp(value):
 
 set_config('ENABLE_NEW_REGEXP', enable_new_regexp)
 set_define('ENABLE_NEW_REGEXP', enable_new_regexp)
+
+# Support for WebAssembly SIMD
+# =====================================================
+
+@depends('--enable-jit', '--enable-simulator', target, milestone)
+def default_wasm_simd(jit_enabled, simulator, target, milestone):
+    if not jit_enabled or simulator:
+        return
+
+    # Note, not `target.cpu in ('x86_64')`, as the parens are stripped
+    # from the 1-element tuple and the operation does string matching.
+    # Good grief.
+    if milestone.is_nightly and target.cpu == 'x86_64':
+        return True
+
+js_option('--enable-wasm-simd',
+          default=default_wasm_simd,
+          help='{Enable|Disable} WebAssembly SIMD')
+
+set_config('ENABLE_WASM_SIMD', depends_if('--enable-wasm-simd')(lambda x: True))
+set_define('ENABLE_WASM_SIMD', depends_if('--enable-wasm-simd')(lambda x: True))

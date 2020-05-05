@@ -2491,8 +2491,9 @@ static const LiveRegisterSet RegsToPreserve(
     GeneralRegisterSet(Registers::AllMask & ~((uint32_t(1) << Registers::sp) |
                                               (uint32_t(1) << Registers::pc))),
     FloatRegisterSet(FloatRegisters::AllDoubleMask));
-static_assert(!SupportsSimd,
-              "high lanes of SIMD registers need to be saved too.");
+#  ifdef ENABLE_WASM_SIMD
+#    error "high lanes of SIMD registers need to be saved too."
+#  endif
 #elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 static const LiveRegisterSet RegsToPreserve(
     GeneralRegisterSet(Registers::AllMask &
@@ -2501,8 +2502,9 @@ static const LiveRegisterSet RegsToPreserve(
                          (uint32_t(1) << Registers::sp) |
                          (uint32_t(1) << Registers::zero))),
     FloatRegisterSet(FloatRegisters::AllDoubleMask));
-static_assert(!SupportsSimd,
-              "high lanes of SIMD registers need to be saved too.");
+#  ifdef ENABLE_WASM_SIMD
+#    error "high lanes of SIMD registers need to be saved too."
+#  endif
 #elif defined(JS_CODEGEN_ARM64)
 // We assume that traps do not happen while lr is live. This both ensures that
 // the size of RegsToPreserve is a multiple of 2 (preserving WasmStackAlignment)
@@ -2512,15 +2514,22 @@ static const LiveRegisterSet RegsToPreserve(
                        ~((uint32_t(1) << Registers::StackPointer) |
                          (uint32_t(1) << Registers::lr))),
     FloatRegisterSet(FloatRegisters::AllDoubleMask));
-static_assert(!SupportsSimd,
-              "high lanes of SIMD registers need to be saved too");
-#else
+#  ifdef ENABLE_WASM_SIMD
+#    error "high lanes of SIMD registers need to be saved too."
+#  endif
+#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+// It's fine to use AllVector128Mask even when SIMD is not enabled:
+// PushRegsInMask strips out the high lanes of the XMM registers in this case.
 static const LiveRegisterSet RegsToPreserve(
     GeneralRegisterSet(Registers::AllMask &
                        ~(uint32_t(1) << Registers::StackPointer)),
-    FloatRegisterSet(FloatRegisters::AllDoubleMask));
-static_assert(!SupportsSimd,
-              "high lanes of SIMD registers need to be saved too");
+    FloatRegisterSet(FloatRegisters::AllVector128Mask));
+#else
+static const LiveRegisterSet RegsToPreserve(
+    GeneralRegisterSet(0), FloatRegisterSet(FloatRegisters::AllDoubleMask));
+#  ifdef ENABLE_WASM_SIMD
+#    error "no SIMD support"
+#  endif
 #endif
 
 // Generate a MachineState which describes the locations of the GPRs as saved

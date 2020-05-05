@@ -131,6 +131,7 @@ class FloatRegister : public FloatRegisterMIPSShared {
 
   bool isSingle() const { return kind_ == Codes::Single; }
   bool isDouble() const { return kind_ == Codes::Double; }
+  bool isSimd128() const { return false; }
 
   FloatRegister singleOverlay() const;
   FloatRegister doubleOverlay() const;

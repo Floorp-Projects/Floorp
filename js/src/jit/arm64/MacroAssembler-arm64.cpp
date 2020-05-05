@@ -446,6 +446,10 @@ void MacroAssembler::flush() { Assembler::flush(); }
 // Stack manipulation functions.
 
 void MacroAssembler::PushRegsInMask(LiveRegisterSet set) {
+#ifdef ENABLE_WASM_SIMD
+#  error "Needs more careful logic if SIMD is enabled"
+#endif
+
   for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more();) {
     vixl::CPURegister src[4] = {vixl::NoCPUReg, vixl::NoCPUReg, vixl::NoCPUReg,
                                 vixl::NoCPUReg};
@@ -474,6 +478,10 @@ void MacroAssembler::PushRegsInMask(LiveRegisterSet set) {
 
 void MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest,
                                      Register scratch) {
+#ifdef ENABLE_WASM_SIMD
+#  error "Needs more careful logic if SIMD is enabled"
+#endif
+
   FloatRegisterSet fpuSet(set.fpus().reduceSetForPush());
   unsigned numFpu = fpuSet.size();
   int32_t diffF = fpuSet.getPushSizeInBytes();
@@ -510,6 +518,10 @@ void MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest,
 
 void MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set,
                                          LiveRegisterSet ignore) {
+#ifdef ENABLE_WASM_SIMD
+#  error "Needs more careful logic if SIMD is enabled"
+#endif
+
   // The offset of the data from the stack pointer.
   uint32_t offset = 0;
 
