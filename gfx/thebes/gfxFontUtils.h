@@ -317,8 +317,8 @@ class gfxSparseBitSet {
  private:
   friend struct IPC::ParamTraits<gfxSparseBitSet>;
   friend struct IPC::ParamTraits<gfxSparseBitSet::Block>;
-  nsTArray<uint16_t> mBlockIndex;
-  nsTArray<Block> mBlocks;
+  CopyableTArray<uint16_t> mBlockIndex;
+  CopyableTArray<Block> mBlocks;
 };
 
 namespace IPC {

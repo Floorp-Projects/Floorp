@@ -20,7 +20,7 @@ struct GradientCacheKey : public PLDHashEntryHdr {
   typedef const GradientCacheKey& KeyType;
   typedef const GradientCacheKey* KeyTypePointer;
   enum { ALLOW_MEMMOVE = true };
-  const nsTArray<GradientStop> mStops;
+  const CopyableTArray<GradientStop> mStops;
   ExtendMode mExtend;
   BackendType mBackendType;
 

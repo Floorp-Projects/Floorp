@@ -35,7 +35,7 @@ struct gfxFontVariationValue {
 // to be used.
 struct gfxFontVariationInstance {
   nsCString mName;
-  nsTArray<gfxFontVariationValue> mValues;
+  CopyableTArray<gfxFontVariationValue> mValues;
 };
 
 #endif

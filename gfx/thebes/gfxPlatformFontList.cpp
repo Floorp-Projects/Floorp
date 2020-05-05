@@ -376,7 +376,7 @@ void gfxPlatformFontList::ApplyWhitelist(
     // and just leave the fontlist unchanged.
     return;
   }
-  aFamilies = accepted;
+  aFamilies = std::move(accepted);
 }
 
 bool gfxPlatformFontList::FamilyInList(const nsACString& aName,
@@ -1242,8 +1242,8 @@ gfxFontEntry* gfxPlatformFontList::GetOrCreateFontEntry(
   return fe;
 }
 
-void gfxPlatformFontList::AddOtherFamilyName(gfxFontFamily* aFamilyEntry,
-                                             nsCString& aOtherFamilyName) {
+void gfxPlatformFontList::AddOtherFamilyName(
+    gfxFontFamily* aFamilyEntry, const nsCString& aOtherFamilyName) {
   nsAutoCString key;
   GenerateFontListKey(aOtherFamilyName, key);
 

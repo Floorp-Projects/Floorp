@@ -37,7 +37,7 @@ class gfxFontFeatureValueSet final {
 
   struct ValueList {
     ValueList(const nsAString& aName, const nsTArray<uint32_t>& aSelectors)
-        : name(aName), featureSelectors(aSelectors) {}
+        : name(aName), featureSelectors(aSelectors.Clone()) {}
     nsString name;
     nsTArray<uint32_t> featureSelectors;
   };
