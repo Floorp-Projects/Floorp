@@ -6,19 +6,17 @@
 use crate::errors::*;
 use memmap::{Mmap, MmapMut, MmapOptions};
 use std::cell::UnsafeCell;
-use std::fs::{remove_file, File, OpenOptions};
-use std::sync::{atomic, Arc};
 use std::convert::TryInto;
 use std::env::temp_dir;
+use std::fs::{remove_file, File, OpenOptions};
+use std::sync::{atomic, Arc};
 
 fn open_shm_file(id: &str) -> Result<File> {
     #[cfg(target_os = "linux")]
     {
         let id_cstring = std::ffi::CString::new(id).unwrap();
         unsafe {
-            let r = libc::syscall(libc::SYS_memfd_create,
-                                  id_cstring.as_ptr(),
-                                  0);
+            let r = libc::syscall(libc::SYS_memfd_create, id_cstring.as_ptr(), 0);
             if r >= 0 {
                 use std::os::unix::io::FromRawFd as _;
                 return Ok(File::from_raw_fd(r.try_into().unwrap()));
@@ -32,10 +30,11 @@ fn open_shm_file(id: &str) -> Result<File> {
             .read(true)
             .write(true)
             .create_new(true)
-            .open(&path) {
-                let _ = remove_file(&path);
-                return Ok(file);
-            }
+            .open(&path)
+        {
+            let _ = remove_file(&path);
+            return Ok(file);
+        }
     }
 
     let mut path = temp_dir();
