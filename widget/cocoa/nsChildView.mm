@@ -2800,6 +2800,10 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 - (void)magnifyWithEvent:(NSEvent*)anEvent {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  if ([self maybeRollup:anEvent]) {
+    return;
+  }
+
   if (!mGeckoChild) {
     return;
   }
