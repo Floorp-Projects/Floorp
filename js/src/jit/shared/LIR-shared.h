@@ -5722,6 +5722,17 @@ class LGuardObjectIdentity : public LInstructionHelper<0, 2, 0> {
   }
 };
 
+class LGuardSpecificAtom : public LInstructionHelper<0, 1, 0> {
+ public:
+  LIR_HEADER(GuardSpecificAtom)
+
+  LGuardSpecificAtom(const LAllocation& str) : LInstructionHelper(classOpcode) {
+    setOperand(0, str);
+  }
+  const LAllocation* str() { return getOperand(0); }
+  const MGuardSpecificAtom* mir() const { return mir_->toGuardSpecificAtom(); }
+};
+
 class LGuardShape : public LInstructionHelper<1, 1, 1> {
  public:
   LIR_HEADER(GuardShape)
