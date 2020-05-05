@@ -77,7 +77,7 @@ mozilla.pth:config/mozunit
 mozilla.pth:dom/bindings
 mozilla.pth:dom/bindings/parser
 mozilla.pth:layout/tools/reftest
-mozilla.pth:other-licenses/ply/
+mozilla.pth:third_party/python/ply
 mozilla.pth:taskcluster
 mozilla.pth:testing
 mozilla.pth:testing/condprofile

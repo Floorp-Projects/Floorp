@@ -76,6 +76,9 @@ pluggy==0.6.0 \
     --hash=sha256:d345c8fe681115900d6da8d048ba67c25df42973bda370783cd58826442dcd7c \
     --hash=sha256:e160a7fcf25762bb60efc7e171d4497ff1d8d2d75a3d0df7a21b76821ecbf5c5 \
     # via pytest
+ply==3.10 \
+    --hash=sha256:96e94af7dd7031d8d6dd6e2a8e0de593b511c211a86e28a9c9621c275ac8bacb \
+    # via -r requirements-mach-vendor-python.in
 psutil==5.7.0 \
     --hash=sha256:1413f4158eb50e110777c4f15d7c759521703bd6beb58926f1d562da40180058 \
     --hash=sha256:298af2f14b635c3c7118fd9183843f4e73e681bb6f01e12284d4d70d48a60953 \
