@@ -170,11 +170,9 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   // with the specified script.
   virtual JSScript* scriptOrModule() const = 0;
 
- private:
-  void operator=(const TransitiveCompileOptions&) = delete;
+  TransitiveCompileOptions(const TransitiveCompileOptions&) = delete;
+  TransitiveCompileOptions& operator=(const TransitiveCompileOptions&) = delete;
 };
-
-class JS_PUBLIC_API CompileOptions;
 
 /**
  * The class representing a full set of compile options.
@@ -210,13 +208,10 @@ class JS_PUBLIC_API ReadOnlyCompileOptions : public TransitiveCompileOptions {
  protected:
   ReadOnlyCompileOptions() = default;
 
-  // Set all POD options (those not requiring reference counts, copies,
-  // rooting, or other hand-holding) not set by copyPODTransitiveOptions to
-  // their values in |rhs|.
   void copyPODNonTransitiveOptions(const ReadOnlyCompileOptions& rhs);
 
- private:
-  void operator=(const ReadOnlyCompileOptions&) = delete;
+  ReadOnlyCompileOptions(const ReadOnlyCompileOptions&) = delete;
+  ReadOnlyCompileOptions& operator=(const ReadOnlyCompileOptions&) = delete;
 };
 
 /**
@@ -260,7 +255,8 @@ class JS_PUBLIC_API OwningCompileOptions final : public ReadOnlyCompileOptions {
  private:
   void release();
 
-  void operator=(const CompileOptions& rhs) = delete;
+  OwningCompileOptions(const OwningCompileOptions&) = delete;
+  OwningCompileOptions& operator=(const OwningCompileOptions&) = delete;
 };
 
 /**
@@ -282,13 +278,15 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
   // Default options determined using the JSContext.
   explicit CompileOptions(JSContext* cx);
 
-  // Copy the transitive options from another options object.
-  CompileOptions(JSContext* cx, const TransitiveCompileOptions& rhs)
+  // Copy both the transitive and the non-transitive options from another
+  // options object.
+  CompileOptions(JSContext* cx, const ReadOnlyCompileOptions& rhs)
       : ReadOnlyCompileOptions(),
         elementRoot(cx),
         elementAttributeNameRoot(cx),
         introductionScriptRoot(cx),
         scriptOrModuleRoot(cx) {
+    copyPODNonTransitiveOptions(rhs);
     copyPODTransitiveOptions(rhs);
 
     filename_ = rhs.filename();
@@ -298,13 +296,6 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     elementAttributeNameRoot = rhs.elementAttributeName();
     introductionScriptRoot = rhs.introductionScript();
     scriptOrModuleRoot = rhs.scriptOrModule();
-  }
-
-  // Copy both the transitive and the non-transitive options from another
-  // options object.
-  CompileOptions(JSContext* cx, const ReadOnlyCompileOptions& rhs)
-      : CompileOptions(cx, static_cast<const TransitiveCompileOptions&>(rhs)) {
-    copyPODNonTransitiveOptions(rhs);
   }
 
   JSObject* element() const override { return elementRoot; }
@@ -431,8 +422,8 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     return *this;
   }
 
- private:
-  void operator=(const CompileOptions& rhs) = delete;
+  CompileOptions(const CompileOptions& rhs) = delete;
+  CompileOptions& operator=(const CompileOptions& rhs) = delete;
 };
 
 }  // namespace JS
