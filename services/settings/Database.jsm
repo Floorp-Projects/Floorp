@@ -182,7 +182,13 @@ class Database {
     try {
       await executeIDB(
         "collections",
-        store => store.put({ cid: this.identifier, metadata }),
+        store => {
+          if (metadata === null) {
+            store.delete(this.identifier);
+          } else {
+            store.put({ cid: this.identifier, metadata });
+          }
+        },
         { desc: "saveMetadata() in " + this.identifier }
       );
       return metadata;
