@@ -101,7 +101,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(SpeechTaskCallback)
 
 SpeechTaskCallback::SpeechTaskCallback(nsISpeechTask* aTask, NSSpeechSynthesizer* aSynth,
                                        const nsTArray<size_t>& aOffsets)
-    : mTask(aTask), mSpeechSynthesizer(aSynth), mCurrentIndex(0), mOffsets(aOffsets) {
+    : mTask(aTask), mSpeechSynthesizer(aSynth), mCurrentIndex(0), mOffsets(aOffsets.Clone()) {
   mDelegate = [[SpeechDelegate alloc] initWithCallback:this];
   [mSpeechSynthesizer setDelegate:mDelegate];
   mStartingTime = TimeStamp::Now();

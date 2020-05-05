@@ -35,7 +35,7 @@ class MediaQueue;
 class DecodedStream : public MediaSink {
  public:
   DecodedStream(MediaDecoderStateMachine* aStateMachine,
-                nsTArray<RefPtr<ProcessedMediaTrack>> aOutputTracks,
+                CopyableTArray<RefPtr<ProcessedMediaTrack>> aOutputTracks,
                 double aVolume, double aPlaybackRate, bool aPreservesPitch,
                 MediaQueue<AudioData>& aAudioQueue,
                 MediaQueue<VideoData>& aVideoQueue);

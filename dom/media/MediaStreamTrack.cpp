@@ -240,14 +240,11 @@ MediaStreamTrack::~MediaStreamTrack() { Destroy(); }
 void MediaStreamTrack::Destroy() {
   SetReadyState(MediaStreamTrackState::Ended);
   // Remove all listeners -- avoid iterating over the list we're removing from
-  const nsTArray<RefPtr<MediaTrackListener>> trackListeners(mTrackListeners);
-  for (auto listener : trackListeners) {
+  for (const auto& listener : mTrackListeners.Clone()) {
     RemoveListener(listener);
   }
   // Do the same as above for direct listeners
-  const nsTArray<RefPtr<DirectMediaTrackListener>> directTrackListeners(
-      mDirectTrackListeners);
-  for (auto listener : directTrackListeners) {
+  for (const auto& listener : mDirectTrackListeners.Clone()) {
     RemoveDirectListener(listener);
   }
 }
@@ -470,8 +467,7 @@ void MediaStreamTrack::MutedChanged(bool aNewState) {
 void MediaStreamTrack::NotifyEnded() {
   MOZ_ASSERT(mReadyState == MediaStreamTrackState::Ended);
 
-  auto consumers(mConsumers);
-  for (const auto& consumer : consumers) {
+  for (const auto& consumer : mConsumers.Clone()) {
     if (consumer) {
       consumer->NotifyEnded(this);
     } else {
@@ -484,8 +480,7 @@ void MediaStreamTrack::NotifyEnded() {
 void MediaStreamTrack::NotifyEnabledChanged() {
   GetSource().SinkEnabledStateChanged();
 
-  auto consumers(mConsumers);
-  for (const auto& consumer : consumers) {
+  for (const auto& consumer : mConsumers.Clone()) {
     if (consumer) {
       consumer->NotifyEnabledChanged(this, Enabled());
     } else {

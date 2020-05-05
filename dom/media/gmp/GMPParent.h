@@ -34,7 +34,7 @@ class GMPCapability {
   explicit GMPCapability(const nsCString& aAPIName) : mAPIName(aAPIName) {}
   explicit GMPCapability(const GMPCapability& aOther) = default;
   nsCString mAPIName;
-  nsTArray<nsCString> mAPITags;
+  CopyableTArray<nsCString> mAPITags;
 
   static bool Supports(const nsTArray<GMPCapability>& aCapabilities,
                        const nsCString& aAPI, const nsTArray<nsCString>& aTags);

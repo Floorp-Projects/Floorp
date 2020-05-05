@@ -771,8 +771,7 @@ RefPtr<GenericNonExclusivePromise::AllPromiseType> MediaEncoder::Shutdown() {
   }
   mEncoderListener->Forget();
 
-  auto listeners(mListeners);
-  for (auto& l : listeners) {
+  for (auto& l : mListeners.Clone()) {
     // We dispatch here since this method is typically called from
     // a DataAvailable() handler.
     nsresult rv = mEncoderThread->Dispatch(
@@ -824,8 +823,7 @@ void MediaEncoder::SetError() {
   }
 
   mError = true;
-  auto listeners(mListeners);
-  for (auto& l : listeners) {
+  for (auto& l : mListeners.Clone()) {
     l->Error();
   }
 }
@@ -887,8 +885,7 @@ void MediaEncoder::NotifyInitialized() {
 
   mInitialized = true;
 
-  auto listeners(mListeners);
-  for (auto& l : listeners) {
+  for (auto& l : mListeners.Clone()) {
     l->Initialized();
   }
 }
@@ -900,8 +897,7 @@ void MediaEncoder::NotifyDataAvailable() {
     return;
   }
 
-  auto listeners(mListeners);
-  for (auto& l : listeners) {
+  for (auto& l : mListeners.Clone()) {
     l->DataAvailable();
   }
 }

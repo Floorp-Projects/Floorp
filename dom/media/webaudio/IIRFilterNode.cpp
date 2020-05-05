@@ -24,8 +24,8 @@ class IIRFilterNodeEngine final : public AudioNodeEngine {
                       const AudioDoubleArray& aFeedback, uint64_t aWindowID)
       : AudioNodeEngine(aNode),
         mDestination(aDestination->Track()),
-        mFeedforward(aFeedforward),
-        mFeedback(aFeedback),
+        mFeedforward(aFeedforward.Clone()),
+        mFeedback(aFeedback.Clone()),
         mWindowID(aWindowID) {}
 
   void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,

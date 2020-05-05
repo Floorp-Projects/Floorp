@@ -51,7 +51,7 @@ TextTrackCue* TextTrackCueList::operator[](uint32_t aIndex) {
 }
 
 TextTrackCueList& TextTrackCueList::operator=(const TextTrackCueList& aOther) {
-  mList = aOther.mList;
+  mList = aOther.mList.Clone();
   return *this;
 }
 
@@ -96,7 +96,7 @@ void TextTrackCueList::RemoveCueAt(uint32_t aIndex) {
 void TextTrackCueList::RemoveAll() { mList.Clear(); }
 
 void TextTrackCueList::GetArray(nsTArray<RefPtr<TextTrackCue>>& aCues) {
-  aCues = nsTArray<RefPtr<TextTrackCue>>(mList);
+  aCues = mList.Clone();
 }
 
 void TextTrackCueList::SetCuesInactive() {

@@ -32,7 +32,7 @@ class MediaMetadataBase {
   nsString mTitle;
   nsString mArtist;
   nsString mAlbum;
-  nsTArray<MediaImage> mArtwork;
+  CopyableTArray<MediaImage> mArtwork;
 };
 
 class MediaMetadata final : public nsISupports,

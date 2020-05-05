@@ -236,8 +236,7 @@ void ForwardedInputTrack::RemoveDirectListenerImpl(
 }
 
 void ForwardedInputTrack::RemoveAllDirectListenersImpl() {
-  nsTArray<RefPtr<DirectMediaTrackListener>> listeners(mOwnedDirectListeners);
-  for (const auto& listener : listeners) {
+  for (const auto& listener : mOwnedDirectListeners.Clone()) {
     RemoveDirectListenerImpl(listener);
   }
   MOZ_DIAGNOSTIC_ASSERT(mOwnedDirectListeners.IsEmpty());

@@ -734,12 +734,12 @@ class MediaDecoderStateMachine
   Mirror<bool> mOutputCaptured;
 
   // Tracks to capture data into.
-  Mirror<nsTArray<RefPtr<ProcessedMediaTrack>>> mOutputTracks;
+  Mirror<CopyableTArray<RefPtr<ProcessedMediaTrack>>> mOutputTracks;
 
   // PrincipalHandle to feed with data captured into mOutputTracks.
   Mirror<PrincipalHandle> mOutputPrincipal;
 
-  Canonical<nsTArray<RefPtr<ProcessedMediaTrack>>> mCanonicalOutputTracks;
+  Canonical<CopyableTArray<RefPtr<ProcessedMediaTrack>>> mCanonicalOutputTracks;
   Canonical<PrincipalHandle> mCanonicalOutputPrincipal;
 
   // Duration of the media. This is guaranteed to be non-null after we finish
@@ -762,7 +762,7 @@ class MediaDecoderStateMachine
  public:
   AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() const;
 
-  AbstractCanonical<nsTArray<RefPtr<ProcessedMediaTrack>>>*
+  AbstractCanonical<CopyableTArray<RefPtr<ProcessedMediaTrack>>>*
   CanonicalOutputTracks() {
     return &mCanonicalOutputTracks;
   }

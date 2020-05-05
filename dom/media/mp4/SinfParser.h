@@ -33,7 +33,7 @@ class Sinf : public Atom {
   uint8_t mDefaultKeyID[16];
   uint8_t mDefaultCryptByteBlock;
   uint8_t mDefaultSkipByteBlock;
-  nsTArray<uint8_t> mDefaultConstantIV;
+  CopyableTArray<uint8_t> mDefaultConstantIV;
 };
 
 class SinfParser {

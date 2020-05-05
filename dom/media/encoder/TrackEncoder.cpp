@@ -60,8 +60,7 @@ void TrackEncoder::SetInitialized() {
 
   mInitialized = true;
 
-  auto listeners(mListeners);
-  for (auto& l : listeners) {
+  for (auto& l : mListeners.Clone()) {
     l->Initialized(this);
   }
 }
@@ -69,8 +68,7 @@ void TrackEncoder::SetInitialized() {
 void TrackEncoder::OnDataAvailable() {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
 
-  auto listeners(mListeners);
-  for (auto& l : listeners) {
+  for (auto& l : mListeners.Clone()) {
     l->DataAvailable(this);
   }
 }
@@ -80,8 +78,7 @@ void TrackEncoder::OnError() {
 
   Cancel();
 
-  auto listeners(mListeners);
-  for (auto& l : listeners) {
+  for (auto& l : mListeners.Clone()) {
     l->Error(this);
   }
 }

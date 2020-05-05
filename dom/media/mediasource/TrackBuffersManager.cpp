@@ -72,7 +72,7 @@ class DispatchKeyNeededEvent : public Runnable {
                          const nsString& aInitDataType)
       : Runnable("DispatchKeyNeededEvent"),
         mDecoder(aDecoder),
-        mInitData(aInitData),
+        mInitData(aInitData.Clone()),
         mInitDataType(aInitDataType) {}
   NS_IMETHOD Run() override {
     // Note: Null check the owner, as the decoder could have been shutdown

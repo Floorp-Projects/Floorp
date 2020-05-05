@@ -60,7 +60,7 @@ class MediaKeyStatusMap final : public nsISupports, public nsWrapperCache {
 
   struct KeyStatus {
     KeyStatus(const nsTArray<uint8_t>& aKeyId, MediaKeyStatus aStatus)
-        : mKeyId(aKeyId), mStatus(aStatus) {}
+        : mKeyId(aKeyId.Clone()), mStatus(aStatus) {}
     bool operator==(const KeyStatus& aOther) const {
       return aOther.mKeyId == mKeyId;
     }
