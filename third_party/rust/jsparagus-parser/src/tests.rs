@@ -82,7 +82,7 @@ fn assert_parses<'alloc, T: IntoChunks<'alloc>>(code: T) {
 
 fn assert_error<'alloc, T: IntoChunks<'alloc>>(code: T) {
     let allocator = &Bump::new();
-    assert!(match try_parse(allocator, code) {
+    assert!(match try_parse(allocator, code).map_err(|e| *e) {
         Err(ParseError::NotImplemented(_)) => panic!("expected error, got NotImplemented"),
         Err(_) => true,
         Ok(ast) => panic!("assertion failed: SUCCESS error: {:?}", ast),
@@ -91,7 +91,7 @@ fn assert_error<'alloc, T: IntoChunks<'alloc>>(code: T) {
 
 fn assert_syntax_error<'alloc, T: IntoChunks<'alloc>>(code: T) {
     let allocator = &Bump::new();
-    assert!(match try_parse(allocator, code) {
+    assert!(match try_parse(allocator, code).map_err(|e| *e) {
         Err(ParseError::SyntaxError(_)) => true,
         Err(other) => panic!("unexpected error: {:?}", other),
         Ok(ast) => panic!("assertion failed: SUCCESS error: {:?}", ast),
@@ -100,7 +100,7 @@ fn assert_syntax_error<'alloc, T: IntoChunks<'alloc>>(code: T) {
 
 fn assert_not_implemented<'alloc, T: IntoChunks<'alloc>>(code: T) {
     let allocator = &Bump::new();
-    assert!(match try_parse(allocator, code) {
+    assert!(match try_parse(allocator, code).map_err(|e| *e) {
         Err(ParseError::NotImplemented(_)) => true,
         Err(other) => panic!("unexpected error: {:?}", other),
         Ok(ast) => panic!("assertion failed: SUCCESS error: {:?}", ast),
@@ -109,7 +109,7 @@ fn assert_not_implemented<'alloc, T: IntoChunks<'alloc>>(code: T) {
 
 fn assert_illegal_character<'alloc, T: IntoChunks<'alloc>>(code: T) {
     let allocator = &Bump::new();
-    assert!(match try_parse(allocator, code) {
+    assert!(match try_parse(allocator, code).map_err(|e| *e) {
         Err(ParseError::IllegalCharacter(_)) => true,
         Err(other) => panic!("unexpected error: {:?}", other),
         Ok(ast) => panic!("assertion failed: SUCCESS error: {:?}", ast),
@@ -120,14 +120,14 @@ fn assert_error_eq<'alloc, T: IntoChunks<'alloc>>(code: T, expected: ParseError)
     let allocator = &Bump::new();
     let result = try_parse(allocator, code);
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err(), expected);
+    assert_eq!(*result.unwrap_err(), expected);
 }
 
 fn assert_incomplete<'alloc, T: IntoChunks<'alloc>>(code: T) {
     let allocator = &Bump::new();
     let result = try_parse(allocator, code);
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err(), ParseError::UnexpectedEnd);
+    assert_eq!(*result.unwrap_err(), ParseError::UnexpectedEnd);
 }
 
 // Assert that `left` and `right`, when parsed as ES Modules, consist of the

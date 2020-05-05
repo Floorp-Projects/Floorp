@@ -216,7 +216,7 @@ impl<'alloc> Lexer<'alloc> {
                 _ => {}
             }
         }
-        Err(ParseError::UnterminatedMultiLineComment)
+        Err(ParseError::UnterminatedMultiLineComment.into())
     }
 
     /// Skip a *SingleLineComment* and the following *LineTerminatorSequence*,
@@ -316,7 +316,7 @@ impl<'alloc> Lexer<'alloc> {
 
                     let value = self.unicode_escape_sequence_after_backslash()?;
                     if !is_identifier_part(value) {
-                        return Err(ParseError::InvalidEscapeSequence);
+                        return Err(ParseError::InvalidEscapeSequence.into());
                     }
 
                     builder.push_different(value);
@@ -335,7 +335,7 @@ impl<'alloc> Lexer<'alloc> {
     fn identifier_name(&mut self, mut builder: AutoCow<'alloc>) -> Result<'alloc, &'alloc str> {
         match self.chars.next() {
             None => {
-                return Err(ParseError::UnexpectedEnd);
+                return Err(ParseError::UnexpectedEnd.into());
             }
             Some(c) => {
                 match c {
@@ -348,7 +348,7 @@ impl<'alloc> Lexer<'alloc> {
 
                         let value = self.unicode_escape_sequence_after_backslash()?;
                         if !is_identifier_start(value) {
-                            return Err(ParseError::IllegalCharacter(value));
+                            return Err(ParseError::IllegalCharacter(value).into());
                         }
                         builder.push_different(value);
                     }
@@ -358,7 +358,7 @@ impl<'alloc> Lexer<'alloc> {
                     }
 
                     other => {
-                        return Err(ParseError::IllegalCharacter(other));
+                        return Err(ParseError::IllegalCharacter(other).into());
                     }
                 }
                 self.identifier_name_tail(builder)
@@ -423,7 +423,8 @@ impl<'alloc> Lexer<'alloc> {
                     */
                     return Err(ParseError::NotImplemented(
                         "async cannot be handled in parser due to multiple lookahead",
-                    ));
+                    )
+                    .into());
                 }
                 "await" => {
                     /*
@@ -432,9 +433,9 @@ impl<'alloc> Lexer<'alloc> {
                         TokenValue::Atom(CommonSourceAtomSetIndices::await_()),
                     ),
                      */
-                    return Err(ParseError::NotImplemented(
-                        "await cannot be handled in parser",
-                    ));
+                    return Err(
+                        ParseError::NotImplemented("await cannot be handled in parser").into(),
+                    );
                 }
                 "break" => (
                     TerminalId::Break,
@@ -545,7 +546,8 @@ impl<'alloc> Lexer<'alloc> {
                     */
                     return Err(ParseError::NotImplemented(
                         "let cannot be handled in parser due to multiple lookahead",
-                    ));
+                    )
+                    .into());
                 }
                 "new" => (
                     TerminalId::New,
@@ -634,9 +636,9 @@ impl<'alloc> Lexer<'alloc> {
                         TokenValue::Atom(CommonSourceAtomSetIndices::yield_()),
                     ),
                      */
-                    return Err(ParseError::NotImplemented(
-                        "yield cannot be handled in parser",
-                    ));
+                    return Err(
+                        ParseError::NotImplemented("yield cannot be handled in parser").into(),
+                    );
                 }
                 "null" => (
                     TerminalId::NullLiteral,
@@ -687,7 +689,7 @@ impl<'alloc> Lexer<'alloc> {
         match self.chars.next() {
             Some('u') => {}
             _ => {
-                return Err(ParseError::InvalidEscapeSequence);
+                return Err(ParseError::InvalidEscapeSequence.into());
             }
         }
         self.unicode_escape_sequence_after_backslash_and_u()
@@ -702,7 +704,7 @@ impl<'alloc> Lexer<'alloc> {
                 match self.chars.next() {
                     Some('}') => {}
                     _ => {
-                        return Err(ParseError::InvalidEscapeSequence);
+                        return Err(ParseError::InvalidEscapeSequence.into());
                     }
                 }
                 value
@@ -735,7 +737,7 @@ impl<'alloc> Lexer<'alloc> {
         if let Some('0'..='9') = self.peek() {
             self.chars.next();
         } else {
-            return Err(self.unexpected_err());
+            return Err(self.unexpected_err().into());
         }
 
         self.decimal_digits_after_first_digit()?;
@@ -762,7 +764,7 @@ impl<'alloc> Lexer<'alloc> {
                     if let Some('0'..='9') = self.peek() {
                         self.chars.next();
                     } else {
-                        return Err(self.unexpected_err());
+                        return Err(self.unexpected_err().into());
                     }
                 }
                 '0'..='9' => {
@@ -814,21 +816,19 @@ impl<'alloc> Lexer<'alloc> {
     /// ```
     fn hex_digit(&mut self) -> Result<'alloc, u32> {
         match self.chars.next() {
-            None => Err(ParseError::InvalidEscapeSequence),
+            None => Err(ParseError::InvalidEscapeSequence.into()),
             Some(c @ '0'..='9') => Ok(c as u32 - '0' as u32),
             Some(c @ 'a'..='f') => Ok(10 + (c as u32 - 'a' as u32)),
             Some(c @ 'A'..='F') => Ok(10 + (c as u32 - 'A' as u32)),
-            Some(other) => Err(ParseError::IllegalCharacter(other)),
+            Some(other) => Err(ParseError::IllegalCharacter(other).into()),
         }
     }
 
     fn code_point_to_char(value: u32) -> Result<'alloc, char> {
         if 0xd800 <= value && value <= 0xdfff {
-            Err(ParseError::NotImplemented(
-                "unicode escape sequences (surrogates)",
-            ))
+            Err(ParseError::NotImplemented("unicode escape sequences (surrogates)").into())
         } else {
-            char::try_from(value).map_err(|_| ParseError::InvalidEscapeSequence)
+            char::try_from(value).map_err(|_| ParseError::InvalidEscapeSequence.into())
         }
     }
 
@@ -858,7 +858,7 @@ impl<'alloc> Lexer<'alloc> {
         loop {
             let next = match self.peek() {
                 None => {
-                    return Err(ParseError::InvalidEscapeSequence);
+                    return Err(ParseError::InvalidEscapeSequence.into());
                 }
                 Some(c @ '0'..='9') => c as u32 - '0' as u32,
                 Some(c @ 'a'..='f') => 10 + (c as u32 - 'a' as u32),
@@ -868,7 +868,7 @@ impl<'alloc> Lexer<'alloc> {
             self.chars.next();
             value = (value << 4) | next;
             if value > 0x10FFFF {
-                return Err(ParseError::InvalidEscapeSequence);
+                return Err(ParseError::InvalidEscapeSequence.into());
             }
         }
 
@@ -918,7 +918,7 @@ impl<'alloc> Lexer<'alloc> {
                 if let Some('0'..='1') = self.peek() {
                     self.chars.next();
                 } else {
-                    return Err(self.unexpected_err());
+                    return Err(self.unexpected_err().into());
                 }
 
                 while let Some(next) = self.peek() {
@@ -929,7 +929,7 @@ impl<'alloc> Lexer<'alloc> {
                             if let Some('0'..='1') = self.peek() {
                                 self.chars.next();
                             } else {
-                                return Err(self.unexpected_err());
+                                return Err(self.unexpected_err().into());
                             }
                         }
                         '0'..='1' => {
@@ -965,7 +965,7 @@ impl<'alloc> Lexer<'alloc> {
                 if let Some('0'..='7') = self.peek() {
                     self.chars.next();
                 } else {
-                    return Err(self.unexpected_err());
+                    return Err(self.unexpected_err().into());
                 }
 
                 while let Some(next) = self.peek() {
@@ -976,7 +976,7 @@ impl<'alloc> Lexer<'alloc> {
                             if let Some('0'..='7') = self.peek() {
                                 self.chars.next();
                             } else {
-                                return Err(self.unexpected_err());
+                                return Err(self.unexpected_err().into());
                             }
                         }
                         '0'..='7' => {
@@ -1011,7 +1011,7 @@ impl<'alloc> Lexer<'alloc> {
                 if let Some('0'..='9') | Some('a'..='f') | Some('A'..='F') = self.peek() {
                     self.chars.next();
                 } else {
-                    return Err(self.unexpected_err());
+                    return Err(self.unexpected_err().into());
                 }
 
                 while let Some(next) = self.peek() {
@@ -1023,7 +1023,7 @@ impl<'alloc> Lexer<'alloc> {
                             {
                                 self.chars.next();
                             } else {
-                                return Err(self.unexpected_err());
+                                return Err(self.unexpected_err().into());
                             }
                         }
                         '0'..='9' | 'a'..='f' | 'A'..='F' => {
@@ -1093,7 +1093,7 @@ impl<'alloc> Lexer<'alloc> {
                 //     //       point and/or ExponentPart.
                 //     self.decimal_digits()?;
                 // }
-                return Err(ParseError::NotImplemented("LegacyOctalIntegerLiteral"));
+                return Err(ParseError::NotImplemented("LegacyOctalIntegerLiteral").into());
             }
 
             _ => {}
@@ -1182,7 +1182,7 @@ impl<'alloc> Lexer<'alloc> {
         // DecimalDigit. (11.8.3)
         if let Some(ch) = self.peek() {
             if is_identifier_start(ch) || ch.is_digit(10) {
-                return Err(ParseError::IllegalCharacter(ch));
+                return Err(ParseError::IllegalCharacter(ch).into());
             }
         }
 
@@ -1228,7 +1228,7 @@ impl<'alloc> Lexer<'alloc> {
     fn escape_sequence(&mut self, text: &mut String<'alloc>) -> Result<'alloc, ()> {
         match self.chars.next() {
             None => {
-                return Err(ParseError::UnterminatedString);
+                return Err(ParseError::UnterminatedString.into());
             }
             Some(c) => match c {
                 LF | LS | PS => {
@@ -1282,7 +1282,7 @@ impl<'alloc> Lexer<'alloc> {
                     value = (value << 4) | self.hex_digit()?;
                     match char::try_from(value) {
                         Err(_) => {
-                            return Err(ParseError::InvalidEscapeSequence);
+                            return Err(ParseError::InvalidEscapeSequence.into());
                         }
                         Ok(c) => {
                             text.push(c);
@@ -1308,12 +1308,14 @@ impl<'alloc> Lexer<'alloc> {
                         Some('0'..='7') => {
                             return Err(ParseError::NotImplemented(
                                 "legacy octal escape sequence in string",
-                            ));
+                            )
+                            .into());
                         }
                         Some('8'..='9') => {
                             return Err(ParseError::NotImplemented(
                                 "digit immediately following \\0 escape sequence",
-                            ));
+                            )
+                            .into());
                         }
                         _ => {}
                     }
@@ -1323,7 +1325,8 @@ impl<'alloc> Lexer<'alloc> {
                 '1'..='7' => {
                     return Err(ParseError::NotImplemented(
                         "legacy octal escape sequence in string",
-                    ));
+                    )
+                    .into());
                 }
 
                 other => {
@@ -1371,7 +1374,7 @@ impl<'alloc> Lexer<'alloc> {
         loop {
             match self.chars.next() {
                 None | Some('\r') | Some('\n') => {
-                    return Err(ParseError::UnterminatedString);
+                    return Err(ParseError::UnterminatedString.into());
                 }
 
                 Some(c @ '"') | Some(c @ '\'') => {
@@ -1411,7 +1414,9 @@ impl<'alloc> Lexer<'alloc> {
 
     fn regular_expression_backslash_sequence(&mut self) -> Result<'alloc, ()> {
         match self.chars.next() {
-            None | Some(CR) | Some(LF) | Some(LS) | Some(PS) => Err(ParseError::UnterminatedRegExp),
+            None | Some(CR) | Some(LF) | Some(LS) | Some(PS) => {
+                Err(ParseError::UnterminatedRegExp.into())
+            }
             Some(_) => Ok(()),
         }
     }
@@ -1426,7 +1431,7 @@ impl<'alloc> Lexer<'alloc> {
         loop {
             match self.chars.next() {
                 None | Some(CR) | Some(LF) | Some(LS) | Some(PS) => {
-                    return Err(ParseError::UnterminatedRegExp);
+                    return Err(ParseError::UnterminatedRegExp.into());
                 }
                 Some('/') => {
                     break;
@@ -1436,7 +1441,7 @@ impl<'alloc> Lexer<'alloc> {
                     loop {
                         match self.chars.next() {
                             None | Some(CR) | Some(LF) | Some(LS) | Some(PS) => {
-                                return Err(ParseError::UnterminatedRegExp);
+                                return Err(ParseError::UnterminatedRegExp.into());
                             }
                             Some(']') => {
                                 break;
@@ -1478,18 +1483,21 @@ impl<'alloc> Lexer<'alloc> {
             if !ch.is_ascii_lowercase() {
                 return Err(ParseError::NotImplemented(
                     "Unexpected flag in regular expression literal",
-                ));
+                )
+                .into());
             }
             let ch_mask = 1 << ((ch as u8) - ('a' as u8));
             if ch_mask & gimsuy_mask == 0 {
                 return Err(ParseError::NotImplemented(
                     "Unexpected flag in regular expression literal",
-                ));
+                )
+                .into());
             }
             if flag_text_set & ch_mask != 0 {
                 return Err(ParseError::NotImplemented(
                     "Flag is mentioned twice in regular expression literal",
-                ));
+                )
+                .into());
             }
             flag_text_set |= ch_mask;
         }
@@ -1585,7 +1593,7 @@ impl<'alloc> Lexer<'alloc> {
                 builder.push_matching(ch);
             }
         }
-        Err(ParseError::UnterminatedString)
+        Err(ParseError::UnterminatedString.into())
     }
 
     fn advance_impl<'parser>(&mut self, parser: &Parser<'parser>) -> Result<'alloc, AdvanceResult> {
@@ -1824,7 +1832,7 @@ impl<'alloc> Lexer<'alloc> {
                                     value: TokenValue::None,
                                 });
                             }
-                            _ => return Err(ParseError::IllegalCharacter('.')),
+                            _ => return Err(ParseError::IllegalCharacter('.').into()),
                         }
                     }
                     Some('0'..='9') => {
@@ -2144,7 +2152,7 @@ impl<'alloc> Lexer<'alloc> {
 
                     let value = self.unicode_escape_sequence_after_backslash()?;
                     if !is_identifier_start(value) {
-                        return Err(ParseError::IllegalCharacter(value));
+                        return Err(ParseError::IllegalCharacter(value).into());
                     }
                     builder.push_different(value);
 
@@ -2173,7 +2181,7 @@ impl<'alloc> Lexer<'alloc> {
                 }
 
                 other => {
-                    return Err(ParseError::IllegalCharacter(other));
+                    return Err(ParseError::IllegalCharacter(other).into());
                 }
             }
         }

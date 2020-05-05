@@ -1,3 +1,9 @@
+//! Code for tracking scopes and looking up names as the emitter traverses
+//! the program.
+//!
+//! EmitterScopes exist only while the bytecode emitter is working.
+//! Longer-lived scope information is stored in `scope::ScopeDataMap`.
+
 use crate::emitter::InstructionWriter;
 use crate::scope_notes::ScopeNoteIndex;
 use ast::source_atom_set::SourceAtomSetIndex;
@@ -5,6 +11,8 @@ use scope::data::{BindingKind, GlobalScopeData, LexicalScopeData, ScopeDataMap, 
 use scope::frame_slot::FrameSlot;
 use std::collections::HashMap;
 
+/// Result of looking up a name.
+///
 /// Corresponds to js::frontend::NameLocation in
 /// m-c/js/src/frontend/NameAnalysisTypes.h
 #[derive(Debug, Clone)]
@@ -14,13 +22,18 @@ pub enum NameLocation {
     FrameSlot(FrameSlot, BindingKind),
 }
 
+// --- EmitterScope types
+//
+// These types are the variants of enum EmitterScope.
+
+
 #[derive(Debug)]
-pub struct GlobalEmitterScope {
+struct GlobalEmitterScope {
     cache: HashMap<SourceAtomSetIndex, NameLocation>,
 }
 
 impl GlobalEmitterScope {
-    pub fn new(data: &GlobalScopeData) -> Self {
+    fn new(data: &GlobalScopeData) -> Self {
         let mut cache = HashMap::new();
         for item in data.iter() {
             cache.insert(item.name(), NameLocation::Global(item.kind()));
@@ -84,8 +97,9 @@ impl LexicalEmitterScope {
     }
 }
 
+/// The information about a scope needed for emitting bytecode.
 #[derive(Debug)]
-pub enum EmitterScope {
+enum EmitterScope {
     Global(GlobalEmitterScope),
     Lexical(LexicalEmitterScope),
 }
@@ -113,28 +127,43 @@ impl EmitterScope {
     }
 }
 
-/// Compared to C++ impl, this uses explicit stack struct,
-/// given Rust cannot store a reference of stack-allocated object into
-/// another object that has longer-lifetime.
+/// Stack that tracks the current scope chain while emitting bytecode.
 ///
-/// Some methods are implemented here, instead of each EmitterScope.
+/// Bytecode is emitted by traversing the structure of the program. During this
+/// process there's always a "current position". This stack represents the
+/// scope chain at the current position. It is updated when we enter or leave
+/// any node that has its own scope.
+///
+/// Unlike the C++ impl, this uses an explicit stack struct, since Rust cannot
+/// store a reference to a stack-allocated object in another object that has a
+/// longer lifetime.
 pub struct EmitterScopeStack {
     scope_stack: Vec<EmitterScope>,
 }
 
 impl EmitterScopeStack {
+    /// Create a new, empty scope stack.
     pub fn new() -> Self {
         Self {
             scope_stack: Vec::new(),
         }
     }
 
-    pub fn innermost(&self) -> &EmitterScope {
+    /// The current innermost scope.
+    fn innermost(&self) -> &EmitterScope {
         self.scope_stack
             .last()
             .expect("There should be at least one scope")
     }
 
+    /// Enter the global scope. Call this once at the beginning of a top-level
+    /// script.
+    ///
+    /// This emits bytecode that implements parts of [ScriptEvaluation][1] and
+    /// [GlobalDeclarationInstantiation][2].
+    ///
+    /// [1]: https://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation
+    /// [2]: https://tc39.es/ecma262/#sec-globaldeclarationinstantiation
     pub fn enter_global(&mut self, emit: &mut InstructionWriter, scope_data_map: &ScopeDataMap) {
         let scope_index = scope_data_map.get_global_index();
         let scope_data = scope_data_map.get_global_at(scope_index);
@@ -169,6 +198,8 @@ impl EmitterScopeStack {
         emit.enter_global_scope(scope_index);
     }
 
+    /// Leave the global scope. Call this once at the end of a top-level
+    /// script.
     pub fn leave_global(&mut self, emit: &InstructionWriter) {
         match self.scope_stack.pop() {
             Some(EmitterScope::Global(_)) => {}
@@ -177,7 +208,8 @@ impl EmitterScopeStack {
         emit.leave_global_scope();
     }
 
-    pub fn dead_zone_frame_slot_range(
+    /// Emit bytecode to mark some local lexical variables as uninitialized.
+    fn dead_zone_frame_slot_range(
         &self,
         emit: &mut InstructionWriter,
         slot_start: FrameSlot,
@@ -196,6 +228,11 @@ impl EmitterScopeStack {
         emit.pop();
     }
 
+    /// Enter a lexical scope.
+    ///
+    /// A new LexicalEmitterScope based on scope_data_map is pushed to the
+    /// scope stack. Bytecode is emitted to mark the new lexical bindings as
+    /// uninitialized.
     pub fn enter_lexical(
         &mut self,
         emit: &mut InstructionWriter,
@@ -220,6 +257,7 @@ impl EmitterScopeStack {
         self.dead_zone_frame_slot_range(emit, first_frame_slot, next_frame_slot);
     }
 
+    /// Leave a lexical scope.
     pub fn leave_lexical(&mut self, emit: &mut InstructionWriter) {
         let lexical_scope = match self.scope_stack.pop() {
             Some(EmitterScope::Lexical(scope)) => scope,
@@ -232,6 +270,12 @@ impl EmitterScopeStack {
         );
     }
 
+    /// Resolve a name by searching the current scope chain.
+    ///
+    /// Implements the parts of [ResolveBinding][1] that can be done at
+    /// emit time.
+    ///
+    /// [1]: https://tc39.es/ecma262/#sec-resolvebinding
     pub fn lookup_name(&mut self, name: SourceAtomSetIndex) -> NameLocation {
         for scope in self.scope_stack.iter().rev() {
             if let Some(loc) = scope.lookup_name(name) {
