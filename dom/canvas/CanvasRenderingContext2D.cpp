@@ -925,7 +925,7 @@ CanvasRenderingContext2D::ContextState::ContextState(const ContextState& aOther)
       miterLimit(aOther.miterLimit),
       globalAlpha(aOther.globalAlpha),
       shadowBlur(aOther.shadowBlur),
-      dash(aOther.dash),
+      dash(aOther.dash.Clone()),
       dashOffset(aOther.dashOffset),
       op(aOther.op),
       fillRule(aOther.fillRule),
@@ -935,7 +935,7 @@ CanvasRenderingContext2D::ContextState::ContextState(const ContextState& aOther)
       filterChain(aOther.filterChain),
       autoSVGFiltersObserver(aOther.autoSVGFiltersObserver),
       filter(aOther.filter),
-      filterAdditionalImages(aOther.filterAdditionalImages),
+      filterAdditionalImages(aOther.filterAdditionalImages.Clone()),
       filterSourceGraphicTainted(aOther.filterSourceGraphicTainted),
       imageSmoothingEnabled(aOther.imageSmoothingEnabled),
       fontExplicitLanguage(aOther.fontExplicitLanguage) {}
