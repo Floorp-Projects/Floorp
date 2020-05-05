@@ -161,7 +161,7 @@ TEST(cubeb, enumerate_devices)
   if (r == CUBEB_ERROR_NOT_SUPPORTED) {
     fprintf(stderr, "Device enumeration not supported"
                     " for this backend, skipping this test.\n");
-    r = CUBEB_OK;
+    return;
   }
   ASSERT_EQ(r, CUBEB_OK) << "Error enumerating devices " << r;
 

@@ -421,6 +421,20 @@ cubeb_stream_get_latency(cubeb_stream * stream, uint32_t * latency)
 }
 
 int
+cubeb_stream_get_input_latency(cubeb_stream * stream, uint32_t * latency)
+{
+  if (!stream || !latency) {
+    return CUBEB_ERROR_INVALID_PARAMETER;
+  }
+
+  if (!stream->context->ops->stream_get_input_latency) {
+    return CUBEB_ERROR_NOT_SUPPORTED;
+  }
+
+  return stream->context->ops->stream_get_input_latency(stream, latency);
+}
+
+int
 cubeb_stream_set_volume(cubeb_stream * stream, float volume)
 {
   if (!stream || volume > 1.0 || volume < 0.0) {
