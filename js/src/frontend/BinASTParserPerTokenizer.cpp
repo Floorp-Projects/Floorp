@@ -397,8 +397,6 @@ JS::Result<Ok> BinASTParserPerTokenizer<Tok>::finishLazyFunction(
   ImmutableScriptFlags immutableFlags = funbox->immutableFlags();
 
   // Compute the flags that frontend doesn't directly compute.
-  immutableFlags.setFlag(ImmutableFlags::ForceStrict,
-                         options().forceStrictMode());
   immutableFlags.setFlag(ImmutableFlags::HasMappedArgsObj,
                          funbox->hasMappedArgsObj());
   immutableFlags.setFlag(ImmutableFlags::IsLikelyConstructorWrapper,

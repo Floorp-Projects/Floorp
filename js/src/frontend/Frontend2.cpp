@@ -379,6 +379,21 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
   SmooshCompileOptions compileOptions;
   compileOptions.no_script_rval = options.noScriptRval;
 
+  // A global script is a top-level context.
+  bool isTopLevelContext = true;
+
+  using ImmutableFlags = ImmutableScriptFlagsEnum;
+
+  // TODO: These flags should be set by Smoosh.
+  ImmutableScriptFlags isf;
+  isf.setFlag(ImmutableFlags::SelfHosted, options.selfHostingMode);
+  isf.setFlag(ImmutableFlags::ForceStrict, options.forceStrictMode());
+  isf.setFlag(ImmutableFlags::HasNonSyntacticScope, options.nonSyntacticScope);
+  if (isTopLevelContext) {
+    isf.setFlag(ImmutableFlags::TreatAsRunOnce, options.isRunOnce);
+    isf.setFlag(ImmutableFlags::NoScriptRval, options.noScriptRval);
+  }
+
   SmooshResult smoosh = smoosh_run(bytes, length, &compileOptions);
   AutoFreeSmooshResult afsr(&smoosh);
 
@@ -415,9 +430,7 @@ JSScript* Smoosh::compileGlobalScript(CompilationInfo& compilationInfo,
   }
 
   SourceExtent extent = SourceExtent::makeGlobalExtent(length);
-  RootedScript script(
-      cx, JSScript::Create(cx, cx->global(), sso, extent,
-                           ImmutableScriptFlags::fromCompileOptions(options)));
+  RootedScript script(cx, JSScript::Create(cx, cx->global(), sso, extent, isf));
 
   Vector<ScopeNote, 0, SystemAllocPolicy> scopeNotes;
   if (!scopeNotes.resize(smoosh.scope_notes.len)) {

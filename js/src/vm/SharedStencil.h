@@ -13,10 +13,9 @@
 #include <stdint.h>  // uint32_t
 
 #include "frontend/SourceNotes.h"  // js::SrcNote
-#include "js/CompileOptions.h"  // JS::{ReadOnlyCompileOptions,TransitiveCompileOptions}
-#include "js/TypeDecls.h"        // JSContext,jsbytecode
-#include "js/UniquePtr.h"        // js::UniquePtr
-#include "util/TrailingArray.h"  // js::TrailingArray
+#include "js/TypeDecls.h"          // JSContext,jsbytecode
+#include "js/UniquePtr.h"          // js::UniquePtr
+#include "util/TrailingArray.h"    // js::TrailingArray
 #include "vm/StencilEnums.h"  // js::{TryNoteKind,ImmutableScriptFlagsEnum,MutableScriptFlagsEnum}
 
 //
@@ -131,30 +130,6 @@ class ImmutableScriptFlags : public ScriptFlagBase<ImmutableScriptFlagsEnum> {
   using ScriptFlagBase<ImmutableScriptFlagsEnum>::ScriptFlagBase;
 
   void operator=(uint32_t flag) { flags_ = flag; }
-
-  static ImmutableScriptFlags fromCompileOptions(
-      const JS::ReadOnlyCompileOptions& options) {
-    ImmutableScriptFlags isf;
-    isf.setFlag(ImmutableScriptFlagsEnum::NoScriptRval, options.noScriptRval);
-    isf.setFlag(ImmutableScriptFlagsEnum::SelfHosted, options.selfHostingMode);
-    isf.setFlag(ImmutableScriptFlagsEnum::TreatAsRunOnce, options.isRunOnce);
-    isf.setFlag(ImmutableScriptFlagsEnum::ForceStrict,
-                options.forceStrictMode());
-    return isf;
-  };
-
-  static ImmutableScriptFlags fromCompileOptions(
-      const JS::TransitiveCompileOptions& options) {
-    ImmutableScriptFlags isf;
-    isf.setFlag(ImmutableScriptFlagsEnum::NoScriptRval,
-                /* noScriptRval (non-transitive compile option) = */ false);
-    isf.setFlag(ImmutableScriptFlagsEnum::SelfHosted, options.selfHostingMode);
-    isf.setFlag(ImmutableScriptFlagsEnum::TreatAsRunOnce,
-                /* isRunOnce (non-transitive compile option) = */ false);
-    isf.setFlag(ImmutableScriptFlagsEnum::ForceStrict,
-                options.forceStrictMode());
-    return isf;
-  };
 };
 
 class MutableScriptFlags : public ScriptFlagBase<MutableScriptFlagsEnum> {
