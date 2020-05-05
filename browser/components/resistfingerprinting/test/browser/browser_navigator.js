@@ -33,14 +33,14 @@ const SPOOFED_PLATFORM = {
   linux: "Linux x86_64",
   win: "Win32",
   macosx: "MacIntel",
-  android: "Linux armv7l",
+  android: "Linux aarch64",
   other: "Linux x86_64",
 };
 const SPOOFED_OSCPU = {
   linux: "Linux x86_64",
   win: "Windows NT 10.0; Win64; x64",
   macosx: "Intel Mac OS X 10.15",
-  android: "Linux armv7l",
+  android: "Linux aarch64",
   other: "Linux x86_64",
 };
 const SPOOFED_UA_NAVIGATOR_OS = {
