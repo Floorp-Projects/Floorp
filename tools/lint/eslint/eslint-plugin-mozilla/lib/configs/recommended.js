@@ -124,6 +124,7 @@ module.exports = {
     "mozilla/import-globals": "error",
     "mozilla/no-compare-against-boolean-literals": "error",
     "mozilla/no-define-cc-etc": "error",
+    "mozilla/no-throw-cr-literal": "error",
     "mozilla/no-useless-parameters": "error",
     "mozilla/no-useless-removeEventListener": "error",
     "mozilla/prefer-boolean-length-check": "error",
