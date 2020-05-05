@@ -2648,7 +2648,7 @@ nsresult ContentEventHandler::OnQueryDOMWidgetHittest(
           docFrameRect.y);
 
   Element* contentUnderMouse = mDocument->ElementFromPointHelper(
-      eventLocCSS.x, eventLocCSS.y, false, false);
+      eventLocCSS.x, eventLocCSS.y, false, false, false);
   if (contentUnderMouse) {
     nsIWidget* targetWidget = nullptr;
     nsIFrame* targetFrame = contentUnderMouse->GetPrimaryFrame();
