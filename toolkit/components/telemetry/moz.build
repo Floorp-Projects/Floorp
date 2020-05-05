@@ -227,7 +227,6 @@ GeneratedFile('TelemetryProcessData.h',
 GeneratedFile(
     'glean_checks',
     script='build_scripts/run_glean_parser.py',
-    py2=False,
     inputs=['geckoview/streaming/metrics.yaml'])
 
 # Add support for GeckoView: please note that building GeckoView
