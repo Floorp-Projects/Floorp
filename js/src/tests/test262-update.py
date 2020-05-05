@@ -46,7 +46,6 @@ FEATURE_CHECK_NEEDED = {
     "WeakRef": "!this.hasOwnProperty('WeakRef')",
 }
 RELEASE_OR_BETA = set([
-    "Intl.NumberFormat-unified",
     "Intl.DateTimeFormat-fractionalSecondDigits",
     "Promise.any",
     "AggregateError",
