@@ -481,19 +481,13 @@ class GTestCommands(MachCommandBase):
 
         # We lazy build gtest because it's slow to link
         try:
-            config = self.config_environment
+            self.config_environment
         except Exception:
             print("Please run |./mach build| before |./mach gtest|.")
             return 1
 
-        active_backend = config.substs.get('BUILD_BACKENDS', [None])[0]
-        if 'Tup' in active_backend:
-            gtest_build_target = mozpath.join(self.topobjdir, '<gtest>')
-        else:
-            gtest_build_target = 'recurse_gtest'
-
         res = self._mach_context.commands.dispatch('build', self._mach_context,
-                                                   what=[gtest_build_target])
+                                                   what=['recurse_gtest'])
         if res:
             print("Could not build xul-gtest")
             return res
@@ -1581,76 +1575,6 @@ class Repackage(MachCommandBase):
             arch=arch,
             mar_channel_id=mar_channel_id,
         )
-
-
-@CommandProvider
-class Analyze(MachCommandBase):
-    """ Get information about a file in the build graph """
-    @Command('analyze', category='misc',
-             description='Analyze the build graph.')
-    def analyze(self):
-        print("Usage: ./mach analyze [files|report] [args...]")
-
-    @SubCommand('analyze', 'files',
-                description='Get incremental build cost for file(s) from the tup database.')
-    @CommandArgument('--path', help='Path to tup db',
-                     default=None)
-    @CommandArgument('files', nargs='*', help='Files to analyze')
-    def analyze_files(self, path, files):
-        from mozbuild.analyze.graph import Graph
-        if path is None:
-            path = mozpath.join(self.topsrcdir, '.tup', 'db')
-        if os.path.isfile(path):
-            g = Graph(path)
-            g.file_summaries(files)
-            g.close()
-        else:
-            res = 'Please make sure you have a local tup db *or* specify the location with --path.'
-            print('Could not find a valid tup db in ' + path, res, sep='\n')
-            return 1
-
-    @SubCommand('analyze', 'all',
-                description='Get a report of files changed within the last n days and '
-                'their corresponding build cost.')
-    @CommandArgument('--days', '-d', type=int, default=14,
-                     help='Number of days to include in the report.')
-    @CommandArgument('--format', default='pretty',
-                     choices=['pretty', 'csv', 'json', 'html'],
-                     help='Print or export data in the given format.')
-    @CommandArgument('--limit', type=int, default=None,
-                     help='Get the top n most expensive files from the report.')
-    @CommandArgument('--path', help='Path to cost_dict.gz',
-                     default=None)
-    def analyze_report(self, days, format, limit, path):
-        from mozbuild.analyze.hg import Report
-        self._activate_virtualenv()
-        try:
-            self.virtualenv_manager.install_pip_package('tablib==0.12.1')
-        except Exception:
-            print('Could not install tablib via pip.')
-            return 1
-        if path is None:
-            # go find tup db and make a cost_dict
-            from mozbuild.analyze.graph import Graph
-            db_path = mozpath.join(self.topsrcdir, '.tup', 'db')
-            if os.path.isfile(db_path):
-                g = Graph(db_path)
-                r = Report(days, cost_dict=g.get_cost_dict())
-                g.close()
-                r.generate_output(format, limit, self.topobjdir)
-            else:
-                res = 'Please specify the location of cost_dict.gz with --path.'
-                print('Could not find %s to make a cost dictionary.' % db_path, res, sep='\n')
-                return 1
-        else:
-            # path to cost_dict.gz was specified
-            if os.path.isfile(path):
-                r = Report(days, path)
-                r.generate_output(format, limit, self.topobjdir)
-            else:
-                res = 'Please specify the location of cost_dict.gz with --path.'
-                print('Could not find cost_dict.gz at %s' % path, res, sep='\n')
-                return 1
 
 
 @SettingsProvider
