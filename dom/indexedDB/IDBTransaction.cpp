@@ -94,7 +94,7 @@ IDBTransaction::IDBTransaction(IDBDatabase* const aDatabase,
                                CreatedFromFactoryFunction /*aDummy*/)
     : DOMEventTargetHelper(aDatabase),
       mDatabase(aDatabase),
-      mObjectStoreNames(aObjectStoreNames),
+      mObjectStoreNames(aObjectStoreNames.Clone()),
       mLoggingSerialNumber(GetIndexedDBThreadLocal()->NextTransactionSN(aMode)),
       mNextObjectStoreId(0),
       mNextIndexId(0),
@@ -897,7 +897,7 @@ RefPtr<DOMStringList> IDBTransaction::ObjectStoreNames() const {
   }
 
   auto list = MakeRefPtr<DOMStringList>();
-  list->StringArray() = mObjectStoreNames;
+  list->StringArray() = mObjectStoreNames.Clone();
   return list;
 }
 
