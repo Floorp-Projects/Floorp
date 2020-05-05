@@ -107,7 +107,7 @@ nsDisplayMasksAndClipPathsGeometry::nsDisplayMasksAndClipPathsGeometry(
     nsDisplayMasksAndClipPaths* aItem, nsDisplayListBuilder* aBuilder)
     : nsDisplaySVGEffectGeometry(aItem, aBuilder),
       nsImageGeometryMixin(aItem, aBuilder),
-      mDestRects(aItem->GetDestRects()) {}
+      mDestRects(aItem->GetDestRects().Clone()) {}
 
 nsDisplayFiltersGeometry::nsDisplayFiltersGeometry(
     nsDisplayFilters* aItem, nsDisplayListBuilder* aBuilder)
