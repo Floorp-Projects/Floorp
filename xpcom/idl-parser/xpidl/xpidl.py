@@ -133,8 +133,9 @@ class Builtin(object):
             raise IDLError("Use string class types for string Array elements", self.location)
 
         if const:
-            print >>sys.stderr, IDLError(
-                "[const] doesn't make sense on builtin types.", self.location, warning=True)
+            print(IDLError(
+                "[const] doesn't make sense on builtin types.",
+                self.location, warning=True), file=sys.stderr)
             const = 'const '
         elif calltype == 'in' and self.isPointer():
             const = 'const '
