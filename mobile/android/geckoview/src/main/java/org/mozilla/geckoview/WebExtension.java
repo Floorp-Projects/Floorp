@@ -144,7 +144,11 @@ public class WebExtension {
      *           </ul>
      * @param flags {@link Flags} for this WebExtension.
      * @param controller the current {@link WebExtensionController} instance
+     *
+     * @deprecated Use the return value of {@link WebExtensionController#installBuiltIn} instead.
+     *             This method will be removed in GeckoView 81.
      */
+    @Deprecated
     public WebExtension(final @NonNull String location, final @NonNull String id,
                         final @WebExtensionFlags long flags,
                         final @NonNull WebExtensionController controller) {
@@ -170,7 +174,11 @@ public class WebExtension {
      *                 <code>resource:</code> URI to a folder inside the APK or
      *                 a <code>file:</code> URL to a <code>.xpi</code> file.
      * @param controller the current {@link WebExtensionController} instance
+     *
+     * @deprecated Use the return value of {@link WebExtensionController#installBuiltIn} instead.
+     *             This method will be removed in GeckoView 81.
      */
+    @Deprecated
     public WebExtension(final @NonNull String location,
                         final @NonNull WebExtensionController controller) {
         this(location, "{" + UUID.randomUUID().toString() + "}", Flags.NONE, controller);
