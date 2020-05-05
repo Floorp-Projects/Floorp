@@ -1028,9 +1028,9 @@ nsresult nsSystemInfo::Init() {
 // Chrome works around this by hardcoding an Android version when a
 // numeric version can't be obtained. We're doing the same.
 // This version will need to be updated whenever there is a new official
-// Android release.
-// See: https://cs.chromium.org/chromium/src/base/sys_info_android.cc?l=61
-#  define DEFAULT_ANDROID_VERSION "6.0.99"
+// Android release. Search for "kDefaultAndroidMajorVersion" in:
+// https://source.chromium.org/chromium/chromium/src/+/master:base/system/sys_info_android.cc
+#  define DEFAULT_ANDROID_VERSION "10.0.99"
 
 /* static */
 void nsSystemInfo::GetAndroidSystemInfo(AndroidSystemInfo* aInfo) {
