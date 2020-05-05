@@ -3,12 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/PresShell.h"
+#include "mozilla/ViewportFrame.h"
 #include "mozilla/ViewportUtils.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/ScrollableLayerGuid.h"
 #include "nsIContent.h"
+#include "nsIFrame.h"
+#include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
+#include "nsQueryFrame.h"
+#include "nsStyleStruct.h"
 
 namespace mozilla {
 
@@ -116,5 +121,26 @@ template CSSToCSSMatrix4x4 ViewportUtils::GetVisualToLayoutTransform<CSSPixel>(
 template LayoutDeviceToLayoutDeviceMatrix4x4
     ViewportUtils::GetVisualToLayoutTransform<LayoutDevicePixel>(
         ScrollableLayerGuid::ViewID);
+
+const nsIFrame* ViewportUtils::IsZoomedContentRoot(const nsIFrame* aFrame) {
+  if (!aFrame) {
+    return nullptr;
+  }
+  if (aFrame->Type() == LayoutFrameType::Canvas) {
+    nsIScrollableFrame* sf = do_QueryFrame(aFrame->GetParent());
+    if (sf && sf->IsRootScrollFrameOfDocument() &&
+        aFrame->PresContext()->IsRootContentDocumentCrossProcess()) {
+      return aFrame->GetParent();
+    }
+  } else if (aFrame->StyleDisplay()->mPosition ==
+             StylePositionProperty::Fixed) {
+    if (ViewportFrame* viewportFrame = do_QueryFrame(aFrame->GetParent())) {
+      if (viewportFrame->PresContext()->IsRootContentDocumentCrossProcess()) {
+        return viewportFrame->PresShell()->GetRootScrollFrame();
+      }
+    }
+  }
+  return nullptr;
+}
 
 }  // namespace mozilla
