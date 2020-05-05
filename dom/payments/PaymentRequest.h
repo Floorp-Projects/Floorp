@@ -35,7 +35,7 @@ class BasicCardDetails final {
  public:
   struct Address {
     nsString country;
-    nsTArray<nsString> addressLine;
+    CopyableTArray<nsString> addressLine;
     nsString region;
     nsString regionCode;
     nsString city;
