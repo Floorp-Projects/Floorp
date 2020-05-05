@@ -319,9 +319,11 @@ static SHM_ID: AtomicUsize = AtomicUsize::new(0);
 // immediately deleted from the filesystem while retaining handles to the
 // shm to be shared between the server and client.
 fn get_shm_id() -> String {
-    format!("cubeb-shm-{}-{}",
-            std::process::id(),
-            SHM_ID.fetch_add(1, Ordering::SeqCst))
+    format!(
+        "cubeb-shm-{}-{}",
+        std::process::id(),
+        SHM_ID.fetch_add(1, Ordering::SeqCst)
+    )
 }
 
 struct ServerStream {
@@ -526,6 +528,12 @@ impl CubebServer {
                 .map(ClientMessage::StreamLatency)
                 .unwrap_or_else(error),
 
+            ServerMessage::StreamGetInputLatency(stm_tok) => try_stream!(self, stm_tok)
+                .stream
+                .input_latency()
+                .map(ClientMessage::StreamLatency)
+                .unwrap_or_else(error),
+
             ServerMessage::StreamSetVolume(stm_tok, volume) => try_stream!(self, stm_tok)
                 .stream
                 .set_volume(volume)
@@ -687,10 +695,10 @@ impl CubebServer {
         let (ipc_server, ipc_client) = MessageStream::anonymous_ipc_pair()?;
         debug!("Created callback pair: {:?}-{:?}", ipc_server, ipc_client);
         let shm_id = get_shm_id();
-        let (input_shm, input_file) = SharedMemWriter::new(&format!("{}-input", shm_id),
-                                                           audioipc::SHM_AREA_SIZE)?;
-        let (output_shm, output_file) = SharedMemReader::new(&format!("{}-output", shm_id),
-                                                             audioipc::SHM_AREA_SIZE)?;
+        let (input_shm, input_file) =
+            SharedMemWriter::new(&format!("{}-input", shm_id), audioipc::SHM_AREA_SIZE)?;
+        let (output_shm, output_file) =
+            SharedMemReader::new(&format!("{}-output", shm_id), audioipc::SHM_AREA_SIZE)?;
 
         // This code is currently running on the Client/Server RPC
         // handling thread.  We need to move the registration of the

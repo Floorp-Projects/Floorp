@@ -11,7 +11,7 @@ edition = "2018"
 [dependencies]
 audio_thread_priority = "0.22"
 audioipc = { path="../audioipc" }
-cubeb-backend = "0.6.0"
+cubeb-backend = "0.7"
 futures = { version="0.1.18", default-features=false, features=["use_std"] }
 futures-cpupool = { version="0.1.8", default-features=false }
 log = "0.4"
