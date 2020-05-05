@@ -39,7 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
 
       try {
         var css = Cu.evalInSandbox("CSSStyleDeclaration", sandbox);
-        is(String(css.prototype), "[object CSSStyleDeclarationPrototype]",
+        is(String(css.prototype), "[object CSSStyleDeclaration]",
            "'CSSStyleDeclaration.prototype' in a sandbox should return the CSSStyleDeclaration interface prototype object");
       } catch (e) {
         ok(false, "'CSSStyleDeclaration' shouldn't throw in a sandbox");

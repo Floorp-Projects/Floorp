@@ -874,7 +874,7 @@ class IDLInterfaceMixin(IDLInterfaceOrInterfaceMixinOrNamespace):
 
 class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
     def __init__(self, location, parentScope, name, parent, members,
-                 isKnownNonPartial, toStringTag):
+                 isKnownNonPartial):
         assert isKnownNonPartial or not parent
         assert isKnownNonPartial or len(members) == 0
 
@@ -905,8 +905,6 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
         self.hasCrossOriginMembers = False
         # True if some descendant (including ourselves) has cross-origin members
         self.hasDescendantWithCrossOriginMembers = False
-
-        self.toStringTag = toStringTag
 
         IDLInterfaceOrInterfaceMixinOrNamespace.__init__(self, location, parentScope, name)
 
@@ -1610,11 +1608,9 @@ class IDLInterfaceOrNamespace(IDLInterfaceOrInterfaceMixinOrNamespace):
 
 class IDLInterface(IDLInterfaceOrNamespace):
     def __init__(self, location, parentScope, name, parent, members,
-                 isKnownNonPartial, classNameOverride=None,
-                 toStringTag=None):
+                 isKnownNonPartial, classNameOverride=None):
         IDLInterfaceOrNamespace.__init__(self, location, parentScope, name,
-                                         parent, members, isKnownNonPartial,
-                                         toStringTag)
+                                         parent, members, isKnownNonPartial)
         self.classNameOverride = classNameOverride
 
     def __str__(self):
@@ -1792,8 +1788,7 @@ class IDLInterface(IDLInterfaceOrNamespace):
 class IDLNamespace(IDLInterfaceOrNamespace):
     def __init__(self, location, parentScope, name, members, isKnownNonPartial):
         IDLInterfaceOrNamespace.__init__(self, location, parentScope, name,
-                                         None, members, isKnownNonPartial,
-                                         toStringTag=None)
+                                         None, members, isKnownNonPartial)
 
     def __str__(self):
         return "Namespace '%s'" % self.identifier.name
@@ -7602,12 +7597,11 @@ class Parser(Tokenizer):
                 nextMethod.addExtendedAttributes([simpleExtendedAttr("Throws")])
                 itr_ident = IDLUnresolvedIdentifier(iface.location,
                                                     iface.identifier.name + "Iterator")
-                toStringTag = iface.identifier.name + " Iterator"
+                classNameOverride = iface.identifier.name + " Iterator"
                 itr_iface = IDLInterface(iface.location, self.globalScope(),
                                          itr_ident, None, [nextMethod],
                                          isKnownNonPartial=True,
-                                         classNameOverride=toStringTag,
-                                         toStringTag=toStringTag)
+                                         classNameOverride=classNameOverride)
                 itr_iface.addExtendedAttributes([simpleExtendedAttr("NoInterfaceObject")])
                 # Make sure the exposure set for the iterator interface is the
                 # same as the exposure set for the iterable interface, because
