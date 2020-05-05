@@ -284,7 +284,8 @@ class MozPromise : public MozPromiseBase {
     return p;
   }
 
-  typedef MozPromise<nsTArray<ResolveValueType>, RejectValueType, IsExclusive>
+  typedef MozPromise<CopyableTArray<ResolveValueType>, RejectValueType,
+                     IsExclusive>
       AllPromiseType;
 
  private:
@@ -341,8 +342,8 @@ class MozPromise : public MozPromiseBase {
       nsISerialEventTarget* aProcessingTarget,
       nsTArray<RefPtr<MozPromise>>& aPromises) {
     if (aPromises.Length() == 0) {
-      return AllPromiseType::CreateAndResolve(nsTArray<ResolveValueType>(),
-                                              __func__);
+      return AllPromiseType::CreateAndResolve(
+          CopyableTArray<ResolveValueType>(), __func__);
     }
 
     RefPtr<AllPromiseHolder> holder = new AllPromiseHolder(aPromises.Length());

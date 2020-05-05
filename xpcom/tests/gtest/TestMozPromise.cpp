@@ -247,7 +247,7 @@ TEST(MozPromise, PromiseAllResolve)
     TestPromise::All(queue, promises)
         ->Then(
             queue, __func__,
-            [queue](const nsTArray<int>& aResolveValues) -> void {
+            [queue](const CopyableTArray<int>& aResolveValues) -> void {
               EXPECT_EQ(aResolveValues.Length(), 3UL);
               EXPECT_EQ(aResolveValues[0], 22);
               EXPECT_EQ(aResolveValues[1], 32);
