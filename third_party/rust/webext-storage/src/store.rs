@@ -5,6 +5,7 @@
 use crate::api::{self, StorageChanges};
 use crate::db::StorageDb;
 use crate::error::*;
+use crate::sync;
 use std::path::Path;
 use std::result;
 
@@ -106,6 +107,11 @@ impl Store {
         api::wipe_all(&tx)?;
         tx.commit()?;
         Ok(())
+    }
+
+    /// Returns a bridged sync engine for Desktop for this store.
+    pub fn bridged_engine(&self) -> sync::BridgedEngine<'_> {
+        sync::BridgedEngine::new(&self.db)
     }
 
     /// Closes the store and its database connection. See the docs for

@@ -10,6 +10,7 @@ mod db;
 pub mod error;
 mod schema;
 pub mod store;
+mod sync;
 
 // This is what we roughly expect the "bridge" used by desktop to do.
 // It's primarily here to avoid dead-code warnings (but I don't want to disable

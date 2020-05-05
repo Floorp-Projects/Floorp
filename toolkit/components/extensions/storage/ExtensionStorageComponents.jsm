@@ -86,7 +86,10 @@ StorageSyncService.prototype = {
   // reference to the underlying storage area, with a quick check to make sure
   // that callers are asking for the right interfaces.
   getInterface(iid) {
-    if (iid.equals(Ci.mozIExtensionStorageArea)) {
+    if (
+      iid.equals(Ci.mozIExtensionStorageArea) ||
+      iid.equals(Ci.mozIBridgedSyncEngine)
+    ) {
       return this._storageArea.QueryInterface(iid);
     }
     throw Components.Exception(

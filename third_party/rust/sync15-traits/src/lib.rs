@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #![warn(rust_2018_idioms)]
-mod bridged_engine;
+pub mod bridged_engine;
 mod changeset;
 pub mod client;
 mod payload;

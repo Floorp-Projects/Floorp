@@ -41,7 +41,6 @@ class BridgedStore {
   }
 
   async applyIncomingBatch(records) {
-    await this.engine.initialize();
     for (let chunk of PlacesUtils.chunkArray(records, this._batchChunkSize)) {
       let incomingEnvelopesAsJSON = chunk.map(record =>
         JSON.stringify(record.toIncomingEnvelope())
@@ -56,7 +55,6 @@ class BridgedStore {
   }
 
   async wipe() {
-    await this.engine.initialize();
     await promisify(this.engine._bridge.wipe);
   }
 }
@@ -251,8 +249,6 @@ BridgedEngine.prototype = {
   _storeObj: BridgedStore,
   _trackerObj: BridgedTracker,
 
-  _initializePromise: null,
-
   /** Returns the storage version for this engine. */
   get version() {
     return this._bridge.storageVersion;
@@ -268,28 +264,6 @@ BridgedEngine.prototype = {
   },
 
   /**
-   * Initializes the underlying Rust bridge for this engine. Once the bridge is
-   * ready, subsequent calls to `initialize` are no-ops. If initialization
-   * fails, the next call to `initialize` will try again.
-   *
-   * @throws  If initializing the bridge fails.
-   */
-  async initialize() {
-    if (!this._initializePromise) {
-      this._initializePromise = promisify(this._bridge.initialize).catch(
-        err => {
-          // We may have failed to initialize the bridge temporarily; for example,
-          // if its database is corrupt. Clear the promise so that subsequent
-          // calls to `initialize` can try to create the bridge again.
-          this._initializePromise = null;
-          throw err;
-        }
-      );
-    }
-    return this._initializePromise;
-  },
-
-  /**
    * Returns the sync ID for this engine. This is exposed for tests, but
    * Sync code always calls `resetSyncID()` and `ensureCurrentSyncID()`,
    * not this.
@@ -297,7 +271,6 @@ BridgedEngine.prototype = {
    * @returns {String?} The sync ID, or `null` if one isn't set.
    */
   async getSyncID() {
-    await this.initialize();
     // Note that all methods on an XPCOM class instance are automatically bound,
     // so we don't need to write `this._bridge.getSyncId.bind(this._bridge)`.
     let syncID = await promisify(this._bridge.getSyncId);
@@ -311,13 +284,11 @@ BridgedEngine.prototype = {
   },
 
   async resetLocalSyncID() {
-    await this.initialize();
     let newSyncID = await promisify(this._bridge.resetSyncId);
     return newSyncID;
   },
 
   async ensureCurrentSyncID(newSyncID) {
-    await this.initialize();
     let assignedSyncID = await promisify(
       this._bridge.ensureCurrentSyncId,
       newSyncID
@@ -326,13 +297,11 @@ BridgedEngine.prototype = {
   },
 
   async getLastSync() {
-    await this.initialize();
     let lastSync = await promisify(this._bridge.getLastSync);
     return lastSync;
   },
 
   async setLastSync(lastSyncMillis) {
-    await this.initialize();
     await promisify(this._bridge.setLastSync, lastSyncMillis);
   },
 
@@ -347,12 +316,6 @@ BridgedEngine.prototype = {
   },
 
   async trackRemainingChanges() {
-    // TODO: Should we call `storeIncoming` here again, to write the records we
-    // just uploaded (that is, records in the changeset where `synced = true`)
-    // back to the bridged engine's mirror? Or can we rely on the engine to
-    // keep the records around (for example, in a temp table), and automatically
-    // write them back on `syncFinished`?
-    await this.initialize();
     await promisify(this._bridge.syncFinished);
   },
 
@@ -373,9 +336,13 @@ BridgedEngine.prototype = {
     return true;
   },
 
+  async _syncStartup() {
+    await super._syncStartup();
+    await promisify(this._bridge.syncStarted);
+  },
+
   async _processIncoming(newitems) {
     await super._processIncoming(newitems);
-    await this.initialize();
 
     let outgoingEnvelopesAsJSON = await promisify(this._bridge.apply);
     let changeset = {};
@@ -399,7 +366,6 @@ BridgedEngine.prototype = {
    * records from the outgoing table back to the mirror.
    */
   async _onRecordsWritten(succeeded, failed, serverModifiedTime) {
-    await this.initialize();
     await promisify(this._bridge.setUploaded, serverModifiedTime, succeeded);
   },
 
@@ -417,7 +383,6 @@ BridgedEngine.prototype = {
 
   async _resetClient() {
     await super._resetClient();
-    await this.initialize();
     await promisify(this._bridge.reset);
   },
 };

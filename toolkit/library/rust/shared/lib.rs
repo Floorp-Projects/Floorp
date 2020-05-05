@@ -76,9 +76,6 @@ extern crate fluent_ffi;
 
 extern crate rusqlite;
 
-#[cfg(feature = "services_sync")]
-extern crate golden_gate;
-
 #[cfg(feature = "remote")]
 extern crate remote;
 
