@@ -9056,10 +9056,9 @@ const FieldInitializers& BytecodeEmitter::findFieldInitializersForCall() {
 
   for (AbstractScopePtrIter si(innermostScope()); si; si++) {
     if (si.abstractScopePtr().is<FunctionScope>()) {
-      JSFunction* fun = si.abstractScopePtr().canonicalFunction();
-      if (fun->isClassConstructor()) {
+      if (si.abstractScopePtr().isClassConstructor()) {
         const FieldInitializers& fieldInitializers =
-            fun->baseScript()->getFieldInitializers();
+            si.abstractScopePtr().fieldInitializers();
         MOZ_ASSERT(fieldInitializers.valid);
         return fieldInitializers;
       }

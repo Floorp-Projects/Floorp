@@ -334,7 +334,8 @@ class ScopeCreationData {
 
   // Valid for functions;
   bool isArrow() const;
-  JSFunction* canonicalFunction() const;
+  bool isClassConstructor() const;
+  const FieldInitializers& fieldInitializers() const;
 
   bool hasScope() const { return scope_ != nullptr; }
 
