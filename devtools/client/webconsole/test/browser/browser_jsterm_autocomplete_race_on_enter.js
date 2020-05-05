@@ -150,4 +150,20 @@ add_task(async function() {
   EventUtils.synthesizeKey("KEY_Enter");
   await onPopupClosed;
   is(getInputValue(hud), "const", "the input has the expected item");
+
+  info(
+    "Hitting Enter quickly after a letter when the expression has text after"
+  );
+  await setInputValueForAutocompletion(hud, "f(und");
+  ok(
+    hasExactPopupLabels(autocompletePopup, ["undefined"]),
+    `the popup has the "undefined" item`
+  );
+  info(`Quickly type "e" and "Enter"`);
+  onPopupClosed = autocompletePopup.once("popup-closed");
+  EventUtils.synthesizeKey("e");
+  await waitForTime(5);
+  EventUtils.synthesizeKey("KEY_Enter");
+  await onPopupClosed;
+  is(getInputValue(hud), "f(undefined)", "the input has the expected item");
 });
