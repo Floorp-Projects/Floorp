@@ -106,15 +106,8 @@ bool HTMLSummaryElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
     return disallowOverridingFocusability;
   }
 
-#ifdef XP_MACOSX
-  // The parent does not have strong opinion about the focusability of this main
-  // summary element, but we'd like to override it when mouse clicking on Mac OS
-  // like other form elements.
-  *aIsFocusable = !aWithMouse || nsFocusManager::sMouseFocusesFormControl;
-#else
-  // The main summary element is focusable on other platforms.
+  // The main summary element is focusable.
   *aIsFocusable = true;
-#endif
 
   // Give a chance to allow the subclass to override aIsFocusable.
   return false;
