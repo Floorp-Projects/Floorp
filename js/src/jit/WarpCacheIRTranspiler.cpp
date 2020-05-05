@@ -20,6 +20,7 @@ using namespace js::jit;
 // The CacheIR transpiler generates MIR from Baseline CacheIR.
 class MOZ_RAII WarpCacheIRTranspiler {
   TempAllocator& alloc_;
+  BytecodeLocation loc_;
   const CacheIRStubInfo* stubInfo_;
   const uint8_t* stubData_;
 
@@ -50,6 +51,8 @@ class MOZ_RAII WarpCacheIRTranspiler {
     effectful_ = ins;
 #endif
   }
+
+  MOZ_MUST_USE bool resumeAfter(MInstruction* ins);
 
   // CacheIR instructions writing to the IC's result register (the *Result
   // instructions) must call this to push the result onto the virtual stack.
@@ -95,9 +98,10 @@ class MOZ_RAII WarpCacheIRTranspiler {
   CACHE_IR_TRANSPILER_GENERATED
 
  public:
-  WarpCacheIRTranspiler(MIRGenerator& mirGen, MBasicBlock* current,
-                        const WarpCacheIR* snapshot)
+  WarpCacheIRTranspiler(MIRGenerator& mirGen, BytecodeLocation loc,
+                        MBasicBlock* current, const WarpCacheIR* snapshot)
       : alloc_(mirGen.alloc()),
+        loc_(loc),
         stubInfo_(snapshot->stubInfo()),
         stubData_(snapshot->stubData()),
         current_(current) {}
@@ -131,6 +135,20 @@ bool WarpCacheIRTranspiler::transpile(const MDefinitionStackVector& inputs) {
 
   // Effectful instructions should have a resume point.
   MOZ_ASSERT_IF(effectful_, effectful_->resumePoint());
+  return true;
+}
+
+bool WarpCacheIRTranspiler::resumeAfter(MInstruction* ins) {
+  MOZ_ASSERT(ins->isEffectful());
+  MOZ_ASSERT(effectful_ == ins);
+
+  MResumePoint* resumePoint = MResumePoint::New(
+      alloc(), ins->block(), loc_.toRawBytecode(), MResumePoint::ResumeAfter);
+  if (!resumePoint) {
+    return false;
+  }
+
+  ins->setResumePoint(resumePoint);
   return true;
 }
 
@@ -445,6 +463,23 @@ bool WarpCacheIRTranspiler::emitLoadStringCharResult(StringOperandId strId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitStoreFixedSlot(ObjOperandId objId,
+                                               uint32_t offsetOffset,
+                                               ValOperandId rhsId) {
+  int32_t offset = int32StubField(offsetOffset);
+
+  MDefinition* obj = getOperand(objId);
+  size_t slotIndex = NativeObject::getFixedSlotIndexFromOffset(offset);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* barrier = MPostWriteBarrier::New(alloc(), obj, rhs);
+  add(barrier);
+
+  auto* store = MStoreFixedSlot::NewBarriered(alloc(), obj, slotIndex, rhs);
+  addEffectful(store);
+  return resumeAfter(store);
+}
+
 bool WarpCacheIRTranspiler::emitInt32IncResult(Int32OperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
@@ -540,9 +575,10 @@ bool WarpCacheIRTranspiler::emitTypeMonitorResult() {
 
 bool WarpCacheIRTranspiler::emitReturnFromIC() { return true; }
 
-bool jit::TranspileCacheIRToMIR(MIRGenerator& mirGen, MBasicBlock* current,
+bool jit::TranspileCacheIRToMIR(MIRGenerator& mirGen, BytecodeLocation loc,
+                                MBasicBlock* current,
                                 const WarpCacheIR* snapshot,
                                 const MDefinitionStackVector& inputs) {
-  WarpCacheIRTranspiler transpiler(mirGen, current, snapshot);
+  WarpCacheIRTranspiler transpiler(mirGen, loc, current, snapshot);
   return transpiler.transpile(inputs);
 }
