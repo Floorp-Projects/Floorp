@@ -823,7 +823,8 @@ class ADBDevice(ADBCommand):
             try:
                 # Guarantee that /data/local/tmp exists and is accessible to all.
                 if not self.exists("/data/local/tmp", timeout=timeout, root=True):
-                    self.mkdir("/data/local/tmp", timeout=timeout, root=True)
+                    # parents=True is required on emulator, where exist() may be flaky
+                    self.mkdir("/data/local/tmp", parents=True, timeout=timeout, root=True)
                 self.chmod("/data/local/tmp", timeout=timeout, root=True)
             except ADBRootError as e:
                 self._logger.warning(
