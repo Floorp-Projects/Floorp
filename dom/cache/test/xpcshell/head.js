@@ -6,6 +6,9 @@
  * and are CC licensed by https://www.flickr.com/photos/legofenris/.
  */
 
+// testSteps is expected to be defined by the file including this file.
+/* global testSteps */
+
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // services required be initialized in order to run CacheStorage
@@ -17,13 +20,34 @@ var sts = Cc["@mozilla.org/network/stream-transport-service;1"].getService(
 );
 var hash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
 
-// Expose Cache and Fetch symbols on the global
-Cu.importGlobalProperties(["caches", "fetch"]);
+function run_test() {
+  runTest();
+}
+
+function runTest() {
+  do_get_profile();
+
+  // Expose Cache and Fetch symbols on the global
+  Cu.importGlobalProperties(["caches", "fetch"]);
+
+  Assert.ok(
+    typeof testSteps === "function",
+    "There should be a testSteps function"
+  );
+  Assert.ok(
+    testSteps.constructor.name === "AsyncFunction",
+    "testSteps should be an async function"
+  );
+
+  add_task(testSteps);
+
+  // Since we defined run_test, we must invoke run_next_test() to start the
+  // async test.
+  run_next_test();
+}
 
 // Extract a zip file into the profile
 function create_test_profile(zipFileName) {
-  do_get_profile();
-
   var directoryService = Services.dirsvc;
 
   var profileDir = directoryService.get("ProfD", Ci.nsIFile);

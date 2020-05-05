@@ -8,14 +8,11 @@
  * 3. Go to profile directory and rename the website folder to "chrome"
  */
 
-async function run_test() {
-  do_test_pending();
+async function testSteps() {
   create_test_profile("schema_25_profile.zip");
 
   let cache = await caches.open("test");
   let response = await cache.match("https://www.mozilla.org");
   ok(!!response, "Upgrade from 25 to 26 do succeed");
   ok(response.type === "opaque", "The response type does be opaque");
-
-  do_test_finished();
 }

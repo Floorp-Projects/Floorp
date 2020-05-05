@@ -52,9 +52,8 @@ function verifyResult() {
   return !foundEmpty;
 }
 
-async function run_test() {
+async function testSteps() {
   const url = "https://www.mozilla.org";
-  do_test_pending();
 
   info("Setting up environment");
 
@@ -83,6 +82,4 @@ async function run_test() {
   ok(verifyResult(), "Empty directory should be removed");
 
   await caches.delete("test");
-
-  do_test_finished();
 }
