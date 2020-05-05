@@ -391,7 +391,7 @@ void nsPluginFrame::GetWidgetConfiguration(
   nsIWidget::Configuration* configuration = aConfigurations->AppendElement();
   configuration->mChild = mWidget;
   configuration->mBounds = mNextConfigurationBounds;
-  configuration->mClipRegion = mNextConfigurationClipRegion;
+  configuration->mClipRegion = mNextConfigurationClipRegion.Clone();
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   if (XRE_IsContentProcess()) {
     configuration->mWindowID =
