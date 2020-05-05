@@ -191,7 +191,7 @@ internal class AutoPushObserver(
         val rawEvent = message ?: return
 
         accountManager.withConstellation {
-            it.processRawEventAsync(String(rawEvent))
+            processRawEventAsync(String(rawEvent))
         }
     }
 

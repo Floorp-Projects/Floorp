@@ -4,21 +4,20 @@
 
 package mozilla.components.feature.syncedtabs
 
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
 import java.util.UUID
 
 /**
  * A [AwesomeBar.SuggestionProvider] implementation that provides suggestions for remote tabs
- * based on [SyncedTabsFeature].
+ * based on [SyncedTabsStorage].
  */
-@ExperimentalCoroutinesApi
 class SyncedTabsStorageSuggestionProvider(
-    private val syncedTabs: SyncedTabsFeature,
+    private val syncedTabs: SyncedTabsStorage,
     private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     private val icons: BrowserIcons? = null
 ) : AwesomeBar.SuggestionProvider {

@@ -4,81 +4,69 @@
 
 package mozilla.components.feature.syncedtabs
 
-import androidx.annotation.VisibleForTesting
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.map
-import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.browser.storage.sync.RemoteTabsStorage
+import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.Dispatchers
 import mozilla.components.browser.storage.sync.Tab
-import mozilla.components.browser.storage.sync.TabEntry
-import mozilla.components.concept.sync.Device
-import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.feature.syncedtabs.controller.DefaultController
+import mozilla.components.feature.syncedtabs.controller.SyncedTabsController
+import mozilla.components.feature.syncedtabs.interactor.DefaultInteractor
+import mozilla.components.feature.syncedtabs.interactor.SyncedTabsInteractor
+import mozilla.components.feature.syncedtabs.presenter.DefaultPresenter
+import mozilla.components.feature.syncedtabs.presenter.SyncedTabsPresenter
+import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
+import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import mozilla.components.service.fxa.manager.FxaAccountManager
-import mozilla.components.service.fxa.manager.ext.withConstellation
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import mozilla.components.support.base.feature.LifecycleAwareFeature
+import kotlin.coroutines.CoroutineContext
 
 /**
- * A feature that listens to the [BrowserStore] changes to update the local remote tabs state
- * in [RemoteTabsStorage].
+ * Feature implementation that will keep a [SyncedTabsView] notified with other synced device tabs for
+ * the Firefox Sync account.
+ *
+ * @param storage The synced tabs storage that stores the current device's and remote device tabs.
+ * @param accountManager Firefox Account Manager that holds a Firefox Sync account.
+ * @param view An implementor of [SyncedTabsView] that will be notified of changes.
+ * @param lifecycleOwner Android Lifecycle Owner to bind observers onto.
+ * @param coroutineContext A coroutine context that can be used to perform work off the main thread.
+ * @param onTabClicked Invoked when a tab is selected by the user on the [SyncedTabsView].
+ * @param controller See [SyncedTabsController].
+ * @param presenter See [SyncedTabsPresenter].
+ * @param interactor See [SyncedTabsInteractor].
  */
-@ExperimentalCoroutinesApi
 class SyncedTabsFeature(
-    private val accountManager: FxaAccountManager,
-    private val store: BrowserStore,
-    private val tabsStorage: RemoteTabsStorage = RemoteTabsStorage()
-) {
-    private var scope: CoroutineScope? = null
+    storage: SyncedTabsStorage,
+    accountManager: FxaAccountManager,
+    view: SyncedTabsView,
+    lifecycleOwner: LifecycleOwner,
+    coroutineContext: CoroutineContext = Dispatchers.IO,
+    onTabClicked: (Tab) -> Unit,
+    controller: SyncedTabsController = DefaultController(
+        storage,
+        accountManager,
+        view,
+        coroutineContext
+    ),
+    private val presenter: SyncedTabsPresenter = DefaultPresenter(
+        controller,
+        accountManager,
+        view,
+        lifecycleOwner
+    ),
+    private val interactor: SyncedTabsInteractor = DefaultInteractor(
+        accountManager,
+        view,
+        coroutineContext,
+        onTabClicked
+    )
+) : LifecycleAwareFeature {
 
-    /**
-     * Start listening to browser store changes.
-     */
-    fun start() {
-        scope = store.flowScoped { flow ->
-            flow.ifChanged { it.tabs }.map { state ->
-                // TO-DO: https://github.com/mozilla-mobile/android-components/issues/5178
-                val lastUsed = 0L
-                // TO-DO: https://github.com/mozilla-mobile/android-components/issues/5179
-                val iconUrl = null
-                state.tabs.filter { !it.content.private }.map { tab ->
-                    // TO-DO: https://github.com/mozilla-mobile/android-components/issues/1340
-                    val history = listOf(TabEntry(tab.content.title, tab.content.url, iconUrl))
-                    Tab(history, 0, lastUsed)
-                }
-            }.collect { tabs ->
-                tabsStorage.store(tabs)
-            }
-        }
+    override fun start() {
+        presenter.start()
+        interactor.start()
     }
 
-    /**
-     * Stop listening to browser store changes.
-     */
-    fun stop() {
-        scope?.cancel()
-    }
-
-    /**
-     * Get the list of remote tabs.
-     */
-    suspend fun getSyncedTabs(): Map<Device, List<Tab>> {
-        val otherDevices = syncClients() ?: return emptyMap()
-        return tabsStorage.getAll().mapNotNull { (client, tabs) ->
-            val fxaDevice = otherDevices.find { it.id == client.id }
-            fxaDevice?.let { fxaDevice to tabs }
-        }.toMap()
-    }
-
-    /**
-     * List of synced devices.
-     */
-    @VisibleForTesting
-    internal fun syncClients(): List<Device>? {
-        accountManager.withConstellation { constellation ->
-            return constellation.state()?.otherDevices
-        }
-        return null
+    override fun stop() {
+        presenter.stop()
+        interactor.stop()
     }
 }

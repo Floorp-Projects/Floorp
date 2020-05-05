@@ -49,7 +49,7 @@ class SendTabFeatureKtTest {
     @Test
     fun `block is executed only account is available`() {
         val accountManager: FxaAccountManager = mock()
-        val block: (DeviceConstellation) -> Unit = mock()
+        val block: DeviceConstellation.() -> Unit = mock()
         val account: OAuthAccount = mock()
         val constellation: DeviceConstellation = mock()
 

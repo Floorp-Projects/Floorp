@@ -14,6 +14,7 @@ import mozilla.components.concept.storage.Storage
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.appservices.remotetabs.RemoteTabsProvider
+import mozilla.components.concept.sync.Device
 import mozilla.appservices.remotetabs.SyncAuthInfo as RustSyncAuthInfo
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
@@ -144,6 +145,14 @@ data class Tab(
         return history.subList(active + 1, history.lastIndex + 1)
     }
 }
+
+/**
+ * A synced device and the list of tabs.
+ */
+data class SyncedDeviceTabs(
+    val device: Device,
+    val tabs: List<Tab>
+)
 
 /**
  * A Tab history entry.

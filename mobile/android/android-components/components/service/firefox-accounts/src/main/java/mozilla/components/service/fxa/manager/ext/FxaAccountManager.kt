@@ -11,7 +11,7 @@ import mozilla.components.service.fxa.manager.FxaAccountManager
 /**
  * Executes [block] and provides the [DeviceConstellation] of an [OAuthAccount] if present.
  */
-inline fun FxaAccountManager.withConstellation(block: (DeviceConstellation) -> Unit) {
+inline fun FxaAccountManager.withConstellation(block: DeviceConstellation.() -> Unit) {
     authenticatedAccount()?.let {
         block(it.deviceConstellation())
     }
