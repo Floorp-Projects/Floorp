@@ -7,8 +7,8 @@
 #include "mozilla/AnimationCollection.h"
 
 #include "mozilla/RestyleManager.h"
-#include "nsAnimationManager.h"         // For dom::CSSAnimation
 #include "nsDOMMutationObserver.h"      // For nsAutoAnimationMutationBatch
+#include "mozilla/dom/CSSAnimation.h"   // For dom::CSSAnimation
 #include "mozilla/dom/CSSTransition.h"  // For dom::CSSTransition
 
 namespace mozilla {
