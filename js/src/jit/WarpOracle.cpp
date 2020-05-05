@@ -393,8 +393,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::Length:
       case JSOp::GetElem:
       case JSOp::CallElem:
-      case JSOp::SetProp:
-      case JSOp::StrictSetProp:
       case JSOp::ToNumeric:
       case JSOp::Pos:
       case JSOp::Inc:
@@ -508,6 +506,8 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::FunApply:
       case JSOp::New:
       case JSOp::SuperCall:
+      case JSOp::SetProp:
+      case JSOp::StrictSetProp:
       case JSOp::SetName:
       case JSOp::StrictSetName:
       case JSOp::SetGName:
