@@ -1797,57 +1797,10 @@ static void DoEHABIBacktrace(PSLockRef aLock,
   // WARNING: this function might be called while the profiler is inactive, and
   //          cannot rely on ActivePS.
 
-  const mcontext_t* mcontext = &aRegs.mContext->uc_mcontext;
-  mcontext_t savedContext;
-  const ProfilingStack& profilingStack =
-      aRegisteredThread.RacyRegisteredThread().ProfilingStack();
-
-  // The profiling stack contains an "EnterJIT" frame whenever we enter
-  // JIT code with profiling enabled; the stack pointer value points
-  // the saved registers.  We use this to unwind resume unwinding
-  // after encounting JIT code.
-  for (uint32_t i = profilingStack.stackSize(); i > 0; --i) {
-    // The profiling stack grows towards higher indices, so we iterate
-    // backwards (from callee to caller).
-    const js::ProfilingStackFrame& frame = profilingStack.frames[i - 1];
-    if (!frame.isJsFrame() && strcmp(frame.label(), "EnterJIT") == 0) {
-      // Found JIT entry frame.  Unwind up to that point (i.e., force
-      // the stack walk to stop before the block of saved registers;
-      // note that it yields nondecreasing stack pointers), then restore
-      // the saved state.
-      uint32_t* vSP = reinterpret_cast<uint32_t*>(frame.stackAddress());
-
-      aNativeStack.mCount +=
-          EHABIStackWalk(*mcontext, /* stackBase = */ vSP,
-                         aNativeStack.mSPs + aNativeStack.mCount,
-                         aNativeStack.mPCs + aNativeStack.mCount,
-                         MAX_NATIVE_FRAMES - aNativeStack.mCount);
-
-      memset(&savedContext, 0, sizeof(savedContext));
-
-      // See also: struct EnterJITStack in js/src/jit/arm/Trampoline-arm.cpp
-      savedContext.arm_r4 = *vSP++;
-      savedContext.arm_r5 = *vSP++;
-      savedContext.arm_r6 = *vSP++;
-      savedContext.arm_r7 = *vSP++;
-      savedContext.arm_r8 = *vSP++;
-      savedContext.arm_r9 = *vSP++;
-      savedContext.arm_r10 = *vSP++;
-      savedContext.arm_fp = *vSP++;
-      savedContext.arm_lr = *vSP++;
-      savedContext.arm_sp = reinterpret_cast<uint32_t>(vSP);
-      savedContext.arm_pc = savedContext.arm_lr;
-      mcontext = &savedContext;
-    }
-  }
-
-  // Now unwind whatever's left (starting from either the last EnterJIT frame
-  // or, if no EnterJIT was found, the original registers).
-  aNativeStack.mCount +=
-      EHABIStackWalk(*mcontext, const_cast<void*>(aRegisteredThread.StackTop()),
-                     aNativeStack.mSPs + aNativeStack.mCount,
-                     aNativeStack.mPCs + aNativeStack.mCount,
-                     MAX_NATIVE_FRAMES - aNativeStack.mCount);
+  aNativeStack.mCount =
+      EHABIStackWalk(aRegs.mContext->uc_mcontext,
+                     const_cast<void*>(aRegisteredThread.StackTop()),
+                     aNativeStack.mSPs, aNativeStack.mPCs, MAX_NATIVE_FRAMES);
 }
 #endif
 

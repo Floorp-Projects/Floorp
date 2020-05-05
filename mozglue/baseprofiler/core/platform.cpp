@@ -1360,14 +1360,10 @@ static void DoEHABIBacktrace(PSLockRef aLock,
   // WARNING: this function might be called while the profiler is inactive, and
   //          cannot rely on ActivePS.
 
-  const mcontext_t* mcontext = &aRegs.mContext->uc_mcontext;
-
-  // Now unwind whatever's left (starting from the original registers).
-  aNativeStack.mCount +=
-      EHABIStackWalk(*mcontext, const_cast<void*>(aRegisteredThread.StackTop()),
-                     aNativeStack.mSPs + aNativeStack.mCount,
-                     aNativeStack.mPCs + aNativeStack.mCount,
-                     MAX_NATIVE_FRAMES - aNativeStack.mCount);
+  aNativeStack.mCount =
+      EHABIStackWalk(aRegs.mContext->uc_mcontext,
+                     const_cast<void*>(aRegisteredThread.StackTop()),
+                     aNativeStack.mSPs, aNativeStack.mPCs, MAX_NATIVE_FRAMES);
 }
 #endif
 
