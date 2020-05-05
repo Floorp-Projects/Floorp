@@ -100,9 +100,8 @@ class AsyncImagePipelineManager final {
                                 const gfx::MaybeIntSize& aScaleToSize,
                                 const wr::ImageRendering& aFilter,
                                 const wr::MixBlendMode& aMixBlendMode);
-  void ApplyAsyncImagesOfImageBridge(
-      wr::RenderRootArray<Maybe<wr::TransactionBuilder>>& aSceneBuilderTxns,
-      wr::RenderRootArray<Maybe<wr::TransactionBuilder>>& aFastTxns);
+  void ApplyAsyncImagesOfImageBridge(wr::TransactionBuilder& aSceneBuilderTxn,
+                                     wr::TransactionBuilder& aFastTxn);
   void ApplyAsyncImageForPipeline(const wr::PipelineId& aPipelineId,
                                   wr::TransactionBuilder& aTxn,
                                   wr::TransactionBuilder& aTxnForImageBridge,
