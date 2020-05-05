@@ -18,15 +18,12 @@ with pathlib.Path(PARENT, "schemas", "intermediate-results-schema.json").open() 
 # These are the properties we know about in the schema.
 # If anything other than these is present, then we will
 # fail validation.
-KNOWN_PERFHERDER_PROPS = set([
-    "name",
-    "value",
-    "unit",
-    "lowerIsBetter",
-    "shouldAlert",
-    "alertThreshold"
-])
-KNOWN_SUITE_PROPS = set(set(["results", "transformer", "extraOptions"]) | KNOWN_PERFHERDER_PROPS)
+KNOWN_PERFHERDER_PROPS = set(
+    ["name", "value", "unit", "lowerIsBetter", "shouldAlert", "alertThreshold"]
+)
+KNOWN_SUITE_PROPS = set(
+    set(["results", "transformer", "extraOptions"]) | KNOWN_PERFHERDER_PROPS
+)
 KNOWN_SINGLE_MEASURE_PROPS = set(set(["values"]) | KNOWN_PERFHERDER_PROPS)
 
 
@@ -74,7 +71,6 @@ def validate_intermediate_results(results):
     :param results dict: The intermediate results to validate.
     :raises ValidationError: Raised when validation fails.
     """
-
     # Start with the standard validation
     validate(results, IR_SCHEMA)
 

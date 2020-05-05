@@ -24,9 +24,11 @@ def test_metrics():
     mach_cmd.run_process = _run_process
     metrics = env.layers[METRICS]
     env.set_arg("tests", [EXAMPLE_TEST])
-    metadata.add_result({
-        "results": str(pathlib.Path(HERE, "browsertime-results")),
-        "name": "browsertime"}
+    metadata.add_result(
+        {
+            "results": str(pathlib.Path(HERE, "browsertime-results")),
+            "name": "browsertime",
+        }
     )
 
     with temp_file() as output:
