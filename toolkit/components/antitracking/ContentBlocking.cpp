@@ -362,7 +362,8 @@ ContentBlocking::AllowAccessFor(
                  // we don't call OnAllowAccessFor in the parent when this is
                  // triggered by the opener heuristic, so we have to do it here.
                  // See storePermission below for the reason.
-                 if (aReason == ContentBlockingNotifier::eOpener) {
+                 if (aReason == ContentBlockingNotifier::eOpener &&
+                     !bc->IsDiscarded()) {
                    MOZ_ASSERT(bc->IsInProcess());
                    ContentBlocking::OnAllowAccessFor(bc, trackingOrigin,
                                                      behavior, aReason);
