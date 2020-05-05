@@ -12346,8 +12346,8 @@ already_AddRefed<nsDOMCaretPosition> Document::CaretPositionFromPoint(
   nsCOMPtr<nsIWidget> widget = nsContentUtils::GetWidget(presShell, &aOffset);
   LayoutDeviceIntPoint refPoint = nsContentUtils::ToWidgetPoint(
       CSSPoint(aX, aY), aOffset, GetPresContext());
-  nsPoint adjustedPoint =
-      nsLayoutUtils::GetEventCoordinatesRelativeTo(widget, refPoint, ptFrame);
+  nsPoint adjustedPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(
+      widget, refPoint, RelativeTo{ptFrame});
 
   nsFrame::ContentOffsets offsets =
       ptFrame->GetContentOffsetsFromPoint(adjustedPoint);

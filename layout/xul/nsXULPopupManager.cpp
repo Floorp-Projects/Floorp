@@ -616,7 +616,7 @@ void nsXULPopupManager::InitTriggerEvent(Event* aEvent, nsIContent* aPopup,
                 thisDocToRootDocOffset.y);
           } else if (rootDocumentRootFrame) {
             nsPoint pnt = nsLayoutUtils::GetEventCoordinatesRelativeTo(
-                event, rootDocumentRootFrame);
+                event, RelativeTo{rootDocumentRootFrame});
             mCachedMousePoint = LayoutDeviceIntPoint(
                 rootDocPresContext->AppUnitsToDevPixels(pnt.x),
                 rootDocPresContext->AppUnitsToDevPixels(pnt.y));

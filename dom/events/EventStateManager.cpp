@@ -3798,7 +3798,7 @@ static bool ShouldBlockCustomCursor(nsPresContext* aPresContext,
   }
 
   nsPoint point = nsLayoutUtils::GetEventCoordinatesRelativeTo(
-      aEvent, topLevel->PresShell()->GetRootFrame());
+      aEvent, RelativeTo{topLevel->PresShell()->GetRootFrame()});
 
   nsSize size(CSSPixel::ToAppUnits(width), CSSPixel::ToAppUnits(height));
   nsPoint hotspot(CSSPixel::ToAppUnits(aCursor.mHotspot.x),
@@ -3893,8 +3893,8 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
   }
   // If not locked, look for correct cursor
   else if (aTargetFrame) {
-    nsPoint pt =
-        nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, aTargetFrame);
+    nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(
+        aEvent, RelativeTo{aTargetFrame});
     Maybe<nsIFrame::Cursor> framecursor = aTargetFrame->GetCursor(pt);
     // Avoid setting cursor when the mouse is over a windowless plugin.
     if (!framecursor) {

@@ -497,8 +497,8 @@ Decimal nsRangeFrame::GetValueAtEventPoint(WidgetGUIEvent* aEvent) {
   } else {
     absPoint = aEvent->mRefPoint;
   }
-  nsPoint point =
-      nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, absPoint, this);
+  nsPoint point = nsLayoutUtils::GetEventCoordinatesRelativeTo(
+      aEvent, absPoint, RelativeTo{this});
 
   if (point == nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)) {
     // We don't want to change the current value for this error state.

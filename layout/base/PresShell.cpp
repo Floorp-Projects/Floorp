@@ -6382,8 +6382,8 @@ void PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent) {
           mPresContext, aEvent->mWidget, aEvent->mRefPoint, rootView);
       mMouseEventTargetGuid = InputAPZContext::GetTargetLayerGuid();
     } else {
-      mMouseLocation =
-          nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, rootFrame);
+      mMouseLocation = nsLayoutUtils::GetEventCoordinatesRelativeTo(
+          aEvent, RelativeTo{rootFrame});
       mMouseEventTargetGuid = InputAPZContext::GetTargetLayerGuid();
     }
     mMouseLocationWasSetBySynthesizedMouseEventForTests =
@@ -6833,8 +6833,14 @@ nsIFrame* PresShell::EventHandler::GetFrameToHandleNonTouchEvent(
   MOZ_ASSERT(aGUIEvent);
   MOZ_ASSERT(aGUIEvent->mClass != eTouchEventClass);
 
-  nsPoint eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(
-      aGUIEvent, aRootFrameToHandleEvent);
+  ViewportType viewportType = ViewportType::Layout;
+  if (aRootFrameToHandleEvent->Type() == LayoutFrameType::Viewport &&
+      aRootFrameToHandleEvent->PresContext()->IsRootContentDocument()) {
+    viewportType = ViewportType::Visual;
+  }
+  RelativeTo relativeTo{aRootFrameToHandleEvent, viewportType};
+  nsPoint eventPoint =
+      nsLayoutUtils::GetEventCoordinatesRelativeTo(aGUIEvent, relativeTo);
 
   uint32_t flags = 0;
   if (aGUIEvent->mClass == eMouseEventClass) {
@@ -6844,8 +6850,8 @@ nsIFrame* PresShell::EventHandler::GetFrameToHandleNonTouchEvent(
     }
   }
 
-  nsIFrame* targetFrame = FindFrameTargetedByInputEvent(
-      aGUIEvent, aRootFrameToHandleEvent, eventPoint, flags);
+  nsIFrame* targetFrame =
+      FindFrameTargetedByInputEvent(aGUIEvent, relativeTo, eventPoint, flags);
   if (!targetFrame) {
     return aRootFrameToHandleEvent;
   }
@@ -6874,8 +6880,8 @@ nsIFrame* PresShell::EventHandler::GetFrameToHandleNonTouchEvent(
   }
 
   // Finally, we need to recompute the target with the latest layout.
-  targetFrame = FindFrameTargetedByInputEvent(
-      aGUIEvent, aRootFrameToHandleEvent, eventPoint, flags);
+  targetFrame =
+      FindFrameTargetedByInputEvent(aGUIEvent, relativeTo, eventPoint, flags);
 
   return targetFrame ? targetFrame : aRootFrameToHandleEvent;
 }
@@ -11093,14 +11099,15 @@ nsIContent* PresShell::EventHandler::GetOverrideClickTarget(
   WidgetMouseEvent* mouseEvent = aGUIEvent->AsMouseEvent();
 
   uint32_t flags = 0;
+  RelativeTo relativeTo{aFrame};
   nsPoint eventPoint =
-      nsLayoutUtils::GetEventCoordinatesRelativeTo(aGUIEvent, aFrame);
+      nsLayoutUtils::GetEventCoordinatesRelativeTo(aGUIEvent, relativeTo);
   if (mouseEvent->mIgnoreRootScrollFrame) {
     flags |= INPUT_IGNORE_ROOT_SCROLL_FRAME;
   }
 
   nsIFrame* target =
-      FindFrameTargetedByInputEvent(aGUIEvent, aFrame, eventPoint, flags);
+      FindFrameTargetedByInputEvent(aGUIEvent, relativeTo, eventPoint, flags);
   if (!target) {
     return nullptr;
   }
