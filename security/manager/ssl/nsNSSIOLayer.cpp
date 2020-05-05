@@ -1815,7 +1815,7 @@ class RemoteClientAuthDataRunnable : public ClientAuthDataRunnable {
  protected:
   virtual void RunOnTargetThread() override;
 
-  nsTArray<ByteArray> mBuiltChain;
+  CopyableTArray<ByteArray> mBuiltChain;
 };
 
 nsTArray<nsTArray<uint8_t>> CollectCANames(CERTDistNames* caNames) {
@@ -2250,7 +2250,7 @@ void ClientAuthDataRunnable::RunOnTargetThread() {
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
-  mEnterpriseCertificates.AppendElements(enterpriseRoots);
+  mEnterpriseCertificates.AppendElements(std::move(enterpriseRoots));
 
   if (NS_WARN_IF(NS_FAILED(CheckForSmartCardChanges()))) {
     return;
@@ -2475,9 +2475,8 @@ mozilla::pkix::Result RemoteClientAuthDataRunnable::BuildChainForCertificate(
 void RemoteClientAuthDataRunnable::RunOnTargetThread() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsTArray<uint8_t> serverCertSerialized;
-  serverCertSerialized.AppendElements(mServerCert->derCert.data,
-                                      mServerCert->derCert.len);
+  const ByteArray serverCertSerialized = CopyableTArray<uint8_t>{
+      mServerCert->derCert.data, mServerCert->derCert.len};
 
   // Note that client cert is NULL in socket process until bug 1632809 is done.
   Maybe<ByteArray> clientCertSerialized;
