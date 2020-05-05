@@ -50,6 +50,17 @@ class ViewportUtils {
   static nsPoint VisualToLayout(const nsPoint& aPt, PresShell* aContext);
   static nsRect VisualToLayout(const nsRect& aRect, PresShell* aContext);
   static nsPoint LayoutToVisual(const nsPoint& aPt, PresShell* aContext);
+
+  /**
+   * Returns non-null if |aFrame| is inside the async zoom container but its
+   * parent frame is not, thereby making |aFrame| a root of a subtree of
+   * frames representing content that is zoomed in. The value returned in such
+   * cases is the root scroll frame inside the async zoom container.
+
+   * Callers use this to identify points during frame tree traversal where the
+   * visual-to-layout transform needs to be applied.
+   */
+  static const nsIFrame* IsZoomedContentRoot(const nsIFrame* aFrame);
 };
 
 // Forward declare explicit instantiations of GetVisualToLayoutTransform() for
