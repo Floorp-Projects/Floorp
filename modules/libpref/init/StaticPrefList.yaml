@@ -568,7 +568,7 @@
 
 - name: apz.windows.force_disable_direct_manipulation
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NOT_NIGHTLY_BUILD@
   mirror: always
 
 - name: apz.x_skate_highmem_adjust
