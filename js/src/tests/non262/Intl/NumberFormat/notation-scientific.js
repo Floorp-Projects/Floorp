@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty("Intl")||release_or_beta)
+// |reftest| skip-if(!this.hasOwnProperty("Intl"))
 
 const {
     Nan, Inf, Integer, MinusSign, PlusSign, Decimal, Fraction, Group,
