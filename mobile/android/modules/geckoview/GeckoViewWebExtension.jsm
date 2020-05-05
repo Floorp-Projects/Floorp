@@ -252,6 +252,11 @@ async function filterPromptPermissions(aPermissions) {
 }
 
 async function exportExtension(aAddon, aPermissions, aSourceURI) {
+  // First, let's make sure the policy is ready if present
+  const policy = WebExtensionPolicy.getByID(aAddon.id);
+  if (policy) {
+    await policy.readyPromise;
+  }
   const {
     creator,
     description,
@@ -288,13 +293,8 @@ async function exportExtension(aAddon, aPermissions, aSourceURI) {
   if (embedderDisabled) {
     disabledFlags.push("appDisabled");
   }
-  let baseURL = "";
-  let privateBrowsingAllowed = false;
-  const policy = WebExtensionPolicy.getByID(id);
-  if (policy) {
-    baseURL = policy.getURL();
-    privateBrowsingAllowed = policy.privateBrowsingAllowed;
-  }
+  const baseURL = policy ? policy.getURL() : "";
+  const privateBrowsingAllowed = policy ? policy.privateBrowsingAllowed : false;
   const promptPermissions = aPermissions
     ? await filterPromptPermissions(aPermissions.permissions)
     : [];
