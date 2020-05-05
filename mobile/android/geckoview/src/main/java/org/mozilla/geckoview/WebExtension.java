@@ -802,7 +802,6 @@ public class WebExtension {
         final private EventDispatcher mEventDispatcher;
 
         private boolean mActionDelegateRegistered = false;
-        private boolean mMessageDelegateRegistered = false;
         private boolean mTabDelegateRegistered = false;
 
         // TODO: remove Bug 1618987
@@ -837,6 +836,14 @@ public class WebExtension {
                     : EventDispatcher.getInstance();
             mSession = session;
             this.runtime = runtime;
+
+            // We queue these messages if the delegate has not been attached yet,
+            // so we need to start listening immediately.
+            mEventDispatcher.registerUiThreadListener(this,
+                    "GeckoView:WebExtension:Message",
+                    "GeckoView:WebExtension:PortMessage",
+                    "GeckoView:WebExtension:Connect",
+                    "GeckoView:WebExtension:Disconnect");
         }
 
         // TODO: remove Bug 1618987
@@ -907,15 +914,6 @@ public class WebExtension {
         public void setMessageDelegate(final WebExtension webExtension,
                                        final WebExtension.MessageDelegate delegate,
                                        final String nativeApp) {
-            if (!mMessageDelegateRegistered && delegate != null) {
-                mEventDispatcher.registerUiThreadListener(this,
-                        "GeckoView:WebExtension:Message",
-                        "GeckoView:WebExtension:PortMessage",
-                        "GeckoView:WebExtension:Connect",
-                        "GeckoView:WebExtension:Disconnect");
-                mMessageDelegateRegistered = true;
-            }
-
             mMessageDelegates.put(new Sender(webExtension.id, nativeApp), delegate);
         }
 
