@@ -1073,14 +1073,14 @@ bool ModuleObject::execute(JSContext* cx, HandleModuleObject self,
   auto guardA = mozilla::MakeScopeExit(
       [&] { self->setReservedSlot(ScriptSlot, UndefinedValue()); });
 
-  RootedModuleEnvironmentObject scope(cx, self->environment());
-  if (!scope) {
+  RootedModuleEnvironmentObject env(cx, self->environment());
+  if (!env) {
     JS_ReportErrorASCII(cx,
                         "Module declarations have not yet been instantiated");
     return false;
   }
 
-  return Execute(cx, script, *scope, rval.address());
+  return Execute(cx, script, env, rval);
 }
 
 /* static */
