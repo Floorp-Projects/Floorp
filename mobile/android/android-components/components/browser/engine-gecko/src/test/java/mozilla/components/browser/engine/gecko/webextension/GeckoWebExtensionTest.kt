@@ -516,7 +516,6 @@ class GeckoWebExtensionTest {
     fun `isEnabled depends on native state and defaults to true if state unknown`() {
         val runtime: GeckoRuntime = mock()
         whenever(runtime.webExtensionController).thenReturn(mock())
-
         val bundle = GeckoBundle()
         bundle.putString("webExtensionId", "id")
         bundle.putString("locationURI", "uri")
@@ -545,8 +544,8 @@ class GeckoWebExtensionTest {
         val runtime: GeckoRuntime = mock()
         whenever(runtime.webExtensionController).thenReturn(mock())
         val builtInExtension = GeckoWebExtension(
-                WebExtension("resource://url", "id", WebExtension.Flags.NONE, mock()),
-                runtime
+            WebExtension("resource://url", "id", WebExtension.Flags.NONE, mock()),
+            runtime
         )
         assertTrue(builtInExtension.isAllowedInPrivateBrowsing())
 

@@ -420,7 +420,7 @@ class GeckoWebExtensionTest {
         assertNull(extensionWithoutMetadata.getMetadata())
 
         val metaDataBundle = GeckoBundle()
-        metaDataBundle.putStringArray("permissions", arrayOf("p1", "p2"))
+        metaDataBundle.putStringArray("promptPermissions", arrayOf("p1", "p2"))
         metaDataBundle.putStringArray("origins", arrayOf("o1", "o2"))
         metaDataBundle.putString("description", "desc")
         metaDataBundle.putString("version", "1.0")
@@ -469,7 +469,7 @@ class GeckoWebExtensionTest {
         assertNull(extensionWithoutMetadata.getMetadata())
 
         val metaDataBundle = GeckoBundle()
-        metaDataBundle.putStringArray("permissions", arrayOf("p1", "p2"))
+        metaDataBundle.putStringArray("promptPermissions", arrayOf("p1", "p2"))
         metaDataBundle.putStringArray("origins", arrayOf("o1", "o2"))
         metaDataBundle.putString("version", "1.0")
         val bundle = GeckoBundle()
@@ -544,8 +544,8 @@ class GeckoWebExtensionTest {
         val runtime: GeckoRuntime = mock()
         whenever(runtime.webExtensionController).thenReturn(mock())
         val builtInExtension = GeckoWebExtension(
-            WebExtension("resource://url", "id", WebExtension.Flags.NONE, mock()),
-            runtime
+                WebExtension("resource://url", "id", WebExtension.Flags.NONE, mock()),
+                runtime
         )
         assertTrue(builtInExtension.isAllowedInPrivateBrowsing())
 
