@@ -80,7 +80,7 @@ void CompositionEvent::InitCompositionEvent(const nsAString& aType,
 void CompositionEvent::GetRanges(TextClauseArray& aRanges) {
   // If the mRanges is not empty, we return the cached value.
   if (!mRanges.IsEmpty()) {
-    aRanges = mRanges;
+    aRanges = mRanges.Clone();
     return;
   }
   RefPtr<TextRangeArray> textRangeArray = mEvent->AsCompositionEvent()->mRanges;
@@ -93,7 +93,7 @@ void CompositionEvent::GetRanges(TextClauseArray& aRanges) {
     const TextRange& range = textRangeArray->ElementAt(i);
     mRanges.AppendElement(new TextClause(window, range, targetRange));
   }
-  aRanges = mRanges;
+  aRanges = mRanges.Clone();
 }
 
 }  // namespace dom
