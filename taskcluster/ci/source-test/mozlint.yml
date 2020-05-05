@@ -251,7 +251,7 @@ localization:
     treeherder:
         symbol: text(l1nt)
     run:
-        mach: lint -v -l l10n -f treeherder
+        mach: lint -v -l l10n -f treeherder *
     attributes:
         code-review: false
     when:
