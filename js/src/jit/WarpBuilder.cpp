@@ -1894,6 +1894,12 @@ bool WarpBuilder::build_SetProp(BytecodeLocation loc) {
   PropertyName* name = loc.getPropertyName(script_);
   MDefinition* val = current->pop();
   MDefinition* obj = current->pop();
+
+  if (auto* snapshot = getOpSnapshot<WarpCacheIR>(loc)) {
+    current->push(val);
+    return buildCacheIR(loc, snapshot, {obj, val});
+  }
+
   MConstant* id = constant(StringValue(name));
   return buildSetPropOp(loc, obj, id, val);
 }
@@ -2823,5 +2829,5 @@ bool WarpBuilder::buildCacheIR(BytecodeLocation loc,
     return false;
   }
 
-  return TranspileCacheIRToMIR(mirGen_, current, snapshot, inputs_);
+  return TranspileCacheIRToMIR(mirGen_, loc, current, snapshot, inputs_);
 }
