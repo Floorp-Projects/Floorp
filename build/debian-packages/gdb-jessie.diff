@@ -1,0 +1,37 @@
+diff -Nru gdb-7.12/debian/changelog gdb-7.12/debian/changelog
+--- gdb-7.12/debian/changelog	2017-01-19 19:28:25.000000000 +0900
++++ gdb-7.12/debian/changelog	2018-02-07 15:36:15.000000000 +0900
+@@ -1,3 +1,11 @@
++gdb (7.12-6.deb8moz1) jessie; urgency=medium
++
++  * Mozilla backport for jessie.
++  * debian/rules: Don't pass --dbgsym-migration to dh_strip, it's not
++    supported on jessie's debhelper.
++
++ -- Mike Hommey <glandium@mozilla.com>  Tue, 16 Jul 2019 18:28:20 +0900
++
+ gdb (7.12-6) unstable; urgency=medium
+ 
+   * debian/patches: import 7.12 branch fixes
+diff -Nru gdb-7.12/debian/rules gdb-7.12/debian/rules
+--- gdb-7.12/debian/rules	2016-12-15 09:31:54.000000000 +0900
++++ gdb-7.12/debian/rules	2018-02-07 15:36:15.000000000 +0900
+@@ -4,7 +4,6 @@
+ 
+ DEB_BUILDDIR := $(ALL_BUILDDIR)/objdir
+ DEB_DH_INSTALL_SOURCEDIR := $(shell pwd)/debian/tmp
+-DEB_DH_STRIP_ARGS_gdb = --dbgsym-migration='gdb-dbg (<< 7.12-1~)'
+ 
+ # Override CDBS's default CFLAGS, which also includes -Wall; gdb
+ # does not handle -Wunused well with -Werror, but defaults to
+@@ -89,10 +88,6 @@
+   arch_config_args := --with-libunwind-ia64
+ endif
+ 
+-ifneq (,$(filter $(DEB_HOST_ARCH),amd64 armel armhf i386 kfreebsd-amd64 kfreebsd-i386 mips mipsel powerpc s390x))
+-  arch_config_args += --with-babeltrace
+-endif
+-
+ ifdef GDB_TARGET
+   run_tests := no
+ 

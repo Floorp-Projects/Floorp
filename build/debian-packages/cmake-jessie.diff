@@ -1,0 +1,62 @@
+diff -Nru cmake-3.7.1/debian/changelog cmake-3.7.1/debian/changelog
+--- cmake-3.7.1/debian/changelog	2016-12-04 09:01:26.000000000 +0900
++++ cmake-3.7.1/debian/changelog	2019-07-16 18:17:07.000000000 +0900
+@@ -1,3 +1,15 @@
++cmake (3.7.1-1.deb8moz1) jessie; urgency=medium
++
++  * Mozilla backport for jessie.
++  * debian/rules, debian/control:
++    - Don't build against system libraries. libuv is missing on jessie, and
++      it's just simpler to disable the use of system libraries altogether.
++    - Don't build a dbgsym package through dh_strip, that's not supported on
++      jessie.
++  * debian/control: Remove versioned dependency on debhelper.
++
++ -- Mike Hommey <glandium@mozilla.com>  Tue, 16 Jul 2019 18:17:07 +0900
++
+ cmake (3.7.1-1) unstable; urgency=medium
+ 
+   * New upstream release.
+diff -Nru cmake-3.7.1/debian/control cmake-3.7.1/debian/control
+--- cmake-3.7.1/debian/control	2016-11-12 19:55:11.000000000 +0900
++++ cmake-3.7.1/debian/control	2019-07-16 18:17:07.000000000 +0900
+@@ -4,16 +4,10 @@
+ Maintainer: Debian CMake Team <pkg-cmake-team@lists.alioth.debian.org>
+ Uploaders: Lisandro Damián Nicanor Pérez Meyer <lisandro@debian.org>,
+            Felix Geyer <fgeyer@debian.org>
+-Build-Depends: debhelper (>= 9.20160114~),
++Build-Depends: debhelper,
+                dpkg-dev (>= 1.17.14~),
+-               libarchive-dev (>= 2.8.0),
+-               libbz2-dev,
+                libcurl4-openssl-dev | libcurl-ssl-dev,
+-               libexpat1-dev,
+-               libjsoncpp-dev,
+-               liblzma-dev,
+                libncurses5-dev,
+-               libuv1-dev,
+                procps [!hurd-any],
+                python-sphinx,
+                qtbase5-dev <!stage1>,
+diff -Nru cmake-3.7.1/debian/rules cmake-3.7.1/debian/rules
+--- cmake-3.7.1/debian/rules	2016-12-04 07:30:25.000000000 +0900
++++ cmake-3.7.1/debian/rules	2019-07-16 18:17:07.000000000 +0900
+@@ -44,7 +44,7 @@
+ override_dh_auto_configure: $(BUILD_FLAGS_FILE)
+ 	rm -rf Build && mkdir -p Build
+ 	cd Build && ../bootstrap --prefix=/usr --docdir=/share/doc/cmake --mandir=/share/man \
+-	                         --init=../$(BUILD_FLAGS_FILE) --system-libs \
++	                         --init=../$(BUILD_FLAGS_FILE) \
+ 	                         --sphinx-man --sphinx-html --sphinx-flags="-D today=\"$(BUILD_DATE)\"" \
+ 	                         $(BOOTSTRAP_PARALLEL) --verbose
+ 
+@@ -68,9 +68,6 @@
+ override_dh_sphinxdoc:
+ 	dh_sphinxdoc -pcmake-doc
+ 
+-override_dh_strip:
+-	dh_strip --dbgsym-migration='cmake-dbg (<< 3.5.0-1~)'
+-
+ %:
+ 	dh $@ --with=sphinxdoc --parallel --builddirectory=Build
+ 
