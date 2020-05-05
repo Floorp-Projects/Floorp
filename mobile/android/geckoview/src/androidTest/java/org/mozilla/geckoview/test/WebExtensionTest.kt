@@ -22,6 +22,7 @@ import org.mozilla.geckoview.test.util.Callbacks
 import org.mozilla.geckoview.WebExtension.DisabledFlags
 import org.mozilla.geckoview.WebExtensionController.EnableSource
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
+import org.mozilla.geckoview.test.util.RuntimeCreator
 
 import java.util.UUID
 
@@ -206,15 +207,17 @@ class WebExtensionTest : BaseSessionTest() {
         // Check that the WebExtension was applied by checking the border color
         assertBodyBorderEqualTo("red")
 
-        var list = sessionRule.waitForResult(controller.list())
-        assertEquals(list.size, 1)
-        assertEquals(list[0].id, borderify.id)
+        var list = extensionsMap(sessionRule.waitForResult(controller.list()))
+        assertEquals(list.size, 2)
+        assertTrue(list.containsKey(borderify.id))
+        assertTrue(list.containsKey(RuntimeCreator.TEST_SUPPORT_EXTENSION_ID))
 
         // Unregister WebExtension and check again
         sessionRule.waitForResult(controller.uninstall(borderify))
 
-        list = sessionRule.waitForResult(controller.list())
-        assertEquals(list, emptyList<WebExtension>())
+        list = extensionsMap(sessionRule.waitForResult(controller.list()))
+        assertEquals(list.size, 1)
+        assertTrue(list.containsKey(RuntimeCreator.TEST_SUPPORT_EXTENSION_ID))
 
         mainSession.reload()
         sessionRule.waitForPageStop()
@@ -307,9 +310,10 @@ class WebExtensionTest : BaseSessionTest() {
                 "xpinstall.signatures.required" to false
         ))
 
-        // First, make sure the list starts empty
-        var list = sessionRule.waitForResult(controller.list())
-        assertEquals(list, emptyList<WebExtension>())
+        // First, make sure the list only contains the test support extension
+        var list = extensionsMap(sessionRule.waitForResult(controller.list()))
+        assertEquals(list.size, 1)
+        assertTrue(list.containsKey(RuntimeCreator.TEST_SUPPORT_EXTENSION_ID))
 
         sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
             @AssertCalled(count=2)
@@ -328,23 +332,27 @@ class WebExtensionTest : BaseSessionTest() {
                 GeckoResult.allOf(borderifyResult, dummyResult))
 
         // Make sure the list is updated accordingly
-        list = sessionRule.waitForResult(controller.list())
-        assertTrue(list.find { it.id == borderify.id } != null)
-        assertTrue(list.find { it.id == dummy.id } != null)
-        assertEquals(list.size, 2)
+        list = extensionsMap(sessionRule.waitForResult(controller.list()))
+        assertTrue(list.containsKey(borderify.id))
+        assertTrue(list.containsKey(dummy.id))
+        assertTrue(list.containsKey(RuntimeCreator.TEST_SUPPORT_EXTENSION_ID))
+        assertEquals(list.size, 3)
 
         // Uninstall borderify and verify that it's not in the list anymore
         sessionRule.waitForResult(controller.uninstall(borderify))
 
-        list = sessionRule.waitForResult(controller.list())
-        assertEquals(list.size, 1)
-        assertEquals(list[0].id, dummy.id)
+        list = extensionsMap(sessionRule.waitForResult(controller.list()))
+        assertEquals(list.size, 2)
+        assertTrue(list.containsKey(dummy.id))
+        assertTrue(list.containsKey(RuntimeCreator.TEST_SUPPORT_EXTENSION_ID))
+        assertFalse(list.containsKey(borderify.id))
 
         // Uninstall dummy and make sure the list is now empty
         sessionRule.waitForResult(controller.uninstall(dummy))
 
-        list = sessionRule.waitForResult(controller.list())
-        assertEquals(list, emptyList<WebExtension>())
+        list = extensionsMap(sessionRule.waitForResult(controller.list()))
+        assertEquals(list.size, 1)
+        assertTrue(list.containsKey(RuntimeCreator.TEST_SUPPORT_EXTENSION_ID))
     }
 
     private fun testInstallError(name: String, expectedError: Int) {
@@ -364,6 +372,14 @@ class WebExtensionTest : BaseSessionTest() {
                             val installException = exception as WebExtension.InstallException
                             assertEquals(installException.code, expectedError)
                         }))
+    }
+
+    private fun extensionsMap(extensionList: List<WebExtension>): Map<String, WebExtension> {
+        val map = HashMap<String, WebExtension>()
+        for (extension in extensionList) {
+            map.put(extension.id, extension);
+        }
+        return map
     }
 
     @Test
@@ -537,7 +553,7 @@ class WebExtensionTest : BaseSessionTest() {
 
                 extensionCreatedSession.webExtensionController.setTabDelegate(tabsExtension, object : WebExtension.SessionTabDelegate {
                     override fun onCloseTab(source: WebExtension?, session: GeckoSession): GeckoResult<AllowOrDeny> {
-                        assertEquals(tabsExtension, source)
+                        assertEquals(tabsExtension.id, source!!.id)
                         assertEquals(details.active, true)
                         assertNotEquals(null, extensionCreatedSession)
                         assertEquals(extensionCreatedSession, session)
