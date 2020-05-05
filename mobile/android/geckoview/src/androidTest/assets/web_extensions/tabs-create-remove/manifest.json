@@ -3,6 +3,11 @@
   "name": "messaging",
   "version": "1.0",
   "description": "Creates and removes a tab.",
+  "applications" : {
+    "gecko": {
+      "id": "tabs-create-remove@tests.mozilla.org"
+    }
+  },
   "background": {
     "scripts": ["background.js"]
   },

@@ -5,6 +5,11 @@
   "background": {
     "scripts": ["background-script.js"]
   },
+  "applications": {
+    "gecko": {
+      "id": "extension-page-update@tests.mozilla.org"
+    }
+  },
   "content_scripts": [
     {
       "matches": ["*://*.example.com/*"],
