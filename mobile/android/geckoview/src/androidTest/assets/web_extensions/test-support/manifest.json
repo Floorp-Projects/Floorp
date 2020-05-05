@@ -3,6 +3,11 @@
   "name": "Test support",
   "version": "1.0",
   "description": "Helper script for GeckoView tests",
+  "applications": {
+    "gecko": {
+      "id": "test-support@tests.mozilla.org"
+     }
+  },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
@@ -25,6 +30,7 @@
   },
   "permissions": [
     "geckoViewAddons",
-    "nativeMessaging"
+    "nativeMessaging",
+    "nativeMessagingFromContent"
   ]
 }
