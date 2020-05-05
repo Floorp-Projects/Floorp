@@ -10,9 +10,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
-import androidx.core.content.ContextCompat
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_crash.*
 import mozilla.components.lib.crash.Crash
@@ -41,6 +41,7 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
         fatalCrashButton.setOnClickListener(this)
         crashButton.setOnClickListener(this)
         fatalServiceCrashButton.setOnClickListener(this)
+        crashList.setOnClickListener(this)
 
         crashReporter.recordCrashBreadcrumb(
             Breadcrumb("CrashActivity onCreate", emptyMap(), "sample", Breadcrumb.Level.DEBUG,
@@ -115,6 +116,12 @@ class CrashActivity : AppCompatActivity(), View.OnClickListener {
                 startService(Intent(this, CrashService::class.java))
                 finish()
             }
+
+            crashList -> {
+                startActivity(Intent(this, CrashListActivity::class.java))
+            }
+
+            else -> throw java.lang.RuntimeException("Unknown ID")
         }
     }
 }
