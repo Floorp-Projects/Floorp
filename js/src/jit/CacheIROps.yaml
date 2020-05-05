@@ -249,7 +249,7 @@
 
 - name: GuardSpecificAtom
   shared: false
-  transpile: false
+  transpile: true
   args:
     str: StringId
     expected: AtomField
