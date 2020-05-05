@@ -55,6 +55,7 @@ class XRRigidTransform final : public nsWrapperCache {
   RefPtr<DOMPoint> mPosition;
   RefPtr<DOMPoint> mOrientation;
   RefPtr<XRRigidTransform> mInverse;
+  gfx::Matrix4x4Double mRawTransformMatrix;
   gfx::PointDouble3D mRawPosition;
   gfx::QuaternionDouble mRawOrientation;
   bool mNeedsUpdate;
