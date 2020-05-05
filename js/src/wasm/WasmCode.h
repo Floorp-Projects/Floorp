@@ -238,9 +238,13 @@ class FuncExport {
   }
 
   bool canHaveJitEntry() const {
-    return !funcType_.temporarilyUnsupportedReftypeForEntry() &&
-           !funcType_.temporarilyUnsupportedResultCountForJitEntry() &&
-           JitOptions.enableWasmJitEntry;
+    return
+#ifdef ENABLE_WASM_SIMD
+        !funcType_.hasV128ArgOrRet() &&
+#endif
+        !funcType_.temporarilyUnsupportedReftypeForEntry() &&
+        !funcType_.temporarilyUnsupportedResultCountForJitEntry() &&
+        JitOptions.enableWasmJitEntry;
   }
 
   bool clone(const FuncExport& src) {
@@ -358,6 +362,9 @@ struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
 
   // Feature flag that gets copied from ModuleEnvironment for BigInt support.
   bool bigIntEnabled;
+
+  // Feature flag that gets copied from ModuleEnvironment for SIMD support.
+  bool v128Enabled;
 
   explicit Metadata(ModuleKind kind = ModuleKind::Wasm)
       : MetadataCacheablePod(kind), debugEnabled(false), debugHash() {}

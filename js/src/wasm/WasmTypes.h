@@ -429,6 +429,7 @@ class ValType {
       case TypeCode::I64:
       case TypeCode::F32:
       case TypeCode::F64:
+      case TypeCode::V128:
       case TypeCode::AnyRef:
       case TypeCode::FuncRef:
       case TypeCode::NullRef:
@@ -446,6 +447,7 @@ class ValType {
     I64 = uint8_t(TypeCode::I64),
     F32 = uint8_t(TypeCode::F32),
     F64 = uint8_t(TypeCode::F64),
+    V128 = uint8_t(TypeCode::V128),
     Ref = uint8_t(TypeCode::OptRef),
   };
 
@@ -490,6 +492,9 @@ class ValType {
       case jit::MIRType::Double:
         tc_ = PackTypeCode(TypeCode::F64);
         break;
+      case jit::MIRType::Int8x16:
+        tc_ = PackTypeCode(TypeCode::V128);
+        break;
       default:
         MOZ_CRASH("ValType(MIRType): unexpected type");
     }
@@ -502,6 +507,7 @@ class ValType {
       case TypeCode::I64:
       case TypeCode::F32:
       case TypeCode::F64:
+      case TypeCode::V128:
         break;
       default:
         MOZ_CRASH("Bad type code");
@@ -600,6 +606,28 @@ class ValType {
   bool operator!=(Kind that) const { return !(*this == that); }
 };
 
+struct V128 {
+  uint8_t bytes[16];
+
+  V128() { memset(bytes, 0, sizeof(bytes)); }
+
+  template <typename T>
+  T extractLane(int lane) {
+    T result;
+    MOZ_ASSERT(lane < 16 / sizeof(T));
+    memcpy(&result, bytes + sizeof(T) * lane, sizeof(T));
+    return result;
+  }
+
+  template <typename T>
+  void insertLane(int lane, T value) {
+    MOZ_ASSERT(lane < 16 / sizeof(T));
+    memcpy(bytes + sizeof(T) * lane, &value, sizeof(T));
+  }
+};
+
+static_assert(sizeof(V128) == 16, "Invariant");
+
 // The dominant use of this data type is for locals and args, and profiling
 // with ZenGarden and Tanks suggests an initial size of 16 minimises heap
 // allocation, both in terms of blocks and bytes.
@@ -615,6 +643,8 @@ static inline unsigned SizeOf(ValType vt) {
     case ValType::I64:
     case ValType::F64:
       return 8;
+    case ValType::V128:
+      return 16;
     case ValType::Ref:
       return sizeof(intptr_t);
   }
@@ -636,6 +666,8 @@ static inline jit::MIRType ToMIRType(ValType vt) {
       return jit::MIRType::Float32;
     case ValType::F64:
       return jit::MIRType::Double;
+    case ValType::V128:
+      return jit::MIRType::Int8x16;
     case ValType::Ref:
       return jit::MIRType::RefOrNull;
   }
@@ -654,6 +686,8 @@ static inline const char* ToCString(ValType type) {
       return "i32";
     case ValType::I64:
       return "i64";
+    case ValType::V128:
+      return "v128";
     case ValType::F32:
       return "f32";
     case ValType::F64:
@@ -946,6 +980,7 @@ class LitVal {
     float f32_;
     double f64_;
     AnyRef ref_;
+    V128 v128_;
   } u;
 
  public:
@@ -969,12 +1004,14 @@ class LitVal {
         u.f64_ = 0;
         break;
       }
+      case ValType::Kind::V128: {
+        new (&u.v128_) V128();
+        break;
+      }
       case ValType::Kind::Ref: {
         u.ref_ = AnyRef::null();
         break;
       }
-      default:
-        MOZ_CRASH();
     }
   }
 
@@ -983,6 +1020,8 @@ class LitVal {
 
   explicit LitVal(float f32) : type_(ValType::F32) { u.f32_ = f32; }
   explicit LitVal(double f64) : type_(ValType::F64) { u.f64_ = f64; }
+
+  explicit LitVal(V128 v128) : type_(ValType::V128) { u.v128_ = v128; }
 
   explicit LitVal(ValType type, AnyRef any) : type_(type) {
     MOZ_ASSERT(type.isReference());
@@ -1014,6 +1053,10 @@ class LitVal {
     MOZ_ASSERT(type_.isReference());
     return u.ref_;
   }
+  const V128& v128() const {
+    MOZ_ASSERT(type_ == ValType::V128);
+    return u.v128_;
+  }
 };
 
 // A Val is a LitVal that can contain (non-null) pointers to GC things. All Vals
@@ -1030,6 +1073,7 @@ class MOZ_NON_PARAM Val : public LitVal {
   explicit Val(uint64_t i64) : LitVal(i64) {}
   explicit Val(float f32) : LitVal(f32) {}
   explicit Val(double f64) : LitVal(f64) {}
+  explicit Val(V128 v128) : LitVal(v128) {}
   explicit Val(ValType type, AnyRef val) : LitVal(type, AnyRef::null()) {
     MOZ_ASSERT(type.isReference());
     u.ref_ = val;
@@ -1119,8 +1163,24 @@ class FuncType {
   bool temporarilyUnsupportedResultCountForJitExit() const {
     return results().length() > MaxResultsForJitExit;
   }
-  // For JS->wasm jit entries, AnyRef parameters and returns are allowed,
-  // as are all reference types apart from TypeIndex.
+#ifdef ENABLE_WASM_SIMD
+  bool hasV128ArgOrRet() const {
+    for (ValType arg : args()) {
+      if (arg == ValType::V128) {
+        return true;
+      }
+    }
+    for (ValType result : results()) {
+      if (result == ValType::V128) {
+        return true;
+      }
+    }
+    return false;
+  }
+#endif
+  // For JS->wasm jit entries, AnyRef parameters and returns are allowed, as are
+  // all reference types apart from TypeIndex.  V128 types are excluded per spec
+  // but are guarded against separately.
   bool temporarilyUnsupportedReftypeForEntry() const {
     for (ValType arg : args()) {
       if (arg.isReference() && !arg.isAnyRef()) {
@@ -1135,7 +1195,8 @@ class FuncType {
     return false;
   }
   // For inlined JS->wasm jit entries, AnyRef parameters and returns are
-  // allowed, as are all reference types apart from TypeIndex.
+  // allowed, as are all reference types apart from TypeIndex.  V128 types are
+  // excluded per spec but are guarded against separately.
   bool temporarilyUnsupportedReftypeForInlineEntry() const {
     for (ValType arg : args()) {
       if (arg.isReference() && !arg.isAnyRef()) {
@@ -1150,7 +1211,8 @@ class FuncType {
     return false;
   }
   // For wasm->JS jit exits, AnyRef parameters and returns are allowed, as are
-  // reference type parameters of all types except TypeIndex.
+  // reference type parameters of all types except TypeIndex.  V128 types are
+  // excluded per spec but are guarded against separately.
   bool temporarilyUnsupportedReftypeForExit() const {
     for (ValType arg : args()) {
       if (arg.isTypeIndex()) {
@@ -2592,10 +2654,11 @@ enum class SymbolicAddress {
   HandleDebugTrap,
   HandleThrow,
   HandleTrap,
-  ReportInt64JSCall,
+  ReportInt64OrV128JSCall,
   CallImport_Void,
   CallImport_I32,
   CallImport_I64,
+  CallImport_V128,
   CallImport_F64,
   CallImport_FuncRef,
   CallImport_AnyRef,
@@ -3193,6 +3256,9 @@ class DebugFrame {
     AnyRef anyref_;
     float f32_;
     double f64_;
+#ifdef ENABLE_WASM_SIMD
+    V128 v128_;
+#endif
 #ifdef DEBUG
     // Should we add a new value representation, this will remind us to update
     // SpilledRegisterResult.
@@ -3202,6 +3268,7 @@ class DebugFrame {
         case ValType::I64:
         case ValType::F32:
         case ValType::F64:
+        case ValType::V128:
           return;
         case ValType::Ref:
           switch (type.refTypeKind()) {

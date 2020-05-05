@@ -2178,6 +2178,8 @@ struct Stk {
       case ValType::I64:
         k = Stk::MemI64;
         break;
+      case ValType::V128:
+        MOZ_CRASH("NYI");
       case ValType::F32:
         k = Stk::MemF32;
         break;
@@ -3084,6 +3086,8 @@ class BaseCompiler final : public BaseCompilerInterface {
         case ValType::I64:
           needI64(RegI64(result.gpr64()));
           break;
+        case ValType::V128:
+          MOZ_CRASH("NYI");
         case ValType::F32:
           if (which == RegKind::All) {
             needF32(RegF32(result.fpr()));
@@ -3120,6 +3124,8 @@ class BaseCompiler final : public BaseCompilerInterface {
         case ValType::I64:
           freeI64(RegI64(result.gpr64()));
           break;
+        case ValType::V128:
+          MOZ_CRASH("NYI");
         case ValType::F32:
           if (which == RegKind::All) {
             freeF32(RegF32(result.fpr()));
@@ -3165,6 +3171,8 @@ class BaseCompiler final : public BaseCompilerInterface {
         case ValType::I64:
           MOZ_ASSERT(isAvailableI64(RegI64(result.gpr64())));
           break;
+        case ValType::V128:
+          MOZ_CRASH("NYI");
         case ValType::F32:
           MOZ_ASSERT(isAvailableF32(RegF32(result.fpr())));
           break;
@@ -4110,6 +4118,8 @@ class BaseCompiler final : public BaseCompilerInterface {
         case ValType::Ref:
           popRef(RegPtr(result.gpr()));
           break;
+        case ValType::V128:
+          MOZ_CRASH("NYI");
       }
     }
   }
@@ -4312,6 +4322,8 @@ class BaseCompiler final : public BaseCompilerInterface {
         case ValType::I64:
           pushI64(RegI64(result.gpr64()));
           break;
+        case ValType::V128:
+          MOZ_CRASH("NYI");
         case ValType::F32:
           pushF32(RegF32(result.fpr()));
           break;
@@ -4818,6 +4830,8 @@ class BaseCompiler final : public BaseCompilerInterface {
           masm.storePtr(RegPtr(result.gpr()), dest);
           break;
         }
+        case ValType::V128:
+          MOZ_CRASH("NYI");
       }
       registerResultIdx++;
     }
@@ -4856,6 +4870,8 @@ class BaseCompiler final : public BaseCompilerInterface {
         case ValType::Ref:
           masm.loadPtr(src, RegPtr(result.gpr()));
           break;
+        case ValType::V128:
+          MOZ_CRASH("NYI");
       }
     }
   }
@@ -5085,6 +5101,9 @@ class BaseCompiler final : public BaseCompilerInterface {
           loadI64(arg, RegI64(argLoc.gpr64()));
         }
         break;
+      }
+      case ValType::V128: {
+        MOZ_CRASH("NYI");
       }
       case ValType::F64: {
         ABIArg argLoc = call->abi.next(MIRType::Double);
@@ -9685,6 +9704,8 @@ bool BaseCompiler::emitGetLocal() {
     case ValType::I64:
       pushLocalI64(slot);
       break;
+    case ValType::V128:
+      MOZ_CRASH("NYI");
     case ValType::F64:
       pushLocalF64(slot);
       break;
@@ -9750,6 +9771,9 @@ bool BaseCompiler::emitSetOrTeeLocal(uint32_t slot) {
         pushF32(rv);
       }
       break;
+    }
+    case ValType::V128: {
+      MOZ_CRASH("NYI");
     }
     case ValType::Ref: {
       RegPtr rv = popRef();

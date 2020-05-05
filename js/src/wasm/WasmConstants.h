@@ -53,10 +53,11 @@ enum class TypeCode {
   // non-special-purpose) types are added here then you MUST update
   // LowestPrimitiveTypeCode, below.
 
-  I32 = 0x7f,  // SLEB128(-0x01)
-  I64 = 0x7e,  // SLEB128(-0x02)
-  F32 = 0x7d,  // SLEB128(-0x03)
-  F64 = 0x7c,  // SLEB128(-0x04)
+  I32 = 0x7f,   // SLEB128(-0x01)
+  I64 = 0x7e,   // SLEB128(-0x02)
+  F32 = 0x7d,   // SLEB128(-0x03)
+  F64 = 0x7c,   // SLEB128(-0x04)
+  V128 = 0x7b,  // SLEB128(-0x05)
 
   // A function pointer with any signature
   FuncRef = 0x70,  // SLEB128(-0x10)
@@ -86,7 +87,7 @@ enum class TypeCode {
 // UnpackTypeCodeTypeAbstracted().  If primitive typecodes are added below any
 // reference typecode then the logic in that function MUST change.
 
-static constexpr TypeCode LowestPrimitiveTypeCode = TypeCode::F64;
+static constexpr TypeCode LowestPrimitiveTypeCode = TypeCode::V128;
 
 enum class FuncTypeIdDescKind { None, Immediate, Global };
 

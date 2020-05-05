@@ -406,6 +406,9 @@ static bool ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v,
       }
       break;
     }
+    case ValType::V128: {
+      break;
+    }
   }
   MOZ_CRASH("unexpected import value type, caller must guard");
 }
@@ -446,6 +449,8 @@ static bool ToJSValue(JSContext* cx, const Val& val, MutableHandleValue out) {
         case RefType::TypeIndex:
           break;
       }
+      break;
+    case ValType::V128:
       break;
   }
   MOZ_CRASH("unexpected type when translating to a JS value");
@@ -605,6 +610,12 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
           if (global.isMutable()) {
             JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                      JSMSG_WASM_BAD_GLOB_MUT_LINK);
+            return false;
+          }
+
+          if (global.type() == ValType::V128) {
+            JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                     JSMSG_WASM_BAD_VAL_TYPE, "v128");
             return false;
           }
 
@@ -2752,6 +2763,7 @@ void WasmGlobalObject::trace(JSTracer* trc, JSObject* obj) {
     case ValType::F32:
     case ValType::I64:
     case ValType::F64:
+    case ValType::V128:
       break;
     case ValType::Ref:
       switch (global->type().refTypeKind()) {
@@ -2839,6 +2851,9 @@ WasmGlobalObject* WasmGlobalObject::create(JSContext* cx, HandleVal hval,
           MOZ_CRASH("Ref NYI");
       }
       break;
+    case ValType::V128:
+      cell->v128 = val.v128();
+      break;
   }
   obj->initReservedSlot(TYPE_SLOT,
                         Int32Value(int32_t(val.type().bitsUnsafe())));
@@ -2908,6 +2923,10 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
              StringEqualsLiteral(typeLinearStr, "i64")) {
     globalType = ValType::I64;
 #endif
+#ifdef ENABLE_WASM_SIMD
+  } else if (SimdAvailable(cx) && StringEqualsLiteral(typeLinearStr, "v128")) {
+    globalType = ValType::V128;
+#endif
 #ifdef ENABLE_WASM_REFTYPES
   } else if (ReftypesAvailable(cx) &&
              StringEqualsLiteral(typeLinearStr, "funcref")) {
@@ -2944,6 +2963,9 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     case ValType::F64:
       globalVal = Val(double(0.0));
       break;
+    case ValType::V128:
+      globalVal = Val(V128());
+      break;
     case ValType::Ref:
       switch (globalType.refTypeKind()) {
         case RefType::Func:
@@ -2963,6 +2985,11 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   RootedValue valueVal(cx, args.get(1));
   if (!valueVal.isUndefined() ||
       (args.length() >= 2 && globalType.isReference())) {
+    if (globalType == ValType::V128) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_WASM_BAD_VAL_TYPE, "v128");
+      return false;
+    }
     if (!ToWebAssemblyValue(cx, globalType, valueVal, &globalVal)) {
       return false;
     }
@@ -2999,6 +3026,10 @@ bool WasmGlobalObject::valueGetterImpl(JSContext* cx, const CallArgs& args) {
     case ValType::F64:
       args.thisv().toObject().as<WasmGlobalObject>().value(cx, args.rval());
       return true;
+    case ValType::V128:
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_WASM_BAD_VAL_TYPE, "v128");
+      return false;
     case ValType::I64:
 #ifdef ENABLE_WASM_BIGINT
       if (I64BigIntConversionAvailable(cx)) {
@@ -3007,7 +3038,7 @@ bool WasmGlobalObject::valueGetterImpl(JSContext* cx, const CallArgs& args) {
       }
 #endif
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                               JSMSG_WASM_BAD_I64_TYPE);
+                               JSMSG_WASM_BAD_VAL_TYPE, "i64");
       return false;
     case ValType::Ref:
       switch (
@@ -3045,9 +3076,10 @@ bool WasmGlobalObject::valueSetterImpl(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  if (global->type() == ValType::I64 && !I64BigIntConversionAvailable(cx)) {
+  if ((global->type() == ValType::I64 && !I64BigIntConversionAvailable(cx)) ||
+      global->type() == ValType::V128) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_BAD_I64_TYPE);
+                             JSMSG_WASM_BAD_VAL_TYPE, "i64 or v128");
     return false;
   }
 
@@ -3108,6 +3140,8 @@ void WasmGlobalObject::setVal(JSContext* cx, wasm::HandleVal hval) {
       cell->i64 = val.i64();
 #endif
       break;
+    case ValType::V128:
+      MOZ_CRASH("unexpected v128 when setting global's value");
     case ValType::Ref:
       switch (this->type().refTypeKind()) {
         case RefType::Func:
@@ -3144,6 +3178,9 @@ void WasmGlobalObject::val(MutableHandleVal outval) const {
       return;
     case ValType::I64:
       outval.set(Val(uint64_t(cell->i64)));
+      return;
+    case ValType::V128:
+      outval.set(Val(cell->v128));
       return;
     case ValType::F32:
       outval.set(Val(cell->f32));

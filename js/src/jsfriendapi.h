@@ -1412,6 +1412,7 @@ enum Type {
   MaxTypedArrayViewType,
 
   Int64,
+  V128,
 };
 
 static inline size_t byteSize(Type atype) {
@@ -1432,6 +1433,8 @@ static inline size_t byteSize(Type atype) {
     case BigInt64:
     case BigUint64:
       return 8;
+    case V128:
+      return 16;
     case MaxTypedArrayViewType:
       break;
   }
@@ -1453,6 +1456,7 @@ static inline bool isSignedIntType(Type atype) {
     case Float32:
     case Float64:
     case BigUint64:
+    case V128:
       return false;
     case MaxTypedArrayViewType:
       break;
@@ -1475,6 +1479,7 @@ static inline bool isBigIntType(Type atype) {
     case Uint32:
     case Float32:
     case Float64:
+    case V128:
       return false;
     case MaxTypedArrayViewType:
       break;
