@@ -12,6 +12,34 @@
 // Rule Definition
 // -----------------------------------------------------------------------------
 
+function isCr(object) {
+  return object.type === "Identifier" && object.name === "Cr";
+}
+
+function isComponentsResults(object) {
+  return (
+    object.type === "MemberExpression" &&
+    object.object.type === "Identifier" &&
+    object.object.name === "Components" &&
+    object.property.type === "Identifier" &&
+    object.property.name === "results"
+  );
+}
+
+function isNewError(argument) {
+  return (
+    argument.type === "NewExpression" &&
+    argument.callee.type === "Identifier" &&
+    argument.callee.name === "Error" &&
+    argument.arguments.length === 1
+  );
+}
+
+function fixT(context, node, argument, fixer) {
+  const sourceText = context.getSourceCode().getText(argument);
+  return fixer.replaceText(node, `Components.Exception("", ${sourceText})`);
+}
+
 module.exports = {
   meta: {
     fixable: "code",
@@ -19,6 +47,10 @@ module.exports = {
       bareCR: "Do not throw bare Cr.ERRORs, use Components.Exception instead",
       bareComponentsResults:
         "Do not throw bare Components.results.ERRORs, use Components.Exception instead",
+      newErrorCR:
+        "Do not pass Cr.ERRORs to new Error(), use Components.Exception instead",
+      newErrorComponentsResults:
+        "Do not pass Components.results.ERRORs to new Error(), use Components.Exception instead",
     },
   },
 
@@ -26,34 +58,40 @@ module.exports = {
     return {
       ThrowStatement(node) {
         if (node.argument.type === "MemberExpression") {
-          function fix(fixer) {
-            const sourceCode = context.getSourceCode();
-            const source = sourceCode.getText(node.argument);
-            return fixer.replaceText(
-              node.argument,
-              `Components.Exception("", ${source})`
-            );
-          }
+          const fix = fixT.bind(null, context, node.argument, node.argument);
 
-          const obj = node.argument.object;
-          if (obj.type === "Identifier" && obj.name === "Cr") {
+          if (isCr(node.argument.object)) {
             context.report({
               node,
               messageId: "bareCR",
               fix,
             });
-          } else if (
-            obj.type === "MemberExpression" &&
-            obj.object.type === "Identifier" &&
-            obj.object.name === "Components" &&
-            obj.property.type === "Identifier" &&
-            obj.property.name === "results"
-          ) {
+          } else if (isComponentsResults(node.argument.object)) {
             context.report({
               node,
               messageId: "bareComponentsResults",
               fix,
             });
+          }
+        } else if (isNewError(node.argument)) {
+          const argument = node.argument.arguments[0];
+
+          if (argument.type === "MemberExpression") {
+            const fix = fixT.bind(null, context, node.argument, argument);
+
+            if (isCr(argument.object)) {
+              context.report({
+                node,
+                messageId: "newErrorCR",
+                fix,
+              });
+            } else if (isComponentsResults(argument.object)) {
+              context.report({
+                node,
+                messageId: "newErrorComponentsResults",
+                fix,
+              });
+            }
           }
         }
       },
