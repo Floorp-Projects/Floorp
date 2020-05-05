@@ -147,8 +147,7 @@ class SharedContext {
 
  public:
   SharedContext(JSContext* cx, Kind kind, CompilationInfo& compilationInfo,
-                Directives directives, SourceExtent extent,
-                ImmutableScriptFlags immutableFlags = {});
+                Directives directives, SourceExtent extent);
 
   // If this is the outermost SharedContext, the Scope that encloses
   // it. Otherwise nullptr.
@@ -184,6 +183,9 @@ class SharedContext {
 
   ThisBinding thisBinding() const { return thisBinding_; }
 
+  bool selfHosted() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::SelfHosted);
+  }
   bool hasModuleGoal() const {
     return immutableFlags_.hasFlag(ImmutableFlags::HasModuleGoal);
   }
@@ -210,6 +212,9 @@ class SharedContext {
   bool treatAsRunOnce() const {
     return immutableFlags_.hasFlag(ImmutableFlags::TreatAsRunOnce);
   }
+  bool noScriptRval() const {
+    return immutableFlags_.hasFlag(ImmutableFlags::NoScriptRval);
+  }
 
   void setExplicitUseStrict() { hasExplicitUseStrict_ = true; }
   void setBindingsAccessedDynamically() {
@@ -232,9 +237,6 @@ class SharedContext {
   }
 
   ImmutableScriptFlags immutableFlags() { return immutableFlags_; }
-  void addToImmutableFlags(ImmutableScriptFlags flags) {
-    immutableFlags_ |= flags;
-  }
 
   inline bool allBindingsClosedOver();
 
@@ -263,10 +265,8 @@ class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext {
 
   GlobalSharedContext(JSContext* cx, ScopeKind scopeKind,
                       CompilationInfo& compilationInfo, Directives directives,
-                      SourceExtent extent,
-                      ImmutableScriptFlags immutableFlags = {})
-      : SharedContext(cx, Kind::Global, compilationInfo, directives, extent,
-                      immutableFlags),
+                      SourceExtent extent)
+      : SharedContext(cx, Kind::Global, compilationInfo, directives, extent),
         scopeKind_(scopeKind),
         bindings(cx) {
     MOZ_ASSERT(scopeKind == ScopeKind::Global ||

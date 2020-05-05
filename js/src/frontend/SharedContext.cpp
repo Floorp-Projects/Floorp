@@ -21,8 +21,7 @@ namespace frontend {
 
 SharedContext::SharedContext(JSContext* cx, Kind kind,
                              CompilationInfo& compilationInfo,
-                             Directives directives, SourceExtent extent,
-                             ImmutableScriptFlags immutableFlags)
+                             Directives directives, SourceExtent extent)
     : cx_(cx),
       compilationInfo_(compilationInfo),
       thisBinding_(ThisBinding::Global),
@@ -34,8 +33,8 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
       inWith_(false),
       needsThisTDZChecks_(false),
       localStrict(false),
-      hasExplicitUseStrict_(false),
-      immutableFlags_(immutableFlags) {
+      hasExplicitUseStrict_(false) {
+  // Compute the script kind "input" flags.
   if (kind == Kind::FunctionBox) {
     immutableFlags_.setFlag(ImmutableFlags::IsFunction);
   } else if (kind == Kind::Module) {
@@ -47,13 +46,27 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
     MOZ_ASSERT(kind == Kind::Global);
   }
 
-  immutableFlags_.setFlag(ImmutableFlags::Strict, directives.strict());
+  // Note: This is a mix of transitive and non-transitive options.
+  const JS::ReadOnlyCompileOptions& options = compilationInfo.options;
 
+  // Initialize the transitive "input" flags. These are applied to all
+  // SharedContext in this compilation and generally cannot be determined from
+  // the source text alone.
+  immutableFlags_.setFlag(ImmutableFlags::SelfHosted, options.selfHostingMode);
   immutableFlags_.setFlag(ImmutableFlags::ForceStrict,
-                          compilationInfo.options.forceStrictMode());
-
+                          options.forceStrictMode());
   immutableFlags_.setFlag(ImmutableFlags::HasNonSyntacticScope,
-                          compilationInfo.options.nonSyntacticScope);
+                          options.nonSyntacticScope);
+
+  // Initialize the non-transistive "input" flags if this is a top-level.
+  if (isTopLevelContext()) {
+    immutableFlags_.setFlag(ImmutableFlags::TreatAsRunOnce, options.isRunOnce);
+    immutableFlags_.setFlag(ImmutableFlags::NoScriptRval, options.noScriptRval);
+  }
+
+  // Initialize the strict flag. This may be updated by the parser as we observe
+  // further directives in the body.
+  immutableFlags_.setFlag(ImmutableFlags::Strict, directives.strict());
 }
 
 void SharedContext::computeAllowSyntax(Scope* scope) {

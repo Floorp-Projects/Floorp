@@ -114,12 +114,6 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, SharedContext* sc,
     // Functions have IC entries for type monitoring |this| and arguments.
     bytecodeSection().setNumICEntries(sc->asFunctionBox()->nargs() + 1);
   }
-
-  // TODO: standardize how "input" flags are initialized.
-  if (sc->isTopLevelContext()) {
-    bool isRunOnce = compilationInfo.options.isRunOnce;
-    sc->setTreatAsRunOnce(isRunOnce);
-  }
 }
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
@@ -5740,13 +5734,6 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
       return false;
     }
 
-    // Only propagate transitive compiler options (principals, version, etc)
-    // from the parent. The remaining values will use their defaults.
-    const JS::TransitiveCompileOptions& transitiveOptions = parser->options();
-    // Add input flags to funbox for JSSCript::Create call.
-    funbox->addToImmutableFlags(
-        ImmutableScriptFlags::fromCompileOptions(transitiveOptions));
-
     EmitterMode nestedMode = emitterMode;
     if (nestedMode == BytecodeEmitter::LazyFunction) {
       MOZ_ASSERT(compilationInfo.sourceObject->source()->hasBinASTSource());
@@ -6754,8 +6741,8 @@ bool BytecodeEmitter::emitExpressionStatement(UnaryNode* exprStmt) {
    */
   bool wantval = false;
   bool useful = false;
-  if (!sc->isFunctionBox()) {
-    useful = wantval = !parser->options().noScriptRval;
+  if (sc->isTopLevelContext()) {
+    useful = wantval = !sc->noScriptRval();
   }
 
   /* Don't eliminate expressions with side effects. */
