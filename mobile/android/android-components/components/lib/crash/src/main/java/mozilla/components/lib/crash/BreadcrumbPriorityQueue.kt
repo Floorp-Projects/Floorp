@@ -4,6 +4,7 @@
 
 package mozilla.components.lib.crash
 
+import mozilla.components.support.base.crash.Breadcrumb
 import java.util.PriorityQueue
 
 internal class BreadcrumbPriorityQueue(

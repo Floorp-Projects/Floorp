@@ -37,6 +37,9 @@ permalink: /changelog/
 * **feature-push**
   * Simplified error handling and reduced non-fatal exception reporting.
 
+* **support-base**
+  * `CrashReporting` allowing adding support for `recordCrashBreadcrumb` without `lib-crash` dependency.
+  
 * **support-utils**
   * `URLStringUtils.isURLLikeStrict` is now deprecated due to performance issues. Consider using the less strict `isURLLike` instead or creating a new method using `:lib-publicsuffixlist`.
 

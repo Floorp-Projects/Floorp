@@ -5,6 +5,7 @@
 package mozilla.components.lib.crash
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.base.crash.Breadcrumb
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.lib.crash
+package mozilla.components.support.base.crash
 
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize

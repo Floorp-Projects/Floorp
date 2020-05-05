@@ -6,6 +6,7 @@ package mozilla.components.lib.crash
 
 import android.content.Intent
 import android.os.Bundle
+import mozilla.components.support.base.crash.Breadcrumb
 import java.io.Serializable
 import java.util.UUID
 

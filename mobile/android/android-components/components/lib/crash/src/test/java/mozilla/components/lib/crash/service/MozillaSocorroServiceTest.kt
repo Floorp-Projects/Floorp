@@ -7,8 +7,8 @@ package mozilla.components.lib.crash.service
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.io.Resources.getResource
 import mozilla.components.Build
-import mozilla.components.lib.crash.Breadcrumb
 import mozilla.components.lib.crash.Crash
+import mozilla.components.support.base.crash.Breadcrumb
 import mozilla.components.support.test.any
 import mozilla.components.support.test.robolectric.testContext
 import okhttp3.mockwebserver.MockResponse

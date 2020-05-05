@@ -14,12 +14,12 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
-import mozilla.components.lib.crash.Breadcrumb
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.lib.crash.service.GleanCrashReporterService
 import mozilla.components.service.glean.Glean
+import mozilla.components.support.base.crash.Breadcrumb
 
 class CrashApplication : Application() {
     internal lateinit var crashReporter: CrashReporter
