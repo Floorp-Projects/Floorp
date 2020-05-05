@@ -1238,7 +1238,7 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
         lazy->setEnclosingScope(enclosingScope);
       }
 
-      fun->initLazyScript(lazy);
+      fun->initScript(lazy);
     }
   }
 
@@ -4301,9 +4301,6 @@ bool JSScript::fullyInitFromStencil(JSContext* cx,
     JSFunction* fun =
         compilationInfo.funcData[*stencil.functionIndex].as<JSFunction*>();
     if (fun->isIncomplete()) {
-      fun->initScript(script);
-    } else if (fun->hasSelfHostedLazyScript()) {
-      fun->clearSelfHostedLazyScript();
       fun->initScript(script);
     } else {
       // We are delazifying in-place.

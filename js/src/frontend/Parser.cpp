@@ -1845,7 +1845,7 @@ bool FunctionCreationData::createLazyScript(
     return false;
   }
 
-  function->initLazyScript(lazy);
+  function->initScript(lazy);
 
   return true;
 }
