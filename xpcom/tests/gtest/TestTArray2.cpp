@@ -472,7 +472,8 @@ TEST(TArray, test_move_array)
 
   ASSERT_EQ(Moveable::Count(), 12);
 
-  AutoTArray<Moveable, 8> copyMoveableAutoArray(constRefMoveableAutoArray);
+  CopyableAutoTArray<Moveable, 8> copyMoveableAutoArray(
+      constRefMoveableAutoArray);
 
   ASSERT_EQ(Moveable::Count(), 16);
 
