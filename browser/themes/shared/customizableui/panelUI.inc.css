@@ -1927,13 +1927,14 @@ panelview[mainview] #PanelUI-whatsNew-content {
 
 #PanelUI-whatsNew .whatsNew-message-date {
   font-size: .85em;
-  margin: 0 -12px;
+  margin: -12px;
+  margin-top: 0;
   padding: 6px 16px;
   background: var(--arrowpanel-dimmed);
 }
 
 #PanelUI-whatsNew .whatsNew-message-body {
-  padding: 6px 6px 18px;
+  padding: 6px 6px 10px;
   text-align: inherit;
   text-decoration: none;
   color: inherit;
@@ -1958,7 +1959,7 @@ panelview[mainview] #PanelUI-whatsNew-content {
   inset-inline-end: 6px;
   height: 32px;
   position: absolute;
-  top: 16px;
+  top: 22px;
   width: 32px;
 }
 
@@ -1969,7 +1970,7 @@ panelview[mainview] #PanelUI-whatsNew-content {
   font-size: 1.3em;
   font-weight: 600;
   line-height: 1.4em;
-  margin: 8px 0 2px;
+  margin: 14px 0 0;
 }
 
 #PanelUI-whatsNew .whatsNew-message-title-large {
@@ -1987,7 +1988,7 @@ panelview[mainview] #PanelUI-whatsNew-content {
 
 #PanelUI-whatsNew .whatsNew-message-content {
   display: block;
-  margin: 13px 0;
+  margin: 10px 0;
 }
 
 #PanelUI-whatsNew .text-link {
@@ -1996,7 +1997,6 @@ panelview[mainview] #PanelUI-whatsNew-content {
   color: #45a1ff;
   cursor: pointer;
   font-size: .9em;
-  margin-top: 1.3em;
 }
 
 #protections-popup-message .text-link {
