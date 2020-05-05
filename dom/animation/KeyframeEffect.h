@@ -77,10 +77,10 @@ struct AnimationProperty {
   // mPerformanceWarning.
   AnimationProperty() = default;
   AnimationProperty(const AnimationProperty& aOther)
-      : mProperty(aOther.mProperty), mSegments(aOther.mSegments) {}
+      : mProperty(aOther.mProperty), mSegments(aOther.mSegments.Clone()) {}
   AnimationProperty& operator=(const AnimationProperty& aOther) {
     mProperty = aOther.mProperty;
-    mSegments = aOther.mSegments;
+    mSegments = aOther.mSegments.Clone();
     return *this;
   }
 
