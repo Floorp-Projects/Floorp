@@ -401,7 +401,8 @@ class TestharnessTest(Test):
         testdriver = manifest_item.testdriver if hasattr(manifest_item, "testdriver") else False
         jsshell = manifest_item.jsshell if hasattr(manifest_item, "jsshell") else False
         script_metadata = manifest_item.script_metadata or []
-        scripts = [v for (k, v) in script_metadata if k == b"script"]
+        scripts = [v for (k, v) in script_metadata
+                   if k in (b"script", "script")]
         return cls(manifest_file.tests_root,
                    manifest_item.url,
                    inherit_metadata,

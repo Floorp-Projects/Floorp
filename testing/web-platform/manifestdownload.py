@@ -118,7 +118,7 @@ def taskcluster_url(logger, commits):
             if not pushes:
                 logger.debug("Error reading response; 'pushes' key not found")
                 continue
-            [cset] = pushes.values()[0]['changesets']
+            [cset] = next(iter(pushes.values()))['changesets']
 
             tc_index_url = tc_url.format(changeset=cset, name=index_name)
             try:

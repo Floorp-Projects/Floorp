@@ -11,7 +11,6 @@
 # API are often easier to read than users of the AST APIs in these cases.
 
 import re
-import sys
 import math
 import textwrap
 
@@ -140,7 +139,7 @@ def _line(raw, skip_indent, lineno, context):
             values = eval(expr, context, {})
         except Exception as e:
             msg = "%s in substitution on line %d" % (repr(e), lineno)
-            raise ValueError(msg), None, sys.exc_traceback
+            raise ValueError(msg) from e
 
         # If we aren't dealing with lists, wrap the result into a
         # single-element list.
