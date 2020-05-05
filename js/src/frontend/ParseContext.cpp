@@ -510,7 +510,7 @@ bool ParseContext::declareFunctionThis(const UsedNameTracker& usedNames,
 
   bool declareThis;
   if (canSkipLazyClosedOverBindings) {
-    declareThis = funbox->hasThisBinding();
+    declareThis = funbox->functionHasThisBinding();
   } else {
     declareThis = hasUsedFunctionSpecialName(usedNames, dotThis) ||
                   funbox->isClassConstructor();
@@ -524,7 +524,7 @@ bool ParseContext::declareFunctionThis(const UsedNameTracker& usedNames,
                                   DeclaredNameInfo::npos)) {
       return false;
     }
-    funbox->setHasThisBinding();
+    funbox->setFunctionHasThisBinding();
   }
 
   return true;
@@ -544,7 +544,7 @@ bool ParseContext::declareFunctionArgumentsObject(
 
   bool tryDeclareArguments;
   if (canSkipLazyClosedOverBindings) {
-    tryDeclareArguments = funbox->declaredArguments();
+    tryDeclareArguments = funbox->shouldDeclareArguments();
   } else {
     tryDeclareArguments = hasUsedFunctionSpecialName(usedNames, argumentsName);
   }
@@ -576,7 +576,7 @@ bool ParseContext::declareFunctionArgumentsObject(
                                     DeclaredNameInfo::npos)) {
         return false;
       }
-      funbox->setDeclaredArguments();
+      funbox->setShouldDeclareArguments();
       usesArguments = true;
     } else if (hasExtraBodyVarScope) {
       // Formal parameters shadow the arguments object.

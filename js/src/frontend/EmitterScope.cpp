@@ -603,7 +603,7 @@ bool EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox) {
   // If the function's scope may be extended at runtime due to sloppy direct
   // eval, any names beyond the function scope must be accessed dynamically as
   // we don't know if the name will become a 'var' binding due to direct eval.
-  if (funbox->hasExtensibleScope()) {
+  if (funbox->funHasExtensibleScope()) {
     fallbackFreeNameLocation_ = Some(NameLocation::Dynamic());
   }
 
@@ -683,7 +683,7 @@ bool EmitterScope::enterFunctionExtraBodyVar(BytecodeEmitter* bce,
   // direct eval, any names beyond the var scope must be accessed
   // dynamically as we don't know if the name will become a 'var' binding
   // due to direct eval.
-  if (funbox->hasExtensibleScope()) {
+  if (funbox->funHasExtensibleScope()) {
     fallbackFreeNameLocation_ = Some(NameLocation::Dynamic());
   }
 

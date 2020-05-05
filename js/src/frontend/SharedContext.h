@@ -98,6 +98,15 @@ class GlobalSharedContext;
 class EvalSharedContext;
 class ModuleSharedContext;
 
+#define FLAG_GETTER_SETTER(enumName, enumEntry, lowerName, name)  \
+ public:                                                          \
+  bool lowerName() const { return hasFlag(enumName::enumEntry); } \
+  void set##name() { setFlag(enumName::enumEntry); }              \
+  void set##name(bool b) { setFlag(enumName::enumEntry, b); }
+
+#define IMMUTABLE_FLAG_GETTER_SETTER(lowerName, name) \
+  FLAG_GETTER_SETTER(ImmutableFlags, name, lowerName, name)
+
 /*
  * The struct SharedContext is part of the current parser context (see
  * ParseContext). It stores information that is reused between the parser and
@@ -145,6 +154,13 @@ class SharedContext {
   void computeInWith(Scope* scope);
   void computeThisBinding(Scope* scope);
 
+  MOZ_MUST_USE bool hasFlag(ImmutableFlags flag) const {
+    return immutableFlags_.hasFlag(flag);
+  }
+  void setFlag(ImmutableFlags flag, bool b = true) {
+    immutableFlags_.setFlag(flag, b);
+  }
+
  public:
   SharedContext(JSContext* cx, Kind kind, CompilationInfo& compilationInfo,
                 Directives directives, SourceExtent extent);
@@ -153,45 +169,40 @@ class SharedContext {
   // it. Otherwise nullptr.
   virtual Scope* compilationEnclosingScope() const = 0;
 
-  bool isFunctionBox() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::IsFunction);
-  }
+  IMMUTABLE_FLAG_GETTER_SETTER(isForEval, IsForEval)
+  IMMUTABLE_FLAG_GETTER_SETTER(isModule, IsModule)
+  IMMUTABLE_FLAG_GETTER_SETTER(isFunction, IsFunction)
+  IMMUTABLE_FLAG_GETTER_SETTER(selfHosted, SelfHosted)
+  IMMUTABLE_FLAG_GETTER_SETTER(forceStrict, ForceStrict)
+  IMMUTABLE_FLAG_GETTER_SETTER(hasNonSyntacticScope, HasNonSyntacticScope)
+  IMMUTABLE_FLAG_GETTER_SETTER(noScriptRval, NoScriptRval)
+  IMMUTABLE_FLAG_GETTER_SETTER(treatAsRunOnce, TreatAsRunOnce)
+  // Strict: custom logic below
+  IMMUTABLE_FLAG_GETTER_SETTER(hasModuleGoal, HasModuleGoal)
+  IMMUTABLE_FLAG_GETTER_SETTER(hasInnerFunctions, HasInnerFunctions)
+  IMMUTABLE_FLAG_GETTER_SETTER(hasDirectEval, HasDirectEval)
+  IMMUTABLE_FLAG_GETTER_SETTER(bindingsAccessedDynamically,
+                               BindingsAccessedDynamically)
+  IMMUTABLE_FLAG_GETTER_SETTER(hasCallSiteObj, HasCallSiteObj)
+
+  bool isFunctionBox() const { return isFunction(); }
   inline FunctionBox* asFunctionBox();
-  bool isModuleContext() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::IsModule);
-  }
+  bool isModuleContext() const { return isModule(); }
   inline ModuleSharedContext* asModuleContext();
   bool isGlobalContext() const {
-    return !(isFunctionBox() || isModuleContext() || isEvalContext());
+    return !(isFunction() || isModule() || isForEval());
   }
   inline GlobalSharedContext* asGlobalContext();
-  bool isEvalContext() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::IsForEval);
-  }
+  bool isEvalContext() const { return isForEval(); }
   inline EvalSharedContext* asEvalContext();
 
-  bool isTopLevelContext() const {
-    if (isModuleContext() || isEvalContext() || isGlobalContext()) {
-      return true;
-    }
-
-    MOZ_ASSERT(isFunctionBox());
-    return false;
-  }
+  bool isTopLevelContext() const { return !isFunction(); }
 
   CompilationInfo& compilationInfo() const { return compilationInfo_; }
 
   ThisBinding thisBinding() const { return thisBinding_; }
 
-  bool selfHosted() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::SelfHosted);
-  }
-  bool hasModuleGoal() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::HasModuleGoal);
-  }
-  bool hasInnerFunctions() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::HasInnerFunctions);
-  }
+  bool isSelfHosted() const { return selfHosted(); }
   bool allowNewTarget() const { return allowNewTarget_; }
   bool allowSuperProperty() const { return allowSuperProperty_; }
   bool allowSuperCall() const { return allowSuperCall_; }
@@ -200,41 +211,7 @@ class SharedContext {
   bool needsThisTDZChecks() const { return needsThisTDZChecks_; }
 
   bool hasExplicitUseStrict() const { return hasExplicitUseStrict_; }
-  bool bindingsAccessedDynamically() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::BindingsAccessedDynamically);
-  }
-  bool hasDirectEval() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::HasDirectEval);
-  }
-  bool hasCallSiteObj() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::HasCallSiteObj);
-  }
-  bool treatAsRunOnce() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::TreatAsRunOnce);
-  }
-  bool noScriptRval() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::NoScriptRval);
-  }
-
   void setExplicitUseStrict() { hasExplicitUseStrict_ = true; }
-  void setBindingsAccessedDynamically() {
-    immutableFlags_.setFlag(ImmutableFlags::BindingsAccessedDynamically);
-  }
-  void setHasDirectEval() {
-    immutableFlags_.setFlag(ImmutableFlags::HasDirectEval);
-  }
-  void setHasCallSiteObj() {
-    immutableFlags_.setFlag(ImmutableFlags::HasCallSiteObj);
-  }
-  void setHasModuleGoal(bool flag = true) {
-    immutableFlags_.setFlag(ImmutableFlags::HasModuleGoal, flag);
-  }
-  void setHasInnerFunctions() {
-    immutableFlags_.setFlag(ImmutableFlags::HasInnerFunctions);
-  }
-  void setTreatAsRunOnce(bool flag = true) {
-    immutableFlags_.setFlag(ImmutableFlags::TreatAsRunOnce, flag);
-  }
 
   ImmutableScriptFlags immutableFlags() { return immutableFlags_; }
 
@@ -244,10 +221,8 @@ class SharedContext {
   // localStrict flag indicates the current region (such as class body) should
   // be treated as strict. The localStrict flag will always be reset to false
   // before the end of the script.
-  bool strict() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::Strict) || localStrict;
-  }
-  void setStrictScript() { immutableFlags_.setFlag(ImmutableFlags::Strict); }
+  bool strict() const { return hasFlag(ImmutableFlags::Strict) || localStrict; }
+  void setStrictScript() { setFlag(ImmutableFlags::Strict); }
   bool setLocalStrictMode(bool strict) {
     bool retVal = localStrict;
     localStrict = strict;
@@ -451,35 +426,46 @@ class FunctionBox : public SharedContext {
     return enclosingScope_.scope();
   }
 
+  IMMUTABLE_FLAG_GETTER_SETTER(isAsync, IsAsync)
+  IMMUTABLE_FLAG_GETTER_SETTER(isGenerator, IsGenerator)
+  IMMUTABLE_FLAG_GETTER_SETTER(funHasExtensibleScope, FunHasExtensibleScope)
+  IMMUTABLE_FLAG_GETTER_SETTER(functionHasThisBinding, FunctionHasThisBinding)
+  // NeedsHomeObject: custom logic below.
+  // IsDerivedClassConstructor: custom logic below.
+  IMMUTABLE_FLAG_GETTER_SETTER(hasRest, HasRest)
+  IMMUTABLE_FLAG_GETTER_SETTER(needsFunctionEnvironmentObjects,
+                               NeedsFunctionEnvironmentObjects)
+  IMMUTABLE_FLAG_GETTER_SETTER(functionHasExtraBodyVarScope,
+                               FunctionHasExtraBodyVarScope)
+  IMMUTABLE_FLAG_GETTER_SETTER(shouldDeclareArguments, ShouldDeclareArguments)
+  IMMUTABLE_FLAG_GETTER_SETTER(argumentsHasVarBinding, ArgumentsHasVarBinding)
+  // AlwaysNeedsArgsObj: custom logic below.
+  // HasMappedArgsObj: custom logic below.
+  // IsLikelyConstructorWrapper: custom logic below.
+
   bool needsCallObjectRegardlessOfBindings() const {
     // Always create a CallObject if:
     // - The scope is extensible at runtime due to sloppy eval.
     // - The function is a generator or async function. (The debugger reads the
     //   generator object directly from the frame.)
 
-    return hasExtensibleScope() || isGenerator() || isAsync();
+    return funHasExtensibleScope() || isGenerator() || isAsync();
   }
 
   bool needsExtraBodyVarEnvironmentRegardlessOfBindings() const {
     MOZ_ASSERT(hasParameterExprs);
-    return hasExtensibleScope();
+    return funHasExtensibleScope();
   }
 
   bool isLikelyConstructorWrapper() const {
     return argumentsHasVarBinding() && usesApply && usesThis && !usesReturn;
   }
 
-  bool isGenerator() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::IsGenerator);
-  }
   GeneratorKind generatorKind() const {
     return isGenerator() ? GeneratorKind::Generator
                          : GeneratorKind::NotGenerator;
   }
 
-  bool isAsync() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::IsAsync);
-  }
   FunctionAsyncKind asyncKind() const {
     return isAsync() ? FunctionAsyncKind::AsyncFunction
                      : FunctionAsyncKind::SyncFunction;
@@ -493,46 +479,12 @@ class FunctionBox : public SharedContext {
   bool isArrow() const { return flags_.isArrow(); }
   bool isLambda() const { return flags_.isLambda(); }
 
-  void setDeclaredArguments() {
-    immutableFlags_.setFlag(ImmutableFlags::ShouldDeclareArguments);
-  }
-  bool declaredArguments() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::ShouldDeclareArguments);
-  }
-
-  bool hasRest() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::HasRest);
-  }
-  void setHasRest() { immutableFlags_.setFlag(ImmutableFlags::HasRest); }
-
   bool hasExprBody() const { return hasExprBody_; }
   void setHasExprBody() {
     MOZ_ASSERT(isArrow());
     hasExprBody_ = true;
   }
 
-  bool functionHasExtraBodyVarScope() {
-    return immutableFlags_.hasFlag(
-        ImmutableFlags::FunctionHasExtraBodyVarScope);
-  }
-  bool hasExtensibleScope() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::FunHasExtensibleScope);
-  }
-  bool hasThisBinding() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::FunctionHasThisBinding);
-  }
-  bool argumentsHasVarBinding() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::ArgumentsHasVarBinding);
-  }
-  bool alwaysNeedsArgsObj() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::AlwaysNeedsArgsObj);
-  }
-  bool needsHomeObject() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::NeedsHomeObject);
-  }
-  bool isDerivedClassConstructor() const {
-    return immutableFlags_.hasFlag(ImmutableFlags::IsDerivedClassConstructor);
-  }
   bool isNamedLambda() const { return flags_.isNamedLambda(explicitName()); }
   bool isGetter() const { return flags_.isGetter(); }
   bool isSetter() const { return flags_.isSetter(); }
@@ -552,32 +504,25 @@ class FunctionBox : public SharedContext {
 
   JSAtom* explicitName() const { return explicitName_; }
 
-  void setHasExtensibleScope() {
-    immutableFlags_.setFlag(ImmutableFlags::FunHasExtensibleScope);
-  }
-  void setHasThisBinding() {
-    immutableFlags_.setFlag(ImmutableFlags::FunctionHasThisBinding);
-  }
-  void setArgumentsHasVarBinding() {
-    immutableFlags_.setFlag(ImmutableFlags::ArgumentsHasVarBinding);
-  }
   void setAlwaysNeedsArgsObj() {
     MOZ_ASSERT(argumentsHasVarBinding());
-    immutableFlags_.setFlag(ImmutableFlags::AlwaysNeedsArgsObj);
+    setFlag(ImmutableFlags::AlwaysNeedsArgsObj);
+  }
+
+  bool needsHomeObject() const {
+    return hasFlag(ImmutableFlags::NeedsHomeObject);
   }
   void setNeedsHomeObject() {
     MOZ_ASSERT(flags_.allowSuperProperty());
-    immutableFlags_.setFlag(ImmutableFlags::NeedsHomeObject);
+    setFlag(ImmutableFlags::NeedsHomeObject);
+  }
+
+  bool isDerivedClassConstructor() const {
+    return hasFlag(ImmutableFlags::IsDerivedClassConstructor);
   }
   void setDerivedClassConstructor() {
     MOZ_ASSERT(flags_.isClassConstructor());
-    immutableFlags_.setFlag(ImmutableFlags::IsDerivedClassConstructor);
-  }
-  void setFunctionHasExtraBodyVarScope() {
-    immutableFlags_.setFlag(ImmutableFlags::FunctionHasExtraBodyVarScope);
-  }
-  void setNeedsFunctionEnvironmentObjects() {
-    immutableFlags_.setFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects);
+    setFlag(ImmutableFlags::IsDerivedClassConstructor);
   }
 
   bool hasSimpleParameterList() const {
@@ -646,6 +591,9 @@ class FunctionBox : public SharedContext {
 
   static void TraceList(JSTracer* trc, FunctionBox* listHead);
 };
+
+#undef FLAG_GETTER_SETTER
+#undef IMMUTABLE_FLAG_GETTER_SETTER
 
 inline FunctionBox* SharedContext::asFunctionBox() {
   MOZ_ASSERT(isFunctionBox());

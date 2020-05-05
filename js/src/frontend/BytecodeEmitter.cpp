@@ -9718,7 +9718,7 @@ bool BytecodeEmitter::emitInitializeFunctionSpecialNames() {
   // Do nothing if the function doesn't have a this-binding (this
   // happens for instance if it doesn't use this/eval or if it's an
   // arrow function).
-  if (funbox->hasThisBinding()) {
+  if (funbox->functionHasThisBinding()) {
     if (!emitInitializeFunctionSpecialName(this, cx->names().dotThis,
                                            JSOp::FunctionThis)) {
       return false;

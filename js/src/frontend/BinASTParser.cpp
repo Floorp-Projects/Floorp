@@ -1487,7 +1487,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedBlockScope(
   if (hasDirectEval && pc_->isFunctionBox() && !pc_->sc()->strict()) {
     // In non-strict mode code, direct calls to eval can
     // add variables to the call object.
-    pc_->functionBox()->setHasExtensibleScope();
+    pc_->functionBox()->setFunHasExtensibleScope();
   }
   auto result = Ok();
   return result;
@@ -1582,7 +1582,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedBoundNamesScope(
   if (hasDirectEval && pc_->isFunctionBox() && !pc_->sc()->strict()) {
     // In non-strict mode code, direct calls to eval can
     // add variables to the call object.
-    pc_->functionBox()->setHasExtensibleScope();
+    pc_->functionBox()->setFunHasExtensibleScope();
   }
   auto result = Ok();
   return result;
@@ -1696,7 +1696,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedParameterScope(
   if (hasDirectEval && pc_->isFunctionBox() && !pc_->sc()->strict()) {
     // In non-strict mode code, direct calls to eval can
     // add variables to the call object.
-    pc_->functionBox()->setHasExtensibleScope();
+    pc_->functionBox()->setFunHasExtensibleScope();
   }
   auto result = Ok();
   return result;
@@ -1799,7 +1799,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedScriptGlobalScope(
   if (hasDirectEval && pc_->isFunctionBox() && !pc_->sc()->strict()) {
     // In non-strict mode code, direct calls to eval can
     // add variables to the call object.
-    pc_->functionBox()->setHasExtensibleScope();
+    pc_->functionBox()->setFunHasExtensibleScope();
   }
   auto result = Ok();
   return result;
@@ -1847,7 +1847,7 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedVarScope(
   if (hasDirectEval && pc_->isFunctionBox() && !pc_->sc()->strict()) {
     // In non-strict mode code, direct calls to eval can
     // add variables to the call object.
-    pc_->functionBox()->setHasExtensibleScope();
+    pc_->functionBox()->setFunHasExtensibleScope();
   }
   auto result = Ok();
   return result;

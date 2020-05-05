@@ -36,12 +36,12 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
       hasExplicitUseStrict_(false) {
   // Compute the script kind "input" flags.
   if (kind == Kind::FunctionBox) {
-    immutableFlags_.setFlag(ImmutableFlags::IsFunction);
+    setFlag(ImmutableFlags::IsFunction);
   } else if (kind == Kind::Module) {
     MOZ_ASSERT(!compilationInfo.options.nonSyntacticScope);
-    immutableFlags_.setFlag(ImmutableFlags::IsModule);
+    setFlag(ImmutableFlags::IsModule);
   } else if (kind == Kind::Eval) {
-    immutableFlags_.setFlag(ImmutableFlags::IsForEval);
+    setFlag(ImmutableFlags::IsForEval);
   } else {
     MOZ_ASSERT(kind == Kind::Global);
   }
@@ -52,21 +52,19 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
   // Initialize the transitive "input" flags. These are applied to all
   // SharedContext in this compilation and generally cannot be determined from
   // the source text alone.
-  immutableFlags_.setFlag(ImmutableFlags::SelfHosted, options.selfHostingMode);
-  immutableFlags_.setFlag(ImmutableFlags::ForceStrict,
-                          options.forceStrictMode());
-  immutableFlags_.setFlag(ImmutableFlags::HasNonSyntacticScope,
-                          options.nonSyntacticScope);
+  setFlag(ImmutableFlags::SelfHosted, options.selfHostingMode);
+  setFlag(ImmutableFlags::ForceStrict, options.forceStrictMode());
+  setFlag(ImmutableFlags::HasNonSyntacticScope, options.nonSyntacticScope);
 
   // Initialize the non-transistive "input" flags if this is a top-level.
   if (isTopLevelContext()) {
-    immutableFlags_.setFlag(ImmutableFlags::TreatAsRunOnce, options.isRunOnce);
-    immutableFlags_.setFlag(ImmutableFlags::NoScriptRval, options.noScriptRval);
+    setFlag(ImmutableFlags::TreatAsRunOnce, options.isRunOnce);
+    setFlag(ImmutableFlags::NoScriptRval, options.noScriptRval);
   }
 
   // Initialize the strict flag. This may be updated by the parser as we observe
   // further directives in the body.
-  immutableFlags_.setFlag(ImmutableFlags::Strict, directives.strict());
+  setFlag(ImmutableFlags::Strict, directives.strict());
 }
 
 void SharedContext::computeAllowSyntax(Scope* scope) {
@@ -200,10 +198,10 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
       nargs_(0),
       explicitName_(explicitName),
       flags_(flags) {
-  immutableFlags_.setFlag(ImmutableFlags::IsGenerator,
-                          generatorKind == GeneratorKind::Generator);
-  immutableFlags_.setFlag(ImmutableFlags::IsAsync,
-                          asyncKind == FunctionAsyncKind::AsyncFunction);
+  setFlag(ImmutableFlags::IsGenerator,
+          generatorKind == GeneratorKind::Generator);
+  setFlag(ImmutableFlags::IsAsync,
+          asyncKind == FunctionAsyncKind::AsyncFunction);
 }
 
 bool FunctionBox::hasFunctionCreationData() const {
@@ -385,7 +383,7 @@ ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
       bindings(cx),
       builder(builder) {
   thisBinding_ = ThisBinding::Module;
-  immutableFlags_.setFlag(ImmutableFlags::HasModuleGoal);
+  setFlag(ImmutableFlags::HasModuleGoal);
 }
 
 MutableHandle<FunctionCreationData> FunctionBox::functionCreationData() const {
