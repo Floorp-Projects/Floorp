@@ -6,7 +6,6 @@
 
 #include "AnimationUtils.h"
 
-#include "mozilla/dom/Animation.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/EffectSet.h"
