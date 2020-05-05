@@ -132,7 +132,7 @@ void Performance::GetEntries(nsTArray<RefPtr<PerformanceEntry>>& aRetval) {
     return;
   }
 
-  aRetval = mResourceEntries;
+  aRetval = mResourceEntries.Clone();
   aRetval.AppendElements(mUserEntries);
   aRetval.Sort(PerformanceEntryComparator());
 }
@@ -146,7 +146,7 @@ void Performance::GetEntriesByType(
   }
 
   if (aEntryType.EqualsLiteral("resource")) {
-    aRetval = mResourceEntries;
+    aRetval = mResourceEntries.Clone();
     return;
   }
 

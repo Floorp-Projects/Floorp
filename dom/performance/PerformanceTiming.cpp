@@ -614,7 +614,7 @@ nsTArray<nsCOMPtr<nsIServerTiming>> PerformanceTimingData::GetServerTiming() {
     return nsTArray<nsCOMPtr<nsIServerTiming>>();
   }
 
-  return nsTArray<nsCOMPtr<nsIServerTiming>>(mServerTiming);
+  return mServerTiming.Clone();
 }
 
 }  // namespace dom
