@@ -39,6 +39,7 @@ class HomeMenu(
     sealed class Item {
         object WhatsNew : Item()
         object Help : Item()
+        object AddonsManager : Item()
         object Settings : Item()
         object SyncedTabs : Item()
         object History : Item()
@@ -112,6 +113,14 @@ class HomeMenu(
             onItemTapped.invoke(Item.History)
         }
 
+        val addons = BrowserMenuImageText(
+            context.getString(R.string.browser_menu_add_ons),
+            R.drawable.mozac_ic_extensions,
+            primaryTextColor
+        ) {
+            onItemTapped.invoke(Item.AddonsManager)
+        }
+
         val settingsItem = BrowserMenuImageText(
             context.getString(R.string.browser_menu_settings),
             R.drawable.ic_settings,
@@ -153,6 +162,7 @@ class HomeMenu(
                 historyItem,
                 if (FeatureFlags.syncedTabs) syncedTabsItem else null,
                 BrowserMenuDivider(),
+                addons,
                 settingsItem,
                 helpItem,
                 if (Settings.getInstance(context).shouldDeleteBrowsingDataOnQuit) quitItem else null
@@ -164,6 +174,7 @@ class HomeMenu(
                 if (Settings.getInstance(context).shouldDeleteBrowsingDataOnQuit) quitItem else null,
                 helpItem,
                 settingsItem,
+                addons,
                 accountAuthItem,
                 BrowserMenuDivider(),
                 bookmarksItem,

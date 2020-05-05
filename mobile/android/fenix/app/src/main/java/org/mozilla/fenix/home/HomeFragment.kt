@@ -741,6 +741,12 @@ class HomeFragment : Fragment() {
                         HomeFragmentDirections.actionGlobalAccountProblemFragment()
                     )
                 }
+                HomeMenu.Item.AddonsManager -> {
+                    nav(
+                        R.id.homeFragment,
+                        HomeFragmentDirections.actionGlobalAddonsManagementFragment()
+                    )
+                }
             }
         },
         onHighlightPresent = { menuButtonView.get()?.setHighlight(it) },
