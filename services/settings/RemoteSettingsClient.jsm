@@ -352,6 +352,9 @@ class RemoteSettingsClient extends EventEmitter {
 
     // Read from the local DB.
     const data = await this.db.list({ filters, order });
+    console.debug(
+      `${this.identifier} ${data.length} records before filtering.`
+    );
 
     if (verifySignature) {
       console.debug(
@@ -379,7 +382,11 @@ class RemoteSettingsClient extends EventEmitter {
     }
 
     // Filter the records based on `this.filterFunc` results.
-    return this._filterEntries(data);
+    const final = await this._filterEntries(data);
+    console.debug(
+      `${this.identifier} ${final.length} records after filtering.`
+    );
+    return final;
   }
 
   /**
@@ -798,7 +805,7 @@ class RemoteSettingsClient extends EventEmitter {
 
     // Fetch collection metadata and list of changes from server.
     console.debug(
-      `Fetch changes from server (expected=${expectedTimestamp}, since=${since})`
+      `${this.identifier} Fetch changes from server (expected=${expectedTimestamp}, since=${since})`
     );
     const {
       metadata,
