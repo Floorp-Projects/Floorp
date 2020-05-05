@@ -48,5 +48,15 @@ ruleTester.run("no-throw-cr-literal", rule, {
       'function t() { throw Components.Exception("", Cr.NS_ERROR_NULL_POINTER); }',
       "bareCR"
     ),
+    invalidCode(
+      "throw new Error(Cr.NS_ERROR_ABORT);",
+      'throw Components.Exception("", Cr.NS_ERROR_ABORT);',
+      "newErrorCR"
+    ),
+    invalidCode(
+      "throw new Error(Components.results.NS_ERROR_ABORT);",
+      'throw Components.Exception("", Components.results.NS_ERROR_ABORT);',
+      "newErrorComponentsResults"
+    ),
   ],
 });
