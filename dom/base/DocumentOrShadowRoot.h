@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/NameSpaceConstants.h"
 #include "mozilla/IdentifierMapEntry.h"
+#include "mozilla/RelativeTo.h"
 #include "nsClassHashtable.h"
 #include "nsContentListDeclarations.h"
 #include "nsTArray.h"
@@ -136,7 +137,7 @@ class DocumentOrShadowRoot {
   Element* ElementFromPointHelper(float aX, float aY,
                                   bool aIgnoreRootScrollFrame,
                                   bool aFlushLayout,
-                                  bool aIsRelativeToLayoutViewport);
+                                  ViewportType aViewportType);
 
   void NodesFromRect(float aX, float aY, float aTopSize, float aRightSize,
                      float aBottomSize, float aLeftSize,
