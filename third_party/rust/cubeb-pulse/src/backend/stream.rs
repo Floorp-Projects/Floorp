@@ -642,6 +642,10 @@ impl<'ctx> StreamOps for PulseStream<'ctx> {
         }
     }
 
+    fn input_latency(&mut self) -> Result<u32> {
+        Err(Error::error())
+    }
+
     fn set_volume(&mut self, volume: f32) -> Result<()> {
         match self.output_stream {
             None => Err(Error::error()),

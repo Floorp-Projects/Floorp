@@ -18,8 +18,8 @@ pub enum DeviceState {
     Enabled,
 }
 
-/// Architecture specific sample type.
 bitflags! {
+    /// Architecture specific sample type.
     pub struct DeviceFormat: ffi::cubeb_device_fmt {
         const S16LE = ffi::CUBEB_DEVICE_FMT_S16LE;
         const S16BE = ffi::CUBEB_DEVICE_FMT_S16BE;
@@ -28,10 +28,10 @@ bitflags! {
     }
 }
 
-/// Channel type for a `cubeb_stream`. Depending on the backend and platform
-/// used, this can control inter-stream interruption, ducking, and volume
-/// control.
 bitflags! {
+    /// Channel type for a `cubeb_stream`. Depending on the backend and platform
+    /// used, this can control inter-stream interruption, ducking, and volume
+    /// control.
     pub struct DevicePref: ffi::cubeb_device_pref {
         const NONE = ffi::CUBEB_DEVICE_PREF_NONE;
         const MULTIMEDIA = ffi::CUBEB_DEVICE_PREF_MULTIMEDIA;
@@ -41,9 +41,9 @@ bitflags! {
     }
 }
 
-/// Whether a particular device is an input device (e.g. a microphone), or an
-/// output device (e.g. headphones).
 bitflags! {
+    /// Whether a particular device is an input device (e.g. a microphone), or an
+    /// output device (e.g. headphones).
     pub struct DeviceType: ffi::cubeb_device_type {
         const UNKNOWN = ffi::CUBEB_DEVICE_TYPE_UNKNOWN as _;
         const INPUT = ffi::CUBEB_DEVICE_TYPE_INPUT as _;
@@ -55,8 +55,8 @@ bitflags! {
 /// across calls.
 pub type DeviceId = ffi::cubeb_devid;
 
-/// Audio device description
 ffi_type_heap! {
+    /// Audio device description
     type CType = ffi::cubeb_device;
     #[derive(Debug)]
     pub struct Device;
@@ -91,11 +91,11 @@ impl DeviceRef {
     }
 }
 
-/// This structure holds the characteristics of an input or output
-/// audio device. It is obtained using `enumerate_devices`, which
-/// returns these structures via `device_collection` and must be
-/// destroyed via `device_collection_destroy`.
 ffi_type_stack! {
+    /// This structure holds the characteristics of an input or output
+    /// audio device. It is obtained using `enumerate_devices`, which
+    /// returns these structures via `device_collection` and must be
+    /// destroyed via `device_collection_destroy`.
     type CType = ffi::cubeb_device_info;
     pub struct DeviceInfo;
     pub struct DeviceInfoRef;

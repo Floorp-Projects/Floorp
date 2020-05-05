@@ -35,7 +35,7 @@ cubeb_output_latency_load_method(int version)
 bool
 cubeb_output_latency_method_is_loaded(output_latency_function * ol)
 {
-  assert(ol && (ol->from_jni || ol->from_lib));
+  assert(ol);
   if (ol->version > ANDROID_JELLY_BEAN_MR1_4_2){
     return !!ol->from_jni;
   }

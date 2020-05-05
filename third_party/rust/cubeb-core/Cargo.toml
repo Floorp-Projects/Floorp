@@ -12,7 +12,7 @@
 
 [package]
 name = "cubeb-core"
-version = "0.6.2"
+version = "0.7.0"
 authors = ["Dan Glastonbury <dglastonbury@mozilla.com>"]
 description = "Common types and definitions for cubeb rust and C bindings. Not intended for direct use.\n"
 homepage = "https://github.com/djg/cubeb-rs"
@@ -21,10 +21,10 @@ categories = ["api-bindings"]
 license = "ISC"
 repository = "https://github.com/djg/cubeb-rs"
 [dependencies.bitflags]
-version = "1.0"
+version = "1.2.0"
 
 [dependencies.cubeb-sys]
-version = "0.6.2"
+version = "0.7.0"
 
 [features]
 gecko-in-tree = ["cubeb-sys/gecko-in-tree"]

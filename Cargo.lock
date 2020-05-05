@@ -743,7 +743,7 @@ dependencies = [
 [[package]]
 name = "coreaudio-sys-utils"
 version = "0.1.0"
-source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=6156e941e5f46a641d2da10ca53a9ad318c10722#6156e941e5f46a641d2da10ca53a9ad318c10722"
+source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=c5aacdc75618025e72f62f727a7a0d91606e6276#c5aacdc75618025e72f62f727a7a0d91606e6276"
 dependencies = [
  "core-foundation-sys",
  "coreaudio-sys",
@@ -952,27 +952,27 @@ dependencies = [
 
 [[package]]
 name = "cubeb"
-version = "0.6.2"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3cbcdfde9ea319160af6eff068ffaa96aad3532e1b5c0ebc134614cfacacae24"
+checksum = "1116606d6045c9199f6a1e082f3cf63383ba6f9961339701faa6370dcf73135f"
 dependencies = [
  "cubeb-core",
 ]
 
 [[package]]
 name = "cubeb-backend"
-version = "0.6.3"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "228778b00abd85a2ccca9330bc0ee7e72795dd255039814baef02b99757ad12e"
+checksum = "cc644425cb33d45994a5df4351958369c00e3f7bbf785b8cab270c7840b75774"
 dependencies = [
  "cubeb-core",
 ]
 
 [[package]]
 name = "cubeb-core"
-version = "0.6.2"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfd9b2ea1cb6afed9419b0d18fc4093df552ccb2300eb57793629f8cd370b4c8"
+checksum = "f7c55529b8f47926e4242e1fc01d31b08a5a4847967c5c250644e33fe237cfe5"
 dependencies = [
  "bitflags",
  "cubeb-sys",
@@ -981,7 +981,7 @@ dependencies = [
 [[package]]
 name = "cubeb-coreaudio"
 version = "0.1.0"
-source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=6156e941e5f46a641d2da10ca53a9ad318c10722#6156e941e5f46a641d2da10ca53a9ad318c10722"
+source = "git+https://github.com/ChunMinChang/cubeb-coreaudio-rs?rev=c5aacdc75618025e72f62f727a7a0d91606e6276#c5aacdc75618025e72f62f727a7a0d91606e6276"
 dependencies = [
  "atomic",
  "audio-mixer",
@@ -998,7 +998,7 @@ dependencies = [
 [[package]]
 name = "cubeb-pulse"
 version = "0.3.0"
-source = "git+https://github.com/djg/cubeb-pulse-rs?rev=5eb38163103b0dae86de81cdaf46070bdeedc0d1#5eb38163103b0dae86de81cdaf46070bdeedc0d1"
+source = "git+https://github.com/djg/cubeb-pulse-rs?rev=70431f444cf164177cb3c0f060698fc35f811be5#70431f444cf164177cb3c0f060698fc35f811be5"
 dependencies = [
  "cubeb-backend",
  "pulse",
@@ -1009,9 +1009,9 @@ dependencies = [
 
 [[package]]
 name = "cubeb-sys"
-version = "0.6.2"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "309c5839c5fa03c08363bd308566cbe4654b25a9984342d7546a33d55b80a3d6"
+checksum = "dcbc562eb6ccf62abacf9e3eebce992e5c36b230ca313ebd7c2d7d0e99deae90"
 dependencies = [
  "cmake",
  "pkg-config",
@@ -3594,7 +3594,7 @@ dependencies = [
 [[package]]
 name = "pulse"
 version = "0.3.0"
-source = "git+https://github.com/djg/cubeb-pulse-rs?rev=5eb38163103b0dae86de81cdaf46070bdeedc0d1#5eb38163103b0dae86de81cdaf46070bdeedc0d1"
+source = "git+https://github.com/djg/cubeb-pulse-rs?rev=70431f444cf164177cb3c0f060698fc35f811be5#70431f444cf164177cb3c0f060698fc35f811be5"
 dependencies = [
  "bitflags",
  "pulse-ffi",
@@ -3603,7 +3603,7 @@ dependencies = [
 [[package]]
 name = "pulse-ffi"
 version = "0.1.0"
-source = "git+https://github.com/djg/cubeb-pulse-rs?rev=5eb38163103b0dae86de81cdaf46070bdeedc0d1#5eb38163103b0dae86de81cdaf46070bdeedc0d1"
+source = "git+https://github.com/djg/cubeb-pulse-rs?rev=70431f444cf164177cb3c0f060698fc35f811be5#70431f444cf164177cb3c0f060698fc35f811be5"
 dependencies = [
  "libc",
 ]
