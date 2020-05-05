@@ -3,23 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BaseProfiler.h"
+#include <windows.h>
+#include <dbghelp.h>
+#include <sstream>
+#include <psapi.h>
 
-#ifdef MOZ_GECKO_PROFILER
+#include "BaseProfilerSharedLibraries.h"
 
-#  include <windows.h>
-#  include <dbghelp.h>
-#  include <sstream>
-#  include <psapi.h>
+#include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 
-#  include "BaseProfilerSharedLibraries.h"
+#include <string>
 
-#  include "mozilla/UniquePtr.h"
-#  include "mozilla/Unused.h"
-
-#  include <string>
-
-#  define CV_SIGNATURE 0x53445352  // 'SDSR'
+#define CV_SIGNATURE 0x53445352  // 'SDSR'
 
 struct CodeViewRecord70 {
   uint32_t signature;
@@ -237,5 +233,3 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
 
 void SharedLibraryInfo::Initialize() { /* do nothing */
 }
-
-#endif  // MOZ_GECKO_PROFILER

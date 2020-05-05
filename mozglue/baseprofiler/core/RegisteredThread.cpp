@@ -4,11 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "RegisteredThread.h"
+
 #include "BaseProfiler.h"
-
-#ifdef MOZ_GECKO_PROFILER
-
-#  include "RegisteredThread.h"
 
 namespace mozilla {
 namespace baseprofiler {
@@ -19,10 +17,10 @@ RegisteredThread::RegisteredThread(ThreadInfo* aInfo, void* aStackTop)
       mStackTop(aStackTop),
       mThreadInfo(aInfo) {
   // We don't have to guess on mac
-#  if defined(GP_OS_darwin)
+#if defined(GP_OS_darwin)
   pthread_t self = pthread_self();
   mStackTop = pthread_get_stackaddr_np(self);
-#  endif
+#endif
 }
 
 RegisteredThread::~RegisteredThread() {}
@@ -43,5 +41,3 @@ size_t RegisteredThread::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
 
 }  // namespace baseprofiler
 }  // namespace mozilla
-
-#endif  // MOZ_GECKO_PROFILER

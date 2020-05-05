@@ -4,22 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ProfileBufferEntry.h"
+
+#include <ostream>
+#include <type_traits>
+
+#include "mozilla/Logging.h"
+#include "mozilla/Sprintf.h"
+#include "mozilla/StackWalk.h"
+
 #include "BaseProfiler.h"
-
-#ifdef MOZ_GECKO_PROFILER
-
-#  include "ProfileBufferEntry.h"
-
-#  include "BaseProfilerMarkerPayload.h"
-#  include "platform.h"
-#  include "ProfileBuffer.h"
-
-#  include "mozilla/Logging.h"
-#  include "mozilla/Sprintf.h"
-#  include "mozilla/StackWalk.h"
-
-#  include <ostream>
-#  include <type_traits>
+#include "BaseProfilerMarkerPayload.h"
+#include "platform.h"
+#include "ProfileBuffer.h"
 
 namespace mozilla {
 namespace baseprofiler {
@@ -577,12 +574,12 @@ class EntryGetter {
 // Because this is a format entirely internal to the Profiler, any parsing
 // error indicates a bug in the ProfileBuffer writing or the parser itself,
 // or possibly flaky hardware.
-#  define ERROR_AND_CONTINUE(msg)                            \
-    {                                                        \
-      fprintf(stderr, "ProfileBuffer parse error: %s", msg); \
-      MOZ_ASSERT(false, msg);                                \
-      continue;                                              \
-    }
+#define ERROR_AND_CONTINUE(msg)                            \
+  {                                                        \
+    fprintf(stderr, "ProfileBuffer parse error: %s", msg); \
+    MOZ_ASSERT(false, msg);                                \
+    continue;                                              \
+  }
 
 void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
                                         int aThreadId, double aSinceTime,
@@ -959,17 +956,17 @@ void ProfileBuffer::StreamProfilerOverheadToJSON(
       aWriter.DoubleProperty("overheadDurations", overheads.sum);
       aWriter.DoubleProperty("overheadPercentage",
                              overheads.sum / (lastTime - firstTime));
-#  define PROFILER_STATS(name, var)                           \
-    aWriter.DoubleProperty("mean" name, (var).sum / (var).n); \
-    aWriter.DoubleProperty("min" name, (var).min);            \
-    aWriter.DoubleProperty("max" name, (var).max);
+#define PROFILER_STATS(name, var)                           \
+  aWriter.DoubleProperty("mean" name, (var).sum / (var).n); \
+  aWriter.DoubleProperty("min" name, (var).min);            \
+  aWriter.DoubleProperty("max" name, (var).max);
       PROFILER_STATS("Interval", intervals);
       PROFILER_STATS("Overhead", overheads);
       PROFILER_STATS("Lockings", lockings);
       PROFILER_STATS("Cleaning", cleanings);
       PROFILER_STATS("Counter", counters);
       PROFILER_STATS("Thread", threads);
-#  undef PROFILER_STATS
+#undef PROFILER_STATS
       aWriter.EndObject();  // statistics
     }
     aWriter.EndObject();  // profilerOverhead
@@ -1162,7 +1159,7 @@ void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
   });
 }
 
-#  undef ERROR_AND_CONTINUE
+#undef ERROR_AND_CONTINUE
 
 static void AddPausedRange(SpliceableJSONWriter& aWriter, const char* aReason,
                            const Maybe<double>& aStartTime,
@@ -1376,5 +1373,3 @@ void ProfileBuffer::DiscardSamplesBeforeTime(double aTime) {
 
 }  // namespace baseprofiler
 }  // namespace mozilla
-
-#endif  // MOZ_GECKO_PROFILER

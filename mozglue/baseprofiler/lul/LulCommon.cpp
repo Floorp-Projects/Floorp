@@ -37,19 +37,17 @@
 //   src/common/module.cc
 //   src/common/unique_string.cc
 
-#include "BaseProfiler.h"
-
-#ifdef MOZ_GECKO_PROFILER
-
 // There's no internal-only interface for LulCommon.  Hence include
 // the external interface directly.
-#  include "LulCommonExt.h"
+#include "LulCommonExt.h"
 
-#  include <stdlib.h>
-#  include <string.h>
+#include <stdlib.h>
+#include <string.h>
 
-#  include <string>
-#  include <map>
+#include <string>
+#include <map>
+
+#include "BaseProfiler.h"
 
 namespace lul {
 
@@ -102,5 +100,3 @@ const UniqueString* UniqueStringUniverse::ToUniqueString(string str) {
 }
 
 }  // namespace lul
-
-#endif  // MOZ_GECKO_PROFILER
