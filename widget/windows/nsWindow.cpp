@@ -65,7 +65,6 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TouchEvents.h"
-#include "mozilla/TimeStamp.h"
 
 #include "mozilla/ipc/MessageChannel.h"
 #include <algorithm>
@@ -213,9 +212,6 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/plugins/PluginProcessParent.h"
 #include "mozilla/webrender/WebRenderAPI.h"
-#include "mozilla/layers/IAPZCTreeManager.h"
-
-#include "DirectManipulationOwner.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -716,72 +712,6 @@ static bool ShouldCacheTitleBarInfo(nsWindowType aWindowType,
           !nsUXThemeData::sTitlebarInfoPopulatedAero);
 }
 
-void nsWindow::SendAnAPZEvent(InputData& aEvent) {
-  APZEventResult result;
-  if (mAPZC) {
-    result = mAPZC->InputBridge()->ReceiveInputEvent(aEvent);
-  }
-  if (result.mStatus == nsEventStatus_eConsumeNoDefault) {
-    return;
-  }
-
-  MOZ_ASSERT(aEvent.mInputType == PANGESTURE_INPUT ||
-             aEvent.mInputType == PINCHGESTURE_INPUT);
-
-  if (aEvent.mInputType == PANGESTURE_INPUT) {
-    PanGestureInput& panInput = aEvent.AsPanGestureInput();
-    WidgetWheelEvent event = panInput.ToWidgetWheelEvent(this);
-    ProcessUntransformedAPZEvent(&event, result);
-
-    return;
-  }
-
-  PinchGestureInput& pinchInput = aEvent.AsPinchGestureInput();
-  WidgetWheelEvent event = pinchInput.ToWidgetWheelEvent(this);
-  ProcessUntransformedAPZEvent(&event, result);
-}
-
-void nsWindow::RecreateDirectManipulationIfNeeded() {
-  DestroyDirectManipulation();
-
-  if (mWindowType != eWindowType_toplevel && mWindowType != eWindowType_popup) {
-    return;
-  }
-
-  if (!StaticPrefs::apz_windows_use_direct_manipulation() ||
-      StaticPrefs::apz_windows_force_disable_direct_manipulation()) {
-    return;
-  }
-
-  if (!IsWin10OrLater()) {
-    // Chrome source said the Windows Direct Manipulation implementation had
-    // important bugs until Windows 10 (although IE on Windows 8.1 seems to use
-    // Direct Manipulation).
-    return;
-  }
-
-  mDmOwner = MakeUnique<DirectManipulationOwner>(this);
-
-  LayoutDeviceIntRect bounds(mBounds.X(), mBounds.Y(), mBounds.Width(),
-                             GetHeight(mBounds.Height()));
-  mDmOwner->Init(bounds);
-}
-
-void nsWindow::ResizeDirectManipulationViewport() {
-  if (mDmOwner) {
-    LayoutDeviceIntRect bounds(mBounds.X(), mBounds.Y(), mBounds.Width(),
-                               GetHeight(mBounds.Height()));
-    mDmOwner->ResizeViewport(bounds);
-  }
-}
-
-void nsWindow::DestroyDirectManipulation() {
-  if (mDmOwner) {
-    mDmOwner->Destroy();
-    mDmOwner.reset();
-  }
-}
-
 // Create the proper widget
 nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                           const LayoutDeviceIntRect& aRect,
@@ -985,9 +915,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       ::PostMessage(mWnd, MOZ_WM_STARTA11Y, 0, 0);
     }
   }
-
-  RecreateDirectManipulationIfNeeded();
-
   return NS_OK;
 }
 
@@ -1004,8 +931,6 @@ void nsWindow::Destroy() {
   // During the destruction of all of our children, make sure we don't get
   // deleted.
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
-
-  DestroyDirectManipulation();
 
   /**
    * On windows the LayerManagerOGL destructor wants the widget to be around for
@@ -1302,7 +1227,6 @@ void nsWindow::SetParent(nsIWidget* aNewParent) {
   if (mWnd) {
     // If we have no parent, SetParent should return the desktop.
     VERIFY(::SetParent(mWnd, nullptr));
-    RecreateDirectManipulationIfNeeded();
   }
 }
 
@@ -1317,7 +1241,6 @@ void nsWindow::ReparentNativeWidget(nsIWidget* aNewParent) {
   NS_ASSERTION(newParent, "Parent widget has a null native window handle");
   if (newParent && mWnd) {
     ::SetParent(mWnd, newParent);
-    RecreateDirectManipulationIfNeeded();
   }
 }
 
@@ -1895,8 +1818,6 @@ void nsWindow::Move(double aX, double aY) {
     }
 
     SetThemeRegion();
-
-    ResizeDirectManipulationViewport();
   }
   NotifyRollupGeometryChange();
 }
@@ -1943,8 +1864,6 @@ void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
       ChangedDPI();
     }
     SetThemeRegion();
-
-    ResizeDirectManipulationViewport();
   }
 
   if (aRepaint) Invalidate();
@@ -2003,8 +1922,6 @@ void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
                      SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
     }
     SetThemeRegion();
-
-    ResizeDirectManipulationViewport();
   }
 
   if (aRepaint) Invalidate();
@@ -3584,7 +3501,6 @@ void nsWindow::SetNativeData(uint32_t aDataType, uintptr_t aVal) {
                             ? mWnd
                             : WinUtils::GetTopLevelHWND(mWnd);
       SetChildStyleAndParent(childHwnd, parentHwnd);
-      RecreateDirectManipulationIfNeeded();
       break;
     }
     default:
@@ -5688,17 +5604,6 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       result = OnPointerEvents(msg, wParam, lParam);
       if (result) {
         DispatchPendingEvents();
-      }
-      break;
-
-    case DM_POINTERHITTEST:
-      if (mDmOwner) {
-        UINT contactId = GET_POINTERID_WPARAM(wParam);
-        POINTER_INPUT_TYPE pointerType;
-        if (mPointerEvents.GetPointerType(contactId, &pointerType) &&
-            pointerType == PT_TOUCHPAD) {
-          mDmOwner->SetContact(contactId);
-        }
       }
       break;
 
