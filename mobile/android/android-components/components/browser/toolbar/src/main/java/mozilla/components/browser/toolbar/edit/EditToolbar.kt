@@ -226,6 +226,7 @@ class EditToolbar internal constructor(
 
     internal fun updateUrl(url: String, shouldAutoComplete: Boolean = false) {
         views.url.setText(url, shouldAutoComplete)
+        views.clear.isVisible = url.isNotBlank()
     }
 
     /**
