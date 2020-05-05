@@ -20,7 +20,7 @@ namespace java = mozilla::java;
 namespace mozilla {
 namespace hal_impl {
 
-void Vibrate(const nsTArray<uint32_t>& pattern, const WindowIdentifier&) {
+void Vibrate(const nsTArray<uint32_t>& pattern, WindowIdentifier&&) {
   // Ignore the WindowIdentifier parameter; it's here only because hal::Vibrate,
   // hal_sandbox::Vibrate, and hal_impl::Vibrate all must have the same
   // signature.
@@ -49,7 +49,7 @@ void Vibrate(const nsTArray<uint32_t>& pattern, const WindowIdentifier&) {
   b->Vibrate(pattern);
 }
 
-void CancelVibrate(const WindowIdentifier&) {
+void CancelVibrate(WindowIdentifier&&) {
   // Ignore WindowIdentifier parameter.
 
   java::GeckoAppShell::CancelVibrate();
