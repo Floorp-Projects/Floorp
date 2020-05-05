@@ -1578,8 +1578,10 @@ public class WebExtension {
         final GeckoBundle bundle = new GeckoBundle(1);
         bundle.putString("extensionId", id);
 
-        EventDispatcher.getInstance().dispatch(
-                "GeckoView:ActionDelegate:Attached", bundle);
+        if (delegate != null) {
+            EventDispatcher.getInstance().dispatch(
+                    "GeckoView:ActionDelegate:Attached", bundle);
+        }
     }
 
     /** Describes the signed status for a {@link WebExtension}.
