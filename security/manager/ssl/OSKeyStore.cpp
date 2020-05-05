@@ -52,7 +52,7 @@ OSKeyStore::OSKeyStore() : mKs(nullptr), mKsIsNSSKeyStore(false) {
 }
 
 static nsresult GenerateRandom(std::vector<uint8_t>& r) {
-  if (r.size() < 1) {
+  if (r.empty()) {
     return NS_ERROR_INVALID_ARG;
   }
   UniquePK11SlotInfo slot(PK11_GetInternalSlot());
