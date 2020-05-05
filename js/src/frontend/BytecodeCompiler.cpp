@@ -658,6 +658,8 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
       return false;
     }
 
+    funbox->synchronizeArgCount();
+
     compilationInfo.script = emitter->getResultScript();
     MOZ_ASSERT(compilationInfo.script);
   } else {

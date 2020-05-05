@@ -1704,7 +1704,6 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
   }
 
   FunctionBox* funbox = pc_->functionBox();
-  funbox->synchronizeArgCount();
 
   // BCE will need to generate bytecode for this.
   funbox->emitBytecode = true;
@@ -1767,7 +1766,6 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   }
 
   FunctionBox* funbox = pc_->functionBox();
-  funbox->synchronizeArgCount();
 
   // Check if we will overflow the `ngcthings` field later.
   mozilla::CheckedUint32 ngcthings =
@@ -1805,7 +1803,9 @@ bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
       // script creation data.
       Rooted<FunctionCreationData> fcd(
           parser->cx_, std::move(funbox->functionCreationData().get()));
-      RootedFunction fun(parser->cx_, AllocNewFunction(parser->cx_, fcd));
+
+      RootedFunction fun(parser->cx_,
+                         AllocNewFunction(parser->cx_, funbox->nargs(), fcd));
       if (!fun) {
         return false;
       }
@@ -2147,7 +2147,7 @@ HandleAtom FunctionCreationData::getExplicitName(JSContext* cx) const {
   return HandleAtom::fromMarkedLocation(&explicitName);
 }
 
-JSFunction* AllocNewFunction(JSContext* cx,
+JSFunction* AllocNewFunction(JSContext* cx, uint16_t nargs,
                              Handle<FunctionCreationData> dataHandle) {
   // FunctionCreationData don't move, so it is safe to grab a reference
   // out of the handle.
@@ -2168,7 +2168,7 @@ JSFunction* AllocNewFunction(JSContext* cx,
   gc::AllocKind allocKind = data.flags.isExtended()
                                 ? gc::AllocKind::FUNCTION_EXTENDED
                                 : gc::AllocKind::FUNCTION;
-  RootedFunction fun(cx, NewFunctionWithProto(cx, nullptr, 0, data.flags,
+  RootedFunction fun(cx, NewFunctionWithProto(cx, nullptr, nargs, data.flags,
                                               nullptr, data.getExplicitName(cx),
                                               proto, allocKind, TenuredObject));
   if (!fun) {
