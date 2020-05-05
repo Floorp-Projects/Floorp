@@ -26,5 +26,8 @@
         app:entryValues="@array/user_agent_override_values"
         app:defaultValue="">
     </ListPreference>
+    <SwitchPreferenceCompat
+        app:key="@string/key_allow_extensions_in_private_browsing"
+        app:title="Run extensions in private tabs"/>
 
 </PreferenceScreen>

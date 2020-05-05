@@ -388,6 +388,8 @@ public class GeckoViewActivity
     private boolean mKillProcessOnDestroy;
     private boolean mDesktopMode;
     private String mUserAgentOverride;
+    private boolean mAllowExtensionsInPrivateBrowsing;
+
     private TabSession mPopupSession;
     private View mPopupView;
     private int mPreferredColorScheme;
@@ -443,6 +445,9 @@ public class GeckoViewActivity
                 Integer.toString(GeckoRuntimeSettings.COLOR_SCHEME_SYSTEM)));
         String userAgentOverride = preferences.getString(
                 getString(R.string.key_user_agent_override), "");
+        boolean allowExtensionsInPrivateBrowsing = preferences.getBoolean(
+                getString(R.string.key_allow_extensions_in_private_browsing),
+                false);
 
         if (mEnableRemoteDebugging != remoteDebugging) {
             if (sGeckoRuntime != null) {
@@ -489,6 +494,16 @@ public class GeckoViewActivity
             if (currentSession != null) {
                 currentSession.reload();
             }
+        }
+
+        if (mAllowExtensionsInPrivateBrowsing != allowExtensionsInPrivateBrowsing) {
+            if (sGeckoRuntime != null && sExtensionManager != null
+                    && sExtensionManager.extension != null) {
+                sGeckoRuntime.getWebExtensionController().setAllowedInPrivateBrowsing(
+                        sExtensionManager.extension,
+                        allowExtensionsInPrivateBrowsing);
+            }
+            mAllowExtensionsInPrivateBrowsing = allowExtensionsInPrivateBrowsing;
         }
     }
 
@@ -951,8 +966,11 @@ public class GeckoViewActivity
                 final WebExtensionController controller = sGeckoRuntime.getWebExtensionController();
                 controller.setPromptDelegate(sExtensionManager);
                 return controller.install(uri);
-            }).accept(extension ->
-                    sExtensionManager.registerExtension(extension));
+            }).then(extension ->
+                sGeckoRuntime.getWebExtensionController().setAllowedInPrivateBrowsing(
+                        extension, mAllowExtensionsInPrivateBrowsing)
+            ).accept(extension ->
+                sExtensionManager.registerExtension(extension));
         });
         builder.setNegativeButton(R.string.cancel, (dialog, which) -> {
             // Nothing to do
