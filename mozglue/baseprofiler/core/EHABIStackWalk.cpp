@@ -24,35 +24,33 @@
 
 #include "BaseProfiler.h"
 
-#ifdef MOZ_GECKO_PROFILER
+#include "EHABIStackWalk.h"
 
-#  include "EHABIStackWalk.h"
+#include "BaseProfilerSharedLibraries.h"
+#include "platform.h"
 
-#  include "BaseProfilerSharedLibraries.h"
-#  include "platform.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/DebugOnly.h"
+#include "mozilla/EndianUtils.h"
 
-#  include "mozilla/Atomics.h"
-#  include "mozilla/DebugOnly.h"
-#  include "mozilla/EndianUtils.h"
+#include <algorithm>
+#include <elf.h>
+#include <stdint.h>
+#include <vector>
+#include <string>
 
-#  include <algorithm>
-#  include <elf.h>
-#  include <stdint.h>
-#  include <vector>
-#  include <string>
-
-#  ifndef PT_ARM_EXIDX
-#    define PT_ARM_EXIDX 0x70000001
-#  endif
+#ifndef PT_ARM_EXIDX
+#  define PT_ARM_EXIDX 0x70000001
+#endif
 
 // Bug 1082817: ICS B2G has a buggy linker that doesn't always ensure
 // that the EXIDX is sorted by address, as the spec requires.  So in
 // that case we build and sort an array of pointers into the index,
 // and binary-search that; otherwise, we search the index in place
 // (avoiding the time and space overhead of the indirection).
-#  if defined(ANDROID_VERSION) && ANDROID_VERSION < 16
-#    define HAVE_UNSORTED_EXIDX
-#  endif
+#if defined(ANDROID_VERSION) && ANDROID_VERSION < 16
+#  define HAVE_UNSORTED_EXIDX
+#endif
 
 namespace mozilla {
 namespace baseprofiler {
@@ -94,7 +92,7 @@ class EHState {
 
 enum { R_SP = 13, R_LR = 14, R_PC = 15 };
 
-#  ifdef HAVE_UNSORTED_EXIDX
+#ifdef HAVE_UNSORTED_EXIDX
 class EHEntryHandle {
   const EHEntry* mValue;
 
@@ -106,13 +104,13 @@ class EHEntryHandle {
 bool operator<(const EHEntryHandle& lhs, const EHEntryHandle& rhs) {
   return lhs.value()->startPC.compute() < rhs.value()->startPC.compute();
 }
-#  endif
+#endif
 
 class EHTable {
   uint32_t mStartPC;
   uint32_t mEndPC;
   uint32_t mBaseAddress;
-#  ifdef HAVE_UNSORTED_EXIDX
+#ifdef HAVE_UNSORTED_EXIDX
   // In principle we should be able to binary-search the index section in
   // place, but the ICS toolchain's linker is noncompliant and produces
   // indices that aren't entirely sorted (e.g., libc).  So we have this:
@@ -123,13 +121,13 @@ class EHTable {
   static const EHEntry* entryGet(EntryIterator aEntry) {
     return aEntry->value();
   }
-#  else
+#else
   typedef const EHEntry* EntryIterator;
   EntryIterator mEntriesBegin, mEntriesEnd;
   EntryIterator entriesBegin() const { return mEntriesBegin; }
   EntryIterator entriesEnd() const { return mEntriesEnd; }
   static const EHEntry* entryGet(EntryIterator aEntry) { return aEntry; }
-#  endif
+#endif
   std::string mName;
 
  public:
@@ -334,9 +332,9 @@ bool EHInterp::unwind() {
   checkStack();
   while (!mFailed) {
     uint8_t insn = next();
-#  if DEBUG_EHABI_UNWIND
+#if DEBUG_EHABI_UNWIND
     LOG("unwind insn = %02x", (unsigned)insn);
-#  endif
+#endif
     // Try to put the common cases first.
 
     // 00xxxxxx: vsp = vsp + (xxxxxx << 2) + 4
@@ -460,9 +458,9 @@ bool EHInterp::unwind() {
     }
 
     // unhandled instruction
-#  ifdef DEBUG_EHABI_UNWIND
+#ifdef DEBUG_EHABI_UNWIND
     LOG("Unhandled EHABI instruction 0x%02x", insn);
-#  endif
+#endif
     mFailed = true;
   }
   return false;
@@ -505,12 +503,12 @@ const EHEntry* EHTable::lookup(uint32_t aPC) const {
     return nullptr;
 
   while (end - begin > 1) {
-#  ifdef EHABI_UNWIND_MORE_ASSERTS
+#ifdef EHABI_UNWIND_MORE_ASSERTS
     if (entryGet(end - 1)->startPC.compute() <
         entryGet(begin)->startPC.compute()) {
       MOZ_CRASH("unsorted exidx");
     }
-#  endif
+#endif
     EntryIterator mid = begin + (end - begin) / 2;
     if (aPC < reinterpret_cast<uint32_t>(entryGet(mid)->startPC.compute()))
       end = mid;
@@ -520,22 +518,22 @@ const EHEntry* EHTable::lookup(uint32_t aPC) const {
   return entryGet(begin);
 }
 
-#  if MOZ_LITTLE_ENDIAN()
+#if MOZ_LITTLE_ENDIAN()
 static const unsigned char hostEndian = ELFDATA2LSB;
-#  elif MOZ_BIG_ENDIAN()
+#elif MOZ_BIG_ENDIAN()
 static const unsigned char hostEndian = ELFDATA2MSB;
-#  else
-#    error "No endian?"
-#  endif
+#else
+#  error "No endian?"
+#endif
 
 // Async signal unsafe: std::vector::reserve, std::string copy ctor.
 EHTable::EHTable(const void* aELF, size_t aSize, const std::string& aName)
     : mStartPC(~0),  // largest uint32_t
       mEndPC(0),
-#  ifndef HAVE_UNSORTED_EXIDX
+#ifndef HAVE_UNSORTED_EXIDX
       mEntriesBegin(nullptr),
       mEntriesEnd(nullptr),
-#  endif
+#endif
       mName(aName) {
   const uint32_t fileHeaderAddr = reinterpret_cast<uint32_t>(aELF);
 
@@ -578,14 +576,14 @@ EHTable::EHTable(const void* aELF, size_t aSize, const std::string& aName)
       reinterpret_cast<const EHEntry*>(mBaseAddress + exidxHdr->p_vaddr);
   const EHEntry* endTable = reinterpret_cast<const EHEntry*>(
       mBaseAddress + exidxHdr->p_vaddr + exidxHdr->p_memsz);
-#  ifdef HAVE_UNSORTED_EXIDX
+#ifdef HAVE_UNSORTED_EXIDX
   mEntries.reserve(endTable - startTable);
   for (const EHEntry* i = startTable; i < endTable; ++i) mEntries.push_back(i);
   std::sort(mEntries.begin(), mEntries.end());
-#  else
+#else
   mEntriesBegin = startTable;
   mEntriesEnd = endTable;
-#  endif
+#endif
 }
 
 Atomic<const EHAddrSpace*> EHAddrSpace::sCurrent(nullptr);
@@ -620,7 +618,7 @@ void EHAddrSpace::Update() {
 }
 
 EHState::EHState(const mcontext_t& context) {
-#  ifdef linux
+#ifdef linux
   mRegs[0] = context.arm_r0;
   mRegs[1] = context.arm_r1;
   mRegs[2] = context.arm_r2;
@@ -637,12 +635,10 @@ EHState::EHState(const mcontext_t& context) {
   mRegs[13] = context.arm_sp;
   mRegs[14] = context.arm_lr;
   mRegs[15] = context.arm_pc;
-#  else
-#    error "Unhandled OS for ARM EHABI unwinding"
-#  endif
+#else
+#  error "Unhandled OS for ARM EHABI unwinding"
+#endif
 }
 
 }  // namespace baseprofiler
 }  // namespace mozilla
-
-#endif  // MOZ_GECKO_PROFILER

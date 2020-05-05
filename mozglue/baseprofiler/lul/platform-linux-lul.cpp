@@ -3,21 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <stdlib.h>
+#include <time.h>
+
+#include "AutoObjectMapper.h"
 #include "BaseProfiler.h"
-
-#ifdef MOZ_GECKO_PROFILER
-
-#  include <stdio.h>
-#  include <signal.h>
-#  include <string.h>
-#  include <stdlib.h>
-#  include <time.h>
-
-#  include "platform.h"
-#  include "PlatformMacros.h"
-#  include "LulMain.h"
-#  include "BaseProfilerSharedLibraries.h"
-#  include "AutoObjectMapper.h"
+#include "BaseProfilerSharedLibraries.h"
+#include "platform.h"
+#include "PlatformMacros.h"
+#include "LulMain.h"
 
 // Contains miscellaneous helpers that are used to connect the Gecko Profiler
 // and LUL.
@@ -28,7 +25,7 @@
 void read_procmaps(lul::LUL* aLUL) {
   MOZ_ASSERT(aLUL->CountMappings() == 0);
 
-#  if defined(GP_OS_linux) || defined(GP_OS_android)
+#if defined(GP_OS_linux) || defined(GP_OS_android)
   SharedLibraryInfo info = SharedLibraryInfo::GetInfoForSelf();
 
   for (size_t i = 0; i < info.GetSize(); i++) {
@@ -36,13 +33,13 @@ void read_procmaps(lul::LUL* aLUL) {
 
     std::string nativePath = lib.GetDebugPath();
 
-#    if defined(MOZ_LINKER)
+#  if defined(MOZ_LINKER)
     // We're using faulty.lib.  Use a special-case object mapper.
     AutoObjectMapperFaultyLib mapper(aLUL->mLog);
-#    else
+#  else
     // We can use the standard POSIX-based mapper.
     AutoObjectMapperPOSIX mapper(aLUL->mLog);
-#    endif
+#  endif
 
     // Ask |mapper| to map the object.  Then hand its mapped address
     // to NotifyAfterMap().
@@ -66,9 +63,9 @@ void read_procmaps(lul::LUL* aLUL) {
     // unmaps the object.
   }
 
-#  else
-#    error "Unknown platform"
-#  endif
+#else
+#  error "Unknown platform"
+#endif
 }
 
 // LUL needs a callback for its logging sink.
@@ -82,5 +79,3 @@ void logging_sink_for_LUL(const char* str) {
   // platform.cpp.
   // VERBOSE_LOG("[%d] %s", profiler_current_process_id(), str);
 }
-
-#endif  // MOZ_GECKO_PROFILER

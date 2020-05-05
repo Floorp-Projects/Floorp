@@ -4,17 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "BaseProfilingStack.h"
+
+#include <algorithm>
+
+#include "mozilla/IntegerRange.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
+
 #include "BaseProfiler.h"
-
-#ifdef MOZ_GECKO_PROFILER
-
-#  include "BaseProfilingStack.h"
-
-#  include "mozilla/IntegerRange.h"
-#  include "mozilla/UniquePtr.h"
-#  include "mozilla/UniquePtrExtensions.h"
-
-#  include <algorithm>
 
 namespace mozilla {
 namespace baseprofiler {
@@ -52,5 +50,3 @@ void ProfilingStack::ensureCapacitySlow() {
 
 }  // namespace baseprofiler
 }  // namespace mozilla
-
-#endif  // MOZ_GECKO_PROFILER
