@@ -78,6 +78,11 @@
   table-layout: fixed;
 }
 
+.requests-list-table {
+  /* Clip column resizers when they are higher than the table. */
+  overflow: hidden;
+}
+
 .requests-list-column,
 .ws-frames-list-column {
   white-space: nowrap;
@@ -118,6 +123,11 @@
 .ws-frames-list-headers th {
   height: calc(var(--theme-toolbar-height) + 1px);
   border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.requests-list-headers th {
+  /* Allow column-resizers to be visible beyond the headers. */
+  overflow: visible;
 }
 
 .requests-list-headers th:not(:first-child),
@@ -206,6 +216,9 @@
   min-height: 23px;
   position: absolute;
   background-color: transparent;
+  /* Extend column-resizers beyond table header to allow resizing on
+   * column borders as well.*/
+  height: 100vh;
 }
 
 /**
