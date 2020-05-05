@@ -57,7 +57,8 @@ static const uint32_t SNAPSHOT_MAX_NARGS = 127;
 static const SnapshotOffset INVALID_RECOVER_OFFSET = uint32_t(-1);
 static const SnapshotOffset INVALID_SNAPSHOT_OFFSET = uint32_t(-1);
 
-// Different kinds of bailouts.
+// Different kinds of bailouts. When extending this enum, make sure to check
+// the bits reserved for bailout kinds in Bailouts.h
 enum BailoutKind {
   // Normal bailouts, that don't need to be handled specially when restarting
   // in baseline.
@@ -120,9 +121,6 @@ enum BailoutKind {
   //    also used for the unused GuardClass instruction
   Bailout_ObjectIdentityOrTypeGuard,
 
-  // JSString was not equal to the expected JSAtom
-  Bailout_SpecificAtomGuard,
-
   // Unbox expects a given type, bails out if it doesn't get it.
   Bailout_NonInt32Input,
   Bailout_NonNumericInput,  // unboxing a double works with int32 too
@@ -177,9 +175,7 @@ enum BailoutKind {
   Bailout_UninitializedLexical,
 
   // A bailout to baseline from Ion on exception to handle Debugger hooks.
-  Bailout_IonExceptionDebugMode,
-
-  Bailout_Limit
+  Bailout_IonExceptionDebugMode
 };
 
 inline const char* BailoutKindString(BailoutKind kind) {
@@ -217,8 +213,6 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "Bailout_NonIntegerIndex";
     case Bailout_ObjectIdentityOrTypeGuard:
       return "Bailout_ObjectIdentityOrTypeGuard";
-    case Bailout_SpecificAtomGuard:
-      return "Bailout_SpecifcAtomGuard";
     case Bailout_NonInt32Input:
       return "Bailout_NonInt32Input";
     case Bailout_NonNumericInput:
@@ -259,12 +253,9 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "Bailout_UninitializedLexical";
     case Bailout_IonExceptionDebugMode:
       return "Bailout_IonExceptionDebugMode";
-
-    case Bailout_Limit:
-      break;
+    default:
+      MOZ_CRASH("Invalid BailoutKind");
   }
-
-  MOZ_CRASH("Invalid BailoutKind");
 }
 
 static const uint32_t ELEMENT_TYPE_BITS = 5;

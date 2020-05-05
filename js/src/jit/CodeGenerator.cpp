@@ -4561,23 +4561,6 @@ void CodeGenerator::visitGuardObjectIdentity(LGuardObjectIdentity* guard) {
   bailoutCmpPtr(cond, input, expected, guard->snapshot());
 }
 
-void CodeGenerator::visitGuardSpecificAtom(LGuardSpecificAtom* guard) {
-  Register str = ToRegister(guard->str());
-
-  Label done;
-  masm.branchPtr(Assembler::Equal, str, ImmGCPtr(guard->mir()->atom()), &done);
-
-  // The pointers are not equal, so if the input string is also an atom it
-  // must be a different string.
-  bailoutTest32(Assembler::Zero, Address(str, JSString::offsetOfFlags()),
-                Imm32(JSString::NON_ATOM_BIT), guard->snapshot());
-
-  // Todo: Check length + VM fallback.
-  bailout(guard->snapshot());
-
-  masm.bind(&done);
-}
-
 void CodeGenerator::visitGuardReceiverPolymorphic(
     LGuardReceiverPolymorphic* lir) {
   const MGuardReceiverPolymorphic* mir = lir->mir();

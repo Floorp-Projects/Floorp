@@ -116,7 +116,7 @@
 
 - name: GuardIsNumber
   shared: true
-  transpile: true
+  transpile: false
   custom_writer: true
   args:
     input: ValId
@@ -249,7 +249,7 @@
 
 - name: GuardSpecificAtom
   shared: false
-  transpile: true
+  transpile: false
   args:
     str: StringId
     expected: AtomField
@@ -571,7 +571,7 @@
 
 - name: StoreFixedSlot
   shared: false
-  transpile: true
+  transpile: false
   args:
     obj: ObjId
     offset: RawWordField
@@ -579,7 +579,7 @@
 
 - name: StoreDynamicSlot
   shared: false
-  transpile: true
+  transpile: false
   args:
     obj: ObjId
     offset: RawWordField
@@ -1403,7 +1403,7 @@
 
 - name: CompareStringResult
   shared: false
-  transpile: true
+  transpile: false
   args:
     op: JSOpImm
     lhs: StringId
@@ -1411,7 +1411,7 @@
 
 - name: CompareObjectResult
   shared: true
-  transpile: true
+  transpile: false
   args:
     op: JSOpImm
     lhs: ObjId
@@ -1435,7 +1435,7 @@
 
 - name: CompareDoubleResult
   shared: true
-  transpile: true
+  transpile: false
   args:
     op: JSOpImm
     lhs: NumberId

@@ -3751,12 +3751,6 @@ void LIRGenerator::visitGuardObjectIdentity(MGuardObjectIdentity* ins) {
   redefine(ins, ins->object());
 }
 
-void LIRGenerator::visitGuardSpecificAtom(MGuardSpecificAtom* ins) {
-  auto* guard = new (alloc()) LGuardSpecificAtom(useRegister(ins->str()));
-  assignSnapshot(guard, Bailout_SpecificAtomGuard);
-  add(guard, ins);
-}
-
 void LIRGenerator::visitGuardShape(MGuardShape* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 
