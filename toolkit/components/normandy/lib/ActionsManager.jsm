@@ -32,18 +32,6 @@ var EXPORTED_SYMBOLS = ["ActionsManager"];
 
 const log = LogManager.getLogger("recipe-runner");
 
-const actionConstructors = {
-  "addon-rollback": AddonRollbackAction,
-  "addon-rollout": AddonRolloutAction,
-  "branched-addon-study": BranchedAddonStudyAction,
-  "console-log": ConsoleLogAction,
-  "messsaging-experiment": MessagingExperimentAction,
-  "multi-preference-experiment": PreferenceExperimentAction,
-  "preference-rollback": PreferenceRollbackAction,
-  "preference-rollout": PreferenceRolloutAction,
-  "show-heartbeat": ShowHeartbeatAction,
-};
-
 /**
  * A class to manage the actions that recipes can use in Normandy.
  */
@@ -52,15 +40,29 @@ class ActionsManager {
     this.finalized = false;
 
     this.localActions = {};
-    for (const [name, Constructor] of Object.entries(actionConstructors)) {
+    for (const [name, Constructor] of Object.entries(
+      ActionsManager.actionConstructors
+    )) {
       this.localActions[name] = new Constructor();
     }
   }
 
+  static actionConstructors = {
+    "addon-rollback": AddonRollbackAction,
+    "addon-rollout": AddonRolloutAction,
+    "branched-addon-study": BranchedAddonStudyAction,
+    "console-log": ConsoleLogAction,
+    "messaging-experiment": MessagingExperimentAction,
+    "multi-preference-experiment": PreferenceExperimentAction,
+    "preference-rollback": PreferenceRollbackAction,
+    "preference-rollout": PreferenceRolloutAction,
+    "show-heartbeat": ShowHeartbeatAction,
+  };
+
   static getCapabilities() {
     // Prefix each action name with "action." to turn it into a capability name.
     let capabilities = new Set();
-    for (const actionName of Object.keys(actionConstructors)) {
+    for (const actionName of Object.keys(ActionsManager.actionConstructors)) {
       capabilities.add(`action.${actionName}`);
     }
     return capabilities;
