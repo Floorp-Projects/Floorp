@@ -216,7 +216,7 @@ yaml:
     treeherder:
         symbol: pedantic(yaml)
     run:
-        mach: lint -v -l yaml -f treeherder -f json:/builds/worker/mozlint.json
+        mach: lint -v -l yaml -f treeherder -f json:/builds/worker/mozlint.json *
     when:
         files-changed:
             - '**/*.yml'
