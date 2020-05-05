@@ -349,7 +349,7 @@ void PerformanceMainThread::GetEntries(
     return;
   }
 
-  aRetval = mResourceEntries;
+  aRetval = mResourceEntries.Clone();
   aRetval.AppendElements(mUserEntries);
 
   if (mDocEntry) {
