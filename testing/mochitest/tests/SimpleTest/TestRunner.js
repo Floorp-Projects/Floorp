@@ -473,6 +473,7 @@ TestRunner.runNextTest = function() {
 
     $("current-test-path").innerHTML = url;
 
+    TestRunner._currentTestStartTimestamp = SpecialPowers.Cu.now();
     TestRunner._currentTestStartTime = new Date().valueOf();
     TestRunner._timeoutFactor = 1;
     TestRunner._expectedMinAsserts = 0;
@@ -671,6 +672,11 @@ TestRunner.testFinished = function(tests) {
         result = result != "CRASH" ? "ERROR" : result;
       }
 
+      SpecialPowers.addProfilerMarker(
+        "TestRunner",
+        TestRunner._currentTestStartTimestamp,
+        TestRunner.currentTestURL
+      );
       var runtime = new Date().valueOf() - TestRunner._currentTestStartTime;
 
       TestRunner.structuredLogger.testEnd(

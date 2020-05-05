@@ -665,6 +665,10 @@ class SpecialPowersChild extends JSWindowActorChild {
     return WrapPrivileged.wrap(this.getFullComponents().results);
   }
 
+  get addProfilerMarker() {
+    return ChromeUtils.addProfilerMarker;
+  }
+
   getDOMWindowUtils(aWindow) {
     if (aWindow == this.contentWindow && this.DOMWindowUtils != null) {
       return this.DOMWindowUtils;
