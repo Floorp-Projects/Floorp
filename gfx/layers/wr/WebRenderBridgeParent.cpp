@@ -1673,8 +1673,7 @@ bool WebRenderBridgeParent::ProcessWebRenderParentCommands(
           return false;
         }
         if (data.animations().Length()) {
-          mAnimStorage->SetAnimations(data.id(), data.animations(),
-                                      RenderRootForExternal(aRenderRoot));
+          mAnimStorage->SetAnimations(data.id(), data.animations());
           const auto activeAnim = mActiveAnimations.find(data.id());
           if (activeAnim == mActiveAnimations.end()) {
             mActiveAnimations.emplace(data.id(), mWrEpoch);
@@ -2304,21 +2303,18 @@ bool WebRenderBridgeParent::SampleAnimations(WrAnimations& aAnimations) {
     for (auto iter = mAnimStorage->ConstAnimatedValueTableIter(); !iter.Done();
          iter.Next()) {
       AnimatedValue* value = iter.UserData();
-      wr::RenderRoot renderRoot = mAnimStorage->AnimationRenderRoot(iter.Key());
       value->Value().match(
           [&](const AnimationTransform& aTransform) {
-            auto& transformArray = aAnimations.mTransformArrays[renderRoot];
-            transformArray.AppendElement(wr::ToWrTransformProperty(
-                iter.Key(), aTransform.mTransformInDevSpace));
+            aAnimations.mTransformArrays.AppendElement(
+                wr::ToWrTransformProperty(iter.Key(),
+                                          aTransform.mTransformInDevSpace));
           },
           [&](const float& aOpacity) {
-            auto& opacityArray = aAnimations.mOpacityArrays[renderRoot];
-            opacityArray.AppendElement(
+            aAnimations.mOpacityArrays.AppendElement(
                 wr::ToWrOpacityProperty(iter.Key(), aOpacity));
           },
           [&](const nscolor& aColor) {
-            auto& colorArray = aAnimations.mColorArrays[renderRoot];
-            colorArray.AppendElement(wr::ToWrColorProperty(
+            aAnimations.mColorArrays.AppendElement(wr::ToWrColorProperty(
                 iter.Key(), ToDeviceColor(gfx::sRGBColor::FromABGR(aColor))));
           });
     }
@@ -2455,16 +2451,9 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
   }
   // We do this even if the arrays are empty, because it will clear out any
   // previous properties store on the WR side, which is desirable.
-  for (auto& api : mApis) {
-    if (!api) {
-      continue;
-    }
-    auto renderRoot = api->GetRenderRoot();
-    fastTxns[renderRoot]->UpdateDynamicProperties(
-        animations.mOpacityArrays[renderRoot],
-        animations.mTransformArrays[renderRoot],
-        animations.mColorArrays[renderRoot]);
-  }
+  fastTxns[wr::RenderRoot::Default]->UpdateDynamicProperties(
+      animations.mOpacityArrays, animations.mTransformArrays,
+      animations.mColorArrays);
 
   SetAPZSampleTime();
 

@@ -488,9 +488,9 @@ class WebRenderBridgeParent final
   bool AdvanceAnimations();
 
   struct WrAnimations {
-    wr::RenderRootArray<nsTArray<wr::WrOpacityProperty>> mOpacityArrays;
-    wr::RenderRootArray<nsTArray<wr::WrTransformProperty>> mTransformArrays;
-    wr::RenderRootArray<nsTArray<wr::WrColorProperty>> mColorArrays;
+    nsTArray<wr::WrOpacityProperty> mOpacityArrays;
+    nsTArray<wr::WrTransformProperty> mTransformArrays;
+    nsTArray<wr::WrColorProperty> mColorArrays;
   };
   bool SampleAnimations(WrAnimations& aAnimations);
 
