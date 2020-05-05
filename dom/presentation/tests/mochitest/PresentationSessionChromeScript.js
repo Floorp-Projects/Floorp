@@ -85,7 +85,7 @@ const mockedServerSocket = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIServerSocket, Ci.nsIFactory]),
   createInstance(aOuter, aIID) {
     if (aOuter) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
+      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
     }
     return this.QueryInterface(aIID);
   },
@@ -227,7 +227,7 @@ const mockedDevicePrompt = {
   ]),
   createInstance(aOuter, aIID) {
     if (aOuter) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
+      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
     }
     return this.QueryInterface(aIID);
   },
@@ -260,7 +260,7 @@ const mockedSessionTransport = {
   ]),
   createInstance(aOuter, aIID) {
     if (aOuter) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
+      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
     }
     return this.QueryInterface(aIID);
   },
@@ -362,7 +362,7 @@ const mockedNetworkManager = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsINetworkManager, Ci.nsIFactory]),
   createInstance(aOuter, aIID) {
     if (aOuter) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
+      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
     }
     return this.QueryInterface(aIID);
   },
@@ -380,7 +380,7 @@ const mockedRequestUIGlue = {
   ]),
   createInstance(aOuter, aIID) {
     if (aOuter) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
+      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
     }
     return this.QueryInterface(aIID);
   },

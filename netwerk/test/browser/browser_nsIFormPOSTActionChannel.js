@@ -44,7 +44,7 @@ CustomProtocolHandler.prototype = {
   /** nsIFactory */
   createInstance(aOuter, aIID) {
     if (aOuter) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
+      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
     }
     return this.QueryInterface(aIID);
   },
@@ -78,7 +78,7 @@ CustomChannel.prototype = {
     return this._uploadStream;
   },
   set uploadStream(val) {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
   setUploadStream(aStream, aContentType, aContentLength) {
     this._uploadStream = aStream;
@@ -105,10 +105,10 @@ CustomChannel.prototype = {
     return -1;
   },
   set contentLength(val) {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
   open() {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
   asyncOpen(aListener) {
     var data = `

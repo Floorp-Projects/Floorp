@@ -18,7 +18,7 @@ const kPromptServiceFactory = Cm.getClassObject(
 var fakePromptServiceFactory = {
   createInstance(aOuter, aIid) {
     if (aOuter != null) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
+      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
     }
     return promptService.QueryInterface(aIid);
   },

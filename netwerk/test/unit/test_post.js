@@ -44,7 +44,7 @@ var listenerCallback = {
     if (iid.equals(Ci.nsIProgressEventSink)) {
       return this;
     }
-    throw Cr.NS_ERROR_NO_INTERFACE;
+    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   },
 
   onProgress(request, progress, progressMax) {

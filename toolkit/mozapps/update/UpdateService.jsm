@@ -325,7 +325,7 @@ function closeHandle(handle) {
  */
 function createMutex(aName, aAllowExisting = true) {
   if (AppConstants.platform != "win") {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
   const INITIAL_OWN = 1;
@@ -366,7 +366,7 @@ function createMutex(aName, aAllowExisting = true) {
  */
 function getPerInstallationMutexName(aGlobal = true) {
   if (AppConstants.platform != "win") {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
   let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
@@ -1518,7 +1518,7 @@ function UpdatePatch(patch) {
       case "size":
         if (0 == parseInt(attr.value)) {
           LOG("UpdatePatch:init - 0-sized patch!");
-          throw Cr.NS_ERROR_ILLEGAL_VALUE;
+          throw Components.Exception("", Cr.NS_ERROR_ILLEGAL_VALUE);
         }
         this[attr.name] = attr.value;
         break;
@@ -1625,7 +1625,7 @@ UpdatePatch.prototype = {
     if (name in this._properties) {
       this._properties[name].present = false;
     } else {
-      throw Cr.NS_ERROR_FAILURE;
+      throw Components.Exception("", Cr.NS_ERROR_FAILURE);
     }
   },
 
@@ -1732,7 +1732,7 @@ function Update(update) {
   }
 
   if (!this._patches.length && !update.hasAttribute("unsupported")) {
-    throw Cr.NS_ERROR_ILLEGAL_VALUE;
+    throw Components.Exception("", Cr.NS_ERROR_ILLEGAL_VALUE);
   }
 
   // Set the installDate value with the current time. If the update has an
@@ -1995,7 +1995,7 @@ Update.prototype = {
     if (name in this._properties) {
       this._properties[name].present = false;
     } else {
-      throw Cr.NS_ERROR_FAILURE;
+      throw Components.Exception("", Cr.NS_ERROR_FAILURE);
     }
   },
 
@@ -2061,7 +2061,7 @@ const UpdateServiceFactory = {
   _instance: null,
   createInstance(outer, iid) {
     if (outer != null) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
+      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
     }
     return this._instance == null
       ? (this._instance = new UpdateService())
@@ -3186,7 +3186,7 @@ UpdateService.prototype = {
    */
   downloadUpdate: function AUS_downloadUpdate(update, background) {
     if (!update) {
-      throw Cr.NS_ERROR_NULL_POINTER;
+      throw Components.Exception("", Cr.NS_ERROR_NULL_POINTER);
     }
 
     // Don't download the update if the update's version is less than the
@@ -3896,7 +3896,7 @@ Checker.prototype = {
     LOG("Checker: checkForUpdates, force: " + force);
     gUpdateFileWriteInfo = { phase: "check", failure: false };
     if (!listener) {
-      throw Cr.NS_ERROR_NULL_POINTER;
+      throw Components.Exception("", Cr.NS_ERROR_NULL_POINTER);
     }
 
     let UpdateServiceInstance = UpdateServiceFactory.createInstance();
@@ -4473,7 +4473,7 @@ Downloader.prototype = {
     gUpdateFileWriteInfo = { phase: "download", failure: false };
     if (!update) {
       AUSTLMY.pingDownloadCode(undefined, AUSTLMY.DWNLD_ERR_NO_UPDATE);
-      throw Cr.NS_ERROR_NULL_POINTER;
+      throw Components.Exception("", Cr.NS_ERROR_NULL_POINTER);
     }
 
     var updateDir = getUpdatesDir();
@@ -5361,7 +5361,7 @@ Downloader.prototype = {
       ].createInstance();
       return prompt.QueryInterface(iid);
     }
-    throw Cr.NS_NOINTERFACE;
+    throw Components.Exception("", Cr.NS_NOINTERFACE);
   },
 
   QueryInterface: ChromeUtils.generateQI([

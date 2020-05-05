@@ -28,7 +28,7 @@ var observer = {
     if (aIID.equals(Ci.nsISupports) ||
         aIID.equals(Ci.nsIObserver))
       return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
+    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   },
 
   observe(subject, topic, data) {

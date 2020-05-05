@@ -20,7 +20,7 @@ function loadFile(aUriSpec) {
   enablePrivilege("UniversalXPConnect");
   var serv = Cc[IOSERVICE_CTRID].getService(nsIIOService);
   if (!serv) {
-    throw Cr.ERR_FAILURE;
+    throw Components.Exception("", Cr.ERR_FAILURE);
   }
   var chan = NetUtil.newChannel({
     uri: aUriSpec,

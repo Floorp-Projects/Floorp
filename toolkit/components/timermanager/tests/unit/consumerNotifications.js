@@ -169,7 +169,7 @@ const gTest0Factory = {
     if (aOuter == null) {
       return gTest0TimerCallback.QueryInterface(aIID);
     }
-    throw Cr.NS_ERROR_NO_AGGREGATION;
+    throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
   },
 };
 
@@ -187,7 +187,7 @@ const gTest1Factory = {
     if (aOuter == null) {
       return gTest1TimerCallback.QueryInterface(aIID);
     }
-    throw Cr.NS_ERROR_NO_AGGREGATION;
+    throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
   },
 };
 
@@ -205,7 +205,7 @@ const gTest2Factory = {
     if (aOuter == null) {
       return gTest2TimerCallback.QueryInterface(aIID);
     }
-    throw Cr.NS_ERROR_NO_AGGREGATION;
+    throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
   },
 };
 
@@ -218,7 +218,7 @@ const gTest3Factory = {
     if (aOuter == null) {
       return gTest3TimerCallback.QueryInterface(aIID);
     }
-    throw Cr.NS_ERROR_NO_AGGREGATION;
+    throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
   },
 };
 
@@ -236,7 +236,7 @@ const gTest4Factory = {
     if (aOuter == null) {
       return gTest4TimerCallback.QueryInterface(aIID);
     }
-    throw Cr.NS_ERROR_NO_AGGREGATION;
+    throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
   },
 };
 
@@ -254,7 +254,7 @@ const gTest5Factory = {
     if (aOuter == null) {
       return gTest5TimerCallback.QueryInterface(aIID);
     }
-    throw Cr.NS_ERROR_NO_AGGREGATION;
+    throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
   },
 };
 
@@ -272,7 +272,7 @@ const gTest6Factory = {
     if (aOuter == null) {
       return gTest6TimerCallback.QueryInterface(aIID);
     }
-    throw Cr.NS_ERROR_NO_AGGREGATION;
+    throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
   },
 };
 
@@ -290,7 +290,7 @@ const gTest7Factory = {
     if (aOuter == null) {
       return gTest7TimerCallback.QueryInterface(aIID);
     }
-    throw Cr.NS_ERROR_NO_AGGREGATION;
+    throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
   },
 };
 
@@ -310,7 +310,7 @@ const gTest8Factory = {
     if (aOuter == null) {
       return gTest8TimerCallback.QueryInterface(aIID);
     }
-    throw Cr.NS_ERROR_NO_AGGREGATION;
+    throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
   },
 };
 
@@ -339,7 +339,7 @@ const gTest9Factory = {
     if (aOuter == null) {
       return gTest9TimerCallback.QueryInterface(aIID);
     }
-    throw Cr.NS_ERROR_NO_AGGREGATION;
+    throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
   },
 };
 

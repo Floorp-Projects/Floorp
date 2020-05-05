@@ -62,12 +62,12 @@ PresentationTransportBuilder.prototype = {
   buildDataChannelTransport(aRole, aWindow, aListener) {
     if (!aRole || !aWindow || !aListener) {
       log("buildDataChannelTransport with illegal parameters");
-      throw Cr.NS_ERROR_ILLEGAL_VALUE;
+      throw Components.Exception("", Cr.NS_ERROR_ILLEGAL_VALUE);
     }
 
     if (this._window) {
       log("buildDataChannelTransport has started.");
-      throw Cr.NS_ERROR_UNEXPECTED;
+      throw Components.Exception("", Cr.NS_ERROR_UNEXPECTED);
     }
 
     log("buildDataChannelTransport with role " + aRole);
@@ -122,7 +122,7 @@ PresentationTransportBuilder.prototype = {
         };
         break;
       default:
-        throw Cr.NS_ERROR_ILLEGAL_VALUE;
+        throw Components.Exception("", Cr.NS_ERROR_ILLEGAL_VALUE);
     }
 
     // TODO bug 1228235 we should have a way to let device providers customize
@@ -333,7 +333,7 @@ PresentationTransport.prototype = {
 
   // nsIPresentationTransport
   get selfAddress() {
-    throw Cr.NS_ERROR_NOT_AVAILABLE;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_AVAILABLE);
   },
 
   get callback() {
@@ -373,7 +373,7 @@ PresentationTransport.prototype = {
     }
 
     if (!this._callback) {
-      throw Cr.NS_ERROR_NOT_AVAILABLE;
+      throw Components.Exception("", Cr.NS_ERROR_NOT_AVAILABLE);
     }
 
     this._enableDataNotification = true;
@@ -402,7 +402,7 @@ PresentationTransport.prototype = {
 
   _doNotifyData(aData) {
     if (!this._callback) {
-      throw Cr.NS_ERROR_NOT_AVAILABLE;
+      throw Components.Exception("", Cr.NS_ERROR_NOT_AVAILABLE);
     }
 
     if (aData instanceof this._window.Blob) {

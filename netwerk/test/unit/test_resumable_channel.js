@@ -51,7 +51,7 @@ Requestor.prototype = {
       return this.prompt2;
     }
 
-    throw Cr.NS_ERROR_NO_INTERFACE;
+    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   },
 
   prompt2: null,

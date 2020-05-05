@@ -66,7 +66,7 @@ var makeFakeAppDir = function() {
         return appD.clone();
       }
 
-      throw Cr.NS_ERROR_FAILURE;
+      throw Components.Exception("", Cr.NS_ERROR_FAILURE);
     },
 
     QueryInterace(iid) {
@@ -77,7 +77,7 @@ var makeFakeAppDir = function() {
         return this;
       }
 
-      throw Cr.NS_ERROR_NO_INTERFACE;
+      throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
     },
   };
 

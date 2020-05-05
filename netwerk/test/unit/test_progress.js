@@ -42,7 +42,7 @@ var progressCallback = {
     ) {
       return this;
     }
-    throw Cr.NS_ERROR_NO_INTERFACE;
+    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   },
 
   onStartRequest(request) {

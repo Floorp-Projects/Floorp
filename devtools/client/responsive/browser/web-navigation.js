@@ -120,10 +120,10 @@ BrowserElementWebNavigation.prototype = {
   // Bug 1233803 - accessing the sessionHistory of remote browsers should be
   // done in content scripts.
   get sessionHistory() {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
   set sessionHistory(value) {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
   _sendMessage(message, data) {
@@ -142,7 +142,7 @@ BrowserElementWebNavigation.prototype = {
   },
 
   swapBrowser(browser) {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
   copyStateFrom(otherWebNavigation) {

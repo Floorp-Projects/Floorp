@@ -1199,7 +1199,7 @@ var PlacesUtils = {
         break;
       }
       default:
-        throw Cr.NS_ERROR_INVALID_ARG;
+        throw Components.Exception("", Cr.NS_ERROR_INVALID_ARG);
     }
     return nodes;
   },
@@ -1339,7 +1339,7 @@ var PlacesUtils = {
     aExpandQueries
   ) {
     if (!this.nodeIsContainer(aNode)) {
-      throw Cr.NS_ERROR_INVALID_ARG;
+      throw Components.Exception("", Cr.NS_ERROR_INVALID_ARG);
     }
 
     // excludeItems is inherited by child containers in an excludeItems view.

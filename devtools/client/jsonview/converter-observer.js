@@ -106,7 +106,7 @@ JsonViewSniffer.prototype = {
 const JsonSnifferFactory = {
   createInstance: function(outer, iid) {
     if (outer) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
+      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
     }
     return new JsonViewSniffer().QueryInterface(iid);
   },
@@ -120,7 +120,7 @@ const JsonSnifferFactory = {
 const JsonViewFactory = {
   createInstance: function(outer, iid) {
     if (outer) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
+      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
     }
     return JsonViewService.createInstance().QueryInterface(iid);
   },

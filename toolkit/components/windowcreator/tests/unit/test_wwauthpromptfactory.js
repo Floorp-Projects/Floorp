@@ -13,13 +13,13 @@ var TestPromptFactory = {
 
   createInstance: function tPF_ci(outer, iid) {
     if (outer) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
+      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
     }
     return this.QueryInterface(iid);
   },
 
   lockFactory: function tPF_lockf(lock) {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
   getPrompt: function tPF_getPrompt(aWindow, aIID) {
@@ -28,7 +28,7 @@ var TestPromptFactory = {
       return {};
     }
 
-    throw Cr.NS_ERROR_NO_INTERFACE;
+    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   },
 }; // end of TestPromptFactory implementation
 

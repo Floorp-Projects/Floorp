@@ -257,12 +257,12 @@ ChannelEventSink.prototype = {
     if (iid.equals(Ci.nsIChannelEventSink)) {
       return this;
     }
-    throw Cr.NS_ERROR_NO_INTERFACE;
+    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   },
 
   asyncOnChannelRedirect(oldChannel, newChannel, flags, callback) {
     if (this._flags & ES_ABORT_REDIRECT) {
-      throw Cr.NS_BINDING_ABORTED;
+      throw Components.Exception("", Cr.NS_BINDING_ABORTED);
     }
 
     callback.onRedirectVerifyCallback(Cr.NS_OK);

@@ -176,12 +176,12 @@ PushSubscription.prototype = {
 
   /** The last time a message was sent to this subscription. */
   get lastPush() {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
   /** The total number of messages sent to this subscription. */
   get pushCount() {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
   /**
@@ -203,7 +203,7 @@ PushSubscription.prototype = {
 
   /** The private key used to decrypt incoming push messages, in JWK format */
   get p256dhPrivateKey() {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
   /**

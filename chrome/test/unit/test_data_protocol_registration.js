@@ -30,7 +30,7 @@ function run_test() {
     contractID: XULAPPINFO_CONTRACTID,
     createInstance(outer, iid) {
       if (outer != null) {
-        throw Cr.NS_ERROR_NO_AGGREGATION;
+        throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
       }
       return XULAppInfo.QueryInterface(iid);
     },

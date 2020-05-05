@@ -24,11 +24,11 @@ amContentHandler.prototype = {
    */
   handleContent(aMimetype, aContext, aRequest) {
     if (aMimetype != XPI_CONTENT_TYPE) {
-      throw Cr.NS_ERROR_WONT_HANDLE_CONTENT;
+      throw Components.Exception("", Cr.NS_ERROR_WONT_HANDLE_CONTENT);
     }
 
     if (!(aRequest instanceof Ci.nsIChannel)) {
-      throw Cr.NS_ERROR_WONT_HANDLE_CONTENT;
+      throw Components.Exception("", Cr.NS_ERROR_WONT_HANDLE_CONTENT);
     }
 
     let uri = aRequest.URI;

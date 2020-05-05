@@ -37,7 +37,7 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
   }
 
   get _crypto() {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
   initialize() {
@@ -61,15 +61,15 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
     plaintextUsername = null,
     plaintextPassword = null
   ) {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
   removeLogin(login) {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
   modifyLogin(oldLogin, newLoginData) {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
   recordPasswordUse(login) {
@@ -77,7 +77,7 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
   }
 
   getAllLogins() {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
   /**
@@ -91,7 +91,7 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
       return [];
     }
 
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
   async searchLoginsAsync(matchData) {
@@ -187,14 +187,14 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
    * Use `searchLoginsAsync` instead.
    */
   searchLogins(matchData) {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
   /**
    * Removes all logins from storage.
    */
   removeAllLogins() {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
   get uiBusy() {

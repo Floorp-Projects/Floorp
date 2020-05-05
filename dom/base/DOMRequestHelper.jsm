@@ -82,7 +82,7 @@ DOMRequestIpcHelper.prototype = {
           this._listeners[name].count++;
           return;
         } else {
-          throw Cr.NS_ERROR_FAILURE;
+          throw Components.Exception("", Cr.NS_ERROR_FAILURE);
         }
       }
 
@@ -279,7 +279,7 @@ DOMRequestIpcHelper.prototype = {
       Cu.reportError(
         "DOMRequestHelper trying to create a DOMRequest without a valid window, failing."
       );
-      throw Cr.NS_ERROR_FAILURE;
+      throw Components.Exception("", Cr.NS_ERROR_FAILURE);
     }
     return Services.DOMRequest.createRequest(this._window);
   },
@@ -295,7 +295,7 @@ DOMRequestIpcHelper.prototype = {
       Cu.reportError(
         "DOMRequestHelper trying to create a Promise without a valid window, failing."
       );
-      throw Cr.NS_ERROR_FAILURE;
+      throw Components.Exception("", Cr.NS_ERROR_FAILURE);
     }
     return new this._window.Promise(aPromiseInit);
   },

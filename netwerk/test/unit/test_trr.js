@@ -215,7 +215,7 @@ class DNSListener {
     if (aIID.equals(Ci.nsIDNSListener) || aIID.equals(Ci.nsISupports)) {
       return this;
     }
-    throw Cr.NS_ERROR_NO_INTERFACE;
+    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   }
 
   // Implement then so we can await this as a promise.

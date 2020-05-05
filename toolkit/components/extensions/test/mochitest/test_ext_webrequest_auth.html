@@ -81,7 +81,7 @@ add_task(async function test_webRequest_auth_nonblocking_forwardAuthProvider() {
         getInterface: ChromeUtils.generateQI([Ci.nsIAuthPromptProvider,
                                               Ci.nsIAuthPrompt2]),
         promptAuth(channel, level, authInfo) {
-          throw Cr.NS_ERROR_NO_INTERFACE;
+          throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
         },
         getAuthPrompt(reason, iid) {
           return this;
@@ -140,7 +140,7 @@ add_task(async function test_webRequest_auth_nonblocking_forwardAuthPrompt2() {
                                                 Ci.nsIAuthPrompt2]),
         getInterface: ChromeUtils.generateQI([Ci.nsIAuthPrompt2]),
         promptAuth(request, level, authInfo) {
-          throw Cr.NS_ERROR_NO_INTERFACE;
+          throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
         },
         asyncPromptAuth(request, callback, context, level, authInfo) {
           // We just cancel here, we're only ensuring that non-webrequest

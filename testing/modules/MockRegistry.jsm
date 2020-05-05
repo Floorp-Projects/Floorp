@@ -50,7 +50,7 @@ class MockRegistry {
 
       get valueCount() {
         if (!this.values) {
-          throw Cr.NS_ERROR_FAILURE;
+          throw Components.Exception("", Cr.NS_ERROR_FAILURE);
         }
         return this.values.size;
       },
@@ -68,7 +68,7 @@ class MockRegistry {
 
       getValueName(index) {
         if (!this.values || index >= this.values.size) {
-          throw Cr.NS_ERROR_FAILURE;
+          throw Components.Exception("", Cr.NS_ERROR_FAILURE);
         }
         let names = Array.from(this.values.keys());
         return names[index];

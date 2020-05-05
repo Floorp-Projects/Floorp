@@ -221,7 +221,7 @@ setupPrototype(GlobalPCList, {
   _xpcom_factory: {
     createInstance(outer, iid) {
       if (outer) {
-        throw Cr.NS_ERROR_NO_AGGREGATION;
+        throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
       }
       return _globalPCList.QueryInterface(iid);
     },

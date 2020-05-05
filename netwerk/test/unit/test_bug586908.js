@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyGetter(this, "systemSettings", function() {
     mainThreadOnly: true,
     PACURI: "http://localhost:" + httpserv.identity.primaryPort + "/redirect",
     getProxyForURI(aURI) {
-      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+      throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
     },
   };
 });

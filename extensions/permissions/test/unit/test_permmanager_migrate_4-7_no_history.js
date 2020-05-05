@@ -13,7 +13,7 @@ var factory = {
     throw new Error("There is no history service");
   },
   lockFactory() {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
   QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory]),
 };

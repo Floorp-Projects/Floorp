@@ -41,12 +41,12 @@ let mockAlertsService = {
     if (aIID.equals(Ci.nsISupports) || aIID.equals(Ci.nsIAlertsService)) {
       return this;
     }
-    throw Cr.NS_ERROR_NO_INTERFACE;
+    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   },
 
   createInstance(aOuter, aIID) {
     if (aOuter != null) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
+      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
     }
     return this.QueryInterface(aIID);
   },
