@@ -57,15 +57,15 @@ class AppLinksInterceptor(
         isSameDomain: Boolean
     ): RequestInterceptor.InterceptionResponse? {
         val uriScheme = Uri.parse(uri).scheme
+        val engineSupportsScheme = engineSupportedSchemes.contains(uriScheme)
 
         val doNotIntercept = when {
             uriScheme == null -> true
             // If request not from user gesture or if we're already on the site,
             // and we're clicking around then let's not go to an external app.
-            (!hasUserGesture && engineSupportedSchemes.contains(uriScheme)) || isSameDomain -> true
+            (!hasUserGesture || isSameDomain) && engineSupportsScheme -> true
             // If scheme not in whitelist then follow user preference
-            (!interceptLinkClicks || !launchInApp()) &&
-                engineSupportedSchemes.contains(uriScheme) -> true
+            (!interceptLinkClicks || !launchInApp()) && engineSupportsScheme -> true
             // Never go to an external app when scheme is in blacklist
             alwaysDeniedSchemes.contains(uriScheme) -> true
             else -> false
@@ -76,7 +76,8 @@ class AppLinksInterceptor(
         }
 
         val redirect = useCases.interceptedAppLinkRedirect(uri)
-        val result = handleRedirect(redirect, uri, hasUserGesture)
+        val result = handleRedirect(redirect, uri)
+
         if (redirect.isRedirect()) {
             if (launchFromInterceptor && result is RequestInterceptor.InterceptionResponse.AppIntent) {
                 result.appIntent.flags = result.appIntent.flags or Intent.FLAG_ACTIVITY_NEW_TASK
@@ -94,8 +95,7 @@ class AppLinksInterceptor(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun handleRedirect(
         redirect: AppLinkRedirect,
-        uri: String,
-        hasUserGesture: Boolean
+        uri: String
     ): RequestInterceptor.InterceptionResponse? {
         if (!redirect.hasExternalApp()) {
             redirect.marketplaceIntent?.let {
@@ -109,7 +109,7 @@ class AppLinksInterceptor(
             return null
         }
 
-        if (!hasUserGesture || !launchInApp()) {
+        if (!launchInApp()) {
             redirect.fallbackUrl?.let {
                 return RequestInterceptor.InterceptionResponse.Url(it)
             }
