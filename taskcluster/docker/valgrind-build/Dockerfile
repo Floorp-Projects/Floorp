@@ -18,7 +18,7 @@ RUN apt-get install \
     libcairo2-dbg \
     libdbus-glib-1-2-dbg \
     libdrm2-dbg \
-    libffi5-dbg \
+    libffi6-dbg \
     libfontconfig1-dbg \
     libgl1-mesa-glx-dbg \
     libglapi-mesa-dbg \
@@ -26,8 +26,7 @@ RUN apt-get install \
     libgdk-pixbuf2.0-0-dbg \
     libgtk-3-0-dbg \
     libice6-dbg \
-    libicu48-dbg \
-    libjson0-dbg \
+    libicu52-dbg \
     libpango1.0-0-dbg \
     libpcre3-dbg \
     libpixman-1-0-dbg \
