@@ -108,7 +108,7 @@ mod tests {
         let mut a = false;
         {
             let a = FromRawArc::new(A(&mut a));
-            a.clone();
+            drop(a.clone());
             assert!(!*a.0);
         }
         assert!(a);
