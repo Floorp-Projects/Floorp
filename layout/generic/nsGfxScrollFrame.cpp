@@ -44,6 +44,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ScrollbarPreferences.h"
+#include "mozilla/ViewportUtils.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
@@ -3667,8 +3668,22 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         scrolledRectClipState.SetClippedToDisplayPort();
       }
 
+      nsRect visibleRectForChildren = visibleRect;
+      nsRect dirtyRectForChildren = dirtyRect;
+
+      // If we are entering the RCD-RSF, we are crossing the async zoom
+      // container boundary, and need to convert from visual to layout
+      // coordinates.
+      if (willBuildAsyncZoomContainer && aBuilder->IsForEventDelivery()) {
+        MOZ_ASSERT(ViewportUtils::IsZoomedContentRoot(mScrolledFrame));
+        visibleRectForChildren = ViewportUtils::VisualToLayout(
+            visibleRectForChildren, mOuter->PresShell());
+        dirtyRectForChildren = ViewportUtils::VisualToLayout(
+            dirtyRectForChildren, mOuter->PresShell());
+      }
+
       nsDisplayListBuilder::AutoBuildingDisplayList building(
-          aBuilder, mOuter, visibleRect, dirtyRect);
+          aBuilder, mOuter, visibleRectForChildren, dirtyRectForChildren);
 
       mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, set);
 
