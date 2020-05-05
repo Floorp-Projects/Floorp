@@ -432,88 +432,10 @@ class MacroAssemblerX86Shared : public Assembler {
   void compareFloat32x4(FloatRegister lhs, Operand rhs,
                         Assembler::Condition cond, FloatRegister output);
 
-  void addInt8x16(FloatRegister lhs, Operand rhs, FloatRegister output) {
-    vpaddb(rhs, lhs, output);
-  }
-  void addInt16x8(FloatRegister lhs, Operand rhs, FloatRegister output) {
-    vpaddw(rhs, lhs, output);
-  }
-  void addInt32x4(FloatRegister lhs, Operand rhs, FloatRegister output) {
-    vpaddd(rhs, lhs, output);
-  }
-  void addFloat32x4(FloatRegister lhs, Operand rhs, FloatRegister output) {
-    vaddps(rhs, lhs, output);
-  }
-
-  void addSatInt8x16(FloatRegister lhs, Operand rhs, SimdSign sign,
-                     FloatRegister output) {
-    if (sign == SimdSign::Signed) {
-      vpaddsb(rhs, lhs, output);
-    } else {
-      vpaddusb(rhs, lhs, output);
-    }
-  }
-  void addSatInt16x8(FloatRegister lhs, Operand rhs, SimdSign sign,
-                     FloatRegister output) {
-    if (sign == SimdSign::Signed) {
-      vpaddsw(rhs, lhs, output);
-    } else {
-      vpaddusw(rhs, lhs, output);
-    }
-  }
-
-  void subInt8x16(FloatRegister lhs, Operand rhs, FloatRegister output) {
-    vpsubb(rhs, lhs, output);
-  }
-  void subInt16x8(FloatRegister lhs, Operand rhs, FloatRegister output) {
-    vpsubw(rhs, lhs, output);
-  }
-  void subInt32x4(FloatRegister lhs, Operand rhs, FloatRegister output) {
-    vpsubd(rhs, lhs, output);
-  }
-  void subFloat32x4(FloatRegister lhs, Operand rhs, FloatRegister output) {
-    vsubps(rhs, lhs, output);
-  }
-
-  void subSatInt8x16(FloatRegister lhs, Operand rhs, SimdSign sign,
-                     FloatRegister output) {
-    if (sign == SimdSign::Signed) {
-      vpsubsb(rhs, lhs, output);
-    } else {
-      vpsubusb(rhs, lhs, output);
-    }
-  }
-  void subSatInt16x8(FloatRegister lhs, Operand rhs, SimdSign sign,
-                     FloatRegister output) {
-    if (sign == SimdSign::Signed) {
-      vpsubsw(rhs, lhs, output);
-    } else {
-      vpsubusw(rhs, lhs, output);
-    }
-  }
-
-  void mulInt16x8(FloatRegister lhs, Operand rhs, FloatRegister output) {
-    vpmullw(rhs, lhs, output);
-  }
   void mulInt32x4(FloatRegister lhs, Operand rhs,
                   const mozilla::Maybe<FloatRegister>& temp,
                   FloatRegister output);
-  void mulFloat32x4(FloatRegister lhs, Operand rhs, FloatRegister output) {
-    vmulps(rhs, lhs, output);
-  }
 
-  void negInt8x16(Operand in, FloatRegister out) {
-    zeroSimd128Int(out);
-    packedSubInt8(in, out);
-  }
-  void negInt16x8(Operand in, FloatRegister out) {
-    zeroSimd128Int(out);
-    packedSubInt16(in, out);
-  }
-  void negInt32x4(Operand in, FloatRegister out) {
-    zeroSimd128Int(out);
-    packedSubInt32(in, out);
-  }
   void negFloat32x4(Operand in, FloatRegister out);
 
   void notInt8x16(Operand in, FloatRegister out);
@@ -521,9 +443,6 @@ class MacroAssemblerX86Shared : public Assembler {
   void notInt32x4(Operand in, FloatRegister out);
   void notFloat32x4(Operand in, FloatRegister out);
 
-  void divFloat32x4(FloatRegister lhs, Operand rhs, FloatRegister output) {
-    vdivps(rhs, lhs, output);
-  }
   void minFloat32x4(FloatRegister lhs, Operand rhs, FloatRegister output);
   void maxFloat32x4(FloatRegister lhs, Operand rhs, FloatRegister temp,
                     FloatRegister output);
@@ -630,7 +549,6 @@ class MacroAssemblerX86Shared : public Assembler {
   void loadUnalignedSimd128Int(const Operand& src, FloatRegister dest) {
     vmovdqu(src, dest);
   }
-
   void storeUnalignedSimd128Int(FloatRegister src, const Address& dest) {
     vmovdqu(src, Operand(dest));
   }
@@ -674,9 +592,6 @@ class MacroAssemblerX86Shared : public Assembler {
                                            FloatRegister dest) {
     // TODO See comment above. See also bug 1068028.
     vrsqrtps(src, dest);
-  }
-  void packedSqrtFloat32x4(const Operand& src, FloatRegister dest) {
-    vsqrtps(src, dest);
   }
 
  public:
@@ -752,22 +667,10 @@ class MacroAssemblerX86Shared : public Assembler {
     loadAlignedSimd128Float(src, dest);
     return dest;
   }
-  void loadUnalignedSimd128Float(const Address& src, FloatRegister dest) {
-    vmovups(Operand(src), dest);
-  }
-  void loadUnalignedSimd128Float(const BaseIndex& src, FloatRegister dest) {
-    vmovdqu(Operand(src), dest);
-  }
-  void loadUnalignedSimd128Float(const Operand& src, FloatRegister dest) {
+  void loadUnalignedSimd128(const Operand& src, FloatRegister dest) {
     vmovups(src, dest);
   }
-  void storeUnalignedSimd128Float(FloatRegister src, const Address& dest) {
-    vmovups(src, Operand(dest));
-  }
-  void storeUnalignedSimd128Float(FloatRegister src, const BaseIndex& dest) {
-    vmovups(src, Operand(dest));
-  }
-  void storeUnalignedSimd128Float(FloatRegister src, const Operand& dest) {
+  void storeUnalignedSimd128(FloatRegister src, const Operand& dest) {
     vmovups(src, dest);
   }
   void packedAddFloat32(const Operand& src, FloatRegister dest) {
