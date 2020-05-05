@@ -2619,11 +2619,15 @@ Matrix4x4Flagged nsLayoutUtils::GetTransformToAncestor(
     nsIFrame** aOutAncestor) {
   nsIFrame* parent;
   Matrix4x4Flagged ctm;
+  // Make sure we don't get an invalid combination of source and destination
+  // RelativeTo values.
+  MOZ_ASSERT(!(aFrame.mViewportType == ViewportType::Visual &&
+               aAncestor.mViewportType == ViewportType::Layout));
   if (aFrame == aAncestor) {
     return ctm;
   }
-  ctm = ctm *
-        aFrame.mFrame->GetTransformMatrix(aAncestor.mFrame, &parent, aFlags);
+  ctm = aFrame.mFrame->GetTransformMatrix(aFrame.mViewportType, aAncestor,
+                                          &parent, aFlags);
   while (parent && parent != aAncestor.mFrame &&
          (!(aFlags & nsIFrame::STOP_AT_STACKING_CONTEXT_AND_DISPLAY_PORT) ||
           (!parent->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) &&
@@ -2631,7 +2635,8 @@ Matrix4x4Flagged nsLayoutUtils::GetTransformToAncestor(
     if (!parent->Extend3DContext()) {
       ctm.ProjectTo2D();
     }
-    ctm = ctm * parent->GetTransformMatrix(aAncestor.mFrame, &parent, aFlags);
+    ctm = ctm * parent->GetTransformMatrix(aFrame.mViewportType, aAncestor,
+                                           &parent, aFlags);
   }
   if (aOutAncestor) {
     *aOutAncestor = parent;
@@ -2660,7 +2665,8 @@ static Matrix4x4Flagged GetTransformToAncestorExcludingAnimated(
   if (ActiveLayerTracker::IsScaleSubjectToAnimation(aFrame)) {
     return ctm;
   }
-  ctm = aFrame->GetTransformMatrix(aAncestor, &parent);
+  ctm = aFrame->GetTransformMatrix(ViewportType::Layout, RelativeTo{aAncestor},
+                                   &parent);
   while (parent && parent != aAncestor) {
     if (ActiveLayerTracker::IsScaleSubjectToAnimation(parent)) {
       return Matrix4x4Flagged();
@@ -2668,7 +2674,8 @@ static Matrix4x4Flagged GetTransformToAncestorExcludingAnimated(
     if (!parent->Extend3DContext()) {
       ctm.ProjectTo2D();
     }
-    ctm = ctm * parent->GetTransformMatrix(aAncestor, &parent);
+    ctm = ctm * parent->GetTransformMatrix(ViewportType::Layout,
+                                           RelativeTo{aAncestor}, &parent);
   }
   return ctm;
 }
