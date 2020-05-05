@@ -11,7 +11,9 @@
           synthesizeKey("KEY_ArrowDown");
           // caret should now be at the start of the third line
           document.body.offsetHeight;
-          setTimeout(function(){ document.documentElement.removeAttribute("class"); },0);
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            document.documentElement.removeAttribute("class");
+          }));
         }
         function runTests() {
           document.querySelector('textarea').focus();
