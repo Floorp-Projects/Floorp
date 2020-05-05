@@ -3,23 +3,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
+import io
 from optparse import OptionParser
 import sys
 import re
 
 o = OptionParser()
-o.add_option("--buildid", dest="buildid")
-o.add_option("--version", dest="version")
+o.add_option('--buildid', dest='buildid')
+o.add_option('--version', dest='version')
 
 (options, args) = o.parse_args()
 
 if not options.buildid:
-    print >>sys.stderr, "--buildid is required"
+    print('--buildid is required', file=sys.stderr)
     sys.exit(1)
 
 if not options.version:
-    print >>sys.stderr, "--version is required"
+    print('--version is required', file=sys.stderr)
     sys.exit(1)
 
 # We want to build a version number that matches the format allowed for
@@ -28,7 +29,8 @@ if not options.version:
 # builds), but also so that newly-built older versions (e.g. beta build) aren't
 # considered "newer" than previously-built newer versions (e.g. a trunk nightly)
 
-define, MOZ_BUILDID, buildid = open(options.buildid, 'r').read().split()
+define, MOZ_BUILDID, buildid = io.open(
+    options.buildid, 'r', encoding='utf-8').read().split()
 
 # extract only the major version (i.e. "14" from "14.0b1")
 majorVersion = re.match(r'^(\d+)[^\d].*', options.version).group(1)
