@@ -33,7 +33,6 @@ UNSUPPORTED_FEATURES = set([
     "export-star-as-namespace-from-module",
     "Intl.DateTimeFormat-quarter",
     "Intl.DateTimeFormat-datetimestyle",
-    "Intl.DateTimeFormat-dayPeriod",
     "Intl.DateTimeFormat-formatRange",
     "Intl.DisplayNames",
     "Intl.Segmenter",
@@ -47,6 +46,7 @@ FEATURE_CHECK_NEEDED = {
 }
 RELEASE_OR_BETA = set([
     "Intl.DateTimeFormat-fractionalSecondDigits",
+    "Intl.DateTimeFormat-dayPeriod",
     "Promise.any",
     "AggregateError",
     "logical-assignment-operators",
