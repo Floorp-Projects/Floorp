@@ -1,0 +1,1 @@
+|jit-test| test-also=--wasm-simd; skip-if: !wasmSimdSupported()
