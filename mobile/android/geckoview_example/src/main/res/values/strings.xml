@@ -53,6 +53,7 @@
     <string name="key_tracking_protection">tracking_protection</string>
     <string name="key_autoplay">autoplay</string>
     <string name="key_remote_debugging">remote_debugging</string>
+    <string name="key_allow_extensions_in_private_browsing">allow_extensions_in_private_browsing</string>
     <string name="key_preferred_color_scheme">preferred_color_scheme</string>
     <string name="key_user_agent_override">user_agent_override</string>
 
