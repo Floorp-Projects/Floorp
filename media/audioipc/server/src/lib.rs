@@ -85,10 +85,7 @@ fn run() -> Result<ServerWrapper> {
 
     let core_thread =
         core::spawn_thread("AudioIPC Server RPC", move || Ok(()), || {}).or_else(|e| {
-            debug!(
-                "Failed to cubeb audio core event loop thread: {:?}",
-                e
-            );
+            debug!("Failed to cubeb audio core event loop thread: {:?}", e);
             Err(e)
         })?;
 
