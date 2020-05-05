@@ -489,22 +489,10 @@ class JSFunction : public js::NativeObject {
     return asyncKind() == js::FunctionAsyncKind::AsyncFunction;
   }
 
-  void initScript(JSScript* script) {
+  void initScript(js::BaseScript* script) {
     MOZ_ASSERT_IF(script, realm() == script->realm());
-
-    u.scripted.s.script_ = script;
-  }
-
-  void initLazyScript(js::BaseScript* lazy) {
     MOZ_ASSERT(isInterpreted());
-    u.scripted.s.script_ = lazy;
-  }
-
-  // Release the lazyScript() pointer while triggering barriers.
-  void clearLazyScript() {
-    js::BaseScript::writeBarrierPre(baseScript());
-    u.scripted.s.script_ = nullptr;
-    MOZ_ASSERT(isIncomplete());
+    u.scripted.s.script_ = script;
   }
 
   void initSelfHostedLazyScript(js::SelfHostedLazyScript* lazy) {

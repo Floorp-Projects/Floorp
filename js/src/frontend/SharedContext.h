@@ -514,9 +514,7 @@ class FunctionBox : public SharedContext {
     flags_.setFlags(FunctionFlags::BASESCRIPT, interpreted);
   }
 
-  void initLazyScript(BaseScript* script) {
-    function()->initLazyScript(script);
-  }
+  void initLazyScript(BaseScript* script) { function()->initScript(script); }
 
   FunctionFlags::FunctionKind kind() { return flags_.kind(); }
 

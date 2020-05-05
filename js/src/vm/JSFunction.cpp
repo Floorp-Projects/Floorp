@@ -1724,6 +1724,7 @@ void JSFunction::maybeRelazify(JSRuntime* rt) {
   }
 
   if (isSelfHostedBuiltin()) {
+    BaseScript::writeBarrierPre(script);
     initSelfHostedLazyScript(&rt->selfHostedLazyScript.ref());
   } else {
     script->relazify(rt);
@@ -2231,17 +2232,12 @@ JSFunction* js::CloneFunctionReuseScript(JSContext* cx, HandleFunction fun,
     return nullptr;
   }
 
-  if (fun->hasBytecode()) {
-    clone->initScript(fun->nonLazyScript());
-    clone->initEnvironment(enclosingEnv);
-  } else if (fun->hasBaseScript()) {
-    MOZ_ASSERT(fun->compartment() == clone->compartment());
-    BaseScript* lazy = fun->baseScript();
-    clone->initLazyScript(lazy);
+  if (fun->hasBaseScript()) {
+    BaseScript* base = fun->baseScript();
+    clone->initScript(base);
     clone->initEnvironment(enclosingEnv);
   } else {
     MOZ_ASSERT(fun->hasSelfHostedLazyScript());
-    MOZ_ASSERT(fun->compartment() == clone->compartment());
     SelfHostedLazyScript* lazy = fun->selfHostedLazyScript();
     clone->initSelfHostedLazyScript(lazy);
     clone->initEnvironment(enclosingEnv);
