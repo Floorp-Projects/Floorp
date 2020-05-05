@@ -34,8 +34,8 @@
 #elif defined(MOZ_WIDGET_ANDROID)
 #  define SPOOFED_UA_OS "Android 9; Mobile"
 #  define SPOOFED_APPVERSION "5.0 (Android 9)"
-#  define SPOOFED_OSCPU "Linux armv7l"
-#  define SPOOFED_PLATFORM "Linux armv7l"
+#  define SPOOFED_OSCPU "Linux aarch64"
+#  define SPOOFED_PLATFORM "Linux aarch64"
 #else
 // For Linux and other platforms, like BSDs, SunOS and etc, we will use Linux
 // platform.
