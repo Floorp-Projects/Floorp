@@ -13,6 +13,9 @@ const TEST_URL =
   "data:text/html;charset=UTF-8,<div>Debugger modules load test</div>";
 
 add_task(async function() {
+  // Disable randomly spawning processes during tests
+  await pushPref("dom.ipc.processPrelaunch.enabled", false);
+
   const toolbox = await openNewTabAndToolbox(TEST_URL, "jsdebugger");
   const toolboxBrowserLoader = toolbox.win.getBrowserLoaderForWindow();
 
