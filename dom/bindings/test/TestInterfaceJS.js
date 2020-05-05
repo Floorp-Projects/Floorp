@@ -125,6 +125,8 @@ TestInterfaceJS.prototype = {
   },
 
   testThrowNsresult() {
+    // This is explicitly testing preservation of raw thrown Crs in XPCJS
+    // eslint-disable-next-line mozilla/no-throw-cr-literal
     throw Cr.NS_BINDING_ABORTED;
   },
 
