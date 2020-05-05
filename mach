@@ -11,7 +11,6 @@
 # shell because `''':'`, `':'` and `:` are all equivalent, and `:` is a no-op.
 ''':'
 py2commands="
-    analyze
     android
     android-emulator
     awsy-test
