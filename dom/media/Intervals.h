@@ -252,7 +252,7 @@ class IntervalSet {
   IntervalSet() = default;
   virtual ~IntervalSet() = default;
 
-  IntervalSet(const SelfType& aOther) : mIntervals(aOther.mIntervals) {}
+  IntervalSet(const SelfType& aOther) : mIntervals(aOther.mIntervals.Clone()) {}
 
   IntervalSet(SelfType&& aOther) {
     mIntervals.AppendElements(std::move(aOther.mIntervals));
@@ -279,7 +279,7 @@ class IntervalSet {
   }
 
   SelfType& operator=(const SelfType& aOther) {
-    mIntervals = aOther.mIntervals;
+    mIntervals = aOther.mIntervals.Clone();
     return *this;
   }
 

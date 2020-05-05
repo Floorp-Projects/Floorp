@@ -340,8 +340,8 @@ GeckoMediaPluginServiceParent::GetContentParent(
       thread, __func__,
       [self = RefPtr<GeckoMediaPluginServiceParent>(this),
        nodeIdString = nsCString(aNodeIdString), api = nsCString(aAPI),
-       tags = nsTArray<nsCString>(aTags),
-       helper = RefPtr<GMPCrashHelper>(aHelper), holder = std::move(holder)](
+       tags = aTags.Clone(), helper = RefPtr<GMPCrashHelper>(aHelper),
+       holder = std::move(holder)](
           const GenericPromise::ResolveOrRejectValue& aValue) mutable -> void {
         if (aValue.IsReject()) {
           NS_WARNING("GMPService::EnsureInitialized failed.");

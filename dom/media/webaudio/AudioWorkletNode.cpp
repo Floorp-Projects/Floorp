@@ -55,7 +55,7 @@ class WorkletNodeEngine final : public AudioNodeEngine {
                     const Optional<Sequence<uint32_t>>& aOutputChannelCount)
       : AudioNodeEngine(aNode),
         mDestination(aDestinationNode->Track()),
-        mParamTimelines(aParamTimelines) {
+        mParamTimelines(std::move(aParamTimelines)) {
     if (aOutputChannelCount.WasPassed()) {
       mOutputChannelCount = aOutputChannelCount.Value();
     }

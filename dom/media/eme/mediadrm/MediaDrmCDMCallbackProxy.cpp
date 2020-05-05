@@ -48,7 +48,7 @@ void MediaDrmCDMCallbackProxy::SessionMessage(
     const nsTArray<uint8_t>& aMessage) {
   MOZ_ASSERT(NS_IsMainThread());
   // For removing constness
-  nsTArray<uint8_t> message(aMessage);
+  nsTArray<uint8_t> message(aMessage.Clone());
   mProxy->OnSessionMessage(NS_ConvertUTF8toUTF16(aSessionId), aMessageType,
                            message);
 }

@@ -539,20 +539,20 @@ class CryptoTrack {
         mSkipByteBlock(0) {}
   CryptoScheme mCryptoScheme;
   int32_t mIVSize;
-  nsTArray<uint8_t> mKeyId;
+  CopyableTArray<uint8_t> mKeyId;
   uint8_t mCryptByteBlock;
   uint8_t mSkipByteBlock;
-  nsTArray<uint8_t> mConstantIV;
+  CopyableTArray<uint8_t> mConstantIV;
 
   bool IsEncrypted() const { return mCryptoScheme != CryptoScheme::None; }
 };
 
 class CryptoSample : public CryptoTrack {
  public:
-  nsTArray<uint16_t> mPlainSizes;
-  nsTArray<uint32_t> mEncryptedSizes;
-  nsTArray<uint8_t> mIV;
-  nsTArray<nsTArray<uint8_t>> mInitDatas;
+  CopyableTArray<uint16_t> mPlainSizes;
+  CopyableTArray<uint32_t> mEncryptedSizes;
+  CopyableTArray<uint8_t> mIV;
+  CopyableTArray<CopyableTArray<uint8_t>> mInitDatas;
   nsString mInitDataType;
 };
 

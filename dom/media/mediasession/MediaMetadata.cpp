@@ -137,7 +137,8 @@ static nsresult ResolveURL(nsString& aURL, nsIURI* aBaseURI) {
 
 void MediaMetadata::SetArtworkInternal(const Sequence<MediaImage>& aArtwork,
                                        ErrorResult& aRv) {
-  nsTArray<MediaImage> artwork(aArtwork);
+  nsTArray<MediaImage> artwork;
+  artwork.Assign(aArtwork);
 
   nsCOMPtr<nsIURI> baseURI = GetEntryBaseURL();
   for (MediaImage& image : artwork) {
