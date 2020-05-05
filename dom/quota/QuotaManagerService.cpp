@@ -383,6 +383,30 @@ NS_IMPL_QUERY_INTERFACE(QuotaManagerService, nsIQuotaManagerService,
                         nsIObserver)
 
 NS_IMETHODIMP
+QuotaManagerService::StorageName(nsIQuotaRequest** _retval) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(nsContentUtils::IsCallerChrome());
+
+  if (NS_WARN_IF(!StaticPrefs::dom_quotaManager_testing())) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  RefPtr<Request> request = new Request();
+
+  StorageNameParams params;
+
+  RequestInfo info(request, params);
+
+  nsresult rv = InitiateRequest(info);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  request.forget(_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 QuotaManagerService::StorageInitialized(nsIQuotaRequest** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(nsContentUtils::IsCallerChrome());
