@@ -15,6 +15,7 @@ apps:
     environment:
       DISABLE_WAYLAND: 1
       HOME: "$SNAP_USER_COMMON"
+      GTK_USE_PORTAL: 1
     slots:
       - dbus-daemon
     plugs:
