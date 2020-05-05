@@ -6,6 +6,7 @@ package org.mozilla.fenix.ext
 
 import android.content.Context
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.MediaState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
@@ -19,10 +20,11 @@ fun Session.toTab(context: Context, selected: Boolean? = null): Tab =
     )
 
 fun Session.toTab(store: BrowserStore, publicSuffixList: PublicSuffixList, selected: Boolean? = null): Tab {
+    val url = store.state.findTab(this.id)?.readerState?.activeUrl ?: this.url
     return Tab(
         sessionId = this.id,
-        url = this.url,
-        hostname = this.url.toShortUrl(publicSuffixList),
+        url = url,
+        hostname = url.toShortUrl(publicSuffixList),
         title = this.title,
         selected = selected,
         icon = this.icon,
