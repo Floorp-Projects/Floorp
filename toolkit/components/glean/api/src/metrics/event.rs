@@ -89,7 +89,7 @@ impl<K: ExtraKeys> EventMetric<K> {
             .into()
             .map(|h| h.into_iter().map(|(k, v)| (k.index(), v)).collect());
 
-        crate::with_glean(|glean| self.inner.record(glean, now.as_u64(), extra))
+        crate::with_glean(|glean| self.inner.record(glean, now.as_millis(), extra))
     }
 
     /// **Test-only API.**
