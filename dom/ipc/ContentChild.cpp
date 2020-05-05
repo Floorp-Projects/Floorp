@@ -3542,7 +3542,8 @@ mozilla::ipc::IPCResult ContentChild::RecvUpdateMediaControlKeysEvent(
     return IPC_OK();
   }
 
-  MediaActionHandler::HandleMediaControlKeysEvent(aContext.get(), aEvent);
+  ContentMediaActionHandler::HandleMediaControlKeysEvent(aContext.get(),
+                                                         aEvent);
   return IPC_OK();
 }
 
