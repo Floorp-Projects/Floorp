@@ -1,18 +1,3 @@
-// Add |Intl.ListFormat| to the Intl object if not already present.
-function addIntlListFormat(global) {
-    if (!global.Intl.ListFormat && typeof global.addIntlExtras === "function") {
-        let obj = {};
-        global.addIntlExtras(obj);
-
-        Object.defineProperty(global.Intl, "ListFormat", {
-            value: obj.ListFormat,
-            writable: true, enumerable: false, configurable: true
-        });
-    }
-}
-
-addIntlListFormat(this);
-
 function GenericPartCreator(type) {
     return str => ({ type, value: str });
 }

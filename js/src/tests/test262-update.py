@@ -428,9 +428,6 @@ def process_test262(test262Dir, test262OutDir, strictTests, externManifests):
                                                                  "detachArrayBuffer.js", "nans.js"]
     explicitIncludes[os.path.join("built-ins", "TypedArrays")] = ["detachArrayBuffer.js"]
 
-    # Intl.ListFormat isn't yet enabled by default.
-    localIncludesMap[os.path.join("intl402")] = ["test262-intl-locale.js"]
-
     # Process all test directories recursively.
     for (dirPath, dirNames, fileNames) in os.walk(testDir):
         relPath = os.path.relpath(dirPath, testDir)

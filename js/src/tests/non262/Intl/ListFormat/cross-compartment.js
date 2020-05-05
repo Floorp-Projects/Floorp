@@ -1,7 +1,6 @@
-// |reftest| skip-if(!this.hasOwnProperty('Intl')||(!this.Intl.ListFormat&&!this.hasOwnProperty('addIntlExtras')))
+// |reftest| skip-if(!this.hasOwnProperty('Intl'))
 
 var g = newGlobal();
-addIntlListFormat(g);
 
 var locale = "en";
 var list = ["a", "b", "c"];
