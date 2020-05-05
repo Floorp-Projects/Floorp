@@ -41,7 +41,7 @@ using JS::Value;
 
 void InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script,
                                         AbstractFramePtr evalInFramePrev,
-                                        const Value& newTargetValue,
+                                        HandleValue newTargetValue,
                                         HandleObject envChain) {
   flags_ = 0;
   script_ = script;
@@ -417,7 +417,7 @@ InterpreterFrame* InterpreterStack::pushInvokeFrame(
 }
 
 InterpreterFrame* InterpreterStack::pushExecuteFrame(
-    JSContext* cx, HandleScript script, const Value& newTargetValue,
+    JSContext* cx, HandleScript script, HandleValue newTargetValue,
     HandleObject envChain, AbstractFramePtr evalInFrame) {
   LifoAlloc::Mark mark = allocator_.mark();
 
