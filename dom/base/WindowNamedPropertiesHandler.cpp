@@ -76,7 +76,19 @@ bool WindowNamedPropertiesHandler::getOwnPropDescriptor(
     JSContext* aCx, JS::Handle<JSObject*> aProxy, JS::Handle<jsid> aId,
     bool /* unused */, JS::MutableHandle<JS::PropertyDescriptor> aDesc) const {
   if (!JSID_IS_STRING(aId)) {
-    // Nothing to do if we're resolving a non-string property.
+    if (aId.isWellKnownSymbol(JS::SymbolCode::toStringTag)) {
+      JS::Rooted<JSString*> toStringTagStr(
+          aCx, JS_NewStringCopyZ(aCx, "WindowProperties"));
+      if (!toStringTagStr) {
+        return false;
+      }
+
+      JS::Rooted<JS::Value> v(aCx, JS::StringValue(toStringTagStr));
+      FillPropertyDescriptor(aDesc, aProxy, JSPROP_READONLY, v);
+      return true;
+    }
+
+    // Nothing to do if we're resolving another non-string property.
     return true;
   }
 
@@ -187,8 +199,13 @@ bool WindowNamedPropertiesHandler::ownPropNames(
   names.Clear();
   Document* doc = win->GetExtantDoc();
   if (!doc || !doc->IsHTMLOrXHTML()) {
-    return true;
+    // Define to @@toStringTag on this object to keep Object.prototype.toString
+    // backwards compatible.
+    JS::Rooted<jsid> toStringTagId(aCx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(
+                                            aCx, JS::SymbolCode::toStringTag)));
+    return aProps.append(toStringTagId);
   }
+
   nsHTMLDocument* document = doc->AsHTMLDocument();
   // Document names are enumerable, so we want to get them no matter what flags
   // is.
@@ -196,6 +213,12 @@ bool WindowNamedPropertiesHandler::ownPropNames(
 
   JS::RootedVector<jsid> docProps(aCx);
   if (!AppendNamedPropertyIds(aCx, aProxy, names, false, &docProps)) {
+    return false;
+  }
+
+  JS::Rooted<jsid> toStringTagId(aCx, SYMBOL_TO_JSID(JS::GetWellKnownSymbol(
+                                          aCx, JS::SymbolCode::toStringTag)));
+  if (!docProps.append(toStringTagId)) {
     return false;
   }
 
