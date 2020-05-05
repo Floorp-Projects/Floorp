@@ -157,8 +157,8 @@ void ClientManagerService::Shutdown() {
 
   // Begin destroying our various manager actors which will in turn destroy
   // all source, handle, and operation actors.
-  AutoTArray<ClientManagerParent*, 16> list(mManagerList);
-  for (auto actor : list) {
+  for (auto actor :
+       CopyableAutoTArray<ClientManagerParent*, 16>(mManagerList)) {
     Unused << PClientManagerParent::Send__delete__(actor);
   }
 }
@@ -386,7 +386,7 @@ class PromiseListHolder final {
 
   void MaybeFinish() {
     if (!mOutstandingPromiseCount) {
-      mResultPromise->Resolve(mResultList, __func__);
+      mResultPromise->Resolve(CopyableTArray(mResultList.Clone()), __func__);
     }
   }
 
