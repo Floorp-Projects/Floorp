@@ -43,6 +43,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/net/ChannelDiverterChild.h"
 #include "mozilla/net/DNS.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "SerializedLoadContext.h"
 #include "nsInputStreamPump.h"
 #include "InterceptedChannel.h"
@@ -3878,7 +3879,10 @@ bool HttpChannelChild::ShouldInterceptURI(nsIURI* aURI, bool& aShouldUpgrade) {
         this, getter_AddRefs(resultPrincipal));
   }
   OriginAttributes originAttributes;
-  NS_ENSURE_TRUE(NS_GetOriginAttributes(this, originAttributes), false);
+  NS_ENSURE_TRUE(
+      StoragePrincipalHelper::GetOriginAttributes(
+          this, originAttributes, StoragePrincipalHelper::eRegularPrincipal),
+      false);
   bool notused = false;
   nsresult rv = NS_ShouldSecureUpgrade(
       aURI, mLoadInfo, resultPrincipal, mPrivateBrowsing, mAllowSTS,

@@ -591,15 +591,6 @@ inline void NS_QueryNotificationCallbacks(nsIInterfaceRequestor* callbacks,
 bool NS_UsePrivateBrowsing(nsIChannel* channel);
 
 /**
- * Extract the OriginAttributes from the channel's triggering principal.
- * If aUsingStoragePrincipal is set to true, the originAttributes could have
- * first-party isolation domain set to the top-level URI.
- */
-bool NS_GetOriginAttributes(nsIChannel* aChannel,
-                            mozilla::OriginAttributes& aAttributes,
-                            bool aUsingStoragePrincipal = false);
-
-/**
  * Returns true if the channel has visited any cross-origin URLs on any
  * URLs that it was redirected through.
  */

@@ -19,6 +19,7 @@
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/InputStreamLengthHelper.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "HttpBackgroundChannelParent.h"
@@ -623,7 +624,8 @@ bool HttpChannelParent::DoAsyncOpen(
 
     if (setChooseApplicationCache) {
       OriginAttributes attrs;
-      NS_GetOriginAttributes(httpChannel, attrs);
+      StoragePrincipalHelper::GetOriginAttributes(
+          httpChannel, attrs, StoragePrincipalHelper::eRegularPrincipal);
 
       nsCOMPtr<nsIPrincipal> principal =
           BasePrincipal::CreateContentPrincipal(uri, attrs);
@@ -916,7 +918,8 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
           newHttpChannel->GetURI(getter_AddRefs(uri));
 
           OriginAttributes attrs;
-          NS_GetOriginAttributes(newHttpChannel, attrs);
+          StoragePrincipalHelper::GetOriginAttributes(
+              newHttpChannel, attrs, StoragePrincipalHelper::eRegularPrincipal);
 
           nsCOMPtr<nsIPrincipal> principal =
               BasePrincipal::CreateContentPrincipal(uri, attrs);

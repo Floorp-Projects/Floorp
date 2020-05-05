@@ -17,6 +17,7 @@
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/Telemetry.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsIEffectiveTLDService.h"
@@ -371,8 +372,8 @@ CookieService::GetCookieStringFromHttp(nsIURI* aHostURI, nsIChannel* aChannel,
       aChannel, false, aHostURI, nullptr, &rejectedReason);
 
   OriginAttributes attrs;
-  NS_GetOriginAttributes(aChannel, attrs,
-                         true /* considering storage principal */);
+  StoragePrincipalHelper::GetOriginAttributes(
+      aChannel, attrs, StoragePrincipalHelper::eStorageAccessPrincipal);
 
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
   bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, aHostURI);
@@ -442,8 +443,8 @@ nsresult CookieService::SetCookieStringCommon(nsIURI* aHostURI,
 
   OriginAttributes attrs;
   if (aChannel) {
-    NS_GetOriginAttributes(aChannel, attrs,
-                           true /* considering storage principal */);
+    StoragePrincipalHelper::GetOriginAttributes(
+        aChannel, attrs, StoragePrincipalHelper::eStorageAccessPrincipal);
   }
 
   nsCString cookieString(aCookieHeader);

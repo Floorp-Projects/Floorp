@@ -15,6 +15,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/nsCSPService.h"
+#include "mozilla/StoragePrincipalHelper.h"
 
 #include "nsHttp.h"
 #include "nsHttpChannel.h"
@@ -594,7 +595,8 @@ nsresult nsHttpChannel::OnBeforeConnect() {
         this, getter_AddRefs(resultPrincipal));
   }
   OriginAttributes originAttributes;
-  if (!NS_GetOriginAttributes(this, originAttributes)) {
+  if (!StoragePrincipalHelper::GetOriginAttributes(
+          this, originAttributes, StoragePrincipalHelper::eRegularPrincipal)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2209,7 +2211,8 @@ nsresult nsHttpChannel::ProcessSingleSecurityHeader(
     // Process header will now discard the headers itself if the channel
     // wasn't secure (whereas before it had to be checked manually)
     OriginAttributes originAttributes;
-    NS_GetOriginAttributes(this, originAttributes);
+    StoragePrincipalHelper::GetOriginAttributes(
+        this, originAttributes, StoragePrincipalHelper::eRegularPrincipal);
     uint32_t failureResult;
     uint32_t headerSource = nsISiteSecurityService::SOURCE_ORGANIC_REQUEST;
     rv = sss->ProcessHeader(aType, mURI, securityHeader, aSecInfo, aFlags,
@@ -2459,7 +2462,8 @@ void nsHttpChannel::ProcessAltService() {
   }
 
   OriginAttributes originAttributes;
-  NS_GetOriginAttributes(this, originAttributes);
+  StoragePrincipalHelper::GetOriginAttributes(
+      this, originAttributes, StoragePrincipalHelper::eRegularPrincipal);
 
   AltSvcMapping::ProcessHeader(
       altSvc, scheme, originHost, originPort, mUsername, GetTopWindowOrigin(),
@@ -6752,7 +6756,8 @@ nsresult nsHttpChannel::BeginConnect() {
   SetDoNotTrack();
 
   OriginAttributes originAttributes;
-  NS_GetOriginAttributes(this, originAttributes);
+  StoragePrincipalHelper::GetOriginAttributes(
+      this, originAttributes, StoragePrincipalHelper::eRegularPrincipal);
 
   RefPtr<nsHttpConnectionInfo> connInfo = new nsHttpConnectionInfo(
       host, port, EmptyCString(), mUsername, GetTopWindowOrigin(), proxyInfo,
@@ -6965,7 +6970,8 @@ nsresult nsHttpChannel::MaybeStartDNSPrefetch() {
 
   if (dnsStrategy & DNS_PREFETCH_ORIGIN) {
     OriginAttributes originAttributes;
-    NS_GetOriginAttributes(this, originAttributes);
+    StoragePrincipalHelper::GetOriginAttributes(
+        this, originAttributes, StoragePrincipalHelper::eRegularPrincipal);
 
     mDNSPrefetch = new nsDNSPrefetch(
         mURI, originAttributes, nsIRequest::GetTRRMode(), this, mTimingEnabled);
