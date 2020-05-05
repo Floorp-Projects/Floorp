@@ -346,7 +346,7 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
   // font list is rebuilt (e.g. due to a fontconfig configuration change),
   // these pointers will be invalidated. InitFontList() flushes the cache
   // in this case.
-  nsDataHashtable<nsCStringHashKey, nsTArray<FamilyAndGeneric>>
+  nsDataHashtable<nsCStringHashKey, CopyableTArray<FamilyAndGeneric>>
       mFcSubstituteCache;
 
   nsCOMPtr<nsITimer> mCheckFontUpdatesTimer;

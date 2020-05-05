@@ -1948,8 +1948,8 @@ bool gfxFontFamily::CheckForLegacyFamilyNames(gfxPlatformFontList* aFontList) {
   const uint32_t kNAME = TRUETYPE_TAG('n', 'a', 'm', 'e');
   // Make a local copy of the array of font faces, in case of changes
   // during the iteration.
-  AutoTArray<RefPtr<gfxFontEntry>, 8> faces(mAvailableFonts);
-  for (auto& fe : faces) {
+  for (auto& fe :
+       CopyableAutoTArray<RefPtr<gfxFontEntry>, 8>(mAvailableFonts)) {
     if (!fe) {
       continue;
     }
@@ -1982,13 +1982,11 @@ void gfxFontFamily::ReadFaceNames(gfxPlatformFontList* aPlatformFontList,
 
   if (!mOtherFamilyNamesInitialized && aFontInfoData &&
       aFontInfoData->mLoadOtherNames && !asyncFontLoaderDisabled) {
-    AutoTArray<nsCString, 4> otherFamilyNames;
-    bool foundOtherNames =
-        aFontInfoData->GetOtherFamilyNames(mName, otherFamilyNames);
-    if (foundOtherNames) {
-      uint32_t i, n = otherFamilyNames.Length();
+    const auto* otherFamilyNames = aFontInfoData->GetOtherFamilyNames(mName);
+    if (otherFamilyNames) {
+      uint32_t i, n = otherFamilyNames->Length();
       for (i = 0; i < n; i++) {
-        aPlatformFontList->AddOtherFamilyName(this, otherFamilyNames[i]);
+        aPlatformFontList->AddOtherFamilyName(this, (*otherFamilyNames)[i]);
       }
     }
     mOtherFamilyNamesInitialized = true;

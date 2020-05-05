@@ -1853,7 +1853,7 @@ void gfxFontUtils::GetVariationData(
                                        int32_t(coords[j]) / 65536.0f};
         instance.mValues.AppendElement(value);
       }
-      aInstances->AppendElement(instance);
+      aInstances->AppendElement(std::move(instance));
     }
   }
   if (aAxes) {

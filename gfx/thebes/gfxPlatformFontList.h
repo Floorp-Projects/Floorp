@@ -280,7 +280,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   // name lookup table methods
 
   void AddOtherFamilyName(gfxFontFamily* aFamilyEntry,
-                          nsCString& aOtherFamilyName);
+                          const nsCString& aOtherFamilyName);
 
   void AddFullname(gfxFontEntry* aFontEntry, const nsCString& aFullname);
 
