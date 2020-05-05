@@ -358,8 +358,7 @@ void APZUpdater::RunOnUpdaterThread(LayersId aLayersId,
       mUpdaterQueue.push_back(QueuedTask{aLayersId, task});
     }
     if (sendWakeMessage) {
-      RefPtr<wr::WebRenderAPI> api =
-          mApz->GetWebRenderAPI(wr::RenderRoot::Default);
+      RefPtr<wr::WebRenderAPI> api = mApz->GetWebRenderAPI();
       if (api) {
         api->WakeSceneBuilder();
       } else {

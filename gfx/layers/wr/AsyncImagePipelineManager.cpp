@@ -37,11 +37,11 @@ AsyncImagePipelineManager::AsyncImagePipeline::AsyncImagePipeline()
       mMixBlendMode(wr::MixBlendMode::Normal) {}
 
 AsyncImagePipelineManager::AsyncImagePipelineManager(
-    nsTArray<RefPtr<wr::WebRenderAPI>>&& aApis, bool aUseCompositorWnd)
-    : mApis(std::move(aApis)),
+    RefPtr<wr::WebRenderAPI>&& aApi, bool aUseCompositorWnd)
+    : mApi(aApi),
       mUseCompositorWnd(aUseCompositorWnd),
-      mIdNamespace(mApis[0]->GetNamespace()),
-      mUseTripleBuffering(mApis[0]->GetUseTripleBuffering()),
+      mIdNamespace(mApi->GetNamespace()),
+      mUseTripleBuffering(mApi->GetUseTripleBuffering()),
       mResourceId(0),
       mAsyncImageEpoch{0},
       mWillGenerateFrame{},
@@ -57,7 +57,7 @@ AsyncImagePipelineManager::~AsyncImagePipelineManager() {
 
 void AsyncImagePipelineManager::Destroy() {
   MOZ_ASSERT(!mDestroyed);
-  mApis.Clear();
+  mApi = nullptr;
   mPipelineTexturesHolders.Clear();
   mDestroyed = true;
 }
@@ -431,9 +431,8 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
   if (!pipeline) {
     return;
   }
-  wr::WebRenderAPI* api = mApis[(size_t)pipeline->mRenderRoot];
   wr::TransactionBuilder fastTxn(/* aUseSceneBuilderThread */ false);
-  wr::AutoTransactionSender sender(api, &fastTxn);
+  wr::AutoTransactionSender sender(mApi, &fastTxn);
 
   // Transaction for async image pipeline that uses ImageBridge always need to
   // be non low priority.
