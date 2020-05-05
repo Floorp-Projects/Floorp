@@ -652,6 +652,12 @@ var GeckoViewWebExtension = {
     return scope.extension;
   },
 
+  async installBuiltIn(aUri) {
+    const addon = await AddonManager.installBuiltinAddon(aUri.spec);
+    const exported = await exportExtension(addon, addon.userPermissions, aUri);
+    return { extension: exported };
+  },
+
   async installWebExtension(aInstallId, aUri) {
     const install = await AddonManager.getInstallForURL(aUri.spec, {
       telemetryInfo: {
@@ -945,8 +951,41 @@ var GeckoViewWebExtension = {
       }
 
       case "GeckoView:WebExtension:InstallBuiltIn": {
-        // TODO
-        aCallback.onError(`Not implemented`);
+        const { locationUri } = aData;
+        let uri;
+        try {
+          uri = Services.io.newURI(locationUri);
+        } catch (ex) {
+          aCallback.onError(
+            `Could not parse uri: ${locationUri}. Error: ${ex}`
+          );
+          return;
+        }
+
+        if (uri.scheme !== "resource" || uri.host !== "android") {
+          aCallback.onError(`Only resource://android/... URIs are allowed.`);
+          return;
+        }
+
+        if (uri.fileName !== "") {
+          aCallback.onError(
+            `This URI does not point to a folder. Note: folders URIs must end with a "/".`
+          );
+          return;
+        }
+
+        try {
+          const result = await this.installBuiltIn(uri);
+          if (result.extension) {
+            aCallback.onSuccess(result);
+          } else {
+            aCallback.onError(result);
+          }
+        } catch (ex) {
+          debug`Install exception error ${ex}`;
+          aCallback.onError(`Unexpected error: ${ex}`);
+        }
+
         break;
       }
 

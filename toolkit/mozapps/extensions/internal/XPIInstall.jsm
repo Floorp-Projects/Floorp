@@ -4262,8 +4262,9 @@ var XPIInstall = {
    *
    * @param  {string} base
    *         A string containing the base URL.  Must be a resource: URL.
-   * @returns {Promise}
-   *          A Promise that resolves when the addon is installed.
+   * @returns {Promise<Addon>}
+   *          A Promise that resolves to an Addon object when the addon is
+   *          installed.
    */
   async installBuiltinAddon(base) {
     if (lastLightweightTheme === null) {
@@ -4309,6 +4310,7 @@ var XPIInstall = {
       }
     }
     await this._activateAddon(addon);
+    return addon.wrapper;
   },
 
   /**
