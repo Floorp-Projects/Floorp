@@ -134,7 +134,8 @@ void CookieServiceChild::TrackCookieLoad(nsIChannel* aChannel) {
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
   OriginAttributes attrs = loadInfo->GetOriginAttributes();
-  StoragePrincipalHelper::PrepareOriginAttributes(aChannel, attrs);
+  StoragePrincipalHelper::PrepareEffectiveStoragePrincipalOriginAttributes(
+      aChannel, attrs);
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
   bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, uri);
   SendPrepareCookieList(
@@ -325,7 +326,8 @@ nsresult CookieServiceChild::SetCookieStringInternal(
 
     MOZ_ASSERT(loadInfo);
     attrs = loadInfo->GetOriginAttributes();
-    StoragePrincipalHelper::PrepareOriginAttributes(aChannel, attrs);
+    StoragePrincipalHelper::PrepareEffectiveStoragePrincipalOriginAttributes(
+        aChannel, attrs);
   }
 
   Maybe<LoadInfoArgs> optionalLoadInfoArgs;

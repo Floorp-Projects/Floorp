@@ -22,6 +22,7 @@
 #include "CacheObserver.h"
 #include "MainThreadUtils.h"
 #include "RequestContextService.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/Unused.h"
 
 namespace mozilla {
@@ -979,7 +980,8 @@ nsLoadGroup::Observe(nsISupports* aSubject, const char* aTopic,
                      const char16_t* aData) {
   MOZ_ASSERT(!strcmp(aTopic, "last-pb-context-exited"));
 
-  OriginAttributes attrs = nsContentUtils::GetOriginAttributes(this);
+  OriginAttributes attrs;
+  StoragePrincipalHelper::GetRegularPrincipalOriginAttributes(this, attrs);
   if (attrs.mPrivateBrowsingId == 0) {
     return NS_OK;
   }

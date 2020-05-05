@@ -14,6 +14,7 @@
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/StorageAccess.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "nsContentUtils.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsINetworkInterceptController.h"
@@ -126,7 +127,8 @@ nsresult WorkerLoadInfo::SetPrincipalsAndCSPOnMainThread(
 
   mPrincipalInfo = MakeUnique<PrincipalInfo>();
   mStoragePrincipalInfo = MakeUnique<PrincipalInfo>();
-  mOriginAttributes = nsContentUtils::GetOriginAttributes(aLoadGroup);
+  StoragePrincipalHelper::GetRegularPrincipalOriginAttributes(
+      aLoadGroup, mOriginAttributes);
 
   nsresult rv = PrincipalToPrincipalInfo(aPrincipal, mPrincipalInfo.get());
   NS_ENSURE_SUCCESS(rv, rv);

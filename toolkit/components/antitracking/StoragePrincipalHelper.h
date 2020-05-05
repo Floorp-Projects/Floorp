@@ -119,9 +119,14 @@
  */
 
 class nsIChannel;
+class nsILoadGroup;
 class nsIPrincipal;
 
 namespace mozilla {
+
+namespace dom {
+class Document;
+}
 
 namespace ipc {
 class PrincipalInfo;
@@ -134,12 +139,40 @@ class StoragePrincipalHelper final {
   static nsresult Create(nsIChannel* aChannel, nsIPrincipal* aPrincipal,
                          nsIPrincipal** aStoragePrincipal);
 
-  static nsresult PrepareOriginAttributes(nsIChannel* aChannel,
-                                          OriginAttributes& aOriginAttributes);
+  static nsresult PrepareEffectiveStoragePrincipalOriginAttributes(
+      nsIChannel* aChannel, OriginAttributes& aOriginAttributes);
 
   static bool VerifyValidStoragePrincipalInfoForPrincipalInfo(
       const mozilla::ipc::PrincipalInfo& aStoragePrincipalInfo,
       const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
+
+  enum PrincipalType {
+    // This is the first-party principal.
+    eRegularPrincipal,
+
+    // This is a dynamic principal based on the current state of the origin. If
+    // the origin has the storage permission granted, effective storagePrincipal
+    // will be the regular principal, otherwise, the intrinsic storagePrincipal
+    // will be used.
+    eStorageAccessPrincipal,
+
+    // This is the first-party principal, plus, First-party isolation attribute
+    // set.
+    ePartitionedPrincipal,
+  };
+
+  /**
+   * Extract the right OriginAttributes from the channel's triggering principal.
+   */
+  static bool GetOriginAttributes(nsIChannel* aChannel,
+                                  OriginAttributes& aAttributes,
+                                  PrincipalType aPrincipalType);
+
+  static bool GetRegularPrincipalOriginAttributes(
+      dom::Document* aDocument, OriginAttributes& aAttributes);
+
+  static bool GetRegularPrincipalOriginAttributes(
+      nsILoadGroup* aLoadGroup, OriginAttributes& aAttributes);
 };
 
 }  // namespace mozilla

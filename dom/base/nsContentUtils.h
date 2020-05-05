@@ -996,17 +996,6 @@ class nsContentUtils {
                                const char*** aArgNames);
 
   /**
-   * Returns origin attributes of the document.
-   **/
-  static mozilla::OriginAttributes GetOriginAttributes(Document* aDoc);
-
-  /**
-   * Returns origin attributes of the load group.
-   **/
-  static mozilla::OriginAttributes GetOriginAttributes(
-      nsILoadGroup* aLoadGroup);
-
-  /**
    * Returns true if this document is in a Private Browsing window.
    */
   static bool IsInPrivateBrowsing(Document* aDoc);
