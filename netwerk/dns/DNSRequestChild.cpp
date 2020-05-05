@@ -60,7 +60,7 @@ ChildDNSRecord::ChildDNSRecord(const DNSRecord& reply, uint16_t flags)
 
   // A shame IPDL gives us no way to grab ownership of array: so copy it.
   const nsTArray<NetAddr>& addrs = reply.addrs();
-  mAddresses = addrs.Clone();
+  mAddresses = addrs;
 }
 
 //-----------------------------------------------------------------------------
@@ -111,7 +111,7 @@ ChildDNSRecord::GetNextAddr(uint16_t port, NetAddr* addr) {
 
 NS_IMETHODIMP
 ChildDNSRecord::GetAddresses(nsTArray<NetAddr>& aAddressArray) {
-  aAddressArray = mAddresses.Clone();
+  aAddressArray = mAddresses;
   return NS_OK;
 }
 
@@ -203,11 +203,11 @@ ChildDNSByTypeRecord::GetType(uint32_t* aType) {
 }
 
 NS_IMETHODIMP
-ChildDNSByTypeRecord::GetRecords(CopyableTArray<nsCString>& aRecords) {
+ChildDNSByTypeRecord::GetRecords(nsTArray<nsCString>& aRecords) {
   if (!mResults.is<TypeRecordTxt>()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  aRecords = mResults.as<CopyableTArray<nsCString>>();
+  aRecords = mResults.as<nsTArray<nsCString>>();
   return NS_OK;
 }
 
@@ -217,7 +217,7 @@ ChildDNSByTypeRecord::GetRecordsAsOneString(nsACString& aRecords) {
   if (!mResults.is<TypeRecordTxt>()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  auto& results = mResults.as<CopyableTArray<nsCString>>();
+  auto& results = mResults.as<nsTArray<nsCString>>();
   for (uint32_t i = 0; i < results.Length(); i++) {
     aRecords.Append(results[i]);
   }

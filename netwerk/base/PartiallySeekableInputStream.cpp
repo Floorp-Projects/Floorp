@@ -58,7 +58,7 @@ PartiallySeekableInputStream::PartiallySeekableInputStream(
       mWeakAsyncInputStream(nullptr),
       mWeakInputStreamLength(nullptr),
       mWeakAsyncInputStreamLength(nullptr),
-      mCachedBuffer(aClonedFrom->mCachedBuffer.Clone()),
+      mCachedBuffer(aClonedFrom->mCachedBuffer),
       mBufferSize(aClonedFrom->mBufferSize),
       mPos(aClonedFrom->mPos),
       mClosed(aClonedFrom->mClosed),

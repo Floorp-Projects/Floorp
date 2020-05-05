@@ -237,12 +237,12 @@ bool OSPreferences::GetDateTimeConnectorPattern(const nsACString& aLocale,
 NS_IMETHODIMP
 OSPreferences::GetSystemLocales(nsTArray<nsCString>& aRetVal) {
   if (!mSystemLocales.IsEmpty()) {
-    aRetVal = mSystemLocales.Clone();
+    aRetVal = mSystemLocales;
     return NS_OK;
   }
 
   if (ReadSystemLocales(aRetVal)) {
-    mSystemLocales = aRetVal.Clone();
+    mSystemLocales = aRetVal;
     return NS_OK;
   }
 
@@ -270,12 +270,12 @@ OSPreferences::GetSystemLocale(nsACString& aRetVal) {
 NS_IMETHODIMP
 OSPreferences::GetRegionalPrefsLocales(nsTArray<nsCString>& aRetVal) {
   if (!mRegionalPrefsLocales.IsEmpty()) {
-    aRetVal = mRegionalPrefsLocales.Clone();
+    aRetVal = mRegionalPrefsLocales;
     return NS_OK;
   }
 
   if (ReadRegionalPrefsLocales(aRetVal)) {
-    mRegionalPrefsLocales = aRetVal.Clone();
+    mRegionalPrefsLocales = aRetVal;
     return NS_OK;
   }
 

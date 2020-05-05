@@ -209,7 +209,7 @@ static nsresult FindPinningInformation(
     if (found && (evalHost == hostname || includeSubdomains)) {
       MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
               ("pkpin: Found dyn match for host: '%s'\n", evalHost));
-      dynamicFingerprints = std::move(pinArray);
+      dynamicFingerprints = pinArray;
       return NS_OK;
     }
 

@@ -33,7 +33,7 @@ nsXPCTestParams::~nsXPCTestParams() = default;
 #define SEQUENCE_METHOD_IMPL(TAKE_OWNERSHIP)                        \
   {                                                                 \
     _retval.SwapElements(b);                                        \
-    b = a.Clone();                                                  \
+    b = a;                                                          \
     for (uint32_t i = 0; i < b.Length(); ++i) TAKE_OWNERSHIP(b[i]); \
     return NS_OK;                                                   \
   }
@@ -349,11 +349,7 @@ NS_IMETHODIMP
 nsXPCTestParams::TestSequenceSequence(const nsTArray<nsTArray<short>>& a,
                                       nsTArray<nsTArray<short>>& b,
                                       nsTArray<nsTArray<short>>& _retval) {
-  _retval = std::move(b);
-  for (const auto& element : a) {
-    b.AppendElement(element.Clone());
-  }
-  return NS_OK;
+  SEQUENCE_METHOD_IMPL(TAKE_OWNERSHIP_NOOP);
 }
 
 NS_IMETHODIMP
@@ -372,7 +368,7 @@ nsXPCTestParams::TestInterfaceIsSequence(const nsIID* aIID,
 NS_IMETHODIMP
 nsXPCTestParams::TestOptionalSequence(const nsTArray<uint8_t>& aInArr,
                                       nsTArray<uint8_t>& aReturnArr) {
-  aReturnArr = aInArr.Clone();
+  aReturnArr = aInArr;
   return NS_OK;
 }
 

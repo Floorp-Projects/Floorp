@@ -341,7 +341,8 @@ class RefreshDriverTimer {
       return;
     }
 
-    for (nsRefreshDriver* driver : aDrivers.Clone()) {
+    nsTArray<RefPtr<nsRefreshDriver>> drivers(aDrivers);
+    for (nsRefreshDriver* driver : drivers) {
       // don't poke this driver if it's in test mode
       if (driver->IsTestControllingRefreshesEnabled()) {
         continue;
@@ -978,7 +979,7 @@ class InactiveRefreshDriverTimer final
 
     mLastFireTime = now;
 
-    nsTArray<RefPtr<nsRefreshDriver>> drivers(mContentRefreshDrivers.Clone());
+    nsTArray<RefPtr<nsRefreshDriver>> drivers(mContentRefreshDrivers);
     drivers.AppendElements(mRootRefreshDrivers);
     size_t index = mNextDriverIndex;
 

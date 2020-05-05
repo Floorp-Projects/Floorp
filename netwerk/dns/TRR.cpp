@@ -950,7 +950,7 @@ nsresult TRR::DohDecode(nsCString& aHost) {
           }
 
           if (!mResult.is<TypeRecordTxt>()) {
-            mResult = AsVariant(CopyableTArray<nsCString>());
+            mResult = AsVariant(nsTArray<nsCString>());
           }
 
           {
@@ -1019,7 +1019,7 @@ nsresult TRR::DohDecode(nsCString& aHost) {
           }
 
           if (!mResult.is<TypeRecordHTTPSSVC>()) {
-            mResult = mozilla::AsVariant(CopyableTArray<SVCB>());
+            mResult = mozilla::AsVariant(nsTArray<SVCB>());
           }
           {
             auto& results = mResult.as<TypeRecordHTTPSSVC>();

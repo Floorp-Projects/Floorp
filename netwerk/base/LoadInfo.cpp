@@ -235,10 +235,9 @@ LoadInfo::LoadInfo(
     }
 
     mInnerWindowID = aLoadingContext->OwnerDoc()->InnerWindowID();
-    mAncestorPrincipals =
-        aLoadingContext->OwnerDoc()->AncestorPrincipals().Clone();
+    mAncestorPrincipals = aLoadingContext->OwnerDoc()->AncestorPrincipals();
     mAncestorOuterWindowIDs =
-        aLoadingContext->OwnerDoc()->AncestorOuterWindowIDs().Clone();
+        aLoadingContext->OwnerDoc()->AncestorOuterWindowIDs();
     MOZ_DIAGNOSTIC_ASSERT(mAncestorPrincipals.Length() ==
                           mAncestorOuterWindowIDs.Length());
     mDocumentHasUserInteracted =
@@ -597,8 +596,8 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
     ancestorOuterWindowIDs.AppendElement(ancestorWGP->OuterWindowId());
     ancestorBC = ancestorWGP->BrowsingContext();
   }
-  mAncestorPrincipals = std::move(ancestorPrincipals);
-  mAncestorOuterWindowIDs = std::move(ancestorOuterWindowIDs);
+  mAncestorPrincipals = ancestorPrincipals;
+  mAncestorOuterWindowIDs = ancestorOuterWindowIDs;
   MOZ_DIAGNOSTIC_ASSERT(mAncestorPrincipals.Length() ==
                         mAncestorOuterWindowIDs.Length());
 
@@ -760,11 +759,11 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mSendCSPViolationEvents(rhs.mSendCSPViolationEvents),
       mOriginAttributes(rhs.mOriginAttributes),
       mRedirectChainIncludingInternalRedirects(
-          rhs.mRedirectChainIncludingInternalRedirects.Clone()),
-      mRedirectChain(rhs.mRedirectChain.Clone()),
-      mAncestorPrincipals(rhs.mAncestorPrincipals.Clone()),
-      mAncestorOuterWindowIDs(rhs.mAncestorOuterWindowIDs.Clone()),
-      mCorsUnsafeHeaders(rhs.mCorsUnsafeHeaders.Clone()),
+          rhs.mRedirectChainIncludingInternalRedirects),
+      mRedirectChain(rhs.mRedirectChain),
+      mAncestorPrincipals(rhs.mAncestorPrincipals),
+      mAncestorOuterWindowIDs(rhs.mAncestorOuterWindowIDs),
+      mCorsUnsafeHeaders(rhs.mCorsUnsafeHeaders),
       mRequestBlockingReason(rhs.mRequestBlockingReason),
       mForcePreflight(rhs.mForcePreflight),
       mIsPreflight(rhs.mIsPreflight),
@@ -866,8 +865,8 @@ LoadInfo::LoadInfo(
       mSendCSPViolationEvents(aSendCSPViolationEvents),
       mOriginAttributes(aOriginAttributes),
       mAncestorPrincipals(std::move(aAncestorPrincipals)),
-      mAncestorOuterWindowIDs(aAncestorOuterWindowIDs.Clone()),
-      mCorsUnsafeHeaders(aCorsUnsafeHeaders.Clone()),
+      mAncestorOuterWindowIDs(aAncestorOuterWindowIDs),
+      mCorsUnsafeHeaders(aCorsUnsafeHeaders),
       mRequestBlockingReason(aRequestBlockingReason),
       mForcePreflight(aForcePreflight),
       mIsPreflight(aIsPreflight),
@@ -1562,7 +1561,7 @@ void LoadInfo::SetCorsPreflightInfo(const nsTArray<nsCString>& aHeaders,
                                     bool aForcePreflight) {
   MOZ_ASSERT(GetSecurityMode() == nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS);
   MOZ_ASSERT(!mInitialSecurityCheckDone);
-  mCorsUnsafeHeaders = aHeaders.Clone();
+  mCorsUnsafeHeaders = aHeaders;
   mForcePreflight = aForcePreflight;
 }
 
