@@ -81,9 +81,6 @@ class MOZ_RAII AutoAssertReportedException {
 #endif
 };
 
-static void UpdateSharedContextCreationFlags(CompilationInfo& compilationinfo,
-                                             SharedContext* sc);
-
 static bool EmplaceEmitter(CompilationInfo& compilationInfo,
                            Maybe<BytecodeEmitter>& emitter,
                            const EitherParser& parser, SharedContext* sc);
@@ -105,13 +102,8 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
   }
 
   // Call this before calling compile{Global,Eval}Script.
-  MOZ_MUST_USE bool prepareScriptParse(LifoAllocScope& allocScope,
-                                       CompilationInfo& compilationInfo,
-                                       SharedContext* sc) {
-    prepareSharedContextAllocationInfo(compilationInfo, sc);
-
-    return createSourceAndParser(allocScope, compilationInfo);
-  }
+  MOZ_MUST_USE bool createSourceAndParser(LifoAllocScope& allocScope,
+                                          CompilationInfo& compilationInfo);
 
   void assertSourceAndParserCreated(CompilationInfo& compilationInfo) const {
     MOZ_ASSERT(compilationInfo.sourceObject != nullptr);
@@ -128,17 +120,6 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
                                    SharedContext* sharedContext) {
     return EmplaceEmitter(compilationInfo, emitter, EitherParser(parser.ptr()),
                           sharedContext);
-  }
-
-  MOZ_MUST_USE bool createSourceAndParser(LifoAllocScope& allocScope,
-                                          CompilationInfo& compilationInfo);
-
-  // This assumes the created script's offsets in the source used to parse it
-  // are the same as are used to compute its Function.prototype.toString()
-  // value.
-  void prepareSharedContextAllocationInfo(CompilationInfo& compilationInfo,
-                                          SharedContext* sc) {
-    UpdateSharedContextCreationFlags(compilationInfo, sc);
   }
 
   bool canHandleParseFailure(CompilationInfo& compilationInfo,
@@ -168,11 +149,7 @@ class MOZ_STACK_CLASS frontend::ScriptCompiler
  public:
   explicit ScriptCompiler(SourceText<Unit>& srcBuf) : Base(srcBuf) {}
 
-  MOZ_MUST_USE bool prepareScriptParse(LifoAllocScope& allocScope,
-                                       CompilationInfo& compilationInfo,
-                                       SharedContext* sc) {
-    return Base::prepareScriptParse(allocScope, compilationInfo, sc);
-  }
+  using Base::createSourceAndParser;
 
   JSScript* compileScript(CompilationInfo& compilationInfo,
                           HandleObject environment, SharedContext* sc);
@@ -204,7 +181,7 @@ static JSScript* CreateGlobalScript(CompilationInfo& compilationInfo,
   LifoAllocScope allocScope(&compilationInfo.cx->tempLifoAlloc());
   frontend::ScriptCompiler<Unit> compiler(srcBuf);
 
-  if (!compiler.prepareScriptParse(allocScope, compilationInfo, &globalsc)) {
+  if (!compiler.createSourceAndParser(allocScope, compilationInfo)) {
     return nullptr;
   }
 
@@ -262,7 +239,7 @@ static JSScript* CreateEvalScript(CompilationInfo& compilationInfo,
   LifoAllocScope allocScope(&compilationInfo.cx->tempLifoAlloc());
 
   frontend::ScriptCompiler<Unit> compiler(srcBuf);
-  if (!compiler.prepareScriptParse(allocScope, compilationInfo, &evalsc)) {
+  if (!compiler.createSourceAndParser(allocScope, compilationInfo)) {
     return nullptr;
   }
 
@@ -294,7 +271,6 @@ class MOZ_STACK_CLASS frontend::ModuleCompiler final
   using Base::createSourceAndParser;
   using Base::emplaceEmitter;
   using Base::parser;
-  using Base::prepareSharedContextAllocationInfo;
 
  public:
   explicit ModuleCompiler(SourceText<Unit>& srcBuf) : Base(srcBuf) {}
@@ -309,7 +285,6 @@ class MOZ_STACK_CLASS frontend::StandaloneFunctionCompiler final
 
   using Base::assertSourceAndParserCreated;
   using Base::canHandleParseFailure;
-  using Base::createSourceAndParser;
   using Base::emplaceEmitter;
   using Base::handleParseFailure;
   using Base::parser;
@@ -321,10 +296,7 @@ class MOZ_STACK_CLASS frontend::StandaloneFunctionCompiler final
   explicit StandaloneFunctionCompiler(SourceText<Unit>& srcBuf)
       : Base(srcBuf) {}
 
-  MOZ_MUST_USE bool prepare(LifoAllocScope& allocScope,
-                            CompilationInfo& compilationInfo) {
-    return createSourceAndParser(allocScope, compilationInfo);
-  }
+  using Base::createSourceAndParser;
 
   FunctionNode* parse(CompilationInfo& compilationInfo, HandleFunction fun,
                       HandleScope enclosingScope, GeneratorKind generatorKind,
@@ -333,25 +305,6 @@ class MOZ_STACK_CLASS frontend::StandaloneFunctionCompiler final
 
   MOZ_MUST_USE bool compile(MutableHandleFunction fun, CompilationInfo& info,
                             FunctionNode* parsedFunction);
-
- private:
-  // Create a script for a function with the given toString offsets in source
-  // text.
-  void prepareFunctionAllocationInfo(CompilationInfo& compilationInfo,
-                                     FunctionBox* funbox) {
-    // The parser extent has stripped off the leading `function...` but
-    // we want the SourceExtent used in the final standalone script to
-    // start from the beginning of the buffer, and use the provided
-    // line and column.
-    SourceExtent extent{/* sourceStart = */ 0,
-                        sourceBuffer_.length(),
-                        funbox->extent.toStringStart,
-                        funbox->extent.toStringEnd,
-                        compilationInfo.options.lineno,
-                        compilationInfo.options.column};
-    funbox->scriptExtent.emplace(extent);
-    return UpdateSharedContextCreationFlags(compilationInfo, funbox);
-  }
 };
 
 AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx,
@@ -455,10 +408,6 @@ bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
   parser->ss = compilationInfo.sourceObject->source();
   return parser->checkOptions();
 }
-
-// Allocate a script for CompilationInfo for the given function or global
-static void UpdateSharedContextCreationFlags(CompilationInfo& compilationInfo,
-                                             SharedContext* sc) {}
 
 static bool EmplaceEmitter(CompilationInfo& compilationInfo,
                            Maybe<BytecodeEmitter>& emitter,
@@ -591,8 +540,6 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
   ModuleSharedContext modulesc(cx, module, compilationInfo, enclosingScope,
                                builder, extent);
 
-  prepareSharedContextAllocationInfo(compilationInfo, &modulesc);
-
   ParseNode* pn = parser->moduleBody(&modulesc);
   if (!pn) {
     return nullptr;
@@ -685,7 +632,17 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
   if (funbox->isInterpreted()) {
     MOZ_ASSERT(fun == funbox->function());
 
-    prepareFunctionAllocationInfo(compilationInfo, funbox);
+    // The parser extent has stripped off the leading `function...` but
+    // we want the SourceExtent used in the final standalone script to
+    // start from the beginning of the buffer, and use the provided
+    // line and column.
+    SourceExtent extent{/* sourceStart = */ 0,
+                        sourceBuffer_.length(),
+                        funbox->extent.toStringStart,
+                        funbox->extent.toStringEnd,
+                        compilationInfo.options.lineno,
+                        compilationInfo.options.column};
+    funbox->scriptExtent.emplace(extent);
 
     if (!parser->publishDeferredFunctions()) {
       return false;
@@ -1107,7 +1064,7 @@ static bool CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
   }
 
   StandaloneFunctionCompiler<char16_t> compiler(srcBuf);
-  if (!compiler.prepare(allocScope, compilationInfo)) {
+  if (!compiler.createSourceAndParser(allocScope, compilationInfo)) {
     return false;
   }
 
