@@ -5383,7 +5383,7 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoBase {
       : nsDisplayHitTestInfoBase(aBuilder, aOther),
         mListPtr(&mList),
         mFrameActiveScrolledRoot(aOther.mFrameActiveScrolledRoot),
-        mMergedFrames(aOther.mMergedFrames),
+        mMergedFrames(aOther.mMergedFrames.Clone()),
         mBounds(aOther.mBounds),
         mBaseBuildingRect(aOther.mBaseBuildingRect),
         mOverrideZIndex(aOther.mOverrideZIndex),
@@ -5567,7 +5567,7 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoBase {
     buildingRect.UnionRect(GetBuildingRect(), aOther->GetBuildingRect());
     SetBuildingRect(buildingRect);
     mMergedFrames.AppendElement(aOther->mFrame);
-    mMergedFrames.AppendElements(aOther->mMergedFrames);
+    mMergedFrames.AppendElements(aOther->mMergedFrames.Clone());
   }
 
   RetainedDisplayList mList;
@@ -6598,7 +6598,8 @@ class nsDisplayMasksAndClipPaths : public nsDisplayEffectsBase {
                              const ActiveScrolledRoot* aActiveScrolledRoot);
   nsDisplayMasksAndClipPaths(nsDisplayListBuilder* aBuilder,
                              const nsDisplayMasksAndClipPaths& aOther)
-      : nsDisplayEffectsBase(aBuilder, aOther), mDestRects(aOther.mDestRects) {
+      : nsDisplayEffectsBase(aBuilder, aOther),
+        mDestRects(aOther.mDestRects.Clone()) {
     MOZ_COUNT_CTOR(nsDisplayMasksAndClipPaths);
   }
 

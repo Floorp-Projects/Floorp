@@ -52,7 +52,8 @@ MaskLayerImageCache::MaskLayerImageKey::MaskLayerImageKey()
 
 MaskLayerImageCache::MaskLayerImageKey::MaskLayerImageKey(
     const MaskLayerImageKey& aKey)
-    : mRoundedClipRects(aKey.mRoundedClipRects), mLayerCount(aKey.mLayerCount) {
+    : mRoundedClipRects(aKey.mRoundedClipRects.Clone()),
+      mLayerCount(aKey.mLayerCount) {
   MOZ_COUNT_CTOR(MaskLayerImageKey);
 }
 

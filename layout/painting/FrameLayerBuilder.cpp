@@ -333,7 +333,7 @@ void DisplayItemData::BeginUpdate(Layer* aLayer, LayerState aState,
 
   // We avoid adding or removing element unnecessarily
   // since we have to modify userdata each time
-  AutoTArray<nsIFrame*, 4> copy(mFrameList);
+  CopyableAutoTArray<nsIFrame*, 4> copy(mFrameList);
   if (!copy.RemoveElement(aItem->Frame())) {
     AddFrame(aItem->Frame());
     mChangedFrameInvalidations.Or(mChangedFrameInvalidations,
@@ -5740,7 +5740,7 @@ void ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry) {
   // so add to it rather than overwriting it (we clear the list when recycling
   // a layer).
   nsTArray<RefPtr<Layer>> maskLayers(
-      aEntry->mLayer->GetAllAncestorMaskLayers());
+      aEntry->mLayer->GetAllAncestorMaskLayers().Clone());
 
   // Iterate over the ASR chain and create the corresponding scroll metadatas.
   // This loop is slightly tricky because the scrollframe-to-clip relationship
