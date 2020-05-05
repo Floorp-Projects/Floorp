@@ -86,6 +86,7 @@ public class WebExtension {
 
     private final static String LOGTAG = "WebExtension";
 
+    // Keep in sync with GeckoViewWebExtension.jsm
     public static class Flags {
         /*
          * Default flags for this WebExtension.
