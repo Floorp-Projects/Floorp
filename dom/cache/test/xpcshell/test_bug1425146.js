@@ -20,9 +20,7 @@
 //    the computation happens before any real DOM cache operation, the database
 //    is not upgraded to schema version 26, so the padding column is missing.
 
-async function run_test() {
-  do_test_pending();
-
+async function testSteps() {
   // The profile contains one cache storage, a script for cache creation and
   // the storage database:
   // - storage/default/http+++www.mozilla.org/cache
@@ -50,6 +48,4 @@ async function run_test() {
   } catch (ex) {
     ok(false, "Should not have thrown");
   }
-
-  do_test_finished();
 }
