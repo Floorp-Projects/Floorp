@@ -47,7 +47,7 @@ struct SvcParamIpv4Hint {
   bool operator==(const SvcParamIpv4Hint& aOther) const {
     return mValue == aOther.mValue;
   }
-  nsTArray<mozilla::net::NetAddr> mValue;
+  CopyableTArray<mozilla::net::NetAddr> mValue;
 };
 
 struct SvcParamEsniConfig {
@@ -61,7 +61,7 @@ struct SvcParamIpv6Hint {
   bool operator==(const SvcParamIpv6Hint& aOther) const {
     return mValue == aOther.mValue;
   }
-  nsTArray<mozilla::net::NetAddr> mValue;
+  CopyableTArray<mozilla::net::NetAddr> mValue;
 };
 
 using SvcParamType =
@@ -84,7 +84,7 @@ struct SVCB {
   }
   uint16_t mSvcFieldPriority = SvcParamKeyNone;
   nsCString mSvcDomainName;
-  nsTArray<SvcFieldValue> mSvcFieldValue;
+  CopyableTArray<SvcFieldValue> mSvcFieldValue;
 };
 
 class SVCBRecord : public nsISVCBRecord {

@@ -508,14 +508,14 @@ bool TypeHostRecord::HasUsableResultInternal() const {
   return !mResults.is<Nothing>();
 }
 
-NS_IMETHODIMP TypeHostRecord::GetRecords(nsTArray<nsCString>& aRecords) {
+NS_IMETHODIMP TypeHostRecord::GetRecords(CopyableTArray<nsCString>& aRecords) {
   // deep copy
   MutexAutoLock lock(mResultsLock);
 
   if (!mResults.is<TypeRecordTxt>()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  aRecords = mResults.as<nsTArray<nsCString>>();
+  aRecords = mResults.as<CopyableTArray<nsCString>>();
   return NS_OK;
 }
 
@@ -526,7 +526,7 @@ NS_IMETHODIMP TypeHostRecord::GetRecordsAsOneString(nsACString& aRecords) {
   if (!mResults.is<TypeRecordTxt>()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  auto& results = mResults.as<nsTArray<nsCString>>();
+  auto& results = mResults.as<CopyableTArray<nsCString>>();
   for (uint32_t i = 0; i < results.Length(); i++) {
     aRecords.Append(results[i]);
   }
@@ -2296,7 +2296,7 @@ void nsHostResolver::GetDNSCacheEntries(nsTArray<DNSCacheEntries>* args) {
       info.TRR = addrRec->addr_info->IsTRR();
     }
 
-    args->AppendElement(info);
+    args->AppendElement(std::move(info));
   }
 }
 
