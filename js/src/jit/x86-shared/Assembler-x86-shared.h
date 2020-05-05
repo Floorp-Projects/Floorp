@@ -245,9 +245,19 @@ class CPUInfo {
     maxEnabledSSEVersion = SSE2;
     avxEnabled = false;
   }
-  static void SetSSE4Disabled() {
+  static void SetSSSE3Disabled() {
+    reset();
+    maxEnabledSSEVersion = SSE3;
+    avxEnabled = false;
+  }
+  static void SetSSE41Disabled() {
     reset();
     maxEnabledSSEVersion = SSSE3;
+    avxEnabled = false;
+  }
+  static void SetSSE42Disabled() {
+    reset();
+    maxEnabledSSEVersion = SSE4_1;
     avxEnabled = false;
   }
   static void SetAVXEnabled() {
