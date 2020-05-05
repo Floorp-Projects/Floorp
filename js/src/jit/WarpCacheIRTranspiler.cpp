@@ -96,6 +96,9 @@ class MOZ_RAII WarpCacheIRTranspiler {
   MOZ_MUST_USE bool emitInt32BinaryArithResult(Int32OperandId lhsId,
                                                Int32OperandId rhsId);
 
+  MOZ_MUST_USE bool emitCompareResult(JSOp op, OperandId lhsId, OperandId rhsId,
+                                      MCompare::CompareType compareType);
+
   MInstruction* addBoundsCheck(MDefinition* index, MDefinition* length);
 
   CACHE_IR_TRANSPILER_GENERATED
@@ -588,18 +591,36 @@ bool WarpCacheIRTranspiler::emitInt32RightShiftResult(Int32OperandId lhsId,
   return emitInt32BinaryArithResult<MRsh>(lhsId, rhsId);
 }
 
-bool WarpCacheIRTranspiler::emitCompareInt32Result(JSOp op,
-                                                   Int32OperandId lhsId,
-                                                   Int32OperandId rhsId) {
+bool WarpCacheIRTranspiler::emitCompareResult(
+    JSOp op, OperandId lhsId, OperandId rhsId,
+    MCompare::CompareType compareType) {
   MDefinition* lhs = getOperand(lhsId);
   MDefinition* rhs = getOperand(rhsId);
 
   auto* ins = MCompare::New(alloc(), lhs, rhs, op);
-  ins->setCompareType(MCompare::Compare_Int32);
+  ins->setCompareType(compareType);
   add(ins);
 
   pushResult(ins);
   return true;
+}
+
+bool WarpCacheIRTranspiler::emitCompareInt32Result(JSOp op,
+                                                   Int32OperandId lhsId,
+                                                   Int32OperandId rhsId) {
+  return emitCompareResult(op, lhsId, rhsId, MCompare::Compare_Int32);
+}
+
+bool WarpCacheIRTranspiler::emitCompareObjectResult(JSOp op, ObjOperandId lhsId,
+                                                    ObjOperandId rhsId) {
+  MOZ_ASSERT(IsEqualityOp(op));
+  return emitCompareResult(op, lhsId, rhsId, MCompare::Compare_Object);
+}
+
+bool WarpCacheIRTranspiler::emitCompareStringResult(JSOp op,
+                                                    StringOperandId lhsId,
+                                                    StringOperandId rhsId) {
+  return emitCompareResult(op, lhsId, rhsId, MCompare::Compare_String);
 }
 
 bool WarpCacheIRTranspiler::emitTypeMonitorResult() {
