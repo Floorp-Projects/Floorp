@@ -3,11 +3,6 @@
   "name": "messaging",
   "version": "1.0",
   "description": "Creates a tab.",
-  "applications": {
-    "gecko": {
-      "id": "tabs-create@tests.mozilla.org"
-    }
-  },
   "background": {
     "scripts": ["background.js"]
   },

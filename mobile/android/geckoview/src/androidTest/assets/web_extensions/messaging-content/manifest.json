@@ -3,11 +3,6 @@
   "name": "messaging",
   "version": "1.0",
   "description": "Test messaging between app and web extension",
-  "applications": {
-    "gecko": {
-      "id": "messaging-content@tests.mozilla.org"
-    }
-  },
   "content_scripts": [
     {
       "matches": [
@@ -18,7 +13,6 @@
   ],
   "permissions": [
     "geckoViewAddons",
-    "nativeMessaging",
-    "nativeMessagingFromContent"
+    "nativeMessaging"
   ]
 }

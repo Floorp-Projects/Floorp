@@ -273,16 +273,8 @@ const NativeMessenger = {
 
   openNative(nativeApp, sender) {
     let context = ParentAPIManager.getContextById(sender.childId);
-    let { extension } = context;
-    if (extension.hasPermission("geckoViewAddons")) {
-      let allowMessagingFromContent = extension.hasPermission(
-        "nativeMessagingFromContent"
-      );
-      return new GeckoViewConnection(
-        sender,
-        nativeApp,
-        allowMessagingFromContent
-      );
+    if (context.extension.hasPermission("geckoViewAddons")) {
+      return new GeckoViewConnection(sender, nativeApp);
     } else if (sender.verified) {
       return new NativeApp(context, nativeApp);
     }

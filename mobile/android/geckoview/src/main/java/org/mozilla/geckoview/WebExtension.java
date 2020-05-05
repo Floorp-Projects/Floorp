@@ -86,7 +86,6 @@ public class WebExtension {
 
     private final static String LOGTAG = "WebExtension";
 
-    // Keep in sync with GeckoViewWebExtension.jsm
     public static class Flags {
         /*
          * Default flags for this WebExtension.
@@ -144,11 +143,7 @@ public class WebExtension {
      *           </ul>
      * @param flags {@link Flags} for this WebExtension.
      * @param controller the current {@link WebExtensionController} instance
-     *
-     * @deprecated Use the return value of {@link WebExtensionController#installBuiltIn} instead.
-     *             This method will be removed in GeckoView 81.
      */
-    @Deprecated
     public WebExtension(final @NonNull String location, final @NonNull String id,
                         final @WebExtensionFlags long flags,
                         final @NonNull WebExtensionController controller) {
@@ -174,11 +169,7 @@ public class WebExtension {
      *                 <code>resource:</code> URI to a folder inside the APK or
      *                 a <code>file:</code> URL to a <code>.xpi</code> file.
      * @param controller the current {@link WebExtensionController} instance
-     *
-     * @deprecated Use the return value of {@link WebExtensionController#installBuiltIn} instead.
-     *             This method will be removed in GeckoView 81.
      */
-    @Deprecated
     public WebExtension(final @NonNull String location,
                         final @NonNull WebExtensionController controller) {
         this(location, "{" + UUID.randomUUID().toString() + "}", Flags.NONE, controller);
@@ -811,6 +802,7 @@ public class WebExtension {
         final private EventDispatcher mEventDispatcher;
 
         private boolean mActionDelegateRegistered = false;
+        private boolean mMessageDelegateRegistered = false;
         private boolean mTabDelegateRegistered = false;
 
         // TODO: remove Bug 1618987
@@ -845,14 +837,6 @@ public class WebExtension {
                     : EventDispatcher.getInstance();
             mSession = session;
             this.runtime = runtime;
-
-            // We queue these messages if the delegate has not been attached yet,
-            // so we need to start listening immediately.
-            mEventDispatcher.registerUiThreadListener(this,
-                    "GeckoView:WebExtension:Message",
-                    "GeckoView:WebExtension:PortMessage",
-                    "GeckoView:WebExtension:Connect",
-                    "GeckoView:WebExtension:Disconnect");
         }
 
         // TODO: remove Bug 1618987
@@ -923,6 +907,15 @@ public class WebExtension {
         public void setMessageDelegate(final WebExtension webExtension,
                                        final WebExtension.MessageDelegate delegate,
                                        final String nativeApp) {
+            if (!mMessageDelegateRegistered && delegate != null) {
+                mEventDispatcher.registerUiThreadListener(this,
+                        "GeckoView:WebExtension:Message",
+                        "GeckoView:WebExtension:PortMessage",
+                        "GeckoView:WebExtension:Connect",
+                        "GeckoView:WebExtension:Disconnect");
+                mMessageDelegateRegistered = true;
+            }
+
             mMessageDelegates.put(new Sender(webExtension.id, nativeApp), delegate);
         }
 
@@ -1585,10 +1578,8 @@ public class WebExtension {
         final GeckoBundle bundle = new GeckoBundle(1);
         bundle.putString("extensionId", id);
 
-        if (delegate != null) {
-            EventDispatcher.getInstance().dispatch(
-                    "GeckoView:ActionDelegate:Attached", bundle);
-        }
+        EventDispatcher.getInstance().dispatch(
+                "GeckoView:ActionDelegate:Attached", bundle);
     }
 
     /** Describes the signed status for a {@link WebExtension}.
