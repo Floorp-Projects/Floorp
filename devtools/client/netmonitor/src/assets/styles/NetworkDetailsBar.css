@@ -313,6 +313,11 @@
   flex-wrap: nowrap;
   justify-content: flex-end;
   align-items: center;
+  cursor: pointer;
+}
+
+.network-monitor .accordion-header-label {
+  color: var(--theme-icon-dimmed-color)
 }
 
 .network-monitor .raw-headers-toggle .headers-summary-label {
@@ -323,6 +328,7 @@
   display: inline-block;
   width: 2em;
   vertical-align: bottom;
+  font-size: 12px;
 }
 
 .network-monitor .properties-view .tree-container .treeTable .treeValueCell .devtools-checkbox-toggle {
@@ -338,6 +344,14 @@
   overflow-wrap: normal;
   overflow-x: auto;
   border: none;
+}
+
+.network-monitor .accordion-item .treeTable .objectBox-string {
+  color: var(--theme-body-color);
+}
+
+.network-monitor .accordion-item .treeTable tr.treeRow.selected .objectBox-string {
+  color: var(--theme-selection-color);
 }
 
 .network-monitor .properties-view .raw-headers-container td {

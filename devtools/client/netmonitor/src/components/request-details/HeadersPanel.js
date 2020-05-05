@@ -74,7 +74,7 @@ const { button, div, input, label, span, textarea, tr, td } = dom;
 
 const RESEND = L10N.getStr("netmonitor.context.resend.label");
 const EDIT_AND_RESEND = L10N.getStr("netmonitor.summary.editAndResend");
-const RAW_HEADERS = L10N.getStr("netmonitor.summary.rawHeaders");
+const RAW_HEADERS = L10N.getStr("netmonitor.headers.raw");
 const HEADERS_EMPTY_TEXT = L10N.getStr("headersEmptyText");
 const HEADERS_FILTER_TEXT = L10N.getStr("headersFilterText");
 const REQUEST_HEADERS = L10N.getStr("requestHeaders");
@@ -367,17 +367,22 @@ class HeadersPanel extends Component {
   renderRawHeadersBtn(key, checked, onChange) {
     return [
       label(
-        { key: `${key}RawHeadersBtn`, className: "raw-headers-toggle" },
+        {
+          key: `${key}RawHeadersBtn`,
+          className: "raw-headers-toggle",
+          htmlFor: `raw-${key}-checkbox`,
+          onClick: event => {
+            // stop the header click event
+            event.stopPropagation();
+          },
+        },
         span({ className: "headers-summary-label" }, RAW_HEADERS),
-        div(
+        span(
           { className: "raw-headers-toggle-input" },
           input({
+            id: `raw-${key}-checkbox`,
             checked,
             className: "devtools-checkbox-toggle",
-            onClick: event => {
-              // stop the header click event
-              event.stopPropagation();
-            },
             onChange,
             type: "checkbox",
           })
@@ -505,6 +510,7 @@ class HeadersPanel extends Component {
           provider: HeadersProvider,
           selectPath: this.getTargetHeaderPath,
           defaultSelectFirstNode: false,
+          enableInput: false,
         },
         header: this.getHeadersTitle(responseHeaders, RESPONSE_HEADERS),
         buttons: this.renderRawHeadersBtn(
@@ -531,6 +537,7 @@ class HeadersPanel extends Component {
           provider: HeadersProvider,
           selectPath: this.getTargetHeaderPath,
           defaultSelectFirstNode: false,
+          enableInput: false,
         },
         header: this.getHeadersTitle(requestHeaders, REQUEST_HEADERS),
         buttons: this.renderRawHeadersBtn(
@@ -563,6 +570,7 @@ class HeadersPanel extends Component {
           provider: HeadersProvider,
           selectPath: this.getTargetHeaderPath,
           defaultSelectFirstNode: false,
+          enableInput: false,
         },
         header: this.getHeadersTitle(
           uploadHeaders,
