@@ -1921,7 +1921,10 @@ bool ScopeCreationData::create(JSContext* cx,
     return false;
   }
 
-  RootedFunction fun(cx, funbox->function());
+  // We do not initialize the canonical function while the data is owned by the
+  // ScopeCreationData. It gets set in ScopeCreationData::releaseData.
+  RootedFunction fun(cx, nullptr);
+
   Rooted<frontend::EnvironmentShapeCreationData> envShape(cx);
   if (!FunctionScope::prepareForScopeCreation(
           cx, &data, hasParameterExprs,
@@ -2098,6 +2101,21 @@ Scope* ScopeCreationData::createSpecificScope<WithScope>(JSContext* cx) {
   scope_ = scope;
 
   return scope;
+}
+
+template <typename SpecificScopeType>
+UniquePtr<typename SpecificScopeType::Data> ScopeCreationData::releaseData() {
+  return UniquePtr<typename SpecificScopeType::Data>(
+      static_cast<typename SpecificScopeType::Data*>(data_.release()));
+}
+
+template <>
+UniquePtr<FunctionScope::Data> ScopeCreationData::releaseData<FunctionScope>() {
+  // Initialize the GCPtrs in the Scope::Data.
+  data<FunctionScope>().canonicalFunction = funbox_->function();
+
+  return UniquePtr<FunctionScope::Data>(
+      static_cast<FunctionScope::Data*>(data_.release()));
 }
 
 template <class SpecificScopeType>

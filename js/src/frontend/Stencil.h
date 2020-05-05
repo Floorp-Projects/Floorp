@@ -360,10 +360,7 @@ class ScopeCreationData {
 
   // Transfer ownership into a new UniquePtr.
   template <typename SpecificScopeType>
-  UniquePtr<typename SpecificScopeType::Data> releaseData() {
-    return UniquePtr<typename SpecificScopeType::Data>(
-        static_cast<typename SpecificScopeType::Data*>(data_.release()));
-  }
+  UniquePtr<typename SpecificScopeType::Data> releaseData();
 
   template <typename SpecificScopeType>
   Scope* createSpecificScope(JSContext* cx);
