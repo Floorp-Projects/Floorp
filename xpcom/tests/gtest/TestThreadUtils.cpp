@@ -830,9 +830,9 @@ TEST(ThreadUtils, IdleTaskRunner)
     return cnt4 == 1;
   }));
 
-  // The repeating timer with no "exit" condition requires an explicit
-  // Cancel() call.
+  // The repeating timers require an explicit Cancel() call.
   runner1->Cancel();
+  runner2->Cancel();
 }
 
 // {9e70a320-be02-11d1-8031-006008159b5a}
