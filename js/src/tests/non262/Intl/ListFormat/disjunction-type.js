@@ -1,4 +1,4 @@
-// |reftest| skip -- "disjunction" type currently not supported
+// |reftest| skip-if(!this.hasOwnProperty('Intl')||(!this.Intl.ListFormat&&!this.hasOwnProperty('addIntlExtras')))
 
 // Note: Use the same test locales as used in unit-type.js
 
@@ -44,7 +44,11 @@ const styles = ["long", "short", "narrow"];
         "es": { long: [Element("A"), Literal(" o "), Element("B")] },
         "ja": { long: [Element("A"), Literal("または"), Element("B")] },
         "nl": { long: [Element("A"), Literal(" of "), Element("B")] },
-        "th": { long: [Element("A"), Literal(" หรือ "), Element("B")] },
+        "th": {
+          long: [Element("A"), Literal(" หรือ "), Element("B")],
+          short: [Element("A"), Literal("หรือ"), Element("B")],
+          narrow: [Element("A"), Literal("หรือ"), Element("B")],
+        },
         "zh": { long: [Element("A"), Literal("或"), Element("B")] },
     };
 
@@ -66,7 +70,7 @@ const styles = ["long", "short", "narrow"];
 
     const testData = {
         "ar": {
-            long: [Element("A"), Literal(" و"), Element("B"), Literal(" و"), Element("C"), Literal(" أو "), Element("D")],
+            long: [Element("A"), Literal(" أو "), Element("B"), Literal(" أو "), Element("C"), Literal(" أو "), Element("D")],
         },
         "de": {
             long: [Element("A"), Literal(", "), Element("B"), Literal(", "), Element("C"), Literal(" oder "), Element("D")],
