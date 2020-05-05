@@ -246,7 +246,8 @@ void ConvertResponseData(const IPCPaymentResponseData& aIPCData,
       bData.expiryYear = data.expiryYear();
       bData.cardSecurityCode = data.cardSecurityCode();
       bData.billingAddress.country = data.billingAddress().country();
-      bData.billingAddress.addressLine = data.billingAddress().addressLine();
+      bData.billingAddress.addressLine =
+          data.billingAddress().addressLine().Clone();
       bData.billingAddress.region = data.billingAddress().region();
       bData.billingAddress.regionCode = data.billingAddress().regionCode();
       bData.billingAddress.city = data.billingAddress().city();
