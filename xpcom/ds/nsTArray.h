@@ -3082,6 +3082,47 @@ struct nsTArray_RelocationStrategy<AutoTArray<E, N>> {
   using Type = nsTArray_RelocateUsingMoveConstructor<AutoTArray<E, N>>;
 };
 
+template <class E, size_t N>
+class CopyableAutoTArray : public AutoTArray<E, N> {
+ public:
+  using AutoTArray<E, N>::AutoTArray;
+
+  CopyableAutoTArray(const CopyableAutoTArray& aOther) : AutoTArray<E, N>() {
+    this->Assign(aOther);
+  }
+  CopyableAutoTArray& operator=(const CopyableAutoTArray& aOther) {
+    if (this != &aOther) {
+      this->Assign(aOther);
+    }
+    return *this;
+  }
+  template <typename Allocator>
+  MOZ_IMPLICIT CopyableAutoTArray(const nsTArray_Impl<E, Allocator>& aOther) {
+    this->Assign(aOther);
+  }
+  template <typename Allocator>
+  CopyableAutoTArray& operator=(const nsTArray_Impl<E, Allocator>& aOther) {
+    if constexpr (std::is_same_v<Allocator, nsTArrayInfallibleAllocator>) {
+      if (this == &aOther) {
+        return *this;
+      }
+    }
+    this->Assign(aOther);
+    return *this;
+  }
+  template <typename Allocator>
+  MOZ_IMPLICIT CopyableAutoTArray(nsTArray_Impl<E, Allocator>&& aOther)
+      : AutoTArray<E, N>{std::move(aOther)} {}
+  template <typename Allocator>
+  CopyableAutoTArray& operator=(nsTArray_Impl<E, Allocator>&& aOther) {
+    static_cast<AutoTArray<E, N>&>(*this) = std::move(aOther);
+    return *this;
+  }
+
+  CopyableAutoTArray(CopyableAutoTArray&&) = default;
+  CopyableAutoTArray& operator=(CopyableAutoTArray&&) = default;
+};
+
 // Span integration
 namespace mozilla {
 
