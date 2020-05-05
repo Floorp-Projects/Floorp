@@ -191,11 +191,6 @@ const startupPhases = {
       ignoreIfUnused: true, // intermittently occurs in "before becoming idle"
       maxCount: 1,
     },
-    {
-      name: "PWebRenderBridge::Msg_EnsureConnected",
-      condition: WIN && WEBRENDER,
-      maxCount: 1,
-    },
   ],
 
   // Things that are expected to be completely out of the startup path
