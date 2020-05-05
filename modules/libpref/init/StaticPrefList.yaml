@@ -2260,6 +2260,13 @@
   value: false
   mirror: always
 
+# Preference that is primarily used for testing of problematic file paths.
+# It can also be used for switching between different storage directories, but
+# such feature is not officially supported.
+- name: dom.quotaManager.storageName
+  type: String
+  value: "storage"
+  mirror: never
 
 # Should we try to load origin information from the cache?
 # See bug 1563023 for more details.
