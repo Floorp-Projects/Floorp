@@ -433,6 +433,10 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
     formatOpt.month = GetOption(options, "month", "string",
                                 ["2-digit", "numeric", "narrow", "short", "long"], undefined);
     formatOpt.day = GetOption(options, "day", "string", ["2-digit", "numeric"], undefined);
+#ifdef NIGHTLY_BUILD
+    formatOpt.dayPeriod = GetOption(options, "dayPeriod", "string", ["narrow", "short", "long"],
+                                    undefined);
+#endif
     formatOpt.hour = GetOption(options, "hour", "string", ["2-digit", "numeric"], undefined);
     formatOpt.minute = GetOption(options, "minute", "string", ["2-digit", "numeric"], undefined);
     formatOpt.second = GetOption(options, "second", "string", ["2-digit", "numeric"], undefined);
@@ -644,6 +648,21 @@ function toBestICUPattern(locale, options) {
         skeleton += hourSkeletonChar;
         break;
     }
+#ifdef NIGHTLY_BUILD
+    // ICU requires that "B" is set after the "j" hour skeleton symbol.
+    // https://unicode-org.atlassian.net/browse/ICU-20731
+    switch (options.dayPeriod) {
+    case "narrow":
+        skeleton += "BBBBB";
+        break;
+    case "short":
+        skeleton += "B";
+        break;
+    case "long":
+        skeleton += "BBBB";
+        break;
+    }
+#endif
     switch (options.minute) {
     case "2-digit":
         skeleton += "mm";
@@ -723,6 +742,10 @@ function ToDateTimeOptions(options, required, defaults) {
 
     // Step 5.
     if (required === "time" || required === "any") {
+#ifdef NIGHTLY_BUILD
+        if (options.dayPeriod !== undefined)
+            needDefaults = false;
+#endif
         if (options.hour !== undefined)
             needDefaults = false;
         if (options.minute !== undefined)
@@ -934,7 +957,8 @@ function Intl_DateTimeFormat_resolvedOptions() {
 function resolveICUPattern(pattern, result) {
     assert(IsObject(result), "resolveICUPattern");
 
-    var hourCycle, weekday, era, year, month, day, hour, minute, second, fractionalSecondDigits, timeZoneName;
+    var hourCycle, weekday, era, year, month, day, dayPeriod, hour, minute, second,
+        fractionalSecondDigits, timeZoneName;
     var i = 0;
     while (i < pattern.length) {
         var c = pattern[i++];
@@ -955,6 +979,7 @@ function resolveICUPattern(pattern, result) {
             case "G":
             case "E":
             case "c":
+            case "B":
             case "z":
             case "v":
             case "V":
@@ -1021,6 +1046,9 @@ function resolveICUPattern(pattern, result) {
             case "d":
                 day = value;
                 break;
+            case "B":
+                dayPeriod = value;
+                break;
             case "h":
                 hourCycle = "h12";
                 hour = value;
@@ -1074,6 +1102,11 @@ function resolveICUPattern(pattern, result) {
     if (day) {
         _DefineDataProperty(result, "day", day);
     }
+#ifdef NIGHTLY_BUILD
+    if (dayPeriod) {
+        _DefineDataProperty(result, "dayPeriod", dayPeriod);
+    }
+#endif
     if (hour) {
         _DefineDataProperty(result, "hour", hour);
     }
