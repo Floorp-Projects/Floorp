@@ -180,9 +180,6 @@ _OPT\.OBJ/
 # Ignore files created when running a reftest.
 ^lextab.py$
 
-# tup database
-^\.tup
-
 # Ignore sync tps logs and reports
 tps\.log
 tps_result\.json

@@ -16,7 +16,6 @@ Important Concepts
    files-metadata
    Profile Guided Optimization <pgo>
    slow
-   tup
    environment-variables
    build-targets
    python

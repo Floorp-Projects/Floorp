@@ -324,13 +324,6 @@ llvm-for-dsymutil:
         repo: https://github.com/llvm/llvm-project
         revision: 3b7811f6441be13c9f613f81ef93297d231b4f8e
 
-tup:
-    description: tup source code
-    fetch:
-        type: git
-        repo: https://github.com/gittup/tup
-        revision: 4371a41ba4ece660bf060b598b9eee4c2eb347d8
-
 rust-size:
     description: rust-size source code
     fetch:

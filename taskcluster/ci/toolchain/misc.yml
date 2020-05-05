@@ -100,24 +100,6 @@ linux64-mar-tools:
             - toolkit/mozapps/update/updater/bspatch/
             - tools/update-packaging/
 
-linux64-tup:
-    description: "tup toolchain build"
-    treeherder:
-        symbol: TL(tup)
-    worker:
-        max-run-time: 3600
-    run:
-        script: build-tup-linux.sh
-        toolchain-artifact: public/build/tup.tar.xz
-    run-on-projects:
-        - trunk
-        - try
-    fetches:
-        fetch:
-            - tup
-        toolchain:
-            - linux64-gcc-7
-
 linux64-upx:
     description: "UPX build"
     treeherder:

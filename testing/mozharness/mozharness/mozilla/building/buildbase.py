@@ -314,7 +314,6 @@ class BuildOptionParser(object):
         'aarch64-debug': 'builds/releng_sub_%s_configs/%s_aarch64_debug.py',
         'android-geckoview-docs': 'builds/releng_sub_%s_configs/%s_geckoview_docs.py',
         'valgrind': 'builds/releng_sub_%s_configs/%s_valgrind.py',
-        'tup': 'builds/releng_sub_%s_configs/%s_tup.py',
     }
     build_pool_cfg_file = 'builds/build_pool_specifics.py'
 
