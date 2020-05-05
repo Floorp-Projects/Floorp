@@ -32,6 +32,7 @@ import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.ktx.android.util.Base64
 import mozilla.components.support.ktx.kotlin.isEmail
+import mozilla.components.support.ktx.kotlin.isExtensionUrl
 import mozilla.components.support.ktx.kotlin.isGeoLocation
 import mozilla.components.support.ktx.kotlin.isPhone
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
@@ -93,7 +94,7 @@ class GeckoEngineSession(
             set(value) { geckoSession.settings.suspendMediaWhenInactive = value }
     }
 
-    private var initialLoad = true
+    internal var initialLoad = true
 
     override val coroutineContext: CoroutineContext
         get() = context + job
@@ -352,7 +353,9 @@ class GeckoEngineSession(
                 return // ¯\_(ツ)_/¯
             }
 
-            // Ignore initial load of about:blank (see https://github.com/mozilla-mobile/android-components/issues/403)
+            // Ignore initial loads of about:blank, see:
+            // https://github.com/mozilla-mobile/android-components/issues/403
+            // https://github.com/mozilla-mobile/android-components/issues/6832
             if (initialLoad && url == ABOUT_BLANK) {
                 return
             }
@@ -373,6 +376,15 @@ class GeckoEngineSession(
         ): GeckoResult<AllowOrDeny> {
             if (request.target == NavigationDelegate.TARGET_WINDOW_NEW) {
                 return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
+
+            // The process switch involved when loading extension pages will
+            // trigger an initial load of about:blank which we want to
+            // avoid:
+            // https://github.com/mozilla-mobile/android-components/issues/6832
+            // https://github.com/mozilla-mobile/android-components/issues/403
+            if (currentUrl?.isExtensionUrl() != request.uri.isExtensionUrl()) {
+                initialLoad = true
             }
 
             val interceptor = settings.requestInterceptor

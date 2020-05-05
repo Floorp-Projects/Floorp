@@ -568,6 +568,37 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun `onLoadRequest will reset initial load flag on process switch to ignore about blank loads`() {
+        val geckoResult = GeckoResult<Boolean?>()
+        val mockedContentBlockingController = mock<ContentBlockingController>()
+        whenever(runtime.contentBlockingController).thenReturn(mockedContentBlockingController)
+        whenever(mockedContentBlockingController.checkException(any())).thenReturn(geckoResult)
+
+        val session = GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider)
+        captureDelegates()
+        assertTrue(session.initialLoad)
+
+        navigationDelegate.value.onLocationChange(mock(), "https://mozilla.org")
+        assertFalse(session.initialLoad)
+
+        navigationDelegate.value.onLoadRequest(mock(), mockLoadRequest("moz-extension://1234-test"))
+        assertTrue(session.initialLoad)
+
+        var observedUrl = ""
+        session.register(object : EngineSession.Observer {
+            override fun onLocationChange(url: String) { observedUrl = url }
+        })
+        navigationDelegate.value.onLocationChange(mock(), "about:blank")
+        assertEquals("", observedUrl)
+
+        navigationDelegate.value.onLocationChange(mock(), "https://www.mozilla.org")
+        assertEquals("https://www.mozilla.org", observedUrl)
+
+        navigationDelegate.value.onLocationChange(mock(), "about:blank")
+        assertEquals("about:blank", observedUrl)
+    }
+
+    @Test
     fun `do not keep track of current url via onPageStart events`() {
         val engineSession = GeckoEngineSession(mock(),
                 geckoSessionProvider = geckoSessionProvider)
