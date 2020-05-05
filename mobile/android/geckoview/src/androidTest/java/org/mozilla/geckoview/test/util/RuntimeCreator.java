@@ -22,6 +22,7 @@ public class RuntimeCreator {
     public static final int TEST_SUPPORT_INITIAL = 0;
     public static final int TEST_SUPPORT_OK = 1;
     public static final int TEST_SUPPORT_ERROR = 2;
+    public static final String TEST_SUPPORT_EXTENSION_ID = "test-support@tests.mozilla.org";
     private static final String LOGTAG = "RuntimeCreator";
 
     private static final Environment env = new Environment();
@@ -95,21 +96,16 @@ public class RuntimeCreator {
 
     public static void registerTestSupport() {
         sTestSupport.set(0);
-        sTestSupportExtension =
-                new WebExtension("resource://android/assets/web_extensions/test-support/",
-                        "test-support@mozilla.com",
-                        WebExtension.Flags.ALLOW_CONTENT_MESSAGING,
-                        sRuntime.getWebExtensionController());
 
-        sTestSupportExtension.setMessageDelegate(sMessageDelegate, "browser");
-
-        sRuntime.registerWebExtension(sTestSupportExtension)
-                .accept(value -> {
-                    sTestSupport.set(TEST_SUPPORT_OK);
-                }, exception -> {
-                    Log.e(LOGTAG, "Could not register TestSupport", exception);
-                    sTestSupport.set(TEST_SUPPORT_ERROR);
-                });
+        sRuntime.getWebExtensionController().installBuiltIn(
+                "resource://android/assets/web_extensions/test-support/").accept(extension -> {
+            extension.setMessageDelegate(sMessageDelegate, "browser");
+            sTestSupportExtension = extension;
+            sTestSupport.set(TEST_SUPPORT_OK);
+        }, exception -> {
+            Log.e(LOGTAG, "Could not register TestSupport", exception);
+            sTestSupport.set(TEST_SUPPORT_ERROR);
+        });
     }
 
     /**
