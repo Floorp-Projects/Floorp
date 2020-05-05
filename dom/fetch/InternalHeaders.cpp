@@ -18,9 +18,9 @@
 namespace mozilla {
 namespace dom {
 
-InternalHeaders::InternalHeaders(const nsTArray<Entry>&& aHeaders,
+InternalHeaders::InternalHeaders(nsTArray<Entry>&& aHeaders,
                                  HeadersGuardEnum aGuard)
-    : mGuard(aGuard), mList(aHeaders), mListDirty(true) {}
+    : mGuard(aGuard), mList(std::move(aHeaders)), mListDirty(true) {}
 
 InternalHeaders::InternalHeaders(
     const nsTArray<HeadersEntry>& aHeadersEntryList, HeadersGuardEnum aGuard)
