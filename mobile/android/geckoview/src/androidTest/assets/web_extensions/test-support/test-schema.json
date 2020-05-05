@@ -132,6 +132,18 @@
             "name": "resolution"
           }
         ]
+      },
+      {
+        "name": "getPidForTab",
+        "type": "function",
+        "async": true,
+        "description": "Gets the top-level pid belonging to tabId.",
+        "parameters": [
+          {
+            "type": "number",
+            "name": "tabId"
+          }
+        ]
       }
     ]
   }
