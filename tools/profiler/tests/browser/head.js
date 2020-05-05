@@ -11,6 +11,15 @@ const { BrowserTestUtils } = ChromeUtils.import(
 
 const BASE_URL = "http://example.com/browser/tools/profiler/tests/browser/";
 
+registerCleanupFunction(() => {
+  if (Services.profiler.IsActive()) {
+    info(
+      "The profiler was found to still be running at the end of the test, which means that some error likely occured. Let's stop it to prevent issues with following tests!"
+    );
+    Services.profiler.StopProfiler();
+  }
+});
+
 /**
  * This is a helper function that will stop the profiler of the browser running
  * with PID contentPid.
