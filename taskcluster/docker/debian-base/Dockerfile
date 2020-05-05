@@ -40,6 +40,7 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
       patch \
       python \
       python3.5 \
+      python3-distutils-extra \
       python3-minimal \
       python-zstandard \
       python3-zstandard \
