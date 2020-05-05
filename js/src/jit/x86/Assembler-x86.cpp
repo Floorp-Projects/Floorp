@@ -36,9 +36,10 @@ ABIArg ABIArgGenerator::next(MIRType type) {
     case MIRType::Bool8x16:
     case MIRType::Bool16x8:
     case MIRType::Bool32x4:
-      // SIMD values aren't passed in or out of C++, so we can make up
-      // whatever internal ABI we like. visitWasmStackArg assumes
-      // SimdMemoryAlignment.
+      // On Win64, >64 bit args need to be passed by reference.  However, wasm
+      // doesn't allow passing SIMD values to JS, so the only way to reach this
+      // is wasm to wasm calls.  Ergo we can break the native ABI here and use
+      // the Wasm ABI instead.
       stackOffset_ = AlignBytes(stackOffset_, SimdMemoryAlignment);
       current_ = ABIArg(stackOffset_);
       stackOffset_ += Simd128DataSize;

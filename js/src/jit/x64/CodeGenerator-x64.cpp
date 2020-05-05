@@ -444,7 +444,7 @@ void CodeGeneratorX64::emitWasmStore(T* ins) {
 void CodeGenerator::visitWasmStore(LWasmStore* ins) { emitWasmStore(ins); }
 
 void CodeGenerator::visitWasmStoreI64(LWasmStoreI64* ins) {
-  emitWasmStore(ins);
+  MOZ_CRASH("Unused on this platform");
 }
 
 void CodeGenerator::visitWasmCompareExchangeHeap(
