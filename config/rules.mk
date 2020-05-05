@@ -28,7 +28,7 @@ USE_AUTOTARGETS_MK = 1
 include $(MOZILLA_DIR)/config/makefiles/makeutils.mk
 
 ifdef REBUILD_CHECK
-REPORT_BUILD = $(info $(shell $(PYTHON) $(MOZILLA_DIR)/config/rebuild_check.py $@ $^))
+REPORT_BUILD = $(info $(shell $(PYTHON3) $(MOZILLA_DIR)/config/rebuild_check.py $@ $^))
 REPORT_BUILD_VERBOSE = $(REPORT_BUILD)
 else
 REPORT_BUILD = $(info $(relativesrcdir)/$(notdir $@))
@@ -66,10 +66,10 @@ INSTALL_TARGETS += CPP_UNIT_TESTS
 endif
 
 run-cppunittests::
-	@$(PYTHON) $(MOZILLA_DIR)/testing/runcppunittests.py --xre-path=$(DIST)/bin --symbols-path=$(DIST)/crashreporter-symbols $(CPP_UNIT_TESTS)
+	@$(PYTHON3) $(MOZILLA_DIR)/testing/runcppunittests.py --xre-path=$(DIST)/bin --symbols-path=$(DIST)/crashreporter-symbols $(CPP_UNIT_TESTS)
 
 cppunittests-remote:
-	$(PYTHON) -u $(MOZILLA_DIR)/testing/remotecppunittests.py \
+	$(PYTHON3) -u $(MOZILLA_DIR)/testing/remotecppunittests.py \
 		--xre-path=$(DEPTH)/dist/bin \
 		--localLib=$(DEPTH)/dist/$(MOZ_APP_NAME) \
 		--deviceIP=${TEST_DEVICE} \
