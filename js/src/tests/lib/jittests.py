@@ -521,7 +521,10 @@ def check_output(out, err, rc, timed_out, test, options):
             return False
 
     if test.expect_crash:
-        if sys.platform == 'win32' and rc == 3 - 2 ** 31:
+        # Python 3 on Windows interprets process exit codes as unsigned
+        # integers, where Python 2 used to allow signed integers. Account for
+        # each possibility here.
+        if sys.platform == 'win32' and rc in (3 - 2 ** 31, 3 + 2 ** 31):
             return True
 
         if sys.platform != 'win32' and rc == -11:
