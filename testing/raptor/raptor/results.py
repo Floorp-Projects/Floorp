@@ -663,7 +663,11 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         if len(video_jobs) > 0:
             # The video list and application metadata (browser name and
             # optionally version) that will be used in the visual metrics task.
-            jobs_json = {"jobs": video_jobs, "application": {"name": self.browser_name}}
+            jobs_json = {
+                "jobs": video_jobs,
+                "application": {"name": self.browser_name},
+                "extra_options": output.summarized_results["suites"][0]["extraOptions"]
+            }
 
             if self.browser_version is not None:
                 jobs_json["application"]["version"] = self.browser_version

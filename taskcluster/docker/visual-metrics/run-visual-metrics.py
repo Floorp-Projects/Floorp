@@ -47,6 +47,7 @@ JOB_SCHEMA = Schema(
             {Required("test_name"): str, Required("browsertime_json_path"): str}
         ],
         Required("application"): {Required("name"): str, "version": str},
+        Required("extra_options"): [str],
     }
 )
 
@@ -282,6 +283,8 @@ def main(log, args):
         "type": "vismet",
         "suites": suites,
     }
+    for entry in suites:
+        entry["extraOptions"] = jobs_json["extra_options"]
 
     # Validates the perf data complies with perfherder schema.
     # The perfherder schema uses jsonschema so we can't use voluptuous here.
