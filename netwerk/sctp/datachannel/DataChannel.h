@@ -323,7 +323,7 @@ class DataChannelConnection final : public net::NeckoTargetHolder
     typedef AutoTArray<RefPtr<DataChannel>, 16> ChannelArray;
     ChannelArray GetAll() const {
       MutexAutoLock lock(mMutex);
-      return mChannels;
+      return mChannels.Clone();
     }
     RefPtr<DataChannel> GetNextChannel(uint16_t aCurrentId) const;
 
