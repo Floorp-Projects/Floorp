@@ -416,7 +416,7 @@ void L10nOverlays::TranslateElement(
     errors.AppendElement(error);
   }
   if (!errors.IsEmpty()) {
-    aErrors.SetValue(errors);
+    aErrors.SetValue(std::move(errors));
   }
 }
 
