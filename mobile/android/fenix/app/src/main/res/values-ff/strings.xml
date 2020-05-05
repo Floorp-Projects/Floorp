@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">Cuuriɗum %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (Cuuriɗum)</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">Yiilo walla naatnu ñiiɓirde</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_open_tabs_header_2">Alaa tabbe udditiiɗe</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Tabbe maa udditiiɗe maa kollire ɗoo.</string>
+
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Ɓeydu sodorde</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">Alaa, mi yaafiima</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">Tabbere hesere</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">Tabbere suuriinde hesere</string>
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Lowe dowrowe</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
+    <string name="browser_tabs_button">Uddit tabbe</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">Caggal</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">Yeeso</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">Hesɗitin</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">Dartin</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">Ɓeyditte</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Ɗoo alaa ɓeyditte</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">Ballal</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Ko Hesɗi</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">Teelte</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">Deftordu</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">Lowre ordinateer</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Aaf</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">Yiytu e Hello</string>
+    <!-- Browser menu button that creates a new tab -->
+    <string name="browser_menu_new_tab">Tabbere hesere</string>
+    <!-- Browser menu button that opens a dialog to report issues with the current site -->
+    <string name="browser_menu_report_issue">Jaŋto caɗeele lowre</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">Lollin</string>
+    <!-- Share menu title, displayed when a user is sharing their current site -->
+    <string name="menu_share_with">Lollin e...</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">Uddit e %1$s</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">Uddit e jaaɓnirgal</string>
+    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
+    <string name="browser_menu_read_appearance">Mbaydi</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">Ɗemngal cuɓangal</string>
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">Yiylo</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">Yiylo ɗemngal</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">Niiwto</string>
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">Codorɗe</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">Yamir</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">Hoto Yamir</string>
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">Ɓeydu humpito</string>
+
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Yiylo</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Yiylo geese ɗee</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">Teelte</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">Baɗte</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Yiylo</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">Palal ñiiɓirɗe</string>
+    <!-- Preference linking to help about Fenix -->
+    <string name="preferences_help">Ballal</string>
+    <!-- Preference linking to the your rights SUMO page -->
+    <string name="preferences_your_rights">Hakkeeji maa</string>
+    <!-- Preference for settings related to saved passwords -->
+    <string name="preferences_passwords">Pinle</string>
+    <!-- Preference for settings related to saved credit cards and addresses -->
+    <string name="preferences_credit_cards_addresses">Karte banke e ñiiɓirɗe</string>
+
+    <!-- Preference category for privacy settings -->
+    <string name="preferences_category_privacy">Suturo</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Suturo e kisal</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">Jamirooje lowre</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Banngagol suturo</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Uddit jokke e tabbere suuriinde</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">Konte</string>
+    <!-- Preference shown on banner to sign into account -->
+    <string name="preferences_sign_in">Seŋo</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Heertin</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Konte Firefox</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">Ɗemngal</string>
+    <!-- Preference category for developer tools -->
+    <string name="developer_tools_category">Kuutorɗe topayɓe</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Hollu codorɗe njiilaw</string>
+
+    </resources>

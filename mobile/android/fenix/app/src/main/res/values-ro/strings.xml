@@ -275,7 +275,7 @@
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">Date de autentificare</string>
     <!-- Preference for signing out -->
-    <string name="preferences_sign_out">Deconectează-te</string>
+    <string name="preferences_sign_out">Deconectare</string>
     <!-- Preference displays and allows changing current FxA device name -->
     <string name="preferences_sync_device_name">Numele dispozitivului</string>
     <!-- Text shown when user enters empty device name -->

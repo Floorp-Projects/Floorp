@@ -14,9 +14,9 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Pytaś abo adresu zapódaś</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Žedne wócynjone rejtarki</string>
+    <string name="no_open_tabs_header_2">Žedne wócynjone rejtariki</string>
     <!-- No Open Tabs Message Description -->
-    <string name="no_open_tabs_description">Waše wócynjone rejtarki se how wócyniju.</string>
+    <string name="no_open_tabs_description">Waše wócynjone rejtariki se how wócyniju.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s se pśez Mozilla zgótujo.</string>
@@ -26,7 +26,7 @@
     <string name="private_browsing_title">Sćo w priwatnem pósejźenju</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">%1$s wašu pytańsku a pśeglědowańsku historjiu z priwatnych rejtarkow wuproznijo, gaž je zacynjaśo abo nałoženje kóńcyśo. Pšez to se wólažcyjo, pśed drugimi, kótarež toś to licadło wužywaju, schowaś,
+    <string name="private_browsing_placeholder_description_2">%1$s wašu pytańsku a pśeglědowańsku historjiu z priwatnych rejtarikow wuproznijo, gaž je zacynjaśo abo nałoženje kóńcyśo. Pšez to se wólažcyjo, pśed drugimi, kótarež toś to licadło wužywaju, schowaś,
         což online gótujośo, lěcrownož to was za websedła abo wašogo póbitowarja internetneje słužby njeanonymizěrujo.</string>
     <string name="private_browsing_common_myths">
        Ceste myty wó priwatnem modusu
@@ -36,7 +36,7 @@
 
     <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Pśidajśo skrotconku, aby priwatne rejtarki ze swójeje startoweje wobrazowki wócynił.</string>
+    <string name="cfr_message">Pśidajśo skrotconku, aby priwatne rejtariki ze swójeje startoweje wobrazowki wócynił.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Skrotconku pśidaś</string>
     <!-- Text for the negative button -->
@@ -44,16 +44,16 @@
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
-    <string name="home_screen_shortcut_open_new_tab_2">Nowy rejtark</string>
+    <string name="home_screen_shortcut_open_new_tab_2">Nowy rejtarik</string>
     <!-- Shortcut action to open new private tab -->
-    <string name="home_screen_shortcut_open_new_private_tab_2">Nowy priwatny rejtark</string>
+    <string name="home_screen_shortcut_open_new_private_tab_2">Nowy priwatny rejtarik</string>
 
     <!-- Heading for the Top Sites block -->
     <string name="home_screen_top_sites_heading">Nejcesćej woglědane sedła</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">Wócynjone rejtarki</string>
+    <string name="browser_tabs_button">Wócynjone rejtariki</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">Slědk</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
@@ -87,9 +87,9 @@
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Na boku pytaś</string>
     <!-- Browser menu button that creates a private tab -->
-    <string name="browser_menu_private_tab">Priwatny rejtark</string>
+    <string name="browser_menu_private_tab">Priwatny rejtarik</string>
     <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Nowy rejtark</string>
+    <string name="browser_menu_new_tab">Nowy rejtarik</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Do zběrki składowaś</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
@@ -205,7 +205,7 @@
     <!-- Preference for private browsing options -->
     <string name="preferences_private_browsing_options">Priwatny modus</string>
     <!-- Preference for opening links in a private tab-->
-    <string name="preferences_open_links_in_a_private_tab">Wótkaze w priwatnem rejtarku wócyniś</string>
+    <string name="preferences_open_links_in_a_private_tab">Wótkaze w priwatnem rejtariku wócyniś</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Fota wobrazowki w priwatnem modusu dowóliś</string>
     <!-- Preference for adding private browsing shortcut -->
@@ -301,13 +301,13 @@
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="fxa_received_tab_channel_name">Dostane rejtarki</string>
+    <string name="fxa_received_tab_channel_name">Dostane rejtariki</string>
     <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="fxa_received_tab_channel_description">Powěźeńki za rejtarki su se dostali z drugich rědow Firefox.</string>
+    <string name="fxa_received_tab_channel_description">Powěźeńki za rejtariki su se dostali z drugich rědow Firefox.</string>
     <!--  The body for these is the URL of the tab received  -->
-    <string name="fxa_tab_received_notification_name">Dostany rejtark</string>
+    <string name="fxa_tab_received_notification_name">Dostany rejtarik</string>
     <!-- When multiple tabs have been received -->
-    <string name="fxa_tabs_received_notification_name">Dostane rejtarki</string>
+    <string name="fxa_tabs_received_notification_name">Dostane rejtariki</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Rajtark z %s</string>
 
@@ -425,29 +425,29 @@
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
-    <string name="tab_header_label">Wócynjone rejtarki</string>
+    <string name="tab_header_label">Wócynjone rejtariki</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_title">Priwatne pósejźenje</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_tabs_title">Priwatne rejtarki</string>
+    <string name="tabs_header_private_tabs_title">Priwatne rejtariki</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
-    <string name="add_tab">Rejtark pśidaś</string>
+    <string name="add_tab">Rejtarik pśidaś</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
-    <string name="close_tab">Rejtark zacyniś</string>
+    <string name="close_tab">Rejtarik zacyniś</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
-    <string name="close_tab_title">Rejtark %s zacyniś</string>
+    <string name="close_tab_title">Rejtarik %s zacyniś</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
-    <string name="open_tabs_menu">Meni wócynjonych rejtarkow</string>
+    <string name="open_tabs_menu">Meni wócynjonych rejtarikow</string>
     <!-- Open tabs menu item to close all tabs -->
-    <string name="tabs_menu_close_all_tabs">Wšykne rejtarki zacyniś</string>
+    <string name="tabs_menu_close_all_tabs">Wšykne rejtariki zacyniś</string>
     <!-- Open tabs menu item to share all tabs -->
-    <string name="tabs_menu_share_tabs">Rejtarki źěliś</string>
+    <string name="tabs_menu_share_tabs">Rejtariki źěliś</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection">Do zběrki składowaś</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Rejtarkowy meni</string>
+    <string name="tab_menu">Rejtarikowy meni</string>
     <!-- Tab menu item to share the tab -->
-    <string name="tab_share">Rejtark źěliś</string>
+    <string name="tab_share">Rejtarik źěliś</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
     <string name="current_session_delete">Lašowaś</string>
     <!-- Button in the current session menu. Saves the session when pressed -->
@@ -463,10 +463,13 @@
     <!-- Text for the menu button to rename a collection -->
     <string name="collection_rename">Zběrku pśemjenowaś</string>
     <!-- Text for the button to open tabs of the selected collection -->
-    <string name="collection_open_tabs">Wócynjone rejtarki</string>
+    <string name="collection_open_tabs">Wócynjone rejtariki</string>
 
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Wótwónoźeś</string>
+
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (priwatny modus)</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -484,9 +487,9 @@
     <!-- History overflow menu share button -->
     <string name="history_menu_share_button">Źěliś</string>
     <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">W nowem rejtarku wócyniś</string>
+    <string name="history_menu_open_in_new_tab_button">W nowem rejtariku wócyniś</string>
     <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">W nowem priwatnem rejtarku wócyniś</string>
+    <string name="history_menu_open_in_private_tab_button">W nowem priwatnem rejtariku wócyniś</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Lašowaś</string>
     <!-- History multi select title in app bar
@@ -510,14 +513,14 @@
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Bóžko %1$s njamóžo toś ten bok zacytaś.</string>
     <!-- Description text displayed on the tab crash page -->
-    <string name="tab_crash_description">Móžośo wopytaś, slědujucy rejtark wótnowiś abo zacyniś.</string>
+    <string name="tab_crash_description">Móžośo wopytaś, slědujucy rejtarik wótnowiś abo zacyniś.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Mozilla rozpšawu wowalenja pósłaś</string>
 
     <!-- Close tab button text on the tab crash page -->
-    <string name="tab_crash_close">Rejtark zacyniś</string>
+    <string name="tab_crash_close">Rejtarik zacyniś</string>
     <!-- Restore tab button text on the tab crash page -->
-    <string name="tab_crash_restore">Rejtarki wótnowiś</string>
+    <string name="tab_crash_restore">Rejtariki wótnowiś</string>
 
     <!-- Content Description for session item menu button -->
     <string name="content_description_session_menu">Pósejźeńske nastajenja</string>
@@ -554,9 +557,9 @@
     <!-- Bookmark overflow menu share button -->
     <string name="bookmark_menu_share_button">Źěliś</string>
     <!-- Bookmark overflow menu open in new tab button -->
-    <string name="bookmark_menu_open_in_new_tab_button">W nowem rejtarku wócyniś</string>
+    <string name="bookmark_menu_open_in_new_tab_button">W nowem rejtariku wócyniś</string>
     <!-- Bookmark overflow menu open in private tab button -->
-    <string name="bookmark_menu_open_in_private_tab_button">W nowem priwatnem rejtarku wócyniś</string>
+    <string name="bookmark_menu_open_in_private_tab_button">W nowem priwatnem rejtariku wócyniś</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Lašowaś</string>
     <!--Bookmark overflow menu save button -->
@@ -655,7 +658,7 @@
 
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Zběrajśo wěcy, kótarež su wam wažne. Aby zachopił, składujśo wócynjone rejtarki do noweje zběrki.</string>
+    <string name="collections_description">Zběrajśo wěcy, kótarež su wam wažne. Aby zachopił, składujśo wócynjone rejtariki do noweje zběrki.</string>
     <!-- Collections header on home fragment -->
     <string name="collections_header">Zběrki</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
@@ -665,7 +668,7 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_collections_description">Waše zběrki se how pokažu.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
-    <string name="create_collection_select_tabs">Rejtarki wubraś</string>
+    <string name="create_collection_select_tabs">Rejtariki wubraś</string>
     <!-- Title for the "select collection" step of the collection creator -->
     <string name="create_collection_select_collection">Zběrku wubraś</string>
     <!-- Title for the "name collection" step of the collection creator -->
@@ -677,17 +680,17 @@
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_deselect_all">Wšykne wótwóliś</string>
     <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
-    <string name="create_collection_save_to_collection_empty">Rejtarki wubraś, kótarež maju se składowaś</string>
+    <string name="create_collection_save_to_collection_empty">Rejtariki wubraś, kótarež maju se składowaś</string>
     <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
      %d is a placeholder for the number of tabs selected. -->
-    <string name="create_collection_save_to_collection_tabs_selected">Wubrane rejtarki: %d</string>
+    <string name="create_collection_save_to_collection_tabs_selected">Wubrane rejtariki: %d</string>
     <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
     %d is a placeholder for the number of tabs selected. -->
-    <string name="create_collection_save_to_collection_tab_selected">%d rejtark wubrany</string>
+    <string name="create_collection_save_to_collection_tab_selected">%d rejtarik wubrany</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-    <string name="create_collection_tabs_saved">Rejtarki su skłaźone!</string>
+    <string name="create_collection_tabs_saved">Rejtariki su skłaźone!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
-    <string name="create_collection_tab_saved">Rejtark jo skłaźony!</string>
+    <string name="create_collection_tab_saved">Rejtarik jo skłaźony!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
     <string name="create_collection_close">Zacyniś</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
@@ -723,7 +726,7 @@
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">Z drugim rědom zwězaś</string>
     <!-- The dialog text shown when additional devices are not available -->
-    <string name="sync_connect_device_dialog">Aby rejtark pósłał, pśizjawśo se pla Firefox na nanejmjenjej jadnom dalšnem rěźe.</string>
+    <string name="sync_connect_device_dialog">Aby rejtarik pósłał, pśizjawśo se pla Firefox na nanejmjenjej jadnom dalšnem rěźe.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Som zrozměł</string>
     <!-- Share error message -->
@@ -733,7 +736,7 @@
     <!-- Text for the warning message on the Add new device screen -->
     <string name="sync_add_new_device_message">Žedne rědy zwězane</string>
     <!-- Text for the button to learn about sending tabs -->
-    <string name="sync_add_new_device_learn_button">Wěcej wó słanju rejtarkow zgóniś…</string>
+    <string name="sync_add_new_device_learn_button">Wěcej wó słanju rejtarikow zgóniś…</string>
     <!-- Text for the button to connect another device -->
     <string name="sync_add_new_device_connect_button">Drugi rěd zwězaś…</string>
 
@@ -741,9 +744,9 @@
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
     <string name="notification_pbm_channel_name">Priwatne pósejźenje</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text">Priwatne rejtarki lašowaś</string>
+    <string name="notification_pbm_delete_text">Priwatne rejtariki lašowaś</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text_2">Priwatne rejtarki zacyniś</string>
+    <string name="notification_pbm_delete_text_2">Priwatne rejtariki zacyniś</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
     <string name="notification_pbm_action_open">Wócyniś</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
@@ -755,21 +758,21 @@
     <!-- Text shown in snackbar when user renames a collection -->
     <string name="snackbar_collection_renamed">Zběrka jo se pśemjeniła</string>
     <!-- Text shown in snackbar when user deletes a tab -->
-    <string name="snackbar_tab_deleted">Rejtark jo se wulašował</string>
+    <string name="snackbar_tab_deleted">Rejtarik jo se wulašował</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
-    <string name="snackbar_tabs_deleted">Rejtarki su se wulašowali</string>
+    <string name="snackbar_tabs_deleted">Rejtariki su se wulašowali</string>
     <!-- Text shown in snackbar when user closes a tab -->
-    <string name="snackbar_tab_closed">Rejtark jo se zacynił</string>
+    <string name="snackbar_tab_closed">Rejtarik jo se zacynił</string>
     <!-- Text shown in snackbar when user closes all tabs -->
-    <string name="snackbar_tabs_closed">Rejtarki su se zacynili</string>
+    <string name="snackbar_tabs_closed">Rejtariki su se zacynili</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">Woblubowanym sedłam pśidane!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
-    <string name="snackbar_private_tab_closed">Priwatny rejtark jo se zacynił</string>
+    <string name="snackbar_private_tab_closed">Priwatny rejtarik jo se zacynił</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
-    <string name="snackbar_private_tabs_closed">Priwatne rejtarki su se zacynili</string>
+    <string name="snackbar_private_tabs_closed">Priwatne rejtariki su se zacynili</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
-    <string name="snackbar_private_tabs_deleted">Priwatne rejtarki su se wulašowali</string>
+    <string name="snackbar_private_tabs_deleted">Priwatne rejtariki su se wulašowali</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">ANULĚROWAŚ</string>
     <!-- Text shown in snackbar when user removes a top site -->
@@ -810,9 +813,9 @@
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Pśeglědowańske daty wulašowaś</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Wócynjone rejtarki</string>
+    <string name="preferences_delete_browsing_data_tabs_title">Wócynjone rejtariki</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
-    <string name="preferences_delete_browsing_data_tabs_subtitle">Rejtarki: %d</string>
+    <string name="preferences_delete_browsing_data_tabs_subtitle">Rejtariki: %d</string>
     <!-- Title for the data and history items in Delete browsing data -->
     <string name="preferences_delete_browsing_data_browsing_data_title">Pśeglědowańska historija a sedłowe daty</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
@@ -945,9 +948,9 @@
 
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">Wócyńśo priwatny rejtark jaden raz: Pótusniśo symbol %s.</string>
+    <string name="onboarding_private_browsing_description1">Wócyńśo priwatny rejtarik jaden raz: Pótusniśo symbol %s.</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">Wócyńśo priwatne rejtarki kuždy raz: Aktualizěrujśo nastajenja priwatnego modusa.</string>
+    <string name="onboarding_private_browsing_always_description">Wócyńśo priwatne rejtariki kuždy raz: Aktualizěrujśo nastajenja priwatnego modusa.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Nastajenja wócyniś</string>
     <!-- text for the privacy notice onboarding card header -->
@@ -981,9 +984,9 @@
     <string name="onboarding_theme_light_title">Swětła drastwa</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
-    <string name="sync_sent_tabs_snackbar">Rejtarki su se pósłali!</string>
+    <string name="sync_sent_tabs_snackbar">Rejtariki su se pósłali!</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
-    <string name="sync_sent_tab_snackbar">Rejtark jo se pósłał!</string>
+    <string name="sync_sent_tab_snackbar">Rejtarik jo se pósłał!</string>
     <!-- Text shown in snackbar when sharing tabs failed  -->
     <string name="sync_sent_tab_error_snackbar">Słanje njejo móžne</string>
     <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
@@ -1062,11 +1065,11 @@
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Slědujuce wopśimjeśe</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">We wšyknych rejtarkach</string>
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">We wšyknych rejtarikach</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Jano w priwatnych rejtarkach</string>
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Jano w priwatnych rejtarikach</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Jano w swójskich rejtarkach</string>
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Jano w swójskich rejtarikach</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Kryptokopaki</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1135,9 +1138,9 @@
     <string name="about_debug_menu_toast_done">Meni pytanja zmólkow jo zmóžnjony</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
-    <string name="tab_counter_content_description_one_tab">1 rejtark</string>
+    <string name="tab_counter_content_description_one_tab">1 rejtarik</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
-    <string name="tab_counter_content_description_multi_tab">Rejtarki: %d</string>
+    <string name="tab_counter_content_description_multi_tab">Rejtariki: %d</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->

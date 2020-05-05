@@ -19,15 +19,16 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Irekitako fitxak hemen erakutsiko dira.</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s Mozillak egina da.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Saio pribatuan zaude</string>
 
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">
-         %1$s(e)k zure bilaketa- eta nabigazio-historia garbitzen du aplikazioa ixtean edo nabigatze pribatuko fitxa guztiak ixtean. Honek ez zaitu anonimo egiten webguneen edo zure interneteko zerbitzu-hornitzailearen aurrean baina erraztu egiten du ordenagailu hau erabiltzen duten beste erabiltzaileengandik online duzun jarduera pribatu mantentzen.
-    </string>
+    <string name="private_browsing_placeholder_description_2">%1$s(e)k fitxa pribatuetako zure bilaketa- eta nabigatze-historia garbitzen du hauek ixtean edo aplikaziotik irtetean. Honek ez zaitu anonimo egiten webguneen edo zure interneteko zerbitzu-hornitzailearen aurrean baina erraztu egiten du ordenagailu hau erabiltzen duten beste erabiltzaileengandik online duzun jarduera pribatu mantentzen.</string>
     <string name="private_browsing_common_myths">
        Nabigatze pribatuari buruzko ohiko mitoak
     </string>
@@ -477,11 +478,18 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Kendu</string>
 
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (modu pribatua)</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Ezabatu historia</string>
     <!-- Text for the dialog to confirm clearing all history -->
     <string name="history_delete_all_dialog">Ziur zaude zure historia garbitu nahi duzula?</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Historia ezabatuta</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">%1$s ezabatuta</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Garbitu</string>
     <!-- History overflow menu copy button -->
@@ -536,6 +544,10 @@
     <string name="bookmark_edit">Editatu laster-marka</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Hautatu karpeta</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">Ziur zaude karpeta hau ezabatu nahi duzula?</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">%1$s ezabatuta</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Gehitu karpeta</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
@@ -589,7 +601,7 @@
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$s ezabatuta</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">Hautatutako laster-markak ezabatzen</string>
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Laster-markak ezabatuta</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">DESEGIN</string>
 
@@ -863,6 +875,32 @@
 
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Nabigatze-datuak ezabatzen…</string>
+
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">Firefox Preview orain Firefox Nightly da</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly gauero eguneratzen da eta eginbide esperimental berriak ditu.
+        Halere, ezegonkorragoa izan lieke. Esperientzia egonkorrago baterako, deskargatu nabigatzailearen beta bertsioa.</string>
+
+    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button">Lortu Mozilla Firefox nabigatzailea</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly lekuz aldatu da</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">Aplikazio honek ez du segurtasun-eguneraketa gehiago izango. Ez erabili gehiago aplikazio hau eta aldatu Nightly berrira.
+        \n\nZure laster-markak, saio-hasierak eta historia beste aplikazio batera eramateko, sortu Firefox kontua.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">Aldatu Nightly berrira</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly lekuz aldatu da</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">Aplikazio honek ez du segurtasun-eguneraketa gehiago izango. Eskuratu Nightly berria eta ez erabili gehiago aplikazio hau.
+        \n\nZure laster-markak, saio-hasierak eta historia beste aplikazio batera eramateko, sortu Firefox kontua.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Lortu Nightly berria</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
