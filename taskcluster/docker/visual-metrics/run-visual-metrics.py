@@ -203,7 +203,7 @@ def main(log, args):
             tar.extractall(path=str(fetch_dir))
     except Exception:
         log.error(
-            "Could not read extract browsertime results archive",
+            "Could not read/extract browsertime results archive",
             path=browsertime_results_path,
             exc_info=True
         )
@@ -285,6 +285,33 @@ def main(log, args):
     }
     for entry in suites:
         entry["extraOptions"] = jobs_json["extra_options"]
+
+    # Try to get the similarity for all possible tests, this means that we
+    # will also get a comparison of recorded vs. live sites to check
+    # the on-going quality of our recordings.
+    similarity = None
+    if "android" in os.getenv("TC_PLATFORM", ""):
+        try:
+            from similarity import calculate_similarity
+            similarity = calculate_similarity(jobs_json, fetch_dir, OUTPUT_DIR, log)
+        except Exception:
+            log.info("Failed to calculate similarity score", exc_info=True)
+
+    if similarity:
+        suites[0]["subtests"].append({
+            "name": "Similarity3D",
+            "value": similarity[0],
+            "replicates": [similarity[0]],
+            "lowerIsBetter": False,
+            "unit": "a.u.",
+        })
+        suites[0]["subtests"].append({
+            "name": "Similarity2D",
+            "value": similarity[1],
+            "replicates": [similarity[1]],
+            "lowerIsBetter": False,
+            "unit": "a.u.",
+        })
 
     # Validates the perf data complies with perfherder schema.
     # The perfherder schema uses jsonschema so we can't use voluptuous here.
