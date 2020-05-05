@@ -41,7 +41,7 @@ impl TimingDistributionMetric {
             .inner
             .write()
             .expect("lock of wrapped metric was poisoned");
-        TimerId(inner.set_start(now.as_u64()))
+        TimerId(inner.set_start(now.as_nanos()))
     }
 
     /// Stop tracking time for the provided metric and associated timer id.
@@ -62,7 +62,7 @@ impl TimingDistributionMetric {
                 .inner
                 .write()
                 .expect("lock of wrapped metric was poisoned");
-            inner.set_stop_and_accumulate(glean, id, now.as_u64())
+            inner.set_stop_and_accumulate(glean, id, now.as_nanos())
         })
     }
 

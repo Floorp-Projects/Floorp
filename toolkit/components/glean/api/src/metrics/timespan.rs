@@ -36,7 +36,7 @@ impl TimespanMetric {
                 .inner
                 .write()
                 .expect("lock of wrapped metric was poisoned");
-            inner.set_start(glean, now.as_u64())
+            inner.set_start(glean, now.as_nanos())
         })
     }
 
@@ -53,7 +53,7 @@ impl TimespanMetric {
                 .inner
                 .write()
                 .expect("lock of wrapped metric was poisoned");
-            inner.set_stop(glean, now.as_u64())
+            inner.set_stop(glean, now.as_nanos())
         })
     }
 
