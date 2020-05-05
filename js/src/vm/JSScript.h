@@ -1605,6 +1605,11 @@ using RuntimeScriptDataTable =
 //   toStringStart                                           toStringEnd
 //
 // NOTE: These are counted in Code Units from the start of the script source.
+//
+// Also included in the SourceExtent is the line and column numbers of the
+// sourceStart position. In most cases this is derived from the source text,
+// however in the case of dynamic functions it may be overriden by the
+// compilation options.
 struct SourceExtent {
   SourceExtent() = default;
 
@@ -1632,7 +1637,7 @@ struct SourceExtent {
   uint32_t toStringEnd = 0;
 
   // Line and column of |sourceStart_| position.
-  uint32_t lineno = 1;
+  uint32_t lineno = 1;  // 1-indexed.
   uint32_t column = 0;  // Count of Code Points
 };
 
