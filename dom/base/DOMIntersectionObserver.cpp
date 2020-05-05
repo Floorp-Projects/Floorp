@@ -189,7 +189,7 @@ void DOMIntersectionObserver::GetRootMargin(DOMString& aRetVal) {
 }
 
 void DOMIntersectionObserver::GetThresholds(nsTArray<double>& aRetVal) {
-  aRetVal = mThresholds;
+  aRetVal = mThresholds.Clone();
 }
 
 void DOMIntersectionObserver::Observe(Element& aTarget) {

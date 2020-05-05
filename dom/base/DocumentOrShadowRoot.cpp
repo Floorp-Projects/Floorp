@@ -763,7 +763,7 @@ int32_t DocumentOrShadowRoot::StyleOrderIndexOfSheet(
 
 void DocumentOrShadowRoot::GetAdoptedStyleSheets(
     nsTArray<RefPtr<StyleSheet>>& aAdoptedStyleSheets) const {
-  aAdoptedStyleSheets = mAdoptedStyleSheets;
+  aAdoptedStyleSheets = mAdoptedStyleSheets.Clone();
 }
 
 void DocumentOrShadowRoot::TraverseSheetRefInStylesIfApplicable(

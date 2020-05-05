@@ -6364,7 +6364,7 @@ void nsGlobalWindowInner::StopGamepadHaptics() {
 bool nsGlobalWindowInner::UpdateVRDisplays(
     nsTArray<RefPtr<mozilla::dom::VRDisplay>>& aDevices) {
   VRDisplay::UpdateVRDisplays(mVRDisplays, this);
-  aDevices = mVRDisplays;
+  aDevices = mVRDisplays.Clone();
   return true;
 }
 

@@ -757,7 +757,7 @@ bool Navigator::Vibrate(const nsTArray<uint32_t>& aPattern) {
     return false;
   }
 
-  nsTArray<uint32_t> pattern(aPattern);
+  nsTArray<uint32_t> pattern(aPattern.Clone());
 
   if (pattern.Length() > StaticPrefs::dom_vibrator_max_vibrate_list_len()) {
     pattern.SetLength(StaticPrefs::dom_vibrator_max_vibrate_list_len());

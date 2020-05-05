@@ -94,7 +94,7 @@ class ShadowIncludingTreeIterator {
   // shadow DOMs.  But the exact value "4" was just picked because it sounded
   // not too big, not too small.  Feel free to replace it with something else
   // based on actual data.
-  AutoTArray<nsINode*, 4> mRoots;
+  CopyableAutoTArray<nsINode*, 4> mRoots;
 
 #ifdef DEBUG
   // Make sure no one mutates the DOM while we're walking over it.
