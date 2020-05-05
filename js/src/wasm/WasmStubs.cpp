@@ -355,7 +355,7 @@ static void SetupABIArguments(MacroAssembler& masm, const FuncExport& fe,
             break;
           case MIRType::Int8x16:
 #ifdef ENABLE_WASM_SIMD
-            masm.loadUnalignedSimd128Float(src, iter->fpu());
+            masm.loadUnalignedSimd128(src, iter->fpu());
             break;
 #else
             MOZ_CRASH("V128 not supported in SetupABIArguments");
@@ -436,7 +436,7 @@ static void StoreRegisterResult(MacroAssembler& masm, const FuncExport& fe,
           break;
         case ValType::V128:
 #ifdef ENABLE_WASM_SIMD
-          masm.storeUnalignedSimd128Float(result.fpr(), Address(loc, 0));
+          masm.storeUnalignedSimd128(result.fpr(), Address(loc, 0));
           break;
 #else
           MOZ_CRASH("V128 not supported in StoreABIReturn");

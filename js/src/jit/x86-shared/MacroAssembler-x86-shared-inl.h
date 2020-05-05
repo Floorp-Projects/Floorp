@@ -1069,6 +1069,414 @@ void MacroAssembler::memoryBarrier(MemoryBarrierBits barrier) {
 }
 
 // ========================================================================
+// SIMD
+//
+// For vector operations of the form "operationSimd128" we currently bias in
+// favor of an integer representation on x86, but this is subject to later
+// adjustment based on an analysis of use cases and actual programs.
+//
+// The order of operations here follows the header file.
+
+// Moves
+
+void MacroAssembler::moveSimd128(FloatRegister src, FloatRegister dest) {
+  MacroAssemblerX86Shared::moveSimd128Int(src, dest);
+}
+
+// Constants
+
+void MacroAssembler::zeroSimd128(FloatRegister dest) {
+  MacroAssemblerX86Shared::zeroSimd128Int(dest);
+}
+
+// Splat
+
+void MacroAssembler::splatX16(Register src, FloatRegister dest) {
+  MacroAssemblerX86Shared::splatX16(src, dest);
+}
+
+void MacroAssembler::splatX8(Register src, FloatRegister dest) {
+  MacroAssemblerX86Shared::splatX8(src, dest);
+}
+
+void MacroAssembler::splatX4(Register src, FloatRegister dest) {
+  MacroAssemblerX86Shared::splatX4(src, dest);
+}
+
+void MacroAssembler::splatX4(FloatRegister src, FloatRegister dest) {
+  MacroAssemblerX86Shared::splatX4(src, dest);
+}
+
+// Extract lane as scalar
+
+void MacroAssembler::extractLaneInt8x16(FloatRegister src, Register dest,
+                                        unsigned lane, SimdSign sign) {
+  MacroAssemblerX86Shared::extractLaneInt8x16(src, dest, lane, sign);
+}
+
+void MacroAssembler::extractLaneInt16x8(FloatRegister src, Register dest,
+                                        unsigned lane, SimdSign sign) {
+  MacroAssemblerX86Shared::extractLaneInt16x8(src, dest, lane, sign);
+}
+
+void MacroAssembler::extractLaneInt32x4(FloatRegister src, Register dest,
+                                        unsigned lane) {
+  MacroAssemblerX86Shared::extractLaneInt32x4(src, dest, lane);
+}
+
+void MacroAssembler::extractLaneFloat32x4(FloatRegister src, FloatRegister dest,
+                                          unsigned lane, bool canonicalize) {
+  MacroAssemblerX86Shared::extractLaneFloat32x4(src, dest, lane, canonicalize);
+}
+
+// Replace lane value
+
+void MacroAssembler::replaceLaneInt8x16(FloatRegister src, Register value,
+                                        FloatRegister dest, unsigned lane) {
+  MacroAssemblerX86Shared::insertLaneSimdInt(src, value, dest, lane, 16);
+}
+
+void MacroAssembler::replaceLaneInt16x8(FloatRegister src, Register value,
+                                        FloatRegister dest, unsigned lane) {
+  MacroAssemblerX86Shared::insertLaneSimdInt(src, value, dest, lane, 8);
+}
+
+void MacroAssembler::replaceLaneInt32x4(FloatRegister src, Register value,
+                                        FloatRegister dest, unsigned lane) {
+  MacroAssemblerX86Shared::insertLaneSimdInt(src, value, dest, lane, 4);
+}
+
+void MacroAssembler::replaceLaneFloat32x4(FloatRegister src,
+                                          FloatRegister value,
+                                          FloatRegister dest, unsigned lane) {
+  MacroAssemblerX86Shared::insertLaneFloat32x4(src, value, dest, lane);
+}
+
+// Shuffle - permute with immediate indices
+
+// Swizzle - permute with variable indices
+
+// Integer Add
+
+void MacroAssembler::addInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  vpaddb(Operand(rhs), lhs, dest);
+}
+
+void MacroAssembler::addInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  vpaddw(Operand(rhs), lhs, dest);
+}
+
+void MacroAssembler::addInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  vpaddd(Operand(rhs), lhs, dest);
+}
+
+// Integer subtract
+
+void MacroAssembler::subInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  vpsubb(Operand(rhs), lhs, dest);
+}
+
+void MacroAssembler::subInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  vpsubw(Operand(rhs), lhs, dest);
+}
+
+void MacroAssembler::subInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  vpsubd(Operand(rhs), lhs, dest);
+}
+
+// Integer multiply
+
+void MacroAssembler::mulInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  vpmullw(Operand(rhs), lhs, dest);
+}
+
+bool MacroAssembler::mulInt32x4RequiresTemp() {
+  return !AssemblerX86Shared::HasSSE41();
+}
+
+void MacroAssembler::mulInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister temp, FloatRegister dest) {
+  MOZ_ASSERT(temp.isInvalid() == !mulInt32x4RequiresTemp());
+  mozilla::Maybe<FloatRegister> theTemp =
+      mulInt32x4RequiresTemp() ? mozilla::Some(temp) : mozilla::Nothing();
+  MacroAssemblerX86Shared::mulInt32x4(lhs, Operand(rhs), theTemp, dest);
+}
+
+// Integer negate
+
+void MacroAssembler::negInt8x16(FloatRegister in, FloatRegister out) {
+  zeroSimd128Int(out);
+  packedSubInt8(Operand(in), out);
+}
+
+void MacroAssembler::negInt16x8(FloatRegister in, FloatRegister out) {
+  zeroSimd128Int(out);
+  packedSubInt16(Operand(in), out);
+}
+
+void MacroAssembler::negInt32x4(FloatRegister in, FloatRegister out) {
+  zeroSimd128Int(out);
+  packedSubInt32(Operand(in), out);
+}
+
+// Saturating integer add
+
+void MacroAssembler::addSatInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                   SimdSign sign, FloatRegister dest) {
+  if (sign == SimdSign::Signed) {
+    vpaddsb(Operand(rhs), lhs, dest);
+  } else {
+    vpaddusb(Operand(rhs), lhs, dest);
+  }
+}
+
+void MacroAssembler::addSatInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                   SimdSign sign, FloatRegister dest) {
+  if (sign == SimdSign::Signed) {
+    vpaddsw(Operand(rhs), lhs, dest);
+  } else {
+    vpaddusw(Operand(rhs), lhs, dest);
+  }
+}
+
+// Saturating integer subtract
+
+void MacroAssembler::subSatInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                   SimdSign sign, FloatRegister dest) {
+  if (sign == SimdSign::Signed) {
+    vpsubsb(Operand(rhs), lhs, dest);
+  } else {
+    vpsubusb(Operand(rhs), lhs, dest);
+  }
+}
+
+void MacroAssembler::subSatInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                   SimdSign sign, FloatRegister dest) {
+  if (sign == SimdSign::Signed) {
+    vpsubsw(Operand(rhs), lhs, dest);
+  } else {
+    vpsubusw(Operand(rhs), lhs, dest);
+  }
+}
+
+// Lane-wise integer minimum
+
+// Lane-wise integer maximum
+
+// Lane-wise integer rounding average
+
+// Left shift by scalar
+
+void MacroAssembler::leftShiftInt16x8(FloatRegister src, Register count,
+                                      Register temp, FloatRegister out) {
+  MacroAssemblerX86Shared::packedLeftShiftByScalarInt16x8(src, count, temp,
+                                                          out);
+}
+
+void MacroAssembler::leftShiftInt32x4(FloatRegister src, Register count,
+                                      Register temp, FloatRegister out) {
+  MacroAssemblerX86Shared::packedLeftShiftByScalarInt32x4(src, count, temp,
+                                                          out);
+}
+
+// Right shift by scalar
+
+void MacroAssembler::rightShiftInt16x8(FloatRegister src, Register count,
+                                       Register temp, FloatRegister out) {
+  MacroAssemblerX86Shared::packedRightShiftByScalarInt16x8(src, count, temp,
+                                                           out);
+}
+
+void MacroAssembler::unsignedRightShiftInt16x8(FloatRegister src,
+                                               Register count, Register temp,
+                                               FloatRegister out) {
+  MacroAssemblerX86Shared::packedUnsignedRightShiftByScalarInt16x8(src, count,
+                                                                   temp, out);
+}
+
+void MacroAssembler::rightShiftInt32x4(FloatRegister src, Register count,
+                                       Register temp, FloatRegister out) {
+  MacroAssemblerX86Shared::packedRightShiftByScalarInt32x4(src, count, temp,
+                                                           out);
+}
+
+void MacroAssembler::unsignedRightShiftInt32x4(FloatRegister src,
+                                               Register count, Register temp,
+                                               FloatRegister out) {
+  MacroAssemblerX86Shared::packedUnsignedRightShiftByScalarInt32x4(src, count,
+                                                                   temp, out);
+}
+
+// Bitwise and, or, xor, not
+
+void MacroAssembler::bitwiseAndSimd128(FloatRegister lhs, FloatRegister rhs,
+                                       FloatRegister dest) {
+  MacroAssemblerX86Shared::bitwiseAndSimdInt(lhs, Operand(rhs), dest);
+}
+
+void MacroAssembler::bitwiseOrSimd128(FloatRegister lhs, FloatRegister rhs,
+                                      FloatRegister dest) {
+  MacroAssemblerX86Shared::bitwiseOrSimdInt(lhs, Operand(rhs), dest);
+}
+
+void MacroAssembler::bitwiseXorSimd128(FloatRegister lhs, FloatRegister rhs,
+                                       FloatRegister dest) {
+  MacroAssemblerX86Shared::bitwiseXorSimdInt(lhs, Operand(rhs), dest);
+}
+
+void MacroAssembler::bitwiseNotSimd128(FloatRegister src, FloatRegister dest) {
+  MacroAssemblerX86Shared::notInt8x16(Operand(src), dest);
+}
+
+// Bitwise and-not
+
+void MacroAssembler::bitwiseAndNotSimd128(FloatRegister lhs, FloatRegister rhs,
+                                          FloatRegister dest) {
+  MacroAssemblerX86Shared::bitwiseAndNotSimdInt(lhs, Operand(rhs), dest);
+}
+
+// Bitwise select
+
+void MacroAssembler::bitwiseSelectSimd128(FloatRegister mask,
+                                          FloatRegister onTrue,
+                                          FloatRegister onFalse,
+                                          FloatRegister temp,
+                                          FloatRegister dest) {
+  MacroAssemblerX86Shared::selectSimd128(mask, onTrue, onFalse, temp, dest);
+}
+
+// All lanes true
+
+// Comparisons (integer and floating-point)
+
+void MacroAssembler::compareInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                    Assembler::Condition cond,
+                                    FloatRegister dest) {
+  MacroAssemblerX86Shared::compareInt8x16(lhs, Operand(rhs), cond, dest);
+}
+
+void MacroAssembler::compareInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                    Assembler::Condition cond,
+                                    FloatRegister dest) {
+  MacroAssemblerX86Shared::compareInt16x8(lhs, Operand(rhs), cond, dest);
+}
+
+void MacroAssembler::compareInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                    Assembler::Condition cond,
+                                    FloatRegister dest) {
+  MacroAssemblerX86Shared::compareInt32x4(lhs, Operand(rhs), cond, dest);
+}
+
+void MacroAssembler::compareFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                      Assembler::Condition cond,
+                                      FloatRegister dest) {
+  MacroAssemblerX86Shared::compareFloat32x4(lhs, Operand(rhs), cond, dest);
+}
+
+// Load
+
+void MacroAssembler::loadUnalignedSimd128(const Address& src,
+                                          FloatRegister dest) {
+  vmovups(Operand(src), dest);
+}
+
+void MacroAssembler::loadUnalignedSimd128(const BaseIndex& src,
+                                          FloatRegister dest) {
+  vmovdqu(Operand(src), dest);
+}
+
+// Load and splat
+
+// Load and extend
+
+// Store
+
+void MacroAssembler::storeUnalignedSimd128(FloatRegister src,
+                                           const Address& dest) {
+  vmovups(src, Operand(dest));
+}
+
+void MacroAssembler::storeUnalignedSimd128(FloatRegister src,
+                                           const BaseIndex& dest) {
+  vmovups(src, Operand(dest));
+}
+
+// Floating point negation
+
+void MacroAssembler::negFloat32x4(FloatRegister src, FloatRegister dest) {
+  MacroAssemblerX86Shared::negFloat32x4(Operand(src), dest);
+}
+
+// Floating point absolute value
+
+void MacroAssembler::absFloat32x4(FloatRegister src, FloatRegister dest) {
+  MacroAssemblerX86Shared::absFloat32x4(Operand(src), dest);
+}
+
+// NaN-propagating minimum
+
+void MacroAssembler::minFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest) {
+  MacroAssemblerX86Shared::minFloat32x4(lhs, Operand(rhs), dest);
+}
+
+// NaN-propagating maxium
+
+void MacroAssembler::maxFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister temp, FloatRegister dest) {
+  MacroAssemblerX86Shared::maxFloat32x4(lhs, Operand(rhs), temp, dest);
+}
+
+// Floating add
+
+void MacroAssembler::addFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest) {
+  vaddps(Operand(rhs), lhs, dest);
+}
+
+// Floating subtract
+
+void MacroAssembler::subFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest) {
+  vsubps(Operand(rhs), lhs, dest);
+}
+
+// Floating division
+
+void MacroAssembler::divFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest) {
+  vdivps(Operand(rhs), lhs, dest);
+}
+
+// Floating Multiply
+
+void MacroAssembler::mulFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest) {
+  vmulps(Operand(rhs), lhs, dest);
+}
+
+// Floating square root
+
+void MacroAssembler::sqrtFloat32x4(FloatRegister src, FloatRegister dest) {
+  vsqrtps(Operand(src), dest);
+}
+
+// Integer to floating point with rounding
+
+// Floating point to integer with saturation
+
+// Integer to integer narrowing
+
+// Integer to integer widening
+
+// ========================================================================
 // Truncate floating point.
 
 void MacroAssembler::truncateFloat32ToInt64(Address src, Address dest,
