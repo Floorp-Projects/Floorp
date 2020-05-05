@@ -632,6 +632,7 @@ void MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access,
       vmovsd(srcAddr, out.fpu());
       break;
     case Scalar::Int64:
+    case Scalar::V128:
     case Scalar::Uint8Clamped:
     case Scalar::BigInt64:
     case Scalar::BigUint64:
@@ -705,6 +706,7 @@ void MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access,
     case Scalar::Float32:
     case Scalar::Float64:
       MOZ_CRASH("non-int64 loads should use load()");
+    case Scalar::V128:
     case Scalar::Uint8Clamped:
     case Scalar::BigInt64:
     case Scalar::BigUint64:
@@ -748,6 +750,7 @@ void MacroAssembler::wasmStore(const wasm::MemoryAccessDesc& access,
     case Scalar::MaxTypedArrayViewType:
     case Scalar::BigInt64:
     case Scalar::BigUint64:
+    case Scalar::V128:
       MOZ_CRASH("unexpected type");
   }
 

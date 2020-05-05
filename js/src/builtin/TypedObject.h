@@ -421,9 +421,10 @@ class ArrayTypeDescr : public ComplexTypeDescr {
 };
 
 struct StructFieldProps {
-  StructFieldProps() : isMutable(0), alignAsInt64(0) {}
+  StructFieldProps() : isMutable(0), alignAsInt64(0), alignAsV128(0) {}
   uint32_t isMutable : 1;
   uint32_t alignAsInt64 : 1;
+  uint32_t alignAsV128 : 1;
 };
 
 /*

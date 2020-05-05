@@ -126,6 +126,7 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
   target->hugeMemory = wasm::IsHugeMemoryEnabled();
   target->bigIntEnabled = wasm::I64BigIntConversionAvailable(cx);
   target->multiValuesEnabled = wasm::MultiValuesAvailable(cx);
+  target->v128Enabled = wasm::SimdAvailable(cx);
 
   Log(cx, "available wasm compilers: tier1=%s tier2=%s",
       baseline ? "baseline" : "none",
@@ -421,13 +422,11 @@ static bool TieringBeneficial(uint32_t codeSize) {
 CompilerEnvironment::CompilerEnvironment(const CompileArgs& args)
     : state_(InitialWithArgs), args_(&args) {}
 
-CompilerEnvironment::CompilerEnvironment(CompileMode mode, Tier tier,
-                                         OptimizedBackend optimizedBackend,
-                                         DebugEnabled debugEnabled,
-                                         bool multiValueConfigured,
-                                         bool refTypesConfigured,
-                                         bool gcTypesConfigured,
-                                         bool hugeMemory, bool bigIntConfigured)
+CompilerEnvironment::CompilerEnvironment(
+    CompileMode mode, Tier tier, OptimizedBackend optimizedBackend,
+    DebugEnabled debugEnabled, bool multiValueConfigured,
+    bool refTypesConfigured, bool gcTypesConfigured, bool hugeMemory,
+    bool bigIntConfigured, bool v128Configured)
     : state_(InitialWithModeTierDebug),
       mode_(mode),
       tier_(tier),
@@ -437,7 +436,8 @@ CompilerEnvironment::CompilerEnvironment(CompileMode mode, Tier tier,
       gcTypes_(gcTypesConfigured),
       multiValues_(multiValueConfigured),
       hugeMemory_(hugeMemory),
-      bigInt_(bigIntConfigured) {}
+      bigInt_(bigIntConfigured),
+      v128_(v128Configured) {}
 
 void CompilerEnvironment::computeParameters() {
   MOZ_ASSERT(state_ == InitialWithModeTierDebug);
@@ -463,6 +463,7 @@ void CompilerEnvironment::computeParameters(Decoder& d) {
   bool hugeMemory = args_->hugeMemory;
   bool bigIntEnabled = args_->bigIntEnabled;
   bool multiValuesEnabled = args_->multiValuesEnabled;
+  bool v128Enabled = args_->v128Enabled;
 
   bool hasSecondTier = ionEnabled || craneliftEnabled;
   MOZ_ASSERT_IF(debugEnabled, baselineEnabled);
@@ -498,6 +499,8 @@ void CompilerEnvironment::computeParameters(Decoder& d) {
   hugeMemory_ = hugeMemory;
   bigInt_ = bigIntEnabled;
   multiValues_ = multiValuesEnabled;
+  v128_ = v128Enabled;
+
   state_ = Computed;
 }
 
@@ -604,6 +607,7 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
 #endif
   bool multiValueConfigured = args.multiValuesEnabled;
   bool bigIntConfigured = args.bigIntEnabled;
+  bool v128Configured = args.v128Enabled;
 
   OptimizedBackend optimizedBackend = args.craneliftEnabled
                                           ? OptimizedBackend::Cranelift
@@ -612,7 +616,7 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
   CompilerEnvironment compilerEnv(
       CompileMode::Tier2, Tier::Optimized, optimizedBackend,
       DebugEnabled::False, multiValueConfigured, refTypesConfigured,
-      gcTypesConfigured, args.hugeMemory, bigIntConfigured);
+      gcTypesConfigured, args.hugeMemory, bigIntConfigured, v128Configured);
 
   ModuleEnvironment env(&compilerEnv, args.sharedMemoryEnabled
                                           ? Shareable::True

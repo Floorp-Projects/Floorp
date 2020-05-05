@@ -248,6 +248,7 @@ uint32_t ScalarTypeDescr::alignment(Type t) {
     JS_FOR_EACH_SCALAR_TYPE_REPR(NUMERIC_TYPE_TO_STRING)
 #undef NUMERIC_TYPE_TO_STRING
     case Scalar::Int64:
+    case Scalar::V128:
     case Scalar::MaxTypedArrayViewType:
       break;
   }
@@ -296,6 +297,7 @@ bool ScalarTypeDescr::call(JSContext* cx, unsigned argc, Value* vp) {
     JS_FOR_EACH_SCALAR_BIGINT_TYPE_REPR(BIGINT_CALL)
 #undef BIGINT_CALL
     case Scalar::Int64:
+    case Scalar::V128:
     case Scalar::MaxTypedArrayViewType:
       MOZ_CRASH();
   }
@@ -959,10 +961,16 @@ StructTypeDescr* StructMetaTypeDescr::createFromArrays(
       return nullptr;
     }
 
-    CheckedInt32 offset = layout.addField(
-        fieldProps[i].alignAsInt64 ? ScalarTypeDescr::alignment(Scalar::Int64)
-                                   : fieldType->alignment(),
-        fieldType->size());
+    CheckedInt32 offset;
+    if (fieldProps[i].alignAsInt64) {
+      offset = layout.addField(ScalarTypeDescr::alignment(Scalar::Int64),
+                               fieldType->size());
+    } else if (fieldProps[i].alignAsV128) {
+      offset = layout.addField(ScalarTypeDescr::alignment(Scalar::V128),
+                               fieldType->size());
+    } else {
+      offset = layout.addField(fieldType->alignment(), fieldType->size());
+    }
     if (!offset.isValid()) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_TYPEDOBJECT_TOO_BIG);

@@ -61,6 +61,7 @@ struct CompileArgs : ShareableBase<CompileArgs> {
   bool hugeMemory;
   bool bigIntEnabled;
   bool multiValuesEnabled;
+  bool v128Enabled;
 
   // CompileArgs has two constructors:
   //
@@ -86,7 +87,8 @@ struct CompileArgs : ShareableBase<CompileArgs> {
         gcEnabled(false),
         hugeMemory(false),
         bigIntEnabled(false),
-        multiValuesEnabled(false) {}
+        multiValuesEnabled(false),
+        v128Enabled(false) {}
 };
 
 // Return the estimated compiled (machine) code size for the given bytecode size

@@ -551,6 +551,8 @@ static inline size_t MIRTypeToSize(MIRType type) {
       return 4;
     case MIRType::Double:
       return 8;
+    case MIRType::Int8x16:
+      return 16;
     case MIRType::Pointer:
     case MIRType::RefOrNull:
       return sizeof(uintptr_t);
@@ -689,6 +691,8 @@ static inline MIRType ScalarTypeToMIRType(Scalar::Type type) {
     case Scalar::BigInt64:
     case Scalar::BigUint64:
       MOZ_CRASH("NYI");
+    case Scalar::V128:
+      return MIRType::Int8x16;
     case Scalar::MaxTypedArrayViewType:
       break;
   }

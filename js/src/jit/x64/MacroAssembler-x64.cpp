@@ -623,13 +623,16 @@ void MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access,
     case Scalar::Float64:
       loadDouble(srcAddr, out.fpu());
       break;
+    case Scalar::V128:
+      vmovups(srcAddr, out.fpu());
+      break;
     case Scalar::Int64:
       MOZ_CRASH("int64 loads must use load64");
     case Scalar::BigInt64:
     case Scalar::BigUint64:
     case Scalar::Uint8Clamped:
     case Scalar::MaxTypedArrayViewType:
-      MOZ_CRASH("unexpected array type");
+      MOZ_CRASH("unexpected scalar type for wasmLoad");
   }
 
   memoryBarrierAfter(access.sync());
@@ -665,12 +668,13 @@ void MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access,
       break;
     case Scalar::Float32:
     case Scalar::Float64:
-      MOZ_CRASH("non-int64 loads should use load()");
+    case Scalar::V128:
+      MOZ_CRASH("float loads must use wasmLoad");
     case Scalar::Uint8Clamped:
     case Scalar::BigInt64:
     case Scalar::BigUint64:
     case Scalar::MaxTypedArrayViewType:
-      MOZ_CRASH("unexpected array type");
+      MOZ_CRASH("unexpected scalar type for wasmLoadI64");
   }
 
   memoryBarrierAfter(access.sync());
@@ -702,6 +706,9 @@ void MacroAssembler::wasmStore(const wasm::MemoryAccessDesc& access,
       break;
     case Scalar::Float64:
       storeUncanonicalizedDouble(value.fpu(), dstAddr);
+      break;
+    case Scalar::V128:
+      vmovups(value.fpu(), dstAddr);
       break;
     case Scalar::Uint8Clamped:
     case Scalar::BigInt64:
