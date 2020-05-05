@@ -137,6 +137,8 @@
 
         if (result.info) {
           if (result.msg) {
+            ChromeUtils.addProfilerMarker("browser-test", undefined,
+                                          "TEST-INFO " + result.msg);
             this.dumper.structuredLogger.info(result.msg);
           }
           return;
@@ -147,6 +149,18 @@
                                                 result.status,
                                                 result.expected,
                                                 result.msg);
+        let markerText = "TEST-";
+        if (result.pass) {
+          markerText += result.todo ? "KNOWN-FAIL" : "PASS";
+        }
+        else {
+          markerText += "UNEXPECTED-" + result.status;
+        }
+        markerText += " " + result.name;
+        if (result.msg) {
+          markerText += " - " + result.msg;
+        }
+        ChromeUtils.addProfilerMarker("browser-test", undefined, markerText);
       },
 
       setDuration: function setDuration(duration) {
