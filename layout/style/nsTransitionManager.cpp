@@ -312,24 +312,16 @@ double CSSTransition::CurrentValuePortion() const {
 }
 
 void CSSTransition::UpdateStartValueFromReplacedTransition() {
-  MOZ_ASSERT(nsCSSProps::PropHasFlags(mTransitionProperty,
-                                      CSSPropFlags::CanAnimateOnCompositor),
-             "The transition property should be able to be run on the "
-             "compositor");
+  MOZ_ASSERT(mEffect && mEffect->AsKeyframeEffect() &&
+                 mEffect->AsKeyframeEffect()->HasAnimationOfPropertySet(
+                     nsCSSPropertyIDSet::CompositorAnimatables()),
+             "Should be called for compositor-runnable transitions");
+
   MOZ_ASSERT(mTimeline,
              "Should have a timeline if we are replacing transition start "
              "values");
 
   if (!mReplacedTransition) {
-    return;
-  }
-
-  if (!mEffect) {
-    return;
-  }
-
-  KeyframeEffect* keyframeEffect = mEffect->AsKeyframeEffect();
-  if (!keyframeEffect) {
     return;
   }
 
@@ -352,7 +344,8 @@ void CSSTransition::UpdateStartValueFromReplacedTransition() {
                                           replacedTo.mServo, valuePosition)
             .Consume();
 
-    keyframeEffect->ReplaceTransitionStartValue(std::move(startValue));
+    mEffect->AsKeyframeEffect()->ReplaceTransitionStartValue(
+        std::move(startValue));
   }
 
   mReplacedTransition.reset();
