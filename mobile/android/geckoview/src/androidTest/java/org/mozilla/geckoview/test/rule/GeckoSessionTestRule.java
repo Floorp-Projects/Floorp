@@ -1098,9 +1098,6 @@ public class GeckoSessionTestRule implements TestRule {
     }
 
     protected void prepareSession(final GeckoSession session) {
-        UiThreadUtils.waitForCondition(() ->
-                        RuntimeCreator.sTestSupport.get() != RuntimeCreator.TEST_SUPPORT_INITIAL,
-                env.getDefaultTimeoutMillis());
         session.getWebExtensionController()
                 .setMessageDelegate(RuntimeCreator.sTestSupportExtension,
                                     mMessageDelegate,
@@ -1205,20 +1202,14 @@ public class GeckoSessionTestRule implements TestRule {
         WebExtensionController controller = getRuntime().getWebExtensionController();
         List<WebExtension> list = waitForResult(controller.list());
 
-        boolean hasTestSupport = false;
         // Uninstall any left-over extensions
         for (WebExtension extension : list) {
-            if (!extension.id.equals(RuntimeCreator.TEST_SUPPORT_EXTENSION_ID)) {
-                waitForResult(controller.uninstall(extension));
-            } else {
-                hasTestSupport = true;
-            }
+            waitForResult(controller.uninstall(extension));
         }
 
-        // If an extension was still installed, this test should fail.
-        // Note the test support extension is always kept for speed.
+        // If an extension was still installed, this test should fail
         assertThat("A WebExtension was left installed during this test.",
-                list.size(), equalTo(hasTestSupport ? 1 : 0));
+                list.size(), equalTo(0));
     }
 
     protected void cleanupStatement() throws Throwable {

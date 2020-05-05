@@ -22,7 +22,6 @@ import org.mozilla.geckoview.test.util.Callbacks
 import org.mozilla.geckoview.WebExtension.DisabledFlags
 import org.mozilla.geckoview.WebExtensionController.EnableSource
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
-import org.mozilla.geckoview.test.util.RuntimeCreator
 
 import java.util.UUID
 
@@ -60,7 +59,7 @@ class WebExtensionTest : BaseSessionTest() {
     }
 
     @Test
-    fun installBuiltIn() {
+    fun registerWebExtension() {
         mainSession.loadUri("example.com")
         sessionRule.waitForPageStop()
 
@@ -68,10 +67,11 @@ class WebExtensionTest : BaseSessionTest() {
         // the WebExtension
         assertBodyBorderEqualTo("")
 
+        val borderify = WebExtension("resource://android/assets/web_extensions/borderify/",
+                controller)
+
         // Load the WebExtension that will add a border to the body
-        val borderify = sessionRule.waitForResult(controller.installBuiltIn(
-                "resource://android/assets/web_extensions/borderify/"
-        ))
+        sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(borderify))
 
         mainSession.reload()
         sessionRule.waitForPageStop()
@@ -80,7 +80,7 @@ class WebExtensionTest : BaseSessionTest() {
         assertBodyBorderEqualTo("red")
 
         // Unregister WebExtension and check again
-        sessionRule.waitForResult(controller.uninstall(borderify))
+        sessionRule.waitForResult(sessionRule.runtime.unregisterWebExtension(borderify))
 
         mainSession.reload()
         sessionRule.waitForPageStop()
@@ -207,17 +207,15 @@ class WebExtensionTest : BaseSessionTest() {
         // Check that the WebExtension was applied by checking the border color
         assertBodyBorderEqualTo("red")
 
-        var list = extensionsMap(sessionRule.waitForResult(controller.list()))
-        assertEquals(list.size, 2)
-        assertTrue(list.containsKey(borderify.id))
-        assertTrue(list.containsKey(RuntimeCreator.TEST_SUPPORT_EXTENSION_ID))
+        var list = sessionRule.waitForResult(controller.list())
+        assertEquals(list.size, 1)
+        assertEquals(list[0].id, borderify.id)
 
         // Unregister WebExtension and check again
         sessionRule.waitForResult(controller.uninstall(borderify))
 
-        list = extensionsMap(sessionRule.waitForResult(controller.list()))
-        assertEquals(list.size, 1)
-        assertTrue(list.containsKey(RuntimeCreator.TEST_SUPPORT_EXTENSION_ID))
+        list = sessionRule.waitForResult(controller.list())
+        assertEquals(list, emptyList<WebExtension>())
 
         mainSession.reload()
         sessionRule.waitForPageStop()
@@ -310,10 +308,9 @@ class WebExtensionTest : BaseSessionTest() {
                 "xpinstall.signatures.required" to false
         ))
 
-        // First, make sure the list only contains the test support extension
-        var list = extensionsMap(sessionRule.waitForResult(controller.list()))
-        assertEquals(list.size, 1)
-        assertTrue(list.containsKey(RuntimeCreator.TEST_SUPPORT_EXTENSION_ID))
+        // First, make sure the list starts empty
+        var list = sessionRule.waitForResult(controller.list())
+        assertEquals(list, emptyList<WebExtension>())
 
         sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
             @AssertCalled(count=2)
@@ -332,27 +329,23 @@ class WebExtensionTest : BaseSessionTest() {
                 GeckoResult.allOf(borderifyResult, dummyResult))
 
         // Make sure the list is updated accordingly
-        list = extensionsMap(sessionRule.waitForResult(controller.list()))
-        assertTrue(list.containsKey(borderify.id))
-        assertTrue(list.containsKey(dummy.id))
-        assertTrue(list.containsKey(RuntimeCreator.TEST_SUPPORT_EXTENSION_ID))
-        assertEquals(list.size, 3)
+        list = sessionRule.waitForResult(controller.list())
+        assertTrue(list.find { it.id == borderify.id } != null)
+        assertTrue(list.find { it.id == dummy.id } != null)
+        assertEquals(list.size, 2)
 
         // Uninstall borderify and verify that it's not in the list anymore
         sessionRule.waitForResult(controller.uninstall(borderify))
 
-        list = extensionsMap(sessionRule.waitForResult(controller.list()))
-        assertEquals(list.size, 2)
-        assertTrue(list.containsKey(dummy.id))
-        assertTrue(list.containsKey(RuntimeCreator.TEST_SUPPORT_EXTENSION_ID))
-        assertFalse(list.containsKey(borderify.id))
+        list = sessionRule.waitForResult(controller.list())
+        assertEquals(list.size, 1)
+        assertEquals(list[0].id, dummy.id)
 
         // Uninstall dummy and make sure the list is now empty
         sessionRule.waitForResult(controller.uninstall(dummy))
 
-        list = extensionsMap(sessionRule.waitForResult(controller.list()))
-        assertEquals(list.size, 1)
-        assertTrue(list.containsKey(RuntimeCreator.TEST_SUPPORT_EXTENSION_ID))
+        list = sessionRule.waitForResult(controller.list())
+        assertEquals(list, emptyList<WebExtension>())
     }
 
     private fun testInstallError(name: String, expectedError: Int) {
@@ -372,14 +365,6 @@ class WebExtensionTest : BaseSessionTest() {
                             val installException = exception as WebExtension.InstallException
                             assertEquals(installException.code, expectedError)
                         }))
-    }
-
-    private fun extensionsMap(extensionList: List<WebExtension>): Map<String, WebExtension> {
-        val map = HashMap<String, WebExtension>()
-        for (extension in extensionList) {
-            map.put(extension.id, extension);
-        }
-        return map
     }
 
     @Test
@@ -501,10 +486,11 @@ class WebExtensionTest : BaseSessionTest() {
             }
         }
 
-        val messaging = installWebExtension(background, messageDelegate)
+        val messaging = createWebExtension(background, messageDelegate)
+        sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(messaging))
         sessionRule.waitForResult(messageResult)
 
-        sessionRule.waitForResult(controller.uninstall(messaging))
+        sessionRule.waitForResult(sessionRule.runtime.unregisterWebExtension(messaging))
     }
 
     // This test
@@ -515,22 +501,23 @@ class WebExtensionTest : BaseSessionTest() {
     @Test
     fun testBrowserTabsCreate() {
         val tabsCreateResult = GeckoResult<Void>()
-        var tabsExtension: WebExtension? = null
+        val tabsExtension = WebExtension(TABS_CREATE_BACKGROUND, controller)
+
         val tabDelegate = object : WebExtension.TabDelegate {
             override fun onNewTab(source: WebExtension, details: WebExtension.CreateTabDetails): GeckoResult<GeckoSession> {
                 assertEquals(details.url, "https://www.mozilla.org/en-US/")
                 assertEquals(details.active, true)
-                assertEquals(tabsExtension!!, source)
+                assertEquals(tabsExtension, source)
                 tabsCreateResult.complete(null)
                 return GeckoResult.fromValue(null)
             }
         }
-
-        tabsExtension = sessionRule.waitForResult(controller.installBuiltIn(TABS_CREATE_BACKGROUND))
         tabsExtension.setTabDelegate(tabDelegate)
+
+        sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(tabsExtension))
         sessionRule.waitForResult(tabsCreateResult)
 
-        sessionRule.waitForResult(controller.uninstall(tabsExtension))
+        sessionRule.waitForResult(sessionRule.runtime.unregisterWebExtension(tabsExtension))
     }
 
     // This test
@@ -544,16 +531,19 @@ class WebExtensionTest : BaseSessionTest() {
     @Test
     fun testBrowserTabsCreateBrowserTabsRemove() {
         val onCloseRequestResult = GeckoResult<Void>()
-        val tabsExtension = sessionRule.waitForResult(
-                controller.installBuiltIn(TABS_CREATE_REMOVE_BACKGROUND))
+        val tabsExtension = WebExtension(TABS_CREATE_REMOVE_BACKGROUND, controller)
 
-        tabsExtension.tabDelegate = object : WebExtension.TabDelegate {
+        sessionRule.addExternalDelegateUntilTestEnd(
+                WebExtension.TabDelegate::class,
+                tabsExtension::setTabDelegate,
+                { tabsExtension.setTabDelegate(null) },
+                object : WebExtension.TabDelegate {
             override fun onNewTab(source: WebExtension, details: WebExtension.CreateTabDetails): GeckoResult<GeckoSession> {
                 val extensionCreatedSession = sessionRule.createClosedSession(sessionRule.session.settings)
 
                 extensionCreatedSession.webExtensionController.setTabDelegate(tabsExtension, object : WebExtension.SessionTabDelegate {
                     override fun onCloseTab(source: WebExtension?, session: GeckoSession): GeckoResult<AllowOrDeny> {
-                        assertEquals(tabsExtension.id, source!!.id)
+                        assertEquals(tabsExtension, source)
                         assertEquals(details.active, true)
                         assertNotEquals(null, extensionCreatedSession)
                         assertEquals(extensionCreatedSession, session)
@@ -564,10 +554,13 @@ class WebExtensionTest : BaseSessionTest() {
 
                 return GeckoResult.fromValue(extensionCreatedSession)
             }
-        };
+        })
 
+
+        sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(tabsExtension))
         sessionRule.waitForResult(onCloseRequestResult)
-        sessionRule.waitForResult(controller.uninstall(tabsExtension))
+
+        sessionRule.waitForResult(sessionRule.runtime.unregisterWebExtension(tabsExtension))
     }
 
     // This test
@@ -585,8 +578,7 @@ class WebExtensionTest : BaseSessionTest() {
     @Test
     fun testSetTabActive() {
         val onCloseRequestResult = GeckoResult<Void>()
-        val tabsExtension = sessionRule.waitForResult(
-                controller.installBuiltIn(TABS_ACTIVATE_REMOVE_BACKGROUND))
+        val tabsExtension = WebExtension(TABS_ACTIVATE_REMOVE_BACKGROUND, controller)
         val newTabSession = sessionRule.createOpenSession(sessionRule.session.settings)
 
         sessionRule.addExternalDelegateUntilTestEnd(
@@ -603,11 +595,13 @@ class WebExtensionTest : BaseSessionTest() {
             }
         })
 
+        sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(tabsExtension))
+
         controller.setTabActive(sessionRule.session, false)
         controller.setTabActive(newTabSession, true)
 
         sessionRule.waitForResult(onCloseRequestResult)
-        sessionRule.waitForResult(controller.uninstall(tabsExtension))
+        sessionRule.waitForResult(sessionRule.runtime.unregisterWebExtension(tabsExtension))
     }
 
     // Same as testSetTabActive when the extension is not allowed in private browsing
@@ -721,8 +715,7 @@ class WebExtensionTest : BaseSessionTest() {
         existingSession.loadTestPath("$HELLO_HTML_PATH?tabToClose")
         existingSession.waitForPageStop()
 
-        val tabsExtension = sessionRule.waitForResult(
-                controller.installBuiltIn(TABS_REMOVE_BACKGROUND))
+        val tabsExtension = WebExtension(TABS_REMOVE_BACKGROUND, controller)
 
         sessionRule.addExternalDelegateUntilTestEnd(
                 WebExtension.SessionTabDelegate::class,
@@ -736,21 +729,24 @@ class WebExtensionTest : BaseSessionTest() {
             }
         })
 
+        sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(tabsExtension))
         sessionRule.waitForResult(onCloseRequestResult)
-        sessionRule.waitForResult(controller.uninstall(tabsExtension))
+
+        sessionRule.waitForResult(sessionRule.runtime.unregisterWebExtension(tabsExtension))
     }
 
-    private fun installWebExtension(background: Boolean,
+    private fun createWebExtension(background: Boolean,
                                    messageDelegate: WebExtension.MessageDelegate): WebExtension {
         val webExtension: WebExtension
+        val uuid = "{${UUID.randomUUID()}}"
 
         if (background) {
-            webExtension = sessionRule.waitForResult(
-                    controller.installBuiltIn(MESSAGING_BACKGROUND))
+            webExtension = WebExtension(MESSAGING_BACKGROUND, uuid, WebExtension.Flags.NONE,
+                    controller)
             webExtension.setMessageDelegate(messageDelegate, "browser")
         } else {
-            webExtension = sessionRule.waitForResult(
-                    controller.installBuiltIn(MESSAGING_CONTENT))
+            webExtension = WebExtension(MESSAGING_CONTENT, uuid,
+                    WebExtension.Flags.ALLOW_CONTENT_MESSAGING, controller)
             sessionRule.session.webExtensionController
                     .setMessageDelegate(webExtension, messageDelegate, "browser")
         }
@@ -822,9 +818,11 @@ class WebExtensionTest : BaseSessionTest() {
             }
         }
 
-        val messaging = installWebExtension(background, messageDelegate)
+        val messaging = createWebExtension(background, messageDelegate)
+
+        sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(messaging))
         sessionRule.waitForResult(result)
-        sessionRule.waitForResult(controller.uninstall(messaging))
+        sessionRule.waitForResult(sessionRule.runtime.unregisterWebExtension(messaging))
     }
 
     @Test
@@ -863,7 +861,7 @@ class WebExtensionTest : BaseSessionTest() {
             }
 
             override fun onDisconnect(port: WebExtension.Port) {
-                assertEquals(messaging!!.id, port.sender.webExtension.id)
+                assertEquals(messaging, port.sender.webExtension)
                 assertEquals(port, messagingPort)
                 // We successfully received a disconnection
                 result.complete(null)
@@ -872,7 +870,7 @@ class WebExtensionTest : BaseSessionTest() {
 
         val messageDelegate = object : WebExtension.MessageDelegate {
             override fun onConnect(port: WebExtension.Port) {
-                assertEquals(messaging!!.id, port.sender.webExtension.id)
+                assertEquals(messaging, port.sender.webExtension)
                 checkSender(port.name, port.sender, background)
 
                 assertEquals(port.name, "browser")
@@ -893,16 +891,18 @@ class WebExtensionTest : BaseSessionTest() {
 
             override fun onMessage(nativeApp: String, message: Any,
                                    sender: WebExtension.MessageSender): GeckoResult<Any>? {
-                assertEquals(messaging!!.id, sender.webExtension.id)
+                assertEquals(messaging, sender.webExtension)
 
                 // Ignored for this test
                 return null
             }
         }
 
-        messaging = installWebExtension(background, messageDelegate)
+        messaging = createWebExtension(background, messageDelegate)
+
+        sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(messaging))
         sessionRule.waitForResult(result)
-        sessionRule.waitForResult(controller.uninstall(messaging))
+        sessionRule.waitForResult(sessionRule.runtime.unregisterWebExtension(messaging))
     }
 
     @Test
@@ -957,7 +957,7 @@ class WebExtensionTest : BaseSessionTest() {
 
         val messageDelegate = object : WebExtension.MessageDelegate {
             override fun onConnect(port: WebExtension.Port) {
-                assertEquals(messaging!!.id, port.sender.webExtension.id)
+                assertEquals(messaging, port.sender.webExtension)
                 checkSender(port.name, port.sender, background)
 
                 port.disconnect()
@@ -965,7 +965,7 @@ class WebExtensionTest : BaseSessionTest() {
 
             override fun onMessage(nativeApp: String, message: Any,
                                    sender: WebExtension.MessageSender): GeckoResult<Any>? {
-                assertEquals(messaging!!.id, sender.webExtension.id)
+                assertEquals(messaging, sender.webExtension)
                 checkSender(nativeApp, sender, background)
 
                 if (message is JSONObject) {
@@ -978,9 +978,11 @@ class WebExtensionTest : BaseSessionTest() {
             }
         }
 
-        messaging = installWebExtension(background, messageDelegate)
+        messaging = createWebExtension(background, messageDelegate)
+
+        sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(messaging))
         sessionRule.waitForResult(result)
-        sessionRule.waitForResult(controller.uninstall(messaging))
+        sessionRule.waitForResult(sessionRule.runtime.unregisterWebExtension(messaging))
     }
 
     @Test
@@ -1006,7 +1008,7 @@ class WebExtensionTest : BaseSessionTest() {
 
         val messageDelegate = object : WebExtension.MessageDelegate {
             override fun onConnect(port: WebExtension.Port) {
-                assertEquals(messaging!!.id, port.sender.webExtension.id)
+                assertEquals(messaging, port.sender.webExtension)
                 assertEquals(WebExtension.MessageSender.ENV_TYPE_CONTENT_SCRIPT,
                         port.sender.environmentType)
                 when (port.sender.url) {
@@ -1027,7 +1029,7 @@ class WebExtensionTest : BaseSessionTest() {
 
             override fun onMessage(nativeApp: String, message: Any,
                                    sender: WebExtension.MessageSender): GeckoResult<Any>? {
-                assertEquals(messaging!!.id, sender.webExtension.id)
+                assertEquals(messaging, sender.webExtension)
                 assertEquals(WebExtension.MessageSender.ENV_TYPE_CONTENT_SCRIPT,
                         sender.environmentType)
                 when (sender.url) {
@@ -1047,15 +1049,17 @@ class WebExtensionTest : BaseSessionTest() {
             }
         }
 
-        messaging = sessionRule.waitForResult(controller.installBuiltIn(
-                "resource://android/assets/web_extensions/messaging-iframe/"))
+        messaging = WebExtension("resource://android/assets/web_extensions/messaging-iframe/",
+                "{${UUID.randomUUID()}}", WebExtension.Flags.ALLOW_CONTENT_MESSAGING, controller)
         sessionRule.session.webExtensionController
                 .setMessageDelegate(messaging, messageDelegate, "browser")
+
+        sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(messaging))
         sessionRule.waitForResult(portTopLevel)
         sessionRule.waitForResult(portIframe)
         sessionRule.waitForResult(messageTopLevel)
         sessionRule.waitForResult(messageIframe)
-        sessionRule.waitForResult(controller.uninstall(messaging))
+        sessionRule.waitForResult(sessionRule.runtime.unregisterWebExtension(messaging))
     }
 
     @Test
@@ -1082,9 +1086,10 @@ class WebExtensionTest : BaseSessionTest() {
             }
         }
 
-        extension = sessionRule.waitForResult(controller.installBuiltIn(
-                "resource://android/assets/web_extensions/extension-page-update/"))
+        extension = WebExtension("resource://android/assets/web_extensions/extension-page-update/",
+                controller)
 
+        sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(extension))
         val sessionController = mainSession.webExtensionController
         sessionController.setMessageDelegate(extension, messageDelegate, "browser")
         sessionController.setTabDelegate(extension, object: WebExtension.SessionTabDelegate {
@@ -1142,7 +1147,7 @@ class WebExtensionTest : BaseSessionTest() {
                 { mainSession.webExtensionController.setTabDelegate(extension, null) },
                 object : WebExtension.SessionTabDelegate {})
 
-        val unregister = controller.uninstall(extension)
+        val unregister = sessionRule.runtime.unregisterWebExtension(extension)
 
         sessionRule.waitUntilCalled(object : WebExtension.SessionTabDelegate {
             @AssertCalled
@@ -1158,43 +1163,33 @@ class WebExtensionTest : BaseSessionTest() {
     }
 
     @Test
-    fun badUrl() {
-        testInstallBuiltInError("invalid url", "Could not parse uri")
-    }
-
-    @Test
-    fun badHost() {
-        testInstallBuiltInError("resource://gre/", "Only resource://android")
-    }
-
-    @Test
-    fun dontAllowRemoteUris() {
-        testInstallBuiltInError("https://example.com/extension/", "Only resource://android")
-    }
-
-    @Test
     fun badFileType() {
-        testInstallBuiltInError("resource://android/bad/location/error",
-                "does not point to a folder")
+        testRegisterError("resource://android/bad/location/error",
+                "does not point to a folder or an .xpi")
     }
 
     @Test
     fun badLocationXpi() {
-        testInstallBuiltInError("resource://android/bad/location/error.xpi",
-                "does not point to a folder")
+        testRegisterError("resource://android/bad/location/error.xpi",
+                "NS_ERROR_FILE_NOT_FOUND")
     }
 
     @Test
-    fun testInstallBuiltInError() {
-        testInstallBuiltInError("resource://android/bad/location/error/",
-                "does not contain a valid manifest")
+    fun badLocationFolder() {
+        testRegisterError("resource://android/bad/location/error/",
+                "NS_ERROR_FILE_NOT_FOUND")
     }
 
-    private fun testInstallBuiltInError(location: String, expectedError: String) {
+    private fun testRegisterError(location: String, expectedError: String) {
         try {
-            sessionRule.waitForResult(controller.installBuiltIn(location))
+            sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(
+                    WebExtension(location, controller)
+            ))
         } catch (ex: Exception) {
-            // Let's make sure the error message contains the expected error message
+            // Let's make sure the error message contains the WebExtension URL
+            assertTrue(ex.message!!.contains(location))
+
+            // and it contains the expected error message
             assertTrue(ex.message!!.contains(expectedError))
 
             return

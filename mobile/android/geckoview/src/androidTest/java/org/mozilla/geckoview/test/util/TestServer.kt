@@ -119,18 +119,16 @@ class TestServer {
         }
 
         server.get("/trickle/.*") { request, response ->
-            val name = request.path.substring("/trickle/".count())
-            val mimeType = MimeTypeMap.getSingleton()
-                    .getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(name))
-            val asset = assets.open(name).readBytes()
+            val count = request.path.split("/").last().toInt()
 
-            response.setContentType(mimeType)
-            response.headers.set("Content-Length", "${asset.size}")
+            response.setContentType("application/octet-stream")
+            response.headers.set("Content-Length", "${count}")
             response.writeHead()
 
-            for (i in 1..asset.size) {
-                response.write(ByteBufferList(byteArrayOf(asset[i])))
-                SystemClock.sleep(50)
+            val payload = byteArrayOf(1)
+            for (i in 1..count) {
+                response.write(ByteBufferList(payload))
+                SystemClock.sleep(250)
             }
 
             response.end()
