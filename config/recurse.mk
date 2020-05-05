@@ -210,7 +210,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
 toolkit/library/target: widget/gtk/mozgtk/gtk3/target
 endif
 
-ifeq (,$(filter WINNT Darwin Android,$(OS_TARGET)))
+ifndef MOZ_FOLD_LIBS
 ifndef MOZ_SYSTEM_NSS
 netwerk/test/http3server/target: security/nss/lib/nss/nss_nss3/target security/nss/lib/ssl/ssl_ssl3/target
 endif
