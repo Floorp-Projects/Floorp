@@ -44,6 +44,8 @@ XRRigidTransform::XRRigidTransform(nsISupports* aParent,
       mRawOrientation(aOrientation),
       mNeedsUpdate(true) {
   mozilla::HoldJSObjects(this);
+  mRawTransformMatrix.SetRotationFromQuaternion(mRawOrientation);
+  mRawTransformMatrix.PostTranslate(mRawPosition);
 }
 
 XRRigidTransform::XRRigidTransform(nsISupports* aParent,
@@ -56,7 +58,12 @@ XRRigidTransform::XRRigidTransform(nsISupports* aParent,
       mNeedsUpdate(true) {
   mozilla::HoldJSObjects(this);
   gfx::PointDouble3D scale;
-  aTransform.Decompose(mRawPosition, mRawOrientation, scale);
+  mRawTransformMatrix = aTransform;
+  mRawTransformMatrix.Decompose(mRawPosition, mRawOrientation, scale);
+  // TODO: Investigate why we need to do this invert after getting orientation
+  // from the transform matrix. It looks like we have a bug at
+  // Matrix4x4Typed.SetFromRotationMatrix() (Bug 1635363).
+  mRawOrientation.Invert();
 }
 
 XRRigidTransform::~XRRigidTransform() { mozilla::DropJSObjects(this); }
@@ -83,7 +90,6 @@ DOMPoint* XRRigidTransform::Position() {
     mPosition = new DOMPoint(mParent, mRawPosition.x, mRawPosition.y,
                              mRawPosition.z, 1.0f);
   }
-
   return mPosition;
 }
 
@@ -112,6 +118,9 @@ void XRRigidTransform::Update(const gfx::PointDouble3D& aPosition,
   mNeedsUpdate = true;
   mRawPosition = aPosition;
   mRawOrientation = aOrientation;
+  mRawTransformMatrix.SetRotationFromQuaternion(mRawOrientation);
+  mRawTransformMatrix.PostTranslate(mRawPosition);
+
   if (mPosition) {
     mPosition->SetX(aPosition.x);
     mPosition->SetY(aPosition.y);
@@ -137,14 +146,15 @@ void XRRigidTransform::GetMatrix(JSContext* aCx,
                                  ErrorResult& aRv) {
   if (!mMatrixArray || mNeedsUpdate) {
     mNeedsUpdate = false;
-    gfx::Matrix4x4 mat;
-    mat.SetRotationFromQuaternion(
-        gfx::Quaternion((float)mRawOrientation.x, (float)mRawOrientation.y,
-                        (float)mRawOrientation.z, (float)mRawOrientation.w));
-    mat.PostTranslate((float)mRawPosition.x, (float)mRawPosition.y,
-                      (float)mRawPosition.z);
 
-    Pose::SetFloat32Array(aCx, this, aRetval, mMatrixArray, mat.components, 16,
+    const uint32_t size = 16;
+    float components[size] = {};
+    // In order to avoid some platforms which only copy
+    // the first or last two bytes of a Float64 to a Float32.
+    for (uint32_t i = 0; i < size; ++i) {
+      components[i] = mRawTransformMatrix.components[i];
+    }
+    Pose::SetFloat32Array(aCx, this, aRetval, mMatrixArray, components, 16,
                           aRv);
     if (!mMatrixArray) {
       return;
