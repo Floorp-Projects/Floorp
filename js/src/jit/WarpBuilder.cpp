@@ -2341,11 +2341,8 @@ bool WarpBuilder::build_Instanceof(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_NewTarget(BytecodeLocation loc) {
-  if (!script_->isFunction()) {
-    MOZ_ASSERT(!script_->isForEval());
-    pushConstant(NullValue());
-    return true;
-  }
+  MOZ_ASSERT(script_->isFunction());
+  MOZ_ASSERT(info().funMaybeLazy());
 
   if (snapshot_.script()->isArrowFunction()) {
     MDefinition* callee = getCallee();
