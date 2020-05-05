@@ -7,10 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "New Tab Page")
 
-BROWSER_CHROME_MANIFESTS += [
-  'test/browser/abouthomecache/browser.ini',
-  'test/browser/browser.ini',
-]
+BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 
 SPHINX_TREES['docs'] = 'docs'
 SPHINX_TREES['content-src/asrouter/docs'] = 'content-src/asrouter/docs'
