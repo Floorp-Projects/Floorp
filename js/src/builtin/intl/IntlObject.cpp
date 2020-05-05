@@ -814,8 +814,8 @@ static bool IntlClassFinish(JSContext* cx, HandleObject intl,
   RootedId ctorId(cx);
   RootedValue ctorValue(cx);
   for (const auto& protoKey :
-       {JSProto_Collator, JSProto_DateTimeFormat, JSProto_Locale,
-        JSProto_NumberFormat, JSProto_PluralRules,
+       {JSProto_Collator, JSProto_DateTimeFormat, JSProto_ListFormat,
+        JSProto_Locale, JSProto_NumberFormat, JSProto_PluralRules,
         JSProto_RelativeTimeFormat}) {
     JSObject* ctor = GlobalObject::getOrCreateConstructor(cx, protoKey);
     if (!ctor) {
