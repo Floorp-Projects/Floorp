@@ -831,6 +831,7 @@ var GeckoViewWebExtension = {
         this.pageActionClick(aData.extensionId);
         break;
       }
+      // TODO: Remove deprecated Bug 1634504
       case "GeckoView:RegisterWebExtension": {
         let uri;
         try {
@@ -880,6 +881,7 @@ var GeckoViewWebExtension = {
         break;
       }
 
+      // TODO: Remove deprecated Bug 1634504
       case "GeckoView:UnregisterWebExtension": {
         if (!this.extensionScopes.has(aData.id)) {
           aCallback.onError(
@@ -1074,6 +1076,7 @@ var GeckoViewWebExtension = {
   },
 };
 
+// TODO: Remove deprecated Bug 1634504
 GeckoViewWebExtension.extensionScopes = new Map();
 // WeakMap[Extension -> BrowserAction]
 GeckoViewWebExtension.browserActions = new WeakMap();
