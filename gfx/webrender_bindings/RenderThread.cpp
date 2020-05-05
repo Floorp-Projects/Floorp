@@ -344,13 +344,7 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
 
     WindowInfo* info = it->second;
     PendingFrameInfo& frameInfo = info->mPendingFrames.front();
-    frameInfo.mDocFramesSeen++;
     frameInfo.mFrameNeedsRender |= aRender;
-    if (frameInfo.mDocFramesSeen < frameInfo.mDocFramesTotal) {
-      return;
-    }
-
-    MOZ_ASSERT(frameInfo.mDocFramesSeen == frameInfo.mDocFramesTotal);
     render = frameInfo.mFrameNeedsRender;
 
     frame = frameInfo;
@@ -602,17 +596,16 @@ void RenderThread::SetDestroyed(wr::WindowId aWindowId) {
 
 void RenderThread::IncPendingFrameCount(wr::WindowId aWindowId,
                                         const VsyncId& aStartId,
-                                        const TimeStamp& aStartTime,
-                                        uint8_t aDocFrameCount) {
+                                        const TimeStamp& aStartTime) {
   auto windows = mWindowInfos.Lock();
   auto it = windows->find(AsUint64(aWindowId));
   if (it == windows->end()) {
     MOZ_ASSERT(false);
     return;
   }
-  it->second->mPendingFrameBuild += aDocFrameCount;
+  it->second->mPendingFrameBuild++;
   it->second->mPendingFrames.push(
-      PendingFrameInfo{aStartTime, aStartId, 0, aDocFrameCount, false});
+      PendingFrameInfo{aStartTime, aStartId, false});
 }
 
 void RenderThread::DecPendingFrameBuildCount(wr::WindowId aWindowId) {
