@@ -113,7 +113,7 @@ void TimeRanges::Normalize(double aTolerance) {
 
     normalized.AppendElement(current);
 
-    mRanges = normalized;
+    mRanges = std::move(normalized);
   }
 }
 
@@ -140,7 +140,7 @@ void TimeRanges::Intersection(const TimeRanges* aOtherRanges) {
     }
   }
 
-  mRanges = intersection;
+  mRanges = std::move(intersection);
 }
 
 TimeRanges::index_type TimeRanges::Find(double aTime,
