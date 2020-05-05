@@ -197,7 +197,9 @@ uint32_t ScopeCreationData::nextFrameSlot() const {
 }
 
 bool ScopeCreationData::isArrow() const { return funbox_->isArrow(); }
-
-JSFunction* ScopeCreationData::canonicalFunction() const {
-  return funbox_->function();
+bool ScopeCreationData::isClassConstructor() const {
+  return funbox_->isClassConstructor();
+}
+const FieldInitializers& ScopeCreationData::fieldInitializers() const {
+  return *funbox_->fieldInitializers;
 }
