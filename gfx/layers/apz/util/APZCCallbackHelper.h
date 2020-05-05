@@ -97,13 +97,21 @@ class APZCCallbackHelper {
   static PresShell* GetRootContentDocumentPresShellForContent(
       nsIContent* aContent);
 
-  /* Apply an "input transform" to the given |aInput| and return the transformed
-     value. The input transform applied is the one for the content element
-     corresponding to |aGuid|; this is populated in a previous call to
-     UpdateCallbackTransform. See that method's documentations for details. This
-     method additionally adjusts |aInput| by inversely scaling by the provided
-     pres shell resolution, to cancel out a compositor-side transform (added in
-     bug 1076241) that APZ doesn't unapply. */
+  /* Apply a "callback transform" to |aInput|, which represents the coordinates
+     of an input event targeting content inside the scroll frame identified by
+    |aGuid|.
+    The callback transform has two components:
+       1. The pres shell resolution, representing the pinch-zoom scale
+          (if the scroll frame |aScrollId| is inside the resolution, which
+          is most of the time).
+       2. A translation representing async scrolling. This can contain:
+           - For any scroll frame, a scroll component resulting from the main
+             thread incompletely applying an APZ-requested scroll position.
+           - For the RCD-RSF only, a persistent component representing the
+             offset of the visual viewport relative to the layout viewport.
+         The translation is accumulated for all scroll frames form |aGuid| up to
+         the root, using values populated in UpdateCallbackTransform. See that
+         method's documentation for additional details. */
   static CSSPoint ApplyCallbackTransform(const CSSPoint& aInput,
                                          const ScrollableLayerGuid& aGuid);
 
