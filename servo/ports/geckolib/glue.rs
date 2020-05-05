@@ -5791,7 +5791,7 @@ fn fill_in_missing_keyframe_values(
         if !longhands_at_offset.contains(property) {
             unsafe {
                 Gecko_AppendPropertyValuePair(
-                    &mut (*keyframe).mPropertyValues,
+                    &mut *(*keyframe).mPropertyValues,
                     property.to_nscsspropertyid(),
                 );
             }
@@ -5873,7 +5873,7 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
                     seen.insert(property);
 
                     Gecko_AppendPropertyValuePair(
-                        &mut (*keyframe).mPropertyValues,
+                        &mut *(*keyframe).mPropertyValues,
                         property.to_nscsspropertyid(),
                     );
                 }
@@ -5922,7 +5922,7 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
                     }
 
                     let pair = Gecko_AppendPropertyValuePair(
-                        &mut (*keyframe).mPropertyValues,
+                        &mut *(*keyframe).mPropertyValues,
                         id.to_nscsspropertyid(),
                     );
 
@@ -5945,7 +5945,7 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
 
                 if custom_properties.any_normal() {
                     let pair = Gecko_AppendPropertyValuePair(
-                        &mut (*keyframe).mPropertyValues,
+                        &mut *(*keyframe).mPropertyValues,
                         nsCSSPropertyID::eCSSPropertyExtra_variable,
                     );
 
