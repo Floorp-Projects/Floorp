@@ -1099,16 +1099,18 @@ Result AuthCertificate(
   nsTArray<nsTArray<uint8_t>> peerCertsBytes;
   // Don't include the end-entity certificate.
   if (!peerCertChain.IsEmpty()) {
-    peerCertsBytes.AppendElements(peerCertChain.Elements() + 1,
-                                  peerCertChain.Length() - 1);
+    std::transform(
+        peerCertChain.cbegin() + 1, peerCertChain.cend(),
+        MakeBackInserter(peerCertsBytes),
+        [](const auto& elementArray) { return elementArray.Clone(); });
   }
 
   Result rv = certVerifier.VerifySSLServerCert(
       cert, time, aPinArg, aHostName, builtCertChain, certVerifierFlags,
-      Some(peerCertsBytes), stapledOCSPResponse, sctsFromTLSExtension, dcInfo,
-      aOriginAttributes, saveIntermediates, &evOidPolicy, &ocspStaplingStatus,
-      &keySizeStatus, &sha1ModeResult, &pinningTelemetryInfo,
-      &certificateTransparencyInfo, &crliteTelemetryInfo,
+      Some(std::move(peerCertsBytes)), stapledOCSPResponse,
+      sctsFromTLSExtension, dcInfo, aOriginAttributes, saveIntermediates,
+      &evOidPolicy, &ocspStaplingStatus, &keySizeStatus, &sha1ModeResult,
+      &pinningTelemetryInfo, &certificateTransparencyInfo, &crliteTelemetryInfo,
       &aIsCertChainRootBuiltInRoot);
 
   CollectCertTelemetry(rv, evOidPolicy, ocspStaplingStatus, keySizeStatus,
@@ -1528,7 +1530,7 @@ SECStatus AuthCertificateHookWithInfo(
   // we currently only support single stapled responses
   Maybe<nsTArray<uint8_t>> stapledOCSPResponse;
   if (stapledOCSPResponses && (stapledOCSPResponses->Length() == 1)) {
-    stapledOCSPResponse.emplace(stapledOCSPResponses->ElementAt(0));
+    stapledOCSPResponse.emplace(stapledOCSPResponses->ElementAt(0).Clone());
   }
 
   uint32_t certVerifierFlags = 0;
