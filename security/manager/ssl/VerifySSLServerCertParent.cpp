@@ -141,12 +141,12 @@ bool VerifySSLServerCertParent::Dispatch(
 
   Maybe<nsTArray<uint8_t>> stapledOCSPResponse;
   if (aStapledOCSPResponse) {
-    stapledOCSPResponse.emplace(aStapledOCSPResponse->data());
+    stapledOCSPResponse.emplace(aStapledOCSPResponse->data().Clone());
   }
 
   Maybe<nsTArray<uint8_t>> sctsFromTLSExtension;
   if (aSctsFromTLSExtension) {
-    sctsFromTLSExtension.emplace(aSctsFromTLSExtension->data());
+    sctsFromTLSExtension.emplace(aSctsFromTLSExtension->data().Clone());
   }
 
   Maybe<DelegatedCredentialInfo> dcInfo;
