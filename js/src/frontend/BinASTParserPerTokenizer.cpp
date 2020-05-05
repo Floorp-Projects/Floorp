@@ -268,7 +268,7 @@ JS::Result<FunctionBox*> BinASTParserPerTokenizer<Tok>::buildFunctionBox(
     Rooted<FunctionCreationData> fcd(
         cx_,
         FunctionCreationData(atom, syntax, generatorKind, functionAsyncKind));
-    BINJS_TRY_VAR(fun, AllocNewFunction(cx_, fcd));
+    BINJS_TRY_VAR(fun, AllocNewFunction(cx_, 0, fcd));
     MOZ_ASSERT(fun->explicitName() == atom);
   } else {
     BINJS_TRY_VAR(fun, lazyScript_->function());
