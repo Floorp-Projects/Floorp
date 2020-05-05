@@ -85,7 +85,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
 
 #ifdef ENABLE_WASM_SIMD
 #  ifdef JS_CODEGEN_X64
-    MOZ_CRASH("FIXME for SIMD");
+    // On X64, we don't need alignment for Wasm SIMD at this time.
 #  else
 #    error \
         "we may need padding so that local slots are SIMD-aligned and the stack must be kept SIMD-aligned too."
