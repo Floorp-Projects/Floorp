@@ -804,13 +804,14 @@ bool js::CallSetter(JSContext* cx, HandleValue thisv, HandleValue setter,
 }
 
 bool js::ExecuteKernel(JSContext* cx, HandleScript script,
-                       JSObject& envChainArg, const Value& newTargetValue,
-                       AbstractFramePtr evalInFrame, Value* result) {
+                       HandleObject envChainArg, HandleValue newTargetValue,
+                       AbstractFramePtr evalInFrame,
+                       MutableHandleValue result) {
   MOZ_ASSERT_IF(script->isGlobalCode(),
-                IsGlobalLexicalEnvironment(&envChainArg) ||
-                    !IsSyntacticEnvironment(&envChainArg));
+                IsGlobalLexicalEnvironment(envChainArg) ||
+                    !IsSyntacticEnvironment(envChainArg));
 #ifdef DEBUG
-  RootedObject terminatingEnv(cx, &envChainArg);
+  RootedObject terminatingEnv(cx, envChainArg);
   while (IsSyntacticEnvironment(terminatingEnv)) {
     terminatingEnv = terminatingEnv->enclosingEnvironment();
   }
@@ -829,9 +830,7 @@ bool js::ExecuteKernel(JSContext* cx, HandleScript script,
   }
 
   if (script->isEmpty()) {
-    if (result) {
-      result->setUndefined();
-    }
+    result.setUndefined();
     return true;
   }
 
@@ -844,11 +843,10 @@ bool js::ExecuteKernel(JSContext* cx, HandleScript script,
   return ok;
 }
 
-bool js::Execute(JSContext* cx, HandleScript script, JSObject& envChainArg,
-                 Value* rval) {
+bool js::Execute(JSContext* cx, HandleScript script, HandleObject envChain,
+                 MutableHandleValue rval) {
   /* The env chain is something we control, so we know it can't
      have any outer objects on it. */
-  RootedObject envChain(cx, &envChainArg);
   MOZ_ASSERT(!IsWindowProxy(envChain));
 
   if (script->isModule()) {
@@ -871,7 +869,7 @@ bool js::Execute(JSContext* cx, HandleScript script, JSObject& envChainArg,
   } while ((s = s->enclosingEnvironment()));
 #endif
 
-  return ExecuteKernel(cx, script, *envChain, NullValue(),
+  return ExecuteKernel(cx, script, envChain, NullHandleValue,
                        NullFramePtr() /* evalInFrame */, rval);
 }
 

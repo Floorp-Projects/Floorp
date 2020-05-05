@@ -1031,7 +1031,7 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
     }
   }
 
-  return ExecuteKernel(cx, script, *env, NullValue(), frame, rval.address());
+  return ExecuteKernel(cx, script, env, NullHandleValue, frame, rval);
 }
 
 Result<Completion> js::DebuggerGenericEval(
