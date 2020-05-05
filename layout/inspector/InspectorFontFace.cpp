@@ -245,7 +245,7 @@ void InspectorFontFace::GetVariationInstances(
     aRV.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
-  for (auto i : instances) {
+  for (const auto& i : instances) {
     InspectorVariationInstance& inst = *aResult.AppendElement();
     inst.mName.Append(NS_ConvertUTF8toUTF16(i.mName));
     // inst.mValues is a webidl sequence<>, which is a fallible array,
@@ -256,7 +256,7 @@ void InspectorFontFace::GetVariationInstances(
       aRV.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;
     }
-    for (auto v : i.mValues) {
+    for (const auto& v : i.mValues) {
       InspectorVariationValue value;
       AppendTagAsASCII(value.mAxis, v.mAxis);
       value.mValue = v.mValue;
@@ -286,7 +286,7 @@ void InspectorFontFace::GetFeatures(nsTArray<InspectorFontFeature>& aResult,
 }
 
 void InspectorFontFace::GetRanges(nsTArray<RefPtr<nsRange>>& aResult) {
-  aResult = mRanges;
+  aResult = mRanges.Clone();
 }
 
 void InspectorFontFace::AddRange(nsRange* aRange) {
