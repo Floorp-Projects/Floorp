@@ -55,7 +55,7 @@ ReportingObserver::ReportingObserver(nsIGlobalObject* aGlobal,
                                      bool aBuffered)
     : mGlobal(aGlobal),
       mCallback(&aCallback),
-      mTypes(aTypes),
+      mTypes(aTypes.Clone()),
       mBuffered(aBuffered) {
   MOZ_ASSERT(aGlobal);
 }

@@ -34,7 +34,7 @@ class ReportFetchHandler final : public PromiseNativeHandler {
 
   explicit ReportFetchHandler(
       const nsTArray<ReportDeliver::ReportData>& aReportData)
-      : mReports(aReportData) {}
+      : mReports(aReportData.Clone()) {}
 
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     if (!gReportDeliver) {
