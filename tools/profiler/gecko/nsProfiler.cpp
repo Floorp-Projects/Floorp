@@ -880,18 +880,11 @@ RefPtr<nsProfiler::SymbolTablePromise> nsProfiler::GetSymbolTableMozPromise(
         SymbolTable symbolTable;
         bool succeeded = profiler_get_symbol_table(
             debugPath.get(), breakpadID.get(), &symbolTable);
-        SchedulerGroup::Dispatch(
-            TaskCategory::Other,
-            NS_NewRunnableFunction(
-                "nsProfiler::GetSymbolTableMozPromise result on main thread",
-                [promiseHolder = std::move(promiseHolder),
-                 symbolTable = std::move(symbolTable), succeeded]() mutable {
-                  if (succeeded) {
-                    promiseHolder.Resolve(std::move(symbolTable), __func__);
-                  } else {
-                    promiseHolder.Reject(NS_ERROR_FAILURE, __func__);
-                  }
-                }));
+        if (succeeded) {
+          promiseHolder.Resolve(std::move(symbolTable), __func__);
+        } else {
+          promiseHolder.Reject(NS_ERROR_FAILURE, __func__);
+        }
       }));
 
   return promise;
