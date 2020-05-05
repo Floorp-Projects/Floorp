@@ -571,7 +571,7 @@
 
 - name: StoreFixedSlot
   shared: false
-  transpile: false
+  transpile: true
   args:
     obj: ObjId
     offset: RawWordField
