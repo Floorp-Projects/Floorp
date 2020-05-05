@@ -651,6 +651,16 @@ class Decoder {
   MOZ_MUST_USE bool readFixedU32(uint32_t* u) { return read<uint32_t>(u); }
   MOZ_MUST_USE bool readFixedF32(float* f) { return read<float>(f); }
   MOZ_MUST_USE bool readFixedF64(double* d) { return read<double>(d); }
+#ifdef ENABLE_WASM_SIMD
+  MOZ_MUST_USE bool readFixedV128(V128* d) {
+    for (unsigned i = 0; i < 16; i++) {
+      if (!read<uint8_t>(d->bytes + i)) {
+        return false;
+      }
+    }
+    return true;
+  }
+#endif
 
   // Variable-length encodings that all use LEB128.
 
@@ -745,11 +755,9 @@ class Decoder {
     if (MOZ_LIKELY(!IsPrefixByte(u8))) {
       return true;
     }
-    if (!readFixedU8(&u8)) {
-      op->b1 = 0;  // Make it sane
+    if (!readVarU32(&op->b1)) {
       return false;
     }
-    op->b1 = u8;
     return true;
   }
 

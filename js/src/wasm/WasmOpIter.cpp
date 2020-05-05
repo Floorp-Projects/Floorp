@@ -40,6 +40,11 @@ using namespace js::wasm;
 #  else
 #    define WASM_GC_OP(code) break
 #  endif
+#  ifdef ENABLE_WASM_SIMD
+#    define WASM_SIMD_OP(code) return code
+#  else
+#    define WASM_SIMD_OP(code) break
+#  endif
 
 OpKind wasm::Classify(OpBytes op) {
   switch (Op(op.b0)) {
@@ -280,6 +285,201 @@ OpKind wasm::Classify(OpBytes op) {
           WASM_GC_OP(OpKind::StructSet);
         case GcOp::StructNarrow:
           WASM_GC_OP(OpKind::StructNarrow);
+      }
+      break;
+    }
+    case Op::SimdPrefix: {
+      switch (SimdOp(op.b1)) {
+        case SimdOp::Limit:
+          // Reject Limit for SimdPrefix encoding
+          break;
+        case SimdOp::I8x16ExtractLaneS:
+        case SimdOp::I8x16ExtractLaneU:
+        case SimdOp::I16x8ExtractLaneS:
+        case SimdOp::I16x8ExtractLaneU:
+        case SimdOp::I32x4ExtractLane:
+        case SimdOp::I64x2ExtractLane:
+        case SimdOp::F32x4ExtractLane:
+        case SimdOp::F64x2ExtractLane:
+          WASM_SIMD_OP(OpKind::ExtractLane);
+        case SimdOp::I8x16Splat:
+        case SimdOp::I16x8Splat:
+        case SimdOp::I32x4Splat:
+        case SimdOp::I64x2Splat:
+        case SimdOp::F32x4Splat:
+        case SimdOp::F64x2Splat:
+        case SimdOp::I8x16AnyTrue:
+        case SimdOp::I8x16AllTrue:
+        case SimdOp::I16x8AnyTrue:
+        case SimdOp::I16x8AllTrue:
+        case SimdOp::I32x4AnyTrue:
+        case SimdOp::I32x4AllTrue:
+          WASM_SIMD_OP(OpKind::Conversion);
+        case SimdOp::I8x16ReplaceLane:
+        case SimdOp::I16x8ReplaceLane:
+        case SimdOp::I32x4ReplaceLane:
+        case SimdOp::I64x2ReplaceLane:
+        case SimdOp::F32x4ReplaceLane:
+        case SimdOp::F64x2ReplaceLane:
+          WASM_SIMD_OP(OpKind::ReplaceLane);
+        case SimdOp::I8x16Eq:
+        case SimdOp::I8x16Ne:
+        case SimdOp::I8x16LtS:
+        case SimdOp::I8x16LtU:
+        case SimdOp::I8x16GtS:
+        case SimdOp::I8x16GtU:
+        case SimdOp::I8x16LeS:
+        case SimdOp::I8x16LeU:
+        case SimdOp::I8x16GeS:
+        case SimdOp::I8x16GeU:
+        case SimdOp::I16x8Eq:
+        case SimdOp::I16x8Ne:
+        case SimdOp::I16x8LtS:
+        case SimdOp::I16x8LtU:
+        case SimdOp::I16x8GtS:
+        case SimdOp::I16x8GtU:
+        case SimdOp::I16x8LeS:
+        case SimdOp::I16x8LeU:
+        case SimdOp::I16x8GeS:
+        case SimdOp::I16x8GeU:
+        case SimdOp::I32x4Eq:
+        case SimdOp::I32x4Ne:
+        case SimdOp::I32x4LtS:
+        case SimdOp::I32x4LtU:
+        case SimdOp::I32x4GtS:
+        case SimdOp::I32x4GtU:
+        case SimdOp::I32x4LeS:
+        case SimdOp::I32x4LeU:
+        case SimdOp::I32x4GeS:
+        case SimdOp::I32x4GeU:
+        case SimdOp::F32x4Eq:
+        case SimdOp::F32x4Ne:
+        case SimdOp::F32x4Lt:
+        case SimdOp::F32x4Gt:
+        case SimdOp::F32x4Le:
+        case SimdOp::F32x4Ge:
+        case SimdOp::F64x2Eq:
+        case SimdOp::F64x2Ne:
+        case SimdOp::F64x2Lt:
+        case SimdOp::F64x2Gt:
+        case SimdOp::F64x2Le:
+        case SimdOp::F64x2Ge:
+        case SimdOp::V128And:
+        case SimdOp::V128Or:
+        case SimdOp::V128Xor:
+        case SimdOp::V128AndNot:
+        case SimdOp::I8x16AvgrU:
+        case SimdOp::I16x8AvgrU:
+        case SimdOp::I8x16Add:
+        case SimdOp::I8x16AddSaturateS:
+        case SimdOp::I8x16AddSaturateU:
+        case SimdOp::I8x16Sub:
+        case SimdOp::I8x16SubSaturateS:
+        case SimdOp::I8x16SubSaturateU:
+        case SimdOp::I8x16MinS:
+        case SimdOp::I8x16MaxS:
+        case SimdOp::I8x16MinU:
+        case SimdOp::I8x16MaxU:
+        case SimdOp::I16x8Add:
+        case SimdOp::I16x8AddSaturateS:
+        case SimdOp::I16x8AddSaturateU:
+        case SimdOp::I16x8Sub:
+        case SimdOp::I16x8SubSaturateS:
+        case SimdOp::I16x8SubSaturateU:
+        case SimdOp::I16x8Mul:
+        case SimdOp::I16x8MinS:
+        case SimdOp::I16x8MaxS:
+        case SimdOp::I16x8MinU:
+        case SimdOp::I16x8MaxU:
+        case SimdOp::I32x4Add:
+        case SimdOp::I32x4Sub:
+        case SimdOp::I32x4Mul:
+        case SimdOp::I32x4MinS:
+        case SimdOp::I32x4MaxS:
+        case SimdOp::I32x4MinU:
+        case SimdOp::I32x4MaxU:
+        case SimdOp::I64x2Add:
+        case SimdOp::I64x2Sub:
+        case SimdOp::I64x2Mul:
+        case SimdOp::F32x4Add:
+        case SimdOp::F32x4Sub:
+        case SimdOp::F32x4Mul:
+        case SimdOp::F32x4Div:
+        case SimdOp::F32x4Min:
+        case SimdOp::F32x4Max:
+        case SimdOp::F64x2Add:
+        case SimdOp::F64x2Sub:
+        case SimdOp::F64x2Mul:
+        case SimdOp::F64x2Div:
+        case SimdOp::F64x2Min:
+        case SimdOp::F64x2Max:
+        case SimdOp::I8x16NarrowSI16x8:
+        case SimdOp::I8x16NarrowUI16x8:
+        case SimdOp::I16x8NarrowSI32x4:
+        case SimdOp::I16x8NarrowUI32x4:
+        case SimdOp::V8x16Swizzle:
+          WASM_SIMD_OP(OpKind::Binary);
+        case SimdOp::I8x16Neg:
+        case SimdOp::I16x8Neg:
+        case SimdOp::I16x8WidenLowSI8x16:
+        case SimdOp::I16x8WidenHighSI8x16:
+        case SimdOp::I16x8WidenLowUI8x16:
+        case SimdOp::I16x8WidenHighUI8x16:
+        case SimdOp::I32x4Neg:
+        case SimdOp::I32x4WidenLowSI16x8:
+        case SimdOp::I32x4WidenHighSI16x8:
+        case SimdOp::I32x4WidenLowUI16x8:
+        case SimdOp::I32x4WidenHighUI16x8:
+        case SimdOp::I32x4TruncSSatF32x4:
+        case SimdOp::I32x4TruncUSatF32x4:
+        case SimdOp::I64x2Neg:
+        case SimdOp::F32x4Abs:
+        case SimdOp::F32x4Neg:
+        case SimdOp::F32x4Sqrt:
+        case SimdOp::F32x4ConvertSI32x4:
+        case SimdOp::F32x4ConvertUI32x4:
+        case SimdOp::F64x2Abs:
+        case SimdOp::F64x2Neg:
+        case SimdOp::F64x2Sqrt:
+        case SimdOp::V128Not:
+        case SimdOp::I8x16Abs:
+        case SimdOp::I16x8Abs:
+        case SimdOp::I32x4Abs:
+          WASM_SIMD_OP(OpKind::Unary);
+        case SimdOp::I8x16Shl:
+        case SimdOp::I8x16ShrS:
+        case SimdOp::I8x16ShrU:
+        case SimdOp::I16x8Shl:
+        case SimdOp::I16x8ShrS:
+        case SimdOp::I16x8ShrU:
+        case SimdOp::I32x4Shl:
+        case SimdOp::I32x4ShrS:
+        case SimdOp::I32x4ShrU:
+        case SimdOp::I64x2Shl:
+        case SimdOp::I64x2ShrS:
+        case SimdOp::I64x2ShrU:
+          WASM_SIMD_OP(OpKind::VectorShift);
+        case SimdOp::V128Bitselect:
+          WASM_SIMD_OP(OpKind::VectorSelect);
+        case SimdOp::V8x16Shuffle:
+        case SimdOp::V8x16ShuffleLegacy:
+          WASM_SIMD_OP(OpKind::VectorShuffle);
+        case SimdOp::V128Const:
+          WASM_SIMD_OP(OpKind::V128);
+        case SimdOp::V128Load:
+        case SimdOp::V8x16LoadSplat:
+        case SimdOp::V16x8LoadSplat:
+        case SimdOp::V32x4LoadSplat:
+        case SimdOp::V64x2LoadSplat:
+        case SimdOp::I16x8LoadS8x8:
+        case SimdOp::I16x8LoadU8x8:
+        case SimdOp::I32x4LoadS16x4:
+        case SimdOp::I32x4LoadU16x4:
+        case SimdOp::I64x2LoadS32x2:
+        case SimdOp::I64x2LoadU32x2:
+          WASM_SIMD_OP(OpKind::Load);
+        case SimdOp::V128Store:
+          WASM_SIMD_OP(OpKind::Store);
       }
       break;
     }
