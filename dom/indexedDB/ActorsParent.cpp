@@ -13232,7 +13232,7 @@ ConnectionPool::TransactionInfo::TransactionInfo(
       mDatabaseId(aDatabaseId),
       mTransactionId(aTransactionId),
       mLoggingSerialNumber(aLoggingSerialNumber),
-      mObjectStoreNames(aObjectStoreNames),
+      mObjectStoreNames(aObjectStoreNames.Clone()),
       mIsWriteTransaction(aIsWriteTransaction),
       mRunning(false) {
   AssertIsOnBackgroundThread();
@@ -26739,7 +26739,7 @@ CursorOpBaseHelperBase<CursorType>::PopulateResponseFromStatement(
 
   if (aInitializeResponse) {
     mOp.mResponse = std::remove_reference_t<decltype(
-        populateResponseHelper.GetTypedResponse(&mOp.mResponse))>{};
+        populateResponseHelper.GetTypedResponse(&mOp.mResponse))>();
   }
 
   auto& responses = populateResponseHelper.GetTypedResponse(&mOp.mResponse);
