@@ -38,6 +38,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.SharedViewModel
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
@@ -190,7 +191,7 @@ class DefaultBrowserToolbarController(
                         } else {
                             val directions =
                                 BrowserFragmentDirections.actionBrowserFragmentToCreateShortcutFragment()
-                            navController.navigate(directions)
+                            navController.navigateSafe(R.id.browserFragment, directions)
                         }
                     }
                 }

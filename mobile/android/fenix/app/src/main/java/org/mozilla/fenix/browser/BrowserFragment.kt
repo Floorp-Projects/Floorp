@@ -35,6 +35,7 @@ import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.shortcut.FirstTimePwaObserver
@@ -181,6 +182,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     }
 
     override fun navToTrackingProtectionPanel(session: Session) {
+        val navController = findNavController()
+
         val useCase = TrackingProtectionUseCases(
             sessionManager = requireComponents.core.sessionManager,
             engine = requireComponents.core.engine
@@ -194,7 +197,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                     trackingProtectionEnabled = isEnabled,
                     gravity = getAppropriateLayoutGravity()
                 )
-            nav(R.id.browserFragment, directions)
+            navController.navigateSafe(R.id.browserFragment, directions)
         }
     }
 
