@@ -410,6 +410,12 @@ class nsTObserverArray : public nsAutoTObserverArray<T, 0> {
   explicit nsTObserverArray(size_type aCapacity) {
     base_type::mArray.SetCapacity(aCapacity);
   }
+
+  nsTObserverArray Clone() const {
+    auto result = nsTObserverArray{};
+    result.mArray.Assign(this->mArray);
+    return result;
+  }
 };
 
 template <typename T, size_t N>

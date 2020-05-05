@@ -939,7 +939,7 @@ void nsPipe::OnPipeException(nsresult aReason, bool aOutputOnly) {
 
     // OnInputException() can drain the stream and remove it from
     // mInputList.  So iterate over a temp list instead.
-    nsTArray<nsPipeInputStream*> list(mInputList);
+    nsTArray<nsPipeInputStream*> list = mInputList.Clone();
     for (uint32_t i = 0; i < list.Length(); ++i) {
       // an output-only exception applies to the input end if the pipe has
       // zero bytes available.
