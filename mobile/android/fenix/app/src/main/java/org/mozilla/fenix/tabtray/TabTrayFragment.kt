@@ -221,10 +221,11 @@ class TabTrayFragment : Fragment(R.layout.fragment_tab_tray), TabsTray.Observer,
 
     private fun onTabsChanged() {
         val hasNoTabs = getListOfSessions().toList().isEmpty()
+        val isPrivate = (activity as HomeActivity).browsingModeManager.mode.isPrivate
 
         view?.tab_tray_empty_view?.isVisible = hasNoTabs
         view?.tabsTray?.asView()?.isVisible = !hasNoTabs
-        view?.save_to_collection_button?.isVisible = !hasNoTabs
+        view?.save_to_collection_button?.isVisible = !hasNoTabs && !isPrivate
 
         if (hasNoTabs) {
             view?.announceForAccessibility(view?.context?.getString(R.string.no_open_tabs_description))
