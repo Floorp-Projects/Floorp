@@ -1871,7 +1871,7 @@ bool FunctionScopeHasClosedOverBindings(ParseContext* pc);
 bool LexicalScopeHasClosedOverBindings(ParseContext* pc,
                                        ParseContext::Scope& scope);
 
-JSFunction* AllocNewFunction(JSContext* cx,
+JSFunction* AllocNewFunction(JSContext* cx, uint16_t nargs,
                              Handle<FunctionCreationData> dataHandle);
 
 } /* namespace frontend */
