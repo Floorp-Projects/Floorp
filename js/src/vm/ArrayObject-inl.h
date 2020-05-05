@@ -10,7 +10,7 @@
 #include "vm/ArrayObject.h"
 
 #include "gc/Allocator.h"
-#include "gc/GCTrace.h"
+#include "gc/GCProbes.h"
 #include "vm/StringType.h"
 
 #include "vm/JSObject-inl.h"
@@ -77,7 +77,7 @@ inline void ArrayObject::setLength(JSContext* cx, uint32_t length) {
     obj->initializeSlotRange(0, span);
   }
 
-  gc::gcTracer.traceCreateObject(obj);
+  gc::gcprobes::CreateObject(obj);
 
   return obj;
 }

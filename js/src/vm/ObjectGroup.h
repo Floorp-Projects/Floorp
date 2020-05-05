@@ -11,7 +11,7 @@
 
 #include "ds/IdValuePair.h"
 #include "gc/Barrier.h"
-#include "gc/GCTrace.h"
+#include "gc/GCProbes.h"
 #include "js/CharacterEncoding.h"
 #include "js/GCHashTable.h"
 #include "js/TypeDecls.h"
@@ -169,7 +169,6 @@ class ObjectGroup : public gc::TenuredCell {
   }
 
   friend class gc::GCRuntime;
-  friend class gc::GCTrace;
 
   // See JSObject::offsetOfGroup() comment.
   friend class js::jit::MacroAssembler;

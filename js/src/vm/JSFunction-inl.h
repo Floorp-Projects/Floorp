@@ -10,7 +10,7 @@
 #include "vm/JSFunction.h"
 
 #include "gc/Allocator.h"
-#include "gc/GCTrace.h"
+#include "gc/GCProbes.h"
 #include "js/CharacterEncoding.h"
 #include "vm/EnvironmentObject.h"
 
@@ -142,7 +142,7 @@ inline JSFunction* CloneFunctionObjectIfNotSingleton(
              "building of metadata for it");
   fun = SetNewObjectMetadata(cx, fun);
 
-  js::gc::gcTracer.traceCreateObject(fun);
+  js::gc::gcprobes::CreateObject(fun);
 
   return fun;
 }

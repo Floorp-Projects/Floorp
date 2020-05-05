@@ -14,7 +14,7 @@
 #include "jsfriendapi.h"
 
 #include "builtin/TypedObject.h"
-#include "gc/GCTrace.h"
+#include "gc/GCProbes.h"
 #include "jit/AtomicOp.h"
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
@@ -544,10 +544,10 @@ template void MacroAssembler::loadFromTypedBigIntArray(Scalar::Type arrayType,
 // Inlined version of gc::CheckAllocatorState that checks the bare essentials
 // and bails for anything that cannot be handled with our jit allocators.
 void MacroAssembler::checkAllocatorState(Label* fail) {
-  // Don't execute the inline path if we are tracing allocations.
-  if (js::gc::gcTracer.traceEnabled()) {
-    jump(fail);
-  }
+  // Don't execute the inline path if GC probes are built in.
+#ifdef JS_GC_PROBES
+  jump(fail);
+#endif
 
 #ifdef JS_GC_ZEAL
   // Don't execute the inline path if gc zeal or tracing are active.
@@ -1110,10 +1110,10 @@ void MacroAssembler::initGCSlots(Register obj, Register temp,
   }
 }
 
-#ifdef JS_GC_TRACE
+#ifdef JS_GC_PROBES
 static void TraceCreateObject(JSObject* obj) {
   AutoUnsafeCallWithABI unsafe;
-  js::gc::gcTracer.traceCreateObject(obj);
+  js::gc::gcprobes::CreateObject(obj);
 }
 #endif
 
@@ -1196,7 +1196,7 @@ void MacroAssembler::initGCThing(Register obj, Register temp,
     MOZ_CRASH("Unknown object");
   }
 
-#ifdef JS_GC_TRACE
+#ifdef JS_GC_PROBES
   AllocatableRegisterSet regs(RegisterSet::Volatile());
   LiveRegisterSet save(regs.asLiveSet());
   PushRegsInMask(save);

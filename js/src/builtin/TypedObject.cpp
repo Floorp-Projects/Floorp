@@ -2353,7 +2353,7 @@ bool TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp) {
   MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
   cx->realm()->setObjectPendingMetadata(cx, tobj);
 
-  js::gc::gcTracer.traceCreateObject(tobj);
+  js::gc::gcprobes::CreateObject(tobj);
 
   return tobj;
 }

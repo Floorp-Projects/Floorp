@@ -13,7 +13,7 @@
 
 #include "builtin/TypedObject.h"
 #include "gc/Allocator.h"
-#include "gc/GCTrace.h"
+#include "gc/GCProbes.h"
 #include "gc/MaybeRooted.h"
 #include "js/Result.h"
 #include "proxy/Proxy.h"
@@ -532,7 +532,7 @@ inline bool NativeObject::isInWholeCellBuffer() const {
     nobj = SetNewObjectMetadata(cx, nobj);
   }
 
-  js::gc::gcTracer.traceCreateObject(nobj);
+  js::gc::gcprobes::CreateObject(nobj);
 
   return nobj;
 }
