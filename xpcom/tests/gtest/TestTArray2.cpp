@@ -35,7 +35,7 @@ inline bool operator<(const nsCOMPtr<T>& lhs, const nsCOMPtr<T>& rhs) {
 template <class ElementType>
 static bool test_basic_array(ElementType* data, size_t dataLen,
                              const ElementType& extra) {
-  nsTArray<ElementType> ary;
+  CopyableTArray<ElementType> ary;
   const nsTArray<ElementType>& cary = ary;
 
   ary.AppendElements(data, dataLen);
@@ -143,7 +143,7 @@ static bool test_basic_array(ElementType* data, size_t dataLen,
           []() { return false; }))
     return false;
 
-  nsTArray<ElementType> copy(ary);
+  nsTArray<ElementType> copy(ary.Clone());
   if (!(ary == copy)) return false;
   for (i = 0; i < copy.Length(); ++i) {
     if (ary[i] != copy[i]) return false;
@@ -380,7 +380,7 @@ TEST(TArray, test_move_array)
 
   ASSERT_EQ(Countable::Count(), 8);
 
-  nsTArray<Countable> copyCountableArray(constRefCountableArray);
+  nsTArray<Countable> copyCountableArray(constRefCountableArray.Clone());
 
   ASSERT_EQ(Countable::Count(), 12);
 
@@ -426,7 +426,7 @@ TEST(TArray, test_move_array)
 
   ASSERT_EQ(Moveable::Count(), 4);
 
-  nsTArray<Moveable> copyMoveableArray(constRefMoveableArray);
+  nsTArray<Moveable> copyMoveableArray(constRefMoveableArray.Clone());
 
   ASSERT_EQ(Moveable::Count(), 8);
 
