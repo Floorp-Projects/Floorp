@@ -15,6 +15,8 @@
 #include "VsyncSource.h"
 
 class SoftwareDisplay final : public mozilla::gfx::VsyncSource::Display {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SoftwareDisplay)
+
  public:
   SoftwareDisplay();
   void EnableVsync() override;
@@ -26,9 +28,8 @@ class SoftwareDisplay final : public mozilla::gfx::VsyncSource::Display {
   void ScheduleNextVsync(mozilla::TimeStamp aVsyncTimestamp);
   void Shutdown() override;
 
-  virtual ~SoftwareDisplay();
-
  private:
+  virtual ~SoftwareDisplay();
   mozilla::TimeDuration mVsyncRate;
   // Use a chromium thread because nsITimers* fire on the main thread
   base::Thread* mVsyncThread;
