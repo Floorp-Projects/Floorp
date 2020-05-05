@@ -147,7 +147,7 @@ nsresult PushNotifier::Dispatch(PushDispatcher& aDispatcher) {
   return rv;
 }
 
-PushData::PushData(const nsTArray<uint8_t>& aData) : mData(aData) {}
+PushData::PushData(const nsTArray<uint8_t>& aData) : mData(aData.Clone()) {}
 
 PushData::~PushData() = default;
 
@@ -198,7 +198,7 @@ PushData::Json(JSContext* aCx, JS::MutableHandle<JS::Value> aResult) {
 
 NS_IMETHODIMP
 PushData::Binary(nsTArray<uint8_t>& aData) {
-  aData = mData;
+  aData = mData.Clone();
   return NS_OK;
 }
 
@@ -306,7 +306,7 @@ PushMessageDispatcher::PushMessageDispatcher(
     const nsAString& aMessageId, const Maybe<nsTArray<uint8_t>>& aData)
     : PushDispatcher(aScope, aPrincipal),
       mMessageId(aMessageId),
-      mData(aData) {}
+      mData(aData ? Some(aData->Clone()) : Nothing()) {}
 
 PushMessageDispatcher::~PushMessageDispatcher() = default;
 
