@@ -166,6 +166,7 @@ const PRIVILEGED_PERMS = new Set([
   "geckoViewAddons",
   "telemetry",
   "urlbar",
+  "nativeMessagingFromContent",
   "normandyAddonStudy",
   "networkStatus",
 ]);
