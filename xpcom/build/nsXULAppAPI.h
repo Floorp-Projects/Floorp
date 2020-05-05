@@ -440,14 +440,6 @@ XRE_API(bool, XRE_IsSocketProcess, ())
  */
 XRE_API(bool, XRE_UseNativeEventProcessing, ())
 
-#if defined(XP_WIN)
-/**
- * @returns true if win32k calls are allowed in this process type, false if
- *          win32k is (or should be) disabled.
- */
-XRE_API(bool, XRE_Win32kCallsAllowed, ())
-#endif
-
 typedef void (*MainFunction)(void* aData);
 
 XRE_API(nsresult, XRE_InitParentProcess,
