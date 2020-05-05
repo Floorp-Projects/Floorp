@@ -86,8 +86,7 @@ static void UpdateSharedContextCreationFlags(CompilationInfo& compilationinfo,
 
 static bool EmplaceEmitter(CompilationInfo& compilationInfo,
                            Maybe<BytecodeEmitter>& emitter,
-                           const EitherParser& parser,
-                           SharedContext* sharedContext);
+                           const EitherParser& parser, SharedContext* sc);
 
 template <typename Unit>
 class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
@@ -459,23 +458,15 @@ bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
 
 // Allocate a script for CompilationInfo for the given function or global
 static void UpdateSharedContextCreationFlags(CompilationInfo& compilationInfo,
-                                             SharedContext* sc) {
-  ImmutableScriptFlags inputFlags =
-      ImmutableScriptFlags::fromCompileOptions(compilationInfo.options);
-
-  // Add the required input flags to the shared context.
-  sc->addToImmutableFlags(inputFlags);
-}
+                                             SharedContext* sc) {}
 
 static bool EmplaceEmitter(CompilationInfo& compilationInfo,
                            Maybe<BytecodeEmitter>& emitter,
-                           const EitherParser& parser,
-                           SharedContext* sharedContext) {
+                           const EitherParser& parser, SharedContext* sc) {
   BytecodeEmitter::EmitterMode emitterMode =
-      compilationInfo.options.selfHostingMode ? BytecodeEmitter::SelfHosting
-                                              : BytecodeEmitter::Normal;
-  emitter.emplace(/* parent = */ nullptr, parser, sharedContext,
-                  compilationInfo, emitterMode);
+      sc->selfHosted() ? BytecodeEmitter::SelfHosting : BytecodeEmitter::Normal;
+  emitter.emplace(/* parent = */ nullptr, parser, sc, compilationInfo,
+                  emitterMode);
   return emitter->init();
 }
 
@@ -778,9 +769,8 @@ static JSScript* CompileGlobalBinASTScriptImpl(
 
   SourceExtent extent = SourceExtent::makeGlobalExtent(len);
   extent.lineno = 0;
-  GlobalSharedContext globalsc(
-      cx, ScopeKind::Global, compilationInfo, compilationInfo.directives,
-      extent, ImmutableScriptFlags::fromCompileOptions(options));
+  GlobalSharedContext globalsc(cx, ScopeKind::Global, compilationInfo,
+                               compilationInfo.directives, extent);
 
   frontend::BinASTParser<ParserT> parser(cx, compilationInfo, options,
                                          compilationInfo.sourceObject);
