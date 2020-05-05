@@ -49,6 +49,8 @@
 #  define AUTO_PROFILER_LABEL_DYNAMIC_CSTR(label, categoryPair, cStr)
 #  define AUTO_PROFILER_LABEL_DYNAMIC_CSTR_NONSENSITIVE(label, categoryPair, \
                                                         cStr)
+#  define AUTO_PROFILER_LABEL_DYNAMIC_CSTR_FLAGS(label, dynamicString, \
+                                                 categoryPair, flags)
 #  define AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(label, categoryPair, nsCStr)
 #  define AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE( \
       label, categoryPair, nsCStr)
@@ -713,6 +715,14 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
     mozilla::AutoProfilerLabel PROFILER_RAII(                                \
         label, cStr, JS::ProfilingCategoryPair::categoryPair,                \
         uint32_t(js::ProfilingStackFrame::Flags::NONSENSITIVE))
+
+// Like AUTO_PROFILER_LABEL_DYNAMIC_CSTR, but also takes an additional set of
+// flags. The flags parameter should carry values from the
+// js::ProfilingStackFrame::Flags enum.
+#  define AUTO_PROFILER_LABEL_DYNAMIC_CSTR_FLAGS(label, dynamicString, \
+                                                 categoryPair, flags)  \
+    mozilla::AutoProfilerLabel PROFILER_RAII(                          \
+        label, dynamicString, JS::ProfilingCategoryPair::categoryPair, flags)
 
 // Similar to AUTO_PROFILER_LABEL_DYNAMIC_CSTR, but takes an nsACString.
 //
