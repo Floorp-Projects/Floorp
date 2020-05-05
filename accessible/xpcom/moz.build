@@ -68,7 +68,6 @@ else:
 GeneratedFile(
     'xpcAccEvents.h', 'xpcAccEvents.cpp',
     script='AccEventGen.py', entry_point='gen_files',
-    py2=True,
     inputs=[
         'AccEvents.conf',
     ])
