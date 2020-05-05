@@ -175,6 +175,8 @@
 
     <string name="pref_key_use_new_search_experience" translatable="false">pref_key_use_new_search_experience</string>
 
+    <string name="pref_key_wait_first_paint" translatable="false">pref_key_wait_first_paint</string>
+
     <string name="pref_key_debug_settings" translatable="false">pref_key_debug_settings</string>
 
     <string name="pref_key_open_tabs_count" translatable="false">pref_key_open_tabs_count</string>

@@ -144,9 +144,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     private val fullScreenFeature = ViewBoundFeatureWrapper<FullScreenFeature>()
     private val swipeRefreshFeature = ViewBoundFeatureWrapper<SwipeRefreshFeature>()
     private val webchannelIntegration = ViewBoundFeatureWrapper<FxaWebChannelFeature>()
-    private val sitePermissionWifiIntegration = ViewBoundFeatureWrapper<SitePermissionsWifiIntegration>()
+    private val sitePermissionWifiIntegration =
+        ViewBoundFeatureWrapper<SitePermissionsWifiIntegration>()
     private val secureWindowFeature = ViewBoundFeatureWrapper<SecureWindowFeature>()
-    private var fullScreenMediaFeature = ViewBoundFeatureWrapper<MediaFullscreenOrientationFeature>()
+    private var fullScreenMediaFeature =
+        ViewBoundFeatureWrapper<MediaFullscreenOrientationFeature>()
     private var pipFeature: PictureInPictureFeature? = null
 
     var customTabSessionId: String? = null
@@ -202,7 +204,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             engineView = WeakReference(engineView),
             swipeRefresh = WeakReference(swipeRefresh),
             viewLifecycleScope = WeakReference(viewLifecycleOwner.lifecycleScope),
-            arguments = requireArguments()
+            arguments = requireArguments(),
+            firstContentfulHappened = ::didFirstContentfulHappen
         ).apply {
             beginAnimateInIfNecessary()
         }
@@ -412,8 +415,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 }
             }
 
-            resumeDownloadDialogState(sessionManager.selectedSession?.id,
-                store, view, context, toolbarHeight)
+            resumeDownloadDialogState(
+                sessionManager.selectedSession?.id,
+                store, view, context, toolbarHeight
+            )
 
             downloadsFeature.set(
                 downloadFeature,
@@ -506,7 +511,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     onNeedToRequestPermissions = { permissions ->
                         requestPermissions(permissions, REQUEST_CODE_APP_PERMISSIONS)
                     },
-                    onShouldShowRequestPermissionRationale = { shouldShowRequestPermissionRationale(it) }),
+                    onShouldShowRequestPermissionRationale = {
+                        shouldShowRequestPermissionRationale(
+                            it
+                        )
+                    }),
                 owner = this,
                 view = view
             )
@@ -566,6 +575,21 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 flow.mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(customTabSessionId) }
                     .ifChanged { tab -> tab.content.pictureInPictureEnabled }
                     .collect { tab -> pipModeChanged(tab) }
+            }
+
+            if (context.settings().waitToShowPageUntilFirstPaint) {
+                store.flowScoped(viewLifecycleOwner) { flow ->
+                    flow.mapNotNull { state ->
+                        state.findTabOrCustomTabOrSelectedTab(
+                            customTabSessionId
+                        )
+                    }
+                        .ifChanged { it.content.firstContentfulPaint }
+                        .collect {
+                            engineView?.asView()?.isVisible =
+                                it.content.firstContentfulPaint || it.content.progress == 100
+                        }
+                }
             }
 
             @Suppress("ConstantConditionIf")
@@ -687,7 +711,12 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         val context = requireContext()
         val behavior = when (context.settings().toolbarPosition) {
             ToolbarPosition.BOTTOM -> EngineViewBottomBehavior(context, null)
-            ToolbarPosition.TOP -> SwipeRefreshScrollingViewBehavior(context, null, engineView, browserToolbarView)
+            ToolbarPosition.TOP -> SwipeRefreshScrollingViewBehavior(
+                context,
+                null,
+                engineView,
+                browserToolbarView
+            )
         }
 
         (swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams).behavior = behavior
@@ -751,12 +780,13 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         super.onStop()
         initUIJob?.cancel()
 
-        requireComponents.core.store.state.findTabOrCustomTabOrSelectedTab(customTabSessionId)?.let { session ->
-            // If we didn't enter PiP, exit full screen on stop
-            if (!session.content.pictureInPictureEnabled && fullScreenFeature.onBackPressed()) {
-                fullScreenChanged(false)
+        requireComponents.core.store.state.findTabOrCustomTabOrSelectedTab(customTabSessionId)
+            ?.let { session ->
+                // If we didn't enter PiP, exit full screen on stop
+                if (!session.content.pictureInPictureEnabled && fullScreenFeature.onBackPressed()) {
+                    fullScreenChanged(false)
+                }
             }
-        }
     }
 
     @CallSuper
@@ -950,7 +980,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                         .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
                             nav(
                                 R.id.browserFragment,
-                                BrowserFragmentDirections.actionGlobalBookmarkEditFragment(guid, true)
+                                BrowserFragmentDirections.actionGlobalBookmarkEditFragment(
+                                    guid,
+                                    true
+                                )
                             )
                         }
                         .show()
@@ -988,10 +1021,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             // Close find in page bar if opened
             findInPageIntegration.onBackPressed()
             FenixSnackbar.make(
-                    view = requireView().browserLayout,
-                    duration = Snackbar.LENGTH_SHORT,
-                    isDisplayedWithBrowserToolbar = false
-                )
+                view = requireView().browserLayout,
+                duration = Snackbar.LENGTH_SHORT,
+                isDisplayedWithBrowserToolbar = false
+            )
                 .setText(getString(R.string.full_screen_notification))
                 .show()
             activity?.enterToImmersiveMode()
@@ -1013,6 +1046,12 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             }
         }
     }
+
+    private fun didFirstContentfulHappen() =
+        if (!requireContext().settings().waitToShowPageUntilFirstPaint) true else
+            context?.components?.core?.store?.state?.findTabOrCustomTabOrSelectedTab(
+                customTabSessionId
+            )?.content?.firstContentfulPaint ?: false
 
     /*
      * Dereference these views when the fragment view is destroyed to prevent memory leaks

@@ -43,4 +43,9 @@ object FeatureFlags {
      * Enables the new search experience
      */
     val newSearchExperience = Config.channel.isDebug
+
+    /**
+     * Enables wait til first contentful paint
+     */
+    val waitUntilPaintToDraw = Config.channel.isDebug
 }

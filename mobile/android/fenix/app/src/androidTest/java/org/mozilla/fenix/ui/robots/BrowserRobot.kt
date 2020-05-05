@@ -44,12 +44,6 @@ import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
 class BrowserRobot {
-
-    fun verifyBrowserScreen() {
-        onView(ViewMatchers.withResourceName("browserLayout"))
-            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    }
-
     fun verifyCurrentPrivateSession(context: Context) {
         val session = context.components.core.sessionManager.selectedSession
         assertTrue("Current session is private", session?.private!!)
@@ -84,6 +78,10 @@ class BrowserRobot {
     */
 
     fun verifyPageContent(expectedText: String) {
+        mDevice.waitNotNull(
+            Until.findObject(By.res("org.mozilla.fenix.debug:id/engineView")),
+            waitingTime
+        )
         assertTrue(mDevice.findObject(UiSelector().text(expectedText)).waitForExists(waitingTime))
     }
 
@@ -145,7 +143,8 @@ class BrowserRobot {
 
     fun verifyEnhancedTrackingProtectionSwitch() = assertEnhancedTrackingProtectionSwitch()
 
-    fun clickEnhancedTrackingProtectionSwitchOffOn() = onView(withResourceName("switch_widget")).click()
+    fun clickEnhancedTrackingProtectionSwitchOffOn() =
+        onView(withResourceName("switch_widget")).click()
 
     fun verifyProtectionSettingsButton() = assertProtectionSettingsButton()
 
@@ -191,7 +190,8 @@ class BrowserRobot {
 
     fun clickEnhancedTrackingProtectionPanel() = enhancedTrackingProtectionPanel().click()
 
-    fun verifyEnhancedTrackingProtectionPanelNotVisible() = assertEnhancedTrackingProtectionPanelNotVisible()
+    fun verifyEnhancedTrackingProtectionPanelNotVisible() =
+        assertEnhancedTrackingProtectionPanelNotVisible()
 
     fun clickContextOpenLinkInNewTab() {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -423,7 +423,8 @@ fun navURLBar() = onView(withId(R.id.mozac_browser_toolbar_url_view))
 private fun assertNavURLBar() = navURLBar()
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-fun enhancedTrackingProtectionPanel() = onView(withId(R.id.mozac_browser_toolbar_tracking_protection_indicator))
+fun enhancedTrackingProtectionPanel() =
+    onView(withId(R.id.mozac_browser_toolbar_tracking_protection_indicator))
 
 private fun assertEnhancedTrackingProtectionPanelNotVisible() {
     enhancedTrackingProtectionPanel()

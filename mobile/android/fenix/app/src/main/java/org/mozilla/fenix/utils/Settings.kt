@@ -103,6 +103,12 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         featureFlag = FeatureFlags.newSearchExperience
     )
 
+    var waitToShowPageUntilFirstPaint by featureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_wait_first_paint),
+        default = false,
+        featureFlag = FeatureFlags.waitUntilPaintToDraw
+    )
+
     var forceEnableZoom by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_accessibility_force_enable_zoom),
         default = false

@@ -34,7 +34,8 @@ class BrowserAnimator(
     private val engineView: WeakReference<EngineView>,
     private val swipeRefresh: WeakReference<View>,
     private val viewLifecycleScope: WeakReference<LifecycleCoroutineScope>,
-    private val arguments: Bundle
+    private val arguments: Bundle,
+    private val firstContentfulHappened: () -> Boolean
 ) {
 
     private val unwrappedEngineView: EngineView?
@@ -53,22 +54,9 @@ class BrowserAnimator(
         }
 
         doOnEnd {
-            unwrappedEngineView?.asView()?.visibility = View.VISIBLE
-            unwrappedSwipeRefresh?.background = null
-            arguments.putBoolean(SHOULD_ANIMATE_FLAG, false)
-        }
-
-        interpolator = DecelerateInterpolator()
-        duration = ANIMATION_DURATION
-    }
-
-    private val browserFadeInValueAnimator = ValueAnimator.ofFloat(0f, END_ANIMATOR_VALUE).apply {
-        addUpdateListener {
-            unwrappedSwipeRefresh?.alpha = it.animatedFraction
-        }
-
-        doOnEnd {
-            unwrappedEngineView?.asView()?.visibility = View.VISIBLE
+            if (firstContentfulHappened()) {
+                unwrappedEngineView?.asView()?.visibility = View.VISIBLE
+            }
             unwrappedSwipeRefresh?.background = null
             arguments.putBoolean(SHOULD_ANIMATE_FLAG, false)
         }
@@ -93,20 +81,10 @@ class BrowserAnimator(
             }
         } else {
             unwrappedSwipeRefresh?.alpha = 1f
-            unwrappedEngineView?.asView()?.visibility = View.VISIBLE
-            unwrappedSwipeRefresh?.background = null
-        }
-    }
-
-    /**
-     * Triggers the *zoom out* browser animation to run.
-     */
-    fun beginAnimateOut() {
-        viewLifecycleScope.get()?.launch(Dispatchers.Main) {
-            captureEngineViewAndDrawStatically {
-                unwrappedEngineView?.asView()?.visibility = View.GONE
-                browserZoomInValueAnimator.reverse()
+            if (firstContentfulHappened()) {
+                unwrappedEngineView?.asView()?.visibility = View.VISIBLE
             }
+            unwrappedSwipeRefresh?.background = null
         }
     }
 

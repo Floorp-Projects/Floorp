@@ -34,6 +34,8 @@
     <string name="preferences_debug_settings">Secret Settings</string>
     <!-- Label for the new search experience preference -->
     <string name="preferences_debug_settings_use_new_search_experience">Use New Search Experience</string>
+    <!-- Label for the wait until first paint preference -->
+    <string name="preferences_debug_settings_wait_first_paint">Wait Until First Paint To Show Page Content</string>
 
     <!-- Content description (not visible, for screen readers etc.) used to announce [LinkTextView]. -->
     <string name="link_text_view_type_announcement" translatable="false">link</string>

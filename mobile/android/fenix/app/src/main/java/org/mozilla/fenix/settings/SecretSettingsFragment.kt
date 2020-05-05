@@ -30,5 +30,11 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             isChecked = context.settings().useNewSearchExperience
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_wait_first_paint).apply {
+            isVisible = FeatureFlags.waitUntilPaintToDraw
+            isChecked = context.settings().waitToShowPageUntilFirstPaint
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
     }
 }
