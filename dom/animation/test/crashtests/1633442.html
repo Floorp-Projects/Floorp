@@ -1,0 +1,15 @@
+<!doctype html>
+<html class="reftest-wait">
+<head>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.documentElement.style.setProperty('transition-duration', '3s', '')
+    document.documentElement.style.setProperty('rotate', '2deg', undefined)
+    document.documentElement.style.setProperty('-moz-outline-radius-topleft', '2%', '')
+    const [anim_1, anim_0] = document.documentElement.getAnimations({})
+    anim_1.effect = anim_0.effect
+    document.documentElement.classList.remove("reftest-wait");
+  })
+</script>
+</head>
+</html>
