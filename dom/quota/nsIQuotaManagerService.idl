@@ -16,6 +16,15 @@ interface nsIQuotaUsageRequest;
 interface nsIQuotaManagerService : nsISupports
 {
   /**
+   * Asynchronously retrieves storage name and returns it as a plain string.
+   *
+   * If the dom.quotaManager.testing preference is not true the call will be
+   * a no-op.
+   */
+  [must_use] nsIQuotaRequest
+  storageName();
+
+  /**
    * Check if storage is initialized.
    *
    * If the dom.quotaManager.testing preference is not true the call will be

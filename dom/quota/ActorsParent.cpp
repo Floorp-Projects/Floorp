@@ -1490,6 +1490,22 @@ class QuotaRequestBase : public NormalOriginOperationBase,
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 };
 
+class StorageNameOp final : public QuotaRequestBase {
+  nsString mName;
+
+ public:
+  StorageNameOp();
+
+  void Init(Quota* aQuota) override;
+
+ private:
+  ~StorageNameOp() = default;
+
+  nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
+
+  void GetResponse(RequestResponse& aResponse) override;
+};
+
 class InitializedRequestBase : public QuotaRequestBase {
  protected:
   bool mInitialized;
@@ -8608,6 +8624,7 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
 
   switch (aParams.type()) {
+    case RequestParams::TStorageNameParams:
     case RequestParams::TStorageInitializedParams:
     case RequestParams::TTemporaryStorageInitializedParams:
     case RequestParams::TInitParams:
@@ -8851,6 +8868,10 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
   RefPtr<QuotaRequestBase> actor;
 
   switch (aParams.type()) {
+    case RequestParams::TStorageNameParams:
+      actor = new StorageNameOp();
+      break;
+
     case RequestParams::TStorageInitializedParams:
       actor = new StorageInitializedOp();
       break;
@@ -9481,6 +9502,43 @@ void QuotaRequestBase::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnOwningThread();
 
   NoteActorDestroyed();
+}
+
+StorageNameOp::StorageNameOp() : QuotaRequestBase(/* aExclusive */ false) {
+  AssertIsOnOwningThread();
+
+  // Overwrite NormalOriginOperationBase default values.
+  mNeedsDirectoryLocking = false;
+
+  // Overwrite OriginOperationBase default values.
+  mNeedsQuotaManagerInit = true;
+  mNeedsStorageInit = false;
+}
+
+void StorageNameOp::Init(Quota* aQuota) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aQuota);
+}
+
+nsresult StorageNameOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aQuotaManager);
+
+  AUTO_PROFILER_LABEL("StorageNameOp::DoDirectoryWork", OTHER);
+
+  mName = aQuotaManager->GetStorageName();
+
+  return NS_OK;
+}
+
+void StorageNameOp::GetResponse(RequestResponse& aResponse) {
+  AssertIsOnOwningThread();
+
+  StorageNameResponse storageNameResponse;
+
+  storageNameResponse.name() = mName;
+
+  aResponse = storageNameResponse;
 }
 
 InitializedRequestBase::InitializedRequestBase()

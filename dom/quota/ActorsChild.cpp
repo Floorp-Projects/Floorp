@@ -255,6 +255,16 @@ void QuotaRequestChild::HandleResponse(bool aResponse) {
   mRequest->SetResult(variant);
 }
 
+void QuotaRequestChild::HandleResponse(const nsAString& aResponse) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mRequest);
+
+  RefPtr<nsVariant> variant = new nsVariant();
+  variant->SetAsAString(aResponse);
+
+  mRequest->SetResult(variant);
+}
+
 void QuotaRequestChild::HandleResponse(const EstimateResponse& aResponse) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
@@ -302,6 +312,10 @@ mozilla::ipc::IPCResult QuotaRequestChild::Recv__delete__(
   switch (aResponse.type()) {
     case RequestResponse::Tnsresult:
       HandleResponse(aResponse.get_nsresult());
+      break;
+
+    case RequestResponse::TStorageNameResponse:
+      HandleResponse(aResponse.get_StorageNameResponse().name());
       break;
 
     case RequestResponse::TStorageInitializedResponse:
