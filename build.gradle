@@ -168,7 +168,7 @@ task machBuildFaster(type: MachExec) {
 
     workingDir "${topsrcdir}"
 
-    commandLine mozconfig.substs.PYTHON
+    commandLine mozconfig.substs.PYTHON3
     args "${topsrcdir}/mach"
     args 'build'
     args 'faster'
