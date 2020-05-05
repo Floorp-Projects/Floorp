@@ -4,11 +4,11 @@
 from __future__ import print_function, unicode_literals, division
 
 import subprocess
-import sys
 
 from datetime import datetime, timedelta
+from mozbuild.util import system_encoding
 from threading import Thread
-from Queue import Queue, Empty
+from six.moves.queue import Queue, Empty
 
 from .progressbar import ProgressBar
 from .results import NullTestOutput, TestOutput, escape_cmdline
@@ -24,7 +24,7 @@ class TaskFinishedMarker:
 
 def _do_work(qTasks, qResults, qWatch, prefix, run_skipped, timeout, show_cmd):
     while True:
-        test = qTasks.get(block=True, timeout=sys.maxint)
+        test = qTasks.get()
         if test is EndMarker:
             qWatch.put(EndMarker)
             qResults.put(EndMarker)
@@ -39,15 +39,20 @@ def _do_work(qTasks, qResults, qWatch, prefix, run_skipped, timeout, show_cmd):
         if show_cmd:
             print(escape_cmdline(cmd))
         tStart = datetime.now()
-        proc = subprocess.Popen(cmd,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
+        proc = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         # Push the task to the watchdog -- it will kill the task
         # if it goes over the timeout while we keep its stdout
         # buffer clear on the "main" worker thread.
         qWatch.put(proc)
         out, err = proc.communicate()
+        # We're not setting universal_newlines=True in subprocess.Popen due to
+        # still needing to support Python 3.5, which doesn't have the "encoding"
+        # parameter to the Popen constructor, so we have to decode the output
+        # here.
+        out = out.decode(system_encoding)
+        err = err.decode(system_encoding)
         qWatch.put(TaskFinishedMarker)
 
         # Create a result record and forward to result processing.
@@ -75,7 +80,7 @@ def _do_watch(qWatch, timeout):
                 # ignore this.
                 if ex.winerror != 5:
                     raise
-            fin = qWatch.get(block=True, timeout=sys.maxint)
+            fin = qWatch.get()
             assert fin is TaskFinishedMarker, "invalid finish marker"
 
 
