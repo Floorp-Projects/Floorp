@@ -13,6 +13,7 @@
 #include "mozilla/jni/Types.h"
 #include "mozilla/jni/Utils.h"
 #include "AndroidBridge.h"
+#include "GeckoProfiler.h"
 
 namespace mozilla {
 namespace jni {
@@ -103,6 +104,11 @@ class Method : public Accessor {
   template <typename... Args>
   static ReturnType Call(const Context& ctx, nsresult* rv,
                          const Args&... args) {
+    AUTO_PROFILER_LABEL_DYNAMIC_CSTR_FLAGS(
+        Traits::Owner::name, Traits::name, OTHER,
+        uint32_t(js::ProfilingStackFrame::Flags::STRING_TEMPLATE_METHOD) |
+            uint32_t(js::ProfilingStackFrame::Flags::NONSENSITIVE));
+
     JNIEnv* const env = ctx.Env();
     BeginAccess(ctx);
 
@@ -133,6 +139,11 @@ class Method<Traits, void> : public Method<Traits, bool> {
  public:
   template <typename... Args>
   static void Call(const Context& ctx, nsresult* rv, const Args&... args) {
+    AUTO_PROFILER_LABEL_DYNAMIC_CSTR_FLAGS(
+        Traits::Owner::name, Traits::name, OTHER,
+        uint32_t(js::ProfilingStackFrame::Flags::STRING_TEMPLATE_METHOD) |
+            uint32_t(js::ProfilingStackFrame::Flags::NONSENSITIVE));
+
     JNIEnv* const env = ctx.Env();
     Base::BeginAccess(ctx);
 
@@ -159,6 +170,10 @@ class Constructor : protected Method<Traits, typename Traits::ReturnType> {
   template <typename... Args>
   static ReturnType Call(const Context& ctx, nsresult* rv,
                          const Args&... args) {
+    AUTO_PROFILER_LABEL_DYNAMIC_CSTR_FLAGS(
+        Traits::Owner::name, "constructor", OTHER,
+        uint32_t(js::ProfilingStackFrame::Flags::NONSENSITIVE));
+
     JNIEnv* const env = ctx.Env();
     Base::BeginAccess(ctx);
 
@@ -209,6 +224,11 @@ class Field : public Accessor {
 
  public:
   static GetterType Get(const Context& ctx, nsresult* rv) {
+    AUTO_PROFILER_LABEL_DYNAMIC_CSTR_FLAGS(
+        Traits::Owner::name, Traits::name, OTHER,
+        uint32_t(js::ProfilingStackFrame::Flags::STRING_TEMPLATE_GETTER) |
+            uint32_t(js::ProfilingStackFrame::Flags::NONSENSITIVE));
+
     JNIEnv* const env = ctx.Env();
     BeginAccess(ctx);
 
@@ -226,6 +246,11 @@ class Field : public Accessor {
   }
 
   static void Set(const Context& ctx, nsresult* rv, SetterType val) {
+    AUTO_PROFILER_LABEL_DYNAMIC_CSTR_FLAGS(
+        Traits::Owner::name, Traits::name, OTHER,
+        uint32_t(js::ProfilingStackFrame::Flags::STRING_TEMPLATE_SETTER) |
+            uint32_t(js::ProfilingStackFrame::Flags::NONSENSITIVE));
+
     JNIEnv* const env = ctx.Env();
     BeginAccess(ctx);
 
