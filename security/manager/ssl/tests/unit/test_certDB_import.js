@@ -52,7 +52,7 @@ const gInterfaceRequestor = {
       return this;
     }
 
-    throw new Error(Cr.NS_ERROR_NO_INTERFACE);
+    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   },
 };
 
