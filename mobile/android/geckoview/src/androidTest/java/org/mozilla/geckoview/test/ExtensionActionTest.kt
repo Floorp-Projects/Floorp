@@ -39,12 +39,9 @@ class ExtensionActionTest : BaseSessionTest() {
 
     @field:Parameterized.Parameter(0) @JvmField var id: String = ""
 
-    private val controller
-        get() = sessionRule.runtime.webExtensionController
-
     @Before
     fun setup() {
-        controller.setTabActive(mainSession, true)
+        sessionRule.runtime.webExtensionController.setTabActive(mainSession, true)
 
         // This method installs the extension, opens up ports with the background script and the
         // content script and captures the default action definition from the manifest
@@ -54,8 +51,9 @@ class ExtensionActionTest : BaseSessionTest() {
         val windowPortResult = GeckoResult<WebExtension.Port>()
         val backgroundPortResult = GeckoResult<WebExtension.Port>()
 
-        extension = sessionRule.waitForResult(
-                controller.installBuiltIn("resource://android/assets/web_extensions/actions/"));
+        extension = WebExtension("resource://android/assets/web_extensions/actions/",
+                "actions", WebExtension.Flags.ALLOW_CONTENT_MESSAGING,
+                sessionRule.runtime.webExtensionController)
 
         sessionRule.session.webExtensionController.setMessageDelegate(
                 extension!!,
@@ -85,15 +83,14 @@ class ExtensionActionTest : BaseSessionTest() {
             }
         })
 
+        sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(extension!!))
+
         sessionRule.session.loadUri("http://example.com")
         sessionRule.waitForPageStop()
 
-        val pageAction = sessionRule.waitForResult(pageActionDefaultResult)
-        val browserAction = sessionRule.waitForResult(browserActionDefaultResult)
-
         default = when (id) {
-            "#pageAction" -> pageAction
-            "#browserAction" -> browserAction
+            "#pageAction" -> sessionRule.waitForResult(pageActionDefaultResult)
+            "#browserAction" -> sessionRule.waitForResult(browserActionDefaultResult)
             else -> throw IllegalArgumentException()
         }
 
@@ -117,11 +114,7 @@ class ExtensionActionTest : BaseSessionTest() {
 
     @After
     fun tearDown() {
-        if (extension != null) {
-            extension!!.setMessageDelegate(null, "browser")
-            extension!!.setActionDelegate(null)
-            sessionRule.waitForResult(controller.uninstall(extension!!))
-        }
+        sessionRule.waitForResult(sessionRule.runtime.unregisterWebExtension(extension!!))
     }
 
     private fun testBackgroundActionApi(message: String, tester: (WebExtension.Action) -> Unit) {

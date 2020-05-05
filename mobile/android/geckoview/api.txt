@@ -448,13 +448,13 @@ package org.mozilla.geckoview {
     method @UiThread public void orientationChanged();
     method @UiThread public void orientationChanged(int);
     method @AnyThread public void readFromParcel(@NonNull Parcel);
-    method @Deprecated @UiThread @NonNull public GeckoResult<Void> registerWebExtension(@NonNull WebExtension);
+    method @UiThread @NonNull public GeckoResult<Void> registerWebExtension(@NonNull WebExtension);
     method @UiThread public void setDelegate(@Nullable GeckoRuntime.Delegate);
     method @UiThread public void setLoginStorageDelegate(@Nullable LoginStorage.Delegate);
     method @UiThread public void setServiceWorkerDelegate(@Nullable GeckoRuntime.ServiceWorkerDelegate);
     method @UiThread public void setWebNotificationDelegate(@Nullable WebNotificationDelegate);
     method @AnyThread public void shutdown();
-    method @Deprecated @UiThread @NonNull public GeckoResult<Void> unregisterWebExtension(@NonNull WebExtension);
+    method @UiThread @NonNull public GeckoResult<Void> unregisterWebExtension(@NonNull WebExtension);
     field public static final String ACTION_CRASHED = "org.mozilla.gecko.ACTION_CRASHED";
     field public static final Parcelable.Creator<GeckoRuntime> CREATOR;
     field public static final String EXTRA_CRASH_FATAL = "fatal";
@@ -1430,8 +1430,8 @@ package org.mozilla.geckoview {
   }
 
   public class WebExtension {
-    ctor @Deprecated public WebExtension(@NonNull String, @NonNull String, long, @NonNull WebExtensionController);
-    ctor @Deprecated public WebExtension(@NonNull String, @NonNull WebExtensionController);
+    ctor public WebExtension(@NonNull String, @NonNull String, long, @NonNull WebExtensionController);
+    ctor public WebExtension(@NonNull String, @NonNull WebExtensionController);
     method @UiThread @Nullable public WebExtension.TabDelegate getTabDelegate();
     method @AnyThread public void setActionDelegate(@Nullable WebExtension.ActionDelegate);
     method @UiThread public void setMessageDelegate(@Nullable WebExtension.MessageDelegate, @NonNull String);
@@ -1613,7 +1613,6 @@ package org.mozilla.geckoview {
     method @UiThread @Nullable public WebExtensionController.PromptDelegate getPromptDelegate();
     method @UiThread @Nullable @Deprecated public WebExtensionController.TabDelegate getTabDelegate();
     method @NonNull @AnyThread public GeckoResult<WebExtension> install(@NonNull String);
-    method @NonNull @AnyThread public GeckoResult<WebExtension> installBuiltIn(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<List<WebExtension>> list();
     method @NonNull @AnyThread public GeckoResult<WebExtension> setAllowedInPrivateBrowsing(@NonNull WebExtension, boolean);
     method @UiThread public void setDebuggerDelegate(@NonNull WebExtensionController.DebuggerDelegate);
