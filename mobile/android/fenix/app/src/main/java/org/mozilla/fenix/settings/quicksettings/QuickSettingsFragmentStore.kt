@@ -145,8 +145,7 @@ class QuickSettingsFragmentStore(
             val autoplayInaudiblePermission =
                 PhoneFeature.AUTOPLAY_INAUDIBLE.toWebsitePermission(context, permissions, settings)
             val shouldBeVisible = cameraPermission.isVisible || microphonePermission.isVisible ||
-                    notificationPermission.isVisible || locationPermission.isVisible ||
-                    autoplayAudiblePermission.isVisible || autoplayInaudiblePermission.isVisible
+                    notificationPermission.isVisible || locationPermission.isVisible
 
             return WebsitePermissionsState(
                 shouldBeVisible, cameraPermission, microphonePermission,
