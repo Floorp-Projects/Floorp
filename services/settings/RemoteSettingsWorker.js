@@ -84,7 +84,8 @@ const Agent = {
       return false;
     }
     const buffer = await resp.arrayBuffer();
-    return this.checkContentHash(buffer, size, hash);
+    const bytes = new Uint8Array(buffer);
+    return this.checkContentHash(bytes, size, hash);
   },
 
   /**
