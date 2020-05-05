@@ -8,6 +8,7 @@
 
 #include "mozilla/PresShell.h"
 
+#include "Units.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
@@ -36,6 +37,7 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "mozilla/ViewportUtils.h"
 #include <algorithm>
 
 #ifdef XP_WIN
@@ -6384,7 +6386,7 @@ void PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent) {
       mMouseEventTargetGuid = InputAPZContext::GetTargetLayerGuid();
     } else {
       mMouseLocation = nsLayoutUtils::GetEventCoordinatesRelativeTo(
-          aEvent, RelativeTo{rootFrame});
+          aEvent, RelativeTo{rootFrame, ViewportType::Visual});
       mMouseEventTargetGuid = InputAPZContext::GetTargetLayerGuid();
     }
     mMouseLocationWasSetBySynthesizedMouseEventForTests =
@@ -8585,6 +8587,12 @@ bool PresShell::EventHandler::AdjustContextMenuKeyEvent(
   if (PrepareToUseCaretPosition(MOZ_KnownLive(aMouseEvent->mWidget),
                                 caretPoint)) {
     // caret position is good
+    int32_t devPixelRatio = GetPresContext()->AppUnitsPerDevPixel();
+    caretPoint = LayoutDeviceIntPoint::FromAppUnitsToNearest(
+        ViewportUtils::LayoutToVisual(
+            LayoutDeviceIntPoint::ToAppUnits(caretPoint, devPixelRatio),
+            GetPresContext()->PresShell()),
+        devPixelRatio);
     aMouseEvent->mRefPoint = caretPoint;
     return true;
   }
