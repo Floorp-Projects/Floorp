@@ -394,7 +394,6 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   nsRect visible;
   nsRect dirty;
   bool ignoreViewportScrolling = false;
-  nsIFrame* savedIgnoreScrollFrame = nullptr;
   if (subdocRootFrame) {
     // get the dirty rect relative to the root frame of the subdoc
     visible = aBuilder->GetVisibleRect() + GetOffsetToCrossDoc(subdocRootFrame);
@@ -403,10 +402,8 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     visible = visible.ScaleToOtherAppUnitsRoundOut(parentAPD, subdocAPD);
     dirty = dirty.ScaleToOtherAppUnitsRoundOut(parentAPD, subdocAPD);
 
-    if (nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame()) {
-      nsIScrollableFrame* rootScrollableFrame =
-          presShell->GetRootScrollFrameAsScrollable();
-      MOZ_ASSERT(rootScrollableFrame);
+    if (nsIScrollableFrame* rootScrollableFrame =
+            presShell->GetRootScrollFrameAsScrollable()) {
       // Use a copy, so the rects don't get modified.
       nsRect copyOfDirty = dirty;
       nsRect copyOfVisible = visible;
@@ -416,10 +413,6 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                                  /* aSetBase = */ true);
 
       ignoreViewportScrolling = presShell->IgnoringViewportScrolling();
-      if (ignoreViewportScrolling) {
-        savedIgnoreScrollFrame = aBuilder->GetIgnoreScrollFrame();
-        aBuilder->SetIgnoreScrollFrame(rootScrollFrame);
-      }
     }
 
     aBuilder->EnterPresShell(subdocRootFrame, pointerEventsNone);
@@ -514,10 +507,6 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   if (subdocRootFrame) {
     aBuilder->LeavePresShell(subdocRootFrame, &childItems);
-
-    if (ignoreViewportScrolling) {
-      aBuilder->SetIgnoreScrollFrame(savedIgnoreScrollFrame);
-    }
   }
 
   // Generate a resolution and/or zoom item if needed. If one or both of those
