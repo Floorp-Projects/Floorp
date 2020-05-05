@@ -175,7 +175,7 @@ function RedirectAndAuthStopper() {}
 RedirectAndAuthStopper.prototype = {
   // nsIChannelEventSink
   asyncOnChannelRedirect(oldChannel, newChannel, flags, callback) {
-    throw new Error(Cr.NS_ERROR_ENTITY_CHANGED);
+    throw Components.Exception("", Cr.NS_ERROR_ENTITY_CHANGED);
   },
 
   // nsIAuthPrompt2
@@ -184,7 +184,7 @@ RedirectAndAuthStopper.prototype = {
   },
 
   asyncPromptAuth(channel, callback, context, level, authInfo) {
-    throw new Error(Cr.NS_ERROR_NOT_IMPLEMENTED);
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
   getInterface(iid) {

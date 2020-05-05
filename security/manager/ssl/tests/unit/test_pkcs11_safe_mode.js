@@ -25,7 +25,7 @@ function run_test() {
   let xulRuntimeFactory = {
     createInstance(outer, iid) {
       if (outer != null) {
-        throw new Error(Cr.NS_ERROR_NO_AGGREGATION);
+        throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
       }
       return xulRuntime.QueryInterface(iid);
     },
