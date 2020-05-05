@@ -1587,20 +1587,20 @@ using RuntimeScriptDataTable =
 //
 // For most functions the fields point to the following locations.
 //
-//   function * f(a, b) { return a + b; }
-//   ^          ^                        ^
-//   |          |                        |
-//   |          sourceStart              sourceEnd
-//   |                                   |
-//   toStringStart                       toStringEnd
+//   function * foo(a, b) { return a + b; }
+//   ^             ^                       ^
+//   |             |                       |
+//   |             sourceStart             sourceEnd
+//   |                                     |
+//   toStringStart                         toStringEnd
 //
 // For the special case of class constructors, the spec requires us to use an
 // alternate definition of toStringStart / toStringEnd.
 //
 //   class C { constructor() { this.field = 42; } }
-//   ^         ^                                 ^ ^
-//   |         |                                 | `---------`
-//   |         sourceStart                       sourceEnd   |
+//   ^                    ^                      ^ ^
+//   |                    |                      | `---------`
+//   |                    sourceStart            sourceEnd   |
 //   |                                                       |
 //   toStringStart                                           toStringEnd
 //
