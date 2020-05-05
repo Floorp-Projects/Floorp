@@ -109,7 +109,7 @@ class KeyboardMap final {
       const KeyboardInput& aEvent, const IgnoreModifierState& aIgnore,
       uint32_t aOverrideCharCode = 0) const;
 
-  nsTArray<KeyboardShortcut> mShortcuts;
+  CopyableTArray<KeyboardShortcut> mShortcuts;
 };
 
 }  // namespace layers

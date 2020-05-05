@@ -754,8 +754,8 @@ struct ScrollSnapInfo {
   StyleScrollSnapStrictness mScrollSnapStrictnessY;
 
   // The scroll positions corresponding to scroll-snap-align values.
-  nsTArray<nscoord> mSnapPositionX;
-  nsTArray<nscoord> mSnapPositionY;
+  CopyableTArray<nscoord> mSnapPositionX;
+  CopyableTArray<nscoord> mSnapPositionY;
 
   struct ScrollSnapRange {
     ScrollSnapRange() = default;
@@ -783,8 +783,8 @@ struct ScrollSnapInfo {
   // See https://drafts.csswg.org/css-scroll-snap-1/#snap-overflow
   //
   // Note: This range contains scroll-margin values.
-  nsTArray<ScrollSnapRange> mXRangeWiderThanSnapport;
-  nsTArray<ScrollSnapRange> mYRangeWiderThanSnapport;
+  CopyableTArray<ScrollSnapRange> mXRangeWiderThanSnapport;
+  CopyableTArray<ScrollSnapRange> mYRangeWiderThanSnapport;
 
   // Note: This snapport size has been already deflated by scroll-padding.
   nsSize mSnapportSize;

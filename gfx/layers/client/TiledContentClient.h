@@ -62,7 +62,7 @@ struct AcquiredBackBuffer {
         mCapture(aCapture),
         mBackBuffer(aBackBuffer),
         mUpdatedRect(aUpdatedRect),
-        mTextureClients(aTextureClients) {}
+        mTextureClients(std::move(aTextureClients)) {}
 
   AcquiredBackBuffer(const AcquiredBackBuffer&) = delete;
   AcquiredBackBuffer& operator=(const AcquiredBackBuffer&) = delete;

@@ -105,7 +105,7 @@ class APZTestData {
  private:
   DataStore mPaints;
   DataStore mRepaintRequests;
-  nsTArray<HitResult> mHitResults;
+  CopyableTArray<HitResult> mHitResults;
   // Additional free-form data that's not grouped paint or scroll frame.
   std::map<std::string, std::string> mAdditionalData;
 
