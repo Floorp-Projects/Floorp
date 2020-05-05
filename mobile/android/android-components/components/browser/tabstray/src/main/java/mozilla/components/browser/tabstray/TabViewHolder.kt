@@ -17,24 +17,39 @@ import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 
 /**
- * A RecyclerView ViewHolder implementation for "tab" items.
+ * An abstract ViewHolder implementation for "tab" items.
  */
-class TabViewHolder(
+abstract class TabViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    abstract var tab: Tab?
+
+    /**
+     * Binds the ViewHolder to the `Tab`.
+     * @param tab the `Tab` used to bind the viewHolder.
+     * @param isSelected boolean to describe whether or not the `Tab` is selected.
+     * @param observable message bus to pass events to Observers of the TabsTray.
+     */
+    abstract fun bind(tab: Tab, isSelected: Boolean, observable: Observable<TabsTray.Observer>)
+}
+
+/**
+ * The default implementation of `TabViewHolder`
+ */
+class DefaultTabViewHolder(
     itemView: View,
     private val tabsTray: BrowserTabsTray
-) : RecyclerView.ViewHolder(itemView) {
+) : TabViewHolder(itemView) {
     private val iconView: ImageView? = itemView.findViewById(R.id.mozac_browser_tabstray_icon)
     private val titleView: TextView = itemView.findViewById(R.id.mozac_browser_tabstray_title)
     private val closeView: AppCompatImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
     private val thumbnailView: TabThumbnailView = itemView.findViewById(R.id.mozac_browser_tabstray_thumbnail)
     private val urlView: TextView? = itemView.findViewById(R.id.mozac_browser_tabstray_url)
 
-    internal var tab: Tab? = null
+    override var tab: Tab? = null
 
     /**
      * Displays the data of the given session and notifies the given observable about events.
      */
-    fun bind(tab: Tab, isSelected: Boolean, observable: Observable<TabsTray.Observer>) {
+    override fun bind(tab: Tab, isSelected: Boolean, observable: Observable<TabsTray.Observer>) {
         this.tab = tab
 
         val title = if (tab.title.isNotEmpty()) {

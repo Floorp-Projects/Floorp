@@ -31,7 +31,7 @@ class TabViewHolderTest {
         val titleView = view.findViewById<TextView>(R.id.mozac_browser_tabstray_title)
         val urlView = view.findViewById<TextView>(R.id.mozac_browser_tabstray_url)
 
-        val holder = TabViewHolder(view, mockTabsTrayWithStyles())
+        val holder = DefaultTabViewHolder(view, mockTabsTrayWithStyles())
 
         assertEquals("", titleView.text)
 
@@ -47,7 +47,7 @@ class TabViewHolderTest {
     fun `URL text is set to tab URL when exception is thrown`() {
         val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
         val urlView = view.findViewById<TextView>(R.id.mozac_browser_tabstray_url)
-        val holder = TabViewHolder(view, mockTabsTrayWithStyles())
+        val holder = DefaultTabViewHolder(view, mockTabsTrayWithStyles())
         val session = Tab("a", "about:home")
 
         holder.bind(session, isSelected = false, observable = mock())
@@ -63,7 +63,7 @@ class TabViewHolderTest {
         }
 
         val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
-        val holder = TabViewHolder(view, mockTabsTrayWithStyles())
+        val holder = DefaultTabViewHolder(view, mockTabsTrayWithStyles())
 
         val session = Tab("a", "https://www.mozilla.org")
         holder.bind(session, isSelected = false, observable = registry)
@@ -81,7 +81,7 @@ class TabViewHolderTest {
         }
 
         val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
-        val holder = TabViewHolder(view, mockTabsTrayWithStyles())
+        val holder = DefaultTabViewHolder(view, mockTabsTrayWithStyles())
 
         val session = Tab("a", "https://www.mozilla.org")
         holder.bind(session, isSelected = true, observable = registry)
@@ -99,7 +99,7 @@ class TabViewHolderTest {
         }
 
         val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
-        val holder = TabViewHolder(view, mockTabsTrayWithStyles())
+        val holder = DefaultTabViewHolder(view, mockTabsTrayWithStyles())
 
         val session = Tab("a", "https://www.mozilla.org")
         val titleView = holder.itemView.findViewById<TextView>(R.id.mozac_browser_tabstray_title)
@@ -119,7 +119,7 @@ class TabViewHolderTest {
         }
 
         val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
-        val holder = TabViewHolder(view, mockTabsTrayWithStyles())
+        val holder = DefaultTabViewHolder(view, mockTabsTrayWithStyles())
 
         val session = Tab("a", "https://www.mozilla.org", title = "Mozilla Firefox")
         val titleView = holder.itemView.findViewById<TextView>(R.id.mozac_browser_tabstray_title)
@@ -136,7 +136,7 @@ class TabViewHolderTest {
         val view = LayoutInflater.from(testContext).inflate(R.layout.mozac_browser_tabstray_item, null)
         val thumbnailView = view.findViewById<ImageView>(R.id.mozac_browser_tabstray_thumbnail)
 
-        val holder = TabViewHolder(view, mockTabsTrayWithStyles())
+        val holder = DefaultTabViewHolder(view, mockTabsTrayWithStyles())
         assertEquals(null, thumbnailView.drawable)
 
         val emptyBitmap = Bitmap.createBitmap(40, 40, Bitmap.Config.ARGB_8888)

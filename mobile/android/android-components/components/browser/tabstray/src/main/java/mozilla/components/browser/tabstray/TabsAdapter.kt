@@ -6,7 +6,6 @@ package mozilla.components.browser.tabstray
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.annotation.LayoutRes
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.tabstray.Tabs
 import mozilla.components.concept.tabstray.TabsTray
@@ -14,12 +13,27 @@ import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 
 /**
+ * Function responsible for creating a `TabViewHolder` in the `TabsAdapter`.
+ */
+typealias ViewHolderProvider = (ViewGroup, BrowserTabsTray) -> TabViewHolder
+
+/**
  * RecyclerView adapter implementation to display a list/grid of tabs.
+ * @param delegate TabsTray.Observer registry to allow `TabsAdapter` to conform to `Observable<TabsTray.Observer>`.
+ * @param viewHolderProvider a function that creates a `TabViewHolder`.
  */
 @Suppress("TooManyFunctions")
 class TabsAdapter(
     delegate: Observable<TabsTray.Observer> = ObserverRegistry(),
-    @LayoutRes private val layoutId: Int = R.layout.mozac_browser_tabstray_item
+    private val viewHolderProvider: ViewHolderProvider = { parent, tabsTray ->
+        DefaultTabViewHolder(
+                LayoutInflater.from(parent.context).inflate(
+                        R.layout.mozac_browser_tabstray_item,
+                        parent,
+                        false),
+                tabsTray
+        )
+    }
 ) : RecyclerView.Adapter<TabViewHolder>(),
     TabsTray,
     Observable<TabsTray.Observer> by delegate {
@@ -29,13 +43,7 @@ class TabsAdapter(
     private var tabs: Tabs? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabViewHolder {
-        return TabViewHolder(
-            LayoutInflater.from(parent.context).inflate(
-                layoutId,
-                parent,
-                false),
-            tabsTray
-        )
+        return viewHolderProvider.invoke(parent, tabsTray)
     }
 
     override fun getItemCount() = tabs?.list?.size ?: 0

@@ -4,18 +4,49 @@
 
 package mozilla.components.browser.tabstray
 
+import android.view.View
+import android.widget.FrameLayout
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.Tabs
+import mozilla.components.concept.tabstray.TabsTray
+import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
+private class TestTabViewHolder(view: View) : TabViewHolder(view) {
+    override var tab: Tab? = null
+    override fun bind(tab: Tab, isSelected: Boolean, observable: Observable<TabsTray.Observer>) { /* noop */ }
+}
+
 @RunWith(AndroidJUnit4::class)
 class TabsAdapterTest {
+
+    @Test
+    fun `onCreateViewHolder will create a DefaultTabViewHolder`() {
+        val adapter = TabsAdapter()
+        adapter.tabsTray = mock()
+
+        val type = adapter.onCreateViewHolder(FrameLayout(testContext), 0)
+
+        assertTrue(type is DefaultTabViewHolder)
+    }
+
+    @Test
+    fun `onCreateViewHolder will create whatever TabViewHolder is provided`() {
+        val adapter = TabsAdapter { _, _ -> TestTabViewHolder(View(testContext)) }
+        adapter.tabsTray = mock()
+
+        val type = adapter.onCreateViewHolder(FrameLayout(testContext), 0)
+
+        assertTrue(type is TestTabViewHolder)
+    }
 
     @Test
     fun `itemCount will reflect number of sessions`() {
