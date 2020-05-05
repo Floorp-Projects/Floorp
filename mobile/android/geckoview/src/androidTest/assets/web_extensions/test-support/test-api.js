@@ -4,6 +4,9 @@
 
 "use strict";
 
+const { E10SUtils } = ChromeUtils.import(
+  "resource://gre/modules/E10SUtils.jsm"
+);
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
@@ -112,6 +115,12 @@ this.test = class extends ExtensionAPI {
 
         async getRequestedLocales() {
           return Services.locale.requestedLocales;
+        },
+
+        async getPidForTab(tabId) {
+          const tab = context.extension.tabManager.get(tabId);
+          const pids = E10SUtils.getBrowserPids(tab.browser);
+          return pids[0];
         },
 
         async addHistogram(id, value) {
