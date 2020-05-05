@@ -536,6 +536,7 @@ bool ParseContext::declareFunctionArgumentsObject(
   ParseContext::Scope& funScope = functionScope();
   ParseContext::Scope& _varScope = varScope();
 
+  bool usesArguments = false;
   bool hasExtraBodyVarScope = &funScope != &_varScope;
 
   // Time to implement the odd semantics of 'arguments'.
@@ -563,7 +564,7 @@ bool ParseContext::declareFunctionArgumentsObject(
     if (hasExtraBodyVarScope) {
       tryDeclareArguments = true;
     } else {
-      funbox->usesArguments = true;
+      usesArguments = true;
     }
   }
 
@@ -576,15 +577,14 @@ bool ParseContext::declareFunctionArgumentsObject(
         return false;
       }
       funbox->setDeclaredArguments();
-      funbox->usesArguments = true;
+      usesArguments = true;
     } else if (hasExtraBodyVarScope) {
       // Formal parameters shadow the arguments object.
       return true;
     }
   }
 
-  // Compute if we need an arguments object.
-  if (funbox->usesArguments) {
+  if (usesArguments) {
     // There is an 'arguments' binding. Is the arguments object definitely
     // needed?
     //
