@@ -7,7 +7,7 @@
 #ifndef BaseProfilerCounts_h
 #define BaseProfilerCounts_h
 
-#ifndef MOZ_BASE_PROFILER
+#ifndef MOZ_GECKO_PROFILER
 
 #  define BASE_PROFILER_DEFINE_COUNT_TOTAL(label, category, description)
 #  define BASE_PROFILER_DEFINE_COUNT(label, category, description)
@@ -275,6 +275,6 @@ class ProfilerCounterTotal final : public BaseProfilerCount {
 }  // namespace baseprofiler
 }  // namespace mozilla
 
-#endif  // !MOZ_BASE_PROFILER
+#endif  // !MOZ_GECKO_PROFILER
 
 #endif  // BaseProfilerCounts_h

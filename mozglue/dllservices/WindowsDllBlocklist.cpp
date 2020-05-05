@@ -638,7 +638,7 @@ MFBT_API void DllBlocklist_Initialize(uint32_t aInitFlags) {
   //   cases, it's ok not to check user32.dll in this scenario.
   const bool skipUser32Check =
       (sInitFlags & eDllBlocklistInitFlagWasBootstrapped)
-#ifdef MOZ_BASE_PROFILER
+#ifdef MOZ_GECKO_PROFILER
       ||
       (!IsWin10AnniversaryUpdateOrLater() && baseprofiler::profiler_is_active())
 #endif

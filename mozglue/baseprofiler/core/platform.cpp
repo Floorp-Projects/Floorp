@@ -28,7 +28,7 @@
 
 #include "BaseProfiler.h"
 
-#ifdef MOZ_BASE_PROFILER
+#ifdef MOZ_GECKO_PROFILER
 
 #  include "platform.h"
 
@@ -3584,4 +3584,4 @@ void profiler_suspend_and_sample_thread(int aThreadId, uint32_t aFeatures,
 }  // namespace baseprofiler
 }  // namespace mozilla
 
-#endif  // MOZ_BASE_PROFILER
+#endif  // MOZ_GECKO_PROFILER

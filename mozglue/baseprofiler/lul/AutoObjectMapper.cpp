@@ -6,7 +6,7 @@
 
 #include "BaseProfiler.h"
 
-#ifdef MOZ_BASE_PROFILER
+#ifdef MOZ_GECKO_PROFILER
 
 #  include <sys/mman.h>
 #  include <unistd.h>
@@ -153,4 +153,4 @@ bool AutoObjectMapperFaultyLib::Map(/*OUT*/ void** start,
 
 #  endif  // defined(MOZ_LINKER)
 
-#endif  // MOZ_BASE_PROFILER
+#endif  // MOZ_GECKO_PROFILER

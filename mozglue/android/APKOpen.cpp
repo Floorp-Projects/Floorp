@@ -202,7 +202,7 @@ static void EnsureBaseProfilerInitialized() {
     return;
   }
 
-#ifdef MOZ_BASE_PROFILER
+#ifdef MOZ_GECKO_PROFILER
   // The stack depth we observe here will be determined by the stack of
   // whichever caller enters this code first. In practice this means that we may
   // miss some root-most frames, which hopefully shouldn't ruin profiling.
