@@ -3,8 +3,17 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 const { Database } = ChromeUtils.import(
   "resource://services-settings/Database.jsm"
+);
+const { RemoteSettingsWorker } = ChromeUtils.import(
+  "resource://services-settings/RemoteSettingsWorker.jsm"
+);
+const { RemoteSettingsClient } = ChromeUtils.import(
+  "resource://services-settings/RemoteSettingsClient.jsm"
 );
 
 add_task(async function test_shutdown_abort_after_start() {
@@ -82,4 +91,41 @@ add_task(async function test_shutdown_immediate_abort() {
     rejection = e;
   });
   ok(rejection, "Directly aborted promise should also have rejected.");
+  // Now clear the shutdown flag and rejection error:
+  Database._cancelShutdown();
+});
+
+add_task(async function test_shutdown_worker() {
+  // Fallback for android:
+  let importPromise = Promise.resolve();
+  let client;
+  // Android has no dumps, so only run the import if we do have dumps:
+  if (AppConstants.platform != "android") {
+    client = new RemoteSettingsClient("language-dictionaries", {
+      bucketNamePref: "services.settings.default_bucket",
+    });
+    const before = await client.get({ syncIfEmpty: false });
+    Assert.equal(before.length, 0);
+
+    importPromise = RemoteSettingsWorker.importJSONDump(
+      "main",
+      "language-dictionaries"
+    );
+  }
+  let stringifyPromise = RemoteSettingsWorker.canonicalStringify(
+    [],
+    [],
+    Date.now()
+  );
+  RemoteSettingsWorker._abortCancelableRequests();
+  await Assert.rejects(
+    stringifyPromise,
+    /Shutdown/,
+    "Should have aborted the stringify request at shutdown."
+  );
+  await importPromise.catch(e => ok(false, "importing failed!"));
+  if (client) {
+    const after = await client.get();
+    Assert.ok(after.length > 0);
+  }
 });
