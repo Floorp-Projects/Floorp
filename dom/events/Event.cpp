@@ -21,6 +21,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/ViewportUtils.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Event.h"
@@ -549,9 +550,8 @@ CSSIntPoint Event::GetScreenCoords(nsPresContext* aPresContext,
       rounded,
       aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
 
-  if (PresShell* presShell = aPresContext->GetPresShell()) {
-    pt = pt.RemoveResolution(
-        nsLayoutUtils::GetCurrentAPZResolutionScale(presShell));
+  if (PresShell* shell = aPresContext->GetPresShell()) {
+    pt = ViewportUtils::VisualToLayout(pt, shell);
   }
 
   pt += LayoutDevicePixel::ToAppUnits(

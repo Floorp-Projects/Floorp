@@ -3108,16 +3108,19 @@ nsPoint nsLayoutUtils::TranslateWidgetToView(nsPresContext* aPresContext,
 
 LayoutDeviceIntPoint nsLayoutUtils::TranslateViewToWidget(
     nsPresContext* aPresContext, nsView* aView, nsPoint aPt,
-    nsIWidget* aWidget) {
+    ViewportType aViewportType, nsIWidget* aWidget) {
   nsPoint viewOffset;
   nsIWidget* viewWidget = aView->GetNearestWidget(&viewOffset);
   if (!viewWidget) {
     return LayoutDeviceIntPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   }
 
-  nsPoint pt = (aPt + viewOffset)
-                   .ApplyResolution(
-                       GetCurrentAPZResolutionScale(aPresContext->PresShell()));
+  nsPoint pt = (aPt + viewOffset);
+  // The target coordinates are visual, so perform a layout-to-visual
+  // conversion if the incoming coordinates are layout.
+  if (aViewportType == ViewportType::Layout && aPresContext->GetPresShell()) {
+    pt = ViewportUtils::LayoutToVisual(pt, aPresContext->GetPresShell());
+  }
   LayoutDeviceIntPoint relativeToViewWidget(
       aPresContext->AppUnitsToDevPixels(pt.x),
       aPresContext->AppUnitsToDevPixels(pt.y));
