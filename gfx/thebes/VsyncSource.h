@@ -16,8 +16,6 @@
 namespace mozilla {
 class RefreshTimerVsyncDispatcher;
 class CompositorVsyncDispatcher;
-class VsyncObserver;
-struct VsyncEvent;
 
 class VsyncIdType {};
 typedef layers::BaseTransactionId<VsyncIdType> VsyncId;
@@ -35,9 +33,9 @@ class VsyncSource {
  public:
   // Controls vsync unique to each display and unique on each platform
   class Display {
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Display)
    public:
     Display();
+    virtual ~Display();
 
     // Notified when this display's vsync occurs, on the vsync thread
     // The aVsyncTimestamp should normalize to the Vsync time that just occured
@@ -49,7 +47,6 @@ class VsyncSource {
     // Large parts of Gecko assume TimeStamps should not be in the future such
     // as animations
     virtual void NotifyVsync(TimeStamp aVsyncTimestamp);
-    void NotifyGenericObservers(VsyncEvent aEvent);
 
     RefPtr<RefreshTimerVsyncDispatcher> GetRefreshTimerVsyncDispatcher();
 
@@ -61,9 +58,6 @@ class VsyncSource {
         CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
     void DisableCompositorVsyncDispatcher(
         CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
-    void AddGenericObserver(VsyncObserver* aObserver);
-    void RemoveGenericObserver(VsyncObserver* aObserver);
-
     void MoveListenersToNewSource(const RefPtr<VsyncSource>& aNewSource);
     void NotifyRefreshTimerVsyncStatus(bool aEnable);
     virtual TimeDuration GetVsyncRate();
@@ -73,9 +67,6 @@ class VsyncSource {
     virtual void DisableVsync() = 0;
     virtual bool IsVsyncEnabled() = 0;
     virtual void Shutdown() = 0;
-
-   protected:
-    virtual ~Display();
 
    private:
     void UpdateVsyncStatus();
@@ -87,11 +78,7 @@ class VsyncSource {
     nsTArray<RefPtr<CompositorVsyncDispatcher>>
         mRegisteredCompositorVsyncDispatchers;
     RefPtr<RefreshTimerVsyncDispatcher> mRefreshTimerVsyncDispatcher;
-    nsTArray<RefPtr<VsyncObserver>>
-        mGenericObservers;  // can only be touched from the main thread
     VsyncId mVsyncId;
-    VsyncId mLastVsyncIdSentToMainThread;     // hold mDispatcherLock to touch
-    VsyncId mLastMainThreadProcessedVsyncId;  // hold mDispatcherLock to touch
   };
 
   void EnableCompositorVsyncDispatcher(
@@ -102,14 +89,6 @@ class VsyncSource {
       CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
   void DeregisterCompositorVsyncDispatcher(
       CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
-
-  // Add and remove a generic observer for vsync. Note that keeping an observer
-  // registered means vsync will keep firing, which may impact power usage. So
-  // this is intended only for "short term" vsync observers. These methods must
-  // be called on the parent process main thread, and the observer will likewise
-  // be notified on the parent process main thread.
-  void AddGenericObserver(VsyncObserver* aObserver);
-  void RemoveGenericObserver(VsyncObserver* aObserver);
 
   void MoveListenersToNewSource(const RefPtr<VsyncSource>& aNewSource);
 

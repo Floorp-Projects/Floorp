@@ -1622,6 +1622,7 @@ bool gfxWindowsPlatform::DwmCompositionEnabled() {
 class D3DVsyncSource final : public VsyncSource {
  public:
   class D3DVsyncDisplay final : public VsyncSource::Display {
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(D3DVsyncDisplay)
    public:
     D3DVsyncDisplay()
         : mPrevVsync(TimeStamp::Now()),
@@ -1866,9 +1867,10 @@ class D3DVsyncSource final : public VsyncSource {
         }
       }  // end for
     }
-    virtual ~D3DVsyncDisplay() { MOZ_ASSERT(NS_IsMainThread()); }
 
    private:
+    virtual ~D3DVsyncDisplay() { MOZ_ASSERT(NS_IsMainThread()); }
+
     bool IsInVsyncThread() {
       return mVsyncThread->thread_id() == PlatformThread::CurrentId();
     }
