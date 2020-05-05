@@ -37,6 +37,8 @@ const {
 
 // Enable the Accessibility panel
 Services.prefs.setBoolPref("devtools.accessibility.enabled", true);
+// Disable auto-init
+Services.prefs.setBoolPref("devtools.accessibility.auto-init.enabled", false);
 
 const SIMULATION_MENU_BUTTON_ID = "#simulation-menu-button";
 const TREE_FILTERS_MENU_ID = "accessibility-tree-filters-menu";
@@ -105,6 +107,7 @@ function shutdownA11y() {
 registerCleanupFunction(async () => {
   info("Cleaning up...");
   await shutdownA11y();
+  Services.prefs.clearUserPref("devtools.accessibility.auto-init.enabled");
   Services.prefs.clearUserPref("devtools.accessibility.enabled");
 });
 
