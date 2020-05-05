@@ -853,6 +853,7 @@ namespace {
 
 }  // namespace
 
+// XXX Change this not to derive from AutoTArray.
 class ClientUsageArray final
     : public AutoTArray<Maybe<uint64_t>, Client::TYPE_MAX> {
  public:
@@ -861,6 +862,12 @@ class ClientUsageArray final
   void Serialize(nsACString& aText) const;
 
   nsresult Deserialize(const nsACString& aText);
+
+  ClientUsageArray Clone() const {
+    ClientUsageArray res;
+    res.Assign(*this);
+    return res;
+  }
 };
 
 class OriginInfo final {
@@ -7954,7 +7961,7 @@ OriginInfo::OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
                        const ClientUsageArray& aClientUsages, uint64_t aUsage,
                        int64_t aAccessTime, bool aPersisted,
                        bool aDirectoryExists)
-    : mClientUsages(aClientUsages),
+    : mClientUsages(aClientUsages.Clone()),
       mGroupInfo(aGroupInfo),
       mOrigin(aOrigin),
       mUsage(aUsage),
