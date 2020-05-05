@@ -366,7 +366,6 @@ class FunctionBox : public SharedContext {
   bool emitBytecode : 1; /* need to generate bytecode for this function. */
 
   // Fields for use in heuristics.
-  bool usesArguments : 1;  /* contains a free use of 'arguments' */
   bool usesApply : 1;      /* contains an f.apply() call */
   bool usesThis : 1;       /* contains 'this' */
   bool usesReturn : 1;     /* contains a 'return' statement */
@@ -467,7 +466,7 @@ class FunctionBox : public SharedContext {
   }
 
   bool isLikelyConstructorWrapper() const {
-    return usesArguments && usesApply && usesThis && !usesReturn;
+    return argumentsHasVarBinding() && usesApply && usesThis && !usesReturn;
   }
 
   bool isGenerator() const {
