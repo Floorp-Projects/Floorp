@@ -881,6 +881,276 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         break;
       }
 #endif
+
+#ifdef ENABLE_WASM_SIMD
+      case uint16_t(Op::SimdPrefix): {
+        if (!env.v128Enabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
+        uint32_t noIndex;
+        switch (op.b1) {
+          case uint32_t(SimdOp::I8x16ExtractLaneS):
+          case uint32_t(SimdOp::I8x16ExtractLaneU):
+            CHECK(iter.readExtractLane(ValType::I32, 16, &noIndex, &nothing));
+          case uint32_t(SimdOp::I16x8ExtractLaneS):
+          case uint32_t(SimdOp::I16x8ExtractLaneU):
+            CHECK(iter.readExtractLane(ValType::I32, 8, &noIndex, &nothing));
+          case uint32_t(SimdOp::I32x4ExtractLane):
+            CHECK(iter.readExtractLane(ValType::I32, 4, &noIndex, &nothing));
+          case uint32_t(SimdOp::I64x2ExtractLane):
+            CHECK(iter.readExtractLane(ValType::I64, 2, &noIndex, &nothing));
+          case uint32_t(SimdOp::F32x4ExtractLane):
+            CHECK(iter.readExtractLane(ValType::F32, 4, &noIndex, &nothing));
+          case uint32_t(SimdOp::F64x2ExtractLane):
+            CHECK(iter.readExtractLane(ValType::F64, 2, &noIndex, &nothing));
+
+          case uint32_t(SimdOp::I8x16Splat):
+          case uint32_t(SimdOp::I16x8Splat):
+          case uint32_t(SimdOp::I32x4Splat):
+            CHECK(iter.readConversion(ValType::I32, ValType::V128, &nothing));
+          case uint32_t(SimdOp::I64x2Splat):
+            CHECK(iter.readConversion(ValType::I64, ValType::V128, &nothing));
+          case uint32_t(SimdOp::F32x4Splat):
+            CHECK(iter.readConversion(ValType::F32, ValType::V128, &nothing));
+          case uint32_t(SimdOp::F64x2Splat):
+            CHECK(iter.readConversion(ValType::F64, ValType::V128, &nothing));
+
+          case uint32_t(SimdOp::I8x16AnyTrue):
+          case uint32_t(SimdOp::I8x16AllTrue):
+          case uint32_t(SimdOp::I16x8AnyTrue):
+          case uint32_t(SimdOp::I16x8AllTrue):
+          case uint32_t(SimdOp::I32x4AnyTrue):
+          case uint32_t(SimdOp::I32x4AllTrue):
+            CHECK(iter.readConversion(ValType::V128, ValType::I32, &nothing));
+
+          case uint32_t(SimdOp::I8x16ReplaceLane):
+            CHECK(iter.readReplaceLane(ValType::I32, 16, &noIndex, &nothing,
+                                       &nothing));
+          case uint32_t(SimdOp::I16x8ReplaceLane):
+            CHECK(iter.readReplaceLane(ValType::I32, 8, &noIndex, &nothing,
+                                       &nothing));
+          case uint32_t(SimdOp::I32x4ReplaceLane):
+            CHECK(iter.readReplaceLane(ValType::I32, 4, &noIndex, &nothing,
+                                       &nothing));
+          case uint32_t(SimdOp::I64x2ReplaceLane):
+            CHECK(iter.readReplaceLane(ValType::I64, 2, &noIndex, &nothing,
+                                       &nothing));
+          case uint32_t(SimdOp::F32x4ReplaceLane):
+            CHECK(iter.readReplaceLane(ValType::F32, 4, &noIndex, &nothing,
+                                       &nothing));
+          case uint32_t(SimdOp::F64x2ReplaceLane):
+            CHECK(iter.readReplaceLane(ValType::F64, 2, &noIndex, &nothing,
+                                       &nothing));
+
+          case uint32_t(SimdOp::I8x16Eq):
+          case uint32_t(SimdOp::I8x16Ne):
+          case uint32_t(SimdOp::I8x16LtS):
+          case uint32_t(SimdOp::I8x16LtU):
+          case uint32_t(SimdOp::I8x16GtS):
+          case uint32_t(SimdOp::I8x16GtU):
+          case uint32_t(SimdOp::I8x16LeS):
+          case uint32_t(SimdOp::I8x16LeU):
+          case uint32_t(SimdOp::I8x16GeS):
+          case uint32_t(SimdOp::I8x16GeU):
+          case uint32_t(SimdOp::I16x8Eq):
+          case uint32_t(SimdOp::I16x8Ne):
+          case uint32_t(SimdOp::I16x8LtS):
+          case uint32_t(SimdOp::I16x8LtU):
+          case uint32_t(SimdOp::I16x8GtS):
+          case uint32_t(SimdOp::I16x8GtU):
+          case uint32_t(SimdOp::I16x8LeS):
+          case uint32_t(SimdOp::I16x8LeU):
+          case uint32_t(SimdOp::I16x8GeS):
+          case uint32_t(SimdOp::I16x8GeU):
+          case uint32_t(SimdOp::I32x4Eq):
+          case uint32_t(SimdOp::I32x4Ne):
+          case uint32_t(SimdOp::I32x4LtS):
+          case uint32_t(SimdOp::I32x4LtU):
+          case uint32_t(SimdOp::I32x4GtS):
+          case uint32_t(SimdOp::I32x4GtU):
+          case uint32_t(SimdOp::I32x4LeS):
+          case uint32_t(SimdOp::I32x4LeU):
+          case uint32_t(SimdOp::I32x4GeS):
+          case uint32_t(SimdOp::I32x4GeU):
+          case uint32_t(SimdOp::F32x4Eq):
+          case uint32_t(SimdOp::F32x4Ne):
+          case uint32_t(SimdOp::F32x4Lt):
+          case uint32_t(SimdOp::F32x4Gt):
+          case uint32_t(SimdOp::F32x4Le):
+          case uint32_t(SimdOp::F32x4Ge):
+          case uint32_t(SimdOp::F64x2Eq):
+          case uint32_t(SimdOp::F64x2Ne):
+          case uint32_t(SimdOp::F64x2Lt):
+          case uint32_t(SimdOp::F64x2Gt):
+          case uint32_t(SimdOp::F64x2Le):
+          case uint32_t(SimdOp::F64x2Ge):
+          case uint32_t(SimdOp::V128And):
+          case uint32_t(SimdOp::V128Or):
+          case uint32_t(SimdOp::V128Xor):
+          case uint32_t(SimdOp::V128AndNot):
+          case uint32_t(SimdOp::I8x16AvgrU):
+          case uint32_t(SimdOp::I16x8AvgrU):
+          case uint32_t(SimdOp::I8x16Add):
+          case uint32_t(SimdOp::I8x16AddSaturateS):
+          case uint32_t(SimdOp::I8x16AddSaturateU):
+          case uint32_t(SimdOp::I8x16Sub):
+          case uint32_t(SimdOp::I8x16SubSaturateS):
+          case uint32_t(SimdOp::I8x16SubSaturateU):
+          case uint32_t(SimdOp::I8x16MinS):
+          case uint32_t(SimdOp::I8x16MinU):
+          case uint32_t(SimdOp::I8x16MaxS):
+          case uint32_t(SimdOp::I8x16MaxU):
+          case uint32_t(SimdOp::I16x8Add):
+          case uint32_t(SimdOp::I16x8AddSaturateS):
+          case uint32_t(SimdOp::I16x8AddSaturateU):
+          case uint32_t(SimdOp::I16x8Sub):
+          case uint32_t(SimdOp::I16x8SubSaturateS):
+          case uint32_t(SimdOp::I16x8SubSaturateU):
+          case uint32_t(SimdOp::I16x8Mul):
+          case uint32_t(SimdOp::I16x8MinS):
+          case uint32_t(SimdOp::I16x8MinU):
+          case uint32_t(SimdOp::I16x8MaxS):
+          case uint32_t(SimdOp::I16x8MaxU):
+          case uint32_t(SimdOp::I32x4Add):
+          case uint32_t(SimdOp::I32x4Sub):
+          case uint32_t(SimdOp::I32x4Mul):
+          case uint32_t(SimdOp::I32x4MinS):
+          case uint32_t(SimdOp::I32x4MinU):
+          case uint32_t(SimdOp::I32x4MaxS):
+          case uint32_t(SimdOp::I32x4MaxU):
+          case uint32_t(SimdOp::I64x2Add):
+          case uint32_t(SimdOp::I64x2Sub):
+          case uint32_t(SimdOp::I64x2Mul):
+          case uint32_t(SimdOp::F32x4Add):
+          case uint32_t(SimdOp::F32x4Sub):
+          case uint32_t(SimdOp::F32x4Mul):
+          case uint32_t(SimdOp::F32x4Div):
+          case uint32_t(SimdOp::F32x4Min):
+          case uint32_t(SimdOp::F32x4Max):
+          case uint32_t(SimdOp::F64x2Add):
+          case uint32_t(SimdOp::F64x2Sub):
+          case uint32_t(SimdOp::F64x2Mul):
+          case uint32_t(SimdOp::F64x2Div):
+          case uint32_t(SimdOp::F64x2Min):
+          case uint32_t(SimdOp::F64x2Max):
+          case uint32_t(SimdOp::I8x16NarrowSI16x8):
+          case uint32_t(SimdOp::I8x16NarrowUI16x8):
+          case uint32_t(SimdOp::I16x8NarrowSI32x4):
+          case uint32_t(SimdOp::I16x8NarrowUI32x4):
+          case uint32_t(SimdOp::V8x16Swizzle):
+            CHECK(iter.readBinary(ValType::V128, &nothing, &nothing));
+
+          case uint32_t(SimdOp::I8x16Neg):
+          case uint32_t(SimdOp::I16x8Neg):
+          case uint32_t(SimdOp::I16x8WidenLowSI8x16):
+          case uint32_t(SimdOp::I16x8WidenHighSI8x16):
+          case uint32_t(SimdOp::I16x8WidenLowUI8x16):
+          case uint32_t(SimdOp::I16x8WidenHighUI8x16):
+          case uint32_t(SimdOp::I32x4Neg):
+          case uint32_t(SimdOp::I32x4WidenLowSI16x8):
+          case uint32_t(SimdOp::I32x4WidenHighSI16x8):
+          case uint32_t(SimdOp::I32x4WidenLowUI16x8):
+          case uint32_t(SimdOp::I32x4WidenHighUI16x8):
+          case uint32_t(SimdOp::I32x4TruncSSatF32x4):
+          case uint32_t(SimdOp::I32x4TruncUSatF32x4):
+          case uint32_t(SimdOp::I64x2Neg):
+          case uint32_t(SimdOp::F32x4Abs):
+          case uint32_t(SimdOp::F32x4Neg):
+          case uint32_t(SimdOp::F32x4Sqrt):
+          case uint32_t(SimdOp::F32x4ConvertSI32x4):
+          case uint32_t(SimdOp::F32x4ConvertUI32x4):
+          case uint32_t(SimdOp::F64x2Abs):
+          case uint32_t(SimdOp::F64x2Neg):
+          case uint32_t(SimdOp::F64x2Sqrt):
+          case uint32_t(SimdOp::V128Not):
+          case uint32_t(SimdOp::I8x16Abs):
+          case uint32_t(SimdOp::I16x8Abs):
+          case uint32_t(SimdOp::I32x4Abs):
+            CHECK(iter.readUnary(ValType::V128, &nothing));
+
+          case uint32_t(SimdOp::I8x16Shl):
+          case uint32_t(SimdOp::I8x16ShrS):
+          case uint32_t(SimdOp::I8x16ShrU):
+          case uint32_t(SimdOp::I16x8Shl):
+          case uint32_t(SimdOp::I16x8ShrS):
+          case uint32_t(SimdOp::I16x8ShrU):
+          case uint32_t(SimdOp::I32x4Shl):
+          case uint32_t(SimdOp::I32x4ShrS):
+          case uint32_t(SimdOp::I32x4ShrU):
+          case uint32_t(SimdOp::I64x2Shl):
+          case uint32_t(SimdOp::I64x2ShrS):
+          case uint32_t(SimdOp::I64x2ShrU):
+            CHECK(iter.readVectorShift(&nothing, &nothing));
+
+          case uint32_t(SimdOp::V128Bitselect):
+            CHECK(iter.readVectorSelect(&nothing, &nothing, &nothing));
+
+          case uint32_t(SimdOp::V8x16Shuffle):
+          case uint32_t(SimdOp::V8x16ShuffleLegacy): {
+            V128 mask;
+            CHECK(iter.readVectorShuffle(&nothing, &nothing, &mask));
+          }
+
+          case uint32_t(SimdOp::V128Const): {
+            V128 noVector;
+            CHECK(iter.readV128Const(&noVector));
+          }
+
+          case uint32_t(SimdOp::V128Load): {
+            LinearMemoryAddress<Nothing> addr;
+            CHECK(iter.readLoad(ValType::V128, 16, &addr));
+          }
+
+          case uint32_t(SimdOp::V8x16LoadSplat): {
+            LinearMemoryAddress<Nothing> addr;
+            CHECK(iter.readLoadSplat(1, &addr));
+          }
+
+          case uint32_t(SimdOp::V16x8LoadSplat): {
+            LinearMemoryAddress<Nothing> addr;
+            CHECK(iter.readLoadSplat(2, &addr));
+          }
+
+          case uint32_t(SimdOp::V32x4LoadSplat): {
+            LinearMemoryAddress<Nothing> addr;
+            CHECK(iter.readLoadSplat(4, &addr));
+          }
+
+          case uint32_t(SimdOp::V64x2LoadSplat): {
+            LinearMemoryAddress<Nothing> addr;
+            CHECK(iter.readLoadSplat(8, &addr));
+          }
+
+          case uint32_t(SimdOp::I16x8LoadS8x8):
+          case uint32_t(SimdOp::I16x8LoadU8x8): {
+            LinearMemoryAddress<Nothing> addr;
+            CHECK(iter.readLoadExtend(&addr));
+          }
+
+          case uint32_t(SimdOp::I32x4LoadS16x4):
+          case uint32_t(SimdOp::I32x4LoadU16x4): {
+            LinearMemoryAddress<Nothing> addr;
+            CHECK(iter.readLoadExtend(&addr));
+          }
+
+          case uint32_t(SimdOp::I64x2LoadS32x2):
+          case uint32_t(SimdOp::I64x2LoadU32x2): {
+            LinearMemoryAddress<Nothing> addr;
+            CHECK(iter.readLoadExtend(&addr));
+          }
+
+          case uint32_t(SimdOp::V128Store): {
+            LinearMemoryAddress<Nothing> addr;
+            CHECK(iter.readStore(ValType::V128, 16, &addr, &nothing));
+          }
+
+          default:
+            return iter.unrecognizedOpcode(&op);
+        }
+        break;
+      }
+#endif  // ENABLE_WASM_SIMD
+
       case uint16_t(Op::MiscPrefix): {
         switch (op.b1) {
           case uint32_t(MiscOp::I32TruncSSatF32):
@@ -2004,6 +2274,19 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
       *init = InitExpr::fromConstant(LitVal(f64));
       break;
     }
+#ifdef ENABLE_WASM_SIMD
+    case uint16_t(Op::SimdPrefix): {
+      if (op.b1 != uint32_t(SimdOp::V128Const)) {
+        return d.fail("unexpected initializer expression");
+      }
+      V128 v128;
+      if (!d.readFixedV128(&v128)) {
+        return d.fail("failed to read initializer v128 expression");
+      }
+      *init = InitExpr::fromConstant(LitVal(v128));
+      break;
+    }
+#endif
     case uint16_t(Op::RefNull): {
       if (!expected.isReference()) {
         return d.fail(
