@@ -451,7 +451,7 @@ JSObject* js::Nursery::allocateObject(JSContext* cx, size_t size,
     static_cast<NativeObject*>(obj)->initSlots(slots);
   }
 
-  gcTracer.traceNurseryAlloc(obj, size);
+  gcprobes::NurseryAlloc(obj, size);
   return obj;
 }
 
@@ -468,7 +468,7 @@ Cell* js::Nursery::allocateString(Zone* zone, size_t size, AllocKind kind) {
   header->zone = zone;
 
   auto cell = reinterpret_cast<Cell*>(&header->cell);
-  gcTracer.traceNurseryAlloc(cell, kind);
+  gcprobes::NurseryAlloc(cell, kind);
   return cell;
 }
 
@@ -485,7 +485,7 @@ Cell* js::Nursery::allocateBigInt(Zone* zone, size_t size, AllocKind kind) {
   header->zone = zone;
 
   auto cell = reinterpret_cast<Cell*>(&header->cell);
-  gcTracer.traceNurseryAlloc(cell, kind);
+  gcprobes::NurseryAlloc(cell, kind);
   return cell;
 }
 
@@ -967,7 +967,7 @@ void js::Nursery::collect(JS::GCReason reason) {
 #endif
 
   stats().beginNurseryCollection(reason);
-  gcTracer.traceMinorGCStart();
+  gcprobes::MinorGCStart();
 
   maybeClearProfileDurations();
   startProfile(ProfileKey::Total);
@@ -1027,7 +1027,7 @@ void js::Nursery::collect(JS::GCReason reason) {
   rt->addTelemetry(JS_TELEMETRY_GC_NURSERY_BYTES, committed());
 
   stats().endNurseryCollection(reason);
-  gcTracer.traceMinorGCEnd();
+  gcprobes::MinorGCEnd();
   timeInChunkAlloc_ = mozilla::TimeDuration();
 
   if (enableProfiling_ && totalTime >= profileThreshold_) {

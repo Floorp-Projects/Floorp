@@ -218,7 +218,7 @@
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
 #include "gc/GCLock.h"
-#include "gc/GCTrace.h"
+#include "gc/GCProbes.h"
 #include "gc/Memory.h"
 #include "gc/ParallelWork.h"
 #include "gc/Policy.h"
@@ -486,7 +486,7 @@ inline size_t Arena::finalize(JSFreeOp* fop, AllocKind thingKind,
       t->finalize(fop);
       AlwaysPoison(t, JS_SWEPT_TENURED_PATTERN, thingSize,
                    MemCheckKind::MakeUndefined);
-      gcTracer.traceTenuredFinalize(t);
+      gcprobes::TenuredFinalize(t);
     }
   }
 
@@ -1264,10 +1264,6 @@ bool GCRuntime::init(uint32_t maxbytes) {
   }
 #endif
 
-  if (!gcTracer.initTrace(*this)) {
-    return false;
-  }
-
   if (!marker.init(mode)) {
     return false;
   }
@@ -1275,6 +1271,8 @@ bool GCRuntime::init(uint32_t maxbytes) {
   if (!initSweepActions()) {
     return false;
   }
+
+  gcprobes::Init(this);
 
   return true;
 }
@@ -1337,7 +1335,7 @@ void GCRuntime::finish() {
   FreeChunkPool(availableChunks_.ref());
   FreeChunkPool(emptyChunks_.ref());
 
-  gcTracer.finishTrace();
+  gcprobes::Finish(this);
 
   nursery().printTotalProfileTimes();
   stats().printTotalProfileTimes();
@@ -6472,8 +6470,7 @@ static bool ShouldCleanUpEverything(JS::GCReason reason,
 }
 
 static bool ShouldSweepOnBackgroundThread(JS::GCReason reason) {
-  return reason != JS::GCReason::DESTROY_RUNTIME && !gcTracer.traceEnabled() &&
-         CanUseExtraThreads();
+  return reason != JS::GCReason::DESTROY_RUNTIME && CanUseExtraThreads();
 }
 
 void GCRuntime::incrementalSlice(SliceBudget& budget,
@@ -7033,7 +7030,7 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
     session.maybeCheckAtomsAccess.emplace(rt);
   }
 
-  gcTracer.traceMajorGCStart();
+  gcprobes::MajorGCStart();
 
   incrementalSlice(budget, gckind, reason, session);
 
@@ -7041,7 +7038,7 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
   clearSelectedForMarking();
 #endif
 
-  gcTracer.traceMajorGCEnd();
+  gcprobes::MajorGCEnd();
 
   MOZ_ASSERT_IF(result == IncrementalResult::ResetIncremental,
                 !isIncrementalGCInProgress());

@@ -13,7 +13,7 @@
 
 #include "gc/GCInternals.h"
 #include "gc/GCLock.h"
-#include "gc/GCTrace.h"
+#include "gc/GCProbes.h"
 #include "gc/Nursery.h"
 #include "jit/JitRealm.h"
 #include "threading/CpuCount.h"
@@ -368,7 +368,7 @@ T* GCRuntime::tryNewTenuredThing(JSContext* cx, AllocKind kind,
   }
 
   checkIncrementalZoneState(cx, t);
-  gcTracer.traceTenuredAlloc(t, kind);
+  gcprobes::TenuredAlloc(t, kind);
   // We count this regardless of the profiler's state, assuming that it costs
   // just as much to count it, as to check the profiler's state and decide not
   // to count it.

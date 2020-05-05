@@ -7,7 +7,7 @@
 #include "vm/ProxyObject.h"
 
 #include "gc/Allocator.h"
-#include "gc/GCTrace.h"
+#include "gc/GCProbes.h"
 #include "proxy/DeadObjectProxy.h"
 #include "vm/Realm.h"
 
@@ -153,7 +153,7 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
   MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
   realm->setObjectPendingMetadata(cx, proxy);
 
-  gc::gcTracer.traceCreateObject(proxy);
+  gc::gcprobes::CreateObject(proxy);
 
   proxy->init(handler, priv, cx);
 
@@ -236,7 +236,7 @@ ProxyObject* ProxyObject::NewSingleton(JSContext* cx,
     MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
     realm->setObjectPendingMetadata(cx, proxy);
 
-    js::gc::gcTracer.traceCreateObject(proxy);
+    js::gc::gcprobes::CreateObject(proxy);
   }
 
   proxy->init(handler, priv, cx);

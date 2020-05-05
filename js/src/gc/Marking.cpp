@@ -3233,7 +3233,7 @@ JSObject* js::TenuringTracer::moveToTenuredSlow(JSObject* src) {
   RelocationOverlay* overlay = RelocationOverlay::forwardCell(src, dst);
   insertIntoObjectFixupList(overlay);
 
-  gcTracer.tracePromoteToTenured(src, dst);
+  gcprobes::PromoteToTenured(src, dst);
   return dst;
 }
 
@@ -3264,7 +3264,7 @@ inline JSObject* js::TenuringTracer::movePlainObjectToTenured(
   RelocationOverlay* overlay = RelocationOverlay::forwardCell(src, dst);
   insertIntoObjectFixupList(overlay);
 
-  gcTracer.tracePromoteToTenured(src, dst);
+  gcprobes::PromoteToTenured(src, dst);
   return dst;
 }
 
@@ -3382,7 +3382,7 @@ JSString* js::TenuringTracer::moveToTenured(JSString* src) {
   RelocationOverlay* overlay = RelocationOverlay::forwardCell(src, dst);
   insertIntoStringFixupList(overlay);
 
-  gcTracer.tracePromoteToTenured(src, dst);
+  gcprobes::PromoteToTenured(src, dst);
   return dst;
 }
 
@@ -3408,7 +3408,7 @@ JS::BigInt* js::TenuringTracer::moveToTenured(JS::BigInt* src) {
   RelocationOverlay* overlay = RelocationOverlay::forwardCell(src, dst);
   insertIntoBigIntFixupList(overlay);
 
-  gcTracer.tracePromoteToTenured(src, dst);
+  gcprobes::PromoteToTenured(src, dst);
   return dst;
 }
 
