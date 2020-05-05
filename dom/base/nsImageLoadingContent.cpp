@@ -721,7 +721,7 @@ void nsImageLoadingContent::ClearScriptedRequests(int32_t aRequestType,
     return;
   }
 
-  nsTArray<RefPtr<ScriptedImageObserver>> observers(mScriptedObservers);
+  nsTArray<RefPtr<ScriptedImageObserver>> observers(mScriptedObservers.Clone());
   auto i = observers.Length();
   do {
     --i;
@@ -762,7 +762,7 @@ void nsImageLoadingContent::CloneScriptedRequests(imgRequestProxy* aRequest) {
     return;
   }
 
-  nsTArray<RefPtr<ScriptedImageObserver>> observers(mScriptedObservers);
+  nsTArray<RefPtr<ScriptedImageObserver>> observers(mScriptedObservers.Clone());
   auto i = observers.Length();
   do {
     --i;
@@ -787,7 +787,7 @@ void nsImageLoadingContent::MakePendingScriptedRequestsCurrent() {
     return;
   }
 
-  nsTArray<RefPtr<ScriptedImageObserver>> observers(mScriptedObservers);
+  nsTArray<RefPtr<ScriptedImageObserver>> observers(mScriptedObservers.Clone());
   auto i = observers.Length();
   do {
     --i;

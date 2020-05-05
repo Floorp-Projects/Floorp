@@ -155,7 +155,7 @@ ContentPermissionRequestParent::ContentPermissionRequestParent(
   mPrincipal = aPrincipal;
   mTopLevelPrincipal = aTopLevelPrincipal;
   mElement = aElement;
-  mRequests = aRequests;
+  mRequests = aRequests.Clone();
   mIsHandlingUserInput = aIsHandlingUserInput;
   mMaybeUnsafePermissionDelegate = aMaybeUnsafePermissionDelegate;
 }
@@ -205,7 +205,7 @@ NS_IMPL_ISUPPORTS(ContentPermissionType, nsIContentPermissionType)
 ContentPermissionType::ContentPermissionType(
     const nsACString& aType, const nsTArray<nsString>& aOptions) {
   mType = aType;
-  mOptions = aOptions;
+  mOptions = aOptions.Clone();
 }
 
 ContentPermissionType::~ContentPermissionType() = default;
@@ -845,7 +845,7 @@ nsContentPermissionRequestProxy::~nsContentPermissionRequestProxy() = default;
 
 nsresult nsContentPermissionRequestProxy::Init(
     const nsTArray<PermissionRequest>& requests) {
-  mPermissionRequests = requests;
+  mPermissionRequests = requests.Clone();
   mRequester = new nsContentPermissionRequesterProxy(mParent);
 
   nsCOMPtr<nsIContentPermissionPrompt> prompt =
