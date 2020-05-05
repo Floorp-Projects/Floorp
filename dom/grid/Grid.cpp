@@ -90,7 +90,7 @@ GridDimension* Grid::Rows() const { return mRows; }
 GridDimension* Grid::Cols() const { return mCols; }
 
 void Grid::GetAreas(nsTArray<RefPtr<GridArea>>& aAreas) const {
-  aAreas = mAreas;
+  aAreas = mAreas.Clone();
 }
 
 }  // namespace dom

@@ -57,7 +57,7 @@ int32_t GridLine::NegativeNumber() const { return mNegativeNumber; }
 void GridLine::SetLineValues(const nsTArray<RefPtr<nsAtom>>& aNames,
                              double aStart, double aBreadth, uint32_t aNumber,
                              int32_t aNegativeNumber, GridDeclaration aType) {
-  mNames = aNames;
+  mNames = aNames.Clone();
   mStart = aStart;
   mBreadth = aBreadth;
   mNumber = aNumber;
@@ -66,7 +66,7 @@ void GridLine::SetLineValues(const nsTArray<RefPtr<nsAtom>>& aNames,
 }
 
 void GridLine::SetLineNames(const nsTArray<RefPtr<nsAtom>>& aNames) {
-  mNames = aNames;
+  mNames = aNames.Clone();
 }
 
 }  // namespace dom
