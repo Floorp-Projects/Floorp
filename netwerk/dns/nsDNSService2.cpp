@@ -349,7 +349,7 @@ nsDNSByTypeRecord::GetType(uint32_t* aType) {
 }
 
 NS_IMETHODIMP
-nsDNSByTypeRecord::GetRecords(CopyableTArray<nsCString>& aRecords) {
+nsDNSByTypeRecord::GetRecords(nsTArray<nsCString>& aRecords) {
   // deep copy
   return mHostRecord->GetRecords(aRecords);
 }

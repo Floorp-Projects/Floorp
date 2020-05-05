@@ -379,7 +379,7 @@ SiteHPKPState::SiteHPKPState(const nsCString& aHost,
       mExpireTime(aExpireTime),
       mState(aState),
       mIncludeSubdomains(aIncludeSubdomains),
-      mSHA256keys(aSHA256keys.Clone()) {}
+      mSHA256keys(aSHA256keys) {}
 
 NS_IMETHODIMP
 SiteHPKPState::GetHostname(nsACString& aHostname) {
@@ -1662,7 +1662,7 @@ nsSiteSecurityService::GetKeyPinsForHostname(
       foundEntry = privateEntry;
     }
   }
-  pinArray = foundEntry->mSHA256keys.Clone();
+  pinArray = foundEntry->mSHA256keys;
   *aIncludeSubdomains = foundEntry->mIncludeSubdomains;
   *aFound = true;
   return NS_OK;

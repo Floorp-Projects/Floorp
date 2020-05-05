@@ -115,7 +115,7 @@ int32_t WebrtcMediaDataDecoder::Decode(
     media::Await(
         do_AddRef(mThreadPool), mDecoder->Decode(compressedFrame),
         [&](const MediaDataDecoder::DecodedData& aResults) {
-          mResults = aResults.Clone();
+          mResults = aResults;
           mError = NS_OK;
         },
         [&](const MediaResult& aError) { mError = aError; });
