@@ -379,7 +379,7 @@ void MacroAssembler::PushRegsInMask(LiveRegisterSet set) {
     } else if (reg.isSingle()) {
       storeFloat32(reg, spillAddress);
     } else if (reg.isSimd128()) {
-      storeUnalignedSimd128Float(reg, spillAddress);
+      storeUnalignedSimd128(reg, spillAddress);
     } else {
       MOZ_CRASH("Unknown register type.");
     }
@@ -417,7 +417,7 @@ void MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest,
     } else if (reg.isSingle()) {
       storeFloat32(reg, dest);
     } else if (reg.isSimd128()) {
-      storeUnalignedSimd128Float(reg, dest);
+      storeUnalignedSimd128(reg, dest);
     } else {
       MOZ_CRASH("Unknown register type.");
     }
@@ -452,7 +452,7 @@ void MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set,
     } else if (reg.isSingle()) {
       loadFloat32(spillAddress, reg);
     } else if (reg.isSimd128()) {
-      loadUnalignedSimd128Float(spillAddress, reg);
+      loadUnalignedSimd128(spillAddress, reg);
     } else {
       MOZ_CRASH("Unknown register type.");
     }
