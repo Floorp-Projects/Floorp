@@ -451,27 +451,17 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
   // function
   nsAutoCString fileName;
   uint32_t lineNumber = 0, columnNumber = 0;
-  JS::AutoFilename rawScriptFilename;
-  if (JS::DescribeScriptedCaller(cx, &rawScriptFilename, &lineNumber,
-                                 &columnNumber)) {
-    nsDependentCSubstring fileName_(rawScriptFilename.get(),
-                                    strlen(rawScriptFilename.get()));
-    ToLowerCase(fileName_);
-    // Extract file name alone if scriptFilename contains line number
-    // separated by multiple space delimiters in few cases.
-    int32_t fileNameIndex = fileName_.FindChar(' ');
-    if (fileNameIndex != -1) {
-      fileName_.SetLength(fileNameIndex);
-    }
-
-    fileName = std::move(fileName_);
-  } else {
+  nsJSUtils::GetCallingLocation(cx, fileName, &lineNumber, &columnNumber);
+  if (fileName.IsEmpty()) {
     fileName = NS_LITERAL_CSTRING("unknown-file");
   }
 
   NS_ConvertUTF8toUTF16 fileNameA(fileName);
   for (const nsLiteralCString& allowlistEntry : evalAllowlist) {
-    if (fileName.Equals(allowlistEntry)) {
+    // checking if current filename begins with entry, because JS Engine
+    // gives us additional stuff for code inside eval or Function ctor
+    // e.g., "require.js > Function"
+    if (StringBeginsWith(fileName, allowlistEntry)) {
       MOZ_LOG(sCSMLog, LogLevel::Debug,
               ("Allowing eval() %s because the containing "
                "file is in the allowlist",
@@ -501,14 +491,30 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
 
   // Maybe Crash
 #ifdef DEBUG
+  // MOZ_CRASH_UNSAFE_PRINTF gives us at most 1024 characters to print.
+  // The given string literal leaves us with ~950, so I'm leaving
+  // each 475 for fileName and aScript each.
+  if (fileName.Length() > 475) {
+    fileName.SetLength(475);
+  }
+  nsAutoCString trimmedScript = NS_ConvertUTF16toUTF8(aScript);
+  if (trimmedScript.Length() > 475) {
+    trimmedScript.SetLength(475);
+  }
   MOZ_CRASH_UNSAFE_PRINTF(
       "Blocking eval() %s from file %s and script provided "
       "%s",
       (aIsSystemPrincipal ? "with System Principal" : "in parent process"),
-      fileName.get(), NS_ConvertUTF16toUTF8(aScript).get());
+      fileName.get(), trimmedScript.get());
 #endif
 
+#ifdef EARLY_BETA_OR_EARLIER
+  // Until we understand the events coming from release, we don't want to
+  // enforce eval restrictions on release. Limiting to Nightly and early beta.
+  return false;
+#else
   return true;
+#endif
 }
 
 /* static */
