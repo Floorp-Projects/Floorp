@@ -1,0 +1,31 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome:;img-src data:; object-src 'none'">
+    <title data-l10n-id="about-processes-title"></title>
+    <link rel="icon" id="favicon" href="chrome://global/skin/icons/performance.svg">
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+    <link rel="localization" href="preview/aboutProcesses.ftl">
+    <script src="chrome://global/content/aboutProcesses.js"></script>
+    <link rel="stylesheet" href="chrome://global/content/aboutProcesses.css">
+  </head>
+  <body>
+    <table id="process-table">
+      <thead id="process-thead">
+        <tr>
+          <td class="clickable" id="column-pid" data-l10n-id="about-processes-column-id"></td>
+          <td class="clickable" id="column-name" data-l10n-id="about-processes-column-name"></td>
+          <td class="clickable" id="column-memory-resident" data-l10n-id="about-processes-column-memory-resident"></td> <!-- Memory usage. -->
+          <td class="clickable" id="column-memory-virtual" data-l10n-id="about-processes-column-memory-virtual"></td> <!-- Memory usage. -->
+          <td class="clickable" id="column-cpu-user" data-l10n-id="about-processes-column-cpu-user"></td> <!-- CPU user. -->
+          <td class="clickable" id="column-cpu-kernel" data-l10n-id="about-processes-column-cpu-kernel"></td> <!-- CPU kernel. -->
+          <td class="clickable" id="column-cpu-threads" data-l10n-id="about-processes-column-threads"></td>
+        </tr>
+      </thead>
+      <tbody id="process-tbody"></tbody>
+    </table>
+  </body>
+</html>
