@@ -29,6 +29,7 @@ suspend fun <T> GeckoResult<T>.await() = suspendCoroutine<T?> { continuation ->
         GeckoResult<Void>()
     })
 }
+
 /**
  * Converts a [GeckoResult] to a [CancellableOperation].
  */

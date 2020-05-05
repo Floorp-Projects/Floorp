@@ -1396,20 +1396,20 @@ class GeckoEngineTest {
         engine.registerWebExtensionDelegate(webExtensionsDelegate)
 
         val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
-                "test-webext",
-                "resource://android/assets/extensions/test",
-                runtime,
-                true,
-                true
+            "test-webext",
+            "resource://android/assets/extensions/test",
+            runtime,
+            true,
+            true
         )
         var result: WebExtension? = null
         var onErrorCalled = false
 
         engine.setAllowedInPrivateBrowsing(
-                extension,
-                true,
-                onSuccess = { ext -> result = ext },
-                onError = { onErrorCalled = true }
+            extension,
+            true,
+            onSuccess = { ext -> result = ext },
+            onError = { onErrorCalled = true }
         )
         allowedInPrivateBrowsingExtensionResult.complete(allowedInPrivateBrowsing)
 
