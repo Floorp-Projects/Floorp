@@ -519,11 +519,6 @@ static EnumSet<nsLayoutUtils::FrameForPointOption> GetHitTestOptions() {
   EnumSet<nsLayoutUtils::FrameForPointOption> options = {
       nsLayoutUtils::FrameForPointOption::IgnorePaintSuppression,
       nsLayoutUtils::FrameForPointOption::IgnoreCrossDoc};
-#ifdef MOZ_WIDGET_ANDROID
-  // On Android, we need IgnoreRootScrollFrame for correct hit testing when
-  // zoomed in or out.
-  options += nsLayoutUtils::FrameForPointOption::IgnoreRootScrollFrame;
-#endif
   return options;
 }
 

@@ -57,9 +57,7 @@ TouchBehaviorFlags TouchActionHelper::GetAllowedTouchBehavior(
   nsPoint relativePoint =
       nsLayoutUtils::GetEventCoordinatesRelativeTo(aWidget, aPoint, aRootFrame);
 
-  nsIFrame* target = nsLayoutUtils::GetFrameForPoint(
-      aRootFrame, relativePoint,
-      nsLayoutUtils::FrameForPointOption::IgnoreRootScrollFrame);
+  nsIFrame* target = nsLayoutUtils::GetFrameForPoint(aRootFrame, relativePoint);
   if (!target) {
     return behavior;
   }
