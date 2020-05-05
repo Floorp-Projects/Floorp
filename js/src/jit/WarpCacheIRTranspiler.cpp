@@ -463,6 +463,26 @@ bool WarpCacheIRTranspiler::emitLoadStringCharResult(StringOperandId strId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitStoreDynamicSlot(ObjOperandId objId,
+                                                 uint32_t offsetOffset,
+                                                 ValOperandId rhsId) {
+  int32_t offset = int32StubField(offsetOffset);
+
+  MDefinition* obj = getOperand(objId);
+  size_t slotIndex = NativeObject::getDynamicSlotIndexFromOffset(offset);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* barrier = MPostWriteBarrier::New(alloc(), obj, rhs);
+  add(barrier);
+
+  auto* slots = MSlots::New(alloc(), obj);
+  add(slots);
+
+  auto* store = MStoreSlot::NewBarriered(alloc(), slots, slotIndex, rhs);
+  addEffectful(store);
+  return resumeAfter(store);
+}
+
 bool WarpCacheIRTranspiler::emitStoreFixedSlot(ObjOperandId objId,
                                                uint32_t offsetOffset,
                                                ValOperandId rhsId) {
