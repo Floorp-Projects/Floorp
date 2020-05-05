@@ -4,6 +4,8 @@
 
 "use strict";
 
+const Services = require("Services");
+
 const {
   accessibility: { AUDIT_TYPE },
 } = require("devtools/shared/constants");
@@ -24,6 +26,7 @@ class AccessibilityProxy {
 
     this.accessibilityEventsMap = new Map();
     this.accessibleWalkerEventsMap = new Map();
+    this.supports = {};
 
     this.audit = this.audit.bind(this);
     this.disableAccessibility = this.disableAccessibility.bind(this);
@@ -256,6 +259,14 @@ class AccessibilityProxy {
         [this.toolbox.targetList.TYPES.FRAME],
         this._onTargetAvailable
       );
+      // Bug 1602075: auto init feature definition is used for an experiment to
+      // determine if we can automatically enable accessibility panel when it
+      // opens.
+      this.supports.autoInit = Services.prefs.getBoolPref(
+        "devtools.accessibility.auto-init.enabled",
+        false
+      );
+
       return true;
     } catch (e) {
       // toolbox may be destroyed during this step.
@@ -342,7 +353,6 @@ class AccessibilityProxy {
       // Finalize accessibility front initialization. See accessibility front
       // bootstrap method description.
       await this.accessibilityFront.bootstrap();
-      this.supports = {};
       // To add a check for backward compatibility add something similar to the
       // example below:
       //
