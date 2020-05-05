@@ -436,9 +436,7 @@ static void NotifyDidRender(layers::CompositorBridgeParent* aBridge,
     aBridge->GetWrBridge()->RecordFrame();
   }
 
-  auto info = aInfo->Raw();
-
-  for (const auto& epoch : info.epochs) {
+  for (const auto& epoch : aInfo->Raw().epochs) {
     aBridge->NotifyPipelineRendered(epoch.pipeline_id, epoch.epoch,
                                     aCompositeStartId, aCompositeStart,
                                     aRenderStart, aEnd, &aStats);
@@ -1123,8 +1121,9 @@ void wr_finished_scene_build(mozilla::wr::WrWindowId aWindowId,
     for (size_t i = 0; i < aDocumentIdsCount; ++i) {
       renderRoots[i] = wr::RenderRootFromId(aDocumentIds[i]);
     }
-    layers::CompositorThreadHolder::Loop()->PostTask(NewRunnableFunction(
-        "NotifyDidSceneBuild", &NotifyDidSceneBuild, cbp, renderRoots, info));
+    layers::CompositorThreadHolder::Loop()->PostTask(
+        NewRunnableFunction("NotifyDidSceneBuild", &NotifyDidSceneBuild, cbp,
+                            std::move(renderRoots), info));
   }
 }
 
