@@ -4,6 +4,9 @@ ChromeUtils.import("resource://normandy/actions/BaseAction.jsm", this);
 ChromeUtils.import("resource://normandy/lib/ActionsManager.jsm", this);
 ChromeUtils.import("resource://normandy/lib/NormandyApi.jsm", this);
 ChromeUtils.import("resource://normandy/lib/Uptake.jsm", this);
+const { ActionSchemas } = ChromeUtils.import(
+  "resource://normandy/actions/schemas/index.js"
+);
 
 // Test life cycle methods for actions
 decorate_task(async function(reportActionStub, Stub) {
@@ -44,4 +47,17 @@ decorate_task(async function(reportActionStub, Stub) {
     actionUnused.finalize.calledOnce,
     "finalize should be called on the unused action"
   );
+});
+
+decorate_task(async function() {
+  for (const [name, Constructor] of Object.entries(
+    ActionsManager.actionConstructors
+  )) {
+    const action = new Constructor();
+    Assert.deepEqual(
+      ActionSchemas[name],
+      action.schema,
+      "action name should map to a schema"
+    );
+  }
 });
