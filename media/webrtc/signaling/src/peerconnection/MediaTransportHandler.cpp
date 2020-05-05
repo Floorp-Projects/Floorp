@@ -520,11 +520,10 @@ void MediaTransportHandlerSTS::ActivateTransport(
     bool aPrivacyRequested) {
   mInitPromise->Then(
       mStsThread, __func__,
-      [=, keyDer = aKeyDer.Clone(), certDer = aCertDer.Clone(),
-       self = RefPtr<MediaTransportHandlerSTS>(this)]() {
+      [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
         MOZ_ASSERT(aComponentCount);
         RefPtr<DtlsIdentity> dtlsIdentity(
-            DtlsIdentity::Deserialize(keyDer, certDer, aAuthType));
+            DtlsIdentity::Deserialize(aKeyDer, aCertDer, aAuthType));
         if (!dtlsIdentity) {
           MOZ_ASSERT(false);
           return;
@@ -612,8 +611,7 @@ void MediaTransportHandlerSTS::StartIceGathering(
     const nsTArray<NrIceStunAddr>& aStunAddrs) {
   mInitPromise->Then(
       mStsThread, __func__,
-      [=, stunAddrs = aStunAddrs.Clone(),
-       self = RefPtr<MediaTransportHandlerSTS>(this)]() {
+      [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
         mObfuscateHostAddresses = aObfuscateHostAddresses;
 
         // Belt and suspenders - in e10s mode, the call below to SetStunAddrs
@@ -622,8 +620,8 @@ void MediaTransportHandlerSTS::StartIceGathering(
         // just set them here, and only do it here.
         mIceCtx->SetCtxFlags(aDefaultRouteOnly);
 
-        if (stunAddrs.Length()) {
-          mIceCtx->SetStunAddrs(stunAddrs);
+        if (aStunAddrs.Length()) {
+          mIceCtx->SetStunAddrs(aStunAddrs);
         }
 
         // Start gathering, but only if there are streams

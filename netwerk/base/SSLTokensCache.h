@@ -18,8 +18,6 @@ namespace mozilla {
 namespace net {
 
 struct SessionCacheInfo {
-  SessionCacheInfo Clone() const;
-
   psm::EVStatus mEVStatus = psm::EVStatus::NotEV;
   uint16_t mCertificateTransparencyStatus =
       nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE;

@@ -44,9 +44,9 @@ struct HttpConnInfo {
 
 struct HttpRetParams {
   nsCString host;
-  CopyableTArray<HttpConnInfo> active;
-  CopyableTArray<HttpConnInfo> idle;
-  CopyableTArray<HalfOpenSockets> halfOpens;
+  nsTArray<HttpConnInfo> active;
+  nsTArray<HttpConnInfo> idle;
+  nsTArray<HalfOpenSockets> halfOpens;
   uint32_t counter;
   uint16_t port;
   nsCString httpVersion;
