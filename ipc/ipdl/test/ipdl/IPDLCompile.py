@@ -28,9 +28,9 @@ class IPDLCompile:
                 self.specfilename
             ])
 
-            proc = subprocess.Popen(args=self.argv,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
+            proc = subprocess.Popen(
+                args=self.argv, stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE, universal_newlines=True)
             self.stdout, self.stderr = proc.communicate()
 
             self.returncode = proc.returncode

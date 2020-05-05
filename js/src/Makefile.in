@@ -40,10 +40,10 @@ endif
 endif
 
 check-js-msg::
-	(cd $(topsrcdir) && $(PYTHON) $(topsrcdir)/config/check_js_msg_encoding.py);
+	(cd $(topsrcdir) && $(PYTHON3) $(topsrcdir)/config/check_js_msg_encoding.py);
 
 check-jit-test::
-	$(JITTEST_SANITIZER_ENV) $(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
+	$(JITTEST_SANITIZER_ENV) $(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON3) -u $(srcdir)/jit-test/jit_test.py \
 	        --no-slow --no-progress --format=automation --jitflags=all \
 			$(JITTEST_VALGRIND_FLAG) \
 			$(JITTEST_EXTRA_ARGS) \
@@ -52,7 +52,7 @@ check-jit-test::
 check:: check-js-msg
 
 check-jstests:
-	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/tests/jstests.py \
+	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON3) -u $(srcdir)/tests/jstests.py \
 		--no-progress --format=automation --timeout 300 \
 		$(JSTESTS_EXTRA_ARGS) \
 		$(DIST)/bin/$(JS_SHELL_NAME)$(BIN_SUFFIX)
