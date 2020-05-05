@@ -65,7 +65,7 @@
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/mozac_browser_tabstray_close"
-        android:layout_width="56dp"
+        android:layout_width="44dp"
         android:layout_height="match_parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintEnd_toEndOf="parent"
