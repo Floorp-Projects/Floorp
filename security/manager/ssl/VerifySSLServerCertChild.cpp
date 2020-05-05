@@ -76,8 +76,8 @@ SECStatus RemoteProcessCertVerification(
     return SECFailure;
   }
 
-  nsTArray<uint8_t> serverCertSerialized;
-  serverCertSerialized.AppendElements(aCert->derCert.data, aCert->derCert.len);
+  const ByteArray serverCertSerialized =
+      CopyableTArray<uint8_t>{aCert->derCert.data, aCert->derCert.len};
 
   nsTArray<ByteArray> peerCertBytes;
   for (auto& certBytes : aPeerCertChain) {

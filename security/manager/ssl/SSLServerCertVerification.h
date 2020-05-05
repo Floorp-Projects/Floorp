@@ -93,6 +93,8 @@ class SSLServerCertVerificationResult final
 
 class SSLServerCertVerificationJob : public Runnable {
  public:
+  SSLServerCertVerificationJob(const SSLServerCertVerificationJob&) = delete;
+
   // Must be called only on the socket transport thread
   static SECStatus Dispatch(uint64_t addrForLogging, void* aPinArg,
                             const UniqueCERTCertificate& serverCert,
