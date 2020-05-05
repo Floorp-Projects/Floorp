@@ -4,40 +4,36 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "LulMain.h"
+
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>  // write(), only for testing LUL
+
+#include <algorithm>  // std::sort
+#include <string>
+#include <utility>
+
+#include "mozilla/Assertions.h"
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/CheckedInt.h"
+#include "mozilla/DebugOnly.h"
+#include "mozilla/MemoryChecking.h"
+#include "mozilla/Sprintf.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
+
 #include "BaseProfiler.h"
-
-#ifdef MOZ_GECKO_PROFILER
-
-#  include "LulMain.h"
-
-#  include <string.h>
-#  include <stdlib.h>
-#  include <stdio.h>
-#  include <unistd.h>  // write(), only for testing LUL
-
-#  include <algorithm>  // std::sort
-#  include <string>
-#  include <utility>
-
-#  include "mozilla/Assertions.h"
-#  include "mozilla/ArrayUtils.h"
-#  include "mozilla/CheckedInt.h"
-#  include "mozilla/DebugOnly.h"
-#  include "mozilla/MemoryChecking.h"
-#  include "mozilla/Sprintf.h"
-#  include "mozilla/UniquePtr.h"
-#  include "mozilla/Unused.h"
-
-#  include "LulCommonExt.h"
-#  include "LulElfExt.h"
-
-#  include "LulMainInt.h"
+#include "LulCommonExt.h"
+#include "LulElfExt.h"
+#include "LulMainInt.h"
 
 using mozilla::baseprofiler::profiler_current_process_id;
 using mozilla::baseprofiler::profiler_current_thread_id;
 
 // Set this to 1 for verbose logging
-#  define DEBUG_MAIN 0
+#define DEBUG_MAIN 0
 
 namespace lul {
 
@@ -67,14 +63,14 @@ static const char* NameOf_DW_REG(int16_t aReg) {
   switch (aReg) {
     case DW_REG_CFA:
       return "cfa";
-#  if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
+#if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
     case DW_REG_INTEL_XBP:
       return "xbp";
     case DW_REG_INTEL_XSP:
       return "xsp";
     case DW_REG_INTEL_XIP:
       return "xip";
-#  elif defined(GP_ARCH_arm)
+#elif defined(GP_ARCH_arm)
     case DW_REG_ARM_R7:
       return "r7";
     case DW_REG_ARM_R11:
@@ -87,23 +83,23 @@ static const char* NameOf_DW_REG(int16_t aReg) {
       return "r14";
     case DW_REG_ARM_R15:
       return "r15";
-#  elif defined(GP_ARCH_arm64)
+#elif defined(GP_ARCH_arm64)
     case DW_REG_AARCH64_X29:
       return "x29";
     case DW_REG_AARCH64_X30:
       return "x30";
     case DW_REG_AARCH64_SP:
       return "sp";
-#  elif defined(GP_ARCH_mips64)
+#elif defined(GP_ARCH_mips64)
     case DW_REG_MIPS_SP:
       return "sp";
     case DW_REG_MIPS_FP:
       return "fp";
     case DW_REG_MIPS_PC:
       return "pc";
-#  else
-#    error "Unsupported arch"
-#  endif
+#else
+#  error "Unsupported arch"
+#endif
     default:
       return "???";
   }
@@ -143,28 +139,28 @@ void RuleSet::Print(void (*aLog)(const char*)) const {
   res += mCfaExpr.ShowRule("cfa");
   res += " in";
   // For each reg we care about, print the recovery expression.
-#  if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
+#if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
   res += mXipExpr.ShowRule(" RA");
   res += mXspExpr.ShowRule(" SP");
   res += mXbpExpr.ShowRule(" BP");
-#  elif defined(GP_ARCH_arm)
+#elif defined(GP_ARCH_arm)
   res += mR15expr.ShowRule(" R15");
   res += mR7expr.ShowRule(" R7");
   res += mR11expr.ShowRule(" R11");
   res += mR12expr.ShowRule(" R12");
   res += mR13expr.ShowRule(" R13");
   res += mR14expr.ShowRule(" R14");
-#  elif defined(GP_ARCH_arm64)
+#elif defined(GP_ARCH_arm64)
   res += mX29expr.ShowRule(" X29");
   res += mX30expr.ShowRule(" X30");
   res += mSPexpr.ShowRule(" SP");
-#  elif defined(GP_ARCH_mips64)
+#elif defined(GP_ARCH_mips64)
   res += mPCexpr.ShowRule(" PC");
   res += mSPexpr.ShowRule(" SP");
   res += mFPexpr.ShowRule(" FP");
-#  else
-#    error "Unsupported arch"
-#  endif
+#else
+#  error "Unsupported arch"
+#endif
   aLog(res.c_str());
 }
 
@@ -172,14 +168,14 @@ LExpr* RuleSet::ExprForRegno(DW_REG_NUMBER aRegno) {
   switch (aRegno) {
     case DW_REG_CFA:
       return &mCfaExpr;
-#  if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
+#if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
     case DW_REG_INTEL_XIP:
       return &mXipExpr;
     case DW_REG_INTEL_XSP:
       return &mXspExpr;
     case DW_REG_INTEL_XBP:
       return &mXbpExpr;
-#  elif defined(GP_ARCH_arm)
+#elif defined(GP_ARCH_arm)
     case DW_REG_ARM_R15:
       return &mR15expr;
     case DW_REG_ARM_R14:
@@ -192,23 +188,23 @@ LExpr* RuleSet::ExprForRegno(DW_REG_NUMBER aRegno) {
       return &mR11expr;
     case DW_REG_ARM_R7:
       return &mR7expr;
-#  elif defined(GP_ARCH_arm64)
+#elif defined(GP_ARCH_arm64)
     case DW_REG_AARCH64_X29:
       return &mX29expr;
     case DW_REG_AARCH64_X30:
       return &mX30expr;
     case DW_REG_AARCH64_SP:
       return &mSPexpr;
-#  elif defined(GP_ARCH_mips64)
+#elif defined(GP_ARCH_mips64)
     case DW_REG_MIPS_SP:
       return &mSPexpr;
     case DW_REG_MIPS_FP:
       return &mFPexpr;
     case DW_REG_MIPS_PC:
       return &mPCexpr;
-#  else
-#    error "Unknown arch"
-#  endif
+#else
+#  error "Unknown arch"
+#endif
     default:
       return nullptr;
   }
@@ -369,7 +365,7 @@ void SecMap::PrepareRuleSets(uintptr_t aStart, size_t aLen) {
 
   size_t n = mRuleSets.size();
 
-#  ifdef DEBUG
+#ifdef DEBUG
   // Do a final check on the rules: their address ranges must be
   // ascending, non overlapping, non zero sized.
   if (n > 0) {
@@ -382,7 +378,7 @@ void SecMap::PrepareRuleSets(uintptr_t aStart, size_t aLen) {
       MOZ_ASSERT(prev->mAddr + prev->mLen <= here->mAddr);
     }
   }
-#  endif
+#endif
 
   // Set the summary min and max address values.
   if (n == 0) {
@@ -403,14 +399,14 @@ void SecMap::PrepareRuleSets(uintptr_t aStart, size_t aLen) {
   // Is now usable for binary search.
   mUsable = true;
 
-#  if 0
+#if 0
   mLog("\nRulesets after preening\n");
   for (size_t i = 0; i < mRuleSets.size(); ++i) {
     mRuleSets[i].Print(mLog);
     mLog("\n");
   }
   mLog("\n");
-#  endif
+#endif
 }
 
 bool SecMap::IsEmpty() { return mRuleSets.empty(); }
@@ -689,15 +685,15 @@ class PriMap {
 // LUL                                                        //
 ////////////////////////////////////////////////////////////////
 
-#  define LUL_LOG(_str)                                           \
-    do {                                                          \
-      char buf[200];                                              \
-      SprintfLiteral(buf, "LUL: pid %d tid %d lul-obj %p: %s",    \
-                     profiler_current_process_id(),               \
-                     profiler_current_thread_id(), this, (_str)); \
-      buf[sizeof(buf) - 1] = 0;                                   \
-      mLog(buf);                                                  \
-    } while (0)
+#define LUL_LOG(_str)                                           \
+  do {                                                          \
+    char buf[200];                                              \
+    SprintfLiteral(buf, "LUL: pid %d tid %d lul-obj %p: %s",    \
+                   profiler_current_process_id(),               \
+                   profiler_current_thread_id(), this, (_str)); \
+    buf[sizeof(buf) - 1] = 0;                                   \
+    mLog(buf);                                                  \
+  } while (0)
 
 LUL::LUL(void (*aLog)(const char*))
     : mLog(aLog),
@@ -901,14 +897,14 @@ static TaggedUWord EvaluateReg(int16_t aReg, const UnwindRegs* aOldRegs,
   switch (aReg) {
     case DW_REG_CFA:
       return aCFA;
-#  if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
+#if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
     case DW_REG_INTEL_XBP:
       return aOldRegs->xbp;
     case DW_REG_INTEL_XSP:
       return aOldRegs->xsp;
     case DW_REG_INTEL_XIP:
       return aOldRegs->xip;
-#  elif defined(GP_ARCH_arm)
+#elif defined(GP_ARCH_arm)
     case DW_REG_ARM_R7:
       return aOldRegs->r7;
     case DW_REG_ARM_R11:
@@ -921,23 +917,23 @@ static TaggedUWord EvaluateReg(int16_t aReg, const UnwindRegs* aOldRegs,
       return aOldRegs->r14;
     case DW_REG_ARM_R15:
       return aOldRegs->r15;
-#  elif defined(GP_ARCH_arm64)
+#elif defined(GP_ARCH_arm64)
     case DW_REG_AARCH64_X29:
       return aOldRegs->x29;
     case DW_REG_AARCH64_X30:
       return aOldRegs->x30;
     case DW_REG_AARCH64_SP:
       return aOldRegs->sp;
-#  elif defined(GP_ARCH_mips64)
+#elif defined(GP_ARCH_mips64)
     case DW_REG_MIPS_SP:
       return aOldRegs->sp;
     case DW_REG_MIPS_FP:
       return aOldRegs->fp;
     case DW_REG_MIPS_PC:
       return aOldRegs->pc;
-#  else
-#    error "Unsupported arch"
-#  endif
+#else
+#  error "Unsupported arch"
+#endif
     default:
       MOZ_ASSERT(0);
       return TaggedUWord();
@@ -956,17 +952,17 @@ TaggedUWord EvaluatePfxExpr(int32_t start, const UnwindRegs* aOldRegs,
   int stackPointer = -1;
   for (int i = 0; i < N_STACK; i++) stack[i] = TaggedUWord();
 
-#  define PUSH(_tuw)                                             \
-    do {                                                         \
-      if (stackPointer >= N_STACK - 1) goto fail; /* overflow */ \
-      stack[++stackPointer] = (_tuw);                            \
-    } while (0)
+#define PUSH(_tuw)                                             \
+  do {                                                         \
+    if (stackPointer >= N_STACK - 1) goto fail; /* overflow */ \
+    stack[++stackPointer] = (_tuw);                            \
+  } while (0)
 
-#  define POP(_lval)                                   \
-    do {                                               \
-      if (stackPointer < 0) goto fail; /* underflow */ \
-      _lval = stack[stackPointer--];                   \
-    } while (0)
+#define POP(_lval)                                   \
+  do {                                               \
+    if (stackPointer < 0) goto fail; /* underflow */ \
+    _lval = stack[stackPointer--];                   \
+  } while (0)
 
   // Cursor in the instruction sequence.
   size_t curr = start + 1;
@@ -1072,8 +1068,8 @@ TaggedUWord EvaluatePfxExpr(int32_t start, const UnwindRegs* aOldRegs,
 fail:
   return TaggedUWord();
 
-#  undef PUSH
-#  undef POP
+#undef PUSH
+#undef POP
 }
 
 // RUNS IN NO-MALLOC CONTEXT
@@ -1118,29 +1114,29 @@ static void UseRuleSet(/*MOD*/ UnwindRegs* aRegs, const StackImage* aStackImg,
   // anew.  If we don't even manage to compute a new PC value, then
   // the caller will have to abandon the unwind.
   // FIXME: Create and use instead: aRegs->SetAllInvalid();
-#  if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
+#if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
   aRegs->xbp = TaggedUWord();
   aRegs->xsp = TaggedUWord();
   aRegs->xip = TaggedUWord();
-#  elif defined(GP_ARCH_arm)
+#elif defined(GP_ARCH_arm)
   aRegs->r7 = TaggedUWord();
   aRegs->r11 = TaggedUWord();
   aRegs->r12 = TaggedUWord();
   aRegs->r13 = TaggedUWord();
   aRegs->r14 = TaggedUWord();
   aRegs->r15 = TaggedUWord();
-#  elif defined(GP_ARCH_arm64)
+#elif defined(GP_ARCH_arm64)
   aRegs->x29 = TaggedUWord();
   aRegs->x30 = TaggedUWord();
   aRegs->sp = TaggedUWord();
   aRegs->pc = TaggedUWord();
-#  elif defined(GP_ARCH_mips64)
+#elif defined(GP_ARCH_mips64)
   aRegs->sp = TaggedUWord();
   aRegs->fp = TaggedUWord();
   aRegs->pc = TaggedUWord();
-#  else
-#    error "Unsupported arch"
-#  endif
+#else
+#  error "Unsupported arch"
+#endif
 
   // This is generally useful.
   const TaggedUWord inval = TaggedUWord();
@@ -1154,14 +1150,14 @@ static void UseRuleSet(/*MOD*/ UnwindRegs* aRegs, const StackImage* aStackImg,
   // value rules mention the CFA.  In any case, compute the new values
   // for each register that we're tracking.
 
-#  if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
+#if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
   aRegs->xbp =
       aRS->mXbpExpr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
   aRegs->xsp =
       aRS->mXspExpr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
   aRegs->xip =
       aRS->mXipExpr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
-#  elif defined(GP_ARCH_arm)
+#elif defined(GP_ARCH_arm)
   aRegs->r7 = aRS->mR7expr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
   aRegs->r11 =
       aRS->mR11expr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
@@ -1173,19 +1169,19 @@ static void UseRuleSet(/*MOD*/ UnwindRegs* aRegs, const StackImage* aStackImg,
       aRS->mR14expr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
   aRegs->r15 =
       aRS->mR15expr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
-#  elif defined(GP_ARCH_arm64)
+#elif defined(GP_ARCH_arm64)
   aRegs->x29 =
       aRS->mX29expr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
   aRegs->x30 =
       aRS->mX30expr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
   aRegs->sp = aRS->mSPexpr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
-#  elif defined(GP_ARCH_mips64)
+#elif defined(GP_ARCH_mips64)
   aRegs->sp = aRS->mSPexpr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
   aRegs->fp = aRS->mFPexpr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
   aRegs->pc = aRS->mPCexpr.EvaluateExpr(&old_regs, cfa, aStackImg, aPfxInstrs);
-#  else
-#    error "Unsupported arch"
-#  endif
+#else
+#  error "Unsupported arch"
+#endif
 
   // We're done.  Any regs for which we didn't manage to compute a
   // new value will now be marked as invalid.
@@ -1212,7 +1208,7 @@ void LUL::Unwind(/*OUT*/ uintptr_t* aFramePCs,
     if (DEBUG_MAIN) {
       char buf[300];
       mLog("\n");
-#  if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
+#if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
       SprintfLiteral(
           buf, "LoopTop: rip %d/%llx  rsp %d/%llx  rbp %d/%llx\n",
           (int)regs.xip.Valid(), (unsigned long long int)regs.xip.Value(),
@@ -1220,7 +1216,7 @@ void LUL::Unwind(/*OUT*/ uintptr_t* aFramePCs,
           (int)regs.xbp.Valid(), (unsigned long long int)regs.xbp.Value());
       buf[sizeof(buf) - 1] = 0;
       mLog(buf);
-#  elif defined(GP_ARCH_arm)
+#elif defined(GP_ARCH_arm)
       SprintfLiteral(
           buf,
           "LoopTop: r15 %d/%llx  r7 %d/%llx  r11 %d/%llx"
@@ -1233,7 +1229,7 @@ void LUL::Unwind(/*OUT*/ uintptr_t* aFramePCs,
           (int)regs.r14.Valid(), (unsigned long long int)regs.r14.Value());
       buf[sizeof(buf) - 1] = 0;
       mLog(buf);
-#  elif defined(GP_ARCH_arm64)
+#elif defined(GP_ARCH_arm64)
       SprintfLiteral(
           buf,
           "LoopTop: pc %d/%llx  x29 %d/%llx  x30 %d/%llx"
@@ -1244,7 +1240,7 @@ void LUL::Unwind(/*OUT*/ uintptr_t* aFramePCs,
           (int)regs.sp.Valid(), (unsigned long long int)regs.sp.Value());
       buf[sizeof(buf) - 1] = 0;
       mLog(buf);
-#  elif defined(GP_ARCH_mips64)
+#elif defined(GP_ARCH_mips64)
       SprintfLiteral(
           buf, "LoopTop: pc %d/%llx  sp %d/%llx  fp %d/%llx\n",
           (int)regs.pc.Valid(), (unsigned long long int)regs.pc.Value(),
@@ -1252,26 +1248,26 @@ void LUL::Unwind(/*OUT*/ uintptr_t* aFramePCs,
           (int)regs.fp.Valid(), (unsigned long long int)regs.fp.Value());
       buf[sizeof(buf) - 1] = 0;
       mLog(buf);
-#  else
-#    error "Unsupported arch"
-#  endif
+#else
+#  error "Unsupported arch"
+#endif
     }
 
-#  if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
+#if defined(GP_ARCH_amd64) || defined(GP_ARCH_x86)
     TaggedUWord ia = regs.xip;
     TaggedUWord sp = regs.xsp;
-#  elif defined(GP_ARCH_arm)
+#elif defined(GP_ARCH_arm)
     TaggedUWord ia = (*aFramesUsed == 0 ? regs.r15 : regs.r14);
     TaggedUWord sp = regs.r13;
-#  elif defined(GP_ARCH_arm64)
+#elif defined(GP_ARCH_arm64)
     TaggedUWord ia = (*aFramesUsed == 0 ? regs.pc : regs.x30);
     TaggedUWord sp = regs.sp;
-#  elif defined(GP_ARCH_mips64)
+#elif defined(GP_ARCH_mips64)
     TaggedUWord ia = regs.pc;
     TaggedUWord sp = regs.sp;
-#  else
-#    error "Unsupported arch"
-#  endif
+#else
+#  error "Unsupported arch"
+#endif
 
     if (*aFramesUsed >= aFramesAvail) {
       break;
@@ -1330,7 +1326,7 @@ void LUL::Unwind(/*OUT*/ uintptr_t* aFramePCs,
       mLog(buf);
     }
 
-#  if defined(GP_PLAT_x86_android) || defined(GP_PLAT_x86_linux)
+#if defined(GP_PLAT_x86_android) || defined(GP_PLAT_x86_linux)
     /////////////////////////////////////////////
     ////
     // On 32 bit x86-linux, syscalls are often done via the VDSO
@@ -1399,7 +1395,7 @@ void LUL::Unwind(/*OUT*/ uintptr_t* aFramePCs,
     }
     ////
     /////////////////////////////////////////////
-#  endif  // defined(GP_PLAT_x86_android) || defined(GP_PLAT_x86_linux)
+#endif  // defined(GP_PLAT_x86_android) || defined(GP_PLAT_x86_linux)
 
     // So, do we have a ruleset for this address?  If so, use it now.
     if (ruleset) {
@@ -1413,8 +1409,8 @@ void LUL::Unwind(/*OUT*/ uintptr_t* aFramePCs,
       continue;
     }
 
-#  if defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux) || \
-      defined(GP_PLAT_amd64_android) || defined(GP_PLAT_x86_android)
+#if defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux) || \
+    defined(GP_PLAT_amd64_android) || defined(GP_PLAT_x86_android)
     // There's no RuleSet for the specified address.  On amd64/x86_linux, see if
     // it's possible to recover the caller's frame by using the frame pointer.
 
@@ -1463,7 +1459,7 @@ void LUL::Unwind(/*OUT*/ uintptr_t* aFramePCs,
         }
       }
     }
-#  elif defined(GP_ARCH_arm64)
+#elif defined(GP_ARCH_arm64)
     // Here is an example of generated code for prologue and epilogue..
     //
     // stp     x29, x30, [sp, #-16]!
@@ -1524,8 +1520,8 @@ void LUL::Unwind(/*OUT*/ uintptr_t* aFramePCs,
         }
       }
     }
-#  endif  // defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux) ||
-          // defined(GP_PLAT_amd64_android) || defined(GP_PLAT_x86_android)
+#endif  // defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux) ||
+        // defined(GP_PLAT_amd64_android) || defined(GP_PLAT_x86_android)
 
     // We failed to recover a frame either using CFI or FP chasing, and we
     // have no other ways to recover the frame.  So we have to give up.
@@ -1543,13 +1539,13 @@ void LUL::Unwind(/*OUT*/ uintptr_t* aFramePCs,
 
 static const int LUL_UNIT_TEST_STACK_SIZE = 32768;
 
-#  if defined(GP_ARCH_mips64)
+#if defined(GP_ARCH_mips64)
 static __attribute__((noinline)) unsigned long __getpc(void) {
   unsigned long rtaddr;
   __asm__ volatile("move %0, $31" : "=r"(rtaddr));
   return rtaddr;
 }
-#  endif
+#endif
 
 // This function is innermost in the test call sequence.  It uses LUL
 // to unwind, and compares the result with the sequence specified in
@@ -1568,7 +1564,7 @@ static __attribute__((noinline)) bool GetAndCheckStackTrace(
   // Get hold of the current unwind-start registers.
   UnwindRegs startRegs;
   memset(&startRegs, 0, sizeof(startRegs));
-#  if defined(GP_ARCH_amd64)
+#if defined(GP_ARCH_amd64)
   volatile uintptr_t block[3];
   MOZ_ASSERT(sizeof(block) == 24);
   __asm__ __volatile__(
@@ -1588,7 +1584,7 @@ static __attribute__((noinline)) bool GetAndCheckStackTrace(
   startRegs.xbp = TaggedUWord(block[2]);
   const uintptr_t REDZONE_SIZE = 128;
   uintptr_t start = block[1] - REDZONE_SIZE;
-#  elif defined(GP_PLAT_x86_linux) || defined(GP_PLAT_x86_android)
+#elif defined(GP_PLAT_x86_linux) || defined(GP_PLAT_x86_android)
   volatile uintptr_t block[3];
   MOZ_ASSERT(sizeof(block) == 12);
   __asm__ __volatile__(
@@ -1610,7 +1606,7 @@ static __attribute__((noinline)) bool GetAndCheckStackTrace(
   startRegs.xbp = TaggedUWord(block[2]);
   const uintptr_t REDZONE_SIZE = 0;
   uintptr_t start = block[1] - REDZONE_SIZE;
-#  elif defined(GP_PLAT_arm_linux) || defined(GP_PLAT_arm_android)
+#elif defined(GP_PLAT_arm_linux) || defined(GP_PLAT_arm_android)
   volatile uintptr_t block[6];
   MOZ_ASSERT(sizeof(block) == 24);
   __asm__ __volatile__(
@@ -1639,7 +1635,7 @@ static __attribute__((noinline)) bool GetAndCheckStackTrace(
   startRegs.r7 = TaggedUWord(block[5]);
   const uintptr_t REDZONE_SIZE = 0;
   uintptr_t start = block[1] - REDZONE_SIZE;
-#  elif defined(GP_ARCH_arm64)
+#elif defined(GP_ARCH_arm64)
   volatile uintptr_t block[4];
   MOZ_ASSERT(sizeof(block) == 32);
   __asm__ __volatile__(
@@ -1658,7 +1654,7 @@ static __attribute__((noinline)) bool GetAndCheckStackTrace(
   startRegs.sp = TaggedUWord(block[3]);
   const uintptr_t REDZONE_SIZE = 0;
   uintptr_t start = block[1] - REDZONE_SIZE;
-#  elif defined(GP_ARCH_mips64)
+#elif defined(GP_ARCH_mips64)
   volatile uintptr_t block[3];
   MOZ_ASSERT(sizeof(block) == 24);
   __asm__ __volatile__(
@@ -1673,9 +1669,9 @@ static __attribute__((noinline)) bool GetAndCheckStackTrace(
   startRegs.fp = TaggedUWord(block[2]);
   const uintptr_t REDZONE_SIZE = 0;
   uintptr_t start = block[1] - REDZONE_SIZE;
-#  else
-#    error "Unsupported platform"
-#  endif
+#else
+#  error "Unsupported platform"
+#endif
 
   // Get hold of the innermost LUL_UNIT_TEST_STACK_SIZE bytes of the
   // stack.
@@ -1803,78 +1799,77 @@ static __attribute__((noinline)) bool GetAndCheckStackTrace(
 // results on |aLUL|'s logging sink, and also returns a boolean
 // indicating whether or not the results are acceptable (correct).
 
-#  define DECL_TEST_FN(NAME) \
-    bool NAME(LUL* aLUL, const char* strPorig, const char* strP);
+#define DECL_TEST_FN(NAME) \
+  bool NAME(LUL* aLUL, const char* strPorig, const char* strP);
 
-#  define GEN_TEST_FN(NAME, FRAMESIZE)                                         \
-    bool NAME(LUL* aLUL, const char* strPorig, const char* strP) {             \
-      /* Create a frame of size (at least) FRAMESIZE, so that the */           \
-      /* 8 functions created by this macro offer some variation in frame */    \
-      /* sizes.  This isn't as simple as it might seem, since a clever */      \
-      /* optimizing compiler (eg, clang-5) detects that the array is unused */ \
-      /* and removes it.  We try to defeat this by passing it to a function */ \
-      /* in a different compilation unit, and hoping that clang does not */    \
-      /* notice that the call is a no-op. */                                   \
-      char space[FRAMESIZE];                                                   \
-      Unused << write(1, space,                                                \
-                      0); /* write zero bytes of |space| to stdout */          \
-                                                                               \
-      if (*strP == '\0') {                                                     \
-        /* We've come to the end of the director string. */                    \
-        /* Take a stack snapshot. */                                           \
-        return GetAndCheckStackTrace(aLUL, strPorig);                          \
-      } else {                                                                 \
-        /* Recurse onwards.  This is a bit subtle.  The obvious */             \
-        /* thing to do here is call onwards directly, from within the */       \
-        /* arms of the case statement.  That gives a problem in that */        \
-        /* there will be multiple return points inside each function when */   \
-        /* unwinding, so it will be difficult to check for consistency */      \
-        /* against the director string.  Instead, we make an indirect */       \
-        /* call, so as to guarantee that there is only one call site */        \
-        /* within each function.  This does assume that the compiler */        \
-        /* won't transform it back to the simple direct-call form. */          \
-        /* To discourage it from doing so, the call is bracketed with */       \
-        /* __asm__ __volatile__ sections so as to make it not-movable. */      \
-        bool (*nextFn)(LUL*, const char*, const char*) = NULL;                 \
-        switch (*strP) {                                                       \
-          case '1':                                                            \
-            nextFn = TestFn1;                                                  \
-            break;                                                             \
-          case '2':                                                            \
-            nextFn = TestFn2;                                                  \
-            break;                                                             \
-          case '3':                                                            \
-            nextFn = TestFn3;                                                  \
-            break;                                                             \
-          case '4':                                                            \
-            nextFn = TestFn4;                                                  \
-            break;                                                             \
-          case '5':                                                            \
-            nextFn = TestFn5;                                                  \
-            break;                                                             \
-          case '6':                                                            \
-            nextFn = TestFn6;                                                  \
-            break;                                                             \
-          case '7':                                                            \
-            nextFn = TestFn7;                                                  \
-            break;                                                             \
-          case '8':                                                            \
-            nextFn = TestFn8;                                                  \
-            break;                                                             \
-          default:                                                             \
-            nextFn = TestFn8;                                                  \
-            break;                                                             \
-        }                                                                      \
-        /* "use" |space| immediately after the recursive call, */              \
-        /* so as to dissuade clang from deallocating the space while */        \
-        /* the call is active, or otherwise messing with the stack frame. */   \
-        __asm__ __volatile__("" ::: "cc", "memory");                           \
-        bool passed = nextFn(aLUL, strPorig, strP + 1);                        \
-        Unused << write(1, space, 0);                                          \
-        __asm__ __volatile__("" ::: "cc", "memory");                           \
-        return passed;                                                         \
-      }                                                                        \
-    }
+#define GEN_TEST_FN(NAME, FRAMESIZE)                                          \
+  bool NAME(LUL* aLUL, const char* strPorig, const char* strP) {              \
+    /* Create a frame of size (at least) FRAMESIZE, so that the */            \
+    /* 8 functions created by this macro offer some variation in frame */     \
+    /* sizes.  This isn't as simple as it might seem, since a clever */       \
+    /* optimizing compiler (eg, clang-5) detects that the array is unused */  \
+    /* and removes it.  We try to defeat this by passing it to a function */  \
+    /* in a different compilation unit, and hoping that clang does not */     \
+    /* notice that the call is a no-op. */                                    \
+    char space[FRAMESIZE];                                                    \
+    Unused << write(1, space, 0); /* write zero bytes of |space| to stdout */ \
+                                                                              \
+    if (*strP == '\0') {                                                      \
+      /* We've come to the end of the director string. */                     \
+      /* Take a stack snapshot. */                                            \
+      return GetAndCheckStackTrace(aLUL, strPorig);                           \
+    } else {                                                                  \
+      /* Recurse onwards.  This is a bit subtle.  The obvious */              \
+      /* thing to do here is call onwards directly, from within the */        \
+      /* arms of the case statement.  That gives a problem in that */         \
+      /* there will be multiple return points inside each function when */    \
+      /* unwinding, so it will be difficult to check for consistency */       \
+      /* against the director string.  Instead, we make an indirect */        \
+      /* call, so as to guarantee that there is only one call site */         \
+      /* within each function.  This does assume that the compiler */         \
+      /* won't transform it back to the simple direct-call form. */           \
+      /* To discourage it from doing so, the call is bracketed with */        \
+      /* __asm__ __volatile__ sections so as to make it not-movable. */       \
+      bool (*nextFn)(LUL*, const char*, const char*) = NULL;                  \
+      switch (*strP) {                                                        \
+        case '1':                                                             \
+          nextFn = TestFn1;                                                   \
+          break;                                                              \
+        case '2':                                                             \
+          nextFn = TestFn2;                                                   \
+          break;                                                              \
+        case '3':                                                             \
+          nextFn = TestFn3;                                                   \
+          break;                                                              \
+        case '4':                                                             \
+          nextFn = TestFn4;                                                   \
+          break;                                                              \
+        case '5':                                                             \
+          nextFn = TestFn5;                                                   \
+          break;                                                              \
+        case '6':                                                             \
+          nextFn = TestFn6;                                                   \
+          break;                                                              \
+        case '7':                                                             \
+          nextFn = TestFn7;                                                   \
+          break;                                                              \
+        case '8':                                                             \
+          nextFn = TestFn8;                                                   \
+          break;                                                              \
+        default:                                                              \
+          nextFn = TestFn8;                                                   \
+          break;                                                              \
+      }                                                                       \
+      /* "use" |space| immediately after the recursive call, */               \
+      /* so as to dissuade clang from deallocating the space while */         \
+      /* the call is active, or otherwise messing with the stack frame. */    \
+      __asm__ __volatile__("" ::: "cc", "memory");                            \
+      bool passed = nextFn(aLUL, strPorig, strP + 1);                         \
+      Unused << write(1, space, 0);                                           \
+      __asm__ __volatile__("" ::: "cc", "memory");                            \
+      return passed;                                                          \
+    }                                                                         \
+  }
 
 // The test functions are mutually recursive, so it is necessary to
 // declare them before defining them.
@@ -1958,5 +1953,3 @@ void RunLulUnitTests(/*OUT*/ int* aNTests, /*OUT*/ int* aNTestsPassed,
 }
 
 }  // namespace lul
-
-#endif  // MOZ_GECKO_PROFILER

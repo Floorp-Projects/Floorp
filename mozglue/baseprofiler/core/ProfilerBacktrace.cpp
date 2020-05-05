@@ -4,16 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ProfilerBacktrace.h"
+
 #include "BaseProfiler.h"
-
-#ifdef MOZ_GECKO_PROFILER
-
-#  include "ProfilerBacktrace.h"
-
-#  include "ProfileBuffer.h"
-#  include "ProfiledThreadData.h"
-#  include "BaseProfileJSONWriter.h"
-#  include "ThreadInfo.h"
+#include "BaseProfileJSONWriter.h"
+#include "ProfileBuffer.h"
+#include "ProfiledThreadData.h"
+#include "ThreadInfo.h"
 
 namespace mozilla {
 namespace baseprofiler {
@@ -79,5 +76,3 @@ ProfileBufferEntryReader::
 };
 
 }  // namespace mozilla
-
-#endif  // MOZ_GECKO_PROFILER

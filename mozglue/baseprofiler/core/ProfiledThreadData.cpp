@@ -4,18 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ProfiledThreadData.h"
+
 #include "BaseProfiler.h"
+#include "ProfileBuffer.h"
+#include "BaseProfileJSONWriter.h"
 
-#ifdef MOZ_GECKO_PROFILER
-
-#  include "ProfiledThreadData.h"
-
-#  include "ProfileBuffer.h"
-#  include "BaseProfileJSONWriter.h"
-
-#  if defined(GP_OS_darwin)
-#    include <pthread.h>
-#  endif
+#if defined(GP_OS_darwin)
+#  include <pthread.h>
+#endif
 
 namespace mozilla {
 namespace baseprofiler {
@@ -170,5 +167,3 @@ void StreamSamplesAndMarkers(const char* aName, int aThreadId,
 
 }  // namespace baseprofiler
 }  // namespace mozilla
-
-#endif  // MOZ_GECKO_PROFILER

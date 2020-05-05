@@ -4,13 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ProfileBuffer.h"
+
+#include "mozilla/MathAlgorithms.h"
+
 #include "BaseProfiler.h"
-
-#ifdef MOZ_GECKO_PROFILER
-
-#  include "ProfileBuffer.h"
-
-#  include "mozilla/MathAlgorithms.h"
 
 namespace mozilla {
 namespace baseprofiler {
@@ -33,15 +31,15 @@ ProfileBufferBlockIndex ProfileBuffer::AddEntry(
     ProfileChunkedBuffer& aProfileChunkedBuffer,
     const ProfileBufferEntry& aEntry) {
   switch (aEntry.GetKind()) {
-#  define SWITCH_KIND(KIND, TYPE, SIZE)                          \
-    case ProfileBufferEntry::Kind::KIND: {                       \
-      return aProfileChunkedBuffer.PutFrom(&aEntry, 1 + (SIZE)); \
-      break;                                                     \
-    }
+#define SWITCH_KIND(KIND, TYPE, SIZE)                          \
+  case ProfileBufferEntry::Kind::KIND: {                       \
+    return aProfileChunkedBuffer.PutFrom(&aEntry, 1 + (SIZE)); \
+    break;                                                     \
+  }
 
     FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(SWITCH_KIND)
 
-#  undef SWITCH_KIND
+#undef SWITCH_KIND
     default:
       MOZ_ASSERT(false, "Unhandled baseprofiler::ProfilerBuffer entry KIND");
       return ProfileBufferBlockIndex{};
@@ -207,5 +205,3 @@ void ProfileBufferCollector::CollectProfilingStackFrame(
 
 }  // namespace baseprofiler
 }  // namespace mozilla
-
-#endif  // MOZ_GECKO_PROFILER

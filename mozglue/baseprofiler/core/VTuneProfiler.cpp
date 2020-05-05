@@ -4,18 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifdef XP_WIN
+#  undef UNICODE
+#  undef _UNICODE
+#endif
+
+#include "VTuneProfiler.h"
+
+#include <memory>
+
 #include "BaseProfiler.h"
-
-#ifdef MOZ_GECKO_PROFILER
-
-#  ifdef XP_WIN
-#    undef UNICODE
-#    undef _UNICODE
-#  endif
-
-#  include "VTuneProfiler.h"
-
-#  include <memory>
 
 namespace mozilla {
 namespace baseprofiler {
@@ -92,5 +90,3 @@ void VTuneProfiler::RegisterThreadInternal(const char* aName) {
 
 }  // namespace baseprofiler
 }  // namespace mozilla
-
-#endif  // MOZ_GECKO_PROFILER

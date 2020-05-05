@@ -4,14 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "BaseProfilingCategory.h"
+
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/Assertions.h"
+
 #include "BaseProfiler.h"
-
-#ifdef MOZ_GECKO_PROFILER
-
-#  include "BaseProfilingCategory.h"
-
-#  include "mozilla/ArrayUtils.h"
-#  include "mozilla/Assertions.h"
 
 namespace mozilla {
 namespace baseprofiler {
@@ -71,5 +69,3 @@ const ProfilingCategoryPairInfo& GetProfilingCategoryPairInfo(
 
 }  // namespace baseprofiler
 }  // namespace mozilla
-
-#endif  // MOZ_GECKO_PROFILER
