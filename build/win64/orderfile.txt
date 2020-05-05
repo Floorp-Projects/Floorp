@@ -2805,7 +2805,6 @@ PrepareAndDispatch
 ?WakeLockInit@hal@mozilla@@YAXXZ
 ?GetDictionaryList@mozSpellChecker@@QEAA?AW4nsresult@@PEAV?$nsTArray@V?$nsTString@_S@@@@@Z
 ?SetRunningEventDelay@nsThread@@UEAA?AW4nsresult@@V?$BaseTimeDuration@VTimeDurationValueCalculator@mozilla@@@mozilla@@VTimeStamp@4@@Z
-?XRE_Win32kCallsAllowed@@YA_NXZ
 ?Init@nsBaseAppShell@@IEAA?AW4nsresult@@XZ
 ?nsAppShellConstructor@@YA?AW4nsresult@@PEAVnsISupports@@AEBUnsID@@PEAPEAX@Z
 ?QueryInterface@nsBaseAppShell@@UEAA?AW4nsresult@@AEBUnsID@@PEAPEAX@Z

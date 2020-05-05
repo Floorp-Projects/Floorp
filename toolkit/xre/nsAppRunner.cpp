@@ -4926,18 +4926,6 @@ bool XRE_UseNativeEventProcessing() {
   return true;
 }
 
-#if defined(XP_WIN)
-bool XRE_Win32kCallsAllowed() {
-  switch (XRE_GetProcessType()) {
-    case GeckoProcessType_GMPlugin:
-    case GeckoProcessType_RDD:
-      return false;
-    default:
-      return true;
-  }
-}
-#endif
-
 // If you add anything to this enum, please update about:support to reflect it
 enum {
   // kE10sEnabledByUser = 0, removed when ending non-e10s support
