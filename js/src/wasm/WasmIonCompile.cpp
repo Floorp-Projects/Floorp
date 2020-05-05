@@ -4354,6 +4354,15 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
       }
 #endif
 
+      // SIMD operations
+#ifdef ENABLE_WASM_SIMD
+      case uint16_t(Op::SimdPrefix): {
+        // We should not implement anything in Ion, but focus on implementing it
+        // in Cranelift.
+        return f.iter().unrecognizedOpcode(&op);
+      }
+#endif
+
       // Miscellaneous operations
       case uint16_t(Op::MiscPrefix): {
         switch (op.b1) {

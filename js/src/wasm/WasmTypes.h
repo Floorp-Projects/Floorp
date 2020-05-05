@@ -232,11 +232,17 @@ class Opcode {
     static_assert(size_t(MozOp::Limit) <= 0xFFFFFF, "fits");
     MOZ_ASSERT(size_t(op) < size_t(MozOp::Limit));
   }
+  MOZ_IMPLICIT Opcode(SimdOp op)
+      : bits_((uint32_t(op) << 8) | uint32_t(Op::SimdPrefix)) {
+    static_assert(size_t(SimdOp::Limit) <= 0xFFFFFF, "fits");
+    MOZ_ASSERT(size_t(op) < size_t(SimdOp::Limit));
+  }
 
   bool isOp() const { return bits_ < uint32_t(Op::FirstPrefix); }
   bool isMisc() const { return (bits_ & 255) == uint32_t(Op::MiscPrefix); }
   bool isThread() const { return (bits_ & 255) == uint32_t(Op::ThreadPrefix); }
   bool isMoz() const { return (bits_ & 255) == uint32_t(Op::MozPrefix); }
+  bool isSimd() const { return (bits_ & 255) == uint32_t(Op::SimdPrefix); }
 
   Op asOp() const {
     MOZ_ASSERT(isOp());
@@ -253,6 +259,10 @@ class Opcode {
   MozOp asMoz() const {
     MOZ_ASSERT(isMoz());
     return MozOp(bits_ >> 8);
+  }
+  SimdOp asSimd() const {
+    MOZ_ASSERT(isSimd());
+    return SimdOp(bits_ >> 8);
   }
 
   uint32_t bits() const { return bits_; }
@@ -607,7 +617,7 @@ class ValType {
 };
 
 struct V128 {
-  uint8_t bytes[16];
+  uint8_t bytes[16];  // Little-endian
 
   V128() { memset(bytes, 0, sizeof(bytes)); }
 
