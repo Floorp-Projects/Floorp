@@ -186,16 +186,6 @@ void js::ListFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
   }
 }
 
-bool js::AddListFormatConstructor(JSContext* cx, JS::Handle<JSObject*> intl) {
-  JSObject* ctor = GlobalObject::getOrCreateConstructor(cx, JSProto_ListFormat);
-  if (!ctor) {
-    return false;
-  }
-
-  RootedValue ctorValue(cx, ObjectValue(*ctor));
-  return DefineDataProperty(cx, intl, cx->names().ListFormat, ctorValue, 0);
-}
-
 /**
  * Returns a new UListFormatter with the locale and list formatting options
  * of the given ListFormat.

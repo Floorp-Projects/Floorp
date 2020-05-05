@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty('Intl')||(!this.Intl.ListFormat&&!this.hasOwnProperty('addIntlExtras')))
+// |reftest| skip-if(!this.hasOwnProperty('Intl'))
 
 // Intl.ListFormat.supportedLocalesOf returns an empty array for unsupported locales.
 assertEq(Intl.ListFormat.supportedLocalesOf("art-lobjan").length, 0);
