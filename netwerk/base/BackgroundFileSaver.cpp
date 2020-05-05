@@ -7,6 +7,7 @@
 #include "BackgroundFileSaver.h"
 
 #include "ScopedNSSTypes.h"
+#include "mozilla/ArrayAlgorithm.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Telemetry.h"
@@ -257,7 +258,8 @@ BackgroundFileSaver::GetSignatureInfo(
     return NS_ERROR_NOT_AVAILABLE;
   }
   for (const auto& signatureChain : mSignatureInfo) {
-    aSignatureInfo.AppendElement(signatureChain);
+    aSignatureInfo.AppendElement(TransformIntoNewArray(
+        signatureChain, [](const auto& element) { return element.Clone(); }));
   }
   return NS_OK;
 }
@@ -825,7 +827,7 @@ nsresult BackgroundFileSaver::ExtractSignatureInfo(const nsAString& filePath) {
           nsTArray<uint8_t> cert;
           cert.AppendElements(certChainElement->pCertContext->pbCertEncoded,
                               certChainElement->pCertContext->cbCertEncoded);
-          certList.AppendElement(cert);
+          certList.AppendElement(std::move(cert));
         }
         if (extractionSuccess) {
           mSignatureInfo.AppendElement(std::move(certList));
