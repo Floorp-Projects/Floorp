@@ -38,7 +38,8 @@ permalink: /changelog/
   * Simplified error handling and reduced non-fatal exception reporting.
 
 * **support-base**
-  * `CrashReporting` allowing adding support for `recordCrashBreadcrumb` without `lib-crash` dependency.
+  * ⚠️ **This is a breaking change**: `CrashReporting` allowing adding support for `recordCrashBreadcrumb` without `lib-crash` dependency.
+  * ⚠️ **This is a breaking change**: `Breadcrumb` has moved from `lib-crash` to this component.
   
 * **support-utils**
   * `URLStringUtils.isURLLikeStrict` is now deprecated due to performance issues. Consider using the less strict `isURLLike` instead or creating a new method using `:lib-publicsuffixlist`.
@@ -51,6 +52,9 @@ permalink: /changelog/
 
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
   * Improve social trackers categorization see [ac#6851](https://github.com/mozilla-mobile/android-components/issues/6851) and [fenix#5921](https://github.com/mozilla-mobile/fenix/issues/5921)
+ 
+* **service-firefox-accounts**
+  * ⚠️ **This is a breaking change**: `FxaAccountManager.withConstellation` puts the `DeviceConstellation` within the same scope as the block so you no longer need to use the `it` reference.
   
 * **feature-syncedtabs**
   * Moved `SyncedTabsFeature` to `SyncedTabsStorage`.
