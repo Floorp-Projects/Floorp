@@ -22,7 +22,7 @@ RemoteDragStartData::RemoteDragStartData(
     const LayoutDeviceIntRect& aRect, nsIPrincipal* aPrincipal,
     nsIContentSecurityPolicy* aCsp)
     : mBrowserParent(aBrowserParent),
-      mDataTransfer(aDataTransfer),
+      mDataTransfer(std::move(aDataTransfer)),
       mRect(aRect),
       mPrincipal(aPrincipal),
       mCsp(aCsp) {}
