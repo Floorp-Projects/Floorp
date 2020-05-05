@@ -108,7 +108,8 @@ static constexpr FloatRegister ScratchFloat32Reg =
     FloatRegister(X86Encoding::xmm15, FloatRegisters::Single);
 static constexpr FloatRegister ScratchDoubleReg =
     FloatRegister(X86Encoding::xmm15, FloatRegisters::Double);
-static constexpr FloatRegister ScratchSimd128Reg = xmm15;
+static constexpr FloatRegister ScratchSimd128Reg =
+    FloatRegister(X86Encoding::xmm15, FloatRegisters::Simd128);
 
 // Avoid rbp, which is the FramePointer, which is unavailable in some modes.
 static constexpr Register CallTempReg0 = rax;
@@ -915,6 +916,17 @@ class Assembler : public AssemblerX86Shared {
 
   void vcvtsi2sdq(Register src, FloatRegister dest) {
     masm.vcvtsi2sdq_rr(src.encoding(), dest.encoding());
+  }
+
+  void vpextrq(unsigned lane, FloatRegister src, Register dest) {
+    MOZ_ASSERT(HasSSE41());
+    masm.vpextrq_irr(lane, src.encoding(), dest.encoding());
+  }
+
+  void vpinsrq(unsigned lane, Register src1, FloatRegister src0,
+               FloatRegister dest) {
+    MOZ_ASSERT(HasSSE41());
+    masm.vpinsrq_irr(lane, src1.encoding(), src0.encoding(), dest.encoding());
   }
 
   void negq(Register reg) { masm.negq_r(reg.encoding()); }

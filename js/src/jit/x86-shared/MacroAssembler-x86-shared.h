@@ -374,6 +374,12 @@ class MacroAssemblerX86Shared : public Assembler {
                                          Register temp, FloatRegister tempF,
                                          Label* failed);
 
+  void unsignedConvertInt32x4ToFloat32x4(FloatRegister src, FloatRegister dest);
+
+  void truncSatFloat32x4ToInt32x4(FloatRegister src, FloatRegister dest);
+  void unsignedTruncSatFloat32x4ToInt32x4(FloatRegister src, FloatRegister temp,
+                                          FloatRegister dest);
+
   void createInt32x4(Register lane0, Register lane1, Register lane2,
                      Register lane3, FloatRegister dest);
   void createFloat32x4(FloatRegister lane0, FloatRegister lane1,
@@ -384,13 +390,16 @@ class MacroAssemblerX86Shared : public Assembler {
   void splatX8(Register input, FloatRegister output);
   void splatX4(Register input, FloatRegister output);
   void splatX4(FloatRegister input, FloatRegister output);
+  void splatX2(FloatRegister input, FloatRegister output);
 
   void reinterpretSimd(bool isIntegerLaneType, FloatRegister input,
                        FloatRegister output);
 
   void extractLaneInt32x4(FloatRegister input, Register output, unsigned lane);
   void extractLaneFloat32x4(FloatRegister input, FloatRegister output,
-                            unsigned lane, bool canonicalize);
+                            unsigned lane);
+  void extractLaneFloat64x2(FloatRegister input, FloatRegister output,
+                            unsigned lane);
   void extractLaneInt16x8(FloatRegister input, Register output, unsigned lane,
                           SimdSign sign);
   void extractLaneInt8x16(FloatRegister input, Register output, unsigned lane,
@@ -403,6 +412,8 @@ class MacroAssemblerX86Shared : public Assembler {
                          unsigned numLanes);
   void insertLaneFloat32x4(FloatRegister input, FloatRegister value,
                            FloatRegister output, unsigned lane);
+  void insertLaneFloat64x2(FloatRegister input, FloatRegister value,
+                           FloatRegister output, unsigned lane);
 
   void allTrueSimdBool(FloatRegister input, Register output);
   void anyTrueSimdBool(FloatRegister input, Register output);
@@ -411,8 +422,9 @@ class MacroAssemblerX86Shared : public Assembler {
                       unsigned lanes[4]);
   void swizzleFloat32x4(FloatRegister input, FloatRegister output,
                         unsigned lanes[4]);
-  void swizzleInt8x16(FloatRegister input, FloatRegister output,
-                      const mozilla::Maybe<Register>& temp, int8_t lanes[16]);
+  void oldSwizzleInt8x16(FloatRegister input, FloatRegister output,
+                         const mozilla::Maybe<Register>& temp,
+                         int8_t lanes[16]);
 
   void shuffleX4(FloatRegister lhs, Operand rhs, FloatRegister out,
                  const mozilla::Maybe<FloatRegister>& maybeTemp,
@@ -425,11 +437,22 @@ class MacroAssemblerX86Shared : public Assembler {
 
   void compareInt8x16(FloatRegister lhs, Operand rhs, Assembler::Condition cond,
                       FloatRegister output);
+  void unsignedCompareInt8x16(FloatRegister lhs, Operand rhs,
+                              Assembler::Condition cond, FloatRegister output,
+                              FloatRegister tmp1, FloatRegister tmp2);
   void compareInt16x8(FloatRegister lhs, Operand rhs, Assembler::Condition cond,
                       FloatRegister output);
+  void unsignedCompareInt16x8(FloatRegister lhs, Operand rhs,
+                              Assembler::Condition cond, FloatRegister output,
+                              FloatRegister tmp1, FloatRegister tmp2);
   void compareInt32x4(FloatRegister lhs, Operand rhs, Assembler::Condition cond,
                       FloatRegister output);
+  void unsignedCompareInt32x4(FloatRegister lhs, Operand rhs,
+                              Assembler::Condition cond, FloatRegister output,
+                              FloatRegister tmp1, FloatRegister tmp2);
   void compareFloat32x4(FloatRegister lhs, Operand rhs,
+                        Assembler::Condition cond, FloatRegister output);
+  void compareFloat64x2(FloatRegister lhs, Operand rhs,
                         Assembler::Condition cond, FloatRegister output);
 
   void mulInt32x4(FloatRegister lhs, Operand rhs,
@@ -437,6 +460,7 @@ class MacroAssemblerX86Shared : public Assembler {
                   FloatRegister output);
 
   void negFloat32x4(Operand in, FloatRegister out);
+  void negFloat64x2(Operand in, FloatRegister out);
 
   void notInt8x16(Operand in, FloatRegister out);
   void notInt16x8(Operand in, FloatRegister out);
@@ -451,7 +475,12 @@ class MacroAssemblerX86Shared : public Assembler {
   void maxNumFloat32x4(FloatRegister lhs, Operand rhs, FloatRegister temp,
                        FloatRegister output);
 
+  void minFloat64x2(FloatRegister lhs, Operand rhs, FloatRegister output);
+  void maxFloat64x2(FloatRegister lhs, Operand rhs, FloatRegister temp,
+                    FloatRegister output);
+
   void absFloat32x4(Operand in, FloatRegister out);
+  void absFloat64x2(Operand in, FloatRegister out);
 
   void bitwiseAndFloat32x4(FloatRegister lhs, const Operand& rhs,
                            FloatRegister dest) {
@@ -594,7 +623,26 @@ class MacroAssemblerX86Shared : public Assembler {
     vrsqrtps(src, dest);
   }
 
+ private:
+  void packedShiftByScalarInt8x16(
+      FloatRegister in, Register count, Register temp, FloatRegister xtmp,
+      FloatRegister dest,
+      void (MacroAssemblerX86Shared::*shift)(FloatRegister, FloatRegister,
+                                             FloatRegister),
+      void (MacroAssemblerX86Shared::*extend)(const Operand&, FloatRegister));
+
  public:
+  void packedLeftShiftByScalarInt8x16(FloatRegister in, Register count,
+                                      Register temp, FloatRegister xtmp,
+                                      FloatRegister dest);
+  void packedRightShiftByScalarInt8x16(FloatRegister in, Register count,
+                                       Register temp, FloatRegister xtmp,
+                                       FloatRegister dest);
+  void packedUnsignedRightShiftByScalarInt8x16(FloatRegister in, Register count,
+                                               Register temp,
+                                               FloatRegister xtmp,
+                                               FloatRegister dest);
+
   void packedLeftShiftByScalarInt16x8(FloatRegister in, Register count,
                                       Register temp, FloatRegister dest);
   void packedRightShiftByScalarInt16x8(FloatRegister in, Register count,
@@ -622,6 +670,14 @@ class MacroAssemblerX86Shared : public Assembler {
   void packedRightShiftByScalarInt32x4(FloatRegister in, Register count,
                                        Register temp, FloatRegister dest);
   void packedUnsignedRightShiftByScalarInt32x4(FloatRegister in, Register count,
+                                               Register temp,
+                                               FloatRegister dest);
+  void packedLeftShiftByScalarInt64x2(FloatRegister in, Register count,
+                                      Register temp, FloatRegister dest);
+  void packedRightShiftByScalarInt64x2(FloatRegister in, Register count,
+                                       Register temp1, FloatRegister temp2,
+                                       FloatRegister dest);
+  void packedUnsignedRightShiftByScalarInt64x2(FloatRegister in, Register count,
                                                Register temp,
                                                FloatRegister dest);
 
@@ -652,15 +708,15 @@ class MacroAssemblerX86Shared : public Assembler {
   void moveSimd128Float(FloatRegister src, FloatRegister dest) {
     vmovaps(src, dest);
   }
-  FloatRegister reusedInputFloat32x4(FloatRegister src, FloatRegister dest) {
+  FloatRegister reusedInputSimd128Float(FloatRegister src, FloatRegister dest) {
     if (HasAVX()) {
       return src;
     }
     moveSimd128Float(src, dest);
     return dest;
   }
-  FloatRegister reusedInputAlignedFloat32x4(const Operand& src,
-                                            FloatRegister dest) {
+  FloatRegister reusedInputAlignedSimd128Float(const Operand& src,
+                                               FloatRegister dest) {
     if (HasAVX() && src.kind() == Operand::FPREG) {
       return FloatRegister::FromCode(src.fpu());
     }
@@ -708,7 +764,7 @@ class MacroAssemblerX86Shared : public Assembler {
     // clobber the output with the input and apply the instruction
     // afterwards.
     // Note: this is useAtStart-safe because src isn't read afterwards.
-    FloatRegister srcCopy = reusedInputFloat32x4(src, dest);
+    FloatRegister srcCopy = reusedInputSimd128Float(src, dest);
     vshufps(mask, srcCopy, srcCopy, dest);
   }
   void shuffleMix(uint32_t mask, const Operand& src, FloatRegister dest) {
