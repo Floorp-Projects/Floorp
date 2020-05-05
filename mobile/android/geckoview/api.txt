@@ -1613,6 +1613,7 @@ package org.mozilla.geckoview {
     method @UiThread @Nullable public WebExtensionController.PromptDelegate getPromptDelegate();
     method @UiThread @Nullable @Deprecated public WebExtensionController.TabDelegate getTabDelegate();
     method @NonNull @AnyThread public GeckoResult<WebExtension> install(@NonNull String);
+    method @NonNull @AnyThread public GeckoResult<WebExtension> installBuiltIn(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<List<WebExtension>> list();
     method @NonNull @AnyThread public GeckoResult<WebExtension> setAllowedInPrivateBrowsing(@NonNull WebExtension, boolean);
     method @UiThread public void setDebuggerDelegate(@NonNull WebExtensionController.DebuggerDelegate);
