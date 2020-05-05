@@ -59,6 +59,7 @@ nsProfiler::~nsProfiler() {
   if (mSymbolTableThread) {
     mSymbolTableThread->Shutdown();
   }
+  ResetGathering();
 }
 
 nsresult nsProfiler::Init() {
@@ -143,10 +144,6 @@ nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
 
 NS_IMETHODIMP
 nsProfiler::StopProfiler() {
-  // If we have a Promise in flight, we should reject it.
-  if (mPromiseHolder.isSome()) {
-    mPromiseHolder->RejectIfExists(NS_ERROR_DOM_ABORT_ERR, __func__);
-  }
   ResetGathering();
 
   profiler_stop();
@@ -921,7 +918,12 @@ void nsProfiler::FinishGathering() {
 }
 
 void nsProfiler::ResetGathering() {
-  mPromiseHolder.reset();
+  // If we have an unfulfilled Promise in flight, we should reject it before
+  // destroying the promise holder.
+  if (mPromiseHolder.isSome()) {
+    mPromiseHolder->RejectIfExists(NS_ERROR_DOM_ABORT_ERR, __func__);
+    mPromiseHolder.reset();
+  }
   mPendingProfiles = 0;
   mGathering = false;
   mWriter.reset();
