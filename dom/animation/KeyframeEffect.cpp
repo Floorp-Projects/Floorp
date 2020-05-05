@@ -826,7 +826,7 @@ nsTArray<AnimationProperty> KeyframeEffect::BuildProperties(
   // happens we could find that |mKeyframes| is overwritten while it is
   // being iterated over. Normally that shouldn't happen but just in case we
   // make a copy of |mKeyframes| first and iterate over that instead.
-  auto keyframesCopy(mKeyframes);
+  auto keyframesCopy(mKeyframes.Clone());
 
   result = KeyframeUtils::GetAnimationPropertiesFromKeyframes(
       keyframesCopy, mTarget.mElement, aStyle, mEffectOptions.mComposite);
@@ -1043,8 +1043,8 @@ already_AddRefed<KeyframeEffect> KeyframeEffect::Constructor(
   // Copy aSource's keyframes and animation properties.
   // Note: We don't call SetKeyframes directly, which might revise the
   //       computed offsets and rebuild the animation properties.
-  effect->mKeyframes = aSource.mKeyframes;
-  effect->mProperties = aSource.mProperties;
+  effect->mKeyframes = aSource.mKeyframes.Clone();
+  effect->mProperties = aSource.mProperties.Clone();
   for (auto iter = aSource.mBaseValues.ConstIter(); !iter.Done(); iter.Next()) {
     // XXX Should this use non-const Iter() and then pass
     // std::move(iter.Data())? Otherwise aSource might be a const&...

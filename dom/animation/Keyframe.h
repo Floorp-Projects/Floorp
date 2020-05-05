@@ -75,7 +75,7 @@ struct Keyframe {
                                                   // "linear"
   dom::CompositeOperationOrAuto mComposite =
       dom::CompositeOperationOrAuto::Auto;
-  nsTArray<PropertyValuePair> mPropertyValues;
+  CopyableTArray<PropertyValuePair> mPropertyValues;
 };
 
 }  // namespace mozilla
