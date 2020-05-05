@@ -99,7 +99,7 @@ class APZCCallbackHelper {
       nsIContent* aContent);
 
   /* Return a "callback transform" to be applied to the coordinates of input
-     events targeting content inside the scroll frame identified by |aGuid|.
+     events targeting content inside the scroll frame identified by |aScrollId|.
      The callback transform has two components:
        1. The pres shell resolution, representing the pinch-zoom scale
           (if the scroll frame |aScrollId| is inside the resolution, which
@@ -109,11 +109,11 @@ class APZCCallbackHelper {
              thread incompletely applying an APZ-requested scroll position.
            - For the RCD-RSF only, a persistent component representing the
              offset of the visual viewport relative to the layout viewport.
-         The translation is accumulated for all scroll frames form |aGuid| up to
-         the root, using values populated in UpdateCallbackTransform. See that
-         method's documentation for additional details. */
+         The translation is accumulated for all scroll frames form |aScrollId|
+         up to the root, using values populated in UpdateCallbackTransform. See
+         that method's documentation for additional details. */
   static CSSToCSSMatrix4x4 GetCallbackTransform(
-      const ScrollableLayerGuid& aGuid);
+      ScrollableLayerGuid::ViewID aScrollId);
 
   /* Dispatch a widget event via the widget stored in the event, if any.
    * In a child process, allows the BrowserParent event-capture mechanism to

@@ -452,11 +452,11 @@ PresShell* APZCCallbackHelper::GetRootContentDocumentPresShellForContent(
 }
 
 mozilla::CSSToCSSMatrix4x4 APZCCallbackHelper::GetCallbackTransform(
-    const ScrollableLayerGuid& aGuid) {
-  if (aGuid.mScrollId == ScrollableLayerGuid::NULL_SCROLL_ID) {
+    ScrollableLayerGuid::ViewID aScrollId) {
+  if (aScrollId == ScrollableLayerGuid::NULL_SCROLL_ID) {
     return {};
   }
-  nsCOMPtr<nsIContent> content = nsLayoutUtils::FindContentFor(aGuid.mScrollId);
+  nsCOMPtr<nsIContent> content = nsLayoutUtils::FindContentFor(aScrollId);
   if (!content) {
     return {};
   }
