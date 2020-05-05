@@ -64,7 +64,7 @@ class InternalHeaders final {
     mGuard = aOther.mGuard;
   }
 
-  explicit InternalHeaders(const nsTArray<Entry>&& aHeaders,
+  explicit InternalHeaders(nsTArray<Entry>&& aHeaders,
                            HeadersGuardEnum aGuard = HeadersGuardEnum::None);
 
   InternalHeaders(const nsTArray<HeadersEntry>& aHeadersEntryList,

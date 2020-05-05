@@ -118,7 +118,7 @@ InternalRequest::InternalRequest(
 }
 InternalRequest::InternalRequest(const InternalRequest& aOther)
     : mMethod(aOther.mMethod),
-      mURLList(aOther.mURLList),
+      mURLList(aOther.mURLList.Clone()),
       mHeaders(new InternalHeaders(*aOther.mHeaders)),
       mBodyLength(InternalResponse::UNKNOWN_BODY_SIZE),
       mContentPolicyType(aOther.mContentPolicyType),
@@ -143,7 +143,7 @@ InternalRequest::InternalRequest(const InternalRequest& aOther)
 
 InternalRequest::InternalRequest(const IPCInternalRequest& aIPCRequest)
     : mMethod(aIPCRequest.method()),
-      mURLList(aIPCRequest.urlList()),
+      mURLList(aIPCRequest.urlList().Clone()),
       mHeaders(new InternalHeaders(aIPCRequest.headers(),
                                    aIPCRequest.headersGuard())),
       mBodyStream(mozilla::ipc::DeserializeIPCStream(aIPCRequest.body())),

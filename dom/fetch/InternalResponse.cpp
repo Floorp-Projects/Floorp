@@ -327,14 +327,14 @@ already_AddRefed<InternalResponse> InternalResponse::OpaqueRedirectResponse() {
              "URLList should not be emtpy for internalResponse");
   RefPtr<InternalResponse> response = OpaqueResponse();
   response->mType = ResponseType::Opaqueredirect;
-  response->mURLList = mURLList;
+  response->mURLList = mURLList.Clone();
   return response.forget();
 }
 
 already_AddRefed<InternalResponse> InternalResponse::CreateIncompleteCopy() {
   RefPtr<InternalResponse> copy = new InternalResponse(mStatus, mStatusText);
   copy->mType = mType;
-  copy->mURLList = mURLList;
+  copy->mURLList = mURLList.Clone();
   copy->mChannelInfo = mChannelInfo;
   if (mPrincipalInfo) {
     copy->mPrincipalInfo =
