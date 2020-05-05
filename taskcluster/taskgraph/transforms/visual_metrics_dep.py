@@ -31,6 +31,10 @@ def run_visual_metrics(config, jobs):
             treeherder_info = dict(dep_job.task['extra']['treeherder'])
             job['treeherder']['symbol'] = SYMBOL % treeherder_info
 
+            # Store the platform name so we can use it to calculate
+            # the similarity metric against other tasks
+            job['worker'].setdefault('env', {})['TC_PLATFORM'] = platform
+
             # vismet runs on Linux but we want to have it displayed
             # alongside the job it was triggered by to make it easier for
             # people to find it back.
