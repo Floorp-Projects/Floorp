@@ -14,6 +14,7 @@ pub use glean_core::{metrics::TimeUnit, CommonMetricData, ErrorType, Lifetime};
 
 mod boolean;
 mod counter;
+mod event;
 mod labeled;
 mod ping;
 mod string;
@@ -24,6 +25,7 @@ mod uuid;
 
 pub use self::boolean::BooleanMetric;
 pub use self::counter::CounterMetric;
+pub use self::event::{EventMetric, ExtraKeys, NoExtraKeys};
 pub use self::labeled::LabeledMetric;
 pub use self::ping::Ping;
 pub use self::string::StringMetric;
