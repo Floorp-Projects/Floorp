@@ -53,7 +53,7 @@ PresentationControlService.prototype = {
     if (this._isServiceInit()) {
       DEBUG &&
         log("PresentationControlService - server socket has been initialized"); // jshint ignore:line
-      throw Cr.NS_ERROR_FAILURE;
+      throw Components.Exception("", Cr.NS_ERROR_FAILURE);
     }
 
     /**
@@ -94,7 +94,7 @@ PresentationControlService.prototype = {
   _serverSocketInit(aPort, aCert) {
     if (!this._serverSocket) {
       DEBUG && log("PresentationControlService - create server socket fail."); // jshint ignore:line
-      throw Cr.NS_ERROR_FAILURE;
+      throw Components.Exception("", Cr.NS_ERROR_FAILURE);
     }
 
     try {
@@ -112,7 +112,7 @@ PresentationControlService.prototype = {
       // NS_ERROR_SOCKET_ADDRESS_IN_USE
       DEBUG &&
         log("PresentationControlService - init server socket fail: " + e); // jshint ignore:line
-      throw Cr.NS_ERROR_FAILURE;
+      throw Components.Exception("", Cr.NS_ERROR_FAILURE);
     }
 
     this._port = this._serverSocket.port;
@@ -235,7 +235,7 @@ PresentationControlService.prototype = {
     } catch (e) {
       DEBUG && log("PresentationControlService - createTransport throws: " + e); // jshint ignore:line
       // Pop the exception to |TCPDevice.establishControlChannel|
-      throw Cr.NS_ERROR_FAILURE;
+      throw Components.Exception("", Cr.NS_ERROR_FAILURE);
     }
     return socketTransport;
   },
@@ -947,7 +947,7 @@ TCPControlChannel.prototype = {
   reconnect(aPresentationId, aUrl) {
     DEBUG && log("TCPControlChannel - reconnect with role: " + this._direction); // jshint ignore:line
     if (this._direction != "sender") {
-      throw Cr.NS_ERROR_FAILURE;
+      throw Components.Exception("", Cr.NS_ERROR_FAILURE);
     }
 
     this._stateMachine.reconnect(aPresentationId, aUrl);

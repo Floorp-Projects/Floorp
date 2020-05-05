@@ -52,7 +52,7 @@ function MockFactory(aClass) {
 MockFactory.prototype = {
   createInstance(aOuter, aIID) {
     if (aOuter) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
+      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
     }
     switch (typeof this._cls) {
       case "function":
@@ -64,7 +64,7 @@ MockFactory.prototype = {
     }
   },
   lockFactory(aLock) {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
   QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory]),
 };

@@ -2349,7 +2349,7 @@ SearchEngine.prototype = {
       Cu.reportError(
         "invalid options arg passed to nsISearchEngine.speculativeConnect"
       );
-      throw Cr.NS_ERROR_INVALID_ARG;
+      throw Components.Exception("", Cr.NS_ERROR_INVALID_ARG);
     }
     let connector = Services.io.QueryInterface(Ci.nsISpeculativeConnect);
 

@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyGetter(this, "PushService", function() {
     return PushService;
   }
 
-  throw Cr.NS_ERROR_NOT_AVAILABLE;
+  throw Components.Exception("", Cr.NS_ERROR_NOT_AVAILABLE);
 });
 
 // Observer notification topics for push messages and subscription status

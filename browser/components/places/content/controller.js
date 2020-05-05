@@ -755,7 +755,7 @@ PlacesController.prototype = {
   async newItem(aType) {
     let ip = this._view.insertionPoint;
     if (!ip) {
-      throw Cr.NS_ERROR_NOT_AVAILABLE;
+      throw Components.Exception("", Cr.NS_ERROR_NOT_AVAILABLE);
     }
 
     let bookmarkGuid = PlacesUIUtils.showBookmarkDialog(
@@ -778,7 +778,7 @@ PlacesController.prototype = {
   async newSeparator() {
     var ip = this._view.insertionPoint;
     if (!ip) {
-      throw Cr.NS_ERROR_NOT_AVAILABLE;
+      throw Components.Exception("", Cr.NS_ERROR_NOT_AVAILABLE);
     }
 
     let index = await ip.getIndex();
@@ -1266,7 +1266,7 @@ PlacesController.prototype = {
     // No reason to proceed if there isn't a valid insertion point.
     let ip = this._view.insertionPoint;
     if (!ip) {
-      throw Cr.NS_ERROR_NOT_AVAILABLE;
+      throw Components.Exception("", Cr.NS_ERROR_NOT_AVAILABLE);
     }
 
     let action = this.clipboardAction;

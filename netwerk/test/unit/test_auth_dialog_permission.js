@@ -95,7 +95,7 @@ Requestor.prototype = {
       return this.prompter;
     }
 
-    throw Cr.NS_ERROR_NO_INTERFACE;
+    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   },
 
   prompter: null,
@@ -159,7 +159,7 @@ Test.prototype = {
       do_throw("Unexpected exception: " + e);
     }
 
-    throw Cr.NS_ERROR_ABORT;
+    throw Components.Exception("", Cr.NS_ERROR_ABORT);
   },
 
   onDataAvailable(request, stream, offset, count) {

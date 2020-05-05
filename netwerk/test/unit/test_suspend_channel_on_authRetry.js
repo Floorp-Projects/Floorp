@@ -120,7 +120,7 @@ Requestor.prototype = {
       return this.prompt;
     }
 
-    throw Cr.NS_ERROR_NO_INTERFACE;
+    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   },
 
   prompt: null,
@@ -145,7 +145,7 @@ var listener = {
     } catch (e) {
       do_throw("Unexpected exception: " + e);
     }
-    throw Cr.NS_ERROR_ABORT;
+    throw Components.Exception("", Cr.NS_ERROR_ABORT);
   },
 
   onDataAvailable: function test_ODA() {

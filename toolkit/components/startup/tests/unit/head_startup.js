@@ -25,7 +25,7 @@ function createAppInfo(ID, name, version, platformVersion = "1.0") {
   let XULAppInfoFactory = {
     createInstance(outer, iid) {
       if (outer != null) {
-        throw Cr.NS_ERROR_NO_AGGREGATION;
+        throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
       }
       return gAppInfo.QueryInterface(iid);
     },

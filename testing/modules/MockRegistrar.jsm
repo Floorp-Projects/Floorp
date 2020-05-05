@@ -57,7 +57,7 @@ var MockRegistrar = Object.freeze({
     let factory = {
       createInstance(outer, iid) {
         if (outer) {
-          throw Cr.NS_ERROR_NO_AGGREGATION;
+          throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
         }
 
         let wrappedMock;
@@ -78,7 +78,7 @@ var MockRegistrar = Object.freeze({
         return wrappedMock.QueryInterface(iid);
       },
       lockFactory(lock) {
-        throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+        throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
       },
       QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory]),
     };

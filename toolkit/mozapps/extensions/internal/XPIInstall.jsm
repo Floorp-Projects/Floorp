@@ -2746,7 +2746,7 @@ var UpdateChecker = function(
   aPlatformVersion
 ) {
   if (!aListener || !aReason) {
-    throw Cr.NS_ERROR_INVALID_ARG;
+    throw Components.Exception("", Cr.NS_ERROR_INVALID_ARG);
   }
 
   ({ AddonUpdateChecker } = ChromeUtils.import(

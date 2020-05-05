@@ -164,7 +164,7 @@ add_task(async function block_pending_request_test() {
         if (aIID.equals(Ci.imgIScriptedNotificationObserver)) {
           return this;
         }
-        throw Cr.NS_ERROR_NO_INTERFACE;
+        throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
       },
     };
 

@@ -28,7 +28,7 @@ function StreamConverterFactory() {
   if (Services.cpmm.sharedData.get("pdfjs.enabled")) {
     return new PdfStreamConverter();
   }
-  throw Cr.NS_ERROR_FACTORY_NOT_REGISTERED;
+  throw Components.Exception("", Cr.NS_ERROR_FACTORY_NOT_REGISTERED);
 }
 
 var EXPORTED_SYMBOLS = ["StreamConverterFactory"];

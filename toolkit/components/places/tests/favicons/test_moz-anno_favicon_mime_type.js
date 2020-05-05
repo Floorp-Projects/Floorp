@@ -30,7 +30,7 @@ streamListener.prototype = {
   },
   onDataAvailable(aRequest, aInputStream, aOffset, aCount) {
     aRequest.cancel(Cr.NS_ERROR_ABORT);
-    throw Cr.NS_ERROR_ABORT;
+    throw Components.Exception("", Cr.NS_ERROR_ABORT);
   },
 };
 

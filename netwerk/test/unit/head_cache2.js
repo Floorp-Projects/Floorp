@@ -279,7 +279,7 @@ OpenCallback.prototype = {
       LOG_C2(self, "Notifying");
       self.goon(entry);
     });
-    throw Cr.NS_ERROR_FAILURE;
+    throw Components.Exception("", Cr.NS_ERROR_FAILURE);
   },
 };
 

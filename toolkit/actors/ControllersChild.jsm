@@ -24,7 +24,7 @@ class ControllersChild extends JSWindowActorChild {
             if (value.type == "long") {
               params.setLongValue(name, parseInt(value.value));
             } else {
-              throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+              throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
             }
           }
           this.docShell.doCommandWithParams(data.cmd, params);
