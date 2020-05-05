@@ -8,6 +8,7 @@
 #define mozilla_saferefptr_h__
 
 #include "mozilla/Maybe.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
@@ -401,6 +402,23 @@ SafeRefPtr<T> SafeRefCounted<T, Atomicity>::SafeRefPtrFromThis() {
   // this actually is safe
   return {static_cast<T*>(this), AcquireStrongRefFromRawPtr{}};
 }
+
+template <typename T>
+struct CopyablePtr<SafeRefPtr<T>> {
+  SafeRefPtr<T> mPtr;
+
+  explicit CopyablePtr(SafeRefPtr<T> aPtr) : mPtr{std::move(aPtr)} {}
+
+  CopyablePtr(const CopyablePtr& aOther) : mPtr{aOther.mPtr.clonePtr()} {}
+  CopyablePtr& operator=(const CopyablePtr& aOther) {
+    if (this != &aOther) {
+      mPtr = aOther.mPtr.clonePtr();
+    }
+    return *this;
+  }
+  CopyablePtr(CopyablePtr&&) = default;
+  CopyablePtr& operator=(CopyablePtr&&) = default;
+};
 
 }  // namespace detail
 
