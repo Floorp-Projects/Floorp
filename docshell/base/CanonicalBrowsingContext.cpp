@@ -280,7 +280,7 @@ uint32_t CanonicalBrowsingContext::CountSiteOrigins(
 
 void CanonicalBrowsingContext::UpdateMediaControlKeysEvent(
     MediaControlKeysEvent aEvent) {
-  MediaActionHandler::HandleMediaControlKeysEvent(this, aEvent);
+  ContentMediaActionHandler::HandleMediaControlKeysEvent(this, aEvent);
   Group()->EachParent([&](ContentParent* aParent) {
     Unused << aParent->SendUpdateMediaControlKeysEvent(this, aEvent);
   });

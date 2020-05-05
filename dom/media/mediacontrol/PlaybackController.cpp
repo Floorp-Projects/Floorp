@@ -127,7 +127,7 @@ void PlaybackController::SeekTo() {
   return;
 }
 
-void MediaActionHandler::HandleMediaControlKeysEvent(
+void ContentMediaActionHandler::HandleMediaControlKeysEvent(
     BrowsingContext* aContext, MediaControlKeysEvent aEvent) {
   PlaybackController controller(aContext);
   switch (aEvent) {
