@@ -96,6 +96,7 @@ var Utils = {
    */
   async hasLocalData(client) {
     const timestamp = await client.db.getLastModified();
+    // Note: timestamp will be 0 if empty JSON dump is loaded.
     return timestamp !== null;
   },
 
