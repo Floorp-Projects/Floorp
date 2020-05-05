@@ -137,6 +137,7 @@ class FloatRegister : public FloatRegisterMIPSShared {
   bool isSingle() const { return kind_ == Single; }
   bool isDouble() const { return kind_ == Double; }
   bool isInvalid() const { return code_ == FloatRegisters::invalid_freg; }
+  bool isSimd128() const { return false; }
 
   FloatRegister doubleOverlay() const;
   FloatRegister singleOverlay() const;

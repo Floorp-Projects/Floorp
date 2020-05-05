@@ -22,15 +22,6 @@
 namespace js {
 namespace jit {
 
-// Does this architecture support SIMD conversions between Uint32x4 and
-// Float32x4?
-static constexpr bool SupportsUint32x4FloatConversions = false;
-
-// Does this architecture support comparisons of unsigned integer vectors?
-static constexpr bool SupportsUint8x16Compares = false;
-static constexpr bool SupportsUint16x8Compares = false;
-static constexpr bool SupportsUint32x4Compares = false;
-
 #if defined(JS_CODEGEN_X86)
 // In bytes: slots needed for potential memory->memory move spills.
 //   +8 for cycles
@@ -186,10 +177,17 @@ class FloatRegisters {
  public:
   using Encoding = X86Encoding::XMMRegisterID;
 
+  // Observe that there is a Simd128 type on both x86 and x64 whether SIMD is
+  // implemented/enabled or not, and that the RegisterContent union is large
+  // enough for a V128 datum always.  Producers and consumers of a register dump
+  // must be aware of this even if they don't need to save/restore values in the
+  // high lanes of the SIMD registers.  See the DumpAllRegs() implementations,
+  // for example.
+
   enum ContentType {
     Single,   // 32-bit float.
     Double,   // 64-bit double.
-    Simd128,  // 128-bit SIMD type (int32x4, bool16x8, etc).
+    Simd128,  // 128-bit Wasm SIMD type.
     NumTypes
   };
 
@@ -197,8 +195,7 @@ class FloatRegisters {
   union RegisterContent {
     float s;
     double d;
-    int32_t i4[4];
-    float s4[4];
+    uint8_t v128[16];
   };
 
   static const char* GetName(Encoding code) {

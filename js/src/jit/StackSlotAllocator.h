@@ -29,7 +29,6 @@ class StackSlotAllocator {
   }
 
   uint32_t allocateQuadSlot() {
-    MOZ_ASSERT(SupportsSimd);
     // This relies on the fact that any architecture specific
     // alignment of the stack pointer is done a priori.
     if (height_ % 8 != 0) {

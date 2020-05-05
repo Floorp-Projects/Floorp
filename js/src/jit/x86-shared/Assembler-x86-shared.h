@@ -1082,9 +1082,7 @@ class AssemblerX86Shared : public AssemblerShared {
   static bool SupportsFloatingPoint() { return CPUInfo::IsSSE2Present(); }
   static bool SupportsUnalignedAccesses() { return true; }
   static bool SupportsFastUnalignedAccesses() { return true; }
-  static bool SupportsSimd() {
-    return js::jit::SupportsSimd && CPUInfo::IsSSE2Present();
-  }
+  static bool SupportsWasmSimd() { return CPUInfo::IsSSE41Present(); }
   static bool HasAVX() { return CPUInfo::IsAVXPresent(); }
 
   static bool HasRoundInstruction(RoundingMode mode) {

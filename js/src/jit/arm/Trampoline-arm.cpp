@@ -555,6 +555,10 @@ void JitRuntime::generateArgumentsRectifier(MacroAssembler& masm) {
 
 static void PushBailoutFrame(MacroAssembler& masm, uint32_t frameClass,
                              Register spArg) {
+#ifdef ENABLE_WASM_SIMD
+#  error "Needs more careful logic if SIMD is enabled"
+#endif
+
   // the stack should look like:
   // [IonFrame]
   // bailoutFrame.registersnapshot

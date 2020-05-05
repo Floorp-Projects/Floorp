@@ -509,6 +509,9 @@ bool shell::enableWasmGc = false;
 #ifdef ENABLE_WASM_MULTI_VALUE
 bool shell::enableWasmMultiValue = true;
 #endif
+#ifdef ENABLE_WASM_SIMD
+bool shell::enableWasmSimd = false;
+#endif
 bool shell::enableWasmVerbose = false;
 bool shell::enableTestWasmAwaitTier2 = false;
 #ifdef ENABLE_WASM_BIGINT
@@ -10505,6 +10508,9 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #ifdef ENABLE_WASM_MULTI_VALUE
   enableWasmMultiValue = !op.getBoolOption("no-wasm-multi-value");
 #endif
+#ifdef ENABLE_WASM_SIMD
+  enableWasmSimd = op.getBoolOption("wasm-simd");
+#endif
   enableWasmVerbose = op.getBoolOption("wasm-verbose");
   enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
   enableAsyncStacks = !op.getBoolOption("no-async-stacks");
@@ -10536,6 +10542,9 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #endif
 #ifdef ENABLE_WASM_MULTI_VALUE
       .setWasmMultiValue(enableWasmMultiValue)
+#endif
+#ifdef ENABLE_WASM_SIMD
+      .setWasmSimd(enableWasmSimd)
 #endif
       .setWasmVerbose(enableWasmVerbose)
       .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
@@ -10909,6 +10918,9 @@ static void SetWorkerContextOptions(JSContext* cx) {
 #endif
 #ifdef ENABLE_WASM_MULTI_VALUE
       .setWasmMultiValue(enableWasmMultiValue)
+#endif
+#ifdef ENABLE_WASM_SIMD
+      .setWasmSimd(enableWasmSimd)
 #endif
 #ifdef ENABLE_WASM_BIGINT
       .setWasmBigIntEnabled(enableWasmBigInt)
@@ -11352,7 +11364,12 @@ int main(int argc, char** argv, char** envp) {
 #else
       !op.addBoolOption('\0', "no-wasm-multi-value", "No-op") ||
 #endif
-
+#ifdef ENABLE_WASM_SIMD
+      !op.addBoolOption('\0', "wasm-simd",
+                        "Enable experimental wasm SIMD features") ||
+#else
+      !op.addBoolOption('\0', "wasm-simd", "No-op") ||
+#endif
       !op.addBoolOption('\0', "no-native-regexp",
                         "Disable native regexp compilation") ||
 #ifdef ENABLE_NEW_REGEXP

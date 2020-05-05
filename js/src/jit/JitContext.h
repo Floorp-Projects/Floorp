@@ -153,7 +153,7 @@ static inline bool IsErrorStatus(JitExecStatus status) {
   return status == JitExec_Error || status == JitExec_Aborted;
 }
 
-bool JitSupportsSimd();
+bool JitSupportsWasmSimd();
 bool JitSupportsAtomics();
 
 }  // namespace jit

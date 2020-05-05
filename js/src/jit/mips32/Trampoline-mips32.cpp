@@ -581,6 +581,11 @@ static void PushBailoutFrame(MacroAssembler& masm, uint32_t frameClass,
     masm.storePtr(Register::FromCode(i), Address(StackPointer, off));
   }
 
+#ifdef ENABLE_WASM_SIMD
+  // What to do for SIMD?
+#  error "Needs more careful logic if SIMD is enabled"
+#endif
+
   // Save floating point registers
   // We can use as_sdc1 because stack is alligned.
   for (uint32_t i = 0; i < FloatRegisters::TotalDouble; i++) {

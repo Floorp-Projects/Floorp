@@ -32,6 +32,11 @@
 #include "jit/Simulator.h"
 #include "js/Printf.h"
 #include "js/PropertySpec.h"  // JS_{PS,FN}{,_END}
+#if defined(JS_CODEGEN_X64)   // Assembler::HasSSE41
+#  include "jit/x64/Assembler-x64.h"
+#  include "jit/x86-shared/Architecture-x86-shared.h"
+#  include "jit/x86-shared/Assembler-x86-shared.h"
+#endif
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/ErrorObject.h"
@@ -71,6 +76,14 @@ extern mozilla::Atomic<bool> fuzzingSafe;
 static inline bool WasmMultiValueFlag(JSContext* cx) {
 #ifdef ENABLE_WASM_MULTI_VALUE
   return cx->options().wasmMultiValue();
+#else
+  return false;
+#endif
+}
+
+static inline bool WasmSimdFlag(JSContext* cx) {
+#ifdef ENABLE_WASM_SIMD
+  return cx->options().wasmSimd() && js::jit::JitSupportsWasmSimd();
 #else
   return false;
 #endif
@@ -119,9 +132,10 @@ static inline bool Append(JSStringBuilder* reason, const char (&s)[ArrayLength],
 
 bool wasm::IonDisabledByFeatures(JSContext* cx, bool* isDisabled,
                                  JSStringBuilder* reason) {
-  // Ion has no debugging support, no gc support.
+  // Ion has no debugging support, no gc support, no simd support.
   bool debug = cx->realm() && cx->realm()->debuggerObservesAsmJS();
   bool gc = cx->options().wasmGc();
+  bool simd = WasmSimdFlag(cx);
   if (reason) {
     char sep = 0;
     if (debug && !Append(reason, "debug", &sep)) {
@@ -130,8 +144,11 @@ bool wasm::IonDisabledByFeatures(JSContext* cx, bool* isDisabled,
     if (gc && !Append(reason, "gc", &sep)) {
       return false;
     }
+    if (simd && !Append(reason, "simd", &sep)) {
+      return false;
+    }
   }
-  *isDisabled = debug || gc;
+  *isDisabled = debug || gc || simd;
   return true;
 }
 
@@ -147,7 +164,7 @@ bool wasm::CraneliftAvailable(JSContext* cx) {
 bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
                                        JSStringBuilder* reason) {
   // Cranelift has no debugging support, no gc support, no multi-value support,
-  // no threads, and on ARM64, no reference types.
+  // no threads, no simd, and on ARM64, no reference types.
   bool debug = cx->realm() && cx->realm()->debuggerObservesAsmJS();
   bool gc = cx->options().wasmGc();
   bool multiValue = WasmMultiValueFlag(cx);
@@ -160,6 +177,7 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
   // On other platforms, assume reftypes has been implemented.
   bool reftypesOnArm64 = false;
 #endif
+  bool simd = WasmSimdFlag(cx);
   if (reason) {
     char sep = 0;
     if (debug && !Append(reason, "debug", &sep)) {
@@ -177,8 +195,11 @@ bool wasm::CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,
     if (reftypesOnArm64 && !Append(reason, "reftypes", &sep)) {
       return false;
     }
+    if (simd && !Append(reason, "simd", &sep)) {
+      return false;
+    }
   }
-  *isDisabled = debug || gc || multiValue || threads || reftypesOnArm64;
+  *isDisabled = debug || gc || multiValue || threads || reftypesOnArm64 || simd;
   return true;
 }
 
@@ -217,6 +238,11 @@ bool wasm::I64BigIntConversionAvailable(JSContext* cx) {
 #else
   return false;
 #endif
+}
+
+bool wasm::SimdAvailable(JSContext* cx) {
+  // Cranelift and Ion do not support SIMD.
+  return WasmSimdFlag(cx) && BaselineAvailable(cx);
 }
 
 bool wasm::ThreadsAvailable(JSContext* cx) {

@@ -112,6 +112,9 @@ bool I64BigIntConversionAvailable(JSContext* cx);
 // Shared memory and atomics.
 bool ThreadsAvailable(JSContext* cx);
 
+// SIMD data and operations.
+bool SimdAvailable(JSContext* cx);
+
 // Compiles the given binary wasm module given the ArrayBufferObject
 // and links the module's imports with the given import object.
 
