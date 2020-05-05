@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.components.toolbar
 
+import android.view.View
 import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -14,10 +15,11 @@ class MenuPresenter(
     private val menuToolbar: BrowserToolbar,
     sessionManager: SessionManager,
     private val sessionId: String? = null
-) : SelectionAwareSessionObserver(sessionManager) {
+) : SelectionAwareSessionObserver(sessionManager), View.OnAttachStateChangeListener {
 
     fun start() {
         observeIdOrSelected(sessionId)
+        menuToolbar.addOnAttachStateChangeListener(this)
     }
 
     /** Redraw the refresh/stop button */
@@ -37,5 +39,13 @@ class MenuPresenter(
 
     fun invalidateActions() {
         menuToolbar.invalidateActions()
+    }
+
+    override fun onViewDetachedFromWindow(v: View?) {
+        menuToolbar.onStop()
+    }
+
+    override fun onViewAttachedToWindow(v: View?) {
+        // no-op
     }
 }
