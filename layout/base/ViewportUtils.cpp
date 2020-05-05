@@ -14,7 +14,7 @@ namespace mozilla {
 using layers::APZCCallbackHelper;
 using layers::ScrollableLayerGuid;
 
-CSSToCSSMatrix4x4 ViewportUtils::GetCallbackTransform(
+CSSToCSSMatrix4x4 ViewportUtils::GetVisualToLayoutTransform(
     ScrollableLayerGuid::ViewID aScrollId) {
   if (aScrollId == ScrollableLayerGuid::NULL_SCROLL_ID) {
     return {};
