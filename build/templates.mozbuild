@@ -175,11 +175,14 @@ def GeneratedFile(name, *names, **kwargs):
 
     You must pass in at least one generated file (the "name" argument). Other
     names can be included as positional arguments after "name"."""
-    script = kwargs.get('script')
-    entry_point = kwargs.get('entry_point')
-    inputs = kwargs.get('inputs', [])
-    flags = kwargs.get('flags', [])
-    force = kwargs.get('force', False)
+    script = kwargs.pop('script', None)
+    entry_point = kwargs.pop('entry_point', None)
+    inputs = kwargs.pop('inputs', [])
+    flags = kwargs.pop('flags', [])
+    force = kwargs.pop('force', False)
+    if kwargs:
+        error('Unrecognized argument(s) to GeneratedFile: %s' %
+              ', '.join(kwargs))
     if entry_point and not script:
        error('entry_point cannot be provided if script is not provided')
     if script and ':' in script:
