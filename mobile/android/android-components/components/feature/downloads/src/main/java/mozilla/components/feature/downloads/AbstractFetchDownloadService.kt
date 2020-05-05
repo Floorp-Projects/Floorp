@@ -248,9 +248,16 @@ abstract class AbstractFetchDownloadService : Service() {
     private fun updateDownloadNotification() {
         for (download in downloadJobs.values) {
             if (!download.canUpdateNotification()) { continue }
+            /*
+            * We want to keep a consistent state in the UI, download.status can be changed from
+            * another thread while we are posting updates to the UI, causing inconsistent UIs.
+            * For this reason, we ONLY use the latest status during an UI update, new changes
+            * will be posted in subsequent updates.
+            */
+            val uiStatus = getDownloadJobStatus(download)
 
             // Dispatch the corresponding notification based on the current status
-            val notification = when (getDownloadJobStatus(download)) {
+            val notification = when (uiStatus) {
                 DownloadJobStatus.ACTIVE -> {
                     DownloadNotification.createOngoingDownloadNotification(
                         context,
@@ -285,7 +292,7 @@ abstract class AbstractFetchDownloadService : Service() {
                 download.lastNotificationUpdate = System.currentTimeMillis()
             }
 
-            if (getDownloadJobStatus(download) != DownloadJobStatus.ACTIVE) {
+            if (uiStatus != DownloadJobStatus.ACTIVE) {
                 sendDownloadStopped(download)
             }
         }
@@ -300,6 +307,12 @@ abstract class AbstractFetchDownloadService : Service() {
         clearAllDownloadsNotificationsAndJobs()
     }
 
+    // As we are not fulfilling the api contract of a foreground service, we can be easily killed
+    // by the system when low on memory, without any call to onDestroy().
+    // To fulfill the contract, we need a pinned notification and call startForeground().
+    // This means can be left with stuck notifications.
+    // https://developer.android.com/guide/components/services#Foreground
+    // https://github.com/mozilla-mobile/android-components/issues/6893
     override fun onDestroy() {
         super.onDestroy()
 
@@ -310,12 +323,14 @@ abstract class AbstractFetchDownloadService : Service() {
     internal fun clearAllDownloadsNotificationsAndJobs() {
         val notificationManager = NotificationManagerCompat.from(context)
 
+        // Before doing any cleaning, we have to stop the notification updater scope.
+        // To ensure we are not recreating the notifications.
+        notificationUpdateScope.cancel()
+
         downloadJobs.values.forEach { state ->
             notificationManager.cancel(state.foregroundServiceId)
             state.job?.cancel()
         }
-
-        notificationUpdateScope.cancel()
     }
 
     internal fun startDownloadJob(downloadId: Long) {
