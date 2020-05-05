@@ -3394,6 +3394,20 @@ void BrowserParent::ApzAwareEventRoutingToChild(
     }
     if (aOutApzResponse) {
       *aOutApzResponse = InputAPZContext::GetApzResponse();
+
+      // We can get here without there being an InputAPZContext on the stack
+      // if a non-native event synthesization function (such as
+      // nsIDOMWindowUtils.sendTouchEvent()) was used in the parent process to
+      // synthesize an event that's targeting a content process. Such events do
+      // not go through APZ. Without an InputAPZContext on the stack we pick up
+      // the default value "eSentinel" which cannot be sent over IPC, so replace
+      // it with "eIgnore" instead, which what APZ uses when it ignores an
+      // event. If a caller needs the ability to synthesize a event with a
+      // different APZ response, a native event synthesization function (such as
+      // sendNativeTouchPoint()) can be used.
+      if (*aOutApzResponse == nsEventStatus_eSentinel) {
+        *aOutApzResponse = nsEventStatus_eIgnore;
+      }
     }
   } else {
     if (aOutInputBlockId) {

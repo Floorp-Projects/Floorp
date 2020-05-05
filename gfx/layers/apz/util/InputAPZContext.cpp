@@ -11,7 +11,7 @@ namespace layers {
 
 ScrollableLayerGuid InputAPZContext::sGuid;
 uint64_t InputAPZContext::sBlockId = 0;
-nsEventStatus InputAPZContext::sApzResponse = nsEventStatus_eIgnore;
+nsEventStatus InputAPZContext::sApzResponse = nsEventStatus_eSentinel;
 bool InputAPZContext::sPendingLayerization = false;
 bool InputAPZContext::sRoutedToChildProcess = false;
 
