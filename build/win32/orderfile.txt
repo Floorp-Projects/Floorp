@@ -2826,7 +2826,6 @@ NS_GetXPTCallStub
 ?WakeLockInit@hal@mozilla@@YAXXZ
 ?GetDictionaryList@mozSpellChecker@@QAE?AW4nsresult@@PAV?$nsTArray@V?$nsTString@_S@@@@@Z
 ?SetRunningEventDelay@nsThread@@UAG?AW4nsresult@@V?$BaseTimeDuration@VTimeDurationValueCalculator@mozilla@@@mozilla@@VTimeStamp@4@@Z
-?XRE_Win32kCallsAllowed@@YA_NXZ
 ?Init@nsBaseAppShell@@IAE?AW4nsresult@@XZ
 ?nsAppShellConstructor@@YA?AW4nsresult@@PAVnsISupports@@ABUnsID@@PAPAX@Z
 ?QueryInterface@nsBaseAppShell@@UAG?AW4nsresult@@ABUnsID@@PAPAX@Z

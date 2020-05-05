@@ -313,7 +313,7 @@ nsresult nsAppShell::Init() {
 
   hal::Init();
 
-  if (XRE_Win32kCallsAllowed()) {
+  if (XRE_IsParentProcess()) {
     sTaskbarButtonCreatedMsg = ::RegisterWindowMessageW(kTaskbarButtonEventId);
     NS_ASSERTION(sTaskbarButtonCreatedMsg,
                  "Could not register taskbar button creation message");
