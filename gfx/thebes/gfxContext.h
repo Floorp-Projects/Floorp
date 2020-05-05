@@ -503,8 +503,8 @@ class gfxContext final {
       Rect rect;
       Matrix transform;
     };
-    nsTArray<PushedClip> pushedClips;
-    nsTArray<Float> dashPattern;
+    CopyableTArray<PushedClip> pushedClips;
+    CopyableTArray<Float> dashPattern;
     StrokeOptions strokeOptions;
     RefPtr<DrawTarget> drawTarget;
     mozilla::gfx::AntialiasMode aaMode;

@@ -907,7 +907,7 @@ nsTArray<uint8_t> gfxWindowsPlatform::GetPlatformCMSOutputProfileData() {
         GetInitContentDeviceData();
     if (contentDeviceData) {
       MOZ_ASSERT(!contentDeviceData->cmsOutputProfileData().IsEmpty());
-      return contentDeviceData->cmsOutputProfileData();
+      return contentDeviceData->cmsOutputProfileData().Clone();
     }
 
     // Otherwise we need to ask the parent for the updated color profile
@@ -918,7 +918,7 @@ nsTArray<uint8_t> gfxWindowsPlatform::GetPlatformCMSOutputProfileData() {
   }
 
   if (!mCachedOutputColorProfile.IsEmpty()) {
-    return nsTArray<uint8_t>(mCachedOutputColorProfile);
+    return mCachedOutputColorProfile.Clone();
   }
 
   mCachedOutputColorProfile = [&] {
@@ -959,7 +959,7 @@ nsTArray<uint8_t> gfxWindowsPlatform::GetPlatformCMSOutputProfileData() {
     return result;
   }();
 
-  return nsTArray<uint8_t>(mCachedOutputColorProfile);
+  return mCachedOutputColorProfile.Clone();
 }
 
 void gfxWindowsPlatform::GetDLLVersion(char16ptr_t aDLLPath,

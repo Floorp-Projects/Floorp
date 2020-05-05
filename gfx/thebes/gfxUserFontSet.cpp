@@ -113,7 +113,7 @@ gfxUserFontEntry::gfxUserFontEntry(
       mLoader(nullptr),
       mFontSet(aFontSet) {
   mIsUserFontContainer = true;
-  mSrcList = aFontFaceSrcList;
+  mSrcList = aFontFaceSrcList.Clone();
   mSrcIndex = 0;
   mWeightRange = aWeight;
   mStretchRange = aStretch;
@@ -139,8 +139,8 @@ void gfxUserFontEntry::UpdateAttributes(
   mWeightRange = aWeight;
   mStretchRange = aStretch;
   mStyleRange = aStyle;
-  mFeatureSettings = aFeatureSettings;
-  mVariationSettings = aVariationSettings;
+  mFeatureSettings = aFeatureSettings.Clone();
+  mVariationSettings = aVariationSettings.Clone();
   mLanguageOverride = aLanguageOverride;
   mCharacterMap = aUnicodeRanges;
   mRangeFlags = aRangeFlags;

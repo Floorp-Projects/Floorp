@@ -41,7 +41,7 @@ UserDataKey gfxContext::sDontUseAsSourceKey;
 #  define CURRENTSTATE_CHANGED()
 #endif
 
-PatternFromState::operator mozilla::gfx::Pattern &() {
+PatternFromState::operator mozilla::gfx::Pattern&() {
   gfxContext::AzureState& state = mContext->CurrentState();
 
   if (state.pattern) {
