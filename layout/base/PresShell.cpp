@@ -3634,7 +3634,8 @@ bool PresShell::ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
     }
     nsIFrame* parent;
     if (container->IsTransformed()) {
-      container->GetTransformMatrix(nullptr, &parent);
+      container->GetTransformMatrix(ViewportType::Layout, RelativeTo{nullptr},
+                                    &parent);
       rect =
           nsLayoutUtils::TransformFrameRectToAncestor(container, rect, parent);
     } else {
