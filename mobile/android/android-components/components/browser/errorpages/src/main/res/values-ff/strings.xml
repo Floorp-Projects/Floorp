@@ -109,4 +109,12 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Fiilde Yiytaaka</string>
 
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Ballagol fiilde salaama</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>Maa taw ko nde momtaande, dirtinaande, walla jamire fiilde ena kala ballago.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Sarworde Proxy Yiytaaka</string>
+
     </resources>

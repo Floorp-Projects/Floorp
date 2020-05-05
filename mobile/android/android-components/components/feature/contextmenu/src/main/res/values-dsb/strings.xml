@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Text for context menu item to open the link in a new tab. -->
-    <string name="mozac_feature_contextmenu_open_link_in_new_tab">Wótkaz w nowem rejtarku wócyniś</string>
+    <string name="mozac_feature_contextmenu_open_link_in_new_tab">Wótkaz w nowem rejtariku wócyniś</string>
     <!-- Text for context menu item to open the link in a private tab. -->
-    <string name="mozac_feature_contextmenu_open_link_in_private_tab">Wótkaz w priwatnem rejtarku wócyniś</string>
+    <string name="mozac_feature_contextmenu_open_link_in_private_tab">Wótkaz w priwatnem rejtariku wócyniś</string>
     <!-- Text for context menu item to open the image in a new tab. -->
-    <string name="mozac_feature_contextmenu_open_image_in_new_tab">Wobraz w nowem rejtarku wócyniś</string>
+    <string name="mozac_feature_contextmenu_open_image_in_new_tab">Wobraz w nowem rejtariku wócyniś</string>
     <!-- Text for context menu item to save / download the link. -->
     <string name="mozac_feature_contextmenu_download_link">Ześěgnjeński wótkaz</string>
     <!-- Text for context menu item to share the link with an other app. -->
@@ -19,9 +19,9 @@
     <!-- Text for context menu item to save / download the file. -->
     <string name="mozac_feature_contextmenu_save_file_to_device">Na rěźe składowaś</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
-    <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">Nowy rejtark jo se wócynił</string>
+    <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">Nowy rejtarik jo se wócynił</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
-    <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Nowy priwatny rejtark jo se wócynił</string>
+    <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Nowy priwatny rejtarik jo se wócynił</string>
     <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
     <string name="mozac_feature_contextmenu_snackbar_link_copied">Wótkaz jo se do mjazywótkłada kopěrował</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->

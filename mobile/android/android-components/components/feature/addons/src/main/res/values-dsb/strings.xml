@@ -5,7 +5,7 @@
     <!-- Description for all_urls add-on permission. -->
     <string name="mozac_feature_addons_permissions_all_urls_description">Mějśo pśistup k swójim datam za wšykne websedła</string>
     <!-- Description for tabs add-on permission. -->
-    <string name="mozac_feature_addons_permissions_tabs_description">Mějśo pśistup k rejtarkam wobglědowaka</string>
+    <string name="mozac_feature_addons_permissions_tabs_description">Mějśo pśistup k rejtarikam wobglědowaka</string>
     <!-- Description for unlimited_storage permission. -->
     <string name="mozac_feature_addons_permissions_unlimited_storage_description">Njewobgranicowanu licbu klientowych datow składowaś</string>
     <!-- Description for navigation permission. -->
@@ -25,7 +25,7 @@
     <!-- Description for downloads_open permission. -->
     <string name="mozac_feature_addons_permissions_downloads_open_description">Dataje wócyniś, kótarež su se ześěgnuli na wašom rěźe</string>
     <!-- Description for find permission. -->
-    <string name="mozac_feature_addons_permissions_find_description">Tekst wšych wócynjonych rejtarkow cytaś</string>
+    <string name="mozac_feature_addons_permissions_find_description">Tekst wšych wócynjonych rejtarikow cytaś</string>
     <!-- Description for geolocation permission. -->
     <string name="mozac_feature_addons_permissions_geolocation_description">Pśistup k wašomu stojnišćoju</string>
     <!-- Description for history permission. -->
@@ -41,13 +41,13 @@
     <!-- Description for proxy permission. -->
     <string name="mozac_feature_addons_permissions_proxy_description">Proksy-nastajenja wobglědowaka kontrolěrowaś</string>
     <!-- Description for sessions permission. -->
-    <string name="mozac_feature_addons_permissions_sessions_description">Mějśo pśistup k njedawno zacynjonym rejtarkam</string>
+    <string name="mozac_feature_addons_permissions_sessions_description">Mějśo pśistup k njedawno zacynjonym rejtarikam</string>
     <!-- Description for tab_hide permission. -->
-    <string name="mozac_feature_addons_permissions_tab_hide_description">Rejtarki wobglědowaka schowaś a pokazaś</string>
+    <string name="mozac_feature_addons_permissions_tab_hide_description">Rejtariki wobglědowaka schowaś a pokazaś</string>
     <!-- Description for top_sites permission. -->
     <string name="mozac_feature_addons_permissions_top_sites_description">Mějśo pśistup k pśeglědowańskej historiji</string>
     <!-- Description for devtools permission. -->
-    <string name="mozac_feature_addons_permissions_devtools_description">Rozšyŕśo wuwijarske rědy, aby pśistup k swójim datam we wócynjonych rejtarkach měł</string>
+    <string name="mozac_feature_addons_permissions_devtools_description">Rozšyŕśo wuwijarske rědy, aby pśistup k swójim datam we wócynjonych rejtarikach měł</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Wersija</string>
     <!-- The authors of an add-on. -->
