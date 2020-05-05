@@ -2434,7 +2434,7 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
   SetAPZSampleTime();
 
   wr::RenderThread::Get()->IncPendingFrameCount(
-      mApis[wr::RenderRoot::Default]->GetId(), aId, start, 1);
+      mApis[wr::RenderRoot::Default]->GetId(), aId, start);
 
 #if defined(ENABLE_FRAME_LATENCY_LOG)
   auto startTime = TimeStamp::Now();
