@@ -3167,8 +3167,8 @@ nsresult Selection::NotifySelectionListeners() {
   // We've notified all selection listeners even when some of them are removed
   // (and may be destroyed) during notifying one of them.  Therefore, we should
   // copy all listeners to the local variable first.
-  const AutoTArray<nsCOMPtr<nsISelectionListener>, 5> selectionListeners(
-      mSelectionListeners);
+  const CopyableAutoTArray<nsCOMPtr<nsISelectionListener>, 5>
+      selectionListeners = mSelectionListeners;
 
   int16_t reason = frameSelection->PopChangeReasons();
 

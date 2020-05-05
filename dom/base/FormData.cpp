@@ -25,7 +25,7 @@ FormData::FormData(const FormData& aFormData)
     : HTMLFormSubmission(aFormData.mActionURL, aFormData.mTarget,
                          aFormData.mEncoding, aFormData.mSubmitter) {
   mOwner = aFormData.mOwner;
-  mFormData = aFormData.mFormData;
+  mFormData = aFormData.mFormData.Clone();
 }
 
 namespace {

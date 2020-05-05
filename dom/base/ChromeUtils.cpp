@@ -798,7 +798,7 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
             ContentParent::GetAll(contentParents);
             nsTArray<RefPtr<ProcInfoPromise>> promises;
             mozilla::ipc::GeckoChildProcessHost::GetAll(
-                [&promises, contentParents](
+                [&promises, &contentParents](
                     mozilla::ipc::GeckoChildProcessHost* aGeckoProcess) {
                   if (!aGeckoProcess->GetChildProcessHandle()) {
                     return;

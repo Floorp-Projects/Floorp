@@ -68,7 +68,7 @@ class DOMStringList : public nsISupports, public nsWrapperCache {
 
   nsTArray<nsString>& StringArray() { return mNames; }
 
-  void CopyList(nsTArray<nsString>& aNames) { aNames = mNames; }
+  void CopyList(nsTArray<nsString>& aNames) { aNames = mNames.Clone(); }
 
  protected:
   // A method that subclasses can override to modify mNames as needed

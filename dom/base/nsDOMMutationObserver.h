@@ -82,15 +82,15 @@ class nsDOMMutationRecord final : public nsISupports, public nsWrapperCache {
   }
 
   void GetAddedAnimations(AnimationArray& aRetVal) const {
-    aRetVal = mAddedAnimations;
+    aRetVal = mAddedAnimations.Clone();
   }
 
   void GetRemovedAnimations(AnimationArray& aRetVal) const {
-    aRetVal = mRemovedAnimations;
+    aRetVal = mRemovedAnimations.Clone();
   }
 
   void GetChangedAnimations(AnimationArray& aRetVal) const {
-    aRetVal = mChangedAnimations;
+    aRetVal = mChangedAnimations.Clone();
   }
 
   nsCOMPtr<nsINode> mTarget;

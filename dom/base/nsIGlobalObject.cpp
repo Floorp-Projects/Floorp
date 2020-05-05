@@ -327,10 +327,8 @@ void nsIGlobalObject::BroadcastReport(Report* aReport) {
 }
 
 void nsIGlobalObject::NotifyReportingObservers() {
-  const nsTArray<RefPtr<ReportingObserver>> reportingObservers(
-      mReportingObservers);
-  for (auto& observer : reportingObservers) {
-    // MOZ_KnownLive because 'reportingObservers' is guaranteed to
+  for (auto& observer : mReportingObservers.Clone()) {
+    // MOZ_KnownLive because the clone of 'mReportingObservers' is guaranteed to
     // keep it alive.
     //
     // This can go away once

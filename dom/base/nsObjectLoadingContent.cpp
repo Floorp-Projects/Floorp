@@ -796,12 +796,12 @@ nsresult nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading) {
 
 void nsObjectLoadingContent::GetPluginAttributes(
     nsTArray<MozPluginParameter>& aAttributes) {
-  aAttributes = mCachedAttributes;
+  aAttributes = mCachedAttributes.Clone();
 }
 
 void nsObjectLoadingContent::GetPluginParameters(
     nsTArray<MozPluginParameter>& aParameters) {
-  aParameters = mCachedParameters;
+  aParameters = mCachedParameters.Clone();
 }
 
 void nsObjectLoadingContent::GetNestedParams(
