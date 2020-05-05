@@ -233,6 +233,7 @@ renaming_overrides_prefixing = true
 "nsACString" = "nsACString"
 "nsAString" = "nsAString"
 "nsString" = "nsString"
+"CopyableTArray" = "CopyableTArray"
 "nsTArray" = "nsTArray"
 "nsPresContext" = "nsPresContext"
 "ComputedTiming" = "ComputedTiming"

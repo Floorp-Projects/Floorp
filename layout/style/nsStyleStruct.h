@@ -1981,6 +1981,7 @@ STATIC_ASSERT_TYPE_LAYOUTS_MATCH(mozilla::UniquePtr<int>,
  */
 template <typename T>
 class nsTArray_Simple {
+ protected:
   T* mBuffer;
 
  public:
@@ -1990,6 +1991,12 @@ class nsTArray_Simple {
     // copy.
   }
 };
+
+/**
+ * <div rustbindgen replaces="CopyableTArray"></div>
+ */
+template <typename T>
+class CopyableTArray_Simple : public nsTArray_Simple<T> {};
 
 STATIC_ASSERT_TYPE_LAYOUTS_MATCH(nsTArray<nsStyleImageLayers::Layer>,
                                  nsTArray_Simple<nsStyleImageLayers::Layer>);
