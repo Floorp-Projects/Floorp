@@ -113,9 +113,6 @@ with Files("tests/wpt.py"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
 
-with Files("tests/2dcontext/**"):
-    BUG_COMPONENT = ("Core", "Canvas: 2D")
-
 with Files("tests/FileAPI/**"):
     BUG_COMPONENT = ("Core", "DOM: File")
 
@@ -565,10 +562,6 @@ with Files("tests/netinfo/**"):
 with Files("tests/notifications/**"):
     BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
 
-with Files("tests/offscreen-canvas/**"):
-    BUG_COMPONENT = ("Core", "Canvas: 2D")
-
-# No tests are run here
 with Files("tests/old-tests/submission/Microsoft/foreigncontent/**"):
     BUG_COMPONENT = ("Core", "SVG")
 
