@@ -33,7 +33,8 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-typedef AutoTArray<RefPtr<RawServoAnimationValue>, 1> ServoAnimationValues;
+typedef CopyableAutoTArray<RefPtr<RawServoAnimationValue>, 1>
+    ServoAnimationValues;
 
 /*static*/
 SMILCSSValueType SMILCSSValueType::sSingleton;
@@ -48,7 +49,7 @@ struct ValueWrapper {
                const RefPtr<RawServoAnimationValue>& aValue)
       : mPropID(aPropID), mServoValues{(aValue)} {}
   ValueWrapper(nsCSSPropertyID aPropID, ServoAnimationValues&& aValues)
-      : mPropID(aPropID), mServoValues{aValues} {}
+      : mPropID(aPropID), mServoValues{std::move(aValues)} {}
 
   bool operator==(const ValueWrapper& aOther) const {
     if (mPropID != aOther.mPropID) {
