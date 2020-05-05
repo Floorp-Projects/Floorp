@@ -18,6 +18,8 @@ AccGroupInfo::AccGroupInfo(const Accessible* aItem, role aRole)
 }
 
 void AccGroupInfo::Update() {
+  mParent = nullptr;
+
   Accessible* parent = mItem->Parent();
   if (!parent) return;
 
