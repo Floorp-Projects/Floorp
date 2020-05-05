@@ -62,6 +62,7 @@ EXPORTS += [
     'nsDOMAttributeMap.h',
     'nsDOMCID.h',
     'nsDOMJSUtils.h',
+    'nsDOMMutationObserver.h',
     'nsDOMNavigationTiming.h',
     'nsDOMString.h',
     'nsDOMTokenList.h',
