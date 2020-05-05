@@ -413,7 +413,7 @@ JS::Result<Ok> BinASTParserPerTokenizer<Tok>::finishLazyFunction(
                                       sourceObject_, extent, immutableFlags));
 
   MOZ_ASSERT(lazy->isBinAST());
-  funbox->initLazyScript(lazy);
+  fun->initScript(lazy);
 
   MOZ_TRY(tokenizer_->registerLazyScript(lazy));
 

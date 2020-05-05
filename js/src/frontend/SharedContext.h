@@ -514,8 +514,6 @@ class FunctionBox : public SharedContext {
     flags_.setFlags(FunctionFlags::BASESCRIPT, interpreted);
   }
 
-  void initLazyScript(BaseScript* script) { function()->initScript(script); }
-
   FunctionFlags::FunctionKind kind() { return flags_.kind(); }
 
   JSAtom* explicitName() const { return explicitName_; }
