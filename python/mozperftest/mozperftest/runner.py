@@ -26,8 +26,12 @@ SEARCH_PATHS = [
     "testing/mozbase/mozprocess",
     "testing/mozbase/mozprofile",
     "testing/mozbase/mozproxy",
+    "third_party/python/attrs/src",
     "third_party/python/dlmanager",
     "third_party/python/esprima",
+    "third_party/python/importlib_metadata",
+    "third_party/python/jsonschema",
+    "third_party/python/pyrsistent",
     "third_party/python/pyyaml/lib3",
     "third_party/python/redo",
     "third_party/python/requests",
@@ -40,12 +44,16 @@ if "SHELL" not in os.environ:
     os.environ["SHELL"] = "/bin/bash"
 
 
-def main():
+def _setup_path():
     for path in SEARCH_PATHS:
         path = os.path.abspath(path)
         if not os.path.exists(path):
             raise IOError("Can't find %s" % path)
         sys.path.insert(0, os.path.join(SRC_ROOT, path))
+
+
+def main():
+    _setup_path()
 
     from mozbuild.base import MachCommandBase, MozbuildObject
     from mozperftest import PerftestArgumentParser
@@ -62,6 +70,8 @@ def main():
 
 
 def run_tests(mach_cmd, **kwargs):
+    _setup_path()
+
     from mozperftest.utils import build_test_list, install_package
     from mozperftest import MachEnvironment, Metadata
 
