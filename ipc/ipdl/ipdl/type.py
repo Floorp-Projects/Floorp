@@ -125,10 +125,10 @@ class Type:
         return self.__class__.__name__
 
     def name(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def fullname(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def accept(self, visitor, *args):
         visit = getattr(visitor, 'visit' + self.__class__.__name__, None)
@@ -229,8 +229,18 @@ class IPDLType(Type):
 
     @classmethod
     def convertsTo(cls, lesser, greater):
-        if (lesser.nestedRange[0] < greater.nestedRange[0] or
-                lesser.nestedRange[1] > greater.nestedRange[1]):
+        def _unwrap(nr):
+            if isinstance(nr, dict):
+                return _unwrap(nr['nested'])
+            elif isinstance(nr, int):
+                return nr
+            else:
+                raise ValueError('Got unexpected nestedRange value: %s' % nr)
+
+        lnr0, gnr0, lnr1, gnr1 = (
+            _unwrap(lesser.nestedRange[0]), _unwrap(greater.nestedRange[0]),
+            _unwrap(lesser.nestedRange[1]), _unwrap(greater.nestedRange[1]))
+        if (lnr0 < gnr0 or lnr1 > gnr1):
             return False
 
         # Protocols that use intr semantics are not allowed to use
@@ -593,7 +603,7 @@ def iteractortypes(t, visited=None):
 
 def hasshmem(type):
     """Return true iff |type| is shmem or has it buried within."""
-    class found:
+    class found(BaseException):
         pass
 
     class findShmem(TypeVisitor):

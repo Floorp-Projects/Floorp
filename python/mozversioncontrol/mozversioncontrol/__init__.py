@@ -397,7 +397,7 @@ class HgRepository(Repository):
     def get_files_in_working_directory(self):
         # Can return backslashes on Windows. Normalize to forward slashes.
         return list(p.replace('\\', '/') for p in
-                    self._run(b'files', b'-0').split(b'\0') if p)
+                    self._run(b'files', b'-0').split('\0') if p)
 
     def working_directory_clean(self, untracked=False, ignored=False):
         args = [b'status', b'--modified', b'--added', b'--removed',
@@ -520,7 +520,7 @@ class GitRepository(Repository):
         self._run('reset', *paths)
 
     def get_files_in_working_directory(self):
-        return self._run('ls-files', '-z').split(b'\0')
+        return self._run('ls-files', '-z').split('\0')
 
     def working_directory_clean(self, untracked=False, ignored=False):
         args = ['status', '--porcelain']

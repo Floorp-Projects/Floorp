@@ -1,9 +1,0 @@
-//error: protocol `BadNestedManagee' requires more powerful send semantics than its manager `BadNestedManager' provides
-
-include protocol BadNestedManager;
-
-nested(upto inside_sync) async protocol BadNestedManagee {
-    manager BadNestedManager;
-child:
-    async __delete__();
-};

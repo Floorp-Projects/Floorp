@@ -38,8 +38,7 @@
 # mismatched alloc/free checking.
 # ----------------------------------------------------------------------------
 
-from __future__ import absolute_import
-from __future__ import print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import re
@@ -112,7 +111,7 @@ def main():
         ]
 
     # This is like alloc_fns, but regexp chars are not escaped.
-    alloc_fns_unescaped = [fn.translate(None, r'\\') for fn in alloc_fns]
+    alloc_fns_unescaped = [fn.replace('\\', '') for fn in alloc_fns]
 
     # This regexp matches the relevant lines in the output of |nm|, which look
     # like the following.
