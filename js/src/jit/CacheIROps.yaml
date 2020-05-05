@@ -116,7 +116,7 @@
 
 - name: GuardIsNumber
   shared: true
-  transpile: false
+  transpile: true
   custom_writer: true
   args:
     input: ValId
@@ -1435,7 +1435,7 @@
 
 - name: CompareDoubleResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     op: JSOpImm
     lhs: NumberId
