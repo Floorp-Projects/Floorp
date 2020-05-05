@@ -12164,8 +12164,7 @@ void DR_State::ParseRulesFile() {
 void DR_State::AddFrameTypeInfo(LayoutFrameType aFrameType,
                                 const char* aFrameNameAbbrev,
                                 const char* aFrameName) {
-  mFrameTypeTable.AppendElement(
-      DR_FrameTypeInfo(aFrameType, aFrameNameAbbrev, aFrameName));
+  mFrameTypeTable.EmplaceBack(aFrameType, aFrameNameAbbrev, aFrameName);
 }
 
 DR_FrameTypeInfo* DR_State::GetFrameTypeInfo(LayoutFrameType aFrameType) {

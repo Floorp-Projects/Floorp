@@ -188,7 +188,7 @@ class nsTransformedTextRun final : public gfxTextRun {
                        bool aOwnsFactory)
       : gfxTextRun(aParams, aLength, aFontGroup, aFlags, aFlags2),
         mFactory(aFactory),
-        mStyles(aStyles),
+        mStyles(std::move(aStyles)),
         mString(aString, aLength),
         mOwnsFactory(aOwnsFactory),
         mNeedsRebuild(true) {

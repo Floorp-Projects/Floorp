@@ -50,10 +50,10 @@ struct ComputedGridTrackInfo {
         mNumExplicitTracks(aNumExplicitTracks),
         mStartFragmentTrack(aStartFragmentTrack),
         mEndFragmentTrack(aEndFragmentTrack),
-        mPositions(aPositions),
-        mSizes(aSizes),
-        mStates(aStates),
-        mRemovedRepeatTracks(aRemovedRepeatTracks),
+        mPositions(std::move(aPositions)),
+        mSizes(std::move(aSizes)),
+        mStates(std::move(aStates)),
+        mRemovedRepeatTracks(std::move(aRemovedRepeatTracks)),
         mResolvedLineNames(std::move(aResolvedLineNames)),
         mRepeatFirstTrack(aRepeatFirstTrack),
         mIsSubgrid(aIsSubgrid),
@@ -84,10 +84,10 @@ struct ComputedGridLineInfo {
       const nsTArray<RefPtr<nsAtom>>& aNamesBefore,
       const nsTArray<RefPtr<nsAtom>>& aNamesAfter,
       nsTArray<RefPtr<nsAtom>>&& aNamesFollowingRepeat)
-      : mNames(aNames),
-        mNamesBefore(aNamesBefore),
-        mNamesAfter(aNamesAfter),
-        mNamesFollowingRepeat(aNamesFollowingRepeat) {}
+      : mNames(std::move(aNames)),
+        mNamesBefore(aNamesBefore.Clone()),
+        mNamesAfter(aNamesAfter.Clone()),
+        mNamesFollowingRepeat(std::move(aNamesFollowingRepeat)) {}
   nsTArray<nsTArray<RefPtr<nsAtom>>> mNames;
   nsTArray<RefPtr<nsAtom>> mNamesBefore;
   nsTArray<RefPtr<nsAtom>> mNamesAfter;
