@@ -3,6 +3,11 @@
   "name": "Borderify",
   "version": "1.0",
   "description": "Adds a red border to all webpages matching example.com.",
+  "applications": {
+    "gecko": {
+      "id": "borderify@tests.mozilla.org"
+    }
+  },
   "icons": {
     "48": "icons/border-48.png"
   },
