@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1305344: Utterance not repeating in Firefox</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="common.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1305344">Mozilla Bug 1305344</a>
+  <iframe id="testFrame"></iframe>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+    loadSpeechTest('file_speech_repeating_utterance.html');
+  </script>
+</body>
+</html>

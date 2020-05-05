@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1305344: Utterance not repeating in Firefox</title>
+  <script type="application/javascript">
+    window.SimpleTest = parent.SimpleTest;
+    window.ok = parent.ok;
+  </script>
+  <script src="common.js"></script>
+</head>
+<body>
+  <script>
+    var utterance = new SpeechSynthesisUtterance("repeating?");
+    var counter = 0;
+    utterance.addEventListener('start', function(e) {
+      if (counter++ === 1) {
+        ok(true)
+        SimpleTest.finish();
+      }
+    });
+    speechSynthesis.speak(utterance);
+    speechSynthesis.speak(utterance);
+  </script>
+</body>
+</html>
