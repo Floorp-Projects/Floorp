@@ -206,7 +206,8 @@ SecretDecoderRing::AsyncEncryptStrings(const nsTArray<nsCString>& plaintexts,
 
   // plaintexts are already expected to be UTF-8.
   nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
-      "BackgroundSdrEncryptStrings", [promise, plaintexts]() mutable {
+      "BackgroundSdrEncryptStrings",
+      [promise, plaintexts = plaintexts.Clone()]() mutable {
         BackgroundSdrEncryptStrings(plaintexts, promise);
       }));
 
@@ -263,7 +264,8 @@ SecretDecoderRing::AsyncDecryptStrings(
 
   // encryptedStrings are expected to be base64.
   nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
-      "BackgroundSdrDecryptStrings", [promise, encryptedStrings]() mutable {
+      "BackgroundSdrDecryptStrings",
+      [promise, encryptedStrings = encryptedStrings.Clone()]() mutable {
         BackgroundSdrDecryptStrings(encryptedStrings, promise);
       }));
 
