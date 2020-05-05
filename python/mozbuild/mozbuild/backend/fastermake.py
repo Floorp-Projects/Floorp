@@ -217,7 +217,7 @@ class FasterMakeBackend(MakeBackend, PartialBackend):
                     [ref_file, l10n_file] + python_deps)
                 rule.add_commands(
                     [
-                        '$(PYTHON) -m mozbuild.action.l10n_merge '
+                        '$(PYTHON3) -m mozbuild.action.l10n_merge '
                         '--output {} --ref-file {} --l10n-file {}'.format(
                             merge, ref_file, l10n_file
                         )
