@@ -145,7 +145,7 @@ bool ObjectElements::PreventExtensions(JSContext* cx, NativeObject* obj) {
 }
 
 /* static */
-void ObjectElements::FreezeOrSeal(JSContext* cx, NativeObject* obj,
+bool ObjectElements::FreezeOrSeal(JSContext* cx, HandleNativeObject obj,
                                   IntegrityLevel level) {
   MOZ_ASSERT_IF(level == IntegrityLevel::Frozen && obj->is<ArrayObject>(),
                 !obj->as<ArrayObject>().lengthIsWritable());
@@ -154,7 +154,14 @@ void ObjectElements::FreezeOrSeal(JSContext* cx, NativeObject* obj,
   MOZ_ASSERT(obj->getElementsHeader()->numShiftedElements() == 0);
 
   if (obj->hasEmptyElements() || obj->denseElementsAreFrozen()) {
-    return;
+    return true;
+  }
+
+  if (level == IntegrityLevel::Frozen) {
+    if (!JSObject::setFlags(cx, obj, BaseShape::FROZEN_ELEMENTS,
+                            JSObject::GENERATE_SHAPE)) {
+      return false;
+    }
   }
 
   if (!obj->denseElementsAreSealed()) {
@@ -164,6 +171,8 @@ void ObjectElements::FreezeOrSeal(JSContext* cx, NativeObject* obj,
   if (level == IntegrityLevel::Frozen) {
     obj->getElementsHeader()->freeze();
   }
+
+  return true;
 }
 
 #ifdef DEBUG

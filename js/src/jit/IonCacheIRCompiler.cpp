@@ -1612,14 +1612,16 @@ static void EmitStoreDenseElement(MacroAssembler& masm,
   if (value.constant()) {
     Value v = value.value();
     Label done;
-    if (v.isInt32()) {
-      Label dontConvert;
-      masm.branchTest32(Assembler::Zero, elementsFlags,
-                        Imm32(ObjectElements::CONVERT_DOUBLE_ELEMENTS),
-                        &dontConvert);
-      masm.storeValue(DoubleValue(v.toInt32()), target);
-      masm.jump(&done);
-      masm.bind(&dontConvert);
+    if (IsTypeInferenceEnabled()) {
+      if (v.isInt32()) {
+        Label dontConvert;
+        masm.branchTest32(Assembler::Zero, elementsFlags,
+                          Imm32(ObjectElements::CONVERT_DOUBLE_ELEMENTS),
+                          &dontConvert);
+        masm.storeValue(DoubleValue(v.toInt32()), target);
+        masm.jump(&done);
+        masm.bind(&dontConvert);
+      }
     }
     masm.storeValue(v, target);
     masm.bind(&done);
@@ -1627,7 +1629,8 @@ static void EmitStoreDenseElement(MacroAssembler& masm,
   }
 
   TypedOrValueRegister reg = value.reg();
-  if (reg.hasTyped() && reg.type() != MIRType::Int32) {
+  if (!IsTypeInferenceEnabled() ||
+      (reg.hasTyped() && reg.type() != MIRType::Int32)) {
     masm.storeTypedOrValue(reg, target);
     return;
   }
@@ -1700,13 +1703,6 @@ bool IonCacheIRCompiler::emitStoreDenseElement(ObjOperandId objId,
   // Hole check.
   BaseObjectElementIndex element(scratch1, index);
   masm.branchTestMagic(Assembler::Equal, element, failure->label());
-
-  // Check for frozen elements. We have to check this here because we attach
-  // this stub also for non-extensible objects, and these can become frozen
-  // without triggering a Shape change.
-  Address flags(scratch1, ObjectElements::offsetOfFlags());
-  masm.branchTest32(Assembler::NonZero, flags, Imm32(ObjectElements::FROZEN),
-                    failure->label());
 
   EmitPreBarrier(masm, element, MIRType::Value);
   EmitStoreDenseElement(masm, val, scratch1, element);
