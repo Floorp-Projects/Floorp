@@ -23,7 +23,7 @@ class nsStyleAutoArray {
   nsStyleAutoArray(const nsStyleAutoArray& aOther) { *this = aOther; }
   nsStyleAutoArray& operator=(const nsStyleAutoArray& aOther) {
     mFirstElement = aOther.mFirstElement;
-    mOtherElements = aOther.mOtherElements;
+    mOtherElements = aOther.mOtherElements.Clone();
     return *this;
   }
 
