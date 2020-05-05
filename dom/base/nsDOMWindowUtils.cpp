@@ -1156,7 +1156,7 @@ nsDOMWindowUtils::ElementFromPoint(float aX, float aY,
   NS_ENSURE_STATE(doc);
 
   RefPtr<Element> el = doc->ElementFromPointHelper(
-      aX, aY, aIgnoreRootScrollFrame, aFlushLayout, false);
+      aX, aY, aIgnoreRootScrollFrame, aFlushLayout, ViewportType::Layout);
   el.forget(aReturn);
   return NS_OK;
 }
@@ -3233,7 +3233,8 @@ nsDOMWindowUtils::SelectAtPoint(float aX, float aY, uint32_t aSelectBehavior,
       nsContentUtils::ToWidgetPoint(CSSPoint(aX, aY), offset, GetPresContext());
   nsPoint ptInRoot = nsLayoutUtils::GetEventCoordinatesRelativeTo(
       widget, pt, RelativeTo{rootFrame});
-  nsIFrame* targetFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, ptInRoot);
+  nsIFrame* targetFrame =
+      nsLayoutUtils::GetFrameForPoint(RelativeTo{rootFrame}, ptInRoot);
   // This can happen if the page hasn't loaded yet or if the point
   // is outside the frame.
   if (!targetFrame) {
