@@ -9,7 +9,7 @@ import socket
 import sys
 import time
 
-from six import reraise
+import six
 
 
 class SocketTimeout(object):
@@ -129,7 +129,10 @@ class TcpTransport(object):
 
         # protocol 3 and above
         if self.protocol >= 3:
-            typ = int(packet[1])
+            if six.PY3:
+                typ = int(chr(packet[1]))
+            else:
+                typ = int(packet[1])
             if typ == Command.TYPE:
                 msg = Command.from_msg(packet)
             elif typ == Response.TYPE:
@@ -145,7 +148,7 @@ class TcpTransport(object):
             the raw packet.
         """
         now = time.time()
-        data = ""
+        data = b""
         bytes_to_recv = 10
 
         while self.socket_timeout is None or (time.time() - now < self.socket_timeout):
@@ -158,7 +161,7 @@ class TcpTransport(object):
                 if not chunk:
                     raise socket.error("No data received over socket")
 
-            sep = data.find(":")
+            sep = data.find(b":")
             if sep > -1:
                 length = data[0:sep]
                 remaining = data[sep + 1:]
@@ -207,7 +210,7 @@ class TcpTransport(object):
         except socket.timeout:
             exc_cls, exc, tb = sys.exc_info()
             msg = "Connection attempt failed because no data has been received over the socket: {}"
-            reraise(exc_cls, exc_cls(msg.format(exc)), tb)
+            six.reraise(exc_cls, exc_cls(msg.format(exc)), tb)
 
         hello = json.loads(raw)
         application_type = hello.get("applicationType")
@@ -238,7 +241,8 @@ class TcpTransport(object):
                 self.expected_response = obj
         else:
             data = json.dumps(obj)
-        payload = "{0}:{1}".format(len(data), data)
+        data = six.ensure_binary(data)
+        payload = six.ensure_binary(str(len(data))) + b":" + data
 
         totalsent = 0
         while totalsent < len(payload):
