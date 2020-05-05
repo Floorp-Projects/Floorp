@@ -18,7 +18,7 @@
     addRenegotiation(test.chain,
       [
         async function PC_LOCAL_SETUP_ICE_HANDLER(test) {
-          await test.pcLocal.endOfTrickleSdp;
+          await test.pcLocal.endOfTrickleIce;
           test.pcLocal.setupIceCandidateHandler(test);
           if (test.testOptions.steeplechase) {
             test.pcLocal.endOfTrickleIce.then(() => {
@@ -45,7 +45,8 @@
                                            STABLE);
         },
 
-        function PC_LOCAL_ROLLBACK(test) {
+        async function PC_LOCAL_ROLLBACK(test) {
+          await test.pcLocal.endOfTrickleIce;
           // We haven't negotiated the new stream yet.
           test.pcLocal.expectNegotiationNeeded();
           return test.setLocalDescription(

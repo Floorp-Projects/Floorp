@@ -48,7 +48,8 @@
                                            STABLE);
         },
 
-        function PC_LOCAL_ROLLBACK(test) {
+        async function PC_LOCAL_ROLLBACK(test) {
+          await test.pcLocal.endOfTrickleIce;
           // We haven't negotiated the new stream yet.
           test.pcLocal.expectNegotiationNeeded();
           return test.setLocalDescription(
