@@ -590,8 +590,31 @@ public class WebExtensionController {
         });
     }
 
-    // TODO: Bug 1601067 make public
-    GeckoResult<WebExtension> installBuiltIn(final String uri) {
+    /**
+     * Install a built-in extension.
+     *
+     * Built-in extensions have access to native messaging, don't need to be
+     * signed and are installed from a folder in the APK instead of a .xpi
+     * bundle.
+     *
+     * Example: <p><code>
+     *    controller.installBuiltIn("resource://android/assets/example/");
+     * </code></p>
+     *
+     * Will install the built-in extension located at
+     * <code>/assets/example/</code> in the app's APK.
+     *
+     * @param uri Folder where the extension is located. To ensure this folder
+     *            is inside the APK, only <code>resource://android</code> URIs
+     *            are allowed.
+     *
+     * @see WebExtension.MessageDelegate
+     * @return A {@link GeckoResult} that completes with the extension once
+     *         it's installed.
+     */
+    @NonNull
+    @AnyThread
+    public GeckoResult<WebExtension> installBuiltIn(final @NonNull String uri) {
         WebExtensionInstallResult result = new WebExtensionInstallResult();
         final GeckoBundle bundle = new GeckoBundle(2);
         bundle.putString("locationUri", uri);

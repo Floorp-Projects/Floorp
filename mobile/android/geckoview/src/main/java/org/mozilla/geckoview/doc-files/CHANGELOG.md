@@ -13,6 +13,13 @@ exclude: true
 
 ⚠️  breaking change
 
+## v78
+- Added [`WebExtensionController.installBuiltIn`][78.1] that allows installing an
+  extension that is bundled with the APK. This method is meant as a replacement
+  for [`GeckoRuntime.registerWebExtension`][67.15].
+
+[78.1]: {{javadoc_uri}}/WebExtensionController.html#installBuiltIn-java.lang.String-
+
 ## v77
 - Added [`GeckoRuntime.appendAppNotesToCrashReport`][77.1] For adding app notes to the crash report.
   ([bug 1626979]({{bugzilla}}1626979))
@@ -675,4 +682,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 562c75192093098207d596f83a159dcb9df2d3e6
+[api-version]: 7332ffcb19b3367e8ac43466f7aae13094fbb1fe
