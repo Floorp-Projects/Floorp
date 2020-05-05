@@ -122,7 +122,7 @@ internal class OneTimeMessageDeliveryObserver(
         authType: AuthType
     ) {
         lazyAccount.value.withConstellation {
-            it.processRawEventAsync(String(message))
+            processRawEventAsync(String(message))
         }
 
         MainScope().launch {

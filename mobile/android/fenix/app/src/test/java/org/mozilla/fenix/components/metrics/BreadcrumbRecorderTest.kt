@@ -9,6 +9,7 @@ import androidx.navigation.NavDestination
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
+import mozilla.components.support.base.crash.Breadcrumb
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Test
@@ -19,7 +20,7 @@ internal class BreadcrumbRecorderTest {
     @Test
     fun `ensure crash reporter recordCrashBreadcrumb is called`() {
         val service = object : CrashReporterService {
-            override fun report(throwable: Throwable): String? = ""
+            override fun report(throwable: Throwable, breadcrumbs: ArrayList<Breadcrumb>): String? = ""
             override fun report(crash: Crash.NativeCodeCrash): String? = ""
             override fun report(crash: Crash.UncaughtExceptionCrash): String? = ""
         }

@@ -10,8 +10,8 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
-import mozilla.components.lib.crash.Breadcrumb
 import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.support.base.crash.Breadcrumb
 
 /**
  * Records breadcrumbs when the fragment changes.
