@@ -160,7 +160,7 @@ void MessageEvent::InitMessageEvent(
 }
 
 void MessageEvent::GetPorts(nsTArray<RefPtr<MessagePort>>& aPorts) {
-  aPorts = mPorts;
+  aPorts = mPorts.Clone();
 }
 
 }  // namespace dom
