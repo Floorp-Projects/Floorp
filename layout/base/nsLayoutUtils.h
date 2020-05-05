@@ -878,6 +878,12 @@ class nsLayoutUtils {
      * When set, return only content that is actually visible.
      */
     OnlyVisible,
+    /**
+     * When set, coordinates are interpreted as being relative to the layout
+     * viewport. When not set, coordinates are interpreted as being relative
+     * to the visual viewport.
+     */
+    IsRelativeToLayoutViewport,
   };
 
   /**

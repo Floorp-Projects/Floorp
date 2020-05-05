@@ -3187,6 +3187,9 @@ nsresult nsLayoutUtils::GetFramesForArea(
       builder.SetIgnoreScrollFrame(rootScrollFrame);
     }
   }
+  if (aOptions.contains(FrameForPointOption::IsRelativeToLayoutViewport)) {
+    builder.SetIsRelativeToLayoutViewport();
+  }
   if (aOptions.contains(FrameForPointOption::IgnoreCrossDoc)) {
     builder.SetDescendIntoSubdocuments(false);
   }
