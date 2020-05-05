@@ -1,4 +1,4 @@
-// |reftest| skip -- "short" and "narrow" style are currently unsupported
+// |reftest| skip-if(!this.hasOwnProperty('Intl')||(!this.Intl.ListFormat&&!this.hasOwnProperty('addIntlExtras')))
 
 // Note: Use the same test locales as used in unit-type.js
 
@@ -70,8 +70,8 @@ const styles = ["long", "short", "narrow"];
 
     const testData = {
         "ar": {
-            long: [Element("A"), Literal("، "), Element("B"), Literal("، "), Element("C"), Literal("، و"), Element("D")],
-            short: [Element("A"), Literal("، و"), Element("B"), Literal("، و"), Element("C"), Literal("، و"), Element("D")],
+            long: [Element("A"), Literal(" و"), Element("B"), Literal(" و"), Element("C"), Literal(" و"), Element("D")],
+            short: [Element("A"), Literal(" و"), Element("B"), Literal(" و"), Element("C"), Literal(" و"), Element("D")],
             narrow: [Element("A"), Literal(" و"), Element("B"), Literal(" و"), Element("C"), Literal(" و"), Element("D")],
         },
         "de": {

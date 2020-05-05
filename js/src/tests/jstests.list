@@ -409,29 +409,6 @@ ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1277801
 skip script test262/built-ins/Object/prototype/toString/symbol-tag-non-str-builtin.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1589095
-# Intl.ListFormat doesn't yet support "disjunction" and "unit" types
-# Intl.ListFormat doesn't yet support "short" and "narrow" styles
-skip script test262/intl402/ListFormat/prototype/formatToParts/en-us-disjunction.js
-skip script test262/intl402/ListFormat/prototype/formatToParts/es-es-narrow.js
-skip script test262/intl402/ListFormat/prototype/formatToParts/en-us-unit.js
-skip script test262/intl402/ListFormat/prototype/formatToParts/en-us-narrow.js
-skip script test262/intl402/ListFormat/prototype/formatToParts/es-es-long.js
-skip script test262/intl402/ListFormat/prototype/formatToParts/es-es-short.js
-skip script test262/intl402/ListFormat/prototype/formatToParts/en-us-short.js
-skip script test262/intl402/ListFormat/prototype/resolvedOptions/type.js
-skip script test262/intl402/ListFormat/prototype/format/es-es-narrow.js
-skip script test262/intl402/ListFormat/prototype/format/en-us-disjunction.js
-skip script test262/intl402/ListFormat/prototype/format/en-us-unit.js
-skip script test262/intl402/ListFormat/prototype/format/en-us-narrow.js
-skip script test262/intl402/ListFormat/prototype/format/es-es-long.js
-skip script test262/intl402/ListFormat/prototype/format/es-es-short.js
-skip script test262/intl402/ListFormat/prototype/format/en-us-short.js
-skip script test262/intl402/ListFormat/constructor/constructor/options-style-valid.js
-skip script test262/intl402/ListFormat/constructor/constructor/options-toobject-prototype.js
-skip script test262/intl402/ListFormat/constructor/constructor/options-order.js
-skip script test262/intl402/ListFormat/constructor/constructor/options-type-valid.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1591099
 skip script test262/intl402/ListFormat/constructor/constructor/proto-from-ctor-realm.js
 
