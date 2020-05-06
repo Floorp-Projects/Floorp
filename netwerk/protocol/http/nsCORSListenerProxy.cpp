@@ -1039,7 +1039,7 @@ class nsCORSPreflightListener final : public nsIStreamListener,
                           const nsCString& aPreflightMethod,
                           const nsTArray<nsCString>& aPreflightHeaders)
       : mPreflightMethod(aPreflightMethod),
-        mPreflightHeaders(aPreflightHeaders),
+        mPreflightHeaders(aPreflightHeaders.Clone()),
         mReferrerPrincipal(aReferrerPrincipal),
         mCallback(aCallback),
         mLoadContext(aLoadContext),

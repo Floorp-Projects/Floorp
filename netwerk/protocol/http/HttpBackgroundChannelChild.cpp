@@ -174,9 +174,9 @@ IPCResult HttpBackgroundChannelChild::RecvOnStopRequest(
     nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
         "HttpBackgroundChannelChild::RecvOnStopRequest",
         [self, aChannelStatus, aTiming, aLastActiveTabOptHit, aResponseTrailers,
-         aConsoleReports] {
+         consoleReports = aConsoleReports.Clone()] {
           self->RecvOnStopRequest(aChannelStatus, aTiming, aLastActiveTabOptHit,
-                                  aResponseTrailers, aConsoleReports);
+                                  aResponseTrailers, consoleReports);
         });
 
     mQueuedRunnables.AppendElement(task.forget());
