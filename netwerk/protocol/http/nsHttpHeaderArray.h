@@ -164,7 +164,7 @@ class nsHttpHeaderArray {
   bool IsSuspectDuplicateHeader(nsHttpAtom header);
 
   // All members must be copy-constructable and assignable
-  nsTArray<nsEntry> mHeaders;
+  CopyableTArray<nsEntry> mHeaders;
 
   friend struct IPC::ParamTraits<nsHttpHeaderArray>;
   friend class nsHttpRequestHead;

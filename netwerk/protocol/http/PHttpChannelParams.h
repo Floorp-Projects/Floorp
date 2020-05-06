@@ -32,7 +32,7 @@ struct RequestHeaderTuple {
   }
 };
 
-typedef nsTArray<RequestHeaderTuple> RequestHeaderTuples;
+typedef CopyableTArray<RequestHeaderTuple> RequestHeaderTuples;
 
 }  // namespace net
 }  // namespace mozilla

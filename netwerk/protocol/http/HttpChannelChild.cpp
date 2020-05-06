@@ -589,11 +589,10 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStopRequest(
   AUTO_PROFILER_LABEL("HttpChannelChild::RecvOnStopRequest", NETWORK);
   LOG(("HttpChannelChild::RecvOnStopRequest [this=%p]\n", this));
 
-  nsTArray<ConsoleReportCollected> consoleReports = std::move(aConsoleReports);
-
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpChannelChild>(this), aChannelStatus, aTiming,
-             aResponseTrailers, consoleReports]() {
+             aResponseTrailers,
+             consoleReports = CopyableTArray{std::move(aConsoleReports)}]() {
         self->OnStopRequest(aChannelStatus, aTiming, aResponseTrailers,
                             consoleReports);
       }));
@@ -1000,9 +999,10 @@ void HttpChannelChild::ProcessOnStopRequest(
       new NeckoTargetChannelFunctionEvent(
           this,
           [self = UnsafePtr<HttpChannelChild>(this), aChannelStatus, aTiming,
-           aResponseTrailers, aConsoleReports]() {
+           aResponseTrailers,
+           consoleReports = CopyableTArray{aConsoleReports.Clone()}]() {
             self->OnStopRequest(aChannelStatus, aTiming, aResponseTrailers,
-                                aConsoleReports);
+                                consoleReports);
           }),
       mDivertingToParent);
 }
@@ -1921,7 +1921,9 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvSetClassifierMatchedTrackingInfo(
   }
 
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<HttpChannelChild>(this), lists, fullhashes]() {
+      this, [self = UnsafePtr<HttpChannelChild>(this),
+             lists = CopyableTArray{std::move(lists)},
+             fullhashes = CopyableTArray{std::move(fullhashes)}]() {
         self->SetMatchedTrackingInfo(lists, fullhashes);
       }));
 

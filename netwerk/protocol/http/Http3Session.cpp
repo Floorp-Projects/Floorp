@@ -1263,12 +1263,12 @@ void Http3Session::CallCertVerification() {
 
   Maybe<nsTArray<nsTArray<uint8_t>>> stapledOCSPResponse;
   if (certInfo.stapled_ocsp_responses_present) {
-    stapledOCSPResponse.emplace(certInfo.stapled_ocsp_responses);
+    stapledOCSPResponse.emplace(std::move(certInfo.stapled_ocsp_responses));
   }
 
   Maybe<nsTArray<uint8_t>> sctsFromTLSExtension;
   if (certInfo.signed_cert_timestamp_present) {
-    sctsFromTLSExtension.emplace(certInfo.signed_cert_timestamp);
+    sctsFromTLSExtension.emplace(std::move(certInfo.signed_cert_timestamp));
   }
 
   mSocketControl->SetAuthenticationCallback(this);

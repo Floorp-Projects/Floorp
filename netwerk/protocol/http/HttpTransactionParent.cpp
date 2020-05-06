@@ -343,10 +343,11 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnStartRequest(
     const int32_t& aProxyConnectResponseCode,
     nsTArray<uint8_t>&& aDataForSniffer) {
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<HttpTransactionParent>(this), aStatus,
-             aResponseHead, aSecurityInfoSerialization, aProxyConnectFailed,
-             aTimings, aProxyConnectResponseCode,
-             aDataForSniffer{std::move(aDataForSniffer)}]() mutable {
+      this,
+      [self = UnsafePtr<HttpTransactionParent>(this), aStatus, aResponseHead,
+       aSecurityInfoSerialization, aProxyConnectFailed, aTimings,
+       aProxyConnectResponseCode,
+       aDataForSniffer = CopyableTArray{std::move(aDataForSniffer)}]() mutable {
         self->DoOnStartRequest(aStatus, aResponseHead,
                                aSecurityInfoSerialization, aProxyConnectFailed,
                                aTimings, aProxyConnectResponseCode,
