@@ -295,8 +295,6 @@ panelview {
   min-height: 14px;
   max-height: 14px;
   animation-name: confirmation-hint-checkmark-animation;
-  animation-duration: 300ms;
-  animation-delay: 60ms;
   animation-fill-mode: forwards;
   animation-timing-function: steps(18);
 }
@@ -304,6 +302,13 @@ panelview {
 #confirmation-hint-checkmark-animation-container[animate] > #confirmation-hint-checkmark-image:-moz-locale-dir(rtl) {
   animation-name: confirmation-hint-checkmark-animation-rtl;
   transform: translateX(252px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #confirmation-hint-checkmark-animation-container[animate] > #confirmation-hint-checkmark-image {
+    animation-duration: 300ms;
+    animation-delay: 60ms;
+  }
 }
 
 @keyframes confirmation-hint-checkmark-animation {
@@ -333,16 +338,18 @@ panelview {
   font-weight: 600;
 }
 
-#confirmation-hint-message-container {
-  transform: scale(.8);
-  opacity: 0;
-  transition: transform 120ms cubic-bezier(.25,1.27,.35,1.18),
-              opacity 60ms linear;
-}
+@media (prefers-reduced-motion: no-preference) {
+  #confirmation-hint-message-container {
+    transform: scale(.8);
+    opacity: 0;
+    transition: transform 120ms cubic-bezier(.25,1.27,.35,1.18),
+                opacity 60ms linear;
+  }
 
-#confirmation-hint-checkmark-animation-container[animate] + #confirmation-hint-message-container {
-  transform: scale(1);
-  opacity: 1;
+  #confirmation-hint-checkmark-animation-container[animate] + #confirmation-hint-message-container {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 panelview[id^=PanelUI-webext-] {
