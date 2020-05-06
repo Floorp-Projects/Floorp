@@ -97,8 +97,7 @@ TEST(storage_asyncStatementExecution_transaction, MultipleAsyncReadStatements)
       ToRefPtr(std::move(stmt2)),
   };
 
-  check_transaction(db, nsTArray<RefPtr<mozIStorageBaseStatement>>(stmts),
-                    false);
+  check_transaction(db, stmts.Clone(), false);
 }
 
 /**
