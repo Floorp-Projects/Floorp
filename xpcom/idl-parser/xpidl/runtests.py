@@ -120,7 +120,7 @@ attribute long bar;
             def write(self, s):
                 pass
         try:
-            header.print_header(i, FdMock(), filename='f')
+            header.print_header(i, FdMock(), filename='f', relpath='f')
             self.assertTrue(False, "Header printing failed to fail")
         except Exception as e:
             self.assertEqual(
