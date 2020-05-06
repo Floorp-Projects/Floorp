@@ -272,11 +272,16 @@ class JSObject : public js::gc::Cell {
   static const JS::TraceKind TraceKind = JS::TraceKind::Object;
   const js::gc::CellHeader& cellHeader() const { return headerAndGroup_; }
 
-  MOZ_ALWAYS_INLINE JS::Zone* zone() const { return groupRaw()->zone(); }
+  MOZ_ALWAYS_INLINE JS::Zone* zone() const {
+    MOZ_ASSERT_IF(!isTenured(), nurseryZone() == groupRaw()->zone());
+    return groupRaw()->zone();
+  }
   MOZ_ALWAYS_INLINE JS::shadow::Zone* shadowZone() const {
     return JS::shadow::Zone::from(zone());
   }
   MOZ_ALWAYS_INLINE JS::Zone* zoneFromAnyThread() const {
+    MOZ_ASSERT_IF(!isTenured(), nurseryZoneFromAnyThread() ==
+                                    groupRaw()->zoneFromAnyThread());
     return groupRaw()->zoneFromAnyThread();
   }
   MOZ_ALWAYS_INLINE JS::shadow::Zone* shadowZoneFromAnyThread() const {
