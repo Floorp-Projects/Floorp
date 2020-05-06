@@ -62,7 +62,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIPushService"
 );
 
-const PREF_PDFJS_ENABLED_CACHE_STATE = "pdfjs.enabledCache.state";
+const PREF_PDFJS_ISDEFAULT_CACHE_STATE = "pdfjs.enabledCache.state";
 
 /**
  * Fission-compatible JSWindowActor implementations.
@@ -1282,13 +1282,8 @@ BrowserGlue.prototype = {
     // handle any UI migration
     this._migrateUI();
 
-    if (Services.prefs.prefHasUserValue(PREF_PDFJS_ENABLED_CACHE_STATE)) {
-      Services.ppmm.sharedData.set(
-        "pdfjs.enabled",
-        Services.prefs.getBoolPref(PREF_PDFJS_ENABLED_CACHE_STATE)
-      );
-    } else {
-      PdfJs.earlyInit(this._isNewProfile);
+    if (!Services.prefs.prefHasUserValue(PREF_PDFJS_ISDEFAULT_CACHE_STATE)) {
+      PdfJs.checkIsDefault(this._isNewProfile);
     }
 
     listeners.init();

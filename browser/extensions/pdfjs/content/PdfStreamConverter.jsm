@@ -23,11 +23,15 @@ const PDF_VIEWER_ORIGIN = "resource://pdf.js";
 const PDF_VIEWER_WEB_PAGE = "resource://pdf.js/web/viewer.html";
 const MAX_NUMBER_OF_PREFS = 50;
 const MAX_STRING_PREF_LENGTH = 128;
+const PDF_CONTENT_TYPE = "application/pdf";
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -58,6 +62,7 @@ ChromeUtils.defineModuleGetter(
   "PdfjsContentUtils",
   "resource://pdf.js/PdfjsContentUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(this, "PdfJs", "resource://pdf.js/PdfJs.jsm");
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
@@ -68,6 +73,26 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/mime;1",
   "nsIMIMEService"
 );
+XPCOMUtils.defineLazyServiceGetter(
+  Svc,
+  "handlers",
+  "@mozilla.org/uriloader/handler-service;1",
+  "nsIHandlerService"
+);
+
+XPCOMUtils.defineLazyGetter(this, "gOurBinary", () => {
+  let file = Services.dirsvc.get("XREExeF", Ci.nsIFile);
+  // Make sure to get the .app on macOS
+  if (AppConstants.platform == "macosx") {
+    while (file) {
+      if (/\.app\/?$/i.test(file.leafName)) {
+        break;
+      }
+      file = file.parent;
+    }
+  }
+  return file;
+});
 
 function getBoolPref(pref, def) {
   try {
@@ -326,7 +351,7 @@ class ChromeActions {
             Ci.nsILoadContext
           );
           this.extListener = extHelperAppSvc.doContent(
-            data.isAttachment ? "application/octet-stream" : "application/pdf",
+            data.isAttachment ? "application/octet-stream" : PDF_CONTENT_TYPE,
             aRequest,
             loadContext,
             false
@@ -1010,7 +1035,86 @@ PdfStreamConverter.prototype = {
     this.listener = aListener;
   },
 
+  _usableHandler(handlerInfo) {
+    let { preferredApplicationHandler } = handlerInfo;
+    if (
+      !preferredApplicationHandler ||
+      !(preferredApplicationHandler instanceof Ci.nsILocalHandlerApp)
+    ) {
+      return false;
+    }
+    preferredApplicationHandler.QueryInterface(Ci.nsILocalHandlerApp);
+    // We have an app, grab the executable
+    let { executable } = preferredApplicationHandler;
+    if (!executable) {
+      return false;
+    }
+    return !executable.equals(gOurBinary);
+  },
+
+  /*
+   * Check if the user wants to use PDF.js. Returns true if PDF.js should
+   * handle PDFs, and false if not. Will always return true on non-parent
+   * processes.
+   *
+   * If the user has selected to open PDFs with a helper app, and we are that
+   * helper app, or if the user has selected the OS default, and we are that
+   * OS default, reset the preference back to pdf.js .
+   *
+   */
+  _validateAndMaybeUpdatePDFPrefs() {
+    let { processType, PROCESS_TYPE_DEFAULT } = Services.appinfo;
+    // If we're not in the parent, or are the default, then just say yes.
+    if (processType != PROCESS_TYPE_DEFAULT || PdfJs.cachedIsDefault()) {
+      return true;
+    }
+
+    // OK, PDF.js might not be the default. Find out if we've misled the user
+    // into making Firefox an external handler or if we're the OS default and
+    // Firefox is set to use the OS default:
+    let mime = Svc.mime.getFromTypeAndExtension(PDF_CONTENT_TYPE, "pdf");
+    // The above might throw errors. We're deliberately letting those bubble
+    // back up, where they'll tell the stream converter not to use us.
+
+    if (!mime) {
+      // This shouldn't happen, but we can't fix what isn't there. Assume
+      // we're OK to handle with PDF.js
+      return true;
+    }
+
+    const { saveToDisk, useHelperApp, useSystemDefault } = Ci.nsIHandlerInfo;
+    let { preferredAction, alwaysAskBeforeHandling } = mime;
+    // If the user has indicated they want to be asked or want to save to
+    // disk, we shouldn't render inline immediately:
+    if (alwaysAskBeforeHandling || preferredAction == saveToDisk) {
+      return false;
+    }
+    // If we have usable helper app info, don't use PDF.js
+    if (preferredAction == useHelperApp && this._usableHandler(mime)) {
+      return false;
+    }
+    // If we want the OS default and that's not Firefox, don't use PDF.js
+    if (preferredAction == useSystemDefault && !mime.isCurrentAppOSDefault()) {
+      return false;
+    }
+    // Log that we're doing this to help debug issues if people end up being
+    // surprised by this behaviour.
+    Cu.reportError("Found unusable PDF preferences. Fixing back to PDF.js");
+
+    mime.preferredAction = Ci.nsIHandlerInfo.handleInternally;
+    mime.alwaysAskBeforeHandling = false;
+    Svc.handlers.store(mime);
+    return true;
+  },
+
   getConvertedType(aFromType) {
+    if (!this._validateAndMaybeUpdatePDFPrefs()) {
+      throw new Components.Exception(
+        "Can't use PDF.js",
+        Cr.NS_ERROR_NOT_AVAILABLE
+      );
+    }
+
     return "text/html";
   },
 

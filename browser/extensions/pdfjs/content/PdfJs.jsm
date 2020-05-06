@@ -23,7 +23,7 @@ const PREF_MIGRATION_VERSION = PREF_PREFIX + ".migrationVersion";
 const PREF_PREVIOUS_ACTION = PREF_PREFIX + ".previousHandler.preferredAction";
 const PREF_PREVIOUS_ASK =
   PREF_PREFIX + ".previousHandler.alwaysAskBeforeHandling";
-const PREF_ENABLED_CACHE_STATE = PREF_PREFIX + ".enabledCache.state";
+const PREF_ISDEFAULT_CACHE_STATE = PREF_PREFIX + ".enabledCache.state";
 const TOPIC_PDFJS_HANDLER_CHANGED = "pdfjs:handlerChanged";
 const PDF_CONTENT_TYPE = "application/pdf";
 
@@ -98,6 +98,7 @@ const gPdfFakeHandlerInfo = {
 var PdfJs = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
   _initialized: false,
+  _cachedIsDefault: true,
 
   init: function init(isNewProfile) {
     if (
@@ -109,20 +110,7 @@ var PdfJs = {
     }
     PdfjsChromeUtils.init();
     this.initPrefs();
-
-    Services.ppmm.sharedData.set(
-      "pdfjs.enabled",
-      this.checkEnabled(isNewProfile)
-    );
-  },
-
-  earlyInit(isNewProfile) {
-    // Note: Please keep this in sync with the duplicated logic in
-    // BrowserGlue.jsm.
-    Services.ppmm.sharedData.set(
-      "pdfjs.enabled",
-      this.checkEnabled(isNewProfile)
-    );
+    this.checkIsDefault(isNewProfile);
   },
 
   initPrefs: function initPrefs() {
@@ -131,15 +119,13 @@ var PdfJs = {
     }
     this._initialized = true;
 
-    if (Services.prefs.getBoolPref(PREF_DISABLED, false)) {
+    if (this._prefDisabled) {
       this._unbecomeHandler();
     } else {
       this._migrate();
     }
 
-    // Listen for when pdf.js is completely disabled or a different pdf handler
-    // is chosen.
-    Services.prefs.addObserver(PREF_DISABLED, this);
+    // Listen for when a different pdf handler is chosen.
     Services.obs.addObserver(this, TOPIC_PDFJS_HANDLER_CHANGED);
 
     initializeDefaultPreferences();
@@ -147,7 +133,6 @@ var PdfJs = {
 
   uninit: function uninit() {
     if (this._initialized) {
-      Services.prefs.removeObserver(PREF_DISABLED, this);
       Services.obs.removeObserver(this, TOPIC_PDFJS_HANDLER_CHANGED);
       this._initialized = false;
     }
@@ -232,15 +217,15 @@ var PdfJs = {
    *                     pdfs differently. If we're on a new profile,
    *                     there's no need to check.
    */
-  _isEnabled(isNewProfile) {
+  _isDefault(isNewProfile) {
     let { processType, PROCESS_TYPE_DEFAULT } = Services.appinfo;
     if (processType !== PROCESS_TYPE_DEFAULT) {
       throw new Error(
-        "isEnabled should only get called in the parent process."
+        "isDefault should only get called in the parent process."
       );
     }
 
-    if (Services.prefs.getBoolPref(PREF_DISABLED, true)) {
+    if (this._prefDisabled) {
       return false;
     }
 
@@ -252,28 +237,32 @@ var PdfJs = {
     let handlerInfo = Svc.mime.getFromTypeAndExtension(PDF_CONTENT_TYPE, "pdf");
     return (
       !handlerInfo.alwaysAskBeforeHandling &&
-      handlerInfo.preferredAction === Ci.nsIHandlerInfo.handleInternally
+      handlerInfo.preferredAction == Ci.nsIHandlerInfo.handleInternally
     );
   },
 
-  checkEnabled(isNewProfile) {
-    let isEnabled = this._isEnabled(isNewProfile);
-    // This will be updated any time we observe a dependency changing, since
-    // updateRegistration internally calls enabled.
-    Services.prefs.setBoolPref(PREF_ENABLED_CACHE_STATE, isEnabled);
-    return isEnabled;
+  checkIsDefault(isNewProfile) {
+    this._cachedIsDefault = this._isDefault(isNewProfile);
+    Services.prefs.setBoolPref(
+      PREF_ISDEFAULT_CACHE_STATE,
+      this._cachedIsDefault
+    );
+  },
+
+  cachedIsDefault() {
+    return this._cachedIsDefault;
   },
 
   // nsIObserver
-  observe: function observe(aSubject, aTopic, aData) {
-    if (
-      Services.appinfo.processType !== Services.appinfo.PROCESS_TYPE_DEFAULT
-    ) {
-      throw new Error(
-        "Only the parent process should be observing PDF handler changes."
-      );
-    }
-
-    Services.ppmm.sharedData.set("pdfjs.enabled", this.checkEnabled());
+  observe(aSubject, aTopic, aData) {
+    this.checkIsDefault();
   },
 };
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  PdfJs,
+  "_prefDisabled",
+  PREF_DISABLED,
+  false,
+  () => PdfJs.checkIsDefault()
+);
