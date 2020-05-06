@@ -66,7 +66,7 @@ class ConsoleReportCollector final : public nsIConsoleReportCollector {
           mLineNumber(aLineNumber),
           mColumnNumber(aColumnNumber),
           mMessageName(aMessageName),
-          mStringParams(aStringParams) {}
+          mStringParams(aStringParams.Clone()) {}
 
     const uint32_t mErrorFlags;
     const nsCString mCategory;
@@ -75,7 +75,7 @@ class ConsoleReportCollector final : public nsIConsoleReportCollector {
     const uint32_t mLineNumber;
     const uint32_t mColumnNumber;
     const nsCString mMessageName;
-    const nsTArray<nsString> mStringParams;
+    const CopyableTArray<nsString> mStringParams;
   };
 
   Mutex mMutex;
