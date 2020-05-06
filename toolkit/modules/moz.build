@@ -210,7 +210,6 @@ EXTRA_JS_MODULES += [
     'Promise.jsm',
     'PromiseMessage.jsm',
     'PromiseUtils.jsm',
-    'Region.jsm',
     'RemotePageAccessManager.jsm',
     'RemoteSecurityUI.jsm',
     'RemoteWebProgress.jsm',

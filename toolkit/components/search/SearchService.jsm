@@ -19,8 +19,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
   getVerificationHash: "resource://gre/modules/SearchEngine.jsm",
   IgnoreLists: "resource://gre/modules/IgnoreLists.jsm",
+  NetworkGeolocationProvider:
+    "resource://gre/modules/NetworkGeolocationProvider.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  Region: "resource://gre/modules/Region.jsm",
   SearchEngine: "resource://gre/modules/SearchEngine.jsm",
   SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.jsm",
   SearchStaticData: "resource://gre/modules/SearchStaticData.jsm",
@@ -254,24 +255,48 @@ async function fetchRegion(ss, awaitRegionCheck) {
   // values for the SEARCH_SERVICE_COUNTRY_FETCH_RESULT 'enum' telemetry probe.
   const TELEMETRY_RESULT_ENUM = {
     success: 0,
-    "region-fetch-no-result": 1,
-    "region-fetch-timeout": 2,
-    error: 3,
+    "xhr-empty": 1,
+    "xhr-timeout": 2,
+    "xhr-error": 3,
+    // Note that we expect to add finer-grained error types here later (eg,
+    // dns error, network error, ssl error, etc) with .ERROR remaining as the
+    // generic catch-all that doesn't fit into other categories.
   };
   let startTime = Date.now();
-  let result;
-  let telemetryResult = TELEMETRY_RESULT_ENUM.success;
-  try {
-    result = await Region.getHomeRegion();
-  } catch (err) {
-    telemetryResult =
-      TELEMETRY_RESULT_ENUM[err.message] || TELEMETRY_RESULT_ENUM.error;
-    Cu.reportError(err);
-  }
-  let took = Date.now() - startTime;
 
-  if (result?.country_code) {
-    await storeRegion(result.country_code).catch(Cu.reportError);
+  let statusCallback = status => {
+    switch (status) {
+      case "xhr-start":
+        // This notification is just for tests...
+        Services.obs.notifyObservers(
+          null,
+          SearchUtils.TOPIC_SEARCH_SERVICE,
+          "geoip-lookup-xhr-starting"
+        );
+        break;
+      case "wifi-timeout":
+        SearchUtils.log("_fetchRegion: timeout fetching wifi information");
+        // Do nothing for now.
+        break;
+    }
+  };
+
+  let networkGeo = new NetworkGeolocationProvider();
+  let result, errorResult;
+  try {
+    result = await networkGeo.getCountry(statusCallback);
+  } catch (ex) {
+    errorResult = ex;
+    Cu.reportError(ex);
+  }
+
+  let took = Date.now() - startTime;
+  // Even if we timed out, we want to save the region and everything
+  // related so next startup sees the value and doesn't retry this dance.
+  if (result) {
+    // As long as the asynchronous codepath in `storeRegion` is only used for
+    // telemetry, we don't need to await its completion.
+    storeRegion(result).catch(Cu.reportError);
   }
   SearchUtils.log(
     "_fetchRegion got success response in " + took + "ms: " + result
@@ -279,6 +304,13 @@ async function fetchRegion(ss, awaitRegionCheck) {
   Services.telemetry
     .getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS")
     .add(took);
+
+  // This notification is just for tests...
+  Services.obs.notifyObservers(
+    null,
+    SearchUtils.TOPIC_SEARCH_SERVICE,
+    "geoip-lookup-xhr-complete"
+  );
 
   // Now that we know the current region, it's possible to fetch defaults,
   // which we couldn't do before in `ensureKnownRegion`.
@@ -292,6 +324,11 @@ async function fetchRegion(ss, awaitRegionCheck) {
     Cu.reportError(ex);
   }
 
+  let telemetryResult = TELEMETRY_RESULT_ENUM.success;
+  if (errorResult) {
+    telemetryResult =
+      TELEMETRY_RESULT_ENUM[errorResult] || TELEMETRY_RESULT_ENUM["xhr-error"];
+  }
   Services.telemetry
     .getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_RESULT")
     .add(telemetryResult);
