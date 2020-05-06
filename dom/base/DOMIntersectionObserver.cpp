@@ -659,11 +659,6 @@ void DOMIntersectionObserver::QueueIntersectionObserverEntry(
   if (aIntersectionRect.isSome()) {
     intersectionRect->SetLayoutRect(aIntersectionRect.value());
   }
-  nsAutoString id;
-  aTarget->GetId(id);
-  printf("%s %s %d\n",
-         NS_ConvertUTF16toUTF8(id).get(),
-          __func__, __LINE__);
   RefPtr<DOMIntersectionObserverEntry> entry = new DOMIntersectionObserverEntry(
       this, time, rootBounds.forget(), boundingClientRect.forget(),
       intersectionRect.forget(), aIntersectionRect.isSome(), aTarget,
