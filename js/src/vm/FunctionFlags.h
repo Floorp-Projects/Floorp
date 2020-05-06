@@ -213,8 +213,8 @@ class FunctionFlags {
   }
   bool isLambda() const { return hasFlags(LAMBDA); }
 
-  bool isNamedLambda(JSAtom* atom) const {
-    return isLambda() && atom && !hasInferredName() && !hasGuessedAtom();
+  bool isNamedLambda(bool hasName) const {
+    return hasName && isLambda() && !hasInferredName() && !hasGuessedAtom();
   }
 
   // These methods determine which of the u.scripted.s union arms are active.
