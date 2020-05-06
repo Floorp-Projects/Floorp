@@ -2266,16 +2266,6 @@ bool WarpBuilder::build_CheckIsObj(BytecodeLocation loc) {
   return true;
 }
 
-bool WarpBuilder::build_CheckIsCallable(BytecodeLocation loc) {
-  CheckIsCallableKind kind = loc.getCheckIsCallableKind();
-  MDefinition* val = current->pop();
-
-  MCheckIsCallable* ins = MCheckIsCallable::New(alloc(), val, uint8_t(kind));
-  current->add(ins);
-  current->push(ins);
-  return true;
-}
-
 bool WarpBuilder::build_CheckObjCoercible(BytecodeLocation) {
   MDefinition* val = current->pop();
   MCheckObjCoercible* ins = MCheckObjCoercible::New(alloc(), val);

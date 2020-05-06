@@ -7096,23 +7096,6 @@ class LCheckIsObj : public LInstructionHelper<0, BOX_PIECES, 0> {
   MCheckIsObj* mir() const { return mir_->toCheckIsObj(); }
 };
 
-class LCheckIsCallable : public LInstructionHelper<0, BOX_PIECES, 1> {
- public:
-  LIR_HEADER(CheckIsCallable)
-
-  static const size_t CheckValue = 0;
-
-  LCheckIsCallable(const LBoxAllocation& value, const LDefinition& temp)
-      : LInstructionHelper(classOpcode) {
-    setBoxOperand(CheckValue, value);
-    setTemp(0, temp);
-  }
-
-  const LDefinition* temp() { return getTemp(0); }
-
-  MCheckIsCallable* mir() const { return mir_->toCheckIsCallable(); }
-};
-
 class LCheckObjCoercible : public LInstructionHelper<0, BOX_PIECES, 0> {
  public:
   LIR_HEADER(CheckObjCoercible)
