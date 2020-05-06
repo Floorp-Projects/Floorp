@@ -26,48 +26,52 @@ jobs:
         symbol: I(deb10-test)
     ubuntu1804-test:
         symbol: I(ub18-test)
-    # Neither the debian8-*raw nor the debian8-*packages images can have
+    # Neither the debian7-*raw nor the debian7-*packages images can have
     # packages dependencies.
-    debian8-raw:
-        symbol: I(deb8-raw)
+    debian7-raw:
+        symbol: I(deb7-raw)
         definition: debian-raw
         args:
-            BASE_IMAGE: debian:jessie-20200422
-            DIST: jessie
-            SNAPSHOT: '20200422T205110Z'
-    debian8-packages:
-        symbol: I(deb8-pkg)
+            BASE_IMAGE: debian:wheezy-20190228
+            DIST: wheezy
+            SNAPSHOT: '20190228T155929Z'
+    debian7-packages:
+        symbol: I(deb7-pkg)
         definition: debian-packages
-        parent: debian8-raw
-    debian8-i386-raw:
-        symbol: I(deb8-32-raw)
+        parent: debian7-raw
+    debian7-i386-raw:
+        symbol: I(deb7-32-raw)
         definition: debian-raw
         args:
-            BASE_IMAGE: i386/debian:jessie-20200422
-            DIST: jessie
-            SNAPSHOT: '20200422T205110Z'
-    debian8-i386-packages:
-        symbol: I(deb8-32-pkg)
+            BASE_IMAGE: i386/debian:wheezy-20190228
+            DIST: wheezy
+            SNAPSHOT: '20190228T155929Z'
+    debian7-i386-packages:
+        symbol: I(deb7-32-pkg)
         definition: debian-packages
-        parent: debian8-i386-raw
-    debian8-base:
-        symbol: I(deb8-base)
+        parent: debian7-i386-raw
+    debian7-base:
+        symbol: I(deb7-base)
         definition: debian-base
-        parent: debian8-raw
+        parent: debian7-raw
         packages:
-            - deb8-gdb
-            - deb8-git
-            - deb8-mercurial
-            - deb8-python3.5
-            - deb8-python3-defaults
-            - deb8-python-zstandard
-            - deb8-xz-utils
+            - deb7-apt
+            - deb7-gdb
+            - deb7-git
+            - deb7-make
+            - deb7-mercurial
+            - deb7-python
+            - deb7-python3.5
+            - deb7-python3-defaults
+            - deb7-python-zstandard
+            - deb7-sqlite3
+            - deb7-xz-utils
     toolchain-build:
         symbol: I(toolchain)
-        parent: debian8-base
+        parent: debian7-base
         packages:
-            - deb8-cmake
-            - deb8-ninja
+            - deb7-cmake
+            - deb7-ninja
     deb9-toolchain-build:
         symbol: I(deb9-toolchain)
         parent: debian9-base
@@ -81,37 +85,61 @@ jobs:
     custom-v8:
         symbol: I(custom-v8)
         parent: debian9-base
-    debian8-amd64-build-base:
-        symbol: I(deb8-bb)
-        parent: debian8-base
+    debian7-amd64-build-base:
+        symbol: I(deb7-bb)
+        parent: debian7-base
         definition: debian-build
         args:
             ARCH: amd64
-    debian8-amd64-build:
-        symbol: I(deb8)
-        parent: debian8-base
+    debian7-amd64-build:
+        symbol: I(deb7)
+        parent: debian7-base
         definition: debian-build
         packages:
-            - deb8-valgrind
+            - deb7-atk
+            - deb7-glib
+            - deb7-gdk-pixbuf
+            - deb7-gtk3
+            - deb7-harfbuzz
+            - deb7-libxkbcommon
+            - deb7-pango
+            - deb7-pcre3
+            - deb7-valgrind
+            - deb7-wayland
         args:
             ARCH: amd64
-    debian8-i386-build:
-        symbol: I(deb8-32)
-        parent: debian8-base
+    debian7-i386-build:
+        symbol: I(deb7-32)
+        parent: debian7-base
         definition: debian-build
         packages:
-            - deb8-valgrind
-            - deb8-32-xz-utils
+            - deb7-32-atk
+            - deb7-32-glib
+            - deb7-32-gdk-pixbuf
+            - deb7-32-gtk3
+            - deb7-32-harfbuzz
+            - deb7-32-libxkbcommon
+            - deb7-32-pango
+            - deb7-32-pcre3
+            - deb7-32-xkeyboard-config
+            - deb7-32-wayland
+            - deb7-atk
+            - deb7-glib
+            - deb7-gtk3
+            - deb7-harfbuzz
+            - deb7-python-defaults
+            - deb7-pcre3
+            - deb7-valgrind
         args:
             ARCH: i386
-    debian8-mozjs-rust-build:
-        symbol: I(deb8jsrs)
-        parent: debian8-amd64-build
+    debian7-mozjs-rust-build:
+        symbol: I(deb7jsrs)
+        parent: debian7-amd64-build
         packages:
-            - deb8-cmake
+            - deb7-cmake
     valgrind-build:
         symbol: I(vb)
-        parent: debian8-amd64-build
+        parent: debian7-amd64-build
     lint:
         symbol: I(lnt)
     # Neither the debian9-raw nor the debian9-packages images can have
@@ -185,7 +213,7 @@ jobs:
         symbol: I(agb)
         parent: debian9-base
         packages:
-            - deb8-valgrind
+            - deb7-valgrind
     fetch:
         symbol: I(fetch)
         parent: debian10-raw
@@ -196,7 +224,7 @@ jobs:
         parent: debian9-base
     gdb-test:
         symbol: I(gdb)
-        parent: debian8-amd64-build
+        parent: debian7-amd64-build
         definition: gdb-test
     mingw32-build:
         symbol: I(mingw)
