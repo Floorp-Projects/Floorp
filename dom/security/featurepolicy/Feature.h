@@ -58,7 +58,7 @@ class Feature final {
 
   Policy mPolicy;
 
-  nsTArray<nsCOMPtr<nsIPrincipal>> mAllowList;
+  CopyableTArray<nsCOMPtr<nsIPrincipal>> mAllowList;
 };
 
 }  // namespace dom

@@ -450,7 +450,9 @@ class nsCSPDirective {
   virtual void toString(nsAString& outStr) const;
   void toDomCSPStruct(mozilla::dom::CSP& outCSP) const;
 
-  virtual void addSrcs(const nsTArray<nsCSPBaseSrc*>& aSrcs) { mSrcs = aSrcs; }
+  virtual void addSrcs(const nsTArray<nsCSPBaseSrc*>& aSrcs) {
+    mSrcs = aSrcs.Clone();
+  }
 
   virtual bool restrictsContentType(nsContentPolicyType aContentType) const;
 

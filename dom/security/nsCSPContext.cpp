@@ -310,7 +310,7 @@ nsresult nsCSPContext::InitFromOther(nsCSPContext* aOtherContext) {
     AppendPolicy(policyStr, policy->getReportOnlyFlag(),
                  policy->getDeliveredViaMetaTagFlag());
   }
-  mIPCPolicies = aOtherContext->mIPCPolicies;
+  mIPCPolicies = aOtherContext->mIPCPolicies.Clone();
   return NS_OK;
 }
 

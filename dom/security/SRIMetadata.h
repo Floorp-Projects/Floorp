@@ -68,7 +68,7 @@ class SRIMetadata final {
   const nsString& GetIntegrityString() const { return mIntegrityString; }
 
  private:
-  nsTArray<nsCString> mHashes;
+  CopyableTArray<nsCString> mHashes;
   nsString mIntegrityString;
   nsCString mAlgorithm;
   int8_t mAlgorithmType;
