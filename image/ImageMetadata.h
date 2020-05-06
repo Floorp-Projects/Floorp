@@ -95,7 +95,7 @@ class ImageMetadata {
   Maybe<Orientation> mOrientation;
 
   // Sizes the image can natively decode to.
-  nsTArray<nsIntSize> mNativeSizes;
+  CopyableTArray<nsIntSize> mNativeSizes;
 
   bool mHasAnimation : 1;
 };
