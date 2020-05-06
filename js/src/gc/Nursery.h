@@ -233,14 +233,13 @@ class Nursery {
 
   // Allocate and return a pointer to a new GC thing. Returns nullptr if the
   // Nursery is full.
-  gc::Cell* allocateCell(JS::Zone* zone, size_t size, gc::AllocKind kind);
+  gc::Cell* allocateCell(JS::Zone* zone, size_t size, JS::TraceKind kind);
 
-  gc::Cell* allocateBigInt(JS::Zone* zone, size_t size, gc::AllocKind kind) {
-    MOZ_ASSERT(kind == gc::AllocKind::BIGINT);
-    return allocateCell(zone, size, kind);
+  gc::Cell* allocateBigInt(JS::Zone* zone, size_t size) {
+    return allocateCell(zone, size, JS::TraceKind::BigInt);
   }
-  gc::Cell* allocateString(JS::Zone* zone, size_t size, gc::AllocKind kind) {
-    return allocateCell(zone, size, kind);
+  gc::Cell* allocateString(JS::Zone* zone, size_t size) {
+    return allocateCell(zone, size, JS::TraceKind::String);
   }
 
   static JS::Zone* getCellZone(const gc::Cell* cell) {

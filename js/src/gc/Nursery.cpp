@@ -455,7 +455,7 @@ JSObject* js::Nursery::allocateObject(JSContext* cx, size_t size,
   return obj;
 }
 
-Cell* js::Nursery::allocateCell(Zone* zone, size_t size, AllocKind kind) {
+Cell* js::Nursery::allocateCell(Zone* zone, size_t size, JS::TraceKind kind) {
   // Ensure there's enough space to replace the contents with a
   // RelocationOverlay.
   MOZ_ASSERT(size >= sizeof(RelocationOverlay));
