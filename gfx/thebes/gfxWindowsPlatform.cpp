@@ -281,7 +281,9 @@ class D3DSharedTexturesReporter final : public nsIMemoryReporter {
 
 NS_IMPL_ISUPPORTS(D3DSharedTexturesReporter, nsIMemoryReporter)
 
-gfxWindowsPlatform::gfxWindowsPlatform() : mRenderMode(RENDER_GDI) {
+gfxWindowsPlatform::gfxWindowsPlatform()
+    : mRenderMode(RENDER_GDI),
+      mDwmCompositionStatus(DwmCompositionStatus::Unknown) {
   /*
    * Initialize COM
    */
@@ -334,6 +336,27 @@ void gfxWindowsPlatform::InitAcceleration() {
   Factory::SetSystemTextQuality(gfxVars::SystemTextQuality());
   gfxVars::SetSystemTextQualityListener(
       gfxDWriteFont::SystemTextQualityChanged);
+
+  if (XRE_IsParentProcess()) {
+    BOOL dwmEnabled = FALSE;
+    if (FAILED(::DwmIsCompositionEnabled(&dwmEnabled)) || !dwmEnabled) {
+      gfxVars::SetDwmCompositionEnabled(false);
+    } else {
+      gfxVars::SetDwmCompositionEnabled(true);
+    }
+  }
+
+  // gfxVars are not atomic, but multiple threads can query DWM status
+  // Therefore, mirror value into an atomic
+  mDwmCompositionStatus = gfxVars::DwmCompositionEnabled()
+                              ? DwmCompositionStatus::Enabled
+                              : DwmCompositionStatus::Disabled;
+
+  gfxVars::SetDwmCompositionEnabledListener([this] {
+    this->mDwmCompositionStatus = gfxVars::DwmCompositionEnabled()
+                                      ? DwmCompositionStatus::Enabled
+                                      : DwmCompositionStatus::Disabled;
+  });
 
   // CanUseHardwareVideoDecoding depends on DeviceManagerDx state,
   // so update the cached value now.
@@ -1610,13 +1633,9 @@ bool gfxWindowsPlatform::InitGPUProcessSupport() {
 }
 
 bool gfxWindowsPlatform::DwmCompositionEnabled() {
-  BOOL dwmEnabled = false;
+  MOZ_RELEASE_ASSERT(mDwmCompositionStatus != DwmCompositionStatus::Unknown);
 
-  if (FAILED(DwmIsCompositionEnabled(&dwmEnabled))) {
-    return false;
-  }
-
-  return dwmEnabled;
+  return mDwmCompositionStatus == DwmCompositionStatus::Enabled;
 }
 
 class D3DVsyncSource final : public VsyncSource {

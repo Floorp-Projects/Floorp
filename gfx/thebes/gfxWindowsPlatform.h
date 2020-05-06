@@ -226,6 +226,12 @@ class gfxWindowsPlatform final : public gfxPlatform {
   RenderMode mRenderMode;
 
  private:
+  enum class DwmCompositionStatus : uint32_t {
+    Unknown,
+    Disabled,
+    Enabled,
+  };
+
   void Init();
   void InitAcceleration() override;
   void InitWebRenderConfig() override;
@@ -253,6 +259,9 @@ class gfxWindowsPlatform final : public gfxPlatform {
 
   RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
   bool mInitializedDevices = false;
+
+  mozilla::Atomic<DwmCompositionStatus, mozilla::ReleaseAcquire>
+      mDwmCompositionStatus;
 
   // Cached contents of the output color profile file
   nsTArray<uint8_t> mCachedOutputColorProfile;
