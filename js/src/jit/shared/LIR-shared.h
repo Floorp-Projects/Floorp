@@ -4436,6 +4436,28 @@ class LStoreUnboxedScalar : public LInstructionHelper<0, 3, 0> {
   const LAllocation* value() { return getOperand(2); }
 };
 
+class LStoreUnboxedBigInt : public LInstructionHelper<0, 3, INT64_PIECES> {
+ public:
+  LIR_HEADER(StoreUnboxedBigInt)
+
+  LStoreUnboxedBigInt(const LAllocation& elements, const LAllocation& index,
+                      const LAllocation& value, const LInt64Definition& temp)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, elements);
+    setOperand(1, index);
+    setOperand(2, value);
+    setInt64Temp(0, temp);
+  }
+
+  const MStoreUnboxedScalar* mir() const {
+    return mir_->toStoreUnboxedScalar();
+  }
+  const LAllocation* elements() { return getOperand(0); }
+  const LAllocation* index() { return getOperand(1); }
+  const LAllocation* value() { return getOperand(2); }
+  LInt64Definition temp() { return getInt64Temp(0); }
+};
+
 class LStoreTypedArrayElementHole : public LInstructionHelper<0, 4, 1> {
  public:
   LIR_HEADER(StoreTypedArrayElementHole)
@@ -4461,6 +4483,34 @@ class LStoreTypedArrayElementHole : public LInstructionHelper<0, 4, 1> {
   const LAllocation* index() { return getOperand(2); }
   const LAllocation* value() { return getOperand(3); }
   const LDefinition* spectreTemp() { return getTemp(0); }
+};
+
+class LStoreTypedArrayElementHoleBigInt
+    : public LInstructionHelper<0, 4, INT64_PIECES> {
+ public:
+  LIR_HEADER(StoreTypedArrayElementHoleBigInt)
+
+  LStoreTypedArrayElementHoleBigInt(const LAllocation& elements,
+                                    const LAllocation& length,
+                                    const LAllocation& index,
+                                    const LAllocation& value,
+                                    const LInt64Definition& temp)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, elements);
+    setOperand(1, length);
+    setOperand(2, index);
+    setOperand(3, value);
+    setInt64Temp(0, temp);
+  }
+
+  const MStoreTypedArrayElementHole* mir() const {
+    return mir_->toStoreTypedArrayElementHole();
+  }
+  const LAllocation* elements() { return getOperand(0); }
+  const LAllocation* length() { return getOperand(1); }
+  const LAllocation* index() { return getOperand(2); }
+  const LAllocation* value() { return getOperand(3); }
+  LInt64Definition temp() { return getInt64Temp(0); }
 };
 
 class LAtomicIsLockFree : public LInstructionHelper<1, 1, 0> {
