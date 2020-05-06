@@ -12,12 +12,16 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.testing.WorkManagerTestInitHelper
 import kotlinx.coroutines.runBlocking
+import mozilla.components.concept.fetch.Client
+import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.experiments.Configuration
 import mozilla.components.service.experiments.Experiment
 import mozilla.components.service.experiments.Experiments
 import mozilla.components.service.experiments.ExperimentsSnapshot
 import mozilla.components.service.experiments.ExperimentsUpdater
 import mozilla.components.service.glean.Glean
+import mozilla.components.service.glean.config.Configuration as GleanConfiguration
+import mozilla.components.service.glean.net.ConceptFetchHttpUploader
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -42,7 +46,9 @@ class ExperimentsDebugActivityTest {
     fun setup() {
         WorkManagerTestInitHelper.initializeTestWorkManager(context)
 
-        Glean.initialize(context, uploadEnabled = true)
+        val httpClient = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() as Client })
+        val config = GleanConfiguration(httpClient = httpClient)
+        Glean.initialize(context, uploadEnabled = true, configuration = config)
 
         // This makes sure we have a "launch" intent in our package, otherwise
         // it will fail looking for it in `GleanDebugActivityTest`.

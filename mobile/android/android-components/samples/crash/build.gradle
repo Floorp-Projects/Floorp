@@ -30,6 +30,7 @@ android {
 
 dependencies {
     implementation project(':lib-crash')
+    implementation project(':lib-fetch-httpurlconnection')
     implementation project(':service-glean')
     implementation project(':support-base')
 

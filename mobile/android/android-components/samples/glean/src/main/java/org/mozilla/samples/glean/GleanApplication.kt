@@ -6,7 +6,11 @@ package org.mozilla.samples.glean
 
 import android.app.Application
 import android.content.Intent
+import mozilla.components.concept.fetch.Client
+import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.glean.Glean
+import mozilla.components.service.glean.config.Configuration
+import mozilla.components.service.glean.net.ConceptFetchHttpUploader
 import mozilla.components.service.experiments.Experiments
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
@@ -28,7 +32,9 @@ class GleanApplication : Application() {
 
         // Initialize the Glean library. Ideally, this is the first thing that
         // must be done right after enabling logging.
-        Glean.initialize(applicationContext, uploadEnabled = true)
+        val httpClient = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() as Client })
+        val config = Configuration(httpClient = httpClient)
+        Glean.initialize(applicationContext, uploadEnabled = true, configuration = config)
 
         // Initialize the Experiments library and pass in the callback that will generate a
         // broadcast Intent to signal the application that experiments have been updated. This is
