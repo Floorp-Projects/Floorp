@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <style>
+    .grid-container {
+      display: grid;
+      /* Repeat auto-fill which is less than the number of elements in the grid. */
+      grid-template-columns: 1px 1px 1px 1px repeat(auto-fill, 1px 1px 1px);
+      width: 13px;
+    }
+    div > div {
+      /* Any name will work */
+      grid-column-start: x;
+    }
+  </style>
+  <div class="grid-container">
+    <div>x</div>
+    <div>y</div>
+    <div>z</div>
+    <div>w</div>
+  </div>
+</html>
