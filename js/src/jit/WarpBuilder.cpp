@@ -2358,10 +2358,22 @@ bool WarpBuilder::build_InitElemArray(BytecodeLocation loc) {
   uint32_t index = loc.getInitElemArrayIndex();
   MConstant* indexConst = constant(Int32Value(index));
 
-  // TODO: we can probably just use MStoreElement like IonBuilder's fast path.
-  // Simpler than IonBuilder because we don't have to worry about maintaining TI
-  // invariants.
-  return buildIC(loc, CacheKind::SetElem, {obj, indexConst, val});
+  // Note: InitArrayElemOperation asserts the index does not exceed the array's
+  // dense element capacity.
+
+  auto* elements = MElements::New(alloc(), obj);
+  current->add(elements);
+
+  current->add(MPostWriteBarrier::New(alloc(), obj, val));
+
+  auto* store = MStoreElement::New(alloc(), elements, indexConst, val,
+                                   /* needsHoleCheck = */ false);
+  current->add(store);
+
+  auto* setLength = MSetInitializedLength::New(alloc(), elements, indexConst);
+  current->add(setLength);
+
+  return resumeAfter(setLength, loc);
 }
 
 bool WarpBuilder::build_InitElemInc(BytecodeLocation loc) {
