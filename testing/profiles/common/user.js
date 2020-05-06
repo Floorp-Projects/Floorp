@@ -68,4 +68,4 @@ user_pref("toolkit.telemetry.coverage.endpoint.base", "http://localhost");
 // Don't ask for a request in testing unless explicitly set this as true.
 user_pref("media.geckoview.autoplay.request", false);
 // user_pref("geo.provider.network.url", "http://localhost/geoip-dummy");
-user_pref("geo.provider-country.network.url", "http://localhost/geoip-dummy");
+user_pref("browser.region.network.url", "http://localhost/geoip-dummy");
