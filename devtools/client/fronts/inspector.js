@@ -163,14 +163,17 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
       return this.walker.gripToNodeFront(grip);
     }
 
-    const { contentDomReference } = grip;
-    const { browsingContextId } = contentDomReference;
+    return this.getNodeActorFromContentDomReference(grip.contentDomReference);
+  }
 
-    // If the grip lives in the same browsing context id than the current one, we can
-    // directly use the current walker.
-    // TODO: When Bug 1578745 lands, we might want to force using `this.walker` as well
-    // when the new pref is set to false.
-    if (this.targetFront.browsingContextID === browsingContextId) {
+  async getNodeActorFromContentDomReference(contentDomReference) {
+    const { browsingContextId } = contentDomReference;
+    // If the contentDomReference lives in the same browsing context id than the
+    // current one, we can directly use the current walker.
+    if (
+      this.targetFront.browsingContextID === browsingContextId ||
+      !this.isContentFissionEnabled
+    ) {
       return this.walker.getNodeActorFromContentDomReference(
         contentDomReference
       );
