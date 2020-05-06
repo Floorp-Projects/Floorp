@@ -8,6 +8,7 @@ import json
 import os
 import sys
 
+import six
 from mozboot.util import get_state_dir
 from mozbuild.base import MozbuildObject
 from mozversioncontrol import get_repository_object, MissingVCSExtension
@@ -161,8 +162,8 @@ def push_to_try(method, msg, try_task_config=None,
     if files_to_change:
         for path, content in files_to_change.items():
             path = os.path.join(vcs.path, path)
-            with open(path, 'w') as fh:
-                fh.write(content)
+            with open(path, 'wb') as fh:
+                fh.write(six.ensure_binary(content))
             changed_files.append(path)
 
     try:

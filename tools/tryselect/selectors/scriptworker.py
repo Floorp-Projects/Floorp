@@ -50,7 +50,7 @@ class ScriptworkerParser(BaseTryParser):
         [
             ["task_type"],
             {
-                "choices": ["list"] + TASK_TYPES.keys(),
+                "choices": ["list"] + list(TASK_TYPES.keys()),
                 "metavar": "TASK-TYPE",
                 "help": "Scriptworker task types to run. (Use `list` to show possibilities)",
             },
@@ -58,7 +58,7 @@ class ScriptworkerParser(BaseTryParser):
         [
             ["--release-type"],
             {
-                "choices": ["nightly"] + RELEASE_TO_BRANCH.keys(),
+                "choices": ["nightly"] + list(RELEASE_TO_BRANCH.keys()),
                 "default": "beta",
                 "help": "Release type to run",
             },
