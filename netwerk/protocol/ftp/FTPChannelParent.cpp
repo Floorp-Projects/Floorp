@@ -36,7 +36,7 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace net {
 
-FTPChannelParent::FTPChannelParent(const PBrowserOrId& aIframeEmbedding,
+FTPChannelParent::FTPChannelParent(dom::BrowserParent* aIframeEmbedding,
                                    nsILoadContext* aLoadContext,
                                    PBOverrideStatus aOverrideStatus)
     : mIPCClosed(false),
@@ -46,15 +46,11 @@ FTPChannelParent::FTPChannelParent(const PBrowserOrId& aIframeEmbedding,
       mDivertingFromChild(false),
       mDivertedOnStartRequest(false),
       mSuspendedForDiversion(false),
+      mBrowserParent(aIframeEmbedding),
       mUseUTF8(false) {
   nsIProtocolHandler* handler;
   CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ftp", &handler);
   MOZ_ASSERT(handler, "no ftp handler");
-
-  if (aIframeEmbedding.type() == PBrowserOrId::TPBrowserParent) {
-    mBrowserParent =
-        static_cast<dom::BrowserParent*>(aIframeEmbedding.get_PBrowserParent());
-  }
 
   mEventQ = new ChannelEventQueue(static_cast<nsIParentChannel*>(this));
 }
