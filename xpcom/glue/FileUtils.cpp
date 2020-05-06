@@ -363,20 +363,21 @@ void mozilla::ReadAheadLib(mozilla::pathstr_t aFilePath) {
     ReadAheadFile(aFilePath);
     return;
   }
-  nsAutoHandle fd(CreateFileW(aFilePath, GENERIC_READ, FILE_SHARE_READ, nullptr,
-                              OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN,
-                              nullptr));
+  nsAutoHandle fd(CreateFileW(aFilePath, GENERIC_READ | GENERIC_EXECUTE,
+                              FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+                              FILE_FLAG_SEQUENTIAL_SCAN, nullptr));
   if (!fd) {
     return;
   }
 
-  nsAutoHandle mapping(
-      CreateFileMapping(fd, nullptr, SEC_IMAGE | PAGE_READONLY, 0, 0, nullptr));
+  nsAutoHandle mapping(CreateFileMapping(
+      fd, nullptr, SEC_IMAGE | PAGE_EXECUTE_READ, 0, 0, nullptr));
   if (!mapping) {
     return;
   }
 
-  PVOID data = MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, 0);
+  PVOID data = MapViewOfFile(
+      mapping, FILE_MAP_READ | FILE_MAP_EXECUTE | SEC_IMAGE, 0, 0, 0);
   if (!data) {
     return;
   }
