@@ -2020,11 +2020,10 @@ nsresult nsPluginHost::SetPluginsInContent(
           tag.id(), tag.name().get(), tag.description().get(),
           tag.filename().get(),
           "",  // aFullPath
-          tag.version().get(), nsTArray<nsCString>(tag.mimeTypes()),
-          nsTArray<nsCString>(tag.mimeDescriptions()),
-          nsTArray<nsCString>(tag.extensions()), tag.isFlashPlugin(),
-          tag.supportsAsyncRender(), tag.lastModifiedTime(), tag.sandboxLevel(),
-          tag.blocklistState());
+          tag.version().get(), tag.mimeTypes().Clone(),
+          tag.mimeDescriptions().Clone(), tag.extensions().Clone(),
+          tag.isFlashPlugin(), tag.supportsAsyncRender(),
+          tag.lastModifiedTime(), tag.sandboxLevel(), tag.blocklistState());
       AddPluginTag(pluginTag);
     }
 

@@ -176,9 +176,9 @@ nsIInternalPluginTag::nsIInternalPluginTag(
       mDescription(aDescription),
       mFileName(aFileName),
       mVersion(aVersion),
-      mMimeTypes(aMimeTypes),
-      mMimeDescriptions(aMimeDescriptions),
-      mExtensions(aExtensions) {}
+      mMimeTypes(aMimeTypes.Clone()),
+      mMimeDescriptions(aMimeDescriptions.Clone()),
+      mExtensions(aExtensions.Clone()) {}
 
 nsIInternalPluginTag::~nsIInternalPluginTag() = default;
 
@@ -545,19 +545,19 @@ void nsPluginTag::SetPluginState(PluginState state) {
 
 NS_IMETHODIMP
 nsPluginTag::GetMimeTypes(nsTArray<nsCString>& aResults) {
-  aResults = mMimeTypes;
+  aResults = mMimeTypes.Clone();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPluginTag::GetMimeDescriptions(nsTArray<nsCString>& aResults) {
-  aResults = mMimeDescriptions;
+  aResults = mMimeDescriptions.Clone();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPluginTag::GetExtensions(nsTArray<nsCString>& aResults) {
-  aResults = mExtensions;
+  aResults = mExtensions.Clone();
   return NS_OK;
 }
 
@@ -881,19 +881,19 @@ nsFakePluginTag::SetEnabledState(uint32_t aEnabledState) {
 
 NS_IMETHODIMP
 nsFakePluginTag::GetMimeTypes(nsTArray<nsCString>& aResults) {
-  aResults = mMimeTypes;
+  aResults = mMimeTypes.Clone();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFakePluginTag::GetMimeDescriptions(nsTArray<nsCString>& aResults) {
-  aResults = mMimeDescriptions;
+  aResults = mMimeDescriptions.Clone();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFakePluginTag::GetExtensions(nsTArray<nsCString>& aResults) {
-  aResults = mExtensions;
+  aResults = mExtensions.Clone();
   return NS_OK;
 }
 
