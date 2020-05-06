@@ -4155,9 +4155,7 @@ class MTruncateToInt32 : public MUnaryInstruction, public ToInt32Policy::Data {
     setMovable();
 
     // Guard unless the conversion is known to be non-effectful & non-throwing.
-    if (!def->definitelyType({MIRType::Undefined, MIRType::Null,
-                              MIRType::Boolean, MIRType::Int32, MIRType::Double,
-                              MIRType::Float32, MIRType::String})) {
+    if (mightHaveSideEffects(def)) {
       setGuard();
     }
   }
@@ -4165,6 +4163,12 @@ class MTruncateToInt32 : public MUnaryInstruction, public ToInt32Policy::Data {
  public:
   INSTRUCTION_HEADER(TruncateToInt32)
   TRIVIAL_NEW_WRAPPERS
+
+  static bool mightHaveSideEffects(MDefinition* def) {
+    return !def->definitelyType(
+        {MIRType::Undefined, MIRType::Null, MIRType::Boolean, MIRType::Int32,
+         MIRType::Double, MIRType::Float32, MIRType::String});
+  }
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
 
