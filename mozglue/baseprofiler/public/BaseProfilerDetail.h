@@ -9,18 +9,14 @@
 #ifndef BaseProfilerDetail_h
 #define BaseProfilerDetail_h
 
+#include "BaseProfiler.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PlatformMutex.h"
 
-#ifdef DEBUG
-#  include "BaseProfiler.h"
-#  ifdef MOZ_GECKO_PROFILER
-#    include "mozilla/Atomics.h"
-// When #defined, safety-checking code is added. By default: DEBUG builds,
-// and we need `MOZ_GECKO_PROFILER` to use `profiler_current_thread_id()`.
-#    define MOZ_BASE_PROFILER_DEBUG
-#  endif  // MOZ_GECKO_PROFILER
-#endif    // DEBUG
+#ifndef MOZ_GECKO_PROFILER
+#  error Do not #include this header when MOZ_GECKO_PROFILER is not #defined.
+#endif
 
 namespace mozilla {
 namespace baseprofiler {
@@ -36,46 +32,43 @@ class BaseProfilerMutex : private ::mozilla::detail::MutexImpl {
   BaseProfilerMutex(BaseProfilerMutex&&) = delete;
   BaseProfilerMutex& operator=(BaseProfilerMutex&&) = delete;
 
-#ifdef MOZ_BASE_PROFILER_DEBUG
+#ifdef DEBUG
   ~BaseProfilerMutex() { MOZ_ASSERT(mOwningThreadId == 0); }
-#endif  // MOZ_BASE_PROFILER_DEBUG
+#endif  // DEBUG
 
-  void Lock() {
-#ifdef MOZ_BASE_PROFILER_DEBUG
-    // This is only designed to catch recursive locking.
-    const int tid = baseprofiler::profiler_current_thread_id();
-    MOZ_ASSERT(tid != 0);
-    MOZ_ASSERT(mOwningThreadId != tid);
-#endif  // MOZ_BASE_PROFILER_DEBUG
-    ::mozilla::detail::MutexImpl::lock();
-#ifdef MOZ_BASE_PROFILER_DEBUG
-    MOZ_ASSERT(mOwningThreadId == 0);
-    mOwningThreadId = tid;
-#endif  // MOZ_BASE_PROFILER_DEBUG
-  }
-
-  void Unlock() {
-#ifdef MOZ_BASE_PROFILER_DEBUG
-    // This should never trigger! But check just in case something has gone
-    // very wrong.
-    MOZ_ASSERT(mOwningThreadId == baseprofiler::profiler_current_thread_id());
-    // We're still holding the mutex here, so it's safe to just reset
-    // `mOwningThreadId`.
-    mOwningThreadId = 0;
-#endif  // MOZ_BASE_PROFILER_DEBUG
-    ::mozilla::detail::MutexImpl::unlock();
+  [[nodiscard]] bool IsLockedOnCurrentThread() const {
+    return mOwningThreadId == baseprofiler::profiler_current_thread_id();
   }
 
   void AssertCurrentThreadOwns() const {
-#ifdef MOZ_BASE_PROFILER_DEBUG
-    MOZ_ASSERT(mOwningThreadId == baseprofiler::profiler_current_thread_id());
-#endif  // MOZ_BASE_PROFILER_DEBUG
+    MOZ_ASSERT(IsLockedOnCurrentThread());
   }
 
-#ifdef MOZ_BASE_PROFILER_DEBUG
+  void Lock() {
+    const int tid = baseprofiler::profiler_current_thread_id();
+    MOZ_ASSERT(tid != 0);
+    MOZ_ASSERT(!IsLockedOnCurrentThread(), "Recursive locking");
+    ::mozilla::detail::MutexImpl::lock();
+    MOZ_ASSERT(mOwningThreadId == 0, "Not unlocked properly");
+    mOwningThreadId = tid;
+  }
+
+  void Unlock() {
+    MOZ_ASSERT(IsLockedOnCurrentThread(), "Unlocking when not locked here");
+    // We're still holding the mutex here, so it's safe to just reset
+    // `mOwningThreadId`.
+    mOwningThreadId = 0;
+    ::mozilla::detail::MutexImpl::unlock();
+  }
+
  private:
-  Atomic<int, MemoryOrdering::SequentiallyConsistent> mOwningThreadId{0};
-#endif  // MOZ_BASE_PROFILER_DEBUG
+  // Thread currently owning the lock, or 0.
+  // Atomic because it may be read at any time independent of the mutex.
+  // Relaxed because threads only need to know if they own it already, so:
+  // - If it's their id, only *they* wrote that value with a locked mutex.
+  // - If it's different from their thread id it doesn't matter what other
+  //   number it is (0 or another id) and that it can change again at any time.
+  Atomic<int, MemoryOrdering::Relaxed> mOwningThreadId{0};
 };
 
 // RAII class to lock a mutex.
@@ -115,6 +108,22 @@ class BaseProfilerMaybeMutex : private ::mozilla::detail::MutexImpl {
 
   bool IsActivated() const { return mMaybeMutex.isSome(); }
 
+  [[nodiscard]] bool IsActivatedAndLockedOnCurrentThread() const {
+    if (!IsActivated()) {
+      // Not activated, so we can never be locked.
+      return false;
+    }
+    return mMaybeMutex->IsLockedOnCurrentThread();
+  }
+
+  void AssertCurrentThreadOwns() const {
+#ifdef DEBUG
+    if (IsActivated()) {
+      mMaybeMutex->AssertCurrentThreadOwns();
+    }
+#endif  // DEBUG
+  }
+
   void Lock() {
     if (IsActivated()) {
       mMaybeMutex->Lock();
@@ -125,14 +134,6 @@ class BaseProfilerMaybeMutex : private ::mozilla::detail::MutexImpl {
     if (IsActivated()) {
       mMaybeMutex->Unlock();
     }
-  }
-
-  void AssertCurrentThreadOwns() const {
-#ifdef MOZ_BASE_PROFILER_DEBUG
-    if (IsActivated()) {
-      mMaybeMutex->AssertCurrentThreadOwns();
-    }
-#endif  // MOZ_BASE_PROFILER_DEBUG
   }
 
  private:
