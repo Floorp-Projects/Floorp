@@ -49,6 +49,9 @@ import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.library.LibraryPageFragment
 import org.mozilla.fenix.utils.allowUndo
 
+/**
+ * The screen that displays the user's bookmark list in their Library.
+ */
 @Suppress("TooManyFunctions", "LargeClass")
 class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHandler {
 
