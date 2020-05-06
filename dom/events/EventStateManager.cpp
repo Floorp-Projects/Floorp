@@ -3260,6 +3260,30 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         // if we're here, the event handler returned false, so stop
         // any of our own processing of a drag. Workaround for bug 43258.
         StopTrackingDragGesture(true);
+
+        // When the event was cancelled, there is currently a chrome document
+        // focused and a mousedown just occurred on a content document, ensure
+        // that the window that was clicked is focused.
+        EnsureDocument(mPresContext);
+        nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+        if (mDocument && fm) {
+          nsCOMPtr<mozIDOMWindowProxy> window;
+          fm->GetFocusedWindow(getter_AddRefs(window));
+          auto* currentWindow = nsPIDOMWindowOuter::From(window);
+          if (currentWindow && mDocument->GetWindow() &&
+              currentWindow != mDocument->GetWindow() &&
+              !nsContentUtils::IsChromeDoc(mDocument)) {
+            nsCOMPtr<nsPIDOMWindowOuter> currentTop;
+            nsCOMPtr<nsPIDOMWindowOuter> newTop;
+            currentTop = currentWindow->GetInProcessTop();
+            newTop = mDocument->GetWindow()->GetInProcessTop();
+            nsCOMPtr<Document> currentDoc = currentWindow->GetExtantDoc();
+            if (nsContentUtils::IsChromeDoc(currentDoc) ||
+                (currentTop && newTop && currentTop != newTop)) {
+              fm->SetFocusedWindow(mDocument->GetWindow());
+            }
+          }
+        }
       }
       SetActiveManager(this, activeContent);
     } break;
