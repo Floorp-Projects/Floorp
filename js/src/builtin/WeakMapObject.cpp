@@ -92,7 +92,10 @@ bool WeakMapObject::get(JSContext* cx, unsigned argc, Value* vp) {
   if (ObjectValueWeakMap* map =
           args.thisv().toObject().as<WeakMapObject>().getMap()) {
     JSObject* key = &args[0].toObject();
-    if (ObjectValueWeakMap::Ptr ptr = map->lookup(key)) {
+    // The lookup here is only used for the removal, so we can skip the read
+    // barrier. This is not very important for performance, but makes it easier
+    // to test nonbarriered removal from internal weakmaps (eg Debugger maps.)
+    if (ObjectValueWeakMap::Ptr ptr = map->lookupUnbarriered(key)) {
       map->remove(ptr);
       args.rval().setBoolean(true);
       return true;

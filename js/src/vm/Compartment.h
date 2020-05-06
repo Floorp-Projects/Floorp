@@ -380,9 +380,7 @@ class JS::Compartment {
 
   inline js::StringWrapperMap::Ptr lookupWrapper(JSString* str) const;
 
-  void removeWrapper(js::ObjectWrapperMap::Ptr p) {
-    crossCompartmentObjectWrappers.remove(p);
-  }
+  void removeWrapper(js::ObjectWrapperMap::Ptr p);
 
   bool hasNurseryAllocatedObjectWrapperEntries(const js::CompartmentFilter& f) {
     return crossCompartmentObjectWrappers.hasNurseryAllocatedWrapperEntries(f);
