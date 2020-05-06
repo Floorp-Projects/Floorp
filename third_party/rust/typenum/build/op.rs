@@ -18,6 +18,7 @@ struct Op {
 pub fn write_op_macro() -> ::std::io::Result<()> {
     let out_dir = ::std::env::var("OUT_DIR").unwrap();
     let dest = ::std::path::Path::new(&out_dir).join("op.rs");
+    println!("cargo:rustc-env=TYPENUM_BUILD_OP={}", dest.display());
     let mut f = ::std::fs::File::create(&dest).unwrap();
 
     // Operator precedence is taken from
@@ -172,6 +173,14 @@ pub fn write_op_macro() -> ::std::io::Result<()> {
             op_type: Function,
         },
         Op {
+            token: "sqrt",
+            operator: "Sqrt",
+            example: ("sqrt(U9)", "U3"),
+            precedence: !0,
+            n_args: 1,
+            op_type: Function,
+        },
+        Op {
             token: "abs",
             operator: "AbsVal",
             example: ("abs(N2)", "P2"),
@@ -207,6 +216,22 @@ pub fn write_op_macro() -> ::std::io::Result<()> {
             token: "max",
             operator: "Maximum",
             example: ("max(P2, P3)", "P3"),
+            precedence: !0,
+            n_args: 2,
+            op_type: Function,
+        },
+        Op {
+            token: "log2",
+            operator: "Log2",
+            example: ("log2(U9)", "U3"),
+            precedence: !0,
+            n_args: 1,
+            op_type: Function,
+        },
+        Op {
+            token: "gcd",
+            operator: "Gcf",
+            example: ("gcd(U9, U21)", "U3"),
             precedence: !0,
             n_args: 2,
             op_type: Function,
@@ -342,7 +367,8 @@ macro_rules! op {{
     for o1 in ops.iter().filter(|op| op.op_type == Operator) {
         // If top of stack is operator o2 with o1.precedence <= o2.precedence,
         // Then pop o2 off stack onto queue:
-        for o2 in ops.iter()
+        for o2 in ops
+            .iter()
             .filter(|op| op.op_type == Operator)
             .filter(|o2| o1.precedence <= o2.precedence)
         {
