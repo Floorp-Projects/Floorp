@@ -124,8 +124,8 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
                                          const nsTArray<nsCString>& aValues)
     : mPluginIface(aPluginIface),
       mMimeType(aMimeType),
-      mNames(aNames),
-      mValues(aValues)
+      mNames(aNames.Clone()),
+      mValues(aValues.Clone())
 #if defined(XP_DARWIN) || defined(XP_WIN)
       ,
       mContentsScaleFactor(1.0)
