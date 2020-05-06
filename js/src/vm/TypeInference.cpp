@@ -380,6 +380,8 @@ static TypeFlags MIRTypeToTypeFlags(jit::MIRType type) {
       return TYPE_FLAG_SYMBOL;
     case jit::MIRType::BigInt:
       return TYPE_FLAG_BIGINT;
+    case jit::MIRType::Object:
+      return TYPE_FLAG_ANYOBJECT;
     case jit::MIRType::MagicOptimizedArguments:
       return TYPE_FLAG_LAZYARGS;
     default:
@@ -392,11 +394,11 @@ bool TypeSet::mightBeMIRType(jit::MIRType type) const {
     return true;
   }
 
-  if (type == jit::MIRType::Object) {
-    return unknownObject() || baseObjectCount() != 0;
+  TypeFlags baseFlags = this->baseFlags();
+  if (baseObjectCount() != 0) {
+    baseFlags |= TYPE_FLAG_ANYOBJECT;
   }
-
-  return baseFlags() & MIRTypeToTypeFlags(type);
+  return baseFlags & MIRTypeToTypeFlags(type);
 }
 
 bool TypeSet::objectsAreSubset(TypeSet* other) {
