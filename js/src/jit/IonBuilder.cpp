@@ -9174,6 +9174,12 @@ AbortReasonOr<Ok> IonBuilder::jsop_getelem_typed(MDefinition* obj,
           barrier = BarrierKind::NoBarrier;
         }
         break;
+      case Scalar::BigInt64:
+      case Scalar::BigUint64:
+        if (types->hasType(TypeSet::BigIntType())) {
+          barrier = BarrierKind::NoBarrier;
+        }
+        break;
       default:
         MOZ_CRASH("Unknown typed array type");
     }

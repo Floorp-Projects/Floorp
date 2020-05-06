@@ -45,9 +45,13 @@ class MOZ_STACK_CLASS nsViewportInfo {
     AllowZoom,
     DisallowZoom,
   };
+  enum class ZoomBehaviour {
+    Mobile,
+    Desktop,  // disallows zooming out past default zoom
+  };
   nsViewportInfo(const mozilla::ScreenIntSize& aDisplaySize,
                  const mozilla::CSSToScreenScale& aDefaultZoom,
-                 ZoomFlag aZoomFlag)
+                 ZoomFlag aZoomFlag, ZoomBehaviour aBehaviour)
       : mDefaultZoom(aDefaultZoom),
         mViewportFit(mozilla::dom::ViewportFitType::Auto),
         mDefaultZoomValid(true),
@@ -55,7 +59,11 @@ class MOZ_STACK_CLASS nsViewportInfo {
         mAllowZoom(aZoomFlag == ZoomFlag::AllowZoom) {
     mSize = mozilla::ScreenSize(aDisplaySize) / mDefaultZoom;
     mozilla::CSSToLayoutDeviceScale pixelRatio(1.0f);
-    mMinZoom = pixelRatio * kViewportMinScale;
+    if (aBehaviour == ZoomBehaviour::Desktop) {
+      mMinZoom = aDefaultZoom;
+    } else {
+      mMinZoom = pixelRatio * kViewportMinScale;
+    }
     mMaxZoom = pixelRatio * kViewportMaxScale;
     ConstrainViewportValues();
   }

@@ -25,21 +25,13 @@ function getInitialState() {
 }
 
 function simulation(state = getInitialState(), action) {
-  const { error } = action;
-
-  if (error) {
-    console.warn(
-      `Error running simulation: ${
-        typeof error == "string"
-          ? error
-          : "simulate function in simulator.js returned an error"
-      }`
-    );
-    return state;
-  }
-
   switch (action.type) {
     case SIMULATE:
+      if (action.error) {
+        console.warn("Error running simulation", action.error);
+        return state;
+      }
+
       const simTypes = action.simTypes;
 
       if (simTypes.length === 0) {

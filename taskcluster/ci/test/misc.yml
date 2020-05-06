@@ -100,8 +100,10 @@ test-verify:
                     - win32-minidump-stackwalk
                     - win32-fix-stacks
                 android-em-7.*:
+                    - android-sdk-linux
                     - linux64-node
                     - linux64-minidump-stackwalk
+                    - linux64-fix-stacks
 
 test-verify-gpu:
     description: "Extra verification of tests modified on this push on gpu instances"
@@ -200,8 +202,10 @@ test-coverage:
                     - win32-minidump-stackwalk
                     - win32-fix-stacks
                 android-em-7.*:
+                    - android-sdk-linux
                     - linux64-node
                     - linux64-minidump-stackwalk
+                    - linux64-fix-stacks
 
 test-coverage-gpu:
     description: "Per-test coverage for tests that require gpu instances"

@@ -5,6 +5,12 @@
 
 const TEST_URI = '<h1 id="h1">header</h1><p id="p">paragraph</p>';
 
+async function hideContextMenu(contextMenu) {
+  const popupHidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
+  contextMenu.hidePopup();
+  await popupHidden;
+}
+
 add_task(async function testNoShowAccessibilityPropertiesContextMenu() {
   const tab = await addTab(buildURL(TEST_URI));
   const { linkedBrowser: browser } = tab;
@@ -30,8 +36,16 @@ add_task(async function testNoShowAccessibilityPropertiesContextMenu() {
   const inspectA11YPropsItem = contextMenu.querySelector(
     "#context-inspect-a11y"
   );
-  ok(inspectA11YPropsItem.hidden, "Accessibility tools are not enabled.");
-  contextMenu.hidePopup();
+  const visible = Services.prefs.getBoolPref(
+    "devtools.accessibility.auto-init.enabled",
+    false
+  );
+  isnot(
+    inspectA11YPropsItem.hidden,
+    visible,
+    "Accessibility tools have the right visibility."
+  );
+  await hideContextMenu(contextMenu);
   gBrowser.removeCurrentTab();
 });
 
@@ -71,7 +85,7 @@ addA11YPanelTask(
         "accessibility panel to open"
     );
     inspectA11YPropsItem.click();
-    contextMenu.hidePopup();
+    await hideContextMenu(contextMenu);
 
     const selected = await panel.once("new-accessible-front-selected");
     const expectedSelectedNode = await getNodeFront(

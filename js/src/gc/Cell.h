@@ -115,19 +115,9 @@ class CellHeader {
   // compacting GC and is now a RelocationOverlay.
   static constexpr uintptr_t FORWARD_BIT = Bit(0);
 
-  // When a Cell is in the nursery, this will indicate if it is a JSString (1)
-  // or JSObject/BigInt (0). When not in nursery, this bit is still reserved for
-  // JSString to use as JSString::NON_ATOM bit. This may be removed by Bug
-  // 1376646.
-  static constexpr uintptr_t JSSTRING_BIT = Bit(1);
-
-  // When a Cell is in the nursery, this will indicate if it is a BigInt (1)
-  // or JSObject/JSString (0).
-  static constexpr uintptr_t BIGINT_BIT = Bit(2);
+  // Bits 1 and 2 are currently unused.
 
   bool isForwarded() const { return header_ & FORWARD_BIT; }
-  bool isString() const { return header_ & JSSTRING_BIT; }
-  bool isBigInt() const { return header_ & BIGINT_BIT; }
 
   uintptr_t flags() const { return header_ & RESERVED_MASK; }
 
@@ -188,16 +178,6 @@ struct alignas(gc::CellAlignBytes) Cell {
 
   inline bool isForwarded() const {
     return reinterpret_cast<const CellHeader*>(this)->isForwarded();
-  }
-
-  inline bool nurseryCellIsString() const {
-    MOZ_ASSERT(!isTenured());
-    return reinterpret_cast<const CellHeader*>(this)->isString();
-  }
-
-  inline bool nurseryCellIsBigInt() const {
-    MOZ_ASSERT(!isTenured());
-    return reinterpret_cast<const CellHeader*>(this)->isBigInt();
   }
 
   template <class T>
@@ -404,7 +384,7 @@ JS::Zone* Cell::nurseryZone() const {
 }
 
 JS::Zone* Cell::nurseryZoneFromAnyThread() const {
-  return NurseryCellHeader::from(this)->zone;
+  return NurseryCellHeader::from(this)->zone();
 }
 
 #ifdef DEBUG
@@ -417,19 +397,8 @@ inline JS::TraceKind Cell::getTraceKind() const {
                                      asTenured().getTraceKind());
     return asTenured().getTraceKind();
   }
-  if (nurseryCellIsString()) {
-    MOZ_ASSERT_IF(isForwarded(), UninlinedForwarded(this)->getTraceKind() ==
-                                     JS::TraceKind::String);
-    return JS::TraceKind::String;
-  }
-  if (nurseryCellIsBigInt()) {
-    MOZ_ASSERT_IF(isForwarded(), UninlinedForwarded(this)->getTraceKind() ==
-                                     JS::TraceKind::BigInt);
-    return JS::TraceKind::BigInt;
-  }
-  MOZ_ASSERT_IF(isForwarded(), UninlinedForwarded(this)->getTraceKind() ==
-                                   JS::TraceKind::Object);
-  return JS::TraceKind::Object;
+
+  return NurseryCellHeader::from(this)->traceKind();
 }
 
 /* static */ MOZ_ALWAYS_INLINE bool Cell::needWriteBarrierPre(JS::Zone* zone) {

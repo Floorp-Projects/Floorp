@@ -495,6 +495,19 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
 #endif
       [[fallthrough]];
     case DeviceFamily::IntelModernRolloutWebRender:
+#ifdef NIGHTLY_BUILD
+      // broxton (apollolake)
+      APPEND_DEVICE(0x0a84);
+      APPEND_DEVICE(0x1a84);
+      APPEND_DEVICE(0x1a85);
+      APPEND_DEVICE(0x5a84);
+      APPEND_DEVICE(0x5a85);
+
+      // geminilake
+      APPEND_DEVICE(0x3184);
+      APPEND_DEVICE(0x3185);
+#endif
+
       // skylake gt1
       APPEND_DEVICE(0x1902);
       APPEND_DEVICE(0x1906);

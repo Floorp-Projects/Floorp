@@ -55,3 +55,39 @@ a newer m-c push). The script was written with these possibilities in
 mind and should be able to eventually recover from any such scenario
 automatically (although it may take additional changes to mozilla-central
 for such recovery to occur).
+
+## Debugging
+
+To debug the converter.py script, you need to have a hg checkout of
+mozilla-central, let's assume it's at $MOZILLA. First create a virtualenv
+with the right dependencies installed:
+
+```
+mkdir -p $HOME/.ghsync
+virtualenv --python=python3 $HOME/.ghsync/venv
+source $HOME/.ghsync/venv/bin/activate
+pip3 install -r $MOZILLA/taskcluster/docker/github-sync/requirements.txt
+```
+
+Also create a checkout of the target github repo and set up a github-sync
+branch to the point where you want port commits to. For example, for WebRender
+you'd do:
+
+```
+cd $HOME/.ghsync
+git clone https://github.com/servo/webrender
+cd webrender
+git checkout -b github-sync master
+```
+
+(You can set the github-sync branch to a past revision if you want to replicate
+a failure that already got committed).
+
+Then run the converter from your hg checkout:
+
+```
+cd $MOZILLA
+tools/github-sync/converter.py $HOME/.ghsync/webrender gfx/wr
+```
+
+You can set the DEBUG variable in the script to True to get more output.

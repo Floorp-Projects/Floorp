@@ -466,7 +466,7 @@ Cell* js::Nursery::allocateCell(Zone* zone, size_t size, JS::TraceKind kind) {
     return nullptr;
   }
 
-  new (ptr) NurseryCellHeader{zone};
+  new (ptr) NurseryCellHeader(zone, kind);
 
   auto cell =
       reinterpret_cast<Cell*>(uintptr_t(ptr) + sizeof(NurseryCellHeader));

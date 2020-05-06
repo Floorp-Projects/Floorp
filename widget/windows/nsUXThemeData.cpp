@@ -54,10 +54,7 @@ nsUXThemeData::ThemeHandle::operator HANDLE() {
 
 void nsUXThemeData::Teardown() { Invalidate(); }
 
-void nsUXThemeData::Initialize() {
-  CheckForCompositor(true);
-  Invalidate();
-}
+void nsUXThemeData::Initialize() { Invalidate(); }
 
 void nsUXThemeData::Invalidate() {
   for (auto& theme : sThemes) {
@@ -179,7 +176,8 @@ void nsUXThemeData::EnsureCommandButtonBoxMetrics() {
 void nsUXThemeData::UpdateTitlebarInfo(HWND aWnd) {
   if (!aWnd) return;
 
-  if (!sTitlebarInfoPopulatedAero && nsUXThemeData::CheckForCompositor()) {
+  if (!sTitlebarInfoPopulatedAero &&
+      gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) {
     RECT captionButtons;
     if (SUCCEEDED(DwmGetWindowAttribute(aWnd, DWMWA_CAPTION_BUTTON_BOUNDS,
                                         &captionButtons,
@@ -229,7 +227,7 @@ void nsUXThemeData::UpdateTitlebarInfo(HWND aWnd) {
   // get the wrong information if the window isn't activated, so we have to:
   if (sThemeId == LookAndFeel::eWindowsTheme_AeroLite ||
       (sThemeId == LookAndFeel::eWindowsTheme_Aero &&
-       !nsUXThemeData::CheckForCompositor())) {
+       !gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled())) {
     showType = SW_SHOW;
   }
   ShowWindow(hWnd, showType);
@@ -301,15 +299,6 @@ LookAndFeel::WindowsTheme nsUXThemeData::GetNativeThemeId() { return sThemeId; }
 bool nsUXThemeData::IsDefaultWindowTheme() { return sIsDefaultWindowsTheme; }
 
 bool nsUXThemeData::IsHighContrastOn() { return sIsHighContrastOn; }
-
-// static
-bool nsUXThemeData::CheckForCompositor(bool aUpdateCache) {
-  static BOOL sCachedValue = FALSE;
-  if (aUpdateCache) {
-    DwmIsCompositionEnabled(&sCachedValue);
-  }
-  return sCachedValue;
-}
 
 // static
 void nsUXThemeData::UpdateNativeThemeInfo() {

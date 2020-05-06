@@ -95,6 +95,8 @@ class MIRGenerator final {
 
   bool stringsCanBeInNursery() const { return stringsCanBeInNursery_; }
 
+  bool bigIntsCanBeInNursery() const { return bigIntsCanBeInNursery_; }
+
   bool safeForMinorGC() const { return safeForMinorGC_; }
   void setNotSafeForMinorGC() { safeForMinorGC_ = false; }
 
@@ -143,6 +145,7 @@ class MIRGenerator final {
   bool instrumentedProfilingIsCached_;
   bool safeForMinorGC_;
   bool stringsCanBeInNursery_;
+  bool bigIntsCanBeInNursery_;
 
   uint32_t minWasmHeapLength_;
 

@@ -12,10 +12,10 @@ pref("app.update.interval", 28800); // 8 hours
 pref("app.update.promptWaitTime", 691200);
 // URL user can browse to manually if for some reason all update installation
 // attempts fail.
-pref("app.update.url.manual", "https://www.mozilla.org/firefox/aurora/");
+pref("app.update.url.manual", "https://www.mozilla.org/%LOCALE%/firefox/aurora/");
 // A default value for the "More information about this update" link
 // supplied in the "An update is available" page of the update wizard.
-pref("app.update.url.details", "https://www.mozilla.org/firefox/aurora/");
+pref("app.update.url.details", "https://www.mozilla.org/%LOCALE%/firefox/aurora/");
 
 pref("app.releaseNotesURL", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%beta/releasenotes/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=whatsnew");
 
