@@ -5046,7 +5046,7 @@ EditActionResult EditorBase::SetCaretBidiLevelForDeletion(
 
   // Set the bidi level of the caret to that of the
   // character that will be (or would have been) deleted
-  frameSelection->SetCaretBidiLevel(levelOfDeletion);
+  frameSelection->SetCaretBidiLevelAndMaybeSchedulePaint(levelOfDeletion);
 
   if (!StaticPrefs::bidi_edit_delete_immediately() &&
       levelBefore != levelAfter) {

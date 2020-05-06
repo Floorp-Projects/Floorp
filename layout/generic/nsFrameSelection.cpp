@@ -575,7 +575,8 @@ nsresult nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(
   return NS_OK;
 }
 
-void nsFrameSelection::SetCaretBidiLevel(nsBidiLevel aLevel) {
+void nsFrameSelection::SetCaretBidiLevelAndMaybeSchedulePaint(
+    nsBidiLevel aLevel) {
   // If the current level is undefined, we have just inserted new text.
   // In this case, we don't want to reset the keyboard language
   mCaret.mBidiLevel = aLevel;
@@ -797,8 +798,8 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
           // ality of the first/last frame on the line (theFrame), and the caret
           // directionality must correspond.
           FrameBidiData bidiData = theFrame->GetBidiData();
-          SetCaretBidiLevel(visualMovement ? bidiData.embeddingLevel
-                                           : bidiData.baseLevel);
+          SetCaretBidiLevelAndMaybeSchedulePaint(
+              visualMovement ? bidiData.embeddingLevel : bidiData.baseLevel);
           break;
         }
         default:
@@ -807,7 +808,8 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
           if ((pos.mContentOffset != frameStart &&
                pos.mContentOffset != frameEnd) ||
               eSelectLine == aAmount) {
-            SetCaretBidiLevel(theFrame->GetEmbeddingLevel());
+            SetCaretBidiLevelAndMaybeSchedulePaint(
+                theFrame->GetEmbeddingLevel());
           } else {
             BidiLevelFromMove(mPresShell, pos.mResultContent,
                               pos.mContentOffset, aAmount, tHint);
@@ -1060,8 +1062,9 @@ void nsFrameSelection::BidiLevelFromMove(PresShell* aPresShell,
       nsPrevNextBidiLevels levels =
           GetPrevNextBidiLevels(aNode, aContentOffset, aHint, false);
 
-      SetCaretBidiLevel(aHint == CARET_ASSOCIATE_BEFORE ? levels.mLevelBefore
-                                                        : levels.mLevelAfter);
+      SetCaretBidiLevelAndMaybeSchedulePaint(aHint == CARET_ASSOCIATE_BEFORE
+                                                 ? levels.mLevelBefore
+                                                 : levels.mLevelAfter);
       break;
     }
       /*
@@ -1069,8 +1072,8 @@ void nsFrameSelection::BidiLevelFromMove(PresShell* aPresShell,
     surrounding characters case eSelectLine: case eSelectParagraph:
       GetPrevNextBidiLevels(aContext, aNode, aContentOffset, &firstFrame,
     &secondFrame, &firstLevel, &secondLevel);
-      aPresShell->SetCaretBidiLevel(std::min(firstLevel, secondLevel));
-      break;
+      aPresShell->SetCaretBidiLevelAndMaybeSchedulePaint(std::min(firstLevel,
+    secondLevel)); break;
       */
 
     default:
@@ -1094,7 +1097,7 @@ void nsFrameSelection::BidiLevelFromClick(nsIContent* aNode,
                                        &OffsetNotUsed);
   if (!clickInFrame) return;
 
-  SetCaretBidiLevel(clickInFrame->GetEmbeddingLevel());
+  SetCaretBidiLevelAndMaybeSchedulePaint(clickInFrame->GetEmbeddingLevel());
 }
 
 bool nsFrameSelection::MaintainedRange::AdjustNormalSelection(
@@ -1283,6 +1286,7 @@ void nsFrameSelection::HandleDrag(nsIFrame* aFrame, const nsPoint& aPoint) {
   const bool scrollViewStop = mLimiters.mLimiter != nullptr;
   mMaintainedRange.AdjustContentOffsets(offsets, scrollViewStop);
 
+  // TODO: no click has happened, rename `HandleClick`.
   HandleClick(offsets.content, offsets.offset, offsets.offset,
               FocusMode::kExtendSelection, offsets.associate);
 }
