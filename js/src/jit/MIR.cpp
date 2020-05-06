@@ -5562,7 +5562,7 @@ MDefinition* MIsNullOrUndefined::foldsTo(TempAllocator& alloc) {
     input = input->getOperand(0);
   }
 
-  if (input->type() == MIRType::Null || input->type() == MIRType::Undefined) {
+  if (input->definitelyType({MIRType::Null, MIRType::Undefined})) {
     return MConstant::New(alloc, BooleanValue(true));
   }
 
