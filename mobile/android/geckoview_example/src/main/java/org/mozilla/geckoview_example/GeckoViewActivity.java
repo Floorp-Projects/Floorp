@@ -382,6 +382,7 @@ public class GeckoViewActivity
     private GeckoView mGeckoView;
     private boolean mFullAccessibilityTree;
     private boolean mUseTrackingProtection;
+    private String mEnhancedTackingProtection;
     private boolean mAllowAutoplay;
     private boolean mUsePrivateBrowsing;
     private boolean mEnableRemoteDebugging;
@@ -437,7 +438,9 @@ public class GeckoViewActivity
         boolean remoteDebugging = preferences.getBoolean(
                 getString(R.string.key_remote_debugging), false);
         boolean trackingProtection = preferences.getBoolean(
-                getString(R.string.key_tracking_protection), true);
+                getString(R.string.key_tracking_protection), false);
+        String enhancedTrackingProtection = preferences.getString(
+                getString(R.string.key_enhanced_tracking_protection), "standard");
         boolean autoplay = preferences.getBoolean(
                 getString(R.string.key_autoplay), false);
         int colorScheme = Integer.parseInt(preferences.getString(
@@ -459,14 +462,34 @@ public class GeckoViewActivity
         final GeckoSession currentSession = mTabSessionManager.getCurrentSession();
 
         if (mUseTrackingProtection != trackingProtection) {
+            mTabSessionManager.setUseTrackingProtection(trackingProtection);
             if (sGeckoRuntime != null) {
-                sGeckoRuntime.getSettings().getContentBlocking()
-                        .setStrictSocialTrackingProtection(mUseTrackingProtection);
-            }
-            if (currentSession != null) {
-                currentSession.reload();
+                sGeckoRuntime.getSettings().getContentBlocking().setStrictSocialTrackingProtection(trackingProtection);
             }
             mUseTrackingProtection = trackingProtection;
+        }
+
+        if (mEnhancedTackingProtection != enhancedTrackingProtection) {
+            int etpLevel;
+            switch (enhancedTrackingProtection) {
+                case "disabled":
+                    etpLevel = ContentBlocking.EtpLevel.NONE;
+                    break;
+                case "standard":
+                    etpLevel = ContentBlocking.EtpLevel.DEFAULT;
+                    break;
+                case "strict":
+                    etpLevel = ContentBlocking.EtpLevel.STRICT;
+                    break;
+                default:
+                    throw new RuntimeException("Invalid ETP level: " + enhancedTrackingProtection);
+            }
+
+            if (sGeckoRuntime != null) {
+                sGeckoRuntime.getSettings().getContentBlocking().setEnhancedTrackingProtectionLevel(etpLevel);
+            }
+
+            mEnhancedTackingProtection = enhancedTrackingProtection;
         }
 
         if (mAllowAutoplay != autoplay) {
@@ -787,6 +810,7 @@ public class GeckoViewActivity
                 .userAgentMode(mDesktopMode
                         ? GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
                         : GeckoSessionSettings.USER_AGENT_MODE_MOBILE)
+                .useTrackingProtection(mUseTrackingProtection)
                 .build());
         connectSession(session);
 

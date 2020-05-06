@@ -12,6 +12,7 @@ public class TabSessionManager {
     private static ArrayList<TabSession> mTabSessions = new ArrayList<>();
     private int mCurrentSessionIndex = 0;
     private TabObserver mTabObserver;
+    private boolean mTrackingProtection;
 
     public interface TabObserver {
         void onCurrentSession(TabSession session);
@@ -34,6 +35,17 @@ public class TabSessionManager {
                     session.getWebExtensionController();
             sessionController.setActionDelegate(extension, actionDelegate);
             sessionController.setTabDelegate(extension, tabDelegate);
+        }
+    }
+
+    public void setUseTrackingProtection(boolean trackingProtection) {
+        if (trackingProtection == mTrackingProtection) {
+            return;
+        }
+        mTrackingProtection = trackingProtection;
+
+        for (final TabSession session : mTabSessions) {
+            session.getSettings().setUseTrackingProtection(trackingProtection);
         }
     }
 
