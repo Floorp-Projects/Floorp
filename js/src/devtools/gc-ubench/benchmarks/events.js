@@ -2,28 +2,37 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-window.tests.set('events', (function() {
-var garbage = [];
-var garbageIndex = 0;
-return {
-    description: "var foo = [ textNode, textNode, ... ]",
+window.tests.set(
+  "events",
+  (function() {
+    var garbage = [];
+    var garbageIndex = 0;
+    return {
+      description: "var foo = [ textNode, textNode, ... ]",
 
-    load: (N) => { garbage = new Array(N); },
-    unload: () => { garbage = []; garbageIndex = 0; },
+      load: N => {
+        garbage = new Array(N);
+      },
+      unload: () => {
+        garbage = [];
+        garbageIndex = 0;
+      },
 
-    defaultGarbagePerFrame: "100K",
-    defaultGarbageTotal: "8",
+      defaultGarbagePerFrame: "100K",
+      defaultGarbageTotal: "8",
 
-    makeGarbage: (N) => {
+      makeGarbage: N => {
         var a = [];
         for (var i = 0; i < N; i++) {
-            var e = document.createEvent("Events");
-            e.initEvent("TestEvent", true, true);
-            a.push(e);
+          var e = document.createEvent("Events");
+          e.initEvent("TestEvent", true, true);
+          a.push(e);
         }
         garbage[garbageIndex++] = a;
-        if (garbageIndex == garbage.length)
-            garbageIndex = 0;
-    }
-};
-})());
+        if (garbageIndex == garbage.length) {
+          garbageIndex = 0;
+        }
+      },
+    };
+  })()
+);

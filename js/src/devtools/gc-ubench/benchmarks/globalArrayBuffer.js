@@ -2,26 +2,35 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-window.tests.set('globalArrayBuffer', (function() {
-var garbage = [];
-var garbageIndex = 0;
-return {
-    description: "var foo = ArrayBuffer(N); # (large malloc data)",
+window.tests.set(
+  "globalArrayBuffer",
+  (function() {
+    var garbage = [];
+    var garbageIndex = 0;
+    return {
+      description: "var foo = ArrayBuffer(N); # (large malloc data)",
 
-    load: (N) => { garbage = new Array(N); },
-    unload: () => { garbage = []; garbageIndex = 0; },
+      load: N => {
+        garbage = new Array(N);
+      },
+      unload: () => {
+        garbage = [];
+        garbageIndex = 0;
+      },
 
-    defaultGarbageTotal: "8K",
-    defaultGarbagePerFrame: "4M",
+      defaultGarbageTotal: "8K",
+      defaultGarbagePerFrame: "4M",
 
-    makeGarbage: (N) => {
+      makeGarbage: N => {
         var ab = new ArrayBuffer(N);
         var view = new Uint8Array(ab);
         view[0] = 1;
         view[N - 1] = 2;
         garbage[garbageIndex++] = ab;
-        if (garbageIndex == garbage.length)
-            garbageIndex = 0;
-    }
-};
-})());
+        if (garbageIndex == garbage.length) {
+          garbageIndex = 0;
+        }
+      },
+    };
+  })()
+);

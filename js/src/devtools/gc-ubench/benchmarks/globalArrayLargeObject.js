@@ -2,26 +2,35 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-window.tests.set('globalArrayLargeObject', (function() {
-var garbage = [];
-var garbageIndex = 0;
-return {
-    description: "var foo = { LARGE }; # (large slots)",
+window.tests.set(
+  "globalArrayLargeObject",
+  (function() {
+    var garbage = [];
+    var garbageIndex = 0;
+    return {
+      description: "var foo = { LARGE }; # (large slots)",
 
-    load: (N) => { garbage = new Array(N); },
-    unload: () => { garbage = []; garbageIndex = 0; },
+      load: N => {
+        garbage = new Array(N);
+      },
+      unload: () => {
+        garbage = [];
+        garbageIndex = 0;
+      },
 
-    defaultGarbageTotal: "8K",
-    defaultGarbagePerFrame: "200K",
+      defaultGarbageTotal: "8K",
+      defaultGarbagePerFrame: "200K",
 
-    makeGarbage: (N) => {
+      makeGarbage: N => {
         var obj = {};
         for (var i = 0; i < N; i++) {
-            obj["key" + i] = i;
+          obj["key" + i] = i;
         }
         garbage[garbageIndex++] = obj;
-        if (garbageIndex == garbage.length)
-            garbageIndex = 0;
-    }
-};
-})());
+        if (garbageIndex == garbage.length) {
+          garbageIndex = 0;
+        }
+      },
+    };
+  })()
+);
