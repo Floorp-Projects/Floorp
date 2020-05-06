@@ -1671,7 +1671,7 @@ class WorkerGetResultRunnable final : public NotificationWorkerRunnable {
  public:
   WorkerGetResultRunnable(WorkerPrivate* aWorkerPrivate,
                           PromiseWorkerProxy* aPromiseProxy,
-                          const nsTArray<NotificationStrings>&& aStrings)
+                          nsTArray<NotificationStrings>&& aStrings)
       : NotificationWorkerRunnable(aWorkerPrivate),
         mPromiseProxy(aPromiseProxy),
         mStrings(std::move(aStrings)) {}
