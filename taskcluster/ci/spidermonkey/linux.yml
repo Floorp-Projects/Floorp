@@ -5,7 +5,7 @@
 job-defaults:
     worker:
         max-run-time: 36000
-        docker-image: {in-tree: debian7-amd64-build}
+        docker-image: {in-tree: debian8-amd64-build}
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/jsshell.manifest"
     run:
@@ -43,7 +43,7 @@ sm-rust-bindings-linux64/debug:
         tier: 2
         platform: linux64/debug
     worker:
-        docker-image: {in-tree: debian7-mozjs-rust-build}
+        docker-image: {in-tree: debian8-mozjs-rust-build}
     run:
         using: spidermonkey-rust-bindings
         spidermonkey-variant: plaindebug
@@ -135,7 +135,7 @@ sm-arm-sim-linux32/debug:
         platform: linux32/debug
         symbol: SM(arm)
     worker:
-        docker-image: {in-tree: debian7-i386-build}
+        docker-image: {in-tree: debian8-i386-build}
     run:
         spidermonkey-variant: arm-sim
 
