@@ -5,7 +5,7 @@ needs-focus == input-number.html input-number-ref.html
 needs-focus == input-time.html input-time-ref.html
 needs-focus == button-load.html button-ref.html
 needs-focus == button-create.html button-ref.html
-needs-focus == textarea-load.html textarea-ref.html
+fuzzy-if(gtkWidget,0-18,0-1) needs-focus == textarea-load.html textarea-ref.html # One anti-aliased corner.
 needs-focus == textarea-create.html textarea-ref.html
 fuzzy-if(Android,0-9,0-3) needs-focus == select-load.html select-ref.html
 fuzzy-if(!nativeThemePref,0-1,0-3) needs-focus == select-create.html select-ref.html

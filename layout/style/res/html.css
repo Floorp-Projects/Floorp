@@ -712,13 +712,28 @@ canvas {
   user-select: none;
 }
 
-/* focusable content: anything w/ tabindex >=0 is focusable, but we
-   skip drawing a focus outline on a few things that handle it
-   themselves. */
-:-moz-focusring:not(input):not(button):not(select):not(textarea):not(iframe):not(frame):not(body):not(html),
-input[type="file"]:-moz-focusring {
+/* focusable content: anything w/ tabindex >=0 is focusable */
+:-moz-focusring {
   /* Don't specify the outline-color, we should always use initial value. */
    outline: 1px dotted;
+}
+
+iframe:-moz-focusring,
+body:-moz-focusring,
+html:-moz-focusring {
+  /* These elements historically don't show outlines when focused by default.
+   * We could consider changing that if needed. */
+  outline-style: none;
+}
+
+input:not([type="file"]):-moz-focusring,
+button:-moz-focusring,
+select:-moz-focusring,
+button:-moz-focusring,
+textarea:-moz-focusring {
+  /* These elements can handle outline themselves when themed, so we use
+   * outline-style: auto and skip rendering the outline only when themed */
+  outline-style: auto;
 }
 
 /* hidden elements */
