@@ -490,7 +490,6 @@ EXTRA_JS_MODULES += [
     'ContentAreaDropListener.jsm',
     'DOMRequestHelper.jsm',
     'IndexedDBHelper.jsm',
-    'LocationHelper.jsm',
     'ProcessSelector.jsm',
     'SlowScriptDebug.jsm',
 ]

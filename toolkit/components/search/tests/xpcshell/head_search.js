@@ -445,7 +445,7 @@ async function withGeoServer(
   let geoLookupUrl = geoLookupData
     ? `http://localhost:${srv.identity.primaryPort}/lookup_geoip`
     : 'data:application/json,{"country_code": "FR"}';
-  Services.prefs.setCharPref("browser.region.network.url", geoLookupUrl);
+  Services.prefs.setCharPref("geo.provider-country.network.url", geoLookupUrl);
 
   try {
     await testFn(gRequests);
@@ -455,7 +455,7 @@ async function withGeoServer(
     Services.prefs.clearUserPref(
       SearchUtils.BROWSER_SEARCH_PREF + PREF_SEARCH_URL
     );
-    Services.prefs.clearUserPref("browser.region.network.url");
+    Services.prefs.clearUserPref("geo.provider-country.network.url");
   }
 }
 
@@ -548,7 +548,7 @@ async function asyncReInit({ awaitRegionFetch = false } = {}) {
 const TELEMETRY_RESULT_ENUM = {
   SUCCESS: 0,
   SUCCESS_WITHOUT_DATA: 1,
-  TIMEOUT: 2,
+  XHRTIMEOUT: 2,
   ERROR: 3,
 };
 
@@ -611,7 +611,7 @@ function useCustomGeoServer(region, waitToRespond = Promise.resolve()) {
   });
 
   Services.prefs.setCharPref(
-    "browser.region.network.url",
+    "geo.provider-country.network.url",
     `http://localhost:${srv.identity.primaryPort}/fetch_region`
   );
 }
