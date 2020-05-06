@@ -71,7 +71,7 @@ nsCSPParser::nsCSPParser(policyTokens& aTokens, nsIURI* aSelfURI,
       mWorkerSrc(nullptr),
       mScriptSrc(nullptr),
       mParsingFrameAncestorsDir(false),
-      mTokens(aTokens),
+      mTokens(aTokens.Clone()),
       mSelfURI(aSelfURI),
       mPolicy(nullptr),
       mCSPContext(aCSPContext),
@@ -1113,7 +1113,7 @@ nsCSPPolicy* nsCSPParser::policy() {
     // All input is already tokenized; set one tokenized array in the form of
     // [ name, src, src, ... ]
     // to mCurDir and call directive which processes the current directive.
-    mCurDir = mTokens[i];
+    mCurDir = mTokens[i].Clone();
     directive();
   }
 
@@ -1162,7 +1162,7 @@ nsCSPPolicy* nsCSPParser::parseContentSecurityPolicy(
   // The tokenizer itself can not fail; all eventual errors
   // are detected in the parser itself.
 
-  nsTArray<nsTArray<nsString> > tokens;
+  nsTArray<CopyableTArray<nsString> > tokens;
   PolicyTokenizer::tokenizePolicy(aPolicyString, tokens);
 
   nsCSPParser parser(tokens, aSelfURI, aCSPContext, aDeliveredViaMetaTag);
