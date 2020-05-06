@@ -102,7 +102,9 @@ def run(
             '{}.py'.format(migration.replace('-', '_')),
         )
         migration_config = {}
-        execfile(migration_path, migration_config, migration_config)
+        with open(migration_path) as f:
+            code = compile(f.read(), migration_path, "exec")
+            exec(code, migration_config, migration_config)
         for (path, from_, to) in migration_config['config']['replacements']:
             if path in files_to_change:
                 contents = files_to_change[path]

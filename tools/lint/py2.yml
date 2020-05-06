@@ -38,6 +38,7 @@ py2:
         - tools/crashreporter/system-symbols/win/symsrv-fetch.py
         - tools/github-sync
         - tools/lint
+        - tools/tryselect
         - testing/performance
     extensions: ['py']
     support-files:

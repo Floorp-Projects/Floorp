@@ -13,10 +13,10 @@ def test_filter_tasks_by_paths(patch_resolver):
     tasks = ['foobar/xpcshell-1', 'foobar/mochitest', 'foobar/xpcshell']
 
     patch_resolver(['xpcshell'], {})
-    assert filter_tasks_by_paths(tasks, 'dummy') == []
+    assert list(filter_tasks_by_paths(tasks, 'dummy')) == []
 
     patch_resolver([], [{'flavor': 'xpcshell'}])
-    assert filter_tasks_by_paths(tasks, 'dummy') == ['foobar/xpcshell-1', 'foobar/xpcshell']
+    assert list(filter_tasks_by_paths(tasks, 'dummy')) == ['foobar/xpcshell-1', 'foobar/xpcshell']
 
 
 def test_resolve_tests_by_suite(patch_resolver):

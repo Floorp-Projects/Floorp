@@ -9,6 +9,7 @@ import importlib
 import os
 import sys
 
+import six
 from mach.decorators import (
     CommandProvider,
     Command,
@@ -156,7 +157,7 @@ class TrySelect(MachCommandBase):
     def handle_try_config(self, **kwargs):
         from tryselect.util.dicttools import merge
         kwargs.setdefault('try_config', {})
-        for cls in self.parser.task_configs.itervalues():
+        for cls in six.itervalues(self.parser.task_configs):
             try_config = cls.try_config(**kwargs)
             if try_config is not None:
                 kwargs['try_config'] = merge(kwargs['try_config'], try_config)

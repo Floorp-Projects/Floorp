@@ -10,6 +10,7 @@ import sys
 from collections import defaultdict
 
 import mozpack.path as mozpath
+import six
 from moztest.resolve import TestResolver
 
 from ..cli import BaseTryParser
@@ -207,7 +208,7 @@ class TryArgumentParser(object):
 
     def consume(self):
         try:
-            self.token = self.tokens.next()
+            self.token = next(self.tokens)
         except StopIteration:
             self.token = (self.EOF, None)
 
@@ -390,7 +391,7 @@ class AutoTry(object):
 
         suites = tests if not intersection else {}
         paths = set()
-        for flavor, flavor_tests in paths_by_flavor.iteritems():
+        for flavor, flavor_tests in six.iteritems(paths_by_flavor):
             suite = self.flavor_suites[flavor]
             if suite not in suites and (not intersection or suite in tests):
                 for job_name in self.flavor_jobs[flavor]:
@@ -450,7 +451,7 @@ class AutoTry(object):
             parts.append("--try-test-paths %s" % " ".join(sorted(paths)))
 
         args_by_dest = {v['dest']: k for k, v in SyntaxParser.pass_through_arguments.items()}
-        for dest, value in extras.iteritems():
+        for dest, value in six.iteritems(extras):
             assert dest in args_by_dest
             arg = args_by_dest[dest]
             action = SyntaxParser.pass_through_arguments[arg]['action']
@@ -470,11 +471,11 @@ class AutoTry(object):
         rv = defaultdict(list)
         for item in items:
             parsed = parse_arg(item)
-            for key, values in parsed.iteritems():
+            for key, values in six.iteritems(parsed):
                 rv[key].extend(values)
 
         if not allow_subitems:
-            if not all(item == [] for item in rv.itervalues()):
+            if not all(item == [] for item in six.itervalues(rv)):
                 raise ValueError("Unexpected subitems in argument")
             return rv.keys()
         else:
@@ -598,7 +599,7 @@ class AutoTry(object):
 
         if kwargs["verbose"] and paths_by_flavor:
             print('The following tests will be selected: ')
-            for flavor, paths in paths_by_flavor.iteritems():
+            for flavor, paths in six.iteritems(paths_by_flavor):
                 print("%s: %s" % (flavor, ",".join(paths)))
 
         if kwargs["verbose"]:
