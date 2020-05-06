@@ -13,4 +13,5 @@ ac_add_options --enable-coverage
 CLANG_LIB_DIR="$(cd $MOZ_FETCHES_DIR/clang/lib/clang/* && cd lib/linux && pwd)"
 export LDFLAGS="--coverage -L$CLANG_LIB_DIR"
 export LIBS="-lclang_rt.profile-x86_64"
-export RUSTFLAGS="-Ccodegen-units=1 -Zprofile -Zno-landing-pads -Clink-dead-code -Coverflow-checks=off"
+export RUSTFLAGS="-Ccodegen-units=1 -Zprofile -Cpanic=abort -Zpanic_abort_tests -Clink-dead-code -Coverflow-checks=off"
+export RUSTDOCFLAGS="-Cpanic=abort"
