@@ -638,7 +638,7 @@ ShouldHookFunc* const HttpOpenRequestAFB::BaseType::mShouldHook =
 
 typedef HttpOpenRequestAFB::Request HORAReqHandler;
 typedef HttpOpenRequestAFB::RequestDelegate<HINTERNET HOOK_CALL(
-    HINTERNET, LPCSTR, LPCSTR, LPCSTR, LPCSTR, nsTArray<nsCString>, DWORD,
+    HINTERNET, LPCSTR, LPCSTR, LPCSTR, LPCSTR, CopyableTArray<nsCString>, DWORD,
     DWORD_PTR)>
     HORADelegateReqHandler;
 
@@ -648,7 +648,7 @@ void HORAReqHandler::Marshal(IpdlTuple& aTuple, const HINTERNET& h,
                              const LPCSTR& ver, const LPCSTR& ref,
                              LPCSTR* const& acceptTypes, const DWORD& flags,
                              const DWORD_PTR& cxt) {
-  nsTArray<nsCString> arrayAcceptTypes;
+  CopyableTArray<nsCString> arrayAcceptTypes;
   LPCSTR* curAcceptType = acceptTypes;
   if (curAcceptType) {
     while (*curAcceptType) {
@@ -656,6 +656,7 @@ void HORAReqHandler::Marshal(IpdlTuple& aTuple, const HINTERNET& h,
       ++curAcceptType;
     }
   }
+  // XXX Could we move arrayAcceptTypes here?
   HORADelegateReqHandler::Marshal(aTuple, h, verb, obj, ver, ref,
                                   arrayAcceptTypes, flags, cxt);
 }
@@ -665,7 +666,7 @@ bool HORAReqHandler::Unmarshal(ServerCallData& aScd, const IpdlTuple& aTuple,
                                HINTERNET& h, LPCSTR& verb, LPCSTR& obj,
                                LPCSTR& ver, LPCSTR& ref, LPCSTR*& acceptTypes,
                                DWORD& flags, DWORD_PTR& cxt) {
-  nsTArray<nsCString> arrayAcceptTypes;
+  CopyableTArray<nsCString> arrayAcceptTypes;
   if (!HORADelegateReqHandler::Unmarshal(aScd, aTuple, h, verb, obj, ver, ref,
                                          arrayAcceptTypes, flags, cxt)) {
     return false;
