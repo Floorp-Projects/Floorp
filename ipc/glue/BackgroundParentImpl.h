@@ -44,15 +44,12 @@ class BackgroundParentImpl : public PBackgroundParent,
   virtual bool DeallocPBackgroundTestParent(
       PBackgroundTestParent* aActor) override;
 
-  virtual PBackgroundIDBFactoryParent* AllocPBackgroundIDBFactoryParent(
-      const LoggingInfo& aLoggingInfo) override;
+  virtual already_AddRefed<PBackgroundIDBFactoryParent>
+  AllocPBackgroundIDBFactoryParent(const LoggingInfo& aLoggingInfo) override;
 
   virtual mozilla::ipc::IPCResult RecvPBackgroundIDBFactoryConstructor(
       PBackgroundIDBFactoryParent* aActor,
       const LoggingInfo& aLoggingInfo) override;
-
-  virtual bool DeallocPBackgroundIDBFactoryParent(
-      PBackgroundIDBFactoryParent* aActor) override;
 
   virtual PBackgroundIndexedDBUtilsParent*
   AllocPBackgroundIndexedDBUtilsParent() override;

@@ -60,12 +60,6 @@ class BackgroundChildImpl : public PBackgroundChild,
   virtual bool DeallocPBackgroundTestChild(
       PBackgroundTestChild* aActor) override;
 
-  virtual PBackgroundIDBFactoryChild* AllocPBackgroundIDBFactoryChild(
-      const LoggingInfo& aLoggingInfo) override;
-
-  virtual bool DeallocPBackgroundIDBFactoryChild(
-      PBackgroundIDBFactoryChild* aActor) override;
-
   virtual PBackgroundIndexedDBUtilsChild* AllocPBackgroundIndexedDBUtilsChild()
       override;
 

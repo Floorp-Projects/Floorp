@@ -151,9 +151,9 @@ class BackgroundFactoryChild final : public PBackgroundIDBFactoryChild {
   // reference here?
   IDBFactory* mFactory;
 
-  NS_DECL_OWNINGTHREAD
-
  public:
+  NS_INLINE_DECL_REFCOUNTING(BackgroundFactoryChild, override)
+
   void AssertIsOnOwningThread() const {
     NS_ASSERT_OWNINGTHREAD(BackgroundFactoryChild);
   }
