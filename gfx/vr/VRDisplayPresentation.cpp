@@ -17,13 +17,15 @@ using namespace mozilla::gfx;
 VRDisplayPresentation::VRDisplayPresentation(
     VRDisplayClient* aDisplayClient,
     const nsTArray<mozilla::dom::VRLayer>& aLayers, uint32_t aGroup)
-    : mDisplayClient(aDisplayClient), mDOMLayers(aLayers), mGroup(aGroup) {
+    : mDisplayClient(aDisplayClient),
+      mDOMLayers(aLayers.Clone()),
+      mGroup(aGroup) {
   CreateLayers();
 }
 
 void VRDisplayPresentation::UpdateLayers(
     const nsTArray<mozilla::dom::VRLayer>& aLayers) {
-  mDOMLayers = aLayers;
+  mDOMLayers = aLayers.Clone();
   CreateLayers();
 }
 
@@ -136,7 +138,7 @@ void VRDisplayPresentation::DestroyLayers() {
 }
 
 void VRDisplayPresentation::GetDOMLayers(nsTArray<dom::VRLayer>& result) {
-  result = mDOMLayers;
+  result = mDOMLayers.Clone();
 }
 
 VRDisplayPresentation::~VRDisplayPresentation() {
