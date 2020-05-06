@@ -221,6 +221,13 @@ struct alignas(gc::CellAlignBytes) Cell {
     return static_cast<const T*>(this);
   }
 
+  inline JS::Zone* zone() const;
+  inline JS::Zone* zoneFromAnyThread() const;
+
+  // Get the zone for a cell known to be in the nursery.
+  inline JS::Zone* nurseryZone() const;
+  inline JS::Zone* nurseryZoneFromAnyThread() const;
+
 #ifdef DEBUG
   static inline void assertThingIsNotGray(Cell* cell);
   inline bool isAligned() const;
@@ -372,6 +379,32 @@ Chunk* Cell::chunk() const {
 
 inline StoreBuffer* Cell::storeBuffer() const {
   return chunk()->trailer.storeBuffer;
+}
+
+JS::Zone* Cell::zone() const {
+  if (isTenured()) {
+    return asTenured().zone();
+  }
+
+  return nurseryZone();
+}
+
+JS::Zone* Cell::zoneFromAnyThread() const {
+  if (isTenured()) {
+    return asTenured().zoneFromAnyThread();
+  }
+
+  return nurseryZoneFromAnyThread();
+}
+
+JS::Zone* Cell::nurseryZone() const {
+  JS::Zone* zone = nurseryZoneFromAnyThread();
+  MOZ_ASSERT(CurrentThreadIsGCMarking() || CurrentThreadCanAccessZone(zone));
+  return zone;
+}
+
+JS::Zone* Cell::nurseryZoneFromAnyThread() const {
+  return NurseryCellHeader::from(this)->zone;
 }
 
 #ifdef DEBUG

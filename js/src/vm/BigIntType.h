@@ -72,22 +72,6 @@ class BigInt final : public js::gc::Cell {
   static const JS::TraceKind TraceKind = JS::TraceKind::BigInt;
   const js::gc::CellHeader& cellHeader() const { return header_.cellHeader(); }
 
-  JS::Zone* zone() const {
-    if (isTenured()) {
-      return asTenured().zone();
-    }
-    return js::Nursery::getBigIntZone(this);
-  }
-
-  // Implement TenuredZone members needed for template instantiations.
-
-  JS::Zone* zoneFromAnyThread() const {
-    if (isTenured()) {
-      return asTenured().zoneFromAnyThread();
-    }
-    return js::Nursery::getBigIntZone(this);
-  }
-
   void fixupAfterMovingGC() {}
 
   js::gc::AllocKind getAllocKind() const { return js::gc::AllocKind::BIGINT; }
