@@ -26,7 +26,7 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(XRViewerPose, XRPose)
 XRViewerPose::XRViewerPose(nsISupports* aParent, XRRigidTransform* aTransform,
                            bool aEmulatedPosition,
                            const nsTArray<RefPtr<XRView>>& aViews)
-    : XRPose(aParent, aTransform, aEmulatedPosition), mViews(aViews) {}
+    : XRPose(aParent, aTransform, aEmulatedPosition), mViews(aViews.Clone()) {}
 
 JSObject* XRViewerPose::WrapObject(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {
@@ -38,7 +38,7 @@ RefPtr<XRView>& XRViewerPose::GetEye(int32_t aIndex) {
 }
 
 void XRViewerPose::GetViews(nsTArray<RefPtr<XRView>>& aResult) {
-  aResult = mViews;
+  aResult = mViews.Clone();
 }
 
 }  // namespace dom

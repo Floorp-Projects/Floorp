@@ -136,7 +136,7 @@ XRSpace* XRInputSource::TargetRaySpace() { return mTargetRaySpace; }
 XRSpace* XRInputSource::GetGripSpace() { return mGripSpace; }
 
 void XRInputSource::GetProfiles(nsTArray<nsString>& aResult) {
-  aResult = mProfiles;
+  aResult = mProfiles.Clone();
 }
 
 Gamepad* XRInputSource::GetGamepad() { return mGamepad; }
