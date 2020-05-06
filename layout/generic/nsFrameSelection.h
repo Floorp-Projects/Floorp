@@ -474,11 +474,7 @@ class nsFrameSelection final {
   void SetHint(CaretAssociateHint aHintRight) { mCaret.mHint = aHintRight; }
   CaretAssociateHint GetHint() const { return mCaret.mHint; }
 
-  /**
-   * SetCaretBidiLevel sets the caret bidi level.
-   * @param aLevel the caret bidi level
-   */
-  void SetCaretBidiLevel(nsBidiLevel aLevel);
+  void SetCaretBidiLevelAndMaybeSchedulePaint(nsBidiLevel aLevel);
 
   /**
    * GetCaretBidiLevel gets the caret bidi level.
