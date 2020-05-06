@@ -22,6 +22,7 @@ function promiseTimezoneMessage() {
 }
 
 add_task(async function setup() {
+  Services.prefs.setBoolPref("browser.region.log", true);
   await AddonTestUtils.promiseStartupManager();
   Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
 });
@@ -29,7 +30,7 @@ add_task(async function setup() {
 add_task(async function test_location_malformed_json() {
   // Here we have malformed JSON
   Services.prefs.setCharPref(
-    "geo.provider-country.network.url",
+    "browser.region.network.url",
     'data:application/json,{"country_code"'
   );
   await Services.search.init();

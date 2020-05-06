@@ -41,8 +41,8 @@ add_task(async function test_location_timeout() {
   let server = startServer(continuePromise);
   let url =
     "http://localhost:" + server.identity.primaryPort + "/lookup_country";
-  Services.prefs.setCharPref("geo.provider-country.network.url", url);
-  Services.prefs.setIntPref("geo.provider-country.network.timeout", 50);
+  Services.prefs.setCharPref("browser.region.network.url", url);
+  Services.prefs.setIntPref("browser.region.network.timeout", 50);
   await Services.search.init();
   ok(
     !Services.prefs.prefHasUserValue("browser.search.region"),
@@ -55,28 +55,21 @@ add_task(async function test_location_timeout() {
   // test server is still blocked on our promise.
   equal(getProbeSum("SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS"), 0);
 
-  let notification = SearchTestUtils.promiseSearchNotification(
-    "geoip-lookup-xhr-complete"
-  );
   // now tell the server to send its response.  That will end up causing the
   // search service to notify of that the response was received.
   resolveContinuePromise();
-  await notification;
+  await SearchTestUtils.promiseSearchNotification("engines-reloaded");
 
   // now we *should* have a report of how long the response took even though
   // it timed out.
   // The telemetry "sum" will be the actual time in ms - just check it's non-zero.
   ok(getProbeSum("SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS") != 0);
   // should have reported the fetch ended up being successful.
-  checkCountryResultTelemetry(TELEMETRY_RESULT_ENUM.success);
+  checkCountryResultTelemetry(TELEMETRY_RESULT_ENUM.SUCCESS);
 
   // and should have the result of the response that finally came in, and
   // everything dependent should also be updated.
   equal(Services.prefs.getCharPref("browser.search.region"), "AU");
 
-  await SearchTestUtils.promiseSearchNotification("engines-reloaded");
-
-  await new Promise(resolve => {
-    server.stop(resolve);
-  });
+  await new Promise(resolve => server.stop(resolve));
 });
