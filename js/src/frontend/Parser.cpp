@@ -1778,9 +1778,32 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
 
   FunctionCreationData& fcd = funbox->functionCreationData().get();
 
-  // Initialize the data used for lazy scripts.
-  fcd.innerFunctionIndexes.emplace(std::move(pc_->innerFunctionIndexesForLazy));
-  fcd.closedOverBindings.emplace(std::move(pc_->closedOverBindingsForLazy()));
+  fcd.gcThings.emplace(cx_);
+  ScriptThingsVector& gcthings = fcd.gcThings.ref();
+
+  if (!gcthings.reserve(ngcthings.value())) {
+    return false;
+  }
+
+  // Copy inner-function and closed-over-binding info for the stencil. The order
+  // is important here. We emit functions first, followed by the bindings info.
+  // The bindings list uses nullptr as delimiter to separates the bindings per
+  // scope.
+  //
+  // See: FullParseHandler::nextLazyInnerFunction(),
+  //      FullParseHandler::nextLazyClosedOverBinding()
+  for (const FunctionIndex& index : pc_->innerFunctionIndexesForLazy) {
+    gcthings.infallibleAppend(AsVariant(index));
+  }
+  for (const ClosedOverBinding& binding : pc_->closedOverBindingsForLazy()) {
+    if (binding) {
+      gcthings.infallibleAppend(AsVariant(binding));
+    } else {
+      gcthings.infallibleAppend(AsVariant(NullScriptThing()));
+    }
+  }
+
+  MOZ_ASSERT(gcthings.length() == ngcthings.value());
 
   return true;
 }
@@ -1837,16 +1860,43 @@ bool FunctionCreationData::createLazyScript(
   immutableFlags.setFlag(ImmutableFlags::IsLikelyConstructorWrapper,
                          funbox->isLikelyConstructorWrapper());
 
-  BaseScript* lazy = BaseScript::CreateLazy(
-      cx, compilationInfo, function, sourceObject, *closedOverBindings,
-      *innerFunctionIndexes, funbox->extent, immutableFlags);
+  Rooted<BaseScript*> lazy(
+      cx,
+      BaseScript::CreateRawLazy(cx, gcThings->length(), function, sourceObject,
+                                funbox->extent, immutableFlags));
   if (!lazy) {
     return false;
+  }
+
+  if (!EmitScriptThingsVector(cx, compilationInfo, *gcThings,
+                              lazy->gcthingsForInit())) {
+    return false;
+  }
+
+  // Connect inner functions to this lazy script now.
+  for (auto inner : lazy->gcthings()) {
+    if (!inner.is<JSObject>()) {
+      continue;
+    }
+    inner.as<JSObject>().as<JSFunction>().setEnclosingLazyScript(lazy);
   }
 
   function->initScript(lazy);
 
   return true;
+}
+
+void FunctionCreationData::trace(JSTracer* trc) {
+  if (gcThings) {
+    for (ScriptThingVariant& thing : *gcThings) {
+      if (thing.is<ClosedOverBinding>()) {
+        JSAtom* atom = thing.as<ClosedOverBinding>();
+        TraceRoot(trc, &atom, "closed-over-binding");
+        MOZ_ASSERT(atom == thing.as<ClosedOverBinding>(),
+                   "Atoms should be unmovable");
+      }
+    }
+  }
 }
 
 static YieldHandling GetYieldHandling(GeneratorKind generatorKind) {

@@ -326,11 +326,17 @@ class ScopeCreationData {
 
 class EmptyGlobalScopeType {};
 
+// The lazy closed-over-binding info is represented by these types that will
+// convert to a GCCellPtr(nullptr), GCCellPtr(JSAtom*).
+class NullScriptThing {};
+using ClosedOverBinding = JSAtom*;
+
 // These types all end up being baked into GC things as part of stencil
 // instantiation.
 using ScriptThingVariant =
-    mozilla::Variant<BigIntIndex, ObjLiteralCreationData, RegExpIndex,
-                     ScopeIndex, FunctionIndex, EmptyGlobalScopeType>;
+    mozilla::Variant<ClosedOverBinding, NullScriptThing, BigIntIndex,
+                     ObjLiteralCreationData, RegExpIndex, ScopeIndex,
+                     FunctionIndex, EmptyGlobalScopeType>;
 
 // A vector of things destined to be converted to GC things.
 using ScriptThingsVector = Vector<ScriptThingVariant>;
@@ -346,22 +352,17 @@ struct FunctionCreationData {
   FunctionCreationData(const FunctionCreationData&) = delete;
   FunctionCreationData(FunctionCreationData&& data) = default;
 
-  // Data used to instantiate the lazy script before script emission.
-  // -------
-  mozilla::Maybe<frontend::AtomVector> closedOverBindings = {};
-  // This is traced by the functionbox
-  mozilla::Maybe<Vector<FunctionIndex>> innerFunctionIndexes = {};
-  // -------
+  // Lazy functions have a list of GC-things that eventually becomes the
+  // PrivateScriptData structure.
+  mozilla::Maybe<ScriptThingsVector> gcThings = {};
 
   bool createLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
                         HandleFunction function, FunctionBox* funbox,
                         HandleScriptSourceObject sourceObject);
 
-  bool hasLazyScriptData() const {
-    return closedOverBindings && innerFunctionIndexes;
-  }
+  bool hasLazyScriptData() const { return gcThings.isSome(); }
 
-  void trace(JSTracer* trc) {}
+  void trace(JSTracer* trc);
 };
 
 // Data used to instantiate the non-lazy script.
