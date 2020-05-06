@@ -26,6 +26,10 @@ class nsChildProcessMIMEInfo : public nsMIMEInfoImpl {
     return NS_ERROR_NOT_IMPLEMENTED;
   };
 
+  NS_IMETHOD IsCurrentAppOSDefault(bool* _retval) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  };
+
  protected:
   [[nodiscard]] virtual nsresult LoadUriInternal(nsIURI* aURI) override {
     return NS_ERROR_NOT_IMPLEMENTED;

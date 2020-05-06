@@ -178,6 +178,7 @@ class nsMIMEInfoImpl : public nsMIMEInfoBase {
   // nsIMIMEInfo methods
   NS_IMETHOD GetHasDefaultHandler(bool* _retval) override;
   NS_IMETHOD GetDefaultDescription(nsAString& aDefaultDescription) override;
+  NS_IMETHOD IsCurrentAppOSDefault(bool* _retval) override;
 
   // additional methods
   /**

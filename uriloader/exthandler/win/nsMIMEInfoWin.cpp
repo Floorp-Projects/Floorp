@@ -861,3 +861,20 @@ nsMIMEInfoWin::GetPossibleLocalHandlers(nsIArray** _retval) {
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsMIMEInfoWin::IsCurrentAppOSDefault(bool* _retval) {
+  *_retval = false;
+  if (mDefaultApplication) {
+    // Determine if the default executable is our executable.
+    nsCOMPtr<nsIFile> ourBinary;
+    XRE_GetBinaryPath(getter_AddRefs(ourBinary));
+    bool isSame = false;
+    nsresult rv = mDefaultApplication->Equals(ourBinary, &isSame);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    *_retval = isSame;
+  }
+  return NS_OK;
+}
