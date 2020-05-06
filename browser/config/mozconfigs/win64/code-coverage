@@ -22,7 +22,8 @@ if [ -d "$MOZ_FETCHES_DIR/clang" ]; then
     export LDFLAGS="clang_rt.profile-x86_64.lib"
 fi
 
-export RUSTFLAGS="-Ccodegen-units=1 -Zprofile -Zno-landing-pads -Clink-dead-code -Coverflow-checks=off"
+export RUSTFLAGS="-Ccodegen-units=1 -Zprofile -Cpanic=abort -Zpanic_abort_tests -Clink-dead-code -Coverflow-checks=off"
+export RUSTDOCFLAGS="-Cpanic=abort"
 
 . "$topsrcdir/build/mozconfig.clang-cl"
 . "$topsrcdir/build/mozconfig.common.override"
