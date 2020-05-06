@@ -401,7 +401,7 @@ if DEBUG:
         eprint(line.decode('utf-8', 'ignore'))
 
 # Also flag any changes that touch the project
-query = '(' + wider_range + ') & modifies("glob:' + relative_path + '/**")'
+query = '(' + wider_range + ') & file("glob:' + relative_path + '/**")'
 for cset in get_multiple_revs(query, '{node}'):
     debugprint("Changeset %s modifies %s" % (cset, relative_path))
     hg_commits[cset].touches_sync_code = True
