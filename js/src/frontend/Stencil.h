@@ -68,35 +68,6 @@ class FunctionIndex : public TypedIndex<FunctionIndexType> {
   using Base::Base;
 };
 
-// Metadata that can be used to allocate a JSFunction object.
-//
-// Keeping metadata separate allows the parser to generate
-// metadata without requiring immediate access to the garbage
-// collector.
-struct FunctionCreationData {
-  // All moves but not copies to avoid expensive surprises.
-  FunctionCreationData() = default;
-  FunctionCreationData(const FunctionCreationData&) = delete;
-  FunctionCreationData(FunctionCreationData&& data) = default;
-
-  // Data used to instantiate the lazy script before script emission.
-  // -------
-  mozilla::Maybe<frontend::AtomVector> closedOverBindings = {};
-  // This is traced by the functionbox
-  mozilla::Maybe<Vector<FunctionIndex>> innerFunctionIndexes = {};
-  // -------
-
-  bool createLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
-                        HandleFunction function, FunctionBox* funbox,
-                        HandleScriptSourceObject sourceObject);
-
-  bool hasLazyScriptData() const {
-    return closedOverBindings && innerFunctionIndexes;
-  }
-
-  void trace(JSTracer* trc) {}
-};
-
 FunctionFlags InitialFunctionFlags(FunctionSyntaxKind kind,
                                    GeneratorKind generatorKind,
                                    FunctionAsyncKind asyncKind,
@@ -363,6 +334,35 @@ using ScriptThingVariant =
 
 // A vector of things destined to be converted to GC things.
 using ScriptThingsVector = Vector<ScriptThingVariant>;
+
+// Metadata that can be used to allocate a JSFunction object.
+//
+// Keeping metadata separate allows the parser to generate
+// metadata without requiring immediate access to the garbage
+// collector.
+struct FunctionCreationData {
+  // All moves but not copies to avoid expensive surprises.
+  FunctionCreationData() = default;
+  FunctionCreationData(const FunctionCreationData&) = delete;
+  FunctionCreationData(FunctionCreationData&& data) = default;
+
+  // Data used to instantiate the lazy script before script emission.
+  // -------
+  mozilla::Maybe<frontend::AtomVector> closedOverBindings = {};
+  // This is traced by the functionbox
+  mozilla::Maybe<Vector<FunctionIndex>> innerFunctionIndexes = {};
+  // -------
+
+  bool createLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
+                        HandleFunction function, FunctionBox* funbox,
+                        HandleScriptSourceObject sourceObject);
+
+  bool hasLazyScriptData() const {
+    return closedOverBindings && innerFunctionIndexes;
+  }
+
+  void trace(JSTracer* trc) {}
+};
 
 // Data used to instantiate the non-lazy script.
 class ScriptStencil {
