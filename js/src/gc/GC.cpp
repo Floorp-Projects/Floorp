@@ -7998,17 +7998,7 @@ JS_FRIEND_API void js::gc::AssertGCThingHasType(js::gc::Cell* cell,
   }
 
   MOZ_ASSERT(IsCellPointerValid(cell));
-
-  if (IsInsideNursery(cell)) {
-    MOZ_ASSERT(kind == (cell->nurseryCellIsString()
-                            ? JS::TraceKind::String
-                            : cell->nurseryCellIsBigInt()
-                                  ? JS::TraceKind::BigInt
-                                  : JS::TraceKind::Object));
-    return;
-  }
-
-  MOZ_ASSERT(MapAllocToTraceKind(cell->asTenured().getAllocKind()) == kind);
+  MOZ_ASSERT(cell->getTraceKind() == kind);
 }
 #endif
 

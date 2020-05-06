@@ -7,6 +7,7 @@
 #include "jit/CompileWrappers.h"
 
 #include "gc/GC.h"
+#include "gc/Heap.h"
 #include "jit/Ion.h"
 #include "jit/JitRealm.h"
 
@@ -161,6 +162,10 @@ void CompileZone::setMinorGCShouldCancelIonCompilations() {
   MOZ_ASSERT(CurrentThreadCanAccessZone(zone()));
   JSRuntime* rt = zone()->runtimeFromMainThread();
   rt->gc.storeBuffer().setShouldCancelIonCompilations();
+}
+
+uintptr_t CompileZone::nurseryCellHeader(JS::TraceKind kind) {
+  return gc::NurseryCellHeader::MakeValue(zone(), kind);
 }
 
 JS::Realm* CompileRealm::realm() { return reinterpret_cast<JS::Realm*>(this); }
