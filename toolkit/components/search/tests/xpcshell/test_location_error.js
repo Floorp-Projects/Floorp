@@ -10,7 +10,7 @@ add_task(async function test_location_error() {
   // We use an invalid port that parses but won't open
   let url = "http://localhost:0";
 
-  Services.prefs.setCharPref("geo.provider-country.network.url", url);
+  Services.prefs.setCharPref("browser.region.network.url", url);
   await Services.search.init();
   try {
     Services.prefs.getCharPref("browser.search.region");
