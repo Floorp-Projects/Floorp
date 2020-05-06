@@ -154,7 +154,7 @@ class nsAutoScrollTimer final : public nsITimerCallback, public nsINamed {
         mSelection(aSelection),
         mPresContext(0),
         mPoint(0, 0),
-        mDelay(30) {
+        mDelayInMs(30) {
     MOZ_ASSERT(mFrameSelection);
     MOZ_ASSERT(mSelection);
   }
@@ -178,7 +178,7 @@ class nsAutoScrollTimer final : public nsITimerCallback, public nsINamed {
       }
     }
 
-    return mTimer->InitWithCallback(this, mDelay, nsITimer::TYPE_ONE_SHOT);
+    return mTimer->InitWithCallback(this, mDelayInMs, nsITimer::TYPE_ONE_SHOT);
   }
 
   nsresult Stop() {
@@ -191,10 +191,7 @@ class nsAutoScrollTimer final : public nsITimerCallback, public nsINamed {
     return NS_OK;
   }
 
-  nsresult SetDelay(uint32_t aDelay) {
-    mDelay = aDelay;
-    return NS_OK;
-  }
+  void SetDelay(uint32_t aDelayInMs) { mDelayInMs = aDelayInMs; }
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Notify(nsITimer* timer) override {
     if (mPresContext) {
@@ -240,7 +237,7 @@ class nsAutoScrollTimer final : public nsITimerCallback, public nsINamed {
   nsPoint mPoint;
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsIContent> mContent;
-  uint32_t mDelay;
+  uint32_t mDelayInMs;
 };
 
 NS_IMPL_ISUPPORTS(nsAutoScrollTimer, nsITimerCallback, nsINamed)
@@ -1788,11 +1785,10 @@ nsresult Selection::SetTextRangeStyle(nsRange* aRange,
 
 nsresult Selection::StartAutoScrollTimer(nsIFrame* aFrame,
                                          const nsPoint& aPoint,
-                                         uint32_t aDelay) {
+                                         uint32_t aDelayInMs) {
   MOZ_ASSERT(aFrame, "Need a frame");
   MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
 
-  nsresult result;
   if (!mFrameSelection) {
     return NS_OK;  // nothing to do
   }
@@ -1801,11 +1797,7 @@ nsresult Selection::StartAutoScrollTimer(nsIFrame* aFrame,
     mAutoScrollTimer = new nsAutoScrollTimer(mFrameSelection, this);
   }
 
-  result = mAutoScrollTimer->SetDelay(aDelay);
-
-  if (NS_FAILED(result)) {
-    return result;
-  }
+  mAutoScrollTimer->SetDelay(aDelayInMs);
 
   return DoAutoScroll(aFrame, aPoint);
 }

@@ -238,7 +238,7 @@ class Selection final : public nsSupportsWeakReference,
 
   MOZ_CAN_RUN_SCRIPT
   nsresult StartAutoScrollTimer(nsIFrame* aFrame, const nsPoint& aPoint,
-                                uint32_t aDelay);
+                                uint32_t aDelayInMs);
 
   nsresult StopAutoScrollTimer();
 
