@@ -60,20 +60,12 @@ interface nsISiteHSTSState : nsISiteSecurityState
 {
 };
 
-// This has to be a builtinclass because it derives from a builtinclass.
-[scriptable, uuid(ae395078-c7d0-474d-b147-f4aa203a9b2c), builtinclass]
-interface nsISiteHPKPState : nsISiteSecurityState
-{
-  [must_use]
-  readonly attribute nsISimpleEnumerator sha256Keys;
-};
-
 [scriptable, uuid(275127f8-dbd7-4681-afbf-6df0c6587a01)]
 interface nsISiteSecurityService : nsISupports
 {
     const uint32_t HEADER_HSTS = 0;
-    const uint32_t HEADER_HPKP = 1;
-    const uint32_t HEADER_OMS = 2;
+    const uint32_t STATIC_PINNING = 1; // was HEADER_HPKP
+    // HEADER_OMS was 2 (but was never implemented)
 
     const uint32_t Success = 0;
     const uint32_t ERROR_UNKNOWN = 1;
@@ -84,12 +76,14 @@ interface nsISiteSecurityService : nsISupports
     const uint32_t ERROR_INVALID_MAX_AGE = 6;
     const uint32_t ERROR_MULTIPLE_INCLUDE_SUBDOMAINS = 7;
     const uint32_t ERROR_INVALID_INCLUDE_SUBDOMAINS = 8;
-    const uint32_t ERROR_INVALID_PIN = 9;
-    const uint32_t ERROR_MULTIPLE_REPORT_URIS = 10;
-    const uint32_t ERROR_PINSET_DOES_NOT_MATCH_CHAIN = 11;
-    const uint32_t ERROR_NO_BACKUP_PIN = 12;
+    // The constants that were removed below were used in HPKP processing
+    // (which has been removed entirely).
+    // ERROR_INVALID_PIN was 9
+    // ERROR_MULTIPLE_REPORT_URIS was 10
+    // ERROR_PINSET_DOES_NOT_MATCH_CHAIN was 11
+    // ERROR_NO_BACKUP_PIN was 12
     const uint32_t ERROR_COULD_NOT_SAVE_STATE = 13;
-    const uint32_t ERROR_ROOT_NOT_BUILT_IN = 14;
+    // ERROR_ROOT_NOT_BUILT_IN was 14
 
     /**
      * nsISiteSecurityService::IsSecureURI can optionally return a flag
@@ -102,15 +96,11 @@ interface nsISiteSecurityService : nsISupports
 
     /**
      * Parses a given HTTP header and records the results internally.
-     * Currently two header types are supported: HSTS (aka STS) and HPKP
+     * Currently one header type is supported: HSTS (aka STS).
      * The format of the HSTS header is defined by the HSTS specification:
      * https://tools.ietf.org/html/rfc6797
      * and allows a host to specify that future HTTP requests should be
      * upgraded to HTTPS.
-     * The format of the HPKP header is defined by the HPKP specification:
-     * https://tools.ietf.org/html/rfc7469
-     * and allows a host to specify a subset of trusted anchors to be used
-     * in future HTTPS connections.
      *
      * @param aType the type of security header in question.
      * @param aSourceURI the URI of the resource with the HTTP header.
@@ -205,7 +195,7 @@ interface nsISiteSecurityService : nsISupports
      *                if the security state is false.
      * @param aSource the source of the HSTS entry. One of SOURCE_PRELOAD_LIST,
      *                SOURCE_ORGANIC_REQUEST, SOURCE_HSTS_PRIMING, or
-     *                SOURCE_UNKNOWN. Not implemented for HPKP.
+     *                SOURCE_UNKNOWN.
      */
     [binaryname(IsSecureURI), noscript, must_use]
     boolean isSecureURINative(in uint32_t aType, in nsIURI aURI,
@@ -235,54 +225,6 @@ interface nsISiteSecurityService : nsISupports
     void clearPreloads();
 
     /**
-     * Returns an array of sha256-hashed key pins for the given domain, if any.
-     * If these pins also apply to subdomains of the given domain,
-     * aIncludeSubdomains will be true. Pins returned are only for non-built-in
-     * pin entries.
-     *
-     * @param aHostname the hostname (punycode) to be queried about
-     * @param evalTime the time at which the pins should be valid. This is in
-              mozilla::pkix::Time which uses internally seconds since 0 AD.
-     * @param aOriginAttributes the origin attributes that isolate this origin,
-     *                          (note that this implementation does not isolate
-     *                          by userContextId because of the risk of man-in-
-     *                          the-middle attacks before trust-on-second-use
-     *                          happens).
-     * @param aPinArray the set of sha256-hashed key pins for the given domain
-     * @param aIncludeSubdomains true if the pins apply to subdomains of the
-     *        given domain
-     */
-    [noscript, must_use] boolean getKeyPinsForHostname(
-      in ACString aHostname,
-      in mozillaPkixTime evalTime,
-      in const_OriginAttributesRef aOriginAttributes,
-      out nsCStringTArrayRef aPinArray,
-      out boolean aIncludeSubdomains);
-
-    /**
-     * Set public-key pins for a host. The resulting pins will be permanent
-     * and visible from private and non-private contexts. These pins replace
-     * any already set by this mechanism or those built-in to Gecko.
-     *
-     * @param aHost the hostname (punycode) that pins will apply to
-     * @param aIncludeSubdomains whether these pins also apply to subdomains
-     * @param aExpires the time this pin should expire (millis since epoch)
-     * @param aSha256Pins array of hashed key fingerprints (SHA-256, base64)
-     * @param aIsPreload are these key pins for a preload entry? (false by
-     *        default)
-     * @param aOriginAttributes the origin attributes that isolate this origin,
-     *                          (note that this implementation does not isolate
-     *                          by userContextId because of the risk of man-in-
-     *                          the-middle attacks before trust-on-second-use
-     *                          happens).
-     */
-    [implicit_jscontext, optional_argc, must_use]
-    boolean setKeyPins(in ACString aHost, in boolean aIncludeSubdomains,
-                       in int64_t aExpires, in Array<ACString> aSha256Pins,
-                       [optional] in boolean aIsPreload,
-                       [optional] in jsval aOriginAttributes);
-
-    /**
      * Set an HSTS preload entry for a host. The resulting entries will be
      * permanent and visible from private and non-private contexts. These
      * entries replace any already set by this mechanism or those built-in to
@@ -300,9 +242,9 @@ interface nsISiteSecurityService : nsISupports
     /**
      * Returns an enumerator of the nsISiteSecurityService storage. Each item in
      * the enumeration is a nsISiteSecurityState that can be QueryInterfaced to
-     * the appropriate nsISiteHSTSState or nsISiteHPKPState, depending on the
-     * provided type. Doesn't include preloaded entries (either the hard-coded
-     * ones or the preloaded-delivered-by-kinto ones).
+     * nsISiteHSTSState.
+     * Doesn't include preloaded entries (either the hard-coded ones or the
+     * preloaded-delivered-by-kinto ones).
      *
      * @param aType the type of security state in question.
      */

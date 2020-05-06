@@ -670,7 +670,7 @@ var NetworkHelper = {
         }
 
         info.hsts = sss.isSecureURI(sss.HEADER_HSTS, uri, flags);
-        info.hpkp = sss.isSecureURI(sss.HEADER_HPKP, uri, flags);
+        info.hpkp = sss.isSecureURI(sss.STATIC_PINNING, uri, flags);
       } else {
         DevToolsUtils.reportException(
           "NetworkHelper.parseSecurityInfo",

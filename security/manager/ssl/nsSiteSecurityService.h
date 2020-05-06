@@ -53,53 +53,6 @@ enum SecurityPropertySource {
 };
 
 /**
- * SiteHPKPState: A utility class that encodes/decodes a string describing
- * the public key pins of a site.
- * HPKP state consists of:
- *  - Hostname (nsCString)
- *  - Origin attributes (OriginAttributes)
- *  - Expiry time (PRTime (aka int64_t) in milliseconds)
- *  - A state flag (SecurityPropertyState, default SecurityPropertyUnset)
- *  - An include subdomains flag (bool, default false)
- *  - An array of sha-256 hashed base 64 encoded fingerprints of required keys
- */
-class SiteHPKPState : public nsISiteHPKPState {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISITEHPKPSTATE
-  NS_DECL_NSISITESECURITYSTATE
-
-  SiteHPKPState();
-  SiteHPKPState(const nsCString& aHost,
-                const OriginAttributes& aOriginAttributes,
-                const nsCString& aStateString);
-  SiteHPKPState(const nsCString& aHost,
-                const OriginAttributes& aOriginAttributes, PRTime aExpireTime,
-                SecurityPropertyState aState, bool aIncludeSubdomains,
-                const nsTArray<nsCString>& SHA256keys);
-
-  nsCString mHostname;
-  OriginAttributes mOriginAttributes;
-  PRTime mExpireTime;
-  SecurityPropertyState mState;
-  bool mIncludeSubdomains;
-  nsTArray<nsCString> mSHA256keys;
-
-  bool IsExpired(mozilla::pkix::Time aTime) {
-    if (aTime >
-        mozilla::pkix::TimeFromEpochInSeconds(mExpireTime / PR_MSEC_PER_SEC)) {
-      return true;
-    }
-    return false;
-  }
-
-  void ToString(nsCString& aString);
-
- protected:
-  virtual ~SiteHPKPState() = default;
-};
-
-/**
  * SiteHSTSState: A utility class that encodes/decodes a string describing
  * the security state of a site. Currently only handles HSTS.
  * HSTS state consists of:
@@ -183,14 +136,6 @@ class nsSiteSecurityService : public nsISiteSecurityService,
                             const OriginAttributes& aOriginAttributes,
                             uint64_t* aMaxAge, bool* aIncludeSubdomains,
                             uint32_t* aFailureResult);
-  nsresult ProcessPKPHeader(nsIURI* aSourceURI, const nsCString& aHeader,
-                            nsITransportSecurityInfo* aSecInfo, uint32_t flags,
-                            const OriginAttributes& aOriginAttributes,
-                            uint64_t* aMaxAge, bool* aIncludeSubdomains,
-                            uint32_t* aFailureResult);
-  nsresult SetHPKPState(const char* aHost, SiteHPKPState& entry, uint32_t flags,
-                        bool aIsPreload,
-                        const OriginAttributes& aOriginAttributes);
   nsresult MarkHostAsNotHSTS(uint32_t aType, const nsAutoCString& aHost,
                              uint32_t aFlags, bool aIsPreload,
                              const OriginAttributes& aOriginAttributes);
@@ -210,11 +155,8 @@ class nsSiteSecurityService : public nsISiteSecurityService,
                         bool* aCached, SecurityPropertySource* aSource,
                         bool* aResult);
 
-  uint64_t mMaxMaxAge;
   bool mUsePreloadList;
   int64_t mPreloadListTimeOffset;
-  bool mHPKPEnabled;
-  bool mProcessPKPHeadersFromNonBuiltInRoots;
   RefPtr<mozilla::DataStorage> mSiteStateStorage;
   RefPtr<mozilla::DataStorage> mPreloadStateStorage;
   const mozilla::Dafsa mDafsa;
