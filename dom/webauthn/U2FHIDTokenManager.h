@@ -148,7 +148,7 @@ class U2FHIDTokenManager final : public U2FTokenTransport {
                 const nsCString& aClientDataJSON,
                 bool aForceNoneAttestation = false)
         : mId(aId),
-          mRpIdHash(aRpIdHash),
+          mRpIdHash(aRpIdHash.Clone()),
           mClientDataJSON(aClientDataJSON),
           mForceNoneAttestation(aForceNoneAttestation) {}
 

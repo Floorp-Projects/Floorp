@@ -815,7 +815,7 @@ RefPtr<U2FSignPromise> U2FSoftTokenManager::Sign(
   }
 
   nsTArray<nsTArray<uint8_t>> appIds;
-  appIds.AppendElement(rpIdHash);
+  appIds.AppendElement(std::move(rpIdHash));
 
   if (aInfo.Extra().isSome()) {
     const auto& extra = aInfo.Extra().ref();
@@ -832,7 +832,7 @@ RefPtr<U2FSignPromise> U2FSoftTokenManager::Sign(
     // Process extensions.
     for (const WebAuthnExtension& ext : extra.Extensions()) {
       if (ext.type() == WebAuthnExtension::TWebAuthnExtensionAppId) {
-        appIds.AppendElement(ext.get_WebAuthnExtensionAppId().AppId());
+        appIds.AppendElement(ext.get_WebAuthnExtensionAppId().AppId().Clone());
       }
     }
   }
