@@ -4612,8 +4612,8 @@ void CodeGenerator::visitGuardSpecificAtom(LGuardSpecificAtom* guard) {
 
   // The pointers are not equal, so if the input string is also an atom it
   // must be a different string.
-  bailoutTest32(Assembler::Zero, Address(str, JSString::offsetOfFlags()),
-                Imm32(JSString::NON_ATOM_BIT), guard->snapshot());
+  bailoutTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
+                Imm32(JSString::ATOM_BIT), guard->snapshot());
 
   // Todo: Check length + VM fallback.
   bailout(guard->snapshot());
@@ -9246,13 +9246,11 @@ JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
   masm.newGCString(output, temp3, &failure, stringsCanBeInNursery);
 
   // Store rope length and flags. temp1 still holds the result of AND'ing the
-  // lhs and rhs flags, so we just have to clear the other flags and set
-  // NON_ATOM_BIT to get our rope flags (Latin1 if both lhs and rhs are
-  // Latin1).
-  static_assert(JSString::INIT_ROPE_FLAGS == JSString::NON_ATOM_BIT,
-                "Rope type flags must be NON_ATOM_BIT only");
+  // lhs and rhs flags, so we just have to clear the other flags to get our rope
+  // flags (Latin1 if both lhs and rhs are Latin1).
+  static_assert(JSString::INIT_ROPE_FLAGS == 0,
+                "Rope type flags must have no bits set");
   masm.and32(Imm32(JSString::LATIN1_CHARS_BIT), temp1);
-  masm.or32(Imm32(JSString::NON_ATOM_BIT), temp1);
   masm.store32(temp1, Address(output, JSString::offsetOfFlags()));
   masm.store32(temp2, Address(output, JSString::offsetOfLength()));
 
