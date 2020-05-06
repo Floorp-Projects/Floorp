@@ -1991,6 +1991,26 @@ void* AllocateBigIntNoGC(JSContext* cx, bool requestMinorGC) {
   return js::AllocateBigInt<NoGC>(cx, gc::TenuredHeap);
 }
 
+#if JS_BITS_PER_WORD == 32
+BigInt* CreateBigIntFromInt64(JSContext* cx, uint32_t low, uint32_t high) {
+  uint64_t n = (static_cast<uint64_t>(high) << 32) + low;
+  return js::BigInt::createFromInt64(cx, n);
+}
+
+BigInt* CreateBigIntFromUint64(JSContext* cx, uint32_t low, uint32_t high) {
+  uint64_t n = (static_cast<uint64_t>(high) << 32) + low;
+  return js::BigInt::createFromUint64(cx, n);
+}
+#else
+BigInt* CreateBigIntFromInt64(JSContext* cx, uint64_t i64) {
+  return js::BigInt::createFromInt64(cx, i64);
+}
+
+BigInt* CreateBigIntFromUint64(JSContext* cx, uint64_t i64) {
+  return js::BigInt::createFromUint64(cx, i64);
+}
+#endif
+
 template <EqualityKind Kind>
 bool BigIntEqual(BigInt* x, BigInt* y) {
   AutoUnsafeCallWithABI unsafe;

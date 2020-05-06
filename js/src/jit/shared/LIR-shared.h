@@ -4340,6 +4340,25 @@ class LLoadUnboxedScalar : public LInstructionHelper<1, 2, 1> {
   const LDefinition* temp() { return getTemp(0); }
 };
 
+class LLoadUnboxedBigInt : public LInstructionHelper<1, 2, 1 + INT64_PIECES> {
+ public:
+  LIR_HEADER(LoadUnboxedBigInt)
+
+  LLoadUnboxedBigInt(const LAllocation& elements, const LAllocation& index,
+                     const LDefinition& temp, const LInt64Definition& temp64)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, elements);
+    setOperand(1, index);
+    setTemp(0, temp);
+    setInt64Temp(1, temp64);
+  }
+  const MLoadUnboxedScalar* mir() const { return mir_->toLoadUnboxedScalar(); }
+  const LAllocation* elements() { return getOperand(0); }
+  const LAllocation* index() { return getOperand(1); }
+  const LDefinition* temp() { return getTemp(0); }
+  const LInt64Definition temp64() { return getInt64Temp(1); }
+};
+
 class LLoadTypedArrayElementHole : public LInstructionHelper<BOX_PIECES, 2, 1> {
  public:
   LIR_HEADER(LoadTypedArrayElementHole)
@@ -4357,6 +4376,30 @@ class LLoadTypedArrayElementHole : public LInstructionHelper<BOX_PIECES, 2, 1> {
   const LAllocation* object() { return getOperand(0); }
   const LAllocation* index() { return getOperand(1); }
   const LDefinition* temp() { return getTemp(0); }
+};
+
+class LLoadTypedArrayElementHoleBigInt
+    : public LInstructionHelper<BOX_PIECES, 2, 1 + INT64_PIECES> {
+ public:
+  LIR_HEADER(LoadTypedArrayElementHoleBigInt)
+
+  LLoadTypedArrayElementHoleBigInt(const LAllocation& object,
+                                   const LAllocation& index,
+                                   const LDefinition& temp,
+                                   const LInt64Definition& temp64)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, object);
+    setOperand(1, index);
+    setTemp(0, temp);
+    setInt64Temp(1, temp64);
+  }
+  const MLoadTypedArrayElementHole* mir() const {
+    return mir_->toLoadTypedArrayElementHole();
+  }
+  const LAllocation* object() { return getOperand(0); }
+  const LAllocation* index() { return getOperand(1); }
+  const LDefinition* temp() { return getTemp(0); }
+  const LInt64Definition temp64() { return getInt64Temp(1); }
 };
 
 class LStoreUnboxedScalar : public LInstructionHelper<0, 3, 0> {

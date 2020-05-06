@@ -3416,26 +3416,36 @@ void LIRGenerator::visitLoadUnboxedScalar(MLoadUnboxedScalar* ins) {
   const LUse elements = useRegister(ins->elements());
   const LAllocation index = useRegisterOrConstant(ins->index());
 
-  MOZ_ASSERT(IsNumberType(ins->type()) || ins->type() == MIRType::Boolean);
-
-  // We need a temp register for Uint32Array with known double result.
-  LDefinition tempDef = LDefinition::BogusTemp();
-  if (ins->storageType() == Scalar::Uint32 &&
-      IsFloatingPointType(ins->type())) {
-    tempDef = temp();
-  }
+  MOZ_ASSERT(IsNumericType(ins->type()) || ins->type() == MIRType::Boolean);
 
   Synchronization sync = Synchronization::Load();
   if (ins->requiresMemoryBarrier()) {
     LMemoryBarrier* fence = new (alloc()) LMemoryBarrier(sync.barrierBefore);
     add(fence, ins);
   }
-  LLoadUnboxedScalar* lir =
-      new (alloc()) LLoadUnboxedScalar(elements, index, tempDef);
-  if (ins->fallible()) {
-    assignSnapshot(lir, Bailout_Overflow);
+
+  if (!Scalar::isBigIntType(ins->storageType())) {
+    // We need a temp register for Uint32Array with known double result.
+    LDefinition tempDef = LDefinition::BogusTemp();
+    if (ins->storageType() == Scalar::Uint32 &&
+        IsFloatingPointType(ins->type())) {
+      tempDef = temp();
+    }
+
+    auto* lir = new (alloc()) LLoadUnboxedScalar(elements, index, tempDef);
+    if (ins->fallible()) {
+      assignSnapshot(lir, Bailout_Overflow);
+    }
+    define(lir, ins);
+  } else {
+    MOZ_ASSERT(ins->type() == MIRType::BigInt);
+
+    auto* lir =
+        new (alloc()) LLoadUnboxedBigInt(elements, index, temp(), tempInt64());
+    define(lir, ins);
+    assignSafepoint(lir, ins);
   }
-  define(lir, ins);
+
   if (ins->requiresMemoryBarrier()) {
     LMemoryBarrier* fence = new (alloc()) LMemoryBarrier(sync.barrierAfter);
     add(fence, ins);
@@ -3487,13 +3497,25 @@ void LIRGenerator::visitLoadTypedArrayElementHole(
   const LUse object = useRegister(ins->object());
   const LAllocation index = useRegister(ins->index());
 
-  LLoadTypedArrayElementHole* lir =
-      new (alloc()) LLoadTypedArrayElementHole(object, index, temp());
-  if (ins->fallible()) {
-    assignSnapshot(lir, Bailout_Overflow);
+  if (!Scalar::isBigIntType(ins->arrayType())) {
+    auto* lir = new (alloc()) LLoadTypedArrayElementHole(object, index, temp());
+    if (ins->fallible()) {
+      assignSnapshot(lir, Bailout_Overflow);
+    }
+    defineBox(lir, ins);
+    assignSafepoint(lir, ins);
+  } else {
+#ifdef JS_CODEGEN_X86
+    LDefinition tmp = LDefinition::BogusTemp();
+#else
+    LDefinition tmp = temp();
+#endif
+
+    auto* lir = new (alloc())
+        LLoadTypedArrayElementHoleBigInt(object, index, tmp, tempInt64());
+    defineBox(lir, ins);
+    assignSafepoint(lir, ins);
   }
-  defineBox(lir, ins);
-  assignSafepoint(lir, ins);
 }
 
 void LIRGenerator::visitStoreUnboxedScalar(MStoreUnboxedScalar* ins) {
