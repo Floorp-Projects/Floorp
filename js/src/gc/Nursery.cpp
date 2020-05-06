@@ -1302,10 +1302,10 @@ void js::Nursery::sweep(JSTracer* trc) {
   for (Cell* cell : cellsWithUid_) {
     JSObject* obj = static_cast<JSObject*>(cell);
     if (!IsForwarded(obj)) {
-      obj->zone()->removeUniqueId(obj);
+      obj->nurseryZone()->removeUniqueId(obj);
     } else {
       JSObject* dst = Forwarded(obj);
-      dst->zone()->transferUniqueId(dst, obj);
+      obj->nurseryZone()->transferUniqueId(dst, obj);
     }
   }
   cellsWithUid_.clear();

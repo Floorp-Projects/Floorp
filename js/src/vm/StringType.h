@@ -586,16 +586,7 @@ class JSString : public js::gc::Cell {
       }
       return asTenured().zone();
     }
-    return js::Nursery::getStringZone(this);
-  }
-
-  // Implement TenuredZone members needed for template instantiations.
-
-  JS::Zone* zoneFromAnyThread() const {
-    if (isTenured()) {
-      return asTenured().zoneFromAnyThread();
-    }
-    return js::Nursery::getStringZone(this);
+    return nurseryZone();
   }
 
   void setLengthAndFlags(uint32_t len, uint32_t flags) {

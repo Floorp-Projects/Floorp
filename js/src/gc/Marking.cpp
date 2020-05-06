@@ -3164,11 +3164,11 @@ inline T* js::TenuringTracer::allocTenured(Zone* zone, AllocKind kind) {
 
 JSObject* js::TenuringTracer::moveToTenuredSlow(JSObject* src) {
   MOZ_ASSERT(IsInsideNursery(src));
-  MOZ_ASSERT(!src->zone()->usedByHelperThread());
+  MOZ_ASSERT(!src->nurseryZone()->usedByHelperThread());
   MOZ_ASSERT(!src->is<PlainObject>());
 
   AllocKind dstKind = src->allocKindForTenure(nursery());
-  auto dst = allocTenured<JSObject>(src->zone(), dstKind);
+  auto dst = allocTenured<JSObject>(src->nurseryZone(), dstKind);
 
   size_t srcSize = Arena::thingSize(dstKind);
   size_t dstSize = srcSize;
@@ -3242,10 +3242,10 @@ inline JSObject* js::TenuringTracer::movePlainObjectToTenured(
   // Fast path version of moveToTenuredSlow() for specialized for PlainObject.
 
   MOZ_ASSERT(IsInsideNursery(src));
-  MOZ_ASSERT(!src->zone()->usedByHelperThread());
+  MOZ_ASSERT(!src->nurseryZone()->usedByHelperThread());
 
   AllocKind dstKind = src->allocKindForTenure();
-  auto dst = allocTenured<PlainObject>(src->zone(), dstKind);
+  auto dst = allocTenured<PlainObject>(src->nurseryZone(), dstKind);
 
   size_t srcSize = Arena::thingSize(dstKind);
   tenuredSize += srcSize;
@@ -3275,7 +3275,7 @@ size_t js::TenuringTracer::moveSlotsToTenured(NativeObject* dst,
     return 0;
   }
 
-  Zone* zone = src->zone();
+  Zone* zone = src->nurseryZone();
   size_t count = src->numDynamicSlots();
 
   if (!nursery().isInside(src->slots_)) {
@@ -3307,7 +3307,7 @@ size_t js::TenuringTracer::moveElementsToTenured(NativeObject* dst,
     return 0;
   }
 
-  Zone* zone = src->zone();
+  Zone* zone = src->nurseryZone();
 
   ObjectElements* srcHeader = src->getElementsHeader();
   size_t nslots = srcHeader->numAllocatedElements();
@@ -3369,10 +3369,10 @@ inline void js::TenuringTracer::insertIntoStringFixupList(
 
 JSString* js::TenuringTracer::moveToTenured(JSString* src) {
   MOZ_ASSERT(IsInsideNursery(src));
-  MOZ_ASSERT(!src->zone()->usedByHelperThread());
+  MOZ_ASSERT(!src->nurseryZone()->usedByHelperThread());
 
   AllocKind dstKind = src->getAllocKind();
-  Zone* zone = src->zone();
+  Zone* zone = src->nurseryZone();
   zone->tenuredStrings++;
 
   JSString* dst = allocTenured<JSString>(zone, dstKind);
@@ -3395,10 +3395,10 @@ inline void js::TenuringTracer::insertIntoBigIntFixupList(
 
 JS::BigInt* js::TenuringTracer::moveToTenured(JS::BigInt* src) {
   MOZ_ASSERT(IsInsideNursery(src));
-  MOZ_ASSERT(!src->zone()->usedByHelperThread());
+  MOZ_ASSERT(!src->nurseryZone()->usedByHelperThread());
 
   AllocKind dstKind = src->getAllocKind();
-  Zone* zone = src->zone();
+  Zone* zone = src->nurseryZone();
   zone->tenuredBigInts++;
 
   JS::BigInt* dst = allocTenured<JS::BigInt>(zone, dstKind);
@@ -3469,14 +3469,14 @@ size_t js::TenuringTracer::moveBigIntToTenured(JS::BigInt* dst, JS::BigInt* src,
   MOZ_ASSERT(OffsetToChunkEnd(src) >= ptrdiff_t(size));
   js_memcpy(dst, src, size);
 
-  MOZ_ASSERT(dst->zone() == src->zone());
+  MOZ_ASSERT(dst->zone() == src->nurseryZone());
 
   if (src->hasHeapDigits()) {
     size_t length = dst->digitLength();
     if (!nursery().isInside(src->heapDigits_)) {
       nursery().removeMallocedBufferDuringMinorGC(src->heapDigits_);
     } else {
-      Zone* zone = src->zone();
+      Zone* zone = src->nurseryZone();
       {
         AutoEnterOOMUnsafeRegion oomUnsafe;
         dst->heapDigits_ = zone->pod_malloc<JS::BigInt::Digit>(length);

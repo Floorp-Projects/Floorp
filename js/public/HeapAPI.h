@@ -575,24 +575,22 @@ static MOZ_ALWAYS_INLINE Zone* GetTenuredGCThingZone(GCCellPtr thing) {
   return js::gc::detail::GetTenuredGCThingZone(thing.unsafeAsUIntPtr());
 }
 
-extern JS_PUBLIC_API Zone* GetNurseryGCThingZone(GCCellPtr thing);
+extern JS_PUBLIC_API Zone* GetNurseryCellZone(js::gc::Cell* cell);
 
 static MOZ_ALWAYS_INLINE Zone* GetGCThingZone(GCCellPtr thing) {
   if (!js::gc::IsInsideNursery(thing.asCell())) {
     return js::gc::detail::GetTenuredGCThingZone(thing.unsafeAsUIntPtr());
   }
 
-  return GetNurseryGCThingZone(thing);
+  return GetNurseryCellZone(thing.asCell());
 }
-
-extern JS_PUBLIC_API Zone* GetNurseryStringZone(JSString* str);
 
 static MOZ_ALWAYS_INLINE Zone* GetStringZone(JSString* str) {
   if (!js::gc::IsInsideNursery(str)) {
     return js::gc::detail::GetTenuredGCThingZone(
         reinterpret_cast<uintptr_t>(str));
   }
-  return GetNurseryStringZone(str);
+  return GetNurseryCellZone(reinterpret_cast<js::gc::Cell*>(str));
 }
 
 extern JS_PUBLIC_API Zone* GetObjectZone(JSObject* obj);
