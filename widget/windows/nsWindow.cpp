@@ -5994,6 +5994,17 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     } break;
 
     case WM_DWMCOMPOSITIONCHANGED:
+      // Every window will get this message, but gfxVars only broadcasts
+      // updates when the value actually changes
+      if (XRE_IsParentProcess()) {
+        BOOL dwmEnabled = FALSE;
+        if (FAILED(::DwmIsCompositionEnabled(&dwmEnabled)) || !dwmEnabled) {
+          gfxVars::SetDwmCompositionEnabled(false);
+        } else {
+          gfxVars::SetDwmCompositionEnabled(true);
+        }
+      }
+
       UpdateNonClientMargins();
       BroadcastMsg(mWnd, WM_DWMCOMPOSITIONCHANGED);
       NotifyThemeChanged();
