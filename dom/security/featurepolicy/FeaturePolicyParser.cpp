@@ -70,7 +70,7 @@ bool FeaturePolicyParser::ParseString(const nsAString& aPolicy,
                                       nsTArray<Feature>& aParsedFeatures) {
   MOZ_ASSERT(aSelfOrigin);
 
-  nsTArray<nsTArray<nsString>> tokens;
+  nsTArray<CopyableTArray<nsString>> tokens;
   PolicyTokenizer::tokenizePolicy(aPolicy, tokens);
 
   nsTArray<Feature> parsedFeatures;

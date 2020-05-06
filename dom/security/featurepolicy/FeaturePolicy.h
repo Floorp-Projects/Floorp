@@ -136,12 +136,12 @@ class FeaturePolicy final : public nsISupports, public nsWrapperCache {
 
   void GetInheritedDeniedFeatureNames(
       nsTArray<nsString>& aInheritedDeniedFeatureNames) {
-    aInheritedDeniedFeatureNames = mInheritedDeniedFeatureNames;
+    aInheritedDeniedFeatureNames = mInheritedDeniedFeatureNames.Clone();
   }
 
   void SetInheritedDeniedFeatureNames(
       const nsTArray<nsString>& aInheritedDeniedFeatureNames) {
-    mInheritedDeniedFeatureNames = aInheritedDeniedFeatureNames;
+    mInheritedDeniedFeatureNames = aInheritedDeniedFeatureNames.Clone();
   }
 
   void GetDeclaredString(nsAString& aDeclaredString) {
