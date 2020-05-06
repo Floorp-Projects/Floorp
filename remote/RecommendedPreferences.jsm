@@ -10,9 +10,6 @@ const RecommendedPreferences = {
   // Allow the application to have focus even when it runs in the background.
   "focusmanager.testmode": true,
 
-  // Force sRGB tagged screenshots until bug 1615395 has been fixed
-  "gfx.color_management.force_srgb": true,
-
   // Avoid breaking odd-runs of firefox because of it running in safe mode.
   // Firefox will run in safe mode alsmost on every even/odd runs as
   // Puppeteer may very easily shutdown Firefox process brutaly and force
