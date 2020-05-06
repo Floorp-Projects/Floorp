@@ -158,7 +158,7 @@ void VRManagerChild::UpdateDisplayInfo(const VRDisplayInfo& aDisplayInfo) {
   nsTArray<uint32_t> disconnectedDisplays;
   nsTArray<uint32_t> connectedDisplays;
 
-  const nsTArray<RefPtr<VRDisplayClient>> prevDisplays(mDisplays);
+  const nsTArray<RefPtr<VRDisplayClient>> prevDisplays(mDisplays.Clone());
 
   // Check if any displays have been disconnected
   for (auto& display : prevDisplays) {
@@ -218,7 +218,7 @@ void VRManagerChild::UpdateDisplayInfo(const VRDisplayInfo& aDisplayInfo) {
     }
   }
 
-  mDisplays = displays;
+  mDisplays = std::move(displays);
 
   // We wish to fire the events only after mDisplays is updated
   for (uint32_t displayID : disconnectedDisplays) {
@@ -250,8 +250,7 @@ mozilla::ipc::IPCResult VRManagerChild::RecvUpdateRuntimeCapabilities(
 }
 
 void VRManagerChild::NotifyRuntimeCapabilitiesUpdatedInternal() {
-  nsTArray<RefPtr<VRManagerEventObserver>> listeners;
-  listeners = mListeners;
+  const nsTArray<RefPtr<VRManagerEventObserver>> listeners = mListeners.Clone();
   for (auto& listener : listeners) {
     listener->NotifyDetectRuntimesCompleted();
   }
@@ -336,7 +335,7 @@ void VRManagerChild::ResetPuppet(dom::Promise* aPromise, ErrorResult& aRv) {
 
 void VRManagerChild::GetVRDisplays(
     nsTArray<RefPtr<VRDisplayClient>>& aDisplays) {
-  aDisplays = mDisplays;
+  aDisplays = mDisplays.Clone();
 }
 
 bool VRManagerChild::RefreshVRDisplaysWithCallback(uint64_t aWindowId) {
@@ -456,8 +455,7 @@ void VRManagerChild::FireDOMVRDisplayPresentChangeEvent(uint32_t aDisplayID) {
 
 void VRManagerChild::FireDOMVRDisplayMountedEventInternal(uint32_t aDisplayID) {
   // Iterate over a copy of mListeners, as dispatched events may modify it.
-  nsTArray<RefPtr<VRManagerEventObserver>> listeners(mListeners);
-  for (auto& listener : listeners) {
+  for (auto& listener : mListeners.Clone()) {
     listener->NotifyVRDisplayMounted(aDisplayID);
   }
 }
@@ -465,16 +463,14 @@ void VRManagerChild::FireDOMVRDisplayMountedEventInternal(uint32_t aDisplayID) {
 void VRManagerChild::FireDOMVRDisplayUnmountedEventInternal(
     uint32_t aDisplayID) {
   // Iterate over a copy of mListeners, as dispatched events may modify it.
-  nsTArray<RefPtr<VRManagerEventObserver>> listeners(mListeners);
-  for (auto& listener : listeners) {
+  for (auto& listener : mListeners.Clone()) {
     listener->NotifyVRDisplayUnmounted(aDisplayID);
   }
 }
 
 void VRManagerChild::FireDOMVRDisplayConnectEventInternal(uint32_t aDisplayID) {
   // Iterate over a copy of mListeners, as dispatched events may modify it.
-  nsTArray<RefPtr<VRManagerEventObserver>> listeners(mListeners);
-  for (auto& listener : listeners) {
+  for (auto& listener : mListeners.Clone()) {
     listener->NotifyVRDisplayConnect(aDisplayID);
   }
 }
@@ -482,8 +478,7 @@ void VRManagerChild::FireDOMVRDisplayConnectEventInternal(uint32_t aDisplayID) {
 void VRManagerChild::FireDOMVRDisplayDisconnectEventInternal(
     uint32_t aDisplayID) {
   // Iterate over a copy of mListeners, as dispatched events may modify it.
-  nsTArray<RefPtr<VRManagerEventObserver>> listeners(mListeners);
-  for (auto& listener : listeners) {
+  for (auto& listener : mListeners.Clone()) {
     listener->NotifyVRDisplayDisconnect(aDisplayID);
   }
 }
@@ -491,8 +486,7 @@ void VRManagerChild::FireDOMVRDisplayDisconnectEventInternal(
 void VRManagerChild::FireDOMVRDisplayPresentChangeEventInternal(
     uint32_t aDisplayID) {
   // Iterate over a copy of mListeners, as dispatched events may modify it.
-  const nsTArray<RefPtr<VRManagerEventObserver>> listeners(mListeners);
-  for (auto& listener : listeners) {
+  for (auto& listener : mListeners.Clone()) {
     // MOZ_KnownLive because 'listeners' is guaranteed to keep it alive.
     //
     // This can go away once
@@ -508,16 +502,13 @@ void VRManagerChild::FireDOMVRDisplayConnectEventsForLoadInternal(
 
 void VRManagerChild::NotifyPresentationGenerationChangedInternal(
     uint32_t aDisplayID) {
-  nsTArray<RefPtr<VRManagerEventObserver>> listeners(mListeners);
-  for (auto& listener : listeners) {
+  for (auto& listener : mListeners.Clone()) {
     listener->NotifyPresentationGenerationChanged(aDisplayID);
   }
 }
 
 void VRManagerChild::NotifyEnumerationCompletedInternal() {
-  nsTArray<RefPtr<VRManagerEventObserver>> listeners;
-  listeners = mListeners;
-  for (auto& listener : listeners) {
+  for (auto& listener : mListeners.Clone()) {
     listener->NotifyEnumerationCompleted();
   }
 }
@@ -526,9 +517,7 @@ void VRManagerChild::FireDOMVRDisplayConnectEventsForLoad(
     VRManagerEventObserver* aObserver) {
   // We need to fire the VRDisplayConnect event when a page is loaded
   // for each VR Display that has already been enumerated
-  nsTArray<RefPtr<VRDisplayClient>> displays;
-  displays = mDisplays;
-  for (auto& display : displays) {
+  for (const auto& display : mDisplays.Clone()) {
     const VRDisplayInfo& info = display->GetDisplayInfo();
     if (info.GetIsConnected()) {
       nsContentUtils::AddScriptRunner(NewRunnableMethod<
