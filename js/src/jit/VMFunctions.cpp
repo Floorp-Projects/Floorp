@@ -1531,14 +1531,6 @@ bool EqualStringsHelperPure(JSString* str1, JSString* str2) {
   return EqualChars(&str1->asLinear(), str2Linear);
 }
 
-bool CheckIsCallable(JSContext* cx, HandleValue v, CheckIsCallableKind kind) {
-  if (!IsCallable(v)) {
-    return ThrowCheckIsCallable(cx, kind);
-  }
-
-  return true;
-}
-
 static bool MaybeTypedArrayIndexString(jsid id) {
   MOZ_ASSERT(JSID_IS_ATOM(id) || JSID_IS_SYMBOL(id));
 

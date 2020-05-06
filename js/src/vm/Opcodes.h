@@ -1382,17 +1382,6 @@
      */ \
     MACRO(CheckIsObj, check_is_obj, NULL, 2, 1, 1, JOF_UINT8) \
     /*
-     * Check that the top value on the stack is callable, and throw a TypeError
-     * if not. The operand `kind` is used only to generate an appropriate error
-     * message.
-     *
-     *   Category: Objects
-     *   Type: Iteration
-     *   Operands: CheckIsCallableKind kind
-     *   Stack: obj => obj
-     */ \
-    MACRO(CheckIsCallable, check_is_callable, NULL, 2, 1, 1, JOF_UINT8) \
-    /*
      * Throw a TypeError if `val` is `null` or `undefined`.
      *
      * Implements: [RequireObjectCoercible][1]. But most instructions that
@@ -3671,6 +3660,7 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
+  MACRO(237)                                   \
   MACRO(238)                                   \
   MACRO(239)                                   \
   MACRO(240)                                   \

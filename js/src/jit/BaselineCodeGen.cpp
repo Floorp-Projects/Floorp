@@ -2228,24 +2228,6 @@ bool BaselineCodeGen<Handler>::emit_CheckIsObj() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_CheckIsCallable() {
-  frame.syncStack(0);
-  masm.loadValue(frame.addressOfStackValue(-1), R0);
-
-  prepareVMCall();
-
-  pushUint8BytecodeOperandArg(R1.scratchReg());
-  pushArg(R0);
-
-  using Fn = bool (*)(JSContext*, HandleValue, CheckIsCallableKind);
-  if (!callVM<Fn, CheckIsCallable>()) {
-    return false;
-  }
-
-  return true;
-}
-
-template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_CheckThis() {
   frame.syncStack(0);
   masm.loadValue(frame.addressOfStackValue(-1), R0);

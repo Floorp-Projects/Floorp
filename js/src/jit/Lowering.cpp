@@ -4681,17 +4681,6 @@ void LIRGenerator::visitCheckIsObj(MCheckIsObj* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitCheckIsCallable(MCheckIsCallable* ins) {
-  MDefinition* checkVal = ins->checkValue();
-  MOZ_ASSERT(checkVal->type() == MIRType::Value);
-
-  LCheckIsCallable* lir =
-      new (alloc()) LCheckIsCallable(useBox(checkVal), temp());
-  redefine(ins, checkVal);
-  add(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitCheckObjCoercible(MCheckObjCoercible* ins) {
   MDefinition* checkVal = ins->checkValue();
   MOZ_ASSERT(checkVal->type() == MIRType::Value);

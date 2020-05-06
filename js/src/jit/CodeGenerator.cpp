@@ -12805,30 +12805,6 @@ void CodeGenerator::visitOutOfLineIsCallable(OutOfLineIsCallable* ool) {
   masm.jump(ool->rejoin());
 }
 
-void CodeGenerator::visitCheckIsCallable(LCheckIsCallable* ins) {
-  ValueOperand checkValue = ToValue(ins, LCheckIsCallable::CheckValue);
-  Register temp = ToRegister(ins->temp());
-
-  // OOL code is used in the following 2 cases:
-  //   * checkValue is not callable
-  //   * checkValue is proxy and it's unknown whether it's callable or not
-  // CheckIsCallable checks if passed value is callable, regardless of the
-  // cases above.  IsCallable operation is not observable and checking it
-  // again doesn't matter.
-  using Fn = bool (*)(JSContext*, HandleValue, CheckIsCallableKind);
-  OutOfLineCode* ool = oolCallVM<Fn, CheckIsCallable>(
-      ins, ArgList(checkValue, Imm32(ins->mir()->checkKind())), StoreNothing());
-
-  masm.branchTestObject(Assembler::NotEqual, checkValue, ool->entry());
-
-  Register object = masm.extractObject(checkValue, temp);
-  emitIsCallableOrConstructor<Callable>(object, temp, ool->entry());
-
-  masm.branchTest32(Assembler::Zero, temp, temp, ool->entry());
-
-  masm.bind(ool->rejoin());
-}
-
 class OutOfLineIsConstructor : public OutOfLineCodeBase<CodeGenerator> {
   LIsConstructor* ins_;
 

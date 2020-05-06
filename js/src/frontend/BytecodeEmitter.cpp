@@ -511,10 +511,6 @@ bool BytecodeEmitter::emitCheckIsObj(CheckIsObjectKind kind) {
   return emit2(JSOp::CheckIsObj, uint8_t(kind));
 }
 
-bool BytecodeEmitter::emitCheckIsCallable(CheckIsCallableKind kind) {
-  return emit2(JSOp::CheckIsCallable, uint8_t(kind));
-}
-
 /* Updates line number notes, not column notes. */
 bool BytecodeEmitter::updateLineNumberNotes(uint32_t offset) {
   if (skipLocationSrcNotes()) {
