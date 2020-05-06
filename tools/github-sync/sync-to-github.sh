@@ -60,6 +60,7 @@ if [[ -n "${GITHUB_SECRET:-}" ]]; then
         ${MYDIR}/read-json.py "secret/token"
     )
     AUTH="moz-gfx:${GITHUB_TOKEN}"
+    CURL_AUTH="Authorization: bearer ${GITHUB_TOKEN}"
 fi
 
 echo "Pushing base ${BRANCH} branch..."
@@ -118,7 +119,7 @@ git push "https://${AUTH}@github.com/moz-gfx/${NAME}" +${BRANCH}:${BRANCH} \
     2>&1 | sed -e "s/${AUTH}/_SANITIZED_/g"
 
 CURL_HEADER="Accept: application/vnd.github.v3+json"
-CURL=(curl -sSfL -H "${CURL_HEADER}" -u "${AUTH}")
+CURL=(curl -sSfL -H "${CURL_HEADER}" -H "${CURL_AUTH}")
 # URL extracted here mostly to make servo-tidy happy with line lengths
 API_URL="https://api.github.com/repos/${DOWNSTREAM_REPO}"
 
