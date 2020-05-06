@@ -91,10 +91,18 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
   }
 #endif
 
-  WindowGlobalInit init(principal,
-                        aWindow->GetDocumentContentBlockingAllowListPrincipal(),
-                        aWindow->GetDocumentURI(), bc, aWindow->WindowID(),
-                        aWindow->GetOuterWindow()->WindowID());
+  // A non null mixedContent channel on the docshell indicates,
+  // that the user has overriden mixed content to allow mixed
+  // content loads to happen.
+  nsCOMPtr<nsIDocShell> rootShell = aWindow->GetDocShell();
+  nsCOMPtr<nsIChannel> mixedChannel;
+  rootShell->GetMixedContentChannel(getter_AddRefs(mixedChannel));
+  bool allowMixedContent = mixedChannel ? true : false;
+
+  WindowGlobalInit init(
+      principal, aWindow->GetDocumentContentBlockingAllowListPrincipal(),
+      aWindow->GetDocumentURI(), bc, aWindow->WindowID(),
+      aWindow->GetOuterWindow()->WindowID(), allowMixedContent);
 
   auto wgc = MakeRefPtr<WindowGlobalChild>(init, aWindow);
 
@@ -441,9 +449,9 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvDispatchSecurityPolicyViolation(
   return IPC_OK();
 }
 
-IPCResult WindowGlobalChild::RecvRawMessage(
-    const JSActorMessageMeta& aMeta, const ClonedMessageData& aData,
-    const ClonedMessageData& aStack) {
+IPCResult WindowGlobalChild::RecvRawMessage(const JSActorMessageMeta& aMeta,
+                                            const ClonedMessageData& aData,
+                                            const ClonedMessageData& aStack) {
   StructuredCloneData data;
   data.BorrowFromClonedMessageDataForChild(aData);
   StructuredCloneData stack;
