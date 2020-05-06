@@ -26,6 +26,8 @@ var features = {
   showingGCs: "mozMemory" in performance,
 };
 
+var load_paused = false;
+
 // Draw state.
 var stopped = 0;
 var start;
@@ -38,6 +40,7 @@ var memoryCtx;
 // Current test state.
 var activeTest = undefined;
 var testDuration = undefined; // ms
+var loadState = "(init)"; // One of '(active)', '(inactive)', '(N/A)'
 var testState = "idle"; // One of 'idle' or 'running'.
 var testStart = undefined; // ms
 var testQueue = [];
@@ -46,10 +49,31 @@ var testQueue = [];
 var globalDefaultGarbageTotal = "8M";
 var globalDefaultGarbagePerFrame = "8K";
 
+function parse_units(v) {
+  if (!v.length) {
+    return NaN;
+  }
+  var lastChar = v[v.length - 1].toLowerCase();
+  if (!isNaN(parseFloat(lastChar))) {
+    return parseFloat(v);
+  }
+  var units = parseFloat(v.substr(0, v.length - 1));
+  if (lastChar == "k") {
+    return units * 1e3;
+  }
+  if (lastChar == "m") {
+    return units * 1e6;
+  }
+  if (lastChar == "g") {
+    return units * 1e9;
+  }
+  return NaN;
+}
+
 function Graph(ctx) {
   this.ctx = ctx;
 
-  var { width, height } = ctx.canvas;
+  var { height } = ctx.canvas;
   this.layout = {
     xAxisLabel_Y: height - 20,
   };
@@ -175,8 +199,6 @@ LatencyGraph.prototype.draw = function() {
 
   // Draw vertical lines marking minor and major GCs
   if (features.showingGCs) {
-    const { width, height } = ctx.canvas;
-
     ctx.strokeStyle = stroke.gcslice;
     var idx = sampleIndex % numSamples;
     const count = {
@@ -184,7 +206,7 @@ LatencyGraph.prototype.draw = function() {
       minor: 0,
       slice: slices[idx],
     };
-    for (var i = 0; i < numSamples; i++) {
+    for (let i = 0; i < numSamples; i++) {
       idx = (sampleIndex + i) % numSamples;
       const isMajorStart = count.major < majorGCs[idx];
       if (count.slice < slices[idx]) {
@@ -206,7 +228,7 @@ LatencyGraph.prototype.draw = function() {
     ctx.strokeStyle = stroke.minor;
     idx = sampleIndex % numSamples;
     count.minor = gcs[idx];
-    for (var i = 0; i < numSamples; i++) {
+    for (let i = 0; i < numSamples; i++) {
       idx = (sampleIndex + i) % numSamples;
       if (count.minor < minorGCs[idx]) {
         ctx.beginPath();
@@ -302,7 +324,7 @@ MemoryGraph.prototype.draw = function() {
 
   var worst = 0,
     worstpos = 0;
-  for (var i = 0; i < numSamples; i++) {
+  for (let i = 0; i < numSamples; i++) {
     if (gcBytes[i] >= worst) {
       worst = gcBytes[i];
       worstpos = i;
@@ -351,7 +373,7 @@ MemoryGraph.prototype.draw = function() {
   ctx.fill();
 
   ctx.beginPath();
-  for (var i = 0; i < numSamples; i++) {
+  for (let i = 0; i < numSamples; i++) {
     if (i == (sampleIndex + 1) % numSamples) {
       ctx.moveTo(this.xpos(i), this.ypos(gcBytes[i]));
     } else {
@@ -367,16 +389,23 @@ MemoryGraph.prototype.draw = function() {
 };
 
 function stopstart() {
-  if (stopped) {
+  const do_graph = document.getElementById("do-graph");
+  if (do_graph.checked) {
     window.requestAnimationFrame(handler);
     prev = performance.now();
     start += prev - stopped;
-    document.getElementById("stop").value = "Pause";
     stopped = 0;
   } else {
-    document.getElementById("stop").value = "Resume";
     stopped = performance.now();
   }
+  update_load_state();
+}
+
+function do_load() {
+  const do_load = document.getElementById("do-load");
+  load_paused = !do_load.checked;
+  console.log(`load paused: ${load_paused}`);
+  update_load_state();
 }
 
 var previous = 0;
@@ -394,9 +423,10 @@ function handler(timestamp) {
       ((testDuration - (timestamp - testStart)) / 1000).toFixed(1) + " sec";
   }
 
-  activeTest.makeGarbage(activeTest.garbagePerFrame);
+  if (!load_paused) {
+    activeTest.makeGarbage(activeTest.garbagePerFrame);
+  }
 
-  var elt = document.getElementById("data");
   var delay = timestamp - prev;
   prev = timestamp;
 
@@ -501,7 +531,7 @@ function onload() {
   }
 
   // Load the initial test.
-  change_active_test("noAllocation");
+  change_load("noAllocation");
 
   // Polyfill rAF.
   var requestAnimationFrame =
@@ -521,6 +551,8 @@ function onload() {
   }
 
   trackHeapSizes(document.getElementById("track-sizes").checked);
+
+  update_load_state();
 
   // Start drawing.
   reset_draw_state();
@@ -549,10 +581,22 @@ function start_test_cycle(tests_to_run) {
   reset_draw_state();
 }
 
+function update_load_state() {
+  if (activeTest.name == "noAllocation") {
+    loadState = "(none)";
+  } else if (stopped || load_paused) {
+    loadState = "(inactive)";
+  } else {
+    loadState = "(active)";
+  }
+  document.getElementById("load-running").textContent = loadState;
+}
+
 function start_test(testName) {
-  change_active_test(testName);
+  change_load(testName);
   console.log(`Running test: ${testName}`);
   document.getElementById("test-selection").value = testName;
+  update_load_state();
 }
 
 function end_test(timestamp) {
@@ -608,7 +652,7 @@ function compute_test_spark_histogram(histogram) {
     [300, 99999999],
   ];
   var rescaled = new Map();
-  for (var [delay, count] of histogram) {
+  for (let [delay,] of histogram) {
     delay = delay / 100;
     for (var i = 0; i < ranges.length; ++i) {
       var low = ranges[i][0];
@@ -620,7 +664,7 @@ function compute_test_spark_histogram(histogram) {
     }
   }
   var total = 0;
-  for (var [i, count] of rescaled) {
+  for (const [, count] of rescaled) {
     total += count;
   }
   var sparks = "▁▂▃▄▅▆▇█";
@@ -635,7 +679,7 @@ function compute_test_spark_histogram(histogram) {
     "#ff0000",
   ];
   var line = "";
-  for (var i = 0; i < ranges.length; ++i) {
+  for (let i = 0; i < ranges.length; ++i) {
     const amt = rescaled.has(i) ? rescaled.get(i) : 0;
     var spark = sparks.charAt(parseInt((amt / total) * 8));
     line += `<span style="color:${colors[i]}">${spark}</span>`;
@@ -648,7 +692,7 @@ function reload_active_test() {
   activeTest.load(activeTest.garbageTotal);
 }
 
-function change_active_test(new_test_name) {
+function change_load(new_test_name) {
   if (activeTest) {
     activeTest.unload();
   }
@@ -673,6 +717,7 @@ function change_active_test(new_test_name) {
   );
 
   activeTest.load(activeTest.garbageTotal);
+  update_load_state();
 }
 
 function duration_changed() {
@@ -684,30 +729,9 @@ function duration_changed() {
 function test_changed() {
   var select = document.getElementById("test-selection");
   console.log(`Switching to test: ${select.value}`);
-  change_active_test(select.value);
+  change_load(select.value);
   gHistogram.clear();
   reset_draw_state();
-}
-
-function parse_units(v) {
-  if (!v.length) {
-    return NaN;
-  }
-  var lastChar = v[v.length - 1].toLowerCase();
-  if (!isNaN(parseFloat(lastChar))) {
-    return parseFloat(v);
-  }
-  var units = parseFloat(v.substr(0, v.length - 1));
-  if (lastChar == "k") {
-    return units * 1e3;
-  }
-  if (lastChar == "m") {
-    return units * 1e6;
-  }
-  if (lastChar == "g") {
-    return units * 1e9;
-  }
-  return NaN;
 }
 
 function format_units(n) {
