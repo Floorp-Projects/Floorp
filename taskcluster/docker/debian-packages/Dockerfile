@@ -7,5 +7,4 @@ RUN apt-get install --install-recommends \
       aptitude \
       build-essential \
       devscripts \
-      fakeroot \
-      git
+      fakeroot
