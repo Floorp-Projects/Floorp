@@ -8,7 +8,6 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 const MAC = AppConstants.platform == "macosx";
-const isFissionEnabled = Services.prefs.getBoolPref("fission.autostart");
 
 add_task(async function test_proc_info() {
   waitForExplicitFinish();
@@ -43,13 +42,6 @@ add_task(async function test_proc_info() {
             "unknown",
             "Child proc type should be known"
           );
-          if (childProc.type == "webIsolated") {
-            Assert.notEqual(
-              childProc.origin || "",
-              "",
-              "Child process should have an origin"
-            );
-          }
 
           for (var y = 0; y < childProc.threads.length; y++) {
             cpuThreads += childProc.threads[y].cpuUser;
