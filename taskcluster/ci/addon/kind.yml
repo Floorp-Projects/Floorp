@@ -22,7 +22,7 @@ jobs:
         run-on-projects: [mozilla-central]
         worker-type: b-linux
         worker:
-            docker-image: {in-tree: debian7-amd64-build}
+            docker-image: {in-tree: debian8-amd64-build}
             max-run-time: 1800
             artifacts:
                 - type: file
