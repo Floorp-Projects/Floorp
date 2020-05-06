@@ -4,6 +4,14 @@
     <SwitchPreferenceCompat
         app:key="@string/key_tracking_protection"
         app:title="Enable Tracking Protection"/>
+    <ListPreference
+        app:key="@string/key_enhanced_tracking_protection"
+        app:title="Enhanced Tracking Protection"
+        app:summary="%s"
+        app:entries="@array/enhanced_tracking_protection_display_names"
+        app:entryValues="@array/enhanced_tracking_protection_values"
+        app:defaultValue="standard">
+    </ListPreference>
     <SwitchPreferenceCompat
         app:key="@string/key_autoplay"
         app:title="Allow Autoplay"/>
