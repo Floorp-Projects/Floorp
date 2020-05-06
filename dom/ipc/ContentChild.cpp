@@ -1045,6 +1045,11 @@ nsresult ContentChild::ProvideWindowCommon(
   }
 
   windowChild->Init();
+  auto guardNullWindowGlobal = MakeScopeExit([&] {
+    if (!windowChild->GetWindowGlobal()) {
+      windowChild->Destroy();
+    }
+  });
 
   // Now that |newChild| has had its IPC link established, call |Init| to set it
   // up.
@@ -1787,6 +1792,11 @@ mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
     return IPC_FAIL(this, "BindPWindowGlobalEndpoint failed");
   }
   windowChild->Init();
+  auto guardNullWindowGlobal = MakeScopeExit([&] {
+    if (!windowChild->GetWindowGlobal()) {
+      windowChild->Destroy();
+    }
+  });
 
   // Ensure that a BrowsingContext is set for our BrowserChild before
   // running `Init`.
