@@ -121,7 +121,7 @@ XRSession::XRSession(
       mRefreshDriver(aRefreshDriver),
       mDisplayClient(aClient),
       mFrameRequestCallbackCounter(0),
-      mEnabledReferenceSpaceTypes(aEnabledReferenceSpaceTypes),
+      mEnabledReferenceSpaceTypes(aEnabledReferenceSpaceTypes.Clone()),
       mViewerPosePoolIndex(0),
       mFramePoolIndex(0) {
   if (aClient) {

@@ -111,7 +111,7 @@ void VRDisplay::UpdateVRDisplays(nsTArray<RefPtr<VRDisplay>>& aDisplays,
     }
   }
 
-  aDisplays = displays;
+  aDisplays = std::move(displays);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(VRFieldOfView, mParent)

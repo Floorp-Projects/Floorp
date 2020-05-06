@@ -283,8 +283,7 @@ bool XRSystem::OnXRPermissionRequestAllow() {
 
 void XRSystem::OnXRPermissionRequestCancel() {
   nsTArray<RefPtr<RequestSessionRequest>> requestSessionRequests(
-      mRequestSessionRequestsWaitingForEnumeration);
-  mRequestSessionRequestsWaitingForEnumeration.Clear();
+      std::move(mRequestSessionRequestsWaitingForEnumeration));
   for (RefPtr<RequestSessionRequest>& request : requestSessionRequests) {
     if (CancelHardwareRequest(request)) {
       request->mPromise->MaybeRejectWithSecurityError(
@@ -315,8 +314,7 @@ void XRSystem::ResolveSessionRequestsWithoutHardware() {
   displays.AppendElement(nullptr);
 
   nsTArray<RefPtr<RequestSessionRequest>> requestSessionRequests(
-      mRequestSessionRequestsWithoutHardware);
-  mRequestSessionRequestsWithoutHardware.Clear();
+      std::move(mRequestSessionRequestsWithoutHardware));
 
   ResolveSessionRequests(requestSessionRequests, displays);
 }
@@ -337,8 +335,7 @@ void XRSystem::NotifyEnumerationCompleted() {
   vm->GetVRDisplays(displays);
 
   nsTArray<RefPtr<RequestSessionRequest>> requestSessionRequests(
-      mRequestSessionRequestsWaitingForEnumeration);
-  mRequestSessionRequestsWaitingForEnumeration.Clear();
+      std::move(mRequestSessionRequestsWaitingForEnumeration));
 
   ResolveSessionRequests(requestSessionRequests, displays);
 }
@@ -388,8 +385,7 @@ void XRSystem::ResolveIsSessionSupportedRequests() {
   // Resolve promises returned by IsSessionSupported
   gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
   nsTArray<RefPtr<IsSessionSupportedRequest>> isSessionSupportedRequests(
-      mIsSessionSupportedRequests);
-  mIsSessionSupportedRequests.Clear();
+      std::move(mIsSessionSupportedRequests));
   bool featurePolicyBlocked = FeaturePolicyBlocked();
 
   for (RefPtr<IsSessionSupportedRequest>& request :
@@ -422,8 +418,7 @@ void XRSystem::ProcessSessionRequestsWaitingForRuntimeDetection() {
   gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
 
   nsTArray<RefPtr<RequestSessionRequest>> sessionRequests(
-      mRequestSessionRequestsWaitingForRuntimeDetection);
-  mRequestSessionRequestsWaitingForRuntimeDetection.Clear();
+      std::move(mRequestSessionRequestsWaitingForRuntimeDetection));
 
   for (RefPtr<RequestSessionRequest>& request : sessionRequests) {
     bool compatibleRuntime = false;
@@ -503,8 +498,8 @@ RequestSessionRequest::RequestSessionRequest(
     : mPromise(aPromise),
       mSessionMode(aSessionMode),
       mPresentationGroup(aPresentationGroup),
-      mRequiredReferenceSpaceTypes(aRequiredReferenceSpaceTypes),
-      mOptionalReferenceSpaceTypes(aOptionalReferenceSpaceTypes) {}
+      mRequiredReferenceSpaceTypes(aRequiredReferenceSpaceTypes.Clone()),
+      mOptionalReferenceSpaceTypes(aOptionalReferenceSpaceTypes.Clone()) {}
 
 bool RequestSessionRequest::ResolveSupport(
     const gfx::VRDisplayClient* aDisplay,
