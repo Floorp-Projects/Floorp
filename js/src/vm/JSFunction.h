@@ -229,7 +229,9 @@ class JSFunction : public js::NativeObject {
   /* Compound attributes: */
   bool isBuiltin() const { return isBuiltinNative() || isSelfHostedBuiltin(); }
 
-  bool isNamedLambda() const { return flags_.isNamedLambda(displayAtom()); }
+  bool isNamedLambda() const {
+    return flags_.isNamedLambda(displayAtom() != nullptr);
+  }
 
   bool hasLexicalThis() const { return isArrow(); }
 
