@@ -117,6 +117,7 @@ nsHTTPCompressConv::AsyncConvertData(const char* aFromType, const char* aToType,
 
 NS_IMETHODIMP
 nsHTTPCompressConv::GetConvertedType(const nsACString& aFromType,
+                                     nsIChannel* aChannel,
                                      nsACString& aToType) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
