@@ -2,7 +2,6 @@
 //!
 //! It is not very featureful right now, and should be considered a work in progress.
 
-use core::marker::PhantomData;
 use core::ops::{Add, Div, Mul, Sub};
 
 use super::*;
@@ -21,7 +20,8 @@ impl TypeArray for ATerm {}
 /// may find it lacking functionality.
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Hash, Debug)]
 pub struct TArr<V, A> {
-    _marker: PhantomData<(V, A)>,
+    first: V,
+    rest: A,
 }
 
 impl<V, A> TypeArray for TArr<V, A> {}
@@ -53,6 +53,7 @@ macro_rules! tarr {
 /// Length of `ATerm` by itself is 0
 impl Len for ATerm {
     type Output = U0;
+    #[inline]
     fn len(&self) -> Self::Output {
         UTerm
     }
@@ -66,8 +67,9 @@ where
     Sum<Length<A>, B1>: Unsigned,
 {
     type Output = Add1<Length<A>>;
+    #[inline]
     fn len(&self) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+        self.rest.len() + B1
     }
 }
 
@@ -77,6 +79,7 @@ where
 
 impl Add<ATerm> for ATerm {
     type Output = ATerm;
+    #[inline]
     fn add(self, _: ATerm) -> Self::Output {
         ATerm
     }
@@ -88,8 +91,12 @@ where
     Vl: Add<Vr>,
 {
     type Output = TArr<Sum<Vl, Vr>, Sum<Al, Ar>>;
-    fn add(self, _: TArr<Vr, Ar>) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn add(self, rhs: TArr<Vr, Ar>) -> Self::Output {
+        TArr {
+            first: self.first + rhs.first,
+            rest: self.rest + rhs.rest,
+        }
     }
 }
 
@@ -99,6 +106,7 @@ where
 
 impl Sub<ATerm> for ATerm {
     type Output = ATerm;
+    #[inline]
     fn sub(self, _: ATerm) -> Self::Output {
         ATerm
     }
@@ -110,8 +118,12 @@ where
     Al: Sub<Ar>,
 {
     type Output = TArr<Diff<Vl, Vr>, Diff<Al, Ar>>;
-    fn sub(self, _: TArr<Vr, Ar>) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn sub(self, rhs: TArr<Vr, Ar>) -> Self::Output {
+        TArr {
+            first: self.first - rhs.first,
+            rest: self.rest - rhs.rest,
+        }
     }
 }
 
@@ -120,6 +132,7 @@ where
 
 impl<Rhs> Mul<Rhs> for ATerm {
     type Output = ATerm;
+    #[inline]
     fn mul(self, _: Rhs) -> Self::Output {
         ATerm
     }
@@ -129,15 +142,21 @@ impl<V, A, Rhs> Mul<Rhs> for TArr<V, A>
 where
     V: Mul<Rhs>,
     A: Mul<Rhs>,
+    Rhs: Copy,
 {
     type Output = TArr<Prod<V, Rhs>, Prod<A, Rhs>>;
-    fn mul(self, _: Rhs) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn mul(self, rhs: Rhs) -> Self::Output {
+        TArr {
+            first: self.first * rhs,
+            rest: self.rest * rhs,
+        }
     }
 }
 
 impl Mul<ATerm> for Z0 {
     type Output = ATerm;
+    #[inline]
     fn mul(self, _: ATerm) -> Self::Output {
         ATerm
     }
@@ -148,6 +167,7 @@ where
     U: Unsigned + NonZero,
 {
     type Output = ATerm;
+    #[inline]
     fn mul(self, _: ATerm) -> Self::Output {
         ATerm
     }
@@ -158,6 +178,7 @@ where
     U: Unsigned + NonZero,
 {
     type Output = ATerm;
+    #[inline]
     fn mul(self, _: ATerm) -> Self::Output {
         ATerm
     }
@@ -168,8 +189,12 @@ where
     Z0: Mul<A>,
 {
     type Output = TArr<Z0, Prod<Z0, A>>;
-    fn mul(self, _: TArr<V, A>) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn mul(self, rhs: TArr<V, A>) -> Self::Output {
+        TArr {
+            first: Z0,
+            rest: self * rhs.rest,
+        }
     }
 }
 
@@ -179,8 +204,12 @@ where
     PInt<U>: Mul<A> + Mul<V>,
 {
     type Output = TArr<Prod<PInt<U>, V>, Prod<PInt<U>, A>>;
-    fn mul(self, _: TArr<V, A>) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn mul(self, rhs: TArr<V, A>) -> Self::Output {
+        TArr {
+            first: self * rhs.first,
+            rest: self * rhs.rest,
+        }
     }
 }
 
@@ -190,8 +219,12 @@ where
     NInt<U>: Mul<A> + Mul<V>,
 {
     type Output = TArr<Prod<NInt<U>, V>, Prod<NInt<U>, A>>;
-    fn mul(self, _: TArr<V, A>) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn mul(self, rhs: TArr<V, A>) -> Self::Output {
+        TArr {
+            first: self * rhs.first,
+            rest: self * rhs.rest,
+        }
     }
 }
 
@@ -200,6 +233,7 @@ where
 
 impl<Rhs> Div<Rhs> for ATerm {
     type Output = ATerm;
+    #[inline]
     fn div(self, _: Rhs) -> Self::Output {
         ATerm
     }
@@ -209,10 +243,15 @@ impl<V, A, Rhs> Div<Rhs> for TArr<V, A>
 where
     V: Div<Rhs>,
     A: Div<Rhs>,
+    Rhs: Copy,
 {
     type Output = TArr<Quot<V, Rhs>, Quot<A, Rhs>>;
-    fn div(self, _: Rhs) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn div(self, rhs: Rhs) -> Self::Output {
+        TArr {
+            first: self.first / rhs,
+            rest: self.rest / rhs,
+        }
     }
 }
 
@@ -221,6 +260,7 @@ where
 
 impl<Rhs> PartialDiv<Rhs> for ATerm {
     type Output = ATerm;
+    #[inline]
     fn partial_div(self, _: Rhs) -> Self::Output {
         ATerm
     }
@@ -230,10 +270,15 @@ impl<V, A, Rhs> PartialDiv<Rhs> for TArr<V, A>
 where
     V: PartialDiv<Rhs>,
     A: PartialDiv<Rhs>,
+    Rhs: Copy,
 {
     type Output = TArr<PartialQuot<V, Rhs>, PartialQuot<A, Rhs>>;
-    fn partial_div(self, _: Rhs) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn partial_div(self, rhs: Rhs) -> Self::Output {
+        TArr {
+            first: self.first.partial_div(rhs),
+            rest: self.rest.partial_div(rhs),
+        }
     }
 }
 
@@ -243,6 +288,7 @@ use core::ops::Rem;
 
 impl<Rhs> Rem<Rhs> for ATerm {
     type Output = ATerm;
+    #[inline]
     fn rem(self, _: Rhs) -> Self::Output {
         ATerm
     }
@@ -252,10 +298,15 @@ impl<V, A, Rhs> Rem<Rhs> for TArr<V, A>
 where
     V: Rem<Rhs>,
     A: Rem<Rhs>,
+    Rhs: Copy,
 {
     type Output = TArr<Mod<V, Rhs>, Mod<A, Rhs>>;
-    fn rem(self, _: Rhs) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn rem(self, rhs: Rhs) -> Self::Output {
+        TArr {
+            first: self.first % rhs,
+            rest: self.rest % rhs,
+        }
     }
 }
 
@@ -265,6 +316,7 @@ use core::ops::Neg;
 
 impl Neg for ATerm {
     type Output = ATerm;
+    #[inline]
     fn neg(self) -> Self::Output {
         ATerm
     }
@@ -276,7 +328,11 @@ where
     A: Neg,
 {
     type Output = TArr<Negate<V>, Negate<A>>;
+    #[inline]
     fn neg(self) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+        TArr {
+            first: -self.first,
+            rest: -self.rest,
+        }
     }
 }

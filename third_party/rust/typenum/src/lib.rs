@@ -44,13 +44,20 @@
 //!
 
 #![no_std]
+#![forbid(unsafe_code)]
 #![warn(missing_docs)]
-#![cfg_attr(feature = "i128", feature(i128_type))]
 #![cfg_attr(feature = "strict", deny(missing_docs))]
 #![cfg_attr(feature = "strict", deny(warnings))]
-#![cfg_attr(feature = "cargo-clippy", deny(clippy))]
-#![cfg_attr(feature = "cargo-clippy",
-            allow(type_complexity, len_without_is_empty, new_without_default_derive))]
+#![cfg_attr(
+    feature = "cargo-clippy",
+    allow(
+        clippy::type_complexity,
+        clippy::len_without_is_empty,
+        clippy::new_without_default,
+        clippy::many_single_char_names
+    )
+)]
+#![cfg_attr(feature = "cargo-clippy", deny(clippy::missing_inline_in_public_items))]
 
 // For debugging macros:
 // #![feature(trace_macros)]
@@ -58,26 +65,37 @@
 
 use core::cmp::Ordering;
 
-include!(concat!(env!("OUT_DIR"), "/consts.rs"));
-include!(concat!(env!("OUT_DIR"), "/op.rs"));
+#[cfg(feature = "force_unix_path_separator")]
+mod generated {
+    include!(concat!(env!("OUT_DIR"), "/op.rs"));
+    include!(concat!(env!("OUT_DIR"), "/consts.rs"));
+}
+
+#[cfg(not(feature = "force_unix_path_separator"))]
+mod generated {
+    include!(env!("TYPENUM_BUILD_OP"));
+    include!(env!("TYPENUM_BUILD_CONSTS"));
+}
+
 pub mod bit;
-pub mod uint;
 pub mod int;
-pub mod private;
 pub mod marker_traits;
-pub mod type_operators;
 pub mod operator_aliases;
+pub mod private;
+pub mod type_operators;
+pub mod uint;
 
 pub mod array;
 
 pub use consts::*;
+pub use generated::consts;
 pub use marker_traits::*;
-pub use type_operators::*;
 pub use operator_aliases::*;
+pub use type_operators::*;
 
-pub use uint::{UInt, UTerm};
-pub use int::{NInt, PInt};
 pub use array::{ATerm, TArr};
+pub use int::{NInt, PInt};
+pub use uint::{UInt, UTerm};
 
 /// A potential output from `Cmp`, this is the type equivalent to the enum variant
 /// `core::cmp::Ordering::Greater`.
@@ -121,15 +139,15 @@ impl Ord for Equal {
 /// Asserts that two types are the same.
 #[macro_export]
 macro_rules! assert_type_eq {
-    ($a:ty, $b:ty) => (
+    ($a:ty, $b:ty) => {
         let _: <$a as $crate::Same<$b>>::Output;
-    );
+    };
 }
 
 /// Asserts that a type is `True`, aka `B1`.
 #[macro_export]
 macro_rules! assert_type {
-    ($a:ty) => (
+    ($a:ty) => {
         let _: <$a as $crate::Same<True>>::Output;
-    );
+    };
 }

@@ -2,6 +2,36 @@
 
 This project follows semantic versioning.
 
+The MSRV (Minimum Supported Rust Version) is 1.22.0, and typenum is tested against this Rust
+version. Much of typenum should work on as low a version as 1.20.0, but that is not guaranteed.
+
+### Unreleased
+
+### 1.12.0 (2020-04-03)
+- [added] Feature `force_unix_path_separator` to support building without Cargo.
+- [added] Greatest common divisor operator `Gcd` with alias `Gcf`.
+- [added] `gcd` to the `op!` macro.
+- [changed] Added `Copy` bound to `Rhs` of `Mul<Rhs>` impl for `<TArr<V, A>`.
+- [changed] Added `Copy` bound to `Rhs` of `Div<Rhs>` impl for `<TArr<V, A>`.
+- [changed] Added `Copy` bound to `Rhs` of `PartialDiv<Rhs>` impl for `<TArr<V, A>`.
+- [changed] Added `Copy` bound to `Rhs` of `Rem<Rhs>` impl for `<TArr<V, A>`.
+- [fixed] Make all functions #[inline].
+
+### 1.11.2 (2019-08-26)
+- [fixed] Cross compilation from Linux to Windows.
+
+### 1.11.1 (2019-08-25)
+- [fixed] Builds on earlier Rust builds again and added Rust 1.22.0 to Travis to prevent future breakage.
+
+### 1.11.0 (2019-08-25)
+- [added] Integer `log2` to the `op!` macro.
+- [added] Integer binary logarithm operator `Logarithm2` with alias `Log2`.
+- [changed] Removed `feature(i128_type)` when running with the `i128` feature. Kept the feature flag.
+  for typenum to maintain compatibility with old Rust versions.
+- [added] Integer `sqrt` to the `op!` macro.
+- [added] Integer square root operator `SquareRoot` with alias `Sqrt`.
+- [fixed] Bug with attempting to create U1024 type alias twice.
+
 ### 1.10.0 (2018-03-11)
 - [added] The `PowerOfTwo` marker trait.
 - [added] Associated constants for `Bit`, `Unsigned`, and `Integer`.
