@@ -13,7 +13,8 @@ import sys
 import subprocess
 
 # load modules from parent dir
-sys.path.insert(1, os.path.dirname(sys.path[0]))
+here = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(1, os.path.dirname(here))
 
 from mozharness.base.log import WARNING
 from mozharness.base.script import BaseScript, PreScriptAction

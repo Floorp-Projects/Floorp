@@ -47,9 +47,9 @@ def test_try_chooser(app):
     assert response.status_code == 200
 
     expected_output = [
-        """<title>Try Chooser Enhanced</title>""",
-        """<input class="filter" type="checkbox" id=windows name="build" value='{"build_platform": ["windows"]}' onchange="console.log('checkbox onchange triggered');apply();">""",  # noqa
-        """<input class="filter" type="checkbox" id=mochitest-browser-chrome name="test" value='{"unittest_suite": ["mochitest-browser-chrome"]}' onchange="console.log('checkbox onchange triggered');apply();">""",  # noqa
+        b"""<title>Try Chooser Enhanced</title>""",
+        b"""<input class="filter" type="checkbox" id=windows name="build" value='{"build_platform": ["windows"]}' onchange="console.log('checkbox onchange triggered');apply();">""",  # noqa
+        b"""<input class="filter" type="checkbox" id=mochitest-browser-chrome name="test" value='{"unittest_suite": ["mochitest-browser-chrome"]}' onchange="console.log('checkbox onchange triggered');apply();">""",  # noqa
     ]
 
     for expected in expected_output:
@@ -57,12 +57,12 @@ def test_try_chooser(app):
 
     response = client.post('/', data={'action': 'Cancel'})
     assert response.status_code == 200
-    assert "You may now close this page" in response.data
+    assert b"You may now close this page" in response.data
     assert app.tasks == []
 
     response = client.post('/', data={'action': 'Push', 'selected-tasks': ''})
     assert response.status_code == 200
-    assert "You may now close this page" in response.data
+    assert b"You may now close this page" in response.data
     assert app.tasks == []
 
     response = client.post('/', data={
@@ -70,7 +70,7 @@ def test_try_chooser(app):
         'selected-tasks': 'build-windows\ntest-windows-mochitest-e10s'
     })
     assert response.status_code == 200
-    assert "You may now close this page" in response.data
+    assert b"You may now close this page" in response.data
     assert set(app.tasks) == set(['build-windows', 'test-windows-mochitest-e10s'])
 
 

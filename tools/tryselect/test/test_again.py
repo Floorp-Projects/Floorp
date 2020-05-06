@@ -9,6 +9,8 @@ import os
 import mozunit
 import pytest
 
+from six.moves import reload_module as reload
+
 from tryselect import push
 from tryselect.selectors import again
 

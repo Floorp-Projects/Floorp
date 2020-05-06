@@ -62,7 +62,6 @@ py2commands="
     test
     test-info
     tps-build
-    try
     valgrind-test
     visualmetrics
     web-platform-tests
