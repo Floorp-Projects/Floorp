@@ -843,6 +843,17 @@ static const int32_t ChunkLocationOffsetFromLastByte =
 static const int32_t ChunkStoreBufferOffsetFromLastByte =
     int32_t(gc::ChunkStoreBufferOffset) - int32_t(gc::ChunkMask);
 
+// Cell header stored before all nursery cells.
+struct alignas(gc::CellAlignBytes) NurseryCellHeader {
+  JS::Zone* const zone;
+
+  static const NurseryCellHeader* from(const Cell* cell) {
+    MOZ_ASSERT(IsInsideNursery(cell));
+    return reinterpret_cast<const NurseryCellHeader*>(
+        uintptr_t(cell) - sizeof(NurseryCellHeader));
+  }
+};
+
 } /* namespace gc */
 
 namespace debug {

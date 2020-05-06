@@ -119,7 +119,7 @@ JS::ubi::Node::Size JS::ubi::Concrete<JSString>::size(
   }
 
   if (IsInsideNursery(&str)) {
-    size += Nursery::stringHeaderSize();
+    size += Nursery::nurseryCellHeaderSize();
   }
 
   size += str.sizeOfExcludingThis(mallocSizeOf);

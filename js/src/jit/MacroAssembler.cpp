@@ -735,14 +735,15 @@ void MacroAssembler::nurseryAllocateString(Register result, Register temp,
 
   CompileZone* zone = GetJitContext()->realm()->zone();
   size_t thingSize = gc::Arena::thingSize(allocKind);
-  size_t totalSize = js::Nursery::stringHeaderSize() + thingSize;
+  size_t totalSize = js::Nursery::nurseryCellHeaderSize() + thingSize;
   MOZ_ASSERT(totalSize < INT32_MAX, "Nursery allocation too large");
   MOZ_ASSERT(totalSize % gc::CellAlignBytes == 0);
 
   bumpPointerAllocate(
       result, temp, fail, zone->addressOfStringNurseryPosition(),
       zone->addressOfStringNurseryCurrentEnd(), totalSize, thingSize);
-  storePtr(ImmPtr(zone), Address(result, -js::Nursery::stringHeaderSize()));
+  storePtr(ImmPtr(zone),
+           Address(result, -js::Nursery::nurseryCellHeaderSize()));
 }
 
 // Inline version of Nursery::allocateBigInt.
@@ -755,14 +756,15 @@ void MacroAssembler::nurseryAllocateBigInt(Register result, Register temp,
 
   CompileZone* zone = GetJitContext()->realm()->zone();
   size_t thingSize = gc::Arena::thingSize(gc::AllocKind::BIGINT);
-  size_t totalSize = js::Nursery::bigIntHeaderSize() + thingSize;
+  size_t totalSize = js::Nursery::nurseryCellHeaderSize() + thingSize;
   MOZ_ASSERT(totalSize < INT32_MAX, "Nursery allocation too large");
   MOZ_ASSERT(totalSize % gc::CellAlignBytes == 0);
 
   bumpPointerAllocate(
       result, temp, fail, zone->addressOfBigIntNurseryPosition(),
       zone->addressOfBigIntNurseryCurrentEnd(), totalSize, thingSize);
-  storePtr(ImmPtr(zone), Address(result, -js::Nursery::bigIntHeaderSize()));
+  storePtr(ImmPtr(zone),
+           Address(result, -js::Nursery::nurseryCellHeaderSize()));
 }
 
 void MacroAssembler::bumpPointerAllocate(Register result, Register temp,

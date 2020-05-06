@@ -455,36 +455,21 @@ JSObject* js::Nursery::allocateObject(JSContext* cx, size_t size,
   return obj;
 }
 
-Cell* js::Nursery::allocateString(Zone* zone, size_t size, AllocKind kind) {
+Cell* js::Nursery::allocateCell(Zone* zone, size_t size, AllocKind kind) {
   // Ensure there's enough space to replace the contents with a
   // RelocationOverlay.
   MOZ_ASSERT(size >= sizeof(RelocationOverlay));
+  MOZ_ASSERT(size % CellAlignBytes == 0);
 
-  size_t allocSize = RoundUp(sizeof(StringLayout) - 1 + size, CellAlignBytes);
-  auto header = static_cast<StringLayout*>(allocate(allocSize));
-  if (!header) {
+  void* ptr = allocate(sizeof(NurseryCellHeader) + size);
+  if (!ptr) {
     return nullptr;
   }
-  header->zone = zone;
 
-  auto cell = reinterpret_cast<Cell*>(&header->cell);
-  gcprobes::NurseryAlloc(cell, kind);
-  return cell;
-}
+  new (ptr) NurseryCellHeader{zone};
 
-Cell* js::Nursery::allocateBigInt(Zone* zone, size_t size, AllocKind kind) {
-  // Ensure there's enough space to replace the contents with a
-  // RelocationOverlay.
-  MOZ_ASSERT(size >= sizeof(RelocationOverlay));
-
-  size_t allocSize = RoundUp(sizeof(BigIntLayout) - 1 + size, CellAlignBytes);
-  auto header = static_cast<BigIntLayout*>(allocate(allocSize));
-  if (!header) {
-    return nullptr;
-  }
-  header->zone = zone;
-
-  auto cell = reinterpret_cast<Cell*>(&header->cell);
+  auto cell =
+      reinterpret_cast<Cell*>(uintptr_t(ptr) + sizeof(NurseryCellHeader));
   gcprobes::NurseryAlloc(cell, kind);
   return cell;
 }
