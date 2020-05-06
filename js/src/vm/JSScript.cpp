@@ -5329,48 +5329,6 @@ BaseScript* BaseScript::CreateRawLazy(JSContext* cx, uint32_t ngcthings,
   return lazy;
 }
 
-/* static */
-BaseScript* BaseScript::CreateLazy(
-    JSContext* cx, const frontend::CompilationInfo& compilationInfo,
-    HandleFunction fun, HandleScriptSourceObject sourceObject,
-    const frontend::AtomVector& closedOverBindings,
-    const Vector<frontend::FunctionIndex>& innerFunctionIndexes,
-    const SourceExtent& extent, uint32_t immutableFlags) {
-  uint32_t ngcthings =
-      innerFunctionIndexes.length() + closedOverBindings.length();
-
-  BaseScript* lazy = BaseScript::CreateRawLazy(cx, ngcthings, fun, sourceObject,
-                                               extent, immutableFlags);
-  if (!lazy) {
-    return nullptr;
-  }
-
-  // Fill in gcthing data with inner functions followed by binding data.
-  mozilla::Span<JS::GCCellPtr> gcThings =
-      lazy->data_ ? lazy->data_->gcthings() : mozilla::Span<JS::GCCellPtr>();
-  auto iter = gcThings.begin();
-
-  for (const frontend::FunctionIndex& index : innerFunctionIndexes) {
-    // Assumes that the associated FunctionCreationData was already published.
-    JSFunction* fun = compilationInfo.funcData[index].as<JSFunction*>();
-    *iter++ = JS::GCCellPtr(fun);
-
-    fun->setEnclosingLazyScript(lazy);
-  }
-
-  for (JSAtom* binding : closedOverBindings) {
-    if (binding) {
-      *iter++ = JS::GCCellPtr(binding);
-    } else {
-      iter++;
-    }
-  }
-
-  MOZ_ASSERT(iter == gcThings.end());
-
-  return lazy;
-}
-
 void JSScript::updateJitCodeRaw(JSRuntime* rt) {
   MOZ_ASSERT(rt);
   uint8_t* jitCodeSkipArgCheck;
