@@ -20,7 +20,7 @@
 namespace mozilla {
 
 RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId, const ProcType& type,
-                                    mach_port_t aChildTask) {
+                                    const nsAString& origin, mach_port_t aChildTask) {
   auto holder = MakeUnique<MozPromiseHolder<ProcInfoPromise>>();
   RefPtr<ProcInfoPromise> promise = holder->Ensure(__func__);
 
@@ -32,11 +32,15 @@ RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId, const 
     return promise;
   }
 
-  auto ResolveGetProcinfo = [holder = std::move(holder), pid, type, childId, aChildTask]() {
+  // Ensure that the string is still alive when `ResolveGetProcInfo` is called.
+  nsString originCopy(origin);
+  auto ResolveGetProcinfo = [holder = std::move(holder), pid, type,
+                             originCopy = std::move(originCopy), childId, aChildTask]() {
     ProcInfo info;
     info.pid = pid;
     info.childId = childId;
     info.type = type;
+    info.origin = originCopy;
     struct proc_bsdinfo proc;
     if ((unsigned long)proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &proc, PROC_PIDTBSDINFO_SIZE) <
         PROC_PIDTBSDINFO_SIZE) {
