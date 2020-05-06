@@ -16,8 +16,18 @@
 struct RawServoAnimationValue;
 class nsIContent;
 class nsIFrame;
+class nsDisplayListBuilder;
+class nsDisplayItem;
 
 namespace mozilla {
+
+class EffectSet;
+struct AnimationProperty;
+
+namespace dom {
+class Animation;
+}  // namespace dom
+
 namespace gfx {
 class Path;
 }  // namespace gfx
@@ -30,6 +40,7 @@ class Layer;
 class LayerManager;
 struct CompositorAnimationData;
 struct PropertyAnimationGroup;
+enum class LayersBackend : int8_t;
 
 class AnimationInfo final {
   typedef nsTArray<Animation> AnimationArray;
@@ -101,6 +112,32 @@ class AnimationInfo final {
       const nsIFrame* aFrame, const nsIContent* aContent,
       const CompositorAnimatableDisplayItemTypes& aDisplayItemTypes,
       const AnimationGenerationCallback& aCallback);
+
+  void AddAnimationsForDisplayItem(nsIFrame* aFrame,
+                                   nsDisplayListBuilder* aBuilder,
+                                   nsDisplayItem* aItem, DisplayItemType aType,
+                                   LayersBackend aLayersBackend);
+
+ private:
+  enum class Send {
+    NextTransaction,
+    Immediate,
+  };
+  void AddAnimationForProperty(nsIFrame* aFrame,
+                               const AnimationProperty& aProperty,
+                               dom::Animation* aAnimation,
+                               const Maybe<TransformData>& aTransformData,
+                               Send aSendFlag);
+
+  bool AddAnimationsForProperty(
+      nsIFrame* aFrame, const EffectSet* aEffects,
+      const nsTArray<RefPtr<dom::Animation>>& aCompositorAnimations,
+      const Maybe<TransformData>& aTransformData, nsCSSPropertyID aProperty,
+      Send aSendFlag);
+
+  void AddNonAnimatingTransformLikePropertiesStyles(
+      const nsCSSPropertyIDSet& aNonAnimatingProperties, nsIFrame* aFrame,
+      Send aSendFlag);
 
  protected:
   // mAnimations (and mPendingAnimations) are only set on the main thread.
