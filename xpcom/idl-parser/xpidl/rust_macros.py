@@ -84,16 +84,16 @@ def write_interface(iface, fd):
 
 header = """\
 //
-// DO NOT EDIT.  THIS FILE IS GENERATED FROM $SRCDIR/%(relpath)s
+// DO NOT EDIT.  THIS FILE IS GENERATED FROM %(filename)s
 //
 
 """
 
 
-def print_rust_macros_bindings(idl, fd, relpath):
+def print_rust_macros_bindings(idl, fd, filename):
     fd = rust.AutoIndent(fd)
 
-    fd.write(header % {'relpath': relpath})
+    fd.write(header % {'filename': filename})
     fd.write("{static D: &'static [Interface] = &[\n")
 
     for p in idl.productions:

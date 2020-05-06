@@ -209,7 +209,7 @@ def paramlistNames(m):
 
 
 header = """/*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM $SRCDIR/%(relpath)s
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM %(filename)s
  */
 
 #ifndef __gen_%(basename)s_h__
@@ -256,8 +256,8 @@ def idl_basename(f):
     return os.path.basename(f).rpartition('.')[0]
 
 
-def print_header(idl, fd, filename, relpath):
-    fd.write(header % {'relpath': relpath,
+def print_header(idl, fd, filename):
+    fd.write(header % {'filename': filename,
                        'basename': idl_basename(filename)})
 
     foundinc = False
