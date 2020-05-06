@@ -1156,9 +1156,6 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  RefPtr<BrowsingContext> ourBc = browserParent->GetBrowsingContext();
-  RefPtr<BrowsingContext> otherBc = otherBrowserParent->GetBrowsingContext();
-
   // When we swap docShells, maybe we have to deal with a new page created just
   // for this operation. In this case, the browser code should already have set
   // the correct userContextId attribute value in the owning element, but our
@@ -1167,11 +1164,12 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
   // This is the reason why now we must retrieve the correct value from the
   // usercontextid attribute before comparing our originAttributes with the
   // other one.
-  OriginAttributes ourOriginAttributes = ourBc->OriginAttributesRef();
+  OriginAttributes ourOriginAttributes = browserParent->OriginAttributesRef();
   rv = PopulateOriginContextIdsFromAttributes(ourOriginAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  OriginAttributes otherOriginAttributes = otherBc->OriginAttributesRef();
+  OriginAttributes otherOriginAttributes =
+      otherBrowserParent->OriginAttributesRef();
   rv = aOther->PopulateOriginContextIdsFromAttributes(otherOriginAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3142,7 +3140,13 @@ already_AddRefed<nsIRemoteTab> nsFrameLoader::GetRemoteTab() {
 }
 
 already_AddRefed<nsILoadContext> nsFrameLoader::LoadContext() {
-  return do_AddRef(GetBrowsingContext());
+  nsCOMPtr<nsILoadContext> loadContext;
+  if (IsRemoteFrame() && EnsureRemoteBrowser()) {
+    loadContext = mRemoteBrowser->GetLoadContext();
+  } else {
+    loadContext = do_GetInterface(ToSupports(GetDocShell(IgnoreErrors())));
+  }
+  return loadContext.forget();
 }
 
 BrowsingContext* nsFrameLoader::GetBrowsingContext() {
@@ -3277,6 +3281,7 @@ nsresult nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
   NS_ENSURE_STATE(parentContext);
 
   MOZ_ASSERT(mPendingBrowsingContext->EverAttached());
+  OriginAttributes attrs = mPendingBrowsingContext->OriginAttributesRef();
 
   UIStateChangeType showFocusRings = UIStateChangeType_NoChange;
   uint64_t chromeOuterWindowID = 0;
@@ -3297,8 +3302,9 @@ nsresult nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
 
   uint32_t maxTouchPoints = BrowserParent::GetMaxTouchPoints(mOwnerContent);
 
-  bool tabContextUpdated = aTabContext->SetTabContext(
-      chromeOuterWindowID, showFocusRings, presentationURLStr, maxTouchPoints);
+  bool tabContextUpdated =
+      aTabContext->SetTabContext(chromeOuterWindowID, showFocusRings, attrs,
+                                 presentationURLStr, maxTouchPoints);
   NS_ENSURE_STATE(tabContextUpdated);
 
   return NS_OK;

@@ -45,7 +45,8 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
 
   BrowsingContext* GetBrowsingContext() { return mBrowsingContext; }
 
-  nsILoadContext* GetLoadContext();
+  // XXX(nika): We should have a load context here. (bug 1532664)
+  nsILoadContext* GetLoadContext() { return nullptr; }
 
   void NavigateByKey(bool aForward, bool aForDocumentNavigation);
 
