@@ -18,7 +18,7 @@ add_task(async function test_setup() {
   let cid = MockRegistrar.register("@mozilla.org/helperapplauncherdialog;1", {
     QueryInterface: ChromeUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
     show(launcher) {
-      launcher.saveToDisk(null, false);
+      launcher.promptForSaveDestination();
     },
     promptForSaveToFileAsync(launcher) {
       // The dialog should create the empty placeholder file.
