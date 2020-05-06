@@ -73,7 +73,10 @@ elif toolkit == 'cocoa':
         'nsINativeMenuService.h',
     ]
 
-TEST_DIRS += ['tests']
+TEST_DIRS += [
+    'tests',
+    'tests/gtest'
+]
 
 DIRS += ['headless']
 
