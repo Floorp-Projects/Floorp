@@ -334,6 +334,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
                        "GetElemSuper with profiling is not supported on x86");
         }
 #endif
+        MOZ_TRY(maybeInlineIC(opSnapshots, script, loc));
         break;
       }
 
@@ -399,6 +400,9 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::Pos:
       case JSOp::Inc:
       case JSOp::Dec:
+      case JSOp::Neg:
+      case JSOp::BitNot:
+      case JSOp::Iter:
       case JSOp::Eq:
       case JSOp::Ne:
       case JSOp::Lt:
@@ -421,6 +425,24 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::Lsh:
       case JSOp::Rsh:
       case JSOp::Ursh:
+      case JSOp::In:
+      case JSOp::HasOwn:
+      case JSOp::Instanceof:
+      case JSOp::GetPropSuper:
+      case JSOp::InitProp:
+      case JSOp::InitLockedProp:
+      case JSOp::InitHiddenProp:
+      case JSOp::InitElem:
+      case JSOp::InitHiddenElem:
+      case JSOp::InitElemArray:
+      case JSOp::InitElemInc:
+      case JSOp::SetName:
+      case JSOp::StrictSetName:
+      case JSOp::SetGName:
+      case JSOp::StrictSetGName:
+      case JSOp::InitGLexical:
+      case JSOp::SetElem:
+      case JSOp::StrictSetElem:
         MOZ_TRY(maybeInlineIC(opSnapshots, script, loc));
         break;
 
@@ -461,8 +483,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::InitLexical:
       case JSOp::GetArg:
       case JSOp::SetArg:
-      case JSOp::Neg:
-      case JSOp::BitNot:
       case JSOp::JumpTarget:
       case JSOp::LoopHead:
       case JSOp::IfEq:
@@ -496,7 +516,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::SetAliasedVar:
       case JSOp::InitAliasedLexical:
       case JSOp::EnvCallee:
-      case JSOp::Iter:
       case JSOp::IterNext:
       case JSOp::MoreIter:
       case JSOp::EndIter:
@@ -508,13 +527,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::FunApply:
       case JSOp::New:
       case JSOp::SuperCall:
-      case JSOp::SetName:
-      case JSOp::StrictSetName:
-      case JSOp::SetGName:
-      case JSOp::StrictSetGName:
-      case JSOp::InitGLexical:
-      case JSOp::SetElem:
-      case JSOp::StrictSetElem:
       case JSOp::DelProp:
       case JSOp::StrictDelProp:
       case JSOp::DelElem:
@@ -547,21 +559,10 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::InitElemSetter:
       case JSOp::InitHiddenElemGetter:
       case JSOp::InitHiddenElemSetter:
-      case JSOp::In:
-      case JSOp::HasOwn:
-      case JSOp::Instanceof:
       case JSOp::NewTarget:
       case JSOp::CheckIsObj:
       case JSOp::CheckIsCallable:
       case JSOp::CheckObjCoercible:
-      case JSOp::GetPropSuper:
-      case JSOp::InitProp:
-      case JSOp::InitLockedProp:
-      case JSOp::InitHiddenProp:
-      case JSOp::InitElem:
-      case JSOp::InitHiddenElem:
-      case JSOp::InitElemArray:
-      case JSOp::InitElemInc:
       case JSOp::FunWithProto:
       case JSOp::SpreadCall:
       case JSOp::SpreadNew:

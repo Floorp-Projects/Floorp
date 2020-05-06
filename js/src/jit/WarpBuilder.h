@@ -142,9 +142,8 @@ class MOZ_STACK_CLASS WarpBuilder {
   MOZ_MUST_USE bool buildBody();
   MOZ_MUST_USE bool buildEpilogue();
 
-  MOZ_MUST_USE bool buildCacheIR(BytecodeLocation loc,
-                                 const WarpCacheIR* snapshot,
-                                 std::initializer_list<MDefinition*> inputs);
+  MOZ_MUST_USE bool buildIC(BytecodeLocation loc, CacheKind kind,
+                            std::initializer_list<MDefinition*> inputs);
 
   MOZ_MUST_USE bool buildEnvironmentChain();
   MInstruction* buildNamedLambdaEnv(MDefinition* callee, MDefinition* env,
@@ -163,17 +162,6 @@ class MOZ_STACK_CLASS WarpBuilder {
   MOZ_MUST_USE bool buildTestOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildDefLexicalOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildCallOp(BytecodeLocation loc);
-
-  MOZ_MUST_USE bool buildGetNameOp(BytecodeLocation loc, MDefinition* env);
-  MOZ_MUST_USE bool buildBindNameOp(BytecodeLocation loc, MDefinition* env);
-  MOZ_MUST_USE bool buildGetPropOp(BytecodeLocation loc, MDefinition* val,
-                                   MDefinition* id);
-  MOZ_MUST_USE bool buildSetPropOp(BytecodeLocation loc, MDefinition* obj,
-                                   MDefinition* id, MDefinition* val);
-  MOZ_MUST_USE bool buildInitPropOp(BytecodeLocation loc, MDefinition* obj,
-                                    MDefinition* id, MDefinition* val);
-  MOZ_MUST_USE bool buildGetPropSuperOp(BytecodeLocation loc, MDefinition* obj,
-                                        MDefinition* receiver, MDefinition* id);
 
   MOZ_MUST_USE bool buildInitPropGetterSetterOp(BytecodeLocation loc);
   MOZ_MUST_USE bool buildInitElemGetterSetterOp(BytecodeLocation loc);
