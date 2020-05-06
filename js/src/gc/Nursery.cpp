@@ -425,8 +425,8 @@ JSObject* js::Nursery::allocateObject(JSContext* cx, size_t size,
   MOZ_ASSERT_IF(clasp->hasFinalize(),
                 CanNurseryAllocateFinalizedClass(clasp) || clasp->isProxy());
 
-  // Make the object allocation.
-  JSObject* obj = static_cast<JSObject*>(allocate(size));
+  auto obj = reinterpret_cast<JSObject*>(
+      allocateCell(cx->zone(), size, JS::TraceKind::Object));
   if (!obj) {
     return nullptr;
   }

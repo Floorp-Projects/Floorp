@@ -3392,8 +3392,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
                              gc::AllocKind allocKind, size_t nDynamicSlots,
                              Label* fail);
   void bumpPointerAllocate(Register result, Register temp, Label* fail,
-                           void* posAddr, const void* curEddAddr,
-                           uint32_t totalSize, uint32_t size);
+                           CompileZone* zone, void* posAddr,
+                           const void* curEddAddr, uint32_t size);
 
   void freeListAllocate(Register result, Register temp, gc::AllocKind allocKind,
                         Label* fail);
