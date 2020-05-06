@@ -629,6 +629,12 @@ class Nursery {
   // Common internal allocator function.
   void* allocate(size_t size);
 
+  void* moveToNextChunkAndAllocate(size_t size);
+
+#ifdef JS_GC_ZEAL
+  void writeCanary(uintptr_t address);
+#endif
+
   void doCollection(JS::GCReason reason, gc::TenureCountCache& tenureCounts);
 
   float doPretenuring(JSRuntime* rt, JS::GCReason reason,

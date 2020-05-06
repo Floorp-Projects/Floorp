@@ -47,10 +47,10 @@ using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 
 #ifdef JS_GC_ZEAL
-constexpr uintptr_t CanaryMagicValue = 0xDEADB15D;
+constexpr uint32_t CanaryMagicValue = 0xDEADB15D;
 
-struct js::Nursery::Canary {
-  uintptr_t magicValue;
+struct alignas(gc::CellAlignBytes) js::Nursery::Canary {
+  uint32_t magicValue;
   Canary* next;
 };
 #endif
@@ -489,7 +489,7 @@ Cell* js::Nursery::allocateBigInt(Zone* zone, size_t size, AllocKind kind) {
   return cell;
 }
 
-void* js::Nursery::allocate(size_t size) {
+inline void* js::Nursery::allocate(size_t size) {
   MOZ_ASSERT(isEnabled());
   MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));
@@ -499,33 +499,13 @@ void* js::Nursery::allocate(size_t size) {
   MOZ_ASSERT(size % CellAlignBytes == 0);
 
 #ifdef JS_GC_ZEAL
-  static const size_t CanarySize =
-      (sizeof(Nursery::Canary) + CellAlignBytes - 1) & ~CellAlignMask;
   if (gc->hasZealMode(ZealMode::CheckNursery)) {
-    size += CanarySize;
+    size += sizeof(Canary);
   }
 #endif
 
-  if (currentEnd() < position() + size) {
-    unsigned chunkno = currentChunk_ + 1;
-    MOZ_ASSERT(chunkno <= maxChunkCount());
-    MOZ_ASSERT(chunkno <= allocatedChunkCount());
-    if (chunkno == maxChunkCount()) {
-      return nullptr;
-    }
-    if (MOZ_UNLIKELY(chunkno == allocatedChunkCount())) {
-      mozilla::TimeStamp start = ReallyNow();
-      {
-        AutoLockGCBgAlloc lock(gc);
-        if (!allocateNextChunk(chunkno, lock)) {
-          return nullptr;
-        }
-      }
-      timeInChunkAlloc_ += ReallyNow() - start;
-      MOZ_ASSERT(chunkno < allocatedChunkCount());
-    }
-    setCurrentChunk(chunkno);
-    poisonAndInitCurrentChunk();
+  if (MOZ_UNLIKELY(currentEnd() < position() + size)) {
+    return moveToNextChunkAndAllocate(size);
   }
 
   void* thing = (void*)position();
@@ -540,19 +520,58 @@ void* js::Nursery::allocate(size_t size) {
 
 #ifdef JS_GC_ZEAL
   if (gc->hasZealMode(ZealMode::CheckNursery)) {
-    auto canary = reinterpret_cast<Canary*>(position() - CanarySize);
-    canary->magicValue = CanaryMagicValue;
-    canary->next = nullptr;
-    if (lastCanary_) {
-      MOZ_ASSERT(!lastCanary_->next);
-      lastCanary_->next = canary;
-    }
-    lastCanary_ = canary;
+    writeCanary(position() - sizeof(Canary));
   }
 #endif
 
   return thing;
 }
+
+void* Nursery::moveToNextChunkAndAllocate(size_t size) {
+  MOZ_ASSERT(currentEnd() < position() + size);
+
+  unsigned chunkno = currentChunk_ + 1;
+  MOZ_ASSERT(chunkno <= maxChunkCount());
+  MOZ_ASSERT(chunkno <= allocatedChunkCount());
+  if (chunkno == maxChunkCount()) {
+    return nullptr;
+  }
+  if (chunkno == allocatedChunkCount()) {
+    mozilla::TimeStamp start = ReallyNow();
+    {
+      AutoLockGCBgAlloc lock(gc);
+      if (!allocateNextChunk(chunkno, lock)) {
+        return nullptr;
+      }
+    }
+    timeInChunkAlloc_ += ReallyNow() - start;
+    MOZ_ASSERT(chunkno < allocatedChunkCount());
+  }
+  setCurrentChunk(chunkno);
+  poisonAndInitCurrentChunk();
+
+  // We know there's enough space to allocate now so we can call allocate()
+  // recursively. Adjust the size for the nursery canary which it will add on.
+  MOZ_ASSERT(currentEnd() >= position() + size);
+#ifdef JS_GC_ZEAL
+  if (gc->hasZealMode(ZealMode::CheckNursery)) {
+    size -= sizeof(Canary);
+  }
+#endif
+  return allocate(size);
+}
+
+#ifdef JS_GC_ZEAL
+inline void Nursery::writeCanary(uintptr_t address) {
+  auto* canary = reinterpret_cast<Canary*>(address);
+  new (canary) Canary{CanaryMagicValue, nullptr};
+  if (lastCanary_) {
+    MOZ_ASSERT(!lastCanary_->next);
+    lastCanary_->next = canary;
+  }
+  lastCanary_ = canary;
+}
+#endif
 
 void* js::Nursery::allocateBuffer(Zone* zone, size_t nbytes) {
   MOZ_ASSERT(nbytes > 0);
