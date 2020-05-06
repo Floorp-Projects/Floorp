@@ -361,6 +361,32 @@ TemporaryTypeSet::TemporaryTypeSet(LifoAlloc* alloc, Type type) {
   }
 }
 
+static TypeFlags MIRTypeToTypeFlags(jit::MIRType type) {
+  switch (type) {
+    case jit::MIRType::Undefined:
+      return TYPE_FLAG_UNDEFINED;
+    case jit::MIRType::Null:
+      return TYPE_FLAG_NULL;
+    case jit::MIRType::Boolean:
+      return TYPE_FLAG_BOOLEAN;
+    case jit::MIRType::Int32:
+      return TYPE_FLAG_INT32;
+    case jit::MIRType::Float32:  // Fall through, there's no JSVAL for Float32.
+    case jit::MIRType::Double:
+      return TYPE_FLAG_DOUBLE;
+    case jit::MIRType::String:
+      return TYPE_FLAG_STRING;
+    case jit::MIRType::Symbol:
+      return TYPE_FLAG_SYMBOL;
+    case jit::MIRType::BigInt:
+      return TYPE_FLAG_BIGINT;
+    case jit::MIRType::MagicOptimizedArguments:
+      return TYPE_FLAG_LAZYARGS;
+    default:
+      MOZ_CRASH("Bad MIR type");
+  }
+}
+
 bool TypeSet::mightBeMIRType(jit::MIRType type) const {
   if (unknown()) {
     return true;
@@ -370,29 +396,7 @@ bool TypeSet::mightBeMIRType(jit::MIRType type) const {
     return unknownObject() || baseObjectCount() != 0;
   }
 
-  switch (type) {
-    case jit::MIRType::Undefined:
-      return baseFlags() & TYPE_FLAG_UNDEFINED;
-    case jit::MIRType::Null:
-      return baseFlags() & TYPE_FLAG_NULL;
-    case jit::MIRType::Boolean:
-      return baseFlags() & TYPE_FLAG_BOOLEAN;
-    case jit::MIRType::Int32:
-      return baseFlags() & TYPE_FLAG_INT32;
-    case jit::MIRType::Float32:  // Fall through, there's no JSVAL for Float32.
-    case jit::MIRType::Double:
-      return baseFlags() & TYPE_FLAG_DOUBLE;
-    case jit::MIRType::String:
-      return baseFlags() & TYPE_FLAG_STRING;
-    case jit::MIRType::Symbol:
-      return baseFlags() & TYPE_FLAG_SYMBOL;
-    case jit::MIRType::BigInt:
-      return baseFlags() & TYPE_FLAG_BIGINT;
-    case jit::MIRType::MagicOptimizedArguments:
-      return baseFlags() & TYPE_FLAG_LAZYARGS;
-    default:
-      MOZ_CRASH("Bad MIR type");
-  }
+  return baseFlags() & MIRTypeToTypeFlags(type);
 }
 
 bool TypeSet::objectsAreSubset(TypeSet* other) {
