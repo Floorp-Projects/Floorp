@@ -2,50 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-class FrameTimer {
-  constructor() {
-    // Start time of the current active test, adjusted for any time spent
-    // stopped (so `now - this.start` is how long the current active test
-    // has run for.)
-    this.start = undefined;
-
-    // Timestamp of callback following the previous frame.
-    this.prev = undefined;
-
-    // Timestamp when drawing was paused, or zero if drawing is active.
-    this.stopped = 0;
-  }
-
-  is_stopped() {
-    return this.stopped != 0;
-  }
-
-  start_recording() {
-    this.start = this.prev = performance.now();
-  }
-
-  record_frame_callback(timestamp) {
-    const delay = timestamp - this.prev;
-    this.prev = timestamp;
-    return delay;
-  }
-
-  stop() {
-    const now = performance.now();
-    this.stopped = now;
-  }
-
-  resume() {
-    const now = performance.now();
-    this.prev += now - this.stopped;
-    const stop_duration = now - this.stopped;
-    this.start += stop_duration;
-    this.stopped = 0;
-  }
-}
-
-var gFrameTimer = new FrameTimer();
-
 // Global defaults
 var gDefaultGarbageTotal = "8M";
 var gDefaultGarbagePerFrame = "8K";
