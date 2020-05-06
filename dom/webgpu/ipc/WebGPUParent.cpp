@@ -553,7 +553,7 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
   auto textureHost = new layers::MemoryTextureHost(
       textureHostData, aDesc, layers::TextureFlags::NO_FLAGS);
   textureHost->CreateRenderTexture(aExternalId);
-  nsTArray<RawId> bufferIds(aBufferIds);
+  nsTArray<RawId> bufferIds(aBufferIds.Clone());
   RefPtr<PresentationData> data = new PresentationData();
   data->mDeviceId = aSelfId;
   data->mQueueId = aQueueId;
