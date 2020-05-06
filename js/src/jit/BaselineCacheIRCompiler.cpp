@@ -1855,6 +1855,7 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
   allowDoubleResult_.emplace(true);
 
   size_t numInputs = writer_.numInputOperands();
+  MOZ_ASSERT(numInputs == NumInputsForCacheKind(kind));
 
   // Baseline passes the first 2 inputs in R0/R1, other Values are stored on
   // the stack.
