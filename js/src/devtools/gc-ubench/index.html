@@ -7,8 +7,9 @@
   <title>GC uBench</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
-  <!-- Benchmark harness -->
+  <!-- Benchmark harness and UI -->
   <script src="harness.js"></script>
+  <script src="ui.js"></script>
 
   <!-- List of garbage-creating test loads -->
   <script src="test_list.js"></script>
@@ -45,7 +46,7 @@
 
 <div>
     Allocation load:
-    <select id="test-selection" required onchange="test_changed()"></select>
+    <select id="test-selection" required onchange="onLoadChange()"></select>
     <span id="load-running">(init)</span>
 </div>
 

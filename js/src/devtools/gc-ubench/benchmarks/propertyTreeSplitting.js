@@ -18,7 +18,7 @@ tests.set(
           obj.y = 2;
           delete obj.x;
         }
-      }
+      },
     };
   })()
 );
