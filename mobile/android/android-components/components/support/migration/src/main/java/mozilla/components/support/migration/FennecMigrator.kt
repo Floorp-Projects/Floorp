@@ -595,7 +595,7 @@ class FennecMigrator private constructor(
                 Migration.Bookmarks -> migrateBookmarks()
                 Migration.OpenTabs -> migrateOpenTabs()
                 Migration.FxA -> migrateFxA()
-                Migration.Gecko -> migrateGecko()
+                Migration.Gecko -> migrateGecko(versionedMigration.version)
                 Migration.Logins -> migrateLogins()
                 Migration.Settings -> migrateSharedPrefs()
                 Migration.Addons -> migrateAddons()
@@ -932,8 +932,8 @@ class FennecMigrator private constructor(
         }
     }
 
-    @SuppressWarnings("TooGenericExceptionCaught")
-    private fun migrateGecko(): Result<Unit> {
+    @Suppress("ComplexMethod", "LongMethod", "TooGenericExceptionCaught", "ReturnCount")
+    private fun migrateGecko(migrationVersion: Int): Result<GeckoMigrationResult> {
         if (profile == null) {
             MigrationGecko.failureReason.add(FailureReasonTelemetryCodes.GECKO_MISSING_PROFILE.code)
             return Result.Failure(IllegalStateException("Missing Profile path"))
@@ -941,10 +941,61 @@ class FennecMigrator private constructor(
 
         return try {
             logger.debug("Migrating gecko files...")
-            val result = GeckoMigration.migrate(profile.path)
+            val result = GeckoMigration.migrate(profile.path, migrationVersion)
             logger.debug("Migrated gecko files.")
-            MigrationGecko.successReason.add(SuccessReasonTelemetryCodes.GECKO_MIGRATED.code)
-            result
+
+            if (result is Result.Failure<GeckoMigrationResult>) {
+                val geckoFailureWrapper = result.throwables.first() as GeckoMigrationException
+                return when (val failure = geckoFailureWrapper.failure) {
+                    is GeckoMigrationResult.Failure.FailedToDeleteFile -> {
+                        logger.error("Failed to delete prefs.js file: $failure")
+                        MigrationGecko.failureReason.add(FailureReasonTelemetryCodes.GECKO_FAILED_TO_DELETE_PREFS.code)
+                        result
+                    }
+                    is GeckoMigrationResult.Failure.FailedToWriteBackup -> {
+                        logger.error("Failed to write backup of prefs.js: $failure")
+                        MigrationGecko.failureReason.add(FailureReasonTelemetryCodes.GECKO_FAILED_TO_WRITE_BACKUP.code)
+                        result
+                    }
+                    is GeckoMigrationResult.Failure.FailedToWritePrefs -> {
+                        logger.error("Failed to write transformed prefs.js: $failure")
+                        MigrationGecko.failureReason.add(FailureReasonTelemetryCodes.GECKO_FAILED_TO_WRITE_PREFS.code)
+                        result
+                    }
+                }
+            }
+
+            val migrationSuccess = result as Result.Success<GeckoMigrationResult>
+            return when (migrationSuccess.value as GeckoMigrationResult.Success) {
+                is GeckoMigrationResult.Success.NoPrefsFile -> {
+                    logger.debug("No prefs.js file found")
+                    MigrationGecko.successReason.add(
+                        SuccessReasonTelemetryCodes.GECKO_MIGRATED_NO_PREFS_JS_FILE.code
+                    )
+                    result
+                }
+                is GeckoMigrationResult.Success.PrefsFileRemovedNoPrefs -> {
+                    logger.debug("Prefs.js removed - no prefs found to keep")
+                    MigrationGecko.successReason.add(
+                        SuccessReasonTelemetryCodes.GECKO_MIGRATED_PREFS_REMOVED_NO_PREFS.code
+                    )
+                    result
+                }
+                is GeckoMigrationResult.Success.PrefsFileRemovedInvalidPrefs -> {
+                    logger.debug("Prefs.js removed - failed to transform prefs")
+                    MigrationGecko.successReason.add(
+                        SuccessReasonTelemetryCodes.GECKO_MIGRATED_PREFS_REMOVED_INVALID_PREFS.code
+                    )
+                    result
+                }
+                is GeckoMigrationResult.Success.PrefsFileMigrated -> {
+                    logger.debug("Prefs.js transformed")
+                    MigrationGecko.successReason.add(
+                        SuccessReasonTelemetryCodes.GECKO_MIGRATED_PREFS_JS_MIGRATED.code
+                    )
+                    result
+                }
+            }
         } catch (e: Exception) {
             MigrationGecko.failureReason.add(FailureReasonTelemetryCodes.GECKO_UNEXPECTED_EXCEPTION.code)
             crashReporter.submitCaughtException(
