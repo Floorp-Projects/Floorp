@@ -13,6 +13,7 @@
 #include "mozilla/Attributes.h"  // MOZ_ALWAYS_INLINE
 #include "mozilla/Likely.h"      // MOZ_UNLIKELY
 
+#include <initializer_list>
 #include <stdint.h>  // intptr_t, uintptr_t, uint8_t, uint32_t
 #include <stdio.h>   // FILE
 
@@ -498,6 +499,9 @@ class TypeSet {
 
   /* Whether any values in this set might have the specified type. */
   bool mightBeMIRType(jit::MIRType type) const;
+
+  /* Get whether this type set is known to be a subset of the given types. */
+  bool isSubset(std::initializer_list<jit::MIRType> types) const;
 
   /*
    * Get whether this type set is known to be a subset of other.
