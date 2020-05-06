@@ -2941,6 +2941,20 @@ class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 2> {
   MInstruction* mir() const { return mir_->toInstruction(); }
 };
 
+// Convert a value to a BigInt.
+class LValueToBigInt : public LInstructionHelper<1, BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(ValueToBigInt)
+  static const size_t Input = 0;
+
+  explicit LValueToBigInt(const LBoxAllocation& input)
+      : LInstructionHelper(classOpcode) {
+    setBoxOperand(Input, input);
+  }
+
+  MToBigInt* mir() const { return mir_->toToBigInt(); }
+};
+
 // Convert a double to an int32.
 //   Input: floating-point register
 //   Output: 32-bit integer
