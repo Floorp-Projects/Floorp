@@ -425,7 +425,7 @@ RawId WebGPUChild::DeviceCreateRenderPipeline(
     if (!vertex_desc.IsNull()) {
       vb_desc = ConvertVertexBufferLayoutDescriptor(vertex_desc.Value());
     }
-    desc.mVertexState.mVertexBuffers.AppendElement(vb_desc);
+    desc.mVertexState.mVertexBuffers.AppendElement(std::move(vb_desc));
   }
   desc.mSampleCount = aDesc.mSampleCount;
   desc.mSampleMask = aDesc.mSampleMask;
