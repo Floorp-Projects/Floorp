@@ -656,7 +656,112 @@ const availableLocaleDisplayNames = {
   ]),
 };
 
+class MozNumberFormat extends Intl.NumberFormat {
+  constructor(locales, options, ...args) {
+    super(getLocales(locales), options, ...args);
+  }
+}
+
+class MozCollator extends Intl.Collator {
+  constructor(locales, options, ...args) {
+    super(getLocales(locales), options, ...args);
+  }
+}
+
+class MozPluralRules extends Intl.PluralRules {
+  constructor(locales, options, ...args) {
+    super(getLocales(locales), options, ...args);
+  }
+}
+
+class MozRelativeTimeFormat extends Intl.RelativeTimeFormat {
+  constructor(locales, options = {}, ...args) {
+    // If someone is asking for MozRelativeTimeFormat, it's likely they'll want
+    // to use `formatBestUnit` which works better with `auto`
+    if (options.numeric === undefined) {
+      options.numeric = "auto";
+    }
+    super(getLocales(locales), options, ...args);
+  }
+
+  formatBestUnit(date, { now = new Date() } = {}) {
+    const diff = {
+      _: {},
+      ms: date.getTime() - now.getTime(),
+      years: date.getFullYear() - now.getFullYear(),
+    };
+
+    defineCachedGetter(diff, "months", function() {
+      return this.years * 12 + date.getMonth() - now.getMonth();
+    });
+    defineCachedGetter(diff, "days", function() {
+      return Math.trunc((startOf(date, "day") - startOf(now, "day")) / day);
+    });
+    defineCachedGetter(diff, "hours", function() {
+      return Math.trunc((startOf(date, "hour") - startOf(now, "hour")) / hour);
+    });
+    defineCachedGetter(diff, "minutes", function() {
+      return Math.trunc(
+        (startOf(date, "minute") - startOf(now, "minute")) / minute
+      );
+    });
+    defineCachedGetter(diff, "seconds", function() {
+      return Math.trunc(
+        (startOf(date, "second") - startOf(now, "second")) / second
+      );
+    });
+
+    const absDiff = {
+      _: {},
+    };
+
+    defineGetter(absDiff, "years", function() {
+      return Math.abs(diff.years);
+    });
+    defineGetter(absDiff, "months", function() {
+      return Math.abs(diff.months);
+    });
+    defineGetter(absDiff, "days", function() {
+      return Math.abs(diff.days);
+    });
+    defineGetter(absDiff, "hours", function() {
+      return Math.abs(diff.hours);
+    });
+    defineGetter(absDiff, "minutes", function() {
+      return Math.abs(diff.minutes);
+    });
+    defineGetter(absDiff, "seconds", function() {
+      return Math.abs(diff.seconds);
+    });
+
+    const unit = bestFit(absDiff);
+
+    switch (unit) {
+      case "year":
+        return this.format(diff.years, unit);
+      case "month":
+        return this.format(diff.months, unit);
+      case "day":
+        return this.format(diff.days, unit);
+      case "hour":
+        return this.format(diff.hours, unit);
+      case "minute":
+        return this.format(diff.minutes, unit);
+      default:
+        if (unit !== "second") {
+          throw new TypeError(`Unsupported unit "${unit}"`);
+        }
+        return this.format(diff.seconds, unit);
+    }
+  }
+}
+
 class MozIntl {
+  NumberFormat = MozNumberFormat;
+  Collator = MozCollator;
+  PluralRules = MozPluralRules;
+  RelativeTimeFormat = MozRelativeTimeFormat;
+
   constructor() {
     // XXX: We should add an observer on
     //      intl:app-locales-changed to invalidate
@@ -814,145 +919,33 @@ class MozIntl {
   get DateTimeFormat() {
     if (!this._cache.hasOwnProperty("DateTimeFormat")) {
       mozIntlHelper.addDateTimeFormatConstructor(this._cache);
-    }
 
-    let DateTimeFormat = this._cache.DateTimeFormat;
+      const DateTimeFormat = this._cache.DateTimeFormat;
 
-    class MozDateTimeFormat extends DateTimeFormat {
-      constructor(locales, options, ...args) {
-        let resolvedLocales = DateTimeFormat.supportedLocalesOf(
-          getLocales(locales)
-        );
-        if (options) {
-          if (options.dateStyle || options.timeStyle) {
-            options.pattern = osPrefs.getDateTimePattern(
-              getDateTimePatternStyle(options.dateStyle),
-              getDateTimePatternStyle(options.timeStyle),
-              resolvedLocales[0]
-            );
-          } else {
-            // make sure that user doesn't pass a pattern explicitly
-            options.pattern = undefined;
-          }
-        }
-        super(resolvedLocales, options, ...args);
-      }
-    }
-    return MozDateTimeFormat;
-  }
-
-  get NumberFormat() {
-    class MozNumberFormat extends Intl.NumberFormat {
-      constructor(locales, options, ...args) {
-        super(getLocales(locales), options, ...args);
-      }
-    }
-    return MozNumberFormat;
-  }
-
-  get Collator() {
-    class MozCollator extends Intl.Collator {
-      constructor(locales, options, ...args) {
-        super(getLocales(locales), options, ...args);
-      }
-    }
-    return MozCollator;
-  }
-
-  get PluralRules() {
-    class MozPluralRules extends Intl.PluralRules {
-      constructor(locales, options, ...args) {
-        super(getLocales(locales), options, ...args);
-      }
-    }
-    return MozPluralRules;
-  }
-
-  get RelativeTimeFormat() {
-    class MozRelativeTimeFormat extends Intl.RelativeTimeFormat {
-      constructor(locales, options = {}, ...args) {
-        // If someone is asking for MozRelativeTimeFormat, it's likely they'll want
-        // to use `formatBestUnit` which works better with `auto`
-        if (options.numeric === undefined) {
-          options.numeric = "auto";
-        }
-        super(getLocales(locales), options, ...args);
-      }
-
-      formatBestUnit(date, { now = new Date() } = {}) {
-        const diff = {
-          _: {},
-          ms: date.getTime() - now.getTime(),
-          years: date.getFullYear() - now.getFullYear(),
-        };
-
-        defineCachedGetter(diff, "months", function() {
-          return this.years * 12 + date.getMonth() - now.getMonth();
-        });
-        defineCachedGetter(diff, "days", function() {
-          return Math.trunc((startOf(date, "day") - startOf(now, "day")) / day);
-        });
-        defineCachedGetter(diff, "hours", function() {
-          return Math.trunc(
-            (startOf(date, "hour") - startOf(now, "hour")) / hour
+      class MozDateTimeFormat extends DateTimeFormat {
+        constructor(locales, options, ...args) {
+          let resolvedLocales = DateTimeFormat.supportedLocalesOf(
+            getLocales(locales)
           );
-        });
-        defineCachedGetter(diff, "minutes", function() {
-          return Math.trunc(
-            (startOf(date, "minute") - startOf(now, "minute")) / minute
-          );
-        });
-        defineCachedGetter(diff, "seconds", function() {
-          return Math.trunc(
-            (startOf(date, "second") - startOf(now, "second")) / second
-          );
-        });
-
-        const absDiff = {
-          _: {},
-        };
-
-        defineGetter(absDiff, "years", function() {
-          return Math.abs(diff.years);
-        });
-        defineGetter(absDiff, "months", function() {
-          return Math.abs(diff.months);
-        });
-        defineGetter(absDiff, "days", function() {
-          return Math.abs(diff.days);
-        });
-        defineGetter(absDiff, "hours", function() {
-          return Math.abs(diff.hours);
-        });
-        defineGetter(absDiff, "minutes", function() {
-          return Math.abs(diff.minutes);
-        });
-        defineGetter(absDiff, "seconds", function() {
-          return Math.abs(diff.seconds);
-        });
-
-        const unit = bestFit(absDiff);
-
-        switch (unit) {
-          case "year":
-            return this.format(diff.years, unit);
-          case "month":
-            return this.format(diff.months, unit);
-          case "day":
-            return this.format(diff.days, unit);
-          case "hour":
-            return this.format(diff.hours, unit);
-          case "minute":
-            return this.format(diff.minutes, unit);
-          default:
-            if (unit !== "second") {
-              throw new TypeError(`Unsupported unit "${unit}"`);
+          if (options) {
+            if (options.dateStyle || options.timeStyle) {
+              options.pattern = osPrefs.getDateTimePattern(
+                getDateTimePatternStyle(options.dateStyle),
+                getDateTimePatternStyle(options.timeStyle),
+                resolvedLocales[0]
+              );
+            } else {
+              // make sure that user doesn't pass a pattern explicitly
+              options.pattern = undefined;
             }
-            return this.format(diff.seconds, unit);
+          }
+          super(resolvedLocales, options, ...args);
         }
       }
+      this._cache.MozDateTimeFormat = MozDateTimeFormat;
     }
-    return MozRelativeTimeFormat;
+
+    return this._cache.MozDateTimeFormat;
   }
 }
 
