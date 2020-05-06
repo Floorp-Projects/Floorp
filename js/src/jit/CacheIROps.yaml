@@ -491,7 +491,7 @@
 
 - name: TruncateDoubleToUInt32
   shared: true
-  transpile: false
+  transpile: true
   args:
     val: ValId
     result: Int32Id
