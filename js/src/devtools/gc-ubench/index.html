@@ -7,28 +7,17 @@
   <title>GC uBench</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
-  <!-- Include benchmark modules. -->
-  <script>var tests = new Map();
-</script>
-  <script src="benchmarks/noAllocation.js"></script>
-  <script src="benchmarks/globalArrayNewObject.js"></script>
-  <script src="benchmarks/globalArrayArrayLiteral.js"></script>
-  <script src="benchmarks/globalArrayLargeArray.js"></script>
-  <script src="benchmarks/globalArrayLargeObject.js"></script>
-  <script src="benchmarks/globalArrayObjectLiteral.js"></script>
-  <script src="benchmarks/globalArrayReallocArray.js"></script>
-  <script src="benchmarks/globalArrayBuffer.js"></script>
-  <script src="benchmarks/globalArrayFgFinalized.js"></script>
-  <script src="benchmarks/largeArrayPropertyAndElements.js"></script>
-  <script src="benchmarks/selfCyclicWeakMap.js"></script>
-  <script src="benchmarks/pairCyclicWeakMap.js"></script>
-  <script src="benchmarks/textNodes.js"></script>
-  <script src="benchmarks/bigTextNodes.js"></script>
-  <script src="benchmarks/events.js"></script>
-  <script src="benchmarks/expandoEvents.js"></script>
-  <script src="benchmarks/propertyTreeSplitting.js"></script>
-
+  <!-- Benchmark harness -->
   <script src="harness.js"></script>
+
+  <!-- List of garbage-creating test loads -->
+  <script src="test_list.js"></script>
+
+  <!-- Collect all test loads into a `tests` Map -->
+  <script>
+    var tests = new Map();
+    foreach_test_file(path => import("./" + path));
+  </script>
 
 </head>
 
@@ -36,7 +25,7 @@
 
 <canvas id="graph" width="1080" height="400" style="padding-left:10px"></canvas>
 <canvas id="memgraph" width="1080" height="400" style="padding-left:10px"></canvas>
-<div id="memgraph-disabled" style="display: none"><i>No performance.mozMemory object available. Set dom.enable_memory_stats to True to see heap size info.</i></div>
+<div id="memgraph-disabled" style="display: none"><i>No performance.mozMemory object available. If running Firefox, set dom.enable_memory_stats to True to see heap size info.</i></div>
 
 <hr>
 
