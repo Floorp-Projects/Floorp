@@ -1283,7 +1283,7 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
   cpm->RegisterRemoteFrame(browserParent);
 
   nsCOMPtr<nsIPrincipal> initialPrincipal =
-      NullPrincipal::Create(aContext.OriginAttributesRef());
+      NullPrincipal::Create(aBrowsingContext->OriginAttributesRef());
   WindowGlobalInit windowInit = WindowGlobalActor::AboutBlankInitializer(
       aBrowsingContext, initialPrincipal);
 
