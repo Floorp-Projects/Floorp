@@ -208,7 +208,8 @@ class ThreadInfoReader final : public StatReader {
 };
 
 RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
-                                    const ProcType& type) {
+                                    const ProcType& type,
+                                    const nsAString& origin) {
   auto holder = MakeUnique<MozPromiseHolder<ProcInfoPromise>>();
   RefPtr<ProcInfoPromise> promise = holder->Ensure(__func__);
   nsresult rv = NS_OK;
@@ -220,8 +221,11 @@ RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
     return promise;
   }
 
+  // Ensure that the string is still alive when the runnable is called.
+  nsString originCopy(origin);
   RefPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      __func__, [holder = std::move(holder), pid, type, childId]() {
+      __func__, [holder = std::move(holder), pid, type,
+                 originCopy = std::move(originCopy), childId]() {
         // opening the stat file and reading its content
         StatReader reader(pid);
         ProcInfo info;
@@ -233,6 +237,7 @@ RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
         // Extra info
         info.childId = childId;
         info.type = type;
+        info.origin = originCopy;
 
         // Let's look at the threads
         nsCString taskPath;

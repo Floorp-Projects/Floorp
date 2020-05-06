@@ -73,7 +73,8 @@ void AppendThreads(ProcInfo* info) {
 }
 
 RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
-                                    const ProcType& type) {
+                                    const ProcType& type,
+                                    const nsAString& origin) {
   auto holder = MakeUnique<MozPromiseHolder<ProcInfoPromise>>();
   RefPtr<ProcInfoPromise> promise = holder->Ensure(__func__);
 
@@ -86,8 +87,12 @@ RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
     return promise;
   }
 
+  // Ensure that the string is still alive when `ResolveGetProcInfo` is called.
+  nsString originCopy(origin);
   RefPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      __func__, [holder = std::move(holder), pid, type, childId]() -> void {
+      __func__,
+      [holder = std::move(holder), originCopy = std::move(originCopy), pid,
+       type, childId]() -> void {
         nsAutoHandle handle(OpenProcess(
             PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid));
 
@@ -118,6 +123,7 @@ RefPtr<ProcInfoPromise> GetProcInfo(base::ProcessId pid, int32_t childId,
         info.pid = pid;
         info.childId = childId;
         info.type = type;
+        info.origin = originCopy;
         info.filename.Assign(filename);
         info.cpuKernel = ToNanoSeconds(kernelTime);
         info.cpuUser = ToNanoSeconds(userTime);
