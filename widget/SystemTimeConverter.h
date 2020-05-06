@@ -25,7 +25,7 @@ namespace mozilla {
 // For performance reasons, this class is careful to minimize calls to the
 // native "current time" function (e.g. gdk_x11_server_get_time) since this can
 // be slow.
-template <typename Time>
+template <typename Time, typename TimeStampNowProvider = TimeStamp>
 class SystemTimeConverter {
  public:
   SystemTimeConverter()
@@ -42,7 +42,7 @@ class SystemTimeConverter {
   template <typename CurrentTimeGetter>
   mozilla::TimeStamp GetTimeStampFromSystemTime(
       Time aTime, CurrentTimeGetter& aCurrentTimeGetter) {
-    TimeStamp roughlyNow = TimeStamp::Now();
+    TimeStamp roughlyNow = TimeStampNowProvider::Now();
 
     // If the reference time is not set, use the current time value to fill
     // it in.
@@ -176,7 +176,7 @@ class SystemTimeConverter {
   void UpdateReferenceTime(Time aReferenceTime,
                            const CurrentTimeGetter& aCurrentTimeGetter) {
     Time currentTime = aCurrentTimeGetter.GetCurrentTime();
-    TimeStamp currentTimeStamp = TimeStamp::Now();
+    TimeStamp currentTimeStamp = TimeStampNowProvider::Now();
     Time timeSinceReference = currentTime - aReferenceTime;
     TimeStamp referenceTimeStamp =
         currentTimeStamp - TimeDuration::FromMilliseconds(timeSinceReference);
