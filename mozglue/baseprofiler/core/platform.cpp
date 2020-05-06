@@ -3375,7 +3375,15 @@ void ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {
 }
 
 bool profiler_is_locked_on_current_thread() {
-  return PSAutoLock::IsLockedOnCurrentThread();
+  // This function is used to help users avoid calling `profiler_...` functions
+  // when the profiler may already have a lock in place, which would prevent a
+  // 2nd recursive lock (resulting in a crash or a never-ending wait).
+  // So we must return `true` for any of:
+  // - The main profiler mutex, used by most functions, and/or
+  // - The buffer mutex, used directly in some functions without locking the
+  //   main mutex, e.g., marker-related functions.
+  return PSAutoLock::IsLockedOnCurrentThread() ||
+         CorePS::CoreBuffer().IsThreadSafeAndLockedOnCurrentThread();
 }
 
 static void racy_profiler_add_marker(const char* aMarkerName,

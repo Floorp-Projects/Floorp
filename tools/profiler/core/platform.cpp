@@ -4875,7 +4875,15 @@ void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info) {
 }
 
 bool profiler_is_locked_on_current_thread() {
-  return gPSMutex.IsLockedOnCurrentThread();
+  // This function is used to help users avoid calling `profiler_...` functions
+  // when the profiler may already have a lock in place, which would prevent a
+  // 2nd recursive lock (resulting in a crash or a never-ending wait).
+  // So we must return `true` for any of:
+  // - The main profiler mutex, used by most functions, and/or
+  // - The buffer mutex, used directly in some functions without locking the
+  //   main mutex, e.g., marker-related functions.
+  return gPSMutex.IsLockedOnCurrentThread() ||
+         CorePS::CoreBuffer().IsThreadSafeAndLockedOnCurrentThread();
 }
 
 bool profiler_add_native_allocation_marker(int aMainThreadId, int64_t aSize,
