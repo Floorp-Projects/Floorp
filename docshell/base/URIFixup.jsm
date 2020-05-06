@@ -262,13 +262,20 @@ URIFixup.prototype = {
       });
     }
 
-    // Now check whether "scheme" is something we don't know about.
-    let isDefaultProtocolHandler =
-      !isCommonProtocol &&
+    let canHandleProtocol =
       scheme &&
-      Services.io.getProtocolHandler(scheme) == defaultProtocolHandler;
+      (isCommonProtocol ||
+        Services.io.getProtocolHandler(scheme) != defaultProtocolHandler ||
+        externalProtocolService.externalProtocolHandlerExists(scheme));
 
-    if (!isDefaultProtocolHandler || !possiblyHostPortRegex.test(uriString)) {
+    if (
+      canHandleProtocol ||
+      // If it's an unknown handler and the given URL looks like host:port or
+      // has a user:password we can't pass it to the external protocol handler.
+      // We'll instead try fixing it with http later.
+      (!possiblyHostPortRegex.test(uriString) &&
+        !userPasswordRegex.test(uriString))
+    ) {
       // Just try to create an URL out of it.
       try {
         info.fixedURI = Services.io.newURI(uriString);
@@ -279,28 +286,20 @@ URIFixup.prototype = {
       }
     }
 
+    // We're dealing with a theoretically valid URI but we have no idea how to
+    // load it. (e.g. "christmas:humbug")
+    // It's more likely the user wants to search, and so we chuck this over to
+    // their preferred search provider.
     // TODO (Bug 1588118): Should check FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP
     // instead of FIXUP_FLAG_FIX_SCHEME_TYPOS.
     if (
       info.fixedURI &&
-      isDefaultProtocolHandler &&
       keywordEnabled &&
       fixupFlags & FIXUP_FLAG_FIX_SCHEME_TYPOS &&
       scheme &&
-      !externalProtocolService.externalProtocolHandlerExists(scheme)
+      !canHandleProtocol
     ) {
-      if (!userPasswordRegex.test(uriString)) {
-        // This basically means we're dealing with a theoretically valid
-        // URI... but we have no idea how to load it. (e.g. "christmas:humbug")
-        // It's more likely the user wants to search, and so we
-        // chuck this over to their preferred search provider instead:
-        tryKeywordFixupForURIInfo(uriString, info, isPrivateContext, postData);
-      } else {
-        // If the given URL has a user:password we can't just pass it to the
-        // external protocol handler; we'll try using it with http instead
-        // later
-        info.preferredURI = info.fixedURI = null;
-      }
+      tryKeywordFixupForURIInfo(uriString, info, isPrivateContext, postData);
     }
 
     if (info.fixedURI) {
