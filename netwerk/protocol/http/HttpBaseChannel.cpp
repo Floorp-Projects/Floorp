@@ -3693,14 +3693,14 @@ HttpBaseChannel::SetMatchedInfo(const nsACString& aList,
 
 NS_IMETHODIMP
 HttpBaseChannel::GetMatchedTrackingLists(nsTArray<nsCString>& aLists) {
-  aLists = mMatchedTrackingLists;
+  aLists = mMatchedTrackingLists.Clone();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HttpBaseChannel::GetMatchedTrackingFullHashes(
     nsTArray<nsCString>& aFullHashes) {
-  aFullHashes = mMatchedTrackingFullHashes;
+  aFullHashes = mMatchedTrackingFullHashes.Clone();
   return NS_OK;
 }
 
@@ -3711,8 +3711,8 @@ HttpBaseChannel::SetMatchedTrackingInfo(
   // aFullHashes can be empty for non hash-matching algorithm, for example,
   // host based test entries in preference.
 
-  mMatchedTrackingLists = aLists;
-  mMatchedTrackingFullHashes = aFullHashes;
+  mMatchedTrackingLists = aLists.Clone();
+  mMatchedTrackingFullHashes = aFullHashes.Clone();
   return NS_OK;
 }
 //-----------------------------------------------------------------------------
@@ -4258,7 +4258,7 @@ void HttpBaseChannel::SetCorsPreflightParameters(
   MOZ_RELEASE_ASSERT(!mRequestObserversCalled);
 
   mRequireCORSPreflight = true;
-  mUnsafeHeaders = aUnsafeHeaders;
+  mUnsafeHeaders = aUnsafeHeaders.Clone();
 }
 
 void HttpBaseChannel::SetAltDataForChild(bool aIsForChild) {
