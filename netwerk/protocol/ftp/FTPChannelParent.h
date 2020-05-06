@@ -22,6 +22,7 @@ namespace mozilla {
 
 namespace dom {
 class BrowserParent;
+class PBrowserOrId;
 }  // namespace dom
 
 namespace net {
@@ -41,7 +42,7 @@ class FTPChannelParent final : public PFTPChannelParent,
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSICHANNELEVENTSINK
 
-  FTPChannelParent(dom::BrowserParent* aIframeEmbedding,
+  FTPChannelParent(const dom::PBrowserOrId& aIframeEmbedding,
                    nsILoadContext* aLoadContext,
                    PBOverrideStatus aOverrideStatus);
 
