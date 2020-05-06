@@ -35,7 +35,7 @@ class LoggingInfo;
 class PBackgroundIDBFactoryParent;
 class PBackgroundIndexedDBUtilsParent;
 
-PBackgroundIDBFactoryParent* AllocPBackgroundIDBFactoryParent(
+already_AddRefed<PBackgroundIDBFactoryParent> AllocPBackgroundIDBFactoryParent(
     const LoggingInfo& aLoggingInfo);
 
 bool RecvPBackgroundIDBFactoryConstructor(PBackgroundIDBFactoryParent* aActor,

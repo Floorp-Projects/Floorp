@@ -5732,15 +5732,20 @@ class TransactionDatabaseOperationBase : public DatabaseOperationBase {
   NS_DECL_NSIRUNNABLE
 };
 
-class Factory final : public PBackgroundIDBFactoryParent {
+class Factory final : public PBackgroundIDBFactoryParent,
+                      public AtomicSafeRefCounted<Factory> {
   RefPtr<DatabaseLoggingInfo> mLoggingInfo;
 
 #ifdef DEBUG
   bool mActorDestroyed;
 #endif
 
+  // Reference counted.
+  ~Factory() override;
+
  public:
-  [[nodiscard]] static RefPtr<Factory> Create(const LoggingInfo& aLoggingInfo);
+  [[nodiscard]] static SafeRefPtr<Factory> Create(
+      const LoggingInfo& aLoggingInfo);
 
   DatabaseLoggingInfo* GetLoggingInfo() const {
     AssertIsOnBackgroundThread();
@@ -5749,14 +5754,11 @@ class Factory final : public PBackgroundIDBFactoryParent {
     return mLoggingInfo;
   }
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::indexedDB::Factory)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(mozilla::dom::indexedDB::Factory)
+  MOZ_INLINE_DECL_SAFEREFCOUNTING_INHERITED(Factory, AtomicSafeRefCounted)
 
- private:
   // Only constructed in Create().
   explicit Factory(RefPtr<DatabaseLoggingInfo> aLoggingInfo);
-
-  // Reference counted.
-  ~Factory() override;
 
   // IPDL methods are only called by IPDL.
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -5833,7 +5835,7 @@ class Database final
   class UnmapBlobCallback;
 
  private:
-  RefPtr<Factory> mFactory;
+  SafeRefPtr<Factory> mFactory;
   SafeRefPtr<FullDatabaseMetadata> mMetadata;
   SafeRefPtr<FileManager> mFileManager;
   RefPtr<DirectoryLock> mDirectoryLock;
@@ -5865,7 +5867,7 @@ class Database final
 
  public:
   // Created by OpenDatabaseOp.
-  Database(RefPtr<Factory> aFactory, const PrincipalInfo& aPrincipalInfo,
+  Database(SafeRefPtr<Factory> aFactory, const PrincipalInfo& aPrincipalInfo,
            const Maybe<ContentParentId>& aOptionalContentParentId,
            const nsACString& aGroup, const nsACString& aOrigin,
            uint32_t aTelemetryId, SafeRefPtr<FullDatabaseMetadata> aMetadata,
@@ -6779,7 +6781,7 @@ class FactoryOp
   };
 
   // Must be released on the background thread!
-  RefPtr<Factory> mFactory;
+  SafeRefPtr<Factory> mFactory;
 
   // Must be released on the main thread!
   RefPtr<ContentParent> mContentParent;
@@ -6837,7 +6839,7 @@ class FactoryOp
   void Stringify(nsACString& aResult) const;
 
  protected:
-  FactoryOp(RefPtr<Factory> aFactory, RefPtr<ContentParent> aContentParent,
+  FactoryOp(SafeRefPtr<Factory> aFactory, RefPtr<ContentParent> aContentParent,
             const CommonFactoryRequestParams& aCommonParams, bool aDeleting);
 
   ~FactoryOp() override {
@@ -6945,7 +6947,8 @@ class OpenDatabaseOp final : public FactoryOp {
   uint32_t mTelemetryId;
 
  public:
-  OpenDatabaseOp(RefPtr<Factory> aFactory, RefPtr<ContentParent> aContentParent,
+  OpenDatabaseOp(SafeRefPtr<Factory> aFactory,
+                 RefPtr<ContentParent> aContentParent,
                  const CommonFactoryRequestParams& aParams);
 
  private:
@@ -7032,7 +7035,7 @@ class DeleteDatabaseOp final : public FactoryOp {
   uint64_t mPreviousVersion;
 
  public:
-  DeleteDatabaseOp(RefPtr<Factory> aFactory,
+  DeleteDatabaseOp(SafeRefPtr<Factory> aFactory,
                    RefPtr<ContentParent> aContentParent,
                    const CommonFactoryRequestParams& aParams)
       : FactoryOp(std::move(aFactory), std::move(aContentParent), aParams,
@@ -10568,7 +10571,7 @@ nsresult DeserializeUpgradeValueToFileIds(
  * Exported functions
  ******************************************************************************/
 
-PBackgroundIDBFactoryParent* AllocPBackgroundIDBFactoryParent(
+already_AddRefed<PBackgroundIDBFactoryParent> AllocPBackgroundIDBFactoryParent(
     const LoggingInfo& aLoggingInfo) {
   AssertIsOnBackgroundThread();
 
@@ -10583,10 +10586,10 @@ PBackgroundIDBFactoryParent* AllocPBackgroundIDBFactoryParent(
     return nullptr;
   }
 
-  RefPtr<Factory> actor = Factory::Create(aLoggingInfo);
+  SafeRefPtr<Factory> actor = Factory::Create(aLoggingInfo);
   MOZ_ASSERT(actor);
 
-  return actor.forget().take();
+  return actor.forget();
 }
 
 bool RecvPBackgroundIDBFactoryConstructor(
@@ -10596,14 +10599,6 @@ bool RecvPBackgroundIDBFactoryConstructor(
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
 
-  return true;
-}
-
-bool DeallocPBackgroundIDBFactoryParent(PBackgroundIDBFactoryParent* aActor) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-
-  RefPtr<Factory> actor = dont_AddRef(static_cast<Factory*>(aActor));
   return true;
 }
 
@@ -13393,7 +13388,7 @@ Factory::Factory(RefPtr<DatabaseLoggingInfo> aLoggingInfo)
 Factory::~Factory() { MOZ_ASSERT(mActorDestroyed); }
 
 // static
-RefPtr<Factory> Factory::Create(const LoggingInfo& aLoggingInfo) {
+SafeRefPtr<Factory> Factory::Create(const LoggingInfo& aLoggingInfo) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
 
@@ -13426,7 +13421,7 @@ RefPtr<Factory> Factory::Create(const LoggingInfo& aLoggingInfo) {
                                loggingInfo);
   }
 
-  return new Factory(std::move(loggingInfo));
+  return MakeSafeRefPtr<Factory>(std::move(loggingInfo));
 }
 
 void Factory::ActorDestroy(ActorDestroyReason aWhy) {
@@ -13513,11 +13508,11 @@ Factory::AllocPBackgroundIDBFactoryRequestParent(
 
   auto actor = [&]() -> RefPtr<FactoryOp> {
     if (aParams.type() == FactoryRequestParams::TOpenDatabaseRequestParams) {
-      return MakeRefPtr<OpenDatabaseOp>(this, std::move(contentParent),
-                                        *commonParams);
+      return MakeRefPtr<OpenDatabaseOp>(
+          SafeRefPtrFromThis(), std::move(contentParent), *commonParams);
     } else {
-      return MakeRefPtr<DeleteDatabaseOp>(this, std::move(contentParent),
-                                          *commonParams);
+      return MakeRefPtr<DeleteDatabaseOp>(
+          SafeRefPtrFromThis(), std::move(contentParent), *commonParams);
     }
   }();
 
@@ -13660,7 +13655,7 @@ WaitForTransactionsHelper::Run() {
  * Database
  ******************************************************************************/
 
-Database::Database(RefPtr<Factory> aFactory,
+Database::Database(SafeRefPtr<Factory> aFactory,
                    const PrincipalInfo& aPrincipalInfo,
                    const Maybe<ContentParentId>& aOptionalContentParentId,
                    const nsACString& aGroup, const nsACString& aOrigin,
@@ -20351,7 +20346,7 @@ mozilla::ipc::IPCResult MutableFile::RecvGetFileId(int64_t* aFileId) {
   return IPC_OK();
 }
 
-FactoryOp::FactoryOp(RefPtr<Factory> aFactory,
+FactoryOp::FactoryOp(SafeRefPtr<Factory> aFactory,
                      RefPtr<ContentParent> aContentParent,
                      const CommonFactoryRequestParams& aCommonParams,
                      bool aDeleting)
@@ -21211,7 +21206,7 @@ mozilla::ipc::IPCResult FactoryOp::RecvPermissionRetry() {
   return IPC_OK();
 }
 
-OpenDatabaseOp::OpenDatabaseOp(RefPtr<Factory> aFactory,
+OpenDatabaseOp::OpenDatabaseOp(SafeRefPtr<Factory> aFactory,
                                RefPtr<ContentParent> aContentParent,
                                const CommonFactoryRequestParams& aParams)
     : FactoryOp(std::move(aFactory), std::move(aContentParent), aParams,
@@ -22177,11 +22172,15 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
     mMetadata = info->mMetadata.clonePtr();
   }
 
+  // XXX Shouldn't Manager() return already_AddRefed when
+  // PBackgroundIDBFactoryParent is declared refcounted?
   mDatabase = MakeSafeRefPtr<Database>(
-      static_cast<Factory*>(Manager()), mCommonParams.principalInfo(),
-      mOptionalContentParentId, mGroup, mOrigin, mTelemetryId,
-      mMetadata.clonePtr(), mFileManager.clonePtr(), std::move(mDirectoryLock),
-      mFileHandleDisabled, mChromeWriteAccessAllowed);
+      SafeRefPtr{static_cast<Factory*>(Manager()),
+                 AcquireStrongRefFromRawPtr{}},
+      mCommonParams.principalInfo(), mOptionalContentParentId, mGroup, mOrigin,
+      mTelemetryId, mMetadata.clonePtr(), mFileManager.clonePtr(),
+      std::move(mDirectoryLock), mFileHandleDisabled,
+      mChromeWriteAccessAllowed);
 
   if (info) {
     info->mLiveDatabases.AppendElement(mDatabase.unsafeGetRawPtr());
