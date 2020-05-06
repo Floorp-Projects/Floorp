@@ -284,7 +284,7 @@ def attrAsWrapper(iface, m, getter):
 
 header = """\
 //
-// DO NOT EDIT.  THIS FILE IS GENERATED FROM $SRCDIR/%(relpath)s
+// DO NOT EDIT.  THIS FILE IS GENERATED FROM %(filename)s
 //
 
 """
@@ -295,10 +295,10 @@ def idl_basename(f):
     return os.path.splitext(os.path.basename(f))[0]
 
 
-def print_rust_bindings(idl, fd, relpath):
+def print_rust_bindings(idl, fd, filename):
     fd = AutoIndent(fd)
 
-    fd.write(header % {'relpath': relpath})
+    fd.write(header % {'filename': filename})
 
     # All of the idl files will be included into the same rust module, as we
     # can't do forward declarations. Because of this, we want to ignore all
