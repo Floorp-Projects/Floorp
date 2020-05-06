@@ -727,13 +727,16 @@ DevTools.prototype = {
     );
     const inspector = toolbox.getCurrentPanel();
 
-    // new-node-front tells us when the node has been selected, whether the
-    // browser is remote or not.
-    const onNewNode = inspector.selection.once("new-node-front");
     const nodeFront = await inspector.inspectorFront.getNodeActorFromContentDomReference(
       domReference
     );
+    if (!nodeFront) {
+      return;
+    }
 
+    // "new-node-front" tells us when the node has been selected, whether the
+    // browser is remote or not.
+    const onNewNode = inspector.selection.once("new-node-front");
     // Select the final node
     inspector.selection.setNodeFront(nodeFront, {
       reason: "browser-context-menu",
@@ -773,6 +776,10 @@ DevTools.prototype = {
     const nodeFront = await inspectorFront.getNodeActorFromContentDomReference(
       domReference
     );
+    if (!nodeFront) {
+      return;
+    }
+
     // Select the accessible object in the panel and wait for the event that
     // tells us it has been done.
     const a11yPanel = toolbox.getCurrentPanel();

@@ -146,6 +146,10 @@ AccessibilityView.prototype = {
   },
 
   async selectNodeAccessible(node) {
+    if (!node) {
+      return;
+    }
+
     const accessibilityFront = await node.targetFront.getFront("accessibility");
     const accessibleWalkerFront = await accessibilityFront.getWalker();
     let accessible = await accessibleWalkerFront.getAccessibleFor(node);
