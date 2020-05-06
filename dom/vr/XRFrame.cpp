@@ -133,8 +133,8 @@ already_AddRefed<XRViewerPose> XRFrame::GetViewerPose(
   return viewerPose.forget();
 }
 
-XRPose* XRFrame::GetPose(const XRSpace& aSpace, const XRSpace& aBaseSpace,
-                         ErrorResult& aRv) {
+already_AddRefed<XRPose> XRFrame::GetPose(const XRSpace& aSpace, const XRSpace& aBaseSpace,
+                                          ErrorResult& aRv) {
   if (!mActive) {
     aRv.ThrowInvalidStateError(
         "GetPose can not be called on an XRFrame that is not active.");
@@ -169,7 +169,7 @@ XRPose* XRFrame::GetPose(const XRSpace& aSpace, const XRSpace& aBaseSpace,
   RefPtr<XRRigidTransform> transform = new XRRigidTransform(mParent, matrix);
   RefPtr<XRPose> pose = new XRPose(mParent, transform, emulatedPosition);
 
-  return pose;
+  return pose.forget();
 }
 
 void XRFrame::StartAnimationFrame() {
