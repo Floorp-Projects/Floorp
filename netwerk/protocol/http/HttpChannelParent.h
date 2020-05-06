@@ -37,6 +37,7 @@ namespace mozilla {
 
 namespace dom {
 class BrowserParent;
+class PBrowserOrId;
 }  // namespace dom
 
 namespace net {
@@ -80,7 +81,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
 
   NS_DECLARE_STATIC_IID_ACCESSOR(HTTP_CHANNEL_PARENT_IID)
 
-  HttpChannelParent(dom::BrowserParent* iframeEmbedding,
+  HttpChannelParent(const dom::PBrowserOrId& iframeEmbedding,
                     nsILoadContext* aLoadContext, PBOverrideStatus aStatus);
 
   [[nodiscard]] bool Init(const HttpChannelCreationArgs& aOpenArgs);
@@ -300,6 +301,8 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
 
   MozPromiseHolder<GenericNonExclusivePromise> mPromise;
   MozPromiseRequestHolder<GenericNonExclusivePromise> mRequest;
+
+  dom::TabId mNestedFrameId;
 
   // To calculate the delay caused by the e10s back-pressure suspension
   TimeStamp mResumedTimestamp;

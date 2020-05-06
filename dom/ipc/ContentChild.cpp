@@ -611,6 +611,7 @@ ContentChild::~ContentChild() {
 
 NS_INTERFACE_MAP_BEGIN(ContentChild)
   NS_INTERFACE_MAP_ENTRY(nsIContentChild)
+  NS_INTERFACE_MAP_ENTRY(nsIWindowProvider)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentChild)
 NS_INTERFACE_MAP_END
 
@@ -779,6 +780,20 @@ void ContentChild::SetProcessName(const nsAString& aName) {
 #endif
 }
 
+NS_IMETHODIMP
+ContentChild::ProvideWindow(nsIOpenWindowInfo* aOpenWindowInfo,
+                            uint32_t aChromeFlags, bool aCalledFromJS,
+                            bool aWidthSpecified, nsIURI* aURI,
+                            const nsAString& aName, const nsACString& aFeatures,
+                            bool aForceNoOpener, bool aForceNoReferrer,
+                            nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
+                            BrowsingContext** aReturn) {
+  return ProvideWindowCommon(nullptr, aOpenWindowInfo, aChromeFlags,
+                             aCalledFromJS, aWidthSpecified, aURI, aName,
+                             aFeatures, aForceNoOpener, aForceNoReferrer,
+                             aLoadState, aWindowIsNew, aReturn);
+}
+
 static nsresult GetCreateWindowParams(nsIOpenWindowInfo* aOpenWindowInfo,
                                       nsDocShellLoadState* aLoadState,
                                       bool aForceNoReferrer, float* aFullZoom,
@@ -849,16 +864,18 @@ nsresult ContentChild::ProvideWindowCommon(
     nsIURI* aURI, const nsAString& aName, const nsACString& aFeatures,
     bool aForceNoOpener, bool aForceNoReferrer, nsDocShellLoadState* aLoadState,
     bool* aWindowIsNew, BrowsingContext** aReturn) {
-  MOZ_DIAGNOSTIC_ASSERT(aTabOpener, "We must have a tab opener");
-
   *aReturn = nullptr;
 
+  UniquePtr<IPCTabContext> ipcContext;
+  TabId openerTabId = TabId(0);
   nsAutoCString features(aFeatures);
   nsAutoString name(aName);
 
   nsresult rv;
 
   RefPtr<BrowsingContext> parent = aOpenWindowInfo->GetParent();
+  MOZ_ASSERT(!parent || aTabOpener,
+             "If parent is non-null, we should have an aTabOpener");
 
   // Cache the boolean preference for allowing noopener windows to open in a
   // separate process.
@@ -880,7 +897,7 @@ nsresult ContentChild::ProvideWindowCommon(
   // load in the current process.
   bool loadInDifferentProcess =
       aForceNoOpener && sNoopenerNewProcess && !useRemoteSubframes;
-  if (!loadInDifferentProcess && aURI) {
+  if (aTabOpener && !loadInDifferentProcess && aURI) {
     // Only special-case cross-process loads if Fission is disabled. With
     // Fission enabled, the initial in-process load will automatically be
     // retargeted to the correct process.
@@ -926,13 +943,26 @@ nsresult ContentChild::ProvideWindowCommon(
     return NS_ERROR_ABORT;
   }
 
+  if (aTabOpener) {
+    PopupIPCTabContext context;
+    openerTabId = aTabOpener->GetTabId();
+    context.opener() = openerTabId;
+    ipcContext = MakeUnique<IPCTabContext>(context);
+  } else {
+    // It's possible to not have a BrowserChild opener in the case
+    // of ServiceWorker::OpenWindow.
+    UnsafeIPCTabContext unsafeTabContext;
+    ipcContext = MakeUnique<IPCTabContext>(unsafeTabContext);
+  }
+
+  MOZ_ASSERT(ipcContext);
   TabId tabId(nsContentUtils::GenerateTabId());
 
   // We need to assign a TabGroup to the PBrowser actor before we send it to the
   // parent. Otherwise, the parent could send messages to us before we have a
   // proper TabGroup for that actor.
   RefPtr<BrowsingContext> openerBC;
-  if (!aForceNoOpener) {
+  if (aTabOpener && !aForceNoOpener) {
     openerBC = parent;
   }
 
@@ -952,9 +982,19 @@ nsresult ContentChild::ProvideWindowCommon(
   // Awkwardly manually construct the new TabContext in order to ensure our
   // OriginAttributes perfectly matches it.
   MutableTabContext newTabContext;
-  newTabContext.SetTabContext(
-      aTabOpener->ChromeOuterWindowID(), aTabOpener->ShowFocusRings(),
-      aTabOpener->PresentationURL(), aTabOpener->MaxTouchPoints());
+  if (aTabOpener) {
+    newTabContext.SetTabContext(
+        aTabOpener->ChromeOuterWindowID(), aTabOpener->ShowFocusRings(),
+        browsingContext->OriginAttributesRef(), aTabOpener->PresentationURL(),
+        aTabOpener->MaxTouchPoints());
+  } else {
+    newTabContext.SetTabContext(
+        /* chromeOuterWindowID */ 0,
+        /* showFocusRings */ UIStateChangeType_NoChange,
+        browsingContext->OriginAttributesRef(),
+        /* presentationURL */ EmptyString(),
+        /* maxTouchPoints */ 0);
+  }
 
   // The initial about:blank document we generate within the nsDocShell will
   // almost certainly be replaced at some point. Unfortunately, getting the
@@ -975,6 +1015,11 @@ nsresult ContentChild::ProvideWindowCommon(
                                            browsingContext, aChromeFlags,
                                            /* aIsTopLevel */ true);
 
+  if (aTabOpener) {
+    MOZ_ASSERT(ipcContext->type() == IPCTabContext::TPopupIPCTabContext);
+    ipcContext->get_PopupIPCTabContext().opener() = aTabOpener;
+  }
+
   if (IsShuttingDown()) {
     return NS_ERROR_ABORT;
   }
@@ -993,10 +1038,8 @@ nsresult ContentChild::ProvideWindowCommon(
   }
 
   // Tell the parent process to set up its PBrowserParent.
-  PopupIPCTabContext ipcContext;
-  ipcContext.openerChild() = aTabOpener;
   if (NS_WARN_IF(!SendConstructPopupBrowser(
-          std::move(parentEp), std::move(windowParentEp), tabId, ipcContext,
+          std::move(parentEp), std::move(windowParentEp), tabId, *ipcContext,
           windowInit, aChromeFlags))) {
     return NS_ERROR_ABORT;
   }
@@ -1048,10 +1091,13 @@ nsresult ContentChild::ProvideWindowCommon(
       return;
     }
 
-    ParentShowInfo showInfo(
-        EmptyString(), false, true, false, aTabOpener->WebWidget()->GetDPI(),
-        aTabOpener->WebWidget()->RoundsWidgetCoordinatesTo(),
-        aTabOpener->WebWidget()->GetDefaultScale().scale);
+    ParentShowInfo showInfo(EmptyString(), false, true, false, 0, 0, 0);
+    if (aTabOpener) {
+      showInfo = ParentShowInfo(
+          EmptyString(), false, true, false, aTabOpener->WebWidget()->GetDPI(),
+          aTabOpener->WebWidget()->RoundsWidgetCoordinatesTo(),
+          aTabOpener->WebWidget()->GetDefaultScale().scale);
+    }
 
     newChild->SetMaxTouchPoints(maxTouchPoints);
     newChild->SetHasSiblings(hasSiblings);
@@ -2869,6 +2915,13 @@ void ContentChild::ShutdownInternal() {
       CrashReporter::Annotation::IPCShutdownState,
       sent ? NS_LITERAL_CSTRING("SendFinishShutdown (sent)")
            : NS_LITERAL_CSTRING("SendFinishShutdown (failed)"));
+}
+
+PBrowserOrId ContentChild::GetBrowserOrId(BrowserChild* aBrowserChild) {
+  if (!aBrowserChild || this == aBrowserChild->Manager()) {
+    return PBrowserOrId(aBrowserChild);
+  }
+  return PBrowserOrId(aBrowserChild->GetTabId());
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvUpdateWindow(

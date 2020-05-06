@@ -37,9 +37,20 @@ nsresult BrowserBridgeParent::InitWithProcess(
   RefPtr<CanonicalBrowsingContext> browsingContext =
       aWindowInit.browsingContext().get_canonical();
 
+  // We can inherit most TabContext fields for the new BrowserParent actor from
+  // our Manager BrowserParent. We also need to sync the first party domain if
+  // the content principal exists.
   MutableTabContext tabContext;
+  OriginAttributes attrs;
+  attrs = Manager()->OriginAttributesRef();
+  RefPtr<nsIPrincipal> principal = Manager()->GetContentPrincipal();
+  if (principal) {
+    attrs.SetFirstPartyDomain(
+        true, principal->OriginAttributesRef().mFirstPartyDomain);
+  }
+
   tabContext.SetTabContext(Manager()->ChromeOuterWindowID(),
-                           Manager()->ShowFocusRings(), aPresentationURL,
+                           Manager()->ShowFocusRings(), attrs, aPresentationURL,
                            Manager()->GetMaxTouchPoints());
 
   // Ensure that our content process is subscribed to our newly created
