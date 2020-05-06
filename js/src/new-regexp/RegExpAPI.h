@@ -25,7 +25,7 @@ bool CheckPatternSyntax(JSContext* cx, frontend::TokenStreamAnyChars& ts,
                         HandleAtom pattern, JS::RegExpFlags flags);
 
 bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
-                    HandleLinearString input, RegExpShared::CodeKind codeKind);
+                    HandleLinearString input);
 
 RegExpRunStatus Execute(JSContext* cx, MutableHandleRegExpShared re,
                         HandleLinearString input, size_t start,
