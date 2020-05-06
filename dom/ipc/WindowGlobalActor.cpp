@@ -34,7 +34,7 @@ WindowGlobalInit WindowGlobalActor::AboutBlankInitializer(
 
   return WindowGlobalInit(aPrincipal, contentBlockingAllowListPrincipal,
                           documentURI, aBrowsingContext, innerWindowId,
-                          outerWindowId, false);
+                          outerWindowId);
 }
 
 void WindowGlobalActor::ConstructActor(const nsACString& aName,
