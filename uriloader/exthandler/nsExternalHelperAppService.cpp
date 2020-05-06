@@ -1734,9 +1734,9 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
 #endif
     if (action == nsIMIMEInfo::useHelperApp ||
         action == nsIMIMEInfo::useSystemDefault) {
-      rv = LaunchWithApplication(nullptr, false);
+      rv = LaunchWithApplication();
     } else {
-      rv = SaveToDisk(nullptr, false);
+      rv = PromptForSaveDestination();
     }
   }
 
@@ -2217,29 +2217,26 @@ void nsExternalAppHandler::RequestSaveDestination(
   }
 }
 
-// SaveToDisk should only be called by the helper app dialog which allows
-// the user to say launch with application or save to disk. It doesn't actually
-// perform the save, it just prompts for the destination file name.
-NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile* aNewFileLocation,
-                                               bool aRememberThisPreference) {
+// PromptForSaveDestination should only be called by the helper app dialog which
+// allows the user to say launch with application or save to disk.
+NS_IMETHODIMP nsExternalAppHandler::PromptForSaveDestination() {
   if (mCanceled) return NS_OK;
 
   mMimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
 
-  if (!aNewFileLocation) {
-    if (mSuggestedFileName.IsEmpty())
-      RequestSaveDestination(mTempLeafName, mTempFileExtension);
-    else {
-      nsAutoString fileExt;
-      int32_t pos = mSuggestedFileName.RFindChar('.');
-      if (pos >= 0)
-        mSuggestedFileName.Right(fileExt, mSuggestedFileName.Length() - pos);
-      if (fileExt.IsEmpty()) fileExt = mTempFileExtension;
-
-      RequestSaveDestination(mSuggestedFileName, fileExt);
-    }
+  if (mSuggestedFileName.IsEmpty()) {
+    RequestSaveDestination(mTempLeafName, mTempFileExtension);
   } else {
-    ContinueSave(aNewFileLocation);
+    nsAutoString fileExt;
+    int32_t pos = mSuggestedFileName.RFindChar('.');
+    if (pos >= 0) {
+      mSuggestedFileName.Right(fileExt, mSuggestedFileName.Length() - pos);
+    }
+    if (fileExt.IsEmpty()) {
+      fileExt = mTempFileExtension;
+    }
+
+    RequestSaveDestination(mSuggestedFileName, fileExt);
   }
 
   return NS_OK;
@@ -2293,17 +2290,9 @@ nsresult nsExternalAppHandler::ContinueSave(nsIFile* aNewFileLocation) {
 }
 
 // LaunchWithApplication should only be called by the helper app dialog which
-// allows the user to say launch with application or save to disk. It doesn't
-// actually perform launch with application.
-NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(
-    nsIFile* aApplication, bool aRememberThisPreference) {
+// allows the user to say launch with application or save to disk.
+NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication() {
   if (mCanceled) return NS_OK;
-
-  if (mMimeInfo && aApplication) {
-    PlatformLocalHandlerApp_t* handlerApp =
-        new PlatformLocalHandlerApp_t(EmptyString(), aApplication);
-    mMimeInfo->SetPreferredApplicationHandler(handlerApp);
-  }
 
   // Now check if the file is local, in which case we won't bother with saving
   // it to a temporary directory and just launch it from where it is
