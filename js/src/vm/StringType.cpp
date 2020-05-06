@@ -356,10 +356,10 @@ void JSString::dumpRepresentationHeader(js::GenericPrinter& out,
   if (flags & LINEAR_BIT) out.put(" LINEAR");
   if (flags & DEPENDENT_BIT) out.put(" DEPENDENT");
   if (flags & INLINE_CHARS_BIT) out.put(" INLINE_CHARS");
-  if (flags & NON_ATOM_BIT)
-    out.put(" NON_ATOM");
+  if (flags & ATOM_BIT)
+    out.put(" ATOM");
   else
-    out.put(" (ATOM)");
+    out.put(" (NON ATOM)");
   if (isPermanentAtom()) out.put(" PERMANENT");
   if (flags & LATIN1_CHARS_BIT) out.put(" LATIN1");
   if (flags & INDEX_VALUE_BIT) out.printf(" INDEX_VALUE(%u)", getIndexValue());

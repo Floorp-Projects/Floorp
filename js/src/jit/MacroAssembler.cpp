@@ -1236,11 +1236,11 @@ void MacroAssembler::compareStrings(JSOp op, Register left, Register right,
     Label leftIsNotAtom;
     Label setNotEqualResult;
     // Atoms cannot be equal to each other if they point to different strings.
-    Imm32 nonAtomBit(JSString::NON_ATOM_BIT);
-    branchTest32(Assembler::NonZero, Address(left, JSString::offsetOfFlags()),
-                 nonAtomBit, &leftIsNotAtom);
-    branchTest32(Assembler::Zero, Address(right, JSString::offsetOfFlags()),
-                 nonAtomBit, &setNotEqualResult);
+    Imm32 atomBit(JSString::ATOM_BIT);
+    branchTest32(Assembler::Zero, Address(left, JSString::offsetOfFlags()),
+                 atomBit, &leftIsNotAtom);
+    branchTest32(Assembler::NonZero, Address(right, JSString::offsetOfFlags()),
+                 atomBit, &setNotEqualResult);
 
     bind(&leftIsNotAtom);
     // Strings of different length can never be equal.
