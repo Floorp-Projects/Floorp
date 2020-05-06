@@ -6,6 +6,9 @@
 [localization] @AB_CD@.jar:
   crashreporter                                    (%crashreporter/**/*.ftl)
   toolkit                                          (%toolkit/**/*.ftl)
+#if defined(NIGHTLY_BUILD)
+  preview/aboutProcesses.ftl                       (../components/aboutprocesses/content/aboutProcesses.ftl)
+#endif
 
 @AB_CD@.jar:
 % locale global @AB_CD@ %locale/@AB_CD@/global/

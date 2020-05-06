@@ -1,0 +1,157 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://global/skin/in-content/common.css");
+
+html {
+  background-color: var(--in-content-page-background);
+}
+body {
+  overflow-x: hidden;
+}
+#process-table {
+  -moz-user-select: none;
+  font-size: 1em;
+  border-spacing: 0;
+  background-color: var(--in-content-box-background);
+  margin: 0;
+  position: absolute;
+  top: 0;
+  inset-inline-start: 0;
+  width: 100%;
+  height: 100%;
+  min-width: 40em;
+}
+
+/* Avoid scrolling the header */
+#process-tbody {
+  display: block;
+  margin-top: 2em;
+}
+#process-thead {
+  position: fixed;
+  z-index: 1;
+  height: 2em;
+  border-bottom: 1px solid var(--in-content-border-color);
+  min-width: 40em;
+  background-color: var(--in-content-box-background);
+}
+tr {
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+}
+td:nth-child(1) {
+  width:  6%;
+}
+/* At least one column needs to have a flexible width,
+   so no width specified for td:nth-child(2) */
+td:nth-child(3) {
+  width: 10%;
+}
+td:nth-child(4) {
+  width: 10%;
+}
+td:nth-child(5) {
+  width: 10%;
+}
+td:nth-child(6) {
+  width: 10%;
+}
+td:nth-child(7) {
+  width: 2%;
+}
+
+#process-thead > tr {
+  height: inherit;
+}
+
+#process-thead > tr > td {
+  border: none;
+  background-color: var(--in-content-button-background);
+}
+#process-thead > tr > td:not(:first-child) {
+  border-inline-start-width: 1px;
+  border-inline-start-style: solid;
+  border-image: linear-gradient(transparent 0%, transparent 20%, var(--in-content-box-border-color) 20%, var(--in-content-box-border-color) 80%, transparent 80%, transparent 100%) 1 1;
+  border-bottom: 1px solid var(--in-content-border-color);
+}
+td {
+  padding: 5px 10px;
+  min-height: 2em;
+  color: var(--in-content-text-color);
+  max-width: 70vw;
+  overflow: hidden;
+  white-space: nowrap;
+}
+#process-tbody > tr > td:first-child {
+  text-overflow: ellipsis;
+}
+.twisty {
+  margin-inline: -10px 0px;
+  padding-inline: 18px;
+  position: relative;
+}
+/* Putting the background image in a positioned pseudo element lets us
+* use CSS transforms on the background image, which we need for rtl. */
+.twisty::before {
+  content: url("chrome://global/skin/icons/twisty-collapsed.svg");
+  position: absolute;
+  display: block;
+  line-height: 50%;
+  top: 4px; /* Half the image's height */
+  left: 0;
+  width: 100%;
+  text-align: center;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+.twisty:dir(rtl)::before {
+  transform: scaleX(-1);
+}
+.twisty.open::before {
+  content: url("chrome://global/skin/icons/twisty-expanded.svg");
+}
+#process-tbody > tr > td.indent {
+  padding-inline: 36px 0;
+}
+
+#process-tbody > tr[selected] > td {
+  background-color: var(--in-content-item-selected);
+  color: var(--in-content-selected-text);
+}
+#process-tbody > tr:hover {
+  background-color: var(--in-content-item-hover);
+}
+
+.clickable {
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+}
+.clickable:dir(rtl) {
+  background-position-x: left 4px;
+}
+.asc {
+  background-image: url(chrome://global/skin/icons/arrow-up-12.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+.desc {
+  background-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+#process-thead > tr > td.clickable:hover {
+  background-color: var(--in-content-button-background-hover);
+}
+#process-thead > tr > td.clickable:active {
+  background-color: var(--in-content-button-background-active);
+}
+
+#process-tbody > tr.process {
+  font-weight: bold;
+}
+#process-tbody > tr.thread {
+  font-size-adjust: 0.5;
+}
