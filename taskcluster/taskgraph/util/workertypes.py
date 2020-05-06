@@ -20,6 +20,7 @@ WORKER_TYPES = {
     "scriptworker-k8s/gecko-3-shipit": ('shipit', None),
     "scriptworker-k8s/gecko-1-shipit": ('shipit', None),
     'terraform-packet/gecko-t-linux': ('docker-worker', 'linux'),
+    'gecko-t/t-linux-metal': ('docker-worker', 'linux'),
 }
 
 
