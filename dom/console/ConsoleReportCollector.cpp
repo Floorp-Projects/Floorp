@@ -29,9 +29,9 @@ void ConsoleReportCollector::AddConsoleReport(
   // any thread
   MutexAutoLock lock(mMutex);
 
-  mPendingReports.AppendElement(
-      PendingReport(aErrorFlags, aCategory, aPropertiesFile, aSourceFileURI,
-                    aLineNumber, aColumnNumber, aMessageName, aStringParams));
+  mPendingReports.EmplaceBack(aErrorFlags, aCategory, aPropertiesFile,
+                              aSourceFileURI, aLineNumber, aColumnNumber,
+                              aMessageName, aStringParams);
 }
 
 void ConsoleReportCollector::FlushReportsToConsole(uint64_t aInnerWindowID,
@@ -43,7 +43,7 @@ void ConsoleReportCollector::FlushReportsToConsole(uint64_t aInnerWindowID,
     if (aAction == ReportAction::Forget) {
       mPendingReports.SwapElements(reports);
     } else {
-      reports = mPendingReports;
+      reports = mPendingReports.Clone();
     }
   }
 
@@ -92,7 +92,7 @@ void ConsoleReportCollector::FlushReportsToConsoleForServiceWorkerScope(
     if (aAction == ReportAction::Forget) {
       mPendingReports.SwapElements(reports);
     } else {
-      reports = mPendingReports;
+      reports = mPendingReports.Clone();
     }
   }
 
@@ -158,10 +158,11 @@ void ConsoleReportCollector::FlushConsoleReports(
 
   for (uint32_t i = 0; i < reports.Length(); ++i) {
     PendingReport& report = reports[i];
-    aCollector->AddConsoleReport(report.mErrorFlags, report.mCategory,
-                                 report.mPropertiesFile, report.mSourceFileURI,
-                                 report.mLineNumber, report.mColumnNumber,
-                                 report.mMessageName, report.mStringParams);
+    aCollector->AddConsoleReport(
+        report.mErrorFlags, report.mCategory, report.mPropertiesFile,
+        report.mSourceFileURI, report.mLineNumber, report.mColumnNumber,
+        report.mMessageName,
+        static_cast<const nsTArray<nsString>&>(report.mStringParams));
   }
 }
 
