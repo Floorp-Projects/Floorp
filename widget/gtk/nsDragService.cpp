@@ -1332,12 +1332,14 @@ void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
         gchar* name = gdk_atom_name(atom);
         if (name && (strcmp(name, gTabDropType) == 0)) {
           isWaylandTabDrop = true;
+          MOZ_LOG(sDragLm, LogLevel::Debug, ("is wayland tab drop\n"));
           break;
         }
       }
     }
 #endif
     if (aResult != MOZ_GTK_DRAG_RESULT_NO_TARGET && !isWaylandTabDrop) {
+      MOZ_LOG(sDragLm, LogLevel::Debug, ("drop is user chancelled\n"));
       mUserCancelled = true;
     }
   }
