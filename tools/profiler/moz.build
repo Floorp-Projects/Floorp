@@ -59,7 +59,7 @@ if CONFIG['MOZ_GECKO_PROFILER']:
             'gecko/nsProfiler.cpp',
         ]
 
-    if CONFIG['OS_TARGET'] in ('Android', 'Linux'):
+    if CONFIG['OS_TARGET'] in ('Android', 'Linux', 'FreeBSD'):
         if CONFIG['CPU_ARCH'] in ('arm', 'aarch64', 'x86', 'x86_64', 'mips64'):
             UNIFIED_SOURCES += [
                 'lul/AutoObjectMapper.cpp',
@@ -83,7 +83,7 @@ if CONFIG['MOZ_GECKO_PROFILER']:
             ]
             if not CONFIG['HAVE_GETCONTEXT']:
                 SOURCES += ['/toolkit/crashreporter/google-breakpad/src/common/linux/breakpad_getcontext.S']
-        if CONFIG['CPU_ARCH'] == 'arm':
+        if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['OS_TARGET'] != 'FreeBSD':
             SOURCES += [
                 'core/EHABIStackWalk.cpp',
             ]

@@ -11,7 +11,7 @@
 
 using namespace mozilla;
 
-#ifdef XP_LINUX
+#if defined(XP_LINUX) || defined(XP_FREEBSD)
 static char* SearchSymbolTable(SymbolTable& aTable, uint32_t aOffset) {
   size_t index;
   bool exact =
@@ -46,7 +46,7 @@ bool ProfilerCodeAddressService::GetFunction(const void* aPc,
                                              nsACString& aResult) {
   Entry& entry = GetEntry(aPc);
 
-#ifdef XP_LINUX
+#if defined(XP_LINUX) || defined(XP_FREEBSD)
   // On Linux, most symbols will not be found by the MozDescribeCodeAddress call
   // that GetEntry does.  So we read the symbol table directly from the ELF
   // image.
