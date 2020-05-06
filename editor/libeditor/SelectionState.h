@@ -98,7 +98,7 @@ class SelectionState final {
   bool IsEmpty() const;
 
  private:
-  AutoTArray<RefPtr<RangeItem>, 1> mArray;
+  CopyableAutoTArray<RefPtr<RangeItem>, 1> mArray;
   nsDirection mDirection;
 
   friend class RangeUpdater;

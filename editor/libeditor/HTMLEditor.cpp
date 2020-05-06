@@ -4084,8 +4084,7 @@ already_AddRefed<nsIContent> HTMLEditor::SplitNodeWithTransaction(
   }
 
   if (!mActionListeners.IsEmpty()) {
-    AutoActionListenerArray listeners(mActionListeners);
-    for (auto& listener : listeners) {
+    for (auto& listener : mActionListeners.Clone()) {
       DebugOnly<nsresult> rvIgnored = listener->DidSplitNode(
           aStartOfRightNode.GetContainer(), newLeftContent);
       NS_WARNING_ASSERTION(
@@ -4458,8 +4457,7 @@ nsresult HTMLEditor::JoinNodesWithTransaction(nsINode& aLeftNode,
   }
 
   if (!mActionListeners.IsEmpty()) {
-    AutoActionListenerArray listeners(mActionListeners);
-    for (auto& listener : listeners) {
+    for (auto& listener : mActionListeners.Clone()) {
       DebugOnly<nsresult> rvIgnored =
           listener->DidJoinNodes(&aLeftNode, &aRightNode, parent, rv);
       NS_WARNING_ASSERTION(
