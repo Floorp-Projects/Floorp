@@ -3999,8 +3999,6 @@ pref("network.psl.onUpdate_notify", false);
   pref("geo.provider.network.url", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
 #endif
 
-pref("geo.provider-country.network.url", "https://location.services.mozilla.com/v1/country?key=%MOZILLA_API_KEY%");
-pref("geo.provider-country.network.scan", false);
 // Timeout to wait before sending the location request.
 pref("geo.provider.network.timeToWaitBeforeSending", 5000);
 // Timeout for outbound network geolocation provider.
@@ -4018,6 +4016,14 @@ pref("geo.provider.network.timeout", 60000);
 #if defined(MOZ_WIDGET_GTK) && defined(MOZ_GPSD)
   pref("geo.provider.use_gpsd", true);
 #endif
+
+// Region
+pref("browser.region.log", false);
+pref("browser.region.network.url", "https://location.services.mozilla.com/v1/country?key=%MOZILLA_API_KEY%");
+// Include wifi data in region request.
+pref("browser.region.network.scan", false);
+// Timeout for whole region request.
+pref("browser.region.timeout", 5000);
 
 // Enable/Disable the device storage API for content
 pref("device.storage.enabled", false);

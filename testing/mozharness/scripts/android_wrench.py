@@ -33,23 +33,16 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
 
         super(AndroidWrench, self).__init__()
         if self.device_serial is None:
-            # Running on an emulator. Need absolute path to adb
-            # to satisfy android.py's start_emulator function.
+            # Running on an emulator.
             self._is_emulator = True
             self.device_serial = 'emulator-5554'
-            self._adb_path = os.path.join(
-                self.query_abs_dirs()['abs_work_dir'],
-                'android-sdk-linux',
-                'platform-tools',
-                'adb')
             self.use_gles3 = True
         else:
             # Running on a device, ensure self.is_emulator returns False.
-            # Also don't set the adb path explicitly, since it should be
-            # on the $PATH anyway and we don't have an easy way to get the
-            # absolute path in automation (it's preinstalled on the bitbar
-            # image).
+            # The adb binary is preinstalled on the bitbar image and is
+            # already on the $PATH.
             self._is_emulator = False
+            self._adb_path = 'adb'
         self._errored = False
 
     @property
@@ -80,6 +73,22 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
         abs_dirs['abs_reftests_path'] = os.environ.get(
             'WRENCH_REFTESTS',
             'gfx/wr/wrench/reftests')
+        if os.environ.get('MOZ_AUTOMATION', '0') == '1':
+            fetches_dir = os.environ.get('MOZ_FETCHES_DIR')
+            if self.is_emulator and fetches_dir:
+                abs_dirs['abs_sdk_dir'] = os.path.join(fetches_dir,
+                                                       'android-sdk-linux')
+            else:
+                abs_dirs['abs_sdk_dir'] = os.path.join(abs_dirs['abs_work_dir'],
+                                                       'android-sdk-linux')
+        else:
+            mozbuild_path = os.environ.get(
+                'MOZBUILD_STATE_PATH',
+                os.path.expanduser('~/.mozbuild'))
+            mozbuild_sdk = os.environ.get(
+                'ANDROID_SDK_HOME',
+                os.path.join(mozbuild_path, 'android-sdk-linux'))
+            abs_dirs['abs_sdk_dir'] = mozbuild_sdk
 
         self.abs_dirs = abs_dirs
         return self.abs_dirs
@@ -194,27 +203,15 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
         if not os.path.exists(self.query_abs_dirs()['abs_avds_dir']):
             self.setup_avds()
 
+        sdk_path = self.query_abs_dirs()['abs_sdk_dir']
+        if not os.path.exists(sdk_path):
+            self.error('Unable to find android SDK at %s' % sdk_path)
+            return
         if os.environ.get('MOZ_AUTOMATION', '0') == '1':
             self.start_emulator()
         else:
             # Can't use start_emulator because it tries to download a non-public
-            # artifact. Instead we just symlink the presumably already-existing
-            # SDK into the right place, and manually run the launch.
-            sdk_path = os.path.join(
-                self.query_abs_dirs()['abs_work_dir'],
-                'android-sdk-linux')
-            if not os.path.exists(sdk_path):
-                mozbuild_path = os.environ.get(
-                    'MOZBUILD_STATE_PATH',
-                    os.path.expanduser('~/.mozbuild'))
-                mozbuild_sdk = os.environ.get(
-                    'ANDROID_SDK_HOME',
-                    os.path.join(mozbuild_path, 'android-sdk-linux'))
-                if os.path.exists(mozbuild_sdk):
-                    os.symlink(mozbuild_sdk, sdk_path)
-                else:
-                    self.error('Unable to find android SDK at %s' % mozbuild_sdk)
-                    return
+            # artifact. Instead we just manually run the launch.
             self._launch_emulator()
 
     def do_test(self):

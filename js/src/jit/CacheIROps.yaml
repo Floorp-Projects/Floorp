@@ -158,7 +158,7 @@
 
 - name: GuardType
   shared: true
-  transpile: false
+  transpile: true
   args:
     input: ValId
     type: ValueTypeImm
@@ -491,7 +491,7 @@
 
 - name: TruncateDoubleToUInt32
   shared: true
-  transpile: false
+  transpile: true
   args:
     val: ValId
     result: Int32Id
@@ -1069,42 +1069,42 @@
 
 - name: DoubleAddResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: NumberId
     rhs: NumberId
 
 - name: DoubleSubResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: NumberId
     rhs: NumberId
 
 - name: DoubleMulResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: NumberId
     rhs: NumberId
 
 - name: DoubleDivResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: NumberId
     rhs: NumberId
 
 - name: DoubleModResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: NumberId
     rhs: NumberId
 
 - name: DoublePowResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: NumberId
     rhs: NumberId

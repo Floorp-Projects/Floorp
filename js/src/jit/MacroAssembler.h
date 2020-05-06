@@ -387,6 +387,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void Push(const ValueOperand& val);
   void Push(const Value& val);
   void Push(JSValueType type, Register reg);
+  void Push(const Register64 reg);
   void PushValue(const Address& addr);
   void PushEmptyRooted(VMFunctionData::RootType rootType);
   inline CodeOffset PushWithPatch(ImmWord word);
@@ -3393,7 +3394,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
                              Label* fail);
   void bumpPointerAllocate(Register result, Register temp, Label* fail,
                            CompileZone* zone, void* posAddr,
-                           const void* curEddAddr, uint32_t size);
+                           const void* curEddAddr, JS::TraceKind traceKind,
+                           uint32_t size);
 
   void freeListAllocate(Register result, Register temp, gc::AllocKind allocKind,
                         Label* fail);

@@ -265,11 +265,20 @@ JS::Result<FunctionBox*> BinASTParserPerTokenizer<Tok>::buildFunctionBox(
   // Allocate the function before walking down the tree.
   RootedFunction fun(cx_);
   if (pc_) {
-    Rooted<FunctionCreationData> fcd(
-        cx_,
-        FunctionCreationData(atom, syntax, generatorKind, functionAsyncKind));
-    BINJS_TRY_VAR(fun, AllocNewFunction(cx_, 0, fcd));
-    MOZ_ASSERT(fun->explicitName() == atom);
+    FunctionFlags flags =
+        InitialFunctionFlags(syntax, generatorKind, functionAsyncKind);
+
+    RootedObject proto(cx_);
+    BINJS_TRY(
+        GetFunctionPrototype(cx_, generatorKind, functionAsyncKind, &proto));
+
+    gc::AllocKind allocKind = flags.isExtended()
+                                  ? gc::AllocKind::FUNCTION_EXTENDED
+                                  : gc::AllocKind::FUNCTION;
+
+    BINJS_TRY_VAR(
+        fun, NewFunctionWithProto(cx_, nullptr, 0, flags, nullptr, atom, proto,
+                                  allocKind, TenuredObject));
   } else {
     BINJS_TRY_VAR(fun, lazyScript_->function());
   }

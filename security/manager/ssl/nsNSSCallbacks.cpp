@@ -885,10 +885,12 @@ static void AccumulateNonECCKeySize(Telemetry::HistogramID probe,
 // named curves for a given size (e.g. secp256k1 vs. secp256r1). We punt on
 // that for now. See also NSS bug 323674.
 static void AccumulateECCCurve(Telemetry::HistogramID probe, uint32_t bits) {
-  unsigned int value = bits == 256 ? 23                              // P-256
-                                   : bits == 384 ? 24                // P-384
-                                                 : bits == 521 ? 25  // P-521
-                                                               : 0;  // Unknown
+  unsigned int value =
+      bits == 255 ? 29                                            // Curve25519
+                  : bits == 256 ? 23                              // P-256
+                                : bits == 384 ? 24                // P-384
+                                              : bits == 521 ? 25  // P-521
+                                                            : 0;  // Unknown
   Telemetry::Accumulate(probe, value);
 }
 

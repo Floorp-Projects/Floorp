@@ -599,9 +599,9 @@ void MacroAssembler::nurseryAllocateObject(Register result, Register temp,
   MOZ_ASSERT(totalSize < INT32_MAX);
   MOZ_ASSERT(totalSize % gc::CellAlignBytes == 0);
 
-  bumpPointerAllocate(result, temp, fail, zone,
-                      zone->addressOfNurseryPosition(),
-                      zone->addressOfNurseryCurrentEnd(), totalSize);
+  bumpPointerAllocate(
+      result, temp, fail, zone, zone->addressOfNurseryPosition(),
+      zone->addressOfNurseryCurrentEnd(), JS::TraceKind::Object, totalSize);
 
   if (nDynamicSlots) {
     computeEffectiveAddress(Address(result, thingSize), temp);
@@ -739,7 +739,8 @@ void MacroAssembler::nurseryAllocateString(Register result, Register temp,
 
   bumpPointerAllocate(result, temp, fail, zone,
                       zone->addressOfStringNurseryPosition(),
-                      zone->addressOfStringNurseryCurrentEnd(), thingSize);
+                      zone->addressOfStringNurseryCurrentEnd(),
+                      JS::TraceKind::String, thingSize);
 }
 
 // Inline version of Nursery::allocateBigInt.
@@ -755,12 +756,14 @@ void MacroAssembler::nurseryAllocateBigInt(Register result, Register temp,
 
   bumpPointerAllocate(result, temp, fail, zone,
                       zone->addressOfBigIntNurseryPosition(),
-                      zone->addressOfBigIntNurseryCurrentEnd(), thingSize);
+                      zone->addressOfBigIntNurseryCurrentEnd(),
+                      JS::TraceKind::BigInt, thingSize);
 }
 
 void MacroAssembler::bumpPointerAllocate(Register result, Register temp,
                                          Label* fail, CompileZone* zone,
                                          void* posAddr, const void* curEndAddr,
+                                         JS::TraceKind traceKind,
                                          uint32_t size) {
   uint32_t totalSize = size + Nursery::nurseryCellHeaderSize();
   MOZ_ASSERT(totalSize < INT32_MAX, "Nursery allocation too large");
@@ -784,7 +787,7 @@ void MacroAssembler::bumpPointerAllocate(Register result, Register temp,
   branchPtr(Assembler::Below, Address(temp, endOffset.value()), result, fail);
   storePtr(result, Address(temp, 0));
   subPtr(Imm32(size), result);
-  storePtr(ImmPtr(zone),
+  storePtr(ImmWord(zone->nurseryCellHeader(traceKind)),
            Address(result, -js::Nursery::nurseryCellHeaderSize()));
 
   if (GetJitContext()->runtime->geckoProfiler().enabled()) {
@@ -1233,11 +1236,11 @@ void MacroAssembler::compareStrings(JSOp op, Register left, Register right,
     Label leftIsNotAtom;
     Label setNotEqualResult;
     // Atoms cannot be equal to each other if they point to different strings.
-    Imm32 nonAtomBit(JSString::NON_ATOM_BIT);
-    branchTest32(Assembler::NonZero, Address(left, JSString::offsetOfFlags()),
-                 nonAtomBit, &leftIsNotAtom);
-    branchTest32(Assembler::Zero, Address(right, JSString::offsetOfFlags()),
-                 nonAtomBit, &setNotEqualResult);
+    Imm32 atomBit(JSString::ATOM_BIT);
+    branchTest32(Assembler::Zero, Address(left, JSString::offsetOfFlags()),
+                 atomBit, &leftIsNotAtom);
+    branchTest32(Assembler::NonZero, Address(right, JSString::offsetOfFlags()),
+                 atomBit, &setNotEqualResult);
 
     bind(&leftIsNotAtom);
     // Strings of different length can never be equal.
@@ -1557,9 +1560,7 @@ void MacroAssembler::initializeBigInt64(Scalar::Type type, Register bigInt,
                                         Register64 val) {
   MOZ_ASSERT(Scalar::isBigIntType(type));
 
-  uint32_t flags = BigInt::TYPE_FLAGS;
-
-  store32(Imm32(flags), Address(bigInt, BigInt::offsetOfFlags()));
+  store32(Imm32(0), Address(bigInt, BigInt::offsetOfFlags()));
 
   Label done, nonZero;
   branch64(Assembler::NotEqual, val, Imm64(0), &nonZero);
@@ -1575,7 +1576,7 @@ void MacroAssembler::initializeBigInt64(Scalar::Type type, Register bigInt,
     Label isPositive;
     branch64(Assembler::GreaterThan, val, Imm64(0), &isPositive);
     {
-      store32(Imm32(BigInt::signBitMask() | flags),
+      store32(Imm32(BigInt::signBitMask()),
               Address(bigInt, BigInt::offsetOfFlags()));
       neg64(val);
     }
@@ -2624,6 +2625,16 @@ void MacroAssembler::Push(const Value& val) {
 void MacroAssembler::Push(JSValueType type, Register reg) {
   pushValue(type, reg);
   framePushed_ += sizeof(Value);
+}
+
+void MacroAssembler::Push(const Register64 reg) {
+#if JS_BITS_PER_WORD == 64
+  Push(reg.reg);
+#else
+  MOZ_ASSERT(MOZ_LITTLE_ENDIAN(), "Big-endian not supported.");
+  Push(reg.high);
+  Push(reg.low);
+#endif
 }
 
 void MacroAssembler::PushValue(const Address& addr) {

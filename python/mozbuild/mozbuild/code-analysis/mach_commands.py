@@ -233,7 +233,8 @@ class StaticAnalysis(MachCommandBase):
         )
 
         self._set_log_level(verbose)
-        self.log_manager.enable_all_structured_loggers()
+        self._activate_virtualenv()
+        self.log_manager.enable_unstructured()
 
         rc = self._get_clang_tools(verbose=verbose)
         if rc != 0:
@@ -339,7 +340,8 @@ class StaticAnalysis(MachCommandBase):
     def check_coverity(self, source=[], output=None, coverity_output_path=None,
                        outgoing=False, full_build=False, verbose=False):
         self._set_log_level(verbose)
-        self.log_manager.enable_all_structured_loggers()
+        self._activate_virtualenv()
+        self.log_manager.enable_unstructured()
 
         if 'MOZ_AUTOMATION' not in os.environ:
             self.log(logging.INFO, 'static-analysis', {},
@@ -627,9 +629,7 @@ class StaticAnalysis(MachCommandBase):
                  'Using symbol upload token from the secrets service: "{}"'.format(secrets_url))
 
         import requests
-        self.log_manager.enable_unstructured()
         res = requests.get(secrets_url)
-        self.log_manager.disable_unstructured()
         res.raise_for_status()
         secret = res.json()
         cov_config = secret['secret'] if 'secret' in secret else None
@@ -800,7 +800,9 @@ class StaticAnalysis(MachCommandBase):
                    task='compileWithGeckoBinariesDebugSources',
                    skip_export=False, outgoing=False, output=None):
         self._set_log_level(verbose)
-        self.log_manager.enable_all_structured_loggers()
+        self._activate_virtualenv()
+        self.log_manager.enable_unstructured()
+
         if self.substs['MOZ_BUILD_APP'] != 'mobile/android':
             self.log(logging.WARNING, 'static-analysis', {},
                      'Cannot check java source code unless you are building for android!')
@@ -1538,14 +1540,15 @@ class StaticAnalysis(MachCommandBase):
     @CommandArgument('source', nargs='*',
                      help='Source files to be compiled checked (regex on path).')
     def check_syntax(self, source, verbose=False):
+        self._set_log_level(verbose)
+        self._activate_virtualenv()
+        self.log_manager.enable_unstructured()
+
         # Verify that we have a valid `source`
         if len(source) == 0:
             self.log(logging.ERROR, 'static-analysis', {},
                      'ERROR: Specify files that need to be syntax checked.')
             return
-
-        self._set_log_level(verbose)
-        self.log_manager.enable_all_structured_loggers()
 
         rc = self._build_compile_db(verbose=verbose)
         if rc != 0:

@@ -68,63 +68,11 @@ class FunctionIndex : public TypedIndex<FunctionIndexType> {
   using Base::Base;
 };
 
-// Metadata that can be used to allocate a JSFunction object.
-//
-// Keeping metadata separate allows the parser to generate
-// metadata without requiring immediate access to the garbage
-// collector.
-struct FunctionCreationData {
-  FunctionCreationData(HandleAtom explicitName, FunctionSyntaxKind kind,
-                       GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-                       bool isSelfHosting = false, bool inFunctionBox = false);
-
-  // Custom Copy constructor to ensure we never copy a FunctionCreationData
-  // that has a LazyScriptData.
-  //
-  // We want to be able to copy FunctionCreationData into a Functionbox as part
-  // of our attempts to syntax parse an inner function, however, because
-  // trySyntaxParseInnerFunction is fallible, for example, if a new directive
-  // like "use asmjs" is encountered, we don't want to -move- it into the
-  // FunctionBox, because we may need it again if the syntax parse fails.
-  //
-  // To ensure that we never lose a lazyScriptData however, we guarantee that
-  // when this copy constructor is run, it doesn't have any lazyScriptData.
-  FunctionCreationData(const FunctionCreationData& data)
-      : explicitName(data.explicitName),
-        flags(data.flags),
-        immutableFlags(data.immutableFlags) {
-    MOZ_RELEASE_ASSERT(!data.hasLazyScriptData());
-  }
-
-  FunctionCreationData(FunctionCreationData&& data) = default;
-
-  // The Parser uses KeepAtoms to prevent GC from collecting atoms
-  JSAtom* explicitName = nullptr;
-
-  FunctionFlags flags = {};
-  ImmutableScriptFlags immutableFlags = {};
-
-  // Data used to instantiate the lazy script before script emission.
-  // -------
-  mozilla::Maybe<frontend::AtomVector> closedOverBindings = {};
-  // This is traced by the functionbox
-  mozilla::Maybe<Vector<FunctionIndex>> innerFunctionIndexes = {};
-  // -------
-
-  HandleAtom getExplicitName(JSContext* cx) const;
-
-  bool createLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
-                        HandleFunction function, FunctionBox* funbox,
-                        HandleScriptSourceObject sourceObject);
-
-  bool hasLazyScriptData() const {
-    return closedOverBindings && innerFunctionIndexes;
-  }
-
-  void trace(JSTracer* trc) {
-    TraceNullableRoot(trc, &explicitName, "FunctionCreationData explicitName");
-  }
-};
+FunctionFlags InitialFunctionFlags(FunctionSyntaxKind kind,
+                                   GeneratorKind generatorKind,
+                                   FunctionAsyncKind asyncKind,
+                                   bool isSelfHosting = false,
+                                   bool hasUnclonedName = false);
 
 // This owns a set of characters, previously syntax checked as a RegExp. Used
 // to avoid allocating the RegExp on the GC heap during parsing.
@@ -378,14 +326,44 @@ class ScopeCreationData {
 
 class EmptyGlobalScopeType {};
 
+// The lazy closed-over-binding info is represented by these types that will
+// convert to a GCCellPtr(nullptr), GCCellPtr(JSAtom*).
+class NullScriptThing {};
+using ClosedOverBinding = JSAtom*;
+
 // These types all end up being baked into GC things as part of stencil
 // instantiation.
 using ScriptThingVariant =
-    mozilla::Variant<BigIntIndex, ObjLiteralCreationData, RegExpIndex,
-                     ScopeIndex, FunctionIndex, EmptyGlobalScopeType>;
+    mozilla::Variant<ClosedOverBinding, NullScriptThing, BigIntIndex,
+                     ObjLiteralCreationData, RegExpIndex, ScopeIndex,
+                     FunctionIndex, EmptyGlobalScopeType>;
 
 // A vector of things destined to be converted to GC things.
 using ScriptThingsVector = Vector<ScriptThingVariant>;
+
+// Metadata that can be used to allocate a JSFunction object.
+//
+// Keeping metadata separate allows the parser to generate
+// metadata without requiring immediate access to the garbage
+// collector.
+struct FunctionCreationData {
+  // All moves but not copies to avoid expensive surprises.
+  FunctionCreationData() = default;
+  FunctionCreationData(const FunctionCreationData&) = delete;
+  FunctionCreationData(FunctionCreationData&& data) = default;
+
+  // Lazy functions have a list of GC-things that eventually becomes the
+  // PrivateScriptData structure.
+  mozilla::Maybe<ScriptThingsVector> gcThings = {};
+
+  bool createLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
+                        HandleFunction function, FunctionBox* funbox,
+                        HandleScriptSourceObject sourceObject);
+
+  bool hasLazyScriptData() const { return gcThings.isSome(); }
+
+  void trace(JSTracer* trc);
+};
 
 // Data used to instantiate the non-lazy script.
 class ScriptStencil {

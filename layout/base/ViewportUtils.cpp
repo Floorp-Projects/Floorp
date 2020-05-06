@@ -33,7 +33,7 @@ gfx::Matrix4x4Typed<Units, Units> ViewportUtils::GetVisualToLayoutTransform(
     return {};
   }
   nsCOMPtr<nsIContent> content = nsLayoutUtils::FindContentFor(aScrollId);
-  if (!content) {
+  if (!content || !content->GetPrimaryFrame()) {
     return {};
   }
 

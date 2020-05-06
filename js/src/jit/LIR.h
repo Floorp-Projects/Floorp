@@ -332,10 +332,14 @@ class LInt64Value {
 
   ValT high() const { return high_; }
   ValT low() const { return low_; }
+
+  const ValT* pointerHigh() const { return &high_; }
+  const ValT* pointerLow() const { return &low_; }
 #else
   explicit LInt64Value(ValT value) : value_(value) {}
 
   ValT value() const { return value_; }
+  const ValT* pointer() const { return &value_; }
 #endif
 };
 
@@ -1038,6 +1042,15 @@ class LInstructionFixedDefsTempsHelper : public LInstruction {
   LDefinition* getTemp(size_t index) {
     MOZ_ASSERT(index < Temps);
     return &defsAndTemps_[Defs + index];
+  }
+  LInt64Definition getInt64Temp(size_t index) {
+    MOZ_ASSERT(index + INT64_PIECES <= Temps);
+#if JS_BITS_PER_WORD == 32
+    return LInt64Definition(defsAndTemps_[Defs + index + INT64HIGH_INDEX],
+                            defsAndTemps_[Defs + index + INT64LOW_INDEX]);
+#else
+    return LInt64Definition(defsAndTemps_[Defs + index]);
+#endif
   }
 
   void setDef(size_t index, const LDefinition& def) {

@@ -23,7 +23,7 @@ fuzzy-if(Android,0-45,0-27) skip-if(!Android) pref(apz.allow_zooming,true) == as
 # to catch more fundamental scrollbar rendering bugs such as the entire track being mispositioned or the thumb being
 # clipped away.
 fuzzy-if(Android,0-54,0-14) fuzzy-if(!Android,0-128,0-137) pref(apz.allow_zooming,true) == scrollbar-zoom-resolution-1.html scrollbar-zoom-resolution-1-ref.html
-fuzzy-if(Android,0-51,0-22) fuzzy-if(!Android,0-128,0-137) pref(apz.allow_zooming,true) == scrollbar-zoom-resolution-2.html scrollbar-zoom-resolution-2-ref.html
+fuzzy-if(Android,0-51,0-22) fuzzy-if(!Android,0-128,0-137) pref(apz.allow_zooming,true) pref(apz.allow_zooming_out,true) == scrollbar-zoom-resolution-2.html scrollbar-zoom-resolution-2-ref.html
 
 # Meta-viewport tag support
 skip-if(!Android) pref(apz.allow_zooming,true) == initial-scale-1.html initial-scale-1-ref.html

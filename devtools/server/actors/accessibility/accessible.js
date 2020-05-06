@@ -396,11 +396,6 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       const targets = [...relation.getTargets().enumerate(Ci.nsIAccessible)];
       let relationObject;
       for (const target of targets) {
-        // Target of the relation is not part of the current root document.
-        if (target.rootDocument !== doc.rawAccessible) {
-          continue;
-        }
-
         let targetAcc;
         try {
           targetAcc = this.walker.attachAccessible(target, doc.rawAccessible);
