@@ -983,13 +983,11 @@ nsresult ContentChild::ProvideWindowCommon(
   if (aTabOpener) {
     newTabContext.SetTabContext(
         aTabOpener->ChromeOuterWindowID(), aTabOpener->ShowFocusRings(),
-        browsingContext->OriginAttributesRef(), aTabOpener->PresentationURL(),
-        aTabOpener->MaxTouchPoints());
+        aTabOpener->PresentationURL(), aTabOpener->MaxTouchPoints());
   } else {
     newTabContext.SetTabContext(
         /* chromeOuterWindowID */ 0,
         /* showFocusRings */ UIStateChangeType_NoChange,
-        browsingContext->OriginAttributesRef(),
         /* presentationURL */ EmptyString(),
         /* maxTouchPoints */ 0);
   }

@@ -41,31 +41,15 @@ bool TabContext::SetTabContext(const TabContext& aContext) {
   return true;
 }
 
-void TabContext::SetPrivateBrowsingAttributes(bool aIsPrivateBrowsing) {
-  mOriginAttributes.SyncAttributesWithPrivateBrowsing(aIsPrivateBrowsing);
-}
-
-void TabContext::SetFirstPartyDomainAttributes(
-    const nsAString& aFirstPartyDomain) {
-  mOriginAttributes.SetFirstPartyDomain(true, aFirstPartyDomain);
-}
-
 bool TabContext::UpdateTabContextAfterSwap(const TabContext& aContext) {
   // This is only used after already initialized.
   MOZ_ASSERT(mInitialized);
 
   // The only permissable changes are to mChromeOuterWindowID.  All other fields
   // must match for the change to be accepted.
-  if (aContext.mOriginAttributes != mOriginAttributes) {
-    return false;
-  }
 
   mChromeOuterWindowID = aContext.mChromeOuterWindowID;
   return true;
-}
-
-const OriginAttributes& TabContext::OriginAttributesRef() const {
-  return mOriginAttributes;
 }
 
 const nsAString& TabContext::PresentationURL() const {
@@ -76,14 +60,12 @@ UIStateChangeType TabContext::ShowFocusRings() const { return mShowFocusRings; }
 
 bool TabContext::SetTabContext(uint64_t aChromeOuterWindowID,
                                UIStateChangeType aShowFocusRings,
-                               const OriginAttributes& aOriginAttributes,
                                const nsAString& aPresentationURL,
                                uint32_t aMaxTouchPoints) {
   NS_ENSURE_FALSE(mInitialized, false);
 
   mInitialized = true;
   mChromeOuterWindowID = aChromeOuterWindowID;
-  mOriginAttributes = aOriginAttributes;
   mPresentationURL = aPresentationURL;
   mShowFocusRings = aShowFocusRings;
   mMaxTouchPoints = aMaxTouchPoints;
@@ -103,16 +85,15 @@ IPCTabContext TabContext::AsIPCTabContext() const {
     return IPCTabContext(JSPluginFrameIPCTabContext(mJSPluginID));
   }
 
-  return IPCTabContext(
-      FrameIPCTabContext(mOriginAttributes, mChromeOuterWindowID,
-                         mPresentationURL, mShowFocusRings, mMaxTouchPoints));
+  return IPCTabContext(FrameIPCTabContext(mChromeOuterWindowID,
+                                          mPresentationURL, mShowFocusRings,
+                                          mMaxTouchPoints));
 }
 
 MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
     : mInvalidReason(nullptr) {
   uint64_t chromeOuterWindowID = 0;
   int32_t jsPluginId = -1;
-  OriginAttributes originAttributes;
   nsAutoString presentationURL;
   UIStateChangeType showFocusRings = UIStateChangeType_NoChange;
   uint32_t maxTouchPoints = 0;
@@ -133,7 +114,6 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
         return;
       }
 
-      originAttributes = context->mOriginAttributes;
       chromeOuterWindowID = ipcContext.chromeOuterWindowID();
       break;
     }
@@ -150,7 +130,6 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
       chromeOuterWindowID = ipcContext.chromeOuterWindowID();
       presentationURL = ipcContext.presentationURL();
       showFocusRings = ipcContext.showFocusRings();
-      originAttributes = ipcContext.originAttributes();
       maxTouchPoints = ipcContext.maxTouchPoints();
       break;
     }
@@ -176,8 +155,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
     rv = mTabContext.SetTabContextForJSPluginFrame(jsPluginId);
   } else {
     rv = mTabContext.SetTabContext(chromeOuterWindowID, showFocusRings,
-                                   originAttributes, presentationURL,
-                                   maxTouchPoints);
+                                   presentationURL, maxTouchPoints);
   }
   if (!rv) {
     mInvalidReason = "Couldn't initialize TabContext.";
