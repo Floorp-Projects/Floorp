@@ -405,7 +405,7 @@ static_assert(std::is_same_v<
               std::remove_cv_t<std::remove_reference_t<decltype(
                   std::declval<const IndexGetParams&>().objectStoreId())>>>);
 
-struct FullDatabaseMetadata {
+struct FullDatabaseMetadata final : AtomicSafeRefCounted<FullDatabaseMetadata> {
   DatabaseMetadata mCommonMetadata;
   nsCString mDatabaseId;
   nsString mFilePath;
@@ -420,12 +420,9 @@ struct FullDatabaseMetadata {
     AssertIsOnBackgroundThread();
   }
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FullDatabaseMetadata)
-
   [[nodiscard]] SafeRefPtr<FullDatabaseMetadata> Duplicate() const;
 
- private:
-  ~FullDatabaseMetadata() = default;
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(FullDatabaseMetadata)
 };
 
 template <class Enumerable>
@@ -5828,7 +5825,8 @@ class WaitForTransactionsHelper final : public Runnable {
 
 class Database final
     : public PBackgroundIDBDatabaseParent,
-      public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
+      public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>>,
+      public AtomicSafeRefCounted<Database> {
   friend class VersionChangeTransaction;
 
   class StartTransactionOp;
@@ -5888,7 +5886,7 @@ class Database final
 #endif
   }
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::indexedDB::Database)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(mozilla::dom::indexedDB::Database)
 
   void Invalidate();
 
@@ -6002,8 +6000,6 @@ class Database final
 
   void Stringify(nsACString& aResult) const;
 
- private:
-  // Reference counted.
   ~Database() override {
     MOZ_ASSERT(mClosed);
     MOZ_ASSERT_IF(mActorWasAlive, mActorDestroyed);
@@ -6012,6 +6008,7 @@ class Database final
                     mFactory.forget());
   }
 
+ private:
   [[nodiscard]] SafeRefPtr<FileInfo> GetBlob(const IPCBlob& aID);
 
   void UnmapBlob(const nsID& aID);
@@ -6237,7 +6234,7 @@ nsCOMPtr<nsIInputStream> DatabaseFile::GetInputStream(ErrorResult& rv) const {
   return inputStream;
 }
 
-class TransactionBase {
+class TransactionBase : public AtomicSafeRefCounted<TransactionBase> {
   friend class CursorBase;
 
   template <IDBCursorType CursorType>
@@ -6307,9 +6304,7 @@ class TransactionBase {
     mHasBeenActiveOnConnectionThread.Flip();
   }
 
-  // XXX Actually, this shouldn't be necessary, and we should be able to
-  // implement refcounting here, and just use that from the subclass.
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(mozilla::dom::indexedDB::TransactionBase)
 
   void Abort(nsresult aResultCode, bool aForce);
 
@@ -6377,10 +6372,10 @@ class TransactionBase {
 
   void Invalidate();
 
+  virtual ~TransactionBase();
+
  protected:
   TransactionBase(SafeRefPtr<Database> aDatabase, Mode aMode);
-
-  virtual ~TransactionBase();
 
   void NoteActorDestroyed() {
     AssertIsOnBackgroundThread();
@@ -6495,14 +6490,7 @@ class TransactionBase::CommitOp final : public DatabaseOperationBase,
 
 class NormalTransaction final : public TransactionBase,
                                 public PBackgroundIDBTransactionParent {
-  friend class Database;
-
   nsTArray<RefPtr<FullObjectStoreMetadata>> mObjectStores;
-
- private:
-  // This constructor is only called by Database.
-  NormalTransaction(SafeRefPtr<Database> aDatabase, TransactionBase::Mode aMode,
-                    nsTArray<RefPtr<FullObjectStoreMetadata>>&& aObjectStores);
 
   // Reference counted.
   ~NormalTransaction() override = default;
@@ -6543,7 +6531,11 @@ class NormalTransaction final : public TransactionBase,
       PBackgroundIDBCursorParent* aActor) override;
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NormalTransaction, override)
+  // This constructor is only called by Database.
+  NormalTransaction(SafeRefPtr<Database> aDatabase, TransactionBase::Mode aMode,
+                    nsTArray<RefPtr<FullObjectStoreMetadata>>&& aObjectStores);
+
+  MOZ_INLINE_DECL_SAFEREFCOUNTING_INHERITED(NormalTransaction, TransactionBase)
 };
 
 class VersionChangeTransaction final
@@ -6560,7 +6552,8 @@ class VersionChangeTransaction final
   // Only called by OpenDatabaseOp.
   explicit VersionChangeTransaction(OpenDatabaseOp* aOpenDatabaseOp);
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VersionChangeTransaction, override)
+  MOZ_INLINE_DECL_SAFEREFCOUNTING_INHERITED(VersionChangeTransaction,
+                                            TransactionBase)
 
  private:
   // Reference counted.
@@ -13883,7 +13876,7 @@ void Database::MapBlob(const IPCBlob& aIPCBlob,
   mMappedBlobs.Put(actor->ID(), AsRefPtr(std::move(aFileInfo)));
 
   RefPtr<UnmapBlobCallback> callback =
-      new UnmapBlobCallback(SafeRefPtr{this, AcquireStrongRefFromRawPtr{}});
+      new UnmapBlobCallback(SafeRefPtrFromThis());
   actor->SetCallback(callback);
 }
 
@@ -14152,8 +14145,7 @@ Database::AllocPBackgroundIDBDatabaseRequestParent(
 
   switch (aParams.type()) {
     case DatabaseRequestParams::TCreateFileParams: {
-      actor = new CreateFileOp(SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
-                               aParams);
+      actor = new CreateFileOp(SafeRefPtrFromThis(), aParams);
 
       NotePendingCreateFileOp();
       break;
@@ -14267,11 +14259,9 @@ Database::AllocPBackgroundIDBTransactionParent(
     objectStoreMetadatas.AppendElement(foundIt->GetData());
   }
 
-  RefPtr transaction =
-      new NormalTransaction(SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
-                            aMode, std::move(objectStoreMetadatas));
-
-  return transaction.forget();
+  return MakeSafeRefPtr<NormalTransaction>(SafeRefPtrFromThis(), aMode,
+                                           std::move(objectStoreMetadatas))
+      .forget();
 }
 
 mozilla::ipc::IPCResult Database::RecvPBackgroundIDBTransactionConstructor(
@@ -14534,8 +14524,7 @@ void TransactionBase::CommitOrAbort() {
   }
 
   RefPtr<CommitOp> commitOp =
-      new CommitOp(SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
-                   ClampResultCode(mResultCode));
+      new CommitOp(SafeRefPtrFromThis(), ClampResultCode(mResultCode));
 
   gConnectionPool->Finish(TransactionId(), commitOp);
 }
@@ -15090,79 +15079,67 @@ PBackgroundIDBRequestParent* TransactionBase::AllocRequest(
   switch (aParams.type()) {
     case RequestParams::TObjectStoreAddParams:
     case RequestParams::TObjectStorePutParams:
-      actor = new ObjectStoreAddOrPutRequestOp(
-          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, std::move(aParams));
+      actor = new ObjectStoreAddOrPutRequestOp(SafeRefPtrFromThis(),
+                                               std::move(aParams));
       break;
 
     case RequestParams::TObjectStoreGetParams:
-      actor = new ObjectStoreGetRequestOp(
-          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, aParams,
-          /* aGetAll */ false);
+      actor = new ObjectStoreGetRequestOp(SafeRefPtrFromThis(), aParams,
+                                          /* aGetAll */ false);
       break;
 
     case RequestParams::TObjectStoreGetAllParams:
-      actor = new ObjectStoreGetRequestOp(
-          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, aParams,
-          /* aGetAll */ true);
+      actor = new ObjectStoreGetRequestOp(SafeRefPtrFromThis(), aParams,
+                                          /* aGetAll */ true);
       break;
 
     case RequestParams::TObjectStoreGetKeyParams:
-      actor = new ObjectStoreGetKeyRequestOp(
-          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, aParams,
-          /* aGetAll */ false);
+      actor = new ObjectStoreGetKeyRequestOp(SafeRefPtrFromThis(), aParams,
+                                             /* aGetAll */ false);
       break;
 
     case RequestParams::TObjectStoreGetAllKeysParams:
-      actor = new ObjectStoreGetKeyRequestOp(
-          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, aParams,
-          /* aGetAll */ true);
+      actor = new ObjectStoreGetKeyRequestOp(SafeRefPtrFromThis(), aParams,
+                                             /* aGetAll */ true);
       break;
 
     case RequestParams::TObjectStoreDeleteParams:
       actor = new ObjectStoreDeleteRequestOp(
-          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
-          aParams.get_ObjectStoreDeleteParams());
+          SafeRefPtrFromThis(), aParams.get_ObjectStoreDeleteParams());
       break;
 
     case RequestParams::TObjectStoreClearParams:
       actor = new ObjectStoreClearRequestOp(
-          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
-          aParams.get_ObjectStoreClearParams());
+          SafeRefPtrFromThis(), aParams.get_ObjectStoreClearParams());
       break;
 
     case RequestParams::TObjectStoreCountParams:
       actor = new ObjectStoreCountRequestOp(
-          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
-          aParams.get_ObjectStoreCountParams());
+          SafeRefPtrFromThis(), aParams.get_ObjectStoreCountParams());
       break;
 
     case RequestParams::TIndexGetParams:
-      actor =
-          new IndexGetRequestOp(SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
-                                aParams, /* aGetAll */ false);
+      actor = new IndexGetRequestOp(SafeRefPtrFromThis(), aParams,
+                                    /* aGetAll */ false);
       break;
 
     case RequestParams::TIndexGetKeyParams:
-      actor = new IndexGetKeyRequestOp(
-          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, aParams,
-          /* aGetAll */ false);
+      actor = new IndexGetKeyRequestOp(SafeRefPtrFromThis(), aParams,
+                                       /* aGetAll */ false);
       break;
 
     case RequestParams::TIndexGetAllParams:
-      actor =
-          new IndexGetRequestOp(SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
-                                aParams, /* aGetAll */ true);
+      actor = new IndexGetRequestOp(SafeRefPtrFromThis(), aParams,
+                                    /* aGetAll */ true);
       break;
 
     case RequestParams::TIndexGetAllKeysParams:
-      actor = new IndexGetKeyRequestOp(
-          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, aParams,
-          /* aGetAll */ true);
+      actor = new IndexGetKeyRequestOp(SafeRefPtrFromThis(), aParams,
+                                       /* aGetAll */ true);
       break;
 
     case RequestParams::TIndexCountParams:
-      actor = new IndexCountRequestOp(
-          SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, aParams);
+      actor = new IndexCountRequestOp(SafeRefPtrFromThis(), aParams);
       break;
 
     default:
@@ -15253,28 +15230,26 @@ PBackgroundIDBCursorParent* TransactionBase::AllocCursor(
     case OpenCursorParams::TObjectStoreOpenCursorParams:
       MOZ_ASSERT(!indexMetadata);
       return MakeAndAddRef<Cursor<IDBCursorType::ObjectStore>>(
-                 SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
-                 std::move(objectStoreMetadata), direction,
-                 CursorBase::ConstructFromTransactionBase{})
+                 SafeRefPtrFromThis(), std::move(objectStoreMetadata),
+                 direction, CursorBase::ConstructFromTransactionBase{})
           .take();
     case OpenCursorParams::TObjectStoreOpenKeyCursorParams:
       MOZ_ASSERT(!indexMetadata);
       return MakeAndAddRef<Cursor<IDBCursorType::ObjectStoreKey>>(
-                 SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
-                 std::move(objectStoreMetadata), direction,
-                 CursorBase::ConstructFromTransactionBase{})
+                 SafeRefPtrFromThis(), std::move(objectStoreMetadata),
+                 direction, CursorBase::ConstructFromTransactionBase{})
           .take();
     case OpenCursorParams::TIndexOpenCursorParams:
       return MakeAndAddRef<Cursor<IDBCursorType::Index>>(
-                 SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
-                 std::move(objectStoreMetadata), std::move(indexMetadata),
-                 direction, CursorBase::ConstructFromTransactionBase{})
+                 SafeRefPtrFromThis(), std::move(objectStoreMetadata),
+                 std::move(indexMetadata), direction,
+                 CursorBase::ConstructFromTransactionBase{})
           .take();
     case OpenCursorParams::TIndexOpenKeyCursorParams:
       return MakeAndAddRef<Cursor<IDBCursorType::IndexKey>>(
-                 SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
-                 std::move(objectStoreMetadata), std::move(indexMetadata),
-                 direction, CursorBase::ConstructFromTransactionBase{})
+                 SafeRefPtrFromThis(), std::move(objectStoreMetadata),
+                 std::move(indexMetadata), direction,
+                 CursorBase::ConstructFromTransactionBase{})
           .take();
     default:
       MOZ_CRASH("Cannot get here.");
@@ -15680,7 +15655,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateObjectStore(
   dbMetadata->mNextObjectStoreId++;
 
   RefPtr<CreateObjectStoreOp> op = new CreateObjectStoreOp(
-      SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, aMetadata);
+      SafeRefPtrFromThis().downcast<VersionChangeTransaction>(), aMetadata);
 
   if (NS_WARN_IF(!op->Init(*this))) {
     op->Cleanup();
@@ -15737,9 +15712,9 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteObjectStore(
       });
   MOZ_ASSERT_IF(isLastObjectStore, foundTargetId);
 
-  RefPtr<DeleteObjectStoreOp> op =
-      new DeleteObjectStoreOp(SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
-                              foundMetadata, isLastObjectStore);
+  RefPtr<DeleteObjectStoreOp> op = new DeleteObjectStoreOp(
+      SafeRefPtrFromThis().downcast<VersionChangeTransaction>(), foundMetadata,
+      isLastObjectStore);
 
   if (NS_WARN_IF(!op->Init(*this))) {
     op->Cleanup();
@@ -15786,7 +15761,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameObjectStore(
   foundMetadata->mCommonMetadata.name() = aName;
 
   RefPtr<RenameObjectStoreOp> renameOp = new RenameObjectStoreOp(
-      SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, foundMetadata);
+      SafeRefPtrFromThis().downcast<VersionChangeTransaction>(), foundMetadata);
 
   if (NS_WARN_IF(!renameOp->Init(*this))) {
     renameOp->Cleanup();
@@ -15851,9 +15826,9 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateIndex(
 
   dbMetadata->mNextIndexId++;
 
-  RefPtr<CreateIndexOp> op =
-      new CreateIndexOp(SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
-                        aObjectStoreId, aMetadata);
+  RefPtr<CreateIndexOp> op = new CreateIndexOp(
+      SafeRefPtrFromThis().downcast<VersionChangeTransaction>(), aObjectStoreId,
+      aMetadata);
 
   if (NS_WARN_IF(!op->Init(*this))) {
     op->Cleanup();
@@ -15933,8 +15908,8 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteIndex(
   MOZ_ASSERT_IF(isLastIndex, foundTargetId);
 
   RefPtr<DeleteIndexOp> op = new DeleteIndexOp(
-      SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, aObjectStoreId, aIndexId,
-      foundIndexMetadata->mCommonMetadata.unique(), isLastIndex);
+      SafeRefPtrFromThis().downcast<VersionChangeTransaction>(), aObjectStoreId,
+      aIndexId, foundIndexMetadata->mCommonMetadata.unique(), isLastIndex);
 
   if (NS_WARN_IF(!op->Init(*this))) {
     op->Cleanup();
@@ -16000,9 +15975,9 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameIndex(
 
   foundIndexMetadata->mCommonMetadata.name() = aName;
 
-  RefPtr<RenameIndexOp> renameOp =
-      new RenameIndexOp(SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
-                        foundIndexMetadata, aObjectStoreId);
+  RefPtr<RenameIndexOp> renameOp = new RenameIndexOp(
+      SafeRefPtrFromThis().downcast<VersionChangeTransaction>(),
+      foundIndexMetadata, aObjectStoreId);
 
   if (NS_WARN_IF(!renameOp->Init(*this))) {
     renameOp->Cleanup();
@@ -16555,10 +16530,8 @@ nsresult FileManager::Init(nsIFile* aDirectory,
     // 0, but the dbRefCnt is non-zero, which will keep the FileInfo object
     // alive.
     MOZ_ASSERT(dbRefCnt > 0);
-    mFileInfos.Put(
-        id, new FileInfo(FileManagerGuard{},
-                         SafeRefPtr{this, AcquireStrongRefFromRawPtr{}}, id,
-                         static_cast<nsrefcnt>(dbRefCnt)));
+    mFileInfos.Put(id, new FileInfo(FileManagerGuard{}, SafeRefPtrFromThis(),
+                                    id, static_cast<nsrefcnt>(dbRefCnt)));
 
     mLastFileId = std::max(id, mLastFileId);
   }
@@ -21243,7 +21216,7 @@ OpenDatabaseOp::OpenDatabaseOp(RefPtr<Factory> aFactory,
                                const CommonFactoryRequestParams& aParams)
     : FactoryOp(std::move(aFactory), std::move(aContentParent), aParams,
                 /* aDeleting */ false),
-      mMetadata(MakeRefPtr<FullDatabaseMetadata>(aParams.metadata())),
+      mMetadata(MakeSafeRefPtr<FullDatabaseMetadata>(aParams.metadata())),
       mRequestedVersion(aParams.metadata().version()),
       mVersionChangeOp(nullptr),
       mTelemetryId(0) {
