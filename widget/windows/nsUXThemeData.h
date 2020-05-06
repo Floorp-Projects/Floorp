@@ -13,23 +13,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "WinUtils.h"
 
-#include <dwmapi.h>
-
 #include "nsWindowDefs.h"
-
-// These window messages are not defined in dwmapi.h
-#ifndef WM_DWMCOMPOSITIONCHANGED
-#  define WM_DWMCOMPOSITIONCHANGED 0x031E
-#endif
-
-// Windows 7 additions
-#ifndef WM_DWMSENDICONICTHUMBNAIL
-#  define WM_DWMSENDICONICTHUMBNAIL 0x0323
-#  define WM_DWMSENDICONICLIVEPREVIEWBITMAP 0x0326
-#endif
-
-#define DWMWA_FORCE_ICONIC_REPRESENTATION 7
-#define DWMWA_HAS_ICONIC_BITMAP 10
 
 enum nsUXThemeClass {
   eUXButton = 0,
@@ -72,11 +56,12 @@ enum WindowsThemeColor {
   WINTHEMECOLOR_HOMESTEAD = 2,
   WINTHEMECOLOR_METALLIC = 3
 };
-
-#define CMDBUTTONIDX_MINIMIZE 0
-#define CMDBUTTONIDX_RESTORE 1
-#define CMDBUTTONIDX_CLOSE 2
-#define CMDBUTTONIDX_BUTTONBOX 3
+enum CmdButtonIdx {
+  CMDBUTTONIDX_MINIMIZE = 0,
+  CMDBUTTONIDX_RESTORE,
+  CMDBUTTONIDX_CLOSE,
+  CMDBUTTONIDX_BUTTONBOX
+};
 
 class nsUXThemeData {
   // This class makes sure we don't attempt to open a theme if the previous
@@ -131,7 +116,7 @@ class nsUXThemeData {
   // nsWindow calls this to update desktop settings info
   static void UpdateTitlebarInfo(HWND aWnd);
 
-  static SIZE GetCommandButtonMetrics(int aMetric) {
+  static SIZE GetCommandButtonMetrics(CmdButtonIdx aMetric) {
     EnsureCommandButtonMetrics();
     return sCommandButtonMetrics[aMetric];
   }
@@ -143,13 +128,5 @@ class nsUXThemeData {
   static mozilla::LookAndFeel::WindowsTheme GetNativeThemeId();
   static bool IsDefaultWindowTheme();
   static bool IsHighContrastOn();
-
-  // This method returns the cached compositor state. Most
-  // callers should call without the argument. The cache
-  // should be modified only when the application receives
-  // WM_DWMCOMPOSITIONCHANGED. This rule prevents inconsistent
-  // results for two or more calls which check the state during
-  // composition transition.
-  static bool CheckForCompositor(bool aUpdateCache = false);
 };
 #endif  // __UXThemeData_h__

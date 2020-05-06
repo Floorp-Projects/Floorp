@@ -1920,9 +1920,7 @@ already_AddRefed<mozilla::gfx::VsyncSource>
 gfxWindowsPlatform::CreateHardwareVsyncSource() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread(), "GFX: Not in main thread.");
 
-  BOOL dwmEnabled = false;
-  DwmIsCompositionEnabled(&dwmEnabled);
-  if (!dwmEnabled) {
+  if (!DwmCompositionEnabled()) {
     NS_WARNING("DWM not enabled, falling back to software vsync");
     return gfxPlatform::CreateHardwareVsyncSource();
   }

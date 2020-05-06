@@ -1546,7 +1546,7 @@ nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                        aDirtyRect);
 
   // ^^ without the right sdk, assume xp theming and fall through.
-  if (nsUXThemeData::CheckForCompositor()) {
+  if (gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) {
     switch (aAppearance) {
       case StyleAppearance::MozWindowTitlebar:
       case StyleAppearance::MozWindowTitlebarMaximized:
@@ -2061,7 +2061,7 @@ bool nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
     aResult->SizeTo(0, 0, 0, 0);
 
     // aero glass doesn't display custom buttons
-    if (nsUXThemeData::CheckForCompositor()) return true;
+    if (gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) return true;
 
     // button padding for standard windows
     if (aAppearance == StyleAppearance::MozWindowButtonBox) {
@@ -2447,7 +2447,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext,
 
     case StyleAppearance::MozWindowButtonBox:
     case StyleAppearance::MozWindowButtonBoxMaximized:
-      if (nsUXThemeData::CheckForCompositor()) {
+      if (gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) {
         aResult->width = nsUXThemeData::GetCommandButtonBoxMetrics().cx;
         aResult->height = nsUXThemeData::GetCommandButtonBoxMetrics().cy -
                           GetSystemMetrics(SM_CYFRAME) -
