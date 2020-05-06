@@ -29,9 +29,9 @@ JSWindowActorProtocol::FromIPC(const JSWindowActorInfo& aInfo) {
   // irrelevant and not propagated.
   proto->mIncludeChrome = false;
   proto->mAllFrames = aInfo.allFrames();
-  proto->mMatches = aInfo.matches();
-  proto->mRemoteTypes = aInfo.remoteTypes();
-  proto->mMessageManagerGroups = aInfo.messageManagerGroups();
+  proto->mMatches = aInfo.matches().Clone();
+  proto->mRemoteTypes = aInfo.remoteTypes().Clone();
+  proto->mMessageManagerGroups = aInfo.messageManagerGroups().Clone();
   proto->mChild.mModuleURI = aInfo.url();
 
   proto->mChild.mEvents.SetCapacity(aInfo.events().Length());
@@ -46,7 +46,7 @@ JSWindowActorProtocol::FromIPC(const JSWindowActorInfo& aInfo) {
     }
   }
 
-  proto->mChild.mObservers = aInfo.observers();
+  proto->mChild.mObservers = aInfo.observers().Clone();
   return proto.forget();
 }
 
