@@ -731,6 +731,11 @@ MFBT_API void profiler_add_marker(const char* aMarkerName,
 
 MFBT_API void profiler_add_js_marker(const char* aMarkerName);
 
+// Returns true if the profiler lock is currently held *on the current thread*.
+// This may be used by re-entrant code that may call profiler functions while
+// the profiler already has the lock (which would deadlock).
+bool profiler_is_locked_on_current_thread();
+
 // Insert a marker in the profile timeline for a specified thread.
 MFBT_API void profiler_add_marker_for_thread(
     int aThreadId, ProfilingCategoryPair aCategoryPair, const char* aMarkerName,
