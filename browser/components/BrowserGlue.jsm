@@ -1673,6 +1673,26 @@ BrowserGlue.prototype = {
     }
   },
 
+  _collectFirstPartyIsolationTelemetry() {
+    let update = aIsFirstPartyIsolated => {
+      Services.telemetry.scalarSet(
+        "privacy.feature.first_party_isolation_enabled",
+        aIsFirstPartyIsolated
+      );
+    };
+
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "_firstPartyIsolated",
+      "privacy.firstparty.isolate",
+      false,
+      (_data, _previous, latest) => {
+        update(latest);
+      }
+    );
+    update(this._firstPartyIsolated);
+  },
+
   // the first browser window has finished initializing
   _onFirstWindowLoaded: function BG__onFirstWindowLoaded(aWindow) {
     AboutNewTab.init();
@@ -1767,6 +1787,8 @@ BrowserGlue.prototype = {
     this._firstWindowLoaded();
 
     this._collectStartupConditionsTelemetry();
+
+    this._collectFirstPartyIsolationTelemetry();
 
     // Set the default favicon size for UI views that use the page-icon protocol.
     PlacesUtils.favicons.setDefaultIconURIPreferredSize(
