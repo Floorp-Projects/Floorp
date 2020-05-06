@@ -243,13 +243,12 @@ struct Zone {
 };
 
 struct String {
-  static const uint32_t NON_ATOM_BIT = js::Bit(1);
+  static const uint32_t NON_ATOM_BIT = js::Bit(3);
   static const uint32_t LINEAR_BIT = js::Bit(4);
   static const uint32_t INLINE_CHARS_BIT = js::Bit(6);
   static const uint32_t LATIN1_CHARS_BIT = js::Bit(9);
   static const uint32_t EXTERNAL_FLAGS = LINEAR_BIT | NON_ATOM_BIT | js::Bit(8);
-  static const uint32_t TYPE_FLAGS_MASK =
-      js::BitMask(9) - js::Bit(2) - js::Bit(0);
+  static const uint32_t TYPE_FLAGS_MASK = js::BitMask(9) - js::BitMask(3);
   static const uint32_t PERMANENT_ATOM_MASK = NON_ATOM_BIT | js::Bit(8);
   static const uint32_t PERMANENT_ATOM_FLAGS = js::Bit(8);
 
