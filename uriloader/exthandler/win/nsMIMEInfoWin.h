@@ -23,6 +23,7 @@ class nsMIMEInfoWin : public nsMIMEInfoBase, public nsIPropertyBag {
   NS_IMETHOD LaunchWithFile(nsIFile* aFile) override;
   NS_IMETHOD GetHasDefaultHandler(bool* _retval) override;
   NS_IMETHOD GetPossibleLocalHandlers(nsIArray** _retval) override;
+  NS_IMETHOD IsCurrentAppOSDefault(bool* _retval) override;
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPROPERTYBAG
