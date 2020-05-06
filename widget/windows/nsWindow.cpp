@@ -1462,7 +1462,7 @@ void nsWindow::Show(bool bState) {
     // connected.
     if (HasBogusPopupsDropShadowOnMultiMonitor() &&
         WinUtils::GetMonitorCount() > 1 &&
-        !nsUXThemeData::CheckForCompositor()) {
+        !gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) {
       if (sDropShadowEnabled) {
         ::SetClassLongA(mWnd, GCL_STYLE, 0);
         sDropShadowEnabled = false;
@@ -2611,7 +2611,7 @@ bool nsWindow::UpdateNonClientMargins(int32_t aSizeMode, bool aReflowWindow) {
       }
     }
   } else {
-    bool glass = nsUXThemeData::CheckForCompositor();
+    bool glass = gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled();
 
     // We're dealing with a "normal" window (not maximized, minimized, or
     // fullscreen), so process `mNonClientMargins` and set `mNonClientOffset`
@@ -2992,7 +2992,8 @@ void nsWindow::SetTransparencyMode(nsTransparencyMode aMode) {
   }
 
   if (nsWindowType::eWindowType_toplevel == window->mWindowType &&
-      mTransparencyMode != aMode && !nsUXThemeData::CheckForCompositor()) {
+      mTransparencyMode != aMode &&
+      !gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) {
     NS_WARNING("Cannot set transparency mode on top-level windows.");
     return;
   }
@@ -3090,7 +3091,7 @@ void nsWindow::UpdateGlass() {
            margins.cyBottomHeight));
 
   // Extends the window frame behind the client area
-  if (nsUXThemeData::CheckForCompositor()) {
+  if (gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) {
     DwmExtendFrameIntoClientArea(mWnd, &margins);
     DwmSetWindowAttribute(mWnd, DWMWA_NCRENDERING_POLICY, &policy,
                           sizeof policy);
@@ -3316,7 +3317,7 @@ bool nsWindow::PrepareForFullscreenTransition(nsISupports** aData) {
   // We don't support fullscreen transition when composition is not
   // enabled, which could make the transition broken and annoying.
   // See bug 1184201.
-  if (!nsUXThemeData::CheckForCompositor()) {
+  if (!gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) {
     return false;
   }
 
@@ -3934,7 +3935,8 @@ void nsWindow::UpdateThemeGeometries(
   }
 
   nsIntRegion clearRegion;
-  if (!HasGlass() || !nsUXThemeData::CheckForCompositor()) {
+  if (!HasGlass() ||
+      !gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) {
     // Make sure and clear old regions we've set previously. Note HasGlass can
     // be false for glass desktops if the window we are rendering to doesn't
     // make use of glass (e.g. fullscreen browsing).
@@ -5010,7 +5012,8 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
   // Glass hit testing w/custom transparent margins
   LRESULT dwmHitResult;
-  if (mCustomNonClient && nsUXThemeData::CheckForCompositor() &&
+  if (mCustomNonClient &&
+      gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled() &&
       /* We don't do this for win10 glass with a custom titlebar,
        * in order to avoid the caption buttons breaking. */
       !(IsWin10OrLater() && HasGlass()) &&
@@ -5259,7 +5262,8 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
        * sending the message with an updated title
        */
 
-      if ((mSendingSetText && nsUXThemeData::CheckForCompositor()) ||
+      if ((mSendingSetText &&
+           gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) ||
           !mCustomNonClient || mNonClientMargins.top == -1)
         break;
 
@@ -5305,7 +5309,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       // let the dwm handle nc painting on glass
       // Never allow native painting if we are on fullscreen
       if (mSizeMode != nsSizeMode_Fullscreen &&
-          nsUXThemeData::CheckForCompositor())
+          gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled())
         break;
 
       if (wParam == TRUE) {
@@ -5341,7 +5345,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       if (!mCustomNonClient) break;
 
       // let the dwm handle nc painting on glass
-      if (nsUXThemeData::CheckForCompositor()) break;
+      if (gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) break;
 
       HRGN paintRgn = ExcludeNonClientFromPaintRegion((HRGN)wParam);
       LRESULT res = CallWindowProcW(GetPrevWindowProc(), mWnd, msg,
@@ -5990,10 +5994,6 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     } break;
 
     case WM_DWMCOMPOSITIONCHANGED:
-      // First, update the compositor state to latest one. All other methods
-      // should use same state as here for consistency painting.
-      nsUXThemeData::CheckForCompositor(true);
-
       UpdateNonClientMargins();
       BroadcastMsg(mWnd, WM_DWMCOMPOSITIONCHANGED);
       NotifyThemeChanged();
