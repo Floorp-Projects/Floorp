@@ -587,6 +587,13 @@ class ProfileChunkedBuffer {
     return {mRangeStart, mRangeEnd, mPushedBlockCount, mClearedBlockCount};
   }
 
+  // True if this buffer is already locked on this thread.
+  // This should be used if some functions may call an already-locked buffer,
+  // e.g.: Put -> memory hook -> profiler_add_native_allocation_marker -> Put.
+  [[nodiscard]] bool IsThreadSafeAndLockedOnCurrentThread() const {
+    return mMutex.IsActivatedAndLockedOnCurrentThread();
+  }
+
   // Lock the buffer mutex and run the provided callback.
   // This can be useful when the caller needs to explicitly lock down this
   // buffer, but not do anything else with it.
