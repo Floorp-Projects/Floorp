@@ -15,7 +15,6 @@ import androidx.core.animation.doOnEnd
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleCoroutineScope
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -33,11 +32,9 @@ class BrowserAnimator(
     private val fragment: WeakReference<Fragment>,
     private val engineView: WeakReference<EngineView>,
     private val swipeRefresh: WeakReference<View>,
+    private val viewLifecycleScope: LifecycleCoroutineScope,
     private val arguments: Bundle
 ) {
-
-    private val viewLifeCycleScope: LifecycleCoroutineScope?
-        get() = fragment.get()?.viewLifecycleOwner?.lifecycleScope
 
     private val unwrappedEngineView: EngineView?
         get() = engineView.get()
@@ -86,7 +83,7 @@ class BrowserAnimator(
     fun beginAnimateInIfNecessary() {
         val shouldAnimate = arguments.getBoolean(SHOULD_ANIMATE_FLAG, false)
         if (shouldAnimate) {
-            viewLifeCycleScope?.launch(Dispatchers.Main) {
+            viewLifecycleScope.launch(Dispatchers.Main) {
                 delay(ANIMATION_DELAY)
                 captureEngineViewAndDrawStatically {
                     unwrappedSwipeRefresh?.alpha = 0f
@@ -104,7 +101,7 @@ class BrowserAnimator(
      * Triggers the *zoom out* browser animation to run.
      */
     fun beginAnimateOut() {
-        viewLifeCycleScope?.launch(Dispatchers.Main) {
+        viewLifecycleScope.launch(Dispatchers.Main) {
             captureEngineViewAndDrawStatically {
                 unwrappedEngineView?.asView()?.visibility = View.GONE
                 browserZoomInValueAnimator.reverse()
@@ -118,11 +115,15 @@ class BrowserAnimator(
      */
     fun captureEngineViewAndDrawStatically(onComplete: () -> Unit) {
         unwrappedEngineView?.asView()?.context.let {
-            viewLifeCycleScope?.launch {
+            viewLifecycleScope.launch {
                 // isAdded check is necessary because of a bug in viewLifecycleOwner. See AC#3828
-                if (!fragment.isAdded()) { return@launch }
+                if (!fragment.isAdded()) {
+                    return@launch
+                }
                 unwrappedEngineView?.captureThumbnail { bitmap ->
-                    if (!fragment.isAdded()) { return@captureThumbnail }
+                    if (!fragment.isAdded()) {
+                        return@captureThumbnail
+                    }
 
                     unwrappedSwipeRefresh?.apply {
                         // If the bitmap is null, the best we can do to reduce the flash is set transparent

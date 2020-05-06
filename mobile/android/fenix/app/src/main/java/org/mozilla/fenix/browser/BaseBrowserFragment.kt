@@ -178,6 +178,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             fragment = WeakReference(this),
             engineView = WeakReference(engineView),
             swipeRefresh = WeakReference(swipeRefresh),
+            viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
             arguments = requireArguments()
         ).apply {
             beginAnimateInIfNecessary()
