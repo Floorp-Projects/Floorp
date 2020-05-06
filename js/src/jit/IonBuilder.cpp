@@ -3411,8 +3411,9 @@ AbortReasonOr<Ok> IonBuilder::visitTableSwitch() {
 void IonBuilder::pushConstant(const Value& v) { current->push(constant(v)); }
 
 static inline bool SimpleBitOpOperand(MDefinition* op) {
-  return !op->mightBeType(MIRType::Object) &&
-         !op->mightBeType(MIRType::Symbol) && !op->mightBeType(MIRType::BigInt);
+  return op->definitelyType({MIRType::Undefined, MIRType::Null,
+                             MIRType::Boolean, MIRType::Int32, MIRType::Double,
+                             MIRType::Float32, MIRType::String});
 }
 
 AbortReasonOr<Ok> IonBuilder::bitnotTrySpecialized(bool* emitted,
@@ -3562,14 +3563,16 @@ AbortReasonOr<Ok> IonBuilder::binaryArithTryConcat(bool* emitted, JSOp op,
 
   // The non-string input (if present) should be atleast easily coercible to
   // string.
+  std::initializer_list<MIRType> coercibleToString = {
+      MIRType::Undefined, MIRType::Null,    MIRType::Boolean, MIRType::Int32,
+      MIRType::Double,    MIRType::Float32, MIRType::String,  MIRType::BigInt,
+  };
   if (right->type() != MIRType::String &&
-      (right->mightBeType(MIRType::Symbol) ||
-       right->mightBeType(MIRType::Object) || right->mightBeMagicType())) {
+      !right->definitelyType(coercibleToString)) {
     return Ok();
   }
   if (left->type() != MIRType::String &&
-      (left->mightBeType(MIRType::Symbol) ||
-       left->mightBeType(MIRType::Object) || left->mightBeMagicType())) {
+      !left->definitelyType(coercibleToString)) {
     return Ok();
   }
 
@@ -6549,10 +6552,9 @@ AbortReasonOr<Ok> IonBuilder::compareTryCharacter(bool* emitted, JSOp op,
 static bool ObjectOrSimplePrimitive(MDefinition* op) {
   // Return true if op is either undefined/null/boolean/int32/symbol or an
   // object.
-  return !op->mightBeType(MIRType::String) &&
-         !op->mightBeType(MIRType::BigInt) &&
-         !op->mightBeType(MIRType::Double) &&
-         !op->mightBeType(MIRType::Float32) && !op->mightBeMagicType();
+  return op->definitelyType({MIRType::Undefined, MIRType::Null,
+                             MIRType::Boolean, MIRType::Int32, MIRType::Symbol,
+                             MIRType::Object});
 }
 
 AbortReasonOr<Ok> IonBuilder::compareTrySpecialized(bool* emitted, JSOp op,
