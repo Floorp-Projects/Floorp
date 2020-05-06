@@ -3524,7 +3524,6 @@ void LIRGenerator::visitLoadTypedArrayElementHole(
       assignSnapshot(lir, Bailout_Overflow);
     }
     defineBox(lir, ins);
-    assignSafepoint(lir, ins);
   } else {
 #ifdef JS_CODEGEN_X86
     LDefinition tmp = LDefinition::BogusTemp();
