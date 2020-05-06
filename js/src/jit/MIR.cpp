@@ -345,6 +345,34 @@ bool MDefinition::mightBeMagicType() const {
   return !resultTypeSet() || resultTypeSet()->hasType(TypeSet::MagicArgType());
 }
 
+bool MDefinition::definitelyType(std::initializer_list<MIRType> types) const {
+#ifdef DEBUG
+  // Only support specialized, non-magic types. Also disallow Int64, because
+  // TypeSet only supports types representable as JSValue.
+  auto isSpecializedNonMagic = [](MIRType type) {
+    return type <= MIRType::Object && type != MIRType::Int64;
+  };
+#endif
+
+  MOZ_ASSERT(types.size() > 0);
+  MOZ_ASSERT(std::all_of(types.begin(), types.end(), isSpecializedNonMagic));
+
+  if (type() == MIRType::Value) {
+    TemporaryTypeSet* resultTypes = resultTypeSet();
+    return resultTypes && !resultTypes->empty() && resultTypes->isSubset(types);
+  }
+
+  auto contains = [&types](MIRType type) {
+    return std::find(types.begin(), types.end(), type) != types.end();
+  };
+
+  if (type() == MIRType::ObjectOrNull) {
+    return contains(MIRType::Object) && contains(MIRType::Null);
+  }
+
+  return contains(type());
+}
+
 MDefinition* MInstruction::foldsToStore(TempAllocator& alloc) {
   if (!dependency()) {
     return nullptr;
