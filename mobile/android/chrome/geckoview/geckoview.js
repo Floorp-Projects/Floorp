@@ -73,6 +73,11 @@ var ModuleManager = {
 
     window.document.documentElement.appendChild(aBrowser);
 
+    // TODO: Bug 1635914 remove workaround. In theory this should not be needed
+    // as docShell should be active by default, but this is not currently the
+    // case so we force it here.
+    aBrowser.docShellIsActive = true;
+
     WindowEventDispatcher.registerListener(this, [
       "GeckoView:UpdateModuleState",
       "GeckoView:UpdateInitData",
