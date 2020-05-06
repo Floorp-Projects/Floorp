@@ -966,19 +966,19 @@ const SecuritySettingsCleaner = {
       let sss = Cc["@mozilla.org/ssservice;1"].getService(
         Ci.nsISiteSecurityService
       );
-      for (let type of [
-        Ci.nsISiteSecurityService.HEADER_HSTS,
-        Ci.nsISiteSecurityService.HEADER_HPKP,
-      ]) {
-        // Also remove HSTS/HPKP information for subdomains by enumerating
-        // the information in the site security service.
-        for (let entry of sss.enumerate(type)) {
-          let hostname = entry.hostname;
-          if (Services.eTLD.hasRootDomain(hostname, aHost)) {
-            // This uri is used as a key to reset the state.
-            let uri = Services.io.newURI("https://" + hostname);
-            sss.resetState(type, uri, 0, entry.originAttributes);
-          }
+      // Also remove HSTS information for subdomains by enumerating
+      // the information in the site security service.
+      for (let entry of sss.enumerate(Ci.nsISiteSecurityService.HEADER_HSTS)) {
+        let hostname = entry.hostname;
+        if (Services.eTLD.hasRootDomain(hostname, aHost)) {
+          // This uri is used as a key to reset the state.
+          let uri = Services.io.newURI("https://" + hostname);
+          sss.resetState(
+            Ci.nsISiteSecurityService.HEADER_HSTS,
+            uri,
+            0,
+            entry.originAttributes
+          );
         }
       }
 

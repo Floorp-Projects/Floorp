@@ -180,7 +180,7 @@ const SecurityInfo = {
       ];
     }
 
-    // HSTS and HPKP if available.
+    // HSTS and static pinning if available.
     if (uri && uri.host) {
       // SiteSecurityService uses different storage if the channel is
       // private. Thus we must give isSecureURI correct flags or we
@@ -194,7 +194,7 @@ const SecurityInfo = {
       }
 
       info.hsts = sss.isSecureURI(sss.HEADER_HSTS, uri, flags);
-      info.hpkp = sss.isSecureURI(sss.HEADER_HPKP, uri, flags);
+      info.hpkp = sss.isSecureURI(sss.STATIC_PINNING, uri, flags);
     } else {
       info.hsts = false;
       info.hpkp = false;

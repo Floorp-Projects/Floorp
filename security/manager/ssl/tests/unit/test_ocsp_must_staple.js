@@ -34,52 +34,6 @@ function add_ocsp_test(
 }
 
 function add_tests() {
-  // ensure that the chain is checked for required features in children:
-  // First a case where intermediate and ee both have the extension
-  add_ocsp_test(
-    "ocsp-stapling-must-staple-ee-with-must-staple-int.example.com",
-    PRErrorCodeSuccess,
-    true,
-    false,
-    function(aSecInfo) {
-      Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", true);
-      Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 1);
-      Services.prefs.setBoolPref(
-        "security.cert_pinning.process_headers_from_non_builtin_roots",
-        true
-      );
-      let uri = Services.io.newURI(
-        "https://ocsp-stapling-must-staple-ee-with-must-staple-int.example.com"
-      );
-      let keyHash = "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=";
-      let backupKeyHash = "KHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN=";
-      let header = `max-age=1000; pin-sha256="${keyHash}"; pin-sha256="${backupKeyHash}"`;
-      let ssservice = Cc["@mozilla.org/ssservice;1"].getService(
-        Ci.nsISiteSecurityService
-      );
-      ssservice.processHeader(
-        Ci.nsISiteSecurityService.HEADER_HPKP,
-        uri,
-        header,
-        aSecInfo,
-        0,
-        Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
-      );
-      ok(
-        ssservice.isSecureURI(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0),
-        "ocsp-stapling-must-staple-ee-with-must-staple-int.example.com should have HPKP set"
-      );
-
-      // Clear accumulated state.
-      ssservice.resetState(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0);
-      Services.prefs.clearUserPref(
-        "security.cert_pinning.process_headers_from_non_builtin_roots"
-      );
-      Services.prefs.clearUserPref("security.cert_pinning.hpkp.enabled");
-      Services.prefs.clearUserPref("security.cert_pinning.enforcement_level");
-    }
-  );
-
   // Next, a case where it's present in the intermediate, not the ee
   add_ocsp_test(
     "ocsp-stapling-plain-ee-with-must-staple-int.example.com",

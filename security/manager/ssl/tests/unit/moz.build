@@ -34,7 +34,6 @@ TEST_DIRS += [
     'test_name_constraints',
     'test_ocsp_url',
     'test_onecrl',
-    'test_pinning_dynamic',
     'test_sanctions',
     'test_signed_apps',
     'test_startcom_wosign',

@@ -5,10 +5,6 @@
 
 do_get_profile(); // must be done before instantiating nsIX509CertDB
 
-// This had better not be larger than the maximum maxAge for HPKP.
-const NON_ISSUED_KEY_HASH = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
-const PINNING_ROOT_KEY_HASH = "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=";
-const KEY_HASHES = [NON_ISSUED_KEY_HASH, PINNING_ROOT_KEY_HASH];
 const SECS_IN_A_WEEK = 7 * 24 * 60 * 60 * 1000;
 const TESTCASES = [
   {
@@ -57,29 +53,6 @@ function checkSiteSecurityStateAttrs(entries) {
   }
 }
 
-function checkSha256Keys(hpkpEntries) {
-  for (let hpkpEntry of hpkpEntries) {
-    let keys = Array.from(
-      hpkpEntry.QueryInterface(Ci.nsISiteHPKPState).sha256Keys,
-      key => key.QueryInterface(Ci.nsIVariant)
-    );
-
-    equal(keys.length, KEY_HASHES.length, "Should get correct number of keys");
-    keys.sort();
-    for (let i = 0; i < KEY_HASHES.length; i++) {
-      equal(keys[i], KEY_HASHES[i], "Should get correct keys");
-    }
-  }
-}
-
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("security.cert_pinning.hpkp.enabled");
-  Services.prefs.clearUserPref(
-    "security.cert_pinning.process_headers_from_non_builtin_roots"
-  );
-  Services.prefs.clearUserPref("security.cert_pinning.max_max_age_seconds");
-});
-
 function add_tests() {
   sss.clearAll();
 
@@ -105,53 +78,24 @@ function add_tests() {
           0,
           Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
         );
-        for (let key of KEY_HASHES) {
-          header += `; pin-sha256="${key}"`;
-        }
-        sss.processHeader(
-          Ci.nsISiteSecurityService.HEADER_HPKP,
-          uri,
-          header,
-          secInfo,
-          0,
-          Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
-        );
       }
     );
   }
 
   add_task(() => {
     let hstsEntries = getEntries(Ci.nsISiteSecurityService.HEADER_HSTS);
-    let hpkpEntries = getEntries(Ci.nsISiteSecurityService.HEADER_HPKP);
 
     checkSiteSecurityStateAttrs(hstsEntries);
-    checkSiteSecurityStateAttrs(hpkpEntries);
-
-    checkSha256Keys(hpkpEntries);
 
     sss.clearAll();
     hstsEntries = getEntries(Ci.nsISiteSecurityService.HEADER_HSTS);
-    hpkpEntries = getEntries(Ci.nsISiteSecurityService.HEADER_HPKP);
 
     equal(hstsEntries.length, 0, "Should clear all HSTS entries");
-    equal(hpkpEntries.length, 0, "Should clear all HPKP entries");
   });
 }
 
 function run_test() {
-  Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", true);
-  Services.prefs.setBoolPref(
-    "security.cert_pinning.process_headers_from_non_builtin_roots",
-    true
-  );
-  Services.prefs.setIntPref(
-    "security.cert_pinning.max_max_age_seconds",
-    20 * SECS_IN_A_WEEK
-  );
-
   add_tls_server_setup("BadCertAndPinningServer", "bad_certs");
-
   add_tests();
-
   run_next_test();
 }

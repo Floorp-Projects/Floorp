@@ -8,172 +8,127 @@
 
 // Ensures nsISiteSecurityService APIs respects origin attributes.
 
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("security.cert_pinning.hpkp.enabled");
-  Services.prefs.clearUserPref("security.cert_pinning.enforcement_level");
-  Services.prefs.clearUserPref(
-    "security.cert_pinning.process_headers_from_non_builtin_roots"
-  );
-});
-
 const GOOD_MAX_AGE_SECONDS = 69403;
-const NON_ISSUED_KEY_HASH = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
-const PINNING_ROOT_KEY_HASH = "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=";
-const VALID_PIN = `pin-sha256="${PINNING_ROOT_KEY_HASH}";`;
-const BACKUP_PIN = `pin-sha256="${NON_ISSUED_KEY_HASH}";`;
 const GOOD_MAX_AGE = `max-age=${GOOD_MAX_AGE_SECONDS};`;
 
 do_get_profile(); // must be done before instantiating nsIX509CertDB
-
-Services.prefs.setBoolPref("security.cert_pinning.hpkp.enabled", true);
-Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 2);
-Services.prefs.setBoolPref(
-  "security.cert_pinning.process_headers_from_non_builtin_roots",
-  true
-);
 
 let sss = Cc["@mozilla.org/ssservice;1"].getService(Ci.nsISiteSecurityService);
 let host = "a.pinning.example.com";
 let uri = Services.io.newURI("https://" + host);
 
 // Check if originAttributes1 and originAttributes2 are isolated with respect
-// to HSTS/HPKP storage.
+// to HSTS storage.
 function doTest(secInfo, originAttributes1, originAttributes2, shouldShare) {
   sss.clearAll();
-  for (let type of [
+  let header = GOOD_MAX_AGE;
+  // Set HSTS for originAttributes1.
+  sss.processHeader(
     Ci.nsISiteSecurityService.HEADER_HSTS,
-    Ci.nsISiteSecurityService.HEADER_HPKP,
-  ]) {
-    let header = GOOD_MAX_AGE;
-    if (type == Ci.nsISiteSecurityService.HEADER_HPKP) {
-      header += VALID_PIN + BACKUP_PIN;
-    }
-    // Set HSTS or HPKP for originAttributes1.
-    sss.processHeader(
-      type,
-      uri,
-      header,
-      secInfo,
-      0,
-      Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
-      originAttributes1
-    );
-    ok(
-      sss.isSecureURI(type, uri, 0, originAttributes1),
-      "URI should be secure given original origin attributes"
-    );
-    equal(
-      sss.isSecureURI(type, uri, 0, originAttributes2),
-      shouldShare,
-      "URI should be secure given different origin attributes if and " +
-        "only if shouldShare is true"
-    );
-
-    if (!shouldShare) {
-      // Remove originAttributes2 from the storage.
-      sss.resetState(type, uri, 0, originAttributes2);
-      ok(
-        sss.isSecureURI(type, uri, 0, originAttributes1),
-        "URI should still be secure given original origin attributes"
-      );
-    }
-
-    // Remove originAttributes1 from the storage.
-    sss.resetState(type, uri, 0, originAttributes1);
-    ok(
-      !sss.isSecureURI(type, uri, 0, originAttributes1),
-      "URI should be not be secure after removeState"
-    );
-  }
-  // Set HPKP for originAttributes1.
-  sss.setKeyPins(
-    host,
-    false,
-    Date.now() + 1234567890,
-    [NON_ISSUED_KEY_HASH, PINNING_ROOT_KEY_HASH],
-    false,
+    uri,
+    header,
+    secInfo,
+    0,
+    Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
     originAttributes1
   );
   ok(
     sss.isSecureURI(
-      Ci.nsISiteSecurityService.HEADER_HPKP,
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       uri,
       0,
       originAttributes1
     ),
-    "URI should be secure after setKeyPins given original origin attributes"
+    "URI should be secure given original origin attributes"
   );
   equal(
     sss.isSecureURI(
-      Ci.nsISiteSecurityService.HEADER_HPKP,
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       uri,
       0,
       originAttributes2
     ),
     shouldShare,
-    "URI should be secure after setKeyPins given different " +
-      "origin attributes if and only if shouldShare is true"
+    "URI should be secure given different origin attributes if and " +
+      "only if shouldShare is true"
   );
 
-  sss.clearAll();
+  if (!shouldShare) {
+    // Remove originAttributes2 from the storage.
+    sss.resetState(
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      uri,
+      0,
+      originAttributes2
+    );
+    ok(
+      sss.isSecureURI(
+        Ci.nsISiteSecurityService.HEADER_HSTS,
+        uri,
+        0,
+        originAttributes1
+      ),
+      "URI should still be secure given original origin attributes"
+    );
+  }
+
+  // Remove originAttributes1 from the storage.
+  sss.resetState(
+    Ci.nsISiteSecurityService.HEADER_HSTS,
+    uri,
+    0,
+    originAttributes1
+  );
   ok(
     !sss.isSecureURI(
-      Ci.nsISiteSecurityService.HEADER_HPKP,
+      Ci.nsISiteSecurityService.HEADER_HSTS,
       uri,
       0,
       originAttributes1
     ),
-    "URI should not be secure after clearAll"
+    "URI should not be secure after removeState"
   );
+
+  sss.clearAll();
 }
 
 function testInvalidOriginAttributes(secInfo, originAttributes) {
-  for (let type of [
-    Ci.nsISiteSecurityService.HEADER_HSTS,
-    Ci.nsISiteSecurityService.HEADER_HPKP,
-  ]) {
-    let header = GOOD_MAX_AGE;
-    if (type == Ci.nsISiteSecurityService.HEADER_HPKP) {
-      header += VALID_PIN + BACKUP_PIN;
-    }
+  let header = GOOD_MAX_AGE;
 
-    let callbacks = [
-      () =>
-        sss.processHeader(
-          type,
-          uri,
-          header,
-          secInfo,
-          0,
-          Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
-          originAttributes
-        ),
-      () => sss.isSecureURI(type, uri, 0, originAttributes),
-      () => sss.resetState(type, uri, 0, originAttributes),
-    ];
-
-    for (let callback of callbacks) {
-      throws(
-        callback,
-        /NS_ERROR_ILLEGAL_VALUE/,
-        "Should get an error with invalid origin attributes"
-      );
-    }
-  }
-
-  throws(
+  let callbacks = [
     () =>
-      sss.setKeyPins(
-        host,
-        false,
-        Date.now() + 1234567890,
-        [NON_ISSUED_KEY_HASH, PINNING_ROOT_KEY_HASH],
-        false,
+      sss.processHeader(
+        Ci.nsISiteSecurityService.HEADER_HSTS,
+        uri,
+        header,
+        secInfo,
+        0,
+        Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
         originAttributes
       ),
-    /NS_ERROR_ILLEGAL_VALUE/,
-    "Should get an error with invalid origin attributes"
-  );
+    () =>
+      sss.isSecureURI(
+        Ci.nsISiteSecurityService.HEADER_HSTS,
+        uri,
+        0,
+        originAttributes
+      ),
+    () =>
+      sss.resetState(
+        Ci.nsISiteSecurityService.HEADER_HSTS,
+        uri,
+        0,
+        originAttributes
+      ),
+  ];
+
+  for (let callback of callbacks) {
+    throws(
+      callback,
+      /NS_ERROR_ILLEGAL_VALUE/,
+      "Should get an error with invalid origin attributes"
+    );
+  }
 }
 
 function add_tests() {
