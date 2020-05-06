@@ -3799,13 +3799,20 @@ bool Element::UpdateIntersectionObservation(DOMIntersectionObserver* aObserver,
   auto* observers = static_cast<IntersectionObserverList*>(
       GetProperty(nsGkAtoms::intersectionobserverlist));
   if (!observers) {
+    printf("%s %d\n", __func__, __LINE__);
     return false;
   }
   bool updated = false;
   if (auto entry = observers->Lookup(aObserver)) {
     updated = entry.Data() != aThreshold;
+    printf("%d \t", entry.Data());
     entry.Data() = aThreshold;
   }
+  nsAutoString id;
+  GetId(id);
+  printf("%s %s %d %d t:%d\n",
+         NS_ConvertUTF16toUTF8(id).get(),
+          __func__, __LINE__, updated, aThreshold);
   return updated;
 }
 
