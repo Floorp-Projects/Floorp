@@ -6047,24 +6047,13 @@ class Database final
   bool DeallocPBackgroundIDBDatabaseRequestParent(
       PBackgroundIDBDatabaseRequestParent* aActor) override;
 
-  PBackgroundIDBTransactionParent* AllocPBackgroundIDBTransactionParent(
+  already_AddRefed<PBackgroundIDBTransactionParent>
+  AllocPBackgroundIDBTransactionParent(
       const nsTArray<nsString>& aObjectStoreNames, const Mode& aMode) override;
 
   mozilla::ipc::IPCResult RecvPBackgroundIDBTransactionConstructor(
       PBackgroundIDBTransactionParent* aActor,
       nsTArray<nsString>&& aObjectStoreNames, const Mode& aMode) override;
-
-  bool DeallocPBackgroundIDBTransactionParent(
-      PBackgroundIDBTransactionParent* aActor) override;
-
-  PBackgroundIDBVersionChangeTransactionParent*
-  AllocPBackgroundIDBVersionChangeTransactionParent(
-      const uint64_t& aCurrentVersion, const uint64_t& aRequestedVersion,
-      const IndexOrObjectStoreId& aNextObjectStoreId,
-      const IndexOrObjectStoreId& aNextIndexId) override;
-
-  bool DeallocPBackgroundIDBVersionChangeTransactionParent(
-      PBackgroundIDBVersionChangeTransactionParent* aActor) override;
 
   PBackgroundMutableFileParent* AllocPBackgroundMutableFileParent(
       const nsString& aName, const nsString& aType) override;
@@ -6318,8 +6307,9 @@ class TransactionBase {
     mHasBeenActiveOnConnectionThread.Flip();
   }
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(
-      mozilla::dom::indexedDB::TransactionBase)
+  // XXX Actually, this shouldn't be necessary, and we should be able to
+  // implement refcounting here, and just use that from the subclass.
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   void Abort(nsresult aResultCode, bool aForce);
 
@@ -6551,6 +6541,9 @@ class NormalTransaction final : public TransactionBase,
 
   bool DeallocPBackgroundIDBCursorParent(
       PBackgroundIDBCursorParent* aActor) override;
+
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NormalTransaction, override)
 };
 
 class VersionChangeTransaction final
@@ -6566,6 +6559,8 @@ class VersionChangeTransaction final
  public:
   // Only called by OpenDatabaseOp.
   explicit VersionChangeTransaction(OpenDatabaseOp* aOpenDatabaseOp);
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VersionChangeTransaction, override)
 
  private:
   // Reference counted.
@@ -14198,7 +14193,8 @@ bool Database::DeallocPBackgroundIDBDatabaseRequestParent(
   return true;
 }
 
-PBackgroundIDBTransactionParent* Database::AllocPBackgroundIDBTransactionParent(
+already_AddRefed<PBackgroundIDBTransactionParent>
+Database::AllocPBackgroundIDBTransactionParent(
     const nsTArray<nsString>& aObjectStoreNames, const Mode& aMode) {
   AssertIsOnBackgroundThread();
 
@@ -14275,7 +14271,7 @@ PBackgroundIDBTransactionParent* Database::AllocPBackgroundIDBTransactionParent(
       new NormalTransaction(SafeRefPtr{this, AcquireStrongRefFromRawPtr{}},
                             aMode, std::move(objectStoreMetadatas));
 
-  return transaction.forget().take();
+  return transaction.forget();
 }
 
 mozilla::ipc::IPCResult Database::RecvPBackgroundIDBTransactionConstructor(
@@ -14319,36 +14315,6 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundIDBTransactionConstructor(
   }
 
   return IPC_OK();
-}
-
-bool Database::DeallocPBackgroundIDBTransactionParent(
-    PBackgroundIDBTransactionParent* aActor) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-
-  RefPtr<NormalTransaction> transaction =
-      dont_AddRef(static_cast<NormalTransaction*>(aActor));
-  return true;
-}
-
-PBackgroundIDBVersionChangeTransactionParent*
-Database::AllocPBackgroundIDBVersionChangeTransactionParent(
-    const uint64_t& aCurrentVersion, const uint64_t& aRequestedVersion,
-    const IndexOrObjectStoreId& aNextObjectStoreId,
-    const IndexOrObjectStoreId& aNextIndexId) {
-  MOZ_CRASH(
-      "PBackgroundIDBVersionChangeTransactionParent actors should be "
-      "constructed manually!");
-}
-
-bool Database::DeallocPBackgroundIDBVersionChangeTransactionParent(
-    PBackgroundIDBVersionChangeTransactionParent* aActor) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-
-  RefPtr<VersionChangeTransaction> transaction =
-      dont_AddRef(static_cast<VersionChangeTransaction*>(aActor));
-  return true;
 }
 
 Database::PBackgroundMutableFileParent*
@@ -15510,10 +15476,6 @@ void VersionChangeTransaction::SetActorAlive() {
   MOZ_ASSERT(!IsActorDestroyed());
 
   mActorWasAlive.Flip();
-
-  // This reference will be absorbed by IPDL and released when the actor is
-  // destroyed.
-  AddRef();
 }
 
 bool VersionChangeTransaction::CopyDatabaseMetadata() {

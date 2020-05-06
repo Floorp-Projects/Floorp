@@ -1919,23 +1919,7 @@ bool BackgroundDatabaseChild::DeallocPBackgroundIDBDatabaseRequestChild(
   return true;
 }
 
-PBackgroundIDBTransactionChild*
-BackgroundDatabaseChild::AllocPBackgroundIDBTransactionChild(
-    const nsTArray<nsString>& aObjectStoreNames, const Mode& aMode) {
-  MOZ_CRASH(
-      "PBackgroundIDBTransactionChild actors should be manually "
-      "constructed!");
-}
-
-bool BackgroundDatabaseChild::DeallocPBackgroundIDBTransactionChild(
-    PBackgroundIDBTransactionChild* aActor) {
-  MOZ_ASSERT(aActor);
-
-  delete static_cast<BackgroundTransactionChild*>(aActor);
-  return true;
-}
-
-PBackgroundIDBVersionChangeTransactionChild*
+already_AddRefed<PBackgroundIDBVersionChangeTransactionChild>
 BackgroundDatabaseChild::AllocPBackgroundIDBVersionChangeTransactionChild(
     const uint64_t aCurrentVersion, const uint64_t aRequestedVersion,
     const int64_t aNextObjectStoreId, const int64_t aNextIndexId) {
@@ -1944,7 +1928,7 @@ BackgroundDatabaseChild::AllocPBackgroundIDBVersionChangeTransactionChild(
   IDBOpenDBRequest* request = mOpenRequestActor->GetOpenDBRequest();
   MOZ_ASSERT(request);
 
-  return new BackgroundVersionChangeTransactionChild(request);
+  return RefPtr{new BackgroundVersionChangeTransactionChild(request)}.forget();
 }
 
 mozilla::ipc::IPCResult
@@ -1989,15 +1973,6 @@ BackgroundDatabaseChild::RecvPBackgroundIDBVersionChangeTransactionConstructor(
   helper.DispatchSuccessEvent(std::move(upgradeNeededEvent));
 
   return IPC_OK();
-}
-
-bool BackgroundDatabaseChild::
-    DeallocPBackgroundIDBVersionChangeTransactionChild(
-        PBackgroundIDBVersionChangeTransactionChild* aActor) {
-  MOZ_ASSERT(aActor);
-
-  delete static_cast<BackgroundVersionChangeTransactionChild*>(aActor);
-  return true;
 }
 
 PBackgroundMutableFileChild*

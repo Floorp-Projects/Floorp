@@ -339,13 +339,7 @@ class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
   bool DeallocPBackgroundIDBDatabaseRequestChild(
       PBackgroundIDBDatabaseRequestChild* aActor);
 
-  PBackgroundIDBTransactionChild* AllocPBackgroundIDBTransactionChild(
-      const nsTArray<nsString>& aObjectStoreNames, const Mode& aMode);
-
-  bool DeallocPBackgroundIDBTransactionChild(
-      PBackgroundIDBTransactionChild* aActor);
-
-  PBackgroundIDBVersionChangeTransactionChild*
+  already_AddRefed<PBackgroundIDBVersionChangeTransactionChild>
   AllocPBackgroundIDBVersionChangeTransactionChild(uint64_t aCurrentVersion,
                                                    uint64_t aRequestedVersion,
                                                    int64_t aNextObjectStoreId,
@@ -355,9 +349,6 @@ class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
       PBackgroundIDBVersionChangeTransactionChild* aActor,
       const uint64_t& aCurrentVersion, const uint64_t& aRequestedVersion,
       const int64_t& aNextObjectStoreId, const int64_t& aNextIndexId) override;
-
-  bool DeallocPBackgroundIDBVersionChangeTransactionChild(
-      PBackgroundIDBVersionChangeTransactionChild* aActor);
 
   PBackgroundMutableFileChild* AllocPBackgroundMutableFileChild(
       const nsString& aName, const nsString& aType);
@@ -446,6 +437,8 @@ class BackgroundTransactionChild final : public BackgroundTransactionBase,
   friend IDBDatabase;
 
  public:
+  NS_INLINE_DECL_REFCOUNTING(BackgroundTransactionChild, override)
+
 #ifdef DEBUG
   void AssertIsOnOwningThread() const override;
 #endif
@@ -486,6 +479,8 @@ class BackgroundVersionChangeTransactionChild final
   IDBOpenDBRequest* mOpenDBRequest;
 
  public:
+  NS_INLINE_DECL_REFCOUNTING(BackgroundVersionChangeTransactionChild, override)
+
 #ifdef DEBUG
   void AssertIsOnOwningThread() const override;
 #endif
