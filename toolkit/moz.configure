@@ -73,6 +73,8 @@ def gecko_profiler(target):
         return target.cpu in ('aarch64', 'arm', 'x86', 'x86_64')
     elif target.kernel == 'Linux':
         return target.cpu in ('aarch64', 'arm', 'x86', 'x86_64', 'mips64')
+    elif target.kernel == 'FreeBSD':
+        return target.cpu in ('aarch64', 'x86_64')
     return target.os in ('OSX', 'WINNT')
 
 @depends(gecko_profiler)
@@ -88,7 +90,7 @@ set_define('MOZ_GECKO_PROFILER', gecko_profiler_define)
 # (for symbol table dumping).
 @depends(gecko_profiler, target)
 def gecko_profiler_parse_elf(value, target):
-    # Currently we only want to build this code on Linux (including Android).
+    # Currently we only want to build this code on Linux (including Android) and BSD.
     # For Android, this is in order to dump symbols from Android system, where
     # on other platforms there exist alternatives that don't require bloating
     # up our binary size. For Linux more generally, we use this in profile
@@ -97,7 +99,7 @@ def gecko_profiler_parse_elf(value, target):
     # MozDescribeCodeAddress to call into some Rust crates that parse ELF and
     # DWARF data, but build system issues currently prevent Rust from being
     # used in mozglue.)
-    if value and target.kernel == 'Linux':
+    if value and (target.kernel == 'Linux' or target.kernel == 'FreeBSD'):
         return True
 
 set_config('MOZ_GECKO_PROFILER_PARSE_ELF', gecko_profiler_parse_elf)

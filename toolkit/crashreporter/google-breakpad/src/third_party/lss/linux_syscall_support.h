@@ -4532,5 +4532,22 @@ struct kernel_statfs {
 }
 #endif
 
+#elif defined(__FreeBSD__)
+
+#include <unistd.h>
+#include <sys/stat.h>
+
+#define sys_readlink readlink
+
+#define sys_open open
+#define sys_close close
+#define sys_fstat fstat
+#define sys_fstat64 fstat
+#define kernel_stat stat
+#define kernel_stat64 stat
+#define sys_mmap mmap
+#define sys_munmap munmap
+
 #endif
+
 #endif

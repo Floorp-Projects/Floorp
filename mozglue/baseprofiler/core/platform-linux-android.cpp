@@ -34,6 +34,9 @@
 #include <math.h>
 
 #include <pthread.h>
+#if defined(GP_OS_freebsd)
+#  include <sys/thr.h>
+#endif
 #include <semaphore.h>
 #include <signal.h>
 #include <sys/time.h>
@@ -75,11 +78,15 @@ namespace baseprofiler {
 int profiler_current_process_id() { return getpid(); }
 
 int profiler_current_thread_id() {
+#if defined(GP_OS_linux) || defined(GP_OS_android)
   // glibc doesn't provide a wrapper for gettid().
-#if defined(__linux__) || !defined(__BIONIC__)
   return static_cast<int>(static_cast<pid_t>(syscall(SYS_gettid)));
+#elif defined(GP_OS_freebsd)
+  long id;
+  (void)thr_self(&id);
+  return static_cast<int>(id);
 #else
-  return static_cast<int>(gettid());
+#  error "bad platform"
 #endif
 }
 
@@ -96,27 +103,37 @@ static void PopulateRegsFromContext(Registers& aRegs, ucontext_t* aContext) {
   mcontext_t& mcontext = aContext->uc_mcontext;
 
   // Extracting the sample from the context is extremely machine dependent.
-#if defined(GP_ARCH_x86)
+#if defined(GP_PLAT_x86_linux) || defined(GP_PLAT_x86_android)
   aRegs.mPC = reinterpret_cast<Address>(mcontext.gregs[REG_EIP]);
   aRegs.mSP = reinterpret_cast<Address>(mcontext.gregs[REG_ESP]);
   aRegs.mFP = reinterpret_cast<Address>(mcontext.gregs[REG_EBP]);
   aRegs.mLR = 0;
-#elif defined(GP_ARCH_amd64)
+#elif defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_amd64_android)
   aRegs.mPC = reinterpret_cast<Address>(mcontext.gregs[REG_RIP]);
   aRegs.mSP = reinterpret_cast<Address>(mcontext.gregs[REG_RSP]);
   aRegs.mFP = reinterpret_cast<Address>(mcontext.gregs[REG_RBP]);
   aRegs.mLR = 0;
-#elif defined(GP_ARCH_arm)
+#elif defined(GP_PLAT_amd64_freebsd)
+  aRegs.mPC = reinterpret_cast<Address>(mcontext.mc_rip);
+  aRegs.mSP = reinterpret_cast<Address>(mcontext.mc_rsp);
+  aRegs.mFP = reinterpret_cast<Address>(mcontext.mc_rbp);
+  aRegs.mLR = 0;
+#elif defined(GP_PLAT_arm_linux) || defined(GP_PLAT_arm_android)
   aRegs.mPC = reinterpret_cast<Address>(mcontext.arm_pc);
   aRegs.mSP = reinterpret_cast<Address>(mcontext.arm_sp);
   aRegs.mFP = reinterpret_cast<Address>(mcontext.arm_fp);
   aRegs.mLR = reinterpret_cast<Address>(mcontext.arm_lr);
-#elif defined(GP_ARCH_arm64)
+#elif defined(GP_PLAT_arm64_linux) || defined(GP_PLAT_arm64_android)
   aRegs.mPC = reinterpret_cast<Address>(mcontext.pc);
   aRegs.mSP = reinterpret_cast<Address>(mcontext.sp);
   aRegs.mFP = reinterpret_cast<Address>(mcontext.regs[29]);
   aRegs.mLR = reinterpret_cast<Address>(mcontext.regs[30]);
-#elif defined(GP_ARCH_mips64)
+#elif defined(GP_PLAT_arm64_freebsd)
+  aRegs.mPC = reinterpret_cast<Address>(mcontext.mc_gpregs.gp_elr);
+  aRegs.mSP = reinterpret_cast<Address>(mcontext.mc_gpregs.gp_sp);
+  aRegs.mFP = reinterpret_cast<Address>(mcontext.mc_gpregs.gp_x[29]);
+  aRegs.mLR = reinterpret_cast<Address>(mcontext.mc_gpregs.gp_lr);
+#elif defined(GP_PLAT_mips64_linux) || defined(GP_PLAT_mips64_android)
   aRegs.mPC = reinterpret_cast<Address>(mcontext.pc);
   aRegs.mSP = reinterpret_cast<Address>(mcontext.gregs[29]);
   aRegs.mFP = reinterpret_cast<Address>(mcontext.gregs[30]);
@@ -130,9 +147,15 @@ static void PopulateRegsFromContext(Registers& aRegs, ucontext_t* aContext) {
 #  define SYS_tgkill __NR_tgkill
 #endif
 
+#if defined(GP_OS_linux) || defined(GP_OS_android)
 int tgkill(pid_t tgid, pid_t tid, int signalno) {
   return syscall(SYS_tgkill, tgid, tid, signalno);
 }
+#endif
+
+#if defined(GP_OS_freebsd)
+#  define tgkill thr_kill2
+#endif
 
 class PlatformData {
  public:
@@ -457,7 +480,7 @@ void SamplerThread::Stop(PSLockRef aLock) {
 // END SamplerThread target specifics
 ////////////////////////////////////////////////////////////////////////
 
-#if defined(GP_OS_linux)
+#if defined(GP_OS_linux) || defined(GP_OS_freebsd)
 
 // We use pthread_atfork() to temporarily disable signal delivery during any
 // fork() call. Without that, fork() can be repeatedly interrupted by signal

@@ -39,7 +39,7 @@ class ProfilerCodeAddressService : public mozilla::CodeAddressService<> {
   bool GetFunction(const void* aPc, nsACString& aResult);
 
  private:
-#ifdef XP_LINUX
+#if defined(XP_LINUX) || defined(XP_FREEBSD)
   // Map of library names (owned by mLibraryStrings) to SymbolTables filled
   // in by profiler_get_symbol_table.
   mozilla::HashMap<const char*, mozilla::SymbolTable,
