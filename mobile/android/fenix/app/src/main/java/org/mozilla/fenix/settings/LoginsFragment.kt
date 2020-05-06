@@ -174,7 +174,7 @@ class LoginsFragment : PreferenceFragmentCompat(), AccountObserver {
     private fun updateSyncPreferenceStatus() {
         val syncLogins = getPreferenceKey(R.string.pref_key_password_sync_logins)
         findPreference<Preference>(syncLogins)?.apply {
-            val syncEnginesStatus = SyncEnginesStorage(context!!).getStatus()
+            val syncEnginesStatus = SyncEnginesStorage(requireContext()).getStatus()
             val loginsSyncStatus = syncEnginesStatus.getOrElse(SyncEngine.Passwords) { false }
             summary = getString(
                 if (loginsSyncStatus) R.string.preferences_passwords_sync_logins_on

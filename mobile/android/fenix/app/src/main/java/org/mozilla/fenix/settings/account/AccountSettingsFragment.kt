@@ -247,7 +247,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun updateSyncEngineStates() {
-        val syncEnginesStatus = SyncEnginesStorage(context!!).getStatus()
+        val syncEnginesStatus = SyncEnginesStorage(requireContext()).getStatus()
         val bookmarksNameKey = getPreferenceKey(R.string.pref_key_sync_bookmarks)
         findPreference<CheckBoxPreference>(bookmarksNameKey)?.apply {
             isEnabled = syncEnginesStatus.containsKey(SyncEngine.Bookmarks)
@@ -314,7 +314,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         return Preference.OnPreferenceChangeListener { _, newValue ->
             accountSettingsInteractor.onChangeDeviceName(newValue as String) {
                 FenixSnackbar.make(
-                    view = view!!,
+                    view = requireView(),
                     duration = FenixSnackbar.LENGTH_LONG,
                     isDisplayedWithBrowserToolbar = false
                 )

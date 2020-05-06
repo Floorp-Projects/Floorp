@@ -98,7 +98,7 @@ class PairFragment : Fragment(R.layout.fragment_pair), UserInteractionHandler {
         when (requestCode) {
             REQUEST_CODE_CAMERA_PERMISSIONS -> {
                 if (ContextCompat.checkSelfPermission(
-                        context!!,
+                        requireContext(),
                         android.Manifest.permission.CAMERA
                     ) == PackageManager.PERMISSION_GRANTED
                 ) {

@@ -39,7 +39,7 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
 
         exceptionsCategory.onPreferenceClickListener = OnPreferenceClickListener {
             val directions = SitePermissionsFragmentDirections.actionSitePermissionsToExceptions()
-            Navigation.findNavController(view!!).navigate(directions)
+            Navigation.findNavController(requireView()).navigate(directions)
             true
         }
     }
@@ -78,6 +78,6 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
     private fun navigateToPhoneFeature(phoneFeature: PhoneFeature) {
         val directions = SitePermissionsFragmentDirections
             .actionSitePermissionsToManagePhoneFeatures(phoneFeature.id)
-        Navigation.findNavController(view!!).navigate(directions)
+        Navigation.findNavController(requireView()).navigate(directions)
     }
 }

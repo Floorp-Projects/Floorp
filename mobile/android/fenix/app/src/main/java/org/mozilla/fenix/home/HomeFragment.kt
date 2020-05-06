@@ -331,11 +331,11 @@ class HomeFragment : Fragment() {
             }
         }
 
-        createHomeMenu(context!!, WeakReference(view.menuButton))
+        createHomeMenu(requireContext(), WeakReference(view.menuButton))
 
         view.menuButton.setColorFilter(ContextCompat.getColor(
-            context!!,
-            ThemeManager.resolveAttribute(R.attr.primaryText, context!!)
+            requireContext(),
+            ThemeManager.resolveAttribute(R.attr.primaryText, requireContext())
         ))
 
         view.toolbar.compoundDrawablePadding =
@@ -381,7 +381,7 @@ class HomeFragment : Fragment() {
         super.onDestroyView()
         _sessionControlInteractor = null
         sessionControlView = null
-        view!!.homeAppBar.removeOnOffsetChangedListener(homeAppBarOffSetListener)
+        requireView().homeAppBar.removeOnOffsetChangedListener(homeAppBarOffSetListener)
     }
 
     override fun onStart() {
@@ -773,7 +773,7 @@ class HomeFragment : Fragment() {
         }
 
         viewLifecycleOwner.lifecycleScope.allowUndo(
-            view!!,
+            requireView(),
             snackbarMessage,
             getString(R.string.snackbar_deleted_undo), {
                 listOfSessionsToDelete.forEach {
@@ -813,7 +813,7 @@ class HomeFragment : Fragment() {
         }
 
         viewLifecycleOwner.lifecycleScope.allowUndo(
-            view!!,
+            requireView(),
             snackbarMessage,
             getString(R.string.snackbar_deleted_undo), {
                 requireComponents.core.pendingSessionDeletionManager.removeSession(sessionId)

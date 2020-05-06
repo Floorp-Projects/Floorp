@@ -88,7 +88,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         // display a "Sign In" preference, which will then get replaced by the correct account information
         // once this call is ran in onResume shortly after.
         updateAccountUIState(
-            context!!,
+            requireContext(),
             requireComponents.backgroundServices.accountManager.accountProfile()
         )
 
@@ -125,7 +125,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         // update it here if we're not going through the `onCreate->onStart->onResume` lifecycle chain.
         update(shouldUpdateAccountUIState = !creatingFragment)
 
-        view!!.findViewById<RecyclerView>(R.id.recycler_view)
+        requireView().findViewById<RecyclerView>(R.id.recycler_view)
             ?.hideInitialScrollBar(viewLifecycleOwner.lifecycleScope)
 
         // Consider finish of `onResume` to be the point at which we consider this fragment as 'created'.
@@ -169,7 +169,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         if (shouldUpdateAccountUIState) {
             updateAccountUIState(
-                context!!,
+                requireContext(),
                 requireComponents.backgroundServices.accountManager.accountProfile()
             )
         }
@@ -178,7 +178,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     @Suppress("ComplexMethod", "LongMethod")
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
         // Hide the scrollbar so the animation looks smoother
-        val recyclerView = view!!.findViewById<RecyclerView>(R.id.recycler_view)
+        val recyclerView = requireView().findViewById<RecyclerView>(R.id.recycler_view)
         recyclerView.isVerticalScrollBarEnabled = false
 
         val directions: NavDirections? = when (preference.key) {
@@ -217,7 +217,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             resources.getString(R.string.pref_key_help) -> {
                 (activity as HomeActivity).openToBrowserAndLoad(
                     searchTermOrURL = SupportUtils.getSumoURLForTopic(
-                        context!!,
+                        requireContext(),
                         SupportUtils.SumoTopic.HELP
                     ),
                     newTab = true,

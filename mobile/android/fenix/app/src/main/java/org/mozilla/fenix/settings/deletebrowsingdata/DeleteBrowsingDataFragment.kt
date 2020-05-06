@@ -210,7 +210,7 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
     }
 
     private fun getCheckboxes(): List<DeleteBrowsingDataItem> {
-        val fragmentView = view!!
+        val fragmentView = requireView()
         return listOf(
             fragmentView.open_tabs_item,
             fragmentView.browsing_data_item,

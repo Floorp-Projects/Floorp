@@ -31,7 +31,7 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
     private val exceptionsClickListener = Preference.OnPreferenceClickListener {
         val directions =
             TrackingProtectionFragmentDirections.actionTrackingProtectionFragmentToExceptionsFragment()
-        view!!.findNavController().navigate(directions)
+        requireView().findNavController().navigate(directions)
         true
     }
     private lateinit var radioStrict: RadioButtonInfoPreference
@@ -75,7 +75,7 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         }
 
         val trackingProtectionLearnMore =
-            context!!.getPreferenceKey(R.string.pref_key_etp_learn_more)
+            requireContext().getPreferenceKey(R.string.pref_key_etp_learn_more)
         val learnMorePreference = findPreference<Preference>(trackingProtectionLearnMore)
         learnMorePreference?.setOnPreferenceClickListener {
             (activity as HomeActivity).openToBrowserAndLoad(

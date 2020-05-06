@@ -39,7 +39,7 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
 
     private val paringClickListener = View.OnClickListener {
         val directions = TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToPairFragment()
-        view!!.findNavController().navigate(directions)
+        requireView().findNavController().navigate(directions)
         requireComponents.analytics.metrics.track(Event.SyncAuthScanPairing)
     }
 

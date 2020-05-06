@@ -178,7 +178,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             fragment = WeakReference(this),
             engineView = WeakReference(engineView),
             swipeRefresh = WeakReference(swipeRefresh),
-            arguments = arguments!!
+            arguments = requireArguments()
         ).apply {
             beginAnimateInIfNecessary()
         }
@@ -829,7 +829,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             // Close find in page bar if opened
             findInPageIntegration.onBackPressed()
             FenixSnackbar.make(
-                    view = view!!,
+                    view = requireView(),
                     duration = Snackbar.LENGTH_SHORT,
                     isDisplayedWithBrowserToolbar = false
                 )

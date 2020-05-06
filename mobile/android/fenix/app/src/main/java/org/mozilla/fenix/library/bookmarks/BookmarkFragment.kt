@@ -61,7 +61,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
     private val sharedViewModel: BookmarksSharedViewModel by activityViewModels {
         ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
     }
-    private val desktopFolders by lazy { DesktopFolders(context!!, showMobileRoot = false) }
+    private val desktopFolders by lazy { DesktopFolders(requireContext(), showMobileRoot = false) }
 
     lateinit var initialJob: Job
     private var pendingBookmarkDeletionJob: (suspend () -> Unit)? = null
@@ -83,7 +83,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
             bookmarkStore = bookmarkStore,
             viewModel = sharedViewModel,
             bookmarksController = DefaultBookmarkController(
-                context = context!!,
+                context = requireContext(),
                 navController = findNavController(),
                 showSnackbar = ::showSnackBarWithText,
                 deleteBookmarkNodes = ::deleteMulti,
@@ -133,7 +133,9 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
         super.onResume()
 
         (activity as HomeActivity).getSupportActionBarAndInflateIfNecessary().show()
-        val currentGuid = BookmarkFragmentArgs.fromBundle(arguments!!).currentRoot.ifEmpty { BookmarkRoot.Mobile.id }
+        val currentGuid = BookmarkFragmentArgs.fromBundle(requireArguments()).currentRoot.ifEmpty {
+            BookmarkRoot.Mobile.id
+        }
 
         // Only display the sign-in prompt if we're inside of the virtual "Desktop Bookmarks" node.
         // Don't want to pester user too much with it, and if there are lots of bookmarks present,
@@ -277,14 +279,14 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 val bookmarkNode = selected.first()
                 getString(
                     R.string.bookmark_deletion_snackbar_message,
-                    bookmarkNode.url?.toShortUrl(context!!.components.publicSuffixList) ?: bookmarkNode.title
+                    bookmarkNode.url?.toShortUrl(requireContext().components.publicSuffixList) ?: bookmarkNode.title
                 )
             }
             else -> throw IllegalStateException("Illegal event type in onDeleteSome")
         }
 
         viewLifecycleOwner.lifecycleScope.allowUndo(
-            view!!, message,
+            requireView(), message,
             getString(R.string.bookmark_undo_deletion), {
                 undoPendingDeletion(selected)
             }, operation = getDeleteOperation(eventType)
@@ -298,7 +300,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
             val bookmarkNode = selected.first()
             getString(
                 R.string.bookmark_deletion_snackbar_message,
-                bookmarkNode.url?.toShortUrl(context!!.components.publicSuffixList)
+                bookmarkNode.url?.toShortUrl(requireContext().components.publicSuffixList)
                     ?: bookmarkNode.title
             )
         }
@@ -322,7 +324,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                     dialog.dismiss()
                     val message = getDeleteDialogString(selected)
                     lifecycleScope.allowUndo(
-                        view!!,
+                        requireView(),
                         message,
                         getString(R.string.bookmark_undo_deletion),
                         {

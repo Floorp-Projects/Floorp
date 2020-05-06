@@ -117,7 +117,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
                 }
             }
             viewModel.invalidate()
-            showSnackBar(view!!, message)
+            showSnackBar(requireView(), message)
             historyStore.dispatch(HistoryFragmentAction.ExitDeletionMode)
         }
     }
