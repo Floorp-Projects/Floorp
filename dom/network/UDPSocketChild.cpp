@@ -136,10 +136,7 @@ nsresult UDPSocketChild::SendDataInternal(const UDPSocketAddr& aAddr,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsTArray<uint8_t> array;
-  array.SwapElements(fallibleArray);
-
-  SendOutgoingData(array, aAddr);
+  SendOutgoingData(UDPData{std::move(fallibleArray)}, aAddr);
 
   return NS_OK;
 }
