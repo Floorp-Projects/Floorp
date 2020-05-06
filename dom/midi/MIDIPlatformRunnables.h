@@ -37,7 +37,7 @@ class ReceiveRunnable final : public MIDIBackgroundRunnable {
  public:
   ReceiveRunnable(const nsAString& aPortId, const nsTArray<MIDIMessage>& aMsgs)
       : MIDIBackgroundRunnable("ReceiveRunnable"),
-        mMsgs(aMsgs),
+        mMsgs(aMsgs.Clone()),
         mPortId(aPortId) {}
   // Used in tests
   ReceiveRunnable(const nsAString& aPortId, const MIDIMessage& aMsgs)
