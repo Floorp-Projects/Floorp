@@ -117,7 +117,7 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
     nsCOMPtr<nsIStreamConverterService> streamConvService =
         do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
     nsAutoCString str;
-    rv = streamConvService->ConvertedType(mContentType, str);
+    rv = streamConvService->ConvertedType(mContentType, aChannel, str);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // We only support passing data to the default content listener

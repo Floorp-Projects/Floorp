@@ -72,6 +72,7 @@ nsFTPDirListingConv::AsyncConvertData(const char* aFromType,
 
 NS_IMETHODIMP
 nsFTPDirListingConv::GetConvertedType(const nsACString& aFromType,
+                                      nsIChannel* aChannel,
                                       nsACString& aToType) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -5,6 +5,7 @@
 
 #include "nsIStreamListener.idl"
 
+interface nsIChannel;
 interface nsIInputStream;
 
 /**
@@ -98,10 +99,13 @@ interface nsIStreamConverter : nsIStreamListener {
      * Returns the content type that the stream listener passed to asyncConvertData will
      * see on the channel if the conversion is being done from aFromType to * /*.
      *
+     * @param aFromType     The type of the content prior to conversion.
+     * @param aChannel      The channel that we'd like to convert. May be null.
+     *
      * @throws if the converter does not support conversion to * /* or if it doesn't know
      *         the type in advance.
      */
-    ACString getConvertedType(in ACString aFromType);
+    ACString getConvertedType(in ACString aFromType, in nsIChannel aChannel);
 };
 
 %{C++
