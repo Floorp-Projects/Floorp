@@ -500,7 +500,9 @@ class FunctionBox : public SharedContext {
     hasExprBody_ = true;
   }
 
-  bool isNamedLambda() const { return flags_.isNamedLambda(explicitName()); }
+  bool isNamedLambda() const {
+    return flags_.isNamedLambda(explicitName() != nullptr);
+  }
   bool isGetter() const { return flags_.isGetter(); }
   bool isSetter() const { return flags_.isSetter(); }
   bool isMethod() const { return flags_.isMethod(); }
