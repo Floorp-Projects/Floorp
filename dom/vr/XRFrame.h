@@ -45,8 +45,8 @@ class XRFrame final : public nsWrapperCache {
   XRSession* Session();
   already_AddRefed<XRViewerPose> GetViewerPose(
       const XRReferenceSpace& aReferenceSpace, ErrorResult& aRv);
-  XRPose* GetPose(const XRSpace& aSpace, const XRSpace& aBaseSpace,
-                  ErrorResult& aRv);
+  already_AddRefed<XRPose> GetPose(const XRSpace& aSpace, const XRSpace& aBaseSpace,
+                                   ErrorResult& aRv);
   gfx::Matrix4x4 ConstructInlineProjection(float aFov, float aAspect,
                                            float aNear, float aFar);
 
