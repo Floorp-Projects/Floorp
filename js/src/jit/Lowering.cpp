@@ -3548,6 +3548,8 @@ void LIRGenerator::visitStoreUnboxedScalar(MStoreUnboxedScalar* ins) {
                   ins->value()->type() == MIRType::Float32);
     MOZ_ASSERT_IF(ins->writeType() == Scalar::Float64,
                   ins->value()->type() == MIRType::Double);
+  } else if (ins->isBigIntWrite()) {
+    MOZ_ASSERT(ins->value()->type() == MIRType::BigInt);
   } else {
     MOZ_ASSERT(ins->value()->type() == MIRType::Int32);
   }
@@ -3559,6 +3561,8 @@ void LIRGenerator::visitStoreUnboxedScalar(MStoreUnboxedScalar* ins) {
   // For byte arrays, the value has to be in a byte register on x86.
   if (ins->isByteWrite()) {
     value = useByteOpRegisterOrNonDoubleConstant(ins->value());
+  } else if (ins->isBigIntWrite()) {
+    value = useRegister(ins->value());
   } else {
     value = useRegisterOrNonDoubleConstant(ins->value());
   }
@@ -3572,7 +3576,12 @@ void LIRGenerator::visitStoreUnboxedScalar(MStoreUnboxedScalar* ins) {
     LMemoryBarrier* fence = new (alloc()) LMemoryBarrier(sync.barrierBefore);
     add(fence, ins);
   }
-  add(new (alloc()) LStoreUnboxedScalar(elements, index, value), ins);
+  if (!ins->isBigIntWrite()) {
+    add(new (alloc()) LStoreUnboxedScalar(elements, index, value), ins);
+  } else {
+    add(new (alloc()) LStoreUnboxedBigInt(elements, index, value, tempInt64()),
+        ins);
+  }
   if (ins->requiresMemoryBarrier()) {
     LMemoryBarrier* fence = new (alloc()) LMemoryBarrier(sync.barrierAfter);
     add(fence, ins);
@@ -3590,6 +3599,8 @@ void LIRGenerator::visitStoreTypedArrayElementHole(
                   ins->value()->type() == MIRType::Float32);
     MOZ_ASSERT_IF(ins->arrayType() == Scalar::Float64,
                   ins->value()->type() == MIRType::Double);
+  } else if (ins->isBigIntWrite()) {
+    MOZ_ASSERT(ins->value()->type() == MIRType::BigInt);
   } else {
     MOZ_ASSERT(ins->value()->type() == MIRType::Int32);
   }
@@ -3597,19 +3608,28 @@ void LIRGenerator::visitStoreTypedArrayElementHole(
   LUse elements = useRegister(ins->elements());
   LAllocation length = useAny(ins->length());
   LAllocation index = useRegister(ins->index());
+
   // For byte arrays, the value has to be in a byte register on x86.
   LAllocation value;
   if (ins->isByteWrite()) {
     value = useByteOpRegisterOrNonDoubleConstant(ins->value());
+  } else if (ins->isBigIntWrite()) {
+    value = useRegister(ins->value());
   } else {
     value = useRegisterOrNonDoubleConstant(ins->value());
   }
 
-  LDefinition spectreTemp =
-      BoundsCheckNeedsSpectreTemp() ? temp() : LDefinition::BogusTemp();
-  auto* lir = new (alloc())
-      LStoreTypedArrayElementHole(elements, length, index, value, spectreTemp);
-  add(lir, ins);
+  if (!ins->isBigIntWrite()) {
+    LDefinition spectreTemp =
+        BoundsCheckNeedsSpectreTemp() ? temp() : LDefinition::BogusTemp();
+    auto* lir = new (alloc()) LStoreTypedArrayElementHole(
+        elements, length, index, value, spectreTemp);
+    add(lir, ins);
+  } else {
+    auto* lir = new (alloc()) LStoreTypedArrayElementHoleBigInt(
+        elements, length, index, value, tempInt64());
+    add(lir, ins);
+  }
 }
 
 void LIRGenerator::visitLoadFixedSlot(MLoadFixedSlot* ins) {

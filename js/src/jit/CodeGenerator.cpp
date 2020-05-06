@@ -12352,6 +12352,27 @@ void CodeGenerator::visitStoreUnboxedScalar(LStoreUnboxedScalar* lir) {
   }
 }
 
+void CodeGenerator::visitStoreUnboxedBigInt(LStoreUnboxedBigInt* lir) {
+  Register elements = ToRegister(lir->elements());
+  Register value = ToRegister(lir->value());
+  Register64 temp = ToRegister64(lir->temp());
+
+  const MStoreUnboxedScalar* mir = lir->mir();
+  Scalar::Type writeType = mir->writeType();
+  size_t width = Scalar::byteSize(mir->storageType());
+
+  masm.loadBigInt64(value, temp);
+
+  if (lir->index()->isConstant()) {
+    Address dest(elements, ToInt32(lir->index()) * width);
+    masm.storeToTypedBigIntArray(writeType, temp, dest);
+  } else {
+    BaseIndex dest(elements, ToRegister(lir->index()),
+                   ScaleFromElemWidth(width));
+    masm.storeToTypedBigIntArray(writeType, temp, dest);
+  }
+}
+
 void CodeGenerator::visitStoreTypedArrayElementHole(
     LStoreTypedArrayElementHole* lir) {
   Register elements = ToRegister(lir->elements());
@@ -12373,6 +12394,34 @@ void CodeGenerator::visitStoreTypedArrayElementHole(
 
   BaseIndex dest(elements, index, ScaleFromElemWidth(width));
   StoreToTypedArray(masm, arrayType, value, dest);
+
+  masm.bind(&skip);
+}
+
+void CodeGenerator::visitStoreTypedArrayElementHoleBigInt(
+    LStoreTypedArrayElementHoleBigInt* lir) {
+  Register elements = ToRegister(lir->elements());
+  Register value = ToRegister(lir->value());
+  Register64 temp = ToRegister64(lir->temp());
+
+  Scalar::Type arrayType = lir->mir()->arrayType();
+  size_t width = Scalar::byteSize(arrayType);
+
+  Register index = ToRegister(lir->index());
+  const LAllocation* length = lir->length();
+  Register spectreTemp = temp.scratchReg();
+
+  Label skip;
+  if (length->isRegister()) {
+    masm.spectreBoundsCheck32(index, ToRegister(length), spectreTemp, &skip);
+  } else {
+    masm.spectreBoundsCheck32(index, ToAddress(length), spectreTemp, &skip);
+  }
+
+  masm.loadBigInt64(value, temp);
+
+  BaseIndex dest(elements, index, ScaleFromElemWidth(width));
+  masm.storeToTypedBigIntArray(arrayType, temp, dest);
 
   masm.bind(&skip);
 }

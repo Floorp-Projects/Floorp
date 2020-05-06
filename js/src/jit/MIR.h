@@ -7938,7 +7938,7 @@ class StoreUnboxedScalarBase {
  protected:
   explicit StoreUnboxedScalarBase(Scalar::Type writeType)
       : writeType_(writeType) {
-    MOZ_ASSERT(isIntegerWrite() || isFloatWrite());
+    MOZ_ASSERT(isIntegerWrite() || isFloatWrite() || isBigIntWrite());
   }
 
  public:
@@ -7956,6 +7956,7 @@ class StoreUnboxedScalarBase {
   bool isFloatWrite() const {
     return writeType_ == Scalar::Float32 || writeType_ == Scalar::Float64;
   }
+  bool isBigIntWrite() const { return Scalar::isBigIntType(writeType_); }
 };
 
 // Store an unboxed scalar value to a typed array or other object.
