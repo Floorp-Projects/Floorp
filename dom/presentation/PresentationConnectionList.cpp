@@ -46,7 +46,7 @@ void PresentationConnectionList::GetConnections(
     return;
   }
 
-  aConnections = mConnections;
+  aConnections = mConnections.Clone();
 }
 
 nsresult PresentationConnectionList::DispatchConnectionAvailableEvent(

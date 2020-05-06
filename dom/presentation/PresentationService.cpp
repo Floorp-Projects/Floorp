@@ -126,7 +126,7 @@ PresentationDeviceRequest::PresentationDeviceRequest(
     const nsAString& aOrigin, uint64_t aWindowId, EventTarget* aEventTarget,
     nsIPrincipal* aPrincipal, nsIPresentationServiceCallback* aCallback,
     nsIPresentationTransportBuilderConstructor* aBuilderConstructor)
-    : mRequestUrls(aUrls),
+    : mRequestUrls(aUrls.Clone()),
       mId(aId),
       mOrigin(aOrigin),
       mWindowId(aWindowId),
