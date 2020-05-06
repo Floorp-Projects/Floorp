@@ -18,7 +18,7 @@ namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-protocol PBackgroundIDBVersionChangeTransaction {
+refcounted protocol PBackgroundIDBVersionChangeTransaction {
   manager PBackgroundIDBDatabase;
 
   manages PBackgroundIDBCursor;
