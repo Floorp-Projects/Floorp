@@ -109,6 +109,8 @@ class CodeGeneratorShared : public LElementVisitor {
 
   bool stringsCanBeInNursery() const { return gen->stringsCanBeInNursery(); }
 
+  bool bigIntsCanBeInNursery() const { return gen->bigIntsCanBeInNursery(); }
+
  protected:
   // The offset of the first instruction of the OSR entry block from the
   // beginning of the code buffer.

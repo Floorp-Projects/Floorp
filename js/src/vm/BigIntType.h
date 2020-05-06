@@ -43,8 +43,6 @@ class BigInt final : public js::gc::Cell {
  public:
   using Digit = uintptr_t;
 
-  static constexpr uintptr_t TYPE_FLAGS = js::gc::CellHeader::BIGINT_BIT;
-
  private:
   using Header = js::gc::CellHeaderWithLengthAndFlags;
 
@@ -65,7 +63,7 @@ class BigInt final : public js::gc::Cell {
   };
 
   void setLengthAndFlags(uint32_t len, uint32_t flags) {
-    header_.setLengthAndFlags(len, flags | TYPE_FLAGS);
+    header_.setLengthAndFlags(len, flags);
   }
 
  public:

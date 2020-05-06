@@ -872,6 +872,12 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   bool newWindowShouldBeModal = false;
   bool parentIsModal = false;
   if (!newBC) {
+    if (XRE_IsContentProcess()) {
+      // If our window provider failed to provide a window in the content
+      // process, we cannot recover. Reject the window open request and bail.
+      return NS_OK;
+    }
+
     windowIsNew = true;
     isNewToplevelWindow = true;
 

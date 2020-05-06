@@ -195,6 +195,21 @@ FunctionBox::FunctionBox(JSContext* cx, FunctionBox* traceListHead,
           asyncKind == FunctionAsyncKind::AsyncFunction);
 }
 
+JSFunction* FunctionBox::createFunction(JSContext* cx) {
+  RootedObject proto(cx);
+  if (!GetFunctionPrototype(cx, generatorKind(), asyncKind(), &proto)) {
+    return nullptr;
+  }
+
+  RootedAtom atom(cx, explicitName());
+  gc::AllocKind allocKind = flags_.isExtended()
+                                ? gc::AllocKind::FUNCTION_EXTENDED
+                                : gc::AllocKind::FUNCTION;
+
+  return NewFunctionWithProto(cx, nullptr, nargs_, flags_, nullptr, atom, proto,
+                              allocKind, TenuredObject);
+}
+
 bool FunctionBox::hasFunctionCreationData() const {
   return compilationInfo_.funcData[funcDataIndex_]
       .get()
@@ -225,14 +240,13 @@ void FunctionBox::initStandaloneFunction(Scope* enclosingScope) {
 }
 
 void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
-                                                FunctionSyntaxKind kind,
-                                                bool isArrow,
-                                                bool allowSuperProperty) {
+                                                FunctionFlags flags,
+                                                FunctionSyntaxKind kind) {
   SharedContext* sc = enclosing->sc();
   useAsm = sc->isFunctionBox() && sc->asFunctionBox()->useAsmOrInsideUseAsm();
 
   // Arrow functions don't have their own `this` binding.
-  if (isArrow) {
+  if (flags.isArrow()) {
     allowNewTarget_ = sc->allowNewTarget();
     allowSuperProperty_ = sc->allowSuperProperty();
     allowSuperCall_ = sc->allowSuperCall();
@@ -241,7 +255,7 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
     thisBinding_ = sc->thisBinding();
   } else {
     allowNewTarget_ = true;
-    allowSuperProperty_ = allowSuperProperty;
+    allowSuperProperty_ = flags.allowSuperProperty();
 
     if (IsConstructorKind(kind)) {
       auto stmt =
@@ -274,8 +288,8 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
 }
 
 void FunctionBox::initFieldInitializer(ParseContext* enclosing,
-                                       Handle<FunctionCreationData> data) {
-  this->initWithEnclosingParseContext(enclosing, data,
+                                       FunctionFlags flags) {
+  this->initWithEnclosingParseContext(enclosing, flags,
                                       FunctionSyntaxKind::Method);
   allowArguments_ = false;
 }

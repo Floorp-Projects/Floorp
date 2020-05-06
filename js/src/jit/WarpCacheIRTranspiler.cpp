@@ -93,6 +93,10 @@ class MOZ_RAII WarpCacheIRTranspiler {
   MOZ_MUST_USE bool emitGuardTo(ValOperandId inputId, MIRType type);
 
   template <typename T>
+  MOZ_MUST_USE bool emitDoubleBinaryArithResult(NumberOperandId lhsId,
+                                                NumberOperandId rhsId);
+
+  template <typename T>
   MOZ_MUST_USE bool emitInt32BinaryArithResult(Int32OperandId lhsId,
                                                Int32OperandId rhsId);
 
@@ -201,6 +205,36 @@ bool WarpCacheIRTranspiler::emitGuardSpecificAtom(StringOperandId strId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardType(ValOperandId inputId,
+                                          ValueType type) {
+  switch (type) {
+    case ValueType::String:
+    case ValueType::Symbol:
+    case ValueType::BigInt:
+    case ValueType::Int32:
+    case ValueType::Double:
+    case ValueType::Boolean:
+      return emitGuardTo(inputId, MIRTypeFromValueType(JSValueType(type)));
+    case ValueType::Undefined: {
+      auto* ins =
+          MGuardValue::New(alloc(), getOperand(inputId), UndefinedValue());
+      add(ins);
+      return true;
+    }
+    case ValueType::Null: {
+      auto* ins = MGuardValue::New(alloc(), getOperand(inputId), NullValue());
+      add(ins);
+      return true;
+    }
+    case ValueType::Magic:
+    case ValueType::PrivateGCThing:
+    case ValueType::Object:
+      break;
+  }
+
+  MOZ_CRASH("unexpected type");
+}
+
 bool WarpCacheIRTranspiler::emitGuardTo(ValOperandId inputId, MIRType type) {
   MDefinition* def = getOperand(inputId);
   if (def->type() == type) {
@@ -254,6 +288,15 @@ bool WarpCacheIRTranspiler::emitGuardToTypedArrayIndex(
     ValOperandId inputId, Int32OperandId resultId) {
   MDefinition* input = getOperand(inputId);
   auto* ins = MTypedArrayIndexToInt32::New(alloc(), input);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
+bool WarpCacheIRTranspiler::emitTruncateDoubleToUInt32(
+    ValOperandId valId, Int32OperandId resultId) {
+  MDefinition* input = getOperand(valId);
+  auto* ins = MTruncateToInt32::New(alloc(), input);
   add(ins);
 
   return defineOperand(resultId, ins);
@@ -546,6 +589,49 @@ bool WarpCacheIRTranspiler::emitInt32DecResult(Int32OperandId inputId) {
 
   pushResult(ins);
   return true;
+}
+
+template <typename T>
+bool WarpCacheIRTranspiler::emitDoubleBinaryArithResult(NumberOperandId lhsId,
+                                                        NumberOperandId rhsId) {
+  MDefinition* lhs = getOperand(lhsId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* ins = T::New(alloc(), lhs, rhs, MIRType::Double);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitDoubleAddResult(NumberOperandId lhsId,
+                                                NumberOperandId rhsId) {
+  return emitDoubleBinaryArithResult<MAdd>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitDoubleSubResult(NumberOperandId lhsId,
+                                                NumberOperandId rhsId) {
+  return emitDoubleBinaryArithResult<MSub>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitDoubleMulResult(NumberOperandId lhsId,
+                                                NumberOperandId rhsId) {
+  return emitDoubleBinaryArithResult<MMul>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitDoubleDivResult(NumberOperandId lhsId,
+                                                NumberOperandId rhsId) {
+  return emitDoubleBinaryArithResult<MDiv>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitDoubleModResult(NumberOperandId lhsId,
+                                                NumberOperandId rhsId) {
+  return emitDoubleBinaryArithResult<MMod>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitDoublePowResult(NumberOperandId lhsId,
+                                                NumberOperandId rhsId) {
+  return emitDoubleBinaryArithResult<MPow>(lhsId, rhsId);
 }
 
 template <typename T>

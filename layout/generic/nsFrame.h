@@ -156,61 +156,11 @@ class nsFrame : public nsIFrame {
   void DestroyFrom(nsIFrame* aDestructRoot,
                    PostDestroyData& aPostDestroyData) override;
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  nsresult HandleEvent(nsPresContext* aPresContext,
-                       mozilla::WidgetGUIEvent* aEvent,
-                       nsEventStatus* aEventStatus) override;
-
   static nsresult GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
                                                  nsPeekOffsetStruct* aPos,
                                                  nsIFrame* aBlockFrame,
                                                  int32_t aLineStart,
                                                  int8_t aOutSideLimit);
-
-  FrameSearchResult PeekOffsetWord(bool aForward, bool aWordSelectEatSpace,
-                                   bool aIsKeyboardSelect, int32_t* aOffset,
-                                   PeekWordState* aState,
-                                   bool aTrimSpaces) override;
-  /**
-   * Check whether we should break at a boundary between punctuation and
-   * non-punctuation. Only call it at a punctuation boundary
-   * (i.e. exactly one of the previous and next characters are punctuation).
-   * @param aForward true if we're moving forward in content order
-   * @param aPunctAfter true if the next character is punctuation
-   * @param aWhitespaceAfter true if the next character is whitespace
-   */
-  static bool BreakWordBetweenPunctuation(const PeekWordState* aState,
-                                          bool aForward, bool aPunctAfter,
-                                          bool aWhitespaceAfter,
-                                          bool aIsKeyboardSelect);
-
-  ComputedStyle* GetParentComputedStyle(
-      nsIFrame** aProviderFrame) const override {
-    return DoGetParentComputedStyle(aProviderFrame);
-  }
-
-  /**
-   * Do the work for getting the parent ComputedStyle frame so that
-   * other frame's |GetParentComputedStyle| methods can call this
-   * method on *another* frame.  (This function handles out-of-flow
-   * frames by using the frame manager's placeholder map and it also
-   * handles block-within-inline and generated content wrappers.)
-   *
-   * @param aProviderFrame (out) the frame associated with the returned value
-   *   or null if the ComputedStyle is for display:contents content.
-   * @return The ComputedStyle that should be the parent of this frame's
-   *   ComputedStyle.  Null is permitted, and means that this frame's
-   *   ComputedStyle should be the root of the ComputedStyle tree.
-   */
-  ComputedStyle* DoGetParentComputedStyle(nsIFrame** aProviderFrame) const;
-
-  void MarkIntrinsicISizesDirty() override;
-
-  mozilla::LogicalSize ComputeSize(
-      gfxContext* aRenderingContext, mozilla::WritingMode aWM,
-      const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
-      const mozilla::LogicalSize& aMargin, const mozilla::LogicalSize& aBorder,
-      const mozilla::LogicalSize& aPadding, ComputeSizeFlags aFlags) override;
 
   /**
    * Calculate the used values for 'width' and 'height' for a replaced element.
@@ -228,59 +178,6 @@ class nsFrame : public nsIFrame {
   // and outline, its children's tight bounds, and nothing else.
   nsRect ComputeSimpleTightBounds(mozilla::gfx::DrawTarget* aDrawTarget) const;
 
-  /**
-   * A helper, used by |nsFrame::ComputeSize| (for frames that need to
-   * override only this part of ComputeSize), that computes the size
-   * that should be returned when 'width', 'height', and
-   * min/max-width/height are all 'auto' or equivalent.
-   *
-   * In general, frames that can accept any computed width/height should
-   * override only ComputeAutoSize, and frames that cannot do so need to
-   * override ComputeSize to enforce their width/height invariants.
-   *
-   * Implementations may optimize by returning a garbage width if
-   * StylePosition()->mWidth.GetUnit() != eStyleUnit_Auto, and
-   * likewise for height, since in such cases the result is guaranteed
-   * to be unused.
-   */
-  virtual mozilla::LogicalSize ComputeAutoSize(
-      gfxContext* aRenderingContext, mozilla::WritingMode aWM,
-      const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
-      const mozilla::LogicalSize& aMargin, const mozilla::LogicalSize& aBorder,
-      const mozilla::LogicalSize& aPadding, ComputeSizeFlags aFlags);
-
-  /**
-   * Utility function for ComputeAutoSize implementations.  Return
-   * max(GetMinISize(), min(aISizeInCB, GetPrefISize()))
-   */
-  nscoord ShrinkWidthToFit(gfxContext* aRenderingContext, nscoord aISizeInCB,
-                           ComputeSizeFlags aFlags);
-
-  /**
-   * Calculates the size of this frame after reflowing (calling Reflow on, and
-   * updating the size and position of) its children, as necessary.  The
-   * calculated size is returned to the caller via the ReflowOutput
-   * outparam.  (The caller is responsible for setting the actual size and
-   * position of this frame.)
-   *
-   * A frame's children must _all_ be reflowed if the frame is dirty (the
-   * NS_FRAME_IS_DIRTY bit is set on it).  Otherwise, individual children
-   * must be reflowed if they are dirty or have the NS_FRAME_HAS_DIRTY_CHILDREN
-   * bit set on them.  Otherwise, whether children need to be reflowed depends
-   * on the frame's type (it's up to individual Reflow methods), and on what
-   * has changed.  For example, a change in the width of the frame may require
-   * all of its children to be reflowed (even those without dirty bits set on
-   * them), whereas a change in its height might not.
-   * (ReflowInput::ShouldReflowAllKids may be helpful in deciding whether
-   * to reflow all the children, but for some frame types it might result in
-   * over-reflow.)
-   *
-   * Note: if it's only the overflow rect(s) of a frame that need to be
-   * updated, then UpdateOverflow should be called instead of Reflow.
-   */
-  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-              const ReflowInput& aReflowInput,
-              nsReflowStatus& aStatus) override;
   void DidReflow(nsPresContext* aPresContext,
                  const ReflowInput* aReflowInput) override;
 
@@ -313,38 +210,10 @@ class nsFrame : public nsIFrame {
    */
   void PushDirtyBitToAbsoluteFrames();
 
-  // Selection Methods
-
-  NS_IMETHOD HandlePress(nsPresContext* aPresContext,
-                         mozilla::WidgetGUIEvent* aEvent,
-                         nsEventStatus* aEventStatus);
-
-  NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
-                                 mozilla::WidgetGUIEvent* aEvent,
-                                 nsEventStatus* aEventStatus,
-                                 bool aControlHeld);
-
-  MOZ_CAN_RUN_SCRIPT
-  NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
-                        mozilla::WidgetGUIEvent* aEvent,
-                        nsEventStatus* aEventStatus);
-
-  NS_IMETHOD HandleRelease(nsPresContext* aPresContext,
-                           mozilla::WidgetGUIEvent* aEvent,
-                           nsEventStatus* aEventStatus);
-
-  enum { SELECT_ACCUMULATE = 0x01 };
-
   nsresult PeekBackwardAndForward(nsSelectionAmount aAmountBack,
                                   nsSelectionAmount aAmountForward,
                                   int32_t aStartPos, bool aJumpLines,
                                   uint32_t aSelectFlags);
-
-  nsresult SelectByTypeAtPoint(nsPresContext* aPresContext,
-                               const nsPoint& aPoint,
-                               nsSelectionAmount aBeginAmountType,
-                               nsSelectionAmount aEndAmountType,
-                               uint32_t aSelectFlags);
 
   // Helper for GetContentAndOffsetsFromPoint; calculation of content offsets
   // in this function assumes there is no child frame that can be targeted.
@@ -357,10 +226,6 @@ class nsFrame : public nsIFrame {
   nsSize GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState) override;
   nscoord GetXULFlex() override;
   nscoord GetXULBoxAscent(nsBoxLayoutState& aBoxLayoutState) override;
-
-  // We compute and store the HTML content's overflow area. So don't
-  // try to compute it in the box code.
-  bool XULComputesOwnOverflowArea() override { return true; }
 
   //--------------------------------------------------
   // Additional methods
@@ -509,14 +374,6 @@ class nsFrame : public nsIFrame {
       nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
       uint16_t aContentType = nsISelectionDisplay::DISPLAY_FRAMES);
 
-  /**
-   * @return see nsISelectionController.idl's `getDisplaySelection`.
-   */
-  int16_t DetermineDisplaySelection();
-
-  // Style post processing hook
-  void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
-
  public:
   /**
    * Helper method to create a view for a frame.  Only used by a few sub-classes
@@ -592,27 +449,8 @@ class nsFrame : public nsIFrame {
            aFrame->PresContext()->IsPaginated() && aFrame->IsBlockFrame();
   }
 
-  nsILineIterator* GetLineIterator() override;
-
  protected:
-  // Test if we are selecting a table object:
-  //  Most table/cell selection requires that Ctrl (Cmd on Mac) key is down
-  //   during a mouse click or drag. Exception is using Shift+click when
-  //   already in "table/cell selection mode" to extend a block selection
-  //  Get the parent content node and offset of the frame
-  //   of the enclosing cell or table (if not inside a cell)
-  //  aTarget tells us what table element to select (currently only cell and
-  //  table supported) (enums for this are defined in nsIFrame.h)
-  nsresult GetDataForTableSelection(const nsFrameSelection* aFrameSelection,
-                                    mozilla::PresShell* aPresShell,
-                                    mozilla::WidgetMouseEvent* aMouseEvent,
-                                    nsIContent** aParentContent,
-                                    int32_t* aContentOffset,
-                                    mozilla::TableSelectionMode* aTarget);
-
   NS_IMETHOD DoXULLayout(nsBoxLayoutState& aBoxLayoutState) override;
-
-  nsBoxLayoutMetrics* BoxMetrics() const;
 
   // Fire DOM event. If no aContent argument use frame's mContent.
   void FireDOMEvent(const nsAString& aDOMEventName,

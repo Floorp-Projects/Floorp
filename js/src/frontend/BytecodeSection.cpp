@@ -65,6 +65,17 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
     uint32_t i;
     mozilla::Span<JS::GCCellPtr>& output;
 
+    bool operator()(const ClosedOverBinding& data) {
+      JSAtom* atom = data;
+      output[i] = JS::GCCellPtr(atom);
+      return true;
+    }
+
+    bool operator()(const NullScriptThing& data) {
+      output[i] = JS::GCCellPtr(nullptr);
+      return true;
+    }
+
     bool operator()(const BigIntIndex& index) {
       BigIntCreationData& data = compilationInfo.bigIntData[index];
       BigInt* bi = data.createBigInt(cx);

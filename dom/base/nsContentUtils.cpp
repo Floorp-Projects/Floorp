@@ -8978,11 +8978,6 @@ bool nsContentUtils::HttpsStateIsModern(Document* aDocument) {
 bool nsContentUtils::ComputeIsSecureContext(nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  // The assertion would be relaxed due to COEP support.
-  MOZ_ASSERT(loadInfo->GetExternalContentPolicyType() ==
-             nsIContentPolicy::TYPE_DOCUMENT);
-
   nsCOMPtr<nsIScriptSecurityManager> ssm = nsContentUtils::GetSecurityManager();
   nsCOMPtr<nsIPrincipal> principal;
   nsresult rv = ssm->GetChannelResultPrincipalIfNotSandboxed(
@@ -8992,6 +8987,7 @@ bool nsContentUtils::ComputeIsSecureContext(nsIChannel* aChannel) {
   }
 
   if (principal->IsSystemPrincipal()) {
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
     // If the load would've been sandboxed, treat this load as an untrusted
     // load, as system code considers sandboxed resources insecure.
     return !loadInfo->GetLoadingSandboxed();

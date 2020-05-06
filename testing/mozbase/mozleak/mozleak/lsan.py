@@ -13,7 +13,8 @@ class LSANLeaks(object):
     in allocation stacks
     """
 
-    def __init__(self, logger, scope=None, allowed=None, maxNumRecordedFrames=None):
+    def __init__(self, logger, scope=None, allowed=None, maxNumRecordedFrames=None,
+                 allowAll=False):
         self.logger = logger
         self.inReport = False
         self.fatalError = False
@@ -25,6 +26,7 @@ class LSANLeaks(object):
         self.summaryData = None
         self.scope = scope
         self.allowedMatch = None
+        self.allowAll = allowAll
         self.sawError = False
 
         # Don't various allocation-related stack frames, as they do not help much to
@@ -54,7 +56,7 @@ class LSANLeaks(object):
         self.setAllowed(allowed)
 
     def setAllowed(self, allowedLines):
-        if not allowedLines:
+        if not allowedLines or self.allowAll:
             self.allowedRegexp = None
         else:
             self.allowedRegexp = re.compile(
@@ -117,6 +119,10 @@ class LSANLeaks(object):
 
     def process(self):
         failures = 0
+
+        if self.allowAll:
+            self.logger.info("LeakSanitizer | Leak checks disabled")
+            return
 
         if self.summaryData:
             allowed = all(allowed for _, allowed in self.foundFrames)

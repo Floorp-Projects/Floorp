@@ -52,6 +52,7 @@ public final class Sample implements Parcelable {
     private void readCrypto(final Parcel in) {
         int hasCryptoInfo = in.readInt();
         if (hasCryptoInfo == 0) {
+            cryptoInfo = null;
             return;
         }
 

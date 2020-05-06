@@ -1125,6 +1125,14 @@ bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result);
 
 void* AllocateBigIntNoGC(JSContext* cx, bool requestMinorGC);
 
+#if JS_BITS_PER_WORD == 32
+BigInt* CreateBigIntFromInt64(JSContext* cx, uint32_t low, uint32_t high);
+BigInt* CreateBigIntFromUint64(JSContext* cx, uint32_t low, uint32_t high);
+#else
+BigInt* CreateBigIntFromInt64(JSContext* cx, uint64_t i64);
+BigInt* CreateBigIntFromUint64(JSContext* cx, uint64_t i64);
+#endif
+
 template <EqualityKind Kind>
 bool BigIntEqual(BigInt* x, BigInt* y);
 
