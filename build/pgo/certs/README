@@ -3,13 +3,3 @@ This directory contains CA and server certificates for testing.
 You can find instructions on how to add or modify certificates at:
 
 https://firefox-source-docs.mozilla.org/build/buildsystem/test_certificates.html
-
-Specific notes for certs:
-
-  dynamicPinningGood: Changing this keyspec will require changing
-  browser/base/content/test/general/pinning_headers.sjs . You can obtain a new
-  valid pin via:
-
-  certutil -L -d . -n dynamicPinningGood -r | openssl x509 -inform der -pubkey \
-  -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary \
-  | openssl enc -base64

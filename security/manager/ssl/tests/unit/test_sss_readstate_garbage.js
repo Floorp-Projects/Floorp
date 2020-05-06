@@ -30,24 +30,7 @@ function checkStateRead(aSubject, aTopic, aData) {
     );
   }
 
-  const HPKP_HOSTS = [
-    "https://keys.with.securitypropertyset.example.com",
-    "https://starts.with.number.key.example.com",
-    "https://starts.with.symbol.key.example.com",
-    "https://multiple.keys.example.com",
-  ];
-  for (let host of HPKP_HOSTS) {
-    ok(
-      gSSService.isSecureURI(
-        Ci.nsISiteSecurityService.HEADER_HPKP,
-        Services.io.newURI(host),
-        0
-      ),
-      `${host} should be HPKP enabled`
-    );
-  }
-
-  const NOT_HSTS_OR_HPKP_HOSTS = [
+  const NOT_HSTS_HOSTS = [
     "https://example.com",
     "https://example3.example.com",
     "https://extra.comma.example.com",
@@ -60,7 +43,7 @@ function checkStateRead(aSubject, aTopic, aData) {
     "https://text.includesubdomains.example.com",
     "https://invalid.includesubdomains.example.com",
   ];
-  for (let host of NOT_HSTS_OR_HPKP_HOSTS) {
+  for (let host of NOT_HSTS_HOSTS) {
     ok(
       !gSSService.isSecureURI(
         Ci.nsISiteSecurityService.HEADER_HSTS,
@@ -68,33 +51,6 @@ function checkStateRead(aSubject, aTopic, aData) {
         0
       ),
       `${host} should not be HSTS enabled`
-    );
-    ok(
-      !gSSService.isSecureURI(
-        Ci.nsISiteSecurityService.HEADER_HPKP,
-        Services.io.newURI(host),
-        0
-      ),
-      `${host} should not be HPKP enabled`
-    );
-  }
-
-  const NOT_HPKP_HOSTS = [
-    "https://empty.keys.example.com",
-    "https://rubbish.after.keys.example.com",
-    "https://keys.with.securitypropertyunset.example.com",
-    "https://keys.with.securitypropertyknockout.example.com",
-    "https://securitypropertynegative.example.com",
-    "https://not.sha256.key.example.com",
-  ];
-  for (let host of NOT_HPKP_HOSTS) {
-    ok(
-      !gSSService.isSecureURI(
-        Ci.nsISiteSecurityService.HEADER_HPKP,
-        Services.io.newURI(host),
-        0
-      ),
-      `${host} should not be HPKP enabled`
     );
   }
 
@@ -126,40 +82,18 @@ function run_test() {
     "0\t0\t0\t0\t",
     "\t\t\t\t\t\t\t",
     "example.com:HSTS\t\t\t\t\t\t\t",
-    "example.com:HPKP\t\t\t\t\t\t\t",
     "example3.example.com:HSTS\t0\t\t\t\t\t\t",
-    "example3.example.com:HPKP\t0\t\t\t\t\t\t",
     `example2.example.com:HSTS\t0\t0\t${expiryTime},1,0`,
-    // HSTS and HPKP state string parsing tests
+    // HSTS state string parsing tests
     `extra.comma.example.com:HSTS\t0\t0\t${expiryTime},,1,0`,
-    `extra.comma.example.com:HPKP\t0\t0\t${expiryTime},,1,0,${PINNING_ROOT_KEY_HASH}`,
     "empty.statestring.example.com:HSTS\t0\t0\t",
-    "empty.statestring.example.com:HPKP\t0\t0\t",
     "rubbish.statestring.example.com:HSTS\t0\t0\tfoobar",
-    "rubbish.statestring.example.com:HPKP\t0\t0\tfoobar",
     `spaces.statestring.example.com:HSTS\t0\t0\t${expiryTime}, 1,0 `,
-    `spaces.statestring.example.com:HPKP\t0\t0\t${expiryTime}, 1,0, ${PINNING_ROOT_KEY_HASH}`,
     `invalid.expirytime.example.com:HSTS\t0\t0\t${expiryTime}foo123,1,0`,
-    `invalid.expirytime.example.com:HPKP\t0\t0\t${expiryTime}foo123,1,0,${PINNING_ROOT_KEY_HASH}`,
     `text.securitypropertystate.example.com:HSTS\t0\t0\t${expiryTime},1foo,0`,
-    `text.securitypropertystate.example.com:HPKP\t0\t0\t${expiryTime},1foo,0,${PINNING_ROOT_KEY_HASH}`,
     `invalid.securitypropertystate.example.com:HSTS\t0\t0\t${expiryTime},999,0`,
-    `invalid.securitypropertystate.example.com:HPKP\t0\t0\t${expiryTime},999,0,${PINNING_ROOT_KEY_HASH}`,
     `text.includesubdomains.example.com:HSTS\t0\t0\t${expiryTime},1,1foo`,
-    `text.includesubdomains.example.com:HPKP\t0\t0\t${expiryTime},1,1foo,${PINNING_ROOT_KEY_HASH}`,
     `invalid.includesubdomains.example.com:HSTS\t0\t0\t${expiryTime},1,0foo`,
-    `invalid.includesubdomains.example.com:HPKP\t0\t0\t${expiryTime},1,0foo,${PINNING_ROOT_KEY_HASH}`,
-    // HPKP specific state string parsing tests
-    `empty.keys.example.com:HPKP\t0\t0\t${expiryTime},1,0,`,
-    `rubbish.after.keys.example.com:HPKP\t0\t0\t${expiryTime},1,0,${PINNING_ROOT_KEY_HASH}foo`,
-    `keys.with.securitypropertyunset.example.com:HPKP\t0\t0\t${expiryTime},0,0,${PINNING_ROOT_KEY_HASH}`,
-    `keys.with.securitypropertyset.example.com:HPKP\t0\t0\t${expiryTime},1,0,${PINNING_ROOT_KEY_HASH}`,
-    `keys.with.securitypropertyknockout.example.com:HPKP\t0\t0\t${expiryTime},2,0,${PINNING_ROOT_KEY_HASH}`,
-    `securitypropertynegative.example.com:HPKP\t0\t0\t${expiryTime},3,0,${PINNING_ROOT_KEY_HASH}`,
-    `not.sha256.key.example.com:HPKP\t0\t0\t${expiryTime},1,0,${BASE64_BUT_NOT_SHA256}`,
-    `starts.with.number.key.example.com:HPKP\t0\t0\t${expiryTime},1,0,${STARTS_WITH_NUMBER}`,
-    `starts.with.symbol.key.example.com:HPKP\t0\t0\t${expiryTime},1,0,${STARTS_WITH_SYMBOL}`,
-    `multiple.keys.example.com:HPKP\t0\t0\t${expiryTime},1,0,${MULTIPLE_KEYS}`,
   ];
   writeLinesAndClose(lines, outputStream);
   Services.obs.addObserver(checkStateRead, "data-storage-ready");
