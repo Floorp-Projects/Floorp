@@ -70,7 +70,7 @@ class Histogram {
   // Initialize maximum number of buckets in histograms as 16,384.
   static const size_t kBucketCount_MAX;
 
-  typedef nsTArray<Count> Counts;
+  typedef CopyableTArray<Count> Counts;
   typedef const Sample* Ranges;
 
   // These enums are used to facilitate deserialization of renderer histograms
