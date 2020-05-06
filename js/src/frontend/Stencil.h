@@ -74,35 +74,10 @@ class FunctionIndex : public TypedIndex<FunctionIndexType> {
 // metadata without requiring immediate access to the garbage
 // collector.
 struct FunctionCreationData {
-  FunctionCreationData(HandleAtom explicitName, FunctionSyntaxKind kind,
-                       GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
-                       bool isSelfHosting = false, bool inFunctionBox = false);
-
-  // Custom Copy constructor to ensure we never copy a FunctionCreationData
-  // that has a LazyScriptData.
-  //
-  // We want to be able to copy FunctionCreationData into a Functionbox as part
-  // of our attempts to syntax parse an inner function, however, because
-  // trySyntaxParseInnerFunction is fallible, for example, if a new directive
-  // like "use asmjs" is encountered, we don't want to -move- it into the
-  // FunctionBox, because we may need it again if the syntax parse fails.
-  //
-  // To ensure that we never lose a lazyScriptData however, we guarantee that
-  // when this copy constructor is run, it doesn't have any lazyScriptData.
-  FunctionCreationData(const FunctionCreationData& data)
-      : explicitName(data.explicitName),
-        flags(data.flags),
-        immutableFlags(data.immutableFlags) {
-    MOZ_RELEASE_ASSERT(!data.hasLazyScriptData());
-  }
-
+  // All moves but not copies to avoid expensive surprises.
+  FunctionCreationData() = default;
+  FunctionCreationData(const FunctionCreationData&) = delete;
   FunctionCreationData(FunctionCreationData&& data) = default;
-
-  // The Parser uses KeepAtoms to prevent GC from collecting atoms
-  JSAtom* explicitName = nullptr;
-
-  FunctionFlags flags = {};
-  ImmutableScriptFlags immutableFlags = {};
 
   // Data used to instantiate the lazy script before script emission.
   // -------
@@ -110,8 +85,6 @@ struct FunctionCreationData {
   // This is traced by the functionbox
   mozilla::Maybe<Vector<FunctionIndex>> innerFunctionIndexes = {};
   // -------
-
-  HandleAtom getExplicitName(JSContext* cx) const;
 
   bool createLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
                         HandleFunction function, FunctionBox* funbox,
@@ -121,10 +94,14 @@ struct FunctionCreationData {
     return closedOverBindings && innerFunctionIndexes;
   }
 
-  void trace(JSTracer* trc) {
-    TraceNullableRoot(trc, &explicitName, "FunctionCreationData explicitName");
-  }
+  void trace(JSTracer* trc) {}
 };
+
+FunctionFlags InitialFunctionFlags(FunctionSyntaxKind kind,
+                                   GeneratorKind generatorKind,
+                                   FunctionAsyncKind asyncKind,
+                                   bool isSelfHosting = false,
+                                   bool hasUnclonedName = false);
 
 // This owns a set of characters, previously syntax checked as a RegExp. Used
 // to avoid allocating the RegExp on the GC heap during parsing.

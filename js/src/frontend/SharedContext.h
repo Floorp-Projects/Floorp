@@ -365,6 +365,8 @@ class FunctionBox : public SharedContext {
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
               JSAtom* explicitName, FunctionFlags flags, size_t index);
 
+  JSFunction* createFunction(JSContext* cx);
+
   MutableHandle<FunctionCreationData> functionCreationData() const;
 
   bool hasFunctionCreationData() const;
@@ -397,27 +399,16 @@ class FunctionBox : public SharedContext {
 
   void initWithEnclosingScope(JSFunction* fun);
 
- private:
   void initWithEnclosingParseContext(ParseContext* enclosing,
-                                     FunctionSyntaxKind kind, bool isArrow,
-                                     bool allowSuperProperty);
-
- public:
-  void initWithEnclosingParseContext(ParseContext* enclosing,
-                                     Handle<FunctionCreationData> fun,
-                                     FunctionSyntaxKind kind) {
-    initWithEnclosingParseContext(enclosing, kind, fun.get().flags.isArrow(),
-                                  fun.get().flags.allowSuperProperty());
-  }
+                                     FunctionFlags flags,
+                                     FunctionSyntaxKind kind);
 
   void initWithEnclosingParseContext(ParseContext* enclosing, JSFunction* fun,
                                      FunctionSyntaxKind kind) {
-    initWithEnclosingParseContext(enclosing, kind, fun->isArrow(),
-                                  fun->allowSuperProperty());
+    initWithEnclosingParseContext(enclosing, fun->flags(), kind);
   }
 
-  void initFieldInitializer(ParseContext* enclosing,
-                            Handle<FunctionCreationData> data);
+  void initFieldInitializer(ParseContext* enclosing, FunctionFlags flags);
 
   void setEnclosingScopeForInnerLazyFunction(
       const AbstractScopePtr& enclosingScope);
