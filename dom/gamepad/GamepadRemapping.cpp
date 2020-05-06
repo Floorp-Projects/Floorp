@@ -373,6 +373,82 @@ class StadiaControllerRemapper final : public GamepadRemapper {
   };
 };
 
+class Playstation3Remapper final : public GamepadRemapper {
+ public:
+  Playstation3Remapper() = default;
+
+  uint32_t GetAxisCount() const override { return AXIS_INDEX_COUNT; }
+
+  uint32_t GetButtonCount() const override { return BUTTON_INDEX_COUNT; }
+
+  void RemapAxisMoveEvent(uint32_t aIndex, uint32_t aAxis,
+                          double aValue) const override {
+    RefPtr<GamepadPlatformService> service =
+        GamepadPlatformService::GetParentService();
+    if (!service) {
+      return;
+    }
+
+    switch (aAxis) {
+      case 0:
+        service->NewAxisMoveEvent(aIndex, AXIS_INDEX_LEFT_STICK_X, aValue);
+        break;
+      case 1:
+        service->NewAxisMoveEvent(aIndex, AXIS_INDEX_LEFT_STICK_Y, aValue);
+        break;
+      case 2:
+        service->NewAxisMoveEvent(aIndex, AXIS_INDEX_RIGHT_STICK_X, aValue);
+        break;
+      case 5:
+        service->NewAxisMoveEvent(aIndex, AXIS_INDEX_RIGHT_STICK_Y, aValue);
+        break;
+      default:
+        NS_WARNING(
+            nsPrintfCString(
+                "Axis idx '%d' doesn't support in Dualshock4Remapper().", aAxis)
+                .get());
+        break;
+    }
+  }
+
+  void RemapButtonEvent(uint32_t aIndex, uint32_t aButton,
+                        bool aPressed) const override {
+    RefPtr<GamepadPlatformService> service =
+        GamepadPlatformService::GetParentService();
+    if (!service) {
+      return;
+    }
+
+    const std::vector<uint32_t> buttonMapping = {BUTTON_INDEX_BACK_SELECT,
+                                                 BUTTON_INDEX_LEFT_THUMBSTICK,
+                                                 BUTTON_INDEX_RIGHT_THUMBSTICK,
+                                                 BUTTON_INDEX_START,
+                                                 BUTTON_INDEX_DPAD_UP,
+                                                 BUTTON_INDEX_DPAD_RIGHT,
+                                                 BUTTON_INDEX_DPAD_DOWN,
+                                                 BUTTON_INDEX_DPAD_LEFT,
+                                                 BUTTON_INDEX_LEFT_TRIGGER,
+                                                 BUTTON_INDEX_RIGHT_TRIGGER,
+                                                 BUTTON_INDEX_LEFT_SHOULDER,
+                                                 BUTTON_INDEX_RIGHT_SHOULDER,
+                                                 BUTTON_INDEX_QUATERNARY,
+                                                 BUTTON_INDEX_SECONDARY,
+                                                 BUTTON_INDEX_PRIMARY,
+                                                 BUTTON_INDEX_TERTIARY,
+                                                 BUTTON_INDEX_META};
+
+    if (buttonMapping.size() <= aButton) {
+      NS_WARNING(
+          nsPrintfCString(
+              "Button idx '%d' doesn't support in Playstation3Remapper().",
+              aButton)
+              .get());
+      return;
+    }
+    service->NewButtonEvent(aIndex, buttonMapping[aButton], aPressed);
+  }
+};
+
 class Dualshock4Remapper final : public GamepadRemapper {
  public:
   Dualshock4Remapper() {
@@ -1598,6 +1674,7 @@ already_AddRefed<GamepadRemapper> GetGamepadRemapper(const uint16_t aVendorId,
       {GamepadId::kPrototypeVendorProduct0667, new BoomN64PsxRemapper()},
       {GamepadId::kPrototypeVendorProduct9401, new AnalogGamepadRemapper()},
       {GamepadId::kRazer1532Product0900, new RazerServalRemapper()},
+      {GamepadId::kSonyProduct0268, new Playstation3Remapper()},
       {GamepadId::kSonyProduct05c4, new Dualshock4Remapper()},
       {GamepadId::kSonyProduct09cc, new Dualshock4Remapper()},
       {GamepadId::kSonyProduct0ba0, new Dualshock4Remapper()},
