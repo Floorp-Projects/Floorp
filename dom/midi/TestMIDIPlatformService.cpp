@@ -51,7 +51,7 @@ class QueueMessagesRunnable : public MIDIBackgroundRunnable {
                         const nsTArray<MIDIMessage>& aMsgs)
       : MIDIBackgroundRunnable("QueueMessagesRunnable"),
         mPortID(aPortID),
-        mMsgs(aMsgs) {}
+        mMsgs(aMsgs.Clone()) {}
   ~QueueMessagesRunnable() = default;
   virtual void RunInternal() {
     AssertIsOnBackgroundThread();
