@@ -813,6 +813,26 @@ bool ToInt32Policy::staticAdjustInputs(TempAllocator& alloc,
   return true;
 }
 
+bool ToBigIntPolicy::staticAdjustInputs(TempAllocator& alloc,
+                                        MInstruction* ins) {
+  MOZ_ASSERT(ins->isToBigInt());
+
+  MDefinition* in = ins->getOperand(0);
+  switch (in->type()) {
+    case MIRType::BigInt:
+    case MIRType::Value:
+      // No need for boxing for these types.
+      return true;
+    default:
+      // Any other types need to be boxed.
+      break;
+  }
+
+  in = BoxAt(alloc, ins, in);
+  ins->replaceOperand(0, in);
+  return true;
+}
+
 bool ToStringPolicy::staticAdjustInputs(TempAllocator& alloc,
                                         MInstruction* ins) {
   MOZ_ASSERT(ins->isToString());
@@ -1151,6 +1171,7 @@ bool TypedArrayIndexPolicy::adjustInputs(TempAllocator& alloc,
   _(TestPolicy)                \
   _(ToDoublePolicy)            \
   _(ToInt32Policy)             \
+  _(ToBigIntPolicy)            \
   _(ToStringPolicy)            \
   _(TypeBarrierPolicy)         \
   _(TypedArrayIndexPolicy)
