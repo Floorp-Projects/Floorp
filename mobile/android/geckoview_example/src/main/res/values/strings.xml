@@ -51,6 +51,7 @@
 
     # Preference Keys
     <string name="key_tracking_protection">tracking_protection</string>
+    <string name="key_enhanced_tracking_protection">enhanced_tracking_protection</string>
     <string name="key_autoplay">autoplay</string>
     <string name="key_remote_debugging">remote_debugging</string>
     <string name="key_allow_extensions_in_private_browsing">allow_extensions_in_private_browsing</string>
@@ -77,6 +78,17 @@
         <item></item>
         <item>Mozilla/5.0 (Linux; Android 10; Z832 Build/MMB29M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Mobile Safari/537.36</item>
         <item>Mozilla/5.0 (iPhone; CPU OS 10_15_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.1.1 Mobile/14E304 Safari/605.1.15</item>
+    </string-array>
+
+    <string-array name="enhanced_tracking_protection_display_names">
+        <item>Disabled</item>
+        <item>Enabled (standard)</item>
+        <item>Enabled (strict)</item>
+    </string-array>
+    <string-array name="enhanced_tracking_protection_values">
+        <item>disabled</item>
+        <item>standard</item>
+        <item>strict</item>
     </string-array>
 
 </resources>
