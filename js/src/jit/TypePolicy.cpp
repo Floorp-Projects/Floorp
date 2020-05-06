@@ -935,6 +935,18 @@ bool StoreUnboxedScalarPolicy::adjustValueInput(TempAllocator& alloc,
                                                 Scalar::Type writeType,
                                                 MDefinition* value,
                                                 int valueOperand) {
+  if (Scalar::isBigIntType(writeType)) {
+    if (value->type() == MIRType::BigInt) {
+      return true;
+    }
+
+    auto* replace = MToBigInt::New(alloc, value);
+    ins->block()->insertBefore(ins, replace);
+    ins->replaceOperand(valueOperand, replace);
+
+    return replace->typePolicy()->adjustInputs(alloc, replace);
+  }
+
   MDefinition* curValue = value;
   // First, ensure the value is int32, boolean, double or Value.
   // The conversion is based on TypedArrayObjectTemplate::setElementTail.
