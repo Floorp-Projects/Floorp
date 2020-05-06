@@ -24,17 +24,6 @@ UUID_PATTERN = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 )
 
-# The harness runs test files in this suite in parallel.
-# To avoid port errors when starting a marionette session, we
-# need to assign a port for each test file.
-MARIONETTE_PORTS = {
-    "test_deletion_request_ping": 20000,
-    "test_event_ping": 20001,
-    "test_main_tab_scalars": 20002,
-    "test_search_counts_across_sessions": 20003,
-    "test_subsession_management": 20004,
-}
-
 here = os.path.abspath(os.path.dirname(__file__))
 
 """Get a build object we need to find a Firefox binary"""
@@ -67,7 +56,7 @@ def fixture_binary():
 
 
 @pytest.fixture(name="marionette")
-def fixture_marionette(binary, ping_server, marionette_port):
+def fixture_marionette(binary, ping_server):
     """Start a marionette session with specific browser prefs"""
     server_url = "{url}pings".format(url=ping_server.get_url("/"))
     prefs = {
@@ -88,13 +77,7 @@ def fixture_marionette(binary, ping_server, marionette_port):
         "toolkit.telemetry.send.overrideOfficialCheck": True,
         "toolkit.telemetry.testing.disableFuzzingDelay": True,
     }
-    yield Marionette(host="localhost", port=marionette_port, bin=binary, prefs=prefs)
-
-
-@pytest.fixture(name="marionette_port")
-def fixture_marionette_port(request):
-    """Return a marionette port for the current test file"""
-    return MARIONETTE_PORTS[request.node.module.__name__]
+    yield Marionette(host="localhost", port=0, bin=binary, prefs=prefs)
 
 
 @pytest.fixture(name="ping_server")
