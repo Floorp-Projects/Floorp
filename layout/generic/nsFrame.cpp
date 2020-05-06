@@ -2606,8 +2606,9 @@ void nsFrame::DisplayOutlineUnconditional(nsDisplayListBuilder* aBuilder,
   // ignored, except when explicitly specified by this specification."
   // CSS outlines fall into this category, so we skip them on these boxes.
   MOZ_ASSERT(!IsTableColGroupFrame() && !IsTableColFrame());
+  const auto& outline = *StyleOutline();
 
-  if (!StyleOutline()->ShouldPaintOutline()) {
+  if (!outline.ShouldPaintOutline()) {
     return;
   }
 
@@ -2621,6 +2622,14 @@ void nsFrame::DisplayOutlineUnconditional(nsDisplayListBuilder* aBuilder,
     // Skip parts of IB-splits with an empty overflow rect, see bug 434301.
     // We may still want to fix some of the overflow area calculations over in
     // that bug.
+    return;
+  }
+
+  // We don't display outline-style: auto on themed frames.
+  //
+  // TODO(emilio): Maybe we want a theme hook to say which frames can handle it
+  // themselves. Non-native theme probably will want this.
+  if (outline.mOutlineStyle.IsAuto() && IsThemed()) {
     return;
   }
 
