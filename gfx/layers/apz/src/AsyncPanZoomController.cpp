@@ -146,6 +146,10 @@ typedef PlatformSpecificStateBase
  * a single input block. If set to false, a single input block can only
  * scroll one APZC.
  *
+ * \li\b apz.allow_zooming_out
+ * If set to true, APZ will allow zooming out past the initial scale on
+ * desktop. This is false by default to match Chrome's behaviour.
+ *
  * \li\b apz.android.chrome_fling_physics.enabled
  * If set to true, APZ uses a fling physical model similar to Chrome's
  * on Android, rather than Android's StackScroller.

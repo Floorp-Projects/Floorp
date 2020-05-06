@@ -222,6 +222,11 @@
   value: @IS_ANDROID@
   mirror: always
 
+- name: apz.allow_zooming_out
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: apz.android.chrome_fling_physics.enabled
   type: RelaxedAtomicBool
   value: true
