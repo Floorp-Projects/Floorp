@@ -585,7 +585,7 @@ static bool IsFontSizeInflationContainer(nsIFrame* aFrame,
   return !isInline;
 }
 
-static void MaybeScheduleReflowSVGNonDisplayText(nsFrame* aFrame) {
+static void MaybeScheduleReflowSVGNonDisplayText(nsIFrame* aFrame) {
   if (!nsSVGUtils::IsInSVGTextSubtree(aFrame)) {
     return;
   }
@@ -957,7 +957,7 @@ static void CompareLayers(
 }
 
 static void AddAndRemoveImageAssociations(
-    ImageLoader& aImageLoader, nsFrame* aFrame,
+    ImageLoader& aImageLoader, nsIFrame* aFrame,
     const nsStyleImageLayers* aOldLayers,
     const nsStyleImageLayers* aNewLayers) {
   // If the old context had a background-image image, or mask-image image,
@@ -1181,7 +1181,7 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
 
 // Subclass hook for style post processing
 /* virtual */
-void nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
+void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   MaybeScheduleReflowSVGNonDisplayText(this);
 
   Document* doc = PresContext()->Document();
@@ -2308,7 +2308,7 @@ static nsIFrame* GetActiveSelectionFrame(nsPresContext* aPresContext,
   return aFrame;
 }
 
-int16_t nsFrame::DetermineDisplaySelection() {
+int16_t nsIFrame::DetermineDisplaySelection() {
   int16_t selType = nsISelectionController::SELECTION_OFF;
 
   nsCOMPtr<nsISelectionController> selCon;
@@ -4505,9 +4505,9 @@ void nsFrame::FireDOMEvent(const nsAString& aDOMEventName,
   }
 }
 
-nsresult nsFrame::HandleEvent(nsPresContext* aPresContext,
-                              WidgetGUIEvent* aEvent,
-                              nsEventStatus* aEventStatus) {
+nsresult nsIFrame::HandleEvent(nsPresContext* aPresContext,
+                               WidgetGUIEvent* aEvent,
+                               nsEventStatus* aEventStatus) {
   if (aEvent->mMessage == eMouseMove) {
     // XXX If the second argument of HandleDrag() is WidgetMouseEvent,
     //     the implementation becomes simpler.
@@ -4526,7 +4526,7 @@ nsresult nsFrame::HandleEvent(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-nsresult nsFrame::GetDataForTableSelection(
+nsresult nsIFrame::GetDataForTableSelection(
     const nsFrameSelection* aFrameSelection, mozilla::PresShell* aPresShell,
     WidgetMouseEvent* aMouseEvent, nsIContent** aParentContent,
     int32_t* aContentOffset, TableSelectionMode* aTarget) {
@@ -4704,8 +4704,8 @@ bool nsIFrame::ShouldHaveLineIfEmpty() const {
  * Handles the Mouse Press Event for the frame
  */
 NS_IMETHODIMP
-nsFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
-                     nsEventStatus* aEventStatus) {
+nsIFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
+                      nsEventStatus* aEventStatus) {
   NS_ENSURE_ARG_POINTER(aEventStatus);
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
     return NS_OK;
@@ -4919,11 +4919,11 @@ nsFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
  * @param aSelectFlags Selection flags defined in nsFame.h.
  * @return success or failure at finding suitable content to select.
  */
-nsresult nsFrame::SelectByTypeAtPoint(nsPresContext* aPresContext,
-                                      const nsPoint& aPoint,
-                                      nsSelectionAmount aBeginAmountType,
-                                      nsSelectionAmount aEndAmountType,
-                                      uint32_t aSelectFlags) {
+nsresult nsIFrame::SelectByTypeAtPoint(nsPresContext* aPresContext,
+                                       const nsPoint& aPoint,
+                                       nsSelectionAmount aBeginAmountType,
+                                       nsSelectionAmount aEndAmountType,
+                                       uint32_t aSelectFlags) {
   NS_ENSURE_ARG_POINTER(aPresContext);
 
   // No point in selecting if selection is turned off
@@ -4950,9 +4950,9 @@ nsresult nsFrame::SelectByTypeAtPoint(nsPresContext* aPresContext,
  * Wouldn't it be nice if this didn't have to be hardwired into Frame code?
  */
 NS_IMETHODIMP
-nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
-                             WidgetGUIEvent* aEvent,
-                             nsEventStatus* aEventStatus, bool aControlHeld) {
+nsIFrame::HandleMultiplePress(nsPresContext* aPresContext,
+                              WidgetGUIEvent* aEvent,
+                              nsEventStatus* aEventStatus, bool aControlHeld) {
   NS_ENSURE_ARG_POINTER(aEvent);
   NS_ENSURE_ARG_POINTER(aEventStatus);
 
@@ -5051,9 +5051,9 @@ nsresult nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
   return frameSelection->MaintainSelection(aAmountBack);
 }
 
-NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
-                                  WidgetGUIEvent* aEvent,
-                                  nsEventStatus* aEventStatus) {
+NS_IMETHODIMP nsIFrame::HandleDrag(nsPresContext* aPresContext,
+                                   WidgetGUIEvent* aEvent,
+                                   nsEventStatus* aEventStatus) {
   MOZ_ASSERT(aEvent->mClass == eMouseEventClass,
              "HandleDrag can only handle mouse event");
 
@@ -5192,9 +5192,9 @@ static nsresult HandleFrameSelection(nsFrameSelection* aFrameSelection,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
-                                     WidgetGUIEvent* aEvent,
-                                     nsEventStatus* aEventStatus) {
+NS_IMETHODIMP nsIFrame::HandleRelease(nsPresContext* aPresContext,
+                                      WidgetGUIEvent* aEvent,
+                                      nsEventStatus* aEventStatus) {
   if (aEvent->mClass != eMouseEventClass) {
     return NS_OK;
   }
@@ -5766,7 +5766,7 @@ Maybe<nsIFrame::Cursor> nsIFrame::GetCursor(const nsPoint&) {
 // Resize and incremental reflow
 
 /* virtual */
-void nsFrame::MarkIntrinsicISizesDirty() {
+void nsIFrame::MarkIntrinsicISizesDirty() {
   // This version is meant only for what used to be box-to-block adaptors.
   // It should not be called by other derived classes.
   if (::IsXULBoxWrapped(this)) {
@@ -6092,13 +6092,13 @@ IntrinsicSize nsIFrame::GetIntrinsicSize() {
 AspectRatio nsIFrame::GetIntrinsicRatio() { return AspectRatio(); }
 
 /* virtual */
-LogicalSize nsFrame::ComputeSize(gfxContext* aRenderingContext, WritingMode aWM,
-                                 const LogicalSize& aCBSize,
-                                 nscoord aAvailableISize,
-                                 const LogicalSize& aMargin,
-                                 const LogicalSize& aBorder,
-                                 const LogicalSize& aPadding,
-                                 ComputeSizeFlags aFlags) {
+LogicalSize nsIFrame::ComputeSize(gfxContext* aRenderingContext,
+                                  WritingMode aWM, const LogicalSize& aCBSize,
+                                  nscoord aAvailableISize,
+                                  const LogicalSize& aMargin,
+                                  const LogicalSize& aBorder,
+                                  const LogicalSize& aPadding,
+                                  ComputeSizeFlags aFlags) {
   MOZ_ASSERT(!GetIntrinsicRatio(),
              "Please override this method and call "
              "nsFrame::ComputeSizeWithIntrinsicDimensions instead.");
@@ -6788,7 +6788,7 @@ nsresult nsIFrame::GetPrefWidthTightBounds(gfxContext* aContext, nscoord* aX,
 }
 
 /* virtual */
-LogicalSize nsFrame::ComputeAutoSize(
+LogicalSize nsIFrame::ComputeAutoSize(
     gfxContext* aRenderingContext, WritingMode aWM,
     const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
     const mozilla::LogicalSize& aMargin, const mozilla::LogicalSize& aBorder,
@@ -6805,8 +6805,9 @@ LogicalSize nsFrame::ComputeAutoSize(
   return result;
 }
 
-nscoord nsFrame::ShrinkWidthToFit(gfxContext* aRenderingContext,
-                                  nscoord aISizeInCB, ComputeSizeFlags aFlags) {
+nscoord nsIFrame::ShrinkWidthToFit(gfxContext* aRenderingContext,
+                                   nscoord aISizeInCB,
+                                   ComputeSizeFlags aFlags) {
   // If we're a container for font size inflation, then shrink
   // wrapping inside of us should not apply font size inflation.
   AutoMaybeDisableFontInflation an(this);
@@ -6983,8 +6984,9 @@ bool nsIFrame::CanContinueTextRun() const {
   return false;
 }
 
-void nsFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-                     const ReflowInput& aReflowInput, nsReflowStatus& aStatus) {
+void nsIFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+                      const ReflowInput& aReflowInput,
+                      nsReflowStatus& aStatus) {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsFrame");
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
@@ -9224,7 +9226,7 @@ nsIFrame::FrameSearchResult nsIFrame::PeekOffsetCharacter(
   return CONTINUE;
 }
 
-nsIFrame::FrameSearchResult nsFrame::PeekOffsetWord(
+nsIFrame::FrameSearchResult nsIFrame::PeekOffsetWord(
     bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
     int32_t* aOffset, PeekWordState* aState, bool /*aTrimSpaces*/) {
   NS_ASSERTION(aOffset && *aOffset <= 1, "aOffset out of range");
@@ -9259,10 +9261,10 @@ nsIFrame::FrameSearchResult nsFrame::PeekOffsetWord(
 }
 
 // static
-bool nsFrame::BreakWordBetweenPunctuation(const PeekWordState* aState,
-                                          bool aForward, bool aPunctAfter,
-                                          bool aWhitespaceAfter,
-                                          bool aIsKeyboardSelect) {
+bool nsIFrame::BreakWordBetweenPunctuation(const PeekWordState* aState,
+                                           bool aForward, bool aPunctAfter,
+                                           bool aWhitespaceAfter,
+                                           bool aIsKeyboardSelect) {
   NS_ASSERTION(aPunctAfter != aState->mLastCharWasPunctuation,
                "Call this only at punctuation boundaries");
   if (aState->mLastCharWasWhitespace) {
@@ -10298,7 +10300,7 @@ nsIFrame* nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
   return nullptr;
 }
 
-ComputedStyle* nsFrame::DoGetParentComputedStyle(
+ComputedStyle* nsIFrame::DoGetParentComputedStyle(
     nsIFrame** aProviderFrame) const {
   *aProviderFrame = nullptr;
 
@@ -10591,9 +10593,6 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState) {
 
   return NS_OK;
 }
-
-/* virtual */
-nsILineIterator* nsFrame::GetLineIterator() { return nullptr; }
 
 nsSize nsFrame::GetXULPrefSize(nsBoxLayoutState& aState) {
   nsSize size(0, 0);
@@ -11021,7 +11020,7 @@ void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
 #endif
 }
 
-nsBoxLayoutMetrics* nsFrame::BoxMetrics() const {
+nsBoxLayoutMetrics* nsIFrame::BoxMetrics() const {
   nsBoxLayoutMetrics* metrics = GetProperty(BoxMetricsProperty());
   NS_ASSERTION(
       metrics,
