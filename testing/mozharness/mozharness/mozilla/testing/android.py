@@ -86,7 +86,7 @@ class AndroidMixin(object):
     def is_emulator(self):
         try:
             c = self.config
-            return True if c.get('emulator_manifest') else False
+            return True if c.get('emulator_avd_name') else False
         except AttributeError:
             return False
 
@@ -158,7 +158,7 @@ class AndroidMixin(object):
         if "deprecated_sdk_path" in self.config:
             sdk_path = os.path.abspath(os.path.join(avd_home_dir, '..'))
         else:
-            sdk_path = os.path.join(self.abs_dirs['abs_work_dir'], 'android-sdk-linux')
+            sdk_path = self.abs_dirs['abs_sdk_dir']
         if os.path.exists(sdk_path):
             env['ANDROID_SDK_HOME'] = sdk_path
             self.info("Found sdk at %s" % sdk_path)
@@ -585,8 +585,6 @@ class AndroidMixin(object):
                                        output_dir=dirs['abs_work_dir'],
                                        cache=cache):
                     self.fatal("Unable to download emulator via tooltool!")
-        else:
-            self.fatal("Cannot get emulator: configure emulator_url or emulator_manifest")
         if not os.path.isfile(self.adb_path):
             self.fatal("The adb binary '%s' is not a valid file!" % self.adb_path)
         self.kill_processes("xpcshell")
