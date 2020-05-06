@@ -40,3 +40,10 @@ checking for arbitrary unit systems and
 [generic-array](https://crates.io/crates/generic-array/) which provides arrays whose
 length you can generically refer to.
 
+### Error messages
+
+
+Typenum's error messages aren't great, and can be difficult to parse. The good news is
+that the fine folks at Auxon have written a tool to help with it. Please take a look at
+[tnfilt](https://github.com/auxoncorp/tnfilt).
+

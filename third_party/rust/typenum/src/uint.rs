@@ -29,18 +29,26 @@
 //!
 
 use core::ops::{Add, BitAnd, BitOr, BitXor, Mul, Shl, Shr, Sub};
-use core::marker::PhantomData;
-use {Cmp, Equal, Greater, Len, Less, NonZero, Ord, Pow};
+use {
+    Cmp, Equal, Gcd, Greater, IsGreaterOrEqual, Len, Less, Logarithm2, Maximum, Minimum, NonZero,
+    Ord, Pow, SquareRoot,
+};
 
-use bit::{B0, B1, Bit};
+use bit::{Bit, B0, B1};
 
-use private::{BitDiff, PrivateAnd, PrivateCmp, PrivatePow, PrivateSub, PrivateXor, Trim};
+use private::{
+    BitDiff, PrivateAnd, PrivateCmp, PrivateLogarithm2, PrivatePow, PrivateSquareRoot, PrivateSub,
+    PrivateXor, Trim,
+};
 
-use private::{BitDiffOut, PrivateAndOut, PrivateCmpOut, PrivatePowOut, PrivateSubOut,
-              PrivateXorOut, TrimOut};
+use private::{
+    BitDiffOut, PrivateAndOut, PrivateCmpOut, PrivatePowOut, PrivateSubOut, PrivateXorOut, TrimOut,
+};
+
+use private::{Internal, InternalMarker};
 
 use consts::{U0, U1};
-use {Add1, Length, Or, Prod, Shleft, Shright, Square, Sub1, Sum};
+use {Add1, Double, Gcf, GrEq, Length, Log2, Or, Prod, Shleft, Shright, Sqrt, Square, Sub1, Sum};
 
 pub use marker_traits::{PowerOfTwo, Unsigned};
 
@@ -145,16 +153,17 @@ impl Unsigned for UTerm {
 /// ```
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Hash, Debug, Default)]
 pub struct UInt<U, B> {
-    _marker: PhantomData<(U, B)>,
+    /// The more significant bits of `Self`.
+    pub(crate) msb: U,
+    /// The least significant bit of `Self`.
+    pub(crate) lsb: B,
 }
 
 impl<U: Unsigned, B: Bit> UInt<U, B> {
     /// Instantiates a singleton representing this unsigned integer.
     #[inline]
     pub fn new() -> UInt<U, B> {
-        UInt {
-            _marker: PhantomData,
-        }
+        UInt::default()
     }
 }
 
@@ -239,6 +248,7 @@ impl<U: Unsigned + PowerOfTwo> PowerOfTwo for UInt<U, B0> {}
 /// Length of `UTerm` by itself is 0
 impl Len for UTerm {
     type Output = U0;
+    #[inline]
     fn len(&self) -> Self::Output {
         UTerm
     }
@@ -252,8 +262,9 @@ where
     Add1<Length<U>>: Unsigned,
 {
     type Output = Add1<Length<U>>;
+    #[inline]
     fn len(&self) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+        self.msb.len() + B1
     }
 }
 
@@ -263,6 +274,7 @@ where
 /// `UTerm + B0 = UTerm`
 impl Add<B0> for UTerm {
     type Output = UTerm;
+    #[inline]
     fn add(self, _: B0) -> Self::Output {
         UTerm
     }
@@ -271,6 +283,7 @@ impl Add<B0> for UTerm {
 /// `U + B0 = U`
 impl<U: Unsigned, B: Bit> Add<B0> for UInt<U, B> {
     type Output = UInt<U, B>;
+    #[inline]
     fn add(self, _: B0) -> Self::Output {
         UInt::new()
     }
@@ -279,6 +292,7 @@ impl<U: Unsigned, B: Bit> Add<B0> for UInt<U, B> {
 /// `UTerm + B1 = UInt<UTerm, B1>`
 impl Add<B1> for UTerm {
     type Output = UInt<UTerm, B1>;
+    #[inline]
     fn add(self, _: B1) -> Self::Output {
         UInt::new()
     }
@@ -287,6 +301,7 @@ impl Add<B1> for UTerm {
 /// `UInt<U, B0> + B1 = UInt<U + B1>`
 impl<U: Unsigned> Add<B1> for UInt<U, B0> {
     type Output = UInt<U, B1>;
+    #[inline]
     fn add(self, _: B1) -> Self::Output {
         UInt::new()
     }
@@ -299,6 +314,7 @@ where
     Add1<U>: Unsigned,
 {
     type Output = UInt<Add1<U>, B0>;
+    #[inline]
     fn add(self, _: B1) -> Self::Output {
         UInt::new()
     }
@@ -310,14 +326,16 @@ where
 /// `UTerm + U = U`
 impl<U: Unsigned> Add<U> for UTerm {
     type Output = U;
-    fn add(self, _: U) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn add(self, rhs: U) -> Self::Output {
+        rhs
     }
 }
 
 /// `UInt<U, B> + UTerm = UInt<U, B>`
 impl<U: Unsigned, B: Bit> Add<UTerm> for UInt<U, B> {
     type Output = UInt<U, B>;
+    #[inline]
     fn add(self, _: UTerm) -> Self::Output {
         UInt::new()
     }
@@ -329,8 +347,12 @@ where
     Ul: Add<Ur>,
 {
     type Output = UInt<Sum<Ul, Ur>, B0>;
-    fn add(self, _: UInt<Ur, B0>) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn add(self, rhs: UInt<Ur, B0>) -> Self::Output {
+        UInt {
+            msb: self.msb + rhs.msb,
+            lsb: B0,
+        }
     }
 }
 
@@ -340,8 +362,12 @@ where
     Ul: Add<Ur>,
 {
     type Output = UInt<Sum<Ul, Ur>, B1>;
-    fn add(self, _: UInt<Ur, B1>) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn add(self, rhs: UInt<Ur, B1>) -> Self::Output {
+        UInt {
+            msb: self.msb + rhs.msb,
+            lsb: B1,
+        }
     }
 }
 
@@ -351,8 +377,12 @@ where
     Ul: Add<Ur>,
 {
     type Output = UInt<Sum<Ul, Ur>, B1>;
-    fn add(self, _: UInt<Ur, B0>) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn add(self, rhs: UInt<Ur, B0>) -> Self::Output {
+        UInt {
+            msb: self.msb + rhs.msb,
+            lsb: B1,
+        }
     }
 }
 
@@ -363,8 +393,12 @@ where
     Sum<Ul, Ur>: Add<B1>,
 {
     type Output = UInt<Add1<Sum<Ul, Ur>>, B0>;
-    fn add(self, _: UInt<Ur, B1>) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn add(self, rhs: UInt<Ur, B1>) -> Self::Output {
+        UInt {
+            msb: self.msb + rhs.msb + B1,
+            lsb: B0,
+        }
     }
 }
 
@@ -374,6 +408,7 @@ where
 /// `UTerm - B0 = Term`
 impl Sub<B0> for UTerm {
     type Output = UTerm;
+    #[inline]
     fn sub(self, _: B0) -> Self::Output {
         UTerm
     }
@@ -382,6 +417,7 @@ impl Sub<B0> for UTerm {
 /// `UInt - B0 = UInt`
 impl<U: Unsigned, B: Bit> Sub<B0> for UInt<U, B> {
     type Output = UInt<U, B>;
+    #[inline]
     fn sub(self, _: B0) -> Self::Output {
         UInt::new()
     }
@@ -390,6 +426,7 @@ impl<U: Unsigned, B: Bit> Sub<B0> for UInt<U, B> {
 /// `UInt<U, B1> - B1 = UInt<U, B0>`
 impl<U: Unsigned, B: Bit> Sub<B1> for UInt<UInt<U, B>, B1> {
     type Output = UInt<UInt<U, B>, B0>;
+    #[inline]
     fn sub(self, _: B1) -> Self::Output {
         UInt::new()
     }
@@ -398,6 +435,7 @@ impl<U: Unsigned, B: Bit> Sub<B1> for UInt<UInt<U, B>, B1> {
 /// `UInt<UTerm, B1> - B1 = UTerm`
 impl Sub<B1> for UInt<UTerm, B1> {
     type Output = UTerm;
+    #[inline]
     fn sub(self, _: B1) -> Self::Output {
         UTerm
     }
@@ -410,6 +448,7 @@ where
     Sub1<U>: Unsigned,
 {
     type Output = UInt<Sub1<U>, B1>;
+    #[inline]
     fn sub(self, _: B1) -> Self::Output {
         UInt::new()
     }
@@ -421,6 +460,7 @@ where
 /// `UTerm - UTerm = UTerm`
 impl Sub<UTerm> for UTerm {
     type Output = UTerm;
+    #[inline]
     fn sub(self, _: UTerm) -> Self::Output {
         UTerm
     }
@@ -433,14 +473,20 @@ where
     PrivateSubOut<UInt<Ul, Bl>, Ur>: Trim,
 {
     type Output = TrimOut<PrivateSubOut<UInt<Ul, Bl>, Ur>>;
-    fn sub(self, _: Ur) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn sub(self, rhs: Ur) -> Self::Output {
+        self.private_sub(rhs).trim()
     }
 }
 
 /// `U - UTerm = U`
 impl<U: Unsigned> PrivateSub<UTerm> for U {
     type Output = U;
+
+    #[inline]
+    fn private_sub(self, _: UTerm) -> Self::Output {
+        self
+    }
 }
 
 /// `UInt<Ul, B0> - UInt<Ur, B0> = UInt<Ul - Ur, B0>`
@@ -449,6 +495,14 @@ where
     Ul: PrivateSub<Ur>,
 {
     type Output = UInt<PrivateSubOut<Ul, Ur>, B0>;
+
+    #[inline]
+    fn private_sub(self, rhs: UInt<Ur, B0>) -> Self::Output {
+        UInt {
+            msb: self.msb.private_sub(rhs.msb),
+            lsb: B0,
+        }
+    }
 }
 
 /// `UInt<Ul, B0> - UInt<Ur, B1> = UInt<(Ul - Ur) - B1, B1>`
@@ -458,6 +512,14 @@ where
     PrivateSubOut<Ul, Ur>: Sub<B1>,
 {
     type Output = UInt<Sub1<PrivateSubOut<Ul, Ur>>, B1>;
+
+    #[inline]
+    fn private_sub(self, rhs: UInt<Ur, B1>) -> Self::Output {
+        UInt {
+            msb: self.msb.private_sub(rhs.msb) - B1,
+            lsb: B1,
+        }
+    }
 }
 
 /// `UInt<Ul, B1> - UInt<Ur, B0> = UInt<Ul - Ur, B1>`
@@ -466,6 +528,14 @@ where
     Ul: PrivateSub<Ur>,
 {
     type Output = UInt<PrivateSubOut<Ul, Ur>, B1>;
+
+    #[inline]
+    fn private_sub(self, rhs: UInt<Ur, B0>) -> Self::Output {
+        UInt {
+            msb: self.msb.private_sub(rhs.msb),
+            lsb: B1,
+        }
+    }
 }
 
 /// `UInt<Ul, B1> - UInt<Ur, B1> = UInt<Ul - Ur, B0>`
@@ -474,6 +544,14 @@ where
     Ul: PrivateSub<Ur>,
 {
     type Output = UInt<PrivateSubOut<Ul, Ur>, B0>;
+
+    #[inline]
+    fn private_sub(self, rhs: UInt<Ur, B1>) -> Self::Output {
+        UInt {
+            msb: self.msb.private_sub(rhs.msb),
+            lsb: B0,
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------------------
@@ -482,6 +560,7 @@ where
 /// 0 & X = 0
 impl<Ur: Unsigned> BitAnd<Ur> for UTerm {
     type Output = UTerm;
+    #[inline]
     fn bitand(self, _: Ur) -> Self::Output {
         UTerm
     }
@@ -495,19 +574,30 @@ where
     PrivateAndOut<UInt<Ul, Bl>, Ur>: Trim,
 {
     type Output = TrimOut<PrivateAndOut<UInt<Ul, Bl>, Ur>>;
-    fn bitand(self, _: Ur) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn bitand(self, rhs: Ur) -> Self::Output {
+        self.private_and(rhs).trim()
     }
 }
 
 /// `UTerm & X = UTerm`
 impl<U: Unsigned> PrivateAnd<U> for UTerm {
     type Output = UTerm;
+
+    #[inline]
+    fn private_and(self, _: U) -> Self::Output {
+        UTerm
+    }
 }
 
 /// `X & UTerm = UTerm`
 impl<B: Bit, U: Unsigned> PrivateAnd<UTerm> for UInt<U, B> {
     type Output = UTerm;
+
+    #[inline]
+    fn private_and(self, _: UTerm) -> Self::Output {
+        UTerm
+    }
 }
 
 /// `UInt<Ul, B0> & UInt<Ur, B0> = UInt<Ul & Ur, B0>`
@@ -516,6 +606,14 @@ where
     Ul: PrivateAnd<Ur>,
 {
     type Output = UInt<PrivateAndOut<Ul, Ur>, B0>;
+
+    #[inline]
+    fn private_and(self, rhs: UInt<Ur, B0>) -> Self::Output {
+        UInt {
+            msb: self.msb.private_and(rhs.msb),
+            lsb: B0,
+        }
+    }
 }
 
 /// `UInt<Ul, B0> & UInt<Ur, B1> = UInt<Ul & Ur, B0>`
@@ -524,6 +622,14 @@ where
     Ul: PrivateAnd<Ur>,
 {
     type Output = UInt<PrivateAndOut<Ul, Ur>, B0>;
+
+    #[inline]
+    fn private_and(self, rhs: UInt<Ur, B1>) -> Self::Output {
+        UInt {
+            msb: self.msb.private_and(rhs.msb),
+            lsb: B0,
+        }
+    }
 }
 
 /// `UInt<Ul, B1> & UInt<Ur, B0> = UInt<Ul & Ur, B0>`
@@ -532,6 +638,14 @@ where
     Ul: PrivateAnd<Ur>,
 {
     type Output = UInt<PrivateAndOut<Ul, Ur>, B0>;
+
+    #[inline]
+    fn private_and(self, rhs: UInt<Ur, B0>) -> Self::Output {
+        UInt {
+            msb: self.msb.private_and(rhs.msb),
+            lsb: B0,
+        }
+    }
 }
 
 /// `UInt<Ul, B1> & UInt<Ur, B1> = UInt<Ul & Ur, B1>`
@@ -540,6 +654,14 @@ where
     Ul: PrivateAnd<Ur>,
 {
     type Output = UInt<PrivateAndOut<Ul, Ur>, B1>;
+
+    #[inline]
+    fn private_and(self, rhs: UInt<Ur, B1>) -> Self::Output {
+        UInt {
+            msb: self.msb.private_and(rhs.msb),
+            lsb: B1,
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------------------
@@ -548,14 +670,16 @@ where
 /// `UTerm | X = X`
 impl<U: Unsigned> BitOr<U> for UTerm {
     type Output = U;
-    fn bitor(self, _: U) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn bitor(self, rhs: U) -> Self::Output {
+        rhs
     }
 }
 
 ///  `X | UTerm = X`
 impl<B: Bit, U: Unsigned> BitOr<UTerm> for UInt<U, B> {
     type Output = Self;
+    #[inline]
     fn bitor(self, _: UTerm) -> Self::Output {
         UInt::new()
     }
@@ -567,8 +691,12 @@ where
     Ul: BitOr<Ur>,
 {
     type Output = UInt<<Ul as BitOr<Ur>>::Output, B0>;
-    fn bitor(self, _: UInt<Ur, B0>) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn bitor(self, rhs: UInt<Ur, B0>) -> Self::Output {
+        UInt {
+            msb: self.msb.bitor(rhs.msb),
+            lsb: B0,
+        }
     }
 }
 
@@ -578,8 +706,12 @@ where
     Ul: BitOr<Ur>,
 {
     type Output = UInt<Or<Ul, Ur>, B1>;
-    fn bitor(self, _: UInt<Ur, B1>) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn bitor(self, rhs: UInt<Ur, B1>) -> Self::Output {
+        UInt {
+            msb: self.msb.bitor(rhs.msb),
+            lsb: self.lsb.bitor(rhs.lsb),
+        }
     }
 }
 
@@ -589,8 +721,12 @@ where
     Ul: BitOr<Ur>,
 {
     type Output = UInt<Or<Ul, Ur>, B1>;
-    fn bitor(self, _: UInt<Ur, B0>) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn bitor(self, rhs: UInt<Ur, B0>) -> Self::Output {
+        UInt {
+            msb: self.msb.bitor(rhs.msb),
+            lsb: self.lsb.bitor(rhs.lsb),
+        }
     }
 }
 
@@ -600,8 +736,12 @@ where
     Ul: BitOr<Ur>,
 {
     type Output = UInt<Or<Ul, Ur>, B1>;
-    fn bitor(self, _: UInt<Ur, B1>) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn bitor(self, rhs: UInt<Ur, B1>) -> Self::Output {
+        UInt {
+            msb: self.msb.bitor(rhs.msb),
+            lsb: self.lsb.bitor(rhs.lsb),
+        }
     }
 }
 
@@ -611,8 +751,9 @@ where
 /// 0 ^ X = X
 impl<Ur: Unsigned> BitXor<Ur> for UTerm {
     type Output = Ur;
-    fn bitxor(self, _: Ur) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn bitxor(self, rhs: Ur) -> Self::Output {
+        rhs
     }
 }
 
@@ -624,19 +765,30 @@ where
     PrivateXorOut<UInt<Ul, Bl>, Ur>: Trim,
 {
     type Output = TrimOut<PrivateXorOut<UInt<Ul, Bl>, Ur>>;
-    fn bitxor(self, _: Ur) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn bitxor(self, rhs: Ur) -> Self::Output {
+        self.private_xor(rhs).trim()
     }
 }
 
 /// `UTerm ^ X = X`
 impl<U: Unsigned> PrivateXor<U> for UTerm {
     type Output = U;
+
+    #[inline]
+    fn private_xor(self, rhs: U) -> Self::Output {
+        rhs
+    }
 }
 
 /// `X ^ UTerm = X`
 impl<B: Bit, U: Unsigned> PrivateXor<UTerm> for UInt<U, B> {
     type Output = Self;
+
+    #[inline]
+    fn private_xor(self, _: UTerm) -> Self::Output {
+        self
+    }
 }
 
 /// `UInt<Ul, B0> ^ UInt<Ur, B0> = UInt<Ul ^ Ur, B0>`
@@ -645,6 +797,14 @@ where
     Ul: PrivateXor<Ur>,
 {
     type Output = UInt<PrivateXorOut<Ul, Ur>, B0>;
+
+    #[inline]
+    fn private_xor(self, rhs: UInt<Ur, B0>) -> Self::Output {
+        UInt {
+            msb: self.msb.private_xor(rhs.msb),
+            lsb: B0,
+        }
+    }
 }
 
 /// `UInt<Ul, B0> ^ UInt<Ur, B1> = UInt<Ul ^ Ur, B1>`
@@ -653,6 +813,14 @@ where
     Ul: PrivateXor<Ur>,
 {
     type Output = UInt<PrivateXorOut<Ul, Ur>, B1>;
+
+    #[inline]
+    fn private_xor(self, rhs: UInt<Ur, B1>) -> Self::Output {
+        UInt {
+            msb: self.msb.private_xor(rhs.msb),
+            lsb: B1,
+        }
+    }
 }
 
 /// `UInt<Ul, B1> ^ UInt<Ur, B0> = UInt<Ul ^ Ur, B1>`
@@ -661,6 +829,14 @@ where
     Ul: PrivateXor<Ur>,
 {
     type Output = UInt<PrivateXorOut<Ul, Ur>, B1>;
+
+    #[inline]
+    fn private_xor(self, rhs: UInt<Ur, B0>) -> Self::Output {
+        UInt {
+            msb: self.msb.private_xor(rhs.msb),
+            lsb: B1,
+        }
+    }
 }
 
 /// `UInt<Ul, B1> ^ UInt<Ur, B1> = UInt<Ul ^ Ur, B0>`
@@ -669,6 +845,14 @@ where
     Ul: PrivateXor<Ur>,
 {
     type Output = UInt<PrivateXorOut<Ul, Ur>, B0>;
+
+    #[inline]
+    fn private_xor(self, rhs: UInt<Ur, B1>) -> Self::Output {
+        UInt {
+            msb: self.msb.private_xor(rhs.msb),
+            lsb: B0,
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------------------
@@ -677,6 +861,7 @@ where
 /// Shifting `UTerm` by a 0 bit: `UTerm << B0 = UTerm`
 impl Shl<B0> for UTerm {
     type Output = UTerm;
+    #[inline]
     fn shl(self, _: B0) -> Self::Output {
         UTerm
     }
@@ -685,6 +870,7 @@ impl Shl<B0> for UTerm {
 /// Shifting `UTerm` by a 1 bit: `UTerm << B1 = UTerm`
 impl Shl<B1> for UTerm {
     type Output = UTerm;
+    #[inline]
     fn shl(self, _: B1) -> Self::Output {
         UTerm
     }
@@ -693,6 +879,7 @@ impl Shl<B1> for UTerm {
 /// Shifting left any unsigned by a zero bit: `U << B0 = U`
 impl<U: Unsigned, B: Bit> Shl<B0> for UInt<U, B> {
     type Output = UInt<U, B>;
+    #[inline]
     fn shl(self, _: B0) -> Self::Output {
         UInt::new()
     }
@@ -701,6 +888,7 @@ impl<U: Unsigned, B: Bit> Shl<B0> for UInt<U, B> {
 /// Shifting left a `UInt` by a one bit: `UInt<U, B> << B1 = UInt<UInt<U, B>, B0>`
 impl<U: Unsigned, B: Bit> Shl<B1> for UInt<U, B> {
     type Output = UInt<UInt<U, B>, B0>;
+    #[inline]
     fn shl(self, _: B1) -> Self::Output {
         UInt::new()
     }
@@ -709,6 +897,7 @@ impl<U: Unsigned, B: Bit> Shl<B1> for UInt<U, B> {
 /// Shifting left `UInt` by `UTerm`: `UInt<U, B> << UTerm = UInt<U, B>`
 impl<U: Unsigned, B: Bit> Shl<UTerm> for UInt<U, B> {
     type Output = UInt<U, B>;
+    #[inline]
     fn shl(self, _: UTerm) -> Self::Output {
         UInt::new()
     }
@@ -717,6 +906,7 @@ impl<U: Unsigned, B: Bit> Shl<UTerm> for UInt<U, B> {
 /// Shifting left `UTerm` by an unsigned integer: `UTerm << U = UTerm`
 impl<U: Unsigned> Shl<U> for UTerm {
     type Output = UTerm;
+    #[inline]
     fn shl(self, _: U) -> Self::Output {
         UTerm
     }
@@ -729,8 +919,9 @@ where
     UInt<UInt<U, B>, B0>: Shl<Sub1<UInt<Ur, Br>>>,
 {
     type Output = Shleft<UInt<UInt<U, B>, B0>, Sub1<UInt<Ur, Br>>>;
-    fn shl(self, _: UInt<Ur, Br>) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn shl(self, rhs: UInt<Ur, Br>) -> Self::Output {
+        (UInt { msb: self, lsb: B0 }).shl(rhs - B1)
     }
 }
 
@@ -740,6 +931,7 @@ where
 /// Shifting right a `UTerm` by an unsigned integer: `UTerm >> U = UTerm`
 impl<U: Unsigned> Shr<U> for UTerm {
     type Output = UTerm;
+    #[inline]
     fn shr(self, _: U) -> Self::Output {
         UTerm
     }
@@ -748,6 +940,7 @@ impl<U: Unsigned> Shr<U> for UTerm {
 /// Shifting right `UInt` by `UTerm`: `UInt<U, B> >> UTerm = UInt<U, B>`
 impl<U: Unsigned, B: Bit> Shr<UTerm> for UInt<U, B> {
     type Output = UInt<U, B>;
+    #[inline]
     fn shr(self, _: UTerm) -> Self::Output {
         UInt::new()
     }
@@ -756,6 +949,7 @@ impl<U: Unsigned, B: Bit> Shr<UTerm> for UInt<U, B> {
 /// Shifting right `UTerm` by a 0 bit: `UTerm >> B0 = UTerm`
 impl Shr<B0> for UTerm {
     type Output = UTerm;
+    #[inline]
     fn shr(self, _: B0) -> Self::Output {
         UTerm
     }
@@ -764,6 +958,7 @@ impl Shr<B0> for UTerm {
 /// Shifting right `UTerm` by a 1 bit: `UTerm >> B1 = UTerm`
 impl Shr<B1> for UTerm {
     type Output = UTerm;
+    #[inline]
     fn shr(self, _: B1) -> Self::Output {
         UTerm
     }
@@ -772,6 +967,7 @@ impl Shr<B1> for UTerm {
 /// Shifting right any unsigned by a zero bit: `U >> B0 = U`
 impl<U: Unsigned, B: Bit> Shr<B0> for UInt<U, B> {
     type Output = UInt<U, B>;
+    #[inline]
     fn shr(self, _: B0) -> Self::Output {
         UInt::new()
     }
@@ -780,8 +976,9 @@ impl<U: Unsigned, B: Bit> Shr<B0> for UInt<U, B> {
 /// Shifting right a `UInt` by a 1 bit: `UInt<U, B> >> B1 = U`
 impl<U: Unsigned, B: Bit> Shr<B1> for UInt<U, B> {
     type Output = U;
+    #[inline]
     fn shr(self, _: B1) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+        self.msb
     }
 }
 
@@ -792,8 +989,9 @@ where
     U: Shr<Sub1<UInt<Ur, Br>>>,
 {
     type Output = Shright<U, Sub1<UInt<Ur, Br>>>;
-    fn shr(self, _: UInt<Ur, Br>) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn shr(self, rhs: UInt<Ur, Br>) -> Self::Output {
+        self.msb.shr(rhs - B1)
     }
 }
 
@@ -803,6 +1001,7 @@ where
 /// `UInt * B0 = UTerm`
 impl<U: Unsigned, B: Bit> Mul<B0> for UInt<U, B> {
     type Output = UTerm;
+    #[inline]
     fn mul(self, _: B0) -> Self::Output {
         UTerm
     }
@@ -811,6 +1010,7 @@ impl<U: Unsigned, B: Bit> Mul<B0> for UInt<U, B> {
 /// `UTerm * B0 = UTerm`
 impl Mul<B0> for UTerm {
     type Output = UTerm;
+    #[inline]
     fn mul(self, _: B0) -> Self::Output {
         UTerm
     }
@@ -819,6 +1019,7 @@ impl Mul<B0> for UTerm {
 /// `UTerm * B1 = UTerm`
 impl Mul<B1> for UTerm {
     type Output = UTerm;
+    #[inline]
     fn mul(self, _: B1) -> Self::Output {
         UTerm
     }
@@ -827,6 +1028,7 @@ impl Mul<B1> for UTerm {
 /// `UInt * B1 = UInt`
 impl<U: Unsigned, B: Bit> Mul<B1> for UInt<U, B> {
     type Output = UInt<U, B>;
+    #[inline]
     fn mul(self, _: B1) -> Self::Output {
         UInt::new()
     }
@@ -835,6 +1037,7 @@ impl<U: Unsigned, B: Bit> Mul<B1> for UInt<U, B> {
 /// `UInt<U, B> * UTerm = UTerm`
 impl<U: Unsigned, B: Bit> Mul<UTerm> for UInt<U, B> {
     type Output = UTerm;
+    #[inline]
     fn mul(self, _: UTerm) -> Self::Output {
         UTerm
     }
@@ -843,6 +1046,7 @@ impl<U: Unsigned, B: Bit> Mul<UTerm> for UInt<U, B> {
 /// `UTerm * U = UTerm`
 impl<U: Unsigned> Mul<U> for UTerm {
     type Output = UTerm;
+    #[inline]
     fn mul(self, _: U) -> Self::Output {
         UTerm
     }
@@ -854,8 +1058,12 @@ where
     Ul: Mul<UInt<Ur, B>>,
 {
     type Output = UInt<Prod<Ul, UInt<Ur, B>>, B0>;
-    fn mul(self, _: UInt<Ur, B>) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn mul(self, rhs: UInt<Ur, B>) -> Self::Output {
+        UInt {
+            msb: self.msb * rhs,
+            lsb: B0,
+        }
     }
 }
 
@@ -866,8 +1074,12 @@ where
     UInt<Prod<Ul, UInt<Ur, B>>, B0>: Add<UInt<Ur, B>>,
 {
     type Output = Sum<UInt<Prod<Ul, UInt<Ur, B>>, B0>, UInt<Ur, B>>;
-    fn mul(self, _: UInt<Ur, B>) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn mul(self, rhs: UInt<Ur, B>) -> Self::Output {
+        UInt {
+            msb: self.msb * rhs,
+            lsb: B0,
+        } + rhs
     }
 }
 
@@ -877,16 +1089,31 @@ where
 /// Zero == Zero
 impl Cmp<UTerm> for UTerm {
     type Output = Equal;
+
+    #[inline]
+    fn compare<IM: InternalMarker>(&self, _: &UTerm) -> Self::Output {
+        Equal
+    }
 }
 
 /// Nonzero > Zero
 impl<U: Unsigned, B: Bit> Cmp<UTerm> for UInt<U, B> {
     type Output = Greater;
+
+    #[inline]
+    fn compare<IM: InternalMarker>(&self, _: &UTerm) -> Self::Output {
+        Greater
+    }
 }
 
 /// Zero < Nonzero
 impl<U: Unsigned, B: Bit> Cmp<UInt<U, B>> for UTerm {
     type Output = Less;
+
+    #[inline]
+    fn compare<IM: InternalMarker>(&self, _: &UInt<U, B>) -> Self::Output {
+        Less
+    }
 }
 
 /// `UInt<Ul, B0>` cmp with `UInt<Ur, B0>`: `SoFar` is `Equal`
@@ -895,6 +1122,11 @@ where
     Ul: PrivateCmp<Ur, Equal>,
 {
     type Output = PrivateCmpOut<Ul, Ur, Equal>;
+
+    #[inline]
+    fn compare<IM: InternalMarker>(&self, rhs: &UInt<Ur, B0>) -> Self::Output {
+        self.msb.private_cmp(&rhs.msb, Equal)
+    }
 }
 
 /// `UInt<Ul, B1>` cmp with `UInt<Ur, B1>`: `SoFar` is `Equal`
@@ -903,6 +1135,11 @@ where
     Ul: PrivateCmp<Ur, Equal>,
 {
     type Output = PrivateCmpOut<Ul, Ur, Equal>;
+
+    #[inline]
+    fn compare<IM: InternalMarker>(&self, rhs: &UInt<Ur, B1>) -> Self::Output {
+        self.msb.private_cmp(&rhs.msb, Equal)
+    }
 }
 
 /// `UInt<Ul, B0>` cmp with `UInt<Ur, B1>`: `SoFar` is `Less`
@@ -911,6 +1148,11 @@ where
     Ul: PrivateCmp<Ur, Less>,
 {
     type Output = PrivateCmpOut<Ul, Ur, Less>;
+
+    #[inline]
+    fn compare<IM: InternalMarker>(&self, rhs: &UInt<Ur, B1>) -> Self::Output {
+        self.msb.private_cmp(&rhs.msb, Less)
+    }
 }
 
 /// `UInt<Ul, B1>` cmp with `UInt<Ur, B0>`: `SoFar` is `Greater`
@@ -919,6 +1161,11 @@ where
     Ul: PrivateCmp<Ur, Greater>,
 {
     type Output = PrivateCmpOut<Ul, Ur, Greater>;
+
+    #[inline]
+    fn compare<IM: InternalMarker>(&self, rhs: &UInt<Ur, B0>) -> Self::Output {
+        self.msb.private_cmp(&rhs.msb, Greater)
+    }
 }
 
 /// Comparing non-terimal bits, with both having bit `B0`.
@@ -931,6 +1178,11 @@ where
     Ul: PrivateCmp<Ur, SoFar>,
 {
     type Output = PrivateCmpOut<Ul, Ur, SoFar>;
+
+    #[inline]
+    fn private_cmp(&self, rhs: &UInt<Ur, B0>, so_far: SoFar) -> Self::Output {
+        self.msb.private_cmp(&rhs.msb, so_far)
+    }
 }
 
 /// Comparing non-terimal bits, with both having bit `B1`.
@@ -943,6 +1195,11 @@ where
     Ul: PrivateCmp<Ur, SoFar>,
 {
     type Output = PrivateCmpOut<Ul, Ur, SoFar>;
+
+    #[inline]
+    fn private_cmp(&self, rhs: &UInt<Ur, B1>, so_far: SoFar) -> Self::Output {
+        self.msb.private_cmp(&rhs.msb, so_far)
+    }
 }
 
 /// Comparing non-terimal bits, with `Lhs` having bit `B0` and `Rhs` having bit `B1`.
@@ -955,6 +1212,11 @@ where
     Ul: PrivateCmp<Ur, Less>,
 {
     type Output = PrivateCmpOut<Ul, Ur, Less>;
+
+    #[inline]
+    fn private_cmp(&self, rhs: &UInt<Ur, B1>, _: SoFar) -> Self::Output {
+        self.msb.private_cmp(&rhs.msb, Less)
+    }
 }
 
 /// Comparing non-terimal bits, with `Lhs` having bit `B1` and `Rhs` having bit `B0`.
@@ -967,21 +1229,41 @@ where
     Ul: PrivateCmp<Ur, Greater>,
 {
     type Output = PrivateCmpOut<Ul, Ur, Greater>;
+
+    #[inline]
+    fn private_cmp(&self, rhs: &UInt<Ur, B0>, _: SoFar) -> Self::Output {
+        self.msb.private_cmp(&rhs.msb, Greater)
+    }
 }
 
 /// Got to the end of just the `Lhs`. It's `Less`.
 impl<U: Unsigned, B: Bit, SoFar: Ord> PrivateCmp<UInt<U, B>, SoFar> for UTerm {
     type Output = Less;
+
+    #[inline]
+    fn private_cmp(&self, _: &UInt<U, B>, _: SoFar) -> Self::Output {
+        Less
+    }
 }
 
 /// Got to the end of just the `Rhs`. `Lhs` is `Greater`.
 impl<U: Unsigned, B: Bit, SoFar: Ord> PrivateCmp<UTerm, SoFar> for UInt<U, B> {
     type Output = Greater;
+
+    #[inline]
+    fn private_cmp(&self, _: &UTerm, _: SoFar) -> Self::Output {
+        Greater
+    }
 }
 
 /// Got to the end of both! Return `SoFar`
 impl<SoFar: Ord> PrivateCmp<UTerm, SoFar> for UTerm {
     type Output = SoFar;
+
+    #[inline]
+    fn private_cmp(&self, _: &UTerm, so_far: SoFar) -> Self::Output {
+        so_far
+    }
 }
 
 // ---------------------------------------------------------------------------------------
@@ -1025,13 +1307,19 @@ where
     X: PrivatePow<U1, N>,
 {
     type Output = PrivatePowOut<X, U1, N>;
-    fn powi(self, _: N) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn powi(self, n: N) -> Self::Output {
+        self.private_pow(U1::new(), n)
     }
 }
 
 impl<Y: Unsigned, X: Unsigned> PrivatePow<Y, U0> for X {
     type Output = Y;
+
+    #[inline]
+    fn private_pow(self, y: Y, _: U0) -> Self::Output {
+        y
+    }
 }
 
 impl<Y: Unsigned, X: Unsigned> PrivatePow<Y, U1> for X
@@ -1039,6 +1327,11 @@ where
     X: Mul<Y>,
 {
     type Output = Prod<X, Y>;
+
+    #[inline]
+    fn private_pow(self, y: Y, _: U1) -> Self::Output {
+        self * y
+    }
 }
 
 /// N is even
@@ -1048,6 +1341,11 @@ where
     Square<X>: PrivatePow<Y, UInt<U, B>>,
 {
     type Output = PrivatePowOut<Square<X>, Y, UInt<U, B>>;
+
+    #[inline]
+    fn private_pow(self, y: Y, n: UInt<UInt<U, B>, B0>) -> Self::Output {
+        (self * self).private_pow(y, n.msb)
+    }
 }
 
 /// N is odd
@@ -1057,6 +1355,115 @@ where
     Square<X>: PrivatePow<Prod<X, Y>, UInt<U, B>>,
 {
     type Output = PrivatePowOut<Square<X>, Prod<X, Y>, UInt<U, B>>;
+
+    #[inline]
+    fn private_pow(self, y: Y, n: UInt<UInt<U, B>, B1>) -> Self::Output {
+        (self * self).private_pow(self * y, n.msb)
+    }
+}
+
+//------------------------------------------
+// Greatest Common Divisor
+
+/// The even number 2*N
+#[allow(unused)] // Silence spurious warning on older versions of rust
+type Even<N> = UInt<N, B0>;
+
+/// The odd number 2*N + 1
+type Odd<N> = UInt<N, B1>;
+
+/// gcd(0, 0) = 0
+impl Gcd<U0> for U0 {
+    type Output = U0;
+}
+
+/// gcd(x, 0) = x
+impl<X> Gcd<U0> for X
+where
+    X: Unsigned + NonZero,
+{
+    type Output = X;
+}
+
+/// gcd(0, y) = y
+impl<Y> Gcd<Y> for U0
+where
+    Y: Unsigned + NonZero,
+{
+    type Output = Y;
+}
+
+/// gcd(x, y) = 2*gcd(x/2, y/2) if both x and y even
+impl<Xp, Yp> Gcd<Even<Yp>> for Even<Xp>
+where
+    Xp: Gcd<Yp>,
+    Even<Xp>: NonZero,
+    Even<Yp>: NonZero,
+{
+    type Output = UInt<Gcf<Xp, Yp>, B0>;
+}
+
+/// gcd(x, y) = gcd(x, y/2) if x odd and y even
+impl<Xp, Yp> Gcd<Even<Yp>> for Odd<Xp>
+where
+    Odd<Xp>: Gcd<Yp>,
+    Even<Yp>: NonZero,
+{
+    type Output = Gcf<Odd<Xp>, Yp>;
+}
+
+/// gcd(x, y) = gcd(x/2, y) if x even and y odd
+impl<Xp, Yp> Gcd<Odd<Yp>> for Even<Xp>
+where
+    Xp: Gcd<Odd<Yp>>,
+    Even<Xp>: NonZero,
+{
+    type Output = Gcf<Xp, Odd<Yp>>;
+}
+
+/// gcd(x, y) = gcd([max(x, y) - min(x, y)], min(x, y)) if both x and y odd
+///
+/// This will immediately invoke the case for x even and y odd because the difference of two odd
+/// numbers is an even number.
+impl<Xp, Yp> Gcd<Odd<Yp>> for Odd<Xp>
+where
+    Odd<Xp>: Max<Odd<Yp>> + Min<Odd<Yp>>,
+    Odd<Yp>: Max<Odd<Xp>> + Min<Odd<Xp>>,
+    Maximum<Odd<Xp>, Odd<Yp>>: Sub<Minimum<Odd<Xp>, Odd<Yp>>>,
+    Diff<Maximum<Odd<Xp>, Odd<Yp>>, Minimum<Odd<Xp>, Odd<Yp>>>: Gcd<Minimum<Odd<Xp>, Odd<Yp>>>,
+{
+    type Output =
+        Gcf<Diff<Maximum<Odd<Xp>, Odd<Yp>>, Minimum<Odd<Xp>, Odd<Yp>>>, Minimum<Odd<Xp>, Odd<Yp>>>;
+}
+
+#[cfg(test)]
+mod gcd_tests {
+    use super::*;
+    use consts::*;
+
+    macro_rules! gcd_test {
+        (
+            $( $a:ident, $b:ident => $c:ident ),* $(,)*
+        ) => {
+            $(
+                assert_eq!(<Gcf<$a, $b> as Unsigned>::to_usize(), $c::to_usize());
+                assert_eq!(<Gcf<$b, $a> as Unsigned>::to_usize(), $c::to_usize());
+             )*
+        }
+    }
+
+    #[test]
+    fn gcd() {
+        gcd_test! {
+            U0,   U0    => U0,
+            U0,   U42   => U42,
+            U12,  U8    => U4,
+            U13,  U1013 => U1,  // Two primes
+            U9,   U26   => U1,  // Not prime but coprime
+            U143, U273  => U13,
+            U117, U273  => U39,
+        }
+    }
 }
 
 // -----------------------------------------
@@ -1066,28 +1473,49 @@ where
 pub trait GetBit<I> {
     #[allow(missing_docs)]
     type Output;
+
+    #[doc(hidden)]
+    fn get_bit<IM: InternalMarker>(&self, &I) -> Self::Output;
 }
 
 #[allow(missing_docs)]
 pub type GetBitOut<N, I> = <N as GetBit<I>>::Output;
 
 // Base case
-impl<Un, Bn> GetBit<U0> for UInt<Un, Bn> {
+impl<Un, Bn> GetBit<U0> for UInt<Un, Bn>
+where
+    Bn: Copy,
+{
     type Output = Bn;
+
+    #[inline]
+    fn get_bit<IM: InternalMarker>(&self, _: &U0) -> Self::Output {
+        self.lsb
+    }
 }
 
 // Recursion case
 impl<Un, Bn, Ui, Bi> GetBit<UInt<Ui, Bi>> for UInt<Un, Bn>
 where
-    UInt<Ui, Bi>: Sub<B1>,
+    UInt<Ui, Bi>: Copy + Sub<B1>,
     Un: GetBit<Sub1<UInt<Ui, Bi>>>,
 {
     type Output = GetBitOut<Un, Sub1<UInt<Ui, Bi>>>;
+
+    #[inline]
+    fn get_bit<IM: InternalMarker>(&self, i: &UInt<Ui, Bi>) -> Self::Output {
+        self.msb.get_bit::<Internal>(&(*i - B1))
+    }
 }
 
 // Ran out of bits
 impl<I> GetBit<I> for UTerm {
     type Output = B0;
+
+    #[inline]
+    fn get_bit<IM: InternalMarker>(&self, _: &I) -> Self::Output {
+        B0
+    }
 }
 
 #[test]
@@ -1111,6 +1539,9 @@ fn test_get_bit() {
 pub trait SetBit<I, B> {
     #[allow(missing_docs)]
     type Output;
+
+    #[doc(hidden)]
+    fn set_bit<IM: InternalMarker>(self, I, B) -> Self::Output;
 }
 /// Alias for the result of calling `SetBit`: `SetBitOut<N, I, B> = <N as SetBit<I, B>>::Output`.
 pub type SetBitOut<N, I, B> = <N as SetBit<I, B>>::Output;
@@ -1124,11 +1555,24 @@ where
     PrivateSetBitOut<N, I, B>: Trim,
 {
     type Output = TrimOut<PrivateSetBitOut<N, I, B>>;
+
+    #[inline]
+    fn set_bit<IM: InternalMarker>(self, i: I, b: B) -> Self::Output {
+        self.private_set_bit(i, b).trim()
+    }
 }
 
 // Base case
 impl<Un, Bn, B> PrivateSetBit<U0, B> for UInt<Un, Bn> {
     type Output = UInt<Un, B>;
+
+    #[inline]
+    fn private_set_bit(self, _: U0, b: B) -> Self::Output {
+        UInt {
+            msb: self.msb,
+            lsb: b,
+        }
+    }
 }
 
 // Recursion case
@@ -1138,11 +1582,24 @@ where
     Un: PrivateSetBit<Sub1<UInt<Ui, Bi>>, B>,
 {
     type Output = UInt<PrivateSetBitOut<Un, Sub1<UInt<Ui, Bi>>, B>, Bn>;
+
+    #[inline]
+    fn private_set_bit(self, i: UInt<Ui, Bi>, b: B) -> Self::Output {
+        UInt {
+            msb: self.msb.private_set_bit(i - B1, b),
+            lsb: self.lsb,
+        }
+    }
 }
 
 // Ran out of bits, setting B0
 impl<I> PrivateSetBit<I, B0> for UTerm {
     type Output = UTerm;
+
+    #[inline]
+    fn private_set_bit(self, _: I, _: B0) -> Self::Output {
+        UTerm
+    }
 }
 
 // Ran out of bits, setting B1
@@ -1151,6 +1608,11 @@ where
     U1: Shl<I>,
 {
     type Output = Shleft<U1, I>;
+
+    #[inline]
+    fn private_set_bit(self, i: I, _: B1) -> Self::Output {
+        <U1 as Shl<I>>::shl(U1::new(), i)
+    }
 }
 
 #[test]
@@ -1200,12 +1662,10 @@ fn test_set_bit() {
 #[cfg(tests)]
 mod tests {
     macro_rules! test_div {
-        ($a:ident / $b:ident = $c:ident) => (
-            {
-                type R = Quot<$a, $b>;
-                assert_eq!(<R as Unsigned>::to_usize(), $c::to_usize());
-            }
-        );
+        ($a:ident / $b:ident = $c:ident) => {{
+            type R = Quot<$a, $b>;
+            assert_eq!(<R as Unsigned>::to_usize(), $c::to_usize());
+        }};
     }
     #[test]
     fn test_div() {
@@ -1237,6 +1697,7 @@ use core::ops::Div;
 // 0 // N
 impl<Ur: Unsigned, Br: Bit> Div<UInt<Ur, Br>> for UTerm {
     type Output = UTerm;
+    #[inline]
     fn div(self, _: UInt<Ur, Br>) -> Self::Output {
         UTerm
     }
@@ -1250,8 +1711,10 @@ where
     (): PrivateDiv<UInt<Ul, Bl>, UInt<Ur, Br>, U0, U0, Sub1<Length<UInt<Ul, Bl>>>>,
 {
     type Output = PrivateDivQuot<UInt<Ul, Bl>, UInt<Ur, Br>, U0, U0, Sub1<Length<UInt<Ul, Bl>>>>;
-    fn div(self, _: UInt<Ur, Br>) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    #[cfg_attr(feature = "cargo-clippy", allow(clippy::suspicious_arithmetic_impl))]
+    fn div(self, rhs: UInt<Ur, Br>) -> Self::Output {
+        ().private_div_quotient(self, rhs, U0::new(), U0::new(), self.len() - B1)
     }
 }
 
@@ -1262,6 +1725,7 @@ use core::ops::Rem;
 // 0 % N
 impl<Ur: Unsigned, Br: Bit> Rem<UInt<Ur, Br>> for UTerm {
     type Output = UTerm;
+    #[inline]
     fn rem(self, _: UInt<Ur, Br>) -> Self::Output {
         UTerm
     }
@@ -1275,8 +1739,9 @@ where
     (): PrivateDiv<UInt<Ul, Bl>, UInt<Ur, Br>, U0, U0, Sub1<Length<UInt<Ul, Bl>>>>,
 {
     type Output = PrivateDivRem<UInt<Ul, Bl>, UInt<Ur, Br>, U0, U0, Sub1<Length<UInt<Ul, Bl>>>>;
-    fn rem(self, _: UInt<Ur, Br>) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn rem(self, rhs: UInt<Ur, Br>) -> Self::Output {
+        ().private_div_remainder(self, rhs, UTerm, UTerm, self.len() - B1)
     }
 }
 
@@ -1316,6 +1781,29 @@ where
         I,
         Compare<TrimOut<UInt<UTerm, GetBitOut<N, I>>>, D>,
     >;
+
+    #[inline]
+    fn private_div_quotient(self, n: N, d: D, q: Q, _: U0, i: I) -> Self::Quotient
+where {
+        let r = (UInt {
+            msb: UTerm,
+            lsb: n.get_bit::<Internal>(&i),
+        })
+        .trim();
+        let r_cmp_d = r.compare::<Internal>(&d);
+        ().private_div_if_quotient(n, d, q, r, i, r_cmp_d)
+    }
+
+    #[inline]
+    fn private_div_remainder(self, n: N, d: D, q: Q, _: U0, i: I) -> Self::Remainder {
+        let r = (UInt {
+            msb: UTerm,
+            lsb: n.get_bit::<Internal>(&i),
+        })
+        .trim();
+        let r_cmp_d = r.compare::<Internal>(&d);
+        ().private_div_if_remainder(n, d, q, r, i, r_cmp_d)
+    }
 }
 
 // R > 0: We perform R <<= 1 and R[0] = N[i], then call out to PrivateDivIf for the if statement
@@ -1348,6 +1836,26 @@ where
         I,
         Compare<UInt<UInt<Ur, Br>, GetBitOut<N, I>>, D>,
     >;
+
+    #[inline]
+    fn private_div_quotient(self, n: N, d: D, q: Q, r: UInt<Ur, Br>, i: I) -> Self::Quotient {
+        let r = UInt {
+            msb: r,
+            lsb: n.get_bit::<Internal>(&i),
+        };
+        let r_cmp_d = r.compare::<Internal>(&d);
+        ().private_div_if_quotient(n, d, q, r, i, r_cmp_d)
+    }
+
+    #[inline]
+    fn private_div_remainder(self, n: N, d: D, q: Q, r: UInt<Ur, Br>, i: I) -> Self::Remainder {
+        let r = UInt {
+            msb: r,
+            lsb: n.get_bit::<Internal>(&i),
+        };
+        let r_cmp_d = r.compare::<Internal>(&d);
+        ().private_div_if_remainder(n, d, q, r, i, r_cmp_d)
+    }
 }
 
 // -----------------------------------------
@@ -1363,24 +1871,81 @@ where
 {
     type Quotient = PrivateDivQuot<N, D, Q, R, Sub1<UInt<Ui, Bi>>>;
     type Remainder = PrivateDivRem<N, D, Q, R, Sub1<UInt<Ui, Bi>>>;
+
+    #[inline]
+    fn private_div_if_quotient(
+        self,
+        n: N,
+        d: D,
+        q: Q,
+        r: R,
+        i: UInt<Ui, Bi>,
+        _: Less,
+    ) -> Self::Quotient
+where {
+        ().private_div_quotient(n, d, q, r, i - B1)
+    }
+
+    #[inline]
+    fn private_div_if_remainder(
+        self,
+        n: N,
+        d: D,
+        q: Q,
+        r: R,
+        i: UInt<Ui, Bi>,
+        _: Less,
+    ) -> Self::Remainder
+where {
+        ().private_div_remainder(n, d, q, r, i - B1)
+    }
 }
 
 // R == D, I > 0, we set R = 0, Q[I] = 1 and recurse
 impl<N, D, Q, R, Ui, Bi> PrivateDivIf<N, D, Q, R, UInt<Ui, Bi>, Equal> for ()
 where
-    UInt<Ui, Bi>: Sub<B1>,
+    UInt<Ui, Bi>: Copy + Sub<B1>,
     Q: SetBit<UInt<Ui, Bi>, B1>,
     (): PrivateDiv<N, D, SetBitOut<Q, UInt<Ui, Bi>, B1>, U0, Sub1<UInt<Ui, Bi>>>,
 {
     type Quotient = PrivateDivQuot<N, D, SetBitOut<Q, UInt<Ui, Bi>, B1>, U0, Sub1<UInt<Ui, Bi>>>;
     type Remainder = PrivateDivRem<N, D, SetBitOut<Q, UInt<Ui, Bi>, B1>, U0, Sub1<UInt<Ui, Bi>>>;
+
+    #[inline]
+    fn private_div_if_quotient(
+        self,
+        n: N,
+        d: D,
+        q: Q,
+        _: R,
+        i: UInt<Ui, Bi>,
+        _: Equal,
+    ) -> Self::Quotient
+where {
+        ().private_div_quotient(n, d, q.set_bit::<Internal>(i, B1), U0::new(), i - B1)
+    }
+
+    #[inline]
+    fn private_div_if_remainder(
+        self,
+        n: N,
+        d: D,
+        q: Q,
+        _: R,
+        i: UInt<Ui, Bi>,
+        _: Equal,
+    ) -> Self::Remainder
+where {
+        ().private_div_remainder(n, d, q.set_bit::<Internal>(i, B1), U0::new(), i - B1)
+    }
 }
 
 use Diff;
 // R > D, I > 0, we set R -= D, Q[I] = 1 and recurse
 impl<N, D, Q, R, Ui, Bi> PrivateDivIf<N, D, Q, R, UInt<Ui, Bi>, Greater> for ()
 where
-    UInt<Ui, Bi>: Sub<B1>,
+    D: Copy,
+    UInt<Ui, Bi>: Copy + Sub<B1>,
     R: Sub<D>,
     Q: SetBit<UInt<Ui, Bi>, B1>,
     (): PrivateDiv<N, D, SetBitOut<Q, UInt<Ui, Bi>, B1>, Diff<R, D>, Sub1<UInt<Ui, Bi>>>,
@@ -1389,12 +1954,50 @@ where
         PrivateDivQuot<N, D, SetBitOut<Q, UInt<Ui, Bi>, B1>, Diff<R, D>, Sub1<UInt<Ui, Bi>>>;
     type Remainder =
         PrivateDivRem<N, D, SetBitOut<Q, UInt<Ui, Bi>, B1>, Diff<R, D>, Sub1<UInt<Ui, Bi>>>;
+
+    #[inline]
+    fn private_div_if_quotient(
+        self,
+        n: N,
+        d: D,
+        q: Q,
+        r: R,
+        i: UInt<Ui, Bi>,
+        _: Greater,
+    ) -> Self::Quotient
+where {
+        ().private_div_quotient(n, d, q.set_bit::<Internal>(i, B1), r - d, i - B1)
+    }
+
+    #[inline]
+    fn private_div_if_remainder(
+        self,
+        n: N,
+        d: D,
+        q: Q,
+        r: R,
+        i: UInt<Ui, Bi>,
+        _: Greater,
+    ) -> Self::Remainder
+where {
+        ().private_div_remainder(n, d, q.set_bit::<Internal>(i, B1), r - d, i - B1)
+    }
 }
 
 // R < D, I == 0: we do nothing, and return
 impl<N, D, Q, R> PrivateDivIf<N, D, Q, R, U0, Less> for () {
     type Quotient = Q;
     type Remainder = R;
+
+    #[inline]
+    fn private_div_if_quotient(self, _: N, _: D, q: Q, _: R, _: U0, _: Less) -> Self::Quotient {
+        q
+    }
+
+    #[inline]
+    fn private_div_if_remainder(self, _: N, _: D, _: Q, r: R, _: U0, _: Less) -> Self::Remainder {
+        r
+    }
 }
 
 // R == D, I == 0: we set R = 0, Q[I] = 1, and return
@@ -1404,6 +2007,16 @@ where
 {
     type Quotient = SetBitOut<Q, U0, B1>;
     type Remainder = U0;
+
+    #[inline]
+    fn private_div_if_quotient(self, _: N, _: D, q: Q, _: R, i: U0, _: Equal) -> Self::Quotient {
+        q.set_bit::<Internal>(i, B1)
+    }
+
+    #[inline]
+    fn private_div_if_remainder(self, _: N, _: D, _: Q, _: R, i: U0, _: Equal) -> Self::Remainder {
+        i
+    }
 }
 
 // R > D, I == 0: We set R -= D, Q[I] = 1, and return
@@ -1414,6 +2027,24 @@ where
 {
     type Quotient = SetBitOut<Q, U0, B1>;
     type Remainder = Diff<R, D>;
+
+    #[inline]
+    fn private_div_if_quotient(self, _: N, _: D, q: Q, _: R, i: U0, _: Greater) -> Self::Quotient {
+        q.set_bit::<Internal>(i, B1)
+    }
+
+    #[inline]
+    fn private_div_if_remainder(
+        self,
+        _: N,
+        d: D,
+        _: Q,
+        r: R,
+        _: U0,
+        _: Greater,
+    ) -> Self::Remainder {
+        r - d
+    }
 }
 
 // -----------------------------------------
@@ -1421,6 +2052,7 @@ where
 use {PartialDiv, Quot};
 impl<Ur: Unsigned, Br: Bit> PartialDiv<UInt<Ur, Br>> for UTerm {
     type Output = UTerm;
+    #[inline]
     fn partial_div(self, _: UInt<Ur, Br>) -> Self::Output {
         UTerm
     }
@@ -1432,8 +2064,9 @@ where
     UInt<Ul, Bl>: Div<UInt<Ur, Br>> + Rem<UInt<Ur, Br>, Output = U0>,
 {
     type Output = Quot<UInt<Ul, Bl>, UInt<Ur, Br>>;
-    fn partial_div(self, _: UInt<Ur, Br>) -> Self::Output {
-        unsafe { ::core::mem::uninitialized() }
+    #[inline]
+    fn partial_div(self, rhs: UInt<Ur, Br>) -> Self::Output {
+        self / rhs
     }
 }
 
@@ -1448,6 +2081,7 @@ where
     B: Bit,
 {
     type Output = UInt<U, B>;
+    #[inline]
     fn private_min(self, _: Ur) -> Self::Output {
         self
     }
@@ -1460,6 +2094,7 @@ where
     B: Bit,
 {
     type Output = UInt<U, B>;
+    #[inline]
     fn private_min(self, _: Ur) -> Self::Output {
         self
     }
@@ -1472,6 +2107,7 @@ where
     B: Bit,
 {
     type Output = Ur;
+    #[inline]
     fn private_min(self, rhs: Ur) -> Self::Output {
         rhs
     }
@@ -1486,6 +2122,7 @@ where
     U: Unsigned,
 {
     type Output = UTerm;
+    #[inline]
     fn min(self, _: U) -> Self::Output {
         self
     }
@@ -1499,6 +2136,7 @@ where
     UInt<U, B>: Cmp<Ur> + PrivateMin<Ur, Compare<UInt<U, B>, Ur>>,
 {
     type Output = PrivateMinOut<UInt<U, B>, Ur, Compare<UInt<U, B>, Ur>>;
+    #[inline]
     fn min(self, rhs: Ur) -> Self::Output {
         self.private_min(rhs)
     }
@@ -1515,6 +2153,7 @@ where
     B: Bit,
 {
     type Output = UInt<U, B>;
+    #[inline]
     fn private_max(self, _: Ur) -> Self::Output {
         self
     }
@@ -1527,6 +2166,7 @@ where
     B: Bit,
 {
     type Output = Ur;
+    #[inline]
     fn private_max(self, rhs: Ur) -> Self::Output {
         rhs
     }
@@ -1539,6 +2179,7 @@ where
     B: Bit,
 {
     type Output = UInt<U, B>;
+    #[inline]
     fn private_max(self, _: Ur) -> Self::Output {
         self
     }
@@ -1553,6 +2194,7 @@ where
     U: Unsigned,
 {
     type Output = U;
+    #[inline]
     fn max(self, rhs: U) -> Self::Output {
         rhs
     }
@@ -1566,7 +2208,163 @@ where
     UInt<U, B>: Cmp<Ur> + PrivateMax<Ur, Compare<UInt<U, B>, Ur>>,
 {
     type Output = PrivateMaxOut<UInt<U, B>, Ur, Compare<UInt<U, B>, Ur>>;
+    #[inline]
     fn max(self, rhs: Ur) -> Self::Output {
         self.private_max(rhs)
     }
+}
+
+// -----------------------------------------
+// SquareRoot
+
+impl<N> SquareRoot for N
+where
+    N: PrivateSquareRoot,
+{
+    type Output = <Self as PrivateSquareRoot>::Output;
+}
+
+// sqrt(0) = 0.
+impl PrivateSquareRoot for UTerm {
+    type Output = UTerm;
+}
+
+// sqrt(1) = 1.
+impl PrivateSquareRoot for UInt<UTerm, B1> {
+    type Output = UInt<UTerm, B1>;
+}
+
+// General case of sqrt(Self) where Self >= 2. If a and b are
+// bit-valued and Self = 4*u + 2*a + b, then the integer-valued
+// (fractional part truncated) square root of Self is either 2*sqrt(u)
+// or 2*sqrt(u)+1. Guess and check by comparing (2*sqrt(u)+1)^2
+// against Self. Since the `typenum` result of that comparison is a
+// bit, directly add that bit to 2*sqrt(u).
+//
+// Use `Sum<Double<Sqrt<U>>, GrEq<...>>` instead of `UInt<Sqrt<U>,
+// GrEq<...>>` because `Sqrt<U>` can turn out to be `UTerm` and
+// `GrEq<...>` can turn out to be `B0`, which would not be a valid
+// UInt as leading zeros are disallowed.
+impl<U, Ba, Bb> PrivateSquareRoot for UInt<UInt<U, Ba>, Bb>
+where
+    U: Unsigned,
+    Ba: Bit,
+    Bb: Bit,
+    U: SquareRoot,
+    Sqrt<U>: Shl<B1>,
+    Double<Sqrt<U>>: Add<B1>,
+    Add1<Double<Sqrt<U>>>: Mul,
+    Self: IsGreaterOrEqual<Square<Add1<Double<Sqrt<U>>>>>,
+    Double<Sqrt<U>>: Add<GrEq<Self, Square<Add1<Double<Sqrt<U>>>>>>,
+{
+    type Output = Sum<Double<Sqrt<U>>, GrEq<Self, Square<Add1<Double<Sqrt<U>>>>>>;
+}
+
+#[test]
+fn sqrt_test() {
+    use consts::*;
+
+    assert_eq!(0, <Sqrt<U0>>::to_u32());
+
+    assert_eq!(1, <Sqrt<U1>>::to_u32());
+    assert_eq!(1, <Sqrt<U2>>::to_u32());
+    assert_eq!(1, <Sqrt<U3>>::to_u32());
+
+    assert_eq!(2, <Sqrt<U4>>::to_u32());
+    assert_eq!(2, <Sqrt<U5>>::to_u32());
+    assert_eq!(2, <Sqrt<U6>>::to_u32());
+    assert_eq!(2, <Sqrt<U7>>::to_u32());
+    assert_eq!(2, <Sqrt<U8>>::to_u32());
+
+    assert_eq!(3, <Sqrt<U9>>::to_u32());
+    assert_eq!(3, <Sqrt<U10>>::to_u32());
+    assert_eq!(3, <Sqrt<U11>>::to_u32());
+    assert_eq!(3, <Sqrt<U12>>::to_u32());
+    assert_eq!(3, <Sqrt<U13>>::to_u32());
+    assert_eq!(3, <Sqrt<U14>>::to_u32());
+    assert_eq!(3, <Sqrt<U15>>::to_u32());
+
+    assert_eq!(4, <Sqrt<U16>>::to_u32());
+    assert_eq!(4, <Sqrt<U17>>::to_u32());
+    assert_eq!(4, <Sqrt<U18>>::to_u32());
+    assert_eq!(4, <Sqrt<U19>>::to_u32());
+    assert_eq!(4, <Sqrt<U20>>::to_u32());
+    assert_eq!(4, <Sqrt<U21>>::to_u32());
+    assert_eq!(4, <Sqrt<U22>>::to_u32());
+    assert_eq!(4, <Sqrt<U23>>::to_u32());
+    assert_eq!(4, <Sqrt<U24>>::to_u32());
+
+    assert_eq!(5, <Sqrt<U25>>::to_u32());
+    assert_eq!(5, <Sqrt<U26>>::to_u32());
+    // ...
+}
+
+// -----------------------------------------
+// Logarithm2
+
+impl<N> Logarithm2 for N
+where
+    N: PrivateLogarithm2,
+{
+    type Output = <Self as PrivateLogarithm2>::Output;
+}
+
+// log2(1) = 0.
+impl PrivateLogarithm2 for UInt<UTerm, B1> {
+    type Output = U0;
+}
+
+// General case of log2(Self) where Self >= 2.
+impl<U, B> PrivateLogarithm2 for UInt<U, B>
+where
+    U: Unsigned + Logarithm2,
+    B: Bit,
+    Log2<U>: Add<B1>,
+{
+    type Output = Add1<Log2<U>>;
+}
+
+#[test]
+fn log2_test() {
+    use consts::*;
+
+    assert_eq!(0, <Log2<U1>>::to_u32());
+
+    assert_eq!(1, <Log2<U2>>::to_u32());
+    assert_eq!(1, <Log2<U3>>::to_u32());
+
+    assert_eq!(2, <Log2<U4>>::to_u32());
+    assert_eq!(2, <Log2<U5>>::to_u32());
+    assert_eq!(2, <Log2<U6>>::to_u32());
+    assert_eq!(2, <Log2<U7>>::to_u32());
+
+    assert_eq!(3, <Log2<U8>>::to_u32());
+    assert_eq!(3, <Log2<U9>>::to_u32());
+    assert_eq!(3, <Log2<U10>>::to_u32());
+    assert_eq!(3, <Log2<U11>>::to_u32());
+    assert_eq!(3, <Log2<U12>>::to_u32());
+    assert_eq!(3, <Log2<U13>>::to_u32());
+    assert_eq!(3, <Log2<U14>>::to_u32());
+    assert_eq!(3, <Log2<U15>>::to_u32());
+
+    assert_eq!(4, <Log2<U16>>::to_u32());
+    assert_eq!(4, <Log2<U17>>::to_u32());
+    assert_eq!(4, <Log2<U18>>::to_u32());
+    assert_eq!(4, <Log2<U19>>::to_u32());
+    assert_eq!(4, <Log2<U20>>::to_u32());
+    assert_eq!(4, <Log2<U21>>::to_u32());
+    assert_eq!(4, <Log2<U22>>::to_u32());
+    assert_eq!(4, <Log2<U23>>::to_u32());
+    assert_eq!(4, <Log2<U24>>::to_u32());
+    assert_eq!(4, <Log2<U25>>::to_u32());
+    assert_eq!(4, <Log2<U26>>::to_u32());
+    assert_eq!(4, <Log2<U27>>::to_u32());
+    assert_eq!(4, <Log2<U28>>::to_u32());
+    assert_eq!(4, <Log2<U29>>::to_u32());
+    assert_eq!(4, <Log2<U30>>::to_u32());
+    assert_eq!(4, <Log2<U31>>::to_u32());
+
+    assert_eq!(5, <Log2<U32>>::to_u32());
+    assert_eq!(5, <Log2<U33>>::to_u32());
+    // ...
 }

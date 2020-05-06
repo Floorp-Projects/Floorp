@@ -2,13 +2,36 @@ use std::{env, fmt, fs, io, path};
 
 use super::{gen_int, gen_uint};
 
+/// Computes the greatest common divisor of two integers.
+fn gcdi(mut a: i64, mut b: i64) -> i64 {
+    a = a.abs();
+    b = b.abs();
+
+    while a != 0 {
+        let tmp = b % a;
+        b = a;
+        a = tmp;
+    }
+
+    b
+}
+
+fn gcdu(mut a: u64, mut b: u64) -> u64 {
+    while a != 0 {
+        let tmp = b % a;
+        b = a;
+        a = tmp;
+    }
+
+    b
+}
+
 fn sign(i: i64) -> char {
-    if i > 0 {
-        'P'
-    } else if i < 0 {
-        'N'
-    } else {
-        '_'
+    use std::cmp::Ordering::*;
+    match i.cmp(&0) {
+        Greater => 'P',
+        Less => 'N',
+        Equal => '_',
     }
 }
 
@@ -68,11 +91,11 @@ fn test_{a}_{op}() {{
     }
 }
 
-fn uint_binary_test(a: u64, op: &'static str, b: u64, result: u64) -> UIntTest {
+fn uint_binary_test(left: u64, operator: &'static str, right: u64, result: u64) -> UIntTest {
     UIntTest {
-        a: a,
-        op: op,
-        b: Option::Some(b),
+        a: left,
+        op: operator,
+        b: Option::Some(right),
         r: result,
     }
 }
@@ -119,11 +142,11 @@ fn test_{sa}{a}_{op}_{sb}{b}() {{
     }
 }
 
-fn int_binary_test(a: i64, op: &'static str, b: i64, result: i64) -> IntBinaryTest {
+fn int_binary_test(left: i64, operator: &'static str, right: i64, result: i64) -> IntBinaryTest {
     IntBinaryTest {
-        a: a,
-        op: op,
-        b: b,
+        a: left,
+        op: operator,
+        b: right,
         r: result,
     }
 }
@@ -160,10 +183,10 @@ fn test_{sa}{a}_{op}() {{
     }
 }
 
-fn int_unary_test(op: &'static str, a: i64, result: i64) -> IntUnaryTest {
+fn int_unary_test(operator: &'static str, num: i64, result: i64) -> IntUnaryTest {
     IntUnaryTest {
-        op: op,
-        a: a,
+        op: operator,
+        a: num,
         r: result,
     }
 }
@@ -173,7 +196,7 @@ fn uint_cmp_test(a: u64, b: u64) -> String {
         "
 #[test]
 #[allow(non_snake_case)]
-fn test_{a}_cmp_{b}() {{
+fn test_{a}_Cmp_{b}() {{
     type A = {gen_a};
     type B = {gen_b};
 
@@ -194,7 +217,7 @@ fn int_cmp_test(a: i64, b: i64) -> String {
         "
 #[test]
 #[allow(non_snake_case)]
-fn test_{sa}{a}_cmp_{sb}{b}() {{
+fn test_{sa}{a}_Cmp_{sb}{b}() {{
     type A = {gen_a};
     type B = {gen_b};
 
@@ -212,6 +235,8 @@ fn test_{sa}{a}_cmp_{sb}{b}() {{
     )
 }
 
+// Allow for rustc 1.22 compatibility.
+#[allow(bare_trait_objects)]
 pub fn build_tests() -> Result<(), Box<::std::error::Error>> {
     // will test all permutations of number pairs up to this (and down to its opposite for ints)
     let high: i64 = 5;
@@ -224,7 +249,7 @@ pub fn build_tests() -> Result<(), Box<::std::error::Error>> {
     let f = fs::File::create(&dest)?;
     let mut writer = io::BufWriter::new(&f);
     use std::io::Write;
-    writer.write(
+    writer.write_all(
         b"
 extern crate typenum;
 
@@ -244,6 +269,7 @@ use typenum::*;
         write!(writer, "{}", uint_binary_test(a, "Add", b, a + b))?;
         write!(writer, "{}", uint_binary_test(a, "Min", b, cmp::min(a, b)))?;
         write!(writer, "{}", uint_binary_test(a, "Max", b, cmp::max(a, b)))?;
+        write!(writer, "{}", uint_binary_test(a, "Gcd", b, gcdu(a, b)))?;
         if a >= b {
             write!(writer, "{}", uint_binary_test(a, "Sub", b, a - b))?;
         }
@@ -265,6 +291,7 @@ use typenum::*;
         write!(writer, "{}", int_binary_test(a, "Mul", b, a * b))?;
         write!(writer, "{}", int_binary_test(a, "Min", b, cmp::min(a, b)))?;
         write!(writer, "{}", int_binary_test(a, "Max", b, cmp::max(a, b)))?;
+        write!(writer, "{}", int_binary_test(a, "Gcd", b, gcdi(a, b)))?;
         if b != 0 {
             write!(writer, "{}", int_binary_test(a, "Div", b, a / b))?;
             write!(writer, "{}", int_binary_test(a, "Rem", b, a % b))?;
