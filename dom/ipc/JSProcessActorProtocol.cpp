@@ -26,9 +26,9 @@ JSProcessActorProtocol::FromIPC(const JSProcessActorInfo& aInfo) {
   RefPtr<JSProcessActorProtocol> proto =
       new JSProcessActorProtocol(aInfo.name());
 
-  proto->mRemoteTypes = aInfo.remoteTypes();
+  proto->mRemoteTypes = aInfo.remoteTypes().Clone();
   proto->mChild.mModuleURI = aInfo.url();
-  proto->mChild.mObservers = aInfo.observers();
+  proto->mChild.mObservers = aInfo.observers().Clone();
 
   return proto.forget();
 }
