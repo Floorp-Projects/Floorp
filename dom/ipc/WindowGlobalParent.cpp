@@ -82,6 +82,8 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
   // `gWindowContexts`.
   WindowContext::Init();
 
+  WindowContext::SetAllowMixedContent(aInit.allowMixedContent());
+
   // Determine which content process the window global is coming from.
   dom::ContentParentId processId(0);
   ContentParent* cp = nullptr;

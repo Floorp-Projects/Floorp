@@ -108,6 +108,16 @@ void WindowContext::SendCommitTransaction(ContentChild* aChild,
   aChild->SendCommitWindowContextTransaction(this, aTxn, aEpoch);
 }
 
+bool WindowContext::CanSet(FieldIndex<IDX_AllowMixedContent>,
+                           const bool& aAllowMixedContent,
+                           ContentParent* aSource) {
+  // reject all attempts to set allow mixed content from a content process
+  if (XRE_IsContentProcess() || aSource) {
+    return false;
+  }
+  return true;
+}
+
 bool WindowContext::CanSet(FieldIndex<IDX_IsThirdPartyWindow>,
                            const bool& IsThirdPartyWindow,
                            ContentParent* aSource) {
