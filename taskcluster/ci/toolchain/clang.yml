@@ -44,6 +44,7 @@ linux64-clang-7:
         fetch:
             - clang-7
         toolchain:
+            - linux64-binutils
             - linux64-gcc-7
 
 linux64-clang-9:

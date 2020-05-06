@@ -182,7 +182,7 @@ def make_job_description(config, jobs):
         }
 
         worker_type = 'b-linux'
-        worker['docker-image'] = {"in-tree": "debian7-amd64-build"}
+        worker['docker-image'] = {"in-tree": "debian8-amd64-build"}
 
         worker['artifacts'] = _generate_task_output_files(
             dep_job, worker_type_implementation(config.graph_config, worker_type),
