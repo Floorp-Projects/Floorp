@@ -42,7 +42,7 @@ test-info-fission:
         product: source
         job-name: test-info-fission
     worker:
-        docker-image: {in-tree: debian8-amd64-build}
+        docker-image: {in-tree: debian7-amd64-build}
     run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
@@ -68,7 +68,7 @@ test-info-disabled-by-os:
         product: source
         job-name: test-info-disabled-by-os
     worker:
-        docker-image: {in-tree: debian8-amd64-build}
+        docker-image: {in-tree: debian7-amd64-build}
     run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
@@ -97,7 +97,7 @@ test-info-all:
         product: source
         job-name: test-info-all
     worker:
-        docker-image: {in-tree: debian8-amd64-build}
+        docker-image: {in-tree: debian7-amd64-build}
         max-run-time: 5400
     run-on-projects: ['mozilla-central']
     fetches:
