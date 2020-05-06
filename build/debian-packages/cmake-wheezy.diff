@@ -1,0 +1,148 @@
+diff -Nru cmake-3.7.1/debian/changelog cmake-3.7.1/debian/changelog
+--- cmake-3.7.1/debian/changelog	2016-12-04 09:01:26.000000000 +0900
++++ cmake-3.7.1/debian/changelog	2017-12-21 15:46:11.000000000 +0900
+@@ -1,3 +1,22 @@
++cmake (3.7.1-1.deb7moz1) wheezy; urgency=medium
++
++  * Mozilla backport for wheezy.
++  * debian/rules, debian/control:
++    - Remove versioned dependencies on dpkg/dpkg-dev/debhelper.
++    - Don't build against system libraries. libuv is missing on wheezy, there
++      are API incompatibilities with libjsoncpp, and it's just simpler to
++      disable the use of system libraries altogether.
++    - Remove Qt GUI. Build profiles are not supported on Wheezy, and Qt5 is
++      not available either. It's not like we need the feature.
++    - Don't build a dbgsym package through dh_strip, that's not supported on
++      Wheezy.
++  * debian/*.maintscript: Remove symlink_to_dir entries, they're not supported
++    on Wheezy. Ideally, we'd replace them with the proper preinst snippet, but
++    it's only needed for upgrades of the package from older versions, and we
++    don't actually care that this works properly.
++
++ -- Mike Hommey <glandium@mozilla.com>  Thu, 21 Dec 2017 15:46:11 +0900
++
+ cmake (3.7.1-1) unstable; urgency=medium
+ 
+   * New upstream release.
+diff -Nru cmake-3.7.1/debian/cmake-curses-gui.maintscript cmake-3.7.1/debian/cmake-curses-gui.maintscript
+--- cmake-3.7.1/debian/cmake-curses-gui.maintscript	2016-10-31 02:20:34.000000000 +0900
++++ cmake-3.7.1/debian/cmake-curses-gui.maintscript	2017-12-21 15:46:11.000000000 +0900
+@@ -1 +0,0 @@
+-symlink_to_dir /usr/share/doc/cmake-curses-gui /usr/share/doc/cmake-data 2.8.12.2-2~
+diff -Nru cmake-3.7.1/debian/cmake-dbg.maintscript cmake-3.7.1/debian/cmake-dbg.maintscript
+--- cmake-3.7.1/debian/cmake-dbg.maintscript	2016-10-31 02:20:34.000000000 +0900
++++ cmake-3.7.1/debian/cmake-dbg.maintscript	2017-12-21 15:46:11.000000000 +0900
+@@ -1 +0,0 @@
+-symlink_to_dir /usr/share/doc/cmake-dbg /usr/share/doc/cmake-data 2.8.12.2-2~
+diff -Nru cmake-3.7.1/debian/cmake-qt-gui.maintscript cmake-3.7.1/debian/cmake-qt-gui.maintscript
+--- cmake-3.7.1/debian/cmake-qt-gui.maintscript	2016-10-31 02:20:34.000000000 +0900
++++ cmake-3.7.1/debian/cmake-qt-gui.maintscript	2017-12-21 15:46:11.000000000 +0900
+@@ -1 +0,0 @@
+-symlink_to_dir /usr/share/doc/cmake-qt-gui /usr/share/doc/cmake-data 2.8.12.2-2~
+diff -Nru cmake-3.7.1/debian/cmake.maintscript cmake-3.7.1/debian/cmake.maintscript
+--- cmake-3.7.1/debian/cmake.maintscript	2016-10-31 02:20:34.000000000 +0900
++++ cmake-3.7.1/debian/cmake.maintscript	2017-12-21 15:46:11.000000000 +0900
+@@ -1,4 +1,3 @@
+-symlink_to_dir /usr/share/doc/cmake /usr/share/doc/cmake-data 2.8.12.2-2~
+ rm_conffile /etc/bash_completion.d/cmake 3.2.2-3~
+ rm_conffile /etc/bash_completion.d/cpack 3.2.2-3~
+ rm_conffile /etc/bash_completion.d/ctest 3.2.2-3~
+diff -Nru cmake-3.7.1/debian/control cmake-3.7.1/debian/control
+--- cmake-3.7.1/debian/control	2016-11-12 19:55:11.000000000 +0900
++++ cmake-3.7.1/debian/control	2017-12-21 15:46:11.000000000 +0900
+@@ -4,20 +4,12 @@
+ Maintainer: Debian CMake Team <pkg-cmake-team@lists.alioth.debian.org>
+ Uploaders: Lisandro Damián Nicanor Pérez Meyer <lisandro@debian.org>,
+            Felix Geyer <fgeyer@debian.org>
+-Build-Depends: debhelper (>= 9.20160114~),
+-               dpkg-dev (>= 1.17.14~),
+-               libarchive-dev (>= 2.8.0),
+-               libbz2-dev,
++Build-Depends: debhelper,
++               dpkg-dev,
+                libcurl4-openssl-dev | libcurl-ssl-dev,
+-               libexpat1-dev,
+-               libjsoncpp-dev,
+-               liblzma-dev,
+                libncurses5-dev,
+-               libuv1-dev,
+                procps [!hurd-any],
+-               python-sphinx,
+-               qtbase5-dev <!stage1>,
+-               zlib1g-dev
++               python-sphinx
+ Standards-Version: 3.9.6
+ Vcs-Git: https://anonscm.debian.org/git/pkg-cmake/cmake.git
+ Vcs-Browser: https://anonscm.debian.org/cgit/pkg-cmake/cmake.git/
+@@ -26,7 +18,6 @@
+ Package: cmake
+ Architecture: any
+ Multi-Arch: foreign
+-Pre-Depends: dpkg (>= 1.17.5~)
+ Depends: cmake-data (= ${source:Version}),
+          procps [!hurd-any],
+          ${misc:Depends},
+@@ -59,7 +50,6 @@
+ 
+ Package: cmake-curses-gui
+ Architecture: any
+-Pre-Depends: dpkg (>= 1.17.5~)
+ Depends: cmake (= ${binary:Version}), ${misc:Depends}, ${shlibs:Depends}
+ Description: curses based user interface for CMake (ccmake)
+  CMake is used to control the software compilation process using simple
+@@ -72,23 +62,6 @@
+  are provided at the bottom of the terminal when the program is running. The
+  main executable file for this GUI is "ccmake".
+ 
+-Package: cmake-qt-gui
+-Architecture: any
+-Build-Profiles: <!stage1>
+-Pre-Depends: dpkg (>= 1.17.5~)
+-Depends: cmake (= ${binary:Version}), ${misc:Depends}, ${shlibs:Depends}
+-Provides: cmake-gui
+-Description: Qt based user interface for CMake (cmake-gui)
+- CMake is used to control the software compilation process using simple
+- platform and compiler independent configuration files. CMake generates native
+- makefiles and workspaces that can be used in the compiler environment of your
+- choice.
+- .
+- This package provides the CMake Qt based GUI. Project configuration
+- settings may be specified interactively. Brief instructions are provided at
+- the bottom of the window when the program is running. The main executable
+- file for this GUI is "cmake-gui".
+-
+ Package: cmake-doc
+ Architecture: all
+ Section: doc
+diff -Nru cmake-3.7.1/debian/rules cmake-3.7.1/debian/rules
+--- cmake-3.7.1/debian/rules	2016-12-04 07:30:25.000000000 +0900
++++ cmake-3.7.1/debian/rules	2017-12-21 15:46:11.000000000 +0900
+@@ -29,9 +29,6 @@
+ 	$(call $(flag_action),CMAKE_CXX_FLAGS,"$(CXXFLAGS)","C++ flags")
+ 	$(call $(flag_action),CMAKE_SKIP_BOOTSTRAP_TEST,ON,"Skip BootstrapTest")
+ 	$(call $(flag_action),BUILD_CursesDialog,ON,"Build curses GUI")
+-ifeq ($(filter stage1,$(DEB_BUILD_PROFILES)),)
+-	$(call $(flag_action),BUILD_QtDialog,ON,"Build Qt GUI")
+-endif
+ ifeq ($(DEB_HOST_ARCH_OS),hurd)
+ 	$(call $(flag_action),CMAKE_USE_LIBUV,0,"Do not use libuv")
+ endif
+@@ -44,7 +41,7 @@
+ override_dh_auto_configure: $(BUILD_FLAGS_FILE)
+ 	rm -rf Build && mkdir -p Build
+ 	cd Build && ../bootstrap --prefix=/usr --docdir=/share/doc/cmake --mandir=/share/man \
+-	                         --init=../$(BUILD_FLAGS_FILE) --system-libs \
++	                         --init=../$(BUILD_FLAGS_FILE) \
+ 	                         --sphinx-man --sphinx-html --sphinx-flags="-D today=\"$(BUILD_DATE)\"" \
+ 	                         $(BOOTSTRAP_PARALLEL) --verbose
+ 
+@@ -68,9 +65,6 @@
+ override_dh_sphinxdoc:
+ 	dh_sphinxdoc -pcmake-doc
+ 
+-override_dh_strip:
+-	dh_strip --dbgsym-migration='cmake-dbg (<< 3.5.0-1~)'
+-
+ %:
+ 	dh $@ --with=sphinxdoc --parallel --builddirectory=Build
+ 
