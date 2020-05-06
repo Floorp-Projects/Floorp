@@ -4,7 +4,7 @@
 "use strict";
 
 add_task(
-  async function test_sendMessage_to_self_should_not_trigger_onMessage() {
+  async function test_sendMessage_connect_to_self_should_not_trigger_onMessage_onConnect() {
     async function background() {
       browser.runtime.onMessage.addListener(msg => {
         browser.test.assertEq("msg from child", msg);
@@ -25,6 +25,21 @@ add_task(
         browser.runtime.sendMessage("should not trigger same-frame onMessage"),
         "Could not establish connection. Receiving end does not exist."
       );
+
+      browser.runtime.onConnect.addListener(port => {
+        browser.test.fail("Should not receive runtime.onConnect from self");
+      });
+
+      await new Promise(resolve => {
+        let port = browser.runtime.connect();
+        port.onDisconnect.addListener(() => {
+          browser.test.assertEq(
+            "Could not establish connection. Receiving end does not exist.",
+            port.error.message
+          );
+          resolve();
+        });
+      });
 
       let anotherFrame = document.createElement("iframe");
       anotherFrame.src = browser.extension.getURL("extensionpage.html");
