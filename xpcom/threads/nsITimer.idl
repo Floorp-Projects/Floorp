@@ -145,10 +145,10 @@ interface nsITimer : nsISupports
    *                            string aTopic,        => ``timer-callback''
    *                            wstring data          =>  null
    *
-   * @param aDelay      delay in milliseconds for timer to fire
+   * @param aDelayInMs  delay in milliseconds for timer to fire
    * @param aType       timer type per TYPE* consts defined above
    */
-  void init(in nsIObserver aObserver, in unsigned long aDelay,
+  void init(in nsIObserver aObserver, in unsigned long aDelayInMs,
             in unsigned long aType);
 
 
@@ -156,12 +156,12 @@ interface nsITimer : nsISupports
    * Initialize a timer to fire after the given millisecond interval.
    * This version takes a callback object.
    *
-   * @param aFunc      nsITimerCallback interface to call when timer expires
-   * @param aDelay     The millisecond interval
-   * @param aType      Timer type per TYPE* consts defined above
+   * @param aFunc       nsITimerCallback interface to call when timer expires
+   * @param aDelayInMs  The millisecond interval
+   * @param aType       Timer type per TYPE* consts defined above
    */
   void initWithCallback(in nsITimerCallback aCallback,
-                        in unsigned long aDelay,
+                        in unsigned long aDelayInMs,
                         in unsigned long aType);
 
   /**
