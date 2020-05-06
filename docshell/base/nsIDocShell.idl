@@ -730,6 +730,13 @@ interface nsIDocShell : nsIDocShellTreeItem
   attribute nsIChannel mixedContentChannel;
 
   /**
+   * Checks whether the channel associated with the root docShell is equal to
+   * mMixedContentChannel. If they are the same, allowMixedContent is set to true.
+   */
+  void GetAllowMixedContentAndConnectionData(out boolean allowMixedContent);
+
+
+  /**
    * Are plugins allowed in the current document loaded in this docshell ?
    * (if there is one). This depends on whether plugins are allowed by this
    * docshell itself or if the document is sandboxed and hence plugins should
