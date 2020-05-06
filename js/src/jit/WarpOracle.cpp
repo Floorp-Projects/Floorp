@@ -561,7 +561,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::InitHiddenElemSetter:
       case JSOp::NewTarget:
       case JSOp::CheckIsObj:
-      case JSOp::CheckIsCallable:
       case JSOp::CheckObjCoercible:
       case JSOp::FunWithProto:
       case JSOp::SpreadCall:

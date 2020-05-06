@@ -1607,7 +1607,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::ImplicitThis:
     case JSOp::NewTarget:
     case JSOp::CheckIsObj:
-    case JSOp::CheckIsCallable:
     case JSOp::CheckObjCoercible:
     case JSOp::DebugCheckSelfHosted:
     case JSOp::IsConstructing:

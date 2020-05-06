@@ -2355,9 +2355,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOp::CheckIsObj:
       return jsop_checkisobj(GET_UINT8(pc));
 
-    case JSOp::CheckIsCallable:
-      return jsop_checkiscallable(GET_UINT8(pc));
-
     case JSOp::CheckObjCoercible:
       return jsop_checkobjcoercible();
 
@@ -9754,14 +9751,6 @@ AbortReasonOr<Ok> IonBuilder::jsop_checkisobj(uint8_t kind) {
   }
 
   MCheckIsObj* check = MCheckIsObj::New(alloc(), current->pop(), kind);
-  current->add(check);
-  current->push(check);
-  return Ok();
-}
-
-AbortReasonOr<Ok> IonBuilder::jsop_checkiscallable(uint8_t kind) {
-  MCheckIsCallable* check =
-      MCheckIsCallable::New(alloc(), current->pop(), kind);
   current->add(check);
   current->push(check);
   return Ok();

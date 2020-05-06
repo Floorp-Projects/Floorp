@@ -669,7 +669,6 @@ uint32_t BytecodeParser::simulateOp(JSOp op, uint32_t offset,
 
     case JSOp::And:
     case JSOp::CheckIsObj:
-    case JSOp::CheckIsCallable:
     case JSOp::CheckObjCoercible:
     case JSOp::CheckThis:
     case JSOp::CheckThisReinit:

@@ -1084,9 +1084,6 @@ MOZ_MUST_USE bool CallNativeSetter(JSContext* cx, HandleFunction callee,
 
 MOZ_MUST_USE bool EqualStringsHelperPure(JSString* str1, JSString* str2);
 
-MOZ_MUST_USE bool CheckIsCallable(JSContext* cx, HandleValue v,
-                                  CheckIsCallableKind kind);
-
 void HandleCodeCoverageAtPC(BaselineFrame* frame, jsbytecode* pc);
 void HandleCodeCoverageAtPrologue(BaselineFrame* frame);
 

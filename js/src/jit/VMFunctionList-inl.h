@@ -80,7 +80,6 @@ namespace jit {
   _(CheckClassHeritageOperation, js::CheckClassHeritageOperation)              \
   _(CheckGlobalOrEvalDeclarationConflicts,                                     \
     js::CheckGlobalOrEvalDeclarationConflicts)                                 \
-  _(CheckIsCallable, js::jit::CheckIsCallable)                                 \
   _(CheckOverRecursed, js::jit::CheckOverRecursed)                             \
   _(CheckOverRecursedBaseline, js::jit::CheckOverRecursedBaseline)             \
   _(CloneRegExpObject, js::CloneRegExpObject)                                  \

@@ -10832,27 +10832,6 @@ class MCheckIsObj : public MUnaryInstruction, public BoxInputsPolicy::Data {
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
-class MCheckIsCallable : public MUnaryInstruction,
-                         public BoxInputsPolicy::Data {
-  uint8_t checkKind_;
-
-  MCheckIsCallable(MDefinition* toCheck, uint8_t checkKind)
-      : MUnaryInstruction(classOpcode, toCheck), checkKind_(checkKind) {
-    setResultType(MIRType::Value);
-    setResultTypeSet(toCheck->resultTypeSet());
-    setGuard();
-  }
-
- public:
-  INSTRUCTION_HEADER(CheckIsCallable)
-  TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, checkValue))
-
-  uint8_t checkKind() const { return checkKind_; }
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-};
-
 class MCheckObjCoercible : public MUnaryInstruction,
                            public BoxInputsPolicy::Data {
   explicit MCheckObjCoercible(MDefinition* toCheck)

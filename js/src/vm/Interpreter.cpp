@@ -2961,15 +2961,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(CheckIsObj)
 
-    CASE(CheckIsCallable) {
-      if (!IsCallable(REGS.sp[-1])) {
-        MOZ_ALWAYS_FALSE(
-            ThrowCheckIsCallable(cx, CheckIsCallableKind(GET_UINT8(REGS.pc))));
-        goto error;
-      }
-    }
-    END_CASE(CheckIsCallable)
-
     CASE(CheckThis) {
       if (REGS.sp[-1].isMagic(JS_UNINITIALIZED_LEXICAL)) {
         MOZ_ALWAYS_FALSE(ThrowUninitializedThis(cx));
@@ -5644,18 +5635,6 @@ bool js::ThrowCheckIsObject(JSContext* cx, CheckIsObjectKind kind) {
     case CheckIsObjectKind::GetAsyncIterator:
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_GET_ASYNC_ITER_RETURNED_PRIMITIVE);
-      break;
-    default:
-      MOZ_CRASH("Unknown kind");
-  }
-  return false;
-}
-
-bool js::ThrowCheckIsCallable(JSContext* cx, CheckIsCallableKind kind) {
-  switch (kind) {
-    case CheckIsCallableKind::IteratorReturn:
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_RETURN_NOT_CALLABLE);
       break;
     default:
       MOZ_CRASH("Unknown kind");
