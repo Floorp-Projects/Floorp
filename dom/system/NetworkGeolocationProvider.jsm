@@ -9,10 +9,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  LocationHelper: "resource://gre/modules/LocationHelper.jsm",
-});
-
 XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
 // GeolocationPositionError has no interface object, so we can't use that here.
@@ -243,6 +239,7 @@ NetworkGeoPositionObject.prototype = {
 };
 
 function NetworkGeolocationProvider() {
+  this.mode = "provider";
   /*
     The _wifiMonitorTimeout controls how long we wait on receiving an update
     from the Wifi subsystem.  If this timer fires, we believe the Wifi scan has
@@ -290,7 +287,9 @@ NetworkGeolocationProvider.prototype = {
   listener: null,
 
   get isWifiScanningEnabled() {
-    return Cc["@mozilla.org/wifi/monitor;1"] && this._wifiScanningEnabled;
+    return Cc["@mozilla.org/wifi/monitor;1"] && this.mode == "provider"
+      ? this._wifiScanningEnabled
+      : this._wifiScanningEnabledCountry;
   },
 
   resetTimer() {
@@ -363,9 +362,30 @@ NetworkGeolocationProvider.prototype = {
     // we got some wifi data, rearm the timer.
     this.resetTimer();
 
+    function isPublic(ap) {
+      let mask = "_nomap";
+      let result = ap.ssid.indexOf(mask, ap.ssid.length - mask.length);
+      if (result != -1) {
+        LOG("Filtering out " + ap.ssid + " " + result);
+        return false;
+      }
+      return true;
+    }
+
+    function sort(a, b) {
+      return b.signal - a.signal;
+    }
+
+    function encode(ap) {
+      return { macAddress: ap.mac, signalStrength: ap.signal };
+    }
+
     let wifiData = null;
     if (accessPoints) {
-      wifiData = LocationHelper.formatWifiAccessPoints(accessPoints);
+      wifiData = accessPoints
+        .filter(isPublic)
+        .sort(sort)
+        .map(encode);
     }
     this.sendLocationRequest(wifiData);
   },
@@ -396,12 +416,54 @@ NetworkGeolocationProvider.prototype = {
   },
 
   /**
+   * One-shot country identifier fetch.
+   *
+   * @param  {Function} statusCallback This method is called for each
+   *                                   intermediate result with the current
+   *                                   state of the request as argument.
+   * @return {Promise<String>} A promise that is resolved with a country code or
+   *                           rejected with an error.
+   */
+  async getCountry(statusCallback) {
+    this.mode = "provider-country";
+
+    let self = this;
+    let promise = new Promise((resolve, reject) => {
+      this.watch({
+        update(country) {
+          resolve(country);
+          self.shutdown();
+        },
+        notifyError(code, message) {
+          reject(message);
+          self.shutdown();
+        },
+        notifyStatus(status) {
+          if (statusCallback) {
+            statusCallback(status);
+          }
+        },
+      });
+    }).finally(() => {
+      this.mode = "provider";
+    });
+
+    this.startup();
+    Services.tm.dispatchToMainThread(() => this.sendLocationRequest(null));
+
+    return promise;
+  },
+
+  /**
    * After wifi (and possible cell tower) data has been gathered, this method is
    * invoked to perform the request to network geolocation provider.
    * The result of each request is sent to all registered listener (@see watch)
    * by invoking its respective `update`, `notifyError` or `notifyStatus`
    * callbacks.
-   * `update` is called upon a successful request with its response data; this will be a `NetworkGeoPositionObject` instance.
+   * `update` is called upon a successful request with its response data; in the
+   * 'provider-country' mode this will be a country code string and in the
+   * 'provider' mode - the default mode of  operation for this class - this will
+   * be a `NetworkGeoPositionObject` instance.
    * `notifyError` is called whenever the request gets an error from the local
    * network subsystem, the server or simply times out.
    * `notifyStatus` is called for each status change of the request that may be
@@ -424,23 +486,29 @@ NetworkGeolocationProvider.prototype = {
       data.wifiAccessPoints = wifiData;
     }
 
-    let useCached = isCachedRequestMoreAccurateThanServerRequest(
-      data.cellTowers,
-      data.wifiAccessPoints
-    );
+    // The 'provider' mode is the only one that supports response caching at the
+    // moment.
+    if (this.mode == "provider") {
+      let useCached = isCachedRequestMoreAccurateThanServerRequest(
+        data.cellTowers,
+        data.wifiAccessPoints
+      );
 
-    LOG("Use request cache:" + useCached + " reason:" + gDebugCacheReasoning);
+      LOG("Use request cache:" + useCached + " reason:" + gDebugCacheReasoning);
 
-    if (useCached) {
-      gCachedRequest.location.timestamp = Date.now();
-      if (this.listener) {
-        this.listener.update(gCachedRequest.location);
+      if (useCached) {
+        gCachedRequest.location.timestamp = Date.now();
+        if (this.listener) {
+          this.listener.update(gCachedRequest.location);
+        }
+        return;
       }
-      return;
     }
 
     // From here on, do a network geolocation request //
-    let url = Services.urlFormatter.formatURLPref("geo.provider.network.url");
+    let url = Services.urlFormatter.formatURLPref(
+      "geo." + this.mode + ".network.url"
+    );
     LOG("Sending request");
 
     let xhr = new XMLHttpRequest();
@@ -455,6 +523,7 @@ NetworkGeolocationProvider.prototype = {
     xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
     xhr.responseType = "json";
     xhr.mozBackgroundRequest = true;
+    // The timeout value doesn't need to change in a different mode.
     xhr.timeout = Services.prefs.getIntPref("geo.provider.network.timeout");
     xhr.ontimeout = () => {
       LOG("Location request XHR timed out.");
@@ -478,21 +547,28 @@ NetworkGeolocationProvider.prototype = {
         return;
       }
 
-      let newLocation = new NetworkGeoPositionObject(
-        xhr.response.location.lat,
-        xhr.response.location.lng,
-        xhr.response.accuracy
-      );
+      let newLocation;
+      if (this.mode == "provider-country") {
+        newLocation = xhr.response && xhr.response.country_code;
+      } else {
+        newLocation = new NetworkGeoPositionObject(
+          xhr.response.location.lat,
+          xhr.response.location.lng,
+          xhr.response.accuracy
+        );
+      }
 
       if (this.listener) {
         this.listener.update(newLocation);
       }
 
-      gCachedRequest = new CachedRequest(
-        newLocation,
-        data.cellTowers,
-        data.wifiAccessPoints
-      );
+      if (this.mode == "provider") {
+        gCachedRequest = new CachedRequest(
+          newLocation,
+          data.cellTowers,
+          data.wifiAccessPoints
+        );
+      }
     };
 
     var requestData = JSON.stringify(data);

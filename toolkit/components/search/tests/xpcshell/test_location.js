@@ -15,7 +15,7 @@ add_task(async function setup() {
 
 add_task(async function test_location() {
   Services.prefs.setCharPref(
-    "browser.region.network.url",
+    "geo.provider-country.network.url",
     'data:application/json,{"country_code": "AU"}'
   );
   await Services.search.init(true);

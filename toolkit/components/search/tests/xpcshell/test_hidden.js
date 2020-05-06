@@ -7,7 +7,7 @@ add_task(async function setup() {
   await useTestEngines("simple-engines");
   // Geo specific defaults won't be fetched if there's no country code.
   Services.prefs.setCharPref(
-    "browser.region.network.url",
+    "geo.provider-country.network.url",
     'data:application/json,{"country_code": "US"}'
   );
 
