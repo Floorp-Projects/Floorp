@@ -11,13 +11,15 @@ add_task(async function() {
 
   let promiseTabOpened = BrowserTestUtils.waitForNewTab(
     gBrowser,
-    FILE + "?opened",
+    FILE + "?open-click",
     true
   );
   info("Opening second tab using a click");
-  await SpecialPowers.spawn(firstTab.linkedBrowser, [""], async function() {
-    content.document.querySelector("#open").click();
-  });
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#open-click",
+    {},
+    firstTab.linkedBrowser
+  );
 
   info("Waiting for the second tab to be opened");
   let secondTab = await promiseTabOpened;
@@ -34,6 +36,43 @@ add_task(async function() {
 
   is(gBrowser.selectedTab, secondTab, "Should've switched tabs");
 
-  BrowserTestUtils.removeTab(firstTab);
-  BrowserTestUtils.removeTab(secondTab);
+  await BrowserTestUtils.removeTab(firstTab);
+  await BrowserTestUtils.removeTab(secondTab);
+});
+
+add_task(async function() {
+  info("Opening first tab: " + FILE);
+  let firstTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, FILE);
+
+  let promiseTabOpened = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    FILE + "?open-mousedown",
+    true
+  );
+  info("Opening second tab using a click");
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "#open-mousedown",
+    { type: "mousedown" },
+    firstTab.linkedBrowser
+  );
+
+  info("Waiting for the second tab to be opened");
+  let secondTab = await promiseTabOpened;
+
+  is(gBrowser.selectedTab, secondTab, "Should've switched tabs");
+
+  info("Ensuring we don't switch back");
+  await new Promise(resolve => {
+    // We need to wait for something _not_ happening, so we need to use an arbitrary setTimeout.
+    //
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    setTimeout(function() {
+      is(gBrowser.selectedTab, secondTab, "Should've remained in original tab");
+      resolve();
+    }, 500);
+  });
+
+  info("cleanup");
+  await BrowserTestUtils.removeTab(firstTab);
+  await BrowserTestUtils.removeTab(secondTab);
 });
