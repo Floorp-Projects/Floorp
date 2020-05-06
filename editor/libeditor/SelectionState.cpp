@@ -77,8 +77,8 @@ nsresult SelectionState::RestoreSelection(Selection& aSelection) {
   aSelection.SetDirection(mDirection);
 
   ErrorResult error;
-  AutoTArray<RefPtr<RangeItem>, 10> rangeItems(mArray);
-  for (RefPtr<RangeItem>& rangeItem : rangeItems) {
+  const CopyableAutoTArray<RefPtr<RangeItem>, 10> rangeItems(mArray);
+  for (const RefPtr<RangeItem>& rangeItem : rangeItems) {
     RefPtr<nsRange> range = rangeItem->GetRange();
     if (!range) {
       NS_WARNING("RangeItem::GetRange() failed");

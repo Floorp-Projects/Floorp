@@ -1490,8 +1490,7 @@ already_AddRefed<Element> EditorBase::CreateNodeWithTransaction(
   }
 
   if (!mActionListeners.IsEmpty()) {
-    AutoActionListenerArray listeners(mActionListeners);
-    for (auto& listener : listeners) {
+    for (auto& listener : mActionListeners.Clone()) {
       DebugOnly<nsresult> rvIgnored = listener->DidCreateNode(
           nsDependentAtomString(&aTagName), newElement, rv);
       NS_WARNING_ASSERTION(
@@ -1564,8 +1563,7 @@ nsresult EditorBase::InsertNodeWithTransaction(
   }
 
   if (!mActionListeners.IsEmpty()) {
-    AutoActionListenerArray listeners(mActionListeners);
-    for (auto& listener : listeners) {
+    for (auto& listener : mActionListeners.Clone()) {
       DebugOnly<nsresult> rvIgnored =
           listener->DidInsertNode(&aContentToInsert, rv);
       NS_WARNING_ASSERTION(
@@ -1666,8 +1664,7 @@ nsresult EditorBase::DeleteNodeWithTransaction(nsIContent& aContent) {
   }
 
   if (!mActionListeners.IsEmpty()) {
-    AutoActionListenerArray listeners(mActionListeners);
-    for (auto& listener : listeners) {
+    for (auto& listener : mActionListeners.Clone()) {
       DebugOnly<nsresult> rvIgnored = listener->DidDeleteNode(&aContent, rv);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
@@ -1753,7 +1750,7 @@ void EditorBase::NotifyEditorObservers(
 
       if (!mEditorObservers.IsEmpty()) {
         // Copy the observers since EditAction()s can modify mEditorObservers.
-        AutoEditorObserverArray observers(mEditorObservers);
+        AutoEditorObserverArray observers(mEditorObservers.Clone());
         for (auto& observer : observers) {
           DebugOnly<nsresult> rvIgnored = observer->EditAction();
           NS_WARNING_ASSERTION(
@@ -2544,8 +2541,7 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
 
   // let listeners know what happened
   if (!mActionListeners.IsEmpty()) {
-    AutoActionListenerArray listeners(mActionListeners);
-    for (auto& listener : listeners) {
+    for (auto& listener : mActionListeners.Clone()) {
       // TODO: might need adaptation because of mutation event listeners called
       // during `DoTransactionInternal`.
       DebugOnly<nsresult> rvIgnored =
@@ -2612,7 +2608,8 @@ nsresult EditorBase::NotifyDocumentListeners(
       }
       // Needs to store all listeners before notifying ComposerCommandsUpdate
       // since notifying it might change mDocStateListeners.
-      const AutoDocumentStateListenerArray listeners(mDocStateListeners);
+      const AutoDocumentStateListenerArray listeners(
+          mDocStateListeners.Clone());
       if (composerCommandsUpdate) {
         composerCommandsUpdate->OnBeforeHTMLEditorDestroyed();
       }
@@ -2653,7 +2650,8 @@ nsresult EditorBase::NotifyDocumentListeners(
       }
       // Needs to store all listeners before notifying ComposerCommandsUpdate
       // since notifying it might change mDocStateListeners.
-      const AutoDocumentStateListenerArray listeners(mDocStateListeners);
+      const AutoDocumentStateListenerArray listeners(
+          mDocStateListeners.Clone());
       if (composerCommandsUpdate) {
         composerCommandsUpdate->OnHTMLEditorDirtyStateChanged(mDocDirtyState);
       }
@@ -2690,8 +2688,7 @@ nsresult EditorBase::SetTextNodeWithoutTransaction(const nsAString& aString,
 
   // Let listeners know what's up
   if (!mActionListeners.IsEmpty() && length) {
-    AutoActionListenerArray listeners(mActionListeners);
-    for (auto& listener : listeners) {
+    for (auto& listener : mActionListeners.Clone()) {
       DebugOnly<nsresult> rvIgnored =
           listener->WillDeleteText(&aTextNode, 0, length);
       if (NS_WARN_IF(Destroyed())) {
@@ -2727,8 +2724,7 @@ nsresult EditorBase::SetTextNodeWithoutTransaction(const nsAString& aString,
 
   // Let listeners know what happened
   if (!mActionListeners.IsEmpty()) {
-    AutoActionListenerArray listeners(mActionListeners);
-    for (auto& listener : listeners) {
+    for (auto& listener : mActionListeners.Clone()) {
       if (length) {
         DebugOnly<nsresult> rvIgnored =
             listener->DidDeleteText(&aTextNode, 0, length, NS_OK);
@@ -2779,8 +2775,7 @@ nsresult EditorBase::DeleteTextWithTransaction(Text& aTextNode,
 
   // Let listeners know what's up
   if (!mActionListeners.IsEmpty()) {
-    AutoActionListenerArray listeners(mActionListeners);
-    for (auto& listener : listeners) {
+    for (auto& listener : mActionListeners.Clone()) {
       DebugOnly<nsresult> rvIgnored =
           listener->WillDeleteText(&aTextNode, aOffset, aLength);
       NS_WARNING_ASSERTION(
@@ -2800,8 +2795,7 @@ nsresult EditorBase::DeleteTextWithTransaction(Text& aTextNode,
 
   // Let listeners know what happened
   if (!mActionListeners.IsEmpty()) {
-    AutoActionListenerArray listeners(mActionListeners);
-    for (auto& listener : listeners) {
+    for (auto& listener : mActionListeners.Clone()) {
       DebugOnly<nsresult> rvIgnored =
           listener->DidDeleteText(&aTextNode, aOffset, aLength, rv);
       NS_WARNING_ASSERTION(
@@ -4133,7 +4127,7 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
   // Notify nsIEditActionListener::WillDelete[Selection|Text]
   if (!mActionListeners.IsEmpty()) {
     if (!deleteContent) {
-      AutoActionListenerArray listeners(mActionListeners);
+      AutoActionListenerArray listeners(mActionListeners.Clone());
       for (auto& listener : listeners) {
         DebugOnly<nsresult> rvIgnored =
             listener->WillDeleteSelection(SelectionRefPtr());
@@ -4145,7 +4139,7 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
                               "must not destroy the editor");
       }
     } else if (deleteCharData) {
-      AutoActionListenerArray listeners(mActionListeners);
+      AutoActionListenerArray listeners(mActionListeners.Clone());
       for (auto& listener : listeners) {
         // XXX Why don't we notify listeners of actual length?
         DebugOnly<nsresult> rvIgnored =
@@ -4184,7 +4178,7 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
   }
 
   // Notify nsIEditActionListener::DidDelete[Selection|Text|Node]
-  AutoActionListenerArray listeners(mActionListeners);
+  AutoActionListenerArray listeners(mActionListeners.Clone());
   if (!deleteContent) {
     for (auto& listener : mActionListeners) {
       DebugOnly<nsresult> rvIgnored =
