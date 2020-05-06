@@ -67,7 +67,6 @@ PYTHON_UNITTEST_MANIFESTS += [
     'mozboot/mozboot/test/python.ini',
     'mozbuild/dumbmake/test/python.ini',
     'mozbuild/mozbuild/test/python.ini',
-    'mozbuild/mozbuild/test/python2.ini',
     'mozbuild/mozpack/test/python.ini',
     'mozlint/test/python.ini',
     'mozperftest/mozperftest/tests/python.ini',
