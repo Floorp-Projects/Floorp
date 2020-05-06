@@ -353,7 +353,9 @@ class GetVisitedCallback final : public nsIAndroidEventCallback {
   explicit GetVisitedCallback(GeckoViewHistory* aHistory,
                               nsIGlobalObject* aGlobalObject,
                               const nsTArray<RefPtr<nsIURI>>& aURIs)
-      : mHistory(aHistory), mGlobalObject(aGlobalObject), mURIs(aURIs) {}
+      : mHistory(aHistory),
+        mGlobalObject(aGlobalObject),
+        mURIs(aURIs.Clone()) {}
 
   NS_DECL_ISUPPORTS
 
