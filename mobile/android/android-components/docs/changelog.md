@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-addons**
+  * Added optional `addonAllowPrivateBrowsingLabelDrawableRes` DrawableRes parameter to `AddonPermissionsAdapter.Style` constructor to allow the clients to add their own drawable. This is used to clearly label the WebExtensions that run in private browsing.
+
 # 40.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v39.0.0...v40.0.0)
@@ -40,7 +43,7 @@ permalink: /changelog/
 * **support-base**
   * ⚠️ **This is a breaking change**: `CrashReporting` allowing adding support for `recordCrashBreadcrumb` without `lib-crash` dependency.
   * ⚠️ **This is a breaking change**: `Breadcrumb` has moved from `lib-crash` to this component.
-  
+
 * **support-utils**
   * `URLStringUtils.isURLLikeStrict` is now deprecated due to performance issues. Consider using the less strict `isURLLike` instead or creating a new method using `:lib-publicsuffixlist`.
 
@@ -52,10 +55,10 @@ permalink: /changelog/
 
 * **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
   * Improve social trackers categorization see [ac#6851](https://github.com/mozilla-mobile/android-components/issues/6851) and [fenix#5921](https://github.com/mozilla-mobile/fenix/issues/5921)
- 
+
 * **service-firefox-accounts**
   * ⚠️ **This is a breaking change**: `FxaAccountManager.withConstellation` puts the `DeviceConstellation` within the same scope as the block so you no longer need to use the `it` reference.
-  
+
 * **feature-syncedtabs**
   * Moved `SyncedTabsFeature` to `SyncedTabsStorage`.
   * ⚠️ **This is a breaking change**: The new `SyncedTabsFeature` now orchestrates the correct state needed for consumers to handle by implementing the `SyncedTabsView`.

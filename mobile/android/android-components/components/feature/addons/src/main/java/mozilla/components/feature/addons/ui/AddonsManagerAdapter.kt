@@ -16,6 +16,7 @@ import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
 import androidx.annotation.ColorRes
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
 import androidx.cardview.widget.CardView
@@ -117,6 +118,7 @@ class AddonsManagerAdapter(
         val ratingAccessibleView = view.findViewById<TextView>(R.id.rating_accessibility)
         val userCountView = view.findViewById<TextView>(R.id.users_count)
         val addButton = view.findViewById<ImageView>(R.id.add_button)
+        val allowedInPrivateBrowsingLabel = view.findViewById<ImageView>(R.id.allowed_in_private_browsing_label)
         return AddonViewHolder(
             view,
             iconContainer,
@@ -126,7 +128,8 @@ class AddonsManagerAdapter(
             ratingView,
             ratingAccessibleView,
             userCountView,
-            addButton
+            addButton,
+            allowedInPrivateBrowsingLabel
         )
     }
 
@@ -223,6 +226,9 @@ class AddonsManagerAdapter(
                 addonsManagerDelegate.onInstallAddonButtonClicked(addon)
             }
         }
+
+        holder.allowedInPrivateBrowsingLabel.isVisible = addon.isAllowedInPrivateBrowsing()
+        style?.maybeSetPrivateBrowsingLabelDrawale(holder.allowedInPrivateBrowsingLabel)
 
         style?.addonBackgroundIconColor?.let {
             val backgroundColor = ContextCompat.getColor(holder.iconContainer.context, it)
@@ -327,7 +333,9 @@ class AddonsManagerAdapter(
         val addonSummaryTextColor: Int? = null,
         val sectionsTypeFace: Typeface? = null,
         @ColorRes
-        val addonBackgroundIconColor: Int? = null
+        val addonBackgroundIconColor: Int? = null,
+        @DrawableRes
+        val addonAllowPrivateBrowsingLabelDrawableRes: Int? = null
     ) {
         internal fun maybeSetSectionsTextColor(textView: TextView) {
             sectionsTextColor?.let {
@@ -353,6 +361,12 @@ class AddonsManagerAdapter(
             addonSummaryTextColor?.let {
                 val color = ContextCompat.getColor(textView.context, it)
                 textView.setTextColor(color)
+            }
+        }
+
+        internal fun maybeSetPrivateBrowsingLabelDrawale(imageView: ImageView) {
+            addonAllowPrivateBrowsingLabelDrawableRes?.let {
+                imageView.setImageDrawable(ContextCompat.getDrawable(imageView.context, it))
             }
         }
     }

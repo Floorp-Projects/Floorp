@@ -49,15 +49,35 @@
         android:paddingEnd="4dp"
         android:paddingBottom="8dp">
 
-        <TextView
-            android:id="@+id/add_on_name"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="2dp"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textSize="16sp"
-            tools:text="uBlock Origin" />
+            android:layout_marginBottom="@dimen/add_on_name_container_margin_bottom"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/add_on_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textSize="16sp"
+                tools:text="uBlock Origin" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/allowed_in_private_browsing_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="@dimen/allowed_in_private_browsing_label_margins"
+                android:layout_marginEnd="@dimen/allowed_in_private_browsing_label_margins"
+                android:layout_weight="0"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:visibility="gone" />
+
+        </LinearLayout>
 
         <TextView
             android:id="@+id/add_on_description"
