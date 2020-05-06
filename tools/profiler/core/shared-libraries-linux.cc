@@ -25,13 +25,15 @@
 #include "common/linux/file_id.h"
 #include <algorithm>
 #include <dlfcn.h>
-#include <features.h>
+#if defined(GP_OS_linux) || defined(GP_OS_android)
+#  include <features.h>
+#endif
 #include <sys/types.h>
 
 #if defined(MOZ_LINKER)
 #  include "AutoObjectMapper.h"
 #endif
-#if defined(GP_OS_linux) || defined(GP_OS_android)
+#if defined(GP_OS_linux) || defined(GP_OS_android) || defined(GP_OS_freebsd)
 #  include <link.h>  // dl_phdr_info
 #else
 #  error "Unexpected configuration"
@@ -185,6 +187,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
   }
 #endif
 
+#if defined(GP_OS_linux) || defined(GP_OS_android)
   // Read info from /proc/self/maps. We ignore most of it.
   pid_t pid = profiler_current_process_id();
   char path[PATH_MAX];
@@ -211,12 +214,12 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
       continue;
     }
 
-#if defined(GP_OS_linux)
+#  if defined(GP_OS_linux)
     // Try to establish the main executable's load address.
     if (exeNameLen > 0 && strcmp(modulePath, exeName) == 0) {
       exeExeAddr = start;
     }
-#elif defined(GP_OS_android)
+#  elif defined(GP_OS_android)
     // Use /proc/pid/maps to get the dalvik-jit section since it has no
     // associated phdrs.
     if (0 == strcmp(modulePath, "/dev/ashmem/dalvik-jit-code-cache")) {
@@ -228,8 +231,9 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
         break;
       }
     }
-#endif
+#  endif
   }
+#endif
 
   nsTArray<LoadedLibraryInfo> libInfoList;
 
