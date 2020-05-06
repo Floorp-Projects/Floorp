@@ -27,8 +27,6 @@
 #include "nsTArrayForwardDeclare.h"
 #include "nsRefPtrHashtable.h"
 
-#include "nsIWindowProvider.h"
-
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 #  include "nsIFile.h"
 #endif
@@ -77,7 +75,6 @@ enum class MediaControlKeysEvent : uint32_t;
 
 class ContentChild final : public PContentChild,
                            public nsIContentChild,
-                           public nsIWindowProvider,
                            public mozilla::ipc::IShmemAllocator,
                            public mozilla::ipc::ChildToParentStreamActorManager,
                            public ProcessActor {
@@ -89,7 +86,6 @@ class ContentChild final : public PContentChild,
 
  public:
   NS_DECL_NSICONTENTCHILD
-  NS_DECL_NSIWINDOWPROVIDER
 
   ContentChild();
   virtual ~ContentChild();

@@ -234,7 +234,6 @@
 #include "nsViewManager.h"
 #include "nsViewportInfo.h"
 #include "nsWidgetsCID.h"
-#include "nsIWindowProvider.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsXULPopupManager.h"
 #include "xpcprivate.h"  // nsXPConnect
@@ -5352,12 +5351,6 @@ void nsContentUtils::RemoveScriptBlocker() {
   sRemovingScriptBlockers = true;
 #endif
   sBlockedScriptRunners->RemoveElementsAt(originalFirstBlocker, blockersCount);
-}
-
-/* static */
-nsIWindowProvider* nsContentUtils::GetWindowProviderForContentProcess() {
-  MOZ_ASSERT(XRE_IsContentProcess());
-  return ContentChild::GetSingleton();
 }
 
 /* static */
