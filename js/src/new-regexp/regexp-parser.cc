@@ -1012,9 +1012,9 @@ Handle<FixedArray> RegExpParser::CreateCaptureNameMap() {
                                     capture->name()->size());
     // CSA code in ConstructNewResultFromMatchInfo requires these strings to be
     // internalized so they can be used as property names in the 'exec' results.
-    // Handle<String> name = factory->InternalizeString(capture_name);
-    // array->set(i * 2, *name);
-    // array->set(i * 2 + 1, Smi::FromInt(capture->index()));
+    Handle<String> name = factory->InternalizeString(capture_name);
+    array->set(i * 2, *name);
+    array->set(i * 2 + 1, Smi::FromInt(capture->index()));
 
     i++;
   }

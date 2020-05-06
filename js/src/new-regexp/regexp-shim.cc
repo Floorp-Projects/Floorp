@@ -183,7 +183,7 @@ Handle<ByteArray> Isolate::NewByteArray(int length, AllocationType alloc) {
 
 Handle<FixedArray> Isolate::NewFixedArray(int length) {
   MOZ_RELEASE_ASSERT(length >= 0);
-  return Handle<FixedArray>::fromHandleValue(JS::UndefinedHandleValue);
+  MOZ_CRASH("TODO");
 }
 
 template <typename CharT>
