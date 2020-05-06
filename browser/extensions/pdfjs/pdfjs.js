@@ -25,7 +25,7 @@ ChromeUtils.defineModuleGetter(
 
 // Register/unregister a constructor as a factory.
 function StreamConverterFactory() {
-  if (Services.cpmm.sharedData.get("pdfjs.enabled")) {
+  if (!Services.prefs.getBoolPref("pdfjs.disabled", false)) {
     return new PdfStreamConverter();
   }
   throw Components.Exception("", Cr.NS_ERROR_FACTORY_NOT_REGISTERED);
