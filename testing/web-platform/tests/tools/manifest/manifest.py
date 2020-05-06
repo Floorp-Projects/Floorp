@@ -7,7 +7,6 @@ from multiprocessing import Pool, cpu_count
 from six import (
     PY3,
     binary_type,
-    ensure_text,
     iteritems,
     itervalues,
     string_types,
