@@ -393,6 +393,7 @@ let ACTORS = {
     // Only matching web pages, as opposed to internal about:, chrome: or
     // resource: pages. See https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Match_patterns
     matches: ["*://*/*"],
+    messageManagerGroups: ["browsers"],
     allFrames: true,
   },
 
