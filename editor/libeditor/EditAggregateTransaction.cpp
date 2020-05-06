@@ -22,8 +22,8 @@ NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 NS_IMETHODIMP EditAggregateTransaction::DoTransaction() {
   // FYI: It's legal (but not very useful) to have an empty child list.
-  AutoTArray<OwningNonNull<EditTransactionBase>, 10> children(mChildren);
-  for (OwningNonNull<EditTransactionBase>& childTransaction : children) {
+  for (const OwningNonNull<EditTransactionBase>& childTransaction :
+       CopyableAutoTArray<OwningNonNull<EditTransactionBase>, 10>(mChildren)) {
     nsresult rv = MOZ_KnownLive(childTransaction)->DoTransaction();
     if (NS_FAILED(rv)) {
       NS_WARNING("EditTransactionBase::DoTransaction() failed");
@@ -36,8 +36,9 @@ NS_IMETHODIMP EditAggregateTransaction::DoTransaction() {
 NS_IMETHODIMP EditAggregateTransaction::UndoTransaction() {
   // FYI: It's legal (but not very useful) to have an empty child list.
   // Undo goes through children backwards.
-  AutoTArray<OwningNonNull<EditTransactionBase>, 10> children(mChildren);
-  for (OwningNonNull<EditTransactionBase>& childTransaction :
+  const CopyableAutoTArray<OwningNonNull<EditTransactionBase>, 10> children(
+      mChildren);
+  for (const OwningNonNull<EditTransactionBase>& childTransaction :
        Reversed(children)) {
     nsresult rv = MOZ_KnownLive(childTransaction)->UndoTransaction();
     if (NS_FAILED(rv)) {
@@ -50,8 +51,9 @@ NS_IMETHODIMP EditAggregateTransaction::UndoTransaction() {
 
 NS_IMETHODIMP EditAggregateTransaction::RedoTransaction() {
   // It's legal (but not very useful) to have an empty child list.
-  AutoTArray<OwningNonNull<EditTransactionBase>, 10> children(mChildren);
-  for (OwningNonNull<EditTransactionBase>& childTransaction : children) {
+  const CopyableAutoTArray<OwningNonNull<EditTransactionBase>, 10> children(
+      mChildren);
+  for (const OwningNonNull<EditTransactionBase>& childTransaction : children) {
     nsresult rv = MOZ_KnownLive(childTransaction)->RedoTransaction();
     if (NS_FAILED(rv)) {
       NS_WARNING("EditTransactionBase::RedoTransaction() failed");
