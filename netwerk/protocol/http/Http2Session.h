@@ -562,6 +562,8 @@ class Http2Session final : public ASpdySession,
 
   uint64_t mCurrentForegroundTabOuterContentWindowId;
 
+  uint32_t mCntActivated;
+
   class CachePushCheckCallback final : public nsICacheEntryOpenCallback {
    public:
     CachePushCheckCallback(Http2Session* session, uint32_t promisedID,
