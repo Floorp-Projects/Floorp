@@ -428,6 +428,22 @@ nsMIMEInfoImpl::GetHasDefaultHandler(bool* _retval) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMIMEInfoImpl::IsCurrentAppOSDefault(bool* _retval) {
+  *_retval = false;
+  if (mDefaultApplication) {
+    // Determine if the default executable is our executable.
+    EnsureAppDetailsAvailable();
+    bool isSame = false;
+    nsresult rv = mDefaultApplication->Equals(sOurAppFile, &isSame);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    *_retval = isSame;
+  }
+  return NS_OK;
+}
+
 nsresult nsMIMEInfoImpl::LaunchDefaultWithFile(nsIFile* aFile) {
   if (!mDefaultApplication) return NS_ERROR_FILE_NOT_FOUND;
 

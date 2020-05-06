@@ -223,6 +223,11 @@ NS_IMETHODIMP ProxyMIMEInfo::LaunchWithFile(nsIFile* aFile) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* boolean isCurrentAppOSDefault(); */
+NS_IMETHODIMP ProxyMIMEInfo::IsCurrentAppOSDefault(bool* _retval) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 static already_AddRefed<nsIHandlerInfo> WrapHandlerInfo(
     const HandlerInfo& aHandlerInfo) {
   nsCOMPtr<nsIHandlerInfo> info;

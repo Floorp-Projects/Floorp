@@ -198,6 +198,11 @@ interface nsIMIMEInfo : nsIHandlerInfo {
      * Other exceptions may be thrown.
      */
     void launchWithFile(in nsIFile aFile);
+
+    /**
+     * Check if we ourselves are registered as the OS default for this type.
+     */
+    boolean isCurrentAppOSDefault();
 };
 
 /**
