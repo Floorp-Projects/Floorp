@@ -87,23 +87,18 @@ class AllocationLoad {
   get name() {
     return this.load.name;
   }
-
   get description() {
     return this.load.description;
   }
-
   get garbagePerFrame() {
     return this._garbagePerFrame;
   }
-
   set garbagePerFrame(amount) {
     this._garbagePerFrame = amount;
   }
-
   get garbageTotal() {
     return this._garbageTotal;
   }
-
   set garbageTotal(amount) {
     this._garbageTotal = amount;
   }
@@ -130,8 +125,67 @@ class AllocationLoad {
   }
 }
 
+class AllocationLoadManager {
+  constructor(tests) {
+    this._loads = new Map();
+    for (const [name, info] of tests.entries()) {
+      this._loads.set(name, new AllocationLoad(info, name));
+    }
+    this._active = undefined;
+    this._paused = false;
+  }
+
+  activeLoad() {
+    return this._active;
+  }
+
+  setActiveLoadByName(name) {
+    if (this._active) {
+      this._active.stop();
+    }
+    this._active = this._loads.get(name);
+    this._active.start();
+  }
+
+  deactivateLoad() {
+    this._active.stop();
+    this._active = undefined;
+  }
+
+  get paused() {
+    return this._paused;
+  }
+  set paused(pause) {
+    this._paused = pause;
+  }
+
+  load_running() {
+    return this._active && this._active.name != "noAllocation";
+  }
+
+  change_garbageTotal(amount) {
+    if (this._active) {
+      this._active.garbageTotal = amount;
+      this._active.reload();
+    }
+  }
+
+  change_garbagePerFrame(amount) {
+    if (this._active) {
+      this._active.garbageTotal = amount;
+    }
+  }
+
+  tick() {
+    if (this._active && !this._paused) {
+      this._active.tick();
+    }
+  }
+}
+
 // Current test state.
-var gActiveLoad = undefined;
+var gLoadMgr = undefined;
+
 var testDuration = undefined; // ms
 var testStart = undefined; // ms
 var testQueue = [];
@@ -203,10 +257,5 @@ function compute_spark_histogram_percents(histogram) {
 }
 
 function change_load_internal(new_load_name) {
-  if (gActiveLoad) {
-    gActiveLoad.stop();
-  }
-
-  gActiveLoad = new AllocationLoad(tests.get(new_load_name));
-  gActiveLoad.start();
+  gLoadMgr.setActiveLoadByName(new_load_name);
 }

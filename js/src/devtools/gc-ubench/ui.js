@@ -34,7 +34,6 @@ var memoryCtx;
 
 var loadState = "(init)"; // One of '(active)', '(inactive)', '(N/A)'
 var testState = "idle"; // One of 'idle' or 'running'.
-var load_paused = false;
 
 function parse_units(v) {
   if (!v.length) {
@@ -161,12 +160,12 @@ LatencyGraph.prototype.drawHBar = function(
 };
 
 LatencyGraph.prototype.draw = function() {
-  var ctx = this.ctx;
+  let ctx = this.ctx;
 
   this.clear();
   this.drawFrame();
 
-  for (var delay of [10, 20, 30, 50, 100, 200, 400, 800]) {
+  for (const delay of [10, 20, 30, 50, 100, 200, 400, 800]) {
     this.drawScale(delay);
   }
   this.draw60fps();
@@ -175,7 +174,7 @@ LatencyGraph.prototype.draw = function() {
   var worst = 0,
     worstpos = 0;
   ctx.beginPath();
-  for (var i = 0; i < numSamples; i++) {
+  for (let i = 0; i < numSamples; i++) {
     ctx.lineTo(this.xpos(i), this.ypos(delays[i]));
     if (delays[i] >= worst) {
       worst = delays[i];
@@ -187,7 +186,7 @@ LatencyGraph.prototype.draw = function() {
   // Draw vertical lines marking minor and major GCs
   if (features.showingGCs) {
     ctx.strokeStyle = stroke.gcslice;
-    var idx = sampleIndex % numSamples;
+    let idx = sampleIndex % numSamples;
     const count = {
       major: majorGCs[idx],
       minor: 0,
@@ -349,7 +348,7 @@ MemoryGraph.prototype.draw = function() {
   ctx.fill();
 
   ctx.beginPath();
-  for (let i = 0; i < numSamples; i++) {
+  for (var i = 0; i < numSamples; i++) {
     if (i == (sampleIndex + 1) % numSamples) {
       ctx.moveTo(this.xpos(i), this.ypos(gcBytes[i]));
     } else {
@@ -364,7 +363,7 @@ MemoryGraph.prototype.draw = function() {
   this.drawAxisLabels("Time", "Heap Memory Usage");
 };
 
-function stopstart() {
+function onUpdateDisplayChanged() {
   const do_graph = document.getElementById("do-graph");
   if (do_graph.checked) {
     window.requestAnimationFrame(handler);
@@ -375,10 +374,10 @@ function stopstart() {
   update_load_state_indicator();
 }
 
-function do_load() {
+function onDoLoadChange() {
   const do_load = document.getElementById("do-load");
-  load_paused = !do_load.checked;
-  console.log(`load paused: ${load_paused}`);
+  gLoadMgr.paused = !do_load.checked;
+  console.log(`load paused: ${gLoadMgr.paused}`);
   update_load_state_indicator();
 }
 
@@ -397,9 +396,7 @@ function handler(timestamp) {
       ((testDuration - (timestamp - testStart)) / 1000).toFixed(1) + " sec";
   }
 
-  if (!load_paused) {
-    gActiveLoad.tick();
-  }
+  gLoadMgr.tick();
 
   const delay = gFrameTimer.record_frame_callback(timestamp);
 
@@ -475,10 +472,7 @@ function reset_draw_state() {
 }
 
 function onunload() {
-  if (gActiveLoad) {
-    gActiveLoad.stop();
-  }
-  gActiveLoad = undefined;
+  gLoadMgr.deactivateLoad();
 }
 
 function onload() {
@@ -493,6 +487,8 @@ function onload() {
     tests.set(name, _tests.get(name));
   });
   _tests = undefined;
+
+  gLoadMgr = new AllocationLoadManager(tests);
 
   // Load initial test duration.
   duration_changed();
@@ -543,7 +539,7 @@ function onload() {
 }
 
 function run_one_test() {
-  start_test_cycle([gActiveLoad.name]);
+  start_test_cycle([gLoadMgr.activeLoad().name]);
 }
 
 function run_all_tests() {
@@ -565,9 +561,9 @@ function start_test_cycle(tests_to_run) {
 }
 
 function update_load_state_indicator() {
-  if (gActiveLoad.is_dummy_load()) {
+  if (!gLoadMgr.load_running()) {
     loadState = "(none)";
-  } else if (gFrameTimer.is_stopped() || load_paused) {
+  } else if (gFrameTimer.is_stopped() || gLoadMgr.paused) {
     loadState = "(inactive)";
   } else {
     loadState = "(active)";
@@ -584,9 +580,9 @@ function start_test(testName) {
 
 function end_test(timestamp) {
   document.getElementById("test-progress").textContent = "(not running)";
-  report_test_result(gActiveLoad, gHistogram);
+  report_test_result(gLoadMgr.activeLoad(), gHistogram);
   gHistogram.clear();
-  console.log(`Ending test ${gActiveLoad.name}`);
+  console.log(`Ending test ${gLoadMgr.activeLoad().name}`);
   if (testQueue.length) {
     start_test(testQueue.shift());
     testStart = timestamp;
@@ -649,10 +645,10 @@ function change_load(new_load_name) {
   console.log(`change_load(${new_load_name})`);
   change_load_internal(new_load_name);
   document.getElementById("garbage-per-frame").value = format_units(
-    gActiveLoad.garbagePerFrame
+    gLoadMgr.activeLoad().garbagePerFrame
   );
   document.getElementById("garbage-total").value = format_units(
-    gActiveLoad.garbageTotal
+    gLoadMgr.activeLoad().garbageTotal
   );
   update_load_state_indicator();
 }
@@ -676,10 +672,12 @@ function garbage_total_changed() {
   if (isNaN(value)) {
     return;
   }
-  if (gActiveLoad) {
-    gActiveLoad.garbageTotal = value;
-    console.log(`Updated garbage-total to ${gActiveLoad.garbageTotal} items`);
-    gActiveLoad.reload();
+
+  if (gLoadMgr.load_running()) {
+    gLoadMgr.change_garbageTotal(value);
+    console.log(
+      `Updated garbage-total to ${gLoadMgr.activeLoad().garbageTotal} items`
+    );
   }
   gHistogram.clear();
   reset_draw_state();
@@ -690,10 +688,12 @@ function garbage_per_frame_changed() {
   if (isNaN(value)) {
     return;
   }
-  if (gActiveLoad) {
-    gActiveLoad.garbagePerFrame = value;
+  if (gLoadMgr.load_running()) {
+    gLoadMgr.change_garbagePerFrame = value;
     console.log(
-      `Updated garbage-per-frame to ${gActiveLoad.garbagePerFrame} items`
+      `Updated garbage-per-frame to ${
+        gLoadMgr.activeLoad().garbagePerFrame
+      } items`
     );
   }
 }
