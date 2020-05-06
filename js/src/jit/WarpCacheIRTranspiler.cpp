@@ -205,6 +205,36 @@ bool WarpCacheIRTranspiler::emitGuardSpecificAtom(StringOperandId strId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardType(ValOperandId inputId,
+                                          ValueType type) {
+  switch (type) {
+    case ValueType::String:
+    case ValueType::Symbol:
+    case ValueType::BigInt:
+    case ValueType::Int32:
+    case ValueType::Double:
+    case ValueType::Boolean:
+      return emitGuardTo(inputId, MIRTypeFromValueType(JSValueType(type)));
+    case ValueType::Undefined: {
+      auto* ins =
+          MGuardValue::New(alloc(), getOperand(inputId), UndefinedValue());
+      add(ins);
+      return true;
+    }
+    case ValueType::Null: {
+      auto* ins = MGuardValue::New(alloc(), getOperand(inputId), NullValue());
+      add(ins);
+      return true;
+    }
+    case ValueType::Magic:
+    case ValueType::PrivateGCThing:
+    case ValueType::Object:
+      break;
+  }
+
+  MOZ_CRASH("unexpected type");
+}
+
 bool WarpCacheIRTranspiler::emitGuardTo(ValOperandId inputId, MIRType type) {
   MDefinition* def = getOperand(inputId);
   if (def->type() == type) {
