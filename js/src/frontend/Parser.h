@@ -584,9 +584,9 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
                               GeneratorKind generatorKind,
                               FunctionAsyncKind asyncKind);
 
-  FunctionBox* newFunctionBox(FunctionNodeType funNode,
-                              Handle<FunctionCreationData> fcd,
-                              uint32_t toStringStart, Directives directives,
+  FunctionBox* newFunctionBox(FunctionNodeType funNode, HandleAtom explicitName,
+                              FunctionFlags flags, uint32_t toStringStart,
+                              Directives directives,
                               GeneratorKind generatorKind,
                               FunctionAsyncKind asyncKind);
 
@@ -1001,7 +1001,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                       ListNodeType nodeList, TokenKind* ttp);
 
   inline bool trySyntaxParseInnerFunction(
-      FunctionNodeType* funNode, Handle<FunctionCreationData> fcd,
+      FunctionNodeType* funNode, HandleAtom explicitName, FunctionFlags flags,
       uint32_t toStringStart, InHandling inHandling,
       YieldHandling yieldHandling, FunctionSyntaxKind kind,
       GeneratorKind generatorKind, FunctionAsyncKind asyncKind, bool tryAnnexB,
@@ -1405,13 +1405,12 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
 
   ListNodeType statementList(YieldHandling yieldHandling);
 
-  MOZ_MUST_USE FunctionNodeType
-  innerFunction(FunctionNodeType funNode, ParseContext* outerpc,
-                Handle<FunctionCreationData> fcd, uint32_t toStringStart,
-                InHandling inHandling, YieldHandling yieldHandling,
-                FunctionSyntaxKind kind, GeneratorKind generatorKind,
-                FunctionAsyncKind asyncKind, bool tryAnnexB,
-                Directives inheritedDirectives, Directives* newDirectives);
+  MOZ_MUST_USE FunctionNodeType innerFunction(
+      FunctionNodeType funNode, ParseContext* outerpc, HandleAtom explicitName,
+      FunctionFlags flags, uint32_t toStringStart, InHandling inHandling,
+      YieldHandling yieldHandling, FunctionSyntaxKind kind,
+      GeneratorKind generatorKind, FunctionAsyncKind asyncKind, bool tryAnnexB,
+      Directives inheritedDirectives, Directives* newDirectives);
 
   // Implements Automatic Semicolon Insertion.
   //
@@ -1555,7 +1554,7 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
   inline bool checkExportedNameForClause(NameNodeType nameNode);
 
   bool trySyntaxParseInnerFunction(
-      FunctionNodeType* funNode, Handle<FunctionCreationData> fcd,
+      FunctionNodeType* funNode, HandleAtom explicitName, FunctionFlags flags,
       uint32_t toStringStart, InHandling inHandling,
       YieldHandling yieldHandling, FunctionSyntaxKind kind,
       GeneratorKind generatorKind, FunctionAsyncKind asyncKind, bool tryAnnexB,
@@ -1701,7 +1700,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   inline bool checkExportedNameForClause(NameNodeType nameNode);
 
   bool trySyntaxParseInnerFunction(
-      FunctionNodeType* funNode, Handle<FunctionCreationData> fcd,
+      FunctionNodeType* funNode, HandleAtom explicitName, FunctionFlags flags,
       uint32_t toStringStart, InHandling inHandling,
       YieldHandling yieldHandling, FunctionSyntaxKind kind,
       GeneratorKind generatorKind, FunctionAsyncKind asyncKind, bool tryAnnexB,
@@ -1870,9 +1869,6 @@ mozilla::Maybe<LexicalScope::Data*> NewLexicalScopeData(
 bool FunctionScopeHasClosedOverBindings(ParseContext* pc);
 bool LexicalScopeHasClosedOverBindings(ParseContext* pc,
                                        ParseContext::Scope& scope);
-
-JSFunction* AllocNewFunction(JSContext* cx, uint16_t nargs,
-                             Handle<FunctionCreationData> dataHandle);
 
 } /* namespace frontend */
 } /* namespace js */
