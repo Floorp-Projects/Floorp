@@ -93,6 +93,10 @@ class MOZ_RAII WarpCacheIRTranspiler {
   MOZ_MUST_USE bool emitGuardTo(ValOperandId inputId, MIRType type);
 
   template <typename T>
+  MOZ_MUST_USE bool emitDoubleBinaryArithResult(NumberOperandId lhsId,
+                                                NumberOperandId rhsId);
+
+  template <typename T>
   MOZ_MUST_USE bool emitInt32BinaryArithResult(Int32OperandId lhsId,
                                                Int32OperandId rhsId);
 
@@ -546,6 +550,49 @@ bool WarpCacheIRTranspiler::emitInt32DecResult(Int32OperandId inputId) {
 
   pushResult(ins);
   return true;
+}
+
+template <typename T>
+bool WarpCacheIRTranspiler::emitDoubleBinaryArithResult(NumberOperandId lhsId,
+                                                        NumberOperandId rhsId) {
+  MDefinition* lhs = getOperand(lhsId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* ins = T::New(alloc(), lhs, rhs, MIRType::Double);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitDoubleAddResult(NumberOperandId lhsId,
+                                                NumberOperandId rhsId) {
+  return emitDoubleBinaryArithResult<MAdd>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitDoubleSubResult(NumberOperandId lhsId,
+                                                NumberOperandId rhsId) {
+  return emitDoubleBinaryArithResult<MSub>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitDoubleMulResult(NumberOperandId lhsId,
+                                                NumberOperandId rhsId) {
+  return emitDoubleBinaryArithResult<MMul>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitDoubleDivResult(NumberOperandId lhsId,
+                                                NumberOperandId rhsId) {
+  return emitDoubleBinaryArithResult<MDiv>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitDoubleModResult(NumberOperandId lhsId,
+                                                NumberOperandId rhsId) {
+  return emitDoubleBinaryArithResult<MMod>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitDoublePowResult(NumberOperandId lhsId,
+                                                NumberOperandId rhsId) {
+  return emitDoubleBinaryArithResult<MPow>(lhsId, rhsId);
 }
 
 template <typename T>

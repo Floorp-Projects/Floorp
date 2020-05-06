@@ -1069,42 +1069,42 @@
 
 - name: DoubleAddResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: NumberId
     rhs: NumberId
 
 - name: DoubleSubResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: NumberId
     rhs: NumberId
 
 - name: DoubleMulResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: NumberId
     rhs: NumberId
 
 - name: DoubleDivResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: NumberId
     rhs: NumberId
 
 - name: DoubleModResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: NumberId
     rhs: NumberId
 
 - name: DoublePowResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: NumberId
     rhs: NumberId
