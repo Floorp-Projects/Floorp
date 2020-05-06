@@ -61,7 +61,7 @@ already_AddRefed<MIDIMessageEvent> MIDIMessageEvent::Constructor(
   RefPtr<MIDIMessageEvent> e = new MIDIMessageEvent(aOwner);
   e->InitEvent(NS_LITERAL_STRING("midimessage"), false, false);
   e->mEvent->mTimeStamp = aReceivedTime;
-  e->mRawData = aData;
+  e->mRawData = aData.Clone();
   e->SetTrusted(true);
   return e.forget();
 }
