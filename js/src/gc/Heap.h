@@ -845,7 +845,29 @@ static const int32_t ChunkStoreBufferOffsetFromLastByte =
 
 // Cell header stored before all nursery cells.
 struct alignas(gc::CellAlignBytes) NurseryCellHeader {
-  JS::Zone* const zone;
+  // Store zone pointer with the trace kind in the lowest three bits.
+  const uintptr_t zoneAndTraceKind;
+
+  // We only need to store a subset of trace kinds so this doesn't cover the
+  // full range.
+  static const uintptr_t TraceKindMask = 3;
+
+  static uintptr_t MakeValue(JS::Zone* const zone, JS::TraceKind kind) {
+    MOZ_ASSERT(uintptr_t(kind) < TraceKindMask);
+    MOZ_ASSERT((uintptr_t(zone) & TraceKindMask) == 0);
+    return uintptr_t(zone) | uintptr_t(kind);
+  }
+
+  NurseryCellHeader(JS::Zone* const zone, JS::TraceKind kind)
+      : zoneAndTraceKind(MakeValue(zone, kind)) {}
+
+  JS::Zone* zone() const {
+    return reinterpret_cast<JS::Zone*>(zoneAndTraceKind & ~TraceKindMask);
+  }
+
+  JS::TraceKind traceKind() const {
+    return JS::TraceKind(zoneAndTraceKind & TraceKindMask);
+  }
 
   static const NurseryCellHeader* from(const Cell* cell) {
     MOZ_ASSERT(IsInsideNursery(cell));
@@ -853,6 +875,13 @@ struct alignas(gc::CellAlignBytes) NurseryCellHeader {
         uintptr_t(cell) - sizeof(NurseryCellHeader));
   }
 };
+
+static_assert(uintptr_t(JS::TraceKind::Object) <=
+              NurseryCellHeader::TraceKindMask);
+static_assert(uintptr_t(JS::TraceKind::String) <=
+              NurseryCellHeader::TraceKindMask);
+static_assert(uintptr_t(JS::TraceKind::BigInt) <=
+              NurseryCellHeader::TraceKindMask);
 
 } /* namespace gc */
 

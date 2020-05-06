@@ -3394,7 +3394,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
                              Label* fail);
   void bumpPointerAllocate(Register result, Register temp, Label* fail,
                            CompileZone* zone, void* posAddr,
-                           const void* curEddAddr, uint32_t size);
+                           const void* curEddAddr, JS::TraceKind traceKind,
+                           uint32_t size);
 
   void freeListAllocate(Register result, Register temp, gc::AllocKind allocKind,
                         Label* fail);

@@ -82,6 +82,8 @@ class CompileZone {
   bool canNurseryAllocateStrings();
   bool canNurseryAllocateBigInts();
   void setMinorGCShouldCancelIonCompilations();
+
+  uintptr_t nurseryCellHeader(JS::TraceKind kind);
 };
 
 class JitRealm;
