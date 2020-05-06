@@ -188,8 +188,7 @@ Http2Session::~Http2Session() {
     Telemetry::Accumulate(Telemetry::DNS_TRR_REQUEST_PER_CONN, mTrrStreams);
   }
   Telemetry::Accumulate(Telemetry::SPDY_PARALLEL_STREAMS, mConcurrentHighWater);
-  Telemetry::Accumulate(Telemetry::SPDY_REQUEST_PER_CONN,
-                        (mNextStreamID - 1) / 2);
+  Telemetry::Accumulate(Telemetry::SPDY_REQUEST_PER_CONN_2, mCntActivated);
   Telemetry::Accumulate(Telemetry::SPDY_SERVER_INITIATED_STREAMS,
                         mServerPushedResources);
   Telemetry::Accumulate(Telemetry::SPDY_GOAWAY_LOCAL, mClientGoAwayReason);
@@ -767,6 +766,8 @@ bool Http2Session::TryToActivate(Http2Stream* aStream) {
 
   LOG3(("Http2Session::TryToActivate %p stream=%p\n", this, aStream));
   IncrementConcurrent(aStream);
+
+  mCntActivated++;
   return true;
 }
 
