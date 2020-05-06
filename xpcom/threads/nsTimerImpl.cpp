@@ -352,9 +352,9 @@ nsresult nsTimerImpl::InitWithNameableFuncCallback(
 }
 
 nsresult nsTimerImpl::InitWithCallback(nsITimerCallback* aCallback,
-                                       uint32_t aDelay, uint32_t aType) {
+                                       uint32_t aDelayInMs, uint32_t aType) {
   return InitHighResolutionWithCallback(
-      aCallback, TimeDuration::FromMilliseconds(aDelay), aType);
+      aCallback, TimeDuration::FromMilliseconds(aDelayInMs), aType);
 }
 
 nsresult nsTimerImpl::InitHighResolutionWithCallback(
@@ -372,7 +372,7 @@ nsresult nsTimerImpl::InitHighResolutionWithCallback(
   return InitCommon(aDelay, aType, std::move(cb));
 }
 
-nsresult nsTimerImpl::Init(nsIObserver* aObserver, uint32_t aDelay,
+nsresult nsTimerImpl::Init(nsIObserver* aObserver, uint32_t aDelayInMs,
                            uint32_t aType) {
   if (NS_WARN_IF(!aObserver)) {
     return NS_ERROR_INVALID_ARG;
@@ -384,7 +384,7 @@ nsresult nsTimerImpl::Init(nsIObserver* aObserver, uint32_t aDelay,
   NS_ADDREF(cb.mCallback.o);
 
   MutexAutoLock lock(mMutex);
-  return InitCommon(aDelay, aType, std::move(cb));
+  return InitCommon(aDelayInMs, aType, std::move(cb));
 }
 
 nsresult nsTimerImpl::Cancel() {
