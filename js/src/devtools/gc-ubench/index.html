@@ -45,18 +45,27 @@
 </div>
 
 <div>
-    <input type="button" id="stop" value="Pause" onclick="stopstart()"></input>
+  Update display:
+  <input type="checkbox" id="do-graph" onchange="stopstart()" checked></input>
 </div>
+
+<div>
+  Run allocation load
+  <input type="checkbox" id="do-load" onchange="do_load()" checked></input>
+</div>
+
+<div>
+    Allocation load:
+    <select id="test-selection" required onchange="test_changed()"></select>
+    <span id="load-running">(init)</span>
+</div>
+
+<hr>
 
 <div>
     Duration: <input type="text" id="test-duration" size="3" value="8" onchange="duration_changed()"></input>s
     <input type="button" id="test-one" value="Run Test" onclick="run_one_test()"></input>
     <input type="button" id="test-all" value="Run All Tests" onclick="run_all_tests()"></input>
-</div>
-
-<div>
-    Currently running test load:
-    <select id="test-selection" required onchange="test_changed()"></select>
 </div>
 
 <div>
