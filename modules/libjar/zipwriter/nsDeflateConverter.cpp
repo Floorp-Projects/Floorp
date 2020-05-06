@@ -93,6 +93,7 @@ NS_IMETHODIMP nsDeflateConverter::AsyncConvertData(const char* aFromType,
 
 NS_IMETHODIMP
 nsDeflateConverter::GetConvertedType(const nsACString& aFromType,
+                                     nsIChannel* aChannel,
                                      nsACString& aToType) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

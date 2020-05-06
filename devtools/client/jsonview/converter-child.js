@@ -75,7 +75,7 @@ Converter.prototype = {
   asyncConvertData: function(fromType, toType, listener, ctx) {
     this.listener = listener;
   },
-  getConvertedType: function(fromType) {
+  getConvertedType: function(fromType, channel) {
     return "text/html";
   },
 

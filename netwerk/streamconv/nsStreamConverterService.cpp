@@ -357,6 +357,7 @@ nsStreamConverterService::CanConvert(const char* aFromType, const char* aToType,
 
 NS_IMETHODIMP
 nsStreamConverterService::ConvertedType(const nsACString& aFromType,
+                                        nsIChannel* aChannel,
                                         nsACString& aOutToType) {
   // first determine whether we can even handle this conversion
   // build a CONTRACTID
@@ -369,7 +370,7 @@ nsStreamConverterService::ConvertedType(const nsACString& aFromType,
   nsresult rv;
   nsCOMPtr<nsIStreamConverter> converter(do_CreateInstance(cContractID, &rv));
   if (NS_SUCCEEDED(rv)) {
-    return converter->GetConvertedType(aFromType, aOutToType);
+    return converter->GetConvertedType(aFromType, aChannel, aOutToType);
   }
   return rv;
 }

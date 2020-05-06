@@ -5,6 +5,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIChannel;
 interface nsIInputStream;
 interface nsIStreamListener;
 
@@ -40,7 +41,7 @@ interface nsIStreamConverterService : nsISupports {
      * Can fail if no converters support this conversion, or if the
      * output type isn't known in advance.
      */
-    ACString convertedType(in ACString aFromType);
+    ACString convertedType(in ACString aFromType, in nsIChannel aChannel);
 
     /**
      * <b>SYNCHRONOUS VERSION</b>

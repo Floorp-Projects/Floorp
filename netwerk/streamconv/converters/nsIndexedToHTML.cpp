@@ -92,7 +92,7 @@ nsIndexedToHTML::AsyncConvertData(const char* aFromType, const char* aToType,
 
 NS_IMETHODIMP
 nsIndexedToHTML::GetConvertedType(const nsACString& aFromType,
-                                  nsACString& aToType) {
+                                  nsIChannel* aChannel, nsACString& aToType) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
