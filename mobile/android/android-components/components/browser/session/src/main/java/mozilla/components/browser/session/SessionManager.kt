@@ -80,6 +80,13 @@ class SessionManager(
 
             session.engineSessionHolder.engineSession = null
             session.engineSessionHolder.engineObserver = null
+
+            // Note: We could consider not clearing the engine session state here. Instead we could
+            // try to actively set it here by calling save() on the engine session (if we have one).
+            // That way adding the same Session again could restore the previous state automatically
+            // (although we would need to make sure we do not override it with null in link()).
+            // Clearing the engine session state would be left to the garbage collector whenever the
+            // session itself gets collected.
             session.engineSessionHolder.engineSessionState = null
 
             store?.syncDispatch(UnlinkEngineSessionAction(session.id))
@@ -408,15 +415,16 @@ class SessionManager(
                 }
 
                 if (closeEngineSessions) {
-                    val state = it.engineSessionHolder.engineSession?.saveState()
-                    linker.unlink(it)
+                    val engineSession = it.engineSessionHolder.engineSession
+                    if (engineSession != null) {
+                        val state = engineSession.saveState()
+                        linker.unlink(it)
 
-                    if (state != null) {
                         it.engineSessionHolder.engineSessionState = state
                         states[it.id] = state
-                    }
 
-                    unlinkedEngineSessions++
+                        unlinkedEngineSessions++
+                    }
                 }
             }
         }
