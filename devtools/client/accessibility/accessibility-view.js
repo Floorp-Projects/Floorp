@@ -170,13 +170,36 @@ AccessibilityView.prototype = {
           // for data (hydration) about the accessible object.
           if (accessible) {
             await accessible.hydrate();
+            if (accessible.indexInParent >= 0) {
+              break;
+            }
           }
+        }
+      }
+    }
 
+    // Attempt to find closest accessible ancestor for a given node.
+    if (!accessible || accessible.indexInParent < 0) {
+      let parentNode = node.parentNode();
+      while (parentNode) {
+        accessible = await accessibleWalkerFront.getAccessibleFor(parentNode);
+        if (accessible) {
+          await accessible.hydrate();
           if (accessible.indexInParent >= 0) {
             break;
           }
         }
+
+        parentNode = parentNode.parentNode();
       }
+    }
+
+    // Do not set the selected state if there is no corresponding accessible.
+    if (!accessible) {
+      console.warn(
+        `No accessible object found for a node or a node in its ancestry: ${node.actorID}`
+      );
+      return;
     }
 
     await this.store.dispatch(select(accessible));
