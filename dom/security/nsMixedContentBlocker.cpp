@@ -832,11 +832,15 @@ nsresult nsMixedContentBlocker::ShouldLoad(
 
   // Determine if the rootDoc is https and if the user decided to allow Mixed
   // Content
-  RefPtr<BrowsingContext> bc = docShell->GetBrowsingContext();
-  RefPtr<BrowsingContext> rootBC = bc->Top();
-  bool rootHasSecureConnection = rootBC->GetIsSecure();
-  WindowContext* topWC = bc->GetTopWindowContext();
-  bool allowMixedContent = topWC->GetAllowMixedContent();
+  bool rootHasSecureConnection =
+      docShell->GetBrowsingContext()->Top()->GetIsSecure();
+  bool allowMixedContent = false;
+  nsresult rv =
+      docShell->GetAllowMixedContentAndConnectionData(&allowMixedContent);
+  if (NS_FAILED(rv)) {
+    *aDecision = REJECT_REQUEST;
+    return rv;
+  }
 
   // When navigating an iframe, the iframe may be https
   // but its parents may not be.  Check the parents to see if any of them are
@@ -858,7 +862,8 @@ nsresult nsMixedContentBlocker::ShouldLoad(
   }
 
   // Get the root document from the rootShell
-  nsCOMPtr<nsIDocShell> rootShell = rootBC->GetDocShell();
+  nsCOMPtr<nsIDocShell> rootShell =
+      docShell->GetBrowsingContext()->Top()->GetDocShell();
   nsCOMPtr<Document> rootDoc = rootShell ? rootShell->GetDocument() : nullptr;
 
   // TODO Fission: Bug 1631405: Make Mixed Content UI fission compatible

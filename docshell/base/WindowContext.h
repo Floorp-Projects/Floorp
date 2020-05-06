@@ -25,10 +25,7 @@ class WindowGlobalParent;
   FIELD(IsThirdPartyWindow, bool)                                      \
   /* Whether this window's channel has been marked as a third-party    \
    * tracking resource */                                              \
-  FIELD(IsThirdPartyTrackingResourceWindow, bool)                      \
-  /* Whether the user has overriden the mixed content blocker to allow \
-   * mixed content loads to happen */                                  \
-  FIELD(AllowMixedContent, bool)
+  FIELD(IsThirdPartyTrackingResourceWindow, bool)
 
 class WindowContext : public nsISupports, public nsWrapperCache {
   MOZ_DECL_SYNCED_CONTEXT(WindowContext, MOZ_EACH_WC_FIELD)
@@ -108,9 +105,6 @@ class WindowContext : public nsISupports, public nsWrapperCache {
               ContentParent* aSource) {
     return GetOuterWindowId() == 0 && aValue != 0;
   }
-
-  bool CanSet(FieldIndex<IDX_AllowMixedContent>, const bool& aAllowMixedContent,
-              ContentParent* aSource);
 
   bool CanSet(FieldIndex<IDX_CookieJarSettings>,
               const Maybe<mozilla::net::CookieJarSettingsArgs>& aValue,

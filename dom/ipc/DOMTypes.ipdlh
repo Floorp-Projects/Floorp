@@ -232,7 +232,6 @@ struct WindowGlobalInit
   MaybeDiscardedBrowsingContext browsingContext;
   uint64_t innerWindowId;
   uint64_t outerWindowId;
-  bool allowMixedContent;
 };
 
 struct DocShellLoadStateInit
