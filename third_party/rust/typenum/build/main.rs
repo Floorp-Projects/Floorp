@@ -1,12 +1,11 @@
 use std::env;
+use std::fmt;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
-use std::fmt;
 
-#[cfg(tests)]
-mod tests;
 mod op;
+mod tests;
 
 pub enum UIntCode {
     Term,
@@ -58,18 +57,22 @@ pub fn gen_uint(u: u64) -> UIntCode {
 }
 
 pub fn gen_int(i: i64) -> IntCode {
-    if i > 0 {
-        IntCode::Pos(Box::new(gen_uint(i as u64)))
-    } else if i < 0 {
-        IntCode::Neg(Box::new(gen_uint(i.abs() as u64)))
-    } else {
-        IntCode::Zero
+    use std::cmp::Ordering::{Equal, Greater, Less};
+
+    match i.cmp(&0) {
+        Greater => IntCode::Pos(Box::new(gen_uint(i as u64))),
+        Less => IntCode::Neg(Box::new(gen_uint(i.abs() as u64))),
+        Equal => IntCode::Zero,
     }
 }
 
-#[cfg_attr(feature="no_std", deprecated(
-    since="1.3.0",
-    note="the `no_std` flag is no longer necessary and will be removed in the future"))]
+#[cfg_attr(
+    feature = "no_std",
+    deprecated(
+        since = "1.3.0",
+        note = "the `no_std` flag is no longer necessary and will be removed in the future"
+    )
+)]
 pub fn no_std() {}
 
 // fixme: get a warning when testing without this
@@ -77,7 +80,7 @@ pub fn no_std() {}
 fn main() {
     let highest: u64 = 1024;
 
-    let first2: u32 = (highest as f64).log(2.0) as u32 + 1;
+    let first2: u32 = (highest as f64).log(2.0).round() as u32 + 1;
     let first10: u32 = (highest as f64).log(10.0) as u32 + 1;
     let uints = (0..(highest + 1))
         .chain((first2..64).map(|i| 2u64.pow(i)))
@@ -85,6 +88,7 @@ fn main() {
 
     let out_dir = env::var("OUT_DIR").unwrap();
     let dest = Path::new(&out_dir).join("consts.rs");
+    println!("cargo:rustc-env=TYPENUM_BUILD_CONSTS={}", dest.display());
 
     let mut f = File::create(&dest).unwrap();
 
@@ -157,22 +161,23 @@ pub mod consts {{
     pub type False = B0;
 ",
         highest = highest
-    ).unwrap();
+    )
+    .unwrap();
 
     for u in uints {
-        write!(f, "    pub type U{} = {};\n", u, gen_uint(u)).unwrap();
+        writeln!(f, "    pub type U{} = {};", u, gen_uint(u)).unwrap();
         if u <= ::std::i64::MAX as u64 && u != 0 {
             let i = u as i64;
-            write!(
+            writeln!(
                 f,
-                "    pub type P{i} = PInt<U{i}>; pub type N{i} = NInt<U{i}>;\n",
+                "    pub type P{i} = PInt<U{i}>; pub type N{i} = NInt<U{i}>;",
                 i = i
-            ).unwrap();
+            )
+            .unwrap();
         }
     }
     write!(f, "}}").unwrap();
 
-    #[cfg(tests)]
     tests::build_tests().unwrap();
 
     op::write_op_macro().unwrap();
