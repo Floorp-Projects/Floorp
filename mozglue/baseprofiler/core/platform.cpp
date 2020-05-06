@@ -226,6 +226,10 @@ class MOZ_RAII PSAutoLock {
   PSAutoLock(const PSAutoLock&) = delete;
   void operator=(const PSAutoLock&) = delete;
 
+  [[nodiscard]] static bool IsLockedOnCurrentThread() {
+    return gPSMutex.IsLockedOnCurrentThread();
+  }
+
  private:
   static detail::BaseProfilerMutex gPSMutex;
 };
@@ -3368,6 +3372,10 @@ UniqueProfilerBacktrace profiler_get_backtrace() {
 
 void ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {
   delete aBacktrace;
+}
+
+bool profiler_is_locked_on_current_thread() {
+  return PSAutoLock::IsLockedOnCurrentThread();
 }
 
 static void racy_profiler_add_marker(const char* aMarkerName,
