@@ -401,6 +401,19 @@ bool TypeSet::mightBeMIRType(jit::MIRType type) const {
   return baseFlags & MIRTypeToTypeFlags(type);
 }
 
+bool TypeSet::isSubset(std::initializer_list<jit::MIRType> types) const {
+  TypeFlags flags = 0;
+  for (auto type : types) {
+    flags |= MIRTypeToTypeFlags(type);
+  }
+
+  TypeFlags baseFlags = this->baseFlags();
+  if (baseObjectCount() != 0) {
+    baseFlags |= TYPE_FLAG_ANYOBJECT;
+  }
+  return (baseFlags & flags) == baseFlags;
+}
+
 bool TypeSet::objectsAreSubset(TypeSet* other) {
   if (other->unknownObject()) {
     return true;
