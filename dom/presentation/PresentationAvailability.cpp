@@ -51,7 +51,7 @@ already_AddRefed<PresentationAvailability> PresentationAvailability::Create(
 
 PresentationAvailability::PresentationAvailability(
     nsPIDOMWindowInner* aWindow, const nsTArray<nsString>& aUrls)
-    : DOMEventTargetHelper(aWindow), mIsAvailable(false), mUrls(aUrls) {
+    : DOMEventTargetHelper(aWindow), mIsAvailable(false), mUrls(aUrls.Clone()) {
   for (uint32_t i = 0; i < mUrls.Length(); ++i) {
     mAvailabilityOfUrl.AppendElement(false);
   }
