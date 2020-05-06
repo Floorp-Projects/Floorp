@@ -371,8 +371,8 @@ bool BaselineCacheIRCompiler::emitGuardSpecificAtom(StringOperandId strId,
 
   // The pointers are not equal, so if the input string is also an atom it
   // must be a different string.
-  masm.branchTest32(Assembler::Zero, Address(str, JSString::offsetOfFlags()),
-                    Imm32(JSString::NON_ATOM_BIT), failure->label());
+  masm.branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
+                    Imm32(JSString::ATOM_BIT), failure->label());
 
   // Check the length.
   masm.loadPtr(atomAddr, scratch);
