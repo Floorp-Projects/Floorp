@@ -3657,7 +3657,7 @@ JS::ubi::Node::Size JS::ubi::Concrete<BigInt>::size(
   BigInt& bi = get();
   size_t size = sizeof(JS::BigInt);
   if (IsInsideNursery(&bi)) {
-    size += Nursery::bigIntHeaderSize();
+    size += Nursery::nurseryCellHeaderSize();
     size += bi.sizeOfExcludingThisInNursery(mallocSizeOf);
   } else {
     size += bi.sizeOfExcludingThis(mallocSizeOf);
