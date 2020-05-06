@@ -1819,7 +1819,7 @@ void NetlinkService::GetNetworkID(nsACString& aNetworkID) {
 nsresult NetlinkService::GetDnsSuffixList(nsTArray<nsCString>& aDnsSuffixList) {
 #if defined(HAVE_RES_NINIT)
   MutexAutoLock lock(mMutex);
-  aDnsSuffixList = mDNSSuffixList;
+  aDnsSuffixList = mDNSSuffixList.Clone();
   return NS_OK;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
