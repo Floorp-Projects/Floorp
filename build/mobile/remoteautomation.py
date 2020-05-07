@@ -308,25 +308,31 @@ class RemoteAutomation(object):
                 parsed_messages = self.messageLogger.write(line)
 
             for message in parsed_messages:
-                if isinstance(message, dict) and message.get('action') == 'test_start':
-                    self.lastTestSeen = message['test']
-                if isinstance(message, dict) and message.get('action') == 'log':
-                    line = message['message'].strip()
-                    if self.counts:
-                        m = re.match(".*:\s*(\d*)", line)
-                        if m:
-                            try:
-                                val = int(m.group(1))
-                                if "Passed:" in line:
-                                    self.counts['pass'] += val
-                                elif "Failed:" in line:
-                                    self.counts['fail'] += val
-                                elif "Todo:" in line:
-                                    self.counts['todo'] += val
-                            except ADBTimeoutError:
-                                raise
-                            except Exception:
-                                pass
+                if isinstance(message, dict):
+                    if message.get('action') == 'test_start':
+                        self.lastTestSeen = message['test']
+                    elif message.get('action') == 'test_end':
+                        self.lastTestSeen = '{} (finished)'.format(message['test'])
+                    elif message.get('action') == 'suite_end':
+                        self.lastTestSeen = "Last test finished"
+                    elif message.get('action') == 'log':
+                        line = message['message'].strip()
+                        if self.counts:
+                            m = re.match(".*:\s*(\d*)", line)
+                            if m:
+                                try:
+                                    val = int(m.group(1))
+                                    if "Passed:" in line:
+                                        self.counts['pass'] += val
+                                        self.lastTestSeen = "Last test finished"
+                                    elif "Failed:" in line:
+                                        self.counts['fail'] += val
+                                    elif "Todo:" in line:
+                                        self.counts['todo'] += val
+                                except ADBTimeoutError:
+                                    raise
+                                except Exception:
+                                    pass
 
         return True
 
