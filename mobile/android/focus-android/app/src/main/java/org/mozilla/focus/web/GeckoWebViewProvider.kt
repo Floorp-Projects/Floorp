@@ -700,6 +700,7 @@ class GeckoWebViewProvider : IWebViewProvider {
             val storage = MobileMetricsPingStorage(context)
             if (!storage.shouldStoreMetrics()) return
 
+            @Suppress("DEPRECATION")
             geckoRuntime!!.telemetry.getSnapshots(true).then({ value ->
                 launch(IO) {
                     try {
