@@ -604,6 +604,11 @@ static MOZ_ALWAYS_INLINE bool InitArrayElemOperation(JSContext* cx,
 
   MOZ_ASSERT(obj->is<ArrayObject>());
 
+  // The JITs depend on InitElemArray's index not exceeding the dense element
+  // capacity.
+  MOZ_ASSERT_IF(op == JSOp::InitElemArray,
+                index < obj->as<ArrayObject>().getDenseCapacity());
+
   if (op == JSOp::InitElemInc && index == INT32_MAX) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_SPREAD_TOO_LARGE);

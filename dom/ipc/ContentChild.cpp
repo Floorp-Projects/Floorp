@@ -55,7 +55,7 @@
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/dom/PLoginReputationChild.h"
 #include "mozilla/dom/PSessionStorageObserverChild.h"
-#include "mozilla/dom/PlaybackController.h"
+#include "mozilla/dom/ContentPlaybackController.h"
 #include "mozilla/dom/PostMessageEvent.h"
 #include "mozilla/dom/PushNotifier.h"
 #include "mozilla/dom/RemoteWorkerService.h"
@@ -3542,7 +3542,8 @@ mozilla::ipc::IPCResult ContentChild::RecvUpdateMediaControlKeysEvent(
     return IPC_OK();
   }
 
-  MediaActionHandler::HandleMediaControlKeysEvent(aContext.get(), aEvent);
+  ContentMediaActionHandler::HandleMediaControlKeysEvent(aContext.get(),
+                                                         aEvent);
   return IPC_OK();
 }
 

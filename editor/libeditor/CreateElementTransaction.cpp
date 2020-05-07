@@ -148,8 +148,14 @@ void CreateElementTransaction::InsertNewNode(ErrorResult& aError) {
     return;
   }
 
-  if (NS_WARN_IF(mPointToInsert.GetContainer() !=
-                 mPointToInsert.GetChild()->GetParentNode())) {
+  // We still know a child, but the child is different element's child,
+  // we should just return error.
+  if (NS_WARN_IF(mPointToInsert.GetChild() &&
+                 mPointToInsert.GetContainer() !=
+                     mPointToInsert.GetChild()->GetParentNode())) {
+    // XXX Is NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE better? Since it won't
+    //     cause throwing exception even if editor user throws an error
+    //     returned from editor's public method.
     aError.Throw(NS_ERROR_FAILURE);
     return;
   }

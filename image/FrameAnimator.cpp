@@ -52,16 +52,11 @@ const gfx::IntRect AnimationState::UpdateStateInternal(
     mDiscarded = false;
     mHasRequestedDecode = true;
 
-    // If mHasBeenDecoded is true then we know the true total frame count and
-    // we can use it to determine if we have all the frames now so we know if
-    // we are currently fully decoded.
-    // If mHasBeenDecoded is false then we'll get another UpdateState call
-    // when the decode finishes.
-    if (mHasBeenDecoded) {
-      const DebugOnly<Maybe<uint32_t>> frameCount = FrameCount();
-      MOZ_ASSERT(static_cast<const Maybe<uint32_t>&>(frameCount).isSome());
-      mIsCurrentlyDecoded = aResult.Surface().IsFullyDecoded();
-    }
+    // If we can seek to the current animation frame we consider it decoded.
+    // Animated images are never fully decoded unless very short.
+    mIsCurrentlyDecoded =
+        bool(aResult.Surface()) &&
+        NS_SUCCEEDED(aResult.Surface().Seek(mCurrentAnimationFrameIndex));
   }
 
   gfx::IntRect ret;
@@ -444,10 +439,39 @@ LookupResult FrameAnimator::GetCompositedFrame(AnimationState& aState,
     MOZ_ASSERT(StaticPrefs::image_mem_animated_discardable_AtStartup());
     MOZ_ASSERT(aState.GetHasRequestedDecode());
     MOZ_ASSERT(!aState.GetIsCurrentlyDecoded());
-    if (result.Type() == MatchType::NOT_FOUND) {
-      return result;
+
+    if (result.Type() == MatchType::EXACT) {
+      // If our composited frame is marked as invalid but our frames are in the
+      // surface cache we might just have not updated our internal state yet.
+      // This can happen if the image is not in a document so that
+      // RequestRefresh is not getting called to advance the frame.
+      // RequestRefresh would result in our composited frame getting marked as
+      // valid either at the end of RequestRefresh when we are able to advance
+      // to the current time or if advancing frames eventually causes us to
+      // decode all of the frames of the image resulting in DecodeComplete
+      // getting called which calls UpdateState. The reason we care about this
+      // is that img.decode promises won't resolve until GetCompositedFrame
+      // returns a frame.
+      UnorientedIntRect rect = UnorientedIntRect::FromUnknownRect(
+          aState.UpdateStateInternal(result, mSize));
+
+      if (!rect.IsEmpty()) {
+        nsCOMPtr<nsIEventTarget> eventTarget = do_GetMainThread();
+        RefPtr<RasterImage> image = mImage;
+        nsCOMPtr<nsIRunnable> ev = NS_NewRunnableFunction(
+            "FrameAnimator::GetCompositedFrame",
+            [=]() -> void { image->NotifyProgress(NoProgress, rect); });
+        eventTarget->Dispatch(ev.forget(), NS_DISPATCH_NORMAL);
+      }
     }
-    return LookupResult(MatchType::PENDING);
+
+    // If it's still invalid we have to return.
+    if (aState.mCompositedFrameInvalid) {
+      if (result.Type() == MatchType::NOT_FOUND) {
+        return result;
+      }
+      return LookupResult(MatchType::PENDING);
+    }
   }
 
   // Otherwise return the raw frame. DoBlend is required to ensure that we only

@@ -65,6 +65,26 @@ ConvertMediaControlKeysTestEventToMediaControlKeysEvent(
   }
 }
 
+inline const char* ToMediaSessionActionStr(MediaSessionAction aAction) {
+  switch (aAction) {
+    case MediaSessionAction::Play:
+      return "play";
+    case MediaSessionAction::Pause:
+      return "pause";
+    case MediaSessionAction::Seekbackward:
+      return "seek backward";
+    case MediaSessionAction::Seekforward:
+      return "seek forward";
+    case MediaSessionAction::Previoustrack:
+      return "previous track";
+    case MediaSessionAction::Nexttrack:
+      return "next track";
+    default:
+      MOZ_ASSERT(aAction == MediaSessionAction::Stop);
+      return "stop";
+  }
+}
+
 inline MediaSessionPlaybackTestState ConvertToMediaSessionPlaybackTestState(
     MediaSessionPlaybackState aState) {
   switch (aState) {
