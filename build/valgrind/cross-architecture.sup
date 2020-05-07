@@ -163,3 +163,11 @@
    fun:_ZN5style7sharing26StyleSharingCache$LT$E$GT$3new*
    ...
 }
+{
+   Leak in libfontconfig1 in Debian 8 and 9. See bug 1636003.
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:FcGetPrgname
+   ...
+}
