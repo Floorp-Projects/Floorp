@@ -212,7 +212,8 @@ NS_IMPL_ISUPPORTS(nsMixedContentBlocker, nsIContentPolicy, nsIChannelEventSink)
 
 static void LogMixedContentMessage(
     MixedContentTypes aClassification, nsIURI* aContentLocation,
-    Document* aRootDoc, nsMixedContentBlockerMessageType aMessageType) {
+    uint64_t aInnerWindowID, nsMixedContentBlockerMessageType aMessageType,
+    nsIURI* aRequestingLocation) {
   nsAutoCString messageCategory;
   uint32_t severityFlag;
   nsAutoCString messageLookupKey;
@@ -235,12 +236,17 @@ static void LogMixedContentMessage(
     }
   }
 
-  AutoTArray<nsString, 1> strings;
+  nsAutoString localizedMsg;
+  AutoTArray<nsString, 1> params;
   CopyUTF8toUTF16(aContentLocation->GetSpecOrDefault(),
-                  *strings.AppendElement());
-  nsContentUtils::ReportToConsole(severityFlag, messageCategory, aRootDoc,
-                                  nsContentUtils::eSECURITY_PROPERTIES,
-                                  messageLookupKey.get(), strings);
+                  *params.AppendElement());
+  nsContentUtils::FormatLocalizedString(nsContentUtils::eSECURITY_PROPERTIES,
+                                        messageLookupKey.get(), params,
+                                        localizedMsg);
+
+  nsContentUtils::ReportToConsoleByWindowID(localizedMsg, severityFlag,
+                                            messageCategory, aInnerWindowID,
+                                            aRequestingLocation);
 }
 
 /* nsIChannelEventSink implementation
@@ -891,6 +897,8 @@ nsresult nsMixedContentBlocker::ShouldLoad(
     }
   }
 
+  uint64_t topInnerWindowID =
+      docShell->GetBrowsingContext()->GetTopWindowContext()->Id();
   nsDocShell* nativeDocShell = nsDocShell::Cast(docShell);
 
   uint32_t state = nsIWebProgressListener::STATE_IS_BROKEN;
@@ -951,8 +959,8 @@ nsresult nsMixedContentBlocker::ShouldLoad(
   if (StaticPrefs::security_mixed_content_block_display_content() &&
       classification == eMixedDisplay) {
     if (allowMixedContent) {
-      LogMixedContentMessage(classification, aContentLocation, rootDoc,
-                             eUserOverride);
+      LogMixedContentMessage(classification, aContentLocation, topInnerWindowID,
+                             eUserOverride, requestingLocation);
       *aDecision = nsIContentPolicy::ACCEPT;
       // See if mixed display content has already loaded on the page or if the
       // state needs to be updated here. If mixed display hasn't loaded
@@ -990,8 +998,8 @@ nsresult nsMixedContentBlocker::ShouldLoad(
       }
     } else {
       *aDecision = nsIContentPolicy::REJECT_REQUEST;
-      LogMixedContentMessage(classification, aContentLocation, rootDoc,
-                             eBlocked);
+      LogMixedContentMessage(classification, aContentLocation, topInnerWindowID,
+                             eBlocked, requestingLocation);
       if (!rootDoc->GetHasMixedDisplayContentBlocked() &&
           NS_SUCCEEDED(stateRV)) {
         rootDoc->SetHasMixedDisplayContentBlocked(true);
@@ -1008,8 +1016,8 @@ nsresult nsMixedContentBlocker::ShouldLoad(
     // If the content is active content, and the pref says active content should
     // be blocked, block it unless the user has choosen to override the pref
     if (allowMixedContent) {
-      LogMixedContentMessage(classification, aContentLocation, rootDoc,
-                             eUserOverride);
+      LogMixedContentMessage(classification, aContentLocation, topInnerWindowID,
+                             eUserOverride, requestingLocation);
       *aDecision = nsIContentPolicy::ACCEPT;
       // See if the state will change here. If it will, only then do we need to
       // call OnSecurityChange() to update the UI.
@@ -1051,8 +1059,8 @@ nsresult nsMixedContentBlocker::ShouldLoad(
       // User has not overriden the pref by Disabling protection. Reject the
       // request and update the security state.
       *aDecision = nsIContentPolicy::REJECT_REQUEST;
-      LogMixedContentMessage(classification, aContentLocation, rootDoc,
-                             eBlocked);
+      LogMixedContentMessage(classification, aContentLocation, topInnerWindowID,
+                             eBlocked, requestingLocation);
       // See if the pref will change here. If it will, only then do we need to
       // call OnSecurityChange() to update the UI.
       if (rootDoc->GetHasMixedActiveContentBlocked()) {
@@ -1074,8 +1082,8 @@ nsresult nsMixedContentBlocker::ShouldLoad(
     // The content is not blocked by the mixed content prefs.
 
     // Log a message that we are loading mixed content.
-    LogMixedContentMessage(classification, aContentLocation, rootDoc,
-                           eUserOverride);
+    LogMixedContentMessage(classification, aContentLocation, topInnerWindowID,
+                           eUserOverride, requestingLocation);
 
     // Fire the event from a script runner as it is unsafe to run script
     // from within ShouldLoad
