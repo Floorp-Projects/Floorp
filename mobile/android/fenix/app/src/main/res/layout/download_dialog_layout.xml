@@ -8,14 +8,14 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?foundation"
-    android:paddingBottom="16dp">
+    android:paddingBottom="4dp">
 
     <ImageView
-        android:id="@+id/download_notification_icon"
+        android:id="@+id/download_dialog_icon"
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:importantForAccessibility="no"
         android:scaleType="center"
         android:tint="?primaryText"
@@ -24,31 +24,28 @@
         app:srcCompat="@drawable/mozac_feature_download_ic_download_complete" />
 
     <TextView
-        android:id="@+id/download_notification_title"
+        android:id="@+id/download_dialog_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_marginStart="3dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="11dp"
         android:paddingStart="5dp"
         android:paddingTop="4dp"
         android:paddingEnd="5dp"
         android:textColor="?primaryText"
         android:textSize="16sp"
-        app:layout_constraintEnd_toStartOf="@id/download_notification_close_button"
+        app:layout_constraintEnd_toStartOf="@id/download_dialog_close_button"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@id/download_notification_icon"
+        app:layout_constraintStart_toEndOf="@id/download_dialog_icon"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Download (85.7 MB)" />
 
     <ImageButton
-        android:id="@+id/download_notification_close_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="3dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="12dp"
+        android:id="@+id/download_dialog_close_button"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:background="@null"
         android:contentDescription="@string/mozac_feature_downloads_button_close"
         android:tint="?primaryText"
@@ -57,27 +54,26 @@
         app:srcCompat="@drawable/mozac_ic_close" />
 
     <TextView
-        android:id="@+id/download_notification_filename"
+        android:id="@+id/download_dialog_filename"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="3dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:paddingStart="5dp"
         android:paddingTop="4dp"
         android:paddingEnd="5dp"
         android:textColor="?primaryText"
-        app:layout_constraintStart_toEndOf="@id/download_notification_icon"
-        app:layout_constraintTop_toBottomOf="@id/download_notification_title"
+        app:layout_constraintStart_toEndOf="@id/download_dialog_icon"
+        app:layout_constraintTop_toBottomOf="@id/download_dialog_title"
         tools:text="Firefox_Preview_v2.1.apk" />
 
     <Button
-        android:id="@+id/download_notification_action_button"
+        android:id="@+id/download_dialog_action_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="4dp"
+        android:layout_marginBottom="8dp"
         android:background="@drawable/rounded_all_corners"
         android:backgroundTint="?accent"
         android:text="@string/mozac_feature_downloads_button_open"
@@ -85,5 +81,5 @@
         android:textColor="?contrastText"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/download_notification_filename" />
+        app:layout_constraintTop_toBottomOf="@id/download_dialog_filename" />
 </androidx.constraintlayout.widget.ConstraintLayout>

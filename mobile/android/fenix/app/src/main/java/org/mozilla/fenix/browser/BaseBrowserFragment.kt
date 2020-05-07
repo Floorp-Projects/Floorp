@@ -32,6 +32,9 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.runWithSessionIdOrSelected
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.accounts.FxaCapability
 import mozilla.components.feature.accounts.FxaWebChannelFeature
@@ -78,7 +81,7 @@ import org.mozilla.fenix.components.toolbar.BrowserToolbarViewInteractor
 import org.mozilla.fenix.components.toolbar.DefaultBrowserToolbarController
 import org.mozilla.fenix.components.toolbar.SwipeRefreshScrollingViewBehavior
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
-import org.mozilla.fenix.downloads.DownloadNotificationBottomSheetDialog
+import org.mozilla.fenix.downloads.DynamicDownloadDialog
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.enterToImmersiveMode
@@ -286,15 +289,18 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 }
             )
 
-            downloadFeature.onDownloadStopped = { download, _, downloadJobStatus ->
+            downloadFeature.onDownloadStopped = { downloadState, _, downloadJobStatus ->
                 // If the download is just paused, don't show any in-app notification
                 if (downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.COMPLETED ||
                     downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.FAILED
                 ) {
-                    val dialog = DownloadNotificationBottomSheetDialog(
-                        context = context,
+
+                    saveDownloadDialogState(session, downloadState, downloadJobStatus)
+
+                    DynamicDownloadDialog(
+                        container = view.browserLayout,
+                        downloadState = downloadState,
                         didFail = downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.FAILED,
-                        download = download,
                         tryAgain = downloadFeature::tryAgain,
                         onCannotOpenFile = {
                             FenixSnackbar.make(
@@ -304,9 +310,12 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                             )
                                 .setText(context.getString(R.string.mozac_feature_downloads_could_not_open_file))
                                 .show()
-                        }
-                    )
-                    dialog.show()
+                        },
+                        view = view.viewDynamicDownloadDialog,
+                        toolbarHeight = toolbarHeight,
+                        onDismiss = { sharedViewModel.downloadDialogState.remove(session.id) }
+                    ).show()
+                    browserToolbarView.expand()
                 }
             }
 
@@ -315,6 +324,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 owner = this,
                 view = view
             )
+
+            resumeDownloadDialogState(session, store, view, context, toolbarHeight)
 
             pipFeature = PictureInPictureFeature(
                 requireComponents.core.sessionManager,
@@ -501,6 +512,74 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
             initializeEngineView(toolbarHeight)
         }
+    }
+
+    /**
+     * Preserves current state of the [DynamicDownloadDialog] to persist through tab changes and
+     * other fragments navigation.
+     * */
+    private fun saveDownloadDialogState(
+        session: Session,
+        downloadState: DownloadState,
+        downloadJobStatus: AbstractFetchDownloadService.DownloadJobStatus
+    ) {
+        sharedViewModel.downloadDialogState[session.id] = Pair(
+            downloadState,
+            downloadJobStatus == AbstractFetchDownloadService.DownloadJobStatus.FAILED
+        )
+    }
+
+    /**
+     * Re-initializes [DynamicDownloadDialog] if the user hasn't dismissed the dialog
+     * before navigating away from it's original tab.
+     * onTryAgain it will use [ContentAction.UpdateDownloadAction] to re-enqueue the former failed
+     * download, because [DownloadsFeature] clears any queued downloads onStop.
+     * */
+    private fun resumeDownloadDialogState(
+        session: Session,
+        store: BrowserStore,
+        view: View,
+        context: Context,
+        toolbarHeight: Int
+    ) {
+        val savedDownloadState =
+            sharedViewModel.downloadDialogState[session.id] ?: return
+
+        val onTryAgain: (Long) -> Unit = {
+            savedDownloadState.first?.let { dlState ->
+                store.dispatch(
+                    ContentAction.UpdateDownloadAction(
+                        session.id, dlState.copy(skipConfirmation = true)
+                    )
+                )
+            }
+        }
+
+        val onCannotOpenFile = {
+            FenixSnackbar.make(
+                view = view,
+                duration = Snackbar.LENGTH_SHORT,
+                isDisplayedWithBrowserToolbar = true
+            )
+                .setText(context.getString(R.string.mozac_feature_downloads_could_not_open_file))
+                .show()
+        }
+
+        val onDismiss: () -> Unit =
+            { sharedViewModel.downloadDialogState.remove(session.id) }
+
+        DynamicDownloadDialog(
+            container = view.browserLayout,
+            downloadState = savedDownloadState.first,
+            didFail = savedDownloadState.second,
+            tryAgain = onTryAgain,
+            onCannotOpenFile = onCannotOpenFile,
+            view = view.viewDynamicDownloadDialog,
+            toolbarHeight = toolbarHeight,
+            onDismiss = onDismiss
+        ).show()
+
+        browserToolbarView.expand()
     }
 
     private fun initializeEngineView(toolbarHeight: Int) {

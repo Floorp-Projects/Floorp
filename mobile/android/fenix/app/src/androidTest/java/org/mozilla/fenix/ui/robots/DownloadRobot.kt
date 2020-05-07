@@ -112,7 +112,7 @@ private fun assertDownloadNotificationShade() {
 private fun assertDownloadNotificationPopup() {
     val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     mDevice.waitNotNull(Until.findObjects(By.text("Open")), TestAssetHelper.waitingTime)
-    onView(withId(R.id.download_notification_title))
+    onView(withId(R.id.download_dialog_title))
         .check(matches(withText(CoreMatchers.containsString("Download completed"))))
 }
 
@@ -123,7 +123,7 @@ private fun clickDownloadButton() =
     onView(withText("Download")).inRoot(isDialog()).check(matches(isDisplayed()))
 
 private fun clickOpenButton() =
-    onView(withId(R.id.download_notification_action_button)).inRoot(isDialog()).check(
+    onView(withId(R.id.download_dialog_action_button)).inRoot(isDialog()).check(
         matches(isDisplayed())
     )
 

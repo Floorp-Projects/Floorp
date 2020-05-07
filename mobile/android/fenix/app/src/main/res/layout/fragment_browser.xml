@@ -32,6 +32,14 @@
         android:layout_width="match_parent"
         android:layout_height="56dp" />
 
+    <include
+        android:id="@+id/viewDynamicDownloadDialog"
+        layout="@layout/download_dialog_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:visibility="gone"/>
+
     <mozilla.components.feature.readerview.view.ReaderViewControlsBar
         android:id="@+id/readerViewControlsBar"
         android:layout_width="match_parent"
