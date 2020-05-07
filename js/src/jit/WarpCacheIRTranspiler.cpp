@@ -591,6 +591,29 @@ bool WarpCacheIRTranspiler::emitInt32DecResult(Int32OperandId inputId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitInt32NegationResult(Int32OperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* constNegOne = MConstant::New(alloc(), Int32Value(-1));
+  add(constNegOne);
+
+  auto* ins = MMul::New(alloc(), input, constNegOne, MIRType::Int32);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
+bool WarpCacheIRTranspiler::emitInt32NotResult(Int32OperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+
+  auto* ins = MBitNot::New(alloc(), input);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 template <typename T>
 bool WarpCacheIRTranspiler::emitDoubleBinaryArithResult(NumberOperandId lhsId,
                                                         NumberOperandId rhsId) {
@@ -657,6 +680,21 @@ bool WarpCacheIRTranspiler::emitInt32SubResult(Int32OperandId lhsId,
   return emitInt32BinaryArithResult<MSub>(lhsId, rhsId);
 }
 
+bool WarpCacheIRTranspiler::emitInt32MulResult(Int32OperandId lhsId,
+                                               Int32OperandId rhsId) {
+  return emitInt32BinaryArithResult<MMul>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitInt32DivResult(Int32OperandId lhsId,
+                                               Int32OperandId rhsId) {
+  return emitInt32BinaryArithResult<MDiv>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitInt32ModResult(Int32OperandId lhsId,
+                                               Int32OperandId rhsId) {
+  return emitInt32BinaryArithResult<MMod>(lhsId, rhsId);
+}
+
 bool WarpCacheIRTranspiler::emitInt32BitOrResult(Int32OperandId lhsId,
                                                  Int32OperandId rhsId) {
   return emitInt32BinaryArithResult<MBitOr>(lhsId, rhsId);
@@ -680,6 +718,18 @@ bool WarpCacheIRTranspiler::emitInt32LeftShiftResult(Int32OperandId lhsId,
 bool WarpCacheIRTranspiler::emitInt32RightShiftResult(Int32OperandId lhsId,
                                                       Int32OperandId rhsId) {
   return emitInt32BinaryArithResult<MRsh>(lhsId, rhsId);
+}
+
+bool WarpCacheIRTranspiler::emitCallStringConcatResult(StringOperandId lhsId,
+                                                       StringOperandId rhsId) {
+  MDefinition* lhs = getOperand(lhsId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* ins = MConcat::New(alloc(), lhs, rhs);
+  add(ins);
+
+  pushResult(ins);
+  return true;
 }
 
 bool WarpCacheIRTranspiler::emitCompareResult(
