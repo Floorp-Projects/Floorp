@@ -7,7 +7,6 @@
 #include "MediaEncryptedEvent.h"
 #include "mozilla/dom/MediaEncryptedEventBinding.h"
 #include "nsContentUtils.h"
-#include "js/ArrayBuffer.h"
 #include "jsfriendapi.h"
 #include "nsINode.h"
 #include "mozilla/dom/MediaKeys.h"
@@ -78,9 +77,11 @@ already_AddRefed<MediaEncryptedEvent> MediaEncryptedEvent::Constructor(
   e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
   e->mInitDataType = aEventInitDict.mInitDataType;
   if (!aEventInitDict.mInitData.IsNull()) {
-    JS::Rooted<JSObject*> buffer(aGlobal.Context(),
-                                 aEventInitDict.mInitData.Value().Obj());
-    e->mInitData = JS::CopyArrayBuffer(aGlobal.Context(), buffer);
+    const auto& a = aEventInitDict.mInitData.Value();
+    nsTArray<uint8_t> initData;
+    CopyArrayBufferViewOrArrayBufferData(a, initData);
+    e->mInitData = ArrayBuffer::Create(aGlobal.Context(), initData.Length(),
+                                       initData.Elements());
     if (!e->mInitData) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return nullptr;
