@@ -47,6 +47,7 @@
 #include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/VsyncDispatcher.h"
 
+class MessageLoop;
 class nsIWidget;
 
 namespace mozilla {
@@ -749,6 +750,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
       const LayersId& aId) override;
   bool DeallocPLayerTransactionParent(
       PLayerTransactionParent* aLayers) override;
+  virtual void ScheduleTask(already_AddRefed<CancelableRunnable>, int);
 
   void SetEGLSurfaceRect(int x, int y, int width, int height);
 

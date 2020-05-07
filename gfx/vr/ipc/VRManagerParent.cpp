@@ -72,12 +72,13 @@ void VRManagerParent::UnregisterFromManager() {
 
 /* static */
 bool VRManagerParent::CreateForContent(Endpoint<PVRManagerParent>&& aEndpoint) {
-  if (!CompositorThread()) {
+  MessageLoop* loop = CompositorThreadHolder::Loop();
+  if (!loop) {
     return false;
   }
 
   RefPtr<VRManagerParent> vmp = new VRManagerParent(aEndpoint.OtherPid(), true);
-  CompositorThread()->Dispatch(NewRunnableMethod<Endpoint<PVRManagerParent>&&>(
+  loop->PostTask(NewRunnableMethod<Endpoint<PVRManagerParent>&&>(
       "gfx::VRManagerParent::Bind", vmp, &VRManagerParent::Bind,
       std::move(aEndpoint)));
 
@@ -101,11 +102,12 @@ void VRManagerParent::RegisterVRManagerInCompositorThread(
 
 /*static*/
 VRManagerParent* VRManagerParent::CreateSameProcess() {
+  MessageLoop* loop = CompositorThreadHolder::Loop();
   RefPtr<VRManagerParent> vmp =
       new VRManagerParent(base::GetCurrentProcId(), false);
   vmp->mCompositorThreadHolder = CompositorThreadHolder::GetSingleton();
   vmp->mSelfRef = vmp;
-  CompositorThread()->Dispatch(
+  loop->PostTask(
       NewRunnableFunction("RegisterVRManagerIncompositorThreadRunnable",
                           RegisterVRManagerInCompositorThread, vmp.get()));
   return vmp.get();
@@ -113,11 +115,13 @@ VRManagerParent* VRManagerParent::CreateSameProcess() {
 
 bool VRManagerParent::CreateForGPUProcess(
     Endpoint<PVRManagerParent>&& aEndpoint) {
+  MessageLoop* loop = CompositorThreadHolder::Loop();
+
   RefPtr<VRManagerParent> vmp =
       new VRManagerParent(aEndpoint.OtherPid(), false);
   vmp->mCompositorThreadHolder = CompositorThreadHolder::GetSingleton();
   vmp->mSelfRef = vmp;
-  CompositorThread()->Dispatch(NewRunnableMethod<Endpoint<PVRManagerParent>&&>(
+  loop->PostTask(NewRunnableMethod<Endpoint<PVRManagerParent>&&>(
       "gfx::VRManagerParent::Bind", vmp, &VRManagerParent::Bind,
       std::move(aEndpoint)));
   return true;
@@ -126,7 +130,7 @@ bool VRManagerParent::CreateForGPUProcess(
 /*static*/
 void VRManagerParent::Shutdown() {
   ReleaseVRManagerParentSingleton();
-  CompositorThread()->Dispatch(NS_NewRunnableFunction(
+  CompositorThreadHolder::Loop()->PostTask(NS_NewRunnableFunction(
       "VRManagerParent::Shutdown",
       []() -> void { VRManagerParent::ShutdownInternal(); }));
 }
