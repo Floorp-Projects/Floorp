@@ -7,6 +7,7 @@ package mozilla.components.browser.tabstray
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.tabstray.TabsTray
@@ -24,7 +25,8 @@ class BrowserTabsTray @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
     val tabsAdapter: TabsAdapter = TabsAdapter(),
-    layout: LayoutManager = GridLayoutManager(context, 2)
+    layout: LayoutManager = GridLayoutManager(context, 2),
+    itemDecoration: DividerItemDecoration? = null
 ) : RecyclerView(context, attrs, defStyleAttr),
     TabsTray by tabsAdapter {
 
@@ -35,6 +37,7 @@ class BrowserTabsTray @JvmOverloads constructor(
 
         layoutManager = layout
         adapter = tabsAdapter
+        itemDecoration?.let { addItemDecoration(it) }
 
         val attr = context.obtainStyledAttributes(attrs, R.styleable.BrowserTabsTray, defStyleAttr, 0)
         styling = TabsTrayStyling(

@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.tabstray
 
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.tabstray.Tabs
 import mozilla.components.support.test.mock
@@ -45,5 +46,18 @@ class BrowserTabsTrayTest {
         val tabsTray = BrowserTabsTray(testContext, tabsAdapter = adapter)
 
         assertEquals(tabsTray, adapter.tabsTray)
+    }
+
+    @Test
+    fun `itemDecoration is set on recycler`() {
+        val adapter = TabsAdapter()
+        val decoration = DividerItemDecoration(
+            testContext,
+            DividerItemDecoration.VERTICAL
+        )
+        val tabsTray = BrowserTabsTray(testContext, tabsAdapter = adapter, itemDecoration = decoration)
+
+        assertEquals(decoration, tabsTray.getItemDecorationAt(0))
+        assertEquals(decoration, adapter.tabsTray.getItemDecorationAt(0))
     }
 }
