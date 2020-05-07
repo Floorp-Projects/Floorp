@@ -2,6 +2,67 @@
   {
     "namespace": "manifest",
     "types": [{
+      "$extend": "WebExtensionManifest",
+      "properties": {
+        "telemetry": {
+          "type": "object",
+          "optional": true,
+          "additionalProperties": { "$ref": "UnrecognizedProperty" },
+          "properties": {
+            "ping_type": {
+              "type": "string"
+            },
+            "schemaName": {
+              "type": "string"
+            },
+            "schemaNamespace": {
+              "type": "string"
+            },
+            "schemaVersion": {
+              "type": "integer"
+            },
+            "public_key": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "key": {
+                  "type": "object",
+                  "properties": {
+                    "crv": {
+                      "type": "string",
+                      "optional": "false"
+                    },
+                    "kty": {
+                      "type": "string",
+                      "optional": "false"
+                    },
+                    "x": {
+                      "type": "string",
+                      "optional": "false"
+                    },
+                    "y": {
+                      "type": "string",
+                      "optional": "false"
+                    }
+                  }
+                }
+              }
+            },
+            "study_name": {
+              "type": "string",
+              "optional": true
+            },
+            "pioneer_id": {
+              "type": "boolean",
+              "optional": true,
+              "default": false
+            }
+          }
+        }
+      }
+    },{
       "$extend": "PermissionNoPrompt",
       "choices": [{
         "type": "string",
@@ -132,6 +193,20 @@
           }
         }
       ]
+    },
+    {
+      "name": "submitEncryptedPing",
+      "type": "function",
+      "description": "Submits a custom ping to the Telemetry back-end, with an encrypted payload. Requires a telemetry entry in the manifest to be used.",
+      "parameters": [
+        {
+          "name": "message",
+          "type": "object",
+          "additionalProperties": { "type": "any" },
+          "description": "The data payload for the ping, which will be encrypted."
+        }
+      ],
+      "async": true
     },
     {
       "name": "canUpload",
