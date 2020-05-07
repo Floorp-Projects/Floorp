@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<body>
+<video id="v" controls></video>
+<script>
+const v = document.getElementById("v");
+
+function audioTrack() {
+  const ctx = new AudioContext(), oscillator = ctx.createOscillator();
+  const dst = oscillator.connect(ctx.createMediaStreamDestination());
+  oscillator.start();
+  return dst.stream.getAudioTracks()[0];
+}
+
+function videoTrack(width = 640, height = 480) {
+  const canvas = Object.assign(document.createElement("canvas"), {width, height});
+  canvas.getContext('2d').fillRect(0, 0, width, height);
+  return canvas.captureStream(10).getVideoTracks()[0];
+}
+
+onload = () => v.srcObject = new MediaStream([videoTrack(), audioTrack()]);
+</script>
+</body>
+</html>

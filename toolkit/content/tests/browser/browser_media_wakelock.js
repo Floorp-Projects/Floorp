@@ -7,12 +7,7 @@
  */
 "use strict";
 
-const PAGE =
-  "https://example.com/browser/toolkit/content/tests/browser/file_video.html";
-const PAGE2 =
-  "https://example.com/browser/toolkit/content/tests/browser/file_videoWithoutAudioTrack.html";
-const PAGE3 =
-  "https://example.com/browser/toolkit/content/tests/browser/file_mediaPlayback2.html";
+const LOCATION = "https://example.com/browser/toolkit/content/tests/browser/";
 
 const powerManagerService = Cc["@mozilla.org/power/powermanagerservice;1"];
 const powerManager = powerManagerService.getService(Ci.nsIPowerManagerService);
@@ -22,7 +17,7 @@ function wakeLockObserved(observeTopic, checkFn) {
     function wakeLockListener() {}
     wakeLockListener.prototype = {
       QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMMozWakeLockListener]),
-      callback: (topic, state) => {
+      callback(topic, state) {
         if (topic == observeTopic && checkFn(state)) {
           powerManager.removeWakeLockListener(wakeLockListener.prototype);
           resolve();
@@ -82,6 +77,7 @@ async function test_media_wakelock({
 }) {
   info(`- start a new test for '${description}' -`);
   info(`- open new foreground tab -`);
+  url = LOCATION + url;
   const tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser, url);
   const browser = tab.linkedBrowser;
 
@@ -118,13 +114,13 @@ async function test_media_wakelock({
 add_task(async function start_tests() {
   await test_media_wakelock({
     description: "playing video",
-    url: PAGE,
+    url: "file_video.html",
     lockAudio: true,
     lockVideo: true,
   });
   await test_media_wakelock({
     description: "playing muted video",
-    url: PAGE,
+    url: "file_video.html",
     videoAttsParams: {
       muted: true,
     },
@@ -133,7 +129,7 @@ add_task(async function start_tests() {
   });
   await test_media_wakelock({
     description: "playing volume=0 video",
-    url: PAGE,
+    url: "file_video.html",
     videoAttsParams: {
       volume: 0.0,
     },
@@ -141,15 +137,33 @@ add_task(async function start_tests() {
     lockVideo: true,
   });
   await test_media_wakelock({
-    description: "playing video without audio track",
-    url: PAGE2,
+    description: "playing video without audio in it",
+    url: "file_videoWithoutAudioTrack.html",
     lockAudio: false,
     lockVideo: false,
   });
   await test_media_wakelock({
-    description: "playing only audio",
-    url: PAGE3,
+    description: "playing audio in video element",
+    url: "file_videoWithAudioOnly.html",
     lockAudio: true,
     lockVideo: false,
+  });
+  await test_media_wakelock({
+    description: "playing audio in audio element",
+    url: "file_mediaPlayback2.html",
+    lockAudio: true,
+    lockVideo: false,
+  });
+  await test_media_wakelock({
+    description: "playing video from media stream with audio and video tracks",
+    url: "browser_mediaStreamPlayback.html",
+    lockAudio: true,
+    lockVideo: true,
+  });
+  await test_media_wakelock({
+    description: "playing video from media stream without audio track",
+    url: "browser_mediaStreamPlaybackWithoutAudio.html",
+    lockAudio: true,
+    lockVideo: true,
   });
 });
