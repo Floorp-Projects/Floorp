@@ -390,10 +390,16 @@ void HTMLVideoElement::UpdateWakeLock() {
 }
 
 bool HTMLVideoElement::ShouldCreateVideoWakeLock() const {
-  // Make sure we only request wake lock for video with audio track, because
-  // video without audio track is often used as background image which seems no
-  // need to hold a wakelock.
-  return HasVideo() && HasAudio();
+  // Only request wake lock for video with audio or video from media stream,
+  // because non-stream video without audio is often used as a background image.
+  //
+  // Some web conferencing sites route audio outside the video element, and
+  // would not be detected unless we check for media stream, so do that below.
+  //
+  // Media streams generally aren't used as background images, though if they
+  // were we'd get false positives. If this is an issue, we could check for
+  // media stream AND document has audio playing (but that was tricky to do).
+  return HasVideo() && (mSrcStream || HasAudio());
 }
 
 void HTMLVideoElement::CreateVideoWakeLockIfNeeded() {
