@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "PlaybackController.h"
+#include "ContentPlaybackController.h"
 
 #include "MediaControlUtils.h"
 #include "mozilla/dom/MediaSession.h"
@@ -13,17 +13,18 @@
 #undef LOG
 #define LOG(msg, ...)                        \
   MOZ_LOG(gMediaControlLog, LogLevel::Debug, \
-          ("PlaybackController=%p, " msg, this, ##__VA_ARGS__))
+          ("ContentPlaybackController=%p, " msg, this, ##__VA_ARGS__))
 
 namespace mozilla {
 namespace dom {
 
-PlaybackController::PlaybackController(BrowsingContext* aContext) {
+ContentPlaybackController::ContentPlaybackController(
+    BrowsingContext* aContext) {
   MOZ_ASSERT(aContext);
   mBC = aContext;
 }
 
-MediaSession* PlaybackController::GetMediaSession() const {
+MediaSession* ContentPlaybackController::GetMediaSession() const {
   RefPtr<nsPIDOMWindowOuter> window = mBC->GetDOMWindow();
   if (!window) {
     return nullptr;
@@ -34,7 +35,7 @@ MediaSession* PlaybackController::GetMediaSession() const {
                                              : nullptr;
 }
 
-void PlaybackController::NotifyContentControlKeyEventReceiver(
+void ContentPlaybackController::NotifyContentControlKeyEventReceiver(
     MediaControlKeysEvent aEvent) {
   if (RefPtr<ContentControlKeyEventReceiver> receiver =
           ContentControlKeyEventReceiver::Get(mBC)) {
@@ -43,7 +44,7 @@ void PlaybackController::NotifyContentControlKeyEventReceiver(
   }
 }
 
-void PlaybackController::NotifyMediaSession(MediaSessionAction aAction) {
+void ContentPlaybackController::NotifyMediaSession(MediaSessionAction aAction) {
   if (RefPtr<MediaSession> session = GetMediaSession()) {
     LOG("Handle '%s' in media session behavior",
         ToMediaSessionActionStr(aAction));
@@ -51,20 +52,20 @@ void PlaybackController::NotifyMediaSession(MediaSessionAction aAction) {
   }
 }
 
-void PlaybackController::NotifyMediaSessionWhenActionIsSupported(
+void ContentPlaybackController::NotifyMediaSessionWhenActionIsSupported(
     MediaSessionAction aAction) {
   if (IsMediaSessionActionSupported(aAction)) {
     NotifyMediaSession(aAction);
   }
 }
 
-bool PlaybackController::IsMediaSessionActionSupported(
+bool ContentPlaybackController::IsMediaSessionActionSupported(
     MediaSessionAction aAction) const {
   RefPtr<MediaSession> session = GetMediaSession();
   return session ? session->IsSupportedAction(aAction) : false;
 }
 
-void PlaybackController::Focus() {
+void ContentPlaybackController::Focus() {
   // Focus is not part of the MediaSession standard, so always use the
   // default behavior and focus the window currently playing media.
   if (RefPtr<nsPIDOMWindowOuter> win = mBC->GetDOMWindow()) {
@@ -72,7 +73,7 @@ void PlaybackController::Focus() {
   }
 }
 
-void PlaybackController::Play() {
+void ContentPlaybackController::Play() {
   const MediaSessionAction action = MediaSessionAction::Play;
   if (IsMediaSessionActionSupported(action)) {
     NotifyMediaSession(action);
@@ -81,7 +82,7 @@ void PlaybackController::Play() {
   }
 }
 
-void PlaybackController::Pause() {
+void ContentPlaybackController::Pause() {
   const MediaSessionAction action = MediaSessionAction::Pause;
   if (IsMediaSessionActionSupported(action)) {
     NotifyMediaSession(action);
@@ -90,29 +91,29 @@ void PlaybackController::Pause() {
   }
 }
 
-void PlaybackController::SeekBackward() {
+void ContentPlaybackController::SeekBackward() {
   NotifyMediaSessionWhenActionIsSupported(MediaSessionAction::Seekbackward);
 }
 
-void PlaybackController::SeekForward() {
+void ContentPlaybackController::SeekForward() {
   NotifyMediaSessionWhenActionIsSupported(MediaSessionAction::Seekforward);
 }
 
-void PlaybackController::PreviousTrack() {
+void ContentPlaybackController::PreviousTrack() {
   NotifyMediaSessionWhenActionIsSupported(MediaSessionAction::Previoustrack);
 }
 
-void PlaybackController::NextTrack() {
+void ContentPlaybackController::NextTrack() {
   NotifyMediaSessionWhenActionIsSupported(MediaSessionAction::Nexttrack);
 }
 
-void PlaybackController::SkipAd() {
+void ContentPlaybackController::SkipAd() {
   // TODO : use media session's action handler if it exists. MediaSessionAction
   // doesn't support `skipad` yet.
   return;
 }
 
-void PlaybackController::Stop() {
+void ContentPlaybackController::Stop() {
   const MediaSessionAction action = MediaSessionAction::Stop;
   if (IsMediaSessionActionSupported(action)) {
     NotifyMediaSession(action);
@@ -121,7 +122,7 @@ void PlaybackController::Stop() {
   }
 }
 
-void PlaybackController::SeekTo() {
+void ContentPlaybackController::SeekTo() {
   // TODO : use media session's action handler if it exists. MediaSessionAction
   // doesn't support `seekto` yet.
   return;
@@ -129,7 +130,7 @@ void PlaybackController::SeekTo() {
 
 void ContentMediaActionHandler::HandleMediaControlKeysEvent(
     BrowsingContext* aContext, MediaControlKeysEvent aEvent) {
-  PlaybackController controller(aContext);
+  ContentPlaybackController controller(aContext);
   switch (aEvent) {
     case MediaControlKeysEvent::eFocus:
       controller.Focus();
