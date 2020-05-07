@@ -375,7 +375,7 @@ void nsMIMEInputStream::SerializeInternal(InputStreamParams& aParams,
     params.optionalStream().emplace(wrappedParams);
   }
 
-  params.headers() = mHeaders;
+  params.headers() = mHeaders.Clone();
   params.startedReading() = mStartedReading;
 
   aParams = params;

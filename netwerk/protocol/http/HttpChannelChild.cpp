@@ -2692,7 +2692,7 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   openArgs.loadFlags() = mLoadFlags;
   openArgs.requestHeaders() = mClientSetRequestHeaders;
   mRequestHead.Method(openArgs.requestMethod());
-  openArgs.preferredAlternativeTypes() = mPreferredCachedAltDataTypes;
+  openArgs.preferredAlternativeTypes() = mPreferredCachedAltDataTypes.Clone();
   openArgs.referrerInfo() = mReferrerInfo;
 
   AutoIPCStream autoStream(openArgs.uploadStream());
@@ -3398,7 +3398,7 @@ void HttpChannelChild::GetClientSetCorsPreflightParameters(
     Maybe<CorsPreflightArgs>& aArgs) {
   if (mRequireCORSPreflight) {
     CorsPreflightArgs args;
-    args.unsafeHeaders() = mUnsafeHeaders;
+    args.unsafeHeaders() = mUnsafeHeaders.Clone();
     aArgs.emplace(args);
   } else {
     aArgs = Nothing();

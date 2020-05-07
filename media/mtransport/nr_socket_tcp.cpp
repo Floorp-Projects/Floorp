@@ -52,7 +52,8 @@ using std::shared_ptr;
 
 class NrTcpSocketData {
  public:
-  explicit NrTcpSocketData(nsTArray<uint8_t>&& aData) : mData(aData) {
+  explicit NrTcpSocketData(nsTArray<uint8_t>&& aData)
+      : mData(std::move(aData)) {
     MOZ_COUNT_CTOR(NrTcpSocketData);
   }
 

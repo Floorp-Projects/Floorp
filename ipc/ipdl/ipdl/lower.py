@@ -942,6 +942,8 @@ IPDL union type."""
     def callOperatorEq(self, rhs):
         if self.ipdltype.isIPDL() and self.ipdltype.isActor():
             rhs = ExprCast(rhs, self.bareType(), const=True)
+        elif self.ipdltype.isIPDL() and self.ipdltype.isArray() and not isinstance(rhs, ExprMove):
+            rhs = ExprCall(ExprSelect(rhs, '.', 'Clone'), args=[])
         return ExprAssn(ExprDeref(self.callGetPtr()), rhs)
 
     def callCtor(self, expr=None):
@@ -951,6 +953,8 @@ IPDL union type."""
             args = None
         elif self.ipdltype.isIPDL() and self.ipdltype.isActor():
             args = [ExprCast(expr, self.bareType(), const=True)]
+        elif self.ipdltype.isIPDL() and self.ipdltype.isArray() and not isinstance(expr, ExprMove):
+            args = [ExprCall(ExprSelect(expr, '.', 'Clone'), args=[])]
         else:
             args = [expr]
 
@@ -2519,10 +2523,21 @@ def _generateCxxStruct(sd):
         struct.addstmts([method])
 
     # members
-    struct.addstmts([StmtDecl(Decl(f.bareType(), f.memberVar().name))
+    struct.addstmts([StmtDecl(Decl(_effectiveMemberType(f), f.memberVar().name))
                      for f in sd.fields_member_order()])
 
     return forwarddeclstmts, fulldecltypes, struct
+
+
+def _effectiveMemberType(f):
+    effective_type = f.bareType()
+    # Structs must be copyable for backwards compatibility reasons, so we use
+    # CopyableTArray<T> as their member type for arrays. This is not exposed
+    # in the method signatures, these keep using nsTArray<T>, which is a base
+    # class of CopyableTArray<T>.
+    if effective_type.name == "nsTArray":
+        effective_type.name = "CopyableTArray"
+    return effective_type
 
 # --------------------------------------------------
 
@@ -3004,9 +3019,12 @@ def _generateCxxUnion(ud):
             readvalue = MethodDefn(MethodDecl(
                 'get', ret=Type.VOID, const=True,
                 params=[Decl(c.ptrToType(), 'aOutValue')]))
+            rhs = ExprCall(getConstValueVar)
+            if c.ipdltype.isIPDL() and c.ipdltype.isArray():
+                rhs = ExprCall(ExprSelect(rhs, '.', 'Clone'), args=[])
             readvalue.addstmts([
                 StmtExpr(ExprAssn(ExprDeref(ExprVar('aOutValue')),
-                                  ExprCall(getConstValueVar)))
+                                  rhs))
             ])
             cls.addstmt(readvalue)
 

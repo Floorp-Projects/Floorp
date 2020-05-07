@@ -630,9 +630,10 @@ bool ShadowLayerForwarder::EndTransaction(
       common.maskLayer() = LayerHandle();
     }
     common.compositorAnimations().id() = mutant->GetCompositorAnimationsId();
-    common.compositorAnimations().animations() = mutant->GetAnimations();
+    common.compositorAnimations().animations() =
+        mutant->GetAnimations().Clone();
     common.invalidRegion() = mutant->GetInvalidRegion().GetRegion();
-    common.scrollMetadata() = mutant->GetAllScrollMetadata();
+    common.scrollMetadata() = mutant->GetAllScrollMetadata().Clone();
     for (size_t i = 0; i < mutant->GetAncestorMaskLayerCount(); i++) {
       auto layer =
           Shadow(mutant->GetAncestorMaskLayerAt(i)->AsShadowableLayer());
@@ -659,10 +660,10 @@ bool ShadowLayerForwarder::EndTransaction(
   info.setSimpleAttrs() = std::move(setSimpleAttrs);
   info.setAttrs() = std::move(setAttrs);
   info.paints() = std::move(mTxn->mPaints);
-  info.toDestroy() = mTxn->mDestroyedActors;
+  info.toDestroy() = mTxn->mDestroyedActors.Clone();
   info.fwdTransactionId() = GetFwdTransactionId();
   info.id() = aId;
-  info.plugins() = mPluginWindowData;
+  info.plugins() = mPluginWindowData.Clone();
   info.isFirstPaint() = mIsFirstPaint;
   info.focusTarget() = mFocusTarget;
   info.scheduleComposite() = aScheduleComposite;
@@ -677,7 +678,7 @@ bool ShadowLayerForwarder::EndTransaction(
 #if defined(ENABLE_FRAME_LATENCY_LOG)
   info.fwdTime() = TimeStamp::Now();
 #endif
-  info.payload() = aPayload;
+  info.payload() = aPayload.Clone();
 
   TargetConfig targetConfig(mTxn->mTargetBounds, mTxn->mTargetRotation,
                             mTxn->mTargetOrientation, aRegionToClear);
