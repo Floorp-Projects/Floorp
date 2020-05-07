@@ -750,15 +750,35 @@ async function changeContentInputValue(browser, selector, str) {
   }) {
     const EventUtils = ContentTaskUtils.getEventUtils(content);
     let input = content.document.querySelector(selector);
+
     input.focus();
-    input.select();
-    await EventUtils.synthesizeKey("KEY_Backspace", {}, content);
-    let changedPromise = ContentTaskUtils.waitForEvent(input, "change");
-    if (str) {
+    if (!str) {
+      input.select();
+      await EventUtils.synthesizeKey("KEY_Backspace", {}, content);
+    } else if (input.value.startsWith(str)) {
+      info(
+        `New string is substring of value: ${str.length}, ${input.value.length}`
+      );
+      input.setSelectionRange(str.length, input.value.length);
+      await EventUtils.synthesizeKey("KEY_Backspace", {}, content);
+    } else if (str.startsWith(input.value)) {
+      info(
+        `New string appends to value: ${input.value}, ${str.substring(
+          input.value.length
+        )}`
+      );
+      input.setSelectionRange(input.value.length, input.value.length);
+      await EventUtils.sendString(str.substring(input.value.length), content);
+    } else {
+      input.select();
       await EventUtils.sendString(str, content);
     }
+
+    let changedPromise = ContentTaskUtils.waitForEvent(input, "change");
     input.blur();
     await changedPromise;
+
+    is(str, input.value, `Expected value '${str}' is set on input`);
   });
   info("Input value changed");
   await TestUtils.waitForTick();
