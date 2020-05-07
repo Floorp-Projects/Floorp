@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html><head>
+
+
+    <style>
+        .grid-container {
+            display: grid;
+            border: solid thick;
+            margin: 10px;
+        }
+
+        .columns {
+            grid-template-columns: repeat(auto-fill, 50px 50px);
+            grid-auto-rows: 25px;
+            grid-column-gap: 100px;
+            width: 300px;
+        }
+
+        .rows {
+            grid-auto-flow: column;
+            grid-template-rows: repeat(auto-fill, 50px 50px);
+            grid-auto-columns: 25px;
+            grid-row-gap: 100px;
+            width: min-content;
+            height: 300px;
+        }
+
+        .grid-container>div {
+            background: lime;
+        }
+    </style>
+
+<style>
+ div {  grid-column-start: first;}
+</style>
+
+</head>
+
+<body>
+
+    <div class="grid-container columns">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+    <div class="grid-container columns"
+        style="grid-template-columns: repeat(auto-fill, 50px 50px 50px)">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+    <div class="grid-container columns"
+        style="grid-template-columns: repeat(auto-fill, 50px 50px 50px 50px)">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+    <div class="grid-container rows">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+
+
+</body></html>
