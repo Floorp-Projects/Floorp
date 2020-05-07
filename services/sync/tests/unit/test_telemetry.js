@@ -1338,7 +1338,7 @@ add_task(async function test_deletion_request_ping() {
     await assertRecordedSyncDeviceID(undefined);
 
     // If we start up without knowing the hashed UID, it should stay undefined.
-    Services.obs.notifyObservers(null, "weave:service:ready");
+    telem.observe(null, "weave:service:ready");
     await assertRecordedSyncDeviceID(undefined);
 
     // But now let's say we've discovered the hashed UID from the server.
@@ -1346,16 +1346,16 @@ add_task(async function test_deletion_request_ping() {
     currentDeviceID = MOCK_DEVICE_ID1;
 
     // Now when we load up, we'll record the sync device id.
-    Services.obs.notifyObservers(null, "weave:service:ready");
+    telem.observe(null, "weave:service:ready");
     await assertRecordedSyncDeviceID(SANITIZED_DEVICE_ID1);
 
     // When the device-id changes we'll update it.
     currentDeviceID = MOCK_DEVICE_ID2;
-    Services.obs.notifyObservers(null, "fxaccounts:new_device_id");
+    telem.observe(null, "fxaccounts:new_device_id");
     await assertRecordedSyncDeviceID(SANITIZED_DEVICE_ID2);
 
-    // When the user signs out we'll clear it.0
-    Services.obs.notifyObservers(null, "fxaccounts:onlogout");
+    // When the user signs out we'll clear it.
+    telem.observe(null, "fxaccounts:onlogout");
     await assertRecordedSyncDeviceID("");
   } finally {
     fxAccounts.telemetry._setHashedUID(false);
