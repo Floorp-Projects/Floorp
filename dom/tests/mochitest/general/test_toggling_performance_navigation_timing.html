@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1511941 - Don't expose PerformanceNavigationTiming when it is disabled</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <div id="content"> </div>
+  <script type="application/javascript">
+    async function testWhetherExposed(resistFingerprinting, enable_performance_navigation_timing) {
+      await SpecialPowers.pushPrefEnv({
+        "set": [["privacy.resistFingerprinting", resistFingerprinting],
+                ["dom.enable_performance_navigation_timing", enable_performance_navigation_timing]],
+        });
+      var iframe = document.createElement("iframe");
+      document.body.append(iframe);
+      var p = iframe.contentWindow.PerformanceNavigationTiming;
+      if (resistFingerprinting)
+        is(p, undefined, "window.PerformanceNavigationTiming should not be exposed when"
+                         + " dom.enable_performance_navigation_timing=" + enable_performance_navigation_timing
+                         + " and privacy.resistFingerprinting="+ resistFingerprinting +".");
+      if (!enable_performance_navigation_timing)
+        is(p, undefined, "window.PerformanceNavigationTiming should not be exposed when"
+                         + " dom.enable_performance_navigation_timing=" + enable_performance_navigation_timing
+                         + " and privacy.resistFingerprinting="+ resistFingerprinting +".");
+      if (enable_performance_navigation_timing && !resistFingerprinting) {
+        isnot(p, undefined, "window.PerformanceNavigationTiming should be exposed when"
+                            + " dom.enable_performance_navigation_timing=" + enable_performance_navigation_timing
+                            + " and privacy.resistFingerprinting="+ resistFingerprinting +".");
+      }
+    }
+
+    async function start() {
+      await testWhetherExposed(true,true);
+      await testWhetherExposed(true,false);
+      await testWhetherExposed(false,true);
+      await testWhetherExposed(false,false);
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    start();
+  </script>
+</body>
+</html>
