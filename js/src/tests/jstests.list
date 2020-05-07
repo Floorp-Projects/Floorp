@@ -378,6 +378,7 @@ ignore-flag(--more-compartments) script test262/built-ins/RegExp/prototype/globa
 ignore-flag(--more-compartments) script test262/built-ins/RegExp/prototype/sticky/cross-realm.js
 ignore-flag(--more-compartments) script test262/built-ins/RegExp/prototype/ignoreCase/cross-realm.js
 ignore-flag(--more-compartments) script test262/built-ins/RegExp/prototype/unicode/cross-realm.js
+ignore-flag(--more-compartments) script test262/built-ins/RegExp/prototype/dotAll/cross-realm.js
 ignore-flag(--more-compartments) script test262/built-ins/RegExp/prototype/source/cross-realm.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1545038
