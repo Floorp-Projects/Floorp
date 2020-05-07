@@ -45,13 +45,6 @@ class TabContext {
   uint64_t ChromeOuterWindowID() const;
 
   /**
-   * OriginAttributesRef() returns the OriginAttributes of this frame to
-   * the caller. This is used to store any attribute associated with the frame's
-   * docshell.
-   */
-  const OriginAttributes& OriginAttributesRef() const;
-
-  /**
    * Returns the presentation URL associated with the tab if this tab is
    * created for presented content
    */
@@ -78,19 +71,8 @@ class TabContext {
    */
   bool SetTabContext(const TabContext& aContext);
 
-  /**
-   * Set the tab context's origin attributes to a private browsing value.
-   */
-  void SetPrivateBrowsingAttributes(bool aIsPrivateBrowsing);
-
-  /**
-   * Set the first party domain of the tab context's origin attributes.
-   */
-  void SetFirstPartyDomainAttributes(const nsAString& aFirstPartyDomain);
-
   bool SetTabContext(uint64_t aChromeOuterWindowID,
                      UIStateChangeType aShowFocusRings,
-                     const OriginAttributes& aOriginAttributes,
                      const nsAString& aPresentationURL,
                      uint32_t aMaxTouchPoints);
 
@@ -133,11 +115,6 @@ class TabContext {
   int32_t mJSPluginID;
 
   /**
-   * OriginAttributes of the top level tab docShell
-   */
-  OriginAttributes mOriginAttributes;
-
-  /**
    * The requested presentation URL.
    */
   nsString mPresentationURL;
@@ -166,20 +143,14 @@ class MutableTabContext : public TabContext {
 
   bool SetTabContext(uint64_t aChromeOuterWindowID,
                      UIStateChangeType aShowFocusRings,
-                     const OriginAttributes& aOriginAttributes,
                      const nsAString& aPresentationURL,
                      uint32_t aMaxTouchPoints) {
     return TabContext::SetTabContext(aChromeOuterWindowID, aShowFocusRings,
-                                     aOriginAttributes, aPresentationURL,
-                                     aMaxTouchPoints);
+                                     aPresentationURL, aMaxTouchPoints);
   }
 
   bool SetTabContextForJSPluginFrame(uint32_t aJSPluginID) {
     return TabContext::SetTabContextForJSPluginFrame(aJSPluginID);
-  }
-
-  void SetFirstPartyDomainAttributes(const nsAString& aFirstPartyDomain) {
-    TabContext::SetFirstPartyDomainAttributes(aFirstPartyDomain);
   }
 };
 
