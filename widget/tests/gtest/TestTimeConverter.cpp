@@ -234,3 +234,32 @@ TEST(TimeConverter, HalfRangeBoundary)
   ts = converter.GetTimeStampFromSystemTime(secondEvent, unused);
   EXPECT_TS(ts, 0);
 }
+
+TEST(TimeConverter, FractionalMillisBug1626734)
+{
+  MockTimeStamp::Init();
+
+  TimeConverter converter;
+
+  GTestTime eventTime = 10;
+  MockCurrentTimeGetter timeGetter(eventTime);
+  UnusedCurrentTimeGetter<GTestTime> unused;
+
+  TimeStamp ts = converter.GetTimeStampFromSystemTime(eventTime, timeGetter);
+  EXPECT_TS(ts, 0);
+
+  MockTimeStamp::Advance(0.2);
+  ts = converter.GetTimeStampFromSystemTime(eventTime, unused);
+  EXPECT_TS(ts, 0);
+
+  MockTimeStamp::Advance(0.9);
+  TimeStamp ts2 = converter.GetTimeStampFromSystemTime(eventTime, unused);
+  EXPECT_TS(ts2, 0);
+
+  // Since ts2 came from a "future" call relative to ts, we expect ts2 to not
+  // be "before" ts. (i.e. time shouldn't go backwards, even by fractional
+  // milliseconds). This assertion is technically already implied by the
+  // EXPECT_TS checks above, but fixing this assertion is the end result that
+  // we wanted in bug 1626734 so it feels appropriate to recheck it explicitly.
+  EXPECT_TRUE(ts <= ts2);
+}
