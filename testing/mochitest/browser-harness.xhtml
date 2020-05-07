@@ -322,13 +322,14 @@
     }
 
     function testsFinished(aTests) {
-      if (gConfig.closeWhenDone) {
-        Cu.exitIfInAutomation();
-        return;
-      }
-
       // Focus our window, to display the results
       window.focus();
+
+      if (gConfig.closeWhenDone) {
+        let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
+        appStartup.quit(Ci.nsIAppStartup.eForceQuit);
+        return;
+      }
 
       // UI
       document.getElementById("results").innerHTML = getHTMLLogFromTests(aTests);
