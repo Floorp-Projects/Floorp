@@ -904,6 +904,12 @@
   args:
     obj: ObjId
 
+- name: LoadTypedArrayLengthResult
+  shared: true
+  transpile: false
+  args:
+    obj: ObjId
+
 - name: LoadStringCharResult
   shared: true
   transpile: true
