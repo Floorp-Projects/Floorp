@@ -248,6 +248,7 @@
     <!-- Ideally we should consolidate this with NeutralButton in the future -->
     <style name="NeutralOnboardingButton" parent="NeutralButton">
         <item name="backgroundTint">?onboardingActionButtonBackground</item>
+        <item name="android:layout_height">36dp</item>
         <item name="android:textColor">?primaryText</item>
     </style>
 
@@ -266,7 +267,6 @@
         <item name="backgroundTint">?onboardingFinishButtonBackground</item>
         <item name="android:textColor">?onboardingFinishButtonText</item>
     </style>
-
 
     <style name="search_pill" parent="Widget.AppCompat.Button.Borderless">
         <item name="android:layout_width">wrap_content</item>

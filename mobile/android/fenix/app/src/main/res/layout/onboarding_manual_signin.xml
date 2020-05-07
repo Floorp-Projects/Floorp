@@ -25,6 +25,7 @@
     <Button
         style="@style/NeutralButton"
         android:id="@+id/turn_on_sync_button"
+        android:layout_height="36dp"
         android:layout_marginTop="16dp"
         android:text="@string/onboarding_firefox_account_sign_in"
         app:backgroundTint="@color/foundation_light_theme" />
