@@ -1655,14 +1655,7 @@ void RasterImage::NotifyProgress(
   // Ensure that we stay alive long enough to finish notifying.
   RefPtr<RasterImage> image = this;
 
-  const bool wasDefaultFlags = aSurfaceFlags == DefaultSurfaceFlags();
-
-  auto invalidRect = ToOriented(aInvalidRect);
-
-  if (!invalidRect.IsEmpty() && wasDefaultFlags) {
-    // Update our image container since we're invalidating.
-    UpdateImageContainer(Some(invalidRect.ToUnknownRect()));
-  }
+  UnorientedIntRect invalidRect = aInvalidRect;
 
   if (!(aDecoderFlags & DecoderFlags::FIRST_FRAME_ONLY)) {
     // We may have decoded new animation frames; update our animation state.
@@ -1676,11 +1669,28 @@ void RasterImage::NotifyProgress(
         ShouldAnimate()) {
       StartAnimation();
     }
+
+    if (mAnimationState) {
+      auto size = ToUnoriented(mSize);
+      IntRect rect = mAnimationState->UpdateState(this, size.ToUnknownSize());
+
+      invalidRect.UnionRect(invalidRect,
+                            UnorientedIntRect::FromUnknownRect(rect));
+    }
+  }
+
+  const bool wasDefaultFlags = aSurfaceFlags == DefaultSurfaceFlags();
+
+  auto orientedInvalidRect = ToOriented(invalidRect);
+
+  if (!orientedInvalidRect.IsEmpty() && wasDefaultFlags) {
+    // Update our image container since we're invalidating.
+    UpdateImageContainer(Some(orientedInvalidRect.ToUnknownRect()));
   }
 
   // Tell the observers what happened.
-  image->mProgressTracker->SyncNotifyProgress(aProgress,
-                                              invalidRect.ToUnknownRect());
+  image->mProgressTracker->SyncNotifyProgress(
+      aProgress, orientedInvalidRect.ToUnknownRect());
 }
 
 void RasterImage::NotifyDecodeComplete(
@@ -1718,19 +1728,32 @@ void RasterImage::NotifyDecodeComplete(
   NotifyProgress(aProgress, aInvalidRect, aFrameCount, aDecoderFlags,
                  aSurfaceFlags);
 
-  if (!(aDecoderFlags & DecoderFlags::FIRST_FRAME_ONLY) && mHasBeenDecoded &&
-      mAnimationState) {
-    // We've finished a full decode of all animation frames and our
-    // AnimationState has been notified about them all, so let it know not to
-    // expect anymore.
-    mAnimationState->NotifyDecodeComplete();
+  if (!(aDecoderFlags & DecoderFlags::FIRST_FRAME_ONLY)) {
+    // We may have decoded new animation frames; update our animation state.
+    MOZ_ASSERT_IF(aFrameCount && *aFrameCount > 1, mAnimationState || mError);
+    if (mAnimationState && aFrameCount) {
+      mAnimationState->UpdateKnownFrameCount(*aFrameCount);
+    }
 
-    auto size = ToUnoriented(mSize);
-    IntRect rect = mAnimationState->UpdateState(this, size.ToUnknownSize());
+    // If we should start animating right now, do so.
+    if (mAnimationState && aFrameCount == Some(1u) && mPendingAnimation &&
+        ShouldAnimate()) {
+      StartAnimation();
+    }
 
-    if (!rect.IsEmpty()) {
-      auto dirtyRect = UnorientedIntRect::FromUnknownRect(rect);
-      NotifyProgress(NoProgress, dirtyRect);
+    if (mAnimationState && mHasBeenDecoded) {
+      // We've finished a full decode of all animation frames and our
+      // AnimationState has been notified about them all, so let it know not to
+      // expect anymore.
+      mAnimationState->NotifyDecodeComplete();
+
+      auto size = ToUnoriented(mSize);
+      IntRect rect = mAnimationState->UpdateState(this, size.ToUnknownSize());
+
+      if (!rect.IsEmpty()) {
+        auto dirtyRect = UnorientedIntRect::FromUnknownRect(rect);
+        NotifyProgress(NoProgress, dirtyRect);
+      }
     }
   }
 

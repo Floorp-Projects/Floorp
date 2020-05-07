@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Cc, Ci, Cu, Cr } = require("chrome");
+const { Cc, Ci, Cu, Cr, components: Components } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
 const Services = require("Services");
 

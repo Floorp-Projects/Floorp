@@ -1342,6 +1342,15 @@ TRR::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   nsCOMPtr<nsIChannel> channel;
   channel.swap(mChannel);
 
+  {
+    // Cancel the timer since we don't need it anymore.
+    nsCOMPtr<nsITimer> timer;
+    mTimeout.swap(timer);
+    if (timer) {
+      timer->Cancel();
+    }
+  }
+
   if (UseDefaultServer()) {
     // Bad content is still considered "okay" if the HTTP response is okay
     gTRRService->TRRIsOkay(NS_SUCCEEDED(aStatusCode) ? TRRService::OKAY_NORMAL
