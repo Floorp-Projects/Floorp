@@ -1,17 +1,3 @@
-commit 8df54289d717eb0624a0ee16fd681c73a9472af4
-Author: Jeff Muizelaar <jrmuizel@gmail.com>
-Date:   Wed May 6 14:04:42 2020 -0400
-
-    Don't use ClearView if we previously used dual source blending on Intel gen6. (#22)
-    
-    Doing a ClearView after a dual source blend seems to cause a TDR on
-    Intel SandyBridge. Presumeably this is because the ClearView is
-    implemented as a regular draw and the driver doesn't properly set up the
-    state.
-    
-    If we detect that this is going to happen we fall back to the manual
-    draw call path. This lets us use ClearView most of the time still.
-
 commit 3885ee272685941f6dfb6cd941d550b107f033d2
 Author: Jeff Gilbert <jgilbert@mozilla.com>
 Date:   Wed Jan 22 18:42:56 2020 -0800
