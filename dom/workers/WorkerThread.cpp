@@ -322,8 +322,7 @@ uint32_t WorkerThread::RecursionDepth(
   return mNestedEventLoopDepth;
 }
 
-PerformanceCounter* WorkerThread::GetPerformanceCounter(
-    nsIRunnable* aEvent) const {
+PerformanceCounter* WorkerThread::GetPerformanceCounter(nsIRunnable* aEvent) {
   if (mWorkerPrivate) {
     return mWorkerPrivate->GetPerformanceCounter();
   }

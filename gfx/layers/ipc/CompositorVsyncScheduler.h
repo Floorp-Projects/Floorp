@@ -109,6 +109,9 @@ class CompositorVsyncScheduler {
  private:
   virtual ~CompositorVsyncScheduler();
 
+  // Schedule a task to run on the compositor thread.
+  void ScheduleTask(already_AddRefed<CancelableRunnable>);
+
   // Post a task to run Composite() on the compositor thread, if there isn't
   // such a task already queued. Can be called from any thread.
   void PostCompositeTask(VsyncId aId, TimeStamp aCompositeTimestamp);

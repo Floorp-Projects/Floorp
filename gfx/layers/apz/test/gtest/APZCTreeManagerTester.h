@@ -23,7 +23,7 @@ class APZCTreeManagerTester : public APZCTesterBase {
   virtual void SetUp() {
     gfxPlatform::GetPlatform();
     APZThreadUtils::SetThreadAssertionsEnabled(false);
-    APZThreadUtils::SetControllerThread(NS_GetCurrentThread());
+    APZThreadUtils::SetControllerThread(MessageLoop::current());
 
     manager = new TestAPZCTreeManager(mcc);
     updater = new APZUpdater(manager, false);
