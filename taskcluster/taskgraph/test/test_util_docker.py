@@ -7,10 +7,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import shutil
 import stat
+import sys
 import tarfile
 import tempfile
 import unittest
 import mock
+import pytest
 import taskcluster_urls as liburls
 
 from taskgraph.util import docker
@@ -23,6 +25,9 @@ MODE_STANDARD = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH
 @mock.patch.dict('os.environ', {'TASKCLUSTER_ROOT_URL': liburls.test_root_url()})
 class TestDocker(unittest.TestCase):
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_generate_context_hash(self):
         tmpdir = tempfile.mkdtemp()
         try:
@@ -76,6 +81,9 @@ class TestDocker(unittest.TestCase):
         with MockedOpen(files):
             self.assertEqual(docker.docker_image('myimage', by_tag=True), "mozilla/myimage:1.2.3")
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_create_context_tar_basic(self):
         tmp = tempfile.mkdtemp()
         try:
@@ -102,6 +110,9 @@ class TestDocker(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_create_context_topsrcdir_files(self):
         tmp = tempfile.mkdtemp()
         try:
@@ -172,6 +183,9 @@ class TestDocker(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_create_context_extra_directory(self):
         tmp = tempfile.mkdtemp()
         try:

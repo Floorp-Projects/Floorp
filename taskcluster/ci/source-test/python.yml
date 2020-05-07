@@ -34,7 +34,7 @@ job-defaults:
 
 taskgraph-tests:
     description: taskcluster/taskgraph unit tests
-    python-version: [2]
+    python-version: [2, 3]
     treeherder:
         symbol: tg
     run:

@@ -43,8 +43,8 @@ def inherit_treeherder_from_dep(job, dep_job):
 
     dep_th_platform = dep_job.task.get('extra', {}).get(
         'treeherder', {}).get('machine', {}).get('platform', '')
-    dep_th_collection = dep_job.task.get('extra', {}).get(
-        'treeherder', {}).get('collection', {}).keys()[0]
+    dep_th_collection = list(dep_job.task.get('extra', {}).get(
+        'treeherder', {}).get('collection', {}).keys())[0]
     treeherder.setdefault('platform',
                           "{}/{}".format(dep_th_platform, dep_th_collection))
     treeherder.setdefault(
