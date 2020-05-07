@@ -204,6 +204,46 @@ def bootstrap(topsrcdir, mozilla_dir=None):
     from mach.util import setenv
     from mozboot.util import get_state_dir
 
+    # Set a reasonable limit to the number of open files.
+    #
+    # Some linux systems set `ulimit -n` to a very high number, which works
+    # well for systems that run servers, but this setting causes performance
+    # problems when programs close file descriptors before forking, like
+    # Python's `subprocess.Popen(..., close_fds=True)` (close_fds=True is the
+    # default in Python 3), or Rust's stdlib.  In some cases, Firefox does the
+    # same thing when spawning processes.  We would prefer to lower this limit
+    # to avoid such performance problems; processes spawned by `mach` will
+    # inherit the limit set here.
+    #
+    # The Firefox build defaults the soft limit to 1024, except for builds that
+    # do LTO, where the soft limit is 8192.  We're going to default to the
+    # latter, since people do occasionally do LTO builds on their local
+    # machines, and requiring them to discover another magical setting after
+    # setting up an LTO build in the first place doesn't seem good.
+    #
+    # This code mimics the code in taskcluster/scripts/run-task.
+    try:
+        import resource
+        # Keep the hard limit the same, though, allowing processes to change
+        # their soft limit if they need to (Firefox does, for instance).
+        (soft, hard) = resource.getrlimit(resource.RLIMIT_NOFILE)
+        # Permit people to override our default limit if necessary via
+        # MOZ_LIMIT_NOFILE, which is the same variable `run-task` uses.
+        limit = os.environ.get('MOZ_LIMIT_NOFILE')
+        if limit:
+            limit = int(limit)
+        else:
+            # If no explicit limit is given, use our default if it's less than
+            # the current soft limit.  For instance, the default on macOS is
+            # 256, so we'd pick that rather than our default.
+            limit = min(soft, 8192)
+        # Now apply the limit, if it's different from the original one.
+        if limit != soft:
+            resource.setrlimit(resource.RLIMIT_NOFILE, (limit, hard))
+    except ImportError:
+        # The resource module is UNIX only.
+        pass
+
     from mozbuild.util import patch_main
     patch_main()
 
