@@ -439,6 +439,7 @@ void nsHttpChannel::ReleaseMainThreadOnlyReferences() {
   arrayToRelease.AppendElement(mAuthProvider.forget());
   arrayToRelease.AppendElement(mRedirectChannel.forget());
   arrayToRelease.AppendElement(mPreflightChannel.forget());
+  arrayToRelease.AppendElement(mDNSPrefetch.forget());
 
   NS_DispatchToMainThread(new ProxyReleaseRunnable(std::move(arrayToRelease)));
 }
