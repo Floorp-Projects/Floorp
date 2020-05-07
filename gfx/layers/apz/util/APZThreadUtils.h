@@ -50,6 +50,14 @@ class APZThreadUtils {
    * Returns true if currently on APZ "controller thread".
    */
   static bool IsControllerThread();
+
+  /**
+   * Schedules a runnable to run on the controller thread at some time
+   * in the future.
+   * This method must always be called on the controller thread.
+   */
+  static void PostDelayedTask(already_AddRefed<Runnable> aRunnable,
+                              int aDelayMs);
 };
 
 // A base class for GenericNamedTimerCallback<Function>.

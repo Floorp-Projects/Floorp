@@ -197,12 +197,6 @@ void RemoteContentController::NotifyPinchGesture(
   }
 }
 
-void RemoteContentController::PostDelayedTask(already_AddRefed<Runnable> aTask,
-                                              int aDelayMs) {
-  (MessageLoop::current() ? MessageLoop::current() : mCompositorThread)
-      ->PostDelayedTask(std::move(aTask), aDelayMs);
-}
-
 bool RemoteContentController::IsRepaintThread() {
   return MessageLoop::current() == mCompositorThread;
 }
