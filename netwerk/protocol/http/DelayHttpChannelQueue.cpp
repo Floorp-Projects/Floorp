@@ -7,6 +7,10 @@
 #include "DelayHttpChannelQueue.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/TimeStamp.h"
+#include "nsIObserverService.h"
+#include "nsHttpChannel.h"
+#include "nsThreadManager.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
