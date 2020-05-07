@@ -2438,12 +2438,34 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
   // XXXsmaug Per spec (2014/08/21) frameloader should not work in case the
   //         element isn't in document, only in shadow dom, but that will change
   //         https://www.w3.org/Bugs/Public/show_bug.cgi?id=26365#c0
-  Document* doc = mOwnerContent->GetComposedDoc();
+  RefPtr<Document> doc = mOwnerContent->GetComposedDoc();
   if (!doc) {
     return false;
   }
 
   MOZ_RELEASE_ASSERT(!doc->IsResourceDoc(), "We shouldn't even exist");
+
+  // Graphics initialization code relies on having frames up-to-date for the
+  // remote browser case, as we can be inside a popup, which is a different
+  // widget.
+  //
+  // FIXME: Ideally this should be unconditional, but we skip if for <iframe
+  // mozbrowser> because the old RDM ui depends on current behavior, and the
+  // mozbrowser frame code is scheduled for deletion, see bug 1574886.
+  if (!OwnerIsMozBrowserFrame()) {
+    doc->FlushPendingNotifications(FlushType::Frames);
+  }
+
+  // The flush could have initialized us.
+  if (mRemoteBrowser) {
+    return true;
+  }
+
+  // Ensure the world hasn't changed that much as a result of that.
+  if (!mOwnerContent || mOwnerContent->OwnerDoc() != doc ||
+      !mOwnerContent->IsInComposedDoc()) {
+    return false;
+  }
 
   if (!doc->IsActive()) {
     // Don't allow subframe loads in non-active documents.
@@ -2532,7 +2554,7 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
   nsresult rv = GetNewTabContext(&context);
   NS_ENSURE_SUCCESS(rv, false);
 
-  nsCOMPtr<Element> ownerElement = mOwnerContent;
+  RefPtr<Element> ownerElement = mOwnerContent;
 
   RefPtr<BrowserParent> nextRemoteBrowser =
       mOpenWindowInfo ? mOpenWindowInfo->GetNextRemoteBrowser() : nullptr;
