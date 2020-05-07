@@ -6,6 +6,7 @@ edition = "2018"
 publish = false
 
 [dependencies]
+chrono = "0.4.10"
 glean-core = "25.1.0"
 log = "0.4"
 once_cell = "1.2.0"
