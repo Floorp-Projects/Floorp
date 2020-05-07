@@ -17,6 +17,7 @@
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/dom/GeneratePlaceholderCanvasData.h"
 #include "SVGObserverUtils.h"
 #include "nsPresContext.h"
 
@@ -5104,9 +5105,8 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
     uint8_t* src =
         rawData.mData + srcReadRect.y * srcStride + srcReadRect.x * 4;
 
-    // Return all-white, opaque pixel data if no permission.
     if (usePlaceholder) {
-      memset(data, 0xFF, len.value());
+      GeneratePlaceholderCanvasData(len.value(), &data);
       break;
     }
 
