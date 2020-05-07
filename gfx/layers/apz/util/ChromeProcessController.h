@@ -13,9 +13,8 @@
 #include "mozilla/layers/MatrixMessage.h"
 
 class nsIDOMWindowUtils;
-
+class nsISerialEventTarget;
 class nsIWidget;
-class MessageLoop;
 
 namespace mozilla {
 class PresShell;
@@ -81,7 +80,7 @@ class ChromeProcessController : public mozilla::layers::GeckoContentController {
   nsCOMPtr<nsIWidget> mWidget;
   RefPtr<APZEventState> mAPZEventState;
   RefPtr<IAPZCTreeManager> mAPZCTreeManager;
-  MessageLoop* mUILoop;
+  nsCOMPtr<nsISerialEventTarget> mUIThread;
 
   void InitializeRoot();
   PresShell* GetPresShell() const;
