@@ -9,11 +9,13 @@
  *  +------------+--------------+------------------------+
  */
 .debug-target-info {
+  --border-inline-end-width: 1px;
+  --padding-inline-end-size: 24px;
   display: flex;
   background: var(--theme-tab-toolbar-background);
   border-bottom: 1px solid var(--theme-splitter-color);
   padding: 4px 0;
-  font-size: 1.2em;
+  font-size: 1.35em;
   color: var(--theme-toolbar-color);
 }
 
@@ -29,12 +31,12 @@
   grid-template-columns: 20px auto auto;
   grid-column-gap: 8px;
   align-items: center;
-  padding: 0 24px;
+  padding: 0 var(--padding-inline-end-size);
   white-space: nowrap;
 }
 
 .debug-target-info .iconized-label:not(:last-child) {
-  border-inline-end: 1px solid var(--theme-splitter-color);
+  border-inline-end: var(--border-inline-end-width) solid var(--theme-splitter-color);
 }
 
 .debug-target-info .iconized-label img {
@@ -45,6 +47,33 @@
 .debug-target-info img {
   -moz-context-properties: fill;
   fill: var(--theme-toolbar-color);
+}
+
+
+/* DebugTargetInfo's renderTargetTitle() component should look like it's in the same
+  section as renderTargetURI() */
+.debug-target-info .debug-target-title {
+  --border-inline-end-width: 0;
+  padding-inline-end: 0;
+}
+
+.debug-target-info .debug-target-url {
+  display: flex;
+  flex-grow: 1;
+  padding-inline-end: var(--padding-inline-end-size);
+  align-self: center;
+}
+
+.debug-target-info .debug-target-url-input {
+  border: 1px solid var(--theme-toolbarbutton-active-background);
+  border-radius: 2px;
+  height: 20px;
+  padding-inline-start: 10px;
+}
+
+.debug-target-info .debug-target-url-input,
+.debug-target-info .debug-target-url-form {
+  width: 100%;
 }
 
 /* Toolbox tabbar */
