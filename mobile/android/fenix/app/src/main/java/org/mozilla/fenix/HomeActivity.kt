@@ -223,15 +223,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         TabsTray::class.java.name -> {
             val layout = LinearLayoutManager(context)
             val adapter = TabsAdapter { parentView, tabsTray ->
-                val decoration = DividerItemDecoration(
-                    context,
-                    DividerItemDecoration.VERTICAL
-                )
-                val drawable = AppCompatResources.getDrawable(context, R.drawable.tab_tray_divider)
-                drawable?.let {
-                    decoration.setDrawable(it)
-                    tabsTray.addItemDecoration(decoration)
-                }
 
                 DefaultTabViewHolder(
                     LayoutInflater.from(parentView.context).inflate(
@@ -241,7 +232,17 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
                     tabsTray
                 )
             }
-            BrowserTabsTray(context, attrs, tabsAdapter = adapter, layout = layout)
+            val tray = BrowserTabsTray(context, attrs, tabsAdapter = adapter, layout = layout)
+            val decoration = DividerItemDecoration(
+                context,
+                DividerItemDecoration.VERTICAL
+            )
+            val drawable = AppCompatResources.getDrawable(context, R.drawable.tab_tray_divider)
+            drawable?.let {
+                decoration.setDrawable(it)
+                tray.addItemDecoration(decoration)
+            }
+            tray
         }
         else -> super.onCreateView(parent, name, context, attrs)
     }
