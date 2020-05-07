@@ -1132,6 +1132,7 @@ void DeleteProgram(GLuint n) {
 void LinkProgram(GLuint program) {
   Program& p = ctx->programs[program];
   assert(p.impl);
+  assert(p.impl->interpolants_size() <= sizeof(Interpolants));
   if (!p.vert_impl) p.vert_impl = p.impl->get_vertex_shader();
   if (!p.frag_impl) p.frag_impl = p.impl->get_fragment_shader();
 }
@@ -2596,17 +2597,15 @@ UNUSED static inline void commit_solid_span(uint8_t* buf, PackedR8 r, int len) {
 #pragma GCC diagnostic ignored "-Wuninitialized"
 #pragma GCC diagnostic ignored "-Wunused-function"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wunused-private-field"
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
-#ifndef __clang__
+#ifdef __clang__
+#pragma GCC diagnostic ignored "-Wunused-private-field"
+#else
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #endif
 #include "load_shader.h"
 #pragma GCC diagnostic pop
-
-static const size_t MAX_INTERPOLANTS = 16;
-typedef VectorType<float, MAX_INTERPOLANTS> Interpolants;
 
 typedef vec2_scalar Point2D;
 typedef vec4_scalar Point3D;
@@ -3413,7 +3412,7 @@ static void draw_quad(int nump, Texture& colortex, int layer,
   // Run vertex shader once for the primitive's vertices.
   // Reserve space for 6 sets of interpolants, in case we need to clip against
   // near and far planes in the perspective case.
-  Interpolants interp_outs[6] = {0};
+  Interpolants interp_outs[6];
   vertex_shader->run_primitive((char*)interp_outs, sizeof(Interpolants));
   vec4 pos = vertex_shader->gl_Position;
   // Check if any vertex W is different from another. If so, use perspective.
