@@ -32,6 +32,8 @@ add_task(async function() {
 
   Services.focus.clearFocus(window);
 
+  newButton.getBoundingClientRect(); // Accesskey registration happens during frame construction.
+
   focusedId = await performAccessKeyForChrome("z");
   is(focusedId, "chromebutton", "chromebutton accesskey");
 
