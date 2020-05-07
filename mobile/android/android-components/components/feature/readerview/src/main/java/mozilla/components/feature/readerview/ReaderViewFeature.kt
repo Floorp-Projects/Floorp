@@ -12,7 +12,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.action.ReaderAction
-import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
@@ -120,7 +119,7 @@ class ReaderViewFeature(
                         connectReaderViewContentScript(tab)
                     }
                     if (tab.readerState.checkRequired) {
-                        checkReaderable(tab)
+                        checkReaderState(tab)
                     }
 
                     if (tab.id == store.state.selectedTabId) {
@@ -196,10 +195,10 @@ class ReaderViewFeature(
     }
 
     @VisibleForTesting
-    internal fun checkReaderable(session: TabSessionState? = store.state.selectedTab) {
+    internal fun checkReaderState(session: TabSessionState? = store.state.selectedTab) {
         session?.engineState?.engineSession?.let { engineSession ->
             if (extensionController.portConnected(engineSession)) {
-                extensionController.sendContentMessage(createCheckReaderableMessage(), engineSession)
+                extensionController.sendContentMessage(createCheckReaderStateMessage(), engineSession)
             }
             store.dispatch(ReaderAction.UpdateReaderableCheckRequiredAction(session.id, false))
         }
@@ -250,12 +249,7 @@ class ReaderViewFeature(
         private val config: WeakReference<Config>
     ) : MessageHandler {
         override fun onPortConnected(port: Port) {
-            val config = config.get() ?: return
-
-            port.postMessage(createCheckReaderableMessage())
-            if (store.state.findTab(sessionId)?.readerState?.active == true) {
-                port.postMessage(createShowReaderMessage(config))
-            }
+            port.postMessage(createCheckReaderStateMessage())
         }
 
         override fun onPortMessage(message: Any, port: Port) {
@@ -267,6 +261,9 @@ class ReaderViewFeature(
                 store.dispatch(ReaderAction.UpdateReaderableAction(sessionId, readerable))
 
                 if (message.has(ACTIVE_URL_RESPONSE_MESSAGE_KEY)) {
+                    config.get()?.let { config ->
+                        port.postMessage(createShowReaderMessage(config))
+                    }
                     val activeUrl = message.getString(ACTIVE_URL_RESPONSE_MESSAGE_KEY)
                     store.dispatch(ReaderAction.UpdateReaderActiveUrlAction(sessionId, activeUrl))
                 }
@@ -304,7 +301,7 @@ class ReaderViewFeature(
         internal const val FONT_SIZE_KEY = "mozac-readerview-fontsize"
         internal const val FONT_SIZE_DEFAULT = 3
 
-        private fun createCheckReaderableMessage(): JSONObject {
+        private fun createCheckReaderStateMessage(): JSONObject {
             return JSONObject().put(ACTION_MESSAGE_KEY, ACTION_CHECK_READER_STATE)
         }
 
