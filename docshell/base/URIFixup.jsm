@@ -173,6 +173,64 @@ XPCOMUtils.defineLazyGetter(this, "domainsWhitelist", () => {
   return domains;
 });
 
+// Cache of whitelisted suffixes.
+// This works differently from the domains whitelist, because when we examine a
+// domain we can't tell how many dot-separated parts constitute the suffix.
+// We create a Map keyed by the last dotted part, containing a Set of
+// all the suffixes ending with that part:
+//   "two" => ["two"]
+//   "three" => ["some.three", "three"]
+// When searching we can restrict the linear scan based on the last part.
+// The ideal structure for this would be a Directed Acyclic Word Graph, but
+// since we expect this list to be small it's not worth the complication.
+XPCOMUtils.defineLazyGetter(this, "suffixesWhitelist", () => {
+  const branch = "browser.fixup.domainsuffixwhitelist.";
+  let suffixes = new Map();
+  let prefs = Services.prefs
+    .getChildList(branch)
+    .filter(p => Services.prefs.getBoolPref(p, false));
+  for (let pref of prefs) {
+    let suffix = pref.substring(branch.length);
+    let lastPart = suffix.substr(suffix.lastIndexOf(".") + 1);
+    if (lastPart) {
+      let entries = suffixes.get(lastPart);
+      if (!entries) {
+        entries = new Set();
+        suffixes.set(lastPart, entries);
+      }
+      entries.add(suffix);
+    }
+  }
+  // Hold onto the observer to avoid it being GC-ed.
+  suffixes._observer = {
+    observe(subject, topic, data) {
+      let suffix = data.substring(branch.length);
+      let lastPart = suffix.substr(suffix.lastIndexOf(".") + 1);
+      let entries = suffixes.get(lastPart);
+      if (Services.prefs.getBoolPref(data, false)) {
+        // Add the suffix.
+        if (!entries) {
+          entries = new Set();
+          suffixes.set(lastPart, entries);
+        }
+        entries.add(suffix);
+      } else if (entries) {
+        // Remove the suffix.
+        entries.delete(suffix);
+        if (!entries.size) {
+          suffixes.delete(lastPart);
+        }
+      }
+    },
+    QueryInterface: ChromeUtils.generateQI([
+      Ci.nsIObserver,
+      Ci.nsISupportsWeakReference,
+    ]),
+  };
+  Services.prefs.addObserver(branch, suffixes._observer, true);
+  return suffixes;
+});
+
 function URIFixup() {}
 
 URIFixup.prototype = {
@@ -548,10 +606,28 @@ function isDomainWhitelisted(asciiHost) {
   // domain (which will prevent a keyword query)
   // Note that any processing of the host here should stay in sync with
   // code in the front-end(s) that set the pref.
-  if (asciiHost.endsWith(".")) {
+  let lastDotIndex = asciiHost.lastIndexOf(".");
+  if (lastDotIndex == asciiHost.length - 1) {
     asciiHost = asciiHost.substring(0, asciiHost.length - 1);
+    lastDotIndex = asciiHost.lastIndexOf(".");
   }
-  return domainsWhitelist.has(asciiHost.toLowerCase());
+  if (domainsWhitelist.has(asciiHost.toLowerCase())) {
+    return true;
+  }
+  // If there's no dot or only a leading dot we are done, otherwise we'll check
+  // against the suffixes whitelist.
+  if (lastDotIndex <= 0) {
+    return false;
+  }
+  // Don't use getPublicSuffix here, since the suffix is not in a known list,
+  // thus it couldn't tell if the suffix is made up of one or multiple
+  // dot-separated parts.
+  let lastPart = asciiHost.substr(lastDotIndex + 1);
+  let suffixes = suffixesWhitelist.get(lastPart);
+  if (suffixes) {
+    return Array.from(suffixes).some(s => asciiHost.endsWith(s));
+  }
+  return false;
 }
 
 /**
