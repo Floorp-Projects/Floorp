@@ -1831,17 +1831,10 @@ class IDLParser(object):
             location = Location(self.lexer, t.lineno, t.lexpos)
             raise IDLError("invalid syntax", location)
 
-    def __init__(self, outputdir=''):
+    def __init__(self):
         self._doccomments = []
-        self.lexer = lex.lex(object=self,
-                             outputdir=outputdir,
-                             lextab='xpidllex',
-                             optimize=1)
-        self.parser = yacc.yacc(module=self,
-                                outputdir=outputdir,
-                                debug=0,
-                                tabmodule='xpidlyacc',
-                                optimize=1)
+        self.lexer = lex.lex(object=self, debug=False)
+        self.parser = yacc.yacc(module=self, write_tables=False, debug=False)
 
     def clearComments(self):
         self._doccomments = []

@@ -1283,7 +1283,9 @@ class GeneratedFile(ContextDerived):
         suffixes = tuple(suffixes)
 
         self.required_before_compile = [
-            f for f in self.outputs if f.endswith(suffixes) or 'stl_wrappers/' in f]
+            f for f in self.outputs if f.endswith(suffixes)
+            or 'stl_wrappers/' in f or 'xpidl.stub' in f
+        ]
 
         self.required_during_compile = [
             f for f in self.outputs if f.endswith(('.asm', '.c', '.cpp'))]

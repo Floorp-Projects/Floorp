@@ -8,5 +8,4 @@ PYTHON_UNITTEST_MANIFESTS += [
     'python.ini',
 ]
 
-GeneratedFile('xpidl.stub', 'xpidllex.py', 'xpidlyacc.py', script='header.py',
-              entry_point='main', py2=True)
+GeneratedFile('xpidl.stub', script='header.py', entry_point='main', py2=True)

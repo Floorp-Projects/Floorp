@@ -5860,10 +5860,7 @@ class Tokenizer(object):
         if lexer:
             self.lexer = lexer
         else:
-            self.lexer = lex.lex(object=self,
-                                 outputdir=outputdir,
-                                 lextab='webidllex',
-                                 reflags=re.DOTALL)
+            self.lexer = lex.lex(object=self, reflags=re.DOTALL)
 
 
 class SqueakyCleanLogger(object):
@@ -7519,8 +7516,8 @@ class Parser(Tokenizer):
         try:
             self.parser = yacc.yacc(module=self,
                                     outputdir=outputdir,
-                                    tabmodule='webidlyacc',
-                                    errorlog=logger
+                                    errorlog=logger,
+                                    write_tables=False,
                                     # Pickling the grammar is a speedup in
                                     # some cases (older Python?) but a
                                     # significant slowdown in others.
