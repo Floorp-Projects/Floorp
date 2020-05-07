@@ -47,6 +47,10 @@ void CopyArrayBufferViewOrArrayBufferData(
     const dom::ArrayBufferViewOrArrayBuffer& aBufferOrView,
     nsTArray<uint8_t>& aOutData);
 
+// Overload for ArrayBuffer
+void CopyArrayBufferViewOrArrayBufferData(const dom::ArrayBuffer& aBufferOrView,
+                                          nsTArray<uint8_t>& aOutData);
+
 struct ArrayData {
   explicit ArrayData(const uint8_t* aData, size_t aLength)
       : mData(aData), mLength(aLength) {}
