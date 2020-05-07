@@ -128,16 +128,6 @@ class UsedNameTracker {
   MOZ_MUST_USE bool noteUse(JSContext* cx, JSAtom* name, uint32_t scriptId,
                             uint32_t scopeId);
 
-  MOZ_MUST_USE bool markAsAlwaysClosedOver(JSContext* cx, JSAtom* name,
-                                           uint32_t scriptId,
-                                           uint32_t scopeId) {
-    // This marks a variable as always closed over:
-    // UsedNameInfo::noteBoundInScope only checks if scriptId and scopeId are
-    // greater than the current scriptId/scopeId, so do a simple increment to
-    // make that so.
-    return noteUse(cx, name, scriptId + 1, scopeId + 1);
-  }
-
   struct RewindToken {
    private:
     friend class UsedNameTracker;
