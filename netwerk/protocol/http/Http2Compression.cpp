@@ -18,6 +18,7 @@
 #include "Http2HuffmanOutgoing.h"
 #include "mozilla/StaticPtr.h"
 #include "nsCharSeparatedTokenizer.h"
+#include "nsIMemoryReporter.h"
 #include "nsHttpHandler.h"
 
 namespace mozilla {

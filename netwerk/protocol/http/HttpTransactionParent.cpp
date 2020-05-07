@@ -64,7 +64,7 @@ NS_IMETHODIMP_(MozExternalRefCountType) HttpTransactionParent::Release(void) {
 // HttpTransactionParent <public>
 //-----------------------------------------------------------------------------
 
-HttpTransactionParent::HttpTransactionParent()
+HttpTransactionParent::HttpTransactionParent(bool aIsDocumentLoad)
     : mResponseIsComplete(false),
       mTransferSize(0),
       mRequestSize(0),
@@ -79,7 +79,9 @@ HttpTransactionParent::HttpTransactionParent()
       mOnStopRequestCalled(false),
       mResolvedByTRR(false),
       mProxyConnectResponseCode(0),
-      mChannelId(0) {
+      mChannelId(0),
+      mDataAlreadySent(false),
+      mIsDocumentLoad(aIsDocumentLoad) {
   LOG(("Creating HttpTransactionParent @%p\n", this));
 
   this->mSelfAddr.inet = {};
@@ -170,7 +172,8 @@ nsresult HttpTransactionParent::Init(
                 topLevelOuterContentWindowId,
                 static_cast<uint8_t>(trafficCategory), requestContextID,
                 classOfService, initialRwin, responseTimeoutEnabled, mChannelId,
-                !!mTransactionObserver, pushedStreamArg, throttleQueue)) {
+                !!mTransactionObserver, pushedStreamArg, throttleQueue,
+                mIsDocumentLoad)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -287,6 +290,8 @@ bool HttpTransactionParent::ResponseIsComplete() { return mResponseIsComplete; }
 int64_t HttpTransactionParent::GetTransferSize() { return mTransferSize; }
 
 int64_t HttpTransactionParent::GetRequestSize() { return mRequestSize; }
+
+bool HttpTransactionParent::DataAlreadySent() { return mDataAlreadySent; }
 
 nsISupports* HttpTransactionParent::SecurityInfo() { return mSecurityInfo; }
 
@@ -434,7 +439,8 @@ void HttpTransactionParent::DoOnTransportStatus(const nsresult& aStatus,
 }
 
 mozilla::ipc::IPCResult HttpTransactionParent::RecvOnDataAvailable(
-    const nsCString& aData, const uint64_t& aOffset, const uint32_t& aCount) {
+    const nsCString& aData, const uint64_t& aOffset, const uint32_t& aCount,
+    const bool& aDataSentToChildProcess) {
   LOG(("HttpTransactionParent::RecvOnDataAvailable [this=%p, aOffset= %" PRIu64
        " aCount=%" PRIu32,
        this, aOffset, aCount));
@@ -445,18 +451,22 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnDataAvailable(
 
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpTransactionParent>(this), aData, aOffset,
-             aCount]() { self->DoOnDataAvailable(aData, aOffset, aCount); }));
+             aCount, aDataSentToChildProcess]() {
+        self->DoOnDataAvailable(aData, aOffset, aCount,
+                                aDataSentToChildProcess);
+      }));
   return IPC_OK();
 }
 
-void HttpTransactionParent::DoOnDataAvailable(const nsCString& aData,
-                                              const uint64_t& aOffset,
-                                              const uint32_t& aCount) {
+void HttpTransactionParent::DoOnDataAvailable(
+    const nsCString& aData, const uint64_t& aOffset, const uint32_t& aCount,
+    const bool& aDataSentToChildProcess) {
   LOG(("HttpTransactionParent::DoOnDataAvailable [this=%p]\n", this));
   if (mCanceled) {
     return;
   }
 
+  mDataAlreadySent = aDataSentToChildProcess;
   nsCOMPtr<nsIInputStream> stringStream;
   nsresult rv = NS_NewByteInputStream(getter_AddRefs(stringStream),
                                       MakeSpan(aData.get(), aCount),
