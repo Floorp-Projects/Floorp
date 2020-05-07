@@ -100,6 +100,9 @@ using TimeConverter = SystemTimeConverter<GTestTime, MockTimeStamp>;
 #define EXPECT_TS(ts, ms) \
   EXPECT_EQ((ts)-MockTimeStamp::Baseline(), TimeDuration::FromMilliseconds(ms))
 
+#define EXPECT_TS_FUZZY(ts, ms) \
+  EXPECT_DOUBLE_EQ(((ts)-MockTimeStamp::Baseline()).ToMilliseconds(), ms)
+
 TEST(TimeConverter, SanityCheck)
 {
   MockTimeStamp::Init();
@@ -123,4 +126,111 @@ TEST(TimeConverter, SanityCheck)
   // forward skew detection and resync the TimeStamp for the new event to Now().
   ts = converter.GetTimeStampFromSystemTime(30, unused);
   EXPECT_TS(ts, 10);
+}
+
+TEST(TimeConverter, Overflow)
+{
+  // This tests wrapping time around the max value supported in the GTestTime
+  // type and ensuring it is handled properly.
+
+  MockTimeStamp::Init();
+
+  const GTestTime max = std::numeric_limits<GTestTime>::max();
+  const GTestTime min = std::numeric_limits<GTestTime>::min();
+  double fullRange = (double)max - (double)min;
+  double wrapPeriod = fullRange + 1.0;
+
+  GTestTime almostOverflowed = max - 100;
+  GTestTime overflowed = max + 100;
+  MockCurrentTimeGetter timeGetter(almostOverflowed);
+  UnusedCurrentTimeGetter<GTestTime> unused;
+  TimeConverter converter;
+
+  // Set reference time to 100ms before the overflow point
+  TimeStamp ts =
+      converter.GetTimeStampFromSystemTime(almostOverflowed, timeGetter);
+  EXPECT_TS(ts, 0);
+
+  // Advance everything by 200ms and verify we get back a TimeStamp 200ms from
+  // the baseline despite wrapping an overflow.
+  MockTimeStamp::Advance(200);
+  ts = converter.GetTimeStampFromSystemTime(overflowed, unused);
+  EXPECT_TS(ts, 200);
+
+  // Advance by another full wraparound of the time. This loses some precision
+  // so we have to do the FUZZY match
+  MockTimeStamp::Advance(wrapPeriod);
+  ts = converter.GetTimeStampFromSystemTime(overflowed, unused);
+  EXPECT_TS_FUZZY(ts, 200.0 + wrapPeriod);
+}
+
+TEST(TimeConverter, InvertedOverflow)
+{
+  // This tests time going from near the min value of GTestTime to the max
+  // value of GTestTime
+
+  MockTimeStamp::Init();
+
+  const GTestTime max = std::numeric_limits<GTestTime>::max();
+  const GTestTime min = std::numeric_limits<GTestTime>::min();
+  double fullRange = (double)max - (double)min;
+  double wrapPeriod = fullRange + 1.0;
+
+  GTestTime nearRangeMin = min + 100;
+  GTestTime nearRangeMax = max - 100;
+  double gap = (double)nearRangeMax - (double)nearRangeMin;
+
+  MockCurrentTimeGetter timeGetter(nearRangeMin);
+  UnusedCurrentTimeGetter<GTestTime> unused;
+  TimeConverter converter;
+
+  // Set reference time to value near min numeric limit
+  TimeStamp ts = converter.GetTimeStampFromSystemTime(nearRangeMin, timeGetter);
+  EXPECT_TS(ts, 0);
+
+  // Advance to value near max numeric limit
+  MockTimeStamp::Advance(gap);
+  ts = converter.GetTimeStampFromSystemTime(nearRangeMax, unused);
+  EXPECT_TS(ts, gap);
+
+  // Advance by another full wraparound of the time. This loses some precision
+  // so we have to do the FUZZY match
+  MockTimeStamp::Advance(wrapPeriod);
+  ts = converter.GetTimeStampFromSystemTime(nearRangeMax, unused);
+  EXPECT_TS_FUZZY(ts, gap + wrapPeriod);
+}
+
+TEST(TimeConverter, HalfRangeBoundary)
+{
+  MockTimeStamp::Init();
+
+  GTestTime max = std::numeric_limits<GTestTime>::max();
+  GTestTime min = std::numeric_limits<GTestTime>::min();
+  double fullRange = (double)max - (double)min;
+  double wrapPeriod = fullRange + 1.0;
+  GTestTime halfRange = (GTestTime)(fullRange / 2.0);
+  GTestTime halfWrapPeriod = (GTestTime)(wrapPeriod / 2.0);
+
+  TimeConverter converter;
+
+  GTestTime firstEvent = 10;
+  MockCurrentTimeGetter timeGetter(firstEvent);
+  UnusedCurrentTimeGetter<GTestTime> unused;
+
+  // Set reference time
+  TimeStamp ts = converter.GetTimeStampFromSystemTime(firstEvent, timeGetter);
+  EXPECT_TS(ts, 0);
+
+  // Advance event time by just under the half-period, to trigger about as big
+  // a forwards skew as we possibly can.
+  GTestTime secondEvent = firstEvent + (halfWrapPeriod - 1);
+  ts = converter.GetTimeStampFromSystemTime(secondEvent, unused);
+  EXPECT_TS(ts, 0);
+
+  // The above forwards skew will have reset the reference timestamp. Now
+  // advance Now time by just under the half-range, to trigger about as big
+  // a backwards skew as we possibly can.
+  MockTimeStamp::Advance(halfRange - 1);
+  ts = converter.GetTimeStampFromSystemTime(secondEvent, unused);
+  EXPECT_TS(ts, 0);
 }
