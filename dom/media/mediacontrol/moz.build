@@ -6,13 +6,13 @@
 EXPORTS.mozilla.dom += [
     'AudioFocusManager.h',
     'ContentMediaController.h',
+    'ContentPlaybackController.h',
     'FetchImageHelper.h',
     'MediaControlKeysEvent.h',
     'MediaControlKeysManager.h',
     'MediaController.h',
     'MediaControlService.h',
     'MediaControlUtils.h',
-    'PlaybackController.h',
 ]
 
 EXPORTS.ipc += [
@@ -22,13 +22,13 @@ EXPORTS.ipc += [
 UNIFIED_SOURCES += [
     'AudioFocusManager.cpp',
     'ContentMediaController.cpp',
+    'ContentPlaybackController.cpp',
     'FetchImageHelper.cpp',
     'MediaControlKeysEvent.cpp',
     'MediaControlKeysManager.cpp',
     'MediaController.cpp',
     'MediaControlService.cpp',
     'MediaControlUtils.cpp',
-    'PlaybackController.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
