@@ -157,6 +157,7 @@ index:
         - 'devedition'
         - 'source'
         - 'system-symbols'
+        - 'geckodriver'
 
 try:
     # We have a few platforms for which we want to do some "extra" builds, or at

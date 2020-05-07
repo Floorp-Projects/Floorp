@@ -352,3 +352,8 @@ If set to true, this task will not be checked to see that
 MOZ_AUTOMATION_PACKAGE_TESTS is set correctly based on whether or not the task
 has dependent tests. This should only be used in very unique situations, such
 as Windows AArch64 builds that copy test packages between build tasks.
+
+geckodriver
+===========
+If non-empty, declares that the (toolchain) task is a `geckodriver`
+task that produces a binary that should be signed.
