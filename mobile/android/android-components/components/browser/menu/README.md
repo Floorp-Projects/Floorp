@@ -29,11 +29,20 @@ There are multiple properties that you customize of the menu browser by just add
     <!--Change the width of the menu-->
     <dimen name="mozac_browser_menu_width" tools:ignore="UnusedResources">250dp</dimen>
 
+    <!--Change the dynamic width of the menu-->
+    <dimen name="mozac_browser_menu_width_min" tools:ignore="UnusedResources">200dp</dimen>
+    <dimen name="mozac_browser_menu_width_max" tools:ignore="UnusedResources">300dp</dimen>
+
     <!--Change the top and bottom padding of the menu-->
     <dimen name="mozac_browser_menu_padding_vertical" tools:ignore="UnusedResources">8dp</dimen>
 
 </resources>
 ```
+BrowserMenu can have a dynamic width:
+- Using the same value for `mozac_browser_menu_width_min` and `mozac_browser_menu_width_max` means BrowserMenu will have a fixed width - `mozac_browser_menu_width`.
+_This is the default behavior_.
+- Different values for `mozac_browser_menu_width_min` and `mozac_browser_menu_width_max` means BrowserMenu will have a dynamic width depending on the widest BrowserMenuItem and between the aforementioned dimensions also taking into account display width.
+
 
 ### BrowserMenuDivider
 ```kotlin
