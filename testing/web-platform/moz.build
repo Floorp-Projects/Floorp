@@ -744,6 +744,24 @@ with Files("tests/web-nfc/**"):
 with Files("tests/webrtc/**"):
     BUG_COMPONENT = ("Core", "WebRTC")
 
+with Files("tests/webrtc-extensions/**"):
+    BUG_COMPONENT = ("Core", "WebRTC")
+
+with Files("tests/webrtc-identity/**"):
+    BUG_COMPONENT = ("Core", "WebRTC")
+
+with Files("tests/webrtc-insertable-streams/**"):
+    BUG_COMPONENT = ("Core", "WebRTC")
+
+with Files("tests/webrtc-quic/**"):
+    BUG_COMPONENT = ("Core", "WebRTC")
+
+with Files("tests/webrtc-stats/**"):
+    BUG_COMPONENT = ("Core", "WebRTC")
+
+with Files("tests/webrtc-svc/**"):
+    BUG_COMPONENT = ("Core", "WebRTC")
+
 with Files("tests/web-share/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
