@@ -283,15 +283,19 @@ const observer = {
 
       case "input": {
         let field = aEvent.target;
-        let { hasBeenTypePassword } = field;
+        let isPasswordType = LoginHelper.isPasswordFieldType(field);
         // React to input into fields filled with generated passwords.
-        if (docState.generatedPasswordFields.has(field)) {
-          LoginManagerChild.forWindow(
-            window
-          )._maybeStopTreatingAsGeneratedPasswordField(aEvent);
+        let loginManagerChild = LoginManagerChild.forWindow(window);
+        if (
+          docState.generatedPasswordFields.has(field) &&
+          loginManagerChild._doesEventClearPrevFieldValue(aEvent)
+        ) {
+          loginManagerChild._stopTreatingAsGeneratedPasswordField(
+            aEvent.target
+          );
         }
 
-        if (!hasBeenTypePassword && !LoginHelper.isUsernameFieldType(field)) {
+        if (!isPasswordType && !LoginHelper.isUsernameFieldType(field)) {
           break;
         }
 
@@ -311,14 +315,14 @@ const observer = {
         // don't flag as user-modified if the form was autofilled and doesn't appear to have changed
         let isAutofillInput = filledLogin && !fillWasUserTriggered;
         if (!alreadyModified && isAutofillInput) {
-          if (hasBeenTypePassword && filledLogin.password == field.value) {
+          if (isPasswordType && filledLogin.password == field.value) {
             log(
               "Ignoring password input event that doesn't change autofilled values"
             );
             break;
           }
           if (
-            !hasBeenTypePassword &&
+            !isPasswordType &&
             filledLogin.usernameField &&
             filledLogin.username == field.value
           ) {
@@ -329,6 +333,20 @@ const observer = {
           }
         }
         docState.fieldModificationsByRootElement.set(formLikeRoot, true);
+
+        if (
+          // When the password field value is cleared or entirely replaced we don't treat it as
+          // an autofilled form any more. We don't do the same for username edits to avoid snooping
+          // on the autofilled password in the resulting doorhanger
+          isPasswordType &&
+          loginManagerChild._doesEventClearPrevFieldValue(aEvent) &&
+          // Don't clear last recorded autofill if THIS is an autofilled value. This will be true
+          // when filling from the context menu.
+          filledLogin &&
+          filledLogin.password !== field.value
+        ) {
+          docState.fillsByRootElement.delete(formLikeRoot);
+        }
 
         break;
       }
@@ -1684,15 +1702,17 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     }
   }
 
-  _maybeStopTreatingAsGeneratedPasswordField(event) {
-    let passwordField = event.target;
-    let { value } = passwordField;
-
-    // If the field is now empty or the inserted text replaced the whole value
-    // then stop treating it as a generated password field.
-    if (!value || (event.data && event.data == value)) {
-      this._stopTreatingAsGeneratedPasswordField(passwordField);
-    }
+  /**
+   * Heuristic for whether or not we should consider [field]s value to be 'new' (as opposed to
+   * 'changed') after applying [event].
+   *
+   * @param {HTMLInputElement} event.target input element being changed.
+   * @param {string?} event.data new value being input into the field.
+   *
+   * @returns {boolean}
+   */
+  _doesEventClearPrevFieldValue({ target, data }) {
+    return !target.value || (data && data == target.value);
   }
 
   _stopTreatingAsGeneratedPasswordField(passwordField) {
