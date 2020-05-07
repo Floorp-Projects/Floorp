@@ -169,8 +169,7 @@ TextureClientRecycleAllocator* CompositableClient::GetTextureClientRecycler() {
         barrier.NotifyAll();
       });
 
-  ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(
-      runnable.forget());
+  ImageBridgeChild::GetSingleton()->GetThread()->Dispatch(runnable.forget());
 
   // should stop the thread until done.
   while (!done) {

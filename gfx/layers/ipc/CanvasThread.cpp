@@ -34,8 +34,8 @@ CanvasThreadHolder::CanvasThreadHolder(
 CanvasThreadHolder::~CanvasThreadHolder() {
   // Note we can't just use NS_IsInCompositorThread() here because
   // sCompositorThreadHolder might have already gone.
-  MOZ_ASSERT(mCompositorThreadKeepAlive->GetCompositorThread()->thread_id() ==
-             PlatformThread::CurrentId());
+  MOZ_ASSERT(
+      mCompositorThreadKeepAlive->GetCompositorThread()->IsOnCurrentThread());
 }
 
 /* static */
@@ -75,8 +75,7 @@ void CanvasThreadHolder::StaticRelease(
   RefPtr<CanvasThreadHolder> threadHolder = aCanvasThreadHolder;
   // Note we can't just use NS_IsInCompositorThread() here because
   // sCompositorThreadHolder might have already gone.
-  MOZ_ASSERT(threadHolder->mCompositorThreadKeepAlive->GetCompositorThread()
-                 ->thread_id() == PlatformThread::CurrentId());
+  MOZ_ASSERT(threadHolder->mCompositorThreadKeepAlive->IsInCompositorThread());
   threadHolder = nullptr;
 
   auto lockedCanvasThreadHolder = sCanvasThreadHolder.Lock();
@@ -89,12 +88,11 @@ void CanvasThreadHolder::StaticRelease(
 void CanvasThreadHolder::ReleaseOnCompositorThread(
     already_AddRefed<CanvasThreadHolder> aCanvasThreadHolder) {
   auto lockedCanvasThreadHolder = sCanvasThreadHolder.Lock();
-  base::Thread* compositorThread =
-      lockedCanvasThreadHolder.ref()
-          ->mCompositorThreadKeepAlive->GetCompositorThread();
-  compositorThread->message_loop()->PostTask(NewRunnableFunction(
-      "CanvasThreadHolder::StaticRelease", CanvasThreadHolder::StaticRelease,
-      std::move(aCanvasThreadHolder)));
+  lockedCanvasThreadHolder.ref()
+      ->mCompositorThreadKeepAlive->GetCompositorThread()
+      ->Dispatch(NewRunnableFunction("CanvasThreadHolder::StaticRelease",
+                                     CanvasThreadHolder::StaticRelease,
+                                     std::move(aCanvasThreadHolder)));
 }
 
 /* static */

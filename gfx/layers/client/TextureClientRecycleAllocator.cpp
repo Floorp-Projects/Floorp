@@ -153,7 +153,7 @@ already_AddRefed<TextureClient> TextureClientRecycleAllocator::CreateOrRecycle(
             new TextureClientReleaseTask(textureHolder->GetTextureClient());
         textureHolder->ClearTextureClient();
         textureHolder = nullptr;
-        mKnowsCompositor->GetTextureForwarder()->GetMessageLoop()->PostTask(
+        mKnowsCompositor->GetTextureForwarder()->GetThread()->Dispatch(
             task.forget());
       } else {
         textureHolder->GetTextureClient()->RecycleTexture(

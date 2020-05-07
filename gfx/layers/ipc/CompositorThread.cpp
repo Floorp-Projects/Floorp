@@ -19,15 +19,10 @@ namespace layers {
 static StaticRefPtr<CompositorThreadHolder> sCompositorThreadHolder;
 static bool sFinishedCompositorShutDown = false;
 
-base::Thread* CompositorThread() {
+nsISerialEventTarget* CompositorThread() {
   return sCompositorThreadHolder
              ? sCompositorThreadHolder->GetCompositorThread()
              : nullptr;
-}
-
-/* static */
-MessageLoop* CompositorThreadHolder::Loop() {
-  return CompositorThread() ? CompositorThread()->message_loop() : nullptr;
 }
 
 CompositorThreadHolder* CompositorThreadHolder::GetSingleton() {
@@ -41,57 +36,40 @@ CompositorThreadHolder::CompositorThreadHolder()
 
 CompositorThreadHolder::~CompositorThreadHolder() {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mCompositorThread) {
-    DestroyCompositorThread(mCompositorThread);
-  }
-}
-
-/* static */
-void CompositorThreadHolder::DestroyCompositorThread(
-    base::Thread* aCompositorThread) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  MOZ_ASSERT(!sCompositorThreadHolder,
-             "We shouldn't be destroying the compositor thread yet.");
-
-  delete aCompositorThread;
   sFinishedCompositorShutDown = true;
 }
 
-/* static */ base::Thread* CompositorThreadHolder::CreateCompositorThread() {
+/* static */ already_AddRefed<nsIThread>
+CompositorThreadHolder::CreateCompositorThread() {
   MOZ_ASSERT(NS_IsMainThread());
 
   MOZ_ASSERT(!sCompositorThreadHolder,
              "The compositor thread has already been started!");
 
-  base::Thread* compositorThread = new base::Thread("Compositor");
+  nsCOMPtr<nsIThread> compositorThread;
+  nsresult rv =
+      NS_NewNamedThread("Compositor", getter_AddRefs(compositorThread));
 
-  base::Thread::Options options;
-  /* Timeout values are powers-of-two to enable us get better data.
-     128ms is chosen for transient hangs because 8Hz should be the minimally
-     acceptable goal for Compositor responsiveness (normal goal is 60Hz). */
-  options.transient_hang_timeout = 128;  // milliseconds
-  /* 2048ms is chosen for permanent hangs because it's longer than most
-   * Compositor hangs seen in the wild, but is short enough to not miss getting
-   * native hang stacks. */
-  options.permanent_hang_timeout = 2048;  // milliseconds
-#if defined(_WIN32)
-  /* With d3d9 the compositor thread creates native ui, see DeviceManagerD3D9.
-   * As such the thread is a gui thread, and must process a windows message
-   * queue or
-   * risk deadlocks. Chromium message loop TYPE_UI does exactly what we need. */
-  options.message_loop_type = MessageLoop::TYPE_UI;
-#endif
+  // TODO re-enable hangout monitor. Will be done in a follow-up thread
+  //  base::Thread::Options options;
+  //  /* Timeout values are powers-of-two to enable us get better data.
+  //     128ms is chosen for transient hangs because 8Hz should be the minimally
+  //     acceptable goal for Compositor responsiveness (normal goal is 60Hz). */
+  //  options.transient_hang_timeout = 128;  // milliseconds
+  //  /* 2048ms is chosen for permanent hangs because it's longer than most
+  //   * Compositor hangs seen in the wild, but is short enough to not miss
+  //   getting
+  //   * native hang stacks. */
+  //  options.permanent_hang_timeout = 2048;  // milliseconds
 
-  if (!compositorThread->StartWithOptions(options)) {
-    delete compositorThread;
+  if (NS_FAILED(rv)) {
     return nullptr;
   }
 
   CompositorBridgeParent::Setup();
   ImageBridgeParent::Setup();
 
-  return compositorThread;
+  return compositorThread.forget();
 }
 
 void CompositorThreadHolder::Start() {
@@ -136,8 +114,12 @@ void CompositorThreadHolder::Shutdown() {
 
 /* static */
 bool CompositorThreadHolder::IsInCompositorThread() {
-  return CompositorThread() &&
-         CompositorThread()->thread_id() == PlatformThread::CurrentId();
+  if (!CompositorThread()) {
+    return false;
+  }
+  bool in = false;
+  MOZ_ALWAYS_SUCCEEDS(CompositorThread()->IsOnCurrentThread(&in));
+  return in;
 }
 
 }  // namespace layers

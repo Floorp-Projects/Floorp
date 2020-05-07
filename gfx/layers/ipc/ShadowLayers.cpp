@@ -189,7 +189,7 @@ RefPtr<KnowsCompositor> ShadowLayerForwarder::GetForMedia() {
 ShadowLayerForwarder::ShadowLayerForwarder(
     ClientLayerManager* aClientLayerManager)
     : mClientLayerManager(aClientLayerManager),
-      mMessageLoop(MessageLoop::current()),
+      mThread(NS_GetCurrentThread()),
       mDiagnosticTypes(DiagnosticTypes::NO_DIAGNOSTIC),
       mIsFirstPaint(false),
       mNextLayerHandle(1) {
@@ -500,9 +500,7 @@ void ShadowLayerForwarder::RemoveTextureFromCompositable(
 }
 
 bool ShadowLayerForwarder::InWorkerThread() {
-  return MessageLoop::current() &&
-         (GetTextureForwarder()->GetMessageLoop()->id() ==
-          MessageLoop::current()->id());
+  return GetTextureForwarder()->GetThread()->IsOnCurrentThread();
 }
 
 void ShadowLayerForwarder::StorePluginWidgetConfigurations(
