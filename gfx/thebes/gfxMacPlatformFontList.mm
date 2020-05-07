@@ -1219,7 +1219,7 @@ void gfxMacPlatformFontList::RegisteredFontsChangedNotificationCallback(
 gfxFontEntry* gfxMacPlatformFontList::PlatformGlobalFontFallback(const uint32_t aCh,
                                                                  Script aRunScript,
                                                                  const gfxFontStyle* aMatchStyle,
-                                                                 FontFamily* aMatchedFamily) {
+                                                                 FontFamily& aMatchedFamily) {
   CFStringRef str;
   UniChar ch[2];
   CFIndex length = 1;
@@ -1275,7 +1275,7 @@ gfxFontEntry* gfxMacPlatformFontList::PlatformGlobalFontFallback(const uint32_t 
           }
           if (fontEntry) {
             if (fontEntry->HasCharacter(aCh)) {
-              *aMatchedFamily = FontFamily(family);
+              aMatchedFamily = FontFamily(family);
             } else {
               fontEntry = nullptr;
               cantUseFallbackFont = true;
@@ -1288,7 +1288,7 @@ gfxFontEntry* gfxMacPlatformFontList::PlatformGlobalFontFallback(const uint32_t 
           fontEntry = family->FindFontForStyle(*aMatchStyle);
           if (fontEntry) {
             if (fontEntry->HasCharacter(aCh)) {
-              *aMatchedFamily = FontFamily(family);
+              aMatchedFamily = FontFamily(family);
             } else {
               fontEntry = nullptr;
               cantUseFallbackFont = true;

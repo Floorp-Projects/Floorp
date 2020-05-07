@@ -138,10 +138,8 @@ class FontList {
   /**
    * Look up a Family record by name, typically to satisfy the font-family
    * property or a font family listed in preferences.
-   * If aAllowHidden is true, "system" font families normally not exposed
-   * to users may be found.
    */
-  Family* FindFamily(const nsCString& aName, bool aAllowHidden = false);
+  Family* FindFamily(const nsCString& aName);
 
   /**
    * Look up an individual Face by PostScript or Full name, for @font-face
