@@ -588,6 +588,7 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
       mShutdownRequired(false),
       mPriority(PRIORITY_NORMAL),
       mIsMainThread(aMainThread == MAIN_THREAD),
+      mUseHangMonitor(aMainThread == MAIN_THREAD),
       mIsAPoolThreadFree(nullptr),
       mCanInvokeJS(false),
 #ifdef EARLY_BETA_OR_EARLIER
@@ -606,6 +607,7 @@ nsThread::nsThread()
       mShutdownRequired(false),
       mPriority(PRIORITY_NORMAL),
       mIsMainThread(false),
+      mUseHangMonitor(false),
       mCanInvokeJS(false),
 #ifdef EARLY_BETA_OR_EARLIER
       mLastWakeupCheckTime(TimeStamp::Now()),
@@ -1077,8 +1079,13 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
   }
 
   Maybe<dom::AutoNoJSAPI> noJSAPI;
+
+  if (mUseHangMonitor && reallyWait) {
+    BackgroundHangMonitor().NotifyWait();
+  }
+
   if (mIsMainThread) {
-    DoMainThreadSpecificProcessing(reallyWait);
+    DoMainThreadSpecificProcessing();
   }
 
   ++mNestedEventLoopDepth;
@@ -1155,7 +1162,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
 
       mozilla::TimeStamp now = mozilla::TimeStamp::Now();
 
-      if (mIsMainThread) {
+      if (mUseHangMonitor) {
         BackgroundHangMonitor().NotifyActivity();
       }
 
@@ -1352,14 +1359,10 @@ void nsThread::SetScriptObserver(
   mScriptObserver = aScriptObserver;
 }
 
-void nsThread::DoMainThreadSpecificProcessing(bool aReallyWait) const {
+void nsThread::DoMainThreadSpecificProcessing() const {
   MOZ_ASSERT(mIsMainThread);
 
   ipc::CancelCPOWs();
-
-  if (aReallyWait) {
-    BackgroundHangMonitor().NotifyWait();
-  }
 
   // Fire a memory pressure notification, if one is pending.
   if (!ShuttingDown()) {
