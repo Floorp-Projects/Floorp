@@ -336,6 +336,7 @@ class FunctionBox : public SharedContext {
 
   // Track if bytecode should be generated and if we have done so.
   bool emitBytecode : 1;
+  bool emitLazy : 1;
   bool wasEmitted : 1;
 
   // Need to emit a synthesized Annex B assignment
