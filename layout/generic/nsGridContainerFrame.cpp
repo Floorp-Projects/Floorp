@@ -1434,22 +1434,7 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
       }
     }
     ExpandRepeatLineNames(!!aRange, aTracks);
-    // If we have a repeat-auto, then mExpandedLineNames will not be the full
-    // size of the template.
-    if (mHasRepeatAuto) {
-      // We need the template end to be after all line names. The expanded line
-      // names have one repetition of the auto(repeat) track name lists already,
-      // so we must subtract the number of repeat track name lists to get to
-      // the number of non-repeat tracks, minus 2 because the first and last
-      // line name lists are shared with the preceding and following non-repeat
-      // line name lists. We then add the repeat end delta, to expand by the
-      // total number of repeat tracks.
-      mTemplateLinesEnd = mExpandedLineNames.Length() -
-                          (mTrackAutoRepeatLineNames.Length() - 2) +
-                          mRepeatEndDelta;
-    } else {
-      mTemplateLinesEnd = mExpandedLineNames.Length();
-    }
+    mTemplateLinesEnd = mExpandedLineNames.Length() + mRepeatEndDelta;
     MOZ_ASSERT(mHasRepeatAuto || mRepeatEndDelta <= 0);
     MOZ_ASSERT(!mHasRepeatAuto || aRange ||
                (mExpandedLineNames.Length() >= 2 &&
