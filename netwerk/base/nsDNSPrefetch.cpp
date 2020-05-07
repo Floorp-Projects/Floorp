@@ -54,8 +54,7 @@ nsDNSPrefetch::nsDNSPrefetch(nsIURI* aURI,
     : mOriginAttributes(aOriginAttributes),
       mStoreTiming(storeTiming),
       mTRRMode(aTRRMode),
-      mListener(aListener),
-      mTarget(GetCurrentThreadEventTarget()) {
+      mListener(do_GetWeakReference(aListener)) {
   aURI->GetAsciiHost(mHostname);
   mIsHttps = aURI->SchemeIs("https");
 }
@@ -72,11 +71,12 @@ nsresult nsDNSPrefetch::Prefetch(uint32_t flags) {
   // then our timing will be useless. However, in such a case,
   // mEndTimestamp will be a null timestamp and callers should check
   // TimingsValid() before using the timing.
+  nsCOMPtr<nsIEventTarget> target = mozilla::GetCurrentThreadEventTarget();
 
   flags |= nsIDNSService::GetFlagsFromTRRMode(mTRRMode);
 
   nsresult rv = sDNSService->AsyncResolveNative(
-      mHostname, flags | nsIDNSService::RESOLVE_SPECULATE, this, mTarget,
+      mHostname, flags | nsIDNSService::RESOLVE_SPECULATE, this, target,
       mOriginAttributes, getter_AddRefs(tmpOutstanding));
   if (NS_FAILED(rv)) {
     return rv;
@@ -89,7 +89,7 @@ nsresult nsDNSPrefetch::Prefetch(uint32_t flags) {
     esniHost.Append(mHostname);
     sDNSService->AsyncResolveByTypeNative(
         esniHost, nsIDNSService::RESOLVE_TYPE_TXT,
-        flags | nsIDNSService::RESOLVE_SPECULATE, this, mTarget,
+        flags | nsIDNSService::RESOLVE_SPECULATE, this, target,
         mOriginAttributes, getter_AddRefs(tmpOutstanding));
   }
   return NS_OK;
@@ -114,16 +114,16 @@ NS_IMPL_ISUPPORTS(nsDNSPrefetch, nsIDNSListener)
 NS_IMETHODIMP
 nsDNSPrefetch::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
                                 nsresult status) {
-  MOZ_ASSERT(mTarget->IsOnCurrentThread());
-
   if (mStoreTiming) {
     mEndTimestamp = mozilla::TimeStamp::Now();
   }
-
-  nsCOMPtr<nsIDNSListener> listener;
-  mListener.swap(listener);
-
-  MOZ_ASSERT(listener);
-  listener->OnLookupComplete(request, rec, status);
+  nsCOMPtr<nsIDNSListener> listener = do_QueryReferent(mListener);
+  if (listener) {
+    listener->OnLookupComplete(request, rec, status);
+  }
+  // OnLookupComplete should be called on the target thread, so we release
+  // mListener here to make sure mListener is also released on the target
+  // thread.
+  mListener = nullptr;
   return NS_OK;
 }
