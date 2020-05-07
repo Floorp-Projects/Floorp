@@ -40,6 +40,7 @@ class DeviceSelector extends PureComponent {
       devices: PropTypes.shape(Types.devices).isRequired,
       onChangeDevice: PropTypes.func.isRequired,
       onUpdateDeviceModal: PropTypes.func.isRequired,
+      onUpdateDeviceSelectorMenu: PropTypes.func.isRequired,
       selectedDevice: PropTypes.string.isRequired,
       viewportId: PropTypes.number.isRequired,
     };
@@ -138,7 +139,7 @@ class DeviceSelector extends PureComponent {
   }
 
   render() {
-    const { devices } = this.props;
+    const { devices, onUpdateDeviceSelectorMenu } = this.props;
     const selectedDevice = this.getSelectedDevice();
     let { icon, label, tooltip } = this.getMenuProps(selectedDevice);
 
@@ -174,6 +175,8 @@ class DeviceSelector extends PureComponent {
         icon,
         title: tooltip,
         disabled: devices.listState !== Types.loadableState.LOADED,
+        onClick: () => onUpdateDeviceSelectorMenu(true),
+        onCloseButton: () => onUpdateDeviceSelectorMenu(false),
       },
       () => this.renderMenuList()
     );

@@ -304,7 +304,11 @@ class ResponsiveUI {
 
           // If the device modal/selector is opened, resize the toolbar height to
           // the size of the stack.
-          if (this.browserStackEl.classList.contains("device-modal-opened")) {
+          if (
+            this.browserStackEl.classList.contains(
+              "device-selector-menu-opened"
+            )
+          ) {
             const style = this.browserWindow.getComputedStyle(
               this.browserStackEl
             );
@@ -582,6 +586,8 @@ class ResponsiveUI {
       case "update-device-modal":
         this.onUpdateDeviceModal(event);
         break;
+      case "update-device-toolbar-height":
+        this.onUpdateToolbarHeight(event);
     }
   }
 
@@ -801,13 +807,31 @@ class ResponsiveUI {
   }
 
   onUpdateDeviceModal(event) {
-    if (event.data.isOpen) {
-      this.browserStackEl.classList.add("device-modal-opened");
-      const style = this.browserWindow.getComputedStyle(this.browserStackEl);
-      this.rdmFrame.style.height = style.height;
-    } else {
-      this.rdmFrame.style.removeProperty("height");
-      this.browserStackEl.classList.remove("device-modal-opened");
+    // Restore the toolbar height if closing
+    if (!event.data.isOpen) {
+      this.restoreToolbarHeight();
+    }
+  }
+
+  /**
+   * Handles setting the height of the toolbar when it's closed. This can happen when
+   * an event occurs outside of the device selector menu component, such as opening the
+   * device modal.
+   */
+  onUpdateToolbarHeight(event) {
+    if (!event.data.isOpen) {
+      const {
+        isModalOpen,
+      } = this.rdmFrame.contentWindow.store.getState().devices;
+
+      // Don't remove the device-selector-menu-opened class if it was closed because
+      // the device modal was opened. We still want to preserve the current height of
+      // toolbar.
+      if (isModalOpen) {
+        return;
+      }
+
+      this.restoreToolbarHeight();
     }
   }
 
@@ -816,6 +840,14 @@ class ResponsiveUI {
       "devtools.responsive.deviceState"
     );
     return !!deviceState;
+  }
+
+  /**
+   * Restores the toolbar's height to it's original class styling.
+   */
+  restoreToolbarHeight() {
+    this.rdmFrame.style.removeProperty("height");
+    this.browserStackEl.classList.remove("device-selector-menu-opened");
   }
 
   /**
