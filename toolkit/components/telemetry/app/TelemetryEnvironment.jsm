@@ -1125,7 +1125,7 @@ EnvironmentCache.prototype = {
   },
 
   setExperimentActive(id, branch, options) {
-    this._log.trace("setExperimentActive");
+    this._log.trace(`setExperimentActive - id: ${id}, branch: ${branch}`);
     // Make sure both the id and the branch have sane lengths.
     const saneId = limitStringToLength(id, MAX_EXPERIMENT_ID_LENGTH);
     const saneBranch = limitStringToLength(
