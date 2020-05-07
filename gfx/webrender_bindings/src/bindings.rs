@@ -1481,7 +1481,7 @@ pub extern "C" fn wr_api_create_document(
     root_dh.ensure_hit_tester();
 
     *out_handle = Box::into_raw(Box::new(DocumentHandle::new(
-        root_dh.api.clone_sender().create_api_by_client(next_namespace_id()),
+        root_dh.api.create_sender().create_api_by_client(next_namespace_id()),
         root_dh.hit_tester.clone(),
         doc_size,
         layer,
@@ -1501,7 +1501,7 @@ pub extern "C" fn wr_api_clone(dh: &mut DocumentHandle, out_handle: &mut *mut Do
     dh.ensure_hit_tester();
 
     let handle = DocumentHandle {
-        api: dh.api.clone_sender().create_api_by_client(next_namespace_id()),
+        api: dh.api.create_sender().create_api_by_client(next_namespace_id()),
         document_id: dh.document_id,
         hit_tester: dh.hit_tester.clone(),
         hit_tester_request: None,
