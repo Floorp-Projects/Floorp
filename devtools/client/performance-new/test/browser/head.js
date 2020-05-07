@@ -16,6 +16,26 @@ registerCleanupFunction(() => {
  */
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
+{
+  const {
+    getEnvironmentVariable,
+  } = require("devtools/client/performance-new/browser");
+
+  if (getEnvironmentVariable("MOZ_PROFILER_SHUTDOWN")) {
+    throw new Error(
+      "These tests cannot be run with shutdown profiling as they rely on manipulating " +
+        "the state of the profiler."
+    );
+  }
+
+  if (getEnvironmentVariable("MOZ_PROFILER_STARTUP")) {
+    throw new Error(
+      "These tests cannot be run with startup profiling as they rely on manipulating " +
+        "the state of the profiler."
+    );
+  }
+}
+
 /**
  * Wait for a single requestAnimationFrame tick.
  */
