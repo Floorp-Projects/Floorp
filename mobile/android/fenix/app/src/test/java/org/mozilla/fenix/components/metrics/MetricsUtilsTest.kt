@@ -1,56 +1,96 @@
 package org.mozilla.fenix.components.metrics
 
+import android.content.Context
+import android.util.Base64
+import com.google.android.gms.ads.identifier.AdvertisingIdClient
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException
+import com.google.android.gms.common.GooglePlayServicesRepairableException
 import io.mockk.every
 import io.mockk.mockk
-import mozilla.components.browser.search.SearchEngine
-import mozilla.components.support.test.robolectric.testContext
+import io.mockk.mockkObject
+import io.mockk.mockkStatic
+import io.mockk.slot
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert
 import org.junit.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mockito.ArgumentMatchers
+import java.io.IOException
 
-@RunWith(FenixRobolectricTestRunner::class)
 class MetricsUtilsTest {
 
+    private val context: Context = mockk(relaxed = true)
+
+    @Ignore("This test has side-effects that cause it to fail other unrelated tests.")
     @Test
-    fun createSearchEvent() {
-        val engine: SearchEngine = mockk(relaxed = true)
-        val context = testContext
+    fun `getAdvertisingID() returns null if the API throws`() {
+        val exceptions = listOf(
+            GooglePlayServicesNotAvailableException(1),
+            GooglePlayServicesRepairableException(0, ArgumentMatchers.anyString(), ArgumentMatchers.any()),
+            IllegalStateException(),
+            IOException()
+        )
 
-        every { engine.identifier } returns ENGINE_SOURCE_IDENTIFIER
+        exceptions.forEach {
+            every {
+                AdvertisingIdClient.getAdvertisingIdInfo(any())
+            } throws it
 
-        assertEquals(
-            "$ENGINE_SOURCE_IDENTIFIER.suggestion",
-            MetricsUtils.createSearchEvent(
-                engine,
-                context,
-                Event.PerformedSearch.SearchAccessPoint.SUGGESTION
-            )?.eventSource?.countLabel
-        )
-        assertEquals(
-            "$ENGINE_SOURCE_IDENTIFIER.action",
-            MetricsUtils.createSearchEvent(
-                engine,
-                context,
-                Event.PerformedSearch.SearchAccessPoint.ACTION
-            )?.eventSource?.countLabel
-        )
-        assertEquals(
-            "$ENGINE_SOURCE_IDENTIFIER.widget",
-            MetricsUtils.createSearchEvent(
-                engine,
-                context,
-                Event.PerformedSearch.SearchAccessPoint.WIDGET
-            )?.eventSource?.countLabel
-        )
-        assertEquals(
-            "$ENGINE_SOURCE_IDENTIFIER.shortcut",
-            MetricsUtils.createSearchEvent(
-                engine,
-                context,
-                Event.PerformedSearch.SearchAccessPoint.SHORTCUT
-            )?.eventSource?.countLabel
-        )
+            Assert.assertNull(MetricsUtils.getAdvertisingID(context))
+        }
+    }
+
+    @Test
+    fun `getAdvertisingID() returns null if the API returns null info`() {
+        mockkStatic(AdvertisingIdClient::class)
+        every { AdvertisingIdClient.getAdvertisingIdInfo(any()) } returns null
+
+        Assert.assertNull(MetricsUtils.getAdvertisingID(context))
+    }
+
+    @Test
+    fun `getAdvertisingID() returns a valid string if the API returns a valid ID`() {
+        val testId = "test-value-id"
+
+        mockkStatic(AdvertisingIdClient::class)
+        every {
+            AdvertisingIdClient.getAdvertisingIdInfo(any())
+        } returns AdvertisingIdClient.Info(testId, false)
+
+        assertEquals(testId, MetricsUtils.getAdvertisingID(context))
+    }
+
+    @Test
+    fun `getHashedIdentifier() returns a hashed identifier`() {
+        val testId = "test-value-id"
+        val testPackageName = "org.mozilla-test.fenix"
+        val mockedHexReturn = "mocked-HEX"
+
+        // Mock the Base64 to record the byte array that is passed in,
+        // which is the actual digest. We can't simply test the return value
+        // of |getHashedIdentifier| as these Android tests require us to mock
+        // Android-specific APIs.
+        mockkStatic(Base64::class)
+        val shaDigest = slot<ByteArray>()
+        every {
+            Base64.encodeToString(capture(shaDigest), any())
+        } returns mockedHexReturn
+
+        // Get the hash identifier.
+        mockkObject(MetricsUtils)
+        every { MetricsUtils.getAdvertisingID(context) } returns testId
+        every { MetricsUtils.getHashingSalt() } returns testPackageName
+        runBlocking {
+            assertEquals(mockedHexReturn, MetricsUtils.getHashedIdentifier(context))
+        }
+
+        // Check that the digest of the identifier matches with what we expect.
+        // Please note that in the real world, Base64.encodeToString would encode
+        // this to something much shorter, which we'd send with the ping.
+        val expectedDigestBytes =
+            "[52, -79, -84, 79, 101, 22, -82, -44, -44, -14, 21, 15, 48, 88, -94, -74, -8, 25, -72, -120, -37, 108, 47, 16, 2, -37, 126, 41, 102, -92, 103, 24]"
+        assertEquals(expectedDigestBytes, shaDigest.captured.contentToString())
     }
 
     companion object {

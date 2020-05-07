@@ -11,6 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.support.base.log.logger.Logger
+import org.mozilla.fenix.GleanMetrics.Activation
 import org.mozilla.fenix.GleanMetrics.Installation
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.ext.settings
@@ -64,6 +65,10 @@ class InstallationPing(private val context: Context) {
             }
 
             CoroutineScope(Dispatchers.IO).launch {
+                MetricsUtils.getHashedIdentifier(context)?.let {
+                    Activation.identifier.set(it)
+                }
+
                 Pings.installation.submit()
                 markAsTriggered()
             }
