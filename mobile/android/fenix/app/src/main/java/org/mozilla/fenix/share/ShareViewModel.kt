@@ -184,6 +184,7 @@ class ShareViewModel(application: Application) : AndroidViewModel(application) {
                     ?.otherDevices
                     .orEmpty()
                     .filter { it.capabilities.contains(DeviceCapability.SEND_TAB) }
+                    .sortedByDescending { it.lastAccessTime }
 
                 val list = mutableListOf<SyncShareOption>()
                 if (shareableDevices.isEmpty()) {
