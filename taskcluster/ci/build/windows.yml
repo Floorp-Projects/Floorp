@@ -8,7 +8,6 @@ job-defaults:
         tooltool-downloads: internal
     fetches:
         toolchain:
-            - win64-winchecksec
             - win64-dump-syms
             - win64-pdbstr
 
@@ -59,6 +58,7 @@ win32/debug:
             - linux64-dump-syms
             - linux64-wine
             - linux64-liblowercase
+            - linux64-winchecksec
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -110,6 +110,7 @@ win32/opt:
             - linux64-dump-syms
             - linux64-wine
             - linux64-liblowercase
+            - linux64-winchecksec
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -161,6 +162,7 @@ win64/debug:
             - linux64-dump-syms
             - linux64-wine
             - linux64-liblowercase
+            - linux64-winchecksec
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -202,6 +204,7 @@ win64-fuzzing/debug:
             - win64-sccache
             - win64-nasm
             - win64-node
+            - win64-winchecksec
     optimization:
         build-fuzzing:
             - windows
@@ -241,6 +244,7 @@ win64-plain/debug:
             - win64-node
             - win64-nasm
             - win64-cbindgen
+            - win64-winchecksec
     optimization:
         push-interval-10:
             - windows
@@ -296,6 +300,7 @@ win64/opt:
             - linux64-dump-syms
             - linux64-wine
             - linux64-liblowercase
+            - linux64-winchecksec
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -335,6 +340,7 @@ win64-plain/opt:
             - win64-nasm
             - win64-node
             - win64-cbindgen
+            - win64-winchecksec
     optimization:
         push-interval-10:
             - windows
@@ -400,6 +406,7 @@ win32-shippable/opt:
             - linux64-dump-syms
             - linux64-wine
             - linux64-liblowercase
+            - linux64-winchecksec
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -454,6 +461,7 @@ win64-shippable/opt:
             - linux64-dump-syms
             - linux64-wine
             - linux64-liblowercase
+            - linux64-winchecksec
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -502,6 +510,7 @@ win32-add-on-devel/opt:
             - linux64-dump-syms
             - linux64-wine
             - linux64-liblowercase
+            - linux64-winchecksec
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -550,6 +559,7 @@ win64-add-on-devel/opt:
             - linux64-dump-syms
             - linux64-wine
             - linux64-liblowercase
+            - linux64-winchecksec
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -598,6 +608,7 @@ win64-noopt/debug:
             - linux64-dump-syms
             - linux64-wine
             - linux64-liblowercase
+            - linux64-winchecksec
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -646,6 +657,7 @@ win32-noopt/debug:
             - linux64-dump-syms
             - linux64-wine
             - linux64-liblowercase
+            - linux64-winchecksec
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -688,6 +700,7 @@ win32-rusttests/opt:
             - win64-sccache
             - win64-nasm
             - win64-node
+            - win64-winchecksec
 
 win32-rusttests/debug:
     description: "Win32 Rust Tests Debug"
@@ -727,6 +740,7 @@ win32-rusttests/debug:
             - win64-sccache
             - win64-nasm
             - win64-node
+            - win64-winchecksec
 
 win64-rusttests/opt:
     description: "Win64 Rust Tests Opt"
@@ -763,6 +777,7 @@ win64-rusttests/opt:
             - win64-sccache
             - win64-nasm
             - win64-node
+            - win64-winchecksec
 
 win64-rusttests/debug:
     description: "Win64 Rust Tests Debug"
@@ -799,6 +814,7 @@ win64-rusttests/debug:
             - win64-sccache
             - win64-nasm
             - win64-node
+            - win64-winchecksec
 
 win64-ccov/opt:
     description: "Win64 Opt Code Coverage"
@@ -843,6 +859,7 @@ win64-ccov/opt:
             - win64-sccache
             - win64-nasm
             - win64-node
+            - win64-winchecksec
 
 win64-asan/debug:
     description: "Win64 Debug ASAN"
@@ -882,6 +899,7 @@ win64-asan/debug:
             # the build step. Once bug 1614626 moves them to the xpcshell task,
             # this dependency can be removed.
             - win32-fix-stacks
+            - win64-winchecksec
 
 win64-asan/opt:
     description: "Win64 Opt ASAN"
@@ -919,6 +937,7 @@ win64-asan/opt:
             - win64-sccache
             - win64-nasm
             - win64-node
+            - win64-winchecksec
 
 win64-asan-reporter-nightly/opt:
     description: "Win64 Opt ASAN Reporter Nightly"
@@ -968,6 +987,7 @@ win64-asan-reporter-nightly/opt:
             - win64-cbindgen
             - win64-nasm
             - win64-node
+            - win64-winchecksec
 
 win64-asan-fuzzing/opt:
     description: "Win64 Fuzzing Opt ASAN"
@@ -1003,6 +1023,7 @@ win64-asan-fuzzing/opt:
             - win64-sccache
             - win64-nasm
             - win64-node
+            - win64-winchecksec
     optimization:
         build-fuzzing:
             - windows
@@ -1069,6 +1090,7 @@ win32-devedition/opt:
             - linux64-dump-syms
             - linux64-wine
             - linux64-liblowercase
+            - linux64-winchecksec
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -1125,6 +1147,7 @@ win64-devedition/opt:
             - linux64-dump-syms
             - linux64-wine
             - linux64-liblowercase
+            - linux64-winchecksec
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -1175,6 +1198,7 @@ win64-aarch64/debug:
             - linux64-dump-syms
             - linux64-wine
             - linux64-liblowercase
+            - linux64-winchecksec
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -1233,6 +1257,7 @@ win64-aarch64/opt:
             - linux64-dump-syms
             - linux64-wine
             - linux64-liblowercase
+            - linux64-winchecksec
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -1439,6 +1464,7 @@ win64-aarch64-shippable-no-eme/opt:
             - linux64-dump-syms
             - linux64-wine
             - linux64-liblowercase
+            - linux64-winchecksec
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
@@ -1600,6 +1626,7 @@ win64-aarch64-devedition-no-eme/opt:
             - linux64-dump-syms
             - linux64-wine
             - linux64-liblowercase
+            - linux64-winchecksec
         fetch:
             - nsis-3.01-win
             - upx-3.95-win
