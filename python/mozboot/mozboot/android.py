@@ -278,23 +278,20 @@ def ensure_android_packages(sdkmanager_tool, packages=None, no_interactive=False
         subprocess.check_call(args)
         return
 
+    # Flush outputs before running sdkmanager.
+    sys.stdout.flush()
+    sys.stderr.flush()
     # Emulate yes.  For a discussion of passing input to check_output,
     # see https://stackoverflow.com/q/10103551.
     yes = '\n'.join(['y']*100).encode("UTF-8")
-    proc = subprocess.Popen(args,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT,
-                            stdin=subprocess.PIPE)
-    output, unused_err = proc.communicate(yes)
+    proc = subprocess.Popen(args, stdin=subprocess.PIPE)
+    proc.communicate(yes)
 
     retcode = proc.poll()
     if retcode:
         cmd = args[0]
         e = subprocess.CalledProcessError(retcode, cmd)
-        e.output = output
         raise e
-
-    print(output)
 
 
 def suggest_mozconfig(os_name, artifact_mode=False):
