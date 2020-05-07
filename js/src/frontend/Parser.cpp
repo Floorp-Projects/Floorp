@@ -1809,6 +1809,46 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   return true;
 }
 
+bool FunctionCreationData::createLazyScript(
+    JSContext* cx, CompilationInfo& compilationInfo, HandleFunction function,
+    FunctionBox* funbox, HandleScriptSourceObject sourceObject) {
+  MOZ_ASSERT(function);
+
+  using ImmutableFlags = ImmutableScriptFlagsEnum;
+  ImmutableScriptFlags immutableFlags = funbox->immutableFlags();
+
+  // Compute the flags that frontend doesn't directly compute.
+  immutableFlags.setFlag(ImmutableFlags::HasMappedArgsObj,
+                         funbox->hasMappedArgsObj());
+  immutableFlags.setFlag(ImmutableFlags::IsLikelyConstructorWrapper,
+                         funbox->isLikelyConstructorWrapper());
+
+  Rooted<BaseScript*> lazy(
+      cx,
+      BaseScript::CreateRawLazy(cx, gcThings.length(), function, sourceObject,
+                                funbox->extent, immutableFlags));
+  if (!lazy) {
+    return false;
+  }
+
+  if (!EmitScriptThingsVector(cx, compilationInfo, gcThings,
+                              lazy->gcthingsForInit())) {
+    return false;
+  }
+
+  // Connect inner functions to this lazy script now.
+  for (auto inner : lazy->gcthings()) {
+    if (!inner.is<JSObject>()) {
+      continue;
+    }
+    inner.as<JSObject>().as<JSFunction>().setEnclosingLazyScript(lazy);
+  }
+
+  function->initScript(lazy);
+
+  return true;
+}
+
 bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
   if (root) {
     auto visitor = [](ParserBase* parser, FunctionTree* tree) {
@@ -1851,46 +1891,6 @@ bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
     };
     return root->visitRecursively(this->cx_, this, visitor);
   }
-  return true;
-}
-
-bool FunctionCreationData::createLazyScript(
-    JSContext* cx, CompilationInfo& compilationInfo, HandleFunction function,
-    FunctionBox* funbox, HandleScriptSourceObject sourceObject) {
-  MOZ_ASSERT(function);
-
-  using ImmutableFlags = ImmutableScriptFlagsEnum;
-  ImmutableScriptFlags immutableFlags = funbox->immutableFlags();
-
-  // Compute the flags that frontend doesn't directly compute.
-  immutableFlags.setFlag(ImmutableFlags::HasMappedArgsObj,
-                         funbox->hasMappedArgsObj());
-  immutableFlags.setFlag(ImmutableFlags::IsLikelyConstructorWrapper,
-                         funbox->isLikelyConstructorWrapper());
-
-  Rooted<BaseScript*> lazy(
-      cx,
-      BaseScript::CreateRawLazy(cx, gcThings.length(), function, sourceObject,
-                                funbox->extent, immutableFlags));
-  if (!lazy) {
-    return false;
-  }
-
-  if (!EmitScriptThingsVector(cx, compilationInfo, gcThings,
-                              lazy->gcthingsForInit())) {
-    return false;
-  }
-
-  // Connect inner functions to this lazy script now.
-  for (auto inner : lazy->gcthings()) {
-    if (!inner.is<JSObject>()) {
-      continue;
-    }
-    inner.as<JSObject>().as<JSFunction>().setEnclosingLazyScript(lazy);
-  }
-
-  function->initScript(lazy);
-
   return true;
 }
 
