@@ -127,7 +127,7 @@ void MessagePortParent::ActorDestroy(ActorDestroyReason aWhy) {
   }
 }
 
-bool MessagePortParent::Entangled(const nsTArray<MessageData>& aMessages) {
+bool MessagePortParent::Entangled(nsTArray<MessageData>&& aMessages) {
   MOZ_ASSERT(!mEntangled);
   mEntangled = true;
   return SendEntangled(aMessages);

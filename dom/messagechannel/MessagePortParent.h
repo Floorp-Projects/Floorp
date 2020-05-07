@@ -26,7 +26,7 @@ class MessagePortParent final
 
   bool Entangle(const nsID& aDestinationUUID, const uint32_t& aSequenceID);
 
-  bool Entangled(const nsTArray<MessageData>& aMessages);
+  bool Entangled(nsTArray<MessageData>&& aMessages);
 
   void Close();
   void CloseAndDelete();
