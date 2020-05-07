@@ -872,10 +872,10 @@ Toolbox.prototype = {
       this._addChromeEventHandlerEvents();
       this._registerOverlays();
 
-      this._componentMount.addEventListener(
-        "keypress",
-        this._onToolbarArrowKeypress
-      );
+      // Get the tab bar of the ToolboxController to attach the "keypress" event listener to.
+      this._tabBar = this.doc.querySelector(".devtools-tabbar");
+      this._tabBar.addEventListener("keypress", this._onToolbarArrowKeypress);
+
       this._componentMount.setAttribute(
         "aria-label",
         L10N.getStr("toolbox.label")
@@ -1856,7 +1856,7 @@ Toolbox.prototype = {
       return;
     }
 
-    const buttons = [...this._componentMount.querySelectorAll("button")];
+    const buttons = [...this._tabBar.querySelectorAll("button")];
     const curIndex = buttons.indexOf(target);
 
     if (curIndex === -1) {
@@ -3700,12 +3700,13 @@ Toolbox.prototype = {
       this.webconsolePanel = null;
     }
     if (this._componentMount) {
-      this._componentMount.removeEventListener(
+      this._tabBar.removeEventListener(
         "keypress",
         this._onToolbarArrowKeypress
       );
       this.ReactDOM.unmountComponentAtNode(this._componentMount);
       this._componentMount = null;
+      this._tabBar = null;
     }
 
     const outstanding = [];
