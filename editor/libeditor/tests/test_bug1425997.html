@@ -26,8 +26,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1425997
 SimpleTest.waitForExplicitFinish();
 // 3 assertions are recorded due to nested execCommand() but not a problem.
 // They are necessary to detect invalid method call without mutation event listers.
-SimpleTest.expectAssertions(0, 3);
-SimpleTest.waitForFocus(function() {
+SimpleTest.expectAssertions(3, 3);
+SimpleTest.waitForFocus(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["dom.document.exec_command.nested_calls_allowed", true]]});
   let selection = window.getSelection();
   let editor = document.getElementById("editor");
   function onCharacterDataModified() {
