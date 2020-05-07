@@ -18,6 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1589754
 <script class="testbody">
 
 add_task(async function test_notifications_permission() {
+  await SpecialPowers.clearUserPref("notification.prompt.testing");
   await SpecialPowers.pushPrefEnv({
     set: [
       // Set pref to exercise relevant code path for regression test.
