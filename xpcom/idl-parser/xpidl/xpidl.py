@@ -7,7 +7,14 @@
 
 """A parser for cross-platform IDL (XPIDL) files."""
 
+# Note that this file is used by the searchfox indexer in ways that are
+# not tested in Firefox's CI. Please try to keep this file py2-compatible
+# if the burden for that is low. If you are making changes you know to be
+# incompatible with py2, please give a searchfox maintainer a heads-up so
+# that any necessary changes can be made on the searchfox side.
+
 from __future__ import absolute_import
+from __future__ import print_function
 
 import sys
 import os.path
