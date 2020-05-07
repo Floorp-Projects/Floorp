@@ -23,14 +23,8 @@ def generate(output, idlFilename, dataFile):
         # (e.g. on nsComputedDOMStyle).
         extendedAttrs = ["CEReactions", "Throws",
                          "SetterNeedsSubjectPrincipal=NonSystem"]
-
         if p.pref != "":
-            # BackdropFilter is a special case where we want WebIDL to check
-            # a function instead of checking the pref directly.
-            if p.method == "BackdropFilter":
-                extendedAttrs.append('Func="nsCSSProps::IsBackdropFilterAvailable"')
-            else:
-                extendedAttrs.append('Pref="%s"' % p.pref)
+            extendedAttrs.append('Pref="%s"' % p.pref)
 
         prop = p.method
 

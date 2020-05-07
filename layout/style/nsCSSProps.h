@@ -117,19 +117,6 @@ class nsCSSProps {
   }
 
  private:
-  // A table for shorthand properties.  The appropriate index is the
-  // property ID minus eCSSProperty_COUNT_no_shorthands.
-  static const nsCSSPropertyID* const
-      kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shorthands];
-
- public:
-  /**
-   * Returns true if the backdrop-filter pref and WebRender are enabled.
-   */
-  static bool IsBackdropFilterAvailable(JSContext*, JSObject*) {
-    return IsEnabled(eCSSProperty_backdrop_filter);
-  }
-
   /**
    * Recoumputes the enabled state of a pref. If aPrefName is nullptr,
    * recomputes the state of all prefs in gPropertyEnabled.
@@ -138,6 +125,12 @@ class nsCSSProps {
   static void RecomputeEnabledState(const char* aPrefName,
                                     void* aClosure = nullptr);
 
+  // A table for shorthand properties.  The appropriate index is the
+  // property ID minus eCSSProperty_COUNT_no_shorthands.
+  static const nsCSSPropertyID* const
+      kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shorthands];
+
+ public:
   static const nsCSSPropertyID* SubpropertyEntryFor(nsCSSPropertyID aProperty) {
     MOZ_ASSERT(eCSSProperty_COUNT_no_shorthands <= aProperty &&
                    aProperty < eCSSProperty_COUNT,
