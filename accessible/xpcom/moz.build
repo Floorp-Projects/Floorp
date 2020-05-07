@@ -71,8 +71,6 @@ GeneratedFile(
     py2=True,
     inputs=[
         'AccEvents.conf',
-        '!/xpcom/idl-parser/xpidl/xpidllex.py',
-        '!/xpcom/idl-parser/xpidl/xpidlyacc.py',
     ])
 
 FINAL_LIBRARY = 'xul'

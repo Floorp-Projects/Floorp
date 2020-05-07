@@ -61,12 +61,8 @@ class Parser:
         if filename in Parser.parsed:
             return Parser.parsed[filename].tu
 
-        self.lexer = lex.lex(debug=self.debug,
-                             optimize=not self.debug,
-                             lextab="ipdl_lextab")
-        self.parser = yacc.yacc(debug=self.debug,
-                                optimize=not self.debug,
-                                tabmodule="ipdl_yacctab")
+        self.lexer = lex.lex(debug=self.debug)
+        self.parser = yacc.yacc(debug=self.debug, write_tables=False)
         self.filename = filename
         self.includedirs = includedirs
         self.tu.filename = filename

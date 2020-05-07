@@ -9,12 +9,10 @@
 
 from __future__ import absolute_import
 
-import sys
 import os.path
 import re
 from xpidl import xpidl
 import itertools
-import glob
 
 printdoccomments = False
 
@@ -592,19 +590,7 @@ def write_interface(iface, fd):
 
 
 def main(outputfile):
-    cachedir = os.path.dirname(outputfile.name if outputfile else '') or '.'
-    if not os.path.isdir(cachedir):
-        os.mkdir(cachedir)
-    sys.path.append(cachedir)
-
-    # Delete the lex/yacc files.  Ply is too stupid to regenerate them
-    # properly
-    for fileglobs in [os.path.join(cachedir, f) for f in ["xpidllex.py*", "xpidlyacc.py*"]]:
-        for filename in glob.glob(fileglobs):
-            os.remove(filename)
-
-    # Instantiate the parser.
-    xpidl.IDLParser(outputdir=cachedir)
+    xpidl.IDLParser()
 
 
 if __name__ == '__main__':
