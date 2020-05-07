@@ -72,9 +72,6 @@ class ContentProcessController final : public GeckoContentController {
 
   void CancelAutoscroll(const ScrollableLayerGuid& aGuid) override;
 
-  void PostDelayedTask(already_AddRefed<Runnable> aRunnable,
-                       int aDelayMs) override;
-
   bool IsRepaintThread() override;
 
   void DispatchToRepaintThread(already_AddRefed<Runnable> aTask) override;
