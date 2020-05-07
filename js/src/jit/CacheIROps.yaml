@@ -906,7 +906,7 @@
 
 - name: LoadTypedArrayLengthResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     obj: ObjId
 
