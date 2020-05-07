@@ -8,7 +8,6 @@
 
 #include "mozilla/net/PSocketProcessChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
-#include "mozilla/Mutex.h"
 #include "nsRefPtrHashtable.h"
 
 namespace mozilla {
@@ -19,7 +18,6 @@ namespace mozilla {
 namespace net {
 
 class SocketProcessBridgeParent;
-class BackgroundDataBridgeParent;
 
 // The IPC actor implements PSocketProcessChild in child process.
 // This is allocated and kept alive by SocketProcessImpl.
@@ -98,12 +96,6 @@ class SocketProcessChild final
       const OriginAttributes& aOriginAttributes,
       const uint32_t& aFlags) override;
 
-  void AddDataBridgeToMap(uint64_t aChannelId,
-                          BackgroundDataBridgeParent* aActor);
-  void RemoveDataBridgeFromMap(uint64_t aChannelId);
-  Maybe<RefPtr<BackgroundDataBridgeParent>> GetAndRemoveDataBridge(
-      uint64_t aChannelId);
-
  protected:
   friend class SocketProcessImpl;
   ~SocketProcessChild();
@@ -119,10 +111,6 @@ class SocketProcessChild final
 #endif
 
   bool mShuttingDown;
-  // Protect the table below.
-  Mutex mMutex;
-  nsDataHashtable<nsUint64HashKey, RefPtr<BackgroundDataBridgeParent>>
-      mBackgroundDataBridgeMap;
 };
 
 }  // namespace net

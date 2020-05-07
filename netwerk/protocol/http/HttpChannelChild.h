@@ -539,7 +539,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   void DoNotifyListener();
   void ContinueDoNotifyListener();
   void OnAfterLastPart(const nsresult& aStatus);
-  void MaybeConnectToSocketProcess();
 
   // Create a a new channel to be used in a redirection, based on the provided
   // response headers.

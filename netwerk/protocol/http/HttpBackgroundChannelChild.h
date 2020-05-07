@@ -17,14 +17,11 @@ using mozilla::ipc::IPCResult;
 namespace mozilla {
 namespace net {
 
-class BackgroundDataBridgeChild;
 class HttpChannelChild;
 
 class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
   friend class BackgroundChannelCreateCallback;
   friend class PHttpBackgroundChannelChild;
-  friend class HttpChannelChild;
-  friend class BackgroundDataBridgeChild;
 
  public:
   explicit HttpBackgroundChannelChild();
@@ -48,8 +45,7 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
                                    const nsresult& aTransportStatus,
                                    const uint64_t& aOffset,
                                    const uint32_t& aCount,
-                                   const nsCString& aData,
-                                   const bool& aDataFromSocketProcess);
+                                   const nsCString& aData);
 
   IPCResult RecvOnStopRequest(
       const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
@@ -65,8 +61,6 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  void CreateDataBridge();
-
  private:
   virtual ~HttpBackgroundChannelChild();
 
@@ -81,12 +75,7 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
   // OnStartRequestReceived.
   // return true after both RecvOnStartRequestSend and OnStartRequestReceived
   // are invoked.
-  // When ODA message is from socket process, it is possible that both
-  // RecvOnStartRequestSent and OnStartRequestReceived are not invoked, but
-  // RecvOnTransportAndData is already invoked. In this case, we only need to
-  // check if OnStartRequestReceived is invoked to make sure ODA doesn't happen
-  // before OnStartRequest.
-  bool IsWaitingOnStartRequest(bool aDataFromSocketProcess = false);
+  bool IsWaitingOnStartRequest();
 
   // Associated HttpChannelChild for handling the channel events.
   // Will be removed while failed to create background channel,
@@ -106,8 +95,6 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
   // Should be flushed after OnStartRequest is received and handled.
   // Should only access on STS thread.
   nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;
-
-  RefPtr<BackgroundDataBridgeChild> mDataBridgeChild;
 };
 
 }  // namespace net

@@ -396,7 +396,6 @@ nsHttpChannel::nsHttpChannel()
       mIsIsolated(0),
       mTopWindowOriginComputed(0),
       mHasCrossOriginOpenerPolicyMismatch(0),
-      mDataAlreadySent(0),
       mPushedStreamId(0),
       mLocalBlocklist(false),
       mOnTailUnblock(nullptr),
@@ -1350,16 +1349,7 @@ nsresult nsHttpChannel::SetupTransaction() {
     MOZ_ASSERT(gIOService->SocketProcessReady(),
                "Socket process should be ready.");
 
-    nsCOMPtr<nsIParentChannel> parentChannel;
-    NS_QueryNotificationCallbacks(this, parentChannel);
-    RefPtr<DocumentLoadListener> documentChannelParent =
-        do_QueryObject(parentChannel);
-    // See HttpTransactionChild::CanSendODAToContentProcessDirectly() and
-    // nsHttpChannel::CallOnStartRequest() for the reason why we need to know if
-    // this is a document load. We only send ODA directly to child process for
-    // non document loads.
-    RefPtr<HttpTransactionParent> transParent =
-        new HttpTransactionParent(!!documentChannelParent);
+    RefPtr<HttpTransactionParent> transParent = new HttpTransactionParent();
     LOG1(("nsHttpChannel %p created HttpTransactionParent %p\n", this,
           transParent.get()));
 
@@ -1933,10 +1923,6 @@ nsresult nsHttpChannel::CallOnStartRequest() {
     }
   }
 
-  // Note that the code below should be synced with the code in
-  // HttpTransactionChild::CanSendODAToContentProcessDirectly(). We MUST make
-  // sure HttpTransactionChild::CanSendODAToContentProcessDirectly() returns
-  // false when a stream converter is applied.
   bool unknownDecoderStarted = false;
   if (mResponseHead && !mResponseHead->HasContentType()) {
     MOZ_ASSERT(mConnectionInfo, "Should have connection info here");
@@ -8480,10 +8466,6 @@ nsHttpChannel::OnDataAvailable(nsIRequest* request, nsIInputStream* input,
       seekable = nullptr;
     }
 
-    mDataAlreadySent = false;
-    if (mTransaction) {
-      mDataAlreadySent = mTransaction->DataAlreadySent();
-    }
     nsresult rv =
         mListener->OnDataAvailable(this, input, mLogicalOffset, count);
     if (NS_SUCCEEDED(rv)) {

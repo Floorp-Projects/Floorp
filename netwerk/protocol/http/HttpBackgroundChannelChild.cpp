@@ -14,7 +14,6 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/net/BackgroundDataBridgeChild.h"
 #include "mozilla/Unused.h"
 #include "nsSocketTransportService2.h"
 
@@ -47,21 +46,6 @@ nsresult HttpBackgroundChannelChild::Init(HttpChannelChild* aChannelChild) {
   return NS_OK;
 }
 
-void HttpBackgroundChannelChild::CreateDataBridge() {
-  MOZ_ASSERT(OnSocketThread());
-  PBackgroundChild* actorChild =
-      BackgroundChild::GetOrCreateSocketActorForCurrentThread();
-  if (NS_WARN_IF(!actorChild)) {
-    return;
-  }
-
-  mDataBridgeChild = new BackgroundDataBridgeChild(this);
-  if (!actorChild->SendPBackgroundDataBridgeConstructor(
-          mDataBridgeChild, mChannelChild->ChannelId())) {
-    mDataBridgeChild = nullptr;
-  }
-}
-
 void HttpBackgroundChannelChild::OnChannelClosed() {
   LOG(("HttpBackgroundChannelChild::OnChannelClosed [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
@@ -71,11 +55,6 @@ void HttpBackgroundChannelChild::OnChannelClosed() {
 
   // Remove pending IPC messages as well.
   mQueuedRunnables.Clear();
-
-  if (mDataBridgeChild) {
-    mDataBridgeChild->Destroy();
-    mDataBridgeChild = nullptr;
-  }
 }
 
 void HttpBackgroundChannelChild::OnStartRequestReceived() {
@@ -119,18 +98,8 @@ bool HttpBackgroundChannelChild::CreateBackgroundChannel() {
   return true;
 }
 
-bool HttpBackgroundChannelChild::IsWaitingOnStartRequest(
-    bool aDataFromSocketProcess) {
+bool HttpBackgroundChannelChild::IsWaitingOnStartRequest() {
   MOZ_ASSERT(OnSocketThread());
-
-  // When data is from socket process, it is possible that both mStartSent and
-  // mStartReceived are false here. We need to wait until OnStartRequest sent
-  // from parent process.
-  // TODO: We can remove this code when diversion is removed in bug 1604448.
-  if (aDataFromSocketProcess) {
-    return !mStartReceived;
-  }
-
   // Need to wait for OnStartRequest if it is sent by
   // parent process but not received by content process.
   return (mStartSent && !mStartReceived);
@@ -148,29 +117,25 @@ IPCResult HttpBackgroundChannelChild::RecvOnStartRequestSent() {
 
 IPCResult HttpBackgroundChannelChild::RecvOnTransportAndData(
     const nsresult& aChannelStatus, const nsresult& aTransportStatus,
-    const uint64_t& aOffset, const uint32_t& aCount, const nsCString& aData,
-    const bool& aDataFromSocketProcess) {
-  LOG(
-      ("HttpBackgroundChannelChild::RecvOnTransportAndData [this=%p, "
-       "aDataFromSocketProcess=%d]\n",
-       this, aDataFromSocketProcess));
+    const uint64_t& aOffset, const uint32_t& aCount, const nsCString& aData) {
+  LOG(("HttpBackgroundChannelChild::RecvOnTransportAndData [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
 
   if (NS_WARN_IF(!mChannelChild)) {
     return IPC_OK();
   }
 
-  if (IsWaitingOnStartRequest(aDataFromSocketProcess)) {
+  if (IsWaitingOnStartRequest()) {
     LOG(("  > pending until OnStartRequest [offset=%" PRIu64 " count=%" PRIu32
          "]\n",
          aOffset, aCount));
 
     mQueuedRunnables.AppendElement(
         NewRunnableMethod<const nsresult, const nsresult, const uint64_t,
-                          const uint32_t, const nsCString, bool>(
+                          const uint32_t, const nsCString>(
             "HttpBackgroundChannelChild::RecvOnTransportAndData", this,
             &HttpBackgroundChannelChild::RecvOnTransportAndData, aChannelStatus,
-            aTransportStatus, aOffset, aCount, aData, aDataFromSocketProcess));
+            aTransportStatus, aOffset, aCount, aData));
 
     return IPC_OK();
   }

@@ -47,9 +47,6 @@ class BackgroundParentImpl : public PBackgroundParent,
   virtual already_AddRefed<PBackgroundIDBFactoryParent>
   AllocPBackgroundIDBFactoryParent(const LoggingInfo& aLoggingInfo) override;
 
-  virtual already_AddRefed<net::PBackgroundDataBridgeParent>
-  AllocPBackgroundDataBridgeParent(const uint64_t& aChannelID) override;
-
   virtual mozilla::ipc::IPCResult RecvPBackgroundIDBFactoryConstructor(
       PBackgroundIDBFactoryParent* aActor,
       const LoggingInfo& aLoggingInfo) override;

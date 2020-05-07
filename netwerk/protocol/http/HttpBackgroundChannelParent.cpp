@@ -192,7 +192,7 @@ bool HttpBackgroundChannelParent::OnTransportAndData(
   }
 
   return SendOnTransportAndData(aChannelStatus, aTransportStatus, aOffset,
-                                aCount, aData, false);
+                                aCount, aData);
 }
 
 bool HttpBackgroundChannelParent::OnStopRequest(
