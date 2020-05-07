@@ -133,13 +133,7 @@ strong {
 }
 
 .tooltip-xul-wrapper .tooltip-container {
-  /**
-   * As the width/height of xul:panel (.tooltip-xul-wrapper) is dependent on the
-   * width/height of the inner content. Thus, if "absolute" position here, as the
-   * width/height that are conveyed to the panel will be zero, the tooltip will be
-   * invisible.
-   */
-  position: static;
+  position: absolute;
 }
 
 .tooltip-top {
