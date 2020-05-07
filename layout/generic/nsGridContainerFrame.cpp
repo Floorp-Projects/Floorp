@@ -1438,7 +1438,21 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
       }
     }
     ExpandRepeatLineNames(!!aRange, aTracks);
-    mTemplateLinesEnd = mExpandedLineNames.Length() + mRepeatEndDelta;
+    if (mHasRepeatAuto) {
+      // We need mTemplateLinesEnd to be after all line names.
+      // mExpandedLineNames has one repetition of the repeat(auto-fit/fill)
+      // track name lists already, so we must subtract the number of repeat
+      // track name lists to get to the number of non-repeat tracks, minus 2
+      // because the first and last line name lists are shared with the
+      // preceding and following non-repeat line name lists. We then add
+      // mRepeatEndDelta to include the interior line name lists from repeat
+      // tracks.
+      mTemplateLinesEnd = mExpandedLineNames.Length() -
+                          (mTrackAutoRepeatLineNames.Length() - 2) +
+                          mRepeatEndDelta;
+    } else {
+      mTemplateLinesEnd = mExpandedLineNames.Length();
+    }
     MOZ_ASSERT(mHasRepeatAuto || mRepeatEndDelta <= 0);
     MOZ_ASSERT(!mHasRepeatAuto || aRange ||
                (mExpandedLineNames.Length() >= 2 &&
@@ -1927,13 +1941,13 @@ class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap {
   Span<const StyleOwnedSlice<StyleCustomIdent>> mTrackAutoRepeatLineNames;
   // The index of the repeat(auto-fill/fit) track, or zero if there is none.
   uint32_t mRepeatAutoStart;
-  // The (hypothetical) index of the last such repeat() track.
+  // The index one past the end of the repeat(auto-fill/fit) tracks. Equal to
+  // mRepeatAutoStart if there are no repeat(auto-fill/fit) tracks.
   uint32_t mRepeatAutoEnd;
-  // The difference between mTemplateLinesEnd and mExpandedLineNames.Length().
+  // The total number of repeat tracks minus 1.
   int32_t mRepeatEndDelta;
   // The end of the line name lists with repeat(auto-fill/fit) tracks accounted
-  // for.  It is equal to mExpandedLineNames.Length() when a repeat()
-  // track generates one track (making mRepeatEndDelta == 0).
+  // for.
   uint32_t mTemplateLinesEnd;
 
   // The parent line map, or null if this map isn't for a subgrid.
