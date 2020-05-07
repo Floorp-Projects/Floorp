@@ -4067,17 +4067,21 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
     return NS_ERROR_EDITOR_DESTROYED;
   }
 
+  HowToHandleCollapsedRange howToHandleCollapsedRange =
+      EditorBase::HowToHandleCollapsedRangeFor(aDirectionAndAmount);
   if (NS_WARN_IF(!SelectionRefPtr()->RangeCount()) ||
-      NS_WARN_IF(
-          SelectionRefPtr()->IsCollapsed() &&
-          EditorBase::HowToHandleCollapsedRangeFor(aDirectionAndAmount) ==
-              HowToHandleCollapsedRange::Ignore)) {
+      NS_WARN_IF(SelectionRefPtr()->IsCollapsed() &&
+                 howToHandleCollapsedRange ==
+                     HowToHandleCollapsedRange::Ignore)) {
+    NS_ASSERTION(
+        false,
+        "For avoiding to throw incompatible exception for `execCommand`, fix "
+        "the caller");
     return NS_ERROR_FAILURE;
   }
 
   RefPtr<EditAggregateTransaction> deleteSelectionTransaction =
-      CreateTransactionForDeleteSelection(
-          EditorBase::HowToHandleCollapsedRangeFor(aDirectionAndAmount));
+      CreateTransactionForDeleteSelection(howToHandleCollapsedRange);
   if (!deleteSelectionTransaction) {
     NS_WARNING("EditorBase::CreateTransactionForDeleteSelection() failed");
     return NS_ERROR_FAILURE;
