@@ -48,7 +48,7 @@ void VideoBridgeParent::Open(Endpoint<PVideoBridgeParent>&& aEndpoint,
                              VideoBridgeSource aSource) {
   RefPtr<VideoBridgeParent> parent = new VideoBridgeParent(aSource);
 
-  CompositorThreadHolder::Loop()->PostTask(
+  CompositorThread()->Dispatch(
       NewRunnableMethod<Endpoint<PVideoBridgeParent>&&>(
           "gfx::layers::VideoBridgeParent::Bind", parent,
           &VideoBridgeParent::Bind, std::move(aEndpoint)));

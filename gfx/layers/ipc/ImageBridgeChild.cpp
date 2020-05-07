@@ -10,7 +10,6 @@
 #include "ImageContainer.h"              // for ImageContainer
 #include "Layers.h"                      // for Layer, etc
 #include "ShadowLayers.h"                // for ShadowLayerForwarder
-#include "base/message_loop.h"           // for MessageLoop
 #include "base/platform_thread.h"        // for PlatformThread
 #include "base/process.h"                // for ProcessId
 #include "base/task.h"                   // for NewRunnableFunction, etc
@@ -38,8 +37,8 @@
 #include "nsISupportsImpl.h"         // for ImageContainer::AddRef, etc
 #include "nsTArray.h"                // for AutoTArray, nsTArray, etc
 #include "nsTArrayForwardDeclare.h"  // for AutoTArray
+#include "nsThread.h"
 #include "nsThreadUtils.h"           // for NS_IsMainThread
-#include "nsXULAppAPI.h"             // for XRE_GetIOMessageLoop
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"  // for StaticRefPtr
 #include "mozilla/layers/TextureClient.h"
@@ -172,7 +171,10 @@ void ImageBridgeChild::CancelWaitForNotifyNotUsed(uint64_t aTextureId) {
 // Singleton
 static StaticMutex sImageBridgeSingletonLock;
 static StaticRefPtr<ImageBridgeChild> sImageBridgeChildSingleton;
-static Thread* sImageBridgeChildThread = nullptr;
+// sImageBridgeChildThread cannot be converted to use a generic
+// nsISerialEventTarget (which may be backed by a threadpool) until bug 1634846
+// is addressed. Therefore we keep it as an nsIThread here.
+static StaticRefPtr<nsIThread> sImageBridgeChildThread;
 
 // dispatched function
 void ImageBridgeChild::ShutdownStep1(SynchronousTask* aTask) {
@@ -293,8 +295,6 @@ void ImageBridgeChild::ForgetImageContainer(const CompositableHandle& aHandle) {
   mImageContainerListeners.erase(aHandle.Value());
 }
 
-Thread* ImageBridgeChild::GetThread() const { return sImageBridgeChildThread; }
-
 /* static */
 RefPtr<ImageBridgeChild> ImageBridgeChild::GetSingleton() {
   StaticMutexAutoLock lock(sImageBridgeSingletonLock);
@@ -310,7 +310,7 @@ void ImageBridgeChild::UpdateImageClient(RefPtr<ImageContainer> aContainer) {
     RefPtr<Runnable> runnable =
         WrapRunnable(RefPtr<ImageBridgeChild>(this),
                      &ImageBridgeChild::UpdateImageClient, aContainer);
-    GetMessageLoop()->PostTask(runnable.forget());
+    GetThread()->Dispatch(runnable.forget());
     return;
   }
 
@@ -355,7 +355,7 @@ void ImageBridgeChild::UpdateAsyncCanvasRenderer(
   RefPtr<Runnable> runnable = WrapRunnable(
       RefPtr<ImageBridgeChild>(this),
       &ImageBridgeChild::UpdateAsyncCanvasRendererSync, &task, aWrapper);
-  GetMessageLoop()->PostTask(runnable.forget());
+  GetThread()->Dispatch(runnable.forget());
 
   task.Wait();
 }
@@ -409,7 +409,7 @@ void ImageBridgeChild::FlushAllImages(ImageClient* aClient,
   RefPtr<Runnable> runnable = WrapRunnable(
       RefPtr<ImageBridgeChild>(this), &ImageBridgeChild::FlushAllImagesSync,
       &task, aClient, aContainer);
-  GetMessageLoop()->PostTask(runnable.forget());
+  GetThread()->Dispatch(runnable.forget());
 
   task.Wait();
 }
@@ -454,9 +454,11 @@ bool ImageBridgeChild::InitForContent(Endpoint<PImageBridgeChild>&& aEndpoint,
   gfxPlatform::GetPlatform();
 
   if (!sImageBridgeChildThread) {
-    sImageBridgeChildThread = new Thread("ImageBridgeChild");
-    bool success = sImageBridgeChildThread->Start();
-    MOZ_RELEASE_ASSERT(success, "Failed to start ImageBridgeChild thread!");
+    nsCOMPtr<nsIThread> thread;
+    nsresult rv = NS_NewNamedThread("ImageBridgeChld", getter_AddRefs(thread));
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv),
+                       "Failed to start ImageBridgeChild thread!");
+    sImageBridgeChildThread = thread.forget();
   }
 
   RefPtr<ImageBridgeChild> child = new ImageBridgeChild(aNamespace);
@@ -464,7 +466,7 @@ bool ImageBridgeChild::InitForContent(Endpoint<PImageBridgeChild>&& aEndpoint,
   RefPtr<Runnable> runnable = NewRunnableMethod<Endpoint<PImageBridgeChild>&&>(
       "layers::ImageBridgeChild::Bind", child, &ImageBridgeChild::Bind,
       std::move(aEndpoint));
-  child->GetMessageLoop()->PostTask(runnable.forget());
+  child->GetThread()->Dispatch(runnable.forget());
 
   // Assign this after so other threads can't post messages before we connect to
   // IPDL.
@@ -501,9 +503,8 @@ void ImageBridgeChild::Bind(Endpoint<PImageBridgeChild>&& aEndpoint) {
 }
 
 void ImageBridgeChild::BindSameProcess(RefPtr<ImageBridgeParent> aParent) {
-  MessageLoop* parentMsgLoop = aParent->GetMessageLoop();
   ipc::MessageChannel* parentChannel = aParent->GetIPCChannel();
-  Open(parentChannel, parentMsgLoop, mozilla::ipc::ChildSide);
+  Open(parentChannel, aParent->GetThread(), mozilla::ipc::ChildSide);
 
   // This reference is dropped in DeallocPImageBridgeChild.
   this->AddRef();
@@ -517,7 +518,6 @@ void ImageBridgeChild::ShutDown() {
 
   ShutdownSingleton();
 
-  delete sImageBridgeChildThread;
   sImageBridgeChildThread = nullptr;
 }
 
@@ -540,7 +540,7 @@ void ImageBridgeChild::WillShutdown() {
     RefPtr<Runnable> runnable =
         WrapRunnable(RefPtr<ImageBridgeChild>(this),
                      &ImageBridgeChild::ShutdownStep1, &task);
-    GetMessageLoop()->PostTask(runnable.forget());
+    GetThread()->Dispatch(runnable.forget());
 
     task.Wait();
   }
@@ -551,7 +551,7 @@ void ImageBridgeChild::WillShutdown() {
     RefPtr<Runnable> runnable =
         WrapRunnable(RefPtr<ImageBridgeChild>(this),
                      &ImageBridgeChild::ShutdownStep2, &task);
-    GetMessageLoop()->PostTask(runnable.forget());
+    GetThread()->Dispatch(runnable.forget());
 
     task.Wait();
   }
@@ -563,17 +563,18 @@ void ImageBridgeChild::InitSameProcess(uint32_t aNamespace) {
   MOZ_ASSERT(!sImageBridgeChildSingleton);
   MOZ_ASSERT(!sImageBridgeChildThread);
 
-  sImageBridgeChildThread = new Thread("ImageBridgeChild");
-  if (!sImageBridgeChildThread->IsRunning()) {
-    sImageBridgeChildThread->Start();
-  }
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_NewNamedThread("ImageBridgeChld", getter_AddRefs(thread));
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv),
+                     "Failed to start ImageBridgeChild thread!");
+  sImageBridgeChildThread = thread.forget();
 
   RefPtr<ImageBridgeChild> child = new ImageBridgeChild(aNamespace);
   RefPtr<ImageBridgeParent> parent = ImageBridgeParent::CreateSameProcess();
 
   RefPtr<Runnable> runnable =
       WrapRunnable(child, &ImageBridgeChild::BindSameProcess, parent);
-  child->GetMessageLoop()->PostTask(runnable.forget());
+  child->GetThread()->Dispatch(runnable.forget());
 
   // Assign this after so other threads can't post messages before we connect to
   // IPDL.
@@ -590,15 +591,15 @@ void ImageBridgeChild::InitWithGPUProcess(
   MOZ_ASSERT(!sImageBridgeChildSingleton);
   MOZ_ASSERT(!sImageBridgeChildThread);
 
-  sImageBridgeChildThread = new Thread("ImageBridgeChild");
-  if (!sImageBridgeChildThread->IsRunning()) {
-    sImageBridgeChildThread->Start();
-  }
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_NewNamedThread("ImageBridgeChld", getter_AddRefs(thread));
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv),
+                     "Failed to start ImageBridgeChild thread!");
+  sImageBridgeChildThread = thread.forget();
 
   RefPtr<ImageBridgeChild> child = new ImageBridgeChild(aNamespace);
 
-  MessageLoop* loop = child->GetMessageLoop();
-  loop->PostTask(NewRunnableMethod<Endpoint<PImageBridgeChild>&&>(
+  child->GetThread()->Dispatch(NewRunnableMethod<Endpoint<PImageBridgeChild>&&>(
       "layers::ImageBridgeChild::Bind", child, &ImageBridgeChild::Bind,
       std::move(aEndpoint)));
 
@@ -612,12 +613,11 @@ void ImageBridgeChild::InitWithGPUProcess(
 
 bool InImageBridgeChildThread() {
   return sImageBridgeChildThread &&
-         sImageBridgeChildThread->thread_id() == PlatformThread::CurrentId();
+         sImageBridgeChildThread->IsOnCurrentThread();
 }
 
-MessageLoop* ImageBridgeChild::GetMessageLoop() const {
-  return sImageBridgeChildThread ? sImageBridgeChildThread->message_loop()
-                                 : nullptr;
+nsISerialEventTarget* ImageBridgeChild::GetThread() const {
+  return sImageBridgeChildThread;
 }
 
 /* static */
@@ -697,7 +697,7 @@ RefPtr<ImageClient> ImageBridgeChild::CreateImageClient(
   RefPtr<Runnable> runnable = WrapRunnable(
       RefPtr<ImageBridgeChild>(this), &ImageBridgeChild::CreateImageClientSync,
       &task, &result, aType, aImageContainer);
-  GetMessageLoop()->PostTask(runnable.forget());
+  GetThread()->Dispatch(runnable.forget());
 
   task.Wait();
 
@@ -733,7 +733,7 @@ already_AddRefed<CanvasClient> ImageBridgeChild::CreateCanvasClient(
   RefPtr<Runnable> runnable = WrapRunnable(
       RefPtr<ImageBridgeChild>(this), &ImageBridgeChild::CreateCanvasClientSync,
       &task, aType, aFlag, &result);
-  GetMessageLoop()->PostTask(runnable.forget());
+  GetThread()->Dispatch(runnable.forget());
 
   task.Wait();
 
@@ -807,7 +807,7 @@ bool ImageBridgeChild::DispatchAllocShmemInternal(
   RefPtr<Runnable> runnable = WrapRunnable(
       RefPtr<ImageBridgeChild>(this), &ImageBridgeChild::ProxyAllocShmemNow,
       &task, aSize, aType, aShmem, aUnsafe, &success);
-  GetMessageLoop()->PostTask(runnable.forget());
+  GetThread()->Dispatch(runnable.forget());
 
   task.Wait();
 
@@ -844,7 +844,7 @@ bool ImageBridgeChild::DeallocShmem(ipc::Shmem& aShmem) {
   RefPtr<Runnable> runnable = WrapRunnable(
       RefPtr<ImageBridgeChild>(this), &ImageBridgeChild::ProxyDeallocShmemNow,
       &task, &aShmem, &result);
-  GetMessageLoop()->PostTask(runnable.forget());
+  GetThread()->Dispatch(runnable.forget());
 
   task.Wait();
   return result;
@@ -999,7 +999,7 @@ void ImageBridgeChild::ReleaseCompositable(const CompositableHandle& aHandle) {
     RefPtr<Runnable> runnable =
         WrapRunnable(RefPtr<ImageBridgeChild>(this),
                      &ImageBridgeChild::ReleaseCompositable, aHandle);
-    GetMessageLoop()->PostTask(runnable.forget());
+    GetThread()->Dispatch(runnable.forget());
     return;
   }
 
