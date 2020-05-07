@@ -7688,12 +7688,6 @@
 #endif
 #endif
 
-# Whether we can send OnDataAvailable to content process directly.
-- name: network.send_ODA_to_content_directly
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Telemetry of traffic categories. Whether or not to enable HttpTrafficAnalyzer.
 - name: network.traffic_analyzer.enabled
   type: RelaxedAtomicBool
