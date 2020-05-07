@@ -879,18 +879,17 @@ void nsBaseWidget::ConfigureAPZCTreeManager() {
       });
   mAPZEventState = new APZEventState(this, std::move(callback));
 
-  mSetAllowedTouchBehaviorCallback = [treeManager](
-                                         uint64_t aInputBlockId,
-                                         const nsTArray<TouchBehaviorFlags>&
-                                             aFlags) {
-    MOZ_ASSERT(NS_IsMainThread());
-    APZThreadUtils::RunOnControllerThread(
-        NewRunnableMethod<
-            uint64_t, StoreCopyPassByLRef<CopyableTArray<TouchBehaviorFlags>>>(
-            "layers::IAPZCTreeManager::SetAllowedTouchBehavior", treeManager,
-            &IAPZCTreeManager::SetAllowedTouchBehavior, aInputBlockId,
-            aFlags.Clone()));
-  };
+  mSetAllowedTouchBehaviorCallback =
+      [treeManager](uint64_t aInputBlockId,
+                    const nsTArray<TouchBehaviorFlags>& aFlags) {
+        MOZ_ASSERT(NS_IsMainThread());
+        APZThreadUtils::RunOnControllerThread(
+            NewRunnableMethod<
+                uint64_t, StoreCopyPassByLRef<nsTArray<TouchBehaviorFlags>>>(
+                "layers::IAPZCTreeManager::SetAllowedTouchBehavior",
+                treeManager, &IAPZCTreeManager::SetAllowedTouchBehavior,
+                aInputBlockId, aFlags.Clone()));
+      };
 
   mRootContentController = CreateRootContentController();
   if (mRootContentController) {

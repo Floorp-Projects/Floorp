@@ -433,8 +433,7 @@ struct TextRange;
 class EditCommands;
 class TextRangeArray;
 
-typedef CopyableTArray<OwningNonNull<dom::StaticRange>>
-    OwningNonNullStaticRangeArray;
+typedef nsTArray<OwningNonNull<dom::StaticRange>> OwningNonNullStaticRangeArray;
 
 // FontRange.h
 struct FontRange;
