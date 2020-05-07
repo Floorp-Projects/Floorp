@@ -36,7 +36,8 @@ child:
                            nsresult  transportStatus,
                            uint64_t  offset,
                            uint32_t  count,
-                           nsCString data);
+                           nsCString data,
+                           bool dataFromSocketProcess);
 
   // This is duplicated on PHttpChannel, which gets used for multi-part
   // streams to make synchronization when we get OnStartRequest multiple
