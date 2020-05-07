@@ -45,7 +45,7 @@ class NeckoParent : public PNeckoParent {
    * Returns null if successful, or an error string if failed.
    */
   [[nodiscard]] static const char* CreateChannelLoadContext(
-      const PBrowserOrId& aBrowser, PContentParent* aContent,
+      PBrowserParent* aBrowser, PContentParent* aContent,
       const SerializedLoadContext& aSerialized,
       nsIPrincipal* aRequestingPrincipal, nsCOMPtr<nsILoadContext>& aResult);
 
@@ -90,10 +90,10 @@ class NeckoParent : public PNeckoParent {
   bool mSocketProcessBridgeInited;
 
   already_AddRefed<PHttpChannelParent> AllocPHttpChannelParent(
-      const PBrowserOrId&, const SerializedLoadContext&,
+      PBrowserParent*, const SerializedLoadContext&,
       const HttpChannelCreationArgs& aOpenArgs);
   virtual mozilla::ipc::IPCResult RecvPHttpChannelConstructor(
-      PHttpChannelParent* aActor, const PBrowserOrId& aBrowser,
+      PHttpChannelParent* aActor, PBrowserParent* aBrowser,
       const SerializedLoadContext& aSerialized,
       const HttpChannelCreationArgs& aOpenArgs) override;
 
@@ -111,15 +111,15 @@ class NeckoParent : public PNeckoParent {
 
   bool DeallocPCookieServiceParent(PCookieServiceParent*);
   PFTPChannelParent* AllocPFTPChannelParent(
-      const PBrowserOrId& aBrowser, const SerializedLoadContext& aSerialized,
+      PBrowserParent* aBrowser, const SerializedLoadContext& aSerialized,
       const FTPChannelCreationArgs& aOpenArgs);
   virtual mozilla::ipc::IPCResult RecvPFTPChannelConstructor(
-      PFTPChannelParent* aActor, const PBrowserOrId& aBrowser,
+      PFTPChannelParent* aActor, PBrowserParent* aBrowser,
       const SerializedLoadContext& aSerialized,
       const FTPChannelCreationArgs& aOpenArgs) override;
   bool DeallocPFTPChannelParent(PFTPChannelParent*);
   PWebSocketParent* AllocPWebSocketParent(
-      const PBrowserOrId& browser, const SerializedLoadContext& aSerialized,
+      PBrowserParent* browser, const SerializedLoadContext& aSerialized,
       const uint32_t& aSerial);
   bool DeallocPWebSocketParent(PWebSocketParent*);
   PTCPSocketParent* AllocPTCPSocketParent(const nsString& host,
