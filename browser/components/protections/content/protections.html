@@ -213,10 +213,20 @@
                 <!-- Insert Lockwise card title here. -->
               </h2>
               <p id="lockwise-header-content" class="content">
-                <!-- Insert Lockwise header content here. -->
+                <span>
+                  <!-- Insert Lockwise header content here. -->
+                </span>
+                <a target="_blank" id="lockwise-how-it-works" data-l10n-id="lockwise-how-it-works-link" href=""></a>
               </p>
             </div>
-            <button id="open-about-logins-button" class="primary" data-l10n-id="protection-report-view-logins-button"></button>
+            <button id="save-passwords-button" class="primary" data-l10n-id="protection-report-save-passwords-button"></button>
+            <div class="lockwise-scanned-wrapper">
+                <img class="icon-small" id="lockwise-scanned-icon" />
+                <span id="lockwise-scanned-text" class="content">
+                  <!-- Display message for stored logins here. -->
+                </span>
+              </div>
+            <button id="manage-passwords-button" class="primary" data-l10n-id="protection-report-manage-passwords-button"></button>
           </div>
         </div>
         <div class="card-body hidden">
@@ -233,18 +243,6 @@
                     <a id="lockwise-ios-inline-link" target="_blank" data-l10n-name="lockwise-ios-inline-link"></a>
                   </span>
                 </p>
-              </span>
-            </div>
-            <div class="has-logins hidden">
-              <span class="number-of-logins block">
-                <!-- Display number of stored logins here. -->
-              </span>
-              <span class="passwords-stored-text">
-                <img class="icon-small" src= "chrome://browser/skin/login.svg"/>
-                <span id="lockwise-passwords-stored">
-                  <!-- Display message for stored logins here. -->
-                  <a target="_blank" id="lockwise-how-it-works" data-l10n-name="lockwise-how-it-works" href=""></a>
-                </span>
               </span>
             </div>
           </div>
