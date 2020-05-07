@@ -224,7 +224,7 @@ bool SharedMessageBody::FromMessagesToSharedChild(
 bool SharedMessageBody::FromSharedToMessagesParent(
     PBackgroundParent* aManager,
     const nsTArray<RefPtr<SharedMessageBody>>& aData,
-    FallibleTArray<MessageData>& aArray) {
+    nsTArray<MessageData>& aArray) {
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aArray.IsEmpty());
 
@@ -233,7 +233,7 @@ bool SharedMessageBody::FromSharedToMessagesParent(
   }
 
   for (auto& data : aData) {
-    MessageData* message = aArray.AppendElement(mozilla::fallible);
+    MessageData* message = aArray.AppendElement();
     message->agentClusterId() = data->mAgentClusterId;
 
     if (data->mCloneData) {

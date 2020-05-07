@@ -149,7 +149,7 @@ bool MessagePortService::RequestEntangling(MessagePortParent* aParent,
     // that reverse destruction order works for us.
     FallibleTArray<RefPtr<SharedMessageBody>> messages(
         std::move(data->mMessages));
-    FallibleTArray<MessageData> array;
+    nsTArray<MessageData> array;
     if (!SharedMessageBody::FromSharedToMessagesParent(aParent->Manager(),
                                                        messages, array)) {
       CloseAll(aParent->ID());
@@ -157,7 +157,7 @@ bool MessagePortService::RequestEntangling(MessagePortParent* aParent,
     }
 
     // We can entangle the port.
-    if (!aParent->Entangled(array)) {
+    if (!aParent->Entangled(std::move(array))) {
       CloseAll(aParent->ID());
       return false;
     }
@@ -232,13 +232,13 @@ bool MessagePortService::DisentanglePort(
   data->mParent = nextParent;
   data->mNextParents.RemoveElementAt(index);
 
-  FallibleTArray<MessageData> array;
+  nsTArray<MessageData> array;
   if (!SharedMessageBody::FromSharedToMessagesParent(data->mParent->Manager(),
                                                      aMessages, array)) {
     return false;
   }
 
-  Unused << data->mParent->Entangled(array);
+  Unused << data->mParent->Entangled(nsTArray{std::move(array)});
   return true;
 }
 
@@ -354,7 +354,7 @@ bool MessagePortService::PostMessages(
   // If the parent can send data to the child, let's proceed.
   if (data->mParent && data->mParent->CanSendData()) {
     {
-      FallibleTArray<MessageData> messages;
+      nsTArray<MessageData> messages;
       if (!SharedMessageBody::FromSharedToMessagesParent(
               data->mParent->Manager(), data->mMessages, messages)) {
         return false;
