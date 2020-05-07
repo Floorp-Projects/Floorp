@@ -833,15 +833,6 @@ bool CompositorBridgeParent::ScheduleResumeOnCompositorThread(int x, int y,
   return !mPaused;
 }
 
-void CompositorBridgeParent::ScheduleTask(
-    already_AddRefed<CancelableRunnable> task, int time) {
-  if (time == 0) {
-    MessageLoop::current()->PostTask(std::move(task));
-  } else {
-    MessageLoop::current()->PostDelayedTask(std::move(task), time);
-  }
-}
-
 void CompositorBridgeParent::UpdatePaintTime(LayerTransactionParent* aLayerTree,
                                              const TimeDuration& aPaintTime) {
   // We get a lot of paint timings for things with empty transactions.
@@ -1234,7 +1225,12 @@ void CompositorBridgeParent::ScheduleRotationOnCompositorThread(
         "layers::CompositorBridgeParent::ForceComposition", this,
         &CompositorBridgeParent::ForceComposition);
     mForceCompositionTask = task;
-    ScheduleTask(task.forget(), StaticPrefs::layers_orientation_sync_timeout());
+    if (StaticPrefs::layers_orientation_sync_timeout() == 0) {
+      CompositorThreadHolder::Loop()->PostTask(task.forget());
+    } else {
+      CompositorThreadHolder::Loop()->PostDelayedTask(
+          task.forget(), StaticPrefs::layers_orientation_sync_timeout());
+    }
   }
 }
 
