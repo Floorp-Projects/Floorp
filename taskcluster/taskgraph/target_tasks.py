@@ -554,14 +554,23 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
             return True
 
         # Run raptor scn-power-idle and speedometer for fenix and fennec68
-        if 'raptor-scn-power-idle' in try_name \
-                and 'pgo' in platform \
-                and ('-fenix' in try_name or '-fennec68' in try_name):
-            return True
-        if 'raptor-speedometer' in try_name \
-                and 'pgo' in platform \
-                and ('-fenix' in try_name or '-fennec68' in try_name):
-            return True
+        if 'pgo' in platform:
+            if 'raptor-scn-power-idle' in try_name \
+                    and ('-fenix' in try_name or '-fennec68' in try_name):
+                return True
+            if 'raptor-speedometer' in try_name \
+                    and '-fennec68' in try_name:
+                return True
+            if 'raptor-speedometer' in try_name \
+                    and 'power' in try_name \
+                    and 'fenix' in try_name:
+                return True
+
+        # Select browsertime tasks
+        if 'browsertime' in try_name and 'pgo' in platform:
+            if 'speedometer-fenix' in try_name:
+                return True
+            return False
 
         # Run the live site tests
         if 'browsertime' in try_name \
@@ -877,7 +886,10 @@ def target_tasks_raptor_tp6m(full_task_graph, parameters, graph_config):
         if '-cold' in try_name and 'pgo' in platform:
             if '-1-refbrow-' in try_name:
                 return True
-            if '-1-fenix-' in try_name:
+            # Get browsertime amazon smoke tests
+            if 'browsertime' in try_name and \
+               'amazon' in try_name and 'search' not in try_name and \
+               'fenix' in try_name:
                 return True
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]

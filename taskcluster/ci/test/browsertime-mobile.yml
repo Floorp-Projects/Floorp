@@ -8,19 +8,11 @@ job-defaults:
     workdir: /builds/worker
     run-on-projects:
         by-app:
-            fenix:
+            refbrow: []
+            default:
                 by-test-platform:
                     android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
                     default: []
-            geckoview:
-                by-test-platform:
-                    android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
-                    default: []
-            fennec:
-                by-test-platform:
-                    android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
-                    default: []
-            default: []
     tier: 3
     target:
         by-app:
@@ -109,10 +101,18 @@ browsertime-tp6m:
                 - amazon
                 - youtube
     apps: ["geckoview", "fenix", "fennec", "chrome-m"]
+    tier:
+        by-raptor-test:
+            amazon:
+                by-app:
+                    fenix: 1
+                    default: 3
+            default: 3
     run-on-projects:
         by-raptor-test:
             amazon:
                 by-app:
+                    fenix: []
                     chrome-m: []
                     default:
                         by-test-platform:
@@ -120,6 +120,7 @@ browsertime-tp6m:
                             default: []
             youtube:
                 by-app:
+                    fenix: []
                     chrome-m: []
                     default:
                         by-test-platform:
@@ -190,6 +191,17 @@ browsertime-tp6m-profiling:
 browsertime-speedometer-mobile:
     description: "Browsertime Speedometer on Android"
     apps: ["geckoview", "fenix", "fennec"]
+    tier:
+        by-app:
+            fenix: 1
+            default: 3
+    run-on-projects:
+        by-app:
+            fenix: []
+            default:
+                by-test-platform:
+                    android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
+                    default: []
     treeherder-symbol: Btime(sp)
     mozharness:
         extra-options:
