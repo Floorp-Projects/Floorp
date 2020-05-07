@@ -320,7 +320,7 @@ class FunctionBox : public SharedContext {
 
   // Index into CompilationInfo::funcData, which contains the function
   // information, either a JSFunction* (for a FunctionBox representing a real
-  // function) or a FunctionCreationData.
+  // function) or a ScriptStencilBase.
   size_t funcDataIndex_ = (size_t)(-1);
 
  public:
@@ -368,9 +368,9 @@ class FunctionBox : public SharedContext {
 
   JSFunction* createFunction(JSContext* cx);
 
-  MutableHandle<FunctionCreationData> functionCreationData() const;
+  MutableHandle<ScriptStencilBase> functionStencil() const;
 
-  bool hasFunctionCreationData() const;
+  bool hasFunctionStencil() const;
   bool hasFunction() const;
 
 #ifdef DEBUG
