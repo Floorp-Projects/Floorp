@@ -416,6 +416,16 @@ bool WarpCacheIRTranspiler::emitLoadInt32ArrayLengthResult(ObjOperandId objId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitLoadTypedArrayLengthResult(ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* length = MTypedArrayLength::New(alloc(), obj);
+  add(length);
+
+  pushResult(length);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadStringLengthResult(StringOperandId strId) {
   MDefinition* str = getOperand(strId);
 
