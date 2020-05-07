@@ -106,6 +106,9 @@ class App extends PureComponent {
     this.onToggleUserAgentInput = this.onToggleUserAgentInput.bind(this);
     this.onUpdateDeviceDisplayed = this.onUpdateDeviceDisplayed.bind(this);
     this.onUpdateDeviceModal = this.onUpdateDeviceModal.bind(this);
+    this.onUpdateDeviceSelectorMenu = this.onUpdateDeviceSelectorMenu.bind(
+      this
+    );
   }
 
   componentWillUnmount() {
@@ -400,6 +403,23 @@ class App extends PureComponent {
     }
   }
 
+  onUpdateDeviceSelectorMenu(isOpen) {
+    if (Services.prefs.getBoolPref("devtools.responsive.browserUI.enabled")) {
+      const rdmToolbar = window.parent.document.querySelector(".rdm-toolbar");
+      const browserStackEl = rdmToolbar.parentNode;
+
+      // Guarantee a fixed height for the HTMLTooltip to render inside.
+      const style = window.getComputedStyle(browserStackEl);
+      rdmToolbar.style.height = style.height;
+
+      if (isOpen) {
+        browserStackEl.classList.add("device-selector-menu-opened");
+      }
+
+      window.postMessage({ type: "update-device-toolbar-height", isOpen }, "*");
+    }
+  }
+
   render() {
     const { devices, networkThrottling, screenshot, viewports } = this.props;
 
@@ -427,6 +447,7 @@ class App extends PureComponent {
       onToggleUserAgentInput,
       onUpdateDeviceDisplayed,
       onUpdateDeviceModal,
+      onUpdateDeviceSelectorMenu,
     } = this;
 
     if (!viewports.length) {
@@ -465,6 +486,7 @@ class App extends PureComponent {
         onToggleReloadOnUserAgent,
         onToggleUserAgentInput,
         onUpdateDeviceModal,
+        onUpdateDeviceSelectorMenu,
       }),
       !Services.prefs.getBoolPref("devtools.responsive.browserUI.enabled")
         ? Viewports({
