@@ -692,6 +692,7 @@ class AbstractFetchDownloadServiceTest {
             putDownloadExtra(download)
         }
 
+        service.registerNotificationActionsReceiver()
         service.onStartCommand(downloadIntent, 0, 0)
         service.downloadJobs.values.forEach { assertTrue(it.job!!.isActive) }
 
@@ -730,6 +731,7 @@ class AbstractFetchDownloadServiceTest {
             putDownloadExtra(download)
         }
 
+        service.registerNotificationActionsReceiver()
         service.onStartCommand(downloadIntent, 0, 0)
         service.downloadJobs.values.forEach { it.job?.join() }
 
@@ -759,6 +761,7 @@ class AbstractFetchDownloadServiceTest {
                 job = CoroutineScope(IO).launch { while (true) { } }
         )
 
+        service.registerNotificationActionsReceiver()
         service.downloadJobs[download.id] = downloadState
 
         val notification = DownloadNotification.createOngoingDownloadNotification(testContext, downloadState)
@@ -788,13 +791,38 @@ class AbstractFetchDownloadServiceTest {
 
         doReturn(testContext).`when`(service).context
 
+        service.registerNotificationActionsReceiver()
         service.onTaskRemoved(null)
 
+        service.registerNotificationActionsReceiver()
         verify(service).clearAllDownloadsNotificationsAndJobs()
 
         service.onDestroy()
 
         verify(service, times(2)).clearAllDownloadsNotificationsAndJobs()
+    }
+
+    @Test
+    fun `register and unregister notification actions receiver`() = runBlocking {
+        val service = spy(object : AbstractFetchDownloadService() {
+            override val httpClient = client
+        })
+
+        doReturn(testContext).`when`(service).context
+
+        service.onCreate()
+
+        verify(service).registerNotificationActionsReceiver()
+
+        service.onTaskRemoved(null)
+
+        verify(service).unregisterNotificationActionsReceiver()
+
+        service.registerNotificationActionsReceiver()
+
+        service.onDestroy()
+
+        verify(service, times(2)).unregisterNotificationActionsReceiver()
     }
 
     @Test

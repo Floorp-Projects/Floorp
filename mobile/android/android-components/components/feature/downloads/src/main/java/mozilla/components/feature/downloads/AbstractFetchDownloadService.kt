@@ -211,9 +211,13 @@ abstract class AbstractFetchDownloadService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    override fun onCreate() {
+        super.onCreate()
+        registerNotificationActionsReceiver()
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val download = intent?.getDownloadExtra() ?: return START_REDELIVER_INTENT
-        registerForUpdates()
 
         // If the job already exists, then don't create a new ID. This can happen when calling tryAgain
         val foregroundServiceId = downloadJobs[download.id]?.foregroundServiceId ?: Random.nextInt()
@@ -319,7 +323,8 @@ abstract class AbstractFetchDownloadService : Service() {
         clearAllDownloadsNotificationsAndJobs()
     }
 
-    // Cancels all running jobs and remove all notifications
+    // Cancels all running jobs and remove all notifications.
+    // Also cleans any resources that we were holding like broadcastReceivers
     internal fun clearAllDownloadsNotificationsAndJobs() {
         val notificationManager = NotificationManagerCompat.from(context)
 
@@ -331,6 +336,7 @@ abstract class AbstractFetchDownloadService : Service() {
             notificationManager.cancel(state.foregroundServiceId)
             state.job?.cancel()
         }
+        unregisterNotificationActionsReceiver()
     }
 
     internal fun startDownloadJob(downloadId: Long) {
@@ -348,7 +354,8 @@ abstract class AbstractFetchDownloadService : Service() {
         downloadedFile.delete()
     }
 
-    private fun registerForUpdates() {
+    @VisibleForTesting
+    internal fun registerNotificationActionsReceiver() {
         val filter = IntentFilter().apply {
             addAction(ACTION_PAUSE)
             addAction(ACTION_RESUME)
@@ -358,6 +365,11 @@ abstract class AbstractFetchDownloadService : Service() {
         }
 
         context.registerReceiver(broadcastReceiver, filter)
+    }
+
+    @VisibleForTesting
+    internal fun unregisterNotificationActionsReceiver() {
+        context.unregisterReceiver(broadcastReceiver)
     }
 
     @Suppress("ComplexCondition")
