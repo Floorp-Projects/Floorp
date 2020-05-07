@@ -5616,6 +5616,15 @@
   mirror: always
   rust: true
 
+# Visibility level of font families available to CSS font-matching:
+#   1 - only base system fonts
+#   2 - also fonts from optional language packs
+#   3 - also user-installed fonts
+- name: layout.css.font-visibility.level
+  type: RelaxedAtomicInt32
+  value: 3
+  mirror: always
+
 # Is support for GeometryUtils.getBoxQuads enabled?
 - name: layout.css.getBoxQuads.enabled
   type: bool

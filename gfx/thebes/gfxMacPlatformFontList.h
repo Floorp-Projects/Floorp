@@ -196,7 +196,7 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
   gfxFontEntry* PlatformGlobalFontFallback(const uint32_t aCh,
                                            Script aRunScript,
                                            const gfxFontStyle* aMatchStyle,
-                                           FontFamily* aMatchedFamily) override;
+                                           FontFamily& aMatchedFamily) override;
 
   bool UsesSystemFallback() override { return true; }
 
