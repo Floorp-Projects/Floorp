@@ -4,9 +4,6 @@
 
 "use strict";
 
-const { AboutProtectionsParent } = ChromeUtils.import(
-  "resource:///actors/AboutProtectionsParent.jsm"
-);
 const nsLoginInfo = new Components.Constructor(
   "@mozilla.org/login-manager/loginInfo;1",
   Ci.nsILoginInfo,
@@ -86,13 +83,6 @@ add_task(async function() {
     const numberOfLogins = hasLoginsContent.querySelector(
       ".number-of-logins.block"
     );
-    const numberOfSyncedDevices = hasLoginsContent.querySelector(
-      ".number-of-synced-devices.block"
-    );
-    const syncedDevicesStatusText = content.document.querySelector(
-      ".synced-devices-text span"
-    );
-    const syncLink = content.document.getElementById("turn-on-sync");
 
     ok(
       ContentTaskUtils.is_hidden(noLoginsContent),
@@ -103,21 +93,6 @@ add_task(async function() {
       "Content for user with logins is shown."
     );
     is(numberOfLogins.textContent, 1, "One stored login should be displayed");
-
-    info("Also check that content for no synced devices is correct.");
-    is(
-      numberOfSyncedDevices.textContent,
-      0,
-      "Zero synced devices are displayed."
-    );
-    is(
-      syncedDevicesStatusText.getAttribute("data-l10n-id"),
-      "lockwise-connected-device-status",
-      "Not syncing to other devices."
-    );
-
-    info("Check that the link to turn on sync is visible.");
-    ok(ContentTaskUtils.is_visible(syncLink), "Sync link is visible.");
   });
 
   info(
@@ -137,37 +112,6 @@ add_task(async function() {
     );
 
     is(numberOfLogins.textContent, 2, "Two stored logins should be displayed");
-  });
-
-  info(
-    "Mock login data with synced devices and check that the correct number and content is displayed."
-  );
-  AboutProtectionsParent.setTestOverride(mockGetLoginDataWithSyncedDevices(5));
-  await reloadTab(tab);
-
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    await ContentTaskUtils.waitForCondition(() => {
-      const hasLogins = content.document.querySelector(
-        "#lockwise-body-content .has-logins"
-      );
-      return ContentTaskUtils.is_visible(hasLogins);
-    }, "Lockwise card for user with logins is shown.");
-
-    const numberOfSyncedDevices = content.document.querySelector(
-      ".number-of-synced-devices.block"
-    );
-    const manageDevicesLink = content.document.getElementById("manage-devices");
-
-    is(
-      numberOfSyncedDevices.textContent,
-      5,
-      "Five synced devices should be displayed"
-    );
-    info("Check that the link to manage devices is visible.");
-    ok(
-      ContentTaskUtils.is_visible(manageDevicesLink),
-      "Manage devices link is visible."
-    );
   });
 
   info("Disable showing the Lockwise card.");
@@ -196,6 +140,5 @@ add_task(async function() {
   Services.logins.removeLogin(TEST_LOGIN1);
   Services.logins.removeLogin(TEST_LOGIN2);
 
-  AboutProtectionsParent.setTestOverride(null);
   await BrowserTestUtils.removeTab(tab);
 });

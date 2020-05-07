@@ -47,6 +47,8 @@ const mockGetMonitorData = data => {
   };
 };
 
+// Modify AboutProtectionsParent's getMonitorData and getLoginData methods
+// to fake being logged in with Fxa.
 // Modify AboutProtectionsHandler's getLoginData method to fake being logged in with Fxa.
 const mockGetMonitorAndLoginData = data => {
   return {
@@ -55,7 +57,6 @@ const mockGetMonitorAndLoginData = data => {
       return {
         hasFxa: true,
         numLogins: Services.logins.countLogins("", "", ""),
-        numSyncedDevices: 0,
       };
     },
   };
