@@ -43,7 +43,8 @@ parent:
                           int64_t progressMax);
   async OnDataAvailable(nsCString data,
                         uint64_t  offset,
-                        uint32_t  count);
+                        uint32_t  count,
+                        bool      dataSentToChildProcess);
   async OnStopRequest(nsresult status,
                       bool responseIsComplete,
                       int64_t transferSize,
@@ -74,7 +75,8 @@ child:
              uint64_t channelId,
              bool hasTransactionObserver,
              H2PushedStreamArg? pushedStreamArg,
-             PInputChannelThrottleQueue? throttleQueue);
+             PInputChannelThrottleQueue? throttleQueue,
+             bool aIsDocumentLoad);
 
   async UpdateClassOfService(uint32_t classOfService);
   async CancelPump(nsresult status);

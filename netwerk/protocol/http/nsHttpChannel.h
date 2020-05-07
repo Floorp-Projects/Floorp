@@ -198,6 +198,8 @@ class nsHttpChannel final : public HttpBaseChannel,
   void SetWarningReporter(HttpChannelSecurityWarningReporter* aReporter);
   HttpChannelSecurityWarningReporter* GetWarningReporter();
 
+  bool OnDataAlreadySent() { return mDataAlreadySent; }
+
  public: /* internal necko use only */
   uint32_t GetRequestTime() const { return mRequestTime; }
 
@@ -734,6 +736,10 @@ class nsHttpChannel final : public HttpBaseChannel,
   // True if this is a navigation to a page with a different cross origin
   // opener policy ( see ComputeCrossOriginOpenerPolicyMismatch )
   uint32_t mHasCrossOriginOpenerPolicyMismatch : 1;
+
+  // True if the data has already been sent from the socket process to the
+  // content process.
+  uint32_t mDataAlreadySent : 1;
 
   // The origin of the top window, only valid when mTopWindowOriginComputed is
   // true.

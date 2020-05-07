@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PBackgroundDataBridge;
 include protocol PBackgroundIDBFactory;
 include protocol PBackgroundIndexedDBUtils;
 include protocol PBackgroundSDBConnection;
@@ -72,6 +73,7 @@ namespace ipc {
 
 sync protocol PBackground
 {
+  manages PBackgroundDataBridge;
   manages PBackgroundIDBFactory;
   manages PBackgroundIndexedDBUtils;
   manages PBackgroundSDBConnection;
@@ -121,6 +123,8 @@ sync protocol PBackground
 parent:
   // Only called at startup during mochitests to check the basic infrastructure.
   async PBackgroundTest(nsCString testArg);
+
+  async PBackgroundDataBridge(uint64_t channelID);
 
   async PBackgroundIDBFactory(LoggingInfo loggingInfo);
 

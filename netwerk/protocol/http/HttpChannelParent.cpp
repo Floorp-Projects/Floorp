@@ -1691,8 +1691,16 @@ HttpChannelParent::OnDataAvailable(nsIRequest* aRequest,
 
   nsresult transportStatus = NS_NET_STATUS_RECEIVING_FROM;
   RefPtr<nsHttpChannel> httpChannelImpl = do_QueryObject(mChannel);
-  if (httpChannelImpl && httpChannelImpl->IsReadingFromCache()) {
-    transportStatus = NS_NET_STATUS_READING;
+  if (httpChannelImpl) {
+    if (httpChannelImpl->IsReadingFromCache()) {
+      transportStatus = NS_NET_STATUS_READING;
+    }
+
+    if (httpChannelImpl->OnDataAlreadySent()) {
+      LOG(("  OnDataAvailable already sent to the child.\n"));
+      uint32_t n;
+      return aInputStream->ReadSegments(NS_DiscardSegment, nullptr, aCount, &n);
+    }
   }
 
   static uint32_t const kCopyChunkSize = 128 * 1024;

@@ -41,7 +41,7 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   NS_DECL_NSITHREADRETARGETABLEREQUEST
   NS_DECLARE_STATIC_IID_ACCESSOR(HTTP_TRANSACTION_PARENT_IID)
 
-  explicit HttpTransactionParent();
+  explicit HttpTransactionParent(bool aIsDocumentLoad);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -54,9 +54,9 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   mozilla::ipc::IPCResult RecvOnTransportStatus(const nsresult& aStatus,
                                                 const int64_t& aProgress,
                                                 const int64_t& aProgressMax);
-  mozilla::ipc::IPCResult RecvOnDataAvailable(const nsCString& aData,
-                                              const uint64_t& aOffset,
-                                              const uint32_t& aCount);
+  mozilla::ipc::IPCResult RecvOnDataAvailable(
+      const nsCString& aData, const uint64_t& aOffset, const uint32_t& aCount,
+      const bool& aDataSentToChildProcess);
   mozilla::ipc::IPCResult RecvOnStopRequest(
       const nsresult& aStatus, const bool& aResponseIsComplete,
       const int64_t& aTransferSize, const TimingStructArgs& aTimings,
@@ -93,7 +93,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   void DoOnTransportStatus(const nsresult& aStatus, const int64_t& aProgress,
                            const int64_t& aProgressMax);
   void DoOnDataAvailable(const nsCString& aData, const uint64_t& aOffset,
-                         const uint32_t& aCount);
+                         const uint32_t& aCount,
+                         const bool& aDataSentToChildProcess);
   void DoOnStopRequest(
       const nsresult& aStatus, const bool& aResponseIsComplete,
       const int64_t& aTransferSize, const TimingStructArgs& aTimings,
@@ -125,6 +126,8 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   bool mResolvedByTRR;
   int32_t mProxyConnectResponseCode;
   uint64_t mChannelId;
+  bool mDataAlreadySent;
+  bool mIsDocumentLoad;
 
   NetAddr mSelfAddr;
   NetAddr mPeerAddr;
