@@ -32,7 +32,6 @@ include protocol PDocumentChannel;
 
 include IPCStream;
 include NeckoChannelParams;
-include PBrowserOrId;
 include protocol PAltDataOutputStream;
 
 using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
@@ -74,13 +73,13 @@ parent:
   async __delete__();
 
   nested(inside_cpow) async PCookieService();
-  async PHttpChannel(PBrowserOrId browser,
+  async PHttpChannel(nullable PBrowser browser,
                      SerializedLoadContext loadContext,
                      HttpChannelCreationArgs args);
-  async PFTPChannel(PBrowserOrId browser, SerializedLoadContext loadContext,
+  async PFTPChannel(nullable PBrowser browser, SerializedLoadContext loadContext,
                     FTPChannelCreationArgs args);
 
-  async PWebSocket(PBrowserOrId browser, SerializedLoadContext loadContext,
+  async PWebSocket(nullable PBrowser browser, SerializedLoadContext loadContext,
                    uint32_t aSerialID);
   async PTCPServerSocket(uint16_t localPort, uint16_t backlog, bool useArrayBuffers);
   async PUDPSocket(nsIPrincipal principal, nsCString filter);
