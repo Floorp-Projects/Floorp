@@ -12,8 +12,10 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
+import mozilla.components.browser.state.action.MediaAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.MediaState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.tabstray.Tabs
@@ -214,6 +216,33 @@ class TabsTrayPresenterTest {
 
         verify(tabsTray).onTabsChanged(0, 1)
         verify(tabsTray).onTabsChanged(3, 1)
+    }
+
+    @Test
+    fun `tabs tray will get updated if mediaState changes`() {
+        val store = BrowserStore(
+                BrowserState(
+                        tabs = listOf(
+                                createTab("https://www.mozilla.org", id = "a"),
+                                createTab("https://getpocket.com", id = "b"),
+                                createTab("https://developer.mozilla.org", id = "c"),
+                                createTab("https://www.firefox.com", id = "d"),
+                                createTab("https://www.google.com", id = "e")
+                        ),
+                        selectedTabId = "a"
+                )
+        )
+
+        val tabsTray: MockedTabsTray = spy(MockedTabsTray())
+        val presenter = TabsTrayPresenter(tabsTray, store, { true }, mock())
+
+        presenter.start()
+        testDispatcher.advanceUntilIdle()
+
+        store.dispatch(MediaAction.UpdateMediaAggregateAction(store.state.media.aggregate.copy(state = MediaState.State.PLAYING))).joinBlocking()
+        testDispatcher.advanceUntilIdle()
+
+        verify(tabsTray, times(3)).updateTabs(store.state.toTabs())
     }
 
     @Test
