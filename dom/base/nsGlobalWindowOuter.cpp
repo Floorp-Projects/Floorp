@@ -2448,6 +2448,16 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
   RefPtr<BrowsingContext> bc = GetBrowsingContext();
   bc->SetCurrentInnerWindowId(mInnerWindow->WindowID());
 
+  // Init Mixed Content Fields
+  nsCOMPtr<nsIChannel> mixedChannel;
+  mDocShell->GetMixedContentChannel(getter_AddRefs(mixedChannel));
+  // A non null mixedContent channel on the docshell indicates,
+  // that the user has overriden mixed content to allow mixed
+  // content loads to happen.
+  if (mixedChannel && (mixedChannel == aDocument->GetChannel())) {
+    wgc->WindowContext()->SetAllowMixedContent(true);
+  }
+
   // We no longer need the old inner window.  Start its destruction if
   // its not being reused and clear our reference.
   if (doomCurrentInner) {

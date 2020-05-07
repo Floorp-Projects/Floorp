@@ -108,6 +108,12 @@ void WindowContext::SendCommitTransaction(ContentChild* aChild,
   aChild->SendCommitWindowContextTransaction(this, aTxn, aEpoch);
 }
 
+bool WindowContext::CanSet(FieldIndex<IDX_AllowMixedContent>,
+                           const bool& aAllowMixedContent,
+                           ContentParent* aSource) {
+  return mBrowsingContext->CheckOnlyOwningProcessCanSet(aSource);
+}
+
 bool WindowContext::CanSet(FieldIndex<IDX_IsThirdPartyWindow>,
                            const bool& IsThirdPartyWindow,
                            ContentParent* aSource) {
