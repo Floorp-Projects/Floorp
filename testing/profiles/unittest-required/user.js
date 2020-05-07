@@ -66,7 +66,7 @@ user_pref("browser.urlbar.speculativeConnect.enabled", false);
 user_pref("browser.urlbar.suggest.searches", false);
 user_pref("browser.urlbar.usepreloadedtopurls.enabled", false);
 // URIFixup whitelist
-user_pref("browser.fixup.domainsuffixwhitelist.test", true);
+user_pref("browser.fixup.domainwhitelist.mochi.test", true);
 user_pref("browser.warnOnQuit", false);
 // Enable webapps testing mode, which bypasses native installation.
 user_pref("browser.webapps.testing", true);
