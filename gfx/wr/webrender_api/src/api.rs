@@ -1283,7 +1283,6 @@ pub enum ScrollClamping {
 ///
 /// This object is created along with the `Renderer` and it's main use from a
 /// user perspective is to create one or several `RenderApi` objects.
-#[derive(Clone)]
 pub struct RenderApiSender {
     api_sender: Sender<ApiMsg>,
 
@@ -1433,8 +1432,10 @@ impl RenderApi {
     }
 
     ///
-    pub fn clone_sender(&self) -> RenderApiSender {
-        RenderApiSender::new(self.api_sender.clone())
+    pub fn create_sender(&self) -> RenderApiSender {
+        RenderApiSender::new(
+            self.api_sender.clone(),
+        )
     }
 
     /// Add a document to the WebRender instance.
