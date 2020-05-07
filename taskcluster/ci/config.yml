@@ -503,7 +503,7 @@ workers:
             implementation: generic-worker
             os: linux-bitbar
             worker-type: 'gecko-{alias}'
-        t-linux(-large|-xlarge|-xlarge-source):
+        t-linux(-large|-xlarge|-xlarge-source|-metal):
             provisioner: 'gecko-t'
             implementation: docker-worker
             os: linux
