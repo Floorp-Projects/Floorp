@@ -302,8 +302,14 @@
        * Weak reference to an optional frame loader that can be used to influence
        * process selection for this browser.
        * See nsIBrowser.sameProcessAsFrameLoader.
+       *
+       * tabbrowser sets "sameProcessAsFrameLoader" on some browsers before
+       * they are connected. This avoids clearing that out while we're doing
+       * the initial construct(), which is what would read it.
        */
-      this._sameProcessAsFrameLoader = null;
+      if (this.mInitialized) {
+        this._sameProcessAsFrameLoader = null;
+      }
 
       this._loadContext = null;
 
@@ -1282,16 +1288,6 @@
         // Ensures the securityUI is initialized.
         var securityUI = this.securityUI; // eslint-disable-line no-unused-vars
       } catch (e) {}
-
-      // tabbrowser.xml sets "sameProcessAsFrameLoader" as a direct property
-      // on some browsers before they are put into a DOM (and get a
-      // binding).  This hack makes sure that we hold a weak reference to
-      // the other browser (and go through the proper getter and setter).
-      if (this.hasOwnProperty("sameProcessAsFrameLoader")) {
-        var sameProcessAsFrameLoader = this.sameProcessAsFrameLoader;
-        delete this.sameProcessAsFrameLoader;
-        this.sameProcessAsFrameLoader = sameProcessAsFrameLoader;
-      }
 
       if (!this.isRemoteBrowser) {
         // If we've transitioned from remote to non-remote, we no longer need
