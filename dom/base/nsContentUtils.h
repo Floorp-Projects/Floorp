@@ -109,7 +109,6 @@ class nsWrapperCache;
 class nsAttrValue;
 class nsITransferable;
 class nsPIWindowRoot;
-class nsIWindowProvider;
 class nsIReferrerInfo;
 
 struct JSRuntime;
@@ -2096,10 +2095,6 @@ class nsContentUtils {
                "This static variable only makes sense on the main thread!");
     return sScriptBlockerCount == 0;
   }
-
-  // XXXcatalinb: workaround for weird include error when trying to reference
-  // ipdl types in WindowWatcher.
-  static nsIWindowProvider* GetWindowProviderForContentProcess();
 
   // Returns the browser window with the most recent time stamp that is
   // not in private browsing mode.
