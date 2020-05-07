@@ -1156,6 +1156,9 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  RefPtr<BrowsingContext> ourBc = browserParent->GetBrowsingContext();
+  RefPtr<BrowsingContext> otherBc = otherBrowserParent->GetBrowsingContext();
+
   // When we swap docShells, maybe we have to deal with a new page created just
   // for this operation. In this case, the browser code should already have set
   // the correct userContextId attribute value in the owning element, but our
@@ -1164,12 +1167,11 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
   // This is the reason why now we must retrieve the correct value from the
   // usercontextid attribute before comparing our originAttributes with the
   // other one.
-  OriginAttributes ourOriginAttributes = browserParent->OriginAttributesRef();
+  OriginAttributes ourOriginAttributes = ourBc->OriginAttributesRef();
   rv = PopulateOriginContextIdsFromAttributes(ourOriginAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  OriginAttributes otherOriginAttributes =
-      otherBrowserParent->OriginAttributesRef();
+  OriginAttributes otherOriginAttributes = otherBc->OriginAttributesRef();
   rv = aOther->PopulateOriginContextIdsFromAttributes(otherOriginAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3297,7 +3299,6 @@ nsresult nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
   NS_ENSURE_STATE(parentContext);
 
   MOZ_ASSERT(mPendingBrowsingContext->EverAttached());
-  OriginAttributes attrs = mPendingBrowsingContext->OriginAttributesRef();
 
   UIStateChangeType showFocusRings = UIStateChangeType_NoChange;
   uint64_t chromeOuterWindowID = 0;
@@ -3318,9 +3319,8 @@ nsresult nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
 
   uint32_t maxTouchPoints = BrowserParent::GetMaxTouchPoints(mOwnerContent);
 
-  bool tabContextUpdated =
-      aTabContext->SetTabContext(chromeOuterWindowID, showFocusRings, attrs,
-                                 presentationURLStr, maxTouchPoints);
+  bool tabContextUpdated = aTabContext->SetTabContext(
+      chromeOuterWindowID, showFocusRings, presentationURLStr, maxTouchPoints);
   NS_ENSURE_STATE(tabContextUpdated);
 
   return NS_OK;

@@ -97,7 +97,6 @@ nsIWidget* nsWebBrowser::EnsureWidget() {
 /* static */
 already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
     nsIWebBrowserChrome* aContainerWindow, nsIWidget* aParentWidget,
-    const OriginAttributes& aOriginAttributes,
     dom::BrowsingContext* aBrowsingContext,
     dom::WindowGlobalChild* aInitialWindowChild,
     bool aDisableHistory /* = false */) {
@@ -124,7 +123,6 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
   if (NS_WARN_IF(!docShell)) {
     return nullptr;
   }
-  MOZ_ASSERT(aBrowsingContext->OriginAttributesRef() == aOriginAttributes);
   browser->SetDocShell(docShell);
 
   // get the system default window background colour
