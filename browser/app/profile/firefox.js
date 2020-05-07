@@ -1033,15 +1033,7 @@ pref("dom.ipc.shims.enabledWarnings", false);
   // For information on what the level number means, see
   // SetSecurityLevelForGPUProcess() in
   // security/sandbox/win/src/sandboxbroker/sandboxBroker.cpp
-  //
-  // This "-1" value is temporary and means "on if hardware allows it",
-  // which is '0' for Intel GPUs and '1' otherwise. It will be removed once
-  // Bug 1400317 is fixed.
-#if defined(NIGHTLY_BUILD)
-  pref("security.sandbox.gpu.level", -1);
-#else
   pref("security.sandbox.gpu.level", 0);
-#endif
 
   // Controls whether we disable win32k for the processes.
   // true means that win32k system calls are not permitted.
