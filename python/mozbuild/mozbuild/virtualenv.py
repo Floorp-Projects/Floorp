@@ -503,6 +503,9 @@ class VirtualenvManager(object):
         else:
             thismodule = __file__
 
+        # __PYVENV_LAUNCHER__ confuses pip about the python interpreter
+        # See https://bugzilla.mozilla.org/show_bug.cgi?id=1635481
+        os.environ.pop('__PYVENV_LAUNCHER__', None)
         args = [self.python_path, thismodule, 'populate', self.topsrcdir,
                 self.topobjdir, self.virtualenv_root, self.manifest_path]
 
