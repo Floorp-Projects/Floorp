@@ -429,6 +429,8 @@ class Marionette(object):
 
         """
         self.host = "127.0.0.1"  # host
+        if int(port) == 0:
+            port = Marionette.check_port_available(port)
         self.port = self.local_port = int(port)
         self.bin = bin
         self.client = None
@@ -519,8 +521,10 @@ class Marionette(object):
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             s.bind((host, port))
+            port = s.getsockname()[1]
         finally:
             s.close()
+            return port
 
     def raise_for_port(self, timeout=None, check_process_status=True):
         """Raise socket.timeout if no connection can be established.
