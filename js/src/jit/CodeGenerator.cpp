@@ -14405,6 +14405,9 @@ void CodeGenerator::visitIonToWasmCall(LIonToWasmCall* lir) {
 void CodeGenerator::visitIonToWasmCallV(LIonToWasmCallV* lir) {
   emitIonToWasmCallBase(lir);
 }
+void CodeGenerator::visitIonToWasmCallI64(LIonToWasmCallI64* lir) {
+  emitIonToWasmCallBase(lir);
+}
 
 void CodeGenerator::visitWasmNullConstant(LWasmNullConstant* lir) {
   masm.xorPtr(ToRegister(lir->output()), ToRegister(lir->output()));
