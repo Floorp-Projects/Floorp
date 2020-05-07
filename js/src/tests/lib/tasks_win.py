@@ -4,9 +4,9 @@
 from __future__ import print_function, unicode_literals, division
 
 import subprocess
+import sys
 
 from datetime import datetime, timedelta
-from mozbuild.util import system_encoding
 from threading import Thread
 from six.moves.queue import Queue, Empty
 
@@ -51,6 +51,7 @@ def _do_work(qTasks, qResults, qWatch, prefix, run_skipped, timeout, show_cmd):
         # still needing to support Python 3.5, which doesn't have the "encoding"
         # parameter to the Popen constructor, so we have to decode the output
         # here.
+        system_encoding = 'mbcs' if sys.platform == 'win32' else 'utf-8'
         out = out.decode(system_encoding)
         err = err.decode(system_encoding)
         qWatch.put(TaskFinishedMarker)
