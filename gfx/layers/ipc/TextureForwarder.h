@@ -13,6 +13,7 @@
 #include "mozilla/layers/LayersTypes.h"     // for LayersBackend
 #include "mozilla/layers/TextureClient.h"   // for TextureClient
 #include "mozilla/layers/KnowsCompositor.h"
+#include "nsISerialEventTarget.h"
 
 namespace mozilla {
 namespace ipc {
@@ -47,7 +48,7 @@ class LayersIPCChannel : public LayersIPCActor,
 
   virtual base::ProcessId GetParentPid() const = 0;
 
-  virtual MessageLoop* GetMessageLoop() const = 0;
+  virtual nsISerialEventTarget* GetThread() const = 0;
 
   virtual FixedSizeSmallShmemSectionAllocator* GetTileLockAllocator() {
     return nullptr;

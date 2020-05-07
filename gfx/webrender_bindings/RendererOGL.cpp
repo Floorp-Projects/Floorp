@@ -200,7 +200,7 @@ bool RendererOGL::EnsureAsyncScreenshot() {
     return true;
   }
   if (!mDisableNativeCompositor) {
-    layers::CompositorThreadHolder::Loop()->PostTask(
+    layers::CompositorThread()->Dispatch(
         NewRunnableFunction("DoWebRenderDisableNativeCompositorRunnable",
                             &DoWebRenderDisableNativeCompositor, mBridge));
 
@@ -219,7 +219,7 @@ void RendererOGL::CheckGraphicsResetStatus() {
   if (gl->IsSupported(gl::GLFeature::robustness)) {
     GLenum resetStatus = gl->fGetGraphicsResetStatus();
     if (resetStatus == LOCAL_GL_PURGED_CONTEXT_RESET_NV) {
-      layers::CompositorThreadHolder::Loop()->PostTask(
+      layers::CompositorThread()->Dispatch(
           NewRunnableFunction("DoNotifyWebRenderContextPurgeRunnable",
                               &DoNotifyWebRenderContextPurge, mBridge));
     }

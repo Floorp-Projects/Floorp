@@ -173,9 +173,8 @@ CompositorManagerChild::CompositorManagerChild(CompositorManagerParent* aParent,
   MOZ_ASSERT(aParent);
 
   SetOtherProcessId(base::GetCurrentProcId());
-  MessageLoop* loop = CompositorThreadHolder::Loop();
   ipc::MessageChannel* channel = aParent->GetIPCChannel();
-  if (NS_WARN_IF(!Open(channel, loop, ipc::ChildSide))) {
+  if (NS_WARN_IF(!Open(channel, CompositorThread(), ipc::ChildSide))) {
     return;
   }
 
