@@ -6,67 +6,69 @@ package mozilla.components.browser.thumbnails
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
-import mozilla.components.browser.session.SelectionAwareSessionObserver
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.collect
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.browser.state.state.ContentState
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.content.isOSOnLowMemory
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * Feature implementation for automatically taking thumbnails of sites.
  * The feature will take a screenshot when the page finishes loading,
- * and will add it to the [Session.thumbnail] property.
+ * and will add it to the [ContentState.thumbnail] property.
  *
  * If the OS is under low memory conditions, the screenshot will be not taken.
- * Ideally, this should be used in conjunction with [SessionManager.onLowMemory] to allow
- * free up some [Session.thumbnail] from memory.
+ * Ideally, this should be used in conjunction with `SessionManager.onLowMemory` to allow
+ * free up some [ContentState.thumbnail] from memory.
  */
 class BrowserThumbnails(
     private val context: Context,
     private val engineView: EngineView,
-    sessionManager: SessionManager
+    private val store: BrowserStore
 ) : LifecycleAwareFeature {
 
-    private val observer = ThumbnailsRequestObserver(sessionManager)
+    private var scope: CoroutineScope? = null
 
     /**
-     * Starts observing the selected session to listen for when a session finish loading.
+     * Starts observing the selected session to listen for when a session finishes loading.
      */
     override fun start() {
-        observer.observeSelected()
+        scope = store.flowScoped { flow ->
+            flow.map { it.selectedTab }
+                .ifChanged { it?.content?.loading }
+                .collect { state ->
+                    if (state?.content?.loading == false) {
+                        requestScreenshot()
+                    }
+                }
+        }
+    }
+
+    @VisibleForTesting
+    internal fun requestScreenshot() {
+        if (!isLowOnMemory()) {
+            engineView.captureThumbnail {
+                val bitmap = it ?: return@captureThumbnail
+                val tabId = store.state.selectedTabId ?: return@captureThumbnail
+
+                store.dispatch(ContentAction.UpdateThumbnailAction(tabId, bitmap))
+            }
+        }
     }
 
     /**
      * Stops observing the selected session.
      */
     override fun stop() {
-        observer.stop()
-    }
-
-    internal inner class ThumbnailsRequestObserver(
-        sessionManager: SessionManager
-    ) : SelectionAwareSessionObserver(sessionManager) {
-
-        override fun onLoadingStateChanged(session: Session, loading: Boolean) {
-            if (!loading) {
-                requestScreenshot(session)
-            }
-        }
-
-        override fun onTitleChanged(session: Session, title: String) {
-            requestScreenshot(session)
-        }
-    }
-
-    private fun requestScreenshot(session: Session) {
-        if (!isLowOnMemory()) {
-            engineView.captureThumbnail {
-                session.thumbnail = it
-            }
-        } else {
-            session.thumbnail = null
-        }
+        scope?.cancel()
     }
 
     @VisibleForTesting

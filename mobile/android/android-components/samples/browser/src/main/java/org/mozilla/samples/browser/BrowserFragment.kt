@@ -81,7 +81,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         )
 
         thumbnailsFeature.set(
-            feature = BrowserThumbnails(requireContext(), layout.engineView, components.sessionManager),
+            feature = BrowserThumbnails(requireContext(), layout.engineView, components.store),
             owner = this,
             view = layout
         )
