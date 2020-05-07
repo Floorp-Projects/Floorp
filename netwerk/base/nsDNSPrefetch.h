@@ -6,7 +6,6 @@
 #ifndef nsDNSPrefetch_h___
 #define nsDNSPrefetch_h___
 
-#include "nsIWeakReferenceUtils.h"
 #include "nsString.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"
@@ -53,7 +52,8 @@ class nsDNSPrefetch final : public nsIDNSListener {
   nsIRequest::TRRMode mTRRMode;
   mozilla::TimeStamp mStartTimestamp;
   mozilla::TimeStamp mEndTimestamp;
-  nsWeakPtr mListener;
+  nsCOMPtr<nsIDNSListener> mListener;
+  nsCOMPtr<nsIEventTarget> mTarget;
 
   nsresult Prefetch(uint32_t flags);
 };
