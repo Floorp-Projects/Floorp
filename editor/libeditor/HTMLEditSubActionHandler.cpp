@@ -2359,9 +2359,13 @@ EditActionResult HTMLEditor::HandleDeleteSelection(
                          "HTMLEditor::HandleDeleteSelectionInternal() failed");
     return result;
   }
-  if (!result.Handled()) {
-    // If it's just ignored, we should fall this back to
-    // `DeleteSelectionWithTransaction()`.
+  // If it's just ignored, we should fall this back to
+  // `DeleteSelectionWithTransaction()` when selection is not collapsed or
+  // content around collapsed range should be deleted.
+  if (!result.Handled() && SelectionRefPtr()->RangeCount() > 0 &&
+      (!SelectionRefPtr()->IsCollapsed() ||
+       EditorBase::HowToHandleCollapsedRangeFor(aDirectionAndAmount) !=
+           HowToHandleCollapsedRange::Ignore)) {
     nsresult rv =
         DeleteSelectionWithTransaction(aDirectionAndAmount, aStripWrappers);
     if (rv == NS_ERROR_EDITOR_DESTROYED) {
@@ -2375,6 +2379,9 @@ EditActionResult HTMLEditor::HandleDeleteSelection(
         "EditorBase::DeleteSelectionWithTransaction() failed, but ignored");
   }
 
+  // XXX At here, selection may have no range because of mutation event
+  //     listeners can do anything so that we should just return NS_OK instead
+  //     of returning error.
   EditorDOMPoint atNewStartOfSelection(
       EditorBase::GetStartPoint(*SelectionRefPtr()));
   if (NS_WARN_IF(!atNewStartOfSelection.IsSet())) {
@@ -3212,7 +3219,10 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
   // XXX This is odd.  We do we simply use `DeleteSelectionWithTransaction()`
   //     only when **first** range is in same container?
   if (firstRangeStart.GetContainer() == firstRangeEnd.GetContainer()) {
-    {
+    // Because of previous DOM tree changes, the range may be collapsed.
+    // If we've already removed all contents in the range, we shouldn't
+    // delete anything around the caret.
+    if (firstRangeStart != firstRangeEnd) {
       AutoTrackDOMPoint startTracker(RangeUpdaterRef(), &firstRangeStart);
       AutoTrackDOMPoint endTracker(RangeUpdaterRef(), &firstRangeEnd);
 
@@ -3223,6 +3233,8 @@ EditActionResult HTMLEditor::HandleDeleteNonCollapsedSelection(
         return EditActionHandled(rv);
       }
     }
+    // However, even if the range is removed, we may need to clean up the
+    // containers which become empty.
     nsresult rv = DeleteUnnecessaryNodesAndCollapseSelection(
         aDirectionAndAmount, firstRangeStart, firstRangeEnd);
     NS_WARNING_ASSERTION(
@@ -3464,7 +3476,7 @@ nsresult HTMLEditor::DeleteUnnecessaryNodesAndCollapseSelection(
   EditorDOMPoint selectionEndPoint(aSelectionEndPoint);
 
   // If we're handling D&D, this is called to delete dragging item from the
-  // tree.  In this case, we should move parent blocks if it becomes empty.
+  // tree.  In this case, we should remove parent blocks if it becomes empty.
   if (GetEditAction() == EditAction::eDrop ||
       GetEditAction() == EditAction::eDeleteByDrag) {
     MOZ_ASSERT((atCaret.GetContainer() == selectionEndPoint.GetContainer() &&
