@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_browser.*
@@ -132,6 +133,17 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 owner = this,
                 autoPause = true
             )
+        }
+
+        subscribeToTabCollections()
+    }
+
+    private fun subscribeToTabCollections() {
+        Observer<List<TabCollection>> {
+            requireComponents.core.tabCollectionStorage.cachedTabCollections = it
+        }.also { observer ->
+            requireComponents.core.tabCollectionStorage.getCollections()
+                .observe(viewLifecycleOwner, observer)
         }
     }
 
