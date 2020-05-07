@@ -64,7 +64,6 @@ var FUNC_NEGATIVE = "cubic-bezier(0.25, -2, 0.75, 1)";
 var FUNC_OVERONE = "cubic-bezier(0.25, 0, 0.75, 3)";
 
 var supported_properties = {
-    "backdrop-filter" : [ test_filter_transition ],
     "border-bottom-left-radius": [ test_radius_transition ],
     "border-bottom-right-radius": [ test_radius_transition ],
     "border-top-left-radius": [ test_radius_transition ],
@@ -353,6 +352,10 @@ var supported_properties = {
       test_length_clamped, test_percent_clamped,
     ],
 };
+
+if (IsCSSPropertyPrefEnabled("layout.css.backdrop-filter.enabled") && IsWebRenderEnabled()) {
+  supported_properties["backdrop-filter"] = [ test_filter_transition ];
+}
 
 if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
   supported_properties["offset-path"] = [ test_path_function ];
