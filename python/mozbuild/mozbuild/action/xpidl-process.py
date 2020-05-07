@@ -27,9 +27,9 @@ from mozbuild.pythonutil import iter_modules_in_path
 from mozbuild.util import FileAvoidWrite
 
 
-def process(input_dirs, inc_paths, bindings_conf, cache_dir, header_dir,
+def process(input_dirs, inc_paths, bindings_conf, header_dir,
             xpcrs_dir, xpt_dir, deps_dir, module, idl_files):
-    p = IDLParser(outputdir=cache_dir)
+    p = IDLParser()
 
     xpts = []
     mk = Makefile()
@@ -97,8 +97,6 @@ def process(input_dirs, inc_paths, bindings_conf, cache_dir, header_dir,
 
 def main(argv):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cache-dir',
-                        help='Directory in which to find or write cached lexer data.')
     parser.add_argument('--depsdir',
                         help='Directory in which to write dependency files.')
     parser.add_argument('--bindings-conf',
@@ -121,9 +119,8 @@ def main(argv):
 
     args = parser.parse_args(argv)
     incpath = [os.path.join(topsrcdir, p) for p in args.incpath]
-    process(args.input_dirs, incpath, args.bindings_conf, args.cache_dir,
-            args.headerdir, args.xpcrsdir, args.xptdir, args.depsdir, args.module,
-            args.idls)
+    process(args.input_dirs, incpath, args.bindings_conf, args.headerdir,
+            args.xpcrsdir, args.xptdir, args.depsdir, args.module, args.idls)
 
 
 if __name__ == '__main__':

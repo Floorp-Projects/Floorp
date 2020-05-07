@@ -10,9 +10,7 @@ ERRORTESTS := $(wildcard $(srcdir)/error/*.ipdl) $(wildcard $(srcdir)/error/*.ip
 check::
 	@$(PYTHON3) $(srcdir)/runtests.py  \
 		$(srcdir)/ok $(srcdir)/error  \
-		$(PYTHON3) $(topsrcdir)/config/pythonpath.py  \
-		$(PLY_INCLUDE)  \
-		$(topsrcdir)/ipc/ipdl/ipdl.py  \
+		$(PYTHON3) $(topsrcdir)/ipc/ipdl/ipdl.py  \
 		--sync-msg-list=$(srcdir)/sync-messages.ini \
 		--msg-metadata=$(srcdir)/message-metadata.ini \
 		OKTESTS $(OKTESTS)  \

@@ -112,8 +112,6 @@ MKDIR ?= mkdir
 SLEEP ?= sleep
 TOUCH ?= touch
 
-PYTHON_PATH = $(PYTHON3) $(topsrcdir)/config/pythonpath.py
-
 #
 # Build using PIC by default
 #
@@ -428,8 +426,6 @@ endif # ! WINNT
 # autoconf.mk sets OBJ_SUFFIX to an error to avoid use before including
 # this file
 OBJ_SUFFIX := $(_OBJ_SUFFIX)
-
-PLY_INCLUDE = -I$(MOZILLA_DIR)/other-licenses/ply
 
 # Enable verbose logs when not using `make -s`
 ifeq (,$(findstring s, $(filter-out --%, $(MAKEFLAGS))))

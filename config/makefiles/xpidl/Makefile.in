@@ -38,8 +38,7 @@ code_gen_deps := $(topsrcdir)/xpcom/ds/tools/perfecthash.py
 # in the virtualenv.
 %.xpt:
 	$(REPORT_BUILD)
-	$(PYTHON_PATH) $(PLY_INCLUDE) -I$(topsrcdir)/xpcom/idl-parser -I$(DEPTH)/xpcom/idl-parser/xpidl \
-		$(process_py) --cache-dir $(DEPTH)/xpcom/idl-parser/xpidl --depsdir $(idl_deps_dir) \
+	$(PYTHON3) $(process_py) --depsdir $(idl_deps_dir) \
 		--bindings-conf $(topsrcdir)/dom/bindings/Bindings.conf \
 		$(foreach dir,$(all_idl_dirs),-I $(dir)) \
 		$(dist_include_dir) $(dist_xpcrs_dir) $(@D) \
@@ -70,7 +69,7 @@ $(xpt_files): $(process_py) $(call mkdir_deps,$(idl_deps_dir) $(dist_include_dir
 
 $(generated_file): $(xpt_files) $(code_gen_py) $(code_gen_deps)
 	$(REPORT_BUILD)
-	$(PYTHON_PATH) $(PLY_INCLUDE) $(code_gen_py) $(generated_file) $(xpt_files)
+	$(PYTHON3) $(code_gen_py) $(generated_file) $(xpt_files)
 
 -include $(depends_files)
 
