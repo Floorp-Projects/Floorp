@@ -53,7 +53,6 @@ class ChromeProcessController : public mozilla::layers::GeckoContentController {
   void NotifyLayerTransforms(
       const nsTArray<MatrixMessage>& aTransforms) override;
   void RequestContentRepaint(const RepaintRequest& aRequest) override;
-  void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs) override;
   bool IsRepaintThread() override;
   void DispatchToRepaintThread(already_AddRefed<Runnable> aTask) override;
   MOZ_CAN_RUN_SCRIPT

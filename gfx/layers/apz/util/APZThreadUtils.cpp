@@ -61,6 +61,15 @@ bool APZThreadUtils::IsControllerThread() {
   return sControllerThread == MessageLoop::current();
 }
 
+/*static*/
+void APZThreadUtils::PostDelayedTask(already_AddRefed<Runnable> aRunnable,
+                                     int aDelayMs) {
+  MOZ_ASSERT(sControllerThread && sControllerThread == MessageLoop::current());
+  MOZ_ASSERT(!XRE_IsContentProcess(),
+             "ContentProcessController should only be used remotely.");
+  sControllerThread->PostDelayedTask(std::move(aRunnable), aDelayMs);
+}
+
 NS_IMPL_ISUPPORTS(GenericNamedTimerCallbackBase, nsITimerCallback, nsINamed)
 
 }  // namespace layers

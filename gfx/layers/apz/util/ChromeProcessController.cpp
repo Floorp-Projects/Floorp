@@ -74,11 +74,6 @@ void ChromeProcessController::RequestContentRepaint(
   }
 }
 
-void ChromeProcessController::PostDelayedTask(already_AddRefed<Runnable> aTask,
-                                              int aDelayMs) {
-  MessageLoop::current()->PostDelayedTask(std::move(aTask), aDelayMs);
-}
-
 bool ChromeProcessController::IsRepaintThread() { return NS_IsMainThread(); }
 
 void ChromeProcessController::DispatchToRepaintThread(
