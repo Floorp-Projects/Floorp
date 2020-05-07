@@ -3509,11 +3509,41 @@ impl TileCacheInstance {
                     kind: Some(BackdropKind::Clear),
                 });
             }
+            PrimitiveInstanceKind::LinearGradient { data_handle, .. } => {
+                let gradient_data = &data_stores.linear_grad[data_handle];
+                if gradient_data.stops_opacity.is_opaque
+                    && gradient_data.tile_spacing == LayoutSize::zero()
+                {
+                    backdrop_candidate = Some(BackdropInfo {
+                        opaque_rect: pic_clip_rect,
+                        kind: None,
+                    });
+                }
+            }
+            PrimitiveInstanceKind::ConicGradient { data_handle, .. } => {
+                let gradient_data = &data_stores.conic_grad[data_handle];
+                if gradient_data.stops_opacity.is_opaque
+                    && gradient_data.tile_spacing == LayoutSize::zero()
+                {
+                    backdrop_candidate = Some(BackdropInfo {
+                        opaque_rect: pic_clip_rect,
+                        kind: None,
+                    });
+                }
+            }
+            PrimitiveInstanceKind::RadialGradient { data_handle, .. } => {
+                let gradient_data = &data_stores.radial_grad[data_handle];
+                if gradient_data.stops_opacity.is_opaque
+                    && gradient_data.tile_spacing == LayoutSize::zero()
+                {
+                    backdrop_candidate = Some(BackdropInfo {
+                        opaque_rect: pic_clip_rect,
+                        kind: None,
+                    });
+                }
+            }
             PrimitiveInstanceKind::LineDecoration { .. } |
             PrimitiveInstanceKind::NormalBorder { .. } |
-            PrimitiveInstanceKind::LinearGradient { .. } |
-            PrimitiveInstanceKind::RadialGradient { .. } |
-            PrimitiveInstanceKind::ConicGradient { .. } |
             PrimitiveInstanceKind::Backdrop { .. } => {
                 // These don't contribute dependencies
             }

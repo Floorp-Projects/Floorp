@@ -51,6 +51,24 @@ impl Into<GradientStopKey> for GradientStop {
     }
 }
 
+// Convert `stop_keys` into a vector of `GradientStop`s, which is a more
+// convenient representation for the current gradient builder. Compute the
+// minimum stop alpha along the way.
+fn stops_and_min_alpha(stop_keys: &[GradientStopKey]) -> (Vec<GradientStop>, f32) {
+    let mut min_alpha: f32 = 1.0;
+    let stops = stop_keys.iter().map(|stop_key| {
+        let color: ColorF = stop_key.color.into();
+        min_alpha = min_alpha.min(color.a);
+
+        GradientStop {
+            offset: stop_key.offset,
+            color,
+        }
+    }).collect();
+
+    (stops, min_alpha)
+}
+
 impl Eq for GradientStopKey {}
 
 impl hash::Hash for GradientStopKey {
@@ -142,7 +160,6 @@ impl DerefMut for LinearGradientTemplate {
 impl From<LinearGradientKey> for LinearGradientTemplate {
     fn from(item: LinearGradientKey) -> Self {
         let common = PrimTemplateCommonData::with_key_common(item.common);
-        let mut min_alpha: f32 = 1.0;
 
         // Check if we can draw this gradient via a fast path by caching the
         // gradient in a smaller task, and drawing as an image.
@@ -183,17 +200,7 @@ impl From<LinearGradientKey> for LinearGradientTemplate {
             }
         }
 
-        // Convert the stops to more convenient representation
-        // for the current gradient builder.
-        let stops: Vec<GradientStop> = item.stops.iter().map(|stop| {
-            let color: ColorF = stop.color.into();
-            min_alpha = min_alpha.min(color.a);
-
-            GradientStop {
-                offset: stop.offset,
-                color,
-            }
-        }).collect();
+        let (stops, min_alpha) = stops_and_min_alpha(&item.stops);
 
         let mut brush_segments = Vec::new();
 
@@ -412,6 +419,7 @@ pub struct RadialGradientTemplate {
     pub stretch_size: LayoutSize,
     pub tile_spacing: LayoutSize,
     pub brush_segments: Vec<BrushSegment>,
+    pub stops_opacity: PrimitiveOpacity,
     pub stops: Vec<GradientStop>,
     pub stops_handle: GpuCacheHandle,
 }
@@ -438,12 +446,12 @@ impl From<RadialGradientKey> for RadialGradientTemplate {
             brush_segments = nine_patch.create_segments(common.prim_rect.size);
         }
 
-        let stops = item.stops.iter().map(|stop| {
-            GradientStop {
-                offset: stop.offset,
-                color: stop.color.into(),
-            }
-        }).collect();
+        let (stops, min_alpha) = stops_and_min_alpha(&item.stops);
+
+        // Save opacity of the stops for use in
+        // selecting which pass this gradient
+        // should be drawn in.
+        let stops_opacity = PrimitiveOpacity::from_alpha(min_alpha);
 
         RadialGradientTemplate {
             common,
@@ -453,6 +461,7 @@ impl From<RadialGradientKey> for RadialGradientTemplate {
             stretch_size: item.stretch_size.into(),
             tile_spacing: item.tile_spacing.into(),
             brush_segments,
+            stops_opacity,
             stops,
             stops_handle: GpuCacheHandle::new(),
         }
@@ -624,6 +633,7 @@ pub struct ConicGradientTemplate {
     pub stretch_size: LayoutSize,
     pub tile_spacing: LayoutSize,
     pub brush_segments: Vec<BrushSegment>,
+    pub stops_opacity: PrimitiveOpacity,
     pub stops: Vec<GradientStop>,
     pub stops_handle: GpuCacheHandle,
 }
@@ -650,12 +660,12 @@ impl From<ConicGradientKey> for ConicGradientTemplate {
             brush_segments = nine_patch.create_segments(common.prim_rect.size);
         }
 
-        let stops = item.stops.iter().map(|stop| {
-            GradientStop {
-                offset: stop.offset,
-                color: stop.color.into(),
-            }
-        }).collect();
+        let (stops, min_alpha) = stops_and_min_alpha(&item.stops);
+
+        // Save opacity of the stops for use in
+        // selecting which pass this gradient
+        // should be drawn in.
+        let stops_opacity = PrimitiveOpacity::from_alpha(min_alpha);
 
         ConicGradientTemplate {
             common,
@@ -665,6 +675,7 @@ impl From<ConicGradientKey> for ConicGradientTemplate {
             stretch_size: item.stretch_size.into(),
             tile_spacing: item.tile_spacing.into(),
             brush_segments,
+            stops_opacity,
             stops,
             stops_handle: GpuCacheHandle::new(),
         }
