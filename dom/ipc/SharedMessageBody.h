@@ -66,7 +66,7 @@ class SharedMessageBody final {
   static bool FromSharedToMessagesParent(
       mozilla::ipc::PBackgroundParent* aManager,
       const nsTArray<RefPtr<SharedMessageBody>>& aData,
-      FallibleTArray<MessageData>& aArray);
+      nsTArray<MessageData>& aArray);
 
   static already_AddRefed<SharedMessageBody> FromMessageToSharedParent(
       MessageData& aMessage,
