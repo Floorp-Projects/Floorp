@@ -123,7 +123,6 @@ bool js::frontend::EmitScriptThingsVector(JSContext* cx,
       // of publishDeferredFunctions, which currently happens before BCE begins.
       // Once we can do LazyScriptCreationData::create without referencing the
       // functionbox, then we should be able to do JSFunction allocation here.
-      MOZ_ASSERT(!data.is<FunctionCreationData>());
       output[i] = JS::GCCellPtr(data.as<JSFunction*>());
       return true;
     }

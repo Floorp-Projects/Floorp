@@ -303,7 +303,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
 
   size_t index = this->getCompilationInfo().funcData.length();
   if (!this->getCompilationInfo().funcData.emplaceBack(
-          mozilla::AsVariant(FunctionCreationData(cx_)))) {
+          mozilla::AsVariant(ScriptStencilBase(cx_)))) {
     return nullptr;
   }
 
@@ -1779,8 +1779,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
     return false;
   }
 
-  FunctionCreationData& fcd = funbox->functionCreationData().get();
-  ScriptThingsVector& gcthings = fcd.gcThings;
+  ScriptThingsVector& gcthings = funbox->functionStencil().get().gcThings;
 
   if (!gcthings.reserve(ngcthings.value())) {
     return false;
@@ -1809,9 +1808,10 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   return true;
 }
 
-bool FunctionCreationData::createLazyScript(
-    JSContext* cx, CompilationInfo& compilationInfo, HandleFunction function,
-    FunctionBox* funbox, HandleScriptSourceObject sourceObject) {
+static bool CreateLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
+                             Handle<ScriptStencilBase> stencil,
+                             HandleFunction function, FunctionBox* funbox,
+                             HandleScriptSourceObject sourceObject) {
   MOZ_ASSERT(function);
 
   using ImmutableFlags = ImmutableScriptFlagsEnum;
@@ -1823,15 +1823,16 @@ bool FunctionCreationData::createLazyScript(
   immutableFlags.setFlag(ImmutableFlags::IsLikelyConstructorWrapper,
                          funbox->isLikelyConstructorWrapper());
 
+  const ScriptThingsVector& gcthings = stencil.get().gcThings;
   Rooted<BaseScript*> lazy(
       cx,
-      BaseScript::CreateRawLazy(cx, gcThings.length(), function, sourceObject,
+      BaseScript::CreateRawLazy(cx, gcthings.length(), function, sourceObject,
                                 funbox->extent, immutableFlags));
   if (!lazy) {
     return false;
   }
 
-  if (!EmitScriptThingsVector(cx, compilationInfo, gcThings,
+  if (!EmitScriptThingsVector(cx, compilationInfo, gcthings,
                               lazy->gcthingsForInit())) {
     return false;
   }
@@ -1857,7 +1858,7 @@ bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
         return true;
       }
 
-      if (!funbox->hasFunctionCreationData()) {
+      if (!funbox->hasFunctionStencil()) {
         return true;
       }
 
@@ -1868,14 +1869,14 @@ bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
         return true;
       }
 
-      // Move the FCD out of the funcDataArray onto the stack here, because
-      // funbox->initializeFunction() below clobbers the funcDataAray element,
-      // and we want fcd to remain alive so that we can work on the lazy
-      // script creation data.
-      Rooted<FunctionCreationData> fcd(
-          parser->cx_, std::move(funbox->functionCreationData().get()));
+      JSContext* cx = parser->cx_;
 
-      RootedFunction fun(parser->cx_, funbox->createFunction(parser->cx_));
+      // Pull the stencil out of the function box before we clobber the funcData
+      // array entry with the JSFunction pointer.
+      Rooted<ScriptStencilBase> stencil(
+          cx, std::move(funbox->functionStencil().get()));
+
+      RootedFunction fun(cx, funbox->createFunction(cx));
       if (!fun) {
         return false;
       }
@@ -1886,23 +1887,12 @@ bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
         return true;
       }
 
-      return fcd.get().createLazyScript(parser->cx_, parser->compilationInfo_,
-                                        fun, funbox, parser->sourceObject_);
+      return CreateLazyScript(cx, parser->compilationInfo_, stencil, fun,
+                              funbox, parser->sourceObject_);
     };
     return root->visitRecursively(this->cx_, this, visitor);
   }
   return true;
-}
-
-void FunctionCreationData::trace(JSTracer* trc) {
-  for (ScriptThingVariant& thing : gcThings) {
-    if (thing.is<ClosedOverBinding>()) {
-      JSAtom* atom = thing.as<ClosedOverBinding>();
-      TraceRoot(trc, &atom, "closed-over-binding");
-      MOZ_ASSERT(atom == thing.as<ClosedOverBinding>(),
-                 "Atoms should be unmovable");
-    }
-  }
 }
 
 static YieldHandling GetYieldHandling(GeneratorKind generatorKind) {
