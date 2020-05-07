@@ -190,7 +190,7 @@ void ProfilerParent::ProfilerStarted(nsIProfilerStartParams* aParams) {
   }
   aParams->GetInterval(&ipcParams.interval());
   aParams->GetFeatures(&ipcParams.features());
-  ipcParams.filters() = aParams->GetFilters();
+  ipcParams.filters() = aParams->GetFilters().Clone();
   aParams->GetActiveBrowsingContextID(&ipcParams.activeBrowsingContextID());
 
   ProfilerParentTracker::Enumerate([&](ProfilerParent* profilerParent) {

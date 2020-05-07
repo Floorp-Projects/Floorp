@@ -1137,7 +1137,7 @@ void DocumentLoadListener::SerializeRedirectData(
 
   aArgs.newLoadFlags() = aLoadFlags;
   aArgs.redirectFlags() = aRedirectFlags;
-  aArgs.redirects() = mRedirects;
+  aArgs.redirects() = mRedirects.Clone();
   aArgs.redirectIdentifier() = mCrossProcessRedirectIdentifier;
   aArgs.properties() = do_QueryObject(mChannel.get());
   aArgs.lastVisitInfo() = LastVisitInfo();

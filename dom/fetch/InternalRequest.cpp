@@ -180,7 +180,7 @@ void InternalRequest::ToIPC(
   MOZ_ASSERT(!mURLList.IsEmpty());
 
   aIPCRequest->method() = mMethod;
-  aIPCRequest->urlList() = mURLList;
+  aIPCRequest->urlList() = mURLList.Clone();
   mHeaders->ToIPC(aIPCRequest->headers(), aIPCRequest->headersGuard());
 
   if (mBodyStream) {

@@ -29,7 +29,7 @@ namespace net {
 
 class WebrtcTCPData {
  public:
-  explicit WebrtcTCPData(nsTArray<uint8_t>&& aData) : mData(aData) {
+  explicit WebrtcTCPData(nsTArray<uint8_t>&& aData) : mData(std::move(aData)) {
     MOZ_COUNT_CTOR(WebrtcTCPData);
   }
 

@@ -38,9 +38,9 @@ JSProcessActorInfo JSProcessActorProtocol::ToIPC() {
 
   JSProcessActorInfo info;
   info.name() = mName;
-  info.remoteTypes() = mRemoteTypes;
+  info.remoteTypes() = mRemoteTypes.Clone();
   info.url() = mChild.mModuleURI;
-  info.observers() = mChild.mObservers;
+  info.observers() = mChild.mObservers.Clone();
   return info;
 }
 

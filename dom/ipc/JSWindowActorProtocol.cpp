@@ -56,9 +56,9 @@ JSWindowActorInfo JSWindowActorProtocol::ToIPC() {
   JSWindowActorInfo info;
   info.name() = mName;
   info.allFrames() = mAllFrames;
-  info.matches() = mMatches;
-  info.remoteTypes() = mRemoteTypes;
-  info.messageManagerGroups() = mMessageManagerGroups;
+  info.matches() = mMatches.Clone();
+  info.remoteTypes() = mRemoteTypes.Clone();
+  info.messageManagerGroups() = mMessageManagerGroups.Clone();
   info.url() = mChild.mModuleURI;
 
   info.events().SetCapacity(mChild.mEvents.Length());
@@ -73,7 +73,7 @@ JSWindowActorInfo JSWindowActorProtocol::ToIPC() {
     }
   }
 
-  info.observers() = mChild.mObservers;
+  info.observers() = mChild.mObservers.Clone();
   return info;
 }
 

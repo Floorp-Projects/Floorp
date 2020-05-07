@@ -279,7 +279,7 @@ void DataStorage::SetCachedStorageEntries(
     entry.filename() = NS_LITERAL_STRING(#_ ".txt"); \
     for (auto& e : aEntries) {                       \
       if (entry.filename().Equals(e.filename())) {   \
-        entry.items() = std::move(e.items());        \
+        entry.items() = e.items().Clone();           \
         break;                                       \
       }                                              \
     }                                                \
