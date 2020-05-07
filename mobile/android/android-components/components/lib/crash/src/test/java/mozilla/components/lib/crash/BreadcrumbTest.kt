@@ -81,7 +81,7 @@ class BreadcrumbTest {
     }
 
     @Test
-    fun `RecordBreadCrumb stores correct date`() {
+    fun `RecordBreadcumb stores correct date`() {
         val testMessage = "test_Message"
         val testData = hashMapOf("1" to "one", "2" to "two")
         val testCategory = "testing_category"
@@ -108,6 +108,22 @@ class BreadcrumbTest {
         reporter.recordCrashBreadcrumb(
                 Breadcrumb(testMessage, testData, testCategory, testLevel, testType, date)
         )
-        assertTrue(reporter.crashBreadcrumbs.elementAt(1).date.compareTo(date) == 0)
+        assertEquals(reporter.crashBreadcrumbs.elementAt(1).date.compareTo(date), 0)
+    }
+
+    @Test
+    fun `Breadcrumb converts correctly to JSON`() {
+        val testMessage = "test_Message"
+        val testData = hashMapOf("1" to "one", "2" to "two")
+        val testCategory = "testing_category"
+        val testLevel = Breadcrumb.Level.CRITICAL
+        val testType = Breadcrumb.Type.USER
+        val testDate = Date(0)
+        val testString = "{\"timestamp\":\"1970-01-01T00:00:00\",\"message\":\"test_Message\"," +
+            "\"category\":\"testing_category\",\"level\":\"Critical\",\"type\":\"User\"," +
+            "\"data\":{\"1\":\"one\",\"2\":\"two\"}}"
+
+        val breadcrumb = Breadcrumb(testMessage, testData, testCategory, testLevel, testType, testDate)
+        assertEquals(breadcrumb.toJson().toString(), testString)
     }
 }
