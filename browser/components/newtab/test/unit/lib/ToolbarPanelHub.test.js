@@ -8,9 +8,11 @@ describe("ToolbarPanelHub", () => {
   let sandbox;
   let instance;
   let everyWindowStub;
+  let preferencesStub;
   let fakeDocument;
   let fakeWindow;
   let fakeElementById;
+  let fakeElementByTagName;
   let createdElements = [];
   let createdCustomElements = [];
   let eventListeners = {};
@@ -44,8 +46,21 @@ describe("ToolbarPanelHub", () => {
       remove: sandbox.stub(),
       removeChild: sandbox.stub(),
     };
+    fakeElementByTagName = {
+      setAttribute: sandbox.stub(),
+      removeAttribute: sandbox.stub(),
+      querySelector: sandbox.stub().returns(null),
+      querySelectorAll: sandbox.stub().returns([]),
+      appendChild: sandbox.stub(),
+      addEventListener: sandbox.stub(),
+      hasAttribute: sandbox.stub(),
+      toggleAttribute: sandbox.stub(),
+      remove: sandbox.stub(),
+      removeChild: sandbox.stub(),
+    };
     fakeDocument = {
       getElementById: sandbox.stub().returns(fakeElementById),
+      getElementsByTagName: sandbox.stub().returns(fakeElementByTagName),
       querySelector: sandbox.stub().returns({}),
       createElementNS: (ns, tagName) => {
         const element = {
@@ -111,6 +126,10 @@ describe("ToolbarPanelHub", () => {
       registerCallback: sandbox.stub(),
       unregisterCallback: sandbox.stub(),
     };
+    preferencesStub = {
+      get: sandbox.stub(),
+      set: sandbox.stub(),
+    };
     scriptloaderStub = { loadSubScript: sandbox.stub() };
     addObserverStub = sandbox.stub();
     removeObserverStub = sandbox.stub();
@@ -141,6 +160,7 @@ describe("ToolbarPanelHub", () => {
       PrivateBrowsingUtils: {
         isBrowserPrivate: isBrowserPrivateStub,
       },
+      Preferences: preferencesStub,
       TrackingDBService: {
         getEarliestRecordedDate: getEarliestRecordedDateStub,
         getEventsByDateRange: getEventsByDateRangeStub,
@@ -158,14 +178,7 @@ describe("ToolbarPanelHub", () => {
   it("should create an instance", () => {
     assert.ok(instance);
   });
-  it("should not enableAppmenuButton() on init() if pref is not enabled", async () => {
-    getBoolPrefStub.returns(false);
-    instance.enableAppmenuButton = sandbox.stub();
-    await instance.init(waitForInitializedStub, { getMessages: () => {} });
-    assert.notCalled(instance.enableAppmenuButton);
-  });
-  it("should enableAppmenuButton() on init() if pref is enabled", async () => {
-    getBoolPrefStub.returns(true);
+  it("should enableAppmenuButton() on init()", async () => {
     instance.enableAppmenuButton = sandbox.stub();
 
     await instance.init(waitForInitializedStub, { getMessages: () => {} });
@@ -176,55 +189,76 @@ describe("ToolbarPanelHub", () => {
     instance.uninit();
     assert.calledTwice(everyWindowStub.unregisterCallback);
   });
-  it("should observe pref changes on init", async () => {
-    await instance.init(waitForInitializedStub, {});
+  describe("#toggleWhatsNewPref", () => {
+    it("should prevent clicks from bubbling", () => {
+      let checkbox = {};
+      let event = {
+        target: {
+          getElementsByTagName: fakeDocument.getElementsByTagName
+            .withArgs("checkbox")
+            .returns([checkbox]),
+        },
+        stopPropagation: sinon.stub(),
+        preventDefault: sinon.stub(),
+      };
 
-    assert.calledOnce(addObserverStub);
-    assert.calledWithExactly(
-      addObserverStub,
-      "browser.messaging-system.whatsNewPanel.enabled",
-      instance
-    );
-  });
-  it("should remove the observer on uninit", () => {
-    instance.uninit();
+      instance.toggleWhatsNewPref(event);
 
-    assert.calledOnce(removeObserverStub);
-    assert.calledWithExactly(
-      removeObserverStub,
-      "browser.messaging-system.whatsNewPanel.enabled",
-      instance
-    );
-  });
-  describe("#observe", () => {
-    it("should uninit if the pref is turned off", () => {
-      sandbox.stub(instance, "uninit");
-      getBoolPrefStub.returns(false);
-
-      instance.observe(
-        "",
-        "",
-        "browser.messaging-system.whatsNewPanel.enabled"
-      );
-
-      assert.calledOnce(instance.uninit);
+      assert.calledOnce(event.stopPropagation);
+      assert.calledOnce(event.preventDefault);
     });
-    it("shouldn't do anything if the pref is true", () => {
-      sandbox.stub(instance, "uninit");
-      getBoolPrefStub.returns(true);
+    it("should call Preferences.set() with true when the checkbox is checked", () => {
+      let checkbox = {};
+      let event = {
+        target: {
+          getElementsByTagName: fakeDocument.getElementsByTagName
+            .withArgs("checkbox")
+            .returns([checkbox]),
+        },
+        stopPropagation: sinon.stub(),
+        preventDefault: sinon.stub(),
+      };
+      // checkbox starts false
+      checkbox.checked = false;
 
-      instance.observe(
-        "",
-        "",
-        "browser.messaging-system.whatsNewPanel.enabled"
+      // toggling the checkbox to set the value to true
+      instance.toggleWhatsNewPref(event);
+
+      assert.calledOnce(preferencesStub.set);
+      assert.calledWith(
+        preferencesStub.set,
+        "browser.messaging-system.whatsNewPanel.enabled",
+        true
       );
+    });
+    it("should call Preferences.set() with false when the checkbox is unchecked", () => {
+      let checkbox = {};
+      let event = {
+        target: {
+          getElementsByTagName: fakeDocument.getElementsByTagName
+            .withArgs("checkbox")
+            .returns([checkbox]),
+        },
+        stopPropagation: sinon.stub(),
+        preventDefault: sinon.stub(),
+      };
+      // checkbox starts true
+      checkbox.checked = true;
 
-      assert.notCalled(instance.uninit);
+      // toggling the checkbox to set the value to false
+      instance.toggleWhatsNewPref(event);
+
+      assert.calledOnce(preferencesStub.set);
+      assert.calledWith(
+        preferencesStub.set,
+        "browser.messaging-system.whatsNewPanel.enabled",
+        false
+      );
     });
   });
   describe("#enableAppmenuButton", () => {
     it("should registerCallback on enableAppmenuButton() if there are messages", async () => {
-      instance.init(waitForInitializedStub, {
+      await instance.init(waitForInitializedStub, {
         getMessages: sandbox.stub().resolves([{}, {}]),
       });
       // init calls `enableAppmenuButton`
@@ -267,13 +301,21 @@ describe("ToolbarPanelHub", () => {
   });
   describe("#enableToolbarButton", () => {
     it("should registerCallback on enableToolbarButton if messages.length", async () => {
-      instance.init(waitForInitializedStub, {
+      await instance.init(waitForInitializedStub, {
         getMessages: sandbox.stub().resolves([{}, {}]),
       });
+      // init calls `enableAppmenuButton`
+      everyWindowStub.registerCallback.resetHistory();
 
       await instance.enableToolbarButton();
 
       assert.calledOnce(everyWindowStub.registerCallback);
+      assert.calledWithExactly(
+        everyWindowStub.registerCallback,
+        "whats-new-menu-button",
+        sinon.match.func,
+        sinon.match.func
+      );
     });
     it("should not registerCallback on enableToolbarButton if no messages", async () => {
       instance.init(waitForInitializedStub, {
