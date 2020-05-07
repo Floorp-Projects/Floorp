@@ -189,3 +189,14 @@ TEST_F(VsyncTester, VsyncSourceHasVsyncRate) {
   ASSERT_NE(vsyncRate, TimeDuration::Forever());
   ASSERT_GT(vsyncRate.ToMilliseconds(), 0);
 }
+
+// Tests that we can disable vsync notifications
+// And has the side effect of turning off vsync notifications so they don't
+// keep running for the rest of the gtest run, which can be a problem because
+// gtests don't send a shutdown notification so it fires after the main thread
+// is gone.
+TEST_F(VsyncTester, DisableVsync) {
+  VsyncSource::Display& globalDisplay = mVsyncSource->GetGlobalDisplay();
+  globalDisplay.DisableVsync();
+  ASSERT_FALSE(globalDisplay.IsVsyncEnabled());
+}
