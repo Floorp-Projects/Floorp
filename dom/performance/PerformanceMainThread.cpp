@@ -7,6 +7,7 @@
 #include "PerformanceMainThread.h"
 #include "PerformanceNavigation.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_privacy.h"
 
 namespace mozilla {
 namespace dom {
@@ -305,7 +306,8 @@ DOMHighResTimeStamp PerformanceMainThread::CreationTime() const {
 void PerformanceMainThread::CreateNavigationTimingEntry() {
   MOZ_ASSERT(!mDocEntry, "mDocEntry should be null.");
 
-  if (!StaticPrefs::dom_enable_performance_navigation_timing()) {
+  if (!StaticPrefs::dom_enable_performance_navigation_timing() ||
+      StaticPrefs::privacy_resistFingerprinting()) {
     return;
   }
 

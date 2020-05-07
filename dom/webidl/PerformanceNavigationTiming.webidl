@@ -17,7 +17,8 @@ enum NavigationType {
   "prerender"
 };
 
-[Exposed=Window]
+[Exposed=Window,
+ Func="mozilla::dom::PerformanceNavigationTiming::Enabled"]
 interface PerformanceNavigationTiming : PerformanceResourceTiming {
   readonly        attribute DOMHighResTimeStamp unloadEventStart;
   readonly        attribute DOMHighResTimeStamp unloadEventEnd;
