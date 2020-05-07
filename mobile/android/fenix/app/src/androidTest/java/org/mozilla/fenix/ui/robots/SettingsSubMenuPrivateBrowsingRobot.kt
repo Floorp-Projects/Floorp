@@ -1,13 +1,18 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.fenix.ui.robots
 
 import android.os.Build
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers
-import androidx.test.espresso.matcher.ViewMatchers.isEnabled
+import androidx.test.espresso.matcher.ViewMatchers.Visibility
+import androidx.test.espresso.matcher.ViewMatchers.withChild
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
+import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
@@ -15,16 +20,21 @@ import androidx.test.uiautomator.By.text
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
+import org.hamcrest.CoreMatchers
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.click
+import org.mozilla.fenix.helpers.isEnabled
 
 /**
  * Implementation of Robot Pattern for the settings PrivateBrowsing sub menu.
  */
 
 class SettingsSubMenuPrivateBrowsingRobot {
+
+    fun verifyNavigationToolBarHeader() = assertNavigationToolBarHeader()
 
     fun verifyOpenLinksInPrivateTab() = assertOpenLinksInPrivateTab()
 
@@ -54,7 +64,6 @@ class SettingsSubMenuPrivateBrowsingRobot {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
-            mDevice.waitForIdle()
             goBackButton().perform(ViewActions.click())
 
             SettingsRobot().interact()
@@ -68,6 +77,16 @@ class SettingsSubMenuPrivateBrowsingRobot {
             return SearchRobot.Transition()
         }
     }
+}
+
+private fun assertNavigationToolBarHeader() {
+    onView(
+        CoreMatchers.allOf(
+            withId(R.id.navigationToolbar),
+            withChild(withText(R.string.preferences_private_browsing_options))
+        )
+    )
+        .check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
 }
 
 private fun openLinksInPrivateTabSwitch() =
@@ -88,21 +107,21 @@ private fun assertAddPrivateBrowsingShortcutButton() {
         waitingTime
     )
     addPrivateBrowsingShortcutButton()
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun assertOpenLinksInPrivateTab() {
     openLinksInPrivateTabSwitch()
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun assertOpenLinksInPrivateTabEnabled() =
-    openLinksInPrivateTabSwitch().check(matches(isEnabled()))
+    openLinksInPrivateTabSwitch().check(matches(isEnabled(true)))
 
 private fun assertOpenLinksInPrivateTabOff() {
     assertFalse(mDevice.findObject(UiSelector().resourceId("android:id/switch_widget")).isChecked())
     openLinksInPrivateTabSwitch()
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun assertPrivateBrowsingShortcutIcon() {
