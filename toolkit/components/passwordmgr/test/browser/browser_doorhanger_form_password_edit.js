@@ -214,15 +214,7 @@ let testCases = [
         username: "user",
         password: "pass",
       },
-      // Eventually we'll want to remove the doorhanger in this case
-      doorhanger: {
-        type: "password-change",
-        dismissed: true,
-        anchorExtraAttr: "",
-        username: "user1",
-        password: "pass1",
-        toggle: "visible",
-      },
+      doorhanger: null,
     },
   },
 ];
