@@ -10,6 +10,18 @@
 
 namespace glsl {
 
+#if USE_SSE2
+bool test_all(Bool cond) { return _mm_movemask_ps(cond) == 0xF; }
+bool test_any(Bool cond) { return _mm_movemask_ps(cond) != 0; }
+bool test_none(Bool cond) { return _mm_movemask_ps(cond) == 0; }
+#else
+bool test_all(Bool cond) {
+  return bit_cast<uint32_t>(CONVERT(cond, U8)) == 0xFFFFFFFFU;
+}
+bool test_any(Bool cond) { return bit_cast<uint32_t>(CONVERT(cond, U8)) != 0; }
+bool test_none(Bool cond) { return bit_cast<uint32_t>(CONVERT(cond, U8)) == 0; }
+#endif
+
 float make_float(float n) { return n; }
 
 float make_float(int32_t n) { return float(n); }
@@ -2235,7 +2247,8 @@ vec4 texelFetchRGBA8(sampler2D sampler, ivec2 P) {
 }
 
 vec4 texelFetchRGBA8(sampler2DArray sampler, ivec3 P) {
-  I32 offset = P.x + P.y * sampler->stride + P.z * sampler->height_stride;
+  assert(test_all(P.z == P.z.x));
+  I32 offset = P.x + P.y * sampler->stride + P.z.x * sampler->height_stride;
   return fetchOffsetsRGBA8(sampler, offset);
 }
 
@@ -2253,7 +2266,8 @@ vec4 texelFetchR8(sampler2D sampler, ivec2 P) {
 }
 
 vec4 texelFetchR8(sampler2DArray sampler, ivec3 P) {
-  I32 offset = P.x + P.y * sampler->stride + P.z * sampler->height_stride;
+  assert(test_all(P.z == P.z.x));
+  I32 offset = P.x + P.y * sampler->stride + P.z.x * sampler->height_stride;
   return vec4(fetchOffsetsR8(sampler, offset), 0.0f, 0.0f, 1.0f);
 }
 
@@ -2269,8 +2283,9 @@ vec4 texelFetchFloat(sampler2D sampler, ivec2 P) {
   return fetchOffsetsFloat(sampler, offset);
 }
 
-vec4 texelFetchFloat(sampler2DArray sampler, ivec3 P) {
-  I32 offset = P.x * 4 + P.y * sampler->stride + P.z * sampler->height_stride;
+SI vec4 texelFetchFloat(sampler2DArray sampler, ivec3 P) {
+  assert(test_all(P.z == P.z.x));
+  I32 offset = P.x * 4 + P.y * sampler->stride + P.z.x * sampler->height_stride;
   return fetchOffsetsFloat(sampler, offset);
 }
 
@@ -2349,7 +2364,7 @@ vec4 texelFetch(sampler2DRect sampler, ivec2 P) {
   return fetchOffsetsRGBA8(sampler, offset);
 }
 
-vec4 texelFetch(sampler2DArray sampler, ivec3 P, int lod) {
+SI vec4 texelFetch(sampler2DArray sampler, ivec3 P, int lod) {
   assert(lod == 0);
   P = clamp2DArray(P, sampler);
   if (sampler->format == TextureFormat::RGBA32F) {
@@ -2460,7 +2475,7 @@ SI T linearQuantize(T P, float scale, S sampler) {
 }
 
 template <typename S>
-vec4 textureLinearRGBA8(S sampler, vec2 P, I32 zoffset = 0) {
+vec4 textureLinearRGBA8(S sampler, vec2 P, int32_t zoffset = 0) {
   assert(sampler->format == TextureFormat::RGBA8);
 
 #if USE_SSE2
@@ -2481,7 +2496,7 @@ vec4 textureLinearRGBA8(S sampler, vec2 P, I32 zoffset = 0) {
       _mm_set1_epi16(sampler->stride));
   row0 = _mm_add_epi32(row0, _mm_unpackhi_epi16(clampyx, _mm_setzero_si128()));
   // Add in layer offset if available
-  row0 = _mm_add_epi32(row0, zoffset);
+  row0 = _mm_add_epi32(row0, _mm_set1_epi32(zoffset));
 
   // Check if fractional coords are all zero, in which case skip filtering.
   __m128i fracyx = _mm_packs_epi32(frac.y, frac.x);
@@ -2622,7 +2637,7 @@ vec4 textureLinearRGBA8(S sampler, vec2 P, I32 zoffset = 0) {
 }
 
 template <typename S>
-static U16 textureLinearPackedR8(S sampler, ivec2 i, I32 zoffset) {
+static U16 textureLinearPackedR8(S sampler, ivec2 i, int32_t zoffset) {
   assert(sampler->format == TextureFormat::R8);
   ivec2 frac = i & (I32)0x7F;
   i >>= 7;
@@ -2659,7 +2674,7 @@ static U16 textureLinearPackedR8(S sampler, ivec2 i, I32 zoffset) {
 }
 
 template <typename S>
-vec4 textureLinearR8(S sampler, vec2 P, I32 zoffset = 0) {
+vec4 textureLinearR8(S sampler, vec2 P, int32_t zoffset = 0) {
   assert(sampler->format == TextureFormat::R8);
 
 #if USE_SSE2
@@ -2680,7 +2695,7 @@ vec4 textureLinearR8(S sampler, vec2 P, I32 zoffset = 0) {
       _mm_set1_epi16(sampler->stride));
   row0 = _mm_add_epi32(row0, _mm_unpackhi_epi16(clampyx, _mm_setzero_si128()));
   // Add in layer offset if available
-  row0 = _mm_add_epi32(row0, zoffset);
+  row0 = _mm_add_epi32(row0, _mm_set1_epi32(zoffset));
 
   __m128i fracyx = _mm_packs_epi32(frac.y, frac.x);
 
@@ -2740,7 +2755,7 @@ vec4 textureLinearR8(S sampler, vec2 P, I32 zoffset = 0) {
 }
 
 template <typename S>
-vec4 textureLinearRGBA32F(S sampler, vec2 P, I32 zoffset = 0) {
+vec4 textureLinearRGBA32F(S sampler, vec2 P, int32_t zoffset = 0) {
   assert(sampler->format == TextureFormat::RGBA32F);
   P.x *= sampler->width;
   P.y *= sampler->height;
@@ -2777,15 +2792,15 @@ vec4 textureLinearRGBA32F(S sampler, vec2 P, I32 zoffset = 0) {
   return pixel_float_to_vec4(c0, c1, c2, c3);
 }
 
-vec4 texture(sampler2D sampler, vec2 P) {
+SI vec4 texture(sampler2D sampler, vec2 P) {
   if (sampler->filter == TextureFilter::LINEAR) {
-    if (sampler->format == TextureFormat::RGBA32F) {
-      return textureLinearRGBA32F(sampler, P);
-    } else if (sampler->format == TextureFormat::RGBA8) {
+    if (sampler->format == TextureFormat::RGBA8) {
       return textureLinearRGBA8(sampler, P);
-    } else {
-      assert(sampler->format == TextureFormat::R8);
+    } else if (sampler->format == TextureFormat::R8) {
       return textureLinearR8(sampler, P);
+    } else {
+      assert(sampler->format == TextureFormat::RGBA32F);
+      return textureLinearRGBA32F(sampler, P);
     }
   } else {
     ivec2 coord(roundzero(P.x, sampler->width), roundzero(P.y, sampler->height));
@@ -2804,17 +2819,20 @@ vec4 texture(sampler2DRect sampler, vec2 P) {
   }
 }
 
-vec4 texture(sampler2DArray sampler, vec3 P) {
+SI vec4 texture(sampler2DArray sampler, vec3 P) {
   if (sampler->filter == TextureFilter::LINEAR) {
-    I32 zoffset =
-        clampCoord(roundeven(P.z, 1.0f), sampler->depth) * sampler->height_stride;
-    if (sampler->format == TextureFormat::RGBA32F) {
-      return textureLinearRGBA32F(sampler, vec2(P.x, P.y), zoffset);
-    } else if (sampler->format == TextureFormat::RGBA8) {
+    // SSE2 can generate slow code for 32-bit multiply, and we never actually sample
+    // from different layers in one chunk, so do cheaper scalar multiplication instead.
+    assert(test_all(P.z == P.z.x));
+    int32_t zoffset =
+        clampCoord(roundeven(P.z.x, 1.0f), sampler->depth) * sampler->height_stride;
+    if (sampler->format == TextureFormat::RGBA8) {
       return textureLinearRGBA8(sampler, vec2(P.x, P.y), zoffset);
-    } else {
-      assert(sampler->format == TextureFormat::R8);
+    } else if (sampler->format == TextureFormat::R8) {
       return textureLinearR8(sampler, vec2(P.x, P.y), zoffset);
+    } else {
+      assert(sampler->format == TextureFormat::RGBA32F);
+      return textureLinearRGBA32F(sampler, vec2(P.x, P.y), zoffset);
     }
   } else {
     // just do nearest for now
@@ -3212,17 +3230,5 @@ Array<vec2, SIZE> if_then_else(I32 c, Array<vec2, SIZE> t,
   }
   return r;
 }
-
-#if USE_SSE2
-bool test_all(Bool cond) { return _mm_movemask_ps(cond) == 0xF; }
-bool test_any(Bool cond) { return _mm_movemask_ps(cond) != 0; }
-bool test_none(Bool cond) { return _mm_movemask_ps(cond) == 0; }
-#else
-bool test_all(Bool cond) {
-  return bit_cast<uint32_t>(CONVERT(cond, U8)) == 0xFFFFFFFFU;
-}
-bool test_any(Bool cond) { return bit_cast<uint32_t>(CONVERT(cond, U8)) != 0; }
-bool test_none(Bool cond) { return bit_cast<uint32_t>(CONVERT(cond, U8)) == 0; }
-#endif
 
 }  // namespace glsl
