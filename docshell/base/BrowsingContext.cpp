@@ -508,8 +508,6 @@ void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
   MOZ_DIAGNOSTIC_ASSERT(mGroup);
   MOZ_DIAGNOSTIC_ASSERT(!mIsDiscarded);
 
-  AssertCoherentLoadContext();
-
   // Add ourselves either to our parent or BrowsingContextGroup's child list.
   if (mParentWindow) {
     mParentWindow->AppendChildBrowsingContext(this);
@@ -1317,38 +1315,6 @@ nsresult BrowsingContext::SetOriginAttributes(const OriginAttributes& aAttrs) {
   AssertOriginAttributesMatchPrivateBrowsing();
 
   return NS_OK;
-}
-
-void BrowsingContext::AssertCoherentLoadContext() {
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  // LoadContext should generally match our opener or parent.
-  if (RefPtr<BrowsingContext> opener = GetOpener()) {
-    MOZ_DIAGNOSTIC_ASSERT(opener->mType == mType);
-    MOZ_DIAGNOSTIC_ASSERT(opener->mGroup == mGroup);
-    MOZ_DIAGNOSTIC_ASSERT(opener->mUseRemoteTabs == mUseRemoteTabs);
-    MOZ_DIAGNOSTIC_ASSERT(opener->mUseRemoteSubframes == mUseRemoteSubframes);
-    MOZ_DIAGNOSTIC_ASSERT(opener->mPrivateBrowsingId == mPrivateBrowsingId);
-    MOZ_DIAGNOSTIC_ASSERT(
-        opener->mOriginAttributes.EqualsIgnoringFPD(mOriginAttributes));
-  }
-  if (RefPtr<BrowsingContext> parent = GetParent()) {
-    MOZ_DIAGNOSTIC_ASSERT(parent->mType == mType);
-    MOZ_DIAGNOSTIC_ASSERT(parent->mGroup == mGroup);
-    MOZ_DIAGNOSTIC_ASSERT(parent->mUseRemoteTabs == mUseRemoteTabs);
-    MOZ_DIAGNOSTIC_ASSERT(parent->mUseRemoteSubframes == mUseRemoteSubframes);
-    MOZ_DIAGNOSTIC_ASSERT(parent->mPrivateBrowsingId == mPrivateBrowsingId);
-    MOZ_DIAGNOSTIC_ASSERT(
-        parent->mOriginAttributes.EqualsIgnoringFPD(mOriginAttributes));
-  }
-
-  // UseRemoteSubframes and UseRemoteTabs must match.
-  MOZ_DIAGNOSTIC_ASSERT(
-      !mUseRemoteSubframes || mUseRemoteTabs,
-      "Cannot set useRemoteSubframes without also setting useRemoteTabs");
-
-  // Double-check OriginAttributes/Private Browsing
-  AssertOriginAttributesMatchPrivateBrowsing();
-#endif
 }
 
 void BrowsingContext::AssertOriginAttributesMatchPrivateBrowsing() {
