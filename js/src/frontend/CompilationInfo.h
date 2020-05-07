@@ -26,7 +26,7 @@
 namespace js {
 namespace frontend {
 
-using FunctionType = mozilla::Variant<JSFunction*, FunctionCreationData>;
+using FunctionType = mozilla::Variant<JSFunction*, ScriptStencilBase>;
 
 // CompilationInfo owns a number of pieces of information about script
 // compilation as well as controls the lifetime of parse nodes and other data by
@@ -48,9 +48,9 @@ struct MOZ_RAII CompilationInfo {
   UsedNameTracker usedNames;
   LifoAllocScope& allocScope;
   FunctionTreeHolder treeHolder;
-  // Hold onto the RegExpCreationData, BigIntCreationData, and
-  // FunctionCreationData that are allocated during parse to
-  // ensure correct destruction.
+
+  // Hold onto the RegExpCreationData and BigIntCreationData that are allocated
+  // during parse to ensure correct destruction.
   Vector<RegExpCreationData> regExpData;
   Vector<BigIntCreationData> bigIntData;
 

@@ -203,3 +203,14 @@ bool ScopeCreationData::isClassConstructor() const {
 const FieldInitializers& ScopeCreationData::fieldInitializers() const {
   return *funbox_->fieldInitializers;
 }
+
+void ScriptStencilBase::trace(JSTracer* trc) {
+  for (ScriptThingVariant& thing : gcThings) {
+    if (thing.is<ClosedOverBinding>()) {
+      JSAtom* atom = thing.as<ClosedOverBinding>();
+      TraceRoot(trc, &atom, "closed-over-binding");
+      MOZ_ASSERT(atom == thing.as<ClosedOverBinding>(),
+                 "Atoms should be unmovable");
+    }
+  }
+}

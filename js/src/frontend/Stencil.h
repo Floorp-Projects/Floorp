@@ -341,29 +341,6 @@ using ScriptThingVariant =
 // A vector of things destined to be converted to GC things.
 using ScriptThingsVector = Vector<ScriptThingVariant>;
 
-// Metadata that can be used to allocate a JSFunction object.
-//
-// Keeping metadata separate allows the parser to generate
-// metadata without requiring immediate access to the garbage
-// collector.
-struct FunctionCreationData {
-  // All moves but not copies to avoid expensive surprises.
-  FunctionCreationData(const FunctionCreationData&) = delete;
-  FunctionCreationData(FunctionCreationData&& data) = default;
-
-  // Lazy functions have a list of GC-things that eventually becomes the
-  // PrivateScriptData structure.
-  ScriptThingsVector gcThings;
-
-  explicit FunctionCreationData(JSContext* cx) : gcThings(cx) {}
-
-  bool createLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
-                        HandleFunction function, FunctionBox* funbox,
-                        HandleScriptSourceObject sourceObject);
-
-  void trace(JSTracer* trc);
-};
-
 // Non-virtual base class for ScriptStencil.
 class ScriptStencilBase {
  public:
@@ -382,6 +359,10 @@ class ScriptStencilBase {
   js::UniquePtr<js::ImmutableScriptData> immutableScriptData = nullptr;
 
   explicit ScriptStencilBase(JSContext* cx) : gcThings(cx) {}
+
+  // This traces any JSAtoms in the gcThings array. This will be removed once
+  // atoms are deferred from parsing.
+  void trace(JSTracer* trc);
 };
 
 // Data used to instantiate the non-lazy script.

@@ -211,10 +211,10 @@ JSFunction* FunctionBox::createFunction(JSContext* cx) {
                               allocKind, TenuredObject);
 }
 
-bool FunctionBox::hasFunctionCreationData() const {
+bool FunctionBox::hasFunctionStencil() const {
   return compilationInfo_.funcData[funcDataIndex_]
       .get()
-      .is<FunctionCreationData>();
+      .is<ScriptStencilBase>();
 }
 
 bool FunctionBox::hasFunction() const {
@@ -392,13 +392,8 @@ ModuleSharedContext::ModuleSharedContext(JSContext* cx, ModuleObject* module,
   setFlag(ImmutableFlags::HasModuleGoal);
 }
 
-MutableHandle<FunctionCreationData> FunctionBox::functionCreationData() const {
-  MOZ_ASSERT(hasFunctionCreationData());
-  // Marked via CompilationData::funcData rooting.
-  return MutableHandle<FunctionCreationData>::fromMarkedLocation(
-      &compilationInfo_.funcData[funcDataIndex_]
-           .get()
-           .as<FunctionCreationData>());
+MutableHandle<ScriptStencilBase> FunctionBox::functionStencil() const {
+  return compilationInfo_.funcData[funcDataIndex_].as<ScriptStencilBase>();
 }
 
 }  // namespace frontend
