@@ -6,6 +6,7 @@ package org.mozilla.fenix.perf
 
 import android.os.Process
 import android.os.SystemClock
+import java.io.FileNotFoundException
 import kotlin.math.roundToLong
 import org.mozilla.fenix.GleanMetrics.StartupTimeline as Telemetry
 
@@ -53,14 +54,23 @@ internal class StartupFrameworkStartMeasurement(
         if (applicationInitNanos < 0) {
             telemetry.frameworkStartError.set(true)
         } else {
-            telemetry.frameworkStart.setRawNanos(getFrameworkStartNanos())
+            try {
+                telemetry.frameworkStart.setRawNanos(getFrameworkStartNanos())
+            } catch (e: FileNotFoundException) {
+                // Privacy managers can add hooks that block access to reading system /proc files.
+                // We want to catch these exception and report an error on accessing the file
+                // rather than an implementation error.
+                telemetry.frameworkStartReadError.set(true)
+            }
 
             // frameworkStart is derived from the number of clock ticks per second. To ensure this
             // value does not throw off our result, we capture it too.
             telemetry.clockTicksPerSecond.add(stat.clockTicksPerSecond.toInt())
         }
     }
-
+    /**
+     * @throws [java.io.FileNotFoundException]
+     */
     private fun getFrameworkStartNanos(): Long {
         // Get our timestamps in ticks: we expect ticks to be less granular than nanoseconds so,
         // to ensure our measurement uses the correct number of significant figures, we convert

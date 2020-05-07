@@ -24,6 +24,9 @@ private const val FIELD_POS_STARTTIME = 21 // starttime naming matches field in 
  */
 open class Stat {
 
+    /**
+     * @throws [java.io.FileNotFoundException]
+     */
     @VisibleForTesting(otherwise = PRIVATE)
     open fun getStatText(pid: Int): String = File("/proc/$pid/stat").readText()
 

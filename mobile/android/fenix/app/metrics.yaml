@@ -2253,6 +2253,22 @@ startup.timeline:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
     expires: "2020-07-15"
+  framework_start_read_error:
+    send_in_pings:
+      - startup-timeline
+    type: boolean
+    description: |
+      An error when attempting to read stats from /proc pseudo-filesystem -
+      privacy managers can block access to reading these files -
+      the application will catch a file reading exception.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/10434
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/10481
+    notification_emails:
+      - perf-android-fe@mozilla.com
+      - mcomella@mozilla.com
+    expires: "2020-07-15"
   clock_ticks_per_second:
     send_in_pings:
       - startup-timeline
