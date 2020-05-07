@@ -18,6 +18,7 @@ fuzzy-if(Android,0-255,0-30) == clipPath-html-06-extref.xhtml clipPath-html-06-r
 == clipPath-html-zoomed-01.xhtml clipPath-html-01-ref.svg
 == clipPath-transformed-html-01.xhtml ../pass.svg
 == clipPath-transformed-html-02.xhtml ../pass.svg
+== css-and-svg-filter-01.html css-and-svg-filter-01-ref.html  
 == conditions-outer-svg-01.xhtml ../pass.svg
 == conditions-outer-svg-02.xhtml ../pass.svg
 == dynamic-conditions-outer-svg-01.xhtml ../pass.svg
