@@ -14399,21 +14399,6 @@
     ],
     "description": "The common combinations of BFCacheStatus when we determine whether the page can be BFCached or not; If it's BFCached, we record BFCache_Success; Success_Not_Toplevel represents the number of not the only top level document in BrowsingContextGroup's documents that are BFCached, and BFCache_Success includes Success_Not_Toplevel; If it's not and it falls under common failure reasons combinations, we record the corresponding combination; Otherwise, we record Other to indicate this is not a common failure"
   },
-  "TYPES_OF_USER_CLICKS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox"],
-    "alert_emails": ["sefeng@mozilla.com", "perfteam@mozilla.com"],
-    "bug_numbers": [1589742],
-    "expires_in_version": "79",
-    "kind": "categorical",
-    "releaseChannelCollection": "opt-out",
-    "labels": [
-      "Browser_Chrome",
-      "Link",
-      "Has_JS_Listener"
-    ],
-    "description": "When a user click(Mousedown + Mouseup event by using the left mouse button) happens, record if it's a click on browser chrome (parent process), a anchor element or an element which has non-privileged click event listener associated"
-  },
   "BFCACHE_PAGE_RESTORED": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],

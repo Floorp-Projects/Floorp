@@ -2944,15 +2944,6 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
                                        nullptr, &status);
         if (NS_SUCCEEDED(rv)) {
           aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-          if (!actEvent.DefaultPreventedByContent() &&
-              mouseEvent->IsTrusted() &&
-              mouseEvent->mInputSource !=
-                  MouseEvent_Binding::MOZ_SOURCE_KEYBOARD &&
-              mouseEvent->mInputSource !=
-                  MouseEvent_Binding::MOZ_SOURCE_UNKNOWN) {
-            Telemetry::AccumulateCategorical(
-                Telemetry::LABELS_TYPES_OF_USER_CLICKS::Link);
-          }
         }
       }
       break;
