@@ -10,11 +10,8 @@
 #include "HttpTransactionChild.h"
 
 #include "mozilla/ipc/IPCStreamUtils.h"
-#include "mozilla/ipc/BackgroundParent.h"
-#include "mozilla/net/BackgroundDataBridgeParent.h"
 #include "mozilla/net/InputChannelThrottleQueueChild.h"
 #include "mozilla/net/SocketProcessChild.h"
-#include "mozilla/StaticPrefs_network.h"
 #include "nsInputStreamPump.h"
 #include "nsHttpHandler.h"
 #include "nsProxyInfo.h"
@@ -22,21 +19,18 @@
 #include "nsQueryObject.h"
 #include "nsSerializationHelper.h"
 
-using mozilla::ipc::BackgroundParent;
-
 namespace mozilla {
 namespace net {
 
 NS_IMPL_ISUPPORTS(HttpTransactionChild, nsIRequestObserver, nsIStreamListener,
-                  nsITransportEventSink, nsIThrottledInputChannel,
-                  nsIThreadRetargetableStreamListener);
+                  nsITransportEventSink, nsIThrottledInputChannel);
 
 //-----------------------------------------------------------------------------
 // HttpTransactionChild <public>
 //-----------------------------------------------------------------------------
 
 HttpTransactionChild::HttpTransactionChild()
-    : mCanceled(false), mStatus(NS_OK), mChannelId(0), mIsDocumentLoad(false) {
+    : mCanceled(false), mStatus(NS_OK), mChannelId(0) {
   LOG(("Creating HttpTransactionChild @%p\n", this));
 }
 
@@ -131,11 +125,6 @@ nsresult HttpTransactionChild::InitInternal(
 mozilla::ipc::IPCResult HttpTransactionChild::RecvCancelPump(
     const nsresult& aStatus) {
   LOG(("HttpTransactionChild::RecvCancelPump start [this=%p]\n", this));
-  CancelInternal(aStatus);
-  return IPC_OK();
-}
-
-void HttpTransactionChild::CancelInternal(nsresult aStatus) {
   MOZ_ASSERT(NS_FAILED(aStatus));
 
   mCanceled = true;
@@ -143,6 +132,8 @@ void HttpTransactionChild::CancelInternal(nsresult aStatus) {
   if (mTransactionPump) {
     mTransactionPump->Cancel(mStatus);
   }
+
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult HttpTransactionChild::RecvSuspendPump() {
@@ -173,8 +164,7 @@ mozilla::ipc::IPCResult HttpTransactionChild::RecvInit(
     const bool& aResponseTimeoutEnabled, const uint64_t& aChannelId,
     const bool& aHasTransactionObserver,
     const Maybe<H2PushedStreamArg>& aPushedStreamArg,
-    const mozilla::Maybe<PInputChannelThrottleQueueChild*>& aThrottleQueue,
-    const bool& aIsDocumentLoad) {
+    const mozilla::Maybe<PInputChannelThrottleQueueChild*>& aThrottleQueue) {
   mRequestHead = aReqHeaders;
   if (aRequestBody) {
     mUploadStream = mozilla::ipc::DeserializeIPCStream(aRequestBody);
@@ -182,7 +172,6 @@ mozilla::ipc::IPCResult HttpTransactionChild::RecvInit(
 
   mTransaction = new nsHttpTransaction();
   mChannelId = aChannelId;
-  mIsDocumentLoad = aIsDocumentLoad;
 
   if (aThrottleQueue.isSome()) {
     mThrottleQueue =
@@ -265,6 +254,10 @@ HttpTransactionChild::OnDataAvailable(nsIRequest* aRequest,
     return mStatus;
   }
 
+  if (!CanSend()) {
+    return NS_ERROR_FAILURE;
+  }
+
   // TODO: send string data in chunks and handle errors. Bug 1600129.
   nsCString data;
   nsresult rv = NS_ReadInputStreamToString(aInputStream, data, aCount);
@@ -272,47 +265,7 @@ HttpTransactionChild::OnDataAvailable(nsIRequest* aRequest,
     return rv;
   }
 
-  if (NS_IsMainThread()) {
-    if (!CanSend()) {
-      return NS_ERROR_FAILURE;
-    }
-
-    LOG(("  ODA to parent process"));
-    Unused << SendOnDataAvailable(data, aOffset, aCount, false);
-    return NS_OK;
-  }
-
-  ipc::AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mDataBridgeParent);
-
-  if (!mDataBridgeParent->CanSend()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  bool dataSentToContentProcess =
-      mDataBridgeParent->SendOnTransportAndData(aOffset, aCount, data);
-  LOG(("  ODA to content process, dataSentToContentProcess=%d",
-       dataSentToContentProcess));
-  if (!dataSentToContentProcess) {
-    MOZ_ASSERT(false, "Send ODA to content process failed");
-    return NS_ERROR_FAILURE;
-  }
-
-  // We still need to send ODA to parent process, because the data needs to be
-  // saved in cache. Note that we set dataSentToChildProcess to true, to this
-  // ODA will not be sent to child process.
-  RefPtr<HttpTransactionChild> self = this;
-  rv = NS_DispatchToMainThread(
-      NS_NewRunnableFunction(
-          "HttpTransactionChild::OnDataAvailable",
-          [self, offset(aOffset), count(aCount), data(data)]() {
-            if (!self->SendOnDataAvailable(data, offset, count, true)) {
-              self->CancelInternal(NS_ERROR_FAILURE);
-            }
-          }),
-      NS_DISPATCH_NORMAL);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-
+  Unused << SendOnDataAvailable(data, aOffset, aCount);
   return NS_OK;
 }
 
@@ -338,36 +291,6 @@ static void GetDataForSniffer(void* aClosure, const uint8_t* aData,
                               uint32_t aCount) {
   nsTArray<uint8_t>* outData = static_cast<nsTArray<uint8_t>*>(aClosure);
   outData->AppendElements(aData, std::min(aCount, MAX_BYTES_SNIFFED));
-}
-
-bool HttpTransactionChild::CanSendODAToContentProcessDirectly(
-    const Maybe<nsHttpResponseHead>& aHead) {
-  if (!StaticPrefs::network_send_ODA_to_content_directly()) {
-    return false;
-  }
-
-  // If this is a document load, the content process that receives ODA is not
-  // decided yet, so don't bother to do the rest check.
-  if (mIsDocumentLoad) {
-    return false;
-  }
-
-  if (!aHead) {
-    return false;
-  }
-
-  // We only need to deliver ODA when the response is succeed.
-  if (aHead->Status() != 200) {
-    return false;
-  }
-
-  // UnknownDecoder could be used in parent process, so we can't send ODA to
-  // content process.
-  if (!aHead->HasContentType()) {
-    return false;
-  }
-
-  return true;
 }
 
 NS_IMETHODIMP
@@ -413,31 +336,6 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
     }
   }
 
-  if (CanSendODAToContentProcessDirectly(optionalHead)) {
-    Maybe<RefPtr<BackgroundDataBridgeParent>> dataBridgeParent =
-        SocketProcessChild::GetSingleton()->GetAndRemoveDataBridge(mChannelId);
-    // Check if there is a registered BackgroundDataBridgeParent.
-    if (dataBridgeParent) {
-      mDataBridgeParent = std::move(dataBridgeParent.ref());
-
-      nsCOMPtr<nsIThread> backgroundThread =
-          mDataBridgeParent->GetBackgroundThread();
-      nsCOMPtr<nsIThreadRetargetableRequest> retargetableTransactionPump;
-      retargetableTransactionPump = do_QueryObject(mTransactionPump);
-      // nsInputStreamPump should implement this interface.
-      MOZ_ASSERT(retargetableTransactionPump);
-
-      nsresult rv =
-          retargetableTransactionPump->RetargetDeliveryTo(backgroundThread);
-      LOG((" Retarget to background thread [this=%p rv=%08x]\n", this,
-           static_cast<uint32_t>(rv)));
-      if (NS_FAILED(rv)) {
-        mDataBridgeParent->Destroy();
-        mDataBridgeParent = nullptr;
-      }
-    }
-  }
-
   int32_t proxyConnectResponseCode =
       mTransaction->GetProxyConnectResponseCode();
 
@@ -445,17 +343,13 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
                                mTransaction->ProxyConnectFailed(),
                                ToTimingStructArgs(mTransaction->Timings()),
                                proxyConnectResponseCode, dataForSniffer);
+  LOG(("HttpTransactionChild::OnStartRequest end [this=%p]\n", this));
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HttpTransactionChild::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   LOG(("HttpTransactionChild::OnStopRequest [this=%p]\n", this));
-
-  if (mDataBridgeParent) {
-    mDataBridgeParent->Destroy();
-    mDataBridgeParent = nullptr;
-  }
 
   // Don't bother sending IPC to parent process if already canceled.
   if (mCanceled) {
@@ -537,15 +431,6 @@ HttpTransactionChild::GetThrottleQueue(nsIInputChannelThrottleQueue** aQueue) {
   nsCOMPtr<nsIInputChannelThrottleQueue> queue =
       static_cast<nsIInputChannelThrottleQueue*>(mThrottleQueue.get());
   queue.forget(aQueue);
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// EventSourceImpl::nsIThreadRetargetableStreamListener
-//-----------------------------------------------------------------------------
-NS_IMETHODIMP
-HttpTransactionChild::CheckListenerChain() {
-  MOZ_ASSERT(NS_IsMainThread(), "Should be on the main thread!");
   return NS_OK;
 }
 

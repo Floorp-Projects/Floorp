@@ -43,8 +43,6 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/net/ChannelDiverterChild.h"
 #include "mozilla/net/DNS.h"
-#include "mozilla/net/SocketProcessBridgeChild.h"
-#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "SerializedLoadContext.h"
 #include "nsInputStreamPump.h"
@@ -62,7 +60,6 @@
 #include "nsCORSListenerProxy.h"
 #include "nsApplicationCache.h"
 #include "ClassifierDummyChannel.h"
-#include "nsIOService.h"
 
 #ifdef MOZ_TASK_TRACER
 #  include "GeckoTaskTracer.h"
@@ -881,8 +878,6 @@ void HttpChannelChild::OnTransportAndData(const nsresult& aChannelStatus,
   DoOnDataAvailable(this, nullptr, stringStream, aOffset, aCount);
   stringStream->Close();
 
-  // TODO: Bug 1523916 backpressure needs to take into account if the data is
-  // coming from the main process or from the socket process via PBackground.
   if (NeedToReportBytesRead()) {
     mUnreportBytesRead += aCount;
     if (mUnreportBytesRead >= gHttpHandler->SendWindowSize() >> 2) {
@@ -2095,8 +2090,6 @@ HttpChannelChild::ConnectParent(uint32_t registrarId) {
     mBgChild = std::move(bgChild);
   }
 
-  MaybeConnectToSocketProcess();
-
   return NS_OK;
 }
 
@@ -2851,8 +2844,6 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
 
     mBgChild = std::move(bgChild);
   }
-
-  MaybeConnectToSocketProcess();
 
   return NS_OK;
 }
@@ -4028,28 +4019,6 @@ void HttpChannelChild::DoDiagnosticAssertWhenOnStopNotCalledOnDestroy() {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   mDoDiagnosticAssertWhenOnStopNotCalledOnDestroy = true;
 #endif
-}
-
-void HttpChannelChild::MaybeConnectToSocketProcess() {
-  if (!nsIOService::UseSocketProcess()) {
-    return;
-  }
-
-  if (!StaticPrefs::network_send_ODA_to_content_directly()) {
-    return;
-  }
-
-  RefPtr<HttpBackgroundChannelChild> bgChild = mBgChild;
-  SocketProcessBridgeChild::GetSocketProcessBridge()->Then(
-      GetCurrentThreadSerialEventTarget(), __func__,
-      [bgChild]() {
-        gSocketTransportService->Dispatch(
-            NewRunnableMethod("HttpBackgroundChannelChild::CreateDataBridge",
-                              bgChild,
-                              &HttpBackgroundChannelChild::CreateDataBridge),
-            NS_DISPATCH_NORMAL);
-      },
-      []() { NS_WARNING("Failed to create SocketProcessBridgeChild"); });
 }
 
 }  // namespace net
