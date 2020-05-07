@@ -25,9 +25,6 @@ struct PopupIPCTabContext
 // An IPCTabContext which corresponds to an app, browser, or normal frame.
 struct FrameIPCTabContext
 {
-  // The originAttributes dictionary.
-  OriginAttributes originAttributes;
-
   uint64_t chromeOuterWindowID;
 
   // The requested presentation URL.
