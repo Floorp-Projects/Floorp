@@ -607,7 +607,6 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   mask-repeat: no-repeat;
   unicode-bidi: plaintext;
   text-align: match-parent;
-  outline: none;
 }
 
 #urlbar:not([focused])[domaindir="ltr"]> #urlbar-input-container > .urlbar-input-box > #urlbar-input {
