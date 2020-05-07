@@ -20,7 +20,6 @@
 #include "js/ContextOptions.h"
 #include "js/SavedFrameAPI.h"
 #include "js/StructuredClone.h"
-#include "mozilla/AppShutdown.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/LoadContext.h"
@@ -2088,18 +2087,6 @@ nsXPCComponents_Utils::GetIsInAutomation(bool* aResult) {
   NS_ENSURE_ARG_POINTER(aResult);
 
   *aResult = xpc::IsInAutomation();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPCComponents_Utils::ExitIfInAutomation() {
-  NS_ENSURE_TRUE(xpc::IsInAutomation(), NS_ERROR_FAILURE);
-
-#ifdef MOZ_GECKO_PROFILER
-  profiler_shutdown(IsFastShutdown::Yes);
-#endif
-
-  mozilla::AppShutdown::DoImmediateExit();
   return NS_OK;
 }
 

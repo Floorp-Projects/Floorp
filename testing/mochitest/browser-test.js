@@ -815,15 +815,6 @@ Tester.prototype = {
       if (this.done) {
         if (this._coverageCollector) {
           this._coverageCollector.finalize();
-        } else if (
-          !AppConstants.RELEASE_OR_BETA &&
-          !AppConstants.DEBUG &&
-          !AppConstants.MOZ_CODE_COVERAGE &&
-          !AppConstants.ASAN &&
-          !AppConstants.TSAN
-        ) {
-          this.finish();
-          return;
         }
 
         // Uninitialize a few things explicitly so that they can clean up
