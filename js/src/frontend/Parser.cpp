@@ -2027,10 +2027,6 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
   uint32_t startYieldOffset = pc_->lastYieldOffset;
 #endif
 
-  // One might expect noteUsedName(".initializers") here when parsing a
-  // constructor. See GeneralParser<ParseHandler, Unit>::classDefinition on why
-  // it's not here.
-
   Node body;
   if (type == StatementListBody) {
     bool inheritedStrict = pc_->sc()->strict();
