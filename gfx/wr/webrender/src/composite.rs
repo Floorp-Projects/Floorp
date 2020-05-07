@@ -96,6 +96,7 @@ pub enum ExternalSurfaceDependency {
     },
     Rgb {
         image_dependency: ImageDependency,
+        flip_y: bool,
     },
 }
 
@@ -158,6 +159,7 @@ pub enum ResolvedExternalSurfaceColorData {
     Rgb {
         image_dependency: ImageDependency,
         plane: ExternalPlaneDescriptor,
+        flip_y: bool,
     },
 }
 
@@ -642,7 +644,7 @@ impl CompositeState {
                         update_params,
                     });
                 },
-                ExternalSurfaceDependency::Rgb{ .. } => {
+                ExternalSurfaceDependency::Rgb{ flip_y, .. } => {
 
                     let image_buffer_kind = get_buffer_kind(planes[0].texture);
 
@@ -650,6 +652,7 @@ impl CompositeState {
                         color_data: ResolvedExternalSurfaceColorData::Rgb {
                             image_dependency: image_dependencies[0],
                             plane: planes[0],
+                            flip_y,
                         },
                         image_buffer_kind,
                         update_params,

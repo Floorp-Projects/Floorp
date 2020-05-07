@@ -20,6 +20,7 @@ flat varying vec4 vUVBounds_v;
 flat varying vec4 vColor;
 flat varying float vLayer;
 varying vec2 vUv;
+flat varying vec4 vUVBounds;
 #endif
 
 #ifdef WR_VERTEX_SHADER
@@ -33,6 +34,7 @@ PER_INSTANCE in vec4 aParams;
 PER_INSTANCE in vec3 aTextureLayers;
 
 #ifdef WR_FEATURE_YUV
+// YUV treats these as a UV clip rect (clamp)
 PER_INSTANCE in vec4 aUvRect0;
 PER_INSTANCE in vec4 aUvRect1;
 PER_INSTANCE in vec4 aUvRect2;
@@ -88,10 +90,23 @@ void main(void) {
     );
 #else
     vUv = mix(aUvRect0.xy, aUvRect0.zw, uv);
+    // flip_y might have the UV rect "upside down", make sure
+    // clamp works correctly:
+    vUVBounds = vec4(aUvRect0.x, min(aUvRect0.y, aUvRect0.w),
+                     aUvRect0.z, max(aUvRect0.y, aUvRect0.w));
     int rescale_uv = int(aParams.y);
     if (rescale_uv == 1)
-        vUv /= TEX_SIZE(sColor0);
-    // Pass through color
+    {
+        // using an atlas, so UVs are in pixels, and need to be
+        // normalized and clamped.
+        vec2 texture_size = TEX_SIZE(sColor0);
+        vUVBounds += vec4(0.5, 0.5, -0.5, -0.5);
+    #ifndef WR_FEATURE_TEXTURE_RECT
+        vUv /= texture_size;
+        vUVBounds /= texture_size.xyxy;
+    #endif
+    }
+    // Pass through color and texture array layer
     vColor = aColor;
     vLayer = aTextureLayers.x;
 #endif
@@ -116,10 +131,11 @@ void main(void) {
     );
 #else
     // The color is just the texture sample modulated by a supplied color
+    vec2 uv = clamp(vUv.xy, vUVBounds.xy, vUVBounds.zw);
 #   if defined(WR_FEATURE_TEXTURE_EXTERNAL) || defined(WR_FEATURE_TEXTURE_2D) || defined(WR_FEATURE_TEXTURE_RECT)
-    vec4 texel = TEX_SAMPLE(sColor0, vec3(vUv, vLayer));
+    vec4 texel = TEX_SAMPLE(sColor0, vec3(uv, vLayer));
 #   else
-    vec4 texel = textureLod(sColor0, vec3(vUv, vLayer), 0.0);
+    vec4 texel = textureLod(sColor0, vec3(uv, vLayer), 0.0);
 #   endif
     vec4 color = vColor * texel;
 #endif
