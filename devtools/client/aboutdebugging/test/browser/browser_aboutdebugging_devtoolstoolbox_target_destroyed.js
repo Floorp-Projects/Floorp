@@ -17,9 +17,11 @@ add_task(async function() {
     devtoolsTab,
     devtoolsWindow,
   } = await openAboutDevtoolsToolbox(document, tab, window, "about:home");
-  const targetUrl = devtoolsDocument.querySelector(".devtools-textinput");
+  const targetInfoHeader = devtoolsDocument.querySelector(
+    ".qa-debug-target-info"
+  );
   ok(
-    targetUrl.value.includes("about:home"),
+    targetInfoHeader.textContent.includes("about:home"),
     "about:devtools-toolbox is open for the target"
   );
 
