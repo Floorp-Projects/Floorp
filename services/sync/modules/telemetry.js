@@ -580,7 +580,7 @@ class SyncTelemetryImpl {
   }
 
   sanitizeFxaDeviceId(deviceId) {
-    fxAccounts.telemetry.sanitizeDeviceId(deviceId);
+    return fxAccounts.telemetry.sanitizeDeviceId(deviceId);
   }
 
   prepareFxaDevices(devices) {
