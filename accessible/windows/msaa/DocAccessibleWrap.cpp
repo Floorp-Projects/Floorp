@@ -46,7 +46,8 @@ DocAccessibleWrap::get_accParent(
     /* [retval][out] */ IDispatch __RPC_FAR* __RPC_FAR* ppdispParent) {
   // We might be a top-level document in a content process.
   DocAccessibleChild* ipcDoc = IPCDoc();
-  if (!ipcDoc) {
+  if (!ipcDoc || static_cast<dom::BrowserChild*>(ipcDoc->Manager())
+                         ->GetTopLevelDocAccessibleChild() != ipcDoc) {
     return DocAccessible::get_accParent(ppdispParent);
   }
 
