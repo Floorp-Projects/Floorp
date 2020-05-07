@@ -403,18 +403,10 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Complete(
                                         callback, callback);
   }
 
-  // FIXME: We should get the correct principal for the to-be-created window so
-  // we can avoid creating unnecessary extra windows in the new process.
-  OriginAttributes attrs = embedderBrowser->OriginAttributesRef();
-  RefPtr<nsIPrincipal> principal = embedderBrowser->GetContentPrincipal();
-  if (principal) {
-    attrs.SetFirstPartyDomain(
-        true, principal->OriginAttributesRef().mFirstPartyDomain);
-  }
-
   nsCOMPtr<nsIPrincipal> initialPrincipal =
-      NullPrincipal::CreateWithInheritedAttributes(attrs,
-                                                   /* isFirstParty */ false);
+      NullPrincipal::CreateWithInheritedAttributes(
+          target->OriginAttributesRef(),
+          /* isFirstParty */ false);
   WindowGlobalInit windowInit =
       WindowGlobalActor::AboutBlankInitializer(target, initialPrincipal);
 
