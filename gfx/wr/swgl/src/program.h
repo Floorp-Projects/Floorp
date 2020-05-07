@@ -6,6 +6,12 @@ struct VertexAttrib;
 
 namespace glsl {
 
+// Type holding group of scalars interpolated across rasterized rows and spans,
+// shuttling values between vertex shaders and fragment shaders.
+// GCC requires power-of-two vector sizes, so must use glsl type as workaround
+// to operate in Float-sized chunks.
+typedef vec3 Interpolants;
+
 struct VertexShaderImpl;
 struct FragmentShaderImpl;
 
@@ -14,6 +20,7 @@ struct ProgramImpl {
   virtual int get_uniform(const char* name) const = 0;
   virtual void bind_attrib(const char* name, int index) = 0;
   virtual int get_attrib(const char* name) const = 0;
+  virtual size_t interpolants_size() const = 0;
   virtual VertexShaderImpl* get_vertex_shader() = 0;
   virtual FragmentShaderImpl* get_fragment_shader() = 0;
 };

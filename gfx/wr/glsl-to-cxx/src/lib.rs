@@ -245,6 +245,7 @@ fn translate_shader(
             write!(state, " attrib_locations.bind_loc(name, index);\n}}\n");
             write!(state, "int get_attrib(const char* name) const override {{\n");
             write!(state, " return attrib_locations.get_loc(name);\n}}\n");
+            write!(state, "size_t interpolants_size() const override {{ return sizeof(InterpOutputs); }}\n");
             write!(state, "VertexShaderImpl* get_vertex_shader() override {{\n");
             write!(state, " return this;\n}}\n");
             write!(state, "FragmentShaderImpl* get_fragment_shader() override {{\n");
