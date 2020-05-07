@@ -831,6 +831,10 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       nsCOMPtr<nsIWindowProvider> provider;
       if (parentTreeOwner) {
         provider = do_GetInterface(parentTreeOwner);
+      } else if (XRE_IsContentProcess()) {
+        // we're in a content process but we don't have a tabchild we can
+        // use.
+        provider = nsContentUtils::GetWindowProviderForContentProcess();
       }
 
       if (provider) {
