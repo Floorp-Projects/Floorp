@@ -18,13 +18,11 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TaggedAnonymousMemory.h"
 
-#include <algorithm>  // std::max, std::min
-#include <memory>     // std::uninitialized_copy_n
+#include <algorithm>
 #include <string.h>
 #ifndef XP_WIN
 #  include <sys/mman.h>
 #endif
-#include <tuple>  // std::tuple
 #ifdef MOZ_VALGRIND
 #  include <valgrind/memcheck.h>
 #endif
@@ -413,51 +411,21 @@ bool ArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
   return true;
 }
 
-using ArrayBufferContents = UniquePtr<uint8_t[], JS::FreePolicy>;
-
-static ArrayBufferContents AllocateUninitializedArrayBufferContents(
-    JSContext* cx, uint32_t nbytes) {
-  // First attempt a normal allocation.
-  uint8_t* p =
-      cx->maybe_pod_arena_malloc<uint8_t>(js::ArrayBufferContentsArena, nbytes);
-  if (MOZ_UNLIKELY(!p)) {
-    // Otherwise attempt a large allocation, calling the
-    // large-allocation-failure callback if necessary.
-    p = static_cast<uint8_t*>(cx->runtime()->onOutOfMemoryCanGC(
-        js::AllocFunction::Malloc, js::ArrayBufferContentsArena, nbytes));
-    if (!p) {
-      ReportOutOfMemory(cx);
-    }
+static uint8_t* AllocateArrayBufferContents(JSContext* cx, uint32_t nbytes) {
+  auto* p =
+      cx->pod_arena_callocCanGC<uint8_t>(js::ArrayBufferContentsArena, nbytes);
+  if (!p) {
+    ReportOutOfMemory(cx);
   }
-
-  return ArrayBufferContents(p);
+  return p;
 }
 
-static ArrayBufferContents AllocateArrayBufferContents(JSContext* cx,
-                                                       uint32_t nbytes) {
-  // First attempt a normal allocation.
-  uint8_t* p =
-      cx->maybe_pod_arena_calloc<uint8_t>(js::ArrayBufferContentsArena, nbytes);
-  if (MOZ_UNLIKELY(!p)) {
-    // Otherwise attempt a large allocation, calling the
-    // large-allocation-failure callback if necessary.
-    p = static_cast<uint8_t*>(cx->runtime()->onOutOfMemoryCanGC(
-        js::AllocFunction::Calloc, js::ArrayBufferContentsArena, nbytes));
-    if (!p) {
-      ReportOutOfMemory(cx);
-    }
-  }
-
-  return ArrayBufferContents(p);
-}
-
-static ArrayBufferContents NewCopiedBufferContents(
-    JSContext* cx, Handle<ArrayBufferObject*> buffer) {
-  ArrayBufferContents dataCopy =
-      AllocateUninitializedArrayBufferContents(cx, buffer->byteLength());
+static uint8_t* NewCopiedBufferContents(JSContext* cx,
+                                        Handle<ArrayBufferObject*> buffer) {
+  uint8_t* dataCopy = AllocateArrayBufferContents(cx, buffer->byteLength());
   if (dataCopy) {
     if (auto count = buffer->byteLength()) {
-      memcpy(dataCopy.get(), buffer->dataPointer(), count);
+      memcpy(dataCopy, buffer->dataPointer(), count);
     }
   }
   return dataCopy;
@@ -1188,83 +1156,6 @@ ArrayBufferObject* ArrayBufferObject::createForContents(
   return buffer;
 }
 
-template <ArrayBufferObject::FillContents FillType>
-/* static */ std::tuple<ArrayBufferObject*, uint8_t*>
-ArrayBufferObject::createBufferAndData(
-    JSContext* cx, uint32_t nbytes, AutoSetNewObjectMetadata&,
-    JS::Handle<JSObject*> proto /* = nullptr */) {
-  MOZ_ASSERT(nbytes <= ArrayBufferObject::MaxBufferByteLength,
-             "caller must validate the byte count it passes");
-
-  // Try fitting the data inline with the object by repurposing fixed-slot
-  // storage.  Add extra fixed slots if necessary to accomplish this, but don't
-  // exceed the maximum number of fixed slots!
-  size_t nslots = JSCLASS_RESERVED_SLOTS(&class_);
-  ArrayBufferContents data;
-  if (nbytes <= MaxInlineBytes) {
-    int newSlots = HowMany(nbytes, sizeof(Value));
-    MOZ_ASSERT(int(nbytes) <= newSlots * int(sizeof(Value)));
-
-    nslots += newSlots;
-  } else {
-    data = (FillType == FillContents::Uninitialized
-                ? AllocateUninitializedArrayBufferContents
-                : AllocateArrayBufferContents)(cx, nbytes);
-    if (!data) {
-      return {nullptr, nullptr};
-    }
-  }
-
-  MOZ_ASSERT(!(class_.flags & JSCLASS_HAS_PRIVATE));
-  gc::AllocKind allocKind = GetArrayBufferGCObjectKind(nslots);
-
-  ArrayBufferObject* buffer = NewObjectWithClassProto<ArrayBufferObject>(
-      cx, nullptr, allocKind, GenericObject);
-  if (!buffer) {
-    return {nullptr, nullptr};
-  }
-
-  MOZ_ASSERT(!gc::IsInsideNursery(buffer),
-             "ArrayBufferObject has a finalizer that must be called to not "
-             "leak in some cases, so it can't be nursery-allocated");
-
-  uint8_t* toFill;
-  if (data) {
-    toFill = data.release();
-    buffer->initialize(nbytes, BufferContents::createMalloced(toFill));
-    AddCellMemory(buffer, nbytes, MemoryUse::ArrayBufferContents);
-  } else {
-    toFill = static_cast<uint8_t*>(buffer->initializeToInlineData(nbytes));
-    if constexpr (FillType == FillContents::Zero) {
-      memset(toFill, 0, nbytes);
-    }
-  }
-
-  return {buffer, toFill};
-}
-
-/* static */ ArrayBufferObject* ArrayBufferObject::copy(
-    JSContext* cx, JS::Handle<ArrayBufferObject*> unwrappedArrayBuffer) {
-  if (unwrappedArrayBuffer->isDetached()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TYPED_ARRAY_DETACHED);
-    return nullptr;
-  }
-
-  uint32_t nbytes = unwrappedArrayBuffer->byteLength();
-
-  AutoSetNewObjectMetadata metadata(cx);
-  auto [buffer, toFill] = createBufferAndData<FillContents::Uninitialized>(
-      cx, nbytes, metadata, nullptr);
-  if (!buffer) {
-    return nullptr;
-  }
-
-  std::uninitialized_copy_n(unwrappedArrayBuffer->dataPointer(), nbytes,
-                            toFill);
-  return buffer;
-}
-
 ArrayBufferObject* ArrayBufferObject::createZeroed(
     JSContext* cx, uint32_t nbytes, HandleObject proto /* = nullptr */) {
   // 24.1.1.1, step 3 (Inlined 6.2.6.1 CreateByteDataBlock, step 2).
@@ -1272,10 +1163,50 @@ ArrayBufferObject* ArrayBufferObject::createZeroed(
     return nullptr;
   }
 
+  // Try fitting the data inline with the object by repurposing fixed-slot
+  // storage.  Add extra fixed slots if necessary to accomplish this, but don't
+  // exceed the maximum number of fixed slots!
+  size_t nslots = JSCLASS_RESERVED_SLOTS(&class_);
+  uint8_t* data;
+  if (nbytes <= MaxInlineBytes) {
+    int newSlots = HowMany(nbytes, sizeof(Value));
+    MOZ_ASSERT(int(nbytes) <= newSlots * int(sizeof(Value)));
+
+    nslots += newSlots;
+    data = nullptr;
+  } else {
+    data = AllocateArrayBufferContents(cx, nbytes);
+    if (!data) {
+      return nullptr;
+    }
+  }
+
+  MOZ_ASSERT(!(class_.flags & JSCLASS_HAS_PRIVATE));
+  gc::AllocKind allocKind = GetArrayBufferGCObjectKind(nslots);
+
   AutoSetNewObjectMetadata metadata(cx);
-  auto [buffer, toFill] =
-      createBufferAndData<FillContents::Zero>(cx, nbytes, metadata, proto);
-  Unused << toFill;
+  Rooted<ArrayBufferObject*> buffer(
+      cx, NewObjectWithClassProto<ArrayBufferObject>(cx, proto, allocKind,
+                                                     GenericObject));
+  if (!buffer) {
+    if (data) {
+      js_free(data);
+    }
+    return nullptr;
+  }
+
+  MOZ_ASSERT(!gc::IsInsideNursery(buffer),
+             "ArrayBufferObject has a finalizer that must be called to not "
+             "leak in some cases, so it can't be nursery-allocated");
+
+  if (data) {
+    buffer->initialize(nbytes, BufferContents::createMalloced(data));
+    AddCellMemory(buffer, nbytes, MemoryUse::ArrayBufferContents);
+  } else {
+    void* inlineData = buffer->initializeToInlineData(nbytes);
+    memset(inlineData, 0, nbytes);
+  }
+
   return buffer;
 }
 
@@ -1349,7 +1280,7 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
     case MAPPED:
     case EXTERNAL: {
       // We can't use these data types directly.  Make a copy to return.
-      ArrayBufferContents copiedData = NewCopiedBufferContents(cx, buffer);
+      uint8_t* copiedData = NewCopiedBufferContents(cx, buffer);
       if (!copiedData) {
         return nullptr;
       }
@@ -1357,7 +1288,7 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
       // Detach |buffer|.  This immediately releases the currently owned
       // contents, freeing or unmapping data in the MAPPED and EXTERNAL cases.
       ArrayBufferObject::detach(cx, buffer);
-      return copiedData.release();
+      return copiedData;
     }
 
     case WASM:
@@ -1387,13 +1318,13 @@ ArrayBufferObject::extractStructuredCloneContents(
     case INLINE_DATA:
     case NO_DATA:
     case USER_OWNED: {
-      ArrayBufferContents copiedData = NewCopiedBufferContents(cx, buffer);
+      uint8_t* copiedData = NewCopiedBufferContents(cx, buffer);
       if (!copiedData) {
         return BufferContents::createFailed();
       }
 
       ArrayBufferObject::detach(cx, buffer);
-      return BufferContents::createMalloced(copiedData.release());
+      return BufferContents::createMalloced(copiedData);
     }
 
     case MALLOCED:
@@ -1733,39 +1664,6 @@ JS_PUBLIC_API JSObject* JS::NewArrayBufferWithContents(JSContext* cx,
 
   BufferContents contents = BufferContents::createMalloced(data);
   return ArrayBufferObject::createForContents(cx, nbytes, contents);
-}
-
-static ArrayBufferObject* UnwrapArrayBuffer(
-    JSContext* cx, JS::Handle<JSObject*> maybeArrayBuffer) {
-  JSObject* obj = CheckedUnwrapStatic(maybeArrayBuffer);
-  if (!obj) {
-    ReportAccessDenied(cx);
-    return nullptr;
-  }
-
-  if (!obj->is<ArrayBufferObject>()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TYPED_ARRAY_BAD_ARGS);
-    return nullptr;
-  }
-
-  return &obj->as<ArrayBufferObject>();
-}
-
-JS_PUBLIC_API JSObject* JS::CopyArrayBuffer(JSContext* cx,
-                                            Handle<JSObject*> arrayBuffer) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-
-  MOZ_ASSERT(arrayBuffer != nullptr);
-
-  Rooted<ArrayBufferObject*> unwrappedSource(
-      cx, UnwrapArrayBuffer(cx, arrayBuffer));
-  if (!unwrappedSource) {
-    return nullptr;
-  }
-
-  return ArrayBufferObject::copy(cx, unwrappedSource);
 }
 
 JS_PUBLIC_API JSObject* JS::NewExternalArrayBuffer(
