@@ -33,7 +33,10 @@
 
 for (var idx in gLonghandProperties) {
   var prop = gLonghandProperties[idx];
+  const webRenderEnabled = IsWebRenderEnabled();
   if (prop.pref && !IsCSSPropertyPrefEnabled(prop.pref)) {
+    continue;
+  } else if (prop.name === "backdrop-filter" && !webRenderEnabled) {
     continue;
   }
   var present = prop.name in gCSSProperties;
@@ -49,6 +52,8 @@ for (var idx in gLonghandProperties) {
 for (var idx in gShorthandProperties) {
   var prop = gShorthandProperties[idx];
   if (prop.pref && !IsCSSPropertyPrefEnabled(prop.pref)) {
+    continue;
+  } else if (prop.name === "backdrop-filter" && !webRenderEnabled) {
     continue;
   }
   if (prop.name == "all") {
@@ -70,6 +75,8 @@ for (var idx in gShorthandProperties) {
 for (var idx in gShorthandPropertiesLikeLonghand) {
   var prop = gShorthandPropertiesLikeLonghand[idx];
   if (prop.pref && !IsCSSPropertyPrefEnabled(prop.pref)) {
+    continue;
+  } else if (prop.name === "backdrop-filter" && !webRenderEnabled) {
     continue;
   }
   var present = prop.name in gCSSProperties;
