@@ -265,6 +265,20 @@ win64-pdbstr:
         arguments: ['x64']
         toolchain-artifact: project/gecko/pdbstr/pdbstr.tar.bz2
 
+linux64-winchecksec:
+    description: "winchecksec"
+    treeherder:
+        symbol: TL(winchecksec)
+    worker:
+        docker-image: {in-tree: deb10-toolchain-build}
+    run:
+        script: build-winchecksec.sh
+        toolchain-artifact: public/build/winchecksec.tar.bz2
+        tooltool-downloads: internal
+    fetches:
+        fetch:
+            - winchecksec
+
 win64-winchecksec:
     description: "winchecksec"
     treeherder:

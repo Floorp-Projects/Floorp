@@ -31,9 +31,12 @@ unset VC_PATH
 
 fi
 
-export WINCHECKSEC="${MOZ_FETCHES_DIR}/winchecksec/winchecksec.exe"
+export WINCHECKSEC="${MOZ_FETCHES_DIR}/winchecksec/winchecksec"
 if [ ! -f "${WINCHECKSEC}" ]; then
-    unset WINCHECKSEC
+    export WINCHECKSEC="${MOZ_FETCHES_DIR}/winchecksec/winchecksec.exe"
+    if [ ! -f "${WINCHECKSEC}" ]; then
+        unset WINCHECKSEC
+    fi
 fi
 
 export PDBSTR="${MOZ_FETCHES_DIR}/pdbstr/pdbstr.exe"
