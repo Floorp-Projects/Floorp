@@ -81,6 +81,11 @@ private fun normalModeAdapterItems(
         tabs.isEmpty() && collections.isEmpty() && !useNewTabTray -> {
             items.add(noTabMessage)
         }
+
+        collections.isEmpty() && useNewTabTray -> {
+            items.add(AdapterItem.CollectionHeader)
+            items.add(noCollectionMessage)
+        }
     }
 
     return items
