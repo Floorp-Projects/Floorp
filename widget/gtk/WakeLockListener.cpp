@@ -42,6 +42,10 @@ NS_IMPL_ISUPPORTS(WakeLockListener, nsIDOMMozWakeLockListener)
 
 StaticRefPtr<WakeLockListener> WakeLockListener::sSingleton;
 
+#  define WAKE_LOCK_LOG(...) \
+    MOZ_LOG(gLinuxWakeLockLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+static mozilla::LazyLogModule gLinuxWakeLockLog("LinuxWakeLock");
+
 enum DesktopEnvironment {
   FreeDesktop,
   GNOME,
@@ -484,6 +488,8 @@ nsresult WakeLockListener::Callback(const nsAString& topic,
 
   // Treat "locked-background" the same as "unlocked" on desktop linux.
   bool shouldLock = state.EqualsLiteral("locked-foreground");
+  WAKE_LOCK_LOG("topic=%s, shouldLock=%d", NS_ConvertUTF16toUTF8(topic).get(),
+                shouldLock);
 
   return shouldLock ? topicLock->InhibitScreensaver()
                     : topicLock->UninhibitScreensaver();
