@@ -1,3 +1,5 @@
+/* eslint no-shadow:"off" */
+
 const passwordInputSelector = "#form-basic-password";
 const usernameInputSelector = "#form-basic-username";
 const FORM_URL =
@@ -120,6 +122,50 @@ let testCases = [
     },
   },
   {
+    /* Test that the reveal password checkbox is shown when editing the
+     * password of a login that has been autofilled and then deleted
+     */
+    name: "test_autofilled_cleared_then_updated_password",
+    logins: [{ username: "username1", password: "password" }],
+    formDefaults: {},
+    formChanges: [
+      {
+        [passwordInputSelector]: "",
+      },
+      {
+        [passwordInputSelector]: "password!",
+      },
+    ],
+    expected: {
+      initialForm: {
+        username: "username1",
+        password: "password",
+      },
+      passwordChangedDoorhanger: {
+        type: "password-change",
+        dismissed: true,
+        username: "username1",
+        password: "password!",
+        toggleVisible: true,
+        initialToggleState: {
+          inputType: "password",
+          toggleChecked: false,
+        },
+      },
+      submitDoorhanger: {
+        type: "password-change",
+        dismissed: false,
+        username: "username1",
+        password: "password!",
+        toggleVisible: true,
+        initialToggleState: {
+          inputType: "password",
+          toggleChecked: false,
+        },
+      },
+    },
+  },
+  {
     /* Test that the reveal password checkbox is hidden when editing the
      * username of an autofilled login
      */
@@ -185,6 +231,8 @@ async function testDoorhangerToggles({
   expected,
   enabledMasterPassword,
 }) {
+  formChanges = Array.isArray(formChanges) ? formChanges : [formChanges];
+
   for (let login of logins) {
     await LoginTestUtils.addLogin(login);
   }
@@ -210,7 +258,12 @@ async function testDoorhangerToggles({
       let formChanged = expected.passwordChangedDoorhanger
         ? listenForTestNotification("PasswordEditedOrGenerated")
         : Promise.resolve();
-      await changeContentFormValues(browser, formChanges);
+      for (let change of formChanges) {
+        await changeContentFormValues(browser, change, {
+          method: "paste_text",
+        });
+      }
+
       await formChanged;
 
       if (expected.passwordChangedDoorhanger) {
@@ -313,6 +366,7 @@ async function verifyDoorhangerToggles(browser, notif, expected) {
       "The visibility checkbox is hidden"
     );
   }
+
   if (initialToggleState) {
     is(
       toggleCheckbox.checked,
