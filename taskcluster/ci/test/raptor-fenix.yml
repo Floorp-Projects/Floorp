@@ -6,18 +6,15 @@ job-defaults:
     max-run-time: 1800
     suite: raptor
     workdir: /builds/worker
-    run-on-projects:
-        by-test-platform:
-            android-hw-.*/opt: []
-            android-hw-.*/pgo: ['trunk', 'mozilla-beta']
+    run-on-projects: []
     tier: 1
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.performance-test.latest
+                index: project.mobile.fenix.v2.nightly.latest
                 name: build/arm64-v8a/geckoNightly/target.apk
             default:
-                index: project.mobile.fenix.v2.performance-test.latest
+                index: project.mobile.fenix.v2.nightly.latest
                 name: build/armeabi-v7a/geckoNightly/target.apk
     e10s: true
     virtualization: hardware
@@ -25,122 +22,86 @@ job-defaults:
         script: raptor_script.py
         config:
             - raptor/android_hw_config.py
+        extra-options:
+            - --app=fenix
+            - --binary-path=org.mozilla.fenix.nightly
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-scn-power-idle-fenix:
     description: "Raptor idle-browser power-usage test on Fenix"
     try-name: raptor-scn-power-idle-fenix
     treeherder-symbol: Rap-fenix(idl-p)
-    run-on-projects: []
-    e10s: true
     tier: 2
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-scn-power-idle
-            - --app=fenix
-            - --binary-path=org.mozilla.fenix.performancetest
             - --power-test
-            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-scn-cpu-memory-idle-fenix:
     description: "Raptor idle-browser cpu/memory on Fenix"
     try-name: raptor-scn-cpu-memory-idle-fenix
     treeherder-symbol: Rap-fenix(idl-cm)
-    run-on-projects: []
-    e10s: true
     tier: 2
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-scn-power-idle
-            - --app=fenix
-            - --binary-path=org.mozilla.fenix.performancetest
             - --cpu-test
             - --memory-test
-            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-scn-cpu-memory-power-idle-fenix:
     description: "Raptor idle-browser cpu/memory/power on Fenix"
     try-name: raptor-scn-cpu-memory-power-idle-fenix
     treeherder-symbol: Rap-fenix(idl-cmp)
-    run-on-projects: []
-    e10s: true
     tier: 2
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-scn-power-idle
-            - --app=fenix
-            - --binary-path=org.mozilla.fenix.performancetest
             - --cpu-test
             - --memory-test
             - --power-test
-            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-scn-power-idle-bg-fenix:
     description: "Raptor idle-browser (backgrounded) power-usage measurement on Fenix"
     try-name: raptor-scn-power-idle-bg-fenix
     treeherder-symbol: Rap-fenix(idlbg-p)
-    run-on-projects: []
-    e10s: true
     tier: 2
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-scn-power-idle-bg
-            - --app=fenix
-            - --binary-path=org.mozilla.fenix.performancetest
             - --power-test
-            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-scn-cpu-memory-idle-bg-fenix:
     description: "Raptor idle-browser (backgrounded) cpu/memory on Fenix"
     try-name: raptor-scn-cpu-memory-idle-bg-fenix
     treeherder-symbol: Rap-fenix(idlbg-cm)
-    run-on-projects: []
-    e10s: true
     tier: 2
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-scn-power-idle-bg
-            - --app=fenix
-            - --binary-path=org.mozilla.fenix.performancetest
             - --cpu-test
             - --memory-test
-            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-scn-cpu-memory-power-idle-bg-fenix:
     description: "Raptor idle-browser (backgrounded) cpu/memory/power on Fenix"
     try-name: raptor-scn-cpu-memory-power-idle-bg-fenix
     treeherder-symbol: Rap-fenix(idlbg-cmp)
-    run-on-projects: []
-    e10s: true
     tier: 2
-    max-run-time: 1800
     mozharness:
         extra-options:
             - --test=raptor-scn-power-idle-bg
-            - --app=fenix
-            - --binary-path=org.mozilla.fenix.performancetest
             - --cpu-test
             - --memory-test
             - --power-test
-            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-youtube-playback-fenix:
     description: "Raptor YouTube Playback on Fenix"
     try-name: raptor-youtube-playback-fenix
     treeherder-symbol: Rap-fenix(ytp)
     run-on-projects: []
-    e10s: true
-    max-run-time: 3000
+    max-run-time: 3600
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback
-            - --app=fenix
-            - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.IntentReceiverActivity
             # Bug 1558456 - Stop tracking youtube-playback-test on motoG5 for >1080p cases
             # - --test-url-params is dynamically added from setup_raptor transform depending
             # on platform and project
@@ -149,114 +110,74 @@ raptor-youtube-playback-av1-sfr-fenix:
     description: "Raptor YouTube Playback AV1 SFR on Fenix"
     try-name: raptor-youtube-playback-av1-sfr-fenix
     treeherder-symbol: Rap-fenix(ytp-av1-sfr)
-    run-on-projects: []
-    e10s: true
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-av1-sfr
-            - --app=fenix
-            - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-youtube-playback-h264-sfr-fenix:
     description: "Raptor YouTube Playback H264 SFR on Fenix"
     try-name: raptor-youtube-playback-h264-sfr-fenix
     treeherder-symbol: Rap-fenix(ytp-h264-sfr)
-    run-on-projects: []
-    e10s: true
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-h264-sfr
-            - --app=fenix
-            - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-youtube-playback-vp9-sfr-fenix:
     description: "Raptor YouTube Playback VP9 SFR on Fenix"
     try-name: raptor-youtube-playback-vp9-sfr-fenix
     treeherder-symbol: Rap-fenix(ytp-vp9-sfr)
-    run-on-projects: []
-    e10s: true
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-vp9-sfr
-            - --app=fenix
-            - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-youtube-playback-widevine-hfr-fenix:
     description: "Raptor YouTube Playback Widevine HFR on Fenix"
     try-name: raptor-youtube-playback-widevine-hfr-fenix
     treeherder-symbol: Rap-fenix(ytp-widevine-hfr)
-    run-on-projects: []
-    e10s: true
     max-run-time: 3000
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-widevine-hfr
-            - --app=fenix
-            - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-youtube-playback-widevine-h264-sfr-fenix:
     description: "Raptor YouTube Playback Widevine H264 SFR on Fenix"
     try-name: raptor-youtube-playback-widevine-h264-sfr
     treeherder-symbol: Rap-fenix(ytp-widevine-h264-sfr)
-    run-on-projects: []
-    e10s: true
     max-run-time: 3000
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-widevine-h264-sfr
-            - --app=fenix
-            - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-youtube-playback-widevine-vp9-sfr-fenix:
     description: "Raptor YouTube Playback Widevine VP9 SFR on Fenix"
     try-name: raptor-youtube-playback-widevine-vp9-sfr
     treeherder-symbol: Rap-fenix(ytp-widevine-vp9-sfr)
-    run-on-projects: []
-    e10s: true
     max-run-time: 3000
     tier: 2
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-widevine-vp9-sfr
-            - --app=fenix
-            - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-speedometer-fenix:
     description: "Raptor Speedometer on Fenix"
     try-name: raptor-speedometer-fenix
     treeherder-symbol: Rap-fenix(sp)
-    run-on-projects: []
-    e10s: true
     max-run-time: 2000
     mozharness:
         extra-options:
             - --test=raptor-speedometer
-            - --app=fenix
-            - --binary-path=org.mozilla.fenix.performancetest
-            - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-speedometer-fenix-power:
     description: "Raptor Speedometer power on Fenix"
     try-name: raptor-speedometer-fenix-power
     treeherder-symbol: Rap-fenix(sp-p)
-    run-on-projects: []
-    e10s: true
     max-run-time: 2000
     mozharness:
         extra-options:
             - --test=raptor-speedometer
-            - --app=fenix
-            - --binary-path=org.mozilla.fenix.performancetest
             - --power-test
-            - --activity=org.mozilla.fenix.IntentReceiverActivity

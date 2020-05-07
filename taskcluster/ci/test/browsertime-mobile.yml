@@ -19,10 +19,10 @@ job-defaults:
             fenix:
                 by-test-platform:
                     android-hw.*-aarch64.*/.*:
-                        index: project.mobile.fenix.v2.performance-test.latest
+                        index: project.mobile.fenix.v2.nightly.latest
                         name: build/arm64-v8a/geckoNightly/target.apk
                     default:
-                        index: project.mobile.fenix.v2.performance-test.latest
+                        index: project.mobile.fenix.v2.nightly.latest
                         name: build/armeabi-v7a/geckoNightly/target.apk
             fennec:
                 by-test-platform:
@@ -52,7 +52,7 @@ job-defaults:
             default: None
     binary-path:
         by-app:
-            fenix: org.mozilla.fenix.performancetest
+            fenix: org.mozilla.fenix.nightly
             geckoview: org.mozilla.geckoview_example
             fennec: org.mozilla.fennec_aurora
             refbrow: org.mozilla.reference.browser.raptor
