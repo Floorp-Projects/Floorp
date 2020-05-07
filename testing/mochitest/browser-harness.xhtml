@@ -322,14 +322,13 @@
     }
 
     function testsFinished(aTests) {
-      // Focus our window, to display the results
-      window.focus();
-
       if (gConfig.closeWhenDone) {
-        let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
-        appStartup.quit(Ci.nsIAppStartup.eForceQuit);
+        Cu.exitIfInAutomation();
         return;
       }
+
+      // Focus our window, to display the results
+      window.focus();
 
       // UI
       document.getElementById("results").innerHTML = getHTMLLogFromTests(aTests);
