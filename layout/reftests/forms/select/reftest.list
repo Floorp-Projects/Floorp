@@ -19,3 +19,5 @@ skip-if(Android) == select-option-display-none-inline-size.html select-option-di
 # drawing the arrow as a background like Linux and Mac), so most of this test
 # doesn't apply since when over-constrained it gets zero-sized.
 skip-if(Android||winWidget) == themed-select-padding-no-clip.html themed-select-padding-no-clip-ref.html
+
+== select-scrollbar-width.html select-scrollbar-width-ref.html
