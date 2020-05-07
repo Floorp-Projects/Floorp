@@ -97,7 +97,8 @@ class ProfileCreator(FirefoxProfileCreator):
             "network.dns.localDomains": ",".join(self.config.domains_set),
             "dom.disable_open_during_load": False,
             "places.history.enabled": False,
-            "dom.send_after_paint_to_content": True
+            "dom.send_after_paint_to_content": True,
+            "network.preload": True,
         })
 
         if self.e10s:

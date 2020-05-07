@@ -581,7 +581,8 @@ class ProfileCreator(object):
             "dom.file.createInChild": True,
             # TODO: Remove preferences once Firefox 64 is stable (Bug 905404)
             "network.proxy.type": 0,
-            "places.history.enabled": False
+            "places.history.enabled": False,
+            "network.preload": True,
         })
         if self.e10s:
             profile.set_preferences({"browser.tabs.remote.autostart": True})
