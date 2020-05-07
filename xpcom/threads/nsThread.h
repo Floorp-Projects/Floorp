@@ -257,8 +257,13 @@ class nsThread : public nsIThreadInternal,
   // notifications, etc.
   nsLocalExecutionRecord EnterLocalExecution();
 
+  void SetUseHangMonitor(bool aValue) {
+    MOZ_ASSERT(IsOnCurrentThread());
+    mUseHangMonitor = aValue;
+  }
+
  private:
-  void DoMainThreadSpecificProcessing(bool aReallyWait) const;
+  void DoMainThreadSpecificProcessing() const;
 
  protected:
   friend class nsThreadShutdownEvent;
@@ -329,6 +334,7 @@ class nsThread : public nsIThreadInternal,
   int8_t mPriority;
 
   const bool mIsMainThread;
+  bool mUseHangMonitor;
   mozilla::Atomic<bool, mozilla::Relaxed>* mIsAPoolThreadFree;
 
   // Set to true if this thread creates a JSRuntime.
