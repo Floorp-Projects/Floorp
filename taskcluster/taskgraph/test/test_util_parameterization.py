@@ -4,11 +4,13 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import sys
 import unittest
 import datetime
 import mock
 import os
 
+import pytest
 from mozunit import main
 from taskgraph.util.parameterization import (
     resolve_timestamps,
@@ -16,6 +18,9 @@ from taskgraph.util.parameterization import (
 )
 
 
+@pytest.mark.xfail(
+    sys.version_info >= (3, 0), reason="python3 migration is not complete"
+)
 class TestTimestamps(unittest.TestCase):
 
     def test_no_change(self):
@@ -40,6 +45,9 @@ class TestTimestamps(unittest.TestCase):
                          [{'relative-datestamp': '1 day', 'another-key': True}])
 
 
+@pytest.mark.xfail(
+    sys.version_info >= (3, 0), reason="python3 migration is not complete"
+)
 class TestTaskRefs(unittest.TestCase):
 
     def do(self, input, output):
@@ -90,6 +98,9 @@ class TestTaskRefs(unittest.TestCase):
         )
 
 
+@pytest.mark.xfail(
+    sys.version_info >= (3, 0), reason="python3 migration is not complete"
+)
 class TestArtifactRefs(unittest.TestCase):
 
     def do(self, input, output):

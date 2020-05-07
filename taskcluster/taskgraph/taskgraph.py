@@ -61,11 +61,11 @@ class TaskGraph(object):
         """
         tasks = {}
         edges = set()
-        for key, value in tasks_dict.iteritems():
+        for key, value in six.iteritems(tasks_dict):
             tasks[key] = Task.from_json(value)
             if 'task_id' in value:
                 tasks[key].task_id = value['task_id']
-            for depname, dep in value['dependencies'].iteritems():
+            for depname, dep in six.iteritems(value['dependencies']):
                 edges.add((key, dep, depname))
         task_graph = cls(tasks, Graph(set(tasks), edges))
         return tasks, task_graph

@@ -8,9 +8,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import re
 import os
-import sys
 
 import attr
+import six
 
 from .. import GECKO
 from .treeherder import join_symbol
@@ -207,16 +207,16 @@ def verify_dependency_tiers(task, taskgraph, scratch_pad, graph_config):
     if task is not None:
         tiers[task.label] = task.task.get('extra', {}) \
                                      .get('treeherder', {}) \
-                                     .get('tier', sys.maxint)
+                                     .get('tier', six.MAXSIZE)
     else:
         def printable_tier(tier):
-            if tier == sys.maxint:
+            if tier == six.MAXSIZE:
                 return 'unknown'
             return tier
 
-        for task in taskgraph.tasks.itervalues():
+        for task in six.itervalues(taskgraph.tasks):
             tier = tiers[task.label]
-            for d in task.dependencies.itervalues():
+            for d in six.itervalues(task.dependencies):
                 if taskgraph[d].task.get("workerType") == "always-optimized":
                     continue
                 if "dummy" in taskgraph[d].kind:
@@ -245,9 +245,9 @@ def verify_required_signoffs(task, taskgraph, scratch_pad, graph_config):
                 return 'required signoffs {}'.format(', '.join(signoffs))
             else:
                 return 'no required signoffs'
-        for task in taskgraph.tasks.itervalues():
+        for task in six.itervalues(taskgraph.tasks):
             required_signoffs = all_required_signoffs[task.label]
-            for d in task.dependencies.itervalues():
+            for d in six.itervalues(task.dependencies):
                 if required_signoffs < all_required_signoffs[d]:
                     raise Exception(
                         '{} ({}) cannot depend on {} ({})'
@@ -301,7 +301,7 @@ def verify_nightly_no_sccache(task, taskgraph, scratch_pad, graph_config):
 def verify_test_packaging(task, taskgraph, scratch_pad, graph_config):
     if task is None:
         exceptions = []
-        for task in taskgraph.tasks.itervalues():
+        for task in six.itervalues(taskgraph.tasks):
             if task.kind == 'build' and not task.attributes.get('skip-verify-test-packaging'):
                 build_env = task.task.get('payload', {}).get('env', {})
                 package_tests = build_env.get('MOZ_AUTOMATION_PACKAGE_TESTS')
