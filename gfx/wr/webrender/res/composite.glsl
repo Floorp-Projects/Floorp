@@ -10,9 +10,10 @@
 flat varying mat3 vYuvColorMatrix;
 flat varying float vYuvCoefficient;
 flat varying int vYuvFormat;
-varying vec3 vUV_y;
-varying vec3 vUV_u;
-varying vec3 vUV_v;
+flat varying vec3 vYuvLayers;
+varying vec2 vUV_y;
+varying vec2 vUV_u;
+varying vec2 vUV_v;
 flat varying vec4 vUVBounds_y;
 flat varying vec4 vUVBounds_u;
 flat varying vec4 vUVBounds_v;
@@ -61,10 +62,10 @@ void main(void) {
     vYuvCoefficient = yuv_coefficient;
     vYuvFormat = yuv_format;
 
+    vYuvLayers = aTextureLayers.xyz;
     write_uv_rect(
         aUvRect0.xy,
         aUvRect0.zw,
-        aTextureLayers.x,
         uv,
         TEX_SIZE(sColor0),
         vUV_y,
@@ -73,7 +74,6 @@ void main(void) {
     write_uv_rect(
         aUvRect1.xy,
         aUvRect1.zw,
-        aTextureLayers.y,
         uv,
         TEX_SIZE(sColor1),
         vUV_u,
@@ -82,7 +82,6 @@ void main(void) {
     write_uv_rect(
         aUvRect2.xy,
         aUvRect2.zw,
-        aTextureLayers.z,
         uv,
         TEX_SIZE(sColor2),
         vUV_v,
@@ -122,6 +121,7 @@ void main(void) {
         vYuvFormat,
         vYuvColorMatrix,
         vYuvCoefficient,
+        vYuvLayers,
         vUV_y,
         vUV_u,
         vUV_v,
