@@ -401,13 +401,15 @@ int GetGtkHeaderBarButtonLayout(WidgetNodeType* aButtonLayout,
   }
 #endif
 
-  const gchar* decorationLayout = nullptr;
+  gchar* decorationLayoutSetting = nullptr;
   GtkSettings* settings = gtk_settings_get_for_screen(gdk_screen_get_default());
-  g_object_get(settings, "gtk-decoration-layout", &decorationLayout, nullptr);
+  g_object_get(settings, "gtk-decoration-layout", &decorationLayoutSetting,
+               nullptr);
 
   // Use a default layout
-  if (!decorationLayout) {
-    decorationLayout = "menu:minimize,maximize,close";
+  const gchar* decorationLayout = "menu:minimize,maximize,close";
+  if (decorationLayoutSetting) {
+    decorationLayout = decorationLayoutSetting;
   }
 
   // "minimize,maximize,close:" layout means buttons are on the opposite
@@ -443,6 +445,7 @@ int GetGtkHeaderBarButtonLayout(WidgetNodeType* aButtonLayout,
   if (aReversedButtonsPlacement) {
     *aReversedButtonsPlacement = reversedButtonsPlacement;
   }
+  g_free(decorationLayoutSetting);
 
   return activeButtonNums;
 }
