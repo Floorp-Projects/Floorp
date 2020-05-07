@@ -137,7 +137,7 @@ void HTMLSlotElement::AssignedNodes(const AssignedNodesOptions& aOptions,
     return FlattenAssignedNodes(this, aNodes);
   }
 
-  aNodes = mAssignedNodes;
+  aNodes = mAssignedNodes.Clone();
 }
 
 void HTMLSlotElement::AssignedElements(const AssignedNodesOptions& aOptions,
