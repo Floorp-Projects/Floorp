@@ -562,7 +562,6 @@ STATIC_ATOMS = [
     Atom("keypress", "keypress"),
     Atom("keyset", "keyset"),
     Atom("keysystem", "keysystem"),
-    Atom("keytext", "keytext"),
     Atom("keyup", "keyup"),
     Atom("kind", "kind"),
     Atom("korean_hangul_formal", "korean-hangul-formal"),

@@ -41,8 +41,6 @@ class Element;
 }  // namespace dom
 }  // namespace mozilla
 
-#define NS_STATE_ACCELTEXT_IS_DERIVED NS_STATE_BOX_CHILD_RESERVED
-
 // the type of menuitem
 enum nsMenuType {
   // a normal menuitem where a command is carried out when activated
@@ -231,9 +229,6 @@ class nsMenuFrame final : public nsBoxFrame, public nsIReflowCallback {
   // checked items. This method can destroy the frame.
   void UpdateMenuSpecialState();
 
-  // Examines the key node and builds the accelerator.
-  void BuildAcceleratorText(bool aNotify);
-
   // Called to execute our command handler. This method can destroy the frame.
   void Execute(mozilla::WidgetGUIEvent* aEvent);
 
@@ -256,8 +251,6 @@ class nsMenuFrame final : public nsBoxFrame, public nsIReflowCallback {
 
   bool mIsMenu;   // Whether or not we can even have children or not.
   bool mChecked;  // are we checked?
-  bool mIgnoreAccelTextChange;  // temporarily set while determining the
-                                // accelerator key
   bool mReflowCallbackPosted;
   nsMenuType mType;
 
