@@ -1225,6 +1225,7 @@ add_task(async function test_fxa_device_telem() {
     // Reset this, as our override doesn't check for sync being enabled.
     t.sanitizeFxaDeviceId = oldSanitizeFxaDeviceId;
     syncEnabled = false;
+    fxAccounts.telemetry._setHashedUID(false);
     devInfo = t.updateFxaDevices(fxaDevices);
     equal(devInfo.deviceID, undefined);
     equal(devInfo.devices.length, 5);
@@ -1240,6 +1241,23 @@ add_task(async function test_fxa_device_telem() {
     t.getFxaDevices = oldGetFxaDevices;
     t.syncIsEnabled = oldSyncIsEnabled;
     t.sanitizeFxaDeviceId = oldSanitizeFxaDeviceId;
+  }
+});
+
+add_task(async function test_sanitize_fxa_device_id() {
+  let t = get_sync_test_telemetry();
+  fxAccounts.telemetry._setHashedUID(false);
+  sinon.stub(t, "syncIsEnabled").callsFake(() => true);
+  const rawDeviceId = "raw one two three";
+  try {
+    equal(t.sanitizeFxaDeviceId(rawDeviceId), null);
+    fxAccounts.telemetry._setHashedUID("mock uid");
+    const sanitizedDeviceId = t.sanitizeFxaDeviceId(rawDeviceId);
+    ok(sanitizedDeviceId);
+    notEqual(sanitizedDeviceId, rawDeviceId);
+  } finally {
+    t.syncIsEnabled.restore();
+    fxAccounts.telemetry._setHashedUID(false);
   }
 });
 
