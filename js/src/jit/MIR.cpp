@@ -3745,6 +3745,57 @@ bool MResumePoint::isRecoverableOperand(MUse* u) const {
   return block()->info().isRecoverableOperand(indexOf(u));
 }
 
+MDefinition* MTruncateBigIntToInt64::foldsTo(TempAllocator& alloc) {
+  MDefinition* input = getOperand(0);
+
+  if (input->isBox()) {
+    input = input->getOperand(0);
+  }
+
+  // If the operand converts an I64 to BigInt, drop both conversions.
+  if (input->isInt64ToBigInt()) {
+    return input->getOperand(0);
+  }
+
+  // Fold this operation if the input operand is constant.
+  if (input->isConstant()) {
+    return MConstant::NewInt64(
+        alloc, BigInt::toInt64(input->toConstant()->toBigInt()));
+  }
+
+  return this;
+}
+
+MDefinition* MToInt64::foldsTo(TempAllocator& alloc) {
+  MDefinition* input = getOperand(0);
+
+  if (input->isBox()) {
+    input = input->getOperand(0);
+  }
+
+  // Unwrap MInt64ToBigInt: MToInt64(MInt64ToBigInt(int64)) = int64.
+  if (input->isInt64ToBigInt()) {
+    return input->getOperand(0);
+  }
+
+  // When the input is an Int64 already, just return it.
+  if (input->type() == MIRType::Int64) {
+    return input;
+  }
+
+  // Fold this operation if the input operand is constant.
+  if (input->isConstant()) {
+    switch (input->type()) {
+      case MIRType::Boolean:
+        return MConstant::NewInt64(alloc, input->toConstant()->toBoolean());
+      default:
+        break;
+    }
+  }
+
+  return this;
+}
+
 MDefinition* MToNumberInt32::foldsTo(TempAllocator& alloc) {
   MDefinition* input = getOperand(0);
 

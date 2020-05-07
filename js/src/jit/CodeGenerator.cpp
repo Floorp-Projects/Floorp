@@ -4646,6 +4646,136 @@ void CodeGenerator::visitGuardReceiverPolymorphic(
   masm.bind(&done);
 }
 
+void CodeGenerator::visitBooleanToInt64(LBooleanToInt64* lir) {
+  Register input = ToRegister(lir->input());
+  Register64 output = ToOutRegister64(lir);
+
+  masm.move32To64ZeroExtend(input, output);
+}
+
+void CodeGenerator::emitStringToInt64(LInstruction* lir, Register input,
+                                      Register64 output) {
+  Register temp = output.scratchReg();
+
+  saveLive(lir);
+
+  masm.reserveStack(sizeof(uint64_t));
+  masm.moveStackPtrTo(temp);
+  pushArg(temp);
+  pushArg(input);
+
+  using Fn = bool (*)(JSContext*, HandleString, uint64_t*);
+  callVM<Fn, DoStringToInt64>(lir);
+
+  masm.load64(Address(masm.getStackPointer(), 0), output);
+  masm.freeStack(sizeof(uint64_t));
+
+  restoreLiveIgnore(lir, StoreValueTo(output).clobbered());
+}
+
+void CodeGenerator::visitStringToInt64(LStringToInt64* lir) {
+  Register input = ToRegister(lir->input());
+  Register64 output = ToOutRegister64(lir);
+
+  emitStringToInt64(lir, input, output);
+}
+
+void CodeGenerator::visitValueToInt64(LValueToInt64* lir) {
+  ValueOperand input = ToValue(lir, LValueToInt64::Input);
+  Register temp = ToRegister(lir->temp());
+  Register64 output = ToOutRegister64(lir);
+
+  bool maybeBigInt = lir->mir()->input()->mightBeType(MIRType::BigInt);
+  bool maybeBool = lir->mir()->input()->mightBeType(MIRType::Boolean);
+  bool maybeString = lir->mir()->input()->mightBeType(MIRType::String);
+  int checks = int(maybeBigInt) + int(maybeBool) + int(maybeString);
+
+  if (checks == 0) {
+    // Bail on other types.
+    bailout(lir->snapshot());
+  } else {
+    Label fail, done;
+    // Jump to fail if this is the last check and we fail it,
+    // otherwise to the next test.
+    auto emitTestAndUnbox = [&](auto testAndUnbox) {
+      MOZ_ASSERT(checks > 0);
+
+      checks--;
+      Label notType;
+      Label* target = checks ? &notType : &fail;
+
+      testAndUnbox(target);
+
+      if (checks) {
+        masm.jump(&done);
+        masm.bind(&notType);
+      }
+    };
+
+    Register tag = masm.extractTag(input, temp);
+
+    // BigInt.
+    if (maybeBigInt) {
+      emitTestAndUnbox([&](Label* target) {
+        masm.branchTestBigInt(Assembler::NotEqual, tag, target);
+        masm.unboxBigInt(input, temp);
+        masm.loadBigInt64(temp, output);
+      });
+    }
+
+    // Boolean
+    if (maybeBool) {
+      emitTestAndUnbox([&](Label* target) {
+        masm.branchTestBoolean(Assembler::NotEqual, tag, target);
+        masm.unboxBoolean(input, temp);
+        masm.move32To64ZeroExtend(temp, output);
+      });
+    }
+
+    // String
+    if (maybeString) {
+      emitTestAndUnbox([&](Label* target) {
+        masm.branchTestString(Assembler::NotEqual, tag, target);
+        masm.unboxString(input, temp);
+        emitStringToInt64(lir, temp, output);
+      });
+    }
+
+    MOZ_ASSERT(checks == 0);
+
+    bailoutFrom(&fail, lir->snapshot());
+    masm.bind(&done);
+  }
+}
+
+void CodeGenerator::visitTruncateBigIntToInt64(LTruncateBigIntToInt64* lir) {
+  Register operand = ToRegister(lir->input());
+  Register64 output = ToOutRegister64(lir);
+
+  masm.loadBigInt64(operand, output);
+}
+
+void CodeGenerator::visitInt64ToBigInt(LInt64ToBigInt* lir) {
+  Register64 input = ToRegister64(lir->input());
+  Register temp = ToRegister(lir->temp());
+  Register output = ToRegister(lir->output());
+
+#if JS_BITS_PER_WORD == 32
+  using Fn = BigInt* (*)(JSContext*, uint32_t, uint32_t);
+  auto args = ArgList(input.low, input.high);
+#else
+  using Fn = BigInt* (*)(JSContext*, uint64_t);
+  auto args = ArgList(input);
+#endif
+
+  OutOfLineCode* ool = oolCallVM<Fn, jit::CreateBigIntFromInt64>(
+      lir, args, StoreRegisterTo(output));
+
+  masm.newGCBigInt(output, temp, ool->entry(), bigIntsCanBeInNursery());
+  masm.initializeBigInt64(Scalar::BigInt64, output, input);
+  masm.bind(ool->rejoin());
+}
+
 void CodeGenerator::visitTypeBarrierV(LTypeBarrierV* lir) {
   ValueOperand operand = ToValue(lir, LTypeBarrierV::Input);
   Register unboxScratch = ToTempRegisterOrInvalid(lir->unboxTemp());

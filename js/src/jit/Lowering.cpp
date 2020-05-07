@@ -2214,6 +2214,59 @@ void LIRGenerator::visitToBigInt(MToBigInt* ins) {
   }
 }
 
+void LIRGenerator::visitToInt64(MToInt64* ins) {
+  MDefinition* opd = ins->input();
+
+  switch (opd->type()) {
+    case MIRType::Value: {
+      auto* lir = new (alloc()) LValueToInt64(useBox(opd), temp());
+      assignSnapshot(lir, Bailout_NonPrimitiveInput);
+      defineInt64(lir, ins);
+      assignSafepoint(lir, ins);
+      break;
+    }
+
+    case MIRType::Boolean: {
+      auto* lir = new (alloc()) LBooleanToInt64(useRegisterAtStart(opd));
+      defineInt64(lir, ins);
+      break;
+    }
+
+    case MIRType::String: {
+      auto* lir = new (alloc()) LStringToInt64(useRegister(opd));
+      defineInt64(lir, ins);
+      assignSafepoint(lir, ins);
+      break;
+    }
+
+    // An Int64 may be passed here from a BigInt to Int64 conversion.
+    case MIRType::Int64: {
+      redefine(ins, opd);
+      break;
+    }
+
+    default:
+      // Undefined, Null, Number, and Symbol throw.
+      // Objects may be effectful.
+      // BigInt operands are eliminated by the type policy.
+      MOZ_CRASH("unexpected type");
+  }
+}
+
+void LIRGenerator::visitTruncateBigIntToInt64(MTruncateBigIntToInt64* ins) {
+  MOZ_ASSERT(ins->input()->type() == MIRType::BigInt);
+  auto* lir = new (alloc()) LTruncateBigIntToInt64(useRegister(ins->input()));
+  defineInt64(lir, ins);
+}
+
+void LIRGenerator::visitInt64ToBigInt(MInt64ToBigInt* ins) {
+  MOZ_ASSERT(ins->input()->type() == MIRType::Int64);
+  auto* lir =
+      new (alloc()) LInt64ToBigInt(useInt64Register(ins->input()), temp());
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitWasmTruncateToInt32(MWasmTruncateToInt32* ins) {
   MDefinition* input = ins->input();
   switch (input->type()) {

@@ -2011,6 +2011,20 @@ BigInt* CreateBigIntFromUint64(JSContext* cx, uint64_t i64) {
 }
 #endif
 
+bool DoStringToInt64(JSContext* cx, HandleString str, uint64_t* res) {
+  BigInt* bi;
+  JS_TRY_VAR_OR_RETURN_FALSE(cx, bi, js::StringToBigInt(cx, str));
+
+  if (!bi) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_BIGINT_INVALID_SYNTAX);
+    return false;
+  }
+
+  *res = js::BigInt::toUint64(bi);
+  return true;
+}
+
 template <EqualityKind Kind>
 bool BigIntEqual(BigInt* x, BigInt* y) {
   AutoUnsafeCallWithABI unsafe;
