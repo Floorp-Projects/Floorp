@@ -3939,17 +3939,6 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* 
 
     case StyleAppearance::ScrollbarNonDisappearing: {
       int32_t themeMetric = kThemeMetricScrollBarWidth;
-
-      if (aFrame) {
-        if (IsSmallScrollbar(aFrame)) {
-          // XXX We're interested in the width of non-disappearing scrollbars
-          // to leave enough space for a dropmarker in non-native styled
-          // comboboxes (bug 869314). It isn't clear to me if comboboxes can
-          // ever have small scrollbars.
-          themeMetric = kThemeMetricSmallScrollBarWidth;
-        }
-      }
-
       SInt32 scrollbarWidth = 0;
       ::GetThemeMetric(themeMetric, &scrollbarWidth);
       aResult->SizeTo(scrollbarWidth, scrollbarWidth);
