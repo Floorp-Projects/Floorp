@@ -1124,6 +1124,7 @@ MOZ_MUST_USE bool TrySkipAwait(JSContext* cx, HandleValue val,
 bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result);
 
 void* AllocateBigIntNoGC(JSContext* cx, bool requestMinorGC);
+bool DoStringToInt64(JSContext* cx, HandleString str, uint64_t* res);
 
 #if JS_BITS_PER_WORD == 32
 BigInt* CreateBigIntFromInt64(JSContext* cx, uint32_t low, uint32_t high);

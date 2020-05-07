@@ -5586,6 +5586,88 @@ class LGuardReceiverPolymorphic : public LInstructionHelper<1, 1, 1> {
   }
 };
 
+// Convert a Boolean to an Int64, following ToBigInt.
+class LBooleanToInt64 : public LInstructionHelper<INT64_PIECES, 1, 0> {
+ public:
+  LIR_HEADER(BooleanToInt64)
+
+  explicit LBooleanToInt64(const LAllocation& input)
+      : LInstructionHelper(classOpcode) {
+    setOperand(Input, input);
+  }
+
+  static const size_t Input = 0;
+
+  const MToInt64* mir() const { return mir_->toToInt64(); }
+};
+
+// Convert a String to an Int64, following ToBigInt.
+class LStringToInt64 : public LInstructionHelper<INT64_PIECES, 1, 0> {
+ public:
+  LIR_HEADER(StringToInt64)
+
+  explicit LStringToInt64(const LAllocation& input)
+      : LInstructionHelper(classOpcode) {
+    setOperand(Input, input);
+  }
+
+  static const size_t Input = 0;
+
+  const MToInt64* mir() const { return mir_->toToInt64(); }
+};
+
+// Simulate ToBigInt on a Value and produce a matching Int64.
+class LValueToInt64 : public LInstructionHelper<INT64_PIECES, BOX_PIECES, 1> {
+ public:
+  LIR_HEADER(ValueToInt64)
+
+  explicit LValueToInt64(const LBoxAllocation& input, const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setBoxOperand(Input, input);
+    setTemp(0, temp);
+  }
+
+  static const size_t Input = 0;
+
+  const MToInt64* mir() const { return mir_->toToInt64(); }
+  const LDefinition* temp() { return getTemp(0); }
+};
+
+// Truncate a BigInt to an unboxed int64.
+class LTruncateBigIntToInt64 : public LInstructionHelper<INT64_PIECES, 1, 0> {
+ public:
+  LIR_HEADER(TruncateBigIntToInt64)
+
+  explicit LTruncateBigIntToInt64(const LAllocation& input)
+      : LInstructionHelper(classOpcode) {
+    setOperand(Input, input);
+  }
+
+  static const size_t Input = 0;
+
+  const MTruncateBigIntToInt64* mir() const {
+    return mir_->toTruncateBigIntToInt64();
+  }
+};
+
+// Create a new BigInt* from an unboxed int64.
+class LInt64ToBigInt : public LInstructionHelper<1, INT64_PIECES, 1> {
+ public:
+  LIR_HEADER(Int64ToBigInt)
+
+  LInt64ToBigInt(const LInt64Allocation& input, const LDefinition& temp)
+      : LInstructionHelper(classOpcode) {
+    setInt64Operand(Input, input);
+    setTemp(0, temp);
+  }
+
+  static const size_t Input = 0;
+
+  const MInt64ToBigInt* mir() const { return mir_->toInt64ToBigInt(); }
+  const LInt64Allocation input() { return getInt64Operand(Input); }
+  const LDefinition* temp() { return getTemp(0); }
+};
+
 // Guard that a value is in a TypeSet.
 class LTypeBarrierV : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 2> {
  public:
