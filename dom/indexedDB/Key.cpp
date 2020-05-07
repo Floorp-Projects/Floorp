@@ -759,18 +759,15 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeBinary(JSObject* aObject,
                                                             ErrorResult& aRv) {
   uint8_t* bufferData;
   uint32_t bufferLength;
-  bool unused;
 
+  // We must use JS::GetObjectAsArrayBuffer()/JS_GetObjectAsArrayBufferView()
+  // instead of js::GetArrayBufferLengthAndData(). The object might be wrapped,
+  // the former will handle the wrapped case, the later won't.
   if (aIsViewObject) {
-    // We must use JS_GetObjectAsArrayBufferView() instead of
-    // js::GetArrayBufferLengthAndData(). Because we check ArrayBufferView
-    // via JS_IsArrayBufferViewObject(), the object might be wrapped,
-    // the former will handle the wrapped case, the later won't.
+    bool unused;
     JS_GetObjectAsArrayBufferView(aObject, &bufferLength, &unused, &bufferData);
-
   } else {
-    JS::GetArrayBufferLengthAndData(aObject, &bufferLength, &unused,
-                                    &bufferData);
+    JS::GetObjectAsArrayBuffer(aObject, &bufferLength, &bufferData);
   }
 
   return EncodeAsString(bufferData, bufferData + bufferLength,
