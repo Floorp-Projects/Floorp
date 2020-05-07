@@ -7,6 +7,13 @@
 // This is loaded into all XUL windows. Wrap in a block to prevent
 // leaking to window scope.
 {
+  let imports = {};
+  ChromeUtils.defineModuleGetter(
+    imports,
+    "ShortcutUtils",
+    "resource://gre/modules/ShortcutUtils.jsm"
+  );
+
   const MozMenuItemBaseMixin = Base => {
     class MozMenuItemBase extends MozElements.BaseTextMixin(Base) {
       // nsIDOMXULSelectControlItemElement
@@ -170,6 +177,25 @@
   );
 
   class MozMenuItem extends MozMenuItemBaseMixin(MozXULElement) {
+    static get observedAttributes() {
+      return super.observedAttributes.concat("acceltext", "key");
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+      if (name == "acceltext") {
+        if (this._ignoreAccelTextChange) {
+          this._ignoreAccelTextChange = false;
+        } else {
+          this._accelTextIsDerived = false;
+          this._computeAccelTextFromKeyIfNeeded();
+        }
+      }
+      if (name == "key") {
+        this._computeAccelTextFromKeyIfNeeded();
+      }
+      super.attributeChangedCallback(name, oldValue, newValue);
+    }
+
     static get inheritedAttributes() {
       return {
         ".menu-iconic-text": "value=label,crop,accesskey,highlightable",
@@ -249,6 +275,40 @@
       return this.matches("menupopup:not([hasbeenopened]) menuitem");
     }
 
+    _computeAccelTextFromKeyIfNeeded() {
+      if (!this._accelTextIsDerived && this.getAttribute("acceltext")) {
+        return;
+      }
+      let accelText = (() => {
+        if (!document.contains(this)) {
+          return null;
+        }
+        let keyId = this.getAttribute("key");
+        if (!keyId) {
+          return null;
+        }
+        let key = document.getElementById(keyId);
+        if (!key) {
+          Cu.reportError(
+            `Key ${keyId} of menuitem ${this.getAttribute("label")} ` +
+              `could not be found`
+          );
+          return null;
+        }
+        return imports.ShortcutUtils.prettifyShortcut(key);
+      })();
+
+      this._accelTextIsDerived = true;
+      // We need to ignore the next attribute change callback for acceltext, in
+      // order to not reenter here.
+      this._ignoreAccelTextChange = true;
+      if (accelText) {
+        this.setAttribute("acceltext", accelText);
+      } else {
+        this.removeAttribute("acceltext");
+      }
+    }
+
     render() {
       if (this.renderedOnce) {
         return;
@@ -263,10 +323,14 @@
         this.append(this.constructor.plainFragment.cloneNode(true));
       }
 
+      this._computeAccelTextFromKeyIfNeeded();
       this.initializeAttributeInheritance();
     }
 
     connectedCallback() {
+      if (this.renderedOnce) {
+        this._computeAccelTextFromKeyIfNeeded();
+      }
       // Eagerly render if we are being inserted into a menulist (since we likely need to
       // size it), or into an already-opened menupopup (since we are already visible).
       // Checking isConnectedAndReady is an optimization that will let us quickly skip
