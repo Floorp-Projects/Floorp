@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/MediaKeyMessageEvent.h"
 #include "mozilla/dom/MediaKeyMessageEventBinding.h"
+#include "js/ArrayBuffer.h"
 #include "js/RootingAPI.h"
 #include "jsfriendapi.h"
 #include "mozilla/dom/Nullable.h"
@@ -76,10 +77,9 @@ already_AddRefed<MediaKeyMessageEvent> MediaKeyMessageEvent::Constructor(
   RefPtr<MediaKeyMessageEvent> e = new MediaKeyMessageEvent(owner);
   bool trusted = e->Init(owner);
   e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
-  nsTArray<uint8_t> initData;
-  CopyArrayBufferViewOrArrayBufferData(aEventInitDict.mMessage, initData);
-  e->mMessage = ArrayBuffer::Create(aGlobal.Context(), initData.Length(),
-                                    initData.Elements());
+  JS::Rooted<JSObject*> buffer(aGlobal.Context(),
+                               aEventInitDict.mMessage.Obj());
+  e->mMessage = JS::CopyArrayBuffer(aGlobal.Context(), buffer);
   if (!e->mMessage) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
