@@ -6,12 +6,11 @@
 #ifndef mozilla_layers_CompositorThread_h
 #define mozilla_layers_CompositorThread_h
 
-#include "base/basictypes.h"       // for DISALLOW_EVIL_CONSTRUCTORS
-#include "base/platform_thread.h"  // for PlatformThreadId
-#include "base/thread.h"           // for Thread
-#include "base/message_loop.h"
 #include "nsISupportsImpl.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
+
+class nsISerialEventTarget;
+class nsIThread;
 
 namespace mozilla {
 namespace layers {
@@ -23,7 +22,9 @@ class CompositorThreadHolder final {
  public:
   CompositorThreadHolder();
 
-  base::Thread* GetCompositorThread() const { return mCompositorThread; }
+  nsISerialEventTarget* GetCompositorThread() const {
+    return mCompositorThread;
+  }
 
   static CompositorThreadHolder* GetSingleton();
 
@@ -40,23 +41,20 @@ class CompositorThreadHolder final {
    */
   static void Shutdown();
 
-  static MessageLoop* Loop();
-
   // Returns true if the calling thread is the compositor thread.
   static bool IsInCompositorThread();
 
  private:
   ~CompositorThreadHolder();
 
-  base::Thread* const mCompositorThread;
+  nsCOMPtr<nsIThread> mCompositorThread;
 
-  static base::Thread* CreateCompositorThread();
-  static void DestroyCompositorThread(base::Thread* aCompositorThread);
+  static already_AddRefed<nsIThread> CreateCompositorThread();
 
   friend class CompositorBridgeParent;
 };
 
-base::Thread* CompositorThread();
+nsISerialEventTarget* CompositorThread();
 
 }  // namespace layers
 }  // namespace mozilla
