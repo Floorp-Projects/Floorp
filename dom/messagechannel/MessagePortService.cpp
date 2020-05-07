@@ -238,7 +238,7 @@ bool MessagePortService::DisentanglePort(
     return false;
   }
 
-  Unused << data->mParent->Entangled(nsTArray{std::move(array)});
+  Unused << data->mParent->Entangled(std::move(array));
   return true;
 }
 
