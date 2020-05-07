@@ -10,6 +10,7 @@ import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.support.base.crash.CrashReporting
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
@@ -28,6 +29,7 @@ import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.Mockito.verifyZeroInteractions
 import org.mockito.verification.VerificationMode
 import org.robolectric.annotation.Config
+import java.lang.IllegalStateException
 
 private interface PipChangedCallback : (Boolean) -> Unit
 
@@ -36,6 +38,7 @@ class PictureInPictureFeatureTest {
 
     private val sessionManager: SessionManager = mock()
     private val selectedSession: Session = mock()
+    private val crashReporting: CrashReporting = mock()
     private val activity: Activity = Mockito.mock(Activity::class.java, Mockito.RETURNS_DEEP_STUBS)
 
     @Before
@@ -50,7 +53,8 @@ class PictureInPictureFeatureTest {
         whenever(activity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE))
             .thenReturn(false)
 
-        val pictureInPictureFeature = spy(PictureInPictureFeature(sessionManager, activity))
+        val pictureInPictureFeature =
+            spy(PictureInPictureFeature(sessionManager, activity, crashReporting))
 
         assertFalse(pictureInPictureFeature.onHomePressed())
         verifyZeroInteractions(sessionManager)
@@ -64,7 +68,8 @@ class PictureInPictureFeatureTest {
         whenever(activity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE))
             .thenReturn(false)
 
-        val pictureInPictureFeature = spy(PictureInPictureFeature(sessionManager, activity))
+        val pictureInPictureFeature =
+            spy(PictureInPictureFeature(sessionManager, activity, crashReporting))
 
         assertFalse(pictureInPictureFeature.onHomePressed())
         verifyZeroInteractions(sessionManager)
@@ -74,7 +79,8 @@ class PictureInPictureFeatureTest {
 
     @Test
     fun `on home pressed without a selected session`() {
-        val pictureInPictureFeature = spy(PictureInPictureFeature(sessionManager, activity))
+        val pictureInPictureFeature =
+            spy(PictureInPictureFeature(sessionManager, activity, crashReporting))
 
         assertFalse(pictureInPictureFeature.onHomePressed())
         verify(sessionManager).selectedSession
@@ -84,7 +90,8 @@ class PictureInPictureFeatureTest {
 
     @Test
     fun `on home pressed with a selected session without a fullscreen mode`() {
-        val pictureInPictureFeature = spy(PictureInPictureFeature(sessionManager, activity))
+        val pictureInPictureFeature =
+            spy(PictureInPictureFeature(sessionManager, activity, crashReporting))
 
         whenever(selectedSession.fullScreenMode).thenReturn(false)
         whenever(sessionManager.selectedSession).thenReturn(selectedSession)
@@ -97,7 +104,8 @@ class PictureInPictureFeatureTest {
 
     @Test
     fun `on home pressed with a selected session in fullscreen and without pip mode`() {
-        val pictureInPictureFeature = spy(PictureInPictureFeature(sessionManager, activity))
+        val pictureInPictureFeature =
+            spy(PictureInPictureFeature(sessionManager, activity, crashReporting))
 
         whenever(selectedSession.fullScreenMode).thenReturn(true)
         whenever(sessionManager.selectedSession).thenReturn(selectedSession)
@@ -111,7 +119,8 @@ class PictureInPictureFeatureTest {
 
     @Test
     fun `on home pressed with a selected session in fullscreen and with pip mode`() {
-        val pictureInPictureFeature = spy(PictureInPictureFeature(sessionManager, activity))
+        val pictureInPictureFeature =
+            spy(PictureInPictureFeature(sessionManager, activity, crashReporting))
 
         whenever(selectedSession.fullScreenMode).thenReturn(true)
         whenever(sessionManager.selectedSession).thenReturn(selectedSession)
@@ -126,7 +135,8 @@ class PictureInPictureFeatureTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.M])
     fun `enter pip mode compat on android m and below`() {
-        val pictureInPictureFeature = PictureInPictureFeature(sessionManager, activity)
+        val pictureInPictureFeature =
+            PictureInPictureFeature(sessionManager, activity, crashReporting)
 
         assertFalse(pictureInPictureFeature.enterPipModeCompat())
     }
@@ -137,7 +147,8 @@ class PictureInPictureFeatureTest {
         whenever(activity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE))
             .thenReturn(false)
 
-        val pictureInPictureFeature = PictureInPictureFeature(sessionManager, activity)
+        val pictureInPictureFeature =
+            PictureInPictureFeature(sessionManager, activity, crashReporting)
 
         assertFalse(pictureInPictureFeature.enterPipModeCompat())
         verify(activity, never()).enterPictureInPictureMode(any())
@@ -146,8 +157,24 @@ class PictureInPictureFeatureTest {
 
     @Test
     @Config(sdk = [Build.VERSION_CODES.O])
+    fun `enter pip mode compat with system feature on android o but entering throws exception`() {
+        whenever(activity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE))
+            .thenReturn(true)
+        whenever(activity.enterPictureInPictureMode(any())).thenThrow(IllegalStateException())
+        whenever(selectedSession.fullScreenMode).thenReturn(true)
+        whenever(sessionManager.selectedSession).thenReturn(selectedSession)
+
+        val pictureInPictureFeature =
+            PictureInPictureFeature(sessionManager, activity, crashReporting)
+        assertFalse(pictureInPictureFeature.onHomePressed())
+        verify(crashReporting).submitCaughtException(any<IllegalStateException>())
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O])
     fun `enter pip mode compat on android o and above`() {
-        val pictureInPictureFeature = PictureInPictureFeature(sessionManager, activity)
+        val pictureInPictureFeature =
+            PictureInPictureFeature(sessionManager, activity, crashReporting)
 
         whenever(activity.enterPictureInPictureMode(any())).thenReturn(true)
 
@@ -158,7 +185,8 @@ class PictureInPictureFeatureTest {
     @Test
     @Config(sdk = [Build.VERSION_CODES.N])
     fun `enter pip mode compat on android n and above`() {
-        val pictureInPictureFeature = PictureInPictureFeature(sessionManager, activity)
+        val pictureInPictureFeature =
+            PictureInPictureFeature(sessionManager, activity, crashReporting)
 
         assertTrue(pictureInPictureFeature.enterPipModeCompat())
         verifyDeprecatedPictureInPictureMode(activity)
@@ -167,7 +195,13 @@ class PictureInPictureFeatureTest {
     @Test
     fun `on pip mode changed`() {
         val pipChangedCallback: PipChangedCallback = mock()
-        val pipFeature = PictureInPictureFeature(sessionManager, activity, null, pipChangedCallback)
+        val pipFeature = PictureInPictureFeature(
+            sessionManager,
+            activity,
+            crashReporting,
+            null,
+            pipChangedCallback
+        )
 
         pipFeature.onPictureInPictureModeChanged(true)
         verify(pipChangedCallback).invoke(true)

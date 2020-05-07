@@ -11,6 +11,8 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.runWithSessionIdOrSelected
+import mozilla.components.support.base.crash.CrashReporting
+import mozilla.components.support.base.log.logger.Logger
 
 /**
  * A simple implementation of Picture-in-picture mode if on a supported platform.
@@ -18,15 +20,19 @@ import mozilla.components.browser.session.runWithSessionIdOrSelected
  * @param sessionManager Session Manager for observing the selected session's fullscreen mode changes.
  * @param activity the activity with the EngineView for calling PIP mode when required; the AndroidX Fragment
  * doesn't support this.
+ * @param crashReporting Instance of `CrashReporting` to record unexpected caught exceptions
  * @param customTabSessionId ID of custom tab session.
  * @param pipChanged a change listener that allows the calling app to perform changes based on PIP mode.
  */
 class PictureInPictureFeature(
     private val sessionManager: SessionManager,
     private val activity: Activity,
+    private val crashReporting: CrashReporting? = null,
     private val customTabSessionId: String? = null,
     private val pipChanged: ((Boolean) -> Unit?)? = null
 ) {
+    internal val logger = Logger("PictureInPictureFeature")
+
     private val hasSystemFeature = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
             activity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
 
@@ -39,7 +45,16 @@ class PictureInPictureFeature(
             sessionManager.runWithSessionIdOrSelected(customTabSessionId) { session ->
                 session.fullScreenMode
             }
-        return fullScreenMode && enterPipModeCompat()
+        return fullScreenMode && try {
+            enterPipModeCompat()
+        } catch (e: IllegalStateException) {
+            // On certain Samsung devices, if accessibility mode is enabled, this will throw an
+            // IllegalStateException even if we check for the system feature beforehand. So let's
+            // catch it, log it, and not enter PiP. See https://stackoverflow.com/q/55288858
+            logger.warn("Entering PipMode failed", e)
+            crashReporting?.submitCaughtException(e)
+            false
+        }
     }
 
     fun enterPipModeCompat() = when {
