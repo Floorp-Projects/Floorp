@@ -641,7 +641,7 @@
 
 - name: StoreDenseElement
   shared: false
-  transpile: false
+  transpile: true
   args:
     obj: ObjId
     index: Int32Id
