@@ -75,7 +75,7 @@ class WorkerThread final : public nsThread {
 
   uint32_t RecursionDepth(const WorkerThreadFriendKey& aKey) const;
 
-  PerformanceCounter* GetPerformanceCounter(nsIRunnable* aEvent) override;
+  PerformanceCounter* GetPerformanceCounter(nsIRunnable* aEvent) const override;
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(WorkerThread, nsThread)
 
