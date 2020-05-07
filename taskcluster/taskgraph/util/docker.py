@@ -319,6 +319,6 @@ def parse_volumes(image):
                 raise ValueError('cannot parse array syntax for VOLUME; '
                                  'convert to multiple entries')
 
-            volumes |= set(v.split())
+            volumes |= set([six.ensure_text(v) for v in v.split()])
 
     return volumes

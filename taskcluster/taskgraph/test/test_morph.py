@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import sys
 
 import pytest
 
@@ -36,6 +37,9 @@ def make_taskgraph():
     return inner
 
 
+@pytest.mark.xfail(
+    sys.version_info >= (3, 0), reason="python3 migration is not complete"
+)
 def test_make_index_tasks(make_taskgraph, graph_config):
     task_def = {
         'routes': [

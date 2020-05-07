@@ -4,9 +4,11 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import sys
 import unittest
 import os
 import mock
+import pytest
 
 from taskgraph import create
 from taskgraph.config import GraphConfig
@@ -39,6 +41,9 @@ class TestCreate(unittest.TestCase):
     def fake_create_task(self, session, task_id, label, task_def):
         self.created_tasks[task_id] = task_def
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_create_tasks(self):
         tasks = {
             'tid-a': Task(kind='test', label='a', attributes={}, task={'payload': 'hello world'}),
@@ -60,6 +65,9 @@ class TestCreate(unittest.TestCase):
                     continue
                 self.assertIn(depid, self.created_tasks)
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_create_task_without_dependencies(self):
         "a task with no dependencies depends on the decision task"
         os.environ['TASK_ID'] = 'decisiontask'
@@ -75,6 +83,9 @@ class TestCreate(unittest.TestCase):
         for tid, task in self.created_tasks.iteritems():
             self.assertEqual(task.get('dependencies'), [os.environ['TASK_ID']])
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     @mock.patch('taskgraph.create.create_task')
     def test_create_tasks_fails_if_create_fails(self, create_task):
         "creat_tasks fails if a single create_task call fails"

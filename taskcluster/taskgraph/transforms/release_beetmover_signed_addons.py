@@ -7,6 +7,7 @@ Transform the beetmover task into an actual task description.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import six
 from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
@@ -174,7 +175,7 @@ def _strip_ja_data_from_linux_job(platform_job):
 
 def _change_platform_in_artifact_map_paths(paths, orig_platform, new_platform):
     amended_paths = {}
-    for artifact, artifact_info in paths.iteritems():
+    for artifact, artifact_info in six.iteritems(paths):
         amended_artifact_info = {
             'checksums_path': artifact_info['checksums_path'].replace(orig_platform, new_platform),
             'destinations': [

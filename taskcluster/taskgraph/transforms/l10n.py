@@ -10,6 +10,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import copy
 import io
 import json
+import six
 
 from mozbuild.chunkify import chunkify
 from six import text_type
@@ -264,13 +265,13 @@ def handle_artifact_prefix(config, jobs):
     """Resolve ``artifact_prefix`` in env vars"""
     for job in jobs:
         artifact_prefix = get_artifact_prefix(job)
-        for k1, v1 in job.get('env', {}).iteritems():
+        for k1, v1 in six.iteritems(job.get('env', {})):
             if isinstance(v1, text_type):
                 job['env'][k1] = v1.format(
                     artifact_prefix=artifact_prefix
                 )
             elif isinstance(v1, dict):
-                for k2, v2 in v1.iteritems():
+                for k2, v2 in six.iteritems(v1):
                     job['env'][k1][k2] = v2.format(
                         artifact_prefix=artifact_prefix
                     )

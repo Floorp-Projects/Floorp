@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
+import six
 from six import text_type
 
 from voluptuous import Required
@@ -109,7 +110,7 @@ def group_tasks(config, tasks):
 
     groups = group_by_fn(config, tasks)
 
-    for combinations in groups.itervalues():
+    for combinations in six.itervalues(groups):
         kinds = [f.kind for f in combinations]
         assert_unique_members(kinds, error_msg=(
             "Multi_dep.py should have filtered down to one task per kind"))
@@ -246,7 +247,7 @@ def get_primary_dep(config, dep_tasks):
         primary_dependencies = [primary_dependencies]
     if not primary_dependencies:
         assert len(dep_tasks) == 1, "Must define a primary-dependency!"
-        return dep_tasks.values()[0]
+        return list(dep_tasks.values())[0]
     primary_dep = None
     for primary_kind in primary_dependencies:
         for dep_kind in dep_tasks:

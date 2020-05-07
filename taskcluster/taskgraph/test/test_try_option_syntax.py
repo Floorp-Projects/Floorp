@@ -4,8 +4,11 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import sys
 import unittest
 
+import pytest
+import six
 from taskgraph.try_option_syntax import TryOptionSyntax, parse_message
 from taskgraph.graph import Graph
 from taskgraph.taskgraph import TaskGraph
@@ -66,9 +69,9 @@ for r in RIDEALONG_BUILDS.values():
         unittest_task(n + '-test', n) for n in r
     ]})
 
-unittest_tasks = {k: v for k, v in tasks.iteritems()
+unittest_tasks = {k: v for k, v in six.iteritems(tasks)
                   if 'unittest_try_name' in v.attributes}
-talos_tasks = {k: v for k, v in tasks.iteritems()
+talos_tasks = {k: v for k, v in six.iteritems(tasks)
                if 'talos_try_name' in v.attributes}
 graph_with_jobs = TaskGraph(tasks, Graph(set(tasks), set()))
 
@@ -175,6 +178,9 @@ class TestTryOptionSyntax(unittest.TestCase):
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.unittests), [])
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_u_all(self):
         "-u all sets unittests=[..whole list..]"
         parameters = parse_message('try: -u all')
@@ -187,6 +193,9 @@ class TestTryOptionSyntax(unittest.TestCase):
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.unittests), sorted([{'test': 'mochitest-webgl1-core'}]))
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_u_alias(self):
         "-u mochitest-gl sets unittests=[mochitest-webgl*]"
         parameters = parse_message('try: -u mochitest-gl')
@@ -199,6 +208,9 @@ class TestTryOptionSyntax(unittest.TestCase):
             'mochitest-webgl2-deqp',
         ]]))
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_u_multi_alias(self):
         "-u e10s sets unittests=[all e10s unittests]"
         parameters = parse_message('try: -u e10s')
@@ -207,6 +219,9 @@ class TestTryOptionSyntax(unittest.TestCase):
             {'test': t} for t in unittest_tasks if 'e10s' in t
         ]))
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_u_commas(self):
         "-u mochitest-webgl1-core,gtest sets unittests=both"
         parameters = parse_message('try: -u mochitest-webgl1-core,gtest')
@@ -250,6 +265,9 @@ class TestTryOptionSyntax(unittest.TestCase):
                                             'linux1804-64', 'linux1804-64-asan']},
         ]))
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_u_platforms_negated(self):
         "-u gtest[-linux] selects all platforms but linux for gtest"
         parameters = parse_message('try: -u gtest[-linux]')
@@ -281,6 +299,9 @@ class TestTryOptionSyntax(unittest.TestCase):
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertEqual(sorted(tos.talos), [])
 
+    @pytest.mark.xfail(
+        sys.version_info >= (3, 0), reason="python3 migration is not complete"
+    )
     def test_t_all(self):
         "-t all sets talos=[..whole list..]"
         parameters = parse_message('try: -t all')
