@@ -6,6 +6,5 @@
 
 | Name | Summary |
 |---|---|
-| [Breadcrumb](-breadcrumb/index.md) | `data class Breadcrumb : `[`Comparable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-comparable/index.html)`<`[`Breadcrumb`](-breadcrumb/index.md)`>`<br>Represents a single crash breadcrumb. |
 | [Crash](-crash/index.md) | `sealed class Crash`<br>Crash types that are handled by this library. |
 | [CrashReporter](-crash-reporter/index.md) | `class CrashReporter : `[`CrashReporting`](../mozilla.components.support.base.crash/-crash-reporting/index.md)<br>A generic crash reporter that can report crashes to multiple services. |

@@ -11,7 +11,10 @@
 
 | Name | Summary |
 |---|---|
+| [ClearReaderActiveUrlAction](-clear-reader-active-url-action/index.md) | `data class ClearReaderActiveUrlAction : `[`ReaderAction`](./index.md)<br>Clears the [ReaderState.activeUrl](../../mozilla.components.browser.state.state/-reader-state/active-url.md). |
 | [UpdateReaderActiveAction](-update-reader-active-action/index.md) | `data class UpdateReaderActiveAction : `[`ReaderAction`](./index.md)<br>Updates the [ReaderState.active](../../mozilla.components.browser.state.state/-reader-state/active.md) flag. |
+| [UpdateReaderActiveUrlAction](-update-reader-active-url-action/index.md) | `data class UpdateReaderActiveUrlAction : `[`ReaderAction`](./index.md)<br>Updates the [ReaderState.activeUrl](../../mozilla.components.browser.state.state/-reader-state/active-url.md). |
+| [UpdateReaderBaseUrlAction](-update-reader-base-url-action/index.md) | `data class UpdateReaderBaseUrlAction : `[`ReaderAction`](./index.md)<br>Updates the [ReaderState.readerBaseUrl](#). |
 | [UpdateReaderConnectRequiredAction](-update-reader-connect-required-action/index.md) | `data class UpdateReaderConnectRequiredAction : `[`ReaderAction`](./index.md)<br>Updates the [ReaderState.connectRequired](../../mozilla.components.browser.state.state/-reader-state/connect-required.md) flag. |
 | [UpdateReaderableAction](-update-readerable-action/index.md) | `data class UpdateReaderableAction : `[`ReaderAction`](./index.md)<br>Updates the [ReaderState.readerable](../../mozilla.components.browser.state.state/-reader-state/readerable.md) flag. |
 | [UpdateReaderableCheckRequiredAction](-update-readerable-check-required-action/index.md) | `data class UpdateReaderableCheckRequiredAction : `[`ReaderAction`](./index.md)<br>Updates the [ReaderState.checkRequired](../../mozilla.components.browser.state.state/-reader-state/check-required.md) flag. |
@@ -26,7 +29,10 @@
 
 | Name | Summary |
 |---|---|
+| [ClearReaderActiveUrlAction](-clear-reader-active-url-action/index.md) | `data class ClearReaderActiveUrlAction : `[`ReaderAction`](./index.md)<br>Clears the [ReaderState.activeUrl](../../mozilla.components.browser.state.state/-reader-state/active-url.md). |
 | [UpdateReaderActiveAction](-update-reader-active-action/index.md) | `data class UpdateReaderActiveAction : `[`ReaderAction`](./index.md)<br>Updates the [ReaderState.active](../../mozilla.components.browser.state.state/-reader-state/active.md) flag. |
+| [UpdateReaderActiveUrlAction](-update-reader-active-url-action/index.md) | `data class UpdateReaderActiveUrlAction : `[`ReaderAction`](./index.md)<br>Updates the [ReaderState.activeUrl](../../mozilla.components.browser.state.state/-reader-state/active-url.md). |
+| [UpdateReaderBaseUrlAction](-update-reader-base-url-action/index.md) | `data class UpdateReaderBaseUrlAction : `[`ReaderAction`](./index.md)<br>Updates the [ReaderState.readerBaseUrl](#). |
 | [UpdateReaderConnectRequiredAction](-update-reader-connect-required-action/index.md) | `data class UpdateReaderConnectRequiredAction : `[`ReaderAction`](./index.md)<br>Updates the [ReaderState.connectRequired](../../mozilla.components.browser.state.state/-reader-state/connect-required.md) flag. |
 | [UpdateReaderableAction](-update-readerable-action/index.md) | `data class UpdateReaderableAction : `[`ReaderAction`](./index.md)<br>Updates the [ReaderState.readerable](../../mozilla.components.browser.state.state/-reader-state/readerable.md) flag. |
 | [UpdateReaderableCheckRequiredAction](-update-readerable-check-required-action/index.md) | `data class UpdateReaderableCheckRequiredAction : `[`ReaderAction`](./index.md)<br>Updates the [ReaderState.checkRequired](../../mozilla.components.browser.state.state/-reader-state/check-required.md) flag. |
