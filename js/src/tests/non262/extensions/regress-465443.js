@@ -19,7 +19,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  expect = 'TypeError: invalid assignment to const `b\'';
+  expect = 'TypeError: invalid assignment to const \'b\'';
 
 
   try
