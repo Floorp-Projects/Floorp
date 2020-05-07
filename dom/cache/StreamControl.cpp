@@ -62,7 +62,7 @@ void StreamControl::CloseAllReadStreams() {
   //    transitively)
   // 2. the this pointer is deleted by CacheStreamControlParent::Shutdown
   //    (called transitively)
-  auto readStreamList = mReadStreamList;
+  auto readStreamList = mReadStreamList.Clone();
   ReadStreamList::ForwardIterator iter(readStreamList);
   while (iter.HasMore()) {
     iter.GetNext()->CloseStream();
