@@ -16,7 +16,14 @@ import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.update.AddonUpdater
 
 @VisibleForTesting
-internal var supportedAddonsFallback = listOf("uBlock0@raymondhill.net")
+internal var supportedAddonsFallback = listOf(
+    "uBlock0@raymondhill.net",
+    "https-everywhere@eff.org",
+    "{73a6fe31-595d-460b-a920-fcc0f8843232}", // noscript
+    "addon@darkreader.org",
+    "jid1-MnnxcxisBPnSXQ@jetpack", // Privacy badger
+    "{2e5ff8c8-32fe-46d0-9fc8-6b8986621f3c}" // Search by Image
+)
 
 @VisibleForTesting
 internal const val AMO_READ_TIMEOUT_IN_SECONDS = 5L
