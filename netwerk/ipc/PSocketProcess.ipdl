@@ -19,11 +19,11 @@ include protocol PAltSvcTransaction;
 
 include MemoryReportTypes;
 include NeckoChannelParams;
-include PBrowserOrId;
 include PrefsTypes;
 include PSMIPCTypes;
 
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
+using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using mozilla::Telemetry::HistogramAccumulation from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::KeyedHistogramAccumulation from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ScalarAction from "mozilla/TelemetryComms.h";

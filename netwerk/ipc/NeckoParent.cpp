@@ -147,7 +147,7 @@ const char* NeckoParent::GetValidatedOriginAttributes(
 }
 
 const char* NeckoParent::CreateChannelLoadContext(
-    const PBrowserOrId& aBrowser, PContentParent* aContent,
+    PBrowserParent* aBrowser, PContentParent* aContent,
     const SerializedLoadContext& aSerialized,
     nsIPrincipal* aRequestingPrincipal, nsCOMPtr<nsILoadContext>& aResult) {
   OriginAttributes attrs;
@@ -162,24 +162,13 @@ const char* NeckoParent::CreateChannelLoadContext(
   if (aSerialized.IsNotNull()) {
     attrs.SyncAttributesWithPrivateBrowsing(
         aSerialized.mOriginAttributes.mPrivateBrowsingId > 0);
-    switch (aBrowser.type()) {
-      case PBrowserOrId::TPBrowserParent: {
-        RefPtr<BrowserParent> browserParent =
-            BrowserParent::GetFrom(aBrowser.get_PBrowserParent());
-        dom::Element* topFrameElement = nullptr;
-        if (browserParent) {
-          topFrameElement = browserParent->GetOwnerElement();
-        }
-        aResult = new LoadContext(aSerialized, topFrameElement, attrs);
-        break;
-      }
-      case PBrowserOrId::TTabId: {
-        aResult = new LoadContext(aSerialized, nullptr, attrs);
-        break;
-      }
-      default:
-        MOZ_CRASH();
+
+    RefPtr<BrowserParent> browserParent = BrowserParent::GetFrom(aBrowser);
+    dom::Element* topFrameElement = nullptr;
+    if (browserParent) {
+      topFrameElement = browserParent->GetOwnerElement();
     }
+    aResult = new LoadContext(aSerialized, topFrameElement, attrs);
   }
 
   return nullptr;
@@ -191,7 +180,7 @@ void NeckoParent::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 already_AddRefed<PHttpChannelParent> NeckoParent::AllocPHttpChannelParent(
-    const PBrowserOrId& aBrowser, const SerializedLoadContext& aSerialized,
+    PBrowserParent* aBrowser, const SerializedLoadContext& aSerialized,
     const HttpChannelCreationArgs& aOpenArgs) {
   nsCOMPtr<nsIPrincipal> requestingPrincipal =
       GetRequestingPrincipal(aOpenArgs);
@@ -208,13 +197,13 @@ already_AddRefed<PHttpChannelParent> NeckoParent::AllocPHttpChannelParent(
   }
   PBOverrideStatus overrideStatus =
       PBOverrideStatusFromLoadContext(aSerialized);
-  RefPtr<HttpChannelParent> p =
-      new HttpChannelParent(aBrowser, loadContext, overrideStatus);
+  RefPtr<HttpChannelParent> p = new HttpChannelParent(
+      BrowserParent::GetFrom(aBrowser), loadContext, overrideStatus);
   return p.forget();
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPHttpChannelConstructor(
-    PHttpChannelParent* aActor, const PBrowserOrId& aBrowser,
+    PHttpChannelParent* aActor, PBrowserParent* aBrowser,
     const SerializedLoadContext& aSerialized,
     const HttpChannelCreationArgs& aOpenArgs) {
   HttpChannelParent* p = static_cast<HttpChannelParent*>(aActor);
@@ -287,7 +276,7 @@ bool NeckoParent::DeallocPAltDataOutputStreamParent(
 }
 
 PFTPChannelParent* NeckoParent::AllocPFTPChannelParent(
-    const PBrowserOrId& aBrowser, const SerializedLoadContext& aSerialized,
+    PBrowserParent* aBrowser, const SerializedLoadContext& aSerialized,
     const FTPChannelCreationArgs& aOpenArgs) {
   nsCOMPtr<nsIPrincipal> requestingPrincipal =
       GetRequestingPrincipal(aOpenArgs);
@@ -304,8 +293,8 @@ PFTPChannelParent* NeckoParent::AllocPFTPChannelParent(
   }
   PBOverrideStatus overrideStatus =
       PBOverrideStatusFromLoadContext(aSerialized);
-  FTPChannelParent* p =
-      new FTPChannelParent(aBrowser, loadContext, overrideStatus);
+  FTPChannelParent* p = new FTPChannelParent(BrowserParent::GetFrom(aBrowser),
+                                             loadContext, overrideStatus);
   p->AddRef();
   return p;
 }
@@ -317,7 +306,7 @@ bool NeckoParent::DeallocPFTPChannelParent(PFTPChannelParent* channel) {
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPFTPChannelConstructor(
-    PFTPChannelParent* aActor, const PBrowserOrId& aBrowser,
+    PFTPChannelParent* aActor, PBrowserParent* aBrowser,
     const SerializedLoadContext& aSerialized,
     const FTPChannelCreationArgs& aOpenArgs) {
   FTPChannelParent* p = static_cast<FTPChannelParent*>(aActor);
@@ -362,7 +351,7 @@ bool NeckoParent::DeallocPCookieServiceParent(PCookieServiceParent* cs) {
 }
 
 PWebSocketParent* NeckoParent::AllocPWebSocketParent(
-    const PBrowserOrId& browser, const SerializedLoadContext& serialized,
+    PBrowserParent* browser, const SerializedLoadContext& serialized,
     const uint32_t& aSerial) {
   nsCOMPtr<nsILoadContext> loadContext;
   const char* error = CreateChannelLoadContext(browser, Manager(), serialized,
@@ -375,8 +364,7 @@ PWebSocketParent* NeckoParent::AllocPWebSocketParent(
     return nullptr;
   }
 
-  RefPtr<BrowserParent> browserParent =
-      BrowserParent::GetFrom(browser.get_PBrowserParent());
+  RefPtr<BrowserParent> browserParent = BrowserParent::GetFrom(browser);
   PBOverrideStatus overrideStatus = PBOverrideStatusFromLoadContext(serialized);
   WebSocketChannelParent* p = new WebSocketChannelParent(
       browserParent, loadContext, overrideStatus, aSerial);

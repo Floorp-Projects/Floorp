@@ -3169,14 +3169,8 @@ bool ContentParent::CanOpenBrowser(const IPCTabContext& aContext) {
 
   if (aContext.type() == IPCTabContext::TPopupIPCTabContext) {
     const PopupIPCTabContext& popupContext = aContext.get_PopupIPCTabContext();
-    if (popupContext.opener().type() != PBrowserOrId::TPBrowserParent) {
-      ASSERT_UNLESS_FUZZING(
-          "Unexpected PopupIPCTabContext type.  Aborting AllocPBrowserParent.");
-      return false;
-    }
 
-    auto opener =
-        BrowserParent::GetFrom(popupContext.opener().get_PBrowserParent());
+    auto opener = BrowserParent::GetFrom(popupContext.openerParent());
     if (!opener) {
       ASSERT_UNLESS_FUZZING(
           "Got null opener from child; aborting AllocPBrowserParent.");
@@ -3222,8 +3216,7 @@ mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
     // type PopupIPCTabContext, and that the opener BrowserParent is
     // reachable.
     const PopupIPCTabContext& popupContext = aContext.get_PopupIPCTabContext();
-    auto opener =
-        BrowserParent::GetFrom(popupContext.opener().get_PBrowserParent());
+    auto opener = BrowserParent::GetFrom(popupContext.openerParent());
     openerTabId = opener->GetTabId();
     openerCpId = opener->Manager()->ChildID();
 
