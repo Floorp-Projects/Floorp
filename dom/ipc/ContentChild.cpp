@@ -867,7 +867,6 @@ nsresult ContentChild::ProvideWindowCommon(
   *aReturn = nullptr;
 
   UniquePtr<IPCTabContext> ipcContext;
-  TabId openerTabId = TabId(0);
   nsAutoCString features(aFeatures);
   nsAutoString name(aName);
 
@@ -945,8 +944,7 @@ nsresult ContentChild::ProvideWindowCommon(
 
   if (aTabOpener) {
     PopupIPCTabContext context;
-    openerTabId = aTabOpener->GetTabId();
-    context.opener() = openerTabId;
+    context.openerChild() = aTabOpener;
     ipcContext = MakeUnique<IPCTabContext>(context);
   } else {
     // It's possible to not have a BrowserChild opener in the case
@@ -1014,11 +1012,6 @@ nsresult ContentChild::ProvideWindowCommon(
   auto newChild = MakeRefPtr<BrowserChild>(this, tabId, newTabContext,
                                            browsingContext, aChromeFlags,
                                            /* aIsTopLevel */ true);
-
-  if (aTabOpener) {
-    MOZ_ASSERT(ipcContext->type() == IPCTabContext::TPopupIPCTabContext);
-    ipcContext->get_PopupIPCTabContext().opener() = aTabOpener;
-  }
 
   if (IsShuttingDown()) {
     return NS_ERROR_ABORT;
@@ -2925,13 +2918,6 @@ void ContentChild::ShutdownInternal() {
       CrashReporter::Annotation::IPCShutdownState,
       sent ? NS_LITERAL_CSTRING("SendFinishShutdown (sent)")
            : NS_LITERAL_CSTRING("SendFinishShutdown (failed)"));
-}
-
-PBrowserOrId ContentChild::GetBrowserOrId(BrowserChild* aBrowserChild) {
-  if (!aBrowserChild || this == aBrowserChild->Manager()) {
-    return PBrowserOrId(aBrowserChild);
-  }
-  return PBrowserOrId(aBrowserChild->GetTabId());
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvUpdateWindow(
