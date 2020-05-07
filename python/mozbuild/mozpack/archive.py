@@ -30,7 +30,10 @@ def create_tar_from_files(fp, files):
 
     FUTURE accept a filename argument (or create APIs to write files)
     """
-    with tarfile.open(name='', mode='w', fileobj=fp, dereference=True) as tf:
+    # The format is explicitly set to tarfile.GNU_FORMAT, because this default format
+    # has been changed in Python 3.8.
+    with tarfile.open(name='', mode='w', fileobj=fp, dereference=True,
+                      format=tarfile.GNU_FORMAT) as tf:
         for archive_path, f in sorted(files.items()):
             if not isinstance(f, BaseFile):
                 f = File(f)
