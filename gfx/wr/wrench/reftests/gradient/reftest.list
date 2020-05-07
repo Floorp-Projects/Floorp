@@ -96,3 +96,11 @@ fuzzy-range(<=1,*169000) == gradient_cache_5stops_vertical.yaml gradient_cache_5
 == gradient_cache_hardstop_clip.yaml gradient_cache_hardstop_clip_ref.yaml
 == gradient_cache_clamp.yaml gradient_cache_clamp_ref.yaml
 == gradient_cache_repeat.yaml gradient_cache_repeat_ref.yaml
+
+# Recognize opaque tiles with gradient backgrounds
+== conic-backdrop-with-spacing.yaml conic-backdrop-with-spacing-ref.yaml
+== conic-backdrop.yaml conic-backdrop-ref.yaml
+== linear-backdrop-with-spacing.yaml linear-backdrop-with-spacing-ref.yaml
+== linear-backdrop.yaml linear-backdrop-ref.yaml
+== radial-backdrop-with-spacing.yaml radial-backdrop-with-spacing-ref.yaml
+== radial-backdrop.yaml radial-backdrop-ref.yaml
