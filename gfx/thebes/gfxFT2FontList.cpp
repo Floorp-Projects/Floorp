@@ -54,6 +54,11 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/jni/Utils.h"
+#  include <dlfcn.h>
+#endif
+
 using namespace mozilla;
 using namespace mozilla::gfx;
 
@@ -1347,18 +1352,81 @@ void gfxFT2FontList::FindFonts() {
   }
   mFontNameCache->Init();
 
-  // ANDROID_ROOT is the root of the android system, typically /system;
-  // font files are in /$ANDROID_ROOT/fonts/
-  nsCString root;
-  char* androidRoot = PR_GetEnv("ANDROID_ROOT");
-  if (androidRoot) {
-    root = androidRoot;
-  } else {
-    root = NS_LITERAL_CSTRING("/system");
-  }
-  root.AppendLiteral("/fonts");
+#if defined(MOZ_WIDGET_ANDROID)
+  // Android API 29+ provides system font and font matcher API for native code.
+  typedef void* (*_ASystemFontIterator_open)();
+  typedef void* (*_ASystemFontIterator_next)(void*);
+  typedef void (*_ASystemFontIterator_close)(void*);
+  typedef const char* (*_AFont_getFontFilePath)(const void*);
+  typedef void (*_AFont_close)(void*);
 
-  FindFontsInDir(root, mFontNameCache.get());
+  static _ASystemFontIterator_open systemFontIterator_open = nullptr;
+  static _ASystemFontIterator_next systemFontIterator_next = nullptr;
+  static _ASystemFontIterator_close systemFontIterator_close = nullptr;
+  static _AFont_getFontFilePath font_getFontFilePath = nullptr;
+  static _AFont_close font_close = nullptr;
+
+  static bool firstTime = true;
+
+  if (firstTime) {
+    if (jni::GetAPIVersion() >= 29) {
+      void* handle = dlopen("libandroid.so", RTLD_LAZY | RTLD_LOCAL);
+      MOZ_ASSERT(handle);
+
+      systemFontIterator_open =
+          (_ASystemFontIterator_open)dlsym(handle, "ASystemFontIterator_open");
+      systemFontIterator_next =
+          (_ASystemFontIterator_next)dlsym(handle, "ASystemFontIterator_next");
+      systemFontIterator_close = (_ASystemFontIterator_close)dlsym(
+          handle, "ASystemFontIterator_close");
+      font_getFontFilePath =
+          (_AFont_getFontFilePath)dlsym(handle, "AFont_getFontFilePath");
+      font_close = (_AFont_close)dlsym(handle, "AFont_close");
+
+      if (NS_WARN_IF(!systemFontIterator_next) ||
+          NS_WARN_IF(!systemFontIterator_close) ||
+          NS_WARN_IF(!font_getFontFilePath) || NS_WARN_IF(!font_close)) {
+        // Since any functions aren't resolved, use old way to enumerate fonts.
+        systemFontIterator_open = nullptr;
+      }
+    }
+    firstTime = false;
+  }
+
+  bool useSystemFontAPI = !!systemFontIterator_open;
+  if (useSystemFontAPI) {
+    void* iter = systemFontIterator_open();
+    if (iter) {
+      void* font = systemFontIterator_next(iter);
+      while (font) {
+        nsAutoCString path(font_getFontFilePath(font));
+        AppendFacesFromFontFile(path, mFontNameCache.get(), kStandard);
+        font_close(font);
+        font = systemFontIterator_next(iter);
+      }
+
+      systemFontIterator_close(iter);
+    } else {
+      useSystemFontAPI = false;
+    }
+  }
+
+  if (!useSystemFontAPI)
+#endif
+  {
+    // ANDROID_ROOT is the root of the android system, typically /system;
+    // font files are in /$ANDROID_ROOT/fonts/
+    nsCString root;
+    char* androidRoot = PR_GetEnv("ANDROID_ROOT");
+    if (androidRoot) {
+      root = androidRoot;
+    } else {
+      root = NS_LITERAL_CSTRING("/system");
+    }
+    root.AppendLiteral("/fonts");
+
+    FindFontsInDir(root, mFontNameCache.get());
+  }
 
   // Look for fonts stored in omnijar, unless we're on a low-memory
   // device where we don't want to spend the RAM to decompress them.
