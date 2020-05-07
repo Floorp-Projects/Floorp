@@ -36,13 +36,13 @@ class MozillaSocorroServiceTest {
             testContext,
             "Test App"
         ))
-        doReturn("").`when`(service).sendReport(any(), any(), any(), anyBoolean(), anyBoolean())
+        doReturn("").`when`(service).sendReport(any(), any(), any(), anyBoolean(), anyBoolean(), any())
 
         val crash = Crash.NativeCodeCrash("", true, "", false, arrayListOf())
         service.report(crash)
 
         verify(service).report(crash)
-        verify(service).sendReport(null, crash.minidumpPath, crash.extrasPath, true, false)
+        verify(service).sendReport(null, crash.minidumpPath, crash.extrasPath, true, false, crash.breadcrumbs)
     }
 
     @Test
@@ -51,13 +51,13 @@ class MozillaSocorroServiceTest {
             testContext,
             "Test App"
         ))
-        doReturn("").`when`(service).sendReport(any(), any(), any(), anyBoolean(), anyBoolean())
+        doReturn("").`when`(service).sendReport(any(), any(), any(), anyBoolean(), anyBoolean(), any())
 
         val crash = Crash.UncaughtExceptionCrash(RuntimeException("Test"), arrayListOf())
         service.report(crash)
 
         verify(service).report(crash)
-        verify(service).sendReport(crash.throwable, null, null, false, true)
+        verify(service).sendReport(crash.throwable, null, null, false, true, crash.breadcrumbs)
     }
 
     @Test
@@ -66,13 +66,13 @@ class MozillaSocorroServiceTest {
                 testContext,
                 "Test App"
         ))
-        doReturn("").`when`(service).sendReport(any(), any(), any(), anyBoolean(), anyBoolean())
+        doReturn("").`when`(service).sendReport(any(), any(), any(), anyBoolean(), anyBoolean(), any())
         val throwable = RuntimeException("Test")
         val breadcrumbs: ArrayList<Breadcrumb> = arrayListOf()
         service.report(throwable, breadcrumbs)
 
         verify(service).report(throwable, breadcrumbs)
-        verify(service).sendReport(throwable, null, null, false, false)
+        verify(service).sendReport(throwable, null, null, false, false, breadcrumbs)
     }
 
     @Test
@@ -120,7 +120,7 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=CrashType\r\n\r\n$FATAL_NATIVE_CRASH_TYPE"))
 
             verify(service).report(crash)
-            verify(service).sendReport(null, "dump.path", "extras.path", true, true)
+            verify(service).sendReport(null, "dump.path", "extras.path", true, true, crash.breadcrumbs)
         } finally {
             mockWebServer.shutdown()
         }
@@ -171,7 +171,7 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=CrashType\r\n\r\n$NON_FATAL_NATIVE_CRASH_TYPE"))
 
             verify(service).report(crash)
-            verify(service).sendReport(null, "dump.path", "extras.path", true, false)
+            verify(service).sendReport(null, "dump.path", "extras.path", true, false, crash.breadcrumbs)
         } finally {
             mockWebServer.shutdown()
         }
@@ -217,7 +217,7 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=CrashType\r\n\r\n$UNCAUGHT_EXCEPTION_TYPE"))
 
             verify(service).report(crash)
-            verify(service).sendReport(crash.throwable, null, null, false, true)
+            verify(service).sendReport(crash.throwable, null, null, false, true, crash.breadcrumbs)
         } finally {
             mockWebServer.shutdown()
         }
@@ -262,7 +262,7 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
             assert(request.contains("name=CrashType\r\n\r\n$CAUGHT_EXCEPTION_TYPE"))
 
-            verify(service).sendReport(throwable, null, null, false, false)
+            verify(service).sendReport(throwable, null, null, false, false, breadcrumbs)
         } finally {
             mockWebServer.shutdown()
         }
@@ -319,7 +319,7 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=CrashType\r\n\r\n$CAUGHT_EXCEPTION_TYPE"))
 
             verify(service).report(throwable, breadcrumbs)
-            verify(service).sendReport(throwable, null, null, false, false)
+            verify(service).sendReport(throwable, null, null, false, false, breadcrumbs)
         } finally {
             mockWebServer.shutdown()
         }
@@ -365,7 +365,7 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=Version\r\n\r\nN/A"))
 
             verify(service).report(throwable, breadcrumbs)
-            verify(service).sendReport(throwable, null, null, false, false)
+            verify(service).sendReport(throwable, null, null, false, false, breadcrumbs)
         } finally {
             mockWebServer.shutdown()
         }
@@ -423,7 +423,7 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=CrashType\r\n\r\n$CAUGHT_EXCEPTION_TYPE"))
 
             verify(service).report(throwable, breadcrumbs)
-            verify(service).sendReport(throwable, null, null, false, false)
+            verify(service).sendReport(throwable, null, null, false, false, breadcrumbs)
         } finally {
             mockWebServer.shutdown()
         }
@@ -453,7 +453,7 @@ class MozillaSocorroServiceTest {
 
             mockWebServer.shutdown()
             verify(service).report(crash)
-            verify(service).sendReport(crash.throwable, null, null, false, true)
+            verify(service).sendReport(crash.throwable, null, null, false, true, crash.breadcrumbs)
         } finally {
             mockWebServer.shutdown()
         }
@@ -480,7 +480,7 @@ class MozillaSocorroServiceTest {
             mockWebServer.shutdown()
 
             verify(service).report(crash)
-            verify(service).sendReport(null, crash.minidumpPath, crash.extrasPath, true, false)
+            verify(service).sendReport(null, crash.minidumpPath, crash.extrasPath, true, false, crash.breadcrumbs)
         } finally {
             mockWebServer.shutdown()
         }
@@ -643,7 +643,7 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=ReleaseChannel\r\n\r\ntest channel"))
 
             verify(service).report(throwable, breadcrumbs)
-            verify(service).sendReport(throwable, null, null, false, false)
+            verify(service).sendReport(throwable, null, null, false, false, breadcrumbs)
         } finally {
             mockWebServer.shutdown()
         }
@@ -695,7 +695,7 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=ReleaseChannel\r\n\r\ntest channel"))
 
             verify(service).report(throwable, breadcrumbs)
-            verify(service).sendReport(throwable, null, null, false, false)
+            verify(service).sendReport(throwable, null, null, false, false, breadcrumbs)
         } finally {
             mockWebServer.shutdown()
         }

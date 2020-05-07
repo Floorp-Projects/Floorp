@@ -6,7 +6,11 @@ package mozilla.components.support.base.crash
 
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
+import org.json.JSONObject
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 /**
  * Represents a single crash breadcrumb.
@@ -46,56 +50,56 @@ data class Breadcrumb(
     /**
      * Crash breadcrumb priority level.
      */
-    enum class Level {
+    enum class Level(val value: String) {
         /**
          * DEBUG level.
          */
-        DEBUG,
+        DEBUG("Debug"),
 
         /**
          * INFO level.
          */
-        INFO,
+        INFO("Info"),
 
         /**
          * WARNING level.
          */
-        WARNING,
+        WARNING("Warning"),
 
         /**
          * ERROR level.
          */
-        ERROR,
+        ERROR("Error"),
 
         /**
          * CRITICAL level.
          */
-        CRITICAL
+        CRITICAL("Critical")
     }
 
     /**
      * Crash breadcrumb type.
      */
-    enum class Type {
+    enum class Type(val value: String) {
         /**
          * DEFAULT type.
          */
-        DEFAULT,
+        DEFAULT("Default"),
 
         /**
          * HTTP type.
          */
-        HTTP,
+        HTTP("Http"),
 
         /**
          * NAVIGATION type.
          */
-        NAVIGATION,
+        NAVIGATION("Navigation"),
 
         /**
          * USER type.
          */
-        USER
+        USER("User")
     }
 
     override fun compareTo(other: Breadcrumb): Int {
@@ -104,5 +108,29 @@ data class Breadcrumb(
         }
 
         return this.level.ordinal.compareTo(other.level.ordinal)
+    }
+
+    /**
+     * Converts Breadcrumb into a JSON object
+     *
+     * @return A [JSONObject] that contains the information within the [Breadcrumb]
+     */
+    fun toJson(): JSONObject {
+        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
+        simpleDateFormat.timeZone = TimeZone.getTimeZone("GMT")
+        val jsonObject = JSONObject()
+        jsonObject.put("timestamp", simpleDateFormat.format(this.date))
+        jsonObject.put("message", this.message)
+        jsonObject.put("category", this.category)
+        jsonObject.put("level", this.level.value)
+        jsonObject.put("type", this.type.value)
+
+        val dataJsonObject = JSONObject()
+        for ((k, v) in this.data) {
+            dataJsonObject.put(k, v)
+        }
+
+        jsonObject.put("data", dataJsonObject)
+        return jsonObject
     }
 }
