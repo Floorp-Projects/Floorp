@@ -388,22 +388,6 @@ var testcases = [
     protocolChange: true,
     inWhitelist: true,
   },
-  // local.domain is a whitelisted suffix...
-  {
-    input: "some.local.domain",
-    fixedURI: "http://some.local.domain/",
-    protocolChange: true,
-    inWhitelist: true,
-  },
-  // ...but .domain is not.
-  {
-    input: "some.domain",
-    fixedURI: "http://some.domain/",
-    alternateURI: "http://www.some.domain/",
-    keywordLookup: true,
-    protocolChange: true,
-    affectedByDNSForSingleWordHosts: true,
-  },
   {
     input: "café.com",
     fixedURI: "http://xn--caf-dma.com/",
@@ -639,8 +623,7 @@ add_task(async function setup() {
     "browser.fixup.typo.scheme",
     "keyword.enabled",
     "browser.fixup.domainwhitelist.whitelisted",
-    "browser.fixup.domainsuffixwhitelist.test",
-    "browser.fixup.domainsuffixwhitelist.local.domain",
+    "browser.fixup.domainwhitelist.mochi.test",
     "browser.search.separatePrivateDefault",
     "browser.search.separatePrivateDefault.ui.enabled",
   ];
