@@ -627,7 +627,17 @@ class SpecialPowersParent extends JSWindowActorParent {
         return undefined;
 
       case "SpecialPowers.Quit":
-        Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
+        if (
+          !AppConstants.RELEASE_OR_BETA &&
+          !AppConstants.DEBUG &&
+          !AppConstants.MOZ_CODE_COVERAGE &&
+          !AppConstants.ASAN &&
+          !AppConstants.TSAN
+        ) {
+          Cu.exitIfInAutomation();
+        } else {
+          Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
+        }
         return undefined;
 
       case "SpecialPowers.Focus":
