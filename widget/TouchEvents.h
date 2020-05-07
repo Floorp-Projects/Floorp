@@ -140,7 +140,7 @@ class WidgetSimpleGestureEvent : public WidgetMouseEventBase {
 
 class WidgetTouchEvent : public WidgetInputEvent {
  public:
-  typedef CopyableTArray<RefPtr<mozilla::dom::Touch>> TouchArray;
+  typedef nsTArray<RefPtr<mozilla::dom::Touch>> TouchArray;
   typedef AutoTArray<RefPtr<mozilla::dom::Touch>, 10> AutoTouchArray;
   typedef AutoTouchArray::base_type TouchArrayBase;
 
