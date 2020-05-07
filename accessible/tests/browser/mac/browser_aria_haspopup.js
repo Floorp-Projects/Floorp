@@ -34,8 +34,13 @@ addAccessibleTask(
     let falseID = getNativeInterface(accDoc, "false");
     is(
       falseID.getAttributeValue("AXHasPopup"),
+      0,
+      "Correct AXHasPopup val for button with false"
+    );
+    is(
+      falseID.getAttributeValue("AXPopupValue"),
       null,
-      "Correct haspopup val for button with false"
+      "Correct AXPopupValue val for button with false"
     );
     let attrChanged = waitForEvent(EVENT_STATE_CHANGE, "false");
     await SpecialPowers.spawn(browser, [], () => {
@@ -46,9 +51,14 @@ addAccessibleTask(
     await attrChanged;
 
     is(
-      falseID.getAttributeValue("AXHasPopup"),
+      falseID.getAttributeValue("AXPopupValue"),
       "true",
-      "Correct aria-haspopup after change for false"
+      "Correct AXPopupValue after change for false"
+    );
+    is(
+      falseID.getAttributeValue("AXHasPopup"),
+      1,
+      "Correct AXHasPopup val for button with true"
     );
 
     let stateChanged = waitForEvent(EVENT_STATE_CHANGE, "false");
@@ -58,17 +68,27 @@ addAccessibleTask(
     await stateChanged;
 
     is(
-      falseID.getAttributeValue("AXHasPopup"),
+      falseID.getAttributeValue("AXPopupValue"),
       null,
-      "Correct aria-haspopup after remove for false"
+      "Correct AXPopupValue after remove for false"
+    );
+    is(
+      falseID.getAttributeValue("AXHasPopup"),
+      0,
+      "Correct AXHasPopup val for button after remove"
     );
 
     // MENU
     let menuID = getNativeInterface(accDoc, "menu");
     is(
-      menuID.getAttributeValue("AXHasPopup"),
+      menuID.getAttributeValue("AXPopupValue"),
       "menu",
-      "Correct haspopup val for button with menu"
+      "Correct AXPopupValue val for button with menu"
+    );
+    is(
+      menuID.getAttributeValue("AXHasPopup"),
+      1,
+      "Correct AXHasPopup val for button with menu"
     );
 
     attrChanged = waitForEvent(EVENT_STATE_CHANGE, "menu");
@@ -80,9 +100,14 @@ addAccessibleTask(
     await attrChanged;
 
     is(
-      menuID.getAttributeValue("AXHasPopup"),
+      menuID.getAttributeValue("AXPopupValue"),
       "true",
-      "Correct aria-haspopup after change for menu"
+      "Correct AXPopupValue after change for menu"
+    );
+    is(
+      menuID.getAttributeValue("AXHasPopup"),
+      1,
+      "Correct AXHasPopup val for button with menu"
     );
 
     stateChanged = waitForEvent(EVENT_STATE_CHANGE, "menu");
@@ -92,17 +117,27 @@ addAccessibleTask(
     await stateChanged;
 
     is(
-      menuID.getAttributeValue("AXHasPopup"),
+      menuID.getAttributeValue("AXPopupValue"),
       null,
-      "Correct aria-haspopup after remove for menu"
+      "Correct AXPopupValue after remove for menu"
+    );
+    is(
+      menuID.getAttributeValue("AXHasPopup"),
+      0,
+      "Correct AXHasPopup val for button after remove"
     );
 
     // LISTBOX
     let listboxID = getNativeInterface(accDoc, "listbox");
     is(
-      listboxID.getAttributeValue("AXHasPopup"),
+      listboxID.getAttributeValue("AXPopupValue"),
       "listbox",
-      "Correct haspopup val for button with listbox"
+      "Correct AXPopupValue for button with listbox"
+    );
+    is(
+      listboxID.getAttributeValue("AXHasPopup"),
+      1,
+      "Correct AXHasPopup for button with listbox"
     );
 
     attrChanged = waitForEvent(EVENT_STATE_CHANGE, "listbox");
@@ -114,9 +149,14 @@ addAccessibleTask(
     await attrChanged;
 
     is(
-      listboxID.getAttributeValue("AXHasPopup"),
+      listboxID.getAttributeValue("AXPopupValue"),
       "true",
-      "Correct aria-haspopup after change for listbox"
+      "Correct AXPopupValue after change for listbox"
+    );
+    is(
+      listboxID.getAttributeValue("AXHasPopup"),
+      1,
+      "Correct AXHasPopup for button with listbox"
     );
 
     stateChanged = waitForEvent(EVENT_STATE_CHANGE, "listbox");
@@ -128,17 +168,27 @@ addAccessibleTask(
     await stateChanged;
 
     is(
-      listboxID.getAttributeValue("AXHasPopup"),
+      listboxID.getAttributeValue("AXPopupValue"),
       null,
-      "Correct aria-haspopup after remove for listbox"
+      "Correct AXPopupValue after remove for listbox"
+    );
+    is(
+      listboxID.getAttributeValue("AXHasPopup"),
+      0,
+      "Correct AXHasPopup for button with listbox"
     );
 
     // TREE
     let treeID = getNativeInterface(accDoc, "tree");
     is(
-      treeID.getAttributeValue("AXHasPopup"),
+      treeID.getAttributeValue("AXPopupValue"),
       "tree",
-      "Correct haspopup val for button with tree"
+      "Correct AXPopupValue for button with tree"
+    );
+    is(
+      treeID.getAttributeValue("AXHasPopup"),
+      1,
+      "Correct AXHasPopup for button with tree"
     );
 
     attrChanged = waitForEvent(EVENT_STATE_CHANGE, "tree");
@@ -150,9 +200,14 @@ addAccessibleTask(
     await attrChanged;
 
     is(
-      treeID.getAttributeValue("AXHasPopup"),
+      treeID.getAttributeValue("AXPopupValue"),
       "true",
-      "Correct aria-haspopup after change for tree"
+      "Correct AXPopupValue after change for tree"
+    );
+    is(
+      treeID.getAttributeValue("AXHasPopup"),
+      1,
+      "Correct AXHasPopup for button with tree"
     );
 
     stateChanged = waitForEvent(EVENT_STATE_CHANGE, "tree");
@@ -162,17 +217,27 @@ addAccessibleTask(
     await stateChanged;
 
     is(
-      treeID.getAttributeValue("AXHasPopup"),
+      treeID.getAttributeValue("AXPopupValue"),
       null,
-      "Correct aria-haspopup after remove for tree"
+      "Correct AXPopupValue after remove for tree"
+    );
+    is(
+      treeID.getAttributeValue("AXHasPopup"),
+      0,
+      "Correct AXHasPopup for button with tree after remove"
     );
 
     // GRID
     let gridID = getNativeInterface(accDoc, "grid");
     is(
-      gridID.getAttributeValue("AXHasPopup"),
+      gridID.getAttributeValue("AXPopupValue"),
       "grid",
-      "Correct haspopup val for button with grid"
+      "Correct AXPopupValue for button with grid"
+    );
+    is(
+      gridID.getAttributeValue("AXHasPopup"),
+      1,
+      "Correct AXHasPopup for button with grid"
     );
 
     attrChanged = waitForEvent(EVENT_STATE_CHANGE, "grid");
@@ -184,9 +249,14 @@ addAccessibleTask(
     await attrChanged;
 
     is(
-      gridID.getAttributeValue("AXHasPopup"),
+      gridID.getAttributeValue("AXPopupValue"),
       "true",
-      "Correct aria-haspopup after change for grid"
+      "Correct AXPopupValue after change for grid"
+    );
+    is(
+      gridID.getAttributeValue("AXHasPopup"),
+      1,
+      "Correct AXHasPopup for button with grid"
     );
 
     stateChanged = waitForEvent(EVENT_STATE_CHANGE, "grid");
@@ -196,17 +266,27 @@ addAccessibleTask(
     await stateChanged;
 
     is(
-      gridID.getAttributeValue("AXHasPopup"),
+      gridID.getAttributeValue("AXPopupValue"),
       null,
-      "Correct aria-haspopup after remove for grid"
+      "Correct AXPopupValue after remove for grid"
+    );
+    is(
+      gridID.getAttributeValue("AXHasPopup"),
+      0,
+      "Correct AXHasPopup for button with grid after remove"
     );
 
     // DIALOG
     let dialogID = getNativeInterface(accDoc, "dialog");
     is(
-      dialogID.getAttributeValue("AXHasPopup"),
+      dialogID.getAttributeValue("AXPopupValue"),
       "dialog",
-      "Correct haspopup val for button with dialog"
+      "Correct AXPopupValue for button with dialog"
+    );
+    is(
+      dialogID.getAttributeValue("AXHasPopup"),
+      1,
+      "Correct AXHasPopup for button with dialog"
     );
 
     attrChanged = waitForEvent(EVENT_STATE_CHANGE, "dialog");
@@ -218,9 +298,14 @@ addAccessibleTask(
     await attrChanged;
 
     is(
-      dialogID.getAttributeValue("AXHasPopup"),
+      dialogID.getAttributeValue("AXPopupValue"),
       "true",
-      "Correct aria-haspopup after change for dialog"
+      "Correct AXPopupValue after change for dialog"
+    );
+    is(
+      dialogID.getAttributeValue("AXHasPopup"),
+      1,
+      "Correct AXHasPopup for button with dialog"
     );
 
     stateChanged = waitForEvent(EVENT_STATE_CHANGE, "dialog");
@@ -232,9 +317,14 @@ addAccessibleTask(
     await stateChanged;
 
     is(
-      dialogID.getAttributeValue("AXHasPopup"),
+      dialogID.getAttributeValue("AXPopupValue"),
       null,
-      "Correct aria-haspopup after remove for dialog"
+      "Correct AXPopupValue after remove for dialog"
+    );
+    is(
+      dialogID.getAttributeValue("AXHasPopup"),
+      0,
+      "Correct AXHasPopup for button with dialog after remove"
     );
   }
 );
