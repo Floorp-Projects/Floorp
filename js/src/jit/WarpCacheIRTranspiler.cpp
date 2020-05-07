@@ -565,6 +565,32 @@ bool WarpCacheIRTranspiler::emitStoreFixedSlot(ObjOperandId objId,
   return resumeAfter(store);
 }
 
+bool WarpCacheIRTranspiler::emitStoreDenseElement(ObjOperandId objId,
+                                                  Int32OperandId indexId,
+                                                  ValOperandId rhsId) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* index = getOperand(indexId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* elements = MElements::New(alloc(), obj);
+  add(elements);
+
+  auto* length = MInitializedLength::New(alloc(), elements);
+  add(length);
+
+  index = addBoundsCheck(index, length);
+
+  auto* barrier = MPostWriteBarrier::New(alloc(), obj, rhs);
+  add(barrier);
+
+  bool needsHoleCheck = true;
+  auto* store =
+      MStoreElement::New(alloc(), elements, index, rhs, needsHoleCheck);
+  store->setNeedsBarrier();
+  addEffectful(store);
+  return resumeAfter(store);
+}
+
 bool WarpCacheIRTranspiler::emitInt32IncResult(Int32OperandId inputId) {
   MDefinition* input = getOperand(inputId);
 
