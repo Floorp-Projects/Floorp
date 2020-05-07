@@ -141,7 +141,6 @@ class AboutProtectionsParent extends JSWindowActorParent {
    *
    * @return {{ hasFxa: Boolean,
    *            numLogins: Number,
-   *            numSyncedDevices: Number,
    *            mobileDeviceConnected: Boolean }}
    *         The login data.
    */
@@ -173,9 +172,6 @@ class AboutProtectionsParent extends JSWindowActorParent {
     return {
       hasFxa,
       numLogins: userFacingLogins,
-      numSyncedDevices: fxAccounts.device.recentDeviceList
-        ? fxAccounts.device.recentDeviceList.length
-        : 0,
       mobileDeviceConnected,
     };
   }
