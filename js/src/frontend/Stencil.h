@@ -348,19 +348,18 @@ using ScriptThingsVector = Vector<ScriptThingVariant>;
 // collector.
 struct FunctionCreationData {
   // All moves but not copies to avoid expensive surprises.
-  FunctionCreationData() = default;
   FunctionCreationData(const FunctionCreationData&) = delete;
   FunctionCreationData(FunctionCreationData&& data) = default;
 
   // Lazy functions have a list of GC-things that eventually becomes the
   // PrivateScriptData structure.
-  mozilla::Maybe<ScriptThingsVector> gcThings = {};
+  ScriptThingsVector gcThings;
+
+  explicit FunctionCreationData(JSContext* cx) : gcThings(cx) {}
 
   bool createLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
                         HandleFunction function, FunctionBox* funbox,
                         HandleScriptSourceObject sourceObject);
-
-  bool hasLazyScriptData() const { return gcThings.isSome(); }
 
   void trace(JSTracer* trc);
 };
