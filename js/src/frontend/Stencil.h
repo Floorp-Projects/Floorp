@@ -365,11 +365,8 @@ struct FunctionCreationData {
   void trace(JSTracer* trc);
 };
 
-// Data used to instantiate the non-lazy script.
-class ScriptStencil {
- public:
-  using ImmutableFlags = ImmutableScriptFlagsEnum;
-
+// Non-virtual base class for ScriptStencil.
+class ScriptStencilBase {
  public:
   // See `BaseScript::functionOrGlobal_`.
   mozilla::Maybe<FunctionIndex> functionIndex;
@@ -377,17 +374,23 @@ class ScriptStencil {
   // See `BaseScript::immutableFlags_`.
   ImmutableScriptFlags immutableFlags;
 
-  // See `finishGCThings` and `BaseScript::data_`.
+  // See `BaseScript::data_`.
   mozilla::Maybe<FieldInitializers> fieldInitializers;
   ScriptThingsVector gcThings;
 
-  // See `initAtomMap` and `BaseScript::sharedData_`.
+  // See `BaseScript::sharedData_`.
   uint32_t natoms = 0;
   js::UniquePtr<js::ImmutableScriptData> immutableScriptData = nullptr;
 
-  // End of fields.
+  explicit ScriptStencilBase(JSContext* cx) : gcThings(cx) {}
+};
 
-  ScriptStencil(JSContext* cx) : gcThings(cx) {}
+// Data used to instantiate the non-lazy script.
+class ScriptStencil : public ScriptStencilBase {
+ public:
+  using ImmutableFlags = ImmutableScriptFlagsEnum;
+
+  explicit ScriptStencil(JSContext* cx) : ScriptStencilBase(cx) {}
 
   bool isFunction() const {
     return immutableFlags.hasFlag(ImmutableFlags::IsFunction);
