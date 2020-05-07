@@ -226,7 +226,7 @@ add_task(async function testLockwiseCardUIWithBreachedLogins() {
   Services.logins.addLogin(TEST_LOGIN1);
 
   info("Mock monitor data with a breached login to test the Lockwise UI");
-  AboutProtectionsParent.setTestOverride(mockGetMonitorDataForLockwiseCard(1));
+  AboutProtectionsParent.setTestOverride(mockGetMonitorData(1));
   await reloadTab(tab);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
@@ -248,7 +248,7 @@ add_task(async function testLockwiseCardUIWithBreachedLogins() {
   info(
     "Mock monitor data with more than one breached logins to test the Lockwise UI"
   );
-  AboutProtectionsParent.setTestOverride(mockGetMonitorDataForLockwiseCard(2));
+  AboutProtectionsParent.setTestOverride(mockGetMonitorData(2));
   await reloadTab(tab);
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const lockwiseScannedText = content.document.querySelector(

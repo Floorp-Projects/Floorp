@@ -8,44 +8,6 @@ const { AboutProtectionsParent } = ChromeUtils.import(
   "resource:///actors/AboutProtectionsParent.jsm"
 );
 
-let fakeDataWithNoError = {
-  monitoredEmails: 1,
-  numBreaches: 11,
-  passwords: 8,
-  potentiallyBreachedLogins: 2,
-  error: false,
-};
-
-let fakeDataWithError = {
-  monitoredEmails: null,
-  numBreaches: null,
-  passwords: null,
-  potentiallyBreachedLogins: null,
-  error: true,
-};
-
-// Modify AboutProtectionsParent's getMonitorData and getLoginData methods
-// to fake being logged in with Fxa.
-const mockGetMonitorData = data => {
-  return {
-    getMonitorData: async () => data,
-  };
-};
-
-// Modify AboutProtectionsParent's getMonitorData and getLoginData methods
-// to fake being logged in with Fxa.
-// Modify AboutProtectionsHandler's getLoginData method to fake being logged in with Fxa.
-const mockGetMonitorAndLoginData = data => {
-  return {
-    getMonitorData: async () => data,
-    getLoginData: () => {
-      return {
-        numLogins: Services.logins.countLogins("", "", ""),
-      };
-    },
-  };
-};
-
 add_task(async function() {
   let tab = await BrowserTestUtils.openNewForegroundTab({
     url: "about:protections",
@@ -61,9 +23,7 @@ add_task(async function() {
     "Check that the correct content is displayed for users with monitor data."
   );
   Services.logins.addLogin(TEST_LOGIN1);
-  AboutProtectionsParent.setTestOverride(
-    mockGetMonitorData(fakeDataWithNoError)
-  );
+  AboutProtectionsParent.setTestOverride(mockGetMonitorData());
   await reloadTab(tab);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
@@ -100,55 +60,16 @@ add_task(async function() {
     const breaches = content.document.querySelector(
       ".monitor-stat span[data-type='known-breaches']"
     );
-    const breachedLockwisePasswords = content.document.querySelector(
-      ".monitor-breached-passwords span[data-type='breached-lockwise-passwords']"
-    );
 
     is(emails.textContent, 1, "1 monitored email is displayed");
     is(passwords.textContent, 8, "8 exposed passwords are displayed");
     is(breaches.textContent, 11, "11 known data breaches are displayed.");
-    is(
-      breachedLockwisePasswords.textContent,
-      2,
-      "2 saved passwords are displayed."
-    );
-  });
-
-  info("Make sure Lockwise section is hidden if no passwords are returned.");
-  const noBreachedLoginsData = {
-    ...fakeDataWithNoError,
-    potentiallyBreachedLogins: 0,
-  };
-  AboutProtectionsParent.setTestOverride(
-    mockGetMonitorData(noBreachedLoginsData)
-  );
-
-  await reloadTab(tab);
-
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    await ContentTaskUtils.waitForCondition(() => {
-      const hasLogins = content.document.querySelector(
-        ".monitor-card.has-logins"
-      );
-      return hasLogins && ContentTaskUtils.is_visible(hasLogins);
-    }, "Monitor card for user with stored logins is shown.");
-
-    const lockwiseSection = content.document.querySelector(
-      ".monitor-breached-passwords"
-    );
-
-    ok(
-      ContentTaskUtils.is_hidden(lockwiseSection),
-      "Lockwise section is hidden."
-    );
   });
 
   info(
     "Check that correct content is displayed when monitor data contains an error message."
   );
-  AboutProtectionsParent.setTestOverride(
-    mockGetMonitorAndLoginData(fakeDataWithError)
-  );
+  AboutProtectionsParent.setTestOverride(mockGetMonitorData(0, true));
   await reloadTab(tab);
   await checkNoLoginsContentIsDisplayed(tab);
 

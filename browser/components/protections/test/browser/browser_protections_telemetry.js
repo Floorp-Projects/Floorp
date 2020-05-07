@@ -214,7 +214,7 @@ add_task(async function checkTelemetryClickEvents() {
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   // Add breached logins.
-  AboutProtectionsParent.setTestOverride(mockGetMonitorDataForLockwiseCard(4));
+  AboutProtectionsParent.setTestOverride(mockGetMonitorData(4));
   await reloadTab(tab);
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const managePasswordsButton = await ContentTaskUtils.waitForCondition(
@@ -319,25 +319,6 @@ add_task(async function checkTelemetryClickEvents() {
   is(events.length, 1, `recorded telemetry for lw_about_link`);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
-    let openLockwise = await ContentTaskUtils.waitForCondition(() => {
-      // Opens an extra tab
-      return content.document.getElementById("lockwise-link");
-    }, "openLockwise exists");
-
-    openLockwise.click();
-  });
-
-  events = await waitForTelemetryEventCount(13);
-
-  events = events.filter(
-    e =>
-      e[1] == "security.ui.protections" &&
-      e[2] == "click" &&
-      e[3] == "lw_open_breach_link"
-  );
-  is(events.length, 1, `recorded telemetry for lw_open_breach_link`);
-
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     let monitorReportLink = await ContentTaskUtils.waitForCondition(() => {
       return content.document.getElementById("monitor-inline-link");
     }, "monitorReportLink exists");
@@ -345,7 +326,7 @@ add_task(async function checkTelemetryClickEvents() {
     monitorReportLink.click();
   });
 
-  events = await waitForTelemetryEventCount(14);
+  events = await waitForTelemetryEventCount(13);
 
   events = events.filter(
     e =>
@@ -363,7 +344,7 @@ add_task(async function checkTelemetryClickEvents() {
     monitorAboutLink.click();
   });
 
-  events = await waitForTelemetryEventCount(15);
+  events = await waitForTelemetryEventCount(14);
 
   events = events.filter(
     e =>
@@ -381,7 +362,7 @@ add_task(async function checkTelemetryClickEvents() {
     signUpForMonitorLink.click();
   });
 
-  events = await waitForTelemetryEventCount(16);
+  events = await waitForTelemetryEventCount(15);
 
   events = events.filter(
     e =>
@@ -399,7 +380,7 @@ add_task(async function checkTelemetryClickEvents() {
     socialLearnMoreLink.click();
   });
 
-  events = await waitForTelemetryEventCount(17);
+  events = await waitForTelemetryEventCount(16);
 
   events = events.filter(
     e =>
@@ -418,7 +399,7 @@ add_task(async function checkTelemetryClickEvents() {
     cookieLearnMoreLink.click();
   });
 
-  events = await waitForTelemetryEventCount(18);
+  events = await waitForTelemetryEventCount(17);
 
   events = events.filter(
     e =>
@@ -437,7 +418,7 @@ add_task(async function checkTelemetryClickEvents() {
     trackerLearnMoreLink.click();
   });
 
-  events = await waitForTelemetryEventCount(19);
+  events = await waitForTelemetryEventCount(18);
 
   events = events.filter(
     e =>
@@ -463,7 +444,7 @@ add_task(async function checkTelemetryClickEvents() {
     fingerprinterLearnMoreLink.click();
   });
 
-  events = await waitForTelemetryEventCount(20);
+  events = await waitForTelemetryEventCount(19);
 
   events = events.filter(
     e =>
@@ -489,7 +470,7 @@ add_task(async function checkTelemetryClickEvents() {
     cryptominerLearnMoreLink.click();
   });
 
-  events = await waitForTelemetryEventCount(21);
+  events = await waitForTelemetryEventCount(20);
 
   events = events.filter(
     e =>
@@ -512,7 +493,7 @@ add_task(async function checkTelemetryClickEvents() {
     lockwiseIOSAppLink.click();
   });
 
-  events = await waitForTelemetryEventCount(22);
+  events = await waitForTelemetryEventCount(21);
 
   events = events.filter(
     e =>
@@ -537,7 +518,7 @@ add_task(async function checkTelemetryClickEvents() {
     mobileAppLink.click();
   });
 
-  events = await waitForTelemetryEventCount(23);
+  events = await waitForTelemetryEventCount(22);
   events = events.filter(
     e =>
       e[1] == "security.ui.protections" &&
@@ -547,9 +528,6 @@ add_task(async function checkTelemetryClickEvents() {
   is(events.length, 1, `recorded telemetry for mobile_app_link`);
 
   await BrowserTestUtils.removeTab(tab);
-  // We open one extra tabs with the click event.
-  // 1. Monitor's "Viewed Saved Logins" link (goes to about:logins)
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // This tests that telemetry is sent when saveEvents is called.
