@@ -102,9 +102,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
   // and if so if it has been modified by a factor/offset
   float mFontSizeFactor;
   nscoord mFontSizeOffset;
-  uint8_t mFontSizeKeyword;  // NS_STYLE_FONT_SIZE_*, is
-                             // NS_STYLE_FONT_SIZE_NO_KEYWORD when not
-                             // keyword-derived
+  mozilla::StyleFontSize mFontSizeKeyword;  // StyleFontSize is Nokeyword when
+                                            // not keyword-derived
 
   mozilla::StyleGenericFontFamily mGenericID;
 
