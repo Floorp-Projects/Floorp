@@ -132,7 +132,7 @@ bool GPUParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
 #endif
 
   CompositorThreadHolder::Start();
-  APZThreadUtils::SetControllerThread(MessageLoop::current());
+  APZThreadUtils::SetControllerThread(NS_GetCurrentThread());
   apz::InitializeGlobalState();
   LayerTreeOwnerTracker::Initialize();
   CompositorBridgeParent::InitializeStatics();
