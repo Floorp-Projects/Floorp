@@ -61,13 +61,13 @@
         android:buttonTint="@color/onboarding_radio_button_color"
         app:onboardingKey="@string/pref_key_toolbar_top" />
 
-    <ImageButton
+    <ImageView
         android:id="@+id/toolbar_top_image"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:background="@drawable/onboarding_toolbar_top"
+        app:srcCompat="@drawable/onboarding_toolbar_top"
         android:contentDescription="@string/preference_top_toolbar"
         android:foreground="@drawable/rounded_ripple"
         app:layout_constraintEnd_toStartOf="@+id/toolbar_bottom_image"
@@ -89,14 +89,14 @@
         android:buttonTint="@color/onboarding_radio_button_color"
         app:onboardingKey="@string/pref_key_toolbar_bottom" />
 
-    <ImageButton
+    <ImageView
         android:id="@+id/toolbar_bottom_image"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
-        android:background="@drawable/onboarding_toolbar_bottom"
+        app:srcCompat="@drawable/onboarding_toolbar_bottom"
         android:contentDescription="@string/preference_bottom_toolbar"
         android:foreground="@drawable/rounded_ripple"
         app:layout_constraintEnd_toEndOf="parent"
