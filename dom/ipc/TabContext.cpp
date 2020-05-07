@@ -121,18 +121,6 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
       maxTouchPoints = ipcContext.maxTouchPoints();
       break;
     }
-    case IPCTabContext::TUnsafeIPCTabContext: {
-      // XXXcatalinb: This used *only* by ServiceWorkerClients::OpenWindow.
-      // It is meant as a temporary solution until service workers can
-      // provide a BrowserChild equivalent. Don't allow this on b2g since
-      // it might be used to escalate privileges.
-      if (!StaticPrefs::dom_serviceWorkers_enabled()) {
-        mInvalidReason = "ServiceWorkers should be enabled.";
-        return;
-      }
-
-      break;
-    }
     default: {
       MOZ_CRASH();
     }
