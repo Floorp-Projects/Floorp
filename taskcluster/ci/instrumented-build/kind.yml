@@ -203,7 +203,7 @@ jobs:
                 - linux64-dump-syms
                 - linux64-wine
                 - linux64-liblowercase
-                - win64-winchecksec
+                - linux64-winchecksec
             fetch:
                 - nsis-3.01-win
                 - upx-3.95-win
@@ -246,7 +246,7 @@ jobs:
                 - linux64-dump-syms
                 - linux64-wine
                 - linux64-liblowercase
-                - win64-winchecksec
+                - linux64-winchecksec
             fetch:
                 - nsis-3.01-win
                 - upx-3.95-win

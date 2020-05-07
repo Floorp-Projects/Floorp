@@ -2021,7 +2021,7 @@ def allow_missing_winchecksec(automation, c_compiler):
     if c_compiler and c_compiler.type != 'clang-cl':
         return True
 
-check_prog('WINCHECKSEC', ['winchecksec.exe'], paths=toolchain_search_path,
+check_prog('WINCHECKSEC', ['winchecksec.exe', 'winchecksec'], paths=toolchain_search_path,
            allow_missing=allow_missing_winchecksec,
            when=compile_environment & target_is_windows)
 
