@@ -11,7 +11,6 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_layers.h"
-#include "nsIGfxInfo.h"
 #include "VRGPUChild.h"
 #include "ProcessUtils.h"
 
@@ -46,21 +45,6 @@ bool GPUProcessHost::Launch(StringVector aExtraOpts) {
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   mSandboxLevel = Preferences::GetInt("security.sandbox.gpu.level");
-
-  if (mSandboxLevel == -1) {
-    mSandboxLevel = 1;
-
-    // Disable GPU sandbox on Intel GPUs because it currently breaks scrolling
-    // using the mouse wheel. See Bug 1400317 for more info.
-    const nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-    MOZ_RELEASE_ASSERT(gfxInfo);
-
-    nsString vendorId;
-    gfxInfo->GetAdapterVendorID(vendorId);
-    if (vendorId.EqualsLiteral("0x8086")) {
-      mSandboxLevel = 0;
-    }
-  }
 #endif
 
   mLaunchPhase = LaunchPhase::Waiting;
