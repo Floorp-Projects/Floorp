@@ -50,6 +50,7 @@ $dokka.location:mozilla.components.support.ktx.kotlin$ELLIPSIS#kotlin.Char.Compa
 $dokka.location:mozilla.components.support.ktx.kotlin$containsAtOffset(kotlin.ByteArray, kotlin.Int, kotlin.ByteArray)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/contains-at-offset.md
 $dokka.location:mozilla.components.support.ktx.kotlin$crossProduct(kotlin.collections.Collection((mozilla.components.support.ktx.kotlin.crossProduct.T)), kotlin.collections.Collection((mozilla.components.support.ktx.kotlin.crossProduct.U)), kotlin.Function2((mozilla.components.support.ktx.kotlin.crossProduct.T, mozilla.components.support.ktx.kotlin.crossProduct.U, mozilla.components.support.ktx.kotlin.crossProduct.R)))mozilla.components.support.ktx.kotlin/kotlin.collections.-collection/cross-product.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isEmail(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-email.md
+$dokka.location:mozilla.components.support.ktx.kotlin$isExtensionUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-extension-url.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isGeoLocation(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-geo-location.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isPhone(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-phone.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isSameOriginAs(kotlin.String, kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-same-origin-as.md

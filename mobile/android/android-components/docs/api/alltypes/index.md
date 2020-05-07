@@ -79,7 +79,7 @@
 | [mozilla.components.feature.awesomebar.provider.BookmarksStorageSuggestionProvider](../mozilla.components.feature.awesomebar.provider/-bookmarks-storage-suggestion-provider/index.md) | A [AwesomeBar.SuggestionProvider](../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that provides suggestions based on the bookmarks stored in the [BookmarksStorage](../mozilla.components.concept.storage/-bookmarks-storage/index.md). |
 | [kotlin.Boolean](../mozilla.components.lib.jexl.ext/kotlin.-boolean/index.md) (extensions in package mozilla.components.lib.jexl.ext) |  |
 | [mozilla.components.service.glean.private.BooleanMetricType](../mozilla.components.service.glean.private/-boolean-metric-type.md) |  |
-| [mozilla.components.lib.crash.Breadcrumb](../mozilla.components.lib.crash/-breadcrumb/index.md) | Represents a single crash breadcrumb. |
+| [mozilla.components.support.base.crash.Breadcrumb](../mozilla.components.support.base.crash/-breadcrumb/index.md) | Represents a single crash breadcrumb. |
 | [mozilla.components.browser.state.action.BrowserAction](../mozilla.components.browser.state.action/-browser-action.md) | [Action](../mozilla.components.lib.state/-action.md) implementation related to [BrowserState](../mozilla.components.browser.state.state/-browser-state/index.md). |
 | [mozilla.components.browser.awesomebar.BrowserAwesomeBar](../mozilla.components.browser.awesomebar/-browser-awesome-bar/index.md) | A customizable [AwesomeBar](../mozilla.components.concept.awesomebar/-awesome-bar/index.md) implementation. |
 | [mozilla.components.browser.icons.BrowserIcons](../mozilla.components.browser.icons/-browser-icons/index.md) | Entry point for loading icons for websites. |

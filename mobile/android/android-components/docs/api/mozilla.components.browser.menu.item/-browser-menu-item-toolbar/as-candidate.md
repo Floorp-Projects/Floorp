@@ -2,7 +2,7 @@
 
 # asCandidate
 
-`fun asCandidate(context: <ERROR CLASS>): `[`RowMenuCandidate`](../../mozilla.components.browser.menu2.candidate/-row-menu-candidate/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuItemToolbar.kt#L67)
+`fun asCandidate(context: <ERROR CLASS>): `[`RowMenuCandidate`](../../mozilla.components.browser.menu2.candidate/-row-menu-candidate/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuItemToolbar.kt#L68)
 
 Overrides [BrowserMenuItem.asCandidate](../../mozilla.components.browser.menu/-browser-menu-item/as-candidate.md)
 

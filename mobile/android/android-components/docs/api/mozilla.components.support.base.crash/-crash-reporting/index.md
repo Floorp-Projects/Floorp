@@ -10,6 +10,7 @@ A  crash reporter interface that can report caught exception to multiple service
 
 | Name | Summary |
 |---|---|
+| [recordCrashBreadcrumb](record-crash-breadcrumb.md) | `abstract fun recordCrashBreadcrumb(breadcrumb: `[`Breadcrumb`](../-breadcrumb/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Add a crash breadcrumb to all registered services with breadcrumb support. |
 | [submitCaughtException](submit-caught-exception.md) | `abstract fun submitCaughtException(throwable: `[`Throwable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html)`): Job`<br>Submit a caught exception report to all registered services. |
 
 ### Extension Functions

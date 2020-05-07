@@ -2,7 +2,7 @@
 
 # EngineSessionLinker
 
-`class EngineSessionLinker` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L47)
+`class EngineSessionLinker` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L48)
 
 This class only exists for migrating from browser-session
 to browser-state. We need a way to dispatch the corresponding browser
