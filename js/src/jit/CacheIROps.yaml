@@ -1125,21 +1125,21 @@
 
 - name: Int32MulResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32DivResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: Int32Id
     rhs: Int32Id
 
 - name: Int32ModResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: Int32Id
     rhs: Int32Id
@@ -1238,7 +1238,7 @@
 
 - name: Int32NotResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     input: Int32Id
 
@@ -1285,7 +1285,7 @@
 
 - name: Int32NegationResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     input: Int32Id
 
@@ -1383,7 +1383,7 @@
 
 - name: CallStringConcatResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     lhs: StringId
     rhs: StringId
