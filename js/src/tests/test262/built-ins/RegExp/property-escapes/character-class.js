@@ -1,4 +1,3 @@
-// |reftest| skip -- regexp-unicode-property-escapes is not supported
 // Copyright 2018 Mathias Bynens. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

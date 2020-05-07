@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- regexp-unicode-property-escapes is not supported
+// |reftest| error:SyntaxError
 // Copyright 2018 Mathias Bynens. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
