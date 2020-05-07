@@ -122,29 +122,14 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
       const PopupIPCTabContext& ipcContext = aParams.get_PopupIPCTabContext();
 
       TabContext* context;
-      if (ipcContext.opener().type() == PBrowserOrId::TPBrowserParent) {
-        context =
-            BrowserParent::GetFrom(ipcContext.opener().get_PBrowserParent());
-        if (!context) {
-          mInvalidReason =
-              "Child is-browser process tried to "
-              "open a null tab.";
-          return;
-        }
-      } else if (ipcContext.opener().type() == PBrowserOrId::TPBrowserChild) {
-        context =
-            static_cast<BrowserChild*>(ipcContext.opener().get_PBrowserChild());
-      } else if (ipcContext.opener().type() == PBrowserOrId::TTabId) {
-        // We should never get here because this PopupIPCTabContext is only
-        // used for allocating a new tab id, not for allocating a PBrowser.
-        mInvalidReason =
-            "Child process tried to open an tab without the opener "
-            "information.";
-        return;
+      if (ipcContext.openerParent()) {
+        context = BrowserParent::GetFrom(ipcContext.openerParent());
+      } else if (ipcContext.openerChild()) {
+        context = static_cast<BrowserChild*>(ipcContext.openerChild());
       } else {
         // This should be unreachable because PopupIPCTabContext::opener is not
         // a nullable field.
-        mInvalidReason = "PopupIPCTabContext::opener was null (?!).";
+        mInvalidReason = "PopupIPCTabContext::opener was null.";
         return;
       }
 

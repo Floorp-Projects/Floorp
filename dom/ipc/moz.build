@@ -160,7 +160,6 @@ PREPROCESSED_IPDL_SOURCES += [
 IPDL_SOURCES += [
     'DOMTypes.ipdlh',
     'MemoryReportTypes.ipdlh',
-    'PBrowserOrId.ipdlh',
     'PColorPicker.ipdl',
     'PContentPermission.ipdlh',
     'PContentPermissionRequest.ipdl',
