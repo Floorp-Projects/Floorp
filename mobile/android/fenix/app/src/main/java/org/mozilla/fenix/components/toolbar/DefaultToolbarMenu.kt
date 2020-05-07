@@ -184,7 +184,8 @@ class DefaultToolbarMenu(
         )
 
         val menuItems = listOfNotNull(
-            library,
+            historyItem,
+            bookmarksItem,
             addons,
             settings,
             if (shouldDeleteDataOnQuit) deleteDataOnQuit else null,
@@ -235,14 +236,6 @@ class DefaultToolbarMenu(
         isHighlighted = { hasAccountProblem }
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.Settings)
-    }
-
-    private val library = BrowserMenuImageText(
-        label = context.getString(R.string.browser_menu_library),
-        imageResource = R.drawable.ic_library,
-        iconTintColorResource = primaryTextColor()
-    ) {
-        onItemTapped.invoke(ToolbarMenu.Item.Library)
     }
 
     private val desktopMode = BrowserMenuImageSwitch(
@@ -354,6 +347,22 @@ class DefaultToolbarMenu(
         isHighlighted = { !context.settings().openInAppOpened }
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.OpenInApp)
+    }
+
+    val historyItem = BrowserMenuImageText(
+        context.getString(R.string.library_history),
+        R.drawable.ic_history,
+        primaryTextColor()
+    ) {
+        onItemTapped.invoke(ToolbarMenu.Item.History)
+    }
+
+    val bookmarksItem = BrowserMenuImageText(
+        context.getString(R.string.library_bookmarks),
+        R.drawable.ic_bookmark_filled,
+        primaryTextColor()
+    ) {
+        onItemTapped.invoke(ToolbarMenu.Item.Bookmarks)
     }
 
     @ColorRes

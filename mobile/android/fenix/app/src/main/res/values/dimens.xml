@@ -12,7 +12,6 @@
     <dimen name="mozac_browser_menu_corner_radius">8dp</dimen>
     <dimen name="toolbar_elevation">7dp</dimen>
     <dimen name="library_item_height">56dp</dimen>
-    <dimen name="library_item_icon_height">48dp</dimen>
     <dimen name="library_item_icon_margin_horizontal">16dp</dimen>
     <dimen name="library_item_icon_margin_vertical">8dp</dimen>
     <dimen name="history_favicon_width_height">40dp</dimen>

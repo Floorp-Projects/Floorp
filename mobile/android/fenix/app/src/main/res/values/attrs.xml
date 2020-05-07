@@ -58,11 +58,6 @@
     <attr name="tabTrayToolbarBackground" format="reference" />
     <attr name="tabTrayItemDivider" format="reference" />
 
-    <declare-styleable name="LibraryListItem">
-        <attr name="listItemTitle" format="reference" />
-        <attr name="listItemIcon" format="reference" />
-    </declare-styleable>
-
     <declare-styleable name="TrackingProtectionCategory">
         <attr name="categoryItemTitle" format="reference" />
         <attr name="categoryItemDescription" format="reference" />

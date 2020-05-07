@@ -16,6 +16,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.selector.findTab
@@ -154,10 +155,6 @@ class DefaultBrowserToolbarController(
             ToolbarMenu.Item.Stop -> sessionUseCases.stopLoading.invoke(currentSession)
             ToolbarMenu.Item.Settings -> browserAnimator.captureEngineViewAndDrawStatically {
                 val directions = BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment()
-                navController.nav(R.id.browserFragment, directions)
-            }
-            ToolbarMenu.Item.Library -> browserAnimator.captureEngineViewAndDrawStatically {
-                val directions = BrowserFragmentDirections.actionBrowserFragmentToLibraryFragment()
                 navController.nav(R.id.browserFragment, directions)
             }
             is ToolbarMenu.Item.RequestDesktop -> sessionUseCases.requestDesktopSite.invoke(
@@ -310,6 +307,18 @@ class DefaultBrowserToolbarController(
                     bookmarkTapped(it)
                 }
             }
+            ToolbarMenu.Item.Bookmarks -> {
+                navController.nav(
+                    R.id.browserFragment,
+                    BrowserFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id)
+                )
+            }
+            ToolbarMenu.Item.History -> {
+                navController.nav(
+                    R.id.browserFragment,
+                    BrowserFragmentDirections.actionGlobalHistoryFragment()
+                )
+            }
         }
     }
 
@@ -350,7 +359,6 @@ class DefaultBrowserToolbarController(
             ToolbarMenu.Item.Reload -> Event.BrowserMenuItemTapped.Item.RELOAD
             ToolbarMenu.Item.Stop -> Event.BrowserMenuItemTapped.Item.STOP
             ToolbarMenu.Item.Settings -> Event.BrowserMenuItemTapped.Item.SETTINGS
-            ToolbarMenu.Item.Library -> Event.BrowserMenuItemTapped.Item.LIBRARY
             is ToolbarMenu.Item.RequestDesktop ->
                 if (item.isChecked) {
                     Event.BrowserMenuItemTapped.Item.DESKTOP_VIEW_ON
@@ -378,6 +386,8 @@ class DefaultBrowserToolbarController(
             ToolbarMenu.Item.OpenInApp -> Event.BrowserMenuItemTapped.Item.OPEN_IN_APP
             ToolbarMenu.Item.Bookmark -> Event.BrowserMenuItemTapped.Item.BOOKMARK
             ToolbarMenu.Item.AddonsManager -> Event.BrowserMenuItemTapped.Item.ADDONS_MANAGER
+            ToolbarMenu.Item.Bookmarks -> Event.BrowserMenuItemTapped.Item.BOOKMARKS
+            ToolbarMenu.Item.History -> Event.BrowserMenuItemTapped.Item.HISTORY
         }
 
         activity.components.analytics.metrics.track(Event.BrowserMenuItemTapped(eventItem))

@@ -11,7 +11,6 @@ import androidx.lifecycle.LifecycleOwner
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.BrowserMenuHighlight
 import mozilla.components.browser.menu.ext.getHighlight
-import mozilla.components.browser.menu.item.BrowserMenuCategory
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageText
@@ -37,7 +36,6 @@ class HomeMenu(
         object WhatsNew : Item()
         object Help : Item()
         object Settings : Item()
-        object Library : Item()
         object History : Item()
         object Bookmarks : Item()
         object Quit : Item()
@@ -138,10 +136,6 @@ class HomeMenu(
                 accountAuthItem,
                 whatsNewItem,
                 BrowserMenuDivider(),
-                BrowserMenuCategory(
-                    context.getString(R.string.browser_menu_library),
-                    textColorResource = menuCategoryTextColor
-                ),
                 bookmarksItem,
                 historyItem,
                 BrowserMenuDivider(),
@@ -158,10 +152,6 @@ class HomeMenu(
                 settingsItem,
                 accountAuthItem,
                 BrowserMenuDivider(),
-                BrowserMenuCategory(
-                    context.getString(R.string.browser_menu_library),
-                    textColorResource = menuCategoryTextColor
-                ),
                 bookmarksItem,
                 historyItem,
                 BrowserMenuDivider(),

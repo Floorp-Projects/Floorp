@@ -408,8 +408,6 @@
     <string name="library_reading_list">Reading List</string>
     <!-- Menu Item Label for Search in Library -->
     <string name="library_search">Search</string>
-    <!-- Library Page Title -->
-    <string name="library_title">Library</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Settings</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->

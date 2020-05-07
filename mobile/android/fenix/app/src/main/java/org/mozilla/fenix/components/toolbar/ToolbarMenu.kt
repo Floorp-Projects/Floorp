@@ -10,7 +10,6 @@ import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 interface ToolbarMenu {
     sealed class Item {
         object Settings : Item()
-        object Library : Item()
         data class RequestDesktop(val isChecked: Boolean) : Item()
         object FindInPage : Item()
         object Share : Item()
@@ -30,6 +29,8 @@ interface ToolbarMenu {
         object OpenInApp : Item()
         object Bookmark : Item()
         object ReaderModeAppearance : Item()
+        object Bookmarks : Item()
+        object History : Item()
     }
 
     val menuBuilder: BrowserMenuBuilder

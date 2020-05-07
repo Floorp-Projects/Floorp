@@ -161,9 +161,6 @@
             android:id="@+id/action_browserFragment_to_settingsFragment"
             app:destination="@id/settingsFragment" />
         <action
-            android:id="@+id/action_browserFragment_to_libraryFragment"
-            app:destination="@id/libraryFragment" />
-        <action
             android:id="@+id/action_browserFragment_to_createShortcutFragment"
             app:destination="@id/createShortcutFragment" />
         <action
@@ -192,19 +189,6 @@
             android:name="webAppManifest"
             app:argType="string"
             app:nullable="true" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/libraryFragment"
-        android:name="org.mozilla.fenix.library.LibraryFragment"
-        android:label="@string/library_title"
-        tools:layout="@layout/fragment_library">
-        <action
-            android:id="@+id/action_libraryFragment_to_historyFragment"
-            app:destination="@+id/historyFragment" />
-        <action
-            android:id="@+id/action_libraryFragment_to_bookmarksFragment"
-            app:destination="@+id/bookmarkFragment" />
     </fragment>
 
     <fragment
