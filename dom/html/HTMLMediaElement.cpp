@@ -741,7 +741,7 @@ class HTMLMediaElement::MediaStreamRenderer
         mWatchManager(this, aMainThread) {}
 
   void Shutdown() {
-    for (const auto& t : nsTArray<WeakPtr<MediaStreamTrack>>(mAudioTracks)) {
+    for (const auto& t : mAudioTracks.Clone()) {
       if (t) {
         RemoveTrack(t->AsAudioStreamTrack());
       }
@@ -3691,10 +3691,10 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::CaptureStreamInternal(
   }
 
   nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
-  OutputMediaStream* out = mOutputStreams.AppendElement(OutputMediaStream(
+  OutputMediaStream* out = mOutputStreams.EmplaceBack(
       MakeRefPtr<DOMMediaStream>(window),
       aStreamCaptureType == StreamCaptureType::CAPTURE_AUDIO,
-      aFinishBehavior == StreamCaptureBehavior::FINISH_WHEN_ENDED));
+      aFinishBehavior == StreamCaptureBehavior::FINISH_WHEN_ENDED);
 
   if (aFinishBehavior == StreamCaptureBehavior::FINISH_WHEN_ENDED &&
       !mOutputTrackSources.IsEmpty()) {
