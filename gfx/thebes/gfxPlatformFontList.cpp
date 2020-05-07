@@ -458,20 +458,8 @@ nsresult gfxPlatformFontList::InitFontList() {
   ClearLangGroupPrefFonts();
   CancelLoader();
 
-  // initialize ranges of characters for which system-wide font search should be
-  // skipped
-  mCodepointsWithNoFonts.reset();
-  mCodepointsWithNoFonts.SetRange(0, 0x1f);            // C0 controls
-  mCodepointsWithNoFonts.SetRange(0x7f, 0x9f);         // C1 controls
-  mCodepointsWithNoFonts.SetRange(0xE000, 0xF8FF);     // PUA
-  mCodepointsWithNoFonts.SetRange(0xF0000, 0x10FFFD);  // Supplementary PUA
-  mCodepointsWithNoFonts.SetRange(0xfdd0, 0xfdef);     // noncharacters
-  for (unsigned i = 0; i <= 0x100000; i += 0x10000) {
-    mCodepointsWithNoFonts.SetRange(i + 0xfffe, i + 0xffff);  // noncharacters
-  }
-  // Forget any font family we previously chose for U+FFFD.
-  mReplacementCharFallbackFamily = FontFamily();
-
+  // Ensure that SetVisibilityLevel will clear the mCodepointsWithNoFonts set.
+  mVisibilityLevel = FontVisibility::Unknown;
   SetVisibilityLevel();
 
   sPlatformFontList = this;
@@ -537,10 +525,26 @@ nsresult gfxPlatformFontList::InitFontList() {
 }
 
 void gfxPlatformFontList::SetVisibilityLevel() {
-  mVisibilityLevel = FontVisibility(
+  FontVisibility newLevel = FontVisibility(
       std::min(int32_t(FontVisibility::User),
                std::max(int32_t(FontVisibility::Base),
                         StaticPrefs::layout_css_font_visibility_level())));
+  if (newLevel != mVisibilityLevel) {
+    mVisibilityLevel = newLevel;
+    // (Re-)initialize ranges of characters for which system-wide font search
+    // should be skipped
+    mCodepointsWithNoFonts.reset();
+    mCodepointsWithNoFonts.SetRange(0, 0x1f);            // C0 controls
+    mCodepointsWithNoFonts.SetRange(0x7f, 0x9f);         // C1 controls
+    mCodepointsWithNoFonts.SetRange(0xE000, 0xF8FF);     // PUA
+    mCodepointsWithNoFonts.SetRange(0xF0000, 0x10FFFD);  // Supplementary PUA
+    mCodepointsWithNoFonts.SetRange(0xfdd0, 0xfdef);     // noncharacters
+    for (unsigned i = 0; i <= 0x100000; i += 0x10000) {
+      mCodepointsWithNoFonts.SetRange(i + 0xfffe, i + 0xffff);  // noncharacters
+    }
+    // Forget any font family we previously chose for U+FFFD.
+    mReplacementCharFallbackFamily = FontFamily();
+  }
 }
 
 void gfxPlatformFontList::FontListChanged() {

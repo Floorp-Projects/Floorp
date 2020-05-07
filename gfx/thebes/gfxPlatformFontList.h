@@ -830,7 +830,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   RefPtr<gfxFontEntry> mDefaultFontEntry;
 
-  FontVisibility mVisibilityLevel = FontVisibility::Base;
+  FontVisibility mVisibilityLevel = FontVisibility::Unknown;
 
   bool mFontFamilyWhitelistActive;
 };
