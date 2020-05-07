@@ -4792,46 +4792,6 @@ nsDocShell::GetMixedContentChannel(nsIChannel** aMixedContentChannel) {
 }
 
 NS_IMETHODIMP
-nsDocShell::GetAllowMixedContentAndConnectionData(bool* aAllowMixedContent) {
-  *aAllowMixedContent = false;
-
-  // If there is a rootDocShell and calling GetMixedContentChannel() on that
-  // rootShell returns a non null mixedContentChannel indicates that the
-  // document has Mixed Active Content that was initially blocked from loading,
-  // but the user has choosen to override the block and allow the content to
-  // load.
-  // mMixedContentChannel is set to the document's channel when the user allows
-  // mixed content. The MixedContentBlocker content policy checks if the
-  // document's root channel matches the mMixedContentChannel.
-
-  nsCOMPtr<nsIDocShell> rootShell = mBrowsingContext->Top()->GetDocShell();
-  // XXX Fission: Cross origin iframes can not access the top-level docshell.
-  // Bug 1632160: Remove GetAllowMixedContentAndConnectionData from
-  // nsIDocShell and expose similar functionality on BrowsingContext
-  if (!rootShell) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIChannel> mixedChannel;
-  rootShell->GetMixedContentChannel(getter_AddRefs(mixedChannel));
-  if (!mixedChannel) {
-    return NS_OK;
-  }
-
-  RefPtr<Document> rootDoc = rootShell->GetDocument();
-  if (!rootDoc) {
-    return NS_OK;
-  }
-
-  // Check the root doc's channel against the root docShell's
-  // mMixedContentChannel to see if they are the same. If they are the same,
-  // the user has overriden the block.
-  *aAllowMixedContent = (mixedChannel == rootDoc->GetChannel());
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocShell::SetVisibility(bool aVisibility) {
   // Show()/Hide() may change mContentViewer.
   nsCOMPtr<nsIContentViewer> cv = mContentViewer;
