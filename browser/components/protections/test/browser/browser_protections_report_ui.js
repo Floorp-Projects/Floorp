@@ -756,7 +756,7 @@ add_task(async function test_etp_custom_protections_off() {
 // Ensure that the ETP mobile promotion card is shown when the pref is on and
 // there are no mobile devices connected.
 add_task(async function test_etp_mobile_promotion_pref_on() {
-  AboutProtectionsParent.setTestOverride(mockGetLoginDataWithSyncedDevices(0));
+  AboutProtectionsParent.setTestOverride(mockGetLoginDataWithSyncedDevices());
   await SpecialPowers.pushPrefEnv({
     set: [["browser.contentblocking.report.show_mobile_app", true]],
   });
@@ -783,7 +783,7 @@ add_task(async function test_etp_mobile_promotion_pref_on() {
 
   // Add a mock mobile device. The promotion should now be hidden.
   AboutProtectionsParent.setTestOverride(
-    mockGetLoginDataWithSyncedDevices(2, true)
+    mockGetLoginDataWithSyncedDevices(true)
   );
   tab = await BrowserTestUtils.openNewForegroundTab({
     url: "about:protections",
@@ -804,7 +804,7 @@ add_task(async function test_etp_mobile_promotion_pref_on() {
 // Test that ETP mobile promotion is not shown when the pref is off,
 // even if no mobile devices are synced.
 add_task(async function test_etp_mobile_promotion_pref_on() {
-  AboutProtectionsParent.setTestOverride(mockGetLoginDataWithSyncedDevices(0));
+  AboutProtectionsParent.setTestOverride(mockGetLoginDataWithSyncedDevices());
   await SpecialPowers.pushPrefEnv({
     set: [["browser.contentblocking.report.show_mobile_app", false]],
   });
@@ -824,7 +824,7 @@ add_task(async function test_etp_mobile_promotion_pref_on() {
   BrowserTestUtils.removeTab(tab);
 
   AboutProtectionsParent.setTestOverride(
-    mockGetLoginDataWithSyncedDevices(2, true)
+    mockGetLoginDataWithSyncedDevices(true)
   );
   tab = await BrowserTestUtils.openNewForegroundTab({
     url: "about:protections",

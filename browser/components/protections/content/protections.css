@@ -605,8 +605,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   display: block;
 }
 
-.passwords-stored-text,
-.synced-devices-text {
+.passwords-stored-text {
   width: max-content;
   padding-inline-start: 4px;
 }

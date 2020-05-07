@@ -1678,7 +1678,6 @@ security.ui.protections:
     description: >
       User interaction by click events on the protection report.
     objects: [
-      "lw_app_link",
       "lw_open_button",
       "lw_sync_link",
       "lw_about_link",
