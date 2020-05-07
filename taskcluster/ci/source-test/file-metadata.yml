@@ -29,6 +29,7 @@ bugzilla-components:
         mach: file-info bugzilla-automation /builds/worker/artifacts
     worker:
         max-run-time: 2700
+    run-on-projects: ['mozilla-central']
     when:
         files-changed:
             - "**"
