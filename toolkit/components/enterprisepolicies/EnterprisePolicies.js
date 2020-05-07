@@ -424,18 +424,16 @@ let InstallSources = null;
  * @returns {Bool} Whether the policy can run.
  */
 function areEnterpriseOnlyPoliciesAllowed() {
-  if (Services.prefs.getBoolPref(PREF_DISALLOW_ENTERPRISE, false)) {
-    // This is used as an override to test the "enterprise_only"
-    // functionality itself on tests, which would always return
-    // true due to the Cu.isInAutomation check below.
-    return false;
+  if (Cu.isInAutomation || isXpcshell) {
+    if (Services.prefs.getBoolPref(PREF_DISALLOW_ENTERPRISE, false)) {
+      // This is used as an override to test the "enterprise_only"
+      // functionality itself on tests.
+      return false;
+    }
+    return true;
   }
 
-  if (
-    AppConstants.MOZ_UPDATE_CHANNEL != "release" ||
-    Cu.isInAutomation ||
-    isXpcshell
-  ) {
+  if (AppConstants.MOZ_UPDATE_CHANNEL != "release") {
     return true;
   }
 
