@@ -411,21 +411,33 @@ bool ArrayBufferObject::class_constructor(JSContext* cx, unsigned argc,
   return true;
 }
 
-static uint8_t* AllocateArrayBufferContents(JSContext* cx, uint32_t nbytes) {
-  auto* p =
-      cx->pod_arena_callocCanGC<uint8_t>(js::ArrayBufferContentsArena, nbytes);
-  if (!p) {
-    ReportOutOfMemory(cx);
+using ArrayBufferContents = UniquePtr<uint8_t[], JS::FreePolicy>;
+
+static ArrayBufferContents AllocateArrayBufferContents(JSContext* cx,
+                                                       uint32_t nbytes) {
+  // First attempt a normal allocation.
+  uint8_t* p =
+      cx->maybe_pod_arena_calloc<uint8_t>(js::ArrayBufferContentsArena, nbytes);
+  if (MOZ_UNLIKELY(!p)) {
+    // Otherwise attempt a large allocation, calling the
+    // large-allocation-failure callback if necessary.
+    p = static_cast<uint8_t*>(cx->runtime()->onOutOfMemoryCanGC(
+        js::AllocFunction::Calloc, js::ArrayBufferContentsArena, nbytes));
+    if (!p) {
+      ReportOutOfMemory(cx);
+    }
   }
-  return p;
+
+  return ArrayBufferContents(p);
 }
 
-static uint8_t* NewCopiedBufferContents(JSContext* cx,
-                                        Handle<ArrayBufferObject*> buffer) {
-  uint8_t* dataCopy = AllocateArrayBufferContents(cx, buffer->byteLength());
+static ArrayBufferContents NewCopiedBufferContents(
+    JSContext* cx, Handle<ArrayBufferObject*> buffer) {
+  ArrayBufferContents dataCopy =
+      AllocateArrayBufferContents(cx, buffer->byteLength());
   if (dataCopy) {
     if (auto count = buffer->byteLength()) {
-      memcpy(dataCopy, buffer->dataPointer(), count);
+      memcpy(dataCopy.get(), buffer->dataPointer(), count);
     }
   }
   return dataCopy;
@@ -1167,13 +1179,12 @@ ArrayBufferObject* ArrayBufferObject::createZeroed(
   // storage.  Add extra fixed slots if necessary to accomplish this, but don't
   // exceed the maximum number of fixed slots!
   size_t nslots = JSCLASS_RESERVED_SLOTS(&class_);
-  uint8_t* data;
+  ArrayBufferContents data;
   if (nbytes <= MaxInlineBytes) {
     int newSlots = HowMany(nbytes, sizeof(Value));
     MOZ_ASSERT(int(nbytes) <= newSlots * int(sizeof(Value)));
 
     nslots += newSlots;
-    data = nullptr;
   } else {
     data = AllocateArrayBufferContents(cx, nbytes);
     if (!data) {
@@ -1189,9 +1200,6 @@ ArrayBufferObject* ArrayBufferObject::createZeroed(
       cx, NewObjectWithClassProto<ArrayBufferObject>(cx, proto, allocKind,
                                                      GenericObject));
   if (!buffer) {
-    if (data) {
-      js_free(data);
-    }
     return nullptr;
   }
 
@@ -1200,7 +1208,7 @@ ArrayBufferObject* ArrayBufferObject::createZeroed(
              "leak in some cases, so it can't be nursery-allocated");
 
   if (data) {
-    buffer->initialize(nbytes, BufferContents::createMalloced(data));
+    buffer->initialize(nbytes, BufferContents::createMalloced(data.release()));
     AddCellMemory(buffer, nbytes, MemoryUse::ArrayBufferContents);
   } else {
     void* inlineData = buffer->initializeToInlineData(nbytes);
@@ -1280,7 +1288,7 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
     case MAPPED:
     case EXTERNAL: {
       // We can't use these data types directly.  Make a copy to return.
-      uint8_t* copiedData = NewCopiedBufferContents(cx, buffer);
+      ArrayBufferContents copiedData = NewCopiedBufferContents(cx, buffer);
       if (!copiedData) {
         return nullptr;
       }
@@ -1288,7 +1296,7 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
       // Detach |buffer|.  This immediately releases the currently owned
       // contents, freeing or unmapping data in the MAPPED and EXTERNAL cases.
       ArrayBufferObject::detach(cx, buffer);
-      return copiedData;
+      return copiedData.release();
     }
 
     case WASM:
@@ -1318,13 +1326,13 @@ ArrayBufferObject::extractStructuredCloneContents(
     case INLINE_DATA:
     case NO_DATA:
     case USER_OWNED: {
-      uint8_t* copiedData = NewCopiedBufferContents(cx, buffer);
+      ArrayBufferContents copiedData = NewCopiedBufferContents(cx, buffer);
       if (!copiedData) {
         return BufferContents::createFailed();
       }
 
       ArrayBufferObject::detach(cx, buffer);
-      return BufferContents::createMalloced(copiedData);
+      return BufferContents::createMalloced(copiedData.release());
     }
 
     case MALLOCED:
