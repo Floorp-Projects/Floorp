@@ -17,7 +17,7 @@
 #include "mozilla/dom/ContentProcessManager.h"
 #include "mozilla/dom/MediaController.h"
 #include "mozilla/dom/MediaControlService.h"
-#include "mozilla/dom/PlaybackController.h"
+#include "mozilla/dom/ContentPlaybackController.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/net/DocumentLoadListener.h"
 #include "mozilla/NullPrincipal.h"
@@ -280,7 +280,7 @@ uint32_t CanonicalBrowsingContext::CountSiteOrigins(
 
 void CanonicalBrowsingContext::UpdateMediaControlKeysEvent(
     MediaControlKeysEvent aEvent) {
-  MediaActionHandler::HandleMediaControlKeysEvent(this, aEvent);
+  ContentMediaActionHandler::HandleMediaControlKeysEvent(this, aEvent);
   Group()->EachParent([&](ContentParent* aParent) {
     Unused << aParent->SendUpdateMediaControlKeysEvent(this, aEvent);
   });
