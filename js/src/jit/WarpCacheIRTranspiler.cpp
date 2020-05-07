@@ -256,6 +256,27 @@ bool WarpCacheIRTranspiler::emitGuardToString(ValOperandId inputId) {
   return emitGuardTo(inputId, MIRType::String);
 }
 
+bool WarpCacheIRTranspiler::emitGuardToBoolean(ValOperandId inputId,
+                                               Int32OperandId resultId) {
+  MDefinition* input = getOperand(inputId);
+
+  MDefinition* boolean;
+  if (input->type() == MIRType::Boolean) {
+    boolean = input;
+  } else {
+    auto* unbox =
+        MUnbox::New(alloc(), input, MIRType::Boolean, MUnbox::Fallible);
+    add(unbox);
+    boolean = unbox;
+  }
+
+  // This is actually a no-op, but still required to get the correct type.
+  auto* ins = MToIntegerInt32::New(alloc(), boolean);
+  add(ins);
+
+  return defineOperand(resultId, ins);
+}
+
 bool WarpCacheIRTranspiler::emitGuardToInt32(ValOperandId inputId,
                                              Int32OperandId resultId) {
   MDefinition* input = getOperand(inputId);
