@@ -4,6 +4,9 @@
     <string name="app_name_private_5">Cuuriɗum %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (Cuuriɗum)</string>
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Cuɓe Goɗɗe</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Yiilo walla naatnu ñiiɓirde</string>
     <!-- No Open Tabs Message Header -->

@@ -18,12 +18,12 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">زبانه های باز شما در اینجا نشان داده می شود.</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s توسط موزیلا تولید شده است.</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">شما در یک جلسه خصوصی هستید</string>
-    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">%1$sجست‌وجوها و تاریخچه مرور شما را هنگام خروج از برنامه یا بستن تمام پنجره‌ها و زبانه‌های ناشناس پاک می‌کند. در حالی که اینکار شما را در وب‌سایت‌ها یا فراهم‌کنندهٔ اینترنت شما ناشناس نمی‌کند، این کار مخفی کردن فعالیت‌های آنلاین شما را برای هرکس دیگری که از این رایانه استفاده می‌کند را ساده‌تر می‌کند.</string>
     <string name="private_browsing_common_myths">اسطوره های رایج در مورد مرور خصوصی</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">حذف جلسه</string>
@@ -41,6 +41,9 @@
     <string name="home_screen_shortcut_open_new_tab_2">زبانه جدید</string>
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">زبانه خصوصی جدید</string>
+
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">سایت‌های برتر</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -144,6 +147,9 @@
     <string name="search_widget_text_short">جست‌وجو</string>
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">جست در جو اینترنت</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">جستجوی صوتی</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
@@ -445,6 +451,14 @@
     <string name="history_delete_all_dialog">آیا مطمئن هستید می‌خواهید تاریخچه مرور خود را پاک کنید؟</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">پاک کردن</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">رونوشت برداشتن</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">اشتراک‌گذاری</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">باز کردن در زبانهٔ جدید</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">باز کردن در زبانهٔ خصوصی</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">حذف</string>
     <!-- History multi select title in app bar
@@ -490,6 +504,10 @@
     <string name="bookmark_edit">ویرایش نشانک</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">انتخاب پوشه</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">آيا از حذف اين پوشه مطمئن هستيد؟</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">%1$s حذف شد</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">افزودن پوشه</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
@@ -543,7 +561,7 @@
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">%1$sحذف شد</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">حذف نشانک‌های انتخاب شده</string>
+    <string name="bookmark_deletion_multiple_snackbar_message_2">نشانک حذف گردید</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">برگردان</string>
 
@@ -1061,8 +1079,13 @@
     <string name="add_to_homescreen_cancel">انصراف</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">افزودن</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">ادامه به این پایگاه اینترنتی</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">نام میانبر</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">شما به راحتی می‌توانید این پایگاه اینترنتی را به صفحه خانگی تلفن خود اضافه کنید تا دسترسی مستقیم به آن داشته باشید و مرور سریعتی را مانند تجربه کردن یک برنامه داشته باشید.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">ورودها و گذرواژه‌ها</string>
