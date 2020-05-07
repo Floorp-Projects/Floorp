@@ -1431,7 +1431,10 @@ class BaseStackFrameAllocator {
 
   // Offset off of sp_ for the slot at stack area location `offset`.
 
-  int32_t stackOffset(int32_t offset) { return masm.framePushed() - offset; }
+  int32_t stackOffset(int32_t offset) {
+    MOZ_ASSERT(offset > 0);
+    return masm.framePushed() - offset;
+  }
 
   uint32_t computeHeightWithStackResults(StackHeight stackBase,
                                          uint32_t stackResultBytes) {
@@ -1719,6 +1722,8 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
     const int32_t offs;
 
     Local(MIRType type, int32_t offs) : type(type), offs(offs) {}
+
+    bool isStackArgument() const { return offs < 0; }
   };
 
   // Profiling shows that the number of parameters and locals frequently
@@ -1761,77 +1766,97 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
 
   void zeroLocals(BaseRegAlloc* ra);
 
+  Address addressOfLocal(const Local& local, uint32_t additionalOffset = 0) {
+    if (local.isStackArgument()) {
+      return Address(FramePointer,
+                     stackArgumentOffsetFromFp(local) + additionalOffset);
+    }
+    return Address(sp_, localOffsetFromSp(local) + additionalOffset);
+  }
+
   void loadLocalI32(const Local& src, RegI32 dest) {
-    masm.load32(Address(sp_, localOffset(src)), dest);
+    masm.load32(addressOfLocal(src), dest);
   }
 
 #ifndef JS_PUNBOX64
   void loadLocalI64Low(const Local& src, RegI32 dest) {
-    masm.load32(Address(sp_, localOffset(src) + INT64LOW_OFFSET), dest);
+    masm.load32(addressOfLocal(src, INT64LOW_OFFSET), dest);
   }
 
   void loadLocalI64High(const Local& src, RegI32 dest) {
-    masm.load32(Address(sp_, localOffset(src) + INT64HIGH_OFFSET), dest);
+    masm.load32(addressOfLocal(src, INT64HIGH_OFFSET), dest);
   }
 #endif
 
   void loadLocalI64(const Local& src, RegI64 dest) {
-    masm.load64(Address(sp_, localOffset(src)), dest);
+    masm.load64(addressOfLocal(src), dest);
   }
 
   void loadLocalPtr(const Local& src, RegPtr dest) {
-    masm.loadPtr(Address(sp_, localOffset(src)), dest);
+    masm.loadPtr(addressOfLocal(src), dest);
   }
 
   void loadLocalF64(const Local& src, RegF64 dest) {
-    masm.loadDouble(Address(sp_, localOffset(src)), dest);
+    masm.loadDouble(addressOfLocal(src), dest);
   }
 
   void loadLocalF32(const Local& src, RegF32 dest) {
-    masm.loadFloat32(Address(sp_, localOffset(src)), dest);
+    masm.loadFloat32(addressOfLocal(src), dest);
   }
 
 #ifdef ENABLE_WASM_SIMD
   void loadLocalV128(const Local& src, RegV128 dest) {
-    masm.loadUnalignedSimd128(Address(sp_, localOffset(src)), dest);
+    masm.loadUnalignedSimd128(addressOfLocal(src), dest);
   }
 #endif
 
   void storeLocalI32(RegI32 src, const Local& dest) {
-    masm.store32(src, Address(sp_, localOffset(dest)));
+    masm.store32(src, addressOfLocal(dest));
   }
 
   void storeLocalI64(RegI64 src, const Local& dest) {
-    masm.store64(src, Address(sp_, localOffset(dest)));
+    masm.store64(src, addressOfLocal(dest));
   }
 
   void storeLocalPtr(Register src, const Local& dest) {
-    masm.storePtr(src, Address(sp_, localOffset(dest)));
+    masm.storePtr(src, addressOfLocal(dest));
   }
 
   void storeLocalF64(RegF64 src, const Local& dest) {
-    masm.storeDouble(src, Address(sp_, localOffset(dest)));
+    masm.storeDouble(src, addressOfLocal(dest));
   }
 
   void storeLocalF32(RegF32 src, const Local& dest) {
-    masm.storeFloat32(src, Address(sp_, localOffset(dest)));
+    masm.storeFloat32(src, addressOfLocal(dest));
   }
 
 #ifdef ENABLE_WASM_SIMD
   void storeLocalV128(RegV128 src, const Local& dest) {
-    masm.storeUnalignedSimd128(src, Address(sp_, localOffset(dest)));
+    masm.storeUnalignedSimd128(src, addressOfLocal(dest));
   }
 #endif
 
   // Offset off of sp_ for `local`.
-  int32_t localOffset(const Local& local) { return localOffset(local.offs); }
+  int32_t localOffsetFromSp(const Local& local) {
+    MOZ_ASSERT(!local.isStackArgument());
+    return localOffset(local.offs);
+  }
+
+  // Offset off of frame pointer for `stack argument`.
+  int32_t stackArgumentOffsetFromFp(const Local& local) {
+    MOZ_ASSERT(local.isStackArgument());
+    return -local.offs;
+  }
 
   // The incoming stack result area pointer is for stack results of the function
   // being compiled.
   void loadIncomingStackResultAreaPtr(RegPtr reg) {
-    masm.loadPtr(Address(sp_, stackOffset(stackResultsPtrOffset_.value())),
-                 reg);
+    const int32_t offset = stackResultsPtrOffset_.value();
+    Address src = offset < 0 ? Address(FramePointer, -offset)
+                             : Address(sp_, stackOffset(offset));
+    masm.loadPtr(src, reg);
   }
+
   void storeIncomingStackResultAreaPtr(RegPtr reg) {
     // If we get here, that means the pointer to the stack results area was
     // passed in as a register, and therefore it will be spilled below the
@@ -5091,8 +5116,10 @@ class BaseCompiler final : public BaseCompilerInterface {
     // Locals are stack allocated.  Mark ref-typed ones in the stackmap
     // accordingly.
     for (const Local& l : localInfo_) {
-      if (l.type == MIRType::RefOrNull) {
-        uint32_t offs = fr.localOffset(l);
+      // Locals that are stack arguments were already added to the stack map
+      // before pushing the frame.
+      if (l.type == MIRType::RefOrNull && !l.isStackArgument()) {
+        uint32_t offs = fr.localOffsetFromSp(l);
         MOZ_ASSERT(0 == (offs % sizeof(void*)));
         stackMapGenerator_.machineStackTracker.setGCPointer(offs /
                                                             sizeof(void*));
@@ -5133,7 +5160,7 @@ class BaseCompiler final : public BaseCompilerInterface {
           fr.storeLocalI64(RegI64(i->gpr64()), l);
           break;
         case MIRType::RefOrNull: {
-          DebugOnly<uint32_t> offs = fr.localOffset(l);
+          DebugOnly<uint32_t> offs = fr.localOffsetFromSp(l);
           MOZ_ASSERT(0 == (offs % sizeof(void*)));
           fr.storeLocalPtr(RegPtr(i->gpr()), l);
           // We should have just visited this local in the preceding loop.
