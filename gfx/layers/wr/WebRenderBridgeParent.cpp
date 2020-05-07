@@ -193,7 +193,7 @@ class ScheduleObserveLayersUpdate : public wr::NotificationHandler {
         mIsActive(aIsActive) {}
 
   void Notify(wr::Checkpoint) override {
-    CompositorThreadHolder::Loop()->PostTask(
+    CompositorThread()->Dispatch(
         NewRunnableMethod<LayersId, LayersObserverEpoch, int>(
             "ObserveLayersUpdate", mBridge,
             &CompositorBridgeParentBase::ObserveLayersUpdate, mLayersId,
@@ -217,7 +217,7 @@ class SceneBuiltNotification : public wr::NotificationHandler {
     auto startTime = this->mTxnStartTime;
     RefPtr<WebRenderBridgeParent> parent = mParent;
     wr::Epoch epoch = mEpoch;
-    CompositorThreadHolder::Loop()->PostTask(NS_NewRunnableFunction(
+    CompositorThread()->Dispatch(NS_NewRunnableFunction(
         "SceneBuiltNotificationRunnable", [parent, epoch, startTime]() {
           auto endTime = TimeStamp::Now();
 #ifdef MOZ_GECKO_PROFILER
@@ -287,7 +287,7 @@ class WebRenderBridgeParent::ScheduleSharedSurfaceRelease final
   }
 
   void Notify(wr::Checkpoint) override {
-    CompositorThreadHolder::Loop()->PostTask(
+    CompositorThread()->Dispatch(
         NewRunnableMethod<nsTArray<wr::ExternalImageKeyPair>>(
             "ObserveSharedSurfaceRelease", mWrBridge,
             &WebRenderBridgeParent::ObserveSharedSurfaceRelease,

@@ -40,7 +40,6 @@ void ReleaseVRManagerParentSingleton() { sVRManagerParentSingleton = nullptr; }
 
 VRManagerChild::VRManagerChild()
     : mRuntimeCapabilities(VRDisplayCapabilityFlags::Cap_None),
-      mMessageLoop(MessageLoop::current()),
       mFrameRequestCallbackCounter(0),
       mWaitingForEnumeration(false),
       mBackend(layers::LayersBackend::LAYERS_NONE) {
@@ -112,8 +111,7 @@ void VRManagerChild::InitSameProcess() {
   sVRManagerChildSingleton = new VRManagerChild();
   sVRManagerParentSingleton = VRManagerParent::CreateSameProcess();
   sVRManagerChildSingleton->Open(sVRManagerParentSingleton->GetIPCChannel(),
-                                 CompositorThreadHolder::Loop(),
-                                 mozilla::ipc::ChildSide);
+                                 CompositorThread(), mozilla::ipc::ChildSide);
 }
 
 /* static */
