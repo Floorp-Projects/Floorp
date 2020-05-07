@@ -995,7 +995,7 @@ def setup_browsertime(config, tasks):
             continue
 
         # This is appropriate as the browsertime task variants mature.
-        task['tier'] = max(task['tier'], 2)
+        task['tier'] = max(task['tier'], 1)
 
         ts = {
             'by-test-platform': {

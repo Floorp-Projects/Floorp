@@ -65,6 +65,11 @@ raptor_description_schema = Schema({
         'app',
         test_description_schema['target']
     ),
+    Optional('tier'): optionally_keyed_by(
+        'app',
+        'raptor-test',
+        test_description_schema['tier']
+    ),
     Optional('run-visual-metrics'): optionally_keyed_by(
         'app',
         bool
@@ -175,6 +180,7 @@ def handle_keyed_by(config, tests):
         'max-run-time',
         'run-on-projects',
         'target',
+        'tier',
         'run-visual-metrics'
     ]
     for test in tests:
