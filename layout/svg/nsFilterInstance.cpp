@@ -98,6 +98,7 @@ void nsFilterInstance::PaintFilteredFrame(
 }
 
 static mozilla::wr::ComponentTransferFuncType FuncTypeToWr(uint8_t aFuncType) {
+  MOZ_ASSERT(aFuncType != SVG_FECOMPONENTTRANSFER_SAME_AS_R);
   switch (aFuncType) {
     case SVG_FECOMPONENTTRANSFER_TYPE_TABLE:
       return mozilla::wr::ComponentTransferFuncType::Table;
@@ -288,15 +289,19 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
       values->AppendElements(attributes.mValues[0]);
       filterData.R_values_count = attributes.mValues[0].Length();
 
-      filterData.funcG_type = FuncTypeToWr(attributes.mTypes[1]);
+      size_t indexToUse =
+          attributes.mTypes[1] == SVG_FECOMPONENTTRANSFER_SAME_AS_R ? 0 : 1;
+      filterData.funcG_type = FuncTypeToWr(attributes.mTypes[indexToUse]);
       size_t G_startindex = values->Length();
-      values->AppendElements(attributes.mValues[1]);
-      filterData.G_values_count = attributes.mValues[1].Length();
+      values->AppendElements(attributes.mValues[indexToUse]);
+      filterData.G_values_count = attributes.mValues[indexToUse].Length();
 
-      filterData.funcB_type = FuncTypeToWr(attributes.mTypes[2]);
+      indexToUse =
+          attributes.mTypes[2] == SVG_FECOMPONENTTRANSFER_SAME_AS_R ? 0 : 2;
+      filterData.funcB_type = FuncTypeToWr(attributes.mTypes[indexToUse]);
       size_t B_startindex = values->Length();
-      values->AppendElements(attributes.mValues[2]);
-      filterData.B_values_count = attributes.mValues[2].Length();
+      values->AppendElements(attributes.mValues[indexToUse]);
+      filterData.B_values_count = attributes.mValues[indexToUse].Length();
 
       filterData.funcA_type = FuncTypeToWr(attributes.mTypes[3]);
       size_t A_startindex = values->Length();

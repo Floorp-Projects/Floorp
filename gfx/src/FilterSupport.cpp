@@ -799,14 +799,18 @@ static already_AddRefed<FilterNode> FilterNodeFromPrimitiveDescription(
 
     already_AddRefed<FilterNode> operator()(
         const ComponentTransferAttributes& aComponentTransfer) {
-      RefPtr<FilterNode> filters[4];  // one for each FILTER_*_TRANSFER type
-      bool useRgb = aComponentTransfer.mTypes[kChannelG] ==
-                        SVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN &&
-                    aComponentTransfer.mTypes[kChannelB] ==
-                        SVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN;
+      MOZ_ASSERT(aComponentTransfer.mTypes[0] !=
+                 SVG_FECOMPONENTTRANSFER_SAME_AS_R);
+      MOZ_ASSERT(aComponentTransfer.mTypes[3] !=
+                 SVG_FECOMPONENTTRANSFER_SAME_AS_R);
 
+      RefPtr<FilterNode> filters[4];  // one for each FILTER_*_TRANSFER type
       for (int32_t i = 0; i < 4; i++) {
-        int32_t inputIndex = useRgb && i < 3 ? 0 : i;
+        int32_t inputIndex = (aComponentTransfer.mTypes[i] ==
+                              SVG_FECOMPONENTTRANSFER_SAME_AS_R) &&
+                                     (i < 3)
+                                 ? 0
+                                 : i;
         ConvertComponentTransferFunctionToFilter(aComponentTransfer, inputIndex,
                                                  i, mDT, filters[0], filters[1],
                                                  filters[2], filters[3]);
