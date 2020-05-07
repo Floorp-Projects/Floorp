@@ -73,6 +73,14 @@ path:other-licenses/bsdiff/
 path:other-licenses/nsis/Contrib/CityHash/cityhash/
 path:toolkit/mozapps/update/updater
 
+# for the minidump_stackwalk toolchain task
+path:toolkit/crashreporter
+path:tools/crashreporter/
+path:testing/tools/fileid
+path:mfbt
+path:config/external/zlib
+path:build/moz.configure
+
 # for the browsertime toolchain task
 path:tools/browsertime/mach_commands.py
 path:tools/browsertime/package.json
