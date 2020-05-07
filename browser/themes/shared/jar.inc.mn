@@ -112,6 +112,9 @@
   skin/classic/browser/panel-icon-retry.svg                    (../shared/panel-icon-retry.svg)
   skin/classic/browser/toolbar-drag-indicator.svg              (../shared/toolbar-drag-indicator.svg)
 
+  skin/classic/browser/protections/resolved-breach.svg         (../shared/protections/resolved-breach.svg)
+  skin/classic/browser/protections/breached-password.svg       (../shared/protections/breached-password.svg)
+
   skin/classic/browser/preferences/bookmark.svg                (../shared/preferences/bookmark.svg)
   skin/classic/browser/preferences/critters-postcard.jpg       (../shared/preferences/critters-postcard.jpg)
   skin/classic/browser/preferences/extensions.svg              (../shared/preferences/extensions.svg)

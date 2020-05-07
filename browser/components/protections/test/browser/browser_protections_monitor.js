@@ -7,21 +7,6 @@
 const { AboutProtectionsParent } = ChromeUtils.import(
   "resource:///actors/AboutProtectionsParent.jsm"
 );
-const nsLoginInfo = new Components.Constructor(
-  "@mozilla.org/login-manager/loginInfo;1",
-  Ci.nsILoginInfo,
-  "init"
-);
-
-const TEST_LOGIN1 = new nsLoginInfo(
-  "https://example.com/",
-  "https://example.com/",
-  null,
-  "user1",
-  "pass1",
-  "username",
-  "password"
-);
 
 let fakeDataWithNoError = {
   monitoredEmails: 1,
@@ -55,7 +40,6 @@ const mockGetMonitorAndLoginData = data => {
     getMonitorData: async () => data,
     getLoginData: () => {
       return {
-        hasFxa: true,
         numLogins: Services.logins.countLogins("", "", ""),
       };
     },

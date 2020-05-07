@@ -81,8 +81,9 @@ h2 {
 
 #manage-protections,
 .card-header > button,
+#save-passwords-button,
 #get-proxy-extension-link,
-#open-about-logins-button,
+#manage-passwords-button,
 #sign-up-for-monitor-link {
   grid-area: 1 / 5 / 1 / -1;
   margin: 0;
@@ -91,6 +92,10 @@ h2 {
   padding: 10px;
   text-align: center;
   line-height: initial;
+}
+
+.lockwise-card.has-logins .wrapper div:nth-child(1) {
+  grid-area: 1 / 1 / 1 / 6;
 }
 
 .card:not(.has-logins) .wrapper div:nth-child(1),
@@ -118,6 +123,10 @@ a.hidden,
 .lockwise-card.hidden,
 #lockwise-body-content .has-logins.hidden,
 #lockwise-body-content .no-logins.hidden,
+.lockwise-card.no-logins #lockwise-how-it-works,
+.lockwise-card.no-logins .lockwise-scanned-wrapper,
+.lockwise-card.no-logins #manage-passwords-button,
+.lockwise-card.has-logins #save-passwords-button,
 .monitor-card.hidden,
 .monitor-card.no-logins .card-body,
 .monitor-card.no-logins #monitor-header-content a,
@@ -605,11 +614,6 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   display: block;
 }
 
-.passwords-stored-text {
-  width: max-content;
-  padding-inline-start: 4px;
-}
-
 .block {
   background-color: var(--grey-60);
   border-radius: 4px;
@@ -623,6 +627,27 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 
 #lockwise-body-content .has-logins a {
   margin-inline-start: 10px;
+}
+
+.lockwise-scanned-wrapper {
+  display: grid;
+  grid-template-columns: 7% auto;
+  margin-block-start: 24px;
+  grid-area: 2 / 1 / 2 / 5;
+  padding-bottom: 1.7em;
+}
+
+#lockwise-scanned-text {
+  margin-inline-end: 15px;
+}
+
+#lockwise-scanned-icon {
+  margin-top: 7px;
+}
+
+#manage-passwords-button {
+  grid-area: 2 / 5 / 2 / 7;
+  margin-inline-end: 15px;
 }
 
 /* Monitor card */
@@ -653,6 +678,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   display: block;
 }
 
+.lockwise-card #lockwise-header-content > a,
 .monitor-card #monitor-header-content > a {
   display: block;
   margin-block-start: 5px;

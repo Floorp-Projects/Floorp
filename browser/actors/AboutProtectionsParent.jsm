@@ -139,20 +139,17 @@ class AboutProtectionsParent extends JSWindowActorParent {
   /**
    * Retrieves login data for the user.
    *
-   * @return {{ hasFxa: Boolean,
+   * @return {{
    *            numLogins: Number,
    *            mobileDeviceConnected: Boolean }}
-   *         The login data.
    */
   async getLoginData() {
     if (gTestOverride && "getLoginData" in gTestOverride) {
       return gTestOverride.getLoginData();
     }
 
-    let hasFxa = false;
-
     try {
-      if ((hasFxa = !!(await fxAccounts.getSignedInUser()))) {
+      if (await fxAccounts.getSignedInUser()) {
         await fxAccounts.device.refreshDeviceList();
       }
     } catch (e) {
@@ -170,7 +167,6 @@ class AboutProtectionsParent extends JSWindowActorParent {
       ).length;
 
     return {
-      hasFxa,
       numLogins: userFacingLogins,
       mobileDeviceConnected,
     };
@@ -360,7 +356,9 @@ class AboutProtectionsParent extends JSWindowActorParent {
         return this.getMonitorData();
 
       case "FetchUserLoginsData":
-        return this.getLoginData();
+        let { potentiallyBreachedLogins } = await this.getMonitorData();
+        let loginsData = await this.getLoginData();
+        return { ...loginsData, potentiallyBreachedLogins };
 
       case "ClearMonitorCache":
         this.monitorResponse = null;
