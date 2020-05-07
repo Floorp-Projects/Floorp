@@ -9,6 +9,8 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_ui.h"
+#include "base/message_loop.h"
+#include "base/task.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Document.h"
 
@@ -76,7 +78,7 @@ void ActiveElementManager::TriggerElementActivation() {
             "layers::ActiveElementManager::SetActiveTask", this,
             &ActiveElementManager::SetActiveTask, mTarget);
     mSetActiveTask = task;
-    NS_GetCurrentThread()->DelayedDispatch(
+    MessageLoop::current()->PostDelayedTask(
         task.forget(), StaticPrefs::ui_touch_activation_delay_ms());
     AEM_LOG("Scheduling mSetActiveTask %p\n", mSetActiveTask.get());
   }

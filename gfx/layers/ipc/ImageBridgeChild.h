@@ -25,6 +25,12 @@
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/ReentrantMonitor.h"  // for ReentrantMonitor, etc
 
+class MessageLoop;
+
+namespace base {
+class Thread;
+}  // namespace base
+
 namespace mozilla {
 namespace ipc {
 class Shmem;
@@ -160,7 +166,14 @@ class ImageBridgeChild final : public PImageBridgeChild,
    *
    * Can be called from any thread.
    */
-  nsISerialEventTarget* GetThread() const override;
+  base::Thread* GetThread() const;
+
+  /**
+   * Returns the ImageBridgeChild's message loop.
+   *
+   * Can be called from any thread.
+   */
+  MessageLoop* GetMessageLoop() const override;
 
   base::ProcessId GetParentPid() const override { return OtherPid(); }
 

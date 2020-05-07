@@ -14,11 +14,9 @@ COM MTA
 Cache Deleter
 Cache I/O
 Cameras IPC
-Canvas
 ChainedPipePump
 ChainedPipeRecv
 Checker Test
-Compositor
 Cookie
 CrashRep Inject
 DDMediaLogs
@@ -43,7 +41,6 @@ IMAP
 IPC Launch
 IPDL Background
 IdentityCrypto
-ImageBridgeChld
 LS Thread
 LayerScope
 MDCDMThread

@@ -26,7 +26,7 @@ class APZCBasicTester : public APZCTesterBase {
  protected:
   virtual void SetUp() {
     APZThreadUtils::SetThreadAssertionsEnabled(false);
-    APZThreadUtils::SetControllerThread(NS_GetCurrentThread());
+    APZThreadUtils::SetControllerThread(MessageLoop::current());
 
     tm = new TestAPZCTreeManager(mcc);
     updater = new APZUpdater(tm, false);

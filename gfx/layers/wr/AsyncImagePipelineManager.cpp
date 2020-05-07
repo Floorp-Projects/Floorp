@@ -551,7 +551,7 @@ void AsyncImagePipelineManager::NotifyPipelinesUpdated(
 
   // Queue a runnable on the compositor thread to process the updates.
   // This will also call CheckForTextureHostsNotUsedByGPU.
-  layers::CompositorThread()->Dispatch(
+  layers::CompositorThreadHolder::Loop()->PostTask(
       NewRunnableMethod("ProcessPipelineUpdates", this,
                         &AsyncImagePipelineManager::ProcessPipelineUpdates));
 }

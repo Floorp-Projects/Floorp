@@ -54,6 +54,7 @@ T MinIgnoreZero(const T& a, const T& b);
 
 class VideoStreamFactory;
 class WebrtcAudioConduit;
+class nsThread;
 
 // Interface of external video encoder for WebRTC.
 class WebrtcVideoEncoder : public VideoEncoder, public webrtc::VideoEncoder {};

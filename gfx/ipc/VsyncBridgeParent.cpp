@@ -20,7 +20,7 @@ RefPtr<VsyncBridgeParent> VsyncBridgeParent::Start(
   RefPtr<Runnable> task = NewRunnableMethod<Endpoint<PVsyncBridgeParent>&&>(
       "gfx::VsyncBridgeParent::Open", parent, &VsyncBridgeParent::Open,
       std::move(aEndpoint));
-  CompositorThread()->Dispatch(task.forget());
+  CompositorThreadHolder::Loop()->PostTask(task.forget());
 
   return parent;
 }
@@ -48,10 +48,10 @@ mozilla::ipc::IPCResult VsyncBridgeParent::RecvNotifyVsync(
 }
 
 void VsyncBridgeParent::Shutdown() {
-  if (!CompositorThreadHolder::IsInCompositorThread()) {
-    CompositorThread()->Dispatch(
-        NewRunnableMethod("gfx::VsyncBridgeParent::ShutdownImpl", this,
-                          &VsyncBridgeParent::ShutdownImpl));
+  MessageLoop* ccloop = CompositorThreadHolder::Loop();
+  if (MessageLoop::current() != ccloop) {
+    ccloop->PostTask(NewRunnableMethod("gfx::VsyncBridgeParent::ShutdownImpl",
+                                       this, &VsyncBridgeParent::ShutdownImpl));
     return;
   }
 
