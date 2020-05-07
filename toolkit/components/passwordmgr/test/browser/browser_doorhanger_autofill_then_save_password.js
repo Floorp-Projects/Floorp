@@ -64,14 +64,12 @@ async function test_save_change({
 
   info("Starting test: " + name);
 
-  Services.logins.addLogin(
-    LoginTestUtils.testData.formLogin({
-      origin: "https://example.com",
-      formActionOrigin: "https://example.com",
-      username: oldUsername,
-      password: oldPassword,
-    })
-  );
+  LoginTestUtils.addLogin({
+    username: oldUsername,
+    password: oldPassword,
+    origin: "https://example.com",
+    formActionOrigin: "https://example.com",
+  });
 
   await BrowserTestUtils.withNewTab(
     {
@@ -85,12 +83,15 @@ async function test_save_change({
 
       await ContentTask.spawn(
         browser,
-        [oldPassword],
-        async function awaitAutofill() {
+        { oldUsername, oldPassword },
+        async function awaitAutofill({ oldUsername, oldPassword }) {
           await ContentTaskUtils.waitForCondition(
             () =>
-              !!content.document.querySelector("#form-basic-username").value,
-            "await autofill"
+              content.document.querySelector("#form-basic-username").value ==
+                oldUsername &&
+              content.document.querySelector("#form-basic-password").value ==
+                oldPassword,
+            "Await and verify autofill"
           );
 
           info(
@@ -119,6 +120,35 @@ async function test_save_change({
         }
       }
 
+      let expectedUsername =
+        [...actions]
+          .reverse()
+          .map(action => action.setUsername)
+          .find(username => !!username) ?? oldUsername;
+      let expectedPassword =
+        [...actions]
+          .reverse()
+          .map(action => action.setPassword)
+          .find(username => !!username) ?? oldPassword;
+
+      await ContentTask.spawn(
+        browser,
+        { expectedUsername, expectedPassword },
+        async function awaitAutofill({ expectedUsername, expectedPassword }) {
+          info("Validating updated fields");
+          is(
+            expectedUsername,
+            content.document.querySelector("#form-basic-username").value,
+            "Verify username field updated"
+          );
+          is(
+            expectedPassword,
+            content.document.querySelector("#form-basic-password").value,
+            "Verify password field updated"
+          );
+        }
+      );
+
       let formSubmittedPromise = listenForTestNotification("FormSubmit");
       await SpecialPowers.spawn(browser, [], async function() {
         let doc = this.content.document;
@@ -129,10 +159,13 @@ async function test_save_change({
       info("Waiting for doorhanger of type: " + expectedDoorhanger);
       let notif = await waitForDoorhanger(browser, expectedDoorhanger);
 
+      await checkDoorhangerUsernamePassword(expectedUsername, expectedPassword);
+
       let promiseLogin = TestUtils.topicObserved(
         "passwordmgr-storage-changed",
         (_, data) => data == expectedNotification
       );
+
       await clickDoorhangerButton(notif, REMEMBER_BUTTON);
       await promiseLogin;
       await cleanupDoorhanger(notif); // clean slate for the next test
