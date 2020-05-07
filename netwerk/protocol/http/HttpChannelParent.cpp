@@ -63,10 +63,11 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace net {
 
-HttpChannelParent::HttpChannelParent(dom::BrowserParent* iframeEmbedding,
+HttpChannelParent::HttpChannelParent(const PBrowserOrId& iframeEmbedding,
                                      nsILoadContext* aLoadContext,
                                      PBOverrideStatus aOverrideStatus)
     : mLoadContext(aLoadContext),
+      mNestedFrameId(0),
       mIPCClosed(false),
       mPBOverride(aOverrideStatus),
       mStatus(NS_OK),
@@ -93,7 +94,12 @@ HttpChannelParent::HttpChannelParent(dom::BrowserParent* iframeEmbedding,
   MOZ_ASSERT(gHttpHandler);
   mHttpHandler = gHttpHandler;
 
-  mBrowserParent = iframeEmbedding;
+  if (iframeEmbedding.type() == PBrowserOrId::TPBrowserParent) {
+    mBrowserParent =
+        static_cast<dom::BrowserParent*>(iframeEmbedding.get_PBrowserParent());
+  } else {
+    mNestedFrameId = iframeEmbedding.get_TabId();
+  }
 
   mSendWindowSize = gHttpHandler->SendWindowSize();
 
@@ -2452,7 +2458,7 @@ NS_IMETHODIMP
 HttpChannelParent::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
                                  void** aResult) {
   nsCOMPtr<nsIAuthPrompt2> prompt =
-      new NeckoParent::NestedFrameAuthPrompt(Manager(), TabId(0));
+      new NeckoParent::NestedFrameAuthPrompt(Manager(), mNestedFrameId);
   prompt.forget(aResult);
   return NS_OK;
 }
