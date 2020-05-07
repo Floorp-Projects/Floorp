@@ -149,13 +149,23 @@ function makeRuleset(coeffs, biases) {
 
     const parentElement = element.parentElement;
     // Check if the input is in a <td>, and, if so, check the textContent of the containing <tr>
-    if (parentElement.tagName === "TD") {
+    if (
+      // Bug 1634819: element.parentElement is null if element.parentNode is a ShadowRoot
+      parentElement &&
+      parentElement.tagName === "TD" &&
+      parentElement.parentElement
+    ) {
       // TODO: How bad is the assumption that the <tr> won't be the parent of the <td>?
       return regex.test(parentElement.parentElement.textContent);
     }
 
     // Check if the input is in a <dd>, and, if so, check the textContent of the preceding <dt>
-    if (parentElement.tagName === "DD") {
+    if (
+      parentElement &&
+      parentElement.tagName === "DD" &&
+      // previousElementSibling can be null
+      parentElement.previousElementSibling
+    ) {
       return regex.test(parentElement.previousElementSibling.textContent);
     }
     return false;
