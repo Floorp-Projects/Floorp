@@ -4584,7 +4584,7 @@ impl Renderer {
 
                     ( textures, instance )
                 },
-                ResolvedExternalSurfaceColorData::Rgb{ ref plane, .. } => {
+                ResolvedExternalSurfaceColorData::Rgb{ ref plane, flip_y, .. } => {
 
                     self.shaders
                         .borrow_mut()
@@ -4598,8 +4598,12 @@ impl Renderer {
                         );
 
                     let textures = BatchTextures::color(plane.texture);
-
-                    let uv_rect = self.texture_resolver.get_uv_rect(&textures.colors[0], plane.uv_rect);
+                    let mut uv_rect = self.texture_resolver.get_uv_rect(&textures.colors[0], plane.uv_rect);
+                    if flip_y {
+                        let y = uv_rect.uv0.y;
+                        uv_rect.uv0.y = uv_rect.uv1.y;
+                        uv_rect.uv1.y = y;
+                    }
 
                     let instance = CompositeInstance::new_rgb(
                         surface_rect.to_f32(),
@@ -4763,8 +4767,14 @@ impl Renderer {
                                 (CompositeSurfaceFormat::Yuv, surface.image_buffer_kind),
                             )
                         },
-                        ResolvedExternalSurfaceColorData::Rgb{ ref plane, .. } => {
-                            let uv_rect = self.texture_resolver.get_uv_rect(&plane.texture, plane.uv_rect);
+                        ResolvedExternalSurfaceColorData::Rgb{ ref plane, flip_y, .. } => {
+
+                            let mut uv_rect = self.texture_resolver.get_uv_rect(&plane.texture, plane.uv_rect);
+                            if flip_y {
+                                let y = uv_rect.uv0.y;
+                                uv_rect.uv0.y = uv_rect.uv1.y;
+                                uv_rect.uv1.y = y;
+                            }
 
                             (
                                 CompositeInstance::new_rgb(
