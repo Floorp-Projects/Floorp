@@ -10,6 +10,7 @@ from time import mktime
 import pytest
 from mozunit import main
 
+from taskgraph.optimize import seta
 from taskgraph.optimize.backstop import Backstop
 from taskgraph.optimize.bugbug import (
     BugBugPushSchedules,
@@ -252,6 +253,26 @@ def test_bugbug_timeout(monkeypatch, responses, params):
     opt = BugBugPushSchedules(0.5)
     with pytest.raises(BugbugTimeoutException):
         opt.should_remove_task(default_tasks[0], params, None)
+
+
+def test_bugbug_fallback(monkeypatch, responses, params):
+    query = "/push/{branch}/{head_rev}/schedules".format(**params)
+    url = BUGBUG_BASE_URL + query
+    responses.add(
+        responses.GET,
+        url,
+        json={"ready": False},
+        status=202,
+    )
+
+    # Make sure the test runs fast.
+    monkeypatch.setattr(time, 'sleep', lambda i: None)
+
+    monkeypatch.setattr(seta, 'is_low_value_task', lambda l, p: l == default_tasks[0].label)
+
+    opt = BugBugPushSchedules(0.5, fallback=True)
+    assert opt.should_remove_task(default_tasks[0], params, None)
+    assert not opt.should_remove_task(default_tasks[1], params, None)
 
 
 def test_backstop(params):

@@ -8,8 +8,9 @@ from collections import defaultdict
 
 from six.moves.urllib.parse import urlsplit
 
-from taskgraph.optimize import register_strategy, OptimizationStrategy
+from taskgraph.optimize import register_strategy, OptimizationStrategy, seta
 from taskgraph.util.bugbug import (
+    BugbugTimeoutException,
     push_schedules,
     CT_HIGH,
     CT_MEDIUM,
@@ -22,6 +23,7 @@ from taskgraph.util.bugbug import (
 @register_strategy("bugbug-low", args=(CT_LOW,))
 @register_strategy("bugbug-high", args=(CT_HIGH,))
 @register_strategy("bugbug-reduced", args=(CT_MEDIUM, True))
+@register_strategy("bugbug-reduced-fallback", args=(CT_MEDIUM, True, False, True))
 @register_strategy("bugbug-reduced-high", args=(CT_HIGH, True))
 class BugBugPushSchedules(OptimizationStrategy):
     """Query the 'bugbug' service to retrieve relevant tasks and manifests.
@@ -35,15 +37,29 @@ class BugBugPushSchedules(OptimizationStrategy):
             groups within a task to find the overall task confidence. Otherwise
             the maximum confidence threshold is used (default: False).
     """
-    def __init__(self, confidence_threshold, use_reduced_tasks=False, combine_weights=False):
+
+    def __init__(
+        self,
+        confidence_threshold,
+        use_reduced_tasks=False,
+        combine_weights=False,
+        fallback=False,
+    ):
         self.confidence_threshold = confidence_threshold
         self.use_reduced_tasks = use_reduced_tasks
         self.combine_weights = combine_weights
+        self.fallback = fallback
 
     def should_remove_task(self, task, params, importance):
         branch = urlsplit(params['head_repository']).path.strip('/')
         rev = params['head_rev']
-        data = push_schedules(branch, rev)
+        try:
+            data = push_schedules(branch, rev)
+        except BugbugTimeoutException:
+            if self.fallback:
+                return seta.is_low_value_task(task.label, params['project'])
+
+            raise
 
         key = "reduced_tasks" if self.use_reduced_tasks else "tasks"
         tasks = set(
