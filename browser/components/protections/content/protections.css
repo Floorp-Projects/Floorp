@@ -133,7 +133,6 @@ a.hidden,
 .monitor-card.no-logins .monitor-scanned-text,
 .monitor-card.no-logins .icon-small,
 .monitor-card.has-logins #sign-up-for-monitor-link,
-#monitor-body-content .monitor-breached-passwords.hidden,
 .loading a,
 .loading button,
 .loading .wrapper,
@@ -651,20 +650,6 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 }
 
 /* Monitor card */
-
-#monitor-body-content .monitor-breached-passwords {
-  grid: 1fr / repeat(7, 1fr);
-  grid-row: 3;
-  grid-column: 1 / -1;
-  display: grid;
-  align-items: center;
-  font-size: 0.85em;
-  border-block-start: 1px solid var(--in-content-border-color);
-  padding-block-start: 20px;
-  line-height: 18px;
-  margin-block-end: 20px;
-}
-
 .monitor-info-wrapper {
   display: grid;
   grid: 1fr / 1fr 1fr 1fr;
@@ -761,10 +746,6 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   grid-column: 1 / 2;
   width: 70px;
   height: 48px;
-}
-
-#password-warning {
-  grid-column: 2 / -1;
 }
 
 #manage-protections,
