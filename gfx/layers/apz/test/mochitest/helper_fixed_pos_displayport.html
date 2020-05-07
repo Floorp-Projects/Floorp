@@ -58,11 +58,10 @@
     function checkFixedPosDisplayport() {
       let fixedPosDisplayport = getCurrentFixedPosDisplayport();
 
-      // First, check the size. We allow it to be 4x the size of the visual
-      // viewport, which should accommodate displayport multipliers while still
-      // being significantly smaller than the entire layout viewport at 8x zoom.
-      ok(fixedPosDisplayport.w < (vv.width * 4), "fixed-pos displayport is too wide");
-      ok(fixedPosDisplayport.h < (vv.height * 4), "fixed-pos displayport is too tall");
+      // First, check check that we don't expand the displayport to the entire layout viewport
+      // even if we are zoomed in a lot.
+      ok(fixedPosDisplayport.w < window.innerWidth, "fixed-pos displayport is too wide");
+      ok(fixedPosDisplayport.h < window.innerHeight, "fixed-pos displayport is too tall");
 
       // Now, check the position. We want it to track the visual scroll position
       // relative to the layout viewport (but not relative to the page), since
