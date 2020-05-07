@@ -385,10 +385,7 @@ static void GetScrollbarMetrics(nsBoxLayoutState& aState, nsIFrame* aBox,
  * 1) the style is not HIDDEN
  * 2) our inside-border height is at least the scrollbar height (i.e., the
  * scrollbar fits vertically)
- * 3) our scrollport width (the inside-border width minus the width allocated
- * for a vertical scrollbar, if showing) is at least the scrollbar's min-width
- * (i.e., the scrollbar fits horizontally)
- * 4) the style is SCROLL, or the kid's overflow-area XMost is
+ * 3) the style is SCROLL, or the kid's overflow-area XMost is
  * greater than the scrollport width
  *
  * @param aForce if true, then we just assume the layout is consistent.
@@ -414,31 +411,28 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
     ReflowScrolledFrame(aState, aAssumeHScroll, aAssumeVScroll, aKidMetrics);
   }
 
-  nsSize vScrollbarMinSize(0, 0);
   nsSize vScrollbarPrefSize(0, 0);
   if (mHelper.mVScrollbarBox) {
     GetScrollbarMetrics(aState->mBoxState, mHelper.mVScrollbarBox,
-                        &vScrollbarMinSize,
+                        nullptr,
                         aAssumeVScroll ? &vScrollbarPrefSize : nullptr);
     nsScrollbarFrame* scrollbar = do_QueryFrame(mHelper.mVScrollbarBox);
     scrollbar->SetScrollbarMediatorContent(mContent);
   }
   nscoord vScrollbarDesiredWidth =
       aAssumeVScroll ? vScrollbarPrefSize.width : 0;
-  nscoord vScrollbarMinHeight = aAssumeVScroll ? vScrollbarMinSize.height : 0;
 
-  nsSize hScrollbarMinSize(0, 0);
   nsSize hScrollbarPrefSize(0, 0);
   if (mHelper.mHScrollbarBox) {
     GetScrollbarMetrics(aState->mBoxState, mHelper.mHScrollbarBox,
-                        &hScrollbarMinSize,
+                        nullptr,
                         aAssumeHScroll ? &hScrollbarPrefSize : nullptr);
     nsScrollbarFrame* scrollbar = do_QueryFrame(mHelper.mHScrollbarBox);
     scrollbar->SetScrollbarMediatorContent(mContent);
   }
+
   nscoord hScrollbarDesiredHeight =
       aAssumeHScroll ? hScrollbarPrefSize.height : 0;
-  nscoord hScrollbarMinWidth = aAssumeHScroll ? hScrollbarMinSize.width : 0;
 
   // First, compute our inside-border size and scrollport size
   // XXXldb Can we depend more on ComputeSize here?
@@ -446,10 +440,8 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
                        ? nsSize(0, 0)
                        : aKidMetrics->PhysicalSize();
   nsSize desiredInsideBorderSize;
-  desiredInsideBorderSize.width =
-      vScrollbarDesiredWidth + std::max(kidSize.width, hScrollbarMinWidth);
-  desiredInsideBorderSize.height =
-      hScrollbarDesiredHeight + std::max(kidSize.height, vScrollbarMinHeight);
+  desiredInsideBorderSize.width = vScrollbarDesiredWidth + kidSize.width;
+  desiredInsideBorderSize.height = hScrollbarDesiredHeight + kidSize.height;
   aState->mInsideBorderSize =
       ComputeInsideBorderSize(aState, desiredInsideBorderSize);
 
@@ -507,9 +499,9 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
           aState->mHScrollbar == ShowScrollbar::Always ||
           scrolledRect.XMost() >= visualViewportSize.width + oneDevPixel ||
           scrolledRect.x <= -oneDevPixel;
-      if (scrollPortSize.width < hScrollbarMinSize.width)
-        wantHScrollbar = false;
-      if (wantHScrollbar != aAssumeHScroll) return false;
+      if (wantHScrollbar != aAssumeHScroll) {
+        return false;
+      }
     }
 
     // If the style is HIDDEN then we already know that aAssumeVScroll is false
@@ -518,9 +510,9 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
           aState->mVScrollbar == ShowScrollbar::Always ||
           scrolledRect.YMost() >= visualViewportSize.height + oneDevPixel ||
           scrolledRect.y <= -oneDevPixel;
-      if (scrollPortSize.height < vScrollbarMinSize.height)
-        wantVScrollbar = false;
-      if (wantVScrollbar != aAssumeVScroll) return false;
+      if (wantVScrollbar != aAssumeVScroll) {
+        return false;
+      }
     }
   }
 
