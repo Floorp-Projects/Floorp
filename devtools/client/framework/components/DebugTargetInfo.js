@@ -42,6 +42,7 @@ class DebugTargetInfo extends PureComponent {
     this.state = { urlValue: props.toolbox.target.url };
 
     this.onChange = this.onChange.bind(this);
+    this.onFocus = this.onFocus.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
   }
 
@@ -150,6 +151,10 @@ class DebugTargetInfo extends PureComponent {
     this.setState({ urlValue: target.value });
   }
 
+  onFocus({ target }) {
+    target.select();
+  }
+
   onSubmit(event) {
     event.preventDefault();
     let url = this.state.urlValue;
@@ -253,6 +258,7 @@ class DebugTargetInfo extends PureComponent {
       dom.input({
         className: "devtools-textinput debug-target-url-input",
         onChange: this.onChange,
+        onFocus: this.onFocus,
         defaultValue: url,
       })
     );
