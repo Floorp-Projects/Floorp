@@ -633,9 +633,14 @@ async function toggleMenuItem(doc, toolboxDoc, menuId, menuItemIndex) {
     menuItem.getAttribute("aria-checked") === "true" ? null : "true";
 
   // Make the menu visible first.
+  const onPopupShown = new Promise(r =>
+    toolboxDoc.addEventListener("popupshown", r, { once: true })
+  );
   EventUtils.synthesizeMouseAtCenter(menuButton, {}, panelWin);
-  await BrowserTestUtils.waitForCondition(
-    () => !!menuItem.offsetParent,
+  await onPopupShown;
+  const boundingRect = menuItem.getBoundingClientRect();
+  ok(
+    boundingRect.width > 0 && boundingRect.height > 0,
     "Menu item is visible."
   );
 

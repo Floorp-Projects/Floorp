@@ -96,6 +96,12 @@ global.ChromeUtils = {
 
 global.define = function() {};
 
+// Used for the HTMLTooltip component.
+// And set "isSystemPrincipal: false" because can't support XUL element in node.
+global.document.nodePrincipal = {
+  isSystemPrincipal: false,
+};
+
 // Point to vendored-in files and mocks when needed.
 const requireHacker = require("require-hacker");
 requireHacker.global_hook("default", (path, module) => {
