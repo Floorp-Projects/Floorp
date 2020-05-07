@@ -115,14 +115,9 @@ add_task(
 
       let { value: allValues2 } = await promisify(service.get, "ext-2", "null");
       deepEqual(allValues2, { hi: "hola! 👋" }, "clear didn't remove ext-2");
-
-      await promisify(service.wipeAll);
-
-      deepEqual(
-        (await promisify(service.get, "ext-2", "null")).value,
-        {},
-        "wipeAll removed ext-2"
-      );
+      // We need to clear data for ext-2 too, so later tests don't fail due to
+      // this data.
+      await promisify(service.clear, "ext-2");
     }
   }
 );
