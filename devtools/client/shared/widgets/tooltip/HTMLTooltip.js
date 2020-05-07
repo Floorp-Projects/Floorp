@@ -374,7 +374,7 @@ function HTMLTooltip(
   // consumeOutsideClicks cannot be used if the tooltip is not closed on click
   this.consumeOutsideClicks = this.noAutoHide ? false : consumeOutsideClicks;
   this.isMenuTooltip = isMenuTooltip;
-  this.useXulWrapper = this._isXUL() && useXulWrapper;
+  this.useXulWrapper = this._isXULPopupAvailable() && useXulWrapper;
   this.preferredWidth = "auto";
   this.preferredHeight = "auto";
 
@@ -404,7 +404,7 @@ function HTMLTooltip(
     this.doc.documentElement.appendChild(this.xulPanelWrapper);
     this.xulPanelWrapper.appendChild(inner);
     inner.appendChild(this.container);
-  } else if (this._isXUL()) {
+  } else if (this._hasXULRootElement()) {
     this.doc.documentElement.appendChild(this.container);
   } else {
     // In non-XUL context the container is ready to use as is.
@@ -979,10 +979,14 @@ HTMLTooltip.prototype = {
   },
 
   /**
-   * Check if the tooltip's owner document is a XUL document.
+   * Check if the tooltip's owner document has XUL root element.
    */
-  _isXUL: function() {
+  _hasXULRootElement: function() {
     return this.doc.documentElement.namespaceURI === XUL_NS;
+  },
+
+  _isXULPopupAvailable: function() {
+    return this.doc.nodePrincipal.isSystemPrincipal;
   },
 
   _createXulPanelWrapper: function() {
