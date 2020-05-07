@@ -43,7 +43,8 @@ enum CheckboxValue {
                         NSAccessibilityFocusedAttribute,  // required
                         NSAccessibilityTitleAttribute,    // required
                         NSAccessibilityChildrenAttribute, NSAccessibilityDescriptionAttribute,
-                        NSAccessibilityRequiredAttribute,
+                        NSAccessibilityRequiredAttribute, NSAccessibilityHasPopupAttribute,
+                        NSAccessibilityPopupValueAttribute,
 #if DEBUG
                         @"AXMozDescription",
 #endif
@@ -62,6 +63,18 @@ enum CheckboxValue {
     return nil;
   }
 
+  if ([attribute isEqualToString:NSAccessibilityHasPopupAttribute]) {
+    return [NSNumber numberWithBool:[self hasPopup]];
+  }
+
+  if ([attribute isEqualToString:NSAccessibilityPopupValueAttribute]) {
+    if ([self hasPopup]) {
+      return utils::GetAccAttr(self, "haspopup");
+    } else {
+      return nil;
+    }
+  }
+
   return [super accessibilityAttributeValue:attribute];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
@@ -72,13 +85,7 @@ enum CheckboxValue {
 }
 
 - (BOOL)hasPopup {
-  if (AccessibleWrap* accWrap = [self getGeckoAccessible])
-    return accWrap->NativeState() & states::HASPOPUP;
-
-  if (ProxyAccessible* proxy = [self getProxyAccessible])
-    return proxy->NativeState() & states::HASPOPUP;
-
-  return false;
+  return ([self stateWithMask:states::HASPOPUP] != 0);
 }
 
 @end

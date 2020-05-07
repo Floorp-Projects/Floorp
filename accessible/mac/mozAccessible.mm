@@ -37,6 +37,7 @@ using namespace mozilla::a11y;
 #define NSAccessibilityARIACurrentAttribute @"AXARIACurrent"
 #define NSAccessibilityDOMIdentifierAttribute @"AXDOMIdentifier"
 #define NSAccessibilityHasPopupAttribute @"AXHasPopup"
+#define NSAccessibilityPopupValueAttribute @"AXPopupValue"
 #define NSAccessibilityMathRootRadicandAttribute @"AXMathRootRadicand"
 #define NSAccessibilityMathRootIndexAttribute @"AXMathRootIndex"
 #define NSAccessibilityMathFractionNumeratorAttribute @"AXMathFractionNumerator"
