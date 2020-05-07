@@ -309,6 +309,7 @@ test_description_schema = Schema({
     # that are built.
     Optional('run-on-projects'): optionally_keyed_by(
         'test-platform',
+        'test-name',
         Any([text_type], 'built-projects')),
 
     # Same as `run-on-projects` except it only applies to Fission tasks. Fission

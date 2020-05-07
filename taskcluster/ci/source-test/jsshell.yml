@@ -30,8 +30,14 @@ job-defaults:
         mach: jsshell-bench --perfherder={shell} --binary=$MOZ_FETCHES_DIR/$JSSHELL {test}
     run-on-projects:
         by-shell:
-            sm: ['mozilla-central', 'try', 'integration']
-            default: ['mozilla-central', 'try']
+            sm:
+                by-test-platform:
+                    (linux|windows|macos)(?!.*shippable).*: []
+                    default: ['mozilla-central', 'try', 'integration']
+            default:
+                by-test-platform:
+                    (linux|windows|macos)(?!.*shippable).*: []
+                    default: ['mozilla-central', 'try']
     fetches:
         build:
             - target.jsshell.zip
