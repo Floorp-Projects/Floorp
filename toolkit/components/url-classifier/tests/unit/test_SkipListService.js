@@ -69,8 +69,10 @@ add_task(async function test_list_changes() {
     obs
   );
 
-  let list = await promise;
+  Assert.equal(await promise, "", "No items in the list");
 
+  // Second event is from the RemoteSettings record.
+  let list = await waitForEvent(updateEvent, "update");
   Assert.equal(list, "example.com", "Has one item in the list");
 
   records.push(
@@ -203,9 +205,10 @@ add_task(async function test_list_init_data() {
   );
 
   let list = await promise;
+  Assert.equal(list, "", "Empty list initially");
 
   Assert.equal(
-    list,
+    await waitForEvent(updateEvent, "update"),
     "tracking.example.com,*.tracking.org",
     "Has several items in the list"
   );
