@@ -193,9 +193,11 @@ class JsepTrack {
 
   virtual std::vector<uint32_t> GetRtxSsrcs() const {
     std::vector<uint32_t> result;
-    std::for_each(
-        mSsrcToRtxSsrc.begin(), mSsrcToRtxSsrc.end(),
-        [&result](const auto& pair) { result.push_back(pair.second); });
+    if (Preferences::GetBool("media.peerconnection.video.use_rtx", false)) {
+      std::for_each(
+          mSsrcToRtxSsrc.begin(), mSsrcToRtxSsrc.end(),
+          [&result](const auto& pair) { result.push_back(pair.second); });
+    }
     return result;
   }
 
