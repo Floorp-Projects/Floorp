@@ -88,6 +88,16 @@ interface nsIScriptError : nsIConsoleMessage
 
     readonly attribute boolean isFromChromeContext;
 
+    // The "exception" value generated when an uncaught exception is thrown
+    // by JavaScript. This can be any value, e.g.
+    // - an Error object (`throw new Error("foobar"`)
+    // - some primitive (`throw "hello"`)
+    attribute jsval exception;
+
+    // The hasException attribute is used to differentiate between no thrown
+    // exception and `throw undefined`.
+    readonly attribute boolean hasException;
+
     attribute jsval stack;
 
     /**

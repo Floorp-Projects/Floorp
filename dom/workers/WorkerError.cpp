@@ -402,12 +402,8 @@ void WorkerErrorReport::LogErrorToConsole(const ErrorData& aReport,
                                           JS::HandleObject aStackGlobal) {
   AssertIsOnMainThread();
 
-  RefPtr<nsScriptErrorBase> scriptError;
-  if (aStack) {
-    scriptError = new nsScriptErrorWithStack(aStack, aStackGlobal);
-  } else {
-    scriptError = new nsScriptError();
-  }
+  RefPtr<nsScriptErrorBase> scriptError =
+      CreateScriptError(nullptr, JS::NothingHandleValue, aStack, aStackGlobal);
 
   NS_WARNING_ASSERTION(scriptError, "Failed to create script error!");
 

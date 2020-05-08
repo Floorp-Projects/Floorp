@@ -165,8 +165,16 @@ class AsyncErrorReporter final : public mozilla::Runnable {
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=1578968
   void SerializeStack(JSContext* aCx, JS::Handle<JSObject*> aStack);
 
+  // Set the exception value associated with this error report.
+  // Should only be called from the main thread.
+  void SetException(JSContext* aCx, JS::Handle<JS::Value> aException);
+
  protected:
   NS_IMETHOD Run() override;
+
+  // This is only used on main thread!
+  JS::PersistentRootedValue mException;
+  bool mHasException = false;
 
   RefPtr<xpc::ErrorReport> mReport;
   // This may be used to marshal a stack from an arbitrary thread/runtime into

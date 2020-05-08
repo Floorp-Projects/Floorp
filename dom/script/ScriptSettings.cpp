@@ -9,6 +9,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/ThreadLocal.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/dom/JSExecutionManager.h"
 #include "mozilla/dom/WorkerPrivate.h"
 
@@ -521,7 +522,9 @@ void AutoJSAPI::ReportException() {
         xpc::FindExceptionStackForConsoleReport(inner, exnStack.exception(),
                                                 exnStack.stack(), &stack,
                                                 &stackGlobal);
-        xpcReport->LogToConsoleWithStack(stack, stackGlobal);
+        JS::Rooted<Maybe<JS::Value>> exception(cx(),
+                                               Some(exnStack.exception()));
+        xpcReport->LogToConsoleWithStack(inner, exception, stack, stackGlobal);
       }
     } else {
       // On a worker or worklet, we just use the error reporting mechanism and

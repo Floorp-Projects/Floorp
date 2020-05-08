@@ -600,7 +600,9 @@ class ErrorReport : public ErrorBase {
   // null. If aStack is non-null, aStackGlobal must be a non-null global
   // object that's same-compartment with aStack. Note that aStack might be a
   // CCW.
-  void LogToConsoleWithStack(JS::HandleObject aStack,
+  void LogToConsoleWithStack(nsGlobalWindowInner* aWin,
+                             JS::Handle<mozilla::Maybe<JS::Value>> aException,
+                             JS::HandleObject aStack,
                              JS::HandleObject aStackGlobal);
 
   // Produce an error event message string from the given JSErrorReport.  Note
