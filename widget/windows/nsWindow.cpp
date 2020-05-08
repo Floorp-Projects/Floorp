@@ -717,6 +717,18 @@ static bool ShouldCacheTitleBarInfo(nsWindowType aWindowType,
 }
 
 void nsWindow::SendAnAPZEvent(InputData& aEvent) {
+  RefPtr<nsWindow> strongThis(this);
+  if (::IsWindowVisible(mWnd)) {
+    nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
+    if (rollupListener) {
+      nsCOMPtr<nsIWidget> popup = rollupListener->GetRollupWidget();
+      if (popup) {
+        uint32_t popupsToRollup = UINT32_MAX;
+        rollupListener->Rollup(popupsToRollup, true, nullptr, nullptr);
+      }
+    }
+  }
+
   APZEventResult result;
   if (mAPZC) {
     result = mAPZC->InputBridge()->ReceiveInputEvent(aEvent);
