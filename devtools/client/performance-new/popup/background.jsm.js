@@ -85,7 +85,7 @@ const presets = {
     label: "Web Developer",
     description:
       "Recommended preset for most web app debugging, with low overhead.",
-    entries: 16 * 1024 * 1024,
+    entries: 128 * 1024 * 1024,
     interval: 1,
     features: ["screenshots", "js"],
     threads: ["GeckoMain", "Compositor", "Renderer", "DOM Worker"],
@@ -94,7 +94,7 @@ const presets = {
   "firefox-platform": {
     label: "Firefox Platform",
     description: "Recommended preset for internal Firefox platform debugging.",
-    entries: 16 * 1024 * 1024,
+    entries: 128 * 1024 * 1024,
     interval: 1,
     features: ["screenshots", "js", "leaf", "stackwalk", "java"],
     threads: ["GeckoMain", "Compositor", "Renderer"],
@@ -103,7 +103,7 @@ const presets = {
   "firefox-front-end": {
     label: "Firefox Front-End",
     description: "Recommended preset for internal Firefox front-end debugging.",
-    entries: 16 * 1024 * 1024,
+    entries: 128 * 1024 * 1024,
     interval: 1,
     features: ["screenshots", "js", "leaf", "stackwalk", "java"],
     threads: ["GeckoMain", "Compositor", "Renderer", "DOM Worker"],
@@ -112,7 +112,7 @@ const presets = {
   media: {
     label: "Media",
     description: "Recommended preset for diagnosing audio and video problems.",
-    entries: 16 * 1024 * 1024,
+    entries: 128 * 1024 * 1024,
     interval: 1,
     features: ["js", "leaf", "stackwalk"],
     threads: [
