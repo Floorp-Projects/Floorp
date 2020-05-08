@@ -80,6 +80,7 @@ class VideoCodecConfig {
   int mULPFECPayloadType;
   int mREDPayloadType;
   int mREDRTXPayloadType;
+  int mRTXPayloadType;
 
   uint32_t mTias;
   EncodingConstraints mEncodingConstraints;
@@ -106,7 +107,8 @@ class VideoCodecConfig {
         mTransportCCFbSet != aRhs.mTransportCCFbSet ||
         mULPFECPayloadType != aRhs.mULPFECPayloadType ||
         mREDPayloadType != aRhs.mREDPayloadType ||
-        mREDRTXPayloadType != aRhs.mREDRTXPayloadType || mTias != aRhs.mTias ||
+        mREDRTXPayloadType != aRhs.mREDRTXPayloadType ||
+        mRTXPayloadType != aRhs.mRTXPayloadType || mTias != aRhs.mTias ||
         !(mEncodingConstraints == aRhs.mEncodingConstraints) ||
         !(mEncodings == aRhs.mEncodings) ||
         mSpropParameterSets != aRhs.mSpropParameterSets ||
@@ -130,6 +132,7 @@ class VideoCodecConfig {
         mULPFECPayloadType(123),
         mREDPayloadType(122),
         mREDRTXPayloadType(-1),
+        mRTXPayloadType(-1),
         mTias(0),
         mEncodingConstraints(constraints),
         mProfile(0x42),
@@ -192,6 +195,8 @@ class VideoCodecConfig {
   bool RtcpFbFECIsSet() const { return mFECFbSet; }
 
   bool RtcpFbTransportCCIsSet() const { return mTransportCCFbSet; }
+
+  bool RtxPayloadTypeIsSet() const { return mRTXPayloadType != -1; }
 };
 }  // namespace mozilla
 #endif

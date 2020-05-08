@@ -514,11 +514,13 @@ MediaConduitErrorCode WebrtcVideoConduit::SetLocalRTPExtensions(
 }
 
 bool WebrtcVideoConduit::SetLocalSSRCs(
-    const std::vector<unsigned int>& aSSRCs) {
+    const std::vector<unsigned int>& aSSRCs,
+    const std::vector<unsigned int>& aRtxSSRCs) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Special case: the local SSRCs are the same - do nothing.
-  if (mSendStreamConfig.rtp.ssrcs == aSSRCs) {
+  if (mSendStreamConfig.rtp.ssrcs == aSSRCs &&
+      mSendStreamConfig.rtp.rtx.ssrcs == aRtxSSRCs) {
     return true;
   }
 
@@ -526,6 +528,7 @@ bool WebrtcVideoConduit::SetLocalSSRCs(
     MutexAutoLock lock(mMutex);
     // Update the value of the ssrcs in the config structure.
     mSendStreamConfig.rtp.ssrcs = aSSRCs;
+    mSendStreamConfig.rtp.rtx.ssrcs = aRtxSSRCs;
 
     bool wasTransmitting = mEngineTransmitting;
     if (StopTransmittingLocked() != kMediaConduitNoError) {
@@ -920,6 +923,12 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureSendMediaCodec(
   mSendStreamConfig.encoder_settings.payload_type = codecConfig->mType;
   mSendStreamConfig.rtp.rtcp_mode = webrtc::RtcpMode::kCompound;
   mSendStreamConfig.rtp.max_packet_size = kVideoMtu;
+  if (codecConfig->RtxPayloadTypeIsSet()) {
+    mSendStreamConfig.rtp.rtx.payload_type = codecConfig->mRTXPayloadType;
+  } else {
+    mSendStreamConfig.rtp.rtx.payload_type = -1;
+    mSendStreamConfig.rtp.rtx.ssrcs.clear();
+  }
 
   // See Bug 1297058, enabling FEC when basic NACK is to be enabled in H.264 is
   // problematic
@@ -978,23 +987,23 @@ static uint32_t GenerateRandomSSRC() {
   return ssrc;
 }
 
-bool WebrtcVideoConduit::SetRemoteSSRC(unsigned int ssrc) {
+bool WebrtcVideoConduit::SetRemoteSSRC(uint32_t ssrc, uint32_t rtxSsrc) {
   MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(mMutex);
 
-  return SetRemoteSSRCLocked(ssrc);
+  return SetRemoteSSRCLocked(ssrc, rtxSsrc);
 }
 
-bool WebrtcVideoConduit::SetRemoteSSRCLocked(unsigned int ssrc) {
+bool WebrtcVideoConduit::SetRemoteSSRCLocked(uint32_t ssrc, uint32_t rtxSsrc) {
   MOZ_ASSERT(NS_IsMainThread());
   mMutex.AssertCurrentThreadOwns();
 
-  unsigned int current_ssrc;
+  uint32_t current_ssrc;
   if (!GetRemoteSSRCLocked(&current_ssrc)) {
     return false;
   }
 
-  if (current_ssrc == ssrc) {
+  if (current_ssrc == ssrc && mRecvStreamConfig.rtp.rtx_ssrc == rtxSsrc) {
     return true;
   }
 
@@ -1016,6 +1025,7 @@ bool WebrtcVideoConduit::SetRemoteSSRCLocked(unsigned int ssrc) {
   }
 
   mRecvStreamConfig.rtp.remote_ssrc = ssrc;
+  mRecvStreamConfig.rtp.rtx_ssrc = rtxSsrc;
   mStsThread->Dispatch(NS_NewRunnableFunction(
       "WebrtcVideoConduit::WaitingForInitialSsrcNoMore",
       [this, self = RefPtr<WebrtcVideoConduit>(this)]() mutable {
@@ -1046,21 +1056,23 @@ bool WebrtcVideoConduit::UnsetRemoteSSRC(uint32_t ssrc) {
     return true;
   }
 
-  if (our_ssrc != ssrc) {
+  if (our_ssrc != ssrc && mRecvStreamConfig.rtp.rtx_ssrc != ssrc) {
     return true;
   }
 
-  while (our_ssrc == ssrc) {
+  mRecvStreamConfig.rtp.rtx_ssrc = 0;
+
+  do {
     our_ssrc = GenerateRandomSSRC();
     if (our_ssrc == 0) {
       return false;
     }
-  }
+  } while (our_ssrc == ssrc);
 
   // There is a (tiny) chance that this new random ssrc will collide with some
   // other conduit's remote ssrc, in which case that conduit will choose a new
   // one.
-  SetRemoteSSRCLocked(our_ssrc);
+  SetRemoteSSRCLocked(our_ssrc, 0);
   return true;
 }
 
@@ -1554,6 +1566,13 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureRecvMediaCodecs(
       mRecvStreamConfig.rtp.red_payload_type = -1;
     }
 
+    mRecvStreamConfig.rtp.rtx_associated_payload_types.clear();
+    for (auto& codec : recv_codecs) {
+      if (codec->RtxPayloadTypeIsSet()) {
+        mRecvStreamConfig.rtp.AddRtxBinding(codec->mRTXPayloadType,
+                                            codec->mType);
+      }
+    }
     // SetRemoteSSRC should have populated this already
     mRecvSSRC = mRecvStreamConfig.rtp.remote_ssrc;
 
@@ -1602,7 +1621,6 @@ MediaConduitErrorCode WebrtcVideoConduit::ConfigureRecvMediaCodecs(
     // XXX Copy over those that are the same and don't rebuild them
     mRecvCodecList.SwapElements(recv_codecs);
     recv_codecs.Clear();
-    mRecvStreamConfig.rtp.rtx_associated_payload_types.clear();
 
     DeleteRecvStream();
     return StartReceivingLocked();
@@ -2019,8 +2037,11 @@ MediaConduitErrorCode WebrtcVideoConduit::ReceivedRTPPacket(const void* data,
             // creating a GMPVideoCodec (in particular, H264) so it can
             // communicate errors to the PC.
             WebrtcGmpPCHandleSetter setter(mPCHandle);
+            // TODO: This is problematic with rtx enabled, we don't know if
+            // new ssrc is for rtx or not. This is fixed in a later patch in
+            // this series.
             SetRemoteSSRC(
-                ssrc);  // this will likely re-create the VideoReceiveStream
+                ssrc, 0);  // this will likely re-create the VideoReceiveStream
             // We want to unblock the queued packets on the original thread
             mStsThread->Dispatch(NS_NewRunnableFunction(
                 "WebrtcVideoConduit::QueuedPacketsHandler",

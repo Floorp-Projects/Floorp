@@ -199,8 +199,9 @@ class MediaSessionConduit {
    * @return true iff the local ssrcs == aSSRCs upon return
    * Note: this is an ordered list and {a,b,c} != {b,a,c}
    */
-  virtual bool SetLocalSSRCs(const std::vector<unsigned int>& aSSRCs) = 0;
-  virtual std::vector<unsigned int> GetLocalSSRCs() = 0;
+  virtual bool SetLocalSSRCs(const std::vector<uint32_t>& aSSRCs,
+                             const std::vector<uint32_t>& aRtxSSRCs) = 0;
+  virtual std::vector<uint32_t> GetLocalSSRCs() = 0;
 
   /**
    * Adds negotiated RTP header extensions to the the conduit. Unknown
@@ -216,8 +217,8 @@ class MediaSessionConduit {
       MediaSessionConduitLocalDirection aDirection,
       const RtpExtList& aExtensions) = 0;
 
-  virtual bool GetRemoteSSRC(unsigned int* ssrc) = 0;
-  virtual bool SetRemoteSSRC(unsigned int ssrc) = 0;
+  virtual bool GetRemoteSSRC(uint32_t* ssrc) = 0;
+  virtual bool SetRemoteSSRC(uint32_t ssrc, uint32_t rtxSsrc) = 0;
   virtual bool UnsetRemoteSSRC(uint32_t ssrc) = 0;
   virtual bool SetLocalCNAME(const char* cname) = 0;
 
@@ -420,7 +421,7 @@ class VideoSessionConduit : public MediaSessionConduit {
 
   virtual void DisableSsrcChanges() = 0;
 
-  bool SetRemoteSSRC(unsigned int ssrc) override = 0;
+  bool SetRemoteSSRC(uint32_t ssrc, uint32_t rtxSsrc) override = 0;
   bool UnsetRemoteSSRC(uint32_t ssrc) override = 0;
 
   /**

@@ -340,7 +340,10 @@ void RTCRtpReceiver::UpdateTransport() {
 
     // Add remote SSRCs so we can distinguish which RTP packets actually
     // belong to this pipeline (also RTCP sender reports).
-    for (unsigned int ssrc : mJsepTransceiver->mRecvTrack.GetSsrcs()) {
+    for (uint32_t ssrc : mJsepTransceiver->mRecvTrack.GetSsrcs()) {
+      filter->AddRemoteSSRC(ssrc);
+    }
+    for (uint32_t ssrc : mJsepTransceiver->mRecvTrack.GetRtxSsrcs()) {
       filter->AddRemoteSSRC(ssrc);
     }
     auto mid = Maybe<std::string>();
@@ -381,7 +384,11 @@ nsresult RTCRtpReceiver::UpdateVideoConduit() {
             ("%s[%s]: %s Setting remote SSRC %u", mPCHandle.c_str(),
              GetMid().c_str(), __FUNCTION__,
              mJsepTransceiver->mRecvTrack.GetSsrcs().front()));
-    conduit->SetRemoteSSRC(mJsepTransceiver->mRecvTrack.GetSsrcs().front());
+    uint32_t rtxSsrc = mJsepTransceiver->mRecvTrack.GetRtxSsrcs().empty()
+                           ? 0
+                           : mJsepTransceiver->mRecvTrack.GetRtxSsrcs().front();
+    conduit->SetRemoteSSRC(mJsepTransceiver->mRecvTrack.GetSsrcs().front(),
+                           rtxSsrc);
   }
 
   // TODO (bug 1423041) once we pay attention to receiving MID's in RTP packets
@@ -438,7 +445,11 @@ nsresult RTCRtpReceiver::UpdateAudioConduit() {
             ("%s[%s]: %s Setting remote SSRC %u", mPCHandle.c_str(),
              GetMid().c_str(), __FUNCTION__,
              mJsepTransceiver->mRecvTrack.GetSsrcs().front()));
-    conduit->SetRemoteSSRC(mJsepTransceiver->mRecvTrack.GetSsrcs().front());
+    uint32_t rtxSsrc = mJsepTransceiver->mRecvTrack.GetRtxSsrcs().empty()
+                           ? 0
+                           : mJsepTransceiver->mRecvTrack.GetRtxSsrcs().front();
+    conduit->SetRemoteSSRC(mJsepTransceiver->mRecvTrack.GetSsrcs().front(),
+                           rtxSsrc);
   }
 
   if (mJsepTransceiver->mRecvTrack.GetNegotiatedDetails() &&

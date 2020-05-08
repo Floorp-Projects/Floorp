@@ -214,11 +214,12 @@ class WebrtcAudioConduit : public AudioSessionConduit,
    * Note: Until the refactor of the VoE into the call API is complete
    *   this list should contain only a single ssrc.
    */
-  bool SetLocalSSRCs(const std::vector<unsigned int>& aSSRCs) override;
-  std::vector<unsigned int> GetLocalSSRCs() override;
-  bool SetRemoteSSRC(unsigned int ssrc) override;
+  bool SetLocalSSRCs(const std::vector<uint32_t>& aSSRCs,
+                     const std::vector<uint32_t>& aRtxSSRCs) override;
+  std::vector<uint32_t> GetLocalSSRCs() override;
+  bool SetRemoteSSRC(uint32_t ssrc, uint32_t rtxSsrc) override;
   bool UnsetRemoteSSRC(uint32_t ssrc) override { return true; }
-  bool GetRemoteSSRC(unsigned int* ssrc) override;
+  bool GetRemoteSSRC(uint32_t* ssrc) override;
   bool SetLocalCNAME(const char* cname) override;
   bool SetLocalMID(const std::string& mid) override;
 

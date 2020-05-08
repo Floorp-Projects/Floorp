@@ -85,12 +85,13 @@ WebrtcAudioConduit::~WebrtcAudioConduit() {
   mPtrVoEBase = nullptr;
 }
 
-bool WebrtcAudioConduit::SetLocalSSRCs(
-    const std::vector<unsigned int>& aSSRCs) {
+bool WebrtcAudioConduit::SetLocalSSRCs(const std::vector<uint32_t>& aSSRCs,
+                                       const std::vector<uint32_t>& aRtxSSRCs) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aSSRCs.size() == 1,
              "WebrtcAudioConduit::SetLocalSSRCs accepts exactly 1 ssrc.");
 
+  // We ignore aRtxSSRCs, it is only used in the VideoConduit.
   if (aSSRCs.empty()) {
     return false;
   }
@@ -108,14 +109,15 @@ bool WebrtcAudioConduit::SetLocalSSRCs(
   return RecreateSendStreamIfExists();
 }
 
-std::vector<unsigned int> WebrtcAudioConduit::GetLocalSSRCs() {
+std::vector<uint32_t> WebrtcAudioConduit::GetLocalSSRCs() {
   MutexAutoLock lock(mMutex);
-  return std::vector<unsigned int>(1, mRecvStreamConfig.rtp.local_ssrc);
+  return std::vector<uint32_t>(1, mRecvStreamConfig.rtp.local_ssrc);
 }
 
-bool WebrtcAudioConduit::SetRemoteSSRC(unsigned int ssrc) {
+bool WebrtcAudioConduit::SetRemoteSSRC(uint32_t ssrc, uint32_t rtxSsrc) {
   MOZ_ASSERT(NS_IsMainThread());
 
+  // We ignore aRtxSsrc, it is only used in the VideoConduit.
   if (mRecvStreamConfig.rtp.remote_ssrc == ssrc) {
     return true;
   }
@@ -124,7 +126,7 @@ bool WebrtcAudioConduit::SetRemoteSSRC(unsigned int ssrc) {
   return RecreateRecvStreamIfExists();
 }
 
-bool WebrtcAudioConduit::GetRemoteSSRC(unsigned int* ssrc) {
+bool WebrtcAudioConduit::GetRemoteSSRC(uint32_t* ssrc) {
   {
     MutexAutoLock lock(mMutex);
     if (!mRecvStream) {
@@ -704,7 +706,7 @@ MediaConduitErrorCode WebrtcAudioConduit::ReceivedRTPPacket(const void* data,
     }
     NS_DispatchToMainThread(
         media::NewRunnableFrom([self, thread, ssrc]() mutable {
-          self->SetRemoteSSRC(ssrc);
+          self->SetRemoteSSRC(ssrc, 0);
           // We want to unblock the queued packets on the original thread
           thread->Dispatch(media::NewRunnableFrom([self, ssrc]() mutable {
                              if (ssrc == self->mRecvSSRC) {
