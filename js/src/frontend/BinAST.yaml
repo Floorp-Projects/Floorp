@@ -150,10 +150,9 @@ hpp:
        public:
         BinASTParser(JSContext* cx, CompilationInfo& compilationInfo,
                      const JS::ReadOnlyCompileOptions& options,
-                     HandleScriptSourceObject sourceObject,
                      Handle<BaseScript*> lazyScript = nullptr)
             : BinASTParserPerTokenizer<Tok>(cx, compilationInfo, options,
-                                            sourceObject, lazyScript) {}
+                                            lazyScript) {}
         ~BinASTParser() {}
 
        protected:
@@ -163,9 +162,9 @@ hpp:
         using Base::alloc_;
         using Base::usedNames_;
 
-        using Base::sourceObject_;
-        using Base::pc_;
+        using Base::compilationInfo_;
         using Base::handler_;
+        using Base::pc_;
 
        protected:
         // BinASTParserPerTokenizer types.

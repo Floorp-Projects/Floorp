@@ -149,16 +149,14 @@ bool GeneralParser<ParseHandler, Unit>::mustMatchTokenInternal(
 }
 
 ParserSharedBase::ParserSharedBase(JSContext* cx,
-                                   CompilationInfo& compilationInfo,
-                                   ScriptSourceObject* sourceObject, Kind kind)
+                                   CompilationInfo& compilationInfo, Kind kind)
     : JS::CustomAutoRooter(cx),
       cx_(cx),
       alloc_(compilationInfo.allocScope.alloc()),
       compilationInfo_(compilationInfo),
       traceListHead_(nullptr),
       pc_(nullptr),
-      usedNames_(compilationInfo.usedNames),
-      sourceObject_(cx, sourceObject) {
+      usedNames_(compilationInfo.usedNames) {
   cx->frontendCollectionPool().addActiveCompilation();
 }
 
@@ -167,10 +165,8 @@ ParserSharedBase::~ParserSharedBase() {
 }
 
 ParserBase::ParserBase(JSContext* cx, const ReadOnlyCompileOptions& options,
-                       bool foldConstants, CompilationInfo& compilationInfo,
-                       ScriptSourceObject* sourceObject)
-    : ParserSharedBase(cx, compilationInfo, sourceObject,
-                       ParserSharedBase::Kind::Parser),
+                       bool foldConstants, CompilationInfo& compilationInfo)
+    : ParserSharedBase(cx, compilationInfo, ParserSharedBase::Kind::Parser),
       anyChars(cx, options, this),
       ss(nullptr),
       foldConstants_(foldConstants),
@@ -197,8 +193,8 @@ template <class ParseHandler>
 PerHandlerParser<ParseHandler>::PerHandlerParser(
     JSContext* cx, const ReadOnlyCompileOptions& options, bool foldConstants,
     CompilationInfo& compilationInfo, BaseScript* lazyOuterFunction,
-    ScriptSourceObject* sourceObject, void* internalSyntaxParser)
-    : ParserBase(cx, options, foldConstants, compilationInfo, sourceObject),
+    void* internalSyntaxParser)
+    : ParserBase(cx, options, foldConstants, compilationInfo),
       handler_(cx, compilationInfo.allocScope.alloc(), lazyOuterFunction),
       internalSyntaxParser_(internalSyntaxParser) {}
 
@@ -206,10 +202,9 @@ template <class ParseHandler, typename Unit>
 GeneralParser<ParseHandler, Unit>::GeneralParser(
     JSContext* cx, const ReadOnlyCompileOptions& options, const Unit* units,
     size_t length, bool foldConstants, CompilationInfo& compilationInfo,
-    SyntaxParser* syntaxParser, BaseScript* lazyOuterFunction,
-    ScriptSourceObject* sourceObject)
+    SyntaxParser* syntaxParser, BaseScript* lazyOuterFunction)
     : Base(cx, options, foldConstants, compilationInfo, syntaxParser,
-           lazyOuterFunction, sourceObject),
+           lazyOuterFunction),
       tokenStream(cx, &compilationInfo, options, units, length) {}
 
 template <typename Unit>
@@ -1810,8 +1805,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
 
 static bool CreateLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
                              Handle<ScriptStencilBase> stencil,
-                             HandleFunction function, FunctionBox* funbox,
-                             HandleScriptSourceObject sourceObject) {
+                             HandleFunction function, FunctionBox* funbox) {
   MOZ_ASSERT(function);
 
   using ImmutableFlags = ImmutableScriptFlagsEnum;
@@ -1825,9 +1819,9 @@ static bool CreateLazyScript(JSContext* cx, CompilationInfo& compilationInfo,
 
   const ScriptThingsVector& gcthings = stencil.get().gcThings;
   Rooted<BaseScript*> lazy(
-      cx,
-      BaseScript::CreateRawLazy(cx, gcthings.length(), function, sourceObject,
-                                funbox->extent, immutableFlags));
+      cx, BaseScript::CreateRawLazy(cx, gcthings.length(), function,
+                                    compilationInfo.sourceObject,
+                                    funbox->extent, immutableFlags));
   if (!lazy) {
     return false;
   }
@@ -1888,7 +1882,7 @@ bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
       }
 
       return CreateLazyScript(cx, parser->compilationInfo_, stencil, fun,
-                              funbox, parser->sourceObject_);
+                              funbox);
     };
     return root->visitRecursively(this->cx_, this, visitor);
   }

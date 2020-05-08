@@ -394,7 +394,7 @@ bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
     syntaxParser.emplace(compilationInfo.cx, compilationInfo.options,
                          sourceBuffer_.units(), sourceBuffer_.length(),
                          /* foldConstants = */ false, compilationInfo, nullptr,
-                         nullptr, compilationInfo.sourceObject);
+                         nullptr);
     if (!syntaxParser->checkOptions()) {
       return false;
     }
@@ -403,8 +403,7 @@ bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
   parser.emplace(compilationInfo.cx, compilationInfo.options,
                  sourceBuffer_.units(), sourceBuffer_.length(),
                  /* foldConstants = */ true, compilationInfo,
-                 syntaxParser.ptrOr(nullptr), nullptr,
-                 compilationInfo.sourceObject);
+                 syntaxParser.ptrOr(nullptr), nullptr);
   parser->ss = compilationInfo.sourceObject->source();
   return parser->checkOptions();
 }
@@ -731,8 +730,7 @@ static JSScript* CompileGlobalBinASTScriptImpl(
   GlobalSharedContext globalsc(cx, ScopeKind::Global, compilationInfo,
                                compilationInfo.directives, extent);
 
-  frontend::BinASTParser<ParserT> parser(cx, compilationInfo, options,
-                                         compilationInfo.sourceObject);
+  frontend::BinASTParser<ParserT> parser(cx, compilationInfo, options);
 
   // Metadata stores internal pointers, so we must use the same buffer every
   // time, including for lazy parses
@@ -923,8 +921,7 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
 
   Parser<FullParseHandler, Unit> parser(cx, options, units, length,
                                         /* foldConstants = */ true,
-                                        compilationInfo, nullptr, lazy,
-                                        compilationInfo.sourceObject);
+                                        compilationInfo, nullptr, lazy);
   if (!parser.checkOptions()) {
     return false;
   }
@@ -1004,8 +1001,7 @@ static bool CompileLazyBinASTFunctionImpl(JSContext* cx,
   CompilationInfo compilationInfo(cx, allocScope, options);
   compilationInfo.initFromSourceObject(lazy->sourceObject());
 
-  frontend::BinASTParser<ParserT> parser(cx, compilationInfo, options,
-                                         compilationInfo.sourceObject, lazy);
+  frontend::BinASTParser<ParserT> parser(cx, compilationInfo, options, lazy);
 
   auto parsed =
       parser.parseLazyFunction(lazy->scriptSource(), lazy->sourceStart());
