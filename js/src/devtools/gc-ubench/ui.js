@@ -514,7 +514,6 @@ function reset_draw_state() {
   for (var i = 0; i < numSamples; i++) {
     delays[i] = 0;
   }
-  gFrameTimer.start_recording();
   sampleIndex = 0;
 }
 
@@ -556,7 +555,8 @@ function onload() {
   }
 
   // Load the initial test.
-  change_load("noAllocation");
+  gLoadMgr.setActiveLoadByName("noAllocation");
+  load_changed();
   document.getElementById("test-selection").value = "noAllocation";
 
   // Polyfill rAF.
@@ -579,6 +579,7 @@ function onload() {
   trackHeapSizes(document.getElementById("track-sizes").checked);
 
   update_load_state_indicator();
+  gFrameTimer.start_recording();
 
   // Start drawing.
   reset_draw_state();
@@ -626,6 +627,7 @@ function end_test(timestamp, load) {
   if (gLoadMgr.cycleStopped()) {
     testState = "idle";
   }
+  update_load_state_indicator();
   reset_draw_state();
 }
 
@@ -677,9 +679,7 @@ function report_test_result(load, histogram) {
   resultList.appendChild(resultElem);
 }
 
-function change_load(new_load_name) {
-  console.log(`change_load(${new_load_name})`);
-  change_load_internal(new_load_name);
+function load_changed() {
   document.getElementById("garbage-per-frame").value = format_units(
     gLoadMgr.activeLoad().garbagePerFrame
   );
@@ -700,7 +700,8 @@ function duration_changed() {
 function onLoadChange() {
   var select = document.getElementById("test-selection");
   console.log(`Switching to test: ${select.value}`);
-  change_load(select.value);
+  gLoadMgr.setActiveLoadByName(select.value);
+  load_changed();
   gHistogram.clear();
   reset_draw_state();
 }

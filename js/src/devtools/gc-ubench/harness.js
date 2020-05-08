@@ -302,7 +302,3 @@ function compute_spark_histogram_percents(histogram) {
 
   return spark;
 }
-
-function change_load_internal(new_load_name) {
-  gLoadMgr.setActiveLoadByName(new_load_name);
-}
