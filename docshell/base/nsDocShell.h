@@ -67,7 +67,6 @@ class EventTarget;
 }  // namespace dom
 namespace net {
 class LoadInfo;
-class DocumentChannelRedirect;
 class DocumentLoadListener;
 }  // namespace net
 }  // namespace mozilla
@@ -510,6 +509,8 @@ class nsDocShell final : public nsDocLoader,
 
   nsDocShell* GetInProcessChildAt(int32_t aIndex);
 
+  static bool ShouldAddURIVisit(nsIChannel* aChannel);
+
   /**
    * Helper function that finds the last URI and its transition flags for a
    * channel.
@@ -764,8 +765,8 @@ class nsDocShell final : public nsDocLoader,
    * @param aChannelRedirectFlags
    *        The nsIChannelEventSink redirect flags to save for later
    */
-  void SaveLastVisit(nsIChannel* aChannel, nsIURI* aURI,
-                     uint32_t aChannelRedirectFlags);
+  static void SaveLastVisit(nsIChannel* aChannel, nsIURI* aURI,
+                            uint32_t aChannelRedirectFlags);
 
   /**
    * Helper function for adding a URI visit using IHistory.
@@ -801,24 +802,6 @@ class nsDocShell final : public nsDocLoader,
       nsIURI* aURI, nsIURI* aPreviousURI, uint32_t aChannelRedirectFlags,
       uint32_t aResponseStatus, mozilla::dom::BrowsingContext* aBrowsingContext,
       nsIWidget* aWidget, uint32_t aLoadType);
-
-  /**
-   * Helper function that will add the redirect chain found in aRedirects using
-   * IHistory (see AddURI and SaveLastVisit above for details)
-   *
-   * @param aChannel
-   *        Channel that will have these properties saved
-   * @param aURI
-   *        The URI that was just visited
-   * @param aChannelRedirectFlags
-   *        For redirects, the redirect flags from nsIChannelEventSink
-   *        (0 otherwise)
-   * @param aRedirects
-   *        The redirect chain collected by the DocumentChannelParent
-   */
-  void SavePreviousRedirectsAndLastVisit(
-      nsIChannel* aChannel, nsIURI* aURI, uint32_t aChannelRedirectFlags,
-      const nsTArray<mozilla::net::DocumentChannelRedirect>& aRedirects);
 
   already_AddRefed<nsIURIFixupInfo> KeywordToURI(const nsACString& aKeyword,
                                                  bool aIsPrivateContext,
@@ -993,6 +976,8 @@ class nsDocShell final : public nsDocLoader,
   void ReattachEditorToWindow(nsISHEntry* aSHEntry);
   void RecomputeCanExecuteScripts();
   void ClearFrameHistory(nsISHEntry* aEntry);
+  // Determine if this type of load should update history.
+  static bool ShouldUpdateGlobalHistory(uint32_t aLoadType);
   void UpdateGlobalHistoryTitle(nsIURI* aURI);
   bool IsFrame() { return mBrowsingContext->GetParent(); }
   bool CanSetOriginAttributes();
