@@ -142,14 +142,18 @@ class TempFileWriter final : public mozilla::JSONWriteFunc {
   explicit operator bool() const { return !mFailed; }
 
   void Write(const char* aStr) override {
+    size_t len = strlen(aStr);
+    Write(aStr, len);
+  }
+
+  void Write(const char* aStr, size_t aLen) override {
     if (mFailed) {
       return;
     }
 
-    size_t len = strlen(aStr);
     DWORD bytesWritten = 0;
-    if (!::WriteFile(mTempFile, aStr, len, &bytesWritten, nullptr) ||
-        bytesWritten != len) {
+    if (!::WriteFile(mTempFile, aStr, aLen, &bytesWritten, nullptr) ||
+        bytesWritten != aLen) {
       mFailed = true;
     }
   }

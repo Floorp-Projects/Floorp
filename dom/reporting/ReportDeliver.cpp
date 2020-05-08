@@ -96,6 +96,9 @@ struct StringWriteFunc final : public JSONWriteFunc {
   explicit StringWriteFunc(nsACString& aBuffer) : mBuffer(aBuffer) {}
 
   void Write(const char* aStr) override { mBuffer.Append(aStr); }
+  void Write(const char* aStr, size_t aLen) override {
+    mBuffer.Append(aStr, aLen);
+  }
 };
 
 class ReportJSONWriter final : public JSONWriter {

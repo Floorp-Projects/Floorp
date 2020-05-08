@@ -338,6 +338,9 @@ struct CStringWriteFunc : public JSONWriteFunc {
   explicit CStringWriteFunc(std::string& aBuffer) : mBuffer(aBuffer) {}
 
   void Write(const char* aStr) override { mBuffer += aStr; }
+  void Write(const char* aStr, size_t aLen) override {
+    mBuffer.append(aStr, 0, aLen);
+  }
 };
 
 struct ProfileSample {

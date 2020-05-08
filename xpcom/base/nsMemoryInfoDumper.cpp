@@ -396,6 +396,12 @@ class GZWriterWrapper : public JSONWriteFunc {
     Unused << mGZWriter->Write(aStr);
   }
 
+  void Write(const char* aStr, size_t aLen) override {
+    // Ignore any failure because JSONWriteFunc doesn't have a mechanism for
+    // handling errors.
+    Unused << mGZWriter->Write(aStr, aLen);
+  }
+
   nsresult Finish() { return mGZWriter->Finish(); }
 
  private:

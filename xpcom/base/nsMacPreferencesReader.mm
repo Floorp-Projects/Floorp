@@ -15,6 +15,9 @@ struct StringWriteFunc : public JSONWriteFunc {
   nsAString& mString;
   explicit StringWriteFunc(nsAString& aStr) : mString(aStr) {}
   void Write(const char* aStr) override { mString.Append(NS_ConvertUTF8toUTF16(aStr)); }
+  void Write(const char* aStr, size_t aLen) override {
+    mString.Append(NS_ConvertUTF8toUTF16(aStr, aLen));
+  }
 };
 
 static void EvaluateDict(JSONWriter* aWriter, NSDictionary<NSString*, id>* aDict);

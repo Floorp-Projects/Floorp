@@ -1294,6 +1294,10 @@ struct StringWriteFunc : public JSONWriteFunc {
   void Write(const char* aStr) override {
     mBuffer.Append(NS_ConvertUTF8toUTF16(aStr));
   }
+
+  void Write(const char* aStr, size_t aLen) override {
+    mBuffer.Append(NS_ConvertUTF8toUTF16(aStr, aLen));
+  }
 };
 }  // namespace
 
