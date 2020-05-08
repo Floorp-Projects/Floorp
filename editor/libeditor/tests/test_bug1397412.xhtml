@@ -28,7 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1397412
   <![CDATA[
 function runTest() {
   var initialHTML1 = "xx<br><br>";
-  var expectedHTML1 = "xx<br>t<br>";
+  var expectedHTML1 = "xx<br>t";
   var initialHTML2 = "xx<br><br>yy<br>";
   var expectedHTML2 = "xx<br>t<br>yy<br>";
   window.docShell
@@ -47,7 +47,8 @@ function runTest() {
   selection.collapse(body, 2);
   sendString("t");
   var actualHTML = body.innerHTML;
-  is(actualHTML, expectedHTML1, "'t' should be inserted between <br>s");
+  is(actualHTML, expectedHTML1,
+      "'t' should be inserted immediately after the first <br> and the other one should be removed");
 
   // Test 2.
   body.innerHTML = initialHTML2;
