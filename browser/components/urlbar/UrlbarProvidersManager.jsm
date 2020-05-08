@@ -276,7 +276,6 @@ class Query {
     this.providers = providers;
     this.started = false;
     this.canceled = false;
-    this.complete = false;
 
     // This is used as a last safety filter in add(), thus we keep an unmodified
     // copy of it.
@@ -292,38 +291,56 @@ class Query {
     }
     this.started = true;
 
-    // Check which providers should be queried.
-    let providers = [];
+    // Check which providers should be queried by calling isActive on them.
+    let activeProviders = [];
+    let activePromises = [];
     let maxPriority = -1;
     for (let provider of this.providers) {
-      if (await provider.tryMethod("isActive", this.context)) {
-        let priority = provider.tryMethod("getPriority", this.context);
-        if (priority >= maxPriority) {
-          // The provider's priority is at least as high as the max.
-          if (priority > maxPriority) {
-            // The provider's priority is higher than the max.  Remove all
-            // previously added providers, since their priority is necessarily
-            // lower, by setting length to zero.
-            providers.length = 0;
-            maxPriority = priority;
-          }
-          providers.push(provider);
-        }
-      }
+      activePromises.push(
+        // Not all isActive implementations are async, so wrap the call in a
+        // promise so we can be sure we can call `then` on it.  Note that
+        // Promise.resolve returns its arg directly if it's already a promise.
+        Promise.resolve(provider.tryMethod("isActive", this.context))
+          .then(isActive => {
+            if (isActive && !this.canceled) {
+              let priority = provider.tryMethod("getPriority", this.context);
+              if (priority >= maxPriority) {
+                // The provider's priority is at least as high as the max.
+                if (priority > maxPriority) {
+                  // The provider's priority is higher than the max.  Remove all
+                  // previously added providers, since their priority is
+                  // necessarily lower, by setting length to zero.
+                  activeProviders.length = 0;
+                  maxPriority = priority;
+                }
+                activeProviders.push(provider);
+              }
+            }
+          })
+          .catch(Cu.reportError)
+      );
     }
 
-    // Start querying providers.
-    let promises = [];
-    let delayStarted = false;
-    for (let provider of providers) {
-      if (this.canceled) {
-        break;
+    // We have to wait for all isActive calls to finish because we want to query
+    // only the highest priority active providers as determined by the priority
+    // logic above.
+    await Promise.all(activePromises);
+
+    if (this.canceled) {
+      this.controller = null;
+      return;
+    }
+
+    // Start querying active providers.
+    let queryPromises = [];
+    for (let provider of activeProviders) {
+      if (provider.type == UrlbarUtils.PROVIDER_TYPE.IMMEDIATE) {
+        queryPromises.push(
+          provider.tryMethod("startQuery", this.context, this.add.bind(this))
+        );
+        continue;
       }
-      if (
-        provider.type != UrlbarUtils.PROVIDER_TYPE.IMMEDIATE &&
-        !delayStarted
-      ) {
-        delayStarted = true;
+      if (!this._sleepTimer) {
         // Tracks the delay timer. We will fire (in this specific case, cancel
         // would do the same, since the callback is empty) the timer when the
         // search is canceled, unblocking start().
@@ -332,26 +349,30 @@ class Query {
           time: UrlbarPrefs.get("delay"),
           logger,
         });
-        await this._sleepTimer.promise;
       }
-      promises.push(
-        provider.tryMethod("startQuery", this.context, this.add.bind(this))
+      queryPromises.push(
+        this._sleepTimer.promise
+          .then(() => {
+            if (this.canceled) {
+              return undefined;
+            }
+            return provider.tryMethod(
+              "startQuery",
+              this.context,
+              this.add.bind(this)
+            );
+          })
+          .catch(Cu.reportError)
       );
     }
 
-    logger.info(`Queried ${promises.length} providers`);
-    if (promises.length) {
-      await Promise.all(promises.map(p => p.catch(Cu.reportError)));
+    logger.info(`Queried ${queryPromises.length} providers`);
+    await Promise.all(queryPromises);
 
-      if (this._chunkTimer) {
-        // All the providers are done returning results, so we can stop chunking.
-        await this._chunkTimer.fire();
-      }
+    if (!this.canceled && this._chunkTimer) {
+      // All the providers are done returning results, so we can stop chunking.
+      await this._chunkTimer.fire();
     }
-
-    // Nothing should be failing above, since we catch all the promises, thus
-    // this is not in a finally for now.
-    this.complete = true;
 
     // Break cycles with the controller to avoid leaks.
     this.controller = null;
@@ -411,42 +432,47 @@ class Query {
     match.providerName = provider.name;
     this.context.results.push(match);
 
-    let notifyResults = () => {
-      if (this._chunkTimer) {
-        this._chunkTimer.cancel().catch(Cu.reportError);
-        delete this._chunkTimer;
-      }
-      this.muxer.sort(this.context);
+    this._notifyResultsFromProvider(provider);
+  }
 
-      // Crop results to the requested number, taking their result spans into
-      // account.
-      logger.debug(
-        `Cropping ${this.context.results.length} matches to ${this.context.maxResults}`
-      );
-      let resultCount = this.context.maxResults;
-      for (let i = 0; i < this.context.results.length; i++) {
-        resultCount -= UrlbarUtils.getSpanForResult(this.context.results[i]);
-        if (resultCount < 0) {
-          this.context.results.splice(i, this.context.results.length - i);
-          break;
-        }
-      }
-
-      this.controller.receiveResults(this.context);
-    };
-
+  _notifyResultsFromProvider(provider) {
     // If the provider is not of immediate type, chunk results, to improve the
     // dataflow and reduce UI flicker.
     if (provider.type == UrlbarUtils.PROVIDER_TYPE.IMMEDIATE) {
-      notifyResults();
+      this._notifyResults();
     } else if (!this._chunkTimer) {
       this._chunkTimer = new SkippableTimer({
         name: "Query chunk timer",
-        callback: notifyResults,
+        callback: () => this._notifyResults(),
         time: CHUNK_MATCHES_DELAY_MS,
         logger,
       });
     }
+  }
+
+  _notifyResults() {
+    this.muxer.sort(this.context);
+
+    if (this._chunkTimer) {
+      this._chunkTimer.cancel().catch(Cu.reportError);
+      this._chunkTimer = null;
+    }
+
+    // Crop results to the requested number, taking their result spans into
+    // account.
+    logger.debug(
+      `Cropping ${this.context.results.length} matches to ${this.context.maxResults}`
+    );
+    let resultCount = this.context.maxResults;
+    for (let i = 0; i < this.context.results.length; i++) {
+      resultCount -= UrlbarUtils.getSpanForResult(this.context.results[i]);
+      if (resultCount < 0) {
+        this.context.results.splice(i, this.context.results.length - i);
+        break;
+      }
+    }
+
+    this.controller.receiveResults(this.context);
   }
 }
 
