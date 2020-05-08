@@ -199,7 +199,7 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
   }
 
   /**
-   * Fetch the target actor for the currently selected tab, or for a specific
+   * Fetch the tab descriptor for the currently selected tab, or for a specific
    * tab given as first parameter.
    *
    * @param [optional] object filter
@@ -248,7 +248,7 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
       descriptorFront.setLocalTab(filter.tab);
     }
 
-    return descriptorFront.getTarget();
+    return descriptorFront;
   }
 
   /**

@@ -91,7 +91,8 @@ async function _targetFromURL(client, id, type, chrome) {
       );
     }
     try {
-      front = await client.mainRoot.getTab({ outerWindowID: id });
+      const tabDescriptor = await client.mainRoot.getTab({ outerWindowID: id });
+      front = await tabDescriptor.getTarget();
     } catch (ex) {
       if (ex.message.startsWith("Protocol error (noTab)")) {
         throw new Error(
