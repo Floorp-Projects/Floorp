@@ -30,9 +30,7 @@ class BinASTParserBase : public ParserSharedBase {
   ~BinASTParserBase() = default;
 
  public:
-  void trace(JSTracer* trc) override {
-    FunctionBox::TraceList(trc, traceListHead_);
-  }
+  void trace(JSTracer* trc) override {}
 };
 
 }  // namespace frontend

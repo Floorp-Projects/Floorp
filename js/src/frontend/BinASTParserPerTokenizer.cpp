@@ -298,14 +298,14 @@ JS::Result<FunctionBox*> BinASTParserPerTokenizer<Tok>::buildFunctionBox(
   // This extent will be further filled in during parse.
   SourceExtent extent;
   auto* funbox = alloc_.new_<FunctionBox>(
-      cx_, traceListHead_, extent, getCompilationInfo(), *directives,
-      generatorKind, functionAsyncKind, fun->explicitName(), fun->flags(),
-      index);
+      cx_, compilationInfo_.traceListHead, extent, getCompilationInfo(),
+      *directives, generatorKind, functionAsyncKind, fun->explicitName(),
+      fun->flags(), index);
   if (MOZ_UNLIKELY(!funbox)) {
     return raiseOOM();
   }
 
-  traceListHead_ = funbox;
+  compilationInfo_.traceListHead = funbox;
   if (pc_) {
     funbox->initWithEnclosingParseContext(pc_, fun, syntax);
   } else {
