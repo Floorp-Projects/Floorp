@@ -55,6 +55,7 @@ class ProfilerParent final : public PProfilerParent {
   static nsTArray<RefPtr<SingleProcessProfilePromise>> GatherProfiles();
 
   static void ProfilerStarted(nsIProfilerStartParams* aParams);
+  static void ProfilerWillStopIfStarted();
   static void ProfilerStopped();
   static void ProfilerPaused();
   static void ProfilerResumed();
