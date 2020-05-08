@@ -383,6 +383,7 @@ public class GeckoViewActivity
     private boolean mFullAccessibilityTree;
     private boolean mUseTrackingProtection;
     private String mEnhancedTackingProtection;
+    private boolean mUseDynamicFirstPartyIsolation;
     private boolean mAllowAutoplay;
     private boolean mUsePrivateBrowsing;
     private boolean mEnableRemoteDebugging;
@@ -441,6 +442,8 @@ public class GeckoViewActivity
                 getString(R.string.key_tracking_protection), false);
         String enhancedTrackingProtection = preferences.getString(
                 getString(R.string.key_enhanced_tracking_protection), "standard");
+        boolean dfpi = preferences.getBoolean(
+                getString(R.string.key_dfpi), false);
         boolean autoplay = preferences.getBoolean(
                 getString(R.string.key_autoplay), false);
         int colorScheme = Integer.parseInt(preferences.getString(
@@ -490,6 +493,16 @@ public class GeckoViewActivity
             }
 
             mEnhancedTackingProtection = enhancedTrackingProtection;
+        }
+
+        if (mUseDynamicFirstPartyIsolation != dfpi) {
+            if (sGeckoRuntime != null) {
+                int cookieBehavior = dfpi ?
+                        ContentBlocking.CookieBehavior.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS :
+                        ContentBlocking.CookieBehavior.ACCEPT_NON_TRACKERS;
+                sGeckoRuntime.getSettings().getContentBlocking().setCookieBehavior(cookieBehavior);
+            }
+            mUseDynamicFirstPartyIsolation = dfpi;
         }
 
         if (mAllowAutoplay != autoplay) {
