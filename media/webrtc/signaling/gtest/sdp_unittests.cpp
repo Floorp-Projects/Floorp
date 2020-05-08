@@ -5768,4 +5768,160 @@ TEST_P(NewSdpTest, CheckSsrcGroupSerialization) {
   }
 }
 
+TEST_P(NewSdpTest, CheckRtxApt) {
+  ParseSdp(kVideoSdp + "a=rtpmap:96 rtx/90000\r\na=fmtp:96", false);
+  ParseSdp(kVideoSdp +
+           "a=rtpmap:96 rtx/90000\r\na=fmtp:96 apt=120; apt=124\r\n");
+  ParseSdp(kVideoSdp + "a=rtpmap:96 rtx/90000\r\na=fmtp:96 apt=", false);
+  ParseSdp(kVideoSdp + "a=rtpmap:96 rtx/90000\r\na=fmtp:96 apt=blah", false);
+  ParseSdp(kVideoSdp +
+               "a=rtpmap:96 rtx/90000\r\na=fmtp:96 "
+               "apt=999999999999999999999999999999",
+           false);
+  ParseSdp(kVideoSdp + "a=rtpmap:96 rtx/90000\r\na=fmtp:96 apt=-120\r\n",
+           false);
+  ParseSdp(kVideoSdp + "a=rtpmap:96 rtx/90000\r\na=fmtp:96 apt=1twenty\r\n",
+           false);
+  ParseSdp(kVideoSdp + "a=rtpmap:96 rtx/90000\r\na=fmtp:96 APT=120\r\n");
+
+  ParseSdp(kVideoSdp + "a=rtpmap:96 rtx/90000\r\na=fmtp:96 apt=120\r\n");
+
+  const SdpMediaSection& msec = Sdp()->GetMediaSection(0);
+  ASSERT_EQ(1U, msec.GetFormats().size());
+  ASSERT_EQ(2U, msec.GetAttributeList().GetRtpmap().mRtpmaps.size());
+  const SdpRtpmapAttributeList::Rtpmap& rtpmap =
+      msec.GetAttributeList().GetRtpmap().GetEntry("96");
+  ASSERT_EQ(rtpmap.pt, "96");
+  ASSERT_EQ(rtpmap.codec, SdpRtpmapAttributeList::CodecType::kRtx);
+  ASSERT_EQ(rtpmap.name, "rtx");
+  ASSERT_EQ(rtpmap.clock, 90000U);
+
+  ASSERT_TRUE(Sdp()->GetMediaSection(0).GetAttributeList().HasAttribute(
+      SdpAttribute::kFmtpAttribute));
+  const auto& format_params = msec.GetAttributeList().GetFmtp().mFmtps;
+  ASSERT_EQ(1U, format_params.size());
+  ASSERT_EQ("96", format_params[0].format);
+  ASSERT_EQ(SdpRtpmapAttributeList::CodecType::kRtx,
+            format_params[0].parameters->codec_type);
+  ASSERT_EQ(static_cast<uint8_t>(120),
+            static_cast<SdpFmtpAttributeList::RtxParameters*>(
+                format_params[0].parameters.get())
+                ->apt);
+  ASSERT_EQ(Nothing(), static_cast<SdpFmtpAttributeList::RtxParameters*>(
+                           format_params[0].parameters.get())
+                           ->rtx_time);
+}
+
+TEST_P(NewSdpTest, CheckRtxAptRtxTime) {
+  ParseSdp(kVideoSdp + "a=rtpmap:96 rtx/90000\r\na=fmtp:96 apt=120;rtx-time=",
+           false);
+  ParseSdp(
+      kVideoSdp + "a=rtpmap:96 rtx/90000\r\na=fmtp:96 apt=120;rtx-time=blah",
+      false);
+  ParseSdp(kVideoSdp +
+               "a=rtpmap:96 rtx/90000\r\na=fmtp:96 "
+               "apt=120;rtx-time=9999999999999999999999999999999",
+           false);
+  ParseSdp(
+      kVideoSdp + "a=rtpmap:96 rtx/90000\r\na=fmtp:96 apt=120;rtx-time=-3000",
+      false);
+  ParseSdp(kVideoSdp +
+               "a=rtpmap:96 rtx/90000\r\na=fmtp:96 apt=120;rtx-time=3thousand",
+           false);
+
+  {
+    ParseSdp(kVideoSdp +
+             "a=rtpmap:96 rtx/90000\r\na=fmtp:96 apt=120;RTX-TIME=3000\r\n");
+
+    const SdpMediaSection& msec = Sdp()->GetMediaSection(0);
+    ASSERT_EQ(1U, msec.GetFormats().size());
+    ASSERT_EQ(2U, msec.GetAttributeList().GetRtpmap().mRtpmaps.size());
+    const SdpRtpmapAttributeList::Rtpmap& rtpmap =
+        msec.GetAttributeList().GetRtpmap().GetEntry("96");
+    ASSERT_EQ(rtpmap.pt, "96");
+    ASSERT_EQ(rtpmap.codec, SdpRtpmapAttributeList::CodecType::kRtx);
+    ASSERT_EQ(rtpmap.name, "rtx");
+    ASSERT_EQ(rtpmap.clock, 90000U);
+
+    ASSERT_TRUE(Sdp()->GetMediaSection(0).GetAttributeList().HasAttribute(
+        SdpAttribute::kFmtpAttribute));
+    const auto& format_params = msec.GetAttributeList().GetFmtp().mFmtps;
+    ASSERT_EQ(1U, format_params.size());
+    ASSERT_EQ("96", format_params[0].format);
+    ASSERT_EQ(SdpRtpmapAttributeList::CodecType::kRtx,
+              format_params[0].parameters->codec_type);
+    ASSERT_EQ(static_cast<uint8_t>(120),
+              static_cast<SdpFmtpAttributeList::RtxParameters*>(
+                  format_params[0].parameters.get())
+                  ->apt);
+    ASSERT_EQ(Some(3000U), static_cast<SdpFmtpAttributeList::RtxParameters*>(
+                               format_params[0].parameters.get())
+                               ->rtx_time);
+  }
+
+  {
+    ParseSdp(kVideoSdp +
+             "a=rtpmap:96 rtx/90000\r\na=fmtp:96 "
+             "apt=120;rtx-time=3000;rtx-time=3300\r\n");
+
+    const SdpMediaSection& msec = Sdp()->GetMediaSection(0);
+    ASSERT_EQ(1U, msec.GetFormats().size());
+    ASSERT_EQ(2U, msec.GetAttributeList().GetRtpmap().mRtpmaps.size());
+    const SdpRtpmapAttributeList::Rtpmap& rtpmap =
+        msec.GetAttributeList().GetRtpmap().GetEntry("96");
+    ASSERT_EQ(rtpmap.pt, "96");
+    ASSERT_EQ(rtpmap.codec, SdpRtpmapAttributeList::CodecType::kRtx);
+    ASSERT_EQ(rtpmap.name, "rtx");
+    ASSERT_EQ(rtpmap.clock, 90000U);
+
+    ASSERT_TRUE(Sdp()->GetMediaSection(0).GetAttributeList().HasAttribute(
+        SdpAttribute::kFmtpAttribute));
+    const auto& format_params = msec.GetAttributeList().GetFmtp().mFmtps;
+    ASSERT_EQ(1U, format_params.size());
+    ASSERT_EQ("96", format_params[0].format);
+    ASSERT_EQ(SdpRtpmapAttributeList::CodecType::kRtx,
+              format_params[0].parameters->codec_type);
+    ASSERT_EQ(static_cast<uint8_t>(120),
+              static_cast<SdpFmtpAttributeList::RtxParameters*>(
+                  format_params[0].parameters.get())
+                  ->apt);
+
+    // Last rtx-time wins. This parameter is unused by our implementation
+    // anyway.
+    ASSERT_EQ(Some(3300U), static_cast<SdpFmtpAttributeList::RtxParameters*>(
+                               format_params[0].parameters.get())
+                               ->rtx_time);
+  }
+
+  {
+    ParseSdp(kVideoSdp +
+             "a=rtpmap:96 rtx/90000\r\na=fmtp:96 apt=120;rtx-time=3000\r\n");
+
+    const SdpMediaSection& msec = Sdp()->GetMediaSection(0);
+    ASSERT_EQ(1U, msec.GetFormats().size());
+    ASSERT_EQ(2U, msec.GetAttributeList().GetRtpmap().mRtpmaps.size());
+    const SdpRtpmapAttributeList::Rtpmap& rtpmap =
+        msec.GetAttributeList().GetRtpmap().GetEntry("96");
+    ASSERT_EQ(rtpmap.pt, "96");
+    ASSERT_EQ(rtpmap.codec, SdpRtpmapAttributeList::CodecType::kRtx);
+    ASSERT_EQ(rtpmap.name, "rtx");
+    ASSERT_EQ(rtpmap.clock, 90000U);
+
+    ASSERT_TRUE(Sdp()->GetMediaSection(0).GetAttributeList().HasAttribute(
+        SdpAttribute::kFmtpAttribute));
+    const auto& format_params = msec.GetAttributeList().GetFmtp().mFmtps;
+    ASSERT_EQ(1U, format_params.size());
+    ASSERT_EQ("96", format_params[0].format);
+    ASSERT_EQ(SdpRtpmapAttributeList::CodecType::kRtx,
+              format_params[0].parameters->codec_type);
+    ASSERT_EQ(static_cast<uint8_t>(120),
+              static_cast<SdpFmtpAttributeList::RtxParameters*>(
+                  format_params[0].parameters.get())
+                  ->apt);
+    ASSERT_EQ(Some(3000U), static_cast<SdpFmtpAttributeList::RtxParameters*>(
+                               format_params[0].parameters.get())
+                               ->rtx_time);
+  }
+}
+
 }  // End namespace test.
