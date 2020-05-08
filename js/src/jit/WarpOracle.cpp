@@ -467,7 +467,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::InitHiddenProp:
       case JSOp::InitElem:
       case JSOp::InitHiddenElem:
-      case JSOp::InitElemArray:
       case JSOp::InitElemInc:
       case JSOp::SetName:
       case JSOp::StrictSetName:
@@ -477,6 +476,10 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::SetElem:
       case JSOp::StrictSetElem:
         MOZ_TRY(maybeInlineIC(opSnapshots, script, loc));
+        break;
+
+      case JSOp::InitElemArray:
+        // WarpBuilder does not use an IC for this op.
         break;
 
       case JSOp::Nop:
