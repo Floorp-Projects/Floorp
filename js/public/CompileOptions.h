@@ -107,6 +107,9 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   // strict-mode.
   bool forceStrictMode_ = false;
 
+  // The context has specified that source pragmas should be parsed.
+  bool sourcePragmas_ = true;
+
   const char* filename_ = nullptr;
   const char* introducerFilename_ = nullptr;
   const char16_t* sourceMapURL_ = nullptr;
@@ -154,6 +157,7 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool forceFullParse() const { return forceFullParse_; }
   bool forceStrictMode() const { return forceStrictMode_; }
   bool skipFilenameValidation() const { return skipFilenameValidation_; }
+  bool sourcePragmas() const { return sourcePragmas_; }
   const char* filename() const { return filename_; }
   const char* introducerFilename() const { return introducerFilename_; }
   const char16_t* sourceMapURL() const { return sourceMapURL_; }

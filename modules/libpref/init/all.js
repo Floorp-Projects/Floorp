@@ -1133,6 +1133,7 @@ pref("javascript.options.wasm_reftypes",          true);
 #endif
 pref("javascript.options.native_regexp",    true);
 pref("javascript.options.parallel_parsing", true);
+pref("javascript.options.source_pragmas",    true);
 // Async stacks instrumentation adds overhead that is only
 // advisable for developers, so we limit it to Nightly and DevEdition
 #if defined(ANDROID) || defined(XP_IOS)

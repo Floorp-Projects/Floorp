@@ -122,6 +122,7 @@ extern bool enableTestWasmAwaitTier2;
 #ifdef ENABLE_WASM_BIGINT
 extern bool enableWasmBigInt;
 #endif
+extern bool enableSourcePragmas;
 extern bool enableAsyncStacks;
 extern bool enableStreams;
 extern bool enableReadableByteStreams;

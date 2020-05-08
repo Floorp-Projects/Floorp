@@ -37,6 +37,7 @@ class JS_PUBLIC_API ContextOptions {
         disableIon_(false),
         disableEvalSecurityChecks_(false),
         asyncStack_(true),
+        sourcePragmas_(true),
         throwOnDebuggeeWouldRun_(true),
         dumpStackOnDebuggeeWouldRun_(false),
         strictMode_(false),
@@ -162,6 +163,13 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 
+  // Enable/disable support for parsing '//(#@) source(Mapping)?URL=' pragmas.
+  bool sourcePragmas() const { return sourcePragmas_; }
+  ContextOptions& setSourcePragmas(bool flag) {
+    sourcePragmas_ = flag;
+    return *this;
+  }
+
   bool throwOnDebuggeeWouldRun() const { return throwOnDebuggeeWouldRun_; }
   ContextOptions& setThrowOnDebuggeeWouldRun(bool flag) {
     throwOnDebuggeeWouldRun_ = flag;
@@ -238,6 +246,7 @@ class JS_PUBLIC_API ContextOptions {
   bool disableIon_ : 1;
   bool disableEvalSecurityChecks_ : 1;
   bool asyncStack_ : 1;
+  bool sourcePragmas_ : 1;
   bool throwOnDebuggeeWouldRun_ : 1;
   bool dumpStackOnDebuggeeWouldRun_ : 1;
   bool strictMode_ : 1;

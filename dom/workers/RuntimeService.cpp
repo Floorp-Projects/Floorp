@@ -307,6 +307,8 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
       .setWasmVerbose(GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_verbose")))
       .setThrowOnAsmJSValidationFailure(GetWorkerPref<bool>(
           NS_LITERAL_CSTRING("throw_on_asmjs_validation_failure")))
+      .setSourcePragmas(
+          GetWorkerPref<bool>(NS_LITERAL_CSTRING("source_pragmas")))
       .setAsyncStack(GetWorkerPref<bool>(NS_LITERAL_CSTRING("asyncstack")));
 
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
