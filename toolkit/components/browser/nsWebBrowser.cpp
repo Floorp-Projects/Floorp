@@ -98,8 +98,7 @@ nsIWidget* nsWebBrowser::EnsureWidget() {
 already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
     nsIWebBrowserChrome* aContainerWindow, nsIWidget* aParentWidget,
     dom::BrowsingContext* aBrowsingContext,
-    dom::WindowGlobalChild* aInitialWindowChild,
-    bool aDisableHistory /* = false */) {
+    dom::WindowGlobalChild* aInitialWindowChild) {
   MOZ_ASSERT_IF(aInitialWindowChild,
                 aInitialWindowChild->BrowsingContext() == aBrowsingContext);
 
@@ -156,13 +155,6 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
   // event.
 
   docShell->InitSessionHistory();
-
-  if (XRE_IsParentProcess() && !aDisableHistory) {
-    // Hook up global history. Do not fail if we can't - just warn.
-    DebugOnly<nsresult> rv =
-        browser->EnableGlobalHistory(browser->mShouldEnableHistory);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "EnableGlobalHistory() failed");
-  }
 
   NS_ENSURE_SUCCESS(docShellAsWin->Create(), nullptr);
 
@@ -262,13 +254,6 @@ nsWebBrowser::GetInterface(const nsIID& aIID, void** aSink) {
 //*****************************************************************************
 // nsWebBrowser::nsIWebBrowser
 //*****************************************************************************
-
-NS_IMETHODIMP
-nsWebBrowser::EnableGlobalHistory(bool aEnable) {
-  NS_ENSURE_STATE(mDocShell);
-
-  return mDocShell->SetUseGlobalHistory(aEnable);
-}
 
 NS_IMETHODIMP
 nsWebBrowser::GetContainerWindow(nsIWebBrowserChrome** aTopWindow) {
