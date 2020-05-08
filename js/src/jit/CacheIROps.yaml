@@ -68,12 +68,6 @@
   args:
     input: ValId
 
-- name: GuardIsNotNullOrUndefined
-  shared: true
-  transpile: false
-  args:
-    input: ValId
-
 - name: GuardIsNull
   shared: true
   transpile: false
