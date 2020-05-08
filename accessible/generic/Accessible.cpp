@@ -746,14 +746,15 @@ void Accessible::XULElmName(DocAccessible* aDocument, nsIContent* aElm,
   /**
    * 3 main cases for XUL Controls to be labeled
    *   1 - control contains label="foo"
-   *   2 - control has, as a child, a label element
+   *   2 - non-child label contains control="controlID"
    *        - label has either value="foo" or children
-   *   3 - non-child label contains control="controlID"
-   *        - label has either value="foo" or children
+   *   3 - name from subtree; e.g. a child label element
+   * Cases 1 and 2 are handled here.
+   * Case 3 is handled by GetNameFromSubtree called in NativeName.
    * Once a label is found, the search is discontinued, so a control
-   *  that has a label child as well as having a label external to
+   *  that has a label attribute as well as having a label external to
    *  the control that uses the control="controlID" syntax will use
-   *  the child label for its Name.
+   *  the label attribute for its Name.
    */
 
   // CASE #1 (via label attribute) -- great majority of the cases
@@ -765,8 +766,7 @@ void Accessible::XULElmName(DocAccessible* aDocument, nsIContent* aElm,
     aElm->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
   }
 
-  // CASES #2 and #3 ------ label as a child or <label control="id" ... >
-  // </label>
+  // CASE #2 -- label as <label control="id" ... ></label>
   if (aName.IsEmpty()) {
     NameFromAssociatedXULLabel(aDocument, aElm, aName);
   }
