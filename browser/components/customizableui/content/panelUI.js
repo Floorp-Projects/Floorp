@@ -45,7 +45,6 @@ const PanelUI = {
       libraryRecentHighlights: "appMenu-library-recentHighlights",
       menuButton: "PanelUI-menu-button",
       panel: "appMenu-popup",
-      notificationPanel: "appMenu-notification-popup",
       addonNotificationContainer: "appMenu-addon-banners",
       overflowFixedList: "widget-overflow-fixed-list",
       overflowPanel: "widget-overflow",
@@ -56,6 +55,7 @@ const PanelUI = {
 
   _initialized: false,
   _notifications: null,
+  _notificationPanel: null,
 
   init() {
     this._initElements();
@@ -113,10 +113,6 @@ const PanelUI = {
 
     window.addEventListener("activate", this);
     CustomizableUI.addListener(this);
-
-    for (let event of this.kEvents) {
-      this.notificationPanel.addEventListener(event, this);
-    }
 
     // We do this sync on init because in order to have the overflow button show up
     // we need to know whether anything is in the permanent panel area.
@@ -177,8 +173,11 @@ const PanelUI = {
 
   uninit() {
     this._removeEventListeners();
-    for (let event of this.kEvents) {
-      this.notificationPanel.removeEventListener(event, this);
+
+    if (this._notificationPanel) {
+      for (let event of this.kEvents) {
+        this.notificationPanel.removeEventListener(event, this);
+      }
     }
 
     Services.obs.removeObserver(this, "fullscreen-nav-toolbox");
@@ -793,6 +792,10 @@ const PanelUI = {
   },
 
   _hidePopup() {
+    if (!this._notificationPanel) {
+      return;
+    }
+
     if (this.isNotificationPanelOpen) {
       this.notificationPanel.hidePopup();
     }
@@ -867,8 +870,6 @@ const PanelUI = {
 
     let anchor = this._getPanelAnchor(this.menuButton);
 
-    this.notificationPanel.hidden = false;
-
     // Insert Fluent files when needed before notification is opened
     MozXULElement.insertFTLIfNeeded("branding/brand.ftl");
     MozXULElement.insertFTLIfNeeded("browser/appMenuNotifications.ftl");
@@ -896,6 +897,21 @@ const PanelUI = {
     this._clearNotificationPanel();
     this._clearBadge();
     this._clearBannerItem();
+  },
+
+  get notificationPanel() {
+    // Lazy load the panic-button-success-notification panel the first time we need to display it.
+    if (!this._notificationPanel) {
+      let template = document.getElementById("appMenuNotificationTemplate");
+      template.replaceWith(template.content);
+      this._notificationPanel = document.getElementById(
+        "appMenu-notification-popup"
+      );
+      for (let event of this.kEvents) {
+        this._notificationPanel.addEventListener(event, this);
+      }
+    }
+    return this._notificationPanel;
   },
 
   _formatDescriptionMessage(n) {

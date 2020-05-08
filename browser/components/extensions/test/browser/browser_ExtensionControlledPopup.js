@@ -15,8 +15,8 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/ExtensionControlledPopup.jsm"
 );
 
-function createMarkup(doc) {
-  let panel = doc.getElementById("extension-notification-panel");
+function createMarkup(doc, popup) {
+  let panel = ExtensionControlledPopup._getAndMaybeCreatePanel(doc);
   let popupnotification = doc.createXULElement("popupnotification");
   let attributes = {
     id: "extension-controlled-notification",
@@ -93,7 +93,7 @@ add_task(async function testExtensionControlledPopup() {
   });
 
   let doc = Services.wm.getMostRecentWindow("navigator:browser").document;
-  let { panel, popupnotification } = createMarkup(doc);
+  let { panel, popupnotification } = createMarkup(doc, popup);
 
   function openPopupWithEvent() {
     let popupShown = promisePopupShown(panel);
