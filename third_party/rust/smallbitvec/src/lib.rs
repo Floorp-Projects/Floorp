@@ -28,13 +28,19 @@
 //! assert_eq!(v[1], false);
 //! ```
 
-use std::cmp::max;
-use std::fmt;
-use std::hash;
-use std::iter::{DoubleEndedIterator, ExactSizeIterator, FromIterator};
-use std::mem::{forget, replace, size_of};
-use std::ops::{Index, Range};
-use std::slice;
+#![no_std]
+
+extern crate alloc;
+
+use alloc::{vec, vec::Vec, boxed::Box};
+
+use core::cmp::max;
+use core::fmt;
+use core::hash;
+use core::iter::{DoubleEndedIterator, ExactSizeIterator, FromIterator};
+use core::mem::{forget, replace, size_of};
+use core::ops::{Index, Range};
+use core::slice;
 
 /// Creates a [`SmallBitVec`] containing the arguments.
 ///
@@ -78,6 +84,18 @@ macro_rules! sbvec {
     );
 }
 
+
+// FIXME: replace this with `debug_assert!` when it’s usable in `const`:
+// * https://github.com/rust-lang/rust/issues/49146
+// * https://github.com/rust-lang/rust/issues/51999
+macro_rules! const_debug_assert_le {
+    ($left: ident <= $right: expr) =>  {
+        #[cfg(debug_assertions)]
+        // Causes an `index out of bounds` panic if `$left` is too large
+        [(); $right + 1][$left];
+    }
+}
+
 #[cfg(test)]
 mod tests;
 
@@ -91,7 +109,7 @@ pub struct SmallBitVec {
 
 /// Total number of bits per word.
 #[inline(always)]
-fn inline_bits() -> usize {
+const fn inline_bits() -> usize {
     size_of::<usize>() * 8
 }
 
@@ -100,21 +118,21 @@ fn inline_bits() -> usize {
 /// - The rightmost bit is set to zero to signal an inline vector.
 /// - The position of the rightmost nonzero bit encodes the length.
 #[inline(always)]
-fn inline_capacity() -> usize {
+const fn inline_capacity() -> usize {
     inline_bits() - 2
 }
 
 /// Left shift amount to access the nth bit
 #[inline(always)]
-fn inline_shift(n: usize) -> usize {
-    debug_assert!(n <= inline_capacity());
+const fn inline_shift(n: usize) -> usize {
+    const_debug_assert_le!(n <= inline_capacity());
     // The storage starts at the leftmost bit.
     inline_bits() - 1 - n
 }
 
 /// An inline vector with the nth bit set.
 #[inline(always)]
-fn inline_index(n: usize) -> usize {
+const fn inline_index(n: usize) -> usize {
     1 << inline_shift(n)
 }
 
@@ -201,7 +219,7 @@ pub enum InternalStorage {
 impl SmallBitVec {
     /// Create an empty vector.
     #[inline]
-    pub fn new() -> SmallBitVec {
+    pub const fn new() -> SmallBitVec {
         SmallBitVec {
             data: inline_index(0),
         }
@@ -277,6 +295,12 @@ impl SmallBitVec {
         } else {
             None
         }
+    }
+
+    /// Get the last bit in this bit vector.
+    #[inline]
+    pub fn last(&self) -> Option<bool> {
+        self.len().checked_sub(1).map(|n| unsafe { self.get_unchecked(n) })
     }
 
     /// Get the nth bit in this bit vector, without bounds checks.
@@ -357,15 +381,11 @@ impl SmallBitVec {
     /// ```
     #[inline]
     pub fn pop(&mut self) -> Option<bool> {
-        let old_len = self.len();
-        if old_len == 0 {
-            return None;
-        }
-        unsafe {
-            let val = self.get_unchecked(old_len - 1);
-            self.set_len(old_len - 1);
-            Some(val)
-        }
+        self.len().checked_sub(1).map(|last| unsafe {
+            let val = self.get_unchecked(last);
+            self.set_len(last);
+            val
+        })
     }
 
     /// Remove and return the bit at index `idx`, shifting all later bits toward the front.
@@ -751,6 +771,7 @@ impl fmt::Debug for SmallBitVec {
 }
 
 impl Default for SmallBitVec {
+    #[inline]
     fn default() -> Self {
         Self::new()
     }
@@ -945,6 +966,17 @@ impl ExactSizeIterator for IntoIter {}
 pub struct Iter<'a> {
     vec: &'a SmallBitVec,
     range: Range<usize>,
+}
+
+impl<'a> Default for Iter<'a> {
+    #[inline]
+    fn default() -> Self {
+        const EMPTY: &'static SmallBitVec = &SmallBitVec::new();
+        Self {
+            vec: EMPTY,
+            range: 0..0,
+        }
+    }
 }
 
 impl<'a> Iterator for Iter<'a> {

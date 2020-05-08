@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "smallbitvec"
-version = "2.3.0"
+version = "2.5.0"
 authors = ["Matt Brubeck <mbrubeck@limpet.net>"]
 description = "A bit vector optimized for size and inline storage"
 documentation = "https://docs.rs/smallbitvec"
