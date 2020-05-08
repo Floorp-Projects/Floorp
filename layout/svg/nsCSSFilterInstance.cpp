@@ -126,8 +126,8 @@ nsresult nsCSSFilterInstance::SetAttributesForBrightness(
 
   // Set transfer functions for RGB.
   atts.mTypes[kChannelROrRGB] = (uint8_t)SVG_FECOMPONENTTRANSFER_TYPE_LINEAR;
-  atts.mTypes[kChannelG] = (uint8_t)SVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN;
-  atts.mTypes[kChannelB] = (uint8_t)SVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN;
+  atts.mTypes[kChannelG] = (uint8_t)SVG_FECOMPONENTTRANSFER_SAME_AS_R;
+  atts.mTypes[kChannelB] = (uint8_t)SVG_FECOMPONENTTRANSFER_SAME_AS_R;
   float slopeIntercept[2];
   slopeIntercept[kComponentTransferSlopeIndex] = value;
   slopeIntercept[kComponentTransferInterceptIndex] = intercept;
@@ -147,8 +147,8 @@ nsresult nsCSSFilterInstance::SetAttributesForContrast(
 
   // Set transfer functions for RGB.
   atts.mTypes[kChannelROrRGB] = (uint8_t)SVG_FECOMPONENTTRANSFER_TYPE_LINEAR;
-  atts.mTypes[kChannelG] = (uint8_t)SVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN;
-  atts.mTypes[kChannelB] = (uint8_t)SVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN;
+  atts.mTypes[kChannelG] = (uint8_t)SVG_FECOMPONENTTRANSFER_SAME_AS_R;
+  atts.mTypes[kChannelB] = (uint8_t)SVG_FECOMPONENTTRANSFER_SAME_AS_R;
   float slopeIntercept[2];
   slopeIntercept[kComponentTransferSlopeIndex] = value;
   slopeIntercept[kComponentTransferInterceptIndex] = intercept;
@@ -223,8 +223,8 @@ nsresult nsCSSFilterInstance::SetAttributesForInvert(
 
   // Set transfer functions for RGB.
   atts.mTypes[kChannelROrRGB] = (uint8_t)SVG_FECOMPONENTTRANSFER_TYPE_TABLE;
-  atts.mTypes[kChannelG] = (uint8_t)SVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN;
-  atts.mTypes[kChannelB] = (uint8_t)SVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN;
+  atts.mTypes[kChannelG] = (uint8_t)SVG_FECOMPONENTTRANSFER_SAME_AS_R;
+  atts.mTypes[kChannelB] = (uint8_t)SVG_FECOMPONENTTRANSFER_SAME_AS_R;
   atts.mValues[kChannelROrRGB].AppendElements(invertTableValues, 2);
 
   atts.mTypes[kChannelA] = (uint8_t)SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY;

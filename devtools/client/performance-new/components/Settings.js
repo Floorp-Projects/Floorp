@@ -195,7 +195,7 @@ class Settings extends PureComponent {
     this._intervalExponentialScale = makeExponentialScale(0.01, 100);
     this._entriesExponentialScale = makePowerOf2Scale(
       128 * 1024,
-      128 * 1024 * 1024
+      256 * 1024 * 1024
     );
   }
 

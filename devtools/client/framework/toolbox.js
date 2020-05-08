@@ -355,6 +355,7 @@ function Toolbox(
   this._onResumedState = this._onResumedState.bind(this);
   this._onTargetAvailable = this._onTargetAvailable.bind(this);
   this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
+  this._onNavigate = this._onNavigate.bind(this);
 
   this.isPaintFlashing = false;
 
@@ -719,7 +720,7 @@ Toolbox.prototype = {
       // Attach to a new top-level target.
       // For now, register these event listeners only on the top level target
       targetFront.on("will-navigate", this._onWillNavigate);
-      targetFront.on("navigate", this._refreshHostTitle);
+      targetFront.on("navigate", this._onNavigate);
       targetFront.on("frame-update", this._updateFrames);
       targetFront.on("inspect-object", this._onInspectObject);
 
@@ -819,13 +820,6 @@ Toolbox.prototype = {
         this._URL = this.win.location.href;
       }
 
-      if (this.hostType === Toolbox.HostType.PAGE) {
-        // Displays DebugTargetInfo which shows the basic information of debug target,
-        // if `about:devtools-toolbox` URL opens directly.
-        // DebugTargetInfo requires this._debugTargetData to be populated
-        this._debugTargetData = this._getDebugTargetData();
-      }
-
       const domReady = new Promise(resolve => {
         DOMHelpers.onceDOMReady(
           this.win,
@@ -878,14 +872,17 @@ Toolbox.prototype = {
       this._addChromeEventHandlerEvents();
       this._registerOverlays();
 
-      this._componentMount.addEventListener(
-        "keypress",
-        this._onToolbarArrowKeypress
-      );
+      // Get the tab bar of the ToolboxController to attach the "keypress" event listener to.
+      this._tabBar = this.doc.querySelector(".devtools-tabbar");
+      this._tabBar.addEventListener("keypress", this._onToolbarArrowKeypress);
+
       this._componentMount.setAttribute(
         "aria-label",
         L10N.getStr("toolbox.label")
       );
+
+      // Set debug target data on the ToolboxController component.
+      this._setDebugTargetData();
 
       this.webconsolePanel = this.doc.querySelector(
         "#toolbox-panel-webconsole"
@@ -993,7 +990,7 @@ Toolbox.prototype = {
   detachTarget() {
     this.target.off("inspect-object", this._onInspectObject);
     this.target.off("will-navigate", this._onWillNavigate);
-    this.target.off("navigate", this._refreshHostTitle);
+    this.target.off("navigate", this._onNavigate);
     this.target.off("frame-update", this._updateFrames);
 
     // Detach the thread
@@ -1826,7 +1823,6 @@ Toolbox.prototype = {
       closeToolbox: this.closeToolbox,
       focusButton: this._onToolbarFocus,
       toolbox: this,
-      debugTargetData: this._debugTargetData,
       onTabsOrderUpdated: this._onTabsOrderUpdated,
     });
 
@@ -1860,7 +1856,7 @@ Toolbox.prototype = {
       return;
     }
 
-    const buttons = [...this._componentMount.querySelectorAll("button")];
+    const buttons = [...this._tabBar.querySelectorAll("button")];
     const curIndex = buttons.indexOf(target);
 
     if (curIndex === -1) {
@@ -3704,12 +3700,13 @@ Toolbox.prototype = {
       this.webconsolePanel = null;
     }
     if (this._componentMount) {
-      this._componentMount.removeEventListener(
+      this._tabBar.removeEventListener(
         "keypress",
         this._onToolbarArrowKeypress
       );
       this.ReactDOM.unmountComponentAtNode(this._componentMount);
       this._componentMount = null;
+      this._tabBar = null;
     }
 
     const outstanding = [];
@@ -4204,5 +4201,25 @@ Toolbox.prototype = {
     }
 
     return id;
+  },
+
+  /**
+   * Fired when the user navigates to another page.
+   */
+  _onNavigate: function() {
+    this._refreshHostTitle();
+    this._setDebugTargetData();
+  },
+
+  /**
+   * Sets basic information on the DebugTargetInfo component
+   */
+  _setDebugTargetData() {
+    if (this.hostType === Toolbox.HostType.PAGE) {
+      // Displays DebugTargetInfo which shows the basic information of debug target,
+      // if `about:devtools-toolbox` URL opens directly.
+      // DebugTargetInfo requires this._debugTargetData to be populated
+      this.component.setDebugTargetData(this._getDebugTargetData());
+    }
   },
 };

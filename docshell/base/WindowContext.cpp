@@ -108,22 +108,41 @@ void WindowContext::SendCommitTransaction(ContentChild* aChild,
   aChild->SendCommitWindowContextTransaction(this, aTxn, aEpoch);
 }
 
+bool WindowContext::CheckOnlyOwningProcessCanSet(ContentParent* aSource) {
+  if (mInProcess) {
+    return true;
+  }
+
+  if (XRE_IsParentProcess() && aSource) {
+    return Canonical()->GetContentParent() == aSource;
+  }
+
+  return false;
+}
+
 bool WindowContext::CanSet(FieldIndex<IDX_AllowMixedContent>,
                            const bool& aAllowMixedContent,
                            ContentParent* aSource) {
-  return mBrowsingContext->CheckOnlyOwningProcessCanSet(aSource);
+  return CheckOnlyOwningProcessCanSet(aSource);
+}
+
+bool WindowContext::CanSet(
+    FieldIndex<IDX_CookieJarSettings>,
+    const Maybe<mozilla::net::CookieJarSettingsArgs>& aValue,
+    ContentParent* aSource) {
+  return CheckOnlyOwningProcessCanSet(aSource);
 }
 
 bool WindowContext::CanSet(FieldIndex<IDX_IsThirdPartyWindow>,
                            const bool& IsThirdPartyWindow,
                            ContentParent* aSource) {
-  return mBrowsingContext->CheckOnlyOwningProcessCanSet(aSource);
+  return CheckOnlyOwningProcessCanSet(aSource);
 }
 
 bool WindowContext::CanSet(FieldIndex<IDX_IsThirdPartyTrackingResourceWindow>,
                            const bool& aIsThirdPartyTrackingResourceWindow,
                            ContentParent* aSource) {
-  return mBrowsingContext->CheckOnlyOwningProcessCanSet(aSource);
+  return CheckOnlyOwningProcessCanSet(aSource);
 }
 
 already_AddRefed<WindowContext> WindowContext::Create(
@@ -133,8 +152,9 @@ already_AddRefed<WindowContext> WindowContext::Create(
 
   FieldTuple init;
   mozilla::Get<IDX_OuterWindowId>(init) = aWindow->OuterWindowId();
-  RefPtr<WindowContext> context = new WindowContext(
-      aWindow->BrowsingContext(), aWindow->InnerWindowId(), std::move(init));
+  RefPtr<WindowContext> context =
+      new WindowContext(aWindow->BrowsingContext(), aWindow->InnerWindowId(),
+                        /* aInProcess */ true, std::move(init));
   context->Init();
   return context.forget();
 }
@@ -154,7 +174,8 @@ void WindowContext::CreateFromIPC(IPCInitializer&& aInit) {
   }
 
   RefPtr<WindowContext> context =
-      new WindowContext(bc, aInit.mInnerWindowId, std::move(aInit.mFields));
+      new WindowContext(bc, aInit.mInnerWindowId, /* aInProcess */ false,
+                        std::move(aInit.mFields));
   context->Init();
 }
 
@@ -192,10 +213,12 @@ void WindowContext::Discard() {
 }
 
 WindowContext::WindowContext(BrowsingContext* aBrowsingContext,
-                             uint64_t aInnerWindowId, FieldTuple&& aFields)
+                             uint64_t aInnerWindowId, bool aInProcess,
+                             FieldTuple&& aFields)
     : mFields(std::move(aFields)),
       mInnerWindowId(aInnerWindowId),
-      mBrowsingContext(aBrowsingContext) {
+      mBrowsingContext(aBrowsingContext),
+      mInProcess(aInProcess) {
   MOZ_ASSERT(mBrowsingContext);
   MOZ_ASSERT(mInnerWindowId);
 }

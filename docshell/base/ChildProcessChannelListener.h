@@ -25,13 +25,11 @@ class ChildProcessChannelListener final {
   using Endpoint = mozilla::ipc::Endpoint<extensions::PStreamFilterParent>;
   using Resolver = std::function<void(const nsresult&)>;
   using Callback = std::function<nsresult(
-      nsDocShellLoadState*, nsTArray<net::DocumentChannelRedirect>&&,
-      nsTArray<Endpoint>&&, nsDOMNavigationTiming*)>;
+      nsDocShellLoadState*, nsTArray<Endpoint>&&, nsDOMNavigationTiming*)>;
 
   void RegisterCallback(uint64_t aIdentifier, Callback&& aCallback);
 
   void OnChannelReady(nsDocShellLoadState* aLoadState, uint64_t aIdentifier,
-                      nsTArray<net::DocumentChannelRedirect>&& aRedirects,
                       nsTArray<Endpoint>&& aStreamFilterEndpoints,
                       nsDOMNavigationTiming* aTiming, Resolver&& aResolver);
 
@@ -42,7 +40,6 @@ class ChildProcessChannelListener final {
   ~ChildProcessChannelListener() = default;
   struct CallbackArgs {
     RefPtr<nsDocShellLoadState> mLoadState;
-    nsTArray<net::DocumentChannelRedirect> mRedirects;
     nsTArray<Endpoint> mStreamFilterEndpoints;
     RefPtr<nsDOMNavigationTiming> mTiming;
     Resolver mResolver;

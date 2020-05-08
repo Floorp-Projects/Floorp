@@ -114,6 +114,7 @@ class ProfilerCodeAddressService;
 class ProfilerMarkerPayload;
 class SpliceableJSONWriter;
 namespace mozilla {
+class ProfileBufferControlledChunkManager;
 namespace net {
 struct TimingStruct;
 enum CacheDisposition : uint8_t;
@@ -284,18 +285,18 @@ bool IsThreadBeingProfiled();
 
 static constexpr mozilla::PowerOfTwo32 PROFILER_DEFAULT_ENTRIES =
 #  if !defined(ARCH_ARMV6)
-    mozilla::MakePowerOfTwo32<1u << 20>();  // 1'048'576 entries = 8MB
+    mozilla::MakePowerOfTwo32<8 * 1024 * 1024>();  // 8M entries = 64MB
 #  else
-    mozilla::MakePowerOfTwo32<1u << 17>();  // 131'072 entries = 1MB
+    mozilla::MakePowerOfTwo32<512 * 1024>();  // 512k entries = 4MB
 #  endif
 
 // Startup profiling usually need to capture more data, especially on slow
 // systems.
 static constexpr mozilla::PowerOfTwo32 PROFILER_DEFAULT_STARTUP_ENTRIES =
 #  if !defined(ARCH_ARMV6)
-    mozilla::MakePowerOfTwo32<1u << 22>();  // 4'194'304 entries = 32MB
+    mozilla::MakePowerOfTwo32<64 * 1024 * 1024>();  // 64M entries = 512MB
 #  else
-    mozilla::MakePowerOfTwo32<1u << 17>();  // 131'072 entries = 1MB
+    mozilla::MakePowerOfTwo32<512 * 1024>();  // 512k entries = 4MB
 #  endif
 
 #  define PROFILER_DEFAULT_DURATION 20 /* seconds, for tests only */
@@ -545,6 +546,10 @@ void profiler_get_start_params(
     uint32_t* aFeatures,
     mozilla::Vector<const char*, 0, mozilla::MallocAllocPolicy>* aFilters,
     uint64_t* aActiveBrowsingContextID);
+
+// Get the chunk manager used in the current profiling session, or null.
+mozilla::ProfileBufferControlledChunkManager*
+profiler_get_controlled_chunk_manager();
 
 // The number of milliseconds since the process started. Operates the same
 // whether the profiler is active or inactive.

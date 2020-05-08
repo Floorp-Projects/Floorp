@@ -127,15 +127,8 @@ bool NeckoChild::DeallocPAltDataOutputStreamChild(
   return true;
 }
 
-already_AddRefed<PDocumentChannelChild> NeckoChild::AllocPDocumentChannelChild(
-    const PBrowserOrId& aBrowser, const SerializedLoadContext& aSerialized,
-    const DocumentChannelCreationArgs& args) {
-  MOZ_ASSERT_UNREACHABLE("AllocPDocumentChannelChild should not be called");
-  return nullptr;
-}
-
 PFTPChannelChild* NeckoChild::AllocPFTPChannelChild(
-    const PBrowserOrId& aBrowser, const SerializedLoadContext& aSerialized,
+    PBrowserChild* aBrowser, const SerializedLoadContext& aSerialized,
     const FTPChannelCreationArgs& aOpenArgs) {
   // We don't allocate here: see FTPChannelChild::AsyncOpen()
   MOZ_CRASH("AllocPFTPChannelChild should not be called");
@@ -166,7 +159,7 @@ bool NeckoChild::DeallocPCookieServiceChild(PCookieServiceChild* cs) {
 }
 
 PWebSocketChild* NeckoChild::AllocPWebSocketChild(
-    const PBrowserOrId& browser, const SerializedLoadContext& aSerialized,
+    PBrowserChild* browser, const SerializedLoadContext& aSerialized,
     const uint32_t& aSerial) {
   MOZ_ASSERT_UNREACHABLE("AllocPWebSocketChild should not be called");
   return nullptr;

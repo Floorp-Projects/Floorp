@@ -119,7 +119,7 @@ def js_subconfigure(host, target, build_env, js_configure_args, mozconfig,
         with open(data_file, 'rb') as f:
             previous_args = pickle.load(f)
 
-    cache_file = cache_file or './config.cache'
+    cache_file = cache_file[0] if cache_file else './config.cache'
     cache_file = os.path.join(build_env.topobjdir, cache_file)
 
     try:

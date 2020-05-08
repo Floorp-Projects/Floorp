@@ -307,6 +307,10 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
   context->mFields.SetWithoutSyncing<IDX_OrientationLock>(
       mozilla::hal::eScreenOrientation_None);
 
+  const bool useGlobalHistory =
+      inherit ? inherit->GetUseGlobalHistory() : false;
+  context->mFields.SetWithoutSyncing<IDX_UseGlobalHistory>(useGlobalHistory);
+
   return context.forget();
 }
 
@@ -317,11 +321,6 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateIndependent(
   bc->mWindowless = bc->IsContent();
   bc->EnsureAttached();
   return bc.forget();
-}
-
-void BrowsingContext::SetWindowless() {
-  MOZ_DIAGNOSTIC_ASSERT(!mEverAttached);
-  mWindowless = true;
 }
 
 void BrowsingContext::EnsureAttached() {
@@ -477,6 +476,10 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
                            messageManagerGroup);
       }
       txn.SetMessageManagerGroup(messageManagerGroup);
+
+      bool useGlobalHistory = !aEmbedder->HasAttr(
+          kNameSpaceID_None, nsGkAtoms::disableglobalhistory);
+      txn.SetUseGlobalHistory(useGlobalHistory);
     }
     txn.Commit(this);
   }
@@ -507,6 +510,8 @@ void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
 
   MOZ_DIAGNOSTIC_ASSERT(mGroup);
   MOZ_DIAGNOSTIC_ASSERT(!mIsDiscarded);
+
+  AssertCoherentLoadContext();
 
   // Add ourselves either to our parent or BrowsingContextGroup's child list.
   if (mParentWindow) {
@@ -1317,6 +1322,38 @@ nsresult BrowsingContext::SetOriginAttributes(const OriginAttributes& aAttrs) {
   return NS_OK;
 }
 
+void BrowsingContext::AssertCoherentLoadContext() {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  // LoadContext should generally match our opener or parent.
+  if (RefPtr<BrowsingContext> opener = GetOpener()) {
+    MOZ_DIAGNOSTIC_ASSERT(opener->mType == mType);
+    MOZ_DIAGNOSTIC_ASSERT(opener->mGroup == mGroup);
+    MOZ_DIAGNOSTIC_ASSERT(opener->mUseRemoteTabs == mUseRemoteTabs);
+    MOZ_DIAGNOSTIC_ASSERT(opener->mUseRemoteSubframes == mUseRemoteSubframes);
+    MOZ_DIAGNOSTIC_ASSERT(opener->mPrivateBrowsingId == mPrivateBrowsingId);
+    MOZ_DIAGNOSTIC_ASSERT(
+        opener->mOriginAttributes.EqualsIgnoringFPD(mOriginAttributes));
+  }
+  if (RefPtr<BrowsingContext> parent = GetParent()) {
+    MOZ_DIAGNOSTIC_ASSERT(parent->mType == mType);
+    MOZ_DIAGNOSTIC_ASSERT(parent->mGroup == mGroup);
+    MOZ_DIAGNOSTIC_ASSERT(parent->mUseRemoteTabs == mUseRemoteTabs);
+    MOZ_DIAGNOSTIC_ASSERT(parent->mUseRemoteSubframes == mUseRemoteSubframes);
+    MOZ_DIAGNOSTIC_ASSERT(parent->mPrivateBrowsingId == mPrivateBrowsingId);
+    MOZ_DIAGNOSTIC_ASSERT(
+        parent->mOriginAttributes.EqualsIgnoringFPD(mOriginAttributes));
+  }
+
+  // UseRemoteSubframes and UseRemoteTabs must match.
+  MOZ_DIAGNOSTIC_ASSERT(
+      !mUseRemoteSubframes || mUseRemoteTabs,
+      "Cannot set useRemoteSubframes without also setting useRemoteTabs");
+
+  // Double-check OriginAttributes/Private Browsing
+  AssertOriginAttributesMatchPrivateBrowsing();
+#endif
+}
+
 void BrowsingContext::AssertOriginAttributesMatchPrivateBrowsing() {
   // Chrome browsing contexts must not have a private browsing OriginAttribute
   // Content browsing contexts must maintain the equality:
@@ -1916,6 +1953,14 @@ void BrowsingContext::DidSet(FieldIndex<IDX_DefaultLoadFlags>) {
       }
     });
   }
+}
+
+bool BrowsingContext::CanSet(FieldIndex<IDX_UseGlobalHistory>,
+                             const bool& aUseGlobalHistory,
+                             ContentParent* aSource) {
+  // Should only be set in the parent process.
+  //  return XRE_IsParentProcess() && !aSource;
+  return true;
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_UserAgentOverride>,

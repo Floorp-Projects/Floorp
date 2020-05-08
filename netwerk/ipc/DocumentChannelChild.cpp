@@ -158,8 +158,6 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
   MOZ_ALWAYS_SUCCEEDS(LoadInfoArgsToLoadInfo(
       aArgs.loadInfo(), cspToInheritLoadingDocument, getter_AddRefs(loadInfo)));
 
-  mLastVisitInfo = std::move(aArgs.lastVisitInfo());
-  mRedirects = std::move(aArgs.redirects());
   mRedirectResolver = std::move(aResolve);
 
   nsCOMPtr<nsIChannel> newChannel;

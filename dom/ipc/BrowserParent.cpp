@@ -90,7 +90,6 @@
 #include "ColorPickerParent.h"
 #include "FilePickerParent.h"
 #include "BrowserChild.h"
-#include "LoadContext.h"
 #include "nsNetCID.h"
 #include "nsIAuthInformation.h"
 #include "nsIAuthPromptCallback.h"
@@ -168,8 +167,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BrowserParent)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventListener)
 NS_INTERFACE_MAP_END
-NS_IMPL_CYCLE_COLLECTION_WEAK(BrowserParent, mLoadContext, mFrameLoader,
-                              mBrowsingContext)
+NS_IMPL_CYCLE_COLLECTION_WEAK(BrowserParent, mFrameLoader, mBrowsingContext)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(BrowserParent)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(BrowserParent)
 
@@ -181,7 +179,6 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
       mTabId(aTabId),
       mManager(aManager),
       mBrowsingContext(aBrowsingContext),
-      mLoadContext(nullptr),
       mFrameElement(nullptr),
       mBrowserDOMWindow(nullptr),
       mFrameLoader(nullptr),
@@ -298,27 +295,7 @@ void BrowserParent::RemoveBrowserParentFromTable(layers::LayersId aLayersId) {
 }
 
 already_AddRefed<nsILoadContext> BrowserParent::GetLoadContext() {
-  nsCOMPtr<nsILoadContext> loadContext;
-  if (mLoadContext) {
-    loadContext = mLoadContext;
-  } else {
-    bool isPrivate = mChromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
-    SetPrivateBrowsingAttributes(isPrivate);
-    bool useTrackingProtection = false;
-    if (mFrameElement) {
-      nsCOMPtr<nsIDocShell> docShell = mFrameElement->OwnerDoc()->GetDocShell();
-      if (docShell) {
-        docShell->GetUseTrackingProtection(&useTrackingProtection);
-      }
-    }
-    loadContext = new LoadContext(
-        GetOwnerElement(), true /* aIsContent */, isPrivate,
-        mChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW,
-        mChromeFlags & nsIWebBrowserChrome::CHROME_FISSION_WINDOW,
-        useTrackingProtection, OriginAttributesRef());
-    mLoadContext = loadContext;
-  }
-  return loadContext.forget();
+  return do_AddRef(mBrowsingContext);
 }
 
 /**
@@ -522,12 +499,6 @@ void BrowserParent::SetOwnerElement(Element* aElement) {
 
   if (mBrowserHost && newTopLevelWin && !isSameTopLevelWin) {
     newTopLevelWin->AddBrowser(mBrowserHost);
-  }
-
-  if (mFrameElement) {
-    bool useGlobalHistory = !mFrameElement->HasAttr(
-        kNameSpaceID_None, nsGkAtoms::disableglobalhistory);
-    Unused << SendSetUseGlobalHistory(useGlobalHistory);
   }
 
 #if defined(XP_WIN) && defined(ACCESSIBILITY)

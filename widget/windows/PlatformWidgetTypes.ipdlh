@@ -7,7 +7,7 @@
 include HeadlessWidgetTypes;
 
 using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
-using nsSizeMode from "nsIWidgetListener.h";
+using nsSizeMode from "mozilla/dom/TabMessageUtils.h";
 using nsTransparencyMode from "mozilla/widget/WidgetMessageUtils.h";
 
 namespace mozilla {

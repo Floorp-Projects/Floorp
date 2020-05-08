@@ -489,8 +489,8 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
                                   LayoutDeviceIntRect(0, 0, 0, 0),
                                   nullptr);  // HandleWidgetEvent
 
-  mWebBrowser = nsWebBrowser::Create(this, mPuppetWidget, OriginAttributesRef(),
-                                     mBrowsingContext, aInitialWindowChild);
+  mWebBrowser = nsWebBrowser::Create(this, mPuppetWidget, mBrowsingContext,
+                                     aInitialWindowChild);
   nsIWebBrowser* webBrowser = mWebBrowser;
 
   mWebNav = do_QueryInterface(webBrowser);
@@ -526,8 +526,6 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
 #ifdef DEBUG
   nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(WebNavigation());
   MOZ_ASSERT(loadContext);
-  MOZ_ASSERT(loadContext->UsePrivateBrowsing() ==
-             (OriginAttributesRef().mPrivateBrowsingId > 0));
   MOZ_ASSERT(loadContext->UseRemoteTabs() ==
              !!(mChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW));
   MOZ_ASSERT(loadContext->UseRemoteSubframes() ==
@@ -2282,21 +2280,6 @@ mozilla::ipc::IPCResult BrowserChild::RecvHandleAccessKey(
       localEvent.mWidget = mPuppetWidget;
       SendAccessKeyNotHandled(localEvent);
     }
-  }
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult BrowserChild::RecvSetUseGlobalHistory(
-    const bool& aUse) {
-  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
-  if (!docShell) {
-    return IPC_OK();
-  }
-
-  nsresult rv = docShell->SetUseGlobalHistory(aUse);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to set UseGlobalHistory on BrowserChild docShell");
   }
 
   return IPC_OK();

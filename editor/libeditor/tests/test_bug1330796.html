@@ -41,10 +41,10 @@ var tests = [
   [ "<span _moz_quote=true style=\"display: block;\">&gt; mailcite<br></span>", 5,
     "<span style=\"display: block;\">&gt; mai<br></span>x<br><span style=\"display: block;\">lcite<br></span>"],
   [ "<span _moz_quote=true style=\"display: block;\">&gt; mailcite<br></span>", 10,
-    "<span style=\"display: block;\">&gt; mailcite<br></span>x<br>" ],
+    "<span style=\"display: block;\">&gt; mailcite<br></span>x" ],
   // No <br> at the end to simulate prior deletion to the end of the quote.
   [ "<span _moz_quote=true style=\"display: block;\">&gt; mailcite</span>", 10,
-    "<span style=\"display: block;\">&gt; mailcite<br></span>x<br>" ],
+    "<span style=\"display: block;\">&gt; mailcite<br></span>x" ],
 
   // Without style="display: block;".
   [ "<span _moz_quote=true>&gt; mailcite<br></span>", 0,
@@ -52,10 +52,10 @@ var tests = [
   [ "<span _moz_quote=true>&gt; mailcite<br></span>", 5,
     "<span>&gt; mai</span><br>x<br><span>lcite<br></span>" ],
   [ "<span _moz_quote=true>&gt; mailcite<br></span>", 10,
-    "<span>&gt; mailcite<br></span>x<br>" ],
+    "<span>&gt; mailcite<br></span>x" ],
   // No <br> at the end to simulate prior deletion to the end of the quote.
   [ "<span _moz_quote=true>&gt; mailcite</span>", 10,
-    "<span>&gt; mailcite</span><br>x<br>" ],
+    "<span>&gt; mailcite</span><br>x" ],
 ];
 
 /** Test for Bug 1330796 **/
