@@ -155,6 +155,23 @@ nsScriptErrorBase::GetCategory(char** result) {
 }
 
 NS_IMETHODIMP
+nsScriptErrorBase::GetHasException(bool* aHasException) {
+  *aHasException = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptErrorBase::GetException(JS::MutableHandleValue aException) {
+  aException.setUndefined();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptErrorBase::SetException(JS::HandleValue aStack) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsScriptErrorBase::GetStack(JS::MutableHandleValue aStack) {
   aStack.setUndefined();
   return NS_OK;

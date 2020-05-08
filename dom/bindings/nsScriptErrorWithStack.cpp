@@ -38,9 +38,10 @@ static nsCString FormatStackString(JSContext* cx, JSPrincipals* aPrincipals,
 
 }  // namespace
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsScriptErrorWithStack)
+NS_IMPL_CYCLE_COLLECTION_MULTI_ZONE_JSHOLDER_CLASS(nsScriptErrorWithStack)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsScriptErrorWithStack)
+  tmp->mException.setUndefined();
   tmp->mStack = nullptr;
   tmp->mStackGlobal = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -49,6 +50,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsScriptErrorWithStack)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsScriptErrorWithStack)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mException)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mStack)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mStackGlobal)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
@@ -62,19 +64,44 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsScriptErrorWithStack)
   NS_INTERFACE_MAP_ENTRY(nsIScriptError)
 NS_INTERFACE_MAP_END
 
-nsScriptErrorWithStack::nsScriptErrorWithStack(JS::HandleObject aStack,
-                                               JS::HandleObject aStackGlobal)
+nsScriptErrorWithStack::nsScriptErrorWithStack(
+    JS::Handle<mozilla::Maybe<JS::Value>> aException, JS::HandleObject aStack,
+    JS::HandleObject aStackGlobal)
     : mStack(aStack), mStackGlobal(aStackGlobal) {
   MOZ_ASSERT(NS_IsMainThread(), "You can't use this class on workers.");
 
-  MOZ_ASSERT(JS_IsGlobalObject(mStackGlobal));
-  js::AssertSameCompartment(mStack, mStackGlobal);
+  if (aException.isSome()) {
+    mHasException = true;
+    mException.set(*aException);
+  } else {
+    mHasException = false;
+    mException.setUndefined();
+  }
+
+  if (mStack) {
+    MOZ_ASSERT(JS_IsGlobalObject(mStackGlobal));
+    js::AssertSameCompartment(mStack, mStackGlobal);
+  } else {
+    MOZ_ASSERT(!mStackGlobal);
+  }
 
   mozilla::HoldJSObjects(this);
 }
 
 nsScriptErrorWithStack::~nsScriptErrorWithStack() {
   mozilla::DropJSObjects(this);
+}
+
+NS_IMETHODIMP
+nsScriptErrorWithStack::GetHasException(bool* aHasException) {
+  *aHasException = mHasException;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptErrorWithStack::GetException(JS::MutableHandleValue aException) {
+  aException.set(mException);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -117,4 +144,43 @@ nsScriptErrorWithStack::ToString(nsACString& /*UTF8*/ aResult) {
   aResult.Assign(combined);
 
   return NS_OK;
+}
+
+static bool IsObjectGlobalDying(JSObject* aObj) {
+  // CCWs are not associated with a single global
+  if (js::IsCrossCompartmentWrapper(aObj)) {
+    return false;
+  }
+
+  nsGlobalWindowInner* win = xpc::WindowGlobalOrNull(aObj);
+  return win && win->IsDying();
+}
+
+already_AddRefed<nsScriptErrorBase> CreateScriptError(
+    nsGlobalWindowInner* win, JS::Handle<mozilla::Maybe<JS::Value>> aException,
+    JS::HandleObject aStack, JS::HandleObject aStackGlobal) {
+  bool createWithStack = true;
+  if (aException.isNothing() && !aStack) {
+    // Neither stack nor exception, do not need nsScriptErrorWithStack.
+    createWithStack = false;
+  } else if (win && (win->IsDying() || !win->WindowID())) {
+    // The window is already dying or we don't have a WindowID,
+    // this means nsConsoleService::ClearMessagesForWindowID
+    // would be unable to cleanup this error.
+    createWithStack = false;
+  } else if ((aStackGlobal && IsObjectGlobalDying(aStackGlobal)) ||
+             (aException.isSome() && aException.value().isObject() &&
+              IsObjectGlobalDying(&aException.value().toObject()))) {
+    // Prevent leaks by not creating references to already dying globals.
+    createWithStack = false;
+  }
+
+  if (!createWithStack) {
+    RefPtr<nsScriptErrorBase> error = new nsScriptError();
+    return error.forget();
+  }
+
+  RefPtr<nsScriptErrorBase> error =
+      new nsScriptErrorWithStack(aException, aStack, aStackGlobal);
+  return error.forget();
 }

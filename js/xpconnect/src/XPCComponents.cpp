@@ -1333,18 +1333,17 @@ nsXPCComponents_Utils::ReportError(HandleValue error, HandleValue stack,
   nsGlobalWindowInner* win = CurrentWindowOrNull(cx);
   const uint64_t innerWindowID = win ? win->WindowID() : 0;
 
-  RootedObject errorObj(cx, error.isObject() ? &error.toObject() : nullptr);
-  JSErrorReport* err = errorObj ? JS_ErrorFromException(cx, errorObj) : nullptr;
+  Rooted<Maybe<Value>> exception(cx, Some(error));
 
   nsCOMPtr<nsIScriptError> scripterr;
-
+  RootedObject errorObj(cx, error.isObject() ? &error.toObject() : nullptr);
   if (errorObj) {
     JS::RootedObject stackVal(cx);
     JS::RootedObject stackGlobal(cx);
     FindExceptionStackForConsoleReport(win, error, nullptr, &stackVal,
                                        &stackGlobal);
     if (stackVal) {
-      scripterr = new nsScriptErrorWithStack(stackVal, stackGlobal);
+      scripterr = CreateScriptError(win, exception, stackVal, stackGlobal);
     }
   }
 
@@ -1398,14 +1397,15 @@ nsXPCComponents_Utils::ReportError(HandleValue error, HandleValue stack,
     }
 
     if (stackObj) {
-      scripterr = new nsScriptErrorWithStack(stackObj, stackGlobal);
+      scripterr = CreateScriptError(win, exception, stackObj, stackGlobal);
     }
   }
 
   if (!scripterr) {
-    scripterr = new nsScriptError();
+    scripterr = CreateScriptError(win, exception, nullptr, nullptr);
   }
 
+  JSErrorReport* err = errorObj ? JS_ErrorFromException(cx, errorObj) : nullptr;
   if (err) {
     // It's a proper JS Error
     nsAutoString fileUni;

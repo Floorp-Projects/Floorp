@@ -296,11 +296,12 @@ void xpc::ErrorReport::LogToStderr() {
 }
 
 void xpc::ErrorReport::LogToConsole() {
-  LogToConsoleWithStack(nullptr, nullptr);
+  LogToConsoleWithStack(nullptr, JS::NothingHandleValue, nullptr, nullptr);
 }
 
-void xpc::ErrorReport::LogToConsoleWithStack(JS::HandleObject aStack,
-                                             JS::HandleObject aStackGlobal) {
+void xpc::ErrorReport::LogToConsoleWithStack(
+    nsGlobalWindowInner* aWin, JS::Handle<mozilla::Maybe<JS::Value>> aException,
+    JS::HandleObject aStack, JS::HandleObject aStackGlobal) {
   if (aStack) {
     MOZ_ASSERT(aStackGlobal);
     MOZ_ASSERT(JS_IsGlobalObject(aStackGlobal));
@@ -322,16 +323,8 @@ void xpc::ErrorReport::LogToConsoleWithStack(JS::HandleObject aStack,
       do_GetService(NS_CONSOLESERVICE_CONTRACTID);
   NS_ENSURE_TRUE_VOID(consoleService);
 
-  RefPtr<nsScriptErrorBase> errorObject;
-  if (mWindowID && aStack) {
-    // Only set stack on messages related to a document
-    // As we cache messages in the console service,
-    // we have to ensure not leaking them after the related
-    // context is destroyed and we only track document lifecycle for now.
-    errorObject = new nsScriptErrorWithStack(aStack, aStackGlobal);
-  } else {
-    errorObject = new nsScriptError();
-  }
+  RefPtr<nsScriptErrorBase> errorObject =
+      CreateScriptError(aWin, aException, aStack, aStackGlobal);
   errorObject->SetErrorMessageName(mErrorMsgName);
 
   uint32_t flags =
