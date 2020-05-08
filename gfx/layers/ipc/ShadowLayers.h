@@ -418,7 +418,7 @@ class ShadowLayerForwarder final : public LayersIPCActor,
  private:
   ClientLayerManager* mClientLayerManager;
   Transaction* mTxn;
-  MessageLoop* mMessageLoop;
+  nsCOMPtr<nsISerialEventTarget> mThread;
   DiagnosticTypes mDiagnosticTypes;
   bool mIsFirstPaint;
   FocusTarget mFocusTarget;

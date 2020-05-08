@@ -158,8 +158,6 @@ class VRManagerChild : public PVRManagerChild {
   bool mDisplaysInitialized;
   nsTArray<uint64_t> mNavigatorCallbacks;
 
-  MessageLoop* mMessageLoop;
-
   struct XRFrameRequest {
     XRFrameRequest(mozilla::dom::FrameRequestCallback& aCallback,
                    int32_t aHandle)

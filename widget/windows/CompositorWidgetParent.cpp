@@ -216,7 +216,7 @@ void CompositorWidgetParent::UpdateCompositorWnd(const HWND aCompositorWnd,
   SendUpdateCompositorWnd(reinterpret_cast<WindowsHandle>(aCompositorWnd),
                           reinterpret_cast<WindowsHandle>(aParentWnd))
       ->Then(
-          layers::CompositorThreadHolder::Loop()->SerialEventTarget(), __func__,
+          layers::CompositorThread(), __func__,
           [self](const bool& aSuccess) {
             if (aSuccess && self->mRootLayerTreeID.isSome()) {
               self->mSetParentCompleted = true;

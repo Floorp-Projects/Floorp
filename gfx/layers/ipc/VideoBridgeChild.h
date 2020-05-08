@@ -57,7 +57,7 @@ class VideoBridgeChild final : public PVideoBridgeChild,
 
   // ClientIPCAllocator
   base::ProcessId GetParentPid() const override { return OtherPid(); }
-  MessageLoop* GetMessageLoop() const override { return mMessageLoop; }
+  nsISerialEventTarget* GetThread() const override { return mThread; }
   void CancelWaitForNotifyNotUsed(uint64_t aTextureId) override {
     MOZ_ASSERT(false, "NO RECYCLING HERE");
   }
@@ -86,7 +86,7 @@ class VideoBridgeChild final : public PVideoBridgeChild,
   virtual ~VideoBridgeChild();
 
   RefPtr<VideoBridgeChild> mIPDLSelfRef;
-  MessageLoop* mMessageLoop;
+  nsCOMPtr<nsISerialEventTarget> mThread;
   bool mCanSend;
 };
 
