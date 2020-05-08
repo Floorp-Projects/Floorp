@@ -207,16 +207,8 @@ class ProfileBufferChunkManagerWithLocalLimit final
         // The current chunk is strictly after the given timestamp, we're done.
         break;
       }
-      // We've found a chunk at or before the timestamp. Move the released chunk
-      // pointer to the next one.
-      UniquePtr<ProfileBufferChunk> oldest =
-          std::exchange(mReleasedChunks, mReleasedChunks->ReleaseNext());
-      mReleasedBufferBytes -= oldest->ChunkBytes();
-      if (mChunkDestroyedCallback) {
-        // Inform the user that we're going to destroy this chunk.
-        mChunkDestroyedCallback(*oldest);
-      }
-      // Stop using `oldest`, this will effectively destroy it.
+      // We've found a chunk at or before the timestamp, discard it.
+      DiscardOldestReleasedChunk(lock);
     }
   }
 
@@ -229,10 +221,48 @@ class ProfileBufferChunkManagerWithLocalLimit final
   void UnlockAfterPeekExtantReleasedChunks() final { mMutex.Unlock(); }
 
  private:
+  void MaybeRecycleChunk(
+      UniquePtr<ProfileBufferChunk>&& chunk,
+      const baseprofiler::detail::BaseProfilerAutoLock& aLock) {
+    // Try to recycle big-enough chunks. (All chunks should have the same size,
+    // but it's a cheap test and may allow future adjustments based on actual
+    // data rate.)
+    if (chunk->BufferBytes() >= mChunkMinBufferBytes) {
+      // We keep up to two recycled chunks at any time.
+      if (!mRecycledChunks) {
+        mRecycledChunks = std::move(chunk);
+      } else if (!mRecycledChunks->GetNext()) {
+        mRecycledChunks->InsertNext(std::move(chunk));
+      }
+    }
+  }
+
+  UniquePtr<ProfileBufferChunk> TakeRecycledChunk(
+      const baseprofiler::detail::BaseProfilerAutoLock& aLock) {
+    UniquePtr<ProfileBufferChunk> recycled;
+    if (mRecycledChunks) {
+      recycled = std::exchange(mRecycledChunks, mRecycledChunks->ReleaseNext());
+      recycled->MarkRecycled();
+    }
+    return recycled;
+  }
+
+  void DiscardOldestReleasedChunk(
+      const baseprofiler::detail::BaseProfilerAutoLock& aLock) {
+    MOZ_ASSERT(!!mReleasedChunks);
+    UniquePtr<ProfileBufferChunk> oldest =
+        std::exchange(mReleasedChunks, mReleasedChunks->ReleaseNext());
+    mReleasedBufferBytes -= oldest->BufferBytes();
+    if (mChunkDestroyedCallback) {
+      // Inform the user that we're going to destroy this chunk.
+      mChunkDestroyedCallback(*oldest);
+    }
+    MaybeRecycleChunk(std::move(oldest), aLock);
+  }
+
   [[nodiscard]] UniquePtr<ProfileBufferChunk> GetChunk(
-      const baseprofiler::detail::BaseProfilerAutoLock&) {
+      const baseprofiler::detail::BaseProfilerAutoLock& aLock) {
     MOZ_ASSERT(mUser, "Not registered yet");
-    UniquePtr<ProfileBufferChunk> chunk;
     // After this function, the total memory consumption will be the sum of:
     // - Bytes from released (i.e., full) chunks,
     // - Bytes from unreleased (still in use) chunks,
@@ -241,35 +271,21 @@ class ProfileBufferChunkManagerWithLocalLimit final
     //   for the new chunk, as it's assumed to be negligible compared to the
     //   total memory limit.)
     // If this total is higher than the local limit, we'll want to destroy
-    // the oldest released chunks until we're under the limit; if any, we'll
+    // the oldest released chunks until we're under the limit; if any, we may
     // recycle one of them to avoid a deallocation followed by an allocation.
     while (mReleasedBufferBytes + mUnreleasedBufferBytes +
                    mChunkMinBufferBytes >=
                mMaxTotalBytes &&
-           mReleasedBufferBytes != 0) {
-      MOZ_ASSERT(!!mReleasedChunks);
-      // We have reached the local limit, extract the oldest released chunk,
-      // which is the first one at `mReleasedChunks`.
-      UniquePtr<ProfileBufferChunk> oldest =
-          std::exchange(mReleasedChunks, mReleasedChunks->ReleaseNext());
-      // Subtract its size from the "released" number of bytes.
-      mReleasedBufferBytes -= oldest->BufferBytes();
-      if (mChunkDestroyedCallback) {
-        // Inform the user that we're going to destroy or recycle this chunk.
-        mChunkDestroyedCallback(*oldest);
-      }
-      // Try to recycle at least one big-enough chunk. (All chunks should have
-      // the same size, but it's a cheap test and may allow future adjustments
-      // based on actual data rate.)
-      if (!chunk && oldest->BufferBytes() >= mChunkMinBufferBytes) {
-        // Recycle this chunk.
-        chunk = std::move(oldest);
-        chunk->MarkRecycled();
-      }
+           !!mReleasedChunks) {
+      // We have reached the local limit, discard the oldest released chunk.
+      DiscardOldestReleasedChunk(aLock);
     }
 
+    // Extract the recycled chunk, if any.
+    UniquePtr<ProfileBufferChunk> chunk = TakeRecycledChunk(aLock);
+
     if (!chunk) {
-      // No recycling -> Create a chunk now. (This could still fail.)
+      // No recycled chunk -> Create a chunk now. (This could still fail.)
       chunk = ProfileBufferChunk::Create(mChunkMinBufferBytes);
     }
 
@@ -290,9 +306,15 @@ class ProfileBufferChunkManagerWithLocalLimit final
       MallocSizeOf aMallocSizeOf,
       const baseprofiler::detail::BaseProfilerAutoLock&) const {
     MOZ_ASSERT(mUser, "Not registered yet");
+    size_t size = 0;
+    if (mReleasedChunks) {
+      size += mReleasedChunks->SizeOfIncludingThis(aMallocSizeOf);
+    }
+    if (mRecycledChunks) {
+      size += mRecycledChunks->SizeOfIncludingThis(aMallocSizeOf);
+    }
     // Note: Missing size of std::function external resources (if any).
-    return mReleasedChunks ? mReleasedChunks->SizeOfIncludingThis(aMallocSizeOf)
-                           : 0;
+    return size;
   }
 
   // Maxumum number of bytes that should be used by all unreleased and released
@@ -318,6 +340,10 @@ class ProfileBufferChunkManagerWithLocalLimit final
   // List of all released chunks. The oldest one should be at the start of the
   // list, and may be destroyed or recycled when the memory limit is reached.
   UniquePtr<ProfileBufferChunk> mReleasedChunks;
+
+  // This may hold chunks that were released then slated for destruction, they
+  // will be reused next time an allocation would have been needed.
+  UniquePtr<ProfileBufferChunk> mRecycledChunks;
 
   // Optional callback used to notify the user when a chunk is about to be
   // destroyed or recycled. (The data content is always destroyed, but the chunk
