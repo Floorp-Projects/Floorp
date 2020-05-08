@@ -248,8 +248,7 @@ class MOZ_STACK_CLASS ParserSharedBase : public JS::CustomAutoRooter {
  public:
   enum class Kind { Parser, BinASTParser };
 
-  ParserSharedBase(JSContext* cx, CompilationInfo& compilationInfo,
-                   ScriptSourceObject* sourceObject, Kind kind);
+  ParserSharedBase(JSContext* cx, CompilationInfo& compilationInfo, Kind kind);
   ~ParserSharedBase();
 
  public:
@@ -268,8 +267,6 @@ class MOZ_STACK_CLASS ParserSharedBase : public JS::CustomAutoRooter {
 
   // For tracking used names in this parsing session.
   UsedNameTracker& usedNames_;
-
-  RootedScriptSourceObject sourceObject_;
 
  public:
   CompilationInfo& getCompilationInfo() { return compilationInfo_; }
@@ -327,8 +324,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   friend class AutoInParametersOfAsyncFunction;
 
   ParserBase(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-             bool foldConstants, CompilationInfo& compilationInfo,
-             ScriptSourceObject* sourceObject);
+             bool foldConstants, CompilationInfo& compilationInfo);
   ~ParserBase();
 
   bool checkOptions();
@@ -484,20 +480,16 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   //       are less likely to select this overload.
   PerHandlerParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                    bool foldConstants, CompilationInfo& compilationInfo,
-                   BaseScript* lazyOuterFunction,
-                   ScriptSourceObject* sourceObject,
-                   void* internalSyntaxParser);
+                   BaseScript* lazyOuterFunction, void* internalSyntaxParser);
 
  protected:
   template <typename Unit>
   PerHandlerParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                    bool foldConstants, CompilationInfo& compilationInfo,
                    GeneralParser<SyntaxParseHandler, Unit>* syntaxParser,
-                   BaseScript* lazyOuterFunction,
-                   ScriptSourceObject* sourceObject)
+                   BaseScript* lazyOuterFunction)
       : PerHandlerParser(cx, options, foldConstants, compilationInfo,
-                         lazyOuterFunction, sourceObject,
-                         static_cast<void*>(syntaxParser)) {}
+                         lazyOuterFunction, static_cast<void*>(syntaxParser)) {}
 
   static typename ParseHandler::NullNode null() { return ParseHandler::null(); }
 
@@ -930,8 +922,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   GeneralParser(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
                 const Unit* units, size_t length, bool foldConstants,
                 CompilationInfo& compilationInfo, SyntaxParser* syntaxParser,
-                BaseScript* lazyOuterFunction,
-                ScriptSourceObject* sourceObject);
+                BaseScript* lazyOuterFunction);
 
   inline void setAwaitHandling(AwaitHandling awaitHandling);
   inline void setInParametersOfAsyncFunction(bool inParameters);

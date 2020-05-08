@@ -3721,8 +3721,7 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
 
   Parser<FullParseHandler, char16_t> parser(
       cx, options, chars.begin().get(), chars.length(),
-      /* foldConstants = */ false, compilationInfo, nullptr, nullptr,
-      compilationInfo.sourceObject);
+      /* foldConstants = */ false, compilationInfo, nullptr, nullptr);
   if (!parser.checkOptions()) {
     return false;
   }

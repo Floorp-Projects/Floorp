@@ -5338,13 +5338,11 @@ static bool ParseBinASTData(JSContext* cx, uint8_t* buf_data,
                             uint32_t buf_length,
                             js::frontend::GlobalSharedContext* globalsc,
                             js::frontend::CompilationInfo& compilationInfo,
-                            const JS::ReadOnlyCompileOptions& options,
-                            HandleScriptSourceObject sourceObj) {
+                            const JS::ReadOnlyCompileOptions& options) {
   MOZ_ASSERT(globalsc);
 
   // Note: We need to keep `reader` alive as long as we can use `parsed`.
-  js::frontend::BinASTParser<Tok> reader(cx, compilationInfo, options,
-                                         sourceObj);
+  js::frontend::BinASTParser<Tok> reader(cx, compilationInfo, options);
 
   JS::Result<js::frontend::ParseNode*> parsed =
       reader.parse(globalsc, buf_data, buf_length);
@@ -5462,8 +5460,8 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
   auto parseFunc = mode == Multipart
                        ? ParseBinASTData<frontend::BinASTTokenReaderMultipart>
                        : ParseBinASTData<frontend::BinASTTokenReaderContext>;
-  if (!parseFunc(cx, buf_data, buf_length, &globalsc, compilationInfo, options,
-                 compilationInfo.sourceObject)) {
+  if (!parseFunc(cx, buf_data, buf_length, &globalsc, compilationInfo,
+                 options)) {
     return false;
   }
 
@@ -5478,13 +5476,11 @@ static bool FullParseTest(JSContext* cx,
                           const JS::ReadOnlyCompileOptions& options,
                           const Unit* units, size_t length,
                           js::frontend::CompilationInfo& compilationInfo,
-                          ScriptSourceObject* sourceObject,
                           js::frontend::ParseGoal goal) {
   using namespace js::frontend;
   Parser<FullParseHandler, Unit> parser(cx, options, units, length,
                                         /* foldConstants = */ false,
-                                        compilationInfo, nullptr, nullptr,
-                                        sourceObject);
+                                        compilationInfo, nullptr, nullptr);
   if (!parser.checkOptions()) {
     return false;
   }
@@ -5632,24 +5628,18 @@ static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedScriptSourceObject sourceObject(
-      cx, frontend::CreateScriptSourceObject(cx, options));
-  if (!sourceObject) {
-    return false;
-  }
-
   if (stableChars.isLatin1()) {
     const Latin1Char* chars_ = stableChars.latin1Range().begin().get();
     auto chars = reinterpret_cast<const mozilla::Utf8Unit*>(chars_);
-    if (!FullParseTest<mozilla::Utf8Unit>(
-            cx, options, chars, length, compilationInfo, sourceObject, goal)) {
+    if (!FullParseTest<mozilla::Utf8Unit>(cx, options, chars, length,
+                                          compilationInfo, goal)) {
       return false;
     }
   } else {
     MOZ_ASSERT(stableChars.isTwoByte());
     const char16_t* chars = stableChars.twoByteRange().begin().get();
     if (!FullParseTest<char16_t>(cx, options, chars, length, compilationInfo,
-                                 sourceObject, goal)) {
+                                 goal)) {
       return false;
     }
   }
@@ -5692,8 +5682,7 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   Parser<frontend::SyntaxParseHandler, char16_t> parser(
-      cx, options, chars, length, false, compilationInfo, nullptr, nullptr,
-      compilationInfo.sourceObject);
+      cx, options, chars, length, false, compilationInfo, nullptr, nullptr);
   if (!parser.checkOptions()) {
     return false;
   }

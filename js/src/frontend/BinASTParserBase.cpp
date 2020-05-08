@@ -11,9 +11,8 @@
 namespace js::frontend {
 
 BinASTParserBase::BinASTParserBase(JSContext* cx,
-                                   CompilationInfo& compilationInfo,
-                                   HandleScriptSourceObject sourceObject)
-    : ParserSharedBase(cx, compilationInfo, sourceObject,
+                                   CompilationInfo& compilationInfo)
+    : ParserSharedBase(cx, compilationInfo,
                        ParserSharedBase::Kind::BinASTParser) {}
 
 }  // namespace js::frontend
