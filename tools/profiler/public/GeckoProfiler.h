@@ -285,18 +285,18 @@ bool IsThreadBeingProfiled();
 
 static constexpr mozilla::PowerOfTwo32 PROFILER_DEFAULT_ENTRIES =
 #  if !defined(ARCH_ARMV6)
-    mozilla::MakePowerOfTwo32<1u << 20>();  // 1'048'576 entries = 8MB
+    mozilla::MakePowerOfTwo32<8 * 1024 * 1024>();  // 8M entries = 64MB
 #  else
-    mozilla::MakePowerOfTwo32<1u << 17>();  // 131'072 entries = 1MB
+    mozilla::MakePowerOfTwo32<512 * 1024>();  // 512k entries = 4MB
 #  endif
 
 // Startup profiling usually need to capture more data, especially on slow
 // systems.
 static constexpr mozilla::PowerOfTwo32 PROFILER_DEFAULT_STARTUP_ENTRIES =
 #  if !defined(ARCH_ARMV6)
-    mozilla::MakePowerOfTwo32<1u << 23>();  // 8'388'608 entries = 64MB
+    mozilla::MakePowerOfTwo32<64 * 1024 * 1024>();  // 64M entries = 512MB
 #  else
-    mozilla::MakePowerOfTwo32<1u << 17>();  // 131'072 entries = 1MB
+    mozilla::MakePowerOfTwo32<512 * 1024>();  // 512k entries = 4MB
 #  endif
 
 #  define PROFILER_DEFAULT_DURATION 20 /* seconds, for tests only */
