@@ -3,8 +3,23 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Global defaults
-var gDefaultGarbagePiles = "8M";
+
+// Allocate this much "garbage" per frame. This might correspond exactly to a
+// number of objects/values, or it might be some set of objects, depending on
+// the mutator in question.
 var gDefaultGarbagePerFrame = "8K";
+
+// In order to avoid a performance cliff between when the per-frame garbage
+// fits in the nursery and when it doesn't, most mutators will collect multiple
+// "piles" of garbage and round-robin through them, so that the per-frame
+// garbage stays alive for some number of frames. There will still be some
+// internal temporary allocations that don't end up in the piles; presumably,
+// the nursery will take care of those.
+//
+// If the per-frame garbage is K and the number of piles is P, then some of the
+// garbage will start getting tenured as long as P*K > size(nursery).
+var gDefaultGarbagePiles = "8";
+
 var gDefaultTestDuration = 8.0;
 
 function parse_units(v) {
