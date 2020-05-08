@@ -11222,17 +11222,21 @@ void nsDocShell::SaveLastVisit(nsIChannel* aChannel, nsIURI* aURI,
                              aChannelRedirectFlags);
 }
 
-void nsDocShell::AddURIVisit(nsIURI* aURI, nsIURI* aPreviousURI,
-                             uint32_t aChannelRedirectFlags,
-                             uint32_t aResponseStatus) {
+/* static */ void nsDocShell::InternalAddURIVisit(
+    nsIURI* aURI, nsIURI* aPreviousURI, uint32_t aChannelRedirectFlags,
+    uint32_t aResponseStatus, BrowsingContext* aBrowsingContext,
+    nsIWidget* aWidget, uint32_t aLoadType) {
   MOZ_ASSERT(aURI, "Visited URI is null!");
-  MOZ_ASSERT(mLoadType != LOAD_ERROR_PAGE && mLoadType != LOAD_BYPASS_HISTORY,
+  MOZ_ASSERT(aLoadType != LOAD_ERROR_PAGE && aLoadType != LOAD_BYPASS_HISTORY,
              "Do not add error or bypass pages to global history");
+
+  bool usePrivateBrowsing = false;
+  aBrowsingContext->GetUsePrivateBrowsing(&usePrivateBrowsing);
 
   // Only content-type docshells save URI visits.  Also don't do
   // anything here if we're not supposed to use global history.
-  if (mItemType != typeContent || !mBrowsingContext->GetUseGlobalHistory() ||
-      UsePrivateBrowsing()) {
+  if (!aBrowsingContext->IsContent() ||
+      !aBrowsingContext->GetUseGlobalHistory() || usePrivateBrowsing) {
     return;
   }
 
@@ -11241,7 +11245,7 @@ void nsDocShell::AddURIVisit(nsIURI* aURI, nsIURI* aPreviousURI,
   if (history) {
     uint32_t visitURIFlags = 0;
 
-    if (!IsFrame()) {
+    if (aBrowsingContext->IsTop()) {
       visitURIFlags |= IHistory::TOP_LEVEL;
     }
 
@@ -11272,10 +11276,19 @@ void nsDocShell::AddURIVisit(nsIURI* aURI, nsIURI* aPreviousURI,
       visitURIFlags |= IHistory::UNRECOVERABLE_ERROR;
     }
 
-    nsPIDOMWindowOuter* outer = GetWindow();
-    nsCOMPtr<nsIWidget> widget = widget::WidgetUtils::DOMWindowToWidget(outer);
-    (void)history->VisitURI(widget, aURI, aPreviousURI, visitURIFlags);
+    mozilla::Unused << history->VisitURI(aWidget, aURI, aPreviousURI,
+                                         visitURIFlags);
   }
+}
+
+void nsDocShell::AddURIVisit(nsIURI* aURI, nsIURI* aPreviousURI,
+                             uint32_t aChannelRedirectFlags,
+                             uint32_t aResponseStatus) {
+  nsPIDOMWindowOuter* outer = GetWindow();
+  nsCOMPtr<nsIWidget> widget = widget::WidgetUtils::DOMWindowToWidget(outer);
+
+  InternalAddURIVisit(aURI, aPreviousURI, aChannelRedirectFlags,
+                      aResponseStatus, mBrowsingContext, widget, mLoadType);
 }
 
 void nsDocShell::SavePreviousRedirectsAndLastVisit(

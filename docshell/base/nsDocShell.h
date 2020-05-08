@@ -68,6 +68,7 @@ class EventTarget;
 namespace net {
 class LoadInfo;
 class DocumentChannelRedirect;
+class DocumentLoadListener;
 }  // namespace net
 }  // namespace mozilla
 
@@ -538,6 +539,7 @@ class nsDocShell final : public nsDocLoader,
   friend class OnLinkClickEvent;
   friend class nsIDocShell;
   friend class mozilla::dom::BrowsingContext;
+  friend class mozilla::net::DocumentLoadListener;
 
   // It is necessary to allow adding a timeline marker wherever a docshell
   // instance is available. This operation happens frequently and needs to
@@ -791,6 +793,14 @@ class nsDocShell final : public nsDocLoader,
   void AddURIVisit(nsIURI* aURI, nsIURI* aPreviousURI,
                    uint32_t aChannelRedirectFlags,
                    uint32_t aResponseStatus = 0);
+
+  /**
+   * Internal helper funtion
+   */
+  static void InternalAddURIVisit(
+      nsIURI* aURI, nsIURI* aPreviousURI, uint32_t aChannelRedirectFlags,
+      uint32_t aResponseStatus, mozilla::dom::BrowsingContext* aBrowsingContext,
+      nsIWidget* aWidget, uint32_t aLoadType);
 
   /**
    * Helper function that will add the redirect chain found in aRedirects using
