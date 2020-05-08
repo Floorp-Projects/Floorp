@@ -45,8 +45,8 @@ SimpleTest.waitForFocus(function() {
   sendString("a");
 
   is(div.innerHTML, "<p><b><font color=\"red\">1234567890</font></b></p>" +
-                    "<p><b><font color=\"red\">a<br></font></b></p>" +
-                    "<p><b><font color=\"red\">b<br></font></b></p>",
+                    "<p><b><font color=\"red\">a</font></b></p>" +
+                    "<p><b><font color=\"red\">b</font></b></p>",
                     "unexpected HTML");
 
   // Second test: Since we modified the code path that splits non-text nodes,
