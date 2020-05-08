@@ -4766,7 +4766,7 @@ MNewArray::MNewArray(TempAllocator& alloc, CompilerConstraintList* constraints,
       pc_(pc),
       vmCall_(vmCall) {
   setResultType(MIRType::Object);
-  if (templateObject()) {
+  if (templateObject() && !JitOptions.warpBuilder) {
     if (TemporaryTypeSet* types =
             MakeSingletonTypeSet(alloc, constraints, templateObject())) {
       setResultTypeSet(types);

@@ -2303,7 +2303,8 @@ class MNewObject : public MUnaryInstruction, public NoTypePolicy::Data {
     MOZ_ASSERT_IF(mode != ObjectLiteral, templateObject());
     setResultType(MIRType::Object);
 
-    if (JSObject* obj = templateObject()) {
+    JSObject* obj = templateObject();
+    if (obj && !JitOptions.warpBuilder) {
       setResultTypeSet(MakeSingletonTypeSet(alloc, constraints, obj));
     }
 

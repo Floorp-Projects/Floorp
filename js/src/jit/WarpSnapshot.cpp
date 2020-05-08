@@ -143,6 +143,15 @@ void WarpRest::dumpData(GenericPrinter& out) const {
   out.printf("    template: 0x%p\n", templateObject());
 }
 
+void WarpNewArray::dumpData(GenericPrinter& out) const {
+  out.printf("    template: 0x%p\n", templateObject());
+  out.printf("    useVMCall: %u\n", useVMCall());
+}
+
+void WarpNewObject::dumpData(GenericPrinter& out) const {
+  out.printf("    template: 0x%p\n", templateObject());
+}
+
 void WarpCacheIR::dumpData(GenericPrinter& out) const {
   out.printf("    stubCode: 0x%p\n", static_cast<JitCode*>(stubCode_));
   out.printf("    stubInfo: 0x%p\n", stubInfo_);
@@ -239,6 +248,14 @@ void WarpLambda::traceData(JSTracer* trc) {
 
 void WarpRest::traceData(JSTracer* trc) {
   TraceWarpGCPtr(trc, templateObject_, "warp-rest-template");
+}
+
+void WarpNewArray::traceData(JSTracer* trc) {
+  TraceWarpGCPtr(trc, templateObject_, "warp-newarray-template");
+}
+
+void WarpNewObject::traceData(JSTracer* trc) {
+  TraceWarpGCPtr(trc, templateObject_, "warp-newobject-template");
 }
 
 void WarpCacheIR::traceData(JSTracer* trc) {
