@@ -1,16 +1,5 @@
-Triage Priorities
-=================
-
-Our work *must* be focused on Mozilla’s objectives, and as you triage
-bugs you should prioritize accordingly.
-
-Defects and tasks which affect:
-
--  Performance
--  Privacy
--  User Security
-
-should be the highest priorities.
+Other Bug Metadata
+==================
 
 Performance
 -----------

@@ -14,8 +14,7 @@ conventions include:
 -  Consistency reduces friction around engineering mobility between
    projects
 
-Several of you are doing this already. But we need you to do some tuning
-of your process.
+We recommend creating sets of labels in your project to do this.
 
 Bug types
 ---------
@@ -32,9 +31,21 @@ richer set of states.
 When you close a bug, add a label indicating `the
 resolution <https://wiki.mozilla.org/BMO/UserGuide/BugStatuses#Resolutions>`__.
 
+-  ``fixed``
+
+   -  A change set for the bug has been landed in Mozilla-Central
+   -  A GitHub issue could be closed, but the change set has not
+      landed so it would be still considered open from the
+      Bugzilla point of view
+
 -  ``invalid``
 
    -  The problem described is not a bug.
+
+-  ``incomplete``
+
+   -  The problem is vaguely described with no steps to reproduce, or is
+      a support request.
 
 -  ``wontfix``
 
@@ -49,36 +60,25 @@ resolution <https://wiki.mozilla.org/BMO/UserGuide/BugStatuses#Resolutions>`__.
 
    -  All attempts at reproducing this bug were futile, and reading the
       code produces no clues as to why the described behavior would
-      occur. incomplete
-   -  The problem is vaguely described with no steps to reproduce, or is
-      a support request.
+      occur.
+
+Severities (Required)
+---------------------
+
+The triage process for Firefox bugs in Bugzilla requires a non default
+value of a bug's `Severity (definitions) </guides/severity>`__.
+
+Release Status Flags (Required)
+-------------------------------
+
+Open Firefox bugs should also have at least `one status flag </guides/status-flags>`__
+(``status_firefoxNN``) set for Nightly, Beta, Release, or ESR.
 
 Priorities
 ----------
 
-Firefox projects in Bugzilla use the priority field to indicate when and
+Firefox projects in Bugzilla can use the `priority field </guides/priority>`__ to indicate when and
 if a bug will be worked on.
-
-Use these labels in your project to indicate priorities.
-
--  ``P1``
-
-   -  Fix in the current release or iteration
-
--  ``P2``
-
-   -  Fix in the next release or iteration
-
--  ``P3``
-
-   -  Backlog
-
--  ``P5``
-
-   -  Will not fix, but will accept a patch
-
-You probably already have a set of tags, so do an edit to convert them
-or use `the GitHub settings app <https://github.com/probot/settings>`__.
 
 Keywords
 --------
@@ -112,24 +112,6 @@ requests, and ``good first issue`` to signal to contributors (`along
 with adequate
 documentation <http://blog.humphd.org/why-good-first-bugs-often-arent/>`__.)
 
-Status Flags
-------------
-
-Bugzilla uses a set of status flags to communicate priorities between
-contributors, product managers, and the the release management team.
-
-A bug which contributors consider a high priority may not effect the
-current release, and vice versa.
-
-In Bugzilla, status for each release number is represented by a field
-which takes `one of multiple
-values <https://wiki.mozilla.org/Bugmasters/Process/Triage/Release_Status>`__.
-
-It’s recommended that you don’t use status and tracking flag tags in
-GitHub issues and use another tool such a Trello or a worksheet to
-communicate to Release Drivers on work that needs to land in the
-``mozilla-centra1`` repository.
-
 Summary
 -------
 
@@ -149,10 +131,25 @@ To represent Bugzilla fields, use labels following this scheme.
    -  ``regression``, ``regressionwindow-wanted``,
       ``regression-internal``
 
--  Priority
+
+-  `Severity </guides/severity>`__ (required)
+
+   -  ``S1``, ``S2``, ``S3``, ``S4``, ``N/A`` (reserved for bugs
+      of type ``task`` or ``enhancement``)
+
+-  `Status flags </guides/status-flags>`__ (required)
+
+   -  ``status_firefoxNN:<status>``
+      (example ``status_firefox77:affected``)
+
+-  `Priority </guides/priority>`__
 
    -  ``P1``, ``P2``, ``P3``, ``P5``
 
 -  Other keywords
 
    -  ``good first bug``, ``perf``, &etc.
+
+
+You may already have a set of tags, so do an edit to convert them
+or use `the GitHub settings app <https://github.com/probot/settings>`__.
