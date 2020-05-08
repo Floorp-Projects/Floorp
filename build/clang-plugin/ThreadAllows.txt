@@ -17,6 +17,7 @@ Cameras IPC
 ChainedPipePump
 ChainedPipeRecv
 Checker Test
+Compositor
 Cookie
 CrashRep Inject
 DDMediaLogs
@@ -41,6 +42,7 @@ IMAP
 IPC Launch
 IPDL Background
 IdentityCrypto
+ImageBridgeChld
 LS Thread
 LayerScope
 MDCDMThread

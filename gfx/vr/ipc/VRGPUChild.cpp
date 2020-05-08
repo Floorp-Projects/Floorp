@@ -56,7 +56,7 @@ void VRGPUChild::Shutdown() {
 
 void VRGPUChild::ActorDestroy(ActorDestroyReason aWhy) {
   VRManager* vm = VRManager::Get();
-  mozilla::layers::CompositorThreadHolder::Loop()->PostTask(
+  mozilla::layers::CompositorThread()->Dispatch(
       NewRunnableMethod("VRGPUChild::ActorDestroy", vm, &VRManager::Shutdown));
 
   mClosed = true;
