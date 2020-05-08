@@ -1,0 +1,24 @@
+# All entries in this file are to suppress issues reported by pointer-overflow.
+# Blacklists for other reasons should go in separate blacklist files.
+
+[pointer-overflow]
+
+# cppunittest
+src:*/mfbt/tests/TestArrayUtils.cpp
+# gtest ImageDecodeToSurface.WebP
+src:*/media/libwebp/src/dec/idec_dec.c
+# gtest ImageDecoders.WebPLargeMultiChunk
+src:*/media/libwebp/src/utils/bit_reader_utils.c
+# gtest MediaDataDecoder.VP9
+src:*/media/ffvpx/libavcodec/avpacket.c
+src:*/media/ffvpx/libavutil/imgutils.c
+# gtest VP8VideoTrackEncoder.FrameEncode
+src:*/media/libvpx/libvpx/vp8/encoder/encodeframe.c
+# gtest ImageDecoders.AVIFSingleChunk
+src:*/third_party/aom/av1/common/quant_common.c
+# crashtest
+src:*/parser/expat/lib/xmlparse.c
+src:*/mfbt/lz4/lz4.c
+src:*/media/libogg/src/ogg_framing.c
+# mochitest gl2c dom/canvas/test/webgl-conf/generated/test_2_conformance2__reading__read-pixels-pack-parameters.html
+src:*/dom/canvas/WebGLContextGL.cpp
