@@ -14,6 +14,7 @@ COM MTA
 Cache Deleter
 Cache I/O
 Cameras IPC
+Canvas
 ChainedPipePump
 ChainedPipeRecv
 Checker Test
