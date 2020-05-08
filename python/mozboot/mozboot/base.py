@@ -324,6 +324,12 @@ class BaseBootstrapper(object):
         '''
         pass
 
+    def ensure_minidump_stackwalk_packages(self, state_dir, checkout_root):
+        '''
+        Install minidump_stackwalk.
+        '''
+        pass
+
     def install_toolchain_static_analysis(self, state_dir, checkout_root, toolchain_job):
         clang_tools_path = os.path.join(state_dir, 'clang-tools')
         if not os.path.exists(clang_tools_path):
