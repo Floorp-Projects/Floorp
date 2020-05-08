@@ -13,8 +13,9 @@
 #include "mozilla/layers/MatrixMessage.h"
 
 class nsIDOMWindowUtils;
-class nsISerialEventTarget;
+
 class nsIWidget;
+class MessageLoop;
 
 namespace mozilla {
 class PresShell;
@@ -52,6 +53,7 @@ class ChromeProcessController : public mozilla::layers::GeckoContentController {
   void NotifyLayerTransforms(
       const nsTArray<MatrixMessage>& aTransforms) override;
   void RequestContentRepaint(const RepaintRequest& aRequest) override;
+  void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs) override;
   bool IsRepaintThread() override;
   void DispatchToRepaintThread(already_AddRefed<Runnable> aTask) override;
   MOZ_CAN_RUN_SCRIPT
@@ -80,7 +82,7 @@ class ChromeProcessController : public mozilla::layers::GeckoContentController {
   nsCOMPtr<nsIWidget> mWidget;
   RefPtr<APZEventState> mAPZEventState;
   RefPtr<IAPZCTreeManager> mAPZCTreeManager;
-  nsCOMPtr<nsISerialEventTarget> mUIThread;
+  MessageLoop* mUILoop;
 
   void InitializeRoot();
   PresShell* GetPresShell() const;
