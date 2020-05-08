@@ -199,6 +199,15 @@ void ProfilerParent::ProfilerStarted(nsIProfilerStartParams* aParams) {
 }
 
 /* static */
+void ProfilerParent::ProfilerWillStopIfStarted() {
+  if (!NS_IsMainThread()) {
+    return;
+  }
+
+  // TODO, see following patches.
+}
+
+/* static */
 void ProfilerParent::ProfilerStopped() {
   if (!NS_IsMainThread()) {
     return;
