@@ -100,6 +100,12 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             "help": "Defines a way to not run a specific implementation status "
                     " (i.e. not implemented)."}
          ],
+        [["--skip-timeout"], {
+            "action": "store_true",
+            "dest": "skip_timeout",
+            "default": False,
+            "help": "Ignore tests that are expected status of TIMEOUT"}
+         ],
         [["--include"], {
             "action": "store",
             "dest": "include",
@@ -265,6 +271,9 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             cmd.append("--disable-e10s")
         if c["enable_webrender"]:
             cmd.append("--enable-webrender")
+
+        if c["skip_timeout"]:
+            cmd.append("--skip-timeout")
 
         for implementation_status in c["skip_implementation_status"]:
             cmd.append("--skip-implementation-status=%s" % implementation_status)
