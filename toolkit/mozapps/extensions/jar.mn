@@ -18,7 +18,6 @@ toolkit.jar:
   content/mozapps/extensions/aboutaddons.css                    (content/aboutaddons.css)
   content/mozapps/extensions/abuse-reports.js                   (content/abuse-reports.js)
   content/mozapps/extensions/abuse-report-frame.html            (content/abuse-report-frame.html)
-  content/mozapps/extensions/abuse-report-frame.js              (content/abuse-report-frame.js)
   content/mozapps/extensions/abuse-report-panel.css             (content/abuse-report-panel.css)
   content/mozapps/extensions/abuse-report-panel.js              (content/abuse-report-panel.js)
   content/mozapps/extensions/default-theme.svg                  (content/default-theme.svg)
