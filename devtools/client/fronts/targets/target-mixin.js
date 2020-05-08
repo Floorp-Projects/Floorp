@@ -560,6 +560,10 @@ function TargetMixin(parentClass) {
         }
       }
 
+      // This event should be emitted before calling super.destroy(), because
+      // super.destroy() will remove all event listeners attached to this front.
+      this.emit("target-destroyed");
+
       // Do that very last in order to let a chance to dispatch `detach` requests.
       super.destroy();
 

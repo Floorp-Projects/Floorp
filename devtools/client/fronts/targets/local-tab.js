@@ -140,7 +140,7 @@ class LocalTabTargetFront extends BrowsingContextTargetFront {
 
       // If we support target switching, only wait for the target to be
       // destroyed so that TargetFactory clears its memoized target for this tab
-      await this.once("close");
+      await this.once("target-destroyed");
     } else {
       // Otherwise, if we don't support target switching, ensure the toolbox is destroyed.
       // We need to wait for the toolbox destruction because the TargetFactory memoized the targets,

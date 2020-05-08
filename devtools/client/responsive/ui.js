@@ -1181,6 +1181,11 @@ class ResponsiveUI {
     // We should ignore the remoteness events in case of old RDM
     // as it is firing fake remoteness events.
     if (this.isBrowserUIEnabled) {
+      // The current tab target will be destroyed by the process change.
+      // Wait for the target to be fully destroyed so that the cache of the
+      // corresponding TabDescriptorFront has been cleared. Otherwise, getTab()
+      // might return the soon to be destroyed target again.
+      await this.targetList.targetFront.once("target-destroyed");
       const newTarget = await this.client.mainRoot.getTab();
       await this.targetList.switchToTarget(newTarget);
     } else {
