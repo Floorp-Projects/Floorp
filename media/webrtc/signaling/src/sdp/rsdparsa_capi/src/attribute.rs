@@ -425,10 +425,14 @@ pub struct RustSdpAttributeFmtpParameters {
 
     // Opus
     pub maxplaybackrate: u32,
+    pub maxaveragebitrate: u32,
     pub usedtx: bool,
     pub stereo: bool,
     pub useinbandfec: bool,
     pub cbr: bool,
+    pub ptime: u32,
+    pub minptime: u32,
+    pub maxptime: u32,
 
     // telephone-event
     pub dtmf_tones: StringView,
@@ -474,6 +478,10 @@ impl<'a> From<&'a SdpAttributeFmtpParameters> for RustSdpAttributeFmtpParameters
             cbr: other.cbr,
             max_fr: other.max_fr,
             maxplaybackrate: other.maxplaybackrate,
+            maxaveragebitrate: other.maxaveragebitrate,
+            ptime: other.ptime,
+            minptime: other.minptime,
+            maxptime: other.maxptime,
             dtmf_tones: StringView::from(other.dtmf_tones.as_str()),
             rtx,
             encodings: &other.encodings,
