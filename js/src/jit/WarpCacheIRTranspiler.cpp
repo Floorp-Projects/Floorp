@@ -348,6 +348,13 @@ bool WarpCacheIRTranspiler::emitLoadObjectResult(ObjOperandId objId) {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitLoadBooleanResult(bool val) {
+  auto* constant = MConstant::New(alloc(), BooleanValue(val));
+  add(constant);
+  pushResult(constant);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadEnclosingEnvironment(
     ObjOperandId objId, ObjOperandId resultId) {
   MDefinition* env = getOperand(objId);
