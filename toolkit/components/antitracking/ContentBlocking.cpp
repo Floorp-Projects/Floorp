@@ -31,6 +31,7 @@
 #include "nsIOService.h"
 #include "nsIWebProgressListener.h"
 #include "nsScriptSecurityManager.h"
+#include "RejectForeignAllowList.h"
 
 namespace mozilla {
 
@@ -961,6 +962,11 @@ bool ContentBlocking::ShouldAllowAccessFor(nsPIDOMWindowInner* aWindow,
     }
   } else {
     MOZ_ASSERT(CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior));
+    if (RejectForeignAllowList::Check(document)) {
+      LOG(("This window is whitelisted for reject foreign"));
+      return true;
+    }
+
     blockedReason = nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN;
   }
 
@@ -1167,6 +1173,10 @@ bool ContentBlocking::ShouldAllowAccessFor(nsIChannel* aChannel, nsIURI* aURI,
     }
   } else {
     MOZ_ASSERT(CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior));
+    if (httpChannel && RejectForeignAllowList::Check(httpChannel)) {
+      LOG(("This channel is whitelisted"));
+      return true;
+    }
     blockedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN;
   }
 
