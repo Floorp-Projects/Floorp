@@ -11,17 +11,15 @@ import android.view.ViewGroup
 import android.widget.Switch
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import androidx.navigation.findNavController
 import kotlinx.android.synthetic.main.fragment_installed_add_on_details.view.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.Addon
+import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.ui.translatedName
-import mozilla.components.lib.state.ext.flowScoped
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.showToolbar
@@ -33,7 +31,6 @@ import org.mozilla.fenix.utils.Settings
 @Suppress("LargeClass", "TooManyFunctions")
 class InstalledAddonDetailsFragment : Fragment() {
     private lateinit var addon: Addon
-    private var scope: CoroutineScope? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -44,36 +41,46 @@ class InstalledAddonDetailsFragment : Fragment() {
             addon = AddonDetailsFragmentArgs.fromBundle(requireNotNull(arguments)).addon
         }
 
-        return inflater.inflate(R.layout.fragment_installed_add_on_details, container, false).also {
-            bind(it)
-        }
+        return inflater.inflate(R.layout.fragment_installed_add_on_details, container, false)
     }
 
-    override fun onStart() {
-        super.onStart()
-        scope = requireContext().components.core.store.flowScoped { flow ->
-            flow.ifChanged { it.extensions }
-                .map { it.extensions.filterValues { extension -> extension.id == addon.id } }
-                .ifChanged()
-                .collect {
-                    val addonState = it[addon.id]
-                    if (addonState != null && addonState.enabled != addon.isEnabled()) {
-                        view?.let { view ->
-                            val newState = addon.installedState?.copy(enabled = addonState.enabled)
-                            this.addon = addon.copy(installedState = newState)
-                            view.enable_switch.setState(addon.isEnabled())
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        bindAddon(view)
+    }
+
+    private fun bindAddon(view: View) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val addons = requireContext().components.addonManager.getAddons()
+                lifecycleScope.launch(Dispatchers.Main) {
+                    runIfFragmentIsAttached {
+                        addons.find { addon.id == it.id }.let {
+                            if (it == null) {
+                                throw AddonManagerException(Exception("Addon ${addon.id} not found"))
+                            } else {
+                                addon = it
+                                bindUI(view)
+                            }
+                            view.add_on_progress_bar.isVisible = false
                         }
                     }
                 }
+            } catch (e: AddonManagerException) {
+                lifecycleScope.launch(Dispatchers.Main) {
+                    runIfFragmentIsAttached {
+                        showSnackBar(
+                            view,
+                            getString(R.string.mozac_feature_addons_failed_to_query_add_ons)
+                        )
+                        view.add_on_progress_bar.isVisible = false
+                    }
+                }
+            }
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-        scope?.cancel()
-    }
-
-    private fun bind(view: View) {
+    private fun bindUI(view: View) {
         val title = addon.translatedName
         showToolbar(title)
 
