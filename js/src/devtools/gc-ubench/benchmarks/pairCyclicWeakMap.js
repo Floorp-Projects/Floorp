@@ -11,7 +11,7 @@ tests.set(
       description: "wm1[k1] = k2; wm2[k2] = k3; wm1[k3] = k4; wm2[k4] = ...",
 
       defaultGarbagePerFrame: "1K",
-      defaultGarbageTotal: "1K",
+      defaultGarbagePiles: "1K",
 
       load: N => {
         garbage = new Array(N);

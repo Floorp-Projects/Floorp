@@ -538,7 +538,7 @@ function onload() {
   duration_changed();
 
   // Load initial garbage size.
-  garbage_total_changed();
+  garbage_piles_changed();
   garbage_per_frame_changed();
 
   // Populate the test selection dropdown.
@@ -677,7 +677,7 @@ function report_test_result(load, histogram) {
   var score = compute_test_score(histogram);
   var sparks = compute_test_spark_histogram(histogram);
   var params = `(${format_units(load.garbagePerFrame)},${format_units(
-    load.garbageTotal
+    load.garbagePiles
   )})`;
   resultElem.innerHTML = `${score.toFixed(3)} ms/s : ${sparks} : ${
     load.name
@@ -691,8 +691,8 @@ function change_load(new_load_name) {
   document.getElementById("garbage-per-frame").value = format_units(
     gLoadMgr.activeLoad().garbagePerFrame
   );
-  document.getElementById("garbage-total").value = format_units(
-    gLoadMgr.activeLoad().garbageTotal
+  document.getElementById("garbage-piles").value = format_units(
+    gLoadMgr.activeLoad().garbagePiles
   );
   update_load_state_indicator();
 }
@@ -711,16 +711,16 @@ function onLoadChange() {
   reset_draw_state();
 }
 
-function garbage_total_changed() {
-  var value = parse_units(document.getElementById("garbage-total").value);
+function garbage_piles_changed() {
+  var value = parse_units(document.getElementById("garbage-piles").value);
   if (isNaN(value)) {
     return;
   }
 
   if (gLoadMgr.load_running()) {
-    gLoadMgr.change_garbageTotal(value);
+    gLoadMgr.change_garbagePiles(value);
     console.log(
-      `Updated garbage-total to ${gLoadMgr.activeLoad().garbageTotal} items`
+      `Updated garbage-piles to ${gLoadMgr.activeLoad().garbagePiles} items`
     );
   }
   gHistogram.clear();

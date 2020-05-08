@@ -22,7 +22,7 @@ tests.set(
         index = 0;
       },
 
-      defaultGarbageTotal: "100K",
+      defaultGarbagePiles: "100K",
       defaultGarbagePerFrame: "30K",
 
       makeGarbage: n => {
