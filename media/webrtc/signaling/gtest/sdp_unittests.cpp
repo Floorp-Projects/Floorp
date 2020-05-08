@@ -2686,6 +2686,10 @@ TEST_P(NewSdpTest, CheckFormatParameters) {
   ASSERT_EQ(1U, opus_parameters->useInBandFec);
   ASSERT_EQ(0U, opus_parameters->maxAverageBitrate);
   ASSERT_EQ(0U, opus_parameters->useDTX);
+  ASSERT_EQ(0U, opus_parameters->useCbr);
+  ASSERT_EQ(0U, opus_parameters->frameSizeMs);
+  ASSERT_EQ(0U, opus_parameters->minFrameSizeMs);
+  ASSERT_EQ(0U, opus_parameters->maxFrameSizeMs);
   ASSERT_EQ("101", audio_format_params[1].format);
   ASSERT_TRUE(!!audio_format_params[1].parameters);
   const SdpFmtpAttributeList::TelephoneEventParameters* te_parameters =
