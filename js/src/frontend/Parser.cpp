@@ -21,6 +21,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Range.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
@@ -1885,8 +1886,15 @@ bool CompilationInfo::publishDeferredFunctions() {
   // are encountered. These leaves each list in a reverse-pre-order which is
   // what we want.
 
+  mozilla::DebugOnly<size_t> prevIndex = size_t(-1);
+
   for (FunctionBox* funbox = traceListHead; funbox;
        funbox = funbox->traceLink()) {
+    // During parse we check that child indices are greater than their parent.
+    // Now confirm we visit FunctionBox in descending index order.
+    MOZ_ASSERT(prevIndex > funbox->index());
+    prevIndex = funbox->index();
+
     if (!MaybePublishFunction(cx, *this, funbox)) {
       return false;
     }
@@ -2214,6 +2222,10 @@ bool GeneralParser<ParseHandler, Unit>::matchOrInsertSemicolon(
 
 bool ParserBase::leaveInnerFunction(ParseContext* outerpc) {
   MOZ_ASSERT(pc_ != outerpc);
+
+  // See: CompilationInfo::publishDeferredFunctions()
+  MOZ_ASSERT_IF(outerpc->isFunctionBox(),
+                outerpc->functionBox()->index() < pc_->functionBox()->index());
 
   // If the current function allows super.property but cannot have a home
   // object, i.e., it is an arrow function, we need to propagate the flag to
@@ -2598,6 +2610,10 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
   }
 
   funbox->initFromLazyFunction(fun);
+
+  // See: CompilationInfo::publishDeferredFunctions()
+  MOZ_ASSERT_IF(pc_->isFunctionBox(),
+                pc_->functionBox()->index() < funbox->index());
 
   // Info derived from parent compilation should not be set yet for our inner
   // lazy functions. Instead that info will be updated when we finish our
