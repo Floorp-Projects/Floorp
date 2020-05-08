@@ -1,0 +1,24 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Storage Manager Persisted Test</title>
+
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript" src="helpers.js"></script>
+  <script type="text/javascript">
+    const path = "dom/quota/test/common/test_storage_manager_persisted.js";
+
+    loadScript(path);
+    loadWorkerScript(path);
+  </script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

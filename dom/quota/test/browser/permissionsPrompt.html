@@ -1,0 +1,34 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+  <head>
+    <meta charset=UTF-8>
+    <title>Persistent-Storage Permission Prompt Test</title>
+
+    <script type="text/javascript" src="helpers.js"></script>
+
+    <script type="text/javascript">
+      function* testSteps()
+      {
+        SpecialPowers.pushPrefEnv({
+          "set": [["dom.storageManager.prompt.testing", false],
+                  ["dom.storageManager.prompt.testing.allow", false]]
+        }, continueToNextStep);
+        yield undefined;
+
+        navigator.storage.persist().then(result => {
+          testGenerator.next(result);
+        });
+        testResult = yield undefined;
+
+        finishTest();
+      }
+    </script>
+
+  </head>
+
+  <body onload="runTest();" onunload="finishTestNow();"></body>
+
+</html>
