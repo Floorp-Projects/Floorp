@@ -568,3 +568,15 @@ function htmlView(type) {
     },
   };
 }
+
+// Helper method exported into the about:addons global, used to open the
+// abuse report panel from outside of the about:addons page
+// (e.g. triggered from the browserAction context menu).
+window.openAbuseReport = ({ addonId, reportEntryPoint }) => {
+  promiseHtmlBrowserLoaded().then(browser => {
+    browser.contentWindow.openAbuseReport({
+      addonId,
+      reportEntryPoint,
+    });
+  });
+};
