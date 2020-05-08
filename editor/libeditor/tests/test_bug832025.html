@@ -35,7 +35,7 @@ sendKey("return");
 // insert some text
 document.execCommand("insertText", false, "abc");
 
-is(test.innerHTML, "<h1>header1</h1><div>abc<br></div>",
+is(test.innerHTML, "<h1>header1</h1><div>abc</div>",
    "A paragraph automatically created after a CR at the end of an H1 should not be bold");
 
 </script>
