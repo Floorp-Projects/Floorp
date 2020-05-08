@@ -48,6 +48,53 @@ class ProfileBufferGlobalController final {
   // Set to null when we receive the final empty update.
   ProfileBufferControlledChunkManager* mParentChunkManager =
       profiler_get_controlled_chunk_manager();
+
+  size_t mUnreleasedTotalBytes = 0;
+
+  struct PidAndBytes {
+    base::ProcessId mProcessId;
+    size_t mBytes;
+
+    // For searching and sorting.
+    bool operator==(base::ProcessId aSearchedProcessId) const {
+      return mProcessId == aSearchedProcessId;
+    }
+    bool operator==(const PidAndBytes& aOther) const {
+      return mProcessId == aOther.mProcessId;
+    }
+    bool operator<(base::ProcessId aSearchedProcessId) const {
+      return mProcessId < aSearchedProcessId;
+    }
+    bool operator<(const PidAndBytes& aOther) const {
+      return mProcessId < aOther.mProcessId;
+    }
+  };
+  using PidAndBytesArray = nsTArray<PidAndBytes>;
+  PidAndBytesArray mUnreleasedBytesByPid;
+
+  size_t mReleasedTotalBytes = 0;
+
+  struct TimeStampAndBytesAndPid {
+    TimeStamp mTimeStamp;
+    size_t mBytes;
+    base::ProcessId mProcessId;
+
+    // For searching and sorting.
+    bool operator==(const TimeStampAndBytesAndPid& aOther) const {
+      // Sort first by timestamps, and then by pid in rare cases with the same
+      // timestamps.
+      return mTimeStamp == aOther.mTimeStamp && mProcessId == aOther.mProcessId;
+    }
+    bool operator<(const TimeStampAndBytesAndPid& aOther) const {
+      // Sort first by timestamps, and then by pid in rare cases with the same
+      // timestamps.
+      return mTimeStamp < aOther.mTimeStamp ||
+             (MOZ_UNLIKELY(mTimeStamp == aOther.mTimeStamp) &&
+              mProcessId < aOther.mProcessId);
+    }
+  };
+  using TimeStampAndBytesAndPidArray = nsTArray<TimeStampAndBytesAndPid>;
+  TimeStampAndBytesAndPidArray mReleasedChunksByTime;
 };
 
 // This singleton class tracks live ProfilerParent's (meaning there's a current
@@ -145,7 +192,120 @@ void ProfileBufferGlobalController::HandleChunkManagerUpdate(
   MOZ_ASSERT(!aUpdate.IsNotUpdate(),
              "HandleChunkManagerUpdate should not be given a non-update");
 
-  // TODO, see following patches.
+  if (aUpdate.IsFinal()) {
+    if (aProcessId == mParentProcessId) {
+      // This was the final update in the parent process, we cannot keep the
+      // chunk manager, and there's no point handling updates anymore.
+      // Do some cleanup now, to free resources before we're destroyed.
+      mParentChunkManager = nullptr;
+      mUnreleasedTotalBytes = 0;
+      mUnreleasedBytesByPid.Clear();
+      mReleasedTotalBytes = 0;
+      mReleasedChunksByTime.Clear();
+      return;
+    }
+
+    // Final update in a child process, remove all traces of it.
+    size_t index = mUnreleasedBytesByPid.BinaryIndexOf(aProcessId);
+    if (index != PidAndBytesArray::NoIndex) {
+      // We already have a value for this pid.
+      PidAndBytes& pidAndBytes = mUnreleasedBytesByPid[index];
+      mUnreleasedTotalBytes -= pidAndBytes.mBytes;
+      mUnreleasedBytesByPid.RemoveElementAt(index);
+    }
+
+    size_t released = 0;
+    size_t i = mReleasedChunksByTime.Length();
+    while (i != 0) {
+      --i;
+      if (mReleasedChunksByTime[i].mProcessId == aProcessId) {
+        released += mReleasedChunksByTime[i].mBytes;
+        mReleasedChunksByTime.RemoveElementAt(i);
+      }
+    }
+    if (released != 0) {
+      mReleasedTotalBytes -= released;
+    }
+
+    // Total can only have gone down, so there's no need to check the limit.
+    return;
+  }
+
+  // Non-final update in parent or child process.
+
+  size_t index = mUnreleasedBytesByPid.BinaryIndexOf(aProcessId);
+  if (index != PidAndBytesArray::NoIndex) {
+    // We already have a value for this pid.
+    PidAndBytes& pidAndBytes = mUnreleasedBytesByPid[index];
+    mUnreleasedTotalBytes =
+        mUnreleasedTotalBytes - pidAndBytes.mBytes + aUpdate.UnreleasedBytes();
+    pidAndBytes.mBytes = aUpdate.UnreleasedBytes();
+  } else {
+    // New pid.
+    mUnreleasedBytesByPid.InsertElementSorted(
+        PidAndBytes{aProcessId, aUpdate.UnreleasedBytes()});
+    mUnreleasedTotalBytes += aUpdate.UnreleasedBytes();
+  }
+
+  size_t destroyedReleased = 0;
+  if (!aUpdate.OldestDoneTimeStamp().IsNull()) {
+    size_t i = 0;
+    for (; i < mReleasedChunksByTime.Length(); ++i) {
+      if (mReleasedChunksByTime[i].mTimeStamp >=
+          aUpdate.OldestDoneTimeStamp()) {
+        break;
+      }
+    }
+    // Here, i is the index of the first item that's at or after
+    // aUpdate.mOldestDoneTimeStamp, so chunks from aProcessId before that have
+    // been destroyed.
+    while (i != 0) {
+      --i;
+      const TimeStampAndBytesAndPid& item = mReleasedChunksByTime[i];
+      if (item.mProcessId == aProcessId) {
+        destroyedReleased += item.mBytes;
+        mReleasedChunksByTime.RemoveElementAt(i);
+      }
+    }
+  }
+
+  size_t newlyReleased = 0;
+  for (const ProfileBufferControlledChunkManager::ChunkMetadata& chunk :
+       aUpdate.NewlyReleasedChunksRef()) {
+    newlyReleased += chunk.mBufferBytes;
+    mReleasedChunksByTime.InsertElementSorted(TimeStampAndBytesAndPid{
+        chunk.mDoneTimeStamp, chunk.mBufferBytes, aProcessId});
+  }
+
+  mReleasedTotalBytes = mReleasedTotalBytes - destroyedReleased + newlyReleased;
+
+#ifdef DEBUG
+  size_t totalReleased = 0;
+  for (const TimeStampAndBytesAndPid& item : mReleasedChunksByTime) {
+    totalReleased += item.mBytes;
+  }
+  MOZ_ASSERT(mReleasedTotalBytes == totalReleased);
+#endif  // DEBUG
+
+  std::vector<ProfileBufferControlledChunkManager::ChunkMetadata> toDestroy;
+  while (mUnreleasedTotalBytes + mReleasedTotalBytes > mMaximumBytes &&
+         !mReleasedChunksByTime.IsEmpty()) {
+    // We have reached the global memory limit, and there *are* released chunks
+    // that can be destroyed. Start with the first one, which is the oldest.
+    const TimeStampAndBytesAndPid& oldest = mReleasedChunksByTime[0];
+    mReleasedTotalBytes -= oldest.mBytes;
+    if (oldest.mProcessId == mParentProcessId) {
+      mParentChunkManager->DestroyChunksAtOrBefore(oldest.mTimeStamp);
+    } else {
+      ProfilerParentTracker::ForChild(
+          oldest.mProcessId,
+          [timestamp = oldest.mTimeStamp](ProfilerParent* profilerParent) {
+            Unused << profilerParent->SendDestroyReleasedChunksAtOrBefore(
+                timestamp);
+          });
+    }
+    mReleasedChunksByTime.RemoveElementAt(0);
+  }
 }
 
 UniquePtr<ProfilerParentTracker> ProfilerParentTracker::sInstance;
