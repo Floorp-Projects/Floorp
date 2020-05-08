@@ -3960,7 +3960,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
     CASE(NewArray) {
       uint32_t length = GET_UINT32(REGS.pc);
-      JSObject* obj = NewArrayOperation(cx, script, REGS.pc, length);
+      ArrayObject* obj = NewArrayOperation(cx, script, REGS.pc, length);
       if (!obj) {
         goto error;
       }
@@ -5497,9 +5497,9 @@ JSObject* js::CreateThisWithTemplate(JSContext* cx,
   return NewObjectOperationWithTemplate(cx, templateObject);
 }
 
-JSObject* js::NewArrayOperation(JSContext* cx, HandleScript script,
-                                jsbytecode* pc, uint32_t length,
-                                NewObjectKind newKind /* = GenericObject */) {
+ArrayObject* js::NewArrayOperation(
+    JSContext* cx, HandleScript script, jsbytecode* pc, uint32_t length,
+    NewObjectKind newKind /* = GenericObject */) {
   MOZ_ASSERT(JSOp(*pc) == JSOp::NewArray);
   MOZ_ASSERT(newKind != SingletonObject);
 
@@ -5532,8 +5532,8 @@ JSObject* js::NewArrayOperation(JSContext* cx, HandleScript script,
   return obj;
 }
 
-JSObject* js::NewArrayOperationWithTemplate(JSContext* cx,
-                                            HandleObject templateObject) {
+ArrayObject* js::NewArrayOperationWithTemplate(JSContext* cx,
+                                               HandleObject templateObject) {
   MOZ_ASSERT(!templateObject->isSingleton());
 
   NewObjectKind newKind;

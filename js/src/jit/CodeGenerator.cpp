@@ -6963,8 +6963,8 @@ void CodeGenerator::visitNewArrayCallVM(LNewArray* lir) {
     pushArg(ImmPtr(lir->mir()->pc()));
     pushArg(ImmGCPtr(lir->mir()->block()->info().script()));
 
-    using Fn = JSObject* (*)(JSContext*, HandleScript, jsbytecode*, uint32_t,
-                             NewObjectKind);
+    using Fn = ArrayObject* (*)(JSContext*, HandleScript, jsbytecode*, uint32_t,
+                                NewObjectKind);
     callVM<Fn, NewArrayOperation>(lir);
   }
 
