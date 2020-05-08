@@ -18,7 +18,7 @@ from taskgraph.transforms.task import task_description_schema
 from voluptuous import Required, Optional
 
 repackage_signing_description_schema = schema.extend({
-    Required('depname', default='geckodriver-repackage'): text_type,
+    Required('depname', default='toolchain-geckodriver'): text_type,
     Optional('label'): text_type,
     Optional('treeherder'): task_description_schema['treeherder'],
     Optional('shipping-phase'): task_description_schema['shipping-phase'],
@@ -29,19 +29,18 @@ transforms.add_validate(repackage_signing_description_schema)
 
 
 @transforms.add
-def make_repackage_signing_description(config, jobs):
+def make_signing_description(config, jobs):
     for job in jobs:
         dep_job = job['primary-dependency']
+
         attributes = copy_attributes_from_dependent_job(dep_job)
         attributes['repackage_type'] = 'repackage-signing'
 
         treeherder = job.get('treeherder', {})
-        treeherder.setdefault('symbol', 'Gd(s)')
+        dep_treeherder = dep_job.task.get('extra', {}).get('treeherder', {})
+        treeherder.setdefault('symbol', '{}(gd-s)'.format(dep_treeherder['groupSymbol']))
         treeherder.setdefault('platform', dep_job.task.get('extra', {}).get('treeherder-platform'))
-        treeherder.setdefault(
-            'tier',
-            dep_job.task.get('extra', {}).get('treeherder', {}).get('tier', 1)
-        )
+        treeherder.setdefault('tier', dep_treeherder.get('tier', 1))
         treeherder.setdefault('kind', 'build')
 
         dependencies = {dep_job.kind: dep_job.label}
@@ -51,9 +50,8 @@ def make_repackage_signing_description(config, jobs):
             if k != 'docker-image'
         })
 
-        description = "Signing Geckodriver for build '{}/{}'".format(
+        description = "Signing Geckodriver for build '{}'".format(
             attributes.get('build_platform'),
-            attributes.get('build_type'),
         )
 
         build_platform = dep_job.attributes.get('build_platform')
@@ -62,9 +60,11 @@ def make_repackage_signing_description(config, jobs):
             build_platform, is_nightly, config
         )
 
-        upstream_artifacts = _craft_upstream_artifacts(dep_job.kind, build_platform)
+        upstream_artifacts = _craft_upstream_artifacts(dep_job, dep_job.kind, build_platform)
 
         scopes = [signing_cert_scope]
+
+        platform = build_platform.split("-")[0]
 
         task = {
             'label': job['label'],
@@ -77,8 +77,9 @@ def make_repackage_signing_description(config, jobs):
             'scopes': scopes,
             'dependencies': dependencies,
             'attributes': attributes,
-            'run-on-projects': dep_job.attributes.get('run_on_projects'),
             'treeherder': treeherder,
+            'run-on-projects': ['mozilla-central'],
+            'index': {"product": "geckodriver", "job-name": platform},
         }
 
         if build_platform.startswith('macosx'):
@@ -102,22 +103,19 @@ def make_repackage_signing_description(config, jobs):
         yield task
 
 
-def _craft_upstream_artifacts(dependency_kind, build_platform):
+def _craft_upstream_artifacts(dep_job, dependency_kind, build_platform):
     if build_platform.startswith('win'):
         signing_format = 'autograph_authenticode'
-        extension = 'zip'
     elif build_platform.startswith('linux'):
         signing_format = 'autograph_gpg'
-        extension = 'tar.gz'
     elif build_platform.startswith('macosx'):
         signing_format = 'mac_geckodriver'
-        extension = 'tar.gz'
     else:
         raise ValueError('Unsupported build platform "{}"'.format(build_platform))
 
     return [{
         'taskId': {'task-reference': '<{}>'.format(dependency_kind)},
-        'taskType': 'repackage',
-        'paths': ['public/geckodriver.{}'.format(extension)],
+        'taskType': 'build',
+        'paths': [dep_job.attributes['toolchain-artifact']],
         'formats': [signing_format],
     }]

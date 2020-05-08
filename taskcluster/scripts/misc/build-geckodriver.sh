@@ -14,12 +14,12 @@ if [ -n "$TOOLTOOL_MANIFEST" ]; then
 fi
 
 EXE=
-COMPRESS_EXT=xz
+COMPRESS_EXT=gz
 
 case "$TARGET" in
 *windows-msvc)
   EXE=.exe
-  COMPRESS_EXT=bz2
+  COMPRESS_EXT=zip
   if [[ $TARGET == "i686-pc-windows-msvc" ]]; then
     . $GECKO_PATH/taskcluster/scripts/misc/vs-setup32.sh
     export CARGO_TARGET_I686_PC_WINDOWS_MSVC_LINKER=$MOZ_FETCHES_DIR/clang/bin/lld-link
@@ -52,10 +52,15 @@ cp $GECKO_PATH/.cargo/config.in $GECKO_PATH/.cargo/config
 cargo build --frozen --verbose --release --target "$TARGET"
 
 cd $GECKO_PATH
+mkdir -p $UPLOAD_DIR
 
 cp target/$TARGET/release/geckodriver$EXE .
-tar -acf geckodriver.tar.$COMPRESS_EXT geckodriver$EXE
-mkdir -p $UPLOAD_DIR
-cp geckodriver.tar.$COMPRESS_EXT $UPLOAD_DIR
+if [ "$COMPRESS_EXT" = "zip" ]; then
+    zip geckodriver.zip geckodriver$EXE
+    cp geckodriver.zip $UPLOAD_DIR
+else
+    tar -acf geckodriver.tar.$COMPRESS_EXT geckodriver$EXE
+    cp geckodriver.tar.$COMPRESS_EXT $UPLOAD_DIR
+fi
 
 . $GECKO_PATH/taskcluster/scripts/misc/vs-cleanup.sh
