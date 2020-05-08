@@ -44,11 +44,6 @@ pub enum BindingKind {
 
     // BindingIdentifier is the name of ClassDeclaration.
     Class,
-
-    // BindingIdentifier is the name of LabelIdentifier.
-    // Only used to track which labels have been seen for duplicate labels. See
-    // the AST Builder method 'on_label_identifier' for more information
-    Label,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -107,6 +102,31 @@ impl BreakOrContinueIndex {
     }
 }
 
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum LabelKind {
+    Other,
+
+    Function,
+
+    Loop,
+
+    LabelledLabel,
+}
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub struct LabelInfo {
+    pub name: SourceAtomSetIndex,
+    // The offset of the BindingIdentifier in the source.
+    pub offset: usize,
+    pub kind: LabelKind,
+}
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub struct LabelIndex {
+    pub index: usize,
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct ContextMetadata {
     // The stack of information about BindingIdentifier.
     //
@@ -121,9 +141,8 @@ pub struct ContextMetadata {
     // EarlyErrorsContext to detect Early Errors.
     //
     // When leaving a context that is not one of script/module/function,
-    // lexical items (`kind != BindingKind::Var && kind != BindingKind::Label`)
-    // in the corresponding range are removed, while non-lexical items
-    // (`kind == BindingKind::Var || kind == BindingKind::Label`) are
+    // lexical items (`kind != BindingKind::Var) in the corresponding range
+    // are removed, while non-lexical items (`kind == BindingKind::Var) are
     // left there, so that VariableDeclarations and labels are propagated to the
     // enclosing context.
     //
@@ -138,6 +157,8 @@ pub struct ContextMetadata {
     //        related metehods should be removed, and each break/continue should be
     //        fed directly to EarlyErrorsContext.
     breaks_and_continues: Vec<ControlInfo>,
+
+    labels: Vec<LabelInfo>,
 }
 
 impl ContextMetadata {
@@ -145,6 +166,7 @@ impl ContextMetadata {
         Self {
             bindings: Vec::new(),
             breaks_and_continues: Vec::new(),
+            labels: Vec::new(),
         }
     }
 
@@ -158,6 +180,10 @@ impl ContextMetadata {
 
     pub fn push_break_or_continue(&mut self, control: ControlInfo) {
         self.breaks_and_continues.push(control);
+    }
+
+    pub fn push_label(&mut self, label: LabelInfo) {
+        self.labels.push(label);
     }
 
     // Update the binding kind of all names declared in a specific range of the
@@ -197,7 +223,7 @@ impl ContextMetadata {
             .take(to.index - from.index)
     }
 
-    // Returns the index of the first binding at/after `offset` source position.
+    // Returns the index of the first label at/after `offset` source position.
     pub fn find_first_binding(&mut self, offset: usize) -> BindingsIndex {
         let mut i = self.bindings.len();
         for info in self.bindings.iter_mut().rev() {
@@ -216,6 +242,27 @@ impl ContextMetadata {
         self.bindings.truncate(index.index)
     }
 
+    pub fn labels_from(&self, index: LabelIndex) -> Skip<Iter<'_, LabelInfo>> {
+        self.labels.iter().skip(index.index)
+    }
+
+    // Update the label kind of a label declared in a specific range of the
+    // source (and not in any nested scope). There should never be more than one.
+    //
+    // It's necessary because the current parser only calls AstBuilder methods
+    // at the end of each production, not at the beginning.
+    //
+    // Labels inside `StatementList` must be marked using this method before
+    // we reach the end of its scope.
+    pub fn mark_label_kind_at_offset(&mut self, from: usize, kind: LabelKind) {
+        let maybe_label = self.find_label_at_offset(from);
+        if let Some(info) = maybe_label {
+            info.kind = kind
+        } else {
+            panic!("Tried to mark a non-existant label");
+        }
+    }
+
     // Remove lexical bindings after `index`-th item,
     // while keeping var bindings.
     //
@@ -230,9 +277,7 @@ impl ContextMetadata {
 
         let mut j = i;
         while j < len {
-            if self.bindings[j].kind == BindingKind::Var
-                || self.bindings[j].kind == BindingKind::Label
-            {
+            if self.bindings[j].kind == BindingKind::Var {
                 self.bindings[i] = self.bindings[j];
                 i += 1;
             }
@@ -240,6 +285,25 @@ impl ContextMetadata {
         }
 
         self.bindings.truncate(i)
+    }
+
+    // Returns the index of the first binding at/after `offset` source position.
+    pub fn find_first_label(&mut self, offset: usize) -> LabelIndex {
+        let mut i = self.labels.len();
+        for info in self.labels.iter_mut().rev() {
+            if info.offset < offset {
+                break;
+            }
+            i -= 1;
+        }
+        LabelIndex { index: i }
+    }
+
+    // Remove all bindings after `index`-th item.
+    //
+    // This should be called when leaving function/script/module.
+    pub fn pop_labels_from(&mut self, index: LabelIndex) {
+        self.labels.truncate(index.index)
     }
 
     pub fn breaks_and_continues_from(
@@ -328,5 +392,14 @@ impl ContextMetadata {
 
     pub fn find_break_or_continue_at(&self, index: BreakOrContinueIndex) -> Option<&ControlInfo> {
         self.breaks_and_continues.get(index.index)
+    }
+
+    pub fn find_label_index_at_offset(&self, offset: usize) -> Option<LabelIndex> {
+        let index = self.labels.iter().position(|info| info.offset == offset);
+        index.map(|index| LabelIndex { index })
+    }
+
+    pub fn find_label_at_offset(&mut self, offset: usize) -> Option<&mut LabelInfo> {
+        self.labels.iter_mut().find(|info| info.offset == offset)
     }
 }
