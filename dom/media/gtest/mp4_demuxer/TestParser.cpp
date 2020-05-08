@@ -179,8 +179,6 @@ static const TestFileData testFiles[] = {
      0, false, false, 2},
     {"test_case_1181215.mp4", true, 0, false, -1, 0, 0, 0, -1, false, 0, false,
      false, 0},
-    {"test_case_1181220.mp4", false, 0, false, -1, 0, 0, 0, -1, false, 0, false,
-     false, 0},  // invalid audio 'sinf' box
     {"test_case_1181223.mp4", false, 0, false, 416666, 320, 240, 0, -1, false,
      0, false, false, 0},
     {"test_case_1181719.mp4", false, 0, false, -1, 0, 0, 0, -1, false, 0, false,
