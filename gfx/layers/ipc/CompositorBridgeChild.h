@@ -200,7 +200,7 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   void HandleMemoryPressure();
 
-  nsISerialEventTarget* GetThread() const override { return mThread; }
+  MessageLoop* GetMessageLoop() const override { return mMessageLoop; }
 
   base::ProcessId GetParentPid() const override { return OtherPid(); }
 
@@ -373,7 +373,7 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   std::unordered_map<uint64_t, RefPtr<TextureClient>>
       mTexturesWaitingNotifyNotUsed;
 
-  nsCOMPtr<nsISerialEventTarget> mThread;
+  MessageLoop* mMessageLoop;
 
   AutoTArray<RefPtr<TextureClientPool>, 2> mTexturePools;
 

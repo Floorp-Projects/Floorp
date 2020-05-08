@@ -48,7 +48,9 @@ void VideoBridgeChild::Shutdown() {
 }
 
 VideoBridgeChild::VideoBridgeChild()
-    : mIPDLSelfRef(this), mThread(NS_GetCurrentThread()), mCanSend(true) {}
+    : mIPDLSelfRef(this),
+      mMessageLoop(MessageLoop::current()),
+      mCanSend(true) {}
 
 VideoBridgeChild::~VideoBridgeChild() = default;
 
@@ -57,7 +59,7 @@ VideoBridgeChild* VideoBridgeChild::GetSingleton() { return sVideoBridge; }
 bool VideoBridgeChild::AllocUnsafeShmem(
     size_t aSize, ipc::SharedMemory::SharedMemoryType aType,
     ipc::Shmem* aShmem) {
-  if (!mThread->IsOnCurrentThread()) {
+  if (MessageLoop::current() != mMessageLoop) {
     return DispatchAllocShmemInternal(aSize, aType, aShmem,
                                       true);  // true: unsafe
   }
@@ -104,7 +106,7 @@ bool VideoBridgeChild::DispatchAllocShmemInternal(
   RefPtr<Runnable> runnable = WrapRunnable(
       RefPtr<VideoBridgeChild>(this), &VideoBridgeChild::ProxyAllocShmemNow,
       &task, aSize, aType, aShmem, aUnsafe, &success);
-  GetThread()->Dispatch(runnable.forget());
+  GetMessageLoop()->PostTask(runnable.forget());
 
   task.Wait();
 
@@ -122,7 +124,7 @@ void VideoBridgeChild::ProxyDeallocShmemNow(SynchronousTask* aTask,
 }
 
 bool VideoBridgeChild::DeallocShmem(ipc::Shmem& aShmem) {
-  if (GetThread()->IsOnCurrentThread()) {
+  if (MessageLoop::current() == mMessageLoop) {
     if (!CanSend()) {
       return false;
     }
@@ -135,7 +137,7 @@ bool VideoBridgeChild::DeallocShmem(ipc::Shmem& aShmem) {
   RefPtr<Runnable> runnable = WrapRunnable(
       RefPtr<VideoBridgeChild>(this), &VideoBridgeChild::ProxyDeallocShmemNow,
       &task, &aShmem, &result);
-  GetThread()->Dispatch(runnable.forget());
+  GetMessageLoop()->PostTask(runnable.forget());
 
   task.Wait();
   return result;
