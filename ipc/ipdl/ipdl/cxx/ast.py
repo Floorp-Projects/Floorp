@@ -5,6 +5,8 @@
 import copy
 import functools
 
+from ipdl.util import hash_str
+
 
 class Visitor:
     def defaultVisit(self, node):
@@ -461,7 +463,7 @@ class Typedef(Node):
                 and self.totypename == other.totypename)
 
     def __hash__(self):
-        return hash(self.totypename)
+        return hash_str(self.totypename)
 
 
 class Using(Node):

@@ -13,6 +13,7 @@ from ipdl.cxx.ast import *
 from ipdl.cxx.code import *
 from ipdl.direct_call import VIRTUAL_CALL_CLASSES, DIRECT_CALL_OVERRIDES
 from ipdl.type import ActorType, UnionType, TypeVisitor, builtinHeaderIncludes
+from ipdl.util import hash_str
 
 
 # -----------------------------------------------------------------------------
@@ -58,7 +59,7 @@ lowered form of |tu|'''
 ##
 
 def hashfunc(value):
-    h = hash(value) % 2**32
+    h = hash_str(value) % 2**32
     if h < 0:
         h += 2**32
     return h
@@ -1898,7 +1899,6 @@ class _ParamTraits():
     @classmethod
     def readSentinel(cls, msgvar, itervar, sentinelKey, sentinelFail):
         # Read the sentinel
-        assert sentinelKey
         read = ExprCall(ExprSelect(msgvar, '->', 'ReadSentinel'),
                         args=[itervar, ExprLiteral.Int(hashfunc(sentinelKey))])
         ifsentinel = StmtIf(ExprNot(read))
