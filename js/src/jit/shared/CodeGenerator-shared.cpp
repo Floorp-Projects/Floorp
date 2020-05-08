@@ -45,7 +45,6 @@ MacroAssembler& CodeGeneratorShared::ensureMasm(MacroAssembler* masmArg) {
 CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
                                          MacroAssembler* masmArg)
     : maybeMasm_(),
-      useWasmStackArgumentAbi_(false),
       masm(ensureMasm(masmArg)),
       gen(gen),
       graph(*graph),
