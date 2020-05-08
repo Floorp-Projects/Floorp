@@ -19,6 +19,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.media.ext.getActiveMediaTab
 import mozilla.components.feature.media.ext.getTitleOrUrl
 import mozilla.components.feature.media.ext.isMediaStateForCustomTab
+import mozilla.components.feature.media.ext.nonPrivateUrl
 import mozilla.components.feature.media.ext.pauseIfPlaying
 import mozilla.components.feature.media.ext.playIfPaused
 import mozilla.components.feature.media.ext.toPlaybackState
@@ -125,6 +126,9 @@ internal class MediaServiceDelegate(
                 .putString(
                     MediaMetadataCompat.METADATA_KEY_TITLE,
                     state.getActiveMediaTab().getTitleOrUrl(context))
+                .putString(
+                    MediaMetadataCompat.METADATA_KEY_ARTIST,
+                    state.getActiveMediaTab().nonPrivateUrl)
                 .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, -1)
                 .build())
     }
