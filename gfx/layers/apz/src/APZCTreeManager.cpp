@@ -1978,11 +1978,11 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
     // (By contrast, if we're in overscroll but not panning, such as after
     // putting two fingers down during an overscroll animation, we process the
     // second touch and proceed to pinch.)
-    if (mApzcForInputBlock && mApzcForInputBlock->IsInPanningState() &&
-        BuildOverscrollHandoffChain(mApzcForInputBlock)
+    if (mApzcForTouchBlock && mApzcForTouchBlock->IsInPanningState() &&
+        BuildOverscrollHandoffChain(mApzcForTouchBlock)
             ->HasOverscrolledApzc()) {
       if (mRetainedTouchIdentifier == -1) {
-        mRetainedTouchIdentifier = mApzcForInputBlock->GetLastTouchIdentifier();
+        mRetainedTouchIdentifier = mApzcForTouchBlock->GetLastTouchIdentifier();
       }
       result.mStatus = nsEventStatus_eConsumeNoDefault;
       return result;
@@ -1990,7 +1990,7 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
 
     mHitResultForInputBlock = CompositorHitTestInvisibleToHit;
     HitTestResult hit = GetTouchInputBlockAPZC(aInput, &touchBehaviors);
-    mApzcForInputBlock = hit.mTargetApzc;
+    mApzcForTouchBlock = hit.mTargetApzc;
     mHitResultForInputBlock = hit.mHitResult;
     mFixedPosSidesForInputBlock = hit.mFixedPosSides;
     if (hit.mLayersId.IsValid()) {
@@ -2020,9 +2020,9 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
         break;
       }
     }
-  } else if (mApzcForInputBlock) {
+  } else if (mApzcForTouchBlock) {
     APZCTM_LOG("Re-using APZC %p as continuation of event block\n",
-               mApzcForInputBlock.get());
+               mApzcForTouchBlock.get());
   }
 
   if (mInScrollbarTouchDrag) {
@@ -2055,13 +2055,13 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
       }
     }
 
-    if (mApzcForInputBlock) {
+    if (mApzcForTouchBlock) {
       MOZ_ASSERT(mHitResultForInputBlock != CompositorHitTestInvisibleToHit);
 
-      mApzcForInputBlock->GetGuid(&result.mTargetGuid);
-      result.mTargetIsRoot = mApzcForInputBlock->IsRootContent();
+      mApzcForTouchBlock->GetGuid(&result.mTargetGuid);
+      result.mTargetIsRoot = mApzcForTouchBlock->IsRootContent();
       result.mStatus = mInputQueue->ReceiveInputEvent(
-          mApzcForInputBlock, TargetConfirmationFlags{mHitResultForInputBlock},
+          mApzcForTouchBlock, TargetConfirmationFlags{mHitResultForInputBlock},
           aInput, &result.mInputBlockId,
           touchBehaviors.IsEmpty() ? Nothing()
                                    : Some(std::move(touchBehaviors)));
@@ -2075,9 +2075,9 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
       // want to multiply transformToApzc and transformToGecko once
       // for each touch point.
       ScreenToParentLayerMatrix4x4 transformToApzc =
-          GetScreenToApzcTransform(mApzcForInputBlock);
+          GetScreenToApzcTransform(mApzcForTouchBlock);
       ParentLayerToScreenMatrix4x4 transformToGecko =
-          GetApzcToGeckoTransform(mApzcForInputBlock);
+          GetApzcToGeckoTransform(mApzcForTouchBlock);
       ScreenToScreenMatrix4x4 outTransform = transformToApzc * transformToGecko;
 
       for (size_t i = 0; i < aInput.mTouches.Length(); i++) {
@@ -2105,7 +2105,7 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
   // If it's the end of the touch sequence then clear out variables so we
   // don't keep dangling references and leak things.
   if (mTouchCounter.GetActiveTouchCount() == 0) {
-    mApzcForInputBlock = nullptr;
+    mApzcForTouchBlock = nullptr;
     mHitResultForInputBlock = CompositorHitTestInvisibleToHit;
     mRetainedTouchIdentifier = -1;
     mInScrollbarTouchDrag = false;
@@ -2133,7 +2133,7 @@ APZEventResult APZCTreeManager::ProcessTouchInputForScrollbarDrag(
     MultiTouchInput& aTouchInput,
     const HitTestingTreeNodeAutoLock& aScrollThumbNode) {
   MOZ_ASSERT(mRetainedTouchIdentifier == -1);
-  MOZ_ASSERT(mApzcForInputBlock);
+  MOZ_ASSERT(mApzcForTouchBlock);
   MOZ_ASSERT(aTouchInput.mTouches.Length() == 1);
 
   // Synthesize a mouse event based on the touch event, so that we can
@@ -2156,16 +2156,16 @@ APZEventResult APZCTreeManager::ProcessTouchInputForScrollbarDrag(
 
   APZEventResult result;
   result.mStatus = mInputQueue->ReceiveInputEvent(
-      mApzcForInputBlock, targetConfirmed, mouseInput, &result.mInputBlockId);
+      mApzcForTouchBlock, targetConfirmed, mouseInput, &result.mInputBlockId);
 
   // |aScrollThumbNode| is non-null iff. this is the event that starts the drag.
   // If so, set up the drag.
   if (aScrollThumbNode) {
-    SetupScrollbarDrag(mouseInput, aScrollThumbNode, mApzcForInputBlock.get());
+    SetupScrollbarDrag(mouseInput, aScrollThumbNode, mApzcForTouchBlock.get());
   }
 
-  mApzcForInputBlock->GetGuid(&result.mTargetGuid);
-  result.mTargetIsRoot = mApzcForInputBlock->IsRootContent();
+  mApzcForTouchBlock->GetGuid(&result.mTargetGuid);
+  result.mTargetIsRoot = mApzcForTouchBlock->IsRootContent();
 
   // Since the input was targeted at a scrollbar:
   //    - The original touch event (which will be sent on to content) will

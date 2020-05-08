@@ -965,22 +965,22 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * a current focus target or whether we are waiting for a new confirmation.
    */
   FocusState mFocusState;
-  /* This tracks the APZC that should receive all inputs for the current input
-   * event block. This allows touch points to move outside the thing they
+  /* This tracks the APZC that should receive all inputs for the current touch
+   * input block. This allows touch points to move outside the thing they
    * started on, but still have the touch events delivered to the same initial
    * APZC. This will only ever be touched on the input delivery thread, and so
    * does not require locking.
    */
-  RefPtr<AsyncPanZoomController> mApzcForInputBlock;
+  RefPtr<AsyncPanZoomController> mApzcForTouchBlock;
   /* The hit result for the current input event block; this should always be in
-   * sync with mApzcForInputBlock.
+   * sync with mApzcForTouchBlock.
    */
   gfx::CompositorHitTestInfo mHitResultForInputBlock;
   /* If the current input event block is targeting an element that is fixed to
    * the viewport, the sides of the viewport to which the element is fixed.
    * Such elements may have been shifted to the dynamic toolbar, and this is
    * used to offset event coordinates accordingly.
-   * This should be in sync with mApzcForInputBlock.
+   * This should be in sync with mApzcForTouchBlock.
    */
   SideBits mFixedPosSidesForInputBlock = SideBits::eNone;
   /* Sometimes we want to ignore all touches except one. In such cases, this
