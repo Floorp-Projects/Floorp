@@ -1275,7 +1275,8 @@ TEST_F(JsepTrackTest, SimulcastOfferer) {
   CreateOffer();
   CreateAnswer();
   // Add simulcast/rid to answer
-  mRecvAns.AddToMsection(constraints, sdp::kRecv, mSsrcGenerator, &GetAnswer());
+  mRecvAns.AddToMsection(constraints, sdp::kRecv, mSsrcGenerator, false,
+                         &GetAnswer());
   Negotiate();
   ASSERT_TRUE(mSendOff.GetNegotiatedDetails());
   ASSERT_EQ(2U, mSendOff.GetNegotiatedDetails()->GetEncodingCount());
@@ -1303,7 +1304,8 @@ TEST_F(JsepTrackTest, SimulcastAnswerer) {
   mSendAns.SetJsConstraints(constraints);
   CreateOffer();
   // Add simulcast/rid to offer
-  mRecvOff.AddToMsection(constraints, sdp::kRecv, mSsrcGenerator, &GetOffer());
+  mRecvOff.AddToMsection(constraints, sdp::kRecv, mSsrcGenerator, false,
+                         &GetOffer());
   CreateAnswer();
   Negotiate();
   ASSERT_TRUE(mSendAns.GetNegotiatedDetails());

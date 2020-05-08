@@ -94,7 +94,7 @@ nsresult JsepSessionImpl::AddTransceiver(RefPtr<JsepTransceiver> transceiver) {
 
   if (transceiver->GetMediaType() != SdpMediaSection::kApplication) {
     // Make sure we have an ssrc. Might already be set.
-    transceiver->mSendTrack.EnsureSsrcs(mSsrcGenerator);
+    transceiver->mSendTrack.EnsureSsrcs(mSsrcGenerator, 1U);
     transceiver->mSendTrack.SetCNAME(mCNAME);
 
     // Make sure we have identifiers for send track, just in case.
@@ -1950,6 +1950,7 @@ void JsepSessionImpl::SetupDefaultCodecs() {
   // Defaults for mandatory params
   vp8->mConstraints.maxFs = 12288;  // Enough for 2048x1536
   vp8->mConstraints.maxFps = 60;
+  vp8->EnableRtx("124");
   mSupportedCodecs.push_back(std::move(vp8));
 
   UniquePtr<JsepVideoCodecDescription> vp9(
@@ -1957,6 +1958,7 @@ void JsepSessionImpl::SetupDefaultCodecs() {
   // Defaults for mandatory params
   vp9->mConstraints.maxFs = 12288;  // Enough for 2048x1536
   vp9->mConstraints.maxFps = 60;
+  vp9->EnableRtx("125");
   mSupportedCodecs.push_back(std::move(vp9));
 
   UniquePtr<JsepVideoCodecDescription> h264_1(
@@ -1964,6 +1966,7 @@ void JsepSessionImpl::SetupDefaultCodecs() {
   h264_1->mPacketizationMode = 1;
   // Defaults for mandatory params
   h264_1->mProfileLevelId = 0x42E00D;
+  h264_1->EnableRtx("127");
   mSupportedCodecs.push_back(std::move(h264_1));
 
   UniquePtr<JsepVideoCodecDescription> h264_0(
@@ -1971,6 +1974,7 @@ void JsepSessionImpl::SetupDefaultCodecs() {
   h264_0->mPacketizationMode = 0;
   // Defaults for mandatory params
   h264_0->mProfileLevelId = 0x42E00D;
+  h264_0->EnableRtx("98");
   mSupportedCodecs.push_back(std::move(h264_0));
 
   UniquePtr<JsepVideoCodecDescription> ulpfec(new JsepVideoCodecDescription(

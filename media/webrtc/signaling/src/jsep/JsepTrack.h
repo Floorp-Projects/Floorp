@@ -13,6 +13,7 @@
 #include <vector>
 
 #include <mozilla/UniquePtr.h>
+#include "mozilla/Preferences.h"
 #include "nsError.h"
 
 #include "signaling/src/jsep/JsepTrackEncoding.h"
@@ -117,6 +118,31 @@ class JsepTrack {
         mSsrcs.push_back(ssrcAttr.ssrc);
       }
     }
+
+    // Use FID ssrc-group to associate rtx ssrcs with "regular" ssrcs. Despite
+    // not being part of RFC 4588, this is how rtx is negotiated by libwebrtc
+    // and jitsi.
+    mSsrcToRtxSsrc.clear();
+    if (msection.GetAttributeList().HasAttribute(
+            SdpAttribute::kSsrcGroupAttribute)) {
+      for (const auto& group :
+           msection.GetAttributeList().GetSsrcGroup().mSsrcGroups) {
+        if (group.semantics == SdpSsrcGroupAttributeList::kFid &&
+            group.ssrcs.size() == 2) {
+          // Ensure we have a "regular" ssrc for each rtx ssrc.
+          if (std::find(mSsrcs.begin(), mSsrcs.end(), group.ssrcs[0]) !=
+              mSsrcs.end()) {
+            mSsrcToRtxSsrc[group.ssrcs[0]] = group.ssrcs[1];
+
+            // Remove rtx ssrcs from mSsrcs
+            auto res = std::remove_if(
+                mSsrcs.begin(), mSsrcs.end(),
+                [group](uint32_t ssrc) { return ssrc == group.ssrcs[1]; });
+            mSsrcs.erase(res, mSsrcs.end());
+          }
+        }
+      }
+    }
   }
 
   JsepTrack(const JsepTrack& orig) { *this = orig; }
@@ -133,6 +159,7 @@ class JsepTrack {
       mDirection = rhs.mDirection;
       mJsEncodeConstraints = rhs.mJsEncodeConstraints;
       mSsrcs = rhs.mSsrcs;
+      mSsrcToRtxSsrc = rhs.mSsrcToRtxSsrc;
       mActive = rhs.mActive;
       mRemoteSetSendBit = rhs.mRemoteSetSendBit;
 
@@ -164,7 +191,15 @@ class JsepTrack {
 
   virtual const std::vector<uint32_t>& GetSsrcs() const { return mSsrcs; }
 
-  virtual void EnsureSsrcs(SsrcGenerator& ssrcGenerator);
+  virtual std::vector<uint32_t> GetRtxSsrcs() const {
+    std::vector<uint32_t> result;
+    std::for_each(
+        mSsrcToRtxSsrc.begin(), mSsrcToRtxSsrc.end(),
+        [&result](const auto& pair) { result.push_back(pair.second); });
+    return result;
+  }
+
+  virtual void EnsureSsrcs(SsrcGenerator& ssrcGenerator, size_t aNumber);
 
   bool GetActive() const { return mActive; }
 
@@ -234,7 +269,7 @@ class JsepTrack {
 
   void AddToMsection(const std::vector<JsConstraints>& constraintsList,
                      sdp::Direction direction, SsrcGenerator& ssrcGenerator,
-                     SdpMediaSection* msection);
+                     bool requireRtxSsrcs, SdpMediaSection* msection);
 
  private:
   std::vector<UniquePtr<JsepCodecDescription>> GetCodecClones() const;
@@ -263,6 +298,9 @@ class JsepTrack {
       const std::vector<std::pair<SdpRidAttributeList::Rid, bool>>& rids,
       std::vector<JsConstraints>* constraints) const;
   void UpdateSsrcs(SsrcGenerator& ssrcGenerator, size_t encodings);
+  void PruneSsrcs(size_t aNumSsrcs);
+  bool IsRtxEnabled(
+      const std::vector<UniquePtr<JsepCodecDescription>>& codecs) const;
 
   mozilla::SdpMediaSection::MediaType mType;
   // These are the ids that everyone outside of JsepSession care about
@@ -277,6 +315,7 @@ class JsepTrack {
   std::vector<JsConstraints> mJsEncodeConstraints;
   UniquePtr<JsepTrackNegotiatedDetails> mNegotiatedDetails;
   std::vector<uint32_t> mSsrcs;
+  std::map<uint32_t, uint32_t> mSsrcToRtxSsrc;
   bool mActive;
   bool mRemoteSetSendBit;
 };
