@@ -1,8 +1,7 @@
 Priority definitions
 ====================
 
-To triage Firefox and Gecko bugs, we are using the following definitions
-across all components:
+We use these definitions across all components:
 
 +----------------------------------------+-----------------------------+
 | Priority                               | Description                 |
