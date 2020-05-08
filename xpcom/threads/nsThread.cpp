@@ -588,7 +588,6 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
       mShutdownRequired(false),
       mPriority(PRIORITY_NORMAL),
       mIsMainThread(aMainThread == MAIN_THREAD),
-      mUseHangMonitor(aMainThread == MAIN_THREAD),
       mIsAPoolThreadFree(nullptr),
       mCanInvokeJS(false),
 #ifdef EARLY_BETA_OR_EARLIER
@@ -607,7 +606,6 @@ nsThread::nsThread()
       mShutdownRequired(false),
       mPriority(PRIORITY_NORMAL),
       mIsMainThread(false),
-      mUseHangMonitor(false),
       mCanInvokeJS(false),
 #ifdef EARLY_BETA_OR_EARLIER
       mLastWakeupCheckTime(TimeStamp::Now()),
@@ -1007,7 +1005,7 @@ static bool GetLabeledRunnableName(nsIRunnable* aEvent, nsACString& aName,
 #endif
 
 mozilla::PerformanceCounter* nsThread::GetPerformanceCounter(
-    nsIRunnable* aEvent) const {
+    nsIRunnable* aEvent) {
   RefPtr<SchedulerGroup::Runnable> docRunnable = do_QueryObject(aEvent);
   if (docRunnable) {
     mozilla::dom::DocGroup* docGroup = docRunnable->DocGroup();
@@ -1079,13 +1077,8 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
   }
 
   Maybe<dom::AutoNoJSAPI> noJSAPI;
-
-  if (mUseHangMonitor && reallyWait) {
-    BackgroundHangMonitor().NotifyWait();
-  }
-
   if (mIsMainThread) {
-    DoMainThreadSpecificProcessing();
+    DoMainThreadSpecificProcessing(reallyWait);
   }
 
   ++mNestedEventLoopDepth;
@@ -1162,7 +1155,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
 
       mozilla::TimeStamp now = mozilla::TimeStamp::Now();
 
-      if (mUseHangMonitor) {
+      if (mIsMainThread) {
         BackgroundHangMonitor().NotifyActivity();
       }
 
@@ -1359,10 +1352,14 @@ void nsThread::SetScriptObserver(
   mScriptObserver = aScriptObserver;
 }
 
-void nsThread::DoMainThreadSpecificProcessing() const {
+void nsThread::DoMainThreadSpecificProcessing(bool aReallyWait) {
   MOZ_ASSERT(mIsMainThread);
 
   ipc::CancelCPOWs();
+
+  if (aReallyWait) {
+    BackgroundHangMonitor().NotifyWait();
+  }
 
   // Fire a memory pressure notification, if one is pending.
   if (!ShuttingDown()) {

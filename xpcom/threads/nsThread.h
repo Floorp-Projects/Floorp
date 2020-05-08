@@ -124,7 +124,7 @@ class PerformanceCounterState {
   bool mCurrentRunnableIsIdleRunnable = false;
 
   // Whether we're attached to the mainthread nsThread.
-  const bool mIsMainThread;
+  bool mIsMainThread;
 
   // The timestamp from which time to be accounted for should be measured.  This
   // can be the start of a runnable running or the end of a nested runnable
@@ -179,7 +179,7 @@ class nsThread : public nsIThreadInternal,
 
  public:
   // The PRThread corresponding to this thread.
-  PRThread* GetPRThread() const { return mThread; }
+  PRThread* GetPRThread() { return mThread; }
 
   const void* StackBase() const { return mStackBase; }
   size_t StackSize() const { return mStackSize; }
@@ -225,10 +225,10 @@ class nsThread : public nsIThreadInternal,
 
   mozilla::SynchronizedEventQueue* EventQueue() { return mEvents.get(); }
 
-  bool ShuttingDown() const { return mShutdownContext != nullptr; }
+  bool ShuttingDown() { return mShutdownContext != nullptr; }
 
   virtual mozilla::PerformanceCounter* GetPerformanceCounter(
-      nsIRunnable* aEvent) const;
+      nsIRunnable* aEvent);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -257,13 +257,8 @@ class nsThread : public nsIThreadInternal,
   // notifications, etc.
   nsLocalExecutionRecord EnterLocalExecution();
 
-  void SetUseHangMonitor(bool aValue) {
-    MOZ_ASSERT(IsOnCurrentThread());
-    mUseHangMonitor = aValue;
-  }
-
  private:
-  void DoMainThreadSpecificProcessing() const;
+  void DoMainThreadSpecificProcessing(bool aReallyWait);
 
  protected:
   friend class nsThreadShutdownEvent;
@@ -333,8 +328,7 @@ class nsThread : public nsIThreadInternal,
 
   int8_t mPriority;
 
-  const bool mIsMainThread;
-  bool mUseHangMonitor;
+  bool mIsMainThread;
   mozilla::Atomic<bool, mozilla::Relaxed>* mIsAPoolThreadFree;
 
   // Set to true if this thread creates a JSRuntime.
