@@ -15,5 +15,6 @@ skip-if(Android) pref(dom.disable_open_during_load,false) load 914521.html # And
 pref(browser.send_pings,true) asserts(0-2) load 1257730-1.html # bug 566159
 load 1331295.html
 load 1341657.html
+load 1584467.html
 load 1614211-1.html
 load 1617315-1.html
