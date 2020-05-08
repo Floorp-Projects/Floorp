@@ -163,7 +163,7 @@ async function verifyRawHeaders(monitor) {
   const responseHeadersText = rawArr[0].textContent;
 
   const rawRequestHeadersArray = requestHeadersText.split("\n");
-  for (let i = 0; i < rawRequestHeadersArray.length; i++) {
+  for (let i = 1; i < rawRequestHeadersArray.length; i++) {
     const header = rawRequestHeadersArray[i];
     actualRequestHeaders.push(header.split(":")[0]);
   }
