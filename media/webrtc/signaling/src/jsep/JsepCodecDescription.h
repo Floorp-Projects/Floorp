@@ -111,7 +111,10 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
         mFECEnabled(false),
         mDtmfEnabled(false),
         mMaxAverageBitrate(0),
-        mDTXEnabled(false) {}
+        mDTXEnabled(false),
+        mFrameSizeMs(0),
+        mMinFrameSizeMs(0),
+        mMaxFrameSizeMs(0) {}
 
   JSEP_CODEC_CLONE(JsepAudioCodecDescription)
 
@@ -156,13 +159,16 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
       if (mMaxPlaybackRate) {
         opusParams.maxplaybackrate = mMaxPlaybackRate;
       }
-      opusParams.maxaveragebitrate = mMaxAverageBitrate;
+      opusParams.maxAverageBitrate = mMaxAverageBitrate;
       if (mChannels == 2 && !mForceMono) {
         // We prefer to receive stereo, if available.
         opusParams.stereo = 1;
       }
       opusParams.useInBandFec = mFECEnabled ? 1 : 0;
       opusParams.useDTX = mDTXEnabled;
+      opusParams.frameSizeMs = mFrameSizeMs;
+      opusParams.minFrameSizeMs = mMinFrameSizeMs;
+      opusParams.maxFrameSizeMs = mMaxFrameSizeMs;
       msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, opusParams));
     } else if (mName == "telephone-event") {
       // add the default dtmf tones
@@ -185,11 +191,14 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
       // at the received side is declarative and can be negotiated
       // separately for either media direction.
       mFECEnabled = opusParams.useInBandFec;
-      if ((opusParams.maxaveragebitrate >= 6000) &&
-          (opusParams.maxaveragebitrate <= 510000)) {
-        mMaxAverageBitrate = opusParams.maxaveragebitrate;
+      if ((opusParams.maxAverageBitrate >= 6000) &&
+          (opusParams.maxAverageBitrate <= 510000)) {
+        mMaxAverageBitrate = opusParams.maxAverageBitrate;
       }
       mDTXEnabled = opusParams.useDTX;
+      mFrameSizeMs = opusParams.frameSizeMs;
+      mMinFrameSizeMs = opusParams.minFrameSizeMs;
+      mMaxFrameSizeMs = opusParams.maxFrameSizeMs;
     }
 
     return true;
@@ -201,6 +210,9 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
   bool mDtmfEnabled;
   uint32_t mMaxAverageBitrate;
   bool mDTXEnabled;
+  uint32_t mFrameSizeMs;
+  uint32_t mMinFrameSizeMs;
+  uint32_t mMaxFrameSizeMs;
 };
 
 class JsepVideoCodecDescription : public JsepCodecDescription {

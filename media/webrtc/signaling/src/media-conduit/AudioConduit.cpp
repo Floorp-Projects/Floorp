@@ -448,13 +448,13 @@ MediaConduitErrorCode WebrtcAudioConduit::ConfigureRecvMediaCodecs(
     webrtc::SdpAudioFormat::Parameters parameters;
     if (codec->mName == "opus") {
       if (codec->mChannels == 2) {
-        parameters = {{"stereo", "1"}};
+        parameters["stereo"] = "1";
       }
       if (codec->mFECEnabled) {
-        parameters = {{"useinbandfec", "1"}};
+        parameters["useinbandfec"] = "1";
       }
       if (codec->mDTXEnabled) {
-        parameters = {{"usedtx", "1"}};
+        parameters["usedtx"] = "1";
       }
       if (codec->mMaxPlaybackRate) {
         parameters["maxplaybackrate"] = std::to_string(codec->mMaxPlaybackRate);
@@ -462,6 +462,15 @@ MediaConduitErrorCode WebrtcAudioConduit::ConfigureRecvMediaCodecs(
       if (codec->mMaxAverageBitrate) {
         parameters["maxaveragebitrate"] =
             std::to_string(codec->mMaxAverageBitrate);
+      }
+      if (codec->mFrameSizeMs) {
+        parameters["ptime"] = std::to_string(codec->mFrameSizeMs);
+      }
+      if (codec->mMinFrameSizeMs) {
+        parameters["minptime"] = std::to_string(codec->mMinFrameSizeMs);
+      }
+      if (codec->mMaxFrameSizeMs) {
+        parameters["maxptime"] = std::to_string(codec->mMaxFrameSizeMs);
       }
     }
 
@@ -916,13 +925,13 @@ bool WebrtcAudioConduit::CodecConfigToWebRTCCodec(
   webrtc::SdpAudioFormat::Parameters parameters;
   if (codecInfo->mName == "opus") {
     if (codecInfo->mChannels == 2) {
-      parameters = {{"stereo", "1"}};
+      parameters["stereo"] = "1";
     }
     if (codecInfo->mFECEnabled) {
-      parameters = {{"useinbandfec", "1"}};
+      parameters["useinbandfec"] = "1";
     }
     if (codecInfo->mDTXEnabled) {
-      parameters = {{"usedtx", "1"}};
+      parameters["usedtx"] = "1";
     }
     if (codecInfo->mMaxPlaybackRate) {
       parameters["maxplaybackrate"] =
@@ -931,6 +940,15 @@ bool WebrtcAudioConduit::CodecConfigToWebRTCCodec(
     if (codecInfo->mMaxAverageBitrate) {
       parameters["maxaveragebitrate"] =
           std::to_string(codecInfo->mMaxAverageBitrate);
+    }
+    if (codecInfo->mFrameSizeMs) {
+      parameters["ptime"] = std::to_string(codecInfo->mFrameSizeMs);
+    }
+    if (codecInfo->mMinFrameSizeMs) {
+      parameters["minptime"] = std::to_string(codecInfo->mMinFrameSizeMs);
+    }
+    if (codecInfo->mMaxFrameSizeMs) {
+      parameters["maxptime"] = std::to_string(codecInfo->mMaxFrameSizeMs);
     }
   }
 

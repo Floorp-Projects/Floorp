@@ -1358,24 +1358,42 @@ class SdpFmtpAttributeList : public SdpAttribute {
       kDefaultStereo = 0,
       kDefaultUseInBandFec = 0,
       kDefaultMaxAverageBitrate = 0,
-      kDefaultUseDTX = 0
+      kDefaultUseDTX = 0,
+      kDefaultFrameSize = 0,
+      kDefaultMinFrameSize = 0,
+      kDefaultMaxFrameSize = 0
     };
     OpusParameters()
         : Parameters(SdpRtpmapAttributeList::kOpus),
           maxplaybackrate(kDefaultMaxPlaybackRate),
           stereo(kDefaultStereo),
           useInBandFec(kDefaultUseInBandFec),
-          maxaveragebitrate(kDefaultMaxAverageBitrate),
-          useDTX(kDefaultUseDTX) {}
+          maxAverageBitrate(kDefaultMaxAverageBitrate),
+          useDTX(kDefaultUseDTX),
+          frameSizeMs(kDefaultFrameSize),
+          minFrameSizeMs(kDefaultMinFrameSize),
+          maxFrameSizeMs(kDefaultMaxFrameSize) {}
 
     Parameters* Clone() const override { return new OpusParameters(*this); }
 
     void Serialize(std::ostream& os) const override {
       os << "maxplaybackrate=" << maxplaybackrate << ";stereo=" << stereo
-         << ";useinbandfec=" << useInBandFec << ";usedtx=" << useDTX;
+         << ";useinbandfec=" << useInBandFec;
 
-      if (maxaveragebitrate) {
-        os << ";maxaveragebitrate=" << maxaveragebitrate;
+      if (useDTX) {
+        os << ";usedtx=1";
+      }
+      if (maxAverageBitrate) {
+        os << ";maxaveragebitrate=" << maxAverageBitrate;
+      }
+      if (frameSizeMs) {
+        os << ";ptime=" << frameSizeMs;
+      }
+      if (minFrameSizeMs) {
+        os << ";minptime=" << minFrameSizeMs;
+      }
+      if (maxFrameSizeMs) {
+        os << ";maxptime=" << maxFrameSizeMs;
       }
     }
 
@@ -1393,15 +1411,21 @@ class SdpFmtpAttributeList : public SdpAttribute {
 
       return maxplaybackrateIsEq && stereo == otherOpus.stereo &&
              useInBandFec == otherOpus.useInBandFec &&
-             maxaveragebitrate == otherOpus.maxaveragebitrate &&
-             useDTX == otherOpus.useDTX;
+             maxAverageBitrate == otherOpus.maxAverageBitrate &&
+             useDTX == otherOpus.useDTX &&
+             frameSizeMs == otherOpus.frameSizeMs &&
+             minFrameSizeMs == otherOpus.minFrameSizeMs &&
+             maxFrameSizeMs == otherOpus.maxFrameSizeMs;
     }
 
     unsigned int maxplaybackrate;
     unsigned int stereo;
     unsigned int useInBandFec;
-    uint32_t maxaveragebitrate;
+    uint32_t maxAverageBitrate;
     bool useDTX;
+    uint32_t frameSizeMs;
+    uint32_t minFrameSizeMs;
+    uint32_t maxFrameSizeMs;
   };
 
   class TelephoneEventParameters : public Parameters {
