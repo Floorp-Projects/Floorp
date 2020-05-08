@@ -395,12 +395,20 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   _isRootDocumentReady() {
-    if (!this.rootDoc) {
-      return false;
+    if (this.rootDoc) {
+      const { readyState } = this.rootDoc;
+      if (readyState == "interactive" || readyState == "complete") {
+        return true;
+      }
     }
 
-    const { readyState } = this.rootDoc;
-    return readyState == "interactive" || readyState == "complete";
+    // A document might stay forever in unitialized state.
+    // If the target actor is not currently loading a document,
+    // assume the document is ready.
+    const webProgress = this.rootDoc.defaultView.docShell.QueryInterface(
+      Ci.nsIWebProgress
+    );
+    return !webProgress.isLoadingDocument;
   },
 
   /**
