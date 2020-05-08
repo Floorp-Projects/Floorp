@@ -203,6 +203,7 @@ class GeckoEngine(
         return installWebExtension(ext, onSuccess, onError)
     }
 
+    @Suppress("Deprecation") // https://github.com/mozilla-mobile/android-components/issues/6356
     internal fun installWebExtension(
         ext: GeckoWebExtension,
         onSuccess: ((WebExtension) -> Unit) = { },

@@ -36,6 +36,7 @@ class GeckoWebExtension(
     val runtime: GeckoRuntime,
     allowContentMessaging: Boolean = true,
     supportActions: Boolean = false,
+    @Suppress("Deprecation") // https://github.com/mozilla-mobile/android-components/issues/6356
     val nativeExtension: GeckoNativeWebExtension = GeckoNativeWebExtension(
         url,
         id,
