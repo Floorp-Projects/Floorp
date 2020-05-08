@@ -354,11 +354,7 @@ class AboutLoginsParent extends JSWindowActorParent {
             return;
           }
           if (!token.hasPassword && OS_AUTH_ENABLED) {
-            if (AppConstants.platform == "macosx") {
-              // OS Auth dialogs on macOS must only provide the "reason" that the prompt
-              // is being displayed.
-              messageId += "-macosx";
-            }
+            messageId += "-" + AppConstants.platform;
             let [
               messageText,
               captionText,
