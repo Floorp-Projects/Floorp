@@ -53,12 +53,12 @@
         android:layout_height="wrap_content"
         android:contentDescription="@string/preference_top_toolbar"
         android:elevation="1dp"
+        android:theme="@style/Checkable.Colored"
         android:translationX="@dimen/onboarding_dual_pane_radio_button_translation_x"
         android:translationY="@dimen/onboarding_dual_pane_radio_button_translation_y"
         app:layout_constraintStart_toStartOf="@+id/toolbar_top_image"
         app:layout_constraintTop_toBottomOf="@+id/description_text"
         app:layout_constraintTop_toTopOf="@+id/toolbar_top_image"
-        android:buttonTint="@color/onboarding_radio_button_color"
         app:onboardingKey="@string/pref_key_toolbar_top" />
 
     <ImageView
@@ -67,13 +67,13 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        app:srcCompat="@drawable/onboarding_toolbar_top"
         android:contentDescription="@string/preference_top_toolbar"
         android:foreground="@drawable/rounded_ripple"
         app:layout_constraintEnd_toStartOf="@+id/toolbar_bottom_image"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/description_text" />
+        app:layout_constraintTop_toBottomOf="@+id/description_text"
+        app:srcCompat="@drawable/onboarding_toolbar_top" />
 
     <org.mozilla.fenix.onboarding.OnboardingRadioButton
         android:id="@+id/toolbar_bottom_radio_button"
@@ -81,12 +81,12 @@
         android:layout_height="wrap_content"
         android:contentDescription="@string/preference_bottom_toolbar"
         android:elevation="1dp"
+        android:theme="@style/Checkable.Colored"
         android:translationX="@dimen/onboarding_dual_pane_radio_button_translation_x"
         android:translationY="@dimen/onboarding_dual_pane_radio_button_translation_y"
         app:layout_constraintStart_toStartOf="@+id/toolbar_bottom_image"
-        app:layout_constraintTop_toTopOf="@+id/toolbar_bottom_image"
         app:layout_constraintTop_toBottomOf="@+id/description_text"
-        android:buttonTint="@color/onboarding_radio_button_color"
+        app:layout_constraintTop_toTopOf="@+id/toolbar_bottom_image"
         app:onboardingKey="@string/pref_key_toolbar_bottom" />
 
     <ImageView
@@ -96,13 +96,13 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
-        app:srcCompat="@drawable/onboarding_toolbar_bottom"
         android:contentDescription="@string/preference_bottom_toolbar"
         android:foreground="@drawable/rounded_ripple"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/toolbar_top_image"
-        app:layout_constraintTop_toBottomOf="@+id/description_text" />
+        app:layout_constraintTop_toBottomOf="@+id/description_text"
+        app:srcCompat="@drawable/onboarding_toolbar_bottom" />
 
     <TextView
         android:id="@+id/toolbar_bottom_title"

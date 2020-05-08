@@ -29,7 +29,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="@id/header_text"
         app:layout_constraintEnd_toEndOf="parent"
-        android:theme="@style/Switch.Colored"
+        android:theme="@style/Checkable.Colored"
         app:layout_constraintTop_toTopOf="@id/header_text" />
 
     <TextView
@@ -62,9 +62,9 @@
         android:layout_marginBottom="16dp"
         android:paddingStart="0dp"
         android:paddingEnd="8dp"
+        android:theme="@style/Checkable.Colored"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/description_text"
-        android:buttonTint="@color/onboarding_radio_button_color"
         app:onboardingKey="@string/pref_key_tracking_protection_standard_option" />
 
     <TextView
@@ -108,10 +108,10 @@
         android:checked="true"
         android:paddingStart="0dp"
         android:paddingEnd="8dp"
+        android:theme="@style/Checkable.Colored"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tracking_protection_standard_option"
-        android:buttonTint="@color/onboarding_radio_button_color"
         app:onboardingKey="@string/pref_key_tracking_protection_strict_default" />
 
     <TextView

@@ -51,11 +51,11 @@
         android:layout_height="wrap_content"
         android:contentDescription="@string/onboarding_theme_light_title"
         android:elevation="1dp"
+        android:theme="@style/Checkable.Colored"
         android:translationX="@dimen/onboarding_dual_pane_radio_button_translation_x"
         android:translationY="@dimen/onboarding_dual_pane_radio_button_translation_y"
         app:layout_constraintStart_toStartOf="@+id/theme_light_image"
         app:layout_constraintTop_toTopOf="@+id/theme_light_image"
-        android:buttonTint="@color/onboarding_radio_button_color"
         app:onboardingKey="@string/pref_key_light_theme" />
 
     <ImageView
@@ -64,13 +64,13 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        app:srcCompat="@drawable/onboarding_light_theme"
         android:contentDescription="@string/onboarding_theme_light_title"
         android:foreground="@drawable/rounded_ripple"
         app:layout_constraintEnd_toStartOf="@+id/theme_dark_image"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/description_text" />
+        app:layout_constraintTop_toBottomOf="@+id/description_text"
+        app:srcCompat="@drawable/onboarding_light_theme" />
 
     <org.mozilla.fenix.onboarding.OnboardingRadioButton
         android:id="@+id/theme_dark_radio_button"
@@ -78,11 +78,11 @@
         android:layout_height="wrap_content"
         android:contentDescription="@string/onboarding_theme_dark_title"
         android:elevation="1dp"
+        android:theme="@style/Checkable.Colored"
         android:translationX="@dimen/onboarding_dual_pane_radio_button_translation_x"
         android:translationY="@dimen/onboarding_dual_pane_radio_button_translation_y"
         app:layout_constraintStart_toStartOf="@+id/theme_dark_image"
         app:layout_constraintTop_toTopOf="@+id/theme_dark_image"
-        android:buttonTint="@color/onboarding_radio_button_color"
         app:onboardingKey="@string/pref_key_dark_theme" />
 
     <ImageView
@@ -92,13 +92,13 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
-        app:srcCompat="@drawable/onboarding_dark_theme"
         android:contentDescription="@string/onboarding_theme_dark_title"
         android:foreground="@drawable/rounded_ripple"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/theme_light_image"
-        app:layout_constraintTop_toBottomOf="@+id/description_text" />
+        app:layout_constraintTop_toBottomOf="@+id/description_text"
+        app:srcCompat="@drawable/onboarding_dark_theme" />
 
     <TextView
         android:id="@+id/dark_theme_title"
@@ -143,10 +143,10 @@
         android:contentDescription="@string/onboarding_theme_automatic_title"
         android:paddingStart="0dp"
         android:paddingEnd="8dp"
+        android:theme="@style/Checkable.Colored"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/divider"
-        android:buttonTint="@color/onboarding_radio_button_color"
         app:onboardingKey="@string/pref_key_follow_device_theme" />
 
     <TextView

@@ -104,8 +104,9 @@
         <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyleLight</item>
     </style>
 
-    <style name="Switch.Colored" parent="Theme.AppCompat">
+    <style name="Checkable.Colored" parent="Theme.AppCompat">
         <item name="colorControlActivated">?attr/onboardingSelected</item>
+        <item name="colorControlNormal">?attr/onboardingDeselected</item>
     </style>
 
     <style name="DialogStyleDark" parent="BaseDialogStyle">
