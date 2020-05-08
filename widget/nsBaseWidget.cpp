@@ -907,7 +907,7 @@ void nsBaseWidget::ConfigureAPZCTreeManager() {
 
 void nsBaseWidget::ConfigureAPZControllerThread() {
   // By default the controller thread is the main thread.
-  APZThreadUtils::SetControllerThread(NS_GetCurrentThread());
+  APZThreadUtils::SetControllerThread(MessageLoop::current());
 }
 
 void nsBaseWidget::SetConfirmedTargetAPZC(

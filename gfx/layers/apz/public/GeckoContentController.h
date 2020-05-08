@@ -14,7 +14,6 @@
 #include "mozilla/Attributes.h"                  // for MOZ_CAN_RUN_SCRIPT
 #include "mozilla/DefineEnum.h"                  // for MOZ_DEFINE_ENUM
 #include "mozilla/EventForwards.h"               // for Modifiers
-#include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/MatrixMessage.h"        // for MatrixMessage
 #include "mozilla/layers/RepaintRequest.h"       // for RepaintRequest
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid, etc
@@ -105,14 +104,12 @@ class GeckoContentController {
                                   Modifiers aModifiers) = 0;
 
   /**
-   * Schedules a runnable to run on the controller thread at some time
+   * Schedules a runnable to run on the controller/UI thread at some time
    * in the future.
    * This method must always be called on the controller thread.
    */
   virtual void PostDelayedTask(already_AddRefed<Runnable> aRunnable,
-                               int aDelayMs) {
-    APZThreadUtils::DelayedDispatch(std::move(aRunnable), aDelayMs);
-  }
+                               int aDelayMs) = 0;
 
   /**
    * Returns true if we are currently on the thread that can send repaint
