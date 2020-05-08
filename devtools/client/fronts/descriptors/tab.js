@@ -31,6 +31,8 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
     // (eg, regular tab toolbox) or browsing context targets (eg tab remote
     // debugging).
     this._localTab = null;
+
+    this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
   }
 
   form(json) {
@@ -79,7 +81,15 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
     front.actorID = form.actor;
     front.form(form);
     this.manage(front);
+    front.on("target-destroyed", this._onTargetDestroyed);
     return front;
+  }
+
+  _onTargetDestroyed() {
+    // Clear the cached targetFront when the target is destroyed.
+    // Note that we are also checking that _targetFront has a valid actorID
+    // in getTarget, this acts as an additional security to avoid races.
+    this._targetFront = null;
   }
 
   /**
