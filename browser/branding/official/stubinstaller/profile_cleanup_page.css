@@ -61,9 +61,12 @@ body {
 #refreshButton {
   padding: 8px 70px;
   font-size: 16px;
-  border: none;
   background: #005ccc;
   color: white;
+}
+
+body.normal-contrast #refreshButton {
+  border: none;
 }
 
 /* No footer for this layout. */
