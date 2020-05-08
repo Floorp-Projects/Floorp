@@ -10,7 +10,7 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - toolchain
+    - geckodriver-repack
 
-only-for-attributes:
-    - geckodriver
+job-template:
+    shipping-phase: promote
