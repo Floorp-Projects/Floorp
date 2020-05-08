@@ -146,6 +146,7 @@ function Inspector(toolbox) {
   this.panelWin.inspector = this;
   this.telemetry = toolbox.telemetry;
   this.store = createStore();
+  this.isReady = false;
 
   // Map [panel id => panel instance]
   // Stores all the instances of sidebar panels like rule view, computed view, ...
@@ -165,7 +166,7 @@ function Inspector(toolbox) {
   this.onHostChanged = this.onHostChanged.bind(this);
   this.onMarkupLoaded = this.onMarkupLoaded.bind(this);
   this.onNewSelection = this.onNewSelection.bind(this);
-  this.onNewRoot = this.onNewRoot.bind(this);
+  this.onRootNodeAvailable = this.onRootNodeAvailable.bind(this);
   this.onPanelWindowResize = this.onPanelWindowResize.bind(this);
   this.onShowBoxModelHighlighterForNode = this.onShowBoxModelHighlighterForNode.bind(
     this
@@ -188,6 +189,11 @@ Inspector.prototype = {
     // Localize all the nodes containing a data-localization attribute.
     localizeMarkup(this.panelDoc);
 
+    // The markup view will be initialized in onRootNodeAvailable, which will be
+    // called through watchTargets and _onTargetAvailable, when a root node is
+    // available for the top-level target.
+    this._onFirstMarkupLoaded = this.once("markuploaded");
+
     await this.toolbox.targetList.watchTargets(
       [this.toolbox.targetList.TYPES.FRAME],
       this._onTargetAvailable,
@@ -198,8 +204,6 @@ Inspector.prototype = {
     // telemetry counts in the Grid Inspector are not double counted on reload.
     this.previousURL = this.currentTarget.url;
     this.styleChangeTracker = new InspectorStyleChangeTracker(this);
-
-    this._markupBox = this.panelDoc.getElementById("markup-box");
 
     return this._deferredOpen();
   },
@@ -216,23 +220,10 @@ Inspector.prototype = {
 
     await Promise.all([
       this._getCssProperties(),
-      this._getDefaultSelection(),
       this._getAccessibilityFront(),
     ]);
 
-    // When we navigate to another process and switch to a new
-    // target and the inspector is already ready, we want to
-    // update the markup view accordingly. So force a new-root event.
-    // For the initial panel startup, the initial top level target
-    // update the markup view from _deferredOpen.
-    // We might want to followup here in order to share the same
-    // codepath between the initial top level target and the next
-    // one we switch to. i.e. extract from deferredOpen code
-    // which has to be called only once on inspector startup.
-    // Then move the rest to onNewRoot and always call onNewRoot from here.
-    if (this.isReady) {
-      this.onNewRoot();
-    }
+    this.walker.watchRootNode(this.onRootNodeAvailable);
   },
 
   _onTargetDestroyed({ type, targetFront, isTopLevel }) {
@@ -351,18 +342,6 @@ Inspector.prototype = {
   },
 
   _deferredOpen: async function() {
-    const onMarkupLoaded = this.once("markuploaded");
-    this._initMarkup();
-    this.isReady = false;
-
-    // Set the node front so that the markup and sidebar panels will have the selected
-    // nodeFront ready when they're initialized.
-    if (this._defaultNode) {
-      this.selection.setNodeFront(this._defaultNode, {
-        reason: "inspector-open",
-      });
-    }
-
     // Setup the splitter before the sidebar is displayed so, we don't miss any events.
     this.setupSplitter();
 
@@ -375,7 +354,7 @@ Inspector.prototype = {
     // Setup the sidebar panels.
     this.setupSidebar();
 
-    await onMarkupLoaded;
+    await this._onFirstMarkupLoaded;
     this.isReady = true;
 
     // All the components are initialized. Take care of the remaining initialization
@@ -383,11 +362,9 @@ Inspector.prototype = {
     this.breadcrumbs = new HTMLBreadcrumbs(this);
     this.setupExtensionSidebars();
     this.setupSearchBox();
-    await this.setupToolbar();
 
     this.onNewSelection();
 
-    this.walker.on("new-root", this.onNewRoot);
     this.toolbox.on("host-changed", this.onHostChanged);
     this.selection.on("new-node-front", this.onNewSelection);
     this.selection.on("detached-front", this.onDetached);
@@ -421,14 +398,6 @@ Inspector.prototype = {
       "accessibility"
     );
     return this.accessibilityFront;
-  },
-
-  _getDefaultSelection: function() {
-    // This may throw if the document is still loading and we are
-    // refering to a dead about:blank document
-    return this._getDefaultNodeForSelection().catch(
-      this._handleRejectionIfNotDestroyed
-    );
   },
 
   /**
@@ -1313,7 +1282,7 @@ Inspector.prototype = {
   /**
    * Reset the inspector on new root mutation.
    */
-  onNewRoot: function() {
+  onRootNodeAvailable: function() {
     // Record new-root timing for telemetry
     this._newRootStart = this.panelWin.performance.now();
 
@@ -1328,9 +1297,10 @@ Inspector.prototype = {
         return;
       }
       this._pendingSelection = null;
-      this.selection.setNodeFront(defaultNode, { reason: "navigateaway" });
+      this.selection.setNodeFront(defaultNode, {
+        reason: "inspector-default-selection",
+      });
 
-      this.once("markuploaded", this.onMarkupLoaded);
       this._initMarkup();
 
       // Setup the toolbar again, since its content may depend on the current document.
@@ -1642,10 +1612,6 @@ Inspector.prototype = {
     this.currentTarget.threadFront.off("paused", this.handleThreadPaused);
     this.currentTarget.threadFront.off("resumed", this.handleThreadResumed);
 
-    if (this.walker) {
-      this.walker.off("new-root", this.onNewRoot);
-    }
-
     this.cancelUpdate();
 
     this.sidebar.destroy();
@@ -1718,6 +1684,8 @@ Inspector.prototype = {
   },
 
   _initMarkup: function() {
+    this.once("markuploaded", this.onMarkupLoaded);
+
     if (!this._markupFrame) {
       this._markupFrame = this.panelDoc.createElement("iframe");
       this._markupFrame.setAttribute(
@@ -1728,6 +1696,7 @@ Inspector.prototype = {
       // This is needed to enable tooltips inside the iframe document.
       this._markupFrame.setAttribute("tooltip", "aHTMLTooltip");
 
+      this._markupBox = this.panelDoc.getElementById("markup-box");
       this._markupBox.style.visibility = "hidden";
       this._markupBox.appendChild(this._markupFrame);
 
@@ -1760,7 +1729,9 @@ Inspector.prototype = {
       destroyPromise = promise.resolve();
     }
 
-    this._markupBox.style.visibility = "hidden";
+    if (this._markupBox) {
+      this._markupBox.style.visibility = "hidden";
+    }
 
     return destroyPromise;
   },
@@ -1775,14 +1746,14 @@ Inspector.prototype = {
     this.toolbox.tellRDMAboutPickerState(true, PICKER_TYPES.EYEDROPPER);
     this.inspectorFront.once("color-pick-canceled", this.onEyeDropperDone);
     this.inspectorFront.once("color-picked", this.onEyeDropperDone);
-    this.walker.once("new-root", this.onEyeDropperDone);
+    this.once("new-root", this.onEyeDropperDone);
   },
 
   stopEyeDropperListeners: function() {
     this.toolbox.tellRDMAboutPickerState(false, PICKER_TYPES.EYEDROPPER);
     this.inspectorFront.off("color-pick-canceled", this.onEyeDropperDone);
     this.inspectorFront.off("color-picked", this.onEyeDropperDone);
-    this.walker.off("new-root", this.onEyeDropperDone);
+    this.off("new-root", this.onEyeDropperDone);
   },
 
   onEyeDropperDone: function() {
