@@ -10,6 +10,11 @@ ChromeUtils.defineModuleGetter(
   "TabStateFlusher",
   "resource:///modules/sessionstore/TabStateFlusher.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionControlledPopup",
+  "resource:///modules/ExtensionControlledPopup.jsm"
+);
 const { E10SUtils } = ChromeUtils.import(
   "resource://gre/modules/E10SUtils.jsm"
 );
@@ -70,7 +75,7 @@ add_task(function test_doorhanger_keep() {
     is(gBrowser.visibleTabs.length, 3, "There are 3 visible tabs");
 
     // Hide the first tab, expect the doorhanger.
-    let panel = document.getElementById("extension-notification-panel");
+    let panel = ExtensionControlledPopup._getAndMaybeCreatePanel(document);
     let popupShown = promisePopupShown(panel);
     extension.sendMessage("hide", { url: "*://*/?one" });
     await extension.awaitMessage("done");
@@ -107,7 +112,7 @@ add_task(function test_doorhanger_disable() {
     is(gBrowser.visibleTabs.length, 3, "There are 3 visible tabs");
 
     // Hide the first tab, expect the doorhanger.
-    let panel = document.getElementById("extension-notification-panel");
+    let panel = ExtensionControlledPopup._getAndMaybeCreatePanel(document);
     let popupShown = promisePopupShown(panel);
     extension.sendMessage("hide", { url: "*://*/?one" });
     await extension.awaitMessage("done");

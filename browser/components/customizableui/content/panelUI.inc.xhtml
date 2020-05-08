@@ -91,95 +91,96 @@
   </panel>
 </html:template>
 
-<panel id="appMenu-notification-popup"
-       class="popup-notification-panel panel-no-padding"
-       type="arrow"
-       position="after_start"
-       hidden="true"
-       flip="slide"
-       orient="vertical"
-       noautofocus="true"
-       noautohide="true"
-       nopreventnavboxhide="true"
-       role="alert">
-  <popupnotification id="appMenu-update-available-notification"
-                     popupid="update-available"
-                     data-lazy-l10n-id="appmenu-update-available"
-                     data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
-                     closebuttonhidden="true"
-                     dropmarkerhidden="true"
-                     checkboxhidden="true"
-                     buttonhighlight="true"
-                     hidden="true">
-    <popupnotificationcontent id="update-available-notification-content" orient="vertical">
-      <description id="update-available-description" data-lazy-l10n-id="appmenu-update-available-message"></description>
-      <label id="update-available-whats-new" is="text-link" data-lazy-l10n-id="appmenu-update-whats-new"/>
-    </popupnotificationcontent>
-  </popupnotification>
+<html:template id="appMenuNotificationTemplate">
+  <panel id="appMenu-notification-popup"
+         class="popup-notification-panel panel-no-padding"
+         type="arrow"
+         position="after_start"
+         flip="slide"
+         orient="vertical"
+         noautofocus="true"
+         noautohide="true"
+         nopreventnavboxhide="true"
+         role="alert">
+    <popupnotification id="appMenu-update-available-notification"
+                       popupid="update-available"
+                       data-lazy-l10n-id="appmenu-update-available"
+                       data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
+                       closebuttonhidden="true"
+                       dropmarkerhidden="true"
+                       checkboxhidden="true"
+                       buttonhighlight="true"
+                       hidden="true">
+      <popupnotificationcontent id="update-available-notification-content" orient="vertical">
+        <description id="update-available-description" data-lazy-l10n-id="appmenu-update-available-message"></description>
+        <label id="update-available-whats-new" is="text-link" data-lazy-l10n-id="appmenu-update-whats-new"/>
+      </popupnotificationcontent>
+    </popupnotification>
 
-  <popupnotification id="appMenu-update-manual-notification"
-                     popupid="update-manual"
-                     data-lazy-l10n-id="appmenu-update-manual"
-                     data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
-                     closebuttonhidden="true"
-                     dropmarkerhidden="true"
-                     checkboxhidden="true"
-                     buttonhighlight="true"
-                     hidden="true">
-    <popupnotificationcontent id="update-manual-notification-content" orient="vertical">
-      <description id="update-manual-description" data-lazy-l10n-id="appmenu-update-manual-message"></description>
-      <label id="update-manual-whats-new" is="text-link"  data-lazy-l10n-id="appmenu-update-whats-new"/>
-    </popupnotificationcontent>
-  </popupnotification>
+    <popupnotification id="appMenu-update-manual-notification"
+                       popupid="update-manual"
+                       data-lazy-l10n-id="appmenu-update-manual"
+                       data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
+                       closebuttonhidden="true"
+                       dropmarkerhidden="true"
+                       checkboxhidden="true"
+                       buttonhighlight="true"
+                       hidden="true">
+      <popupnotificationcontent id="update-manual-notification-content" orient="vertical">
+        <description id="update-manual-description" data-lazy-l10n-id="appmenu-update-manual-message"></description>
+        <label id="update-manual-whats-new" is="text-link"  data-lazy-l10n-id="appmenu-update-whats-new"/>
+      </popupnotificationcontent>
+    </popupnotification>
 
-  <popupnotification id="appMenu-update-unsupported-notification"
-                     popupid="update-unsupported"
-                     data-lazy-l10n-id="appmenu-update-unsupported"
-                     data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
-                     closebuttonhidden="true"
-                     dropmarkerhidden="true"
-                     checkboxhidden="true"
-                     buttonhighlight="true"
-                     hidden="true">
-    <popupnotificationcontent id="update-unsupported-notification-content" orient="vertical">
-      <description id="update-unsupported-description" data-lazy-l10n-id="appmenu-update-unsupported-message"></description>
-    </popupnotificationcontent>
-  </popupnotification>
+    <popupnotification id="appMenu-update-unsupported-notification"
+                       popupid="update-unsupported"
+                       data-lazy-l10n-id="appmenu-update-unsupported"
+                       data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
+                       closebuttonhidden="true"
+                       dropmarkerhidden="true"
+                       checkboxhidden="true"
+                       buttonhighlight="true"
+                       hidden="true">
+      <popupnotificationcontent id="update-unsupported-notification-content" orient="vertical">
+        <description id="update-unsupported-description" data-lazy-l10n-id="appmenu-update-unsupported-message"></description>
+      </popupnotificationcontent>
+    </popupnotification>
 
-  <popupnotification id="appMenu-update-restart-notification"
-                     popupid="update-restart"
-                     data-lazy-l10n-id="appmenu-update-restart"
-                     data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
-                     closebuttonhidden="true"
-                     dropmarkerhidden="true"
-                     checkboxhidden="true"
-                     buttonhighlight="true"
-                     hidden="true">
-    <popupnotificationcontent id="update-restart-notification-content" orient="vertical">
-      <description id="update-restart-description" data-lazy-l10n-id="appmenu-update-restart-message"></description>
-    </popupnotificationcontent>
-  </popupnotification>
+    <popupnotification id="appMenu-update-restart-notification"
+                       popupid="update-restart"
+                       data-lazy-l10n-id="appmenu-update-restart"
+                       data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
+                       closebuttonhidden="true"
+                       dropmarkerhidden="true"
+                       checkboxhidden="true"
+                       buttonhighlight="true"
+                       hidden="true">
+      <popupnotificationcontent id="update-restart-notification-content" orient="vertical">
+        <description id="update-restart-description" data-lazy-l10n-id="appmenu-update-restart-message"></description>
+      </popupnotificationcontent>
+    </popupnotification>
 
-  <popupnotification id="appMenu-addon-installed-notification"
-                     popupid="addon-installed"
-                     closebuttonhidden="true"
-                     secondarybuttonhidden="true"
-                     data-lazy-l10n-id="appmenu-addon-private-browsing-installed"
-                     data-l10n-attrs="buttonlabel, buttonaccesskey"
-                     dropmarkerhidden="true"
-                     checkboxhidden="true"
-                     buttonhighlight="true"
-                     hidden="true">
-    <popupnotificationcontent class="addon-installed-notification-content" orient="vertical">
-      <description id="addon-install-description" data-lazy-l10n-id="appmenu-addon-post-install-message">
-        <image data-l10n-name="addon-install-icon" class="addon-addon-icon"></image>
-        <image data-l10n-name="addon-menu-icon" class="addon-toolbar-icon"></image>
-      </description>
-      <checkbox id="addon-incognito-checkbox"
-                data-lazy-l10n-id="appmenu-addon-post-install-incognito-checkbox"/>
-    </popupnotificationcontent>
-  </popupnotification>
-</panel>
+    <popupnotification id="appMenu-addon-installed-notification"
+                       popupid="addon-installed"
+                       closebuttonhidden="true"
+                       secondarybuttonhidden="true"
+                       data-lazy-l10n-id="appmenu-addon-private-browsing-installed"
+                       data-l10n-attrs="buttonlabel, buttonaccesskey"
+                       dropmarkerhidden="true"
+                       checkboxhidden="true"
+                       buttonhighlight="true"
+                       hidden="true">
+      <popupnotificationcontent class="addon-installed-notification-content" orient="vertical">
+        <description id="addon-install-description" data-lazy-l10n-id="appmenu-addon-post-install-message">
+          <image data-l10n-name="addon-install-icon" class="addon-addon-icon"></image>
+          <image data-l10n-name="addon-menu-icon" class="addon-toolbar-icon"></image>
+        </description>
+        <checkbox id="addon-incognito-checkbox"
+                  data-lazy-l10n-id="appmenu-addon-post-install-incognito-checkbox"/>
+      </popupnotificationcontent>
+    </popupnotification>
+  </panel>
+</html:template>
 
 <menupopup id="customizationPaletteItemContextMenu"
            onpopupshowing="gCustomizeMode.onPaletteContextMenuShowing(event)">
@@ -995,51 +996,52 @@
             oncommand="gCustomizeMode.onDownloadsAutoHideChange(event)"/>
 </panel>
 
-<panel id="extension-notification-panel"
-       class="popup-notification-panel panel-no-padding"
-       role="group"
-       type="arrow"
-       hidden="true"
-       flip="slide"
-       position="bottomcenter topright"
-       tabspecific="true">
-  <popupnotification id="extension-new-tab-notification"
-                     class="extension-controlled-notification"
-                     popupid="extension-new-tab"
-                     hidden="true"
-                     data-lazy-l10n-id="appmenu-new-tab-controlled"
-                     data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
-                     closebuttonhidden="true"
-                     dropmarkerhidden="true"
-                     checkboxhidden="true">
-    <popupnotificationcontent orient="vertical">
-      <description id="extension-new-tab-notification-description"/>
-    </popupnotificationcontent>
-  </popupnotification>
-  <popupnotification id="extension-homepage-notification"
-                     class="extension-controlled-notification"
-                     popupid="extension-homepage"
-                     hidden="true"
-                     data-lazy-l10n-id="appmenu-homepage-controlled"
-                     data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
-                     closebuttonhidden="true"
-                     dropmarkerhidden="true"
-                     checkboxhidden="true">
-    <popupnotificationcontent orient="vertical">
-      <description id="extension-homepage-notification-description"/>
-    </popupnotificationcontent>
-  </popupnotification>
-  <popupnotification id="extension-tab-hide-notification"
-                     class="extension-controlled-notification"
-                     popupid="extension-tab-hide"
-                     hidden="true"
-                     data-lazy-l10n-id="appmenu-tab-hide-controlled"
-                     data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
-                     closebuttonhidden="true"
-                     dropmarkerhidden="true"
-                     checkboxhidden="true">
-    <popupnotificationcontent orient="vertical">
-      <description id="extension-tab-hide-notification-description"/>
-    </popupnotificationcontent>
-  </popupnotification>
-</panel>
+<html:template id="extensionNotificationTemplate">
+  <panel id="extension-notification-panel"
+         class="popup-notification-panel panel-no-padding"
+         role="group"
+         type="arrow"
+         flip="slide"
+         position="bottomcenter topright"
+         tabspecific="true">
+    <popupnotification id="extension-new-tab-notification"
+                       class="extension-controlled-notification"
+                       popupid="extension-new-tab"
+                       hidden="true"
+                       data-lazy-l10n-id="appmenu-new-tab-controlled"
+                       data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
+                       closebuttonhidden="true"
+                       dropmarkerhidden="true"
+                       checkboxhidden="true">
+      <popupnotificationcontent orient="vertical">
+        <description id="extension-new-tab-notification-description"/>
+      </popupnotificationcontent>
+    </popupnotification>
+    <popupnotification id="extension-homepage-notification"
+                       class="extension-controlled-notification"
+                       popupid="extension-homepage"
+                       hidden="true"
+                       data-lazy-l10n-id="appmenu-homepage-controlled"
+                       data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
+                       closebuttonhidden="true"
+                       dropmarkerhidden="true"
+                       checkboxhidden="true">
+      <popupnotificationcontent orient="vertical">
+        <description id="extension-homepage-notification-description"/>
+      </popupnotificationcontent>
+    </popupnotification>
+    <popupnotification id="extension-tab-hide-notification"
+                       class="extension-controlled-notification"
+                       popupid="extension-tab-hide"
+                       hidden="true"
+                       data-lazy-l10n-id="appmenu-tab-hide-controlled"
+                       data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
+                       closebuttonhidden="true"
+                       dropmarkerhidden="true"
+                       checkboxhidden="true">
+      <popupnotificationcontent orient="vertical">
+        <description id="extension-tab-hide-notification-description"/>
+      </popupnotificationcontent>
+    </popupnotification>
+  </panel>
+</html:template>
