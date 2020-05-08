@@ -143,6 +143,12 @@
 #define IS_NOT_NIGHTLY_BUILD  true
 #endif
 
+#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
+#define IS_NIGHTLY_OR_DEV_EDITION true
+#else
+#define IS_NIGHTLY_OR_DEV_EDITION false
+#endif
+
 #ifdef MOZILLA_OFFICIAL
 #define IS_NOT_MOZILLA_OFFICIAL false
 #else
@@ -4684,7 +4690,7 @@
 # Use better error message when accessing property of null or undefined.
 - name: javascript.options.property_error_message_fix
   type: RelaxedAtomicBool
-  value: @IS_NOT_RELEASE_OR_BETA@
+  value: @IS_NIGHTLY_OR_DEV_EDITION@
   mirror: always
 
 #ifdef NIGHTLY_BUILD
