@@ -37,14 +37,14 @@ async function initResourceWatcherAndTarget(tab) {
   // Create a TargetList for the test tab
   const client = await createLocalClient();
 
-  let target;
+  let descriptor;
   if (tab) {
-    target = await client.mainRoot.getTab({ tab });
+    descriptor = await client.mainRoot.getTab({ tab });
   } else {
-    const descriptor = await client.mainRoot.getMainProcess();
-    target = await descriptor.getTarget();
+    descriptor = await client.mainRoot.getMainProcess();
   }
 
+  const target = await descriptor.getTarget();
   const targetList = new TargetList(client.mainRoot, target);
   await targetList.startListening();
 
