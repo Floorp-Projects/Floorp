@@ -1,4 +1,4 @@
-use crate::context_stack::{ControlInfo, ControlKind};
+use crate::context_stack::{ControlInfo, ControlKind, LabelKind};
 use crate::parser_tables_generated::TerminalId;
 use crate::DeclarationKind;
 use crate::Token;
@@ -905,12 +905,12 @@ impl VarEarlyErrorsContext for LexicalForBodyEarlyErrorsContext {
 
 pub struct LabelledStatementEarlyErrorsContext {
     name: SourceAtomSetIndex,
-    is_loop: bool,
+    kind: LabelKind,
 }
 
 impl LabelledStatementEarlyErrorsContext {
-    pub fn new(name: SourceAtomSetIndex, is_loop: bool) -> Self {
-        Self { name, is_loop }
+    pub fn new(name: SourceAtomSetIndex, kind: LabelKind) -> Self {
+        Self { name, kind }
     }
 
     pub fn check_duplicate_label<'alloc>(
@@ -966,7 +966,10 @@ impl LabelledStatementEarlyErrorsContext {
         //    indirectly (but not crossing function boundaries), within an
         //    IterationStatement.
         if let Some(name) = info.label {
-            if !self.is_loop && info.kind == ControlKind::Continue && name == self.name {
+            if self.kind != LabelKind::Loop
+                && info.kind == ControlKind::Continue
+                && name == self.name
+            {
                 return Err(ParseError::BadContinue.into());
             }
         }

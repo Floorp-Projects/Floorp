@@ -26,7 +26,6 @@ pub enum NameLocation {
 //
 // These types are the variants of enum EmitterScope.
 
-
 #[derive(Debug)]
 struct GlobalEmitterScope {
     cache: HashMap<SourceAtomSetIndex, NameLocation>,
