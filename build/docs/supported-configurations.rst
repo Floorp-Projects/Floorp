@@ -1,14 +1,27 @@
+Supported build targets
+=======================
+
+ ..  role:: strikethrough
+
 There are three tiers of **supported Firefox build targets** at this
 time. These tiers represent the shared engineering priorities of the
 Mozilla project.
 
+.. note::
+
+   Sheriffs are in charge of monitoring the tree. They have a slightly different definition of tiers.
+   See the `job tier definition <https://wiki.mozilla.org/Sheriffing/Job_Visibility_Policy#Overview_of_the_Job_Visibility_Tiers>`__ for more information.
+
+.. _tier-1:
+
 The term **"Tier-1 platform"** refers to those platforms - CPU
 architectures and operating systems - that are the primary focus of
 Firefox development efforts. Tier-1 platforms are fully supported by
-Mozilla's `continuous integration processes </en-US/docs/>`__ and the
-`Try Server </en-US/docs/>`__. Any proposed change to Firefox on these
+Mozilla's `continuous integration processes <https://treeherder.mozilla.org/>`__ and the
+:ref:`Try Server`. Any proposed change to Firefox on these
 platforms that results in build failures, test failures, performance
 regressions or other major problems **will be reverted immediately**.
+
 
 The **Tier-1 Firefox platforms** and their supported compilers are:
 
@@ -24,6 +37,8 @@ are also **not considered Tier-1 platforms, and are not supported**.
 Note also that while Windows/x86 and ARM/AArch64 are supported *as build
 targets*, it is not possible to build Firefox *on* Windows/x86 or
 Windows/AArch64 systems.
+
+.. _tier-2:
 
 **Tier-2 platforms** are actively maintained by the Mozilla community,
 though with less rigorous requirements. Proposed changes resulting in
@@ -41,6 +56,8 @@ The **Tier-2 Firefox platforms** and their supported compilers are:
    -  *Note that some features of this platform are disabled, as they
       require MS COM or the w32api project doesn't expose the necessary
       Windows APIs.*
+
+.. _tier-3:
 
 **Tier-3 platforms** have a maintainer or community which attempt to
 keep the platform working. These platforms are **not supported by our
@@ -60,7 +77,7 @@ platforms may or may not work correctly or build at all.
 -  OpenBSD/x86, x86-64 (clang) - maintained by Landry Breuil
 -  NetBSD/x86-64 (gcc) - maintained by David Laight
 -  Solaris/x86-64, sparc64 (gcc) - maintained by Petr Sumbera
--  [STRIKEOUT:Windows/x86-64 (mingw-gcc)] - Unsupported due to
+-  :strikethrough:`Windows/x86-64 (mingw-gcc)` - Unsupported due to
    requirements for clang-bindgen
 
 If you're filing a bug against Firefox on a Tier-3 platform (or any
