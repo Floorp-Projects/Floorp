@@ -5,6 +5,7 @@
 // Global defaults
 var gDefaultGarbagePiles = "8M";
 var gDefaultGarbagePerFrame = "8K";
+var gDefaultTestDuration = 8.0;
 
 function parse_units(v) {
   if (!v.length) {
@@ -81,6 +82,47 @@ class AllocationLoad {
   }
 }
 
+class LoadCycle {
+  constructor(tests_to_run, duration) {
+    this.queue = [...tests_to_run];
+    this.duration = duration;
+    this.idx = -1;
+  }
+
+  get current() {
+    return this.queue[this.idx];
+  }
+
+  start(now = performance.now()) {
+    this.idx = 0;
+    this.cycleStart = this.started = now;
+  }
+
+  tick(now = performance.now()) {
+    if (this.currentLoadElapsed(now) < this.duration) {
+      return;
+    }
+
+    this.idx++;
+    this.started = now;
+    if (this.idx >= this.queue.length) {
+      this.idx = -1;
+    }
+  }
+
+  done() {
+    return this.idx == -1;
+  }
+
+  cycleElapsed(now = performance.now()) {
+    return now - this.cycleStart;
+  }
+
+  currentLoadElapsed(now = performance.now()) {
+    return now - this.started;
+  }
+}
+
 class AllocationLoadManager {
   constructor(tests) {
     this._loads = new Map();
@@ -89,6 +131,17 @@ class AllocationLoadManager {
     }
     this._active = undefined;
     this._paused = false;
+    this._eventsSinceLastTick = 0;
+
+    // Public API
+    this.cycle = null;
+    this.testDurationMS = gDefaultTestDuration * 1000;
+
+    // Constants
+    this.CYCLE_STARTED = 1;
+    this.CYCLE_STOPPED = 2;
+    this.LOAD_ENDED = 4;
+    this.LOAD_STARTED = 8;
   }
 
   activeLoad() {
@@ -132,19 +185,57 @@ class AllocationLoadManager {
     }
   }
 
-  tick() {
+  tick(now = performance.now()) {
+    this.lastActive = this._active;
+    let events = this._eventsSinceLastTick;
+    this._eventsSinceLastTick = 0;
+
+    if (this.cycle) {
+      const prev = this.cycle.current;
+      this.cycle.tick(now);
+      if (this.cycle.current != prev) {
+        if (this.cycle.current) {
+          this.setActiveLoadByName(this.cycle.current);
+        } else {
+          this.deactivateLoad();
+        }
+        events |= this.LOAD_ENDED;
+        if (this.cycle.done()) {
+          events |= this.CYCLE_STOPPED;
+          this.cycle = null;
+        } else {
+          events |= this.LOAD_STARTED;
+        }
+      }
+    }
+
     if (this._active && !this._paused) {
       this._active.tick();
     }
+
+    return events;
+  }
+
+  startCycle(tests_to_run, now = performance.now()) {
+    this.cycle = new LoadCycle(tests_to_run, this.testDurationMS);
+    this.cycle.start(now);
+    this.setActiveLoadByName(this.cycle.current);
+    this._eventsSinceLastTick |= this.CYCLE_STARTED | this.LOAD_STARTED;
+  }
+
+  cycleStopped() {
+    return !this.cycle || this.cycle.done();
+  }
+
+  cycleCurrentLoadRemaining(now = performance.now()) {
+    return this.cycleStopped()
+      ? 0
+      : this.testDurationMS - this.cycle.currentLoadElapsed(now);
   }
 }
 
 // Current test state.
 var gLoadMgr = undefined;
-
-var testDuration = undefined; // ms
-var testStart = undefined; // ms
-var testQueue = [];
 
 function format_gcBytes(bytes) {
   if (bytes < 4000) {
@@ -171,7 +262,7 @@ function compute_test_score(histogram) {
   for (let [delay, count] of histogram) {
     score += Math.abs((delay - 1000 / 60) * count);
   }
-  score = score / (testDuration / 1000);
+  score = score / (gLoadMgr.testDurationMS / 1000);
   return Math.round(score * 1000) / 1000;
 }
 
