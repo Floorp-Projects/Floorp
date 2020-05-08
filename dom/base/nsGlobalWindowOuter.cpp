@@ -1734,6 +1734,10 @@ bool nsGlobalWindowOuter::WouldReuseInnerWindow(Document* aNewDocument) {
     return true;
   }
 
+  if (aNewDocument->IsStaticDocument()) {
+    return false;
+  }
+
   if (BasePrincipal::Cast(mDoc->NodePrincipal())
           ->FastEqualsConsideringDomain(aNewDocument->NodePrincipal())) {
     // The origin is the same.
