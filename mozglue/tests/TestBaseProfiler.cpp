@@ -13,6 +13,7 @@
 #include "mozilla/ProfileBufferChunk.h"
 #include "mozilla/ProfileBufferChunkManagerSingle.h"
 #include "mozilla/ProfileBufferChunkManagerWithLocalLimit.h"
+#include "mozilla/ProfileBufferControlledChunkManager.h"
 #include "mozilla/ProfileChunkedBuffer.h"
 #include "mozilla/Vector.h"
 
@@ -827,6 +828,264 @@ static void TestChunkManagerWithLocalLimit() {
 #endif  // DEBUG
 
   printf("TestChunkManagerWithLocalLimit done\n");
+}
+
+static bool IsSameMetadata(
+    const ProfileBufferControlledChunkManager::ChunkMetadata& a1,
+    const ProfileBufferControlledChunkManager::ChunkMetadata& a2) {
+  return a1.mDoneTimeStamp == a2.mDoneTimeStamp &&
+         a1.mBufferBytes == a2.mBufferBytes;
+};
+
+static bool IsSameUpdate(
+    const ProfileBufferControlledChunkManager::Update& a1,
+    const ProfileBufferControlledChunkManager::Update& a2) {
+  // Final and not-an-update don't carry other data, so we can test these two
+  // states first.
+  if (a1.IsFinal() || a2.IsFinal()) {
+    return a1.IsFinal() && a2.IsFinal();
+  }
+  if (a1.IsNotUpdate() || a2.IsNotUpdate()) {
+    return a1.IsNotUpdate() && a2.IsNotUpdate();
+  }
+
+  // Here, both are "normal" udpates, check member variables:
+
+  if (a1.UnreleasedBytes() != a2.UnreleasedBytes()) {
+    return false;
+  }
+  if (a1.ReleasedBytes() != a2.ReleasedBytes()) {
+    return false;
+  }
+  if (a1.OldestDoneTimeStamp() != a2.OldestDoneTimeStamp()) {
+    return false;
+  }
+  if (a1.NewlyReleasedChunksRef().size() !=
+      a2.NewlyReleasedChunksRef().size()) {
+    return false;
+  }
+  for (unsigned i = 0; i < a1.NewlyReleasedChunksRef().size(); ++i) {
+    if (!IsSameMetadata(a1.NewlyReleasedChunksRef()[i],
+                        a2.NewlyReleasedChunksRef()[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static void TestControlledChunkManagerUpdate() {
+  printf("TestControlledChunkManagerUpdate...\n");
+
+  using Update = ProfileBufferControlledChunkManager::Update;
+
+  // Default construction.
+  Update update1;
+  MOZ_RELEASE_ASSERT(update1.IsNotUpdate());
+  MOZ_RELEASE_ASSERT(!update1.IsFinal());
+
+  // Clear an already-cleared update.
+  update1.Clear();
+  MOZ_RELEASE_ASSERT(update1.IsNotUpdate());
+  MOZ_RELEASE_ASSERT(!update1.IsFinal());
+
+  // Final construction with nullptr.
+  const Update final(nullptr);
+  MOZ_RELEASE_ASSERT(final.IsFinal());
+  MOZ_RELEASE_ASSERT(!final.IsNotUpdate());
+
+  // Copy final to cleared.
+  update1 = final;
+  MOZ_RELEASE_ASSERT(update1.IsFinal());
+  MOZ_RELEASE_ASSERT(!update1.IsNotUpdate());
+
+  // Copy final to final.
+  update1 = final;
+  MOZ_RELEASE_ASSERT(update1.IsFinal());
+  MOZ_RELEASE_ASSERT(!update1.IsNotUpdate());
+
+  // Clear a final update.
+  update1.Clear();
+  MOZ_RELEASE_ASSERT(update1.IsNotUpdate());
+  MOZ_RELEASE_ASSERT(!update1.IsFinal());
+
+  // Move final to cleared.
+  update1 = Update(nullptr);
+  MOZ_RELEASE_ASSERT(update1.IsFinal());
+  MOZ_RELEASE_ASSERT(!update1.IsNotUpdate());
+
+  // Move final to final.
+  update1 = Update(nullptr);
+  MOZ_RELEASE_ASSERT(update1.IsFinal());
+  MOZ_RELEASE_ASSERT(!update1.IsNotUpdate());
+
+  // Move from not-an-update (effectively same as Clear).
+  update1 = Update();
+  MOZ_RELEASE_ASSERT(update1.IsNotUpdate());
+  MOZ_RELEASE_ASSERT(!update1.IsFinal());
+
+  auto CreateBiggerChunkAfter = [](const ProfileBufferChunk& aChunkToBeat) {
+    while (TimeStamp::NowUnfuzzed() <=
+           aChunkToBeat.ChunkHeader().mDoneTimeStamp) {
+      ::SleepMilli(1);
+    }
+    auto chunk = ProfileBufferChunk::Create(aChunkToBeat.BufferBytes() * 2);
+    MOZ_RELEASE_ASSERT(!!chunk);
+    MOZ_RELEASE_ASSERT(chunk->BufferBytes() >= aChunkToBeat.BufferBytes() * 2);
+    Unused << chunk->ReserveInitialBlockAsTail(0);
+    chunk->MarkDone();
+    MOZ_RELEASE_ASSERT(chunk->ChunkHeader().mDoneTimeStamp >
+                       aChunkToBeat.ChunkHeader().mDoneTimeStamp);
+    return chunk;
+  };
+
+  update1 = Update(1, 2, nullptr, nullptr);
+
+  // Create initial update with 2 released chunks and 1 unreleased chunk.
+  auto released = ProfileBufferChunk::Create(10);
+  ProfileBufferChunk* c1 = released.get();
+  Unused << c1->ReserveInitialBlockAsTail(0);
+  c1->MarkDone();
+
+  released->SetLast(CreateBiggerChunkAfter(*c1));
+  ProfileBufferChunk* c2 = c1->GetNext();
+
+  auto unreleased = CreateBiggerChunkAfter(*c2);
+  ProfileBufferChunk* c3 = unreleased.get();
+
+  Update update2(c3->BufferBytes(), c1->BufferBytes() + c2->BufferBytes(), c1,
+                 c1);
+  MOZ_RELEASE_ASSERT(IsSameUpdate(
+      update2,
+      Update(c3->BufferBytes(), c1->BufferBytes() + c2->BufferBytes(),
+             c1->ChunkHeader().mDoneTimeStamp,
+             {{c1->ChunkHeader().mDoneTimeStamp, c1->BufferBytes()},
+              {c2->ChunkHeader().mDoneTimeStamp, c2->BufferBytes()}})));
+  // Check every field, this time only, after that we'll trust that the
+  // `SameUpdate` test will be enough.
+  MOZ_RELEASE_ASSERT(!update2.IsNotUpdate());
+  MOZ_RELEASE_ASSERT(!update2.IsFinal());
+  MOZ_RELEASE_ASSERT(update2.UnreleasedBytes() == c3->BufferBytes());
+  MOZ_RELEASE_ASSERT(update2.ReleasedBytes() ==
+                     c1->BufferBytes() + c2->BufferBytes());
+  MOZ_RELEASE_ASSERT(update2.OldestDoneTimeStamp() ==
+                     c1->ChunkHeader().mDoneTimeStamp);
+  MOZ_RELEASE_ASSERT(update2.NewlyReleasedChunksRef().size() == 2);
+  MOZ_RELEASE_ASSERT(
+      IsSameMetadata(update2.NewlyReleasedChunksRef()[0],
+                     {c1->ChunkHeader().mDoneTimeStamp, c1->BufferBytes()}));
+  MOZ_RELEASE_ASSERT(
+      IsSameMetadata(update2.NewlyReleasedChunksRef()[1],
+                     {c2->ChunkHeader().mDoneTimeStamp, c2->BufferBytes()}));
+
+  // Fold into not-an-update.
+  update1.Fold(std::move(update2));
+  MOZ_RELEASE_ASSERT(IsSameUpdate(
+      update1,
+      Update(c3->BufferBytes(), c1->BufferBytes() + c2->BufferBytes(),
+             c1->ChunkHeader().mDoneTimeStamp,
+             {{c1->ChunkHeader().mDoneTimeStamp, c1->BufferBytes()},
+              {c2->ChunkHeader().mDoneTimeStamp, c2->BufferBytes()}})));
+
+  // Pretend nothing happened.
+  update2 = Update(c3->BufferBytes(), c1->BufferBytes() + c2->BufferBytes(), c1,
+                   nullptr);
+  MOZ_RELEASE_ASSERT(IsSameUpdate(
+      update2, Update(c3->BufferBytes(), c1->BufferBytes() + c2->BufferBytes(),
+                      c1->ChunkHeader().mDoneTimeStamp, {})));
+  update1.Fold(std::move(update2));
+  MOZ_RELEASE_ASSERT(IsSameUpdate(
+      update1,
+      Update(c3->BufferBytes(), c1->BufferBytes() + c2->BufferBytes(),
+             c1->ChunkHeader().mDoneTimeStamp,
+             {{c1->ChunkHeader().mDoneTimeStamp, c1->BufferBytes()},
+              {c2->ChunkHeader().mDoneTimeStamp, c2->BufferBytes()}})));
+
+  // Pretend there's a new unreleased chunk.
+  c3->SetLast(CreateBiggerChunkAfter(*c3));
+  ProfileBufferChunk* c4 = c3->GetNext();
+  update2 = Update(c3->BufferBytes() + c4->BufferBytes(),
+                   c1->BufferBytes() + c2->BufferBytes(), c1, nullptr);
+  MOZ_RELEASE_ASSERT(
+      IsSameUpdate(update2, Update(c3->BufferBytes() + c4->BufferBytes(),
+                                   c1->BufferBytes() + c2->BufferBytes(),
+                                   c1->ChunkHeader().mDoneTimeStamp, {})));
+  update1.Fold(std::move(update2));
+  MOZ_RELEASE_ASSERT(IsSameUpdate(
+      update1,
+      Update(c3->BufferBytes() + c4->BufferBytes(),
+             c1->BufferBytes() + c2->BufferBytes(),
+             c1->ChunkHeader().mDoneTimeStamp,
+             {{c1->ChunkHeader().mDoneTimeStamp, c1->BufferBytes()},
+              {c2->ChunkHeader().mDoneTimeStamp, c2->BufferBytes()}})));
+
+  // Pretend the first unreleased chunk c3 has been released.
+  released->SetLast(std::exchange(unreleased, unreleased->ReleaseNext()));
+  update2 =
+      Update(c4->BufferBytes(),
+             c1->BufferBytes() + c2->BufferBytes() + c3->BufferBytes(), c1, c3);
+  MOZ_RELEASE_ASSERT(IsSameUpdate(
+      update2,
+      Update(c4->BufferBytes(),
+             c1->BufferBytes() + c2->BufferBytes() + c3->BufferBytes(),
+             c1->ChunkHeader().mDoneTimeStamp,
+             {{c3->ChunkHeader().mDoneTimeStamp, c3->BufferBytes()}})));
+  update1.Fold(std::move(update2));
+  MOZ_RELEASE_ASSERT(IsSameUpdate(
+      update1,
+      Update(c4->BufferBytes(),
+             c1->BufferBytes() + c2->BufferBytes() + c3->BufferBytes(),
+             c1->ChunkHeader().mDoneTimeStamp,
+             {{c1->ChunkHeader().mDoneTimeStamp, c1->BufferBytes()},
+              {c2->ChunkHeader().mDoneTimeStamp, c2->BufferBytes()},
+              {c3->ChunkHeader().mDoneTimeStamp, c3->BufferBytes()}})));
+
+  // Pretend c1 has been destroyed, so the oldest timestamp is now at c2.
+  released = released->ReleaseNext();
+  c1 = nullptr;
+  update2 = Update(c4->BufferBytes(), c2->BufferBytes() + c3->BufferBytes(), c2,
+                   nullptr);
+  MOZ_RELEASE_ASSERT(IsSameUpdate(
+      update2, Update(c4->BufferBytes(), c2->BufferBytes() + c3->BufferBytes(),
+                      c2->ChunkHeader().mDoneTimeStamp, {})));
+  update1.Fold(std::move(update2));
+  MOZ_RELEASE_ASSERT(IsSameUpdate(
+      update1,
+      Update(c4->BufferBytes(), c2->BufferBytes() + c3->BufferBytes(),
+             c2->ChunkHeader().mDoneTimeStamp,
+             {{c2->ChunkHeader().mDoneTimeStamp, c2->BufferBytes()},
+              {c3->ChunkHeader().mDoneTimeStamp, c3->BufferBytes()}})));
+
+  // Pretend c2 has been recycled to make unreleased c5, and c4 has been
+  // released.
+  auto recycled = std::exchange(released, released->ReleaseNext());
+  recycled->MarkRecycled();
+  Unused << recycled->ReserveInitialBlockAsTail(0);
+  recycled->MarkDone();
+  released->SetLast(std::move(unreleased));
+  unreleased = std::move(recycled);
+  ProfileBufferChunk* c5 = c2;
+  c2 = nullptr;
+  update2 =
+      Update(c5->BufferBytes(), c3->BufferBytes() + c4->BufferBytes(), c3, c4);
+  MOZ_RELEASE_ASSERT(IsSameUpdate(
+      update2,
+      Update(c5->BufferBytes(), c3->BufferBytes() + c4->BufferBytes(),
+             c3->ChunkHeader().mDoneTimeStamp,
+             {{c4->ChunkHeader().mDoneTimeStamp, c4->BufferBytes()}})));
+  update1.Fold(std::move(update2));
+  MOZ_RELEASE_ASSERT(IsSameUpdate(
+      update1,
+      Update(c5->BufferBytes(), c3->BufferBytes() + c4->BufferBytes(),
+             c3->ChunkHeader().mDoneTimeStamp,
+             {{c3->ChunkHeader().mDoneTimeStamp, c3->BufferBytes()},
+              {c4->ChunkHeader().mDoneTimeStamp, c4->BufferBytes()}})));
+
+  // And send a final update.
+  update1.Fold(Update(nullptr));
+  MOZ_RELEASE_ASSERT(update1.IsFinal());
+  MOZ_RELEASE_ASSERT(!update1.IsNotUpdate());
+
+  printf("TestControlledChunkManagerUpdate done\n");
 }
 
 static void TestChunkedBuffer() {
@@ -2521,6 +2780,7 @@ void TestProfilerDependencies() {
   TestChunk();
   TestChunkManagerSingle();
   TestChunkManagerWithLocalLimit();
+  TestControlledChunkManagerUpdate();
   TestChunkedBuffer();
   TestChunkedBufferSingle();
   TestModuloBuffer();
