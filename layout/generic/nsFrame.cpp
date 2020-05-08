@@ -6934,11 +6934,11 @@ void nsFrame::FinishReflowWithAbsoluteFrames(nsPresContext* aPresContext,
   FinishAndStoreOverflow(&aDesiredSize, aReflowInput.mStyleDisplay);
 }
 
-void nsFrame::ReflowAbsoluteFrames(nsPresContext* aPresContext,
-                                   ReflowOutput& aDesiredSize,
-                                   const ReflowInput& aReflowInput,
-                                   nsReflowStatus& aStatus,
-                                   bool aConstrainBSize) {
+void nsIFrame::ReflowAbsoluteFrames(nsPresContext* aPresContext,
+                                    ReflowOutput& aDesiredSize,
+                                    const ReflowInput& aReflowInput,
+                                    nsReflowStatus& aStatus,
+                                    bool aConstrainBSize) {
   if (HasAbsolutelyPositionedChildren()) {
     nsAbsoluteContainingBlock* absoluteContainer = GetAbsoluteContainingBlock();
 
@@ -10495,7 +10495,7 @@ Maybe<StyleVerticalAlignKeyword> nsIFrame::VerticalAlignEnum() const {
 }
 
 NS_IMETHODIMP
-nsFrame::RefreshSizeCache(nsBoxLayoutState& aState) {
+nsIFrame::RefreshSizeCache(nsBoxLayoutState& aState) {
   // XXXbz this comment needs some rewriting to make sense in the
   // post-reflow-branch world.
 
@@ -10594,7 +10594,7 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState) {
   return NS_OK;
 }
 
-nsSize nsFrame::GetXULPrefSize(nsBoxLayoutState& aState) {
+nsSize nsIFrame::GetXULPrefSize(nsBoxLayoutState& aState) {
   nsSize size(0, 0);
   DISPLAY_PREF_SIZE(this, size);
   // If the size is cached, and there are no HTML constraints that we might
@@ -10627,7 +10627,7 @@ nsSize nsFrame::GetXULPrefSize(nsBoxLayoutState& aState) {
   return size;
 }
 
-nsSize nsFrame::GetXULMinSize(nsBoxLayoutState& aState) {
+nsSize nsIFrame::GetXULMinSize(nsBoxLayoutState& aState) {
   nsSize size(0, 0);
   DISPLAY_MIN_SIZE(this, size);
   // Don't use the cache if we have HTMLReflowInput constraints --- they might
@@ -10658,7 +10658,7 @@ nsSize nsFrame::GetXULMinSize(nsBoxLayoutState& aState) {
   return size;
 }
 
-nsSize nsFrame::GetXULMaxSize(nsBoxLayoutState& aState) {
+nsSize nsIFrame::GetXULMaxSize(nsBoxLayoutState& aState) {
   nsSize size(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   DISPLAY_MAX_SIZE(this, size);
   // Don't use the cache if we have HTMLReflowInput constraints --- they might
@@ -10671,24 +10671,22 @@ nsSize nsFrame::GetXULMaxSize(nsBoxLayoutState& aState) {
 
   if (IsXULCollapsed()) return size;
 
-  size = nsIFrame::GetXULMaxSize(aState);
+  size = nsIFrame::GetUncachedXULMaxSize(aState);
   metrics->mMaxSize = size;
 
   return size;
 }
 
-nscoord nsFrame::GetXULFlex() {
+nscoord nsIFrame::GetXULFlex() {
   nsBoxLayoutMetrics* metrics = BoxMetrics();
-  if (!XULNeedsRecalc(metrics->mFlex)) {
-    return metrics->mFlex;
+  if (XULNeedsRecalc(metrics->mFlex)) {
+    nsIFrame::AddXULFlex(this, metrics->mFlex);
   }
-
-  metrics->mFlex = nsIFrame::GetXULFlex();
 
   return metrics->mFlex;
 }
 
-nscoord nsFrame::GetXULBoxAscent(nsBoxLayoutState& aState) {
+nscoord nsIFrame::GetXULBoxAscent(nsBoxLayoutState& aState) {
   nsBoxLayoutMetrics* metrics = BoxMetrics();
   if (!XULNeedsRecalc(metrics->mAscent)) {
     return metrics->mAscent;
@@ -10705,7 +10703,7 @@ nscoord nsFrame::GetXULBoxAscent(nsBoxLayoutState& aState) {
   return metrics->mAscent;
 }
 
-nsresult nsFrame::DoXULLayout(nsBoxLayoutState& aState) {
+nsresult nsIFrame::DoXULLayout(nsBoxLayoutState& aState) {
   nsRect ourRect(mRect);
 
   gfxContext* rendContext = aState.GetRenderingContext();
@@ -10782,10 +10780,10 @@ nsresult nsFrame::DoXULLayout(nsBoxLayoutState& aState) {
   return NS_OK;
 }
 
-void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
-                        ReflowOutput& aDesiredSize,
-                        gfxContext* aRenderingContext, nscoord aX, nscoord aY,
-                        nscoord aWidth, nscoord aHeight, bool aMoveFrame) {
+void nsIFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
+                         ReflowOutput& aDesiredSize,
+                         gfxContext* aRenderingContext, nscoord aX, nscoord aY,
+                         nscoord aWidth, nscoord aHeight, bool aMoveFrame) {
   DO_GLOBAL_REFLOW_COUNT("nsBoxToBlockAdaptor");
 
 #ifdef DEBUG_REFLOW

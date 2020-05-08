@@ -281,28 +281,33 @@ nsresult nsLeafBoxFrame::CharacterDataChanged(
 
 /* virtual */
 nsSize nsLeafBoxFrame::GetXULPrefSize(nsBoxLayoutState& aState) {
-  return nsIFrame::GetXULPrefSize(aState);
+  return nsIFrame::GetUncachedXULPrefSize(aState);
 }
 
 /* virtual */
 nsSize nsLeafBoxFrame::GetXULMinSize(nsBoxLayoutState& aState) {
-  return nsIFrame::GetXULMinSize(aState);
+  return nsIFrame::GetUncachedXULMinSize(aState);
 }
 
 /* virtual */
 nsSize nsLeafBoxFrame::GetXULMaxSize(nsBoxLayoutState& aState) {
-  return nsIFrame::GetXULMaxSize(aState);
+  return nsIFrame::GetUncachedXULMaxSize(aState);
 }
 
 /* virtual */
-nscoord nsLeafBoxFrame::GetXULFlex() { return nsIFrame::GetXULFlex(); }
+nscoord nsLeafBoxFrame::GetXULFlex() {
+  nscoord flex = 0;
+  nsIFrame::AddXULFlex(this, flex);
+  return flex;
+}
 
 /* virtual */
 nscoord nsLeafBoxFrame::GetXULBoxAscent(nsBoxLayoutState& aState) {
-  return nsIFrame::GetXULBoxAscent(aState);
+  if (IsXULCollapsed()) {
+    return 0;
+  }
+  return GetXULPrefSize(aState).height;
 }
 
 NS_IMETHODIMP
-nsLeafBoxFrame::DoXULLayout(nsBoxLayoutState& aState) {
-  return nsIFrame::DoXULLayout(aState);
-}
+nsLeafBoxFrame::DoXULLayout(nsBoxLayoutState& aState) { return NS_OK; }
