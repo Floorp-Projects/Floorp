@@ -1758,14 +1758,6 @@ class EditorBase : public nsIEditor,
    */
   nsresult CollapseSelectionToEnd();
 
-  /**
-   * Helpers to add a node to the selection.
-   * Used by table cell selection methods.
-   */
-  nsresult CreateRange(nsINode* aStartContainer, int32_t aStartOffset,
-                       nsINode* aEndContainer, int32_t aEndOffset,
-                       nsRange** aRange);
-
   static bool IsPreformatted(nsINode* aNode);
 
   /**
