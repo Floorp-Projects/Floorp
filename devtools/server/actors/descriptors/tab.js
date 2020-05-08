@@ -46,7 +46,6 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
     Actor.prototype.initialize.call(this, connection);
     this._conn = connection;
     this._browser = browser;
-    this.exited = false;
   },
 
   form() {
@@ -225,8 +224,6 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
 
   destroy() {
     this._browser = null;
-    this.exited = true;
-    this.emit("exited");
 
     Actor.prototype.destroy.call(this);
   },
