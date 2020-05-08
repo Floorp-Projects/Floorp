@@ -457,6 +457,7 @@ this.uicontrol = (function() {
         exc.unloadTime = unloadTime;
         exc.nowTime = Date.now();
         exc.noPopup = true;
+        exc.noReport = true;
         throw exc;
       }
       if (ui.isHeader(event.target)) {
