@@ -474,7 +474,7 @@ BrowserTabList.prototype._checkListening = function() {
   this._listenForEventsIf(
     this._actorByBrowser.size > 0,
     "_listeningForTabClose",
-    ["TabClose", "TabRemotenessChange"]
+    ["TabClose"]
   );
 
   /*
@@ -641,17 +641,6 @@ BrowserTabList.prototype.handleEvent = DevToolsUtils.makeInfallible(function(
       }
       break;
     }
-    case "TabRemotenessChange": {
-      // We have to remove the cached actor as we have to create a new instance.
-      const actor = this._actorByBrowser.get(browser);
-      if (actor) {
-        this._actorByBrowser.delete(browser);
-        // Don't create a new actor; iterate will take care of that. Just notify.
-        this._notifyListChanged();
-        this._checkListening();
-      }
-      break;
-    }
     case "TabAttrModified": {
       // Remote <browser> title changes are handled via DOMTitleChange message
       // TabAttrModified is only here for browsers in parent process which
@@ -714,7 +703,6 @@ BrowserTabList.prototype.onOpenWindow = DevToolsUtils.makeInfallible(function(
     }
     if (this._listeningForTabClose) {
       window.addEventListener("TabClose", this);
-      window.addEventListener("TabRemotenessChange", this);
     }
     if (this._listeningForTitleChange) {
       window.messageManager.addMessageListener("DOMTitleChanged", this);
