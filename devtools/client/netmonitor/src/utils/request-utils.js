@@ -128,10 +128,17 @@ function formDataURI(mimeType, encoding, text) {
  * Write out a list of headers into a chunk of text
  *
  * @param {array} headers - array of headers info { name, value }
+ * @param {string} preHeaderText - first line of the headers request/response
  * @return {string} list of headers in text format
  */
-function writeHeaderText(headers) {
-  return headers.map(({ name, value }) => name + ": " + value).join("\n");
+function writeHeaderText(headers, preHeaderText) {
+  let result = "";
+  if (preHeaderText != "") {
+    result += preHeaderText + "\r\n";
+  }
+  result += headers.map(({ name, value }) => name + ": " + value).join("\r\n");
+  result += "\r\n\r\n";
+  return result;
 }
 
 /**

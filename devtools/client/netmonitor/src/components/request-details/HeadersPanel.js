@@ -157,8 +157,38 @@ class HeadersPanel extends Component {
 
   getHeadersTitle(headers, title) {
     let result = "";
+    let preHeaderText = "";
+    const {
+      responseHeaders,
+      requestHeaders,
+      httpVersion,
+      status,
+      statusText,
+      method,
+      urlDetails,
+    } = this.props.request;
     if (headers?.headers.length) {
-      result = `${title} (${getFormattedSize(headers.headersSize, 3)})`;
+      if (!headers.headersSize) {
+        if (title == RESPONSE_HEADERS) {
+          preHeaderText = `${httpVersion} ${status} ${statusText}`;
+          result = `${title} (${getFormattedSize(
+            writeHeaderText(responseHeaders.headers, preHeaderText).length,
+            3
+          )})`;
+        } else {
+          preHeaderText = `${method} ${
+            urlDetails.url.split(
+              requestHeaders.headers.find(ele => ele.name === "Host").value
+            )[1]
+          } ${httpVersion}`;
+          result = `${title} (${getFormattedSize(
+            writeHeaderText(requestHeaders.headers, preHeaderText).length,
+            3
+          )})`;
+        }
+      } else {
+        result = `${title} (${getFormattedSize(headers.headersSize, 3)})`;
+      }
     }
 
     return result;
@@ -303,30 +333,39 @@ class HeadersPanel extends Component {
 
     const {
       request: {
+        method,
         httpVersion,
         requestHeaders,
         requestHeadersFromUploadStream: uploadHeaders,
         responseHeaders,
         status,
         statusText,
+        urlDetails,
       },
     } = this.props;
 
     let value;
-
+    let preHeaderText = "";
     if (path.includes("RAW_HEADERS_ID")) {
       const rawHeaderType = this.getRawHeaderType(path);
       switch (rawHeaderType) {
         case "REQUEST":
-          value = writeHeaderText(requestHeaders.headers);
+          preHeaderText = `${method} ${
+            urlDetails.url.split(
+              requestHeaders.headers.find(ele => ele.name === "Host").value
+            )[1]
+          } ${httpVersion}`;
+          value = writeHeaderText(requestHeaders.headers, preHeaderText).trim();
           break;
         case "RESPONSE":
-          // display Status-Line above other response headers
-          const statusLine = `${httpVersion} ${status} ${statusText}\n`;
-          value = statusLine + writeHeaderText(responseHeaders.headers);
+          preHeaderText = `${httpVersion} ${status} ${statusText}`;
+          value = writeHeaderText(
+            responseHeaders.headers,
+            preHeaderText
+          ).trim();
           break;
         case "UPLOAD":
-          value = writeHeaderText(uploadHeaders.headers);
+          value = writeHeaderText(uploadHeaders.headers, preHeaderText).trim();
           break;
       }
 
