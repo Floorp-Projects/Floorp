@@ -52,6 +52,7 @@
     # Preference Keys
     <string name="key_tracking_protection">tracking_protection</string>
     <string name="key_enhanced_tracking_protection">enhanced_tracking_protection</string>
+    <string name="key_dfpi">dfpi</string>
     <string name="key_autoplay">autoplay</string>
     <string name="key_remote_debugging">remote_debugging</string>
     <string name="key_allow_extensions_in_private_browsing">allow_extensions_in_private_browsing</string>

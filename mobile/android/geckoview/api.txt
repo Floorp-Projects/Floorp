@@ -230,6 +230,7 @@ package org.mozilla.geckoview {
     ctor protected CookieBehavior();
     field public static final int ACCEPT_ALL = 0;
     field public static final int ACCEPT_FIRST_PARTY = 1;
+    field public static final int ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS = 5;
     field public static final int ACCEPT_NONE = 2;
     field public static final int ACCEPT_NON_TRACKERS = 4;
     field public static final int ACCEPT_VISITED = 3;

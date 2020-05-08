@@ -90,7 +90,8 @@ public class ContentBlocking {
              * Set the ETP behavior level.
              *
              * @param level The level of ETP blocking to use. Only takes effect if
-             *              cookie behavior is set to {@link ContentBlocking.CookieBehavior#ACCEPT_NON_TRACKERS}.
+             *              cookie behavior is set to {@link ContentBlocking.CookieBehavior#ACCEPT_NON_TRACKERS}
+             *              or {@link ContentBlocking.CookieBehavior#ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS}.
              *
              * @return The Builder instance.
              */
@@ -198,7 +199,8 @@ public class ContentBlocking {
          *
          * @param level The level of ETP blocking to use; must be one of {@link ContentBlocking.EtpLevel}
          *              flags. Only takes effect if the cookie behavior is
-         *              {@link ContentBlocking.CookieBehavior#ACCEPT_NON_TRACKERS}.
+         *              {@link ContentBlocking.CookieBehavior#ACCEPT_NON_TRACKERS} or
+         *              {@link ContentBlocking.CookieBehavior#ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS}.
          *
          * @return This Settings instance.
          */
@@ -472,6 +474,13 @@ public class ContentBlocking {
          * site set by known trackers.
          */
         public static final int ACCEPT_NON_TRACKERS = 4;
+
+        /**
+         * Enable dynamic first party isolation (dFPI); this will block third-party tracking
+         * cookies in accordance with the ETP level and isolate non-tracking third-party
+         * cookies.
+         */
+        public static final int ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS = 5;
 
         protected CookieBehavior() {}
     }

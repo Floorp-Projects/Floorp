@@ -13,6 +13,9 @@
         app:defaultValue="standard">
     </ListPreference>
     <SwitchPreferenceCompat
+        app:key="@string/key_dfpi"
+        app:title="Enable Dynamic FPI"/>
+    <SwitchPreferenceCompat
         app:key="@string/key_autoplay"
         app:title="Allow Autoplay"/>
     <SwitchPreferenceCompat
