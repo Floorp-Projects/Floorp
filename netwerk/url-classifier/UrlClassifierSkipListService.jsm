@@ -28,7 +28,7 @@ class Feature {
     }
   }
 
-  async addObserver(observer) {
+  async addAndRunObserver(observer) {
     this.observers.add(observer);
     this.notifyObservers(observer);
   }
@@ -58,18 +58,15 @@ class Feature {
   }
 
   notifyObservers(observer = null) {
-    // Don't notify until we have the initial data.
-    if (!this.remoteEntries) {
-      return;
-    }
-
     let entries = [];
     if (this.prefValue) {
       entries = this.prefValue.split(",");
     }
 
-    for (let entry of this.remoteEntries) {
-      entries.push(entry);
+    if (this.remoteEntries) {
+      for (let entry of this.remoteEntries) {
+        entries.push(entry);
+      }
     }
 
     let entriesAsString = entries.join(",").toLowerCase();
@@ -153,7 +150,7 @@ UrlClassifierSkipListService.prototype = {
         featureObj.onRemoteSettingsUpdate(this.entries);
       }
     }
-    this.features[feature].addObserver(observer);
+    this.features[feature].addAndRunObserver(observer);
   },
 
   unregisterSkipListObserver(feature, observer) {
