@@ -2429,38 +2429,16 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
     newInnerWindow->mChromeEventHandler = mChromeEventHandler;
   }
 
-  // Tell the WindowGlobalParent that it should become the current window global
-  // for our BrowsingContext if it isn't already.
-  WindowGlobalChild* wgc = mInnerWindow->GetWindowGlobalChild();
-  wgc->SetDocumentURI(aDocument->GetDocumentURI());
-
-  wgc->SetDocumentPrincipal(aDocument->NodePrincipal());
-
-  wgc->SendUpdateDocumentCspSettings(
-      aDocument->GetBlockAllMixedContent(false),
-      aDocument->GetUpgradeInsecureRequests(false));
-  wgc->SendUpdateSandboxFlags(aDocument->GetSandboxFlags());
-  net::CookieJarSettingsArgs csArgs;
-  net::CookieJarSettings::Cast(aDocument->CookieJarSettings())
-      ->Serialize(csArgs);
-  if (!wgc->SendUpdateCookieJarSettings(csArgs)) {
-    NS_WARNING(
-        "Failed to update document's cookie jar settings on the "
-        "WindowGlobalParent");
+  if (!aState) {
+    // Notify our WindowGlobalChild that it has a new document. If `aState` was
+    // passed, we're restoring the window from the BFCache, so the document
+    // hasn't changed.
+    mInnerWindow->GetWindowGlobalChild()->OnNewDocument(aDocument);
   }
 
+  // Update the current window for our BrowsingContext.
   RefPtr<BrowsingContext> bc = GetBrowsingContext();
   bc->SetCurrentInnerWindowId(mInnerWindow->WindowID());
-
-  // Init Mixed Content Fields
-  nsCOMPtr<nsIChannel> mixedChannel;
-  mDocShell->GetMixedContentChannel(getter_AddRefs(mixedChannel));
-  // A non null mixedContent channel on the docshell indicates,
-  // that the user has overriden mixed content to allow mixed
-  // content loads to happen.
-  if (mixedChannel && (mixedChannel == aDocument->GetChannel())) {
-    wgc->WindowContext()->SetAllowMixedContent(true);
-  }
 
   // We no longer need the old inner window.  Start its destruction if
   // its not being reused and clear our reference.
@@ -2512,20 +2490,6 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
 
   bool isThirdPartyTrackingResourceWindow =
       nsContentUtils::IsThirdPartyTrackingResourceWindow(newInnerWindow);
-
-  // Set the cookie jar settings to the window context.
-  if (newInnerWindow) {
-    WindowContext::Transaction txn;
-    txn.SetCookieBehavior(
-        Some(aDocument->CookieJarSettings()->GetCookieBehavior()));
-    txn.SetIsOnContentBlockingAllowList(
-        aDocument->CookieJarSettings()->GetIsOnContentBlockingAllowList());
-    txn.SetIsThirdPartyWindow(nsContentUtils::IsThirdPartyWindowOrChannel(
-        newInnerWindow, nullptr, nullptr));
-    txn.SetIsThirdPartyTrackingResourceWindow(
-        isThirdPartyTrackingResourceWindow);
-    txn.Commit(newInnerWindow->GetWindowContext());
-  }
 
   mHasStorageAccess = false;
   nsIURI* uri = aDocument->GetDocumentURI();
