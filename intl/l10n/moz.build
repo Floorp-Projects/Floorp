@@ -37,18 +37,13 @@ LOCAL_INCLUDES += [
 ]
 
 if CONFIG['COMPILE_ENVIRONMENT']:
-    GENERATED_FILES += [
-        'fluent_ffi_generated.h',
-    ]
+    GeneratedFile('fluent_ffi_generated.h',
+                  script='/build/RunCbindgen.py',
+                  entry_point='generate',
+                  inputs=['/intl/l10n/rust/fluent-ffi'])
 
     EXPORTS.mozilla.intl += [
         '!fluent_ffi_generated.h',
-    ]
-
-    ffi_generated = GENERATED_FILES['fluent_ffi_generated.h']
-    ffi_generated.script = '/build/RunCbindgen.py:generate'
-    ffi_generated.inputs = [
-        '/intl/l10n/rust/fluent-ffi',
     ]
 
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
