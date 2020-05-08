@@ -2159,10 +2159,26 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
       int64_t i64;
       int32_t i32[2];
     } bits = {.i64 = imm};
+    static_assert(sizeof(bits) == 8);
     storeImmediateToStack(bits.i32[0], destHeight, temp);
     storeImmediateToStack(bits.i32[1], destHeight - sizeof(int32_t), temp);
 #endif
   }
+
+#ifdef ENABLE_WASM_SIMD
+  void storeImmediateToStack(V128 imm, uint32_t destHeight, Register temp) {
+    union {
+      int32_t i32[4];
+      uint8_t bytes[16];
+    } bits;
+    static_assert(sizeof(bits) == 16);
+    memcpy(bits.bytes, imm.bytes, 16);
+    for (unsigned i = 0; i < 4; i++) {
+      storeImmediateToStack(bits.i32[i], destHeight - i * sizeof(int32_t),
+                            temp);
+    }
+  }
+#endif
 };
 
 void BaseStackFrame::zeroLocals(BaseRegAlloc* ra) {
@@ -3379,7 +3395,9 @@ class BaseCompiler final : public BaseCompilerInterface {
           break;
         case ValType::V128:
 #ifdef ENABLE_WASM_SIMD
-          freeV128(RegV128(result.fpr()));
+          if (which == RegKind::All) {
+            freeV128(RegV128(result.fpr()));
+          }
           break;
 #else
           MOZ_CRASH("No SIMD support");
@@ -4625,6 +4643,11 @@ class BaseCompiler final : public BaseCompilerInterface {
           // Likewise, rely on f64 bits being punned to i64.
           fr.storeImmediateToStack(v.i64val_, resultHeight, temp);
           break;
+#ifdef ENABLE_WASM_SIMD
+        case Stk::ConstV128:
+          fr.storeImmediateToStack(v.v128val_, resultHeight, temp);
+          break;
+#endif
         case Stk::ConstRef:
           if (sizeof(intptr_t) == sizeof(int32_t)) {
             fr.storeImmediateToStack(int32_t(v.refval_), resultHeight, temp);
