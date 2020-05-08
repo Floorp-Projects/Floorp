@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import shlex
 import subprocess
 
 import yaml
@@ -49,7 +50,7 @@ class PresetHandler(object):
             print("error: must set the $EDITOR environment variable to use --edit-presets")
             return
 
-        subprocess.call([os.environ['EDITOR'], self.path])
+        subprocess.call(shlex.split(os.environ['EDITOR']) + [self.path])
 
     def save(self, name, **data):
         self.presets[name] = data
