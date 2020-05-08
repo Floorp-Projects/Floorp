@@ -387,6 +387,39 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
         break;
       }
 
+      case JSOp::NewArray: {
+        // TODO: optimize ICEntry lookup.
+        const ICEntry& entry = script->jitScript()->icEntryFromPCOffset(offset);
+        auto* stub = entry.fallbackStub()->toNewArray_Fallback();
+        if (ArrayObject* templateObj = stub->templateObject()) {
+          // Only inline elements are supported without a VM call.
+          size_t numInlineElements =
+              gc::GetGCKindSlots(templateObj->asTenured().getAllocKind()) -
+              ObjectElements::VALUES_PER_HEADER;
+          bool useVMCall = loc.getNewArrayLength() > numInlineElements;
+          if (!AddOpSnapshot<WarpNewArray>(alloc_, opSnapshots, offset,
+                                           templateObj, useVMCall)) {
+            return abort(AbortReason::Alloc);
+          }
+        }
+        break;
+      }
+
+      case JSOp::NewObject:
+      case JSOp::NewObjectWithGroup:
+      case JSOp::NewInit: {
+        // TODO: optimize ICEntry lookup.
+        const ICEntry& entry = script->jitScript()->icEntryFromPCOffset(offset);
+        auto* stub = entry.fallbackStub()->toNewObject_Fallback();
+        if (JSObject* templateObj = stub->templateObject()) {
+          if (!AddOpSnapshot<WarpNewObject>(alloc_, opSnapshots, offset,
+                                            templateObj)) {
+            return abort(AbortReason::Alloc);
+          }
+        }
+        break;
+      }
+
       case JSOp::GetName:
       case JSOp::GetGName:
       case JSOp::GetProp:
@@ -547,10 +580,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpOracle::createScriptSnapshot(
       case JSOp::InitHomeObject:
       case JSOp::SuperBase:
       case JSOp::SuperFun:
-      case JSOp::NewArray:
-      case JSOp::NewObject:
-      case JSOp::NewObjectWithGroup:
-      case JSOp::NewInit:
       case JSOp::InitPropGetter:
       case JSOp::InitPropSetter:
       case JSOp::InitHiddenPropGetter:
