@@ -127,6 +127,9 @@ TEST_F(VsyncTester, CompositorGetVsyncNotifications) {
 
   vsyncDispatcher = nullptr;
   testVsyncObserver = nullptr;
+
+  globalDisplay.DisableVsync();
+  ASSERT_FALSE(globalDisplay.IsVsyncEnabled());
 }
 
 // Test that if we have vsync enabled, the parent refresh driver should get
@@ -154,6 +157,9 @@ TEST_F(VsyncTester, ParentRefreshDriverGetVsyncNotifications) {
 
   vsyncDispatcher = nullptr;
   testVsyncObserver = nullptr;
+
+  globalDisplay.DisableVsync();
+  ASSERT_FALSE(globalDisplay.IsVsyncEnabled());
 }
 
 // Test that child refresh vsync observers get vsync notifications
@@ -180,6 +186,9 @@ TEST_F(VsyncTester, ChildRefreshDriverGetVsyncNotifications) {
 
   vsyncDispatcher = nullptr;
   testVsyncObserver = nullptr;
+
+  globalDisplay.DisableVsync();
+  ASSERT_FALSE(globalDisplay.IsVsyncEnabled());
 }
 
 // Test that we can read the vsync rate
@@ -188,15 +197,7 @@ TEST_F(VsyncTester, VsyncSourceHasVsyncRate) {
   TimeDuration vsyncRate = globalDisplay.GetVsyncRate();
   ASSERT_NE(vsyncRate, TimeDuration::Forever());
   ASSERT_GT(vsyncRate.ToMilliseconds(), 0);
-}
 
-// Tests that we can disable vsync notifications
-// And has the side effect of turning off vsync notifications so they don't
-// keep running for the rest of the gtest run, which can be a problem because
-// gtests don't send a shutdown notification so it fires after the main thread
-// is gone.
-TEST_F(VsyncTester, DisableVsync) {
-  VsyncSource::Display& globalDisplay = mVsyncSource->GetGlobalDisplay();
   globalDisplay.DisableVsync();
   ASSERT_FALSE(globalDisplay.IsVsyncEnabled());
 }

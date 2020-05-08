@@ -9,6 +9,8 @@
 
 #include "mozilla/Maybe.h"
 
+#include <tuple>  // std::tuple
+
 #include "builtin/TypedObjectConstants.h"
 #include "gc/Memory.h"
 #include "gc/ZoneAllocator.h"
@@ -232,6 +234,13 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
                 "self-hosted code with burned-in constants must use the "
                 "correct DETACHED bit value");
 
+  enum class FillContents { Zero, Uninitialized };
+
+  template <FillContents FillType>
+  static std::tuple<ArrayBufferObject*, uint8_t*> createBufferAndData(
+      JSContext* cx, uint32_t nbytes, AutoSetNewObjectMetadata&,
+      JS::Handle<JSObject*> proto = nullptr);
+
  public:
   class BufferContents {
     uint8_t* data_;
@@ -318,6 +327,9 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   static ArrayBufferObject* createForContents(JSContext* cx, uint32_t nbytes,
                                               BufferContents contents);
+
+  static ArrayBufferObject* copy(
+      JSContext* cx, JS::Handle<ArrayBufferObject*> unwrappedArrayBuffer);
 
   static ArrayBufferObject* createZeroed(JSContext* cx, uint32_t nbytes,
                                          HandleObject proto = nullptr);

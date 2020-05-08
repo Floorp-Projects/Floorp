@@ -10,12 +10,39 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptSettings.h"  // for AutoJSAPI
+#include "mozilla/dom/BrowsingContext.h"
 #include "nsContentUtils.h"
 #include "xpcpublic.h"
 
 namespace mozilla {
 
 NS_IMPL_ISUPPORTS(LoadContext, nsILoadContext, nsIInterfaceRequestor)
+
+LoadContext::LoadContext(const IPC::SerializedLoadContext& aToCopy,
+                         dom::Element* aTopFrameElement,
+                         OriginAttributes& aAttrs)
+    : mTopFrameElement(do_GetWeakReference(aTopFrameElement)),
+      mIsContent(aToCopy.mIsContent),
+      mUseRemoteTabs(aToCopy.mUseRemoteTabs),
+      mUseRemoteSubframes(aToCopy.mUseRemoteSubframes),
+      mUseTrackingProtection(aToCopy.mUseTrackingProtection),
+#ifdef DEBUG
+      mIsNotNull(aToCopy.mIsNotNull),
+#endif
+      mOriginAttributes(aAttrs) {
+}
+
+LoadContext::LoadContext(OriginAttributes& aAttrs)
+    : mTopFrameElement(nullptr),
+      mIsContent(false),
+      mUseRemoteTabs(false),
+      mUseRemoteSubframes(false),
+      mUseTrackingProtection(false),
+#ifdef DEBUG
+      mIsNotNull(true),
+#endif
+      mOriginAttributes(aAttrs) {
+}
 
 LoadContext::LoadContext(nsIPrincipal* aPrincipal,
                          nsILoadContext* aOptionalBase)
@@ -39,6 +66,8 @@ LoadContext::LoadContext(nsIPrincipal* aPrincipal,
   MOZ_ALWAYS_SUCCEEDS(
       aOptionalBase->GetUseTrackingProtection(&mUseTrackingProtection));
 }
+
+LoadContext::~LoadContext() = default;
 
 //-----------------------------------------------------------------------------
 // LoadContext::nsILoadContext

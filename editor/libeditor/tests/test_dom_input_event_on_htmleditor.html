@@ -225,12 +225,7 @@ async function runTests() {
     cancelBeforeInput = false;
     action = 'typing "B"';
     synthesizeKey("B", {shiftKey: true}, aWindow);
-    // XXX This inconsistency must be a bug.
-    if (!isEditTargetIsDescendantOfEditingHost) {
-      is(editTarget.innerHTML, "B<br>", `${aDescription}"B" should've been inserted by ${action}`);
-    } else {
-      is(editTarget.innerHTML, "B", `${aDescription}"B" should've been inserted by ${action}`);
-    }
+    is(editTarget.innerHTML, "B", `${aDescription}"B" should've been inserted by ${action}`);
     is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
     is(beforeInputEvent.inputType, "insertText", `${aDescription}inputType of "beforeinput" event for ${action} should be "insertText"`);
     is(beforeInputEvent.data, "B", `${aDescription}data of "beforeinput" event for ${action} should be "B"`);
@@ -246,12 +241,7 @@ async function runTests() {
     cancelBeforeInput = true;
     action = 'typing "Enter"';
     synthesizeKey("KEY_Enter", {}, aWindow);
-    // XXX This inconsistency must be a bug.
-    if (!isEditTargetIsDescendantOfEditingHost) {
-      is(editTarget.innerHTML, "B<br>", `${aDescription}shouldn't modify the editor by ${action} since "beforeinput" was canceled`);
-    } else {
-      is(editTarget.innerHTML, "B", `${aDescription}shouldn't modify the editor by ${action} since "beforeinput" was canceled`);
-    }
+    is(editTarget.innerHTML, "B", `${aDescription}shouldn't modify the editor by ${action} since "beforeinput" was canceled`);
     ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
     ok(!inputEvent, `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
 
@@ -283,9 +273,9 @@ async function runTests() {
     action = 'typing "C" in new paragraph';
     synthesizeKey("C", {shiftKey: true}, aWindow);
     if (!isEditTargetIsDescendantOfEditingHost) {
-      is(editTarget.innerHTML, "<div>B</div><div>C<br></div>", `${aDescription}should insert "C" into the new paragraph by ${action}`);
+      is(editTarget.innerHTML, "<div>B</div><div>C</div>", `${aDescription}should insert "C" into the new paragraph by ${action}`);
     } else {
-      is(editTarget.innerHTML, "B<br>C<br>", `${aDescription}should insert "C" into the new paragraph by ${action}`);
+      is(editTarget.innerHTML, "B<br>C", `${aDescription}should insert "C" into the new paragraph by ${action}`);
     }
     is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
     is(beforeInputEvent.inputType, "insertText", `${aDescription}inputType of "beforeinput" event for ${action} should be "insertText"`);

@@ -45,15 +45,6 @@ class DocumentChannel : public nsIIdentChannel, public nsITraceableChannel {
 
   NS_DECLARE_STATIC_IID_ACCESSOR(DOCUMENT_CHANNEL_IID)
 
-  const nsTArray<DocumentChannelRedirect>& GetRedirectChain() const {
-    return mRedirects;
-  }
-
-  void GetLastVisit(nsIURI** aURI, uint32_t* aChannelRedirectFlags) const {
-    *aURI = do_AddRef(mLastVisitInfo.uri()).take();
-    *aChannelRedirectFlags = mLastVisitInfo.previousFlags();
-  }
-
   void SetNavigationTiming(nsDOMNavigationTiming* aTiming) {
     mTiming = aTiming;
   }
@@ -88,9 +79,6 @@ class DocumentChannel : public nsIIdentChannel, public nsITraceableChannel {
   nsDocShell* GetDocShell();
 
   virtual ~DocumentChannel() = default;
-
-  LastVisitInfo mLastVisitInfo;
-  nsTArray<DocumentChannelRedirect> mRedirects;
 
   const TimeStamp mAsyncOpenTime;
   const RefPtr<nsDocShellLoadState> mLoadState;

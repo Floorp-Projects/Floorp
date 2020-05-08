@@ -498,25 +498,6 @@ async function selectMenuItem({ toolWindow }, selector, value) {
  *         as an argument.
  */
 async function testMenuItems(toolWindow, button, testFn) {
-  if (button.id === "device-selector") {
-    // device-selector uses a DevTools MenuButton instead of a XUL menu
-    button.click();
-    // Wait for appearance the menu items..
-    await waitUntil(() =>
-      toolWindow.document.querySelector("#device-selector-menu .menuitem")
-    );
-    const tooltip = toolWindow.document.querySelector("#device-selector-menu");
-    const items = tooltip.querySelectorAll(".menuitem > .command");
-    testFn([...items]);
-
-    if (tooltip.classList.contains("tooltip-visible")) {
-      // Close the tooltip explicitly.
-      button.click();
-      await waitUntil(() => !tooltip.classList.contains("tooltip-visible"));
-    }
-    return;
-  }
-
   // The context menu appears only in the top level window, which is different from
   // the inner toolWindow.
   const win = getTopLevelWindow(toolWindow);
@@ -524,13 +505,31 @@ async function testMenuItems(toolWindow, button, testFn) {
   await new Promise(resolve => {
     win.document.addEventListener(
       "popupshown",
-      () => {
-        const popup = win.document.querySelector('menupopup[menu-api="true"]');
-        const menuItems = [...popup.children];
+      async () => {
+        if (button.id === "device-selector") {
+          const popup = toolWindow.document.querySelector(
+            "#device-selector-menu"
+          );
+          const menuItems = [...popup.querySelectorAll(".menuitem > .command")];
 
-        testFn(menuItems);
+          testFn(menuItems);
 
-        popup.hidePopup();
+          if (popup.classList.contains("tooltip-visible")) {
+            // Close the tooltip explicitly.
+            button.click();
+            await waitUntil(() => !popup.classList.contains("tooltip-visible"));
+          }
+        } else {
+          const popup = win.document.querySelector(
+            'menupopup[menu-api="true"]'
+          );
+          const menuItems = [...popup.children];
+
+          testFn(menuItems);
+
+          popup.hidePopup();
+        }
+
         resolve();
       },
       { once: true }

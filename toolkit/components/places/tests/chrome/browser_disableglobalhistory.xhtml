@@ -21,7 +21,7 @@
     let browser = document.getElementById(id);
     /* eslint-disable-next-line no-shadow */
     return ContentTask.spawn(browser, {id, expected}, function({id, expected}) {
-      Assert.equal(docShell.useGlobalHistory, expected,
+      Assert.equal(docShell.browsingContext.useGlobalHistory, expected,
                    "Got the right useGlobalHistory state in the docShell of " + id);
     });
   }

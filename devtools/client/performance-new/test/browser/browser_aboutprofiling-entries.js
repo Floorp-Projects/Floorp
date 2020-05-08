@@ -10,7 +10,7 @@ add_task(async function test() {
   await withAboutProfiling(async document => {
     is(
       getActiveConfiguration().capacity,
-      Math.pow(2, 24),
+      128 * 1024 * 1024,
       "The active configuration is set to a specific number initially. If this" +
         " test fails here, then the magic numbers here may need to be adjusted."
     );
@@ -21,7 +21,7 @@ add_task(async function test() {
 
     is(
       getActiveConfiguration().capacity,
-      Math.pow(2, 18),
+      256 * 1024,
       "The capacity changed to a smaller value."
     );
   });

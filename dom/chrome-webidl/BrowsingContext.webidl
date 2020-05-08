@@ -88,6 +88,11 @@ interface BrowsingContext {
 
   attribute float textZoom;
 
+  /**
+   * Whether this docshell should save entries in global history.
+   */
+  attribute boolean useGlobalHistory;
+
   // Extension to give chrome JS the ability to set the window screen
   // orientation while in RDM.
   void setRDMPaneOrientation(OrientationType type, float rotationAngle);

@@ -45,8 +45,6 @@ ParentProcessDocumentChannel::RedirectToRealChannel(
     channel->SetLoadGroup(mLoadGroup);
   }
 
-  mLastVisitInfo = mDocumentLoadListener->LastVisitInfo();
-  mRedirects = mDocumentLoadListener->Redirects().Clone();
   mStreamFilterEndpoints = std::move(aStreamFilterEndpoints);
 
   RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise> p =
