@@ -88,7 +88,7 @@ class RemoteContentController : public GeckoContentController,
   bool IsRemote() override;
 
  private:
-  MessageLoop* mCompositorThread;
+  nsCOMPtr<nsISerialEventTarget> mCompositorThread;
   bool mCanSend;
 
   void HandleTapOnMainThread(TapType aType, LayoutDevicePoint aPoint,
