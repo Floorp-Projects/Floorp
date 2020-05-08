@@ -19,6 +19,7 @@
 #include "nsContentUtils.h"
 #include "nsContentPolicyUtils.h"
 #include "nsNetUtil.h"
+#include "mozilla/net/DocumentLoadListener.h"
 
 using namespace mozilla;
 
@@ -230,10 +231,16 @@ CSPService::AsyncOnChannelRedirect(nsIChannel* oldChannel,
   if (XRE_IsE10sParentProcess()) {
     nsCOMPtr<nsIParentChannel> parentChannel;
     NS_QueryNotificationCallbacks(oldChannel, parentChannel);
+    RefPtr<net::DocumentLoadListener> docListener =
+        do_QueryObject(parentChannel);
     // Since this is an IPC'd channel we do not have access to the request
     // context. In turn, we do not have an event target for policy violations.
     // Enforce the CSP check in the content process where we have that info.
-    if (parentChannel) {
+    // We allow redirect checks to run for document loads via
+    // DocumentLoadListener, since these are fully supported and we don't expose
+    // the redirects to the content process. We can't do this for all request
+    // types yet because we don't serialize nsICSPEventListener.
+    if (parentChannel && !docListener) {
       return NS_OK;
     }
   }
