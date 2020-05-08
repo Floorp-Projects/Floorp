@@ -14,6 +14,7 @@ from ipdl.ast import ASYNC, SYNC, INTR
 from ipdl.ast import IN, OUT, INOUT
 from ipdl.ast import NOT_NESTED, INSIDE_SYNC_NESTED, INSIDE_CPOW_NESTED
 import ipdl.builtin as builtin
+from ipdl.util import hash_str
 
 _DELETE_MSG = '__delete__'
 
@@ -101,7 +102,7 @@ class Type:
                 and self.fullname() == o.fullname())
 
     def __hash__(self):
-        return hash(self.fullname())
+        return hash_str(self.fullname())
 
     # Is this a C++ type?
     def isCxx(self):
