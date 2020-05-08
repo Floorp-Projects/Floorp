@@ -110,6 +110,13 @@ namespace mozilla {
 class JSONWriteFunc {
  public:
   virtual void Write(const char* aStr) = 0;
+  virtual void Write(const char* aStr, size_t aLen) = 0;
+
+  template <size_t LenPlusOne>
+  inline void WriteLiteral(const char (&aStr)[LenPlusOne]) {
+    Write(aStr, LenPlusOne - 1);
+  }
+
   virtual ~JSONWriteFunc() = default;
 };
 
@@ -138,6 +145,7 @@ class JSONWriter {
     // indicates which one is in use. They're not within a union because that
     // wouldn't work with UniquePtr.
     bool mIsOwned;
+    size_t mLen;
     const char* mUnownedStr;
     UniquePtr<char[]> mOwnedStr;
 
@@ -176,13 +184,14 @@ class JSONWriter {
         // No escapes needed. Easy.
         mIsOwned = false;
         mUnownedStr = aStr;
+        mLen = p - aStr;
         return;
       }
 
       // Escapes are needed. We'll create a new string.
       mIsOwned = true;
-      size_t len = (p - aStr) + nExtra;
-      mOwnedStr = MakeUnique<char[]>(len + 1);
+      mLen = (p - aStr) + nExtra;
+      mOwnedStr = MakeUnique<char[]>(mLen + 1);
 
       p = aStr;
       size_t i = 0;
@@ -216,6 +225,8 @@ class JSONWriter {
       SanityCheck();
       return mIsOwned ? mOwnedStr.get() : mUnownedStr;
     }
+
+    constexpr size_t len() const { return mLen; }
   };
 
  public:
@@ -258,28 +269,34 @@ class JSONWriter {
 
   void PropertyNameAndColon(const char* aName) {
     EscapedString escapedName(aName);
-    mWriter->Write("\"");
-    mWriter->Write(escapedName.get());
-    mWriter->Write("\": ");
+    mWriter->WriteLiteral("\"");
+    mWriter->Write(escapedName.get(), escapedName.len());
+    mWriter->WriteLiteral("\": ");
   }
 
   void Scalar(const char* aMaybePropertyName, const char* aStringValue) {
+    Scalar(aMaybePropertyName, aStringValue, strlen(aStringValue));
+  }
+
+  void Scalar(const char* aMaybePropertyName, const char* aStringValue,
+              size_t aStringLen) {
     Separator();
     if (aMaybePropertyName) {
       PropertyNameAndColon(aMaybePropertyName);
     }
-    mWriter->Write(aStringValue);
+    mWriter->Write(aStringValue, aStringLen);
     mNeedComma[mDepth] = true;
   }
 
-  void QuotedScalar(const char* aMaybePropertyName, const char* aStringValue) {
+  void QuotedScalar(const char* aMaybePropertyName, const char* aStringValue,
+                    size_t aStringLen) {
     Separator();
     if (aMaybePropertyName) {
       PropertyNameAndColon(aMaybePropertyName);
     }
-    mWriter->Write("\"");
-    mWriter->Write(aStringValue);
-    mWriter->Write("\"");
+    mWriter->WriteLiteral("\"");
+    mWriter->Write(aStringValue, aStringLen);
+    mWriter->WriteLiteral("\"");
     mNeedComma[mDepth] = true;
   }
 
@@ -310,7 +327,7 @@ class JSONWriter {
   void EndCollection(const char* aEndChar) {
     MOZ_ASSERT(mDepth > 0);
     if (mNeedNewlines[mDepth]) {
-      mWriter->Write("\n");
+      mWriter->WriteLiteral("\n");
       mDepth--;
       Indent();
     } else {
@@ -351,7 +368,8 @@ class JSONWriter {
 
   // Prints: "<aName>": <aBool>
   void BoolProperty(const char* aName, bool aBool) {
-    Scalar(aName, aBool ? "true" : "false");
+    const char* val = aBool ? "true" : "false";
+    Scalar(aName, val);
   }
 
   // Prints: <aBool>
@@ -360,8 +378,10 @@ class JSONWriter {
   // Prints: "<aName>": <aInt>
   void IntProperty(const char* aName, int64_t aInt) {
     char buf[64];
-    SprintfLiteral(buf, "%" PRId64, aInt);
-    Scalar(aName, buf);
+    int len = SprintfLiteral(buf, "%" PRId64, aInt);
+    if (len > 0) {
+      Scalar(aName, buf, static_cast<size_t>(len));
+    }
   }
 
   // Prints: <aInt>
@@ -375,7 +395,8 @@ class JSONWriter {
         double_conversion::DoubleToStringConverter::EcmaScriptConverter();
     double_conversion::StringBuilder builder(buf, buflen);
     converter.ToShortest(aDouble, &builder);
-    Scalar(aName, builder.Finalize());
+    const char* val = builder.Finalize();
+    Scalar(aName, val);
   }
 
   // Prints: <aDouble>
@@ -384,7 +405,7 @@ class JSONWriter {
   // Prints: "<aName>": "<aStr>"
   void StringProperty(const char* aName, const char* aStr) {
     EscapedString escapedStr(aStr);
-    QuotedScalar(aName, escapedStr.get());
+    QuotedScalar(aName, escapedStr.get(), escapedStr.len());
   }
 
   // Prints: "<aStr>"
