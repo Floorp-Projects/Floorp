@@ -24,14 +24,6 @@ CLANG_TESTS = [
      "(near initialization for 'full_wmonthname[0]')", '-Wpointer-sign')
 ]
 
-MSVC_TESTS = [
-    ("C:/mozilla-central/test/foo.cpp(793) : warning C4244: 'return' : "
-     "conversion from 'double' to 'uint32_t', possible loss of data",
-     'C:/mozilla-central/test/foo.cpp', 793, 'C4244',
-     "'return' : conversion from 'double' to 'uint32_t', possible loss of "
-     'data')
-]
-
 CURRENT_LINE = 1
 
 
@@ -140,18 +132,6 @@ class TestWarningsParsing(unittest.TestCase):
             self.assertEqual(warning['column'], column)
             self.assertEqual(warning['message'], message)
             self.assertEqual(warning['flag'], flag)
-
-    def test_msvc_parsing(self):
-        for source, filename, line, flag, message in MSVC_TESTS:
-            collector = WarningsCollector(lambda w: None)
-            warning = collector.process_line(source)
-
-            self.assertIsNotNone(warning)
-
-            self.assertEqual(warning['filename'], os.path.normpath(filename))
-            self.assertEqual(warning['line'], line)
-            self.assertEqual(warning['flag'], flag)
-            self.assertEqual(warning['message'], message)
 
 
 class TestWarningsDatabase(unittest.TestCase):
