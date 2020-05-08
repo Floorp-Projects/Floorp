@@ -437,6 +437,12 @@
               "items": {
                 "type": "string"
               }
+            },
+            "restricted_domains": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         }

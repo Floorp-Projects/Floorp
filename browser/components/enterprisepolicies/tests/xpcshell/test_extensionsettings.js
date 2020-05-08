@@ -202,3 +202,20 @@ add_task(async function test_extensionsettings_string() {
   let extensionSettings = Services.policies.getExtensionSettings("*");
   equal(extensionSettings.installation_mode, "blocked");
 });
+
+add_task(async function test_extensionsettings_string() {
+  let restrictedDomains = Services.prefs.getCharPref(
+    "extensions.webextensions.restrictedDomains"
+  );
+  await setupPolicyEngineWithJson({
+    policies: {
+      ExtensionSettings:
+        '{"*": {"restricted_domains": ["example.com","example.org"]}}',
+    },
+  });
+
+  let newRestrictedDomains = Services.prefs.getCharPref(
+    "extensions.webextensions.restrictedDomains"
+  );
+  equal(newRestrictedDomains, restrictedDomains + ",example.com,example.org");
+});
