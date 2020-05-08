@@ -307,6 +307,10 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
   context->mFields.SetWithoutSyncing<IDX_OrientationLock>(
       mozilla::hal::eScreenOrientation_None);
 
+  const bool useGlobalHistory =
+      inherit ? inherit->GetUseGlobalHistory() : false;
+  context->mFields.SetWithoutSyncing<IDX_UseGlobalHistory>(useGlobalHistory);
+
   return context.forget();
 }
 
@@ -477,6 +481,10 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
                            messageManagerGroup);
       }
       txn.SetMessageManagerGroup(messageManagerGroup);
+
+      bool useGlobalHistory = !aEmbedder->HasAttr(
+          kNameSpaceID_None, nsGkAtoms::disableglobalhistory);
+      txn.SetUseGlobalHistory(useGlobalHistory);
     }
     txn.Commit(this);
   }
@@ -1950,6 +1958,13 @@ void BrowsingContext::DidSet(FieldIndex<IDX_DefaultLoadFlags>) {
       }
     });
   }
+}
+
+bool BrowsingContext::CanSet(FieldIndex<IDX_UseGlobalHistory>,
+                             const bool& aUseGlobalHistory,
+                             ContentParent* aSource) {
+  // TODO: Allow access from all
+  return true;
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_UserAgentOverride>,
