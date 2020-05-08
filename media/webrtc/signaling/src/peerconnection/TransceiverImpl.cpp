@@ -547,6 +547,7 @@ static nsresult JsepCodecDescToAudioCodecConfig(
   (*aConfig)->mFrameSizeMs = desc.mFrameSizeMs;
   (*aConfig)->mMinFrameSizeMs = desc.mMinFrameSizeMs;
   (*aConfig)->mMaxFrameSizeMs = desc.mMaxFrameSizeMs;
+  (*aConfig)->mCbrEnabled = desc.mCbrEnabled;
 
   return NS_OK;
 }
