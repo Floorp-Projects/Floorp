@@ -3812,7 +3812,7 @@ bool DoNewArrayFallback(JSContext* cx, BaselineFrame* frame,
     }
 
     if (!obj->isSingleton()) {
-      JSObject* templateObject =
+      ArrayObject* templateObject =
           NewArrayOperation(cx, script, pc, length, TenuredObject);
       if (!templateObject) {
         return false;

@@ -642,12 +642,12 @@ JSObject* NewObjectOperationWithTemplate(JSContext* cx,
                                          HandleObject templateObject);
 JSObject* CreateThisWithTemplate(JSContext* cx, HandleObject templateObject);
 
-JSObject* NewArrayOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
-                            uint32_t length,
-                            NewObjectKind newKind = GenericObject);
+ArrayObject* NewArrayOperation(JSContext* cx, HandleScript script,
+                               jsbytecode* pc, uint32_t length,
+                               NewObjectKind newKind = GenericObject);
 
-JSObject* NewArrayOperationWithTemplate(JSContext* cx,
-                                        HandleObject templateObject);
+ArrayObject* NewArrayOperationWithTemplate(JSContext* cx,
+                                           HandleObject templateObject);
 
 ArrayObject* NewArrayCopyOnWriteOperation(JSContext* cx, HandleScript script,
                                           jsbytecode* pc);
