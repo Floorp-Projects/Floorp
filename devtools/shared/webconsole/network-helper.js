@@ -358,10 +358,11 @@ var NetworkHelper = {
    */
   parseSetCookieHeader: function(header) {
     function parseSameSiteAttribute(attribute) {
+      attribute = attribute.toLowerCase();
       switch (attribute) {
-        case COOKIE_SAMESITE.LAX:
+        case COOKIE_SAMESITE.LAX.toLowerCase():
           return COOKIE_SAMESITE.LAX;
-        case COOKIE_SAMESITE.STRICT:
+        case COOKIE_SAMESITE.STRICT.toLowerCase():
           return COOKIE_SAMESITE.STRICT;
         default:
           return COOKIE_SAMESITE.NONE;
