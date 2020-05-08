@@ -2435,7 +2435,9 @@ void InitializeFeatures(const Renderer11DeviceCaps &deviceCaps,
             // Haswell drivers occasionally corrupt (small?) (vertex?) texture data uploads for
             // 128bit formats.
             features->setDataFasterThanImageUploadOn128bitFormats.enabled = false;
-        }
+        } else if (IsSandyBridge(adapterDesc.DeviceId)) {
+	    features->emulateClearViewAfterDualSourceBlending.enabled = true;
+	}
     }
 
     if (IsAMD(adapterDesc.VendorId))
