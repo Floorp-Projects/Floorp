@@ -221,6 +221,26 @@ class HTMLEditUtils final {
   }
 
   /**
+   * GetFirstLeafChild() returns leftmost leaf content in aNode.  It depends on
+   * aChildBlockBoundary whether this scans into a block child or treat
+   * block as a leaf.
+   */
+  static nsIContent* GetFirstLeafChild(nsINode& aNode,
+                                       ChildBlockBoundary aChildBlockBoundary) {
+    for (nsIContent* content = aNode.GetFirstChild(); content;
+         content = content->GetFirstChild()) {
+      if (aChildBlockBoundary == ChildBlockBoundary::TreatAsLeaf &&
+          HTMLEditUtils::IsBlockElement(*content)) {
+        return content;
+      }
+      if (!content->HasChildren()) {
+        return content;
+      }
+    }
+    return nullptr;
+  }
+
+  /**
    * GetAncestorBlockElement() returns parent or nearest ancestor of aContent
    * which is a block element.  If aAncestorLimiter is not nullptr,
    * this stops looking for the result when it meets the limiter.

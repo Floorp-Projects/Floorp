@@ -2745,7 +2745,8 @@ already_AddRefed<Element> HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
       if (nextSibling->IsHTMLElement(nsGkAtoms::br)) {
         return nullptr;
       }
-      nsIContent* firstEditableLeaf = GetLeftmostChild(nextSibling);
+      nsIContent* firstEditableLeaf = HTMLEditUtils::GetFirstLeafChild(
+          *nextSibling, ChildBlockBoundary::Ignore);
       if (firstEditableLeaf &&
           firstEditableLeaf->IsHTMLElement(nsGkAtoms::br)) {
         return nullptr;
@@ -4960,7 +4961,8 @@ nsIContent* HTMLEditor::GetLastEditableChild(nsINode& aNode) const {
 }
 
 nsIContent* HTMLEditor::GetFirstEditableLeaf(nsINode& aNode) const {
-  nsIContent* child = GetLeftmostChild(&aNode);
+  nsIContent* child =
+      HTMLEditUtils::GetFirstLeafChild(aNode, ChildBlockBoundary::Ignore);
   while (child && (!EditorUtils::IsEditableContent(*child, EditorType::HTML) ||
                    child->HasChildren())) {
     child = GetNextEditableHTMLNode(*child);
