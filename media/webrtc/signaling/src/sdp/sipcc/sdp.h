@@ -419,6 +419,8 @@ typedef enum {
     SDP_CBR,
     SDP_MAX_FR,
     SDP_MAX_PLAYBACK_RATE,
+    SDP_APT,
+    SDP_RTX_TIME,
     SDP_MAX_FMTP_PARAM,
     SDP_FMTP_PARAM_UNKNOWN
 } sdp_fmtp_codec_param_e;
@@ -748,6 +750,11 @@ typedef struct sdp_fmtp {
     uint16_t                       annex_p_val_warp; /* 3 = half; 4=sixteenth */
 
     uint8_t                        flag;
+
+    /* RTX parameters */
+    uint8_t apt;
+    tinybool has_rtx_time;
+    uint32_t rtx_time;
 
   /* END - All Video related FMTP parameters */
 
