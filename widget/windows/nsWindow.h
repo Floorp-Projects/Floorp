@@ -30,6 +30,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/dom/MouseEventBinding.h"
+#include "mozilla/UniquePtr.h"
 #include "nsMargin.h"
 #include "nsRegionFwd.h"
 
@@ -62,6 +63,7 @@ namespace widget {
 class NativeKey;
 class InProcessWinCompositorWidget;
 struct MSGResult;
+class DirectManipulationOwner;
 }  // namespace widget
 }  // namespace mozilla
 
@@ -564,6 +566,10 @@ class nsWindow final : public nsWindowBase {
   void CreateCompositor() override;
   void RequestFxrOutput();
 
+  void RecreateDirectManipulationIfNeeded();
+  void ResizeDirectManipulationViewport();
+  void DestroyDirectManipulation();
+
  protected:
   nsCOMPtr<nsIWidget> mParent;
   nsIntSize mLastSize;
@@ -728,6 +734,8 @@ class nsWindow final : public nsWindowBase {
   // When true, used to indicate an async call to RequestFxrOutput to the GPU
   // process after the Compositor is created
   bool mRequestFxrOutputPending;
+
+  mozilla::UniquePtr<mozilla::widget::DirectManipulationOwner> mDmOwner;
 };
 
 #endif  // Window_h__
