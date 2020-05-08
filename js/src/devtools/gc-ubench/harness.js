@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Global defaults
-var gDefaultGarbageTotal = "8M";
+var gDefaultGarbagePiles = "8M";
 var gDefaultGarbagePerFrame = "8K";
 
 function parse_units(v) {
@@ -35,9 +35,9 @@ class AllocationLoad {
     this._garbagePerFrame =
       info.garbagePerFrame ||
       parse_units(info.defaultGarbagePerFrame || gDefaultGarbagePerFrame);
-    this._garbageTotal =
-      info.garbageTotal ||
-      parse_units(info.defaultGarbageTotal || gDefaultGarbageTotal);
+    this._garbagePiles =
+      info.garbagePiles ||
+      parse_units(info.defaultGarbagePiles || gDefaultGarbagePiles);
   }
 
   get name() {
@@ -52,15 +52,15 @@ class AllocationLoad {
   set garbagePerFrame(amount) {
     this._garbagePerFrame = amount;
   }
-  get garbageTotal() {
-    return this._garbageTotal;
+  get garbagePiles() {
+    return this._garbagePiles;
   }
-  set garbageTotal(amount) {
-    this._garbageTotal = amount;
+  set garbagePiles(amount) {
+    this._garbagePiles = amount;
   }
 
   start() {
-    this.load.load(this._garbageTotal);
+    this.load.load(this._garbagePiles);
   }
 
   stop() {
@@ -119,16 +119,16 @@ class AllocationLoadManager {
     return this._active && this._active.name != "noAllocation";
   }
 
-  change_garbageTotal(amount) {
+  change_garbagePiles(amount) {
     if (this._active) {
-      this._active.garbageTotal = amount;
+      this._active.garbagePiles = amount;
       this._active.reload();
     }
   }
 
   change_garbagePerFrame(amount) {
     if (this._active) {
-      this._active.garbageTotal = amount;
+      this._active.garbagePerFrame = amount;
     }
   }
 
