@@ -62,6 +62,21 @@ reflectLimitedEnumerated({
   }
 });
 
+// .formMethod when dialog is enabled
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({ set: [["dom.dialog_element.enabled", true]] })
+  reflectLimitedEnumerated({
+    element: document.createElement("button"),
+    attribute: "formMethod",
+    validValues: [ "get", "post", "dialog"],
+    invalidValues: [ "put", "", "tulip" ],
+    defaultValue: {
+      invalid: "get",
+      missing: "",
+    }
+  });
+});
+
 // .formNoValidate
 reflectBoolean({
   element: document.createElement("button"),
