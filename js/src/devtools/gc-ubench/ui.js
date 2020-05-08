@@ -79,6 +79,7 @@ class FrameTimer {
 }
 
 var gFrameTimer = new FrameTimer();
+
 function parse_units(v) {
   if (!v.length) {
     return NaN;
@@ -361,26 +362,22 @@ MemoryGraph.prototype.draw = function() {
     );
   }
 
-  this.drawHBar(
-    this.bestEver,
-    `${format_gcBytes(this.bestEver)} min`,
-    "#00cf61"
-  );
+  this.drawHBar(this.bestEver, `${format_bytes(this.bestEver)} min`, "#00cf61");
   this.drawHBar(
     this.worstEver,
-    `${format_gcBytes(this.worstEver)} max`,
+    `${format_bytes(this.worstEver)} max`,
     "#cc1111"
   );
   this.drawHBar(
     performance.mozMemory.zone.gcAllocTrigger,
-    `${format_gcBytes(performance.mozMemory.zone.gcAllocTrigger)} trigger`,
+    `${format_bytes(performance.mozMemory.zone.gcAllocTrigger)} trigger`,
     "#cc11cc"
   );
 
   ctx.fillStyle = "rgb(255,0,0)";
   if (worst) {
     ctx.fillText(
-      format_gcBytes(worst),
+      format_bytes(worst),
       this.xpos(worstpos) - 10,
       this.ypos(worst) - 14
     );
@@ -413,7 +410,7 @@ function onUpdateDisplayChanged() {
     window.requestAnimationFrame(handler);
     gFrameTimer.resume();
   } else {
-    gFrameTimer.stop();
+    gFrameTimer.pause();
   }
   update_load_state_indicator();
 }
@@ -437,6 +434,7 @@ function handler(timestamp) {
     if (!gLoadMgr.cycleStopped()) {
       start_test();
     }
+    update_load_display();
   }
 
   if (testState == "running") {
@@ -556,7 +554,7 @@ function onload() {
 
   // Load the initial test.
   gLoadMgr.setActiveLoadByName("noAllocation");
-  load_changed();
+  update_load_display();
   document.getElementById("test-selection").value = "noAllocation";
 
   // Polyfill rAF.
@@ -653,24 +651,12 @@ function compute_test_spark_histogram(histogram) {
   return line;
 }
 
-function format_units(n) {
-  n = String(n);
-  if (n.length > 9 && n.substr(-9) == "000000000") {
-    return n.substr(0, n.length - 9) + "G";
-  } else if (n.length > 9 && n.substr(-6) == "000000") {
-    return n.substr(0, n.length - 6) + "M";
-  } else if (n.length > 3 && n.substr(-3) == "000") {
-    return n.substr(0, n.length - 3) + "K";
-  }
-  return String(n);
-}
-
 function report_test_result(load, histogram) {
   var resultList = document.getElementById("results-display");
   var resultElem = document.createElement("div");
   var score = compute_test_score(histogram);
   var sparks = compute_test_spark_histogram(histogram);
-  var params = `(${format_units(load.garbagePerFrame)},${format_units(
+  var params = `(${format_num(load.garbagePerFrame)},${format_num(
     load.garbagePiles
   )})`;
   resultElem.innerHTML = `${score.toFixed(3)} ms/s : ${sparks} : ${
@@ -679,13 +665,15 @@ function report_test_result(load, histogram) {
   resultList.appendChild(resultElem);
 }
 
-function load_changed() {
-  document.getElementById("garbage-per-frame").value = format_units(
-    gLoadMgr.activeLoad().garbagePerFrame
-  );
-  document.getElementById("garbage-piles").value = format_units(
-    gLoadMgr.activeLoad().garbagePiles
-  );
+function update_load_display() {
+  const garbage = gLoadMgr.activeLoad()
+    ? gLoadMgr.activeLoad().garbagePerFrame
+    : parse_units(gDefaultGarbagePerFrame);
+  document.getElementById("garbage-per-frame").value = format_num(garbage);
+  const piles = gLoadMgr.activeLoad()
+    ? gLoadMgr.activeLoad().garbagePiles
+    : parse_units(gDefaultGarbagePiles);
+  document.getElementById("garbage-piles").value = format_num(piles);
   update_load_state_indicator();
 }
 
@@ -701,14 +689,16 @@ function onLoadChange() {
   var select = document.getElementById("test-selection");
   console.log(`Switching to test: ${select.value}`);
   gLoadMgr.setActiveLoadByName(select.value);
-  load_changed();
+  update_load_display();
   gHistogram.clear();
   reset_draw_state();
 }
 
 function garbage_piles_changed() {
-  var value = parse_units(document.getElementById("garbage-piles").value);
+  const input = document.getElementById("garbage-piles");
+  const value = parse_units(input.value);
   if (isNaN(value)) {
+    update_load_display();
     return;
   }
 
@@ -723,8 +713,10 @@ function garbage_piles_changed() {
 }
 
 function garbage_per_frame_changed() {
-  var value = parse_units(document.getElementById("garbage-per-frame").value);
+  const input = document.getElementById("garbage-per-frame");
+  var value = parse_units(input.value);
   if (isNaN(value)) {
+    update_load_display();
     return;
   }
   if (gLoadMgr.load_running()) {
