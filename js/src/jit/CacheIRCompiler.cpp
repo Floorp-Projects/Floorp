@@ -1390,25 +1390,6 @@ bool CacheIRCompiler::emitGuardIsNullOrUndefined(ValOperandId inputId) {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardIsNotNullOrUndefined(ValOperandId inputId) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  JSValueType knownType = allocator.knownType(inputId);
-  if (knownType == JSVAL_TYPE_UNDEFINED || knownType == JSVAL_TYPE_NULL) {
-    return false;
-  }
-
-  ValueOperand input = allocator.useValueRegister(masm, inputId);
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  masm.branchTestNull(Assembler::Equal, input, failure->label());
-  masm.branchTestUndefined(Assembler::Equal, input, failure->label());
-
-  return true;
-}
-
 bool CacheIRCompiler::emitGuardIsNull(ValOperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   JSValueType knownType = allocator.knownType(inputId);
