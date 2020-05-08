@@ -2,7 +2,7 @@
 
 # PictureInPictureFeature
 
-`class PictureInPictureFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/PictureInPictureFeature.kt#L24)
+`class PictureInPictureFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/PictureInPictureFeature.kt#L27)
 
 A simple implementation of Picture-in-picture mode if on a supported platform.
 
@@ -13,6 +13,8 @@ A simple implementation of Picture-in-picture mode if on a supported platform.
 `activity` - the activity with the EngineView for calling PIP mode when required; the AndroidX Fragment
 doesn't support this.
 
+`crashReporting` - Instance of `CrashReporting` to record unexpected caught exceptions
+
 `customTabSessionId` - ID of custom tab session.
 
 `pipChanged` - a change listener that allows the calling app to perform changes based on PIP mode.
@@ -21,7 +23,7 @@ doesn't support this.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `PictureInPictureFeature(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, activity: <ERROR CLASS>, customTabSessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, pipChanged: (`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`? = null)`<br>A simple implementation of Picture-in-picture mode if on a supported platform. |
+| [&lt;init&gt;](-init-.md) | `PictureInPictureFeature(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, activity: <ERROR CLASS>, crashReporting: `[`CrashReporting`](../../mozilla.components.support.base.crash/-crash-reporting/index.md)`? = null, customTabSessionId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, pipChanged: (`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`? = null)`<br>A simple implementation of Picture-in-picture mode if on a supported platform. |
 
 ### Functions
 

@@ -2,7 +2,12 @@
 
 # DEBUG
 
-`DEBUG` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/crash/Breadcrumb.kt#L53)
+`DEBUG` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/crash/Breadcrumb.kt#L57)
 
 DEBUG level.
 
+### Inherited Properties
+
+| Name | Summary |
+|---|---|
+| [value](value.md) | `val value: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |

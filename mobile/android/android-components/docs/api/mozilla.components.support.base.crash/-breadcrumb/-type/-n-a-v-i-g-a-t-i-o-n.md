@@ -2,7 +2,12 @@
 
 # NAVIGATION
 
-`NAVIGATION` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/crash/Breadcrumb.kt#L93)
+`NAVIGATION` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/crash/Breadcrumb.kt#L97)
 
 NAVIGATION type.
 
+### Inherited Properties
+
+| Name | Summary |
+|---|---|
+| [value](value.md) | `val value: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |

@@ -2,7 +2,7 @@
 
 # level
 
-`val level: `[`Level`](-level/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/crash/Breadcrumb.kt#L34)
+`val level: `[`Level`](-level/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/crash/Breadcrumb.kt#L38)
 
 Level of the crash breadcrumb.
 

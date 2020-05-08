@@ -2,7 +2,7 @@
 
 # Breadcrumb
 
-`data class Breadcrumb : `[`Comparable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-comparable/index.html)`<`[`Breadcrumb`](./index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/crash/Breadcrumb.kt#L15)
+`data class Breadcrumb : `[`Comparable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-comparable/index.html)`<`[`Breadcrumb`](./index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/crash/Breadcrumb.kt#L19)
 
 Represents a single crash breadcrumb.
 
@@ -35,6 +35,7 @@ Represents a single crash breadcrumb.
 | Name | Summary |
 |---|---|
 | [compareTo](compare-to.md) | `fun compareTo(other: `[`Breadcrumb`](./index.md)`): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+| [toJson](to-json.md) | `fun toJson(): <ERROR CLASS>`<br>Converts Breadcrumb into a JSON object |
 
 ### Extension Functions
 

@@ -2,7 +2,7 @@
 
 # Level
 
-`enum class Level` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/crash/Breadcrumb.kt#L49)
+`enum class Level` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/crash/Breadcrumb.kt#L53)
 
 Crash breadcrumb priority level.
 
@@ -15,3 +15,9 @@ Crash breadcrumb priority level.
 | [WARNING](-w-a-r-n-i-n-g.md) | WARNING level. |
 | [ERROR](-e-r-r-o-r.md) | ERROR level. |
 | [CRITICAL](-c-r-i-t-i-c-a-l.md) | CRITICAL level. |
+
+### Properties
+
+| Name | Summary |
+|---|---|
+| [value](value.md) | `val value: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
