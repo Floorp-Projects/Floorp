@@ -56,6 +56,8 @@ debugger-tests:
 devtools-tests:
     description: devtools node-based tests (for instance jest)
     platform: linux1804-64/opt
+    attributes:
+        code-review: true
     treeherder:
         symbol: node(devtools)
         kind: test
