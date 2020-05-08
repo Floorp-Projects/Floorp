@@ -78,15 +78,6 @@ const ABUSE_REPORT_MESSAGE_BARS = {
 };
 
 async function openAbuseReport({ addonId, reportEntryPoint }) {
-  if (AbuseReporter.openDialogDisabled) {
-    document.dispatchEvent(
-      new CustomEvent("abuse-report:new", {
-        detail: { addonId, reportEntryPoint },
-      })
-    );
-    return;
-  }
-
   try {
     const reportDialog = await AbuseReporter.openDialog(
       addonId,
