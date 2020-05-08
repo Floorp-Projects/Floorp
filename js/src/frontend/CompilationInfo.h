@@ -102,6 +102,8 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
     return sourceObject->source()->assignSource(cx, options, sourceBuffer);
   }
 
+  MOZ_MUST_USE bool publishDeferredFunctions();
+
   void trace(JSTracer* trc) final;
 
   // To avoid any misuses, make sure this is neither copyable,

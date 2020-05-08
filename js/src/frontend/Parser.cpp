@@ -282,6 +282,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     return nullptr;
   }
 
+  // Note: The order we insert into traceListHead is important. See consumers.
   compilationInfo_.traceListHead = funbox;
   handler_.setFunctionBox(funNode, funbox);
 
@@ -324,6 +325,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     return nullptr;
   }
 
+  // Note: The order we insert into traceListHead is important. See consumers.
   compilationInfo.traceListHead = funbox;
   handler_.setFunctionBox(funNode, funbox);
 
@@ -1878,18 +1880,19 @@ static bool MaybePublishFunction(JSContext* cx,
   return CreateLazyScript(cx, compilationInfo, stencil, fun, funbox);
 }
 
-bool ParserBase::publishDeferredFunctions(FunctionTree* root) {
-  if (root) {
-    auto visitor = [](ParserBase* parser, FunctionTree* tree) {
-      FunctionBox* funbox = tree->funbox();
-      if (!funbox) {
-        return true;
-      }
-      return MaybePublishFunction(parser->cx_, parser->compilationInfo_,
-                                  funbox);
-    };
-    return root->visitRecursively(this->cx_, this, visitor);
+bool CompilationInfo::publishDeferredFunctions() {
+  // Use the trace list to visit funboxes. We must visit inner functions before
+  // their parents. The trace list inserts functions to the head of list as they
+  // are encountered. These leaves each list in a reverse-pre-order which is
+  // what we want.
+
+  for (FunctionBox* funbox = traceListHead; funbox;
+       funbox = funbox->traceLink()) {
+    if (!MaybePublishFunction(cx, *this, funbox)) {
+      return false;
+    }
   }
+
   return true;
 }
 
