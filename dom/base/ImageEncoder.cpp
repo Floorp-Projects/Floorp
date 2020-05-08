@@ -6,7 +6,6 @@
 
 #include "ImageEncoder.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
-#include "mozilla/dom/GeneratePlaceholderCanvasData.h"
 #include "mozilla/dom/MemoryBlobImpl.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/gfx/2D.h"
@@ -384,9 +383,8 @@ nsresult ImageEncoder::ExtractDataInternal(
       return NS_ERROR_INVALID_ARG;
     }
     if (aUsePlaceholder) {
-      auto size = 4 * aSize.width * aSize.height;
-      auto* data = map.mData;
-      GeneratePlaceholderCanvasData(size, &data);
+      // If placeholder data was requested, return all-white, opaque image data.
+      memset(map.mData, 0xFF, 4 * aSize.width * aSize.height);
     }
     rv = aEncoder->InitFromData(map.mData, aSize.width * aSize.height * 4,
                                 aSize.width, aSize.height, aSize.width * 4,
