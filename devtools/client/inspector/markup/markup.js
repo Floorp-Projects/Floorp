@@ -889,8 +889,9 @@ MarkupView.prototype = {
    * Given the known reason, should the current selection be briefly highlighted
    * In a few cases, we don't want to highlight the node:
    * - If the reason is null (used to reset the selection),
-   * - if it's "inspector-default-selection" (initial node selected, either when
-   *   opening the inspector or after a navigation/reload)
+   * - if it's "inspector-open" (when the inspector opens up, let's not
+   * highlight the default node)
+   * - if it's "navigateaway" (since the page is being navigated away from)
    * - if it's "test" (this is a special case for mochitest. In tests, we often
    * need to select elements but don't necessarily want the highlighter to come
    * and go after a delay as this might break test scenarios)
@@ -901,7 +902,8 @@ MarkupView.prototype = {
   _shouldNewSelectionBeHighlighted: function() {
     const reason = this.inspector.selection.reason;
     const unwantedReasons = [
-      "inspector-default-selection",
+      "inspector-open",
+      "navigateaway",
       "nodeselected",
       "test",
     ];

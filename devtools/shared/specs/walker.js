@@ -54,14 +54,6 @@ const walkerSpec = generateActorSpec({
     "new-mutations": {
       type: "newMutations",
     },
-    "root-available": {
-      type: "root-available",
-      node: Arg(0, "nullable:domnode"),
-    },
-    "root-destroyed": {
-      type: "root-destroyed",
-      node: Arg(0, "nullable:domnode"),
-    },
     "picker-node-picked": {
       type: "pickerNodePicked",
       node: Arg(0, "disconnectedNode"),
@@ -370,14 +362,6 @@ const walkerSpec = generateActorSpec({
       response: {
         nodeFront: RetVal("disconnectedNode"),
       },
-    },
-    watchRootNode: {
-      request: {},
-      response: {},
-    },
-    unwatchRootNode: {
-      request: {},
-      oneway: true,
     },
   },
 });
