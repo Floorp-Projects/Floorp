@@ -173,6 +173,9 @@ enum BailoutKind {
   // Bailout triggered by MGuardValue.
   Bailout_ValueGuard,
 
+  // Bailout triggered by MGuardNullOrUndefined.
+  Bailout_NullOrUndefinedGuard,
+
   // When we're trying to use an uninitialized lexical.
   Bailout_UninitializedLexical,
 
@@ -255,6 +258,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "Bailout_ShapeGuard";
     case Bailout_ValueGuard:
       return "Bailout_ValueGuard";
+    case Bailout_NullOrUndefinedGuard:
+      return "Bailout_NullOrUndefinedGuard";
     case Bailout_UninitializedLexical:
       return "Bailout_UninitializedLexical";
     case Bailout_IonExceptionDebugMode:

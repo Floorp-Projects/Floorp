@@ -4829,6 +4829,22 @@ void CodeGenerator::visitGuardValue(LGuardValue* lir) {
   bailoutFrom(&bail, lir->snapshot());
 }
 
+void CodeGenerator::visitGuardNullOrUndefined(LGuardNullOrUndefined* lir) {
+  ValueOperand input = ToValue(lir, LGuardNullOrUndefined::Input);
+
+  ScratchTagScope tag(masm, input);
+  masm.splitTagForTest(input, tag);
+
+  Label done;
+  masm.branchTestNull(Assembler::Equal, tag, &done);
+
+  Label bail;
+  masm.branchTestUndefined(Assembler::NotEqual, tag, &bail);
+  bailoutFrom(&bail, lir->snapshot());
+
+  masm.bind(&done);
+}
+
 // Out-of-line path to update the store buffer.
 class OutOfLineCallPostWriteBarrier : public OutOfLineCodeBase<CodeGenerator> {
   LInstruction* lir_;
