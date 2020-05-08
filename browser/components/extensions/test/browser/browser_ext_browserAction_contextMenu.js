@@ -588,29 +588,6 @@ add_task(async function browseraction_contextmenu_report_extension() {
     useAddonManager: "temporary",
   });
 
-  async function testReportFrame(browser) {
-    const abuseReportFrame = await BrowserTestUtils.waitForCondition(() => {
-      return browser.contentDocument.querySelector(
-        "addon-abuse-report-xulframe"
-      );
-    }, "Wait the abuse report frame");
-
-    ok(
-      !abuseReportFrame.hidden,
-      "Abuse report frame has the expected visibility"
-    );
-    is(
-      abuseReportFrame.report.addon.id,
-      id,
-      "Abuse report frame has the expected addon id"
-    );
-    is(
-      abuseReportFrame.report.reportEntryPoint,
-      "toolbar_context_menu",
-      "Abuse report frame has the expected reportEntryPoint"
-    );
-  }
-
   async function testReportDialog() {
     const reportDialogWindow = await BrowserTestUtils.waitForCondition(
       () => AbuseReporter.getOpenDialog(),
@@ -638,14 +615,6 @@ add_task(async function browseraction_contextmenu_report_extension() {
       undefined,
       "Report resolved as user cancelled when the window is closed"
     );
-  }
-
-  async function testReport(browser) {
-    if (AbuseReporter.openDialogDisabled) {
-      await testReportFrame(browser);
-    } else {
-      await testReportDialog();
-    }
   }
 
   async function testContextMenu(menuId, customizing) {
@@ -678,7 +647,7 @@ add_task(async function browseraction_contextmenu_report_extension() {
 
     await BrowserTestUtils.browserLoaded(browser);
 
-    await testReport(browser);
+    await testReportDialog();
 
     // Close the new about:addons tab when running in customize mode,
     // or cancel the abuse report if the about:addons page has been
@@ -701,38 +670,24 @@ add_task(async function browseraction_contextmenu_report_extension() {
 
   await extension.startup();
 
-  async function testOnPrefEnv(prefEnv) {
-    info(`Test on abuse report with pref: ${uneval(prefEnv)}`);
-    await SpecialPowers.pushPrefEnv(prefEnv);
+  win = await BrowserTestUtils.openNewBrowserWindow();
 
-    info("Run tests in normal mode");
-    await runTestContextMenu({
-      buttonId,
-      customizing: false,
-      testContextMenu,
-      win,
-    });
+  info("Run tests in normal mode");
+  await runTestContextMenu({
+    buttonId,
+    customizing: false,
+    testContextMenu,
+    win,
+  });
 
-    info("Run tests in customize mode");
-    await runTestContextMenu({
-      buttonId,
-      customizing: true,
-      testContextMenu,
-      win,
-    });
+  info("Run tests in customize mode");
+  await runTestContextMenu({
+    buttonId,
+    customizing: true,
+    testContextMenu,
+    win,
+  });
 
-    await SpecialPowers.popPrefEnv();
-  }
-
-  for (let prefValue of [true, false]) {
-    win = await BrowserTestUtils.openNewBrowserWindow();
-
-    await testOnPrefEnv({
-      set: [["extensions.abuseReport.openDialog", prefValue]],
-    });
-
-    await BrowserTestUtils.closeWindow(win);
-  }
-
+  await BrowserTestUtils.closeWindow(win);
   await extension.unload();
 });

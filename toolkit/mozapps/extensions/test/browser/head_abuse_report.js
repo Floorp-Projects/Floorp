@@ -148,12 +148,6 @@ const AbuseReportTestUtils = {
     this._setupMockServer();
   },
 
-  // Returns the addon-abuse-report-xulframe element from the currently open
-  // about:addons tab.
-  getReportFrame(managerWindow = gManagerWindow) {
-    return managerWindow.document.querySelector("addon-abuse-report-xulframe");
-  },
-
   // Returns the currently open abuse report dialog window (if any).
   getReportDialog() {
     return Services.ww.getWindowByName("addons-abuse-report-dialog", null);
@@ -168,13 +162,6 @@ const AbuseReportTestUtils = {
   // Returns a reference to the addon-abuse-report element from the currently
   // open abuse report.
   getReportPanel() {
-    if (AbuseReporter.openDialogDisabled) {
-      const frame = this.getReportFrame();
-      return frame
-        .querySelector("browser")
-        .contentDocument.querySelector("addon-abuse-report");
-    }
-
     const win = this.getReportDialog();
     ok(win, "Got an abuse report dialog open");
     return win && win.document.querySelector("addon-abuse-report");
@@ -193,33 +180,14 @@ const AbuseReportTestUtils = {
   async promiseReportOpened({ addonId, reportEntryPoint, managerWindow }) {
     let abuseReportEl;
 
-    if (AbuseReporter.openDialogDisabled) {
-      const win = managerWindow || gManagerWindow;
-      ok(win, "Expect about:addons window to be found");
-      const frame = AbuseReportTestUtils.getReportFrame(win);
-      ok(frame, "Found an abuse report frame");
-
-      if (frame.hidden) {
-        const onceReportFrameShown = BrowserTestUtils.waitForEvent(
-          frame,
-          "abuse-report:frame-shown"
-        );
-        info("Wait for the abuse report frame to be visible");
-        await onceReportFrameShown;
-        ok(!frame.hidden, "Abuse Report frame should be visible");
-      }
-      info("Wait for the abuse report panel to be rendered");
-      abuseReportEl = await frame.promiseAbuseReport;
-      await AbuseReportTestUtils.promiseReportRendered(abuseReportEl);
-    } else {
-      if (!this.getReportDialog()) {
-        info("Wait for the report dialog window");
-        const dialog = await waitForNewWindow();
-        is(dialog, this.getReportDialog(), "Report dialog opened");
-      }
-      info("Wait for the abuse report panel render");
-      abuseReportEl = await AbuseReportTestUtils.promiseReportDialogRendered();
+    if (!this.getReportDialog()) {
+      info("Wait for the report dialog window");
+      const dialog = await waitForNewWindow();
+      is(dialog, this.getReportDialog(), "Report dialog opened");
     }
+
+    info("Wait for the abuse report panel render");
+    abuseReportEl = await AbuseReportTestUtils.promiseReportDialogRendered();
 
     ok(abuseReportEl, "Got an abuse report panel");
     is(
@@ -237,50 +205,20 @@ const AbuseReportTestUtils = {
   },
 
   // Return a promise resolved when the currently open report panel
-  // is closed (for both the "about:addons sub-frame" and
-  // "dialog window" modes).
+  // is closed.
   // Also asserts that a specific report panel element has been closed,
   // if one has been provided through the optional panel parameter.
   async promiseReportClosed(panel) {
-    function assertPanelClosed() {
-      // Assert that the panel has been closed (if the caller has passed it).
-      if (panel) {
-        if (AbuseReporter.openDialogDisabled) {
-          ok(panel.hidden, "abuse report panel should be hidden");
-        } else {
-          ok(!panel.ownerGlobal, "abuse report dialog closed");
-        }
-      }
-    }
-
-    // Test helper implementation for "about:addons sub-frame" mode.
-    if (AbuseReporter.openDialogDisabled) {
-      const frame = panel
-        ? panel.ownerGlobal.parent.document.querySelector(
-            "addon-abuse-report-xulframe"
-          )
-        : this.getReportFrame();
-      if (!frame || frame.hidden) {
-        throw Error("Expected report frame not found or already hidden");
-      }
-      await BrowserTestUtils.waitForEvent(frame, "abuse-report:frame-hidden");
-      ok(frame.hidden, "abuse report frame should be hidden");
-      ok(
-        !frame.hasAttribute("addon-id"),
-        "addon-id attribute has been removed from the abuse report frame"
-      );
-      assertPanelClosed();
-      return;
-    }
-
-    // Test helper implementation for "dialog window" mode.
     const win = panel ? panel.ownerGlobal : this.getReportDialog();
     if (!win || win.closed) {
       throw Error("Expected report dialog not found or already closed");
     }
 
     await waitClosedWindow(win);
-    assertPanelClosed();
+    // Assert that the panel has been closed (if the caller has passed it).
+    if (panel) {
+      ok(!panel.ownerGlobal, "abuse report dialog closed");
+    }
   },
 
   // Returns a promise resolved when the report panel has been rendered
@@ -314,19 +252,15 @@ const AbuseReportTestUtils = {
     let el = abuseReportEl;
 
     if (!el) {
-      if (AbuseReporter.openDialogDisabled) {
-        const frame = this.getReportFrame();
-        el = await frame.promiseAbuseReport;
-      } else {
-        const win = this.getReportDialog();
-        if (!win) {
-          await waitForNewWindow();
-        }
-
-        el = await this.promiseReportDialogRendered();
-        ok(el, "Got an abuse report panel");
+      const win = this.getReportDialog();
+      if (!win) {
+        await waitForNewWindow();
       }
+
+      el = await this.promiseReportDialogRendered();
+      ok(el, "Got an abuse report panel");
     }
+
     return el._radioCheckedReason
       ? el
       : BrowserTestUtils.waitForEvent(
@@ -410,15 +344,6 @@ const AbuseReportTestUtils = {
   // Assert that the report panel is hidden (or closed if the report
   // panel is opened in its own dialog window).
   async assertReportPanelHidden() {
-    if (AbuseReporter.openDialogDisabled) {
-      const abuseReportFrameEl = this.getReportFrame();
-      ok(
-        abuseReportFrameEl.hidden,
-        "Abuse Report frame should be initially hidden"
-      );
-      return;
-    }
-
     const win = this.getReportDialog();
     ok(!win, "Abuse Report dialog should be initially hidden");
   },
@@ -440,16 +365,6 @@ const AbuseReportTestUtils = {
   },
 
   triggerSubmit(reason, message) {
-    if (AbuseReporter.openDialogDisabled) {
-      const el = this.getReportFrame();
-      el.handleEvent(
-        new CustomEvent("abuse-report:submit", {
-          detail: { report: el.report, reason, message },
-        })
-      );
-      return;
-    }
-
     const reportEl = this.getReportDialog().document.querySelector(
       "addon-abuse-report"
     );
@@ -467,18 +382,9 @@ const AbuseReportTestUtils = {
 
     await openAboutAddons();
 
-    let promiseReportPanel;
-
-    if (AbuseReporter.openDialogDisabled) {
-      const frame = this.getReportFrame();
-      promiseReportPanel = frame.promiseAbuseReport.then(el =>
-        this.promiseReportRendered(el)
-      );
-    } else {
-      promiseReportPanel = waitForNewWindow().then(() =>
-        this.promiseReportDialogRendered()
-      );
-    }
+    let promiseReportPanel = waitForNewWindow().then(() =>
+      this.promiseReportDialogRendered()
+    );
 
     this.triggerNewReport(addonId, reportEntryPoint);
 
@@ -1462,39 +1368,21 @@ async function test_report_action_hidden_on_langpack_addons() {
 
 // This test verifies that triggering a report that would be immediately
 // cancelled (e.g. because abuse reports for that extension type are not
-// supported) the abuse report frame is being hidden as expected.
+// supported) the abuse report is being hidden as expected.
 async function test_report_hidden_on_report_unsupported_addontype() {
   await openAboutAddons();
 
-  // The error message bar is only being shown in the new implementation
-  // which opens the report in a dialog window, on the contrary when the
-  // report is shown in a about:addons subframe the report is cancelled
-  // but no error messagebar is going to be shown.
-  let onceCreateReportFailed;
-  let reportFrameEl;
-  if (AbuseReporter.openDialogDisabled) {
-    reportFrameEl = AbuseReportTestUtils.getReportFrame();
-    onceCreateReportFailed = BrowserTestUtils.waitForEvent(
-      reportFrameEl,
-      "abuse-report:cancel"
-    );
-  } else {
-    onceCreateReportFailed = AbuseReportTestUtils.promiseMessageBars(1);
-  }
+  let onceCreateReportFailed = AbuseReportTestUtils.promiseMessageBars(1);
 
   AbuseReportTestUtils.triggerNewReport(EXT_UNSUPPORTED_TYPE_ADDON_ID, "menu");
 
   await onceCreateReportFailed;
 
-  if (AbuseReporter.openDialogDisabled) {
-    is(reportFrameEl.hidden, true, "report frame should not be visible");
-  } else {
-    is(
-      AbuseReporter.getOpenDialog(),
-      undefined,
-      "report dialog should not be open"
-    );
-  }
+  is(
+    AbuseReporter.getOpenDialog(),
+    undefined,
+    "report dialog should not be open"
+  );
 
   await closeAboutAddons();
 }
@@ -1503,9 +1391,6 @@ async function test_no_report_checkbox_for_unsupported_addon_types() {
   async function test_report_checkbox_hidden(addon) {
     await openAboutAddons(addon.type);
     await gManagerWindow.promiseHtmlBrowserLoaded();
-
-    const abuseReportFrameEl = AbuseReportTestUtils.getReportFrame();
-    ok(abuseReportFrameEl.hidden, "Abuse Report frame should be hidden");
 
     const { contentDocument: doc } = gManagerWindow.getHtmlBrowser();
 
@@ -1532,8 +1417,6 @@ async function test_no_report_checkbox_for_unsupported_addon_types() {
     );
     removeButton.click();
     await promiseCardRemoved;
-
-    ok(abuseReportFrameEl.hidden, "Abuse Report frame should still be hidden");
 
     await closeAboutAddons();
   }
