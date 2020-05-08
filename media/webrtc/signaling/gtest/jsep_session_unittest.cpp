@@ -3478,6 +3478,10 @@ TEST_F(JsepSessionTest, ValidateOfferedAudioCodecParams) {
   ASSERT_EQ((uint32_t)0, parsed_opus_params.useInBandFec);
   ASSERT_EQ((uint32_t)0, parsed_opus_params.maxAverageBitrate);
   ASSERT_EQ((uint32_t)0, parsed_opus_params.useDTX);
+  ASSERT_EQ((uint32_t)0, parsed_opus_params.useCbr);
+  ASSERT_EQ((uint32_t)0, parsed_opus_params.frameSizeMs);
+  ASSERT_EQ((uint32_t)0, parsed_opus_params.minFrameSizeMs);
+  ASSERT_EQ((uint32_t)0, parsed_opus_params.maxFrameSizeMs);
 
   // dtmf
   const SdpFmtpAttributeList::Parameters* dtmf_params =
