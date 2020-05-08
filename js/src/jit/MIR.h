@@ -8871,6 +8871,26 @@ class MGuardValue : public MUnaryInstruction, public BoxInputsPolicy::Data {
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
+// Guard on null or undefined values.
+class MGuardNullOrUndefined : public MUnaryInstruction,
+                              public BoxInputsPolicy::Data {
+  explicit MGuardNullOrUndefined(MDefinition* val)
+      : MUnaryInstruction(classOpcode, val) {
+    setGuard();
+    setMovable();
+  }
+
+ public:
+  INSTRUCTION_HEADER(GuardNullOrUndefined)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, value))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
 // Bail if the object's shape or unboxed group is not in the input list.
 class MGuardReceiverPolymorphic : public MUnaryInstruction,
                                   public SingleObjectPolicy::Data {

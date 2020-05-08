@@ -3959,6 +3959,13 @@ void LIRGenerator::visitGuardValue(MGuardValue* ins) {
   add(lir, ins);
 }
 
+void LIRGenerator::visitGuardNullOrUndefined(MGuardNullOrUndefined* ins) {
+  MOZ_ASSERT(ins->value()->type() == MIRType::Value);
+  auto* lir = new (alloc()) LGuardNullOrUndefined(useBox(ins->value()));
+  assignSnapshot(lir, Bailout_NullOrUndefinedGuard);
+  add(lir, ins);
+}
+
 void LIRGenerator::visitAssertRange(MAssertRange* ins) {
   MDefinition* input = ins->input();
   LInstruction* lir = nullptr;
