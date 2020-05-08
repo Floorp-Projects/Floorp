@@ -149,20 +149,6 @@ bool WindowContext::CanSet(FieldIndex<IDX_IsThirdPartyTrackingResourceWindow>,
   return CheckOnlyOwningProcessCanSet(aSource);
 }
 
-already_AddRefed<WindowContext> WindowContext::Create(
-    WindowGlobalChild* aWindow) {
-  MOZ_RELEASE_ASSERT(XRE_IsContentProcess(),
-                     "Should be a WindowGlobalParent in the parent");
-
-  FieldTuple init;
-  mozilla::Get<IDX_OuterWindowId>(init) = aWindow->OuterWindowId();
-  RefPtr<WindowContext> context =
-      new WindowContext(aWindow->BrowsingContext(), aWindow->InnerWindowId(),
-                        /* aInProcess */ true, std::move(init));
-  context->Init();
-  return context.forget();
-}
-
 void WindowContext::CreateFromIPC(IPCInitializer&& aInit) {
   MOZ_RELEASE_ASSERT(XRE_IsContentProcess(),
                      "Should be a WindowGlobalParent in the parent");
@@ -178,8 +164,8 @@ void WindowContext::CreateFromIPC(IPCInitializer&& aInit) {
   }
 
   RefPtr<WindowContext> context =
-      new WindowContext(bc, aInit.mInnerWindowId, /* aInProcess */ false,
-                        std::move(aInit.mFields));
+      new WindowContext(bc, aInit.mInnerWindowId, aInit.mOuterWindowId,
+                        /* aInProcess */ false, std::move(aInit.mFields));
   context->Init();
 }
 
@@ -216,15 +202,26 @@ void WindowContext::Discard() {
   Group()->Unregister(this);
 }
 
+WindowContext::IPCInitializer WindowContext::GetIPCInitializer() {
+  IPCInitializer init;
+  init.mInnerWindowId = mInnerWindowId;
+  init.mOuterWindowId = mOuterWindowId;
+  init.mBrowsingContextId = mBrowsingContext->Id();
+  init.mFields = mFields.Fields();
+  return init;
+}
+
 WindowContext::WindowContext(BrowsingContext* aBrowsingContext,
-                             uint64_t aInnerWindowId, bool aInProcess,
-                             FieldTuple&& aFields)
+                             uint64_t aInnerWindowId, uint64_t aOuterWindowId,
+                             bool aInProcess, FieldTuple&& aFields)
     : mFields(std::move(aFields)),
       mInnerWindowId(aInnerWindowId),
+      mOuterWindowId(aOuterWindowId),
       mBrowsingContext(aBrowsingContext),
       mInProcess(aInProcess) {
   MOZ_ASSERT(mBrowsingContext);
   MOZ_ASSERT(mInnerWindowId);
+  MOZ_ASSERT(mOuterWindowId);
 }
 
 WindowContext::~WindowContext() {
@@ -299,6 +296,7 @@ void IPDLParamTraits<dom::WindowContext::IPCInitializer>::Write(
     const dom::WindowContext::IPCInitializer& aInit) {
   // Write actor ID parameters.
   WriteIPDLParam(aMessage, aActor, aInit.mInnerWindowId);
+  WriteIPDLParam(aMessage, aActor, aInit.mOuterWindowId);
   WriteIPDLParam(aMessage, aActor, aInit.mBrowsingContextId);
   WriteIPDLParam(aMessage, aActor, aInit.mFields);
 }
@@ -308,6 +306,7 @@ bool IPDLParamTraits<dom::WindowContext::IPCInitializer>::Read(
     dom::WindowContext::IPCInitializer* aInit) {
   // Read actor ID parameters.
   return ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mInnerWindowId) &&
+         ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mOuterWindowId) &&
          ReadIPDLParam(aMessage, aIterator, aActor,
                        &aInit->mBrowsingContextId) &&
          ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mFields);

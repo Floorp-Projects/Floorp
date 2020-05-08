@@ -150,13 +150,12 @@ class WindowGlobalParent final : public WindowContext,
 
   already_AddRefed<Promise> GetSecurityInfo(ErrorResult& aRv);
 
-  // Create a WindowGlobalParent from over IPC. This method should not be called
-  // from outside of the IPC constructors.
-  WindowGlobalParent(const WindowGlobalInit& aInit, bool aInProcess);
+  static already_AddRefed<WindowGlobalParent> CreateDisconnected(
+      const WindowGlobalInit& aInit, bool aInProcess = false);
 
   // Initialize the mFrameLoader fields for a created WindowGlobalParent. Must
   // be called after setting the Manager actor.
-  void Init(const WindowGlobalInit& aInit);
+  void Init() final;
 
   nsIGlobalObject* GetParentObject();
   JSObject* WrapObject(JSContext* aCx,
@@ -234,6 +233,10 @@ class WindowGlobalParent final : public WindowContext,
                                     ShareResolver&& aResolver);
 
  private:
+  WindowGlobalParent(CanonicalBrowsingContext* aBrowsingContext,
+                     uint64_t aInnerWindowId, uint64_t aOuterWindowId,
+                     bool aInProcess, FieldTuple&& aFields);
+
   ~WindowGlobalParent();
 
   // NOTE: This document principal doesn't reflect possible |document.domain|

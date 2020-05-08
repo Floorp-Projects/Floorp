@@ -21,8 +21,14 @@ namespace dom {
 // Common base class for WindowGlobal{Parent, Child}.
 class WindowGlobalActor : public nsISupports {
  public:
+  // Called to determine initial state for a window global actor created for an
+  // initial about:blank document.
   static WindowGlobalInit AboutBlankInitializer(
       dom::BrowsingContext* aBrowsingContext, nsIPrincipal* aPrincipal);
+
+  // Called to determine initial state for a window global actor created for a
+  // specific existing nsGlobalWindowInner.
+  static WindowGlobalInit WindowInitializer(nsGlobalWindowInner* aWindow);
 
  protected:
   virtual ~WindowGlobalActor() = default;

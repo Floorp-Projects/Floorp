@@ -47,34 +47,22 @@ namespace dom {
 typedef nsRefPtrHashtable<nsUint64HashKey, WindowGlobalChild> WGCByIdMap;
 static StaticAutoPtr<WGCByIdMap> gWindowGlobalChildById;
 
-WindowGlobalChild::WindowGlobalChild(const WindowGlobalInit& aInit,
-                                     nsGlobalWindowInner* aWindow)
-    : mWindowGlobal(aWindow),
-      mBrowsingContext(aInit.browsingContext().GetMaybeDiscarded()),
-      mDocumentPrincipal(aInit.principal()),
-      mDocumentURI(aInit.documentURI()),
-      mInnerWindowId(aInit.innerWindowId()),
-      mOuterWindowId(aInit.outerWindowId()),
-      mBeforeUnloadListeners(0) {
-  MOZ_DIAGNOSTIC_ASSERT(mBrowsingContext);
+WindowGlobalChild::WindowGlobalChild(dom::WindowContext* aWindowContext,
+                                     nsIPrincipal* aPrincipal,
+                                     nsIURI* aDocumentURI)
+    : mWindowContext(aWindowContext),
+      mDocumentPrincipal(aPrincipal),
+      mDocumentURI(aDocumentURI) {
+  MOZ_DIAGNOSTIC_ASSERT(mWindowContext);
   MOZ_DIAGNOSTIC_ASSERT(mDocumentPrincipal);
 
-  MOZ_ASSERT_IF(aWindow, mInnerWindowId == aWindow->WindowID());
-  MOZ_ASSERT_IF(aWindow,
-                mOuterWindowId == aWindow->GetOuterWindow()->WindowID());
+  if (!mDocumentURI) {
+    NS_NewURI(getter_AddRefs(mDocumentURI), "about:blank");
+  }
 }
 
 already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
     nsGlobalWindowInner* aWindow) {
-  nsCOMPtr<nsIPrincipal> principal = aWindow->GetPrincipal();
-  MOZ_ASSERT(principal);
-
-  RefPtr<nsDocShell> docshell = nsDocShell::Cast(aWindow->GetDocShell());
-  MOZ_ASSERT(docshell);
-
-  // Initalize our WindowGlobalChild object.
-  RefPtr<dom::BrowsingContext> bc = docshell->GetBrowsingContext();
-
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   // Opener policy is set when we start to load a document. Here, we ensure we
   // have set the correct Opener policy so that it will be available in the
@@ -87,23 +75,13 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
       loadInfo->GetExternalContentPolicyType() ==
           nsIContentPolicy::TYPE_DOCUMENT &&
       NS_SUCCEEDED(httpChan->GetCrossOriginOpenerPolicy(&policy))) {
-    MOZ_DIAGNOSTIC_ASSERT(policy == bc->GetOpenerPolicy());
+    MOZ_DIAGNOSTIC_ASSERT(policy ==
+                          aWindow->GetBrowsingContext()->GetOpenerPolicy());
   }
 #endif
 
-  WindowGlobalInit init(principal,
-                        aWindow->GetDocumentContentBlockingAllowListPrincipal(),
-                        aWindow->GetDocumentURI(), bc, aWindow->WindowID(),
-                        aWindow->GetOuterWindow()->WindowID());
-
-  auto wgc = MakeRefPtr<WindowGlobalChild>(init, aWindow);
-
-  // If we have already closed our browsing context, return a pre-destroyed
-  // WindowGlobalChild actor.
-  if (bc->IsDiscarded()) {
-    wgc->ActorDestroy(FailedConstructor);
-    return wgc.forget();
-  }
+  WindowGlobalInit init = WindowGlobalActor::WindowInitializer(aWindow);
+  RefPtr<WindowGlobalChild> wgc = CreateDisconnected(init);
 
   // Send the link constructor over PBrowser, or link over PInProcess.
   if (XRE_IsParentProcess()) {
@@ -113,15 +91,10 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
       return nullptr;
     }
 
-    // Note: ref is released in DeallocPWindowGlobalChild
     ManagedEndpoint<PWindowGlobalParent> endpoint =
         ipChild->OpenPWindowGlobalEndpoint(wgc);
-
-    auto wgp = MakeRefPtr<WindowGlobalParent>(init, /* aInProcess */ true);
-
-    // Note: ref is released in DeallocPWindowGlobalParent
-    ipParent->BindPWindowGlobalEndpoint(std::move(endpoint), wgp);
-    wgp->Init(init);
+    ipParent->BindPWindowGlobalEndpoint(std::move(endpoint),
+                                        wgc->WindowContext()->Canonical());
   } else {
     RefPtr<BrowserChild> browserChild =
         BrowserChild::GetFrom(static_cast<mozIDOMWindow*>(aWindow));
@@ -129,32 +102,49 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
 
     ManagedEndpoint<PWindowGlobalParent> endpoint =
         browserChild->OpenPWindowGlobalEndpoint(wgc);
-
     browserChild->SendNewWindowGlobal(std::move(endpoint), init);
   }
 
   wgc->Init();
+  wgc->InitWindowGlobal(aWindow);
   return wgc.forget();
 }
 
-void WindowGlobalChild::Init() {
-  if (!mDocumentURI) {
-    NS_NewURI(getter_AddRefs(mDocumentURI), "about:blank");
+already_AddRefed<WindowGlobalChild> WindowGlobalChild::CreateDisconnected(
+    const WindowGlobalInit& aInit) {
+  RefPtr<dom::BrowsingContext> browsingContext =
+      dom::BrowsingContext::Get(aInit.context().mBrowsingContextId);
+
+  RefPtr<dom::WindowContext> windowContext =
+      dom::WindowContext::GetById(aInit.context().mInnerWindowId);
+  MOZ_RELEASE_ASSERT(!windowContext, "Creating duplicate WindowContext");
+
+  // Create our new WindowContext
+  if (XRE_IsParentProcess()) {
+    windowContext =
+        WindowGlobalParent::CreateDisconnected(aInit, /* aInProcess */ true);
+  } else {
+    dom::WindowContext::FieldTuple fields = aInit.context().mFields;
+    windowContext =
+        new dom::WindowContext(browsingContext, aInit.context().mInnerWindowId,
+                               aInit.context().mOuterWindowId,
+                               /* aInProcess */ true, std::move(fields));
   }
 
-  // Ensure we have a corresponding WindowContext object.
-  if (XRE_IsParentProcess()) {
-    mWindowContext = GetParentActor();
-  } else {
-    mWindowContext = WindowContext::Create(this);
-  }
+  RefPtr<WindowGlobalChild> windowChild = new WindowGlobalChild(
+      windowContext, aInit.principal(), aInit.documentURI());
+  return windowChild.forget();
+}
+
+void WindowGlobalChild::Init() {
+  mWindowContext->Init();
 
   // Register this WindowGlobal in the gWindowGlobalParentsById map.
   if (!gWindowGlobalChildById) {
     gWindowGlobalChildById = new WGCByIdMap();
     ClearOnShutdown(&gWindowGlobalChildById);
   }
-  auto entry = gWindowGlobalChildById->LookupForAdd(mInnerWindowId);
+  auto entry = gWindowGlobalChildById->LookupForAdd(InnerWindowId());
   MOZ_RELEASE_ASSERT(!entry, "Duplicate WindowGlobalChild entry for ID!");
   entry.OrInsert([&] { return this; });
 }
@@ -170,6 +160,18 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::GetByInnerWindowId(
     return nullptr;
   }
   return gWindowGlobalChildById->Get(aInnerWindowId);
+}
+
+dom::BrowsingContext* WindowGlobalChild::BrowsingContext() {
+  return mWindowContext->GetBrowsingContext();
+}
+
+uint64_t WindowGlobalChild::InnerWindowId() {
+  return mWindowContext->InnerWindowId();
+}
+
+uint64_t WindowGlobalChild::OuterWindowId() {
+  return mWindowContext->OuterWindowId();
 }
 
 bool WindowGlobalChild::IsCurrentGlobal() {
@@ -469,10 +471,10 @@ void WindowGlobalChild::SetDocumentURI(nsIURI* aDocumentURI) {
   // loaded, the first url loaded in it will be about:blank. This call keeps the
   // first non-about:blank registration of window and discards the previous one.
   uint64_t embedderInnerWindowID = 0;
-  if (mBrowsingContext->GetParent()) {
-    embedderInnerWindowID = mBrowsingContext->GetEmbedderInnerWindowId();
+  if (BrowsingContext()->GetParent()) {
+    embedderInnerWindowID = BrowsingContext()->GetEmbedderInnerWindowId();
   }
-  profiler_register_page(mBrowsingContext->Id(), mInnerWindowId,
+  profiler_register_page(BrowsingContext()->Id(), InnerWindowId(),
                          aDocumentURI->GetSpecOrDefault(),
                          embedderInnerWindowID);
 #endif
@@ -531,10 +533,10 @@ void WindowGlobalChild::ActorDestroy(ActorDestroyReason aWhy) {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript(),
              "Destroying WindowGlobalChild can run script");
 
-  gWindowGlobalChildById->Remove(mInnerWindowId);
+  gWindowGlobalChildById->Remove(InnerWindowId());
 
 #ifdef MOZ_GECKO_PROFILER
-  profiler_unregister_page(mInnerWindowId);
+  profiler_unregister_page(InnerWindowId());
 #endif
 
   // Destroy our JSActors, and reject any pending queries.
@@ -549,7 +551,7 @@ void WindowGlobalChild::ActorDestroy(ActorDestroyReason aWhy) {
 
 WindowGlobalChild::~WindowGlobalChild() {
   MOZ_ASSERT(!gWindowGlobalChildById ||
-             !gWindowGlobalChildById->Contains(mInnerWindowId));
+             !gWindowGlobalChildById->Contains(InnerWindowId()));
   MOZ_ASSERT(!mWindowActors.Count());
 }
 
@@ -563,7 +565,7 @@ nsISupports* WindowGlobalChild::GetParentObject() {
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WindowGlobalChild, mWindowGlobal,
-                                      mBrowsingContext, mWindowActors)
+                                      mWindowActors)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WindowGlobalChild)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
