@@ -161,17 +161,10 @@ def compute_manifest_runtimes(suites, platform):
                 path = path.split(':', 1)[-1]
 
             if suite in EXCEED_LIMIT:
-                # Sanitize test paths to remove leading forward slash and
-                # in case of mozilla tests, the /_mozilla prefix.
-                prefix = 'testing/web-platform/tests'
-                path = path.lstrip('/')
-
-                if path.startswith('_mozilla'):
-                    prefix = 'testing/web-platform/mozilla/tests'
-                    path = path.lstrip('_mozilla/')
-
-                # Normalize returned test paths to be relative to topsrcdir.
-                path = os.path.join(prefix, path.split('/')[0])
+                depth = 2
+                if path.startswith('/_mozilla'):
+                    depth = 3
+                path = os.path.join('/', *path.split('/')[:depth])
 
                 # Use the previously calculated path to the web-platform-test
                 # group as the key.
