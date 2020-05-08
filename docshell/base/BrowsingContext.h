@@ -115,6 +115,7 @@ class WindowProxyHolder;
   FIELD(AllowContentRetargeting, bool)                                       \
   FIELD(AllowContentRetargetingOnChildren, bool)                             \
   FIELD(ForceEnableTrackingProtection, bool)                                 \
+  FIELD(UseGlobalHistory, bool)                                              \
   /* These field are used to store the states of autoplay media request on   \
    * GeckoView only, and it would only be modified on the top level browsing \
    * context. */                                                             \
@@ -734,6 +735,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_DefaultLoadFlags>,
               const uint32_t& aDefaultLoadFlags, ContentParent* aSource);
   void DidSet(FieldIndex<IDX_DefaultLoadFlags>);
+
+  bool CanSet(FieldIndex<IDX_UseGlobalHistory>, const bool& aUseGlobalHistory,
+              ContentParent* aSource);
 
   template <size_t I, typename T>
   bool CanSet(FieldIndex<I>, const T&, ContentParent*) {

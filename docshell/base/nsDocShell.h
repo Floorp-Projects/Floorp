@@ -1263,7 +1263,6 @@ class nsDocShell final : public nsDocLoader,
   bool mIsOffScreenBrowser : 1;
   bool mDisableMetaRefreshWhenInactive : 1;
   bool mIsAppTab : 1;
-  bool mUseGlobalHistory : 1;
   bool mDeviceSizeIsPageSize : 1;
   bool mWindowDraggingAllowed : 1;
   bool mInFrameSwap : 1;
