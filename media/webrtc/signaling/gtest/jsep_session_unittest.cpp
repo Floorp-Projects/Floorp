@@ -61,6 +61,7 @@ class JsepSessionTest : public JsepSessionTestBase,
     Preferences::SetCString("media.peerconnection.sdp.parser", "legacy");
     Preferences::SetCString("media.peerconnection.sdp.alternate_parse_mode",
                             "never");
+    Preferences::SetBool("media.peerconnection.video.use_rtx", true);
     Preferences::SetBool("media.navigator.video.use_transport_cc", true);
 
     mSessionOff =
