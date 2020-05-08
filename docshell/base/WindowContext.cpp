@@ -120,6 +120,15 @@ bool WindowContext::CheckOnlyOwningProcessCanSet(ContentParent* aSource) {
   return false;
 }
 
+bool WindowContext::CanSet(FieldIndex<IDX_IsSecure>, const bool& aIsSecure,
+                           ContentParent* aSource) {
+  // reject attempts to set isSecure for mixed content from a content process
+  if (XRE_IsContentProcess() || aSource) {
+    return false;
+  }
+  return true;
+}
+
 bool WindowContext::CanSet(FieldIndex<IDX_AllowMixedContent>,
                            const bool& aAllowMixedContent,
                            ContentParent* aSource) {
