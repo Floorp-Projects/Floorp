@@ -7,7 +7,6 @@
 #include "VRThread.h"
 #include "nsDebug.h"
 #include "nsThreadManager.h"
-#include "nsThread.h"
 #include "nsThreadUtils.h"
 #include "VRManager.h"
 

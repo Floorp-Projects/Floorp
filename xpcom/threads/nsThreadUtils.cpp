@@ -133,15 +133,7 @@ already_AddRefed<nsIRunnable> mozilla::CreateMediumHighRunnable(
 //-----------------------------------------------------------------------------
 
 nsresult NS_NewNamedThread(const nsACString& aName, nsIThread** aResult,
-                           nsIRunnable* aInitialEvent, uint32_t aStackSize) {
-  nsCOMPtr<nsIRunnable> event = aInitialEvent;
-  return NS_NewNamedThread(aName, aResult, event.forget(), aStackSize);
-}
-
-nsresult NS_NewNamedThread(const nsACString& aName, nsIThread** aResult,
-                           already_AddRefed<nsIRunnable> aInitialEvent,
-                           uint32_t aStackSize) {
-  nsCOMPtr<nsIRunnable> event = std::move(aInitialEvent);
+                           nsIRunnable* aEvent, uint32_t aStackSize) {
   nsCOMPtr<nsIThread> thread;
 #ifdef MOZILLA_INTERNAL_API
   nsresult rv = nsThreadManager::get().nsThreadManager::NewNamedThread(
@@ -160,8 +152,8 @@ nsresult NS_NewNamedThread(const nsACString& aName, nsIThread** aResult,
     return rv;
   }
 
-  if (event) {
-    rv = thread->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
+  if (aEvent) {
+    rv = thread->Dispatch(aEvent, NS_DISPATCH_NORMAL);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
