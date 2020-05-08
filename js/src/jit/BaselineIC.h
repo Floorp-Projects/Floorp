@@ -1778,7 +1778,7 @@ class ICBinaryArith_Fallback : public ICFallbackStub {
 class ICNewArray_Fallback : public ICFallbackStub {
   friend class ICStubSpace;
 
-  GCPtrObject templateObject_;
+  GCPtrArrayObject templateObject_;
 
   // The group used for objects created here is always available, even if the
   // template object itself is not.
@@ -1790,9 +1790,9 @@ class ICNewArray_Fallback : public ICFallbackStub {
         templateGroup_(templateGroup) {}
 
  public:
-  GCPtrObject& templateObject() { return templateObject_; }
+  GCPtrArrayObject& templateObject() { return templateObject_; }
 
-  void setTemplateObject(JSObject* obj) {
+  void setTemplateObject(ArrayObject* obj) {
     MOZ_ASSERT(obj->group() == templateGroup());
     templateObject_ = obj;
   }
