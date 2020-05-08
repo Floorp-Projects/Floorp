@@ -21,7 +21,7 @@ import type { Source, Context } from "../../types";
 import type { Symbols } from "../../reducers/types";
 
 async function doSetSymbols(
-  cx,
+  cx: Context,
   source: Source,
   { dispatch, getState, parser }: ThunkArgs
 ) {

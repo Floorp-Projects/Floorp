@@ -12,7 +12,7 @@ export default function remapLocations(
   breakpoints: Breakpoint[],
   sourceId: SourceId,
   sourceMaps: SourceMaps
-) {
+): Promise<Breakpoint[]> {
   const sourceBreakpoints: Promise<Breakpoint>[] = breakpoints.map(
     async breakpoint => {
       if (breakpoint.location.sourceId !== sourceId) {

@@ -27,12 +27,15 @@ import type {
   OrientationType,
   SelectedPrimaryPaneTabType,
 } from "../reducers/ui";
+import type { UIAction } from "./types/UIAction";
 
-export function setPrimaryPaneTab(tabName: SelectedPrimaryPaneTabType) {
+export function setPrimaryPaneTab(
+  tabName: SelectedPrimaryPaneTabType
+): UIAction {
   return { type: "SET_PRIMARY_PANE_TAB", tabName };
 }
 
-export function closeActiveSearch() {
+export function closeActiveSearch(): UIAction {
   return {
     type: "TOGGLE_ACTIVE_SEARCH",
     value: null,
@@ -157,7 +160,7 @@ export function flashLineRange(location: {
  * @memberof actions/sources
  * @static
  */
-export function clearHighlightLineRange() {
+export function clearHighlightLineRange(): UIAction {
   return {
     type: "CLEAR_HIGHLIGHT_LINES",
   };
@@ -166,7 +169,7 @@ export function clearHighlightLineRange() {
 export function openConditionalPanel(
   location: ?SourceLocation,
   log: boolean = false
-) {
+): ?UIAction {
   if (!location) {
     return;
   }
@@ -178,13 +181,13 @@ export function openConditionalPanel(
   };
 }
 
-export function closeConditionalPanel() {
+export function closeConditionalPanel(): UIAction {
   return {
     type: "CLOSE_CONDITIONAL_PANEL",
   };
 }
 
-export function clearProjectDirectoryRoot(cx: Context) {
+export function clearProjectDirectoryRoot(cx: Context): UIAction {
   return {
     type: "SET_PROJECT_DIRECTORY_ROOT",
     cx,
@@ -224,18 +227,18 @@ export function setProjectDirectoryRoot(cx: Context, newRoot: string) {
   };
 }
 
-export function updateViewport() {
+export function updateViewport(): UIAction {
   return {
     type: "SET_VIEWPORT",
     viewport: getLocationsInViewport(getEditor()),
   };
 }
 
-export function updateCursorPosition(cursorPosition: SourceLocation) {
+export function updateCursorPosition(cursorPosition: SourceLocation): UIAction {
   return { type: "SET_CURSOR_POSITION", cursorPosition };
 }
 
-export function setOrientation(orientation: OrientationType) {
+export function setOrientation(orientation: OrientationType): UIAction {
   return { type: "SET_ORIENTATION", orientation };
 }
 

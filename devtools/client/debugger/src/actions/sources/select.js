@@ -46,12 +46,13 @@ import type {
   URL,
 } from "../../types";
 import type { ThunkArgs } from "../types";
+import type { SourceAction } from "../types/SourceAction";
 
 export const setSelectedLocation = (
   cx: Context,
   source: Source,
   location: SourceLocation
-) => ({
+): SourceAction => ({
   type: "SET_SELECTED_LOCATION",
   cx,
   source,
@@ -62,15 +63,15 @@ export const setPendingSelectedLocation = (
   cx: Context,
   url: URL,
   options?: PartialPosition
-) => ({
+): SourceAction => ({
   type: "SET_PENDING_SELECTED_LOCATION",
   cx,
   url,
-  line: options ? options.line : null,
-  column: options ? options.column : null,
+  line: options?.line,
+  column: options?.column,
 });
 
-export const clearSelectedLocation = (cx: Context) => ({
+export const clearSelectedLocation = (cx: Context): SourceAction => ({
   type: "CLEAR_SELECTED_LOCATION",
   cx,
 });

@@ -17,7 +17,7 @@ import type { ThunkArgs } from "../types";
 // b is a single position (line and column).
 // This function tests to see if the b position
 // falls within the range given in a.
-function inHouseContainsPosition(a: Object, b: Object) {
+function inHouseContainsPosition(a: Object, b: Object): boolean {
   const bColumn = b.column || 0;
   const startsBefore =
     a.start.line < b.line ||

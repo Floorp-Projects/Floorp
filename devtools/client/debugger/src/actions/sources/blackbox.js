@@ -9,7 +9,10 @@
  * @module actions/sources
  */
 
-import { isOriginalId, originalToGeneratedId } from "devtools-source-map";
+import SourceMaps, {
+  isOriginalId,
+  originalToGeneratedId,
+} from "devtools-source-map";
 import { recordEvent } from "../../utils/telemetry";
 import { features } from "../../utils/prefs";
 import { getSourceActorsForSource } from "../../selectors";
@@ -18,27 +21,27 @@ import { PROMISE } from "../utils/middleware/promise";
 
 import type { Source, Context, SourceId } from "../../types";
 import type { ThunkArgs } from "../types";
+import type { State } from "../../reducers/types";
 
 async function blackboxActors(
-  state,
+  state: State,
   client,
   sourceId: SourceId,
   isBlackBoxed: boolean,
   range?
-) {
+): Promise<{ isBlackBoxed: boolean }> {
   for (const actor of getSourceActorsForSource(state, sourceId)) {
     await client.blackBox(actor, isBlackBoxed, range);
   }
   return { isBlackBoxed: !isBlackBoxed };
 }
 
-async function getSourceId(source: Source, sourceMaps) {
-  let sourceId, range;
+async function getSourceId(source: Source, sourceMaps: typeof SourceMaps) {
+  let sourceId = source.id,
+    range;
   if (features.originalBlackbox && isOriginalId(source.id)) {
     range = await sourceMaps.getFileGeneratedRange(source.id);
     sourceId = originalToGeneratedId(source.id);
-  } else {
-    sourceId = source.id;
   }
   return { sourceId, range };
 }
