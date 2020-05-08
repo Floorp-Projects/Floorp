@@ -781,12 +781,15 @@ void RsdparsaSdpAttributeList::LoadFmtp(RustAttributeList* attributeList) {
       fmtpParameters.reset(
           new SdpFmtpAttributeList::RedParameters(std::move(redParameters)));
     } else if (codecName == "RTX") {
-      Maybe<uint32_t> rtx_time = Nothing();
+      SdpFmtpAttributeList::RtxParameters rtxParameters;
+
+      rtxParameters.apt = rustFmtpParameters.rtx.apt;
       if (rustFmtpParameters.rtx.has_rtx_time) {
-        rtx_time = Some(rustFmtpParameters.rtx.rtx_time);
+        rtxParameters.rtx_time = Some(rustFmtpParameters.rtx.rtx_time);
       }
-      fmtpParameters.reset(new SdpFmtpAttributeList::RtxParameters(
-          rustFmtpParameters.rtx.apt, rtx_time));
+
+      fmtpParameters.reset(
+          new SdpFmtpAttributeList::RtxParameters(rtxParameters));
     } else {
       // The parameter set is unknown so skip it
       continue;

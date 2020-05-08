@@ -1214,13 +1214,11 @@ class SdpFmtpAttributeList : public SdpAttribute {
 
   class RtxParameters : public Parameters {
    public:
-    uint8_t apt;
+    uint8_t apt = 255;  // Valid payload types are 0 - 127, use 255 to represent
+                        // unset value.
     Maybe<uint32_t> rtx_time;
 
-    RtxParameters(const uint8_t aApt, const Maybe<uint32_t>& aRtxTime)
-        : Parameters(SdpRtpmapAttributeList::kRtx),
-          apt(aApt),
-          rtx_time(aRtxTime) {}
+    RtxParameters() : Parameters(SdpRtpmapAttributeList::kRtx) {}
 
     virtual ~RtxParameters() {}
 
@@ -1229,8 +1227,10 @@ class SdpFmtpAttributeList : public SdpAttribute {
     }
 
     virtual void Serialize(std::ostream& os) const override {
-      os << "apt=" << apt;
-      rtx_time.apply([&](const auto& time) { os << ";rtx-time=" << time; });
+      if (apt <= 127) {
+        os << "apt=" << static_cast<uint32_t>(apt);
+        rtx_time.apply([&](const auto& time) { os << ";rtx-time=" << time; });
+      }
     }
 
     virtual bool CompareEq(const Parameters& aOther) const override {
