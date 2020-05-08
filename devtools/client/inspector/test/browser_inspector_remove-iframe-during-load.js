@@ -27,7 +27,6 @@ add_task(async function() {
 
   // Create/remove an extra one now, after the load event.
   info("Creating and removing an iframe.");
-  const onMarkupLoaded = inspector.once("markuploaded");
   testActor.eval(
     "new " +
       function() {
@@ -41,9 +40,6 @@ add_task(async function() {
     !(await testActor.hasNode("iframe")),
     "The after-load iframe should have been removed."
   );
-
-  info("Waiting for markup-view to load.");
-  await onMarkupLoaded;
 
   // Assert that the markup-view is displayed and works
   ok(!(await testActor.hasNode("iframe")), "Iframe has been removed.");
