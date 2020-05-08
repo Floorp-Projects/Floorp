@@ -1338,6 +1338,14 @@ class JsepSessionTest : public JsepSessionTestBase,
           std::cerr << " dtmf(" << (audioCodec->mDtmfEnabled ? "yes" : "no")
                     << ")";
         }
+        if (track.GetMediaType() == SdpMediaSection::kVideo) {
+          const JsepVideoCodecDescription* videoCodec =
+              static_cast<const JsepVideoCodecDescription*>(codec.get());
+          std::cerr << " rtx("
+                    << (videoCodec->mRtxEnabled ? videoCodec->mRtxPayloadType
+                                                : "no")
+                    << ")";
+        }
         std::cerr << std::endl;
       }
     }
@@ -6685,6 +6693,227 @@ TEST_F(JsepSessionTest, JsStopsTransceiverBeforeAnswer) {
   ASSERT_EQ(1U, mSessionOff->GetTransceivers()[0]->mTransport.mComponents);
   ASSERT_FALSE(mSessionOff->GetTransceivers()[0]->mSendTrack.GetActive());
   ASSERT_FALSE(mSessionOff->GetTransceivers()[0]->mRecvTrack.GetActive());
+}
+
+TEST_F(JsepSessionTest, TestOfferPTAsymmetryRtxApt) {
+  for (auto& codec : mSessionAns->Codecs()) {
+    if (codec->mName == "VP8") {
+      JsepVideoCodecDescription* vp8 =
+          static_cast<JsepVideoCodecDescription*>(codec.get());
+      vp8->EnableRtx("42");
+      break;
+    }
+  }
+
+  types.push_back(SdpMediaSection::kVideo);
+  AddTracks(*mSessionOff, "video");
+  AddTracks(*mSessionAns, "video");
+  JsepOfferOptions options;
+
+  // Ensure that mSessionAns is appropriately configured.
+  std::string offer;
+  JsepSession::Result result = mSessionAns->CreateOffer(options, &offer);
+  ASSERT_FALSE(result.mError.isSome());
+  ASSERT_NE(std::string::npos, offer.find("a=rtpmap:42 rtx")) << offer;
+
+  OfferAnswer();
+
+  // Answerer should use what the offerer suggested
+  UniquePtr<JsepCodecDescription> codec;
+  GetCodec(*mSessionAns, 0, sdp::kSend, 0, 0, &codec);
+  ASSERT_TRUE(codec);
+  ASSERT_EQ("VP8", codec->mName);
+  JsepVideoCodecDescription* vp8 =
+      static_cast<JsepVideoCodecDescription*>(codec.get());
+  ASSERT_EQ("120", vp8->mDefaultPt);
+  ASSERT_EQ("124", vp8->mRtxPayloadType);
+  GetCodec(*mSessionAns, 0, sdp::kRecv, 0, 0, &codec);
+  ASSERT_TRUE(codec);
+  ASSERT_EQ("VP8", codec->mName);
+  vp8 = static_cast<JsepVideoCodecDescription*>(codec.get());
+  ASSERT_EQ("120", vp8->mDefaultPt);
+  ASSERT_EQ("124", vp8->mRtxPayloadType);
+
+  // Answerer should not change back when it reoffers
+  result = mSessionAns->CreateOffer(options, &offer);
+  ASSERT_FALSE(result.mError.isSome());
+  ASSERT_NE(std::string::npos, offer.find("a=rtpmap:124 rtx")) << offer;
+}
+
+TEST_F(JsepSessionTest, TestAnswerPTAsymmetryRtx) {
+  // JsepSessionImpl will never answer with an asymmetric payload type
+  // (tested in TestOfferPTAsymmetry), so we have to rewrite SDP a little.
+  types.push_back(SdpMediaSection::kVideo);
+  AddTracks(*mSessionOff, "video");
+  AddTracks(*mSessionAns, "video");
+
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer);
+
+  Replace("a=rtpmap:120 VP8", "a=rtpmap:119 VP8", &offer);
+  Replace("m=video 9 UDP/TLS/RTP/SAVPF 120", "m=video 9 UDP/TLS/RTP/SAVPF 119",
+          &offer);
+  ReplaceAll("a=fmtp:120", "a=fmtp:119", &offer);
+  ReplaceAll("a=fmtp:122 120", "a=fmtp:122 119", &offer);
+  ReplaceAll("a=fmtp:124 apt=120", "a=fmtp:124 apt=119", &offer);
+  ReplaceAll("a=rtcp-fb:120", "a=rtcp-fb:119", &offer);
+
+  SetRemoteOffer(offer);
+
+  std::string answer = CreateAnswer();
+  SetLocalAnswer(answer);
+  SetRemoteAnswer(answer);
+
+  UniquePtr<JsepCodecDescription> codec;
+  GetCodec(*mSessionOff, 0, sdp::kSend, 0, 0, &codec);
+  ASSERT_TRUE(codec);
+  ASSERT_EQ("VP8", codec->mName);
+  ASSERT_EQ("119", codec->mDefaultPt);
+  JsepVideoCodecDescription* vp8 =
+      static_cast<JsepVideoCodecDescription*>(codec.get());
+  ASSERT_EQ("124", vp8->mRtxPayloadType);
+  GetCodec(*mSessionOff, 0, sdp::kRecv, 0, 0, &codec);
+  ASSERT_TRUE(codec);
+  ASSERT_EQ("VP8", codec->mName);
+  ASSERT_EQ("120", codec->mDefaultPt);
+  vp8 = static_cast<JsepVideoCodecDescription*>(codec.get());
+  ASSERT_EQ("124", vp8->mRtxPayloadType);
+
+  GetCodec(*mSessionAns, 0, sdp::kSend, 0, 0, &codec);
+  ASSERT_TRUE(codec);
+  ASSERT_EQ("VP8", codec->mName);
+  ASSERT_EQ("119", codec->mDefaultPt);
+  vp8 = static_cast<JsepVideoCodecDescription*>(codec.get());
+  ASSERT_EQ("124", vp8->mRtxPayloadType);
+  GetCodec(*mSessionAns, 0, sdp::kRecv, 0, 0, &codec);
+  ASSERT_TRUE(codec);
+  ASSERT_EQ("VP8", codec->mName);
+  ASSERT_EQ("119", codec->mDefaultPt);
+  vp8 = static_cast<JsepVideoCodecDescription*>(codec.get());
+  ASSERT_EQ("124", vp8->mRtxPayloadType);
+}
+
+TEST_F(JsepSessionTest, TestAnswerPTAsymmetryRtxApt) {
+  // JsepSessionImpl will never answer with an asymmetric payload type
+  // so we have to rewrite SDP a little.
+  types.push_back(SdpMediaSection::kVideo);
+  AddTracks(*mSessionOff, "video");
+  AddTracks(*mSessionAns, "video");
+
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer);
+
+  Replace("a=rtpmap:124 rtx", "a=rtpmap:42 rtx", &offer);
+  Replace("m=video 9 UDP/TLS/RTP/SAVPF 120 124",
+          "m=video 9 UDP/TLS/RTP/SAVPF 120 42", &offer);
+  ReplaceAll("a=fmtp:124", "a=fmtp:42", &offer);
+
+  SetRemoteOffer(offer);
+
+  std::string answer = CreateAnswer();
+  SetLocalAnswer(answer);
+  SetRemoteAnswer(answer);
+
+  UniquePtr<JsepCodecDescription> codec;
+  GetCodec(*mSessionOff, 0, sdp::kSend, 0, 0, &codec);
+  ASSERT_TRUE(codec);
+  ASSERT_EQ("VP8", codec->mName);
+  ASSERT_EQ("120", codec->mDefaultPt);
+  JsepVideoCodecDescription* vp8 =
+      static_cast<JsepVideoCodecDescription*>(codec.get());
+  ASSERT_EQ("42", vp8->mRtxPayloadType);
+  GetCodec(*mSessionOff, 0, sdp::kRecv, 0, 0, &codec);
+  ASSERT_TRUE(codec);
+  ASSERT_EQ("VP8", codec->mName);
+  ASSERT_EQ("120", codec->mDefaultPt);
+  vp8 = static_cast<JsepVideoCodecDescription*>(codec.get());
+  ASSERT_EQ("124", vp8->mRtxPayloadType);
+
+  GetCodec(*mSessionAns, 0, sdp::kSend, 0, 0, &codec);
+  ASSERT_TRUE(codec);
+  ASSERT_EQ("VP8", codec->mName);
+  vp8 = static_cast<JsepVideoCodecDescription*>(codec.get());
+  ASSERT_EQ("120", vp8->mDefaultPt);
+  ASSERT_EQ("42", vp8->mRtxPayloadType);
+  GetCodec(*mSessionAns, 0, sdp::kRecv, 0, 0, &codec);
+  ASSERT_TRUE(codec);
+  ASSERT_EQ("VP8", codec->mName);
+  vp8 = static_cast<JsepVideoCodecDescription*>(codec.get());
+  ASSERT_EQ("120", vp8->mDefaultPt);
+  ASSERT_EQ("42", vp8->mRtxPayloadType);
+}
+
+TEST_F(JsepSessionTest, TestOfferNoRtx) {
+  for (auto& codec : mSessionOff->Codecs()) {
+    if (codec->mType == SdpMediaSection::kVideo) {
+      JsepVideoCodecDescription* videoCodec =
+          static_cast<JsepVideoCodecDescription*>(codec.get());
+      videoCodec->mRtxEnabled = false;
+    }
+  }
+
+  types.push_back(SdpMediaSection::kVideo);
+  AddTracks(*mSessionOff, "video");
+  AddTracks(*mSessionAns, "video");
+  JsepOfferOptions options;
+
+  std::string offer;
+  JsepSession::Result result = mSessionOff->CreateOffer(options, &offer);
+  ASSERT_FALSE(result.mError.isSome());
+  ASSERT_EQ(std::string::npos, offer.find("rtx")) << offer;
+
+  OfferAnswer();
+
+  // Answerer should use what the offerer suggested
+  UniquePtr<JsepCodecDescription> codec;
+  for (size_t i = 0; i < 4; ++i) {
+    GetCodec(*mSessionAns, 0, sdp::kSend, 0, i, &codec);
+    ASSERT_TRUE(codec);
+    JsepVideoCodecDescription* videoCodec =
+        static_cast<JsepVideoCodecDescription*>(codec.get());
+    ASSERT_FALSE(videoCodec->mRtxEnabled);
+    GetCodec(*mSessionAns, 0, sdp::kRecv, 0, i, &codec);
+    ASSERT_TRUE(codec);
+    videoCodec = static_cast<JsepVideoCodecDescription*>(codec.get());
+    ASSERT_FALSE(videoCodec->mRtxEnabled);
+  }
+}
+
+TEST_F(JsepSessionTest, TestOneWayRtx) {
+  for (auto& codec : mSessionAns->Codecs()) {
+    if (codec->mType == SdpMediaSection::kVideo) {
+      JsepVideoCodecDescription* videoCodec =
+          static_cast<JsepVideoCodecDescription*>(codec.get());
+      videoCodec->mRtxEnabled = false;
+    }
+  }
+
+  types.push_back(SdpMediaSection::kVideo);
+  AddTracks(*mSessionOff, "video");
+  AddTracks(*mSessionAns, "video");
+  JsepOfferOptions options;
+
+  std::string offer;
+  JsepSession::Result result = mSessionAns->CreateOffer(options, &offer);
+  ASSERT_FALSE(result.mError.isSome());
+  ASSERT_EQ(std::string::npos, offer.find("rtx")) << offer;
+
+  OfferAnswer();
+
+  // If the answerer does not support rtx, the offerer should not send it,
+  // but it is too late to turn off recv on the offerer side.
+  UniquePtr<JsepCodecDescription> codec;
+  for (size_t i = 0; i < 4; ++i) {
+    GetCodec(*mSessionOff, 0, sdp::kSend, 0, i, &codec);
+    ASSERT_TRUE(codec);
+    JsepVideoCodecDescription* videoCodec =
+        static_cast<JsepVideoCodecDescription*>(codec.get());
+    ASSERT_FALSE(videoCodec->mRtxEnabled);
+    GetCodec(*mSessionOff, 0, sdp::kRecv, 0, i, &codec);
+    ASSERT_TRUE(codec);
+    videoCodec = static_cast<JsepVideoCodecDescription*>(codec.get());
+    ASSERT_TRUE(videoCodec->mRtxEnabled);
+  }
 }
 
 }  // namespace mozilla
