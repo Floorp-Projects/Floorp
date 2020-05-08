@@ -2511,16 +2511,23 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
 
   // Set the cookie jar settings to the window context.
   if (newInnerWindow) {
-    WindowContext::Transaction txn;
-    txn.SetCookieBehavior(
-        Some(aDocument->CookieJarSettings()->GetCookieBehavior()));
-    txn.SetIsOnContentBlockingAllowList(
-        aDocument->CookieJarSettings()->GetIsOnContentBlockingAllowList());
-    txn.SetIsThirdPartyWindow(nsContentUtils::IsThirdPartyWindowOrChannel(
-        newInnerWindow, nullptr, nullptr));
-    txn.SetIsThirdPartyTrackingResourceWindow(
-        isThirdPartyTrackingResourceWindow);
-    txn.Commit(newInnerWindow->GetWindowContext());
+    net::CookieJarSettingsArgs cookieJarSettings;
+    net::CookieJarSettings::Cast(aDocument->CookieJarSettings())
+        ->Serialize(cookieJarSettings);
+
+    newInnerWindow->GetWindowGlobalChild()
+        ->WindowContext()
+        ->SetCookieJarSettings(Some(cookieJarSettings));
+
+    newInnerWindow->GetWindowGlobalChild()
+        ->WindowContext()
+        ->SetIsThirdPartyWindow(nsContentUtils::IsThirdPartyWindowOrChannel(
+            newInnerWindow, nullptr, nullptr));
+
+    newInnerWindow->GetWindowGlobalChild()
+        ->WindowContext()
+        ->SetIsThirdPartyTrackingResourceWindow(
+            isThirdPartyTrackingResourceWindow);
   }
 
   mHasStorageAccess = false;
