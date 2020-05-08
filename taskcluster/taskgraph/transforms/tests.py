@@ -1151,6 +1151,15 @@ def disable_fennec_e10s(config, tasks):
 
 
 @transforms.add
+def disable_wpt_timeouts_on_autoland(config, tasks):
+    """do not run web-platform-tests that are expected TIMEOUT on autoland"""
+    for task in tasks:
+        if 'web-platform-tests' in task['test-name'] and config.params['project'] == 'autoland':
+            task['mozharness'].setdefault('extra-options', []).append('--skip-timeout')
+        yield task
+
+
+@transforms.add
 def enable_code_coverage(config, tasks):
     """Enable code coverage for the ccov build-platforms"""
     for task in tasks:
