@@ -4251,19 +4251,6 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
   return rv;
 }
 
-nsresult EditorBase::CreateRange(nsINode* aStartContainer, int32_t aStartOffset,
-                                 nsINode* aEndContainer, int32_t aEndOffset,
-                                 nsRange** aRange) {
-  RefPtr<nsRange> range = nsRange::Create(
-      aStartContainer, aStartOffset, aEndContainer, aEndOffset, IgnoreErrors());
-  if (!range) {
-    NS_WARNING("nsRange::Create() failed");
-    return NS_ERROR_FAILURE;
-  }
-  range.forget(aRange);
-  return NS_OK;
-}
-
 nsresult EditorBase::AppendNodeToSelectionAsRange(nsINode* aNode) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
@@ -4276,15 +4263,11 @@ nsresult EditorBase::AppendNodeToSelectionAsRange(nsINode* aNode) {
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<nsRange> range;
-  nsresult rv = CreateRange(atContent.GetContainer(), atContent.Offset(),
-                            atContent.GetContainer(), atContent.Offset() + 1,
-                            getter_AddRefs(range));
-  if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::CreateRange() failed");
-    return rv;
-  }
+  RefPtr<nsRange> range = nsRange::Create(
+      atContent.ToRawRangeBoundary(),
+      atContent.NextPoint().ToRawRangeBoundary(), IgnoreErrors());
   if (NS_WARN_IF(!range)) {
+    NS_WARNING("nsRange::Create() failed");
     return NS_ERROR_FAILURE;
   }
 
