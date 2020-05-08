@@ -11,7 +11,7 @@ kind-dependencies:
     - toolchain
 
 only-for-build-types:
-    - performance-test
+    - nightly
 
 only-for-abis:
     - armeabi-v7a
@@ -76,7 +76,7 @@ job-defaults:
             - './test-linux.sh'
             - '--cfg=mozharness/configs/raptor/android_hw_config.py'
             - '--app=fenix'
-            - '--binary=org.mozilla.fenix.performancetest'
+            - '--binary=org.mozilla.fenix.nightly'
             - '--activity=org.mozilla.fenix.IntentReceiverActivity'
             - '--download-symbols=ondemand'
     fetches:
