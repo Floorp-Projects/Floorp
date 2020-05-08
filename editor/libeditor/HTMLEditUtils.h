@@ -195,6 +195,32 @@ class HTMLEditUtils final {
   static bool IsSingleLineContainer(nsINode& aNode);
 
   /**
+   * GetLastLeafChild() returns rightmost leaf content in aNode.  It depends on
+   * aChildBlockBoundary whether this scans into a block child or treat
+   * block as a leaf.
+   */
+  enum class ChildBlockBoundary {
+    // Even if there is a child block, keep scanning a leaf content in it.
+    Ignore,
+    // If there is a child block, return it.
+    TreatAsLeaf,
+  };
+  static nsIContent* GetLastLeafChild(nsINode& aNode,
+                                      ChildBlockBoundary aChildBlockBoundary) {
+    for (nsIContent* content = aNode.GetLastChild(); content;
+         content = content->GetLastChild()) {
+      if (aChildBlockBoundary == ChildBlockBoundary::TreatAsLeaf &&
+          HTMLEditUtils::IsBlockElement(*content)) {
+        return content;
+      }
+      if (!content->HasChildren()) {
+        return content;
+      }
+    }
+    return nullptr;
+  }
+
+  /**
    * GetAncestorBlockElement() returns parent or nearest ancestor of aContent
    * which is a block element.  If aAncestorLimiter is not nullptr,
    * this stops looking for the result when it meets the limiter.

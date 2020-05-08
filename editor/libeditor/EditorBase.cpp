@@ -127,6 +127,8 @@ namespace mozilla {
 using namespace dom;
 using namespace widget;
 
+using ChildBlockBoundary = HTMLEditUtils::ChildBlockBoundary;
+
 /*****************************************************************************
  * mozilla::EditorBase
  *****************************************************************************/
@@ -2848,20 +2850,21 @@ nsIContent* EditorBase::GetPreviousNodeInternal(const EditorRawDOMPoint& aPoint,
 
   // unless there isn't one, in which case we are at the end of the node
   // and want the deep-right child.
-  nsIContent* rightMostContent =
-      GetRightmostChild(aPoint.GetContainer(), aNoBlockCrossing);
-  if (!rightMostContent) {
+  nsIContent* lastLeafContent = HTMLEditUtils::GetLastLeafChild(
+      *aPoint.GetContainer(), aNoBlockCrossing ? ChildBlockBoundary::TreatAsLeaf
+                                               : ChildBlockBoundary::Ignore);
+  if (!lastLeafContent) {
     return nullptr;
   }
 
   if ((!aFindEditableNode ||
-       EditorUtils::IsEditableContent(*rightMostContent, GetEditorType())) &&
-      (aFindAnyDataNode || EditorUtils::IsElementOrText(*rightMostContent))) {
-    return rightMostContent;
+       EditorUtils::IsEditableContent(*lastLeafContent, GetEditorType())) &&
+      (aFindAnyDataNode || EditorUtils::IsElementOrText(*lastLeafContent))) {
+    return lastLeafContent;
   }
 
   // restart the search from the non-editable node we just found
-  return GetPreviousNodeInternal(*rightMostContent, aFindEditableNode,
+  return GetPreviousNodeInternal(*lastLeafContent, aFindEditableNode,
                                  aFindAnyDataNode, aNoBlockCrossing);
 }
 
@@ -2952,9 +2955,12 @@ nsIContent* EditorBase::FindNextLeafNode(nsINode* aCurrentNode, bool aGoForward,
         // don't look inside prevsib, since it is a block
         return sibling;
       }
-      nsIContent* leaf = aGoForward
-                             ? GetLeftmostChild(sibling, bNoBlockCrossing)
-                             : GetRightmostChild(sibling, bNoBlockCrossing);
+      nsIContent* leaf =
+          aGoForward
+              ? GetLeftmostChild(sibling, bNoBlockCrossing)
+              : HTMLEditUtils::GetLastLeafChild(
+                    *sibling, bNoBlockCrossing ? ChildBlockBoundary::TreatAsLeaf
+                                               : ChildBlockBoundary::Ignore);
       if (!leaf) {
         return sibling;
       }
@@ -3010,30 +3016,6 @@ nsIContent* EditorBase::FindNode(nsINode* aCurrentNode, bool aGoForward,
 
   return FindNode(candidate, aGoForward, aEditableNode, aFindAnyDataNode,
                   bNoBlockCrossing);
-}
-
-nsIContent* EditorBase::GetRightmostChild(nsINode* aCurrentNode,
-                                          bool bNoBlockCrossing) const {
-  if (NS_WARN_IF(!aCurrentNode)) {
-    return nullptr;
-  }
-  nsIContent* content = aCurrentNode->GetLastChild();
-  if (!content) {
-    return nullptr;
-  }
-  for (;;) {
-    if (bNoBlockCrossing && HTMLEditUtils::IsBlockElement(*content)) {
-      return content;
-    }
-    nsIContent* nextContent = content->GetLastChild();
-    if (!nextContent) {
-      return content;
-    }
-    content = nextContent;
-  }
-
-  MOZ_ASSERT_UNREACHABLE("What part of for(;;) do you not understand?");
-  return nullptr;
 }
 
 nsIContent* EditorBase::GetLeftmostChild(nsINode* aCurrentNode,
