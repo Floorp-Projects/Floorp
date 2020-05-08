@@ -544,6 +544,9 @@ static nsresult JsepCodecDescToAudioCodecConfig(
   (*aConfig)->mDtmfEnabled = desc.mDtmfEnabled;
   (*aConfig)->mDTXEnabled = desc.mDTXEnabled;
   (*aConfig)->mMaxAverageBitrate = desc.mMaxAverageBitrate;
+  (*aConfig)->mFrameSizeMs = desc.mFrameSizeMs;
+  (*aConfig)->mMinFrameSizeMs = desc.mMinFrameSizeMs;
+  (*aConfig)->mMaxFrameSizeMs = desc.mMaxFrameSizeMs;
 
   return NS_OK;
 }

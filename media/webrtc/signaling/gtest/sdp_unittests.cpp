@@ -2684,7 +2684,7 @@ TEST_P(NewSdpTest, CheckFormatParameters) {
   ASSERT_EQ(32000U, opus_parameters->maxplaybackrate);
   ASSERT_EQ(1U, opus_parameters->stereo);
   ASSERT_EQ(1U, opus_parameters->useInBandFec);
-  ASSERT_EQ(0U, opus_parameters->maxaveragebitrate);
+  ASSERT_EQ(0U, opus_parameters->maxAverageBitrate);
   ASSERT_EQ(0U, opus_parameters->useDTX);
   ASSERT_EQ("101", audio_format_params[1].format);
   ASSERT_TRUE(!!audio_format_params[1].parameters);
