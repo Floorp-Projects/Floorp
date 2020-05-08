@@ -88,6 +88,7 @@ def get_chunked_manifests(flavor, subsuite, chunks, mozinfo):
         run in the corresponding chunk.
     """
     mozinfo = dict(mozinfo)
+
     # Compute all tests for the given suite/subsuite.
     tests = get_tests(flavor, subsuite)
     all_manifests = set(t['manifest_relpath'] for t in tests)
@@ -99,13 +100,9 @@ def get_chunked_manifests(flavor, subsuite, chunks, mozinfo):
     active_manifests = set(t['manifest_relpath'] for t in tests)
 
     # Run the chunking algorithm.
-    chunked_manifests = [
-        c[1] for c in chunk_by_runtime(
-            None,
-            chunks,
-            get_runtimes(mozinfo['os'])
-        ).get_chunked_manifests(tests)
-    ]
+    chunker = chunk_by_runtime(None, chunks, get_runtimes(mozinfo['os']))
+    manifests = set(chunker.get_manifest(t) for t in tests)
+    chunked_manifests = [c[1] for c in chunker.get_chunked_manifests(manifests)]
 
     # Add all skipped manifests to the first chunk so they still show up in the
     # logs. They won't impact runtime much.
