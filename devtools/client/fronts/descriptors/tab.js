@@ -26,12 +26,21 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
     this._client = client;
+
+    // The tab descriptor can be configured to create either local tab targets
+    // (eg, regular tab toolbox) or browsing context targets (eg tab remote
+    // debugging).
+    this._localTab = null;
   }
 
   form(json) {
     this.actorID = json.actor;
     this._form = json;
     this.traits = json.traits || {};
+  }
+
+  setLocalTab(localTab) {
+    this._localTab = localTab;
   }
 
   get outerWindowID() {
@@ -56,16 +65,12 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
     return this._form.favicon;
   }
 
-  _createTabTarget(form, filter) {
-    // Instanciate a specialized class for a local tab as it needs some more
-    // client side integration with the Firefox frontend.
-    // But ignore the fake `tab` object we receive, where there is only a
-    // `linkedBrowser` attribute, but this isn't a real <tab> element.
-    // devtools/client/framework/test/browser_toolbox_target.js is passing such
-    // a fake tab.
+  _createTabTarget(form) {
     let front;
-    if (filter?.tab?.tagName == "tab") {
-      front = new LocalTabTargetFront(this._client, null, this, filter.tab);
+    if (this._localTab) {
+      // Instanciate a specialized class for a local tab as it needs some more
+      // client side integration with the Firefox frontend.
+      front = new LocalTabTargetFront(this._client, null, this, this._localTab);
     } else {
       front = new BrowsingContextTargetFront(this._client, null, this);
     }
@@ -117,7 +122,7 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
     }
   }
 
-  async getTarget(filter) {
+  async getTarget() {
     if (this._targetFront && this._targetFront.actorID) {
       return this._targetFront;
     }
@@ -130,7 +135,7 @@ class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
       let targetFront = null;
       try {
         const targetForm = await super.getTarget();
-        targetFront = this._createTabTarget(targetForm, filter);
+        targetFront = this._createTabTarget(targetForm);
         await targetFront.attach();
       } catch (e) {
         console.log(
