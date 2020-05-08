@@ -9,6 +9,8 @@
 
 use super::*;
 
+use alloc::format;
+
 #[cfg(target_pointer_width = "32")]
 #[test]
 fn test_inline_capacity() {
