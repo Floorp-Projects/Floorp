@@ -75,6 +75,24 @@ var OSKeyStore = {
     return !!this._pendingUnlockPromise;
   },
 
+  canReauth() {
+    // The OS auth dialog is not supported on macOS < 10.12
+    // (Darwin 16) due to various issues (bug 1622304 and bug 1622303).
+    // We have no support on linux (bug 1527745.)
+    if (
+      AppConstants.platform == "win" ||
+      AppConstants.isPlatformAndVersionAtLeast("macosx", "16")
+    ) {
+      log.debug(
+        "canReauth, returning true, this._testReauth:",
+        this._testReauth
+      );
+      return true;
+    }
+    log.debug("canReauth, returning false");
+    return false;
+  },
+
   /**
    * If the test pref exists, this method will dispatch a observer message and
    * resolves to simulate successful reauth, or rejects to simulate failed reauth.
@@ -182,11 +200,7 @@ var OSKeyStore = {
         this._testReauth
       ) {
         unlockPromise = this._reauthInTests();
-      } else if (
-        AppConstants.platform == "win" ||
-        (AppConstants.platform == "macosx" &&
-          AppConstants.isPlatformAndVersionAtLeast("macosx", "16"))
-      ) {
+      } else if (this.canReauth()) {
         // The OS auth dialog is not supported on macOS < 10.12
         // (Darwin 16) due to various issues (bug 1622304 and bug 1622303).
 
