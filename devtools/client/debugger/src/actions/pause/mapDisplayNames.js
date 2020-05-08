@@ -8,10 +8,10 @@ import { getFrames, getSymbols, getSource } from "../../selectors";
 
 import { findClosestFunction } from "../../utils/ast";
 
-import type { ThreadContext } from "../../types";
+import type { Frame, ThreadContext } from "../../types";
 import type { ThunkArgs } from "../types";
 
-function mapDisplayName(frame, { getState }) {
+function mapDisplayName(frame: Frame, { getState }) {
   if (frame.isOriginal) {
     return frame;
   }

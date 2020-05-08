@@ -408,7 +408,7 @@ async function toggleEventLogging(logEventBreakpoints: boolean) {
   );
 }
 
-function getAllThreadFronts() {
+function getAllThreadFronts(): ThreadFront[] {
   const fronts = [currentThreadFront()];
   for (const { threadFront } of (Object.values(targets): any)) {
     fronts.push(threadFront);

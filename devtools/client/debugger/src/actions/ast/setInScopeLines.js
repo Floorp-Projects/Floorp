@@ -19,7 +19,9 @@ import type { AstLocation } from "../../workers/parser";
 import type { ThunkArgs } from "../types";
 import type { Context, SourceLocation } from "../../types";
 
-function getOutOfScopeLines(outOfScopeLocations: ?(AstLocation[])) {
+function getOutOfScopeLines(
+  outOfScopeLocations: ?(AstLocation[])
+): ?(AstLocation[]) {
   if (!outOfScopeLocations) {
     return null;
   }

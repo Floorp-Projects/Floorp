@@ -5,6 +5,7 @@
 // @flow
 
 import type { ThunkArgs } from "../types";
+import type { PauseAction } from "../types/PauseAction";
 import type { ThreadContext } from "../../types";
 
 /**
@@ -15,7 +16,7 @@ import type { ThreadContext } from "../../types";
  * @memberof actions/pause
  * @static
  */
-export function breakOnNext(cx: ThreadContext) {
+export function breakOnNext(cx: ThreadContext): PauseAction {
   return async ({ dispatch, getState, client }: ThunkArgs) => {
     await client.breakOnNext(cx.thread);
     return dispatch({ type: "BREAK_ON_NEXT", thread: cx.thread });

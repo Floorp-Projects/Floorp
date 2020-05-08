@@ -37,10 +37,14 @@ import { fulfilled } from "../../utils/async-value";
 import type { ThunkArgs } from "../../actions/types";
 import { loadSourceActorBreakpointColumns } from "../source-actors";
 
+type LocationsList = {
+  number: ?(number[]),
+};
+
 async function mapLocations(
   generatedLocations: SourceLocation[],
   { sourceMaps }: ThunkArgs
-) {
+): Promise<MappedLocation[]> {
   if (generatedLocations.length == 0) {
     return [];
   }
@@ -56,18 +60,24 @@ async function mapLocations(
 }
 
 // Filter out positions, that are not in the original source Id
-function filterBySource(positions: MappedLocation[], sourceId: SourceId) {
+function filterBySource(
+  positions: MappedLocation[],
+  sourceId: SourceId
+): MappedLocation[] {
   if (!isOriginalId(sourceId)) {
     return positions;
   }
   return positions.filter(position => position.location.sourceId == sourceId);
 }
 
-function filterByUniqLocation(positions: MappedLocation[]) {
+function filterByUniqLocation(positions: MappedLocation[]): MappedLocation[] {
   return uniqBy(positions, ({ location }) => makeBreakpointId(location));
 }
 
-function convertToList(results, source: Source) {
+function convertToList(
+  results: LocationsList,
+  source: Source
+): SourceLocation[] {
   const { id, url } = source;
   const positions = [];
 
@@ -112,7 +122,7 @@ async function _setBreakpointPositions(
   sourceId: SourceId,
   line,
   thunkArgs: ThunkArgs
-) {
+): Promise<void> {
   const { client, dispatch, getState, sourceMaps } = thunkArgs;
   let generatedSource = getSource(getState(), sourceId);
   if (!generatedSource) {
@@ -199,7 +209,7 @@ async function _setBreakpointPositions(
   });
 }
 
-function generatedSourceActorKey(state, sourceId: SourceId) {
+function generatedSourceActorKey(state, sourceId: SourceId): string {
   const generatedSource = getSource(
     state,
     isOriginalId(sourceId) ? originalToGeneratedId(sourceId) : sourceId

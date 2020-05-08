@@ -11,7 +11,7 @@ import {
 
 import type { ThunkArgs } from "../../types";
 
-function validateActionContext(getState, action) {
+function validateActionContext(getState, action): void {
   if (action.type == "COMMAND" && action.status == "done") {
     // The thread will have resumed execution since the action was initiated,
     // so just make sure we haven't navigated.
