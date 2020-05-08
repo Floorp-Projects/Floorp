@@ -64,6 +64,8 @@ namespace mozilla {
 using namespace dom;
 using namespace widget;
 
+using ChildBlockBoundary = HTMLEditUtils::ChildBlockBoundary;
+
 const char16_t kNBSP = 160;
 
 // Some utilities to handle overloading of "A" tag for link and named anchor.
@@ -4973,7 +4975,8 @@ nsIContent* HTMLEditor::GetFirstEditableLeaf(nsINode& aNode) const {
 }
 
 nsIContent* HTMLEditor::GetLastEditableLeaf(nsINode& aNode) const {
-  nsCOMPtr<nsIContent> child = GetRightmostChild(&aNode, false);
+  nsIContent* child =
+      HTMLEditUtils::GetLastLeafChild(aNode, ChildBlockBoundary::Ignore);
   while (child && (!EditorUtils::IsEditableContent(*child, EditorType::HTML) ||
                    child->HasChildren())) {
     child = GetPreviousEditableHTMLNode(*child);

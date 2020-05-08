@@ -33,6 +33,8 @@ namespace mozilla {
 
 using namespace dom;
 
+using ChildBlockBoundary = HTMLEditUtils::ChildBlockBoundary;
+
 const char16_t kNBSP = 160;
 
 template WSRunScanner::WSRunScanner(const HTMLEditor* aHTMLEditor,
@@ -1132,9 +1134,8 @@ nsIContent* WSRunScanner::GetPreviousWSNodeInner(nsINode* aStartNode,
   }
   if (HTMLEditUtils::IsContainerNode(*previousContent)) {
     // Else if it's a container, get deep rightmost child
-    nsCOMPtr<nsIContent> child =
-        mHTMLEditor->GetRightmostChild(previousContent);
-    if (child) {
+    if (nsIContent* child = HTMLEditUtils::GetLastLeafChild(
+            *previousContent, ChildBlockBoundary::Ignore)) {
       return child;
     }
   }
@@ -1182,9 +1183,8 @@ nsIContent* WSRunScanner::GetPreviousWSNode(const EditorDOMPoint& aPoint,
   }
   if (HTMLEditUtils::IsContainerNode(*previousContent)) {
     // Else if it's a container, get deep rightmost child
-    nsCOMPtr<nsIContent> child =
-        mHTMLEditor->GetRightmostChild(previousContent);
-    if (child) {
+    if (nsIContent* child = HTMLEditUtils::GetLastLeafChild(
+            *previousContent, ChildBlockBoundary::Ignore)) {
       return child;
     }
   }
