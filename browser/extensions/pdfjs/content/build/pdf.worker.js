@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.5.145';
-const pdfjsBuild = '2711f4bc8';
+const pdfjsVersion = '2.5.153';
+const pdfjsBuild = 'bf2ce760f';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -223,7 +223,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.5.145';
+    const workerVersion = '2.5.153';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -563,7 +563,7 @@ var WorkerMessageHandler = {
           }
 
           handler.send("UnsupportedFeature", {
-            featureId: _util.UNSUPPORTED_FEATURES.unknown
+            featureId: _util.UNSUPPORTED_FEATURES.errorOperatorList
           });
           sink.error(reason);
         });
@@ -974,7 +974,19 @@ const UNSUPPORTED_FEATURES = {
   javaScript: "javaScript",
   smask: "smask",
   shadingPattern: "shadingPattern",
-  font: "font"
+  font: "font",
+  errorTilingPattern: "errorTilingPattern",
+  errorExtGState: "errorExtGState",
+  errorXObject: "errorXObject",
+  errorFontLoadType3: "errorFontLoadType3",
+  errorFontState: "errorFontState",
+  errorFontMissing: "errorFontMissing",
+  errorFontTranslate: "errorFontTranslate",
+  errorColorSpace: "errorColorSpace",
+  errorOperatorList: "errorOperatorList",
+  errorFontToUnicode: "errorFontToUnicode",
+  errorFontLoadNative: "errorFontLoadNative",
+  errorFontGetPath: "errorFontGetPath"
 };
 exports.UNSUPPORTED_FEATURES = UNSUPPORTED_FEATURES;
 const PasswordResponses = {
@@ -1187,7 +1199,7 @@ function arrayByteLength(arr) {
     return arr.length;
   }
 
-  assert(arr.byteLength !== undefined);
+  assert(arr.byteLength !== undefined, "arrayByteLength - invalid argument.");
   return arr.byteLength;
 }
 
@@ -3016,7 +3028,10 @@ class Page {
 
       for (const annotation of annotations) {
         if (isAnnotationRenderable(annotation, intent)) {
-          opListPromises.push(annotation.getOperatorList(partialEvaluator, task, renderInteractiveForms));
+          opListPromises.push(annotation.getOperatorList(partialEvaluator, task, renderInteractiveForms).catch(function (reason) {
+            (0, _util.warn)("getOperatorList - ignoring annotation data during " + `"${task.name}" task: "${reason}".`);
+            return null;
+          }));
         }
       }
 
@@ -3442,7 +3457,6 @@ class PDFDocument {
       catalog,
       linearization
     } = this;
-    (0, _util.assert)(linearization && linearization.pageFirst === pageIndex);
 
     const ref = _primitives.Ref.get(linearization.objectNumberFirst, 0);
 
@@ -4095,7 +4109,10 @@ class Catalog {
             break;
 
           default:
-            (0, _util.assert)(typeof value === "boolean");
+            if (typeof value !== "boolean") {
+              throw new _util.FormatError(`viewerPreferences - expected a boolean value for: ${key}`);
+            }
+
             prefValue = value;
         }
 
@@ -5955,7 +5972,7 @@ class Parser {
       } else if (state === 1) {
         state = ch === I ? 2 : 0;
       } else {
-        (0, _util.assert)(state === 2);
+        (0, _util.assert)(state === 2, "findDefaultInlineStreamEnd - invalid state.");
 
         if (ch === SPACE || ch === LF || ch === CR) {
           maybeEIPos = stream.pos;
@@ -19986,6 +20003,11 @@ var OperatorList = function OperatorListClosure() {
     },
 
     addOpList(opList) {
+      if (!(opList instanceof OperatorList)) {
+        (0, _util.warn)('addOpList - ignoring invalid "opList" parameter.');
+        return;
+      }
+
       Object.assign(this.dependencies, opList.dependencies);
 
       for (var i = 0, ii = opList.length; i < ii; i++) {
@@ -20329,7 +20351,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
                   }
 
                   this.handler.send("UnsupportedFeature", {
-                    featureId: _util.UNSUPPORTED_FEATURES.unknown
+                    featureId: _util.UNSUPPORTED_FEATURES.errorExtGState
                   });
                   (0, _util.warn)(`hasBlendModes - ignoring ExtGState: "${ex}".`);
                   continue;
@@ -20397,7 +20419,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
                 }
 
                 this.handler.send("UnsupportedFeature", {
-                  featureId: _util.UNSUPPORTED_FEATURES.unknown
+                  featureId: _util.UNSUPPORTED_FEATURES.errorXObject
                 });
                 (0, _util.warn)(`hasBlendModes - ignoring XObject: "${ex}".`);
                 continue;
@@ -20710,7 +20732,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
         if (this.options.ignoreErrors) {
           this.handler.send("UnsupportedFeature", {
-            featureId: _util.UNSUPPORTED_FEATURES.unknown
+            featureId: _util.UNSUPPORTED_FEATURES.errorTilingPattern
           });
           (0, _util.warn)(`handleTilingType - ignoring pattern: "${reason}".`);
           return;
@@ -20737,7 +20759,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           return translated;
         }).catch(reason => {
           this.handler.send("UnsupportedFeature", {
-            featureId: _util.UNSUPPORTED_FEATURES.font
+            featureId: _util.UNSUPPORTED_FEATURES.errorFontLoadType3
           });
           return new TranslatedFont({
             loadedName: "g_font_error",
@@ -20777,7 +20799,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
       if (this.options.ignoreErrors) {
         this.handler.send("UnsupportedFeature", {
-          featureId: _util.UNSUPPORTED_FEATURES.font
+          featureId: _util.UNSUPPORTED_FEATURES.errorFontState
         });
         (0, _util.warn)(`ensureStateFont: "${reason}".`);
         return;
@@ -20906,7 +20928,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         }
 
         this.handler.send("UnsupportedFeature", {
-          featureId: _util.UNSUPPORTED_FEATURES.font
+          featureId: _util.UNSUPPORTED_FEATURES.errorFontMissing
         });
         (0, _util.warn)(`${partialMsg} -- attempting to fallback to a default font.`);
         fontRef = PartialEvaluator.getFallbackFontDict();
@@ -21001,7 +21023,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         }));
       }).catch(reason => {
         this.handler.send("UnsupportedFeature", {
-          featureId: _util.UNSUPPORTED_FEATURES.font
+          featureId: _util.UNSUPPORTED_FEATURES.errorFontTranslate
         });
 
         try {
@@ -21060,7 +21082,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
         if (this.options.ignoreErrors) {
           this.handler.send("UnsupportedFeature", {
-            featureId: _util.UNSUPPORTED_FEATURES.unknown
+            featureId: _util.UNSUPPORTED_FEATURES.errorColorSpace
           });
           (0, _util.warn)(`parseColorSpace - ignoring ColorSpace: "${reason}".`);
           return null;
@@ -21220,7 +21242,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
                 if (self.options.ignoreErrors) {
                   self.handler.send("UnsupportedFeature", {
-                    featureId: _util.UNSUPPORTED_FEATURES.unknown
+                    featureId: _util.UNSUPPORTED_FEATURES.errorXObject
                   });
                   (0, _util.warn)(`getOperatorList - ignoring XObject: "${reason}".`);
                   return;
@@ -21507,7 +21529,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
         if (this.options.ignoreErrors) {
           this.handler.send("UnsupportedFeature", {
-            featureId: _util.UNSUPPORTED_FEATURES.unknown
+            featureId: _util.UNSUPPORTED_FEATURES.errorOperatorList
           });
           (0, _util.warn)(`getOperatorList - ignoring errors during "${task.name}" ` + `task: "${reason}".`);
           closePendingRestoreOPS();
@@ -22424,7 +22446,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
           if (this.options.ignoreErrors) {
             this.handler.send("UnsupportedFeature", {
-              featureId: _util.UNSUPPORTED_FEATURES.font
+              featureId: _util.UNSUPPORTED_FEATURES.errorFontToUnicode
             });
             (0, _util.warn)(`readToUnicode - ignoring ToUnicode data: "${reason}".`);
             return null;
@@ -45828,7 +45850,7 @@ class PDFWorkerStream {
   }
 
   getFullReader() {
-    (0, _util.assert)(!this._fullRequestReader);
+    (0, _util.assert)(!this._fullRequestReader, "PDFWorkerStream.getFullReader can only be called once.");
     this._fullRequestReader = new PDFWorkerStreamReader(this._msgHandler);
     return this._fullRequestReader;
   }
