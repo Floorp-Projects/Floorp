@@ -147,7 +147,8 @@ nsEventStatus InputQueue::ReceiveTouchInput(
       return nsEventStatus_eIgnore;
     }
 
-    INPQ_LOG("received new event in block %p\n", block);
+    INPQ_LOG("received new touch event (type=%d) in block %p\n", aEvent.mType,
+             block);
   }
 
   if (aOutInputBlockId) {
@@ -272,7 +273,7 @@ nsEventStatus InputQueue::ReceiveScrollWheelInput(
     CancelAnimationsForNewBlock(block, ExcludeWheel);
     MaybeRequestContentResponse(aTarget, block);
   } else {
-    INPQ_LOG("received new event in block %p\n", block);
+    INPQ_LOG("received new wheel event in block %p\n", block);
   }
 
   if (aOutInputBlockId) {
@@ -314,7 +315,7 @@ nsEventStatus InputQueue::ReceiveKeyboardInput(
 
     mActiveKeyboardBlock = block;
   } else {
-    INPQ_LOG("received new event in block %p\n", block);
+    INPQ_LOG("received new keyboard event in block %p\n", block);
   }
 
   if (aOutInputBlockId) {
@@ -397,7 +398,8 @@ nsEventStatus InputQueue::ReceivePanGestureInput(
     CancelAnimationsForNewBlock(block);
     MaybeRequestContentResponse(aTarget, block);
   } else {
-    INPQ_LOG("received new event in block %p\n", block);
+    INPQ_LOG("received new pan event (type=%d) in block %p\n", aEvent.mType,
+             block);
   }
 
   if (aOutInputBlockId) {
@@ -445,7 +447,8 @@ nsEventStatus InputQueue::ReceivePinchGestureInput(
     CancelAnimationsForNewBlock(block);
     MaybeRequestContentResponse(aTarget, block);
   } else {
-    INPQ_LOG("received new event in block %p\n", block);
+    INPQ_LOG("received new pinch event (type=%d) in block %p\n", aEvent.mType,
+             block);
   }
 
   if (aOutInputBlockId) {
