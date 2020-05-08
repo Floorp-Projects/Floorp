@@ -11,7 +11,7 @@ tests.set(
       description: "var wm = new WeakMap(); wm[k1] = k2; wm[k2] = k3; ...",
 
       defaultGarbagePerFrame: "1K",
-      defaultGarbageTotal: "1K",
+      defaultGarbagePiles: "1K",
 
       load: N => {
         garbage = new Array(N);

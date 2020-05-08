@@ -19,7 +19,7 @@ tests.set(
       },
 
       defaultGarbagePerFrame: "100K",
-      defaultGarbageTotal: "8",
+      defaultGarbagePiles: "8",
 
       makeGarbage: N => {
         var a = [];
