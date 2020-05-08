@@ -111,6 +111,8 @@ class nsWindow final : public nsWindowBase {
 
   friend class nsWindowGfx;
 
+  void SendAnAPZEvent(mozilla::InputData& aEvent);
+
   // nsWindowBase
   virtual void InitEvent(mozilla::WidgetGUIEvent& aEvent,
                          LayoutDeviceIntPoint* aPoint = nullptr) override;
