@@ -360,8 +360,9 @@ impl FunctionScopeData {
 
 #[derive(Debug)]
 pub enum ScopeData {
-    /// No scope should be generated. This is used, for example, when we see a
-    /// function, and set aside a ScopeData for its lexical bindings, but upon
+    /// No scope should be generated, but this scope becomes an alias to
+    /// enclosing scope. This is used, for example, when we see a function,
+    /// and set aside a ScopeData for its lexical bindings, but upon
     /// reaching the end of the function body, we find that there were no
     /// lexical bindings and the spec actually says not to generate a Lexical
     /// Environment when this function is called.
@@ -370,8 +371,8 @@ pub enum ScopeData {
     /// it turns out it doesn't have any bindings in it and we can optimize it
     /// away.
     ///
-    /// FIXME: "previous" doesn't work in some case. embed scope index instead.
-    AliasPrevious,
+    /// NOTE: Alias can be chained.
+    Alias(ScopeIndex),
 
     Global(GlobalScopeData),
     Var(VarScopeData),
@@ -515,7 +516,7 @@ impl ScopeDataMap {
 
     pub fn is_alias(&mut self, index: ScopeIndex) -> bool {
         match self.scopes.get(index) {
-            ScopeData::AliasPrevious => true,
+            ScopeData::Alias(_) => true,
             _ => false,
         }
     }

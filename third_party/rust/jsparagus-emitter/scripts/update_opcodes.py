@@ -48,7 +48,6 @@ input_paths = ensure_input_files([
     (public_dir, 'Symbol.h'),
     (vm_dir, 'AsyncFunctionResolveKind.h'),
     (vm_dir, 'BytecodeFormatFlags.h'),
-    (vm_dir, 'CheckIsCallableKind.h'),
     (vm_dir, 'CheckIsObjectKind.h'),
     (vm_dir, 'FunctionFlags.h'),
     (vm_dir, 'FunctionPrefixKind.h'),
@@ -333,7 +332,6 @@ def extract_types(paths):
         }
 
     extract_enum(types, paths, 'AsyncFunctionResolveKind')
-    extract_enum(types, paths, 'CheckIsCallableKind')
     extract_enum(types, paths, 'CheckIsObjectKind')
     extract_enum(types, paths, 'FunctionPrefixKind')
     extract_enum(types, paths, 'GeneratorResumeKind')
@@ -417,7 +415,6 @@ def parse_operands(opcode):
 
     copied_types = [
         'AsyncFunctionResolveKind',
-        'CheckIsCallableKind',
         'CheckIsObjectKind',
         'FunctionPrefixKind',
         'GeneratorResumeKind',

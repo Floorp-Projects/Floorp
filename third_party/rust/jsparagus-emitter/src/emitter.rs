@@ -35,11 +35,6 @@ pub enum AsyncFunctionResolveKind {
 }
 
 #[derive(Debug)]
-pub enum CheckIsCallableKind {
-    IteratorReturn = 0,
-}
-
-#[derive(Debug)]
 pub enum CheckIsObjectKind {
     IteratorNext = 0,
     IteratorReturn = 1,
@@ -724,11 +719,6 @@ impl InstructionWriter {
 
     pub fn check_is_obj(&mut self, kind: CheckIsObjectKind) {
         self.emit_op(Opcode::CheckIsObj);
-        self.write_u8(kind as u8);
-    }
-
-    pub fn check_is_callable(&mut self, kind: CheckIsCallableKind) {
-        self.emit_op(Opcode::CheckIsCallable);
         self.write_u8(kind as u8);
     }
 

@@ -12,7 +12,9 @@
 
 #include <stdint.h>  // uint8_t, uint16_t
 
-class JSAtom;
+#include "jstypes.h"  // JS_PUBLIC_API
+
+class JS_PUBLIC_API JSAtom;
 
 namespace js {
 
@@ -211,8 +213,8 @@ class FunctionFlags {
   }
   bool isLambda() const { return hasFlags(LAMBDA); }
 
-  bool isNamedLambda(JSAtom* atom) const {
-    return isLambda() && atom && !hasInferredName() && !hasGuessedAtom();
+  bool isNamedLambda(bool hasName) const {
+    return hasName && isLambda() && !hasInferredName() && !hasGuessedAtom();
   }
 
   // These methods determine which of the u.scripted.s union arms are active.
