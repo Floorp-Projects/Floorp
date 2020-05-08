@@ -98,7 +98,7 @@ class WebrtcVideoConduit
    * feed in received RTP Frames to the VideoEngine for decoding
    */
   MediaConduitErrorCode ReceivedRTPPacket(const void* data, int len,
-                                          uint32_t ssrc) override;
+                                          webrtc::RTPHeader& header) override;
 
   /**
    * APIs used by the registered external transport to this Conduit to

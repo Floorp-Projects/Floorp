@@ -666,9 +666,8 @@ MediaConduitErrorCode WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
 }
 
 // Transport Layer Callbacks
-MediaConduitErrorCode WebrtcAudioConduit::ReceivedRTPPacket(const void* data,
-                                                            int len,
-                                                            uint32_t ssrc) {
+MediaConduitErrorCode WebrtcAudioConduit::ReceivedRTPPacket(
+    const void* data, int len, webrtc::RTPHeader& header) {
   ASSERT_ON_THREAD(mStsThread);
 
   // Handle the unknown ssrc (and ssrc-not-signaled case).
@@ -685,7 +684,7 @@ MediaConduitErrorCode WebrtcAudioConduit::ReceivedRTPPacket(const void* data,
     return kMediaConduitNoError;
   }
 
-  if (mRecvSSRC != ssrc) {
+  if (mRecvSSRC != header.ssrc) {
     // a new switch needs to be done
     // any queued packets are from a previous switch that hasn't completed
     // yet; drop them and only process the latest SSRC
@@ -693,10 +692,10 @@ MediaConduitErrorCode WebrtcAudioConduit::ReceivedRTPPacket(const void* data,
     mRtpPacketQueue.Enqueue(data, len);
 
     CSFLogDebug(LOGTAG, "%s: switching from SSRC %u to %u", __FUNCTION__,
-                static_cast<uint32_t>(mRecvSSRC), ssrc);
+                static_cast<uint32_t>(mRecvSSRC), header.ssrc);
 
     // we "switch" here immediately, but buffer until the queue is released
-    mRecvSSRC = ssrc;
+    mRecvSSRC = header.ssrc;
 
     // Ensure lamba captures refs
     RefPtr<WebrtcAudioConduit> self = this;
@@ -705,7 +704,7 @@ MediaConduitErrorCode WebrtcAudioConduit::ReceivedRTPPacket(const void* data,
       return kMediaConduitRTPProcessingFailed;
     }
     NS_DispatchToMainThread(
-        media::NewRunnableFrom([self, thread, ssrc]() mutable {
+        media::NewRunnableFrom([self, thread, ssrc = header.ssrc]() mutable {
           self->SetRemoteSSRC(ssrc, 0);
           // We want to unblock the queued packets on the original thread
           thread->Dispatch(media::NewRunnableFrom([self, ssrc]() mutable {
