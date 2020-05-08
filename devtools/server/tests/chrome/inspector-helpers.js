@@ -1,6 +1,6 @@
 /* exported attachURL, promiseDone,
-   promiseOnce,
-   addTest, addAsyncTest,
+   promiseOnce, isNewRoot,
+   waitForMutation, addTest, addAsyncTest,
    runNextTest, _documentWalker */
 "use strict";
 
@@ -104,6 +104,32 @@ function promiseDone(currentPromise) {
       dump(err.stack);
     }
     SimpleTest.finish();
+  });
+}
+
+// Mutation list testing
+
+function isNewRoot(change) {
+  return change.type === "newRoot";
+}
+
+// Load mutations aren't predictable, so keep accumulating mutations until
+// the one we're looking for shows up.
+function waitForMutation(walker, test, mutations = []) {
+  return new Promise(resolve => {
+    for (const change of mutations) {
+      if (test(change)) {
+        resolve(mutations);
+      }
+    }
+
+    walker.once("mutations", newMutations => {
+      waitForMutation(walker, test, mutations.concat(newMutations)).then(
+        finalMutations => {
+          resolve(finalMutations);
+        }
+      );
+    });
   });
 }
 
