@@ -207,7 +207,7 @@ class ContentPage {
     );
 
     chromeShell.createAboutBlankContentViewer(system, system);
-    chromeShell.useGlobalHistory = false;
+    this.windowlessBrowser.browsingContext.useGlobalHistory = false;
     let loadURIOptions = {
       triggeringPrincipal: system,
     };

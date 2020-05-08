@@ -243,7 +243,8 @@ static uint32_t AvailableFeatures() {
 // Default features common to all contexts (even if not available).
 static uint32_t DefaultFeatures() {
   return ProfilerFeature::Java | ProfilerFeature::JS | ProfilerFeature::Leaf |
-         ProfilerFeature::StackWalk | ProfilerFeature::Threads;
+         ProfilerFeature::StackWalk | ProfilerFeature::Threads |
+         ProfilerFeature::Screenshots;
 }
 
 // Extra default features when MOZ_PROFILER_STARTUP is set (even if not
@@ -959,6 +960,14 @@ class ActivePS {
   }
 
   PS_GET(const Vector<std::string>&, Filters)
+
+  // Not using PS_GET, because only the "Controlled" interface of
+  // `mProfileBufferChunkManager` should be exposed here.
+  static ProfileBufferControlledChunkManager& ControlledChunkManager(
+      PSLockRef) {
+    MOZ_ASSERT(sInstance);
+    return sInstance->mProfileBufferChunkManager;
+  }
 
   static void FulfillChunkRequests(PSLockRef) {
     MOZ_ASSERT(sInstance);
@@ -3775,6 +3784,8 @@ void profiler_shutdown(IsFastShutdown aIsFastShutdown) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
+  ProfilerParent::ProfilerWillStopIfStarted();
+
   // If the profiler is active we must get a handle to the SamplerThread before
   // ActivePS is destroyed, in order to delete it.
   SamplerThread* samplerThread = nullptr;
@@ -3916,6 +3927,15 @@ void profiler_get_start_params(int* aCapacity, Maybe<double>* aDuration,
   for (uint32_t i = 0; i < filters.length(); ++i) {
     (*aFilters)[i] = filters[i].c_str();
   }
+}
+
+ProfileBufferControlledChunkManager* profiler_get_controlled_chunk_manager() {
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+  PSAutoLock lock(gPSMutex);
+  if (NS_WARN_IF(!ActivePS::Exists(lock))) {
+    return nullptr;
+  }
+  return &ActivePS::ControlledChunkManager(lock);
 }
 
 namespace mozilla {
@@ -4275,6 +4295,8 @@ void profiler_start(PowerOfTwo32 aCapacity, double aInterval,
                     const Maybe<double>& aDuration) {
   LOG("profiler_start");
 
+  ProfilerParent::ProfilerWillStopIfStarted();
+
   SamplerThread* samplerThread = nullptr;
   {
     PSAutoLock lock(gPSMutex);
@@ -4316,6 +4338,8 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
                              uint64_t aActiveBrowsingContextID,
                              const Maybe<double>& aDuration) {
   LOG("profiler_ensure_started");
+
+  ProfilerParent::ProfilerWillStopIfStarted();
 
   bool startedProfiler = false;
   SamplerThread* samplerThread = nullptr;
@@ -4425,6 +4449,8 @@ void profiler_stop() {
   LOG("profiler_stop");
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  ProfilerParent::ProfilerWillStopIfStarted();
 
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
   // Remove the hooks early, as native allocations (if they are on) can be

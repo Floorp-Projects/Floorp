@@ -108,12 +108,7 @@ class DeviceModal extends PureComponent {
   }
 
   onDeviceModalSubmit() {
-    const {
-      devices,
-      onDeviceListUpdate,
-      onUpdateDeviceDisplayed,
-      onUpdateDeviceModal,
-    } = this.props;
+    const { devices, onDeviceListUpdate, onUpdateDeviceDisplayed } = this.props;
 
     const preferredDevices = {
       added: new Set(),
@@ -137,7 +132,6 @@ class DeviceModal extends PureComponent {
     }
 
     onDeviceListUpdate(preferredDevices);
-    onUpdateDeviceModal(false);
   }
 
   onEditCustomDevice(newDevice) {

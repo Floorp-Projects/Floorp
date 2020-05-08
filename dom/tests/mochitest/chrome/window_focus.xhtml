@@ -813,39 +813,6 @@ function startTest()
   expectFocusShift(() => synthesizeKey("KEY_Tab", {shiftKey: true}),
                    null, input1, true, "shift+tab on input with tabindex set");
 
-  // ---- test for bug 618907 which ensures that canceling the mousedown event still focuses the
-  //      right frame
-
-  var childContentFrame = document.getElementById("ifa")
-  childContentFrame.style.MozUserFocus = "";
-
-  var frab = childContentFrame.contentDocument.getElementById("fra-b");
-  var mouseDownListener = event => event.preventDefault();
-  frab.addEventListener("mousedown", mouseDownListener, false);
-
-  var childElementToFocus = childContentFrame.contentDocument.getElementById("fra");
-  gLastFocus = childElementToFocus;
-  gLastFocusWindow = childContentFrame.contentWindow;
-  gLastFocus.focus();
-  gEvents = "";
-
-  setFocusTo("t1", window);
-
-  gLastFocusMethod = -1;
-  expectFocusShift(() => synthesizeMouse(frab, 5, 5, { }, childContentFrame.contentWindow),
-                   null, childElementToFocus, true,
-                   "mousedown event canceled - chrome to content");
-
-  frab.removeEventListener("mousedown", mouseDownListener, false);
-
-  var t5 = getById("t5");
-  t5.addEventListener("mousedown", mouseDownListener, false);
-  synthesizeMouse(t5, 10, 10, { })
-  t5.removeEventListener("mousedown", mouseDownListener, false);
-  is(fm.focusedElement, childElementToFocus,
-     "mousedown event cancelled - content to chrome - element");
-  is(fm.focusedWindow, childContentFrame.contentWindow, "mousedown event cancelled - content to chrome - window");
-
   // ---- test to check that refocusing an element during a blur event doesn't succeed
 
   var t1 = getById("t1");

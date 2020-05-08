@@ -7,7 +7,6 @@
 include "mozilla/dom/TabMessageUtils.h";
 
 include protocol PBrowser;
-include PBrowserOrId;
 
 using UIStateChangeType from "nsPIDOMWindow.h";
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
@@ -19,16 +18,13 @@ namespace dom {
 // receives window.open().
 struct PopupIPCTabContext
 {
-  PBrowserOrId opener;
+  PBrowser opener;
   uint64_t chromeOuterWindowID;
 };
 
 // An IPCTabContext which corresponds to an app, browser, or normal frame.
 struct FrameIPCTabContext
 {
-  // The originAttributes dictionary.
-  OriginAttributes originAttributes;
-
   uint64_t chromeOuterWindowID;
 
   // The requested presentation URL.
@@ -48,13 +44,6 @@ struct JSPluginFrameIPCTabContext
   uint32_t jsPluginId;
 };
 
-// XXXcatalinb: This is only used by ServiceWorkerClients::OpenWindow.
-// Because service workers don't have an associated BrowserChild
-// we can't satisfy the security constraints on b2g. As such, the parent
-// process will accept this tab context only on desktop.
-struct UnsafeIPCTabContext
-{ };
-
 // IPCTabContext is an analog to mozilla::dom::TabContext.  Both specify an
 // iframe/PBrowser's own and containing app-ids and tell you whether the
 // iframe/PBrowser is a browser frame.  But only IPCTabContext is allowed to
@@ -67,7 +56,6 @@ union IPCTabContext
   PopupIPCTabContext;
   FrameIPCTabContext;
   JSPluginFrameIPCTabContext;
-  UnsafeIPCTabContext;
 };
 
 }

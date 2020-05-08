@@ -115,6 +115,7 @@ class WindowProxyHolder;
   FIELD(AllowContentRetargeting, bool)                                       \
   FIELD(AllowContentRetargetingOnChildren, bool)                             \
   FIELD(ForceEnableTrackingProtection, bool)                                 \
+  FIELD(UseGlobalHistory, bool)                                              \
   /* These field are used to store the states of autoplay media request on   \
    * GeckoView only, and it would only be modified on the top level browsing \
    * context. */                                                             \
@@ -219,7 +220,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool IsDiscarded() const { return mIsDiscarded; }
 
   bool Windowless() const { return mWindowless; }
-  void SetWindowless();
 
   // Get the DocShell for this BrowsingContext if it is in-process, or
   // null if it's not.
@@ -384,6 +384,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   float FullZoom() const { return GetFullZoom(); }
   float TextZoom() const { return GetTextZoom(); }
+
+  bool UseGlobalHistory() const { return GetUseGlobalHistory(); }
 
   bool IsLoading();
 
@@ -616,6 +618,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   void AssertOriginAttributesMatchPrivateBrowsing();
 
+  // Assert that the BrowsingContext's LoadContext flags appear coherent
+  // relative to related BrowsingContexts.
+  void AssertCoherentLoadContext();
+
   friend class ::nsOuterWindowProxy;
   friend class ::nsGlobalWindowOuter;
   friend class WindowContext;
@@ -730,6 +736,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_DefaultLoadFlags>,
               const uint32_t& aDefaultLoadFlags, ContentParent* aSource);
   void DidSet(FieldIndex<IDX_DefaultLoadFlags>);
+
+  bool CanSet(FieldIndex<IDX_UseGlobalHistory>, const bool& aUseGlobalHistory,
+              ContentParent* aSource);
 
   template <size_t I, typename T>
   bool CanSet(FieldIndex<I>, const T&, ContentParent*) {

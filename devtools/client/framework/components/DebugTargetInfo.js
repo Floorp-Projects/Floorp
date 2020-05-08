@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const Services = require("Services");
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
@@ -33,6 +34,16 @@ class DebugTargetInfo extends PureComponent {
       L10N: PropTypes.object.isRequired,
       toolbox: PropTypes.object.isRequired,
     };
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.state = { urlValue: props.toolbox.target.url };
+
+    this.onChange = this.onChange.bind(this);
+    this.onFocus = this.onFocus.bind(this);
+    this.onSubmit = this.onSubmit.bind(this);
   }
 
   componentDidMount() {
@@ -136,6 +147,36 @@ class DebugTargetInfo extends PureComponent {
     }
   }
 
+  onChange({ target }) {
+    this.setState({ urlValue: target.value });
+  }
+
+  onFocus({ target }) {
+    target.select();
+  }
+
+  onSubmit(event) {
+    event.preventDefault();
+    let url = this.state.urlValue;
+
+    if (!url || !url.length) {
+      return;
+    }
+
+    try {
+      // Get the URL from the fixup service:
+      const flags = Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS;
+      const uriInfo = Services.uriFixup.getFixupURIInfo(url, flags);
+      url = uriInfo.fixedURI.spec;
+    } catch (ex) {
+      // The getFixupURIInfo service will throw an error if a malformed URI is
+      // produced from the input.
+      console.error(ex);
+    }
+
+    this.props.toolbox.target.navigateTo({ url });
+  }
+
   shallRenderConnection() {
     const { connectionType } = this.props.debugTargetData;
     const renderableTypes = [CONNECTION_TYPES.USB, CONNECTION_TYPES.NETWORK];
@@ -176,21 +217,50 @@ class DebugTargetInfo extends PureComponent {
     );
   }
 
-  renderTarget() {
+  renderTargetTitle() {
     const title = this.props.toolbox.target.name;
-    const url = this.props.toolbox.target.url;
 
     const { image, l10nId } = this.getAssetsForDebugTargetType();
 
     return dom.span(
       {
-        className: "iconized-label",
+        className: "iconized-label debug-target-title",
       },
       dom.img({ src: image, alt: this.props.L10N.getStr(l10nId) }),
       title
         ? dom.b({ className: "devtools-ellipsis-text qa-target-title" }, title)
-        : null,
-      dom.span({ className: "devtools-ellipsis-text" }, url)
+        : null
+    );
+  }
+
+  renderTargetURI() {
+    const url = this.props.toolbox.target.url;
+    const { targetType } = this.props.debugTargetData;
+    const isURLEditable = targetType === DEBUG_TARGET_TYPES.TAB;
+
+    return dom.span(
+      {
+        key: url,
+        className: "debug-target-url",
+      },
+      isURLEditable
+        ? this.renderTargetInput(url)
+        : dom.span({ className: "devtools-ellipsis-text" }, url)
+    );
+  }
+
+  renderTargetInput(url) {
+    return dom.form(
+      {
+        className: "debug-target-url-form",
+        onSubmit: this.onSubmit,
+      },
+      dom.input({
+        className: "devtools-textinput debug-target-url-input",
+        onChange: this.onChange,
+        onFocus: this.onFocus,
+        defaultValue: url,
+      })
     );
   }
 
@@ -201,7 +271,8 @@ class DebugTargetInfo extends PureComponent {
       },
       this.shallRenderConnection() ? this.renderConnection() : null,
       this.renderRuntime(),
-      this.renderTarget()
+      this.renderTargetTitle(),
+      this.renderTargetURI()
     );
   }
 }

@@ -14,7 +14,6 @@
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/ProcessActor.h"
 #include "mozilla/dom/JSProcessActorChild.h"
-#include "mozilla/dom/PBrowserOrId.h"
 #include "mozilla/dom/PContentChild.h"
 #include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/StaticPtr.h"
@@ -27,8 +26,6 @@
 #include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
 #include "nsRefPtrHashtable.h"
-
-#include "nsIWindowProvider.h"
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 #  include "nsIFile.h"
@@ -76,13 +73,11 @@ class GetFilesHelperChild;
 class TabContext;
 enum class MediaControlKeysEvent : uint32_t;
 
-class ContentChild final
-    : public PContentChild,
-      public nsIContentChild,
-      public nsIWindowProvider,
-      public mozilla::ipc::IShmemAllocator,
-      public mozilla::ipc::ChildToParentStreamActorManager,
-      public ProcessActor {
+class ContentChild final : public PContentChild,
+                           public nsIContentChild,
+                           public mozilla::ipc::IShmemAllocator,
+                           public mozilla::ipc::ChildToParentStreamActorManager,
+                           public ProcessActor {
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
   typedef mozilla::ipc::FileDescriptor FileDescriptor;
   typedef mozilla::ipc::PFileDescriptorSetChild PFileDescriptorSetChild;
@@ -91,7 +86,6 @@ class ContentChild final
 
  public:
   NS_DECL_NSICONTENTCHILD
-  NS_DECL_NSIWINDOWPROVIDER
 
   ContentChild();
   virtual ~ContentChild();
@@ -506,8 +500,6 @@ class ContentChild final
   FORWARD_SHMEM_ALLOCATOR_TO(PContentChild)
 
   void GetAvailableDictionaries(nsTArray<nsString>& aDictionaries);
-
-  PBrowserOrId GetBrowserOrId(BrowserChild* aBrowserChild);
 
   PWebrtcGlobalChild* AllocPWebrtcGlobalChild();
 

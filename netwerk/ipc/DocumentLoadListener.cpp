@@ -52,6 +52,17 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace net {
 
+static void SetNeedToAddURIVisit(nsIChannel* aChannel,
+                                 bool aNeedToAddURIVisit) {
+  nsCOMPtr<nsIWritablePropertyBag2> props(do_QueryInterface(aChannel));
+  if (!props) {
+    return;
+  }
+
+  props->SetPropertyAsBool(NS_LITERAL_STRING("docshell.needToAddURIVisit"),
+                           aNeedToAddURIVisit);
+}
+
 /**
  * An extension to nsDocumentOpenInfo that we run in the parent process, so
  * that we can make the decision to retarget to content handlers or the external
@@ -262,12 +273,40 @@ DocumentLoadListener::~DocumentLoadListener() {
   LOG(("DocumentLoadListener dtor [this=%p]", this));
 }
 
-net::LastVisitInfo DocumentLoadListener::LastVisitInfo() const {
+void DocumentLoadListener::AddURIVisit(nsIChannel* aChannel,
+                                       uint32_t aLoadFlags) {
+  if (mLoadStateLoadType == LOAD_ERROR_PAGE ||
+      mLoadStateLoadType == LOAD_BYPASS_HISTORY) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
+
   nsCOMPtr<nsIURI> previousURI;
   uint32_t previousFlags = 0;
-  nsDocShell::ExtractLastVisit(mChannel, getter_AddRefs(previousURI),
-                               &previousFlags);
-  return net::LastVisitInfo{previousURI, previousFlags};
+  if (mLoadStateLoadType & nsIDocShell::LOAD_CMD_RELOAD) {
+    previousURI = uri;
+  } else {
+    nsDocShell::ExtractLastVisit(aChannel, getter_AddRefs(previousURI),
+                                 &previousFlags);
+  }
+
+  // Get the HTTP response code, if available.
+  uint32_t responseStatus = 0;
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  if (httpChannel) {
+    Unused << httpChannel->GetResponseStatus(&responseStatus);
+  }
+
+  RefPtr<CanonicalBrowsingContext> browsingContext =
+      mParentChannelListener->GetBrowsingContext();
+  nsCOMPtr<nsIWidget> widget =
+      browsingContext->GetParentProcessWidgetContaining();
+
+  nsDocShell::InternalAddURIVisit(uri, previousURI, previousFlags,
+                                  responseStatus, browsingContext, widget,
+                                  mLoadStateLoadType);
 }
 
 already_AddRefed<LoadInfo> DocumentLoadListener::CreateLoadInfo(
@@ -1135,12 +1174,12 @@ void DocumentLoadListener::SerializeRedirectData(
     aArgs.contentDispositionFilename() = Some(contentDispositionFilenameTemp);
   }
 
+  SetNeedToAddURIVisit(mChannel, false);
+
   aArgs.newLoadFlags() = aLoadFlags;
   aArgs.redirectFlags() = aRedirectFlags;
-  aArgs.redirects() = mRedirects.Clone();
   aArgs.redirectIdentifier() = mCrossProcessRedirectIdentifier;
   aArgs.properties() = do_QueryObject(mChannel.get());
-  aArgs.lastVisitInfo() = LastVisitInfo();
   aArgs.srcdocData() = mSrcdocData;
   aArgs.baseUri() = mBaseURI;
   aArgs.loadStateLoadFlags() = mLoadStateLoadFlags;
@@ -1376,7 +1415,20 @@ DocumentLoadListener::RedirectToRealChannel(
     uint32_t aRedirectFlags, uint32_t aLoadFlags,
     const Maybe<uint64_t>& aDestinationProcess,
     nsTArray<ParentEndpoint>&& aStreamFilterEndpoints) {
-  LOG(("DocumentLoadListener RedirectToRealChannel [this=%p]", this));
+  LOG(
+      ("DocumentLoadListener RedirectToRealChannel [this=%p] "
+       "aRedirectFlags=%" PRIx32 ", aLoadFlags=%" PRIx32,
+       this, aRedirectFlags, aLoadFlags));
+
+  // TODO(djg): Add the last URI visit to history if success. Is there a better
+  // place to handle this? Need access to the updated aLoadFlags.
+  nsresult status = NS_OK;
+  mChannel->GetStatus(&status);
+  bool updateGHistory =
+      nsDocShell::ShouldUpdateGlobalHistory(mLoadStateLoadType);
+  if (NS_SUCCEEDED(status) && updateGHistory && !net::ChannelIsPost(mChannel)) {
+    AddURIVisit(mChannel, aLoadFlags);
+  }
 
   if (aDestinationProcess || OtherPid()) {
     // Register the new channel and obtain id for it
@@ -1486,7 +1538,7 @@ void DocumentLoadListener::TriggerRedirectToRealChannel(
   // If there were redirect(s), then we want this switch to be recorded as a
   // real one, since we have a new URI.
   uint32_t redirectFlags = 0;
-  if (mRedirects.IsEmpty()) {
+  if (!mHaveVisibleRedirect) {
     redirectFlags = nsIChannelEventSink::REDIRECT_INTERNAL;
   }
 
@@ -1767,20 +1819,21 @@ DocumentLoadListener::AsyncOnChannelRedirect(
          this));
     aCallback->OnRedirectVerifyCallback(NS_OK);
     return NS_OK;
-  } else {
+  }
+
+  if (!net::ChannelIsPost(aOldChannel)) {
+    AddURIVisit(aOldChannel, 0);
+
     nsCOMPtr<nsIURI> oldURI;
     aOldChannel->GetURI(getter_AddRefs(oldURI));
-    uint32_t responseStatus = 0;
-    if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aOldChannel)) {
-      Unused << httpChannel->GetResponseStatus(&responseStatus);
-    }
-    mRedirects.AppendElement(DocumentChannelRedirect{
-        oldURI, aFlags, responseStatus, net::ChannelIsPost(aOldChannel)});
+    nsDocShell::SaveLastVisit(aNewChannel, oldURI, aFlags);
   }
+  mHaveVisibleRedirect |= true;
+
   LOG(
       ("DocumentLoadListener AsyncOnChannelRedirect [this=%p] "
-       "mRedirects=%" PRIx32,
-       this, uint32_t(mRedirects.Length())));
+       "mHaveVisibleRedirect=%c",
+       this, mHaveVisibleRedirect ? 'T' : 'F'));
 
   // If this is a cross-origin redirect, then we should no longer allow
   // mixed content. The destination docshell checks this in its redirect
@@ -1809,28 +1862,6 @@ DocumentLoadListener::AsyncOnChannelRedirect(
   // We expect the URI classifier to run on the redirected channel with
   // the new URI and set these again.
   mIParentChannelFunctions.Clear();
-
-  nsCOMPtr<nsILoadInfo> loadInfo = aOldChannel->LoadInfo();
-
-  nsCOMPtr<nsIURI> originalUri;
-  rv = aOldChannel->GetOriginalURI(getter_AddRefs(originalUri));
-  if (NS_FAILED(rv)) {
-    aOldChannel->Cancel(NS_ERROR_DOM_BAD_URI);
-    return rv;
-  }
-
-  nsCOMPtr<nsIURI> newUri;
-  rv = aNewChannel->GetURI(getter_AddRefs(newUri));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  Maybe<nsresult> cancelCode;
-  rv = CSPService::ConsultCSPForRedirect(originalUri, newUri, loadInfo,
-                                         cancelCode);
-
-  if (cancelCode) {
-    aOldChannel->Cancel(*cancelCode);
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef ANDROID
   nsCOMPtr<nsIURI> uriBeingLoaded =

@@ -1187,7 +1187,7 @@ class HiddenXULWindow {
       chromeShell.setOriginAttributes(attrs);
     }
 
-    chromeShell.useGlobalHistory = false;
+    windowlessBrowser.browsingContext.useGlobalHistory = false;
     chromeShell.loadURI("chrome://extensions/content/dummy.xhtml", {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });

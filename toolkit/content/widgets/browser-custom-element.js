@@ -1274,7 +1274,7 @@
             !this.isRemoteBrowser
           ) {
             try {
-              this.docShell.useGlobalHistory = true;
+              this.docShell.browsingContext.useGlobalHistory = true;
             } catch (ex) {
               // This can occur if the Places database is locked
               Cu.reportError("Error enabling browser global history: " + ex);

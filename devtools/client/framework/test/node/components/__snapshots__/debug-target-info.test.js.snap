@@ -32,7 +32,7 @@ exports[`DebugTargetInfo component Connection info renders the expected snapshot
     </span>
   </span>
   <span
-    className="iconized-label"
+    className="iconized-label debug-target-title"
   >
     <img
       alt="toolbox.debugTargetInfo.targetType.tab"
@@ -43,11 +43,21 @@ exports[`DebugTargetInfo component Connection info renders the expected snapshot
     >
       Test Tab Name
     </b>
-    <span
-      className="devtools-ellipsis-text"
+  </span>
+  <span
+    className="debug-target-url"
+  >
+    <form
+      className="debug-target-url-form"
+      onSubmit={[Function]}
     >
-      http://some.target/url
-    </span>
+      <input
+        className="devtools-textinput debug-target-url-input"
+        defaultValue="http://some.target/url"
+        onChange={[Function]}
+        onFocus={[Function]}
+      />
+    </form>
   </span>
 </header>
 `;
@@ -84,7 +94,7 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
     </span>
   </span>
   <span
-    className="iconized-label"
+    className="iconized-label debug-target-title"
   >
     <img
       alt="toolbox.debugTargetInfo.targetType.process"
@@ -95,6 +105,10 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
     >
       Test Tab Name
     </b>
+  </span>
+  <span
+    className="debug-target-url"
+  >
     <span
       className="devtools-ellipsis-text"
     >
@@ -136,7 +150,7 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
     </span>
   </span>
   <span
-    className="iconized-label"
+    className="iconized-label debug-target-title"
   >
     <img
       alt="toolbox.debugTargetInfo.targetType.tab"
@@ -147,11 +161,21 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
     >
       Test Tab Name
     </b>
-    <span
-      className="devtools-ellipsis-text"
+  </span>
+  <span
+    className="debug-target-url"
+  >
+    <form
+      className="debug-target-url-form"
+      onSubmit={[Function]}
     >
-      http://some.target/url
-    </span>
+      <input
+        className="devtools-textinput debug-target-url-input"
+        defaultValue="http://some.target/url"
+        onChange={[Function]}
+        onFocus={[Function]}
+      />
+    </form>
   </span>
 </header>
 `;
@@ -188,7 +212,7 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
     </span>
   </span>
   <span
-    className="iconized-label"
+    className="iconized-label debug-target-title"
   >
     <img
       alt="toolbox.debugTargetInfo.targetType.worker"
@@ -199,6 +223,10 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
     >
       Test Tab Name
     </b>
+  </span>
+  <span
+    className="debug-target-url"
+  >
     <span
       className="devtools-ellipsis-text"
     >
@@ -240,7 +268,7 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
     </span>
   </span>
   <span
-    className="iconized-label"
+    className="iconized-label debug-target-title"
   >
     <img
       alt="toolbox.debugTargetInfo.targetType.extension"
@@ -251,6 +279,10 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
     >
       Test Tab Name
     </b>
+  </span>
+  <span
+    className="debug-target-url"
+  >
     <span
       className="devtools-ellipsis-text"
     >
@@ -281,7 +313,7 @@ exports[`DebugTargetInfo component Target title renders the expected snapshot fo
     />
   </span>
   <span
-    className="iconized-label"
+    className="iconized-label debug-target-title"
   >
     <img
       alt="toolbox.debugTargetInfo.targetType.tab"
@@ -292,11 +324,21 @@ exports[`DebugTargetInfo component Target title renders the expected snapshot fo
     >
       Test Tab Name
     </b>
-    <span
-      className="devtools-ellipsis-text"
+  </span>
+  <span
+    className="debug-target-url"
+  >
+    <form
+      className="debug-target-url-form"
+      onSubmit={[Function]}
     >
-      http://some.target/url
-    </span>
+      <input
+        className="devtools-textinput debug-target-url-input"
+        defaultValue="http://some.target/url"
+        onChange={[Function]}
+        onFocus={[Function]}
+      />
+    </form>
   </span>
 </header>
 `;
@@ -322,17 +364,27 @@ exports[`DebugTargetInfo component Target title renders the expected snapshot fo
     />
   </span>
   <span
-    className="iconized-label"
+    className="iconized-label debug-target-title"
   >
     <img
       alt="toolbox.debugTargetInfo.targetType.tab"
       src="chrome://devtools/skin/images/globe.svg"
     />
-    <span
-      className="devtools-ellipsis-text"
+  </span>
+  <span
+    className="debug-target-url"
+  >
+    <form
+      className="debug-target-url-form"
+      onSubmit={[Function]}
     >
-      http://some.target/without/a/name
-    </span>
+      <input
+        className="devtools-textinput debug-target-url-input"
+        defaultValue="http://some.target/without/a/name"
+        onChange={[Function]}
+        onFocus={[Function]}
+      />
+    </form>
   </span>
 </header>
 `;

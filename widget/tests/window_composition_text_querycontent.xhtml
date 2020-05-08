@@ -8839,7 +8839,8 @@ async function runIMEContentObserverTest()
     synthesizeKey("KEY_Backspace", {}, win, callback);
     await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
-    checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 2, addedLength: 0 });
+    // Due to becoming the editor empty, <br> element needs to be appended.  Therefore, addedLength has to be kLFLen.
+    checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 2, addedLength: kLFLen });
     checkSelectionChangeNotification(notifications[1], description, { offset: 0 + offsetAtContainer, text: "" });
     checkPositionChangeNotification(notifications[2], description);
     dumpUnexpectedNotifications(description, 3);
@@ -8973,11 +8974,10 @@ async function runIMEContentObserverTest()
     aElement.innerHTML = "<div>1<div>2<div>3</div>4</div>5</div>";
     await waitNotifications;
     ensureToRemovePrecedingPositionChangeNotification();
-    // There is <br> after the end of the line.  Therefore, removed length includes a line breaker length.
     if (isDefaultParagraphSeparatorBlock) {
-      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer - kLFLen, removedLength: getNativeText("\nad\n").length, addedLength: getNativeText("\n1\n2\n345").length });
+      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer - kLFLen, removedLength: getNativeText("\nad").length, addedLength: getNativeText("\n1\n2\n345").length });
     } else {
-      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: 2 + kLFLen, addedLength: getNativeText("\n1\n2\n345").length });
+      checkTextChangeNotification(notifications[0], description, { offset: 0 + offsetAtContainer, removedLength: "ad".length, addedLength: getNativeText("\n1\n2\n345").length });
     }
     checkSelectionChangeNotification(notifications[1], description, { offset: 0, text: "" });
     checkPositionChangeNotification(notifications[2], description);

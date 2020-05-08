@@ -27,3 +27,9 @@ global.define = function(fn) {
 };
 
 global.requestIdleCallback = function() {};
+
+// Used for the HTMLTooltip component.
+// And set "isSystemPrincipal: false" because can't support XUL element in node.
+global.document.nodePrincipal = {
+  isSystemPrincipal: false,
+};
