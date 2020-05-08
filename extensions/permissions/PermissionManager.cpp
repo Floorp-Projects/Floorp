@@ -814,6 +814,16 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
     mState = eDBInitialized;
   });
 
+  MOZ_ACCESS_THREAD_BOUND(mThreadBoundData, data);
+
+  auto raiiFailure = MakeScopeExit([&]() {
+    if (data->mDBConn) {
+      DebugOnly<nsresult> rv = data->mDBConn->Close();
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      data->mDBConn = nullptr;
+    }
+  });
+
   nsresult rv;
 
   if (aRemoveFile) {
@@ -849,8 +859,6 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-
-  MOZ_ACCESS_THREAD_BOUND(mThreadBoundData, data);
 
   bool ready;
   data->mDBConn->GetConnectionReady(&ready);
@@ -1419,6 +1427,8 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
     rv = Read(lock);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  raiiFailure.release();
 
   return NS_OK;
 }
