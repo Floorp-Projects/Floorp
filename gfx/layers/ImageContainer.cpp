@@ -296,6 +296,7 @@ void ImageContainer::ClearImagesFromImageBridge() {
 }
 
 void ImageContainer::SetCurrentImages(const nsTArray<NonOwningImage>& aImages) {
+  AUTO_PROFILER_LABEL("ImageContainer::SetCurrentImages", GRAPHICS);
   MOZ_ASSERT(!aImages.IsEmpty());
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   if (mIsAsync) {
