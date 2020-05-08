@@ -12,7 +12,7 @@ import type { Context, SourceId } from "../../types";
 import type { ThunkArgs } from "../../actions/types";
 import { loadSourceActorBreakableLines } from "../source-actors";
 
-function calculateBreakableLines(positions) {
+function calculateBreakableLines(positions): number[] {
   const lines = [];
   for (const line in positions) {
     if (positions[line].length > 0) {

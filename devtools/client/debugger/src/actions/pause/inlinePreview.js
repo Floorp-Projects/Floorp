@@ -16,10 +16,11 @@ import { validateThreadContext } from "../../utils/context";
 import type { OriginalScope } from "../../utils/pause/mapScopes";
 import type { ThreadContext, Frame, Scope, Preview } from "../../types";
 import type { ThunkArgs } from "../types";
+import type { SourceScope } from "../../workers/parser/getScopes";
 
 // We need to display all variables in the current functional scope so
 // include all data for block scopes until the first functional scope
-function getLocalScopeLevels(originalAstScopes): number {
+function getLocalScopeLevels(originalAstScopes: SourceScope[]): number {
   let levels = 0;
   while (
     originalAstScopes[levels] &&

@@ -8,18 +8,28 @@ import { getFrames, getSource, getSelectedFrame } from "../../selectors";
 
 import assert from "../../utils/assert";
 
-import type { Frame, OriginalFrame, ThreadContext } from "../../types";
+import type {
+  Frame,
+  FrameId,
+  OriginalFrame,
+  ThreadContext,
+  ThreadId,
+} from "../../types";
 import type { State } from "../../reducers/types";
 import type { ThunkArgs } from "../types";
 
 import SourceMaps, { isGeneratedId } from "devtools-source-map";
 
-function isFrameBlackboxed(state, frame) {
+function isFrameBlackboxed(state: State, frame: Frame): boolean {
   const source = getSource(state, frame.location.sourceId);
-  return source?.isBlackBoxed;
+  return !!source?.isBlackBoxed;
 }
 
-function getSelectedFrameId(state, thread, frames) {
+function getSelectedFrameId(
+  state: State,
+  thread: ThreadId,
+  frames: Frame[]
+): ?FrameId {
   let selectedFrame = getSelectedFrame(state, thread);
   if (selectedFrame && !isFrameBlackboxed(state, selectedFrame)) {
     return selectedFrame.id;
@@ -32,7 +42,7 @@ function getSelectedFrameId(state, thread, frames) {
 export function updateFrameLocation(
   frame: Frame,
   sourceMaps: typeof SourceMaps
-) {
+): Promise<Frame> {
   if (frame.isOriginal) {
     return Promise.resolve(frame);
   }
