@@ -10,7 +10,11 @@ import android.view.View
 import android.widget.Switch
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.Addon
+import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.ui.translatedName
 import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.BrowserActivity
@@ -21,14 +25,42 @@ import org.mozilla.samples.browser.R
  */
 @Suppress("LargeClass")
 class InstalledAddonDetailsActivity : AppCompatActivity() {
+    private val scope = CoroutineScope(Dispatchers.IO)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_installed_add_on_details)
         val addon = requireNotNull(intent.getParcelableExtra<Addon>("add_on"))
-        bind(addon)
+        bindAddon(addon)
     }
 
-    private fun bind(addon: Addon) {
+    private fun bindAddon(addon: Addon) {
+        scope.launch {
+            try {
+                val context = baseContext
+                val addons = context.components.addonManager.getAddons()
+                scope.launch(Dispatchers.Main) {
+                    addons.find { addon.id == it.id }.let {
+                        if (it == null) {
+                            throw AddonManagerException(Exception("Addon ${addon.id} not found"))
+                        } else {
+                            bindUI(it)
+                        }
+                    }
+                }
+            } catch (e: AddonManagerException) {
+                scope.launch(Dispatchers.Main) {
+                    Toast.makeText(
+                        baseContext,
+                        R.string.mozac_feature_addons_failed_to_query_add_ons,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+    private fun bindUI(addon: Addon) {
         title = addon.translatedName
 
         bindEnableSwitch(addon)
