@@ -199,15 +199,10 @@ already_AddRefed<Promise> DocumentL10n::TranslateDocument(ErrorResult& aRv) {
       Element* elem = elements.ElementAt(i - 1);
       MOZ_RELEASE_ASSERT(elem->HasAttr(nsGkAtoms::datal10nid));
       if (!elem->HasElementCreatedFromPrototypeAndHasUnmodifiedL10n()) {
-        if (!nonProtoElements.AppendElement(*elem, fallible)) {
-          mozalloc_handle_oom(0);
+        if (NS_WARN_IF(!nonProtoElements.AppendElement(*elem, fallible))) {
+          promise->MaybeRejectWithUndefined();
+          return promise.forget();
         }
-        // XXX(Bug 1631381) Consider making this fallible again like this:
-        // if (NS_WARN_IF(!nonProtoElements.AppendElement(*elem, fallible))) {
-        //   InitialDocumentTranslationCompleted();
-        //   mReady->MaybeRejectWithUndefined();
-        //   return;
-        // }
         elements.RemoveElement(elem);
       }
       i--;
