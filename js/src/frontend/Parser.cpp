@@ -174,8 +174,7 @@ ParserBase::ParserBase(JSContext* cx, const ReadOnlyCompileOptions& options,
 #endif
       isUnexpectedEOF_(false),
       awaitHandling_(AwaitIsName),
-      inParametersOfAsyncFunction_(false),
-      treeHolder_(compilationInfo.treeHolder) {
+      inParametersOfAsyncFunction_(false) {
 }
 
 bool ParserBase::checkOptions() {
@@ -2714,43 +2713,6 @@ GeneralParser<ParseHandler, Unit>::templateLiteral(
     handler_.addList(nodeList, literal);
   } while (tt == TokenKind::TemplateHead);
   return nodeList;
-}
-
-AutoPushTree::AutoPushTree(FunctionTreeHolder& holder)
-    : holder_(holder), oldParent_(holder_.getCurrentParent()) {
-  MOZ_ASSERT(holder_.getCurrentParent());
-}
-
-bool AutoPushTree::init(JSContext* cx, FunctionBox* funbox) {
-  // Add a new child, and set it as the current parent.
-  FunctionTree* child = holder_.getCurrentParent()->add(cx, funbox);
-  if (!child) {
-    return false;
-  }
-  holder_.setCurrentParent(child);
-  return true;
-}
-
-AutoPushTree::~AutoPushTree() {
-  // Restore the old parent.
-  holder_.setCurrentParent(oldParent_);
-}
-
-void FunctionTree::dump(JSContext* cx, FunctionTree& node, int indent) {
-  for (int i = 0; i < indent; i++) {
-    fprintf(stderr, " ");
-  }
-
-  fprintf(stderr, "(*) %p ", node.funbox_);
-  if (node.funbox_ && node.funbox_->explicitName()) {
-    UniqueChars bytes = AtomToPrintableString(cx, node.funbox_->explicitName());
-    fprintf(stderr, " %s\n", bytes ? bytes.get() : "<nobytes>");
-  } else {
-    fprintf(stderr, " <noexplicitname> \n");
-  }
-  for (auto& child : node.children_) {
-    dump(cx, child, indent + 2);
-  }
 }
 
 template <class ParseHandler, typename Unit>

@@ -185,7 +185,6 @@
 #include "frontend/ErrorReporter.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
-#include "frontend/FunctionTree.h"
 #include "frontend/NameAnalysisTypes.h"
 #include "frontend/NameCollections.h"
 #include "frontend/ParseContext.h"
@@ -294,11 +293,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
 
   bool inParametersOfAsyncFunction_ : 1;
 
-  FunctionTreeHolder& treeHolder_;
-
  public:
-  FunctionTreeHolder& getTreeHolder() { return treeHolder_; }
-
   bool awaitIsKeyword() const { return awaitHandling_ != AwaitIsName; }
 
   bool inParametersOfAsyncFunction() const {

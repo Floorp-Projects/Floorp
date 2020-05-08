@@ -279,8 +279,6 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
   mozilla::Maybe<Tokenizer> tokenizer_;
   VariableDeclarationKind variableDeclarationKind_;
 
-  FunctionTreeHolder treeHolder_;
-
   friend class BinASTParseContext;
   friend class AutoVariableDeclarationKind;
 
