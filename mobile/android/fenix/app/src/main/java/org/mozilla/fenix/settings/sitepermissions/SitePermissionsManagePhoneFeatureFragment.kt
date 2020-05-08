@@ -122,10 +122,7 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
                     // makes ALLOW_ALL behave as ALLOW_ON_WIFI
                     saveActionInSettings(AUTOPLAY_ALLOW_ALL)
                 }
-                // TODO replace with AUTOPLAY_ALLOW_ON_WIFI when
-                // https://bugzilla.mozilla.org/show_bug.cgi?id=1621825 is fixed. This GV bug
-                // makes ALLOW_ALL behave as ALLOW_ON_WIFI
-                restoreState(AUTOPLAY_ALLOW_ALL)
+                restoreState(AUTOPLAY_ALLOW_ON_WIFI)
             } else {
                 text = getString(R.string.preference_option_phone_feature_blocked)
                 setOnClickListener {
