@@ -15,9 +15,9 @@ namespace mozilla {
 namespace dom {
 
 class WindowGlobalParent;
+class WindowGlobalInit;
 
 #define MOZ_EACH_WC_FIELD(FIELD)                                       \
-  FIELD(OuterWindowId, uint64_t)                                       \
   FIELD(CookieBehavior, Maybe<uint32_t>)                               \
   FIELD(IsOnContentBlockingAllowList, bool)                            \
   /* Whether the given window hierarchy is third party. See            \
@@ -44,7 +44,7 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   BrowsingContextGroup* Group() const;
   uint64_t Id() const { return InnerWindowId(); }
   uint64_t InnerWindowId() const { return mInnerWindowId; }
-  uint64_t OuterWindowId() const { return GetOuterWindowId(); }
+  uint64_t OuterWindowId() const { return mOuterWindowId; }
   bool IsDiscarded() const { return mIsDiscarded; }
 
   bool IsCached() const;
@@ -69,32 +69,32 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   struct IPCInitializer {
     uint64_t mInnerWindowId;
+    uint64_t mOuterWindowId;
     uint64_t mBrowsingContextId;
 
     FieldTuple mFields;
 
     bool operator==(const IPCInitializer& aOther) const {
       return mInnerWindowId == aOther.mInnerWindowId &&
+             mOuterWindowId == aOther.mOuterWindowId &&
              mBrowsingContextId == aOther.mBrowsingContextId &&
              mFields == aOther.mFields;
     }
   };
-  IPCInitializer GetIPCInitializer() {
-    return {mInnerWindowId, mBrowsingContext->Id(), mFields.Fields()};
-  }
+  IPCInitializer GetIPCInitializer();
 
-  static already_AddRefed<WindowContext> Create(WindowGlobalChild* aWindow);
   static void CreateFromIPC(IPCInitializer&& aInit);
 
  protected:
   WindowContext(BrowsingContext* aBrowsingContext, uint64_t aInnerWindowId,
-                bool aInProcess, FieldTuple&& aFields);
+                uint64_t aOuterWindowId, bool aInProcess, FieldTuple&& aFields);
   virtual ~WindowContext();
 
-  void Init();
+  virtual void Init();
 
  private:
   friend class BrowsingContext;
+  friend class WindowGlobalChild;
 
   void AppendChildBrowsingContext(BrowsingContext* aBrowsingContext);
   void RemoveChildBrowsingContext(BrowsingContext* aBrowsingContext);
@@ -108,11 +108,6 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   bool CheckOnlyOwningProcessCanSet(ContentParent* aSource);
 
   // Overload `CanSet` to get notifications for a particular field being set.
-  bool CanSet(FieldIndex<IDX_OuterWindowId>, const uint64_t& aValue,
-              ContentParent* aSource) {
-    return GetOuterWindowId() == 0 && aValue != 0;
-  }
-
   bool CanSet(FieldIndex<IDX_AllowMixedContent>, const bool& aAllowMixedContent,
               ContentParent* aSource);
 
@@ -137,6 +132,7 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   void DidSet(FieldIndex<I>, T&& aOldValue) {}
 
   uint64_t mInnerWindowId;
+  uint64_t mOuterWindowId;
   RefPtr<BrowsingContext> mBrowsingContext;
 
   // --- NEVER CHANGE `mChildren` DIRECTLY! ---

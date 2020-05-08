@@ -47,7 +47,7 @@ class WindowGlobalChild final : public WindowGlobalActor,
     return GetByInnerWindowId(aInnerWindowId);
   }
 
-  dom::BrowsingContext* BrowsingContext() override { return mBrowsingContext; }
+  dom::BrowsingContext* BrowsingContext() override;
   dom::WindowContext* WindowContext() { return mWindowContext; }
   nsGlobalWindowInner* GetWindowGlobal() { return mWindowGlobal; }
 
@@ -68,8 +68,8 @@ class WindowGlobalChild final : public WindowGlobalActor,
   nsIPrincipal* DocumentPrincipal() { return mDocumentPrincipal; }
 
   // The Window ID for this WindowGlobal
-  uint64_t InnerWindowId() { return mInnerWindowId; }
-  uint64_t OuterWindowId() { return mOuterWindowId; }
+  uint64_t InnerWindowId();
+  uint64_t OuterWindowId();
 
   uint64_t ContentParentId();
 
@@ -100,9 +100,8 @@ class WindowGlobalChild final : public WindowGlobalActor,
   // Create and initialize the WindowGlobalChild object.
   static already_AddRefed<WindowGlobalChild> Create(
       nsGlobalWindowInner* aWindow);
-
-  WindowGlobalChild(const WindowGlobalInit& aInit,
-                    nsGlobalWindowInner* aWindow);
+  static already_AddRefed<WindowGlobalChild> CreateDisconnected(
+      const WindowGlobalInit& aInit);
 
   void Init();
 
@@ -148,17 +147,17 @@ class WindowGlobalChild final : public WindowGlobalActor,
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
+  WindowGlobalChild(dom::WindowContext* aWindowContext,
+                    nsIPrincipal* aPrincipal, nsIURI* aURI);
+
   ~WindowGlobalChild();
 
   RefPtr<nsGlobalWindowInner> mWindowGlobal;
-  RefPtr<dom::BrowsingContext> mBrowsingContext;
   RefPtr<dom::WindowContext> mWindowContext;
   nsRefPtrHashtable<nsCStringHashKey, JSWindowActorChild> mWindowActors;
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
   nsCOMPtr<nsIURI> mDocumentURI;
-  uint64_t mInnerWindowId;
-  uint64_t mOuterWindowId;
-  int64_t mBeforeUnloadListeners;
+  int64_t mBeforeUnloadListeners = 0;
 };
 
 }  // namespace dom
