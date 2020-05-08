@@ -15,10 +15,11 @@
 #  define TOUCH_FEEDBACK_NONE 0x3
 
 enum {
-  PT_POINTER = 0x00000001,  // Generic pointer
-  PT_TOUCH = 0x00000002,    // Touch
-  PT_PEN = 0x00000003,      // Pen
-  PT_MOUSE = 0x00000004,    // Mouse
+  PT_POINTER = 0x00000001,   // Generic pointer
+  PT_TOUCH = 0x00000002,     // Touch
+  PT_PEN = 0x00000003,       // Pen
+  PT_MOUSE = 0x00000004,     // Mouse
+  PT_TOUCHPAD = 0x00000005,  // Touch pad
 };
 
 typedef DWORD POINTER_INPUT_TYPE;
