@@ -475,7 +475,7 @@ either Raptor or browsertime."""
         self.config.update(
             {
                 "playback_tool": test.get("playback"),
-                "playback_version": test.get("playback_version", "5.0.1"),
+                "playback_version": test.get("playback_version", "4.0.4"),
                 "playback_binary_zip": test.get("playback_binary_zip_%s" % platform),
                 "playback_pageset_zip": test.get("playback_pageset_zip_%s" % platform),
                 "playback_binary_manifest": test.get("playback_binary_manifest"),
