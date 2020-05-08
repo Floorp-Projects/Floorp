@@ -1238,8 +1238,8 @@ nsIContent* WSRunScanner::GetNextWSNodeInner(nsINode* aStartNode,
   }
   if (HTMLEditUtils::IsContainerNode(*nextContent)) {
     // Else if it's a container, get deep leftmost child
-    nsCOMPtr<nsIContent> child = mHTMLEditor->GetLeftmostChild(nextContent);
-    if (child) {
+    if (nsIContent* child = HTMLEditUtils::GetFirstLeafChild(
+            *nextContent, ChildBlockBoundary::Ignore)) {
       return child;
     }
   }
@@ -1283,8 +1283,8 @@ nsIContent* WSRunScanner::GetNextWSNode(const EditorDOMPoint& aPoint,
   }
   if (HTMLEditUtils::IsContainerNode(*nextContent)) {
     // else if it's a container, get deep leftmost child
-    nsCOMPtr<nsIContent> child = mHTMLEditor->GetLeftmostChild(nextContent);
-    if (child) {
+    if (nsIContent* child = HTMLEditUtils::GetFirstLeafChild(
+            *nextContent, ChildBlockBoundary::Ignore)) {
       return child;
     }
   }

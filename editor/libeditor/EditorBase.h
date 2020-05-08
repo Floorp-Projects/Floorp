@@ -1696,13 +1696,6 @@ class EditorBase : public nsIEditor,
   }
 
   /**
-   * Get the leftmost child of aCurrentNode;
-   * return nullptr if aCurrentNode has no children.
-   */
-  nsIContent* GetLeftmostChild(nsINode* aCurrentNode,
-                               bool bNoBlockCrossing = false) const;
-
-  /**
    * Returns true if aNode is our root node.
    */
   bool IsRoot(nsINode* inNode) const;
