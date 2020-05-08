@@ -995,6 +995,12 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
         // This is a lower priority request and we are swamped, so refuse it.
         rv = NS_ERROR_DNS_LOOKUP_QUEUE_FULL;
 
+        // Check if DNS resolution is disabled.
+      } else if (StaticPrefs::network_dns_disabled()) {
+        LOG(("  DNS resolution disabled: dropping request for host [%s].\n",
+             host.get()));
+        rv = NS_ERROR_UNKNOWN_HOST;
+
         // Check if the offline flag is set.
       } else if (flags & RES_OFFLINE) {
         LOG(("  Offline request for host [%s]; ignoring.\n", host.get()));
