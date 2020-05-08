@@ -44,6 +44,7 @@ using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using refcounted class nsISHEntry from "nsISHEntry.h";
 using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
 using refcounted class mozilla::dom::CrossProcessSHEntry from "mozilla/dom/MaybeNewPSHEntry.h";
+using mozilla::dom::WindowContextInitializer from "mozilla/dom/WindowContext.h";
 
 namespace mozilla {
 namespace dom {
@@ -223,15 +224,15 @@ struct PerformanceInfo
   CategoryDispatch[] items;
 };
 
-
 struct WindowGlobalInit
 {
+  // Fields which are synchronized to other processes are found here.
+  WindowContextInitializer context;
+
+  // Private fields only shared with the parent process.
   nsIPrincipal principal;
   nsIPrincipal contentBlockingAllowListPrincipal;
   nsIURI documentURI;
-  MaybeDiscardedBrowsingContext browsingContext;
-  uint64_t innerWindowId;
-  uint64_t outerWindowId;
 };
 
 struct DocShellLoadStateInit

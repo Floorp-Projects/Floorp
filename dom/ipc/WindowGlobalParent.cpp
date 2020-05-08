@@ -51,12 +51,11 @@ using namespace mozilla::dom::ipc;
 namespace mozilla {
 namespace dom {
 
-WindowGlobalParent::WindowGlobalParent(const WindowGlobalInit& aInit,
-                                       bool aInProcess)
-    : WindowContext(aInit.browsingContext().GetMaybeDiscarded(),
-                    aInit.innerWindowId(), aInProcess, {}),
-      mDocumentPrincipal(aInit.principal()),
-      mDocumentURI(aInit.documentURI()),
+WindowGlobalParent::WindowGlobalParent(
+    CanonicalBrowsingContext* aBrowsingContext, uint64_t aInnerWindowId,
+    uint64_t aOuterWindowId, bool aInProcess, FieldTuple&& aFields)
+    : WindowContext(aBrowsingContext, aInnerWindowId, aOuterWindowId,
+                    aInProcess, std::move(aFields)),
       mIsInitialDocument(false),
       mHasBeforeUnload(false),
       mSandboxFlags(0),
@@ -65,16 +64,34 @@ WindowGlobalParent::WindowGlobalParent(const WindowGlobalInit& aInit,
       mBlockAllMixedContent(false),
       mUpgradeInsecureRequests(false) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(), "Parent process only");
-
-  MOZ_RELEASE_ASSERT(
-      BrowsingContext(),
-      "Must be made in BrowsingContext, though it may be discarded");
-  MOZ_RELEASE_ASSERT(mDocumentPrincipal, "Must have a valid principal");
-
-  mFields.SetWithoutSyncing<IDX_OuterWindowId>(aInit.outerWindowId());
 }
 
-void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
+already_AddRefed<WindowGlobalParent> WindowGlobalParent::CreateDisconnected(
+    const WindowGlobalInit& aInit, bool aInProcess) {
+  RefPtr<CanonicalBrowsingContext> browsingContext =
+      CanonicalBrowsingContext::Get(aInit.context().mBrowsingContextId);
+  if (NS_WARN_IF(!browsingContext)) {
+    return nullptr;
+  }
+
+  RefPtr<WindowGlobalParent> wgp =
+      GetByInnerWindowId(aInit.context().mInnerWindowId);
+  MOZ_RELEASE_ASSERT(!wgp, "Creating duplicate WindowGlobalParent");
+
+  FieldTuple fields(aInit.context().mFields);
+  wgp = new WindowGlobalParent(browsingContext, aInit.context().mInnerWindowId,
+                               aInit.context().mOuterWindowId, aInProcess,
+                               std::move(fields));
+  wgp->mDocumentPrincipal = aInit.principal();
+  wgp->mDocumentURI = aInit.documentURI();
+  wgp->mDocContentBlockingAllowListPrincipal =
+      aInit.contentBlockingAllowListPrincipal();
+  MOZ_RELEASE_ASSERT(wgp->mDocumentPrincipal, "Must have a valid principal");
+
+  return wgp.forget();
+}
+
+void WindowGlobalParent::Init() {
   MOZ_ASSERT(Manager(), "Should have a manager!");
 
   // Invoke our base class' `Init` method. This will register us in
@@ -113,11 +130,8 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
   // If there is no current window global, assume we're about to become it
   // optimistically.
   if (!BrowsingContext()->IsDiscarded()) {
-    BrowsingContext()->SetCurrentInnerWindowId(aInit.innerWindowId());
+    BrowsingContext()->SetCurrentInnerWindowId(InnerWindowId());
   }
-
-  mDocContentBlockingAllowListPrincipal =
-      aInit.contentBlockingAllowListPrincipal();
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {

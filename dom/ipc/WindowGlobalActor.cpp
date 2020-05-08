@@ -17,24 +17,50 @@
 namespace mozilla {
 namespace dom {
 
+// Common WindowGlobalInit creation code used by both `AboutBlankInitializer`
+// and `WindowInitializer`.
+static WindowGlobalInit BaseInitializer(dom::BrowsingContext* aBrowsingContext,
+                                        uint64_t aInnerWindowId,
+                                        uint64_t aOuterWindowId) {
+  MOZ_DIAGNOSTIC_ASSERT(aBrowsingContext);
+
+  WindowGlobalInit init;
+  auto& ctx = init.context();
+  ctx.mInnerWindowId = aInnerWindowId;
+  ctx.mOuterWindowId = aOuterWindowId;
+  ctx.mBrowsingContextId = aBrowsingContext->Id();
+
+  // If any synced fields need to be initialized from our BrowsingContxt, we can
+  // initialize them here.
+  return init;
+}
+
 WindowGlobalInit WindowGlobalActor::AboutBlankInitializer(
     dom::BrowsingContext* aBrowsingContext, nsIPrincipal* aPrincipal) {
-  MOZ_ASSERT(aBrowsingContext);
-  MOZ_ASSERT(aPrincipal);
+  WindowGlobalInit init =
+      BaseInitializer(aBrowsingContext, nsContentUtils::GenerateWindowId(),
+                      nsContentUtils::GenerateWindowId());
 
-  nsCOMPtr<nsIURI> documentURI;
-  Unused << NS_NewURI(getter_AddRefs(documentURI), "about:blank");
-
-  uint64_t outerWindowId = nsContentUtils::GenerateWindowId();
-  uint64_t innerWindowId = nsContentUtils::GenerateWindowId();
-
-  nsCOMPtr<nsIPrincipal> contentBlockingAllowListPrincipal;
+  init.principal() = aPrincipal;
+  Unused << NS_NewURI(getter_AddRefs(init.documentURI()), "about:blank");
   ContentBlockingAllowList::ComputePrincipal(
-      aPrincipal, getter_AddRefs(contentBlockingAllowListPrincipal));
+      aPrincipal, getter_AddRefs(init.contentBlockingAllowListPrincipal()));
 
-  return WindowGlobalInit(aPrincipal, contentBlockingAllowListPrincipal,
-                          documentURI, aBrowsingContext, innerWindowId,
-                          outerWindowId);
+  return init;
+}
+
+WindowGlobalInit WindowGlobalActor::WindowInitializer(
+    nsGlobalWindowInner* aWindow) {
+  WindowGlobalInit init =
+      BaseInitializer(aWindow->GetBrowsingContext(), aWindow->WindowID(),
+                      aWindow->GetOuterWindow()->WindowID());
+
+  init.principal() = aWindow->GetPrincipal();
+  init.contentBlockingAllowListPrincipal() =
+      aWindow->GetDocumentContentBlockingAllowListPrincipal();
+  init.documentURI() = aWindow->GetDocumentURI();
+
+  return init;
 }
 
 void WindowGlobalActor::ConstructActor(const nsACString& aName,

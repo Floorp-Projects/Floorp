@@ -30,12 +30,11 @@ BrowserBridgeParent::~BrowserBridgeParent() { Destroy(); }
 nsresult BrowserBridgeParent::InitWithProcess(
     ContentParent* aContentParent, const nsString& aPresentationURL,
     const WindowGlobalInit& aWindowInit, uint32_t aChromeFlags, TabId aTabId) {
-  if (aWindowInit.browsingContext().IsNullOrDiscarded()) {
+  RefPtr<CanonicalBrowsingContext> browsingContext =
+      CanonicalBrowsingContext::Get(aWindowInit.context().mBrowsingContextId);
+  if (!browsingContext || browsingContext->IsDiscarded()) {
     return NS_ERROR_UNEXPECTED;
   }
-
-  RefPtr<CanonicalBrowsingContext> browsingContext =
-      aWindowInit.browsingContext().get_canonical();
 
   // Unfortunately, due to the current racy destruction of BrowsingContext
   // instances when Fission is enabled, while `browsingContext` may not be
@@ -80,8 +79,11 @@ nsresult BrowserBridgeParent::InitWithProcess(
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
   cpm->RegisterRemoteFrame(browserParent);
 
-  auto windowParent =
-      MakeRefPtr<WindowGlobalParent>(aWindowInit, /* inprocess */ false);
+  RefPtr<WindowGlobalParent> windowParent =
+      WindowGlobalParent::CreateDisconnected(aWindowInit);
+  if (!windowParent) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   ManagedEndpoint<PWindowGlobalChild> windowChildEp =
       browserParent->OpenPWindowGlobalEndpoint(windowParent);
@@ -106,7 +108,7 @@ nsresult BrowserBridgeParent::InitWithProcess(
   mBrowserParent->SetOwnerElement(Manager()->GetOwnerElement());
   mBrowserParent->InitRendering();
 
-  windowParent->Init(aWindowInit);
+  windowParent->Init();
 
   // Send the newly created layers ID back into content.
   Unused << SendSetLayersId(mBrowserParent->GetLayersId());
