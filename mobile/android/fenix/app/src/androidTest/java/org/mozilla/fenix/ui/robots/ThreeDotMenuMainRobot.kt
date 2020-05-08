@@ -72,6 +72,10 @@ class ThreeDotMenuMainRobot {
             waitingTime
         )
         addBookmarkButton().click()
+        // wait for main menu to disappear
+        mDevice.waitNotNull(
+            Until.gone(By.res("mozac_browser_menu_recyclerView"))
+        )
     }
 
     fun verifyCollectionNameTextField() = assertCollectionNameTextField()
