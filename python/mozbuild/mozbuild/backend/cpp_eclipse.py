@@ -114,19 +114,19 @@ class CppEclipseBackend(CommonBackend):
                     raise
 
         project_path = os.path.join(self._project_dir, '.project')
-        with open(project_path, 'wb') as fh:
+        with open(project_path, 'w') as fh:
             self._write_project(fh)
 
         cproject_path = os.path.join(self._project_dir, '.cproject')
-        with open(cproject_path, 'wb') as fh:
+        with open(cproject_path, 'w') as fh:
             self._write_cproject(fh)
 
         language_path = os.path.join(settings_dir, 'language.settings.xml')
-        with open(language_path, 'wb') as fh:
+        with open(language_path, 'w') as fh:
             self._write_language_settings(fh)
 
         workspace_language_path = os.path.join(self._workspace_lang_dir, 'language.settings.xml')
-        with open(workspace_language_path, 'wb') as fh:
+        with open(workspace_language_path, 'w') as fh:
             workspace_lang_settings = WORKSPACE_LANGUAGE_SETTINGS_TEMPLATE
             workspace_lang_settings = workspace_lang_settings.replace(
                 "@COMPILER_FLAGS@", self._cxx + " " + self._cppflags)
@@ -136,16 +136,16 @@ class CppEclipseBackend(CommonBackend):
 
         core_resources_prefs_path = os.path.join(
             workspace_settings_dir, 'org.eclipse.core.resources.prefs')
-        with open(core_resources_prefs_path, 'wb') as fh:
+        with open(core_resources_prefs_path, 'w') as fh:
             fh.write(STATIC_CORE_RESOURCES_PREFS)
 
         core_runtime_prefs_path = os.path.join(
             workspace_settings_dir, 'org.eclipse.core.runtime.prefs')
-        with open(core_runtime_prefs_path, 'wb') as fh:
+        with open(core_runtime_prefs_path, 'w') as fh:
             fh.write(STATIC_CORE_RUNTIME_PREFS)
 
         ui_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.ui.prefs')
-        with open(ui_prefs_path, 'wb') as fh:
+        with open(ui_prefs_path, 'w') as fh:
             fh.write(STATIC_UI_PREFS)
 
         cdt_ui_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.cdt.ui.prefs')
@@ -160,11 +160,11 @@ class CppEclipseBackend(CommonBackend):
             cdt_ui_prefs += XML_PREF_TEMPLATE.replace("@PREF_NAME@",
                                                       pref).replace("@PREF_VAL@", val)
         cdt_ui_prefs += "</profile>\\n</profiles>\\n"
-        with open(cdt_ui_prefs_path, 'wb') as fh:
+        with open(cdt_ui_prefs_path, 'w') as fh:
             fh.write(cdt_ui_prefs)
 
         cdt_core_prefs_path = os.path.join(workspace_settings_dir, 'org.eclipse.cdt.core.prefs')
-        with open(cdt_core_prefs_path, 'wb') as fh:
+        with open(cdt_core_prefs_path, 'w') as fh:
             cdt_core_prefs = STATIC_CDT_CORE_PREFS
             # When we generated the code formatter called "Mozilla" above, we
             # also set it to be the active formatter.  When a formatter is set
@@ -174,7 +174,7 @@ class CppEclipseBackend(CommonBackend):
             fh.write(cdt_core_prefs)
 
         editor_prefs_path = os.path.join(workspace_settings_dir, "org.eclipse.ui.editors.prefs")
-        with open(editor_prefs_path, 'wb') as fh:
+        with open(editor_prefs_path, 'w') as fh:
             fh.write(EDITOR_SETTINGS)
 
         # Now import the project into the workspace
@@ -210,7 +210,7 @@ class CppEclipseBackend(CommonBackend):
 
     def _write_noindex(self):
         noindex_path = os.path.join(self._project_dir, '.settings/org.eclipse.cdt.core.prefs')
-        with open(noindex_path, 'wb') as fh:
+        with open(noindex_path, 'w') as fh:
             fh.write(NOINDEX_TEMPLATE)
 
     def _remove_noindex(self):
@@ -333,7 +333,7 @@ class CppEclipseBackend(CommonBackend):
         exe_path = os.path.join(exe_path, self._appname + self._bin_suffix)
 
         main_gecko_launch = os.path.join(launch_dir, 'gecko.launch')
-        with open(main_gecko_launch, 'wb') as fh:
+        with open(main_gecko_launch, 'w') as fh:
             launch = GECKO_LAUNCH_CONFIG_TEMPLATE
             launch = launch.replace('@LAUNCH_PROGRAM@', exe_path)
             launch = launch.replace('@LAUNCH_ARGS@', '-P -no-remote')
