@@ -2,8 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Localized string used as the dialog window title (a new behavior locked
-# behind the "extensions.abuseReport.openDialog" preference).
+# Localized string used as the dialog window title.
 # "Report" is a noun in this case, "Report for AddonName".
 #
 # Variables:
