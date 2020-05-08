@@ -187,15 +187,17 @@ ContentBlocking::AllowAccessFor(
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
-  if (parentWindowContext->GetCookieBehavior().isNothing()) {
+  Maybe<net::CookieJarSettingsArgs> cookieJarSetting =
+      parentWindowContext->GetCookieJarSettings();
+  if (cookieJarSetting.isNothing()) {
     LOG(
-        ("No cookie behaviour found for our parent window context, bailing "
+        ("No cookiejar setting found for our parent window context, bailing "
          "out early"));
     return StorageAccessGrantPromise::CreateAndReject(false, __func__);
   }
 
   // Only add storage permission when there is a reason to do so.
-  uint32_t behavior = *parentWindowContext->GetCookieBehavior();
+  uint32_t behavior = cookieJarSetting->cookieBehavior();
   if (!CookieJarSettings::IsRejectThirdPartyContexts(behavior)) {
     LOG(
         ("Disabled by network.cookie.cookieBehavior pref (%d), bailing out "
@@ -211,7 +213,7 @@ ContentBlocking::AllowAccessFor(
           nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
 
   // No need to continue when we are already in the allow list.
-  if (parentWindowContext->GetIsOnContentBlockingAllowList()) {
+  if (cookieJarSetting->isOnContentBlockingAllowList()) {
     return StorageAccessGrantPromise::CreateAndResolve(true, __func__);
   }
 
