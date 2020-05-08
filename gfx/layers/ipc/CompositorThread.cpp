@@ -4,20 +4,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "CompositorThread.h"
-#include "MainThreadUtils.h"
-#include "nsThreadUtils.h"
+
 #include "CompositorBridgeParent.h"
+#include "MainThreadUtils.h"
+#include "VRManagerParent.h"
+#include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/layers/CanvasTranslator.h"
 #include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/media/MediaSystemResourceService.h"
-#include "VRManagerParent.h"
+#include "nsThread.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace layers {
 
 static StaticRefPtr<CompositorThreadHolder> sCompositorThreadHolder;
 static bool sFinishedCompositorShutDown = false;
+static mozilla::BackgroundHangMonitor* sBackgroundHangMonitor;
 
 nsISerialEventTarget* CompositorThread() {
   return sCompositorThreadHolder
@@ -47,20 +51,24 @@ CompositorThreadHolder::CreateCompositorThread() {
              "The compositor thread has already been started!");
 
   nsCOMPtr<nsIThread> compositorThread;
-  nsresult rv =
-      NS_NewNamedThread("Compositor", getter_AddRefs(compositorThread));
-
-  // TODO re-enable hangout monitor. Will be done in a follow-up thread
-  //  base::Thread::Options options;
-  //  /* Timeout values are powers-of-two to enable us get better data.
-  //     128ms is chosen for transient hangs because 8Hz should be the minimally
-  //     acceptable goal for Compositor responsiveness (normal goal is 60Hz). */
-  //  options.transient_hang_timeout = 128;  // milliseconds
-  //  /* 2048ms is chosen for permanent hangs because it's longer than most
-  //   * Compositor hangs seen in the wild, but is short enough to not miss
-  //   getting
-  //   * native hang stacks. */
-  //  options.permanent_hang_timeout = 2048;  // milliseconds
+  nsresult rv = NS_NewNamedThread(
+      "Compositor", getter_AddRefs(compositorThread),
+      NS_NewRunnableFunction(
+          "CompositorThreadHolder::CompositorThreadHolderSetup", []() {
+            sBackgroundHangMonitor = new mozilla::BackgroundHangMonitor(
+                "Compositor",
+                /* Timeout values are powers-of-two to enable us get better
+                   data. 128ms is chosen for transient hangs because 8Hz should
+                   be the minimally acceptable goal for Compositor
+                   responsiveness (normal goal is 60Hz). */
+                128,
+                /* 2048ms is chosen for permanent hangs because it's longer than
+                 * most Compositor hangs seen in the wild, but is short enough
+                 * to not miss getting native hang stacks. */
+                2048);
+            nsCOMPtr<nsIThread> thread = NS_GetCurrentThread();
+            static_cast<nsThread*>(thread.get())->SetUseHangMonitor(true);
+          }));
 
   if (NS_FAILED(rv)) {
     return nullptr;
@@ -103,7 +111,19 @@ void CompositorThreadHolder::Shutdown() {
   CompositorManagerParent::Shutdown();
   CanvasTranslator::Shutdown();
 
+  // Ensure there are no pending tasks that would cause an access to the
+  // thread's HangMonitor. APZ and Canvas can keep a reference to the compositor
+  // thread and may continue to dispatch tasks on it as the system shuts down.
+  CompositorThread()->Dispatch(NS_NewRunnableFunction(
+      "CompositorThreadHolder::Shutdown",
+      [backgroundHangMonitor = UniquePtr<mozilla::BackgroundHangMonitor>(
+           sBackgroundHangMonitor)]() {
+        nsCOMPtr<nsIThread> thread = NS_GetCurrentThread();
+        static_cast<nsThread*>(thread.get())->SetUseHangMonitor(false);
+      }));
+
   sCompositorThreadHolder = nullptr;
+  sBackgroundHangMonitor = nullptr;
 
   // No locking is needed around sFinishedCompositorShutDown because it is only
   // ever accessed on the main thread.
