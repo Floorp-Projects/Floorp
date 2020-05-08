@@ -1050,7 +1050,7 @@
 
 - name: LoadBooleanResult
   shared: true
-  transpile: false
+  transpile: true
   args:
     val: BoolImm
 
