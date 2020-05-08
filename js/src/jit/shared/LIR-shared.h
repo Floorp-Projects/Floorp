@@ -7124,6 +7124,20 @@ class LGuardValue : public LInstructionHelper<0, BOX_PIECES, 0> {
   MGuardValue* mir() { return mir_->toGuardValue(); }
 };
 
+class LGuardNullOrUndefined : public LInstructionHelper<0, BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(GuardNullOrUndefined)
+
+  explicit LGuardNullOrUndefined(const LBoxAllocation& input)
+      : LInstructionHelper(classOpcode) {
+    setBoxOperand(Input, input);
+  }
+
+  static const size_t Input = 0;
+
+  MGuardNullOrUndefined* mir() { return mir_->toGuardNullOrUndefined(); }
+};
+
 class LRecompileCheck : public LInstructionHelper<0, 0, 1> {
  public:
   LIR_HEADER(RecompileCheck)

@@ -295,6 +295,17 @@ bool WarpCacheIRTranspiler::emitGuardIsNumber(ValOperandId inputId) {
   return emitGuardTo(inputId, MIRType::Double);
 }
 
+bool WarpCacheIRTranspiler::emitGuardIsNullOrUndefined(ValOperandId inputId) {
+  MDefinition* input = getOperand(inputId);
+  if (input->type() == MIRType::Null || input->type() == MIRType::Undefined) {
+    return true;
+  }
+
+  auto* ins = MGuardNullOrUndefined::New(alloc(), input);
+  add(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardToInt32Index(ValOperandId inputId,
                                                   Int32OperandId resultId) {
   MDefinition* input = getOperand(inputId);
