@@ -105,7 +105,7 @@ class AboutWelcomeParent extends JSWindowActorParent {
         reason: this.AboutWelcomeObserver.terminateReason,
         page: "about:welcome",
       },
-      message_id: this.AWMesssageId,
+      message_id: this.AWMessageId,
       id: "ABOUT_WELCOME",
     });
   }
@@ -122,7 +122,7 @@ class AboutWelcomeParent extends JSWindowActorParent {
     log.debug(`Received content event: ${type}`);
     switch (type) {
       case "AWPage:SET_WELCOME_MESSAGE_SEEN":
-        this.AWMesssageId = data;
+        this.AWMessageId = data;
         try {
           Services.prefs.setBoolPref(DID_SEE_ABOUT_WELCOME_PREF, true);
         } catch (e) {
