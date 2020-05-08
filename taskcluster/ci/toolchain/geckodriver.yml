@@ -7,10 +7,18 @@ job-defaults:
     worker-type: b-linux
     worker:
         max-run-time: 1800
+        artifacts:
+            - name: public
+              type: directory
+              path: /builds/worker/artifacts
     run-on-projects: ['trunk']
+    attributes:
+        build_type: opt
+        geckodriver: true
+        shippable: true
     run:
         script: build-geckodriver.sh
-        toolchain-artifact: public/build/geckodriver.tar.xz
+        toolchain-artifact: public/geckodriver.tar.gz
         sparse-profile: null
         resources:
             - 'testing/geckodriver'
@@ -21,26 +29,32 @@ job-defaults:
 
 linux32-geckodriver:
     treeherder:
-        symbol: TL32(geckodriver)
+        symbol: TL32(gd)
+        platform: linux32/opt
     run:
         arguments: ['i686-unknown-linux-gnu']
-    run-on-projects: ['try', 'release']  # Do not run on autoland - Bug 1599197
+    attributes:
+        build_platform: linux-geckodriver
     fetches:
         toolchain:
             - linux64-rust
 
 linux64-geckodriver:
     treeherder:
-        symbol: TL(geckodriver)
+        symbol: TL(gd)
+        platform: linux64/opt
     run:
         arguments: ['x86_64-unknown-linux-gnu']
+    attributes:
+        build_platform: linux64-geckodriver
     fetches:
         toolchain:
             - linux64-rust
 
 macosx64-geckodriver:
     treeherder:
-        symbol: TM(geckodriver)
+        symbol: TM(gd)
+        platform: macosx64/opt
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
@@ -49,6 +63,9 @@ macosx64-geckodriver:
         resources:
             - taskcluster/scripts/misc/tooltool-download.sh
         tooltool-downloads: internal
+        toolchain-artifact: public/geckodriver.tar.gz
+    attributes:
+        build_platform: macosx64-geckodriver
     fetches:
         toolchain:
             - linux64-cctools-port
@@ -58,7 +75,8 @@ macosx64-geckodriver:
 
 win32-geckodriver:
     treeherder:
-        symbol: TW32(geckodriver)
+        symbol: TW32(gd)
+        platform: win32/opt
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
@@ -66,8 +84,10 @@ win32-geckodriver:
         arguments: ['i686-pc-windows-msvc']
         resources:
             - taskcluster/scripts/misc/tooltool-download.sh
-        toolchain-artifact: public/build/geckodriver.tar.bz2
+        toolchain-artifact: public/geckodriver.zip
         tooltool-downloads: internal
+    attributes:
+        build_platform: win32-geckodriver
     fetches:
         toolchain:
             - linux64-clang
@@ -75,7 +95,8 @@ win32-geckodriver:
 
 win64-geckodriver:
     treeherder:
-        symbol: TW64(geckodriver)
+        symbol: TW64(gd)
+        platform: win64/opt
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
@@ -83,8 +104,10 @@ win64-geckodriver:
         arguments: ['x86_64-pc-windows-msvc']
         resources:
             - taskcluster/scripts/misc/tooltool-download.sh
-        toolchain-artifact: public/build/geckodriver.tar.bz2
+        toolchain-artifact: public/geckodriver.zip
         tooltool-downloads: internal
+    attributes:
+        build_platform: win64-geckodriver
     fetches:
         toolchain:
             - linux64-clang
