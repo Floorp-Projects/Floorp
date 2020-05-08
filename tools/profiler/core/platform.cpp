@@ -961,6 +961,14 @@ class ActivePS {
 
   PS_GET(const Vector<std::string>&, Filters)
 
+  // Not using PS_GET, because only the "Controlled" interface of
+  // `mProfileBufferChunkManager` should be exposed here.
+  static ProfileBufferControlledChunkManager& ControlledChunkManager(
+      PSLockRef) {
+    MOZ_ASSERT(sInstance);
+    return sInstance->mProfileBufferChunkManager;
+  }
+
   static void FulfillChunkRequests(PSLockRef) {
     MOZ_ASSERT(sInstance);
     sInstance->mProfileBufferChunkManager.FulfillChunkRequests();
@@ -3917,6 +3925,15 @@ void profiler_get_start_params(int* aCapacity, Maybe<double>* aDuration,
   for (uint32_t i = 0; i < filters.length(); ++i) {
     (*aFilters)[i] = filters[i].c_str();
   }
+}
+
+ProfileBufferControlledChunkManager* profiler_get_controlled_chunk_manager() {
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+  PSAutoLock lock(gPSMutex);
+  if (NS_WARN_IF(!ActivePS::Exists(lock))) {
+    return nullptr;
+  }
+  return &ActivePS::ControlledChunkManager(lock);
 }
 
 namespace mozilla {

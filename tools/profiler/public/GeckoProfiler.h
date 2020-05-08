@@ -114,6 +114,7 @@ class ProfilerCodeAddressService;
 class ProfilerMarkerPayload;
 class SpliceableJSONWriter;
 namespace mozilla {
+class ProfileBufferControlledChunkManager;
 namespace net {
 struct TimingStruct;
 enum CacheDisposition : uint8_t;
@@ -545,6 +546,10 @@ void profiler_get_start_params(
     uint32_t* aFeatures,
     mozilla::Vector<const char*, 0, mozilla::MallocAllocPolicy>* aFilters,
     uint64_t* aActiveBrowsingContextID);
+
+// Get the chunk manager used in the current profiling session, or null.
+mozilla::ProfileBufferControlledChunkManager*
+profiler_get_controlled_chunk_manager();
 
 // The number of milliseconds since the process started. Operates the same
 // whether the profiler is active or inactive.
