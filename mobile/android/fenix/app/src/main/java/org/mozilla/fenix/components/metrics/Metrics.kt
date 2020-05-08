@@ -29,7 +29,6 @@ import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.CrashReporter
 import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
-import org.mozilla.fenix.GleanMetrics.Library
 import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.Tip
@@ -67,8 +66,6 @@ sealed class Event {
     object QRScannerPromptDisplayed : Event()
     object QRScannerNavigationAllowed : Event()
     object QRScannerNavigationDenied : Event()
-    object LibraryOpened : Event()
-    object LibraryClosed : Event()
     object SyncAuthOpened : Event()
     object SyncAuthClosed : Event()
     object SyncAuthSignUp : Event()
@@ -267,12 +264,6 @@ sealed class Event {
             )
     }
 
-    data class LibrarySelectedItem(val item: LibraryItem) : Event() {
-        enum class LibraryItem { BOOKMARKS, HISTORY }
-        override val extras: Map<Library.selectedItemKeys, String>?
-            get() = mapOf(Library.selectedItemKeys.item to item.name)
-    }
-
     data class ErrorPageVisited(val errorType: ErrorType) : Event() {
         override val extras: Map<ErrorPage.visitedErrorKeys, String>?
             get() = mapOf(ErrorPage.visitedErrorKeys.errorType to errorType.name)
@@ -408,7 +399,7 @@ sealed class Event {
 
     data class BrowserMenuItemTapped(val item: Item) : Event() {
         enum class Item {
-            SETTINGS, LIBRARY, HELP, DESKTOP_VIEW_ON, DESKTOP_VIEW_OFF, FIND_IN_PAGE, NEW_TAB,
+            SETTINGS, HELP, DESKTOP_VIEW_ON, DESKTOP_VIEW_OFF, FIND_IN_PAGE, NEW_TAB,
             NEW_PRIVATE_TAB, SHARE, REPORT_SITE_ISSUE, BACK, FORWARD, RELOAD, STOP, OPEN_IN_FENIX,
             SAVE_TO_COLLECTION, ADD_TO_TOP_SITES, ADD_TO_HOMESCREEN, QUIT, READER_MODE_ON,
             READER_MODE_OFF, OPEN_IN_APP, BOOKMARK, READER_MODE_APPEARANCE, ADDONS_MANAGER,

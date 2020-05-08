@@ -22,7 +22,6 @@ import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.FindInPage
 import org.mozilla.fenix.GleanMetrics.History
-import org.mozilla.fenix.GleanMetrics.Library
 import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.MediaNotification
 import org.mozilla.fenix.GleanMetrics.MediaState
@@ -212,16 +211,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.QRScannerNavigationDenied -> EventWrapper<NoExtraKeys>(
             { QrScanner.navigationDenied.record(it) }
-        )
-        is Event.LibraryOpened -> EventWrapper<NoExtraKeys>(
-            { Library.opened.record(it) }
-        )
-        is Event.LibraryClosed -> EventWrapper<NoExtraKeys>(
-            { Library.closed.record(it) }
-        )
-        is Event.LibrarySelectedItem -> EventWrapper(
-            { Library.selectedItem.record(it) },
-            { Library.selectedItemKeys.valueOf(it) }
         )
         is Event.ErrorPageVisited -> EventWrapper(
             { ErrorPage.visitedError.record(it) },

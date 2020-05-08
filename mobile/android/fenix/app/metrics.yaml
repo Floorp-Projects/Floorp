@@ -89,10 +89,10 @@ events:
           A string containing the name of the item the user tapped. These items
           include:
 
-            Settings, Library, Help, Desktop Site toggle on/off, Find in Page,
+            Settings, Help, Desktop Site toggle on/off, Find in Page,
             New Tab, Private Tab, Share, Report Site Issue, Back/Forward button,
             Reload Button, Quit, Reader Mode On, Reader Mode Off, Open In app,
-            Add To Top Sites, Add-ons Manager
+            Add To Top Sites, Add-ons Manager, Bookmarks, History
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/1024
     data_reviews:
@@ -804,44 +804,6 @@ qr_scanner:
       - https://github.com/mozilla-mobile/fenix/issues/1857
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2020-09-01"
-
-library:
-  opened:
-    type: event
-    description: |
-      A user opened the library
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/976
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/2538#issuecomment-492830242
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2020-09-01"
-  closed:
-    type: event
-    description: |
-      A user closed the library
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/976
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/2538#issuecomment-492830242
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2020-09-01"
-  selected_item:
-    type: event
-    description: |
-      A user selected a library item
-    extra_keys:
-      item:
-        description: "The library item the user selected"
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/976
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/2538#issuecomment-492830242
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"
