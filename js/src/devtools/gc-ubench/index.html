@@ -50,6 +50,17 @@
     <span id="load-running">(init)</span>
 </div>
 
+<div>
+    &nbsp;&nbsp;&nbsp;&nbsp;Garbage items per frame:
+    <input type="text" id="garbage-per-frame" size="5" value="8K"
+           onchange="garbage_per_frame_changed()"></input>
+</div>
+<div>
+    &nbsp;&nbsp;&nbsp;&nbsp;Garbage piles:
+    <input type="text" id="garbage-piles" size="5" value="8"
+           onchange="garbage_piles_changed()"></input>
+</div>
+
 <hr>
 
 <div>
@@ -67,17 +78,6 @@
     &nbsp;&nbsp;&nbsp;&nbsp;45 fps: <span id="pct45">n/a</span>
     &nbsp;&nbsp;&nbsp;&nbsp;30 fps: <span id="pct30">n/a</span>
 </div
-
-<div>
-    &nbsp;&nbsp;&nbsp;&nbsp;Garbage items per frame:
-    <input type="text" id="garbage-per-frame" size="5" value="8K"
-           onchange="garbage_per_frame_changed()"></input>
-</div>
-<div>
-    &nbsp;&nbsp;&nbsp;&nbsp;Garbage piles:
-    <input type="text" id="garbage-piles" size="5" value="8M"
-           onchange="garbage_piles_changed()"></input>
-</div>
 
 <div id="results-Area">
     Test Results:
