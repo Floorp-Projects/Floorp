@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test preserving metadata between page reloads</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+  </head>
+<body>
+<p id="display"></p>
+<div id="content">
+  <iframe id="test-frame" width="800px" height="600px" srcdoc='
+        <html>
+          <body>
+            <h3>Bug 1635224: Preserve mLastValueChangeWasInteractive between reloads</h3>
+            <div>
+              <form>
+                <textarea id="maxlen-textarea" maxlength="2" rows="2" cols="10"></textarea><br/>
+                <input id="maxlen-inputtext" type="text" maxlength="2"><br/>
+                <textarea id="minlen-textarea" minlength="8" rows="2" cols="10"></textarea><br/>
+                <input id="minlen-inputtext" type="text" minlength="8"><br/>
+              </form>
+            </div>
+          </body>
+        </html>
+'></iframe>
+</div>
+
+<pre id="test">
+<script>
+  SimpleTest.waitForExplicitFinish()
+  const Ci = SpecialPowers.Ci;
+  const str = "aaaaa";
+
+  function afterLoad() {
+    SimpleTest.waitForFocus(function () {
+      var iframeDoc = $("test-frame").contentDocument;
+      var src = iframeDoc.getElementById("src");
+
+      function test(fieldId, callback) {
+        var field = iframeDoc.getElementById(fieldId);
+        field.focus();
+        SimpleTest.waitForClipboard(str,
+          function () {
+            SpecialPowers.Cc["@mozilla.org/widget/clipboardhelper;1"]
+              .getService(Ci.nsIClipboardHelper)
+              .copyString(str);
+          },
+          function () {
+            synthesizeKey("v", { accelKey: true });
+            is(field.value, "aaaaa", "the value of " + fieldId + " was entered correctly");
+            is(field.checkValidity(), false, "the validity of " + fieldId + " should be false");
+            $("test-frame").contentWindow.location.reload();
+            is(field.value, "aaaaa", "the value of " + fieldId + " persisted correctly");
+            is(field.checkValidity(), false, "the validity of " + fieldId + " should be false after reload");
+            callback();
+          },
+          function () {
+            ok(false, "Failed to copy the string");
+            SimpleTest.finish();
+          }
+        );
+      }
+
+      function runNextTest() {
+        if (fieldIds.length) {
+          var currentFieldId = fieldIds.shift();
+          test(currentFieldId, runNextTest);
+        } else {
+          SimpleTest.finish();
+        }
+      }
+
+      var fieldIds = ["maxlen-textarea", "maxlen-inputtext", "minlen-textarea", "minlen-inputtext"];
+      runNextTest();
+    });
+  }
+  addLoadEvent(afterLoad);
+</script>
+</pre>
+</body>
+</html>
