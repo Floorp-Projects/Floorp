@@ -195,7 +195,7 @@ var OSKeyStore = {
         unlockPromise = osReauthenticator
           .asyncReauthenticateUser(reauth, dialogCaption, parentWindow)
           .then(reauthResult => {
-            if (typeof reauthResult[0] == "boolean" && !reauthResult[0]) {
+            if (!reauthResult[0]) {
               throw new Components.Exception(
                 "User canceled OS reauth entry",
                 Cr.NS_ERROR_FAILURE
