@@ -280,9 +280,9 @@ function exportFlags(aPolicy) {
 
 async function exportExtension(aAddon, aPermissions, aSourceURI) {
   // First, let's make sure the policy is ready if present
-  const policy = WebExtensionPolicy.getByID(aAddon.id);
-  if (policy) {
-    await policy.readyPromise;
+  let policy = WebExtensionPolicy.getByID(aAddon.id);
+  if (policy?.readyPromise) {
+    policy = await policy.readyPromise;
   }
   const {
     creator,
