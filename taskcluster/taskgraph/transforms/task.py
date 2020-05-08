@@ -23,7 +23,6 @@ import attr
 from mozbuild.util import memoize
 from taskgraph.util.attributes import TRUNK_PROJECTS
 from taskgraph.util.hash import hash_path
-from taskgraph.util.taskcluster import get_root_url
 from taskgraph.util.treeherder import split_symbol
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.keyed_by import evaluate_keyed_by
@@ -1999,10 +1998,6 @@ def build_task(config, tasks):
             if payload:
                 env = payload.setdefault('env', {})
                 env['MOZ_AUTOMATION'] = '1'
-
-                # Set TASKCLUSTER_ROOT_URL on workers that don't set it
-                if provisioner_id == 'terraform-packet':
-                    env['TASKCLUSTER_ROOT_URL'] = get_root_url(False)
 
         yield {
             'label': task['label'],
