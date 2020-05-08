@@ -9,7 +9,10 @@ Mozilla project.
 
 .. note::
 
-   Sheriffs are in charge of monitoring the tree. They have a slightly different definition of tiers.
+   Sheriffs are in charge of monitoring the tree. Their definition for tiers
+   is for automation jobs, which tells a developer what is expected of them when
+   they land code. This document is about the tiers of supported build targets,
+   which tells a person compiling/using Firefox what they can expect from Mozilla.
    See the `job tier definition <https://wiki.mozilla.org/Sheriffing/Job_Visibility_Policy#Overview_of_the_Job_Visibility_Tiers>`__ for more information.
 
 .. _tier-1:
