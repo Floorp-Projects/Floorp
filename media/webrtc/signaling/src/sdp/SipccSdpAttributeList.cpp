@@ -757,7 +757,7 @@ void SipccSdpAttributeList::LoadFmtp(sdp_t* sdp, uint16_t level) {
         opusParameters->maxplaybackrate = fmtp->maxplaybackrate;
         opusParameters->stereo = fmtp->stereo;
         opusParameters->useInBandFec = fmtp->useinbandfec;
-        opusParameters->maxaveragebitrate = fmtp->maxaveragebitrate;
+        opusParameters->maxAverageBitrate = fmtp->maxaveragebitrate;
         opusParameters->useDTX = fmtp->usedtx;
         parameters.reset(opusParameters);
       } break;

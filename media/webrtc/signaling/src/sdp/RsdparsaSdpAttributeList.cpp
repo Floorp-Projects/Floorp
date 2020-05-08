@@ -750,8 +750,13 @@ void RsdparsaSdpAttributeList::LoadFmtp(RustAttributeList* attributeList) {
       SdpFmtpAttributeList::OpusParameters opusParameters;
 
       opusParameters.maxplaybackrate = rustFmtpParameters.maxplaybackrate;
+      opusParameters.maxAverageBitrate = rustFmtpParameters.maxaveragebitrate;
+      opusParameters.useDTX = rustFmtpParameters.usedtx;
       opusParameters.stereo = rustFmtpParameters.stereo;
       opusParameters.useInBandFec = rustFmtpParameters.useinbandfec;
+      opusParameters.frameSizeMs = rustFmtpParameters.ptime;
+      opusParameters.minFrameSizeMs = rustFmtpParameters.minptime;
+      opusParameters.maxFrameSizeMs = rustFmtpParameters.maxptime;
 
       fmtpParameters.reset(
           new SdpFmtpAttributeList::OpusParameters(std::move(opusParameters)));

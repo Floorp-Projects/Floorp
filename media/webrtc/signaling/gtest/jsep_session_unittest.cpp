@@ -3476,7 +3476,7 @@ TEST_F(JsepSessionTest, ValidateOfferedAudioCodecParams) {
   ASSERT_EQ((uint32_t)48000, parsed_opus_params.maxplaybackrate);
   ASSERT_EQ((uint32_t)1, parsed_opus_params.stereo);
   ASSERT_EQ((uint32_t)0, parsed_opus_params.useInBandFec);
-  ASSERT_EQ((uint32_t)0, parsed_opus_params.maxaveragebitrate);
+  ASSERT_EQ((uint32_t)0, parsed_opus_params.maxAverageBitrate);
   ASSERT_EQ((uint32_t)0, parsed_opus_params.useDTX);
 
   // dtmf

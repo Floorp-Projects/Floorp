@@ -28,6 +28,9 @@ struct AudioCodecConfig {
 
   bool mFECEnabled;
   bool mDtmfEnabled;
+  uint32_t mFrameSizeMs;
+  uint32_t mMaxFrameSizeMs;
+  uint32_t mMinFrameSizeMs;
 
   // OPUS-specific
   bool mDTXEnabled;
@@ -42,6 +45,9 @@ struct AudioCodecConfig {
         mChannels(channels),
         mFECEnabled(FECEnabled),
         mDtmfEnabled(false),
+        mFrameSizeMs(0),
+        mMaxFrameSizeMs(0),
+        mMinFrameSizeMs(0),
         mDTXEnabled(false),
         mMaxAverageBitrate(0),
         mMaxPlaybackRate(0) {}
