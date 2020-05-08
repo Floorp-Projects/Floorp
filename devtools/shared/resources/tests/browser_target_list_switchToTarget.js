@@ -24,7 +24,8 @@ async function testSwitchToTarget(client) {
   const firstTab = await addTab(
     `data:text/html,<iframe src="data:text/html,foo"></iframe>`
   );
-  const firstTarget = await mainRoot.getTab({ tab: gBrowser.selectedTab });
+  const firstDescriptor = await mainRoot.getTab({ tab: gBrowser.selectedTab });
+  const firstTarget = await firstDescriptor.getTarget();
 
   const targetList = new TargetList(mainRoot, firstTarget);
 
@@ -41,7 +42,8 @@ async function testSwitchToTarget(client) {
   const secondTab = await addTab(
     `data:text/html,<iframe src="data:text/html,bar"></iframe>`
   );
-  const secondTarget = await mainRoot.getTab({ tab: gBrowser.selectedTab });
+  const secondDescriptor = await mainRoot.getTab({ tab: gBrowser.selectedTab });
+  const secondTarget = await secondDescriptor.getTarget();
 
   const frameTargets = [];
   let currentTarget = firstTarget;

@@ -121,7 +121,8 @@ async function initToolbox(url, host) {
 
       await client.connect();
       // Creates a target for a given browser iframe.
-      target = await client.mainRoot.getTab({ tab });
+      const tabDescriptor = await client.mainRoot.getTab({ tab });
+      target = await tabDescriptor.getTarget();
       // Instruct the Target to automatically close the client on destruction.
       target.shouldCloseClient = true;
     } else {

@@ -101,7 +101,8 @@ async function testPreffedOffTab(mainRoot) {
   // Create a TargetList for a given test tab
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   const tab = await addTab(FISSION_TEST_URL);
-  const target = await mainRoot.getTab({ tab });
+  const descriptor = await mainRoot.getTab({ tab });
+  const target = await descriptor.getTarget();
   const targetList = new TargetList(mainRoot, target);
 
   await targetList.startListening();

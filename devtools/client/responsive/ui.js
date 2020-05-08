@@ -466,7 +466,8 @@ class ResponsiveUI {
     this.client = new DevToolsClient(DevToolsServer.connectPipe());
     await this.client.connect();
 
-    const targetFront = await this.client.mainRoot.getTab();
+    const descriptor = await this.client.mainRoot.getTab();
+    const targetFront = await descriptor.getTarget();
     this.targetList = new TargetList(this.client.mainRoot, targetFront);
     this.targetList.startListening();
     await this.targetList.watchTargets(
@@ -1186,7 +1187,8 @@ class ResponsiveUI {
       // corresponding TabDescriptorFront has been cleared. Otherwise, getTab()
       // might return the soon to be destroyed target again.
       await this.targetList.targetFront.once("target-destroyed");
-      const newTarget = await this.client.mainRoot.getTab();
+      const descriptor = await this.client.mainRoot.getTab();
+      const newTarget = await descriptor.getTarget();
       await this.targetList.switchToTarget(newTarget);
     } else {
       const { browserWindow, tab } = this;

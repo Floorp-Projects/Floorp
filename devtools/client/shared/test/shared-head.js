@@ -175,7 +175,8 @@ async function getTestActorWithoutToolbox(tab) {
   const client = new DevToolsClient(DevToolsServer.connectPipe());
   await client.connect();
 
-  const targetFront = await client.mainRoot.getTab({ tab });
+  const descriptor = await client.mainRoot.getTab({ tab });
+  const targetFront = await descriptor.getTarget();
   return targetFront.getFront("test");
 }
 

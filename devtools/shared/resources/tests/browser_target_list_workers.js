@@ -143,7 +143,8 @@ async function testTabWorkers(mainRoot, tab) {
   info("Test TargetList against workers via a tab target");
 
   // Create a TargetList for a given test tab
-  const target = await mainRoot.getTab({ tab });
+  const descriptor = await mainRoot.getTab({ tab });
+  const target = await descriptor.getTarget();
 
   // Ensure attaching the target as BrowsingContextTargetActor.listWorkers
   // assert that the target actor is attached.

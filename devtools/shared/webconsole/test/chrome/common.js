@@ -63,7 +63,8 @@ var _attachConsole = async function(listeners, attachToTab, attachToWorker) {
       const targetDescriptor = await client.mainRoot.getMainProcess();
       target = await targetDescriptor.getTarget();
     } else {
-      target = await client.mainRoot.getTab();
+      const targetDescriptor = await client.mainRoot.getTab();
+      target = await targetDescriptor.getTarget();
       if (attachToWorker) {
         const workerName = "console-test-worker.js#" + new Date().getTime();
         worker = new Worker(workerName);
