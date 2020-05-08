@@ -23,23 +23,23 @@ import mozpack.path as mozpath
 RE_STRIP_COLORS = re.compile(r'\x1b\[[\d;]+m')
 
 # This captures Clang diagnostics with the standard formatting.
-RE_CLANG_WARNING = re.compile(r"""
+RE_CLANG_WARNING_AND_ERROR = re.compile(r"""
     (?P<file>[^:]+)
     :
     (?P<line>\d+)
     :
     (?P<column>\d+)
     :
-    \swarning:\s
+    \s(?P<type>warning|error):\s
     (?P<message>.+)
     \[(?P<flag>[^\]]+)
     """, re.X)
 
 # This captures Clang-cl warning format.
-RE_CLANG_CL_WARNING = re.compile(r"""
+RE_CLANG_CL_WARNING_AND_ERROR = re.compile(r"""
     (?P<file>.*)
     \((?P<line>\d+),(?P<column>\d+)\)
-    \s?:\s+warning:\s
+    \s?:\s+(?P<type>warning|error):\s
     (?P<message>.*)
     \[(?P<flag>[^\]]+)
     """, re.X)
@@ -327,12 +327,13 @@ class WarningsCollector(object):
         filename = None
 
         # TODO make more efficient so we run minimal regexp matches.
-        match_clang = RE_CLANG_WARNING.match(filtered)
-        match_clang_cl = RE_CLANG_CL_WARNING.match(filtered)
+        match_clang = RE_CLANG_WARNING_AND_ERROR.match(filtered)
+        match_clang_cl = RE_CLANG_CL_WARNING_AND_ERROR.match(filtered)
         if match_clang:
             d = match_clang.groupdict()
 
             filename = d['file']
+            warning['type'] = d['type']
             warning['line'] = int(d['line'])
             warning['column'] = int(d['column'])
             warning['flag'] = d['flag']
@@ -342,6 +343,7 @@ class WarningsCollector(object):
             d = match_clang_cl.groupdict()
 
             filename = d['file']
+            warning['type'] = d['type']
             warning['line'] = int(d['line'])
             warning['column'] = int(d['column'])
             warning['flag'] = d['flag']
