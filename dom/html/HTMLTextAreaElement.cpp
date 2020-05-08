@@ -735,7 +735,8 @@ HTMLTextAreaElement::SaveState() {
         return rv;
       }
 
-      state->contentData() = std::move(value);
+      state->contentData() =
+          TextContentData(value, mLastValueChangeWasInteractive);
     }
   }
 
@@ -757,12 +758,15 @@ HTMLTextAreaElement::SaveState() {
 bool HTMLTextAreaElement::RestoreState(PresState* aState) {
   const PresContentData& state = aState->contentData();
 
-  if (state.type() == PresContentData::TnsString) {
+  if (state.type() == PresContentData::TTextContentData) {
     ErrorResult rv;
-    SetValue(state.get_nsString(), rv);
+    SetValue(state.get_TextContentData().value(), rv);
     ENSURE_SUCCESS(rv, false);
+    if (state.get_TextContentData().lastValueChangeWasInteractive()) {
+      mLastValueChangeWasInteractive = true;
+      UpdateState(true);
+    }
   }
-
   if (aState->disabledSet() && !aState->disabled()) {
     SetDisabled(false, IgnoreErrors());
   }
