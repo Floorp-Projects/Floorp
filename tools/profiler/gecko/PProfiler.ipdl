@@ -23,6 +23,9 @@ child:
   async Pause();
   async Resume();
 
+  async AwaitNextChunkManagerUpdate() returns (ProfileBufferChunkManagerUpdate update);
+  async DestroyReleasedChunksAtOrBefore(TimeStamp timeStamp);
+
   async GatherProfile() returns (Shmem profile);
 
   async ClearAllPages();
