@@ -757,6 +757,7 @@ void RsdparsaSdpAttributeList::LoadFmtp(RustAttributeList* attributeList) {
       opusParameters.frameSizeMs = rustFmtpParameters.ptime;
       opusParameters.minFrameSizeMs = rustFmtpParameters.minptime;
       opusParameters.maxFrameSizeMs = rustFmtpParameters.maxptime;
+      opusParameters.useCbr = rustFmtpParameters.cbr;
 
       fmtpParameters.reset(
           new SdpFmtpAttributeList::OpusParameters(std::move(opusParameters)));

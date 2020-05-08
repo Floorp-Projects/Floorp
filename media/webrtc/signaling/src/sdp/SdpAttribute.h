@@ -1361,7 +1361,8 @@ class SdpFmtpAttributeList : public SdpAttribute {
       kDefaultUseDTX = 0,
       kDefaultFrameSize = 0,
       kDefaultMinFrameSize = 0,
-      kDefaultMaxFrameSize = 0
+      kDefaultMaxFrameSize = 0,
+      kDefaultUseCbr = 0
     };
     OpusParameters()
         : Parameters(SdpRtpmapAttributeList::kOpus),
@@ -1372,7 +1373,8 @@ class SdpFmtpAttributeList : public SdpAttribute {
           useDTX(kDefaultUseDTX),
           frameSizeMs(kDefaultFrameSize),
           minFrameSizeMs(kDefaultMinFrameSize),
-          maxFrameSizeMs(kDefaultMaxFrameSize) {}
+          maxFrameSizeMs(kDefaultMaxFrameSize),
+          useCbr(kDefaultUseCbr) {}
 
     Parameters* Clone() const override { return new OpusParameters(*this); }
 
@@ -1395,6 +1397,9 @@ class SdpFmtpAttributeList : public SdpAttribute {
       if (maxFrameSizeMs) {
         os << ";maxptime=" << maxFrameSizeMs;
       }
+      if (useCbr) {
+        os << ";cbr=1";
+      }
     }
 
     virtual bool CompareEq(const Parameters& other) const override {
@@ -1415,7 +1420,8 @@ class SdpFmtpAttributeList : public SdpAttribute {
              useDTX == otherOpus.useDTX &&
              frameSizeMs == otherOpus.frameSizeMs &&
              minFrameSizeMs == otherOpus.minFrameSizeMs &&
-             maxFrameSizeMs == otherOpus.maxFrameSizeMs;
+             maxFrameSizeMs == otherOpus.maxFrameSizeMs &&
+             useCbr == otherOpus.useCbr;
     }
 
     unsigned int maxplaybackrate;
@@ -1426,6 +1432,7 @@ class SdpFmtpAttributeList : public SdpAttribute {
     uint32_t frameSizeMs;
     uint32_t minFrameSizeMs;
     uint32_t maxFrameSizeMs;
+    bool useCbr;
   };
 
   class TelephoneEventParameters : public Parameters {
