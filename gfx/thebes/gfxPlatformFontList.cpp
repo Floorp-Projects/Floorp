@@ -832,7 +832,8 @@ void gfxPlatformFontList::GetFontFamilyList(
 
 gfxFontEntry* gfxPlatformFontList::SystemFindFontForChar(
     uint32_t aCh, uint32_t aNextCh, Script aRunScript,
-    const gfxFontStyle* aStyle, FontVisibility* aVisibility) {
+    const gfxFontStyle* aStyle, FontVisibility* aVisibility,
+    FontMatchingStats* aFontMatchingStats) {
   MOZ_ASSERT(!mCodepointsWithNoFonts.test(aCh),
              "don't call for codepoints already known to be unsupported");
 
@@ -879,8 +880,8 @@ gfxFontEntry* gfxPlatformFontList::SystemFindFontForChar(
   uint32_t cmapCount = 0;
   if (!fontEntry) {
     common = false;
-    fontEntry =
-        GlobalFontFallback(aCh, aRunScript, aStyle, cmapCount, fallbackFamily);
+    fontEntry = GlobalFontFallback(aCh, aRunScript, aStyle, cmapCount,
+                                   fallbackFamily, aFontMatchingStats);
   }
   TimeDuration elapsed = TimeStamp::Now() - start;
 
@@ -966,19 +967,26 @@ gfxFontEntry* gfxPlatformFontList::CommonFontFallback(
 
 gfxFontEntry* gfxPlatformFontList::GlobalFontFallback(
     const uint32_t aCh, Script aRunScript, const gfxFontStyle* aMatchStyle,
-    uint32_t& aCmapCount, FontFamily& aMatchedFamily) {
+    uint32_t& aCmapCount, FontFamily& aMatchedFamily,
+    FontMatchingStats* aFontMatchingStats) {
   bool useCmaps = IsFontFamilyWhitelistActive() ||
                   gfxPlatform::GetPlatform()->UseCmapsDuringSystemFallback();
+  FontVisibility rejectedFallbackVisibility = FontVisibility::Unknown;
   if (!useCmaps) {
     // Allow platform-specific fallback code to try and find a usable font
     gfxFontEntry* fe = PlatformGlobalFontFallback(aCh, aRunScript, aMatchStyle,
                                                   aMatchedFamily);
     if (fe) {
-      if ((aMatchedFamily.mIsShared &&
-           IsVisibleToCSS(*aMatchedFamily.mShared)) ||
-          (!aMatchedFamily.mIsShared &&
-           IsVisibleToCSS(*aMatchedFamily.mUnshared))) {
-        return fe;
+      if (aMatchedFamily.mIsShared) {
+        if (IsVisibleToCSS(*aMatchedFamily.mShared)) {
+          return fe;
+        }
+        rejectedFallbackVisibility = aMatchedFamily.mShared->Visibility();
+      } else {
+        if (IsVisibleToCSS(*aMatchedFamily.mUnshared)) {
+          return fe;
+        }
+        rejectedFallbackVisibility = aMatchedFamily.mUnshared->Visibility();
       }
     }
   }
@@ -1022,6 +1030,14 @@ gfxFontEntry* gfxPlatformFontList::GlobalFontFallback(
     if (data.mBestMatch) {
       aMatchedFamily = FontFamily(data.mMatchedFamily);
       return data.mBestMatch;
+    }
+  }
+
+  if (aFontMatchingStats) {
+    if (rejectedFallbackVisibility == FontVisibility::LangPack) {
+      aFontMatchingStats->mFallbacks |= FallbackTypes::MissingFontLangPack;
+    } else if (rejectedFallbackVisibility == FontVisibility::User) {
+      aFontMatchingStats->mFallbacks |= FallbackTypes::MissingFontUser;
     }
   }
 

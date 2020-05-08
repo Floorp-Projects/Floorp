@@ -3451,7 +3451,7 @@ gfxFont* gfxFontGroup::WhichSystemFontSupportsChar(uint32_t aCh,
   FontVisibility visibility;
   gfxFontEntry* fe =
       gfxPlatformFontList::PlatformFontList()->SystemFindFontForChar(
-          aCh, aNextCh, aRunScript, &mStyle, &visibility);
+          aCh, aNextCh, aRunScript, &mStyle, &visibility, mFontMatchingStats);
   if (fe) {
     if (mFontMatchingStats) {
       switch (visibility) {
