@@ -25,9 +25,12 @@ function log(s) {
   log.textContent = log.textContent+s+"\n";
 }
 
+SpecialPowers.registerObservers("csp-on-violate-policy");
+
 // used to watch if requests are blocked by CSP or allowed through
 function examiner() {
   SpecialPowers.addObserver(this, "csp-on-violate-policy");
+  SpecialPowers.addObserver(this, "specialpowers-csp-on-violate-policy");
   SpecialPowers.addObserver(this, "specialpowers-http-notify-request");
 }
 examiner.prototype  = {
@@ -46,7 +49,7 @@ examiner.prototype  = {
       window.testResult(testid, allowedUri, true);
     }
 
-    else if (topic === "csp-on-violate-policy") {
+    else if (topic === "csp-on-violate-policy" || topic === "specialpowers-csp-on-violate-policy") {
       // request was blocked
       asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
       if (!testpat.test(asciiSpec)) return;
@@ -62,6 +65,7 @@ examiner.prototype  = {
 
   remove() {
     SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+    SpecialPowers.removeObserver(this, "specialpowers-csp-on-violate-policy");
     SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
   }
 }

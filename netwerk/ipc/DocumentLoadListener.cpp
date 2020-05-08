@@ -1810,28 +1810,6 @@ DocumentLoadListener::AsyncOnChannelRedirect(
   // the new URI and set these again.
   mIParentChannelFunctions.Clear();
 
-  nsCOMPtr<nsILoadInfo> loadInfo = aOldChannel->LoadInfo();
-
-  nsCOMPtr<nsIURI> originalUri;
-  rv = aOldChannel->GetOriginalURI(getter_AddRefs(originalUri));
-  if (NS_FAILED(rv)) {
-    aOldChannel->Cancel(NS_ERROR_DOM_BAD_URI);
-    return rv;
-  }
-
-  nsCOMPtr<nsIURI> newUri;
-  rv = aNewChannel->GetURI(getter_AddRefs(newUri));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  Maybe<nsresult> cancelCode;
-  rv = CSPService::ConsultCSPForRedirect(originalUri, newUri, loadInfo,
-                                         cancelCode);
-
-  if (cancelCode) {
-    aOldChannel->Cancel(*cancelCode);
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-
 #ifdef ANDROID
   nsCOMPtr<nsIURI> uriBeingLoaded =
       AntiTrackingUtils::MaybeGetDocumentURIBeingLoaded(mChannel);
