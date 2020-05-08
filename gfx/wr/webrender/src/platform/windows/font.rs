@@ -413,52 +413,78 @@ impl FontContext {
     fn convert_to_bgra(
         &self,
         pixels: &[u8],
+        width: usize,
+        height: usize,
         texture_type: dwrote::DWRITE_TEXTURE_TYPE,
         render_mode: FontRenderMode,
         bitmaps: bool,
         subpixel_bgr: bool,
+        texture_padding: bool,
     ) -> Vec<u8> {
+        let (buffer_width, buffer_height, padding) = if texture_padding {
+            (width + 2, height + 2, 1)
+        } else {
+            (width, height, 0)
+        };
+
+        let buffer_length = buffer_width * buffer_height * 4;
+        let mut bgra_pixels: Vec<u8> = vec![0; buffer_length];
+
         match (texture_type, render_mode, bitmaps) {
             (dwrote::DWRITE_TEXTURE_ALIASED_1x1, _, _) => {
-                let mut bgra_pixels: Vec<u8> = vec![0; pixels.len() * 4];
-                for i in 0 .. pixels.len() {
-                    let alpha = pixels[i];
-                    bgra_pixels[i * 4 + 0] = alpha;
-                    bgra_pixels[i * 4 + 1] = alpha;
-                    bgra_pixels[i * 4 + 2] = alpha;
-                    bgra_pixels[i * 4 + 3] = alpha;
+                assert!(width * height == pixels.len());
+                let mut i = 0;
+                for row in padding .. height + padding {
+                    let row_offset = row * buffer_width;
+                    for col in padding .. width + padding {
+                        let offset = (row_offset + col) * 4;
+                        let alpha = pixels[i];
+                        i += 1;
+                        bgra_pixels[offset + 0] = alpha;
+                        bgra_pixels[offset + 1] = alpha;
+                        bgra_pixels[offset + 2] = alpha;
+                        bgra_pixels[offset + 3] = alpha;
+                    }
                 }
-                bgra_pixels
             }
             (_, FontRenderMode::Subpixel, false) => {
-                let length = pixels.len() / 3;
-                let mut bgra_pixels: Vec<u8> = vec![0; length * 4];
-                for i in 0 .. length {
-                    let (mut r, g, mut b) = (pixels[i * 3 + 0], pixels[i * 3 + 1], pixels[i * 3 + 2]);
-                    if subpixel_bgr {
-                        mem::swap(&mut r, &mut b);
+                assert!(width * height * 3 == pixels.len());
+                let mut i = 0;
+                for row in padding .. height + padding {
+                    let row_offset = row * buffer_width;
+                    for col in padding .. width + padding {
+                        let offset = (row_offset + col) * 4;
+                        let (mut r, g, mut b) = (pixels[i + 0], pixels[i + 1], pixels[i + 2]);
+                        if subpixel_bgr {
+                            mem::swap(&mut r, &mut b);
+                        }
+                        i += 3;
+                        bgra_pixels[offset + 0] = b;
+                        bgra_pixels[offset + 1] = g;
+                        bgra_pixels[offset + 2] = r;
+                        bgra_pixels[offset + 3] = 0xff;
                     }
-                    bgra_pixels[i * 4 + 0] = b;
-                    bgra_pixels[i * 4 + 1] = g;
-                    bgra_pixels[i * 4 + 2] = r;
-                    bgra_pixels[i * 4 + 3] = 0xff;
                 }
-                bgra_pixels
             }
             _ => {
-                let length = pixels.len() / 3;
-                let mut bgra_pixels: Vec<u8> = vec![0; length * 4];
-                for i in 0 .. length {
-                    // Only take the G channel, as its closest to D2D
-                    let alpha = pixels[i * 3 + 1] as u8;
-                    bgra_pixels[i * 4 + 0] = alpha;
-                    bgra_pixels[i * 4 + 1] = alpha;
-                    bgra_pixels[i * 4 + 2] = alpha;
-                    bgra_pixels[i * 4 + 3] = alpha;
+                assert!(width * height * 3 == pixels.len());
+                let mut i = 0;
+                for row in padding .. height + padding {
+                    let row_offset = row * buffer_width;
+                    for col in padding .. width + padding {
+                        let offset = (row_offset + col) * 4;
+                        // Only take the G channel, as its closest to D2D
+                        let alpha = pixels[i + 1] as u8;
+                        i += 3;
+                        bgra_pixels[offset + 0] = alpha;
+                        bgra_pixels[offset + 1] = alpha;
+                        bgra_pixels[offset + 2] = alpha;
+                        bgra_pixels[offset + 3] = alpha;
+                    }
                 }
-                bgra_pixels
             }
-        }
+        };
+        bgra_pixels
     }
 
     pub fn prepare_font(font: &mut FontInstance) {
@@ -533,8 +559,10 @@ impl FontContext {
         }
 
         let pixels = analysis.create_alpha_texture(texture_type, bounds).or(Err(GlyphRasterError::LoadFailed))?;
-        let mut bgra_pixels = self.convert_to_bgra(&pixels, texture_type, font.render_mode, bitmaps,
-                                                   font.flags.contains(FontInstanceFlags::SUBPIXEL_BGR));
+        let mut bgra_pixels = self.convert_to_bgra(&pixels, width as usize, height as usize,
+                                                   texture_type, font.render_mode, bitmaps,
+                                                   font.flags.contains(FontInstanceFlags::SUBPIXEL_BGR),
+                                                   font.texture_padding);
 
         let FontInstancePlatformOptions { gamma, contrast, cleartype_level, .. } =
             font.platform_options.unwrap_or_default();
@@ -561,11 +589,12 @@ impl FontContext {
             font.get_glyph_format()
         };
 
+        let padding = if font.texture_padding { 1 } else { 0 };
         Ok(RasterizedGlyph {
-            left: bounds.left as f32,
-            top: -bounds.top as f32,
-            width,
-            height,
+            left: (bounds.left - padding) as f32,
+            top: (-bounds.top + padding) as f32,
+            width: width + padding * 2,
+            height: height + padding * 2,
             scale: (if bitmaps { y_scale.recip() } else { 1.0 }) as f32,
             format,
             bytes: bgra_pixels,

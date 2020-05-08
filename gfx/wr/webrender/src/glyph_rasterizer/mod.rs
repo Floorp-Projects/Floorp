@@ -418,6 +418,10 @@ pub struct FontInstance {
     pub flags: FontInstanceFlags,
     pub color: ColorU,
     pub transform_glyphs: bool,
+    // If true, add padding to the rasterized glyph buffer. This is
+    // useful when one anticipates the glyph will need to be scaled
+    // when rendered.
+    pub texture_padding: bool,
     // The font size is in *device* pixels, not logical pixels.
     // It is stored as an Au since we need sub-pixel sizes, but
     // can't store as a f32 due to use of this type as a hash key.
@@ -460,6 +464,7 @@ impl FontInstance {
         FontInstance {
             transform: FontTransform::identity(),
             transform_glyphs: false,
+            texture_padding: false,
             color,
             size: base.size,
             base,
@@ -474,6 +479,7 @@ impl FontInstance {
         FontInstance {
             transform: FontTransform::identity(),
             transform_glyphs: false,
+            texture_padding: false,
             color: ColorU::new(0, 0, 0, 255),
             size: base.size,
             render_mode: base.render_mode,
