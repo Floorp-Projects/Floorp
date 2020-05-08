@@ -501,12 +501,6 @@ void BrowserParent::SetOwnerElement(Element* aElement) {
     newTopLevelWin->AddBrowser(mBrowserHost);
   }
 
-  if (mFrameElement) {
-    bool useGlobalHistory = !mFrameElement->HasAttr(
-        kNameSpaceID_None, nsGkAtoms::disableglobalhistory);
-    Unused << SendSetUseGlobalHistory(useGlobalHistory);
-  }
-
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
   if (!mIsDestroyed) {
     uintptr_t newWindowHandle = 0;

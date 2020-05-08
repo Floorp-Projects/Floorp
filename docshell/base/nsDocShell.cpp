@@ -2830,7 +2830,10 @@ nsDocShell::AddChild(nsIDocShellTreeItem* aChild) {
 
   /* Set the child's global history if the parent has one */
   if (mBrowsingContext->GetUseGlobalHistory()) {
-    childDocShell->SetUseGlobalHistory(true);
+    // childDocShell->SetUseGlobalHistory(true);
+    // this should be set through BC inherit
+    MOZ_ASSERT(nsDocShell::Cast(childDocShell)
+                   ->mBrowsingContext->GetUseGlobalHistory());
   }
 
   if (aChild->ItemType() != mItemType) {
@@ -3004,23 +3007,6 @@ nsresult nsDocShell::AddChildSHEntryToParent(nsISHEntry* aNewEntry,
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-nsDocShell::SetUseGlobalHistory(bool aUseGlobalHistory) {
-  mBrowsingContext->SetUseGlobalHistory(aUseGlobalHistory);
-  if (!aUseGlobalHistory) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<IHistory> history = services::GetHistoryService();
-  return history ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetUseGlobalHistory(bool* aUseGlobalHistory) {
-  *aUseGlobalHistory = mBrowsingContext->GetUseGlobalHistory();
-  return NS_OK;
 }
 
 NS_IMETHODIMP
