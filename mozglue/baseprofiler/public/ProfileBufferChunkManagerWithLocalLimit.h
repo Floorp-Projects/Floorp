@@ -10,6 +10,7 @@
 #include "BaseProfiler.h"
 #include "mozilla/BaseProfilerDetail.h"
 #include "mozilla/ProfileBufferChunkManager.h"
+#include "mozilla/ProfileBufferControlledChunkManager.h"
 
 namespace mozilla {
 
@@ -27,7 +28,8 @@ namespace mozilla {
 // assuming that the user is doing the right thing and releasing chunks ASAP,
 // and that the memory limit is reasonably large.
 class ProfileBufferChunkManagerWithLocalLimit final
-    : public ProfileBufferChunkManager {
+    : public ProfileBufferChunkManager,
+      public ProfileBufferControlledChunkManager {
  public:
   using Length = ProfileBufferChunk::Length;
 
@@ -38,6 +40,13 @@ class ProfileBufferChunkManagerWithLocalLimit final
                                                    Length aChunkMinBufferBytes)
       : mMaxTotalBytes(aMaxTotalBytes),
         mChunkMinBufferBytes(aChunkMinBufferBytes) {}
+
+  ~ProfileBufferChunkManagerWithLocalLimit() {
+    if (mUpdateCallback) {
+      // Signal the end of this callback.
+      std::move(mUpdateCallback)(Update(nullptr));
+    }
+  }
 
   [[nodiscard]] size_t MaxTotalSize() const final {
     // `mMaxTotalBytes` is `const` so there is no need to lock the mutex.
@@ -94,11 +103,20 @@ class ProfileBufferChunkManagerWithLocalLimit final
   void ReleaseChunks(UniquePtr<ProfileBufferChunk> aChunks) final {
     baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
     MOZ_ASSERT(mUser, "Not registered yet");
+    // Keep a pointer to the first newly-released chunk, so we can use it to
+    // prepare an update (after `aChunks` is moved-from).
+    const ProfileBufferChunk* const newlyReleasedChunks = aChunks.get();
     // Compute the size of all provided chunks.
     size_t bytes = 0;
-    for (const ProfileBufferChunk* chunk = aChunks.get(); chunk;
+    for (const ProfileBufferChunk* chunk = newlyReleasedChunks; chunk;
          chunk = chunk->GetNext()) {
       bytes += chunk->BufferBytes();
+      MOZ_ASSERT(!chunk->ChunkHeader().mDoneTimeStamp.IsNull(),
+                 "All released chunks should have a 'Done' timestamp");
+      MOZ_ASSERT(
+          !chunk->GetNext() || (chunk->ChunkHeader().mDoneTimeStamp <
+                                chunk->GetNext()->ChunkHeader().mDoneTimeStamp),
+          "Released chunk groups must have increasing timestamps");
     }
     // Transfer the chunks size from the unreleased bucket to the released one.
     mUnreleasedBufferBytes -= bytes;
@@ -110,8 +128,16 @@ class ProfileBufferChunkManagerWithLocalLimit final
     } else {
       // Add to the end of the released chunks list (oldest first, most recent
       // last.)
+      MOZ_ASSERT(mReleasedChunks->Last()->ChunkHeader().mDoneTimeStamp <
+                     aChunks->ChunkHeader().mDoneTimeStamp,
+                 "Chunks must be released in increasing timestamps");
       mReleasedBufferBytes += bytes;
       mReleasedChunks->SetLast(std::move(aChunks));
+    }
+
+    if (mUpdateCallback) {
+      mUpdateCallback(Update(mUnreleasedBufferBytes, mReleasedBufferBytes,
+                             mReleasedChunks.get(), newlyReleasedChunks));
     }
   }
 
@@ -127,6 +153,9 @@ class ProfileBufferChunkManagerWithLocalLimit final
     baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
     MOZ_ASSERT(mUser, "Not registered yet");
     mReleasedBufferBytes = 0;
+    if (mUpdateCallback) {
+      mUpdateCallback(Update(mUnreleasedBufferBytes, 0, nullptr, nullptr));
+    }
     return std::move(mReleasedChunks);
   }
 
@@ -134,6 +163,10 @@ class ProfileBufferChunkManagerWithLocalLimit final
     baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
     MOZ_ASSERT(mUser, "Not registered yet");
     mUnreleasedBufferBytes = 0;
+    if (mUpdateCallback) {
+      mUpdateCallback(
+          Update(0, mReleasedBufferBytes, mReleasedChunks.get(), nullptr));
+    }
   }
 
   [[nodiscard]] size_t SizeOfExcludingThis(
@@ -147,6 +180,44 @@ class ProfileBufferChunkManagerWithLocalLimit final
     baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
     MOZ_ASSERT(mUser, "Not registered yet");
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf, lock);
+  }
+
+  void SetUpdateCallback(UpdateCallback&& aUpdateCallback) final {
+    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+    if (mUpdateCallback) {
+      // Signal the end of the previous callback.
+      std::move(mUpdateCallback)(Update(nullptr));
+    }
+    mUpdateCallback = std::move(aUpdateCallback);
+    if (mUpdateCallback) {
+      mUpdateCallback(Update(mUnreleasedBufferBytes, mReleasedBufferBytes,
+                             mReleasedChunks.get(), nullptr));
+    }
+  }
+
+  void DestroyChunksAtOrBefore(TimeStamp aDoneTimeStamp) final {
+    MOZ_ASSERT(!aDoneTimeStamp.IsNull());
+    baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
+    for (;;) {
+      if (!mReleasedChunks) {
+        // We don't own any released chunks (anymore), we're done.
+        break;
+      }
+      if (mReleasedChunks->ChunkHeader().mDoneTimeStamp > aDoneTimeStamp) {
+        // The current chunk is strictly after the given timestamp, we're done.
+        break;
+      }
+      // We've found a chunk at or before the timestamp. Move the released chunk
+      // pointer to the next one.
+      UniquePtr<ProfileBufferChunk> oldest =
+          std::exchange(mReleasedChunks, mReleasedChunks->ReleaseNext());
+      mReleasedBufferBytes -= oldest->ChunkBytes();
+      if (mChunkDestroyedCallback) {
+        // Inform the user that we're going to destroy this chunk.
+        mChunkDestroyedCallback(*oldest);
+      }
+      // Stop using `oldest`, this will effectively destroy it.
+    }
   }
 
  protected:
@@ -205,6 +276,11 @@ class ProfileBufferChunkManagerWithLocalLimit final
     if (chunk) {
       // We do have a chunk (recycled or new), record its size as "unreleased".
       mUnreleasedBufferBytes += chunk->BufferBytes();
+
+      if (mUpdateCallback) {
+        mUpdateCallback(Update(mUnreleasedBufferBytes, mReleasedBufferBytes,
+                               mReleasedChunks.get(), nullptr));
+      }
     }
 
     return chunk;
@@ -251,6 +327,8 @@ class ProfileBufferChunkManagerWithLocalLimit final
   // Callback set from `RequestChunk()`, until it is serviced in
   // `FulfillChunkRequests()`. There can only be one request in flight.
   std::function<void(UniquePtr<ProfileBufferChunk>)> mChunkReceiver;
+
+  UpdateCallback mUpdateCallback;
 };
 
 }  // namespace mozilla
