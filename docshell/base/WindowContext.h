@@ -49,6 +49,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   bool IsCached() const;
 
+  bool IsInProcess() { return mInProcess; }
+
   // Get the parent WindowContext of this WindowContext, taking the BFCache into
   // account. This will not cross chrome/content <browser> boundaries.
   WindowContext* GetParentWindowContext();
@@ -86,7 +88,7 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
  protected:
   WindowContext(BrowsingContext* aBrowsingContext, uint64_t aInnerWindowId,
-                FieldTuple&& aFields);
+                bool aInProcess, FieldTuple&& aFields);
   virtual ~WindowContext();
 
   void Init();
@@ -103,6 +105,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   void SendCommitTransaction(ContentChild* aChild, const BaseTransaction& aTxn,
                              uint64_t aEpoch);
 
+  bool CheckOnlyOwningProcessCanSet(ContentParent* aSource);
+
   // Overload `CanSet` to get notifications for a particular field being set.
   bool CanSet(FieldIndex<IDX_OuterWindowId>, const uint64_t& aValue,
               ContentParent* aSource) {
@@ -114,10 +118,7 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   bool CanSet(FieldIndex<IDX_CookieJarSettings>,
               const Maybe<mozilla::net::CookieJarSettingsArgs>& aValue,
-              ContentParent* aSource) {
-    return true;
-  }
-
+              ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_IsThirdPartyWindow>,
               const bool& IsThirdPartyWindow, ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_IsThirdPartyTrackingResourceWindow>,
@@ -142,6 +143,7 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   nsTArray<RefPtr<BrowsingContext>> mChildren;
 
   bool mIsDiscarded = false;
+  bool mInProcess = false;
 };
 
 using WindowContextTransaction = WindowContext::BaseTransaction;

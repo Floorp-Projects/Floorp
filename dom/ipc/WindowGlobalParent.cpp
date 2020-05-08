@@ -54,10 +54,9 @@ namespace dom {
 WindowGlobalParent::WindowGlobalParent(const WindowGlobalInit& aInit,
                                        bool aInProcess)
     : WindowContext(aInit.browsingContext().GetMaybeDiscarded(),
-                    aInit.innerWindowId(), {}),
+                    aInit.innerWindowId(), aInProcess, {}),
       mDocumentPrincipal(aInit.principal()),
       mDocumentURI(aInit.documentURI()),
-      mInProcess(aInProcess),
       mIsInitialDocument(false),
       mHasBeforeUnload(false),
       mSandboxFlags(0),
@@ -85,7 +84,7 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
   // Determine which content process the window global is coming from.
   dom::ContentParentId processId(0);
   ContentParent* cp = nullptr;
-  if (!mInProcess) {
+  if (!IsInProcess()) {
     cp = static_cast<ContentParent*>(Manager()->Manager());
     processId = cp->ChildID();
 
@@ -644,7 +643,7 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
   WindowContext::Discard();
 
   ContentParent* cp = nullptr;
-  if (!mInProcess) {
+  if (!IsInProcess()) {
     cp = static_cast<ContentParent*>(Manager()->Manager());
   }
 
@@ -661,7 +660,7 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
   // There shouldn't have any content blocking log when a documnet is loaded in
   // the parent process(See NotifyContentBlockingeEvent), so we could skip
   // reporting log when it is in-process.
-  if (!mInProcess) {
+  if (!IsInProcess()) {
     RefPtr<BrowserParent> browserParent =
         static_cast<BrowserParent*>(Manager());
     if (browserParent) {
