@@ -15,6 +15,7 @@ Object.defineProperty(this, "NetworkHelper", {
 
 function run_test() {
   test_isTextMimeType();
+  test_parseCookieHeader();
 }
 
 function test_isTextMimeType() {
@@ -64,4 +65,27 @@ function test_isTextMimeType() {
     NetworkHelper.isTextMimeType("application/vnd.google.safebrowsing-chunk"),
     false
   );
+}
+
+function test_parseCookieHeader() {
+  let result = NetworkHelper.parseSetCookieHeader("Test=1; SameSite=Strict");
+  Assert.deepEqual(result, [{ name: "Test", value: "1", samesite: "Strict" }]);
+
+  result = NetworkHelper.parseSetCookieHeader("Test=1; SameSite=strict");
+  Assert.deepEqual(result, [{ name: "Test", value: "1", samesite: "Strict" }]);
+
+  result = NetworkHelper.parseSetCookieHeader("Test=1; SameSite=STRICT");
+  Assert.deepEqual(result, [{ name: "Test", value: "1", samesite: "Strict" }]);
+
+  result = NetworkHelper.parseSetCookieHeader("Test=1; SameSite=None");
+  Assert.deepEqual(result, [{ name: "Test", value: "1", samesite: "None" }]);
+
+  result = NetworkHelper.parseSetCookieHeader("Test=1; SameSite=NONE");
+  Assert.deepEqual(result, [{ name: "Test", value: "1", samesite: "None" }]);
+
+  result = NetworkHelper.parseSetCookieHeader("Test=1; SameSite=lax");
+  Assert.deepEqual(result, [{ name: "Test", value: "1", samesite: "Lax" }]);
+
+  result = NetworkHelper.parseSetCookieHeader("Test=1; SameSite=Lax");
+  Assert.deepEqual(result, [{ name: "Test", value: "1", samesite: "Lax" }]);
 }
