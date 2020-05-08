@@ -1,8 +1,15 @@
 <!doctype html>
 <script>
-function openWindow() {
-  window.childWindow = window.open(location.href + "?opened", "", "");
+function openWindow(id) {
+  window.childWindow = window.open(location.href + "?" + id, "", "");
 }
 </script>
-<button id="open" onclick="openWindow()">Open window</button>
+<button id="open-click" onclick="openWindow('open-click')">Open window</button>
 <button id="focus" onclick="window.childWindow.focus()">Focus window</button>
+<button id="open-mousedown">Open window</button>
+<script>
+document.getElementById("open-mousedown").addEventListener("mousedown", function(e) {
+  openWindow(this.id);
+  e.preventDefault();
+});
+</script>
