@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Tabs goBack and goForward Test</title>
+    <script
+      type="text/javascript"
+      src="/tests/SimpleTest/SimpleTest.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="/tests/SimpleTest/ExtensionTestUtils.js"
+    ></script>
+    <script type="text/javascript" src="head.js"></script>
+    <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <script type="text/javascript">
+      "use strict";
+
+      add_task(async function test_tabs_goBack_goForward() {
+        const extension = ExtensionTestUtils.loadExtension({
+          useAddonManager: "permanent",
+          manifest: {
+            applications: {
+              gecko: { id: "goBack-goForward@tests.mozilla.org" },
+            },
+            permissions: ["tabs"],
+          },
+
+          files: {
+            "tab1.html": `<head>
+              <meta charset=UTF-8">
+              <title>tab1</title>
+            </head>`,
+            "tab2.html": `<head>
+              <meta charset=UTF-8">
+              <title>tab2</title>
+            </head>`,
+          },
+
+          async background() {
+            let tabUpdatedCount = 0;
+            let tab = {};
+
+            browser.tabs.onUpdated.addListener(
+              async (tabId, changeInfo, tabInfo) => {
+                if (
+                  changeInfo.status !== "complete" ||
+                  tabId !== tab.id ||
+                  tabInfo.url === "about:blank"
+                ) {
+                  return;
+                }
+
+                tabUpdatedCount++;
+                switch (tabUpdatedCount) {
+                  case 1:
+                    browser.test.assertEq(
+                      "tab1",
+                      tabInfo.title,
+                      "tab1 is found as expected"
+                    );
+                    browser.tabs.update(tabId, { url: "tab2.html" });
+                    break;
+
+                  case 2:
+                    browser.test.assertEq(
+                      "tab2",
+                      tabInfo.title,
+                      "tab2 is found as expected"
+                    );
+                    browser.tabs.update(tabId, { url: "tab1.html" });
+                    break;
+
+                  case 3:
+                    browser.test.assertEq(
+                      "tab1",
+                      tabInfo.title,
+                      "tab1 is found as expected"
+                    );
+                    browser.tabs.goBack();
+                    break;
+
+                  case 4:
+                    browser.test.assertEq(
+                      "tab2",
+                      tabInfo.title,
+                      "tab2 is found after navigating backward with empty parameter"
+                    );
+                    browser.tabs.goBack(tabId);
+                    break;
+
+                  case 5:
+                    browser.test.assertEq(
+                      "tab1",
+                      tabInfo.title,
+                      "tab1 is found after navigating backward with tabId as parameter"
+                    );
+                    browser.tabs.goForward();
+                    break;
+
+                  case 6:
+                    browser.test.assertEq(
+                      "tab2",
+                      tabInfo.title,
+                      "tab2 is found after navigating forward with empty parameter"
+                    );
+                    browser.tabs.goForward(tabId);
+                    break;
+
+                  case 7:
+                    browser.test.assertEq(
+                      "tab1",
+                      tabInfo.title,
+                      "tab1 is found after navigating forward with tabId as parameter"
+                    );
+                    await browser.tabs.remove(tabId);
+                    browser.test.notifyPass("tabs.goBack.goForward");
+                    break;
+
+                  default:
+                    break;
+                }
+              }
+            );
+
+            tab = await browser.tabs.create({ url: "tab1.html", active: true });
+          },
+        });
+
+        await extension.startup();
+        await extension.awaitFinish("tabs.goBack.goForward");
+        await extension.unload();
+      });
+    </script>
+  </body>
+</html>

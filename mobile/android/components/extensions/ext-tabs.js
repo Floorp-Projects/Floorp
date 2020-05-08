@@ -507,6 +507,16 @@ this.tabs = class extends ExtensionAPI {
 
           return tab.removeCSS(context, details);
         },
+
+        goForward(tabId) {
+          const { browser } = getTabOrActive(tabId);
+          browser.goForward();
+        },
+
+        goBack(tabId) {
+          const { browser } = getTabOrActive(tabId);
+          browser.goBack();
+        },
       },
     };
     return self;
