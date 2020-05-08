@@ -4,7 +4,9 @@
 
 window.attachEvent("onload", function() {
   if (parseInt(external.getIsHighContrast())) {
-    document.body.className = "high-contrast";
+    document.body.className += " high-contrast";
+  } else {
+    document.body.className += " normal-contrast";
   }
 
   document.body.style.fontFamily = external.getFontName() + ", sans-serif";
