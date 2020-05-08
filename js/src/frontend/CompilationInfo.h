@@ -31,7 +31,7 @@ using FunctionType = mozilla::Variant<JSFunction*, ScriptStencilBase>;
 // CompilationInfo owns a number of pieces of information about script
 // compilation as well as controls the lifetime of parse nodes and other data by
 // controling the mark and reset of the LifoAlloc.
-struct MOZ_RAII CompilationInfo {
+struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
   JSContext* cx;
   const JS::ReadOnlyCompileOptions& options;
 
@@ -40,6 +40,10 @@ struct MOZ_RAII CompilationInfo {
   AutoKeepAtoms keepAtoms;
 
   Directives directives;
+
+  // List of function contexts for GC tracing. These are allocated in the
+  // LifoAlloc and still require tracing.
+  FunctionBox* traceListHead = nullptr;
 
   // The resulting outermost script for the compilation powered
   // by this CompilationInfo.
@@ -74,7 +78,8 @@ struct MOZ_RAII CompilationInfo {
   // Construct a CompilationInfo
   CompilationInfo(JSContext* cx, LifoAllocScope& alloc,
                   const JS::ReadOnlyCompileOptions& options)
-      : cx(cx),
+      : JS::CustomAutoRooter(cx),
+        cx(cx),
         options(options),
         keepAtoms(cx),
         directives(options.forceStrictMode()),
@@ -96,6 +101,8 @@ struct MOZ_RAII CompilationInfo {
   MOZ_MUST_USE bool assignSource(JS::SourceText<Unit>& sourceBuffer) {
     return sourceObject->source()->assignSource(cx, options, sourceBuffer);
   }
+
+  void trace(JSTracer* trc) final;
 
   // To avoid any misuses, make sure this is neither copyable,
   // movable or assignable.

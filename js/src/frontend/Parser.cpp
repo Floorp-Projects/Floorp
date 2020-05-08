@@ -154,7 +154,6 @@ ParserSharedBase::ParserSharedBase(JSContext* cx,
       cx_(cx),
       alloc_(compilationInfo.allocScope.alloc()),
       compilationInfo_(compilationInfo),
-      traceListHead_(nullptr),
       pc_(nullptr),
       usedNames_(compilationInfo.usedNames) {
   cx->frontendCollectionPool().addActiveCompilation();
@@ -275,7 +274,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    * function.
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
-      cx_, traceListHead_, extent, this->getCompilationInfo(),
+      cx_, compilationInfo_.traceListHead, extent, this->getCompilationInfo(),
       inheritedDirectives, generatorKind, asyncKind, fun->explicitName(),
       fun->flags(), index);
   if (!funbox) {
@@ -283,7 +282,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     return nullptr;
   }
 
-  traceListHead_ = funbox;
+  compilationInfo_.traceListHead = funbox;
   handler_.setFunctionBox(funNode, funbox);
 
   return funbox;
@@ -296,8 +295,10 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     GeneratorKind generatorKind, FunctionAsyncKind asyncKind) {
   MOZ_ASSERT(funNode);
 
-  size_t index = this->getCompilationInfo().funcData.length();
-  if (!this->getCompilationInfo().funcData.emplaceBack(
+  CompilationInfo& compilationInfo = this->getCompilationInfo();
+
+  size_t index = compilationInfo.funcData.length();
+  if (!compilationInfo.funcData.emplaceBack(
           mozilla::AsVariant(ScriptStencilBase(cx_)))) {
     return nullptr;
   }
@@ -314,7 +315,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    * function.
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
-      cx_, traceListHead_, extent, this->getCompilationInfo(),
+      cx_, compilationInfo.traceListHead, extent, compilationInfo,
       inheritedDirectives, generatorKind, asyncKind, explicitName, flags,
       index);
 
@@ -323,14 +324,14 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     return nullptr;
   }
 
-  traceListHead_ = funbox;
+  compilationInfo.traceListHead = funbox;
   handler_.setFunctionBox(funNode, funbox);
 
   return funbox;
 }
 
-void ParserBase::trace(JSTracer* trc) {
-  FunctionBox::TraceList(trc, traceListHead_);
+void CompilationInfo::trace(JSTracer* trc) {
+  FunctionBox::TraceList(trc, traceListHead);
 }
 
 bool ParserBase::setSourceMapInfo() {

@@ -259,9 +259,6 @@ class MOZ_STACK_CLASS ParserSharedBase : public JS::CustomAutoRooter {
   // Information for parsing with a lifetime longer than the parser itself.
   CompilationInfo& compilationInfo_;
 
-  // List of parsed functions for GC tracing.
-  FunctionBox* traceListHead_;
-
   // innermost parse context (stack-allocated)
   ParseContext* pc_;
 
@@ -329,7 +326,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
 
   bool checkOptions();
 
-  void trace(JSTracer* trc) final;
+  void trace(JSTracer* trc) final {}
 
   const char* getFilename() const { return anyChars.getFilename(); }
   TokenPos pos() const { return anyChars.currentToken().pos; }
@@ -398,12 +395,12 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   Mark mark() const {
     Mark m;
     m.mark = alloc_.mark();
-    m.traceListHead = traceListHead_;
+    m.traceListHead = compilationInfo_.traceListHead;
     return m;
   }
   void release(Mark m) {
     alloc_.release(m.mark);
-    traceListHead_ = m.traceListHead;
+    compilationInfo_.traceListHead = m.traceListHead;
   }
 
  public:
@@ -722,7 +719,6 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::propagateFreeNamesAndMarkClosedOverBindings;
   using Base::setLocalStrictMode;
   using Base::stringLiteral;
-  using Base::traceListHead_;
   using Base::yieldExpressionsSupported;
 
   using Base::abortIfSyntaxParser;
