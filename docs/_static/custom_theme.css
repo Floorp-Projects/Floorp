@@ -21,3 +21,8 @@ table.docutils td, table.docutils th
 .rst-content .line-block {
     margin-bottom: 0px !important;
 }
+
+/* Add the strikethrough feature */
+span.strikethrough {
+    text-decoration: line-through;
+}
