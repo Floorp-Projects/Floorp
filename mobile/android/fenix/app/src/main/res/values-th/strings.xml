@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_2">Firefox Preview ส่วนตัว</string>
-    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_3">Firefox Preview (ส่วนตัว)</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">%s ส่วนตัว</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (ส่วนตัว)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">ตัวเลือกเพิ่มเติม</string>
@@ -18,14 +18,16 @@
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">แท็บที่คุณเปิดจะถูกแสดงที่นี่</string>
 
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s ผลิตขึ้นโดย Mozilla</string>
+
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">คุณอยู่ในวาระส่วนตัว</string>
 
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">%1$s จะล้างประวัติการค้นหาและประวัติการท่องเว็บของคุณเมื่อคุณออกจากแอปหรือปิดแท็บและหน้าต่างการท่องเว็บแบบส่วนตัวทั้งหมด แม้ว่าสิ่งนี้จะไม่ทำให้คุณไม่เปิดเผยตัวตนกับเว็บไซต์หรือผู้ให้บริการอินเทอร์เน็ตของคุณ
-        แต่จะทำให้การรักษาความเป็นส่วนตัวของสิ่งที่คุณทำออนไลน์จากผู้อื่นที่ใช้คอมพิวเตอร์เครื่องนี้ง่ายขึ้น</string>
+    <string name="private_browsing_placeholder_description_2">%1$s จะล้างประวัติการค้นหาและประวัติการเรียกดูของคุณจากแท็บส่วนตัวเมื่อคุณปิดแท็บเหล่านั้นหรือออกจากแอป แม้ว่าสิ่งนี้จะไม่ทำให้คุณไม่เปิดเผยตัวตนกับเว็บไซต์หรือผู้ให้บริการอินเทอร์เน็ตของคุณ แต่จะทำให้การรักษาความเป็นส่วนตัวของสิ่งที่คุณทำออนไลน์จากผู้อื่นที่ใช้อุปกรณ์เครื่องนี้ง่ายขึ้น</string>
     <string name="private_browsing_common_myths">ความเข้าใจผิดที่พบบ่อยเกี่ยวกับการท่องเว็บแบบส่วนตัว</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">ลบวาระ</string>
@@ -110,6 +112,10 @@
     <string name="browser_menu_open_app_link">เปิดในแอป</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">ลักษณะที่ปรากฏ</string>
+
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">ไม่สามารถเชื่อมต่อได้เนื่องจากเป็นรูปแบบ URL ที่ไม่รู้จัก</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -279,10 +285,6 @@
     <string name="sync_last_synced_summary">ซิงค์ล่าสุด: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">ซิงค์ล่าสุด: ไม่เคย</string>
-    <!-- Text for displaying the default device name.
-        The first parameter is the application name, the second is the device manufacturer name
-        and the third is the device model. -->
-    <string name="default_device_name">%s บน %s %s</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -564,8 +566,6 @@
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
     <string name="bookmark_deletion_snackbar_message">ลบ %1$s แล้ว</string>
-    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">กำลังลบที่คั่นหน้าที่เลือก</string>
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">เลิกทำ</string>
 

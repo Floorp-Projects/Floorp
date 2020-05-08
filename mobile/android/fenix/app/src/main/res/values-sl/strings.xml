@@ -25,6 +25,9 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Ste v zasebni seji</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">%1$s izbriše zgodovino iskanja in brskanja zasebnih zavihkov, ko jih zaprete ali zaprete aplikacijo. Čeprav to ne pomeni, da ste za spletna mesta ali ponudnike internetnih storitev anonimni, vam omogoča uporabo spleta v zasebnosti, skrito pred očmi ostalih uporabnikov te naprave.</string>
     <string name="private_browsing_common_myths">
        Pogoste zmote o zasebnem brskanju
     </string>
@@ -213,6 +216,8 @@
     <string name="preferences_override_fxa_server">Strežnik Firefox računov po meri</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Sinhronizacijski strežnik po meri</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Strežnik Firefox Računa/Synca je spremenjen. Zapiranje aplikacije za uveljavitev sprememb …</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Račun</string>
     <!-- Preference shown on banner to sign into account -->
@@ -469,6 +474,9 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Odstrani</string>
 
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (zasebni način)</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Izbriši zgodovino</string>
@@ -533,6 +541,10 @@
     <string name="bookmark_edit">Uredi zaznamek</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Izberi mapo</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">Ali ste prepričani, da želite zbrisati to mapo?</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">Mapa %1$s izbrisana</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Dodaj mapo</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
@@ -792,6 +804,8 @@
     <string name="full_screen_notification">Vstop v celozaslonski način</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">Spletni naslov kopiran</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">To je vzorčno besedilo. Pokaže vam, kako bo besedilo prikazano, ko povečate ali zmanjšate velikost s to nastavitvijo.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Povečajte ali zmanjšajte besedilo na spletnih straneh</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -822,6 +836,8 @@
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Piškotki</string>
 
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Odjavljeni boste z večine strani</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files">Slike in datoteke v predpomnilniku</string>
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
@@ -834,6 +850,8 @@
     <string name="preferences_delete_browsing_data_on_quit">Ob izhodu izbriši podatke brskanja</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit">Samodejno izbriše podatke brskanja, ko v glavnem meniju izberete &quot;Izhod&quot;</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Samodejno izbriše podatke brskanja, ko v glavnem meniju izberete \&quot;Izhod\&quot;</string>
     <!-- Category for history items to delete on quit in delete browsing data on quit -->
     <string name="preferences_delete_browsing_data_on_quit_browsing_history">Zgodovina brskanja</string>
 
@@ -1051,6 +1069,8 @@
     <string name="etp_social_media_trackers_description">Omeji zmožnost družbenih omrežij, da bi sledile vašemu brskanju po spletu.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Spletni sledilni piškotki</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Zavrača piškotke, ki jih oglaševalci in analitična podjetja uporabljajo za zbiranje podatkov brskanja na številnih straneh.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Kriptorudarji</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
@@ -1268,6 +1288,8 @@
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">Dobrodošli v popolnoma novem %su</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">Čaka vas popolnoma prenovljen brskalnik z izboljšano zmogljivostjo in možnostmi, ki vam bodo pomagale narediti več.\n\nPočakajte, da posodobimo %s z vašimi</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">Posodabljanje %s …</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->

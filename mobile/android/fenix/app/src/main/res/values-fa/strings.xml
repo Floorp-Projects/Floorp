@@ -449,6 +449,10 @@
     <string name="history_delete_all">حذف تاریخچه</string>
     <!-- Text for the dialog to confirm clearing all history -->
     <string name="history_delete_all_dialog">آیا مطمئن هستید می‌خواهید تاریخچه مرور خود را پاک کنید؟</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">تاریخچه حذف شد.</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">%1$sحذف شد</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">پاک کردن</string>
     <!-- History overflow menu copy button -->
@@ -826,6 +830,9 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">در حال حذف اطلاعات…</string>
 
+    <!-- text for firefox preview moving tip button. "Mozilla Firefox Browser" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button">دریافت مرورگر موزیلا فایرفاکس</string>
+
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -899,6 +906,9 @@
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">اعلامیه حریم خصوصی ما را بخوانید</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string name="onboarding_close">بستن</string>
+
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">شروع مرور</string>
 
@@ -936,6 +946,8 @@
     <string name="sign_in_with_email">به جای آن از ایمیل استفاده کنید</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
     <string name="sign_out_confirmation_message">فایرفاکس همگام سازی با حساب شما را متوقف خواهد کرد، ولی هیچ کدوم از اطلاعات شما بر روی این مرورگر حذف نخواهد شد.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s همگام سازی با حساب شما را متوقف خواهد کرد، ولی هیچ کدوم از داده‌های شما بر روی این مرورگر حذف نخواهد شد.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">قطع ارتباط</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -1037,6 +1049,9 @@
     <string name="etp_panel_off">محافظت برای این سایت فعال نیست</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
     <string name="enhanced_tracking_protection_exceptions">محاظفت در برابر دنبال شدن برای این پایگاه اینترنتی خاموش شده است</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">بازگشت به عقب</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">حقوق شما</string>
     <!-- About page link text to open open source licenses screen -->
@@ -1057,6 +1072,11 @@
     <string name="about_licensing_information">اطلاعات مجوز</string>
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">کتابخانه هایی که از آنها استفاده می کنیم</string>
+
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">منؤ اشکال‌زدایی: %1$d کلیک تا فعال سازی</string>
+    <string name="about_debug_menu_toast_done">منؤ اشکال‌زدایی فعال شد</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1زبانه</string>
