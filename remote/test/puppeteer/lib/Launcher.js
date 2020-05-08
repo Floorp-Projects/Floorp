@@ -642,13 +642,21 @@ class FirefoxLauncher {
 
       // Allow the application to have focus even it runs in the background
       'focusmanager.testmode': true,
+
       // Disable useragent updates
       'general.useragent.updates.enabled': false,
+
       // Always use network provider for geolocation tests so we bypass the
       // macOS dialog raised by the corelocation provider
       'geo.provider.testing': true,
+
       // Do not scan Wifi
       'geo.wifi.scan': false,
+
+      // Force sRGB tagged screenshots for image encoder
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1615395
+      'gfx.color_management.force_srgb': true,
+
       // No hang monitor
       'hangmonitor.timeout': 0,
       // Show chrome errors and warnings in the error console
