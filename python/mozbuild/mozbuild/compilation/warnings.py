@@ -44,16 +44,6 @@ RE_CLANG_CL_WARNING = re.compile(r"""
     \[(?P<flag>[^\]]+)
     """, re.X)
 
-# This captures Visual Studio's warning format.
-RE_MSVC_WARNING = re.compile(r"""
-    (?P<file>.*)
-    \((?P<line>\d+)\)
-    \s?:\swarning\s
-    (?P<flag>[^:]+)
-    :\s
-    (?P<message>.*)
-    """, re.X)
-
 IN_FILE_INCLUDED_FROM = 'In file included from '
 
 
@@ -339,7 +329,6 @@ class WarningsCollector(object):
         # TODO make more efficient so we run minimal regexp matches.
         match_clang = RE_CLANG_WARNING.match(filtered)
         match_clang_cl = RE_CLANG_CL_WARNING.match(filtered)
-        match_msvc = RE_MSVC_WARNING.match(filtered)
         if match_clang:
             d = match_clang.groupdict()
 
@@ -358,13 +347,6 @@ class WarningsCollector(object):
             warning['flag'] = d['flag']
             warning['message'] = d['message'].rstrip()
 
-        elif match_msvc:
-            d = match_msvc.groupdict()
-
-            filename = d['file']
-            warning['line'] = int(d['line'])
-            warning['flag'] = d['flag']
-            warning['message'] = d['message'].rstrip()
         else:
             self.included_from = []
             return None
