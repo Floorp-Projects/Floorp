@@ -8,7 +8,7 @@ export const AboutWelcomeUtils = {
       case "OPEN_AWESOME_BAR":
       case "OPEN_PRIVATE_BROWSER_WINDOW":
       case "SHOW_MIGRATION_WIZARD":
-        window.AWSendToParent("SPECIAL_ACTION", action);
+        window.AWSendToParent(action.type);
         break;
       case "OPEN_URL":
         window.open(action.data.args);
