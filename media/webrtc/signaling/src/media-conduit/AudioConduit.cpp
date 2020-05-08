@@ -472,6 +472,9 @@ MediaConduitErrorCode WebrtcAudioConduit::ConfigureRecvMediaCodecs(
       if (codec->mMaxFrameSizeMs) {
         parameters["maxptime"] = std::to_string(codec->mMaxFrameSizeMs);
       }
+      if (codec->mCbrEnabled) {
+        parameters["cbr"] = "1";
+      }
     }
 
     webrtc::SdpAudioFormat format(codec->mName, codec->mFreq, codec->mChannels,
@@ -949,6 +952,9 @@ bool WebrtcAudioConduit::CodecConfigToWebRTCCodec(
     }
     if (codecInfo->mMaxFrameSizeMs) {
       parameters["maxptime"] = std::to_string(codecInfo->mMaxFrameSizeMs);
+    }
+    if (codecInfo->mCbrEnabled) {
+      parameters["cbr"] = "1";
     }
   }
 

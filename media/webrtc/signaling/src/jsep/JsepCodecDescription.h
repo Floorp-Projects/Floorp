@@ -114,7 +114,8 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
         mDTXEnabled(false),
         mFrameSizeMs(0),
         mMinFrameSizeMs(0),
-        mMaxFrameSizeMs(0) {}
+        mMaxFrameSizeMs(0),
+        mCbrEnabled(false) {}
 
   JSEP_CODEC_CLONE(JsepAudioCodecDescription)
 
@@ -169,6 +170,7 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
       opusParams.frameSizeMs = mFrameSizeMs;
       opusParams.minFrameSizeMs = mMinFrameSizeMs;
       opusParams.maxFrameSizeMs = mMaxFrameSizeMs;
+      opusParams.useCbr = mCbrEnabled;
       msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, opusParams));
     } else if (mName == "telephone-event") {
       // add the default dtmf tones
@@ -196,9 +198,20 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
         mMaxAverageBitrate = opusParams.maxAverageBitrate;
       }
       mDTXEnabled = opusParams.useDTX;
-      mFrameSizeMs = opusParams.frameSizeMs;
+      if (remoteMsection.GetAttributeList().HasAttribute(
+              SdpAttribute::kPtimeAttribute)) {
+        mFrameSizeMs = remoteMsection.GetAttributeList().GetPtime();
+      } else {
+        mFrameSizeMs = opusParams.frameSizeMs;
+      }
       mMinFrameSizeMs = opusParams.minFrameSizeMs;
-      mMaxFrameSizeMs = opusParams.maxFrameSizeMs;
+      if (remoteMsection.GetAttributeList().HasAttribute(
+              SdpAttribute::kMaxptimeAttribute)) {
+        mFrameSizeMs = remoteMsection.GetAttributeList().GetMaxptime();
+      } else {
+        mMaxFrameSizeMs = opusParams.maxFrameSizeMs;
+      }
+      mCbrEnabled = opusParams.useCbr;
     }
 
     return true;
@@ -213,6 +226,7 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
   uint32_t mFrameSizeMs;
   uint32_t mMinFrameSizeMs;
   uint32_t mMaxFrameSizeMs;
+  bool mCbrEnabled;
 };
 
 class JsepVideoCodecDescription : public JsepCodecDescription {

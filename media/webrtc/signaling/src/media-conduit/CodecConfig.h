@@ -36,6 +36,7 @@ struct AudioCodecConfig {
   bool mDTXEnabled;
   uint32_t mMaxAverageBitrate;
   int mMaxPlaybackRate;
+  bool mCbrEnabled;
 
   AudioCodecConfig(int type, std::string name, int freq, int channels,
                    bool FECEnabled)
@@ -50,7 +51,8 @@ struct AudioCodecConfig {
         mMinFrameSizeMs(0),
         mDTXEnabled(false),
         mMaxAverageBitrate(0),
-        mMaxPlaybackRate(0) {}
+        mMaxPlaybackRate(0),
+        mCbrEnabled(false) {}
 };
 
 /*
