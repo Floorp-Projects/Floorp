@@ -37,6 +37,23 @@ nsresult BrowserBridgeParent::InitWithProcess(
   RefPtr<CanonicalBrowsingContext> browsingContext =
       aWindowInit.browsingContext().get_canonical();
 
+  // Unfortunately, due to the current racy destruction of BrowsingContext
+  // instances when Fission is enabled, while `browsingContext` may not be
+  // discarded, an ancestor might be.
+  //
+  // A discarded ancestor will cause us issues when creating our `BrowserParent`
+  // in the new content process, so abort the attempt if we have one.
+  //
+  // FIXME: We should never have a non-discarded BrowsingContext with discarded
+  // ancestors. (bug 1634759)
+  CanonicalBrowsingContext* ancestor = browsingContext->GetParent();
+  while (ancestor) {
+    if (NS_WARN_IF(ancestor->IsDiscarded())) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    ancestor = ancestor->GetParent();
+  }
+
   MutableTabContext tabContext;
   tabContext.SetTabContext(Manager()->ChromeOuterWindowID(),
                            Manager()->ShowFocusRings(), aPresentationURL,
