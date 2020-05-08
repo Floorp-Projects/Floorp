@@ -13,40 +13,31 @@ The field is display alongside the bug's priority.
    :alt: Screenshot of severity field
 
 
-Levels
+Values
 ------
 
 `Severities are
 enumerated <https://wiki.mozilla.org/BMO/UserGuide/BugFields#severity>`__
 as:
 
--  ``blocker`` Broken important user-facing feature, Blocks development
-   and/or testing work
--  ``critical`` Affecting a large number of users (all users on AMD64,
-   Windows, MacOS, Linux), or major areas of functionality (tls, DOM,
-   JavaScript, FxA, Add-ons)
--  ``normal`` Default; Regular issue, some loss of functionality under
-   specific circumstances
--  ``minor`` Affecting a small number of users (i.e. ArchLinux users on
-   PowerPC), a problem with an easy workaround, or a cosmetic issue such
-   as misspellings or text alignment
+-  ``--``: Default for new bugs
+-  ``N/A``: (not applicable): Only applies to bugs of type Task or Enhancement.
+-  ``S1``: (Catastrophic) Blocks development/testing, may impact more than 25%
+     of users, causes data loss, potential chemspill, and no workaround available
+-  ``S2``: (Serious) Major Functionality/product severely impaired and a
+     satisfactory workaround doesn't exist
+-  ``S3``: (Normal) Blocks non-critical functionality and a work around exists
+-  ``S4``: (Small/Trivial) minor significance, cosmetic issues, low or no impact to users
 
-By default, all bugs have a severity of ``normal``.
+By default, new bugs have a severity of ``--``.
 
 Rules of thumb
 --------------
 
--  *A crash may be be a critical defect, but not all crashes are
+-  *A crash may be be a ``S1`` or ``S2`` defect, but not all crashes are
    critical defects*
--  If a bug's severity is ``critical`` or ``blocker`` then it **must**
+-  If a bug's severity is ``S1`` or ``S2`` then it **must**
    have an ``assignee``
--  Enhancement bug severity is ``normal``
-
-The ``severity`` field vs the ``tracking_firefoxNN`` field
-----------------------------------------------------------
-
-The ``tracking_firefoxNN`` field is used by Release Management.
-
-A bug with ``tracking_firefoxNN`` of ``blocking`` does not mean the the
-bug's ``severity`` is ``blocking``, just that the bug is needed to be
-``RESOLVED`` as ``FIXED`` or ``VERIFIED`` for a release train.
+-  The severity of most bugs of type ``task`` and ``enhancement`` will be
+   ``N/A``
+-  **Do not** assign bugs of type ``defect`` the severity ``N/A``
