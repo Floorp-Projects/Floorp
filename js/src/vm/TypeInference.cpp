@@ -3521,6 +3521,14 @@ bool JSFunction::setTypeForScriptedFunction(JSContext* cx, HandleFunction fun,
   if (!IsTypeInferenceEnabled()) {
     return true;
   }
+
+  // Note: Delazifying our parent may fail with a recoverable OOM. This can
+  //       result in the current function being initialized twice. Check if
+  //       group was already initialized.
+  if (fun->isSingleton() || fun->group()->maybeInterpretedFunction()) {
+    return true;
+  }
+
   if (singleton) {
     if (!setSingleton(cx, fun)) {
       return false;
