@@ -1005,7 +1005,7 @@ static bool GetLabeledRunnableName(nsIRunnable* aEvent, nsACString& aName,
 #endif
 
 mozilla::PerformanceCounter* nsThread::GetPerformanceCounter(
-    nsIRunnable* aEvent) {
+    nsIRunnable* aEvent) const {
   RefPtr<SchedulerGroup::Runnable> docRunnable = do_QueryObject(aEvent);
   if (docRunnable) {
     mozilla::dom::DocGroup* docGroup = docRunnable->DocGroup();
@@ -1352,7 +1352,7 @@ void nsThread::SetScriptObserver(
   mScriptObserver = aScriptObserver;
 }
 
-void nsThread::DoMainThreadSpecificProcessing(bool aReallyWait) {
+void nsThread::DoMainThreadSpecificProcessing(bool aReallyWait) const {
   MOZ_ASSERT(mIsMainThread);
 
   ipc::CancelCPOWs();
