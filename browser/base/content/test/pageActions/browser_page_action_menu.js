@@ -273,7 +273,7 @@ add_task(async function copyURLFromPanel() {
     EventUtils.synthesizeMouseAtCenter(copyURLButton, {});
     await hiddenPromise;
 
-    let feedbackPanel = document.getElementById("confirmation-hint");
+    let feedbackPanel = ConfirmationHint._panel;
     let feedbackShownPromise = BrowserTestUtils.waitForEvent(
       feedbackPanel,
       "popupshown"
@@ -284,7 +284,7 @@ add_task(async function copyURLFromPanel() {
       "pageActionButton",
       "Feedback menu should be anchored on the main Page Action button"
     );
-    let feedbackHiddenPromise = promisePanelHidden("confirmation-hint");
+    let feedbackHiddenPromise = promisePanelHidden(feedbackPanel);
     await feedbackHiddenPromise;
 
     action.pinnedToUrlbar = false;
@@ -302,17 +302,17 @@ add_task(async function copyURLFromURLBar() {
     registerCleanupFunction(() => (action.pinnedToUrlbar = false));
 
     let copyURLButton = document.getElementById("pageAction-urlbar-copyURL");
-    let feedbackShownPromise = promisePanelShown("confirmation-hint");
+    let panel = ConfirmationHint._panel;
+    let feedbackShownPromise = promisePanelShown(panel);
     EventUtils.synthesizeMouseAtCenter(copyURLButton, {});
 
     await feedbackShownPromise;
-    let panel = document.getElementById("confirmation-hint");
     Assert.equal(
       panel.anchorNode.id,
       "pageAction-urlbar-copyURL",
       "Feedback menu should be anchored on the main URL bar button"
     );
-    let feedbackHiddenPromise = promisePanelHidden("confirmation-hint");
+    let feedbackHiddenPromise = promisePanelHidden(panel);
     await feedbackHiddenPromise;
 
     action.pinnedToUrlbar = false;

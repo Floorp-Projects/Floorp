@@ -98,7 +98,7 @@ async function verifyGeneratedPasswordWasFilled(
 }
 
 async function verifyConfirmationHint(browser, forceClose) {
-  let hintElem = browser.ownerDocument.getElementById("confirmation-hint");
+  let hintElem = browser.ownerGlobal.ConfirmationHint._panel;
   await BrowserTestUtils.waitForPopupEvent(hintElem, "shown");
   try {
     is(hintElem.state, "open", "hint popup is open");
