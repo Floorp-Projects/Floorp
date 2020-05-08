@@ -45,8 +45,7 @@ class VideoConduitTest : public ::testing::Test {
     mVideoConduit = new WebrtcVideoConduit(
         WebRtcCallWrapper::Create(UniquePtr<MockCall>(mCall)),
         GetCurrentThreadSerialEventTarget());
-    std::vector<unsigned int> ssrcs = {42};
-    mVideoConduit->SetLocalSSRCs(ssrcs);
+    mVideoConduit->SetLocalSSRCs({42}, {43});
   }
 
   ~VideoConduitTest() override { mVideoConduit->DeleteStreams(); }
@@ -503,8 +502,7 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecScaleResolutionBy) {
   VideoCodecConfig::Encoding encoding;
   std::vector<webrtc::VideoStream> videoStreams;
 
-  std::vector<unsigned int> ssrcs = {42, 1729};
-  mVideoConduit->SetLocalSSRCs(ssrcs);
+  mVideoConduit->SetLocalSSRCs({42, 1729}, {43, 1730});
 
   VideoCodecConfig codecConfig(120, "VP8", constraints);
   encoding.constraints.scaleDownBy = 2;
@@ -641,8 +639,7 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecRids) {
   ASSERT_EQ(mCall->mVideoSendConfig.rtp.rids.size(), 0U);
   mVideoConduit->StopTransmitting();
 
-  std::vector<unsigned int> ssrcs = {42, 1729};
-  mVideoConduit->SetLocalSSRCs(ssrcs);
+  mVideoConduit->SetLocalSSRCs({42, 1729}, {43, 1730});
 
   codecConfig.mEncodings.clear();
   encoding.rid = "1";
@@ -722,8 +719,7 @@ TEST_F(VideoConduitTest, TestOnSinkWantsChanged) {
 }
 
 TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastOddScreen) {
-  std::vector<unsigned int> ssrcs = {42, 43, 44};
-  mVideoConduit->SetLocalSSRCs(ssrcs);
+  mVideoConduit->SetLocalSSRCs({42, 43, 44}, {45, 46, 47});
 
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
@@ -762,7 +758,7 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastOddScreen) {
   codecConfig.mEncodings.clear();
   codecConfig.mEncodings.push_back(encoding);
   ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
-  mVideoConduit->SetLocalSSRCs({42});
+  mVideoConduit->SetLocalSSRCs({42}, {43});
   ASSERT_EQ(ec, kMediaConduitNoError);
   SendVideoFrame(26, 24, 2);
   videoStreams = mCall->CreateEncoderStreams(sink->mVideoFrame.width(),
@@ -775,8 +771,7 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastOddScreen) {
 }
 
 TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastAllScaling) {
-  std::vector<unsigned int> ssrcs = {42, 43, 44};
-  mVideoConduit->SetLocalSSRCs(ssrcs);
+  mVideoConduit->SetLocalSSRCs({42, 43, 44}, {45, 46, 47});
 
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
@@ -854,8 +849,7 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastAllScaling) {
 }
 
 TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastScreenshare) {
-  std::vector<unsigned int> ssrcs = {42, 43, 44};
-  mVideoConduit->SetLocalSSRCs(ssrcs);
+  mVideoConduit->SetLocalSSRCs({42, 43, 44}, {45, 46, 47});
 
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
@@ -1628,8 +1622,7 @@ TEST_F(VideoConduitTest, TestVideoEncodeScaleResolutionBy) {
 }
 
 TEST_F(VideoConduitTest, TestVideoEncodeSimulcastScaleResolutionBy) {
-  std::vector<unsigned int> ssrcs = {42, 43, 44};
-  mVideoConduit->SetLocalSSRCs(ssrcs);
+  mVideoConduit->SetLocalSSRCs({42, 43, 44}, {45, 46, 47});
 
   MediaConduitErrorCode ec;
   EncodingConstraints constraints;
