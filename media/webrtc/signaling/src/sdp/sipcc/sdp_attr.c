@@ -1289,6 +1289,38 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
             fmtp_p->maxplaybackrate = (uint32_t) strtoul_result;
             codec_info_found = TRUE;
 
+        } else if (cpr_strncasecmp(tmp, sdp_fmtp_codec_param[51].name,
+                                   sdp_fmtp_codec_param[51].strlen) == 0) {
+          result1 =
+              sdp_get_fmtp_tok_val(sdp_p, &fmtp_ptr, "apt", tmp, sizeof(tmp),
+                                   &tok, &strtoul_result, -1, 0, UINT8_MAX);
+          if (result1 != SDP_SUCCESS) {
+              SDP_FREE(temp_ptr);
+              return result1;
+          }
+
+          fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
+          fmtp_p->apt = (uint8_t)strtoul_result;
+
+          codec_info_found = TRUE;
+
+        } else if (cpr_strncasecmp(tmp, sdp_fmtp_codec_param[52].name,
+                                   sdp_fmtp_codec_param[52].strlen) == 0) {
+
+          result1 =
+              sdp_get_fmtp_tok_val(sdp_p, &fmtp_ptr, "rtx_time", tmp, sizeof(tmp),
+                                   &tok, &strtoul_result, -1, 0, UINT_MAX);
+          if (result1 != SDP_SUCCESS) {
+              SDP_FREE(temp_ptr);
+              return result1;
+          }
+
+          fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
+          fmtp_p->has_rtx_time = TRUE;
+          fmtp_p->rtx_time = (uint32_t)strtoul_result;
+
+          codec_info_found = TRUE;
+
         } else if (fmtp_ptr != NULL && *fmtp_ptr == '\n') {
             temp=PL_strtok_r(tmp, ";", &strtok_state);
             if (temp) {

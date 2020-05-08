@@ -43,7 +43,8 @@ typedef enum rtp_ptype_
     RTP_RED          = 122,
     RTP_ULPFEC       = 123,
     RTP_I420         = 124,
-    RTP_ISAC         = 124
+    RTP_ISAC         = 124,
+    RTP_RTX          = 125
 } rtp_ptype;
 
 typedef struct {
