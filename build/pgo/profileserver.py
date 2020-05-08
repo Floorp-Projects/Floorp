@@ -132,7 +132,7 @@ if __name__ == '__main__':
         env["LLVM_PROFILE_FILE"] = "default_%p_random_%m.profraw"
 
         # Write to an output file if we're running in automation
-        process_args = {}
+        process_args = {'universal_newlines': True}
         if 'UPLOAD_PATH' in env:
             process_args['logfile'] = os.path.join(env['UPLOAD_PATH'], 'profile-run-1.log')
 
