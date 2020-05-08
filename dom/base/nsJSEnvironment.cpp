@@ -536,7 +536,9 @@ class ScriptErrorEvent : public Runnable {
       JS::Rooted<JSObject*> stackGlobal(rootingCx);
       xpc::FindExceptionStackForConsoleReport(win, mError, mErrorStack, &stack,
                                               &stackGlobal);
-      mReport->LogToConsoleWithStack(stack, stackGlobal);
+      JS::Rooted<Maybe<JS::Value>> exception(rootingCx, Some(mError));
+      nsGlobalWindowInner* inner = nsGlobalWindowInner::Cast(win);
+      mReport->LogToConsoleWithStack(inner, exception, stack, stackGlobal);
     }
 
     return NS_OK;
@@ -2691,6 +2693,13 @@ void AsyncErrorReporter::SerializeStack(JSContext* aCx,
   mStackHolder->SerializeMainThreadOrWorkletStack(aCx, aStack);
 }
 
+void AsyncErrorReporter::SetException(JSContext* aCx,
+                                      JS::Handle<JS::Value> aException) {
+  MOZ_ASSERT(NS_IsMainThread());
+  mException.init(aCx, aException);
+  mHasException = true;
+}
+
 NS_IMETHODIMP AsyncErrorReporter::Run() {
   AutoJSAPI jsapi;
   DebugOnly<bool> ok = jsapi.Init(xpc::UnprivilegedJunkScope());
@@ -2704,7 +2713,17 @@ NS_IMETHODIMP AsyncErrorReporter::Run() {
       stackGlobal = JS::CurrentGlobalOrNull(cx);
     }
   }
-  mReport->LogToConsoleWithStack(stack, stackGlobal);
+
+  JS::Rooted<Maybe<JS::Value>> exception(cx, Nothing());
+  if (mHasException) {
+    MOZ_ASSERT(NS_IsMainThread());
+    exception = Some(mException);
+    // Remove our reference to the exception.
+    mException.setUndefined();
+    mHasException = false;
+  }
+
+  mReport->LogToConsoleWithStack(nullptr, exception, stack, stackGlobal);
   return NS_OK;
 }
 

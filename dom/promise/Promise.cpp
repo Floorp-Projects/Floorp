@@ -541,29 +541,36 @@ void Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise) {
   // the privileges of the Promise object that holds it. If we don't unwrap
   // before trying to create the error report, we wind up reporting any
   // cross-origin objects as "uncaught exception: Object".
-  Maybe<JSAutoRealm> ar;
-  if (result.isObject()) {
-    result.setObject(*js::UncheckedUnwrap(&result.toObject()));
-    ar.emplace(aCx, &result.toObject());
-  }
+  {
+    Maybe<JSAutoRealm> ar;
+    JS::Rooted<JS::Value> unwrapped(aCx, result);
+    if (unwrapped.isObject()) {
+      unwrapped.setObject(*js::UncheckedUnwrap(&unwrapped.toObject()));
+      ar.emplace(aCx, &unwrapped.toObject());
+    }
 
-  js::ErrorReport report(aCx);
-  RefPtr<Exception> exn;
-  if (result.isObject() &&
-      (NS_SUCCEEDED(UNWRAP_OBJECT(DOMException, &result, exn)) ||
-       NS_SUCCEEDED(UNWRAP_OBJECT(Exception, &result, exn)))) {
-    xpcReport->Init(aCx, exn, isChrome, innerWindowID);
-  } else if (report.init(aCx, result, js::ErrorReport::NoSideEffects)) {
-    xpcReport->Init(report.report(), report.toStringResult().c_str(), isChrome,
-                    innerWindowID);
-  } else {
-    JS_ClearPendingException(aCx);
-    return;
+    js::ErrorReport report(aCx);
+    RefPtr<Exception> exn;
+    if (unwrapped.isObject() &&
+        (NS_SUCCEEDED(UNWRAP_OBJECT(DOMException, &unwrapped, exn)) ||
+         NS_SUCCEEDED(UNWRAP_OBJECT(Exception, &unwrapped, exn)))) {
+      xpcReport->Init(aCx, exn, isChrome, innerWindowID);
+    } else if (report.init(aCx, unwrapped, js::ErrorReport::NoSideEffects)) {
+      xpcReport->Init(report.report(), report.toStringResult().c_str(),
+                      isChrome, innerWindowID);
+    } else {
+      JS_ClearPendingException(aCx);
+      return;
+    }
   }
 
   // Now post an event to do the real reporting async
-  RefPtr<nsIRunnable> event = new AsyncErrorReporter(xpcReport);
+  RefPtr<AsyncErrorReporter> event = new AsyncErrorReporter(xpcReport);
   if (win) {
+    if (!win->IsDying()) {
+      // Exceptions from a dying window will cause the window to leak.
+      event->SetException(aCx, result);
+    }
     win->Dispatch(mozilla::TaskCategory::Other, event.forget());
   } else {
     NS_DispatchToMainThread(event);
