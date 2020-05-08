@@ -111,7 +111,7 @@ class GeckoContentController {
    */
   virtual void PostDelayedTask(already_AddRefed<Runnable> aRunnable,
                                int aDelayMs) {
-    APZThreadUtils::PostDelayedTask(std::move(aRunnable), aDelayMs);
+    APZThreadUtils::DelayedDispatch(std::move(aRunnable), aDelayMs);
   }
 
   /**
