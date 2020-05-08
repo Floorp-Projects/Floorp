@@ -79,10 +79,6 @@ class WindowGlobalParent final : public WindowContext,
   // Has this actor been shut down
   bool IsClosed() { return !CanSend(); }
 
-  // Check if this actor is managed by PInProcess, as-in the document is loaded
-  // in-process.
-  bool IsInProcess() { return mInProcess; }
-
   // Get the other side of this actor if it is an in-process actor. Returns
   // |nullptr| if the actor has been torn down, or is not in-process.
   already_AddRefed<WindowGlobalChild> GetChildActor();
@@ -248,7 +244,6 @@ class WindowGlobalParent final : public WindowContext,
   nsString mDocumentTitle;
 
   nsRefPtrHashtable<nsCStringHashKey, JSWindowActorParent> mWindowActors;
-  bool mInProcess;
   bool mIsInitialDocument;
 
   // True if this window has a "beforeunload" event listener.
