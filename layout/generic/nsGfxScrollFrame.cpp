@@ -1682,8 +1682,6 @@ nsXULScrollFrame::DoXULLayout(nsBoxLayoutState& aState) {
   ReflowChildFlags flags = aState.LayoutFlags();
   nsresult rv = XULLayout(aState);
   aState.SetLayoutFlags(flags);
-
-  nsIFrame::DoXULLayout(aState);
   return rv;
 }
 

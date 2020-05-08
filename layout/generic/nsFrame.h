@@ -181,16 +181,6 @@ class nsFrame : public nsIFrame {
   void DidReflow(nsPresContext* aPresContext,
                  const ReflowInput* aReflowInput) override;
 
-  /**
-   * NOTE: aStatus is assumed to be already-initialized. The reflow statuses of
-   * any reflowed absolute children will be merged into aStatus; aside from
-   * that, this method won't modify aStatus.
-   */
-  void ReflowAbsoluteFrames(nsPresContext* aPresContext,
-                            ReflowOutput& aDesiredSize,
-                            const ReflowInput& aReflowInput,
-                            nsReflowStatus& aStatus,
-                            bool aConstrainBSize = true);
   void FinishReflowWithAbsoluteFrames(nsPresContext* aPresContext,
                                       ReflowOutput& aDesiredSize,
                                       const ReflowInput& aReflowInput,
@@ -219,13 +209,6 @@ class nsFrame : public nsIFrame {
   // in this function assumes there is no child frame that can be targeted.
   virtual ContentOffsets CalcContentOffsetsFromFramePoint(
       const nsPoint& aPoint);
-
-  // Box layout methods
-  nsSize GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
-  nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
-  nsSize GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState) override;
-  nscoord GetXULFlex() override;
-  nscoord GetXULBoxAscent(nsBoxLayoutState& aBoxLayoutState) override;
 
   //--------------------------------------------------
   // Additional methods
@@ -450,20 +433,11 @@ class nsFrame : public nsIFrame {
   }
 
  protected:
-  NS_IMETHOD DoXULLayout(nsBoxLayoutState& aBoxLayoutState) override;
-
   // Fire DOM event. If no aContent argument use frame's mContent.
   void FireDOMEvent(const nsAString& aDOMEventName,
                     nsIContent* aContent = nullptr);
 
  private:
-  void BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
-                 ReflowOutput& aDesiredSize, gfxContext* aRenderingContext,
-                 nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                 bool aMoveFrame = true);
-
-  NS_IMETHODIMP RefreshSizeCache(nsBoxLayoutState& aState);
-
   // Returns true if this frame has any kind of CSS animations.
   bool HasCSSAnimations();
 
