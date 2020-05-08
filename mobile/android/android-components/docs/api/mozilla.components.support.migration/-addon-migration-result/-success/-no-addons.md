@@ -2,7 +2,7 @@
 
 # NoAddons
 
-`object NoAddons : `[`Success`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AddonMigration.kt#L42)
+`object NoAddons : `[`Success`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AddonMigration.kt#L49)
 
 No add-ons installed to migrate.
 

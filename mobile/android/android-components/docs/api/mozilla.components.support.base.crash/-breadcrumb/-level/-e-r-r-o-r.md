@@ -2,7 +2,12 @@
 
 # ERROR
 
-`ERROR` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/crash/Breadcrumb.kt#L68)
+`ERROR` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/crash/Breadcrumb.kt#L72)
 
 ERROR level.
 
+### Inherited Properties
+
+| Name | Summary |
+|---|---|
+| [value](value.md) | `val value: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |

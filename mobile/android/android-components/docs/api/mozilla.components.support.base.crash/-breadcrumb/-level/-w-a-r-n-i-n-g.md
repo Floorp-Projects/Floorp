@@ -2,7 +2,12 @@
 
 # WARNING
 
-`WARNING` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/crash/Breadcrumb.kt#L63)
+`WARNING` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/crash/Breadcrumb.kt#L67)
 
 WARNING level.
 
+### Inherited Properties
+
+| Name | Summary |
+|---|---|
+| [value](value.md) | `val value: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |

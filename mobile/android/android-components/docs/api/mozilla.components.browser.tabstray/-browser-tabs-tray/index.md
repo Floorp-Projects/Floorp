@@ -2,7 +2,7 @@
 
 # BrowserTabsTray
 
-`class BrowserTabsTray : RecyclerView, `[`TabsTray`](../../mozilla.components.concept.tabstray/-tabs-tray/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/BrowserTabsTray.kt#L22)
+`class BrowserTabsTray : RecyclerView, `[`TabsTray`](../../mozilla.components.concept.tabstray/-tabs-tray/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/tabstray/src/main/java/mozilla/components/browser/tabstray/BrowserTabsTray.kt#L23)
 
 A customizable tabs tray for browsers.
 
@@ -10,7 +10,7 @@ A customizable tabs tray for browsers.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `BrowserTabsTray(context: <ERROR CLASS>, attrs: <ERROR CLASS>? = null, defStyleAttr: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 0, tabsAdapter: `[`TabsAdapter`](../-tabs-adapter/index.md)` = TabsAdapter(), layout: LayoutManager = GridLayoutManager(context, 2))`<br>A customizable tabs tray for browsers. |
+| [&lt;init&gt;](-init-.md) | `BrowserTabsTray(context: <ERROR CLASS>, attrs: <ERROR CLASS>? = null, defStyleAttr: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = 0, tabsAdapter: `[`TabsAdapter`](../-tabs-adapter/index.md)` = TabsAdapter(), layout: LayoutManager = GridLayoutManager(context, 2), itemDecoration: DividerItemDecoration? = null)`<br>A customizable tabs tray for browsers. |
 
 ### Properties
 

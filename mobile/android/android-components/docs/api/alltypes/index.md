@@ -225,6 +225,7 @@
 | [mozilla.components.browser.menu2.candidate.DrawableButtonMenuIcon](../mozilla.components.browser.menu2.candidate/-drawable-button-menu-icon/index.md) | Menu icon that displays an image button. |
 | [mozilla.components.browser.menu2.candidate.DrawableMenuIcon](../mozilla.components.browser.menu2.candidate/-drawable-menu-icon/index.md) | Menu icon that displays a drawable. |
 | [mozilla.components.support.utils.DrawableUtils](../mozilla.components.support.utils/-drawable-utils/index.md) |  |
+| [mozilla.components.browser.menu.view.DynamicWidthRecyclerView](../mozilla.components.browser.menu.view/-dynamic-width-recycler-view/index.md) | [RecylerView](#) with automatically set width between widthMin / widthMax xml attributes. |
 | [mozilla.components.browser.toolbar.edit.EditToolbar](../mozilla.components.browser.toolbar.edit/-edit-toolbar/index.md) | Sub-component of the browser toolbar responsible for allowing the user to edit the URL ("edit mode"). |
 | [mozilla.components.concept.engine.webextension.EnableSource](../mozilla.components.concept.engine.webextension/-enable-source/index.md) | Provides additional information about why an extension is being enabled or disabled. |
 | [mozilla.components.concept.push.EncryptedPushMessage](../mozilla.components.concept.push/-encrypted-push-message/index.md) | A push message holds the information needed to pass the message on to the appropriate receiver. |
