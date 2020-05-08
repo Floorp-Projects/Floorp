@@ -153,6 +153,52 @@ void WindowGlobalChild::InitWindowGlobal(nsGlobalWindowInner* aWindow) {
   mWindowGlobal = aWindow;
 }
 
+void WindowGlobalChild::OnNewDocument(Document* aDocument) {
+  MOZ_RELEASE_ASSERT(mWindowGlobal);
+  MOZ_RELEASE_ASSERT(aDocument);
+
+  // Send a series of messages to update document-specific state on
+  // WindowGlobalParent.
+  // FIXME: Perhaps these should be combined into a smaller number of messages?
+  SetDocumentURI(aDocument->GetDocumentURI());
+  SetDocumentPrincipal(aDocument->NodePrincipal());
+  SendUpdateDocumentCspSettings(aDocument->GetBlockAllMixedContent(false),
+                                aDocument->GetUpgradeInsecureRequests(false));
+  SendUpdateSandboxFlags(aDocument->GetSandboxFlags());
+
+  net::CookieJarSettingsArgs csArgs;
+  net::CookieJarSettings::Cast(aDocument->CookieJarSettings())
+      ->Serialize(csArgs);
+  if (!SendUpdateCookieJarSettings(csArgs)) {
+    NS_WARNING(
+        "Failed to update document's cookie jar settings on the "
+        "WindowGlobalParent");
+  }
+
+  // Update window context fields for the newly loaded Document.
+  WindowContext::Transaction txn;
+  txn.SetCookieBehavior(
+      Some(aDocument->CookieJarSettings()->GetCookieBehavior()));
+  txn.SetIsOnContentBlockingAllowList(
+      aDocument->CookieJarSettings()->GetIsOnContentBlockingAllowList());
+  txn.SetIsThirdPartyWindow(nsContentUtils::IsThirdPartyWindowOrChannel(
+      mWindowGlobal, nullptr, nullptr));
+  txn.SetIsThirdPartyTrackingResourceWindow(
+      nsContentUtils::IsThirdPartyTrackingResourceWindow(mWindowGlobal));
+
+  // Init Mixed Content Fields
+  nsCOMPtr<nsIChannel> mixedChannel;
+  mWindowGlobal->GetDocShell()->GetMixedContentChannel(
+      getter_AddRefs(mixedChannel));
+  // A non null mixedContent channel on the docshell indicates,
+  // that the user has overriden mixed content to allow mixed
+  // content loads to happen.
+  if (mixedChannel && (mixedChannel == aDocument->GetChannel())) {
+    txn.SetAllowMixedContent(true);
+  }
+  txn.Commit(mWindowContext);
+}
+
 /* static */
 already_AddRefed<WindowGlobalChild> WindowGlobalChild::GetByInnerWindowId(
     uint64_t aInnerWindowId) {
