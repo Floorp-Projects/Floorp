@@ -28,24 +28,41 @@ addTest(async function setup() {
   gInspectee = doc;
   const walker = inspector.walker;
   gWalker = await inspector.getWalker();
+
   ok(walker === gWalker, "getWalker() twice should return the same walker.");
   runNextTest();
 });
 
-addTest(function testReload() {
+addTest(async function testReload() {
   const oldRootID = gWalker.rootNode.actorID;
-  // Load a node to populate the tree a bit.
-  promiseDone(gWalker.querySelector(gWalker.rootNode, "#a").then(front => {
-    gInspectee.defaultView.location.reload();
-    return waitForMutation(gWalker, isNewRoot);
-  }).then(() => {
-    ok(gWalker.rootNode.actorID != oldRootID, "Root node should have changed.");
-  }).then(() => {
-    // Make sure we can still access the document
-    return gWalker.querySelector(gWalker.rootNode, "#a");
-  }).then(front => {
-    ok(front.actorID, "Got a new actor ID");
-  }).then(runNextTest));
+
+  // watchRootNodeResolve will be assigned to different promises throughout the
+  // test to be able to await on individual calls of the watchRootNode callback.
+  let watchRootNodeResolve;
+
+  info("Start watching for root nodes and wait for the initial root node");
+  const onInitialRootNodePromise = new Promise(r => (watchRootNodeResolve = r));
+  const onInitialNewRootAvailable = gWalker.once("root-available");
+  gWalker.watchRootNode(() => watchRootNodeResolve());
+  await Promise.all([onInitialNewRootAvailable, onInitialRootNodePromise]);
+
+  info("Retrieve the node front for the selector `#a`");
+  const nodeFront = await gWalker.querySelector(gWalker.rootNode, "#a");
+  ok(nodeFront.actorID, "Node front has a valid actor ID");
+
+  info("Reload the page and wait for the newRoot mutation");
+  const onNewRootNodePromise = new Promise(r => (watchRootNodeResolve = r));
+  const onNewRootAvailable = gWalker.once("root-available");
+
+  gInspectee.defaultView.location.reload();
+  await Promise.all([onNewRootAvailable, onNewRootNodePromise]);
+
+  info("Retrieve the (new) node front for the selector `#a`");
+  const newNodeFront = await gWalker.querySelector(gWalker.rootNode, "#a");
+  ok(newNodeFront.actorID, "Got a new actor ID");
+  ok(gWalker.rootNode.actorID != oldRootID, "Root node should have changed.");
+
+  runNextTest();
 });
 
 addTest(function cleanup() {
