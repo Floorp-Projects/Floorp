@@ -52,6 +52,8 @@ class RemoteContentController : public GeckoContentController,
                           LayoutDeviceCoord aSpanChange,
                           Modifiers aModifiers) override;
 
+  void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs) override;
+
   bool IsRepaintThread() override;
 
   void DispatchToRepaintThread(already_AddRefed<Runnable> aTask) override;
@@ -88,7 +90,7 @@ class RemoteContentController : public GeckoContentController,
   bool IsRemote() override;
 
  private:
-  nsCOMPtr<nsISerialEventTarget> mCompositorThread;
+  MessageLoop* mCompositorThread;
   bool mCanSend;
 
   void HandleTapOnMainThread(TapType aType, LayoutDevicePoint aPoint,
