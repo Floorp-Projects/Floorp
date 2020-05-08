@@ -595,6 +595,8 @@ class FunctionBox : public SharedContext {
   void trace(JSTracer* trc);
 
   static void TraceList(JSTracer* trc, FunctionBox* listHead);
+
+  FunctionBox* traceLink() { return traceLink_; }
 };
 
 #undef FLAG_GETTER_SETTER
