@@ -97,27 +97,6 @@ uint64_t XULListboxAccessible::NativeState() const {
   return states;
 }
 
-/**
- * Our value is the label of our ( first ) selected child.
- */
-void XULListboxAccessible::Value(nsString& aValue) const {
-  aValue.Truncate();
-
-  nsCOMPtr<nsIDOMXULSelectControlElement> select = Elm()->AsXULSelectControl();
-  if (select) {
-    RefPtr<dom::Element> element;
-    select->GetSelectedItem(getter_AddRefs(element));
-
-    if (element) {
-      nsCOMPtr<nsIDOMXULSelectControlItemElement> selectedItem =
-          element->AsXULSelectControlItem();
-      if (selectedItem) {
-        selectedItem->GetLabel(aValue);
-      }
-    }
-  }
-}
-
 role XULListboxAccessible::NativeRole() const {
   // A richlistbox is used with the new autocomplete URL bar, and has a parent
   // popup <panel>.
