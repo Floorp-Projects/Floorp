@@ -7032,6 +7032,12 @@ void CodeGenerator::visitNewArray(LNewArray* lir) {
   if (lir->mir()->convertDoubleElements()) {
     templateObject.setConvertDoubleElements();
   }
+#ifdef DEBUG
+  size_t numInlineElements = gc::GetGCKindSlots(templateObject.getAllocKind()) -
+                             ObjectElements::VALUES_PER_HEADER;
+  MOZ_ASSERT(length <= numInlineElements,
+             "Inline allocation only supports inline elements");
+#endif
   masm.createGCObject(objReg, tempReg, templateObject,
                       lir->mir()->initialHeap(), ool->entry());
 
