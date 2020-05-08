@@ -293,12 +293,13 @@ class nsFocusManager final : public nsIFocusManager,
       nsPIDOMWindowOuter* aWindow, mozilla::dom::BrowsingContext* aContext);
 
   /**
-   * When aNewWindow is focused, adjust the ancestors of aNewWindow so that they
-   * also have their corresponding frames focused. Thus, one can start at
-   * the active top-level window and navigate down the currently focused
-   * elements for each frame in the tree to get to aNewWindow.
+   * When aBrowsingContext is focused, adjust the ancestors of aBrowsingContext
+   * so that they also have their corresponding frames focused. Thus, one can
+   * start at the active top-level window and navigate down the currently
+   * focused elements for each frame in the tree to get to aBrowsingContext.
    */
-  void AdjustWindowFocus(nsPIDOMWindowOuter* aNewWindow, bool aCheckPermission);
+  void AdjustWindowFocus(mozilla::dom::BrowsingContext* aBrowsingContext,
+                         bool aCheckPermission, bool aIsVisible);
 
   /**
    * Returns true if aWindow is visible.

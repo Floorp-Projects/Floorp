@@ -1648,6 +1648,9 @@ both:
     async DiscardBrowsingContext(MaybeDiscardedBrowsingContext aContext)
             returns (bool unused);
 
+    async AdjustWindowFocus(MaybeDiscardedBrowsingContext aContext,
+                            bool aCheckPermission,
+                            bool aIsVisible);
     async WindowClose(MaybeDiscardedBrowsingContext aContext,
                       bool aTrustedCaller);
     async WindowFocus(MaybeDiscardedBrowsingContext aContext,
