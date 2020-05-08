@@ -486,7 +486,7 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
     // Publish deferred items
-    if (!parser->publishDeferredFunctions()) {
+    if (!compilationInfo.publishDeferredFunctions()) {
       return nullptr;
     }
 
@@ -544,7 +544,7 @@ ModuleObject* frontend::ModuleCompiler<Unit>::compile(
     return nullptr;
   }
 
-  if (!parser->publishDeferredFunctions()) {
+  if (!compilationInfo.publishDeferredFunctions()) {
     return nullptr;
   }
 
@@ -643,7 +643,7 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
                         compilationInfo.options.column};
     funbox->scriptExtent.emplace(extent);
 
-    if (!parser->publishDeferredFunctions()) {
+    if (!compilationInfo.publishDeferredFunctions()) {
       return false;
     }
 
@@ -932,7 +932,7 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<BaseScript*> lazy,
   if (!pn) {
     return false;
   }
-  if (!parser.publishDeferredFunctions()) {
+  if (!compilationInfo.publishDeferredFunctions()) {
     return false;
   }
 

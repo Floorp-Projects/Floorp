@@ -296,14 +296,8 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
 
   FunctionTreeHolder& treeHolder_;
 
-  MOZ_MUST_USE bool publishDeferredFunctions(FunctionTree* root);
-
  public:
   FunctionTreeHolder& getTreeHolder() { return treeHolder_; }
-
-  MOZ_MUST_USE bool publishDeferredFunctions() {
-    return publishDeferredFunctions(getTreeHolder().getFunctionTree());
-  }
 
   bool awaitIsKeyword() const { return awaitHandling_ != AwaitIsName; }
 
