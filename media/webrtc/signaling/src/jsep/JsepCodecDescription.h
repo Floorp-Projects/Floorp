@@ -203,6 +203,7 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
         mRembEnabled(false),
         mFECEnabled(false),
         mTransportCCEnabled(false),
+        mRtxEnabled(false),
         mREDPayloadType(0),
         mULPFECPayloadType(0),
         mProfileLevelId(0),
@@ -260,6 +261,11 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
     }
   }
 
+  void EnableRtx(const std::string& rtxPayloadType) {
+    mRtxEnabled = true;
+    mRtxPayloadType = rtxPayloadType;
+  }
+
   void AddParametersToMSection(SdpMediaSection& msection) const override {
     AddFmtpsToMSection(msection);
     AddRtcpFbsToMSection(msection);
@@ -309,6 +315,20 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
         vp8Params.max_fs = mConstraints.maxFs;
         vp8Params.max_fr = mConstraints.maxFps;
         msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, vp8Params));
+      }
+    }
+
+    if (mRtxEnabled && mDirection == sdp::kRecv) {
+      SdpFmtpAttributeList::RtxParameters params(
+          GetRtxParameters(mDefaultPt, msection));
+      uint16_t apt;
+      if (SdpHelper::GetPtAsInt(mDefaultPt, &apt)) {
+        if (apt <= 127) {
+          msection.AddCodec(mRtxPayloadType, "rtx", mClock, mChannels);
+
+          params.apt = apt;
+          msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mRtxPayloadType, params));
+        }
       }
     }
   }
@@ -361,6 +381,45 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
       result = static_cast<const SdpFmtpAttributeList::RedParameters&>(*params);
     }
 
+    return result;
+  }
+
+  SdpFmtpAttributeList::RtxParameters GetRtxParameters(
+      const std::string& pt, const SdpMediaSection& msection) const {
+    SdpFmtpAttributeList::RtxParameters result;
+    const auto* params = msection.FindFmtp(pt);
+
+    if (params && params->codec_type == SdpRtpmapAttributeList::kRtx) {
+      result = static_cast<const SdpFmtpAttributeList::RtxParameters&>(*params);
+    }
+
+    return result;
+  }
+
+  Maybe<std::string> GetRtxPtByApt(const std::string& apt,
+                                   const SdpMediaSection& msection) const {
+    Maybe<std::string> result;
+    uint16_t aptAsInt;
+    if (!SdpHelper::GetPtAsInt(apt, &aptAsInt)) {
+      return result;
+    }
+
+    const SdpAttributeList& attrs = msection.GetAttributeList();
+    if (attrs.HasAttribute(SdpAttribute::kFmtpAttribute)) {
+      for (const auto& fmtpAttr : attrs.GetFmtp().mFmtps) {
+        if (fmtpAttr.parameters) {
+          auto* params = fmtpAttr.parameters.get();
+          if (params && params->codec_type == SdpRtpmapAttributeList::kRtx) {
+            const SdpFmtpAttributeList::RtxParameters* rtxParams =
+                static_cast<const SdpFmtpAttributeList::RtxParameters*>(params);
+            if (rtxParams->apt == aptAsInt) {
+              result = Some(fmtpAttr.format);
+              break;
+            }
+          }
+        }
+      }
+    }
     return result;
   }
 
@@ -455,6 +514,16 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
 
         mConstraints.maxFs = vp8Params.max_fs;
         mConstraints.maxFps = vp8Params.max_fr;
+      }
+    }
+
+    if (mRtxEnabled && (mDirection == sdp::kSend || isOffer)) {
+      Maybe<std::string> rtxPt = GetRtxPtByApt(mDefaultPt, remoteMsection);
+      if (rtxPt.isSome()) {
+        EnableRtx(*rtxPt);
+      } else {
+        mRtxEnabled = false;
+        mRtxPayloadType = "";
       }
     }
 
@@ -693,8 +762,10 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
   bool mRembEnabled;
   bool mFECEnabled;
   bool mTransportCCEnabled;
+  bool mRtxEnabled;
   uint8_t mREDPayloadType;
   uint8_t mULPFECPayloadType;
+  std::string mRtxPayloadType;
   std::vector<uint8_t> mRedundantEncodings;
 
   // H264-specific stuff
