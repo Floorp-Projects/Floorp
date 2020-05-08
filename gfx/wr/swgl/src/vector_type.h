@@ -107,7 +107,9 @@ struct VectorType {
   VectorType() : data{0} { }
 
   constexpr VectorType(const VectorType& rhs) : data(rhs.data) {}
-  constexpr VectorType(T n) : data{n, n, n, n} {}
+  // GCC vector extensions only support broadcasting scalars on arithmetic ops,
+  // but not on initializers, hence the following...
+  constexpr VectorType(T n) : data((data_type){0} + n) {}
   constexpr VectorType(T a, T b, T c, T d) : data{a, b, c, d} {}
   constexpr VectorType(T a, T b, T c, T d, T e, T f, T g, T h)
       : data{a, b, c, d, e, f, g, h} {}

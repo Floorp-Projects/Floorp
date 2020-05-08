@@ -2354,6 +2354,25 @@ template <typename T>
 static inline T muldiv255(T x, T y) {
   return (x * y + x) >> 8;
 }
+
+// Byte-wise addition for when x or y is a signed 8-bit value stored in the
+// low byte of a larger type T only with zeroed-out high bits, where T is
+// greater than 8 bits, i.e. uint16_t. This can result when muldiv255 is used
+// upon signed operands, using up all the precision in a 16 bit integer, and
+// potentially losing the sign bit in the last >> 8 shift. Due to the
+// properties of two's complement arithmetic, even though we've discarded the
+// sign bit, we can still represent a negative number under addition (without
+// requiring any extra sign bits), just that any negative number will behave
+// like a large unsigned number under addition, generating a single carry bit
+// on overflow that we need to discard. Thus, just doing a byte-wise add will
+// overflow without the troublesome carry, giving us only the remaining 8 low
+// bits we actually need while keeping the high bits at zero.
+template <typename T>
+static inline T addlow(T x, T y) {
+  typedef VectorType<uint8_t, sizeof(T)> bytes;
+  return bit_cast<T>(bit_cast<bytes>(x) + bit_cast<bytes>(y));
+}
+
 static inline WideRGBA8 alphas(WideRGBA8 c) {
   return SHUFFLE(c, c, 3, 3, 3, 3, 7, 7, 7, 7, 11, 11, 11, 11, 15, 15, 15, 15);
 }
@@ -2365,11 +2384,16 @@ static inline WideRGBA8 blend_pixels_RGBA8(PackedRGBA8 pdst, WideRGBA8 src) {
                               0xFFFF, 0xFFFF, 0xFFFF, 0};
   const WideRGBA8 ALPHA_MASK = {0, 0, 0, 0xFFFF, 0, 0, 0, 0xFFFF,
                                 0, 0, 0, 0xFFFF, 0, 0, 0, 0xFFFF};
+  const WideRGBA8 ALPHA_OPAQUE = {0, 0, 0, 255, 0, 0, 0, 255,
+                                  0, 0, 0, 255, 0, 0, 0, 255};
   switch (blend_key) {
     case BLEND_KEY_NONE:
       return src;
     case BLEND_KEY(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE):
-      return dst + muldiv255((src - dst) | ALPHA_MASK, alphas(src));
+      // dst + src.a*(src.rgb1 - dst.rgb0)
+      // use addlow for signed overflow
+      return addlow(dst,
+          muldiv255(alphas(src), (src | ALPHA_OPAQUE) - (dst & RGB_MASK)));
     case BLEND_KEY(GL_ONE, GL_ONE_MINUS_SRC_ALPHA):
       return src + dst - muldiv255(dst, alphas(src));
     case BLEND_KEY(GL_ZERO, GL_ONE_MINUS_SRC_COLOR):
@@ -2389,8 +2413,10 @@ static inline WideRGBA8 blend_pixels_RGBA8(PackedRGBA8 pdst, WideRGBA8 src) {
     case BLEND_KEY(GL_ONE_MINUS_DST_ALPHA, GL_ONE, GL_ZERO, GL_ONE):
       return dst + ((src - muldiv255(src, alphas(src))) & RGB_MASK);
     case BLEND_KEY(GL_CONSTANT_COLOR, GL_ONE_MINUS_SRC_COLOR):
-      return dst +
-             muldiv255(combine(ctx->blendcolor, ctx->blendcolor) - dst, src);
+      // src*k + (1-src)*dst = src*k + dst - src*dst = dst + src*(k - dst)
+      // use addlow for signed overflow
+      return addlow(dst,
+          muldiv255(src, combine(ctx->blendcolor, ctx->blendcolor) - dst));
     case BLEND_KEY(GL_ONE, GL_ONE_MINUS_SRC1_COLOR): {
       WideRGBA8 secondary =
           pack_pixels_RGBA8(fragment_shader->gl_SecondaryFragColor);

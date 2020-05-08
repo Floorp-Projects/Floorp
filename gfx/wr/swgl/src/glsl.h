@@ -11,15 +11,15 @@
 namespace glsl {
 
 #if USE_SSE2
-bool test_all(Bool cond) { return _mm_movemask_ps(cond) == 0xF; }
-bool test_any(Bool cond) { return _mm_movemask_ps(cond) != 0; }
-bool test_none(Bool cond) { return _mm_movemask_ps(cond) == 0; }
+SI bool test_all(Bool cond) { return _mm_movemask_ps(cond) == 0xF; }
+SI bool test_any(Bool cond) { return _mm_movemask_ps(cond) != 0; }
+SI bool test_none(Bool cond) { return _mm_movemask_ps(cond) == 0; }
 #else
-bool test_all(Bool cond) {
+SI bool test_all(Bool cond) {
   return bit_cast<uint32_t>(CONVERT(cond, U8)) == 0xFFFFFFFFU;
 }
-bool test_any(Bool cond) { return bit_cast<uint32_t>(CONVERT(cond, U8)) != 0; }
-bool test_none(Bool cond) { return bit_cast<uint32_t>(CONVERT(cond, U8)) == 0; }
+SI bool test_any(Bool cond) { return bit_cast<uint32_t>(CONVERT(cond, U8)) != 0; }
+SI bool test_none(Bool cond) { return bit_cast<uint32_t>(CONVERT(cond, U8)) == 0; }
 #endif
 
 float make_float(float n) { return n; }
