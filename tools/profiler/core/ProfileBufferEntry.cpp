@@ -479,6 +479,9 @@ struct CStringWriteFunc : public JSONWriteFunc {
   explicit CStringWriteFunc(nsACString& aBuffer) : mBuffer(aBuffer) {}
 
   void Write(const char* aStr) override { mBuffer.Append(aStr); }
+  void Write(const char* aStr, size_t aLen) override {
+    mBuffer.Append(aStr, aLen);
+  }
 };
 
 static nsCString JSONForJITFrame(JSContext* aContext,

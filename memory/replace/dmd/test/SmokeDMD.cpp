@@ -47,6 +47,8 @@ class FpWriteFunc : public mozilla::JSONWriteFunc {
 
   void Write(const char* aStr) override { fputs(aStr, mFp); }
 
+  void Write(const char* aStr, size_t aLen) override { fputs(aStr, mFp); }
+
  private:
   FILE* mFp;
 };

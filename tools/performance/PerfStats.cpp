@@ -95,6 +95,9 @@ struct StringWriteFunc : public JSONWriteFunc {
 
   explicit StringWriteFunc(nsCString& aString) : mString(aString) {}
   virtual void Write(const char* aStr) override { mString.Append(aStr); }
+  virtual void Write(const char* aStr, size_t aLen) override {
+    mString.Append(aStr, aLen);
+  }
 };
 
 void AppendJSONStringAsProperty(nsCString& aDest, const char* aPropertyName,

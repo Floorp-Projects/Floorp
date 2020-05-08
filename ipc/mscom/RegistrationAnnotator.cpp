@@ -21,6 +21,9 @@ namespace {
 class CStringWriter final : public mozilla::JSONWriteFunc {
  public:
   void Write(const char* aStr) override { mBuf += aStr; }
+  void Write(const char* aStr, size_t aLen) override {
+    mBuf.Append(aStr, aLen);
+  }
 
   const nsCString& Get() const { return mBuf; }
 

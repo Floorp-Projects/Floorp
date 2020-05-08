@@ -23,7 +23,12 @@ struct StringWriteFunc : public JSONWriteFunc {
   StringWriteFunc() : mPtr(mBuf) {}
 
   void Write(const char* aStr) override {
-    char* last = mPtr + strlen(aStr);  // where the nul will be added
+    size_t len = strlen(aStr);
+    Write(aStr, len);
+  }
+
+  void Write(const char* aStr, size_t aLen) override {
+    char* last = mPtr + aLen;  // where the nul will be added
 
     // If you change this test and this assertion fails, just make kLen bigger.
     MOZ_RELEASE_ASSERT(last < mBuf + kLen);

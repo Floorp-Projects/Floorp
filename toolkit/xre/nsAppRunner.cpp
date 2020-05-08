@@ -2128,6 +2128,9 @@ struct FileWriteFunc : public JSONWriteFunc {
   explicit FileWriteFunc(FILE* aFile) : mFile(aFile) {}
 
   void Write(const char* aStr) override { fprintf(mFile, "%s", aStr); }
+  void Write(const char* aStr, size_t aLen) override {
+    fprintf(mFile, "%s", aStr);
+  }
 };
 
 static void SubmitDowngradeTelemetry(const nsCString& aLastVersion,

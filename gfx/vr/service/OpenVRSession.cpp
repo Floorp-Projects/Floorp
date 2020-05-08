@@ -67,6 +67,9 @@ struct StringWriteFunc : public JSONWriteFunc {
   explicit StringWriteFunc(nsACString& buffer) : mBuffer(buffer) {}
 
   void Write(const char* aStr) override { mBuffer.Append(aStr); }
+  void Write(const char* aStr, size_t aLen) override {
+    mBuffer.Append(aStr, aLen);
+  }
 };
 
 class ControllerManifestFile {

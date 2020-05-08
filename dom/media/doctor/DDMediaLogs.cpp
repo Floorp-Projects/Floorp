@@ -378,6 +378,9 @@ struct StringWriteFunc : public JSONWriteFunc {
   nsCString& mCString;
   explicit StringWriteFunc(nsCString& aCString) : mCString(aCString) {}
   void Write(const char* aStr) override { mCString.Append(aStr); }
+  void Write(const char* aStr, size_t aLen) override {
+    mCString.Append(aStr, aLen);
+  }
 };
 
 void DDMediaLogs::FulfillPromises() {

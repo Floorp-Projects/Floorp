@@ -35,6 +35,7 @@ class ChunkedJSONWriteFunc : public mozilla::JSONWriteFunc {
   }
 
   void Write(const char* aStr) override;
+  void Write(const char* aStr, size_t aLen) override;
   void CopyDataIntoLazilyAllocatedBuffer(
       const std::function<char*(size_t)>& aAllocator) const;
   mozilla::UniquePtr<char[]> CopyData() const;
@@ -72,6 +73,7 @@ struct OStreamJSONWriteFunc : public mozilla::JSONWriteFunc {
   explicit OStreamJSONWriteFunc(std::ostream& aStream) : mStream(aStream) {}
 
   void Write(const char* aStr) override { mStream << aStr; }
+  void Write(const char* aStr, size_t aLen) override { mStream << aStr; }
 
   std::ostream& mStream;
 };

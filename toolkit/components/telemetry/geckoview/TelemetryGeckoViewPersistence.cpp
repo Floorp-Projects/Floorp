@@ -116,6 +116,11 @@ class StreamingJSONWriter : public mozilla::JSONWriteFunc {
     mozilla::Unused << mStream->Write(aStr, strlen(aStr), &count);
   }
 
+  void Write(const char* aStr, size_t aLen) override {
+    uint32_t count;
+    mozilla::Unused << mStream->Write(aStr, aLen, &count);
+  }
+
  private:
   nsCOMPtr<nsIOutputStream> mStream;
 };
