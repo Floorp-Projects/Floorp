@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-session**
+  * ⚠️ **This is a breaking change**: Added optional `crashReporting` param to [PictureInPictureFeature] so we can record caught exceptions.
+
 * **feature-downloads**
   * Fixed issue [#6881](https://github.com/mozilla-mobile/android-components/issues/6881).
 
