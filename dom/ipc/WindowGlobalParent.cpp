@@ -250,11 +250,6 @@ IPCResult WindowGlobalParent::RecvUpdateDocumentURI(nsIURI* aURI) {
   // XXX(nika): Assert that the URI change was one which makes sense (either
   // about:blank -> a real URI, or a legal push/popstate URI change?)
   mDocumentURI = aURI;
-  // Update Mixed Content fields
-  nsCOMPtr<nsIURI> innerDocURI = NS_GetInnermostURI(mDocumentURI);
-  if (innerDocURI) {
-    WindowContext::SetIsSecure(innerDocURI->SchemeIs("https"));
-  }
   return IPC_OK();
 }
 
