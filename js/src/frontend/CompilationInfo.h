@@ -11,7 +11,6 @@
 #include "mozilla/Variant.h"
 
 #include "ds/LifoAlloc.h"
-#include "frontend/FunctionTree.h"
 #include "frontend/SharedContext.h"
 #include "frontend/Stencil.h"
 #include "frontend/UsedNameTracker.h"
@@ -51,7 +50,6 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
 
   UsedNameTracker usedNames;
   LifoAllocScope& allocScope;
-  FunctionTreeHolder treeHolder;
 
   // Hold onto the RegExpCreationData and BigIntCreationData that are allocated
   // during parse to ensure correct destruction.
@@ -86,7 +84,6 @@ struct MOZ_RAII CompilationInfo : public JS::CustomAutoRooter {
         script(cx),
         usedNames(cx),
         allocScope(alloc),
-        treeHolder(cx),
         regExpData(cx),
         bigIntData(cx),
         funcData(cx),

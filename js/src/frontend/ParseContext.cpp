@@ -240,14 +240,6 @@ ParseContext::ParseContext(JSContext* cx, ParseContext*& parent,
       scriptId_(compilationInfo.usedNames.nextScriptId()),
       superScopeNeedsHomeObject_(false) {
   if (isFunctionBox()) {
-    // We exclude ASM bodies because they are always eager, and the
-    // FunctionBoxes that get added to the tree in an AsmJS compilation
-    // don't have a long enough lifespan, as AsmJS marks the lifo allocator
-    // inside the ModuleValidator, and frees it again when that dies.
-    if (!this->functionBox()->useAsmOrInsideUseAsm()) {
-      tree.emplace(compilationInfo.treeHolder);
-    }
-
     if (functionBox()->isNamedLambda()) {
       namedLambdaScope_.emplace(cx, parent, compilationInfo.usedNames);
     }
@@ -264,11 +256,6 @@ bool ParseContext::init() {
   JSContext* cx = sc()->cx_;
 
   if (isFunctionBox()) {
-    if (tree) {
-      if (!tree->init(cx, this->functionBox())) {
-        return false;
-      }
-    }
     // Named lambdas always need a binding for their own name. If this
     // binding is closed over when we finish parsing the function in
     // finishFunctionScopes, the function box needs to be marked as
