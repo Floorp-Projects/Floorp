@@ -591,8 +591,6 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     new_result["subtest_unit"] = "ms"
                     LOG.info("parsed new result: %s" % str(new_result))
 
-                    # `extra_options` will be populated with Gecko profiling flags in
-                    # the future.
                     new_result["extra_options"] = []
                     if self.no_conditioned_profile:
                         new_result["extra_options"].append("nocondprof")
@@ -600,6 +598,8 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                         new_result["extra_options"].append("fission")
                     if self.live_sites:
                         new_result["extra_options"].append("live")
+                    if self.gecko_profile:
+                        new_result["extra_options"].append("gecko_profile")
 
                     return new_result
 
@@ -626,11 +626,11 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     new_result["subtest_unit"] = test.get("subtest_unit", "ms")
                     LOG.info("parsed new result: %s" % str(new_result))
 
-                    # `extra_options` will also be populated with Gecko profiling flags in
-                    # the future.
                     new_result["extra_options"] = []
                     if self.app != "firefox":
                         new_result["extra_options"].append(self.app)
+                    if self.gecko_profile:
+                        new_result["extra_options"].append("gecko_profile")
 
                     return new_result
 
