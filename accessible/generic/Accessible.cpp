@@ -775,18 +775,12 @@ void Accessible::XULElmName(DocAccessible* aDocument, nsIContent* aElm,
    */
 
   // CASE #1 (via label attribute) -- great majority of the cases
-  nsCOMPtr<nsIDOMXULSelectControlItemElement> itemEl =
-      aElm->AsElement()->AsXULSelectControlItem();
-  if (itemEl) {
-    itemEl->GetLabel(aName);
-  } else {
-    // Use @label if this is not a select control element, which uses label
-    // attribute to indicate, which option is selected.
-    nsCOMPtr<nsIDOMXULSelectControlElement> select =
-        aElm->AsElement()->AsXULSelectControl();
-    if (!select) {
-      aElm->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
-    }
+  // Only do this if this is not a select control element, which uses label
+  // attribute to indicate, which option is selected.
+  nsCOMPtr<nsIDOMXULSelectControlElement> select =
+      aElm->AsElement()->AsXULSelectControl();
+  if (!select) {
+    aElm->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
   }
 
   // CASES #2 and #3 ------ label as a child or <label control="id" ... >
