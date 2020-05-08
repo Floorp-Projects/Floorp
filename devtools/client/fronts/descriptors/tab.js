@@ -23,7 +23,7 @@ const {
 } = require("devtools/shared/protocol");
 
 class TabDescriptorFront extends FrontClassWithSpec(tabDescriptorSpec) {
-  constructor(client, targetFront, parentFront, options) {
+  constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
     this._client = client;
   }
