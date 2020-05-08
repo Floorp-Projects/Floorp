@@ -1355,23 +1355,36 @@ def set_test_verify_chunks(config, tasks):
 
 
 @transforms.add
+def set_chunked_manifests(config, tasks):
+    """Determine the set of test manifests that should run against this task
+    and divide them into chunks.
+    """
+
+    for task in tasks:
+        if taskgraph.fast or task['suite'] in CHUNK_SUITES_BLACKLIST:
+            yield task
+            continue
+
+        suite_definition = TEST_SUITES[task['suite']]
+        mozinfo = guess_mozinfo_from_task(task)
+        task['chunked-manifests'] = get_chunked_manifests(
+            suite_definition['build_flavor'],
+            suite_definition.get('kwargs', {}).get('subsuite', 'undefined'),
+            task['chunks'],
+            frozenset(mozinfo.items()),
+        )
+        yield task
+
+
+@transforms.add
 def split_chunks(config, tasks):
     """Based on the 'chunks' key, split tests up into chunks by duplicating
     them and assigning 'this-chunk' appropriately and updating the treeherder
-    symbol."""
+    symbol.
+    """
 
     for task in tasks:
-        chunked_manifests = None
-        if not taskgraph.fast and task['suite'] not in CHUNK_SUITES_BLACKLIST:
-            suite_definition = TEST_SUITES[task['suite']]
-            mozinfo = guess_mozinfo_from_task(task)
-            chunked_manifests = get_chunked_manifests(
-                suite_definition['build_flavor'],
-                suite_definition.get('kwargs', {}).get('subsuite', 'undefined'),
-                task['chunks'],
-                frozenset(mozinfo.items()),
-            )
-
+        chunked_manifests = task.pop('chunked-manifests', None)
         for i in range(task['chunks']):
             this_chunk = i + 1
 
