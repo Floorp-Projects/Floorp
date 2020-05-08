@@ -70,7 +70,7 @@ Platforms in the CI
    Windows 7 DevEdition, , 
    Windows 7 VM Nightly, ,
    Windows 7 Shippable, , 
-   Windows 7 MinGW, Tom Ritter, the Tor project uses MingGW; make sure we test that for them
+   Windows 7 MinGW, Tom Ritter, the Tor project uses MinGW; make sure we test that for them
    Windows 10 x64, , 
    Windows 10 x64 CCov, Marco Castelluccio , Collect :ref:`Code coverage` information to identify what is tested (or not)
    Windows 10 x64 DevEdition, , 
@@ -80,7 +80,7 @@ Platforms in the CI
    Windows 10 x64 QuantumRender Shippable, , 
    Windows 10 x64 QuantumRender, , 
    Windows 10 x64 2017 Ref HW, , 
-   Windows 10 x64 MinGW, Tom Ritter, the Tor project uses MingGW; make sure we test that for them
+   Windows 10 x64 MinGW, Tom Ritter, the Tor project uses MinGW; make sure we test that for them
    Windows 10 AArch64, , 
    Windows 2012, , 
    Windows 2012 shippable, , 
@@ -96,7 +96,7 @@ Platforms in the CI
    Windows 2012 x64 addon, ,
    Windows 2012 x64 NoOpt, ,
    Windows 2012 x64 DevEdition, ,
-   Windows MinGW, Tom Ritter, the Tor project uses MingGW; make sure we test that for them
+   Windows MinGW, Tom Ritter, the Tor project uses MinGW; make sure we test that for them
    Android 4.0 API16+, , 
    Android 4.0 API16+ Beta, , 
    Android 4.0 API16+ Release, ,
