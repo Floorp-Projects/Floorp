@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "mappings": "",
+  "sources": [
+    "fake-mapped.js"
+  ],
+  "sourcesContent": [
+    ""
+  ]
+}

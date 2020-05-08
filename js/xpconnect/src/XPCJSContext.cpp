@@ -930,6 +930,8 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   sDiscardSystemSource =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "discardSystemSource");
 
+  bool useSourcePragmas =
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "source_pragmas");
   bool useAsyncStack = Preferences::GetBool(JS_OPTIONS_DOT_STR "asyncstack");
 
   bool throwOnDebuggeeWouldRun =
@@ -985,6 +987,7 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
 #endif
       .setWasmVerbose(useWasmVerbose)
       .setThrowOnAsmJSValidationFailure(throwOnAsmJSValidationFailure)
+      .setSourcePragmas(useSourcePragmas)
       .setAsyncStack(useAsyncStack)
       .setThrowOnDebuggeeWouldRun(throwOnDebuggeeWouldRun)
       .setDumpStackOnDebuggeeWouldRun(dumpStackOnDebuggeeWouldRun);

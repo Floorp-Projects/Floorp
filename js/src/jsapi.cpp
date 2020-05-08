@@ -3460,6 +3460,7 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   forceFullParse_ = rhs.forceFullParse_;
   forceStrictMode_ = rhs.forceStrictMode_;
   skipFilenameValidation_ = rhs.skipFilenameValidation_;
+  sourcePragmas_ = rhs.sourcePragmas_;
   selfHostingMode = rhs.selfHostingMode;
   asmJSOption = rhs.asmJSOption;
   throwOnAsmJSValidationFailureOption = rhs.throwOnAsmJSValidationFailureOption;
@@ -3563,6 +3564,8 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
   }
   throwOnAsmJSValidationFailureOption =
       cx->options().throwOnAsmJSValidationFailure();
+
+  sourcePragmas_ = cx->options().sourcePragmas();
 
   // Certain modes of operation force strict-mode in general.
   forceStrictMode_ = cx->options().strictMode();

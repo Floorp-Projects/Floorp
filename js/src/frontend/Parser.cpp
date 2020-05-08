@@ -337,6 +337,12 @@ void CompilationInfo::trace(JSTracer* trc) {
 }
 
 bool ParserBase::setSourceMapInfo() {
+  // If support for source pragmas have been fully disabled, we can skip
+  // processing of all of these values.
+  if (!options().sourcePragmas()) {
+    return true;
+  }
+
   // Not all clients initialize ss. Can't update info to an object that isn't
   // there.
   if (!ss) {
