@@ -354,22 +354,25 @@ class AboutLoginsParent extends JSWindowActorParent {
             return;
           }
           if (!token.hasPassword && OS_AUTH_ENABLED) {
-            if (AppConstants.platform == "macosx") {
-              // OS Auth dialogs on macOS must only provide the "reason" that the prompt
-              // is being displayed.
-              messageId += "-macosx";
+            let messageText = { value: "NOT SUPPORTED" };
+            let captionText = { value: "" };
+            // This feature is only supported on Windows and macOS
+            // but we still call in to OSKeyStore on Linux to get
+            // the proper auth_details for Telemetry.
+            // See bug 1614874 for Linux support.
+            if (OSKeyStore.canReauth()) {
+              messageId += "-" + AppConstants.platform;
+              [messageText, captionText] = await AboutLoginsL10n.formatMessages(
+                [
+                  {
+                    id: messageId,
+                  },
+                  {
+                    id: "about-logins-os-auth-dialog-caption",
+                  },
+                ]
+              );
             }
-            let [
-              messageText,
-              captionText,
-            ] = await AboutLoginsL10n.formatMessages([
-              {
-                id: messageId,
-              },
-              {
-                id: "about-logins-os-auth-dialog-caption",
-              },
-            ]);
             let result = await OSKeyStore.ensureLoggedIn(
               messageText.value,
               captionText.value,
