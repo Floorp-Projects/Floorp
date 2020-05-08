@@ -582,6 +582,11 @@
   value: @IS_NOT_NIGHTLY_BUILD@
   mirror: always
 
+- name: apz.windows.use_direct_manipulation
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: apz.x_skate_highmem_adjust
   type: AtomicFloat
   value: 0.0f
