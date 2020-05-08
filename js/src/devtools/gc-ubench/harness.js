@@ -252,15 +252,23 @@ class AllocationLoadManager {
 // Current test state.
 var gLoadMgr = undefined;
 
-function format_gcBytes(bytes) {
-  if (bytes < 4000) {
-    return `${bytes} bytes`;
-  } else if (bytes < 4e6) {
-    return `${(bytes / 1024).toFixed(2)} KB`;
-  } else if (bytes < 4e9) {
-    return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+function format_with_units(n, label, shortlabel, kbase) {
+  if (n < kbase * 4) {
+    return `${n} ${label}`;
+  } else if (n < kbase ** 2 * 4) {
+    return `${(n / kbase).toFixed(2)}K${shortlabel}`;
+  } else if (n < kbase ** 3 * 4) {
+    return `${(n / kbase ** 2).toFixed(2)}M${shortlabel}`;
   }
-  return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
+  return `${(n / kbase ** 3).toFixed(2)}G${shortlabel}`;
+}
+
+function format_bytes(bytes) {
+  return format_with_units(bytes, "bytes", "B", 1024);
+}
+
+function format_num(n) {
+  return format_with_units(n, "", "", 1000);
 }
 
 function update_histogram(histogram, delay) {
