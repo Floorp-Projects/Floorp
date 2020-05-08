@@ -7,15 +7,7 @@ loadTestSubscript("head_abuse_report.js");
 
 add_task(async function setup() {
   await AbuseReportTestUtils.setup();
-
-  // Run abuse reports tests in the "dialog window" mode.
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.abuseReport.openDialog", true]],
-  });
 });
-
-// Add all the test tasks shared with browser_html_abuse_report.js.
-addCommonAbuseReportTestTasks();
 
 /**
  * Test tasks specific to the abuse report opened in its own dialog window.
