@@ -147,6 +147,9 @@ permalink: /changelog/
 * **Developer ergonomics**
   * Improved autoPublication workflow. See https://mozac.org/contributing/testing-components-inside-app for updated documentation.
 
+* **browser-search**
+  * Added `getSearchTemplate` to reconstruct the user-entered search engine url template
+
 # 38.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v37.0.0...v38.0.0)

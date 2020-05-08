@@ -28,6 +28,14 @@ class SearchEngine internal constructor(
     }
 
     /**
+     * Gets the user-entered search url template
+     */
+    fun getSearchTemplate(): String {
+        val template = Uri.decode(resultsUris[0].toString())
+        return paramSubstitution(template, USER_QUERY_TEMPLATE)
+    }
+
+    /**
      * Builds a URL to search for the given search terms with this search engine.
      */
     fun buildSearchUrl(searchTerm: String): String {
@@ -92,6 +100,8 @@ class SearchEngine internal constructor(
         private const val OS_PARAM_LANGUAGE = "{" + "language" + "}"
         private const val OS_PARAM_OUTPUT_ENCODING = "{" + "outputEncoding" + "}"
         private const val OS_PARAM_OPTIONAL = "\\{" + "(?:\\w+:)?\\w+?" + "\\}"
+
+        private const val USER_QUERY_TEMPLATE = "%s"
 
         private fun normalize(input: String): String {
             val trimmedInput = input.trim { it <= ' ' }
