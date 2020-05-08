@@ -534,7 +534,7 @@ DevToolsStartup.prototype = {
    * Also, this menu duplicates its own entries from the "Web Developer"
    * menu in the system menu, under "Tools" main menu item. The system
    * menu is being hooked by "hookWebDeveloperMenu" which ends up calling
-   * devtools/client/framework/browser-menu to create the items for real,
+   * devtools/client/framework/browser-menus to create the items for real,
    * initDevTools, from onViewShowing is also calling browser-menu.
    */
   hookDeveloperToggle() {
