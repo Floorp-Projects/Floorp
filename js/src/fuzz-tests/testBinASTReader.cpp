@@ -61,7 +61,7 @@ static int testBinASTReaderFuzz(const uint8_t* buf, size_t size) {
                                directives, extent);
 
   BinASTParser<js::frontend::BinASTTokenReaderMultipart> reader(
-      gCx, binCompilationInfo, options, binCompilationInfo.sourceObject);
+      gCx, binCompilationInfo, options);
 
   // Will be deallocated once `reader` goes out of scope.
   auto binParsed = reader.parse(&globalsc, binSource);

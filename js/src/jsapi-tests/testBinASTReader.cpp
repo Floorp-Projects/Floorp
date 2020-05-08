@@ -338,7 +338,7 @@ void runTestFromPath(JSContext* cx, const char* path) {
     js::frontend::Parser<js::frontend::FullParseHandler, mozilla::Utf8Unit>
         txtParser(cx, txtOptions, txtSource.begin(), txtSource.length(),
                   /* foldConstants = */ false, compilationInfo, nullptr,
-                  nullptr, compilationInfo.sourceObject);
+                  nullptr);
     if (!txtParser.checkOptions()) {
       MOZ_CRASH("Bad options");
     }
@@ -377,8 +377,7 @@ void runTestFromPath(JSContext* cx, const char* path) {
     frontend::GlobalSharedContext globalsc(
         cx, ScopeKind::Global, binCompilationInfo, directives, extent);
 
-    frontend::BinASTParser<Tok> binParser(cx, binCompilationInfo, binOptions,
-                                          binCompilationInfo.sourceObject);
+    frontend::BinASTParser<Tok> binParser(cx, binCompilationInfo, binOptions);
 
     auto binParsed = binParser.parse(
         &globalsc,
