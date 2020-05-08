@@ -2,10 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* Increase the size of the content */
 .wy-nav-content {
-max-width: 80% !important;
+    max-width: 80% !important;
 }
+
+/* Increase the size of the tables */
 table.docutils {
     width: 90%;
 }
 
+/* Override the default values for multiline text in a table */
+table.docutils td, table.docutils th
+{
+    font-size: 16px !important;
+}
+
+.rst-content .line-block {
+    margin-bottom: 0px !important;
+}
