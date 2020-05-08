@@ -162,6 +162,11 @@ class StaticAnalysisMonitor(object):
                 warning['reliability'] = check_config.get('reliability', 'low')
                 warning['reason'] = check_config.get('reason')
                 warning['publish'] = check_config.get('publish', True)
+            elif warning["flag"] == "clang-diagnostic-error":
+                # For a "warning" that is flagged as "clang-diagnostic-error"
+                # set it as "publish"
+                warning['publish'] = True
+
         return (warning, True)
 
 
