@@ -148,7 +148,7 @@ add_task(async function test_update_reload() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: ["tabs", "history"],
+      permissions: ["tabs"],
     },
 
     background() {
@@ -157,9 +157,15 @@ add_task(async function test_update_reload() {
         browser.test.sendMessage("result", result);
       });
 
-      browser.history.onVisited.addListener(data => {
-        browser.test.sendMessage("historyAdded");
-      });
+      const filter = {
+        properties: ["status"],
+      };
+
+      browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
+        if (changeInfo.status === "complete") {
+          browser.test.sendMessage("historyAdded");
+        }
+      }, filter);
     },
   });
 
