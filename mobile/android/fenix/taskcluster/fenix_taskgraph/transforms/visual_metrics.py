@@ -75,10 +75,6 @@ def run_visual_metrics(config, jobs):
                 symbol=treeherder_info['symbol']
             )
 
-            # Store the platform name so we can use it to calculate
-            # the similarity metric against other tasks
-            job['worker'].setdefault('env', {})['TC_PLATFORM'] = platform
-
             # run-on-projects needs to be set based on the dependent task
             attributes = dict(dep_job.attributes)
             job['run-on-projects'] = attributes['run_on_projects']
