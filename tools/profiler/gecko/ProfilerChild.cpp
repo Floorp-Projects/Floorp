@@ -83,6 +83,18 @@ static nsCString CollectProfileOrEmptyString(bool aIsShuttingDown) {
   return profileCString;
 }
 
+mozilla::ipc::IPCResult ProfilerChild::RecvAwaitNextChunkManagerUpdate(
+    AwaitNextChunkManagerUpdateResolver&& aResolve) {
+  // TODO, see following patches.
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ProfilerChild::RecvDestroyReleasedChunksAtOrBefore(
+    const TimeStamp& aTimeStamp) {
+  // TODO, see following patches.
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ProfilerChild::RecvGatherProfile(
     GatherProfileResolver&& aResolve) {
   mozilla::ipc::Shmem shmem;
