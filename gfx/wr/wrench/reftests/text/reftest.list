@@ -7,7 +7,7 @@
 != shadow-cover-2.yaml blank.yaml
 
 skip_on(android,device) fuzzy(1,3) == shadow.yaml shadow-ref.yaml  # Fails on Pixel2
-== shadow-huge.yaml shadow-huge-ref.yaml
+fuzzy(1,1) == shadow-huge.yaml shadow-huge-ref.yaml
 != shadow-cover-1.yaml shadow-cover-2.yaml
 != shadow-many.yaml shadow.yaml
 != shadow-complex.yaml shadow-many.yaml

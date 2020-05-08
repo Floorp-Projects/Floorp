@@ -249,14 +249,14 @@ impl TextRunPrimitive {
         // Check there is a valid transform that doesn't exceed the font size limit.
         // Ensure the font is supposed to be rasterized in screen-space.
         // Only support transforms that can be coerced to simple 2D transforms.
-        let (use_subpixel_aa, transform_glyphs, oversized) = if raster_space != RasterSpace::Screen ||
+        let (use_subpixel_aa, transform_glyphs, texture_padding, oversized) = if raster_space != RasterSpace::Screen ||
             transform.has_perspective_component() || !transform.has_2d_inverse()
         {
-            (false, false, device_font_size > FONT_SIZE_LIMIT)
+            (false, false, true, device_font_size > FONT_SIZE_LIMIT)
         } else if transform.exceeds_2d_scale((FONT_SIZE_LIMIT / device_font_size) as f64) {
-            (false, false, true)
+            (false, false, true, true)
         } else {
-            (true, !transform.is_simple_2d_translation(), false)
+            (true, !transform.is_simple_2d_translation(), false, false)
         };
 
         let font_transform = if transform_glyphs {
@@ -312,12 +312,14 @@ impl TextRunPrimitive {
         let cache_dirty =
             self.used_font.transform != font_transform ||
             self.used_font.size != specified_font.size ||
-            self.used_font.transform_glyphs != transform_glyphs;
+            self.used_font.transform_glyphs != transform_glyphs ||
+            self.used_font.texture_padding != texture_padding;
 
         // Construct used font instance from the specified font instance
         self.used_font = FontInstance {
             transform: font_transform,
             transform_glyphs,
+            texture_padding,
             size: specified_font.size,
             ..specified_font.clone()
         };
