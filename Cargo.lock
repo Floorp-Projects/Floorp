@@ -5327,9 +5327,9 @@ dependencies = [
 
 [[package]]
 name = "webrtc-sdp"
-version = "0.3.5"
+version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33a041b38913afdc47ea2337fda2bcfdafd2928439422a601bc3bf3cff11a2ee"
+checksum = "22ca3fe7f015c28dcfbea0b0e05fbcb1a26ed902f80509dd0a4bf40556e73f58"
 dependencies = [
  "log",
  "url",
