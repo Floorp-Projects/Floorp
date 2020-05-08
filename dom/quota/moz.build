@@ -7,25 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Storage: Quota Manager")
 
-MOCHITEST_MANIFESTS += ['test/mochitest.ini']
-
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
-
-XPCSHELL_TESTS_MANIFESTS += [
-    'test/unit/telemetry/xpcshell.ini',
-    'test/unit/upgrades/xpcshell.ini',
-    'test/unit/xpcshell.ini'
-]
-
-TEST_HARNESS_FILES.xpcshell.dom.quota.test += [
-    'test/head-shared.js',
-]
-
-TEST_HARNESS_FILES.xpcshell.dom.quota.test.unit += [
-    'test/unit/head-shared.js',
-]
-
-TEST_DIRS += ['test/gtest']
+DIRS += ['test']
 
 XPIDL_SOURCES += [
     'nsIQuotaCallbacks.idl',
