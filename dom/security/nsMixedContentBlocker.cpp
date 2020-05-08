@@ -837,7 +837,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   // Determine if the rootDoc is https and if the user decided to allow Mixed
   // Content
   WindowContext* topWC = requestingWindow->TopWindowContext();
-  bool rootHasSecureConnection = topWC->GetIsSecure();
+  bool rootHasSecureConnection = topWC->GetBrowsingContext()->GetIsSecure();
   bool allowMixedContent = topWC->GetAllowMixedContent();
 
   // When navigating an iframe, the iframe may be https
@@ -848,7 +848,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
 
     RefPtr<WindowContext> curWindow = requestingWindow;
     while (!httpsParentExists && curWindow) {
-      httpsParentExists = curWindow->GetIsSecure();
+      httpsParentExists = curWindow->GetBrowsingContext()->GetIsSecure();
       curWindow = curWindow->GetParentWindowContext();
     }
 
