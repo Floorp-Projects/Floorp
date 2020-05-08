@@ -148,8 +148,8 @@ class MediaSessionConduit {
    * Obtained packets are passed to the Media-Engine for further
    * processing , say, decoding
    */
-  virtual MediaConduitErrorCode ReceivedRTPPacket(const void* data, int len,
-                                                  uint32_t ssrc) = 0;
+  virtual MediaConduitErrorCode ReceivedRTPPacket(
+      const void* data, int len, webrtc::RTPHeader& header) = 0;
 
   /**
    * Function triggered on Incoming RTCP packet from the remote
