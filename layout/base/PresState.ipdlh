@@ -24,9 +24,14 @@ union FileContentData {
   nsString;
 };
 
+struct TextContentData {
+  nsString value;
+  bool lastValueChangeWasInteractive;
+};
+
 union PresContentData {
   void_t;
-  nsString;
+  TextContentData;
   SelectContentData;
   CheckedContentData;
   // We can need to serialize blobs in order to transmit this type, so we need
@@ -46,4 +51,4 @@ struct PresState {
   bool droppedDown;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
